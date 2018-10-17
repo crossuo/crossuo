@@ -26,28 +26,32 @@ const CC_HAIR_STYLE CCreateCharacterManager::m_HumanMaleHairStyleTable[HUMAN_MAL
     { 0x074E, 0x2049, "2 Tails" }
 };
 //----------------------------------------------------------------------------------
-const CC_HAIR_STYLE CCreateCharacterManager::m_HumanFemaleHairStyleTable[HUMAN_FEMALE_HAIR_COUNT] =
-    { { 0, 0, "NONE" },
-      { 0x0737, 0x203B, "Short" },
-      { 0x0732, 0x203C, "Long" },
-      { 0x0735, 0x203D, "Pony Tail" },
-      { 0x0733, 0x2044, "Mohawk" },
-      { 0x0734, 0x2045, "Pageboy" },
-      { 0x0730, 0x204A, "Topknot" },
-      { 0x072F, 0x2047, "Curly" },
-      { 0x0736, 0x2048, "Receding" },
-      { 0x072C, 0x2049, "2 Tails" },
-      { 0x0731, 0x2046, "Buns" } };
+const CC_HAIR_STYLE
+    CCreateCharacterManager::m_HumanFemaleHairStyleTable[HUMAN_FEMALE_HAIR_COUNT] = {
+        { 0, 0, "NONE" },
+        { 0x0737, 0x203B, "Short" },
+        { 0x0732, 0x203C, "Long" },
+        { 0x0735, 0x203D, "Pony Tail" },
+        { 0x0733, 0x2044, "Mohawk" },
+        { 0x0734, 0x2045, "Pageboy" },
+        { 0x0730, 0x204A, "Topknot" },
+        { 0x072F, 0x2047, "Curly" },
+        { 0x0736, 0x2048, "Receding" },
+        { 0x072C, 0x2049, "2 Tails" },
+        { 0x0731, 0x2046, "Buns" }
+    };
 //----------------------------------------------------------------------------------
-const CC_HAIR_STYLE CCreateCharacterManager::m_HumanBeardStyleTable[HUMAN_MALE_FACIAL_HAIR_COUNT] =
-    { { 0, 0, "NONE" },
-      { 0x0759, 0x2040, "Goatee" },
-      { 0x075B, 0x203E, "Long beard" },
-      { 0x075D, 0x203F, "Short beard" },
-      { 0x075C, 0x2041, "Moustache" },
-      { 0x075E, 0x204B, "Short beard/moustache" },
-      { 0x075A, 0x204C, "Long beard/moustache" },
-      { 0x075F, 0x204D, "Vandyke" } };
+const CC_HAIR_STYLE
+    CCreateCharacterManager::m_HumanBeardStyleTable[HUMAN_MALE_FACIAL_HAIR_COUNT] = {
+        { 0, 0, "NONE" },
+        { 0x0759, 0x2040, "Goatee" },
+        { 0x075B, 0x203E, "Long beard" },
+        { 0x075D, 0x203F, "Short beard" },
+        { 0x075C, 0x2041, "Moustache" },
+        { 0x075E, 0x204B, "Short beard/moustache" },
+        { 0x075A, 0x204C, "Long beard/moustache" },
+        { 0x075F, 0x204D, "Vandyke" }
+    };
 //----------------------------------------------------------------------------------
 const CC_HAIR_STYLE CCreateCharacterManager::m_ElfMaleHairStyleTable[ELF_MALE_HAIR_COUNT] = {
     { 0, 0, "NONE" },
