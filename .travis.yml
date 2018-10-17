@@ -29,6 +29,8 @@ addons:
       - libsdl2-mixer-dev
       - libfreeimage-dev
       - libglew-dev
+      - libsndio-dev
+      - libxkbcommon-dev
 script:
     - export CC=${CC_COMPILER}
     - export CXX=${CXX_COMPILER}
