@@ -85,7 +85,7 @@ void CGumpConsoleType::DeleteConsolePrefix()
             if (str.find(g_ConsolePrefix[m_SelectedType]) == 0)
             {
                 str.erase(str.begin(), str.begin() + g_ConsolePrefix[m_SelectedType].length());
-                g_GameConsole.SetText(str);
+                g_GameConsole.SetTextW(str);
             }
 
             break;
@@ -109,7 +109,7 @@ void CGumpConsoleType::SetConsolePrefix()
         {
             wstring str(g_GameConsole.Data());
             str = g_ConsolePrefix[m_SelectedType] + str;
-            g_GameConsole.SetText(str);
+            g_GameConsole.SetTextW(str);
 
             break;
         }
@@ -208,7 +208,7 @@ void CGumpConsoleType::UpdateContent()
 
             if (m_ShowFullText || !i)
             {
-                entry->m_Entry.SetText(text[i]);
+                entry->m_Entry.SetTextA(text[i]);
                 entry->m_Entry.CreateTextureA(3, text[i], 0, 0, TS_LEFT, 0);
             }
             else
@@ -219,7 +219,7 @@ void CGumpConsoleType::UpdateContent()
                 if (str.length() < 3)
                     str += " ";
 
-                entry->m_Entry.SetText(str);
+                entry->m_Entry.SetTextA(str);
                 entry->m_Entry.CreateTextureA(3, str, 0, 0, TS_LEFT, 0);
             }
 

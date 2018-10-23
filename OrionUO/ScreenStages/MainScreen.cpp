@@ -1,44 +1,32 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** MainScreen.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-//----------------------------------------------------------------------------------
-#include "stdafx.h"
 #include "MainScreen.h"
+#include "BaseScreen.h"
+#include "../GUI/GUITextEntry.h"
+#include "../Wisp/WispDefinitions.h"
+#include "../TextEngine/EntryText.h"
+
 #include "FileSystem.h"
 
 #define ORIONUO_CONFIG "OrionUO.cfg"
 
-//----------------------------------------------------------------------------------
 CMainScreen g_MainScreen;
-//----------------------------------------------------------------------------------
+
 CMainScreen::CMainScreen()
     : CBaseScreen(m_MainGump)
-    , m_Account(NULL)
-    , m_Password(NULL)
-    , m_SavePassword(NULL)
-    , m_AutoLogin(NULL)
+    , m_Account(nullptr)
+    , m_Password(nullptr)
+    , m_SavePassword(nullptr)
+    , m_AutoLogin(nullptr)
 {
     WISPFUN_DEBUG("c165_f1");
     m_Password = new CEntryText(32, 0, 300);
 }
-//----------------------------------------------------------------------------------
+
 CMainScreen::~CMainScreen()
 {
     WISPFUN_DEBUG("c165_f2");
     delete m_Password;
 }
-//----------------------------------------------------------------------------------
-/*!
-Инициализация
-@return 
-*/
+
 void CMainScreen::Init()
 {
     WISPFUN_DEBUG("c165_f3");
@@ -52,8 +40,8 @@ void CMainScreen::Init()
 
     if (!m_SavePassword->Checked)
     {
-        m_Password->SetText(L"");
-        m_MainGump.m_PasswordFake->SetText(L"");
+        m_Password->SetTextW(L"");
+        m_MainGump.m_PasswordFake->SetTextW(L"");
     }
 
     g_EntryPointer = m_MainGump.m_PasswordFake;
@@ -73,12 +61,7 @@ void CMainScreen::Init()
 
     m_Gump.PrepareTextures();
 }
-//----------------------------------------------------------------------------------
-/*!
-Обработка события после плавного затемнения экрана
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
+
 void CMainScreen::ProcessSmoothAction(uchar action)
 {
     WISPFUN_DEBUG("c165_f4");
@@ -90,12 +73,12 @@ void CMainScreen::ProcessSmoothAction(uchar action)
     else if (action == ID_SMOOTH_MS_QUIT)
         g_OrionWindow.Destroy();
 }
-//----------------------------------------------------------------------------------
+
 void CMainScreen::SetAccounting(const string &account, const string &password)
 {
     WISPFUN_DEBUG("c165_f5");
-    m_Account->SetText(account);
-    m_Password->SetText(password);
+    m_Account->SetTextA(account);
+    m_Password->SetTextA(password);
 
     size_t len = password.length();
     m_MainGump.m_PasswordFake->Clear();
@@ -103,7 +86,7 @@ void CMainScreen::SetAccounting(const string &account, const string &password)
     IFOR (i, 0, len)
         m_MainGump.m_PasswordFake->Insert(L'*');
 }
-//----------------------------------------------------------------------------------
+
 void CMainScreen::Paste()
 {
     WISPFUN_DEBUG("c165_f6");
@@ -120,20 +103,14 @@ void CMainScreen::Paste()
     else
         g_EntryPointer->Paste();
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
 void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     WISPFUN_DEBUG("c165_f7");
     if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uchar)wParam))
         return;
-    else if (g_EntryPointer == NULL)
+    else if (g_EntryPointer == nullptr)
         g_EntryPointer = m_MainGump.m_PasswordFake;
 
     if (g_EntryPointer->Length() < 16) //add char to text field
@@ -149,17 +126,11 @@ void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
     m_Gump.WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
+
 void CMainScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
     WISPFUN_DEBUG("c165_f8");
-    if (g_EntryPointer == NULL)
+    if (g_EntryPointer == nullptr)
         g_EntryPointer = m_MainGump.m_PasswordFake;
 
     switch (wParam)
@@ -182,9 +153,9 @@ void CMainScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
         default:
         {
             if (g_EntryPointer == m_MainGump.m_PasswordFake)
-                m_Password->OnKey(NULL, wParam);
+                m_Password->OnKey(nullptr, wParam);
 
-            g_EntryPointer->OnKey(NULL, wParam);
+            g_EntryPointer->OnKey(nullptr, wParam);
 
             break;
         }
@@ -194,9 +165,33 @@ void CMainScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 }
 #else
 void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
+{    
+    WISPFUN_DEBUG("");
+    LOG("SDL_TextInputEvent: %s\n", ev.text);
+
+    uchar ch = ev.text[0];
+    if (!g_FontManager.IsPrintASCII(ch))
+        return;
+
+    if (g_EntryPointer == nullptr)
+    {
+        g_EntryPointer = m_MainGump.m_PasswordFake;
+    }
+
+    if (g_EntryPointer->Length() < 16) //add char to text field
+    {
+        if (g_EntryPointer == m_MainGump.m_PasswordFake)
+        {
+            if (g_EntryPointer->Insert(L'*'))
+                m_Password->Insert(ch);
+        }
+        else
+            g_EntryPointer->Insert(ch);
+    }
+
+    m_Gump.WantRedraw = true;
 }
+
 void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
 {
     WISPFUN_DEBUG("c165_f8");
@@ -235,12 +230,7 @@ void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
     m_Gump.WantRedraw = true;
 }
 #endif
-//----------------------------------------------------------------------------------
-/*!
-Получить код конфига по ключу
-@param [__in] key Ключ
-@return 
-*/
+
 int CMainScreen::GetConfigKeyCode(const string &key)
 {
     //WISPFUN_DEBUG("c165_f9");
@@ -261,11 +251,7 @@ int CMainScreen::GetConfigKeyCode(const string &key)
 
     return result;
 }
-//----------------------------------------------------------------------------------
-/*!
-Загрузка кастомного пути к папке с УО файлами
-@return
-*/
+
 void CMainScreen::LoadCustomPath()
 {
     WISPFUN_DEBUG("c165_f14");
@@ -291,11 +277,7 @@ void CMainScreen::LoadCustomPath()
         }
     }
 }
-//----------------------------------------------------------------------------------
-/*!
-Загрузка конфига
-@return 
-*/
+
 void CMainScreen::LoadGlobalConfig()
 {
     WISPFUN_DEBUG("c165_f10");
@@ -317,7 +299,7 @@ void CMainScreen::LoadGlobalConfig()
             {
                 case MSCC_ACTID:
                 {
-                    m_Account->SetText(strings[1]);
+                    m_Account->SetTextA(strings[1]);
                     m_Account->SetPos((int)strings[1].length());
 
                     break;
@@ -332,7 +314,7 @@ void CMainScreen::LoadGlobalConfig()
 
                     if (len)
                     {
-                        m_Password->SetText(password);
+                        m_Password->SetTextA(password);
 
                         IFOR (zv, 0, len)
                             m_MainGump.m_PasswordFake->Insert(L'*');
@@ -341,9 +323,9 @@ void CMainScreen::LoadGlobalConfig()
                     }
                     else
                     {
-                        m_MainGump.m_PasswordFake->SetText("");
+                        m_MainGump.m_PasswordFake->SetTextA("");
                         m_MainGump.m_PasswordFake->SetPos(0);
-                        m_Password->SetText("");
+                        m_Password->SetTextA("");
                         m_Password->SetPos(0);
                     }
 
@@ -355,9 +337,9 @@ void CMainScreen::LoadGlobalConfig()
 
                     if (!m_SavePassword->Checked)
                     {
-                        m_MainGump.m_PasswordFake->SetText("");
+                        m_MainGump.m_PasswordFake->SetTextA("");
                         m_MainGump.m_PasswordFake->SetPos(0);
-                        m_Password->SetText("");
+                        m_Password->SetTextA("");
                         m_Password->SetPos(0);
                     }
 
@@ -393,11 +375,7 @@ void CMainScreen::LoadGlobalConfig()
         }
     }
 }
-//----------------------------------------------------------------------------------
-/*!
-Сохранение конфига
-@return 
-*/
+
 void CMainScreen::SaveGlobalConfig()
 {
     WISPFUN_DEBUG("c165_f11");

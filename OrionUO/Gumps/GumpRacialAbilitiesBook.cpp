@@ -204,7 +204,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
             CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
                 ID_GRAB_DICTIONARY_ICON + offs, 0x0288, 0, 0, dataX, 52 + y, 0, false, 9));
             bool passive = true;
-            entry->m_Entry.SetText(GetAbilityName(offs, passive));
+            entry->m_Entry.SetTextA(GetAbilityName(offs, passive));
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
 

@@ -34,7 +34,7 @@ class CMacroObjectString : public CMacroObject
 {
 public:
     //Строка действия
-    string String = "";
+    string m_String;
 
     CMacroObjectString(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str);
     virtual ~CMacroObjectString();

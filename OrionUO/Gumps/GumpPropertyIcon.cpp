@@ -24,7 +24,7 @@ CGumpPropertyIcon::~CGumpPropertyIcon()
 {
 }
 //----------------------------------------------------------------------------------
-void CGumpPropertyIcon::SetText(const wstring &val)
+void CGumpPropertyIcon::SetTextW(const wstring &val)
 {
     m_Text = val;
     int width = 0;

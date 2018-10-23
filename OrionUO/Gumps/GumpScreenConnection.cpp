@@ -25,8 +25,8 @@ CGumpScreenConnection::~CGumpScreenConnection()
 void CGumpScreenConnection::CreateText(int x, int y, string str, uchar font)
 {
     WISPFUN_DEBUG("c113_f1");
-    if (g_ConnectionScreen.GetText().length())
-        str = g_ConnectionScreen.GetText();
+    if (g_ConnectionScreen.GetTextA().length())
+        str = g_ConnectionScreen.GetTextA();
 
     CGUIText *obj = new CGUIText(0x0386, x, y);
     obj->CreateTextureA(font, str, 260, TS_CENTER);

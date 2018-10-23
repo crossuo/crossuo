@@ -606,7 +606,7 @@ void CConfigManager::SetItemPropertiesMode(uchar val)
             (CGumpPropertyIcon *)g_GumpManager.UpdateContent(0, 0, GT_PROPERTY_ICON);
 
         if (gump != NULL && (val == OPM_AT_ICON || val == OPM_ALWAYS_UP))
-            gump->SetText(gump->GetText());
+            gump->SetTextW(gump->GetTextW());
 
         g_ObjectPropertiesManager.Reset();
     }

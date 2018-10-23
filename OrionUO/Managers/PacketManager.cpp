@@ -2955,7 +2955,7 @@ PACKET_HANDLER(Talk)
             {
                 Ptr = Start + 44;
                 g_ConnectionScreen.SetConnectionFailed(true);
-                g_ConnectionScreen.SetText(ReadString(0));
+                g_ConnectionScreen.SetTextA(ReadString(0));
             }
         }
 
@@ -3052,7 +3052,7 @@ PACKET_HANDLER(UnicodeTalk)
             {
                 Ptr = Start + 48;
                 g_ConnectionScreen.SetConnectionFailed(true);
-                g_ConnectionScreen.SetText(ToString(ReadWString((Size - 48) / 2)));
+                g_ConnectionScreen.SetTextA(ToString(ReadWString((Size - 48) / 2)));
             }
         }
 
@@ -5307,7 +5307,7 @@ PACKET_HANDLER(BulletinBoardData)
     }
 }
 //----------------------------------------------------------------------------------
-PACKET_HANDLER(OpenBook)
+PACKET_HANDLER(OpenBook) // 0x93
 {
     WISPFUN_DEBUG("c150_f92");
     if (g_World == NULL)
@@ -5321,13 +5321,13 @@ PACKET_HANDLER(OpenBook)
     CGumpBook *gump = new CGumpBook(
         serial, 0, 0, pageCount, flags != 0, (g_PacketManager.GetClientVersion() >= CV_308Z));
 
-    gump->m_EntryTitle->m_Entry.SetText(ReadString(60));
-    gump->m_EntryAuthor->m_Entry.SetText(ReadString(30));
+    gump->m_EntryTitle->m_Entry.SetTextA(ReadString(60));
+    gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(30));
 
     g_GumpManager.AddGump(gump);
 }
 //----------------------------------------------------------------------------------
-PACKET_HANDLER(OpenBookNew)
+PACKET_HANDLER(OpenBookNew) // 0xD4
 {
     WISPFUN_DEBUG("c150_f93");
     if (g_World == NULL)
@@ -5343,12 +5343,12 @@ PACKET_HANDLER(OpenBookNew)
     int titleLen = ReadUInt16BE();
 
     if (titleLen > 0)
-        gump->m_EntryTitle->m_Entry.SetText(ReadString(titleLen));
+        gump->m_EntryTitle->m_Entry.SetTextA(ReadString(titleLen));
 
     int authorLen = ReadUInt16BE();
 
     if (authorLen > 0)
-        gump->m_EntryAuthor->m_Entry.SetText(ReadString(authorLen));
+        gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(authorLen));
 
     g_GumpManager.AddGump(gump);
 }
@@ -6028,7 +6028,7 @@ PACKET_HANDLER(OrionMessages)
                 if (param.length())
                 {
                     if (macro->HaveString())
-                        ((CMacroObjectString *)macro)->String = param;
+                        ((CMacroObjectString *)macro)->m_String = param;
                     else
                     {
                         IFOR (i, 0, CMacro::MACRO_ACTION_COUNT)

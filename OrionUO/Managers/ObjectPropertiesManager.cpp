@@ -186,7 +186,7 @@ void CObjectPropertiesManager::Display(int serial)
 
     if (condition && gump->Object != m_Object)
     {
-        gump->SetText(it->second.CreateTextData(true));
+        gump->SetTextW(it->second.CreateTextData(true));
         gump->Object = m_Object;
     }
 }

@@ -1652,7 +1652,7 @@ void CGumpOptions::RedrawMacroData()
     m_MacroCheckboxAlt->Checked = alt;
     m_MacroCheckboxCtrl->Checked = ctrl;
 
-    m_MacroKey->m_Entry.SetText(m_HotkeyText[key & 0xFF]);
+    m_MacroKey->m_Entry.SetTextA(m_HotkeyText[key & 0xFF]);
 
     CMacroObject *obj = m_MacroObjectPointer;
 
@@ -1732,7 +1732,7 @@ void CGumpOptions::RedrawMacroData()
                     false,
                     1));
                 entry->CheckOnSerial = true;
-                entry->m_Entry.SetText(((CMacroObjectString *)obj)->String);
+                entry->m_Entry.SetTextA(((CMacroObjectString *)obj)->m_String);
 
                 m_MacroDataBox->Add(new CGUIScissor(false));
             }
@@ -1866,7 +1866,7 @@ void CGumpOptions::DrawPage6()
     m_ContainerOffsetX->CheckOnSerial = true;
     m_ContainerOffsetX->m_Entry.MaxLength = GetSystemMetrics(SM_CXSCREEN) - 20;
     m_ContainerOffsetX->m_Entry.NumberOnly = true;
-    m_ContainerOffsetX->m_Entry.SetText(std::to_wstring(g_ContainerRect.DefaultX));
+    m_ContainerOffsetX->m_Entry.SetTextW(std::to_wstring(g_ContainerRect.DefaultX));
 
     text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 312, 76));
     text->CreateTextureW(0, L"y:");
@@ -1882,7 +1882,7 @@ void CGumpOptions::DrawPage6()
     m_ContainerOffsetY->CheckOnSerial = true;
     m_ContainerOffsetY->m_Entry.MaxLength = GetSystemMetrics(SM_CYSCREEN) - 60;
     m_ContainerOffsetY->m_Entry.NumberOnly = true;
-    m_ContainerOffsetY->m_Entry.SetText(std::to_wstring(g_ContainerRect.DefaultY));
+    m_ContainerOffsetY->m_Entry.SetTextW(std::to_wstring(g_ContainerRect.DefaultY));
 
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P6_AUTO_ARRANGE_MINIMIZED_WINDOWS, 0x00D2, 0x00D3, 0x00D2, 0, 96));
@@ -2015,7 +2015,7 @@ void CGumpOptions::DrawPage7()
     m_GameWindowWidth->CheckOnSerial = true;
     m_GameWindowWidth->m_Entry.MaxLength = GetSystemMetrics(SM_CXSCREEN) - 20;
     m_GameWindowWidth->m_Entry.NumberOnly = true;
-    m_GameWindowWidth->m_Entry.SetText(std::to_wstring(g_OptionsConfig.GameWindowWidth));
+    m_GameWindowWidth->m_Entry.SetTextW(std::to_wstring(g_OptionsConfig.GameWindowWidth));
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 126, 112));
     text->CreateTextureW(0, L"x");
@@ -2031,7 +2031,7 @@ void CGumpOptions::DrawPage7()
     m_GameWindowHeight->CheckOnSerial = true;
     m_GameWindowHeight->m_Entry.MaxLength = GetSystemMetrics(SM_CYSCREEN) - 60;
     m_GameWindowHeight->m_Entry.NumberOnly = true;
-    m_GameWindowHeight->m_Entry.SetText(std::to_wstring(g_OptionsConfig.GameWindowHeight));
+    m_GameWindowHeight->m_Entry.SetTextW(std::to_wstring(g_OptionsConfig.GameWindowHeight));
 
     CGUICheckbox *checkbox = (CGUICheckbox *)Add(
         new CGUICheckbox(ID_GO_P7_LOCK_GAME_WINDOW_RESIZING, 0x00D2, 0x00D3, 0x00D2, 230, 114));
@@ -2581,13 +2581,13 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
     WISPFUN_DEBUG("c104_f18");
     if (serial == ID_GO_PAGE_6)
     {
-        m_ContainerOffsetX->m_Entry.SetText(std::to_string(g_ContainerRect.DefaultX));
-        m_ContainerOffsetY->m_Entry.SetText(std::to_string(g_ContainerRect.DefaultY));
+        m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
+        m_ContainerOffsetY->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultY));
     }
     else if (serial == ID_GO_PAGE_7)
     {
-        m_GameWindowWidth->m_Entry.SetText(std::to_string(g_OptionsConfig.GameWindowWidth));
-        m_GameWindowHeight->m_Entry.SetText(std::to_string(g_OptionsConfig.GameWindowHeight));
+        m_GameWindowWidth->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowWidth));
+        m_GameWindowHeight->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowHeight));
     }
     else if (serial == ID_GO_CANCEL) //Cancel
     {
@@ -2624,8 +2624,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage6();
 
-                m_ContainerOffsetX->m_Entry.SetText(std::to_string(g_ContainerRect.DefaultX));
-                m_ContainerOffsetY->m_Entry.SetText(std::to_string(g_ContainerRect.DefaultY));
+                m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
+                m_ContainerOffsetY->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultY));
 
                 break;
             }
@@ -2633,8 +2633,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage7();
 
-                m_GameWindowWidth->m_Entry.SetText(std::to_string(g_OptionsConfig.GameWindowWidth));
-                m_GameWindowHeight->m_Entry.SetText(
+                m_GameWindowWidth->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowWidth));
+                m_GameWindowHeight->m_Entry.SetTextA(
                     std::to_string(g_OptionsConfig.GameWindowHeight));
 
                 break;
@@ -2711,7 +2711,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                     m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
                     g_OptionsMacroManager.Add(m_MacroPointer);
 
-                    m_MacroKey->m_Entry.SetText(m_HotkeyText[m_MacroPointer->Key & 0xFF]);
+                    m_MacroKey->m_Entry.SetTextA(m_HotkeyText[m_MacroPointer->Key & 0xFF]);
 
                     RedrawMacroData();
                 }
@@ -2735,7 +2735,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                         m_MacroPointer = newpointer;
                         m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
 
-                        m_MacroKey->m_Entry.SetText(m_HotkeyText[m_MacroPointer->Key & 0xFF]);
+                        m_MacroKey->m_Entry.SetTextA(m_HotkeyText[m_MacroPointer->Key & 0xFF]);
 
                         RedrawMacroData();
 
@@ -3400,7 +3400,7 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
             if (canAdd)
             {
                 g_EntryPointer->Insert((wchar_t)wParam);
-                ((CMacroObjectString *)obj)->String = g_EntryPointer->c_str();
+                ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
                 WantRedraw = true;
             }
         }
@@ -3414,7 +3414,7 @@ void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
     {
         m_MacroPointer->Key = wParam & 0xFF;
 
-        m_MacroKey->m_Entry.SetText(m_HotkeyText[wParam & 0xFF]);
+        m_MacroKey->m_Entry.SetTextA(m_HotkeyText[wParam & 0xFF]);
 
         WantRedraw = true;
     }
@@ -3472,7 +3472,7 @@ void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                 }
 
                 if (obj != NULL)
-                    ((CMacroObjectString *)obj)->String = g_EntryPointer->c_str();
+                    ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
             }
         }
     }

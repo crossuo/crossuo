@@ -51,8 +51,8 @@ protected:
     string m_Text = "";
 
 public:
-    string GetText() { return m_Text; };
-    void SetText(const string &val);
+    string GetTextA() { return m_Text; };
+    void SetTextA(const string &val);
 
 private:
     CGumpScreenConnection m_ConnectionGump;

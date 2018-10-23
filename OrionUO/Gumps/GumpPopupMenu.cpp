@@ -120,7 +120,7 @@ void CGumpPopupMenu::Parse(WISP_NETWORK::CPacketReader &reader)
         menu->Add(item);
 
         CEntryText &entry = item->m_Entry;
-        entry.SetText(str);
+        entry.SetTextW(str);
         entry.PrepareToDrawW(CONTEXT_MENU_FONT, info.Color);
 
         CGLTextTexture &texture = entry.m_Texture;

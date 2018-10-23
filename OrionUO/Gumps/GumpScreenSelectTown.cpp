@@ -130,7 +130,7 @@ void CGumpScreenSelectTown::UpdateContent()
 
         CGUITextEntry *entry = (CGUITextEntry *)Add(
             new CGUITextEntry(ID_STS_TOWN + (int)i, 0x0058, 0x0099, 0x0481, x, y, 0, false, 3));
-        entry->m_Entry.SetText(city->Name);
+        entry->m_Entry.SetTextA(city->Name);
         entry->CheckOnSerial = true;
         entry->ReadOnly = true;
         entry->Focused = (g_SelectTownScreen.m_City->Name == city->Name);

@@ -80,7 +80,7 @@ CMacroObject::~CMacroObject()
 CMacroObjectString::CMacroObjectString(
     const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str)
     : CMacroObject(code, subCode)
-    , String(str)
+    , m_String(str)
 {
 }
 //----------------------------------------------------------------------------------
@@ -253,7 +253,7 @@ void CMacro::Save(WISP_FILE::CBinaryFileWritter &writter)
 
         if (obj->HaveString()) //with string
         {
-            string str = ((CMacroObjectString *)obj)->String;
+            string str = ((CMacroObjectString *)obj)->m_String;
             size += (short)str.length() + 3;
         }
     }
@@ -288,7 +288,7 @@ void CMacro::Save(WISP_FILE::CBinaryFileWritter &writter)
 
         if (type == 2) //with string
         {
-            string str = ((CMacroObjectString *)obj)->String;
+            string str = ((CMacroObjectString *)obj)->m_String;
             int len = (int)str.length();
 
             writter.WriteInt16LE(len + 1);
@@ -312,7 +312,7 @@ CMacro *CMacro::GetCopy()
     {
         if (obj->HaveString())
             macro->Add(new CMacroObjectString(
-                obj->Code, obj->SubCode, ((CMacroObjectString *)obj)->String));
+                obj->Code, obj->SubCode, ((CMacroObjectString *)obj)->m_String));
         else
             macro->Add(new CMacroObject(obj->Code, obj->SubCode));
 

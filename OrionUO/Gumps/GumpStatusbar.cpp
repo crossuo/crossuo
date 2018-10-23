@@ -983,7 +983,7 @@ void CGumpStatusbar::UpdateContent()
                         1,
                         TS_LEFT,
                         UOFONT_FIXED));
-                    m_Entry->m_Entry.SetText(memberName);
+                    m_Entry->m_Entry.SetTextA(memberName);
                     m_Entry->CheckOnSerial = true;
 
                     if (member.Character->CanChangeName)
@@ -1121,7 +1121,7 @@ void CGumpStatusbar::UpdateContent()
                 1,
                 TS_LEFT,
                 UOFONT_FIXED));
-            m_Entry->m_Entry.SetText(objName);
+            m_Entry->m_Entry.SetTextA(objName);
             m_Entry->CheckOnSerial = true;
 
             if (canChangeName)
@@ -1314,7 +1314,7 @@ void CGumpStatusbar::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                 CGameObject *obj = g_World->FindWorldObject(Serial);
 
                 if (obj != NULL)
-                    g_EntryPointer->SetText(obj->GetName());
+                    g_EntryPointer->SetTextA(obj->GetName());
             }
 
             if (g_ConfigManager.GetConsoleNeedEnter())
@@ -1344,7 +1344,7 @@ void CGumpStatusbar::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 
             CGameObject *obj = g_World->FindWorldObject(Serial);
             if (obj != NULL)
-                g_EntryPointer->SetText(obj->GetName());
+                g_EntryPointer->SetTextA(obj->GetName());
 
             if (g_ConfigManager.GetConsoleNeedEnter())
                 g_EntryPointer = NULL;

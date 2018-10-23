@@ -16,8 +16,8 @@ protected:
     wstring m_Text = L"No Data";
 
 public:
-    wstring GetText() { return m_Text; };
-    void SetText(const wstring &val);
+    wstring GetTextW() { return m_Text; };
+    void SetTextW(const wstring &val);
     CRenderObject *Object = NULL;
 
 private:

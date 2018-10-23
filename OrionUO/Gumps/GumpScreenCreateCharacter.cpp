@@ -43,7 +43,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
         new CGUITextEntry(ID_CCS_NAME_FIELD, 1, 1, 1, 257, 65, 300, false, 5, TS_LEFT, 0, 32));
     entry->CheckOnSerial = true;
     g_EntryPointer = &entry->m_Entry;
-    g_EntryPointer->SetText(g_CreateCharacterScreen.Name);
+    g_EntryPointer->SetTextA(g_CreateCharacterScreen.Name);
 
     Add(new CGUIGumppic(0x0708, 238, 98));
     Add(new CGUIResizepic(0, 0x0E10, 475, 125, 151, 310));
@@ -99,7 +99,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
             0,
             false,
             9));
-        entry->m_Entry.SetText("Skin Tone");
+        entry->m_Entry.SetTextA("Skin Tone");
         entry->CheckOnSerial = true;
         entry->ReadOnly = true;
 
@@ -125,9 +125,9 @@ void CGumpScreenCreateCharacter::UpdateContent()
             9));
 
         if (g_CreateCharacterManager.GetRace() == RT_GARGOYLE)
-            entry->m_Entry.SetText("Robe Color");
+            entry->m_Entry.SetTextA("Robe Color");
         else
-            entry->m_Entry.SetText("Shirt Color");
+            entry->m_Entry.SetTextA("Shirt Color");
 
         entry->CheckOnSerial = true;
         entry->ReadOnly = true;
@@ -158,9 +158,9 @@ void CGumpScreenCreateCharacter::UpdateContent()
             entry->ReadOnly = true;
 
             if (g_CreateCharacterManager.GetFemale())
-                entry->m_Entry.SetText("Skirt Color");
+                entry->m_Entry.SetTextA("Skirt Color");
             else
-                entry->m_Entry.SetText("Pants Color");
+                entry->m_Entry.SetTextA("Pants Color");
 
             color = g_CreateCharacterManager.PantsColor - 1;
 
@@ -184,7 +184,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
             0,
             false,
             9));
-        entry->m_Entry.SetText("Hair Color");
+        entry->m_Entry.SetTextA("Hair Color");
         entry->CheckOnSerial = true;
         entry->ReadOnly = true;
 
@@ -210,7 +210,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
                 0,
                 false,
                 9));
-            entry->m_Entry.SetText("Facial Hair Color");
+            entry->m_Entry.SetTextA("Facial Hair Color");
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
 

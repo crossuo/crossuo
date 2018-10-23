@@ -454,7 +454,7 @@ void CGumpCombatBook::UpdateContent()
 
             CGUITextEntry *entry = (CGUITextEntry *)Add(
                 new CGUITextEntry(ID_GCB_ICON + offs, 0x0288, 0, 0, dataX, 42 + y, 0, false, 9));
-            entry->m_Entry.SetText(m_AbilityName[offs]);
+            entry->m_Entry.SetTextA(m_AbilityName[offs]);
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
 

@@ -22,7 +22,7 @@ CGUISkillGroup::CGUISkillGroup(
     SetMinimized(isMinimized);
 
     m_Name = new CGUITextEntry(serial, 0, 0, 0, 16, -5, 0, false, 6);
-    m_Name->m_Entry.SetText(group->Name);
+    m_Name->m_Entry.SetTextA(group->Name);
 }
 //----------------------------------------------------------------------------------
 CGUISkillGroup::~CGUISkillGroup()

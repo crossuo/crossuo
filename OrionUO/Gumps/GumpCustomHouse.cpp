@@ -972,7 +972,7 @@ void CGumpCustomHouse::DrawMenuSection()
     m_DataBox->Add(new CGUIButton(ID_GCH_MENU_BACKUP, 0x098D, 0x098D, 0x098D, 150, 50));
     CGUITextEntry *entry = (CGUITextEntry *)m_DataBox->Add(new CGUITextEntry(
         ID_GCH_MENU_BACKUP, 0, 0x0036, 0x0036, 150, 50, textWidth, true, 0, TS_CENTER));
-    entry->m_Entry.SetText(L"Backup");
+    entry->m_Entry.SetTextW(L"Backup");
     entry->CheckOnSerial = true;
     entry->ReadOnly = true;
     entry->FocusedOffsetY = 2;
@@ -980,7 +980,7 @@ void CGumpCustomHouse::DrawMenuSection()
     m_DataBox->Add(new CGUIButton(ID_GCH_MENU_RESTORE, 0x098D, 0x098D, 0x098D, 150, 90));
     entry = (CGUITextEntry *)m_DataBox->Add(new CGUITextEntry(
         ID_GCH_MENU_RESTORE, 0, 0x0036, 0x0036, 150, 90, textWidth, true, 0, TS_CENTER));
-    entry->m_Entry.SetText(L"Restore");
+    entry->m_Entry.SetTextW(L"Restore");
     entry->CheckOnSerial = true;
     entry->ReadOnly = true;
     entry->FocusedOffsetY = 2;
@@ -988,7 +988,7 @@ void CGumpCustomHouse::DrawMenuSection()
     m_DataBox->Add(new CGUIButton(ID_GCH_MENU_SYNCH, 0x098D, 0x098D, 0x098D, 270, 50));
     entry = (CGUITextEntry *)m_DataBox->Add(new CGUITextEntry(
         ID_GCH_MENU_SYNCH, 0, 0x0036, 0x0036, 270, 50, textWidth, true, 0, TS_CENTER));
-    entry->m_Entry.SetText(L"Synch");
+    entry->m_Entry.SetTextW(L"Synch");
     entry->CheckOnSerial = true;
     entry->ReadOnly = true;
     entry->FocusedOffsetY = 2;
@@ -996,7 +996,7 @@ void CGumpCustomHouse::DrawMenuSection()
     m_DataBox->Add(new CGUIButton(ID_GCH_MENU_CLEAR, 0x098D, 0x098D, 0x098D, 270, 90));
     entry = (CGUITextEntry *)m_DataBox->Add(new CGUITextEntry(
         ID_GCH_MENU_CLEAR, 0, 0x0036, 0x0036, 270, 90, textWidth, true, 0, TS_CENTER));
-    entry->m_Entry.SetText(L"Clear");
+    entry->m_Entry.SetTextW(L"Clear");
     entry->CheckOnSerial = true;
     entry->ReadOnly = true;
     entry->FocusedOffsetY = 2;
@@ -1004,7 +1004,7 @@ void CGumpCustomHouse::DrawMenuSection()
     m_DataBox->Add(new CGUIButton(ID_GCH_MENU_COMMIT, 0x098D, 0x098D, 0x098D, 390, 50));
     entry = (CGUITextEntry *)m_DataBox->Add(new CGUITextEntry(
         ID_GCH_MENU_COMMIT, 0, 0x0036, 0x0036, 390, 50, textWidth, true, 0, TS_CENTER));
-    entry->m_Entry.SetText(L"Commit");
+    entry->m_Entry.SetTextW(L"Commit");
     entry->CheckOnSerial = true;
     entry->ReadOnly = true;
     entry->FocusedOffsetY = 2;
@@ -1012,7 +1012,7 @@ void CGumpCustomHouse::DrawMenuSection()
     m_DataBox->Add(new CGUIButton(ID_GCH_MENU_REVERT, 0x098D, 0x098D, 0x098D, 390, 90));
     entry = (CGUITextEntry *)m_DataBox->Add(new CGUITextEntry(
         ID_GCH_MENU_REVERT, 0, 0x0036, 0x0036, 390, 90, textWidth, true, 0, TS_CENTER));
-    entry->m_Entry.SetText(L"Revert");
+    entry->m_Entry.SetTextW(L"Revert");
     entry->CheckOnSerial = true;
     entry->ReadOnly = true;
     entry->FocusedOffsetY = 2;

@@ -100,7 +100,7 @@ void CGumpScreenServer::UpdateContent()
 
         CGUITextEntry *entry = new CGUITextEntry(
             ID_SS_SERVER_LIST + (int)i, 0x034F, 0x0021, 0x0021, 74, 10 + offsetY, 0, false, 5);
-        entry->m_Entry.SetText(server->Name);
+        entry->m_Entry.SetTextA(server->Name);
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
         htmlGump->Add(entry);
@@ -108,9 +108,9 @@ void CGumpScreenServer::UpdateContent()
         entry = new CGUITextEntry(
             ID_SS_SERVER_LIST + (int)i, 0x034F, 0x0021, 0x0021, 250, 10 + offsetY, 0, false, 5);
         if (server->Ping == -1)
-            entry->m_Entry.SetText("-");
+            entry->m_Entry.SetTextA("-");
         else
-            entry->m_Entry.SetText(std::to_string(server->Ping) + "ms");
+            entry->m_Entry.SetTextA(std::to_string(server->Ping) + "ms");
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
         htmlGump->Add(entry);
@@ -118,9 +118,9 @@ void CGumpScreenServer::UpdateContent()
         entry = new CGUITextEntry(
             ID_SS_SERVER_LIST + (int)i, 0x034F, 0x0021, 0x0021, 320, 10 + offsetY, 0, false, 5);
         if (server->PacketsLoss == -1)
-            entry->m_Entry.SetText("-");
+            entry->m_Entry.SetTextA("-");
         else
-            entry->m_Entry.SetText(std::to_string(server->PacketsLoss) + "%");
+            entry->m_Entry.SetTextA(std::to_string(server->PacketsLoss) + "%");
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
         htmlGump->Add(entry);

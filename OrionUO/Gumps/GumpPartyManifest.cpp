@@ -126,7 +126,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
         if (g_Party.Leader == 0)
             g_Orion.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
         else
-            g_GameConsole.SetText(L"/");
+            g_GameConsole.SetTextW(L"/");
     }
     else if (serial == ID_GPM_BUTTON_LOOT_TYPE)
     {
@@ -164,7 +164,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
         {
             char buf[10] = { 0 };
             sprintf_s(buf, "/%i ", memberIndex + 1);
-            g_GameConsole.SetText(buf);
+            g_GameConsole.SetTextA(buf);
         }
     }
     else if (serial >= ID_GPM_BUTTON_KICK_MEMBER)

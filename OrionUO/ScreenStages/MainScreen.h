@@ -1,15 +1,6 @@
-﻿/***********************************************************************************
-**
-** MainScreen.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-//----------------------------------------------------------------------------------
-#pragma once
+﻿#pragma once
 #include <SDL_events.h>
-//----------------------------------------------------------------------------------
+
 class CMainScreen : public CBaseScreen
 {
 private:
@@ -26,11 +17,6 @@ private:
         MSCC_COUNT,
     };
 
-    /*!
-	Получить код конфига по ключу
-	@param [__in] key Ключ
-	@return Код конфига
-	*/
     int GetConfigKeyCode(const string &key);
 
     CGumpScreenMain m_MainGump;
@@ -39,11 +25,9 @@ public:
     CMainScreen();
     virtual ~CMainScreen();
 
-    //!Идентификаторы событий для плавного перехода
     static const uchar ID_SMOOTH_MS_QUIT = 1;
     static const uchar ID_SMOOTH_MS_CONNECT = 2;
 
-    //!Поля для ввода аккаунта и пароля
     CEntryText *m_Account = nullptr;
     CEntryText *m_Password = nullptr;
     CGUICheckbox *m_SavePassword = nullptr;
@@ -53,35 +37,14 @@ public:
 
     void Paste();
 
-    /*!
-	Обработка события после плавного затемнения экрана
-	@param [__in_opt] action Идентификатор действия
-	@return 
-	*/
     void ProcessSmoothAction(uchar action = 0xFF);
 
-    /*!
-	Загрузка конфига
-	@return 
-	*/
     void LoadGlobalConfig();
 
-    /*!
-	Загрузка пути к папке с УО
-	@return
-	*/
     void LoadCustomPath();
 
-    /*!
-	Сохранение конфига
-	@return 
-	*/
     void SaveGlobalConfig();
 
-    /*!
-	Инициализация
-	@return 
-	*/
     void Init();
 
 #if USE_WISP
@@ -92,5 +55,5 @@ public:
     virtual void OnKeyDown(const SDL_KeyboardEvent &ev) override;
 #endif
 };
-//----------------------------------------------------------------------------------
+
 extern CMainScreen g_MainScreen;

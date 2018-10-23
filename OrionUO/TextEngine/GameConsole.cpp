@@ -376,7 +376,7 @@ void CGameConsole::ChangeConsoleMessage(bool next)
         else if (next)
             m_ConsoleSelectedIndex = 0;
 
-        SetText(m_ConsoleStack[m_ConsoleSelectedIndex]);
+        SetTextW(m_ConsoleStack[m_ConsoleSelectedIndex]);
         SetPos((int)m_ConsoleStack[m_ConsoleSelectedIndex].length());
         m_PositionChanged = true;
     }

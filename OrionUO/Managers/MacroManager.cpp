@@ -223,7 +223,7 @@ bool CMacroManager::Convert(const os_path &path)
 
                         //LOG("\tSub action string is: %s\n", args.c_str());
 
-                        ((CMacroObjectString *)obj)->String = args;
+                        ((CMacroObjectString *)obj)->m_String = args;
                     }
                 }
                 else if (data.size() > 1) //Аргументы - код (значение), либо просто код макроса
@@ -766,7 +766,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
 
-            if (mos->String.length())
+            if (mos->m_String.length())
             {
                 SPEECH_TYPE st = ST_NORMAL;
 
@@ -793,7 +793,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
                 if (g_PacketManager.GetClientVersion() >= CV_500A)
                     CPacketUnicodeSpeechRequest(
-                        ToWString(mos->String).c_str(),
+                        ToWString(mos->m_String).c_str(),
                         st,
                         3,
                         g_ConfigManager.SpeechColor,
@@ -801,7 +801,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                         .Send();
                 else
                     CPacketASCIISpeechRequest(
-                        mos->String.c_str(), st, 3, g_ConfigManager.SpeechColor)
+                        mos->m_String.c_str(), st, 3, g_ConfigManager.SpeechColor)
                         .Send();
             }
 
@@ -845,7 +845,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                         if (chBuffer != NULL && strlen(chBuffer))
                         {
                             wstring str = g_EntryPointer->Data() + ToWString(chBuffer);
-                            g_EntryPointer->SetText(str);
+                            g_EntryPointer->SetTextW(str);
                         }
 
                         GlobalUnlock(cb);
@@ -1090,7 +1090,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
 
-            string str = mos->String;
+            string str = mos->m_String;
 
             if (str.length())
                 m_NextTimer = g_Ticks + std::atoi(str.c_str());
@@ -1261,7 +1261,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
 
-            string str = mos->String;
+            string str = mos->m_String;
 
             if (str.length())
             {

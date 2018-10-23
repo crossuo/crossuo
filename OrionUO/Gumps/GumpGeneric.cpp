@@ -97,7 +97,7 @@ void CGumpGeneric::AddText(
                 CGUIGenericTextEntry *gte = (CGUIGenericTextEntry *)item;
 
                 if (gte->TextID == index)
-                    gte->m_Entry.SetText(text);
+                    gte->m_Entry.SetTextW(text);
 
                 break;
             }

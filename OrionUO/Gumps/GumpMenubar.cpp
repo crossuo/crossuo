@@ -77,7 +77,7 @@ CGumpMenubar::CGumpMenubar(short x, short y)
             true,
             1,
             TS_CENTER));
-        entry->m_Entry.SetText(text[i]);
+        entry->m_Entry.SetTextW(text[i]);
         entry->CheckOnSerial = true;
         entry->ReadOnly = true;
         entry->FocusedOffsetY = 2;

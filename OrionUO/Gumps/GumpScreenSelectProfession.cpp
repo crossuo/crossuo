@@ -106,7 +106,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
             CGUITextEntry *entry = new CGUITextEntry(
                 ID_SPS_SKILLS_LIST + (int)i, 1, 0x0035, 0x0035, 3, yPtr, 0, false, 9);
-            entry->m_Entry.SetText(skill->Name);
+            entry->m_Entry.SetTextA(skill->Name);
             entry->m_Entry.CreateTextureA(9, skill->Name, 1, 0, TS_LEFT, 0);
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
@@ -235,9 +235,9 @@ void CGumpScreenSelectProfession::UpdateContentOld()
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
                 if (skillID >= g_SkillsManager.Count || skill == NULL)
-                    entry->m_Entry.SetText("Click here");
+                    entry->m_Entry.SetTextA("Click here");
                 else
-                    entry->m_Entry.SetText(skill->Name);
+                    entry->m_Entry.SetTextA(skill->Name);
 
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
@@ -314,7 +314,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
                 2,
                 TS_LEFT,
                 UOFONT_FIXED | UOFONT_SOLID));
-            entry->m_Entry.SetText(child->Name);
+            entry->m_Entry.SetTextA(child->Name); // TODO: Check DrawW - Refactory display strings
             entry->m_Entry.PrepareToDrawW(2, 0, TS_LEFT, UOFONT_FIXED | UOFONT_SOLID);
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
@@ -391,7 +391,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
                 CGUITextEntry *entry = new CGUITextEntry(
                     ID_SPS_SKILLS_LIST + (int)i, 1, 0x0035, 0x0035, 2, yPtr, 0, false, 9);
-                entry->m_Entry.SetText(skill->Name);
+                entry->m_Entry.SetTextA(skill->Name);
                 entry->m_Entry.PrepareToDrawA(9, 1);
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
@@ -439,9 +439,9 @@ void CGumpScreenSelectProfession::UpdateContentNew()
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
                 if (skillID >= g_SkillsManager.Count || skill == NULL)
-                    entry->m_Entry.SetText("Click here");
+                    entry->m_Entry.SetTextA("Click here");
                 else
-                    entry->m_Entry.SetText(skill->Name);
+                    entry->m_Entry.SetTextA(skill->Name);
 
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;

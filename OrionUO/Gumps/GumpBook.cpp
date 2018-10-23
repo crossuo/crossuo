@@ -178,7 +178,7 @@ void CGumpBook::SetPageData(int page, const wstring &data)
     m_PageDataReceived[page] = true;
 
     if (entry != NULL)
-        entry->m_Entry.SetText(data);
+        entry->m_Entry.SetTextW(data);
 }
 //----------------------------------------------------------------------------------
 void CGumpBook::ChangePage(int newPage, bool playSound)

@@ -94,7 +94,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
         150,
         useUnicode,
         (useUnicode ? unicodeFontIndex : 9)));
-    m_EntrySubject->m_Entry.SetText(subject);
+    m_EntrySubject->m_Entry.SetTextW(subject);
 
     if (!m_Variant)
     {
@@ -119,7 +119,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
         useUnicode,
         (useUnicode ? unicodeFontIndex : 9)));
     m_Entry->m_Entry.MaxWidth = 0;
-    m_Entry->m_Entry.SetText(data);
+    m_Entry->m_Entry.SetTextW(data);
     m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.c_str(), textColor, 220, TS_LEFT, 0);
     m_HitBox = (CGUIHitBox *)m_HTMLGump->Add(
         new CGUIHitBox(ID_GBBI_TEXT_FIELD, 3, 3, 220, m_Entry->m_Entry.m_Texture.Height));

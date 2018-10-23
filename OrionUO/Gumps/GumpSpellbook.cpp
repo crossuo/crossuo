@@ -738,7 +738,7 @@ void CGumpSpellbook::UpdateContent()
                     spellSerial + offs, 0x0288, 0, 0, dataX, 52 + y, 0, false, 9));
                 string abbreviature;
                 string reagents;
-                entry->m_Entry.SetText(GetSpellName(offs, abbreviature, reagents));
+                entry->m_Entry.SetTextA(GetSpellName(offs, abbreviature, reagents));
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
 

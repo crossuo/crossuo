@@ -78,7 +78,7 @@ void CGumpScreenCharacterList::UpdateContent()
                     0,
                     32));
                 entry->m_Entry.Width = 270;
-                entry->m_Entry.SetText(g_CharacterList.GetName(i));
+                entry->m_Entry.SetTextA(g_CharacterList.GetName(i));
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
                 entry->Focused = (g_CharacterList.Selected == i);

@@ -509,7 +509,7 @@ void CGumpSkills::SetGroupTextFromEntry()
                 group->m_Name->Focused = false;
 
                 if (!g_EntryPointer->Length())
-                    g_EntryPointer->SetText("NoNameGroup");
+                    g_EntryPointer->SetTextA("NoNameGroup");
 
                 groupItem->Name = g_EntryPointer->c_str();
 
