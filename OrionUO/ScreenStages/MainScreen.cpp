@@ -12,6 +12,9 @@
 #include "stdafx.h"
 #include "MainScreen.h"
 #include "FileSystem.h"
+
+#define ORIONUO_CONFIG "OrionUO.cfg"
+
 //----------------------------------------------------------------------------------
 CMainScreen g_MainScreen;
 //----------------------------------------------------------------------------------
@@ -267,7 +270,8 @@ void CMainScreen::LoadCustomPath()
 {
     WISPFUN_DEBUG("c165_f14");
 
-    WISP_FILE::CTextFileParser file(g_App.ExeFilePath("OrionUO.cfg"), "=", "#;", "");
+    LOG("Loading custom path from " ORIONUO_CONFIG "\n");
+    WISP_FILE::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
 
     while (!file.IsEOF())
     {
@@ -298,7 +302,8 @@ void CMainScreen::LoadGlobalConfig()
     m_AutoLogin->Checked = false;
     g_ScreenEffectManager.Enabled = false;
 
-    WISP_FILE::CTextFileParser file(g_App.ExeFilePath("OrionUO.cfg"), "=", "#;", "");
+    LOG("Loading global config from " ORIONUO_CONFIG "\n");
+    WISP_FILE::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
 
     while (!file.IsEOF())
     {
@@ -327,7 +332,6 @@ void CMainScreen::LoadGlobalConfig()
 
                     if (len)
                     {
-                        //m_Password->SetText(DecryptPW(password.c_str(), (int)len));
                         m_Password->SetText(password);
 
                         IFOR (zv, 0, len)
@@ -397,7 +401,8 @@ void CMainScreen::LoadGlobalConfig()
 void CMainScreen::SaveGlobalConfig()
 {
     WISPFUN_DEBUG("c165_f11");
-    FILE *uo_cfg = fs_open(g_App.ExeFilePath("OrionUO.cfg"), FS_WRITE);
+    LOG("Saving global config to " ORIONUO_CONFIG "\n");
+    FILE *uo_cfg = fs_open(g_App.ExeFilePath(ORIONUO_CONFIG), FS_WRITE);
     if (uo_cfg == nullptr)
         return;
 
@@ -411,7 +416,7 @@ void CMainScreen::SaveGlobalConfig()
         sprintf_s(
             buf,
             "AcctPassword=%s\n",
-            CryptPW(m_Password->c_str(), (int)m_Password->Length()).c_str());
+            m_Password->c_str());
         fputs(buf, uo_cfg);
         sprintf_s(buf, "RememberAcctPW=yes\n");
         fputs(buf, uo_cfg);
@@ -442,58 +447,3 @@ void CMainScreen::SaveGlobalConfig()
     }
     fs_close(uo_cfg);
 }
-//----------------------------------------------------------------------------------
-/*!
-Шифрование пароля для сохранения в конфиг
-@param [__in] buf Не зашифрованный пароль
-@param [__in] len Длина пароля
-@return Зашифрованный пароль
-*/
-string CMainScreen::CryptPW(const char *buf, int len)
-{
-    WISPFUN_DEBUG("c165_f12");
-    char ret[50] = { 0 };
-
-    IFOR (i, 0, len)
-    {
-        char c = buf[i];
-        c += 13;
-
-        if (c > 126)
-            c -= 95;
-        if (c == 32)
-            c = 127;
-
-        ret[i] = c;
-    }
-
-    return ret;
-}
-//----------------------------------------------------------------------------------
-/*!
-Расшифровка пароля
-@param [__in] buf Зашифрованный пароль
-@param [__in] len Длина пароля
-@return Расшифрованный пароль
-*/
-string CMainScreen::DecryptPW(const char *buf, int len)
-{
-    WISPFUN_DEBUG("c165_f13");
-    char ret[50] = { 0 };
-
-    IFOR (i, 0, len)
-    {
-        char c = buf[i];
-        if (c == 127)
-            c = 32;
-
-        c -= 13;
-        if (c < 33)
-            c += 95;
-
-        ret[i] = c;
-    }
-
-    return ret;
-}
-//----------------------------------------------------------------------------------

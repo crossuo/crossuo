@@ -27,22 +27,6 @@ private:
     };
 
     /*!
-	Шифрование пароля для сохранения в конфиг
-	@param [__in] buf Не зашифрованный пароль
-	@param [__in] len Длина пароля
-	@return Зашифрованный пароль
-	*/
-    string CryptPW(const char *buf, int len);
-
-    /*!
-	Расшифровка пароля
-	@param [__in] buf Зашифрованный пароль
-	@param [__in] len Длина пароля
-	@return Расшифрованный пароль
-	*/
-    string DecryptPW(const char *buf, int len);
-
-    /*!
 	Получить код конфига по ключу
 	@param [__in] key Ключ
 	@return Код конфига
