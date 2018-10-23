@@ -8,24 +8,24 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_rect.h>
 #include "PathFinder.h"
-//----------------------------------------------------------------------------------
+
 CPathFinder g_PathFinder;
-//----------------------------------------------------------------------------------
+
 CPathFinder::CPathFinder()
 {
 }
-//----------------------------------------------------------------------------------
+
 CPathFinder::~CPathFinder()
 {
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int stepState)
 {
-    WISPFUN_DEBUG("c177_f1");
+    DEBUG_TRACE_FUNCTION;
     int blockX = x / 8;
     int blockY = y / 8;
 
@@ -191,11 +191,11 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
 
     return !list.empty();
 }
-//----------------------------------------------------------------------------------
+
 int CPathFinder::CalculateMinMaxZ(
     int &minZ, int &maxZ, int newX, int newY, int currentZ, int newDirection, int stepState)
 {
-    WISPFUN_DEBUG("c177_f2");
+    DEBUG_TRACE_FUNCTION;
     const int offsetX[10] = { 0, 1, 1, 1, 0, -1, -1, -1, 0, 1 };
     const int offsetY[10] = { -1, -1, 0, 1, 1, 1, 0, -1, -1, -1 };
 
@@ -251,10 +251,10 @@ int CPathFinder::CalculateMinMaxZ(
 
     return maxZ;
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 {
-    WISPFUN_DEBUG("c177_f3");
+    DEBUG_TRACE_FUNCTION;
     int stepState = PSS_NORMAL;
 
     if (g_Player->Dead() || g_Player->Graphic == 0x03DB)
@@ -390,10 +390,10 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 
     return (resultZ != -128);
 }
-//----------------------------------------------------------------------------------
+
 void CPathFinder::GetNewXY(uchar direction, int &x, int &y)
 {
-    WISPFUN_DEBUG("c177_f4");
+    DEBUG_TRACE_FUNCTION;
     switch (direction & 7)
     {
         case 0:
@@ -442,10 +442,10 @@ void CPathFinder::GetNewXY(uchar direction, int &x, int &y)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::CanWalk(uchar &direction, int &x, int &y, char &z)
 {
-    WISPFUN_DEBUG("c177_f5");
+    DEBUG_TRACE_FUNCTION;
     int newX = x;
     int newY = y;
     char newZ = z;
@@ -500,10 +500,10 @@ bool CPathFinder::CanWalk(uchar &direction, int &x, int &y, char &z)
 
     return passed;
 }
-//----------------------------------------------------------------------------------
+
 int CPathFinder::GetWalkSpeed(bool run, bool onMount)
 {
-    WISPFUN_DEBUG("c177_f6");
+    DEBUG_TRACE_FUNCTION;
     bool mounted =
         (onMount ||
          (g_SpeedMode == CST_FAST_UNMOUNT || g_SpeedMode == CST_FAST_UNMOUNT_AND_CANT_RUN) ||
@@ -511,10 +511,10 @@ int CPathFinder::GetWalkSpeed(bool run, bool onMount)
 
     return CHARACTER_ANIMATION_DELAY_TABLE[mounted][run];
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::Walk(bool run, uchar direction)
 {
-    WISPFUN_DEBUG("c177_f7");
+    DEBUG_TRACE_FUNCTION;
     if (BlockMoving || g_Walker.WalkingFailed || g_Walker.LastStepRequestTime > g_Ticks ||
         g_Walker.StepsCount >= MAX_STEPS_COUNT || g_Player == NULL ||
         /*!g_Player->Frozen() ||*/ g_DeathScreenTimer || g_GameState != GS_GAME)
@@ -675,16 +675,16 @@ bool CPathFinder::Walk(bool run, uchar direction)
 
     return true;
 }
-//----------------------------------------------------------------------------------
-int CPathFinder::GetGoalDistCost(const WISP_GEOMETRY::CPoint2Di &p, int cost)
+
+int CPathFinder::GetGoalDistCost(const Wisp::CPoint2Di &p, int cost)
 {
-    WISPFUN_DEBUG("c177_f8");
+    DEBUG_TRACE_FUNCTION;
     return (abs(m_EndPoint.X - p.X) + abs(m_EndPoint.Y - p.Y)) * cost;
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::DoesNotExistOnOpenList(int x, int y, int z)
 {
-    WISPFUN_DEBUG("c177_f9");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     IFOR (i, 0, PATHFINDER_MAX_NODES)
@@ -700,10 +700,10 @@ bool CPathFinder::DoesNotExistOnOpenList(int x, int y, int z)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::DoesNotExistOnClosedList(int x, int y, int z)
 {
-    WISPFUN_DEBUG("c177_f10");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     IFOR (i, 0, PATHFINDER_MAX_NODES)
@@ -719,11 +719,11 @@ bool CPathFinder::DoesNotExistOnClosedList(int x, int y, int z)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 int CPathFinder::AddNodeToList(
     int list, int direction, int x, int y, int z, CPathNode *parentNode, int cost)
 {
-    WISPFUN_DEBUG("c177_f11");
+    DEBUG_TRACE_FUNCTION;
     if (!list)
     {
         if (!DoesNotExistOnClosedList(x, y, z))
@@ -742,7 +742,7 @@ int CPathFinder::AddNodeToList(
                         node.X = x;
                         node.Y = y;
                         node.Z = z;
-                        WISP_GEOMETRY::CPoint2Di p(x, y);
+                        Wisp::CPoint2Di p(x, y);
 
                         node.DistFromGoalCost = GetGoalDistCost(p, cost);
                         node.DistFromStartCost = parentNode->DistFromStartCost + cost;
@@ -822,10 +822,10 @@ int CPathFinder::AddNodeToList(
 
     return -1;
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::OpenNodes(CPathNode *node)
 {
-    WISPFUN_DEBUG("c177_f12");
+    DEBUG_TRACE_FUNCTION;
     bool found = false;
 
     IFOR (i, 0, 8)
@@ -865,10 +865,10 @@ bool CPathFinder::OpenNodes(CPathNode *node)
 
     return found;
 }
-//----------------------------------------------------------------------------------
+
 int CPathFinder::FindCheapestNode()
 {
-    WISPFUN_DEBUG("c177_f13");
+    DEBUG_TRACE_FUNCTION;
     int cheapestCost = 9999999;
     int cheapestNode = -1;
 
@@ -891,10 +891,10 @@ int CPathFinder::FindCheapestNode()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::FindPath(int maxNodes)
 {
-    WISPFUN_DEBUG("c177_f14");
+    DEBUG_TRACE_FUNCTION;
     int curNode = 0;
 
     m_ClosedList[0].Used = true;
@@ -950,10 +950,10 @@ bool CPathFinder::FindPath(int maxNodes)
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 {
-    WISPFUN_DEBUG("c177_f15");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, PATHFINDER_MAX_NODES) //m_ActiveOpenNodes)
         m_OpenList[i].Reset();
 
@@ -985,10 +985,10 @@ bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 
     return (m_PathSize != 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPathFinder::ProcessAutowalk()
 {
-    WISPFUN_DEBUG("c177_f16");
+    DEBUG_TRACE_FUNCTION;
     if (AutoWalking && g_Player != NULL && !g_DeathScreenTimer &&
         g_Walker.StepsCount < MAX_STEPS_COUNT && g_Walker.LastStepRequestTime <= g_Ticks)
     {
@@ -1011,11 +1011,11 @@ void CPathFinder::ProcessAutowalk()
             StopAutoWalk();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPathFinder::StopAutoWalk()
 {
-    WISPFUN_DEBUG("c177_f17");
+    DEBUG_TRACE_FUNCTION;
     AutoWalking = false;
     m_PathSize = 0;
 }
-//----------------------------------------------------------------------------------
+

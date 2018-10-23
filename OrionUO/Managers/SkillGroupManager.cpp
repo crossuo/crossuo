@@ -8,26 +8,26 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CSkillGroupManager g_SkillGroupManager;
-//----------------------------------------------------------------------------------
+
 CSkillGroupManager::CSkillGroupManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 CSkillGroupManager::~CSkillGroupManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Выставить группы по-умолчанию
 @return 
 */
 void CSkillGroupManager::MakeDefault()
 {
-    WISPFUN_DEBUG("c155_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     MakeDefaultMiscellaneous();
@@ -47,10 +47,10 @@ void CSkillGroupManager::MakeDefault()
         group = group->m_Next;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultMiscellaneous()
 {
-    WISPFUN_DEBUG("c155_f2");
+    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Miscellaneous";
     group->Add(4);
@@ -63,10 +63,10 @@ void CSkillGroupManager::MakeDefaultMiscellaneous()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultCombat()
 {
-    WISPFUN_DEBUG("c155_f3");
+    DEBUG_TRACE_FUNCTION;
     int cnt = g_SkillsManager.Count;
 
     CSkillGroupObject *group = new CSkillGroupObject();
@@ -95,10 +95,10 @@ void CSkillGroupManager::MakeDefaultCombat()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultTradeSkills()
 {
-    WISPFUN_DEBUG("c155_f4");
+    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Trade Skills";
     group->Add(0);
@@ -114,10 +114,10 @@ void CSkillGroupManager::MakeDefaultTradeSkills()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultMagic()
 {
-    WISPFUN_DEBUG("c155_f5");
+    DEBUG_TRACE_FUNCTION;
     int cnt = g_SkillsManager.Count;
 
     CSkillGroupObject *group = new CSkillGroupObject();
@@ -138,10 +138,10 @@ void CSkillGroupManager::MakeDefaultMagic()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultWilderness()
 {
-    WISPFUN_DEBUG("c155_f6");
+    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Wilderness";
     group->Add(2);
@@ -153,10 +153,10 @@ void CSkillGroupManager::MakeDefaultWilderness()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultThieving()
 {
-    WISPFUN_DEBUG("c155_f7");
+    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Thieving";
     group->Add(14);
@@ -170,10 +170,10 @@ void CSkillGroupManager::MakeDefaultThieving()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupManager::MakeDefaultBard()
 {
-    WISPFUN_DEBUG("c155_f8");
+    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Bard";
     group->Add(15);
@@ -183,14 +183,14 @@ void CSkillGroupManager::MakeDefaultBard()
 
     Add(group);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Очистить список групп
 @return 
 */
 void CSkillGroupManager::Clear()
 {
-    WISPFUN_DEBUG("c155_f9");
+    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *item = m_Groups;
 
     while (item != NULL)
@@ -205,7 +205,7 @@ void CSkillGroupManager::Clear()
     Count = 0;
     m_Groups = NULL;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить группу
 @param [__in] group Ссылка на группу
@@ -213,7 +213,7 @@ void CSkillGroupManager::Clear()
 */
 void CSkillGroupManager::Add(CSkillGroupObject *group)
 {
-    WISPFUN_DEBUG("c155_f10");
+    DEBUG_TRACE_FUNCTION;
     if (m_Groups == NULL)
     {
         m_Groups = group;
@@ -235,7 +235,7 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
 
     Count++;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удалить группу
 @param [__in] group Ссылка на группу
@@ -243,7 +243,7 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
 */
 bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 {
-    WISPFUN_DEBUG("c155_f11");
+    DEBUG_TRACE_FUNCTION;
     if (group->m_Prev == NULL) //Miscellaneous
     {
         int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 100;
@@ -277,7 +277,7 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка групп из файла конфига
 @param [__in] path Путь к файлу конфига
@@ -285,12 +285,12 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 */
 bool CSkillGroupManager::Load(const os_path &path)
 {
-    WISPFUN_DEBUG("c155_f12");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     Clear();
 
-    WISP_FILE::CMappedFile file;
+    Wisp::CMappedFile file;
 
     if (file.Load(path))
     {
@@ -336,7 +336,7 @@ bool CSkillGroupManager::Load(const os_path &path)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Сохранение групп в файл конфиг
 @param [__in] path Путьк  файлу конфига
@@ -344,8 +344,8 @@ bool CSkillGroupManager::Load(const os_path &path)
 */
 void CSkillGroupManager::Save(const os_path &path)
 {
-    WISPFUN_DEBUG("c155_f13");
-    WISP_FILE::CBinaryFileWritter writter;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CBinaryFileWritter writter;
 
     writter.Open(path);
 
@@ -391,4 +391,4 @@ void CSkillGroupManager::Save(const os_path &path)
 
     writter.Close();
 }
-//----------------------------------------------------------------------------------
+

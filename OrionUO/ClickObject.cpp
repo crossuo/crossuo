@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CClickObject g_ClickObject;
-//----------------------------------------------------------------------------------
+
 void CClickObject::Clear(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c185_f1");
+    DEBUG_TRACE_FUNCTION;
     if (obj == Object)
     {
         Object = NULL;
@@ -27,10 +27,10 @@ void CClickObject::Clear(CRenderObject *obj)
         Page = 0;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CClickObject::Clear()
 {
-    WISPFUN_DEBUG("c185_f2");
+    DEBUG_TRACE_FUNCTION;
     Object = NULL;
     Gump = NULL;
     Timer = 0;
@@ -39,10 +39,10 @@ void CClickObject::Clear()
     Enabled = false;
     Page = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CClickObject::Init(CRenderObject *obj, CGump *gump)
 {
-    WISPFUN_DEBUG("c185_f3");
+    DEBUG_TRACE_FUNCTION;
     Enabled = true;
     Object = obj;
     Gump = gump;
@@ -51,4 +51,4 @@ void CClickObject::Init(CRenderObject *obj, CGump *gump)
     Y = 0;
     Page = 0;
 }
-//----------------------------------------------------------------------------------
+

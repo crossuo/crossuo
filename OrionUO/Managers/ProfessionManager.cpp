@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CProfessionManager g_ProfessionManager;
-//----------------------------------------------------------------------------------
+
 //!Ключи конфига
 const string CProfessionManager::m_Keys[m_KeyCount] = {
     "begin", "name", "truename", "desc", "toplevel", "gump", "type",     "children", "skill",
     "stat",  "str",  "int",      "dex",  "end",      "true", "category", "nameid",   "descid"
 };
-//----------------------------------------------------------------------------------
+
 CProfessionManager::CProfessionManager()
     : CBaseQueue()
     , Selected(NULL)
 {
 }
-//----------------------------------------------------------------------------------
+
 CProfessionManager::~CProfessionManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить код кофига по строке
 @param [__in] key Строка из файла
@@ -36,7 +36,7 @@ CProfessionManager::~CProfessionManager()
 */
 int CProfessionManager::GetKeyCode(const string &key)
 {
-    WISPFUN_DEBUG("c153_f1");
+    DEBUG_TRACE_FUNCTION;
     string str = ToLowerA(key);
     int result = 0;
 
@@ -48,15 +48,15 @@ int CProfessionManager::GetKeyCode(const string &key)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработать часть файла (загрузка профессии)
 @param [__in] file Указатель на файл
 @return true при успешной обработке
 */
-bool CProfessionManager::ParseFilePart(WISP_FILE::CTextFileParser &file)
+bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
-    WISPFUN_DEBUG("c153_f2");
+    DEBUG_TRACE_FUNCTION;
     PROFESSION_TYPE type = PT_NO_PROF;
     std::vector<string> childrens;
     string name = "";
@@ -252,7 +252,7 @@ bool CProfessionManager::ParseFilePart(WISP_FILE::CTextFileParser &file)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить ребенка в профессию
 @param [__in] parent Ссылка на родителя
@@ -261,7 +261,7 @@ bool CProfessionManager::ParseFilePart(WISP_FILE::CTextFileParser &file)
 */
 bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *child)
 {
-    WISPFUN_DEBUG("c153_f3");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (parent->Type == PT_CATEGORY)
@@ -293,14 +293,14 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка профессий из файла
 @return true в случае успешной загрузки
 */
 bool CProfessionManager::Load()
 {
-    WISPFUN_DEBUG("c153_f4");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     CProfessionCategory *head = new CProfessionCategory();
@@ -312,7 +312,7 @@ bool CProfessionManager::Load()
     head->TopLevel = true;
     Add(head);
 
-    WISP_FILE::CTextFileParser file(g_App.UOFilesPath("Prof.txt"), " \t,", "#;", "\"\"");
+    Wisp::CTextFileParser file(g_App.UOFilesPath("Prof.txt"), " \t,", "#;", "\"\"");
 
     if (!file.IsEOF())
     {
@@ -378,15 +378,15 @@ bool CProfessionManager::Load()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка описания профессий
 @return 
 */
 void CProfessionManager::LoadProfessionDescription()
 {
-    WISPFUN_DEBUG("c153_f5");
-    WISP_FILE::CMappedFile file;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CMappedFile file;
 
     if (file.Load(g_App.UOFilesPath("Professn.enu")))
     {
@@ -442,7 +442,7 @@ void CProfessionManager::LoadProfessionDescription()
         g_OrionWindow.ShowMessage("Failed to load professn.enu", "Failed to load");
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить родителя профессии
 @param [__in] obj Ссылка на объект профессии
@@ -451,7 +451,7 @@ void CProfessionManager::LoadProfessionDescription()
 */
 CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfession *check)
 {
-    WISPFUN_DEBUG("c153_f6");
+    DEBUG_TRACE_FUNCTION;
     if (check == NULL)
         check = (CBaseProfession *)m_Items;
 
@@ -473,4 +473,4 @@ CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfes
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CBaseScreen *g_CurrentScreen = NULL;
-//----------------------------------------------------------------------------------
+
 CBaseScreen::CBaseScreen(CGump &gump)
     : CBaseQueue()
     , m_Gump(gump)
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовка/выбор объектов
 @param [__in] mode true - отрисовка, false - выбор
@@ -26,7 +26,7 @@ CBaseScreen::CBaseScreen(CGump &gump)
 */
 void CBaseScreen::Render(bool mode)
 {
-    WISPFUN_DEBUG("c159_f1");
+    DEBUG_TRACE_FUNCTION;
     if (mode)
     {
         g_GL.BeginDraw();
@@ -67,14 +67,14 @@ void CBaseScreen::Render(bool mode)
         g_LastSelectedObject.Init(g_SelectedObject);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Вычисление состояния перехода
 @return Индекс состояния
 */
 int CBaseScreen::DrawSmoothMonitor()
 {
-    WISPFUN_DEBUG("c159_f2");
+    DEBUG_TRACE_FUNCTION;
     if (g_ScreenEffectManager.Process() && SmoothScreenAction)
     {
         ProcessSmoothAction();
@@ -86,17 +86,17 @@ int CBaseScreen::DrawSmoothMonitor()
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Наложение эффекта перехода
 @return 
 */
 void CBaseScreen::DrawSmoothMonitorEffect()
 {
-    WISPFUN_DEBUG("c159_f3");
+    DEBUG_TRACE_FUNCTION;
     g_ScreenEffectManager.Draw();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Создание плавного затемнения экрана
 @param [__in] action Идентификатор действия
@@ -104,10 +104,10 @@ void CBaseScreen::DrawSmoothMonitorEffect()
 */
 void CBaseScreen::CreateSmoothAction(BYTE action)
 {
-    WISPFUN_DEBUG("c159_f4");
+    DEBUG_TRACE_FUNCTION;
     if (g_ScreenEffectManager.UseSunset())
         SmoothScreenAction = action;
     else
         ProcessSmoothAction(action);
 }
-//----------------------------------------------------------------------------------
+

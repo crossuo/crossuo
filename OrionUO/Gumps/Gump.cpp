@@ -8,26 +8,26 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGump *g_ResizedGump = NULL;
 CGump *g_CurrentCheckGump = NULL;
-//----------------------------------------------------------------------------------
+
 CGump::CGump()
     : CGump(GT_NONE, 0, 0, 0)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGump::CGump(GUMP_TYPE type, uint serial, int x, int y)
     : CRenderObject(serial, 0, 0, x, y)
     , GumpType(type)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGump::~CGump()
 {
-    WISPFUN_DEBUG("c84_f1");
+    DEBUG_TRACE_FUNCTION;
     //Если это гамп, блокирующий игровое окно
     if (Blocked)
     {
@@ -59,13 +59,13 @@ CGump::~CGump()
     if (g_PressedObject.MidGump == this)
         g_PressedObject.ClearMid();
 }
-//---------------------------------------------------------------------------
+
 void CGump::GUMP_DIRECT_HTML_LINK_EVENT_C
 {
     g_FontManager.GoToWebLink(link);
     DebugMsg("OnDirectHTMLLink(%i)\n", link);
 }
-//---------------------------------------------------------------------------
+
 void CGump::FixCoordinates()
 {
     const int gumpOffsetX = 40;
@@ -130,10 +130,10 @@ void CGump::FixCoordinates()
         }
     }
 }
-//---------------------------------------------------------------------------
+
 bool CGump::CanBeMoved()
 {
-    WISPFUN_DEBUG("c84_f2");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     if (NoMove)
@@ -143,29 +143,29 @@ bool CGump::CanBeMoved()
 
     return result;
 }
-//---------------------------------------------------------------------------
+
 /*!
 Отрисовать замочек гампа
 @return
 */
 void CGump::DrawLocker()
 {
-    WISPFUN_DEBUG("c84_f3");
+    DEBUG_TRACE_FUNCTION;
     if (m_Locker.Serial && g_ShowGumpLocker)
         g_TextureGumpState[LockMoving].Draw(m_Locker.GetX(), m_Locker.GetY());
 }
-//---------------------------------------------------------------------------
+
 bool CGump::SelectLocker()
 {
-    WISPFUN_DEBUG("c84_f4");
+    DEBUG_TRACE_FUNCTION;
     return (
         m_Locker.Serial && g_ShowGumpLocker &&
         g_Orion.PolygonePixelsInXY(m_Locker.GetX(), m_Locker.GetY(), 10, 14));
 }
-//---------------------------------------------------------------------------
+
 bool CGump::TestLockerClick()
 {
-    WISPFUN_DEBUG("c84_f5");
+    DEBUG_TRACE_FUNCTION;
     bool result = (m_Locker.Serial && g_ShowGumpLocker && g_PressedObject.LeftObject == &m_Locker);
 
     if (result)
@@ -173,10 +173,10 @@ bool CGump::TestLockerClick()
 
     return result;
 }
-//---------------------------------------------------------------------------
+
 void CGump::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c84_f6");
+    DEBUG_TRACE_FUNCTION;
     g_GumpPressed =
         (!g_ObjectInHand.Enabled &&
          g_PressedObject.LeftGump == this /*&& g_SelectedObject.Gump() == this*/);
@@ -211,10 +211,10 @@ void CGump::CalculateGumpState()
         g_GumpTranslate.Y = (float)(m_Y + g_GumpMovingOffset.Y);
     }
 }
-//---------------------------------------------------------------------------
+
 void CGump::ProcessListing()
 {
-    WISPFUN_DEBUG("c84_f7");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != NULL && !g_PressedObject.LeftGump->NoProcess &&
         g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI())
     {
@@ -274,10 +274,10 @@ void CGump::ProcessListing()
         }
     }
 }
-//---------------------------------------------------------------------------
+
 bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const int draw2Page)
 {
-    WISPFUN_DEBUG("c84_f8");
+    DEBUG_TRACE_FUNCTION;
     bool transparent = false;
 
     glClear(GL_STENCIL_BUFFER_BIT);
@@ -312,10 +312,10 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
 
     return transparent;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
-    WISPFUN_DEBUG("c84_f9");
+    DEBUG_TRACE_FUNCTION;
     float alpha[2] = { 1.0f, 0.7f };
     CGUIComboBox *combo = NULL;
 
@@ -412,10 +412,10 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-//----------------------------------------------------------------------------------
+
 CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
-    WISPFUN_DEBUG("c84_f10");
+    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = NULL;
 
     int page = 0;
@@ -424,7 +424,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
     bool currentScissorState = true;
     CGUIComboBox *combo = NULL;
 
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
 
     QFOR(item, start, CBaseGUI *)
     {
@@ -473,7 +473,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                 {
                     CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
-                    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                    g_MouseManager.Position = Wisp::CPoint2Di(
                         oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
@@ -494,7 +494,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                         int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
                         int offsetY = htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y;
 
-                        g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                        g_MouseManager.Position = Wisp::CPoint2Di(
                             g_MouseManager.Position.X - offsetX,
                             g_MouseManager.Position.Y - offsetY);
 
@@ -570,11 +570,11 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::TestItemsLeftMouseDown(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    WISPFUN_DEBUG("c84_f11");
+    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw = (!draw2Page || (page >= currentPage && page <= currentPage + draw2Page));
@@ -615,8 +615,8 @@ void CGump::TestItemsLeftMouseDown(
                 {
                     if (g_SelectedObject.Object == ((CGUIShopResult *)item)->m_MinMaxButtons)
                     {
-                        WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-                        g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+                        g_MouseManager.Position = Wisp::CPoint2Di(
                             g_MouseManager.Position.X - item->GetX(),
                             g_MouseManager.Position.Y - item->GetY());
 
@@ -805,8 +805,8 @@ void CGump::TestItemsLeftMouseDown(
 
                     htmlTextBackgroundCanBeColored = !htmlGump->HaveBackground;
 
-                    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-                    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+                    g_MouseManager.Position = Wisp::CPoint2Di(
                         oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
@@ -819,7 +819,7 @@ void CGump::TestItemsLeftMouseDown(
                     int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
                     int offsetY = htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y;
 
-                    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                    g_MouseManager.Position = Wisp::CPoint2Di(
                         g_MouseManager.Position.X - offsetX, g_MouseManager.Position.Y - offsetY);
 
                     TestItemsLeftMouseDown(gump, item, currentPage, draw2Page);
@@ -834,10 +834,10 @@ void CGump::TestItemsLeftMouseDown(
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, int draw2Page)
 {
-    WISPFUN_DEBUG("c84_f12");
+    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw = (!draw2Page || (page >= currentPage && page <= currentPage + draw2Page));
@@ -1072,11 +1072,11 @@ void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, 
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGump::TestItemsScrolling(
     CGump *gump, CBaseGUI *start, bool up, int currentPage, int draw2Page)
 {
-    WISPFUN_DEBUG("c84_f13");
+    DEBUG_TRACE_FUNCTION;
     const int delay = SCROLL_LISTING_DELAY / 7;
 
     int group = 0;
@@ -1144,8 +1144,8 @@ void CGump::TestItemsScrolling(
                     {
                         CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
-                        WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-                        g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+                        g_MouseManager.Position = Wisp::CPoint2Di(
                             oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                         CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
@@ -1165,7 +1165,7 @@ void CGump::TestItemsScrolling(
                         int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
                         int offsetY = htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y;
 
-                        g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                        g_MouseManager.Position = Wisp::CPoint2Di(
                             g_MouseManager.Position.X - offsetX,
                             g_MouseManager.Position.Y - offsetY);
 
@@ -1184,11 +1184,11 @@ void CGump::TestItemsScrolling(
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGump::TestItemsDragging(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    WISPFUN_DEBUG("c84_f14");
+    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw =
@@ -1256,8 +1256,8 @@ void CGump::TestItemsDragging(
                 {
                     CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
-                    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-                    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+                    g_MouseManager.Position = Wisp::CPoint2Di(
                         oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
@@ -1270,7 +1270,7 @@ void CGump::TestItemsDragging(
                     int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
                     int offsetY = htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y;
 
-                    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+                    g_MouseManager.Position = Wisp::CPoint2Di(
                         g_MouseManager.Position.X - offsetX, g_MouseManager.Position.Y - offsetY);
 
                     TestItemsDragging(gump, item, currentPage, draw2Page);
@@ -1286,17 +1286,17 @@ void CGump::TestItemsDragging(
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGump::PrepareTextures()
 {
-    WISPFUN_DEBUG("c84_f15");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
-//----------------------------------------------------------------------------------
+
 bool CGump::EntryPointerHere()
 {
-    WISPFUN_DEBUG("c84_f16");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
@@ -1305,10 +1305,10 @@ bool CGump::EntryPointerHere()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::GenerateFrame(bool stop)
 {
-    WISPFUN_DEBUG("c84_f17");
+    DEBUG_TRACE_FUNCTION;
     if (!g_GL.Drawing)
     {
         FrameCreated = false;
@@ -1336,10 +1336,10 @@ void CGump::GenerateFrame(bool stop)
     WantRedraw = true;
     FrameCreated = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::Draw()
 {
-    WISPFUN_DEBUG("c84_f18");
+    DEBUG_TRACE_FUNCTION;
     CalculateGumpState();
 
     if (WantUpdateContent)
@@ -1447,10 +1447,10 @@ void CGump::Draw()
 
     glTranslatef(-posX, -posY, 0.0f);
 }
-//----------------------------------------------------------------------------------
+
 CRenderObject *CGump::Select()
 {
-    WISPFUN_DEBUG("c84_f19");
+    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CalculateGumpState();
 
@@ -1462,8 +1462,8 @@ CRenderObject *CGump::Select()
         FrameCreated = false;
     }
 
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = Wisp::CPoint2Di(
         oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
     CRenderObject *selected = NULL;
@@ -1488,33 +1488,33 @@ CRenderObject *CGump::Select()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::RecalculateSize()
 {
-    WISPFUN_DEBUG("c84_f19_1");
+    DEBUG_TRACE_FUNCTION;
 
-    WISP_GEOMETRY::CPoint2Di minPosition(999, 999);
-    WISP_GEOMETRY::CPoint2Di maxPosition;
-    WISP_GEOMETRY::CPoint2Di offset;
+    Wisp::CPoint2Di minPosition(999, 999);
+    Wisp::CPoint2Di maxPosition;
+    Wisp::CPoint2Di offset;
 
     GetItemsSize(this, (CBaseGUI *)m_Items, minPosition, maxPosition, offset, -1, Page, Draw2Page);
 
-    WISP_GEOMETRY::CSize size(maxPosition.X - minPosition.X, maxPosition.Y - minPosition.Y);
+    Wisp::CSize size(maxPosition.X - minPosition.X, maxPosition.Y - minPosition.Y);
 
-    GumpRect = WISP_GEOMETRY::CRect(minPosition, size);
+    GumpRect = Wisp::CRect(minPosition, size);
 }
-//----------------------------------------------------------------------------------
+
 void CGump::GetItemsSize(
     CGump *gump,
     CBaseGUI *start,
-    WISP_GEOMETRY::CPoint2Di &minPosition,
-    WISP_GEOMETRY::CPoint2Di &maxPosition,
-    WISP_GEOMETRY::CPoint2Di &offset,
+    Wisp::CPoint2Di &minPosition,
+    Wisp::CPoint2Di &maxPosition,
+    Wisp::CPoint2Di &offset,
     int count,
     int currentPage,
     int draw2Page)
 {
-    WISPFUN_DEBUG("c84_f19_2");
+    DEBUG_TRACE_FUNCTION;
 
     int page = 0;
     bool canDraw = (!draw2Page || (page >= currentPage && page <= currentPage + draw2Page));
@@ -1572,7 +1572,7 @@ void CGump::GetItemsSize(
             case GOT_XFMHTMLGUMP:
             case GOT_XFMHTMLTOKEN:
             {
-                WISP_GEOMETRY::CPoint2Di htmlOffset(
+                Wisp::CPoint2Di htmlOffset(
                     offset.X + item->GetX(), offset.X + item->GetY());
                 CGump::GetItemsSize(
                     gump,
@@ -1598,7 +1598,7 @@ void CGump::GetItemsSize(
                 if (y < minPosition.Y)
                     minPosition.Y = y;
 
-                WISP_GEOMETRY::CSize itemSize = item->GetSize();
+                Wisp::CSize itemSize = item->GetSize();
 
                 x += itemSize.Width;
                 y += itemSize.Height;
@@ -1614,56 +1614,56 @@ void CGump::GetItemsSize(
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGump::OnLeftMouseButtonDown()
 {
-    WISPFUN_DEBUG("c84_f20");
+    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = Wisp::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
 
     TestItemsLeftMouseDown(this, (CBaseGUI *)m_Items, Page, Draw2Page);
 
     g_MouseManager.Position = oldPos;
     g_CurrentCheckGump = NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c84_f21");
+    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     TestItemsLeftMouseUp(this, (CBaseGUI *)m_Items, Page, Draw2Page);
     TestLockerClick();
     g_CurrentCheckGump = NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::OnMidMouseButtonScroll(bool up)
 {
-    WISPFUN_DEBUG("c84_f22");
+    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = Wisp::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
 
     TestItemsScrolling(this, (CBaseGUI *)m_Items, up, Page, Draw2Page);
 
     g_MouseManager.Position = oldPos;
     g_CurrentCheckGump = NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::OnDragging()
 {
-    WISPFUN_DEBUG("c84_f23");
+    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = Wisp::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
 
     TestItemsDragging(this, (CBaseGUI *)m_Items, Page, Draw2Page);
 
     g_MouseManager.Position = oldPos;
     g_CurrentCheckGump = NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGump::PasteClipboardData(wstring &data)
 {
 }
-//----------------------------------------------------------------------------------
+

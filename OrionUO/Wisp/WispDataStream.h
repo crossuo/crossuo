@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-namespace WISP_DATASTREAM
+namespace Wisp
 {
 class CDataWritter
 {
@@ -269,4 +269,4 @@ public:
     wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 
-}; // namespace WISP_DATASTREAM
+}; // namespace Wisp

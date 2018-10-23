@@ -1,34 +1,34 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "FileSystem.h"
 #include "WispThread.h"
 #include <SDL_timer.h>
-namespace WISP_APPLICATION
+namespace Wisp
 {
 CApplication *g_WispApplication = nullptr;
-//----------------------------------------------------------------------------------
+
 CApplication::CApplication()
 {
     LOG("INITIATING CAPPLICATION\n");
     g_MainThread = CThread::GetCurrentThreadId();
-    WISPFUN_DEBUG("c1_f1");
+    DEBUG_TRACE_FUNCTION;
     g_WispApplication = this;
     m_UOPath = m_ExePath = fs_path_current();
     g_MainScreen.LoadCustomPath();
 }
-//----------------------------------------------------------------------------------
+
 CApplication::~CApplication()
 {
-    WISPFUN_DEBUG("c1_f2");
+    DEBUG_TRACE_FUNCTION;
     g_WispApplication = nullptr;
     Hinstance = 0;
 }
-//----------------------------------------------------------------------------------
+
 int CApplication::Run(HINSTANCE hinstance)
 {
-    // WISPFUN_DEBUG("c1_f3");
+    // DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     timeBeginPeriod(1);
     Hinstance = hinstance;
@@ -58,7 +58,7 @@ int CApplication::Run(HINSTANCE hinstance)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (!(quit = WISP_WINDOW::g_WispWindow->OnWindowProc(event)))
+            if (!(quit = Wisp::g_WispWindow->OnWindowProc(event)))
                 OnMainLoop();
         }
     }
@@ -66,7 +66,7 @@ int CApplication::Run(HINSTANCE hinstance)
     return EXIT_SUCCESS;
 #endif
 }
-//---------------------------------------------------------------------------
+
 string CApplication::GetFileVersion(uint *numericVerion) const
 {
 #if USE_WISP
@@ -126,10 +126,10 @@ string CApplication::GetFileVersion(uint *numericVerion) const
     return " Linux";
 #endif
 }
-//---------------------------------------------------------------------------
+
 os_path CApplication::ExeFilePath(const char *str, ...) const
 {
-    WISPFUN_DEBUG("c1_f4");
+    DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, str);
 
@@ -143,15 +143,15 @@ os_path CApplication::ExeFilePath(const char *str, ...) const
     res.append(ToPath(out));
     return res;
 }
-//---------------------------------------------------------------------------
+
 os_path CApplication::UOFilesPath(const string &str, ...) const
 {
     return UOFilesPath(str.c_str());
 }
-//---------------------------------------------------------------------------
+
 os_path CApplication::UOFilesPath(const char *str, ...) const
 {
-    WISPFUN_DEBUG("c1_f6");
+    DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, str);
 
@@ -165,6 +165,6 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     res.append(ToPath(out));
     return res;
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_APPLICATION
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

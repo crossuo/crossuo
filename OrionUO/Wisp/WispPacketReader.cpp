@@ -1,23 +1,23 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 
-namespace WISP_NETWORK
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CPacketReader::CPacketReader()
-    : WISP_DATASTREAM::CDataReader()
+    : Wisp::CDataReader()
 {
 }
-//----------------------------------------------------------------------------------
+
 CPacketReader::~CPacketReader()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CPacketReader::Read(class CConnection *connection)
 {
-    WISPFUN_DEBUG("c10_f1");
+    DEBUG_TRACE_FUNCTION;
     if (connection->ReadyRead())
     {
         if (!connection->Read())
@@ -26,7 +26,7 @@ void CPacketReader::Read(class CConnection *connection)
             return;
         }
 
-        WISP_NETWORK::CPacketMessage *parser = connection->m_MessageParser;
+        Wisp::CPacketMessage *parser = connection->m_MessageParser;
 
         while (true)
         {
@@ -49,6 +49,6 @@ void CPacketReader::Read(class CConnection *connection)
         }
     }
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_NETWORK
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

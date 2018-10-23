@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIMINMAXBUTTONS_H
 #define GUIMINMAXBUTTONS_H
-//----------------------------------------------------------------------------------
+
 class CGUIMinMaxButtons : public CBaseGUI
 {
 public:
@@ -80,7 +80,7 @@ public:
 
     virtual bool IsPressedOuthit() { return true; }
 
-    virtual WISP_GEOMETRY::CSize GetSize() { return WISP_GEOMETRY::CSize(36, 18); }
+    virtual Wisp::CSize GetSize() { return Wisp::CSize(36, 18); }
 
     //Прокрутка
     virtual void Scroll(int delay);
@@ -107,6 +107,5 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

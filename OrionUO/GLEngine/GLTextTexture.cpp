@@ -8,28 +8,28 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGLTextTexture::CGLTextTexture()
     : CGLTexture()
 {
 }
-//----------------------------------------------------------------------------------
+
 CGLTextTexture::~CGLTextTexture()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGLTextTexture::Clear()
 {
-    WISPFUN_DEBUG("c35_f1");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture::Clear();
     LinesCount = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CGLTextTexture::Draw(int x, int y, bool checktrans)
 {
-    WISPFUN_DEBUG("c35_f2");
+    DEBUG_TRACE_FUNCTION;
     if (Texture != 0)
     {
         if (checktrans)
@@ -51,4 +51,3 @@ void CGLTextTexture::Draw(int x, int y, bool checktrans)
             g_GL_Draw(*this, x, y);
     }
 }
-//----------------------------------------------------------------------------------

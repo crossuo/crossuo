@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CSelectTownScreen g_SelectTownScreen;
-//----------------------------------------------------------------------------------
+
 CSelectTownScreen::CSelectTownScreen()
     : CBaseScreen(m_SelectTownGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CSelectTownScreen::~CSelectTownScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CSelectTownScreen::Init()
 {
-    WISPFUN_DEBUG("c167_f1");
+    DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_70130)
         m_City = g_CityList.GetCity(0);
     else
@@ -45,7 +45,7 @@ void CSelectTownScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после плавного затемнения экрана
 @param [__in_opt] action Идентификатор действия
@@ -53,7 +53,7 @@ void CSelectTownScreen::Init()
 */
 void CSelectTownScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c167_f2");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -67,4 +67,4 @@ void CSelectTownScreen::ProcessSmoothAction(uchar action)
         g_Orion.InitScreen(GS_GAME_CONNECT);
     }
 }
-//----------------------------------------------------------------------------------
+

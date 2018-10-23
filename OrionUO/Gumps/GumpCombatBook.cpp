@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)
 {
-    WISPFUN_DEBUG("c91_f1");
+    DEBUG_TRACE_FUNCTION;
     Draw2Page = true;
 
     if (g_PacketManager.GetClientVersion() < CV_7000)
@@ -30,14 +30,14 @@ CGumpCombatBook::CGumpCombatBook(int x, int y)
 
     PagesCount = DictionaryPagesCount + (AbilityCount * 2);
 }
-//----------------------------------------------------------------------------------
+
 CGumpCombatBook::~CGumpCombatBook()
 {
 }
-//----------------------------------------------------------------------------------
+
 USHORT_LIST CGumpCombatBook::GetItemsList(uchar index)
 {
-    WISPFUN_DEBUG("c91_f2");
+    DEBUG_TRACE_FUNCTION;
     USHORT_LIST list;
 
     switch (index)
@@ -347,10 +347,10 @@ USHORT_LIST CGumpCombatBook::GetItemsList(uchar index)
 
     return list;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpCombatBook::InitToolTip()
 {
-    WISPFUN_DEBUG("c91_f3");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         g_ToolTip.Set(L"Double click to maximize book gump");
@@ -378,15 +378,15 @@ void CGumpCombatBook::InitToolTip()
                 80);
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpCombatBook::PrepareContent()
 {
-    WISPFUN_DEBUG("c91_f4");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump == this && Page < DictionaryPagesCount &&
         (g_PressedObject.LeftSerial == ID_GCB_ICON_FIRST ||
          g_PressedObject.LeftSerial == ID_GCB_ICON_SECOND))
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -400,10 +400,10 @@ void CGumpCombatBook::PrepareContent()
         }
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpCombatBook::UpdateContent()
 {
-    WISPFUN_DEBUG("c91_f5");
+    DEBUG_TRACE_FUNCTION;
     m_PrevPage = NULL;
     m_NextPage = NULL;
 
@@ -531,10 +531,10 @@ void CGumpCombatBook::UpdateContent()
         (CGUIButton *)Add(new CGUIButton(ID_GCB_BUTTON_NEXT, 0x08BC, 0x08BC, 0x08BC, 321, 8));
     m_NextPage->Visible = (Page + 2 < PagesCount);
 }
-//----------------------------------------------------------------------------
+
 void CGumpCombatBook::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c91_f6");
+    DEBUG_TRACE_FUNCTION;
     int newPage = -1;
 
     if (serial == ID_GCB_BUTTON_PREV)
@@ -580,10 +580,10 @@ void CGumpCombatBook::GUMP_BUTTON_EVENT_C
         g_ClickObject.Page = newPage;
     }
 }
-//----------------------------------------------------------------------------
+
 bool CGumpCombatBook::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c91_f7");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Minimized)
@@ -636,20 +636,20 @@ bool CGumpCombatBook::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpCombatBook::DelayedClick(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c91_f8");
+    DEBUG_TRACE_FUNCTION;
     if (obj != NULL)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpCombatBook::ChangePage(int newPage)
 {
-    WISPFUN_DEBUG("c91_f9");
+    DEBUG_TRACE_FUNCTION;
     Page = newPage;
 
     m_PrevPage->Visible = (Page != 0);
@@ -657,7 +657,7 @@ void CGumpCombatBook::ChangePage(int newPage)
 
     g_Orion.PlaySoundEffect(0x0055);
 }
-//----------------------------------------------------------------------------------
+
 const string CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
     "Armor Ignore",       "Bleed Attack",    "Concussion Blow",
     "Crushing Blow",      "Disarm",          "Dismount",
@@ -673,4 +673,4 @@ const string CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
     "Infused Throw", //CV_7000
     "Mystic Arc",         "Disrobe"
 };
-//----------------------------------------------------------------------------------
+

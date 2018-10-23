@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y)
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)
     , Index(index)
 {
-    WISPFUN_DEBUG("c76_f1");
+    DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
     if (skill != NULL)
@@ -36,20 +36,20 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
         CreateValueText();
     }
 }
-//----------------------------------------------------------------------------------
+
 CGUISkillItem::~CGUISkillItem()
 {
-    WISPFUN_DEBUG("c76_f2");
+    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
     m_ValueText.Clear();
 
     RELEASE_POINTER(m_ButtonUse);
     RELEASE_POINTER(m_ButtonStatus);
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillItem::SetStatus(uchar val)
 {
-    WISPFUN_DEBUG("c76_f3");
+    DEBUG_TRACE_FUNCTION;
     m_Status = val;
 
     ushort graphic = GetStatusButtonGraphic();
@@ -58,10 +58,10 @@ void CGUISkillItem::SetStatus(uchar val)
     m_ButtonStatus->GraphicSelected = graphic;
     m_ButtonStatus->GraphicPressed = graphic;
 }
-//----------------------------------------------------------------------------------
+
 ushort CGUISkillItem::GetStatusButtonGraphic()
 {
-    WISPFUN_DEBUG("c76_f4");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = 0x0984; //Up
 
     if (m_Status == 1)
@@ -71,10 +71,10 @@ ushort CGUISkillItem::GetStatusButtonGraphic()
 
     return graphic;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 {
-    WISPFUN_DEBUG("c76_f5");
+    DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
     if (skill != NULL)
@@ -92,19 +92,19 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
         g_FontManager.GenerateA(9, m_ValueText, sbf, 0x0288);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillItem::PrepareTextures()
 {
-    WISPFUN_DEBUG("c76_f6");
+    DEBUG_TRACE_FUNCTION;
     if (m_ButtonUse != NULL)
         m_ButtonUse->PrepareTextures();
 
     m_ButtonStatus->PrepareTextures();
 }
-//----------------------------------------------------------------------------------
+
 CBaseGUI *CGUISkillItem::SelectedItem()
 {
-    WISPFUN_DEBUG("c76_f7");
+    DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = this;
 
     if (g_Orion.PolygonePixelsInXY(
@@ -119,10 +119,10 @@ CBaseGUI *CGUISkillItem::SelectedItem()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillItem::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c76_f8");
+    DEBUG_TRACE_FUNCTION;
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
     if (m_ButtonUse != NULL)
@@ -139,13 +139,13 @@ void CGUISkillItem::Draw(bool checktrans)
 
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 }
-//----------------------------------------------------------------------------------
+
 bool CGUISkillItem::Select()
 {
-    WISPFUN_DEBUG("c76_f9");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
     return (x >= 0 && y >= 0 && x < 255 && y < 17);
 }
-//----------------------------------------------------------------------------------
+

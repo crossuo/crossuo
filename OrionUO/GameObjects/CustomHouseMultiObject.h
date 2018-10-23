@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef CUSTOMHOUSEMULTIOBJECT_H
 #define CUSTOMHOUSEMULTIOBJECT_H
-//----------------------------------------------------------------------------------
+
 //!Custom house component object class
 class CCustomHouseMultiObject : public CMultiObject
 {
@@ -38,6 +38,5 @@ public:
 	*/
     virtual bool IsCustomHouseMulti() { return true; }
 };
-//----------------------------------------------------------------------------------
+
 #endif //CUSTOMHOUSEMULTIOBJECT_H
-//----------------------------------------------------------------------------------

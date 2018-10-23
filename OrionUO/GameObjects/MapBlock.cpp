@@ -8,16 +8,16 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_timer.h>
-//----------------------------------------------------------------------------------
+
 CMapBlock::CMapBlock(int index)
     : CBaseQueueItem()
     , Index(index)
     , LastAccessTime(SDL_GetTicks())
 {
-    WISPFUN_DEBUG("c24_f1");
+    DEBUG_TRACE_FUNCTION;
     //Обнуляем блок
     IFOR (i, 0, 8)
     {
@@ -25,10 +25,10 @@ CMapBlock::CMapBlock(int index)
             Block[i][j] = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 CMapBlock::~CMapBlock()
 {
-    WISPFUN_DEBUG("c24_f2");
+    DEBUG_TRACE_FUNCTION;
     //При удалении блока очищаем список отрисовки блока и удаляем элементы
     IFOR (i, 0, 8)
     {
@@ -56,10 +56,10 @@ CMapBlock::~CMapBlock()
 
     m_Items = NULL;
 }
-//----------------------------------------------------------------------------------
+
 bool CMapBlock::HasNoExternalData()
 {
-    WISPFUN_DEBUG("c24_f3");
+    DEBUG_TRACE_FUNCTION;
     IFOR (x, 0, 8)
     {
         IFOR (y, 0, 8)
@@ -75,10 +75,10 @@ bool CMapBlock::HasNoExternalData()
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 ushort CMapBlock::GetRadarColor(int x, int y)
 {
-    WISPFUN_DEBUG("c24_f4");
+    DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
 
     //Получаем указатель на последний элемент списка
@@ -106,10 +106,10 @@ ushort CMapBlock::GetRadarColor(int x, int y)
     //Вернем входящий цвет, если не нашлось ничего подходящего
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 void CMapBlock::CreateLandTextureRect()
 {
-    WISPFUN_DEBUG("c24_f5");
+    DEBUG_TRACE_FUNCTION;
     //Подкорректируем индекс карты
     int map = g_MapManager.GetActualMap();
 
@@ -279,10 +279,10 @@ void CMapBlock::CreateLandTextureRect()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 {
-    WISPFUN_DEBUG("c24_f6");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     IFOR (i, -1, 2 && !result)
@@ -302,10 +302,10 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 char CMapBlock::GetLandZ(int x, int y, int map)
 {
-    WISPFUN_DEBUG("c24_f7");
+    DEBUG_TRACE_FUNCTION;
 
     if (x < 0 || y < 0)
         return -125;
@@ -321,10 +321,10 @@ char CMapBlock::GetLandZ(int x, int y, int map)
 
     return ((PMAP_BLOCK)blockIndex->MapAddress)->Cells[mY * 8 + mX].Z;
 }
-//----------------------------------------------------------------------------------
+
 CLandObject *CMapBlock::GetLand(int x, int y)
 {
-    WISPFUN_DEBUG("c24_f8");
+    DEBUG_TRACE_FUNCTION;
     CMapObject *obj = Block[x][y];
 
     //Пройдемся по MapObject'ам блока
@@ -339,10 +339,10 @@ CLandObject *CMapBlock::GetLand(int x, int y)
 
     return (CLandObject *)obj;
 }
-//----------------------------------------------------------------------------------
+
 void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 {
-    WISPFUN_DEBUG("c24_f10");
+    DEBUG_TRACE_FUNCTION;
     item->RemoveRender();
 
     int priorityZ = item->GetZ();
@@ -429,10 +429,10 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
         item->m_PrevXY = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 {
-    WISPFUN_DEBUG("c24_f11");
+    DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
 
     //Найдем указатель на первый элемент списка рендера
@@ -441,10 +441,10 @@ CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 
     return obj;
 }
-//----------------------------------------------------------------------------------
+
 CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
 {
-    WISPFUN_DEBUG("c24_f12");
+    DEBUG_TRACE_FUNCTION;
     if (Block[x][y] != NULL)
     {
         CMapObject *item = Block[x][y];
@@ -496,4 +496,4 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
 
     return obj;
 }
-//----------------------------------------------------------------------------------
+

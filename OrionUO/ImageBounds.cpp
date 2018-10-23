@@ -8,11 +8,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CImageBounds g_PlayerRect(0, 0, 0, 0);
-//----------------------------------------------------------------------------------
+
 CImageBounds::CImageBounds(int x, int y, int width, int height)
     : X(x)
     , Y(y)
@@ -20,14 +20,14 @@ CImageBounds::CImageBounds(int x, int y, int width, int height)
     , Height(height)
 {
 }
-//----------------------------------------------------------------------------------
+
 CImageBounds::~CImageBounds()
 {
 }
-//----------------------------------------------------------------------------------
+
 bool CImageBounds::InRect(const CImageBounds &ib)
 {
-    WISPFUN_DEBUG("c188_f1");
+    DEBUG_TRACE_FUNCTION;
     bool inRect = false;
 
     if (X < ib.X)
@@ -61,21 +61,21 @@ bool CImageBounds::InRect(const CImageBounds &ib)
 
     return inRect;
 }
-//----------------------------------------------------------------------------------
+
 CTextImageBounds::CTextImageBounds(int x, int y, int width, int height, CRenderTextObject *text)
     : CImageBounds(x, y, width, height)
     , Text(text)
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextImageBounds::CTextImageBounds(CTextData *text)
     : CImageBounds(text->RealDrawX, text->RealDrawY, text->m_Texture.Width, text->m_Texture.Height)
     , Text(text)
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextImageBounds::~CTextImageBounds()
 {
     Text = NULL;
 }
-//----------------------------------------------------------------------------------
+

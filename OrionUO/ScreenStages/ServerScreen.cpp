@@ -8,28 +8,28 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "ServerScreen.h"
-//----------------------------------------------------------------------------------
+
 CServerScreen g_ServerScreen;
-//----------------------------------------------------------------------------------
+
 CServerScreen::CServerScreen()
     : CBaseScreen(m_ServerGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CServerScreen::~CServerScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CServerScreen::Init()
 {
-    WISPFUN_DEBUG("c168_f1");
+    DEBUG_TRACE_FUNCTION;
     g_OrionWindow.SetTitle(string("Ultima Online - ") + g_MainScreen.m_Account->c_str());
 
     g_ScreenEffectManager.UseSunrise();
@@ -38,7 +38,7 @@ void CServerScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 /*!
 Обработка нажатия клавиши
@@ -48,7 +48,7 @@ void CServerScreen::Init()
 */
 void CServerScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c168_f2");
+    DEBUG_TRACE_FUNCTION;
     m_Gump.OnKeyDown(wParam, lParam);
 
     if (wParam == VK_RETURN)
@@ -63,7 +63,7 @@ void CServerScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
     NOT_IMPLEMENTED; // FIXME
 }
 #endif
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после плавного затемнения экрана
 @param [__in_opt] action Идентификатор действия
@@ -71,7 +71,7 @@ void CServerScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
 */
 void CServerScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c168_f3");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -85,4 +85,4 @@ void CServerScreen::ProcessSmoothAction(uchar action)
         g_Orion.InitScreen(GS_MAIN);
     }
 }
-//----------------------------------------------------------------------------------
+

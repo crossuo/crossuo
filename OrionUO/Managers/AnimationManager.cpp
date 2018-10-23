@@ -8,11 +8,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CAnimationManager g_AnimationManager;
-//----------------------------------------------------------------------------------
+
 const int CAnimationManager::m_UsedLayers[8][USED_LAYER_COUNT] = {
     {
         //dir 0
@@ -63,24 +63,24 @@ const int CAnimationManager::m_UsedLayers[8][USED_LAYER_COUNT] = {
         OL_HAIR,  OL_BEARD, OL_EARRINGS, OL_HELMET, OL_1_HAND, OL_2_HAND, OL_CLOAK,
     },
 };
-//----------------------------------------------------------------------------------
+
 CAnimationManager::CAnimationManager()
-    : WISP_DATASTREAM::CDataReader()
+    : Wisp::CDataReader()
 {
-    WISPFUN_DEBUG("c133_f1");
+    DEBUG_TRACE_FUNCTION;
     memset(m_AddressIdx, 0, sizeof(m_AddressIdx));
     memset(m_SizeIdx, 0, sizeof(m_SizeIdx));
 
     memset(m_CharacterLayerGraphic, 0, sizeof(m_CharacterLayerGraphic));
     memset(m_CharacterLayerAnimID, 0, sizeof(m_CharacterLayerAnimID));
 }
-//----------------------------------------------------------------------------------
+
 CAnimationManager::~CAnimationManager()
 {
-    WISPFUN_DEBUG("c133_f2");
+    DEBUG_TRACE_FUNCTION;
     ClearUnusedTextures(g_Ticks + 100000);
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::UpdateAnimationAddressTable()
 {
     IFOR (i, 0, MAX_ANIMATIONS_DATA_INDEX_COUNT)
@@ -119,7 +119,7 @@ void CAnimationManager::UpdateAnimationAddressTable()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка данных
 @param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
@@ -127,7 +127,7 @@ void CAnimationManager::UpdateAnimationAddressTable()
 */
 void CAnimationManager::Load(puint verdata)
 {
-    WISPFUN_DEBUG("c133_f3");
+    DEBUG_TRACE_FUNCTION;
     size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
 
     IFOR (i, 0, MAX_ANIMATIONS_DATA_INDEX_COUNT)
@@ -299,7 +299,7 @@ void CAnimationManager::Load(puint verdata)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка файла корректора индексов картинок анимаций
 @param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
@@ -307,14 +307,14 @@ void CAnimationManager::Load(puint verdata)
 */
 void CAnimationManager::InitIndexReplaces(puint verdata)
 {
-    WISPFUN_DEBUG("c133_f4");
+    DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_500A)
     {
         static const string typeNames[5] = {
             "monster", "sea_monster", "animal", "human", "equipment"
         };
 
-        WISP_FILE::CTextFileParser mobtypesParser(
+        Wisp::CTextFileParser mobtypesParser(
             g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
 
         while (!mobtypesParser.IsEOF())
@@ -351,9 +351,9 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
     //std::pair<ushort, char> m_GroupReplaces[2];
 
-    WISP_FILE::CTextFileParser animParser[2] = {
-        WISP_FILE::CTextFileParser(g_App.UOFilesPath("Anim1.def"), " \t", "#;//", "{}"),
-        WISP_FILE::CTextFileParser(g_App.UOFilesPath("Anim2.def"), " \t", "#;//", "{}"),
+    Wisp::CTextFileParser animParser[2] = {
+        Wisp::CTextFileParser(g_App.UOFilesPath("Anim1.def"), " \t", "#;//", "{}"),
+        Wisp::CTextFileParser(g_App.UOFilesPath("Anim2.def"), " \t", "#;//", "{}"),
     };
 
     IFOR (i, 0, 2)
@@ -375,12 +375,12 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
     if (g_PacketManager.GetClientVersion() < CV_305D) //CV_204C
         return;
 
-    WISP_FILE::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
-    WISP_FILE::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
-    WISP_FILE::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
-    WISP_FILE::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
+    Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
+    Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
+    Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
+    Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
 
-    WISP_FILE::CTextFileParser equipConvParser(
+    Wisp::CTextFileParser equipConvParser(
         g_App.UOFilesPath("Equipconv.def"), " \t", "#;//", "");
 
     while (!equipConvParser.IsEOF())
@@ -832,7 +832,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс группы по индексу картинки
 @param [__in] id Индекс картинки
@@ -840,7 +840,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 */
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(ushort id)
 {
-    WISPFUN_DEBUG("c133_f5");
+    DEBUG_TRACE_FUNCTION;
 
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
@@ -862,7 +862,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(ushort id)
 
     return AG_HIGHT;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс группы смерти анимации
 @param [__in] id BИндекс картинки
@@ -871,7 +871,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(ushort id)
 */
 uchar CAnimationManager::GetDieGroupIndex(ushort id, bool second)
 {
-    WISPFUN_DEBUG("c133_f6");
+    DEBUG_TRACE_FUNCTION;
     //LOG("gr: 0x%04X, %i\n", id, m_DataIndex[id].Type);
     switch (m_DataIndex[id].Type)
     {
@@ -887,7 +887,7 @@ uchar CAnimationManager::GetDieGroupIndex(ushort id, bool second)
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Коррекция направления и режима зеркального отображения
 @param [__inout] dir Направление
@@ -896,7 +896,7 @@ uchar CAnimationManager::GetDieGroupIndex(ushort id, bool second)
 */
 void CAnimationManager::GetAnimDirection(uchar &dir, bool &mirror)
 {
-    WISPFUN_DEBUG("c133_f7");
+    DEBUG_TRACE_FUNCTION;
     switch (dir)
     {
         case 2:
@@ -939,7 +939,7 @@ void CAnimationManager::GetAnimDirection(uchar &dir, bool &mirror)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Коррекция направления и режима зеркального отображения для сидячего персонажа
 @param [__inout] dir Направление
@@ -950,7 +950,7 @@ void CAnimationManager::GetAnimDirection(uchar &dir, bool &mirror)
 */
 void CAnimationManager::GetSittingAnimDirection(uchar &dir, bool &mirror, int &x, int &y)
 {
-    WISPFUN_DEBUG("c133_f8");
+    DEBUG_TRACE_FUNCTION;
     switch (dir)
     {
         case 0:
@@ -985,7 +985,7 @@ void CAnimationManager::GetSittingAnimDirection(uchar &dir, bool &mirror, int &x
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Очистка неиспользуемых текстур
 @param [__in] ticks Таймер удаления
@@ -993,7 +993,7 @@ void CAnimationManager::GetSittingAnimDirection(uchar &dir, bool &mirror, int &x
 */
 void CAnimationManager::ClearUnusedTextures(uint ticks)
 {
-    WISPFUN_DEBUG("c133_f9");
+    DEBUG_TRACE_FUNCTION;
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
 
@@ -1023,7 +1023,7 @@ void CAnimationManager::ClearUnusedTextures(uint ticks)
 
     LOG("CAnimationManager::ClearUnusedTextures::removed %i\n", count);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка картинок для указанного направления персонажа
 @param [__in] direction Ссылка на направление анимации
@@ -1031,7 +1031,7 @@ void CAnimationManager::ClearUnusedTextures(uint ticks)
 */
 bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction)
 {
-    WISPFUN_DEBUG("c133_f10");
+    DEBUG_TRACE_FUNCTION;
 
     if (direction.IsUOP)
         return TryReadUOPAnimDimins(direction);
@@ -1055,11 +1055,11 @@ bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CAnimationManager::TestPixels(
     CGameObject *obj, int x, int y, bool mirror, uchar &frameIndex, ushort id)
 {
-    WISPFUN_DEBUG("c133_f12");
+    DEBUG_TRACE_FUNCTION;
     if (obj == NULL)
         return false;
 
@@ -1108,10 +1108,10 @@ bool CAnimationManager::TestPixels(
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uchar &frameIndex, int id)
 {
-    WISPFUN_DEBUG("c133_f14");
+    DEBUG_TRACE_FUNCTION;
     //if (obj == NULL)
     //	return;
 
@@ -1318,10 +1318,10 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uchar 
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::FixSittingDirection(uchar &layerDirection, bool &mirror, int &x, int &y)
 {
-    WISPFUN_DEBUG("c133_f15");
+    DEBUG_TRACE_FUNCTION;
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
 
     switch (Direction)
@@ -1421,7 +1421,7 @@ void CAnimationManager::FixSittingDirection(uchar &layerDirection, bool &mirror,
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать персонажа
 @param [__in] obj Ссылка на персонажа
@@ -1433,7 +1433,7 @@ void CAnimationManager::FixSittingDirection(uchar &layerDirection, bool &mirror,
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
     m_EquipConvItem = NULL;
-    WISPFUN_DEBUG("c133_f16");
+    DEBUG_TRACE_FUNCTION;
     m_Transform = false;
 
     int drawX = x + obj->OffsetX;
@@ -1779,7 +1779,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::PrepareTargetAttackGump(
     CTargetGump &gump, int drawX, int drawY, ushort targetColor, int per, CGameCharacter &obj)
 {
@@ -1795,7 +1795,7 @@ void CAnimationManager::PrepareTargetAttackGump(
     else
         gump.HealthColor = 90; //Character status line (blue)
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Проверить наличие пикселя персонажа в указанных координатах
 @param [__in] obj Ссылка на персонажа
@@ -1806,7 +1806,7 @@ void CAnimationManager::PrepareTargetAttackGump(
 */
 bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 {
-    WISPFUN_DEBUG("c133_f17");
+    DEBUG_TRACE_FUNCTION;
     y -= 3;
     m_Sitting = obj->IsSitting();
     Direction = 0;
@@ -1855,7 +1855,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     return TestPixels(obj, drawX, drawY, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, drawX, drawY, mirror, layerDir, animIndex, 0);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать труп
 @param [__in] obj Ссылка на труп
@@ -1866,7 +1866,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 */
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
-    WISPFUN_DEBUG("c133_f18");
+    DEBUG_TRACE_FUNCTION;
 
     if (g_CorpseManager.InList(obj->Serial, 0))
         return;
@@ -1889,7 +1889,7 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 
     DrawEquippedLayers(false, obj, x, y, mirror, Direction, animIndex, 0);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Проверить наличие пикселя трупа в указанных координатах
 @param [__in] obj Ссылка на труп
@@ -1900,7 +1900,7 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 */
 bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 {
-    WISPFUN_DEBUG("c133_f19");
+    DEBUG_TRACE_FUNCTION;
 
     if (g_CorpseManager.InList(obj->Serial, 0))
         return false;
@@ -1917,7 +1917,7 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     return TestPixels(obj, x, y, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, x, y, mirror, Direction, animIndex, 0);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Существует ли анимация в файле
 @param [__in] graphic Индекс картинки
@@ -1926,7 +1926,7 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 */
 bool CAnimationManager::AnimationExists(ushort graphic, uchar group)
 {
-    WISPFUN_DEBUG("c133_f20");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
     if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < ANIMATION_GROUPS_COUNT)
     {
@@ -1935,7 +1935,7 @@ bool CAnimationManager::AnimationExists(ushort graphic, uchar group)
     }
     return result;
 }
-//----------------------------------------------------------------------------------
+
 ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     uchar frameIndex, ushort id, uchar dir, uchar animGroup, bool isCorpse)
 {
@@ -2058,11 +2058,11 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     CGameObject *obj, uchar frameIndex, uchar defaultDirection, uchar defaultGroup)
 {
-    WISPFUN_DEBUG("c133_f22");
+    DEBUG_TRACE_FUNCTION;
 
     uchar dir = defaultDirection & 0x7F;
     uchar animGroup = defaultGroup;
@@ -2103,7 +2103,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
 
     return dims;
 }
-//----------------------------------------------------------------------------------
+
 bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &direction)
 {
     UOPAnimationData &animDataStruct = m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
@@ -2201,11 +2201,11 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::CalculateFrameInformation(
     FRAME_OUTPUT_INFO &info, CGameObject *obj, bool mirror, uchar animIndex)
 {
-    WISPFUN_DEBUG("c133_f23");
+    DEBUG_TRACE_FUNCTION;
     ANIMATION_DIMENSIONS dim = GetAnimationDimensions(obj, animIndex, Direction, AnimGroup);
 
     int y = -(dim.Height + dim.CenterY + 3);
@@ -2226,11 +2226,11 @@ void CAnimationManager::CalculateFrameInformation(
     if (info.EndY < y + dim.Height)
         info.EndY = y + dim.Height;
 }
-//----------------------------------------------------------------------------------
+
 DRAW_FRAME_INFORMATION
 CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLayers)
 {
-    WISPFUN_DEBUG("c133_f24");
+    DEBUG_TRACE_FUNCTION;
     m_Sitting = false;
     Direction = 0;
 
@@ -2362,7 +2362,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
     return dfInfo;
 }
-//----------------------------------------------------------------------------------
+
 bool CAnimationManager::DrawEquippedLayers(
     bool selection,
     CGameObject *obj,
@@ -2373,7 +2373,7 @@ bool CAnimationManager::DrawEquippedLayers(
     uchar animIndex,
     int lightOffset)
 {
-    WISPFUN_DEBUG("c133_f25");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     vector<CGameItem *> &list = obj->m_DrawLayeredObjects;
@@ -2431,10 +2431,10 @@ bool CAnimationManager::DrawEquippedLayers(
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 {
-    WISPFUN_DEBUG("c133_f26");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     switch (layer)
@@ -2554,7 +2554,7 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 vector<UOPFrameData> CAnimationManager::ReadUOPFrameDataOffsets()
 {
     //format id?
@@ -2617,7 +2617,7 @@ vector<UOPFrameData> CAnimationManager::ReadUOPFrameDataOffsets()
     }
     return pixelDataOffsets;
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::ReadUOPFrameData(
     short &imageCenterX,
     short &imageCenterY,
@@ -2635,7 +2635,7 @@ void CAnimationManager::ReadUOPFrameData(
     imageWidth = ReadInt16LE();
     imageHeight = ReadInt16LE();
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, ushort index)
 {
     auto getReplaceGroup =
@@ -2664,7 +2664,7 @@ uchar CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, ushort 
 
     return (uchar)(index % HAG_ANIMATION_COUNT);
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, ushort action, uchar mode)
 {
     if (action <= 10)
@@ -2752,7 +2752,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, ushort
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_1_2(
     CGameCharacter *obj, ushort action, uchar mode)
 {
@@ -2775,7 +2775,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_1_2(
 
     return 16;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, ushort action, uchar mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
@@ -2807,7 +2807,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, ushort
 
     return 3;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, ushort action, uchar mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
@@ -2832,7 +2832,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, ushort
 
     return 10;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, ushort action, uchar mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
@@ -2874,7 +2874,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, ushort
 
     return 9;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_6_14(
     CGameCharacter *obj, ushort action, uchar mode)
 {
@@ -2903,7 +2903,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_6_14(
 
     return 11;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, ushort action, uchar mode)
 {
     if (obj->FindLayer(OL_MOUNT) != NULL)
@@ -2919,7 +2919,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, ushort
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, ushort action, uchar mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
@@ -2947,7 +2947,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, ushort
 
     return 11;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_9_10(
     CGameCharacter *obj, ushort action, uchar mode)
 {
@@ -2963,7 +2963,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_9_10(
 
     return 20;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimationType_11(
     CGameCharacter *obj, ushort action, uchar mode)
 {
@@ -2998,7 +2998,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_11(
 
     return 12;
 }
-//----------------------------------------------------------------------------------
+
 uchar CAnimationManager::GetObjectNewAnimation(
     CGameCharacter *obj, ushort type, ushort action, uchar mode)
 {
@@ -3036,7 +3036,7 @@ uchar CAnimationManager::GetObjectNewAnimation(
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::ReadFrameDimensionData(
     ANIMATION_DIMENSIONS &result, uchar frameIndex, bool isCorpse)
 {
@@ -3065,7 +3065,7 @@ void CAnimationManager::ReadFrameDimensionData(
         result.Height = ReadInt16LE();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &direction)
 {
     pushort palette = (pushort)Start;
@@ -3158,4 +3158,4 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
         g_GL_BindTexture16(frame, imageWidth, imageHeight, &data[0]);
     }
 }
-//----------------------------------------------------------------------------------
+

@@ -4,7 +4,7 @@
 #define DATASTREAM_DEBUG(x)
 #endif
 
-namespace WISP_DATASTREAM
+namespace Wisp
 {
 CDataWritter::CDataWritter()
 {
@@ -296,4 +296,4 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
     return result.c_str(); // This must be here to trim null bytes
 }
 
-}; // namespace WISP_DATASTREAM
+}; // namespace Wisp

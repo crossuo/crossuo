@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, ushort graphic, int x, int y, int minValue, int maxValue, int value)
     : CBaseGUI(GOT_MINMAXBUTTONS, serial, graphic, 0, x, y)
@@ -19,16 +19,16 @@ CGUIMinMaxButtons::CGUIMinMaxButtons(
     , Value(value)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIMinMaxButtons::~CGUIMinMaxButtons()
 {
-    WISPFUN_DEBUG("c67_f1");
+    DEBUG_TRACE_FUNCTION;
     Text.Clear();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIMinMaxButtons::UpdateText()
 {
-    WISPFUN_DEBUG("c67_f2");
+    DEBUG_TRACE_FUNCTION;
     if (HaveText)
     {
         if (Unicode)
@@ -122,10 +122,10 @@ void CGUIMinMaxButtons::UpdateText()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUIMinMaxButtons::Scroll(int delay)
 {
-    WISPFUN_DEBUG("c67_f3");
+    DEBUG_TRACE_FUNCTION;
     if (LastScrollTime < g_Ticks && m_ScrollMode)
     {
         if (m_ScrollMode == 1)
@@ -144,10 +144,10 @@ void CGUIMinMaxButtons::Scroll(int delay)
         UpdateText();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUIMinMaxButtons::OnClick()
 {
-    WISPFUN_DEBUG("c67_f4");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -164,7 +164,7 @@ void CGUIMinMaxButtons::OnClick()
     LastScrollTime = g_Ticks + 100;
     ScrollStep = BaseScrollStep;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIMinMaxButtons::SetTextParameters(
     bool haveText,
     SLIDER_TEXT_POSITION textPosition,
@@ -175,7 +175,7 @@ void CGUIMinMaxButtons::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     ushort textFlags)
 {
-    WISPFUN_DEBUG("c67_f5");
+    DEBUG_TRACE_FUNCTION;
     HaveText = haveText;
     TextPosition = textPosition;
     Font = font;
@@ -187,17 +187,17 @@ void CGUIMinMaxButtons::SetTextParameters(
 
     UpdateText();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIMinMaxButtons::PrepareTextures()
 {
-    WISPFUN_DEBUG("c67_f6");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.ExecuteGump(Graphic);
     g_Orion.ExecuteGump(Graphic + 1);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIMinMaxButtons::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c67_f7");
+    DEBUG_TRACE_FUNCTION;
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 
     IFOR (i, 0, 2)
@@ -211,13 +211,13 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
     if (HaveText)
         Text.Draw(TextX, TextY, checktrans);
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIMinMaxButtons::Select()
 {
-    WISPFUN_DEBUG("c67_f8");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
     return (x >= 0 && y >= 0 && x < 36 && y < 18);
 }
-//----------------------------------------------------------------------------------
+

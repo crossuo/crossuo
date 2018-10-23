@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpScreenConnection::CGumpScreenConnection()
     : CGump(GT_NONE, 0, 0, 0)
 {
     NoMove = true;
     NoClose = true;
 }
-//----------------------------------------------------------------------------------
+
 CGumpScreenConnection::~CGumpScreenConnection()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenConnection::CreateText(int x, int y, string str, uchar font)
 {
-    WISPFUN_DEBUG("c113_f1");
+    DEBUG_TRACE_FUNCTION;
     if (g_ConnectionScreen.GetTextA().length())
         str = g_ConnectionScreen.GetTextA();
 
@@ -32,10 +32,10 @@ void CGumpScreenConnection::CreateText(int x, int y, string str, uchar font)
     obj->CreateTextureA(font, str, 260, TS_CENTER);
     Add(obj);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenConnection::UpdateContent()
 {
-    WISPFUN_DEBUG("c113_f2");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
@@ -227,10 +227,10 @@ void CGumpScreenConnection::UpdateContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenConnection::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c113_f3");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_CS_OK) //v button
     {
         if (g_ConnectionScreen.GetType() == CST_CHARACTER_LIST)
@@ -256,4 +256,4 @@ void CGumpScreenConnection::GUMP_BUTTON_EVENT_C
     else if (serial == ID_CS_CANCEL) //Button x
         g_ConnectionScreen.CreateSmoothAction(CConnectionScreen::ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
 }
-//----------------------------------------------------------------------------------
+

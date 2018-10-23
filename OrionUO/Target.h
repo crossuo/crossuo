@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef TARGET_H
 #define TARGET_H
-//----------------------------------------------------------------------------------
+
 //Класс для работы с таргетом
 class CTarget
 {
@@ -48,10 +48,10 @@ public:
     void SetLastTargetObject(int serial);
 
     //Установить данные прицела
-    void SetData(WISP_DATASTREAM::CDataReader &reader);
+    void SetData(Wisp::CDataReader &reader);
 
     //Установить данные мульти-таргета
-    void SetMultiData(WISP_DATASTREAM::CDataReader &reader);
+    void SetMultiData(Wisp::CDataReader &reader);
 
     bool IsTargeting() const { return Targeting; }
 
@@ -96,8 +96,7 @@ public:
     //Получить объект мульти в координатах
     CMulti *GetMultiAtXY(short x, short y);
 };
-//----------------------------------------------------------------------------------
+
 extern CTarget g_Target;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

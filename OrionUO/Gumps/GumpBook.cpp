@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpBook.h"
-//----------------------------------------------------------------------------------
+
 CGumpBook::CGumpBook(uint serial, short x, short y, short pageCount, bool writable, bool unicode)
     : CGump(GT_BOOK, serial, x, y)
     , PageCount(pageCount)
     , Writable(writable)
     , Unicode(unicode)
 {
-    WISPFUN_DEBUG("c87_f1");
+    DEBUG_TRACE_FUNCTION;
     m_ChangedPage = new bool[pageCount + 1];
     m_PageDataReceived = new bool[pageCount + 1];
     Page = 0;
@@ -130,18 +130,18 @@ CGumpBook::CGumpBook(uint serial, short x, short y, short pageCount, bool writab
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CGumpBook::~CGumpBook()
 {
-    WISPFUN_DEBUG("c87_f2");
+    DEBUG_TRACE_FUNCTION;
 
     RELEASE_POINTER(m_ChangedPage);
     RELEASE_POINTER(m_PageDataReceived);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::PrepareContent()
 {
-    WISPFUN_DEBUG("c87_f2.1");
+    DEBUG_TRACE_FUNCTION;
     /*if (!m_PageDataReceived[Page])
 	{
 		CPacketBookPageDataRequest(Serial, Page).Send();
@@ -154,10 +154,10 @@ void CGumpBook::PrepareContent()
 		m_PageDataReceived[Page + 1] = true;
 	}*/
 }
-//----------------------------------------------------------------------------------
+
 CGUITextEntry *CGumpBook::GetEntry(int page)
 {
-    WISPFUN_DEBUG("c87_f3");
+    DEBUG_TRACE_FUNCTION;
     int currentPage = -1;
 
     QFOR(item, m_Items, CBaseGUI *)
@@ -170,20 +170,20 @@ CGUITextEntry *CGumpBook::GetEntry(int page)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::SetPageData(int page, const wstring &data)
 {
-    WISPFUN_DEBUG("c87_f4");
+    DEBUG_TRACE_FUNCTION;
     CGUITextEntry *entry = GetEntry(page);
     m_PageDataReceived[page] = true;
 
     if (entry != NULL)
         entry->m_Entry.SetTextW(data);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::ChangePage(int newPage, bool playSound)
 {
-    WISPFUN_DEBUG("c87_f5");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, 2)
     {
         if (Page + i >= PageCount)
@@ -212,20 +212,20 @@ void CGumpBook::ChangePage(int newPage, bool playSound)
             g_EntryPointer = &g_GameConsole;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::DelayedClick(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c87_f6");
+    DEBUG_TRACE_FUNCTION;
     if (obj != NULL)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c87_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!g_ClickObject.Enabled)
     {
         int newPage = -1;
@@ -259,10 +259,10 @@ void CGumpBook::GUMP_BUTTON_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpBook::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c87_f8");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftSerial == ID_GB_BUTTON_PREV) //Prev
     {
         //Был нажат уголок "Назад", при даблклике устанавливаем 1 страницу
@@ -291,10 +291,10 @@ bool CGumpBook::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::InsertInContent(const WPARAM &wparam, bool isCharPress)
 {
-    WISPFUN_DEBUG("c87_f9");
+    DEBUG_TRACE_FUNCTION;
     int page = Page;
 
     if (page >= 0 && page <= PageCount)
@@ -452,11 +452,11 @@ void CGumpBook::InsertInContent(const WPARAM &wparam, bool isCharPress)
         //page
     }
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c87_f10");
+    DEBUG_TRACE_FUNCTION;
     if (!Writable)
         return;
 
@@ -486,10 +486,10 @@ void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     else
         InsertInContent(wParam);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c87_f11");
+    DEBUG_TRACE_FUNCTION;
     if (!Writable)
         return;
 
@@ -531,7 +531,7 @@ void CGumpBook::OnKeyDown(const SDL_KeyboardEvent &ev)
     NOT_IMPLEMENTED; // FIXME
 }
 #endif
-//----------------------------------------------------------------------------------
+
 void CGumpBook::SetPagePos(int val, int page)
 {
     //safety
@@ -548,10 +548,9 @@ void CGumpBook::SetPagePos(int val, int page)
         val = g_EntryPointer->Length();
     g_EntryPointer->SetPos(val, this);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBook::PasteClipboardData(wstring &data)
 {
     IFOR (i, 0, (int)data.length())
         InsertInContent(data[i]);
 }
-//----------------------------------------------------------------------------------

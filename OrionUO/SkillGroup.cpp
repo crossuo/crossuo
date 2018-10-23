@@ -8,41 +8,41 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CSkillGroupObject::CSkillGroupObject()
 {
-    WISPFUN_DEBUG("c207_f1");
+    DEBUG_TRACE_FUNCTION;
     memset(m_Items, 0xFF, sizeof(m_Items));
 }
-//----------------------------------------------------------------------------------
+
 CSkillGroupObject::~CSkillGroupObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 uchar CSkillGroupObject::GetItem(intptr_t index)
 {
-    WISPFUN_DEBUG("c207_f2");
+    DEBUG_TRACE_FUNCTION;
     if (index < 0 || index >= Count)
         return 0xFF;
 
     return m_Items[index];
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupObject::Add(uchar index)
 {
-    WISPFUN_DEBUG("c207_f3");
+    DEBUG_TRACE_FUNCTION;
     if (Contains(index))
         return;
 
     m_Items[Count] = index;
     Count++;
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupObject::AddSorted(uchar index)
 {
-    WISPFUN_DEBUG("c207_f4");
+    DEBUG_TRACE_FUNCTION;
     if (Contains(index))
         return;
 
@@ -51,10 +51,10 @@ void CSkillGroupObject::AddSorted(uchar index)
 
     Sort();
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupObject::Remove(uchar index)
 {
-    WISPFUN_DEBUG("c207_f5");
+    DEBUG_TRACE_FUNCTION;
     bool removed = false;
 
     IFOR (i, 0, Count)
@@ -80,10 +80,10 @@ void CSkillGroupObject::Remove(uchar index)
         m_Items[Count] = 0xFF;
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CSkillGroupObject::Contains(uchar index)
 {
-    WISPFUN_DEBUG("c207_f6");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, Count)
     {
         if (m_Items[i] == index)
@@ -92,10 +92,10 @@ bool CSkillGroupObject::Contains(uchar index)
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupObject::Sort()
 {
-    WISPFUN_DEBUG("c207_f7");
+    DEBUG_TRACE_FUNCTION;
     BYTE table[60] = { 0 };
     int Ptr = 0;
 
@@ -115,13 +115,13 @@ void CSkillGroupObject::Sort()
     IFOR (j, 0, Count)
         m_Items[j] = table[j];
 }
-//----------------------------------------------------------------------------------
+
 void CSkillGroupObject::TransferTo(CSkillGroupObject *group)
 {
-    WISPFUN_DEBUG("c207_f8");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, Count)
         group->Add(m_Items[i]);
 
     group->Sort();
 }
-//----------------------------------------------------------------------------------
+

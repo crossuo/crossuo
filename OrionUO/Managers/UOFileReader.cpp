@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 
 UOFileReader g_UOFileReader;
-//---------------------------------------------------------------------------
+
 //----------------------------------CUOFileReader-------------------------------
-//---------------------------------------------------------------------------
+
 /*!
 Получить массив пикселей гампа
 @param [__in] io Ссылка на данные о гампе
@@ -22,7 +22,7 @@ UOFileReader g_UOFileReader;
 */
 USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 {
-    WISPFUN_DEBUG("c148_f1");
+    DEBUG_TRACE_FUNCTION;
     size_t dataStart = io.Address;
     puint lookupList = (puint)dataStart;
 
@@ -76,7 +76,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 
     return pixels;
 }
-//---------------------------------------------------------------------------
+
 /*!
 Прочитать гамп и сгенерировать текстуру
 @param [__in] io Ссылка на данные о гампе
@@ -84,7 +84,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 */
 CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
 {
-    WISPFUN_DEBUG("c148_f2");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = NULL;
 
     USHORT_LIST pixels = GetGumpPixels(io);
@@ -97,11 +97,11 @@ CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
 
     return th;
 }
-//---------------------------------------------------------------------------
+
 USHORT_LIST
 UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, short &height)
 {
-    WISPFUN_DEBUG("c148_f4");
+    DEBUG_TRACE_FUNCTION;
 
     uint flag = *(puint)io.Address;
     pushort P = (pushort)io.Address;
@@ -331,7 +331,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
     return pixels;
 }
-//---------------------------------------------------------------------------
+
 /*!
 Прочитать арт и сгенерировать текстуру
 @param [__in] ID Индекс арта
@@ -340,7 +340,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 */
 CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
 {
-    WISPFUN_DEBUG("c148_f2");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *texture = NULL;
     short width = 0;
     short height = 0;
@@ -429,7 +429,7 @@ CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
 
     return texture;
 }
-//---------------------------------------------------------------------------
+
 /*!
 Прочитать текстуру ландшафта и сгенерировать тексруту
 @param [__in] io Ссылка на данные о текстуре ландшафта
@@ -437,7 +437,7 @@ CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
 */
 CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 {
-    WISPFUN_DEBUG("c148_f7");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = new CGLTexture();
     th->Texture = 0;
     ushort color = io.Color;
@@ -487,7 +487,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 
     return th;
 }
-//---------------------------------------------------------------------------
+
 /*!
 Прочитать освещение и сгенерировать текстуру
 @param [__in] io Ссылка на данные о освещении
@@ -495,7 +495,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 */
 CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 {
-    WISPFUN_DEBUG("c148_f8");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = new CGLTexture();
     th->Texture = NULL;
 
@@ -521,4 +521,4 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 
     return th;
 }
-//---------------------------------------------------------------------------
+

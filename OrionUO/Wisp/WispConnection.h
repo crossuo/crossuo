@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "../Sockets.h"
-namespace WISP_NETWORK
+namespace Wisp
 {
 class CConnection
 {
@@ -29,4 +29,4 @@ public:
     int Send(puchar data, int size);
     int Send(const UCHAR_LIST &data);
 };
-}; // namespace WISP_NETWORK
+}; // namespace Wisp

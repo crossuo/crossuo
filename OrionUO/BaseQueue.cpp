@@ -8,21 +8,21 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CBaseQueueItem---------------------------------
-//----------------------------------------------------------------------------------
+
 CBaseQueueItem::CBaseQueueItem()
     : CBaseQueue()
     , m_Next(NULL)
     , m_Prev(NULL)
 {
 }
-//----------------------------------------------------------------------------------
+
 CBaseQueueItem::~CBaseQueueItem()
 {
-    WISPFUN_DEBUG("c180_f1");
+    DEBUG_TRACE_FUNCTION;
     //Принудительная очистка при удалении
     Clear();
 
@@ -45,28 +45,28 @@ CBaseQueueItem::~CBaseQueueItem()
 		m_Next = NULL;
 	}*/
 }
-//----------------------------------------------------------------------------------
+
 //-------------------------------------CBaseQueue-----------------------------------
-//----------------------------------------------------------------------------------
+
 CBaseQueue::CBaseQueue()
     : m_Items(NULL)
 {
 }
-//----------------------------------------------------------------------------------
+
 CBaseQueue::~CBaseQueue()
 {
-    WISPFUN_DEBUG("c181_f1");
+    DEBUG_TRACE_FUNCTION;
     //Принудительная очистка при удалении
     Clear();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Очистка списка
 @return 
 */
 void CBaseQueue::Clear()
 {
-    WISPFUN_DEBUG("c181_f2");
+    DEBUG_TRACE_FUNCTION;
     //Если в контейнере есть элементы - достаточно просто удалить первый, остальные удалятся вместе с ним
     if (m_Items != NULL)
     {
@@ -82,7 +82,7 @@ void CBaseQueue::Clear()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавление элемента в список
 @param [__in] item Ссылка на новый элемент
@@ -90,7 +90,7 @@ void CBaseQueue::Clear()
 */
 CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f3");
+    DEBUG_TRACE_FUNCTION;
     //Если вставляемый элемент не равен нулю
     if (item != NULL)
     {
@@ -112,7 +112,7 @@ CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
     //Вернем вставляемый элемент (для однострочных конструкций типа: item = Container->Add(new TItem());)
     return item;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удаление указанного элемента из списка
 @param [__in] item Ссылка на элемент
@@ -120,7 +120,7 @@ CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
 */
 void CBaseQueue::Delete(CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f4");
+    DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю
     if (item != NULL)
     {
@@ -133,7 +133,7 @@ void CBaseQueue::Delete(CBaseQueueItem *item)
         delete item;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удаление элемента с указанным индексом
 @param [__in] index Индекс элемента
@@ -141,11 +141,11 @@ void CBaseQueue::Delete(CBaseQueueItem *item)
 */
 void CBaseQueue::Delete(int index)
 {
-    WISPFUN_DEBUG("c181_f5");
+    DEBUG_TRACE_FUNCTION;
     //Получим элемент с указанным индексом и удалим его (если есть)
     Delete(Get(index));
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс указанного элемента
 @param [__in] item Ссылка на элемент
@@ -153,7 +153,7 @@ void CBaseQueue::Delete(int index)
 */
 int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f6");
+    DEBUG_TRACE_FUNCTION;
     int index = 0;
 
     //Пройдемся по очереди
@@ -169,14 +169,14 @@ int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
     //В случае не удачного поиска - вернем -1 (не найдено)
     return -1;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить общее количество элементов в списке
 @return Количество объектов в очереди
 */
 int CBaseQueue::GetItemsCount()
 {
-    WISPFUN_DEBUG("c181_f7");
+    DEBUG_TRACE_FUNCTION;
     int count = 0;
 
     //Пройдемся по всем элементам очереди и запомним общее количество
@@ -186,7 +186,7 @@ int CBaseQueue::GetItemsCount()
 
     return count;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить элемент с указанным индексом
 @param [__in] index Индекс элемента
@@ -194,7 +194,7 @@ int CBaseQueue::GetItemsCount()
 */
 CBaseQueueItem *CBaseQueue::Get(int index)
 {
-    WISPFUN_DEBUG("c181_f8");
+    DEBUG_TRACE_FUNCTION;
     CBaseQueueItem *item = m_Items;
 
     //Пройдемся по всем элементам очереди до нахождения нужного или окончания списка
@@ -203,7 +203,7 @@ CBaseQueueItem *CBaseQueue::Get(int index)
 
     return item;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Осуществляет вставку элемента в очередь
 @param [__in] first Ссылка на предшествующий элемент
@@ -212,7 +212,7 @@ CBaseQueueItem *CBaseQueue::Get(int index)
 */
 void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f9");
+    DEBUG_TRACE_FUNCTION;
     if (first == NULL)
     {
         item->m_Next = m_Items;
@@ -235,7 +235,7 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
             next->m_Prev = item;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Осуществляет изъятие указанного элемента из очереди
 @param [__in] item Ссылка на элемент
@@ -243,7 +243,7 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 */
 void CBaseQueue::Unlink(CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f10");
+    DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю
     if (item != NULL)
     {
@@ -266,7 +266,7 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Поместить элемент в начало очереди
 @param [__in] item Ссылка на элемент
@@ -274,7 +274,7 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
 */
 void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f11");
+    DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю и не равен началу очереди
     if (item != NULL && item != m_Items)
     {
@@ -292,7 +292,7 @@ void CBaseQueue::MoveToFront(CBaseQueueItem *item)
         m_Items = item;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Поместить элемент в конец очереди
 @param [__in] item Ссылка на элемент
@@ -300,7 +300,7 @@ void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 */
 void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 {
-    WISPFUN_DEBUG("c181_f12");
+    DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю
     if (item != NULL)
     {
@@ -320,7 +320,7 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
         item->m_Next = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Переместить элемент вверх/вниз по очереди
 @param [__in] item Ссылка на элемент
@@ -329,7 +329,7 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 */
 bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
 {
-    WISPFUN_DEBUG("c181_f13");
+    DEBUG_TRACE_FUNCTION;
     //Немедленно запишем результат (и исходные данные для первой проверки) в переменную
     bool result = (item != NULL);
 
@@ -400,14 +400,14 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
     //Если все проверки прошли успешно - элемент перемещен
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить указатель на последний элемент
 @return Ссылка на элемент
 */
 CBaseQueueItem *CBaseQueue::Last()
 {
-    WISPFUN_DEBUG("c181_f14");
+    DEBUG_TRACE_FUNCTION;
     //Начинаем поиск с начала очереди
     CBaseQueueItem *last = m_Items;
 
@@ -418,4 +418,4 @@ CBaseQueueItem *CBaseQueue::Last()
     //Вернем что получилось в результате поиска
     return last;
 }
-//----------------------------------------------------------------------------------
+

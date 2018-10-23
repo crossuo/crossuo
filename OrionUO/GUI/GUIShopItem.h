@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUISHOPITEM_H
 #define GUISHOPITEM_H
-//----------------------------------------------------------------------------------
+
 class CGUIShopItem : public CBaseGUI
 {
 public:
@@ -67,7 +67,7 @@ public:
     //!Создать текстуру количества
     void CreateCountText(int lostCount);
 
-    virtual WISP_GEOMETRY::CSize GetSize() { return WISP_GEOMETRY::CSize(200, m_MaxOffset + 20); }
+    virtual Wisp::CSize GetSize() { return Wisp::CSize(200, m_MaxOffset + 20); }
 
     virtual void PrepareTextures();
 
@@ -76,6 +76,5 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

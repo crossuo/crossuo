@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIButton::CGUIButton(
     int serial, ushort graphic, ushort graphicSelected, ushort graphicPressed, int x, int y)
     : CGUIDrawObject(GOT_BUTTON, serial, graphic, 0, x, y)
@@ -18,22 +18,22 @@ CGUIButton::CGUIButton(
     , GraphicPressed(graphicPressed)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIButton::~CGUIButton()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIButton::PrepareTextures()
 {
-    WISPFUN_DEBUG("c44_f1");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.ExecuteGump(Graphic);
     g_Orion.ExecuteGump(GraphicSelected);
     g_Orion.ExecuteGump(GraphicPressed);
 }
-//----------------------------------------------------------------------------------
+
 ushort CGUIButton::GetDrawGraphic()
 {
-    WISPFUN_DEBUG("c44_f2");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = Graphic;
 
     if (g_GumpPressedElement == this)
@@ -43,18 +43,18 @@ ushort CGUIButton::GetDrawGraphic()
 
     return graphic;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIButton::OnMouseEnter()
 {
-    WISPFUN_DEBUG("c44_f3");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != NULL)
         g_SelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIButton::OnMouseExit()
 {
-    WISPFUN_DEBUG("c44_f4");
+    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != NULL)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+

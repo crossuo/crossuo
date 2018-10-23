@@ -8,31 +8,31 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CTextContainer g_SystemChat(30);
-//----------------------------------------------------------------------------------
+
 CTextContainer::CTextContainer(int maxSize)
     : MaxSize(maxSize)
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextContainer::~CTextContainer()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CTextContainer::Clear()
 {
-    WISPFUN_DEBUG("c173_f1");
+    DEBUG_TRACE_FUNCTION;
     CBaseQueue::Clear();
 
     Size = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CTextContainer::Add(CTextData *obj)
 {
-    WISPFUN_DEBUG("c173_f2");
+    DEBUG_TRACE_FUNCTION;
     CBaseQueue::Add(obj);
 
     if (Size >= MaxSize)
@@ -40,18 +40,18 @@ void CTextContainer::Add(CTextData *obj)
     else
         Size++;
 }
-//----------------------------------------------------------------------------------
+
 void CTextContainer::Delete(CTextData *obj)
 {
-    WISPFUN_DEBUG("c173_f3");
+    DEBUG_TRACE_FUNCTION;
     CBaseQueue::Delete(obj);
 
     Size--;
 }
-//----------------------------------------------------------------------------------
+
 void CTextContainer::DrawSystemChat(int x, int y, int height)
 {
-    WISPFUN_DEBUG("c173_f4");
+    DEBUG_TRACE_FUNCTION;
     int offset = (y + height) - 41;
 
     CTextData *td = (CTextData *)g_SystemChat.Last();
@@ -68,4 +68,4 @@ void CTextContainer::DrawSystemChat(int x, int y, int height)
         td = (CTextData *)td->m_Prev;
     }
 }
-//----------------------------------------------------------------------------------
+

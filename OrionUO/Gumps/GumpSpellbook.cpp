@@ -8,25 +8,25 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 //!Названия кругов заклинаний
 string CGumpSpellbook::m_SpellCircleName[8] = { "First Circle",   "Second Circle", "Third Circle",
                                                 "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
                                                 "Seventh Circle", "Eighth Circle" };
-//----------------------------------------------------------------------------------
+
 CGumpSpellbook::CGumpSpellbook(uint serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)
 {
     Draw2Page = true;
     memset(&m_Spells[0], 0, sizeof(m_Spells));
 }
-//----------------------------------------------------------------------------------
+
 CGumpSpellbook::~CGumpSpellbook()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSpellbook::InitStaticData()
 {
     return;
@@ -117,10 +117,10 @@ void CGumpSpellbook::InitStaticData()
     m_SpellName1[63][0] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028383, false, "Water Elemental");
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSpellbook::UpdateGraphic(ushort parentGraphic)
 {
-    WISPFUN_DEBUG("c127_f1");
+    DEBUG_TRACE_FUNCTION;
     SPELLBOOK_TYPE bookType = BookType;
 
     switch (parentGraphic)
@@ -170,10 +170,10 @@ void CGumpSpellbook::UpdateGraphic(ushort parentGraphic)
     if (bookType != BookType)
         WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSpellbook::InitToolTip()
 {
-    WISPFUN_DEBUG("c127_f2");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         g_ToolTip.Set(L"Double click to maximize book gump");
@@ -201,10 +201,10 @@ void CGumpSpellbook::InitToolTip()
         }
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpSpellbook::PrepareContent()
 {
-    WISPFUN_DEBUG("c127_f3");
+    DEBUG_TRACE_FUNCTION;
     int maxSpellsCount = 0;
     int spellsOnPage = 0;
     int dictionaryPagesCount = 0;
@@ -225,7 +225,7 @@ void CGumpSpellbook::PrepareContent()
     if (g_PressedObject.LeftGump == this && Page >= dictionaryPagesCount &&
         g_PressedObject.LeftSerial >= ID_GSB_SPELL_ICON_LEFT)
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -347,10 +347,10 @@ void CGumpSpellbook::PrepareContent()
         }
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpSpellbook::GetTooltipBookInfo(int &dictionaryPagesCount, int &tooltipOffset)
 {
-    WISPFUN_DEBUG("c127_f4");
+    DEBUG_TRACE_FUNCTION;
     int maxSpellsCount = 0;
 
     switch (BookType)
@@ -413,7 +413,7 @@ void CGumpSpellbook::GetTooltipBookInfo(int &dictionaryPagesCount, int &tooltipO
     if (dictionaryPagesCount % 2)
         dictionaryPagesCount++;
 }
-//----------------------------------------------------------------------------
+
 void CGumpSpellbook::GetSummaryBookInfo(
     int &maxSpellsCount,
     int &dictionaryPagesCount,
@@ -423,7 +423,7 @@ void CGumpSpellbook::GetSummaryBookInfo(
     ushort &minimizedGraphic,
     ushort &iconStartGraphic)
 {
-    WISPFUN_DEBUG("c127_f5");
+    DEBUG_TRACE_FUNCTION;
     switch (BookType)
     {
         case ST_MAGE:
@@ -507,10 +507,10 @@ void CGumpSpellbook::GetSummaryBookInfo(
     if (dictionaryPagesCount % 2)
         dictionaryPagesCount++;
 }
-//----------------------------------------------------------------------------
+
 string CGumpSpellbook::GetSpellName(int offset, string &abbreviature, string &reagents)
 {
-    WISPFUN_DEBUG("c127_f6");
+    DEBUG_TRACE_FUNCTION;
     switch (BookType)
     {
         case ST_MAGE:
@@ -540,10 +540,10 @@ string CGumpSpellbook::GetSpellName(int offset, string &abbreviature, string &re
 
     return "";
 }
-//----------------------------------------------------------------------------
+
 string CGumpSpellbook::GetSpellRequries(int offset, int &y)
 {
-    WISPFUN_DEBUG("c127_f7");
+    DEBUG_TRACE_FUNCTION;
     char buf[100] = { 0 };
     y = 162;
 
@@ -607,10 +607,10 @@ string CGumpSpellbook::GetSpellRequries(int offset, int &y)
 
     return buf;
 }
-//----------------------------------------------------------------------------
+
 void CGumpSpellbook::UpdateContent()
 {
-    WISPFUN_DEBUG("c127_f8");
+    DEBUG_TRACE_FUNCTION;
     m_Body = NULL;
     m_PrevPage = NULL;
     m_NextPage = NULL;
@@ -847,10 +847,10 @@ void CGumpSpellbook::UpdateContent()
     m_LastSpellBookmark = (CGUIGumppic *)Add(new CGUIGumppic(0x08AD, 184, 2));
     m_LastSpellPointer = (CGUIGumppic *)Add(new CGUIGumppic(0x08AF, 184, 52));
 }
-//----------------------------------------------------------------------------
+
 void CGumpSpellbook::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c127_f9");
+    DEBUG_TRACE_FUNCTION;
     int newPage = -1;
 
     if (serial == ID_GSB_BUTTON_PREV)
@@ -953,17 +953,17 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
         g_ClickObject.Page = newPage;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpSpellbook::GUMP_TEXT_ENTRY_EVENT_C
 {
-    WISPFUN_DEBUG("c127_f10");
+    DEBUG_TRACE_FUNCTION;
     if (serial >= ID_GSB_SPELL_ICON_LEFT)
         OnButton(serial);
 }
-//----------------------------------------------------------------------------
+
 bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c127_f11");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Minimized)
@@ -1024,20 +1024,20 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSpellbook::DelayedClick(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c127_f12");
+    DEBUG_TRACE_FUNCTION;
     if (obj != NULL)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSpellbook::ChangePage(int newPage)
 {
-    WISPFUN_DEBUG("c127_f13");
+    DEBUG_TRACE_FUNCTION;
     Page = newPage;
 
     m_PrevPage->Visible = (Page != 0);
@@ -1045,7 +1045,7 @@ void CGumpSpellbook::ChangePage(int newPage)
 
     g_Orion.PlaySoundEffect(0x0055);
 }
-//----------------------------------------------------------------------------------
+
 string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
     { "Clumsy", "U J" },
     { "Create Food", "I M Y" },
@@ -1112,7 +1112,7 @@ string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
     { "Fire Elemental", "K V X F" },
     { "Water Elemental", "K V X A" }
 };
-//----------------------------------------------------------------------------------
+
 string CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
     "Bloodmoss\nNightshade",
     "Garlic\nGinseng\nMandrake root",
@@ -1179,7 +1179,7 @@ string CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
     "Bloodmoss\nMandrake root\nSpiders silk\nSulfurous ash",
     "Bloodmoss\nMandrake root\nSpiders silk"
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2]{
     { "Animate Dead", "Uus Corp" },
     { "Blood Oath", "In Jux Mani Xen" },
@@ -1199,7 +1199,7 @@ const string CGumpSpellbook::m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2]{
     { "Wraith Form", "Rel Xen Um" },
     { "Exorcism", "Ort Corp Grav" }
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT] = {
     "Daemon Blood\nGrave Dust",
     "Daemon Blood",
@@ -1219,7 +1219,7 @@ const string CGumpSpellbook::m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT] = {
     "Nox Crystal\nPig Iron",
     "Nox Crystal\nGrave Dust"
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellName3[SPELLBOOK_3_SPELLS_COUNT][2]{
     { "Cleanse by Fire", "Expor Flamus" },     { "Close Wounds", "Obsu Vulni" },
     { "Consecrate Weapon", "Consecrus Arma" }, { "Dispel Evil", "Dispiro Malas" },
@@ -1227,17 +1227,17 @@ const string CGumpSpellbook::m_SpellName3[SPELLBOOK_3_SPELLS_COUNT][2]{
     { "Holy Light", "Augus Luminos" },         { "Noble Sacrifice", "Dium Prostra" },
     { "Remove Curse", "Extermo Vomica" },      { "Sacred Journey", "Sanctum Viatas" }
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellName4[SPELLBOOK_4_SPELLS_COUNT]{
     "Honorable Execution", "Confidence",       "Evasion",
     "Counter Attack",      "Lightning Strike", "Momentum Strike"
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellName5[SPELLBOOK_5_SPELLS_COUNT]{
     "Focus Attack",    "Death Strike", "Animal Form", "Ki Attack",
     "Surprise Attack", "Backstab",     "Shadowjump",  "Mirror Image"
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2]{
     { "Arcane Circle", "Myrshalee" },     { "Gift of Renewal", "Olorisstra" },
     { "Immolating Weapon", "Thalshara" }, { "Attunement", "Haeldril" },
@@ -1248,7 +1248,7 @@ const string CGumpSpellbook::m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2]{
     { "Ethereal Voyage", "Orlavdra" },    { "Word of Death", "Nyraxle" },
     { "Gift of Life", "Illorae" },        { "Arcane Empowerment", "Aslavdra" }
 };
-//----------------------------------------------------------------------------------
+
 const string CGumpSpellbook::m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][2]{
     { "Nether Bolt", "In Corp Ylem" },
     { "Healing Stone", "Kal In Mani" },
@@ -1281,31 +1281,31 @@ const string CGumpSpellbook::m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][2]{
     { "Mana Shield", "Faerkulggen" },
     { "Summon Reaper", "Lartarisstree" }
 };
-//----------------------------------------------------------------------------------
+
 const SPELL_REQURIES CGumpSpellbook::m_SpellRequries2[SPELLBOOK_2_SPELLS_COUNT] = {
     { 23, 40 }, { 13, 20 }, { 11, 20 }, { 7, 0 },   { 11, 20 }, { 11, 40 },
     { 23, 70 }, { 17, 30 }, { 5, 20 },  { 17, 50 }, { 29, 65 }, { 17, 30 },
     { 23, 99 }, { 41, 80 }, { 23, 60 }, { 17, 20 }, { 40, 80 }
 };
-//----------------------------------------------------------------------------------
+
 const PALADIN_SPELL_REQURIES CGumpSpellbook::m_SpellRequries3[SPELLBOOK_3_SPELLS_COUNT] = {
     { 10, 5, 10 },  { 10, 0, 10 },  { 10, 15, 10 }, { 10, 35, 10 }, { 15, 25, 10 },
     { 20, 45, 10 }, { 10, 55, 10 }, { 20, 65, 30 }, { 20, 5, 10 },  { 10, 15, 15 }
 };
-//----------------------------------------------------------------------------------
+
 const SPELL_REQURIES CGumpSpellbook::m_SpellRequries4[SPELLBOOK_4_SPELLS_COUNT] = {
     { 0, 25 }, { 10, 25 }, { 10, 60 }, { 5, 40 }, { 10, 50 }, { 10, 70 }
 };
-//----------------------------------------------------------------------------------
+
 const SPELL_REQURIES CGumpSpellbook::m_SpellRequries5[SPELLBOOK_5_SPELLS_COUNT] = {
     { 10, 30 }, { 30, 85 }, { 10, 0 }, { 25, 80 }, { 20, 60 }, { 30, 40 }, { 15, 50 }, { 10, 20 }
 };
-//----------------------------------------------------------------------------------
+
 const SPELL_REQURIES CGumpSpellbook::m_SpellRequries6[SPELLBOOK_6_SPELLS_COUNT] = {
     { 24, 0 },  { 24, 0 },  { 32, 10 }, { 24, 0 },  { 32, 10 }, { 24, 0 },  { 10, 38 }, { 10, 38 },
     { 34, 24 }, { 50, 66 }, { 40, 52 }, { 40, 52 }, { 32, 24 }, { 50, 80 }, { 70, 38 }, { 50, 24 }
 };
-//----------------------------------------------------------------------------------
+
 //?!?!?
 /*"Enchanted Summoning",
 "Anticipate Hit",
@@ -1338,4 +1338,4 @@ const SPELL_REQURIES CGumpSpellbook::m_SpellRequries6[SPELLBOOK_6_SPELLS_COUNT] 
 "Boarding",
 "Flaming Shot",
 "Playing The Odds"*/
-//----------------------------------------------------------------------------------
+

@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIDrawObject::CGUIDrawObject(
     GUMP_OBJECT_TYPE type, int serial, ushort graphic, ushort color, int x, int y)
     : CBaseGUI(type, serial, graphic, color, x, y)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIDrawObject::~CGUIDrawObject()
 {
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CSize CGUIDrawObject::GetSize()
+
+Wisp::CSize CGUIDrawObject::GetSize()
 {
-    WISPFUN_DEBUG("c52_f1");
-    WISP_GEOMETRY::CSize size;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CSize size;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
     if (th != NULL)
@@ -35,10 +35,10 @@ WISP_GEOMETRY::CSize CGUIDrawObject::GetSize()
 
     return size;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIDrawObject::SetShaderMode()
 {
-    WISPFUN_DEBUG("c52_f2");
+    DEBUG_TRACE_FUNCTION;
 
     if (Color != 0)
     {
@@ -52,16 +52,16 @@ void CGUIDrawObject::SetShaderMode()
     else
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIDrawObject::PrepareTextures()
 {
-    WISPFUN_DEBUG("c52_f3");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.ExecuteGump(Graphic);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIDrawObject::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c52_f4");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
     if (th != NULL)
@@ -71,10 +71,10 @@ void CGUIDrawObject::Draw(bool checktrans)
         th->Draw(m_X, m_Y, checktrans);
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIDrawObject::Select()
 {
-    WISPFUN_DEBUG("c52_f5");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
     if (th != NULL)
@@ -82,4 +82,4 @@ bool CGUIDrawObject::Select()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+

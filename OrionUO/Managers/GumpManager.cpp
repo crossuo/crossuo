@@ -8,19 +8,19 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpManager.h"
-//----------------------------------------------------------------------------------
+
 CGumpManager g_GumpManager;
-//----------------------------------------------------------------------------------
+
 /*!
 Вычислить количество статусбаров без пати
 @return Количество non-party статусбыров
 */
 int CGumpManager::GetNonpartyStatusbarsCount()
 {
-    WISPFUN_DEBUG("c144_f1");
+    DEBUG_TRACE_FUNCTION;
     int count = 0;
 
     QFOR(gump, m_Items, CGump *)
@@ -32,7 +32,7 @@ int CGumpManager::GetNonpartyStatusbarsCount()
 
     return count;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить гамп
 @param [__in] obj Ссылка на гамп
@@ -40,7 +40,7 @@ int CGumpManager::GetNonpartyStatusbarsCount()
 */
 void CGumpManager::AddGump(CGump *obj)
 {
-    WISPFUN_DEBUG("c144_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_Items == NULL)
     {
         m_Items = obj;
@@ -217,14 +217,14 @@ void CGumpManager::AddGump(CGump *obj)
         obj->PrepareTextures();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить гамп-владелец текущей активной TEntryText
 @return Ссылку на гамп или NULL
 */
 CGump *CGumpManager::GetTextEntryOwner()
 {
-    WISPFUN_DEBUG("c144_f3");
+    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (gump->EntryPointerHere())
@@ -233,7 +233,7 @@ CGump *CGumpManager::GetTextEntryOwner()
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Проверить, существует ли гамп
 @param [__in] gumpID ID гампа (в памяти)
@@ -241,7 +241,7 @@ CGump *CGumpManager::GetTextEntryOwner()
 */
 CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 {
-    WISPFUN_DEBUG("c144_f4");
+    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (gumpID == (uintptr_t)gump)
@@ -250,7 +250,7 @@ CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обновить содержимое гампа
 @param [__in] serial Серийник гампа
@@ -260,7 +260,7 @@ CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 */
 CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
 {
-    WISPFUN_DEBUG("c144_f5");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = GetGump(serial, id, type);
 
     if (gump != NULL)
@@ -268,7 +268,7 @@ CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
 
     return gump;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обновить гамп
 @param [__in] serial Серийник гампа
@@ -278,7 +278,7 @@ CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
 */
 CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
 {
-    WISPFUN_DEBUG("c144_f6");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = GetGump(serial, id, type);
 
     if (gump != NULL)
@@ -286,7 +286,7 @@ CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
 
     return gump;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Найти гамп
 @param [__in] serial Серийник гампа
@@ -296,7 +296,7 @@ CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
 */
 CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
 {
-    WISPFUN_DEBUG("c144_f7");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
 
     while (gump != NULL)
@@ -326,7 +326,7 @@ CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
 
     return gump;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Закрыть все гампы с указанными параметрами
 @param [__in] serial Серийник гампа
@@ -336,7 +336,7 @@ CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
 */
 void CGumpManager::CloseGump(uint serial, uint id, GUMP_TYPE type)
 {
-    WISPFUN_DEBUG("c144_f8");
+    DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != NULL;)
     {
         CGump *next = (CGump *)gump->m_Next;
@@ -371,7 +371,7 @@ void CGumpManager::CloseGump(uint serial, uint id, GUMP_TYPE type)
         gump = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удалить гамп
 @param [__in] obj Ссылка на гамп
@@ -379,7 +379,7 @@ void CGumpManager::CloseGump(uint serial, uint id, GUMP_TYPE type)
 */
 void CGumpManager::RemoveGump(CGump *obj)
 {
-    WISPFUN_DEBUG("c144_f8");
+    DEBUG_TRACE_FUNCTION;
     Unlink(obj);
 
     if (g_World != NULL)
@@ -406,14 +406,14 @@ void CGumpManager::RemoveGump(CGump *obj)
     obj->m_Prev = NULL;
     delete obj;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Событие удаления менеджера (вызывается перед удалением)
 @return 
 */
 void CGumpManager::OnDelete()
 {
-    WISPFUN_DEBUG("c144_f10");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
 
     while (gump != NULL)
@@ -426,14 +426,14 @@ void CGumpManager::OnDelete()
         gump = tmp;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удалить гампы, которые не могут быть досягаемы из-за изменения дистанции до объекта
 @return 
 */
 void CGumpManager::RemoveRangedGumps()
 {
-    WISPFUN_DEBUG("c144_f11");
+    DEBUG_TRACE_FUNCTION;
     if (g_World != NULL)
     {
         CGump *gump = (CGump *)m_Items;
@@ -477,10 +477,10 @@ void CGumpManager::RemoveRangedGumps()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::PrepareContent()
 {
-    WISPFUN_DEBUG("c144_f12");
+    DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != NULL;)
     {
         CGump *next = (CGump *)gump->m_Next;
@@ -494,10 +494,10 @@ void CGumpManager::PrepareContent()
         gump = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::RemoveMarked()
 {
-    WISPFUN_DEBUG("c144_f13");
+    DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != NULL;)
     {
         CGump *next = (CGump *)gump->m_Next;
@@ -508,14 +508,14 @@ void CGumpManager::RemoveMarked()
         gump = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Подготовка текстур
 @return 
 */
 void CGumpManager::PrepareTextures()
 {
-    WISPFUN_DEBUG("c144_f14");
+    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         g_CurrentCheckGump = gump;
@@ -524,10 +524,10 @@ void CGumpManager::PrepareTextures()
 
     g_CurrentCheckGump = NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::Draw(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f15");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
     CGump *menuBarGump = NULL;
 
@@ -554,10 +554,10 @@ void CGumpManager::Draw(bool blocked)
     if (menuBarGump != NULL && (g_CustomHouseGump == NULL || menuBarGump == g_CustomHouseGump))
         menuBarGump->Draw();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::Select(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f16");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
     CGump *menuBarGump = NULL;
 
@@ -585,10 +585,10 @@ void CGumpManager::Select(bool blocked)
         (g_CustomHouseGump == NULL || menuBarGump == g_CustomHouseGump))
         menuBarGump->Select();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::InitToolTip()
 {
-    WISPFUN_DEBUG("c144_f17");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = g_SelectedObject.Gump;
 
     if (gump != NULL)
@@ -601,18 +601,18 @@ void CGumpManager::InitToolTip()
         gump->InitToolTip();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Перерисовать все гампы
 @return 
 */
 void CGumpManager::RedrawAll()
 {
-    WISPFUN_DEBUG("c144_f18");
+    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Нажатие левой кнопки мыши
 @param [__in] blocked Состояние экрана
@@ -620,7 +620,7 @@ void CGumpManager::RedrawAll()
 */
 void CGumpManager::OnLeftMouseButtonDown(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f19");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsText())
         return;
 
@@ -643,7 +643,7 @@ void CGumpManager::OnLeftMouseButtonDown(bool blocked)
 
     RemoveMarked();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отпускание левой кнопки мыши
 @param [__in] blocked Состояние экрана
@@ -651,7 +651,7 @@ void CGumpManager::OnLeftMouseButtonDown(bool blocked)
 */
 bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f20");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsText())
         return false;
 
@@ -678,7 +678,7 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 
             if (canMove && gump->CanBeMoved() && !gump->NoMove && !g_ObjectInHand.Enabled)
             {
-                WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+                Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
                 if (gump->GumpType == GT_STATUSBAR)
                 {
@@ -794,7 +794,7 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Двойной клик левой кнопкой мыши
 @param [__in] blocked Состояние экрана
@@ -802,7 +802,7 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 */
 bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f21");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsText())
@@ -824,7 +824,7 @@ bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Нажатие правой кнопки мыши
 @param [__in] blocked Состояние экрана
@@ -832,7 +832,7 @@ bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
 */
 void CGumpManager::OnRightMouseButtonDown(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f22");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsText())
         return;
 
@@ -855,7 +855,7 @@ void CGumpManager::OnRightMouseButtonDown(bool blocked)
 
     RemoveMarked();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отпускание правой кнопки мыши
 @param [__in] blocked Состояние экрана
@@ -863,7 +863,7 @@ void CGumpManager::OnRightMouseButtonDown(bool blocked)
 */
 void CGumpManager::OnRightMouseButtonUp(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f23");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsText())
         return;
 
@@ -1022,7 +1022,7 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 
     RemoveMarked();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка средней кнопки (колесика) мыши
 @param [__in] state Состояние колесика
@@ -1031,7 +1031,7 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 */
 void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
 {
-    WISPFUN_DEBUG("c144_f24");
+    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (g_SelectedObject.Gump == gump && !gump->NoProcess)
@@ -1042,10 +1042,10 @@ void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::OnDragging(bool blocked)
 {
-    WISPFUN_DEBUG("c144_f25");
+    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (g_PressedObject.LeftGump == gump && !gump->NoProcess)
@@ -1056,7 +1056,7 @@ void CGumpManager::OnDragging(bool blocked)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 /*!
 Обработка нажатия клавиши
@@ -1067,7 +1067,7 @@ void CGumpManager::OnDragging(bool blocked)
 */
 bool CGumpManager::OnCharPress(const WPARAM &wParam, const LPARAM &lParam, bool blocked)
 {
-    WISPFUN_DEBUG("c144_f26");
+    DEBUG_TRACE_FUNCTION;
     CGump *gump = GetTextEntryOwner();
     bool result = false;
 
@@ -1094,7 +1094,7 @@ bool CGumpManager::OnCharPress(const WPARAM &wParam, const LPARAM &lParam, bool 
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка нажатия клавиши
 @param [__in] wparam не подписанный параметр
@@ -1104,7 +1104,7 @@ bool CGumpManager::OnCharPress(const WPARAM &wParam, const LPARAM &lParam, bool 
 */
 bool CGumpManager::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam, bool blocked)
 {
-    WISPFUN_DEBUG("c144_f27");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_EntryPointer != NULL && g_EntryPointer != &g_GameConsole)
@@ -1163,7 +1163,7 @@ bool CGumpManager::OnKeyDown(const SDL_KeyboardEvent &ev, bool blocked)
     return false;
 }
 #endif
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка гампов из конфига
 @param [__in] path Путь к файлу конфига
@@ -1171,8 +1171,8 @@ bool CGumpManager::OnKeyDown(const SDL_KeyboardEvent &ev, bool blocked)
 */
 void CGumpManager::Load(const os_path &path)
 {
-    WISPFUN_DEBUG("c144_f28");
-    WISP_FILE::CMappedFile file;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CMappedFile file;
 
     bool paperdollRequested = false;
     bool menubarFound = false;
@@ -1466,7 +1466,7 @@ void CGumpManager::Load(const os_path &path)
             !g_ConfigManager.GameWindowY)
             g_ConfigManager.GameWindowY = 40;
 
-        WISP_GEOMETRY::CSize windowSize = g_OrionWindow.GetSize();
+        Wisp::CSize windowSize = g_OrionWindow.GetSize();
 
         int x = g_ConfigManager.GameWindowX + g_ConfigManager.GameWindowWidth;
         int y = g_ConfigManager.GameWindowY;
@@ -1521,7 +1521,7 @@ void CGumpManager::Load(const os_path &path)
 
     if (!bufficonWindowFound)
     {
-        WISP_GEOMETRY::CSize windowSize = g_OrionWindow.GetSize();
+        Wisp::CSize windowSize = g_OrionWindow.GetSize();
 
         int x = g_ConfigManager.GameWindowX + (int)(g_ConfigManager.GameWindowWidth * 0.7f);
         int y = g_ConfigManager.GameWindowY + g_ConfigManager.GameWindowHeight;
@@ -1540,11 +1540,11 @@ void CGumpManager::Load(const os_path &path)
 
     AddGump(new CGumpConsoleType(minimizedConsoleType, showFullTextConsoleType));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpManager::SaveDefaultGumpProperties(
-    WISP_FILE::CBinaryFileWritter &writer, CGump *gump, int size)
+    Wisp::CBinaryFileWritter &writer, CGump *gump, int size)
 {
-    WISPFUN_DEBUG("c144_f29");
+    DEBUG_TRACE_FUNCTION;
     writer.WriteInt8(size);
     writer.WriteInt8(gump->GumpType);
     writer.WriteUInt16LE(gump->GetX());
@@ -1559,7 +1559,7 @@ void CGumpManager::SaveDefaultGumpProperties(
     writer.WriteUInt16LE(gump->MinimizedY);
     writer.WriteInt8(gump->LockMoving);
 };
-//----------------------------------------------------------------------------------
+
 /*!
 Сохранить гампы в конфиг
 @param [__in] path Путь к файлу кофнига
@@ -1567,8 +1567,8 @@ void CGumpManager::SaveDefaultGumpProperties(
 */
 void CGumpManager::Save(const os_path &path)
 {
-    WISPFUN_DEBUG("c144_f30");
-    WISP_FILE::CBinaryFileWritter writter;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CBinaryFileWritter writter;
 
     writter.Open(path);
 
@@ -1814,4 +1814,4 @@ void CGumpManager::Save(const os_path &path)
 
     writter.Close();
 }
-//----------------------------------------------------------------------------------
+

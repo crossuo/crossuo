@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GLFRAMEBUFFER_H
 #define GLFRAMEBUFFER_H
-//----------------------------------------------------------------------------------
+
 //!Класс для работы с фрэймбуфером
 class CGLFrameBuffer
 {
@@ -38,7 +38,7 @@ public:
 	*/
     bool Init(int width, int height);
 
-    bool Init(const WISP_GEOMETRY::CSize &size) { return Init(size.Width, size.Height); }
+    bool Init(const Wisp::CSize &size) { return Init(size.Width, size.Height); }
 
     /*!
 	Очистка фрэймбуфера
@@ -66,11 +66,11 @@ public:
 	*/
     bool Ready(int width, int height);
 
-    bool Ready(const WISP_GEOMETRY::CSize &size) { return Ready(size.Width, size.Height); }
+    bool Ready(const Wisp::CSize &size) { return Ready(size.Width, size.Height); }
 
     bool ReadyMinSize(int width, int height);
 
-    bool ReadyMinSize(const WISP_GEOMETRY::CSize &size) { return Ready(size.Width, size.Height); }
+    bool ReadyMinSize(const Wisp::CSize &size) { return Ready(size.Width, size.Height); }
 
     /*!
 	Использование буфера
@@ -86,6 +86,5 @@ public:
 	*/
     void Draw(int x, int y);
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

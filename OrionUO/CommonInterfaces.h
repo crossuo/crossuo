@@ -7,7 +7,7 @@
 ************************************************************************************
 */
 #pragma once
-//----------------------------------------------------------------------------------
+
 #if defined(ORION_LINUX)
 #include "stdafx.h"
 #include <stdint.h>
@@ -15,11 +15,11 @@
 #else
 #include <Windows.h>
 #endif
-//----------------------------------------------------------------------------------
+
 #ifndef UOInterface
 #define UOInterface struct
 #endif
-//----------------------------------------------------------------------------------
+
 class IOrionString
 {
 public:
@@ -33,23 +33,23 @@ public:
     char *m_DataA{ NULL };
     wchar_t *m_DataW{ NULL };
 };
-//----------------------------------------------------------------------------------
+
 #pragma pack(push, 1)
-//----------------------------------------------------------------------------------
+
 struct ORION_RAW_FILE_INFO
 {
     uint64_t Address;
     uint64_t Size;
     unsigned int Extra;
 };
-//----------------------------------------------------------------------------------
+
 struct ORION_RAW_ART_INFO
 {
     uint64_t Address;
     uint64_t Size;
     uint64_t CompressedSize;
 };
-//----------------------------------------------------------------------------------
+
 struct ORION_RAW_GUMP_INFO
 {
     uint64_t Address;
@@ -58,7 +58,7 @@ struct ORION_RAW_GUMP_INFO
     int Width;
     int Height;
 };
-//----------------------------------------------------------------------------------
+
 //IGLEngine
 typedef void CDECL FUNCDEF_PUSH_SCISSOR(int, int, int, int);
 typedef void CDECL FUNCDEF_POP_SCISSOR();
@@ -124,7 +124,7 @@ typedef void CDECL FUNCDEF_GET_FILE_INFO(unsigned int, ORION_RAW_FILE_INFO &);
 typedef void CDECL FUNCDEF_GET_LAND_ART_INFO(unsigned short, ORION_RAW_ART_INFO &);
 typedef void CDECL FUNCDEF_GET_STATIC_ART_INFO(unsigned short, ORION_RAW_ART_INFO &);
 typedef void CDECL FUNCDEF_GET_GUMP_ART_INFO(unsigned short, ORION_RAW_GUMP_INFO &);
-//----------------------------------------------------------------------------------
+
 UOInterface IGLEngine
 {
     int Version;
@@ -142,7 +142,7 @@ UOInterface IGLEngine
     FUNCDEF_DRAW_GUMP *DrawGump;
     FUNCDEF_DRAW_GUMPPIC *DrawGumppic;
 };
-//----------------------------------------------------------------------------------
+
 UOInterface IUltimaOnline
 {
     int Version;
@@ -169,7 +169,7 @@ UOInterface IUltimaOnline
     FUNCDEF_SECURE_TRADING_CHECK_STATE *SecureTradingCheckState;
     FUNCDEF_SECURE_TRADING_CLOSE *SecureTradingClose;
 };
-//----------------------------------------------------------------------------------
+
 UOInterface IClilocManager
 {
     int Version;
@@ -179,7 +179,7 @@ UOInterface IClilocManager
 
     FUNCDEF_GET_CLILOC_ARGUMENTS *GetClilocArguments;
 };
-//----------------------------------------------------------------------------------
+
 UOInterface IColorManager
 {
     int Version;
@@ -194,7 +194,7 @@ UOInterface IColorManager
     FUNCDEF_GET_COLOR *GetColor;
     FUNCDEF_GET_PARTIAL_HUE_COLOR *GetPartialHueColor;
 };
-//----------------------------------------------------------------------------------
+
 UOInterface IPathFinder
 {
     int Version;
@@ -205,7 +205,7 @@ UOInterface IPathFinder
     FUNCDEF_GET_STOP_AUTOWALK *StopAutowalk;
     FUNCDEF_GET_AUTOWALKING *GetAutowalking;
 };
-//----------------------------------------------------------------------------------
+
 UOInterface IFileManager
 {
     int Version;
@@ -215,14 +215,14 @@ UOInterface IFileManager
     FUNCDEF_GET_STATIC_ART_INFO *GetStaticArtInfo;
     FUNCDEF_GET_GUMP_ART_INFO *GetGumpArtInfo;
 };
-//----------------------------------------------------------------------------------
+
 extern IGLEngine g_Interface_GL;
 extern IUltimaOnline g_Interface_UO;
 extern IClilocManager g_Interface_ClilocManager;
 extern IColorManager g_Interface_ColorManager;
 extern IPathFinder g_Interface_PathFinder;
 extern IFileManager g_Interface_FileManager;
-//----------------------------------------------------------------------------------
+
 typedef struct PLUGIN_CLIENT_INTERFACE
 {
     int Version;
@@ -234,8 +234,7 @@ typedef struct PLUGIN_CLIENT_INTERFACE
     IPathFinder *PathFinder;
     IFileManager *FileManager;
 } * PPLUGIN_CLIENT_INTERFACE;
-//----------------------------------------------------------------------------------
+
 #pragma pack(pop)
-//----------------------------------------------------------------------------------
+
 extern PLUGIN_CLIENT_INTERFACE g_PluginClientInterface;
-//----------------------------------------------------------------------------------

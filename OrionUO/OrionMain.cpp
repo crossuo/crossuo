@@ -7,7 +7,7 @@
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
-    WISPFUN_DEBUG("c_main");
+    DEBUG_TRACE_FUNCTION;
     INITLOGGER(L"uolog.txt");
 
     //ParseCommandLine(); // FIXME
@@ -73,7 +73,7 @@ extern COrionWindow g_OrionWindow;
 
 int main(int argc, char **argv)
 {
-    WISPFUN_DEBUG();
+    DEBUG_TRACE_FUNCTION;
 
     // TODO: good cli parsing api
     // keep this simple for now just for travis-ci

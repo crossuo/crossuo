@@ -8,16 +8,16 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CEffectManager g_EffectManager;
-//----------------------------------------------------------------------------------
+
 CEffectManager::CEffectManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить эффект
 @param [__in] effect Ссылка на эффект
@@ -25,7 +25,7 @@ CEffectManager::CEffectManager()
 */
 void CEffectManager::AddEffect(CGameEffect *effect)
 {
-    WISPFUN_DEBUG("c141_f1");
+    DEBUG_TRACE_FUNCTION;
     switch (effect->EffectType)
     {
         case EF_MOVING:
@@ -108,7 +108,7 @@ void CEffectManager::AddEffect(CGameEffect *effect)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удалить эффект
 @param [__in] effect Ссылка на эффект
@@ -116,14 +116,14 @@ void CEffectManager::AddEffect(CGameEffect *effect)
 */
 void CEffectManager::RemoveEffect(CGameEffect *effect)
 {
-    WISPFUN_DEBUG("c141_f2");
+    DEBUG_TRACE_FUNCTION;
     Unlink(effect);
 
     effect->m_Next = NULL;
     effect->m_Prev = NULL;
     delete effect;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Создать эффект взрыва
 @param [__in] effect Ссылка на эффект
@@ -131,7 +131,7 @@ void CEffectManager::RemoveEffect(CGameEffect *effect)
 */
 void CEffectManager::CreateExplodeEffect(CGameEffect *effect, const EFFECT_TYPE &type)
 {
-    WISPFUN_DEBUG("c141_f3");
+    DEBUG_TRACE_FUNCTION;
     CGameEffect *newEffect = new CGameEffect();
 
     newEffect->EffectType = type;
@@ -149,14 +149,14 @@ void CEffectManager::CreateExplodeEffect(CGameEffect *effect, const EFFECT_TYPE 
 
     AddEffect(newEffect);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обновление эффектов
 @return 
 */
 void CEffectManager::UpdateEffects()
 {
-    WISPFUN_DEBUG("c141_f3");
+    DEBUG_TRACE_FUNCTION;
     for (CGameEffect *effect = (CGameEffect *)m_Items; effect != NULL;)
     {
         CGameEffect *next = (CGameEffect *)effect->m_Next;
@@ -166,13 +166,13 @@ void CEffectManager::UpdateEffects()
         effect = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удаление эффектов, вышедших за пределы экрана
 @return 
 */
 void CEffectManager::RemoveRangedEffects()
 {
-    WISPFUN_DEBUG("c141_f4");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+

@@ -8,18 +8,18 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_rect.h>
 #include "GameScreen.h"
-//----------------------------------------------------------------------------------
+
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
-//----------------------------------------------------------------------------------
+
 CGameScreen::CGameScreen()
     : CBaseScreen(m_GameScreenGump)
 {
-    WISPFUN_DEBUG("c164_f1");
+    DEBUG_TRACE_FUNCTION;
     m_RenderList.resize(1000);
 
     memset(&g_RenderBounds, 0, sizeof(g_RenderBounds));
@@ -27,25 +27,25 @@ CGameScreen::CGameScreen()
     memset(&m_ObjectHandlesList[0], 0, sizeof(m_ObjectHandlesList));
     memset(&m_Light[0], 0, sizeof(m_Light));
 }
-//----------------------------------------------------------------------------------
+
 CGameScreen::~CGameScreen()
 {
-    WISPFUN_DEBUG("c164_f2");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CGameScreen::Init()
 {
-    WISPFUN_DEBUG("c164_f3");
+    DEBUG_TRACE_FUNCTION;
     g_OrionWindow.NoResize = false;
 
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после плавного затемнения экрана
 @param [__in_opt] action Идентификатор действия
@@ -53,21 +53,21 @@ void CGameScreen::Init()
 */
 void CGameScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c164_f4");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
     if (action == ID_SMOOTH_GS_LOGOUT)
         g_LogoutAfterClick = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация всплывающих подсказок
 @return 
 */
 void CGameScreen::InitToolTip()
 {
-    WISPFUN_DEBUG("c164_f5");
+    DEBUG_TRACE_FUNCTION;
 
     CRenderObject *obj = g_SelectedObject.Object;
     CGump *gump = g_SelectedObject.Gump;
@@ -122,7 +122,7 @@ void CGameScreen::InitToolTip()
             g_GumpManager.InitToolTip();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Вычисление значений Z координаты для рендера
 @param [__out] noDrawRoof Не рисовать крыши и верхние этажи строений
@@ -132,7 +132,7 @@ void CGameScreen::InitToolTip()
 
 void CGameScreen::UpdateMaxDrawZ()
 {
-    WISPFUN_DEBUG("c164_f6");
+    DEBUG_TRACE_FUNCTION;
     int playerX = g_Player->GetX();
     int playerY = g_Player->GetY();
     int playerZ = g_Player->GetZ();
@@ -255,7 +255,7 @@ void CGameScreen::UpdateMaxDrawZ()
         g_MaxGroundZ = maxGroundZ;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Применение прозрачности крон деревьев в указанных координатах
 @param [__in] graphic ндекс картинки дерева
@@ -266,7 +266,7 @@ void CGameScreen::UpdateMaxDrawZ()
 */
 void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, int z)
 {
-    WISPFUN_DEBUG("c164_f7");
+    DEBUG_TRACE_FUNCTION;
     int bx = x / 8;
     int by = y / 8;
 
@@ -290,7 +290,7 @@ void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, i
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Проверка принадлежности кроны к группе крон (с последующим применением прозрачности всей группе)
 @param [__in] graphic Индекс картинки дерева
@@ -301,7 +301,7 @@ void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, i
 */
 void CGameScreen::CheckFoliageUnion(ushort graphic, int x, int y, int z)
 {
-    WISPFUN_DEBUG("c164_f8");
+    DEBUG_TRACE_FUNCTION;
 
     IFOR (i, 0, TREE_COUNT)
     {
@@ -323,14 +323,14 @@ void CGameScreen::CheckFoliageUnion(ushort graphic, int x, int y, int z)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Расчет списка объектов рендера, вычисление прозрачности крон деревьев (в т.ч. составных)
 @return 
 */
 void CGameScreen::CalculateRenderList()
 {
-    WISPFUN_DEBUG("c164_f10");
+    DEBUG_TRACE_FUNCTION;
     m_RenderListCount = 0;
 
     if (g_Player == NULL)
@@ -556,16 +556,16 @@ void CGameScreen::CalculateRenderList()
 
     UpdateDrawPos = false;
 }
-//----------------------------------------------------------------------------------
+
 void CGameScreen::AddTileToRenderList(
     CRenderWorldObject *obj, int worldX, int worldY, bool useObjectHandles, int maxZ)
 {
-    WISPFUN_DEBUG("c164_f11");
+    DEBUG_TRACE_FUNCTION;
     ushort grayColor = 0;
 
     if (g_ConfigManager.GrayOutOfRangeObjects)
     {
-        if (GetDistance(g_Player, WISP_GEOMETRY::CPoint2Di(worldX, worldY)) >
+        if (GetDistance(g_Player, Wisp::CPoint2Di(worldX, worldY)) >
             g_ConfigManager.UpdateRange)
             grayColor = 0x038E;
     }
@@ -860,10 +860,10 @@ void CGameScreen::AddTileToRenderList(
         m_RenderListCount++;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useObjectHandles)
 {
-    WISPFUN_DEBUG("c164_f12");
+    DEBUG_TRACE_FUNCTION;
     int characterX = obj->GetX();
     int characterY = obj->GetY();
 
@@ -943,14 +943,14 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Вычисление параметров игрового окна
 @return 
 */
 void CGameScreen::CalculateGameWindowBounds()
 {
-    WISPFUN_DEBUG("c164_f13");
+    DEBUG_TRACE_FUNCTION;
     g_GrayedPixels = g_Player->Dead();
 
     if (g_GrayedPixels && g_Season != ST_DESOLATION)
@@ -1111,7 +1111,7 @@ void CGameScreen::CalculateGameWindowBounds()
             g_LightBuffer.Init(testWidth, testHeight);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Функция добавления источника света
 @param [__in] rwo Верхний объект, источающий свет
@@ -1122,7 +1122,7 @@ void CGameScreen::CalculateGameWindowBounds()
 */
 void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObject, int x, int y)
 {
-    WISPFUN_DEBUG("c164_f14");
+    DEBUG_TRACE_FUNCTION;
 
     if (m_LightCount < MAX_LIGHT_SOURCES)
     {
@@ -1188,7 +1188,7 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Рисование игрового окна
 @param [__in] mode true - отрисовка, false - выбор
@@ -1196,7 +1196,7 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
 */
 void CGameScreen::DrawGameWindow(bool mode)
 {
-    WISPFUN_DEBUG("c164_f15");
+    DEBUG_TRACE_FUNCTION;
     int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
 
     if (mode)
@@ -1340,14 +1340,14 @@ void CGameScreen::DrawGameWindow(bool mode)
             m_ObjectHandlesList[i]->SelectObjectHandlesTexture();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отображение источников света
 @return 
 */
 void CGameScreen::DrawGameWindowLight()
 {
-    WISPFUN_DEBUG("c164_f16");
+    DEBUG_TRACE_FUNCTION;
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     if (!UseLight)
@@ -1426,7 +1426,7 @@ void CGameScreen::DrawGameWindowLight()
 
     UnuseShader();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отображение текста над объектами мира
 @param [__in] mode true - отрисовка, false - выбор
@@ -1434,7 +1434,7 @@ void CGameScreen::DrawGameWindowLight()
 */
 void CGameScreen::DrawGameWindowText(bool mode)
 {
-    WISPFUN_DEBUG("c164_f17");
+    DEBUG_TRACE_FUNCTION;
     if (mode)
     {
         g_FontColorizerShader.Use();
@@ -1512,10 +1512,10 @@ void CGameScreen::DrawGameWindowText(bool mode)
     else
         g_WorldTextRenderer.Select(NULL);
 }
-//----------------------------------------------------------------------------------
+
 void CGameScreen::PrepareContent()
 {
-    WISPFUN_DEBUG("c164_f18");
+    DEBUG_TRACE_FUNCTION;
     g_WorldTextRenderer.CalculateWorldPositions(false);
 
     m_GameScreenGump.PrepareContent();
@@ -1534,7 +1534,7 @@ void CGameScreen::PrepareContent()
     if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGameObject() &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (CanBeDraggedByOffset(offset) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -1580,7 +1580,7 @@ void CGameScreen::PrepareContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовка/выбор объектов
 @param [__in] mode true - отрисовка, false - выбор
@@ -1588,7 +1588,7 @@ void CGameScreen::PrepareContent()
 */
 void CGameScreen::Render(bool mode)
 {
-    WISPFUN_DEBUG("c164_f19");
+    DEBUG_TRACE_FUNCTION;
     if (!RenderListInitalized)
         CalculateRenderList();
 
@@ -1946,18 +1946,18 @@ void CGameScreen::Render(bool mode)
                 else
                 {
                     g_GlobalScale = oldScale;
-                    WISP_GEOMETRY::CPoint2Di oldMouse = g_MouseManager.Position;
+                    Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
 
-                    //g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
+                    //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
 
-                    //g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
+                    //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
 
                     int mouseX =
                         (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
                     int mouseY =
                         (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
 
-                    /*g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di
+                    /*g_MouseManager.Position = Wisp::CPoint2Di
 					(
 						//(int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX)
 						mouseX
@@ -2001,14 +2001,14 @@ void CGameScreen::Render(bool mode)
         g_LastSelectedObject.Init(g_SelectedObject);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Нажатие левой кнопки мыши
 @return
 */
 void CGameScreen::OnLeftMouseButtonDown()
 {
-    WISPFUN_DEBUG("c164_f20");
+    DEBUG_TRACE_FUNCTION;
     CGumpSkills *skillGump = (CGumpSkills *)g_GumpManager.GetGump(0, 0, GT_SKILLS);
 
     if (skillGump != NULL)
@@ -2028,14 +2028,14 @@ void CGameScreen::OnLeftMouseButtonDown()
     if (g_PopupMenu != NULL && g_SelectedObject.Gump != g_PopupMenu)
         g_GumpManager.RemoveGump(g_PopupMenu);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отпускание левой кнопки мыши
 @return 
 */
 void CGameScreen::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c164_f21");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump == &m_GameScreenGump)
     {
         m_GameScreenGump.OnLeftMouseButtonUp();
@@ -2163,7 +2163,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 g_ObjectInHand.Enabled)
             {
                 can_drop =
-                    (GetDistance(g_Player, WISP_GEOMETRY::CPoint2Di(rwo->GetX(), rwo->GetY())) <=
+                    (GetDistance(g_Player, Wisp::CPoint2Di(rwo->GetX(), rwo->GetY())) <=
                      DRAG_ITEMS_DISTANCE);
 
                 if (can_drop)
@@ -2238,14 +2238,14 @@ void CGameScreen::OnLeftMouseButtonUp()
             gumpEntry->FrameCreated = false;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Двойной клик левой кнопкой мыши
 @return true при успешной обработке
 */
 bool CGameScreen::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c164_f22");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
     uint charUnderMouse = 0;
 
@@ -2312,28 +2312,28 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Нажатие правой кнопки мыши
 @return
 */
 void CGameScreen::OnRightMouseButtonDown()
 {
-    WISPFUN_DEBUG("c164_f23");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.RightGump != NULL)
         g_GumpManager.OnRightMouseButtonDown(false);
 
     if (g_PopupMenu != NULL && g_SelectedObject.Gump != g_PopupMenu)
         g_GumpManager.RemoveGump(g_PopupMenu);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отпускание правой кнопки мыши
 @return 
 */
 void CGameScreen::OnRightMouseButtonUp()
 {
-    WISPFUN_DEBUG("c164_f24");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.RightGump != NULL)
         g_GumpManager.OnRightMouseButtonUp(false);
     else if (
@@ -2355,14 +2355,14 @@ void CGameScreen::OnRightMouseButtonUp()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Двойной клик правой кнопкой мыши
 @return true при успешной обработке
 */
 bool CGameScreen::OnRightMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c164_f25");
+    DEBUG_TRACE_FUNCTION;
     if (g_ConfigManager.EnablePathfind && g_SelectedObject.Object != NULL &&
         g_SelectedObject.Object->IsWorldObject() && !g_PathFinder.AutoWalking)
     {
@@ -2380,7 +2380,7 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка средней кнопки (колесика) мыши
 @param [__in] state Состояние колесика
@@ -2388,7 +2388,7 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
 */
 void CGameScreen::OnMidMouseButtonScroll(bool up)
 {
-    WISPFUN_DEBUG("c164_f26");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != NULL)
         g_GumpManager.OnMidMouseButtonScroll(up, false);
     else if (g_ConfigManager.GetUseScaling())
@@ -2413,14 +2413,14 @@ void CGameScreen::OnMidMouseButtonScroll(bool up)
             g_GlobalScale = 2.3;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameScreen::OnDragging()
 {
-    WISPFUN_DEBUG("c164_f27");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != NULL)
         g_GumpManager.OnDragging(false);
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 /*!
 Обработка нажатия клавиши
@@ -2430,7 +2430,7 @@ void CGameScreen::OnDragging()
 */
 void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c164_f28");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == NULL)
         return; //Ignore no print keys
 
@@ -2460,10 +2460,10 @@ void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         (int)g_EntryPointer->Length() < max(g_EntryPointer->MaxLength, 60))
         g_EntryPointer->Insert((wchar_t)wParam);
 }
-//----------------------------------------------------------------------------------
+
 void CGameScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c164_f29");
+    DEBUG_TRACE_FUNCTION;
     if (wParam == VK_TAB && (lParam & 0x40000000))
         return;
 
@@ -2629,10 +2629,10 @@ void CGameScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameScreen::OnKeyUp(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c164_f30");
+    DEBUG_TRACE_FUNCTION;
     if (wParam == VK_TAB && g_GameState == GS_GAME)
     {
         if (g_ConfigManager.HoldTabForCombat)
@@ -2650,7 +2650,7 @@ void CGameScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
 }
 void CGameScreen::OnKeyUp(const SDL_KeyboardEvent &ev)
 {
-    WISPFUN_DEBUG("c164_f30");
+    DEBUG_TRACE_FUNCTION;
     if (ev.keysym.sym == SDLK_TAB && g_GameState == GS_GAME)
     {
         if (g_ConfigManager.HoldTabForCombat)

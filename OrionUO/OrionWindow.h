@@ -6,11 +6,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #pragma once
 #include <SDL_events.h>
-//----------------------------------------------------------------------------------
-class COrionWindow : public WISP_WINDOW::CWindow
+
+class COrionWindow : public Wisp::CWindow
 {
     //int RenderTimerDelay = FRAME_DELAY_ACTIVE_WINDOW;
 
@@ -30,7 +30,7 @@ public:
 protected:
     virtual bool OnCreate();
     virtual void OnDestroy();
-    virtual void OnResize(WISP_GEOMETRY::CSize &newSize);
+    virtual void OnResize(Wisp::CSize &newSize);
     virtual void OnLeftMouseButtonDown();
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();
@@ -48,7 +48,7 @@ protected:
     virtual void OnShow(bool show);
     virtual void OnSetText(const LPARAM &lParam);
     virtual void OnTimer(uint id);
-    virtual void OnThreadedTimer(uint nowTime, WISP_THREADED_TIMER::CThreadedTimer *timer);
+    virtual void OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer);
     virtual HRESULT OnRepaint(const WPARAM &wParam, const LPARAM &lParam);
     virtual LRESULT OnUserMessages(int message, const WPARAM &wParam, const LPARAM &lParam);
 #if USE_WISP
@@ -61,6 +61,5 @@ protected:
     virtual void OnKeyUp(const SDL_KeyboardEvent &ev) override;
 #endif
 };
-//----------------------------------------------------------------------------------
+
 extern COrionWindow g_OrionWindow;
-//----------------------------------------------------------------------------------

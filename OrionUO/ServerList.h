@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef SERVERLIST_H
 #define SERVERLIST_H
-//----------------------------------------------------------------------------------
+
 class CServer
 {
 public:
@@ -27,7 +27,7 @@ public:
         ushort index, const string &name, uchar fullPercent, uchar timezone, int ip, bool selected);
     ~CServer();
 };
-//----------------------------------------------------------------------------------
+
 //Класс для хранения списка серверов
 class CServerList
 {
@@ -48,9 +48,9 @@ public:
 
     CServer *Select(int index);
 
-    void ParsePacket(WISP_DATASTREAM::CDataReader &reader);
+    void ParsePacket(Wisp::CDataReader &reader);
 };
-//----------------------------------------------------------------------------------
+
 extern CServerList g_ServerList;
-//----------------------------------------------------------------------------------
+
 #endif

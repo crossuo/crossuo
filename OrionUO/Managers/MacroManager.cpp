@@ -8,26 +8,26 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "FileSystem.h"
-//----------------------------------------------------------------------------------
+
 CMacroManager g_MacroManager;
-//----------------------------------------------------------------------------------
+
 uchar CMacroManager::m_SkillIndexTable[24] = { 1,  2,  35, 4,  6,  12,
                                                14, 15, 16, 19, 21, 0xFF /*imbuing*/,
                                                23, 3,  46, 9,  30, 22,
                                                48, 32, 33, 47, 36, 38 };
-//----------------------------------------------------------------------------------
+
 CMacroManager::CMacroManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 CMacroManager::~CMacroManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Конвертирование строки в виртуальный код клавиши
 @param [__in] strings Исходные строки, при склейке получим входную строку
@@ -35,7 +35,7 @@ CMacroManager::~CMacroManager()
 */
 ushort CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
 {
-    WISPFUN_DEBUG("c145_f1");
+    DEBUG_TRACE_FUNCTION;
     string str = strings[0];
 
     for (int i = 1; i < (int)strings.size() - 3; i++)
@@ -127,7 +127,7 @@ ushort CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
 
     return key;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Сконвертировать файл макросов оригинального клиента
 @param [__in] path Путь к файлу с макросами
@@ -135,9 +135,9 @@ ushort CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
 */
 bool CMacroManager::Convert(const os_path &path)
 {
-    WISPFUN_DEBUG("c145_f2");
-    WISP_FILE::CTextFileParser file(path, "", "", "");
-    WISP_FILE::CTextFileParser unicodeParser({}, " ", "", "");
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CTextFileParser file(path, "", "", "");
+    Wisp::CTextFileParser unicodeParser({}, " ", "", "");
 
     //Позиции доп. кнопок в списке, индексация с конца, т.е. strings.size() - position
     const int MACRO_POSITION_ALT = 2;
@@ -259,7 +259,7 @@ bool CMacroManager::Convert(const os_path &path)
 
     return fs_path_exists(path);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузить макросы из конфига
 @param [__in] path Путь к файлу конфига
@@ -267,11 +267,11 @@ bool CMacroManager::Convert(const os_path &path)
 */
 bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 {
-    WISPFUN_DEBUG("c145_f3");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
     Clear();
 
-    WISP_FILE::CMappedFile file;
+    Wisp::CMappedFile file;
 
     if (file.Load(path) && file.Size)
     {
@@ -291,7 +291,7 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Сохранить макросы в конфиг
 @param [__in] path Путь к файлу конфига
@@ -299,8 +299,8 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 */
 void CMacroManager::Save(const os_path &path)
 {
-    WISPFUN_DEBUG("c145_f4");
-    WISP_FILE::CBinaryFileWritter writter;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CBinaryFileWritter writter;
     writter.Open(path);
 
     writter.WriteUInt8(0); //verison
@@ -318,7 +318,7 @@ void CMacroManager::Save(const os_path &path)
 
     writter.Close();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Поиск макроса
 @param [__in] key Индекс кнопки
@@ -329,7 +329,7 @@ void CMacroManager::Save(const os_path &path)
 */
 CMacro *CMacroManager::FindMacro(ushort key, bool alt, bool ctrl, bool shift)
 {
-    WISPFUN_DEBUG("c145_f5");
+    DEBUG_TRACE_FUNCTION;
     CMacro *obj = (CMacro *)m_Items;
 
     while (obj != NULL)
@@ -342,21 +342,21 @@ CMacro *CMacroManager::FindMacro(ushort key, bool alt, bool ctrl, bool shift)
 
     return obj;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузить макросы из опций
 @return 
 */
 void CMacroManager::LoadFromOptions()
 {
-    WISPFUN_DEBUG("c145_f6");
+    DEBUG_TRACE_FUNCTION;
     Clear();
     ChangePointer(NULL);
 
     QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *)
     Add(obj->GetCopy());
 }
-//----------------------------------------------------------------------------------
+
 void CMacroManager::ChangePointer(CMacroObject *macro)
 {
     g_MacroPointer = macro;
@@ -367,14 +367,14 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
         g_PluginManager.WindowProc(g_OrionWindow.Handle, UOMSG_END_MACRO_PAYING, 0, 0);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Начать выполнение макроса
 @return 
 */
 void CMacroManager::Execute()
 {
-    WISPFUN_DEBUG("c145_f7");
+    DEBUG_TRACE_FUNCTION;
     while (g_MacroPointer != NULL)
     {
         switch (Process())
@@ -396,14 +396,14 @@ void CMacroManager::Execute()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Выполнить команды подменю
 @return 
 */
 void CMacroManager::ProcessSubMenu()
 {
-    WISPFUN_DEBUG("c145_f8");
+    DEBUG_TRACE_FUNCTION;
     switch (g_MacroPointer->Code)
     {
         case MC_OPEN:
@@ -732,7 +732,7 @@ void CMacroManager::ProcessSubMenu()
             break;
     }
 }
-//---------------------------------------------------------------------------
+
 /*!
 Выполнить действие макроса (или набор действий)
 @return Код выполнения
@@ -750,10 +750,10 @@ MACRO_RETURN_CODE CMacroManager::Process()
 
     return result;
 }
-//---------------------------------------------------------------------------
+
 MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 {
-    WISPFUN_DEBUG("c145_f9");
+    DEBUG_TRACE_FUNCTION;
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
     static DWORD itemInHand[2] = { 0, 0 };
 
@@ -1413,4 +1413,4 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

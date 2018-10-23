@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef FILEMANAGER_H
 #define FILEMANAGER_H
-//----------------------------------------------------------------------------------
+
 class CUopBlockHeader
 {
 public:
@@ -37,8 +37,8 @@ public:
     }
     ~CUopBlockHeader() {}
 };
-//----------------------------------------------------------------------------------
-class CUopMappedFile : public WISP_FILE::CMappedFile
+
+class CUopMappedFile : public Wisp::CMappedFile
 {
 public:
     std::unordered_map<uint64, CUopBlockHeader> m_Map;
@@ -53,8 +53,8 @@ public:
 
     UCHAR_LIST GetData(const CUopBlockHeader &block);
 };
-//----------------------------------------------------------------------------------
-class CFileManager : public WISP_DATASTREAM::CDataReader
+
+class CFileManager : public Wisp::CDataReader
 {
 public:
     bool UseVerdata = false;
@@ -67,37 +67,37 @@ public:
     AutoResetEvent m_AutoResetEvent;
 
     //!Адреса файлов в памяти
-    WISP_FILE::CMappedFile m_AnimIdx[6];
-    WISP_FILE::CMappedFile m_ArtIdx;
-    WISP_FILE::CMappedFile m_GumpIdx;
-    WISP_FILE::CMappedFile m_LightIdx;
-    WISP_FILE::CMappedFile m_MultiIdx;
-    WISP_FILE::CMappedFile m_SkillsIdx;
-    WISP_FILE::CMappedFile m_SoundIdx;
-    WISP_FILE::CMappedFile m_StaticIdx[6];
-    WISP_FILE::CMappedFile m_TextureIdx;
+    Wisp::CMappedFile m_AnimIdx[6];
+    Wisp::CMappedFile m_ArtIdx;
+    Wisp::CMappedFile m_GumpIdx;
+    Wisp::CMappedFile m_LightIdx;
+    Wisp::CMappedFile m_MultiIdx;
+    Wisp::CMappedFile m_SkillsIdx;
+    Wisp::CMappedFile m_SoundIdx;
+    Wisp::CMappedFile m_StaticIdx[6];
+    Wisp::CMappedFile m_TextureIdx;
 
     std::fstream m_AnimMul[6];
-    WISP_FILE::CMappedFile m_AnimdataMul;
-    WISP_FILE::CMappedFile m_ArtMul;
-    WISP_FILE::CMappedFile m_HuesMul;
-    WISP_FILE::CMappedFile m_GumpMul;
-    WISP_FILE::CMappedFile m_LightMul;
-    WISP_FILE::CMappedFile m_MapMul[6];
-    WISP_FILE::CMappedFile m_MultiMul;
-    WISP_FILE::CMappedFile m_RadarcolMul;
-    WISP_FILE::CMappedFile m_SkillsMul;
-    WISP_FILE::CMappedFile m_SoundMul;
-    WISP_FILE::CMappedFile m_StaticMul[6];
-    WISP_FILE::CMappedFile m_TextureMul;
-    WISP_FILE::CMappedFile m_TiledataMul;
-    WISP_FILE::CMappedFile m_UnifontMul[20];
-    WISP_FILE::CMappedFile m_VerdataMul;
-    WISP_FILE::CMappedFile m_FacetMul[6];
+    Wisp::CMappedFile m_AnimdataMul;
+    Wisp::CMappedFile m_ArtMul;
+    Wisp::CMappedFile m_HuesMul;
+    Wisp::CMappedFile m_GumpMul;
+    Wisp::CMappedFile m_LightMul;
+    Wisp::CMappedFile m_MapMul[6];
+    Wisp::CMappedFile m_MultiMul;
+    Wisp::CMappedFile m_RadarcolMul;
+    Wisp::CMappedFile m_SkillsMul;
+    Wisp::CMappedFile m_SoundMul;
+    Wisp::CMappedFile m_StaticMul[6];
+    Wisp::CMappedFile m_TextureMul;
+    Wisp::CMappedFile m_TiledataMul;
+    Wisp::CMappedFile m_UnifontMul[20];
+    Wisp::CMappedFile m_VerdataMul;
+    Wisp::CMappedFile m_FacetMul[6];
 
-    WISP_FILE::CMappedFile m_MultiMap;
-    WISP_FILE::CMappedFile m_SpeechMul;
-    WISP_FILE::CMappedFile m_LangcodeIff;
+    Wisp::CMappedFile m_MultiMap;
+    Wisp::CMappedFile m_SpeechMul;
+    Wisp::CMappedFile m_LangcodeIff;
 
     //UOP
     CUopMappedFile m_ArtLegacyMUL;
@@ -111,12 +111,12 @@ public:
     CUopMappedFile m_MultiCollection;
 
     //Map patches
-    WISP_FILE::CMappedFile m_MapDifl[6];
-    WISP_FILE::CMappedFile m_MapDif[6];
+    Wisp::CMappedFile m_MapDifl[6];
+    Wisp::CMappedFile m_MapDif[6];
 
-    WISP_FILE::CMappedFile m_StaDifl[6];
-    WISP_FILE::CMappedFile m_StaDifi[6];
-    WISP_FILE::CMappedFile m_StaDif[6];
+    Wisp::CMappedFile m_StaDifl[6];
+    Wisp::CMappedFile m_StaDifi[6];
+    Wisp::CMappedFile m_StaDif[6];
 
     bool Load();
     bool LoadWithUOP();
@@ -145,7 +145,7 @@ private:
 
     bool LoadUOPFile(CUopMappedFile &file, const char *fileName);
 };
-//---------------------------------------------------------------------------
+
 extern CFileManager g_FileManager;
-//---------------------------------------------------------------------------
+
 #endif

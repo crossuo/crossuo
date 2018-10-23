@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpDrag.h"
-//----------------------------------------------------------------------------------
+
 CGumpDrag::CGumpDrag(uint serial, short x, short y)
     : CGump(GT_DRAG, serial, x, y)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGumpDrag::~CGumpDrag()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDrag::UpdateContent()
 {
-    WISPFUN_DEBUG("c94_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIGumppic(0x085C, 0, 0));
@@ -53,33 +53,33 @@ void CGumpDrag::UpdateContent()
 
     Add(new CGUIButton(ID_GD_OKAY, 0x081A, 0x081C, 0x081B, 102, 37));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDrag::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c94_f2");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GD_OKAY) //Button Okay
         OnOkayPressed();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDrag::GUMP_SLIDER_CLICK_EVENT_C
 {
-    WISPFUN_DEBUG("c94_f3");
+    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDrag::GUMP_SLIDER_MOVE_EVENT_C
 {
-    WISPFUN_DEBUG("c94_f4");
+    DEBUG_TRACE_FUNCTION;
     if (m_StartText)
         m_StartText = false;
 
     if (m_Entry != NULL)
         m_Entry->m_Entry.SetTextW(std::to_wstring(m_Slider->Value));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDrag::OnOkayPressed()
 {
-    WISPFUN_DEBUG("c94_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!g_ObjectInHand.Enabled)
     {
         RemoveMark = true;
@@ -93,11 +93,11 @@ void CGumpDrag::OnOkayPressed()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpDrag::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c94_f5");
+    DEBUG_TRACE_FUNCTION;
     if (wParam >= '0' && wParam <= '9')
     {
         if (m_StartText)
@@ -119,10 +119,10 @@ void CGumpDrag::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDrag::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c94_f6");
+    DEBUG_TRACE_FUNCTION;
     CGameItem *item = g_World->FindWorldItem(Serial);
 
     if (item != NULL)

@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUMPSCREENSELECTTOWN_H
 #define GUMPSCREENSELECTTOWN_H
-//----------------------------------------------------------------------------------
+
 class CGumpScreenSelectTown : public CGump
 {
 private:
@@ -21,7 +21,7 @@ private:
     static const int ID_STS_TOWN = 10;
 
     //!Список точек для отображения кнопок городов
-    vector<WISP_GEOMETRY::CPoint2Di> m_TownButtonText;
+    vector<Wisp::CPoint2Di> m_TownButtonText;
 
     CGUIHTMLGump *m_HTMLGump{ NULL };
     CGUIText *m_Description{ NULL };
@@ -35,6 +35,5 @@ public:
     GUMP_BUTTON_EVENT_H;
     GUMP_TEXT_ENTRY_EVENT_H;
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

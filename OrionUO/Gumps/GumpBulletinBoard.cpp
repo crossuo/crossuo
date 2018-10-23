@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpBulletinBoard::CGumpBulletinBoard(uint serial, short x, short y, string name)
     : CGump(GT_BULLETIN_BOARD, serial, x, y)
 {
-    WISPFUN_DEBUG("c89_f1");
+    DEBUG_TRACE_FUNCTION;
     Add(new CGUIGumppic(0x087A, 0, 0));
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 159, 36));
@@ -66,16 +66,16 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint serial, short x, short y, string nam
         slider->SetY(slider->GetY() - 14);
     }
 }
-//----------------------------------------------------------------------------------
+
 CGumpBulletinBoard::~CGumpBulletinBoard()
 {
-    WISPFUN_DEBUG("c89_f2");
+    DEBUG_TRACE_FUNCTION;
     g_GumpManager.CloseGump(0xFFFFFFFF, Serial, GT_BULLETIN_BOARD_ITEM);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBulletinBoard::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c89_f3");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBB_POST_MESSAGE)
     {
         CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(
@@ -84,10 +84,10 @@ void CGumpBulletinBoard::GUMP_BUTTON_EVENT_C
         g_GumpManager.AddGump(gump);
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpBulletinBoard::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c89_f4");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI())
@@ -104,4 +104,4 @@ bool CGumpBulletinBoard::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

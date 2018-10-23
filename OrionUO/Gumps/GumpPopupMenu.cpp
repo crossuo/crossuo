@@ -8,15 +8,15 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpPopupMenu *g_PopupMenu = NULL;
-//----------------------------------------------------------------------------------
+
 CGumpPopupMenu::CGumpPopupMenu(uint serial, short x, short y)
     : CGump(GT_POPUP_MENU, serial, x, y)
 {
-    WISPFUN_DEBUG("c107_f1");
+    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     g_PopupMenu = this;
     Page = 1;
@@ -25,14 +25,14 @@ CGumpPopupMenu::CGumpPopupMenu(uint serial, short x, short y)
     m_Polygone->DrawOnly = true;
     m_Polygone->Visible = false;
 }
-//----------------------------------------------------------------------------------
+
 CGumpPopupMenu::~CGumpPopupMenu()
 {
-    WISPFUN_DEBUG("c107_f2");
+    DEBUG_TRACE_FUNCTION;
     g_PopupMenu = NULL;
 }
-//----------------------------------------------------------------------------------
-void CGumpPopupMenu::Parse(WISP_NETWORK::CPacketReader &reader)
+
+void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 {
     ushort mode = reader.ReadUInt16BE();
     bool isNewClilocs = (mode >= 2);
@@ -158,10 +158,10 @@ void CGumpPopupMenu::Parse(WISP_NETWORK::CPacketReader &reader)
         g_GumpManager.AddGump(menu);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPopupMenu::PrepareContent()
 {
-    WISPFUN_DEBUG("c107_f3");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump == this && g_SelectedObject.Object != NULL &&
         ((CBaseGUI *)g_SelectedObject.Object)->Type == GOT_HITBOX)
     {
@@ -185,10 +185,10 @@ void CGumpPopupMenu::PrepareContent()
         m_Polygone->Visible = false;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c107_f4");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPM_MAXIMIZE)
     {
         Page = 2;
@@ -235,4 +235,4 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
         RemoveMark = true;
     }
 }
-//----------------------------------------------------------------------------------
+

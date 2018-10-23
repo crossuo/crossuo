@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #pragma once
 #include <SDL_events.h>
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера гампов
 class CGumpManager : public CBaseQueue
 {
@@ -20,7 +20,7 @@ private:
 	*/
     int GetNonpartyStatusbarsCount();
 
-    void SaveDefaultGumpProperties(WISP_FILE::CBinaryFileWritter &writer, CGump *gump, int size);
+    void SaveDefaultGumpProperties(Wisp::CBinaryFileWritter &writer, CGump *gump, int size);
 
 public:
     CGumpManager()
@@ -149,6 +149,6 @@ public:
     virtual bool OnKeyDown(const SDL_KeyboardEvent &ev, bool blocked);
 #endif
 };
-//----------------------------------------------------------------------------------
+
 //!Ссылка на менеджер гампов
 extern CGumpManager g_GumpManager;

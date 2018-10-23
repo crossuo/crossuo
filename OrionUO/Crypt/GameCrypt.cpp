@@ -1,15 +1,15 @@
-//----------------------------------------------------------------------------------
+
 #if !USE_ORIONDLL
 #include "GameCrypt.h"
 
 CBlowfishCrypt g_BlowfishCrypt;
 CTwofishCrypt g_TwofishCrypt;
-//----------------------------------------------------------------------------------
+
 static unsigned long p_box[18] = { 0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822,
                                    0x299f31d0, 0x082efa98, 0xec4e6c89, 0x452821e6, 0x38d01377,
                                    0xbe5466cf, 0x34e90c6c, 0xc0ac29b7, 0xc97c50dd, 0x3f84d5b5,
                                    0xb5470917, 0x9216d5d9, 0x8979fb1b };
-//----------------------------------------------------------------------------------
+
 static unsigned long s_box[4 * 256] = {
     0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96, 0xba7c9045, 0xf12c7f99,
     0x24a19947, 0xb3916cf7, 0x0801f2e2, 0x858efc16, 0x636920d8, 0x71574e69, 0xa458fea3, 0xf4933d7e,
@@ -140,7 +140,7 @@ static unsigned long s_box[4 * 256] = {
     0x85cbfe4e, 0x8ae88dd8, 0x7aaaf9b0, 0x4cf9aa7e, 0x1948c25c, 0x02fb8a8c, 0x01c36ae4, 0xd6ebe1f9,
     0x90d4f869, 0xa65cdea0, 0x3f09252d, 0xc208e69f, 0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6
 };
-//----------------------------------------------------------------------------------
+
 // Set of keys
 static unsigned char g_key_table[CRYPT_GAMEKEY_COUNT][CRYPT_GAMEKEY_LENGTH] = {
     { 0x91, 0x3C, 0x2B, 0x0F, 0x44, 0xC6 }, { 0x0C, 0x96, 0xD2, 0x40, 0x93, 0x21 },
@@ -157,7 +157,7 @@ static unsigned char g_key_table[CRYPT_GAMEKEY_COUNT][CRYPT_GAMEKEY_LENGTH] = {
     { 0xAE, 0xD2, 0x52, 0xB5, 0x28, 0x98 }, { 0x3B, 0x7F, 0x65, 0xED, 0x5E, 0x93 },
     { 0x30, 0xBF, 0x0A, 0x34, 0xDB, 0x3D }
 };
-//----------------------------------------------------------------------------------
+
 // Seed Table
 static unsigned char g_seed_table[2][CRYPT_GAMESEED_COUNT][2][CRYPT_GAMESEED_LENGTH] = {
     { { { 0x9E, 0xEC, 0x5B, 0x3C, 0x8F, 0xA8, 0x8C, 0x55 },
@@ -358,11 +358,11 @@ static unsigned char g_seed_table[2][CRYPT_GAMESEED_COUNT][2][CRYPT_GAMESEED_LEN
       { { 0x6E, 0x26, 0x01, 0xE9, 0xDB, 0x50, 0x13, 0xEA },
         { 0x22, 0x59, 0x30, 0x3B, 0xE4, 0x5F, 0x43, 0x1E } } }
 };
-//----------------------------------------------------------------------------------
+
 // Expanded Key Tables
 static unsigned int p_table[CRYPT_GAMEKEY_COUNT][18];
 static unsigned int s_table[CRYPT_GAMEKEY_COUNT][1024];
-//----------------------------------------------------------------------------------
+
 #define N2L(C, LL)                                                                                 \
     LL = ((unsigned int)(*((C)++))) << 24, LL |= ((unsigned int)(*((C)++))) << 16,                 \
     LL |= ((unsigned int)(*((C)++))) << 8, LL |= ((unsigned int)(*((C)++)))
@@ -377,10 +377,10 @@ static unsigned int s_table[CRYPT_GAMEKEY_COUNT][1024];
     LL = (LL) ^ (P) ^                                                                              \
          ((S[(R) >> 24] + S[0x0100 + (((R) >> 16) & 0xff)]) ^ S[0x0200 + (((R) >> 8) & 0xff)]) +   \
              S[0x0300 + ((R)&0xff)]
-//----------------------------------------------------------------------------------
+
 // static
 bool CBlowfishCrypt::m_tables_ready = false;
-//----------------------------------------------------------------------------------
+
 void CBlowfishCrypt::InitTables()
 {
     for (int key_index = 0; key_index < CRYPT_GAMEKEY_COUNT; key_index++)
@@ -433,7 +433,7 @@ void CBlowfishCrypt::InitTables()
     }
     m_tables_ready = true;
 }
-//----------------------------------------------------------------------------------
+
 void CBlowfishCrypt::RawEncrypt(uint *values, int table)
 {
     unsigned int left = values[0];
@@ -463,7 +463,7 @@ void CBlowfishCrypt::RawEncrypt(uint *values, int table)
     values[1] = left;
     values[0] = right;
 }
-//----------------------------------------------------------------------------------
+
 void CBlowfishCrypt::Encrypt(puchar in, puchar out, int len)
 {
     while (m_stream_pos + len > CRYPT_GAMETABLE_TRIGGER)
@@ -509,7 +509,7 @@ void CBlowfishCrypt::Encrypt(puchar in, puchar out, int len)
 
     m_stream_pos += len;
 }
-//----------------------------------------------------------------------------------
+
 void CBlowfishCrypt::Init()
 {
     if (!m_tables_ready)
@@ -520,7 +520,7 @@ void CBlowfishCrypt::Init()
     m_stream_pos = 0;
     m_block_pos = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CTwofishCrypt::Init(uchar IP[4])
 {
     memcpy(&m_IP, IP, 4);
@@ -553,7 +553,7 @@ void CTwofishCrypt::Init(uchar IP[4])
                            0xDC, 0x60, 0x8C, 0xD6, 0xFE, 0x7C, 0x25, 0x69 };
     memcpy(sm_bData, l_sm_bData, 0x10);
 }
-//----------------------------------------------------------------------------------
+
 void CTwofishCrypt::Init_MD5()
 {
     if (m_md5 != NULL)
@@ -563,7 +563,7 @@ void CTwofishCrypt::Init_MD5()
     m_use_md5 = true;
     memcpy(sm_bData, m_md5->GetMD5(), 0x10);
 }
-//----------------------------------------------------------------------------------
+
 void CTwofishCrypt::Encrypt(puchar in, puchar out, int size)
 {
     uchar tmpBuff[0x100] = { 0 };
@@ -579,7 +579,7 @@ void CTwofishCrypt::Encrypt(puchar in, puchar out, int size)
         out[i] = in[i] ^ m_subData3[m_pos++];
     }
 }
-//----------------------------------------------------------------------------------
+
 void CTwofishCrypt::Decrypt(puchar in, puchar out, int size)
 {
     uint dwTmpIndex = dwIndex;

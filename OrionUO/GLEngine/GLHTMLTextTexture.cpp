@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGLHTMLTextTexture::CGLHTMLTextTexture()
     : CGLTextTexture()
 {
 }
-//----------------------------------------------------------------------------------
+
 CGLHTMLTextTexture::~CGLHTMLTextTexture()
 {
-    WISPFUN_DEBUG("c31_f1");
+    DEBUG_TRACE_FUNCTION;
     m_WebLinkRect.clear();
 }
-//----------------------------------------------------------------------------------
+
 ushort CGLHTMLTextTexture::WebLinkUnderMouse(int x, int y)
 {
-    WISPFUN_DEBUG("c31_f2");
+    DEBUG_TRACE_FUNCTION;
     x = g_MouseManager.Position.X - x;
     y = g_MouseManager.Position.Y - y;
 
@@ -40,4 +40,3 @@ ushort CGLHTMLTextTexture::WebLinkUnderMouse(int x, int y)
 
     return 0;
 }
-//----------------------------------------------------------------------------------

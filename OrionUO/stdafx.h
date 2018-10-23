@@ -68,7 +68,6 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "Glu32.lib")
 
-//----------------------------------------------------------------------------------
 #if !defined(ORION_CMAKE)
 #if defined(_M_IX86)
 #pragma comment(lib, "../Dependencies/lib/Win32/glew32.lib")
@@ -80,7 +79,7 @@
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2main.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2test.lib")
-//----------------------------------------------------------------------------------
+
 #else
 #pragma comment(lib, "../Dependencies/lib/x64/glew32.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/bass.lib")
@@ -93,7 +92,6 @@
 #pragma comment(lib, "../Dependencies/lib/x64/SDL2test.lib")
 #endif
 #endif
-//----------------------------------------------------------------------------------
 
 using namespace std;
 

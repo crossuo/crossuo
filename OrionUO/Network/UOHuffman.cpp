@@ -1,8 +1,8 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//---------------------------------------------------------------------------
+
 #include "stdafx.h"
-//---------------------------------------------------------------------------
+
 int CDecompressingCopier::tree[] = {
     /*   0*/ 1,    2,
     /*   1*/ 3,    4,
@@ -261,7 +261,7 @@ int CDecompressingCopier::tree[] = {
     /* 254*/ -180, -186,
     /* 255*/ -245, -247,
 };
-//---------------------------------------------------------------------------
+
 void CDecompressingCopier::
 operator()(char *dest, const char *src, int &dest_size, intptr_t &src_size)
 {
@@ -313,4 +313,4 @@ operator()(char *dest, const char *src, int &dest_size, intptr_t &src_size)
         }
     }
 }
-//---------------------------------------------------------------------------
+

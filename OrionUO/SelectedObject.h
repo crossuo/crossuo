@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef SELECTEDOBJECT_H
 #define SELECTEDOBJECT_H
-//----------------------------------------------------------------------------------
+
 class CSelectedObject
 {
 public:
@@ -25,8 +25,8 @@ public:
     void Init(CRenderObject *obj, CGump *gump = NULL);
     void Init(const CSelectedObject &obj);
 };
-//----------------------------------------------------------------------------------
+
 extern CSelectedObject g_SelectedObject;
 extern CSelectedObject g_LastSelectedObject;
-//----------------------------------------------------------------------------------
+
 #endif

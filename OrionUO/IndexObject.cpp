@@ -8,93 +8,93 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CIndexObject::CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexObject::~CIndexObject()
 {
-    WISPFUN_DEBUG("c189_f1");
+    DEBUG_TRACE_FUNCTION;
     if (Texture != NULL)
     {
         delete Texture;
         Texture = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 CIndexObjectLand::CIndexObjectLand()
     : CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexObjectLand::~CIndexObjectLand()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexObjectStatic::CIndexObjectStatic()
     : CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexObjectStatic::~CIndexObjectStatic()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexSound::CIndexSound()
     : CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexSound::~CIndexSound()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexMulti::CIndexMulti()
     : CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexMulti::~CIndexMulti()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexLight::CIndexLight()
     : CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexLight::~CIndexLight()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexGump::CIndexGump()
     : CIndexObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexGump::~CIndexGump()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexAnimation::CIndexAnimation()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexAnimation::~CIndexAnimation()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexMusic::CIndexMusic()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexMusic::~CIndexMusic()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CIndexObject::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id)
 {
     Address = ptr->Position;
@@ -110,7 +110,7 @@ void CIndexObject::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const usho
 
     ID = id;
 };
-//----------------------------------------------------------------------------------
+
 void CIndexMulti::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
@@ -119,7 +119,7 @@ void CIndexMulti::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushor
     else
         Count = (ushort)(DataSize / sizeof(MULTI_BLOCK));
 };
-//----------------------------------------------------------------------------------
+
 void CIndexLight::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
@@ -127,7 +127,7 @@ void CIndexLight::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushor
     Width = realPtr->Width;
     Height = realPtr->Height;
 };
-//----------------------------------------------------------------------------------
+
 void CIndexGump::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
@@ -135,4 +135,4 @@ void CIndexGump::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort
     Width = realPtr->Width;
     Height = realPtr->Height;
 };
-//----------------------------------------------------------------------------------
+

@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CTextRenderer g_WorldTextRenderer;
-//----------------------------------------------------------------------------------
+
 CTextRenderer::CTextRenderer()
     : CRenderTextObject()
     , m_TextItems(this)
     , m_DrawPointer(NULL)
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextRenderer::~CTextRenderer()
 {
-    WISPFUN_DEBUG("c175_f1");
+    DEBUG_TRACE_FUNCTION;
     m_TextItems = NULL;
 }
-//---------------------------------------------------------------------------
+
 CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 {
-    WISPFUN_DEBUG("c175_f2");
+    DEBUG_TRACE_FUNCTION;
     if (obj != NULL)
     {
         CRenderTextObject *item = m_TextItems;
@@ -55,10 +55,10 @@ CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 
     return obj;
 }
-//---------------------------------------------------------------------------
+
 void CTextRenderer::ToTop(CRenderTextObject *obj)
 {
-    WISPFUN_DEBUG("c175_f3");
+    DEBUG_TRACE_FUNCTION;
     obj->UnlinkDraw();
 
     CRenderTextObject *next = m_TextItems->m_NextDraw;
@@ -70,10 +70,10 @@ void CTextRenderer::ToTop(CRenderTextObject *obj)
     if (next != NULL)
         next->m_PrevDraw = obj;
 }
-//----------------------------------------------------------------------------------
+
 bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
 {
-    WISPFUN_DEBUG("c175_f4");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
     CTextImageBounds rect(text);
 
@@ -94,7 +94,7 @@ bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 bool CTextRenderer::ProcessTextRemoveBlending(CTextData &text)
 {
     if (g_ConfigManager.RemoveTextWithBlending)
@@ -124,10 +124,10 @@ bool CTextRenderer::ProcessTextRemoveBlending(CTextData &text)
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 bool CTextRenderer::CalculatePositions(bool noCalculate)
 {
-    WISPFUN_DEBUG("c175_f5");
+    DEBUG_TRACE_FUNCTION;
     bool changed = false;
 
     if (!noCalculate)
@@ -164,10 +164,10 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 
     return changed;
 }
-//----------------------------------------------------------------------------------
+
 void CTextRenderer::Draw()
 {
-    WISPFUN_DEBUG("c175_f6");
+    DEBUG_TRACE_FUNCTION;
     CalculatePositions(true);
 
     for (CRenderTextObject *item = m_DrawPointer; item != NULL; item = item->m_PrevDraw)
@@ -216,10 +216,10 @@ void CTextRenderer::Draw()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CTextRenderer::Select(CGump *gump)
 {
-    WISPFUN_DEBUG("c175_f7");
+    DEBUG_TRACE_FUNCTION;
     if (gump != NULL)
         CalculatePositions(true);
     else
@@ -247,10 +247,10 @@ void CTextRenderer::Select(CGump *gump)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 {
-    WISPFUN_DEBUG("c175_f8");
+    DEBUG_TRACE_FUNCTION;
     bool changed = false;
 
     if (!noCalculate)
@@ -280,10 +280,10 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 
     return changed;
 }
-//----------------------------------------------------------------------------------
+
 void CTextRenderer::WorldDraw()
 {
-    WISPFUN_DEBUG("c175_f9");
+    DEBUG_TRACE_FUNCTION;
     CalculateWorldPositions(true);
 
     int renderIndex = g_GameScreen.RenderIndex - 1;
@@ -346,4 +346,4 @@ void CTextRenderer::WorldDraw()
         }
     }
 }
-//----------------------------------------------------------------------------------
+

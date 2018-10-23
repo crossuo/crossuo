@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "../Sockets.h"
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CSocket::CSocket(bool gameSocket)
-    : WISP_NETWORK::CConnection()
+    : Wisp::CConnection()
     , GameSocket(gameSocket)
 {
 }
-//----------------------------------------------------------------------------------
+
 CSocket::~CSocket()
 {
 }
-//----------------------------------------------------------------------------------
+
 bool CSocket::Connect(const string &address, int port)
 {
-    WISPFUN_DEBUG("c158_f1");
+    DEBUG_TRACE_FUNCTION;
     LOG("Connecting...%s:%i\n", address.c_str(), port);
 
     if (UseProxy)
@@ -38,7 +38,7 @@ bool CSocket::Connect(const string &address, int port)
             m_Socket = nullptr;
             Connected = false;
             LOG("Connecting...%s:%i\n", address.c_str(), port);
-            return WISP_NETWORK::CConnection::Connect(address, port);
+            return Wisp::CConnection::Connect(address, port);
         }
 
         ushort serverPort = htons(port);
@@ -67,7 +67,7 @@ bool CSocket::Connect(const string &address, int port)
             m_Socket = nullptr;
             Connected = false;
             LOG("Connecting...%s:%i\n", address.c_str(), port);
-            return WISP_NETWORK::CConnection::Connect(address, port);
+            return Wisp::CConnection::Connect(address, port);
         }
 
         if (ProxySocks5)
@@ -87,7 +87,7 @@ bool CSocket::Connect(const string &address, int port)
                 m_Socket = nullptr;
                 Connected = false;
                 LOG("Connecting...%s:%i\n", address.c_str(), port);
-                return WISP_NETWORK::CConnection::Connect(address, port);
+                return Wisp::CConnection::Connect(address, port);
             }
             else
             {
@@ -112,7 +112,7 @@ bool CSocket::Connect(const string &address, int port)
                             m_Socket = nullptr;
                             Connected = false;
                             LOG("Connecting...%s:%i\n", address.c_str(), port);
-                            return WISP_NETWORK::CConnection::Connect(address, port);
+                            return Wisp::CConnection::Connect(address, port);
                         }
                     }
                     memset(str, 0, 10);
@@ -163,7 +163,7 @@ bool CSocket::Connect(const string &address, int port)
                         m_Socket = nullptr;
                         Connected = false;
                         LOG("Connecting...%s:%i\n", address.c_str(), port);
-                        return WISP_NETWORK::CConnection::Connect(address, port);
+                        return Wisp::CConnection::Connect(address, port);
                     }
                     LOG("Connected to server via proxy\n");
                 }
@@ -174,7 +174,7 @@ bool CSocket::Connect(const string &address, int port)
                     m_Socket = nullptr;
                     Connected = false;
                     LOG("Connecting...%s:%i\n", address.c_str(), port);
-                    return WISP_NETWORK::CConnection::Connect(address, port);
+                    return Wisp::CConnection::Connect(address, port);
                 }
             }
         }
@@ -222,20 +222,20 @@ bool CSocket::Connect(const string &address, int port)
                 m_Socket = nullptr;
                 Connected = false;
                 LOG("Connecting...%s:%i\n", address.c_str(), port);
-                return WISP_NETWORK::CConnection::Connect(address, port);
+                return Wisp::CConnection::Connect(address, port);
             }
             LOG("Connected to server via proxy\n");
         }
     }
     else
-        return WISP_NETWORK::CConnection::Connect(address, port);
+        return Wisp::CConnection::Connect(address, port);
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 UCHAR_LIST CSocket::Decompression(UCHAR_LIST data)
 {
-    WISPFUN_DEBUG("c158_f2");
+    DEBUG_TRACE_FUNCTION;
     if (GameSocket)
     {
         intptr_t inSize = (intptr_t)data.size();
@@ -262,4 +262,4 @@ UCHAR_LIST CSocket::Decompression(UCHAR_LIST data)
 
     return data;
 }
-//----------------------------------------------------------------------------------
+

@@ -1,40 +1,40 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "WispWindow.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <SDL_timer.h>
-namespace WISP_WINDOW
+namespace Wisp
 {
 CWindow *g_WispWindow = nullptr;
-//---------------------------------------------------------------------------
+
 #if USE_WISP
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WISPFUN_DEBUG("c_ww_wp");
+    DEBUG_TRACE_FUNCTION;
     if (g_WispWindow != NULL)
         return g_WispWindow->OnWindowProc(hWnd, message, wParam, lParam);
 
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 #endif
-//----------------------------------------------------------------------------------
+
 CWindow::CWindow()
 {
-    WISPFUN_DEBUG("c14_f1");
+    DEBUG_TRACE_FUNCTION;
     g_WispWindow = this;
 }
-//----------------------------------------------------------------------------------
+
 CWindow::~CWindow()
 {
 }
-//----------------------------------------------------------------------------------
-void CWindow::SetSize(const WISP_GEOMETRY::CSize &size)
+
+void CWindow::SetSize(const Wisp::CSize &size)
 {
 #if USE_WISP
-    WISPFUN_DEBUG("c14_f2");
+    DEBUG_TRACE_FUNCTION;
     RECT pos = { 0, 0, 0, 0 };
     GetWindowRect(Handle, &pos);
 
@@ -59,10 +59,10 @@ void CWindow::SetSize(const WISP_GEOMETRY::CSize &size)
 #endif
     m_Size = size;
 }
-//----------------------------------------------------------------------------------
-void CWindow::SetMinSize(const WISP_GEOMETRY::CSize &newMinSize)
+
+void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
 {
-    WISPFUN_DEBUG("c14_f3");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     if (m_Size.Width < newMinSize.Width || m_Size.Height < newMinSize.Height)
     {
@@ -99,10 +99,10 @@ void CWindow::SetMinSize(const WISP_GEOMETRY::CSize &newMinSize)
 #endif
     m_MinSize = newMinSize;
 }
-//----------------------------------------------------------------------------------
-void CWindow::SetMaxSize(const WISP_GEOMETRY::CSize &newMaxSize)
+
+void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
 {
-    WISPFUN_DEBUG("c14_f4");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     if (m_Size.Width > newMaxSize.Width || m_Size.Height > newMaxSize.Height)
     {
@@ -139,11 +139,11 @@ void CWindow::SetMaxSize(const WISP_GEOMETRY::CSize &newMaxSize)
 #endif
     m_MaxSize = newMaxSize;
 }
-//----------------------------------------------------------------------------------
+
 bool CWindow::Create(
     const char *className, const char *title, bool showCursor, int width, int height)
 {
-    WISPFUN_DEBUG("c14_f5");
+    DEBUG_TRACE_FUNCTION;
 
 #if USE_WISP
     HICON icon = LoadIcon(g_OrionWindow.hInstance, MAKEINTRESOURCE(IDI_ORIONUO));
@@ -285,10 +285,10 @@ bool CWindow::Create(
     return OnCreate();
 }
 
-//----------------------------------------------------------------------------------
+
 void CWindow::Destroy()
 {
-    WISPFUN_DEBUG("c14_f6");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     PostMessage(Handle, WM_CLOSE, 0, 0);
 #else
@@ -296,31 +296,31 @@ void CWindow::Destroy()
         SDL_DestroyWindow(m_window);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 void CWindow::ShowMessage(const string &text, const string &title)
 {
-    WISPFUN_DEBUG("c14_f7");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     MessageBoxA(Handle, text.c_str(), title.c_str(), MB_OK);
 #else
     SDL_Log("%s: %s\n", title.c_str(), text.c_str());
 #endif
 }
-//----------------------------------------------------------------------------------
+
 void CWindow::ShowMessage(const wstring &text, const wstring &title)
 {
-    WISPFUN_DEBUG("c14_f8");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     MessageBoxW(Handle, text.c_str(), title.c_str(), MB_OK);
 #else
     SDL_Log("%s: %s\n", title.c_str(), text.c_str());
 #endif
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c14_f9");
+    DEBUG_TRACE_FUNCTION;
     //DebugMsg("m=0x%08X, w0x%08X l0x%08X\n", message, wParam, lParam);
     static bool parse = true;
 
@@ -397,7 +397,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
                 return 0;
             }
 
-            WISP_GEOMETRY::CSize newSize(LOWORD(lParam), HIWORD(lParam));
+            Wisp::CSize newSize(LOWORD(lParam), HIWORD(lParam));
 
             OnResize(newSize);
             m_Size = newSize;
@@ -419,156 +419,156 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         }
         case WM_MOUSEMOVE:
         {
-            WISP_MOUSE::g_WispMouse->LeftButtonPressed = (bool)(wParam & MK_LBUTTON);
-            WISP_MOUSE::g_WispMouse->RightButtonPressed = (bool)(wParam & MK_RBUTTON);
-            WISP_MOUSE::g_WispMouse->MidButtonPressed = (bool)(wParam & MK_MBUTTON);
-            WISP_MOUSE::g_WispMouse->Update(); // TODO: check if is correct
+            Wisp::g_WispMouse->LeftButtonPressed = (bool)(wParam & MK_LBUTTON);
+            Wisp::g_WispMouse->RightButtonPressed = (bool)(wParam & MK_RBUTTON);
+            Wisp::g_WispMouse->MidButtonPressed = (bool)(wParam & MK_MBUTTON);
+            Wisp::g_WispMouse->Update(); // TODO: check if is correct
 
-            if (WISP_MOUSE::g_WispMouse->Dragging)
+            if (Wisp::g_WispMouse->Dragging)
                 OnDragging();
 
             break;
         }
         case WM_LBUTTONDOWN:
         {
-            WISP_MOUSE::g_WispMouse->Capture();
+            Wisp::g_WispMouse->Capture();
 
-            WISP_MOUSE::g_WispMouse->Update();
-            WISP_MOUSE::g_WispMouse->LeftButtonPressed = true;
-            WISP_MOUSE::g_WispMouse->LeftDropPosition = WISP_MOUSE::g_WispMouse->Position;
-            WISP_MOUSE::g_WispMouse->CancelDoubleClick = false;
+            Wisp::g_WispMouse->Update();
+            Wisp::g_WispMouse->LeftButtonPressed = true;
+            Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
+            Wisp::g_WispMouse->CancelDoubleClick = false;
 
             uint ticks = SDL_GetTicks();
 
-            if (WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer +
-                    WISP_MOUSE::g_WispMouse->DoubleClickDelay >=
+            if (Wisp::g_WispMouse->LastLeftButtonClickTimer +
+                    Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
             {
-                WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = 0;
+                Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
 
                 if (!OnLeftMouseButtonDoubleClick())
                     OnLeftMouseButtonDown();
                 else
-                    WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = 0xFFFFFFFF;
+                    Wisp::g_WispMouse->LastLeftButtonClickTimer = 0xFFFFFFFF;
 
                 break;
             }
 
             OnLeftMouseButtonDown();
 
-            if (WISP_MOUSE::g_WispMouse->CancelDoubleClick)
-                WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = 0;
+            if (Wisp::g_WispMouse->CancelDoubleClick)
+                Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
             else
-                WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = ticks;
+                Wisp::g_WispMouse->LastLeftButtonClickTimer = ticks;
 
             break;
         }
         case WM_LBUTTONUP:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
 
-            if (WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
+            if (Wisp::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
                 OnLeftMouseButtonUp();
 
-            WISP_MOUSE::g_WispMouse->LeftButtonPressed = false;
-            WISP_MOUSE::g_WispMouse->Release();
+            Wisp::g_WispMouse->LeftButtonPressed = false;
+            Wisp::g_WispMouse->Release();
 
             break;
         }
         case WM_RBUTTONDOWN:
         {
-            WISP_MOUSE::g_WispMouse->Capture();
+            Wisp::g_WispMouse->Capture();
 
-            WISP_MOUSE::g_WispMouse->Update();
-            WISP_MOUSE::g_WispMouse->RightButtonPressed = true;
-            WISP_MOUSE::g_WispMouse->RightDropPosition = WISP_MOUSE::g_WispMouse->Position;
-            WISP_MOUSE::g_WispMouse->CancelDoubleClick = false;
+            Wisp::g_WispMouse->Update();
+            Wisp::g_WispMouse->RightButtonPressed = true;
+            Wisp::g_WispMouse->RightDropPosition = Wisp::g_WispMouse->Position;
+            Wisp::g_WispMouse->CancelDoubleClick = false;
 
             uint ticks = SDL_GetTicks();
 
-            if (WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer +
-                    WISP_MOUSE::g_WispMouse->DoubleClickDelay >=
+            if (Wisp::g_WispMouse->LastRightButtonClickTimer +
+                    Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
             {
-                WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = 0;
+                Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
 
                 if (!OnRightMouseButtonDoubleClick())
                     OnRightMouseButtonDown();
                 else
-                    WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = 0xFFFFFFFF;
+                    Wisp::g_WispMouse->LastRightButtonClickTimer = 0xFFFFFFFF;
 
                 break;
             }
 
             OnRightMouseButtonDown();
 
-            if (WISP_MOUSE::g_WispMouse->CancelDoubleClick)
-                WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = 0;
+            if (Wisp::g_WispMouse->CancelDoubleClick)
+                Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
             else
-                WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = ticks;
+                Wisp::g_WispMouse->LastRightButtonClickTimer = ticks;
 
             break;
         }
         case WM_RBUTTONUP:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
 
-            if (WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
+            if (Wisp::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
                 OnRightMouseButtonUp();
 
-            WISP_MOUSE::g_WispMouse->RightButtonPressed = false;
-            WISP_MOUSE::g_WispMouse->Release();
+            Wisp::g_WispMouse->RightButtonPressed = false;
+            Wisp::g_WispMouse->Release();
 
             break;
         }
         //Нажатие на колесико мышки
         case WM_MBUTTONDOWN:
         {
-            WISP_MOUSE::g_WispMouse->Capture();
+            Wisp::g_WispMouse->Capture();
 
-            WISP_MOUSE::g_WispMouse->Update();
-            WISP_MOUSE::g_WispMouse->MidButtonPressed = true;
-            WISP_MOUSE::g_WispMouse->MidDropPosition = WISP_MOUSE::g_WispMouse->Position;
-            WISP_MOUSE::g_WispMouse->CancelDoubleClick = false;
+            Wisp::g_WispMouse->Update();
+            Wisp::g_WispMouse->MidButtonPressed = true;
+            Wisp::g_WispMouse->MidDropPosition = Wisp::g_WispMouse->Position;
+            Wisp::g_WispMouse->CancelDoubleClick = false;
 
             uint ticks = SDL_GetTicks();
 
-            if (WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer +
-                    WISP_MOUSE::g_WispMouse->DoubleClickDelay >=
+            if (Wisp::g_WispMouse->LastMidButtonClickTimer +
+                    Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
             {
                 if (!OnMidMouseButtonDoubleClick())
                     OnMidMouseButtonDown();
 
-                WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer = 0;
+                Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
 
                 break;
             }
 
             OnMidMouseButtonDown();
 
-            if (WISP_MOUSE::g_WispMouse->CancelDoubleClick)
-                WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer = 0;
+            if (Wisp::g_WispMouse->CancelDoubleClick)
+                Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
             else
-                WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer = ticks;
+                Wisp::g_WispMouse->LastMidButtonClickTimer = ticks;
 
             break;
         }
         //Отпускание колесика мышки
         case WM_MBUTTONUP:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
             OnMidMouseButtonUp();
 
-            WISP_MOUSE::g_WispMouse->MidButtonPressed = false;
-            WISP_MOUSE::g_WispMouse->Release();
+            Wisp::g_WispMouse->MidButtonPressed = false;
+            Wisp::g_WispMouse->Release();
 
             break;
         }
         //Колесико мышки вверх/вниз
         case WM_MOUSEWHEEL:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
             OnMidMouseButtonScroll(!(short(HIWORD(wParam)) > 0));
 
             break;
@@ -576,7 +576,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         //Доп. кнопки мыши
         case WM_XBUTTONDOWN:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
             OnXMouseButton(!(short(HIWORD(wParam)) > 0));
 
             break;
@@ -639,9 +639,9 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
 
             break;
         }
-        case WISP_THREADED_TIMER::CThreadedTimer::MessageID:
+        case Wisp::CThreadedTimer::MessageID:
         {
-            OnThreadedTimer((uint)wParam, (WISP_THREADED_TIMER::CThreadedTimer *)lParam);
+            OnThreadedTimer((uint)wParam, (Wisp::CThreadedTimer *)lParam);
 
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", wParam, lParam);
 
@@ -692,7 +692,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
             // FIXME
             //case WM_GETMINMAXINFO:
             //case WM_SIZE:
-            // WISP_THREADED_TIMER::CThreadedTimer::MessageID:
+            // Wisp::CThreadedTimer::MessageID:
             //case WM_TIMER:
 
         case SDL_KEYDOWN:
@@ -716,15 +716,15 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
         case SDL_MOUSEMOTION:
         {
-            WISP_MOUSE::g_WispMouse->Update();
-            if (WISP_MOUSE::g_WispMouse->Dragging)
+            Wisp::g_WispMouse->Update();
+            if (Wisp::g_WispMouse->Dragging)
                 OnDragging();
         }
         break;
 
         case SDL_MOUSEWHEEL:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
 
             const bool isUp = ev.wheel.y > 0;
             OnMidMouseButtonScroll(isUp);
@@ -734,116 +734,116 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         case SDL_MOUSEBUTTONUP:
         case SDL_MOUSEBUTTONDOWN:
         {
-            WISP_MOUSE::g_WispMouse->Update();
+            Wisp::g_WispMouse->Update();
 
             const bool isDown = ev.type == SDL_MOUSEBUTTONDOWN;
             auto &mouse = ev.button;
             switch (mouse.button)
             {
                 case SDL_BUTTON_LEFT:
-                    WISP_MOUSE::g_WispMouse->LeftButtonPressed = isDown;
+                    Wisp::g_WispMouse->LeftButtonPressed = isDown;
                     if (isDown)
                     {
-                        WISP_MOUSE::g_WispMouse->Capture();
-                        WISP_MOUSE::g_WispMouse->LeftDropPosition =
-                            WISP_MOUSE::g_WispMouse->Position;
-                        WISP_MOUSE::g_WispMouse->CancelDoubleClick = false;
+                        Wisp::g_WispMouse->Capture();
+                        Wisp::g_WispMouse->LeftDropPosition =
+                            Wisp::g_WispMouse->Position;
+                        Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint ticks = SDL_GetTicks();
-                        if (WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer +
-                                WISP_MOUSE::g_WispMouse->DoubleClickDelay >=
+                        if (Wisp::g_WispMouse->LastLeftButtonClickTimer +
+                                Wisp::g_WispMouse->DoubleClickDelay >=
                             ticks)
                         {
-                            WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = 0;
+                            Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
                             if (!OnLeftMouseButtonDoubleClick())
                                 OnLeftMouseButtonDown();
                             else
-                                WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = 0xFFFFFFFF;
+                                Wisp::g_WispMouse->LastLeftButtonClickTimer = 0xFFFFFFFF;
                             break;
                         }
 
                         OnLeftMouseButtonDown();
 
-                        if (WISP_MOUSE::g_WispMouse->CancelDoubleClick)
-                            WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = 0;
+                        if (Wisp::g_WispMouse->CancelDoubleClick)
+                            Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
                         else
-                            WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer = ticks;
+                            Wisp::g_WispMouse->LastLeftButtonClickTimer = ticks;
                         break;
                     }
                     else
                     {
-                        if (WISP_MOUSE::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
+                        if (Wisp::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
                             OnLeftMouseButtonUp();
-                        WISP_MOUSE::g_WispMouse->Release();
+                        Wisp::g_WispMouse->Release();
                     }
                     break;
 
                 case SDL_BUTTON_MIDDLE:
-                    WISP_MOUSE::g_WispMouse->MidButtonPressed = isDown;
+                    Wisp::g_WispMouse->MidButtonPressed = isDown;
                     if (isDown)
                     {
-                        WISP_MOUSE::g_WispMouse->Capture();
-                        WISP_MOUSE::g_WispMouse->MidDropPosition =
-                            WISP_MOUSE::g_WispMouse->Position;
-                        WISP_MOUSE::g_WispMouse->CancelDoubleClick = false;
+                        Wisp::g_WispMouse->Capture();
+                        Wisp::g_WispMouse->MidDropPosition =
+                            Wisp::g_WispMouse->Position;
+                        Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint ticks = SDL_GetTicks();
-                        if (WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer +
-                                WISP_MOUSE::g_WispMouse->DoubleClickDelay >=
+                        if (Wisp::g_WispMouse->LastMidButtonClickTimer +
+                                Wisp::g_WispMouse->DoubleClickDelay >=
                             ticks)
                         {
                             if (!OnMidMouseButtonDoubleClick())
                                 OnMidMouseButtonDown();
 
-                            WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer = 0;
+                            Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
                             break;
                         }
 
                         OnMidMouseButtonDown();
 
-                        if (WISP_MOUSE::g_WispMouse->CancelDoubleClick)
-                            WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer = 0;
+                        if (Wisp::g_WispMouse->CancelDoubleClick)
+                            Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
                         else
-                            WISP_MOUSE::g_WispMouse->LastMidButtonClickTimer = ticks;
+                            Wisp::g_WispMouse->LastMidButtonClickTimer = ticks;
                     }
                     else
                     {
                         OnMidMouseButtonUp();
-                        WISP_MOUSE::g_WispMouse->Release();
+                        Wisp::g_WispMouse->Release();
                     }
                     break;
 
                 case SDL_BUTTON_RIGHT:
-                    WISP_MOUSE::g_WispMouse->RightButtonPressed = isDown;
+                    Wisp::g_WispMouse->RightButtonPressed = isDown;
                     if (isDown)
                     {
-                        WISP_MOUSE::g_WispMouse->Capture();
-                        WISP_MOUSE::g_WispMouse->RightDropPosition =
-                            WISP_MOUSE::g_WispMouse->Position;
-                        WISP_MOUSE::g_WispMouse->CancelDoubleClick = false;
+                        Wisp::g_WispMouse->Capture();
+                        Wisp::g_WispMouse->RightDropPosition =
+                            Wisp::g_WispMouse->Position;
+                        Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint ticks = SDL_GetTicks();
-                        if (WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer +
-                                WISP_MOUSE::g_WispMouse->DoubleClickDelay >=
+                        if (Wisp::g_WispMouse->LastRightButtonClickTimer +
+                                Wisp::g_WispMouse->DoubleClickDelay >=
                             ticks)
                         {
-                            WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = 0;
+                            Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
                             if (!OnRightMouseButtonDoubleClick())
                                 OnRightMouseButtonDown();
                             else
-                                WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = 0xFFFFFFFF;
+                                Wisp::g_WispMouse->LastRightButtonClickTimer = 0xFFFFFFFF;
                             break;
                         }
 
                         OnRightMouseButtonDown();
 
-                        if (WISP_MOUSE::g_WispMouse->CancelDoubleClick)
-                            WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = 0;
+                        if (Wisp::g_WispMouse->CancelDoubleClick)
+                            Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
                         else
-                            WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer = ticks;
+                            Wisp::g_WispMouse->LastRightButtonClickTimer = ticks;
                     }
                     else
                     {
-                        if (WISP_MOUSE::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
+                        if (Wisp::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
                             OnRightMouseButtonUp();
-                        WISP_MOUSE::g_WispMouse->Release();
+                        Wisp::g_WispMouse->Release();
                     }
                     break;
 
@@ -873,12 +873,12 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
     return false;
 }
 #endif
-//----------------------------------------------------------------------------------
+
 void CWindow::CreateThreadedTimer(
     uint id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
 {
-    WISPFUN_DEBUG("c14_f10");
-    for (deque<WISP_THREADED_TIMER::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
+    DEBUG_TRACE_FUNCTION;
+    for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
          i != m_ThreadedTimersStack.end();
          ++i)
     {
@@ -886,16 +886,16 @@ void CWindow::CreateThreadedTimer(
             return;
     }
 
-    WISP_THREADED_TIMER::CThreadedTimer *timer =
-        new WISP_THREADED_TIMER::CThreadedTimer(id, Handle, waitForProcessMessage);
+    Wisp::CThreadedTimer *timer =
+        new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
     m_ThreadedTimersStack.push_back(timer);
     timer->Run(!oneShot, delay, synchronizedDelay);
 }
-//----------------------------------------------------------------------------------
+
 void CWindow::RemoveThreadedTimer(uint id)
 {
-    WISPFUN_DEBUG("c14_f11");
-    for (deque<WISP_THREADED_TIMER::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
+    DEBUG_TRACE_FUNCTION;
+    for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
          i != m_ThreadedTimersStack.end();
          ++i)
     {
@@ -908,11 +908,11 @@ void CWindow::RemoveThreadedTimer(uint id)
         }
     }
 }
-//----------------------------------------------------------------------------------
-WISP_THREADED_TIMER::CThreadedTimer *CWindow::GetThreadedTimer(uint id)
+
+Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint id)
 {
-    WISPFUN_DEBUG("c14_f12");
-    for (deque<WISP_THREADED_TIMER::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
+    DEBUG_TRACE_FUNCTION;
+    for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
          i != m_ThreadedTimersStack.end();
          ++i)
     {
@@ -922,6 +922,6 @@ WISP_THREADED_TIMER::CThreadedTimer *CWindow::GetThreadedTimer(uint id)
 
     return 0;
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_WINDOW
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

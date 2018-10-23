@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpDye::CGumpDye(uint serial, short x, short y, ushort graphic)
     : CGumpSelectColor(serial, x, y, SCGS_OPT_TOOLTIP_TEXT)
 {
@@ -18,14 +18,14 @@ CGumpDye::CGumpDye(uint serial, short x, short y, ushort graphic)
     GumpType = GT_DYE;
     Graphic = graphic;
 }
-//----------------------------------------------------------------------------------
+
 CGumpDye::~CGumpDye()
 {
 }
-//----------------------------------------------------------------------------------
+
 ushort CGumpDye::GetCurrentColor()
 {
-    WISPFUN_DEBUG("c95_f1");
+    DEBUG_TRACE_FUNCTION;
     ushort startColor = m_ColorRef + 2;
     ushort color = 0;
 
@@ -45,10 +45,10 @@ ushort CGumpDye::GetCurrentColor()
 
     return color;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDye::UpdateContent()
 {
-    WISPFUN_DEBUG("c95_f2");
+    DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::UpdateContent();
 
     if (m_Tube == NULL)
@@ -63,35 +63,35 @@ void CGumpDye::UpdateContent()
     else
         m_Tube->Color = GetCurrentColor();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDye::OnSelectColor(ushort color)
 {
-    WISPFUN_DEBUG("c95_f3");
+    DEBUG_TRACE_FUNCTION;
     CPacketDyeDataResponse(Serial, Graphic, color + 1).Send();
     RemoveMark = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDye::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c95_f4");
+    DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::OnButton(serial);
 
     if (serial >= ID_GSC_COLORS && m_Tube != NULL)
         m_Tube->Color = GetCurrentColor();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDye::GUMP_SLIDER_CLICK_EVENT_C
 {
-    WISPFUN_DEBUG("c95_f5");
+    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpDye::GUMP_SLIDER_MOVE_EVENT_C
 {
-    WISPFUN_DEBUG("c95_f6");
+    DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::OnSliderMove(serial);
 
     if (m_Tube != NULL)
         m_Tube->Color = GetCurrentColor();
 }
-//----------------------------------------------------------------------------------
+

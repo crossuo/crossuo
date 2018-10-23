@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     : CGumpBaseScroll(GT_JOURNAL, 0, 0x0820, height, x, y, true, 0, true)
 {
-    WISPFUN_DEBUG("c98_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GJ_LOCK_MOVING;
 
     if (minimized)
@@ -60,14 +60,14 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     QFOR(item, g_Journal.m_Items, CTextData *)
     AddText(item);
 }
-//----------------------------------------------------------------------------------
+
 CGumpJournal::~CGumpJournal()
 {
 }
-//---------------------------------------------------------------------------
+
 void CGumpJournal::InitToolTip()
 {
-    WISPFUN_DEBUG("c98_f2");
+    DEBUG_TRACE_FUNCTION;
     uint id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -116,10 +116,10 @@ void CGumpJournal::InitToolTip()
     else
         g_ToolTip.Set(L"Double click to maximize journal gump");
 }
-//----------------------------------------------------------------------------------
+
 void CGumpJournal::UpdateHeight()
 {
-    WISPFUN_DEBUG("c98_f3");
+    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     m_BottomLine->SetY(Height - 26); //Bottom line
@@ -137,10 +137,10 @@ void CGumpJournal::UpdateHeight()
     if (!m_TextLocker->Visible)
         m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
 }
-//----------------------------------------------------------------------------------
+
 int CGumpJournal::RecalculateHeight()
 {
-    WISPFUN_DEBUG("c98_f4");
+    DEBUG_TRACE_FUNCTION;
     int height = 0;
 
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
@@ -167,10 +167,10 @@ int CGumpJournal::RecalculateHeight()
 
     return height;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpJournal::AddText(CTextData *obj)
 {
-    WISPFUN_DEBUG("c98_f5");
+    DEBUG_TRACE_FUNCTION;
     CGUIText *text = (CGUIText *)m_HTMLGump->Add(new CGUIText(obj->Color, 4, RecalculateHeight()));
     text->MoveOnDrag = true;
     text->Serial = 0;
@@ -195,10 +195,10 @@ void CGumpJournal::AddText(CTextData *obj)
         m_HTMLGump->m_Slider->CalculateOffset();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpJournal::DeleteText(CTextData *obj)
 {
-    WISPFUN_DEBUG("c98_f6");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXT && item->TextData == obj)
@@ -211,10 +211,10 @@ void CGumpJournal::DeleteText(CTextData *obj)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpJournal::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c98_f7");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE)
     {
         Minimized = true;
@@ -229,10 +229,10 @@ void CGumpJournal::GUMP_BUTTON_EVENT_C
         m_TextLocker->Visible = false;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpJournal::GUMP_CHECKBOX_EVENT_C
 {
-    WISPFUN_DEBUG("c98_f8");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GJ_SHOW_SYSTEM)
     {
         g_JournalShowSystem = !g_JournalShowSystem;
@@ -270,10 +270,10 @@ void CGumpJournal::GUMP_CHECKBOX_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpJournal::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c98_f9");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;
@@ -285,4 +285,4 @@ bool CGumpJournal::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+

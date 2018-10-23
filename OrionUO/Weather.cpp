@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CWeather g_Weather;
 /// <summary>
 /// колебания по синусоиде с частотой freq и амплитудой -range до +range
@@ -26,14 +26,14 @@ float SinOscillate(float freq, int range, DWORD current_tick)
     float anglef = (float)(int((current_tick / 2.7777f) * freq) % 360);
     return sinf(deg2radf(anglef)) * range;
 }
-//----------------------------------------------------------------------------------
+
 CWeather::CWeather()
 {
 }
-//---------------------------------------------------------------------------
+
 void CWeather::Reset()
 {
-    WISPFUN_DEBUG("c214_f1");
+    DEBUG_TRACE_FUNCTION;
     Type = 0;
     Count = 0;
     CurrentCount = 0;
@@ -46,10 +46,10 @@ void CWeather::Reset()
 
     m_Effects.clear();
 }
-//---------------------------------------------------------------------------
+
 void CWeather::Generate()
 {
-    WISPFUN_DEBUG("c214_f2");
+    DEBUG_TRACE_FUNCTION;
     LastTick = g_Ticks;
 
     if (Type == 0xFF || Type == 0xFE)
@@ -75,10 +75,10 @@ void CWeather::Generate()
         CurrentCount++;
     }
 }
-//---------------------------------------------------------------------------
+
 void CWeather::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c214_f3");
+    DEBUG_TRACE_FUNCTION;
     bool removeEffects = false;
 
     if (Timer < g_Ticks)
@@ -278,4 +278,3 @@ void CWeather::Draw(int x, int y)
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     LastTick = g_Ticks;
 }
-//---------------------------------------------------------------------------

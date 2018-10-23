@@ -8,15 +8,15 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CLandObject::CLandObject(int serial, ushort graphic, ushort color, short x, short y, char z)
     : CMapObject(ROT_LAND_OBJECT, serial, 0, color, x, y, z)
     , MinZ(z)
     , AverageZ(z)
 {
-    WISPFUN_DEBUG("c23_f1");
+    DEBUG_TRACE_FUNCTION;
     OriginalGraphic = graphic;
     UpdateGraphicBySeason();
 
@@ -33,10 +33,10 @@ CLandObject::CLandObject(int serial, ushort graphic, ushort color, short x, shor
     g_LandObjectsCount++;
 #endif //UO_DEBUG_INFO!=0
 }
-//---------------------------------------------------------------------------
+
 CLandObject::~CLandObject()
 {
-    WISPFUN_DEBUG("c23_f2");
+    DEBUG_TRACE_FUNCTION;
     if (PositionBuffer != 0)
     {
         glDeleteBuffers(1, &PositionBuffer);
@@ -55,17 +55,17 @@ CLandObject::~CLandObject()
         NormalBuffer = 0;
     }
 }
-//---------------------------------------------------------------------------
+
 void CLandObject::UpdateGraphicBySeason()
 {
-    WISPFUN_DEBUG("c23_f3");
+    DEBUG_TRACE_FUNCTION;
     Graphic = g_Orion.GetLandSeasonGraphic(OriginalGraphic);
     NoDrawTile = (Graphic == 2);
 }
-//---------------------------------------------------------------------------
+
 int CLandObject::GetDirectionZ(int direction)
 {
-    WISPFUN_DEBUG("c23_f4");
+    DEBUG_TRACE_FUNCTION;
     switch (direction)
     {
         case 1:
@@ -80,10 +80,10 @@ int CLandObject::GetDirectionZ(int direction)
 
     return m_Z;
 }
-//---------------------------------------------------------------------------
+
 int CLandObject::CalculateCurrentAverageZ(int direction)
 {
-    WISPFUN_DEBUG("c23_f5");
+    DEBUG_TRACE_FUNCTION;
     int result = GetDirectionZ(((uchar)(direction >> 1) + 1) & 3);
 
     if (direction & 1)
@@ -91,10 +91,10 @@ int CLandObject::CalculateCurrentAverageZ(int direction)
 
     return (result + GetDirectionZ(direction >> 1)) >> 1;
 }
-//---------------------------------------------------------------------------
+
 void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
 {
-    WISPFUN_DEBUG("c23_f6");
+    DEBUG_TRACE_FUNCTION;
     if (IsStretched)
     {
         //Сохраним среднее значение Z-координаты
@@ -124,10 +124,10 @@ void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
             MinZ = zBottom;
     }
 }
-//---------------------------------------------------------------------------
+
 void CLandObject::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c23_f7");
+    DEBUG_TRACE_FUNCTION;
     if (m_Z <= g_MaxGroundZ)
     {
         ushort objColor = 0;
@@ -145,10 +145,10 @@ void CLandObject::Draw(int x, int y)
             g_Orion.DrawLandTexture(this, objColor, x, y);
     }
 }
-//---------------------------------------------------------------------------
+
 void CLandObject::Select(int x, int y)
 {
-    WISPFUN_DEBUG("c23_f8");
+    DEBUG_TRACE_FUNCTION;
     if (m_Z <= g_MaxGroundZ)
     {
         if (!IsStretched)
@@ -163,4 +163,4 @@ void CLandObject::Select(int x, int y)
         }
     }
 }
-//----------------------------------------------------------------------------------
+

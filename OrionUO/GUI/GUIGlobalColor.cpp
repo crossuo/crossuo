@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIGlobalColor::CGUIGlobalColor(bool enabled, GLfloat r, GLfloat g, GLfloat b, GLfloat a)
     : CBaseGUI(GOT_GLOBAL_COLOR, 0, 0, 0, 0, 0)
     , R(r)
@@ -20,15 +20,15 @@ CGUIGlobalColor::CGUIGlobalColor(bool enabled, GLfloat r, GLfloat g, GLfloat b, 
 {
     Enabled = enabled;
 }
-//----------------------------------------------------------------------------------
+
 CGUIGlobalColor::~CGUIGlobalColor()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIGlobalColor::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c55_f1");
+    DEBUG_TRACE_FUNCTION;
     if (Enabled)
         glColor4f(R, G, B, A);
 }
-//----------------------------------------------------------------------------------
+

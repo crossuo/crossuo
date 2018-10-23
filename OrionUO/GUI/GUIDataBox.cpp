@@ -8,28 +8,28 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIDataBox::CGUIDataBox()
     : CGUIPolygonal(GOT_DATABOX, 0, 0, 0, 0)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIDataBox::~CGUIDataBox()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIDataBox::PrepareTextures()
 {
-    WISPFUN_DEBUG("c51_f1");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIDataBox::EntryPointerHere()
 {
-    WISPFUN_DEBUG("c51_f2");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
@@ -38,4 +38,4 @@ bool CGUIDataBox::EntryPointerHere()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+

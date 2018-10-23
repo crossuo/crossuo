@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CRenderStaticObject::CRenderStaticObject(
     RENDER_OBJECT_TYPE renderType,
     int serial,
@@ -21,7 +21,7 @@ CRenderStaticObject::CRenderStaticObject(
     char z)
     : CMapObject(renderType, serial, graphic, color, x, y, z)
 {
-    WISPFUN_DEBUG("c27_f1");
+    DEBUG_TRACE_FUNCTION;
     m_TiledataPtr = &g_Orion.m_StaticData[graphic];
 
     if (m_TiledataPtr->Height > 5)
@@ -54,17 +54,17 @@ CRenderStaticObject::CRenderStaticObject(
             CanBeTransparent |= 0x10;
     }
 }
-//---------------------------------------------------------------------------
+
 CRenderStaticObject::~CRenderStaticObject()
 {
-    WISPFUN_DEBUG("c27_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_TextControl != NULL)
     {
         delete m_TextControl;
         m_TextControl = NULL;
     }
 }
-//---------------------------------------------------------------------------
+
 void CRenderStaticObject::UpdateTextCoordinates()
 {
     int offset = 0;
@@ -104,7 +104,7 @@ void CRenderStaticObject::UpdateTextCoordinates()
         }
     }
 }
-//---------------------------------------------------------------------------
+
 void CRenderStaticObject::FixTextCoordinates()
 {
     if (IsGameObject() && ((CGameObject *)this)->Container != 0xFFFFFFFF)
@@ -144,7 +144,7 @@ void CRenderStaticObject::FixTextCoordinates()
             text.RealDrawY += offsetY;
     }
 }
-//---------------------------------------------------------------------------
+
 bool CRenderStaticObject::IsNoDrawTile(ushort graphic)
 {
     switch (graphic)
@@ -174,10 +174,10 @@ bool CRenderStaticObject::IsNoDrawTile(ushort graphic)
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 void CRenderStaticObject::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c27_f3");
+    DEBUG_TRACE_FUNCTION;
 #if UO_DEBUG_INFO != 0
     g_RenderedObjectsCountInGameWindow++;
 #endif
@@ -209,10 +209,10 @@ void CRenderStaticObject::Draw(int x, int y)
     if (IsLightSource() && g_GameScreen.UseLight)
         g_GameScreen.AddLight(this, this, x, y);
 }
-//----------------------------------------------------------------------------------
+
 void CRenderStaticObject::Select(int x, int y)
 {
-    WISPFUN_DEBUG("c27_f4");
+    DEBUG_TRACE_FUNCTION;
     if (m_DrawTextureColor[3] != 0xFF)
     {
         if (!IsTranslucent() || m_DrawTextureColor[3] != TRANSLUCENT_ALPHA)
@@ -222,10 +222,10 @@ void CRenderStaticObject::Select(int x, int y)
     if (!g_UseCircleTrans && g_Orion.StaticPixelsInXYAnimated(RenderGraphic, x, y))
         g_SelectedObject.Init(this);
 }
-//---------------------------------------------------------------------------
+
 void CRenderStaticObject::AddText(CTextData *msg)
 {
-    WISPFUN_DEBUG("c27_f5");
+    DEBUG_TRACE_FUNCTION;
     if (m_TextControl != NULL)
     {
         msg->Owner = this;
@@ -235,10 +235,10 @@ void CRenderStaticObject::AddText(CTextData *msg)
         g_Orion.AddJournalMessage(msg, "You see: ");
     }
 }
-//---------------------------------------------------------------------------
+
 bool CRenderStaticObject::TextCanBeTransparent(CRenderTextObject *text)
 {
-    WISPFUN_DEBUG("c27_f8");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     QFOR(item, m_TextControl->m_Items, CTextData *)
@@ -252,10 +252,10 @@ bool CRenderStaticObject::TextCanBeTransparent(CRenderTextObject *text)
 
     return result;
 }
-//---------------------------------------------------------------------------
+
 bool CRenderStaticObject::TranparentTest(int playerZPlus5)
 {
-    WISPFUN_DEBUG("c27_f9");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     if (m_Z <= playerZPlus5 - m_TiledataPtr->Height)
@@ -265,7 +265,7 @@ bool CRenderStaticObject::TranparentTest(int playerZPlus5)
 
     return result;
 }
-//---------------------------------------------------------------------------
+
 bool CRenderStaticObject::CheckDrawFoliage()
 {
     if (IsFoliage())
@@ -283,7 +283,7 @@ bool CRenderStaticObject::CheckDrawFoliage()
 
     return true;
 }
-//---------------------------------------------------------------------------
+
 bool CRenderStaticObject::CheckDrawVegetation()
 {
     if (g_ConfigManager.GetNoVegetation() && Vegetation)
@@ -291,4 +291,4 @@ bool CRenderStaticObject::CheckDrawVegetation()
 
     return true;
 }
-//----------------------------------------------------------------------------------
+

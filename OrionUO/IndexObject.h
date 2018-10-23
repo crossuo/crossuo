@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef INDEXOBJECT_H
 #define INDEXOBJECT_H
-//----------------------------------------------------------------------------------
+
 class CIndexObject
 {
 public:
@@ -26,7 +26,7 @@ public:
     virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id);
     CGLTexture *Texture{ NULL };
 };
-//----------------------------------------------------------------------------------
+
 class CIndexObjectLand : public CIndexObject
 {
 public:
@@ -35,7 +35,7 @@ public:
     CIndexObjectLand();
     virtual ~CIndexObjectLand();
 };
-//----------------------------------------------------------------------------------
+
 class CIndexObjectStatic : public CIndexObject
 {
 public:
@@ -49,7 +49,7 @@ public:
     CIndexObjectStatic();
     virtual ~CIndexObjectStatic();
 };
-//----------------------------------------------------------------------------------
+
 class CIndexSound : public CIndexObject
 {
 public:
@@ -61,7 +61,7 @@ public:
     UCHAR_LIST m_WaveFile;
     HSTREAM m_Stream{ NULL };
 };
-//----------------------------------------------------------------------------------
+
 class CIndexMulti : public CIndexObject
 {
 public:
@@ -71,7 +71,7 @@ public:
     virtual ~CIndexMulti();
     virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id) override;
 };
-//----------------------------------------------------------------------------------
+
 class CIndexGump : public CIndexObject
 {
 public:
@@ -79,7 +79,7 @@ public:
     virtual ~CIndexGump();
     virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id) override;
 };
-//----------------------------------------------------------------------------------
+
 class CIndexLight : public CIndexObject
 {
 public:
@@ -87,7 +87,7 @@ public:
     virtual ~CIndexLight();
     virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id) override;
 };
-//---------------------------------------------------------------------------
+
 class CIndexAnimation
 {
 public:
@@ -103,7 +103,7 @@ public:
 
     CTextureAnimationGroup m_Groups[ANIMATION_GROUPS_COUNT];
 };
-//---------------------------------------------------------------------------
+
 class CIndexMusic
 {
 public:
@@ -113,6 +113,5 @@ public:
     CIndexMusic();
     virtual ~CIndexMusic();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIButtonTileart::CGUIButtonTileart(
     int serial,
     ushort graphic,
@@ -30,16 +30,16 @@ CGUIButtonTileart::CGUIButtonTileart(
 {
     Type = GOT_BUTTONTILEART;
 }
-//----------------------------------------------------------------------------------
+
 CGUIButtonTileart::~CGUIButtonTileart()
 {
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CSize CGUIButtonTileart::GetSize()
+
+Wisp::CSize CGUIButtonTileart::GetSize()
 {
-    WISPFUN_DEBUG("c45_f1");
-    WISP_GEOMETRY::CSize gumpSize = CGUIDrawObject::GetSize();
-    WISP_GEOMETRY::CSize tileSize;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CSize gumpSize = CGUIDrawObject::GetSize();
+    Wisp::CSize tileSize;
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
 
@@ -67,20 +67,20 @@ WISP_GEOMETRY::CSize CGUIButtonTileart::GetSize()
     if (TileY + tileSize.Height > endY)
         endY = TileY + tileSize.Height;
 
-    return WISP_GEOMETRY::CSize(abs(endX) - abs(startX), abs(endY) - abs(startY));
+    return Wisp::CSize(abs(endX) - abs(startX), abs(endY) - abs(startY));
 }
-//----------------------------------------------------------------------------------
+
 void CGUIButtonTileart::PrepareTextures()
 {
-    WISPFUN_DEBUG("c45_f2");
+    DEBUG_TRACE_FUNCTION;
     CGUIButton::PrepareTextures();
 
     g_Orion.ExecuteStaticArt(TileGraphic);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIButtonTileart::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c45_f3");
+    DEBUG_TRACE_FUNCTION;
     CGUIDrawObject::Draw(checktrans);
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
@@ -92,10 +92,10 @@ void CGUIButtonTileart::Draw(bool checktrans)
         th->Draw(m_X, m_Y, checktrans);
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIButtonTileart::Select()
 {
-    WISPFUN_DEBUG("c45_f4");
+    DEBUG_TRACE_FUNCTION;
     if (CGUIDrawObject::Select())
         return true;
 
@@ -106,4 +106,4 @@ bool CGUIButtonTileart::Select()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+

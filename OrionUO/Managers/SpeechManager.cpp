@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CSpeechManager g_SpeechManager;
-//----------------------------------------------------------------------------------
+
 //------------------------------------CSpeechItem-----------------------------------
-//----------------------------------------------------------------------------------
+
 CSpeechItem::CSpeechItem(ushort code, const wstring &data)
     : Code(code)
     , Data(data)
@@ -33,27 +33,27 @@ CSpeechItem::CSpeechItem(ushort code, const wstring &data)
 
     //LOG(L"[0x%04X]=(cs=%i, ce=%i) %s\n", m_Code, m_CheckStart, m_CheckEnd, m_Data.c_str());
 }
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CSpeechManager---------------------------------
-//----------------------------------------------------------------------------------
+
 CSpeechManager::CSpeechManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 CSpeechManager::~CSpeechManager()
 {
-    WISPFUN_DEBUG("c157_f1");
+    DEBUG_TRACE_FUNCTION;
     m_SpeechEntries.clear();
     m_LangCodes.clear();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка данных из Speech.mul
 @return true при успешной загрузке
 */
 bool CSpeechManager::LoadSpeech()
 {
-    WISPFUN_DEBUG("c157_f2");
+    DEBUG_TRACE_FUNCTION;
     LoadLangCodes();
 
     string lang(255, 0);
@@ -80,7 +80,7 @@ bool CSpeechManager::LoadSpeech()
 
     LOG("Selected language: %s (%s)\n", g_Language.c_str(), lang.c_str());
 
-    WISP_DATASTREAM::CDataReader reader;
+    Wisp::CDataReader reader;
     UCHAR_LIST tempData;
     bool isUOP = false;
 
@@ -172,18 +172,18 @@ bool CSpeechManager::LoadSpeech()
     m_Loaded = true;
     return true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка данных из Langcode.iff
 @return true при успешной загрузке
 */
 bool CSpeechManager::LoadLangCodes()
 {
-    WISPFUN_DEBUG("c157_f3");
+    DEBUG_TRACE_FUNCTION;
 
     m_LangCodes.push_back(CLangCode("enu", 101, "English", "United States"));
 
-    WISP_FILE::CMappedFile &file = g_FileManager.m_LangcodeIff;
+    Wisp::CMappedFile &file = g_FileManager.m_LangcodeIff;
 
     //скипаем заголовок файла
     file.ReadString(36);
@@ -220,10 +220,10 @@ bool CSpeechManager::LoadLangCodes()
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 void CSpeechManager::GetKeywords(const wchar_t *text, UINT_LIST &codes)
 {
-    WISPFUN_DEBUG("c157_f4");
+    DEBUG_TRACE_FUNCTION;
     if (!m_Loaded ||
         g_PacketManager.GetClientVersion() < CV_305D) //Но по факту с 2.0.7 версии клиента
         return;
@@ -264,4 +264,4 @@ void CSpeechManager::GetKeywords(const wchar_t *text, UINT_LIST &codes)
             codes.push_back(entry.Code);
     }
 }
-//---------------------------------------------------------------------------
+

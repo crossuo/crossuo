@@ -8,33 +8,33 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CSelectProfessionScreen g_SelectProfessionScreen;
-//----------------------------------------------------------------------------------
+
 CSelectProfessionScreen::CSelectProfessionScreen()
     : CBaseScreen(m_SelectProfessionGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CSelectProfessionScreen::~CSelectProfessionScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CSelectProfessionScreen::SetSkillSelection(int val)
 {
     m_SkillSelection = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CSelectProfessionScreen::Init()
 {
-    WISPFUN_DEBUG("c166_f1");
+    DEBUG_TRACE_FUNCTION;
     g_ProfessionManager.Selected = (CBaseProfession *)g_ProfessionManager.m_Items;
     m_SkillSelection = 0;
 
@@ -44,7 +44,7 @@ void CSelectProfessionScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после плавного затемнения экрана
 @param [__in_opt] action Идентификатор действия
@@ -52,7 +52,7 @@ void CSelectProfessionScreen::Init()
 */
 void CSelectProfessionScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c166_f2");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -68,4 +68,4 @@ void CSelectProfessionScreen::ProcessSmoothAction(uchar action)
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_CREATE)
         g_Orion.InitScreen(GS_CREATE);
 }
-//----------------------------------------------------------------------------------
+

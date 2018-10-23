@@ -1,6 +1,6 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 
 #include <thread>
@@ -16,12 +16,12 @@ typedef unsigned thread_int;
 typedef int thread_int;
 #endif
 
-namespace WISP_THREAD
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 thread_int THREADCALL CThreadLoop(void *arg)
 {
-    WISPFUN_DEBUG("c_trdlp");
+    DEBUG_TRACE_FUNCTION;
     CThread *parent = (CThread *)arg;
 
     while (parent->IsActive())
@@ -55,10 +55,10 @@ thread_int THREADCALL CThreadLoop(void *arg)
 
     return 0;
 };
-//----------------------------------------------------------------------------------
+
 thread_int THREADCALL CThreadLoopSynchronizedDelay(void *arg)
 {
-    WISPFUN_DEBUG("c_trdlpsd");
+    DEBUG_TRACE_FUNCTION;
     CThread *parent = (CThread *)arg;
 
     while (parent->IsActive())
@@ -97,10 +97,10 @@ thread_int THREADCALL CThreadLoopSynchronizedDelay(void *arg)
 
     return 0;
 };
-//----------------------------------------------------------------------------------
+
 CThread::CThread()
 {
-    WISPFUN_DEBUG("c12_f1");
+    DEBUG_TRACE_FUNCTION;
     //DebugMsg("CThread\n");
 #if USE_WISP
     InitializeCriticalSection(&m_CriticalSection);
@@ -108,10 +108,10 @@ CThread::CThread()
     m_Mutex = SDL_CreateMutex();
 #endif
 }
-//----------------------------------------------------------------------------------
+
 CThread::~CThread()
 {
-    WISPFUN_DEBUG("c12_f2");
+    DEBUG_TRACE_FUNCTION;
     //DebugMsg("~CThread\n");
 #if USE_WISP
     DeleteCriticalSection(&m_CriticalSection);
@@ -131,10 +131,10 @@ CThread::~CThread()
 #endif
     ID = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
 {
-    WISPFUN_DEBUG("c12_f3");
+    DEBUG_TRACE_FUNCTION;
     if (!m_Active && m_Handle == 0)
     {
         m_Cycled = cycled;
@@ -155,10 +155,10 @@ void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
 #endif
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CThread::IsActive()
 {
-    WISPFUN_DEBUG("c12_f4");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     bool result = m_Active;
@@ -170,10 +170,10 @@ bool CThread::IsActive()
 #endif
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CThread::Stop()
 {
-    WISPFUN_DEBUG("c12_f5");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     m_Active = false;
@@ -184,10 +184,10 @@ void CThread::Stop()
     SDL_UnlockMutex(m_Mutex);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 bool CThread::Cycled()
 {
-    WISPFUN_DEBUG("c12_f6");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     bool result = m_Cycled;
@@ -200,10 +200,10 @@ bool CThread::Cycled()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CThread::Pause()
 {
-    WISPFUN_DEBUG("c12_f7");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     m_Paused = true;
@@ -214,10 +214,10 @@ void CThread::Pause()
     SDL_UnlockMutex(m_Mutex);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 void CThread::Resume()
 {
-    WISPFUN_DEBUG("c12_f8");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     m_Paused = false;
@@ -228,10 +228,10 @@ void CThread::Resume()
     SDL_UnlockMutex(m_Mutex);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 bool CThread::Paused()
 {
-    WISPFUN_DEBUG("c12_f9");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     bool result = m_Paused;
@@ -244,10 +244,10 @@ bool CThread::Paused()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 int CThread::Delay()
 {
-    WISPFUN_DEBUG("c12_f10");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     int result = m_Delay;
@@ -260,10 +260,10 @@ int CThread::Delay()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CThread::ChangeDelay(int newDelay)
 {
-    WISPFUN_DEBUG("c12_f11");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CriticalSection);
     m_Delay = newDelay;
@@ -274,13 +274,13 @@ void CThread::ChangeDelay(int newDelay)
     SDL_UnlockMutex(m_Mutex);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 SDL_threadID CThread::GetCurrentThreadId()
 {
     //return GetCurrentThreadId();
     //return std::this_thread::get_id();
     return SDL_GetThreadID(nullptr);
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_THREAD
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

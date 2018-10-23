@@ -8,11 +8,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CMouseManager g_MouseManager;
-//----------------------------------------------------------------------------------
+
 ushort g_CursorData[2][16] = { { 0x206A,
                                  0x206B,
                                  0x206C,
@@ -45,7 +45,7 @@ ushort g_CursorData[2][16] = { { 0x206A,
                                  0x2060,
                                  0x2061,
                                  0x2062 } };
-//----------------------------------------------------------------------------------
+
 /*!
 Конвертирование значения направления
 @param [__in] val Значение направления
@@ -55,7 +55,7 @@ int CMouseManager::Sgn(int val)
 {
     return (0 < val) - (val < 0);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить направление курсора относительно центра игрового окна
 @param [__in] x1 Координата X центра
@@ -67,7 +67,7 @@ int CMouseManager::Sgn(int val)
 */
 int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_facing)
 {
-    WISPFUN_DEBUG("c147_f1");
+    DEBUG_TRACE_FUNCTION;
     int shiftX = to_x - x1;
     int shiftY = to_y - y1;
 
@@ -131,14 +131,14 @@ int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_fac
 
     return current_facing;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс картинки игрового курсора
 @return Индекс картинки
 */
 ushort CMouseManager::GetGameCursor()
 {
-    WISPFUN_DEBUG("c147_f2");
+    DEBUG_TRACE_FUNCTION;
     int war = (int)(g_Player != NULL && g_Player->Warmode);
     ushort result = g_CursorData[war][9]; //Main Gump mouse cursor
 
@@ -161,14 +161,14 @@ ushort CMouseManager::GetGameCursor()
     return g_CursorData[war]
                        [GetFacing(gameWindowCenterX, gameWindowCenterY, Position.X, Position.Y, 1)];
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка движения персонажа
 @return 
 */
 void CMouseManager::ProcessWalking()
 {
-    WISPFUN_DEBUG("c147_f3");
+    DEBUG_TRACE_FUNCTION;
     bool mouseInWindow = true;
 
     if (Position.X < g_ConfigManager.GameWindowX || Position.Y < g_ConfigManager.GameWindowY ||
@@ -203,14 +203,14 @@ void CMouseManager::ProcessWalking()
             g_PathFinder.Walk(run, dir - 1);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка текстур курсора
 @return true при успешной загрузке
 */
 bool CMouseManager::LoadCursorTextures()
 {
-    WISPFUN_DEBUG("c147_f4");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     IFOR (i, 0, 2)
@@ -327,7 +327,7 @@ bool CMouseManager::LoadCursorTextures()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать курсор
 @param [__in] id Индекс картинки курсора
@@ -335,7 +335,7 @@ bool CMouseManager::LoadCursorTextures()
 */
 void CMouseManager::Draw(ushort id)
 {
-    WISPFUN_DEBUG("c147_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_GameState >= GS_GAME)
     {
         if (g_CustomHouseGump != NULL && g_CustomHouseGump->SelectedGraphic)
@@ -498,4 +498,4 @@ void CMouseManager::Draw(ushort id)
         }
     }
 }
-//----------------------------------------------------------------------------------
+

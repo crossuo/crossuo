@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CClilocManager g_ClilocManager;
-//----------------------------------------------------------------------------------
+
 //--------------------------------------CCliloc-------------------------------------
-//----------------------------------------------------------------------------------
+
 CCliloc::CCliloc(const string &lang)
     : CBaseQueueItem()
 {
-    WISPFUN_DEBUG("c135_f1");
+    DEBUG_TRACE_FUNCTION;
     Loaded = false;
     Language = lang;
 
@@ -30,17 +30,17 @@ CCliloc::CCliloc(const string &lang)
             Loaded = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 CCliloc::~CCliloc()
 {
-    WISPFUN_DEBUG("c135_f2");
+    DEBUG_TRACE_FUNCTION;
     m_File.Unload();
 
     m_ClilocSystem.clear();
     m_ClilocRegular.clear();
     m_ClilocSupport.clear();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузить клилок
 @param [__in] id Индекс клилока
@@ -48,7 +48,7 @@ CCliloc::~CCliloc()
 */
 string CCliloc::Load(uint &id)
 {
-    WISPFUN_DEBUG("c135_f3");
+    DEBUG_TRACE_FUNCTION;
     string result = "";
 
     if (Loaded)
@@ -87,7 +87,7 @@ string CCliloc::Load(uint &id)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
 {
     if (toCamelCase)
@@ -95,7 +95,7 @@ wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
 
     return DecodeUTF8(result);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить ASCII строку по id (и загрузить при необходимости)
 @param [__in] id Индекс клилока
@@ -104,7 +104,7 @@ wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
 */
 wstring CCliloc::Get(int id, bool toCamelCase, string result)
 {
-    WISPFUN_DEBUG("c135_f4");
+    DEBUG_TRACE_FUNCTION;
     if (id >= 3000000)
     {
         CLILOC_MAP::iterator i = m_ClilocSupport.find(id);
@@ -143,13 +143,13 @@ wstring CCliloc::Get(int id, bool toCamelCase, string result)
 
     return CamelCaseTest(toCamelCase, result);
 }
-//----------------------------------------------------------------------------------
+
 string CCliloc::GetA(int id, bool toCamelCase, string result)
 {
-    WISPFUN_DEBUG("c135_f4_1");
+    DEBUG_TRACE_FUNCTION;
     return ToString(Get(id, toCamelCase, result));
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить Unicode строку по id (и загрузить при необходимости)
 @param [__in] id Индекс клилока
@@ -158,23 +158,23 @@ string CCliloc::GetA(int id, bool toCamelCase, string result)
 */
 wstring CCliloc::GetW(int id, bool toCamelCase, string result)
 {
-    WISPFUN_DEBUG("c135_f5");
+    DEBUG_TRACE_FUNCTION;
     return Get(id, toCamelCase, result);
 }
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CClilocManager---------------------------------
-//----------------------------------------------------------------------------------
+
 CClilocManager::CClilocManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 CClilocManager::~CClilocManager()
 {
     m_ENUCliloc = NULL;
     m_LastCliloc = NULL;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить ссылку на объект клилока (и загрузить при необходимости)
 @param [__in] lang Расширение клилока
@@ -182,7 +182,7 @@ CClilocManager::~CClilocManager()
 */
 CCliloc *CClilocManager::Cliloc(const string &lang)
 {
-    WISPFUN_DEBUG("c136_f1");
+    DEBUG_TRACE_FUNCTION;
     string language = ToLowerA(lang).c_str();
 
     if (!language.length())
@@ -225,10 +225,10 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
 
     return obj;
 }
-//----------------------------------------------------------------------------------
+
 wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstring args)
 {
-    WISPFUN_DEBUG("c136_f2");
+    DEBUG_TRACE_FUNCTION;
     while (args.length() && args[0] == L'\t')
         args.erase(args.begin());
 
@@ -278,4 +278,4 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
 
     return message;
 }
-//----------------------------------------------------------------------------------
+

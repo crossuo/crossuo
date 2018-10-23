@@ -1,11 +1,10 @@
-﻿//----------------------------------------------------------------------------------
+﻿
 #ifndef WISPPACKETREADER_H
 #define WISPPACKETREADER_H
-//----------------------------------------------------------------------------------
-namespace WISP_NETWORK
+
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
-class CPacketReader : public WISP_DATASTREAM::CDataReader
+class CPacketReader : public Wisp::CDataReader
 {
     int MaxPacketStackSize = 5;
 
@@ -25,7 +24,7 @@ protected:
 public:
     deque<UCHAR_LIST> m_PacketsStack;
 };
-//----------------------------------------------------------------------------------
-}; // namespace WISP_NETWORK
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+
 #endif

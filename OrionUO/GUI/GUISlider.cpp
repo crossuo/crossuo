@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUISlider::CGUISlider(
     int serial,
     ushort graphic,
@@ -36,19 +36,19 @@ CGUISlider::CGUISlider(
     , MaxValue(maxValue)
     , Value(value)
 {
-    WISPFUN_DEBUG("c77_f1");
+    DEBUG_TRACE_FUNCTION;
     CalculateOffset();
 }
-//----------------------------------------------------------------------------------
+
 CGUISlider::~CGUISlider()
 {
-    WISPFUN_DEBUG("c77_f2");
+    DEBUG_TRACE_FUNCTION;
     Text.Clear();
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::UpdateText()
 {
-    WISPFUN_DEBUG("c77_f3");
+    DEBUG_TRACE_FUNCTION;
     if (HaveText)
     {
         if (Unicode)
@@ -154,11 +154,11 @@ void CGUISlider::UpdateText()
         }
     }
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CSize CGUISlider::GetSize()
+
+Wisp::CSize CGUISlider::GetSize()
 {
-    WISPFUN_DEBUG("c77_f4");
-    WISP_GEOMETRY::CSize size;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CSize size;
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
@@ -183,10 +183,10 @@ WISP_GEOMETRY::CSize CGUISlider::GetSize()
 
     return size;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::OnScroll(bool up, int delay)
 {
-    WISPFUN_DEBUG("c77_f5");
+    DEBUG_TRACE_FUNCTION;
     if (LastScrollTime < g_Ticks)
     {
         if (up)
@@ -205,10 +205,10 @@ void CGUISlider::OnScroll(bool up, int delay)
         UpdateText();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::OnClick(int x, int y)
 {
-    WISPFUN_DEBUG("c77_f6");
+    DEBUG_TRACE_FUNCTION;
     int lenght = Length;
     int maxValue = MaxValue - MinValue;
 
@@ -224,10 +224,10 @@ void CGUISlider::OnClick(int x, int y)
     CalculateOffset();
     UpdateText();
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::CalculateOffset()
 {
-    WISPFUN_DEBUG("c77_f7");
+    DEBUG_TRACE_FUNCTION;
     if (Value < MinValue)
         Value = MinValue;
     else if (Value > MaxValue)
@@ -252,7 +252,7 @@ void CGUISlider::CalculateOffset()
     if (Offset < 0)
         Offset = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::SetTextParameters(
     bool haveText,
     SLIDER_TEXT_POSITION textPosition,
@@ -263,7 +263,7 @@ void CGUISlider::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     ushort textFlags)
 {
-    WISPFUN_DEBUG("c77_f8");
+    DEBUG_TRACE_FUNCTION;
     HaveText = haveText;
     TextPosition = textPosition;
     Font = font;
@@ -275,10 +275,10 @@ void CGUISlider::SetTextParameters(
 
     UpdateText();
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::PrepareTextures()
 {
-    WISPFUN_DEBUG("c77_f9");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.ExecuteGump(Graphic);
     g_Orion.ExecuteGump(GraphicSelected);
     g_Orion.ExecuteGump(GraphicPressed);
@@ -291,10 +291,10 @@ void CGUISlider::PrepareTextures()
             g_Orion.ExecuteGump(BackgroundGraphic);
     }
 }
-//----------------------------------------------------------------------------------
+
 ushort CGUISlider::GetDrawGraphic()
 {
-    WISPFUN_DEBUG("c77_f10");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = Graphic;
 
     if (g_GumpPressedElement == this)
@@ -304,10 +304,10 @@ ushort CGUISlider::GetDrawGraphic()
 
     return graphic;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c77_f11");
+    DEBUG_TRACE_FUNCTION;
     /*Value++;
 	if (Value > MaxValue)
 	{
@@ -387,10 +387,10 @@ void CGUISlider::Draw(bool checktrans)
             Text.Draw(TextX, TextY, checktrans);
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGUISlider::Select()
 {
-    WISPFUN_DEBUG("c77_f12");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
     if (th != NULL)
@@ -423,18 +423,18 @@ bool CGUISlider::Select()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::OnMouseEnter()
 {
-    WISPFUN_DEBUG("c77_f13");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != NULL)
         g_SelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISlider::OnMouseExit()
 {
-    WISPFUN_DEBUG("c77_f14");
+    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != NULL)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+

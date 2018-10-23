@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIBlending::CGUIBlending(bool enabled, GLenum sFactor, GLenum dFactor)
     : CBaseGUI(GOT_BLENDING, 0, 0, 0, 0, 0)
     , SFactor(sFactor)
@@ -18,14 +18,14 @@ CGUIBlending::CGUIBlending(bool enabled, GLenum sFactor, GLenum dFactor)
 {
     Enabled = enabled;
 }
-//----------------------------------------------------------------------------------
+
 CGUIBlending::~CGUIBlending()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIBlending::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c41_f1");
+    DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {
         glEnable(GL_BLEND);
@@ -34,4 +34,4 @@ void CGUIBlending::Draw(bool checktrans)
     else
         glDisable(GL_BLEND);
 }
-//----------------------------------------------------------------------------------
+

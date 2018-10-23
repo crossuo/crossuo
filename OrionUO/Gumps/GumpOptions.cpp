@@ -8,26 +8,26 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpOptions.h"
-//----------------------------------------------------------------------------------
+
 const ushort g_OptionsTextColor = 0;
 const int g_OptionsPolygoneColorOffset = 12;
-//----------------------------------------------------------------------------------
+
 CGumpOptions::CGumpOptions(short x, short y)
     : CGump(GT_OPTIONS, 0, x, y)
 {
     Page = 2;
 }
-//----------------------------------------------------------------------------------
+
 CGumpOptions::~CGumpOptions()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpOptions::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c104_f1");
+    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed)
@@ -52,20 +52,20 @@ void CGumpOptions::CalculateGumpState()
             WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::PrepareContent()
 {
-    WISPFUN_DEBUG("c104_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_WantRedrawMacroData)
     {
         RedrawMacroData();
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::UpdateContent()
 {
-    WISPFUN_DEBUG("c104_f3");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     //Body
@@ -126,10 +126,10 @@ void CGumpOptions::UpdateContent()
 
     RedrawMacroData();
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::Init()
 {
-    WISPFUN_DEBUG("c104_f4");
+    DEBUG_TRACE_FUNCTION;
     g_OptionsMacroManager.LoadFromMacro();
     g_OptionsDeveloperMode = g_DeveloperMode;
 
@@ -138,10 +138,10 @@ void CGumpOptions::Init()
 
     WantUpdateContent = true;
 }
-//---------------------------------------------------------------------------
+
 void CGumpOptions::InitToolTip()
 {
-    WISPFUN_DEBUG("c104_f5");
+    DEBUG_TRACE_FUNCTION;
     uint id = g_SelectedObject.Serial;
 
     switch (id)
@@ -832,10 +832,10 @@ void CGumpOptions::InitToolTip()
             break;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage1()
 {
-    WISPFUN_DEBUG("c104_f6");
+    DEBUG_TRACE_FUNCTION;
     //Sound and Music
     Add(new CGUIPage(1));
 
@@ -914,10 +914,10 @@ void CGumpOptions::DrawPage1()
     checkbox->Checked = g_OptionsConfig.BackgroundSound;
     checkbox->SetTextParameters(0, L"Play sounds in background", g_OptionsTextColor);
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage2()
 {
-    WISPFUN_DEBUG("c104_f7");
+    DEBUG_TRACE_FUNCTION;
     //Orion's configuration
     Add(new CGUIPage(2));
 
@@ -1304,10 +1304,10 @@ void CGumpOptions::DrawPage2()
 
     html->CalculateDataSize();
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage3()
 {
-    WISPFUN_DEBUG("c104_f8");
+    DEBUG_TRACE_FUNCTION;
     //Language
     Add(new CGUIPage(3));
 
@@ -1367,10 +1367,10 @@ void CGumpOptions::DrawPage3()
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 88, 173));
     text->CreateTextureW(0, L"Font for Tool-tips");
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage4()
 {
-    WISPFUN_DEBUG("c104_f9");
+    DEBUG_TRACE_FUNCTION;
     //Chat
     Add(new CGUIPage(4));
 
@@ -1627,10 +1627,10 @@ void CGumpOptions::DrawPage4()
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 324, 192));
     text->CreateTextureW(0, L"Chat font");
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::RedrawMacroData()
 {
-    WISPFUN_DEBUG("c104_f10");
+    DEBUG_TRACE_FUNCTION;
     m_WantRedrawMacroData = false;
     WantUpdateContent = true;
     m_MacroDataBox->Clear();
@@ -1748,10 +1748,10 @@ void CGumpOptions::RedrawMacroData()
                 new CGUIButton(ID_GO_P5_BUTTON_DOWN, 0x0985, 0x0986, 0x0986, 415, y /*295 /*269*/));
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage5()
 {
-    WISPFUN_DEBUG("c104_f11");
+    DEBUG_TRACE_FUNCTION;
     Add(new CGUIPage(5));
 
     Add(new CGUIGumppic(0x00EC, 0, 309));
@@ -1812,10 +1812,10 @@ void CGumpOptions::DrawPage5()
 
     m_MacroDataBox = (CGUIDataBox *)Add(new CGUIDataBox());
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage6()
 {
-    WISPFUN_DEBUG("c104_f12");
+    DEBUG_TRACE_FUNCTION;
     //Interface
     Add(new CGUIPage(6));
 
@@ -1982,10 +1982,10 @@ void CGumpOptions::DrawPage6()
 
     html->CalculateDataSize();
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage7()
 {
-    WISPFUN_DEBUG("c104_f13");
+    DEBUG_TRACE_FUNCTION;
     //Display
     Add(new CGUIPage(7));
 
@@ -2172,10 +2172,10 @@ void CGumpOptions::DrawPage7()
         checkbox->SetTextParameters(0, L"Ignore Alliance Messages", g_OptionsTextColor);
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage8()
 {
-    WISPFUN_DEBUG("c104_f14");
+    DEBUG_TRACE_FUNCTION;
     //Reputation System
     Add(new CGUIPage(8));
 
@@ -2286,10 +2286,10 @@ void CGumpOptions::DrawPage8()
     checkbox->Checked = g_OptionsConfig.CriminalActionsQuery;
     checkbox->SetTextParameters(0, L"Query before performing criminal actions", g_OptionsTextColor);
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage9()
 {
-    WISPFUN_DEBUG("c104_f15");
+    DEBUG_TRACE_FUNCTION;
     //Miscellaneous
     Add(new CGUIPage(9));
 
@@ -2360,19 +2360,19 @@ void CGumpOptions::DrawPage9()
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 86, 243));
     text->CreateTextureW(0, L"Set the font for speech");
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::DrawPage10()
 {
-    WISPFUN_DEBUG("c104_f16");
+    DEBUG_TRACE_FUNCTION;
     //Filter Options
     Add(new CGUIPage(10));
 
     Add(new CGUIGumppic(0x00EA, 576, 309));
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, ushort color)
 {
-    WISPFUN_DEBUG("c104_f17");
+    DEBUG_TRACE_FUNCTION;
     switch (state)
     {
         case SCGS_OPT_TOOLTIP_TEXT:
@@ -2575,10 +2575,10 @@ void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, ushort colo
             break;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c104_f18");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GO_PAGE_6)
     {
         m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
@@ -2832,10 +2832,10 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::GUMP_CHECKBOX_EVENT_C
 {
-    WISPFUN_DEBUG("c104_f19");
+    DEBUG_TRACE_FUNCTION;
     switch (Page)
     {
         case 1: //Sound and Music
@@ -3037,10 +3037,10 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             break;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::GUMP_RADIO_EVENT_C
 {
-    WISPFUN_DEBUG("c104_f20");
+    DEBUG_TRACE_FUNCTION;
     if (!state)
         return;
 
@@ -3148,16 +3148,16 @@ void CGumpOptions::GUMP_RADIO_EVENT_C
             break;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::GUMP_SLIDER_CLICK_EVENT_C
 {
-    WISPFUN_DEBUG("c104_f21");
+    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
 {
-    WISPFUN_DEBUG("c104_f22");
+    DEBUG_TRACE_FUNCTION;
     switch (Page)
     {
         case 1: //Sound and Music
@@ -3230,10 +3230,10 @@ void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
             break;
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
 {
-    WISPFUN_DEBUG("c104_f23");
+    DEBUG_TRACE_FUNCTION;
     bool isAction = false;
     int index = serial - ID_GO_P5_MACRO_SELECTION;
 
@@ -3312,11 +3312,11 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
         m_WantRedrawMacroData = true;
     }
 }
-//----------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c104_f24");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == &m_GameWindowWidth->m_Entry ||
         g_EntryPointer == &m_GameWindowHeight->m_Entry ||
         g_EntryPointer == &m_ContainerOffsetX->m_Entry ||
@@ -3406,10 +3406,10 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         }
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c104_f25");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == &m_MacroKey->m_Entry)
     {
         m_MacroPointer->Key = wParam & 0xFF;
@@ -3487,10 +3487,10 @@ void CGumpOptions::OnKeyDown(const SDL_KeyboardEvent &ev)
     NOT_IMPLEMENTED; // FIXME
 }
 #endif
-//----------------------------------------------------------------------------
+
 void CGumpOptions::ApplyPageChanges()
 {
-    WISPFUN_DEBUG("c104_f26");
+    DEBUG_TRACE_FUNCTION;
     switch (Page)
     {
         case 1: //Sound and Music
@@ -3737,7 +3737,7 @@ void CGumpOptions::ApplyPageChanges()
             break;
     }
 }
-//---------------------------------------------------------------------------
+
 const char *CGumpOptions::m_HotkeyText[0x100] = {
     "",               //0x00
     "Left Mouse",     //0x01
@@ -3996,4 +3996,3 @@ const char *CGumpOptions::m_HotkeyText[0x100] = {
     "Clear",          //0xfe
     "0xff"            //0xff
 };
-//----------------------------------------------------------------------------

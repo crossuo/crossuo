@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIBuff::CGUIBuff(ushort graphic, int timer, const wstring &text)
     : CGUIDrawObject(GOT_BUFF, 0, graphic, 0, 0, 0)
     , Timer(timer)
     , Text(text)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIBuff::~CGUIBuff()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIBuff::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c42_f1");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
     if (th != NULL)
@@ -33,4 +33,4 @@ void CGUIBuff::Draw(bool checktrans)
         th->Draw(m_X, m_Y, checktrans);
     }
 }
-//----------------------------------------------------------------------------------
+

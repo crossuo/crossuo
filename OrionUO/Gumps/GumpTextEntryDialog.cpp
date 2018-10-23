@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpTextEntryDialog.h"
-//----------------------------------------------------------------------------------
+
 CGumpTextEntryDialog::CGumpTextEntryDialog(
     uint serial, short x, short y, uchar variant, int maxLength, string text, string description)
     : CGump(GT_TEXT_ENTRY_DIALOG, serial, x, y)
@@ -20,7 +20,7 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
     , Variant(variant)
     , m_MaxLength(maxLength)
 {
-    WISPFUN_DEBUG("c130_f1");
+    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     Blocked = true;
 
@@ -32,14 +32,14 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
 
     g_GrayMenuCount++;
 }
-//----------------------------------------------------------------------------------
+
 CGumpTextEntryDialog::~CGumpTextEntryDialog()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTextEntryDialog::PrepareContent()
 {
-    WISPFUN_DEBUG("c130_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_TextField != NULL && m_Entry != NULL)
     {
         ushort newGraphic = 0x0475; //Text field
@@ -56,10 +56,10 @@ void CGumpTextEntryDialog::PrepareContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTextEntryDialog::UpdateContent()
 {
-    WISPFUN_DEBUG("c130_f3");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIGumppic(0x0474, 0, 0));
@@ -90,20 +90,20 @@ void CGumpTextEntryDialog::UpdateContent()
     if (!NoClose)
         Add(new CGUIButton(ID_GTED_BUTTON_CANCEL, 0x0478, 0x047A, 0x0479, 204, 190));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTextEntryDialog::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c130_f4");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GTED_BUTTON_OKAY) //Button okay
         SendTextEntryDialogResponse(true);
     else if (serial == ID_GTED_BUTTON_CANCEL) //Button cancel
         SendTextEntryDialogResponse(false);
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpTextEntryDialog::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c130_f5");
+    DEBUG_TRACE_FUNCTION;
     if (Variant == 2) //Только числа
     {
         if (wParam >= '0' && wParam <= '9')
@@ -127,10 +127,10 @@ void CGumpTextEntryDialog::OnCharPress(const WPARAM &wParam, const LPARAM &lPara
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTextEntryDialog::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c130_f6");
+    DEBUG_TRACE_FUNCTION;
     switch (wParam)
     {
         case VK_RETURN:
@@ -166,10 +166,10 @@ void CGumpTextEntryDialog::OnKeyDown(const SDL_KeyboardEvent &ev)
     NOT_IMPLEMENTED; // FIXME
 }
 #endif
-//----------------------------------------------------------------------------------
+
 void CGumpTextEntryDialog::SendTextEntryDialogResponse(bool mode)
 {
-    WISPFUN_DEBUG("c130_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!RemoveMark &&
         m_Entry != NULL) //Непредвиденная ошибка при отсутствии поля ввода текста в гампе
     {
@@ -180,4 +180,4 @@ void CGumpTextEntryDialog::SendTextEntryDialogResponse(bool mode)
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-//----------------------------------------------------------------------------------
+

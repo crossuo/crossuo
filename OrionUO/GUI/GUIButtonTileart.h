@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIBUTTONTILEART_H
 #define GUIBUTTONTILEART_H
-//----------------------------------------------------------------------------------
+
 class CGUIButtonTileart : public CGUIButton
 {
     //!ИД картинки статики
@@ -40,13 +40,12 @@ public:
         int tileY);
     virtual ~CGUIButtonTileart();
 
-    virtual WISP_GEOMETRY::CSize GetSize();
+    virtual Wisp::CSize GetSize();
 
     virtual void PrepareTextures();
 
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

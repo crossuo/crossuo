@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpBulletinBoardItem.h"
-//----------------------------------------------------------------------------------
+
 CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     int serial,
     int x,
@@ -25,7 +25,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     : CGumpBaseScroll(GT_BULLETIN_BOARD_ITEM, serial, 0x0820, 250, x, y, false, 70)
     , m_Variant(variant)
 {
-    WISPFUN_DEBUG("c90_f1");
+    DEBUG_TRACE_FUNCTION;
     ID = id;
     m_MinHeight = 200;
 
@@ -163,14 +163,14 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 CGumpBulletinBoardItem::~CGumpBulletinBoardItem()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBulletinBoardItem::UpdateHeight()
 {
-    WISPFUN_DEBUG("c90_f2");
+    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     if (m_ButtonPost != NULL)
@@ -182,10 +182,10 @@ void CGumpBulletinBoardItem::UpdateHeight()
     if (m_ButtonReply != NULL)
         m_ButtonReply->SetY(Height - 22); //Reply
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBulletinBoardItem::RecalculateHeight()
 {
-    WISPFUN_DEBUG("c90_f3");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == &m_Entry->m_Entry)
     {
         m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.c_str(), 0x0386, 220, TS_LEFT, 0);
@@ -197,10 +197,10 @@ void CGumpBulletinBoardItem::RecalculateHeight()
         m_HTMLGump->CalculateDataSize();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c90_f4");
+    DEBUG_TRACE_FUNCTION;
     if (m_EntrySubject != NULL)
     {
         if (serial == ID_GBBI_POST)
@@ -229,20 +229,20 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpBulletinBoardItem::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c90_f5");
+    DEBUG_TRACE_FUNCTION;
     g_EntryPointer->Insert((wchar_t)wParam);
 
     RecalculateHeight();
     WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBulletinBoardItem::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c90_f6");
+    DEBUG_TRACE_FUNCTION;
     if (wParam == VK_RETURN && m_Entry != NULL && g_EntryPointer == &m_Entry->m_Entry)
     {
         g_EntryPointer->Insert(L'\n');

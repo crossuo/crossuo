@@ -1,24 +1,24 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 
-namespace WISP_FILE
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CBinaryFileWritter::CBinaryFileWritter()
-    : WISP_DATASTREAM::CDataWritter()
+    : Wisp::CDataWritter()
 {
 }
-//----------------------------------------------------------------------------------
+
 CBinaryFileWritter::~CBinaryFileWritter()
 {
     Close();
 }
-//----------------------------------------------------------------------------------
+
 bool CBinaryFileWritter::Open(const os_path &path)
 {
-    WISPFUN_DEBUG("c2_f1");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     //if (fs_path_exists(path))
@@ -29,10 +29,10 @@ bool CBinaryFileWritter::Open(const os_path &path)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CBinaryFileWritter::Close()
 {
-    WISPFUN_DEBUG("c2_f3");
+    DEBUG_TRACE_FUNCTION;
     WriteBuffer();
 
     if (m_File != nullptr)
@@ -41,16 +41,16 @@ void CBinaryFileWritter::Close()
         m_File = nullptr;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CBinaryFileWritter::WriteBuffer()
 {
-    WISPFUN_DEBUG("c2_f4");
+    DEBUG_TRACE_FUNCTION;
     if (m_File != nullptr && m_Data.size() > 0)
     {
         fwrite(&m_Data[0], m_Data.size(), 1, m_File);
         m_Data.clear();
     }
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_FILE
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

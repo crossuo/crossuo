@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 COptionsMacroManager g_OptionsMacroManager;
-//----------------------------------------------------------------------------------
+
 COptionsMacroManager::COptionsMacroManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 COptionsMacroManager::~COptionsMacroManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузить из списка макросов
 @return 
 */
 void COptionsMacroManager::LoadFromMacro()
 {
-    WISPFUN_DEBUG("c149_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     QFOR(obj, g_MacroManager.m_Items, CMacro *)
@@ -37,4 +37,4 @@ void COptionsMacroManager::LoadFromMacro()
     if (m_Items == NULL)
         Add(CMacro::CreateBlankMacro());
 }
-//----------------------------------------------------------------------------------
+

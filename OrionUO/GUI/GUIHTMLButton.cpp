@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIHTMLButton::CGUIHTMLButton(
     CGUIHTMLGump *htmlGump,
     int serial,
@@ -23,21 +23,21 @@ CGUIHTMLButton::CGUIHTMLButton(
     , m_HTMLGump(htmlGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIHTMLButton::~CGUIHTMLButton()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLButton::SetShaderMode()
 {
-    WISPFUN_DEBUG("c59_f1");
+    DEBUG_TRACE_FUNCTION;
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLButton::Scroll(bool up, int delay)
 {
-    WISPFUN_DEBUG("c59_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_HTMLGump != NULL)
         m_HTMLGump->Scroll(up, delay);
 }
-//----------------------------------------------------------------------------------
+

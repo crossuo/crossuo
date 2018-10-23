@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CustomHousesManager g_CustomHousesManager;
-//----------------------------------------------------------------------------------
+
 void CCustomHouse::Paste(CGameItem *foundation)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     if (foundation == NULL)
         return;
 
@@ -31,18 +31,18 @@ void CCustomHouse::Paste(CGameItem *foundation)
         g_CustomHouseGump->GenerateFloorPlace();
     }
 }
-//----------------------------------------------------------------------------------
+
 //--------------------------------CustomHousesManager-------------------------------
-//----------------------------------------------------------------------------------
+
 CustomHousesManager::~CustomHousesManager()
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 }
-//----------------------------------------------------------------------------------
+
 void CustomHousesManager::Clear()
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     for (unordered_map<uint, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
     {
         CCustomHouse *house = i->second;
@@ -50,10 +50,10 @@ void CustomHousesManager::Clear()
         i->second = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 CCustomHouse *CustomHousesManager::Get(int serial)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     for (unordered_map<uint, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
     {
         CCustomHouse *house = i->second;
@@ -64,20 +64,20 @@ CCustomHouse *CustomHousesManager::Get(int serial)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CustomHousesManager::Add(CCustomHouse *house)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     if (house != NULL)
         m_Items[house->Serial] = house;
 }
-//----------------------------------------------------------------------------------
+
 void CustomHousesManager::Load(const os_path &path)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
-    WISP_FILE::CMappedFile file;
+    Wisp::CMappedFile file;
 
     if (file.Load(path) && file.Size)
     {
@@ -121,11 +121,11 @@ void CustomHousesManager::Load(const os_path &path)
         file.Unload();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CustomHousesManager::Save(const os_path &path)
 {
-    WISPFUN_DEBUG("");
-    WISP_FILE::CBinaryFileWritter writter;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CBinaryFileWritter writter;
 
     writter.Open(path);
 
@@ -172,4 +172,4 @@ void CustomHousesManager::Save(const os_path &path)
 
     writter.Close();
 }
-//----------------------------------------------------------------------------------
+

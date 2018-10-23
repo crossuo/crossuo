@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef MAPMANAGER_H
 #define MAPMANAGER_H
-//----------------------------------------------------------------------------------
+
 class CIndexMap
 {
 public:
@@ -24,9 +24,9 @@ public:
     CIndexMap();
     virtual ~CIndexMap();
 };
-//----------------------------------------------------------------------------------
+
 typedef vector<CIndexMap> MAP_INDEX_LIST;
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера карт
 class CMapManager : public CBaseQueue
 {
@@ -58,7 +58,7 @@ public:
 
     void CreateBlocksTable();
 
-    void ApplyPatches(WISP_DATASTREAM::CDataReader &stream);
+    void ApplyPatches(Wisp::CDataReader &stream);
 
     void UpdatePatched();
 
@@ -143,7 +143,7 @@ public:
 	*/
     void AddRender(CRenderWorldObject *item);
 };
-//----------------------------------------------------------------------------------
+
 extern CMapManager g_MapManager;
-//----------------------------------------------------------------------------------
+
 #endif

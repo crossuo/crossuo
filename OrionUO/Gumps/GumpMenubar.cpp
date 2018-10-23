@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpMenubar::CGumpMenubar(short x, short y)
     : CGump(GT_MENUBAR, 0, x, y)
 {
-    WISPFUN_DEBUG("c101_f1");
+    DEBUG_TRACE_FUNCTION;
     Page = 2;
 
     Add(new CGUIPage(1));
@@ -83,14 +83,14 @@ CGumpMenubar::CGumpMenubar(short x, short y)
         entry->FocusedOffsetY = 2;
     }
 }
-//----------------------------------------------------------------------------------
+
 CGumpMenubar::~CGumpMenubar()
 {
 }
-//---------------------------------------------------------------------------
+
 void CGumpMenubar::SetOpened(bool val)
 {
-    WISPFUN_DEBUG("c101_f2");
+    DEBUG_TRACE_FUNCTION;
     m_Opened = val;
 
     if (val)
@@ -100,10 +100,10 @@ void CGumpMenubar::SetOpened(bool val)
 
     WantRedraw = true;
 }
-//---------------------------------------------------------------------------
+
 void CGumpMenubar::InitToolTip()
 {
-    WISPFUN_DEBUG("c101_f3");
+    DEBUG_TRACE_FUNCTION;
     uint id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -162,10 +162,10 @@ void CGumpMenubar::InitToolTip()
     else
         g_ToolTip.Set(L"Maximize the menubar gump");
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMenubar::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c101_f4");
+    DEBUG_TRACE_FUNCTION;
     switch (serial)
     {
         case ID_GMB_MINIMIZE:
@@ -227,10 +227,10 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMenubar::GUMP_TEXT_ENTRY_EVENT_C
 {
-    WISPFUN_DEBUG("c101_f5");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXTENTRY)
@@ -242,10 +242,10 @@ void CGumpMenubar::GUMP_TEXT_ENTRY_EVENT_C
 
     OnButton(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMenubar::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c101_f6");
+    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     QFOR(item, m_Items, CBaseGUI *)
@@ -259,4 +259,4 @@ void CGumpMenubar::OnLeftMouseButtonUp()
 
     WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+

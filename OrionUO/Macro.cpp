@@ -8,19 +8,19 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CMacroObject *g_MacroPointer = NULL;
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CMacroObject-----------------------------------
-//----------------------------------------------------------------------------------
+
 CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode)
     : CBaseQueueItem()
     , Code(code)
     , SubCode(subCode)
 {
-    WISPFUN_DEBUG("c190_f1");
+    DEBUG_TRACE_FUNCTION;
     switch (code)
     {
         //With sub menu
@@ -70,26 +70,26 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CMacroObject::~CMacroObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 //----------------------------------CMacroObjectString------------------------------
-//----------------------------------------------------------------------------------
+
 CMacroObjectString::CMacroObjectString(
     const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str)
     : CMacroObject(code, subCode)
     , m_String(str)
 {
 }
-//----------------------------------------------------------------------------------
+
 CMacroObjectString::~CMacroObjectString()
 {
 }
-//----------------------------------------------------------------------------------
+
 //----------------------------------------CMacro------------------------------------
-//----------------------------------------------------------------------------------
+
 CMacro::CMacro(ushort key, bool alt, bool ctrl, bool shift)
     : CBaseQueueItem()
     , Key(key)
@@ -98,24 +98,24 @@ CMacro::CMacro(ushort key, bool alt, bool ctrl, bool shift)
     , Shift(shift)
 {
 }
-//----------------------------------------------------------------------------------
+
 CMacro::~CMacro()
 {
 }
-//----------------------------------------------------------------------------------
+
 CMacro *CMacro::CreateBlankMacro()
 {
-    WISPFUN_DEBUG("c191_f1");
+    DEBUG_TRACE_FUNCTION;
     CMacro *obj = new CMacro(0, false, false, false);
 
     obj->Add(new CMacroObject(MC_NONE, MSC_NONE));
 
     return obj;
 }
-//----------------------------------------------------------------------------------
+
 CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
 {
-    WISPFUN_DEBUG("c191_f2");
+    DEBUG_TRACE_FUNCTION;
     CMacroObject *obj = NULL;
 
     switch (code)
@@ -143,10 +143,10 @@ CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
 
     return obj;
 }
-//----------------------------------------------------------------------------------
+
 void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
 {
-    WISPFUN_DEBUG("c191_f3");
+    DEBUG_TRACE_FUNCTION;
     obj->m_Prev = source->m_Prev;
     obj->m_Next = source->m_Next;
 
@@ -162,10 +162,10 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
     source->m_Next = NULL;
     delete source;
 }
-//----------------------------------------------------------------------------------
-CMacro *CMacro::Load(WISP_FILE::CMappedFile &file)
+
+CMacro *CMacro::Load(Wisp::CMappedFile &file)
 {
-    WISPFUN_DEBUG("c191_f4");
+    DEBUG_TRACE_FUNCTION;
     puchar next = file.Ptr;
     short size = file.ReadInt16LE();
     next += size;
@@ -239,10 +239,10 @@ CMacro *CMacro::Load(WISP_FILE::CMappedFile &file)
 
     return macro;
 }
-//----------------------------------------------------------------------------------
-void CMacro::Save(WISP_FILE::CBinaryFileWritter &writter)
+
+void CMacro::Save(Wisp::CBinaryFileWritter &writter)
 {
-    WISPFUN_DEBUG("c191_f5");
+    DEBUG_TRACE_FUNCTION;
     short size = 10;
     short count = 0;
 
@@ -301,10 +301,10 @@ void CMacro::Save(WISP_FILE::CBinaryFileWritter &writter)
     writter.WriteUInt32LE(0); //EOM
     writter.WriteBuffer();
 }
-//----------------------------------------------------------------------------------
+
 CMacro *CMacro::GetCopy()
 {
-    WISPFUN_DEBUG("c191_f6");
+    DEBUG_TRACE_FUNCTION;
     CMacro *macro = new CMacro(Key, Alt, Ctrl, Shift);
     MACRO_CODE oldCode = MC_NONE;
 
@@ -324,10 +324,10 @@ CMacro *CMacro::GetCopy()
 
     return macro;
 }
-//----------------------------------------------------------------------------------
+
 void CMacro::GetBoundByCode(const MACRO_CODE &code, int &count, int &offset)
 {
-    WISPFUN_DEBUG("c191_f7");
+    DEBUG_TRACE_FUNCTION;
     switch (code)
     {
         case MC_WALK:
@@ -381,7 +381,7 @@ void CMacro::GetBoundByCode(const MACRO_CODE &code, int &count, int &offset)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 const char *CMacro::m_MacroActionName[MACRO_ACTION_NAME_COUNT] = { "(NONE)",
                                                                    "Say",
                                                                    "Emote",
@@ -442,7 +442,7 @@ const char *CMacro::m_MacroActionName[MACRO_ACTION_NAME_COUNT] = { "(NONE)",
                                                                    "BandageSelf",
                                                                    "BandageTarget",
                                                                    "ToggleGargoyleFlying" };
-//----------------------------------------------------------------------------------
+
 const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "?",
     "NW (top)", //Walk group
@@ -655,4 +655,4 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Object",
     "Mobile"
 };
-//----------------------------------------------------------------------------------
+

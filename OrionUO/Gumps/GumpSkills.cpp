@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpSkills.h"
-//----------------------------------------------------------------------------------
+
 CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
     : CGumpBaseScroll(GT_SKILLS, 0, 0x1F40, height, x, y, true, 0, true, 15)
 {
-    WISPFUN_DEBUG("c125_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GS_LOCK_MOVING;
 
     if (minimized)
@@ -96,14 +96,14 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
 
     m_HTMLGump->CalculateDataSize();
 }
-//----------------------------------------------------------------------------------
+
 CGumpSkills::~CGumpSkills()
 {
 }
-//---------------------------------------------------------------------------
+
 void CGumpSkills::InitToolTip()
 {
-    WISPFUN_DEBUG("c125_f2");
+    DEBUG_TRACE_FUNCTION;
     uint id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -155,10 +155,10 @@ void CGumpSkills::InitToolTip()
     else
         g_ToolTip.Set(L"Double click to maximize skills gump");
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::UpdateHeight()
 {
-    WISPFUN_DEBUG("c125_f3");
+    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     m_BottomLine->SetY(Height - 48); //Bottom line
@@ -166,10 +166,10 @@ void CGumpSkills::UpdateHeight()
     m_CreateGroup->SetY(Height - 3); //New Group gump
     m_SkillSum->SetY(Height - 6);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::UpdateGroupPositions()
 {
-    WISPFUN_DEBUG("c125_f4");
+    DEBUG_TRACE_FUNCTION;
     int index = 0;
     int currentY = 0;
 
@@ -192,10 +192,10 @@ void CGumpSkills::UpdateGroupPositions()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
 {
-    WISPFUN_DEBUG("c125_f5");
+    DEBUG_TRACE_FUNCTION;
     int currentIndex = 0;
 
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
@@ -211,10 +211,10 @@ CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 CGUISkillItem *CGumpSkills::GetSkill(int index)
 {
-    WISPFUN_DEBUG("c125_f6");
+    DEBUG_TRACE_FUNCTION;
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (group->Type == GOT_SKILLGROUP)
@@ -229,10 +229,10 @@ CGUISkillItem *CGumpSkills::GetSkill(int index)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::UpdateSkillValue(int index)
 {
-    WISPFUN_DEBUG("c125_f7");
+    DEBUG_TRACE_FUNCTION;
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (group->Type == GOT_SKILLGROUP)
@@ -254,10 +254,10 @@ void CGumpSkills::UpdateSkillValue(int index)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::UpdateSkillValues()
 {
-    WISPFUN_DEBUG("c125_f8");
+    DEBUG_TRACE_FUNCTION;
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (group->Type == GOT_SKILLGROUP)
@@ -270,26 +270,26 @@ void CGumpSkills::UpdateSkillValues()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::UpdateSkillsSum()
 {
-    WISPFUN_DEBUG("c125_f9");
+    DEBUG_TRACE_FUNCTION;
     char str[20] = { 0 };
     sprintf_s(str, "%.1f", g_SkillsManager.SkillsTotal);
     m_SkillSum->CreateTextureA(3, str);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::Init()
 {
-    WISPFUN_DEBUG("c125_f10");
+    DEBUG_TRACE_FUNCTION;
     //Свернем все доступные группы
     QFOR(group, g_SkillGroupManager.m_Groups, CSkillGroupObject *)
     group->Maximized = false;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c125_f11");
+    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_PressedObject.LeftGump == this && g_PressedObject.LeftSerial >= ID_GS_SKILL &&
@@ -309,10 +309,10 @@ void CGumpSkills::CalculateGumpState()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::PrepareContent()
 {
-    WISPFUN_DEBUG("c125_f12");
+    DEBUG_TRACE_FUNCTION;
     uint serial = g_PressedObject.LeftSerial;
 
     if (g_PressedObject.LeftGump == this && serial >= ID_GS_SKILL && serial < ID_GS_SKILL_STATE)
@@ -417,10 +417,10 @@ void CGumpSkills::PrepareContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
 {
-    WISPFUN_DEBUG("c125_f13");
+    DEBUG_TRACE_FUNCTION;
     index = 0;
 
     //Получить группу под курсором
@@ -461,10 +461,10 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
     //Ничего не нашлось
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::UpdateGroupText()
 {
-    WISPFUN_DEBUG("c125_f14");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_SKILLGROUP)
@@ -490,10 +490,10 @@ void CGumpSkills::UpdateGroupText()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::SetGroupTextFromEntry()
 {
-    WISPFUN_DEBUG("c125_f15");
+    DEBUG_TRACE_FUNCTION;
     int index = 0;
     CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
 
@@ -525,10 +525,10 @@ void CGumpSkills::SetGroupTextFromEntry()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c125_f16");
+    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (g_PressedObject.LeftGump == this && g_PressedObject.LeftSerial >= ID_GS_SKILL &&
@@ -538,17 +538,17 @@ void CGumpSkills::OnLeftMouseButtonUp()
 
         if (g_SelectedObject.Gump != this)
         {
-            WISP_GEOMETRY::CPoint2Di pos = g_MouseManager.Position;
+            Wisp::CPoint2Di pos = g_MouseManager.Position;
 
             g_GumpManager.AddGump(
                 new CGumpSkill(g_PressedObject.LeftSerial - ID_GS_SKILL, pos.X - 70, pos.Y - 10));
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c125_f17");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE) //Сворачиваем гамп
     {
         Minimized = true;
@@ -639,10 +639,10 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::GUMP_CHECKBOX_EVENT_C
 {
-    WISPFUN_DEBUG("c125_f18");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_SHOW_REAL) //Показать реальное значение
     {
         m_ShowReal = state;
@@ -658,10 +658,10 @@ void CGumpSkills::GUMP_CHECKBOX_EVENT_C
         UpdateSkillValues();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
 {
-    WISPFUN_DEBUG("c125_f19");
+    DEBUG_TRACE_FUNCTION;
     CGUISkillGroup *group = GetSkillGroup(serial - ID_GS_GROUP);
 
     if (group != NULL)
@@ -677,10 +677,10 @@ void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
             group->m_Name->Focused = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpSkills::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c125_f20");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized) //При даблклике по мини-гампу - раскрываем его
     {
         Minimized = false;
@@ -692,11 +692,11 @@ bool CGumpSkills::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpSkills::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c125_f21");
+    DEBUG_TRACE_FUNCTION;
     g_EntryPointer->Insert((wchar_t)wParam);
 
     int val = g_FontManager.GetWidthA(6, g_EntryPointer->c_str());
@@ -708,7 +708,7 @@ void CGumpSkills::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 }
 void CGumpSkills::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c125_f22");
+    DEBUG_TRACE_FUNCTION;
     if (!EntryPointerHere())
     {
         if (wParam == VK_DELETE)

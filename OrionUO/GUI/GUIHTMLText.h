@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIHTMLTEXT_H
 #define GUIHTMLTEXT_H
-//----------------------------------------------------------------------------------
+
 class CGUIHTMLText : public CBaseGUI
 {
 public:
@@ -51,10 +51,7 @@ public:
     //!Текстура текста
     CGLHTMLTextTexture m_Texture{ CGLHTMLTextTexture() };
 
-    virtual WISP_GEOMETRY::CSize GetSize()
-    {
-        return WISP_GEOMETRY::CSize(m_Texture.Width, m_Texture.Height);
-    }
+    virtual Wisp::CSize GetSize() { return Wisp::CSize(m_Texture.Width, m_Texture.Height); }
 
     //!Создать текстуру текста
     void CreateTexture(bool backgroundCanBeColored);
@@ -62,6 +59,5 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

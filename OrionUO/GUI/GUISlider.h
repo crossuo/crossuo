@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUISLIDER_H
 #define GUISLIDER_H
-//----------------------------------------------------------------------------------
+
 class CGUISlider : public CBaseGUI
 {
 public:
@@ -110,7 +110,7 @@ public:
 
     virtual bool IsPressedOuthit() { return true; }
 
-    virtual WISP_GEOMETRY::CSize GetSize();
+    virtual Wisp::CSize GetSize();
 
     //!Скроллинг
     virtual void OnScroll(bool up, int delay);
@@ -145,6 +145,5 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

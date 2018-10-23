@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpBuff::CGumpBuff(short x, short y)
     : CGump(GT_BUFF, 0, x, y)
 {
-    WISPFUN_DEBUG("c88_f1");
+    DEBUG_TRACE_FUNCTION;
     Graphic = 0x7580;
     m_Locker.Serial = ID_GB_LOCK_MOVING;
 
@@ -24,20 +24,20 @@ CGumpBuff::CGumpBuff(short x, short y)
     Add(new CGUIAlphaBlending(true, 0.1f));
     Add(new CGUIAlphaBlending(false, 0.1f));
 }
-//----------------------------------------------------------------------------------
+
 CGumpBuff::~CGumpBuff()
 {
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpBuff::CanBeDisplayed()
 {
-    WISPFUN_DEBUG("c88_f2");
+    DEBUG_TRACE_FUNCTION;
     return g_ConfigManager.ToggleBufficonWindow;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::UpdateBuffIcons()
 {
-    WISPFUN_DEBUG("c88_f3");
+    DEBUG_TRACE_FUNCTION;
     for (CBaseGUI *item = (CBaseGUI *)m_Items; item != NULL;)
     {
         CBaseGUI *next = (CBaseGUI *)item->m_Next;
@@ -91,10 +91,10 @@ void CGumpBuff::UpdateBuffIcons()
         item = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::AddBuff(ushort id, ushort timer, const wstring &text)
 {
-    WISPFUN_DEBUG("c88_f4");
+    DEBUG_TRACE_FUNCTION;
     DWORD ticks = 0xFFFFFFFF;
 
     if (timer)
@@ -122,10 +122,10 @@ void CGumpBuff::AddBuff(ushort id, ushort timer, const wstring &text)
     Add(new CGUIBuff(id, ticks, text));
     WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::DeleteBuff(ushort id)
 {
-    WISPFUN_DEBUG("c88_f5");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_BUFF && item->Graphic == id)
@@ -137,10 +137,10 @@ void CGumpBuff::DeleteBuff(ushort id)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::InitToolTip()
 {
-    WISPFUN_DEBUG("c88_f6");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Serial == ID_GB_NEXT_WINDOW_DIRECTION)
         g_ToolTip.Set(L"Change buff window gump");
     else if (g_SelectedObject.Object)
@@ -186,17 +186,17 @@ void CGumpBuff::InitToolTip()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::GetGumpStatus(
-    WISP_GEOMETRY::CPoint2Di &ball,
-    WISP_GEOMETRY::CPoint2Di &items,
+    Wisp::CPoint2Di &ball,
+    Wisp::CPoint2Di &items,
     bool &useX,
     bool &decX,
     bool &decY,
-    WISP_GEOMETRY::CPoint2Di &startGump,
-    WISP_GEOMETRY::CSize &endGump)
+    Wisp::CPoint2Di &startGump,
+    Wisp::CSize &endGump)
 {
-    WISPFUN_DEBUG("c88_f7");
+    DEBUG_TRACE_FUNCTION;
     startGump.X = 0;
     startGump.Y = 0;
 
@@ -251,7 +251,7 @@ void CGumpBuff::GetGumpStatus(
         }
     }
 
-    WISP_GEOMETRY::CPoint2Di itemsOfs = items;
+    Wisp::CPoint2Di itemsOfs = items;
 
     QFOR(item, m_Items, CBaseGUI *)
     {
@@ -260,7 +260,7 @@ void CGumpBuff::GetGumpStatus(
 
         bool moved = false;
 
-        WISP_GEOMETRY::CSize gumpDim = g_Orion.GetGumpDimension(item->Graphic);
+        Wisp::CSize gumpDim = g_Orion.GetGumpDimension(item->Graphic);
 
         if (useX)
         {
@@ -305,28 +305,28 @@ void CGumpBuff::GetGumpStatus(
     if (itemsOfs.Y > endGump.Height)
         endGump.Height = itemsOfs.Y;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::PrepareContent()
 {
-    WISPFUN_DEBUG("c88_f8");
+    DEBUG_TRACE_FUNCTION;
     if (Graphic < 0x757F || Graphic > 0x7582)
     {
         Graphic = 0x7580;
         WantUpdateContent = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::UpdateContent()
 {
-    WISPFUN_DEBUG("c88_f9");
+    DEBUG_TRACE_FUNCTION;
     bool decX = false;
     bool decY = false;
     bool useX = true;
 
-    WISP_GEOMETRY::CPoint2Di ballCoordinates;
-    WISP_GEOMETRY::CPoint2Di startCoordinates;
-    WISP_GEOMETRY::CPoint2Di startGump;
-    WISP_GEOMETRY::CSize endGump;
+    Wisp::CPoint2Di ballCoordinates;
+    Wisp::CPoint2Di startCoordinates;
+    Wisp::CPoint2Di startGump;
+    Wisp::CSize endGump;
 
     GetGumpStatus(ballCoordinates, startCoordinates, useX, decX, decY, startGump, endGump);
 
@@ -360,7 +360,7 @@ void CGumpBuff::UpdateContent()
 
         CGUIBuff *buff = (CGUIBuff *)item;
 
-        WISP_GEOMETRY::CSize gumpDim = g_Orion.GetGumpDimension(buff->Graphic);
+        Wisp::CSize gumpDim = g_Orion.GetGumpDimension(buff->Graphic);
         buff->SetX(startCoordinates.X);
         buff->SetY(startCoordinates.Y);
 
@@ -384,10 +384,10 @@ void CGumpBuff::UpdateContent()
     if (gui != NULL)
         MoveToBack(gui);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBuff::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c88_f10");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GB_NEXT_WINDOW_DIRECTION)
     {
         switch (Graphic)
@@ -420,4 +420,4 @@ void CGumpBuff::GUMP_BUTTON_EVENT_C
     else if (serial == ID_GB_LOCK_MOVING)
         LockMoving = !LockMoving;
 }
-//----------------------------------------------------------------------------------
+

@@ -8,25 +8,25 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "FileSystem.h"
 CFileManager g_FileManager;
-//----------------------------------------------------------------------------------
+
 CUopMappedFile::CUopMappedFile()
-    : WISP_FILE::CMappedFile()
+    : Wisp::CMappedFile()
 {
 }
-//----------------------------------------------------------------------------------
+
 CUopMappedFile::~CUopMappedFile()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CUopMappedFile::Add(uint64 hash, const CUopBlockHeader &item)
 {
     m_Map[hash] = item;
 }
-//----------------------------------------------------------------------------------
+
 CUopBlockHeader *CUopMappedFile::GetBlock(uint64 hash)
 {
     std::unordered_map<uint64, CUopBlockHeader>::iterator found = m_Map.find(hash);
@@ -36,7 +36,7 @@ CUopBlockHeader *CUopMappedFile::GetBlock(uint64 hash)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 UCHAR_LIST CUopMappedFile::GetData(const CUopBlockHeader &block)
 {
     ResetPtr();
@@ -61,19 +61,19 @@ UCHAR_LIST CUopMappedFile::GetData(const CUopBlockHeader &block)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 CFileManager::CFileManager()
-    : WISP_DATASTREAM::CDataReader()
+    : Wisp::CDataReader()
 {
 }
-//----------------------------------------------------------------------------------
+
 CFileManager::~CFileManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::Load()
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     LOG("Client Verison: %d\n", g_PacketManager.GetClientVersion());
 
     if (g_PacketManager.GetClientVersion() >= CV_7000 && LoadUOPFile(m_MainMisc, "MainMisc.uop"))
@@ -159,7 +159,7 @@ bool CFileManager::Load()
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::LoadWithUOP()
 {
     if (true)
@@ -282,10 +282,10 @@ bool CFileManager::LoadWithUOP()
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 void CFileManager::Unload()
 {
-    //WISPFUN_DEBUG("c142_f2");
+    //DEBUG_TRACE_FUNCTION;
     m_ArtIdx.Unload();
     m_GumpIdx.Unload();
     m_SoundIdx.Unload();
@@ -345,7 +345,7 @@ void CFileManager::Unload()
 
     m_VerdataMul.Unload();
 }
-//----------------------------------------------------------------------------------
+
 void CFileManager::SendFilesInfo()
 {
     if (m_TiledataMul.Start != NULL)
@@ -444,13 +444,13 @@ void CFileManager::SendFilesInfo()
                 .SendToPlugin();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CFileManager::TryReadUOPAnimations()
 {
     std::thread readThread(&CFileManager::ReadTask, this);
     readThread.detach();
 }
-//----------------------------------------------------------------------------------
+
 void CFileManager::ReadTask()
 {
     std::unordered_map<uint64_t, UOPAnimationData> hashes;
@@ -559,15 +559,15 @@ void CFileManager::ReadTask()
 
     m_AutoResetEvent.Set();
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::FileExists(const os_path &filename)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     auto r = fs_path_exists(filename);
     LOG("FileExists: %s = %d\n", CStringFromPath(filename), r);
     return r;
 }
-//----------------------------------------------------------------------------------
+
 char *CFileManager::ReadUOPDataFromFileStream(UOPAnimationData &animData)
 {
     animData.fileStream->clear();
@@ -577,7 +577,7 @@ char *CFileManager::ReadUOPDataFromFileStream(UOPAnimationData &animData)
     animData.fileStream->read(buf, animData.compressedLength);
     return buf;
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::DecompressUOPFileData(
     UOPAnimationData &animData, UCHAR_LIST &decLayoutData, char *buf)
 {
@@ -597,7 +597,7 @@ bool CFileManager::DecompressUOPFileData(
     }
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
 {
     LOG("Loading UOP fileName: %s\n", fileName);
@@ -679,7 +679,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
         if (data.empty())
             continue;
 
-        WISP_DATASTREAM::CDataReader reader(&data[0], data.size());
+        Wisp::CDataReader reader(&data[0], data.size());
 
         //LOG("%s\n", reader.ReadString(decompressedSize));
 
@@ -692,7 +692,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::TryOpenFileStream(std::fstream &fileStream, const os_path &filePath)
 {
     LOG("Trying to open file stream for %s\n", CStringFromPath(filePath));
@@ -705,7 +705,7 @@ bool CFileManager::TryOpenFileStream(std::fstream &fileStream, const os_path &fi
     LOG("Opened file stream for %s\n", CStringFromPath(filePath));
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CFileManager::IsMulFileOpen(int idx) const
 {
     //we only have 5 anim mul files atm
@@ -713,7 +713,7 @@ bool CFileManager::IsMulFileOpen(int idx) const
         return false;
     return m_AnimMul[idx].is_open();
 }
-//----------------------------------------------------------------------------------
+
 void CFileManager::ReadAnimMulDataFromFileStream(
     vector<char> &animData, CTextureAnimationDirection &direction)
 {
@@ -722,4 +722,4 @@ void CFileManager::ReadAnimMulDataFromFileStream(
     fileStream->seekg(direction.Address, std::ios::beg);
     fileStream->read(static_cast<char *>(animData.data()), direction.Size);
 }
-//----------------------------------------------------------------------------------
+

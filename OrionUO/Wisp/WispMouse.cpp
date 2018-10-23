@@ -1,9 +1,9 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_mouse.h>
-namespace WISP_MOUSE
+namespace Wisp
 {
 #if defined(_MSC_VER)
 //forcing value to bool 'true' or 'false' (performance warning)
@@ -11,26 +11,26 @@ namespace WISP_MOUSE
 #endif
 
 CMouse *g_WispMouse = nullptr;
-//----------------------------------------------------------------------------------
+
 CMouse::CMouse()
 {
     g_WispMouse = this;
 }
-//----------------------------------------------------------------------------------
+
 CMouse::~CMouse()
 {
     g_WispMouse = nullptr;
 }
-//----------------------------------------------------------------------------------
+
 void CMouse::Update()
 {
-    WISPFUN_DEBUG("c8_f1");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     POINT pos;
     GetCursorPos(&pos);
 
-    if (WISP_WINDOW::g_WispWindow != nullptr)
-        ScreenToClient(WISP_WINDOW::g_WispWindow->Handle, &pos);
+    if (Wisp::g_WispWindow != nullptr)
+        ScreenToClient(Wisp::g_WispWindow->Handle, &pos);
 
     Position.X = pos.x;
     Position.Y = pos.y;
@@ -40,10 +40,10 @@ void CMouse::Update()
     Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
     RealPosition = Position;
 }
-//----------------------------------------------------------------------------------
+
 void CMouse::Release() const
 {
-    WISPFUN_DEBUG("c8_f3");
+    DEBUG_TRACE_FUNCTION;
 
 #if USE_WISP
     if (!(LeftButtonPressed || RightButtonPressed || MidButtonPressed))
@@ -53,23 +53,23 @@ void CMouse::Release() const
         SDL_CaptureMouse(SDL_FALSE);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 void CMouse::Capture() const
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
 
 #if USE_WISP
-    if (WISP_WINDOW::g_WispWindow != nullptr)
-        ::SetCapture(WISP_WINDOW::g_WispWindow->Handle);
+    if (Wisp::g_WispWindow != nullptr)
+        ::SetCapture(Wisp::g_WispWindow->Handle);
 #else
     SDL_CaptureMouse(SDL_TRUE);
 #endif
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CPoint2Di CMouse::LeftDroppedOffset()
+
+Wisp::CPoint2Di CMouse::LeftDroppedOffset()
 {
-    WISPFUN_DEBUG("c8_f4");
-    WISP_GEOMETRY::CPoint2Di position;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CPoint2Di position;
 
     if (LeftButtonPressed)
     {
@@ -79,11 +79,11 @@ WISP_GEOMETRY::CPoint2Di CMouse::LeftDroppedOffset()
 
     return position;
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CPoint2Di CMouse::RightDroppedOffset()
+
+Wisp::CPoint2Di CMouse::RightDroppedOffset()
 {
-    WISPFUN_DEBUG("c8_f5");
-    WISP_GEOMETRY::CPoint2Di position;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CPoint2Di position;
 
     if (RightButtonPressed)
     {
@@ -93,11 +93,11 @@ WISP_GEOMETRY::CPoint2Di CMouse::RightDroppedOffset()
 
     return position;
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CPoint2Di CMouse::MidDroppedOffset()
+
+Wisp::CPoint2Di CMouse::MidDroppedOffset()
 {
-    WISPFUN_DEBUG("c8_f6");
-    WISP_GEOMETRY::CPoint2Di position;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CPoint2Di position;
 
     if (MidButtonPressed)
     {
@@ -107,6 +107,6 @@ WISP_GEOMETRY::CPoint2Di CMouse::MidDroppedOffset()
 
     return position;
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_MOUSE
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

@@ -8,12 +8,12 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CContainerRect g_ContainerRect;
 vector<CContainerOffset> g_ContainerOffset;
-//----------------------------------------------------------------------------------
+
 /*CONTAINER_OFFSET g_ContainerOffset[CONTAINERS_COUNT] =
 {
 	//Gump   OpenSnd  CloseSnd  X   Y   Width Height
@@ -50,7 +50,7 @@ vector<CContainerOffset> g_ContainerOffset;
 	{ 0x010D, 0x002F, 0x002E, { 0, 20, 168, 115 } },
 	{ 0x010E, 0x002F, 0x002E, { 0, 20, 168, 115 } }
 };*/
-//----------------------------------------------------------------------------------
+
 /*!
 Функция вычисления смещения для текущей картинки
 @param [__in] gumpID Индекс картинки
@@ -58,7 +58,7 @@ vector<CContainerOffset> g_ContainerOffset;
 */
 void CContainerRect::Calculate(ushort gumpID)
 {
-    WISPFUN_DEBUG("c187_f1");
+    DEBUG_TRACE_FUNCTION;
     //!Указатель на текстуру
     CGLTexture *tex = g_Orion.ExecuteGump(gumpID);
 
@@ -114,4 +114,4 @@ void CContainerRect::Calculate(ushort gumpID)
         }
     }
 }
-//----------------------------------------------------------------------------------
+

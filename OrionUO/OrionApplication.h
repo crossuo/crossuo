@@ -6,11 +6,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef ORIONAPPLICATION_H
 #define ORIONAPPLICATION_H
-//----------------------------------------------------------------------------------
-class COrionApplication : public WISP_APPLICATION::CApplication
+
+class COrionApplication : public Wisp::CApplication
 {
 public:
     uint NextRenderTime = 0;
@@ -21,13 +21,12 @@ protected:
 
 public:
     COrionApplication()
-        : WISP_APPLICATION::CApplication()
+        : Wisp::CApplication()
     {
     }
     virtual ~COrionApplication() {}
 };
-//----------------------------------------------------------------------------------
+
 extern COrionApplication g_App;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

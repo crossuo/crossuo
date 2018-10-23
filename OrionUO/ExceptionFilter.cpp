@@ -1,12 +1,12 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #if defined(ORION_WINDOWS)
 
 #include <psapi.h>
 #include <tlhelp32.h>
-//----------------------------------------------------------------------------------
+
 string GetMemStorageText(int storage)
 {
     switch (storage)
@@ -27,7 +27,7 @@ string GetMemStorageText(int storage)
 
     return "Unknown";
 }
-//----------------------------------------------------------------------------------
+
 inline BOOL ModuleFind(const HANDLE &snapshot, PVOID pvBaseAddr, PMODULEENTRY32 pme)
 {
     for (BOOL ok = Module32First(snapshot, pme); ok; ok = Module32Next(snapshot, pme))
@@ -38,7 +38,7 @@ inline BOOL ModuleFind(const HANDLE &snapshot, PVOID pvBaseAddr, PMODULEENTRY32 
 
     return FALSE;
 }
-//----------------------------------------------------------------------------------
+
 void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
 {
     if (vmq.dwRgnStorage == MEM_FREE)
@@ -73,7 +73,7 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
         vmq.dwRgnBlocks,
         filePath.c_str());
 }
-//----------------------------------------------------------------------------------
+
 void DumpLibraryInformation()
 {
 #if USE_WISP_DEBUG_FUNCTION_NAMES == 1
@@ -133,7 +133,7 @@ void DumpLibraryInformation()
         CloseHandle(process);
     }
 }
-//----------------------------------------------------------------------------------
+
 void DumpCurrentRegistersInformation(CONTEXT *CR)
 {
 #if defined(_WIN64)
@@ -170,7 +170,7 @@ void DumpCurrentRegistersInformation(CONTEXT *CR)
     CRASHLOG_DUMP((puchar)CR->Esp, 64);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptionInfo)
 {
     static int errorCount = 0;
@@ -205,7 +205,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
 
             DumpCurrentRegistersInformation(exceptionInfo->ContextRecord);
 
-            WISP_FILE::CMappedFile file;
+            Wisp::CMappedFile file;
 
             wchar_t fileName[MAX_PATH] = { 0 };
             GetModuleFileNameW(0, fileName, MAX_PATH);
@@ -294,4 +294,4 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 #endif // ORION_WINDOWS
-//----------------------------------------------------------------------------------
+

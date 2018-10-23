@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUISCROLLBACKGROUND_H
 #define GUISCROLLBACKGROUND_H
-//----------------------------------------------------------------------------------
+
 class CGUIScrollBackground : public CBaseGUI
 {
 public:
@@ -28,7 +28,7 @@ public:
     int Width = 0;
 
     //!Рабочая область
-    WISP_GEOMETRY::CRect WorkSpace = WISP_GEOMETRY::CRect();
+    Wisp::CRect WorkSpace = Wisp::CRect();
 
     CGUIScrollBackground(int serial, ushort graphic, int x, int y, int height);
     virtual ~CGUIScrollBackground();
@@ -36,13 +36,12 @@ public:
     //!Обновить высоту
     void UpdateHeight(int height);
 
-    virtual WISP_GEOMETRY::CSize GetSize() { return WISP_GEOMETRY::CSize(Width, Height); }
+    virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
 
     virtual void PrepareTextures();
 
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

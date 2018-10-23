@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUMPBUFF_H
 #define GUMPBUFF_H
-//----------------------------------------------------------------------------------
+
 class CGumpBuff : public CGump
 {
 private:
@@ -24,13 +24,13 @@ private:
     const int ID_GB_BUFF_ITEM = 10;
 
     void GetGumpStatus(
-        WISP_GEOMETRY::CPoint2Di &ball,
-        WISP_GEOMETRY::CPoint2Di &items,
+        Wisp::CPoint2Di &ball,
+        Wisp::CPoint2Di &items,
         bool &useX,
         bool &decX,
         bool &decY,
-        WISP_GEOMETRY::CPoint2Di &startGump,
-        WISP_GEOMETRY::CSize &endGump);
+        Wisp::CPoint2Di &startGump,
+        Wisp::CSize &endGump);
 
 public:
     CGumpBuff(short x, short y);
@@ -52,6 +52,5 @@ public:
 
     GUMP_BUTTON_EVENT_H;
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

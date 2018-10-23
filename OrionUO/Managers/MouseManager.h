@@ -6,15 +6,15 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef MOUSEMANAGER_H
 #define MOUSEMANAGER_H
-//----------------------------------------------------------------------------------
+
 //!Картинки курсора мышки
 extern ushort g_CursorData[2][16];
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера мыши
-class CMouseManager : public WISP_MOUSE::CMouse
+class CMouseManager : public Wisp::CMouse
 {
 private:
     //!Смещение картинки относительно курсора
@@ -22,7 +22,7 @@ private:
 
 public:
     CMouseManager()
-        : WISP_MOUSE::CMouse()
+        : Wisp::CMouse()
     {
         memset(&m_CursorOffset[0][0], 0, sizeof(m_CursorOffset));
     }

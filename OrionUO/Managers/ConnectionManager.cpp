@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CConnectionManager g_ConnectionManager;
-//----------------------------------------------------------------------------------
+
 NETWORK_INIT_TYPE *g_NetworkInit = NULL;
 NETWORK_ACTION_TYPE *g_NetworkAction = NULL;
 NETWORK_POST_ACTION_TYPE *g_NetworkPostAction = NULL;
-//----------------------------------------------------------------------------------
+
 CConnectionManager::CConnectionManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 CConnectionManager::~CConnectionManager()
 {
-    WISPFUN_DEBUG("c139_f1");
+    DEBUG_TRACE_FUNCTION;
     //Дисконнектим всё подключенное
     if (m_LoginSocket.Connected)
         m_LoginSocket.Disconnect();
@@ -31,62 +31,62 @@ CConnectionManager::~CConnectionManager()
     if (m_GameSocket.Connected)
         m_GameSocket.Disconnect();
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SetUseProxy(bool val)
 {
-    WISPFUN_DEBUG("c139_f2");
+    DEBUG_TRACE_FUNCTION;
     m_UseProxy = val;
     m_LoginSocket.UseProxy = val;
     m_GameSocket.UseProxy = val;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SetProxyAddress(const string &val)
 {
-    WISPFUN_DEBUG("c139_f3");
+    DEBUG_TRACE_FUNCTION;
     m_ProxyAddress = val;
     m_LoginSocket.ProxyAddress = val;
     m_GameSocket.ProxyAddress = val;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SetProxyPort(int val)
 {
-    WISPFUN_DEBUG("c139_f4");
+    DEBUG_TRACE_FUNCTION;
     m_ProxyPort = val;
     m_LoginSocket.ProxyPort = val;
     m_GameSocket.ProxyPort = val;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SetProxySocks5(bool val)
 {
-    WISPFUN_DEBUG("c139_f5");
+    DEBUG_TRACE_FUNCTION;
     m_ProxySocks5 = val;
     m_LoginSocket.ProxySocks5 = val;
     m_GameSocket.ProxySocks5 = val;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SetProxyAccount(const string &val)
 {
-    WISPFUN_DEBUG("c139_f6");
+    DEBUG_TRACE_FUNCTION;
     m_ProxyAccount = val;
     m_LoginSocket.ProxyAccount = val;
     m_GameSocket.ProxyAccount = val;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SetProxyPassword(const string &val)
 {
-    WISPFUN_DEBUG("c139_f7");
+    DEBUG_TRACE_FUNCTION;
     m_ProxyPassword = val;
     m_LoginSocket.ProxyPassword = val;
     m_GameSocket.ProxyPassword = val;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализаци логин сокета
 @return Код ошибки
 */
 void CConnectionManager::Init()
 {
-    WISPFUN_DEBUG("c139_f8");
+    DEBUG_TRACE_FUNCTION;
     //Сокет уже открыт, ошибка
     if (m_LoginSocket.Connected)
         return;
@@ -98,7 +98,7 @@ void CConnectionManager::Init()
     {
         if (LPHOSTENT lphost = gethostbyname(hostName))
         {
-            WISP_DATASTREAM::CDataWritter stream;
+            Wisp::CDataWritter stream;
 #if defined(ORION_LINUX)
             auto addr_list = (struct in_addr *)lphost->h_addr_list; // FIXME: just got it to compile
             auto addr = lphost->h_addr_list[0];
@@ -112,7 +112,7 @@ void CConnectionManager::Init()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация игрового сокета
 @param [__in] GameSeed Ключ для игрового шифрования
@@ -120,7 +120,7 @@ void CConnectionManager::Init()
 */
 void CConnectionManager::Init(puchar gameSeed)
 {
-    WISPFUN_DEBUG("c139_f9");
+    DEBUG_TRACE_FUNCTION;
     //Гейм сокет уже открыт, ошибка
     if (m_GameSocket.Connected)
         return;
@@ -129,15 +129,15 @@ void CConnectionManager::Init(puchar gameSeed)
 
     g_NetworkInit(false, &gameSeed[0]);
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionManager::SendIP(CSocket &socket, puchar seed)
 
 {
-    WISPFUN_DEBUG("c139_f10");
+    DEBUG_TRACE_FUNCTION;
     g_PluginManager.WindowProc(g_OrionWindow.Handle, UOMSG_IP_SEND, (WPARAM)seed, 4);
     socket.Send(seed, 4);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Подключение к серверу
 @param [__in] IP IP адрес сервера
@@ -147,7 +147,7 @@ void CConnectionManager::SendIP(CSocket &socket, puchar seed)
 */
 bool CConnectionManager::Connect(const string &address, int port, puchar gameSeed)
 {
-    WISPFUN_DEBUG("c139_f11");
+    DEBUG_TRACE_FUNCTION;
     if (m_IsLoginSocket) //Логин сокет
     {
         if (m_LoginSocket.Connected)
@@ -171,7 +171,7 @@ bool CConnectionManager::Connect(const string &address, int port, puchar gameSee
 
                 SendIP(m_LoginSocket, m_Seed); //Сид, 4 байта
 
-                WISP_DATASTREAM::CDataWritter stream;
+                Wisp::CDataWritter stream;
 
                 string str = g_Orion.ClientVersionText;
 
@@ -229,14 +229,14 @@ bool CConnectionManager::Connect(const string &address, int port, puchar gameSee
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Разорвать подключение
 @return
 */
 void CConnectionManager::Disconnect()
 {
-    WISPFUN_DEBUG("c139_f12");
+    DEBUG_TRACE_FUNCTION;
     //!Дисконнект всего, что подключено
     if (m_LoginSocket.Connected)
         m_LoginSocket.Disconnect();
@@ -244,14 +244,14 @@ void CConnectionManager::Disconnect()
     if (m_GameSocket.Connected)
         m_GameSocket.Disconnect();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить данные с сервера
 @return 
 */
 void CConnectionManager::Recv()
 {
-    WISPFUN_DEBUG("c139_f13");
+    DEBUG_TRACE_FUNCTION;
     if (m_IsLoginSocket) //Логин сокет
     {
         if (!m_LoginSocket.Connected)
@@ -298,7 +298,7 @@ void CConnectionManager::Recv()
         g_PacketManager.Read(&m_GameSocket);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отправить сообщение серверу
 @param [__in] buf Буфер с данными
@@ -307,7 +307,7 @@ void CConnectionManager::Recv()
 */
 int CConnectionManager::Send(puchar buf, int size)
 {
-    WISPFUN_DEBUG("c139_f14");
+    DEBUG_TRACE_FUNCTION;
     if (g_TheAbyss)
     {
         switch (buf[0])
@@ -367,10 +367,10 @@ int CConnectionManager::Send(puchar buf, int size)
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 int CConnectionManager::Send(const UCHAR_LIST &data)
 {
-    WISPFUN_DEBUG("c139_f15");
+    DEBUG_TRACE_FUNCTION;
     return Send((puchar)&data[0], (int)data.size());
 }
-//----------------------------------------------------------------------------------
+

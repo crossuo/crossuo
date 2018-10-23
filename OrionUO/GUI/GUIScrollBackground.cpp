@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIScrollBackground::CGUIScrollBackground(int serial, ushort graphic, int x, int y, int height)
     : CBaseGUI(GOT_SCROLLBACKGROUND, serial, graphic, 0, x, y)
     , Height(height)
 {
-    WISPFUN_DEBUG("c71_f1");
+    DEBUG_TRACE_FUNCTION;
     OffsetX = 0;
     BottomOffsetX = 0;
     Width = 0;
@@ -47,14 +47,14 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, ushort graphic, int x, in
 
     UpdateHeight(Height);
 }
-//----------------------------------------------------------------------------------
+
 CGUIScrollBackground::~CGUIScrollBackground()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIScrollBackground::UpdateHeight(int height)
 {
-    WISPFUN_DEBUG("c71_f2");
+    DEBUG_TRACE_FUNCTION;
     Height = height;
 
     CGLTexture *th[4] = { NULL };
@@ -67,19 +67,19 @@ void CGUIScrollBackground::UpdateHeight(int height)
             return;
     }
 
-    WorkSpace = WISP_GEOMETRY::CRect(
+    WorkSpace = Wisp::CRect(
         OffsetX + 10, th[0]->Height, th[1]->Width - 20, Height - (th[0]->Height + th[3]->Height));
 }
-//----------------------------------------------------------------------------------
+
 void CGUIScrollBackground::PrepareTextures()
 {
-    WISPFUN_DEBUG("c71_f3");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.ExecuteGumpPart(Graphic, 4);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIScrollBackground::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c71_f4");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th[4] = { NULL };
 
     IFOR (i, 0, 4)
@@ -122,10 +122,10 @@ void CGUIScrollBackground::Draw(bool checktrans)
 
     th[3]->Draw(m_X + BottomOffsetX, m_Y + Height - th[3]->Height, checktrans); //Bottom scroll
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIScrollBackground::Select()
 {
-    WISPFUN_DEBUG("c71_f5");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -181,4 +181,4 @@ bool CGUIScrollBackground::Select()
 
     return select;
 }
-//----------------------------------------------------------------------------------
+

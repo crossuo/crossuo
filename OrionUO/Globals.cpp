@@ -1,24 +1,24 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
 bool g_ShiftPressed = false;
-//----------------------------------------------------------------------------------
+
 bool g_MovingFromMouse = false;
 bool g_AutoMoving = false;
 bool g_TheAbyss = false;
 bool g_AbyssPacket03First = true;
 bool g_Asmut = false;
-//----------------------------------------------------------------------------------
+
 int g_LandObjectsCount = 0;
 int g_StaticsObjectsCount = 0;
 int g_GameObjectsCount = 0;
 int g_MultiObjectsCount = 0;
 int g_RenderedObjectsCountInGameWindow = 0;
-//----------------------------------------------------------------------------------
+
 GLdouble g_GlobalScale = 1.0;
 
 CGLTexture g_MapTexture[MAX_MAPS_COUNT];
@@ -44,8 +44,8 @@ GAME_STATE g_GameState = GS_MAIN;
 
 CGLTexture g_TextureGumpState[2];
 
-WISP_GEOMETRY::CSize g_MapSize[MAX_MAPS_COUNT];
-WISP_GEOMETRY::CSize g_MapBlockSize[MAX_MAPS_COUNT];
+Wisp::CSize g_MapSize[MAX_MAPS_COUNT];
+Wisp::CSize g_MapBlockSize[MAX_MAPS_COUNT];
 
 int g_MultiIndexCount = 0;
 
@@ -54,8 +54,8 @@ CGLFrameBuffer g_LightBuffer;
 bool g_GumpPressed = false;
 class CRenderObject *g_GumpSelectedElement = NULL;
 class CRenderObject *g_GumpPressedElement = NULL;
-WISP_GEOMETRY::CPoint2Di g_GumpMovingOffset;
-WISP_GEOMETRY::CPoint2Df g_GumpTranslate;
+Wisp::CPoint2Di g_GumpMovingOffset;
+Wisp::CPoint2Df g_GumpTranslate;
 bool g_ShowGumpLocker = false;
 
 bool g_GrayedPixels = false;
@@ -112,7 +112,7 @@ uint g_DeathScreenTimer = 0;
 
 float g_AnimCharactersDelayValue = 80.0f; //0x50
 
-WISP_GEOMETRY::CPoint2Di g_RemoveRangeXY;
+Wisp::CPoint2Di g_RemoveRangeXY;
 
 int g_GrayMenuCount = 0;
 
@@ -168,8 +168,8 @@ uint g_OrionFeaturesFlags = OFF_ALL_FLAGS;
 PING_INFO_DATA g_GameServerPingInfo = { 0 };
 string g_PingString = "";
 uint g_PingTimer = 0;
-//----------------------------------------------------------------------------------
-bool CanBeDraggedByOffset(const WISP_GEOMETRY::CPoint2Di &point)
+
+bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point)
 {
     if (g_Target.IsTargeting())
         return (
@@ -178,7 +178,7 @@ bool CanBeDraggedByOffset(const WISP_GEOMETRY::CPoint2Di &point)
 
     return (abs(point.X) >= DRAG_ITEMS_PIXEL_RANGE || abs(point.Y) >= DRAG_ITEMS_PIXEL_RANGE);
 }
-//----------------------------------------------------------------------------------
+
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y)
 {
     if (!ofsX)
@@ -221,7 +221,7 @@ void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y)
         x += y;
     }
 }
-//----------------------------------------------------------------------------------
+
 string ToCamelCase(string text)
 {
     bool lastSpace = true;
@@ -236,7 +236,7 @@ string ToCamelCase(string text)
 
     return text;
 }
-//----------------------------------------------------------------------------------
+
 int GetDistance(CGameObject *current, CGameObject *target)
 {
     if (current != NULL && target != NULL)
@@ -252,8 +252,8 @@ int GetDistance(CGameObject *current, CGameObject *target)
 
     return 100500;
 }
-//----------------------------------------------------------------------------------
-int GetDistance(CGameObject *current, const WISP_GEOMETRY::CPoint2Di &target)
+
+int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target)
 {
     if (current != NULL)
     {
@@ -268,8 +268,8 @@ int GetDistance(CGameObject *current, const WISP_GEOMETRY::CPoint2Di &target)
 
     return 100500;
 }
-//----------------------------------------------------------------------------------
-int GetDistance(const WISP_GEOMETRY::CPoint2Di &current, CGameObject *target)
+
+int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target)
 {
     if (target != NULL)
     {
@@ -284,18 +284,18 @@ int GetDistance(const WISP_GEOMETRY::CPoint2Di &current, CGameObject *target)
 
     return 100500;
 }
-//----------------------------------------------------------------------------------
-int GetRemoveDistance(const WISP_GEOMETRY::CPoint2Di &current, CGameObject *target)
+
+int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target)
 {
     if (target != NULL)
     {
-        WISP_GEOMETRY::CPoint2Di targetPoint(target->GetX(), target->GetY());
+        Wisp::CPoint2Di targetPoint(target->GetX(), target->GetY());
 
         if (target->NPC && !((CGameCharacter *)target)->m_Steps.empty())
         {
             CWalkData &wd = ((CGameCharacter *)target)->m_Steps.back();
 
-            targetPoint = WISP_GEOMETRY::CPoint2Di(wd.X, wd.Y);
+            targetPoint = Wisp::CPoint2Di(wd.X, wd.Y);
         }
 
         int distx = abs(targetPoint.X - current.X);
@@ -309,9 +309,9 @@ int GetRemoveDistance(const WISP_GEOMETRY::CPoint2Di &current, CGameObject *targ
 
     return 100500;
 }
-//----------------------------------------------------------------------------------
+
 bool CheckMultiDistance(
-    const WISP_GEOMETRY::CPoint2Di &current, CGameObject *target, int maxDistance)
+    const Wisp::CPoint2Di &current, CGameObject *target, int maxDistance)
 {
     bool result = false;
 
@@ -326,8 +326,8 @@ bool CheckMultiDistance(
 
     return result;
 }
-//----------------------------------------------------------------------------------
-int GetDistance(const WISP_GEOMETRY::CPoint2Di &current, const WISP_GEOMETRY::CPoint2Di &target)
+
+int GetDistance(const Wisp::CPoint2Di &current, const Wisp::CPoint2Di &target)
 {
     int distx = abs(target.X - current.X);
     int disty = abs(target.Y - current.Y);
@@ -337,7 +337,7 @@ int GetDistance(const WISP_GEOMETRY::CPoint2Di &current, const WISP_GEOMETRY::CP
 
     return distx;
 }
-//----------------------------------------------------------------------------------
+
 int GetTopObjDistance(CGameObject *current, CGameObject *target)
 {
     if (current != NULL && target != NULL)
@@ -359,7 +359,7 @@ int GetTopObjDistance(CGameObject *current, CGameObject *target)
 
     return 100500;
 }
-//---------------------------------------------------------------------------
+
 const char *GetReagentName(ushort id)
 {
     switch (id)
@@ -386,4 +386,4 @@ const char *GetReagentName(ushort id)
 
     return "";
 }
-//----------------------------------------------------------------------------------
+

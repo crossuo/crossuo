@@ -1,11 +1,11 @@
-//----------------------------------------------------------------------------------
+
 #ifndef GameCryptH
 #define GameCryptH
-//----------------------------------------------------------------------------------
+
 #include "../Wisp/WispGlobal.h"
 #include "aes.h"
 #include "md5.h"
-//----------------------------------------------------------------------------------
+
 #define CRYPT_AUTO_VALUE 0x80
 
 #define CRYPT_GAMEKEY_LENGTH 6
@@ -18,7 +18,7 @@
 #define CRYPT_GAMETABLE_STEP 3
 #define CRYPT_GAMETABLE_MODULO 11
 #define CRYPT_GAMETABLE_TRIGGER 21036
-//----------------------------------------------------------------------------------
+
 class CBlowfishCrypt
 {
 private:
@@ -39,7 +39,7 @@ public:
     void Encrypt(puchar in, puchar out, int len);
     void Init();
 };
-//----------------------------------------------------------------------------------
+
 class CTwofishCrypt
 {
 private:
@@ -63,9 +63,8 @@ public:
     void Encrypt(puchar in, puchar out, int size);
     void Decrypt(puchar in, puchar out, int size);
 };
-//----------------------------------------------------------------------------------
+
 extern CBlowfishCrypt g_BlowfishCrypt;
 extern CTwofishCrypt g_TwofishCrypt;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

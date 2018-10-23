@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_timer.h>
-//----------------------------------------------------------------------------------
+
 CGUIShopItem::CGUIShopItem(
     int serial,
     ushort graphic,
@@ -26,21 +26,21 @@ CGUIShopItem::CGUIShopItem(
     , Price(price)
     , Name(name)
 {
-    WISPFUN_DEBUG("c73_f1");
+    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
     CreateCountText(0);
     CreateNameText();
     UpdateOffsets();
 }
-//----------------------------------------------------------------------------------
+
 CGUIShopItem::~CGUIShopItem()
 {
-    WISPFUN_DEBUG("c73_f2");
+    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
     m_CountText.Clear();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::UpdateOffsets()
 {
     if (Serial >= 0x40000000)
@@ -95,10 +95,10 @@ void CGUIShopItem::UpdateOffsets()
     else
         m_TextOffset = ((m_MaxOffset - m_NameText.Height) / 2);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::OnClick()
 {
-    WISPFUN_DEBUG("c73_f3");
+    DEBUG_TRACE_FUNCTION;
     Selected = false;
 
     for (CBaseGUI *item = this; item != NULL; item = (CBaseGUI *)item->m_Next)
@@ -122,10 +122,10 @@ void CGUIShopItem::OnClick()
     Selected = true;
     CreateNameText();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::CreateNameText()
 {
-    WISPFUN_DEBUG("c73_f4");
+    DEBUG_TRACE_FUNCTION;
     ushort textColor = 0x021F;
 
     if (Selected)
@@ -134,10 +134,10 @@ void CGUIShopItem::CreateNameText()
     string str = Name + " at " + std::to_string(Price) + "gp";
     g_FontManager.GenerateA(9, m_NameText, str, textColor, 90);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::CreateCountText(int lostCount)
 {
-    WISPFUN_DEBUG("c73_f5");
+    DEBUG_TRACE_FUNCTION;
     ushort textColor = 0x021F;
 
     if (Selected)
@@ -145,10 +145,10 @@ void CGUIShopItem::CreateCountText(int lostCount)
 
     g_FontManager.GenerateA(9, m_CountText, std::to_string(Count - lostCount), textColor);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::PrepareTextures()
 {
-    WISPFUN_DEBUG("c73_f6");
+    DEBUG_TRACE_FUNCTION;
 
     if (Serial >= 0x40000000)
         g_Orion.ExecuteStaticArt(Graphic);
@@ -192,10 +192,10 @@ void CGUIShopItem::PrepareTextures()
     g_Orion.ExecuteGump(0x003A);
     g_Orion.ExecuteGump(0x003B);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::SetShaderMode()
 {
-    WISPFUN_DEBUG("c73_f7");
+    DEBUG_TRACE_FUNCTION;
 
     if (Color != 0)
     {
@@ -209,10 +209,10 @@ void CGUIShopItem::SetShaderMode()
     else
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIShopItem::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c73_f8");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = NULL;
 
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
@@ -306,13 +306,13 @@ void CGUIShopItem::Draw(bool checktrans)
 
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIShopItem::Select()
 {
-    WISPFUN_DEBUG("c73_f9");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
     return (x >= 0 && y >= -10 && x < 200 && y < m_MaxOffset);
 }
-//----------------------------------------------------------------------------------
+

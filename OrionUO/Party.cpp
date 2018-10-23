@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CParty g_Party;
-//----------------------------------------------------------------------------------
+
 CParty::CParty()
 {
 }
-//----------------------------------------------------------------------------------
+
 CParty::~CParty()
 {
 }
-//----------------------------------------------------------------------------------
+
 bool CParty::Contains(int serial)
 {
-    WISPFUN_DEBUG("c196_f1");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Leader != 0)
@@ -41,20 +41,20 @@ bool CParty::Contains(int serial)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CParty::Clear()
 {
-    WISPFUN_DEBUG("c196_f2");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, 10)
     {
         Member[i].Serial = 0;
         Member[i].Character = NULL;
     }
 }
-//----------------------------------------------------------------------------------
-void CParty::ParsePacketData(WISP_DATASTREAM::CDataReader &reader)
+
+void CParty::ParsePacketData(Wisp::CDataReader &reader)
 {
-    WISPFUN_DEBUG("c196_f3");
+    DEBUG_TRACE_FUNCTION;
     uchar code = reader.ReadUInt8();
 
     switch (code)
@@ -85,8 +85,8 @@ void CParty::ParsePacketData(WISP_DATASTREAM::CDataReader &reader)
                 break;
             }
             Clear();
-            WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-            WISP_GEOMETRY::CPoint2Di mousePos(76, 30);
+            Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+            Wisp::CPoint2Di mousePos(76, 30);
             g_MouseManager.Position = mousePos;
 
             CGumpStatusbar *prevGump = NULL;
@@ -165,4 +165,4 @@ void CParty::ParsePacketData(WISP_DATASTREAM::CDataReader &reader)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+

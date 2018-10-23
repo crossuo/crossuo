@@ -8,12 +8,12 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 void CWalkData::GetOffset(float &x, float &y, float &steps)
 {
-    WISPFUN_DEBUG("c178_f1");
+    DEBUG_TRACE_FUNCTION;
     float step_NESW_D = 44.0f / steps; //NW NE SW SE
     float step_NESW = 22.0f / steps;   //N E S W
 
@@ -98,4 +98,4 @@ void CWalkData::GetOffset(float &x, float &y, float &steps)
             y = (float)checkY;
     }
 }
-//----------------------------------------------------------------------------------
+

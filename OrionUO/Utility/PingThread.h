@@ -16,8 +16,8 @@ struct PING_INFO_DATA
     int Average;
     int Lost;
 };
-//----------------------------------------------------------------------------------
-class CPingThread : public WISP_THREAD::CThread
+
+class CPingThread : public Wisp::CThread
 {
     uint ServerID = 0xFFFFFFFF;
     string ServerIP = "";

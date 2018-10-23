@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUITextEntry::CGUITextEntry(
     int serial,
     ushort color,
@@ -34,28 +34,28 @@ CGUITextEntry::CGUITextEntry(
     , m_Entry(maxLength, maxWidth, maxWidth)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUITextEntry::~CGUITextEntry()
 {
-    WISPFUN_DEBUG("c79_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Entry.Clear();
 }
-//----------------------------------------------------------------------------------
+
 bool CGUITextEntry::EntryPointerHere()
 {
-    WISPFUN_DEBUG("c79_f2");
+    DEBUG_TRACE_FUNCTION;
     return (g_EntryPointer == &m_Entry);
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CSize CGUITextEntry::GetSize()
+
+Wisp::CSize CGUITextEntry::GetSize()
 {
-    WISPFUN_DEBUG("c79_f3");
-    return WISP_GEOMETRY::CSize(m_Entry.m_Texture.Width, m_Entry.m_Texture.Height);
+    DEBUG_TRACE_FUNCTION;
+    return Wisp::CSize(m_Entry.m_Texture.Width, m_Entry.m_Texture.Height);
 }
-//----------------------------------------------------------------------------------
+
 void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focused)
 {
-    WISPFUN_DEBUG("c79_f4");
+    DEBUG_TRACE_FUNCTION;
     UseGlobalColor = use;
 
     if (use)
@@ -85,30 +85,30 @@ void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focuse
             GlobalColorFocusedA = 0xFF;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUITextEntry::OnClick(CGump *gump, int x, int y)
 {
-    WISPFUN_DEBUG("c79_f5");
+    DEBUG_TRACE_FUNCTION;
     m_Entry.OnClick(gump, Font, Unicode, x, y, Align, TextFlags);
 }
-//----------------------------------------------------------------------------------
+
 void CGUITextEntry::OnMouseEnter()
 {
-    WISPFUN_DEBUG("c79_f6");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != NULL)
         g_SelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGUITextEntry::OnMouseExit()
 {
-    WISPFUN_DEBUG("c79_f7");
+    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != NULL)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGUITextEntry::PrepareTextures()
 {
-    WISPFUN_DEBUG("c79_f8");
+    DEBUG_TRACE_FUNCTION;
     ushort color = Color;
 
     if (!UseGlobalColor)
@@ -131,10 +131,10 @@ void CGUITextEntry::PrepareTextures()
     else
         m_Entry.PrepareToDrawA(Font, color, Align, TextFlags);
 }
-//----------------------------------------------------------------------------------
+
 void CGUITextEntry::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c79_f9");
+    DEBUG_TRACE_FUNCTION;
     int y = m_Y;
     ushort color = Color;
 
@@ -201,13 +201,13 @@ void CGUITextEntry::Draw(bool checktrans)
     if (UseGlobalColor)
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-//----------------------------------------------------------------------------------
+
 bool CGUITextEntry::Select()
 {
-    WISPFUN_DEBUG("c79_f10");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
     return (x >= 0 && y >= 0 && x < m_Entry.m_Texture.Width && y < m_Entry.m_Texture.Height);
 }
-//----------------------------------------------------------------------------------
+

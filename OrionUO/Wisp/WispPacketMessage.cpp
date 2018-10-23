@@ -1,55 +1,55 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 
-namespace WISP_NETWORK
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CPacketMessage::CPacketMessage(bool bigEndian)
     : BigEndian(bigEndian)
 {
 }
-//----------------------------------------------------------------------------------
+
 CPacketMessage::CPacketMessage(puchar data, int dataSize, bool bigEndian)
     : BigEndian(bigEndian)
 {
-    WISPFUN_DEBUG("c9_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Data.resize(dataSize);
     memcpy(&m_Data[0], &data[0], dataSize);
 }
-//----------------------------------------------------------------------------------
+
 CPacketMessage::CPacketMessage(const UCHAR_LIST &data, bool bigEndian)
     : BigEndian(bigEndian)
     , m_Data(data)
 {
-    WISPFUN_DEBUG("c9_f2");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 CPacketMessage::~CPacketMessage()
 {
-    WISPFUN_DEBUG("c9_f3");
+    DEBUG_TRACE_FUNCTION;
     m_Data.clear();
 }
-//----------------------------------------------------------------------------------
+
 void CPacketMessage::Append(puchar data, int dataSize)
 {
-    WISPFUN_DEBUG("c9_f4");
+    DEBUG_TRACE_FUNCTION;
     UCHAR_LIST buf(dataSize);
     memcpy(&buf[0], &data[0], dataSize);
 
     m_Data.insert(m_Data.end(), buf.begin(), buf.end());
 }
-//----------------------------------------------------------------------------------
+
 void CPacketMessage::Append(const UCHAR_LIST &data)
 {
-    WISPFUN_DEBUG("c9_f5");
+    DEBUG_TRACE_FUNCTION;
     m_Data.insert(m_Data.end(), data.begin(), data.end());
 }
-//----------------------------------------------------------------------------------
+
 UCHAR_LIST CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
 {
-    WISPFUN_DEBUG("c9_f6");
+    DEBUG_TRACE_FUNCTION;
     UCHAR_LIST result;
 
     if (!m_Data.size())
@@ -84,6 +84,6 @@ UCHAR_LIST CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
 
     return result;
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_NETWORK
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

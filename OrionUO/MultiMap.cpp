@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CMultiMap g_MultiMap;
-//----------------------------------------------------------------------------------
+
 CMultiMap::CMultiMap()
 {
 }
-//----------------------------------------------------------------------------------
+
 CMultiMap::~CMultiMap()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 {
-    WISPFUN_DEBUG("c192_f1");
-    WISP_FILE::CMappedFile &file = g_FileManager.m_MultiMap;
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CMappedFile &file = g_FileManager.m_MultiMap;
 
     if (!file.Size)
     {
@@ -142,10 +142,10 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         g_GL_BindTexture16(*mapObject->m_Texture, gump->Width, gump->Height, &wordMap[0]);
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int facet)
 {
-    WISPFUN_DEBUG("c192_f2");
+    DEBUG_TRACE_FUNCTION;
     if (facet < 0 || facet > 5)
     {
         LOG("Invalid facet index: %i\n", facet);
@@ -153,7 +153,7 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
         return false;
     }
 
-    WISP_FILE::CMappedFile &file = g_FileManager.m_FacetMul[facet];
+    Wisp::CMappedFile &file = g_FileManager.m_FacetMul[facet];
     file.ResetPtr();
 
     if (!file.Size)
@@ -207,4 +207,4 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
 
     return true;
 }
-//----------------------------------------------------------------------------------
+

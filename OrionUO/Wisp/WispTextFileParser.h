@@ -1,10 +1,9 @@
-//----------------------------------------------------------------------------------
+
 #ifndef WISPTEXTFILEPARSER_H
 #define WISPTEXTFILEPARSER_H
-//----------------------------------------------------------------------------------
-namespace WISP_FILE
+
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
 class CTextFileParser
 {
 public:
@@ -92,7 +91,7 @@ public:
     //Прочитать токены из строки //Read tokens from the string
     STRING_LIST GetTokens(const char *str, bool trim = true);
 };
-//----------------------------------------------------------------------------------
+
 class CTextFileWritter
 {
 private:
@@ -113,7 +112,7 @@ public:
 
     void WriteBool(const string &key, bool value);
 };
-//----------------------------------------------------------------------------------
-}; // namespace WISP_FILE
-    //----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+
 #endif

@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CServerList g_ServerList;
-//----------------------------------------------------------------------------------
+
 //---------------------------------------CServer------------------------------------
-//----------------------------------------------------------------------------------
+
 CServer::CServer()
 {
 }
-//----------------------------------------------------------------------------------
+
 CServer::CServer(
     ushort index, const string &name, uchar fullPercent, uchar timezone, int ip, bool selected)
     : Index(index)
@@ -29,23 +29,23 @@ CServer::CServer(
     , Selected(selected)
 {
 }
-//----------------------------------------------------------------------------------
+
 CServer::~CServer()
 {
 }
-//----------------------------------------------------------------------------------
+
 //-------------------------------------CServerList----------------------------------
-//----------------------------------------------------------------------------------
+
 CServerList::CServerList()
 {
 }
-//----------------------------------------------------------------------------------
+
 CServerList::~CServerList()
 {
     m_Servers.clear();
 }
-//----------------------------------------------------------------------------------
-void CServerList::ParsePacket(WISP_DATASTREAM::CDataReader &reader)
+
+void CServerList::ParsePacket(Wisp::CDataReader &reader)
 {
     m_Servers.clear();
     g_ServerList.LastServerIndex = 0;
@@ -90,19 +90,19 @@ void CServerList::ParsePacket(WISP_DATASTREAM::CDataReader &reader)
 
     g_ServerScreen.UpdateContent();
 }
-//----------------------------------------------------------------------------------
+
 CServer *CServerList::GetServer(int index)
 {
-    WISPFUN_DEBUG("c206_f3");
+    DEBUG_TRACE_FUNCTION;
     if (index < m_Servers.size())
         return &m_Servers[index];
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 CServer *CServerList::GetSelectedServer()
 {
-    WISPFUN_DEBUG("c206_f4");
+    DEBUG_TRACE_FUNCTION;
 
     for (CServer &server : m_Servers)
     {
@@ -112,10 +112,10 @@ CServer *CServerList::GetSelectedServer()
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 CServer *CServerList::Select(int index)
 {
-    WISPFUN_DEBUG("c206_f5");
+    DEBUG_TRACE_FUNCTION;
     CServer *server = NULL;
 
     DFOR (i, m_Servers.size() - 1, 0)
@@ -131,4 +131,4 @@ CServer *CServerList::Select(int index)
 
     return server;
 }
-//----------------------------------------------------------------------------------
+

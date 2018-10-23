@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIGumppicHightlighted::CGUIGumppicHightlighted(
     int serial, ushort graphic, ushort color, ushort selectedColor, int x, int y)
     : CGUIDrawObject(GOT_GUMPPICHIGHTLIGHTED, serial, graphic, color, x, y)
     , SelectedColor(selectedColor)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIGumppicHightlighted::~CGUIGumppicHightlighted()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIGumppicHightlighted::SetShaderMode()
 {
-    WISPFUN_DEBUG("c56_f1");
+    DEBUG_TRACE_FUNCTION;
 
     if (g_SelectedObject.Object == this)
     {
@@ -44,18 +44,18 @@ void CGUIGumppicHightlighted::SetShaderMode()
     else
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIGumppicHightlighted::OnMouseEnter()
 {
-    WISPFUN_DEBUG("c56_f2");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != NULL)
         g_SelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIGumppicHightlighted::OnMouseExit()
 {
-    WISPFUN_DEBUG("c56_f3");
+    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != NULL)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+

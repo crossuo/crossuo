@@ -8,40 +8,40 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "CreateCharacterScreen.h"
-//----------------------------------------------------------------------------------
+
 CCreateCharacterScreen g_CreateCharacterScreen;
-//----------------------------------------------------------------------------------
+
 CCreateCharacterScreen::CCreateCharacterScreen()
     : CBaseScreen(m_CreateCharacterGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CCreateCharacterScreen::~CCreateCharacterScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CCreateCharacterScreen::SetStyleSelection(int val)
 {
     m_StyleSelection = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CCreateCharacterScreen::SetColorSelection(int val)
 {
     m_ColorSelection = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CCreateCharacterScreen::Init()
 {
-    WISPFUN_DEBUG("c162_f1");
+    DEBUG_TRACE_FUNCTION;
     g_CreateCharacterManager.Clear();
 
     Name = "";
@@ -54,7 +54,7 @@ void CCreateCharacterScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после плавного затемнения экрана
 @param [__in_opt] action Идентификатор действия
@@ -62,7 +62,7 @@ void CCreateCharacterScreen::Init()
 */
 void CCreateCharacterScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c162_f2");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -80,14 +80,14 @@ void CCreateCharacterScreen::ProcessSmoothAction(uchar action)
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_SELECT_TOWN)
         g_Orion.InitScreen(GS_SELECT_TOWN);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Нажатие левой кнопки мыши
 @return 
 */
 void CCreateCharacterScreen::OnLeftMouseButtonDown()
 {
-    WISPFUN_DEBUG("c162_f3");
+    DEBUG_TRACE_FUNCTION;
     CBaseScreen::OnLeftMouseButtonDown();
 
     if (g_SelectedObject.Serial == 0)
@@ -99,7 +99,7 @@ void CCreateCharacterScreen::OnLeftMouseButtonDown()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 /*!
 Обработка нажатия клавиши
@@ -109,7 +109,7 @@ void CCreateCharacterScreen::OnLeftMouseButtonDown()
 */
 void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c162_f4");
+    DEBUG_TRACE_FUNCTION;
     if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uchar)wParam))
         return;
     else if (g_EntryPointer == NULL)
@@ -121,7 +121,7 @@ void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lPa
     Name = g_EntryPointer->c_str();
     m_Gump.WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка нажатия клавиши
 @param [__in] wparam не подписанный параметр
@@ -130,7 +130,7 @@ void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lPa
 */
 void CCreateCharacterScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c162_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer != NULL)
     {
         g_EntryPointer->OnKey(&m_Gump, wParam);

@@ -6,12 +6,12 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef CONNECTION_H
 #define CONNECTION_H
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера подключения к серверу
-class CSocket : public WISP_NETWORK::CConnection
+class CSocket : public Wisp::CConnection
 {
 public:
     bool GameSocket = false;
@@ -33,5 +33,5 @@ public:
 
     virtual UCHAR_LIST Decompression(UCHAR_LIST data);
 };
-//---------------------------------------------------------------------------
+
 #endif

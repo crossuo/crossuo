@@ -8,21 +8,21 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GameBlockedScreen.h"
-//----------------------------------------------------------------------------------
+
 CGameBlockedScreen g_GameBlockedScreen;
-//----------------------------------------------------------------------------------
+
 CGameBlockedScreen::CGameBlockedScreen()
     : CBaseScreen(m_GameBlockedScreenGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGameBlockedScreen::~CGameBlockedScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
@@ -31,7 +31,7 @@ void CGameBlockedScreen::Init()
 {
     Code = 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовка/выбор объектов
 @param [__in] mode true - отрисовка, false - выбор
@@ -39,7 +39,7 @@ void CGameBlockedScreen::Init()
 */
 void CGameBlockedScreen::Render(bool mode)
 {
-    WISPFUN_DEBUG("c163_f1");
+    DEBUG_TRACE_FUNCTION;
     if (mode)
     {
         g_GumpManager.Draw(true);
@@ -66,29 +66,29 @@ void CGameBlockedScreen::Render(bool mode)
         g_LastSelectedObject.Init(g_SelectedObject);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Нажатие левой кнопки мыши
 @return 
 */
 void CGameBlockedScreen::OnLeftMouseButtonDown()
 {
-    WISPFUN_DEBUG("c163_f2");
+    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != NULL)
         g_GumpManager.OnLeftMouseButtonDown(true);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отпускание левой кнопки мыши
 @return 
 */
 void CGameBlockedScreen::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c163_f3");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != NULL)
         g_GumpManager.OnLeftMouseButtonUp(true);
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 /*!
 Обработка нажатия клавиши
@@ -98,13 +98,13 @@ void CGameBlockedScreen::OnLeftMouseButtonUp()
 */
 void CGameBlockedScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c163_f4");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == NULL || g_EntryPointer == &g_GameConsole)
         return;
 
     g_GumpManager.OnCharPress(wParam, lParam, true);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка нажатия клавиши
 @param [__in] wparam не подписанный параметр
@@ -113,7 +113,7 @@ void CGameBlockedScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 */
 void CGameBlockedScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c163_f5");
+    DEBUG_TRACE_FUNCTION;
     CGumpNotify *notify = (CGumpNotify *)g_GumpManager.GetGump(0, 0, GT_NOTIFY);
 
     if (g_EntryPointer == NULL || g_EntryPointer == &g_GameConsole)
@@ -131,7 +131,7 @@ void CGameBlockedScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
             notify->OnKeyDown(wParam, lParam);
     }
 }
-//----------------------------------------------------------------------------------
+
 #else
 void CGameBlockedScreen::OnTextInput(const SDL_TextInputEvent &ev)
 {

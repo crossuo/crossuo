@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpSelectFont::CGumpSelectFont(uint serial, short x, short y, SELECT_FONT_GUMP_STATE state)
     : CGump(GT_SELECT_FONT, serial, x, y)
     , m_State(state)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGumpSelectFont::~CGumpSelectFont()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectFont::UpdateContent()
 {
-    WISPFUN_DEBUG("c122_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CGUIResizepic *background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x0A28, 0, 0, 200, 70));
@@ -76,10 +76,10 @@ void CGumpSelectFont::UpdateContent()
 
     Add(new CGUIGroup(0));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectFont::GUMP_RADIO_EVENT_C
 {
-    WISPFUN_DEBUG("c122_f2");
+    DEBUG_TRACE_FUNCTION;
     if (!state)
         return;
 
@@ -130,4 +130,4 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
             break;
     }
 }
-//----------------------------------------------------------------------------------
+

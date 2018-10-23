@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUISKILLITEM_H
 #define GUISKILLITEM_H
-//----------------------------------------------------------------------------------
+
 class CGUISkillItem : public CBaseGUI
 {
 public:
@@ -45,7 +45,7 @@ public:
     //!Создать текстуру значения навыка
     void CreateValueText(bool showReal = false, bool showCap = false);
 
-    virtual WISP_GEOMETRY::CSize GetSize() { return WISP_GEOMETRY::CSize(255, 17); }
+    virtual Wisp::CSize GetSize() { return Wisp::CSize(255, 17); }
 
     virtual void PrepareTextures();
 
@@ -55,6 +55,5 @@ public:
     //!Получить ссылку на выбранную компоненту или на себя
     CBaseGUI *SelectedItem();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpSelectColor::CGumpSelectColor(uint serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
     : CGump(GT_SELECT_COLOR, serial, x, y)
     , m_State(state)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGumpSelectColor::~CGumpSelectColor()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectColor::UpdateContent()
 {
-    WISPFUN_DEBUG("c121_f1");
+    DEBUG_TRACE_FUNCTION;
     if (m_Items == NULL)
     {
         Add(new CGUIGumppic(0x0906, 0, 0));
@@ -86,10 +86,10 @@ void CGumpSelectColor::UpdateContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectColor::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c121_f2");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != NULL)
     {
         ushort color = 0;
@@ -113,26 +113,26 @@ void CGumpSelectColor::GUMP_BUTTON_EVENT_C
         ((CGUIColoredPolygone *)item)->Focused = (item->Serial == m_SelectedIndex);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectColor::GUMP_SLIDER_CLICK_EVENT_C
 {
-    WISPFUN_DEBUG("c121_f3");
+    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectColor::GUMP_SLIDER_MOVE_EVENT_C
 {
-    WISPFUN_DEBUG("c121_f4");
+    DEBUG_TRACE_FUNCTION;
     if (m_Slider != NULL && m_ColorRef != m_Slider->Value)
     {
         m_ColorRef = m_Slider->Value;
         WantUpdateContent = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSelectColor::OnSelectColor(ushort color)
 {
-    WISPFUN_DEBUG("c121_f5");
+    DEBUG_TRACE_FUNCTION;
     CGumpOptions *gump = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);
 
     if (gump != NULL)
@@ -140,4 +140,4 @@ void CGumpSelectColor::OnSelectColor(ushort color)
 
     RemoveMark = true;
 }
-//----------------------------------------------------------------------------------
+

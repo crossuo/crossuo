@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIHTMLText::CGUIHTMLText(
     int index,
     uchar font,
@@ -31,35 +31,35 @@ CGUIHTMLText::CGUIHTMLText(
     , Width(width)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIHTMLText::~CGUIHTMLText()
 {
-    WISPFUN_DEBUG("c64_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLText::CreateTexture(bool backgroundCanBeColored)
 {
-    WISPFUN_DEBUG("c64_f2");
+    DEBUG_TRACE_FUNCTION;
     g_FontManager.SetUseHTML(true, HTMLStartColor, backgroundCanBeColored);
 
     g_FontManager.GenerateW(Font, m_Texture, Text, Color, 30, Width, Align, TextFlags);
 
     g_FontManager.SetUseHTML(false);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLText::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c64_f3");
+    DEBUG_TRACE_FUNCTION;
     m_Texture.Draw(m_X, m_Y, checktrans);
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIHTMLText::Select()
 {
-    WISPFUN_DEBUG("c64_f4");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
     return (x >= 0 && y >= 0 && x < m_Texture.Width && y < m_Texture.Height);
 }
-//----------------------------------------------------------------------------------
+

@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIPOLYGONAL_H
 #define GUIPOLYGONAL_H
-//----------------------------------------------------------------------------------
+
 class CGUIPolygonal : public CBaseGUI
 {
 public:
@@ -30,8 +30,7 @@ public:
 
     virtual bool Select();
 
-    virtual WISP_GEOMETRY::CSize GetSize() { return WISP_GEOMETRY::CSize(Width, Height); }
+    virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

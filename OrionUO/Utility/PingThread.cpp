@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_events.h>
 #include <SDL_timer.h>
-//----------------------------------------------------------------------------------
+
 #if !USE_WISP
 uint32_t CPingThread::m_PingEvent = 0;
 #endif
-//----------------------------------------------------------------------------------
+
 CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount)
-    : WISP_THREAD::CThread()
+    : Wisp::CThread()
     , ServerID(serverID)
     , ServerIP(serverIP)
     , RequestsCount(requestsCount)
@@ -31,14 +31,14 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
 #endif
 
     LOG("CPingThread => %s\n", serverIP.c_str());
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 CPingThread::~CPingThread()
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 int CPingThread::CalculatePing()
 {
     auto handle = icmp_open();
@@ -54,10 +54,10 @@ int CPingThread::CalculatePing()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CPingThread::OnExecute(uint32_t nowTime)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
 
     if (ServerIP.empty() || RequestsCount < 1)
         return;
@@ -94,4 +94,4 @@ void CPingThread::OnExecute(uint32_t nowTime)
     SDL_PushEvent(&event);
 #endif
 }
-//----------------------------------------------------------------------------------
+

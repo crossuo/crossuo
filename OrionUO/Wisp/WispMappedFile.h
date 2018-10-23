@@ -1,8 +1,8 @@
 #pragma once
 
-namespace WISP_FILE
+namespace Wisp
 {
-class CMappedFile : public WISP_DATASTREAM::CDataReader
+class CMappedFile : public Wisp::CDataReader
 {
 #if USE_WISP
 private:
@@ -22,4 +22,4 @@ public:
     void Unload();
 };
 
-}; // namespace WISP_FILE
+}; // namespace Wisp

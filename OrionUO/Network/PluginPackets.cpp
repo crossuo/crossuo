@@ -8,21 +8,21 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CPluginPacket::CPluginPacket()
-    : WISP_DATASTREAM::CDataWritter()
+    : Wisp::CDataWritter()
 {
     WriteUInt8(0xFC);
     WriteUInt16BE(0); //size reserved
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacket::CPluginPacket(int size, bool autoResize)
-    : WISP_DATASTREAM::CDataWritter(size, autoResize)
+    : Wisp::CDataWritter(size, autoResize)
 {
 }
-//----------------------------------------------------------------------------------
+
 void CPluginPacket::SendToPlugin()
 {
     if (m_Data.size() >= 5)
@@ -31,7 +31,7 @@ void CPluginPacket::SendToPlugin()
         g_PluginManager.PacketRecv(&m_Data[0], (int)m_Data.size());
     }
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketSkillsList::CPluginPacketSkillsList()
     : CPluginPacket()
 {
@@ -51,7 +51,7 @@ CPluginPacketSkillsList::CPluginPacketSkillsList()
         WriteString(skill->Name);
     }
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketSpellsList::CPluginPacketSpellsList()
     : CPluginPacket()
 {
@@ -93,7 +93,7 @@ CPluginPacketSpellsList::CPluginPacketSpellsList()
     IFOR (i, 0, CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT)
         WriteString(CGumpSpellbook::m_SpellName7[i][0]);
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketMacrosList::CPluginPacketMacrosList()
     : CPluginPacket()
 {
@@ -116,7 +116,7 @@ CPluginPacketMacrosList::CPluginPacketMacrosList()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketFileInfo::CPluginPacketFileInfo(int index, uint64 address, uint64 size)
     : CPluginPacket()
 {
@@ -125,7 +125,7 @@ CPluginPacketFileInfo::CPluginPacketFileInfo(int index, uint64 address, uint64 s
     WriteUInt64BE(address);
     WriteUInt64BE(size);
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketFileInfoLocalized::CPluginPacketFileInfoLocalized(
     int index, uint64 address, uint64 size, const string &language)
     : CPluginPacket()
@@ -136,7 +136,7 @@ CPluginPacketFileInfoLocalized::CPluginPacketFileInfoLocalized(
     WriteUInt64BE(size);
     WriteString(language);
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketStaticArtGraphicDataInfo::CPluginPacketStaticArtGraphicDataInfo(
     ushort graphic, uint64 address, uint64 size, uint64 compressedSize)
     : CPluginPacket()
@@ -148,7 +148,7 @@ CPluginPacketStaticArtGraphicDataInfo::CPluginPacketStaticArtGraphicDataInfo(
     WriteUInt64BE(size);
     WriteUInt64BE(compressedSize);
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketGumpArtGraphicDataInfo::CPluginPacketGumpArtGraphicDataInfo(
     ushort graphic, uint64 address, uint64 size, uint64 compressedSize, ushort width, ushort height)
     : CPluginPacket()
@@ -162,16 +162,16 @@ CPluginPacketGumpArtGraphicDataInfo::CPluginPacketGumpArtGraphicDataInfo(
     WriteUInt16BE(width);
     WriteUInt16BE(height);
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketFilesTransfered::CPluginPacketFilesTransfered()
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_FILES_TRANSFERED);
 }
-//----------------------------------------------------------------------------------
+
 CPluginPacketOpenMap::CPluginPacketOpenMap()
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_OPEN_MAP);
 }
-//----------------------------------------------------------------------------------
+

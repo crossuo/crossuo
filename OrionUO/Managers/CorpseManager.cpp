@@ -8,11 +8,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CCorpseManager g_CorpseManager;
-//----------------------------------------------------------------------------------
+
 void CCorpseManager::Add(const CCorpse &corpse)
 {
     for (const CCorpse &item : m_List)
@@ -23,7 +23,7 @@ void CCorpseManager::Add(const CCorpse &corpse)
 
     m_List.push_back(corpse);
 }
-//----------------------------------------------------------------------------------
+
 void CCorpseManager::Remove(int corpseSerial, int objectSerial)
 {
     for (deque<CCorpse>::iterator i = m_List.begin(); i != m_List.end();)
@@ -44,7 +44,7 @@ void CCorpseManager::Remove(int corpseSerial, int objectSerial)
             ++i;
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CCorpseManager::InList(int corpseSerial, int objectSerial)
 {
     for (const CCorpse &item : m_List)
@@ -55,7 +55,7 @@ bool CCorpseManager::InList(int corpseSerial, int objectSerial)
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 CGameObject *CCorpseManager::GetCorpseObject(int serial)
 {
     for (const CCorpse &item : m_List)
@@ -66,4 +66,4 @@ CGameObject *CCorpseManager::GetCorpseObject(int serial)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+

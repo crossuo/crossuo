@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIHTMLGump::CGUIHTMLGump(
     int serial,
     ushort graphic,
@@ -28,27 +28,27 @@ CGUIHTMLGump::CGUIHTMLGump(
     , CurrentOffset()
     , AvailableOffset()
 {
-    WISPFUN_DEBUG("c60_f1");
+    DEBUG_TRACE_FUNCTION;
     Serial = serial;
     Graphic = graphic;
 
     Initalize();
 }
-//----------------------------------------------------------------------------------
+
 CGUIHTMLGump::~CGUIHTMLGump()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::PrepareTextures()
 {
-    WISPFUN_DEBUG("c60_f2");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::Initalize(bool menu)
 {
-    WISPFUN_DEBUG("c60_f3");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     if (menu)
@@ -154,10 +154,10 @@ void CGUIHTMLGump::Initalize(bool menu)
         Add(m_Scissor);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::UpdateHeight(int height)
 {
-    WISPFUN_DEBUG("c60_f4");
+    DEBUG_TRACE_FUNCTION;
     Height = height;
 
     m_Background->Height = height;
@@ -187,17 +187,17 @@ void CGUIHTMLGump::UpdateHeight(int height)
 
     CalculateDataSize();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::ResetDataOffset()
 {
-    WISPFUN_DEBUG("c60_f5");
+    DEBUG_TRACE_FUNCTION;
     m_Slider->Value = 0;
     CurrentOffset.Reset();
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, int &endX, int &endY)
 {
-    WISPFUN_DEBUG("c60_f6");
+    DEBUG_TRACE_FUNCTION;
     for (; item != NULL; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_HITBOX || !item->Visible)
@@ -214,7 +214,7 @@ void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, i
         if (item->GetY() < startY)
             startY = item->GetY();
 
-        WISP_GEOMETRY::CSize size = item->GetSize();
+        Wisp::CSize size = item->GetSize();
 
         int curX = item->GetX() + size.Width;
         int curY = item->GetY() + size.Height;
@@ -226,10 +226,10 @@ void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, i
             endY = curY;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::CalculateDataSize()
 {
-    WISPFUN_DEBUG("c60_f7");
+    DEBUG_TRACE_FUNCTION;
     CBaseGUI *item = (CBaseGUI *)m_Items;
 
     IFOR (i, 0, 5)
@@ -267,10 +267,10 @@ void CGUIHTMLGump::CalculateDataSize()
 
     m_Slider->CalculateOffset();
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIHTMLGump::EntryPointerHere()
 {
-    WISPFUN_DEBUG("c60_f8");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
@@ -279,12 +279,12 @@ bool CGUIHTMLGump::EntryPointerHere()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIHTMLGump::Select()
 {
-    WISPFUN_DEBUG("c60_f9");
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = Wisp::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
 
     bool selected = false;
 
@@ -301,11 +301,11 @@ bool CGUIHTMLGump::Select()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLGump::Scroll(bool up, int delay)
 {
-    WISPFUN_DEBUG("c60_f10");
+    DEBUG_TRACE_FUNCTION;
     if (m_Slider != NULL)
         m_Slider->OnScroll(up, delay);
 }
-//----------------------------------------------------------------------------------
+

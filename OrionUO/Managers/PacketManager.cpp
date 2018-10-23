@@ -8,13 +8,13 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "PacketManager.h"
 #include "../Sockets.h"
-//----------------------------------------------------------------------------------
+
 CPacketManager g_PacketManager;
-//----------------------------------------------------------------------------------
+
 //Карта пакетов УО для анализа
 #define UMSG(save, size)                                                                           \
     {                                                                                              \
@@ -44,7 +44,7 @@ CPacketManager g_PacketManager;
     {                                                                                              \
         save, name, size, DIR_BOTH, &CPacketManager::Handle##rmethod                               \
     }
-//----------------------------------------------------------------------------------
+
 CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0x00*/ SMSG(ORION_SAVE_PACKET, "Create Character", 0x68),
     /*0x01*/ SMSG(ORION_SAVE_PACKET, "Disconnect", 0x05),
@@ -323,9 +323,9 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xFE*/ RMSG(ORION_SAVE_PACKET, "Razor Handshake", 0x8),
     /*0xFF*/ UMSG(ORION_SAVE_PACKET, PACKET_VARIABLE_SIZE)
 };
-//----------------------------------------------------------------------------------
+
 CPacketManager::CPacketManager()
-    : WISP_NETWORK::CPacketReader()
+    : Wisp::CPacketReader()
 {
 #if USE_WISP
     InitializeCriticalSection(&m_CSPluginNetwork);
@@ -333,7 +333,7 @@ CPacketManager::CPacketManager()
     m_Mutex = SDL_CreateMutex();
 #endif
 }
-//----------------------------------------------------------------------------------
+
 CPacketManager::~CPacketManager()
 {
 #if USE_WISP
@@ -344,10 +344,10 @@ CPacketManager::~CPacketManager()
     m_Mutex = nullptr;
 #endif
 }
-//---------------------------------------------------------------------------
+
 bool CPacketManager::AutoLoginNameExists(const string &name)
 {
-    WISPFUN_DEBUG("c150_f1");
+    DEBUG_TRACE_FUNCTION;
     if (!AutoLoginNames.length())
         return false;
 
@@ -355,7 +355,7 @@ bool CPacketManager::AutoLoginNameExists(const string &name)
 
     return (AutoLoginNames.find(search) != string::npos);
 }
-//----------------------------------------------------------------------------------
+
 #define CV_PRINT 0
 
 #if CV_PRINT != 0
@@ -363,10 +363,10 @@ bool CPacketManager::AutoLoginNameExists(const string &name)
 #else //CV_PRINT==0
 #define CVPRINT(s)
 #endif //CV_PRINT!=0
-//----------------------------------------------------------------------------------
+
 void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
 {
-    WISPFUN_DEBUG("c150_f2");
+    DEBUG_TRACE_FUNCTION;
     m_ClientVersion = newClientVersion;
 
     if (newClientVersion >= CV_500A)
@@ -548,19 +548,19 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
         m_Packets[0x00].Size = 0x68;
     }
 }
-//----------------------------------------------------------------------------------
+
 int CPacketManager::GetPacketSize(const UCHAR_LIST &packet, int &offsetToSize)
 {
-    WISPFUN_DEBUG("c150_f3");
+    DEBUG_TRACE_FUNCTION;
     if (packet.size())
         return m_Packets[packet[0]].Size;
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::SendMegaClilocRequests()
 {
-    WISPFUN_DEBUG("c150_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled && !m_MegaClilocRequests.empty())
     {
         if (m_ClientVersion >= CV_500A)
@@ -577,10 +577,10 @@ void CPacketManager::SendMegaClilocRequests()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::AddMegaClilocRequest(int serial)
 {
-    WISPFUN_DEBUG("c150_f6");
+    DEBUG_TRACE_FUNCTION;
     for (int item : m_MegaClilocRequests)
     {
         if (item == serial)
@@ -589,10 +589,10 @@ void CPacketManager::AddMegaClilocRequest(int serial)
 
     m_MegaClilocRequests.push_back(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::OnReadFailed()
 {
-    WISPFUN_DEBUG("c150_f7");
+    DEBUG_TRACE_FUNCTION;
     LOG("OnReadFailed...Disconnecting...\n");
     g_Orion.DisconnectGump();
 
@@ -603,10 +603,10 @@ void CPacketManager::OnReadFailed()
 
     g_ConnectionManager.Disconnect();
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::OnPacket()
 {
-    WISPFUN_DEBUG("c150_f8");
+    DEBUG_TRACE_FUNCTION;
     uint ticks = g_Ticks;
     g_TotalRecvSize += (uint)Size;
 
@@ -655,10 +655,10 @@ void CPacketManager::OnPacket()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::SavePluginReceivePacket(puchar buf, int size)
 {
-    WISPFUN_DEBUG("c150_f9");
+    DEBUG_TRACE_FUNCTION;
     UCHAR_LIST packet(size);
 
     memcpy(&packet[0], &buf[0], size);
@@ -677,10 +677,10 @@ void CPacketManager::SavePluginReceivePacket(puchar buf, int size)
     SDL_UnlockMutex(m_Mutex);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::ProcessPluginPackets()
 {
-    WISPFUN_DEBUG("c150_f10");
+    DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     EnterCriticalSection(&m_CSPluginNetwork);
 #else
@@ -703,10 +703,10 @@ void CPacketManager::ProcessPluginPackets()
     SDL_UnlockMutex(m_Mutex);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::PluginReceiveHandler(puchar buf, int size)
 {
-    WISPFUN_DEBUG("c150_f11");
+    DEBUG_TRACE_FUNCTION;
     SetData(buf, size);
 
     uint ticks = g_Ticks;
@@ -735,12 +735,12 @@ void CPacketManager::PluginReceiveHandler(puchar buf, int size)
         (this->*(info.Handler))();
     }
 }
-//----------------------------------------------------------------------------------
+
 #define PACKET_HANDLER(name) void CPacketManager::Handle##name()
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(LoginError)
 {
-    WISPFUN_DEBUG("c150_f12");
+    DEBUG_TRACE_FUNCTION;
     if (g_GameState == GS_MAIN_CONNECT || g_GameState == GS_SERVER_CONNECT ||
         g_GameState == GS_GAME_CONNECT)
     {
@@ -749,16 +749,16 @@ PACKET_HANDLER(LoginError)
         g_ConnectionManager.Disconnect();
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ServerList)
 {
-    WISPFUN_DEBUG("c150_f13");
+    DEBUG_TRACE_FUNCTION;
     g_ServerList.ParsePacket(*this);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(RelayServer)
 {
-    WISPFUN_DEBUG("c150_f14");
+    DEBUG_TRACE_FUNCTION;
     memset(&g_SelectedCharName[0], 0, sizeof(g_SelectedCharName));
     in_addr addr;
     puint paddr = (puint)Ptr;
@@ -775,10 +775,10 @@ PACKET_HANDLER(RelayServer)
     g_PacketLoginComplete = false;
     g_CurrentMap = 0;
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(CharacterList)
 {
-    WISPFUN_DEBUG("c150_f15");
+    DEBUG_TRACE_FUNCTION;
     HandleResendCharacterList();
 
     uchar locCount = ReadUInt8();
@@ -835,10 +835,10 @@ PACKET_HANDLER(CharacterList)
 
     g_CharacterListScreen.UpdateContent();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ResendCharacterList)
 {
-    WISPFUN_DEBUG("c150_f16");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.InitScreen(GS_CHARACTER);
 
     int numSlots = ReadInt8();
@@ -907,26 +907,26 @@ PACKET_HANDLER(ResendCharacterList)
     if (!haveCharacter)
         g_Orion.InitScreen(GS_PROFESSION_SELECT);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(LoginComplete)
 {
-    WISPFUN_DEBUG("c150_f17");
+    DEBUG_TRACE_FUNCTION;
     g_PacketLoginComplete = true;
 
     g_Orion.LoginComplete(false);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(SetTime)
 {
-    WISPFUN_DEBUG("c150_f18");
+    DEBUG_TRACE_FUNCTION;
     g_ServerTimeHour = ReadUInt8();
     g_ServerTimeMinute = ReadUInt8();
     g_ServerTimeSecond = ReadUInt8();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(EnterWorld)
 {
-    WISPFUN_DEBUG("c150_f19");
+    DEBUG_TRACE_FUNCTION;
     uint serial = ReadUInt32BE();
     ConfigSerial = serial;
     bool loadConfig = false;
@@ -1008,10 +1008,10 @@ PACKET_HANDLER(EnterWorld)
             g_Orion.CreateTextMessageF(3, 0x0037, "Login confirm to %s", server->Name.c_str());
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateHitpoints)
 {
-    WISPFUN_DEBUG("c150_f20");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1028,10 +1028,10 @@ PACKET_HANDLER(UpdateHitpoints)
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateMana)
 {
-    WISPFUN_DEBUG("c150_f21");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1047,10 +1047,10 @@ PACKET_HANDLER(UpdateMana)
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateStamina)
 {
-    WISPFUN_DEBUG("c150_f22");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1066,10 +1066,10 @@ PACKET_HANDLER(UpdateStamina)
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(MobileAttributes)
 {
-    WISPFUN_DEBUG("c150_f23");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1092,10 +1092,10 @@ PACKET_HANDLER(MobileAttributes)
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(NewHealthbarUpdate)
 {
-    WISPFUN_DEBUG("c150_f24");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1153,10 +1153,10 @@ PACKET_HANDLER(NewHealthbarUpdate)
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdatePlayer)
 {
-    WISPFUN_DEBUG("c150_f25");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1185,10 +1185,10 @@ PACKET_HANDLER(UpdatePlayer)
     g_World->UpdatePlayer(
         serial, graphic, graphicIncrement, color, flags, x, y, serverID, direction, z);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(CharacterStatus)
 {
-    WISPFUN_DEBUG("c150_f26");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1330,10 +1330,10 @@ PACKET_HANDLER(CharacterStatus)
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateItem)
 {
-    WISPFUN_DEBUG("c150_f27");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1426,10 +1426,10 @@ PACKET_HANDLER(UpdateItem)
         updateType,
         1);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateItemSA)
 {
-    WISPFUN_DEBUG("c150_f28");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1467,10 +1467,10 @@ PACKET_HANDLER(UpdateItemSA)
         g_World->UpdatePlayer(
             serial, graphic, graphicIncrement, color, flags, x, y, 0 /*serverID*/, direction, z);
 }
-//---------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateObject)
 {
-    WISPFUN_DEBUG("c150_f29");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1573,10 +1573,10 @@ PACKET_HANDLER(UpdateObject)
         g_Player->UpdateAbilities();
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(EquipItem)
 {
-    WISPFUN_DEBUG("c150_f30");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1614,10 +1614,10 @@ PACKET_HANDLER(EquipItem)
     if (cserial == g_PlayerSerial && (layer == OL_1_HAND || layer == OL_2_HAND))
         g_Player->UpdateAbilities();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateContainedItem)
 {
-    WISPFUN_DEBUG("c150_f31");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1637,10 +1637,10 @@ PACKET_HANDLER(UpdateContainedItem)
     g_World->UpdateContainedItem(
         serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateContainedItems)
 {
-    WISPFUN_DEBUG("c150_f32");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1702,10 +1702,10 @@ PACKET_HANDLER(UpdateContainedItems)
             serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DenyMoveItem)
 {
-    WISPFUN_DEBUG("c150_f33");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1792,10 +1792,10 @@ PACKET_HANDLER(DenyMoveItem)
         g_Orion.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, errorMessages[code]);
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(EndDraggingItem)
 {
-    WISPFUN_DEBUG("c150_f33_1");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1806,20 +1806,20 @@ PACKET_HANDLER(EndDraggingItem)
     g_ObjectInHand.Enabled = false;
     g_ObjectInHand.Dropped = false;
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DropItemAccepted)
 {
-    WISPFUN_DEBUG("c150_f33_1");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
     g_ObjectInHand.Enabled = false;
     g_ObjectInHand.Dropped = false;
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DeleteObject)
 {
-    WISPFUN_DEBUG("c150_f34");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1919,10 +1919,10 @@ PACKET_HANDLER(DeleteObject)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateCharacter)
 {
-    WISPFUN_DEBUG("c150_f35");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1967,10 +1967,10 @@ PACKET_HANDLER(UpdateCharacter)
 
     g_World->MoveToTop(obj);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Warmode)
 {
-    WISPFUN_DEBUG("c150_f36");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -1996,19 +1996,19 @@ PACKET_HANDLER(Warmode)
 
     g_World->MoveToTop(g_Player);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(PauseControl)
 {
-    WISPFUN_DEBUG("c150_f37");
+    DEBUG_TRACE_FUNCTION;
     /*g_ClientPaused = ReadUInt8();
 
 	if (!g_ClientPaused)
 	UO->ResumeClient();*/
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenPaperdoll)
 {
-    WISPFUN_DEBUG("c150_f38");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -2034,22 +2034,22 @@ PACKET_HANDLER(OpenPaperdoll)
     gump->CanLift = (flags & 0x02);
     gump->UpdateDescription(text);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ClientVersion)
 {
-    WISPFUN_DEBUG("c150_f39");
+    DEBUG_TRACE_FUNCTION;
     CPacketClientVersion(g_Orion.ClientVersionText).Send();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Ping)
 {
-    WISPFUN_DEBUG("c150_f40");
+    DEBUG_TRACE_FUNCTION;
     g_Ping = 0;
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(SetWeather)
 {
-    WISPFUN_DEBUG("c150_f41");
+    DEBUG_TRACE_FUNCTION;
     g_Weather.Reset();
 
     uchar type = ReadUInt8();
@@ -2106,10 +2106,10 @@ PACKET_HANDLER(SetWeather)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(PersonalLightLevel)
 {
-    WISPFUN_DEBUG("c150_f42");
+    DEBUG_TRACE_FUNCTION;
     uint serial = ReadUInt32BE();
 
     if (serial == g_PlayerSerial)
@@ -2122,10 +2122,10 @@ PACKET_HANDLER(PersonalLightLevel)
         g_PersonalLightLevel = level;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(LightLevel)
 {
-    WISPFUN_DEBUG("c150_f43");
+    DEBUG_TRACE_FUNCTION;
     uchar level = ReadUInt8();
 
     if (level > 0x1F)
@@ -2133,10 +2133,10 @@ PACKET_HANDLER(LightLevel)
 
     g_LightLevel = level;
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(EnableLockedFeatures)
 {
-    WISPFUN_DEBUG("c150_f44");
+    DEBUG_TRACE_FUNCTION;
     if (m_ClientVersion >= CV_60142)
         g_LockedClientFeatures = ReadUInt32BE();
     else
@@ -2146,10 +2146,10 @@ PACKET_HANDLER(EnableLockedFeatures)
 
     g_AnimationManager.UpdateAnimationAddressTable();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenContainer)
 {
-    WISPFUN_DEBUG("c150_f45");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -2337,10 +2337,10 @@ PACKET_HANDLER(OpenContainer)
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UpdateSkills)
 {
-    WISPFUN_DEBUG("c150_f46");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -2451,10 +2451,10 @@ PACKET_HANDLER(UpdateSkills)
 
     LOG("Skill(s) updated!\n");
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ExtendedCommand)
 {
-    WISPFUN_DEBUG("c150_f47");
+    DEBUG_TRACE_FUNCTION;
     ushort cmd = ReadUInt16BE();
 
     switch (cmd)
@@ -2872,10 +2872,10 @@ PACKET_HANDLER(ExtendedCommand)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DenyWalk)
 {
-    WISPFUN_DEBUG("c150_f48");
+    DEBUG_TRACE_FUNCTION;
     if (g_Player == NULL)
         return;
 
@@ -2893,10 +2893,10 @@ PACKET_HANDLER(DenyWalk)
 
     g_World->MoveToTop(g_Player);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ConfirmWalk)
 {
-    WISPFUN_DEBUG("c150_f49");
+    DEBUG_TRACE_FUNCTION;
     if (g_Player == NULL)
         return;
 
@@ -2915,16 +2915,16 @@ PACKET_HANDLER(ConfirmWalk)
 
     g_World->MoveToTop(g_Player);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenUrl)
 {
-    WISPFUN_DEBUG("c150_f50");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.GoToWebLink(ReadString(0));
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Target)
 {
-    WISPFUN_DEBUG("c150_f51");
+    DEBUG_TRACE_FUNCTION;
     g_Target.SetData(*this);
 
     if (g_PartyHelperTimer > g_Ticks && g_PartyHelperTarget)
@@ -2934,10 +2934,10 @@ PACKET_HANDLER(Target)
         g_PartyHelperTarget = 0;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Talk)
 {
-    WISPFUN_DEBUG("c150_f52");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
     {
         if (g_GameState == GS_GAME_CONNECT)
@@ -3031,10 +3031,10 @@ PACKET_HANDLER(Talk)
         g_Orion.CreateTextMessage(TT_OBJECT, serial, (uchar)font, textColor, str);
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UnicodeTalk)
 {
-    WISPFUN_DEBUG("c150_f53");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
     {
         if (g_GameState == GS_GAME_CONNECT)
@@ -3139,10 +3139,10 @@ PACKET_HANDLER(UnicodeTalk)
             TT_OBJECT, serial, (uchar)g_ConfigManager.SpeechFont, textColor, str);
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ClientTalk)
 {
-    WISPFUN_DEBUG("c150_f54");
+    DEBUG_TRACE_FUNCTION;
     if (!g_AbyssPacket03First)
     {
         bool parse = true;
@@ -3176,10 +3176,10 @@ PACKET_HANDLER(ClientTalk)
 
     g_AbyssPacket03First = false;
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(MultiPlacement)
 {
-    WISPFUN_DEBUG("c150_f55");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3188,10 +3188,10 @@ PACKET_HANDLER(MultiPlacement)
 
     g_Target.SetMultiData(*this);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(GraphicEffect)
 {
-    WISPFUN_DEBUG("c150_f56");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3318,10 +3318,10 @@ PACKET_HANDLER(GraphicEffect)
 
     g_EffectManager.AddEffect(effect);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DeathScreen)
 {
-    WISPFUN_DEBUG("c150_f57");
+    DEBUG_TRACE_FUNCTION;
     uchar action = ReadUInt8();
 
     if (action != 1)
@@ -3342,25 +3342,25 @@ PACKET_HANDLER(DeathScreen)
         g_DeathScreenTimer = g_Ticks + DEATH_SCREEN_DELAY;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(PlaySoundEffect)
 {
-    WISPFUN_DEBUG("c150_f58");
+    DEBUG_TRACE_FUNCTION;
     Move(1);
     ushort index = ReadUInt16BE();
     ushort volume = ReadUInt16BE();
     ushort xCoord = ReadUInt16BE();
     ushort yCoord = ReadUInt16BE();
 
-    int distance = GetDistance(g_Player, WISP_GEOMETRY::CPoint2Di(xCoord, yCoord));
+    int distance = GetDistance(g_Player, Wisp::CPoint2Di(xCoord, yCoord));
     //LOG("Play sound 0x%04X\n", index);
 
     g_Orion.PlaySoundEffect(index, g_SoundManager.GetVolumeValue(distance));
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(PlayMusic)
 {
-    WISPFUN_DEBUG("c150_f59");
+    DEBUG_TRACE_FUNCTION;
     ushort index = ReadUInt16BE();
 
     //LOG("Play midi music 0x%04X\n", index);
@@ -3370,10 +3370,10 @@ PACKET_HANDLER(PlayMusic)
 
     g_Orion.PlayMusic(index);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DragAnimation)
 {
-    WISPFUN_DEBUG("c150_f60");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3464,10 +3464,10 @@ PACKET_HANDLER(DragAnimation)
 
     g_EffectManager.AddEffect(effect);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(CorpseEquipment)
 {
-    WISPFUN_DEBUG("c150_f61");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3489,30 +3489,30 @@ PACKET_HANDLER(CorpseEquipment)
         layer = ReadUInt8();
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ASCIIPrompt)
 {
-    WISPFUN_DEBUG("c150_f62");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
     g_ConsolePrompt = PT_ASCII;
     memcpy(&g_LastASCIIPrompt[0], &Start[0], 11);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(UnicodePrompt)
 {
-    WISPFUN_DEBUG("c150_f63");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
     g_ConsolePrompt = PT_UNICODE;
     memcpy(&g_LastUnicodePrompt[0], &Start[0], 11);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(CharacterAnimation)
 {
-    WISPFUN_DEBUG("c150_f64");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3538,10 +3538,10 @@ PACKET_HANDLER(CharacterAnimation)
         obj->AnimationFromServer = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(NewCharacterAnimation)
 {
-    WISPFUN_DEBUG("c150_f65");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3567,51 +3567,51 @@ PACKET_HANDLER(NewCharacterAnimation)
         obj->AnimationFromServer = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DisplayQuestArrow)
 {
-    WISPFUN_DEBUG("c150_f66");
+    DEBUG_TRACE_FUNCTION;
     g_QuestArrow.Timer = g_Ticks + 1000;
     g_QuestArrow.Enabled = (ReadUInt8() != 0);
     g_QuestArrow.X = ReadUInt16BE();
     g_QuestArrow.Y = ReadUInt16BE();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ClientViewRange)
 {
-    WISPFUN_DEBUG("c150_f67");
+    DEBUG_TRACE_FUNCTION;
     g_ConfigManager.UpdateRange = ReadUInt8();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(KrriosClientSpecial)
 {
-    WISPFUN_DEBUG("c150_f68");
+    DEBUG_TRACE_FUNCTION;
     uchar type = ReadUInt8();
 
     if (type == 0xFE)
         CPacketRazorAnswer().Send();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(AssistVersion)
 {
-    WISPFUN_DEBUG("c150_f69");
+    DEBUG_TRACE_FUNCTION;
     uint version = ReadUInt32BE();
 
     CPacketAssistVersion(version, g_Orion.ClientVersionText).Send();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(CharacterListNotification)
 {
-    WISPFUN_DEBUG("c150_f70");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
     g_ConnectionScreen.SetConnectionFailed(true);
     g_ConnectionScreen.SetErrorCode(ReadUInt8());
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(ErrorCode)
 {
-    WISPFUN_DEBUG("c150_f71");
+    DEBUG_TRACE_FUNCTION;
     uchar code = ReadUInt8();
 
     g_Orion.InitScreen(GS_DELETE);
@@ -3621,10 +3621,10 @@ PACKET_HANDLER(ErrorCode)
     if (code > 7)
         g_ConnectionScreen.SetErrorCode(3);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(AttackCharacter)
 {
-    WISPFUN_DEBUG("c150_f72");
+    DEBUG_TRACE_FUNCTION;
     g_LastAttackObject = ReadUInt32BE();
 
     if (g_LastAttackObject != 0 && g_World != NULL)
@@ -3635,10 +3635,10 @@ PACKET_HANDLER(AttackCharacter)
             CPacketStatusRequest(g_LastAttackObject).Send();
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Season)
 {
-    WISPFUN_DEBUG("c150_f73");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3658,10 +3658,10 @@ PACKET_HANDLER(Season)
 
     g_Orion.ChangeSeason((SEASON_TYPE)season, g_OldSeasonMusic);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DisplayDeath)
 {
-    WISPFUN_DEBUG("c150_f74");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3685,17 +3685,17 @@ PACKET_HANDLER(DisplayDeath)
 
     owner->SetAnimation(group, 0, 5, 1, false, false);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenChat)
 {
-    WISPFUN_DEBUG("c150_f75");
+    DEBUG_TRACE_FUNCTION;
     uchar newbuf[4] = { 0xf0, 0x00, 0x04, 0xff };
     g_Orion.Send(newbuf, 4);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DisplayClilocString)
 {
-    WISPFUN_DEBUG("c150_f76");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3756,10 +3756,10 @@ PACKET_HANDLER(DisplayClilocString)
         g_Orion.CreateUnicodeTextMessage(TT_OBJECT, serial, (uchar)font, color, message);
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(MegaCliloc)
 {
-    WISPFUN_DEBUG("c150_f77");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3909,10 +3909,10 @@ PACKET_HANDLER(MegaCliloc)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Damage)
 {
-    WISPFUN_DEBUG("c150_f78");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -3953,10 +3953,10 @@ PACKET_HANDLER(Damage)
         text->Timer = g_Ticks + DAMAGE_TEXT_NORMAL_DELAY;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(BuffDebuff)
 {
-    WISPFUN_DEBUG("c150_f79");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -4119,10 +4119,10 @@ PACKET_HANDLER(BuffDebuff)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(SecureTrading)
 {
-    WISPFUN_DEBUG("c150_f80");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -4179,10 +4179,10 @@ PACKET_HANDLER(SecureTrading)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(TextEntryDialog)
 {
-    WISPFUN_DEBUG("c150_f81");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -4208,10 +4208,10 @@ PACKET_HANDLER(TextEntryDialog)
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenMenu)
 {
-    WISPFUN_DEBUG("c150_f82");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -4250,7 +4250,7 @@ PACKET_HANDLER(OpenMenu)
             nameLen = ReadUInt8();
             name = ReadString(nameLen);
 
-            WISP_GEOMETRY::CSize size = g_Orion.GetStaticArtDimension(graphic);
+            Wisp::CSize size = g_Orion.GetStaticArtDimension(graphic);
 
             if (size.Width && size.Height)
             {
@@ -4328,10 +4328,10 @@ PACKET_HANDLER(OpenMenu)
         g_GumpManager.AddGump(gump);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 {
-    WISPFUN_DEBUG("c150_f83");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, (int)list.size())
     {
         HTMLGumpDataInfo &data = list[i];
@@ -4396,10 +4396,10 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 
     list.clear();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenGump)
 {
-    WISPFUN_DEBUG("c150_f84");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -4430,9 +4430,9 @@ PACKET_HANDLER(OpenGump)
     ushort commandsLength = ReadUInt16BE();
     string commands = ReadString(commandsLength);
 
-    WISP_FILE::CTextFileParser parser({}, " ", "", "{}");
-    WISP_FILE::CTextFileParser cmdParser({}, " ", "", "");
-    WISP_FILE::CTextFileParser tilepicGraphicParser({}, ",", "", "");
+    Wisp::CTextFileParser parser({}, " ", "", "{}");
+    Wisp::CTextFileParser cmdParser({}, " ", "", "");
+    Wisp::CTextFileParser tilepicGraphicParser({}, ",", "", "");
 
     STRING_LIST commandList = parser.GetTokens(commands.c_str());
     CBaseGUI *lastGumpObject = NULL;
@@ -4752,7 +4752,7 @@ PACKET_HANDLER(OpenGump)
 
                 if (listSize >= 5 && m_ClientVersion >= CV_305D)
                 {
-                    WISP_FILE::CTextFileParser gumppicParser({}, "=", "", "");
+                    Wisp::CTextFileParser gumppicParser({}, "=", "", "");
                     STRING_LIST hueList = gumppicParser.GetTokens(list[4].c_str());
 
                     if (hueList.size() > 1)
@@ -4894,10 +4894,10 @@ PACKET_HANDLER(OpenGump)
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenCompressedGump)
 {
-    WISPFUN_DEBUG("c150_f85");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -4999,15 +4999,15 @@ PACKET_HANDLER(OpenCompressedGump)
 
     OnPacket();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(DyeData)
 {
-    WISPFUN_DEBUG("c150_f86");
+    DEBUG_TRACE_FUNCTION;
     uint serial = ReadUInt32BE();
     Move(2);
     ushort graphic = ReadUInt16BE();
 
-    WISP_GEOMETRY::CSize gumpSize = g_Orion.GetGumpDimension(0x0906);
+    Wisp::CSize gumpSize = g_Orion.GetGumpDimension(0x0906);
 
     int x = (WORD)((g_OrionWindow.GetSize().Width / 2) - (gumpSize.Width / 2));
     int y = (WORD)((g_OrionWindow.GetSize().Height / 2) - (gumpSize.Height / 2));
@@ -5016,10 +5016,10 @@ PACKET_HANDLER(DyeData)
 
     g_GumpManager.AddGump(gump);
 }
-//---------------------------------------------------------------------------
+
 PACKET_HANDLER(DisplayMap)
 {
-    WISPFUN_DEBUG("c150_f87");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5060,10 +5060,10 @@ PACKET_HANDLER(DisplayMap)
     if (obj != NULL)
         obj->Opened = true;
 }
-//---------------------------------------------------------------------------
+
 PACKET_HANDLER(MapData)
 {
-    WISPFUN_DEBUG("c150_f88");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5116,10 +5116,10 @@ PACKET_HANDLER(MapData)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(TipWindow)
 {
-    WISPFUN_DEBUG("c150_f89");
+    DEBUG_TRACE_FUNCTION;
     uchar flag = ReadUInt8();
 
     if (flag != 1) //1 - ignore
@@ -5143,10 +5143,10 @@ PACKET_HANDLER(TipWindow)
         g_GumpManager.AddGump(gump);
     }
 }
-//---------------------------------------------------------------------------
+
 PACKET_HANDLER(CharacterProfile)
 {
-    WISPFUN_DEBUG("c150_f90");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5161,10 +5161,10 @@ PACKET_HANDLER(CharacterProfile)
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(BulletinBoardData)
 {
-    WISPFUN_DEBUG("c150_f91");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5306,10 +5306,10 @@ PACKET_HANDLER(BulletinBoardData)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenBook) // 0x93
 {
-    WISPFUN_DEBUG("c150_f92");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5326,10 +5326,10 @@ PACKET_HANDLER(OpenBook) // 0x93
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OpenBookNew) // 0xD4
 {
-    WISPFUN_DEBUG("c150_f93");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5352,10 +5352,10 @@ PACKET_HANDLER(OpenBookNew) // 0xD4
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(BookData)
 {
-    WISPFUN_DEBUG("c150_f94");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5395,10 +5395,10 @@ PACKET_HANDLER(BookData)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(BuyList)
 {
-    WISPFUN_DEBUG("c150_f95");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5503,10 +5503,10 @@ PACKET_HANDLER(BuyList)
     else
         LOG("Unknown layer for buy container!!!\n");
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(SellList)
 {
-    WISPFUN_DEBUG("c150_f96");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -5572,26 +5572,26 @@ PACKET_HANDLER(SellList)
 
     g_GumpManager.AddGump(gump);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(BuyReply)
 {
-    WISPFUN_DEBUG("c150_f97");
+    DEBUG_TRACE_FUNCTION;
     uint serial = ReadUInt32BE();
     uchar flag = ReadUInt8();
 
     if (!flag) //Close shop gump
         g_GumpManager.CloseGump(serial, 0, GT_SHOP);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Logout)
 {
-    WISPFUN_DEBUG("c150_f98");
+    DEBUG_TRACE_FUNCTION;
     g_Orion.LogOut();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OPLInfo)
 {
-    WISPFUN_DEBUG("c150_f99");
+    DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled)
     {
         uint serial = ReadUInt32BE();
@@ -5601,10 +5601,10 @@ PACKET_HANDLER(OPLInfo)
             AddMegaClilocRequest(serial);
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(CustomHouse)
 {
-    WISPFUN_DEBUG("c150_f100");
+    DEBUG_TRACE_FUNCTION;
     bool compressed = ReadUInt8() == 0x03;
     bool enableResponse = ReadUInt8() == 0x01;
     uint serial = ReadUInt32BE();
@@ -5664,7 +5664,7 @@ PACKET_HANDLER(CustomHouse)
             continue;
         }
 
-        WISP_DATASTREAM::CDataReader tempReader(static_cast<puchar>(&decompressedBytes[0]), dLen);
+        Wisp::CDataReader tempReader(static_cast<puchar>(&decompressedBytes[0]), dLen);
         Move(cLen);
 
         ushort id = 0;
@@ -5760,10 +5760,10 @@ PACKET_HANDLER(CustomHouse)
     if (enableResponse)
         CPacketCustomHouseResponse().Send();
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(OrionMessages)
 {
-    WISPFUN_DEBUG("c150_f101");
+    DEBUG_TRACE_FUNCTION;
     ushort command = ReadUInt16BE();
     uchar type = command >> 12;
     command &= 0x0FFF;
@@ -6087,10 +6087,10 @@ PACKET_HANDLER(OrionMessages)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(PacketsList)
 {
-    WISPFUN_DEBUG("c150_f102");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -6109,20 +6109,20 @@ PACKET_HANDLER(PacketsList)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(MovePlayer)
 {
-    WISPFUN_DEBUG("c150_f103");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
     uchar direction = ReadUInt8();
     g_PathFinder.Walk(direction & 0x80, direction & 7);
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(Pathfinding)
 {
-    WISPFUN_DEBUG("c150_f104");
+    DEBUG_TRACE_FUNCTION;
     if (g_World == NULL)
         return;
 
@@ -6131,7 +6131,7 @@ PACKET_HANDLER(Pathfinding)
     ushort z = ReadInt16BE();
     g_PathFinder.WalkTo(x, y, z, 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPacketManager::SetCachedGumpCoords(uint id, int x, int y)
 {
     std::unordered_map<uint, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
@@ -6146,10 +6146,10 @@ void CPacketManager::SetCachedGumpCoords(uint id, int x, int y)
         m_GumpsCoordsCache[id] = GumpCoords{ x, y };
     }
 }
-//----------------------------------------------------------------------------------
+
 PACKET_HANDLER(BoatMoving)
 {
-    WISPFUN_DEBUG("c150_f105");
+    DEBUG_TRACE_FUNCTION;
 
     //disable BoatMoving for the 0.1.9.6 patch
     return;
@@ -6210,4 +6210,4 @@ PACKET_HANDLER(BoatMoving)
             1);
     }
 }
-//----------------------------------------------------------------------------------
+

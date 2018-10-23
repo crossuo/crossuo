@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CRenderTextObject::CRenderTextObject()
     : CRenderObject(0, 0, 0, 0, 0)
 {
 }
-//---------------------------------------------------------------------------
+
 CRenderTextObject::~CRenderTextObject()
 {
-    WISPFUN_DEBUG("c172_f1");
+    DEBUG_TRACE_FUNCTION;
     UnlinkDraw();
 }
-//---------------------------------------------------------------------------
+
 void CRenderTextObject::UnlinkDraw()
 {
-    WISPFUN_DEBUG("c172_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_NextDraw != NULL)
         m_NextDraw->m_PrevDraw = m_PrevDraw;
 
@@ -34,10 +34,10 @@ void CRenderTextObject::UnlinkDraw()
     m_NextDraw = NULL;
     m_PrevDraw = NULL;
 }
-//---------------------------------------------------------------------------
+
 void CRenderTextObject::ToTop()
 {
-    WISPFUN_DEBUG("c172_f3");
+    DEBUG_TRACE_FUNCTION;
     CRenderTextObject *obj = this;
 
     while (obj != NULL)
@@ -51,4 +51,4 @@ void CRenderTextObject::ToTop()
     CTextRenderer *tr = (CTextRenderer *)obj;
     tr->ToTop(this);
 }
-//----------------------------------------------------------------------------------
+

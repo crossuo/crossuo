@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef SHADERDATA_H
 #define SHADERDATA_H
-//---------------------------------------------------------------------------
+
 static const char *g_Vert_ShaderData =
     "varying vec3 l;\r\n"
     "varying vec3 n;\r\n"
@@ -25,7 +25,7 @@ static const char *g_Vert_ShaderData =
     "	gl_TexCoord[0] = gl_MultiTexCoord0;\r\n"
     "	gl_FrontColor = gl_Color;\r\n"
     "}";
-//---------------------------------------------------------------------------
+
 static const char *g_Frag_DeathShaderData =
     "varying vec3 l;\r\n"
     "varying vec3 n;\r\n"
@@ -48,7 +48,7 @@ static const char *g_Frag_DeathShaderData =
     "	}\r\n"
     "	gl_FragColor = textureColor;\r\n"
     "}";
-//---------------------------------------------------------------------------
+
 static const char *g_Frag_LightShaderData =
     "uniform sampler2D usedTexture;\r\n"
     "uniform int drawMode;\r\n"
@@ -64,7 +64,7 @@ static const char *g_Frag_LightShaderData =
     "	else\r\n"
     "		gl_FragColor = textureColor;\r\n"
     "}";
-//---------------------------------------------------------------------------
+
 static const char *g_Frag_FontShaderData =
     "uniform sampler2D usedTexture;\r\n"
     "uniform int drawMode;\r\n"
@@ -89,7 +89,7 @@ static const char *g_Frag_FontShaderData =
     "	else\r\n"
     "		gl_FragColor = textureColor * gl_Color;\r\n"
     "}";
-//---------------------------------------------------------------------------
+
 static const char *g_Frag_ColorizerShaderData =
     "varying vec3 l;\r\n"
     "varying vec3 n;\r\n"
@@ -142,5 +142,5 @@ static const char *g_Frag_ColorizerShaderData =
     "	else\r\n"
     "		gl_FragColor = textureColor * gl_Color;\r\n"
     "}";
-//---------------------------------------------------------------------------
+
 #endif

@@ -8,18 +8,18 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGameEffect::~CGameEffect()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать эффект
 @param [__in] mode Режим рисования. true - рисование, false - выбор объектов
@@ -30,7 +30,7 @@ CGameEffect::~CGameEffect()
 */
 void CGameEffect::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c16_f1");
+    DEBUG_TRACE_FUNCTION;
 #if UO_DEBUG_INFO != 0
     g_RenderedObjectsCountInGameWindow++;
 #endif
@@ -63,10 +63,10 @@ void CGameEffect::Draw(int x, int y)
 
     RemoveRenderMode();
 }
-//----------------------------------------------------------------------------------
+
 void CGameEffect::Update(CGameObject *parent)
 {
-    WISPFUN_DEBUG("c16_f2");
+    DEBUG_TRACE_FUNCTION;
     if (EffectType != EF_MOVING)
     {
         if (Duration < g_Ticks)
@@ -103,14 +103,14 @@ void CGameEffect::Update(CGameObject *parent)
         CalculateCurrentGraphic();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Вычислить текущий индекс картинки
 @return Индекс картинки
 */
 ushort CGameEffect::CalculateCurrentGraphic()
 {
-    WISPFUN_DEBUG("c16_f3");
+    DEBUG_TRACE_FUNCTION;
     uintptr_t addressAnimData = (uintptr_t)g_FileManager.m_AnimdataMul.Start;
 
     if (addressAnimData)
@@ -130,24 +130,24 @@ ushort CGameEffect::CalculateCurrentGraphic()
 
     return Graphic + Increment;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить текущий индекс картинки
 @return Индекс картинки
 */
 ushort CGameEffect::GetCurrentGraphic()
 {
-    WISPFUN_DEBUG("c16_f4");
+    DEBUG_TRACE_FUNCTION;
     return Graphic + Increment;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Применение режима отображения
 @return 
 */
 void CGameEffect::ApplyRenderMode()
 {
-    WISPFUN_DEBUG("c16_f5");
+    DEBUG_TRACE_FUNCTION;
     switch (RenderMode)
     {
         case 1: //ok
@@ -186,14 +186,14 @@ void CGameEffect::ApplyRenderMode()
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отмена режима отображения
 @return 
 */
 void CGameEffect::RemoveRenderMode()
 {
-    WISPFUN_DEBUG("c16_f6");
+    DEBUG_TRACE_FUNCTION;
     switch (RenderMode)
     {
         case 1: //ok
@@ -223,4 +223,3 @@ void CGameEffect::RemoveRenderMode()
             break;
     }
 }
-//---------------------------------------------------------------------------

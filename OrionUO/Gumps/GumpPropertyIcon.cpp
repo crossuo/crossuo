@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpPropertyIcon::CGumpPropertyIcon(int x, int y)
     : CGump(GT_PROPERTY_ICON, 0, x, y)
 {
@@ -19,11 +19,11 @@ CGumpPropertyIcon::CGumpPropertyIcon(int x, int y)
     int width = 0;
     g_ToolTip.CreateTextTexture(m_Texture, m_Text, width, 300);
 }
-//----------------------------------------------------------------------------------
+
 CGumpPropertyIcon::~CGumpPropertyIcon()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPropertyIcon::SetTextW(const wstring &val)
 {
     m_Text = val;
@@ -36,7 +36,7 @@ void CGumpPropertyIcon::SetTextW(const wstring &val)
     Object = NULL;
     WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPropertyIcon::PrepareContent()
 {
     if (g_ConfigManager.GetItemPropertiesMode() == OPM_AT_ICON && Object != NULL &&
@@ -47,7 +47,7 @@ void CGumpPropertyIcon::PrepareContent()
         WantUpdateContent = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPropertyIcon::UpdateContent()
 {
     Clear();
@@ -87,19 +87,19 @@ void CGumpPropertyIcon::UpdateContent()
     else if (mode == OPM_SINGLE_CLICK)
         Add(new CGUIGumppic(0x00EC, 0, 0));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPropertyIcon::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c126_f13");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPI_LOCK_MOVING)
         LockMoving = !LockMoving;
     else if (serial == ID_GPI_MINIMIZE)
         g_ConfigManager.SetItemPropertiesMode(OPM_FOLLOW_MOUSE);
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpPropertyIcon::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c126_f14");
+    DEBUG_TRACE_FUNCTION;
 
     uchar mode = g_ConfigManager.GetItemPropertiesMode() + 1;
 
@@ -110,4 +110,4 @@ bool CGumpPropertyIcon::OnLeftMouseButtonDoubleClick()
 
     return true;
 }
-//----------------------------------------------------------------------------------
+

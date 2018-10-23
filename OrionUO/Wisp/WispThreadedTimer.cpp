@@ -1,14 +1,14 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_events.h>
 
-namespace WISP_THREADED_TIMER
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CThreadedTimer::CThreadedTimer(uint id, HWND windowHandle, bool waitForProcessMessage)
-    : WISP_THREAD::CThread()
+    : Wisp::CThread()
     , TimerID(id)
     , WindowHandle(windowHandle)
     , WaitForProcessMessage(waitForProcessMessage)
@@ -17,14 +17,14 @@ CThreadedTimer::CThreadedTimer(uint id, HWND windowHandle, bool waitForProcessMe
     EventID = SDL_RegisterEvents(1);
 #endif
 }
-//----------------------------------------------------------------------------------
+
 CThreadedTimer::~CThreadedTimer()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CThreadedTimer::OnExecute(uint nowTime)
 {
-    WISPFUN_DEBUG("c13_f1");
+    DEBUG_TRACE_FUNCTION;
     if (IsActive())
     {
 #if USE_WISP
@@ -43,13 +43,13 @@ void CThreadedTimer::OnExecute(uint nowTime)
 #endif
     }
 }
-//----------------------------------------------------------------------------------
+
 void CThreadedTimer::OnDestroy()
 {
-    WISPFUN_DEBUG("c13_f2");
-    if (WISP_WINDOW::g_WispWindow != NULL)
-        WISP_WINDOW::g_WispWindow->RemoveThreadedTimer(TimerID);
+    DEBUG_TRACE_FUNCTION;
+    if (Wisp::g_WispWindow != NULL)
+        Wisp::g_WispWindow->RemoveThreadedTimer(TimerID);
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_THREADED_TIMER
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

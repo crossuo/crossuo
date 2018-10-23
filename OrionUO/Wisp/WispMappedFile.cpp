@@ -1,26 +1,26 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "FileSystem.h"
 
-namespace WISP_FILE
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CMappedFile::CMappedFile()
-    : WISP_DATASTREAM::CDataReader()
+    : Wisp::CDataReader()
 {
 }
-//----------------------------------------------------------------------------------
+
 CMappedFile::~CMappedFile()
 {
     Unload();
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 bool CMappedFile::Load()
 {
-    WISPFUN_DEBUG("c7_f1");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
     Size = GetFileSize(m_File, nullptr);
     if (Size > 0)
@@ -58,10 +58,10 @@ bool CMappedFile::Load()
     return result;
 }
 #endif
-//----------------------------------------------------------------------------------
+
 bool CMappedFile::Load(const os_path &path)
 {
-    WISPFUN_DEBUG("c7_f2");
+    DEBUG_TRACE_FUNCTION;
     LOG("Mmaping  %s\n", CStringFromPath(path));
     bool result = false;
 
@@ -97,10 +97,10 @@ bool CMappedFile::Load(const os_path &path)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CMappedFile::Unload()
 {
-    //WISPFUN_DEBUG("c7_f4");
+    //DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     if (Start != nullptr)
         UnmapViewOfFile(Start);
@@ -123,6 +123,6 @@ void CMappedFile::Unload()
 
     SetData(nullptr, 0);
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_FILE
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

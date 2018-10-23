@@ -1,24 +1,24 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "FileSystem.h"
-//----------------------------------------------------------------------------------
-namespace WISP_LOGGER
+
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CLogger g_WispLogger;
 CLogger g_WispCrashLogger;
-//----------------------------------------------------------------------------------
+
 CLogger::CLogger()
 {
 }
-//----------------------------------------------------------------------------------
+
 CLogger::~CLogger()
 {
     Close();
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::Close()
 {
     if (m_File != nullptr)
@@ -28,7 +28,7 @@ void CLogger::Close()
         m_File = nullptr;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::Init(const os_path &filePath)
 {
     if (m_File != nullptr)
@@ -41,7 +41,7 @@ void CLogger::Init(const os_path &filePath)
 
     FileName = filePath;
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::Print(const char *format, ...)
 {
     if (m_File == nullptr)
@@ -53,7 +53,7 @@ void CLogger::Print(const char *format, ...)
     va_end(arg);
     fflush(m_File);
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::VPrint(const char *format, va_list ap)
 {
     if (m_File == nullptr)
@@ -62,7 +62,7 @@ void CLogger::VPrint(const char *format, va_list ap)
     vfprintf(m_File, format, ap);
     fflush(m_File);
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::Print(const wchar_t *format, ...)
 {
     if (m_File == nullptr)
@@ -74,7 +74,7 @@ void CLogger::Print(const wchar_t *format, ...)
     va_end(arg);
     fflush(m_File);
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::VPrint(const wchar_t *format, va_list ap)
 {
     if (m_File == nullptr)
@@ -83,7 +83,7 @@ void CLogger::VPrint(const wchar_t *format, va_list ap)
     vfwprintf(m_File, format, ap);
     fflush(m_File);
 }
-//----------------------------------------------------------------------------------
+
 void CLogger::Dump(uchar *buf, int size)
 {
     if (m_File == nullptr)
@@ -120,6 +120,6 @@ void CLogger::Dump(uchar *buf, int size)
 
     fflush(m_File);
 }
-//----------------------------------------------------------------------------------
-}; // namespace WISP_LOGGER
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+

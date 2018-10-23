@@ -1,24 +1,24 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//----------------------------------------------------------------------------------
+
 #include "WispConnection.h"
 #include "WispDefinitions.h"
 #include "WispPacketMessage.h"
 
-namespace WISP_NETWORK
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
+
 CConnection::CConnection()
 {
-    WISPFUN_DEBUG("c3_f1");
+    DEBUG_TRACE_FUNCTION;
 
     m_Socket = tcp_open();
     m_MessageParser = new CPacketMessage();
 }
-//----------------------------------------------------------------------------------
+
 CConnection::~CConnection()
 {
-    WISPFUN_DEBUG("c3_f2");
+    DEBUG_TRACE_FUNCTION;
     Disconnect();
 
     if (m_MessageParser != nullptr)
@@ -27,10 +27,10 @@ CConnection::~CConnection()
         m_MessageParser = nullptr;
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CConnection::Connect(const string &address, uint16_t port)
 {
-    WISPFUN_DEBUG("c3_f3");
+    DEBUG_TRACE_FUNCTION;
     if (Connected)
         return false;
 
@@ -49,10 +49,10 @@ bool CConnection::Connect(const string &address, uint16_t port)
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnection::Disconnect()
 {
-    WISPFUN_DEBUG("c3_f4");
+    DEBUG_TRACE_FUNCTION;
     if (Connected && m_Socket != nullptr)
     {
         tcp_close(m_Socket);
@@ -63,10 +63,10 @@ void CConnection::Disconnect()
         m_MessageParser->Clear();
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CConnection::ReadyRead()
 {
-    WISPFUN_DEBUG("c3_f5");
+    DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
         return false;
 
@@ -79,10 +79,10 @@ bool CConnection::ReadyRead()
 
     return (DataReady != 0);
 }
-//----------------------------------------------------------------------------------
+
 bool CConnection::Read(int maxSize)
 {
-    WISPFUN_DEBUG("c3_f6");
+    DEBUG_TRACE_FUNCTION;
     if (DataReady == -1)
     {
         LOG("CConnection::Read, m_DataReady=%i\n", DataReady);
@@ -109,10 +109,10 @@ bool CConnection::Read(int maxSize)
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 int CConnection::Send(puchar data, int size)
 {
-    WISPFUN_DEBUG("c3_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
         return 0;
 
@@ -120,10 +120,10 @@ int CConnection::Send(puchar data, int size)
     //LOG("CConnection::Send=>%i\n", sent);
     return sent;
 }
-//----------------------------------------------------------------------------------
+
 int CConnection::Send(const UCHAR_LIST &data)
 {
-    WISPFUN_DEBUG("c3_f8");
+    DEBUG_TRACE_FUNCTION;
     if (!data.size())
         return 0;
 
@@ -131,4 +131,4 @@ int CConnection::Send(const UCHAR_LIST &data)
     LOG("CConnection::Send=>%i\n", sent);
     return sent;
 }
-}; // namespace WISP_NETWORK
+}; // namespace Wisp

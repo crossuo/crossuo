@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIWORLDMAPTEXTURE_H
 #define GUIWORLDMAPTEXTURE_H
-//----------------------------------------------------------------------------------
+
 class CGUIWorldMapTexture : public CBaseGUI
 {
 public:
@@ -29,11 +29,10 @@ public:
     CGUIWorldMapTexture(int x, int y);
     virtual ~CGUIWorldMapTexture();
 
-    //virtual WISP_GEOMETRY::CSize GetSize() { return WISP_GEOMETRY::CSize(Width, Height); }
+    //virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
 
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

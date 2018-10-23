@@ -8,24 +8,24 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "GumpGeneric.h"
-//----------------------------------------------------------------------------------
+
 CGumpGeneric::CGumpGeneric(uint serial, short x, short y, uint id)
     : CGump(GT_GENERIC, serial, x, y)
 {
     Page = 1;
     ID = id;
 }
-//----------------------------------------------------------------------------------
+
 CGumpGeneric::~CGumpGeneric()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpGeneric::InitToolTip()
 {
-    WISPFUN_DEBUG("c128_f3");
+    DEBUG_TRACE_FUNCTION;
 
     if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsGUI())
     {
@@ -71,11 +71,11 @@ void CGumpGeneric::InitToolTip()
             g_ToolTip.Set(obj->ClilocID, "");
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpGeneric::AddText(
     int index, const wstring &text, CBaseGUI *start, bool backbroundCanBeColored)
 {
-    WISPFUN_DEBUG("c96_f1");
+    DEBUG_TRACE_FUNCTION;
     if (start == NULL)
         start = (CBaseGUI *)m_Items;
 
@@ -130,32 +130,32 @@ void CGumpGeneric::AddText(
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpGeneric::SendGumpResponse(int index)
 {
-    WISPFUN_DEBUG("c96_f2");
+    DEBUG_TRACE_FUNCTION;
     //Ответ на гамп
     CPacketGumpResponse(this, index).Send();
 
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpGeneric::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c96_f3");
+    DEBUG_TRACE_FUNCTION;
     SendGumpResponse(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpGeneric::GUMP_DIRECT_HTML_LINK_EVENT_C
 {
-    WISPFUN_DEBUG("c96_f4");
+    DEBUG_TRACE_FUNCTION;
     g_FontManager.GoToWebLink(link);
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c96_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
         return false;
 
@@ -173,18 +173,18 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 void CGumpGeneric::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c96_f6");
+    DEBUG_TRACE_FUNCTION;
     g_EntryPointer->Insert((wchar_t)wParam);
     WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpGeneric::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c96_f7");
+    DEBUG_TRACE_FUNCTION;
     if (wParam == VK_RETURN)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())

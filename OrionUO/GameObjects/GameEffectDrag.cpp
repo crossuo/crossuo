@@ -8,25 +8,25 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGameEffectDrag::CGameEffectDrag()
     : CGameEffect()
 {
 }
-//----------------------------------------------------------------------------------
+
 CGameEffectDrag::~CGameEffectDrag()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обновить эффект
 @return
 */
 void CGameEffectDrag::Update(CGameObject *parent)
 {
-    WISPFUN_DEBUG("c17_f1");
+    DEBUG_TRACE_FUNCTION;
     if (LastMoveTime > g_Ticks)
         return;
 
@@ -38,4 +38,4 @@ void CGameEffectDrag::Update(CGameObject *parent)
     if (Duration < g_Ticks)
         g_EffectManager.RemoveEffect(this);
 }
-//----------------------------------------------------------------------------------
+

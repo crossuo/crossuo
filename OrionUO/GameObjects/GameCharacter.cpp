@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include <SDL_timer.h>
-//----------------------------------------------------------------------------------
+
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)
     , Hits(0)
@@ -21,7 +21,7 @@ CGameCharacter::CGameCharacter(int serial)
 {
     NPC = true;
     NoDrawTile = false;
-    WISPFUN_DEBUG("c15_f1");
+    DEBUG_TRACE_FUNCTION;
 
     bool wantStatusRequest = (g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR) != NULL) ||
                              (g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM) != NULL) ||
@@ -39,10 +39,10 @@ CGameCharacter::CGameCharacter(int serial)
     if (wantStatusRequest)
         CPacketStatusRequest(Serial).Send();
 }
-//----------------------------------------------------------------------------------
+
 CGameCharacter::~CGameCharacter()
 {
-    WISPFUN_DEBUG("c15_f2");
+    DEBUG_TRACE_FUNCTION;
     //!Чистим память
     m_Steps.clear();
 
@@ -78,7 +78,7 @@ CGameCharacter::~CGameCharacter()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameCharacter::UpdateTextCoordinates()
 {
     CTextData *text = (CTextData *)m_TextControl->Last();
@@ -103,10 +103,10 @@ void CGameCharacter::UpdateTextCoordinates()
         text->RealDrawY = y - offset;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameCharacter::UpdateHitsTexture(uchar hits)
 {
-    WISPFUN_DEBUG("c15_f3");
+    DEBUG_TRACE_FUNCTION;
     if (HitsPercent != hits || m_HitsTexture.Empty())
     {
         HitsPercent = hits;
@@ -126,14 +126,14 @@ void CGameCharacter::UpdateHitsTexture(uchar hits)
         g_FontManager.GenerateA(3, m_HitsTexture, hitsText, color);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Сидит ли персонаж
 @return Индекс объекта из таблицы, на котором он восседает
 */
 int CGameCharacter::IsSitting()
 {
-    WISPFUN_DEBUG("c15_f4");
+    DEBUG_TRACE_FUNCTION;
     int result = 0;
     ushort testGraphic = Graphic;
     bool human =
@@ -281,7 +281,7 @@ int CGameCharacter::IsSitting()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать персонажа
 @param [__in] mode Режим рисования. true - рисование, false - выбор объектов
@@ -292,7 +292,7 @@ int CGameCharacter::IsSitting()
 */
 void CGameCharacter::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c15_f5");
+    DEBUG_TRACE_FUNCTION;
     if (TimeToRandomFidget < g_Ticks)
         SetRandomFidgetAnimation();
 
@@ -311,14 +311,14 @@ void CGameCharacter::Draw(int x, int y)
 
     DrawEffects(x, y);
 }
-//----------------------------------------------------------------------------------
+
 void CGameCharacter::Select(int x, int y)
 {
-    WISPFUN_DEBUG("c15_f6");
+    DEBUG_TRACE_FUNCTION;
     if (g_AnimationManager.CharacterPixelsInXY(this, x, y))
         g_SelectedObject.Init(this);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обновить информацию о поле персонажа, обновление гампов
 @param [__in_opt] direction Направление персонажа
@@ -326,7 +326,7 @@ void CGameCharacter::Select(int x, int y)
 */
 void CGameCharacter::OnGraphicChange(int direction)
 {
-    WISPFUN_DEBUG("c15_f7");
+    DEBUG_TRACE_FUNCTION;
     //!Обновления пола и расы в зависимости от индекса картинки персонажа
     switch (Graphic)
     {
@@ -382,7 +382,7 @@ void CGameCharacter::OnGraphicChange(int direction)
             CPacketStatusRequest(Serial).Send();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Установка анимации от сервера
 @param [__in] id Группа анимаци
@@ -396,7 +396,7 @@ void CGameCharacter::OnGraphicChange(int direction)
 void CGameCharacter::SetAnimation(
     uchar id, uchar interval, uchar frameCount, uchar repeatCount, bool repeat, bool frameDirection)
 {
-    WISPFUN_DEBUG("c15_f10");
+    DEBUG_TRACE_FUNCTION;
     AnimationGroup = id;
     AnimIndex = 0;
     AnimationInterval = interval;
@@ -409,7 +409,7 @@ void CGameCharacter::SetAnimation(
     LastAnimationChangeTime = g_Ticks;
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Установка группы анимации
 @param [__in] val Новое значение группы анимации
@@ -417,7 +417,7 @@ void CGameCharacter::SetAnimation(
 */
 void CGameCharacter::ResetAnimationGroup(uchar val)
 {
-    WISPFUN_DEBUG("c15_f11");
+    DEBUG_TRACE_FUNCTION;
     AnimationFrameCount = 0;
     AnimationInterval = 0;
     AnimationRepeat = false;
@@ -427,14 +427,14 @@ void CGameCharacter::ResetAnimationGroup(uchar val)
 
     AnimationGroup = val;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Установка случайной анимации (при длительном простое)
 @return 
 */
 void CGameCharacter::SetRandomFidgetAnimation()
 {
-    WISPFUN_DEBUG("c15_f12");
+    DEBUG_TRACE_FUNCTION;
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
 
     if (FindLayer(OL_MOUNT) == NULL)
@@ -456,7 +456,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
         AnimationGroup = fidgetAnimTable[groupIndex - 1][RandomInt(3)];
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Скорректировать отношение анимаций
 @param [__in] group Группа анимации
@@ -465,7 +465,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
 */
 void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uchar &animation)
 {
-    WISPFUN_DEBUG("c15_f13");
+    DEBUG_TRACE_FUNCTION;
     const uchar animAssociateTable[PAG_ANIMATION_COUNT][3] = {
         { LAG_WALK, HAG_WALK, PAG_WALK_UNARMED },
         { LAG_WALK, HAG_WALK, PAG_WALK_ARMED },
@@ -507,7 +507,7 @@ void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uchar &animation)
     if (group && animation < PAG_ANIMATION_COUNT)
         animation = animAssociateTable[animation][group - 1];
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Скорректировать отношение индексов групп анимаций
 @param [__in] graphic Индекс картинки
@@ -517,7 +517,7 @@ void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uchar &animation)
 */
 void CGameCharacter::CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS group, uchar &animation)
 {
-    WISPFUN_DEBUG("c15_f14");
+    DEBUG_TRACE_FUNCTION;
     if (group == AG_LOW)
     {
         switch (animation)
@@ -573,7 +573,7 @@ void CGameCharacter::CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS grou
             animation = HAG_STAND;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Проверка на возможность изменения направления персонажа при движении в сидячем положении
 @param [__in] group Индекс группы анимации
@@ -581,7 +581,7 @@ void CGameCharacter::CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS grou
 */
 bool CGameCharacter::TestStepNoChangeDirection(uchar group)
 {
-    WISPFUN_DEBUG("c15_f15");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     switch (group)
@@ -608,7 +608,7 @@ bool CGameCharacter::TestStepNoChangeDirection(uchar group)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить текущую группу анимации
 @param [__in_opt] graphic Индекс картинки персонажа
@@ -616,7 +616,7 @@ bool CGameCharacter::TestStepNoChangeDirection(uchar group)
 */
 uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
 {
-    WISPFUN_DEBUG("c15_f16");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = checkGraphic;
 
     if (!graphic)
@@ -795,7 +795,7 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
     }
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
 {
     if (animGroup == 64 || animGroup == 65)
@@ -804,14 +804,14 @@ void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
         AnimationGroup = animGroup;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс картинки для вычисления картинки анимации
 @return Индекс картинки персонажа
 */
 ushort CGameCharacter::GetMountAnimation()
 {
-    WISPFUN_DEBUG("c15_f17");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = Graphic;
 
     switch (graphic)
@@ -829,7 +829,7 @@ ushort CGameCharacter::GetMountAnimation()
 
     return graphic;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 не подписанная функция
 @param [__inout] dir не подписанный параметр
@@ -838,7 +838,7 @@ ushort CGameCharacter::GetMountAnimation()
 */
 void CGameCharacter::UpdateAnimationInfo(BYTE &dir, bool canChange)
 {
-    WISPFUN_DEBUG("c15_f18");
+    DEBUG_TRACE_FUNCTION;
     dir = Direction & 7;
 
     if (!m_Steps.empty())
@@ -993,10 +993,10 @@ void CGameCharacter::UpdateAnimationInfo(BYTE &dir, bool canChange)
         OffsetZ = 0;
     }
 }
-//----------------------------------------------------------------------------------
+
 CGameItem *CGameCharacter::FindSecureTradeBox()
 {
-    WISPFUN_DEBUG("c20_f25");
+    DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CGameItem *)
     {
         if (obj->Graphic == 0x1E5E && !obj->Layer)
@@ -1005,9 +1005,9 @@ CGameItem *CGameCharacter::FindSecureTradeBox()
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 void CGameCharacter::SetDead(bool &dead)
 {
     m_Dead = dead;
 }
-//----------------------------------------------------------------------------------
+

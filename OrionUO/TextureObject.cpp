@@ -8,20 +8,20 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CTextureAnimationFrame::CTextureAnimationFrame()
     : CGLTexture()
     , CenterX(0)
     , CenterY(0)
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextureAnimationFrame::~CTextureAnimationFrame()
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextureAnimationDirection::CTextureAnimationDirection()
     : FrameCount(0)
     , BaseAddress(0)
@@ -36,16 +36,16 @@ CTextureAnimationDirection::CTextureAnimationDirection()
     , IsVerdata(false)
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextureAnimationDirection::~CTextureAnimationDirection()
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextureAnimationGroup::CTextureAnimationGroup()
 {
 }
-//----------------------------------------------------------------------------------
+
 CTextureAnimationGroup::~CTextureAnimationGroup()
 {
 }
-//----------------------------------------------------------------------------------
+

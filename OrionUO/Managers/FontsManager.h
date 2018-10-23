@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef FONTSMANAGER_H
 #define FONTSMANAGER_H
-//----------------------------------------------------------------------------------
+
 typedef struct MULTILINES_FONT_DATA
 {
     wchar_t item;
@@ -20,7 +20,7 @@ typedef struct MULTILINES_FONT_DATA
 
     MULTILINES_FONT_DATA *Next;
 } * PMULTILINES_FONT_DATA;
-//----------------------------------------------------------------------------------
+
 typedef struct MULTILINES_FONT_INFO
 {
     int Width;
@@ -44,7 +44,7 @@ typedef struct MULTILINES_FONT_INFO
         m_Next = NULL;
     }
 } * PMULTILINES_FONT_INFO;
-//----------------------------------------------------------------------------------
+
 //!Структура с данными о ссылке
 struct WEB_LINK
 {
@@ -54,7 +54,7 @@ struct WEB_LINK
     //!Ссылка
     string WebLink;
 };
-//----------------------------------------------------------------------------------
+
 //!Структура с данными о HTML-символе
 struct HTML_char
 {
@@ -76,7 +76,7 @@ struct HTML_char
     //!Индекс ссылки
     ushort LinkID;
 };
-//----------------------------------------------------------------------------------
+
 struct HTML_DATA_INFO
 {
     HTML_TAG_TYPE Tag;
@@ -86,11 +86,11 @@ struct HTML_DATA_INFO
     uint Color;
     ushort Link;
 };
-//----------------------------------------------------------------------------------
+
 typedef map<ushort, WEB_LINK> WEBLINK_MAP;
 typedef vector<HTML_char> HTMLCHAR_LIST;
 typedef vector<HTML_DATA_INFO> HTMLINFO_LIST;
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера шрифтов
 class CFontsManager
 {
@@ -291,7 +291,7 @@ public:
 	@param [__in] flags Эффекты текста
 	@return Координаты каретки
 	*/
-    WISP_GEOMETRY::CPoint2Di GetCaretPosA(
+    Wisp::CPoint2Di GetCaretPosA(
         uchar font, const string &str, int pos, int width, TEXT_ALIGN_TYPE align, ushort flags);
 
     /*!
@@ -458,7 +458,7 @@ public:
 	@param [__in] flags Эффекты текста
 	@return Координаты каретки
 	*/
-    WISP_GEOMETRY::CPoint2Di GetCaretPosW(
+    Wisp::CPoint2Di GetCaretPosW(
         uchar font, const wstring &str, int pos, int width, TEXT_ALIGN_TYPE align, ushort flags);
 
     /*!

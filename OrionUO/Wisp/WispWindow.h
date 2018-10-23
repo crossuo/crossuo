@@ -1,10 +1,9 @@
-﻿//----------------------------------------------------------------------------------
+﻿
 #pragma once
 #include <SDL_video.h>
 #include <SDL_events.h>
-namespace WISP_WINDOW
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
 class CWindow
 {
 public:
@@ -12,26 +11,26 @@ public:
     bool NoResize = false;
 
 protected:
-    WISP_GEOMETRY::CSize m_Size = WISP_GEOMETRY::CSize();
-    WISP_GEOMETRY::CSize m_MinSize = WISP_GEOMETRY::CSize(100, 100);
-    WISP_GEOMETRY::CSize m_MaxSize =
-        WISP_GEOMETRY::CSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    Wisp::CSize m_Size = Wisp::CSize();
+    Wisp::CSize m_MinSize = Wisp::CSize(100, 100);
+    Wisp::CSize m_MaxSize =
+        Wisp::CSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 
 public:
-    WISP_GEOMETRY::CSize GetSize() { return m_Size; };
-    void SetSize(const WISP_GEOMETRY::CSize &val);
+    Wisp::CSize GetSize() { return m_Size; };
+    void SetSize(const Wisp::CSize &val);
 
-    WISP_GEOMETRY::CSize GetMinSize() { return m_MinSize; };
-    void SetMinSize(const WISP_GEOMETRY::CSize &val);
+    Wisp::CSize GetMinSize() { return m_MinSize; };
+    void SetMinSize(const Wisp::CSize &val);
 
-    WISP_GEOMETRY::CSize GetMaxSize() { return m_MaxSize; };
-    void SetMaxSize(const WISP_GEOMETRY::CSize &val);
+    Wisp::CSize GetMaxSize() { return m_MaxSize; };
+    void SetMaxSize(const Wisp::CSize &val);
 
     // GetSystemMetrics -> SDL_GetCurrentDisplayMode
     SDL_Window *m_window = nullptr;
 
 private:
-    deque<WISP_THREADED_TIMER::CThreadedTimer *> m_ThreadedTimersStack;
+    deque<Wisp::CThreadedTimer *> m_ThreadedTimersStack;
 
 public:
     CWindow();
@@ -97,12 +96,12 @@ public:
         bool waitForProcessMessage = true,
         bool synchronizedDelay = false);
     void RemoveThreadedTimer(uint id);
-    WISP_THREADED_TIMER::CThreadedTimer *GetThreadedTimer(uint id);
+    Wisp::CThreadedTimer *GetThreadedTimer(uint id);
 
 protected:
     virtual bool OnCreate() { return true; }
     virtual void OnDestroy() {}
-    virtual void OnResize(WISP_GEOMETRY::CSize &newSize) {}
+    virtual void OnResize(Wisp::CSize &newSize) {}
     virtual void OnLeftMouseButtonDown() {}
     virtual void OnLeftMouseButtonUp() {}
     virtual bool OnLeftMouseButtonDoubleClick() { return false; }
@@ -120,7 +119,7 @@ protected:
     virtual void OnShow(bool show) {}
 
     virtual void OnTimer(uint id) {}
-    virtual void OnThreadedTimer(uint nowTime, WISP_THREADED_TIMER::CThreadedTimer *timer) {}
+    virtual void OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer) {}
     virtual void OnSetText(const LPARAM &lParam) {}
     virtual HRESULT OnRepaint(const WPARAM &wParam, const LPARAM &lParam)
     {
@@ -140,8 +139,7 @@ protected:
     virtual void OnKeyUp(const SDL_KeyboardEvent &ev) {}
 #endif
 };
-//----------------------------------------------------------------------------------
+
 extern CWindow *g_WispWindow;
-//----------------------------------------------------------------------------------
-};  // namespace WISP_WINDOW
-    //----------------------------------------------------------------------------------
+
+}; // namespace Wisp

@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 
 CColorManager g_ColorManager;
-//----------------------------------------------------------------------------------
+
 CColorManager::CColorManager()
     : m_HuesCount(0)
 {
 }
-//----------------------------------------------------------------------------------
+
 CColorManager::~CColorManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CColorManager::Init()
 {
-    WISPFUN_DEBUG("c137_f1");
+    DEBUG_TRACE_FUNCTION;
     intptr_t addr = (intptr_t)g_FileManager.m_HuesMul.Start;
     size_t size = g_FileManager.m_HuesMul.Size;
 
@@ -49,7 +49,7 @@ void CColorManager::Init()
             g_FileManager.m_RadarcolMul.Size);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Патч блока цветов из вердаты
 @param [__in] index Индекс в списке
@@ -58,7 +58,7 @@ void CColorManager::Init()
 */
 void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
 {
-    WISPFUN_DEBUG("c137_f2");
+    DEBUG_TRACE_FUNCTION;
     if (index < 0 || index >= m_HuesCount)
         return;
 
@@ -69,14 +69,14 @@ void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
             &group->Entries[i].ColorTable[0],
             sizeof(ushort[32]));
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Создание палитры цветов для шейдера
 @return
 */
 void CColorManager::CreateHuesPalette()
 {
-    WISPFUN_DEBUG("c137_f3");
+    DEBUG_TRACE_FUNCTION;
     m_HuesFloat.resize(m_HuesCount);
     int entryCount = m_HuesCount / 8;
 
@@ -99,7 +99,7 @@ void CColorManager::CreateHuesPalette()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отправка цветов в шейдер
 @param [__in] color Индекс цвета
@@ -107,7 +107,7 @@ void CColorManager::CreateHuesPalette()
 */
 void CColorManager::SendColorsToShader(ushort color)
 {
-    WISPFUN_DEBUG("c137_f4");
+    DEBUG_TRACE_FUNCTION;
     if (color != 0)
     {
         if (color & SPECTRAL_COLOR_FLAG)
@@ -126,7 +126,7 @@ void CColorManager::SendColorsToShader(ushort color)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Конвертирование цвета из 16 бит в 32 бит
 @param [__in] c 16-битный цвет
@@ -147,7 +147,7 @@ uint CColorManager::Color16To32(ushort c)
 		(((c & 0x1F) * 0xFF / 0x1F) << 16)
 	);*/
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Конвертирование цвета из 32 бит в 16 бит
 @param [__in] c 32-битный цвет
@@ -158,7 +158,7 @@ ushort CColorManager::Color32To16(int c)
     return (((c & 0xFF) * 32) / 256) | (((((c >> 16) & 0xff) * 32) / 256) << 10) |
            (((((c >> 8) & 0xff) * 32) / 256) << 5);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Перевод в серый
 @param [__in] c 16-битный цвет
@@ -168,7 +168,7 @@ ushort CColorManager::ConvertToGray(ushort c)
 {
     return ((c & 0x1F) * 299 + ((c >> 5) & 0x1F) * 587 + ((c >> 10) & 0x1F) * 114) / 1000;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить 16-битный цвет
 @param [__in] c Исходный цвет
@@ -177,7 +177,7 @@ ushort CColorManager::ConvertToGray(ushort c)
 */
 ushort CColorManager::GetColor16(ushort c, ushort color)
 {
-    WISPFUN_DEBUG("c137_f5");
+    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -189,7 +189,7 @@ ushort CColorManager::GetColor16(ushort c, ushort color)
 
     return c;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить 16-битный цвет для радара
 @param [__in] c Исходный 16-битный цвет
@@ -197,13 +197,13 @@ ushort CColorManager::GetColor16(ushort c, ushort color)
 */
 ushort CColorManager::GetRadarColorData(int c)
 {
-    WISPFUN_DEBUG("c137_f6");
+    DEBUG_TRACE_FUNCTION;
     if (c < m_Radarcol.size())
         return m_Radarcol[c];
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить 32-битный цвет без конвертирования входящего цвета
 @param [__in] c Исходный 16-битный цвет
@@ -212,7 +212,7 @@ ushort CColorManager::GetRadarColorData(int c)
 */
 uint CColorManager::GetPolygoneColor(ushort c, ushort color)
 {
-    WISPFUN_DEBUG("c137_f8");
+    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -224,7 +224,7 @@ uint CColorManager::GetPolygoneColor(ushort c, ushort color)
 
     return 0xFF010101; //Black
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить 32-битный цвет для Unicode-шрифтов
 @param [__in] c Исходный 16-битный цвет
@@ -233,7 +233,7 @@ uint CColorManager::GetPolygoneColor(ushort c, ushort color)
 */
 uint CColorManager::GetUnicodeFontColor(ushort &c, ushort color)
 {
-    WISPFUN_DEBUG("c137_f9");
+    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -245,7 +245,7 @@ uint CColorManager::GetUnicodeFontColor(ushort &c, ushort color)
 
     return Color16To32(c);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить 32-битный цвет
 @param [__in] c Исходный 16-битный цвет
@@ -254,7 +254,7 @@ uint CColorManager::GetUnicodeFontColor(ushort &c, ushort color)
 */
 uint CColorManager::GetColor(ushort &c, ushort color)
 {
-    WISPFUN_DEBUG("c137_f10");
+    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -266,7 +266,7 @@ uint CColorManager::GetColor(ushort &c, ushort color)
 
     return Color16To32(c);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить 32-битный цвет с учетом оттенков серого
 @param [__in] c Исходный 16-битный цвет
@@ -275,7 +275,7 @@ uint CColorManager::GetColor(ushort &c, ushort color)
 */
 uint CColorManager::GetPartialHueColor(ushort &c, ushort color)
 {
-    WISPFUN_DEBUG("c137_f11");
+    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -292,7 +292,7 @@ uint CColorManager::GetPartialHueColor(ushort &c, ushort color)
 
     return Color16To32(c);
 }
-//----------------------------------------------------------------------------------
+
 ushort CColorManager::FixColor(ushort color, ushort defaultColor)
 {
     ushort fixedColor = color & 0x3FFF;
@@ -311,4 +311,4 @@ ushort CColorManager::FixColor(ushort color, ushort defaultColor)
 
     return fixedColor;
 }
-//----------------------------------------------------------------------------------
+

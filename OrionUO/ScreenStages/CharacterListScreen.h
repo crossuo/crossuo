@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #pragma once
 #include <SDL_events.h>
-//----------------------------------------------------------------------------------
+
 class CCharacterListScreen : public CBaseScreen
 {
 private:
@@ -45,5 +45,5 @@ public:
     virtual void OnKeyDown(const SDL_KeyboardEvent &ev) override;
 #endif
 };
-//----------------------------------------------------------------------------------
+
 extern CCharacterListScreen g_CharacterListScreen;

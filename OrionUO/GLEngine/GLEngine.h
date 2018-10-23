@@ -6,14 +6,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GLENGINE_H
 #define GLENGINE_H
-//----------------------------------------------------------------------------------
-typedef deque<WISP_GEOMETRY::CRect> SCISSOR_LIST;
-//----------------------------------------------------------------------------------
+
+typedef deque<Wisp::CRect> SCISSOR_LIST;
+
 class CGLEngine;
-//----------------------------------------------------------------------------------
+
 typedef void (CGLEngine::*BIND_TEXTURE_16_FUNCTION)(CGLTexture &, int, int, pushort);
 typedef void (CGLEngine::*BIND_TEXTURE_32_FUNCTION)(CGLTexture &, int, int, puint);
 
@@ -27,7 +27,7 @@ typedef void (CGLEngine::*DRAW_TEXTURE_SITTING_FUNCTION)(
 typedef void (CGLEngine::*DRAW_TEXTURE_SHADOW_FUNCTION)(const CGLTexture &, int, int, bool);
 typedef void (CGLEngine::*DRAW_TEXTURE_STRETCHED_FUNCTION)(const CGLTexture &, int, int, int, int);
 typedef void (CGLEngine::*DRAW_TEXTURE_RESIZEPIC_FUNCTION)(CGLTexture **, int, int, int, int);
-//----------------------------------------------------------------------------------
+
 //Указатели на функции рисования, в соответствии с текущим контекстом устройства
 //Загрузка текстур 16 и 32 бит
 extern BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr;
@@ -56,7 +56,7 @@ extern DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr;
 
 //Нарисовать фон
 extern DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr;
-//----------------------------------------------------------------------------------
+
 #define g_GL_BindTexture16 (g_GL.*(g_GL_BindTexture16_Ptr))
 #define g_GL_BindTexture32 (g_GL.*(g_GL_BindTexture32_Ptr))
 
@@ -68,7 +68,7 @@ extern DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr;
 #define g_GL_DrawShadow (g_GL.*(g_GL_DrawShadow_Ptr))
 #define g_GL_DrawStretched (g_GL.*(g_GL_DrawStretched_Ptr))
 #define g_GL_DrawResizepic (g_GL.*(g_GL_DrawResizepic_Ptr))
-//----------------------------------------------------------------------------------
+
 class CGLEngine
 {
 public:
@@ -125,10 +125,10 @@ public:
 
     //Указать область рисования (ножницами, сохраняет мартицу)
     void PushScissor(int x, int y, int width, int height);
-    void PushScissor(const WISP_GEOMETRY::CPoint2Di &position, int width, int height);
-    void PushScissor(int x, int y, const WISP_GEOMETRY::CSize &size);
-    void PushScissor(const WISP_GEOMETRY::CPoint2Di &position, const WISP_GEOMETRY::CSize &size);
-    void PushScissor(const WISP_GEOMETRY::CRect &rect);
+    void PushScissor(const Wisp::CPoint2Di &position, int width, int height);
+    void PushScissor(int x, int y, const Wisp::CSize &size);
+    void PushScissor(const Wisp::CPoint2Di &position, const Wisp::CSize &size);
+    void PushScissor(const Wisp::CRect &rect);
 
     void PopScissor();
 
@@ -221,7 +221,7 @@ public:
     //Нарисовать фон
     void GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int height);
 };
-//---------------------------------------------------------------------------
+
 extern CGLEngine g_GL;
-//---------------------------------------------------------------------------
+
 #endif

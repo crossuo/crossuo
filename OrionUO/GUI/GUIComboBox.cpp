@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIComboBox::CGUIComboBox(
     int serial,
     ushort graphic,
@@ -29,7 +29,7 @@ CGUIComboBox::CGUIComboBox(
     , ShowMaximizedCenter(showMaximizedCenter)
     , OpenedWidth(width)
 {
-    WISPFUN_DEBUG("c49_f1");
+    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = false;
     m_ArrowX = 0;
     m_OffsetY = 0;
@@ -62,20 +62,20 @@ CGUIComboBox::CGUIComboBox(
             m_MinimizedArrowX = th->Width - 16;
     }
 }
-//----------------------------------------------------------------------------------
+
 CGUIComboBox::~CGUIComboBox()
 {
-    WISPFUN_DEBUG("c49_f2");
+    DEBUG_TRACE_FUNCTION;
     if (Text != NULL)
     {
         delete Text;
         Text = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUIComboBox::RecalculateWidth()
 {
-    WISPFUN_DEBUG("c49_f3");
+    DEBUG_TRACE_FUNCTION;
     if (!CompositeBackground)
     {
         OpenedWidth = 0;
@@ -99,24 +99,24 @@ void CGUIComboBox::RecalculateWidth()
         m_WorkWidth = OpenedWidth - 6;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUIComboBox::SetShowItemsCount(int val)
 {
-    WISPFUN_DEBUG("c49_f4");
+    DEBUG_TRACE_FUNCTION;
     m_WorkHeight = val * 15;
     m_ShowItemsCount = val;
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CSize CGUIComboBox::GetSize()
-{
-    WISPFUN_DEBUG("c49_f5");
 
-    return WISP_GEOMETRY::CSize(m_WorkWidth, m_WorkHeight);
+Wisp::CSize CGUIComboBox::GetSize()
+{
+    DEBUG_TRACE_FUNCTION;
+
+    return Wisp::CSize(m_WorkWidth, m_WorkHeight);
 }
-//----------------------------------------------------------------------------------
+
 void CGUIComboBox::PrepareTextures()
 {
-    WISPFUN_DEBUG("c49_f6");
+    DEBUG_TRACE_FUNCTION;
     if (CompositeBackground)
     {
         g_Orion.ExecuteGump(Graphic);
@@ -131,10 +131,10 @@ void CGUIComboBox::PrepareTextures()
         g_Orion.ExecuteGump(0x00FC);
     }
 }
-//----------------------------------------------------------------------------------
+
 CBaseGUI *CGUIComboBox::SkipToStart()
 {
-    WISPFUN_DEBUG("c49_f7");
+    DEBUG_TRACE_FUNCTION;
     CBaseGUI *start = (CBaseGUI *)m_Items;
 
     int index = 0;
@@ -155,10 +155,10 @@ CBaseGUI *CGUIComboBox::SkipToStart()
 
     return start;
 }
-//----------------------------------------------------------------------------------
+
 void CGUIComboBox::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c49_f8");
+    DEBUG_TRACE_FUNCTION;
     if (Text != NULL)
         Text->m_Texture.Draw(m_X + Text->GetX(), m_Y + Text->GetY() + TextOffsetY, checktrans);
 
@@ -307,10 +307,10 @@ void CGUIComboBox::Draw(bool checktrans)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIComboBox::Select()
 {
-    WISPFUN_DEBUG("c49_f9");
+    DEBUG_TRACE_FUNCTION;
     ListingDirection = 0;
     bool select = false;
 
@@ -353,10 +353,10 @@ bool CGUIComboBox::Select()
 
     return select;
 }
-//----------------------------------------------------------------------------------
+
 CBaseGUI *CGUIComboBox::SelectedItem()
 {
-    WISPFUN_DEBUG("c49_f10");
+    DEBUG_TRACE_FUNCTION;
     CBaseGUI *select = this;
 
     if (g_PressedObject.LeftObject == this) //maximized
@@ -398,10 +398,10 @@ CBaseGUI *CGUIComboBox::SelectedItem()
 
     return select;
 }
-//----------------------------------------------------------------------------------
+
 int CGUIComboBox::IsSelectedItem()
 {
-    WISPFUN_DEBUG("c49_f11");
+    DEBUG_TRACE_FUNCTION;
     int select = -1;
 
     if (g_PressedObject.LeftObject == this) //maximized
@@ -429,4 +429,4 @@ int CGUIComboBox::IsSelectedItem()
 
     return select;
 }
-//----------------------------------------------------------------------------------
+

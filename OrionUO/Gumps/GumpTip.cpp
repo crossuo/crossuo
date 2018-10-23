@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpTip::CGumpTip(uint serial, short x, short y, string str, bool updates)
     : CGumpBaseScroll(GT_TIP, serial, 0x0820, 250, x, y, true)
     , Updates(updates)
 {
-    WISPFUN_DEBUG("c131_f1");
+    DEBUG_TRACE_FUNCTION;
     Add(new CGUIPage(1));
     Add(new CGUIGumppic((Updates ? 0x09D3 : 0x09CB), 0, 0));
 
@@ -45,14 +45,14 @@ CGumpTip::CGumpTip(uint serial, short x, short y, string str, bool updates)
     text->CreateTextureA(6, str, 200);
     m_HTMLGump->CalculateDataSize();
 }
-//----------------------------------------------------------------------------------
+
 CGumpTip::~CGumpTip()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTip::UpdateHeight()
 {
-    WISPFUN_DEBUG("c131_f2");
+    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     if (!Updates)
@@ -62,10 +62,10 @@ void CGumpTip::UpdateHeight()
         m_ButtonNextGump->SetY(Height);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTip::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c131_f3");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE)
     {
         Minimized = true;
@@ -77,10 +77,10 @@ void CGumpTip::GUMP_BUTTON_EVENT_C
     else if (serial == ID_GT_NEXT_GUMP)
         SendTipRequest(1);
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpTip::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c131_f4");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;
@@ -92,14 +92,14 @@ bool CGumpTip::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpTip::SendTipRequest(uchar flag)
 {
-    WISPFUN_DEBUG("c131_f5");
+    DEBUG_TRACE_FUNCTION;
     //Отправляем запрос диалога Tip/Updates
     CPacketTipRequest((ushort)Serial, flag).Send();
 
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-//----------------------------------------------------------------------------------
+

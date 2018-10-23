@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CIntlocManager g_IntlocManager;
-//----------------------------------------------------------------------------------
+
 //--------------------------------------CIntloc-------------------------------------
-//----------------------------------------------------------------------------------
+
 CIntloc::CIntloc(int fileIndex, const string &lang)
     : CBaseQueueItem()
 {
-    WISPFUN_DEBUG("c135_f1");
+    DEBUG_TRACE_FUNCTION;
     Loaded = false;
     Language = lang;
     FileIndex = fileIndex;
@@ -60,15 +60,15 @@ CIntloc::CIntloc(int fileIndex, const string &lang)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CIntloc::~CIntloc()
 {
-    WISPFUN_DEBUG("c135_f2");
+    DEBUG_TRACE_FUNCTION;
     m_File.Unload();
 
     m_Strings.clear();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить ASCII строку по id (и загрузить при необходимости)
 @param [__in] id Индекс клилока
@@ -77,7 +77,7 @@ CIntloc::~CIntloc()
 */
 wstring CIntloc::Get(int id, bool toCamelCase)
 {
-    WISPFUN_DEBUG("c135_f4");
+    DEBUG_TRACE_FUNCTION;
     if (id < m_Strings.size())
     {
         if (toCamelCase)
@@ -88,21 +88,21 @@ wstring CIntloc::Get(int id, bool toCamelCase)
 
     return L"";
 }
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CIntlocManager---------------------------------
-//----------------------------------------------------------------------------------
+
 CIntlocManager::CIntlocManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIntlocManager::~CIntlocManager()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
 {
-    WISPFUN_DEBUG("c136_f1");
+    DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CIntloc *)
     {
         if (obj->Language == lang && obj->FileIndex == fileIndex)
@@ -132,10 +132,10 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 wstring CIntlocManager::Intloc(const string &lang, uint clilocID, bool isNewCliloc)
 {
-    WISPFUN_DEBUG("c136_f1");
+    DEBUG_TRACE_FUNCTION;
     string language = ToLowerA(lang).c_str();
 
     if (!language.length())
@@ -160,4 +160,4 @@ wstring CIntlocManager::Intloc(const string &lang, uint clilocID, bool isNewClil
 
     return str;
 }
-//----------------------------------------------------------------------------------
+

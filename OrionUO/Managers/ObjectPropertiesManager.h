@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef OBJECTPROPERTIESMANAGER_H
 #define OBJECTPROPERTIESMANAGER_H
-//----------------------------------------------------------------------------------
+
 class CObjectProperty
 {
 public:
@@ -25,9 +25,9 @@ public:
 
     wstring CreateTextData(bool extended);
 };
-//----------------------------------------------------------------------------------
+
 typedef map<uint, CObjectProperty> OBJECT_PROPERTIES_MAP;
-//----------------------------------------------------------------------------------
+
 class CObjectPropertiesManager
 {
     uint Timer = 0;
@@ -51,8 +51,7 @@ public:
 
     void Add(int serial, const CObjectProperty &objectProperty);
 };
-//----------------------------------------------------------------------------------
+
 extern CObjectPropertiesManager g_ObjectPropertiesManager;
-//----------------------------------------------------------------------------------
+
 #endif //OBJECTPROPERTIESMANAGER_H
-//----------------------------------------------------------------------------------

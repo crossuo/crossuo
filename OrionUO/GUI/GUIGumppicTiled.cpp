@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIGumppicTiled::CGUIGumppicTiled(ushort graphic, int x, int y, int width, int height)
     : CGUIDrawObject(GOT_GUMPPICTILED, 0, graphic, 0, x, y)
     , Width(width)
     , Height(height)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIGumppicTiled::~CGUIGumppicTiled()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIGumppicTiled::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c57_f1");
+    DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
     if (th != NULL)
@@ -34,10 +34,10 @@ void CGUIGumppicTiled::Draw(bool checktrans)
         th->Draw(m_X, m_Y, Width, Height, checktrans);
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGUIGumppicTiled::Select()
 {
-    WISPFUN_DEBUG("c57_f2");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -86,4 +86,4 @@ bool CGUIGumppicTiled::Select()
 
     return false;
 }
-//----------------------------------------------------------------------------------
+

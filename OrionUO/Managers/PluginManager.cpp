@@ -8,7 +8,7 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #if defined(ORION_LINUX)
 #include <stdint.h>
@@ -16,22 +16,22 @@
 #else
 #include <Windows.h>
 #endif
-//----------------------------------------------------------------------------------
+
 CPluginManager g_PluginManager;
-//----------------------------------------------------------------------------------
+
 bool CDECL PluginRecvFunction(puchar buf, const int &size)
 {
-    WISPFUN_DEBUG("c_plgrcvfnc");
+    DEBUG_TRACE_FUNCTION;
     //SendMessage(g_OrionWindow.Handle, UOMSG_RECV, (WPARAM)buf, size);
 
     g_PacketManager.SavePluginReceivePacket(buf, size);
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 bool CDECL PluginSendFunction(puchar buf, const int &size)
 {
-    WISPFUN_DEBUG("c_plgsndfnc");
+    DEBUG_TRACE_FUNCTION;
     //SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)buf, size);
 
     uint ticks = g_Ticks;
@@ -60,14 +60,14 @@ bool CDECL PluginSendFunction(puchar buf, const int &size)
 
     return true;
 }
-//----------------------------------------------------------------------------------
+
 //--------------------------------------CPlugin-------------------------------------
-//----------------------------------------------------------------------------------
+
 CPlugin::CPlugin(uint flags)
     : CBaseQueueItem()
     , m_Flags(flags)
 {
-    WISPFUN_DEBUG("c151_f1");
+    DEBUG_TRACE_FUNCTION;
     m_PPS = new PLUGIN_INTERFACE();
     memset(m_PPS, 0, sizeof(PLUGIN_INTERFACE));
 
@@ -75,27 +75,27 @@ CPlugin::CPlugin(uint flags)
     m_PPS->ClientVersion = g_PacketManager.GetClientVersion();
     m_PPS->ClientFlags = (g_FileManager.UseVerdata ? 0x01 : 0);
 }
-//----------------------------------------------------------------------------------
+
 CPlugin::~CPlugin()
 {
-    WISPFUN_DEBUG("c151_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_PPS != NULL)
     {
         delete m_PPS;
         m_PPS = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CPluginManager---------------------------------
-//----------------------------------------------------------------------------------
+
 CPluginManager::CPluginManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 LRESULT CPluginManager::WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    WISPFUN_DEBUG("c152_f1");
+    DEBUG_TRACE_FUNCTION;
     LRESULT result = 0;
 
     QFOR(plugin, m_Items, CPlugin *)
@@ -112,10 +112,10 @@ LRESULT CPluginManager::WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lp
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 bool CPluginManager::PacketRecv(puchar buf, int size)
 {
-    WISPFUN_DEBUG("c152_f2");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     QFOR(plugin, m_Items, CPlugin *)
@@ -131,10 +131,10 @@ bool CPluginManager::PacketRecv(puchar buf, int size)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 bool CPluginManager::PacketSend(puchar buf, int size)
 {
-    WISPFUN_DEBUG("c152_f3");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     QFOR(plugin, m_Items, CPlugin *)
@@ -150,44 +150,44 @@ bool CPluginManager::PacketSend(puchar buf, int size)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CPluginManager::Disconnect()
 {
-    WISPFUN_DEBUG("c152_f4");
+    DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->m_PPS->OnDisconnect != NULL)
             plugin->m_PPS->OnDisconnect();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPluginManager::WorldDraw()
 {
-    WISPFUN_DEBUG("c152_f5");
+    DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldRender() && plugin->m_PPS->OnWorldDraw != NULL)
             plugin->m_PPS->OnWorldDraw();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPluginManager::SceneDraw()
 {
-    WISPFUN_DEBUG("c152_f6");
+    DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterSceneRender() && plugin->m_PPS->OnSceneDraw != NULL)
             plugin->m_PPS->OnSceneDraw();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPluginManager::WorldMapDraw()
 {
-    WISPFUN_DEBUG("c152_f7");
+    DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != NULL)
             plugin->m_PPS->OnWorldMapDraw();
     }
 }
-//----------------------------------------------------------------------------------
+

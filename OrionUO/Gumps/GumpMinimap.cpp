@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpMinimap::CGumpMinimap(short x, short y, bool minimized)
     : CGump(GT_MINIMAP, 0, x, y)
 {
-    WISPFUN_DEBUG("c102_f1");
+    DEBUG_TRACE_FUNCTION;
     Minimized = minimized;
     m_Locker.Serial = ID_GMM_LOCK_MOVING;
     GenerateMap();
 }
-//----------------------------------------------------------------------------------
+
 CGumpMinimap::~CGumpMinimap()
 {
-    WISPFUN_DEBUG("c102_f2");
+    DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMinimap::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c102_f3");
+    DEBUG_TRACE_FUNCTION;
     bool minimized = Minimized;
     Minimized = false;
 
@@ -36,70 +36,70 @@ void CGumpMinimap::CalculateGumpState()
 
     Minimized = minimized;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMinimap::GenerateMap()
 {
-    WISPFUN_DEBUG("c102_f4");
+    DEBUG_TRACE_FUNCTION;
 
-    /*const WISP_GEOMETRY::CPoint2Di foliageOffsetTable[17 * 3] =
+    /*const Wisp::CPoint2Di foliageOffsetTable[17 * 3] =
 	{
-		WISP_GEOMETRY::CPoint2Di(0, 0),
-		WISP_GEOMETRY::CPoint2Di(-2, 1),
-		WISP_GEOMETRY::CPoint2Di(-2, -2),
-		WISP_GEOMETRY::CPoint2Di(-1, -1),
-		WISP_GEOMETRY::CPoint2Di(-1, 0),
-		WISP_GEOMETRY::CPoint2Di(-1, 1),
-		WISP_GEOMETRY::CPoint2Di(-1, 2),
-		WISP_GEOMETRY::CPoint2Di(-1, -1),
-		WISP_GEOMETRY::CPoint2Di(0, 1),
-		WISP_GEOMETRY::CPoint2Di(0, 2),
-		WISP_GEOMETRY::CPoint2Di(0, -2),
-		WISP_GEOMETRY::CPoint2Di(1, -1),
-		WISP_GEOMETRY::CPoint2Di(1, 0),
-		WISP_GEOMETRY::CPoint2Di(1, 1),
-		WISP_GEOMETRY::CPoint2Di(1, -1),
-		WISP_GEOMETRY::CPoint2Di(2, 0),
-		WISP_GEOMETRY::CPoint2Di(2, 0),
+		Wisp::CPoint2Di(0, 0),
+		Wisp::CPoint2Di(-2, 1),
+		Wisp::CPoint2Di(-2, -2),
+		Wisp::CPoint2Di(-1, -1),
+		Wisp::CPoint2Di(-1, 0),
+		Wisp::CPoint2Di(-1, 1),
+		Wisp::CPoint2Di(-1, 2),
+		Wisp::CPoint2Di(-1, -1),
+		Wisp::CPoint2Di(0, 1),
+		Wisp::CPoint2Di(0, 2),
+		Wisp::CPoint2Di(0, -2),
+		Wisp::CPoint2Di(1, -1),
+		Wisp::CPoint2Di(1, 0),
+		Wisp::CPoint2Di(1, 1),
+		Wisp::CPoint2Di(1, -1),
+		Wisp::CPoint2Di(2, 0),
+		Wisp::CPoint2Di(2, 0),
 
-		WISP_GEOMETRY::CPoint2Di(0, -1),
-		WISP_GEOMETRY::CPoint2Di(-2, 0),
-		WISP_GEOMETRY::CPoint2Di(-2, -1),
-		WISP_GEOMETRY::CPoint2Di(-1, 0),
-		WISP_GEOMETRY::CPoint2Di(-1, 1),
-		WISP_GEOMETRY::CPoint2Di(-1, 2),
-		WISP_GEOMETRY::CPoint2Di(-1, -2),
-		WISP_GEOMETRY::CPoint2Di(0, -1),
-		WISP_GEOMETRY::CPoint2Di(0, 1),
-		WISP_GEOMETRY::CPoint2Di(0, 2),
-		WISP_GEOMETRY::CPoint2Di(0, -2),
-		WISP_GEOMETRY::CPoint2Di(1, -1),
-		WISP_GEOMETRY::CPoint2Di(1, 0),
-		WISP_GEOMETRY::CPoint2Di(1, 1),
-		WISP_GEOMETRY::CPoint2Di(1, 0),
-		WISP_GEOMETRY::CPoint2Di(2, 1),
-		WISP_GEOMETRY::CPoint2Di(2, 0),
+		Wisp::CPoint2Di(0, -1),
+		Wisp::CPoint2Di(-2, 0),
+		Wisp::CPoint2Di(-2, -1),
+		Wisp::CPoint2Di(-1, 0),
+		Wisp::CPoint2Di(-1, 1),
+		Wisp::CPoint2Di(-1, 2),
+		Wisp::CPoint2Di(-1, -2),
+		Wisp::CPoint2Di(0, -1),
+		Wisp::CPoint2Di(0, 1),
+		Wisp::CPoint2Di(0, 2),
+		Wisp::CPoint2Di(0, -2),
+		Wisp::CPoint2Di(1, -1),
+		Wisp::CPoint2Di(1, 0),
+		Wisp::CPoint2Di(1, 1),
+		Wisp::CPoint2Di(1, 0),
+		Wisp::CPoint2Di(2, 1),
+		Wisp::CPoint2Di(2, 0),
 
-		WISP_GEOMETRY::CPoint2Di(0, -1),
-		WISP_GEOMETRY::CPoint2Di(-2, 1),
-		WISP_GEOMETRY::CPoint2Di(-2, -2),
-		WISP_GEOMETRY::CPoint2Di(-1, -1),
-		WISP_GEOMETRY::CPoint2Di(-1, 0),
-		WISP_GEOMETRY::CPoint2Di(-1, 1),
-		WISP_GEOMETRY::CPoint2Di(-1, 2),
-		WISP_GEOMETRY::CPoint2Di(-1, -1),
-		WISP_GEOMETRY::CPoint2Di(0, 1),
-		WISP_GEOMETRY::CPoint2Di(0, -2),
-		WISP_GEOMETRY::CPoint2Di(1, -1),
-		WISP_GEOMETRY::CPoint2Di(1, 0),
-		WISP_GEOMETRY::CPoint2Di(1, 1),
-		WISP_GEOMETRY::CPoint2Di(1, 2),
-		WISP_GEOMETRY::CPoint2Di(1, -1),
-		WISP_GEOMETRY::CPoint2Di(2, 1),
-		WISP_GEOMETRY::CPoint2Di(2, 0)
+		Wisp::CPoint2Di(0, -1),
+		Wisp::CPoint2Di(-2, 1),
+		Wisp::CPoint2Di(-2, -2),
+		Wisp::CPoint2Di(-1, -1),
+		Wisp::CPoint2Di(-1, 0),
+		Wisp::CPoint2Di(-1, 1),
+		Wisp::CPoint2Di(-1, 2),
+		Wisp::CPoint2Di(-1, -1),
+		Wisp::CPoint2Di(0, 1),
+		Wisp::CPoint2Di(0, -2),
+		Wisp::CPoint2Di(1, -1),
+		Wisp::CPoint2Di(1, 0),
+		Wisp::CPoint2Di(1, 1),
+		Wisp::CPoint2Di(1, 2),
+		Wisp::CPoint2Di(1, -1),
+		Wisp::CPoint2Di(2, 1),
+		Wisp::CPoint2Di(2, 0)
 	};*/
 
-    const WISP_GEOMETRY::CPoint2Di originalOffsetTable[2] = { WISP_GEOMETRY::CPoint2Di(0, 0),
-                                                              WISP_GEOMETRY::CPoint2Di(0, 1) };
+    const Wisp::CPoint2Di originalOffsetTable[2] = { Wisp::CPoint2Di(0, 0),
+                                                              Wisp::CPoint2Di(0, 1) };
 
     if (g_Player != NULL)
     {
@@ -194,7 +194,7 @@ void CGumpMinimap::GenerateMap()
                         color = g_Orion.GetLandSeasonGraphic(color);
 
                     int tableSize = 2;
-                    const WISP_GEOMETRY::CPoint2Di *table = &originalOffsetTable[0];
+                    const Wisp::CPoint2Di *table = &originalOffsetTable[0];
 
                     /*if (color > 0x4000 && ::IsFoliage(g_Orion.GetStaticFlags(color - 0x4000)))
 					{
@@ -214,7 +214,7 @@ void CGumpMinimap::GenerateMap()
 
     WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMinimap::CreatePixels(
     USHORT_LIST &data,
     int color,
@@ -222,7 +222,7 @@ void CGumpMinimap::CreatePixels(
     int y,
     int width,
     int height,
-    const WISP_GEOMETRY::CPoint2Di *table,
+    const Wisp::CPoint2Di *table,
     int count)
 {
     int px = x;
@@ -248,10 +248,10 @@ void CGumpMinimap::CreatePixels(
             data[block] = color;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMinimap::PrepareContent()
 {
-    WISPFUN_DEBUG("c102_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_Player->GetX() != LastX || g_Player->GetY() != LastY || m_Texture.Texture == 0)
         GenerateMap();
     else if (!m_Count || m_Count == 6 || WantRedraw)
@@ -268,10 +268,10 @@ void CGumpMinimap::PrepareContent()
     if (m_Count > 12)
         m_Count = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMinimap::UpdateContent()
 {
-    WISPFUN_DEBUG("c102_f6");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = 0x1393 - (int)Minimized;
 
     CGLTexture *th = g_Orion.ExecuteGump(graphic);
@@ -332,20 +332,20 @@ void CGumpMinimap::UpdateContent()
         m_DataBox->Add(new CGUIColoredPolygone(0, 0, gumpCenterX, gumpCenterY, 2, 2, 0xFFFFFFFF));
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpMinimap::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c102_f7");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GMM_LOCK_MOVING)
         LockMoving = !LockMoving;
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpMinimap::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c102_f8");
+    DEBUG_TRACE_FUNCTION;
 
     g_Orion.OpenMinimap();
 
     return true;
 }
-//----------------------------------------------------------------------------------
+

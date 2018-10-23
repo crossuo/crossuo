@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUITEXTENTRY_H
 #define GUITEXTENTRY_H
-//----------------------------------------------------------------------------------
+
 class CGUITextEntry : public CBaseGUI
 {
 public:
@@ -106,7 +106,7 @@ public:
 
     virtual bool EntryPointerHere();
 
-    virtual WISP_GEOMETRY::CSize GetSize();
+    virtual Wisp::CSize GetSize();
 
     //!Установить глобальный OGL цвет перед отрисовкой текста
     void SetGlobalColor(bool use, int color, int selected, int focused);
@@ -120,6 +120,5 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

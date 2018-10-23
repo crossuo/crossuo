@@ -8,29 +8,29 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CQuestArrow g_QuestArrow;
-//----------------------------------------------------------------------------------
+
 CQuestArrow::CQuestArrow()
 {
 }
-//----------------------------------------------------------------------------------
+
 CQuestArrow::~CQuestArrow()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CQuestArrow::Draw()
 {
-    WISPFUN_DEBUG("c200_f1");
+    DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {
         int dir = g_MouseManager.GetFacing(g_Player->GetX(), g_Player->GetY(), X, Y, 0);
 
         ushort gumpID = m_Gump + ((dir + 1) % 8);
 
-        WISP_GEOMETRY::CSize size = g_Orion.GetGumpDimension(gumpID);
+        Wisp::CSize size = g_Orion.GetGumpDimension(gumpID);
 
         int gox = X - g_Player->GetX();
         int goy = Y - g_Player->GetY();
@@ -63,4 +63,4 @@ void CQuestArrow::Draw()
             g_Orion.DrawGump(gumpID, 0, x, y);
     }
 }
-//----------------------------------------------------------------------------------
+

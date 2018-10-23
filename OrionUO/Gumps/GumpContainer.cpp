@@ -8,17 +8,17 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 const uint CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
-//----------------------------------------------------------------------------------
+
 CGumpContainer::CGumpContainer(uint serial, uint id, short x, short y)
     : CGump(GT_CONTAINER, serial, x, y)
     , IsGameBoard(id == 0x091A || id == 0x092E)
 {
-    WISPFUN_DEBUG("c93_f1");
+    DEBUG_TRACE_FUNCTION;
     Page = 1;
     m_Locker.Serial = ID_GC_LOCK_MOVING;
     ID = id;
@@ -53,14 +53,14 @@ CGumpContainer::CGumpContainer(uint serial, uint id, short x, short y)
 
     Add(new CGUIShader(&g_ColorizerShader, false));
 }
-//----------------------------------------------------------------------------------
+
 CGumpContainer::~CGumpContainer()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
 {
-    WISPFUN_DEBUG("c93_f3");
+    DEBUG_TRACE_FUNCTION;
     if (Graphic < g_ContainerOffset.size())
     {
         const CContainerOffsetRect &rect = g_ContainerOffset[Graphic].Rect;
@@ -78,10 +78,10 @@ void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
             item->SetY(rect.MinY + rect.MaxY);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c93_f4");
+    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed && g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsText())
@@ -100,17 +100,17 @@ void CGumpContainer::CalculateGumpState()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::PrepareTextures()
 {
-    WISPFUN_DEBUG("c93_f5");
+    DEBUG_TRACE_FUNCTION;
     CGump::PrepareTextures();
     g_Orion.ExecuteGumpPart(0x0045, 2); //Corpse eyes
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::InitToolTip()
 {
-    WISPFUN_DEBUG("c93_f6");
+    DEBUG_TRACE_FUNCTION;
     if (!Minimized)
     {
         if (g_SelectedObject.Serial == ID_GC_MINIMIZE)
@@ -121,17 +121,17 @@ void CGumpContainer::InitToolTip()
     else
         g_ToolTip.Set(L"Double click to maximize container gump");
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::PrepareContent()
 {
-    WISPFUN_DEBUG("c93_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!g_Player->Dead() &&
         GetTopObjDistance(g_Player, g_World->FindWorldObject(Serial)) <= DRAG_ITEMS_DISTANCE &&
         g_PressedObject.LeftGump == this && !g_ObjectInHand.Enabled &&
         g_PressedObject.LeftSerial != ID_GC_MINIMIZE &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (CanBeDraggedByOffset(offset) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -195,10 +195,10 @@ void CGumpContainer::PrepareContent()
             WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::UpdateContent()
 {
-    WISPFUN_DEBUG("c93_f8");
+    DEBUG_TRACE_FUNCTION;
     CGameItem *container = g_World->FindWorldItem(Serial);
 
     if (container == NULL)
@@ -276,10 +276,10 @@ void CGumpContainer::UpdateContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::Draw()
 {
-    WISPFUN_DEBUG("c93_f9");
+    DEBUG_TRACE_FUNCTION;
     CGump::Draw();
 
     if (!Minimized)
@@ -295,16 +295,16 @@ void CGumpContainer::Draw()
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
     }
 }
-//----------------------------------------------------------------------------------
+
 CRenderObject *CGumpContainer::Select()
 {
-    WISPFUN_DEBUG("c93_f10");
+    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = CGump::Select();
 
     if (!Minimized)
     {
-        WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-        g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+        g_MouseManager.Position = Wisp::CPoint2Di(
             oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         m_TextRenderer.Select(this);
@@ -314,10 +314,10 @@ CRenderObject *CGumpContainer::Select()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c93_f11");
+    DEBUG_TRACE_FUNCTION;
     if (!Minimized && serial == ID_GC_MINIMIZE && ID == 0x003C)
         Minimized = true;
     else if (serial == ID_GC_LOCK_MOVING)
@@ -326,10 +326,10 @@ void CGumpContainer::GUMP_BUTTON_EVENT_C
         g_MouseManager.CancelDoubleClick = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpContainer::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c93_f12");
+    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     uint dropContainer = Serial;
@@ -456,10 +456,10 @@ void CGumpContainer::OnLeftMouseButtonUp()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpContainer::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c93_f13");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (!g_PressedObject.LeftSerial && Minimized && ID == 0x003C)
@@ -480,4 +480,4 @@ bool CGumpContainer::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

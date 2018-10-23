@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpBaseScroll::CGumpBaseScroll(
     GUMP_TYPE type,
     uint serial,
@@ -28,7 +28,7 @@ CGumpBaseScroll::CGumpBaseScroll(
     , HaveBackgroundLines(haveBackgroundLines)
     , ScissorOffsetHeight(scissorOffsetHeight)
 {
-    WISPFUN_DEBUG("c86_f1");
+    DEBUG_TRACE_FUNCTION;
     Page = 2;
     Add(new CGUIPage(2));
 
@@ -48,7 +48,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     m_Background =
         (CGUIScrollBackground *)Add(new CGUIScrollBackground(0, graphic, 0, offsetY, Height));
-    WISP_GEOMETRY::CRect rect = m_Background->WorkSpace;
+    Wisp::CRect rect = m_Background->WorkSpace;
 
     if (type != GT_SKILLS)
         m_Minimizer->SetX(137);
@@ -111,14 +111,14 @@ CGumpBaseScroll::CGumpBaseScroll(
     else
         m_Resizer->SetX(170);
 }
-//----------------------------------------------------------------------------------
+
 CGumpBaseScroll::~CGumpBaseScroll()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBaseScroll::UpdateHeight()
 {
-    WISPFUN_DEBUG("c86_f2");
+    DEBUG_TRACE_FUNCTION;
     Height = StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
 
     if (Height < m_MinHeight)
@@ -148,27 +148,27 @@ void CGumpBaseScroll::UpdateHeight()
 
     m_Resizer->SetY(offsetY + Height - 3);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBaseScroll::GUMP_RESIZE_START_EVENT_C
 {
-    WISPFUN_DEBUG("c86_f3");
+    DEBUG_TRACE_FUNCTION;
     StartResizeHeight = Height;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBaseScroll::GUMP_RESIZE_EVENT_C
 {
-    WISPFUN_DEBUG("c86_f4");
+    DEBUG_TRACE_FUNCTION;
     if (StartResizeHeight)
     {
         UpdateHeight();
         RecalculateSize();
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpBaseScroll::GUMP_RESIZE_END_EVENT_C
 {
-    WISPFUN_DEBUG("c86_f5");
+    DEBUG_TRACE_FUNCTION;
     if (StartResizeHeight)
         StartResizeHeight = 0;
 }
-//----------------------------------------------------------------------------------
+

@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpPartyManifest::CGumpPartyManifest(uint serial, short x, short y, bool canLoot)
     : CGump(GT_PARTY_MANIFEST, serial, x, y)
     , m_CanLoot(canLoot)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGumpPartyManifest::~CGumpPartyManifest()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPartyManifest::UpdateContent()
 {
-    WISPFUN_DEBUG("c106_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIResizepic(0, 0x0A28, 0, 0, 450, 480));
@@ -104,10 +104,10 @@ void CGumpPartyManifest::UpdateContent()
     Add(new CGUIButton(ID_GPM_BUTTON_OKAY, 0x00F9, 0x00F7, 0x00F8, 130, 430));
     Add(new CGUIButton(ID_GPM_BUTTON_CANCEL, 0x00F3, 0x00F2, 0x00F1, 236, 430));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c106_f2");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPM_BUTTON_OKAY)
     {
         if (g_Party.Leader != 0 && g_Party.CanLoot != m_CanLoot)
@@ -178,4 +178,4 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
             CPacketPartyRemoveRequest(g_Party.Member[memberIndex].Serial).Send();
     }
 }
-//----------------------------------------------------------------------------------
+

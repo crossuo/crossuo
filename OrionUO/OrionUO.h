@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef ORIONUO_H
 #define ORIONUO_H
-//----------------------------------------------------------------------------------
+
 class COrion
 {
 public:
@@ -223,10 +223,10 @@ public:
     ushort GetLightColor(ushort id) { return m_StaticDataIndex[id].LightColor; }
 
     //Получить габариты картинки статики
-    WISP_GEOMETRY::CSize GetStaticArtDimension(ushort id);
+    Wisp::CSize GetStaticArtDimension(ushort id);
 
     //Получить габариты картинки гампа
-    WISP_GEOMETRY::CSize GetGumpDimension(ushort id);
+    Wisp::CSize GetGumpDimension(ushort id);
 
     //Загрузка текстуры гампа
     CGLTexture *ExecuteGump(ushort id);
@@ -493,8 +493,7 @@ public:
 
     void StartReconnect();
 };
-//----------------------------------------------------------------------------------
+
 extern COrion g_Orion;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

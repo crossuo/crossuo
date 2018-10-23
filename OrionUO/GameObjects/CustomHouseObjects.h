@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef CUSTOMHOUSEOBJECTS_H
 #define CUSTOMHOUSEOBJECTS_H
-//----------------------------------------------------------------------------------
+
 //!Base class for Custom House object info
 class CCustomHouseObject
 {
@@ -39,7 +39,7 @@ public:
 	*/
     virtual bool Parse(const char *text) { return false; }
 };
-//----------------------------------------------------------------------------------
+
 //!Wall object for CH
 class CCustomHouseObjectWall : public CCustomHouseObject
 {
@@ -132,7 +132,7 @@ public:
     //!Graphics list with replaced windowed walls
     ushort m_WindowGraphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 //!Category of wall objects
 class CCustomHouseObjectWallCategory
 {
@@ -155,7 +155,7 @@ public:
     //!Wall objects list
     vector<CCustomHouseObjectWall> m_Items;
 };
-//----------------------------------------------------------------------------------
+
 //!Floor objects for CH
 class CCustomHouseObjectFloor : public CCustomHouseObject
 {
@@ -244,7 +244,7 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 /*class CCustomHouseObjectFloorCategory
 {
 	int Index = 0;
@@ -255,7 +255,7 @@ public:
 
 	vector<CCustomHouseObjectFloor> m_Items;
 };*/
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectDoor : public CCustomHouseObject
 {
 public:
@@ -319,7 +319,7 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 /*class CCustomHouseObjectDoorCategory
 {
 	int Index = 0;
@@ -330,7 +330,7 @@ public:
 
 	vector<CCustomHouseObjectDoor> m_Items;
 };*/
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectMisc : public CCustomHouseObject
 {
 public:
@@ -400,7 +400,7 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectMiscCategory
 {
 public:
@@ -422,7 +422,7 @@ public:
     //!Misc objects list
     vector<CCustomHouseObjectMisc> m_Items;
 };
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectStair : public CCustomHouseObject
 {
 public:
@@ -501,7 +501,7 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 /*class CCustomHouseObjectStairCategory
 {
 	int Index = 0;
@@ -512,7 +512,7 @@ public:
 
 	vector<CCustomHouseObjectStair> m_Items;
 };*/
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectTeleport : public CCustomHouseObject
 {
     //!Teleport 1 graphic
@@ -600,7 +600,7 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 /*class CCustomHouseObjectTeleportCategory
 {
 	int Index = 0;
@@ -611,7 +611,7 @@ public:
 
 	vector<CCustomHouseObjectTeleport> m_Items;
 };*/
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectRoof : public CCustomHouseObject
 {
 public:
@@ -682,7 +682,7 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectRoofCategory
 {
 public:
@@ -704,7 +704,7 @@ public:
     //!Roof objects list
     vector<CCustomHouseObjectRoof> m_Items;
 };
-//----------------------------------------------------------------------------------
+
 class CCustomHouseObjectPlaceInfo
 {
 public:
@@ -788,6 +788,5 @@ public:
     //!Graphics list
     ushort m_Graphics[GRAPHICS_COUNT];
 };
-//----------------------------------------------------------------------------------
+
 #endif //CUSTOMHOUSEOBJECTS_H
-//----------------------------------------------------------------------------------

@@ -6,12 +6,12 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #pragma once
 #include <SDL_events.h>
-//----------------------------------------------------------------------------------
+
 class CBaseGUI;
-//----------------------------------------------------------------------------------
+
 #define GUMP_BUTTON_EVENT_C OnButton(int serial)
 #define GUMP_CHECKBOX_EVENT_C OnCheckbox(int serial, bool state)
 #define GUMP_RADIO_EVENT_C OnRadio(int serial, bool state)
@@ -24,7 +24,7 @@ class CBaseGUI;
 #define GUMP_DIRECT_HTML_LINK_EVENT_C OnDirectHTMLLink(ushort link)
 #define GUMP_COMBOBOX_SELECTION_EVENT_C OnComboboxSelection(int serial)
 #define GUMP_SCROLL_BUTTON_EVENT_C OnScrollButton()
-//----------------------------------------------------------------------------------
+
 #define GUMP_BUTTON_EVENT_H virtual void GUMP_BUTTON_EVENT_C
 #define GUMP_CHECKBOX_EVENT_H virtual void GUMP_CHECKBOX_EVENT_C
 #define GUMP_RADIO_EVENT_H virtual void GUMP_RADIO_EVENT_C
@@ -37,7 +37,7 @@ class CBaseGUI;
 #define GUMP_DIRECT_HTML_LINK_EVENT_H virtual void GUMP_DIRECT_HTML_LINK_EVENT_C
 #define GUMP_COMBOBOX_SELECTION_EVENT_H virtual void GUMP_COMBOBOX_SELECTION_EVENT_C
 #define GUMP_SCROLL_BUTTON_EVENT_H virtual void GUMP_SCROLL_BUTTON_EVENT_C
-//----------------------------------------------------------------------------------
+
 //!Базовый класс гампов
 class CGump : public CRenderObject
 {
@@ -60,7 +60,7 @@ public:
     bool RemoveMark = false;
     bool NoProcess = false;
     bool Visible = true;
-    WISP_GEOMETRY::CRect GumpRect = WISP_GEOMETRY::CRect();
+    Wisp::CRect GumpRect = Wisp::CRect();
 
 protected:
     CGUIButton m_Locker{ CGUIButton(0, 0, 0, 0, 0, 0) };
@@ -90,9 +90,9 @@ public:
     static void GetItemsSize(
         CGump *gump,
         CBaseGUI *start,
-        WISP_GEOMETRY::CPoint2Di &minPosition,
-        WISP_GEOMETRY::CPoint2Di &maxPosition,
-        WISP_GEOMETRY::CPoint2Di &offset,
+        Wisp::CPoint2Di &minPosition,
+        Wisp::CPoint2Di &maxPosition,
+        Wisp::CPoint2Di &offset,
         int count,
         int currentPage,
         int draw2Page);
@@ -171,8 +171,7 @@ public:
     virtual void OnKeyUp(const SDL_KeyboardEvent &ev){};
 #endif
 };
-//----------------------------------------------------------------------------------
+
 //!Ссылка на гамп, который в данный момент изменяет высоту
 extern CGump *g_ResizedGump;
 extern CGump *g_CurrentCheckGump;
-//----------------------------------------------------------------------------------

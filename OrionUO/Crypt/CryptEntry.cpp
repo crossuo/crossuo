@@ -1,4 +1,4 @@
-//----------------------------------------------------------------------------------
+
 #if !USE_ORIONDLL
 #include "../Wisp/WispGlobal.h"
 #include "../Wisp/WispDataStream.h"
@@ -6,11 +6,11 @@
 #include "../PluginInterface.h"
 #include "LoginCrypt.h"
 #include "GameCrypt.h"
-//----------------------------------------------------------------------------------
+
 ENCRYPTION_TYPE g_EncryptionType = ET_NOCRYPT;
 size_t g_CryptPluginsCount = 0;
 UCHAR_LIST g_RawData;
-//----------------------------------------------------------------------------------
+
 static void Init(const bool &mode, u8 *array)
 {
     if (mode)
@@ -29,7 +29,7 @@ static void Init(const bool &mode, u8 *array)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 static void Send(const bool &mode, u8 *src, u8 *dest, const int &size)
 {
     if (g_EncryptionType == ET_NOCRYPT)
@@ -53,7 +53,7 @@ static void Send(const bool &mode, u8 *src, u8 *dest, const int &size)
     else
         g_BlowfishCrypt.Encrypt(&src[0], &dest[0], size);
 }
-//----------------------------------------------------------------------------------
+
 static void Decrypt(u8 *src, u8 *dest, const int &size)
 {
     if (g_EncryptionType == ET_TFISH)
@@ -61,12 +61,12 @@ static void Decrypt(u8 *src, u8 *dest, const int &size)
     else
         memcpy(&dest[0], &src[0], size);
 }
-//----------------------------------------------------------------------------------
+
 static void LoadPlugins(PLUGIN_INFO *result)
 {
     if (g_RawData.size())
     {
-        WISP_DATASTREAM::CDataReader file(&g_RawData[0], (int)g_RawData.size());
+        Wisp::CDataReader file(&g_RawData[0], (int)g_RawData.size());
 
         uchar ver = file.ReadUInt8();
 
@@ -100,7 +100,7 @@ static void LoadPlugins(PLUGIN_INFO *result)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 UCHAR_LIST ApplyInstall(uchar *address, size_t size)
 {
     UCHAR_LIST result;
@@ -110,8 +110,8 @@ UCHAR_LIST ApplyInstall(uchar *address, size_t size)
         g_RawData.resize(size);
         memcpy(&g_RawData[0], &address[0], size);
 
-        WISP_DATASTREAM::CDataReader file(address, size);
-        WISP_DATASTREAM::CDataWritter writter;
+        Wisp::CDataReader file(address, size);
+        Wisp::CDataWritter writter;
 
         uchar version = file.ReadInt8();
         writter.WriteUInt8(version);
@@ -177,12 +177,12 @@ UCHAR_LIST ApplyInstall(uchar *address, size_t size)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 size_t GetPluginsCount()
 {
     return g_CryptPluginsCount;
 }
-//----------------------------------------------------------------------------------
+
 void CryptInstallNew(uchar *address, size_t size, uchar *result, size_t &resultSize)
 {
     assert(address && result && size && resultSize);

@@ -8,19 +8,19 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 void CFastWalkStack::SetValue(int index, int value)
 {
-    WISPFUN_DEBUG("c176_f1");
+    DEBUG_TRACE_FUNCTION;
     if (index >= 0 && index < 5)
         m_Keys[index] = value;
 }
-//----------------------------------------------------------------------------------
+
 void CFastWalkStack::AddValue(int value)
 {
-    WISPFUN_DEBUG("c176_f2");
+    DEBUG_TRACE_FUNCTION;
 
     IFOR (i, 0, 5)
     {
@@ -31,10 +31,10 @@ void CFastWalkStack::AddValue(int value)
         }
     }
 }
-//---------------------------------------------------------------------------
+
 uint CFastWalkStack::GetValue()
 {
-    WISPFUN_DEBUG("c176_f3");
+    DEBUG_TRACE_FUNCTION;
 
     IFOR (i, 0, 5)
     {
@@ -49,4 +49,4 @@ uint CFastWalkStack::GetValue()
 
     return 0;
 }
-//----------------------------------------------------------------------------------
+

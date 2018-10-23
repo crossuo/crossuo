@@ -1,10 +1,9 @@
-﻿//----------------------------------------------------------------------------------
+﻿
 #ifndef WISPPACKETMESSAGE_H
 #define WISPPACKETMESSAGE_H
-//----------------------------------------------------------------------------------
-namespace WISP_NETWORK
+
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
 class CPacketMessage
 {
     bool BigEndian = false;
@@ -25,7 +24,7 @@ public:
 
     UCHAR_LIST Read(class CPacketReader *reader, int &dataOffset);
 };
-//----------------------------------------------------------------------------------
-}; // namespace WISP_NETWORK
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+
 #endif

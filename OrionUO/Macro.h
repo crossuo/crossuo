@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef MACRO_H
 #define MACRO_H
-//----------------------------------------------------------------------------------
+
 //Класс объекта макроса
 class CMacroObject : public CBaseQueueItem
 {
@@ -28,7 +28,7 @@ public:
 
     virtual bool HaveString() { return false; }
 };
-//----------------------------------------------------------------------------------
+
 //Класс объекта макроса, содержащий строку
 class CMacroObjectString : public CMacroObject
 {
@@ -41,7 +41,7 @@ public:
 
     virtual bool HaveString() { return true; }
 };
-//----------------------------------------------------------------------------------
+
 //Класс макроса
 class CMacro : public CBaseQueueItem
 {
@@ -73,10 +73,10 @@ public:
     void ChangeObject(CMacroObject *source, CMacroObject *obj);
 
     //Загрузить макросы из файла
-    static CMacro *Load(WISP_FILE::CMappedFile &file);
+    static CMacro *Load(Wisp::CMappedFile &file);
 
     //Сохранить макросы в файл
-    void Save(WISP_FILE::CBinaryFileWritter &writter);
+    void Save(Wisp::CBinaryFileWritter &writter);
 
     //Создать пустой макрос
     static CMacro *CreateBlankMacro();
@@ -90,8 +90,7 @@ public:
     //Получить копию макросов
     CMacro *GetCopy();
 };
-//----------------------------------------------------------------------------------
+
 extern CMacroObject *g_MacroPointer;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

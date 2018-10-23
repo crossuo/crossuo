@@ -8,26 +8,26 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "CommonInterfaces.h"
 #include <SDL_timer.h>
-//----------------------------------------------------------------------------------
+
 IOrionString g_OrionString;
-//----------------------------------------------------------------------------------
+
 IOrionString::IOrionString()
     : m_Unicode(false)
     , m_DataA(NULL)
     , m_DataW(NULL)
 {
 }
-//----------------------------------------------------------------------------------
+
 IOrionString::~IOrionString()
 {
     RELEASE_POINTER(m_DataA);
     RELEASE_POINTER(m_DataW);
 }
-//----------------------------------------------------------------------------------
+
 IOrionString &IOrionString::operator()(const std::string &str)
 {
     RELEASE_POINTER(m_DataA);
@@ -42,7 +42,7 @@ IOrionString &IOrionString::operator()(const std::string &str)
 
     return *this;
 }
-//----------------------------------------------------------------------------------
+
 IOrionString &IOrionString::operator()(const std::wstring &str)
 {
     RELEASE_POINTER(m_DataW);
@@ -57,40 +57,40 @@ IOrionString &IOrionString::operator()(const std::wstring &str)
 
     return *this;
 }
-//----------------------------------------------------------------------------------
+
 //IGLEngine
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_PushScissor(int x, int y, int width, int height)
 {
     g_GL.PushScissor(x, y, width, height);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_PopScissor()
 {
     g_GL.PopScissor();
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawLine(unsigned int color, int x, int y, int width, int height)
 {
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawLine(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, int height)
 {
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawPolygone(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radius, int gradientMode)
 {
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawCircle(x, y, radius, gradientMode);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawTextA(
     int x,
     int y,
@@ -103,7 +103,7 @@ void CDECL FUNCBODY_DrawTextA(
 {
     g_FontManager.DrawA(font, text, color, x, y, width, align, flags);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawTextW(
     int x,
     int y,
@@ -116,68 +116,68 @@ void CDECL FUNCBODY_DrawTextW(
 {
     g_FontManager.DrawW(font, text, color, x, y, 30, width, align, flags);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawArt(int x, int y, unsigned short graphic, unsigned short color)
 {
     g_Orion.DrawStaticArt(graphic, color, x, y);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawArtAnimated(int x, int y, unsigned short graphic, unsigned short color)
 {
     g_Orion.DrawStaticArtAnimated(graphic, color, x, y);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawResizepicGump(int x, int y, unsigned short graphic, int width, int height)
 {
     g_Orion.DrawResizepicGump(graphic, x, y, width, height);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawGump(int x, int y, unsigned short graphic, unsigned short color)
 {
     g_Orion.DrawGump(graphic, color, x, y);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DrawGumppic(
     int x, int y, unsigned short graphic, unsigned short color, int width, int height)
 {
     g_Orion.DrawGump(graphic, color, x, y, width, height);
 }
-//----------------------------------------------------------------------------------
+
 //IUltimaOnline
-//----------------------------------------------------------------------------------
+
 uint64_t CDECL FUNCBODY_GetLandFlags(unsigned short graphic)
 {
     return g_Orion.GetLandFlags(graphic);
 }
-//----------------------------------------------------------------------------------
+
 uint64_t CDECL FUNCBODY_GetStaticFlags(unsigned short graphic)
 {
     return g_Orion.GetStaticFlags(graphic);
 }
-//----------------------------------------------------------------------------------
+
 int CDECL FUNCBODY_GetValueInt(VALUE_KEY_INT key, int value)
 {
     return g_Orion.ValueInt(key, value);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SetValueInt(VALUE_KEY_INT key, int value)
 {
     g_Orion.ValueInt(key, value);
 }
-//----------------------------------------------------------------------------------
+
 IOrionString *CDECL FUNCBODY_GetValueString(VALUE_KEY_STRING key, const char *value)
 {
     return &g_OrionString(g_Orion.ValueString(key, value));
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SetValueString(VALUE_KEY_STRING key, const char *value)
 {
     g_Orion.ValueString(key, value);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SetTargetData(unsigned char *buf, int size)
 {
-    WISP_DATASTREAM::CDataReader reader(buf, size);
+    Wisp::CDataReader reader(buf, size);
     reader.Move(1);
 
     if (*buf == 0x6C)
@@ -185,22 +185,22 @@ void CDECL FUNCBODY_SetTargetData(unsigned char *buf, int size)
     else
         g_Target.SetMultiData(reader);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendTargetObject(unsigned int serial)
 {
     g_Target.Plugin_SendTargetObject(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendTargetTile(unsigned short graphic, short x, short y, char z)
 {
     g_Target.Plugin_SendTargetTile(graphic, x, y, z);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendTargetCancel()
 {
     g_Target.Plugin_SendCancelTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendCastSpell(int index)
 {
     if (index >= 0)
@@ -212,7 +212,7 @@ void CDECL FUNCBODY_SendCastSpell(int index)
             g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
     }
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendUseSkill(int index)
 {
     if (index >= 0)
@@ -224,7 +224,7 @@ void CDECL FUNCBODY_SendUseSkill(int index)
             g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
     }
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendAsciiSpeech(const char *text, unsigned short color)
 {
     if (!color)
@@ -234,7 +234,7 @@ void CDECL FUNCBODY_SendAsciiSpeech(const char *text, unsigned short color)
     SendMessage(
         g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
 {
     if (!color)
@@ -244,35 +244,35 @@ void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
     SendMessage(
         g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendRenameMount(uint serial, const char *text)
 {
     CPacketRenameRequest packet(serial, text);
     SendMessage(
         g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SendMenuResponse(unsigned int serial, unsigned int id, int code)
 {
     UOI_MENU_RESPONSE data = { serial, id, code };
     SendMessage(g_OrionWindow.Handle, UOMSG_MENU_RESPONSE, (WPARAM)&data, 0);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_DisplayStatusbarGump(unsigned int serial, int x, int y)
 {
     g_Orion.DisplayStatusbarGump(serial, x, y);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_CloseStatusbarGump(unsigned int serial)
 {
     g_GumpManager.CloseGump(serial, 0, GT_STATUSBAR);
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_Logout()
 {
     g_Orion.LogOut();
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SecureTradingCheckState(unsigned int id1, bool state)
 {
     CGumpSecureTrading *gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(id1, 0, GT_TRADE);
@@ -286,7 +286,7 @@ void CDECL FUNCBODY_SecureTradingCheckState(unsigned int id1, bool state)
             g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
     }
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_SecureTradingClose(unsigned int id1)
 {
     CGumpSecureTrading *gump = (CGumpSecureTrading *)g_GumpManager.GetGump(id1, 0, GT_TRADE);
@@ -300,79 +300,79 @@ void CDECL FUNCBODY_SecureTradingClose(unsigned int id1)
             g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
     }
 }
-//----------------------------------------------------------------------------------
+
 //IClilocManager
-//----------------------------------------------------------------------------------
+
 IOrionString *CDECL FUNCBODY_GetClilocA(unsigned int clilocID, const char *defaultText)
 {
     return &g_OrionString(g_ClilocManager.Cliloc(g_Language)->GetA(clilocID, false, defaultText));
 }
-//----------------------------------------------------------------------------------
+
 IOrionString *CDECL FUNCBODY_GetClilocW(unsigned int clilocID, const char *defaultText)
 {
     return &g_OrionString(g_ClilocManager.Cliloc(g_Language)->GetW(clilocID, false, defaultText));
 }
-//----------------------------------------------------------------------------------
+
 IOrionString *CDECL FUNCBODY_GetClilocArguments(unsigned int clilocID, const wchar_t *args)
 {
     return &g_OrionString(g_ClilocManager.ParseArgumentsToClilocString(clilocID, false, args));
 }
-//----------------------------------------------------------------------------------
+
 //IColorManager
-//----------------------------------------------------------------------------------
+
 int CDECL FUNCBODY_GetHuesCount()
 {
     return g_ColorManager.GetHuesCount();
 }
-//----------------------------------------------------------------------------------
+
 unsigned short CDECL FUNCBODY_GetColor32To16(unsigned int &color)
 {
     return g_ColorManager.Color32To16(color);
 }
-//----------------------------------------------------------------------------------
+
 unsigned int CDECL FUNCBODY_GetColor16To32(unsigned short &color)
 {
     return g_ColorManager.Color16To32(color);
 }
-//----------------------------------------------------------------------------------
+
 unsigned short CDECL FUNCBODY_GetColorToGray(unsigned short &color)
 {
     return g_ColorManager.ConvertToGray(color);
 }
-//----------------------------------------------------------------------------------
+
 unsigned int CDECL FUNCBODY_GetPolygoneColor(unsigned short c, unsigned short color)
 {
     return g_ColorManager.GetPolygoneColor(c, color);
 }
-//----------------------------------------------------------------------------------
+
 unsigned int CDECL FUNCBODY_GetColor(unsigned short &c, unsigned short color)
 {
     return g_ColorManager.GetColor(c, color);
 }
-//----------------------------------------------------------------------------------
+
 unsigned int CDECL FUNCBODY_GetPartialHueColor(unsigned short &c, unsigned short color)
 {
     return g_ColorManager.GetPartialHueColor(c, color);
 }
-//----------------------------------------------------------------------------------
+
 //IPathFinder
-//----------------------------------------------------------------------------------
+
 bool CDECL FUNCBODY_GetCanWalk(unsigned char &direction, int &x, int &y, char &z)
 {
     return g_PathFinder.CanWalk(direction, x, y, z);
 }
-//----------------------------------------------------------------------------------
+
 bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 {
     return SendMessage(g_OrionWindow.Handle, UOMSG_WALK, run, direction);
 }
-//----------------------------------------------------------------------------------
+
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
 {
     if (g_Player == NULL)
         return false;
 
-    WISP_GEOMETRY::CPoint2Di startPoint(g_Player->GetX(), g_Player->GetY());
+    Wisp::CPoint2Di startPoint(g_Player->GetX(), g_Player->GetY());
 
     if (!g_Player->m_Steps.empty())
     {
@@ -382,7 +382,7 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
         startPoint.Y = wd.Y;
     }
 
-    if (GetDistance(startPoint, WISP_GEOMETRY::CPoint2Di(x, y)) <= distance)
+    if (GetDistance(startPoint, Wisp::CPoint2Di(x, y)) <= distance)
         return true;
 
     bool result = SendMessage(
@@ -399,7 +399,7 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
         if (g_Player == NULL)
             return false;
 
-        WISP_GEOMETRY::CPoint2Di p(g_Player->GetX(), g_Player->GetY());
+        Wisp::CPoint2Di p(g_Player->GetX(), g_Player->GetY());
 
         if (!g_Player->m_Steps.empty())
         {
@@ -409,28 +409,28 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
             p.Y = wd.Y;
         }
 
-        result = (GetDistance(p, WISP_GEOMETRY::CPoint2Di(x, y)) <= distance);
+        result = (GetDistance(p, Wisp::CPoint2Di(x, y)) <= distance);
     }
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_GetStopAutowalk()
 {
     if (g_PathFinder.PathFindidngCanBeCancelled)
         g_PathFinder.StopAutoWalk();
 }
-//----------------------------------------------------------------------------------
+
 bool CDECL FUNCBODY_GetAutowalking()
 {
     return g_PathFinder.AutoWalking;
 }
-//----------------------------------------------------------------------------------
+
 //IFileManager
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
 {
-    WISP_FILE::CMappedFile *file = NULL;
+    Wisp::CMappedFile *file = NULL;
     unsigned int extra = 0;
 
     switch (index)
@@ -601,7 +601,7 @@ void CDECL FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
         info.Extra = 0;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, ORION_RAW_ART_INFO &info)
 {
     if (index < MAX_LAND_DATA_INDEX_COUNT)
@@ -626,7 +626,7 @@ void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, ORION_RAW_ART_INFO &inf
     info.Size = 0;
     info.CompressedSize = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, ORION_RAW_ART_INFO &info)
 {
     if (index < MAX_STATIC_DATA_INDEX_COUNT)
@@ -651,7 +651,7 @@ void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, ORION_RAW_ART_INFO &i
     info.Size = 0;
     info.CompressedSize = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, ORION_RAW_GUMP_INFO &info)
 {
     if (index < MAX_GUMP_DATA_INDEX_COUNT)
@@ -680,9 +680,9 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, ORION_RAW_GUMP_INFO &in
     info.Width = 0;
     info.Height = 0;
 }
-//----------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------
+
+
+
 IGLEngine g_Interface_GL = { 0,
                              sizeof(IGLEngine),
                              FUNCBODY_PushScissor,
@@ -697,7 +697,7 @@ IGLEngine g_Interface_GL = { 0,
                              FUNCBODY_DrawResizepicGump,
                              FUNCBODY_DrawGump,
                              FUNCBODY_DrawGumppic };
-//----------------------------------------------------------------------------------
+
 IUltimaOnline g_Interface_UO = { 2,
                                  sizeof(IUltimaOnline),
                                  FUNCBODY_GetLandFlags,
@@ -721,11 +721,11 @@ IUltimaOnline g_Interface_UO = { 2,
                                  FUNCBODY_Logout,
                                  FUNCBODY_SecureTradingCheckState,
                                  FUNCBODY_SecureTradingClose };
-//----------------------------------------------------------------------------------
+
 IClilocManager g_Interface_ClilocManager = {
     0, sizeof(IClilocManager), FUNCBODY_GetClilocA, FUNCBODY_GetClilocW, FUNCBODY_GetClilocArguments
 };
-//----------------------------------------------------------------------------------
+
 IColorManager g_Interface_ColorManager = { 0,
                                            sizeof(IColorManager),
                                            FUNCBODY_GetHuesCount,
@@ -735,7 +735,7 @@ IColorManager g_Interface_ColorManager = { 0,
                                            FUNCBODY_GetPolygoneColor,
                                            FUNCBODY_GetColor,
                                            FUNCBODY_GetPartialHueColor };
-//----------------------------------------------------------------------------------
+
 IPathFinder g_Interface_PathFinder = { 0,
                                        sizeof(IPathFinder),
                                        FUNCBODY_GetCanWalk,
@@ -743,11 +743,11 @@ IPathFinder g_Interface_PathFinder = { 0,
                                        FUNCBODY_GetWalkTo,
                                        FUNCBODY_GetStopAutowalk,
                                        FUNCBODY_GetAutowalking };
-//----------------------------------------------------------------------------------
+
 IFileManager g_Interface_FileManager = { 0,
                                          sizeof(IFileManager),
                                          FUNCBODY_GetFileInfo,
                                          FUNCBODY_GetLandArtInfo,
                                          FUNCBODY_GetStaticArtInfo,
                                          FUNCBODY_GetGumpArtInfo };
-//----------------------------------------------------------------------------------
+

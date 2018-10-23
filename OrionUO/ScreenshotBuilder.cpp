@@ -8,29 +8,29 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "FileSystem.h"
 
 CScreenshotBuilder g_ScreenshotBuilder;
-//---------------------------------------------------------------------------
+
 CScreenshotBuilder::CScreenshotBuilder()
 {
 }
-//---------------------------------------------------------------------------
+
 CScreenshotBuilder::~CScreenshotBuilder()
 {
 }
-//---------------------------------------------------------------------------
+
 void CScreenshotBuilder::SaveScreen()
 {
-    WISPFUN_DEBUG("c204_f1");
+    DEBUG_TRACE_FUNCTION;
     SaveScreen(0, 0, g_OrionWindow.GetSize().Width, g_OrionWindow.GetSize().Height);
 }
-//---------------------------------------------------------------------------
+
 void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
 {
-    WISPFUN_DEBUG("c204_f2");
+    DEBUG_TRACE_FUNCTION;
     auto path = g_App.ExeFilePath("snapshots");
     fs_path_create(path);
 
@@ -94,10 +94,10 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     if (g_GameState >= GS_GAME)
         g_Orion.CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
 }
-//---------------------------------------------------------------------------
+
 UINT_LIST CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
 {
-    WISPFUN_DEBUG("c204_f3");
+    DEBUG_TRACE_FUNCTION;
     UINT_LIST pixels(width * height);
 
     glReadPixels(
@@ -114,4 +114,3 @@ UINT_LIST CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height
 
     return pixels;
 }
-//---------------------------------------------------------------------------

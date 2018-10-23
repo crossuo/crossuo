@@ -2,13 +2,13 @@
 
 CCharacterList::CCharacterList()
 {
-    WISPFUN_DEBUG("c182_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 }
 
 void CCharacterList::Clear()
 {
-    WISPFUN_DEBUG("c182_f2");
+    DEBUG_TRACE_FUNCTION;
     IFOR (i, 0, 7)
         m_Name[i] = "";
 
@@ -20,14 +20,14 @@ void CCharacterList::Clear()
 
 void CCharacterList::SetName(intptr_t pos, const string &name)
 {
-    WISPFUN_DEBUG("c182_f3");
+    DEBUG_TRACE_FUNCTION;
     if (pos >= 0 && pos < Count)
         m_Name[pos] = name;
 }
 
 string CCharacterList::GetName(intptr_t pos) const
 {
-    WISPFUN_DEBUG("c182_f4");
+    DEBUG_TRACE_FUNCTION;
     if (pos >= 0 && pos < Count)
         return m_Name[pos];
 
@@ -36,7 +36,7 @@ string CCharacterList::GetName(intptr_t pos) const
 
 string CCharacterList::GetSelectedName() const
 {
-    WISPFUN_DEBUG("c182_f5");
+    DEBUG_TRACE_FUNCTION;
     if (Selected >= 0 && Selected < Count)
         return m_Name[Selected];
 

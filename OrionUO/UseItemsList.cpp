@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CUseItemActions g_UseItemActions;
-//----------------------------------------------------------------------------------
+
 void CUseItemActions::Add(int serial)
 {
-    WISPFUN_DEBUG("c186_f1");
+    DEBUG_TRACE_FUNCTION;
     for (deque<uint>::iterator i = m_List.begin(); i != m_List.end(); ++i)
     {
         if (*i == serial)
@@ -24,10 +24,10 @@ void CUseItemActions::Add(int serial)
 
     m_List.push_back(serial);
 }
-//----------------------------------------------------------------------------------
+
 void CUseItemActions::Process()
 {
-    WISPFUN_DEBUG("c186_f2");
+    DEBUG_TRACE_FUNCTION;
     if (Timer <= g_Ticks)
     {
         Timer = g_Ticks + 1000;
@@ -47,4 +47,4 @@ void CUseItemActions::Process()
         }
     }
 }
-//----------------------------------------------------------------------------------
+

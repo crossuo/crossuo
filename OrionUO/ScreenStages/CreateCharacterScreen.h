@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #pragma once
 #include <SDL_events.h>
-//----------------------------------------------------------------------------------
+
 class CCreateCharacterScreen : public CBaseScreen
 {
     //!Выбранный стиль прически/бороды
@@ -65,5 +65,5 @@ public:
     virtual void OnKeyDown(const SDL_KeyboardEvent &ev) override;
 #endif
 };
-//----------------------------------------------------------------------------------
+
 extern CCreateCharacterScreen g_CreateCharacterScreen;

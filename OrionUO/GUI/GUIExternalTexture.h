@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIEXTERNALTEXTURE_H
 #define GUIEXTERNALTEXTURE_H
-//----------------------------------------------------------------------------------
+
 class CGUIExternalTexture : public CBaseGUI
 {
     //!Удалять ли текстуру при удалении объекта
@@ -33,12 +33,11 @@ public:
     //!Ссылка на текстуру
     CGLTexture *m_Texture;
 
-    virtual WISP_GEOMETRY::CSize GetSize();
+    virtual Wisp::CSize GetSize();
 
     virtual void SetShaderMode();
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

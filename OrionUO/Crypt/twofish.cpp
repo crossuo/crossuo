@@ -1,5 +1,5 @@
 #if !USE_ORIONDLL
-//---------------------------------------------------------------------------
+
 /***************************************************************************
 	TWOFISH2.C  -- Optimized C API calls for TWOFISH AES submission
 
@@ -39,7 +39,7 @@
 #ifndef _WINDOWS_
 typedef void *PVOID;
 #endif
-//---------------------------------------------------------------------------
+
 #if defined(min_key) && !defined(MIN_KEY)
 #define MIN_KEY 1 /* toupper() */
 #elif defined(part_key) && !defined(PART_KEY)

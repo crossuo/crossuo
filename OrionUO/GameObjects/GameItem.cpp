@@ -8,18 +8,18 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)
 {
     NPC = false;
 }
-//----------------------------------------------------------------------------------
+
 CGameItem::~CGameItem()
 {
-    WISPFUN_DEBUG("c19_f1");
+    DEBUG_TRACE_FUNCTION;
     ClearMultiItems();
 
     if (Opened)
@@ -42,10 +42,10 @@ CGameItem::~CGameItem()
         Dragged = false;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameItem::ClearMultiItems()
 {
-    WISPFUN_DEBUG("c19_f2");
+    DEBUG_TRACE_FUNCTION;
     if (MultiBody && m_Items != NULL)
     {
         CMulti *multi = (CMulti *)m_Items;
@@ -55,7 +55,7 @@ void CGameItem::ClearMultiItems()
 
     WantUpdateMulti = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Событие изменения картинки объекта
 @param [__in_opt] direction Направление предмета (для трупов)
@@ -63,7 +63,7 @@ void CGameItem::ClearMultiItems()
 */
 void CGameItem::OnGraphicChange(int direction)
 {
-    WISPFUN_DEBUG("c19_f4");
+    DEBUG_TRACE_FUNCTION;
     if (!MultiBody)
     {
         if (Graphic >= g_Orion.m_StaticData.size())
@@ -119,10 +119,10 @@ void CGameItem::OnGraphicChange(int direction)
             LoadMulti(m_Items == NULL);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGameItem::CalculateFieldColor()
 {
-    WISPFUN_DEBUG("c19_f5");
+    DEBUG_TRACE_FUNCTION;
     FieldColor = 0;
 
     if (!g_ConfigManager.GetChangeFieldsGraphic())
@@ -144,10 +144,10 @@ void CGameItem::CalculateFieldColor()
     else if (Graphic == 0x0080)
         FieldColor = 0x038A;
 }
-//----------------------------------------------------------------------------------
+
 void CGameItem::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c19_f7");
+    DEBUG_TRACE_FUNCTION;
     if (Container == 0xFFFFFFFF)
     {
         if (MultiBody)
@@ -235,7 +235,7 @@ void CGameItem::Draw(int x, int y)
         if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == Serial &&
             !Locked())
         {
-            WISP_GEOMETRY::CSize size = g_Orion.GetStaticArtDimension(Graphic);
+            Wisp::CSize size = g_Orion.GetStaticArtDimension(Graphic);
 
             if (size.Width >= 80)
             {
@@ -264,7 +264,7 @@ void CGameItem::Draw(int x, int y)
         DrawEffects(x, y);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать предмет
 @param [__in] mode Режим рисования. true - рисование, false - выбор объектов
@@ -275,7 +275,7 @@ void CGameItem::Draw(int x, int y)
 */
 void CGameItem::Select(int x, int y)
 {
-    WISPFUN_DEBUG("c19_f8");
+    DEBUG_TRACE_FUNCTION;
     if (Container == 0xFFFFFFFF)
     {
         if (MultiBody)
@@ -315,14 +315,14 @@ void CGameItem::Select(int x, int y)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс картинки (для анимации)
 @return Индекс картинки
 */
 ushort CGameItem::GetMountAnimation()
 {
-    WISPFUN_DEBUG("c19_f9");
+    DEBUG_TRACE_FUNCTION;
     ushort graphic = Graphic;
 
     if (Layer == OL_MOUNT)
@@ -577,7 +577,7 @@ ushort CGameItem::GetMountAnimation()
 
     return graphic;
 }
-//----------------------------------------------------------------------------------
+
 void CGameItem::ClearCustomHouseMultis(int state)
 {
     CMulti *nextMulti = NULL;
@@ -610,7 +610,7 @@ void CGameItem::ClearCustomHouseMultis(int state)
             Delete(multi);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить мульти в текущий объект
 @return
@@ -630,14 +630,14 @@ CGameItem::AddMulti(ushort graphic, ushort color, char x, char y, char z, bool i
 
     return mo;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузка мульти в текущий объект
 @return 
 */
 void CGameItem::LoadMulti(bool dropAlpha)
 {
-    WISPFUN_DEBUG("c19_f10");
+    DEBUG_TRACE_FUNCTION;
     ClearMultiItems();
 
     if (Graphic >= MAX_MULTI_DATA_INDEX_COUNT)
@@ -667,7 +667,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
         if (data.empty())
             return;
 
-        WISP_DATASTREAM::CDataReader reader(&data[0], data.size());
+        Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
 
         IFOR (i, 0, count)
@@ -759,7 +759,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
     if (minimap != NULL)
         minimap->LastX = 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить объекта-мульти
 @param [__in] obj Ссылка на мульти-объект
@@ -767,7 +767,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 */
 void CGameItem::AddMultiObject(CMultiObject *obj)
 {
-    WISPFUN_DEBUG("c19_f11");
+    DEBUG_TRACE_FUNCTION;
     if (m_Items == NULL)
     {
         m_Items = new CMulti(obj->GetX(), obj->GetY());
@@ -826,7 +826,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получение объекта мульти в заданных координатах
 @param [__in] x Координата X
@@ -835,7 +835,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
 */
 CMulti *CGameItem::GetMultiAtXY(short x, short y)
 {
-    WISPFUN_DEBUG("c19_f12");
+    DEBUG_TRACE_FUNCTION;
     QFOR(multi, m_Items, CMulti *)
     {
         if (multi->X == x && multi->Y == y)
@@ -844,7 +844,7 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
 
     return NULL;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Найти объект внутри (рекурсивно) по типу с учетом (и без) цвета
 @param [__in] graphic Индекс картинки
@@ -853,7 +853,7 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
 */
 CGameItem *CGameItem::FindItem(ushort graphic, ushort color)
 {
-    WISPFUN_DEBUG("c19_f13");
+    DEBUG_TRACE_FUNCTION;
     CGameItem *item = NULL;
 
     if (color == 0xFFFF) //Поиск по минимальному цвету
@@ -902,10 +902,10 @@ CGameItem *CGameItem::FindItem(ushort graphic, ushort color)
 
     return item;
 }
-//----------------------------------------------------------------------------------
+
 CMulti *CGameItem::GetMulti()
 {
     CMulti *multi = (CMulti *)m_Items;
     return multi;
 }
-//----------------------------------------------------------------------------------
+

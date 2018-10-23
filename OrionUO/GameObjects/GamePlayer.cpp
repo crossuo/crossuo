@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CPlayer *g_Player = NULL;
-//----------------------------------------------------------------------------------
+
 CPlayer::CPlayer(int serial)
     : CGameCharacter(serial)
 {
-    WISPFUN_DEBUG("c21_f1");
+    DEBUG_TRACE_FUNCTION;
     CPacketSkillsRequest(Serial).Send();
 }
-//---------------------------------------------------------------------------
+
 CPlayer::~CPlayer()
 {
-    WISPFUN_DEBUG("c21_f2");
+    DEBUG_TRACE_FUNCTION;
 }
-//---------------------------------------------------------------------------
+
 void CPlayer::CloseBank()
 {
     CGameItem *bank = FindLayer(OL_BANK);
@@ -37,14 +37,14 @@ void CPlayer::CloseBank()
         g_GumpManager.CloseGump(bank->Serial, 0, GT_CONTAINER);
     }
 }
-//---------------------------------------------------------------------------
+
 /*!
 Поиск бинтов в сумке (и подсумках)
 @return Ссылка на бинт или NULL
 */
 CGameItem *CPlayer::FindBandage()
 {
-    WISPFUN_DEBUG("c21_f11");
+    DEBUG_TRACE_FUNCTION;
     CGameItem *item = FindLayer(OL_BACKPACK);
 
     if (item != NULL)
@@ -52,10 +52,10 @@ CGameItem *CPlayer::FindBandage()
 
     return item;
 }
-//---------------------------------------------------------------------------
+
 void CPlayer::UpdateAbilities()
 {
-    WISPFUN_DEBUG("c21_f12");
+    DEBUG_TRACE_FUNCTION;
     ushort equippedGraphic = 0;
 
     CGameItem *layerObject = g_Player->FindLayer(OL_1_HAND);
@@ -739,4 +739,3 @@ void CPlayer::UpdateAbilities()
 
     g_GumpManager.UpdateContent(0, 0, GT_COMBAT_BOOK);
 }
-//---------------------------------------------------------------------------

@@ -6,14 +6,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef ANIMATIONMANAGER_H
 #define ANIMATIONMANAGER_H
-//----------------------------------------------------------------------------------
+
 static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;
 static const float LOWER_BODY_RATIO = 0.94f;
-//----------------------------------------------------------------------------------
+
 struct FRAME_OUTPUT_INFO
 {
     int StartX;
@@ -21,7 +21,7 @@ struct FRAME_OUTPUT_INFO
     int EndX;
     int EndY;
 };
-//----------------------------------------------------------------------------------
+
 struct ANIMATION_DIMENSIONS
 {
     int Width;
@@ -35,7 +35,7 @@ struct UOPFrameData
     short frameId;
     uint pixelDataOffset;
 };
-//----------------------------------------------------------------------------------
+
 class CEquipConvData
 {
 public:
@@ -51,12 +51,12 @@ public:
     }
     ~CEquipConvData() {}
 };
-//----------------------------------------------------------------------------------
+
 typedef unordered_map<ushort, CEquipConvData> EQUIP_CONV_DATA_MAP;
 typedef unordered_map<ushort, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера анимаций
-class CAnimationManager : public WISP_DATASTREAM::CDataReader
+class CAnimationManager : public Wisp::CDataReader
 {
 public:
     //!Цвет текущего кадра
@@ -323,9 +323,8 @@ public:
 
     uchar GetObjectNewAnimation(CGameCharacter *obj, ushort type, ushort action, uchar delay);
 };
-//----------------------------------------------------------------------------------
+
 //!Ссылка на менеджер анимаций
 extern CAnimationManager g_AnimationManager;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

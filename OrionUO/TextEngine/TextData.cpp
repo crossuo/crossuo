@@ -8,15 +8,15 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CTextData::CTextData()
     : CRenderTextObject()
 {
-    WISPFUN_DEBUG("c174_f1");
+    DEBUG_TRACE_FUNCTION;
 }
-//---------------------------------------------------------------------------
+
 CTextData::CTextData(CTextData *obj)
     : Unicode(obj->Unicode)
     , Type(obj->Type)
@@ -24,24 +24,24 @@ CTextData::CTextData(CTextData *obj)
     , Timer(obj->Timer)
     , Alpha(obj->Alpha)
 {
-    WISPFUN_DEBUG("c174_f2");
+    DEBUG_TRACE_FUNCTION;
     RealDrawX = obj->RealDrawX;
     RealDrawY = obj->RealDrawY;
     Color = obj->Color;
     Text = obj->Text;
     UnicodeText = obj->UnicodeText;
 }
-//---------------------------------------------------------------------------
+
 CTextData::~CTextData()
 {
-    WISPFUN_DEBUG("c174_f3");
+    DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
     Owner = NULL;
 }
-//---------------------------------------------------------------------------
+
 bool CTextData::CanBeDrawedInJournalGump()
 {
-    WISPFUN_DEBUG("c174_f4");
+    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     switch (Type)
@@ -61,11 +61,11 @@ bool CTextData::CanBeDrawedInJournalGump()
 
     return result;
 }
-//---------------------------------------------------------------------------
+
 void CTextData::GenerateTexture(
     int maxWidth, ushort flags, TEXT_ALIGN_TYPE align, uchar cell, int font)
 {
-    WISPFUN_DEBUG("c174_f5");
+    DEBUG_TRACE_FUNCTION;
     if (Unicode)
     {
         if (font == -1)
@@ -89,4 +89,4 @@ void CTextData::GenerateTexture(
         }
     }
 }
-//----------------------------------------------------------------------------------
+

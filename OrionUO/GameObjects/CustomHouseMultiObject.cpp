@@ -8,18 +8,18 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CCustomHouseMultiObject::CCustomHouseMultiObject(
     ushort graphic, ushort color, short x, short y, char z, int flags)
     : CMultiObject(graphic, x, y, z, flags)
 {
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     Color = color;
 }
-//----------------------------------------------------------------------------------
+
 CCustomHouseMultiObject::~CCustomHouseMultiObject()
 {
 }
-//----------------------------------------------------------------------------------
+

@@ -8,12 +8,12 @@ CEntryText::CEntryText(int maxLength, int width, int maxWidth, bool numberOnly)
     , MaxWidth(maxWidth)
     , NumberOnly(numberOnly)
 {
-    WISPFUN_DEBUG("c169_f1");
+    DEBUG_TRACE_FUNCTION;
 }
 
 CEntryText::~CEntryText()
 {
-    WISPFUN_DEBUG("c169_f2");
+    DEBUG_TRACE_FUNCTION;
     //Если удаляемое поле - текущее то выставим консоль согласно конфигу
     if (g_EntryPointer == this)
     {
@@ -35,7 +35,7 @@ CEntryText::~CEntryText()
 //Вызывается при клике на текстовое поле (если это предусмотрено в обработчике)
 const char *CEntryText::c_str()
 {
-    WISPFUN_DEBUG("c169_f3");
+    DEBUG_TRACE_FUNCTION;
     m_CText = ToString(Text);
     return m_CText.c_str();
 }
@@ -44,7 +44,7 @@ const char *CEntryText::c_str()
 void CEntryText::OnClick(
     CGump *gump, uchar font, bool unicode, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f4");
+    DEBUG_TRACE_FUNCTION;
     //Текстовое поле - текущее поле ввода
     if (g_EntryPointer == this)
     {
@@ -84,7 +84,7 @@ void CEntryText::OnClick(
 //Вызывается при обработке нажатия клавиши
 void CEntryText::OnKey(CGump *gump, WPARAM wParam)
 {
-    WISPFUN_DEBUG("c169_f5");
+    DEBUG_TRACE_FUNCTION;
     switch (wParam)
     {
         case VK_HOME:
@@ -131,7 +131,7 @@ void CEntryText::OnKey(CGump *gump, WPARAM wParam)
 //Получить количество строк
 int CEntryText::GetLinesCountA(uchar font, TEXT_ALIGN_TYPE align, ushort flags, int width)
 {
-    WISPFUN_DEBUG("c169_f6");
+    DEBUG_TRACE_FUNCTION;
     if (!width)
         width = Width;
 
@@ -154,7 +154,7 @@ int CEntryText::GetLinesCountA(uchar font, TEXT_ALIGN_TYPE align, ushort flags, 
 //Получить количество строк
 int CEntryText::GetLinesCountW(uchar font, TEXT_ALIGN_TYPE align, ushort flags, int width)
 {
-    WISPFUN_DEBUG("c169_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!width)
         width = Width;
 
@@ -177,7 +177,7 @@ int CEntryText::GetLinesCountW(uchar font, TEXT_ALIGN_TYPE align, ushort flags, 
 //Вставить символ относительно m_Position
 bool CEntryText::Insert(wchar_t ch, CGump *gump)
 {
-    WISPFUN_DEBUG("c169_f8");
+    DEBUG_TRACE_FUNCTION;
     //Коррекция позиции
     if (m_Position < 0)
         m_Position = 0;
@@ -221,7 +221,7 @@ bool CEntryText::Insert(wchar_t ch, CGump *gump)
 //Удалить символ относительно m_Position (true - слева, false - справа)
 void CEntryText::Remove(bool left, CGump *gump)
 {
-    WISPFUN_DEBUG("c169_f9");
+    DEBUG_TRACE_FUNCTION;
     //Ткнули Backspace
     if (left)
     {
@@ -258,7 +258,7 @@ void CEntryText::Remove(bool left, CGump *gump)
 */
 void CEntryText::Clear()
 {
-    WISPFUN_DEBUG("c169_f10");
+    DEBUG_TRACE_FUNCTION;
     //Очистка
     Text = L"";
     m_CText = "";
@@ -271,7 +271,7 @@ void CEntryText::Clear()
 
 void CEntryText::Paste()
 {
-    WISPFUN_DEBUG("c169_f11");
+    DEBUG_TRACE_FUNCTION;
     if (OpenClipboard(g_OrionWindow.Handle))
     {
         HANDLE hData = GetClipboardData(CF_UNICODETEXT);
@@ -298,7 +298,7 @@ void CEntryText::Paste()
 //Изменение позиции m_Position
 void CEntryText::AddPos(int val, CGump *gump)
 {
-    WISPFUN_DEBUG("c169_f12");
+    DEBUG_TRACE_FUNCTION;
     //Добавляем (вычитаем) позицию
     m_Position += val;
 
@@ -321,7 +321,7 @@ void CEntryText::AddPos(int val, CGump *gump)
 //Изменение позиции m_Position
 void CEntryText::SetPos(int val, CGump *gump)
 {
-    WISPFUN_DEBUG("c169_f13");
+    DEBUG_TRACE_FUNCTION;
     //Выставляем указанную позицию
     m_Position = val;
 
@@ -344,7 +344,7 @@ void CEntryText::SetPos(int val, CGump *gump)
 //Изменение текста
 void CEntryText::SetTextA(const string &text)
 {
-    WISPFUN_DEBUG("c169_f14");
+    DEBUG_TRACE_FUNCTION;
     //Перевод ASCII в юникод строку
     wstring wtext = ToWString(text);
 
@@ -355,7 +355,7 @@ void CEntryText::SetTextA(const string &text)
 //Изменение текста
 void CEntryText::SetTextW(const wstring &text)
 {
-    WISPFUN_DEBUG("c169_f15");
+    DEBUG_TRACE_FUNCTION;
     //Очистка перед изменением
     Clear();
 
@@ -399,7 +399,7 @@ void CEntryText::SetTextW(const wstring &text)
 //Проверка ширины текста и корректировка входящей строки (при необходимости)
 string CEntryText::CheckMaxWidthA(uchar font, string str)
 {
-    WISPFUN_DEBUG("c169_f16");
+    DEBUG_TRACE_FUNCTION;
     //Если задана максимальная ширина
     if (MaxWidth > 0)
     {
@@ -421,7 +421,7 @@ string CEntryText::CheckMaxWidthA(uchar font, string str)
 
 wstring CEntryText::CheckMaxWidthW(uchar font, wstring str)
 {
-    WISPFUN_DEBUG("c169_f17");
+    DEBUG_TRACE_FUNCTION;
     //Если задана максимальная ширина
     if (MaxWidth > 0)
     {
@@ -443,7 +443,7 @@ wstring CEntryText::CheckMaxWidthW(uchar font, wstring str)
 
 void CEntryText::FixMaxWidthA(uchar font)
 {
-    WISPFUN_DEBUG("c169_f18");
+    DEBUG_TRACE_FUNCTION;
     c_str();
 
     //Если задана максимальная ширина
@@ -465,7 +465,7 @@ void CEntryText::FixMaxWidthA(uchar font)
 
 void CEntryText::FixMaxWidthW(uchar font)
 {
-    WISPFUN_DEBUG("c169_f19");
+    DEBUG_TRACE_FUNCTION;
     //Если задана максимальная ширина
     if (MaxWidth > 0)
     {
@@ -486,7 +486,7 @@ void CEntryText::FixMaxWidthW(uchar font)
 void CEntryText::CreateTextureA(
     uchar font, string str, ushort color, int width, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f20");
+    DEBUG_TRACE_FUNCTION;
     //Если это пустая строка - очищаем все
     if (!str.length())
         Clear();
@@ -535,7 +535,7 @@ void CEntryText::CreateTextureA(
 void CEntryText::CreateTextureW(
     uchar font, wstring str, ushort color, int width, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f21");
+    DEBUG_TRACE_FUNCTION;
     //Если это пустая строка - очищаем все
     if (!str.length())
         Clear();
@@ -577,7 +577,7 @@ void CEntryText::CreateTextureW(
 
 void CEntryText::PrepareToDrawA(uchar font, ushort color, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f22");
+    DEBUG_TRACE_FUNCTION;
     //Если изменился текст или цвет
     if (Changed || Color != color)
     {
@@ -599,7 +599,7 @@ void CEntryText::PrepareToDrawA(uchar font, ushort color, TEXT_ALIGN_TYPE align,
 
 void CEntryText::PrepareToDrawW(uchar font, ushort color, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f23");
+    DEBUG_TRACE_FUNCTION;
     //Если изменился текст или цвет
     if (Changed || Color != color)
     {
@@ -621,7 +621,7 @@ void CEntryText::PrepareToDrawW(uchar font, ushort color, TEXT_ALIGN_TYPE align,
 
 void CEntryText::DrawA(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f24");
+    DEBUG_TRACE_FUNCTION;
     PrepareToDrawA(font, color, align, flags);
 
     //Отрисовка текстуры
@@ -641,7 +641,7 @@ void CEntryText::DrawA(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE a
 
 void CEntryText::DrawW(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f25");
+    DEBUG_TRACE_FUNCTION;
     PrepareToDrawW(font, color, align, flags);
 
     //Отрисовка текстуры
@@ -655,7 +655,7 @@ void CEntryText::DrawW(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE a
 void CEntryText::DrawMaskA(
     uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f26");
+    DEBUG_TRACE_FUNCTION;
     //Накладываем на текст маску из "*"
     size_t len = Length();
     string str = "";
@@ -688,7 +688,7 @@ void CEntryText::DrawMaskA(
 void CEntryText::DrawMaskW(
     uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
 {
-    WISPFUN_DEBUG("c169_f27");
+    DEBUG_TRACE_FUNCTION;
     //Накладываем на текст маску из "*"
     size_t len = Length();
     wstring str = L"";

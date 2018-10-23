@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpSecureTrading::CGumpSecureTrading(uint serial, short x, short y, uint id, uint id2)
     : CGump(GT_TRADE, serial, x, y)
     , ID2(id2)
 {
     ID = id;
 }
-//----------------------------------------------------------------------------------
+
 CGumpSecureTrading::~CGumpSecureTrading()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c120_f1");
+    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed && g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsText())
@@ -38,10 +38,10 @@ void CGumpSecureTrading::CalculateGumpState()
     if (g_GumpTranslate.X || g_GumpTranslate.Y)
         WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::PrepareContent()
 {
-    WISPFUN_DEBUG("c120_f3");
+    DEBUG_TRACE_FUNCTION;
     if (m_MyCheck != NULL)
     {
         if (StateMy)
@@ -83,10 +83,10 @@ void CGumpSecureTrading::PrepareContent()
     if (m_TextRenderer.CalculatePositions(false))
         WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::UpdateContent()
 {
-    WISPFUN_DEBUG("c120_f4");
+    DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
     if (selobj == NULL)
@@ -198,10 +198,10 @@ void CGumpSecureTrading::UpdateContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::Draw()
 {
-    WISPFUN_DEBUG("c120_f5");
+    DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
     if (selobj == NULL)
@@ -222,10 +222,10 @@ void CGumpSecureTrading::Draw()
 
     glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
 }
-//----------------------------------------------------------------------------------
+
 CRenderObject *CGumpSecureTrading::Select()
 {
-    WISPFUN_DEBUG("c120_f6");
+    DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
     if (selobj == NULL)
@@ -233,8 +233,8 @@ CRenderObject *CGumpSecureTrading::Select()
 
     CRenderObject *selected = CGump::Select();
 
-    WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = Wisp::CPoint2Di(
         oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
     m_TextRenderer.Select(this);
@@ -243,10 +243,10 @@ CRenderObject *CGumpSecureTrading::Select()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c120_f7");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GST_CHECKBOX) //Изменение состояния чекбокса
     {
         StateMy = !StateMy;
@@ -269,10 +269,10 @@ void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c120_f8");
+    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (g_ObjectInHand.Enabled)
@@ -325,14 +325,14 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
         g_MouseManager.CancelDoubleClick = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpSecureTrading::SendTradingResponse(int code)
 {
-    WISPFUN_DEBUG("c120_f9");
+    DEBUG_TRACE_FUNCTION;
     //Ответ на трэйд окно
     CPacketTradeResponse(this, code).Send();
 
     if (code == 1) //Закрываем окно
         RemoveMark = true;
 }
-//----------------------------------------------------------------------------------
+

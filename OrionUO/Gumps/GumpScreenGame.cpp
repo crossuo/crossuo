@@ -8,30 +8,30 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpScreenGame::CGumpScreenGame()
     : CGump(GT_NONE, 0, 0, 0)
 {
-    WISPFUN_DEBUG("c115_f1");
+    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     NoClose = true;
 
     Add(new CGUIButton(ID_GS_RESIZE, 0x0837, 0x0837, 0x0838, 0, 0));
     Add(new CGUIGumppic(0x0E14, 0, 0));
 }
-//----------------------------------------------------------------------------------
+
 CGumpScreenGame::~CGumpScreenGame()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenGame::UpdateContent()
 {
-    WISPFUN_DEBUG("c115_f2");
+    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump == this)
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (g_PressedObject.LeftObject == m_Items) //resizer
         {
@@ -83,20 +83,20 @@ void CGumpScreenGame::UpdateContent()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenGame::InitToolTip()
 {
-    WISPFUN_DEBUG("c115_f3");
+    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == NULL)
         return;
 
     if (g_SelectedObject.Serial == ID_GS_RESIZE)
         g_ToolTip.Set(L"Resize game window", 100);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenGame::Draw()
 {
-    WISPFUN_DEBUG("c115_f4");
+    DEBUG_TRACE_FUNCTION;
     //Рамка игрового окна
     g_Orion.DrawGump(
         0x0A8D,
@@ -140,10 +140,10 @@ void CGumpScreenGame::Draw()
         g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth - 3,
         g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 3);
 }
-//----------------------------------------------------------------------------------
+
 CRenderObject *CGumpScreenGame::Select()
 {
-    WISPFUN_DEBUG("c115_f5");
+    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = NULL;
 
     if (!g_ConfigManager.LockResizingGameWindow)
@@ -188,20 +188,20 @@ CRenderObject *CGumpScreenGame::Select()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenGame::OnLeftMouseButtonDown()
 {
-    WISPFUN_DEBUG("c115_f6");
+    DEBUG_TRACE_FUNCTION;
     //CGump::OnLeftMouseButtonDown();
 
     if (g_GumpConsoleType != NULL)
         g_GumpManager.MoveToBack(g_GumpConsoleType);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenGame::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c115_f7");
-    WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
     if (g_PressedObject.LeftObject == m_Items) //resizer
     {
@@ -245,4 +245,4 @@ void CGumpScreenGame::OnLeftMouseButtonUp()
                 g_OrionWindow.GetSize().Height - g_ConfigManager.GameWindowHeight;
     }
 }
-//----------------------------------------------------------------------------------
+

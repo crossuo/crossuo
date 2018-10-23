@@ -6,20 +6,20 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #pragma once
 #if defined(ORION_LINUX)
 #define CDECL
 #endif
-//----------------------------------------------------------------------------------
+
 typedef void CDECL NETWORK_INIT_TYPE(const bool &, BYTE *);
 typedef void CDECL NETWORK_ACTION_TYPE(const bool &, BYTE *, BYTE *, const int &);
 typedef void CDECL NETWORK_POST_ACTION_TYPE(BYTE *, BYTE *, const int &);
-//----------------------------------------------------------------------------------
+
 extern NETWORK_INIT_TYPE *g_NetworkInit;
 extern NETWORK_ACTION_TYPE *g_NetworkAction;
 extern NETWORK_POST_ACTION_TYPE *g_NetworkPostAction;
-//----------------------------------------------------------------------------------
+
 //!Класс менеджера подключения к серверу
 class CConnectionManager
 {
@@ -139,7 +139,6 @@ public:
 	*/
     puchar GetClientIP() const { return (puchar)m_Seed; }
 };
-//----------------------------------------------------------------------------------
+
 //!Менеджер подключения
 extern CConnectionManager g_ConnectionManager;
-//----------------------------------------------------------------------------------

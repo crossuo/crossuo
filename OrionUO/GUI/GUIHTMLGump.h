@@ -8,10 +8,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef GUIHTMLGUMP_H
 #define GUIHTMLGUMP_H
-//----------------------------------------------------------------------------------
+
 class CGUIHTMLGump : public CGUIPolygonal
 {
 public:
@@ -22,16 +22,16 @@ public:
     bool HaveScrollbar = false;
 
     //!Размер данных, хранимых внутри компоненты
-    WISP_GEOMETRY::CSize DataSize = WISP_GEOMETRY::CSize();
+    Wisp::CSize DataSize = Wisp::CSize();
 
     //!Смещение к данным
-    WISP_GEOMETRY::CPoint2Di DataOffset = WISP_GEOMETRY::CPoint2Di();
+    Wisp::CPoint2Di DataOffset = Wisp::CPoint2Di();
 
     //!Текущее смещение к данным
-    WISP_GEOMETRY::CPoint2Di CurrentOffset = WISP_GEOMETRY::CPoint2Di();
+    Wisp::CPoint2Di CurrentOffset = Wisp::CPoint2Di();
 
     //!Доступное смещение для скроллинга
-    WISP_GEOMETRY::CPoint2Di AvailableOffset = WISP_GEOMETRY::CPoint2Di();
+    Wisp::CPoint2Di AvailableOffset = Wisp::CPoint2Di();
 
 private:
     void CalculateDataSize(CBaseGUI *item, int &startX, int &startY, int &endX, int &endY);
@@ -81,6 +81,5 @@ public:
 
     virtual bool IsHTMLGump() { return true; }
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

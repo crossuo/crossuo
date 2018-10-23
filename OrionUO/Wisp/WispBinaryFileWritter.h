@@ -1,13 +1,12 @@
-//----------------------------------------------------------------------------------
+
 #ifndef WISPBINARYFILEWRITTER_H
 #define WISPBINARYFILEWRITTER_H
-//----------------------------------------------------------------------------------
+
 #include "FileSystem.h"
-//----------------------------------------------------------------------------------
-namespace WISP_FILE
+
+namespace Wisp
 {
-//----------------------------------------------------------------------------------
-class CBinaryFileWritter : public WISP_DATASTREAM::CDataWritter
+class CBinaryFileWritter : public Wisp::CDataWritter
 {
 private:
     FILE *m_File{ nullptr };
@@ -23,7 +22,7 @@ public:
 
     void WriteBuffer();
 };
-//----------------------------------------------------------------------------------
-}; // namespace WISP_FILE
-//----------------------------------------------------------------------------------
+
+}; // namespace Wisp
+
 #endif

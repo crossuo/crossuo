@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef CUSTOMHOUSESMANAGER_H
 #define CUSTOMHOUSESMANAGER_H
-//----------------------------------------------------------------------------------
+
 class CBuildObject
 {
 public:
@@ -28,7 +28,7 @@ public:
     }
     ~CBuildObject() {}
 };
-//----------------------------------------------------------------------------------
+
 class CCustomHouse
 {
 public:
@@ -47,8 +47,8 @@ public:
 
     void Paste(CGameItem *foundation);
 };
-//----------------------------------------------------------------------------------
-class CustomHousesManager : public WISP_DATASTREAM::CDataReader
+
+class CustomHousesManager : public Wisp::CDataReader
 {
     unordered_map<uint, CCustomHouse *> m_Items;
 
@@ -65,8 +65,7 @@ public:
     void Load(const os_path &path);
     void Save(const os_path &path);
 };
-//----------------------------------------------------------------------------------
+
 extern CustomHousesManager g_CustomHousesManager;
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

@@ -8,26 +8,26 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGLTextureCircleOfTransparency g_CircleOfTransparency;
-//----------------------------------------------------------------------------------
+
 CGLTextureCircleOfTransparency::CGLTextureCircleOfTransparency()
     : CGLTexture()
 {
 }
-//----------------------------------------------------------------------------------
+
 CGLTextureCircleOfTransparency::~CGLTextureCircleOfTransparency()
 {
-    WISPFUN_DEBUG("c37_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 }
-//---------------------------------------------------------------------------
+
 void CGLTextureCircleOfTransparency::CreatePixels(
     int radius, short &width, short &height, UINT_LIST &pixels)
 {
-    WISPFUN_DEBUG("c37_f2");
+    DEBUG_TRACE_FUNCTION;
     int fixRadius = radius + 1;
     int mulRadius = fixRadius * 2;
 
@@ -52,10 +52,10 @@ void CGLTextureCircleOfTransparency::CreatePixels(
         }
     }
 }
-//---------------------------------------------------------------------------
+
 bool CGLTextureCircleOfTransparency::Create(int radius)
 {
-    WISPFUN_DEBUG("c37_f3");
+    DEBUG_TRACE_FUNCTION;
     if (radius <= 0)
         return false;
     else if (radius > 200)
@@ -80,10 +80,10 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
 
     return true;
 }
-//---------------------------------------------------------------------------
+
 void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 {
-    WISPFUN_DEBUG("c37_f4");
+    DEBUG_TRACE_FUNCTION;
     if (Texture != 0)
     {
         X = x - Width / 2;
@@ -106,10 +106,10 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
         glDisable(GL_STENCIL_TEST);
     }
 }
-//---------------------------------------------------------------------------
+
 void CGLTextureCircleOfTransparency::Redraw()
 {
-    WISPFUN_DEBUG("c37_f5");
+    DEBUG_TRACE_FUNCTION;
     glClear(GL_STENCIL_BUFFER_BIT);
 
     if (g_ConfigManager.UseCircleTrans && Texture != 0)
@@ -131,4 +131,3 @@ void CGLTextureCircleOfTransparency::Redraw()
         glDisable(GL_STENCIL_TEST);
     }
 }
-//----------------------------------------------------------------------------------

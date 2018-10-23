@@ -8,28 +8,28 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
 #include "CharacterListScreen.h"
-//----------------------------------------------------------------------------------
+
 CCharacterListScreen g_CharacterListScreen;
-//----------------------------------------------------------------------------------
+
 CCharacterListScreen::CCharacterListScreen()
     : CBaseScreen(m_CharacterListGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CCharacterListScreen::~CCharacterListScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CCharacterListScreen::Init()
 {
-    WISPFUN_DEBUG("c160_f1");
+    DEBUG_TRACE_FUNCTION;
 
     string title = string("Ultima Online - ") + g_MainScreen.m_Account->c_str();
 
@@ -48,7 +48,7 @@ void CCharacterListScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после перехода
 @param [__in_opt] action Идентификатор действия
@@ -56,7 +56,7 @@ void CCharacterListScreen::Init()
 */
 void CCharacterListScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c160_f2");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -82,7 +82,7 @@ void CCharacterListScreen::ProcessSmoothAction(uchar action)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 #if USE_WISP
 /*!
 Обработка нажатия клавиши
@@ -92,7 +92,7 @@ void CCharacterListScreen::ProcessSmoothAction(uchar action)
 */
 void CCharacterListScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c160_f3");
+    DEBUG_TRACE_FUNCTION;
     m_Gump.OnKeyDown(wParam, lParam);
 
     if (wParam == VK_RETURN)

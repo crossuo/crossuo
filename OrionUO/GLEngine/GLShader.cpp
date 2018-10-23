@@ -8,29 +8,29 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CDeathShader g_DeathShader;
 CColorizerShader g_ColorizerShader;
 CColorizerShader g_FontColorizerShader;
 CColorizerShader g_LightColorizerShader;
-//----------------------------------------------------------------------------------
+
 void UnuseShader()
 {
-    WISPFUN_DEBUG("c_uns_sdr");
+    DEBUG_TRACE_FUNCTION;
     glUseProgramObjectARB(0);
     ShaderColorTable = 0;
     g_ShaderDrawMode = 0;
 }
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CGLShader--------------------------------------
-//----------------------------------------------------------------------------------
+
 CGLShader::CGLShader()
 {
-    WISPFUN_DEBUG("c32_f1");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
 {
     GLint val = GL_FALSE;
@@ -125,10 +125,10 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
 
     return val == GL_TRUE;
 }
-//----------------------------------------------------------------------------------
+
 CGLShader::~CGLShader()
 {
-    WISPFUN_DEBUG("c32_f2");
+    DEBUG_TRACE_FUNCTION;
     if (m_Shader != 0)
     {
         glDeleteObjectARB(m_Shader);
@@ -149,10 +149,10 @@ CGLShader::~CGLShader()
 
     m_TexturePointer = 0;
 }
-//----------------------------------------------------------------------------------
+
 bool CGLShader::Use()
 {
-    WISPFUN_DEBUG("c32_f3");
+    DEBUG_TRACE_FUNCTION;
     UnuseShader();
 
     bool result = false;
@@ -165,27 +165,27 @@ bool CGLShader::Use()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CGLShader::Pause()
 {
-    WISPFUN_DEBUG("c32_f4");
+    DEBUG_TRACE_FUNCTION;
     glUseProgramObjectARB(0);
 }
-//----------------------------------------------------------------------------------
+
 void CGLShader::Resume()
 {
-    WISPFUN_DEBUG("c32_f5");
+    DEBUG_TRACE_FUNCTION;
     glUseProgramObjectARB(m_Shader);
 }
-//----------------------------------------------------------------------------------
+
 //-----------------------------------CDeathShader-----------------------------------
-//----------------------------------------------------------------------------------
+
 CDeathShader::CDeathShader()
     : CGLShader()
 {
-    WISPFUN_DEBUG("c33_f1");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
 {
     if (CGLShader::Init(vertexShaderData, fragmentShaderData))
@@ -195,15 +195,15 @@ bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShader
 
     return (m_Shader != 0);
 }
-//----------------------------------------------------------------------------------
+
 //----------------------------------CColorizerShader--------------------------------
-//----------------------------------------------------------------------------------
+
 CColorizerShader::CColorizerShader()
     : CGLShader()
 {
-    WISPFUN_DEBUG("c34_f1");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
 {
     if (CGLShader::Init(vertexShaderData, fragmentShaderData))
@@ -217,10 +217,10 @@ bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentSh
 
     return (m_Shader != 0);
 }
-//----------------------------------------------------------------------------------
+
 bool CColorizerShader::Use()
 {
-    WISPFUN_DEBUG("c34_f2");
+    DEBUG_TRACE_FUNCTION;
     bool result = CGLShader::Use();
 
     if (result)
@@ -232,4 +232,4 @@ bool CColorizerShader::Use()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

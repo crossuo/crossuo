@@ -8,11 +8,11 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CObjectOnCursor g_ObjectInHand;
-//----------------------------------------------------------------------------------
+
 void CObjectOnCursor::Clear()
 {
     Enabled = false;
@@ -29,10 +29,10 @@ void CObjectOnCursor::Clear()
     TiledataPtr = NULL;
     UpdatedInWorld = false;
 }
-//----------------------------------------------------------------------------------
+
 ushort CObjectOnCursor::GetDrawGraphic(bool &doubleDraw)
 {
-    WISPFUN_DEBUG("c20_f15");
+    DEBUG_TRACE_FUNCTION;
     int index = CGameObject::IsGold(Graphic);
     ushort result = Graphic;
 
@@ -50,4 +50,4 @@ ushort CObjectOnCursor::GetDrawGraphic(bool &doubleDraw)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

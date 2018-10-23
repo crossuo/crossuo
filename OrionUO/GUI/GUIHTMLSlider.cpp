@@ -8,9 +8,9 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIHTMLSlider::CGUIHTMLSlider(
     CGUIHTMLGump *htmlGump,
     int serial,
@@ -43,20 +43,20 @@ CGUIHTMLSlider::CGUIHTMLSlider(
     , m_HTMLGump(htmlGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIHTMLSlider::~CGUIHTMLSlider()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIHTMLSlider::CalculateOffset()
 {
-    WISPFUN_DEBUG("c63_f1");
+    DEBUG_TRACE_FUNCTION;
     CGUISlider::CalculateOffset();
 
     if (m_HTMLGump != NULL)
     {
-        WISP_GEOMETRY::CPoint2Di currentOffset = m_HTMLGump->CurrentOffset;
-        WISP_GEOMETRY::CPoint2Di availableOffset = m_HTMLGump->AvailableOffset;
+        Wisp::CPoint2Di currentOffset = m_HTMLGump->CurrentOffset;
+        Wisp::CPoint2Di availableOffset = m_HTMLGump->AvailableOffset;
 
         if (Vertical)
             currentOffset.Y = (int)((availableOffset.Y * Percents) / 100.0f);
@@ -66,4 +66,4 @@ void CGUIHTMLSlider::CalculateOffset()
         m_HTMLGump->CurrentOffset = currentOffset;
     }
 }
-//----------------------------------------------------------------------------------
+

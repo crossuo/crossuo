@@ -6,10 +6,10 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #ifndef ENUMLIST_H
 #define ENUMLIST_H
-//----------------------------------------------------------------------------------
+
 //!На какой стадии находится рендер (и вообще клиент)
 enum GAME_STATE
 {
@@ -29,7 +29,7 @@ enum GAME_STATE
 							вызвавшего эту стадию рендера
 							*/
 };
-//----------------------------------------------------------------------------------
+
 //!Тип объекта при рендере
 enum RENDER_OBJECT_TYPE
 {
@@ -40,7 +40,7 @@ enum RENDER_OBJECT_TYPE
     ROT_MULTI_OBJECT,  //Мульти
     ROT_EFFECT         //Эффект
 };
-//----------------------------------------------------------------------------------
+
 //!Тип объекта поиска
 enum SCAN_TYPE_OBJECT
 {
@@ -50,7 +50,7 @@ enum SCAN_TYPE_OBJECT
     STO_OBJECTS,
     STO_MOBILES
 };
-//----------------------------------------------------------------------------------
+
 //!Тип поиска объекта
 enum SCAN_MODE_OBJECT
 {
@@ -58,7 +58,7 @@ enum SCAN_MODE_OBJECT
     SMO_PREV,
     SMO_NEAREST
 };
-//----------------------------------------------------------------------------------
+
 //!Тип эффекта
 enum EFFECT_TYPE
 {
@@ -68,7 +68,7 @@ enum EFFECT_TYPE
     EF_STAY_AT_SOURCE, //!Привязан к персонажу
     EF_DRAG            //!Анимация перемещения предмета
 };
-//----------------------------------------------------------------------------------
+
 //!Тип ускорения
 enum CHARACTER_SPEED_TYPE
 {
@@ -77,7 +77,7 @@ enum CHARACTER_SPEED_TYPE
     CST_CANT_RUN, //!Персонаж может только ходить, не бежать (как на маунте, так и без него)
     CST_FAST_UNMOUNT_AND_CANT_RUN //!Совокупность предыдущих 2 вариантов (персонаж не может бежать и ускорение только при перемещении без маунта)
 };
-//----------------------------------------------------------------------------------
+
 //!Тип шифрования
 enum ENCRYPTION_TYPE
 {
@@ -88,7 +88,7 @@ enum ENCRYPTION_TYPE
     ET_203,  //!Специальное для 2.0.3 клиента (BlowFish + TwoFish без MD5)
     ET_TFISH //!TwoFish + MD5
 };
-//----------------------------------------------------------------------------------
+
 //!Версия клиента (для изменения в протоколе и прочих няшках)
 enum CLIENT_VERSION
 {
@@ -121,7 +121,7 @@ enum CLIENT_VERSION
     CV_70240, //*.mul -> *.uop
     CV_70331  //
 };
-//----------------------------------------------------------------------------------
+
 //!На какой стадии находится окно коннекта
 enum CONNECTION_SCREEN_TYPE
 {
@@ -132,7 +132,7 @@ enum CONNECTION_SCREEN_TYPE
     CST_GAME_LOGIN,
     CST_GAME
 };
-//----------------------------------------------------------------------------------
+
 //!Рассы
 enum RACE_TYPE
 {
@@ -140,7 +140,7 @@ enum RACE_TYPE
     RT_ELF,
     RT_GARGOYLE
 };
-//----------------------------------------------------------------------------------
+
 //!Типы профессий
 enum PROFESSION_TYPE
 {
@@ -148,7 +148,7 @@ enum PROFESSION_TYPE
     PT_CATEGORY,
     PT_PROFESSION
 };
-//----------------------------------------------------------------------------------
+
 //!Состояния ClientFlag для отправки при создании персонажа
 enum CLIENT_FLAG
 {
@@ -163,7 +163,7 @@ enum CLIENT_FLAG
     CF_RESERVED = 0x80,
     CF_3D = 0x100
 };
-//----------------------------------------------------------------------------------
+
 //!Расширения для списка персонажей
 enum CHARACTER_LIST_FLAG
 {
@@ -184,7 +184,7 @@ enum CHARACTER_LIST_FLAG
     CLF_NEW_MOVEMENT_SYSTEM = 0x4000,
     CLF_UNLOCK_FELUCCA_AREAS = 0x8000
 };
-//----------------------------------------------------------------------------------
+
 //!Состояния client features
 enum LOCKED_FEATURE_FLAG
 {
@@ -209,7 +209,7 @@ enum LOCKED_FEATURE_FLAG
     LFF_GOTHIC_HOUSING = 0x40000,
     LFF_RUSTIC_HOUSING = 0x80000
 };
-//----------------------------------------------------------------------------------
+
 //!Типы спеллбук
 enum SPELLBOOK_TYPE
 {
@@ -221,7 +221,7 @@ enum SPELLBOOK_TYPE
     ST_SPELL_WEAVING,
     ST_MYSTICISM
 };
-//----------------------------------------------------------------------------------
+
 //!Смещение для книг заклинаний
 enum SPELLBOOK_OFFSET
 {
@@ -233,7 +233,7 @@ enum SPELLBOOK_OFFSET
     SO_SPELL_WEAVING = 501,
     SO_MYSTICISM = 601
 };
-//----------------------------------------------------------------------------------
+
 //!Состояния плавного переключения экранов
 enum SCREEN_EFFECT_MODE
 {
@@ -241,7 +241,7 @@ enum SCREEN_EFFECT_MODE
     SEM_SUNRISE,
     SEM_SUNSET
 };
-//----------------------------------------------------------------------------------
+
 //!Тип плавного переключения экрана
 enum SCREEN_EFFECT_TYPE
 {
@@ -251,7 +251,7 @@ enum SCREEN_EFFECT_TYPE
     SET_TO_WHITE_THEN_BLACK,
     SET_TO_BLACK_VERY_FAST
 };
-//----------------------------------------------------------------------------------
+
 //!Состояния плавного переключения экранов
 enum WEATHER_TYPE
 {
@@ -260,7 +260,7 @@ enum WEATHER_TYPE
     WT_SNOW,
     WT_STORM
 };
-//----------------------------------------------------------------------------------
+
 //!Типы гампов
 enum GUMP_TYPE
 {
@@ -311,7 +311,7 @@ enum GUMP_TYPE
     GT_PROPERTY,
     GT_PROPERTY_ICON
 };
-//----------------------------------------------------------------------------------
+
 //!Типы объектов гампов
 enum GUMP_OBJECT_TYPE
 {
@@ -361,7 +361,7 @@ enum GUMP_OBJECT_TYPE
     GOT_TOOLTIP,      //
     GOT_VIRTURE_GUMP  //
 };
-//----------------------------------------------------------------------------------
+
 enum SLIDER_TEXT_POSITION
 {
     STP_TOP = 0,
@@ -373,7 +373,7 @@ enum SLIDER_TEXT_POSITION
     STP_LEFT_CENTER,
     STP_RIGHT_CENTER
 };
-//----------------------------------------------------------------------------------
+
 enum SELECT_COLOR_GUMP_STATE
 {
     //SCGS_OPT_POPUP_TEXT = 0,
@@ -406,7 +406,7 @@ enum SELECT_COLOR_GUMP_STATE
     SCGS_OPT_REPSYS_ENEMY,
     SCGS_OPT_REPSYS_MURDERER
 };
-//----------------------------------------------------------------------------------
+
 enum SELECT_FONT_GUMP_STATE
 {
     SFGS_OPT_POPUP = 1,
@@ -414,7 +414,7 @@ enum SELECT_FONT_GUMP_STATE
     SFGS_OPT_CHAT,
     SFGS_OPT_MISCELLANEOUS
 };
-//----------------------------------------------------------------------------------
+
 enum MAP_MESSAGE
 {
     MM_ADD = 1,
@@ -425,14 +425,14 @@ enum MAP_MESSAGE
     MM_EDIT,
     MM_EDIT_RESPONSE
 };
-//----------------------------------------------------------------------------------
+
 enum UPDATE_GAME_OBJECT_TYPE
 {
     UGOT_ITEM = 0,
     UGOT_NEW_ITEM = 1,
     UGOT_MULTI = 2,
 };
-//----------------------------------------------------------------------------------
+
 enum ORION_COMMAND_TYPE
 {
     OCT_RESERVED = 1,
@@ -454,7 +454,7 @@ enum ORION_COMMAND_TYPE
     OCT_MOVE_PAPERDOLL = 112,
     OCT_USE_ABILITY = 113
 };
-//----------------------------------------------------------------------------------
+
 enum ORION_FILE_INDEX
 {
     OFI_MAP_0_MUL = 1,
@@ -527,13 +527,13 @@ enum ORION_FILE_INDEX
     OFI_RADARCOL_MUL,
     OFI_FILES_COUNT
 };
-//----------------------------------------------------------------------------------
+
 enum ORION_GRAPHIC_DATA_TYPE
 {
     OGDT_STATIC_ART = 1,
     OGDT_GUMP_ART
 };
-//----------------------------------------------------------------------------------
+
 enum ORION_FEATURE_FLAGS
 {
     OFF_DRAW_CHARACTERS_STATUS_IN_WORLD = 0x00000001,
@@ -548,7 +548,7 @@ enum ORION_FEATURE_FLAGS
 
     OFF_ALL_FLAGS = 0xFFFFFFFF
 };
-//----------------------------------------------------------------------------------
+
 enum VALUE_KEY_INT
 {
     VKI_SOUND = 0,
@@ -627,7 +627,7 @@ enum VALUE_KEY_INT
     VKI_VIEW_RANGE,
     VKI_SET_PVPCALLER
 };
-//----------------------------------------------------------------------------------
+
 enum VALUE_KEY_STRING
 {
     VKS_SKILL_NAME = 0,
@@ -641,7 +641,7 @@ enum VALUE_KEY_STRING
     VKS_SPELLBOOK_6_SPELL_NAME,
     VKS_SPELLBOOK_7_SPELL_NAME
 };
-//----------------------------------------------------------------------------------
+
 //!Типы текстовых сообщений
 enum OBJECT_LAYERS
 {
@@ -676,7 +676,7 @@ enum OBJECT_LAYERS
     OL_SELL,        //28
     OL_BANK         //29
 };
-//----------------------------------------------------------------------------------
+
 //!Типы текстовых сообщений
 enum SPEECH_TYPE
 {
@@ -693,21 +693,21 @@ enum SPEECH_TYPE
     ST_COMMAND_PROMT = 0x0F,     //Command Prompts
     ST_ENCODED_COMMAND = 0xC0,   //Encoded Commands
 };
-//----------------------------------------------------------------------------------
+
 enum TEXT_TYPE
 {
     TT_CLIENT = 0,
     TT_SYSTEM,
     TT_OBJECT
 };
-//----------------------------------------------------------------------------------
+
 enum TEXT_ALIGN_TYPE
 {
     TS_LEFT = 0,
     TS_CENTER,
     TS_RIGHT
 };
-//----------------------------------------------------------------------------------
+
 enum HTML_TAG_TYPE
 {
     HTT_NONE = 0,
@@ -733,7 +733,7 @@ enum HTML_TAG_TYPE
     HTT_RIGHT,
     HTT_DIV
 };
-//----------------------------------------------------------------------------------
+
 //!Типы промптов
 enum PROMPT_TYPE
 {
@@ -741,7 +741,7 @@ enum PROMPT_TYPE
     PT_ASCII,
     PT_UNICODE
 };
-//----------------------------------------------------------------------------------
+
 enum MOUSE_WHEEL_STATE
 {
     MWS_UP = 0,
@@ -750,21 +750,21 @@ enum MOUSE_WHEEL_STATE
     MWS_SCROLL_UP,
     MWS_SCROLL_DOWN
 };
-//----------------------------------------------------------------------------------
+
 enum DRAW_CHARACTERS_STATUS_STATE
 {
     DCSS_NO_DRAW = 0,
     DCSS_ABOVE,
     DCSS_UNDER
 };
-//----------------------------------------------------------------------------------
+
 enum DRAW_CHARACTERS_STATUS_CONDITION_STATE
 {
     DCSCS_ALWAYS = 0,
     DCSCS_NOT_MAX,
     DCSCS_LOWER
 };
-//----------------------------------------------------------------------------------
+
 enum HIDDEN_CHARACTERS_RENDER_MODE
 {
     HCRM_ORIGINAL = 0,
@@ -772,14 +772,14 @@ enum HIDDEN_CHARACTERS_RENDER_MODE
     HCRM_SPECTRAL_COLOR,
     HCRM_SPECIAL_SPECTRAL_COLOR
 };
-//----------------------------------------------------------------------------------
+
 enum DRAW_AURA_STATE
 {
     DAS_NEVER = 0,
     DAS_IN_WARMODE,
     DAS_ALWAYS
 };
-//----------------------------------------------------------------------------------
+
 enum SCREENSHOT_FORMAT
 {
     SF_BMP = 0,
@@ -787,7 +787,7 @@ enum SCREENSHOT_FORMAT
     SF_TIFF,
     SF_JPEG
 };
-//----------------------------------------------------------------------------------
+
 enum OBJECT_PROPERTIES_MODE
 {
     OPM_AT_ICON = 0,
@@ -795,7 +795,7 @@ enum OBJECT_PROPERTIES_MODE
     OPM_FOLLOW_MOUSE,
     OPM_SINGLE_CLICK
 };
-//----------------------------------------------------------------------------------
+
 enum CHARACTER_BACKPACK_STYLE
 {
     CBS_DEFAULT = 0,
@@ -803,7 +803,7 @@ enum CHARACTER_BACKPACK_STYLE
     CBS_POLAR_BEAR,
     CBS_GHOUL_SKIN
 };
-//----------------------------------------------------------------------------------
+
 enum SHADER_DRAW_MODE
 {
     SDM_NO_COLOR = 0,
@@ -817,7 +817,7 @@ enum SHADER_DRAW_MODE
     SDM_SPECIAL_SPECTRAL = 11,
     SDM_SHADOW = 12
 };
-//----------------------------------------------------------------------------------
+
 enum STATIC_TILES_FILTER_FLAGS
 {
     STFF_CAVE = 0x01,
@@ -826,7 +826,7 @@ enum STATIC_TILES_FILTER_FLAGS
     STFF_VEGETATION = 0x08,
     STFF_WATER = 0x10
 };
-//----------------------------------------------------------------------------------
+
 enum ORION_INTERNAL_PACKET_MESSAGE_TYPE
 {
     OIPMT_FILES_TRANSFERED = 1,
@@ -838,7 +838,7 @@ enum ORION_INTERNAL_PACKET_MESSAGE_TYPE
     OIPMT_MACRO_LIST = 102,
     OIPMT_OPEN_MAP = 103
 };
-//----------------------------------------------------------------------------------
+
 //!Направления чара
 enum DIRECTION_TYPE
 {
@@ -851,7 +851,7 @@ enum DIRECTION_TYPE
     DT_W,
     DT_NW
 };
-//----------------------------------------------------------------------------------
+
 enum ANIMATION_GROUPS_TYPE
 {
     AGT_MONSTER = 0,
@@ -861,7 +861,7 @@ enum ANIMATION_GROUPS_TYPE
     AGT_EQUIPMENT,
     AGT_UNKNOWN
 };
-//----------------------------------------------------------------------------------
+
 enum ANIMATION_GROUPS
 {
     AG_NONE = 0,
@@ -869,7 +869,7 @@ enum ANIMATION_GROUPS
     AG_HIGHT,
     AG_PEOPLE
 };
-//----------------------------------------------------------------------------------
+
 enum LOW_ANIMATION_GROUP
 {
     LAG_WALK = 0,
@@ -888,7 +888,7 @@ enum LOW_ANIMATION_GROUP
 
     LAG_ANIMATION_COUNT
 };
-//----------------------------------------------------------------------------------
+
 enum HIGHT_ANIMATION_GROUP
 {
     HAG_WALK = 0,
@@ -916,7 +916,7 @@ enum HIGHT_ANIMATION_GROUP
 
     HAG_ANIMATION_COUNT
 };
-//----------------------------------------------------------------------------------
+
 enum PEOPLE_ANIMATION_GROUP
 {
     PAG_WALK_UNARMED = 0,
@@ -957,7 +957,7 @@ enum PEOPLE_ANIMATION_GROUP
 
     PAG_ANIMATION_COUNT
 };
-//----------------------------------------------------------------------------------
+
 //!Злобность персонажа
 enum NOTORIETY_TYPE
 {
@@ -970,7 +970,7 @@ enum NOTORIETY_TYPE
     NT_MURDERER,
     NT_INVULNERABLE
 };
-//----------------------------------------------------------------------------------
+
 enum CLICK_OBJECT_TYPE
 {
     COT_NONE = 0,
@@ -978,7 +978,7 @@ enum CLICK_OBJECT_TYPE
     COT_STATIC,
     COT_GUMP
 };
-//----------------------------------------------------------------------------------
+
 enum CUSTOM_HOUSE_UPDATE_TYPE
 {
     CHUT_UPDATE = 1,
@@ -987,7 +987,7 @@ enum CUSTOM_HOUSE_UPDATE_TYPE
     CHUT_CONSTRUCT_BEGIN,
     CHUT_CONSTRUCT_END
 };
-//----------------------------------------------------------------------------------
+
 enum MACRO_CODE
 {
     MC_NONE = 0,
@@ -1051,7 +1051,7 @@ enum MACRO_CODE
     MC_BANDAGE_TARGET,
     MC_TOGGLE_GARGOYLE_FLYING
 };
-//----------------------------------------------------------------------------------
+
 enum MACRO_SUB_CODE
 {
     MSC_NONE = 0,
@@ -1266,14 +1266,14 @@ enum MACRO_SUB_CODE
     MSC_G7_MOBILE,
     MSC_TOTAL_COUNT
 };
-//----------------------------------------------------------------------------------
+
 enum MACRO_RETURN_CODE
 {
     MRC_PARSE_NEXT = 0,
     MRC_BREAK_PARSER,
     MRC_STOP
 };
-//----------------------------------------------------------------------------------
+
 enum GAME_CONSOLE_TEXT_TYPE
 {
     GCTT_NORMAL = 0,
@@ -1290,7 +1290,7 @@ enum GAME_CONSOLE_TEXT_TYPE
     GCTT_PARTY_ADD,
     GCTT_PARTY_LEAVE
 };
-//----------------------------------------------------------------------------------
+
 enum SEASON_TYPE
 {
     ST_SPRING = 0,
@@ -1299,7 +1299,7 @@ enum SEASON_TYPE
     ST_WINTER,
     ST_DESOLATION
 };
-//----------------------------------------------------------------------------------
+
 enum ABILITY_TYPE
 {
     AT_NONE = 0,
@@ -1336,6 +1336,5 @@ enum ABILITY_TYPE
     AT_MYSTIC_ARC,
     AT_DISROBE
 };
-//----------------------------------------------------------------------------------
+
 #endif
-//----------------------------------------------------------------------------------

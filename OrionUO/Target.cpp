@@ -8,21 +8,21 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CTarget g_Target;
-//----------------------------------------------------------------------------------
+
 CTarget::CTarget()
 {
     //Чистимся
     memset(m_Data, 0, sizeof(m_Data));
     memset(m_LastData, 0, sizeof(m_LastData));
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::Reset()
 {
-    WISPFUN_DEBUG("c209_f1");
+    DEBUG_TRACE_FUNCTION;
     //Чистимся
     memset(m_Data, 0, sizeof(m_Data));
     memset(m_LastData, 0, sizeof(m_LastData));
@@ -39,7 +39,7 @@ void CTarget::Reset()
     Targeting = false;
     MultiGraphic = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::RequestFromCustomHouse()
 {
     Type = 2;
@@ -57,16 +57,16 @@ void CTarget::RequestFromCustomHouse()
         g_CustomHouseGump->WantUpdateContent = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::SetLastTargetObject(int serial)
 {
     Type = 0;
     pack32(m_LastData + 7, serial);
 }
-//----------------------------------------------------------------------------------
-void CTarget::SetData(WISP_DATASTREAM::CDataReader &reader)
+
+void CTarget::SetData(Wisp::CDataReader &reader)
 {
-    WISPFUN_DEBUG("c209_f2");
+    DEBUG_TRACE_FUNCTION;
     //Копируем буффер
     memcpy(&m_Data[0], reader.Start, reader.Size);
 
@@ -77,10 +77,10 @@ void CTarget::SetData(WISP_DATASTREAM::CDataReader &reader)
     Targeting = (CursorType < 3);
     MultiGraphic = 0;
 }
-//----------------------------------------------------------------------------------
-void CTarget::SetMultiData(WISP_DATASTREAM::CDataReader &reader)
+
+void CTarget::SetMultiData(Wisp::CDataReader &reader)
 {
-    WISPFUN_DEBUG("c209_f3");
+    DEBUG_TRACE_FUNCTION;
     //Устанавливаем соответствующие значения
     Type = 1;
     CursorType = 0;
@@ -99,10 +99,10 @@ void CTarget::SetMultiData(WISP_DATASTREAM::CDataReader &reader)
     MultiX = reader.ReadUInt16BE();
     MultiY = reader.ReadUInt16BE();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::SendTargetObject(int serial)
 {
-    WISPFUN_DEBUG("c209_f4");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -139,10 +139,10 @@ void CTarget::SendTargetObject(int serial)
 
     SendTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::SendTargetTile(ushort tileID, short x, short y, char z)
 {
-    WISPFUN_DEBUG("c209_f5");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -163,10 +163,10 @@ void CTarget::SendTargetTile(ushort tileID, short x, short y, char z)
 
     SendTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::SendCancelTarget()
 {
-    WISPFUN_DEBUG("c209_f6");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -186,10 +186,10 @@ void CTarget::SendCancelTarget()
         g_CustomHouseGump->WantUpdateContent = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::Plugin_SendTargetObject(int serial)
 {
-    WISPFUN_DEBUG("c209_f4");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -233,10 +233,10 @@ void CTarget::Plugin_SendTargetObject(int serial)
 
     Plugin_SendTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::Plugin_SendTargetTile(ushort tileID, short x, short y, char z)
 {
-    WISPFUN_DEBUG("c209_f5");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -257,10 +257,10 @@ void CTarget::Plugin_SendTargetTile(ushort tileID, short x, short y, char z)
 
     Plugin_SendTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::Plugin_SendCancelTarget()
 {
-    WISPFUN_DEBUG("c209_f6");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -271,10 +271,10 @@ void CTarget::Plugin_SendCancelTarget()
 
     Plugin_SendTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::SendLastTarget()
 {
-    WISPFUN_DEBUG("c209_f7");
+    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
         return; //Если в клиенте нет таргета - выход
 
@@ -287,10 +287,10 @@ void CTarget::SendLastTarget()
 
     SendTarget();
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::SendTarget()
 {
-    WISPFUN_DEBUG("c209_f8");
+    DEBUG_TRACE_FUNCTION;
 
     if (Type != 2)
         g_Orion.Send(m_Data, sizeof(m_Data));
@@ -302,10 +302,10 @@ void CTarget::SendTarget()
 
     g_MouseManager.CancelDoubleClick = true;
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::Plugin_SendTarget()
 {
-    WISPFUN_DEBUG("c209_f8");
+    DEBUG_TRACE_FUNCTION;
     SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)m_Data, sizeof(m_Data));
 
     //Чистим данные
@@ -315,20 +315,20 @@ void CTarget::Plugin_SendTarget()
 
     g_MouseManager.CancelDoubleClick = true;
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::UnloadMulti()
 {
-    WISPFUN_DEBUG("c209_f9");
+    DEBUG_TRACE_FUNCTION;
     if (m_Multi != NULL)
     {
         delete m_Multi;
         m_Multi = NULL;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 {
-    WISPFUN_DEBUG("c209_f10");
+    DEBUG_TRACE_FUNCTION;
     UnloadMulti();
 
     CIndexMulti &index = g_Orion.m_MultiDataIndex[MultiGraphic - 1];
@@ -342,7 +342,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
         if (data.empty())
             return;
 
-        WISP_DATASTREAM::CDataReader reader(&data[0], data.size());
+        Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
 
         IFOR (i, 0, count)
@@ -381,10 +381,10 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CTarget::AddMultiObject(CMultiObject *obj)
 {
-    WISPFUN_DEBUG("c209_f11");
+    DEBUG_TRACE_FUNCTION;
     if (m_Multi == NULL)
     {
         m_Multi = new CMulti(obj->GetX(), obj->GetY());
@@ -448,10 +448,10 @@ void CTarget::AddMultiObject(CMultiObject *obj)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CMulti *CTarget::GetMultiAtXY(short x, short y)
 {
-    WISPFUN_DEBUG("c209_f12");
+    DEBUG_TRACE_FUNCTION;
     CMulti *multi = m_Multi;
 
     while (multi != NULL)
@@ -464,4 +464,4 @@ CMulti *CTarget::GetMultiAtXY(short x, short y)
 
     return multi;
 }
-//----------------------------------------------------------------------------------
+

@@ -17,23 +17,23 @@ CMainScreen::CMainScreen()
     , m_SavePassword(nullptr)
     , m_AutoLogin(nullptr)
 {
-    WISPFUN_DEBUG("c165_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Password = new CEntryText(32, 0, 300);
 }
 
 CMainScreen::~CMainScreen()
 {
-    WISPFUN_DEBUG("c165_f2");
+    DEBUG_TRACE_FUNCTION;
     delete m_Password;
 }
 
 void CMainScreen::Init()
 {
-    WISPFUN_DEBUG("c165_f3");
+    DEBUG_TRACE_FUNCTION;
     g_ConfigLoaded = false;
     g_GlobalScale = 1.0;
 
-    g_OrionWindow.SetSize(WISP_GEOMETRY::CSize(640, 480));
+    g_OrionWindow.SetSize(Wisp::CSize(640, 480));
     g_OrionWindow.NoResize = true;
     g_OrionWindow.SetTitle("Ultima Online");
     g_GL.UpdateRect();
@@ -64,7 +64,7 @@ void CMainScreen::Init()
 
 void CMainScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c165_f4");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -76,7 +76,7 @@ void CMainScreen::ProcessSmoothAction(uchar action)
 
 void CMainScreen::SetAccounting(const string &account, const string &password)
 {
-    WISPFUN_DEBUG("c165_f5");
+    DEBUG_TRACE_FUNCTION;
     m_Account->SetTextA(account);
     m_Password->SetTextA(password);
 
@@ -89,7 +89,7 @@ void CMainScreen::SetAccounting(const string &account, const string &password)
 
 void CMainScreen::Paste()
 {
-    WISPFUN_DEBUG("c165_f6");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == m_MainGump.m_PasswordFake)
     {
         m_Password->Paste();
@@ -107,7 +107,7 @@ void CMainScreen::Paste()
 #if USE_WISP
 void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c165_f7");
+    DEBUG_TRACE_FUNCTION;
     if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uchar)wParam))
         return;
     else if (g_EntryPointer == nullptr)
@@ -129,7 +129,7 @@ void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
 void CMainScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c165_f8");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == nullptr)
         g_EntryPointer = m_MainGump.m_PasswordFake;
 
@@ -166,7 +166,7 @@ void CMainScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 #else
 void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
 {    
-    WISPFUN_DEBUG("");
+    DEBUG_TRACE_FUNCTION;
     LOG("SDL_TextInputEvent: %s\n", ev.text);
 
     uchar ch = ev.text[0];
@@ -194,7 +194,7 @@ void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
 
 void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
 {
-    WISPFUN_DEBUG("c165_f8");
+    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == nullptr)
         g_EntryPointer = m_MainGump.m_PasswordFake;
 
@@ -233,7 +233,7 @@ void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
 
 int CMainScreen::GetConfigKeyCode(const string &key)
 {
-    //WISPFUN_DEBUG("c165_f9");
+    //DEBUG_TRACE_FUNCTION;
     const int keyCount = MSCC_COUNT - 1;
 
     static const string m_Keys[keyCount] = { "acctid",    "acctpassword",  "rememberacctpw",
@@ -254,10 +254,10 @@ int CMainScreen::GetConfigKeyCode(const string &key)
 
 void CMainScreen::LoadCustomPath()
 {
-    WISPFUN_DEBUG("c165_f14");
+    DEBUG_TRACE_FUNCTION;
 
     LOG("Loading custom path from " ORIONUO_CONFIG "\n");
-    WISP_FILE::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
+    Wisp::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
 
     while (!file.IsEOF())
     {
@@ -280,12 +280,12 @@ void CMainScreen::LoadCustomPath()
 
 void CMainScreen::LoadGlobalConfig()
 {
-    WISPFUN_DEBUG("c165_f10");
+    DEBUG_TRACE_FUNCTION;
     m_AutoLogin->Checked = false;
     g_ScreenEffectManager.Enabled = false;
 
     LOG("Loading global config from " ORIONUO_CONFIG "\n");
-    WISP_FILE::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
+    Wisp::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
 
     while (!file.IsEOF())
     {
@@ -378,7 +378,7 @@ void CMainScreen::LoadGlobalConfig()
 
 void CMainScreen::SaveGlobalConfig()
 {
-    WISPFUN_DEBUG("c165_f11");
+    DEBUG_TRACE_FUNCTION;
     LOG("Saving global config to " ORIONUO_CONFIG "\n");
     FILE *uo_cfg = fs_open(g_App.ExeFilePath(ORIONUO_CONFIG), FS_WRITE);
     if (uo_cfg == nullptr)

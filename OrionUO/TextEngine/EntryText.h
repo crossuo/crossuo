@@ -13,7 +13,7 @@ public:
     bool Changed = true;
     ushort Color = 0;
     int DrawOffset = 0;
-    WISP_GEOMETRY::CPoint2Di CaretPos = {};
+    Wisp::CPoint2Di CaretPos = {};
     bool NumberOnly = false;
 
 protected:
@@ -110,4 +110,3 @@ public:
 };
 
 extern CEntryText *g_EntryPointer;
-

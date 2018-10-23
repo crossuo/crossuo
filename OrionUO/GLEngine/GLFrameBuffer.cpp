@@ -8,20 +8,20 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGLFrameBuffer::CGLFrameBuffer()
 {
-    WISPFUN_DEBUG("c30_f1");
+    DEBUG_TRACE_FUNCTION;
 }
-//----------------------------------------------------------------------------------
+
 CGLFrameBuffer::~CGLFrameBuffer()
 {
-    WISPFUN_DEBUG("c30_f2");
+    DEBUG_TRACE_FUNCTION;
     Free();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализациия буфера
 @param [__in] width Ширина буфера
@@ -30,7 +30,7 @@ CGLFrameBuffer::~CGLFrameBuffer()
 */
 bool CGLFrameBuffer::Init(int width, int height)
 {
-    WISPFUN_DEBUG("c30_f3");
+    DEBUG_TRACE_FUNCTION;
     Free();
 
     bool result = false;
@@ -66,14 +66,14 @@ bool CGLFrameBuffer::Init(int width, int height)
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Очистка фрэймбуфера
 @return
 */
 void CGLFrameBuffer::Free()
 {
-    WISPFUN_DEBUG("c30_f4");
+    DEBUG_TRACE_FUNCTION;
     Texture.Clear();
 
     if (g_GL.CanUseFrameBuffer && m_FrameBuffer != 0)
@@ -84,14 +84,14 @@ void CGLFrameBuffer::Free()
 
     m_OldFrameBuffer = 0;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Завершение использования фрэймбуфера
 @return 
 */
 void CGLFrameBuffer::Release()
 {
-    WISPFUN_DEBUG("c30_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_GL.CanUseFrameBuffer)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_OldFrameBuffer);
@@ -102,7 +102,7 @@ void CGLFrameBuffer::Release()
         g_GL.RestorePort();
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Проверка готовности буфера с потенциальным пересозданием
 @param [__in] width Ширина буфера
@@ -111,25 +111,25 @@ void CGLFrameBuffer::Release()
 */
 bool CGLFrameBuffer::Ready(int width, int height)
 {
-    WISPFUN_DEBUG("c30_f6");
+    DEBUG_TRACE_FUNCTION;
     return (
         g_GL.CanUseFrameBuffer && m_Ready && Texture.Width == width && Texture.Height == height);
 }
-//----------------------------------------------------------------------------------
+
 bool CGLFrameBuffer::ReadyMinSize(int width, int height)
 {
-    WISPFUN_DEBUG("c30_f6");
+    DEBUG_TRACE_FUNCTION;
     return (
         g_GL.CanUseFrameBuffer && m_Ready && Texture.Width >= width && Texture.Height >= height);
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Использование буфера
 @return true в случае успеха
 */
 bool CGLFrameBuffer::Use()
 {
-    WISPFUN_DEBUG("c30_f7");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_GL.CanUseFrameBuffer && m_Ready)
@@ -154,7 +154,7 @@ bool CGLFrameBuffer::Use()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Отрисовать текстуру буфера
 @param [__in] x Экранная координата X
@@ -163,11 +163,11 @@ bool CGLFrameBuffer::Use()
 */
 void CGLFrameBuffer::Draw(int x, int y)
 {
-    WISPFUN_DEBUG("c30_f8");
+    DEBUG_TRACE_FUNCTION;
     if (g_GL.CanUseFrameBuffer && m_Ready)
     {
         g_GL.OldTexture = 0;
         g_GL.GL1_Draw(Texture, x, y);
     }
 }
-//----------------------------------------------------------------------------------
+

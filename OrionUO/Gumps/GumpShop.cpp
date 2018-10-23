@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
     : CGump(GT_SHOP, serial, x, y)
     , IsBuyGump(isBuyGump)
 {
-    WISPFUN_DEBUG("c123_f1");
+    DEBUG_TRACE_FUNCTION;
     Visible = !isBuyGump;
 
     if (isBuyGump)
@@ -113,14 +113,14 @@ CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 CGumpShop::~CGumpShop()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpShop::SendList()
 {
-    WISPFUN_DEBUG("c123_f2");
+    DEBUG_TRACE_FUNCTION;
     CGameCharacter *vendor = g_World->FindWorldCharacter(Serial);
 
     if (vendor == NULL)
@@ -131,10 +131,10 @@ void CGumpShop::SendList()
     else
         CPacketSellRequest(this).Send();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpShop::UpdateTotalPrice()
 {
-    WISPFUN_DEBUG("c123_f3");
+    DEBUG_TRACE_FUNCTION;
     if (m_TotalPriceText != NULL)
     {
         int totalPrice = 0;
@@ -152,10 +152,10 @@ void CGumpShop::UpdateTotalPrice()
         m_TotalPriceText->CreateTextureA(9, std::to_string(totalPrice));
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpShop::PrepareContent()
 {
-    WISPFUN_DEBUG("c123_f4");
+    DEBUG_TRACE_FUNCTION;
     if (NoProcess && g_Player != NULL)
     {
         string name = g_Player->GetName();
@@ -189,10 +189,10 @@ void CGumpShop::PrepareContent()
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpShop::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c123_f5");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GB_BUTTON_ACCEPT) //Accept
     {
         NoProcess = true;
@@ -201,10 +201,10 @@ void CGumpShop::GUMP_BUTTON_EVENT_C
     else if (serial == ID_GB_BUTTON_CLEAR) //Clear
         m_ContinueCounter = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c123_f6");
+    DEBUG_TRACE_FUNCTION;
     CGUIMinMaxButtons *minmax = (CGUIMinMaxButtons *)g_PressedObject.LeftObject;
 
     if (minmax == NULL)
@@ -250,10 +250,10 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
 
     UpdateTotalPrice();
 }
-//----------------------------------------------------------------------------------
+
 void CGumpShop::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c123_f7");
+    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled &&
@@ -263,10 +263,10 @@ void CGumpShop::OnLeftMouseButtonUp()
         g_MouseManager.CancelDoubleClick = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpShop::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c123_f8");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI())
@@ -334,4 +334,4 @@ bool CGumpShop::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

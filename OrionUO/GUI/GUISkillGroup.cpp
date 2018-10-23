@@ -8,14 +8,14 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUISkillGroup::CGUISkillGroup(
     int serial, int minimizeSerial, CSkillGroupObject *group, int x, int y)
     : CBaseGUI(GOT_SKILLGROUP, serial, 0, 0, x, y)
 {
-    WISPFUN_DEBUG("c75_f1");
+    DEBUG_TRACE_FUNCTION;
     const bool isMinimized = !group->Maximized;
     const ushort graphic = (isMinimized ? 0x0827 : 0x0826);
     m_Minimizer = new CGUIButton(minimizeSerial, graphic, graphic, graphic, 0, 0);
@@ -24,29 +24,29 @@ CGUISkillGroup::CGUISkillGroup(
     m_Name = new CGUITextEntry(serial, 0, 0, 0, 16, -5, 0, false, 6);
     m_Name->m_Entry.SetTextA(group->Name);
 }
-//----------------------------------------------------------------------------------
+
 CGUISkillGroup::~CGUISkillGroup()
 {
-    WISPFUN_DEBUG("c75_f2");
+    DEBUG_TRACE_FUNCTION;
     RELEASE_POINTER(m_Minimizer);
     RELEASE_POINTER(m_Name);
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillGroup::SetMinimized(bool val)
 {
     assert(m_Minimizer);
 
-    WISPFUN_DEBUG("c75_f3");
+    DEBUG_TRACE_FUNCTION;
     m_Minimized = val;
     const ushort graphic = (val ? 0x0827 : 0x0826);
     m_Minimizer->Graphic = graphic;
     m_Minimizer->GraphicSelected = graphic;
     m_Minimizer->GraphicPressed = graphic;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillGroup::UpdateDataPositions()
 {
-    WISPFUN_DEBUG("c75_f4");
+    DEBUG_TRACE_FUNCTION;
     int y = 0;
 
     QFOR(item, m_Items, CBaseGUI *)
@@ -55,10 +55,10 @@ void CGUISkillGroup::UpdateDataPositions()
         y += 17;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillGroup::PrepareTextures()
 {
-    WISPFUN_DEBUG("c75_f5");
+    DEBUG_TRACE_FUNCTION;
     m_Minimizer->PrepareTextures();
     g_Orion.ExecuteGump(0x0835);
     m_Name->PrepareTextures();
@@ -66,25 +66,25 @@ void CGUISkillGroup::PrepareTextures()
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
-//----------------------------------------------------------------------------------
+
 bool CGUISkillGroup::EntryPointerHere()
 {
-    WISPFUN_DEBUG("c75_f6");
+    DEBUG_TRACE_FUNCTION;
     return (g_EntryPointer == &m_Name->m_Entry);
 }
-//----------------------------------------------------------------------------------
+
 CBaseGUI *CGUISkillGroup::SelectedItem()
 {
-    WISPFUN_DEBUG("c75_f7");
+    DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = m_Name;
 
     if (g_Orion.PolygonePixelsInXY(m_X + m_Minimizer->GetX(), m_Y + m_Minimizer->GetY(), 14, 14))
         selected = m_Minimizer;
     else if (!GetMinimized())
     {
-        WISP_GEOMETRY::CPoint2Di oldMouse = g_MouseManager.Position;
+        Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
         g_MouseManager.Position =
-            WISP_GEOMETRY::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
+            Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
         QFOR(item, m_Items, CBaseGUI *)
         {
@@ -104,21 +104,21 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
-WISP_GEOMETRY::CSize CGUISkillGroup::GetSize()
+
+Wisp::CSize CGUISkillGroup::GetSize()
 {
-    WISPFUN_DEBUG("c75_f8");
-    WISP_GEOMETRY::CSize size(220, 19);
+    DEBUG_TRACE_FUNCTION;
+    Wisp::CSize size(220, 19);
 
     if (!GetMinimized() && m_Items != NULL)
         size.Height += GetItemsCount() * 17;
 
     return size;
 }
-//----------------------------------------------------------------------------------
+
 void CGUISkillGroup::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c75_f9");
+    DEBUG_TRACE_FUNCTION;
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
     m_Minimizer->Draw(checktrans);
@@ -156,10 +156,10 @@ void CGUISkillGroup::Draw(bool checktrans)
 
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 }
-//----------------------------------------------------------------------------------
+
 bool CGUISkillGroup::Select()
 {
-    WISPFUN_DEBUG("c75_f10");
+    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -167,9 +167,9 @@ bool CGUISkillGroup::Select()
 
     if (!GetMinimized() && !result)
     {
-        WISP_GEOMETRY::CPoint2Di oldMouse = g_MouseManager.Position;
+        Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
         g_MouseManager.Position =
-            WISP_GEOMETRY::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
+            Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
         QFOR(item, m_Items, CBaseGUI *)
         {
@@ -185,4 +185,4 @@ bool CGUISkillGroup::Select()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

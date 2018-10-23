@@ -8,15 +8,15 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygoneColor)
     : CBaseGUI(GOT_LINE, 0, 0, 0, startX, startY)
     , TargetX(targetX)
     , TargetY(targetY)
 {
-    WISPFUN_DEBUG("c65_f1");
+    DEBUG_TRACE_FUNCTION;
     ColorR = ToColorR(polygoneColor);
     ColorG = ToColorG(polygoneColor);
     ColorB = ToColorB(polygoneColor);
@@ -25,14 +25,14 @@ CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygon
     if (!ColorA)
         ColorA = 0xFF;
 }
-//----------------------------------------------------------------------------------
+
 CGUILine::~CGUILine()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUILine::Draw(bool checktrans)
 {
-    WISPFUN_DEBUG("c65_f2");
+    DEBUG_TRACE_FUNCTION;
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
     if (ColorA < 0xFF)
@@ -49,4 +49,4 @@ void CGUILine::Draw(bool checktrans)
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-//----------------------------------------------------------------------------------
+

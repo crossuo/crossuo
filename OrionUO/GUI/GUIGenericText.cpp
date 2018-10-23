@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGUIGenericText::CGUIGenericText(int index, ushort color, int x, int y, int maxWidth)
     : CGUIText(color, x, y)
     , TextID(index)
     , MaxWidth(maxWidth)
 {
 }
-//----------------------------------------------------------------------------------
+
 CGUIGenericText::~CGUIGenericText()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGUIGenericText::CreateTexture(const wstring &str)
 {
-    WISPFUN_DEBUG("c54_f1");
+    DEBUG_TRACE_FUNCTION;
     ushort flags = UOFONT_BLACK_BORDER;
 
     if (MaxWidth)
@@ -33,4 +33,4 @@ void CGUIGenericText::CreateTexture(const wstring &str)
     CreateTextureW(
         (uchar)(g_PacketManager.GetClientVersion() >= CV_305D), str, 30, MaxWidth, TS_LEFT, flags);
 }
-//----------------------------------------------------------------------------------
+

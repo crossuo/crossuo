@@ -1,7 +1,7 @@
-﻿//---------------------------------------------------------------------------
+﻿
 #ifndef UOHuffmanH
 #define UOHuffmanH
-//---------------------------------------------------------------------------
+
 class CDecompressingCopier
 {
 private:
@@ -22,5 +22,5 @@ public:
 
     virtual void operator()(char *dest, const char *src, int &dest_size, intptr_t &src_size);
 };
-//---------------------------------------------------------------------------
+
 #endif

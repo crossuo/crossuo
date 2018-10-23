@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CConnectionScreen g_ConnectionScreen;
-//----------------------------------------------------------------------------------
+
 CConnectionScreen::CConnectionScreen()
     : CBaseScreen(m_ConnectionGump)
 {
 }
-//----------------------------------------------------------------------------------
+
 CConnectionScreen::~CConnectionScreen()
 {
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @return 
 */
 void CConnectionScreen::Init()
 {
-    WISPFUN_DEBUG("c161_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Text = "";
     m_ConnectionFailed = false;
     m_Connected = false;
@@ -42,43 +42,43 @@ void CConnectionScreen::Init()
     m_Gump.PrepareTextures();
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionScreen::SetConnectionFailed(bool val)
 {
     m_ConnectionFailed = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionScreen::SetConnected(bool val)
 {
     m_Connected = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionScreen::SetCompleted(bool val)
 {
     m_Completed = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionScreen::SetErrorCode(int val)
 {
     m_ErrorCode = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionScreen::SetType(CONNECTION_SCREEN_TYPE val)
 {
     m_Type = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 void CConnectionScreen::SetTextA(const string &val)
 {
     m_Text = val;
     m_Gump.WantUpdateContent = true;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка события после плавного затемнения экрана
 @param [__in_opt] action Идентификатор действия
@@ -86,7 +86,7 @@ void CConnectionScreen::SetTextA(const string &val)
 */
 void CConnectionScreen::ProcessSmoothAction(uchar action)
 {
-    WISPFUN_DEBUG("c161_f2");
+    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
         action = SmoothScreenAction;
 
@@ -99,7 +99,7 @@ void CConnectionScreen::ProcessSmoothAction(uchar action)
     else if (action == ID_SMOOTH_CS_SEND_DELETE)
         CPacketDeleteCharacter(g_CharacterList.Selected).Send();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Обработка нажатия клавиши
 @param [__in] wparam не подписанный параметр
@@ -108,7 +108,7 @@ void CConnectionScreen::ProcessSmoothAction(uchar action)
 */
 void CConnectionScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 {
-    WISPFUN_DEBUG("c161_f3");
+    DEBUG_TRACE_FUNCTION;
     switch (wParam)
     {
         case VK_RETURN:
@@ -147,4 +147,4 @@ void CConnectionScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
             break;
     }
 }
-//----------------------------------------------------------------------------------
+

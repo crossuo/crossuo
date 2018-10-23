@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CPressedObject g_PressedObject;
-//----------------------------------------------------------------------------------
+
 CPressedObject::CPressedObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 CPressedObject::~CPressedObject()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::Init(const CPressedObject &obj)
 {
-    WISPFUN_DEBUG("c198_f1");
+    DEBUG_TRACE_FUNCTION;
     LeftObject = obj.LeftObject;
     LeftGump = obj.LeftGump;
     LeftSerial = obj.LeftSerial;
@@ -36,18 +36,18 @@ void CPressedObject::Init(const CPressedObject &obj)
     MidGump = obj.MidGump;
     MidSerial = obj.MidSerial;
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::ClearAll()
 {
-    WISPFUN_DEBUG("c198_f2");
+    DEBUG_TRACE_FUNCTION;
     ClearLeft();
     ClearRight();
     ClearMid();
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::Clear(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c198_f3");
+    DEBUG_TRACE_FUNCTION;
     if (obj == LeftObject)
     {
         LeftObject = NULL;
@@ -66,82 +66,82 @@ void CPressedObject::Clear(CRenderObject *obj)
         MidSerial = 0;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::ClearLeft()
 {
-    WISPFUN_DEBUG("c198_f4");
+    DEBUG_TRACE_FUNCTION;
     LeftObject = NULL;
     LeftGump = NULL;
     LeftSerial = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::InitLeft(CRenderObject *obj, CGump *gump)
 {
-    WISPFUN_DEBUG("c198_f5");
+    DEBUG_TRACE_FUNCTION;
     LeftObject = obj;
     LeftGump = gump;
     LeftSerial = (obj != NULL ? obj->Serial : 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::InitLeft(const CSelectedObject &obj)
 {
-    WISPFUN_DEBUG("c198_f6");
+    DEBUG_TRACE_FUNCTION;
     LeftObject = obj.Object;
     LeftGump = obj.Gump;
     LeftSerial = (LeftObject != NULL ? obj.Serial : 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::ClearRight()
 {
-    WISPFUN_DEBUG("c198_f7");
+    DEBUG_TRACE_FUNCTION;
     RightObject = NULL;
     RightGump = NULL;
     RightSerial = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::InitRight(CRenderObject *obj, CGump *gump)
 {
-    WISPFUN_DEBUG("c198_f8");
+    DEBUG_TRACE_FUNCTION;
     RightObject = obj;
     RightGump = gump;
     RightSerial = (obj != NULL ? obj->Serial : 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::InitRight(const CSelectedObject &obj)
 {
-    WISPFUN_DEBUG("c198_f9");
+    DEBUG_TRACE_FUNCTION;
     RightObject = obj.Object;
     RightGump = obj.Gump;
     RightSerial = (RightObject != NULL ? obj.Serial : 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::ClearMid()
 {
-    WISPFUN_DEBUG("c198_f10");
+    DEBUG_TRACE_FUNCTION;
     MidObject = NULL;
     MidGump = NULL;
     MidSerial = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::InitMid(CRenderObject *obj, CGump *gump)
 {
-    WISPFUN_DEBUG("c198_f11");
+    DEBUG_TRACE_FUNCTION;
     MidObject = obj;
     MidGump = gump;
     MidSerial = (obj != NULL ? obj->Serial : 0);
 }
-//----------------------------------------------------------------------------------
+
 void CPressedObject::InitMid(const CSelectedObject &obj)
 {
-    WISPFUN_DEBUG("c198_f12");
+    DEBUG_TRACE_FUNCTION;
     MidObject = obj.Object;
     MidGump = obj.Gump;
     MidSerial = (MidObject != NULL ? obj.Serial : 0);
 }
-//----------------------------------------------------------------------------------
+
 bool CPressedObject::TestMoveOnDrag()
 {
-    WISPFUN_DEBUG("c198_f13");
+    DEBUG_TRACE_FUNCTION;
     return (LeftObject != NULL && LeftObject->IsGUI() && ((CBaseGUI *)LeftObject)->MoveOnDrag);
 }
-//----------------------------------------------------------------------------------
+

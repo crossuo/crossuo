@@ -8,35 +8,35 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpScreenSelectTown::CGumpScreenSelectTown()
     : CGump(GT_NONE, 0, 0, 0)
 {
-    WISPFUN_DEBUG("c118_f1");
+    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     NoClose = true;
 
     //!Список точек для отображения кнопок городов
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(105, 130));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(245, 90));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(165, 200));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(395, 160));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(200, 305));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(335, 250));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(160, 395));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(100, 250));
-    m_TownButtonText.push_back(WISP_GEOMETRY::CPoint2Di(270, 130));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(105, 130));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(245, 90));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(165, 200));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(395, 160));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(200, 305));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(335, 250));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(160, 395));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(100, 250));
+    m_TownButtonText.push_back(Wisp::CPoint2Di(270, 130));
 }
-//----------------------------------------------------------------------------------
+
 CGumpScreenSelectTown::~CGumpScreenSelectTown()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenSelectTown::UpdateContent()
 {
-    WISPFUN_DEBUG("c118_f2");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CCityItem *city = g_SelectTownScreen.m_City;
@@ -136,10 +136,10 @@ void CGumpScreenSelectTown::UpdateContent()
         entry->Focused = (g_SelectTownScreen.m_City->Name == city->Name);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c118_f3");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_STS_QUIT) //x button
         g_SelectTownScreen.CreateSmoothAction(CSelectTownScreen::ID_SMOOTH_STS_QUIT);
     else if (serial == ID_STS_ARROW_PREV) //< button
@@ -148,10 +148,10 @@ void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
         g_SelectTownScreen.CreateSmoothAction(
             CSelectTownScreen::ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT);
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
 {
-    WISPFUN_DEBUG("c118_f4");
+    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXTENTRY)
@@ -196,4 +196,4 @@ void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+

@@ -8,23 +8,23 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpScreenCreateCharacter::CGumpScreenCreateCharacter()
     : CGump(GT_NONE, 0, 0, 0)
 {
     NoMove = true;
     NoClose = true;
 }
-//----------------------------------------------------------------------------------
+
 CGumpScreenCreateCharacter::~CGumpScreenCreateCharacter()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenCreateCharacter::UpdateContent()
 {
-    WISPFUN_DEBUG("c114_f1");
+    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
@@ -447,10 +447,10 @@ void CGumpScreenCreateCharacter::UpdateContent()
         Add(new CGUIGroup(0));
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenCreateCharacter::InitToolTip()
 {
-    WISPFUN_DEBUG("c114_f2");
+    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == NULL)
         return;
 
@@ -477,10 +477,10 @@ void CGumpScreenCreateCharacter::InitToolTip()
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenCreateCharacter::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c114_f3");
+    DEBUG_TRACE_FUNCTION;
     if (serial == ID_CCS_QUIT) //x button
         g_CreateCharacterScreen.CreateSmoothAction(CCreateCharacterScreen::ID_SMOOTH_CCS_QUIT);
     else if (serial == ID_CCS_ARROW_PREV) //< button
@@ -526,10 +526,10 @@ void CGumpScreenCreateCharacter::GUMP_BUTTON_EVENT_C
         g_CreateCharacterScreen.SetColorSelection(0);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenCreateCharacter::GUMP_RADIO_EVENT_C
 {
-    WISPFUN_DEBUG("c114_f4");
+    DEBUG_TRACE_FUNCTION;
     if (state)
     {
         if (serial == ID_CCS_MALE_BUTTON)
@@ -547,10 +547,10 @@ void CGumpScreenCreateCharacter::GUMP_RADIO_EVENT_C
         g_CreateCharacterScreen.SetColorSelection(0);
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenCreateCharacter::GUMP_TEXT_ENTRY_EVENT_C
 {
-    WISPFUN_DEBUG("c114_f5");
+    DEBUG_TRACE_FUNCTION;
     if (g_CreateCharacterScreen.GetColorSelection() == 0)
     {
         if (serial == ID_CCS_SKIN_TONE)
@@ -616,10 +616,10 @@ void CGumpScreenCreateCharacter::GUMP_TEXT_ENTRY_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpScreenCreateCharacter::GUMP_COMBOBOX_SELECTION_EVENT_C
 {
-    WISPFUN_DEBUG("c114_f6");
+    DEBUG_TRACE_FUNCTION;
     if (serial >= ID_CCS_HAIR_STYLE)
     {
         if (serial >= ID_CCS_FACIAL_HAIR_STYLE)
@@ -642,4 +642,4 @@ void CGumpScreenCreateCharacter::GUMP_COMBOBOX_SELECTION_EVENT_C
         }
     }
 }
-//----------------------------------------------------------------------------------
+

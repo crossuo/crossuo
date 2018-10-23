@@ -8,27 +8,27 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CMapManager g_MapManager;
-//----------------------------------------------------------------------------------
+
 CIndexMap::CIndexMap()
 {
 }
-//----------------------------------------------------------------------------------
+
 CIndexMap::~CIndexMap()
 {
 }
-//----------------------------------------------------------------------------------
+
 CMapManager::CMapManager()
     : CBaseQueue()
 {
 }
-//----------------------------------------------------------------------------------
+
 CMapManager::~CMapManager()
 {
-    WISPFUN_DEBUG("c146_f1");
+    DEBUG_TRACE_FUNCTION;
     if (m_Blocks != NULL)
     {
         ClearUsedBlocks();
@@ -39,19 +39,19 @@ CMapManager::~CMapManager()
 
     MaxBlockIndex = 0;
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::CreateBlocksTable()
 {
-    WISPFUN_DEBUG("c146_f2");
+    DEBUG_TRACE_FUNCTION;
     IFOR (map, 0, MAX_MAPS_COUNT)
         CreateBlockTable((int)map);
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::CreateBlockTable(int map)
 {
-    WISPFUN_DEBUG("c146_f3");
+    DEBUG_TRACE_FUNCTION;
     MAP_INDEX_LIST &list = m_BlockData[map];
-    WISP_GEOMETRY::CSize &size = g_MapBlockSize[map];
+    Wisp::CSize &size = g_MapBlockSize[map];
 
     int maxBlockCount = size.Width * size.Height;
 
@@ -145,12 +145,12 @@ void CMapManager::CreateBlockTable(int map)
         index.StaticCount = realStaticCount;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
 {
-    WISPFUN_DEBUG("c146_f4");
+    DEBUG_TRACE_FUNCTION;
     MAP_INDEX_LIST &list = m_BlockData[0];
-    WISP_GEOMETRY::CSize &size = g_MapBlockSize[0];
+    Wisp::CSize &size = g_MapBlockSize[0];
 
     int maxBlockCount = size.Width * size.Height;
 
@@ -160,14 +160,14 @@ void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
     list[block].OriginalMapAddress = address;
     list[block].MapAddress = address;
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::ResetPatchesInBlockTable()
 {
-    WISPFUN_DEBUG("c146_f5");
+    DEBUG_TRACE_FUNCTION;
     IFOR (map, 0, MAX_MAPS_COUNT)
     {
         MAP_INDEX_LIST &list = m_BlockData[map];
-        WISP_GEOMETRY::CSize &size = g_MapBlockSize[map];
+        Wisp::CSize &size = g_MapBlockSize[map];
 
         int maxBlockCount = size.Width * size.Height;
 
@@ -190,10 +190,10 @@ void CMapManager::ResetPatchesInBlockTable()
         }
     }
 }
-//----------------------------------------------------------------------------------
-void CMapManager::ApplyPatches(WISP_DATASTREAM::CDataReader &stream)
+
+void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 {
-    WISPFUN_DEBUG("c146_f6");
+    DEBUG_TRACE_FUNCTION;
     ResetPatchesInBlockTable();
 
     PatchesCount = stream.ReadUInt32BE();
@@ -221,14 +221,14 @@ void CMapManager::ApplyPatches(WISP_DATASTREAM::CDataReader &stream)
         m_StaticPatchCount[i] = (int)staticsPatchesCount;
 
         MAP_INDEX_LIST &list = m_BlockData[i];
-        WISP_GEOMETRY::CSize &size = g_MapBlockSize[i];
+        Wisp::CSize &size = g_MapBlockSize[i];
 
         uint maxBlockCount = size.Height * size.Width;
 
         if (mapPatchesCount)
         {
-            WISP_FILE::CMappedFile &difl = g_FileManager.m_MapDifl[i];
-            WISP_FILE::CMappedFile &dif = g_FileManager.m_MapDif[i];
+            Wisp::CMappedFile &difl = g_FileManager.m_MapDifl[i];
+            Wisp::CMappedFile &dif = g_FileManager.m_MapDif[i];
 
             mapPatchesCount = min(mapPatchesCount, (intptr_t)difl.Size / 4);
 
@@ -248,8 +248,8 @@ void CMapManager::ApplyPatches(WISP_DATASTREAM::CDataReader &stream)
 
         if (staticsPatchesCount)
         {
-            WISP_FILE::CMappedFile &difl = g_FileManager.m_StaDifl[i];
-            WISP_FILE::CMappedFile &difi = g_FileManager.m_StaDifi[i];
+            Wisp::CMappedFile &difl = g_FileManager.m_StaDifl[i];
+            Wisp::CMappedFile &difi = g_FileManager.m_StaDifi[i];
             size_t startAddress = (size_t)g_FileManager.m_StaDif[i].Start;
 
             staticsPatchesCount = min(staticsPatchesCount, (intptr_t)difl.Size / 4);
@@ -291,10 +291,10 @@ void CMapManager::ApplyPatches(WISP_DATASTREAM::CDataReader &stream)
 
     UpdatePatched();
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::UpdatePatched()
 {
-    WISPFUN_DEBUG("c146_f7");
+    DEBUG_TRACE_FUNCTION;
     if (g_Player == NULL)
         return;
 
@@ -329,10 +329,10 @@ void CMapManager::UpdatePatched()
     if (gump != NULL)
         gump->LastX = 0;
 }
-//----------------------------------------------------------------------------------
+
 CIndexMap *CMapManager::GetIndex(int map, int blockX, int blockY)
 {
-    WISPFUN_DEBUG("c146_f8");
+    DEBUG_TRACE_FUNCTION;
     if (map >= MAX_MAPS_COUNT)
         return NULL;
 
@@ -344,12 +344,12 @@ CIndexMap *CMapManager::GetIndex(int map, int blockX, int blockY)
 
     return &list[block];
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::ClearBlockAccess()
 {
     memset(&m_BlockAccessList[0], 0, sizeof(m_BlockAccessList));
 }
-//----------------------------------------------------------------------------------
+
 char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
 {
     int blockX = x / 8;
@@ -400,7 +400,7 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
 
     return defaultZ;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить блок для радара из муллов
 @param [__in] blockX Координата X блока
@@ -410,7 +410,7 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
 */
 void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 {
-    WISPFUN_DEBUG("c146_f10");
+    DEBUG_TRACE_FUNCTION;
     CIndexMap *indexMap = GetIndex(GetActualMap(), blockX, blockY);
 
     if (indexMap == NULL || indexMap->MapAddress == 0)
@@ -457,7 +457,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить значение Z координаты для указанной точки в мире
 @param [__in] x Координата X
@@ -468,7 +468,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 */
 void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
 {
-    WISPFUN_DEBUG("c146_f11");
+    DEBUG_TRACE_FUNCTION;
     int blockX = x / 8;
     int blockY = y / 8;
     uint index = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
@@ -498,14 +498,14 @@ void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удалить неиспользуемые блоки
 @return 
 */
 void CMapManager::ClearUnusedBlocks()
 {
-    WISPFUN_DEBUG("c146_f12");
+    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
     uint ticks = g_Ticks - CLEAR_TEXTURES_DELAY;
     int count = 0;
@@ -528,10 +528,10 @@ void CMapManager::ClearUnusedBlocks()
         block = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CMapManager::ClearUsedBlocks()
 {
-    WISPFUN_DEBUG("c146_f13");
+    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
 
     while (block != NULL)
@@ -546,7 +546,7 @@ void CMapManager::ClearUsedBlocks()
         block = next;
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Инициализация
 @param [__in_opt] delayed По истечении времени на загрузку выходить из цикла
@@ -554,7 +554,7 @@ void CMapManager::ClearUsedBlocks()
 */
 void CMapManager::Init(bool delayed)
 {
-    WISPFUN_DEBUG("c146_f14");
+    DEBUG_TRACE_FUNCTION;
     if (g_Player == NULL)
         return;
 
@@ -627,7 +627,7 @@ void CMapManager::Init(bool delayed)
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Загрузить блок
 @param [__inout] block Ссылка на блок для загрузки
@@ -635,7 +635,7 @@ void CMapManager::Init(bool delayed)
 */
 void CMapManager::LoadBlock(CMapBlock *block)
 {
-    WISPFUN_DEBUG("c146_f15");
+    DEBUG_TRACE_FUNCTION;
     int map = GetActualMap();
 
     CIndexMap *indexMap = GetIndex(GetActualMap(), block->X, block->Y);
@@ -692,14 +692,14 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
     block->CreateLandTextureRect();
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить индекс текущей карты
 @return
 */
 int CMapManager::GetActualMap()
 {
-    WISPFUN_DEBUG("c146_f16");
+    DEBUG_TRACE_FUNCTION;
     if (g_CurrentMap == 1 &&
         ((!g_FileManager.m_MapUOP[1].Start && !g_FileManager.m_MapMul[1].Start) ||
          !g_FileManager.m_StaticIdx[1].Start || !g_FileManager.m_StaticMul[1].Start))
@@ -707,7 +707,7 @@ int CMapManager::GetActualMap()
 
     return g_CurrentMap;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить объект рендера
 @param [__in] item Ссылка на объект
@@ -715,7 +715,7 @@ int CMapManager::GetActualMap()
 */
 void CMapManager::AddRender(CRenderWorldObject *item)
 {
-    WISPFUN_DEBUG("c146_f17");
+    DEBUG_TRACE_FUNCTION;
     int itemX = item->GetX();
     int itemY = item->GetY();
 
@@ -742,7 +742,7 @@ void CMapManager::AddRender(CRenderWorldObject *item)
         block->AddRender(item, x, y);
     }
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Получить ссылку на блок
 @param [__in] index Индекс блока
@@ -750,7 +750,7 @@ void CMapManager::AddRender(CRenderWorldObject *item)
 */
 CMapBlock *CMapManager::GetBlock(int index)
 {
-    WISPFUN_DEBUG("c146_f18");
+    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = NULL;
 
     if (index < MaxBlockIndex)
@@ -763,7 +763,7 @@ CMapBlock *CMapManager::GetBlock(int index)
 
     return block;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Добавить блок
 @param [__in] index Индекс блока
@@ -771,14 +771,14 @@ CMapBlock *CMapManager::GetBlock(int index)
 */
 CMapBlock *CMapManager::AddBlock(int index)
 {
-    WISPFUN_DEBUG("c146_f19");
+    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)Add(new CMapBlock(index));
 
     m_Blocks[index] = block;
 
     return block;
 }
-//----------------------------------------------------------------------------------
+
 /*!
 Удалить блок
 @param [__in] index Индекс блока
@@ -786,7 +786,7 @@ CMapBlock *CMapManager::AddBlock(int index)
 */
 void CMapManager::DeleteBlock(int index)
 {
-    WISPFUN_DEBUG("c146_f20");
+    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
 
     while (block != NULL)
@@ -802,4 +802,4 @@ void CMapManager::DeleteBlock(int index)
         block = (CMapBlock *)block->m_Next;
     }
 }
-//----------------------------------------------------------------------------------
+

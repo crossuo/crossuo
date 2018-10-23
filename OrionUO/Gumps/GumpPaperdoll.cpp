@@ -8,19 +8,19 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 int CGumpPaperdoll::UsedLayers[m_LayerCount] = {
     OL_CLOAK,    OL_RING,  OL_SHIRT,  OL_ARMS,  OL_PANTS,  OL_SHOES,    OL_LEGS,    OL_TORSO,
     OL_BRACELET, OL_15,    OL_GLOVES, OL_TUNIC, OL_SKIRT,  OL_NECKLACE, OL_HAIR,    OL_ROBE,
     OL_EARRINGS, OL_BEARD, OL_HELMET, OL_WAIST, OL_1_HAND, OL_2_HAND,   OL_TALISMAN
 };
-//----------------------------------------------------------------------------------
+
 CGumpPaperdoll::CGumpPaperdoll(uint serial, short x, short y, bool minimized)
     : CGump(GT_PAPERDOLL, serial, x, y)
 {
-    WISPFUN_DEBUG("c105_f1");
+    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GP_LOCK_MOVING;
 
     if (minimized)
@@ -115,14 +115,14 @@ CGumpPaperdoll::CGumpPaperdoll(uint serial, short x, short y, bool minimized)
 
     m_DataBox = (CGUIDataBox *)Add(new CGUIDataBox());
 }
-//----------------------------------------------------------------------------------
+
 CGumpPaperdoll::~CGumpPaperdoll()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::CalculateGumpState()
 {
-    WISPFUN_DEBUG("c105_f2");
+    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed && g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsText())
@@ -141,10 +141,10 @@ void CGumpPaperdoll::CalculateGumpState()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::InitToolTip()
 {
-    WISPFUN_DEBUG("c105_f3");
+    DEBUG_TRACE_FUNCTION;
     uint id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -241,10 +241,10 @@ void CGumpPaperdoll::InitToolTip()
     else
         g_ToolTip.Set(L"Double click to maximize paperdoll gump");
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c105_f4");
+    DEBUG_TRACE_FUNCTION;
     if (obj != NULL)
     {
         CTextData *td = new CTextData();
@@ -277,10 +277,10 @@ void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
         g_Orion.AddJournalMessage(td, "");
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::PrepareContent()
 {
-    WISPFUN_DEBUG("c105_f5");
+    DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == NULL)
@@ -291,7 +291,7 @@ void CGumpPaperdoll::PrepareContent()
         g_PressedObject.LeftSerial != 0xFFFFFFFF &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (CanBeDraggedByOffset(offset) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -345,10 +345,10 @@ void CGumpPaperdoll::PrepareContent()
     if (!Minimized && m_TextRenderer.CalculatePositions(false))
         WantRedraw = true;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::UpdateContent()
 {
-    WISPFUN_DEBUG("c105_f6");
+    DEBUG_TRACE_FUNCTION;
     //Clear();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
@@ -695,10 +695,10 @@ void CGumpPaperdoll::UpdateContent()
 
     m_DataBox->Add(new CGUIShader(&g_ColorizerShader, false));
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::UpdateDescription(const string &text)
 {
-    WISPFUN_DEBUG("c105_f7");
+    DEBUG_TRACE_FUNCTION;
     if (m_Description != NULL)
     {
         m_Description->CreateTextureA(1, text, 185);
@@ -706,10 +706,10 @@ void CGumpPaperdoll::UpdateDescription(const string &text)
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::Draw()
 {
-    WISPFUN_DEBUG("c105_f8");
+    DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == NULL)
@@ -733,10 +733,10 @@ void CGumpPaperdoll::Draw()
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
     }
 }
-//----------------------------------------------------------------------------------
+
 CRenderObject *CGumpPaperdoll::Select()
 {
-    WISPFUN_DEBUG("c105_f9");
+    DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == NULL)
@@ -746,8 +746,8 @@ CRenderObject *CGumpPaperdoll::Select()
 
     if (!Minimized)
     {
-        WISP_GEOMETRY::CPoint2Di oldPos = g_MouseManager.Position;
-        g_MouseManager.Position = WISP_GEOMETRY::CPoint2Di(
+        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+        g_MouseManager.Position = Wisp::CPoint2Di(
             oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         m_TextRenderer.Select(this);
@@ -757,10 +757,10 @@ CRenderObject *CGumpPaperdoll::Select()
 
     return selected;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c105_f10");
+    DEBUG_TRACE_FUNCTION;
     switch (serial)
     {
         case ID_GP_BUTTON_HELP: //Paperdoll button Help
@@ -841,10 +841,10 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
             break;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpPaperdoll::OnLeftMouseButtonUp()
 {
-    WISPFUN_DEBUG("c105_f11");
+    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     uint serial = g_SelectedObject.Serial;
@@ -934,10 +934,10 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
         }
     }
 }
-//----------------------------------------------------------------------------------
+
 bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c105_f12");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;
@@ -1004,4 +1004,4 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+

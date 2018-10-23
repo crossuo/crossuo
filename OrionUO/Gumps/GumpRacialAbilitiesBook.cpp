@@ -8,22 +8,22 @@
 **
 ************************************************************************************
 */
-//----------------------------------------------------------------------------------
+
 #include "stdafx.h"
-//----------------------------------------------------------------------------------
+
 CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
     : CGump(GT_RACIAL_ABILITIES_BOOK, 0, x, y)
 {
     Draw2Page = true;
 }
-//----------------------------------------------------------------------------------
+
 CGumpRacialAbilitiesBook::~CGumpRacialAbilitiesBook()
 {
 }
-//----------------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::InitToolTip()
 {
-    WISPFUN_DEBUG("c110_f1");
+    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         g_ToolTip.Set(L"Double click to maximize book gump");
@@ -37,10 +37,10 @@ void CGumpRacialAbilitiesBook::InitToolTip()
             g_ClilocManager.Cliloc(g_Language)->GetW(TooltipOffset + (serial - ID_GRAB_ICON), true),
             150);
 }
-//----------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::PrepareContent()
 {
-    WISPFUN_DEBUG("c110_f2");
+    DEBUG_TRACE_FUNCTION;
     int abilityOnPage = 0;
     ushort iconStartGraphic = 0;
 
@@ -50,7 +50,7 @@ void CGumpRacialAbilitiesBook::PrepareContent()
         g_PressedObject.LeftSerial >= ID_GRAB_ICON &&
         !((CBaseGUI *)g_PressedObject.LeftObject)->MoveOnDrag)
     {
-        WISP_GEOMETRY::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -64,10 +64,10 @@ void CGumpRacialAbilitiesBook::PrepareContent()
         }
     }
 }
-//----------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, ushort &iconStartGraphic)
 {
-    WISPFUN_DEBUG("c110_f3");
+    DEBUG_TRACE_FUNCTION;
     DictionaryPagesCount = 2;
     abilityOnPage = 3;
 
@@ -98,10 +98,10 @@ void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, ushort &ic
             break;
     }
 }
-//----------------------------------------------------------------------------
+
 string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 {
-    WISPFUN_DEBUG("c110_f4");
+    DEBUG_TRACE_FUNCTION;
     string result = "";
     passive = true;
 
@@ -144,10 +144,10 @@ string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 
     return result;
 }
-//----------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::UpdateContent()
 {
-    WISPFUN_DEBUG("c110_f5");
+    DEBUG_TRACE_FUNCTION;
     m_PrevPage = NULL;
     m_NextPage = NULL;
 
@@ -260,10 +260,10 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         (CGUIButton *)Add(new CGUIButton(ID_GRAB_BUTTON_NEXT, 0x08BC, 0x08BC, 0x08BC, 321, 8));
     m_NextPage->Visible = (Page + 2 < PagesCount);
 }
-//----------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
 {
-    WISPFUN_DEBUG("c110_f6");
+    DEBUG_TRACE_FUNCTION;
     int newPage = -1;
 
     if (serial == ID_GRAB_BUTTON_PREV)
@@ -309,10 +309,10 @@ void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
         g_ClickObject.Page = newPage;
     }
 }
-//----------------------------------------------------------------------------
+
 bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 {
-    WISPFUN_DEBUG("c110_f7");
+    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Minimized)
@@ -355,20 +355,20 @@ bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-//----------------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::DelayedClick(CRenderObject *obj)
 {
-    WISPFUN_DEBUG("c110_f8");
+    DEBUG_TRACE_FUNCTION;
     if (obj != NULL)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;
     }
 }
-//----------------------------------------------------------------------------------
+
 void CGumpRacialAbilitiesBook::ChangePage(int newPage)
 {
-    WISPFUN_DEBUG("c110_f9");
+    DEBUG_TRACE_FUNCTION;
     Page = newPage;
 
     m_PrevPage->Visible = (Page != 0);
@@ -376,4 +376,4 @@ void CGumpRacialAbilitiesBook::ChangePage(int newPage)
 
     g_Orion.PlaySoundEffect(0x0055);
 }
-//----------------------------------------------------------------------------------
+
