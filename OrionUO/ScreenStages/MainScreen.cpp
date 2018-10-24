@@ -196,37 +196,41 @@ void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == nullptr)
+    {
         g_EntryPointer = m_MainGump.m_PasswordFake;
+    }
 
     switch (ev.keysym.sym)
     {
         case SDLK_TAB:
         {
             if (g_EntryPointer == m_Account)
+            {
                 g_EntryPointer = m_MainGump.m_PasswordFake;
+            }
             else
+            {
                 g_EntryPointer = m_Account;
-
+            }
             break;
         }
         case SDLK_RETURN:
         case SDLK_RETURN2:
         {
             CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
-
             break;
         }
         default:
         {
             if (g_EntryPointer == m_MainGump.m_PasswordFake)
+            {
                 m_Password->OnKey(nullptr, ev.keysym.sym);
+            }
 
             g_EntryPointer->OnKey(nullptr, ev.keysym.sym);
-
             break;
         }
     }
-
     m_Gump.WantRedraw = true;
 }
 #endif
