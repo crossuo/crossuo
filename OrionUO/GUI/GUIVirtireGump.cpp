@@ -26,7 +26,7 @@ bool CGUIVirtureGump::Select()
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         int x = g_MouseManager.Position.X - m_X;
         int y = g_MouseManager.Position.Y - m_Y;

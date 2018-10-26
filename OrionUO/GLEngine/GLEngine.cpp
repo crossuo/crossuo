@@ -78,13 +78,13 @@ bool CGLEngine::GLSetupPixelFormat()
 
     if (!pixelformat)
     {
-        MessageBox(NULL, L"ChoosePixelFormat failed", L"Error", MB_OK);
+        MessageBox(nullptr, L"ChoosePixelFormat failed", L"Error", MB_OK);
         return false;
     }
 
     if (!SetPixelFormat(DC, pixelformat, &pfd))
     {
-        MessageBox(NULL, L"SetPixelFormat failed", L"Error", MB_OK);
+        MessageBox(nullptr, L"SetPixelFormat failed", L"Error", MB_OK);
         return false;
     }
 #endif
@@ -180,7 +180,7 @@ bool CGLEngine::Install()
     PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT =
         (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 
-    if (wglSwapIntervalEXT != NULL)
+    if (wglSwapIntervalEXT != nullptr)
         wglSwapIntervalEXT(0);
 #else
     SDL_GL_SetSwapInterval(0); // 1 vsync
@@ -216,7 +216,7 @@ void CGLEngine::Uninstall()
     DEBUG_TRACE_FUNCTION;
 #if USE_WISP
     DC = 0;
-    wglMakeCurrent(NULL, NULL);
+    wglMakeCurrent(nullptr, nullptr);
 
     if (RC != 0)
     {

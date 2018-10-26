@@ -59,10 +59,10 @@ protected:
 
     bool m_WantFullUpdateContent{ false };
 
-    CGUIButton *m_StatusbarUnlocker{ NULL };
-    CGUIGumppic *m_Body{ NULL };
-    CGUIGumppic *m_HitsBody{ NULL };
-    CGUITextEntry *m_Entry{ NULL };
+    CGUIButton *m_StatusbarUnlocker{ nullptr };
+    CGUIGumppic *m_Body{ nullptr };
+    CGUIGumppic *m_HitsBody{ nullptr };
+    CGUITextEntry *m_Entry{ nullptr };
 
     string m_Name = string("");
 
@@ -75,8 +75,8 @@ public:
     static int m_StatusbarDefaultWidth;
     static int m_StatusbarDefaultHeight;
 
-    CGumpStatusbar *m_GroupNext{ NULL };
-    CGumpStatusbar *m_GroupPrev{ NULL };
+    CGumpStatusbar *m_GroupNext{ nullptr };
+    CGumpStatusbar *m_GroupPrev{ nullptr };
 
     CGumpStatusbar *GetTopStatusbar();
     CGumpStatusbar *GetNearStatusbar(int &x, int &y);
@@ -85,7 +85,7 @@ public:
     void AddStatusbar(CGumpStatusbar *bar);
     void RemoveFromGroup();
 
-    bool InGroup() { return (m_GroupNext != NULL || m_GroupPrev != NULL); }
+    bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
     virtual void InitToolTip();
 

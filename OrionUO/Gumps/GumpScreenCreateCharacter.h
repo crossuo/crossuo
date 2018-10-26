@@ -45,8 +45,8 @@ private:
         CCSID_FACIAL_HAIR_COLOR
     };
 
-    CGUIGumppic *m_Hair{ NULL };
-    CGUIGumppic *m_FacialHair{ NULL };
+    CGUIGumppic *m_Hair{ nullptr };
+    CGUIGumppic *m_FacialHair{ nullptr };
 
 public:
     CGumpScreenCreateCharacter();

@@ -21,8 +21,8 @@ protected:
     uchar m_ColorRef{ 1 };
     int m_SelectedIndex{ 10 };
 
-    CGUISlider *m_Slider{ NULL };
-    CGUIDataBox *m_DataBox{ NULL };
+    CGUISlider *m_Slider{ nullptr };
+    CGUIDataBox *m_DataBox{ nullptr };
 
 public:
     CGumpSelectColor(uint serial, short x, short y, SELECT_COLOR_GUMP_STATE state);

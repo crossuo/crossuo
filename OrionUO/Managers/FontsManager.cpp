@@ -73,7 +73,7 @@ bool CFontsManager::LoadFonts()
 
     if (FontCount < 1)
     {
-        Font = NULL;
+        Font = nullptr;
         FontCount = 0;
 
         return false;
@@ -125,7 +125,7 @@ bool CFontsManager::LoadFonts()
 bool CFontsManager::UnicodeFontExists(uchar font)
 {
     DEBUG_TRACE_FUNCTION;
-    if (font >= 20 || m_UnicodeFontAddress[font] == NULL)
+    if (font >= 20 || m_UnicodeFontAddress[font] == 0)
         return false;
 
     return true;
@@ -211,14 +211,14 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosA(
 
     PMULTILINES_FONT_INFO info =
         GetInfoA(font, str.c_str(), (int)str.length(), align, flags, width);
-    if (info == NULL)
+    if (info == nullptr)
         return p;
 
     int height = 0;
     PMULTILINES_FONT_INFO ptr = info;
 
     //loop throgh lines to get width and height
-    while (info != NULL)
+    while (info != nullptr)
     {
         p.X = 0;
         int len = info->CharCount;
@@ -240,7 +240,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosA(
         }
 
         //add to height if there's another line
-        if (info->m_Next != NULL)
+        if (info->m_Next != nullptr)
             p.Y += info->MaxHeight;
 
         PMULTILINES_FONT_INFO ptr = info;
@@ -282,7 +282,7 @@ int CFontsManager::CalculateCaretPosA(
 
     PMULTILINES_FONT_INFO info =
         GetInfoA(font, str.c_str(), (int)str.length(), align, flags, width);
-    if (info == NULL)
+    if (info == nullptr)
         return 0;
 
     int height = GetHeightA(info);
@@ -294,7 +294,7 @@ int CFontsManager::CalculateCaretPosA(
     int pos = 0;
     bool found = false;
 
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         info = ptr;
 
@@ -383,7 +383,7 @@ int CFontsManager::GetWidthExA(
 
     int textWidth = 0;
 
-    while (info != NULL)
+    while (info != nullptr)
     {
         if (info->Width > textWidth)
             textWidth = info->Width;
@@ -422,7 +422,7 @@ int CFontsManager::GetHeightA(
 
     int textHeight = 0;
 
-    while (info != NULL)
+    while (info != nullptr)
     {
         textHeight += info->MaxHeight;
 
@@ -446,7 +446,7 @@ int CFontsManager::GetHeightA(PMULTILINES_FONT_INFO info)
     DEBUG_TRACE_FUNCTION;
     int textHeight = 0;
 
-    while (info != NULL)
+    while (info != nullptr)
     {
         textHeight += info->MaxHeight;
 
@@ -505,14 +505,14 @@ string CFontsManager::GetTextByWidthA(uchar font, const string &str, int width, 
 @param [__in] align Расположение текста
 @param [__in] flags Эффекты текста
 @param [__in] width Ширина текстуры
-@return Ссылка на мультистрочный текст или NULL
+@return Ссылка на мультистрочный текст или nullptr
 */
 PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
     uchar font, const char *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= FontCount)
-        return NULL;
+        return nullptr;
 
     FONT_DATA &fd = Font[font];
 
@@ -699,7 +699,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
     {
         ptr = info;
 
-        while (ptr != NULL)
+        while (ptr != nullptr)
         {
             if (ptr->Width > 1)
                 ptr->MaxHeight = ptr->MaxHeight + 2;
@@ -794,7 +794,7 @@ UINT_LIST CFontsManager::GeneratePixelsA(
         return pData;
 
     PMULTILINES_FONT_INFO info = GetInfoA(font, str, len, align, flags, width);
-    if (info == NULL)
+    if (info == nullptr)
         return pData;
 
     width += 4;
@@ -805,7 +805,7 @@ UINT_LIST CFontsManager::GeneratePixelsA(
     {
         PMULTILINES_FONT_INFO ptr = info;
 
-        while (ptr != NULL)
+        while (ptr != nullptr)
         {
             info = ptr;
 
@@ -828,7 +828,7 @@ UINT_LIST CFontsManager::GeneratePixelsA(
     bool partialHue = (font != 5 && font != 8) && !UnusePartialHue;
     int font6OffsetY = (int)(font == 6) * 7;
 
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         info = ptr;
 
@@ -1001,13 +1001,13 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
 
     PMULTILINES_FONT_INFO info =
         GetInfoW(font, str.c_str(), (int)str.length(), align, flags, width);
-    if (info == NULL)
+    if (info == nullptr)
         return p;
 
     puint table = (puint)m_UnicodeFontAddress[font];
 
     //loop throgh lines to get width and height
-    while (info != NULL)
+    while (info != nullptr)
     {
         p.X = 0;
         int len = info->CharCount;
@@ -1037,7 +1037,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
         }
 
         //add to height if there's another line
-        if (info->m_Next != NULL)
+        if (info->m_Next != nullptr)
             p.Y += info->MaxHeight;
 
         PMULTILINES_FONT_INFO ptr = info;
@@ -1077,7 +1077,7 @@ int CFontsManager::CalculateCaretPosW(
 
     PMULTILINES_FONT_INFO info =
         GetInfoW(font, str.c_str(), (int)str.length(), align, flags, width);
-    if (info == NULL)
+    if (info == nullptr)
         return 0;
 
     int height = 0;
@@ -1086,7 +1086,7 @@ int CFontsManager::CalculateCaretPosW(
     int pos = 0;
     bool found = false;
 
-    while (info != NULL)
+    while (info != nullptr)
     {
         height += info->MaxHeight;
         width = 0;
@@ -1199,7 +1199,7 @@ int CFontsManager::GetWidthExW(
 
     int textWidth = 0;
 
-    while (info != NULL)
+    while (info != nullptr)
     {
         if (info->Width > textWidth)
             textWidth = info->Width;
@@ -1239,7 +1239,7 @@ int CFontsManager::GetHeightW(
 
     int textHeight = 0;
 
-    while (info != NULL)
+    while (info != nullptr)
     {
         if (m_UseHTML)
             textHeight += MAX_HTML_TEXT_HEIGHT;
@@ -1268,7 +1268,7 @@ int CFontsManager::GetHeightW(PMULTILINES_FONT_INFO info)
 
     int textHeight = 0;
 
-    for (; info != NULL; info = info->m_Next)
+    for (; info != nullptr; info = info->m_Next)
     {
         if (m_UseHTML)
             textHeight += MAX_HTML_TEXT_HEIGHT;
@@ -1942,7 +1942,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
     HTMLCHAR_LIST htmlData = GetHTMLData(font, str, len, align, flags);
 
     if (!htmlData.size())
-        return NULL;
+        return nullptr;
 
     PMULTILINES_FONT_INFO info = new MULTILINES_FONT_INFO();
     info->Reset();
@@ -2162,7 +2162,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
 @param [__in] align Расположение текста
 @param [__in] flags Эффекты текста
 @param [__in] width Ширина текстуры
-@return Ссылка на мультистрочный текст или NULL
+@return Ссылка на мультистрочный текст или nullptr
 */
 PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     uchar font, const wchar_t *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width)
@@ -2177,7 +2177,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     m_BottomMargin = 0;
 
     if (font >= 20 || !m_UnicodeFontAddress[font])
-        return NULL;
+        return nullptr;
 
     if (m_UseHTML)
         return GetInfoHTML(font, str, len, align, flags, width);
@@ -2482,12 +2482,12 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
     PMULTILINES_FONT_INFO info = GetInfoW(font, str, len, align, flags, width);
 
-    if (info == NULL)
+    if (info == nullptr)
         return pData;
 
     if (m_UseHTML && (m_LeftMargin || m_RightMargin))
     {
-        while (info != NULL)
+        while (info != nullptr)
         {
             PMULTILINES_FONT_INFO ptr = info->m_Next;
 
@@ -2504,7 +2504,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
         info = GetInfoW(font, str, len, align, flags, newWidth);
 
-        if (info == NULL)
+        if (info == nullptr)
             return pData;
     }
 
@@ -2513,7 +2513,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
         PMULTILINES_FONT_INFO ptr = info;
         width = 0;
 
-        while (ptr != NULL)
+        while (ptr != nullptr)
         {
             if (ptr->Width > width)
                 width = ptr->Width;
@@ -2528,7 +2528,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
     if (!height)
     {
-        while (info != NULL)
+        while (info != nullptr)
         {
             PMULTILINES_FONT_INFO ptr = info;
 
@@ -2570,7 +2570,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
     int linkStartX = 0;
     int linkStartY = 0;
 
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         info = ptr;
 

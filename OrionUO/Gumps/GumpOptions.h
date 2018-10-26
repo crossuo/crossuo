@@ -191,60 +191,60 @@ private:
     static const int ID_GO_P9_TRANSPARENCY_RADIUS = 904;
     static const int ID_GO_P9_INFORM_SKILLS = 905;
 
-    class CMacro *m_MacroPointer{ NULL };
-    class CMacroObject *m_MacroObjectPointer{ NULL };
+    class CMacro *m_MacroPointer{ nullptr };
+    class CMacroObject *m_MacroObjectPointer{ nullptr };
 
-    CGUISlider *m_SliderSound{ NULL };
-    CGUISlider *m_SliderMusic{ NULL };
-    CGUISlider *m_SliderClientFPS{ NULL };
-    CGUISlider *m_SliderHiddenAlpha{ NULL };
-    CGUISlider *m_SliderSpellIconsAlpha{ NULL };
-    CGUISlider *m_SliderDrawStatusConditionValue{ NULL };
-    CGUISlider *m_SliderTooltipDelay{ NULL };
-    CGUISlider *m_SliderSpeechDuration{ NULL };
-    CGUISlider *m_SliderCircleTransparency{ NULL };
-    CGUISlider *m_SliderInformSkills{ NULL };
-    CGUISlider *m_SliderPingTimer{ NULL };
+    CGUISlider *m_SliderSound{ nullptr };
+    CGUISlider *m_SliderMusic{ nullptr };
+    CGUISlider *m_SliderClientFPS{ nullptr };
+    CGUISlider *m_SliderHiddenAlpha{ nullptr };
+    CGUISlider *m_SliderSpellIconsAlpha{ nullptr };
+    CGUISlider *m_SliderDrawStatusConditionValue{ nullptr };
+    CGUISlider *m_SliderTooltipDelay{ nullptr };
+    CGUISlider *m_SliderSpeechDuration{ nullptr };
+    CGUISlider *m_SliderCircleTransparency{ nullptr };
+    CGUISlider *m_SliderInformSkills{ nullptr };
+    CGUISlider *m_SliderPingTimer{ nullptr };
 
-    CGUIColoredPolygone *m_ColorTooltipText{ NULL };
+    CGUIColoredPolygone *m_ColorTooltipText{ nullptr };
 
-    CGUIColoredPolygone *m_ColorInputText{ NULL };
-    CGUIColoredPolygone *m_ColorMenuOption{ NULL };
-    CGUIColoredPolygone *m_ColorPlayerColorInMemberList{ NULL };
-    CGUIColoredPolygone *m_ColorChatText{ NULL };
-    CGUIColoredPolygone *m_ColorPlayerNameWithoutSpeakingPrivileges{ NULL };
-    CGUIColoredPolygone *m_ColorMutedText{ NULL };
-    CGUIColoredPolygone *m_ColorChannelModeratorName{ NULL };
-    CGUIColoredPolygone *m_ColorChannelModeratorText{ NULL };
-    CGUIColoredPolygone *m_ColorMyName{ NULL };
-    CGUIColoredPolygone *m_ColorMyText{ NULL };
-    CGUIColoredPolygone *m_ColorSystemMessage{ NULL };
-    CGUIColoredPolygone *m_ColorTextOutputBackground{ NULL };
-    CGUIColoredPolygone *m_ColorTextInputBackground{ NULL };
-    CGUIColoredPolygone *m_ColorUserListBackground{ NULL };
-    CGUIColoredPolygone *m_ColorConferenceListBackground{ NULL };
-    CGUIColoredPolygone *m_ColorCommandListBackground{ NULL };
+    CGUIColoredPolygone *m_ColorInputText{ nullptr };
+    CGUIColoredPolygone *m_ColorMenuOption{ nullptr };
+    CGUIColoredPolygone *m_ColorPlayerColorInMemberList{ nullptr };
+    CGUIColoredPolygone *m_ColorChatText{ nullptr };
+    CGUIColoredPolygone *m_ColorPlayerNameWithoutSpeakingPrivileges{ nullptr };
+    CGUIColoredPolygone *m_ColorMutedText{ nullptr };
+    CGUIColoredPolygone *m_ColorChannelModeratorName{ nullptr };
+    CGUIColoredPolygone *m_ColorChannelModeratorText{ nullptr };
+    CGUIColoredPolygone *m_ColorMyName{ nullptr };
+    CGUIColoredPolygone *m_ColorMyText{ nullptr };
+    CGUIColoredPolygone *m_ColorSystemMessage{ nullptr };
+    CGUIColoredPolygone *m_ColorTextOutputBackground{ nullptr };
+    CGUIColoredPolygone *m_ColorTextInputBackground{ nullptr };
+    CGUIColoredPolygone *m_ColorUserListBackground{ nullptr };
+    CGUIColoredPolygone *m_ColorConferenceListBackground{ nullptr };
+    CGUIColoredPolygone *m_ColorCommandListBackground{ nullptr };
 
-    CGUIColoredPolygone *m_ColorSpeech{ NULL };
-    CGUIColoredPolygone *m_ColorEmote{ NULL };
-    CGUIColoredPolygone *m_ColorPartyMessage{ NULL };
-    CGUIColoredPolygone *m_ColorGuildMessage{ NULL };
-    CGUIColoredPolygone *m_ColorAllianceMessage{ NULL };
+    CGUIColoredPolygone *m_ColorSpeech{ nullptr };
+    CGUIColoredPolygone *m_ColorEmote{ nullptr };
+    CGUIColoredPolygone *m_ColorPartyMessage{ nullptr };
+    CGUIColoredPolygone *m_ColorGuildMessage{ nullptr };
+    CGUIColoredPolygone *m_ColorAllianceMessage{ nullptr };
 
-    CGUIColoredPolygone *m_ColorInnocent{ NULL };
-    CGUIColoredPolygone *m_ColorFriendly{ NULL };
-    CGUIColoredPolygone *m_ColorSomeone{ NULL };
-    CGUIColoredPolygone *m_ColorCriminal{ NULL };
-    CGUIColoredPolygone *m_ColorEnemy{ NULL };
-    CGUIColoredPolygone *m_ColorMurderer{ NULL };
+    CGUIColoredPolygone *m_ColorInnocent{ nullptr };
+    CGUIColoredPolygone *m_ColorFriendly{ nullptr };
+    CGUIColoredPolygone *m_ColorSomeone{ nullptr };
+    CGUIColoredPolygone *m_ColorCriminal{ nullptr };
+    CGUIColoredPolygone *m_ColorEnemy{ nullptr };
+    CGUIColoredPolygone *m_ColorMurderer{ nullptr };
 
-    CGUIDataBox *m_MacroDataBox{ NULL };
-    CGUICheckbox *m_MacroCheckboxShift{ NULL };
-    CGUICheckbox *m_MacroCheckboxAlt{ NULL };
-    CGUICheckbox *m_MacroCheckboxCtrl{ NULL };
+    CGUIDataBox *m_MacroDataBox{ nullptr };
+    CGUICheckbox *m_MacroCheckboxShift{ nullptr };
+    CGUICheckbox *m_MacroCheckboxAlt{ nullptr };
+    CGUICheckbox *m_MacroCheckboxCtrl{ nullptr };
 
-    CGUITextEntry *m_ContainerOffsetX{ NULL };
-    CGUITextEntry *m_ContainerOffsetY{ NULL };
+    CGUITextEntry *m_ContainerOffsetX{ nullptr };
+    CGUITextEntry *m_ContainerOffsetY{ nullptr };
 
     bool m_WantRedrawMacroData{ true };
     void RedrawMacroData();
@@ -258,9 +258,9 @@ public:
 
     void UpdateColor(const SELECT_COLOR_GUMP_STATE &state, ushort color);
 
-    CGUITextEntry *m_GameWindowWidth{ NULL };
-    CGUITextEntry *m_GameWindowHeight{ NULL };
-    CGUITextEntry *m_MacroKey{ NULL };
+    CGUITextEntry *m_GameWindowWidth{ nullptr };
+    CGUITextEntry *m_GameWindowHeight{ nullptr };
+    CGUITextEntry *m_MacroKey{ nullptr };
 
     virtual void InitToolTip();
 

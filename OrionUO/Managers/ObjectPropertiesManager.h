@@ -35,7 +35,7 @@ class CObjectPropertiesManager
 private:
     OBJECT_PROPERTIES_MAP m_Map;
 
-    class CRenderObject *m_Object{ NULL };
+    class CRenderObject *m_Object{ nullptr };
 
 public:
     CObjectPropertiesManager() {}

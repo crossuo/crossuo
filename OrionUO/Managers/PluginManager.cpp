@@ -79,10 +79,10 @@ CPlugin::CPlugin(uint flags)
 CPlugin::~CPlugin()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_PPS != NULL)
+    if (m_PPS != nullptr)
     {
         delete m_PPS;
-        m_PPS = NULL;
+        m_PPS = nullptr;
     }
 }
 
@@ -100,7 +100,7 @@ LRESULT CPluginManager::WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lp
 
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->CanWindowProc() && plugin->m_PPS->WindowProc != NULL)
+        if (plugin->CanWindowProc() && plugin->m_PPS->WindowProc != nullptr)
         {
             result = plugin->m_PPS->WindowProc(hWnd, msg, wparam, lparam);
             /*bool funRet = plugin->m_PPS->WindowProc(hWnd, msg, wparam, lparam);
@@ -120,7 +120,7 @@ bool CPluginManager::PacketRecv(puchar buf, int size)
 
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->CanParseRecv() && plugin->m_PPS->OnRecv != NULL)
+        if (plugin->CanParseRecv() && plugin->m_PPS->OnRecv != nullptr)
         {
             bool funRet = plugin->m_PPS->OnRecv(buf, size);
 
@@ -139,7 +139,7 @@ bool CPluginManager::PacketSend(puchar buf, int size)
 
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->CanParseSend() && plugin->m_PPS->OnSend != NULL)
+        if (plugin->CanParseSend() && plugin->m_PPS->OnSend != nullptr)
         {
             bool funRet = plugin->m_PPS->OnSend(buf, size);
 
@@ -156,7 +156,7 @@ void CPluginManager::Disconnect()
     DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->m_PPS->OnDisconnect != NULL)
+        if (plugin->m_PPS->OnDisconnect != nullptr)
             plugin->m_PPS->OnDisconnect();
     }
 }
@@ -166,7 +166,7 @@ void CPluginManager::WorldDraw()
     DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->CanEnterWorldRender() && plugin->m_PPS->OnWorldDraw != NULL)
+        if (plugin->CanEnterWorldRender() && plugin->m_PPS->OnWorldDraw != nullptr)
             plugin->m_PPS->OnWorldDraw();
     }
 }
@@ -176,7 +176,7 @@ void CPluginManager::SceneDraw()
     DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->CanEnterSceneRender() && plugin->m_PPS->OnSceneDraw != NULL)
+        if (plugin->CanEnterSceneRender() && plugin->m_PPS->OnSceneDraw != nullptr)
             plugin->m_PPS->OnSceneDraw();
     }
 }
@@ -186,7 +186,7 @@ void CPluginManager::WorldMapDraw()
     DEBUG_TRACE_FUNCTION;
     QFOR(plugin, m_Items, CPlugin *)
     {
-        if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != NULL)
+        if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != nullptr)
             plugin->m_PPS->OnWorldMapDraw();
     }
 }

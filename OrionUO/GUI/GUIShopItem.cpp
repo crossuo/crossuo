@@ -47,7 +47,7 @@ void CGUIShopItem::UpdateOffsets()
     {
         CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 
-        if (th != NULL)
+        if (th != nullptr)
             m_MaxOffset = th->Height;
     }
     else
@@ -101,7 +101,7 @@ void CGUIShopItem::OnClick()
     DEBUG_TRACE_FUNCTION;
     Selected = false;
 
-    for (CBaseGUI *item = this; item != NULL; item = (CBaseGUI *)item->m_Next)
+    for (CBaseGUI *item = this; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_SHOPITEM && ((CGUIShopItem *)item)->Selected)
         {
@@ -110,7 +110,7 @@ void CGUIShopItem::OnClick()
         }
     }
 
-    for (CBaseGUI *item = this; item != NULL; item = (CBaseGUI *)item->m_Prev)
+    for (CBaseGUI *item = this; item != nullptr; item = (CBaseGUI *)item->m_Prev)
     {
         if (item->Type == GOT_SHOPITEM && ((CGUIShopItem *)item)->Selected)
         {
@@ -213,7 +213,7 @@ void CGUIShopItem::SetShaderMode()
 void CGUIShopItem::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = NULL;
+    CGLTexture *th = nullptr;
 
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
@@ -228,7 +228,7 @@ void CGUIShopItem::Draw(bool checktrans)
     {
         th = g_Orion.ExecuteStaticArt(Graphic);
 
-        if (th != NULL)
+        if (th != nullptr)
             th->Draw(2, m_ImageOffset, checktrans);
     }
     else
@@ -291,17 +291,17 @@ void CGUIShopItem::Draw(bool checktrans)
 
     th = g_Orion.ExecuteGump(0x0039);
 
-    if (th != NULL)
+    if (th != nullptr)
         th->Draw(2, m_MaxOffset, checktrans);
 
     th = g_Orion.ExecuteGump(0x003A);
 
-    if (th != NULL)
+    if (th != nullptr)
         th->Draw(32, m_MaxOffset, 140, 0, checktrans);
 
     th = g_Orion.ExecuteGump(0x003B);
 
-    if (th != NULL)
+    if (th != nullptr)
         th->Draw(166, m_MaxOffset, checktrans);
 
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);

@@ -16,26 +16,26 @@ CTextRenderer g_WorldTextRenderer;
 CTextRenderer::CTextRenderer()
     : CRenderTextObject()
     , m_TextItems(this)
-    , m_DrawPointer(NULL)
+    , m_DrawPointer(nullptr)
 {
 }
 
 CTextRenderer::~CTextRenderer()
 {
     DEBUG_TRACE_FUNCTION;
-    m_TextItems = NULL;
+    m_TextItems = nullptr;
 }
 
 CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         CRenderTextObject *item = m_TextItems;
 
-        if (item != NULL)
+        if (item != nullptr)
         {
-            if (item->m_NextDraw != NULL)
+            if (item->m_NextDraw != nullptr)
             {
                 CRenderTextObject *next = item->m_NextDraw;
 
@@ -48,7 +48,7 @@ CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
             {
                 item->m_NextDraw = obj;
                 obj->m_PrevDraw = item;
-                obj->m_NextDraw = NULL;
+                obj->m_NextDraw = nullptr;
             }
         }
     }
@@ -67,7 +67,7 @@ void CTextRenderer::ToTop(CRenderTextObject *obj)
     obj->m_PrevDraw = m_TextItems;
     obj->m_NextDraw = next;
 
-    if (next != NULL)
+    if (next != nullptr)
         next->m_PrevDraw = obj;
 }
 
@@ -82,7 +82,7 @@ bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
     {
         if (it->InRect(rect))
         {
-            if (rwo == NULL || rwo->TextCanBeTransparent(it->Text))
+            if (rwo == nullptr || rwo->TextCanBeTransparent(it->Text))
             {
                 result = true;
                 break;
@@ -133,7 +133,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
     if (!noCalculate)
         ClearRect();
 
-    for (m_DrawPointer = m_TextItems; m_DrawPointer != NULL;
+    for (m_DrawPointer = m_TextItems; m_DrawPointer != nullptr;
          m_DrawPointer = m_DrawPointer->m_NextDraw)
     {
         if (!noCalculate && m_DrawPointer->IsText())
@@ -142,7 +142,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 
             if (text.Timer >= g_Ticks)
             {
-                CRenderWorldObject *rwo = NULL;
+                CRenderWorldObject *rwo = nullptr;
 
                 if (text.Type == TT_OBJECT)
                     rwo = g_World->FindWorldObject(text.Serial);
@@ -158,7 +158,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
             }
         }
 
-        if (m_DrawPointer->m_NextDraw == NULL)
+        if (m_DrawPointer->m_NextDraw == nullptr)
             break;
     }
 
@@ -170,7 +170,7 @@ void CTextRenderer::Draw()
     DEBUG_TRACE_FUNCTION;
     CalculatePositions(true);
 
-    for (CRenderTextObject *item = m_DrawPointer; item != NULL; item = item->m_PrevDraw)
+    for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
     {
         if (!item->IsText())
             continue;
@@ -220,7 +220,7 @@ void CTextRenderer::Draw()
 void CTextRenderer::Select(CGump *gump)
 {
     DEBUG_TRACE_FUNCTION;
-    if (gump != NULL)
+    if (gump != nullptr)
         CalculatePositions(true);
     else
         CalculateWorldPositions(true);
@@ -230,7 +230,7 @@ void CTextRenderer::Select(CGump *gump)
     if (renderIndex < 1)
         renderIndex = 99;
 
-    for (CRenderTextObject *item = m_DrawPointer; item != NULL; item = item->m_PrevDraw)
+    for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
     {
         if (!item->IsText())
             continue;
@@ -239,7 +239,7 @@ void CTextRenderer::Select(CGump *gump)
 
         if (text.Timer >= g_Ticks)
         {
-            if (gump == NULL && (text.Owner == NULL || text.Owner->UseInRender != renderIndex))
+            if (gump == nullptr && (text.Owner == nullptr || text.Owner->UseInRender != renderIndex))
                 continue;
 
             if (text.m_Texture.Select(text.RealDrawX, text.RealDrawY))
@@ -256,7 +256,7 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
     if (!noCalculate)
         ClearRect();
 
-    for (m_DrawPointer = m_TextItems; m_DrawPointer != NULL;
+    for (m_DrawPointer = m_TextItems; m_DrawPointer != nullptr;
          m_DrawPointer = m_DrawPointer->m_NextDraw)
     {
         if (!noCalculate && m_DrawPointer->IsText())
@@ -265,7 +265,7 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 
             if (text.Timer >= g_Ticks)
             {
-                if (text.Owner != NULL)
+                if (text.Owner != nullptr)
                 {
                     text.Transparent = InRect((CTextData *)m_DrawPointer, text.Owner);
 
@@ -274,7 +274,7 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
             }
         }
 
-        if (m_DrawPointer->m_NextDraw == NULL)
+        if (m_DrawPointer->m_NextDraw == nullptr)
             break;
     }
 
@@ -291,7 +291,7 @@ void CTextRenderer::WorldDraw()
     if (renderIndex < 1)
         renderIndex = 99;
 
-    for (CRenderTextObject *item = m_DrawPointer; item != NULL; item = item->m_PrevDraw)
+    for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
     {
         if (!item->IsText())
             continue;
@@ -302,7 +302,7 @@ void CTextRenderer::WorldDraw()
         {
             CRenderWorldObject *rwo = text.Owner;
 
-            if (rwo == NULL || rwo->UseInRender != renderIndex)
+            if (rwo == nullptr || rwo->UseInRender != renderIndex)
                 continue;
 
             ushort textColor = text.Color;

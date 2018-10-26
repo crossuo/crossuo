@@ -79,7 +79,7 @@ CSkill *CSkillsManager::Get(int index)
     if (index < (uint)Count)
         return &m_Skills[index];
 
-    return NULL;
+    return nullptr;
 }
 
 bool CSkillsManager::CompareName(const string &str1, const string &str2)

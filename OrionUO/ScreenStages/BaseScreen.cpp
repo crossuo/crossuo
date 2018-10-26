@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CBaseScreen *g_CurrentScreen = NULL;
+CBaseScreen *g_CurrentScreen = nullptr;
 
 CBaseScreen::CBaseScreen(CGump &gump)
     : CBaseQueue()
@@ -52,15 +52,15 @@ void CBaseScreen::Render(bool mode)
 
         CRenderObject *selected = m_Gump.Select();
 
-        if (selected != NULL)
+        if (selected != nullptr)
             g_SelectedObject.Init(selected, &m_Gump);
 
         if (g_SelectedObject.Object != g_LastSelectedObject.Object)
         {
-            if (g_SelectedObject.Object != NULL)
+            if (g_SelectedObject.Object != nullptr)
                 g_SelectedObject.Object->OnMouseEnter();
 
-            if (g_LastSelectedObject.Object != NULL)
+            if (g_LastSelectedObject.Object != nullptr)
                 g_LastSelectedObject.Object->OnMouseExit();
         }
 

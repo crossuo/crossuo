@@ -38,14 +38,14 @@ void CJournal::Add(CTextData *obj)
 
     CGumpJournal *gump = (CGumpJournal *)g_GumpManager.UpdateGump(0, 0, GT_JOURNAL);
 
-    if (gump != NULL)
+    if (gump != nullptr)
         gump->AddText(obj);
 
     if (Size >= MaxSize)
     {
         CTextData *item = (CTextData *)m_Items;
 
-        if (gump != NULL)
+        if (gump != nullptr)
             gump->DeleteText(item);
 
         Delete(item);

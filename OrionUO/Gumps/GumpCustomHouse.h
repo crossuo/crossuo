@@ -144,14 +144,14 @@ private:
         ID_GCH_ITEM_IN_LIST
     };
 
-    CGUIDataBox *m_DataBox{ NULL };
-    CGUIDataBox *m_DataBoxGUI{ NULL };
+    CGUIDataBox *m_DataBox{ nullptr };
+    CGUIDataBox *m_DataBoxGUI{ nullptr };
 
-    CGUIGumppic *m_Gumppic{ NULL };
+    CGUIGumppic *m_Gumppic{ nullptr };
 
-    CGUIText *m_TextComponents{ NULL };
-    CGUIText *m_TextFixtures{ NULL };
-    CGUIText *m_TextCost{ NULL };
+    CGUIText *m_TextComponents{ nullptr };
+    CGUIText *m_TextFixtures{ nullptr };
+    CGUIText *m_TextCost{ nullptr };
 
     void DrawWallSection();
     void DrawDoorSection();

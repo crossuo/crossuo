@@ -146,7 +146,7 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
 void CGumpMap::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_DataBox != NULL)
+    if (m_DataBox != nullptr)
     {
         int serial = 1;
 
@@ -158,9 +158,9 @@ void CGumpMap::PrepareContent()
         }
 
         //Если окошко захвачено для перемещения - вычислим оффсеты
-        if (g_PressedObject.LeftGump == this && g_PressedObject.LeftObject != NULL && m_PlotState)
+        if (g_PressedObject.LeftGump == this && g_PressedObject.LeftObject != nullptr && m_PlotState)
         {
-            if (m_PinOnCursor == NULL)
+            if (m_PinOnCursor == nullptr)
             {
                 Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
@@ -169,7 +169,7 @@ void CGumpMap::PrepareContent()
                     m_PinOnCursor = (CBaseGUI *)g_PressedObject.LeftObject;
             }
 
-            if (m_PinOnCursor != NULL)
+            if (m_PinOnCursor != nullptr)
             {
                 int newX = g_MouseManager.Position.X - (m_X + 20);
                 int newY = g_MouseManager.Position.Y - (m_Y + 30);
@@ -181,7 +181,7 @@ void CGumpMap::PrepareContent()
             }
         }
 
-        NoMove = (m_PinOnCursor != NULL);
+        NoMove = (m_PinOnCursor != nullptr);
     }
 }
 
@@ -191,7 +191,7 @@ void CGumpMap::GenerateFrame(bool stop)
 
     //m_Labels
 
-    if (m_DataBox != NULL)
+    if (m_DataBox != nullptr)
     {
         int idx = 0;
 
@@ -202,7 +202,7 @@ void CGumpMap::GenerateFrame(bool stop)
 
             if (item != m_PinOnCursor)
             {
-                CGUIText *text = NULL;
+                CGUIText *text = nullptr;
 
                 if (idx >= (int)m_Labels.size())
                 {
@@ -220,7 +220,7 @@ void CGumpMap::GenerateFrame(bool stop)
 
     CGump::GenerateFrame(false);
 
-    if (m_DataBox != NULL)
+    if (m_DataBox != nullptr)
     {
         int idx = 1;
 
@@ -231,7 +231,7 @@ void CGumpMap::GenerateFrame(bool stop)
 
             CBaseGUI *next = (CBaseGUI *)item->m_Next;
 
-            if (next != NULL)
+            if (next != nullptr)
             {
                 int nextDrawX = next->GetX() + 20;
                 int nextDrawY = next->GetY() + 30;
@@ -245,7 +245,7 @@ void CGumpMap::GenerateFrame(bool stop)
 
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-                if (m_PinOnCursor == NULL && g_SelectedObject.Serial >= ID_GM_PIN_LIST_INSERT &&
+                if (m_PinOnCursor == nullptr && g_SelectedObject.Serial >= ID_GM_PIN_LIST_INSERT &&
                     (g_SelectedObject.Serial - ID_GM_PIN_LIST_INSERT) == idx)
                 {
                     int checkX = drawX + 2;
@@ -280,7 +280,7 @@ CRenderObject *CGumpMap::Select()
     DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = CGump::Select();
 
-    if (m_DataBox != NULL)
+    if (m_DataBox != nullptr)
     {
         Wisp::CPoint2Di oldPos = g_MouseManager.Position;
         g_MouseManager.Position = Wisp::CPoint2Di(
@@ -293,7 +293,7 @@ CRenderObject *CGumpMap::Select()
 
             CBaseGUI *next = (CBaseGUI *)item->m_Next;
 
-            if (next != NULL)
+            if (next != nullptr)
             {
                 int nextDrawX = next->GetX() + 20;
                 int nextDrawY = next->GetY() + 30;
@@ -354,9 +354,9 @@ void CGumpMap::OnLeftMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
-    if (m_DataBox != NULL && g_PressedObject.LeftObject != NULL)
+    if (m_DataBox != nullptr && g_PressedObject.LeftObject != nullptr)
     {
-        if (m_PlotState && m_PinOnCursor == NULL && m_PinTimer > g_Ticks)
+        if (m_PlotState && m_PinOnCursor == nullptr && m_PinTimer > g_Ticks)
         {
             if (g_PressedObject.LeftSerial >= ID_GM_PIN_LIST_INSERT)
             {
@@ -364,7 +364,7 @@ void CGumpMap::OnLeftMouseButtonUp()
 
                 CBaseGUI *first = (CBaseGUI *)m_DataBox->Get(idx);
 
-                if (first != NULL)
+                if (first != nullptr)
                 {
                     int x = m_X;
                     int y = m_Y;
@@ -374,7 +374,7 @@ void CGumpMap::OnLeftMouseButtonUp()
 
                     CBaseGUI *next = (CBaseGUI *)first->m_Next;
 
-                    if (next != NULL)
+                    if (next != nullptr)
                     {
                         int nextDrawX = x + next->GetX() + 20;
                         int nextDrawY = y + next->GetY() + 30;
@@ -414,7 +414,7 @@ void CGumpMap::OnLeftMouseButtonUp()
         }
     }
 
-    if (m_PinOnCursor != NULL && m_DataBox != NULL)
+    if (m_PinOnCursor != nullptr && m_DataBox != nullptr)
     {
         int x = m_X + 24;
         int y = m_Y + 32;
@@ -439,6 +439,6 @@ void CGumpMap::OnLeftMouseButtonUp()
         }
 
         WantRedraw = true;
-        m_PinOnCursor = NULL;
+        m_PinOnCursor = nullptr;
     }
 }

@@ -21,7 +21,7 @@ public:
     void AddText(
         int index,
         const wstring &text,
-        CBaseGUI *start = NULL,
+        CBaseGUI *start = nullptr,
         bool backbroundCanBeColored = false);
 
     void SendGumpResponse(int index);

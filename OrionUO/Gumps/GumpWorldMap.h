@@ -66,15 +66,15 @@ private:
 
     int GetCurrentMap();
 
-    CGUIButton *m_Minimizer{ NULL };
-    CGUIResizepic *m_Background{ NULL };
-    CGUIResizeButton *m_Resizer{ NULL };
-    CGUIText *Text{ NULL };
-    CGUICheckbox *m_Checkbox{ NULL };
-    CGUIScissor *m_Scissor{ NULL };
-    CGUIWorldMapTexture *m_MapData{ NULL };
-    CGUIComboBox *m_ComboboxScale{ NULL };
-    CGUIComboBox *m_ComboboxMap{ NULL };
+    CGUIButton *m_Minimizer{ nullptr };
+    CGUIResizepic *m_Background{ nullptr };
+    CGUIResizeButton *m_Resizer{ nullptr };
+    CGUIText *Text{ nullptr };
+    CGUICheckbox *m_Checkbox{ nullptr };
+    CGUIScissor *m_Scissor{ nullptr };
+    CGUIWorldMapTexture *m_MapData{ nullptr };
+    CGUIComboBox *m_ComboboxScale{ nullptr };
+    CGUIComboBox *m_ComboboxMap{ nullptr };
 
 protected:
     virtual void CalculateGumpState();

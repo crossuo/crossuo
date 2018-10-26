@@ -58,7 +58,7 @@ public:
 
 protected:
     //!Ссылка на список эффектов персонажа
-    class CGameEffect *m_Effects{ NULL };
+    class CGameEffect *m_Effects{ nullptr };
 
     //!Указатель на текстуру для опции Object Handles
     CGLTexture m_TextureObjectHalndes{ CGLTexture() };
@@ -272,7 +272,7 @@ public:
 
     CGameItem *FindLayer(int layer);
 
-    virtual CGameItem *FindSecureTradeBox() { return NULL; }
+    virtual CGameItem *FindSecureTradeBox() { return nullptr; }
 };
 
 #endif

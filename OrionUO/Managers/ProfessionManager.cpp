@@ -21,7 +21,7 @@ const string CProfessionManager::m_Keys[m_KeyCount] = {
 
 CProfessionManager::CProfessionManager()
     : CBaseQueue()
-    , Selected(NULL)
+    , Selected(nullptr)
 {
 }
 
@@ -142,7 +142,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
                     {
                         CSkill *skillPtr = g_SkillsManager.Get((uint)j);
 
-                        if (skillPtr != NULL && strings[1] == skillPtr->Name)
+                        if (skillPtr != nullptr && strings[1] == skillPtr->Name)
                         {
                             skillIndex[skillCount] = (int)j;
                             skillValue[skillCount] = atoi(strings[2].c_str());
@@ -188,7 +188,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
         }
     }
 
-    CBaseProfession *obj = NULL;
+    CBaseProfession *obj = nullptr;
 
     if (type == PT_CATEGORY)
     {
@@ -218,7 +218,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 
     bool result = (type != PROFESSION_TYPE::PT_NO_PROF);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         obj->NameClilocID = nameClilocID;
         obj->Name = name;
@@ -235,7 +235,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
         {
             CBaseProfession *parent = (CBaseProfession *)m_Items;
 
-            while (parent != NULL)
+            while (parent != nullptr)
             {
                 result = AddChild(parent, obj);
 
@@ -279,7 +279,7 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
         {
             CBaseProfession *item = (CBaseProfession *)cat->m_Items;
 
-            while (item != NULL)
+            while (item != nullptr)
             {
                 result = AddChild(item, child);
 
@@ -452,16 +452,16 @@ void CProfessionManager::LoadProfessionDescription()
 CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfession *check)
 {
     DEBUG_TRACE_FUNCTION;
-    if (check == NULL)
+    if (check == nullptr)
         check = (CBaseProfession *)m_Items;
 
     if (obj == m_Items)
         return obj;
 
     CBaseProfession *item = (CBaseProfession *)check->m_Items;
-    CBaseProfession *result = NULL;
+    CBaseProfession *result = nullptr;
 
-    while (item != NULL && result == NULL)
+    while (item != nullptr && result == nullptr)
     {
         if (obj == item)
             result = check;

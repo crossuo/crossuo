@@ -38,7 +38,7 @@ CGumpBaseScroll::CGumpBaseScroll(
     {
         CGLTexture *th = g_Orion.ExecuteGump(0x082D);
 
-        if (th != NULL)
+        if (th != nullptr)
             offsetY = th->Height - 3;
     }
 
@@ -75,7 +75,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     CGUIHTMLButton *button = m_HTMLGump->m_ButtonUp;
 
-    if (button != NULL)
+    if (button != nullptr)
     {
         button->Graphic = 0x0824;
         button->GraphicSelected = 0x0824;
@@ -85,7 +85,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     button = m_HTMLGump->m_ButtonDown;
 
-    if (button != NULL)
+    if (button != nullptr)
     {
         button->Graphic = 0x0825;
         button->GraphicSelected = 0x0825;
@@ -95,7 +95,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     CGUIHTMLSlider *slider = m_HTMLGump->m_Slider;
 
-    if (slider != NULL)
+    if (slider != nullptr)
     {
         slider->Graphic = 0x001F;
         slider->GraphicSelected = 0x001F;
@@ -133,7 +133,7 @@ void CGumpBaseScroll::UpdateHeight()
 
     CGLTexture *th = g_Orion.ExecuteGump(0x082D);
 
-    if (th != NULL && m_Minimizer->Visible)
+    if (th != nullptr && m_Minimizer->Visible)
         offsetY = th->Height - 3;
 
     m_Background->UpdateHeight(Height);

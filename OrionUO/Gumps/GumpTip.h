@@ -19,8 +19,8 @@ private:
     static const int ID_GT_REMOVE_GUMP = 2;
     static const int ID_GT_NEXT_GUMP = 3;
 
-    CGUIButton *m_ButtonPrevGump{ NULL };
-    CGUIButton *m_ButtonNextGump{ NULL };
+    CGUIButton *m_ButtonPrevGump{ nullptr };
+    CGUIButton *m_ButtonNextGump{ nullptr };
 
     virtual void UpdateHeight();
 

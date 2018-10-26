@@ -30,8 +30,8 @@ private:
     const int ID_GRAB_DICTIONARY_ICON = 100;
     const int ID_GRAB_ICON = 1000;
 
-    CGUIButton *m_PrevPage{ NULL };
-    CGUIButton *m_NextPage{ NULL };
+    CGUIButton *m_PrevPage{ nullptr };
+    CGUIButton *m_NextPage{ nullptr };
 
     void GetSummaryBookInfo(int &abilityOnPage, ushort &iconStartGraphic);
 

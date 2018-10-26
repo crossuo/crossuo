@@ -24,8 +24,8 @@ private:
 
 public:
     //Ссылки на следующую и предыдущую группы
-    CSkillGroupObject *m_Next{ NULL };
-    CSkillGroupObject *m_Prev{ NULL };
+    CSkillGroupObject *m_Next{ nullptr };
+    CSkillGroupObject *m_Prev{ nullptr };
 
     CSkillGroupObject();
     ~CSkillGroupObject();

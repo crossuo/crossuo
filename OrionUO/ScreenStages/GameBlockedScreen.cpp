@@ -47,10 +47,10 @@ void CGameBlockedScreen::Render(bool mode)
 
         if (g_SelectedObject.Object != g_LastSelectedObject.Object)
         {
-            if (g_SelectedObject.Object != NULL)
+            if (g_SelectedObject.Object != nullptr)
                 g_SelectedObject.Object->OnMouseEnter();
 
-            if (g_LastSelectedObject.Object != NULL)
+            if (g_LastSelectedObject.Object != nullptr)
                 g_LastSelectedObject.Object->OnMouseExit();
         }
 
@@ -61,14 +61,14 @@ void CGameBlockedScreen::Render(bool mode)
 void CGameBlockedScreen::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL)
+    if (g_SelectedObject.Gump != nullptr)
         g_GumpManager.OnLeftMouseButtonDown(true);
 }
 
 void CGameBlockedScreen::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PressedObject.LeftGump != NULL)
+    if (g_PressedObject.LeftGump != nullptr)
         g_GumpManager.OnLeftMouseButtonUp(true);
 }
 
@@ -76,7 +76,7 @@ void CGameBlockedScreen::OnLeftMouseButtonUp()
 void CGameBlockedScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_EntryPointer == NULL || g_EntryPointer == &g_GameConsole)
+    if (g_EntryPointer == nullptr || g_EntryPointer == &g_GameConsole)
         return;
 
     g_GumpManager.OnCharPress(wParam, lParam, true);

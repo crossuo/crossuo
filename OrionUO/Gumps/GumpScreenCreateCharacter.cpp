@@ -398,7 +398,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
         gumppic->Color = g_CreateCharacterManager.BeardColor;
     }
 
-    Add(new CGUIShader(NULL, false));
+    Add(new CGUIShader(nullptr, false));
 
     if (g_PacketManager.GetClientVersion() < CV_4011D)
     {
@@ -451,7 +451,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 void CGumpScreenCreateCharacter::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == NULL)
+    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
     uint id = g_SelectedObject.Serial;

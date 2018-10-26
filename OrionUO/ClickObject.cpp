@@ -18,8 +18,8 @@ void CClickObject::Clear(CRenderObject *obj)
     DEBUG_TRACE_FUNCTION;
     if (obj == Object)
     {
-        Object = NULL;
-        Gump = NULL;
+        Object = nullptr;
+        Gump = nullptr;
         Timer = 0;
         X = 0;
         Y = 0;
@@ -31,8 +31,8 @@ void CClickObject::Clear(CRenderObject *obj)
 void CClickObject::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    Object = NULL;
-    Gump = NULL;
+    Object = nullptr;
+    Gump = nullptr;
     Timer = 0;
     //m_X = 0;
     //m_Y = 0;

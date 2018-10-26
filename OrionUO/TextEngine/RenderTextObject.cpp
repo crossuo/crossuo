@@ -25,14 +25,14 @@ CRenderTextObject::~CRenderTextObject()
 void CRenderTextObject::UnlinkDraw()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_NextDraw != NULL)
+    if (m_NextDraw != nullptr)
         m_NextDraw->m_PrevDraw = m_PrevDraw;
 
-    if (m_PrevDraw != NULL)
+    if (m_PrevDraw != nullptr)
         m_PrevDraw->m_NextDraw = m_NextDraw;
 
-    m_NextDraw = NULL;
-    m_PrevDraw = NULL;
+    m_NextDraw = nullptr;
+    m_PrevDraw = nullptr;
 }
 
 void CRenderTextObject::ToTop()
@@ -40,9 +40,9 @@ void CRenderTextObject::ToTop()
     DEBUG_TRACE_FUNCTION;
     CRenderTextObject *obj = this;
 
-    while (obj != NULL)
+    while (obj != nullptr)
     {
-        if (obj->m_PrevDraw == NULL)
+        if (obj->m_PrevDraw == nullptr)
             break;
 
         obj = obj->m_PrevDraw;

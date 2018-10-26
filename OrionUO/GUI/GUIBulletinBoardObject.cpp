@@ -41,7 +41,7 @@ void CGUIBulletinBoardObject::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(0x1523);
 
-    if (th != NULL)
+    if (th != nullptr)
         th->Draw(m_X, m_Y, checktrans);
 
     m_Texture.Draw(m_X + 23, m_Y + 1);

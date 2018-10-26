@@ -137,7 +137,7 @@ void CGumpWorldMap::CalculateGumpState()
 
     if (g_GumpPressed)
     {
-        if (g_PressedObject.LeftObject != NULL &&
+        if (g_PressedObject.LeftObject != nullptr &&
             ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_COMBOBOX)
         {
             g_GumpMovingOffset.Reset();
@@ -277,16 +277,16 @@ void CGumpWorldMap::LoadMap(int map)
     DEBUG_TRACE_FUNCTION;
 
     if (!Called ||
-        (g_FileManager.m_MapUOP[map].Start == NULL && g_FileManager.m_MapMul[map].Start == NULL) ||
-        g_FileManager.m_StaticIdx[map].Start == NULL ||
-        g_FileManager.m_StaticMul[map].Start == NULL)
+        (g_FileManager.m_MapUOP[map].Start == nullptr && g_FileManager.m_MapMul[map].Start == nullptr) ||
+        g_FileManager.m_StaticIdx[map].Start == nullptr ||
+        g_FileManager.m_StaticMul[map].Start == nullptr)
         return;
 
     if (g_MapTexture[map].Texture == 0)
     {
         uint crc32 = 0;
 
-        if (g_FileManager.m_MapUOP[map].Start == NULL)
+        if (g_FileManager.m_MapUOP[map].Start == nullptr)
             crc32 = g_Orion.GetFileHashCode(
                 g_FileManager.m_MapMul[map].Start, g_FileManager.m_MapMul[map].Size);
         else
@@ -298,7 +298,7 @@ void CGumpWorldMap::LoadMap(int map)
         crc32 ^= g_Orion.GetFileHashCode(
             g_FileManager.m_StaticMul[map].Start, g_FileManager.m_StaticMul[map].Size);
 
-        if (g_FileManager.m_MapMul[map].Start != NULL)
+        if (g_FileManager.m_MapMul[map].Start != nullptr)
         {
             IFOR (i, 0, g_MapManager.PatchesCount)
             {
@@ -381,7 +381,7 @@ void CGumpWorldMap::LoadMap(int map)
                 {
                     CIndexMap *indexMap = g_MapManager.GetIndex(map, (int)bx, (int)by);
 
-                    if (indexMap == NULL || indexMap->MapAddress == 0)
+                    if (indexMap == nullptr || indexMap->MapAddress == 0)
                         continue;
 
                     int mapY = (int)by * 8;
@@ -405,7 +405,7 @@ void CGumpWorldMap::LoadMap(int map)
 
                     PSTATICS_BLOCK sb = (PSTATICS_BLOCK)indexMap->StaticAddress;
 
-                    if (sb != NULL)
+                    if (sb != nullptr)
                     {
                         int count = indexMap->StaticCount;
 
@@ -528,7 +528,7 @@ void CGumpWorldMap::PrepareContent()
     int playerX = 0;
     int playerY = 0;
 
-    if (g_Player != NULL)
+    if (g_Player != nullptr)
     {
         playerX = g_Player->GetX();
         playerY = g_Player->GetY();
@@ -542,7 +542,7 @@ void CGumpWorldMap::PrepareContent()
     int oldX = CurrentOffsetX;
     int oldY = CurrentOffsetY;
 
-    if (m_LinkWithPlayer && g_CurrentMap == map && g_Player != NULL)
+    if (m_LinkWithPlayer && g_CurrentMap == map && g_Player != nullptr)
     {
         CurrentOffsetX = (Width / 2) - playerX;
 

@@ -40,7 +40,7 @@ public:
     WORLD_MAP m_Map;
 
     //!Предметы в мире
-    CGameObject *m_Items{ NULL };
+    CGameObject *m_Items{ nullptr };
 
     void ResetObjectHandlesState();
 
@@ -79,21 +79,21 @@ public:
     /*!
 	Найти игровой объект в памяти
 	@param [__in] serial Серийник объекта
-	@return Ссылка на объект или NULL
+	@return Ссылка на объект или nullptr
 	*/
     CGameObject *FindWorldObject(int serial);
 
     /*!
 	Найти игровой предмет в памяти
 	@param [__in] serial Серийник предмета
-	@return Ссылка на предмет или NULL
+	@return Ссылка на предмет или nullptr
 	*/
     CGameItem *FindWorldItem(int serial);
 
     /*!
 	Найти игрового персонажа в памяти
 	@param [__in] serial Серийник персонажа
-	@return Ссылка а персонажа или NULL
+	@return Ссылка а персонажа или nullptr
 	*/
     CGameCharacter *FindWorldCharacter(int serial);
 
@@ -129,7 +129,7 @@ public:
     void PutContainer(CGameObject *obj, int containerSerial)
     {
         CGameObject *cnt = FindWorldObject(containerSerial);
-        if (cnt != NULL)
+        if (cnt != nullptr)
             PutContainer(obj, cnt);
     }
 
@@ -151,7 +151,7 @@ public:
     void PutEquipment(CGameItem *obj, int containerSerial, int layer)
     {
         CGameObject *cnt = FindWorldObject(containerSerial);
-        if (cnt != NULL)
+        if (cnt != nullptr)
             PutEquipment(obj, cnt, layer);
     }
 
@@ -189,7 +189,7 @@ public:
 	@param [__in] scanDistance Дистанция поиска
 	@param [__in] scanType Тип объектов поиска
 	@param [__in] scanMode Режим поиска
-	@return Ссылка на найденный объект или NULL
+	@return Ссылка на найденный объект или nullptr
 	*/
     CGameObject *SearchWorldObject(
         int serialStart, int scanDistance, SCAN_TYPE_OBJECT scanType, SCAN_MODE_OBJECT scanMode);

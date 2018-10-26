@@ -35,7 +35,7 @@ Wisp::CSize CGUIExternalTexture::GetSize()
     DEBUG_TRACE_FUNCTION;
     Wisp::CSize size;
 
-    if (m_Texture != NULL)
+    if (m_Texture != nullptr)
     {
         if (DrawWidth)
             size.Width = DrawWidth;
@@ -71,7 +71,7 @@ void CGUIExternalTexture::SetShaderMode()
 void CGUIExternalTexture::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Texture != NULL)
+    if (m_Texture != nullptr)
     {
         SetShaderMode();
 
@@ -102,7 +102,7 @@ void CGUIExternalTexture::Draw(bool checktrans)
 bool CGUIExternalTexture::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Texture != NULL)
+    if (m_Texture != nullptr)
         return m_Texture->Select(m_X, m_Y, !CheckPolygone);
 
     return false;

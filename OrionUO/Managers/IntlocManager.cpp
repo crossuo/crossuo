@@ -108,7 +108,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
         if (obj->Language == lang && obj->FileIndex == fileIndex)
         {
             if (!obj->Loaded)
-                return NULL;
+                return nullptr;
 
             return obj;
         }
@@ -130,7 +130,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 wstring CIntlocManager::Intloc(const string &lang, uint clilocID, bool isNewCliloc)
@@ -148,10 +148,10 @@ wstring CIntlocManager::Intloc(const string &lang, uint clilocID, bool isNewClil
         int fileIndex = (clilocID / 1000) % 1000;
         CIntloc *obj = Intloc(fileIndex, language);
 
-        if (obj == NULL && language != "enu")
+        if (obj == nullptr && language != "enu")
             obj = Intloc(fileIndex, "enu");
 
-        if (obj != NULL)
+        if (obj != nullptr)
             str = obj->Get(clilocID % 1000, true);
     }
 

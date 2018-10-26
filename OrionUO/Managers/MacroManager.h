@@ -50,7 +50,7 @@ public:
 	@param [__in] alt Зажатый альт
 	@param [__in] ctrl Зажатый контрол
 	@param [__in] shift Зажатый шифт
-	@return Ссылку на макрос или NULL
+	@return Ссылку на макрос или nullptr
 	*/
     class CMacro *FindMacro(Keycode key, bool alt, bool ctrl, bool shift);
 

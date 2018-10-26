@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGameWorld *g_World = NULL;
+CGameWorld *g_World = nullptr;
 
 CGameWorld::CGameWorld(int serial)
 {
@@ -25,7 +25,7 @@ CGameWorld::~CGameWorld()
     RemovePlayer();
 
     CGameObject *obj = m_Items;
-    while (obj != NULL)
+    while (obj != nullptr)
     {
         CGameObject *next = (CGameObject *)obj->m_Next;
         RemoveObject(obj);
@@ -35,7 +35,7 @@ CGameWorld::~CGameWorld()
 
     m_Map.clear();
 
-    m_Items = NULL;
+    m_Items = nullptr;
 }
 
 void CGameWorld::ResetObjectHandlesState()
@@ -55,7 +55,7 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
             int soundID = 0x012B;
             int delaySound = 400;
 
-            if (gc->FindLayer(OL_MOUNT) != NULL)
+            if (gc->FindLayer(OL_MOUNT) != nullptr)
             {
                 if (gc->m_Steps.back().Direction & 0x80)
                 {
@@ -118,7 +118,7 @@ void CGameWorld::ProcessAnimation()
                 gc->ProcessGargoyleAnims(animGroup);
 
                 CGameItem *mount = gc->FindLayer(OL_MOUNT);
-                if (mount != NULL)
+                if (mount != nullptr)
                 {
                     switch (animGroup)
                     {
@@ -311,13 +311,13 @@ void CGameWorld::CreatePlayer(int serial)
 
     m_Map[serial] = g_Player;
 
-    if (m_Items != NULL)
+    if (m_Items != nullptr)
         m_Items->Add(g_Player);
     else
     {
         m_Items = g_Player;
-        m_Items->m_Next = NULL;
-        m_Items->m_Prev = NULL;
+        m_Items->m_Next = nullptr;
+        m_Items->m_Prev = nullptr;
     }
 }
 
@@ -328,13 +328,13 @@ void CGameWorld::CreatePlayer(int serial)
 void CGameWorld::RemovePlayer()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Player != NULL)
+    if (g_Player != nullptr)
     {
         RemoveFromContainer(g_Player);
-        m_Map[g_Player->Serial] = NULL;
+        m_Map[g_Player->Serial] = nullptr;
         m_Map.erase(g_Player->Serial);
         delete g_Player;
-        g_Player = NULL;
+        g_Player = nullptr;
         g_PlayerSerial = 0;
     }
 }
@@ -361,19 +361,19 @@ CGameItem *CGameWorld::GetWorldItem(int serial)
     DEBUG_TRACE_FUNCTION;
     WORLD_MAP::iterator i = m_Map.find(serial);
 
-    if (i == m_Map.end() || (*i).second == NULL)
+    if (i == m_Map.end() || (*i).second == nullptr)
     {
         CGameItem *obj = new CGameItem(serial);
 
         m_Map[serial] = obj;
 
-        if (m_Items != NULL)
+        if (m_Items != nullptr)
             m_Items->AddObject(obj);
         else
         {
             m_Items = obj;
-            m_Items->m_Next = NULL;
-            m_Items->m_Prev = NULL;
+            m_Items->m_Next = nullptr;
+            m_Items->m_Prev = nullptr;
         }
 
         return obj;
@@ -392,19 +392,19 @@ CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
     DEBUG_TRACE_FUNCTION;
     WORLD_MAP::iterator i = m_Map.find(serial);
 
-    if (i == m_Map.end() || (*i).second == NULL)
+    if (i == m_Map.end() || (*i).second == nullptr)
     {
         CGameCharacter *obj = new CGameCharacter(serial);
 
         m_Map[serial] = obj;
 
-        if (m_Items != NULL)
+        if (m_Items != nullptr)
             m_Items->AddObject(obj);
         else
         {
             m_Items = obj;
-            m_Items->m_Next = NULL;
-            m_Items->m_Prev = NULL;
+            m_Items->m_Next = nullptr;
+            m_Items->m_Prev = nullptr;
         }
 
         return obj;
@@ -416,12 +416,12 @@ CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
 /*!
 Найти игровой объект в памяти
 @param [__in] serial Серийник объекта
-@return Ссылка на объект или NULL
+@return Ссылка на объект или nullptr
 */
 CGameObject *CGameWorld::FindWorldObject(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    CGameObject *result = NULL;
+    CGameObject *result = nullptr;
 
     WORLD_MAP::iterator i = m_Map.find(serial);
     if (i != m_Map.end())
@@ -433,12 +433,12 @@ CGameObject *CGameWorld::FindWorldObject(int serial)
 /*!
 Найти игровой предмет в памяти
 @param [__in] serial Серийник предмета
-@return Ссылка на предмет или NULL
+@return Ссылка на предмет или nullptr
 */
 CGameItem *CGameWorld::FindWorldItem(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    CGameItem *result = NULL;
+    CGameItem *result = nullptr;
 
     WORLD_MAP::iterator i = m_Map.find(serial);
     if (i != m_Map.end() && !((*i).second)->NPC)
@@ -450,12 +450,12 @@ CGameItem *CGameWorld::FindWorldItem(int serial)
 /*!
 Найти игрового персонажа в памяти
 @param [__in] serial Серийник персонажа
-@return Ссылка а персонажа или NULL
+@return Ссылка а персонажа или nullptr
 */
 CGameCharacter *CGameWorld::FindWorldCharacter(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    CGameCharacter *result = NULL;
+    CGameCharacter *result = nullptr;
 
     WORLD_MAP::iterator i = m_Map.find(serial);
     if (i != m_Map.end() && ((*i).second)->NPC)
@@ -468,7 +468,7 @@ void CGameWorld::ReplaceObject(CGameObject *obj, int newSerial)
 {
     DEBUG_TRACE_FUNCTION;
 
-    m_Map[obj->Serial] = NULL;
+    m_Map[obj->Serial] = nullptr;
     m_Map.erase(obj->Serial);
 
     QFOR(item, obj->m_Items, CGameObject *)
@@ -489,7 +489,7 @@ void CGameWorld::RemoveObject(CGameObject *obj)
     RemoveFromContainer(obj);
 
     uint serial = obj->Serial;
-    m_Map[serial] = NULL;
+    m_Map[serial] = nullptr;
     m_Map.erase(serial);
     delete obj;
 }
@@ -513,7 +513,7 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
 
         CGameObject *container = FindWorldObject(containerSerial);
 
-        if (container != NULL)
+        if (container != nullptr)
             container->Reject(obj);
         else
             obj->Container = 0xFFFFFFFF;
@@ -522,34 +522,34 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
     {
         g_GameScreen.RenderListInitalized = false;
 
-        if (m_Items != NULL)
+        if (m_Items != nullptr)
         {
             if (m_Items == obj)
             {
                 m_Items = (CGameObject *)m_Items->m_Next;
-                if (m_Items != NULL)
-                    m_Items->m_Prev = NULL;
+                if (m_Items != nullptr)
+                    m_Items->m_Prev = nullptr;
             }
             else
             {
-                if (obj->m_Next != NULL)
+                if (obj->m_Next != nullptr)
                 {
-                    if (obj->m_Prev != NULL)
+                    if (obj->m_Prev != nullptr)
                     {
                         obj->m_Prev->m_Next = obj->m_Next;
                         obj->m_Next->m_Prev = obj->m_Prev;
                     }
                     else //WTF???
-                        obj->m_Next->m_Prev = NULL;
+                        obj->m_Next->m_Prev = nullptr;
                 }
-                else if (obj->m_Prev != NULL)
-                    obj->m_Prev->m_Next = NULL;
+                else if (obj->m_Prev != nullptr)
+                    obj->m_Prev->m_Next = nullptr;
             }
         }
     }
 
-    obj->m_Next = NULL;
-    obj->m_Prev = NULL;
+    obj->m_Next = nullptr;
+    obj->m_Prev = nullptr;
     obj->RemoveRender();
 }
 
@@ -586,31 +586,31 @@ void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
 void CGameWorld::MoveToTop(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     if (obj->Container == 0xFFFFFFFF)
         g_MapManager.AddRender(obj);
 
-    if (obj->m_Next == NULL)
+    if (obj->m_Next == nullptr)
         return;
 
     if (obj->Container == 0xFFFFFFFF)
     {
-        if (obj->m_Prev == NULL)
+        if (obj->m_Prev == nullptr)
         {
             m_Items = (CGameObject *)obj->m_Next;
-            m_Items->m_Prev = NULL;
+            m_Items->m_Prev = nullptr;
 
             CGameObject *item = m_Items;
 
-            while (item != NULL)
+            while (item != nullptr)
             {
-                if (item->m_Next == NULL)
+                if (item->m_Next == nullptr)
                 {
                     item->m_Next = obj;
                     obj->m_Prev = item;
-                    obj->m_Next = NULL;
+                    obj->m_Next = nullptr;
 
                     break;
                 }
@@ -625,13 +625,13 @@ void CGameWorld::MoveToTop(CGameObject *obj)
             obj->m_Prev->m_Next = obj->m_Next;
             obj->m_Next->m_Prev = obj->m_Prev;
 
-            while (item != NULL)
+            while (item != nullptr)
             {
-                if (item->m_Next == NULL)
+                if (item->m_Next == nullptr)
                 {
                     item->m_Next = obj;
                     obj->m_Prev = item;
-                    obj->m_Next = NULL;
+                    obj->m_Next = nullptr;
 
                     break;
                 }
@@ -644,23 +644,23 @@ void CGameWorld::MoveToTop(CGameObject *obj)
     {
         CGameObject *container = FindWorldObject(obj->Container);
 
-        if (container == NULL)
+        if (container == nullptr)
             return;
 
-        if (obj->m_Prev == NULL)
+        if (obj->m_Prev == nullptr)
         {
             container->m_Items = obj->m_Next;
-            container->m_Items->m_Prev = NULL;
+            container->m_Items->m_Prev = nullptr;
 
             CGameObject *item = (CGameObject *)container->m_Items;
 
-            while (item != NULL)
+            while (item != nullptr)
             {
-                if (item->m_Next == NULL)
+                if (item->m_Next == nullptr)
                 {
                     item->m_Next = obj;
                     obj->m_Prev = item;
-                    obj->m_Next = NULL;
+                    obj->m_Next = nullptr;
 
                     break;
                 }
@@ -675,13 +675,13 @@ void CGameWorld::MoveToTop(CGameObject *obj)
             obj->m_Prev->m_Next = obj->m_Next;
             obj->m_Next->m_Prev = obj->m_Prev;
 
-            while (item != NULL)
+            while (item != nullptr)
             {
-                if (item->m_Next == NULL)
+                if (item->m_Next == nullptr)
                 {
                     item->m_Next = obj;
                     obj->m_Prev = item;
-                    obj->m_Next = NULL;
+                    obj->m_Next = nullptr;
 
                     break;
                 }
@@ -698,13 +698,13 @@ void CGameWorld::MoveToTop(CGameObject *obj)
 @param [__in] scanDistance Дистанция поиска
 @param [__in] scanType Тип объектов поиска
 @param [__in] scanMode Режим поиска
-@return Ссылка на найденный объект или NULL
+@return Ссылка на найденный объект или nullptr
 */
 CGameObject *CGameWorld::SearchWorldObject(
     int serialStart, int scanDistance, SCAN_TYPE_OBJECT scanType, SCAN_MODE_OBJECT scanMode)
 {
     DEBUG_TRACE_FUNCTION;
-    CGameObject *result = NULL;
+    CGameObject *result = nullptr;
 
     CGameObject *start = FindWorldObject(serialStart);
 
@@ -713,7 +713,7 @@ CGameObject *CGameWorld::SearchWorldObject(
 
     if (scanMode == SMO_PREV)
     {
-        if (start == NULL || start->m_Prev == NULL)
+        if (start == nullptr || start->m_Prev == nullptr)
         {
             start = m_Items;
             startI = 1;
@@ -723,7 +723,7 @@ CGameObject *CGameWorld::SearchWorldObject(
     }
     else
     {
-        if (start == NULL || start->m_Next == NULL)
+        if (start == nullptr || start->m_Next == nullptr)
         {
             start = m_Items;
             startI = 1;
@@ -732,13 +732,13 @@ CGameObject *CGameWorld::SearchWorldObject(
             start = (CGameObject *)start->m_Next;
     }
 
-    if (start != NULL)
+    if (start != nullptr)
     {
         CGameObject *obj = start;
         int distance = 100500;
-        CGameObject *distanceResult = NULL;
+        CGameObject *distanceResult = nullptr;
 
-        IFOR (i, startI, count && result == NULL)
+        IFOR (i, startI, count && result == nullptr)
         {
             if (i)
             {
@@ -746,12 +746,12 @@ CGameObject *CGameWorld::SearchWorldObject(
 
                 if (scanMode == SMO_PREV)
                 {
-                    while (obj != NULL && obj->m_Next != NULL)
+                    while (obj != nullptr && obj->m_Next != nullptr)
                         obj = (CGameObject *)obj->m_Next;
                 }
             }
 
-            while (obj != NULL && result == NULL)
+            while (obj != nullptr && result == nullptr)
             {
                 int dist = GetDistance(obj, g_Player);
 
@@ -804,7 +804,7 @@ CGameObject *CGameWorld::SearchWorldObject(
             }
         }
 
-        if (distanceResult != NULL)
+        if (distanceResult != nullptr)
             result = distanceResult;
     }
 
@@ -836,8 +836,8 @@ void CGameWorld::UpdateGameObject(
         z,
         direction);
 
-    CGameCharacter *character = NULL;
-    CGameItem *item = NULL;
+    CGameCharacter *character = nullptr;
+    CGameItem *item = nullptr;
     CGameObject *obj = FindWorldObject(serial);
 
     if (g_ObjectInHand.Enabled && g_ObjectInHand.Serial == serial)
@@ -855,7 +855,7 @@ void CGameWorld::UpdateGameObject(
 
     bool created = false;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
         created = true;
         LOG("created ");
@@ -864,7 +864,7 @@ void CGameWorld::UpdateGameObject(
         {
             character = GetWorldCharacter(serial);
 
-            if (character == NULL)
+            if (character == nullptr)
             {
                 LOG("No memory?\n");
                 return;
@@ -884,7 +884,7 @@ void CGameWorld::UpdateGameObject(
         {
             item = GetWorldItem(serial);
 
-            if (item == NULL)
+            if (item == nullptr)
             {
                 LOG("No memory?\n");
                 return;
@@ -910,7 +910,7 @@ void CGameWorld::UpdateGameObject(
             item = (CGameItem *)obj;
     }
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     obj->MapIndex = g_CurrentMap;
@@ -1126,21 +1126,21 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
 
     CGump *gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_BULLETIN_BOARD);
 
-    if (gump != NULL) //Message board item
+    if (gump != nullptr) //Message board item
         CPacketBulletinBoardRequestMessageSummary(containerSerial, obj->Serial).Send();
     else
     {
         gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_SPELLBOOK);
 
-        if (gump == NULL)
+        if (gump == nullptr)
         {
             gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_CONTAINER);
 
-            if (gump != NULL && gump->GumpType == GT_CONTAINER)
+            if (gump != nullptr && gump->GumpType == GT_CONTAINER)
                 ((CGumpContainer *)gump)->UpdateItemCoordinates(obj);
         }
 
-        if (gump != NULL && !container->NPC)
+        if (gump != nullptr && !container->NPC)
         {
             ((CGameItem *)container)->Opened = true;
         }
@@ -1148,11 +1148,11 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
 
     CGameObject *top = container->GetTopObject();
 
-    if (top != NULL)
+    if (top != nullptr)
     {
         top = top->FindSecureTradeBox();
 
-        if (top != NULL)
+        if (top != nullptr)
             g_GumpManager.UpdateContent(0, top->Serial, GT_TRADE);
     }
 }
@@ -1172,18 +1172,18 @@ void CGameWorld::UpdateContainedItem(
 
     CGameObject *container = FindWorldObject(containerSerial);
 
-    if (container == NULL)
+    if (container == nullptr)
         return;
 
     CGameObject *obj = FindWorldObject(serial);
 
-    if (obj != NULL && (!container->IsCorpse() || ((CGameItem *)obj)->Layer == OL_NONE))
+    if (obj != nullptr && (!container->IsCorpse() || ((CGameItem *)obj)->Layer == OL_NONE))
     {
         RemoveObject(obj);
-        obj = NULL;
+        obj = nullptr;
     }
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
         if (serial & 0x40000000)
             obj = GetWorldItem(serial);
@@ -1191,7 +1191,7 @@ void CGameWorld::UpdateContainedItem(
             obj = GetWorldCharacter(serial);
     }
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
         LOG("No memory?\n");
         return;
@@ -1238,11 +1238,11 @@ void CGameWorld::Dump(uchar tCount, uint serial)
     if (serial != 0xFFFFFFFF)
     {
         obj = FindWorldObject(serial);
-        if (obj != NULL)
+        if (obj != nullptr)
             obj = (CGameObject *)obj->m_Items;
     }
 
-    while (obj != NULL)
+    while (obj != nullptr)
     {
         if (obj->Container == serial)
         {
@@ -1264,7 +1264,7 @@ void CGameWorld::Dump(uchar tCount, uint serial)
                 obj->GetZ(),
                 obj->MapIndex);
 
-            if (obj->m_Items != NULL)
+            if (obj->m_Items != nullptr)
                 Dump(tCount + 1, obj->Container);
         }
 

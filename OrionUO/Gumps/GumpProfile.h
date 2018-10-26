@@ -16,8 +16,8 @@ private:
     static const int ID_GP_APPLY = 1;
     static const int ID_GP_TEXT_FIELD = 2;
 
-    CGUITextEntry *m_Entry{ NULL };
-    CGUIHitBox *m_HitBox{ NULL };
+    CGUITextEntry *m_Entry{ nullptr };
+    CGUIHitBox *m_HitBox{ nullptr };
     CBaseGUI *m_BottomData[4];
 
     void RecalculateHeight();

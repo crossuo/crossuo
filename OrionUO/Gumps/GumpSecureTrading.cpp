@@ -27,7 +27,7 @@ void CGumpSecureTrading::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
-    if (g_GumpPressed && g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsText())
+    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsText())
     {
         g_GumpMovingOffset.Reset();
 
@@ -42,7 +42,7 @@ void CGumpSecureTrading::CalculateGumpState()
 void CGumpSecureTrading::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_MyCheck != NULL)
+    if (m_MyCheck != nullptr)
     {
         if (StateMy)
         {
@@ -63,7 +63,7 @@ void CGumpSecureTrading::PrepareContent()
         }
     }
 
-    if (m_OpponentCheck != NULL)
+    if (m_OpponentCheck != nullptr)
     {
         if (StateOpponent)
         {
@@ -89,10 +89,10 @@ void CGumpSecureTrading::UpdateContent()
     DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
-    if (selobj == NULL)
+    if (selobj == nullptr)
         return; //Объект, к которому привязан гамп - исчез
 
-    if (m_Items == NULL)
+    if (m_Items == nullptr)
     {
         Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
 
@@ -144,7 +144,7 @@ void CGumpSecureTrading::UpdateContent()
     //Отрисовка нашего товара (при наличии товара)
     CGameObject *container = g_World->FindWorldObject(ID);
 
-    if (container != NULL && container->m_Items != NULL)
+    if (container != nullptr && container->m_Items != nullptr)
     {
         QFOR(item, container->m_Items, CGameItem *)
         {
@@ -172,7 +172,7 @@ void CGumpSecureTrading::UpdateContent()
 
     //Отрисовка нашего опонента (при наличии товара)
     container = g_World->FindWorldObject(ID2);
-    if (container != NULL && container->m_Items != NULL)
+    if (container != nullptr && container->m_Items != nullptr)
     {
         QFOR(item, container->m_Items, CGameItem *)
         {
@@ -204,7 +204,7 @@ void CGumpSecureTrading::Draw()
     DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
-    if (selobj == NULL)
+    if (selobj == nullptr)
         return; //Объект, к которому привязан гамп - исчез
 
     if (g_GumpPressed)
@@ -228,8 +228,8 @@ CRenderObject *CGumpSecureTrading::Select()
     DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
-    if (selobj == NULL)
-        return NULL; //Объект, к которому привязан гамп - исчез
+    if (selobj == nullptr)
+        return nullptr; //Объект, к которому привязан гамп - исчез
 
     CRenderObject *selected = CGump::Select();
 
@@ -259,7 +259,7 @@ void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
         {
             CGameObject *clickTarget = g_World->FindWorldObject(serial);
 
-            if (clickTarget == NULL)
+            if (clickTarget == nullptr)
                 return;
 
             g_ClickObject.Init(clickTarget);
@@ -292,7 +292,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
 
                 CGLTexture *th = g_Orion.ExecuteStaticArt(graphic);
 
-                if (th != NULL)
+                if (th != nullptr)
                 {
                     x -= (th->Width / 2);
                     y -= (th->Height / 2);
@@ -319,7 +319,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
     }
     else if (
         g_Target.IsTargeting() && g_SelectedObject.Serial >= 0x40000000 &&
-        g_World->FindWorldObject(g_SelectedObject.Serial) != NULL)
+        g_World->FindWorldObject(g_SelectedObject.Serial) != nullptr)
     {
         g_Target.SendTargetObject(g_SelectedObject.Serial);
         g_MouseManager.CancelDoubleClick = true;

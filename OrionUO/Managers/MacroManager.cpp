@@ -325,14 +325,14 @@ void CMacroManager::Save(const os_path &path)
 @param [__in] alt Зажатый альт
 @param [__in] ctrl Зажатый контрол
 @param [__in] shift Зажатый шифт
-@return Ссылку на макрос или NULL
+@return Ссылку на макрос или nullptr
 */
 CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 {
     DEBUG_TRACE_FUNCTION;
     CMacro *obj = (CMacro *)m_Items;
 
-    while (obj != NULL)
+    while (obj != nullptr)
     {
         if (obj->Key == key && obj->Alt == alt && obj->Ctrl == ctrl && obj->Shift == shift)
             break;
@@ -351,7 +351,7 @@ void CMacroManager::LoadFromOptions()
 {
     DEBUG_TRACE_FUNCTION;
     Clear();
-    ChangePointer(NULL);
+    ChangePointer(nullptr);
 
     QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *)
     Add(obj->GetCopy());
@@ -361,7 +361,7 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
 {
     g_MacroPointer = macro;
 
-    if (g_MacroPointer == NULL && SendNotificationToPlugin)
+    if (g_MacroPointer == nullptr && SendNotificationToPlugin)
     {
         SendNotificationToPlugin = false;
         g_PluginManager.WindowProc(g_OrionWindow.Handle, UOMSG_END_MACRO_PAYING, 0, 0);
@@ -375,13 +375,13 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
 void CMacroManager::Execute()
 {
     DEBUG_TRACE_FUNCTION;
-    while (g_MacroPointer != NULL)
+    while (g_MacroPointer != nullptr)
     {
         switch (Process())
         {
             case MRC_STOP:
             {
-                ChangePointer(NULL);
+                ChangePointer(nullptr);
                 return;
             }
             case MRC_BREAK_PARSER:
@@ -498,7 +498,7 @@ void CMacroManager::ProcessSubMenu()
                 {
                     CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
 
-                    if (backpack != NULL)
+                    if (backpack != nullptr)
                         g_Orion.DoubleClick(backpack->Serial);
 
                     break;
@@ -551,7 +551,7 @@ void CMacroManager::ProcessSubMenu()
         case MC_MINIMIZE:
         case MC_MAXIMIZE:
         {
-            CGump *gump = NULL;
+            CGump *gump = nullptr;
 
             switch (g_MacroPointer->SubCode)
             {
@@ -603,7 +603,7 @@ void CMacroManager::ProcessSubMenu()
                         {
                             CGameItem *gi = g_World->FindWorldItem(item->Serial);
 
-                            if (gi != NULL)
+                            if (gi != nullptr)
                             {
                                 switch (g_MacroPointer->SubCode)
                                 {
@@ -661,7 +661,7 @@ void CMacroManager::ProcessSubMenu()
                                 }
                             }
 
-                            if (gump != NULL)
+                            if (gump != nullptr)
                                 break;
                         }
                     }
@@ -678,7 +678,7 @@ void CMacroManager::ProcessSubMenu()
                 {
                     CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
 
-                    if (backpack != NULL)
+                    if (backpack != nullptr)
                         g_GumpManager.CloseGump(backpack->Serial, 0, GT_SPELLBOOK);
 
                     break;
@@ -714,7 +714,7 @@ void CMacroManager::ProcessSubMenu()
                     break;
             }
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 if (g_MacroPointer->Code == MC_CLOSE)
                     g_GumpManager.RemoveGump(gump);
@@ -741,7 +741,7 @@ MACRO_RETURN_CODE CMacroManager::Process()
 {
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
 
-    if (g_MacroPointer == NULL)
+    if (g_MacroPointer == nullptr)
         result = MRC_STOP;
     else if (m_NextTimer <= g_Ticks)
         result = Process(g_MacroPointer);
@@ -832,17 +832,17 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_PASTE:
         {
-            if (g_EntryPointer != NULL)
+            if (g_EntryPointer != nullptr)
             {
                 if (OpenClipboard(g_OrionWindow.Handle))
                 {
                     HANDLE cb = GetClipboardData(CF_TEXT);
 
-                    if (cb != NULL)
+                    if (cb != nullptr)
                     {
                         char *chBuffer = (char *)GlobalLock(cb);
 
-                        if (chBuffer != NULL && strlen(chBuffer))
+                        if (chBuffer != nullptr && strlen(chBuffer))
                         {
                             wstring str = g_EntryPointer->Data() + ToWString(chBuffer);
                             g_EntryPointer->SetTextW(str);
@@ -1016,7 +1016,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 CGameItem *objHand = g_World->FindWorldItem(itemInHand[handIndex]);
 
-                if (objHand != NULL)
+                if (objHand != nullptr)
                 {
                     g_Orion.PickupItem(objHand, 1, false);
                     g_Orion.EquipItem(g_PlayerSerial);
@@ -1029,7 +1029,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 uint backpack = 0;
                 CGameItem *objBackpack = g_Player->FindLayer(OL_BACKPACK);
 
-                if (objBackpack != NULL)
+                if (objBackpack != nullptr)
                     backpack = objBackpack->Serial;
 
                 if (!backpack)
@@ -1037,7 +1037,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
                 CGameItem *objHand = g_Player->FindLayer(OL_1_HAND + handIndex);
 
-                if (objHand != NULL)
+                if (objHand != nullptr)
                 {
                     itemInHand[handIndex] = objHand->Serial;
 
@@ -1067,7 +1067,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             CGameObject *obj =
                 g_World->SearchWorldObject(g_LastTargetObject, 30, STO_MOBILES, SMO_NEXT);
 
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 if (obj->NPC && !((CGameCharacter *)obj)->MaxHits)
                     CPacketStatusRequest(obj->Serial).Send();
@@ -1107,7 +1107,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             CGump *gump = (CGump *)g_GumpManager.m_Items;
 
-            while (gump != NULL)
+            while (gump != nullptr)
             {
                 CGump *next = (CGump *)gump->m_Next;
 
@@ -1229,7 +1229,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 {
                     CGameItem *bandage = g_Player->FindBandage();
 
-                    if (bandage != NULL)
+                    if (bandage != nullptr)
                     {
                         WaitingBandageTarget = true;
                         g_Orion.DoubleClick(bandage->Serial);
@@ -1242,7 +1242,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 CGameItem *bandage = g_Player->FindBandage();
 
-                if (bandage != NULL)
+                if (bandage != nullptr)
                 {
                     if (macro->Code == MC_BANDAGE_SELF)
                         CPacketTargetSelectedObject(bandage->Serial, g_PlayerSerial).Send();
@@ -1333,14 +1333,14 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 scanType,
                 (SCAN_MODE_OBJECT)(macro->Code - MC_SELECT_NEXT));
 
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 g_GumpManager.CloseGump(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM);
 
                 g_NewTargetSystem.Serial = obj->Serial;
 
                 if (g_GumpManager.UpdateContent(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM) ==
-                    NULL)
+                    nullptr)
                 {
                     if (g_NewTargetSystem.Serial < 0x40000000)
                         CPacketStatusRequest(g_NewTargetSystem.Serial).Send();

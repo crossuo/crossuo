@@ -11,8 +11,8 @@
 
 #include "stdafx.h"
 
-CGump *g_ResizedGump = NULL;
-CGump *g_CurrentCheckGump = NULL;
+CGump *g_ResizedGump = nullptr;
+CGump *g_CurrentCheckGump = nullptr;
 
 CGump::CGump()
     : CGump(GT_NONE, 0, 0, 0)
@@ -180,12 +180,12 @@ void CGump::CalculateGumpState()
     g_GumpPressed =
         (!g_ObjectInHand.Enabled &&
          g_PressedObject.LeftGump == this /*&& g_SelectedObject.Gump() == this*/);
-    g_GumpSelectedElement = ((g_SelectedObject.Gump == this) ? g_SelectedObject.Object : NULL);
-    g_GumpPressedElement = NULL;
+    g_GumpSelectedElement = ((g_SelectedObject.Gump == this) ? g_SelectedObject.Object : nullptr);
+    g_GumpPressedElement = nullptr;
 
     CRenderObject *leftObj = g_PressedObject.LeftObject;
 
-    if (g_GumpPressed && leftObj != NULL)
+    if (g_GumpPressed && leftObj != nullptr)
     {
         if (leftObj == g_SelectedObject.Object)
             g_GumpPressedElement = leftObj;
@@ -194,7 +194,7 @@ void CGump::CalculateGumpState()
     }
 
     if (CanBeMoved() && g_GumpPressed && !g_ObjectInHand.Enabled &&
-        (!g_PressedObject.LeftSerial || g_GumpPressedElement == NULL ||
+        (!g_PressedObject.LeftSerial || g_GumpPressedElement == nullptr ||
          g_PressedObject.TestMoveOnDrag()))
         g_GumpMovingOffset = g_MouseManager.LeftDroppedOffset();
     else
@@ -215,8 +215,8 @@ void CGump::CalculateGumpState()
 void CGump::ProcessListing()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PressedObject.LeftGump != NULL && !g_PressedObject.LeftGump->NoProcess &&
-        g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI())
+    if (g_PressedObject.LeftGump != nullptr && !g_PressedObject.LeftGump->NoProcess &&
+        g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI())
     {
         CBaseGUI *item = (CBaseGUI *)g_PressedObject.LeftObject;
 
@@ -287,7 +287,7 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
         ((page == -1) ||
          ((page >= currentPage && page <= currentPage + draw2Page) || (!page && !draw2Page)));
 
-    for (; item != NULL; item = (CBaseGUI *)item->m_Next)
+    for (; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_PAGE)
         {
@@ -317,7 +317,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     DEBUG_TRACE_FUNCTION;
     float alpha[2] = { 1.0f, 0.7f };
-    CGUIComboBox *combo = NULL;
+    CGUIComboBox *combo = nullptr;
 
     bool transparent = ApplyTransparent(start, 0, currentPage, draw2Page);
     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
@@ -407,7 +407,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
         }
     }
 
-    if (combo != NULL)
+    if (combo != nullptr)
         combo->Draw(false);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -416,13 +416,13 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     DEBUG_TRACE_FUNCTION;
-    CRenderObject *selected = NULL;
+    CRenderObject *selected = nullptr;
 
     int page = 0;
     bool canDraw = (!draw2Page || (page >= currentPage && page <= currentPage + draw2Page));
     vector<bool> scissorList;
     bool currentScissorState = true;
-    CGUIComboBox *combo = NULL;
+    CGUIComboBox *combo = nullptr;
 
     Wisp::CPoint2Di oldPos = g_MouseManager.Position;
 
@@ -461,7 +461,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                 continue;
             }
             else if (
-                !currentScissorState || !item->Enabled || (item->DrawOnly && selected != NULL) ||
+                !currentScissorState || !item->Enabled || (item->DrawOnly && selected != nullptr) ||
                 !item->Select())
                 continue;
 
@@ -478,7 +478,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
 
-                    CRenderObject *selectedHTML = NULL;
+                    CRenderObject *selectedHTML = nullptr;
 
                     IFOR (j, 0, 4)
                     {
@@ -502,13 +502,13 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                             CGump::SelectItems((CBaseGUI *)item->m_Next, currentPage, draw2Page);
                     }
                     else
-                        selected = NULL;
+                        selected = nullptr;
 
-                    if (selected == NULL)
+                    if (selected == nullptr)
                     {
                         selected = selectedHTML;
 
-                        if (selected == NULL)
+                        if (selected == nullptr)
                             selected = item;
                     }
 
@@ -565,7 +565,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
         }
     }
 
-    if (combo != NULL)
+    if (combo != nullptr)
         selected = combo->SelectedItem();
 
     return selected;
@@ -581,7 +581,7 @@ void CGump::TestItemsLeftMouseDown(
 
     static bool htmlTextBackgroundCanBeColored = false;
 
-    if (!(start != NULL && start->m_Next == NULL && start->Type == GOT_HTMLTEXT))
+    if (!(start != nullptr && start->m_Next == nullptr && start->Type == GOT_HTMLTEXT))
         htmlTextBackgroundCanBeColored = false;
 
     QFOR(item, start, CBaseGUI *)
@@ -1034,7 +1034,7 @@ void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, 
                     CGUISkillItem *skillItem = (CGUISkillItem *)item;
 
                     if ((g_PressedObject.LeftObject == skillItem->m_ButtonUse &&
-                         skillItem->m_ButtonUse != NULL) ||
+                         skillItem->m_ButtonUse != nullptr) ||
                         g_PressedObject.LeftObject == skillItem->m_ButtonStatus)
                     {
                         gump->OnButton(g_PressedObject.LeftSerial);
@@ -1466,7 +1466,7 @@ CRenderObject *CGump::Select()
     g_MouseManager.Position = Wisp::CPoint2Di(
         oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
-    CRenderObject *selected = NULL;
+    CRenderObject *selected = nullptr;
 
     if (SelectLocker())
         selected = &m_Locker;
@@ -1477,14 +1477,14 @@ CRenderObject *CGump::Select()
         g_MouseManager.Position.Y < GumpRect.Position.Y + GumpRect.Size.Height)
         selected = SelectItems((CBaseGUI *)m_Items, Page, Draw2Page);
 
-    if (selected != NULL)
+    if (selected != nullptr)
     {
         CBaseGUI *sel = (CBaseGUI *)selected;
         g_SelectedObject.Init(selected, this);
     }
 
     g_MouseManager.Position = oldPos;
-    g_CurrentCheckGump = NULL;
+    g_CurrentCheckGump = nullptr;
 
     return selected;
 }
@@ -1625,7 +1625,7 @@ void CGump::OnLeftMouseButtonDown()
     TestItemsLeftMouseDown(this, (CBaseGUI *)m_Items, Page, Draw2Page);
 
     g_MouseManager.Position = oldPos;
-    g_CurrentCheckGump = NULL;
+    g_CurrentCheckGump = nullptr;
 }
 
 void CGump::OnLeftMouseButtonUp()
@@ -1634,7 +1634,7 @@ void CGump::OnLeftMouseButtonUp()
     g_CurrentCheckGump = this;
     TestItemsLeftMouseUp(this, (CBaseGUI *)m_Items, Page, Draw2Page);
     TestLockerClick();
-    g_CurrentCheckGump = NULL;
+    g_CurrentCheckGump = nullptr;
 }
 
 void CGump::OnMidMouseButtonScroll(bool up)
@@ -1647,7 +1647,7 @@ void CGump::OnMidMouseButtonScroll(bool up)
     TestItemsScrolling(this, (CBaseGUI *)m_Items, up, Page, Draw2Page);
 
     g_MouseManager.Position = oldPos;
-    g_CurrentCheckGump = NULL;
+    g_CurrentCheckGump = nullptr;
 }
 
 void CGump::OnDragging()
@@ -1660,7 +1660,7 @@ void CGump::OnDragging()
     TestItemsDragging(this, (CBaseGUI *)m_Items, Page, Draw2Page);
 
     g_MouseManager.Position = oldPos;
-    g_CurrentCheckGump = NULL;
+    g_CurrentCheckGump = nullptr;
 }
 
 void CGump::PasteClipboardData(wstring &data)

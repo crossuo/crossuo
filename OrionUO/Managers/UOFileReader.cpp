@@ -18,7 +18,7 @@ UOFileReader g_UOFileReader;
 /*!
 Получить массив пикселей гампа
 @param [__in] io Ссылка на данные о гампе
-@return Массив пикселей или NULL
+@return Массив пикселей или nullptr
 */
 USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 {
@@ -85,7 +85,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = NULL;
+    CGLTexture *th = nullptr;
 
     USHORT_LIST pixels = GetGumpPixels(io);
 
@@ -160,7 +160,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
         if (g_Orion.IsTreeTile(id, stumpIndex))
         {
-            pushort ptr = NULL;
+            pushort ptr = nullptr;
 
             if (stumpIndex == g_StumpHatchedID)
             {
@@ -341,7 +341,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = NULL;
+    CGLTexture *texture = nullptr;
     short width = 0;
     short height = 0;
 
@@ -459,7 +459,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
     {
         LOG("UOFileReader::ReadTexture bad data size\n", io.DataSize);
         delete th;
-        return NULL;
+        return nullptr;
     }
 
     USHORT_LIST pixels(w * h);
@@ -497,7 +497,7 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = new CGLTexture();
-    th->Texture = NULL;
+    th->Texture = 0;
 
     USHORT_LIST pixels(io.Width * io.Height);
 

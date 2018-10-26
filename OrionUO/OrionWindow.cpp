@@ -28,7 +28,7 @@ void COrionWindow::SetRenderTimerDelay(int delay)
     DEBUG_TRACE_FUNCTION;
     Wisp::CThreadedTimer *timer = GetThreadedTimer(RENDER_TIMER_ID);
 
-    if (timer != NULL)
+    if (timer != nullptr)
         timer->ChangeDelay(delay);
 }
 
@@ -77,13 +77,13 @@ void COrionWindow::OnResize(Wisp::CSize &newSize)
 void COrionWindow::EmulateOnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
         g_PressedObject.InitLeft(g_SelectedObject);
 
-        if (g_SelectedObject.Object != NULL || g_GameState == GS_GAME)
+        if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
         {
             Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
 
@@ -95,7 +95,7 @@ void COrionWindow::EmulateOnLeftMouseButtonDown()
 void COrionWindow::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_GeneratedMouseDown = false;
 
@@ -103,7 +103,7 @@ void COrionWindow::OnLeftMouseButtonDown()
 
         g_PressedObject.InitLeft(g_SelectedObject);
 
-        if (g_SelectedObject.Object != NULL || g_GameState == GS_GAME)
+        if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
             g_CurrentScreen->OnLeftMouseButtonDown();
     }
 }
@@ -111,22 +111,22 @@ void COrionWindow::OnLeftMouseButtonDown()
 void COrionWindow::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
-        //if ((g_SelectedObject.Object() != NULL && g_SelectedObject.Object() == g_PressedObject.LeftObject && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
-        if ((g_SelectedObject.Object != NULL && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
+        //if ((g_SelectedObject.Object() != nullptr && g_SelectedObject.Object() == g_PressedObject.LeftObject && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
+        if ((g_SelectedObject.Object != nullptr && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
         {
             g_CurrentScreen->OnLeftMouseButtonUp();
 
-            if (g_MovingFromMouse && g_PressedObject.LeftGump == NULL)
+            if (g_MovingFromMouse && g_PressedObject.LeftGump == nullptr)
                 g_AutoMoving = true;
         }
 
-        if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI() &&
+        if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
             ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_COMBOBOX &&
-            g_PressedObject.LeftGump != NULL)
+            g_PressedObject.LeftGump != nullptr)
             g_PressedObject.LeftGump->WantRedraw = true;
 
         g_PressedObject.ClearLeft();
@@ -138,13 +138,13 @@ bool COrionWindow::OnLeftMouseButtonDoubleClick()
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
         g_PressedObject.InitLeft(g_SelectedObject);
 
-        result = (g_SelectedObject.Object != NULL &&
+        result = (g_SelectedObject.Object != nullptr &&
                   g_SelectedObject.Object == g_PressedObject.LeftObject) &&
                  g_CurrentScreen->OnLeftMouseButtonDoubleClick();
 
@@ -161,7 +161,7 @@ bool COrionWindow::OnLeftMouseButtonDoubleClick()
 void COrionWindow::OnRightMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
@@ -169,7 +169,7 @@ void COrionWindow::OnRightMouseButtonDown()
 
         g_CurrentScreen->OnRightMouseButtonDown();
 
-        if (g_SelectedObject.Gump == NULL &&
+        if (g_SelectedObject.Gump == nullptr &&
             !(g_MouseManager.Position.X < g_ConfigManager.GameWindowX ||
               g_MouseManager.Position.Y < g_ConfigManager.GameWindowY ||
               g_MouseManager.Position.X >
@@ -186,11 +186,11 @@ void COrionWindow::OnRightMouseButtonDown()
 void COrionWindow::OnRightMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
-        if ((g_SelectedObject.Object != NULL &&
+        if ((g_SelectedObject.Object != nullptr &&
              g_SelectedObject.Object == g_PressedObject.RightObject && g_SelectedObject.Serial) ||
             g_GameState >= GS_GAME)
             g_CurrentScreen->OnRightMouseButtonUp();
@@ -205,13 +205,13 @@ bool COrionWindow::OnRightMouseButtonDoubleClick()
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
         g_PressedObject.InitRight(g_SelectedObject);
 
-        result = (g_SelectedObject.Object != NULL &&
+        result = (g_SelectedObject.Object != nullptr &&
                   g_SelectedObject.Object == g_PressedObject.RightObject) &&
                  g_CurrentScreen->OnRightMouseButtonDoubleClick();
 
@@ -228,7 +228,7 @@ void COrionWindow::OnMidMouseButtonDown()
     if (g_PluginManager.WindowProc(Handle, WM_MBUTTONDOWN, 0, 0))
         return;
 
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnMidMouseButtonDown();
 }
 
@@ -238,14 +238,14 @@ void COrionWindow::OnMidMouseButtonUp()
     if (g_PluginManager.WindowProc(Handle, WM_MBUTTONUP, 0, 0))
         return;
 
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnMidMouseButtonUp();
 }
 
 bool COrionWindow::OnMidMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
         return g_CurrentScreen->OnMidMouseButtonDoubleClick();
 
     return false;
@@ -257,7 +257,7 @@ void COrionWindow::OnMidMouseButtonScroll(bool up)
     if (g_PluginManager.WindowProc(Handle, WM_MOUSEWHEEL, (up ? 0 : 0x11110000), 0))
         return;
 
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->Render(false);
 
@@ -275,7 +275,7 @@ void COrionWindow::OnXMouseButton(bool up)
 void COrionWindow::OnDragging()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnDragging();
 }
 
@@ -311,11 +311,11 @@ void COrionWindow::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
     if ((iswprint((wchar_t)wParam) ||
          (g_GameState >= GS_GAME && (wParam == 0x11 || wParam == 0x17))) &&
-        g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
+        g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnCharPress(wParam, lParam);
     else if (wParam == KEY_RETURN)
         g_CurrentScreen->OnKeyDown(wParam, lParam);
-    else if (wParam == 0x16 && g_EntryPointer != NULL)
+    else if (wParam == 0x16 && g_EntryPointer != nullptr)
     {
         if (g_GameState == GS_MAIN)
             g_MainScreen.Paste();
@@ -500,7 +500,7 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
 
             if (!data->Serial && !data->ID)
             {
-                for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != NULL;)
+                for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
                 {
                     CGump *next = (CGump *)gump->m_Next;
 
@@ -518,11 +518,11 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
 
             CGump *gump = g_GumpManager.GetGump(data->Serial, data->ID, GT_MENU);
 
-            if (gump == NULL)
+            if (gump == nullptr)
             {
                 gump = g_GumpManager.GetGump(data->Serial, data->ID, GT_GRAY_MENU);
 
-                if (gump != NULL)
+                if (gump != nullptr)
                 {
                     CPacketGrayMenuResponse(gump, data->Code).Send();
                     g_GumpManager.RemoveGump(gump);
@@ -540,7 +540,7 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
         {
             PING_INFO_DATA *info = (PING_INFO_DATA *)wParam;
 
-            if (info != NULL)
+            if (info != nullptr)
             {
                 if (info->ServerID == 0xFFFFFFFF)
                 {
@@ -559,7 +559,7 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
                 {
                     CServer *server = g_ServerList.GetServer(info->ServerID);
 
-                    if (server != NULL)
+                    if (server != nullptr)
                     {
                         if (info->Min < 9999)
                         {

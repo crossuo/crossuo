@@ -58,7 +58,7 @@ public:
 //!Класс менеджера cпича
 class CSpeechManager
 {
-    CLangCode *CurrentLanguage = NULL;
+    CLangCode *CurrentLanguage = nullptr;
 
 private:
     vector<CSpeechItem> m_SpeechEntries;

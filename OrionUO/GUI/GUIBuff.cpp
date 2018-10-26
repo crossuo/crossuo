@@ -27,7 +27,7 @@ void CGUIBuff::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         glColor4ub(0xFF, 0xFF, 0xFF, Alpha);
         th->Draw(m_X, m_Y, checktrans);

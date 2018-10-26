@@ -65,7 +65,7 @@ CGumpProfile::CGumpProfile(
 CGumpProfile::~CGumpProfile()
 {
     DEBUG_TRACE_FUNCTION;
-    if (Changed && m_Entry != NULL)
+    if (Changed && m_Entry != nullptr)
         CPacketProfileUpdate(Serial, m_Entry->m_Entry.Data(), m_Entry->m_Entry.Length()).Send();
 }
 
@@ -99,14 +99,14 @@ void CGumpProfile::GUMP_BUTTON_EVENT_C
         Page = 1;
         WantRedraw = true;
     }
-    else if (Serial == g_PlayerSerial && serial == ID_GP_APPLY && m_Entry != NULL)
+    else if (Serial == g_PlayerSerial && serial == ID_GP_APPLY && m_Entry != nullptr)
     {
         Changed = true;
 
         if (g_EntryPointer == &m_Entry->m_Entry)
         {
             if (g_ConfigManager.GetConsoleNeedEnter())
-                g_EntryPointer = NULL;
+                g_EntryPointer = nullptr;
             else
                 g_EntryPointer = &g_GameConsole;
         }

@@ -76,6 +76,6 @@ CTextImageBounds::CTextImageBounds(CTextData *text)
 
 CTextImageBounds::~CTextImageBounds()
 {
-    Text = NULL;
+    Text = nullptr;
 }
 

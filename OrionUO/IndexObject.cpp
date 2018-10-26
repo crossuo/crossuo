@@ -18,10 +18,10 @@ CIndexObject::CIndexObject()
 CIndexObject::~CIndexObject()
 {
     DEBUG_TRACE_FUNCTION;
-    if (Texture != NULL)
+    if (Texture != nullptr)
     {
         delete Texture;
-        Texture = NULL;
+        Texture = nullptr;
     }
 }
 

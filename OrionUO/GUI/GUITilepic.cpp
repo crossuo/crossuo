@@ -27,7 +27,7 @@ Wisp::CSize CGUITilepic::GetSize()
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         size.Width = th->Width;
         size.Height = th->Height;
@@ -47,7 +47,7 @@ void CGUITilepic::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         SetShaderMode();
 
@@ -62,7 +62,7 @@ bool CGUITilepic::Select()
     //	return true;
     CGLTexture *th = g_Orion.m_StaticDataIndex[Graphic].Texture;
 
-    if (th != NULL)
+    if (th != nullptr)
         return th->Select(m_X, m_Y, !CheckPolygone);
 
     return false;

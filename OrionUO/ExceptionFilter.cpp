@@ -46,7 +46,7 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
 
     string filePath = "";
 
-    if (vmq.pvRgnBaseAddress != NULL)
+    if (vmq.pvRgnBaseAddress != nullptr)
     {
         MODULEENTRY32 me = { sizeof(me) };
         if (ModuleFind(snapshot, vmq.pvRgnBaseAddress, &me))
@@ -81,7 +81,7 @@ void DumpLibraryInformation()
     for (const string &str : g_WispDebugFunStack)
         CRASHLOG("%s\n", str.c_str());
 #elif USE_WISP_DEBUG_FUNCTION_NAMES == 2
-    if (g_WispCurrentFunctionName != NULL)
+    if (g_WispCurrentFunctionName != nullptr)
     {
         CRASHLOG("trace function: %s\n", g_WispCurrentFunctionName);
     }
@@ -100,7 +100,7 @@ void DumpLibraryInformation()
 
         HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
 
-        if (process == NULL)
+        if (process == nullptr)
         {
             CRASHLOG("::OpenProcess failed!\n");
             return;
@@ -108,14 +108,14 @@ void DumpLibraryInformation()
 
         HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, processId);
 
-        if (snapshot == NULL)
+        if (snapshot == nullptr)
         {
             CRASHLOG("::CreateToolhelp32Snapshot failed!\n");
             CloseHandle(process);
             return;
         }
 
-        PVOID address = NULL;
+        PVOID address = nullptr;
 
         while (true)
         {
@@ -256,12 +256,12 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
             bool reportSent = CreateProcessW(
                 L"OrionCrashReporter.exe",
                 &crashlogPath[0], // Command line
-                NULL,             // Process handle not inheritable
-                NULL,             // Thread handle not inheritable
+                nullptr,             // Process handle not inheritable
+                nullptr,             // Thread handle not inheritable
                 FALSE,            // Set handle inheritance to FALSE
                 0,                // No creation flags
-                NULL,             // Use parent's environment block
-                NULL,             // Use parent's starting directory
+                nullptr,             // Use parent's environment block
+                nullptr,             // Use parent's starting directory
                 &si,              // Pointer to STARTUPINFO structure
                 &pi);
 

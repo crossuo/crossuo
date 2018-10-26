@@ -53,7 +53,7 @@ void CGUIHTMLSlider::CalculateOffset()
     DEBUG_TRACE_FUNCTION;
     CGUISlider::CalculateOffset();
 
-    if (m_HTMLGump != NULL)
+    if (m_HTMLGump != nullptr)
     {
         Wisp::CPoint2Di currentOffset = m_HTMLGump->CurrentOffset;
         Wisp::CPoint2Di availableOffset = m_HTMLGump->AvailableOffset;

@@ -14,14 +14,14 @@ class CPressedObject
 {
 public:
     uint LeftSerial = 0;
-    CRenderObject *LeftObject = NULL;
-    CGump *LeftGump = NULL;
+    CRenderObject *LeftObject = nullptr;
+    CGump *LeftGump = nullptr;
     uint RightSerial = 0;
-    CRenderObject *RightObject = NULL;
-    CGump *RightGump = NULL;
+    CRenderObject *RightObject = nullptr;
+    CGump *RightGump = nullptr;
     uint MidSerial = 0;
-    CRenderObject *MidObject = NULL;
-    CGump *MidGump = NULL;
+    CRenderObject *MidObject = nullptr;
+    CGump *MidGump = nullptr;
     CPressedObject();
     virtual ~CPressedObject();
 
@@ -35,13 +35,13 @@ public:
 
     void Init(const CPressedObject &obj);
 
-    void InitLeft(CRenderObject *obj, CGump *gump = NULL);
+    void InitLeft(CRenderObject *obj, CGump *gump = nullptr);
     void InitLeft(const CSelectedObject &obj);
 
-    void InitRight(CRenderObject *obj, CGump *gump = NULL);
+    void InitRight(CRenderObject *obj, CGump *gump = nullptr);
     void InitRight(const CSelectedObject &obj);
 
-    void InitMid(CRenderObject *obj, CGump *gump = NULL);
+    void InitMid(CRenderObject *obj, CGump *gump = nullptr);
     void InitMid(const CSelectedObject &obj);
 
     bool TestMoveOnDrag();

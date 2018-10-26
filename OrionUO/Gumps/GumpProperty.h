@@ -23,7 +23,7 @@ public:
 
     virtual void PrepareContent();
 
-    virtual class CRenderObject *Select() { return NULL; }
+    virtual class CRenderObject *Select() { return nullptr; }
 };
 
 #endif //GUMPPROPERTY_H

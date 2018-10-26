@@ -11,7 +11,7 @@
 #define BASEQUEUE_H
 
 //!TBaseQueue for [extended]
-#define QFOR(var, start, type) for (type var = (type)start; var != NULL; var = (type)var->m_Next)
+#define QFOR(var, start, type) for (type var = (type)start; var != nullptr; var = (type)var->m_Next)
 //!TBaseQueue for
 #define BQFOR(var, start) QFOR(var, start, CBaseQueueItem *)
 
@@ -57,7 +57,7 @@ public:
     /*!
 	Получить элемент с указанным индексом
 	@param [__in] index Индекс элемента
-	@return Ссылка на элемент или NULL
+	@return Ссылка на элемент или nullptr
 	*/
     CBaseQueueItem *Get(int index);
 
@@ -115,7 +115,7 @@ public:
 	Пустой список или нет
 	@return true в случае успешного перемещения
 	*/
-    bool Empty() const { return (m_Items == NULL); }
+    bool Empty() const { return (m_Items == nullptr); }
 
     /*!
 	Получить указатель на последний элемент

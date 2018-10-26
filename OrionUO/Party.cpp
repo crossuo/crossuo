@@ -48,7 +48,7 @@ void CParty::Clear()
     IFOR (i, 0, 10)
     {
         Member[i].Serial = 0;
-        Member[i].Character = NULL;
+        Member[i].Character = nullptr;
     }
 }
 
@@ -73,11 +73,11 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 IFOR (i, 0, 10)
                 {
                     CPartyObject &member = Member[i];
-                    if (member.Character == NULL)
+                    if (member.Character == nullptr)
                         break;
                     CGumpStatusbar *gump = (CGumpStatusbar *)g_GumpManager.UpdateContent(
                         member.Character->Serial, 0, GT_STATUSBAR);
-                    if (gump != NULL)
+                    if (gump != nullptr)
                         gump->WantRedraw = true;
                 }
                 Clear();
@@ -89,7 +89,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
             Wisp::CPoint2Di mousePos(76, 30);
             g_MouseManager.Position = mousePos;
 
-            CGumpStatusbar *prevGump = NULL;
+            CGumpStatusbar *prevGump = nullptr;
 
             IFOR (i, 0, count)
             {
@@ -102,7 +102,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 CGumpStatusbar *gump =
                     (CGumpStatusbar *)g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 
-                if (gump == NULL)
+                if (gump == nullptr)
                 {
                     g_Orion.OpenStatus(serial);
 
@@ -113,7 +113,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                         gump->Minimized = false;
                     }
 
-                    if (prevGump != NULL)
+                    if (prevGump != nullptr)
                         prevGump->AddStatusbar(gump);
 
                     prevGump = gump;

@@ -75,7 +75,7 @@ private:
     int m_WorkHeight{ 0 };
 
     //!Выводимый в свернутом состоянии текст
-    class CGUIText *Text{ NULL };
+    class CGUIText *Text{ nullptr };
 
 public:
     CGUIComboBox(

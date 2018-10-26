@@ -14,15 +14,15 @@ class CSelectedObject
 {
 public:
     uint Serial = 0;
-    CRenderObject *Object = NULL;
-    CGump *Gump = NULL;
+    CRenderObject *Object = nullptr;
+    CGump *Gump = nullptr;
     CSelectedObject();
     virtual ~CSelectedObject();
 
     void Clear();
     void Clear(CRenderObject *obj);
 
-    void Init(CRenderObject *obj, CGump *gump = NULL);
+    void Init(CRenderObject *obj, CGump *gump = nullptr);
     void Init(const CSelectedObject &obj);
 };
 

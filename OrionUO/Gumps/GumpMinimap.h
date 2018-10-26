@@ -23,8 +23,8 @@ private:
 
     CGLTexture m_Texture{ CGLTexture() };
 
-    CGUIGumppic *m_Body{ NULL };
-    CGUIDataBox *m_DataBox{ NULL };
+    CGUIGumppic *m_Body{ nullptr };
+    CGUIDataBox *m_DataBox{ nullptr };
 
     void GenerateMap();
 

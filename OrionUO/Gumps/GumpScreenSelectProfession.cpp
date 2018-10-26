@@ -20,11 +20,11 @@ CGumpScreenSelectProfession::CGumpScreenSelectProfession()
 
     IFOR (i, 0, 3)
     {
-        m_StatsSliders[i] = NULL;
-        m_SkillsSliders[i] = NULL;
+        m_StatsSliders[i] = nullptr;
+        m_SkillsSliders[i] = nullptr;
     }
 
-    m_SkillsSliders[3] = NULL;
+    m_SkillsSliders[3] = nullptr;
 }
 
 CGumpScreenSelectProfession::~CGumpScreenSelectProfession()
@@ -36,7 +36,7 @@ void CGumpScreenSelectProfession::UpdateContent()
     DEBUG_TRACE_FUNCTION;
     Clear();
 
-    if (g_ProfessionManager.Selected == NULL)
+    if (g_ProfessionManager.Selected == nullptr)
     {
         g_OrionWindow.ShowMessage("No items in profession manager!", "Profession error!");
         return;
@@ -53,7 +53,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
     DEBUG_TRACE_FUNCTION;
     CBaseProfession *obj = g_ProfessionManager.Selected;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
         g_OrionWindow.ShowMessage("No items in profession manager!", "Profession error!");
         return;
@@ -61,11 +61,11 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
     IFOR (i, 0, 3)
     {
-        m_StatsSliders[i] = NULL;
-        m_SkillsSliders[i] = NULL;
+        m_StatsSliders[i] = nullptr;
+        m_SkillsSliders[i] = nullptr;
     }
 
-    m_SkillsSliders[3] = NULL;
+    m_SkillsSliders[3] = nullptr;
 
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
     Add(new CGUIGumppic(0x157C, 0, 0));
@@ -101,7 +101,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         {
             CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex((uint)i));
 
-            if (skill == NULL)
+            if (skill == nullptr)
                 continue;
 
             CGUITextEntry *entry = new CGUITextEntry(
@@ -201,7 +201,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
-                if (skill != NULL)
+                if (skill != nullptr)
                     text->CreateTextureA(1, skill->Name, 90, TS_LEFT, UOFONT_FIXED);
 
                 Add(text);
@@ -234,7 +234,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
-                if (skillID >= g_SkillsManager.Count || skill == NULL)
+                if (skillID >= g_SkillsManager.Count || skill == nullptr)
                     entry->m_Entry.SetTextA("Click here");
                 else
                     entry->m_Entry.SetTextA(skill->Name);
@@ -386,7 +386,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
             {
                 CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex((uint)i));
 
-                if (skill == NULL)
+                if (skill == nullptr)
                     continue;
 
                 CGUITextEntry *entry = new CGUITextEntry(
@@ -438,7 +438,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
-                if (skillID >= g_SkillsManager.Count || skill == NULL)
+                if (skillID >= g_SkillsManager.Count || skill == nullptr)
                     entry->m_Entry.SetTextA("Click here");
                 else
                     entry->m_Entry.SetTextA(skill->Name);

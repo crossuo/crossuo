@@ -41,7 +41,7 @@ bool CGLFrameBuffer::Init(int width, int height)
         glGenTextures(1, &Texture.Texture);
         glBindTexture(GL_TEXTURE_2D, Texture.Texture);
         glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+            GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
 
         GLint currentFrameBuffer = 0;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFrameBuffer);

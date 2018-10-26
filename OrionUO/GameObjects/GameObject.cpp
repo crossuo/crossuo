@@ -27,19 +27,19 @@ CGameObject::CGameObject(int serial)
 CGameObject::~CGameObject()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Effects != NULL)
+    if (m_Effects != nullptr)
     {
         delete m_Effects;
-        m_Effects = NULL;
+        m_Effects = nullptr;
     }
 
-    m_Next = NULL;
-    m_Prev = NULL;
+    m_Next = nullptr;
+    m_Prev = nullptr;
 
-    if (m_TextureObjectHalndes.Texture != NULL)
+    if (m_TextureObjectHalndes.Texture != 0)
     {
         glDeleteTextures(1, &m_TextureObjectHalndes.Texture);
-        m_TextureObjectHalndes.Texture = NULL;
+        m_TextureObjectHalndes.Texture = 0;
     }
 
     Clear();
@@ -75,7 +75,7 @@ void CGameObject::SetName(const string &newName)
 
             CServer *server = g_ServerList.GetSelectedServer();
 
-            if (server != NULL)
+            if (server != nullptr)
                 title += " (" + server->Name + ")";
 
             g_OrionWindow.SetTitle(title);
@@ -97,7 +97,7 @@ void CGameObject::SetName(const string &newName)
 void CGameObject::DrawObjectHandlesTexture()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextureObjectHalndes.Texture == NULL)
+    if (m_TextureObjectHalndes.Texture == 0)
     {
         if (NPC || IsCorpse())
             GenerateObjectHandlesTexture(ToWString(m_Name));
@@ -138,7 +138,7 @@ void CGameObject::DrawObjectHandlesTexture()
 void CGameObject::SelectObjectHandlesTexture()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextureObjectHalndes.Texture != NULL)
+    if (m_TextureObjectHalndes.Texture != 0)
     {
         int x = DrawX - g_ObjectHandlesWidthOffset;
         int y = DrawY;
@@ -177,10 +177,10 @@ void CGameObject::SelectObjectHandlesTexture()
 void CGameObject::GenerateObjectHandlesTexture(wstring text)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextureObjectHalndes.Texture != NULL)
+    if (m_TextureObjectHalndes.Texture != 0)
     {
         glDeleteTextures(1, &m_TextureObjectHalndes.Texture);
-        m_TextureObjectHalndes.Texture = NULL;
+        m_TextureObjectHalndes.Texture = 0;
     }
 
     int width = g_ObjectHandlesWidth - 20;
@@ -322,7 +322,7 @@ void CGameObject::Clear()
     {
         CGameObject *obj = (CGameObject *)m_Items;
 
-        while (obj != NULL)
+        while (obj != nullptr)
         {
             CGameObject *next = (CGameObject *)obj->m_Next;
 
@@ -331,7 +331,7 @@ void CGameObject::Clear()
             obj = next;
         }
 
-        m_Items = NULL;
+        m_Items = nullptr;
     }
 }
 
@@ -340,16 +340,16 @@ void CGameObject::ClearUnequipped()
     DEBUG_TRACE_FUNCTION;
     if (!Empty())
     {
-        CGameObject *newFirstItem = NULL;
+        CGameObject *newFirstItem = nullptr;
         CGameObject *obj = (CGameObject *)m_Items;
 
-        while (obj != NULL)
+        while (obj != nullptr)
         {
             CGameObject *next = (CGameObject *)obj->m_Next;
 
             if (((CGameItem *)obj)->Layer != OL_NONE)
             {
-                if (newFirstItem == NULL)
+                if (newFirstItem == nullptr)
                     newFirstItem = obj;
             }
             else
@@ -369,7 +369,7 @@ void CGameObject::ClearNotOpenedItems()
     {
         CGameObject *obj = (CGameObject *)m_Items;
 
-        while (obj != NULL)
+        while (obj != nullptr)
         {
             CGameObject *next = (CGameObject *)obj->m_Next;
 
@@ -490,7 +490,7 @@ void CGameObject::UpdateEffects()
     DEBUG_TRACE_FUNCTION;
     CGameEffect *effect = m_Effects;
 
-    while (effect != NULL)
+    while (effect != nullptr)
     {
         CGameEffect *next = (CGameEffect *)effect->m_Next;
 
@@ -508,17 +508,17 @@ void CGameObject::UpdateEffects()
 void CGameObject::AddEffect(CGameEffect *effect)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Effects == NULL)
+    if (m_Effects == nullptr)
     {
         m_Effects = effect;
-        effect->m_Next = NULL;
-        effect->m_Prev = NULL;
+        effect->m_Next = nullptr;
+        effect->m_Prev = nullptr;
     }
     else
     {
         effect->m_Next = m_Effects;
         m_Effects->m_Prev = effect;
-        effect->m_Prev = NULL;
+        effect->m_Prev = nullptr;
         m_Effects = effect;
     }
 }
@@ -531,23 +531,23 @@ void CGameObject::AddEffect(CGameEffect *effect)
 void CGameObject::RemoveEffect(CGameEffect *effect)
 {
     DEBUG_TRACE_FUNCTION;
-    if (effect->m_Prev == NULL)
+    if (effect->m_Prev == nullptr)
     {
         m_Effects = (CGameEffect *)effect->m_Next;
 
-        if (m_Effects != NULL)
-            m_Effects->m_Prev = NULL;
+        if (m_Effects != nullptr)
+            m_Effects->m_Prev = nullptr;
     }
     else
     {
         effect->m_Prev->m_Next = effect->m_Next;
 
-        if (effect->m_Next != NULL)
+        if (effect->m_Next != nullptr)
             effect->m_Next->m_Prev = effect->m_Prev;
     }
 
-    effect->m_Next = NULL;
-    effect->m_Prev = NULL;
+    effect->m_Next = nullptr;
+    effect->m_Prev = nullptr;
     delete effect;
 }
 
@@ -561,11 +561,11 @@ void CGameObject::AddObject(CGameObject *obj)
     DEBUG_TRACE_FUNCTION;
     g_World->RemoveFromContainer(obj);
 
-    if (m_Next == NULL)
+    if (m_Next == nullptr)
     {
         m_Next = obj;
         m_Next->m_Prev = this;
-        m_Next->m_Next = NULL;
+        m_Next->m_Next = nullptr;
 
         ((CGameObject *)m_Next)->Container = Container;
     }
@@ -573,11 +573,11 @@ void CGameObject::AddObject(CGameObject *obj)
     {
         CGameObject *item = (CGameObject *)m_Next;
 
-        while (item->m_Next != NULL)
+        while (item->m_Next != nullptr)
             item = (CGameObject *)item->m_Next;
 
         item->m_Next = obj;
-        obj->m_Next = NULL;
+        obj->m_Next = nullptr;
         obj->m_Prev = item;
 
         obj->Container = Container;
@@ -597,19 +597,19 @@ void CGameObject::AddItem(CGameObject *obj)
 
     g_World->RemoveFromContainer(obj);
 
-    if (m_Items != NULL)
+    if (m_Items != nullptr)
     {
         CGameObject *item = (CGameObject *)Last();
 
         item->m_Next = obj;
-        obj->m_Next = NULL;
+        obj->m_Next = nullptr;
         obj->m_Prev = item;
     }
     else
     {
         m_Items = obj;
-        m_Items->m_Next = NULL;
-        m_Items->m_Prev = NULL;
+        m_Items->m_Next = nullptr;
+        m_Items->m_Prev = nullptr;
     }
 
     obj->Container = Serial;
@@ -626,37 +626,37 @@ void CGameObject::Reject(CGameObject *obj)
     if (obj->Container != Serial)
         return;
 
-    if (m_Items != NULL)
+    if (m_Items != nullptr)
     {
         if (((CGameObject *)m_Items)->Serial == obj->Serial)
         {
-            if (m_Items->m_Next != NULL)
+            if (m_Items->m_Next != nullptr)
             {
                 m_Items = m_Items->m_Next;
-                m_Items->m_Prev = NULL;
+                m_Items->m_Prev = nullptr;
             }
             else
-                m_Items = NULL;
+                m_Items = nullptr;
         }
         else
         {
-            if (obj->m_Next != NULL)
+            if (obj->m_Next != nullptr)
             {
-                if (obj->m_Prev != NULL)
+                if (obj->m_Prev != nullptr)
                 {
                     obj->m_Prev->m_Next = obj->m_Next;
                     obj->m_Next->m_Prev = obj->m_Prev;
                 }
                 else //WTF???
-                    obj->m_Next->m_Prev = NULL;
+                    obj->m_Next->m_Prev = nullptr;
             }
-            else if (obj->m_Prev != NULL)
-                obj->m_Prev->m_Next = NULL;
+            else if (obj->m_Prev != nullptr)
+                obj->m_Prev->m_Next = nullptr;
         }
     }
 
-    obj->m_Next = NULL;
-    obj->m_Prev = NULL;
+    obj->m_Next = nullptr;
+    obj->m_Prev = nullptr;
     obj->Container = 0xFFFFFFFF;
 }
 
@@ -684,7 +684,7 @@ CGameItem *CGameObject::FindLayer(int layer)
             return obj;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 bool CGameObject::Caller()

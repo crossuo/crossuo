@@ -25,7 +25,7 @@ CGUIHTMLHitBox::~CGUIHTMLHitBox()
 void CGUIHTMLHitBox::Scroll(bool up, int delay)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_HTMLGump != NULL)
+    if (m_HTMLGump != nullptr)
         m_HTMLGump->Scroll(up, delay);
 }
 

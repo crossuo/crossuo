@@ -35,7 +35,7 @@ void CSelectTownScreen::Init()
     {
         m_City = g_CityList.GetCity(3);
 
-        if (m_City == NULL)
+        if (m_City == nullptr)
             m_City = g_CityList.GetCity(0);
     }
 

@@ -251,7 +251,7 @@ void CGumpSpellbook::PrepareContent()
         }
     }
 
-    if (!Minimized && m_LastSpellPointer != NULL)
+    if (!Minimized && m_LastSpellPointer != nullptr)
     {
         spellIndexOffset = (int)BookType * 100;
 
@@ -611,12 +611,12 @@ string CGumpSpellbook::GetSpellRequries(int offset, int &y)
 void CGumpSpellbook::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    m_Body = NULL;
-    m_PrevPage = NULL;
-    m_NextPage = NULL;
-    m_LastSpellPointer = NULL;
-    m_LastSpellBookmark = NULL;
-    m_TithingPointsText = NULL;
+    m_Body = nullptr;
+    m_PrevPage = nullptr;
+    m_NextPage = nullptr;
+    m_LastSpellPointer = nullptr;
+    m_LastSpellBookmark = nullptr;
+    m_TithingPointsText = nullptr;
 
     Clear();
 
@@ -655,7 +655,7 @@ void CGumpSpellbook::UpdateContent()
 
     CGameItem *spellbook = g_World->FindWorldItem(Serial);
 
-    if (spellbook == NULL)
+    if (spellbook == nullptr)
         return;
 
     QFOR(item, spellbook->m_Items, CGameItem *)
@@ -1028,7 +1028,7 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 void CGumpSpellbook::DelayedClick(CRenderObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;

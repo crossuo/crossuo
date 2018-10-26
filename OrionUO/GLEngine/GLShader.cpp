@@ -35,12 +35,12 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
 {
     GLint val = GL_FALSE;
 
-    if (vertexShaderData != NULL && fragmentShaderData != NULL)
+    if (vertexShaderData != nullptr && fragmentShaderData != nullptr)
     {
         m_Shader = glCreateProgramObjectARB();
 
         m_VertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-        glShaderSourceARB(m_VertexShader, 1, (const GLcharARB **)&vertexShaderData, NULL);
+        glShaderSourceARB(m_VertexShader, 1, (const GLcharARB **)&vertexShaderData, nullptr);
         glCompileShaderARB(m_VertexShader);
 
         glGetShaderiv(m_VertexShader, GL_COMPILE_STATUS, &val);
@@ -61,7 +61,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         glAttachObjectARB(m_Shader, m_VertexShader);
 
         m_FragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-        glShaderSourceARB(m_FragmentShader, 1, (const GLcharARB **)&fragmentShaderData, NULL);
+        glShaderSourceARB(m_FragmentShader, 1, (const GLcharARB **)&fragmentShaderData, nullptr);
         glCompileShaderARB(m_FragmentShader);
 
         glGetShaderiv(m_FragmentShader, GL_COMPILE_STATUS, &val);
@@ -109,7 +109,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         GLint maxLength = 0;
         glGetProgramiv(m_Shader, GL_INFO_LOG_LENGTH, &maxLength);
 
-        // The maxLength includes the NULL character
+        // The maxLength includes the nullptr character
         std::vector<GLchar> infoLog(maxLength);
         glGetProgramInfoLog(m_Shader, maxLength, &maxLength, &infoLog[0]);
 

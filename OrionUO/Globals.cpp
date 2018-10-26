@@ -52,8 +52,8 @@ int g_MultiIndexCount = 0;
 CGLFrameBuffer g_LightBuffer;
 
 bool g_GumpPressed = false;
-class CRenderObject *g_GumpSelectedElement = NULL;
-class CRenderObject *g_GumpPressedElement = NULL;
+class CRenderObject *g_GumpSelectedElement = nullptr;
+class CRenderObject *g_GumpPressedElement = nullptr;
 Wisp::CPoint2Di g_GumpMovingOffset;
 Wisp::CPoint2Df g_GumpTranslate;
 bool g_ShowGumpLocker = false;
@@ -239,7 +239,7 @@ string ToCamelCase(string text)
 
 int GetDistance(CGameObject *current, CGameObject *target)
 {
-    if (current != NULL && target != NULL)
+    if (current != nullptr && target != nullptr)
     {
         int distx = abs(target->GetX() - current->GetX());
         int disty = abs(target->GetY() - current->GetY());
@@ -255,7 +255,7 @@ int GetDistance(CGameObject *current, CGameObject *target)
 
 int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target)
 {
-    if (current != NULL)
+    if (current != nullptr)
     {
         int distx = abs(target.X - current->GetX());
         int disty = abs(target.Y - current->GetY());
@@ -271,7 +271,7 @@ int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target)
 
 int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target)
 {
-    if (target != NULL)
+    if (target != nullptr)
     {
         int distx = abs(target->GetX() - current.X);
         int disty = abs(target->GetY() - current.Y);
@@ -287,7 +287,7 @@ int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target)
 
 int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target)
 {
-    if (target != NULL)
+    if (target != nullptr)
     {
         Wisp::CPoint2Di targetPoint(target->GetX(), target->GetY());
 
@@ -315,7 +315,7 @@ bool CheckMultiDistance(
 {
     bool result = false;
 
-    if (target != NULL)
+    if (target != nullptr)
     {
         maxDistance += ((CGameItem *)target)->MultiDistanceBonus;
 
@@ -340,12 +340,12 @@ int GetDistance(const Wisp::CPoint2Di &current, const Wisp::CPoint2Di &target)
 
 int GetTopObjDistance(CGameObject *current, CGameObject *target)
 {
-    if (current != NULL && target != NULL)
+    if (current != nullptr && target != nullptr)
     {
-        while (target != NULL && target->Container != 0xFFFFFFFF)
+        while (target != nullptr && target->Container != 0xFFFFFFFF)
             target = g_World->FindWorldObject(target->Container);
 
-        if (target != NULL)
+        if (target != nullptr)
         {
             int distx = abs(target->GetX() - current->GetX());
             int disty = abs(target->GetY() - current->GetY());

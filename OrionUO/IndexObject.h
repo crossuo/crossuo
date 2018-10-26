@@ -20,11 +20,11 @@ public:
     ushort ID = 0;
     ushort Color = 0;
     uint LastAccessTime = 0;
-    CUopBlockHeader *UopBlock = NULL;
+    CUopBlockHeader *UopBlock = nullptr;
     CIndexObject();
     virtual ~CIndexObject();
     virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id);
-    CGLTexture *Texture{ NULL };
+    CGLTexture *Texture{ nullptr };
 };
 
 class CIndexObjectLand : public CIndexObject
@@ -59,7 +59,7 @@ public:
     virtual ~CIndexSound();
 
     UCHAR_LIST m_WaveFile;
-    HSTREAM m_Stream{ NULL };
+    HSTREAM m_Stream{ nullptr };
 };
 
 class CIndexMulti : public CIndexObject

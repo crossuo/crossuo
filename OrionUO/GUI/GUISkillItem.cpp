@@ -18,12 +18,12 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
     DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
-    if (skill != NULL)
+    if (skill != nullptr)
     {
         if (skill->Button != 0)
             m_ButtonUse = new CGUIButton(useSerial, 0x0837, 0x0838, 0x0838, 8, 0);
         else
-            m_ButtonUse = NULL;
+            m_ButtonUse = nullptr;
 
         m_Status = skill->Status;
 
@@ -77,7 +77,7 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
     DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
-    if (skill != NULL)
+    if (skill != nullptr)
     {
         //Значение скилла (учитывая выбранный флаг отображения)
         float val = skill->BaseValue;
@@ -96,7 +96,7 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 void CGUISkillItem::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_ButtonUse != NULL)
+    if (m_ButtonUse != nullptr)
         m_ButtonUse->PrepareTextures();
 
     m_ButtonStatus->PrepareTextures();
@@ -110,7 +110,7 @@ CBaseGUI *CGUISkillItem::SelectedItem()
     if (g_Orion.PolygonePixelsInXY(
             m_X + m_ButtonStatus->GetX(), m_Y + m_ButtonStatus->GetY(), 14, 14))
         selected = m_ButtonStatus;
-    else if (m_ButtonUse != NULL)
+    else if (m_ButtonUse != nullptr)
     {
         if (g_Orion.GumpPixelsInXY(
                 m_ButtonUse->Graphic, m_X + m_ButtonUse->GetX(), m_Y + m_ButtonUse->GetY()))
@@ -125,7 +125,7 @@ void CGUISkillItem::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
-    if (m_ButtonUse != NULL)
+    if (m_ButtonUse != nullptr)
         m_ButtonUse->Draw(checktrans);
 
     if (g_PressedObject.LeftObject == this)

@@ -41,7 +41,7 @@ public:
 	@param [__in] serial Серийник гампа
 	@param [__in] ID ID гампа
 	@param [__in] Type Тип гампа
-	@return Ссылку на обновленный гамп или NULL
+	@return Ссылку на обновленный гамп или nullptr
 	*/
     CGump *UpdateContent(int serial, int id, const GUMP_TYPE &type);
 
@@ -50,7 +50,7 @@ public:
 	@param [__in] serial Серийник гампа
 	@param [__in] ID ID гампа
 	@param [__in] Type Тип гампа
-	@return Ссылку на обновленный гамп или NULL
+	@return Ссылку на обновленный гамп или nullptr
 	*/
     CGump *UpdateGump(int serial, int id, const GUMP_TYPE &type);
 
@@ -59,13 +59,13 @@ public:
 	@param [__in] serial Серийник гампа
 	@param [__in] ID ID гампа
 	@param [__in] Type Тип гампа
-	@return Ссылку на гамп или NULL
+	@return Ссылку на гамп или nullptr
 	*/
     CGump *GetGump(int serial, int id, const GUMP_TYPE &type);
 
     /*!
 	Получить гамп-владелец текущей активной TEntryText
-	@return Ссылку на гамп или NULL
+	@return Ссылку на гамп или nullptr
 	*/
     CGump *GetTextEntryOwner();
 

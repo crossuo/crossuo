@@ -43,7 +43,7 @@ bool CBaseProfession::AddDescription(int desc, string name, const char *val)
     }
     else
     {
-        for (CBaseProfession *obj = (CBaseProfession *)m_Items; obj != NULL && !result;
+        for (CBaseProfession *obj = (CBaseProfession *)m_Items; obj != nullptr && !result;
              obj = (CBaseProfession *)obj->m_Next)
             result = obj->AddDescription(desc, name, val);
     }

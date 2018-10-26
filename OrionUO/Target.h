@@ -35,7 +35,7 @@ private:
     uchar m_LastData[19];
 
     //Список объектов мульти на таргете
-    CMulti *m_Multi{ NULL };
+    CMulti *m_Multi{ nullptr };
 
     //Добавить мульти-объект
     void AddMultiObject(CMultiObject *obj);

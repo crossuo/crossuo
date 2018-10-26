@@ -19,8 +19,8 @@ public:
     CRenderTextObject();
     virtual ~CRenderTextObject();
 
-    CRenderTextObject *m_NextDraw{ NULL };
-    CRenderTextObject *m_PrevDraw{ NULL };
+    CRenderTextObject *m_NextDraw{ nullptr };
+    CRenderTextObject *m_PrevDraw{ nullptr };
 
     //Вытащить из очереди
     void UnlinkDraw();

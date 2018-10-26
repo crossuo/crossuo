@@ -24,7 +24,7 @@ CGumpSelectColor::~CGumpSelectColor()
 void CGumpSelectColor::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Items == NULL)
+    if (m_Items == nullptr)
     {
         Add(new CGUIGumppic(0x0906, 0, 0));
 
@@ -90,7 +90,7 @@ void CGumpSelectColor::UpdateContent()
 void CGumpSelectColor::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != NULL)
+    if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != nullptr)
     {
         ushort color = 0;
 
@@ -123,7 +123,7 @@ void CGumpSelectColor::GUMP_SLIDER_CLICK_EVENT_C
 void CGumpSelectColor::GUMP_SLIDER_MOVE_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Slider != NULL && m_ColorRef != m_Slider->Value)
+    if (m_Slider != nullptr && m_ColorRef != m_Slider->Value)
     {
         m_ColorRef = m_Slider->Value;
         WantUpdateContent = true;
@@ -135,7 +135,7 @@ void CGumpSelectColor::OnSelectColor(ushort color)
     DEBUG_TRACE_FUNCTION;
     CGumpOptions *gump = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);
 
-    if (gump != NULL)
+    if (gump != nullptr)
         gump->UpdateColor(m_State, color);
 
     RemoveMark = true;

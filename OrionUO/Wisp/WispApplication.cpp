@@ -37,7 +37,7 @@ int CApplication::Run(HINSTANCE hinstance)
 
     while (msg.message != WM_QUIT)
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -82,17 +82,17 @@ string CApplication::GetFileVersion(uint *numericVerion) const
         {
             UCHAR_LIST lpVersionInfo(dwSize, 0);
 
-            if (GetFileVersionInfoW(&szFilename[0], NULL, dwSize, &lpVersionInfo[0]))
+            if (GetFileVersionInfoW(&szFilename[0], nullptr, dwSize, &lpVersionInfo[0]))
             {
                 UINT uLen = 0;
-                VS_FIXEDFILEINFO *lpFfi = NULL;
+                VS_FIXEDFILEINFO *lpFfi = nullptr;
 
                 VerQueryValueW(&lpVersionInfo[0], PATH_SEP, (LPVOID *)&lpFfi, &uLen);
 
                 DWORD dwFileVersionMS = 0;
                 DWORD dwFileVersionLS = 0;
 
-                if (lpFfi != NULL)
+                if (lpFfi != nullptr)
                 {
                     dwFileVersionMS = lpFfi->dwFileVersionMS;
                     dwFileVersionLS = lpFfi->dwFileVersionLS;
@@ -103,7 +103,7 @@ string CApplication::GetFileVersion(uint *numericVerion) const
                 int dwSecondRight = (int)HIWORD(dwFileVersionLS);
                 int dwRightMost = (int)LOWORD(dwFileVersionLS);
 
-                if (numericVerion != NULL)
+                if (numericVerion != nullptr)
                     *numericVerion = ((dwLeftMost & 0xFF) << 24) | ((dwSecondLeft & 0xFF) << 16) |
                                      ((dwSecondRight & 0xFF) << 8) | (dwRightMost & 0xFF);
 

@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpPopupMenu *g_PopupMenu = NULL;
+CGumpPopupMenu *g_PopupMenu = nullptr;
 
 CGumpPopupMenu::CGumpPopupMenu(uint serial, short x, short y)
     : CGump(GT_POPUP_MENU, serial, x, y)
@@ -29,7 +29,7 @@ CGumpPopupMenu::CGumpPopupMenu(uint serial, short x, short y)
 CGumpPopupMenu::~CGumpPopupMenu()
 {
     DEBUG_TRACE_FUNCTION;
-    g_PopupMenu = NULL;
+    g_PopupMenu = nullptr;
 }
 
 void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
@@ -162,7 +162,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 void CGumpPopupMenu::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump == this && g_SelectedObject.Object != NULL &&
+    if (g_SelectedObject.Gump == this && g_SelectedObject.Object != nullptr &&
         ((CBaseGUI *)g_SelectedObject.Object)->Type == GOT_HITBOX)
     {
         CGUIHitBox *box = (CGUIHitBox *)g_SelectedObject.Object;
@@ -192,7 +192,7 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
     if (serial == ID_GPM_MAXIMIZE)
     {
         Page = 2;
-        CGUIResizepic *resizepic = NULL;
+        CGUIResizepic *resizepic = nullptr;
         int width = 0;
         int height = 20;
 
@@ -219,7 +219,7 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
                 ((CGUIHitBox *)item)->Width = width - 20;
         }
 
-        if (resizepic != NULL)
+        if (resizepic != nullptr)
         {
             resizepic->Width = width;
             resizepic->Height = height;

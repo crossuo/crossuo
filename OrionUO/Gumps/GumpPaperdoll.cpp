@@ -102,7 +102,7 @@ CGumpPaperdoll::CGumpPaperdoll(uint serial, short x, short y, bool minimized)
     }
     else
     {
-        m_ButtonWarmode = NULL;
+        m_ButtonWarmode = nullptr;
         Add(new CGUIGumppic(0x07D1, 0, 0));
     }
 
@@ -125,7 +125,7 @@ void CGumpPaperdoll::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
-    if (g_GumpPressed && g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsText())
+    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsText())
     {
         g_GumpMovingOffset.Reset();
 
@@ -245,7 +245,7 @@ void CGumpPaperdoll::InitToolTip()
 void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         CTextData *td = new CTextData();
         td->Unicode = false;
@@ -283,7 +283,7 @@ void CGumpPaperdoll::PrepareContent()
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     if (!g_Player->Dead() && (CanLift || Serial == g_PlayerSerial) &&
@@ -302,7 +302,7 @@ void CGumpPaperdoll::PrepareContent()
             {
                 CGameItem *equipment = obj->FindLayer(layer);
 
-                if (equipment != NULL)
+                if (equipment != nullptr)
                 {
                     //if (g_Target.IsTargeting())
                     //	g_Target.SendCancelTarget();
@@ -324,7 +324,7 @@ void CGumpPaperdoll::PrepareContent()
     if (g_SelectedObject.Gump == this && g_ObjectInHand.Enabled &&
         g_ObjectInHand.TiledataPtr->AnimID)
     {
-        if (obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer) == NULL)
+        if (obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer) == nullptr)
         {
             if (!m_WantTransparentContent)
             {
@@ -353,7 +353,7 @@ void CGumpPaperdoll::UpdateContent()
 
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     m_DataBox->Clear();
@@ -363,7 +363,7 @@ void CGumpPaperdoll::UpdateContent()
 
     m_DataBox->Add(new CGUIShader(&g_ColorizerShader, true));
 
-    CGUIGumppic *bodyGumppic = NULL;
+    CGUIGumppic *bodyGumppic = nullptr;
 
     ushort color = obj->Color & 0x3FFF;
 
@@ -419,7 +419,7 @@ void CGumpPaperdoll::UpdateContent()
     int gumpOffset = (obj->Female ? FEMALE_GUMP_OFFSET : MALE_GUMP_OFFSET);
 
     //Draw equipment & backpack
-    CGameItem *equipment = NULL;
+    CGameItem *equipment = nullptr;
 
     EQUIP_CONV_BODY_MAP &equipConv = g_AnimationManager.GetEquipConv();
 
@@ -438,7 +438,7 @@ void CGumpPaperdoll::UpdateContent()
         {
             equipment = obj->FindLayer(UsedLayers[i]);
 
-            if (equipment != NULL)
+            if (equipment != nullptr)
             {
                 if (useSlots)
                 {
@@ -493,7 +493,7 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     int cOfs = gumpOffset;
 
-                    if (obj->Female && g_Orion.ExecuteGump(id + cOfs) == NULL)
+                    if (obj->Female && g_Orion.ExecuteGump(id + cOfs) == nullptr)
                         cOfs = MALE_GUMP_OFFSET;
 
                     bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(id + cOfs, 8, 19));
@@ -509,7 +509,7 @@ void CGumpPaperdoll::UpdateContent()
             {
                 equipment = obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer);
 
-                if (equipment == NULL)
+                if (equipment == nullptr)
                 {
                     ushort id = g_ObjectInHand.TiledataPtr->AnimID;
 
@@ -552,17 +552,17 @@ void CGumpPaperdoll::UpdateContent()
 
                 CGameItem *equipment = slotObjects[i];
 
-                if (equipment != NULL)
+                if (equipment != nullptr)
                 {
                     uint slotSerial = ID_GP_ITEMS + equipment->Layer;
 
                     CIndexObjectStatic &sio = g_Orion.m_StaticDataIndex[equipment->Graphic];
                     CGLTexture *texture = sio.Texture;
 
-                    if (texture == NULL)
+                    if (texture == nullptr)
                         texture = g_Orion.ExecuteStaticArt(equipment->Graphic);
 
-                    if (texture == NULL)
+                    if (texture == nullptr)
                     {
                         yPtr += 21;
                         continue;
@@ -656,7 +656,7 @@ void CGumpPaperdoll::UpdateContent()
 
     equipment = obj->FindLayer(OL_BACKPACK);
 
-    if (equipment != NULL && equipment->AnimID != 0)
+    if (equipment != nullptr && equipment->AnimID != 0)
     {
         ushort backpackGraphic = equipment->AnimID + 50000;
 
@@ -677,7 +677,7 @@ void CGumpPaperdoll::UpdateContent()
                     break;
             }
 
-            if (g_Orion.ExecuteGump(backpackGraphic) == NULL)
+            if (g_Orion.ExecuteGump(backpackGraphic) == nullptr)
                 backpackGraphic = equipment->AnimID + 50000;
         }
 
@@ -699,7 +699,7 @@ void CGumpPaperdoll::UpdateContent()
 void CGumpPaperdoll::UpdateDescription(const string &text)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Description != NULL)
+    if (m_Description != nullptr)
     {
         m_Description->CreateTextureA(1, text, 185);
 
@@ -712,7 +712,7 @@ void CGumpPaperdoll::Draw()
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     //if (g_LastObjectType == SOT_TEXT_OBJECT)
@@ -739,8 +739,8 @@ CRenderObject *CGumpPaperdoll::Select()
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
-    if (obj == NULL)
-        return NULL;
+    if (obj == nullptr)
+        return nullptr;
 
     CRenderObject *selected = CGump::Select();
 
@@ -851,7 +851,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
 
     CGameCharacter *container = g_World->FindWorldCharacter(Serial);
 
-    if (container == NULL && serial >= ID_GP_ITEMS)
+    if (container == nullptr && serial >= ID_GP_ITEMS)
         return;
 
     //Что-то в руке
@@ -864,13 +864,13 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
             GetDistance(g_Player, container) >= DRAG_ITEMS_DISTANCE)
             canWear = false;
 
-        if (canWear && container != NULL)
+        if (canWear && container != nullptr)
         {
             if (layer == OL_BACKPACK) //Ткнули на пак
             {
                 CGameItem *equipment = container->FindLayer(layer);
 
-                if (equipment != NULL)
+                if (equipment != nullptr)
                 {
                     if (Serial != g_PlayerSerial)
                         g_Orion.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
@@ -889,7 +889,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
             {
                 CGameItem *equipment = container->FindLayer(g_ObjectInHand.TiledataPtr->Layer);
 
-                if (equipment == NULL) //На этом слое ничего нет
+                if (equipment == nullptr) //На этом слое ничего нет
                 {
                     if (Serial != g_PlayerSerial)
                         g_Orion.EquipItem(container->Serial);
@@ -914,7 +914,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
         int layer = serial - ID_GP_ITEMS;
         CGameItem *equipment = container->FindLayer(layer);
 
-        if (equipment != NULL)
+        if (equipment != nullptr)
         {
             if (g_Target.IsTargeting())
             {
@@ -987,13 +987,13 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
     {
         CGameCharacter *container = g_World->FindWorldCharacter(Serial);
 
-        if (container != NULL)
+        if (container != nullptr)
         {
             int layer = serial - ID_GP_ITEMS;
 
             CGameItem *equipment = container->FindLayer(layer);
 
-            if (equipment != NULL)
+            if (equipment != nullptr)
             {
                 g_Orion.DoubleClick(equipment->Serial);
 

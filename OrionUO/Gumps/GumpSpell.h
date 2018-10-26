@@ -25,16 +25,16 @@ private:
 protected:
     virtual void CalculateGumpState();
 
-    CGUIButton *m_SpellUnlocker{ NULL };
+    CGUIButton *m_SpellUnlocker{ nullptr };
 
 public:
     CGumpSpell(uint serial, short x, short y, ushort graphic, SPELLBOOK_TYPE spellType);
     virtual ~CGumpSpell();
 
-    CGUIAlphaBlending *m_Blender{ NULL };
+    CGUIAlphaBlending *m_Blender{ nullptr };
 
-    CGumpSpell *m_GroupNext{ NULL };
-    CGumpSpell *m_GroupPrev{ NULL };
+    CGumpSpell *m_GroupNext{ nullptr };
+    CGumpSpell *m_GroupPrev{ nullptr };
 
     CGumpSpell *GetTopSpell();
     CGumpSpell *GetNearSpell(int &x, int &y);
@@ -43,7 +43,7 @@ public:
     void AddSpell(CGumpSpell *spell);
     void RemoveFromGroup();
 
-    bool InGroup() { return (m_GroupNext != NULL || m_GroupPrev != NULL); }
+    bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
     virtual void InitToolTip();
 

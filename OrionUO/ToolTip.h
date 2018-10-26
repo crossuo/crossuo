@@ -26,7 +26,7 @@ public:
 
     void Reset();
 
-    class CRenderObject *m_Object{ NULL };
+    class CRenderObject *m_Object{ nullptr };
 
     //Текстура тулпита
     CGLTextTexture Texture;

@@ -33,7 +33,7 @@ public:
     CTextImageBounds(class CTextData *text);
     virtual ~CTextImageBounds();
 
-    CRenderTextObject *Text{ NULL };
+    CRenderTextObject *Text{ nullptr };
 };
 
 extern CImageBounds g_PlayerRect;

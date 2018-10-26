@@ -64,14 +64,14 @@ void CGUIColoredPolygone::Draw(bool checktrans)
 void CGUIColoredPolygone::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (DrawDot && g_SelectedObject.Gump != NULL)
+    if (DrawDot && g_SelectedObject.Gump != nullptr)
         g_SelectedObject.Gump->WantRedraw = true;
 }
 
 void CGUIColoredPolygone::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (DrawDot && g_LastSelectedObject.Gump != NULL)
+    if (DrawDot && g_LastSelectedObject.Gump != nullptr)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
 

@@ -27,8 +27,8 @@ private:
 
     static const string m_AbilityName[MAX_ABILITIES_COUNT];
 
-    CGUIButton *m_PrevPage{ NULL };
-    CGUIButton *m_NextPage{ NULL };
+    CGUIButton *m_PrevPage{ nullptr };
+    CGUIButton *m_NextPage{ nullptr };
 
 public:
     CGumpCombatBook(int x, int y);

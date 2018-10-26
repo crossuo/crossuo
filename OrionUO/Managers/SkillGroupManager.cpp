@@ -40,7 +40,7 @@ void CSkillGroupManager::MakeDefault()
 
     CSkillGroupObject *group = m_Groups;
 
-    while (group != NULL)
+    while (group != nullptr)
     {
         group->Sort();
 
@@ -193,7 +193,7 @@ void CSkillGroupManager::Clear()
     DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *item = m_Groups;
 
-    while (item != NULL)
+    while (item != nullptr)
     {
         CSkillGroupObject *next = item->m_Next;
 
@@ -203,7 +203,7 @@ void CSkillGroupManager::Clear()
     }
 
     Count = 0;
-    m_Groups = NULL;
+    m_Groups = nullptr;
 }
 
 /*!
@@ -214,11 +214,11 @@ void CSkillGroupManager::Clear()
 void CSkillGroupManager::Add(CSkillGroupObject *group)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Groups == NULL)
+    if (m_Groups == nullptr)
     {
         m_Groups = group;
-        m_Groups->m_Next = NULL;
-        m_Groups->m_Prev = NULL;
+        m_Groups->m_Next = nullptr;
+        m_Groups->m_Prev = nullptr;
         Count = 1;
 
         return;
@@ -226,11 +226,11 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
 
     CSkillGroupObject *item = m_Groups;
 
-    while (item->m_Next != NULL)
+    while (item->m_Next != nullptr)
         item = item->m_Next;
 
     item->m_Next = group;
-    group->m_Next = NULL;
+    group->m_Next = nullptr;
     group->m_Prev = item;
 
     Count++;
@@ -244,7 +244,7 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
 bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 {
     DEBUG_TRACE_FUNCTION;
-    if (group->m_Prev == NULL) //Miscellaneous
+    if (group->m_Prev == nullptr) //Miscellaneous
     {
         int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 100;
         int y = g_ConfigManager.GameWindowY + (g_ConfigManager.GameWindowHeight / 2) - 62;
@@ -266,7 +266,7 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
         if (Count < 0)
             Count = 0;
 
-        if (group->m_Next != NULL)
+        if (group->m_Next != nullptr)
             group->m_Next->m_Prev = group->m_Prev;
 
         group->m_Prev->m_Next = group->m_Next;
@@ -353,7 +353,7 @@ void CSkillGroupManager::Save(const os_path &path)
 
     Count = 0;
     CSkillGroupObject *group = m_Groups;
-    while (group != NULL)
+    while (group != nullptr)
     {
         Count++;
         group = group->m_Next;

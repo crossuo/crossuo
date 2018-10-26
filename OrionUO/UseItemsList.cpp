@@ -38,7 +38,7 @@ void CUseItemActions::Process()
         uint serial = m_List.front();
         m_List.pop_front();
 
-        if (g_World->FindWorldObject(serial) != NULL)
+        if (g_World->FindWorldObject(serial) != nullptr)
         {
             if (serial < 0x40000000) //NPC
                 g_Orion.PaperdollReq(serial);

@@ -29,12 +29,12 @@ CMapManager::CMapManager()
 CMapManager::~CMapManager()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Blocks != NULL)
+    if (m_Blocks != nullptr)
     {
         ClearUsedBlocks();
 
         delete[] m_Blocks;
-        m_Blocks = NULL;
+        m_Blocks = nullptr;
     }
 
     MaxBlockIndex = 0;
@@ -65,7 +65,7 @@ void CMapManager::CreateBlockTable(int map)
     size_t endMapAddress = mapAddress + g_FileManager.m_MapMul[map].Size;
 
     CUopMappedFile &uopFile = g_FileManager.m_MapUOP[map];
-    bool isUop = (uopFile.Start != NULL);
+    bool isUop = (uopFile.Start != nullptr);
 
     if (isUop)
     {
@@ -108,7 +108,7 @@ void CMapManager::CreateBlockTable(int map)
 
                 CUopBlockHeader *uopBlock = uopFile.GetBlock(COrion::CreateHash(mapFilePath));
 
-                if (uopBlock != NULL)
+                if (uopBlock != nullptr)
                     uopOffset = (size_t)uopBlock->Offset;
                 else
                     LOG("Hash not found in uop map %i file.\n", map);
@@ -175,9 +175,9 @@ void CMapManager::ResetPatchesInBlockTable()
         if (maxBlockCount < 1)
             return;
 
-        if (g_FileManager.m_MapMul[map].Start == NULL ||
-            g_FileManager.m_StaticIdx[map].Start == NULL ||
-            g_FileManager.m_StaticMul[map].Start == NULL)
+        if (g_FileManager.m_MapMul[map].Start == nullptr ||
+            g_FileManager.m_StaticIdx[map].Start == nullptr ||
+            g_FileManager.m_StaticMul[map].Start == nullptr)
             return;
 
         IFOR (block, 0, maxBlockCount)
@@ -209,7 +209,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 
     IFOR (i, 0, PatchesCount)
     {
-        if (g_FileManager.m_MapMul[i].Start == NULL)
+        if (g_FileManager.m_MapMul[i].Start == nullptr)
         {
             stream.Move(8);
             continue;
@@ -295,12 +295,12 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 void CMapManager::UpdatePatched()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Player == NULL)
+    if (g_Player == nullptr)
         return;
 
     deque<CRenderWorldObject *> objectsList;
 
-    if (m_Blocks != NULL)
+    if (m_Blocks != nullptr)
     {
         QFOR(block, m_Items, CMapBlock *)
         {
@@ -308,7 +308,7 @@ void CMapManager::UpdatePatched()
             {
                 IFOR (y, 0, 8)
                 {
-                    for (CRenderWorldObject *item = block->GetRender((int)x, (int)y); item != NULL;
+                    for (CRenderWorldObject *item = block->GetRender((int)x, (int)y); item != nullptr;
                          item = item->m_NextXY)
                     {
                         if (!item->IsLandObject() && !item->IsStaticObject())
@@ -326,7 +326,7 @@ void CMapManager::UpdatePatched()
 
     CGumpMinimap *gump = (CGumpMinimap *)g_GumpManager.UpdateGump(0, 0, GT_MINIMAP);
 
-    if (gump != NULL)
+    if (gump != nullptr)
         gump->LastX = 0;
 }
 
@@ -334,13 +334,13 @@ CIndexMap *CMapManager::GetIndex(int map, int blockX, int blockY)
 {
     DEBUG_TRACE_FUNCTION;
     if (map >= MAX_MAPS_COUNT)
-        return NULL;
+        return nullptr;
 
     uint block = (blockX * g_MapBlockSize[map].Height) + blockY;
     MAP_INDEX_LIST &list = m_BlockData[map];
 
     if (block >= list.size())
-        return NULL;
+        return nullptr;
 
     return &list[block];
 }
@@ -364,11 +364,11 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
     accessBlock = true;
     CMapBlock *block = GetBlock(index);
 
-    if (block != NULL)
+    if (block != nullptr)
     {
         CMapObject *item = block->Block[x % 8][y % 8];
 
-        for (; item != NULL; item = (CMapObject *)item->m_Next)
+        for (; item != nullptr; item = (CMapObject *)item->m_Next)
         {
             if (!item->IsGameObject())
             {
@@ -384,7 +384,7 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
             break;
         }
 
-        if (item == NULL)
+        if (item == nullptr)
             return defaultZ;
 
         char tileZ = item->GetZ();
@@ -413,7 +413,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
     DEBUG_TRACE_FUNCTION;
     CIndexMap *indexMap = GetIndex(GetActualMap(), blockX, blockY);
 
-    if (indexMap == NULL || indexMap->MapAddress == 0)
+    if (indexMap == nullptr || indexMap->MapAddress == 0)
         return;
 
     PMAP_BLOCK pmb = (PMAP_BLOCK)indexMap->MapAddress;
@@ -432,7 +432,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 
     PSTATICS_BLOCK sb = (PSTATICS_BLOCK)indexMap->StaticAddress;
 
-    if (sb != NULL)
+    if (sb != nullptr)
     {
         int count = indexMap->StaticCount;
 
@@ -477,7 +477,7 @@ void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
     {
         CMapBlock *block = GetBlock(index);
 
-        if (block == NULL)
+        if (block == nullptr)
         {
             block = AddBlock(index);
             block->X = blockX;
@@ -487,7 +487,7 @@ void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
 
         CMapObject *item = block->Block[x % 8][y % 8];
 
-        while (item != NULL)
+        while (item != nullptr)
         {
             if (item->IsLandObject())
                 groundZ = item->GetZ();
@@ -510,7 +510,7 @@ void CMapManager::ClearUnusedBlocks()
     uint ticks = g_Ticks - CLEAR_TEXTURES_DELAY;
     int count = 0;
 
-    while (block != NULL)
+    while (block != nullptr)
     {
         CMapBlock *next = (CMapBlock *)block->m_Next;
 
@@ -519,7 +519,7 @@ void CMapManager::ClearUnusedBlocks()
             uint index = block->Index;
             Delete(block);
 
-            m_Blocks[index] = NULL;
+            m_Blocks[index] = nullptr;
 
             if (++count >= MAX_MAP_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
                 break;
@@ -534,14 +534,14 @@ void CMapManager::ClearUsedBlocks()
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
 
-    while (block != NULL)
+    while (block != nullptr)
     {
         CMapBlock *next = (CMapBlock *)block->m_Next;
 
         uint index = block->Index;
         Delete(block);
 
-        m_Blocks[index] = NULL;
+        m_Blocks[index] = nullptr;
 
         block = next;
     }
@@ -555,19 +555,19 @@ void CMapManager::ClearUsedBlocks()
 void CMapManager::Init(bool delayed)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Player == NULL)
+    if (g_Player == nullptr)
         return;
 
     int map = GetActualMap();
 
     if (!delayed)
     {
-        if (m_Blocks != NULL)
+        if (m_Blocks != nullptr)
         {
             ClearUsedBlocks();
 
             delete[] m_Blocks;
-            m_Blocks = NULL;
+            m_Blocks = nullptr;
         }
 
         MaxBlockIndex = g_MapBlockSize[map].Width * g_MapBlockSize[map].Height;
@@ -613,7 +613,7 @@ void CMapManager::Init(bool delayed)
             {
                 CMapBlock *block = GetBlock(realIndex);
 
-                if (block == NULL)
+                if (block == nullptr)
                 {
                     if (delayed && g_Ticks - ticks >= maxDelay)
                         return;
@@ -640,7 +640,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
     CIndexMap *indexMap = GetIndex(GetActualMap(), block->X, block->Y);
 
-    if (indexMap == NULL || indexMap->MapAddress == 0)
+    if (indexMap == nullptr || indexMap->MapAddress == 0)
         return;
 
     PMAP_BLOCK pmb = (PMAP_BLOCK)indexMap->MapAddress;
@@ -666,7 +666,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
     PSTATICS_BLOCK sb = (PSTATICS_BLOCK)indexMap->StaticAddress;
 
-    if (sb != NULL)
+    if (sb != nullptr)
     {
         int count = indexMap->StaticCount;
 
@@ -728,7 +728,7 @@ void CMapManager::AddRender(CRenderWorldObject *item)
     {
         CMapBlock *block = GetBlock(index);
 
-        if (block == NULL)
+        if (block == nullptr)
         {
             block = AddBlock(index);
             block->X = x;
@@ -746,18 +746,18 @@ void CMapManager::AddRender(CRenderWorldObject *item)
 /*!
 Получить ссылку на блок
 @param [__in] index Индекс блока
-@return Ссылка на блок или NULL
+@return Ссылка на блок или nullptr
 */
 CMapBlock *CMapManager::GetBlock(int index)
 {
     DEBUG_TRACE_FUNCTION;
-    CMapBlock *block = NULL;
+    CMapBlock *block = nullptr;
 
     if (index < MaxBlockIndex)
     {
         block = m_Blocks[index];
 
-        if (block != NULL)
+        if (block != nullptr)
             block->LastAccessTime = g_Ticks;
     }
 
@@ -767,7 +767,7 @@ CMapBlock *CMapManager::GetBlock(int index)
 /*!
 Добавить блок
 @param [__in] index Индекс блока
-@return Ссылка на блок или NULL
+@return Ссылка на блок или nullptr
 */
 CMapBlock *CMapManager::AddBlock(int index)
 {
@@ -789,12 +789,12 @@ void CMapManager::DeleteBlock(int index)
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
 
-    while (block != NULL)
+    while (block != nullptr)
     {
         if (block->Index == index)
         {
             Delete(block);
-            m_Blocks[index] = NULL;
+            m_Blocks[index] = nullptr;
 
             break;
         }

@@ -39,8 +39,8 @@ public:
     virtual ~CGUISkillItem();
 
     //!Компоненты управления
-    CGUIButton *m_ButtonUse{ NULL };
-    CGUIButton *m_ButtonStatus{ NULL };
+    CGUIButton *m_ButtonUse{ nullptr };
+    CGUIButton *m_ButtonStatus{ nullptr };
 
     //!Создать текстуру значения навыка
     void CreateValueText(bool showReal = false, bool showCap = false);

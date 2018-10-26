@@ -26,7 +26,7 @@ void CObjectOnCursor::Clear()
     Flags = 0;
     Container = 0;
     IsGameFigure = false;
-    TiledataPtr = NULL;
+    TiledataPtr = nullptr;
     UpdatedInWorld = false;
 }
 

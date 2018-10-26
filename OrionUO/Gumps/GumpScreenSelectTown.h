@@ -23,8 +23,8 @@ private:
     //!Список точек для отображения кнопок городов
     vector<Wisp::CPoint2Di> m_TownButtonText;
 
-    CGUIHTMLGump *m_HTMLGump{ NULL };
-    CGUIText *m_Description{ NULL };
+    CGUIHTMLGump *m_HTMLGump{ nullptr };
+    CGUIText *m_Description{ nullptr };
 
 public:
     CGumpScreenSelectTown();

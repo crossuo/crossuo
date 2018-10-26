@@ -71,7 +71,7 @@ void CGameEffect::Update(CGameObject *parent)
     {
         if (Duration < g_Ticks)
         {
-            if (parent != NULL)
+            if (parent != nullptr)
                 parent->RemoveEffect(this);
             else
                 g_EffectManager.RemoveEffect(this);
@@ -86,7 +86,7 @@ void CGameEffect::Update(CGameObject *parent)
 
                 if (AnimIndex >= 10)
                 {
-                    if (parent != NULL)
+                    if (parent != nullptr)
                         parent->RemoveEffect(this);
                     else
                         g_EffectManager.RemoveEffect(this);

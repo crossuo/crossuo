@@ -44,7 +44,7 @@ CPluginPacketSkillsList::CPluginPacketSkillsList()
     {
         CSkill *skill = g_SkillsManager.Get((uint)i);
 
-        if (skill == NULL)
+        if (skill == nullptr)
             continue;
 
         WriteUInt8(skill->Button);

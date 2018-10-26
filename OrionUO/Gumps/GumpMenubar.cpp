@@ -26,11 +26,11 @@ CGumpMenubar::CGumpMenubar(short x, short y)
     CGLTexture *th2 = g_Orion.ExecuteGump(0x098D);
 
     int smallWidth = 50;
-    if (th1 != NULL)
+    if (th1 != nullptr)
         smallWidth = th1->Width;
 
     int largeWidth = 100;
-    if (th2 != NULL)
+    if (th2 != nullptr)
         largeWidth = th2->Width;
 
     static const int textPosTable[8][5] = { { 0x098B, 30, 32, smallWidth, ID_GMB_MAP },

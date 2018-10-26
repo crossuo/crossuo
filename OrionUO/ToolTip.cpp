@@ -27,7 +27,7 @@ void CToolTip::Reset()
 {
     DEBUG_TRACE_FUNCTION;
     Texture.Clear();
-    m_Object = NULL;
+    m_Object = nullptr;
 }
 
 void CToolTip::CreateTextTexture(
@@ -80,7 +80,7 @@ void CToolTip::Set(const wstring &str, int maxWidth)
 
     CRenderObject *object = g_SelectedObject.Object;
 
-    if (object == m_Object || object == NULL) //Уже забиндено или нет объекта для бинда
+    if (object == m_Object || object == nullptr) //Уже забиндено или нет объекта для бинда
         return;
 
     Timer = g_Ticks + g_ConfigManager.ToolTipsDelay;

@@ -34,7 +34,7 @@ void CCorpseManager::Remove(int corpseSerial, int objectSerial)
             {
                 CGameItem *obj = g_World->FindWorldItem(corpseSerial);
 
-                if (obj != NULL)
+                if (obj != nullptr)
                     obj->Layer = (i->Direction & 7) | (i->Running ? 0x80 : 0);
             }
 
@@ -64,6 +64,6 @@ CGameObject *CCorpseManager::GetCorpseObject(int serial)
             return g_World->FindWorldObject(item.CorpseSerial);
     }
 
-    return NULL;
+    return nullptr;
 }
 

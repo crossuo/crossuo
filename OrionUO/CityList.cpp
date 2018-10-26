@@ -70,7 +70,7 @@ CCityItem *CCityList::GetCity(int index)
     if (index < m_CityList.size())
         return m_CityList[index];
 
-    return NULL;
+    return nullptr;
 }
 
 /*!

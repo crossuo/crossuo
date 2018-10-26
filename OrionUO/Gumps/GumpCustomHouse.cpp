@@ -13,7 +13,7 @@
 #include <SDL_rect.h>
 #include "GumpCustomHouse.h"
 #include "FileSystem.h"
-CGumpCustomHouse *g_CustomHouseGump = NULL;
+CGumpCustomHouse *g_CustomHouseGump = nullptr;
 
 template <class T, class A>
 void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const os_path &path)
@@ -130,13 +130,13 @@ CGumpCustomHouse::CGumpCustomHouse(int serial, int x, int y)
 
     CGameItem *foundationItem = g_World->GetWorldItem(serial);
 
-    if (foundationItem != NULL)
+    if (foundationItem != nullptr)
     {
         MinHouseZ = foundationItem->GetZ() + 7;
 
         CMulti *multi = foundationItem->GetMulti();
 
-        if (multi != NULL)
+        if (multi != nullptr)
         {
             StartPos.X = foundationItem->GetX() + multi->MinX;
             StartPos.Y = foundationItem->GetY() + multi->MinY;
@@ -204,15 +204,15 @@ CGumpCustomHouse::CGumpCustomHouse(int serial, int x, int y)
 
 CGumpCustomHouse::~CGumpCustomHouse()
 {
-    g_CustomHouseGump = NULL;
+    g_CustomHouseGump = nullptr;
 
-    m_DataBox = NULL;
-    m_DataBoxGUI = NULL;
+    m_DataBox = nullptr;
+    m_DataBoxGUI = nullptr;
 
-    m_Gumppic = NULL;
-    m_TextComponents = NULL;
-    m_TextFixtures = NULL;
-    m_TextCost = NULL;
+    m_Gumppic = nullptr;
+    m_TextComponents = nullptr;
+    m_TextFixtures = nullptr;
+    m_TextCost = nullptr;
 
     CPacketCustomHouseBuildingExit().Send();
     g_Target.SendCancelTarget();
@@ -1277,7 +1277,7 @@ void CGumpCustomHouse::UpdateContent()
 
     CGameItem *foundationItem = g_World->GetWorldItem(Serial);
 
-    if (foundationItem != NULL)
+    if (foundationItem != nullptr)
     {
         QFOR(multi, foundationItem->m_Items, CMulti *)
         {
@@ -1547,7 +1547,7 @@ bool CGumpCustomHouse::CanBuildHere(
         }
     }
 
-    if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsWorldObject())
+    if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
     {
         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
 
@@ -1558,7 +1558,7 @@ bool CGumpCustomHouse::CanBuildHere(
         CGameItem *foundationItem = g_World->GetWorldItem(Serial);
 
         int minZ =
-            (foundationItem != NULL ? foundationItem->GetZ() : 0) + 7 + (CurrentFloor - 1) * 20;
+            (foundationItem != nullptr ? foundationItem->GetZ() : 0) + 7 + (CurrentFloor - 1) * 20;
         int maxZ = minZ + 20;
 
         int boundsOffset = (int)(State != CHGS_WALL);
@@ -1590,12 +1590,12 @@ bool CGumpCustomHouse::CanBuildHere(
             if (!ValidateItemPlace(rect, item.Graphic, rwo->GetX() + item.X, rwo->GetY() + item.Y))
                 return false;
 
-            if (type != CHBT_FLOOR && foundationItem != NULL)
+            if (type != CHBT_FLOOR && foundationItem != nullptr)
             {
                 CMulti *multi =
                     foundationItem->GetMultiAtXY(rwo->GetX() + item.X, rwo->GetY() + item.Y);
 
-                if (multi != NULL)
+                if (multi != nullptr)
                 {
                     QFOR(multiObject, multi->m_Items, CMultiObject *)
                     {
@@ -1653,7 +1653,7 @@ bool CGumpCustomHouse::ValidateItemPlace(const SDL_Rect &rect, ushort graphic, i
 bool CGumpCustomHouse::ValidatePlaceStructure(
     CGameItem *foundationItem, CMulti *multi, int minZ, int maxZ, int flags)
 {
-    if (multi == NULL)
+    if (multi == nullptr)
         return false;
 
     QFOR(item, multi->m_Items, CMultiObject *)
@@ -1742,7 +1742,7 @@ bool CGumpCustomHouse::ValidateItemPlace(
     int maxZ,
     vector<Wisp::CPoint2Di> &validatedFloors)
 {
-    if (item == NULL || !item->IsCustomHouseMulti())
+    if (item == nullptr || !item->IsCustomHouseMulti())
         return true;
     else if (item->State & CHMOF_FLOOR)
     {
@@ -1800,7 +1800,7 @@ bool CGumpCustomHouse::ValidateItemPlace(
     }
     else if (item->State & (CHMOF_STAIR | CHMOF_ROOF | CHMOF_FIXTURE))
     {
-        for (CMultiObject *temp = item; temp != NULL; temp = (CMultiObject *)temp->m_Prev)
+        for (CMultiObject *temp = item; temp != nullptr; temp = (CMultiObject *)temp->m_Prev)
         {
             if ((temp->State & CHMOF_FLOOR) && temp->GetZ() >= minZ && temp->GetZ() < maxZ)
             {
@@ -1809,7 +1809,7 @@ bool CGumpCustomHouse::ValidateItemPlace(
             }
         }
 
-        for (CMultiObject *temp = item; temp != NULL; temp = (CMultiObject *)temp->m_Next)
+        for (CMultiObject *temp = item; temp != nullptr; temp = (CMultiObject *)temp->m_Next)
         {
             if ((temp->State & CHMOF_FLOOR) && temp->GetZ() >= minZ && temp->GetZ() < maxZ)
             {
@@ -1923,7 +1923,7 @@ bool CGumpCustomHouse::CanEraseHere(CRenderWorldObject *place, CUSTOM_HOUSE_BUIL
 {
     type = CHBT_NORMAL;
 
-    if (place != NULL && place->IsMultiObject())
+    if (place != nullptr && place->IsMultiObject())
     {
         CMultiObject *multi = (CMultiObject *)place;
 
@@ -1945,7 +1945,7 @@ bool CGumpCustomHouse::CanEraseHere(CRenderWorldObject *place, CUSTOM_HOUSE_BUIL
 
 void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
 {
-    if (place != NULL && place->IsMultiObject()) // && place->GetZ() >= MinHouseZ)
+    if (place != nullptr && place->IsMultiObject()) // && place->GetZ() >= MinHouseZ)
     {
         CMultiObject *multiObject = (CMultiObject *)place;
 
@@ -1961,7 +1961,7 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
         {
             CGameItem *foundationItem = g_World->GetWorldItem(Serial);
 
-            if (foundationItem == NULL)
+            if (foundationItem == nullptr)
                 return;
 
             if (Erasing)
@@ -1972,7 +1972,7 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
                 {
                     CMulti *multi = foundationItem->GetMultiAtXY(place->GetX(), place->GetY());
 
-                    if (multi == NULL)
+                    if (multi == nullptr)
                         return;
 
                     int z = 7 + (CurrentFloor - 1) * 20;
@@ -2041,7 +2041,7 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
                         CMulti *multi =
                             foundationItem->GetMultiAtXY(placeX + item.X, placeY + item.Y);
 
-                        if (multi != NULL)
+                        if (multi != nullptr)
                         {
                             if (!CombinedStair)
                             {
@@ -2051,10 +2051,10 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
                                 if (CurrentFloor == 1)
                                     minZ -= 7;
 
-                                CMultiObject *nextMultiObject = NULL;
+                                CMultiObject *nextMultiObject = nullptr;
 
                                 for (CMultiObject *multiObject = (CMultiObject *)multi->m_Items;
-                                     multiObject != NULL;
+                                     multiObject != nullptr;
                                      multiObject = nextMultiObject)
                                 {
                                     nextMultiObject = (CMultiObject *)multiObject->m_Next;
@@ -2093,7 +2093,7 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
                                     }
                                 }
 
-                                if (multi->m_Items == NULL)
+                                if (multi->m_Items == nullptr)
                                     foundationItem->Delete(multi);
                             }
 
@@ -2127,7 +2127,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
 {
     CGameItem *foundationItem = g_World->GetWorldItem(Serial);
 
-    if (foundationItem != NULL)
+    if (foundationItem != nullptr)
     {
         foundationItem->ClearCustomHouseMultis(CHMOF_GENERIC_INTERNAL);
 
@@ -2227,11 +2227,11 @@ void CGumpCustomHouse::GenerateFloorPlace()
             {
                 CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                if (multi == NULL)
+                if (multi == nullptr)
                     continue;
 
-                CMultiObject *floorMulti = NULL;
-                CMultiObject *floorCustomMulti = NULL;
+                CMultiObject *floorMulti = nullptr;
+                CMultiObject *floorCustomMulti = nullptr;
 
                 QFOR(item, multi->m_Items, CMultiObject *)
                 {
@@ -2244,7 +2244,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         floorMulti = item;
                 }
 
-                if (floorMulti != NULL && floorCustomMulti == NULL)
+                if (floorMulti != nullptr && floorCustomMulti == nullptr)
                 {
                     CMultiObject *mo = foundationItem->AddMulti(
                         floorMulti->Graphic,
@@ -2283,7 +2283,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                     {
                         CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                        if (multi == NULL)
+                        if (multi == nullptr)
                             continue;
 
                         QFOR(item, multi->m_Items, CMultiObject *)
@@ -2329,7 +2329,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                     {
                         CMulti *multi = foundationItem->GetMultiAtXY(point.X, point.Y);
 
-                        if (multi == NULL)
+                        if (multi == nullptr)
                             continue;
 
                         QFOR(item, multi->m_Items, CMultiObject *)
@@ -2348,7 +2348,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                            if (multi == NULL)
+                            if (multi == nullptr)
                                 continue;
 
                             QFOR(item, multi->m_Items, CMultiObject *)
@@ -2371,7 +2371,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                            if (multi == NULL)
+                            if (multi == nullptr)
                                 continue;
 
                             QFOR(item, multi->m_Items, CMultiObject *)
@@ -2394,7 +2394,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                            if (multi == NULL)
+                            if (multi == nullptr)
                                 continue;
 
                             QFOR(item, multi->m_Items, CMultiObject *)
@@ -2416,7 +2416,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                            if (multi == NULL)
+                            if (multi == nullptr)
                                 continue;
 
                             QFOR(item, multi->m_Items, CMultiObject *)
@@ -2439,7 +2439,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                            if (multi == NULL)
+                            if (multi == nullptr)
                                 continue;
 
                             QFOR(item, multi->m_Items, CMultiObject *)
@@ -2462,7 +2462,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
-                            if (multi == NULL)
+                            if (multi == nullptr)
                                 continue;
 
                             QFOR(item, multi->m_Items, CMultiObject *)

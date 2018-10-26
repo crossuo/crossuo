@@ -22,7 +22,7 @@ CGameConsole::~CGameConsole()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == this)
-        g_EntryPointer = NULL;
+        g_EntryPointer = nullptr;
 }
 
 void CGameConsole::Send()

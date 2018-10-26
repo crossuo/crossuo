@@ -23,7 +23,7 @@ public:
 
 protected:
     //Указатель на структуру данных тайлдаты
-    STATIC_TILES *m_TiledataPtr{ NULL };
+    STATIC_TILES *m_TiledataPtr{ nullptr };
 
 public:
     CRenderStaticObject(
@@ -36,7 +36,7 @@ public:
         char z);
     virtual ~CRenderStaticObject();
 
-    CTextContainer *m_TextControl{ NULL }; //Ссылка на контейнер для текста
+    CTextContainer *m_TextControl{ nullptr }; //Ссылка на контейнер для текста
 
     virtual void UpdateTextCoordinates();
     virtual void FixTextCoordinates();

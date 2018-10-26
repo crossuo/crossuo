@@ -13,7 +13,7 @@
 SDL_threadID g_MainThread;
 deque<string> g_WispDebugFunStack;
 #if USE_WISP_DEBUG_FUNCTION_NAMES == 2
-char *g_WispCurrentFunctionName = NULL;
+char *g_WispCurrentFunctionName = nullptr;
 #endif
 
 CWispFunDebug::CWispFunDebug(const char *str)
@@ -46,13 +46,13 @@ int CalculatePercents(int max, int current, int maxValue)
 
 string EncodeUTF8(const wstring &wstr)
 {
-    int size = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    int size = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
     string result = "";
 
     if (size > 0)
     {
         result.resize(size + 1);
-        WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &result[0], size, NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &result[0], size, nullptr, nullptr);
         result.resize(size); // result[size] = 0;
     }
 
@@ -61,7 +61,7 @@ string EncodeUTF8(const wstring &wstr)
 
 wstring DecodeUTF8(const string &str)
 {
-    int size = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+    int size = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
     wstring result = L"";
 
     if (size > 0)
@@ -128,12 +128,12 @@ string ToString(const wstring &wstr)
 #if USE_WISP
     string str = "";
     int size = (int)wstr.length();
-    int newSize = ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, NULL, 0, NULL, NULL);
+    int newSize = ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, nullptr, 0, nullptr, nullptr);
 
     if (newSize > 0)
     {
         str.resize(newSize + 1);
-        ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, &str[0], newSize, NULL, NULL);
+        ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, &str[0], newSize, nullptr, nullptr);
         str.resize(newSize); // str[newSize] = 0;
     }
     return str;

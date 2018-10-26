@@ -16,7 +16,7 @@ class CGUIHTMLButton : public CGUIButton
 {
 private:
     //!Ссылка на гамп-родитель
-    class CGUIHTMLGump *m_HTMLGump{ NULL };
+    class CGUIHTMLGump *m_HTMLGump{ nullptr };
 
 public:
     CGUIHTMLButton(

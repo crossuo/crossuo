@@ -43,7 +43,7 @@ public:
     //!Это игровая фигура
     bool IsGameFigure = false;
     //!Указатель на тайлдату для объекта
-    STATIC_TILES *TiledataPtr = NULL; //!Обновлен ли предмет в мире
+    STATIC_TILES *TiledataPtr = nullptr; //!Обновлен ли предмет в мире
     bool UpdatedInWorld = false;
 
     CObjectOnCursor() {}

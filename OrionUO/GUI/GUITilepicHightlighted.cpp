@@ -53,7 +53,7 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         SetShaderMode();
 
@@ -69,7 +69,7 @@ bool CGUITilepicHightlighted::Select()
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.m_StaticDataIndex[Graphic].Texture;
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         int count = 1 + DoubleDraw;
         int offset = 0;
@@ -89,14 +89,14 @@ bool CGUITilepicHightlighted::Select()
 void CGUITilepicHightlighted::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL)
+    if (g_SelectedObject.Gump != nullptr)
         g_SelectedObject.Gump->WantRedraw = true;
 }
 
 void CGUITilepicHightlighted::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_LastSelectedObject.Gump != NULL)
+    if (g_LastSelectedObject.Gump != nullptr)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
 

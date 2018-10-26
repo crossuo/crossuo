@@ -144,7 +144,7 @@ void CGumpScreenServer::UpdateContent()
 void CGumpScreenServer::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == NULL)
+    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
     uint id = g_SelectedObject.Serial;

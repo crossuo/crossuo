@@ -26,8 +26,8 @@ private:
     string m_Description = string("");
     int m_MaxLength{ 0 };
 
-    CGUIGumppic *m_TextField{ NULL };
-    CGUITextEntry *m_Entry{ NULL };
+    CGUIGumppic *m_TextField{ nullptr };
+    CGUITextEntry *m_Entry{ nullptr };
 
 public:
     CGumpTextEntryDialog(

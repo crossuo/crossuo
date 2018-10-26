@@ -62,7 +62,7 @@ public:
     CPathNode();
     virtual ~CPathNode();
 
-    CPathNode *m_Parent{ NULL };
+    CPathNode *m_Parent{ nullptr };
 
     void Reset();
 };

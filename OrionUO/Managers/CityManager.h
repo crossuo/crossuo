@@ -35,7 +35,7 @@ public:
     /*!
 	Получить указатель на город
 	@param [__in] name Имя города
-	@return Ссылка на город или NULL
+	@return Ссылка на город или nullptr
 	*/
     CCity GetCity(const string &name);
 

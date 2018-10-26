@@ -148,8 +148,8 @@ string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 void CGumpRacialAbilitiesBook::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    m_PrevPage = NULL;
-    m_NextPage = NULL;
+    m_PrevPage = nullptr;
+    m_NextPage = nullptr;
 
     Clear();
 
@@ -359,7 +359,7 @@ bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 void CGumpRacialAbilitiesBook::DelayedClick(CRenderObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;

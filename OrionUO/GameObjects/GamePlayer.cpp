@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CPlayer *g_Player = NULL;
+CPlayer *g_Player = nullptr;
 
 CPlayer::CPlayer(int serial)
     : CGameCharacter(serial)
@@ -29,7 +29,7 @@ void CPlayer::CloseBank()
 {
     CGameItem *bank = FindLayer(OL_BANK);
 
-    if (bank != NULL && bank->Opened)
+    if (bank != nullptr && bank->Opened)
     {
         bank->Clear();
         bank->Opened = false;
@@ -40,14 +40,14 @@ void CPlayer::CloseBank()
 
 /*!
 Поиск бинтов в сумке (и подсумках)
-@return Ссылка на бинт или NULL
+@return Ссылка на бинт или nullptr
 */
 CGameItem *CPlayer::FindBandage()
 {
     DEBUG_TRACE_FUNCTION;
     CGameItem *item = FindLayer(OL_BACKPACK);
 
-    if (item != NULL)
+    if (item != nullptr)
         item = item->FindItem(0x0E21);
 
     return item;
@@ -60,7 +60,7 @@ void CPlayer::UpdateAbilities()
 
     CGameItem *layerObject = g_Player->FindLayer(OL_1_HAND);
 
-    if (layerObject != NULL)
+    if (layerObject != nullptr)
     {
         equippedGraphic = layerObject->Graphic;
     }
@@ -68,7 +68,7 @@ void CPlayer::UpdateAbilities()
     {
         layerObject = g_Player->FindLayer(OL_2_HAND);
 
-        if (layerObject != NULL)
+        if (layerObject != nullptr)
             equippedGraphic = layerObject->Graphic;
     }
 

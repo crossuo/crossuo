@@ -22,7 +22,7 @@ CDataWritter::~CDataWritter()
 {
     DATASTREAM_DEBUG("c4_f2");
     m_Data.clear();
-    Ptr = NULL;
+    Ptr = nullptr;
 }
 
 void CDataWritter::Resize(size_t newSize, bool resetPtr)
@@ -42,7 +42,7 @@ void CDataWritter::Move(const intptr_t &offset)
         IFOR (i, offset, 0)
             m_Data.push_back(0);
     }
-    else if (Ptr != NULL)
+    else if (Ptr != nullptr)
         Ptr += offset;
 }
 
@@ -54,7 +54,7 @@ void CDataWritter::WriteDataBE(const puchar data, size_t size, const intptr_t &o
         DFOR (i, size - 1, 0)
             m_Data.push_back(data[i]);
     }
-    else if (Ptr != NULL)
+    else if (Ptr != nullptr)
     {
         puchar ptr = Ptr + offset + size - 1;
 
@@ -73,7 +73,7 @@ void CDataWritter::WriteDataLE(const puchar data, size_t size, const intptr_t &o
         IFOR (i, 0, size)
             m_Data.push_back(data[i]);
     }
-    else if (Ptr != NULL)
+    else if (Ptr != nullptr)
     {
         puchar ptr = Ptr + offset;
 
@@ -172,10 +172,10 @@ CDataReader::CDataReader(puchar start, size_t size)
 CDataReader::~CDataReader()
 {
     DATASTREAM_DEBUG("c5_f2");
-    Start = NULL;
+    Start = nullptr;
     Size = 0;
-    End = NULL;
-    Ptr = NULL;
+    End = nullptr;
+    Ptr = nullptr;
 }
 
 void CDataReader::SetData(puchar start, size_t size, const intptr_t &offset)
@@ -190,7 +190,7 @@ void CDataReader::SetData(puchar start, size_t size, const intptr_t &offset)
 void CDataReader::ReadDataBE(puchar data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f4");
-    if (Ptr != NULL)
+    if (Ptr != nullptr)
     {
         puchar ptr = Ptr + offset + size - 1;
 
@@ -207,7 +207,7 @@ void CDataReader::ReadDataBE(puchar data, size_t size, const intptr_t &offset)
 void CDataReader::ReadDataLE(puchar data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f5");
-    if (Ptr != NULL)
+    if (Ptr != nullptr)
     {
         puchar ptr = Ptr + offset;
 

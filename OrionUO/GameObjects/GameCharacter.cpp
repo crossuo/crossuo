@@ -23,13 +23,13 @@ CGameCharacter::CGameCharacter(int serial)
     NoDrawTile = false;
     DEBUG_TRACE_FUNCTION;
 
-    bool wantStatusRequest = (g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR) != NULL) ||
-                             (g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM) != NULL) ||
+    bool wantStatusRequest = (g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR) != nullptr) ||
+                             (g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM) != nullptr) ||
                              g_ConfigManager.GetDrawStatusState() ||
                              (serial == g_LastTargetObject) || (serial == g_LastAttackObject);
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == serial &&
-        g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM) == NULL)
+        g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM) == nullptr)
     {
         wantStatusRequest = true;
         g_GumpManager.AddGump(
@@ -74,7 +74,7 @@ CGameCharacter::~CGameCharacter()
                 continue;
 
             member.Serial = 0;
-            member.Character = NULL;
+            member.Character = nullptr;
         }
     }
 }
@@ -83,7 +83,7 @@ void CGameCharacter::UpdateTextCoordinates()
 {
     CTextData *text = (CTextData *)m_TextControl->Last();
 
-    if (text == NULL)
+    if (text == nullptr)
         return;
 
     ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(this, 0);
@@ -95,7 +95,7 @@ void CGameCharacter::UpdateTextCoordinates()
     if (g_ConfigManager.GetDrawStatusState() == DCSS_ABOVE)
         y -= 14;
 
-    for (; text != NULL; text = (CTextData *)text->m_Prev)
+    for (; text != nullptr; text = (CTextData *)text->m_Prev)
     {
         offset += text->m_Texture.Height;
 
@@ -140,14 +140,14 @@ int CGameCharacter::IsSitting()
         (((testGraphic >= 0x0190) && (testGraphic <= 0x0193)) || (testGraphic == 0x03DB) ||
          (testGraphic == 0x03DF) || (testGraphic == 0x03E2));
 
-    if (human && FindLayer(OL_MOUNT) == NULL && !TestStepNoChangeDirection(GetAnimationGroup()))
+    if (human && FindLayer(OL_MOUNT) == nullptr && !TestStepNoChangeDirection(GetAnimationGroup()))
     {
         CRenderWorldObject *obj = this;
 
-        while (obj != NULL && obj->m_PrevXY != NULL)
+        while (obj != nullptr && obj->m_PrevXY != nullptr)
             obj = obj->m_PrevXY;
 
-        while (obj != NULL && !result)
+        while (obj != nullptr && !result)
         {
             if (obj->IsStaticGroupObject() && abs(m_Z - obj->GetZ()) <= 1) //m_Z == obj->GetZ()
             {
@@ -376,8 +376,8 @@ void CGameCharacter::OnGraphicChange(int direction)
     {
         g_GumpManager.UpdateContent(Serial, 0, GT_PAPERDOLL);
 
-        if ((g_GumpManager.UpdateContent(Serial, 0, GT_STATUSBAR) != NULL ||
-             g_GumpManager.UpdateContent(Serial, 0, GT_TARGET_SYSTEM) != NULL) &&
+        if ((g_GumpManager.UpdateContent(Serial, 0, GT_STATUSBAR) != nullptr ||
+             g_GumpManager.UpdateContent(Serial, 0, GT_TARGET_SYSTEM) != nullptr) &&
             MaxHits == 0)
             CPacketStatusRequest(Serial).Send();
     }
@@ -437,7 +437,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
     DEBUG_TRACE_FUNCTION;
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
 
-    if (FindLayer(OL_MOUNT) == NULL)
+    if (FindLayer(OL_MOUNT) == nullptr)
     {
         AnimIndex = 0;
         AnimationFrameCount = 0;
@@ -690,9 +690,9 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
         {
             if (isRun)
             {
-                if (FindLayer(OL_MOUNT) != NULL)
+                if (FindLayer(OL_MOUNT) != nullptr)
                     result = (uchar)PAG_ONMOUNT_RIDE_FAST;
-                else if (FindLayer(OL_1_HAND) != NULL || FindLayer(OL_2_HAND) != NULL)
+                else if (FindLayer(OL_1_HAND) != nullptr || FindLayer(OL_2_HAND) != nullptr)
                     result = (uchar)PAG_RUN_ARMED;
                 else
                     result = (uchar)PAG_RUN_UNARMED;
@@ -703,9 +703,9 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
             else
             {
             test_walk:
-                if (FindLayer(OL_MOUNT) != NULL)
+                if (FindLayer(OL_MOUNT) != nullptr)
                     result = (uchar)PAG_ONMOUNT_RIDE_SLOW;
-                else if ((FindLayer(OL_1_HAND) != NULL || FindLayer(OL_2_HAND) != NULL) && !Dead())
+                else if ((FindLayer(OL_1_HAND) != nullptr || FindLayer(OL_2_HAND) != nullptr) && !Dead())
                 {
                     if (InWar)
                         result = (uchar)PAG_WALK_WARMODE;
@@ -720,13 +720,13 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
         }
         else if (AnimationGroup == 0xFF)
         {
-            if (FindLayer(OL_MOUNT) != NULL)
+            if (FindLayer(OL_MOUNT) != nullptr)
                 result = (uchar)PAG_ONMOUNT_STAND;
             else if (InWar && !Dead())
             {
-                if (FindLayer(OL_1_HAND) != NULL)
+                if (FindLayer(OL_1_HAND) != nullptr)
                     result = (uchar)PAG_STAND_ONEHANDED_ATTACK;
-                else if (FindLayer(OL_2_HAND) != NULL)
+                else if (FindLayer(OL_2_HAND) != nullptr)
                     result = (uchar)PAG_STAND_TWOHANDED_ATTACK;
                 else
                     result = (uchar)PAG_STAND_ONEHANDED_ATTACK;
@@ -859,7 +859,7 @@ void CGameCharacter::UpdateAnimationInfo(BYTE &dir, bool canChange)
             if (AnimationFromServer)
                 SetAnimation(0xFF);
 
-            int maxDelay = g_PathFinder.GetWalkSpeed(run, FindLayer(OL_MOUNT) != NULL) - 15;
+            int maxDelay = g_PathFinder.GetWalkSpeed(run, FindLayer(OL_MOUNT) != nullptr) - 15;
 
             int delay = (int)g_Ticks - (int)LastStepTime;
             bool removeStep = (delay >= maxDelay);
@@ -1003,7 +1003,7 @@ CGameItem *CGameCharacter::FindSecureTradeBox()
             return obj;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void CGameCharacter::SetDead(bool &dead)

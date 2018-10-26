@@ -30,8 +30,8 @@ public:
     IOrionString &operator()(const std::wstring &str);
 
     bool m_Unicode{ false };
-    char *m_DataA{ NULL };
-    wchar_t *m_DataW{ NULL };
+    char *m_DataA{ nullptr };
+    wchar_t *m_DataW{ nullptr };
 };
 
 #pragma pack(push, 1)

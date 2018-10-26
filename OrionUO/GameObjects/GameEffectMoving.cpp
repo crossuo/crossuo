@@ -36,11 +36,11 @@ void CGameEffectMoving::Update(CGameObject *parent)
 
     CGameObject *obj = g_World->FindWorldObject(DestSerial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         obj = obj->GetTopObject();
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             DestX = obj->GetX();
             DestY = obj->GetY();
@@ -147,7 +147,7 @@ void CGameEffectMoving::Update(CGameObject *parent)
         {
             EFFECT_TYPE type = EF_STAY_AT_POS;
 
-            if (g_World->FindWorldObject(Serial) != NULL)
+            if (g_World->FindWorldObject(Serial) != nullptr)
                 type = EF_STAY_AT_SOURCE;
 
             m_Z = DestZ;

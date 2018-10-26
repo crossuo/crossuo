@@ -931,7 +931,7 @@ PACKET_HANDLER(EnterWorld)
     ConfigSerial = serial;
     bool loadConfig = false;
 
-    if (g_World != NULL)
+    if (g_World != nullptr)
     {
         LOG("Warning!!! Duplicate enter world message\n");
 
@@ -1004,7 +1004,7 @@ PACKET_HANDLER(EnterWorld)
     {
         CServer *server = g_ServerList.GetSelectedServer();
 
-        if (server != NULL)
+        if (server != nullptr)
             g_Orion.CreateTextMessageF(3, 0x0037, "Login confirm to %s", server->Name.c_str());
     }
 }
@@ -1012,14 +1012,14 @@ PACKET_HANDLER(EnterWorld)
 PACKET_HANDLER(UpdateHitpoints)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     obj->MaxHits = ReadInt16BE();
@@ -1032,14 +1032,14 @@ PACKET_HANDLER(UpdateHitpoints)
 PACKET_HANDLER(UpdateMana)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     obj->MaxMana = ReadInt16BE();
@@ -1051,14 +1051,14 @@ PACKET_HANDLER(UpdateMana)
 PACKET_HANDLER(UpdateStamina)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     obj->MaxStam = ReadInt16BE();
@@ -1070,14 +1070,14 @@ PACKET_HANDLER(UpdateStamina)
 PACKET_HANDLER(MobileAttributes)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     obj->MaxHits = ReadInt16BE();
@@ -1096,7 +1096,7 @@ PACKET_HANDLER(MobileAttributes)
 PACKET_HANDLER(NewHealthbarUpdate)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     if (*Start == 0x16 && m_ClientVersion < CV_500A)
@@ -1106,7 +1106,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     ushort count = ReadUInt16BE();
@@ -1157,7 +1157,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
 PACKET_HANDLER(UpdatePlayer)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -1189,13 +1189,13 @@ PACKET_HANDLER(UpdatePlayer)
 PACKET_HANDLER(CharacterStatus)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     string name = ReadString(30);
@@ -1334,7 +1334,7 @@ PACKET_HANDLER(CharacterStatus)
 PACKET_HANDLER(UpdateItem)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -1430,7 +1430,7 @@ PACKET_HANDLER(UpdateItem)
 PACKET_HANDLER(UpdateItemSA)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     Move(2);
@@ -1471,7 +1471,7 @@ PACKET_HANDLER(UpdateItemSA)
 PACKET_HANDLER(UpdateObject)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -1485,11 +1485,11 @@ PACKET_HANDLER(UpdateObject)
     uchar notoriety = ReadUInt8();
     bool oldDead = false;
 
-    bool isAlreadyExists = (g_World->FindWorldObject(serial) != NULL);
+    bool isAlreadyExists = (g_World->FindWorldObject(serial) != nullptr);
 
     if (serial == g_PlayerSerial)
     {
-        if (g_Player != NULL)
+        if (g_Player != nullptr)
         {
             bool updateStatusbar = (g_Player->GetFlags() != flags);
 
@@ -1511,7 +1511,7 @@ PACKET_HANDLER(UpdateObject)
 
     CGameObject *obj = g_World->FindWorldObject(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     obj->ClearNotOpenedItems();
@@ -1577,7 +1577,7 @@ PACKET_HANDLER(UpdateObject)
 PACKET_HANDLER(EquipItem)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -1618,7 +1618,7 @@ PACKET_HANDLER(EquipItem)
 PACKET_HANDLER(UpdateContainedItem)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -1641,7 +1641,7 @@ PACKET_HANDLER(UpdateContainedItem)
 PACKET_HANDLER(UpdateContainedItems)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     ushort itemsCount = ReadUInt16BE();
@@ -1665,7 +1665,7 @@ PACKET_HANDLER(UpdateContainedItems)
         {
             CGameObject *container = g_World->FindWorldObject(containerSerial);
 
-            if (container != NULL)
+            if (container != nullptr)
             {
                 LOG("Making %08X empty...\n", containerSerial);
 
@@ -1706,11 +1706,11 @@ PACKET_HANDLER(UpdateContainedItems)
 PACKET_HANDLER(DenyMoveItem)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     if (g_ObjectInHand.Enabled ||
-        (g_ObjectInHand.Dropped && g_World->FindWorldItem(g_ObjectInHand.Serial) == NULL))
+        (g_ObjectInHand.Dropped && g_World->FindWorldItem(g_ObjectInHand.Serial) == nullptr))
     {
         if (g_World->ObjectToRemove == g_ObjectInHand.Serial)
             g_World->ObjectToRemove = 0;
@@ -1736,7 +1736,7 @@ PACKET_HANDLER(DenyMoveItem)
             {
                 CGameItem *obj = g_World->GetWorldItem(g_ObjectInHand.Serial);
 
-                if (obj != NULL)
+                if (obj != nullptr)
                 {
                     obj->Graphic = g_ObjectInHand.Graphic;
                     obj->Color = g_ObjectInHand.Color;
@@ -1749,7 +1749,7 @@ PACKET_HANDLER(DenyMoveItem)
 
                     CGameObject *container = g_World->FindWorldObject(g_ObjectInHand.Container);
 
-                    if (container != NULL)
+                    if (container != nullptr)
                     {
                         if (container->NPC)
                         {
@@ -1760,13 +1760,13 @@ PACKET_HANDLER(DenyMoveItem)
                         else
                         {
                             g_World->RemoveObject(obj);
-                            obj = NULL;
+                            obj = nullptr;
                         }
                     }
                     else
                         g_World->RemoveFromContainer(obj);
 
-                    if (obj != NULL)
+                    if (obj != nullptr)
                         g_World->MoveToTop(obj);
                 }
             }
@@ -1796,7 +1796,7 @@ PACKET_HANDLER(DenyMoveItem)
 PACKET_HANDLER(EndDraggingItem)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     //Unused
@@ -1810,7 +1810,7 @@ PACKET_HANDLER(EndDraggingItem)
 PACKET_HANDLER(DropItemAccepted)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     g_ObjectInHand.Enabled = false;
@@ -1820,7 +1820,7 @@ PACKET_HANDLER(DropItemAccepted)
 PACKET_HANDLER(DeleteObject)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -1830,7 +1830,7 @@ PACKET_HANDLER(DeleteObject)
 
     CGameObject *obj = g_World->FindWorldObject(serial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         bool updateAbilities = false;
         uint cont = obj->Container & 0x7FFFFFFF;
@@ -1839,7 +1839,7 @@ PACKET_HANDLER(DeleteObject)
         {
             CGameObject *top = obj->GetTopObject();
 
-            if (top != NULL)
+            if (top != nullptr)
             {
                 if (top->IsPlayer())
                 {
@@ -1849,7 +1849,7 @@ PACKET_HANDLER(DeleteObject)
 
                 CGameObject *tradeBox = top->FindSecureTradeBox();
 
-                if (tradeBox != NULL)
+                if (tradeBox != nullptr)
                     g_GumpManager.UpdateContent(0, tradeBox->Serial, GT_TRADE);
             }
 
@@ -1868,7 +1868,7 @@ PACKET_HANDLER(DeleteObject)
                 CGumpBulletinBoard *bbGump =
                     (CGumpBulletinBoard *)g_GumpManager.UpdateGump(cont, 0, GT_BULLETIN_BOARD);
 
-                if (bbGump != NULL && bbGump->m_HTMLGump != NULL)
+                if (bbGump != nullptr && bbGump->m_HTMLGump != nullptr)
                 {
                     QFOR(go, bbGump->m_HTMLGump->m_Items, CBaseGUI *)
                     {
@@ -1923,13 +1923,13 @@ PACKET_HANDLER(DeleteObject)
 PACKET_HANDLER(UpdateCharacter)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
 
     ushort graphic = ReadUInt16BE();
@@ -1971,7 +1971,7 @@ PACKET_HANDLER(UpdateCharacter)
 PACKET_HANDLER(Warmode)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     g_Player->Warmode = ReadUInt8();
@@ -1980,7 +1980,7 @@ PACKET_HANDLER(Warmode)
 
     CGumpPaperdoll *gump = (CGumpPaperdoll *)g_GumpManager.GetGump(g_PlayerSerial, 0, GT_PAPERDOLL);
 
-    if (gump != NULL && gump->m_ButtonWarmode != NULL)
+    if (gump != nullptr && gump->m_ButtonWarmode != nullptr)
     {
         ushort graphic = 0x07E5;
 
@@ -2009,7 +2009,7 @@ PACKET_HANDLER(PauseControl)
 PACKET_HANDLER(OpenPaperdoll)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -2020,12 +2020,12 @@ PACKET_HANDLER(OpenPaperdoll)
 
     uchar flags = ReadUInt8();
 
-    if (obj != NULL)
+    if (obj != nullptr)
         obj->Title = text;
 
     CGumpPaperdoll *gump = (CGumpPaperdoll *)g_GumpManager.UpdateGump(serial, 0, GT_PAPERDOLL);
 
-    if (gump == NULL)
+    if (gump == nullptr)
     {
         gump = new CGumpPaperdoll(serial, 0, 0, false);
         g_GumpManager.AddGump(gump);
@@ -2150,13 +2150,13 @@ PACKET_HANDLER(EnableLockedFeatures)
 PACKET_HANDLER(OpenContainer)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
     ushort gumpid = ReadUInt16BE();
 
-    CGump *gump = NULL;
+    CGump *gump = nullptr;
 
     if (gumpid == 0xFFFF) //Spellbook
     {
@@ -2183,7 +2183,7 @@ PACKET_HANDLER(OpenContainer)
 
         CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
 
-        if (vendor != NULL)
+        if (vendor != nullptr)
         {
             CGumpShop *buyGump = new CGumpShop(serial, true, 150, 5);
             gump = buyGump;
@@ -2193,7 +2193,7 @@ PACKET_HANDLER(OpenContainer)
             {
                 CGameItem *item = vendor->FindLayer((int)layer);
 
-                if (item == NULL)
+                if (item == nullptr)
                 {
                     LOG("Buy layer %i not found!\n", layer);
                     continue;
@@ -2201,7 +2201,7 @@ PACKET_HANDLER(OpenContainer)
 
                 item = (CGameItem *)item->m_Items;
 
-                if (item == NULL)
+                if (item == nullptr)
                 {
                     LOG("Buy items not found!\n");
                     continue;
@@ -2211,7 +2211,7 @@ PACKET_HANDLER(OpenContainer)
 
                 if (reverse)
                 {
-                    while (item != NULL && item->m_Next != NULL)
+                    while (item != nullptr && item->m_Next != nullptr)
                         item = (CGameItem *)item->m_Next;
                 }
 
@@ -2225,7 +2225,7 @@ PACKET_HANDLER(OpenContainer)
                         currentY += shopItem->GetSize().Height;
                 }
 
-                while (item != NULL)
+                while (item != nullptr)
                 {
                     CGUIShopItem *shopItem = (CGUIShopItem *)htmlGump->Add(new CGUIShopItem(
                         item->Serial,
@@ -2282,7 +2282,7 @@ PACKET_HANDLER(OpenContainer)
         g_Orion.ExecuteGump(gumpid);
     }
 
-    if (gump == NULL)
+    if (gump == nullptr)
         return;
 
     gump->ID = gumpid;
@@ -2324,7 +2324,7 @@ PACKET_HANDLER(OpenContainer)
 
         CGameItem *obj = g_World->FindWorldItem(serial);
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             /*if (gumpid != 0xFFFF)*/ obj->Opened = true;
             if (!obj->IsCorpse() && gumpid != 0xFFFF)
@@ -2341,7 +2341,7 @@ PACKET_HANDLER(OpenContainer)
 PACKET_HANDLER(UpdateSkills)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uchar type = ReadUInt8();
@@ -2372,7 +2372,7 @@ PACKET_HANDLER(UpdateSkills)
     {
         g_SkillsManager.SkillsRequested = false;
 
-        if (gump == NULL)
+        if (gump == nullptr)
         {
             gump = new CGumpSkills(0, 0, false, 250);
             g_GumpManager.AddGump(gump);
@@ -2403,7 +2403,7 @@ PACKET_HANDLER(UpdateSkills)
 
         CSkill *skill = g_SkillsManager.Get(id);
 
-        if (id < g_SkillsManager.Count && skill != NULL)
+        if (id < g_SkillsManager.Count && skill != nullptr)
         {
             if (isSingleUpdate)
             {
@@ -2429,7 +2429,7 @@ PACKET_HANDLER(UpdateSkills)
             skill->Cap = (float)(cap / 10.0f);
             skill->Status = lock;
 
-            if (gump != NULL)
+            if (gump != nullptr)
                 gump->UpdateSkillValue(id);
 
             /*if (haveCap)
@@ -2446,7 +2446,7 @@ PACKET_HANDLER(UpdateSkills)
 
     g_SkillsManager.UpdateSkillsSum();
 
-    if (gump != NULL)
+    if (gump != nullptr)
         gump->UpdateSkillsSum();
 
     LOG("Skill(s) updated!\n");
@@ -2479,7 +2479,7 @@ PACKET_HANDLER(ExtendedCommand)
             uint id = ReadUInt32BE();
             uint button = ReadUInt32BE();
 
-            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != NULL;)
+            for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
             {
                 CGump *next = (CGump *)gump->m_Next;
 
@@ -2520,7 +2520,7 @@ PACKET_HANDLER(ExtendedCommand)
         {
             uint serial = ReadUInt32BE();
             CGameItem *item = g_World->FindWorldItem(serial);
-            if (item == NULL)
+            if (item == nullptr)
                 return;
 
             item->JournalPrefix = "";
@@ -2653,7 +2653,7 @@ PACKET_HANDLER(ExtendedCommand)
                 case 0:
                 {
                     CGameCharacter *bonded = g_World->FindWorldCharacter(serial);
-                    if (bonded == NULL)
+                    if (bonded == nullptr)
                         break;
 
                     bool dead = ReadUInt8();
@@ -2674,18 +2674,18 @@ PACKET_HANDLER(ExtendedCommand)
 
                         CGump *statusbar = g_GumpManager.GetGump(g_PlayerSerial, 0, GT_STATUSBAR);
 
-                        if (statusbar != NULL && !statusbar->Minimized)
+                        if (statusbar != nullptr && !statusbar->Minimized)
                             statusbar->WantUpdateContent = true;
                     }
                     break;
                 }
                 case 5:
                 {
-                    if (g_World == NULL)
+                    if (g_World == nullptr)
                         return;
 
                     CGameCharacter *character = g_World->FindWorldCharacter(serial);
-                    if (character == NULL)
+                    if (character == nullptr)
                         break;
 
                     if (Size == 19)
@@ -2705,7 +2705,7 @@ PACKET_HANDLER(ExtendedCommand)
 
             CGameItem *spellbook = g_World->FindWorldItem(serial);
 
-            if (spellbook == NULL)
+            if (spellbook == nullptr)
             {
                 LOG("Where is a spellbook?!?\n");
                 return;
@@ -2747,10 +2747,10 @@ PACKET_HANDLER(ExtendedCommand)
             CCustomHouse *house = g_CustomHousesManager.Get(serial);
             LOG("Seek house: 0x%08X 0x%08X\n", serial, revision);
 
-            if (house != NULL)
+            if (house != nullptr)
                 LOG("House found: 0x%08X 0x%08X\n", house->Serial, house->Revision);
 
-            if (house == NULL || house->Revision != revision)
+            if (house == nullptr || house->Revision != revision)
                 CPacketCustomHouseDataReq(serial).Send();
             else
                 house->Paste(g_World->FindWorldItem(serial));
@@ -2814,14 +2814,14 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x22:
         {
-            if (g_World == NULL)
+            if (g_World == nullptr)
                 return;
 
             Move(1);
             uint serial = ReadUInt32BE();
             CGameCharacter *character = g_World->FindWorldCharacter(serial);
 
-            if (character != NULL)
+            if (character != nullptr)
             {
                 int damage = ReadUInt8();
 
@@ -2838,7 +2838,7 @@ PACKET_HANDLER(ExtendedCommand)
 
                 CTextData *head = (CTextData *)character->m_DamageTextControl.Last();
 
-                if (head != NULL)
+                if (head != nullptr)
                 {
                     height += head->GetY();
 
@@ -2876,7 +2876,7 @@ PACKET_HANDLER(ExtendedCommand)
 PACKET_HANDLER(DenyWalk)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Player == NULL)
+    if (g_Player == nullptr)
         return;
 
     g_Ping = 0;
@@ -2897,7 +2897,7 @@ PACKET_HANDLER(DenyWalk)
 PACKET_HANDLER(ConfirmWalk)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Player == NULL)
+    if (g_Player == nullptr)
         return;
 
     uchar sequence = ReadUInt8();
@@ -2938,7 +2938,7 @@ PACKET_HANDLER(Target)
 PACKET_HANDLER(Talk)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
     {
         if (g_GameState == GS_GAME_CONNECT)
         {
@@ -2998,7 +2998,7 @@ PACKET_HANDLER(Talk)
     CGameObject *obj = g_World->FindWorldObject(serial);
 
     if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || !serial ||
-        (ToLowerA(name) == "system" && obj == NULL))
+        (ToLowerA(name) == "system" && obj == nullptr))
     {
         g_Orion.CreateTextMessage(TT_SYSTEM, serial, (uchar)font, textColor, str);
     }
@@ -3010,7 +3010,7 @@ PACKET_HANDLER(Talk)
             str = "*" + str + "*";
         }
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             //reset
             obj->JournalPrefix = "";
@@ -3035,7 +3035,7 @@ PACKET_HANDLER(Talk)
 PACKET_HANDLER(UnicodeTalk)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
     {
         if (g_GameState == GS_GAME_CONNECT)
         {
@@ -3106,7 +3106,7 @@ PACKET_HANDLER(UnicodeTalk)
     }
 
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || !serial ||
-        (ToLowerA(name) == "system" && obj == NULL))
+        (ToLowerA(name) == "system" && obj == nullptr))
         g_Orion.CreateUnicodeTextMessage(
             TT_SYSTEM, serial, (uchar)g_ConfigManager.SpeechFont, textColor, str);
     else
@@ -3116,7 +3116,7 @@ PACKET_HANDLER(UnicodeTalk)
             textColor = g_ConfigManager.EmoteColor;
         }
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             //reset
             obj->JournalPrefix = "";
@@ -3180,7 +3180,7 @@ PACKET_HANDLER(ClientTalk)
 PACKET_HANDLER(MultiPlacement)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     //uint serial = unpack32(buf + 2);
@@ -3192,7 +3192,7 @@ PACKET_HANDLER(MultiPlacement)
 PACKET_HANDLER(GraphicEffect)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uchar type = ReadUInt8();
@@ -3249,7 +3249,7 @@ PACKET_HANDLER(GraphicEffect)
         }
     }
 
-    CGameEffect *effect = NULL;
+    CGameEffect *effect = nullptr;
     if (!type) //Moving
     {
         effect = new CGameEffectMoving();
@@ -3269,7 +3269,7 @@ PACKET_HANDLER(GraphicEffect)
 
     CGameCharacter *sourceObject = g_World->FindWorldCharacter(sourceSerial);
 
-    if (sourceObject != NULL)
+    if (sourceObject != nullptr)
     {
         effect->SetX(sourceObject->GetX());
         effect->SetY(sourceObject->GetY());
@@ -3284,7 +3284,7 @@ PACKET_HANDLER(GraphicEffect)
 
     CGameCharacter *destObject = g_World->FindWorldCharacter(destSerial);
 
-    if (destObject != NULL)
+    if (destObject != nullptr)
     {
         effect->DestX = destObject->GetX();
         effect->DestY = destObject->GetY();
@@ -3374,7 +3374,7 @@ PACKET_HANDLER(PlayMusic)
 PACKET_HANDLER(DragAnimation)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     ushort graphic = ReadUInt16BE();
@@ -3401,7 +3401,7 @@ PACKET_HANDLER(DragAnimation)
 
     CGameCharacter *sourceObj = g_World->FindWorldCharacter(sourceSerial);
 
-    if (sourceObj == NULL)
+    if (sourceObj == nullptr)
         sourceSerial = 0;
     else
     {
@@ -3412,7 +3412,7 @@ PACKET_HANDLER(DragAnimation)
 
     CGameCharacter *destObj = g_World->FindWorldCharacter(destSerial);
 
-    if (destObj == NULL)
+    if (destObj == nullptr)
         destSerial = 0;
     else
     {
@@ -3421,7 +3421,7 @@ PACKET_HANDLER(DragAnimation)
         destZ = destObj->GetZ();
     }
 
-    CGameEffect *effect = NULL;
+    CGameEffect *effect = nullptr;
 
     uchar speed = 5;
 
@@ -3468,7 +3468,7 @@ PACKET_HANDLER(DragAnimation)
 PACKET_HANDLER(CorpseEquipment)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint cserial = ReadUInt32BE();
@@ -3483,7 +3483,7 @@ PACKET_HANDLER(CorpseEquipment)
 
         CGameItem *obj = g_World->FindWorldItem(serial);
 
-        if (obj != NULL && obj->Container == cserial)
+        if (obj != nullptr && obj->Container == cserial)
             g_World->PutEquipment(obj, cserial, layer);
 
         layer = ReadUInt8();
@@ -3493,7 +3493,7 @@ PACKET_HANDLER(CorpseEquipment)
 PACKET_HANDLER(ASCIIPrompt)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     g_ConsolePrompt = PT_ASCII;
@@ -3503,7 +3503,7 @@ PACKET_HANDLER(ASCIIPrompt)
 PACKET_HANDLER(UnicodePrompt)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     g_ConsolePrompt = PT_UNICODE;
@@ -3513,13 +3513,13 @@ PACKET_HANDLER(UnicodePrompt)
 PACKET_HANDLER(CharacterAnimation)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         ushort action = ReadUInt16BE();
         ushort frameCount = ReadUInt16BE();
@@ -3542,13 +3542,13 @@ PACKET_HANDLER(CharacterAnimation)
 PACKET_HANDLER(NewCharacterAnimation)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         ushort type = ReadUInt16BE();
         ushort action = ReadUInt16BE();
@@ -3627,11 +3627,11 @@ PACKET_HANDLER(AttackCharacter)
     DEBUG_TRACE_FUNCTION;
     g_LastAttackObject = ReadUInt32BE();
 
-    if (g_LastAttackObject != 0 && g_World != NULL)
+    if (g_LastAttackObject != 0 && g_World != nullptr)
     {
         CGameCharacter *obj = g_World->FindWorldCharacter(g_LastAttackObject);
 
-        if (obj != NULL && !obj->MaxHits)
+        if (obj != nullptr && !obj->MaxHits)
             CPacketStatusRequest(g_LastAttackObject).Send();
     }
 }
@@ -3639,7 +3639,7 @@ PACKET_HANDLER(AttackCharacter)
 PACKET_HANDLER(Season)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uchar season = ReadUInt8();
@@ -3662,7 +3662,7 @@ PACKET_HANDLER(Season)
 PACKET_HANDLER(DisplayDeath)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -3671,7 +3671,7 @@ PACKET_HANDLER(DisplayDeath)
 
     CGameCharacter *owner = g_World->FindWorldCharacter(serial);
 
-    if (owner == NULL)
+    if (owner == nullptr)
         return;
 
     serial |= 0x80000000;
@@ -3696,7 +3696,7 @@ PACKET_HANDLER(OpenChat)
 PACKET_HANDLER(DisplayClilocString)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -3727,7 +3727,7 @@ PACKET_HANDLER(DisplayClilocString)
     CGameObject *obj = g_World->FindWorldObject(serial);
 
     if (/*type == ST_BROADCAST || type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || !serial ||
-        (ToLowerA(name) == "system" && obj == NULL))
+        (ToLowerA(name) == "system" && obj == nullptr))
         g_Orion.CreateUnicodeTextMessage(TT_SYSTEM, serial, (uchar)font, color, message);
     else
     {
@@ -3737,7 +3737,7 @@ PACKET_HANDLER(DisplayClilocString)
 			str = L"*" + str + L"*";
 		}*/
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             if (!name.length())
             {
@@ -3760,7 +3760,7 @@ PACKET_HANDLER(DisplayClilocString)
 PACKET_HANDLER(MegaCliloc)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     ushort unknown = ReadUInt16BE();
@@ -3815,16 +3815,16 @@ PACKET_HANDLER(MegaCliloc)
             list.push_back(str);
     }
 
-    CGameItem *container = NULL;
+    CGameItem *container = nullptr;
 
     CGameObject *obj = g_World->FindWorldObject(serial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
         container = g_World->FindWorldItem(obj->Container);
 
     bool inBuyList = false;
 
-    if (container != NULL)
+    if (container != nullptr)
         inBuyList =
             (container->Layer == OL_BUY || container->Layer == OL_BUY_RESTOCK ||
              container->Layer == OL_SELL);
@@ -3841,7 +3841,7 @@ PACKET_HANDLER(MegaCliloc)
             {
                 name = str;
 
-                if (obj != NULL && !obj->NPC)
+                if (obj != nullptr && !obj->NPC)
                 {
                     obj->SetName(ToString(str));
                     obj->GenerateObjectHandlesTexture(str);
@@ -3863,7 +3863,7 @@ PACKET_HANDLER(MegaCliloc)
 
     g_ObjectPropertiesManager.Add(serial, CObjectProperty(serial, clilocRevision, name, data));
 
-    if (obj != NULL && g_ToolTip.m_Object == obj)
+    if (obj != nullptr && g_ToolTip.m_Object == obj)
         g_ObjectPropertiesManager.Reset();
 
     //LOG("message=%s\n", ToString(message).c_str());
@@ -3872,7 +3872,7 @@ PACKET_HANDLER(MegaCliloc)
     {
         CGumpShop *gump = (CGumpShop *)g_GumpManager.GetGump(container->Serial, 0, GT_SHOP);
 
-        if (gump != NULL)
+        if (gump != nullptr)
         {
             CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
 
@@ -3891,7 +3891,7 @@ PACKET_HANDLER(MegaCliloc)
 
                     int delta = si->GetSize().Height - oldHeight;
 
-                    if (delta && shopItem->m_Next != NULL)
+                    if (delta && shopItem->m_Next != nullptr)
                     {
                         QFOR(shopItem2, shopItem->m_Next, CBaseGUI *)
                         {
@@ -3913,13 +3913,13 @@ PACKET_HANDLER(MegaCliloc)
 PACKET_HANDLER(Damage)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
     CGameCharacter *character = g_World->FindWorldCharacter(serial);
 
-    if (character != NULL)
+    if (character != nullptr)
     {
         int damage = ReadUInt16BE();
 
@@ -3936,7 +3936,7 @@ PACKET_HANDLER(Damage)
 
         CTextData *head = (CTextData *)character->m_DamageTextControl.Last();
 
-        if (head != NULL)
+        if (head != nullptr)
         {
             height += head->GetY();
 
@@ -3957,7 +3957,7 @@ PACKET_HANDLER(Damage)
 PACKET_HANDLER(BuffDebuff)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     /*
@@ -4070,7 +4070,7 @@ PACKET_HANDLER(BuffDebuff)
     {
         CGumpBuff *gump = (CGumpBuff *)g_GumpManager.UpdateGump(0, 0, GT_BUFF);
 
-        if (gump != NULL)
+        if (gump != nullptr)
         {
             ushort mode = ReadUInt16BE();
 
@@ -4123,7 +4123,7 @@ PACKET_HANDLER(BuffDebuff)
 PACKET_HANDLER(SecureTrading)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uchar type = ReadUInt8();
@@ -4139,21 +4139,21 @@ PACKET_HANDLER(SecureTrading)
 
         CGameObject *obj = g_World->FindWorldObject(id1);
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             obj = obj->GetTopObject()->FindSecureTradeBox();
 
-            if (obj != NULL)
+            if (obj != nullptr)
                 obj->Clear();
         }
 
         obj = g_World->FindWorldObject(id2);
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             obj = obj->GetTopObject()->FindSecureTradeBox();
 
-            if (obj != NULL)
+            if (obj != nullptr)
                 obj->Clear();
         }
 
@@ -4169,7 +4169,7 @@ PACKET_HANDLER(SecureTrading)
         CGumpSecureTrading *gump =
             (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
 
-        if (gump != NULL)
+        if (gump != nullptr)
         {
             uint id1 = ReadUInt32BE();
             uint id2 = ReadUInt32BE();
@@ -4183,7 +4183,7 @@ PACKET_HANDLER(SecureTrading)
 PACKET_HANDLER(TextEntryDialog)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -4212,7 +4212,7 @@ PACKET_HANDLER(TextEntryDialog)
 PACKET_HANDLER(OpenMenu)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -4400,7 +4400,7 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 PACKET_HANDLER(OpenGump)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     vector<HTMLGumpDataInfo> htmlGumlList;
@@ -4435,7 +4435,7 @@ PACKET_HANDLER(OpenGump)
     Wisp::CTextFileParser tilepicGraphicParser({}, ",", "", "");
 
     STRING_LIST commandList = parser.GetTokens(commands.c_str());
-    CBaseGUI *lastGumpObject = NULL;
+    CBaseGUI *lastGumpObject = nullptr;
 
     bool EntryChanged = false;
     int FirstPage = 0;
@@ -4453,7 +4453,7 @@ PACKET_HANDLER(OpenGump)
 
         string cmd = ToLowerA(list[0]);
 
-        CBaseGUI *go = NULL;
+        CBaseGUI *go = nullptr;
 
         if (cmd == "nodispose")
         {
@@ -4775,7 +4775,7 @@ PACKET_HANDLER(OpenGump)
                     }
                 }
 
-                if (go == NULL)
+                if (go == nullptr)
                 {
                     if (color)
                         gump->Add(new CGUIShader(&g_ColorizerShader, true));
@@ -4854,7 +4854,7 @@ PACKET_HANDLER(OpenGump)
         }
         else if (cmd == "tooltip")
         {
-            if (listSize >= 2 && lastGumpObject != NULL)
+            if (listSize >= 2 && lastGumpObject != nullptr)
                 lastGumpObject->ClilocID = ToInt(list[1]);
         }
         else if (cmd == "mastergump")
@@ -4863,7 +4863,7 @@ PACKET_HANDLER(OpenGump)
                 gump->MasterGump = ToInt(list[1]);
         }
 
-        if (go != NULL)
+        if (go != nullptr)
         {
             lastGumpObject = go;
             gump->Add(go);
@@ -4898,7 +4898,7 @@ PACKET_HANDLER(OpenGump)
 PACKET_HANDLER(OpenCompressedGump)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint senderID = ReadUInt32BE();
@@ -5020,7 +5020,7 @@ PACKET_HANDLER(DyeData)
 PACKET_HANDLER(DisplayMap)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -5057,20 +5057,20 @@ PACKET_HANDLER(DisplayMap)
 
     CGameItem *obj = g_World->FindWorldItem(serial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
         obj->Opened = true;
 }
 
 PACKET_HANDLER(MapData)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
     CGumpMap *gump = (CGumpMap *)g_GumpManager.UpdateGump(serial, 0, GT_MAP);
 
-    if (gump != NULL && gump->m_DataBox != NULL)
+    if (gump != nullptr && gump->m_DataBox != nullptr)
     {
         switch ((MAP_MESSAGE)ReadUInt8()) //Action
         {
@@ -5147,7 +5147,7 @@ PACKET_HANDLER(TipWindow)
 PACKET_HANDLER(CharacterProfile)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -5165,7 +5165,7 @@ PACKET_HANDLER(CharacterProfile)
 PACKET_HANDLER(BulletinBoardData)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     switch (ReadUInt8())
@@ -5176,16 +5176,16 @@ PACKET_HANDLER(BulletinBoardData)
 
             CGameItem *item = g_World->FindWorldItem(serial);
 
-            if (item != NULL)
+            if (item != nullptr)
             {
                 CGumpBulletinBoard *bbGump =
                     (CGumpBulletinBoard *)g_GumpManager.UpdateGump(serial, 0, GT_BULLETIN_BOARD);
 
-                if (bbGump != NULL)
+                if (bbGump != nullptr)
                 {
                     CBaseGUI *bbItem = (CBaseGUI *)bbGump->m_HTMLGump->m_Items;
 
-                    while (bbItem != NULL)
+                    while (bbItem != nullptr)
                     {
                         CBaseGUI *bbNext = (CBaseGUI *)bbItem->m_Next;
 
@@ -5219,7 +5219,7 @@ PACKET_HANDLER(BulletinBoardData)
             CGumpBulletinBoard *gump =
                 (CGumpBulletinBoard *)g_GumpManager.GetGump(boardSerial, 0, GT_BULLETIN_BOARD);
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 uint serial = ReadUInt32BE();
                 uint parentID = ReadUInt32BE();
@@ -5254,7 +5254,7 @@ PACKET_HANDLER(BulletinBoardData)
             CGumpBulletinBoard *gump =
                 (CGumpBulletinBoard *)g_GumpManager.GetGump(boardSerial, 0, GT_BULLETIN_BOARD);
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 uint serial = ReadUInt32BE();
 
@@ -5310,7 +5310,7 @@ PACKET_HANDLER(BulletinBoardData)
 PACKET_HANDLER(OpenBook) // 0x93
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -5330,7 +5330,7 @@ PACKET_HANDLER(OpenBook) // 0x93
 PACKET_HANDLER(OpenBookNew) // 0xD4
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
@@ -5356,14 +5356,14 @@ PACKET_HANDLER(OpenBookNew) // 0xD4
 PACKET_HANDLER(BookData)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGumpBook *gump = (CGumpBook *)g_GumpManager.GetGump(serial, 0, GT_BOOK);
 
-    if (gump != NULL)
+    if (gump != nullptr)
     {
         ushort pageCount = ReadUInt16BE();
 
@@ -5399,14 +5399,14 @@ PACKET_HANDLER(BookData)
 PACKET_HANDLER(BuyList)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameItem *container = g_World->FindWorldItem(serial);
 
-    if (container == NULL)
+    if (container == nullptr)
     {
         LOG("Error!!! Buy container is not found!!!\n");
         return;
@@ -5416,7 +5416,7 @@ PACKET_HANDLER(BuyList)
 
     CGameCharacter *vendor = g_World->FindWorldCharacter(vendorSerial);
 
-    if (vendor == NULL)
+    if (vendor == nullptr)
     {
         LOG("Error!!! Buy vendor is not found!!!\n");
         return;
@@ -5424,13 +5424,13 @@ PACKET_HANDLER(BuyList)
 
     CGumpShop *gump = (CGumpShop *)g_GumpManager.GetGump(vendorSerial, 0, GT_SHOP);
 
-    if (gump != NULL && (gump->Serial != vendorSerial || !gump->IsBuyGump))
+    if (gump != nullptr && (gump->Serial != vendorSerial || !gump->IsBuyGump))
     {
         g_GumpManager.RemoveGump(gump);
-        gump = NULL;
+        gump = nullptr;
     }
 
-    if (gump == NULL)
+    if (gump == nullptr)
     {
         gump = new CGumpShop(vendorSerial, true, 150, 5);
         g_GumpManager.AddGump(gump);
@@ -5443,15 +5443,15 @@ PACKET_HANDLER(BuyList)
         uchar count = ReadUInt8();
 
         CGameItem *item = (CGameItem *)container->m_Items;
-        //oldp spams this packet twice in a row on NPC verndors. NULL check is needed t
-        if (item == NULL)
+        //oldp spams this packet twice in a row on NPC verndors. nullptr check is needed t
+        if (item == nullptr)
             return;
 
         bool reverse = (item->GetX() > 1);
 
         if (reverse)
         {
-            while (item != NULL && item->m_Next != NULL)
+            while (item != nullptr && item->m_Next != nullptr)
                 item = (CGameItem *)item->m_Next;
         }
 
@@ -5467,7 +5467,7 @@ PACKET_HANDLER(BuyList)
 
         IFOR (i, 0, count)
         {
-            if (item == NULL)
+            if (item == nullptr)
             {
                 LOG("Error!!! Buy item is not found!!!\n");
                 break;
@@ -5507,14 +5507,14 @@ PACKET_HANDLER(BuyList)
 PACKET_HANDLER(SellList)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uint serial = ReadUInt32BE();
 
     CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
 
-    if (vendor == NULL)
+    if (vendor == nullptr)
     {
         LOG("Error!!! Sell vendor is not found!!!\n");
         return;
@@ -5611,12 +5611,12 @@ PACKET_HANDLER(CustomHouse)
     uint revision = ReadUInt32BE();
     CGameItem *foundationItem = g_World->FindWorldItem(serial);
 
-    if (foundationItem == NULL)
+    if (foundationItem == nullptr)
         return;
 
     CMulti *multi = foundationItem->GetMulti();
 
-    if (multi == NULL)
+    if (multi == nullptr)
         return;
 
     ReadUInt16BE();
@@ -5624,7 +5624,7 @@ PACKET_HANDLER(CustomHouse)
 
     CCustomHouse *house = g_CustomHousesManager.Get(serial);
 
-    if (house == NULL)
+    if (house == nullptr)
     {
         house = new CCustomHouse(serial, revision);
         g_CustomHousesManager.Add(house);
@@ -5835,7 +5835,7 @@ PACKET_HANDLER(OrionMessages)
 
             if (!serial && !id)
             {
-                for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != NULL;)
+                for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
                 {
                     CGump *next = (CGump *)gump->m_Next;
 
@@ -5853,11 +5853,11 @@ PACKET_HANDLER(OrionMessages)
 
             CGump *gump = g_GumpManager.GetGump(serial, id, GT_MENU);
 
-            if (gump == NULL)
+            if (gump == nullptr)
             {
                 gump = g_GumpManager.GetGump(serial, id, GT_GRAY_MENU);
 
-                if (gump != NULL)
+                if (gump != nullptr)
                 {
                     CPacketGrayMenuResponse(gump, code).Send();
                     g_GumpManager.RemoveGump(gump);
@@ -5909,7 +5909,7 @@ PACKET_HANDLER(OrionMessages)
 
             CGump *gump = g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 gump->Minimized = minimized;
 
@@ -5945,7 +5945,7 @@ PACKET_HANDLER(OrionMessages)
             CGumpSecureTrading *gump =
                 (CGumpSecureTrading *)g_GumpManager.UpdateGump(id1, 0, GT_TRADE);
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 gump->StateMy = (ReadUInt8() != 0);
                 CPacketTradeResponse(gump, 2).Send();
@@ -5960,7 +5960,7 @@ PACKET_HANDLER(OrionMessages)
             CGumpSecureTrading *gump =
                 (CGumpSecureTrading *)g_GumpManager.GetGump(id1, 0, GT_TRADE);
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 gump->RemoveMark = true;
                 CPacketTradeResponse(gump, 1).Send();
@@ -5998,7 +5998,7 @@ PACKET_HANDLER(OrionMessages)
             static CMacro existsMacros(0, false, false, false);
             existsMacros.Clear();
 
-            g_MacroPointer = NULL;
+            g_MacroPointer = nullptr;
             g_MacroManager.SendNotificationToPlugin = true;
 
             IFOR (m, 0, count)
@@ -6061,7 +6061,7 @@ PACKET_HANDLER(OrionMessages)
 
             CGump *gump = g_GumpManager.UpdateContent(serial, 0, GT_PAPERDOLL);
 
-            if (gump != NULL)
+            if (gump != nullptr)
             {
                 if (gump->Minimized)
                 {
@@ -6091,7 +6091,7 @@ PACKET_HANDLER(OrionMessages)
 PACKET_HANDLER(PacketsList)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     int count = ReadUInt16BE();
@@ -6113,7 +6113,7 @@ PACKET_HANDLER(PacketsList)
 PACKET_HANDLER(MovePlayer)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     uchar direction = ReadUInt8();
@@ -6123,7 +6123,7 @@ PACKET_HANDLER(MovePlayer)
 PACKET_HANDLER(Pathfinding)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_World == NULL)
+    if (g_World == nullptr)
         return;
 
     ushort x = ReadInt16BE();
@@ -6156,7 +6156,7 @@ PACKET_HANDLER(BoatMoving)
     uint boatSerial = ReadUInt32BE();
 
     CGameObject *boat = g_World->FindWorldObject(boatSerial);
-    if (boat == NULL)
+    if (boat == nullptr)
         return;
 
     uchar boatSpeed = ReadUInt8();
@@ -6190,7 +6190,7 @@ PACKET_HANDLER(BoatMoving)
         ushort boatObjectZ = ReadUInt16BE();
 
         CGameObject *boatObject = g_World->FindWorldObject(boatObjectSerial);
-        if (boatObject == NULL)
+        if (boatObject == nullptr)
             continue;
 
         uchar direction = boatObject->NPC ? ((CGameCharacter *)boatObject)->Direction : 0;

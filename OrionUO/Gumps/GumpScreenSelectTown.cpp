@@ -41,7 +41,7 @@ void CGumpScreenSelectTown::UpdateContent()
 
     CCityItem *city = g_SelectTownScreen.m_City;
 
-    if (city == NULL)
+    if (city == nullptr)
         return;
 
     wstring description = city->m_City.Description;
@@ -97,7 +97,7 @@ void CGumpScreenSelectTown::UpdateContent()
         else
             city = g_CityList.GetCity((uint)i + 1);
 
-        if (city == NULL)
+        if (city == nullptr)
             continue;
 
         int x = 0;
@@ -160,7 +160,7 @@ void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
             {
                 CCityItem *city = g_CityList.GetCity(serial - ID_STS_TOWN + 1);
 
-                if (city == NULL || g_SelectTownScreen.m_City->Name == city->Name)
+                if (city == nullptr || g_SelectTownScreen.m_City->Name == city->Name)
                     break;
 
                 g_SelectTownScreen.m_City = city;
@@ -177,13 +177,13 @@ void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
                 //!Используем обработку HTML-тэгов при создании текстуры текста
                 g_FontManager.SetUseHTML(true);
 
-                if (m_Description != NULL)
+                if (m_Description != nullptr)
                     m_Description->CreateTextureW(1, description, 30, 150);
 
                 //!Выключаем обработку HTML-тэгов
                 g_FontManager.SetUseHTML(false);
 
-                if (m_HTMLGump != NULL)
+                if (m_HTMLGump != nullptr)
                 {
                     m_HTMLGump->ResetDataOffset();
                     m_HTMLGump->CalculateDataSize();

@@ -218,7 +218,7 @@ void CAnimationManager::Load(puint verdata)
         }
     }
 
-    if (verdata != NULL)
+    if (verdata != nullptr)
     {
         int dataCount = *verdata;
 
@@ -336,7 +336,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
                     {
                         m_DataIndex[index].Type = (ANIMATION_GROUPS_TYPE)i;
 
-                        char *endP = NULL;
+                        char *endP = nullptr;
                         m_DataIndex[index].Flags =
                             0x80000000 | strtoul(("0x" + strings[2]).c_str(), &endP, 16);
 
@@ -1004,10 +1004,10 @@ void CAnimationManager::ClearUnusedTextures(uint ticks)
 
         if (obj->LastAccessTime < ticks)
         {
-            if (obj->m_Frames != NULL)
+            if (obj->m_Frames != nullptr)
             {
                 delete[] obj->m_Frames;
-                obj->m_Frames = NULL;
+                obj->m_Frames = nullptr;
             }
             obj->FrameCount = 0;
             obj->LastAccessTime = 0;
@@ -1060,14 +1060,14 @@ bool CAnimationManager::TestPixels(
     CGameObject *obj, int x, int y, bool mirror, uchar &frameIndex, ushort id)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj == NULL)
+    if (obj == nullptr)
         return false;
 
     if (!id)
         id = obj->GetMountAnimation();
 
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-        return NULL;
+        return nullptr;
 
     CTextureAnimationDirection &direction =
         m_DataIndex[id].m_Groups[AnimGroup].m_Direction[Direction];
@@ -1112,7 +1112,7 @@ bool CAnimationManager::TestPixels(
 void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uchar &frameIndex, int id)
 {
     DEBUG_TRACE_FUNCTION;
-    //if (obj == NULL)
+    //if (obj == nullptr)
     //	return;
 
     bool isShadow = (id >= 0x10000);
@@ -1195,7 +1195,7 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uchar 
                         if (direction.Address != direction.PatchedAddress)
                             color = m_DataIndex[id].Color;
 
-                        if (!color && m_EquipConvItem != NULL)
+                        if (!color && m_EquipConvItem != nullptr)
                             color = m_EquipConvItem->Color;
 
                         partialHue = false;
@@ -1432,7 +1432,7 @@ void CAnimationManager::FixSittingDirection(uchar &layerDirection, bool &mirror,
 */
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
-    m_EquipConvItem = NULL;
+    m_EquipConvItem = nullptr;
     DEBUG_TRACE_FUNCTION;
     m_Transform = false;
 
@@ -1560,7 +1560,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     int lightOffset = 20;
 
-    if (obj->IsHuman() && goi != NULL) //Draw mount
+    if (obj->IsHuman() && goi != nullptr) //Draw mount
     {
         m_Sitting = 0;
         lightOffset += 20;
@@ -1616,9 +1616,9 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
 
-        if (m_Sitting && Direction == 3 && sittingData.DrawBack && obj->FindLayer(OL_CLOAK) == NULL)
+        if (m_Sitting && Direction == 3 && sittingData.DrawBack && obj->FindLayer(OL_CLOAK) == nullptr)
         {
-            for (CRenderWorldObject *ro = obj->m_PrevXY; ro != NULL; ro = ro->m_PrevXY)
+            for (CRenderWorldObject *ro = obj->m_PrevXY; ro != nullptr; ro = ro->m_PrevXY)
             {
                 if ((ro->Graphic & 0x3FFF) == sittingData.Graphic)
                 {
@@ -1662,7 +1662,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             CTextureAnimationDirection &direction =
                 m_DataIndex[id].m_Groups[AnimGroup].m_Direction[Direction];
 
-            if (direction.Address != 0 && direction.m_Frames != NULL)
+            if (direction.Address != 0 && direction.m_Frames != nullptr)
             {
                 CTextureAnimationFrame &frame = direction.m_Frames[0];
 
@@ -1825,7 +1825,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     int drawX = x - obj->OffsetX;
     int drawY = y - obj->OffsetY - obj->OffsetZ;
 
-    if (obj->IsHuman() && goi != NULL) //Check mount
+    if (obj->IsHuman() && goi != nullptr) //Check mount
     {
         ushort mountID = goi->GetMountAnimation();
 
@@ -1959,7 +1959,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
                         frameIndex = 0;
                 }
 
-                if (direction.m_Frames != NULL)
+                if (direction.m_Frames != nullptr)
                 {
                     CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
 
@@ -1977,7 +1977,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
 
         puchar ptr = (puchar)direction.Address;
 
-        if (ptr != NULL)
+        if (ptr != nullptr)
         {
             if (!direction.IsVerdata)
             {
@@ -2047,7 +2047,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
             data.pixelDataOffset = ReadUInt32LE();
 
             short imageCenterX, imageCenterY, imageWidth, imageHeight;
-            pushort palette = NULL;
+            pushort palette = nullptr;
             ReadUOPFrameData(imageCenterX, imageCenterY, imageWidth, imageHeight, palette, data);
             result.CenterX = imageCenterX;
             result.CenterY = imageCenterY;
@@ -2095,7 +2095,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     {
         dims.Width = 20;
 
-        if (obj->NPC && obj->FindLayer(OL_MOUNT) != NULL)
+        if (obj->NPC && obj->FindLayer(OL_MOUNT) != nullptr)
             dims.Height = 100;
         else
             dims.Height = 60;
@@ -2128,7 +2128,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
 
     direction.FrameCount = (int)pixelDataOffsets.size() / 5;
     int dirFrameStartIdx = direction.FrameCount * Direction;
-    if (direction.m_Frames == NULL)
+    if (direction.m_Frames == nullptr)
         direction.m_Frames = new CTextureAnimationFrame[direction.FrameCount];
 
     IFOR (i, 0, direction.FrameCount)
@@ -2139,7 +2139,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
             continue;
 
         UOPFrameData frameData = pixelDataOffsets[i + dirFrameStartIdx];
-        if (frameData.dataStart == NULL)
+        if (frameData.dataStart == nullptr)
             continue;
 
         short imageCenterX, imageCenterY, imageWidth, imageHeight;
@@ -2272,7 +2272,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
-        if (goi != NULL) //Check mount
+        if (goi != nullptr) //Check mount
         {
             ushort mountID = goi->GetMountAnimation();
 
@@ -2305,7 +2305,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
             {
                 goi = obj->FindLayer(m_UsedLayers[layerDir][l]);
 
-                if (goi == NULL || !goi->AnimID)
+                if (goi == nullptr || !goi->AnimID)
                     continue;
 
                 if (!IsCovered(goi->Layer, obj))
@@ -2343,7 +2343,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
             {
                 CGameItem *goi = obj->FindLayer(m_UsedLayers[Direction][l]);
 
-                if (goi != NULL && goi->AnimID)
+                if (goi != nullptr && goi->AnimID)
                 {
                     if (!IsCovered(goi->Layer, obj))
                     {
@@ -2422,7 +2422,7 @@ bool CAnimationManager::DrawEquippedLayers(
             }
 
             Draw(item, drawX, drawY, mirror, animIndex, id);
-            m_EquipConvItem = NULL;
+            m_EquipConvItem = nullptr;
 
             if (item->IsLightSource() && g_GameScreen.UseLight)
                 g_GameScreen.AddLight(obj, item, drawX, drawY - lightOffset);
@@ -2702,7 +2702,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, ushort
         }
         else if (type != AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != NULL)
+            if (obj->FindLayer(OL_MOUNT) != nullptr)
             {
                 if (action)
                 {
@@ -2765,7 +2765,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_1_2(
 
     if (type != AGT_MONSTER)
     {
-        if (type <= AGT_ANIMAL || obj->FindLayer(OL_MOUNT) != NULL)
+        if (type <= AGT_ANIMAL || obj->FindLayer(OL_MOUNT) != nullptr)
             return 0xFF;
 
         return 30;
@@ -2821,7 +2821,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, ushort
     {
         if (type > AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != NULL)
+            if (obj->FindLayer(OL_MOUNT) != nullptr)
                 return 0xFF;
 
             return 20;
@@ -2851,7 +2851,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, ushort
     }
     else if (type != AGT_ANIMAL)
     {
-        if (obj->FindLayer(OL_MOUNT) != NULL)
+        if (obj->FindLayer(OL_MOUNT) != nullptr)
             return 0xFF;
 
         if (mode % 2)
@@ -2892,7 +2892,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_6_14(
             if (type == AGT_ANIMAL)
                 return 3;
 
-            if (obj->FindLayer(OL_MOUNT) != NULL)
+            if (obj->FindLayer(OL_MOUNT) != nullptr)
                 return 0xFF;
 
             return 34;
@@ -2906,7 +2906,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_6_14(
 
 uchar CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, ushort action, uchar mode)
 {
-    if (obj->FindLayer(OL_MOUNT) != NULL)
+    if (obj->FindLayer(OL_MOUNT) != nullptr)
         return 0xFF;
 
     if (action)
@@ -2936,7 +2936,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, ushort
             if (type == AGT_ANIMAL)
                 return 9;
 
-            if (obj->FindLayer(OL_MOUNT) != NULL)
+            if (obj->FindLayer(OL_MOUNT) != nullptr)
                 return 0xFF;
 
             return 33;
@@ -2978,7 +2978,7 @@ uchar CAnimationManager::GetObjectNewAnimationType_11(
     {
         if (type >= AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != NULL)
+            if (obj->FindLayer(OL_MOUNT) != nullptr)
                 return 0xFF;
 
             switch (action)

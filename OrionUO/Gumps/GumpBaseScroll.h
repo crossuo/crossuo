@@ -24,10 +24,10 @@ protected:
     static const int ID_GBS_BUTTON_MINIMIZE = 0xFFFFFFF1;
     static const int ID_GBS_BUTTON_RESIZE = 0xFFFFFFF2;
 
-    CGUIButton *m_Minimizer{ NULL };
-    CGUIScrollBackground *m_Background{ NULL };
-    CGUIHTMLGump *m_HTMLGump{ NULL };
-    CGUIResizeButton *m_Resizer{ NULL };
+    CGUIButton *m_Minimizer{ nullptr };
+    CGUIScrollBackground *m_Background{ nullptr };
+    CGUIHTMLGump *m_HTMLGump{ nullptr };
+    CGUIResizeButton *m_Resizer{ nullptr };
 
     int m_MinHeight{ 160 };
 

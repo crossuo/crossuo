@@ -20,7 +20,7 @@ public:
     /*!
 	Получить массив пикселей гампа
 	@param [__in] io Ссылка на данные о гампе
-	@return Массив пикселей или NULL
+	@return Массив пикселей или nullptr
 	*/
     USHORT_LIST GetGumpPixels(CIndexObject &io);
 

@@ -143,9 +143,9 @@ void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
 
 #if USE_WISP
         if (synchronizedDelay)
-            m_Handle = (HANDLE)_beginthreadex(NULL, 0, CThreadLoopSynchronizedDelay, this, 0, &ID);
+            m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoopSynchronizedDelay, this, 0, &ID);
         else
-            m_Handle = (HANDLE)_beginthreadex(NULL, 0, CThreadLoop, this, 0, &ID);
+            m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoop, this, 0, &ID);
 #else
         if (synchronizedDelay)
             m_Handle = SDL_CreateThread(

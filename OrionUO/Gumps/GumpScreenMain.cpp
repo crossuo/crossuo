@@ -28,7 +28,7 @@ void CGumpScreenMain::PrepareContent()
     static uint lastArrowTick = 0;
     static bool arrowLighted = false;
 
-    if (lastArrowTick < g_Ticks && m_Arrow != NULL)
+    if (lastArrowTick < g_Ticks && m_Arrow != nullptr)
     {
         arrowLighted = !arrowLighted;
 
@@ -46,7 +46,7 @@ void CGumpScreenMain::PrepareContent()
 void CGumpScreenMain::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Items != NULL)
+    if (m_Items != nullptr)
         return;
 
     //Clear();
@@ -107,7 +107,7 @@ void CGumpScreenMain::UpdateContent()
 void CGumpScreenMain::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == NULL)
+    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
     uint id = g_SelectedObject.Serial;

@@ -52,7 +52,7 @@ void CGumpScreenGame::UpdateContent()
 
             CGumpOptions *opt = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);
 
-            if (opt != NULL)
+            if (opt != nullptr)
             {
                 opt->m_GameWindowWidth->m_Entry.SetTextW(
                     std::to_wstring(g_RenderBounds.GameWindowWidth));
@@ -87,7 +87,7 @@ void CGumpScreenGame::UpdateContent()
 void CGumpScreenGame::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == NULL)
+    if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
     if (g_SelectedObject.Serial == ID_GS_RESIZE)
@@ -144,7 +144,7 @@ void CGumpScreenGame::Draw()
 CRenderObject *CGumpScreenGame::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CRenderObject *selected = NULL;
+    CRenderObject *selected = nullptr;
 
     if (!g_ConfigManager.LockResizingGameWindow)
     {
@@ -182,7 +182,7 @@ CRenderObject *CGumpScreenGame::Select()
                      0))
             selected = (CRenderObject *)m_Items->m_Next;
 
-        if (selected != NULL)
+        if (selected != nullptr)
             g_SelectedObject.Init(selected, this);
     }
 
@@ -194,7 +194,7 @@ void CGumpScreenGame::OnLeftMouseButtonDown()
     DEBUG_TRACE_FUNCTION;
     //CGump::OnLeftMouseButtonDown();
 
-    if (g_GumpConsoleType != NULL)
+    if (g_GumpConsoleType != nullptr)
         g_GumpManager.MoveToBack(g_GumpConsoleType);
 }
 

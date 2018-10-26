@@ -144,14 +144,14 @@ CGumpSpell *CGumpSpell::GetTopSpell()
 {
     DEBUG_TRACE_FUNCTION;
     if (!InGroup())
-        return NULL;
+        return nullptr;
 
-    if (m_GroupPrev == NULL)
+    if (m_GroupPrev == nullptr)
         return this;
 
     CGumpSpell *gump = m_GroupPrev;
 
-    while (gump != NULL && gump->m_GroupPrev != NULL)
+    while (gump != nullptr && gump->m_GroupPrev != nullptr)
         gump = gump->m_GroupPrev;
 
     return gump;
@@ -161,7 +161,7 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     if (InGroup())
-        return NULL;
+        return nullptr;
 
     int gumpWidth = 44;
     int gumpHeight = 44;
@@ -184,7 +184,7 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
 
     CGump *gump = (CGump *)g_GumpManager.m_Items;
 
-    while (gump != NULL)
+    while (gump != nullptr)
     {
         if (gump != this && gump->GumpType == GT_SPELL && ((CGumpSpell *)gump)->BigIcon == BigIcon)
         {
@@ -263,7 +263,7 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
 
                 CGump *testGump = (CGump *)g_GumpManager.m_Items;
 
-                while (testGump != NULL)
+                while (testGump != nullptr)
                 {
                     if (testGump != this && testGump->GumpType == GT_SPELL &&
                         ((CGumpSpell *)testGump)->BigIcon == BigIcon)
@@ -275,7 +275,7 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                     testGump = (CGump *)testGump->m_Next;
                 }
 
-                if (testGump == NULL)
+                if (testGump == nullptr)
                 {
                     x = testX;
                     y = testY;
@@ -294,12 +294,12 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
 bool CGumpSpell::GetSpellGroupOffset(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
-    if (InGroup() && g_MouseManager.LeftButtonPressed && g_PressedObject.LeftGump != NULL &&
+    if (InGroup() && g_MouseManager.LeftButtonPressed && g_PressedObject.LeftGump != nullptr &&
         !g_PressedObject.LeftSerial)
     {
         CGumpSpell *gump = GetTopSpell();
 
-        while (gump != NULL)
+        while (gump != nullptr)
         {
             //Если гамп захватили и (может быть) двигают
             if (gump != this && g_PressedObject.LeftGump == gump && gump->CanBeMoved())
@@ -327,7 +327,7 @@ void CGumpSpell::UpdateGroup(int x, int y)
 
     CGumpSpell *gump = GetTopSpell();
 
-    while (gump != NULL)
+    while (gump != nullptr)
     {
         if (gump != this)
         {
@@ -347,31 +347,31 @@ void CGumpSpell::UpdateGroup(int x, int y)
 void CGumpSpell::AddSpell(CGumpSpell *spell)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_GroupNext == NULL)
+    if (m_GroupNext == nullptr)
     {
         m_GroupNext = spell;
         spell->m_GroupPrev = this;
-        spell->m_GroupNext = NULL;
+        spell->m_GroupNext = nullptr;
     }
     else
     {
         CGumpSpell *gump = m_GroupNext;
 
-        while (gump != NULL && gump->m_GroupNext != NULL)
+        while (gump != nullptr && gump->m_GroupNext != nullptr)
             gump = gump->m_GroupNext;
 
         gump->m_GroupNext = spell;
         spell->m_GroupPrev = gump;
-        spell->m_GroupNext = NULL;
+        spell->m_GroupNext = nullptr;
     }
 
-    if (spell->m_SpellUnlocker != NULL)
+    if (spell->m_SpellUnlocker != nullptr)
     {
         spell->m_SpellUnlocker->Visible = spell->InGroup();
         spell->WantRedraw = true;
     }
 
-    if (m_SpellUnlocker != NULL)
+    if (m_SpellUnlocker != nullptr)
     {
         m_SpellUnlocker->Visible = InGroup();
 
@@ -382,28 +382,28 @@ void CGumpSpell::AddSpell(CGumpSpell *spell)
 void CGumpSpell::RemoveFromGroup()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_GroupNext != NULL)
+    if (m_GroupNext != nullptr)
     {
         m_GroupNext->WantRedraw = true;
         m_GroupNext->m_GroupPrev = m_GroupPrev;
 
-        if (m_GroupNext->m_SpellUnlocker != NULL)
+        if (m_GroupNext->m_SpellUnlocker != nullptr)
             m_GroupNext->m_SpellUnlocker->Visible = m_GroupNext->InGroup();
     }
 
-    if (m_GroupPrev != NULL)
+    if (m_GroupPrev != nullptr)
     {
         m_GroupPrev->WantRedraw = true;
         m_GroupPrev->m_GroupNext = m_GroupNext;
 
-        if (m_GroupPrev->m_SpellUnlocker != NULL)
+        if (m_GroupPrev->m_SpellUnlocker != nullptr)
             m_GroupPrev->m_SpellUnlocker->Visible = m_GroupPrev->InGroup();
     }
 
-    m_GroupNext = NULL;
-    m_GroupPrev = NULL;
+    m_GroupNext = nullptr;
+    m_GroupPrev = nullptr;
 
-    if (m_SpellUnlocker != NULL)
+    if (m_SpellUnlocker != nullptr)
     {
         m_SpellUnlocker->Visible = InGroup();
         WantRedraw = true;
@@ -423,7 +423,7 @@ void CGumpSpell::CalculateGumpState()
             int testX = g_MouseManager.Position.X;
             int testY = g_MouseManager.Position.Y;
 
-            if (GetNearSpell(testX, testY) != NULL)
+            if (GetNearSpell(testX, testY) != nullptr)
             {
                 g_GumpTranslate.X = (float)testX;
                 g_GumpTranslate.Y = (float)testY;
@@ -451,12 +451,12 @@ void CGumpSpell::GUMP_BUTTON_EVENT_C
     {
         CGumpSpell *oldGroup = m_GroupNext;
 
-        if (oldGroup == NULL)
+        if (oldGroup == nullptr)
             oldGroup = m_GroupPrev;
 
         RemoveFromGroup();
 
-        if (oldGroup != NULL)
+        if (oldGroup != nullptr)
         {
             oldGroup->UpdateGroup(0, 0);
             oldGroup->WantRedraw = true;

@@ -43,7 +43,7 @@ Wisp::CSize CGUIButtonTileart::GetSize()
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         tileSize.Width = th->Width;
         tileSize.Height = th->Height;
@@ -85,7 +85,7 @@ void CGUIButtonTileart::Draw(bool checktrans)
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         SetShaderMode();
 
@@ -101,7 +101,7 @@ bool CGUIButtonTileart::Select()
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
 
-    if (th != NULL)
+    if (th != nullptr)
         return th->Select(m_X, m_Y, !CheckPolygone);
 
     return false;

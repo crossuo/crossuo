@@ -111,7 +111,7 @@ public:
 
     virtual void UpdateContent() {}
 
-    virtual class CTextRenderer *GetTextRenderer() { return NULL; }
+    virtual class CTextRenderer *GetTextRenderer() { return nullptr; }
 
     virtual void PrepareTextures();
 

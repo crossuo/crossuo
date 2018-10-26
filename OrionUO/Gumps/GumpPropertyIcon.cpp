@@ -33,16 +33,16 @@ void CGumpPropertyIcon::SetTextW(const wstring &val)
         val,
         width,
         (g_ConfigManager.GetItemPropertiesMode() == OPM_ALWAYS_UP ? 300 : 0));
-    Object = NULL;
+    Object = nullptr;
     WantUpdateContent = true;
 }
 
 void CGumpPropertyIcon::PrepareContent()
 {
-    if (g_ConfigManager.GetItemPropertiesMode() == OPM_AT_ICON && Object != NULL &&
+    if (g_ConfigManager.GetItemPropertiesMode() == OPM_AT_ICON && Object != nullptr &&
         Object != g_SelectedObject.Object)
     {
-        Object = NULL;
+        Object = nullptr;
         g_ObjectPropertiesManager.Reset();
         WantUpdateContent = true;
     }
@@ -56,7 +56,7 @@ void CGumpPropertyIcon::UpdateContent()
 
     if (mode == OPM_AT_ICON)
     {
-        if (Object == NULL)
+        if (Object == nullptr)
             Add(new CGUIGumppic(0x00E3, 0, 0));
         else
         {

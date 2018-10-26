@@ -27,7 +27,7 @@ Wisp::CSize CGUIDrawObject::GetSize()
     Wisp::CSize size;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         size.Width = th->Width;
         size.Height = th->Height;
@@ -64,7 +64,7 @@ void CGUIDrawObject::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         SetShaderMode();
 
@@ -77,7 +77,7 @@ bool CGUIDrawObject::Select()
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
         return th->Select(m_X, m_Y, !CheckPolygone);
 
     return false;

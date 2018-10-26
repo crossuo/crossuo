@@ -36,7 +36,7 @@ CGumpStatusbar::~CGumpStatusbar()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_ConnectionManager.Connected() && g_PacketManager.GetClientVersion() >= CV_200 &&
-        g_World != NULL && g_World->FindWorldObject(Serial) != NULL)
+        g_World != nullptr && g_World->FindWorldObject(Serial) != nullptr)
         CPacketCloseStatusbarGump(Serial).Send();
 
     RemoveFromGroup();
@@ -104,14 +104,14 @@ CGumpStatusbar *CGumpStatusbar::GetTopStatusbar()
 {
     DEBUG_TRACE_FUNCTION;
     if (!InGroup())
-        return NULL;
+        return nullptr;
 
-    if (m_GroupPrev == NULL)
+    if (m_GroupPrev == nullptr)
         return this;
 
     CGumpStatusbar *gump = m_GroupPrev;
 
-    while (gump != NULL && gump->m_GroupPrev != NULL)
+    while (gump != nullptr && gump->m_GroupPrev != nullptr)
         gump = gump->m_GroupPrev;
 
     return gump;
@@ -121,7 +121,7 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     if (InGroup() || !Minimized)
-        return NULL;
+        return nullptr;
 
     //154x59 mini-gump
 
@@ -142,7 +142,7 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
 
     CGump *gump = (CGump *)g_GumpManager.m_Items;
 
-    while (gump != NULL)
+    while (gump != nullptr)
     {
         if (gump != this && gump->GumpType == GT_STATUSBAR && gump->Minimized)
         {
@@ -221,7 +221,7 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
 
                 CGump *testGump = (CGump *)g_GumpManager.m_Items;
 
-                while (testGump != NULL)
+                while (testGump != nullptr)
                 {
                     if (testGump != this && testGump->GumpType == GT_STATUSBAR &&
                         testGump->Minimized)
@@ -233,7 +233,7 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
                     testGump = (CGump *)testGump->m_Next;
                 }
 
-                if (testGump == NULL)
+                if (testGump == nullptr)
                 {
                     x = testX;
                     y = testY;
@@ -253,14 +253,14 @@ bool CGumpStatusbar::GetStatusbarGroupOffset(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     if (InGroup() && Minimized && g_MouseManager.LeftButtonPressed &&
-        g_PressedObject.LeftGump != NULL &&
-        (g_PressedObject.LeftObject == NULL ||
+        g_PressedObject.LeftGump != nullptr &&
+        (g_PressedObject.LeftObject == nullptr ||
          (g_PressedObject.LeftObject->IsGUI() &&
           ((CBaseGUI *)g_PressedObject.LeftObject)->MoveOnDrag)))
     {
         CGumpStatusbar *gump = GetTopStatusbar();
 
-        while (gump != NULL)
+        while (gump != nullptr)
         {
             //Если гамп захватили и (может быть) двигают
             if (gump != this && g_PressedObject.LeftGump == gump && gump->CanBeMoved())
@@ -288,7 +288,7 @@ void CGumpStatusbar::UpdateGroup(int x, int y)
 
     CGumpStatusbar *gump = GetTopStatusbar();
 
-    while (gump != NULL)
+    while (gump != nullptr)
     {
         if (gump != this)
         {
@@ -308,31 +308,31 @@ void CGumpStatusbar::UpdateGroup(int x, int y)
 void CGumpStatusbar::AddStatusbar(CGumpStatusbar *bar)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_GroupNext == NULL)
+    if (m_GroupNext == nullptr)
     {
         m_GroupNext = bar;
         bar->m_GroupPrev = this;
-        bar->m_GroupNext = NULL;
+        bar->m_GroupNext = nullptr;
     }
     else
     {
         CGumpStatusbar *gump = m_GroupNext;
 
-        while (gump != NULL && gump->m_GroupNext != NULL)
+        while (gump != nullptr && gump->m_GroupNext != nullptr)
             gump = gump->m_GroupNext;
 
         gump->m_GroupNext = bar;
         bar->m_GroupPrev = gump;
-        bar->m_GroupNext = NULL;
+        bar->m_GroupNext = nullptr;
     }
 
-    if (bar->m_StatusbarUnlocker != NULL)
+    if (bar->m_StatusbarUnlocker != nullptr)
     {
         bar->m_StatusbarUnlocker->Visible = bar->InGroup();
         bar->WantRedraw = true;
     }
 
-    if (m_StatusbarUnlocker != NULL)
+    if (m_StatusbarUnlocker != nullptr)
     {
         m_StatusbarUnlocker->Visible = InGroup();
 
@@ -343,28 +343,28 @@ void CGumpStatusbar::AddStatusbar(CGumpStatusbar *bar)
 void CGumpStatusbar::RemoveFromGroup()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_GroupNext != NULL)
+    if (m_GroupNext != nullptr)
     {
         m_GroupNext->WantRedraw = true;
         m_GroupNext->m_GroupPrev = m_GroupPrev;
 
-        if (m_GroupNext->m_StatusbarUnlocker != NULL)
+        if (m_GroupNext->m_StatusbarUnlocker != nullptr)
             m_GroupNext->m_StatusbarUnlocker->Visible = m_GroupNext->InGroup();
     }
 
-    if (m_GroupPrev != NULL)
+    if (m_GroupPrev != nullptr)
     {
         m_GroupPrev->WantRedraw = true;
         m_GroupPrev->m_GroupNext = m_GroupNext;
 
-        if (m_GroupPrev->m_StatusbarUnlocker != NULL)
+        if (m_GroupPrev->m_StatusbarUnlocker != nullptr)
             m_GroupPrev->m_StatusbarUnlocker->Visible = m_GroupPrev->InGroup();
     }
 
-    m_GroupNext = NULL;
-    m_GroupPrev = NULL;
+    m_GroupNext = nullptr;
+    m_GroupPrev = nullptr;
 
-    if (m_StatusbarUnlocker != NULL)
+    if (m_StatusbarUnlocker != nullptr)
     {
         m_StatusbarUnlocker->Visible = InGroup();
         WantRedraw = true;
@@ -387,7 +387,7 @@ void CGumpStatusbar::CalculateGumpState()
             int testX = g_MouseManager.Position.X;
             int testY = g_MouseManager.Position.Y;
 
-            if (GetNearStatusbar(testX, testY) != NULL)
+            if (GetNearStatusbar(testX, testY) != nullptr)
             {
                 g_GumpTranslate.X = (float)testX;
                 g_GumpTranslate.Y = (float)testY;
@@ -409,18 +409,18 @@ void CGumpStatusbar::CalculateGumpState()
 void CGumpStatusbar::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_HitsBody != NULL)
+    if (m_HitsBody != nullptr)
     {
         CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
-        if (obj == NULL && m_HitsBody->Color != 0x0386)
+        if (obj == nullptr && m_HitsBody->Color != 0x0386)
         {
             m_Body->Color = 0x0386;
             m_HitsBody->Color = 0x0386;
             m_Entry->Color = 0x0386;
             m_Entry->ReadOnly = true;
         }
-        else if (obj != NULL && m_HitsBody->Color == 0x0386)
+        else if (obj != nullptr && m_HitsBody->Color == 0x0386)
         {
             m_Body->Color = g_ConfigManager.GetColorByNotoriety(obj->Notoriety);
             m_HitsBody->Color = 0;
@@ -443,12 +443,12 @@ void CGumpStatusbar::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
     Clear();
-    m_StatusbarUnlocker = NULL;
-    m_Body = NULL;
-    m_HitsBody = NULL;
-    m_Entry = NULL;
+    m_StatusbarUnlocker = nullptr;
+    m_Body = nullptr;
+    m_HitsBody = nullptr;
+    m_Entry = nullptr;
     bool useUOPGumps = g_FileManager.UseUOPGumps;
-    CGUIText *text = NULL;
+    CGUIText *text = nullptr;
 
     if (Serial == g_PlayerSerial) //Если это статусбар игрока
     {
@@ -948,11 +948,11 @@ void CGumpStatusbar::UpdateContent()
                 if (g_Party.Member[i].Serial == Serial)
                 {
                     CPartyObject &member = g_Party.Member[i];
-                    if (member.Character == NULL)
+                    if (member.Character == nullptr)
                     {
                         member.Character = g_World->FindWorldCharacter(member.Serial);
 
-                        if (member.Character == NULL)
+                        if (member.Character == nullptr)
                             break;
                     }
 
@@ -1065,7 +1065,7 @@ void CGumpStatusbar::UpdateContent()
             string objName = m_Name;
             bool canChangeName = false;
 
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 hitsColor = 0;
                 //Вычисляем цвет статусбара
@@ -1092,7 +1092,7 @@ void CGumpStatusbar::UpdateContent()
 
             Add(new CGUIShader(&g_ColorizerShader, false));
 
-            if (obj != NULL && obj->MaxHits > 0)
+            if (obj != nullptr && obj->MaxHits > 0)
             {
                 int per = CalculatePercents(obj->MaxHits, obj->Hits, 109);
 
@@ -1189,12 +1189,12 @@ void CGumpStatusbar::GUMP_BUTTON_EVENT_C
     {
         CGumpStatusbar *oldGroup = m_GroupNext;
 
-        if (oldGroup == NULL)
+        if (oldGroup == nullptr)
             oldGroup = m_GroupPrev;
 
         RemoveFromGroup();
 
-        if (oldGroup != NULL)
+        if (oldGroup != nullptr)
         {
             oldGroup->UpdateGroup(0, 0);
             oldGroup->WantRedraw = true;
@@ -1240,12 +1240,12 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
         {
             CGumpStatusbar *oldGroup = m_GroupNext;
 
-            if (oldGroup == NULL)
+            if (oldGroup == nullptr)
                 oldGroup = m_GroupPrev;
 
             RemoveFromGroup();
 
-            if (oldGroup != NULL)
+            if (oldGroup != nullptr)
             {
                 oldGroup->UpdateGroup(0, 0);
                 oldGroup->WantRedraw = true;

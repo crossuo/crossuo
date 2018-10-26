@@ -96,7 +96,7 @@ void CCityManager::Init()
 
         CCliloc *cliloc = g_ClilocManager.Cliloc(g_Language);
 
-        if (cliloc != NULL)
+        if (cliloc != nullptr)
         {
             IFOR (i, 0, 9)
                 m_CityList.push_back(CCity(cityNames[i], cliloc->GetW(1075072 + (int)i)));
@@ -112,7 +112,7 @@ CCityManager::~CCityManager()
 /*!
 Получить указатель на город
 @param [__in] name Имя города
-@return Ссылка на город или NULL
+@return Ссылка на город или nullptr
 */
 CCity CCityManager::GetCity(const string &name)
 {

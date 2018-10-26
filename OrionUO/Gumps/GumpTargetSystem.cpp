@@ -46,7 +46,7 @@ void CGumpTargetSystem::UpdateContent()
     if (g_ConfigManager.DisableNewTargetSystem || !g_NewTargetSystem.Serial)
         return;
 
-    if (m_Items == NULL)
+    if (m_Items == nullptr)
     {
         m_Body = (CGUIGumppic *)Add(new CGUIGumppic(0x0804, 0, 0));
         m_Body->SelectOnly = true;
@@ -55,11 +55,11 @@ void CGumpTargetSystem::UpdateContent()
 
     CGameObject *obj = g_World->FindWorldObject(g_NewTargetSystem.Serial);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         //Вычисляем цвет статусбара
         ushort color = 0;
-        CGameCharacter *character = NULL;
+        CGameCharacter *character = nullptr;
 
         if (obj->NPC)
         {
@@ -98,7 +98,7 @@ void CGumpTargetSystem::UpdateContent()
         //Hits
         m_DataBox->Add(new CGUIGumppic(0x0805, 34, 38));
 
-        if (character != NULL)
+        if (character != nullptr)
         {
             int per = CalculatePercents(character->MaxHits, character->Hits, 109);
 

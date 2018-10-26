@@ -51,7 +51,7 @@ void CGumpDye::UpdateContent()
     DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::UpdateContent();
 
-    if (m_Tube == NULL)
+    if (m_Tube == nullptr)
     {
         Add(new CGUIShader(&g_ColorizerShader, true));
 
@@ -76,7 +76,7 @@ void CGumpDye::GUMP_BUTTON_EVENT_C
     DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::OnButton(serial);
 
-    if (serial >= ID_GSC_COLORS && m_Tube != NULL)
+    if (serial >= ID_GSC_COLORS && m_Tube != nullptr)
         m_Tube->Color = GetCurrentColor();
 }
 
@@ -91,7 +91,7 @@ void CGumpDye::GUMP_SLIDER_MOVE_EVENT_C
     DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::OnSliderMove(serial);
 
-    if (m_Tube != NULL)
+    if (m_Tube != nullptr)
         m_Tube->Color = GetCurrentColor();
 }
 

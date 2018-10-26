@@ -1169,7 +1169,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
 
     CGUITextEntry *entry = gump->GetEntry(page);
 
-    if (entry != NULL)
+    if (entry != nullptr)
     {
         CEntryText &textEntry = entry->m_Entry;
         string data = EncodeUTF8(textEntry.Data());

@@ -25,15 +25,15 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint serial, short x, short y, string nam
     m_HTMLGump =
         (CGUIHTMLGump *)Add(new CGUIHTMLGump(ID_GBS_HTMLGUMP, 0, 127, 159, 241, 195, false, true));
 
-    if (m_HTMLGump->m_Background != NULL)
+    if (m_HTMLGump->m_Background != nullptr)
         m_HTMLGump->m_Background->Height -= 30;
 
-    if (m_HTMLGump->m_Scissor != NULL)
+    if (m_HTMLGump->m_Scissor != nullptr)
         m_HTMLGump->m_Scissor->Height -= 30;
 
     CGUIHTMLButton *button = m_HTMLGump->m_ButtonUp;
 
-    if (button != NULL)
+    if (button != nullptr)
     {
         button->Graphic = 0x0824;
         button->GraphicSelected = 0x0824;
@@ -45,7 +45,7 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint serial, short x, short y, string nam
 
     button = m_HTMLGump->m_ButtonDown;
 
-    if (button != NULL)
+    if (button != nullptr)
     {
         button->Graphic = 0x0825;
         button->GraphicSelected = 0x0825;
@@ -57,7 +57,7 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint serial, short x, short y, string nam
 
     CGUIHTMLSlider *slider = m_HTMLGump->m_Slider;
 
-    if (slider != NULL)
+    if (slider != nullptr)
     {
         slider->Graphic = 0x001F;
         slider->GraphicSelected = 0x001F;
@@ -90,7 +90,7 @@ bool CGumpBulletinBoard::OnLeftMouseButtonDoubleClick()
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI())
+    if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI())
     {
         CBaseGUI *gui = (CBaseGUI *)g_PressedObject.LeftObject;
 

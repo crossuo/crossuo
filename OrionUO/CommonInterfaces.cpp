@@ -17,8 +17,8 @@ IOrionString g_OrionString;
 
 IOrionString::IOrionString()
     : m_Unicode(false)
-    , m_DataA(NULL)
-    , m_DataW(NULL)
+    , m_DataA(nullptr)
+    , m_DataW(nullptr)
 {
 }
 
@@ -277,7 +277,7 @@ void CDECL FUNCBODY_SecureTradingCheckState(unsigned int id1, bool state)
 {
     CGumpSecureTrading *gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(id1, 0, GT_TRADE);
 
-    if (gump != NULL)
+    if (gump != nullptr)
     {
         gump->StateMy = state;
 
@@ -291,7 +291,7 @@ void CDECL FUNCBODY_SecureTradingClose(unsigned int id1)
 {
     CGumpSecureTrading *gump = (CGumpSecureTrading *)g_GumpManager.GetGump(id1, 0, GT_TRADE);
 
-    if (gump != NULL)
+    if (gump != nullptr)
     {
         gump->RemoveMark = true;
 
@@ -369,7 +369,7 @@ bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
 {
-    if (g_Player == NULL)
+    if (g_Player == nullptr)
         return false;
 
     Wisp::CPoint2Di startPoint(g_Player->GetX(), g_Player->GetY());
@@ -396,7 +396,7 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
         while (g_PathFinder.AutoWalking)
             SDL_Delay(100);
 
-        if (g_Player == NULL)
+        if (g_Player == nullptr)
             return false;
 
         Wisp::CPoint2Di p(g_Player->GetX(), g_Player->GetY());
@@ -430,7 +430,7 @@ bool CDECL FUNCBODY_GetAutowalking()
 
 void CDECL FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
 {
-    Wisp::CMappedFile *file = NULL;
+    Wisp::CMappedFile *file = nullptr;
     unsigned int extra = 0;
 
     switch (index)
@@ -574,7 +574,7 @@ void CDECL FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
         {
             QFOR(item, g_ClilocManager.m_Items, CCliloc *)
             {
-                if (item->Loaded && item->m_File.Start != NULL && item->Language == "enu")
+                if (item->Loaded && item->m_File.Start != nullptr && item->Language == "enu")
                 {
                     file = &item->m_File;
                     extra = 'ENU';
@@ -588,7 +588,7 @@ void CDECL FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
             break;
     }
 
-    if (file != NULL)
+    if (file != nullptr)
     {
         info.Address = (uint64_t)file->Start;
         info.Size = (uint64_t)file->Size;
@@ -608,12 +608,12 @@ void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, ORION_RAW_ART_INFO &inf
     {
         CIndexObjectLand &landData = g_Orion.m_LandDataIndex[index];
 
-        if (landData.Address != NULL)
+        if (landData.Address != 0)
         {
             info.Address = (uint64_t)landData.Address;
             info.Size = (uint64_t)landData.DataSize;
 
-            if (landData.UopBlock != NULL)
+            if (landData.UopBlock != nullptr)
                 info.CompressedSize = (uint64_t)landData.UopBlock->CompressedSize;
             else
                 info.CompressedSize = 0;
@@ -633,12 +633,12 @@ void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, ORION_RAW_ART_INFO &i
     {
         CIndexObjectStatic &staticData = g_Orion.m_StaticDataIndex[index];
 
-        if (staticData.Address != NULL)
+        if (staticData.Address != 0)
         {
             info.Address = (uint64_t)staticData.Address;
             info.Size = (uint64_t)staticData.DataSize;
 
-            if (staticData.UopBlock != NULL)
+            if (staticData.UopBlock != nullptr)
                 info.CompressedSize = (uint64_t)staticData.UopBlock->CompressedSize;
             else
                 info.CompressedSize = 0;
@@ -658,14 +658,14 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, ORION_RAW_GUMP_INFO &in
     {
         CIndexGump &gumpData = g_Orion.m_GumpDataIndex[index];
 
-        if (gumpData.Address != NULL)
+        if (gumpData.Address != 0)
         {
             info.Address = (uint64_t)gumpData.Address;
             info.Size = (uint64_t)gumpData.DataSize;
             info.Width = gumpData.Width;
             info.Height = gumpData.Height;
 
-            if (gumpData.UopBlock != NULL)
+            if (gumpData.UopBlock != nullptr)
                 info.CompressedSize = (uint64_t)gumpData.UopBlock->CompressedSize;
             else
                 info.CompressedSize = 0;

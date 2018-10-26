@@ -29,12 +29,12 @@ private:
     //Получить группу над курсором
     class CSkillGroupObject *GetGroupUnderCursor(int &index);
 
-    CGUIGumppic *m_BottomLine{ NULL };
-    CGUIGumppic *m_Comment{ NULL };
-    CGUIButton *m_CreateGroup{ NULL };
-    CGUIText *m_SkillSum{ NULL };
-    CGUICheckbox *m_CheckboxShowReal{ NULL };
-    CGUICheckbox *m_CheckboxShowCap{ NULL };
+    CGUIGumppic *m_BottomLine{ nullptr };
+    CGUIGumppic *m_Comment{ nullptr };
+    CGUIButton *m_CreateGroup{ nullptr };
+    CGUIText *m_SkillSum{ nullptr };
+    CGUICheckbox *m_CheckboxShowReal{ nullptr };
+    CGUICheckbox *m_CheckboxShowCap{ nullptr };
 
     void UpdateGroupPositions();
 

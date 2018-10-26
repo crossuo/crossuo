@@ -27,8 +27,8 @@ public:
     virtual ~CGUISkillGroup();
 
     //!Компоненты управления
-    CGUIButton *m_Minimizer{ NULL };
-    CGUITextEntry *m_Name{ NULL };
+    CGUIButton *m_Minimizer{ nullptr };
+    CGUITextEntry *m_Name{ nullptr };
 
     void UpdateDataPositions();
 

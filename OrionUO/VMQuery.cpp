@@ -143,7 +143,7 @@ BOOL VMQuery(HANDLE hProcess, LPCVOID pvAddress, PVMQUERY pVMQ)
     switch (mbi.State)
     {
         case MEM_FREE: // Free block (not reserved)
-            pVMQ->pvBlkBaseAddress = NULL;
+            pVMQ->pvBlkBaseAddress = nullptr;
             pVMQ->BlkSize = 0;
             pVMQ->dwBlkProtection = 0;
             pVMQ->dwBlkStorage = MEM_FREE;

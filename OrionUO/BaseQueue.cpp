@@ -15,8 +15,8 @@
 
 CBaseQueueItem::CBaseQueueItem()
     : CBaseQueue()
-    , m_Next(NULL)
-    , m_Prev(NULL)
+    , m_Next(nullptr)
+    , m_Prev(nullptr)
 {
 }
 
@@ -27,29 +27,29 @@ CBaseQueueItem::~CBaseQueueItem()
     Clear();
 
     CBaseQueueItem *item = m_Next;
-    //while (item != NULL && item->m_Next != NULL)
+    //while (item != nullptr && item->m_Next != nullptr)
     //	item = item->m_Next;
 
-    while (item != NULL && item != this)
+    while (item != nullptr && item != this)
     {
         CBaseQueueItem *next = item->m_Next;
-        item->m_Next = NULL;
+        item->m_Next = nullptr;
         delete item;
         item = next;
     }
 
     //Если есть следующий элемент - улдалим его (контейнер очищается/удаляется)
-    /*if (m_Next != NULL)
+    /*if (m_Next != nullptr)
 	{
 		delete m_Next;
-		m_Next = NULL;
+		m_Next = nullptr;
 	}*/
 }
 
 //-------------------------------------CBaseQueue-----------------------------------
 
 CBaseQueue::CBaseQueue()
-    : m_Items(NULL)
+    : m_Items(nullptr)
 {
 }
 
@@ -68,15 +68,15 @@ void CBaseQueue::Clear()
 {
     DEBUG_TRACE_FUNCTION;
     //Если в контейнере есть элементы - достаточно просто удалить первый, остальные удалятся вместе с ним
-    if (m_Items != NULL)
+    if (m_Items != nullptr)
     {
         CBaseQueueItem *item = m_Items;
-        m_Items = NULL;
+        m_Items = nullptr;
 
-        while (item != NULL)
+        while (item != nullptr)
         {
             CBaseQueueItem *next = item->m_Next;
-            item->m_Next = NULL;
+            item->m_Next = nullptr;
             delete item;
             item = next;
         }
@@ -92,16 +92,16 @@ CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
     //Если вставляемый элемент не равен нулю
-    if (item != NULL)
+    if (item != nullptr)
     {
         //Если очередь пуста -  вставим элемент в самое начало очереди
-        if (m_Items == NULL)
+        if (m_Items == nullptr)
             m_Items = item;
         else //Или, найдем последний элемент и запихаем его в зад
         {
             CBaseQueueItem *current = m_Items;
 
-            while (current->m_Next != NULL)
+            while (current->m_Next != nullptr)
                 current = current->m_Next;
 
             current->m_Next = item;
@@ -122,14 +122,14 @@ void CBaseQueue::Delete(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю
-    if (item != NULL)
+    if (item != nullptr)
     {
         //Разлинкуем элемент
         Unlink(item);
 
         //Можно спокойно удалять его
-        item->m_Next = NULL;
-        item->m_Prev = NULL;
+        item->m_Next = nullptr;
+        item->m_Prev = nullptr;
         delete item;
     }
 }
@@ -190,7 +190,7 @@ int CBaseQueue::GetItemsCount()
 /*!
 Получить элемент с указанным индексом
 @param [__in] index Индекс элемента
-@return Ссылка на элемент или NULL
+@return Ссылка на элемент или nullptr
 */
 CBaseQueueItem *CBaseQueue::Get(int index)
 {
@@ -198,7 +198,7 @@ CBaseQueueItem *CBaseQueue::Get(int index)
     CBaseQueueItem *item = m_Items;
 
     //Пройдемся по всем элементам очереди до нахождения нужного или окончания списка
-    for (; item != NULL && index; item = item->m_Next, index--)
+    for (; item != nullptr && index; item = item->m_Next, index--)
         ;
 
     return item;
@@ -213,12 +213,12 @@ CBaseQueueItem *CBaseQueue::Get(int index)
 void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
-    if (first == NULL)
+    if (first == nullptr)
     {
         item->m_Next = m_Items;
-        item->m_Prev = NULL;
+        item->m_Prev = nullptr;
 
-        if (m_Items != NULL)
+        if (m_Items != nullptr)
             m_Items->m_Prev = item;
 
         m_Items = item;
@@ -231,7 +231,7 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 
         first->m_Next = item;
 
-        if (next != NULL)
+        if (next != nullptr)
             next->m_Prev = item;
     }
 }
@@ -245,7 +245,7 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю
-    if (item != NULL)
+    if (item != nullptr)
     {
         //Если элемент - начало списка
         if (item == m_Items)
@@ -253,15 +253,15 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
             //Скорректируем его
             m_Items = m_Items->m_Next;
 
-            if (m_Items != NULL)
-                m_Items->m_Prev = NULL;
+            if (m_Items != nullptr)
+                m_Items->m_Prev = nullptr;
         }
         else
         {
             //Или подменим указатели предыдущего и следующего (при его наличии) элементов друг на друга
             item->m_Prev->m_Next = item->m_Next;
 
-            if (item->m_Next != NULL)
+            if (item->m_Next != nullptr)
                 item->m_Next->m_Prev = item->m_Prev;
         }
     }
@@ -276,17 +276,17 @@ void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю и не равен началу очереди
-    if (item != NULL && item != m_Items)
+    if (item != nullptr && item != m_Items)
     {
         //Разлинкуем
         Unlink(item);
 
         //Перелинкуем с началом очереди
-        if (m_Items != NULL)
+        if (m_Items != nullptr)
             m_Items->m_Prev = item;
 
         item->m_Next = m_Items;
-        item->m_Prev = NULL;
+        item->m_Prev = nullptr;
 
         //Вставим в начало очереди
         m_Items = item;
@@ -302,7 +302,7 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
     //Если элемент не равен нулю
-    if (item != NULL)
+    if (item != nullptr)
     {
         //Разлинкуем
         Unlink(item);
@@ -311,13 +311,13 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
         CBaseQueueItem *last = Last();
 
         //Перелинкуем элемент с последним элементом (или с началом очереди при пустой очереди)
-        if (last == NULL)
+        if (last == nullptr)
             m_Items = item;
         else
             last->m_Next = item;
 
         item->m_Prev = last;
-        item->m_Next = NULL;
+        item->m_Next = nullptr;
     }
 }
 
@@ -331,7 +331,7 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
 {
     DEBUG_TRACE_FUNCTION;
     //Немедленно запишем результат (и исходные данные для первой проверки) в переменную
-    bool result = (item != NULL);
+    bool result = (item != nullptr);
 
     //Если элемент не равен нулю
     if (result)
@@ -342,7 +342,7 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
             CBaseQueueItem *prev = item->m_Prev;
 
             //Если предыдущий элемент не равен нулю (есть куда двигаться)
-            result = (prev != NULL);
+            result = (prev != nullptr);
 
             if (result)
             {
@@ -352,7 +352,7 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
                     prev->m_Prev = item;
                     prev->m_Next = item->m_Next;
                     m_Items = item;
-                    item->m_Prev = NULL;
+                    item->m_Prev = nullptr;
                     item->m_Next = prev;
                 }
                 else //Где-то в теле очереди
@@ -371,7 +371,7 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
             CBaseQueueItem *next = item->m_Next;
 
             //Если следующий элемент не равен нулю (есть куда двигаться)
-            result = (next != NULL);
+            result = (next != nullptr);
 
             if (result)
             {
@@ -381,7 +381,7 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
                     item->m_Next = next->m_Next;
                     item->m_Prev = next;
                     m_Items = item;
-                    m_Items->m_Prev = NULL;
+                    m_Items->m_Prev = nullptr;
                     m_Items->m_Next = item;
                 }
                 else //Где-то в теле очереди
@@ -412,7 +412,7 @@ CBaseQueueItem *CBaseQueue::Last()
     CBaseQueueItem *last = m_Items;
 
     //Пройдемся по всем элементам очереди до конца (если очередь не пуста)
-    while (last != NULL && last->m_Next != NULL)
+    while (last != nullptr && last->m_Next != nullptr)
         last = last->m_Next;
 
     //Вернем что получилось в результате поиска

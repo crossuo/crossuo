@@ -83,7 +83,7 @@ public:
 	@param [__in_opt] check Ссылка на проверочный объект профессии
 	@return Ссылка на найденного родителя объекта профессии
 	*/
-    CBaseProfession *GetParent(CBaseProfession *obj, CBaseProfession *check = NULL);
+    CBaseProfession *GetParent(CBaseProfession *obj, CBaseProfession *check = nullptr);
 
     /*!
 	Загрузка профессий из файла

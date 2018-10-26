@@ -30,7 +30,7 @@ public:
     virtual ~CGUIShopResult();
 
     //!Компонента кнопок MinMax
-    class CGUIMinMaxButtons *m_MinMaxButtons{ NULL };
+    class CGUIMinMaxButtons *m_MinMaxButtons{ nullptr };
 
     //!Получить ссылку на выбранную компоненту или ссылку на себя
     CBaseGUI *SelectedItem();

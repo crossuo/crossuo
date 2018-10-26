@@ -21,11 +21,11 @@ protected:
 
     uchar m_Variant{ 0 };
 
-    CGUIButton *m_ButtonPost{ NULL };
-    CGUIButton *m_ButtonRemove{ NULL };
-    CGUIButton *m_ButtonReply{ NULL };
+    CGUIButton *m_ButtonPost{ nullptr };
+    CGUIButton *m_ButtonRemove{ nullptr };
+    CGUIButton *m_ButtonReply{ nullptr };
 
-    CGUIHitBox *m_HitBox{ NULL };
+    CGUIHitBox *m_HitBox{ nullptr };
 
     void RecalculateHeight();
 
@@ -45,8 +45,8 @@ public:
         const wstring &data);
     virtual ~CGumpBulletinBoardItem();
 
-    CGUITextEntry *m_EntrySubject{ NULL };
-    CGUITextEntry *m_Entry{ NULL };
+    CGUITextEntry *m_EntrySubject{ nullptr };
+    CGUITextEntry *m_Entry{ nullptr };
 
     GUMP_BUTTON_EVENT_H;
 

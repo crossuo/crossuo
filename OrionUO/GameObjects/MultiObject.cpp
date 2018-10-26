@@ -114,7 +114,7 @@ void CMultiObject::Select(int x, int y)
                 return;
             else if ((State & CHMOF_TRANSPARENT) && !(State & CHMOF_GENERIC_INTERNAL))
             {
-                if (g_CustomHouseGump == NULL || !g_CustomHouseGump->SelectedGraphic)
+                if (g_CustomHouseGump == nullptr || !g_CustomHouseGump->SelectedGraphic)
                     return;
             }
         }

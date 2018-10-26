@@ -101,7 +101,7 @@ void CGumpMinimap::GenerateMap()
     const Wisp::CPoint2Di originalOffsetTable[2] = { Wisp::CPoint2Di(0, 0),
                                                               Wisp::CPoint2Di(0, 1) };
 
-    if (g_Player != NULL)
+    if (g_Player != nullptr)
     {
         LastX = g_Player->GetX();
         LastY = g_Player->GetY();
@@ -177,7 +177,7 @@ void CGumpMinimap::GenerateMap()
                     uint color = mb.Cells[x][y].Graphic;
                     char &isLand = mb.Cells[x][y].IsLand;
 
-                    if (mapBlock != NULL)
+                    if (mapBlock != nullptr)
                     {
                         ushort multiColor = mapBlock->GetRadarColor((int)x, (int)y);
 
@@ -276,10 +276,10 @@ void CGumpMinimap::UpdateContent()
 
     CGLTexture *th = g_Orion.ExecuteGump(graphic);
 
-    if (th == NULL)
+    if (th == nullptr)
         return;
 
-    if (m_Items == NULL)
+    if (m_Items == nullptr)
     {
         m_DataBox = (CGUIDataBox *)Add(new CGUIDataBox());
         m_Body = (CGUIGumppic *)Add(new CGUIGumppic(graphic, 0, 0));

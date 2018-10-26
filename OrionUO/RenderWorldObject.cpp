@@ -74,38 +74,38 @@ bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
 void CRenderWorldObject::RemoveRender()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_PrevXY != NULL)
+    if (m_PrevXY != nullptr)
         m_PrevXY->m_NextXY = m_NextXY;
 
-    if (m_NextXY != NULL)
+    if (m_NextXY != nullptr)
         m_NextXY->m_PrevXY = m_PrevXY;
 
-    m_NextXY = NULL;
-    m_PrevXY = NULL;
+    m_NextXY = nullptr;
+    m_PrevXY = nullptr;
 }
 
 bool CRenderWorldObject::RemovedFromRender()
 {
-    return m_NextXY == NULL && m_PrevXY == NULL;
+    return m_NextXY == nullptr && m_PrevXY == nullptr;
 }
 
 CLandObject *CRenderWorldObject::GetLand()
 {
     DEBUG_TRACE_FUNCTION;
 
-    for (CRenderWorldObject *land = this; land != NULL; land = land->m_NextXY)
+    for (CRenderWorldObject *land = this; land != nullptr; land = land->m_NextXY)
     {
         if (land->IsLandObject())
             return (CLandObject *)land;
     }
 
-    for (CRenderWorldObject *land = this->m_PrevXY; land != NULL; land = land->m_PrevXY)
+    for (CRenderWorldObject *land = this->m_PrevXY; land != nullptr; land = land->m_PrevXY)
     {
         if (land->IsLandObject())
             return (CLandObject *)land;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void CRenderWorldObject::SetZ(char val)

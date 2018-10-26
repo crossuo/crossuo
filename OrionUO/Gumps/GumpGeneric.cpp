@@ -27,7 +27,7 @@ void CGumpGeneric::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
 
-    if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsGUI())
+    if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsGUI())
     {
         CBaseGUI *obj = (CBaseGUI *)g_SelectedObject.Object;
 
@@ -76,7 +76,7 @@ void CGumpGeneric::AddText(
     int index, const wstring &text, CBaseGUI *start, bool backbroundCanBeColored)
 {
     DEBUG_TRACE_FUNCTION;
-    if (start == NULL)
+    if (start == nullptr)
         start = (CBaseGUI *)m_Items;
 
     QFOR(item, start, CBaseGUI *)
@@ -159,7 +159,7 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
     if (g_GeneratedMouseDown)
         return false;
 
-    if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI() &&
+    if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
         ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_VIRTURE_GUMP)
     {
         //Ответ на гамп
@@ -196,7 +196,7 @@ void CGumpGeneric::OnKeyDown(const KeyEvent &ev)
     if (key == KEY_RETURN)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
-            g_EntryPointer = NULL;
+            g_EntryPointer = nullptr;
         else
             g_EntryPointer = &g_GameConsole;
 

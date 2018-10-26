@@ -84,7 +84,7 @@ void CGumpContainer::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
-    if (g_GumpPressed && g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsText())
+    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsText())
     {
         g_GumpMovingOffset.Reset();
 
@@ -138,7 +138,7 @@ void CGumpContainer::PrepareContent()
         {
             CGameItem *selobj = g_World->FindWorldItem(g_PressedObject.LeftSerial);
 
-            if (selobj != NULL && selobj->IsStackable() && selobj->Count > 1 && !g_ShiftPressed)
+            if (selobj != nullptr && selobj->IsStackable() && selobj->Count > 1 && !g_ShiftPressed)
             {
                 CGumpDrag *newgump = new CGumpDrag(
                     g_PressedObject.LeftSerial,
@@ -149,7 +149,7 @@ void CGumpContainer::PrepareContent()
                 g_OrionWindow.EmulateOnLeftMouseButtonDown();
                 selobj->Dragged = true;
             }
-            else if (selobj != NULL)
+            else if (selobj != nullptr)
             {
                 //if (g_Target.IsTargeting())
                 //	g_Target.SendCancelTarget();
@@ -163,7 +163,7 @@ void CGumpContainer::PrepareContent()
         }
     }
 
-    if (ID == 0x09 && m_CorpseEyes != NULL)
+    if (ID == 0x09 && m_CorpseEyes != nullptr)
     {
         if (m_CorpseEyesTicks < g_Ticks)
         {
@@ -201,7 +201,7 @@ void CGumpContainer::UpdateContent()
     DEBUG_TRACE_FUNCTION;
     CGameItem *container = g_World->FindWorldItem(Serial);
 
-    if (container == NULL)
+    if (container == nullptr)
         return;
 
     if ((ushort)ID == 0x003C)
@@ -210,7 +210,7 @@ void CGumpContainer::UpdateContent()
 
         CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
 
-        if (backpack != NULL && backpack->Serial == Serial)
+        if (backpack != nullptr && backpack->Serial == Serial)
         {
             switch (g_ConfigManager.GetCharacterBackpackStyle())
             {
@@ -228,7 +228,7 @@ void CGumpContainer::UpdateContent()
                     break;
             }
 
-            if (g_Orion.ExecuteGump(graphic) == NULL)
+            if (g_Orion.ExecuteGump(graphic) == nullptr)
                 graphic = 0x003C;
 
             m_BodyGump->Graphic = graphic;
@@ -248,7 +248,7 @@ void CGumpContainer::UpdateContent()
         {
             bool doubleDraw = false;
             ushort graphic = obj->GetDrawGraphic(doubleDraw);
-            CGUIGumppicHightlighted *item = NULL;
+            CGUIGumppicHightlighted *item = nullptr;
 
             if (IsGameBoard)
             {
@@ -359,7 +359,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
 
             CGameItem *target = g_World->FindWorldItem(selectedSerial);
 
-            if (target != NULL)
+            if (target != nullptr)
             {
                 if (target->IsContainer())
                     dropContainer = target->Serial;
@@ -408,7 +408,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
             y += 20;
         }
 
-        if (th != NULL)
+        if (th != nullptr)
         {
             x -= (th->Width / 2);
             y -= (th->Height / 2);
@@ -446,7 +446,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
         {
             CGameObject *clickTarget = g_World->FindWorldObject(selectedSerial);
 
-            if (clickTarget != NULL)
+            if (clickTarget != nullptr)
             {
                 g_ClickObject.Init(clickTarget);
                 g_ClickObject.Timer = g_Ticks + g_MouseManager.DoubleClickDelay;

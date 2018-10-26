@@ -72,13 +72,13 @@ void CGameScreen::InitToolTip()
     CRenderObject *obj = g_SelectedObject.Object;
     CGump *gump = g_SelectedObject.Gump;
 
-    if (obj != NULL && g_TooltipsEnabled)
+    if (obj != nullptr && g_TooltipsEnabled)
     {
         uint serial = 0;
 
         if (obj->IsGameObject())
             serial = g_SelectedObject.Serial;
-        else if (gump != NULL && obj->IsGUI())
+        else if (gump != nullptr && obj->IsGUI())
         {
             if (gump->GumpType == GT_TRADE ||
                 (gump->GumpType == GT_SHOP && ((CBaseGUI *)obj)->Type == GOT_SHOPITEM))
@@ -91,16 +91,16 @@ void CGameScreen::InitToolTip()
                     serial = g_SelectedObject.Serial;
                 else if (
                     gump->GumpType == GT_PAPERDOLL &&
-                    g_SelectedObject.Serial >= CGumpPaperdoll::ID_GP_ITEMS && g_World != NULL)
+                    g_SelectedObject.Serial >= CGumpPaperdoll::ID_GP_ITEMS && g_World != nullptr)
                 {
                     CGameCharacter *character = g_World->FindWorldCharacter(gump->Serial);
 
-                    if (character != NULL)
+                    if (character != nullptr)
                     {
                         CGameObject *item = character->FindLayer(
                             g_SelectedObject.Serial - CGumpPaperdoll::ID_GP_ITEMS);
 
-                        if (item != NULL)
+                        if (item != nullptr)
                             serial = item->Serial;
                     }
                 }
@@ -114,7 +114,7 @@ void CGameScreen::InitToolTip()
         }
     }
 
-    if (g_ConfigManager.UseToolTips && gump != NULL)
+    if (g_ConfigManager.UseToolTips && gump != nullptr)
     {
         if (gump == &m_GameScreenGump)
             m_GameScreenGump.InitToolTip();
@@ -158,7 +158,7 @@ void CGameScreen::UpdateMaxDrawZ()
     int blockIndex = (bx * g_MapBlockSize[g_CurrentMap].Height) + by;
     CMapBlock *mb = g_MapManager.GetBlock(blockIndex);
 
-    if (mb != NULL)
+    if (mb != nullptr)
     {
         int x = playerX % 8;
         int y = playerY % 8;
@@ -166,7 +166,7 @@ void CGameScreen::UpdateMaxDrawZ()
         int pz14 = playerZ + 14;
         int pz16 = playerZ + 16;
 
-        for (CRenderWorldObject *ro = mb->GetRender(x, y); ro != NULL; ro = ro->m_NextXY)
+        for (CRenderWorldObject *ro = mb->GetRender(x, y); ro != nullptr; ro = ro->m_NextXY)
         {
             char tileZ = ro->GetZ();
 
@@ -213,12 +213,12 @@ void CGameScreen::UpdateMaxDrawZ()
         blockIndex = (bx * g_MapBlockSize[g_CurrentMap].Height) + by;
         CMapBlock *mb11 = g_MapManager.GetBlock(blockIndex);
 
-        if (mb11 != NULL)
+        if (mb11 != nullptr)
         {
             x = playerX % 8;
             y = playerY % 8;
 
-            for (CRenderWorldObject *ro = mb11->GetRender(x, y); ro != NULL; ro = ro->m_NextXY)
+            for (CRenderWorldObject *ro = mb11->GetRender(x, y); ro != nullptr; ro = ro->m_NextXY)
             {
                 if (!ro->IsGameObject())
                 {
@@ -273,12 +273,12 @@ void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, i
     int blockIndex = (bx * g_MapBlockSize[g_CurrentMap].Height) + by;
     CMapBlock *mb = g_MapManager.GetBlock(blockIndex);
 
-    if (mb != NULL)
+    if (mb != nullptr)
     {
         int tx = x % 8;
         int ty = y % 8;
 
-        for (CRenderWorldObject *obj = mb->GetRender(tx, ty); obj != NULL; obj = obj->m_NextXY)
+        for (CRenderWorldObject *obj = mb->GetRender(tx, ty); obj != nullptr; obj = obj->m_NextXY)
         {
             ushort testGraphic = obj->Graphic;
 
@@ -333,10 +333,10 @@ void CGameScreen::CalculateRenderList()
     DEBUG_TRACE_FUNCTION;
     m_RenderListCount = 0;
 
-    if (g_Player == NULL)
+    if (g_Player == nullptr)
         return;
 
-    if (g_Target.IsTargeting() && g_Target.MultiGraphic && g_SelectedObject.Object != NULL &&
+    if (g_Target.IsTargeting() && g_Target.MultiGraphic && g_SelectedObject.Object != nullptr &&
         g_SelectedObject.Object->IsWorldObject())
     {
         int grZ = 0;
@@ -453,7 +453,7 @@ void CGameScreen::CalculateRenderList()
                     {
                         CMapBlock *block = g_MapManager.GetBlock(blockIndex);
 
-                        if (block == NULL)
+                        if (block == nullptr)
                         {
                             block = g_MapManager.AddBlock(blockIndex);
                             block->X = blockX;
@@ -481,7 +481,7 @@ void CGameScreen::CalculateRenderList()
 
             CMapBlock *mb = g_MapManager->GetBlock(blockIndex);
 
-            if (mb == NULL)
+            if (mb == nullptr)
             {
                 mb = g_MapManager->AddBlock(blockIndex);
                 mb->SetX(bx);
@@ -519,7 +519,7 @@ void CGameScreen::CalculateRenderList()
         {
             CRenderWorldObject *obj = m_RenderList[i].Object;
 
-            if (obj != NULL && obj->IsStaticGroupObject())
+            if (obj != nullptr && obj->IsStaticGroupObject())
             {
                 CRenderStaticObject *rst = obj->StaticGroupObjectPtr();
 
@@ -540,7 +540,7 @@ void CGameScreen::CalculateRenderList()
     QFOR(go, g_World->m_Items, CGameObject *)
     {
         if (go->UseInRender != RenderIndex && (go->NPC || go->IsCorpse()) &&
-            go->m_TextControl->m_Items != NULL)
+            go->m_TextControl->m_Items != nullptr)
         {
             go->UpdateDrawCoordinates();
             go->UseInRender = RenderIndex;
@@ -570,7 +570,7 @@ void CGameScreen::AddTileToRenderList(
             grayColor = 0x038E;
     }
 
-    if (g_CustomHouseGump != NULL)
+    if (g_CustomHouseGump != nullptr)
     {
         SDL_Rect rect = { g_CustomHouseGump->StartPos.X,
                           g_CustomHouseGump->StartPos.Y,
@@ -582,7 +582,7 @@ void CGameScreen::AddTileToRenderList(
             grayColor = 0x038E;
     }
 
-    for (; obj != NULL; obj = obj->m_NextXY)
+    for (; obj != nullptr; obj = obj->m_NextXY)
     {
 #if UO_RENDER_LIST_SORT == 1
         if (obj->CurrentRenderIndex == RenderIndex || obj->NoDrawTile)
@@ -608,7 +608,7 @@ void CGameScreen::AddTileToRenderList(
 
         CRenderStaticObject *rso = obj->StaticGroupObjectPtr();
 
-        if (rso != NULL)
+        if (rso != nullptr)
         {
             if (rso->IsGameObject())
             {
@@ -665,7 +665,7 @@ void CGameScreen::AddTileToRenderList(
 
         CLandObject *land = obj->LandObjectPtr();
 
-        if (land != NULL && land->IsStretched)
+        if (land != nullptr && land->IsStretched)
             testMinZ -= (land->MinZ * 4);
         else
             testMinZ = testMaxZ;
@@ -691,7 +691,7 @@ void CGameScreen::AddTileToRenderList(
                     int textDrawY = drawY + character->OffsetY -
                                     (character->OffsetZ + dims.Height + dims.CenterY);
 
-                    for (CTextData *text = (CTextData *)textContainer.m_Items; text != NULL;)
+                    for (CTextData *text = (CTextData *)textContainer.m_Items; text != nullptr;)
                     {
                         CTextData *next = (CTextData *)text->m_Next;
 
@@ -777,7 +777,7 @@ void CGameScreen::AddTileToRenderList(
             {
                 CGLTexture *texturePtr = g_Orion.ExecuteStaticArt(obj->Graphic);
 
-                if (texturePtr != NULL)
+                if (texturePtr != nullptr)
                 {
                     CGLTexture &texture = *texturePtr;
 
@@ -835,7 +835,7 @@ void CGameScreen::AddTileToRenderList(
         m_RenderList[m_RenderListCount].GrayColor = grayColor;
         obj->UseInRender = RenderIndex;
 
-        if (!grayColor && g_CustomHouseGump != NULL && g_Target.IsTargeting() &&
+        if (!grayColor && g_CustomHouseGump != nullptr && g_Target.IsTargeting() &&
             obj == g_SelectedObject.Object)
         {
             int zOffset = 0;
@@ -875,7 +875,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
     bool fullDrawLastItem = false;
     int dropMaxZIndex = -1;
 
-    if (character != NULL)
+    if (character != nullptr)
     {
         //g_GL.DrawPolygone(drawX - dfInfo.OffsetX, drawY, dfInfo.Width, dfInfo.Height - dfInfo.OffsetY);
 
@@ -925,7 +925,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
         {
             CMapBlock *block = g_MapManager.GetBlock(blockIndex);
 
-            if (block == NULL)
+            if (block == nullptr)
             {
                 block = g_MapManager.AddBlock(blockIndex);
                 block->X = blockX;
@@ -1137,14 +1137,14 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
         int blockIndex = (bx * g_MapBlockSize[g_CurrentMap].Height) + by;
         CMapBlock *mb = g_MapManager.GetBlock(blockIndex);
 
-        if (mb != NULL)
+        if (mb != nullptr)
         {
             bx = testX % 8;
             by = testY % 8;
 
             char z5 = rwo->GetZ() + 5;
 
-            for (CRenderWorldObject *obj = mb->GetRender(bx, by); obj != NULL; obj = obj->m_NextXY)
+            for (CRenderWorldObject *obj = mb->GetRender(bx, by); obj != nullptr; obj = obj->m_NextXY)
             {
                 if (!obj->IsStaticGroupObject() ||
                     (obj->IsGameObject() && ((CGameObject *)obj)->NPC) || obj->NoDrawTile ||
@@ -1222,7 +1222,7 @@ void CGameScreen::DrawGameWindow(bool mode)
             RENDER_OBJECT_DATA &rod = m_RenderList[i];
             CRenderWorldObject *obj = rod.Object;
 
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 g_OutOfRangeColor = rod.GrayColor;
 
@@ -1328,7 +1328,7 @@ void CGameScreen::DrawGameWindow(bool mode)
         {
             CRenderWorldObject *obj = m_RenderList[i].Object;
 
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 g_UseCircleTrans = (useCircleTrans && obj->TranparentTest(playerZPlus5));
 
@@ -1510,7 +1510,7 @@ void CGameScreen::DrawGameWindowText(bool mode)
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
     else
-        g_WorldTextRenderer.Select(NULL);
+        g_WorldTextRenderer.Select(nullptr);
 }
 
 void CGameScreen::PrepareContent()
@@ -1522,7 +1522,7 @@ void CGameScreen::PrepareContent()
 
     g_GumpManager.PrepareContent();
 
-    if (g_SelectedObject.Gump != NULL &&
+    if (g_SelectedObject.Gump != nullptr &&
         (g_SelectedObject.Gump->GumpType == GT_STATUSBAR ||
          g_SelectedObject.Gump->GumpType == GT_POPUP_MENU) &&
         g_SelectedObject.Gump->Serial != g_PlayerSerial)
@@ -1530,8 +1530,8 @@ void CGameScreen::PrepareContent()
     else
         g_StatusbarUnderMouse = 0;
 
-    //if (g_SelectedObject.Object() != NULL && g_SelectedObject.Object()->IsGameObject() && g_PressedObject.LeftObject == g_SelectedObject.Object())
-    if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGameObject() &&
+    //if (g_SelectedObject.Object() != nullptr && g_SelectedObject.Object()->IsGameObject() && g_PressedObject.LeftObject == g_SelectedObject.Object())
+    if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGameObject() &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
         Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
@@ -1541,7 +1541,7 @@ void CGameScreen::PrepareContent()
         {
             CGameItem *selobj = g_World->FindWorldItem(g_PressedObject.LeftSerial);
 
-            if (selobj != NULL && !g_ObjectInHand.Enabled && !selobj->Locked() &&
+            if (selobj != nullptr && !g_ObjectInHand.Enabled && !selobj->Locked() &&
                 GetDistance(g_Player, selobj) <= DRAG_ITEMS_DISTANCE)
             {
                 if (selobj->Serial >= 0x40000000 && !g_GrayedPixels) //Item selection
@@ -1568,7 +1568,7 @@ void CGameScreen::PrepareContent()
             {
                 CGameCharacter *selchar = g_World->FindWorldCharacter(g_PressedObject.LeftSerial);
 
-                if (selchar != NULL) //Character selection
+                if (selchar != nullptr) //Character selection
                 {
                     g_Orion.OpenStatus(selchar->Serial);
                     g_GeneratedMouseDown = true;
@@ -1643,11 +1643,11 @@ void CGameScreen::Render(bool mode)
         g_RenderedObjectsCountInGameWindow = 0;
 
         g_TargetGump.Color = 0;
-        g_TargetGump.TargetedCharacter = NULL;
+        g_TargetGump.TargetedCharacter = nullptr;
         g_AttackTargetGump.Color = 0;
-        g_AttackTargetGump.TargetedCharacter = NULL;
+        g_AttackTargetGump.TargetedCharacter = nullptr;
         g_NewTargetSystem.ColorGump = 0;
-        g_NewTargetSystem.TargetedCharacter = NULL;
+        g_NewTargetSystem.TargetedCharacter = nullptr;
 
         m_LightCount = 0;
 
@@ -1786,7 +1786,7 @@ void CGameScreen::Render(bool mode)
 
             g_FontManager.DrawA(3, dbf, 0x35, 20, 54);
 
-            if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsWorldObject())
+            if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
             {
                 CRenderWorldObject *selRwo = (CRenderWorldObject *)g_SelectedObject.Object;
                 CLandObject *land = selRwo->LandObjectPtr();
@@ -1830,7 +1830,7 @@ void CGameScreen::Render(bool mode)
                 int tz = selRwo->GetZ();
 
                 //Если это тайл текстуры
-                if (land != NULL && land->IsStretched)
+                if (land != nullptr && land->IsStretched)
                     tz = (char)land->Serial;
 
                 uint tiledataFlags = (uint)(
@@ -1916,23 +1916,23 @@ void CGameScreen::Render(bool mode)
 
         g_GumpManager.Select(false);
 
-        if (g_SelectedObject.Gump != NULL)
+        if (g_SelectedObject.Gump != nullptr)
         {
             if (g_SelectedObject.Object->IsText())
                 ((CRenderTextObject *)g_SelectedObject.Object)->ToTop();
         }
-        else if (m_GameScreenGump.Select() == NULL)
+        else if (m_GameScreenGump.Select() == nullptr)
         {
             if (!g_DeathScreenTimer)
             {
                 //Проверка текста
                 DrawGameWindowText(mode);
 
-                if (g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsText())
+                if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
                     g_WorldTextRenderer.ToTop((CRenderTextObject *)g_SelectedObject.Object);
             }
 
-            if (g_SelectedObject.Object == NULL) //Если ничего не выбралось - пройдемся по объектам
+            if (g_SelectedObject.Object == nullptr) //Если ничего не выбралось - пройдемся по объектам
             {
                 //Если курсор мыши в игровом окне - просканируем его
                 if (g_MouseManager.Position.X < g_RenderBounds.GameWindowPosX ||
@@ -1991,10 +1991,10 @@ void CGameScreen::Render(bool mode)
 
         if (g_SelectedObject.Object != g_LastSelectedObject.Object)
         {
-            if (g_LastSelectedObject.Object != NULL)
+            if (g_LastSelectedObject.Object != nullptr)
                 g_LastSelectedObject.Object->OnMouseExit();
 
-            if (g_SelectedObject.Object != NULL)
+            if (g_SelectedObject.Object != nullptr)
                 g_SelectedObject.Object->OnMouseEnter();
         }
 
@@ -2011,12 +2011,12 @@ void CGameScreen::OnLeftMouseButtonDown()
     DEBUG_TRACE_FUNCTION;
     CGumpSkills *skillGump = (CGumpSkills *)g_GumpManager.GetGump(0, 0, GT_SKILLS);
 
-    if (skillGump != NULL)
+    if (skillGump != nullptr)
         skillGump->UpdateGroupText();
 
     if (g_SelectedObject.Gump == &m_GameScreenGump)
         m_GameScreenGump.OnLeftMouseButtonDown();
-    else if (g_SelectedObject.Gump != NULL)
+    else if (g_SelectedObject.Gump != nullptr)
     {
         //g_SelectGumpObjects = true;
 
@@ -2025,7 +2025,7 @@ void CGameScreen::OnLeftMouseButtonDown()
         //g_SelectGumpObjects = false;
     }
 
-    if (g_PopupMenu != NULL && g_SelectedObject.Gump != g_PopupMenu)
+    if (g_PopupMenu != nullptr && g_SelectedObject.Gump != g_PopupMenu)
         g_GumpManager.RemoveGump(g_PopupMenu);
 }
 
@@ -2043,7 +2043,7 @@ void CGameScreen::OnLeftMouseButtonUp()
     }
     else if (
         g_MouseManager.LeftButtonPressed &&
-        (g_PressedObject.LeftGump != NULL || g_ObjectInHand.Enabled))
+        (g_PressedObject.LeftGump != nullptr || g_ObjectInHand.Enabled))
     {
         if (g_GumpManager.OnLeftMouseButtonUp(false))
             return;
@@ -2057,14 +2057,14 @@ void CGameScreen::OnLeftMouseButtonUp()
         g_MouseManager.Position.Y > (gameWindowPosY + g_ConfigManager.GameWindowHeight))
         return;
 
-    if (g_SelectedObject.Object != NULL)
+    if (g_SelectedObject.Object != nullptr)
     {
-        CRenderWorldObject *rwo = NULL;
+        CRenderWorldObject *rwo = nullptr;
 
         if (g_SelectedObject.Object->IsWorldObject())
             rwo = (CRenderWorldObject *)g_SelectedObject.Object;
 
-        if (g_CustomHouseGump != NULL && g_Target.IsTargeting())
+        if (g_CustomHouseGump != nullptr && g_Target.IsTargeting())
         {
             g_CustomHouseGump->OnTargetWorld(rwo);
 
@@ -2083,7 +2083,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 {
                     CGameObject *obj = g_World->FindWorldObject(td->Serial);
 
-                    if (obj != NULL && (obj->NPC || obj->IsCorpse()))
+                    if (obj != nullptr && (obj->NPC || obj->IsCorpse()))
                         g_Target.SendTargetObject(td->Serial);
                 }
 
@@ -2091,7 +2091,7 @@ void CGameScreen::OnLeftMouseButtonUp()
 
                 return;
             }
-            else if (rwo != NULL)
+            else if (rwo != nullptr)
             {
                 if (rwo->IsGameObject())
                     g_Target.SendTargetObject(rwo->Serial);
@@ -2100,14 +2100,14 @@ void CGameScreen::OnLeftMouseButtonUp()
                         0 /*g_SelectedObject->Index*/, rwo->GetX(), rwo->GetY(), rwo->GetZ());
                 else if (rwo->IsStaticObject() || rwo->IsMultiObject())
                 {
-                    STATIC_TILES *st = NULL;
+                    STATIC_TILES *st = nullptr;
 
                     if (g_PacketManager.GetClientVersion() >= CV_7090 && rwo->IsSurface())
                         st = ((CRenderStaticObject *)rwo)->GetStaticData();
 
                     short targetZ = rwo->GetZ();
 
-                    if (st != NULL)
+                    if (st != nullptr)
                         targetZ += st->Height;
 
                     g_Target.SendTargetTile(rwo->Graphic, rwo->GetX(), rwo->GetY(), (char)targetZ);
@@ -2119,7 +2119,7 @@ void CGameScreen::OnLeftMouseButtonUp()
             }
         }
 
-        if (rwo != NULL)
+        if (rwo != nullptr)
         {
             uint drop_container = 0xFFFFFFFF;
             bool can_drop = false;
@@ -2133,7 +2133,7 @@ void CGameScreen::OnLeftMouseButtonUp()
 
                 can_drop = (GetDistance(g_Player, target) <= DRAG_ITEMS_DISTANCE);
 
-                if (can_drop && target != NULL)
+                if (can_drop && target != nullptr)
                 {
                     if (target->IsContainer() || target->NPC)
                     {
@@ -2176,7 +2176,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                     g_Orion.PlaySoundEffect(0x0051);
             }
 
-            if (can_drop /*&& ObjectInHand != NULL*/)
+            if (can_drop /*&& ObjectInHand != nullptr*/)
             {
                 if (drop_container == 0xFFFFFFFF && !dropX && !dropY)
                     can_drop = false;
@@ -2201,7 +2201,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                         CTextData *td =
                             (CTextData *)rwo->StaticGroupObjectPtr()->m_TextControl->m_Items;
 
-                        if (td == NULL || td->Timer < g_Ticks)
+                        if (td == nullptr || td->Timer < g_Ticks)
                         {
                             ushort id = rwo->Graphic;
 
@@ -2225,16 +2225,16 @@ void CGameScreen::OnLeftMouseButtonUp()
         }
     }
 
-    if (g_EntryPointer != &g_GameConsole && g_EntryPointer != NULL)
+    if (g_EntryPointer != &g_GameConsole && g_EntryPointer != nullptr)
     {
         CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
 
         if (g_ConfigManager.GetConsoleNeedEnter())
-            g_EntryPointer = NULL;
+            g_EntryPointer = nullptr;
         else
             g_EntryPointer = &g_GameConsole;
 
-        if (gumpEntry != NULL)
+        if (gumpEntry != nullptr)
             gumpEntry->FrameCreated = false;
     }
 }
@@ -2251,7 +2251,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
     if (g_SelectedObject.Gump && g_GumpManager.OnLeftMouseButtonDoubleClick(false))
         result = true;
-    else if (g_SelectedObject.Object != NULL)
+    else if (g_SelectedObject.Object != nullptr)
     {
         if (g_SelectedObject.Object->IsGameObject())
         {
@@ -2274,7 +2274,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
                 CGameObject *obj = g_World->FindWorldObject(serial);
 
-                if (obj != NULL && (obj->NPC || obj->IsCorpse()))
+                if (obj != nullptr && (obj->NPC || obj->IsCorpse()))
                 {
                     if (obj->NPC)
                         charUnderMouse = serial;
@@ -2290,12 +2290,12 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
     if (charUnderMouse != 0)
     {
         if (!g_ConfigManager.DisableNewTargetSystem &&
-            (charUnderMouse != g_PlayerSerial || g_Player->FindLayer(OL_MOUNT) == NULL))
+            (charUnderMouse != g_PlayerSerial || g_Player->FindLayer(OL_MOUNT) == nullptr))
         {
             g_GumpManager.CloseGump(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM);
             g_NewTargetSystem.Serial = charUnderMouse;
 
-            if (g_GumpManager.UpdateContent(charUnderMouse, 0, GT_TARGET_SYSTEM) == NULL)
+            if (g_GumpManager.UpdateContent(charUnderMouse, 0, GT_TARGET_SYSTEM) == nullptr)
             {
                 CPacketStatusRequest(charUnderMouse).Send();
 
@@ -2320,10 +2320,10 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 void CGameScreen::OnRightMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PressedObject.RightGump != NULL)
+    if (g_PressedObject.RightGump != nullptr)
         g_GumpManager.OnRightMouseButtonDown(false);
 
-    if (g_PopupMenu != NULL && g_SelectedObject.Gump != g_PopupMenu)
+    if (g_PopupMenu != nullptr && g_SelectedObject.Gump != g_PopupMenu)
         g_GumpManager.RemoveGump(g_PopupMenu);
 }
 
@@ -2334,16 +2334,16 @@ void CGameScreen::OnRightMouseButtonDown()
 void CGameScreen::OnRightMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PressedObject.RightGump != NULL)
+    if (g_PressedObject.RightGump != nullptr)
         g_GumpManager.OnRightMouseButtonUp(false);
     else if (
-        g_PressedObject.RightObject != NULL && g_PressedObject.RightObject->IsGameObject() &&
+        g_PressedObject.RightObject != nullptr && g_PressedObject.RightObject->IsGameObject() &&
         g_SelectedGameObjectHandle == g_PressedObject.RightSerial)
         ((CGameObject *)g_PressedObject.RightObject)->ClosedObjectHandle = true;
 
     if ((g_ShiftPressed && !g_CtrlPressed && !g_AltPressed) &&
         g_ConfigManager.HoldShiftForEnablePathfind && g_ConfigManager.EnablePathfind &&
-        g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsWorldObject() &&
+        g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject() &&
         !g_PathFinder.AutoWalking)
     {
         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
@@ -2363,7 +2363,7 @@ void CGameScreen::OnRightMouseButtonUp()
 bool CGameScreen::OnRightMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_ConfigManager.EnablePathfind && g_SelectedObject.Object != NULL &&
+    if (g_ConfigManager.EnablePathfind && g_SelectedObject.Object != nullptr &&
         g_SelectedObject.Object->IsWorldObject() && !g_PathFinder.AutoWalking)
     {
         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
@@ -2389,7 +2389,7 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
 void CGameScreen::OnMidMouseButtonScroll(bool up)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL)
+    if (g_SelectedObject.Gump != nullptr)
         g_GumpManager.OnMidMouseButtonScroll(up, false);
     else if (g_ConfigManager.GetUseScaling())
     {
@@ -2417,7 +2417,7 @@ void CGameScreen::OnMidMouseButtonScroll(bool up)
 void CGameScreen::OnDragging()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PressedObject.LeftGump != NULL)
+    if (g_PressedObject.LeftGump != nullptr)
         g_GumpManager.OnDragging(false);
 }
 
@@ -2425,7 +2425,7 @@ void CGameScreen::OnDragging()
 void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_EntryPointer == NULL)
+    if (g_EntryPointer == nullptr)
         return; //Ignore no print keys
 
     if (g_EntryPointer != &g_GameConsole && wParam != 0x11 && wParam != 0x17)

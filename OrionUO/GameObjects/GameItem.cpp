@@ -29,7 +29,7 @@ CGameItem::~CGameItem()
         g_GumpManager.CloseGump(Serial, 0, GT_MAP);
 
         CGump *gump = g_GumpManager.GetGump(Serial, 0, GT_BULLETIN_BOARD);
-        if (gump != NULL)
+        if (gump != nullptr)
             g_GumpManager.RemoveGump(gump);
 
         Opened = false;
@@ -46,10 +46,10 @@ CGameItem::~CGameItem()
 void CGameItem::ClearMultiItems()
 {
     DEBUG_TRACE_FUNCTION;
-    if (MultiBody && m_Items != NULL)
+    if (MultiBody && m_Items != nullptr)
     {
         CMulti *multi = (CMulti *)m_Items;
-        m_Items = NULL;
+        m_Items = nullptr;
         delete multi;
     }
 
@@ -112,11 +112,11 @@ void CGameItem::OnGraphicChange(int direction)
             g_Orion.ExecuteStaticArt(Graphic);
         }
     }
-    else if (m_Items == NULL || WantUpdateMulti)
+    else if (m_Items == nullptr || WantUpdateMulti)
     {
         if (!MultiDistanceBonus ||
             CheckMultiDistance(g_RemoveRangeXY, this, g_ConfigManager.UpdateRange))
-            LoadMulti(m_Items == NULL);
+            LoadMulti(m_Items == nullptr);
     }
 }
 
@@ -580,17 +580,17 @@ ushort CGameItem::GetMountAnimation()
 
 void CGameItem::ClearCustomHouseMultis(int state)
 {
-    CMulti *nextMulti = NULL;
+    CMulti *nextMulti = nullptr;
 
     int checkZ = m_Z + 7;
 
-    for (CMulti *multi = (CMulti *)m_Items; multi != NULL; multi = nextMulti)
+    for (CMulti *multi = (CMulti *)m_Items; multi != nullptr; multi = nextMulti)
     {
         nextMulti = (CMulti *)multi->m_Next;
 
-        CMultiObject *nextItem = NULL;
+        CMultiObject *nextItem = nullptr;
 
-        for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != NULL; item = nextItem)
+        for (CMultiObject *item = (CMultiObject *)multi->m_Items; item != nullptr; item = nextItem)
         {
             nextItem = (CMultiObject *)item->m_Next;
 
@@ -606,7 +606,7 @@ void CGameItem::ClearCustomHouseMultis(int state)
                 item->State = item->State | CHMOF_FLOOR | CHMOF_IGNORE_IN_RENDER;
         }
 
-        if (multi->m_Items == NULL)
+        if (multi->m_Items == nullptr)
             Delete(multi);
     }
 }
@@ -618,7 +618,7 @@ void CGameItem::ClearCustomHouseMultis(int state)
 CMultiObject *
 CGameItem::AddMulti(ushort graphic, ushort color, char x, char y, char z, bool isCustomHouseMulti)
 {
-    CMultiObject *mo = NULL;
+    CMultiObject *mo = nullptr;
 
     if (isCustomHouseMulti)
         mo = new CCustomHouseMultiObject(graphic, color, GetX() + x, GetY() + y, z, 1);
@@ -660,7 +660,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
     if (!dropAlpha)
         alpha = 0xFF;
 
-    if (index.UopBlock != NULL)
+    if (index.UopBlock != nullptr)
     {
         UCHAR_LIST data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
 
@@ -743,7 +743,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
     CMulti *multi = (CMulti *)m_Items;
 
-    if (multi != NULL)
+    if (multi != nullptr)
     {
         multi->MinX = minX;
         multi->MinY = minY;
@@ -756,7 +756,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
     CGumpMinimap *minimap = (CGumpMinimap *)g_GumpManager.GetGump(0, 0, GT_MINIMAP);
 
-    if (minimap != NULL)
+    if (minimap != nullptr)
         minimap->LastX = 0;
 }
 
@@ -768,25 +768,25 @@ void CGameItem::LoadMulti(bool dropAlpha)
 void CGameItem::AddMultiObject(CMultiObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Items == NULL)
+    if (m_Items == nullptr)
     {
         m_Items = new CMulti(obj->GetX(), obj->GetY());
-        m_Items->m_Next = NULL;
+        m_Items->m_Next = nullptr;
         m_Items->m_Items = obj;
-        obj->m_Next = NULL;
-        obj->m_Prev = NULL;
+        obj->m_Next = nullptr;
+        obj->m_Prev = nullptr;
     }
     else
     {
         CMulti *multi = GetMultiAtXY(obj->GetX(), obj->GetY());
 
-        if (multi != NULL)
+        if (multi != nullptr)
         {
             QFOR(multiobj, multi->m_Items, CMultiObject *)
             {
                 if (obj->GetZ() < multiobj->GetZ())
                 {
-                    if (multiobj->m_Prev == NULL)
+                    if (multiobj->m_Prev == nullptr)
                         multi->Insert(multiobj->m_Prev, obj);
                     else
                         multi->Insert(multiobj, obj);
@@ -794,11 +794,11 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
                     return;
                 }
 
-                if (multiobj->m_Next == NULL)
+                if (multiobj->m_Next == nullptr)
                 {
                     multiobj->m_Next = obj;
                     obj->m_Prev = multiobj;
-                    obj->m_Next = NULL;
+                    obj->m_Next = nullptr;
 
                     return;
                 }
@@ -809,14 +809,14 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
         else
         {
             CMulti *newmulti = new CMulti(obj->GetX(), obj->GetY());
-            newmulti->m_Next = NULL;
+            newmulti->m_Next = nullptr;
             newmulti->m_Items = obj;
-            obj->m_Next = NULL;
-            obj->m_Prev = NULL;
+            obj->m_Next = nullptr;
+            obj->m_Prev = nullptr;
 
             QFOR(multi, m_Items, CMulti *)
             {
-                if (multi->m_Next == NULL)
+                if (multi->m_Next == nullptr)
                 {
                     multi->m_Next = newmulti;
                     newmulti->m_Prev = multi;
@@ -831,7 +831,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
 Получение объекта мульти в заданных координатах
 @param [__in] x Координата X
 @param [__in] y Координата Y
-@return Ссылка на мульти или NULL
+@return Ссылка на мульти или nullptr
 */
 CMulti *CGameItem::GetMultiAtXY(short x, short y)
 {
@@ -842,19 +842,19 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
             return multi;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /*!
 Найти объект внутри (рекурсивно) по типу с учетом (и без) цвета
 @param [__in] graphic Индекс картинки
 @param [__in_opt] color Цвет предмета
-@return Ссылка на найденный объект или NULL
+@return Ссылка на найденный объект или nullptr
 */
 CGameItem *CGameItem::FindItem(ushort graphic, ushort color)
 {
     DEBUG_TRACE_FUNCTION;
-    CGameItem *item = NULL;
+    CGameItem *item = nullptr;
 
     if (color == 0xFFFF) //Поиск по минимальному цвету
     {
@@ -875,7 +875,7 @@ CGameItem *CGameItem::FindItem(ushort graphic, ushort color)
             {
                 CGameItem *found = obj->FindItem(graphic, color);
 
-                if (found != NULL && found->Color < minColor)
+                if (found != nullptr && found->Color < minColor)
                 {
                     item = found;
                     minColor = found->Color;
@@ -894,7 +894,7 @@ CGameItem *CGameItem::FindItem(ushort graphic, ushort color)
             {
                 CGameItem *found = obj->FindItem(graphic, color);
 
-                if (found != NULL)
+                if (found != nullptr)
                     item = found;
             }
         }

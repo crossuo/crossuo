@@ -34,7 +34,7 @@ public:
     CGLTexture();
     virtual ~CGLTexture();
 
-    GLuint Texture{ 0 };
+    GLuint Texture = 0;
 
     HIT_MAP_TYPE m_HitMap;
 

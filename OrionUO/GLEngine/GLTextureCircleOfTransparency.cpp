@@ -70,7 +70,7 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
 
     Radius = radius;
 
-    if (Texture != NULL)
+    if (Texture != 0)
     {
         glDeleteTextures(1, &Texture);
         Texture = 0;

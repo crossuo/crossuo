@@ -16,7 +16,7 @@ CustomHousesManager g_CustomHousesManager;
 void CCustomHouse::Paste(CGameItem *foundation)
 {
     DEBUG_TRACE_FUNCTION;
-    if (foundation == NULL)
+    if (foundation == nullptr)
         return;
 
     foundation->ClearCustomHouseMultis(0);
@@ -25,7 +25,7 @@ void CCustomHouse::Paste(CGameItem *foundation)
     for (const CBuildObject &item : m_Items)
         foundation->AddMulti(item.Graphic, 0, item.X, item.Y, item.Z + z, true);
 
-    if (g_CustomHouseGump != NULL && g_CustomHouseGump->Serial == Serial)
+    if (g_CustomHouseGump != nullptr && g_CustomHouseGump->Serial == Serial)
     {
         g_CustomHouseGump->WantUpdateContent = true;
         g_CustomHouseGump->GenerateFloorPlace();
@@ -47,7 +47,7 @@ void CustomHousesManager::Clear()
     {
         CCustomHouse *house = i->second;
         delete house;
-        i->second = NULL;
+        i->second = nullptr;
     }
 }
 
@@ -58,17 +58,17 @@ CCustomHouse *CustomHousesManager::Get(int serial)
     {
         CCustomHouse *house = i->second;
 
-        if (house != NULL && house->Serial == serial)
+        if (house != nullptr && house->Serial == serial)
             return i->second;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void CustomHousesManager::Add(CCustomHouse *house)
 {
     DEBUG_TRACE_FUNCTION;
-    if (house != NULL)
+    if (house != nullptr)
         m_Items[house->Serial] = house;
 }
 
@@ -99,7 +99,7 @@ void CustomHousesManager::Load(const os_path &path)
 
             LOG("Load house from cache file: 0x%08X 0x%08X\n", serial, revision);
 
-            if (house == NULL)
+            if (house == nullptr)
             {
                 house = new CCustomHouse(serial, revision);
                 g_CustomHousesManager.Add(house);
@@ -138,7 +138,7 @@ void CustomHousesManager::Save(const os_path &path)
     {
         CCustomHouse *house = i->second;
 
-        if (house != NULL && house->m_Items.size())
+        if (house != nullptr && house->m_Items.size())
             count++;
     }
 
@@ -149,7 +149,7 @@ void CustomHousesManager::Save(const os_path &path)
     {
         CCustomHouse *house = i->second;
 
-        if (house == NULL || !house->m_Items.size())
+        if (house == nullptr || !house->m_Items.size())
             continue;
 
         writter.WriteUInt32LE(house->Serial);

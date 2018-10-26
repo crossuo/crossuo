@@ -75,14 +75,14 @@ private:
     uchar m_Spells[MAX_SPELLS_COUNT];
     int PageCount{ 8 };
 
-    CGUIGumppic *m_Body{ NULL };
-    CGUIText *m_TithingPointsText{ NULL };
+    CGUIGumppic *m_Body{ nullptr };
+    CGUIText *m_TithingPointsText{ nullptr };
 
-    CGUIButton *m_PrevPage{ NULL };
-    CGUIButton *m_NextPage{ NULL };
+    CGUIButton *m_PrevPage{ nullptr };
+    CGUIButton *m_NextPage{ nullptr };
 
-    CGUIGumppic *m_LastSpellPointer{ NULL };
-    CGUIGumppic *m_LastSpellBookmark{ NULL };
+    CGUIGumppic *m_LastSpellPointer{ nullptr };
+    CGUIGumppic *m_LastSpellBookmark{ nullptr };
 
     void GetTooltipBookInfo(int &dictionaryPagesCount, int &tooltipOffset);
 

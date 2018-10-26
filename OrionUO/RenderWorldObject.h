@@ -55,8 +55,8 @@ public:
     virtual bool TranparentTest(int playerZ) { return false; }
 
     //Ссылки на предыдущий и следующий элементы в очереди рендера
-    CRenderWorldObject *m_NextXY{ NULL };
-    CRenderWorldObject *m_PrevXY{ NULL };
+    CRenderWorldObject *m_NextXY{ nullptr };
+    CRenderWorldObject *m_PrevXY{ nullptr };
 
     //Получить указатель на объект ландшафта в данных координатах
     class CLandObject *GetLand();
@@ -120,9 +120,9 @@ public:
     virtual bool IsMultiObject() { return false; }
     virtual bool IsEffectObject() { return false; }
 
-    virtual class CRenderStaticObject *StaticGroupObjectPtr() { return NULL; }
-    virtual class CLandObject *LandObjectPtr() { return NULL; }
-    virtual class CGameCharacter *GameCharacterPtr() { return NULL; }
+    virtual class CRenderStaticObject *StaticGroupObjectPtr() { return nullptr; }
+    virtual class CLandObject *LandObjectPtr() { return nullptr; }
+    virtual class CGameCharacter *GameCharacterPtr() { return nullptr; }
 
     virtual void UpdateRealDrawCoordinates();
     virtual void UpdateDrawCoordinates();

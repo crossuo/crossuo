@@ -50,19 +50,19 @@ void CPressedObject::Clear(CRenderObject *obj)
     DEBUG_TRACE_FUNCTION;
     if (obj == LeftObject)
     {
-        LeftObject = NULL;
+        LeftObject = nullptr;
         LeftSerial = 0;
     }
 
     if (obj == RightObject)
     {
-        RightObject = NULL;
+        RightObject = nullptr;
         RightSerial = 0;
     }
 
     if (obj == MidObject)
     {
-        MidObject = NULL;
+        MidObject = nullptr;
         MidSerial = 0;
     }
 }
@@ -70,8 +70,8 @@ void CPressedObject::Clear(CRenderObject *obj)
 void CPressedObject::ClearLeft()
 {
     DEBUG_TRACE_FUNCTION;
-    LeftObject = NULL;
-    LeftGump = NULL;
+    LeftObject = nullptr;
+    LeftGump = nullptr;
     LeftSerial = 0;
 }
 
@@ -80,7 +80,7 @@ void CPressedObject::InitLeft(CRenderObject *obj, CGump *gump)
     DEBUG_TRACE_FUNCTION;
     LeftObject = obj;
     LeftGump = gump;
-    LeftSerial = (obj != NULL ? obj->Serial : 0);
+    LeftSerial = (obj != nullptr ? obj->Serial : 0);
 }
 
 void CPressedObject::InitLeft(const CSelectedObject &obj)
@@ -88,14 +88,14 @@ void CPressedObject::InitLeft(const CSelectedObject &obj)
     DEBUG_TRACE_FUNCTION;
     LeftObject = obj.Object;
     LeftGump = obj.Gump;
-    LeftSerial = (LeftObject != NULL ? obj.Serial : 0);
+    LeftSerial = (LeftObject != nullptr ? obj.Serial : 0);
 }
 
 void CPressedObject::ClearRight()
 {
     DEBUG_TRACE_FUNCTION;
-    RightObject = NULL;
-    RightGump = NULL;
+    RightObject = nullptr;
+    RightGump = nullptr;
     RightSerial = 0;
 }
 
@@ -104,7 +104,7 @@ void CPressedObject::InitRight(CRenderObject *obj, CGump *gump)
     DEBUG_TRACE_FUNCTION;
     RightObject = obj;
     RightGump = gump;
-    RightSerial = (obj != NULL ? obj->Serial : 0);
+    RightSerial = (obj != nullptr ? obj->Serial : 0);
 }
 
 void CPressedObject::InitRight(const CSelectedObject &obj)
@@ -112,14 +112,14 @@ void CPressedObject::InitRight(const CSelectedObject &obj)
     DEBUG_TRACE_FUNCTION;
     RightObject = obj.Object;
     RightGump = obj.Gump;
-    RightSerial = (RightObject != NULL ? obj.Serial : 0);
+    RightSerial = (RightObject != nullptr ? obj.Serial : 0);
 }
 
 void CPressedObject::ClearMid()
 {
     DEBUG_TRACE_FUNCTION;
-    MidObject = NULL;
-    MidGump = NULL;
+    MidObject = nullptr;
+    MidGump = nullptr;
     MidSerial = 0;
 }
 
@@ -128,7 +128,7 @@ void CPressedObject::InitMid(CRenderObject *obj, CGump *gump)
     DEBUG_TRACE_FUNCTION;
     MidObject = obj;
     MidGump = gump;
-    MidSerial = (obj != NULL ? obj->Serial : 0);
+    MidSerial = (obj != nullptr ? obj->Serial : 0);
 }
 
 void CPressedObject::InitMid(const CSelectedObject &obj)
@@ -136,12 +136,12 @@ void CPressedObject::InitMid(const CSelectedObject &obj)
     DEBUG_TRACE_FUNCTION;
     MidObject = obj.Object;
     MidGump = obj.Gump;
-    MidSerial = (MidObject != NULL ? obj.Serial : 0);
+    MidSerial = (MidObject != nullptr ? obj.Serial : 0);
 }
 
 bool CPressedObject::TestMoveOnDrag()
 {
     DEBUG_TRACE_FUNCTION;
-    return (LeftObject != NULL && LeftObject->IsGUI() && ((CBaseGUI *)LeftObject)->MoveOnDrag);
+    return (LeftObject != nullptr && LeftObject->IsGUI() && ((CBaseGUI *)LeftObject)->MoveOnDrag);
 }
 

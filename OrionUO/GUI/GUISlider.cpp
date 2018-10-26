@@ -60,7 +60,7 @@ void CGUISlider::UpdateText()
 
         CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-        if (th != NULL)
+        if (th != nullptr)
         {
             int textX = m_X;
             int textY = m_Y;
@@ -162,7 +162,7 @@ Wisp::CSize CGUISlider::GetSize()
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         if (Vertical)
         {
@@ -214,7 +214,7 @@ void CGUISlider::OnClick(int x, int y)
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
         lenght -= (Vertical ? (th->Height / 2) : th->Width);
 
     float percents = ((Vertical ? y : x) / (float)lenght) * 100.0f;
@@ -239,7 +239,7 @@ void CGUISlider::CalculateOffset()
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
         lenght -= (Vertical ? th->Height : th->Width);
 
     if (maxValue > 0)
@@ -327,13 +327,13 @@ void CGUISlider::Draw(bool checktrans)
     {
         if (CompositeBackground)
         {
-            CGLTexture *th[3] = { NULL };
+            CGLTexture *th[3] = { nullptr };
 
             IFOR (i, 0, 3)
             {
                 th[i] = g_Orion.ExecuteGump(BackgroundGraphic + (int)i);
 
-                if (th[i] == NULL)
+                if (th[i] == nullptr)
                     return;
             }
 
@@ -364,7 +364,7 @@ void CGUISlider::Draw(bool checktrans)
         {
             CGLTexture *th = g_Orion.ExecuteGump(BackgroundGraphic);
 
-            if (th != NULL)
+            if (th != nullptr)
             {
                 if (Vertical)
                     th->Draw(m_X, m_Y, 0, Length, checktrans);
@@ -376,7 +376,7 @@ void CGUISlider::Draw(bool checktrans)
 
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         if (Vertical)
             th->Draw(m_X, m_Y + Offset, checktrans);
@@ -393,7 +393,7 @@ bool CGUISlider::Select()
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         int buttonX = m_X;
         int buttonY = m_Y;
@@ -427,14 +427,14 @@ bool CGUISlider::Select()
 void CGUISlider::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL)
+    if (g_SelectedObject.Gump != nullptr)
         g_SelectedObject.Gump->WantRedraw = true;
 }
 
 void CGUISlider::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_LastSelectedObject.Gump != NULL)
+    if (g_LastSelectedObject.Gump != nullptr)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
 

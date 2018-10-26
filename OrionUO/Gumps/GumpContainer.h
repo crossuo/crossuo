@@ -20,8 +20,8 @@ private:
 
     CTextRenderer m_TextRenderer{ CTextRenderer() };
 
-    CGUIGumppic *m_CorpseEyes{ NULL };
-    CGUIDataBox *m_DataBox{ NULL };
+    CGUIGumppic *m_CorpseEyes{ nullptr };
+    CGUIDataBox *m_DataBox{ nullptr };
 
 protected:
     virtual void CalculateGumpState();
@@ -33,7 +33,7 @@ public:
     static const uint ID_GC_LOCK_MOVING;
     static const uint ID_GC_MINIMIZE;
 
-    CGUIGumppic *m_BodyGump{ NULL };
+    CGUIGumppic *m_BodyGump{ nullptr };
 
     void UpdateItemCoordinates(class CGameObject *item);
 

@@ -110,7 +110,7 @@ Wisp::CSize CGUISkillGroup::GetSize()
     DEBUG_TRACE_FUNCTION;
     Wisp::CSize size(220, 19);
 
-    if (!GetMinimized() && m_Items != NULL)
+    if (!GetMinimized() && m_Items != nullptr)
         size.Height += GetItemsCount() * 17;
 
     return size;
@@ -144,7 +144,7 @@ void CGUISkillGroup::Draw(bool checktrans)
             g_Orion.DrawGump(0x0835, 0, x, 5, width, 0);
     }
 
-    if (!GetMinimized() && m_Items != NULL)
+    if (!GetMinimized() && m_Items != nullptr)
     {
         glTranslatef(0.0f, 19.0f, 0.0f);
 

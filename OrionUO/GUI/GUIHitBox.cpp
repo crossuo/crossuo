@@ -24,14 +24,14 @@ CGUIHitBox::~CGUIHitBox()
 void CGUIHitBox::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL)
+    if (g_SelectedObject.Gump != nullptr)
         g_SelectedObject.Gump->WantRedraw = true;
 }
 
 void CGUIHitBox::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_LastSelectedObject.Gump != NULL)
+    if (g_LastSelectedObject.Gump != nullptr)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
 

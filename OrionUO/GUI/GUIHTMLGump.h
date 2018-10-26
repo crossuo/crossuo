@@ -49,13 +49,13 @@ public:
     virtual ~CGUIHTMLGump();
 
     //!Ссылки на компоненты
-    CGUIHTMLResizepic *m_Background{ NULL };
-    CGUIHTMLButton *m_ButtonUp{ NULL };
-    CGUIHTMLButton *m_ButtonDown{ NULL };
-    CGUIHTMLHitBox *m_HitBoxLeft{ NULL };
-    CGUIHTMLHitBox *m_HitBoxRight{ NULL };
-    CGUIHTMLSlider *m_Slider{ NULL };
-    CGUIScissor *m_Scissor{ NULL };
+    CGUIHTMLResizepic *m_Background{ nullptr };
+    CGUIHTMLButton *m_ButtonUp{ nullptr };
+    CGUIHTMLButton *m_ButtonDown{ nullptr };
+    CGUIHTMLHitBox *m_HitBoxLeft{ nullptr };
+    CGUIHTMLHitBox *m_HitBoxRight{ nullptr };
+    CGUIHTMLSlider *m_Slider{ nullptr };
+    CGUIScissor *m_Scissor{ nullptr };
 
     //!Инициализация
     //!			menu - флаг инициализации для гампа CGumpMenu

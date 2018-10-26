@@ -241,7 +241,7 @@ int TableOp(int op)
 *                   srcTxt      =   ASCII source
 *                   d           =   ptr to dwords to fill in
 *                   dstTxt      =   where to make a copy of ASCII source
-*                                   (NULL ok)
+*                                   (nullptr ok)
 *
 * Return:           Zero if no error.  Nonzero --> invalid hex or length
 *
@@ -870,7 +870,7 @@ int reKey(keyInstance *key)
 int makeKey(keyInstance *key, u8 direction, int keyLen, CONST char *keyMaterial)
 {
 #if VALIDATE_PARMS /* first, sanity check on parameters */
-    if (key == NULL)
+    if (key == nullptr)
         return BAD_KEY_INSTANCE; /* must have a keyInstance to initialize */
     if ((direction != DIR_ENCRYPT) && (direction != DIR_DECRYPT))
         return BAD_KEY_DIR; /* must have valid direction */
@@ -889,7 +889,7 @@ int makeKey(keyInstance *key, u8 direction, int keyLen, CONST char *keyMaterial)
     memset(key->key32, 0, sizeof(key->key32)); /* zero unused bits */
     key->keyMaterial[MAX_KEY_SIZE] = 0;        /* terminate ASCII string */
 
-    if ((keyMaterial == NULL) || (keyMaterial[0] == 0))
+    if ((keyMaterial == nullptr) || (keyMaterial[0] == 0))
         return TRUE; /* allow a "dummy" call */
 
     if (ParseHexDword(keyLen, keyMaterial, key->key32, key->keyMaterial))
@@ -917,7 +917,7 @@ int cipherInit(cipherInstance *cipher, u8 mode, CONST char *IV)
 {
     int i;
 #if VALIDATE_PARMS /* first, sanity check on parameters */
-    if (cipher == NULL)
+    if (cipher == nullptr)
         return BAD_PARAMS; /* must have a cipherInstance to initialize */
     if ((mode != MODE_ECB) && (mode != MODE_CBC) && (mode != MODE_CFB1))
         return BAD_CIPHER_MODE; /* must have valid cipher mode */
@@ -930,7 +930,7 @@ int cipherInit(cipherInstance *cipher, u8 mode, CONST char *IV)
 
     if ((mode != MODE_ECB) && (IV)) /* parse the IV */
     {
-        if (ParseHexDword(BLOCK_SIZE, IV, cipher->iv32, NULL))
+        if (ParseHexDword(BLOCK_SIZE, IV, cipher->iv32, nullptr))
             return BAD_IV_MAT;
         for (i = 0; i < BLOCK_SIZE / 32; i++) /* make byte-oriented copy for CFB1 */
             ((u32 *)cipher->IV)[i] = Bswap(cipher->iv32[i]);
@@ -980,9 +980,9 @@ int blockEncrypt(
     GetSboxKey;
 
 #if VALIDATE_PARMS
-    if ((cipher == NULL) || (cipher->cipherSig != VALID_SIG))
+    if ((cipher == nullptr) || (cipher->cipherSig != VALID_SIG))
         return BAD_CIPHER_STATE;
-    if ((key == NULL) || (key->keySig != VALID_SIG))
+    if ((key == nullptr) || (key->keySig != VALID_SIG))
         return BAD_KEY_INSTANCE;
     if ((rounds < 2) || (rounds > MAX_ROUNDS) || (rounds & 1))
         return BAD_KEY_INSTANCE;
@@ -1158,9 +1158,9 @@ int blockDecrypt(
     GetSboxKey;
 
 #if VALIDATE_PARMS
-    if ((cipher == NULL) || (cipher->cipherSig != VALID_SIG))
+    if ((cipher == nullptr) || (cipher->cipherSig != VALID_SIG))
         return BAD_CIPHER_STATE;
-    if ((key == NULL) || (key->keySig != VALID_SIG))
+    if ((key == nullptr) || (key->keySig != VALID_SIG))
         return BAD_KEY_INSTANCE;
     if ((rounds < 2) || (rounds > MAX_ROUNDS) || (rounds & 1))
         return BAD_KEY_INSTANCE;

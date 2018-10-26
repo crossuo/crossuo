@@ -93,7 +93,7 @@ void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lPa
     DEBUG_TRACE_FUNCTION;
     if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uchar)wParam))
         return;
-    else if (g_EntryPointer == NULL)
+    else if (g_EntryPointer == nullptr)
         return;
 
     if (g_EntryPointer->Length() < 20) //add char to text field

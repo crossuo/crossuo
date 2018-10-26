@@ -31,7 +31,7 @@ void CGumpDrag::UpdateContent()
     int count = 0;
     CGameItem *selobj = g_World->FindWorldItem(Serial);
 
-    if (selobj != NULL)
+    if (selobj != nullptr)
         count = selobj->Count;
 
     m_Slider = (CGUISlider *)Add(new CGUISlider(
@@ -39,7 +39,7 @@ void CGumpDrag::UpdateContent()
 
     CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
 
-    if (gumpEntry != NULL)
+    if (gumpEntry != nullptr)
         gumpEntry->WantRedraw = true;
 
     Add(new CGUIHitBox(ID_GD_TEXT_FIELD, 28, 40, 60, 16));
@@ -73,7 +73,7 @@ void CGumpDrag::GUMP_SLIDER_MOVE_EVENT_C
     if (m_StartText)
         m_StartText = false;
 
-    if (m_Entry != NULL)
+    if (m_Entry != nullptr)
         m_Entry->m_Entry.SetTextW(std::to_wstring(m_Slider->Value));
 }
 
@@ -88,7 +88,7 @@ void CGumpDrag::OnOkayPressed()
         {
             CGameItem *obj = g_World->FindWorldItem(Serial);
 
-            if (obj != NULL)
+            if (obj != nullptr)
                 g_Orion.PickupItem(obj, m_Slider->Value);
         }
     }
@@ -141,7 +141,7 @@ void CGumpDrag::OnKeyDown(const KeyEvent &ev)
         {
             OnOkayPressed();
             if (g_ConfigManager.GetConsoleNeedEnter())
-                g_EntryPointer = NULL;
+                g_EntryPointer = nullptr;
             else
                 g_EntryPointer = &g_GameConsole;
             break;

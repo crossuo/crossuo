@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpConsoleType *g_GumpConsoleType = NULL;
+CGumpConsoleType *g_GumpConsoleType = nullptr;
 
 CGumpConsoleType::CGumpConsoleType(bool minimized, bool showFullText)
     : CGump(GT_CONSOLE_TYPE, 0, 0, 0)
@@ -26,7 +26,7 @@ CGumpConsoleType::CGumpConsoleType(bool minimized, bool showFullText)
 CGumpConsoleType::~CGumpConsoleType()
 {
     DEBUG_TRACE_FUNCTION;
-    g_GumpConsoleType = NULL;
+    g_GumpConsoleType = nullptr;
 }
 
 bool CGumpConsoleType::CanBeDisplayed()

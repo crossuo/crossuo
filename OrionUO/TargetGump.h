@@ -18,7 +18,7 @@ public:
     int Hits = 0;
     ushort Color = 0;
     ushort HealthColor = 0;
-    CGameCharacter *TargetedCharacter = NULL;
+    CGameCharacter *TargetedCharacter = nullptr;
     CTargetGump();
     ~CTargetGump();
 
@@ -39,7 +39,7 @@ public:
     ushort GumpBottom = 0;
     ushort ColorGump = 0;
     ushort HealthColor = 0;
-    CGameCharacter *TargetedCharacter = NULL;
+    CGameCharacter *TargetedCharacter = nullptr;
     CNewTargetSystem();
     ~CNewTargetSystem();
 

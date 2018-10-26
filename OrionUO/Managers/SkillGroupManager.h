@@ -27,7 +27,7 @@ private:
 
 public:
     //!Указатель на список групп
-    CSkillGroupObject *m_Groups{ NULL };
+    CSkillGroupObject *m_Groups{ nullptr };
 
     CSkillGroupManager();
     ~CSkillGroupManager();

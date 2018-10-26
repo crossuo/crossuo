@@ -97,7 +97,7 @@ CServer *CServerList::GetServer(int index)
     if (index < m_Servers.size())
         return &m_Servers[index];
 
-    return NULL;
+    return nullptr;
 }
 
 CServer *CServerList::GetSelectedServer()
@@ -110,13 +110,13 @@ CServer *CServerList::GetSelectedServer()
             return &server;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 CServer *CServerList::Select(int index)
 {
     DEBUG_TRACE_FUNCTION;
-    CServer *server = NULL;
+    CServer *server = nullptr;
 
     DFOR (i, m_Servers.size() - 1, 0)
     {

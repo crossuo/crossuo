@@ -23,7 +23,7 @@ public:
     CGumpBulletinBoard(uint serial, short x, short y, string name);
     virtual ~CGumpBulletinBoard();
 
-    CGUIHTMLGump *m_HTMLGump{ NULL };
+    CGUIHTMLGump *m_HTMLGump{ nullptr };
 
     GUMP_BUTTON_EVENT_H;
 

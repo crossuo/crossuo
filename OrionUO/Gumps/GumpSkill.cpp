@@ -26,7 +26,7 @@ CGumpSkill::CGumpSkill(int serial, int x, int y)
 
         CSkill *skill = g_SkillsManager.Get(Serial);
 
-        if (skill != NULL)
+        if (skill != nullptr)
             text->CreateTextureW(1, ToWString(skill->Name), 30, 120, TS_CENTER);
 
         resizepic->Height = 20 + text->m_Texture.Height;
@@ -53,7 +53,7 @@ void CGumpSkill::OnLeftMouseButtonUp()
     {
         CSkill *skill = g_SkillsManager.Get(Serial);
 
-        if (skill != NULL && skill->Button)
+        if (skill != nullptr && skill->Button)
         {
             Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 

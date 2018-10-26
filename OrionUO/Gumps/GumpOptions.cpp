@@ -32,7 +32,7 @@ void CGumpOptions::CalculateGumpState()
 
     if (g_GumpPressed)
     {
-        if (g_PressedObject.LeftObject != NULL &&
+        if (g_PressedObject.LeftObject != nullptr &&
             ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_COMBOBOX)
         {
             g_GumpMovingOffset.Reset();
@@ -1640,7 +1640,7 @@ void CGumpOptions::RedrawMacroData()
     bool shift = false;
     ushort key = 0;
 
-    if (m_MacroPointer != NULL)
+    if (m_MacroPointer != nullptr)
     {
         alt = m_MacroPointer->Alt;
         ctrl = m_MacroPointer->Ctrl;
@@ -1656,9 +1656,9 @@ void CGumpOptions::RedrawMacroData()
 
     CMacroObject *obj = m_MacroObjectPointer;
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
-        if (obj->m_Prev != NULL)
+        if (obj->m_Prev != nullptr)
             m_MacroDataBox->Add(
                 new CGUIButton(ID_GO_P5_BUTTON_UP, 0x0983, 0x0984, 0x0984, 415, 173));
 
@@ -1668,7 +1668,7 @@ void CGumpOptions::RedrawMacroData()
         int x = 164;
         int y = 187;
 
-        while (obj != NULL && macroCount < maxMacroDraw)
+        while (obj != nullptr && macroCount < maxMacroDraw)
         {
             CGUIComboBox *combobox = (CGUIComboBox *)m_MacroDataBox->Add(new CGUIComboBox(
                 ID_GO_P5_MACRO_SELECTION + (macroCount * 1000),
@@ -2721,12 +2721,12 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                     {
                         CMacro *newpointer = (CMacro *)m_MacroPointer->m_Next;
 
-                        if (newpointer == NULL)
+                        if (newpointer == nullptr)
                             newpointer = (CMacro *)m_MacroPointer->m_Prev;
 
                         g_OptionsMacroManager.Delete(m_MacroPointer);
 
-                        if (newpointer == NULL)
+                        if (newpointer == nullptr)
                         {
                             newpointer = CMacro::CreateBlankMacro();
                             g_OptionsMacroManager.Add(newpointer);
@@ -2744,7 +2744,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                 }
                 else if (serial == ID_GO_P5_BUTTON_PREVEOUS) //Preveous button
                 {
-                    if (m_MacroPointer->m_Prev != NULL && m_LastChangeMacroTime < g_Ticks)
+                    if (m_MacroPointer->m_Prev != nullptr && m_LastChangeMacroTime < g_Ticks)
                     {
                         m_MacroPointer = (CMacro *)m_MacroPointer->m_Prev;
                         m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
@@ -2757,7 +2757,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                 else if (
                     serial == ID_GO_P5_BUTTON_NEXT && m_LastChangeMacroTime < g_Ticks) //Next button
                 {
-                    if (m_MacroPointer->m_Next != NULL)
+                    if (m_MacroPointer->m_Next != nullptr)
                     {
                         m_MacroPointer = (CMacro *)m_MacroPointer->m_Next;
                         m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
@@ -2769,7 +2769,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                 }
                 else if (serial == ID_GO_P5_BUTTON_UP) //Up button
                 {
-                    if (m_MacroObjectPointer->m_Prev != NULL)
+                    if (m_MacroObjectPointer->m_Prev != nullptr)
                     {
                         m_MacroObjectPointer = (CMacroObject *)m_MacroObjectPointer->m_Prev;
                         RedrawMacroData();
@@ -2777,7 +2777,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                 }
                 else if (serial == ID_GO_P5_BUTTON_DOWN) //Down button
                 {
-                    if (m_MacroObjectPointer->m_Next != NULL)
+                    if (m_MacroObjectPointer->m_Next != nullptr)
                     {
                         m_MacroObjectPointer = (CMacroObject *)m_MacroObjectPointer->m_Next;
                         RedrawMacroData();
@@ -3253,12 +3253,12 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
 
     CMacroObject *obj = m_MacroObjectPointer;
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         const int maxMacroDraw = 7;
         int macroCount = 0;
 
-        while (obj != NULL && macroCount < maxMacroDraw)
+        while (obj != nullptr && macroCount < maxMacroDraw)
         {
             if (macroCount == macroIndex)
                 break;
@@ -3268,7 +3268,7 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
         }
     }
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         if (!isAction)
         {
@@ -3287,11 +3287,11 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
 
             if (code != MC_NONE)
             {
-                if (obj->m_Next == NULL)
+                if (obj->m_Next == nullptr)
                     m_MacroPointer->Add(new CMacroObject(MC_NONE, MSC_NONE));
             }
             else if (
-                obj->m_Next != NULL && obj->m_Next->m_Next == NULL &&
+                obj->m_Next != nullptr && obj->m_Next->m_Next == nullptr &&
                 ((CMacroObject *)obj->m_Next)->Code == MC_NONE)
             {
                 if (obj == m_MacroObjectPointer)
@@ -3338,9 +3338,9 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     {
         CMacroObject *obj = m_MacroObjectPointer;
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
-            CGUITextEntry *entry = NULL;
+            CGUITextEntry *entry = nullptr;
 
             QFOR(item, m_MacroDataBox->m_Items, CBaseGUI *)
             {
@@ -3352,12 +3352,12 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
                 }
             }
 
-            if (entry != NULL)
+            if (entry != nullptr)
             {
                 const int maxMacroDraw = 7;
                 int macroCount = 0;
 
-                while (obj != NULL && macroCount < maxMacroDraw)
+                while (obj != nullptr && macroCount < maxMacroDraw)
                 {
                     if (obj->HasSubMenu == 2 &&
                         entry->Serial == ID_GO_P5_ACTION_SELECTION + (macroCount * 1000))
@@ -3369,7 +3369,7 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
             }
         }
 
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             bool canAdd = false;
 

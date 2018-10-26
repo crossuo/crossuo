@@ -19,14 +19,14 @@ private:
     static const int ID_GJ_BUTTON_LOCK = 4;
     static constexpr int ID_GJ_LOCK_MOVING = 5;
 
-    CGUIGumppic *m_BottomLine{ NULL };
-    CGUIButton *m_TextLocker{ NULL };
-    CGUICheckbox *m_CheckboxShowSystem{ NULL };
-    CGUICheckbox *m_CheckboxShowObjects{ NULL };
-    CGUICheckbox *m_CheckboxShowClient{ NULL };
-    CGUIText *m_TextShowSystem{ NULL };
-    CGUIText *m_TextShowObjects{ NULL };
-    CGUIText *m_TextShowClient{ NULL };
+    CGUIGumppic *m_BottomLine{ nullptr };
+    CGUIButton *m_TextLocker{ nullptr };
+    CGUICheckbox *m_CheckboxShowSystem{ nullptr };
+    CGUICheckbox *m_CheckboxShowObjects{ nullptr };
+    CGUICheckbox *m_CheckboxShowClient{ nullptr };
+    CGUIText *m_TextShowSystem{ nullptr };
+    CGUIText *m_TextShowObjects{ nullptr };
+    CGUIText *m_TextShowClient{ nullptr };
 
 protected:
     virtual void UpdateHeight();

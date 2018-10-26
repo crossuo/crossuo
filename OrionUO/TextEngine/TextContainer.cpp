@@ -56,7 +56,7 @@ void CTextContainer::DrawSystemChat(int x, int y, int height)
 
     CTextData *td = (CTextData *)g_SystemChat.Last();
 
-    while (td != NULL && offset >= y)
+    while (td != nullptr && offset >= y)
     {
         CGLTextTexture &tth = td->m_Texture;
 

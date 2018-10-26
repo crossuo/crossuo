@@ -19,8 +19,8 @@ private:
 
     bool m_StartText{ true };
 
-    CGUITextEntry *m_Entry{ NULL };
-    CGUISlider *m_Slider{ NULL };
+    CGUITextEntry *m_Entry{ nullptr };
+    CGUISlider *m_Slider{ nullptr };
 
 public:
     CGumpDrag(uint serial, short x, short y);

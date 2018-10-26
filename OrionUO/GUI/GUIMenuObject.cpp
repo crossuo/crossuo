@@ -38,7 +38,7 @@ bool CGUIMenuObject::Select()
 void CGUIMenuObject::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL && g_SelectedObject.Gump->GumpType == GT_MENU)
+    if (g_SelectedObject.Gump != nullptr && g_SelectedObject.Gump->GumpType == GT_MENU)
     {
         CGumpMenu *menu = (CGumpMenu *)g_SelectedObject.Gump;
 
@@ -53,7 +53,7 @@ void CGUIMenuObject::OnMouseEnter()
 void CGUIMenuObject::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_LastSelectedObject.Gump != NULL && g_LastSelectedObject.Gump->GumpType == GT_MENU)
+    if (g_LastSelectedObject.Gump != nullptr && g_LastSelectedObject.Gump->GumpType == GT_MENU)
     {
         CGumpMenu *menu = (CGumpMenu *)g_LastSelectedObject.Gump;
 

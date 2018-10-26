@@ -168,7 +168,7 @@ CGUITextEntry *CGumpBook::GetEntry(int page)
             return (CGUITextEntry *)item;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void CGumpBook::SetPageData(int page, const wstring &data)
@@ -177,7 +177,7 @@ void CGumpBook::SetPageData(int page, const wstring &data)
     CGUITextEntry *entry = GetEntry(page);
     m_PageDataReceived[page] = true;
 
-    if (entry != NULL)
+    if (entry != nullptr)
         entry->m_Entry.SetTextW(data);
 }
 
@@ -207,7 +207,7 @@ void CGumpBook::ChangePage(int newPage, bool playSound)
     if (EntryPointerHere())
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
-            g_EntryPointer = NULL;
+            g_EntryPointer = nullptr;
         else
             g_EntryPointer = &g_GameConsole;
     }
@@ -216,7 +216,7 @@ void CGumpBook::ChangePage(int newPage, bool playSound)
 void CGumpBook::DelayedClick(CRenderObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         ChangePage(g_ClickObject.Page);
         WantRedraw = true;
@@ -302,14 +302,14 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
         bool isSecondEntry = false;
         CGUITextEntry *entry = GetEntry(page);
 
-        if (entry == NULL)
+        if (entry == nullptr)
             return;
 
         if (g_EntryPointer != &entry->m_Entry)
         {
             entry = GetEntry(page + 1);
 
-            if (entry != NULL && page < PageCount - 1 && g_EntryPointer == &entry->m_Entry)
+            if (entry != nullptr && page < PageCount - 1 && g_EntryPointer == &entry->m_Entry)
             {
                 isSecondEntry = true;
                 page++;
@@ -366,12 +366,12 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                                                                166);
 
                     bool addNewLine = false;
-                    while (info != NULL)
+                    while (info != nullptr)
                     {
                         PMULTILINES_FONT_INFO next = info->m_Next;
-                        if (next != NULL)
+                        if (next != nullptr)
                         {
-                            if (next->m_Next == NULL && next->Data.size() > 0 &&
+                            if (next->m_Next == nullptr && next->Data.size() > 0 &&
                                 info->Data.size() == 0)
                                 addNewLine = true;
                             info->Data.clear();

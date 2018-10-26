@@ -27,10 +27,10 @@ void CTarget::Reset()
     memset(m_Data, 0, sizeof(m_Data));
     memset(m_LastData, 0, sizeof(m_LastData));
 
-    if (m_Multi != NULL)
+    if (m_Multi != nullptr)
     {
         delete m_Multi;
-        m_Multi = NULL;
+        m_Multi = nullptr;
     }
 
     Type = 0;
@@ -48,7 +48,7 @@ void CTarget::RequestFromCustomHouse()
     Targeting = true;
     MultiGraphic = 0;
 
-    if (g_CustomHouseGump != NULL)
+    if (g_CustomHouseGump != nullptr)
     {
         g_CustomHouseGump->Erasing = false;
         g_CustomHouseGump->SeekTile = false;
@@ -110,9 +110,9 @@ void CTarget::SendTargetObject(int serial)
     pack32(m_Data + 7, serial);
     m_Data[1] = 0;
 
-    CGameObject *obj = (g_World != NULL ? g_World->FindWorldObject(serial) : NULL);
+    CGameObject *obj = (g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         pack16(m_Data + 11, obj->GetX());
         pack16(m_Data + 13, obj->GetY());
@@ -133,7 +133,7 @@ void CTarget::SendTargetObject(int serial)
         //Скопируем для LastTarget
         memcpy(m_LastData, m_Data, sizeof(m_Data));
 
-        if (obj != NULL && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
+        if (obj != nullptr && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
             CPacketStatusRequest(serial).Send();
     }
 
@@ -177,7 +177,7 @@ void CTarget::SendCancelTarget()
 
     SendTarget();
 
-    if (g_CustomHouseGump != NULL)
+    if (g_CustomHouseGump != nullptr)
     {
         g_CustomHouseGump->Erasing = false;
         g_CustomHouseGump->SeekTile = false;
@@ -197,9 +197,9 @@ void CTarget::Plugin_SendTargetObject(int serial)
     pack32(m_Data + 7, serial);
     m_Data[1] = 0;
 
-    CGameObject *obj = (g_World != NULL ? g_World->FindWorldObject(serial) : NULL);
+    CGameObject *obj = (g_World != nullptr ? g_World->FindWorldObject(serial) : nullptr);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         pack16(m_Data + 11, obj->GetX());
         pack16(m_Data + 13, obj->GetY());
@@ -220,7 +220,7 @@ void CTarget::Plugin_SendTargetObject(int serial)
         //Скопируем для LastTarget
         memcpy(m_LastData, m_Data, sizeof(m_Data));
 
-        if (obj != NULL && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
+        if (obj != nullptr && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
         {
             CPacketStatusRequest packet(serial);
             SendMessage(
@@ -319,10 +319,10 @@ void CTarget::Plugin_SendTarget()
 void CTarget::UnloadMulti()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Multi != NULL)
+    if (m_Multi != nullptr)
     {
         delete m_Multi;
-        m_Multi = NULL;
+        m_Multi = nullptr;
     }
 }
 
@@ -335,7 +335,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 
     int count = (int)index.Count;
 
-    if (index.UopBlock != NULL)
+    if (index.UopBlock != nullptr)
     {
         UCHAR_LIST data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
 
@@ -363,7 +363,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
             AddMultiObject(mo);
         }
     }
-    else if (index.Address != NULL)
+    else if (index.Address != 0)
     {
         int itemOffset = sizeof(MULTI_BLOCK);
 
@@ -385,26 +385,26 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 void CTarget::AddMultiObject(CMultiObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Multi == NULL)
+    if (m_Multi == nullptr)
     {
         m_Multi = new CMulti(obj->GetX(), obj->GetY());
-        m_Multi->m_Next = NULL;
-        m_Multi->m_Prev = NULL;
+        m_Multi->m_Next = nullptr;
+        m_Multi->m_Prev = nullptr;
         m_Multi->m_Items = obj;
-        obj->m_Next = NULL;
-        obj->m_Prev = NULL;
+        obj->m_Next = nullptr;
+        obj->m_Prev = nullptr;
     }
     else
     {
         CMulti *multi = GetMultiAtXY(obj->GetX(), obj->GetY());
 
-        if (multi != NULL)
+        if (multi != nullptr)
         {
             QFOR(multiobj, multi->m_Items, CMultiObject *)
             {
                 if (obj->GetZ() < multiobj->GetZ())
                 {
-                    if (multiobj->m_Prev == NULL)
+                    if (multiobj->m_Prev == nullptr)
                         multi->Insert(multiobj->m_Prev, obj);
                     else
                         multi->Insert(multiobj, obj);
@@ -412,11 +412,11 @@ void CTarget::AddMultiObject(CMultiObject *obj)
                     return;
                 }
 
-                if (multiobj->m_Next == NULL)
+                if (multiobj->m_Next == nullptr)
                 {
                     multiobj->m_Next = obj;
                     obj->m_Prev = multiobj;
-                    obj->m_Next = NULL;
+                    obj->m_Next = nullptr;
 
                     return;
                 }
@@ -427,16 +427,16 @@ void CTarget::AddMultiObject(CMultiObject *obj)
         else
         {
             CMulti *newmulti = new CMulti(obj->GetX(), obj->GetY());
-            newmulti->m_Next = NULL;
+            newmulti->m_Next = nullptr;
             newmulti->m_Items = obj;
-            obj->m_Next = NULL;
-            obj->m_Prev = NULL;
+            obj->m_Next = nullptr;
+            obj->m_Prev = nullptr;
 
             multi = m_Multi;
 
-            while (multi != NULL)
+            while (multi != nullptr)
             {
-                if (multi->m_Next == NULL)
+                if (multi->m_Next == nullptr)
                 {
                     multi->m_Next = newmulti;
                     newmulti->m_Prev = multi;
@@ -454,7 +454,7 @@ CMulti *CTarget::GetMultiAtXY(short x, short y)
     DEBUG_TRACE_FUNCTION;
     CMulti *multi = m_Multi;
 
-    while (multi != NULL)
+    while (multi != nullptr)
     {
         if (multi->X == x && multi->Y == y)
             break;

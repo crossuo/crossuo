@@ -19,15 +19,15 @@ public:
     ushort Y = 0;
     bool Enabled = false;
     uint Page = 0;
-    CRenderObject *Object = NULL;
-    CGump *Gump = NULL;
+    CRenderObject *Object = nullptr;
+    CGump *Gump = nullptr;
     CClickObject() {}
     ~CClickObject() {}
 
     void Clear(CRenderObject *obj);
     void Clear();
 
-    void Init(CRenderObject *obj, CGump *gump = NULL);
+    void Init(CRenderObject *obj, CGump *gump = nullptr);
 };
 
 extern CClickObject g_ClickObject; //Ссылка на объект клика

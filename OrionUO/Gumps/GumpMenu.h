@@ -25,7 +25,7 @@ public:
 
     static const int ID_GM_HTMLGUMP = 1000;
 
-    CGUIText *m_TextObject{ NULL };
+    CGUIText *m_TextObject{ nullptr };
 
     void SendMenuResponse(int index);
 

@@ -21,14 +21,14 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, ushort graphic, int x, in
     Width = 0;
     int width = 0;
 
-    CGLTexture *th[4] = { NULL };
+    CGLTexture *th[4] = { nullptr };
     bool isValid = true;
 
     IFOR (i, 0, 4)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
-        if (th[i] != NULL)
+        if (th[i] != nullptr)
         {
             if (width < th[i]->Width)
                 width = th[i]->Width;
@@ -57,13 +57,13 @@ void CGUIScrollBackground::UpdateHeight(int height)
     DEBUG_TRACE_FUNCTION;
     Height = height;
 
-    CGLTexture *th[4] = { NULL };
+    CGLTexture *th[4] = { nullptr };
 
     IFOR (i, 0, 4)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
-        if (th[i] == NULL)
+        if (th[i] == nullptr)
             return;
     }
 
@@ -80,13 +80,13 @@ void CGUIScrollBackground::PrepareTextures()
 void CGUIScrollBackground::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th[4] = { NULL };
+    CGLTexture *th[4] = { nullptr };
 
     IFOR (i, 0, 4)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
-        if (th[i] == NULL)
+        if (th[i] == nullptr)
             return;
     }
 
@@ -137,13 +137,13 @@ bool CGUIScrollBackground::Select()
 
     bool select = false;
 
-    CGLTexture *th[4] = { NULL };
+    CGLTexture *th[4] = { nullptr };
 
     IFOR (i, 0, 4)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
-        if (th[i] == NULL)
+        if (th[i] == nullptr)
             return false;
     }
 

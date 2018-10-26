@@ -13,9 +13,9 @@
 
 CConnectionManager g_ConnectionManager;
 
-NETWORK_INIT_TYPE *g_NetworkInit = NULL;
-NETWORK_ACTION_TYPE *g_NetworkAction = NULL;
-NETWORK_POST_ACTION_TYPE *g_NetworkPostAction = NULL;
+NETWORK_INIT_TYPE *g_NetworkInit = nullptr;
+NETWORK_ACTION_TYPE *g_NetworkAction = nullptr;
+NETWORK_POST_ACTION_TYPE *g_NetworkPostAction = nullptr;
 
 CConnectionManager::CConnectionManager()
 {

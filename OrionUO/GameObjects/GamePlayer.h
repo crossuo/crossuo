@@ -80,7 +80,7 @@ public:
 
     /*!
 	Search bandage in backpack
-	@return Item pointer or NULL if bandage is not found
+	@return Item pointer or nullptr if bandage is not found
 	*/
     class CGameItem *FindBandage();
 

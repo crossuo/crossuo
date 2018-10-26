@@ -31,13 +31,13 @@ void CGUIResizepic::PrepareTextures()
 void CGUIResizepic::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th[9] = { NULL };
+    CGLTexture *th[9] = { nullptr };
 
     IFOR (i, 0, 9)
     {
         CGLTexture *pth = g_Orion.ExecuteGump(Graphic + (int)i);
 
-        if (pth == NULL)
+        if (pth == nullptr)
             return;
 
         if (i == 4)

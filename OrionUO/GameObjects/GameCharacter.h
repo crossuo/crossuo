@@ -306,7 +306,7 @@ public:
 
     /*!
 	Find secure trade box object
-	@return Item pointer or NULL if box is not found
+	@return Item pointer or nullptr if box is not found
 	*/
     virtual CGameItem *FindSecureTradeBox();
 

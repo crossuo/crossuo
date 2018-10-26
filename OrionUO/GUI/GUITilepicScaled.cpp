@@ -28,7 +28,7 @@ void CGUITilepicScaled::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         SetShaderMode();
 

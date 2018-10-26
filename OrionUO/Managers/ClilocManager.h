@@ -69,10 +69,10 @@ class CClilocManager : public CBaseQueue
 {
 private:
     //!Ссылка на последний использованный клилок (для более быстрого доступа)
-    CCliloc *m_LastCliloc{ NULL };
+    CCliloc *m_LastCliloc{ nullptr };
 
     //!Ссылка на дефолтный клилок (для более быстрого доступа)
-    CCliloc *m_ENUCliloc{ NULL };
+    CCliloc *m_ENUCliloc{ nullptr };
 
 public:
     CClilocManager();

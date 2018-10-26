@@ -139,7 +139,7 @@ int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_fac
 ushort CMouseManager::GetGameCursor()
 {
     DEBUG_TRACE_FUNCTION;
-    int war = (int)(g_Player != NULL && g_Player->Warmode);
+    int war = (int)(g_Player != nullptr && g_Player->Warmode);
     ushort result = g_CursorData[war][9]; //Main Gump mouse cursor
 
     if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled)
@@ -152,7 +152,7 @@ ushort CMouseManager::GetGameCursor()
 
     //bool gumpChecked = (g_LastSelectedGump || (g_LastSelectedObject && g_LastObjectType != SOT_GAME_OBJECT && g_LastObjectType != SOT_STATIC_OBJECT && g_LastObjectType != SOT_LAND_OBJECT && g_LastObjectType != SOT_TEXT_OBJECT));
 
-    if (!mouseInWindow || g_SelectedObject.Gump != NULL || g_PressedObject.LeftGump != NULL)
+    if (!mouseInWindow || g_SelectedObject.Gump != nullptr || g_PressedObject.LeftGump != nullptr)
         return result;
 
     int gameWindowCenterX = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2);
@@ -177,11 +177,11 @@ void CMouseManager::ProcessWalking()
         mouseInWindow = false;
 
     if ((g_MovingFromMouse || (mouseInWindow && g_AutoMoving)) &&
-        g_PressedObject.RightGump == NULL &&
+        g_PressedObject.RightGump == nullptr &&
         !((g_ShiftPressed && !g_CtrlPressed && !g_AltPressed) &&
           g_ConfigManager.HoldShiftForEnablePathfind && g_ConfigManager.EnablePathfind) &&
         !(g_SelectedGameObjectHandle == g_PressedObject.RightSerial &&
-          g_PressedObject.RightObject != NULL && g_PressedObject.RightObject->IsGameObject()))
+          g_PressedObject.RightObject != nullptr && g_PressedObject.RightObject->IsGameObject()))
     {
         int gameWindowCenterX = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2);
         int gameWindowCenterY =
@@ -223,7 +223,7 @@ bool CMouseManager::LoadCursorTextures()
 
             if (!i)
             {
-                if (pth != NULL)
+                if (pth != nullptr)
                 {
                     float OffsX = 0.0f;
                     float OffsY = 0.0f;
@@ -338,7 +338,7 @@ void CMouseManager::Draw(ushort id)
     DEBUG_TRACE_FUNCTION;
     if (g_GameState >= GS_GAME)
     {
-        if (g_CustomHouseGump != NULL && g_CustomHouseGump->SelectedGraphic)
+        if (g_CustomHouseGump != nullptr && g_CustomHouseGump->SelectedGraphic)
         {
             ushort color = 0;
 
@@ -393,7 +393,7 @@ void CMouseManager::Draw(ushort id)
 
                 CGLTexture *to = g_Orion.ExecuteGump(ohGraphic);
 
-                if (to != NULL)
+                if (to != nullptr)
                     g_Orion.DrawGump(
                         ohGraphic,
                         ohColor,
@@ -427,7 +427,7 @@ void CMouseManager::Draw(ushort id)
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(id);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         ushort color = 0;
 

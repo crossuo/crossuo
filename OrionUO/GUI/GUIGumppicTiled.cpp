@@ -27,7 +27,7 @@ void CGUIGumppicTiled::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         SetShaderMode();
 
@@ -46,7 +46,7 @@ bool CGUIGumppicTiled::Select()
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         int width = Width;
         int height = Height;

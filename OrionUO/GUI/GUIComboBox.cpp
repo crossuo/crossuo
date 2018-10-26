@@ -42,7 +42,7 @@ CGUIComboBox::CGUIComboBox(
     {
         CGLTexture *th = g_Orion.ExecuteGump(OpenGraphic);
 
-        if (th != NULL)
+        if (th != nullptr)
         {
             m_ArrowX = th->Width - 24;
             m_OffsetY = th->Height;
@@ -50,7 +50,7 @@ CGUIComboBox::CGUIComboBox(
 
         th = g_Orion.ExecuteGump(OpenGraphic + 1);
 
-        if (th != NULL)
+        if (th != nullptr)
         {
             m_StepY = th->Height;
             m_WorkWidth = th->Width - 12;
@@ -58,7 +58,7 @@ CGUIComboBox::CGUIComboBox(
 
         th = g_Orion.ExecuteGump(Graphic);
 
-        if (th != NULL && !Width)
+        if (th != nullptr && !Width)
             m_MinimizedArrowX = th->Width - 16;
     }
 }
@@ -66,10 +66,10 @@ CGUIComboBox::CGUIComboBox(
 CGUIComboBox::~CGUIComboBox()
 {
     DEBUG_TRACE_FUNCTION;
-    if (Text != NULL)
+    if (Text != nullptr)
     {
         delete Text;
-        Text = NULL;
+        Text = nullptr;
     }
 }
 
@@ -159,7 +159,7 @@ CBaseGUI *CGUIComboBox::SkipToStart()
 void CGUIComboBox::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    if (Text != NULL)
+    if (Text != nullptr)
         Text->m_Texture.Draw(m_X + Text->GetX(), m_Y + Text->GetY() + TextOffsetY, checktrans);
 
     if (g_PressedObject.LeftObject == this) //maximized
@@ -243,7 +243,7 @@ void CGUIComboBox::Draw(bool checktrans)
     }
     else
     {
-        CGUIText *selected = NULL;
+        CGUIText *selected = nullptr;
         int index = 0;
 
         QFOR(item, m_Items, CBaseGUI *)
@@ -267,7 +267,7 @@ void CGUIComboBox::Draw(bool checktrans)
             else
                 g_Orion.DrawGump(Graphic, 0, m_X, m_Y);
 
-            if (selected != NULL)
+            if (selected != nullptr)
             {
                 if (!g_ConfigManager.GetUseGLListsForInterface())
                     g_GL.PushScissor(m_X + 6, m_Y, m_MinimizedArrowX, 20);
@@ -288,7 +288,7 @@ void CGUIComboBox::Draw(bool checktrans)
         {
             g_Orion.DrawResizepicGump(Graphic, m_X, m_Y, Width, 20);
 
-            if (selected != NULL)
+            if (selected != nullptr)
             {
                 if (!g_ConfigManager.GetUseGLListsForInterface())
                     g_GL.PushScissor(m_X + 3, m_Y, Width - 6, 20);

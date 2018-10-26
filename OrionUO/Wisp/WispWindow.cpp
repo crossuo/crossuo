@@ -14,7 +14,7 @@ CWindow *g_WispWindow = nullptr;
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_WispWindow != NULL)
+    if (g_WispWindow != nullptr)
         return g_WispWindow->OnWindowProc(hWnd, message, wParam, lParam);
 
     return DefWindowProc(hWnd, message, wParam, lParam);
@@ -160,7 +160,7 @@ bool CWindow::Create(
     wcex.hInstance = hInstance;
     wcex.hCursor = cursor;
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = NULL;
+    wcex.lpszMenuName = nullptr;
     wcex.lpszClassName = wclassName.c_str();
     wcex.hIcon = icon;
     wcex.hIconSm = icon;
@@ -179,10 +179,10 @@ bool CWindow::Create(
         0,
         width,
         height,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
         hInstance,
-        NULL);
+        nullptr);
     if (!Handle)
         return false;
 
@@ -200,7 +200,7 @@ bool CWindow::Create(
 
     SetWindowPos(Handle, HWND_TOP, 0, 0, r.right, r.bottom, 0);
 
-    srand(unsigned(time(NULL)));
+    srand(unsigned(time(nullptr)));
 
     GetClientRect(Handle, &r);
     m_Size.Width = r.right - r.left;
@@ -333,7 +333,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         {
             if (LOWORD(lParam) == HTCLIENT)
             {
-                SetCursor(NULL);
+                SetCursor(nullptr);
                 return 0;
             }
             break;

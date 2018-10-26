@@ -38,7 +38,7 @@ bool CGumpBuff::CanBeDisplayed()
 void CGumpBuff::UpdateBuffIcons()
 {
     DEBUG_TRACE_FUNCTION;
-    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != NULL;)
+    for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr;)
     {
         CBaseGUI *next = (CBaseGUI *)item->m_Next;
 
@@ -346,7 +346,7 @@ void CGumpBuff::UpdateContent()
     gui->SetX(ballCoordinates.X);
     gui->SetY(ballCoordinates.Y);
 
-    gui = NULL;
+    gui = nullptr;
 
     QFOR(item, m_Items, CBaseGUI *)
     {
@@ -381,7 +381,7 @@ void CGumpBuff::UpdateContent()
     }
 
     //Выключение прозрачности в задницу очереди
-    if (gui != NULL)
+    if (gui != nullptr)
         MoveToBack(gui);
 }
 

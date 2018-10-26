@@ -100,7 +100,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     {
         CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
 
-        if (gumpEntry != NULL)
+        if (gumpEntry != nullptr)
             gumpEntry->WantRedraw = true;
 
         g_EntryPointer = &m_EntrySubject->m_Entry;
@@ -129,9 +129,9 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
 
     m_HTMLGump->CalculateDataSize();
 
-    m_ButtonPost = NULL;
-    m_ButtonRemove = NULL;
-    m_ButtonReply = NULL;
+    m_ButtonPost = nullptr;
+    m_ButtonRemove = nullptr;
+    m_ButtonReply = nullptr;
 
     switch (m_Variant)
     {
@@ -173,13 +173,13 @@ void CGumpBulletinBoardItem::UpdateHeight()
     DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
-    if (m_ButtonPost != NULL)
+    if (m_ButtonPost != nullptr)
         m_ButtonPost->SetY(Height - 22); //Post
 
-    if (m_ButtonRemove != NULL)
+    if (m_ButtonRemove != nullptr)
         m_ButtonRemove->SetY(Height - 22); //Remove
 
-    if (m_ButtonReply != NULL)
+    if (m_ButtonReply != nullptr)
         m_ButtonReply->SetY(Height - 22); //Reply
 }
 
@@ -201,7 +201,7 @@ void CGumpBulletinBoardItem::RecalculateHeight()
 void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_EntrySubject != NULL)
+    if (m_EntrySubject != nullptr)
     {
         if (serial == ID_GBBI_POST)
         {

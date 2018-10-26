@@ -72,7 +72,7 @@ bool CSpeechManager::LoadSpeech()
         }
     }
 
-    if (CurrentLanguage == NULL)
+    if (CurrentLanguage == nullptr)
     {
         CurrentLanguage = &m_LangCodes[0];
         g_Language = m_LangCodes[0].Abbreviature;
@@ -84,11 +84,11 @@ bool CSpeechManager::LoadSpeech()
     UCHAR_LIST tempData;
     bool isUOP = false;
 
-    if (g_FileManager.m_MainMisc.Start != NULL)
+    if (g_FileManager.m_MainMisc.Start != nullptr)
     {
         CUopBlockHeader *block = g_FileManager.m_MainMisc.GetBlock(0x0891F809004D8081);
 
-        if (block != NULL)
+        if (block != nullptr)
         {
             tempData = g_FileManager.m_MainMisc.GetData(*block);
             reader.SetData(&tempData[0], tempData.size());
@@ -96,7 +96,7 @@ bool CSpeechManager::LoadSpeech()
         }
     }
 
-    if (reader.Start == NULL)
+    if (reader.Start == nullptr)
         reader.SetData(g_FileManager.m_SpeechMul.Start, g_FileManager.m_SpeechMul.Size);
 
     if (isUOP)

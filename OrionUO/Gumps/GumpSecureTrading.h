@@ -23,11 +23,11 @@ private:
 
     CTextRenderer m_TextRenderer{ CTextRenderer() };
 
-    CGUIButton *m_MyCheck{ NULL };
-    CGUIGumppic *m_OpponentCheck{ NULL };
+    CGUIButton *m_MyCheck{ nullptr };
+    CGUIGumppic *m_OpponentCheck{ nullptr };
 
-    CGUIDataBox *m_MyDataBox{ NULL };
-    CGUIDataBox *m_OpponentDataBox{ NULL };
+    CGUIDataBox *m_MyDataBox{ nullptr };
+    CGUIDataBox *m_OpponentDataBox{ nullptr };
 
 protected:
     virtual void CalculateGumpState();

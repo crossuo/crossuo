@@ -36,7 +36,7 @@ CTextData::~CTextData()
 {
     DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
-    Owner = NULL;
+    Owner = nullptr;
 }
 
 bool CTextData::CanBeDrawedInJournalGump()

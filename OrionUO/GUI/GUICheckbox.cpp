@@ -64,7 +64,7 @@ void CGUICheckbox::UpdateTextPosition()
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-    if (th != NULL)
+    if (th != nullptr)
     {
         switch (TextPosition)
         {
@@ -193,14 +193,14 @@ bool CGUICheckbox::Select()
 void CGUICheckbox::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (Graphic != GraphicSelected && g_SelectedObject.Gump != NULL)
+    if (Graphic != GraphicSelected && g_SelectedObject.Gump != nullptr)
         g_SelectedObject.Gump->WantRedraw = true;
 }
 
 void CGUICheckbox::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (Graphic != GraphicSelected && g_LastSelectedObject.Gump != NULL)
+    if (Graphic != GraphicSelected && g_LastSelectedObject.Gump != nullptr)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
 

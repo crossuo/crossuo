@@ -417,7 +417,7 @@ void CConfigManager::SetConsoleNeedEnter(bool val)
 {
     DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && val && g_EntryPointer == &g_GameConsole)
-        g_EntryPointer = NULL;
+        g_EntryPointer = nullptr;
 
     m_ConsoleNeedEnter = val;
 }
@@ -455,7 +455,7 @@ void CConfigManager::SetOldStyleStatusbar(bool val)
     {
         CGump *gump = g_GumpManager.UpdateGump(g_PlayerSerial, 0, GT_STATUSBAR);
 
-        if (gump != NULL && !gump->Minimized)
+        if (gump != nullptr && !gump->Minimized)
             gump->WantUpdateContent = true;
     }
 }
@@ -490,7 +490,7 @@ void CConfigManager::SetChangeFieldsGraphic(bool val)
     if (!(g_OrionFeaturesFlags & OFF_TILED_FIELDS))
         m_ChangeFieldsGraphic = false;
 
-    if (this == &g_ConfigManager && g_World != NULL)
+    if (this == &g_ConfigManager && g_World != nullptr)
     {
         QFOR(item, g_World->m_Items, CGameObject *)
         {
@@ -506,7 +506,7 @@ void CConfigManager::SetPaperdollSlots(bool val)
 
     m_PaperdollSlots = val;
 
-    if (this == &g_ConfigManager && g_World != NULL)
+    if (this == &g_ConfigManager && g_World != nullptr)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
         {
@@ -525,7 +525,7 @@ void CConfigManager::SetScaleImagesInPaperdollSlots(bool val)
 
     m_ScaleImagesInPaperdollSlots = val;
 
-    if (this == &g_ConfigManager && g_World != NULL)
+    if (this == &g_ConfigManager && g_World != nullptr)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
         {
@@ -562,7 +562,7 @@ void CConfigManager::SetNoDrawRoofs(bool val)
     if (!(g_OrionFeaturesFlags & OFF_TILED_FIELDS))
         m_NoDrawRoofs = false;
 
-    if (this == &g_ConfigManager && g_Player != NULL)
+    if (this == &g_ConfigManager && g_Player != nullptr)
     {
         g_Player->OldX = 0;
         g_Player->OldY = 0;
@@ -576,7 +576,7 @@ void CConfigManager::SetUseGLListsForInterface(bool val)
     bool old = m_UseGLListsForInterface;
     m_UseGLListsForInterface = (val || !g_GL.CanUseFrameBuffer);
 
-    if (this == &g_ConfigManager && g_World != NULL && old != m_UseGLListsForInterface)
+    if (this == &g_ConfigManager && g_World != nullptr && old != m_UseGLListsForInterface)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
         {
@@ -600,12 +600,12 @@ void CConfigManager::SetItemPropertiesMode(uchar val)
 
     m_ItemPropertiesMode = val;
 
-    if (this == &g_ConfigManager && g_World != NULL)
+    if (this == &g_ConfigManager && g_World != nullptr)
     {
         CGumpPropertyIcon *gump =
             (CGumpPropertyIcon *)g_GumpManager.UpdateContent(0, 0, GT_PROPERTY_ICON);
 
-        if (gump != NULL && (val == OPM_AT_ICON || val == OPM_ALWAYS_UP))
+        if (gump != nullptr && (val == OPM_AT_ICON || val == OPM_ALWAYS_UP))
             gump->SetTextW(gump->GetTextW());
 
         g_ObjectPropertiesManager.Reset();
@@ -618,13 +618,13 @@ void CConfigManager::SetItemPropertiesIcon(bool val)
 
     m_ItemPropertiesIcon = val;
 
-    if (this == &g_ConfigManager && g_World != NULL)
+    if (this == &g_ConfigManager && g_World != nullptr)
     {
         if (val)
         {
             CGump *gump = g_GumpManager.UpdateContent(0, 0, GT_PROPERTY_ICON);
 
-            if (gump == NULL)
+            if (gump == nullptr)
             {
                 Wisp::CSize windowSize = g_OrionWindow.GetSize();
 
@@ -654,13 +654,13 @@ void CConfigManager::SetCharacterBackpackStyle(uchar val)
 
     m_CharacterBackpackStyle = val;
 
-    if (this == &g_ConfigManager && g_World != NULL)
+    if (this == &g_ConfigManager && g_World != nullptr)
     {
         g_GumpManager.UpdateContent(g_PlayerSerial, 0, GT_PAPERDOLL);
 
         CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
 
-        if (backpack != NULL)
+        if (backpack != nullptr)
             g_GumpManager.UpdateContent(backpack->Serial, 0, GT_CONTAINER);
     }
 }
@@ -1176,7 +1176,7 @@ bool CConfigManager::LoadBin(const os_path &path)
                     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
                 else
                     SetWindowPos(
-                        g_OrionWindow.Handle, NULL, windowX, windowY, windowWidth, windowHeight, 0);
+                        g_OrionWindow.Handle, nullptr, windowX, windowY, windowWidth, windowHeight, 0);
 
                 g_GL.UpdateRect();
 
@@ -1779,11 +1779,11 @@ bool CConfigManager::Load(const os_path &path)
                     g_DeveloperMode = (DEVELOPER_MODE)atoi(strings[1].c_str());
                     break;
                 case CMKC_LAST_SERVER:
-                    if (g_World == NULL)
+                    if (g_World == nullptr)
                         g_ServerList.LastServerName = strings[1];
                     break;
                 case CMKC_LAST_CHARACTER:
-                    if (g_World == NULL)
+                    if (g_World == nullptr)
                         g_CharacterList.LastCharacterName = strings[1];
                     break;
                 case CMKC_CHARACTER_BACKPACK_STYLE:
@@ -1835,7 +1835,7 @@ bool CConfigManager::Load(const os_path &path)
             SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
         else
             SetWindowPos(
-                g_OrionWindow.Handle, NULL, windowX, windowY, windowWidth, windowHeight, 0);
+                g_OrionWindow.Handle, nullptr, windowX, windowY, windowWidth, windowHeight, 0);
 
         g_GL.UpdateRect();
     }

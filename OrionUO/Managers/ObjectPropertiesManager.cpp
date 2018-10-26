@@ -36,7 +36,7 @@ wstring CObjectProperty::CreateTextData(bool extended)
 
     if (Name.length())
     {
-        if (obj != NULL)
+        if (obj != nullptr)
         {
             if (!obj->NPC)
             {
@@ -105,7 +105,7 @@ CObjectPropertiesManager::~CObjectPropertiesManager()
 
 void CObjectPropertiesManager::Reset()
 {
-    m_Object = NULL;
+    m_Object = nullptr;
     g_ToolTip.Reset();
 }
 
@@ -140,15 +140,15 @@ void CObjectPropertiesManager::Display(int serial)
 
     if (it == m_Map.end() || it->second.Empty())
     {
-        if (m_Object != NULL)
+        if (m_Object != nullptr)
         {
             if (g_ConfigManager.GetItemPropertiesMode() == OPM_AT_ICON)
             {
                 CGumpPropertyIcon *gump =
                     (CGumpPropertyIcon *)g_GumpManager.UpdateContent(0, 0, GT_PROPERTY_ICON);
 
-                if (gump != NULL)
-                    gump->Object = NULL;
+                if (gump != nullptr)
+                    gump->Object = nullptr;
             }
 
             Reset();
@@ -168,7 +168,7 @@ void CObjectPropertiesManager::Display(int serial)
 
     CGumpPropertyIcon *gump = (CGumpPropertyIcon *)g_GumpManager.GetGump(0, 0, GT_PROPERTY_ICON);
 
-    if (gump == NULL)
+    if (gump == nullptr)
         return;
 
     bool condition = (g_ConfigManager.GetItemPropertiesMode() == OPM_ALWAYS_UP);

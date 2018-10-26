@@ -530,9 +530,9 @@ void CTwofishCrypt::Init(uchar IP[4])
     memset(&ki, 0, sizeof(ki));
     memset(&ci, 0, sizeof(ci));
 
-    makeKey(&ki, DIR_DECRYPT, 0x80, NULL);
+    makeKey(&ki, DIR_DECRYPT, 0x80, nullptr);
 
-    cipherInit(&ci, MODE_ECB, NULL);
+    cipherInit(&ci, MODE_ECB, nullptr);
 
     ki.key32[0] = ki.key32[1] = ki.key32[2] = ki.key32[3] =
         m_IP; //0x0100007f or 0x8edb49ad or may be client_ip xor 0x8fdb49d2
@@ -556,7 +556,7 @@ void CTwofishCrypt::Init(uchar IP[4])
 
 void CTwofishCrypt::Init_MD5()
 {
-    if (m_md5 != NULL)
+    if (m_md5 != nullptr)
         delete m_md5;
     m_md5 = new MD5Crypt();
     m_md5->Init(m_subData3, 256);

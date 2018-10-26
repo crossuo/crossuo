@@ -37,8 +37,8 @@ protected:
     static const int m_LayerCount = 23;
     static int UsedLayers[m_LayerCount];
 
-    CGUIDataBox *m_DataBox{ NULL };
-    CGUIText *m_Description{ NULL };
+    CGUIDataBox *m_DataBox{ nullptr };
+    CGUIText *m_Description{ nullptr };
 
     bool m_WantTransparentContent{ false };
 
@@ -48,7 +48,7 @@ public:
     CGumpPaperdoll(uint serial, short x, short y, bool minimized);
     virtual ~CGumpPaperdoll();
 
-    CGUIButton *m_ButtonWarmode{ NULL };
+    CGUIButton *m_ButtonWarmode{ nullptr };
 
     CTextContainer m_TextContainer{ CTextContainer(10) };
 

@@ -95,7 +95,7 @@ void CGUIHTMLGump::Initalize(bool menu)
         {
             CGLTexture *th = g_Orion.ExecuteGump(0x00FE);
 
-            if (th != NULL)
+            if (th != nullptr)
                 offsetWidth -= th->Width;
         }
 
@@ -109,7 +109,7 @@ void CGUIHTMLGump::Initalize(bool menu)
 
         int sliderHeight = Height;
 
-        if (thDown != NULL)
+        if (thDown != nullptr)
             sliderHeight -= thDown->Height;
 
         m_ButtonDown =
@@ -121,7 +121,7 @@ void CGUIHTMLGump::Initalize(bool menu)
 
         int sliderStartY = 0;
 
-        if (thUp != NULL)
+        if (thUp != nullptr)
         {
             sliderStartY = thUp->Height;
             sliderHeight -= sliderStartY;
@@ -166,7 +166,7 @@ void CGUIHTMLGump::UpdateHeight(int height)
 
     int sliderHeight = height;
 
-    if (thDown != NULL)
+    if (thDown != nullptr)
         sliderHeight -= thDown->Height;
 
     m_ButtonDown->SetY(sliderHeight);
@@ -175,7 +175,7 @@ void CGUIHTMLGump::UpdateHeight(int height)
 
     int sliderStartY = 0;
 
-    if (thUp != NULL)
+    if (thUp != nullptr)
     {
         sliderStartY = thUp->Height;
         sliderHeight -= sliderStartY;
@@ -198,7 +198,7 @@ void CGUIHTMLGump::ResetDataOffset()
 void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, int &endX, int &endY)
 {
     DEBUG_TRACE_FUNCTION;
-    for (; item != NULL; item = (CBaseGUI *)item->m_Next)
+    for (; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_HITBOX || !item->Visible)
             continue;
@@ -305,7 +305,7 @@ bool CGUIHTMLGump::Select()
 void CGUIHTMLGump::Scroll(bool up, int delay)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Slider != NULL)
+    if (m_Slider != nullptr)
         m_Slider->OnScroll(up, delay);
 }
 

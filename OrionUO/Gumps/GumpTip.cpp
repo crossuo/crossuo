@@ -25,8 +25,8 @@ CGumpTip::CGumpTip(uint serial, short x, short y, string str, bool updates)
     {
         Add(new CGUIGumppic(0x09D2, 112, 35));
 
-        m_ButtonPrevGump = NULL;
-        m_ButtonNextGump = NULL;
+        m_ButtonPrevGump = nullptr;
+        m_ButtonNextGump = nullptr;
     }
     else //Tips text gump
     {

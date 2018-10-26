@@ -35,7 +35,7 @@ void CCharacterListScreen::Init()
 
     CServer *server = g_ServerList.GetSelectedServer();
 
-    if (server != NULL)
+    if (server != nullptr)
         title += "(" + server->Name + ")";
 
     g_OrionWindow.SetTitle(title);

@@ -41,7 +41,7 @@ typedef struct MULTILINES_FONT_INFO
         CharStart = 0;
         CharCount = 0;
         Align = TS_LEFT;
-        m_Next = NULL;
+        m_Next = nullptr;
     }
 } * PMULTILINES_FONT_INFO;
 
@@ -103,7 +103,7 @@ public:
 
 private:
     //!Список ASCII шрифтов
-    FONT_DATA *Font{ NULL };
+    FONT_DATA *Font{ nullptr };
 
     //!Список ссылок
     WEBLINK_MAP m_WebLink;
@@ -377,7 +377,7 @@ public:
 	@param [__in] align Расположение текста
 	@param [__in] flags Эффекты текста
 	@param [__in] width Ширина текстуры
-	@return Ссылка на мультистрочный текст или NULL
+	@return Ссылка на мультистрочный текст или nullptr
 	*/
     PMULTILINES_FONT_INFO
     GetInfoA(uchar font, const char *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);
@@ -545,7 +545,7 @@ public:
 	@param [__in] align Расположение текста
 	@param [__in] flags Эффекты текста
 	@param [__in] width Ширина текстуры
-	@return Ссылка на мультистрочный текст или NULL
+	@return Ссылка на мультистрочный текст или nullptr
 	*/
     PMULTILINES_FONT_INFO GetInfoW(
         uchar font, const wchar_t *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);

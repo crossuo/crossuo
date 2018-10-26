@@ -51,7 +51,7 @@ CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
         m_TotalPriceText = (CGUIText *)Add(new CGUIText(0x0386, 358, 386));
         m_TotalPriceText->CreateTextureA(9, "0");
 
-        m_TotalGoldText = NULL;
+        m_TotalGoldText = nullptr;
     }
 
     m_NameText = (CGUIText *)Add(new CGUIText(0x0386, 242, 408));
@@ -60,7 +60,7 @@ CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
     {
         CGUIHTMLButton *button = m_ItemList[i]->m_ButtonUp;
 
-        if (button != NULL)
+        if (button != nullptr)
         {
             button->Graphic = 0x0824;
             button->GraphicSelected = 0x0824;
@@ -75,7 +75,7 @@ CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
 
         button = m_ItemList[i]->m_ButtonDown;
 
-        if (button != NULL)
+        if (button != nullptr)
         {
             button->Graphic = 0x0825;
             button->GraphicSelected = 0x0825;
@@ -93,7 +93,7 @@ CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
 
         CGUIHTMLSlider *slider = m_ItemList[i]->m_Slider;
 
-        if (slider != NULL)
+        if (slider != nullptr)
         {
             slider->Graphic = 0x001F;
             slider->GraphicSelected = 0x001F;
@@ -123,7 +123,7 @@ void CGumpShop::SendList()
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *vendor = g_World->FindWorldCharacter(Serial);
 
-    if (vendor == NULL)
+    if (vendor == nullptr)
         return;
 
     if (IsBuyGump)
@@ -135,7 +135,7 @@ void CGumpShop::SendList()
 void CGumpShop::UpdateTotalPrice()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TotalPriceText != NULL)
+    if (m_TotalPriceText != nullptr)
     {
         int totalPrice = 0;
 
@@ -156,7 +156,7 @@ void CGumpShop::UpdateTotalPrice()
 void CGumpShop::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (NoProcess && g_Player != NULL)
+    if (NoProcess && g_Player != nullptr)
     {
         string name = g_Player->GetName();
         int len = (int)name.length();
@@ -207,7 +207,7 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
     DEBUG_TRACE_FUNCTION;
     CGUIMinMaxButtons *minmax = (CGUIMinMaxButtons *)g_PressedObject.LeftObject;
 
-    if (minmax == NULL)
+    if (minmax == nullptr)
         return;
 
     bool deleteItem = false;
@@ -229,7 +229,7 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
         uint itemSerial = minmax->Serial;
         int y = 0;
 
-        for (CBaseGUI *item = (CBaseGUI *)m_ItemList[1]->m_Items; item != NULL;)
+        for (CBaseGUI *item = (CBaseGUI *)m_ItemList[1]->m_Items; item != nullptr;)
         {
             CBaseGUI *next = (CBaseGUI *)item->m_Next;
 
@@ -257,7 +257,7 @@ void CGumpShop::OnLeftMouseButtonUp()
     CGump::OnLeftMouseButtonUp();
 
     if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled &&
-        g_World->FindWorldObject(g_SelectedObject.Serial) != NULL)
+        g_World->FindWorldObject(g_SelectedObject.Serial) != nullptr)
     {
         g_Target.SendTargetObject(g_SelectedObject.Serial);
         g_MouseManager.CancelDoubleClick = true;
@@ -269,12 +269,12 @@ bool CGumpShop::OnLeftMouseButtonDoubleClick()
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    if (g_PressedObject.LeftObject != NULL && g_PressedObject.LeftObject->IsGUI())
+    if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI())
     {
         if (((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_SHOPITEM)
         {
             CGUIShopItem *shopItem = (CGUIShopItem *)g_PressedObject.LeftObject;
-            CGUIShopResult *shopResult = NULL;
+            CGUIShopResult *shopResult = nullptr;
 
             int posY = 0;
 
@@ -292,7 +292,7 @@ bool CGumpShop::OnLeftMouseButtonDoubleClick()
                 }
             }
 
-            if (shopResult != NULL)
+            if (shopResult != nullptr)
             {
                 CGUIMinMaxButtons *minmax = shopResult->m_MinMaxButtons;
 

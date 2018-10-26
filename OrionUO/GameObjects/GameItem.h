@@ -108,7 +108,7 @@ public:
 	Получение объекта мульти в заданных координатах
 	@param [__in] x Координата X
 	@param [__in] y Координата Y
-	@return Ссылка на мульти или NULL
+	@return Ссылка на мульти или nullptr
 	*/
     CMulti *GetMultiAtXY(short x, short y);
 
@@ -116,7 +116,7 @@ public:
 	Найти объект внутри (рекурсивно) по типу с учетом (и без) цвета
 	@param [__in] graphic Индекс картинки
 	@param [__in_opt] color Цвет предмета
-	@return Ссылка на найденный объект или NULL
+	@return Ссылка на найденный объект или nullptr
 	*/
     CGameItem *FindItem(ushort graphic, ushort color = 0xFFFF);
 };

@@ -22,7 +22,7 @@ class CGUIScissor : public CGUIPolygonal
 
 public:
     //!Гамп-родитель
-    CGump *GumpParent = NULL;
+    CGump *GumpParent = nullptr;
 
     CGUIScissor(
         bool enabled,

@@ -30,9 +30,9 @@ public:
     virtual ~CGumpShop();
 
     CGUIHTMLGump *m_ItemList[2];
-    CGUIText *m_TotalPriceText{ NULL };
-    CGUIText *m_TotalGoldText{ NULL };
-    CGUIText *m_NameText{ NULL };
+    CGUIText *m_TotalPriceText{ nullptr };
+    CGUIText *m_TotalGoldText{ nullptr };
+    CGUIText *m_NameText{ nullptr };
 
     void SendList();
 

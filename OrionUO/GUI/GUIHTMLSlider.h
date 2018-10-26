@@ -16,7 +16,7 @@ class CGUIHTMLSlider : public CGUISlider
 {
 private:
     //!Гамп-родитель
-    class CGUIHTMLGump *m_HTMLGump{ NULL };
+    class CGUIHTMLGump *m_HTMLGump{ nullptr };
 
 public:
     CGUIHTMLSlider(

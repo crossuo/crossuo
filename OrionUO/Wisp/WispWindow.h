@@ -87,7 +87,7 @@ public:
 #endif
 
     // May be done using: SDL_AddTimer / SDL_RemoveTimer
-    void CreateTimer(uint id, int delay) { ::SetTimer(Handle, id, delay, NULL); }
+    void CreateTimer(uint id, int delay) { ::SetTimer(Handle, id, delay, nullptr); }
     void RemoveTimer(uint id) { ::KillTimer(Handle, id); }
 
     void CreateThreadedTimer(

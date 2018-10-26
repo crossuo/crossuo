@@ -34,12 +34,12 @@ private:
 
     uint m_PinTimer{ 0 };
 
-    CBaseGUI *m_PinOnCursor{ NULL };
-    CBaseGUI *m_FakeInsertionPin{ NULL };
+    CBaseGUI *m_PinOnCursor{ nullptr };
+    CBaseGUI *m_FakeInsertionPin{ nullptr };
 
-    CGUIButton *m_PlotCourse{ NULL };
-    CGUIButton *m_StopPlotting{ NULL };
-    CGUIButton *m_ClearCourse{ NULL };
+    CGUIButton *m_PlotCourse{ nullptr };
+    CGUIButton *m_StopPlotting{ nullptr };
+    CGUIButton *m_ClearCourse{ nullptr };
 
     vector<CGUIText *> m_Labels;
 
@@ -57,8 +57,8 @@ public:
         int height);
     virtual ~CGumpMap();
 
-    CGUIExternalTexture *m_Texture{ NULL };
-    CGUIDataBox *m_DataBox{ NULL };
+    CGUIExternalTexture *m_Texture{ nullptr };
+    CGUIDataBox *m_DataBox{ nullptr };
 
     virtual void PrepareContent();
 

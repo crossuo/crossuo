@@ -95,14 +95,14 @@ void CGUITextEntry::OnClick(CGump *gump, int x, int y)
 void CGUITextEntry::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_SelectedObject.Gump != NULL)
+    if (g_SelectedObject.Gump != nullptr)
         g_SelectedObject.Gump->WantRedraw = true;
 }
 
 void CGUITextEntry::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_LastSelectedObject.Gump != NULL)
+    if (g_LastSelectedObject.Gump != nullptr)
         g_LastSelectedObject.Gump->WantRedraw = true;
 }
 
@@ -117,9 +117,9 @@ void CGUITextEntry::PrepareTextures()
             color = ColorFocused;
         else if (
             g_GumpSelectedElement == this ||
-            (CheckOnSerial && g_CurrentCheckGump != NULL &&
+            (CheckOnSerial && g_CurrentCheckGump != nullptr &&
              g_CurrentCheckGump == g_SelectedObject.Gump && Serial == g_SelectedObject.Serial &&
-             g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsGUI()))
+             g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsGUI()))
             color = ColorSelected;
     }
 
@@ -150,9 +150,9 @@ void CGUITextEntry::Draw(bool checktrans)
     }
     else if (
         g_GumpSelectedElement == this ||
-        (CheckOnSerial && g_CurrentCheckGump != NULL &&
+        (CheckOnSerial && g_CurrentCheckGump != nullptr &&
          g_CurrentCheckGump == g_SelectedObject.Gump && Serial == g_SelectedObject.Serial &&
-         g_SelectedObject.Object != NULL && g_SelectedObject.Object->IsGUI()))
+         g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsGUI()))
     {
         if (UseGlobalColor)
             glColor4ub(

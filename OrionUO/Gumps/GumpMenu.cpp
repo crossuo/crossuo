@@ -37,7 +37,7 @@ void CGumpMenu::PrepareContent()
     {
         TextChanged = false;
 
-        if (m_TextObject != NULL)
+        if (m_TextObject != nullptr)
         {
             if (Text.length())
                 m_TextObject->CreateTextureA(1, Text, 200, TS_LEFT, UOFONT_FIXED);

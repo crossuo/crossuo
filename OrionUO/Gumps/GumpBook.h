@@ -25,13 +25,13 @@ private:
     static const int ID_GB_BUTTON_PREV = 5;
     static const int ID_GB_BUTTON_NEXT = 6;
 
-    bool *m_ChangedPage{ NULL };
-    bool *m_PageDataReceived{ NULL };
+    bool *m_ChangedPage{ nullptr };
+    bool *m_PageDataReceived{ nullptr };
 
     void InsertInContent(const Keycode key, bool isCharPress = true);
 
-    CGUIButton *m_PrevPage{ NULL };
-    CGUIButton *m_NextPage{ NULL };
+    CGUIButton *m_PrevPage{ nullptr };
+    CGUIButton *m_NextPage{ nullptr };
 
     void SetPagePos(int val, int page);
 
@@ -41,8 +41,8 @@ public:
 
     virtual void PasteClipboardData(wstring &data) override;
 
-    CGUITextEntry *m_EntryAuthor{ NULL };
-    CGUITextEntry *m_EntryTitle{ NULL };
+    CGUITextEntry *m_EntryAuthor{ nullptr };
+    CGUITextEntry *m_EntryTitle{ nullptr };
 
     CGUITextEntry *GetEntry(int page);
 

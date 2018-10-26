@@ -63,7 +63,7 @@ void CContainerRect::Calculate(ushort gumpID)
     CGLTexture *tex = g_Orion.ExecuteGump(gumpID);
 
     //!Если текстура есть в памяти
-    if (tex != NULL)
+    if (tex != nullptr)
     {
         //!Если выключено смещение - открываем гамп в правом верхнем углу клиента
         if (!g_ConfigManager.OffsetInterfaceWindows)

@@ -45,7 +45,7 @@ void CGumpAbility::InitToolTip()
 void CGumpAbility::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Colorizer != NULL && m_Body != NULL)
+    if (m_Colorizer != nullptr && m_Body != nullptr)
     {
         int index = (Serial != 0 ? 1 : 0);
         uchar &ability = g_Ability[index];

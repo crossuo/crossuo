@@ -171,8 +171,8 @@ CClilocManager::CClilocManager()
 
 CClilocManager::~CClilocManager()
 {
-    m_ENUCliloc = NULL;
-    m_LastCliloc = NULL;
+    m_ENUCliloc = nullptr;
+    m_LastCliloc = nullptr;
 }
 
 /*!
@@ -190,13 +190,13 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
 
     if (language == "enu")
     {
-        if (m_ENUCliloc == NULL)
+        if (m_ENUCliloc == nullptr)
             m_ENUCliloc = (CCliloc *)Add(new CCliloc(language));
 
         return m_ENUCliloc;
     }
 
-    if (m_LastCliloc != NULL && m_LastCliloc->Language == language)
+    if (m_LastCliloc != nullptr && m_LastCliloc->Language == language)
     {
         if (!m_LastCliloc->Loaded)
             return m_ENUCliloc;

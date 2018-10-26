@@ -25,8 +25,8 @@ CSelectedObject::~CSelectedObject()
 void CSelectedObject::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    Object = NULL;
-    Gump = NULL;
+    Object = nullptr;
+    Gump = nullptr;
     Serial = 0;
 }
 
@@ -35,8 +35,8 @@ void CSelectedObject::Clear(CRenderObject *obj)
     DEBUG_TRACE_FUNCTION;
     if (obj == Object)
     {
-        Object = NULL;
-        Gump = NULL;
+        Object = nullptr;
+        Gump = nullptr;
         Serial = 0;
     }
 }
@@ -46,7 +46,7 @@ void CSelectedObject::Init(CRenderObject *obj, CGump *gump)
     DEBUG_TRACE_FUNCTION;
     Object = obj;
     Gump = gump;
-    Serial = (obj != NULL ? obj->Serial : 0);
+    Serial = (obj != nullptr ? obj->Serial : 0);
 }
 
 void CSelectedObject::Init(const CSelectedObject &obj)
@@ -54,6 +54,6 @@ void CSelectedObject::Init(const CSelectedObject &obj)
     DEBUG_TRACE_FUNCTION;
     Object = obj.Object;
     Gump = obj.Gump;
-    Serial = (obj.Object != NULL ? obj.Object->Serial : 0);
+    Serial = (obj.Object != nullptr ? obj.Object->Serial : 0);
 }
 

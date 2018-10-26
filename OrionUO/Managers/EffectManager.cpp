@@ -35,11 +35,11 @@ void CEffectManager::AddEffect(CGameEffect *effect)
             if (effect->EffectType == EF_MOVING)
             {
                 CGameObject *obj = g_World->FindWorldObject(effect->DestSerial);
-                if (obj != NULL)
+                if (obj != nullptr)
                 {
                     obj = obj->GetTopObject();
 
-                    if (obj != NULL)
+                    if (obj != nullptr)
                     {
                         effect->DestX = obj->GetX();
                         effect->DestY = obj->GetY();
@@ -56,7 +56,7 @@ void CEffectManager::AddEffect(CGameEffect *effect)
                     {
                         EFFECT_TYPE type = EF_STAY_AT_POS;
 
-                        if (obj != NULL)
+                        if (obj != nullptr)
                             type = EF_STAY_AT_SOURCE;
 
                         CreateExplodeEffect(moving, type);
@@ -79,7 +79,7 @@ void CEffectManager::AddEffect(CGameEffect *effect)
 
             g_MapManager.AddRender(effect);
 
-            effect->Update(NULL);
+            effect->Update(nullptr);
 
             break;
         }
@@ -87,7 +87,7 @@ void CEffectManager::AddEffect(CGameEffect *effect)
         case EF_STAY_AT_SOURCE:
         {
             CGameObject *obj = g_World->FindWorldObject(effect->Serial);
-            if (obj != NULL)
+            if (obj != nullptr)
             {
                 if (effect->EffectType == EF_LIGHTING)
                 {
@@ -119,8 +119,8 @@ void CEffectManager::RemoveEffect(CGameEffect *effect)
     DEBUG_TRACE_FUNCTION;
     Unlink(effect);
 
-    effect->m_Next = NULL;
-    effect->m_Prev = NULL;
+    effect->m_Next = nullptr;
+    effect->m_Prev = nullptr;
     delete effect;
 }
 
@@ -157,11 +157,11 @@ void CEffectManager::CreateExplodeEffect(CGameEffect *effect, const EFFECT_TYPE 
 void CEffectManager::UpdateEffects()
 {
     DEBUG_TRACE_FUNCTION;
-    for (CGameEffect *effect = (CGameEffect *)m_Items; effect != NULL;)
+    for (CGameEffect *effect = (CGameEffect *)m_Items; effect != nullptr;)
     {
         CGameEffect *next = (CGameEffect *)effect->m_Next;
 
-        effect->Update(NULL);
+        effect->Update(nullptr);
 
         effect = next;
     }

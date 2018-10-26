@@ -40,7 +40,7 @@ void CGUIMinMaxButtons::UpdateText()
 
         CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
-        if (th != NULL)
+        if (th != nullptr)
         {
             int textX = m_X;
             int textY = m_Y;
@@ -204,7 +204,7 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
     {
         CGLTexture *th = g_Orion.ExecuteGump(Graphic + (int)i);
 
-        if (th != NULL)
+        if (th != nullptr)
             th->Draw(m_X + ((int)i * 18), m_Y, checktrans);
     }
 

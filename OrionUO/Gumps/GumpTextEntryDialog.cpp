@@ -40,7 +40,7 @@ CGumpTextEntryDialog::~CGumpTextEntryDialog()
 void CGumpTextEntryDialog::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextField != NULL && m_Entry != NULL)
+    if (m_TextField != nullptr && m_Entry != nullptr)
     {
         ushort newGraphic = 0x0475; //Text field
 
@@ -72,7 +72,7 @@ void CGumpTextEntryDialog::UpdateContent()
 
     CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
 
-    if (gumpEntry != NULL)
+    if (gumpEntry != nullptr)
         gumpEntry->WantRedraw = true;
 
     m_TextField = (CGUIGumppic *)Add(new CGUIGumppic(0x0477, 60, 130));
@@ -167,7 +167,7 @@ void CGumpTextEntryDialog::SendTextEntryDialogResponse(bool mode)
 {
     DEBUG_TRACE_FUNCTION;
     if (!RemoveMark &&
-        m_Entry != NULL) //Непредвиденная ошибка при отсутствии поля ввода текста в гампе
+        m_Entry != nullptr) //Непредвиденная ошибка при отсутствии поля ввода текста в гампе
     {
         //Отправляем ответ на ентри диалог
         CPacketTextEntryDialogResponse(this, &m_Entry->m_Entry, mode).Send();

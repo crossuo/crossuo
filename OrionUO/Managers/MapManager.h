@@ -37,7 +37,7 @@ public:
 
 protected:
     //!Вектор ссылок на блоки карты
-    CMapBlock **m_Blocks{ NULL };
+    CMapBlock **m_Blocks{ nullptr };
 
     MAP_INDEX_LIST m_BlockData[MAX_MAPS_COUNT];
 
@@ -110,14 +110,14 @@ public:
     /*!
 	Получить ссылку на блок
 	@param [__in] index Индекс блока
-	@return Ссылка на блок или NULL
+	@return Ссылка на блок или nullptr
 	*/
     CMapBlock *GetBlock(int index);
 
     /*!
 	Добавить блок
 	@param [__in] index Индекс блока
-	@return Ссылка на блок или NULL
+	@return Ссылка на блок или nullptr
 	*/
     CMapBlock *AddBlock(int index);
 

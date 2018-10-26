@@ -33,7 +33,7 @@ void CGUIScissor::Draw(bool checktrans)
             int x = m_X;
             int y = m_Y;
 
-            if (GumpParent != NULL)
+            if (GumpParent != nullptr)
             {
                 x -= GumpParent->GumpRect.Position.X;
                 y -= GumpParent->GumpRect.Position.Y;

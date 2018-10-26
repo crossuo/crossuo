@@ -20,9 +20,9 @@ string CPartyObject::GetName(int index)
     DEBUG_TRACE_FUNCTION;
     if (Serial)
     {
-        if (Character == NULL)
+        if (Character == nullptr)
             Character = g_World->FindWorldCharacter(Serial);
-        if (Character != NULL)
+        if (Character != nullptr)
             return Character->GetName();
     }
 

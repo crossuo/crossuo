@@ -18,7 +18,7 @@ public:
 
     CPartyObject();
     ~CPartyObject() {}
-    class CGameCharacter *Character{ NULL };
+    class CGameCharacter *Character{ nullptr };
     string GetName(int index);
 };
 

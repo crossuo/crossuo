@@ -47,7 +47,7 @@ void CThreadedTimer::OnExecute(uint nowTime)
 void CThreadedTimer::OnDestroy()
 {
     DEBUG_TRACE_FUNCTION;
-    if (Wisp::g_WispWindow != NULL)
+    if (Wisp::g_WispWindow != nullptr)
         Wisp::g_WispWindow->RemoveThreadedTimer(TimerID);
 }
 

@@ -58,10 +58,10 @@ CRenderStaticObject::CRenderStaticObject(
 CRenderStaticObject::~CRenderStaticObject()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextControl != NULL)
+    if (m_TextControl != nullptr)
     {
         delete m_TextControl;
-        m_TextControl = NULL;
+        m_TextControl = nullptr;
     }
 }
 
@@ -71,7 +71,7 @@ void CRenderStaticObject::UpdateTextCoordinates()
 
     if (IsGameObject() && ((CGameObject *)this)->Container != 0xFFFFFFFF)
     {
-        for (CTextData *item = (CTextData *)m_TextControl->Last(); item != NULL;
+        for (CTextData *item = (CTextData *)m_TextControl->Last(); item != nullptr;
              item = (CTextData *)item->m_Prev)
         {
             CTextData &text = *item;
@@ -89,7 +89,7 @@ void CRenderStaticObject::UpdateTextCoordinates()
     {
         int y = DrawY - (m_TiledataPtr->Height + 20);
 
-        for (CTextData *item = (CTextData *)m_TextControl->Last(); item != NULL;
+        for (CTextData *item = (CTextData *)m_TextControl->Last(); item != nullptr;
              item = (CTextData *)item->m_Prev)
         {
             CTextData &text = *item;
@@ -117,7 +117,7 @@ void CRenderStaticObject::FixTextCoordinates()
     int minY = g_RenderBounds.GameWindowPosY;
     int maxY = minY + g_RenderBounds.GameWindowHeight;
 
-    for (CTextData *item = (CTextData *)m_TextControl->m_Items; item != NULL;
+    for (CTextData *item = (CTextData *)m_TextControl->m_Items; item != nullptr;
          item = (CTextData *)item->m_Next)
     {
         CTextData &text = *item;
@@ -168,7 +168,7 @@ bool CRenderStaticObject::IsNoDrawTile(ushort graphic)
         long long flags = g_Orion.GetStaticFlags(graphic);
 
         if (!::IsNoDiagonal(flags) ||
-            (::IsAnimated(flags) && g_Player != NULL && g_Player->Race == RT_GARGOYLE))
+            (::IsAnimated(flags) && g_Player != nullptr && g_Player->Race == RT_GARGOYLE))
             return false;
     }
 
@@ -226,7 +226,7 @@ void CRenderStaticObject::Select(int x, int y)
 void CRenderStaticObject::AddText(CTextData *msg)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextControl != NULL)
+    if (m_TextControl != nullptr)
     {
         msg->Owner = this;
         m_TextControl->Add(msg);
