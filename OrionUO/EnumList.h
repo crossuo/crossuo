@@ -1,14 +1,6 @@
-﻿/***********************************************************************************
-**
-** EnumList.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// Copyright (C) August 2016 Hotride
 
-#ifndef ENUMLIST_H
-#define ENUMLIST_H
+#pragma once
 
 //!На какой стадии находится рендер (и вообще клиент)
 enum GAME_STATE
@@ -1336,5 +1328,3 @@ enum ABILITY_TYPE
     AT_MYSTIC_ARC,
     AT_DISROBE
 };
-
-#endif

@@ -80,38 +80,38 @@ void CEntryText::OnClick(
         gump->FrameCreated = false;
 }
 
-void CEntryText::OnKey(CGump *gump, WPARAM wParam)
+void CEntryText::OnKey(CGump *gump, Keycode key)
 {
     DEBUG_TRACE_FUNCTION;
 
-    switch (wParam)
+    switch (key)
     {
-        case VK_HOME:
+        case KEY_HOME:
         {
             SetPos(0, gump);
             break;
         }
-        case VK_END:
+        case KEY_END:
         {
             SetPos((int)Length(), gump);
             break;
         }
-        case VK_LEFT:
+        case KEY_LEFT:
         {
             AddPos(-1, gump);
             break;
         }
-        case VK_RIGHT:
+        case KEY_RIGHT:
         {
             AddPos(1, gump);
             break;
         }
-        case VK_BACK:
+        case KEY_BACK:
         {
             Remove(true, gump);
             break;
         }
-        case VK_DELETE:
+        case KEY_DELETE:
         {
             Remove(false, gump);
             break;

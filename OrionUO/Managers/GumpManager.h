@@ -8,7 +8,7 @@
 */
 
 #pragma once
-#include <SDL_events.h>
+#include "Input.h"
 
 //!Класс менеджера гампов
 class CGumpManager : public CBaseQueue
@@ -143,11 +143,10 @@ public:
 
 #if USE_WISP
     bool OnCharPress(const WPARAM &wParam, const LPARAM &lParam, bool blocked);
-    bool OnKeyDown(const WPARAM &wParam, const LPARAM &lParam, bool blocked);
 #else
     virtual bool OnTextInput(const SDL_TextInputEvent &ev, bool blocked);
-    virtual bool OnKeyDown(const SDL_KeyboardEvent &ev, bool blocked);
 #endif
+    virtual bool OnKeyDown(const KeyEvent &ev, bool blocked);
 };
 
 //!Ссылка на менеджер гампов

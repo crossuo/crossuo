@@ -140,33 +140,28 @@ void CGumpProfile::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
     WantRedraw = true;
 }
-
-void CGumpProfile::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (wParam == VK_RETURN)
-    {
-        g_EntryPointer->Insert(0x000D);
-
-        RecalculateHeight();
-
-        WantRedraw = true;
-    }
-    else
-    {
-        g_EntryPointer->OnKey(this, wParam);
-
-        if (WantRedraw)
-            RecalculateHeight();
-    }
-}
 #else
 void CGumpProfile::OnTextInput(const SDL_TextInputEvent &ev)
 {
     NOT_IMPLEMENTED; // FIXME
 }
-void CGumpProfile::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
 #endif
+
+void CGumpProfile::OnKeyDown(const KeyEvent &ev)
+{
+    DEBUG_TRACE_FUNCTION;
+
+    const auto key = EvKey(ev);
+    if (key == KEY_RETURN)
+    {
+        g_EntryPointer->Insert(0x000D);
+        RecalculateHeight();
+        WantRedraw = true;
+    }
+    else
+    {
+        g_EntryPointer->OnKey(this, key);
+        if (WantRedraw)
+            RecalculateHeight();
+    }
+}

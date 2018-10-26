@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (c) 2018 Danny Angelo Carminati Grein 
+
 #pragma once
 
 #if !defined(ORION_WINDOWS)
@@ -125,50 +128,6 @@ typedef unsigned int UINT;
 const unsigned int WM_NCPAINT = 0x85;
 #define SM_CXSCREEN 0
 #define SM_CYSCREEN 1
-
-#define VK_RETURN 13
-#define VK_ESCAPE 27
-#define VK_TAB 9
-#define VK_SHIFT 1
-#define VK_CONTROL 2
-#define VK_MENU 3
-#define VK_RMENU 4
-#define VK_LEFT 5
-#define VK_RIGHT 6
-#define VK_DOWN 7
-#define VK_UP 8
-#define VK_END 10
-#define VK_HOME 11
-#define VK_NEXT 12
-#define VK_PRIOR 14
-#define VK_F4 15
-#define VK_DELETE 16
-#define VK_F1 17
-#define VK_F2 18
-#define VK_F3 19
-#define VK_F5 21
-#define VK_F6 22
-#define VK_F7 23
-#define VK_F8 24
-#define VK_F9 25
-#define VK_F10 26
-#define VK_F11 27
-#define VK_F12 28
-#define VK_CAPITAL 29
-#define VK_PAUSE 30
-#define VK_SPACE 31
-#define VK_BACK 32
-#define VK_SCROLL 33
-#define VK_NUMPAD0 34
-#define VK_NUMPAD1 35
-#define VK_NUMPAD2 36
-#define VK_NUMPAD3 37
-#define VK_NUMPAD4 38
-#define VK_NUMPAD5 39
-#define VK_NUMPAD6 40
-#define VK_NUMPAD7 41
-#define VK_NUMPAD8 42
-#define VK_NUMPAD9 43
 
 #define PM_REMOVE 0x0001
 #define MK_MBUTTON 0

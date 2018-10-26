@@ -7,8 +7,8 @@
 ************************************************************************************
 */
 
-#ifndef CONNECTIONSCREEN_H
-#define CONNECTIONSCREEN_H
+#pragma once
+#include "Input.h"
 
 class CConnectionScreen : public CBaseScreen
 {
@@ -80,9 +80,7 @@ public:
 	*/
     void ProcessSmoothAction(uchar action = 0xFF);
 
-    virtual void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam);
+    virtual void OnKeyDown(const KeyEvent &ev);
 };
 
 extern CConnectionScreen g_ConnectionScreen;
-
-#endif

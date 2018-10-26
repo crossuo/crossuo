@@ -1,7 +1,8 @@
 ﻿
 #pragma once
 #include <SDL_video.h>
-#include <SDL_events.h>
+#include "Input.h"
+
 namespace Wisp
 {
 class CWindow
@@ -131,13 +132,11 @@ protected:
     }
 #if USE_WISP
     virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam) {}
-    virtual void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam) {}
-    virtual void OnKeyUp(const WPARAM &wParam, const LPARAM &lParam) {}
 #else
     virtual void OnTextInput(const SDL_TextInputEvent &ev) {}
-    virtual void OnKeyDown(const SDL_KeyboardEvent &ev) {}
-    virtual void OnKeyUp(const SDL_KeyboardEvent &ev) {}
 #endif
+    virtual void OnKeyDown(const KeyEvent &ev) {}
+    virtual void OnKeyUp(const KeyEvent &ev) {}
 };
 
 extern CWindow *g_WispWindow;

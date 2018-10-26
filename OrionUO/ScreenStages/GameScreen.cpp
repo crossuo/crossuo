@@ -2422,12 +2422,6 @@ void CGameScreen::OnDragging()
 }
 
 #if USE_WISP
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
 void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
@@ -2441,10 +2435,10 @@ void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     }
 
 #if USE_WISP
-    bool altGR = (GetAsyncKeyState(VK_RMENU) & 0x80000000);
-    bool altPressed = (GetAsyncKeyState(VK_MENU) & 0x80000000);
-    bool ctrlPressed = (GetAsyncKeyState(VK_CONTROL) & 0x80000000);
-    //bool shiftPressed = GetAsyncKeyState(VK_SHIFT) & 0x80000000;
+    bool altGR = (GetAsyncKeyState(KEY_RMENU) & 0x80000000);
+    bool altPressed = (GetAsyncKeyState(KEY_MENU) & 0x80000000);
+    bool ctrlPressed = (GetAsyncKeyState(KEY_CONTROL) & 0x80000000);
+    //bool shiftPressed = GetAsyncKeyState(KEY_SHIFT) & 0x80000000;
 #else
     const auto mod = SDL_GetModState();
     const bool altGR = mod & KMOD_RALT;
@@ -2460,24 +2454,37 @@ void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         (int)g_EntryPointer->Length() < max(g_EntryPointer->MaxLength, 60))
         g_EntryPointer->Insert((wchar_t)wParam);
 }
+#else
+void CGameScreen::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
 
-void CGameScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGameScreen::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam == VK_TAB && (lParam & 0x40000000))
-        return;
 
-    if (g_GumpManager.OnKeyDown(wParam, lParam, false))
+    const auto key = EvKey(ev);
+
+#if USE_WISP
+    if (key == KEY_TAB && (lParam & 0x40000000))
+        return;
+#else
+    LOG("FIXME: TAB is pressed condition");
+#endif
+
+    if (g_GumpManager.OnKeyDown(ev, false))
         return;
 
     if (g_EntryPointer == &g_GameConsole)
-        g_EntryPointer->OnKey(NULL, wParam);
+        g_EntryPointer->OnKey(nullptr, key);
 
-    switch (wParam)
+    switch (key)
     {
-        case VK_RETURN:
+        case KEY_RETURN:
         {
-            if (g_EntryPointer != NULL)
+            if (g_EntryPointer != nullptr)
             {
                 if (g_EntryPointer == &g_GameConsole)
                 {
@@ -2494,83 +2501,74 @@ void CGameScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                 }
 
                 if (g_ConfigManager.GetConsoleNeedEnter())
-                    g_EntryPointer = NULL;
+                    g_EntryPointer = nullptr;
                 else
                     g_EntryPointer = &g_GameConsole;
             }
             else
                 g_EntryPointer = &g_GameConsole;
 
-            if (g_GumpConsoleType != NULL)
+            if (g_GumpConsoleType != nullptr)
                 g_GumpConsoleType->SetConsolePrefix();
-
             break;
         }
-        case VK_PRIOR: //PgUp
+        case KEY_PAGEUP:
         {
             //walk N (0)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 0);
-
             break;
         }
-        case VK_NEXT: //PgDown
+        case KEY_PAGEDOWN:
         {
             //walk E (2)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 2);
-
             break;
         }
-        case VK_HOME:
+        case KEY_HOME:
         {
             //walk W (6)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 6);
-
             break;
         }
-        case VK_END:
+        case KEY_END:
         {
             //walk S (4)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 4);
-
             break;
         }
-        case VK_UP:
+        case KEY_UP:
         {
             //Walk NW (7)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 7);
-
             break;
         }
-        case VK_LEFT:
+        case KEY_LEFT:
         {
             //Walk SW (5)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 5);
-
             break;
         }
-        case VK_DOWN:
+        case KEY_DOWN:
         {
             //Walk SE (3)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 3);
-
             break;
         }
-        case VK_RIGHT:
+        case KEY_RIGHT:
         {
             //Walk NE (1)
             if (!g_PathFinder.AutoWalking)
                 g_PathFinder.Walk(g_ConfigManager.AlwaysRun, 1);
-
             break;
         }
-        case VK_ESCAPE:
+        case KEY_ESCAPE:
         {
             if (g_Target.IsTargeting())
                 g_Target.SendCancelTarget();
@@ -2583,14 +2581,13 @@ void CGameScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 
             if (g_ConsolePrompt)
                 g_Orion.ConsolePromptCancel();
-
             break;
         }
         default:
             break;
     }
 
-    if (wParam == VK_TAB)
+    if (key == KEY_TAB)
     {
         if (g_ConfigManager.HoldTabForCombat)
             g_Orion.ChangeWarmode(1);
@@ -2598,63 +2595,41 @@ void CGameScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
             g_Orion.ChangeWarmode();
     }
 
-    //if (g_MacroPointer == NULL)
-    {
 #if USE_WISP
-        bool altPressed = GetAsyncKeyState(VK_MENU) & 0x80000000;
-        bool ctrlPressed = GetAsyncKeyState(VK_CONTROL) & 0x80000000;
-        bool shiftPressed = GetAsyncKeyState(VK_SHIFT) & 0x80000000;
+    bool altPressed = GetAsyncKeyState(KEY_MENU) & 0x80000000;
+    bool ctrlPressed = GetAsyncKeyState(KEY_CONTROL) & 0x80000000;
+    bool shiftPressed = GetAsyncKeyState(KEY_SHIFT) & 0x80000000;
 #else
-        const auto mod = SDL_GetModState();
-        const bool altPressed = mod & KMOD_ALT;
-        const bool ctrlPressed = mod & KMOD_CTRL;
-        const bool shiftPressed = mod & KMOD_SHIFT;
+    const auto mod = SDL_GetModState();
+    const bool altPressed = mod & KMOD_ALT;
+    const bool ctrlPressed = mod & KMOD_CTRL;
+    const bool shiftPressed = mod & KMOD_SHIFT;
 #endif
 
-        // Disable macros to avoid mixing with a chat input.
-        // If you activate the chat, you want to write a message not run a macro.
-        if (g_ConfigManager.GetConsoleNeedEnter() && g_EntryPointer == &g_GameConsole)
-            return;
+    // Disable macros to avoid mixing with a chat input.
+    // If you activate the chat, you want to write a message not run a macro.
+    if (g_ConfigManager.GetConsoleNeedEnter() && g_EntryPointer == &g_GameConsole)
+        return;
 
-        CMacro *macro =
-            g_MacroManager.FindMacro((ushort)wParam, altPressed, ctrlPressed, shiftPressed);
-
-        if (macro != NULL)
-        {
-            g_MacroManager.ChangePointer((CMacroObject *)macro->m_Items);
-
-            g_MacroManager.WaitingBandageTarget = false;
-            g_MacroManager.WaitForTargetTimer = 0;
-            g_MacroManager.Execute();
-        }
+    auto macro = g_MacroManager.FindMacro(key, altPressed, ctrlPressed, shiftPressed);
+    if (macro != nullptr)
+    {
+        g_MacroManager.ChangePointer((CMacroObject *)macro->m_Items);
+        g_MacroManager.WaitingBandageTarget = false;
+        g_MacroManager.WaitForTargetTimer = 0;
+        g_MacroManager.Execute();
     }
 }
 
-void CGameScreen::OnKeyUp(const WPARAM &wParam, const LPARAM &lParam)
+void CGameScreen::OnKeyUp(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam == VK_TAB && g_GameState == GS_GAME)
+
+    const auto key = EvKey(ev);
+    if (key == KEY_TAB && g_GameState == GS_GAME)
     {
         if (g_ConfigManager.HoldTabForCombat)
             g_Orion.ChangeWarmode(0);
     }
 }
-#else
-void CGameScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGameScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGameScreen::OnKeyUp(const SDL_KeyboardEvent &ev)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (ev.keysym.sym == SDLK_TAB && g_GameState == GS_GAME)
-    {
-        if (g_ConfigManager.HoldTabForCombat)
-            g_Orion.ChangeWarmode(0);
-    }
-}
-#endif
+

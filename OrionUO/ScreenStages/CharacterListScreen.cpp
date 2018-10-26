@@ -83,24 +83,13 @@ void CCharacterListScreen::ProcessSmoothAction(uchar action)
     }
 }
 
-#if USE_WISP
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return
-*/
-void CCharacterListScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CCharacterListScreen::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    m_Gump.OnKeyDown(wParam, lParam);
 
-    if (wParam == VK_RETURN)
+    m_Gump.OnKeyDown(ev);
+
+    const auto key = EvKey(ev);
+    if (key == KEY_RETURN)
         CreateSmoothAction(ID_SMOOTH_CLS_SELECT_CHARACTER);
 }
-#else
-void CCharacterListScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif

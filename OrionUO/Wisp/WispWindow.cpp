@@ -590,9 +590,9 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            OnKeyDown(wParam, lParam);
+            OnKeyDown({wParam, lParam});
 
-            if (wParam == VK_F4 && (GetAsyncKeyState(VK_MENU) & 0x80000000)) //Alt + F4
+            if (wParam == KEY_F4 && (GetAsyncKeyState(KEY_MENU) & 0x80000000)) //Alt + F4
                 break;
 
             return 0; //break;
@@ -600,7 +600,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            OnKeyUp(wParam, lParam);
+            OnKeyUp({wParam, lParam});
 
             return 0; //break;
         }
@@ -649,7 +649,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         }
         case WM_SYSCHAR:
         {
-            if (wParam == VK_F4 && (GetAsyncKeyState(VK_MENU) & 0x80000000)) //Alt + F4
+            if (wParam == KEY_F4 && (GetAsyncKeyState(KEY_MENU) & 0x80000000)) //Alt + F4
                 break;
             return 0;
         }

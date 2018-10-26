@@ -70,7 +70,7 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         ushort flags = 0);
 
-    void OnKey(CGump *gump, WPARAM wParam);
+    void OnKey(CGump *gump, Keycode key);
 
     int Pos() const { return m_Position; }
 

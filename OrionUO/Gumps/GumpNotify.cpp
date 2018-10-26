@@ -1,13 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpNotify.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "stdafx.h"
 
@@ -19,6 +11,7 @@ CGumpNotify::CGumpNotify(short x, short y, uchar variant, short width, short hei
     , Text(text)
 {
     DEBUG_TRACE_FUNCTION;
+
     Blocked = true;
     g_GrayMenuCount++;
 
@@ -37,30 +30,33 @@ CGumpNotify::~CGumpNotify()
 void CGumpNotify::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
+
     if (serial == ID_GN_BUTTON_OK)
         Process();
 }
 
-void CGumpNotify::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpNotify::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam == VK_RETURN)
-    {
-        if (g_ConfigManager.GetConsoleNeedEnter())
-            g_EntryPointer = NULL;
-        else
-            g_EntryPointer = &g_GameConsole;
 
-        Process();
-    }
+    const auto key = EvKey(ev);
+    if (key != KEY_RETURN)
+        return;
+
+    if (g_ConfigManager.GetConsoleNeedEnter())
+        g_EntryPointer = nullptr;
+    else
+        g_EntryPointer = &g_GameConsole;
+
+    Process();
 }
 
 void CGumpNotify::Process()
 {
     DEBUG_TRACE_FUNCTION;
+
     if (Variant == ID_GN_STATE_LOGOUT)
         g_GameScreen.CreateSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);
     else if (Variant == ID_GN_STATE_NOTIFICATION)
         RemoveMark = true;
 }
-

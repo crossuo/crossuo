@@ -38,7 +38,7 @@ private:
 	@param [__in] strings Исходные строки, при склейке получим входную строку
 	@return Ключ
 	*/
-    ushort ConvertStringToKeyCode(const STRING_LIST &strings);
+    Keycode ConvertStringToKeyCode(const STRING_LIST &strings);
 
 public:
     CMacroManager();
@@ -52,7 +52,7 @@ public:
 	@param [__in] shift Зажатый шифт
 	@return Ссылку на макрос или NULL
 	*/
-    class CMacro *FindMacro(ushort key, bool alt, bool ctrl, bool shift);
+    class CMacro *FindMacro(Keycode key, bool alt, bool ctrl, bool shift);
 
     /*!
 	Сконвертировать файл макросов оригинального клиента

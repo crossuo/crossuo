@@ -1094,23 +1094,23 @@ bool CGumpManager::OnCharPress(const WPARAM &wParam, const LPARAM &lParam, bool 
 
     return result;
 }
+#else
+bool CGumpManager::OnTextInput(const SDL_TextInputEvent &ev, bool blocked)
+{
+    NOT_IMPLEMENTED; // FIXME
+    return false;
+}
+#endif
 
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@param [__in] blocked Состояние экрана
-@return true при успешной обработке
-*/
-bool CGumpManager::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam, bool blocked)
+bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
-    bool result = false;
 
+    bool result = false;
+    const auto key = EvKey(ev);
     if (g_EntryPointer != NULL && g_EntryPointer != &g_GameConsole)
     {
         CGump *gump = GetTextEntryOwner();
-
         if (gump != NULL && !gump->NoProcess)
         {
             switch (gump->GumpType)
@@ -1124,51 +1124,30 @@ bool CGumpManager::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam, bool bl
                 case GT_GENERIC:
                 case GT_BOOK:
                 {
-                    gump->OnKeyDown(wParam, lParam);
-
+                    gump->OnKeyDown(ev);
                     result = true;
-
                     break;
                 }
             }
         }
-        else if (wParam == VK_DELETE)
+        else if (key == KEY_DELETE)
         {
             gump = GetGump(0, 0, GT_SKILLS);
             if (gump != NULL && !gump->NoProcess)
-                gump->OnKeyDown(wParam, lParam);
+                gump->OnKeyDown(ev);
         }
     }
-    else if (wParam == VK_DELETE)
+    else if (key == KEY_DELETE)
     {
         CGump *gump = GetGump(0, 0, GT_SKILLS);
-
         if (gump != NULL && !gump->NoProcess)
-            gump->OnKeyDown(wParam, lParam);
+            gump->OnKeyDown(ev);
     }
 
     RemoveMarked();
-
     return result;
 }
-#else
-bool CGumpManager::OnTextInput(const SDL_TextInputEvent &ev, bool blocked)
-{
-    NOT_IMPLEMENTED; // FIXME
-    return false;
-}
-bool CGumpManager::OnKeyDown(const SDL_KeyboardEvent &ev, bool blocked)
-{
-    NOT_IMPLEMENTED; // FIXME
-    return false;
-}
-#endif
 
-/*!
-Загрузка гампов из конфига
-@param [__in] path Путь к файлу конфига
-@return 
-*/
 void CGumpManager::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;

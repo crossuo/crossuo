@@ -8,7 +8,7 @@
 */
 
 #pragma once
-#include <SDL_events.h>
+#include "Input.h"
 
 //Базовый класс стадий окна клиента
 class CBaseScreen : public CBaseQueue
@@ -94,19 +94,11 @@ public:
     {
         m_Gump.OnCharPress(wParam, lParam);
     }
-    virtual void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-    {
-        m_Gump.OnKeyDown(wParam, lParam);
-    }
-    virtual void OnKeyUp(const WPARAM &wParam, const LPARAM &lParam)
-    {
-        m_Gump.OnKeyUp(wParam, lParam);
-    }
 #else
     virtual void OnTextInput(const SDL_TextInputEvent &ev) { m_Gump.OnTextInput(ev); }
-    virtual void OnKeyDown(const SDL_KeyboardEvent &ev) { m_Gump.OnKeyDown(ev); }
-    virtual void OnKeyUp(const SDL_KeyboardEvent &ev) { m_Gump.OnKeyUp(ev); }
 #endif
+    virtual void OnKeyDown(const KeyEvent &ev) { m_Gump.OnKeyDown(ev); }
+    virtual void OnKeyUp(const KeyEvent &ev) { m_Gump.OnKeyUp(ev); }
 };
 
 //!Указатель на текущий экран

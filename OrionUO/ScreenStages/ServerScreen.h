@@ -8,7 +8,7 @@
 */
 
 #pragma once
-#include <SDL_events.h>
+#include "Input.h"
 
 class CServerScreen : public CBaseScreen
 {
@@ -41,11 +41,7 @@ public:
 	*/
     void ProcessSmoothAction(uchar action = 0xFF);
 
-#if USE_WISP
-    virtual void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam);
-#else
-    virtual void OnKeyDown(const SDL_KeyboardEvent &ev) override;
-#endif
+    virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 
 extern CServerScreen g_ServerScreen;

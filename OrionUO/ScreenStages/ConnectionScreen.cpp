@@ -22,10 +22,6 @@ CConnectionScreen::~CConnectionScreen()
 {
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CConnectionScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -79,11 +75,6 @@ void CConnectionScreen::SetTextA(const string &val)
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Обработка события после плавного затемнения экрана
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
 void CConnectionScreen::ProcessSmoothAction(uchar action)
 {
     DEBUG_TRACE_FUNCTION;
@@ -100,18 +91,14 @@ void CConnectionScreen::ProcessSmoothAction(uchar action)
         CPacketDeleteCharacter(g_CharacterList.Selected).Send();
 }
 
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
-void CConnectionScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CConnectionScreen::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    switch (wParam)
+
+    const auto key = EvKey(ev);
+    switch (key)
     {
-        case VK_RETURN:
+        case KEY_RETURN:
         {
             if (m_Type == CST_CHARACTER_LIST)
                 CreateSmoothAction(ID_SMOOTH_CS_SEND_DELETE);
@@ -127,7 +114,7 @@ void CConnectionScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 
             break;
         }
-        case VK_ESCAPE:
+        case KEY_ESCAPE:
         {
             if (m_Type == CST_CHARACTER_LIST)
                 CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_CHARACTER);

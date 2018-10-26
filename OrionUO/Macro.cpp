@@ -1,19 +1,8 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Macro.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// Copyright (C) August 2016 Hotride
+#include "Macro.h"
+#include "Wisp/WispDefinitions.h"
 
-#include "stdafx.h"
-
-CMacroObject *g_MacroPointer = NULL;
-
-//-----------------------------------CMacroObject-----------------------------------
+CMacroObject *g_MacroPointer = nullptr;
 
 CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode)
     : CBaseQueueItem()
@@ -75,7 +64,6 @@ CMacroObject::~CMacroObject()
 {
 }
 
-//----------------------------------CMacroObjectString------------------------------
 
 CMacroObjectString::CMacroObjectString(
     const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str)
@@ -88,9 +76,8 @@ CMacroObjectString::~CMacroObjectString()
 {
 }
 
-//----------------------------------------CMacro------------------------------------
 
-CMacro::CMacro(ushort key, bool alt, bool ctrl, bool shift)
+CMacro::CMacro(Keycode key, bool alt, bool ctrl, bool shift)
     : CBaseQueueItem()
     , Key(key)
     , Alt(alt)
@@ -116,7 +103,7 @@ CMacro *CMacro::CreateBlankMacro()
 CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
 {
     DEBUG_TRACE_FUNCTION;
-    CMacroObject *obj = NULL;
+    CMacroObject *obj = nullptr;
 
     switch (code)
     {
@@ -150,16 +137,16 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
     obj->m_Prev = source->m_Prev;
     obj->m_Next = source->m_Next;
 
-    if (source->m_Prev == NULL)
+    if (source->m_Prev == nullptr)
         m_Items = obj;
     else
         source->m_Prev->m_Next = obj;
 
-    if (source->m_Next != NULL)
+    if (source->m_Next != nullptr)
         source->m_Next->m_Prev = obj;
 
-    source->m_Prev = NULL;
-    source->m_Next = NULL;
+    source->m_Prev = nullptr;
+    source->m_Next = nullptr;
     delete source;
 }
 
@@ -170,10 +157,8 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     short size = file.ReadInt16LE();
     next += size;
 
-    ushort key = file.ReadUInt16LE();
-
+    auto key = file.ReadUInt16LE();
     bool alt = false;
-
     if (key & MODKEY_ALT)
     {
         key -= MODKEY_ALT;
@@ -181,7 +166,6 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     }
 
     bool ctrl = false;
-
     if (key & MODKEY_CTRL)
     {
         key -= MODKEY_CTRL;
@@ -189,7 +173,6 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     }
 
     bool shift = false;
-
     if (key & MODKEY_SHIFT)
     {
         key -= MODKEY_SHIFT;
@@ -197,18 +180,14 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     }
 
     int count = file.ReadInt16LE();
-
     CMacro *macro = new CMacro(key, alt, ctrl, shift);
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
-        BYTE type = file.ReadUInt8();
-
+        auto type = file.ReadUInt8();
         MACRO_CODE code = (MACRO_CODE)file.ReadUInt16LE();
-
         MACRO_SUB_CODE subCode = (MACRO_SUB_CODE)file.ReadUInt16LE();
-
-        CMacroObject *obj = NULL;
+        CMacroObject *obj = nullptr;
 
         switch (type)
         {
@@ -231,7 +210,7 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
                 break;
         }
 
-        if (obj != NULL)
+        if (obj != nullptr)
             macro->Add(obj);
     }
 
@@ -246,7 +225,7 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
     short size = 10;
     short count = 0;
 
-    QFOR(obj, m_Items, CMacroObject *)
+    for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         size += 5;
         count++;
@@ -260,8 +239,7 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
 
     writter.WriteUInt16LE(size);
 
-    ushort key = Key;
-
+    auto key = Key;
     if (Alt)
         key += MODKEY_ALT;
 
@@ -272,13 +250,11 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
         key += MODKEY_SHIFT;
 
     writter.WriteUInt16LE(key);
-
     writter.WriteUInt16LE(count);
 
-    QFOR(obj, m_Items, CMacroObject *)
+    for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         uchar type = 0;
-
         if (obj->HaveString())
             type = 2;
 
@@ -308,7 +284,7 @@ CMacro *CMacro::GetCopy()
     CMacro *macro = new CMacro(Key, Alt, Ctrl, Shift);
     MACRO_CODE oldCode = MC_NONE;
 
-    QFOR(obj, m_Items, CMacroObject *)
+    for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         if (obj->HaveString())
             macro->Add(new CMacroObjectString(
@@ -655,4 +631,3 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Object",
     "Mobile"
 };
-

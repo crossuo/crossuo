@@ -127,45 +127,41 @@ void CGumpTextEntryDialog::OnCharPress(const WPARAM &wParam, const LPARAM &lPara
         }
     }
 }
+#else
+void CGumpTextEntryDialog::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
 
-void CGumpTextEntryDialog::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpTextEntryDialog::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    switch (wParam)
-    {
-        case VK_RETURN:
-        case VK_ESCAPE:
-        {
-            SendTextEntryDialogResponse(wParam == VK_RETURN);
 
+    const auto key = EvKey(ev);
+    switch (key)
+    {
+        case KEY_RETURN:
+        case KEY_ESCAPE:
+        {
+            SendTextEntryDialogResponse(key == KEY_RETURN);
             break;
         }
-        case VK_HOME:
-        case VK_END:
-        case VK_LEFT:
-        case VK_RIGHT:
-        case VK_BACK:
-        case VK_DELETE:
+        case KEY_HOME:
+        case KEY_END:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_BACK:
+        case KEY_DELETE:
         {
-            g_EntryPointer->OnKey(this, wParam);
+            g_EntryPointer->OnKey(this, key);
             WantRedraw = true;
-
             break;
         }
         default:
             break;
     }
 }
-#else
-void CGumpTextEntryDialog::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGumpTextEntryDialog::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpTextEntryDialog::SendTextEntryDialogResponse(bool mode)
 {

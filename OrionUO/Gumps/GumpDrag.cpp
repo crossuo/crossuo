@@ -119,73 +119,66 @@ void CGumpDrag::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         WantRedraw = true;
     }
 }
-
-void CGumpDrag::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    CGameItem *item = g_World->FindWorldItem(Serial);
-
-    if (item != NULL)
-    {
-        switch (wParam)
-        {
-            case VK_RETURN:
-            {
-                OnOkayPressed();
-
-                if (g_ConfigManager.GetConsoleNeedEnter())
-                    g_EntryPointer = NULL;
-                else
-                    g_EntryPointer = &g_GameConsole;
-
-                break;
-            }
-            case VK_HOME:
-            case VK_END:
-            case VK_LEFT:
-            case VK_RIGHT:
-            {
-                g_EntryPointer->OnKey(this, wParam);
-
-                if (m_StartText)
-                    m_StartText = false;
-
-                WantRedraw = true;
-
-                break;
-            }
-            case VK_DELETE:
-            case VK_BACK:
-            {
-                g_EntryPointer->OnKey(this, wParam);
-
-                if (m_StartText)
-                    m_StartText = false;
-
-                int val = 0;
-
-                if (g_EntryPointer->Length())
-                    val = atoi(g_EntryPointer->c_str());
-
-                m_Slider->Value = val;
-                m_Slider->CalculateOffset();
-
-                WantRedraw = true;
-
-                break;
-            }
-            default:
-                break;
-        }
-    }
-}
 #else
 void CGumpDrag::OnTextInput(const SDL_TextInputEvent &ev)
 {
     NOT_IMPLEMENTED; // FIXME
 }
-void CGumpDrag::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
 #endif
+
+void CGumpDrag::OnKeyDown(const KeyEvent &ev)
+{
+    DEBUG_TRACE_FUNCTION;
+    CGameItem *item = g_World->FindWorldItem(Serial);
+
+    if (item == nullptr)
+        return;
+
+    auto key = EvKey(ev);
+    switch (key)
+    {
+        case KEY_RETURN:
+        {
+            OnOkayPressed();
+            if (g_ConfigManager.GetConsoleNeedEnter())
+                g_EntryPointer = NULL;
+            else
+                g_EntryPointer = &g_GameConsole;
+            break;
+        }
+        case KEY_HOME:
+        case KEY_END:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        {
+            g_EntryPointer->OnKey(this, key);
+
+            if (m_StartText)
+                m_StartText = false;
+
+            WantRedraw = true;
+            break;
+        }
+        case KEY_DELETE:
+        case KEY_BACK:
+        {
+            g_EntryPointer->OnKey(this, key);
+
+            if (m_StartText)
+                m_StartText = false;
+
+            int val = 0;
+
+            if (g_EntryPointer->Length())
+                val = atoi(g_EntryPointer->c_str());
+
+            m_Slider->Value = val;
+            m_Slider->CalculateOffset();
+
+            WantRedraw = true;
+            break;
+        }
+        default:
+            break;
+    }
+}

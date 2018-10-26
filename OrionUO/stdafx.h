@@ -102,6 +102,8 @@ using namespace std;
 #include "Stubs.h"
 #endif
 
+#include "Input.h"
+
 #include "Wisp/WispDefinitions.h"
 #include "Wisp/WispGlobal.h"
 #include "Wisp/WispApplication.h"

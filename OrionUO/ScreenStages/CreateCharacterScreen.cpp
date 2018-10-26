@@ -35,10 +35,6 @@ void CCreateCharacterScreen::SetColorSelection(int val)
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CCreateCharacterScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -55,11 +51,6 @@ void CCreateCharacterScreen::Init()
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Обработка события после плавного затемнения экрана
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
 void CCreateCharacterScreen::ProcessSmoothAction(uchar action)
 {
     DEBUG_TRACE_FUNCTION;
@@ -81,10 +72,6 @@ void CCreateCharacterScreen::ProcessSmoothAction(uchar action)
         g_Orion.InitScreen(GS_SELECT_TOWN);
 }
 
-/*!
-Нажатие левой кнопки мыши
-@return 
-*/
 void CCreateCharacterScreen::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
@@ -101,12 +88,6 @@ void CCreateCharacterScreen::OnLeftMouseButtonDown()
 }
 
 #if USE_WISP
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
 void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
@@ -121,31 +102,22 @@ void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lPa
     Name = g_EntryPointer->c_str();
     m_Gump.WantRedraw = true;
 }
-
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
-void CCreateCharacterScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (g_EntryPointer != NULL)
-    {
-        g_EntryPointer->OnKey(&m_Gump, wParam);
-
-        Name = g_EntryPointer->c_str();
-        m_Gump.WantRedraw = true;
-    }
-}
 #else
 void CCreateCharacterScreen::OnTextInput(const SDL_TextInputEvent &ev)
 {
     NOT_IMPLEMENTED; // FIXME
 }
-void CCreateCharacterScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
 #endif
+
+void CCreateCharacterScreen::OnKeyDown(const KeyEvent &ev)
+{
+    DEBUG_TRACE_FUNCTION;
+    
+    const auto key = EvKey(ev);
+    if (g_EntryPointer != nullptr)
+    {
+        g_EntryPointer->OnKey(&m_Gump, key);
+        Name = g_EntryPointer->c_str();
+        m_Gump.WantRedraw = true;
+    }
+}

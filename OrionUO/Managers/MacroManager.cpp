@@ -33,7 +33,7 @@ CMacroManager::~CMacroManager()
 @param [__in] strings Исходные строки, при склейке получим входную строку
 @return Ключ
 */
-ushort CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
+Keycode CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
 {
     DEBUG_TRACE_FUNCTION;
     string str = strings[0];
@@ -41,7 +41,7 @@ ushort CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
     for (int i = 1; i < (int)strings.size() - 3; i++)
         str += " " + strings[i];
 
-    ushort key = 0;
+    Keycode key = 0;
 
     if (str.length() == 1)
         key = *str.c_str();
@@ -50,71 +50,71 @@ ushort CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
         str = ToUpperA(str);
 
         if (str == "ESC")
-            key = VK_ESCAPE;
+            key = KEY_ESCAPE;
         else if (str == "BACKSPACE")
-            key = VK_BACK;
+            key = KEY_BACK;
         else if (str == "TAB")
-            key = VK_TAB;
+            key = KEY_TAB;
         else if (str == "ENTER")
-            key = VK_RETURN;
+            key = KEY_RETURN;
         else if (str == "CTRL")
-            key = VK_CONTROL;
+            key = KEY_CONTROL;
         else if (str == "ALT")
-            key = VK_MENU;
+            key = KEY_MENU;
         else if (str == "SHIFT")
-            key = VK_SHIFT;
+            key = KEY_SHIFT;
         else if (str == "SPACE")
-            key = VK_SPACE;
+            key = KEY_SPACE;
         else if (str == "CAPS LOCK")
-            key = VK_CAPITAL;
+            key = KEY_CAPITAL;
         else if (str == "F1")
-            key = VK_F1;
+            key = KEY_F1;
         else if (str == "F2")
-            key = VK_F2;
+            key = KEY_F2;
         else if (str == "F3")
-            key = VK_F3;
+            key = KEY_F3;
         else if (str == "F4")
-            key = VK_F4;
+            key = KEY_F4;
         else if (str == "F5")
-            key = VK_F5;
+            key = KEY_F5;
         else if (str == "F6")
-            key = VK_F6;
+            key = KEY_F6;
         else if (str == "F7")
-            key = VK_F7;
+            key = KEY_F7;
         else if (str == "F8")
-            key = VK_F8;
+            key = KEY_F8;
         else if (str == "F9")
-            key = VK_F9;
+            key = KEY_F9;
         else if (str == "F10")
-            key = VK_F10;
+            key = KEY_F10;
         else if (str == "F11")
-            key = VK_F11;
+            key = KEY_F11;
         else if (str == "F12")
-            key = VK_F12;
+            key = KEY_F12;
         else if (str == "PAUSE")
-            key = VK_PAUSE;
+            key = KEY_PAUSE;
         else if (str == "SCROLL LOCK")
-            key = VK_SCROLL;
+            key = KEY_SCROLL;
         else if (str == "NUM 0")
-            key = VK_NUMPAD0;
+            key = KEY_NUMPAD0;
         else if (str == "NUM 1")
-            key = VK_NUMPAD1;
+            key = KEY_NUMPAD1;
         else if (str == "NUM 2")
-            key = VK_NUMPAD2;
+            key = KEY_NUMPAD2;
         else if (str == "NUM 3")
-            key = VK_NUMPAD3;
+            key = KEY_NUMPAD3;
         else if (str == "NUM 4")
-            key = VK_NUMPAD4;
+            key = KEY_NUMPAD4;
         else if (str == "NUM 5")
-            key = VK_NUMPAD5;
+            key = KEY_NUMPAD5;
         else if (str == "NUM 6")
-            key = VK_NUMPAD6;
+            key = KEY_NUMPAD6;
         else if (str == "NUM 7")
-            key = VK_NUMPAD7;
+            key = KEY_NUMPAD7;
         else if (str == "NUM 8")
-            key = VK_NUMPAD8;
+            key = KEY_NUMPAD8;
         else if (str == "NUM 9")
-            key = VK_NUMPAD9;
+            key = KEY_NUMPAD9;
         else if (str == "NUM *")
             key = 42;
         else if (str == "NUM -")
@@ -327,7 +327,7 @@ void CMacroManager::Save(const os_path &path)
 @param [__in] shift Зажатый шифт
 @return Ссылку на макрос или NULL
 */
-CMacro *CMacroManager::FindMacro(ushort key, bool alt, bool ctrl, bool shift)
+CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 {
     DEBUG_TRACE_FUNCTION;
     CMacro *obj = (CMacro *)m_Items;

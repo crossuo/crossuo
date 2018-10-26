@@ -7,8 +7,8 @@
 ************************************************************************************
 */
 
-#ifndef GUMPNOTIFY_H
-#define GUMPNOTIFY_H
+#pragma once
+#include "Input.h"
 
 class CGumpNotify : public CGump
 {
@@ -30,7 +30,5 @@ public:
     static const int ID_GN_STATE_NOTIFICATION = 2;
 
     GUMP_BUTTON_EVENT_H;
-    void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam);
+    virtual void OnKeyDown(const KeyEvent &ev) override;
 };
-
-#endif

@@ -8,7 +8,7 @@
 */
 
 #pragma once
-#include <SDL_events.h>
+#include "Input.h"
 
 class CGumpOptions : public CGump
 {
@@ -279,9 +279,8 @@ public:
 
 #if USE_WISP
     void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
-    void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam);
 #else
     virtual void OnTextInput(const SDL_TextInputEvent &ev) override;
-    virtual void OnKeyDown(const SDL_KeyboardEvent &ev) override;
 #endif
+    virtual void OnKeyDown(const KeyEvent &ev) override;
 };

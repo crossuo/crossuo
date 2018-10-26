@@ -3406,32 +3406,37 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         }
     }
 }
+#else
+void CGumpOptions::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
 
-void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpOptions::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
+    const auto key = EvKey(ev);
     if (g_EntryPointer == &m_MacroKey->m_Entry)
     {
-        m_MacroPointer->Key = wParam & 0xFF;
-
-        m_MacroKey->m_Entry.SetTextA(m_HotkeyText[wParam & 0xFF]);
-
+        m_MacroPointer->Key = key & 0xFF;
+        m_MacroKey->m_Entry.SetTextA(m_HotkeyText[key & 0xFF]);
         WantRedraw = true;
     }
     else
     {
-        if (wParam == VK_RETURN)
+        if (key == KEY_RETURN)
         {
             if (g_ConfigManager.GetConsoleNeedEnter())
-                g_EntryPointer = NULL;
+                g_EntryPointer = nullptr;
             else
                 g_EntryPointer = &g_GameConsole;
-
             WantRedraw = true;
         }
         else
         {
-            g_EntryPointer->OnKey(this, wParam);
+            g_EntryPointer->OnKey(this, key);
 
             if (g_EntryPointer != &m_GameWindowWidth->m_Entry &&
                 g_EntryPointer != &m_GameWindowHeight->m_Entry &&
@@ -3440,9 +3445,9 @@ void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
             {
                 CMacroObject *obj = m_MacroObjectPointer;
 
-                if (obj != NULL)
+                if (obj != nullptr)
                 {
-                    CGUITextEntry *entry = NULL;
+                    CGUITextEntry *entry = nullptr;
 
                     QFOR(item, m_MacroDataBox->m_Items, CBaseGUI *)
                     {
@@ -3454,12 +3459,12 @@ void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                         }
                     }
 
-                    if (entry != NULL)
+                    if (entry != nullptr)
                     {
                         const int maxMacroDraw = 7;
                         int macroCount = 0;
 
-                        while (obj != NULL && macroCount < maxMacroDraw)
+                        while (obj != nullptr && macroCount < maxMacroDraw)
                         {
                             if (obj->HasSubMenu == 2 &&
                                 entry->Serial == ID_GO_P5_ACTION_SELECTION + (macroCount * 1000))
@@ -3471,22 +3476,12 @@ void CGumpOptions::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                     }
                 }
 
-                if (obj != NULL)
+                if (obj != nullptr)
                     ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
             }
         }
     }
 }
-#else
-void CGumpOptions::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGumpOptions::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpOptions::ApplyPageChanges()
 {

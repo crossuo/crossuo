@@ -1306,9 +1306,9 @@ void COrion::Process(bool rendering)
     bool oldShift = g_ShiftPressed;
 
 #if USE_WISP
-    g_AltPressed = GetAsyncKeyState(VK_MENU) & 0x80000000;
-    g_CtrlPressed = GetAsyncKeyState(VK_CONTROL) & 0x80000000;
-    g_ShiftPressed = GetAsyncKeyState(VK_SHIFT) & 0x80000000;
+    g_AltPressed = GetAsyncKeyState(KEY_MENU) & 0x80000000;
+    g_CtrlPressed = GetAsyncKeyState(KEY_CONTROL) & 0x80000000;
+    g_ShiftPressed = GetAsyncKeyState(KEY_SHIFT) & 0x80000000;
 #else
     auto mod = SDL_GetModState();
     g_AltPressed = mod & KMOD_ALT;

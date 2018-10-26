@@ -181,11 +181,19 @@ void CGumpGeneric::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     g_EntryPointer->Insert((wchar_t)wParam);
     WantRedraw = true;
 }
+#else
+void CGumpGeneric::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
 
-void CGumpGeneric::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpGeneric::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam == VK_RETURN)
+    
+    auto key = EvKey(ev);
+    if (key == KEY_RETURN)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
             g_EntryPointer = NULL;
@@ -195,15 +203,7 @@ void CGumpGeneric::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
         WantRedraw = true;
     }
     else
-        g_EntryPointer->OnKey(this, wParam);
+    {
+        g_EntryPointer->OnKey(this, key);
+    }
 }
-#else
-void CGumpGeneric::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGumpGeneric::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif

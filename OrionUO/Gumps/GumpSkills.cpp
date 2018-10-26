@@ -706,23 +706,31 @@ void CGumpSkills::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     else
         WantRedraw = true;
 }
-void CGumpSkills::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+#else
+void CGumpSkills::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
+
+void CGumpSkills::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
+    const auto key = EvKey(ev);
     if (!EntryPointerHere())
     {
-        if (wParam == VK_DELETE)
+        if (key == KEY_DELETE)
         {
             int index = 0;
             CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
-            CGUISkillGroup *first = NULL;
+            CGUISkillGroup *first = nullptr;
 
             QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
             {
                 if (item->Type == GOT_SKILLGROUP)
                 {
                     CGUISkillGroup *group = (CGUISkillGroup *)item;
-
                     if (group->m_Name->Focused)
                     {
                         if (g_EntryPointer == &group->m_Name->m_Entry)
@@ -732,19 +740,17 @@ void CGumpSkills::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                         {
                             m_HTMLGump->Delete(item);
 
-                            if (first != NULL)
+                            if (first != nullptr)
                             {
                                 first->Clear();
-
                                 groupItem = g_SkillGroupManager.m_Groups;
                                 int count = groupItem->Count;
 
-                                IFOR (i, 0, count)
+                                for (int i = 0; i < count; i++)
                                 {
-                                    uchar index = groupItem->GetItem(
-                                        i); //Получаем индекс скилла по порядковому номеру
-
-                                    if (index < g_SkillsManager.Count) //Он валиден
+                                    uchar index = groupItem->GetItem(i);
+                                    if (index < g_SkillsManager.Count)
+                                    {
                                         first->Add(new CGUISkillItem(
                                             ID_GS_SKILL + index,
                                             ID_GS_SKILL_BUTTON + index,
@@ -752,6 +758,7 @@ void CGumpSkills::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                                             index,
                                             0,
                                             (int)i * 17));
+                                    }
                                 }
                             }
 
@@ -759,9 +766,7 @@ void CGumpSkills::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 
                             m_HTMLGump->CalculateDataSize();
                         }
-
                         WantRedraw = true;
-
                         break;
                     }
 
@@ -769,54 +774,37 @@ void CGumpSkills::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
                         first = group;
 
                     index++;
-
-                    if (groupItem != NULL)
+                    if (groupItem != nullptr)
                         groupItem = groupItem->m_Next;
                 }
             }
         }
-
         return;
     }
 
-    //Обработчик нажатия клавиш
-    switch (wParam)
+    switch (key)
     {
-        case VK_RETURN:
+        case KEY_RETURN:
         {
             SetGroupTextFromEntry();
-
             if (g_ConfigManager.GetConsoleNeedEnter())
-                g_EntryPointer = NULL;
+                g_EntryPointer = nullptr;
             else
                 g_EntryPointer = &g_GameConsole;
-
             WantRedraw = true;
-
             break;
         }
-        case VK_HOME:
-        case VK_END:
-        case VK_LEFT:
-        case VK_RIGHT:
-        case VK_BACK:
-        case VK_DELETE:
+        case KEY_HOME:
+        case KEY_END:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_BACK:
+        case KEY_DELETE:
         {
-            g_EntryPointer->OnKey(this, wParam);
-
+            g_EntryPointer->OnKey(this, key);
             break;
         }
         default:
             break;
     }
 }
-#else
-void CGumpSkills::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGumpSkills::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif

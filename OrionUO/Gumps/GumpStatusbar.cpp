@@ -1298,77 +1298,70 @@ void CGumpStatusbar::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         }
     }
 }
+#else
+void CGumpStatusbar::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
 
-void CGumpStatusbar::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    switch (wParam)
+
+    const auto key = EvKey(ev);
+    switch (key)
     {
-        case VK_RETURN:
+        case KEY_RETURN:
         {
-            //Если всё впорядке - изменяем имя
             if (g_EntryPointer->Length())
+            {
                 SendRenameRequest();
-            else //Нельзя изменить имя на пустое
+            }
+            else
             {
                 CGameObject *obj = g_World->FindWorldObject(Serial);
-
-                if (obj != NULL)
+                if (obj != nullptr)
                     g_EntryPointer->SetTextA(obj->GetName());
             }
 
             if (g_ConfigManager.GetConsoleNeedEnter())
-                g_EntryPointer = NULL;
+                g_EntryPointer = nullptr;
             else
                 g_EntryPointer = &g_GameConsole;
 
-            WantRedraw = true; //Перерисуем
-
-            break;
-        }
-        case VK_HOME:
-        case VK_LEFT:
-        case VK_RIGHT:
-        case VK_BACK:
-        case VK_DELETE:
-        case VK_END:
-        {
-            g_EntryPointer->OnKey(this, wParam);
             WantRedraw = true;
-
             break;
         }
-        case VK_ESCAPE:
+        case KEY_HOME:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_BACK:
+        case KEY_DELETE:
+        case KEY_END:
         {
-            //По тыку на Esc можно выйти из редактирования имени существа
-
+            g_EntryPointer->OnKey(this, key);
+            WantRedraw = true;
+            break;
+        }
+        case KEY_ESCAPE:
+        {
             CGameObject *obj = g_World->FindWorldObject(Serial);
-            if (obj != NULL)
+            if (obj != nullptr)
                 g_EntryPointer->SetTextA(obj->GetName());
 
             if (g_ConfigManager.GetConsoleNeedEnter())
-                g_EntryPointer = NULL;
+                g_EntryPointer = nullptr;
             else
                 g_EntryPointer = &g_GameConsole;
 
-            WantRedraw = true; //Перерисуем
-
+            WantRedraw = true;
             break;
         }
         default:
             break;
     }
 }
-#else
-void CGumpStatusbar::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGumpStatusbar::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpStatusbar::SendRenameRequest()
 {

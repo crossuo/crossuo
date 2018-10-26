@@ -22,21 +22,12 @@ CGameBlockedScreen::CGameBlockedScreen()
 CGameBlockedScreen::~CGameBlockedScreen()
 {
 }
-
-/*!
-Инициализация
-@return 
-*/
+ 
 void CGameBlockedScreen::Init()
 {
     Code = 0;
 }
 
-/*!
-Отрисовка/выбор объектов
-@param [__in] mode true - отрисовка, false - выбор
-@return При выборе объектов - идентификатор выбранного объекта
-*/
 void CGameBlockedScreen::Render(bool mode)
 {
     DEBUG_TRACE_FUNCTION;
@@ -67,10 +58,6 @@ void CGameBlockedScreen::Render(bool mode)
     }
 }
 
-/*!
-Нажатие левой кнопки мыши
-@return 
-*/
 void CGameBlockedScreen::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
@@ -78,10 +65,6 @@ void CGameBlockedScreen::OnLeftMouseButtonDown()
         g_GumpManager.OnLeftMouseButtonDown(true);
 }
 
-/*!
-Отпускание левой кнопки мыши
-@return 
-*/
 void CGameBlockedScreen::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
@@ -90,12 +73,6 @@ void CGameBlockedScreen::OnLeftMouseButtonUp()
 }
 
 #if USE_WISP
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
 void CGameBlockedScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
@@ -104,41 +81,31 @@ void CGameBlockedScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
     g_GumpManager.OnCharPress(wParam, lParam, true);
 }
-
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@return 
-*/
-void CGameBlockedScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    CGumpNotify *notify = (CGumpNotify *)g_GumpManager.GetGump(0, 0, GT_NOTIFY);
-
-    if (g_EntryPointer == NULL || g_EntryPointer == &g_GameConsole)
-    {
-        if (wParam == VK_RETURN && notify != NULL)
-            notify->OnKeyDown(wParam, lParam);
-    }
-    else
-    {
-        CGump *gump = g_GumpManager.GetTextEntryOwner();
-
-        if (gump != NULL && gump->GumpType == GT_TEXT_ENTRY_DIALOG)
-            gump->OnKeyDown(wParam, lParam);
-        else if (notify != NULL)
-            notify->OnKeyDown(wParam, lParam);
-    }
-}
-
 #else
 void CGameBlockedScreen::OnTextInput(const SDL_TextInputEvent &ev)
 {
     NOT_IMPLEMENTED; // FIXME
 }
-void CGameBlockedScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
 #endif
+
+void CGameBlockedScreen::OnKeyDown(const KeyEvent &ev)
+{
+    DEBUG_TRACE_FUNCTION;
+
+    CGumpNotify *notify = (CGumpNotify *)g_GumpManager.GetGump(0, 0, GT_NOTIFY);
+    const auto key = EvKey(ev);
+    if (g_EntryPointer == nullptr || g_EntryPointer == &g_GameConsole)
+    {
+        if (key == KEY_RETURN && notify != nullptr)
+            notify->OnKeyDown(ev);
+    }
+    else
+    {
+        CGump *gump = g_GumpManager.GetTextEntryOwner();
+
+        if (gump != nullptr && gump->GumpType == GT_TEXT_ENTRY_DIALOG)
+            gump->OnKeyDown(ev);
+        else if (notify != nullptr)
+            notify->OnKeyDown(ev);
+    }
+}

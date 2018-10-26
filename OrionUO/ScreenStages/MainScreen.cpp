@@ -1,5 +1,6 @@
 #include "MainScreen.h"
 #include "BaseScreen.h"
+#include "Input.h"
 #include "../GUI/GUITextEntry.h"
 #include "../Wisp/WispDefinitions.h"
 #include "../TextEngine/EntryText.h"
@@ -126,43 +127,6 @@ void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
     m_Gump.WantRedraw = true;
 }
-
-void CMainScreen::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (g_EntryPointer == nullptr)
-        g_EntryPointer = m_MainGump.m_PasswordFake;
-
-    switch (wParam)
-    {
-        case VK_TAB:
-        {
-            if (g_EntryPointer == m_Account)
-                g_EntryPointer = m_MainGump.m_PasswordFake;
-            else
-                g_EntryPointer = m_Account;
-
-            break;
-        }
-        case VK_RETURN:
-        {
-            CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
-
-            break;
-        }
-        default:
-        {
-            if (g_EntryPointer == m_MainGump.m_PasswordFake)
-                m_Password->OnKey(nullptr, wParam);
-
-            g_EntryPointer->OnKey(nullptr, wParam);
-
-            break;
-        }
-    }
-
-    m_Gump.WantRedraw = true;
-}
 #else
 void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
 {    
@@ -191,18 +155,21 @@ void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
 
     m_Gump.WantRedraw = true;
 }
+#endif
 
-void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
+void CMainScreen::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (g_EntryPointer == nullptr)
     {
         g_EntryPointer = m_MainGump.m_PasswordFake;
     }
 
-    switch (ev.keysym.sym)
+    const auto key = EvKey(ev);
+    switch (key)
     {
-        case SDLK_TAB:
+        case KEY_TAB:
         {
             if (g_EntryPointer == m_Account)
             {
@@ -214,8 +181,8 @@ void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
             }
             break;
         }
-        case SDLK_RETURN:
-        case SDLK_RETURN2:
+        case KEY_RETURN:
+        case KEY_RETURN2:
         {
             CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
             break;
@@ -224,16 +191,15 @@ void CMainScreen::OnKeyDown(const SDL_KeyboardEvent &ev)
         {
             if (g_EntryPointer == m_MainGump.m_PasswordFake)
             {
-                m_Password->OnKey(nullptr, ev.keysym.sym);
+                m_Password->OnKey(nullptr, key);
             }
 
-            g_EntryPointer->OnKey(nullptr, ev.keysym.sym);
+            g_EntryPointer->OnKey(nullptr, key);
             break;
         }
     }
     m_Gump.WantRedraw = true;
 }
-#endif
 
 int CMainScreen::GetConfigKeyCode(const string &key)
 {

@@ -239,32 +239,27 @@ void CGumpBulletinBoardItem::OnCharPress(const WPARAM &wParam, const LPARAM &lPa
     RecalculateHeight();
     WantRedraw = true;
 }
-
-void CGumpBulletinBoardItem::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (wParam == VK_RETURN && m_Entry != NULL && g_EntryPointer == &m_Entry->m_Entry)
-    {
-        g_EntryPointer->Insert(L'\n');
-
-        RecalculateHeight();
-        WantRedraw = true;
-    }
-    else
-    {
-        g_EntryPointer->OnKey(this, wParam);
-
-        if (WantRedraw)
-            RecalculateHeight();
-    }
-}
 #else
 void CGumpBulletinBoardItem::OnTextInput(const SDL_TextInputEvent &ev)
 {
     NOT_IMPLEMENTED; // FIXME
 }
-void CGumpBulletinBoardItem::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
 #endif
+
+void CGumpBulletinBoardItem::OnKeyDown(const KeyEvent &ev)
+{
+    DEBUG_TRACE_FUNCTION;
+    auto key = EvKey(ev);
+    if (key == KEY_RETURN && m_Entry != nullptr && g_EntryPointer == &m_Entry->m_Entry)
+    {
+        g_EntryPointer->Insert(L'\n');
+        RecalculateHeight();
+        WantRedraw = true;
+    }
+    else
+    {
+        g_EntryPointer->OnKey(this, key);
+        if (WantRedraw)
+            RecalculateHeight();
+    }
+}

@@ -8,7 +8,7 @@
 */
 
 #pragma once
-#include <SDL_events.h>
+#include "Input.h"
 
 class COrionWindow : public Wisp::CWindow
 {
@@ -53,13 +53,11 @@ protected:
     virtual LRESULT OnUserMessages(int message, const WPARAM &wParam, const LPARAM &lParam);
 #if USE_WISP
     virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
-    virtual void OnKeyDown(const WPARAM &wParam, const LPARAM &lParam);
-    virtual void OnKeyUp(const WPARAM &wParam, const LPARAM &lParam);
 #else
     virtual void OnTextInput(const SDL_TextInputEvent &ev) override;
-    virtual void OnKeyDown(const SDL_KeyboardEvent &ev) override;
-    virtual void OnKeyUp(const SDL_KeyboardEvent &ev) override;
 #endif
+    virtual void OnKeyDown(const KeyEvent &ev) override;
+    virtual void OnKeyUp(const KeyEvent &ev) override;
 };
 
 extern COrionWindow g_OrionWindow;

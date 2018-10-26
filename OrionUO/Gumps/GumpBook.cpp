@@ -292,7 +292,7 @@ bool CGumpBook::OnLeftMouseButtonDoubleClick()
     return false;
 }
 
-void CGumpBook::InsertInContent(const WPARAM &wparam, bool isCharPress)
+void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
 {
     DEBUG_TRACE_FUNCTION;
     int page = Page;
@@ -320,10 +320,10 @@ void CGumpBook::InsertInContent(const WPARAM &wparam, bool isCharPress)
 
         if (isCharPress)
         {
-            if (!Unicode && wparam >= 0x0100)
+            if (!Unicode && key >= 0x0100)
                 return;
 
-            if (g_EntryPointer->Insert((wchar_t)wparam))
+            if (g_EntryPointer->Insert((wchar_t)key))
             {
                 int linesCount = 0;
                 int maxLinesCount = 8;
@@ -486,16 +486,23 @@ void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     else
         InsertInContent(wParam);
 }
+#else
+void CGumpBook::OnTextInput(const SDL_TextInputEvent &ev)
+{
+    NOT_IMPLEMENTED; // FIXME
+}
+#endif
 
-void CGumpBook::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpBook::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Writable)
         return;
 
-    switch (wParam)
+    auto key = EvKey(ev);
+    switch (key)
     {
-        case VK_RETURN:
+        case KEY_RETURN:
         {
             if (g_EntryPointer != &m_EntryTitle->m_Entry &&
                 g_EntryPointer != &m_EntryAuthor->m_Entry)
@@ -506,31 +513,21 @@ void CGumpBook::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
 
             break;
         }
-        case VK_HOME:
-        case VK_END:
-        case VK_LEFT:
-        case VK_RIGHT:
-        case VK_BACK:
-        case VK_DELETE:
+        case KEY_HOME:
+        case KEY_END:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_BACK:
+        case KEY_DELETE:
         {
-            g_EntryPointer->OnKey(this, wParam);
-            InsertInContent(wParam, false);
+            g_EntryPointer->OnKey(this, key);
+            InsertInContent(key, false);
             break;
         }
         default:
             break;
     }
 }
-#else
-void CGumpBook::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-void CGumpBook::OnKeyDown(const SDL_KeyboardEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpBook::SetPagePos(int val, int page)
 {

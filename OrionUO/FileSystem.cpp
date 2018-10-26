@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (c) 2018 Danny Angelo Carminati Grein 
+
 #include "stdafx.h"
 #include "FileSystem.h"
 

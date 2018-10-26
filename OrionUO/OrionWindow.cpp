@@ -313,7 +313,7 @@ void COrionWindow::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
          (g_GameState >= GS_GAME && (wParam == 0x11 || wParam == 0x17))) &&
         g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnCharPress(wParam, lParam);
-    else if (wParam == VK_RETURN)
+    else if (wParam == KEY_RETURN)
         g_CurrentScreen->OnKeyDown(wParam, lParam);
     else if (wParam == 0x16 && g_EntryPointer != NULL)
     {
@@ -322,30 +322,6 @@ void COrionWindow::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         else
             g_EntryPointer->Paste();
     }
-}
-
-void COrionWindow::OnKeyDown(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (g_PluginManager.WindowProc(Handle, WM_KEYDOWN, wParam, lParam))
-        return;
-
-    if (wParam != VK_RETURN && /*!iswprint(wParam) &&*/ g_CurrentScreen != NULL &&
-        g_ScreenEffectManager.Mode == SEM_NONE)
-        g_CurrentScreen->OnKeyDown(wParam, lParam);
-}
-
-void COrionWindow::OnKeyUp(const WPARAM &wParam, const LPARAM &lParam)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (g_PluginManager.WindowProc(Handle, WM_KEYUP, wParam, lParam))
-        return;
-
-    if (/*!iswprint(wParam) &&*/ g_CurrentScreen != NULL && g_ScreenEffectManager.Mode == SEM_NONE)
-        g_CurrentScreen->OnKeyUp(wParam, lParam);
-
-    if (wParam == 0x2C) //Print Screen
-        g_ScreenshotBuilder.SaveScreen();
 }
 #else
 void COrionWindow::OnTextInput(const SDL_TextInputEvent &ev)
@@ -359,13 +335,9 @@ void COrionWindow::OnTextInput(const SDL_TextInputEvent &ev)
         g_CurrentScreen->OnTextInput(ev);
     }
 }
-
-void COrionWindow::OnKeyDown(const SDL_KeyboardEvent &ev)
+/*
+void COrionWindow::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-    //if (g_PluginManager.WindowProc(Handle, WM_KEYDOWN, wParam, lParam))
-    //	return;
-
     const bool isCtrl = (SDL_GetModState() & KMOD_CTRL) != 0;
     if (isCtrl && ev.keysym.sym == SDLK_v && g_EntryPointer != nullptr)
     {
@@ -375,24 +347,50 @@ void COrionWindow::OnKeyDown(const SDL_KeyboardEvent &ev)
             g_EntryPointer->Paste();
     }
     else if (
-        /*ev.keysym.sym != SDLK_RETURN &&*/ g_CurrentScreen != nullptr &&
+        g_CurrentScreen != nullptr &&
         g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnKeyDown(ev);
 }
+*/
+#endif
 
-void COrionWindow::OnKeyUp(const SDL_KeyboardEvent &ev)
+void COrionWindow::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    //if (g_PluginManager.WindowProc(Handle, WM_KEYUP, wParam, lParam))
-    //	return;
+
+#if USE_WISP
+    if (g_PluginManager.WindowProc(Handle, WM_KEYDOWN, ev.wParam, ev.lParam))
+        return;
+#endif
+
+    const auto key = EvKey(ev);
+    if (key != KEY_RETURN && g_CurrentScreen != nullptr &&
+        g_ScreenEffectManager.Mode == SEM_NONE)
+    {
+        g_CurrentScreen->OnKeyDown(ev);
+    }
+}
+
+void COrionWindow::OnKeyUp(const KeyEvent &ev)
+{
+    DEBUG_TRACE_FUNCTION;
+
+#if USE_WISP
+    if (g_PluginManager.WindowProc(Handle, WM_KEYUP, ev.wParam, ev.lParam))
+        return;
+#endif
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
+    {
         g_CurrentScreen->OnKeyUp(ev);
+    }
 
-    if (ev.keysym.sym == SDLK_PRINTSCREEN)
+    const auto key = EvKey(ev);
+    if (key == KEY_PRINTSCREEN)
+    {
         g_ScreenshotBuilder.SaveScreen();
+    }
 }
-#endif
 
 HRESULT COrionWindow::OnRepaint(const WPARAM &wParam, const LPARAM &lParam)
 {
