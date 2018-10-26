@@ -2657,7 +2657,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
     }
     else if (serial == ID_GO_OKAY) //Okay
     {
-        /*IFOR(i, 0, 10)
+        /*for (auto i = 0; i < 10; i++)
 		{
 			Page = i;
 			ApplyPageChanges();

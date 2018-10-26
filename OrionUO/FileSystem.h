@@ -1,5 +1,5 @@
 // GPLv3 License
-// Copyright (c) 2018 Danny Angelo Carminati Grein 
+// Copyright (c) 2018 Danny Angelo Carminati Grein
 
 #pragma once
 

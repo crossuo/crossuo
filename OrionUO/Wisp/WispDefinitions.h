@@ -45,10 +45,5 @@ void DebugDump(puchar data, int size);
         ptr = nullptr;                                                                             \
     }
 
-//!Incremented ordinary for
-#define IFOR(var, start, stop) for (intptr_t var = start; var < (intptr_t)stop; var++)
-//!Decremented ordinary for
-#define DFOR(var, start, stop) for (intptr_t var = start; var >= (intptr_t)stop; var--)
-
 #define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
 #define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))

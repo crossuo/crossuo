@@ -1,6 +1,9 @@
+// MIT License
+// Copyright (c) Hotride
 
-#ifndef WISPLOGGER_H
-#define WISPLOGGER_H
+#pragma once
+
+void LogDump(FILE *fp, uchar *buf, int size);
 
 namespace Wisp
 {
@@ -12,23 +15,28 @@ namespace Wisp
 #define LOG Wisp::g_WispLogger.Print
 #if CWISPLOGGER == 2
 #define LOG_DUMP(...)
+#define SAFE_LOG_DUMP(...)
 #else //CWISPLOGGER != 2
 #define LOG_DUMP Wisp::g_WispLogger.Dump
+#define SAFE_LOG_DUMP(...)
 #endif //CWISPLOGGER == 2
 #else  //CWISPLOGGER == 0
 #define INITLOGGER(path)
 #define LOG(...)
 #define LOG_DUMP(...)
+#define SAFE_LOG_DUMP(...)
 #endif //CWISPLOGGER!=0
 #else
 #if CWISPLOGGER
 #define INITLOGGER(path)
 #define LOG(...) fprintf(stdout, " LOG: " __VA_ARGS__)
-#define LOG_DUMP(...)
+#define LOG_DUMP(...) LogDump(stdout, __VA_ARGS__)
+#define SAFE_LOG_DUMP(...) LogDump(stdout, __VA_ARGS__)
 #else //CWISPLOGGER == 0
 #define INITLOGGER(path)
 #define LOG(...)
 #define LOG_DUMP(...)
+#define SAFE_LOG_DUMP(...)
 #endif //CWISPLOGGER!=0
 #endif
 
@@ -63,6 +71,5 @@ public:
 
 extern CLogger g_WispLogger;
 extern CLogger g_WispCrashLogger;
-} // namespace Wisp
 
-#endif //WISPLOGGER_H
+} // namespace Wisp

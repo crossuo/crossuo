@@ -1,13 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** PluginManager.cpp
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
 #include "stdafx.h"
 #if defined(ORION_LINUX)
@@ -23,22 +15,19 @@ bool CDECL PluginRecvFunction(puchar buf, const int &size)
 {
     DEBUG_TRACE_FUNCTION;
     //SendMessage(g_OrionWindow.Handle, UOMSG_RECV, (WPARAM)buf, size);
-
     g_PacketManager.SavePluginReceivePacket(buf, size);
-
     return true;
 }
 
 bool CDECL PluginSendFunction(puchar buf, const int &size)
 {
     DEBUG_TRACE_FUNCTION;
-    //SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)buf, size);
 
+    //SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)buf, size);
     uint ticks = g_Ticks;
     g_TotalSendSize += size;
 
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
-
     LOG("--- ^(%d) s(+%d => %d) Plugin->Server:: %s\n",
         ticks - g_LastPacketTime,
         size,
@@ -51,17 +40,17 @@ bool CDECL PluginSendFunction(puchar buf, const int &size)
     if (*buf == 0x80 || *buf == 0x91)
     {
         LOG_DUMP(buf, 1);
+        SAFE_LOG_DUMP(buf, size);
         LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
     }
     else
+    {
         LOG_DUMP(buf, size);
+    }
 
     g_ConnectionManager.Send(buf, size);
-
     return true;
 }
-
-//--------------------------------------CPlugin-------------------------------------
 
 CPlugin::CPlugin(uint flags)
     : CBaseQueueItem()
@@ -85,8 +74,6 @@ CPlugin::~CPlugin()
         m_PPS = nullptr;
     }
 }
-
-//-----------------------------------CPluginManager---------------------------------
 
 CPluginManager::CPluginManager()
     : CBaseQueue()
@@ -116,8 +103,8 @@ LRESULT CPluginManager::WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lp
 bool CPluginManager::PacketRecv(puchar buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
-    bool result = true;
 
+    bool result = true;
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanParseRecv() && plugin->m_PPS->OnRecv != nullptr)
@@ -135,8 +122,8 @@ bool CPluginManager::PacketRecv(puchar buf, int size)
 bool CPluginManager::PacketSend(puchar buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
-    bool result = true;
 
+    bool result = true;
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanParseSend() && plugin->m_PPS->OnSend != nullptr)
@@ -154,6 +141,7 @@ bool CPluginManager::PacketSend(puchar buf, int size)
 void CPluginManager::Disconnect()
 {
     DEBUG_TRACE_FUNCTION;
+
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->m_PPS->OnDisconnect != nullptr)
@@ -164,6 +152,7 @@ void CPluginManager::Disconnect()
 void CPluginManager::WorldDraw()
 {
     DEBUG_TRACE_FUNCTION;
+
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldRender() && plugin->m_PPS->OnWorldDraw != nullptr)
@@ -174,6 +163,7 @@ void CPluginManager::WorldDraw()
 void CPluginManager::SceneDraw()
 {
     DEBUG_TRACE_FUNCTION;
+
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterSceneRender() && plugin->m_PPS->OnSceneDraw != nullptr)
@@ -184,6 +174,7 @@ void CPluginManager::SceneDraw()
 void CPluginManager::WorldMapDraw()
 {
     DEBUG_TRACE_FUNCTION;
+    
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != nullptr)

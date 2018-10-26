@@ -1,5 +1,5 @@
 // GPLv3 License
-// Copyright (c) 2018 Danny Angelo Carminati Grein 
+// Copyright (c) 2018 Danny Angelo Carminati Grein
 
 #pragma once
 
@@ -11,12 +11,12 @@
 
 struct KeyEvent
 {
-  WPARAM wParam;
-  LPARAM lParam;
+    WPARAM wParam;
+    LPARAM lParam;
 };
 
 #define Keycode WPARAM
-#define EvKey(x)   ((Keycode)x.wParam)
+#define EvKey(x) ((Keycode)x.wParam)
 
 #define KEY_SHIFT VK_SHIFT
 #define KEY_CONTROL VK_CONTROL
@@ -73,10 +73,10 @@ struct KeyEvent
 
 typedef SDL_KeyboardEvent KeyEvent;
 #define Keycode SDL_Keycode
-#define EvKey(x)   ((Keycode)x.keysym.sym)
+#define EvKey(x) ((Keycode)x.keysym.sym)
 
-#define KEY_SHIFT (SDLK_LSHIFT|SDLK_RSHIFT)
-#define KEY_CONTROL (SDLK_LCTRL|SDLK_RCTRL)
+#define KEY_SHIFT (SDLK_LSHIFT | SDLK_RSHIFT)
+#define KEY_CONTROL (SDLK_LCTRL | SDLK_RCTRL)
 #define KEY_CAPITAL SDLK_CAPSLOCK
 
 #define KEY_RETURN SDLK_RETURN

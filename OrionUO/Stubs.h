@@ -1,5 +1,5 @@
 // GPLv3 License
-// Copyright (c) 2018 Danny Angelo Carminati Grein 
+// Copyright (c) 2018 Danny Angelo Carminati Grein
 
 #pragma once
 
@@ -29,8 +29,8 @@ using namespace std;
 #pragma clang diagnostic ignored                                                                   \
     "-Woverloaded-virtual" // FIXME: CGameItem::GetLightID, CTextContainer::Add, CJournal::Add etc.
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses" // FIXME!!!!!!!!!!!!!!!!!!!!!!!!
-#pragma clang diagnostic ignored "-Wnull-conversion"        // FIXME: nullptr to bool m_CanProcessAlpha
-#pragma clang diagnostic ignored "-Wnull-arithmetic"        // FIXME: comparing nullptr to non-pointer
+#pragma clang diagnostic ignored "-Wnull-conversion" // FIXME: nullptr to bool m_CanProcessAlpha
+#pragma clang diagnostic ignored "-Wnull-arithmetic" // FIXME: comparing nullptr to non-pointer
 #pragma clang diagnostic ignored "-Wsign-compare"
 #pragma clang diagnostic ignored "-Wshadow"  // FIXME: shadowing local variables
 #pragma clang diagnostic ignored "-Wreorder" // FIXME: Initialization order in class fields

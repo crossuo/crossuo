@@ -1,14 +1,5 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** OrionUO.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "stdafx.h"
 #include <SDL_loadso.h>
@@ -670,7 +661,7 @@ void COrion::GetCurrentLocale()
 
 	if (GetSystemDefaultLocaleName(&localeName[0], LOCALE_NAME_MAX_LENGTH))
 	{
-		IFOR(i, 0, 10)
+		for (auto i = 0; i < 10; i++)
 		{
 			if (!localeName[i])
 				break;
@@ -1646,7 +1637,7 @@ void COrion::LoadPluginConfig()
 
         /*g_FileManager.SendFilesInfo();
 
-		IFOR(i, 0, 0x10000)
+		for (auto i = 0; i < 0x10000; i++)
 		{
 			CIndexObjectStatic &staticObj = m_StaticDataIndex[i];
 
@@ -1971,10 +1962,13 @@ int COrion::Send(puchar buf, int size)
         if (*buf == 0x80 || *buf == 0x91)
         {
             LOG_DUMP(buf, 1);
+            SAFE_LOG_DUMP(buf, size);
             LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
         }
         else
+        {
             LOG_DUMP(buf, size);
+        }
     }
 
     int result = 0;
@@ -6595,4 +6589,3 @@ void COrion::StartReconnect()
         g_OrionWindow.CreateTimer(COrionWindow::FASTLOGIN_TIMER_ID, 50);
     }
 }
-

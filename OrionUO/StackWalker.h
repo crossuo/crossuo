@@ -177,7 +177,7 @@ protected:
     do                                                                                             \
     {                                                                                              \
         memset(&c, 0, sizeof(CONTEXT));                                                            \
-        EXCEPTION_POINTERS *pExp = nullptr;                                                           \
+        EXCEPTION_POINTERS *pExp = nullptr;                                                        \
         __try                                                                                      \
         {                                                                                          \
             throw 0;                                                                               \

@@ -164,10 +164,10 @@ public:
 #if USE_WISP
     virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam) {}
 #else
-    virtual void OnTextInput(const SDL_TextInputEvent &ev){}
+    virtual void OnTextInput(const SDL_TextInputEvent &ev) {}
 #endif
-    virtual void OnKeyDown(const KeyEvent &ev){}
-    virtual void OnKeyUp(const KeyEvent &ev){}
+    virtual void OnKeyDown(const KeyEvent &ev) {}
+    virtual void OnKeyUp(const KeyEvent &ev) {}
 };
 
 //!Ссылка на гамп, который в данный момент изменяет высоту

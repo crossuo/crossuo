@@ -1,13 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** OrionWindow.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "stdafx.h"
 #include <SDL_timer.h>
@@ -474,10 +466,13 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
             if (*buf == 0x80 || *buf == 0x91)
             {
                 LOG_DUMP(buf, 1);
+                SAFE_LOG_DUMP(buf, size);
                 LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
             }
             else
+            {
                 LOG_DUMP(buf, size);
+            }
 
             g_ConnectionManager.Send((PBYTE)wParam, (int)lParam);
 
@@ -590,4 +585,3 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
 
     return S_OK;
 }
-

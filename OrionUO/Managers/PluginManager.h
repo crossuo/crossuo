@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** PluginManager.h
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
-#ifndef PLUGINMANAGER_H
-#define PLUGINMANAGER_H
+#pragma once
 
 class CPlugin : public CBaseQueueItem
 {
@@ -48,5 +41,3 @@ public:
 };
 
 extern CPluginManager g_PluginManager;
-
-#endif

@@ -1,5 +1,5 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+// MIT License
+// Copyright (c) Hotride
 
 #include "stdafx.h"
 #include "FileSystem.h"
@@ -86,7 +86,14 @@ void CLogger::VPrint(const wchar_t *format, va_list ap)
 
 void CLogger::Dump(uchar *buf, int size)
 {
-    if (m_File == nullptr)
+    LogDump(m_File, buf, size);
+}
+
+}; // namespace Wisp
+
+void LogDump(FILE *fp, uchar *buf, int size)
+{
+    if (fp == nullptr)
         return;
 
     int num_lines = size / 16;
@@ -97,29 +104,26 @@ void CLogger::Dump(uchar *buf, int size)
     for (int line = 0; line < num_lines; line++)
     {
         int row = 0;
-        fprintf(m_File, "%04X: ", line * 16);
+        fprintf(fp, "%04X: ", line * 16);
 
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
-                fprintf(m_File, "%02X ", buf[line * 16 + row]);
+                fprintf(fp, "%02X ", buf[line * 16 + row]);
             else
-                fprintf(m_File, "-- ");
+                fprintf(fp, "-- ");
         }
 
-        fprintf(m_File, ": ");
+        fprintf(fp, ": ");
 
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
-                fputc(isprint(buf[line * 16 + row]) ? buf[line * 16 + row] : '.', m_File);
+                fputc(isprint(buf[line * 16 + row]) ? buf[line * 16 + row] : '.', fp);
         }
 
-        fputc('\n', m_File);
+        fputc('\n', fp);
     }
 
-    fflush(m_File);
+    fflush(fp);
 }
-
-}; // namespace Wisp
-
