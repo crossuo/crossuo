@@ -954,10 +954,10 @@ bool CPathFinder::FindPath(int maxNodes)
 bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 {
     DEBUG_TRACE_FUNCTION;
-    for (int i = 0; i < PATHFINDER_MAX_NODES) //m_ActiveOpenNodes; i++)
+    for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
         m_OpenList[i].Reset();
 
-    for (int i = 0; i < PATHFINDER_MAX_NODES) //m_ActiveClosedNodes; i++)
+    for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
         m_ClosedList[i].Reset();
 
     m_StartPoint.X = g_Player->GetX();
