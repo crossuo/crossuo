@@ -2,6 +2,7 @@
 
 #include "FileSystem.h"
 #include <SDL.h>
+#include <time.h>
 
 #if USE_WISP
 
@@ -21,24 +22,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     auto path = g_App.ExeFilePath("crashlogs");
     fs_path_create(path);
 
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-
-    char buf[100] = { 0 };
-
-    sprintf_s(
-        buf,
-        "/crash_%i_%i_%i___%i_%i_%i_%i.txt",
-        st.wYear,
-        st.wMonth,
-        st.wDay,
-        st.wHour,
-        st.wMinute,
-        st.wSecond,
-        st.wMilliseconds);
-
+    char buf[100]{};
+    auto t = time(nullptr);
+    auto now = *localtime(&t);
+    sprintf_s(buf, "/crash_%d%d%d_%d_%d_%d.txt", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
     path += ToPath(buf);
-
     INITCRASHLOGGER(path);
 
     socket_init();
@@ -99,16 +87,12 @@ int main(int argc, char **argv)
 
     // FIXME: log stuff
     /*
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-
-	char buf[100] = { 0 };
-
-	sprintf_s(buf, "\\crash_%i_%i_%i___%i_%i_%i_%i.txt", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-
-	path += buf;
-
-	INITCRASHLOGGER(path.c_str());
+    char buf[100]{};
+    auto t = time(nullptr);
+    auto now = *localtime(&t);
+    sprintf_s(buf, "/crash_%d%d%d_%d_%d_%d.txt", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
+    path += ToPath(buf);
+    INITCRASHLOGGER(path);
 	*/
 
     if (!g_isHeadless)

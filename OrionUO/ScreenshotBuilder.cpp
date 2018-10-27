@@ -1,16 +1,9 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ScreenshotBuilder.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "stdafx.h"
 #include "FileSystem.h"
+#include <time.h>
 
 CScreenshotBuilder g_ScreenshotBuilder;
 
@@ -31,25 +24,14 @@ void CScreenshotBuilder::SaveScreen()
 void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
+
     auto path = g_App.ExeFilePath("snapshots");
     fs_path_create(path);
 
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-
-    char buf[100] = { 0 };
-
-    sprintf_s(
-        buf,
-        "/snapshot_d(%i.%i.%i)_t(%i.%i.%i_%i)",
-        st.wYear,
-        st.wMonth,
-        st.wDay,
-        st.wHour,
-        st.wMinute,
-        st.wSecond,
-        st.wMilliseconds);
-
+    auto t = time(nullptr);
+    auto now = *localtime(&t);
+    char buf[100]{};
+    sprintf_s(buf, "/snapshot_d(%d%d%d)_t(%d%d%d)", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);  
     path += ToPath(buf);
 
     UINT_LIST pixels = GetScenePixels(x, y, width, height);

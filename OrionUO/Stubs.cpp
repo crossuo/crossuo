@@ -27,21 +27,6 @@ int MultiByteToWideChar(int, int, const char *, int, wchar_t *, int)
     NOT_IMPLEMENTED;
     return 0;
 }
-bool GetWindowRect(void *, RECT *)
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
-bool SetWindowPos(void *, void *, int, int, int, int, int)
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
-bool AdjustWindowRectEx(RECT *, int, bool, int)
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
 bool SendMessage(void *, int, int, int)
 {
     NOT_IMPLEMENTED;
@@ -108,10 +93,6 @@ int GetProfileStringA(const char *, const char *, const char *, char *, int)
 }
 
 // Thread
-void CloseHandle(void *)
-{
-    NOT_IMPLEMENTED;
-}
 void KillTimer(void *, unsigned int)
 {
     NOT_IMPLEMENTED;
@@ -119,50 +100,6 @@ void KillTimer(void *, unsigned int)
 void SetTimer(void *, unsigned int, unsigned int, void *)
 {
     NOT_IMPLEMENTED;
-}
-int timeBeginPeriod(int)
-{
-    NOT_IMPLEMENTED;
-    return 0;
-}
-void *_beginthreadex(void *, unsigned, unsigned (*)(void *), void *, unsigned, unsigned *)
-{
-    NOT_IMPLEMENTED;
-    return nullptr;
-}
-void _endthreadex(int)
-{
-    NOT_IMPLEMENTED;
-}
-int timeEndPeriod(int)
-{
-    NOT_IMPLEMENTED;
-    return 0;
-}
-void GetLocalTime(SYSTEMTIME *)
-{
-    NOT_IMPLEMENTED;
-}
-
-// Socket
-bool WSAStartup(int, void *)
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
-void WSASetLastError(int)
-{
-    NOT_IMPLEMENTED;
-}
-int WSACleanup(void)
-{
-    NOT_IMPLEMENTED;
-    return 0;
-}
-int recvfrom(int, const char *, int, int, const struct sockaddr *, int *)
-{
-    NOT_IMPLEMENTED;
-    return 0;
 }
 
 char *_strlwr(char *s)

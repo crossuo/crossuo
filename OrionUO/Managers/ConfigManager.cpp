@@ -1175,8 +1175,7 @@ bool CConfigManager::LoadBin(const os_path &path)
                 if (zoomed)
                     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
                 else
-                    SetWindowPos(
-                        g_OrionWindow.Handle, nullptr, windowX, windowY, windowWidth, windowHeight, 0);
+                    g_OrionWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
 
                 g_GL.UpdateRect();
 
@@ -1832,10 +1831,13 @@ bool CConfigManager::Load(const os_path &path)
         SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
 
         if (zoomed)
+        {
             SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+        }
         else
-            SetWindowPos(
-                g_OrionWindow.Handle, nullptr, windowX, windowY, windowWidth, windowHeight, 0);
+        {
+            g_OrionWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
+        }
 
         g_GL.UpdateRect();
     }
@@ -1990,13 +1992,13 @@ void CConfigManager::Save(const os_path &path)
 
         writter.WriteBool("Zoomed", g_OrionWindow.IsMaximizedWindow());
 
-        RECT rect = { 0 };
-        GetWindowRect(g_OrionWindow.Handle, &rect);
+        int x, y, w, h;
+        g_OrionWindow.GetPositionSize(&x, &y, &w, &h);
 
-        writter.WriteInt("RealX", rect.left);
-        writter.WriteInt("RealY", rect.top);
-        writter.WriteInt("RealWidth", (rect.right - rect.left));
-        writter.WriteInt("RealHeight", (rect.bottom - rect.top));
+        writter.WriteInt("RealX", x);
+        writter.WriteInt("RealY", y);
+        writter.WriteInt("RealWidth", w);
+        writter.WriteInt("RealHeight", h);
 
         writter.WriteBool("ToggleBufficonWindow", ToggleBufficonWindow);
         writter.WriteInt("DeveloperMode", g_DeveloperMode);

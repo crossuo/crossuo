@@ -169,17 +169,6 @@ const unsigned int WM_NCPAINT = 0x85;
 
 #define MAX_PATH 256
 
-struct SYSTEMTIME
-{
-    WORD wYear;
-    WORD wMonth;
-    WORD wDayOfWeek;
-    WORD wDay;
-    WORD wHour;
-    WORD wMinute;
-    WORD wSecond;
-    WORD wMilliseconds;
-};
 struct RECT
 {
     int left;
@@ -189,8 +178,6 @@ struct RECT
 };
 
 // Bad and very ugly "API" stuff
-bool GetWindowRect(void *, RECT *);
-bool SetWindowPos(void *, void *, int, int, int, int, int);
 int GetSystemMetrics(int);
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t);
 bool SendMessage(void *, int, int, int);
@@ -213,40 +200,8 @@ void *GetClipboardData(unsigned);
 bool CloseClipboard();
 
 // Thread
-void CloseHandle(void *); // WispThread.cpp
 void KillTimer(void *, unsigned int);
 void SetTimer(void *, unsigned int, unsigned int, void *);
-int timeBeginPeriod(int);
-void *_beginthreadex(void *, unsigned, unsigned (*)(void *), void *, unsigned, unsigned *);
-void _endthreadex(int);
-int timeEndPeriod(int);
-void GetLocalTime(SYSTEMTIME *);
-
-// Socket
-struct WSADATA
-{
-    WORD wVersion;
-    WORD wHighVersion;
-    char szDescription[256];
-    char szSystemStatus[256];
-    unsigned short iMaxSockets;
-    unsigned short iMaxUdpDg;
-    char *lpVendorInfo;
-};
-bool WSAStartup(int, void *);
-void WSASetLastError(int);
-int WSACleanup(void);
-int recvfrom(int, const char *, int, int, const struct sockaddr *, int *);
-#define closesocket close
-#define INVALID_SOCKET -1
-#define SOCKET_ERROR -1
-#define MAKEWORD(x, y) (int)(x)
-typedef struct hostent HOSTENT;
-typedef HOSTENT *LPHOSTENT;
-#define SOCKADDR struct sockaddr
-#define SOCKADDR_IN struct in_addr
-#define LPIN_ADDR struct in_addr *
-#define LPSOCKADDR const SOCKADDR *
 
 // String
 #define strncpy_s strncpy

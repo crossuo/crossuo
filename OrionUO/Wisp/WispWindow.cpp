@@ -1,5 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+﻿// MIT License
 
 #include "stdafx.h"
 #include "WispWindow.h"
@@ -52,18 +51,39 @@ void CWindow::SetSize(const Wisp::CSize &size)
 
     SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
 #else
-    // SDL_GetWindowPosition
-    // SDL_GetWindowSize
-    // SDL_SetWindowPosition
-    NOT_IMPLEMENTED;
+    SDL_SetWindowSize(m_window, size.Width, size.Height);
 #endif
     m_Size = size;
+}
+
+void CWindow::SetPositionSize(int x, int y, int width, int height)
+{
+#if USE_WISP
+    SetWindowPos(Handle, nullptr, x, y, width, height, 0);
+#else
+    SDL_SetWindowSize(m_window, x, y);
+    SDL_SetWindowPosition(m_window, width, height);
+#endif
+}
+
+void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
+{
+#if USE_WISP
+    RECT rect{};
+    GetWindowRect(Handle, &rect);
+    x = rect.left;
+    y = rect.top;
+    width = (rect.right - rect.left);
+    height = (rect.bottom - rect.top);
+#else
+    SDL_GetWindowSize(m_window, x, y);
+    SDL_GetWindowPosition(m_window, width, height);
+#endif
 }
 
 void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
 {
     DEBUG_TRACE_FUNCTION;
-#if USE_WISP
     if (m_Size.Width < newMinSize.Width || m_Size.Height < newMinSize.Height)
     {
         int width = m_Size.Width;
@@ -75,6 +95,7 @@ void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
         if (height < newMinSize.Height)
             height = newMinSize.Height;
 
+#if USE_WISP
         RECT pos = { 0, 0, 0, 0 };
         GetWindowRect(Handle, &pos);
 
@@ -93,17 +114,16 @@ void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
     }
 #else
-    // SDL_GetWindowPosition
-    // SDL_GetWindowSize
-    NOT_IMPLEMENTED;
+        SDL_SetWindowSize(m_window, width, height);
 #endif
+    }
     m_MinSize = newMinSize;
 }
 
 void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
 {
     DEBUG_TRACE_FUNCTION;
-#if USE_WISP
+
     if (m_Size.Width > newMaxSize.Width || m_Size.Height > newMaxSize.Height)
     {
         int width = m_Size.Width;
@@ -115,6 +135,7 @@ void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
         if (height > newMaxSize.Height)
             height = newMaxSize.Height;
 
+#if USE_WISP
         RECT pos = { 0, 0, 0, 0 };
         GetWindowRect(Handle, &pos);
 
@@ -131,12 +152,11 @@ void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
             r.bottom += -r.top;
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
-    }
 #else
-    // SDL_GetWindowPosition
-    // SDL_GetWindowSize
-    NOT_IMPLEMENTED;
+        SDL_SetWindowMaximumSize(m_window, newMaxSize.Width, newMaxSize.Height);
 #endif
+    }
+
     m_MaxSize = newMaxSize;
 }
 

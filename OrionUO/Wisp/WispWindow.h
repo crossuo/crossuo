@@ -1,4 +1,5 @@
-﻿
+﻿// MIT License
+
 #pragma once
 #include <SDL_video.h>
 #include "Input.h"
@@ -26,6 +27,9 @@ public:
 
     Wisp::CSize GetMaxSize() { return m_MaxSize; };
     void SetMaxSize(const Wisp::CSize &val);
+
+    void GetPositionSize(int *x, int *y, int *width, int *height);
+    void SetPositionSize(int x, int y, int width, int height);
 
     // GetSystemMetrics -> SDL_GetCurrentDisplayMode
     SDL_Window *m_window = nullptr;

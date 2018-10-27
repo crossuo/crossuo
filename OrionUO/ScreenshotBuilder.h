@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** ScreenshotBuilder.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SCREENSHOTBUILDER_H
-#define SCREENSHOTBUILDER_H
+#pragma once
 
 class CScreenshotBuilder
 {
@@ -17,12 +10,8 @@ public:
     virtual ~CScreenshotBuilder();
 
     void SaveScreen();
-
     void SaveScreen(int x, int y, int width, int height);
-
     UINT_LIST GetScenePixels(int x, int y, int width, int height);
 };
 
 extern CScreenshotBuilder g_ScreenshotBuilder;
-
-#endif
