@@ -1436,7 +1436,7 @@ HTMLCHAR_LIST CFontsManager::GetHTMLData(
 
                 int index = -1;
 
-                DFOR (j, (int)stack.size() - 1, 1)
+                for (int j = (int)stack.size() - 1; j >= 1; j--)
                 {
                     if (stack[j].Tag == tag)
                     {

@@ -51,14 +51,14 @@ void CDataWritter::WriteDataBE(const puchar data, size_t size, const intptr_t &o
     DATASTREAM_DEBUG("c4_f5");
     if (AutoResize)
     {
-        DFOR (i, size - 1, 0)
+        for (int i = size - 1; i >= 0; i--)
             m_Data.push_back(data[i]);
     }
     else if (Ptr != nullptr)
     {
         puchar ptr = Ptr + offset + size - 1;
 
-        DFOR (i, size - 1, 0)
+        for (int i = size - 1; i >= 0; i--)
             *(ptr - i) = data[i];
 
         Ptr += size;

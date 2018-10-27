@@ -351,7 +351,7 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 
             if (objZ - minZ >= DEFAULT_BLOCK_HEIGHT)
             {
-                DFOR (j, i - 1, 0)
+                for (int j = i - 1; j >= 0; j--)
                 {
                     const CPathObject &tempObj = list[j];
 

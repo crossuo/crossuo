@@ -118,7 +118,7 @@ CServer *CServerList::Select(int index)
     DEBUG_TRACE_FUNCTION;
     CServer *server = nullptr;
 
-    DFOR (i, m_Servers.size() - 1, 0)
+    for (int i = m_Servers.size() - 1; i >= 0; i--)
     {
         if (index == i)
         {

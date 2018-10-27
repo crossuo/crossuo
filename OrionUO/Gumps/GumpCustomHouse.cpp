@@ -2367,7 +2367,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 break;
                         }
 
-                        DFOR (y, EndPos.Y, StartPos.Y)
+                        for (int y = EndPos.Y; y >= StartPos.Y; y--)
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2435,7 +2435,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 break;
                         }
 
-                        DFOR (x, EndPos.X, StartPos.X)
+                        for (int x = EndPos.X; x >= StartPos.X; x--)
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
