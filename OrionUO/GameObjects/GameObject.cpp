@@ -217,9 +217,9 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
 
         if (color)
         {
-            IFOR (x, 0, g_ObjectHandlesWidth)
+            for (int x = 0; x < g_ObjectHandlesWidth; x++)
             {
-                IFOR (y, 0, g_ObjectHandlesHeight)
+                for (int y = 0; y < g_ObjectHandlesHeight; y++)
                 {
                     ushort &pixel = pixels[(y * g_ObjectHandlesWidth) + x];
 
@@ -239,11 +239,11 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
 
     int maxHeight = textTexture.Height;
 
-    IFOR (x, 0, width)
+    for (int x = 0; x < width; x++)
     {
         int gumpDataX = (int)x + 10;
 
-        IFOR (y, 0, maxHeight)
+        for (int y = 0; y < maxHeight; y++)
         {
             int gumpDataY = (int)y + 1;
 

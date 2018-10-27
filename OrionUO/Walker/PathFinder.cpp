@@ -324,7 +324,7 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 
     int listSize = (int)list.size();
 
-    IFOR (i, 0, listSize)
+    for (int i = 0; i < listSize; i++)
     {
         const CPathObject &obj = list[i];
 
@@ -461,7 +461,7 @@ bool CPathFinder::CanWalk(uchar &direction, int &x, int &y, char &z)
 
         if (passed) //test angleowner tiles
         {
-            IFOR (i, 0, 2 && passed)
+            for (int i = 0; i < 2 && passed; i++)
             {
                 int testX = x;
                 int testY = y;
@@ -476,7 +476,7 @@ bool CPathFinder::CanWalk(uchar &direction, int &x, int &y, char &z)
 
         if (!passed) //test neary tiles
         {
-            IFOR (i, 0, 2 && !passed)
+            for (int i = 0; i < 2 && !passed; i++)
             {
                 newX = x;
                 newY = y;
@@ -687,7 +687,7 @@ bool CPathFinder::DoesNotExistOnOpenList(int x, int y, int z)
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    IFOR (i, 0, PATHFINDER_MAX_NODES)
+    for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
     {
         CPathNode &node = m_OpenList[i];
 
@@ -706,7 +706,7 @@ bool CPathFinder::DoesNotExistOnClosedList(int x, int y, int z)
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    IFOR (i, 0, PATHFINDER_MAX_NODES)
+    for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
     {
         CPathNode &node = m_ClosedList[i];
 
@@ -730,7 +730,7 @@ int CPathFinder::AddNodeToList(
         {
             if (!DoesNotExistOnOpenList(x, y, z))
             {
-                IFOR (i, 0, PATHFINDER_MAX_NODES)
+                for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
                 {
                     CPathNode &node = m_OpenList[i];
 
@@ -765,7 +765,7 @@ int CPathFinder::AddNodeToList(
             }
             else
             {
-                IFOR (i, 0, PATHFINDER_MAX_NODES)
+                for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
                 {
                     CPathNode &node = m_OpenList[i];
 
@@ -795,7 +795,7 @@ int CPathFinder::AddNodeToList(
     {
         parentNode->Used = false;
 
-        IFOR (i, 0, PATHFINDER_MAX_NODES)
+        for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
         {
             CPathNode &node = m_ClosedList[i];
 
@@ -828,7 +828,7 @@ bool CPathFinder::OpenNodes(CPathNode *node)
     DEBUG_TRACE_FUNCTION;
     bool found = false;
 
-    IFOR (i, 0, 8)
+    for (int i = 0; i < 8; i++)
     {
         uchar direction = (uchar)i;
         int x = node->X;
@@ -872,7 +872,7 @@ int CPathFinder::FindCheapestNode()
     int cheapestCost = 9999999;
     int cheapestNode = -1;
 
-    IFOR (i, 0, PATHFINDER_MAX_NODES)
+    for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
     {
         if (m_OpenList[i].Used)
         {
@@ -954,10 +954,10 @@ bool CPathFinder::FindPath(int maxNodes)
 bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, PATHFINDER_MAX_NODES) //m_ActiveOpenNodes)
+    for (int i = 0; i < PATHFINDER_MAX_NODES) //m_ActiveOpenNodes; i++)
         m_OpenList[i].Reset();
 
-    IFOR (i, 0, PATHFINDER_MAX_NODES) //m_ActiveClosedNodes)
+    for (int i = 0; i < PATHFINDER_MAX_NODES) //m_ActiveClosedNodes; i++)
         m_ClosedList[i].Reset();
 
     m_StartPoint.X = g_Player->GetX();

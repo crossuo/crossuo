@@ -943,7 +943,7 @@ void CGumpStatusbar::UpdateContent()
     {
         if (g_Party.Contains(Serial) && !g_ConfigManager.GetOriginalPartyStatusbar())
         {
-            IFOR (i, 0, 10)
+            for (int i = 0; i < 10; i++)
             {
                 if (g_Party.Member[i].Serial == Serial)
                 {

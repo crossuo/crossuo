@@ -65,7 +65,7 @@ const char *BASS_ErrorGetDescription()
     DEBUG_TRACE_FUNCTION;
     int currentErrorCode = BASS_ErrorGetCode();
 
-    IFOR (i, 0, 38)
+    for (int i = 0; i < 38; i++)
     {
         if (BASS_ErrorTable[i].errorCode == currentErrorCode)
             return BASS_ErrorTable[i].desc;

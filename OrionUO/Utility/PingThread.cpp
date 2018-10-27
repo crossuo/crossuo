@@ -64,7 +64,7 @@ void CPingThread::OnExecute(uint32_t nowTime)
 
     PING_INFO_DATA info = { ServerID, 9999, 0, 0, 0 };
 
-    IFOR (i, 0, RequestsCount)
+    for (int i = 0; i < RequestsCount; i++)
     {
         int ping = CalculatePing();
 

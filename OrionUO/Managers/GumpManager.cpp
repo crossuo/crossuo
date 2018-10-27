@@ -1183,7 +1183,7 @@ void CGumpManager::Load(const os_path &path)
         file.Ptr = oldPtr;
         bool menubarLoaded = false;
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             CGump *gump = nullptr;
 
@@ -1395,13 +1395,13 @@ void CGumpManager::Load(const os_path &path)
             file.Ptr = next;
         }
 
-        IFOR (i, 0, spellGroupsCount)
+        for (int i = 0; i < spellGroupsCount; i++)
         {
             CGumpSpell *topSpell = nullptr;
 
             ushort spellsCount = file.ReadUInt16LE();
 
-            IFOR (j, 0, spellsCount)
+            for (int j = 0; j < spellsCount; j++)
             {
                 puchar next = file.Ptr;
                 uchar size = file.ReadUInt8();
@@ -1762,7 +1762,7 @@ void CGumpManager::Save(const os_path &path)
             }
         }
 
-        IFOR (i, 0, spellGroupsCount)
+        for (int i = 0; i < spellGroupsCount; i++)
         {
             CGumpSpell *spell = (CGumpSpell *)spellGroups[i];
             int spellsCount = 0;

@@ -98,7 +98,7 @@ void CCityManager::Init()
 
         if (cliloc != nullptr)
         {
-            IFOR (i, 0, 9)
+            for (int i = 0; i < 9; i++)
                 m_CityList.push_back(CCity(cityNames[i], cliloc->GetW(1075072 + (int)i)));
         }
     }

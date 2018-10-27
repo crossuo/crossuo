@@ -200,7 +200,7 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
     {
         CGLTexture *th = g_Orion.ExecuteGump(Graphic + (int)i);
 

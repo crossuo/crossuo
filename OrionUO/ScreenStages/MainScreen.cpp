@@ -84,7 +84,7 @@ void CMainScreen::SetAccounting(const string &account, const string &password)
     size_t len = password.length();
     m_MainGump.m_PasswordFake->Clear();
 
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
         m_MainGump.m_PasswordFake->Insert(L'*');
 }
 
@@ -98,7 +98,7 @@ void CMainScreen::Paste()
         size_t len = m_Password->Length();
         g_EntryPointer->Clear();
 
-        IFOR (i, 0, len)
+        for (int i = 0; i < len; i++)
             g_EntryPointer->Insert(L'*');
     }
     else
@@ -213,7 +213,7 @@ int CMainScreen::GetConfigKeyCode(const string &key)
     string str = ToLowerA(key);
     int result = 0;
 
-    IFOR (i, 0, keyCount && !result)
+    for (int i = 0; i < keyCount && !result; i++)
     {
         if (str == m_Keys[i])
             result = (int)i + 1;
@@ -286,7 +286,7 @@ void CMainScreen::LoadGlobalConfig()
                     {
                         m_Password->SetTextA(password);
 
-                        IFOR (zv, 0, len)
+                        for (int zv = 0; zv < len; zv++)
                             m_MainGump.m_PasswordFake->Insert(L'*');
 
                         m_Password->SetPos((int)len);

@@ -329,7 +329,7 @@ void CGUISlider::Draw(bool checktrans)
         {
             CGLTexture *th[3] = { nullptr };
 
-            IFOR (i, 0, 3)
+            for (int i = 0; i < 3; i++)
             {
                 th[i] = g_Orion.ExecuteGump(BackgroundGraphic + (int)i);
 

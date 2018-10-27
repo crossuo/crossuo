@@ -241,7 +241,7 @@ bool ToBool(const string &str)
     const string m_TrueValues[countOfTrue] = { "on", "yes", "true" };
     bool result = false;
 
-    IFOR (i, 0, countOfTrue && !result)
+    for (int i = 0; i < countOfTrue && !result; i++)
         result = (data == m_TrueValues[i]);
 
     return result;

@@ -58,9 +58,9 @@ void CGumpSelectColor::UpdateContent()
     puchar huesData = (puchar)g_ColorManager.GetHuesRangePointer() + 32 + 4;
     const int colorOffsetDivider = sizeof(HUES_GROUP) - 4;
 
-    IFOR (y, 0, 10)
+    for (int y = 0; y < 10; y++)
     {
-        IFOR (x, 0, 20)
+        for (int x = 0; x < 20; x++)
         {
             int colorIndex = (startColor + ((startColor + (startColor << 2)) << 1)) << 3;
 

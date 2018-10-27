@@ -53,7 +53,7 @@ void CGumpScreenCharacterList::UpdateContent()
         2, g_ClilocManager.Cliloc(g_Language)->GetA(3000050, false, "Character Selection"));
     Add(obj);
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         size_t len = g_CharacterList.GetName(i).length();
 
@@ -139,7 +139,7 @@ void CGumpScreenCharacterList::InitToolTip()
     {
         bool testField = (g_PacketManager.GetClientVersion() >= CV_305D);
 
-        IFOR (i, 0, g_CharacterList.Count)
+        for (int i = 0; i < g_CharacterList.Count; i++)
         {
             if (!testField || !i || g_CharacterList.GetName(i).length() != 0)
             {
@@ -175,7 +175,7 @@ void CGumpScreenCharacterList::GUMP_BUTTON_EVENT_C
 void CGumpScreenCharacterList::GUMP_TEXT_ENTRY_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, g_CharacterList.Count)
+    for (int i = 0; i < g_CharacterList.Count; i++)
     {
         if (serial == (ID_CS_CHARACTERS + (int)i))
         {
@@ -199,7 +199,7 @@ void CGumpScreenCharacterList::GUMP_TEXT_ENTRY_EVENT_C
 bool CGumpScreenCharacterList::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, g_CharacterList.Count)
+    for (int i = 0; i < g_CharacterList.Count; i++)
     {
         if (g_SelectedObject.Serial == (ID_CS_CHARACTERS + i))
         {

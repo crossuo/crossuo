@@ -9,7 +9,7 @@ CCharacterList::CCharacterList()
 void CCharacterList::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, 7)
+    for (int i = 0; i < 7; i++)
         m_Name[i] = "";
 
     Selected = 0;

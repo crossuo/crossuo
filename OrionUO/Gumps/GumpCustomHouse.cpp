@@ -456,7 +456,7 @@ void CGumpCustomHouse::DrawWallSection()
 
         m_DataBox->Add(new CGUIScissor(true, 0, 0, 121, 36, 384, 60));
 
-        IFOR (i, startCategory, endCategory)
+        for (int i = startCategory; i < endCategory; i++)
         {
             const vector<CCustomHouseObjectWall> &vec = m_Walls[i].m_Items;
 
@@ -497,7 +497,7 @@ void CGumpCustomHouse::DrawWallSection()
 
             m_DataBox->Add(new CGUIScissor(true, 0, 0, 130, 36, 384, 120));
 
-            IFOR (i, 0, 8)
+            for (int i = 0; i < 8; i++)
             {
                 ushort graphic = (ShowWindow ? item.m_WindowGraphics[i] : item.m_Graphics[i]);
 
@@ -550,7 +550,7 @@ void CGumpCustomHouse::DrawDoorSection()
 
         m_DataBox->Add(new CGUIScissor(true, 0, 0, 138, 36, 384, 120));
 
-        IFOR (i, 0, 8)
+        for (int i = 0; i < 8; i++)
         {
             ushort graphic = item.m_Graphics[i];
 
@@ -677,9 +677,9 @@ void CGumpCustomHouse::DrawFloorSection()
 
         int index = 0;
 
-        IFOR (j, 0, 2)
+        for (int j = 0; j < 2; j++)
         {
-            IFOR (i, 0, 8)
+            for (int i = 0; i < 8; i++)
             {
                 ushort graphic = item.m_Graphics[index];
 
@@ -719,7 +719,7 @@ void CGumpCustomHouse::DrawStairSection()
     {
         CCustomHouseObjectStair &item = m_Stairs[Page];
 
-        IFOR (j, 0, 2)
+        for (int j = 0; j < 2; j++)
         {
             int x = (j ? 96 : 192);
             int y = (j ? 60 : 0);
@@ -734,7 +734,7 @@ void CGumpCustomHouse::DrawStairSection()
             int end = (j ? 6 : 9);
             int combinedStair = (j ? 0 : 10);
 
-            IFOR (i, start, end)
+            for (int i = start; i < end; i++)
             {
                 ushort graphic = item.m_Graphics[i];
 
@@ -781,7 +781,7 @@ void CGumpCustomHouse::DrawRoofSection()
 
         m_DataBox->Add(new CGUIScissor(true, 0, 0, 121, 36, 384, 60));
 
-        IFOR (i, startCategory, endCategory)
+        for (int i = startCategory; i < endCategory; i++)
         {
             const vector<CCustomHouseObjectRoof> &vec = m_Roofs[i].m_Items;
 
@@ -824,9 +824,9 @@ void CGumpCustomHouse::DrawRoofSection()
 
             int index = 0;
 
-            IFOR (j, 0, 2)
+            for (int j = 0; j < 2; j++)
             {
-                IFOR (i, 0, 8)
+                for (int i = 0; i < 8; i++)
                 {
                     ushort graphic = item.m_Graphics[index];
 
@@ -891,7 +891,7 @@ void CGumpCustomHouse::DrawMiscSection()
 
         m_DataBox->Add(new CGUIScissor(true, 0, 0, 121, 36, 384, 60));
 
-        IFOR (i, startCategory, endCategory)
+        for (int i = startCategory; i < endCategory; i++)
         {
             const vector<CCustomHouseObjectMisc> &vec = m_Miscs[i].m_Items;
 
@@ -932,7 +932,7 @@ void CGumpCustomHouse::DrawMiscSection()
 
             m_DataBox->Add(new CGUIScissor(true, 0, 0, 130, 44, 384, 120));
 
-            IFOR (i, 0, 8)
+            for (int i = 0; i < 8; i++)
             {
                 ushort graphic = item.m_Graphics[i];
 
@@ -1021,11 +1021,11 @@ void CGumpCustomHouse::DrawMenuSection()
 template <class T, class A>
 pair<int, int> SeekGraphicInCustomHouseObjectListWithCategory(const vector<A> &list, ushort graphic)
 {
-    IFOR (i, 0, (int)list.size())
+    for (int i = 0; i < (int)list.size(); i++)
     {
         const A &cat = list[i];
 
-        IFOR (j, 0, (int)cat.m_Items.size())
+        for (int j = 0; j < (int)cat.m_Items.size(); j++)
         {
             int contains = cat.m_Items[j].Contains(graphic);
 
@@ -1040,7 +1040,7 @@ pair<int, int> SeekGraphicInCustomHouseObjectListWithCategory(const vector<A> &l
 template <class T>
 pair<int, int> SeekGraphicInCustomHouseObjectList(const vector<T> &list, ushort graphic)
 {
-    IFOR (i, 0, (int)list.size())
+    for (int i = 0; i < (int)list.size(); i++)
     {
         int contains = list[i].Contains(graphic);
 
@@ -1784,7 +1784,7 @@ bool CGumpCustomHouse::ValidateItemPlace(
                                                         Wisp::CPoint2Di(1, 0),
                                                         Wisp::CPoint2Di(0, 1) };
 
-            IFOR (i, 0, 4)
+            for (int i = 0; i < 4; i++)
             {
                 Wisp::CPoint2Di testPoint(
                     item->GetX() + table[i].X, item->GetY() + table[i].Y);
@@ -2142,7 +2142,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                 int floorZ = foundationItem->GetZ() + 7;
                 int itemZ = item->GetZ();
 
-                IFOR (i, 0, 4)
+                for (int i = 0; i < 4; i++)
                 {
                     int offset = ((int)i ? 0 : 7);
 
@@ -2221,9 +2221,9 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
         int z = foundationItem->GetZ() + 7;
 
-        IFOR (x, StartPos.X + 1, EndPos.X)
+        for (int x = StartPos.X + 1; x < EndPos.X; x++)
         {
-            IFOR (y, StartPos.Y + 1, EndPos.Y)
+            for (int y = StartPos.Y + 1; y < EndPos.Y; y++)
             {
                 CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2268,18 +2268,18 @@ void CGumpCustomHouse::GenerateFloorPlace()
             }
         }
 
-        IFOR (i, 0, FloorCount)
+        for (int i = 0; i < FloorCount; i++)
         {
             int minZ = foundationItem->GetZ() + 7 + ((int)i * 20);
             int maxZ = minZ + 20;
 
-            IFOR (j, 0, 2)
+            for (int j = 0; j < 2; j++)
             {
                 vector<Wisp::CPoint2Di> validatedFloors;
 
-                IFOR (x, StartPos.X, EndPos.X + 1)
+                for (int x = StartPos.X; x < EndPos.X + 1; x++)
                 {
-                    IFOR (y, StartPos.Y, EndPos.Y + 1)
+                    for (int y = StartPos.Y; y < EndPos.Y + 1; y++)
                     {
                         CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2339,12 +2339,12 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 item->State = item->State & ~CHMOF_INCORRECT_PLACE;
                         }
                     }
-                    IFOR (x, StartPos.X, EndPos.X + 1)
+                    for (int x = StartPos.X; x < EndPos.X + 1; x++)
                     {
                         int minY = 0;
                         int maxY = 0;
 
-                        IFOR (y, StartPos.Y, EndPos.Y + 1)
+                        for (int y = StartPos.Y; y < EndPos.Y + 1; y++)
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2390,7 +2390,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 break;
                         }
 
-                        IFOR (y, minY, maxY)
+                        for (int y = minY; y < maxY; y++)
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2407,12 +2407,12 @@ void CGumpCustomHouse::GenerateFloorPlace()
                         }
                     }
 
-                    IFOR (y, StartPos.Y, EndPos.Y + 1)
+                    for (int y = StartPos.Y; y < EndPos.Y + 1; y++)
                     {
                         int minX = 0;
                         int maxX = 0;
 
-                        IFOR (x, StartPos.X, EndPos.X + 1)
+                        for (int x = StartPos.X; x < EndPos.X + 1; x++)
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2458,7 +2458,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
                                 break;
                         }
 
-                        IFOR (x, minX, maxX)
+                        for (int x = minX; x < maxX; x++)
                         {
                             CMulti *multi = foundationItem->GetMultiAtXY((int)x, (int)y);
 
@@ -2482,11 +2482,11 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
         ushort color = 0x0051;
 
-        IFOR (i, 1, CurrentFloor)
+        for (int i = 1; i < CurrentFloor; i++)
         {
-            IFOR (x, StartPos.X, EndPos.X)
+            for (int x = StartPos.X; x < EndPos.X; x++)
             {
-                IFOR (y, StartPos.Y, EndPos.Y)
+                for (int y = StartPos.Y; y < EndPos.Y; y++)
                 {
                     ushort tempColor = color;
 

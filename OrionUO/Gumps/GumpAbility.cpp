@@ -70,7 +70,7 @@ void CGumpAbility::OnAbilityUse(int index)
 
     if (!(ability & 0x80))
     {
-        IFOR (i, 0, 2)
+        for (int i = 0; i < 2; i++)
             g_Ability[i] &= 0x7F;
 
         CPacketUseCombatAbility(ability).Send();

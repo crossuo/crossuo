@@ -43,7 +43,7 @@ CMapManager::~CMapManager()
 void CMapManager::CreateBlocksTable()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (map, 0, MAX_MAPS_COUNT)
+    for (int map = 0; map < MAX_MAPS_COUNT; map++)
         CreateBlockTable((int)map);
 }
 
@@ -85,7 +85,7 @@ void CMapManager::CreateBlockTable(int map)
     int fileNumber = -1;
     size_t uopOffset = 0;
 
-    IFOR (block, 0, maxBlockCount)
+    for (int block = 0; block < maxBlockCount; block++)
     {
         CIndexMap &index = list[block];
 
@@ -164,7 +164,7 @@ void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
 void CMapManager::ResetPatchesInBlockTable()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (map, 0, MAX_MAPS_COUNT)
+    for (int map = 0; map < MAX_MAPS_COUNT; map++)
     {
         MAP_INDEX_LIST &list = m_BlockData[map];
         Wisp::CSize &size = g_MapBlockSize[map];
@@ -180,7 +180,7 @@ void CMapManager::ResetPatchesInBlockTable()
             g_FileManager.m_StaticMul[map].Start == nullptr)
             return;
 
-        IFOR (block, 0, maxBlockCount)
+        for (int block = 0; block < maxBlockCount; block++)
         {
             CIndexMap &index = list[block];
 
@@ -207,7 +207,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
     memset(&m_MapPatchCount[0], 0, sizeof(m_MapPatchCount));
     memset(&m_StaticPatchCount[0], 0, sizeof(m_StaticPatchCount));
 
-    IFOR (i, 0, PatchesCount)
+    for (int i = 0; i < PatchesCount; i++)
     {
         if (g_FileManager.m_MapMul[i].Start == nullptr)
         {
@@ -235,7 +235,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
             difl.ResetPtr();
             dif.ResetPtr();
 
-            IFOR (j, 0, mapPatchesCount)
+            for (int j = 0; j < mapPatchesCount; j++)
             {
                 uint blockIndex = difl.ReadUInt32LE();
 
@@ -257,7 +257,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
             difl.ResetPtr();
             difi.ResetPtr();
 
-            IFOR (j, 0, staticsPatchesCount)
+            for (int j = 0; j < staticsPatchesCount; j++)
             {
                 uint blockIndex = difl.ReadUInt32LE();
 
@@ -304,9 +304,9 @@ void CMapManager::UpdatePatched()
     {
         QFOR(block, m_Items, CMapBlock *)
         {
-            IFOR (x, 0, 8)
+            for (int x = 0; x < 8; x++)
             {
-                IFOR (y, 0, 8)
+                for (int y = 0; y < 8; y++)
                 {
                     for (CRenderWorldObject *item = block->GetRender((int)x, (int)y); item != nullptr;
                          item = item->m_NextXY)
@@ -418,9 +418,9 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 
     PMAP_BLOCK pmb = (PMAP_BLOCK)indexMap->MapAddress;
 
-    IFOR (x, 0, 8)
+    for (int x = 0; x < 8; x++)
     {
-        IFOR (y, 0, 8)
+        for (int y = 0; y < 8; y++)
         {
             MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
             RADAR_MAP_CELLS &outCell = mb.Cells[x][y];
@@ -436,7 +436,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
     {
         int count = indexMap->StaticCount;
 
-        IFOR (c, 0, count)
+        for (int c = 0; c < count; c++)
         {
             if (sb->Color && sb->Color != 0xFFFF && !CRenderStaticObject::IsNoDrawTile(sb->Color))
             {
@@ -648,9 +648,9 @@ void CMapManager::LoadBlock(CMapBlock *block)
     int bx = block->X * 8;
     int by = block->Y * 8;
 
-    IFOR (x, 0, 8)
+    for (int x = 0; x < 8; x++)
     {
-        IFOR (y, 0, 8)
+        for (int y = 0; y < 8; y++)
         {
             int pos = (int)y * 8 + (int)x;
             CMapObject *obj = new CLandObject(

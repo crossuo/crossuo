@@ -43,7 +43,7 @@ void CGumpPartyManifest::UpdateContent()
     int yPtr = 48;
     ushort gumpID = 0;
 
-    IFOR (i, 0, 10)
+    for (int i = 0; i < 10; i++)
     {
         Add(new CGUIButton(
             ID_GPM_BUTTON_TELL_MEMBER + (int)i, 0x0FAB, 0x0FAC, 0x0FAD, 40, yPtr + 2));
@@ -140,7 +140,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
         else
         {
             //???????????????
-            IFOR (i, 0, 10)
+            for (int i = 0; i < 10; i++)
             {
                 if (g_Party.Member[i].Serial != 0)
                     CPacketPartyRemoveRequest(g_Party.Member[i].Serial).Send();

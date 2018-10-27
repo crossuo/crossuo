@@ -232,7 +232,7 @@ void CGUIHTMLGump::CalculateDataSize()
     DEBUG_TRACE_FUNCTION;
     CBaseGUI *item = (CBaseGUI *)m_Items;
 
-    IFOR (i, 0, 5)
+    for (int i = 0; i < 5; i++)
         item = (CBaseGUI *)item->m_Next;
 
     int startX = 0;
@@ -290,7 +290,7 @@ bool CGUIHTMLGump::Select()
 
     CBaseGUI *item = (CBaseGUI *)m_Items;
 
-    IFOR (i, 0, 5 && !selected)
+    for (int i = 0; i < 5 && !selected; i++)
     {
         selected = item->Select();
 

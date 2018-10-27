@@ -18,7 +18,7 @@ CGumpScreenSelectProfession::CGumpScreenSelectProfession()
     NoMove = true;
     NoClose = true;
 
-    IFOR (i, 0, 3)
+    for (int i = 0; i < 3; i++)
     {
         m_StatsSliders[i] = nullptr;
         m_SkillsSliders[i] = nullptr;
@@ -59,7 +59,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         return;
     }
 
-    IFOR (i, 0, 3)
+    for (int i = 0; i < 3; i++)
     {
         m_StatsSliders[i] = nullptr;
         m_SkillsSliders[i] = nullptr;
@@ -97,7 +97,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
     {
         int yPtr = 4; // 20;
 
-        IFOR (i, 0, g_SkillsManager.Count)
+        for (int i = 0; i < g_SkillsManager.Count; i++)
         {
             CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex((uint)i));
 
@@ -160,7 +160,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
         int yPtr = 136;
 
-        IFOR (i, 0, 3)
+        for (int i = 0; i < 3; i++)
         {
             CGUIText *text = new CGUIText(1, 360, yPtr);
             text->CreateTextureA(1, statName[i]);
@@ -190,7 +190,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         {
             yPtr = 260;
 
-            IFOR (i, 0, 3)
+            for (int i = 0; i < 3; i++)
             {
                 int skillID = profession->GetSkillIndex((int)i);
 
@@ -213,7 +213,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         {
             yPtr = 256;
 
-            IFOR (i, 0, 3)
+            for (int i = 0; i < 3; i++)
             {
                 Add(new CGUIResizepic(ID_SPS_SKILLS_FILED + (int)i, 0x0BB8, 350, yPtr, 105, 25));
 
@@ -246,7 +246,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
             }
         }
 
-        IFOR (i, 0, 3)
+        for (int i = 0; i < 3; i++)
         {
             m_SkillsSliders[i] = (CGUISlider *)Add(new CGUISlider(
                 ID_SPS_SKILLS_SPHERE + (int)i,
@@ -347,7 +347,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
         int yPtr = 171;
 
         //Stats
-        IFOR (i, 0, 3)
+        for (int i = 0; i < 3; i++)
         {
             text = (CGUIText *)Add(new CGUIText(1, 160, yPtr));
             text->CreateTextureA(1, statName[i]);
@@ -382,7 +382,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
             yPtr = 4;
 
-            IFOR (i, 0, g_SkillsManager.Count)
+            for (int i = 0; i < g_SkillsManager.Count; i++)
             {
                 CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex((uint)i));
 
@@ -417,7 +417,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
                 skillsCount++;
             }
 
-            IFOR (i, 0, skillsCount)
+            for (int i = 0; i < skillsCount; i++)
             {
                 Add(new CGUIResizepic(ID_SPS_SKILLS_FILED + (int)i, 0x0BB8, 340, yPtr, 175, 25));
 
@@ -564,9 +564,9 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
                 if (g_PacketManager.GetClientVersion() >= CV_70160)
                     skillsCount++;
 
-                IFOR (i, 0, skillsCount)
+                for (int i = 0; i < skillsCount; i++)
                 {
-                    IFOR (j, 0, skillsCount)
+                    for (int j = 0; j < skillsCount; j++)
                     {
                         if (i != j)
                         {
@@ -642,7 +642,7 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
             if (g_PacketManager.GetClientVersion() >= CV_70160)
                 skillsCount++;
 
-            IFOR (i, 0, skillsCount)
+            for (int i = 0; i < skillsCount; i++)
             {
                 if (serial == ID_SPS_SKILLS_FILED + (int)i)
                 {
@@ -751,7 +751,7 @@ void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
         }
     }
 
-    IFOR (i, 0, 3)
+    for (int i = 0; i < 3; i++)
     {
         m_StatsSliders[i]->Value = stats[i];
         m_StatsSliders[i]->CalculateOffset();
@@ -855,7 +855,7 @@ void CGumpScreenSelectProfession::ShuffleSkills(int id)
         }
     }
 
-    IFOR (i, 0, skillsCount)
+    for (int i = 0; i < skillsCount; i++)
     {
         m_SkillsSliders[i]->Value = skills[i];
         m_SkillsSliders[i]->CalculateOffset();

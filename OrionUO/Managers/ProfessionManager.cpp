@@ -40,7 +40,7 @@ int CProfessionManager::GetKeyCode(const string &key)
     string str = ToLowerA(key);
     int result = 0;
 
-    IFOR (i, 0, m_KeyCount && !result)
+    for (int i = 0; i < m_KeyCount && !result; i++)
     {
         if (str == m_Keys[i])
             result = (int)i + 1;
@@ -129,7 +129,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             }
             case PM_CODE_CHILDREN:
             {
-                IFOR (j, 1, (int)strings.size())
+                for (int j = 1; j < (int)strings.size(); j++)
                     childrens.push_back(strings[j]);
 
                 break;
@@ -138,7 +138,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             {
                 if (strings.size() > 2 && skillCount < 4)
                 {
-                    IFOR (j, 0, 54)
+                    for (int j = 0; j < 54; j++)
                     {
                         CSkill *skillPtr = g_SkillsManager.Get((uint)j);
 
@@ -194,7 +194,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     {
         CProfessionCategory *temp = new CProfessionCategory();
 
-        IFOR (i, 0, (int)childrens.size())
+        for (int i = 0; i < (int)childrens.size(); i++)
             temp->AddChildren(childrens[i]);
 
         obj = temp;
@@ -207,7 +207,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
         temp->Int = stats[1];
         temp->Dex = stats[2];
 
-        IFOR (i, 0, 4)
+        for (int i = 0; i < 4; i++)
         {
             temp->SetSkillIndex((int)i, (uchar)skillIndex[i]);
             temp->SetSkillValue((int)i, (uchar)skillValue[i]);
@@ -417,7 +417,7 @@ void CProfessionManager::LoadProfessionDescription()
                 ((CBaseProfession *)m_Items)->AddDescription(-2, "parent", ptr);
                 ptr += strlen(ptr) + 1;
 
-                IFOR (i, 0, (int)list.size())
+                for (int i = 0; i < (int)list.size(); i++)
                 {
                     if (!((CBaseProfession *)m_Items)->AddDescription((int)i - 1, list[i], ptr))
                     {

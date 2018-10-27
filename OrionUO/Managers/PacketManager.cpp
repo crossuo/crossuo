@@ -787,7 +787,7 @@ PACKET_HANDLER(CharacterList)
 
     if (m_ClientVersion >= CV_70130)
     {
-        IFOR (i, 0, locCount)
+        for (int i = 0; i < locCount; i++)
         {
             CCityItemNew *city = new CCityItemNew();
 
@@ -809,7 +809,7 @@ PACKET_HANDLER(CharacterList)
     }
     else
     {
-        IFOR (i, 0, locCount)
+        for (int i = 0; i < locCount; i++)
         {
             CCityItem *city = new CCityItem();
 
@@ -860,7 +860,7 @@ PACKET_HANDLER(ResendCharacterList)
     {
         int selectedPos = -1;
 
-        IFOR (i, 0, numSlots)
+        for (int i = 0; i < numSlots; i++)
         {
             string name = ReadString(30);
             Move(30);
@@ -1111,7 +1111,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
 
     ushort count = ReadUInt16BE();
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         ushort type = ReadUInt16BE();
         uchar enable = ReadUInt8(); //enable/disable
@@ -1646,7 +1646,7 @@ PACKET_HANDLER(UpdateContainedItems)
 
     ushort itemsCount = ReadUInt16BE();
 
-    IFOR (i, 0, itemsCount)
+    for (int i = 0; i < itemsCount; i++)
     {
         uint serial = ReadUInt32BE();
         ushort graphic = ReadUInt16BE();
@@ -2189,7 +2189,7 @@ PACKET_HANDLER(OpenContainer)
             gump = buyGump;
             buyGump->Visible = true;
 
-            IFOR (layer, OL_BUY_RESTOCK, OL_BUY + 1)
+            for (int layer = OL_BUY_RESTOCK; layer < OL_BUY + 1; layer++)
             {
                 CGameItem *item = vendor->FindLayer((int)layer);
 
@@ -2263,7 +2263,7 @@ PACKET_HANDLER(OpenContainer)
     {
         ushort graphic = 0xFFFF;
 
-        IFOR (i, 0, (int)g_ContainerOffset.size())
+        for (int i = 0; i < (int)g_ContainerOffset.size(); i++)
         {
             if (gumpid == g_ContainerOffset[i].Gump)
             {
@@ -2354,7 +2354,7 @@ PACKET_HANDLER(UpdateSkills)
         int count = ReadInt16BE();
         g_SkillsManager.Clear();
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             bool haveButton = (ReadUInt8() != 0);
             int nameLength = ReadUInt8();
@@ -2463,7 +2463,7 @@ PACKET_HANDLER(ExtendedCommand)
             break;
         case 1: //Initialize Fast Walk Prevention
         {
-            IFOR (i, 0, 6)
+            for (int i = 0; i < 6; i++)
                 g_Player->m_FastWalkStack.SetValue((int)i, ReadUInt32BE());
 
             break;
@@ -2716,14 +2716,14 @@ PACKET_HANDLER(ExtendedCommand)
             ushort graphic = ReadUInt16BE();
             SPELLBOOK_TYPE bookType = (SPELLBOOK_TYPE)ReadUInt16BE();
 
-            IFOR (j, 0, 2)
+            for (int j = 0; j < 2; j++)
             {
                 uint spells = 0;
 
-                IFOR (i, 0, 4)
+                for (int i = 0; i < 4; i++)
                     spells |= (ReadUInt8() << (i * 8));
 
-                IFOR (i, 0, 32)
+                for (int i = 0; i < 32; i++)
                 {
                     if (spells & (1 << i))
                     {
@@ -2804,7 +2804,7 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x21:
         {
-            IFOR (i, 0, 2)
+            for (int i = 0; i < 2; i++)
             {
                 g_Ability[i] &= 0x7F;
                 g_GumpManager.UpdateContent((int)i, 0, GT_ABILITY);
@@ -4242,7 +4242,7 @@ PACKET_HANDLER(OpenMenu)
 
         int posX = 0;
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             ushort graphic = ReadUInt16BE();
             ushort color = ReadUInt16BE();
@@ -4293,7 +4293,7 @@ PACKET_HANDLER(OpenMenu)
         int offsetY = 35 + text->m_Texture.Height;
         int gumpHeight = 70 + offsetY;
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             Move(4);
 
@@ -4332,7 +4332,7 @@ PACKET_HANDLER(OpenMenu)
 void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, (int)list.size())
+    for (int i = 0; i < (int)list.size(); i++)
     {
         HTMLGumpDataInfo &data = list[i];
 
@@ -4879,7 +4879,7 @@ PACKET_HANDLER(OpenGump)
 
     int textLinesCount = ReadInt16BE();
 
-    IFOR (i, 0, textLinesCount)
+    for (int i = 0; i < textLinesCount; i++)
     {
         int linelen = ReadInt16BE();
 
@@ -5284,7 +5284,7 @@ PACKET_HANDLER(BulletinBoardData)
                 uchar lines = ReadUInt8();
                 wstring data = L"";
 
-                IFOR (i, 0, lines)
+                for (int i = 0; i < lines; i++)
                 {
                     uchar linelen = ReadUInt8();
 
@@ -5367,7 +5367,7 @@ PACKET_HANDLER(BookData)
     {
         ushort pageCount = ReadUInt16BE();
 
-        IFOR (i, 0, pageCount)
+        for (int i = 0; i < pageCount; i++)
         {
             ushort page = ReadUInt16BE();
 
@@ -5378,7 +5378,7 @@ PACKET_HANDLER(BookData)
 
             wstring str = L"";
 
-            IFOR (j, 0, lineCount)
+            for (int j = 0; j < lineCount; j++)
             {
                 if (j)
                     str += L'\n';
@@ -5465,7 +5465,7 @@ PACKET_HANDLER(BuyList)
                 currentY += shopItem->GetSize().Height;
         }
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             if (item == nullptr)
             {
@@ -5535,7 +5535,7 @@ PACKET_HANDLER(SellList)
 
     int currentY = 0;
 
-    IFOR (i, 0, itemsCount)
+    for (int i = 0; i < itemsCount; i++)
     {
         uint itemSerial = ReadUInt32BE();
         ushort graphic = ReadUInt16BE();
@@ -5642,7 +5642,7 @@ PACKET_HANDLER(CustomHouse)
 
     uchar planes = ReadUInt8();
 
-    IFOR (plane, 0, planes)
+    for (int plane = 0; plane < planes; plane++)
     {
         uint header = ReadUInt32BE();
         uLongf dLen = ((header & 0xFF0000) >> 16) | ((header & 0xF0) << 4);
@@ -5787,13 +5787,13 @@ PACKET_HANDLER(OrionMessages)
 
             ushort count = ReadUInt16BE();
 
-            IFOR (i, 0, count)
+            for (int i = 0; i < count; i++)
                 g_Orion.m_IgnoreInFilterTiles.push_back(
                     std::pair<ushort, ushort>(ReadUInt16BE(), 0));
 
             ushort countRange = ReadUInt16BE();
 
-            IFOR (i, 0, countRange)
+            for (int i = 0; i < countRange; i++)
             {
                 ushort rangeStart = ReadUInt16BE();
                 ushort rangeEnd = ReadUInt16BE();
@@ -6001,13 +6001,13 @@ PACKET_HANDLER(OrionMessages)
             g_MacroPointer = nullptr;
             g_MacroManager.SendNotificationToPlugin = true;
 
-            IFOR (m, 0, count)
+            for (int m = 0; m < count; m++)
             {
                 string name = ReadString(0);
                 string param = ReadString(0);
                 MACRO_CODE macroCode = MC_NONE;
 
-                IFOR (i, 0, CMacro::MACRO_ACTION_NAME_COUNT)
+                for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 {
                     std::string macroName = CMacro::m_MacroActionName[i];
                     if (strcmp(name.c_str(), macroName.c_str()) == 0)
@@ -6031,7 +6031,7 @@ PACKET_HANDLER(OrionMessages)
                         ((CMacroObjectString *)macro)->m_String = param;
                     else
                     {
-                        IFOR (i, 0, CMacro::MACRO_ACTION_COUNT)
+                        for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
                         {
                             if (param == CMacro::m_MacroAction[i])
                             {
@@ -6096,7 +6096,7 @@ PACKET_HANDLER(PacketsList)
 
     int count = ReadUInt16BE();
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         uchar id = ReadUInt8();
 

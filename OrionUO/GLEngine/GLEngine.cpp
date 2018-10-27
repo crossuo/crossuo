@@ -281,9 +281,9 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, pu
     hitMap.resize(width * height);
     int pos = 0;
 
-    IFOR (y, 0, height)
+    for (int y = 0; y < height; y++)
     {
-        IFOR (x, 0, width)
+        for (int x = 0; x < width; x++)
         {
             hitMap[pos] = (pixels[pos] != 0);
             pos++;
@@ -317,9 +317,9 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, pu
     hitMap.resize(width * height);
     int pos = 0;
 
-    IFOR (y, 0, height)
+    for (int y = 0; y < height; y++)
     {
-        IFOR (x, 0, width)
+        for (int x = 0; x < width; x++)
         {
             hitMap[pos] = (pixels[pos] != 0);
             pos++;
@@ -922,7 +922,7 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
     int offsetLeft = max(th[0]->Width, th[5]->Width) - th[3]->Width;
     int offsetRight = max(th[2]->Width, th[7]->Width) - th[4]->Width;
 
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         BindTexture(th[i]->Texture);
 
@@ -1333,7 +1333,7 @@ void CGLEngine::GL2_DrawStretched(
 void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         BindTexture(th[i]->Texture);
 

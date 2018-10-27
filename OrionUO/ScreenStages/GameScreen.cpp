@@ -303,7 +303,7 @@ void CGameScreen::CheckFoliageUnion(ushort graphic, int x, int y, int z)
 {
     DEBUG_TRACE_FUNCTION;
 
-    IFOR (i, 0, TREE_COUNT)
+    for (int i = 0; i < TREE_COUNT; i++)
     {
         const TREE_UNIONS &info = TREE_INFO[i];
 
@@ -416,7 +416,7 @@ void CGameScreen::CalculateRenderList()
     int mapBlockHeight = g_MapBlockSize[g_MapManager.GetActualMap()].Height;
     uint maxBlockIndex = g_MapManager.MaxBlockIndex;
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
     {
         int minValue = minY;
         int maxValue = maxY;
@@ -427,7 +427,7 @@ void CGameScreen::CalculateRenderList()
             maxValue = maxX;
         }
 
-        IFOR (lead, minValue, maxValue)
+        for (int lead = minValue; lead < maxValue; lead++)
         {
             int x = minX;
             int y = (int)lead;
@@ -489,7 +489,7 @@ void CGameScreen::CalculateRenderList()
                 g_MapManager->LoadBlock(mb);
             }
 
-            IFOR (x, 0, 8)
+            for (int x = 0; x < 8; x++)
             {
                 int currentX = bx * 8 + x;
 
@@ -497,7 +497,7 @@ void CGameScreen::CalculateRenderList()
                     currentX > g_RenderBounds.RealMaxRangeX)
                     continue;
 
-                IFOR (y, 0, 8)
+                for (int y = 0; y < 8; y++)
                 {
                     int currentY = by * 8 + y;
 
@@ -515,7 +515,7 @@ void CGameScreen::CalculateRenderList()
 
     if (m_CanProcessAlpha)
     {
-        IFOR (i, 0, m_RenderListCount)
+        for (int i = 0; i < m_RenderListCount; i++)
         {
             CRenderWorldObject *obj = m_RenderList[i].Object;
 
@@ -904,7 +904,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
     int mapBlockHeight = g_MapBlockSize[g_CurrentMap].Height;
     uint maxBlockIndex = g_MapManager.MaxBlockIndex;
 
-    IFOR (i, 0, size)
+    for (int i = 0; i < size; i++)
     {
         int x = coordinates[i].first;
 
@@ -1217,7 +1217,7 @@ void CGameScreen::DrawGameWindow(bool mode)
 
         m_HitsStack.clear();
 
-        IFOR (i, 0, m_RenderListCount)
+        for (int i = 0; i < m_RenderListCount; i++)
         {
             RENDER_OBJECT_DATA &rod = m_RenderList[i];
             CRenderWorldObject *obj = rod.Object;
@@ -1313,7 +1313,7 @@ void CGameScreen::DrawGameWindow(bool mode)
 
         UnuseShader();
 
-        IFOR (i, 0, m_ObjectHandlesCount)
+        for (int i = 0; i < m_ObjectHandlesCount; i++)
             m_ObjectHandlesList[i]->DrawObjectHandlesTexture();
 
         g_PluginManager.WorldDraw();
@@ -1324,7 +1324,7 @@ void CGameScreen::DrawGameWindow(bool mode)
             (g_ConfigManager.UseCircleTrans &&
              g_CircleOfTransparency.Select(g_CircleOfTransparency.X, g_CircleOfTransparency.Y));
 
-        IFOR (i, 0, m_RenderListCount)
+        for (int i = 0; i < m_RenderListCount; i++)
         {
             CRenderWorldObject *obj = m_RenderList[i].Object;
 
@@ -1336,7 +1336,7 @@ void CGameScreen::DrawGameWindow(bool mode)
             }
         }
 
-        IFOR (i, 0, m_ObjectHandlesCount)
+        for (int i = 0; i < m_ObjectHandlesCount; i++)
             m_ObjectHandlesList[i]->SelectObjectHandlesTexture();
     }
 }
@@ -1385,7 +1385,7 @@ void CGameScreen::DrawGameWindowLight()
 
             glTranslatef(translateOffsetX, translateOffsetY, 0.0f);
 
-            IFOR (i, 0, m_LightCount)
+            for (int i = 0; i < m_LightCount; i++)
                 g_Orion.DrawLight(m_Light[i]);
 
             glTranslatef(-translateOffsetX, -translateOffsetY, 0.0f);
@@ -1418,7 +1418,7 @@ void CGameScreen::DrawGameWindowLight()
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
 
-        IFOR (i, 0, m_LightCount)
+        for (int i = 0; i < m_LightCount; i++)
             g_Orion.DrawLight(m_Light[i]);
 
         glDisable(GL_BLEND);
@@ -1459,7 +1459,7 @@ void CGameScreen::DrawGameWindowText(bool mode)
             {
                 g_ColorizerShader.Use();
 
-                IFOR (i, 0, 2)
+                for (int i = 0; i < 2; i++)
                 {
                     for (vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
                          it != m_HitsStack.end();
@@ -1863,7 +1863,7 @@ void CGameScreen::Render(bool mode)
 
                 string flagsData = "";
 
-                IFOR (f, 0, 32)
+                for (int f = 0; f < 32; f++)
                 {
                     if (tiledataFlags & (1 << f))
                         flagsData += string("\n") + flagNames[f];

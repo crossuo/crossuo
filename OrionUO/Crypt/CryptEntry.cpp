@@ -83,7 +83,7 @@ static void LoadPlugins(PLUGIN_INFO *result)
 
             char count = file.ReadInt8();
 
-            IFOR (i, 0, count)
+            for (int i = 0; i < count; i++)
             {
                 short len = file.ReadInt16LE();
                 string fileName = file.ReadString(len);
@@ -148,7 +148,7 @@ UCHAR_LIST ApplyInstall(uchar *address, size_t size)
             writter.WriteUInt8(mapsCount);
         }
 
-        IFOR (i, 0, mapsCount)
+        for (int i = 0; i < mapsCount; i++)
         {
             writter.WriteUInt16LE(file.ReadUInt16LE());
             writter.WriteUInt16LE(file.ReadUInt16LE());

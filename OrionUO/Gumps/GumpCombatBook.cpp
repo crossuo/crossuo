@@ -424,7 +424,7 @@ void CGumpCombatBook::UpdateContent()
 
     int offs = 0;
 
-    IFOR (page, 0, DictionaryPagesCount)
+    for (int page = 0; page < DictionaryPagesCount; page++)
     {
         Add(new CGUIPage((int)page));
 
@@ -443,7 +443,7 @@ void CGumpCombatBook::UpdateContent()
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, indexX, 6));
         text->CreateTextureA(6, "INDEX");
 
-        IFOR (i, 0, spellsOnPage)
+        for (int i = 0; i < spellsOnPage; i++)
         {
             if (offs >= AbilityCount)
                 break;
@@ -483,7 +483,7 @@ void CGumpCombatBook::UpdateContent()
 
     int page = DictionaryPagesCount;
 
-    IFOR (i, 0, AbilityCount)
+    for (int i = 0; i < AbilityCount; i++)
     {
         Add(new CGUIPage(page));
         page += 2;
@@ -502,7 +502,7 @@ void CGumpCombatBook::UpdateContent()
         int textX = 62;
         int textY = 98;
 
-        IFOR (j, 0, size)
+        for (int j = 0; j < size; j++)
         {
             if (j == 6)
             {

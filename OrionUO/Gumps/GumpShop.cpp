@@ -56,7 +56,7 @@ CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
 
     m_NameText = (CGUIText *)Add(new CGUIText(0x0386, 242, 408));
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
     {
         CGUIHTMLButton *button = m_ItemList[i]->m_ButtonUp;
 

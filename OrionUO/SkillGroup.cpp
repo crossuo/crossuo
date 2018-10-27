@@ -57,7 +57,7 @@ void CSkillGroupObject::Remove(uchar index)
     DEBUG_TRACE_FUNCTION;
     bool removed = false;
 
-    IFOR (i, 0, Count)
+    for (int i = 0; i < Count; i++)
     {
         if (m_Items[i] == index)
         {
@@ -84,7 +84,7 @@ void CSkillGroupObject::Remove(uchar index)
 bool CSkillGroupObject::Contains(uchar index)
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, Count)
+    for (int i = 0; i < Count; i++)
     {
         if (m_Items[i] == index)
             return true;
@@ -99,9 +99,9 @@ void CSkillGroupObject::Sort()
     BYTE table[60] = { 0 };
     int Ptr = 0;
 
-    IFOR (i, 0, g_SkillsManager.Count)
+    for (int i = 0; i < g_SkillsManager.Count; i++)
     {
-        IFOR (j, 0, Count)
+        for (int j = 0; j < Count; j++)
         {
             if (g_SkillsManager.GetSortedIndex((int)i) == m_Items[j])
             {
@@ -112,14 +112,14 @@ void CSkillGroupObject::Sort()
         }
     }
 
-    IFOR (j, 0, Count)
+    for (int j = 0; j < Count; j++)
         m_Items[j] = table[j];
 }
 
 void CSkillGroupObject::TransferTo(CSkillGroupObject *group)
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, Count)
+    for (int i = 0; i < Count; i++)
         group->Add(m_Items[i]);
 
     group->Sort();

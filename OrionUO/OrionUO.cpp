@@ -42,7 +42,7 @@ uint Reflect(uint source, int c)
     //DEBUG_TRACE_FUNCTION;
     uint value = 0;
 
-    IFOR (i, 1, c + 1)
+    for (int i = 1; i < c + 1; i++)
     {
         if (source & 0x1)
             value |= (1 << (c - i));
@@ -96,7 +96,7 @@ void COrion::ParseCommandLine() // FIXME: move this out
     string defaultPluginFunction = "Install";
     uint defaultPluginFlags = 0xFFFFFFFF;
 
-    IFOR (i, 0, argc)
+    for (int i = 0; i < argc; i++)
     {
         if (!args[i] || *args[i] != L'-')
             continue;
@@ -219,7 +219,7 @@ UINT_LIST COrion::FindPattern(puchar ptr, int size, const UCHAR_LIST &pattern)
 
     int count = size - patternSize - 1;
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         if (!memcmp(&ptr[0], &pattern[0], patternSize))
             result.push_back(0x00400000 + (int)i);
@@ -260,11 +260,11 @@ bool COrion::Install()
         }
     }
 
-    IFOR (i, 0, 256)
+    for (int i = 0; i < 256; i++)
     {
         m_CRC_Table[i] = Reflect((int)i, 8) << 24;
 
-        IFOR (j, 0, 8)
+        for (int j = 0; j < 8; j++)
             m_CRC_Table[i] =
                 (m_CRC_Table[i] << 1) ^ ((m_CRC_Table[i] & (1 << 31)) ? 0x04C11DB7 : 0);
 
@@ -406,7 +406,7 @@ bool COrion::Install()
 
     g_CreateCharacterManager.Init();
 
-    IFOR (i, 0, 6)
+    for (int i = 0; i < 6; i++)
         g_AnimationManager.Init(
             (int)i,
             (size_t)g_FileManager.m_AnimIdx[i].Start,
@@ -434,7 +434,7 @@ bool COrion::Install()
           r, b, b, b, r, r, r, b, b, r, r, r, r, r, r, r, b, b, b, b, r, r, r, r, r, b, b, b }
     };
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
         g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
 
     memset(&m_WinterTile[0], 0, sizeof(m_WinterTile));
@@ -520,10 +520,10 @@ void COrion::Uninstall()
 
     g_AuraTexture.Clear();
 
-    IFOR (i, 0, 6)
+    for (int i = 0; i < 6; i++)
         g_MapTexture[i].Clear();
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
         g_TextureGumpState[i].Clear();
 
     g_SoundManager.Free();
@@ -721,7 +721,7 @@ void COrion::CheckStaticTileFilterFiles()
         file.Init(filePath);
         file.Print("#Format: graphic\n");
 
-        IFOR (i, 0x053B, 0x0553 + 1)
+        for (int i = 0x053B; i < 0x0553 + 1; i++)
         {
             if (i != 0x0550)
                 file.Print("0x%04X\n", i);
@@ -758,7 +758,7 @@ void COrion::CheckStaticTileFilterFiles()
             0x0D40, 0x0CE9
         };
 
-        IFOR (i, 0, vegetationTilesCount)
+        for (int i = 0; i < vegetationTilesCount; i++)
         {
             int64_t flags = g_Orion.GetStaticFlags(vegetationTiles[i]);
             if (flags & 0x00000040)
@@ -789,7 +789,7 @@ void COrion::CheckStaticTileFilterFiles()
             0x0D01, 0x12B6, 0x12B7, 0x12B8, 0x12B9, 0x12BA, 0x12BB, 0x12BC, 0x12BD
         };
 
-        IFOR (i, 0, treeTilesCount)
+        for (int i = 0; i < treeTilesCount; i++)
         {
             ushort graphic = treeTiles[i];
             uchar hatched = 1;
@@ -1075,7 +1075,7 @@ bool COrion::LoadClientConfig()
         else
             file.Move(1);
 
-        IFOR (i, 0, mapsCount)
+        for (int i = 0; i < mapsCount; i++)
         {
             g_MapSize[i].Width = file.ReadUInt16LE();
             g_MapSize[i].Height = file.ReadUInt16LE();
@@ -1210,7 +1210,7 @@ bool COrion::LoadClientConfig()
         else
             file.Move(1);
 
-        IFOR (i, 0, mapsCount)
+        for (int i = 0; i < mapsCount; i++)
         {
             g_MapSize[i].Width = file.ReadUInt16LE();
             g_MapSize[i].Height = file.ReadUInt16LE();
@@ -1616,7 +1616,7 @@ void COrion::LoadPluginConfig()
         PLUGIN_INFO *pluginsInfo = new PLUGIN_INFO[pluginsInfoCount];
         g_PluginInitNew(pluginsInfo);
 
-        IFOR (i, 0, pluginsInfoCount)
+        for (int i = 0; i < pluginsInfoCount; i++)
         {
             libName.push_back(pluginsInfo[i].FileName);
             functions.push_back(pluginsInfo[i].FunctionName);
@@ -1626,7 +1626,7 @@ void COrion::LoadPluginConfig()
         delete[] pluginsInfo;
     }
 
-    IFOR (i, 0, (int)libName.size())
+    for (int i = 0; i < (int)libName.size(); i++)
         LoadPlugin(g_App.ExeFilePath(libName[i].c_str()), functions[i], flags[i]);
 
     if (g_PluginManager.m_Items != nullptr)
@@ -1840,7 +1840,7 @@ void COrion::ClearUnusedTextures()
                       MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
                       100 };
 
-    IFOR (i, 0, 5)
+    for (int i = 0; i < 5; i++)
     {
         int count = 0;
         deque<CIndexObject *> *list = (deque<CIndexObject *> *)lists[i];
@@ -2096,9 +2096,9 @@ void COrion::ChangeSeason(const SEASON_TYPE &season, int music)
 
     QFOR(item, g_MapManager.m_Items, CMapBlock *)
     {
-        IFOR (x, 0, 8)
+        for (int x = 0; x < 8; x++)
         {
-            IFOR (y, 0, 8)
+            for (int y = 0; y < 8; y++)
             {
                 QFOR(obj, item->GetRender((int)x, (int)y), CRenderWorldObject *)
                 {
@@ -3393,11 +3393,11 @@ void COrion::LoadTiledata(int landSize, int staticsSize)
 
         m_StaticData.resize(staticsSize * 32);
 
-        IFOR (i, 0, landSize)
+        for (int i = 0; i < landSize; i++)
         {
             file.ReadUInt32LE();
 
-            IFOR (j, 0, 32)
+            for (int j = 0; j < 32; j++)
             {
                 LAND_TILES &tile = m_LandData[(i * 32) + j];
 
@@ -3411,11 +3411,11 @@ void COrion::LoadTiledata(int landSize, int staticsSize)
             }
         }
 
-        IFOR (i, 0, staticsSize)
+        for (int i = 0; i < staticsSize; i++)
         {
             file.ReadUInt32LE();
 
-            IFOR (j, 0, 32)
+            for (int j = 0; j < 32; j++)
             {
                 STATIC_TILES &tile = m_StaticData[(i * 32) + j];
 
@@ -3446,7 +3446,7 @@ void COrion::ReadMulIndexFile(
     PBASE_IDX_BLOCK ptr,
     std::function<PBASE_IDX_BLOCK()> getNewPtrValue)
 {
-    IFOR (i, 0, indexMaxCount)
+    for (int i = 0; i < indexMaxCount; i++)
     {
         CIndexObject *obj = getIdxObj((int)i);
         obj->ReadIndexFile(address, ptr, (ushort)i);
@@ -3470,7 +3470,7 @@ void COrion::ReadUOPIndexFile(
     char basePath[200] = { 0 };
     sprintf_s(basePath, "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 
-    IFOR (i, startIndex, indexMaxCount)
+    for (int i = startIndex; i < indexMaxCount; i++)
     {
         char hashString[200] = { 0 };
         sprintf_s(hashString, basePath, (int)i);
@@ -3756,7 +3756,7 @@ void COrion::UnloadIndexFiles()
         &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
     };
 
-    IFOR (i, 0, 5)
+    for (int i = 0; i < 5; i++)
     {
         deque<CIndexObject *> &list = *lists[i];
 
@@ -3796,7 +3796,7 @@ void COrion::InitStaticAnimList()
     {
         uintptr_t lastElement = (uintptr_t)(&m_AnimData[0] + m_AnimData.size() - sizeof(ANIM_DATA));
 
-        IFOR (i, 0, (int)m_StaticData.size())
+        for (int i = 0; i < (int)m_StaticData.size(); i++)
         {
             m_StaticDataIndex[i].Index = (ushort)i;
 
@@ -4244,7 +4244,7 @@ void COrion::PatchFiles()
 
     size_t vAddr = (size_t)file.Start;
 
-    IFOR (i, 0, dataCount)
+    for (int i = 0; i < dataCount; i++)
     {
         PVERDATA_HEADER vh = (PVERDATA_HEADER)(vAddr + 4 + (i * sizeof(VERDATA_HEADER)));
 
@@ -4304,7 +4304,7 @@ void COrion::PatchFiles()
 
                 file.ReadUInt32LE();
 
-                IFOR (j, 0, 32)
+                for (int j = 0; j < 32; j++)
                 {
                     LAND_TILES &tile = m_LandData[offset + j];
 
@@ -4326,7 +4326,7 @@ void COrion::PatchFiles()
 
                 file.ReadUInt32LE();
 
-                IFOR (j, 0, 32)
+                for (int j = 0; j < 32; j++)
                 {
                     STATIC_TILES &tile = m_StaticData[offset + j];
 
@@ -4396,7 +4396,7 @@ void COrion::IndexReplaces()
 
             int size = (int)newArt.size();
 
-            IFOR (i, 0, size)
+            for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newArt[i].c_str());
 
@@ -4452,7 +4452,7 @@ void COrion::IndexReplaces()
 
             int size = (int)newTexture.size();
 
-            IFOR (i, 0, size)
+            for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newTexture[i].c_str());
 
@@ -4489,7 +4489,7 @@ void COrion::IndexReplaces()
 
             int size = (int)newGump.size();
 
-            IFOR (i, 0, size)
+            for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newGump[i].c_str());
 
@@ -4522,7 +4522,7 @@ void COrion::IndexReplaces()
 
             int size = (int)newMulti.size();
 
-            IFOR (i, 0, size)
+            for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newMulti[i].c_str());
 
@@ -4554,7 +4554,7 @@ void COrion::IndexReplaces()
 
             int size = (int)newSound.size();
 
-            IFOR (i, 0, size)
+            for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newSound[i].c_str());
 
@@ -4624,7 +4624,7 @@ void COrion::CreateAuraTexture()
 
     CGLTextureCircleOfTransparency::CreatePixels(30, width, height, pixels);
 
-    IFOR (i, 0, (int)pixels.size())
+    for (int i = 0; i < (int)pixels.size(); i++)
     {
         uint &pixel = pixels[i];
 
@@ -4648,7 +4648,7 @@ void COrion::CreateObjectHandlesBackground()
     CGLTexture *th[9] = { nullptr };
     ushort gumpID[9] = { 0 };
 
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         CGLTexture *pth = ExecuteGump(0x24EA + (ushort)i);
 
@@ -4675,7 +4675,7 @@ void COrion::CreateObjectHandlesBackground()
         }
     }
 
-    IFOR (i, 0, 8)
+    for (int i = 0; i < 8; i++)
     {
         if (i == 3 || i == 4)
             continue;
@@ -4778,11 +4778,11 @@ void COrion::CreateObjectHandlesBackground()
             int gumpHeight = io.Height;
             int srcX = 0;
 
-            IFOR (x, drawX, drawWidth)
+            for (int x = drawX; x < drawWidth; x++)
             {
                 int srcY = 0;
 
-                IFOR (y, drawY, drawHeight)
+                for (int y = drawY; y < drawHeight; y++)
                 {
                     ushort &pixel = g_ObjectHandlesBackgroundPixels[(y * g_ObjectHandlesWidth) + x];
 
@@ -5096,7 +5096,7 @@ bool COrion::ExecuteGumpPart(ushort id, int count)
     DEBUG_TRACE_FUNCTION;
     bool result = true;
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         if (ExecuteGump(id + (ushort)i) == nullptr)
             result = false;
@@ -5156,7 +5156,7 @@ void COrion::DrawResizepicGump(ushort id, int x, int y, int width, int height)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[9] = { nullptr };
 
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         CGLTexture *pth = ExecuteGump(id + (ushort)i);
 
@@ -5450,7 +5450,7 @@ bool COrion::ResizepicPixelsInXY(ushort id, int x, int y, int width, int height)
 
     CGLTexture *th[9] = { nullptr };
 
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         CGLTexture *pth = m_GumpDataIndex[id + i].Texture;
 
@@ -5470,7 +5470,7 @@ bool COrion::ResizepicPixelsInXY(ushort id, int x, int y, int width, int height)
     int offsetLeft = max(th[0]->Width, th[5]->Width) - th[3]->Width;
     int offsetRight = max(th[2]->Width, th[7]->Width) - th[4]->Width;
 
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         switch (i)
         {

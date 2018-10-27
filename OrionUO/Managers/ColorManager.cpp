@@ -63,7 +63,7 @@ void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
         return;
 
     m_HuesRange[index].Header = group->Header;
-    IFOR (i, 0, 8)
+    for (int i = 0; i < 8; i++)
         memcpy(
             &m_HuesRange[index].Entries[i].ColorTable[0],
             &group->Entries[i].ColorTable[0],
@@ -80,13 +80,13 @@ void CColorManager::CreateHuesPalette()
     m_HuesFloat.resize(m_HuesCount);
     int entryCount = m_HuesCount / 8;
 
-    IFOR (i, 0, entryCount)
+    for (int i = 0; i < entryCount; i++)
     {
-        IFOR (j, 0, 8)
+        for (int j = 0; j < 8; j++)
         {
             FLOAT_HUES &fh = m_HuesFloat[(i * 8) + j];
 
-            IFOR (h, 0, 32)
+            for (int h = 0; h < 32; h++)
             {
                 int idx = (int)h * 3;
 

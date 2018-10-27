@@ -19,9 +19,9 @@ CMapBlock::CMapBlock(int index)
 {
     DEBUG_TRACE_FUNCTION;
     //Обнуляем блок
-    IFOR (i, 0, 8)
+    for (int i = 0; i < 8; i++)
     {
-        IFOR (j, 0, 8)
+        for (int j = 0; j < 8; j++)
             Block[i][j] = nullptr;
     }
 }
@@ -30,9 +30,9 @@ CMapBlock::~CMapBlock()
 {
     DEBUG_TRACE_FUNCTION;
     //При удалении блока очищаем список отрисовки блока и удаляем элементы
-    IFOR (i, 0, 8)
+    for (int i = 0; i < 8; i++)
     {
-        IFOR (j, 0, 8)
+        for (int j = 0; j < 8; j++)
         {
             CMapObject *obj = Block[i][j];
 
@@ -60,9 +60,9 @@ CMapBlock::~CMapBlock()
 bool CMapBlock::HasNoExternalData()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (x, 0, 8)
+    for (int x = 0; x < 8; x++)
     {
-        IFOR (y, 0, 8)
+        for (int y = 0; y < 8; y++)
         {
             for (CRenderWorldObject *obj = GetRender((int)x, (int)y); obj != nullptr;
                  obj = obj->m_NextXY)
@@ -114,9 +114,9 @@ void CMapBlock::CreateLandTextureRect()
     int map = g_MapManager.GetActualMap();
 
     //И пройдемся по всем позициям ландшафта блока
-    IFOR (x, 0, 8)
+    for (int x = 0; x < 8; x++)
     {
-        IFOR (y, 0, 8)
+        for (int y = 0; y < 8; y++)
         {
             //Указатель на землю
             CLandObject *obj = GetLand((int)x, (int)y);
@@ -148,12 +148,12 @@ void CMapBlock::CreateLandTextureRect()
 
                     CVector vec[3][3][4];
 
-                    IFOR (i, -1, 2)
+                    for (int i = -1; i < 2; i++)
                     {
                         int curX = tileX + (int)i;
                         int curI = (int)i + 1;
 
-                        IFOR (j, -1, 2)
+                        for (int j = -1; j < 2; j++)
                         {
                             int curY = tileY + (int)j;
                             int curJ = (int)j + 1;
@@ -165,7 +165,7 @@ void CMapBlock::CreateLandTextureRect()
 
                             if (currentZ == leftZ && currentZ == rightZ && currentZ == bottomZ)
                             {
-                                IFOR (k, 0, 4)
+                                for (int k = 0; k < 4; k++)
                                     vec[curI][curJ][k].Link(0.0, 0.0, 1.0);
                             }
                             else
@@ -285,9 +285,9 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    IFOR (i, -1, 2 && !result)
+    for (int i = -1; i < 2 && !result; i++)
     {
-        IFOR (j, -1, 2 && !result)
+        for (int j = -1; j < 2 && !result; j++)
         {
             if (recurse)
                 result = TestStretched(x + (int)i, y + (int)j, z, map, false);

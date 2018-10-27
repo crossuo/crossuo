@@ -175,7 +175,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
 
     int offs = 0;
 
-    IFOR (page, 0, DictionaryPagesCount)
+    for (int page = 0; page < DictionaryPagesCount; page++)
     {
         Add(new CGUIPage((int)page));
 
@@ -192,7 +192,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, indexX, 10));
         text->CreateTextureA(6, "INDEX");
 
-        IFOR (i, 0, abilityOnPage)
+        for (int i = 0; i < abilityOnPage; i++)
         {
             if (offs >= AbilityCount)
                 break;
@@ -216,7 +216,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
 
     int page = DictionaryPagesCount;
 
-    IFOR (i, 0, AbilityCount)
+    for (int i = 0; i < AbilityCount; i++)
     {
         int iconX = 62;
         int iconTextX = 112;

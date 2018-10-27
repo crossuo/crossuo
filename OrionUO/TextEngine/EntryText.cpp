@@ -254,7 +254,7 @@ void CEntryText::Paste()
                 gump->PasteClipboardData(text);
             else
             {
-                IFOR (i, 0, (int)text.length())
+                for (int i = 0; i < (int)text.length(); i++)
                     Insert(text[i]);
             }
 

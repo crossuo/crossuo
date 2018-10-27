@@ -66,7 +66,7 @@ CGameCharacter::~CGameCharacter()
     //Чистим если находился в пати.
     if (g_Party.Contains(serial))
     {
-        IFOR (i, 0, 10)
+        for (int i = 0; i < 10; i++)
         {
             CPartyObject &member = g_Party.Member[i];
 
@@ -260,7 +260,7 @@ int CGameCharacter::IsSitting()
                     case 0x3DFF:
                     case 0x3E00:
                     {
-                        IFOR (i, 0, SITTING_ITEMS_COUNT)
+                        for (int i = 0; i < SITTING_ITEMS_COUNT; i++)
                         {
                             if (SITTING_INFO[i].Graphic == graphic)
                             {
@@ -939,7 +939,7 @@ void CGameCharacter::UpdateAnimationInfo(BYTE &dir, bool canChange)
                         {
                             int count = g_Walker.StepsCount - sequencePtr;
 
-                            IFOR (i, 0, count)
+                            for (int i = 0; i < count; i++)
                             {
                                 g_Walker.m_Step[sequencePtr - 1] = g_Walker.m_Step[sequencePtr];
                                 sequencePtr++;

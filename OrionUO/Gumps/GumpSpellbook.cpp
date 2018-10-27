@@ -265,11 +265,11 @@ void CGumpSpellbook::PrepareContent()
         {
             int offs = (spellsOnPage * Page);
 
-            IFOR (j, 0, 2)
+            for (int j = 0; j < 2; j++)
             {
                 int y = 0;
 
-                IFOR (i, 0, spellsOnPage)
+                for (int i = 0; i < spellsOnPage; i++)
                 {
                     if (m_Spells[offs])
                     {
@@ -302,7 +302,7 @@ void CGumpSpellbook::PrepareContent()
         {
             int page = dictionaryPagesCount;
 
-            IFOR (i, 0, maxSpellsCount)
+            for (int i = 0; i < maxSpellsCount; i++)
             {
                 if (!m_Spells[i])
                     continue;
@@ -693,7 +693,7 @@ void CGumpSpellbook::UpdateContent()
         Add(new CGUIButton(ID_GSB_BUTTON_CIRCLE_7_8, 0x08B8, 0x08B8, 0x08B8, 332, 175));
     }
 
-    IFOR (page, 0, dictionaryPagesCount)
+    for (int page = 0; page < dictionaryPagesCount; page++)
     {
         Add(new CGUIPage((int)page));
 
@@ -726,7 +726,7 @@ void CGumpSpellbook::UpdateContent()
             text->CreateTextureA(6, m_SpellCircleName[page]);
         }
 
-        IFOR (i, 0, spellsOnPage)
+        for (int i = 0; i < spellsOnPage; i++)
         {
             if (m_Spells[offs])
             {
@@ -755,7 +755,7 @@ void CGumpSpellbook::UpdateContent()
     bool haveReagents = (BookType <= ST_NECRO);
     bool haveAbbreviature = (BookType != ST_BUSHIDO && BookType != ST_NINJITSU);
 
-    IFOR (i, 0, maxSpellsCount)
+    for (int i = 0; i < maxSpellsCount; i++)
     {
         if (!m_Spells[i])
             continue;
@@ -909,9 +909,9 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
 
         if (Page < dictionaryPagesCount) //List of spells
         {
-            IFOR (j, 0, 2)
+            for (int j = 0; j < 2; j++)
             {
-                IFOR (i, 0, spellsOnPage)
+                for (int i = 0; i < spellsOnPage; i++)
                 {
                     intptr_t offs = i + (spellsOnPage * (Page + j));
 
@@ -923,7 +923,7 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
                     {
                         int c = dictionaryPagesCount;
 
-                        IFOR (k, 0, maxSpellsCount)
+                        for (int k = 0; k < maxSpellsCount; k++)
                         {
                             if (m_Spells[k])
                             {

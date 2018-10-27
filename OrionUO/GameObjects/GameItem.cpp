@@ -670,7 +670,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
         Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             ushort graphic = reader.ReadUInt16LE();
             short x = reader.ReadInt16LE();
@@ -712,7 +712,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
         if (g_PacketManager.GetClientVersion() >= CV_7090)
             itemOffset = sizeof(MULTI_BLOCK_NEW);
 
-        IFOR (j, 0, count)
+        for (int j = 0; j < count; j++)
         {
             PMULTI_BLOCK pmb = (PMULTI_BLOCK)(address + (j * itemOffset));
 

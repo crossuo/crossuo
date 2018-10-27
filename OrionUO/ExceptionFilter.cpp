@@ -219,7 +219,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                 puchar eipBytes = (puchar)exceptionInfo->ContextRecord->Eip;
 #endif
 
-                IFOR (i, 0, 16)
+                for (int i = 0; i < 16; i++)
                     pattern.push_back(eipBytes[i]);
 
                 UINT_LIST list = COrion::FindPattern(file.Start, (int)file.Size, pattern);

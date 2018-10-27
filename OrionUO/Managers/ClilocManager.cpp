@@ -252,7 +252,7 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
         }
     }
 
-    IFOR (i, 0, (int)arguments.size())
+    for (int i = 0; i < (int)arguments.size(); i++)
     {
         size_t pos1 = message.find(L"~");
 

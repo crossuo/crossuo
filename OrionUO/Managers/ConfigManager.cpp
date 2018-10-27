@@ -1364,7 +1364,7 @@ int CConfigManager::GetConfigKeyCode(const string &key)
 
     string str = ToLowerA(key);
 
-    IFOR (i, 0, CMKC_COUNT)
+    for (int i = 0; i < CMKC_COUNT; i++)
     {
         if (str == ToLowerA(keys[i]))
             return (int)i;

@@ -1682,7 +1682,7 @@ void CGumpOptions::RedrawMacroData()
                 true));
             combobox->SelectedIndex = obj->Code;
 
-            IFOR (i, 0, CMacro::MACRO_ACTION_NAME_COUNT)
+            for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 combobox->Add(new CGUIComboboxText(0x0386, 1, CMacro::GetActionName((int)i)));
 
             if (obj->HasSubMenu == 1)
@@ -1703,7 +1703,7 @@ void CGumpOptions::RedrawMacroData()
                     true));
                 combobox->SelectedIndex = obj->SubCode - macroListOffset;
 
-                IFOR (i, 0, macroListCount)
+                for (int i = 0; i < macroListCount; i++)
                     combobox->Add(new CGUIComboboxText(
                         0x0386,
                         1,

@@ -22,7 +22,7 @@ void CFastWalkStack::AddValue(int value)
 {
     DEBUG_TRACE_FUNCTION;
 
-    IFOR (i, 0, 5)
+    for (int i = 0; i < 5; i++)
     {
         if (!m_Keys[i])
         {
@@ -36,7 +36,7 @@ uint CFastWalkStack::GetValue()
 {
     DEBUG_TRACE_FUNCTION;
 
-    IFOR (i, 0, 5)
+    for (int i = 0; i < 5; i++)
     {
         uint key = m_Keys[i];
 

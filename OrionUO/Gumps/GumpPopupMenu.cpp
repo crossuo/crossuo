@@ -41,7 +41,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 
     vector<CPopupMenuItemInfo> items;
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         CPopupMenuItemInfo info;
         info.Color = 0xFFFE;

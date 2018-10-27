@@ -163,11 +163,11 @@ void CGumpMinimap::GenerateMap()
             int realBlockX = (i * 8);
             int realBlockY = (j * 8);
 
-            IFOR (x, 0, 8)
+            for (int x = 0; x < 8; x++)
             {
                 int px = ((realBlockX + (int)x) - LastX) + gumpCenterX;
 
-                IFOR (y, 0, 8)
+                for (int y = 0; y < 8; y++)
                 {
                     int py = (realBlockY + (int)y) - LastY;
 
@@ -228,7 +228,7 @@ void CGumpMinimap::CreatePixels(
     int px = x;
     int py = y;
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         px += table[i].X;
         py += table[i].Y;

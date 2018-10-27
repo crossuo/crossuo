@@ -48,7 +48,7 @@ bool CFontsManager::LoadFonts()
         bool exit = false;
         fontFile.Move(1);
 
-        IFOR (i, 0, 224)
+        for (int i = 0; i < 224; i++)
         {
             PFONT_HEADER fh = (PFONT_HEADER)fontFile.Ptr;
             fontFile.Move(sizeof(FONT_HEADER));
@@ -83,12 +83,12 @@ bool CFontsManager::LoadFonts()
 
     fontFile.ResetPtr();
 
-    IFOR (i, 0, FontCount)
+    for (int i = 0; i < FontCount; i++)
     {
         FONT_DATA &fd = Font[i];
         fd.Header = fontFile.ReadUInt8();
 
-        IFOR (j, 0, 224)
+        for (int j = 0; j < 224; j++)
         {
             FONT_CHARACTER_DATA &fcd = fd.Chars[j];
             fcd.Width = fontFile.ReadUInt8();
@@ -101,7 +101,7 @@ bool CFontsManager::LoadFonts()
         }
     }
 
-    IFOR (i, 0, 20)
+    for (int i = 0; i < 20; i++)
     {
         m_UnicodeFontAddress[i] = (size_t)g_FileManager.m_UnifontMul[i].Start;
         m_UnicodeFontSize[i] = (uint)g_FileManager.m_UnifontMul[i].Size;
@@ -113,7 +113,7 @@ bool CFontsManager::LoadFonts()
         m_UnicodeFontSize[1] = m_UnicodeFontSize[0];
     }
 
-    IFOR (i, 0, 256)
+    for (int i = 0; i < 256; i++)
     {
         if (m_FontIndex[i] >= 0xE0)
             m_FontIndex[i] = m_FontIndex[' '];
@@ -228,7 +228,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosA(
         //if pos is not in this line, just skip this
         if (pos <= info->CharStart + len)
         {
-            IFOR (i, 0, len)
+            for (int i = 0; i < len; i++)
             {
                 //collect data about width of each character
                 uchar index = m_FontIndex[(uchar)ptr->Data[i].item];
@@ -307,7 +307,7 @@ int CFontsManager::CalculateCaretPosA(
             {
                 int len = ptr->CharCount;
 
-                IFOR (i, 0, len)
+                for (int i = 0; i < len; i++)
                 {
                     uchar index = m_FontIndex[(uchar)ptr->Data[i].item];
 
@@ -532,7 +532,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
     int lastSpace = 0;
     int readWidth = 0;
 
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
     {
         char si = str[i];
 
@@ -852,7 +852,7 @@ UINT_LIST CFontsManager::GeneratePixelsA(
 
         int count = (int)ptr->Data.size();
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             uchar index = (uchar)ptr->Data[i].item;
             int offsY = GetFontOffsetY(font, index);
@@ -864,14 +864,14 @@ UINT_LIST CFontsManager::GeneratePixelsA(
 
             ushort charColor = color;
 
-            IFOR (y, 0, dh)
+            for (int y = 0; y < dh; y++)
             {
                 int testY = (int)y + lineOffsY + offsY;
 
                 if (testY >= height)
                     break;
 
-                IFOR (x, 0, dw)
+                for (int x = 0; x < dw; x++)
                 {
                     if (((int)x + w) >= width)
                         break;
@@ -1017,7 +1017,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
         //if pos is not in this line, just skip this
         if (pos <= info->CharStart + len)
         {
-            IFOR (i, 0, len)
+            for (int i = 0; i < len; i++)
             {
                 //collect data about width of each character
                 const wchar_t &ch = info->Data[i].item;
@@ -1097,7 +1097,7 @@ int CFontsManager::CalculateCaretPosW(
             {
                 int len = info->CharCount;
 
-                IFOR (i, 0, len)
+                for (int i = 0; i < len; i++)
                 {
                     const wchar_t &ch = info->Data[i].item;
                     int offset = table[ch];
@@ -1398,7 +1398,7 @@ HTMLCHAR_LIST CFontsManager::GetHTMLData(
 
     HTML_DATA_INFO currentInfo = info;
 
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
     {
         wchar_t si = str[i];
 
@@ -1573,7 +1573,7 @@ HTML_DATA_INFO CFontsManager::GetCurrentHTMLInfo(const HTMLINFO_LIST &list)
     DEBUG_TRACE_FUNCTION;
     HTML_DATA_INFO info = { HTT_NONE, TS_LEFT, 0, 0xFF, 0, 0 };
 
-    IFOR (i, 0, (int)list.size())
+    for (int i = 0; i < (int)list.size(); i++)
     {
         const HTML_DATA_INFO &current = list[i];
 
@@ -1964,7 +1964,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
     if (len)
         ptr->Align = htmlData[0].Align;
 
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
     {
         wchar_t si = htmlData[i].Char;
         puint table = (puint)m_UnicodeFontAddress[htmlData[i].Font];
@@ -2209,7 +2209,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     uint lastspace_charcolor = 0xFFFFFFFF;
     uint lastspace_current_charcolor = 0xFFFFFFFF;
 
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
     {
         wchar_t si = str[i];
 
@@ -2597,7 +2597,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
         ushort oldLink = 0;
 
         int dataSize = (int)ptr->Data.size();
-        IFOR (i, 0, dataSize)
+        for (int i = 0; i < dataSize; i++)
         {
             const MULTILINES_FONT_DATA &dataPtr = ptr->Data[i];
             const wchar_t &si = dataPtr.item;
@@ -2697,7 +2697,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
                 int scanlineCount = (int)((dw - 1) / 8) + 1;
 
-                IFOR (y, 0, dh)
+                for (int y = 0; y < dh; y++)
                 {
                     int testY = offsY + lineOffsY + (int)y;
 
@@ -2713,9 +2713,9 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
                     int testX = w + offsX + italicOffset + (int)isSolid;
 
-                    IFOR (c, 0, scanlineCount)
+                    for (int c = 0; c < scanlineCount; c++)
                     {
-                        IFOR (j, 0, 8)
+                        for (int j = 0; j < 8; j++)
                         {
                             int x = ((int)c * 8) + (int)j;
 
@@ -2749,7 +2749,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
                     maxXOk += dw;
 
-                    IFOR (cy, 0, dh)
+                    for (int cy = 0; cy < dh; cy++)
                     {
                         int testY = offsY + lineOffsY + (int)cy;
 
@@ -2760,7 +2760,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                         if (isItalic && cy < dh)
                             italicOffset = (int)((dh - (int)cy) / ITALIC_FONT_KOEFFICIENT);
 
-                        IFOR (cx, minXOk, maxXOk)
+                        for (int cx = minXOk; cx < maxXOk; cx++)
                         {
                             int testX = (int)cx + w + offsX + italicOffset;
 
@@ -2776,7 +2776,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                                 if (endX == 2 && (testX + 1) >= width)
                                     endX--;
 
-                                IFOR (x, 0, endX)
+                                for (int x = 0; x < endX; x++)
                                 {
                                     int nowX = testX + (int)x;
 
@@ -2792,7 +2792,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                         }
                     }
 
-                    IFOR (cy, 0, dh)
+                    for (int cy = 0; cy < dh; cy++)
                     {
                         int testY = offsY + lineOffsY + (int)cy;
 
@@ -2803,7 +2803,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                         if (isItalic)
                             italicOffset = (int)((dh - cy) / ITALIC_FONT_KOEFFICIENT);
 
-                        IFOR (cx, 0, dw)
+                        for (int cx = 0; cx < dw; cx++)
                         {
                             int testX = (int)cx + w + offsX + italicOffset;
 
@@ -2828,7 +2828,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                     maxXOk += dw;
                     maxYOk += dh;
 
-                    IFOR (cy, minYOk, maxYOk)
+                    for (int cy = minYOk; cy < maxYOk; cy++)
                     {
                         int testY = offsY + lineOffsY + (int)cy;
 
@@ -2839,7 +2839,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                         if (isItalic && cy >= 0 && cy < dh)
                             italicOffset = (int)((dh - (int)cy) / ITALIC_FONT_KOEFFICIENT);
 
-                        IFOR (cx, minXOk, maxXOk)
+                        for (int cx = minXOk; cx < maxXOk; cx++)
                         {
                             int testX = (int)cx + w + offsX + italicOffset;
 
@@ -2860,11 +2860,11 @@ UINT_LIST CFontsManager::GeneratePixelsW(
 
                                 bool passed = false;
 
-                                IFOR (x, startX, endX)
+                                for (int x = startX; x < endX; x++)
                                 {
                                     int nowX = testX + (int)x;
 
-                                    IFOR (y, startY, endY)
+                                    for (int y = startY; y < endY; y++)
                                     {
                                         int testBlock = ((testY + (int)y) * width) + nowX;
 
@@ -2918,7 +2918,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
                 if (testY >= height)
                     break;
 
-                IFOR (cx, minXOk, dw + maxXOk)
+                for (int cx = minXOk; cx < dw + maxXOk; cx++)
                 {
                     int testX = ((int)cx + tmpW + offsX + (int)isSolid);
 
@@ -2944,11 +2944,11 @@ UINT_LIST CFontsManager::GeneratePixelsW(
     {
         m_BackgroundColor |= 0xFF;
 
-        IFOR (y, 0, height)
+        for (int y = 0; y < height; y++)
         {
             int yPos = ((int)y * width);
 
-            IFOR (x, 0, width)
+            for (int x = 0; x < width; x++)
             {
                 uint &p = pData[yPos + x];
 

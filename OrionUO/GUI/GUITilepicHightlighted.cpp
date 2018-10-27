@@ -74,7 +74,7 @@ bool CGUITilepicHightlighted::Select()
         int count = 1 + DoubleDraw;
         int offset = 0;
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             if (th->Select(m_X + offset, m_Y + offset, !CheckPolygone))
                 return true;

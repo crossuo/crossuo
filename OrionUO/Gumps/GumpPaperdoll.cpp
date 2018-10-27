@@ -434,7 +434,7 @@ void CGumpPaperdoll::UpdateContent()
         static const int maxPaperdollSlots = 6;
         CGameItem *slotObjects[maxPaperdollSlots] = { 0 };
 
-        IFOR (i, 0, m_LayerCount)
+        for (int i = 0; i < m_LayerCount; i++)
         {
             equipment = obj->FindLayer(UsedLayers[i]);
 
@@ -543,7 +543,7 @@ void CGumpPaperdoll::UpdateContent()
 
             bool scaleImages = g_ConfigManager.GetScaleImagesInPaperdollSlots();
 
-            IFOR (i, 0, maxPaperdollSlots)
+            for (int i = 0; i < maxPaperdollSlots; i++)
             {
                 CGUIGumppicTiled *backgroundSlot = (CGUIGumppicTiled *)m_DataBox->Add(
                     new CGUIGumppicTiled(0x243A, 1, yPtr, 19, 20));
@@ -595,12 +595,12 @@ void CGumpPaperdoll::UpdateContent()
                         int imageOffsetX = texture->ImageOffsetX;
                         int imageOffsetY = texture->ImageOffsetY;
 
-                        IFOR (y, 0, wantImageHeight)
+                        for (int y = 0; y < wantImageHeight; y++)
                         {
                             int srcPos = (y + imageOffsetY) * imageWidth + imageOffsetX;
                             int destPos = y * wantImageWidth;
 
-                            IFOR (x, 0, wantImageWidth)
+                            for (int x = 0; x < wantImageWidth; x++)
                                 wantPixels[destPos + x] = pixels[srcPos + x];
                         }
 

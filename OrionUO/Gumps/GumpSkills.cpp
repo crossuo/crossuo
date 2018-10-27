@@ -71,7 +71,7 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
 
             int count = group->Count;
 
-            IFOR (i, 0, count)
+            for (int i = 0; i < count; i++)
             {
                 uchar index = group->GetItem(i); //Получаем индекс скилла по порядковому номеру
 
@@ -393,7 +393,7 @@ void CGumpSkills::PrepareContent()
                             (CGUISkillGroup *)groupUnderCursor->m_Items;
                         int itemsCount = groupObject->Count;
 
-                        IFOR (i, 1, itemsCount)
+                        for (int i = 1; i < itemsCount; i++)
                         {
                             if (groupObject->GetItem(i) == skillIndex)
                             {

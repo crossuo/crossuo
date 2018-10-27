@@ -90,7 +90,7 @@ bool CSkillsManager::CompareName(const string &str1, const string &str2)
     bool result = false;
 
     //Пройдемся по всем символам этой строки, сравнивая их друг с другом
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
     {
         char c1 = str1.at(i);
         char c2 = str2.at(i);
@@ -115,10 +115,10 @@ void CSkillsManager::Sort()
     bufTable[0] = 0;
 
     //Пройдемся по всем нвыкам (кроме первого)
-    IFOR (i, 1, Count)
+    for (int i = 1; i < Count; i++)
     {
         //Пройдемся по обработанным
-        IFOR (j, 0, parsed)
+        for (int j = 0; j < parsed; j++)
         {
             //Если можно вставить в текущую позицию -
             if (CompareName(m_Skills[bufTable[j]].Name, m_Skills[i].Name))

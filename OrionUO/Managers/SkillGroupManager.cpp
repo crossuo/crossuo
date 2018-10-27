@@ -298,7 +298,7 @@ bool CSkillGroupManager::Load(const os_path &path)
 
         short count = file.ReadUInt16LE();
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             PBYTE next = file.Ptr;
             short size = file.ReadUInt16LE();
@@ -312,7 +312,7 @@ bool CSkillGroupManager::Load(const os_path &path)
 
             short skills = file.ReadUInt16LE();
 
-            IFOR (j, 0, skills)
+            for (int j = 0; j < skills; j++)
             {
                 BYTE skill = file.ReadUInt8();
 
@@ -363,7 +363,7 @@ void CSkillGroupManager::Save(const os_path &path)
 
     group = m_Groups;
 
-    IFOR (i, 0, Count)
+    for (int i = 0; i < Count; i++)
     {
         string str = group->Name;
         size_t len = str.length() + 1;
@@ -378,7 +378,7 @@ void CSkillGroupManager::Save(const os_path &path)
 
         writter.WriteUInt16LE(count); //Skills count
 
-        IFOR (j, 0, count)
+        for (int j = 0; j < count; j++)
         {
             BYTE skill = group->GetItem(j);
             writter.WriteUInt8(skill); //Skill

@@ -29,9 +29,9 @@ ushort CGumpDye::GetCurrentColor()
     ushort startColor = m_ColorRef + 2;
     ushort color = 0;
 
-    IFOR (y, 0, 10 && !color)
+    for (int y = 0; y < 10 && !color; y++)
     {
-        IFOR (x, 0, 20)
+        for (int x = 0; x < 20; x++)
         {
             if (m_SelectedIndex == ID_GSC_COLORS + (x * 30 + y))
             {

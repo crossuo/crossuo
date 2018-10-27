@@ -192,19 +192,19 @@ void CCreateCharacterManager::SetRace(RACE_TYPE newRace)
 void CCreateCharacterManager::Init()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 1, HUMAN_MALE_HAIR_COUNT)
+    for (int i = 1; i < HUMAN_MALE_HAIR_COUNT; i++)
         g_Orion.ExecuteGump(m_HumanMaleHairStyleTable[i].GumpID);
 
-    IFOR (i, 1, HUMAN_FEMALE_HAIR_COUNT)
+    for (int i = 1; i < HUMAN_FEMALE_HAIR_COUNT; i++)
         g_Orion.ExecuteGump(m_HumanFemaleHairStyleTable[i].GumpID);
 
-    IFOR (i, 1, HUMAN_MALE_FACIAL_HAIR_COUNT)
+    for (int i = 1; i < HUMAN_MALE_FACIAL_HAIR_COUNT; i++)
         g_Orion.ExecuteGump(m_HumanBeardStyleTable[i].GumpID);
 
-    IFOR (i, 1, ELF_MALE_HAIR_COUNT)
+    for (int i = 1; i < ELF_MALE_HAIR_COUNT; i++)
         g_Orion.ExecuteGump(m_ElfMaleHairStyleTable[i].GumpID);
 
-    IFOR (i, 1, ELF_FEMALE_HAIR_COUNT)
+    for (int i = 1; i < ELF_FEMALE_HAIR_COUNT; i++)
         g_Orion.ExecuteGump(m_ElfFemaleHairStyleTable[i].GumpID);
 }
 

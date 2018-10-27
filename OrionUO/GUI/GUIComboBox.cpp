@@ -191,7 +191,7 @@ void CGUIComboBox::Draw(bool checktrans)
 
             int graphicOffset = 0;
 
-            IFOR (i, 0, m_ShowItemsCount)
+            for (int i = 0; i < m_ShowItemsCount; i++)
             {
                 g_Orion.DrawGump(OpenGraphic + 1 + graphicOffset, 0, m_X + 5, bodyY);
                 graphicOffset = (graphicOffset + 1) % 3;

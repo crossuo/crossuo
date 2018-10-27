@@ -28,7 +28,7 @@ bool CParty::Contains(int serial)
 
     if (Leader != 0)
     {
-        IFOR (i, 0, 10)
+        for (int i = 0; i < 10; i++)
         {
             if (Member[i].Serial == serial)
             {
@@ -45,7 +45,7 @@ bool CParty::Contains(int serial)
 void CParty::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, 10)
+    for (int i = 0; i < 10; i++)
     {
         Member[i].Serial = 0;
         Member[i].Character = nullptr;
@@ -70,7 +70,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
             {
                 Leader = 0;
                 Inviter = 0;
-                IFOR (i, 0, 10)
+                for (int i = 0; i < 10; i++)
                 {
                     CPartyObject &member = Member[i];
                     if (member.Character == nullptr)
@@ -91,7 +91,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
 
             CGumpStatusbar *prevGump = nullptr;
 
-            IFOR (i, 0, count)
+            for (int i = 0; i < count; i++)
             {
                 uint serial = reader.ReadUInt32BE();
                 Member[i].Serial = serial;
@@ -140,7 +140,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
             uint serial = reader.ReadUInt32BE();
             wstring name = reader.ReadWString(0, true);
 
-            IFOR (i, 0, 10)
+            for (int i = 0; i < 10; i++)
             {
                 if (Member[i].Serial == serial)
                 {

@@ -197,7 +197,7 @@ void CGumpConsoleType::UpdateContent()
 
         int text0Height = 0;
 
-        IFOR (i, 0, 7)
+        for (int i = 0; i < 7; i++)
         {
             CGUITextEntry *entry =
                 new CGUITextEntry((int)i + 1, 0, 0, 0, offsetX, offsetY, 0, false, 3);

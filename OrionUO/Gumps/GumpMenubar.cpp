@@ -56,7 +56,7 @@ CGumpMenubar::CGumpMenubar(short x, short y)
     Add(new CGUIResizepic(0, 0x13BE, 0, 0, 718, 27));
     Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A4, 0x15A4, 0x15A4, 5, 3));
 
-    IFOR (i, 0, 8)
+    for (int i = 0; i < 8; i++)
     {
         Add(new CGUIButton(
             textPosTable[i][4],

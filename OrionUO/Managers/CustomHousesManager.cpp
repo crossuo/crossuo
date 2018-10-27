@@ -85,7 +85,7 @@ void CustomHousesManager::Load(const os_path &path)
 
         int count = file.ReadInt32LE();
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             uint serial = file.ReadUInt32LE();
 
@@ -107,7 +107,7 @@ void CustomHousesManager::Load(const os_path &path)
             else
                 house->Revision = revision;
 
-            IFOR (j, 0, itemsCount)
+            for (int j = 0; j < itemsCount; j++)
             {
                 ushort graphic = file.ReadUInt16LE();
                 char x = file.ReadInt8();

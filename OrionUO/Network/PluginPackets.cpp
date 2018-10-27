@@ -40,7 +40,7 @@ CPluginPacketSkillsList::CPluginPacketSkillsList()
     WriteUInt16BE(OIPMT_SKILL_LIST);
     WriteUInt16BE(count);
 
-    IFOR (i, 0, count)
+    for (int i = 0; i < count; i++)
     {
         CSkill *skill = g_SkillsManager.Get((uint)i);
 
@@ -60,37 +60,37 @@ CPluginPacketSpellsList::CPluginPacketSpellsList()
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName1[i][0]);
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName2[i][0]);
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName3[i][0]);
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName4[i]);
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName5[i]);
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName6[i][0]);
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT);
 
-    IFOR (i, 0, CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT)
+    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT; i++)
         WriteString(CGumpSpellbook::m_SpellName7[i][0]);
 }
 
@@ -100,7 +100,7 @@ CPluginPacketMacrosList::CPluginPacketMacrosList()
     WriteUInt16BE(OIPMT_MACRO_LIST);
     WriteUInt16BE(CMacro::MACRO_ACTION_NAME_COUNT);
 
-    IFOR (i, 0, CMacro::MACRO_ACTION_NAME_COUNT)
+    for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
     {
         WriteString(CMacro::m_MacroActionName[i]);
 
@@ -110,7 +110,7 @@ CPluginPacketMacrosList::CPluginPacketMacrosList()
 
         WriteUInt16BE(count);
 
-        IFOR (j, 0, count)
+        for (int j = 0; j < count; j++)
         {
             WriteString(CMacro::m_MacroAction[j + offset]);
         }

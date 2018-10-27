@@ -738,7 +738,7 @@ CGameObject *CGameWorld::SearchWorldObject(
         int distance = 100500;
         CGameObject *distanceResult = nullptr;
 
-        IFOR (i, startI, count && result == nullptr)
+        for (int i = startI; i < count && result == nullptr; i++)
         {
             if (i)
             {
@@ -1249,7 +1249,7 @@ void CGameWorld::Dump(uchar tCount, uint serial)
             if (obj->Serial == g_Player->Serial)
                 LOG("---Player---\n");
 
-            IFOR (i, 0, tCount)
+            for (int i = 0; i < tCount; i++)
                 LOG("\t");
 
             LOG("%s%08X:%04X[%04X](%%02X)*%i\tin 0x%08X XYZ=%i,%i,%i on Map %i\n",

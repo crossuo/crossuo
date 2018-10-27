@@ -62,7 +62,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
     text->CreateTextureA(9, "Facial Hair Style");
     combo->SetText(text);
 
-    IFOR (i, 0, facialHairCount)
+    for (int i = 0; i < facialHairCount; i++)
         combo->Add(
             new CGUIComboboxText(0x0381, 9, g_CreateCharacterManager.GetBeard((uchar)i).Name));
 
@@ -78,7 +78,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
     text->CreateTextureA(9, "Hair Style");
     combo->SetText(text);
 
-    IFOR (i, 0, hairCount)
+    for (int i = 0; i < hairCount; i++)
         combo->Add(
             new CGUIComboboxText(0x0381, 9, g_CreateCharacterManager.GetHair((uchar)i).Name));
 
@@ -248,9 +248,9 @@ void CGumpScreenCreateCharacter::UpdateContent()
                 polygoneHeight = 40;
             }
 
-            IFOR (y, 0, maxY)
+            for (int y = 0; y < maxY; y++)
             {
-                IFOR (x, 0, maxX)
+                for (int x = 0; x < maxX; x++)
                 {
                     ushort startColor = *colorPtr++;
 
@@ -277,11 +277,11 @@ void CGumpScreenCreateCharacter::UpdateContent()
             g_CreateCharacterScreen.GetColorSelection() == CCSID_SHIRT_COLOR ||
             g_CreateCharacterScreen.GetColorSelection() == CCSID_SKIRT_OR_PANTS_COLOR)
         {
-            IFOR (y, 1, 48)
+            for (int y = 1; y < 48; y++)
             {
                 ushort startColor = (1 << (y % 4)) * 100 + 1 + ((ushort)y / 4);
 
-                IFOR (x, 0, 20)
+                for (int x = 0; x < 20; x++)
                 {
                     int colorIndex = (startColor + ((startColor + (startColor << 2)) << 1)) << 3;
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
@@ -323,9 +323,9 @@ void CGumpScreenCreateCharacter::UpdateContent()
                 polygoneHeight = 93;
             }
 
-            IFOR (y, 0, maxY)
+            for (int y = 0; y < maxY; y++)
             {
-                IFOR (x, 0, 6)
+                for (int x = 0; x < 6; x++)
                 {
                     ushort startColor = *colorPtr++;
 

@@ -72,7 +72,7 @@ void CWalker::ConfirmWalk(uchar sequence)
 
     int stepIndex = 0;
 
-    IFOR (i, 0, StepsCount)
+    for (int i = 0; i < StepsCount; i++)
     {
         if (m_Step[i].Sequence == sequence)
             break;
@@ -95,7 +95,7 @@ void CWalker::ConfirmWalk(uchar sequence)
             g_RemoveRangeXY.X = m_Step[0].X;
             g_RemoveRangeXY.Y = m_Step[0].Y;
 
-            IFOR (i, 1, StepsCount)
+            for (int i = 1; i < StepsCount; i++)
             {
                 m_Step[i - 1] = m_Step[i];
             }

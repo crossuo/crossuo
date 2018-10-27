@@ -83,15 +83,15 @@ CAnimationManager::~CAnimationManager()
 
 void CAnimationManager::UpdateAnimationAddressTable()
 {
-    IFOR (i, 0, MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
         CIndexAnimation &index = m_DataIndex[i];
 
-        IFOR (g, 0, ANIMATION_GROUPS_COUNT)
+        for (int g = 0; g < ANIMATION_GROUPS_COUNT; g++)
         {
             CTextureAnimationGroup &group = index.m_Groups[g];
 
-            IFOR (d, 0, 5)
+            for (int d = 0; d < 5; d++)
             {
                 CTextureAnimationDirection &direction = group.m_Direction[d];
                 bool replace = (direction.FileIndex >= 4);
@@ -130,7 +130,7 @@ void CAnimationManager::Load(puint verdata)
     DEBUG_TRACE_FUNCTION;
     size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
 
-    IFOR (i, 0, MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
         CIndexAnimation &index = m_DataIndex[i];
 
@@ -192,12 +192,12 @@ void CAnimationManager::Load(puint verdata)
 
         size_t address = m_AddressIdx[0] + findID;
 
-        IFOR (j, 0, count)
+        for (int j = 0; j < count; j++)
         {
             CTextureAnimationGroup &group = index.m_Groups[j];
             int offset = (int)j * 5;
 
-            IFOR (d, 0, 5)
+            for (int d = 0; d < 5; d++)
             {
                 CTextureAnimationDirection &direction = group.m_Direction[d];
 
@@ -222,7 +222,7 @@ void CAnimationManager::Load(puint verdata)
     {
         int dataCount = *verdata;
 
-        IFOR (j, 0, dataCount)
+        for (int j = 0; j < dataCount; j++)
         {
             PVERDATA_HEADER vh =
                 (PVERDATA_HEADER)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
@@ -330,7 +330,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
                 string testType = ToLowerA(strings[1]);
 
-                IFOR (i, 0, 5)
+                for (int i = 0; i < 5; i++)
                 {
                     if (testType == typeNames[i])
                     {
@@ -356,7 +356,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
         Wisp::CTextFileParser(g_App.UOFilesPath("Anim2.def"), " \t", "#;//", "{}"),
     };
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
     {
         while (!animParser[i].IsEOF())
         {
@@ -611,12 +611,12 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
                     size_t address = m_AddressIdx[animFile] + startAnimID;
                     size_t maxAddress = m_AddressIdx[animFile] + m_SizeIdx[animFile];
 
-                    IFOR (j, 0, count)
+                    for (int j = 0; j < count; j++)
                     {
                         CTextureAnimationGroup &group = dataIndex.m_Groups[j];
                         int offset = (int)j * 5;
 
-                        IFOR (d, 0, 5)
+                        for (int d = 0; d < 5; d++)
                         {
                             CTextureAnimationDirection &direction = group.m_Direction[d];
 
@@ -696,7 +696,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
                     break;
             }
 
-            IFOR (j, 0, count)
+            for (int j = 0; j < count; j++)
             {
                 if (j == ignoreGroups[0] || j == ignoreGroups[1])
                     continue;
@@ -704,7 +704,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
                 CTextureAnimationGroup &group = dataIndex.m_Groups[j];
                 CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[j];
 
-                IFOR (d, 0, 5)
+                for (int d = 0; d < 5; d++)
                 {
                     CTextureAnimationDirection &direction = group.m_Direction[d];
                     CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
@@ -793,12 +793,12 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
             if (ignoreGroups[0] == -1)
                 continue;
 
-            IFOR (j, 0, 2)
+            for (int j = 0; j < 2; j++)
             {
                 CTextureAnimationGroup &group = dataIndex.m_Groups[ignoreGroups[j]];
                 CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[ignoreGroups[j]];
 
-                IFOR (d, 0, 5)
+                for (int d = 0; d < 5; d++)
                 {
                     CTextureAnimationDirection &direction = group.m_Direction[d];
                     CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
@@ -2131,7 +2131,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     if (direction.m_Frames == nullptr)
         direction.m_Frames = new CTextureAnimationFrame[direction.FrameCount];
 
-    IFOR (i, 0, direction.FrameCount)
+    for (int i = 0; i < direction.FrameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
 
@@ -2181,7 +2181,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
 
             int block = (y * imageWidth) + x;
 
-            IFOR (k, 0, runLength)
+            for (int k = 0; k < runLength; k++)
             {
                 ushort val = palette[ReadUInt8()];
 
@@ -2301,7 +2301,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         if (obj->IsHuman() && checkLayers) //Check layred objects
         {
-            IFOR (l, 0, USED_LAYER_COUNT)
+            for (int l = 0; l < USED_LAYER_COUNT; l++)
             {
                 goi = obj->FindLayer(m_UsedLayers[layerDir][l]);
 
@@ -2339,7 +2339,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         if (checkLayers)
         {
-            IFOR (l, 0, USED_LAYER_COUNT)
+            for (int l = 0; l < USED_LAYER_COUNT; l++)
             {
                 CGameItem *goi = obj->FindLayer(m_UsedLayers[Direction][l]);
 
@@ -2582,7 +2582,7 @@ vector<UOPFrameData> CAnimationManager::ReadUOPFrameDataOffsets()
     Ptr = dataStart;
     vector<UOPFrameData> pixelDataOffsets;
 
-    IFOR (i, 0, frameCount)
+    for (int i = 0; i < frameCount; i++)
     {
         UOPFrameData data;
         data.dataStart = Ptr;
@@ -3081,7 +3081,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
     direction.m_Frames = new CTextureAnimationFrame[frameCount];
 
-    IFOR (i, 0, frameCount)
+    for (int i = 0; i < frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
 
@@ -3140,7 +3140,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
             int block = (y * imageWidth) + x;
 
-            IFOR (k, 0, runLength)
+            for (int k = 0; k < runLength; k++)
             {
                 ushort val = palette[ReadUInt8()];
 

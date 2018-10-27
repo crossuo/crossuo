@@ -99,7 +99,7 @@ void CPlayer::UpdateAbilities()
             }
         }
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             switch (graphics[i])
             {

@@ -184,7 +184,7 @@ void CGumpBook::SetPageData(int page, const wstring &data)
 void CGumpBook::ChangePage(int newPage, bool playSound)
 {
     DEBUG_TRACE_FUNCTION;
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
     {
         if (Page + i >= PageCount)
             break;
@@ -414,7 +414,7 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                     //insert data on the next page
                     if (info->Data.size() == 0 || addNewLine)
                         InsertInContent('\n');
-                    IFOR (i, 0, info->Data.size())
+                    for (int i = 0; i < info->Data.size(); i++)
                         InsertInContent(info->Data[i].item);
 
                     if (goBack)
@@ -548,6 +548,6 @@ void CGumpBook::SetPagePos(int val, int page)
 
 void CGumpBook::PasteClipboardData(wstring &data)
 {
-    IFOR (i, 0, (int)data.length())
+    for (int i = 0; i < (int)data.length(); i++)
         InsertInContent(data[i]);
 }

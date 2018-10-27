@@ -213,9 +213,9 @@ bool CMouseManager::LoadCursorTextures()
     DEBUG_TRACE_FUNCTION;
     bool result = true;
 
-    IFOR (i, 0, 2)
+    for (int i = 0; i < 2; i++)
     {
-        IFOR (j, 0, 16)
+        for (int j = 0; j < 16; j++)
         {
             ushort id = g_CursorData[i][j];
 

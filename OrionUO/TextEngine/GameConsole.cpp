@@ -141,7 +141,7 @@ void CGameConsole::Send(wstring text, ushort defaultColor)
                 {
                     if (g_Party.Leader != 0)
                     {
-                        IFOR (i, 0, 10)
+                        for (int i = 0; i < 10; i++)
                         {
                             if (g_Party.Member[i].Serial != 0)
                                 CPacketPartyRemoveRequest(g_Party.Member[i].Serial).Send();

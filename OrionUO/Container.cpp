@@ -76,7 +76,7 @@ void CContainerRect::Calculate(ushort gumpID)
             int passed = 0;
 
             //!Цикл в 4 итерации и пока не будут валидные координаты
-            IFOR (i, 0, 4 && !passed)
+            for (int i = 0; i < 4 && !passed; i++)
             {
                 //!Пора изменять смещение по оси Y и обнулять по оси X
                 if (X + tex->Width + CONTAINERS_RECT_STEP > g_OrionWindow.GetSize().Width)

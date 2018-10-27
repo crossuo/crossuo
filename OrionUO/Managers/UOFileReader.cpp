@@ -46,7 +46,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 
     ushort color = io.Color;
 
-    IFOR (y, 0, io.Height)
+    for (int y = 0; y < io.Height; y++)
     {
         int gSize = 0;
 
@@ -58,7 +58,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
         PGUMP_BLOCK gmul = (PGUMP_BLOCK)(dataStart + lookupList[y] * 4);
         int pos = (int)y * io.Width;
 
-        IFOR (i, 0, gSize)
+        for (int i = 0; i < gSize; i++)
         {
             ushort val = gmul[i].Value;
 
@@ -69,7 +69,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 
             int count = gmul[i].Run;
 
-            IFOR (j, 0, count)
+            for (int j = 0; j < count; j++)
                 pixels[pos++] = a;
         }
     }
@@ -115,13 +115,13 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
         height = 44;
         pixels.resize(44 * 44, 0);
 
-        IFOR (i, 0, 22)
+        for (int i = 0; i < 22; i++)
         {
             int start = (22 - ((int)i + 1));
             int pos = (int)i * 44 + start;
             int end = start + ((int)i + 1) * 2;
 
-            IFOR (j, start, end)
+            for (int j = start; j < end; j++)
             {
                 ushort val = *P++;
 
@@ -135,12 +135,12 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
             }
         }
 
-        IFOR (i, 0, 22)
+        for (int i = 0; i < 22; i++)
         {
             int pos = ((int)i + 22) * 44 + (int)i;
             int end = (int)i + (22 - (int)i) * 2;
 
-            IFOR (j, i, end)
+            for (int j = i; j < end; j++)
             {
                 ushort val = *P++;
 
@@ -187,7 +187,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
                 return pixels;
             }
 
-            IFOR (i, 0, blocksize)
+            for (int i = 0; i < blocksize; i++)
                 pixels[i] = ptr[i];
         }
         else
@@ -252,7 +252,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
                     X += XOffs;
                     int pos = Y * width + X;
 
-                    IFOR (j, 0, Run)
+                    for (int j = 0; j < Run; j++)
                     {
                         ushort val = *ptr++;
 
@@ -280,13 +280,13 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
             if ((id >= 0x2053 && id <= 0x2062) ||
                 (id >= 0x206A && id <= 0x2079)) //Убираем рамку (если это курсор мышки)
             {
-                IFOR (i, 0, width)
+                for (int i = 0; i < width; i++)
                 {
                     pixels[i] = 0;
                     pixels[(height - 1) * width + i] = 0;
                 }
 
-                IFOR (i, 0, height)
+                for (int i = 0; i < height; i++)
                 {
                     pixels[i * width] = 0;
                     pixels[i * width + width - 1] = 0;
@@ -294,12 +294,12 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
             }
             else if (g_Orion.IsCaveTile(id))
             {
-                IFOR (y, 0, height)
+                for (int y = 0; y < height; y++)
                 {
                     int startY = (y ? -1 : 0);
                     int endY = (y + 1 < height ? 2 : 1);
 
-                    IFOR (x, 0, width)
+                    for (int x = 0; x < width; x++)
                     {
                         ushort &pixel = pixels[y * width + x];
 
@@ -308,11 +308,11 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
                             int startX = (x ? -1 : 0);
                             int endX = (x + 1 < width ? 2 : 1);
 
-                            IFOR (i, startY, endY)
+                            for (int i = startY; i < endY; i++)
                             {
                                 int currentY = (int)y + (int)i;
 
-                                IFOR (j, startX, endX)
+                                for (int j = startX; j < endX; j++)
                                 {
                                     int currentX = (int)x + (int)j;
 
@@ -361,9 +361,9 @@ CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
             bool allBlack = true;
             int pos = 0;
 
-            IFOR (i, 0, 44)
+            for (int i = 0; i < 44; i++)
             {
-                IFOR (j, 0, 44)
+                for (int j = 0; j < 44; j++)
                 {
                     if (pixels[pos++])
                     {
@@ -378,22 +378,22 @@ CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
 
             if (allBlack)
             {
-                IFOR (i, 0, 22)
+                for (int i = 0; i < 22; i++)
                 {
                     int start = (22 - ((int)i + 1));
                     int pos = (int)i * 44 + start;
                     int end = start + ((int)i + 1) * 2;
 
-                    IFOR (j, start, end)
+                    for (int j = start; j < end; j++)
                         pixels[pos++] = 0x8000;
                 }
 
-                IFOR (i, 0, 22)
+                for (int i = 0; i < 22; i++)
                 {
                     int pos = ((int)i + 22) * 44 + (int)i;
                     int end = (int)i + (22 - (int)i) * 2;
 
-                    IFOR (j, i, end)
+                    for (int j = i; j < end; j++)
                         pixels[pos++] = 0x8000;
                 }
             }
@@ -402,9 +402,9 @@ CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
         {
             int pos = 0;
 
-            IFOR (y, 0, height)
+            for (int y = 0; y < height; y++)
             {
-                IFOR (x, 0, width)
+                for (int x = 0; x < width; x++)
                 {
                     if (pixels[pos++])
                     {
@@ -466,11 +466,11 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 
     pushort P = (pushort)io.Address;
 
-    IFOR (i, 0, h)
+    for (int i = 0; i < h; i++)
     {
         int pos = (int)i * w;
 
-        IFOR (j, 0, w)
+        for (int j = 0; j < w; j++)
         {
             ushort val = *P++;
 
@@ -503,11 +503,11 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 
     puchar p = (puchar)io.Address;
 
-    IFOR (i, 0, io.Height)
+    for (int i = 0; i < io.Height; i++)
     {
         int pos = (int)i * io.Width;
 
-        IFOR (j, 0, io.Width)
+        for (int j = 0; j < io.Width; j++)
         {
             ushort val = (*p << 10) | (*p << 5) | *p;
             p++;

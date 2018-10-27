@@ -63,7 +63,7 @@ bool CSpeechManager::LoadSpeech()
     else
         g_Language = lang.c_str();
 
-    IFOR (i, 0, (int)m_LangCodes.size())
+    for (int i = 0; i < (int)m_LangCodes.size(); i++)
     {
         if (m_LangCodes[i].Abbreviature == g_Language)
         {
@@ -232,7 +232,7 @@ void CSpeechManager::GetKeywords(const wchar_t *text, UINT_LIST &codes)
     wstring input = ToLowerW(text);
     //to lower, case insensitive approach.
 
-    IFOR (i, 0, size)
+    for (int i = 0; i < size; i++)
     {
         CSpeechItem entry = m_SpeechEntries[i];
         wstring data = entry.Data;

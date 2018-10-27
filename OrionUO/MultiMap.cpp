@@ -81,7 +81,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         int currentHeight = y * height;
         int posY = gump->Width * ((currentHeight - startHeight) >> 8);
 
-        IFOR (i, 0, size)
+        for (int i = 0; i < size; i++)
         {
             if (colored && x >= startX && x < endX && y >= startY && y < endY)
             {
@@ -124,7 +124,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         USHORT_LIST colorTable(maxPixelValue);
         int colorOffset = 31 * maxPixelValue;
 
-        IFOR (i, 0, maxPixelValue)
+        for (int i = 0; i < maxPixelValue; i++)
         {
             colorOffset -= 31;
             colorTable[i] = 0x8000 | huesData[colorOffset / maxPixelValue];
@@ -132,7 +132,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
         USHORT_LIST wordMap(mapSize);
 
-        IFOR (i, 0, mapSize)
+        for (int i = 0; i < mapSize; i++)
         {
             BYTE &pic = byteMap[i];
 
@@ -179,17 +179,17 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
 
     USHORT_LIST map(width * height);
 
-    IFOR (y, 0, mapHeight)
+    for (int y = 0; y < mapHeight; y++)
     {
         int x = 0;
         int colorCount = file.ReadInt32LE() / 3;
 
-        IFOR (i, 0, colorCount)
+        for (int i = 0; i < colorCount; i++)
         {
             int size = file.ReadUInt8();
             ushort color = 0x8000 | file.ReadInt16LE();
 
-            IFOR (j, 0, size)
+            for (int j = 0; j < size; j++)
             {
                 if ((x >= startX && x < endX) && (y >= startY && y < endY))
                     map[((y - startY) * width) + (x - startX)] = color;

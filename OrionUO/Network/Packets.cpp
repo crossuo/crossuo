@@ -87,7 +87,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     WriteUInt16BE(0x0000); //?
 
     uint clientFlag = 0;
-    IFOR (i, 0, g_CharacterList.ClientFlag)
+    for (int i = 0; i < g_CharacterList.ClientFlag; i++)
         clientFlag |= (1 << i);
 
     WriteUInt32BE(clientFlag); //clientflag
@@ -121,7 +121,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     val = profession->Int;
     WriteUInt8(val);
 
-    IFOR (i, 0, skillsCount)
+    for (int i = 0; i < skillsCount; i++)
     {
         val = profession->GetSkillIndex((int)i);
         if (val == 0xFF)
@@ -150,7 +150,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
         WriteUInt16BE(0x0000);   //?
 
         ushort slot = 0xFFFF;
-        IFOR (i, 0, g_CharacterList.Count)
+        for (int i = 0; i < g_CharacterList.Count; i++)
         {
             if (!g_CharacterList.GetName(i).length())
             {
@@ -177,7 +177,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
         WriteUInt8(location); //location
 
         uint slot = 0xFFFFFFFF;
-        IFOR (i, 0, g_CharacterList.Count)
+        for (int i = 0; i < g_CharacterList.Count; i++)
         {
             if (!g_CharacterList.GetName(i).length())
             {
@@ -219,7 +219,7 @@ CPacketSelectCharacter::CPacketSelectCharacter(int index, const string &name)
 
     uint clientFlag = 0;
 
-    IFOR (i, 0, g_CharacterList.ClientFlag)
+    for (int i = 0; i < g_CharacterList.ClientFlag; i++)
         clientFlag |= (1 << i);
 
     WriteUInt32BE(clientFlag);
@@ -429,7 +429,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     //Sallos aka PlayUO algorithm
     if (encoded)
     {
-        IFOR (i, 0, (int)codeBytes.size())
+        for (int i = 0; i < (int)codeBytes.size(); i++)
         {
             WriteUInt8(codeBytes[i]);
         }
@@ -907,7 +907,7 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     size_t msgLen = strlen(message);
     int len = 0;
 
-    IFOR (i, 0, msgLen)
+    for (int i = 0; i < msgLen; i++)
     {
         if (message[i] == '\n')
         {
@@ -939,7 +939,7 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     len = 0;
     char *msgPtr = (char *)message;
 
-    IFOR (i, 0, msgLen)
+    for (int i = 0; i < msgLen; i++)
     {
         if (msgPtr[len] == '\n')
         {
@@ -1016,7 +1016,7 @@ CPacketClientType::CPacketClientType()
 
     uint clientFlag = 0;
 
-    IFOR (i, 0, g_CharacterList.ClientFlag)
+    for (int i = 0; i < g_CharacterList.ClientFlag; i++)
         clientFlag |= (1 << i);
 
     WriteUInt32BE(clientFlag);
@@ -1143,7 +1143,7 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(UINT_LIST &list)
     WriteUInt8(0xD6);
     WriteUInt16BE((ushort)size);
 
-    IFOR (i, 0, len)
+    for (int i = 0; i < len; i++)
         WriteUInt32BE(list[i]);
 
     if ((int)list.size() > 50)
@@ -1181,7 +1181,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
             size += len;
             const char *str = data.c_str();
 
-            IFOR (i, 0, len)
+            for (int i = 0; i < len; i++)
             {
                 if (*(str + i) == '\n')
                     lineCount++;
@@ -1205,7 +1205,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
         {
             const char *str = data.c_str();
 
-            IFOR (i, 0, len)
+            for (int i = 0; i < len; i++)
             {
                 char ch = *(str + i);
 

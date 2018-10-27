@@ -24,7 +24,7 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, ushort graphic, int x, in
     CGLTexture *th[4] = { nullptr };
     bool isValid = true;
 
-    IFOR (i, 0, 4)
+    for (int i = 0; i < 4; i++)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
@@ -59,7 +59,7 @@ void CGUIScrollBackground::UpdateHeight(int height)
 
     CGLTexture *th[4] = { nullptr };
 
-    IFOR (i, 0, 4)
+    for (int i = 0; i < 4; i++)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
@@ -82,7 +82,7 @@ void CGUIScrollBackground::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[4] = { nullptr };
 
-    IFOR (i, 0, 4)
+    for (int i = 0; i < 4; i++)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
@@ -101,7 +101,7 @@ void CGUIScrollBackground::Draw(bool checktrans)
 
     while (!exit)
     {
-        IFOR (i, 1, 3)
+        for (int i = 1; i < 3; i++)
         {
             int deltaHeight = height - currentY;
 
@@ -139,7 +139,7 @@ bool CGUIScrollBackground::Select()
 
     CGLTexture *th[4] = { nullptr };
 
-    IFOR (i, 0, 4)
+    for (int i = 0; i < 4; i++)
     {
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
@@ -160,7 +160,7 @@ bool CGUIScrollBackground::Select()
 
     while (!select)
     {
-        IFOR (i, 1, 3 && !select)
+        for (int i = 1; i < 3 && !select; i++)
         {
             int deltaHeight = height - currentY;
 

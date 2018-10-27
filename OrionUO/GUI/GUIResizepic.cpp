@@ -33,7 +33,7 @@ void CGUIResizepic::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[9] = { nullptr };
 
-    IFOR (i, 0, 9)
+    for (int i = 0; i < 9; i++)
     {
         CGLTexture *pth = g_Orion.ExecuteGump(Graphic + (int)i);
 

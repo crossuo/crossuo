@@ -92,7 +92,7 @@ void CGumpScreenServer::UpdateContent()
 
     int offsetY = 0;
 
-    IFOR (i, 0, g_ServerList.ServersCount())
+    for (int i = 0; i < g_ServerList.ServersCount(); i++)
     {
         CServer *server = g_ServerList.GetServer((uint)i);
 

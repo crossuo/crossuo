@@ -75,7 +75,7 @@ CGumpWorldMap::CGumpWorldMap(short x, short y)
     m_ComboboxScale->TextOffsetY = -5;
     m_ComboboxScale->SelectedIndex = m_Scale;
 
-    IFOR (i, 0, 7)
+    for (int i = 0; i < 7; i++)
         m_ComboboxScale->Add(
             new CGUIComboboxText(0, 6, scaleNames[i], 36, TS_CENTER, UOFONT_FIXED));
 
@@ -84,7 +84,7 @@ CGumpWorldMap::CGumpWorldMap(short x, short y)
     m_ComboboxMap->TextOffsetY = -5;
     m_ComboboxMap->SelectedIndex = m_Map;
 
-    IFOR (i, 0, 7)
+    for (int i = 0; i < 7; i++)
         m_ComboboxMap->Add(new CGUIComboboxText(0, 6, mapNames[i], 98, TS_CENTER, UOFONT_FIXED));
 }
 
@@ -300,7 +300,7 @@ void CGumpWorldMap::LoadMap(int map)
 
         if (g_FileManager.m_MapMul[map].Start != nullptr)
         {
-            IFOR (i, 0, g_MapManager.PatchesCount)
+            for (int i = 0; i < g_MapManager.PatchesCount; i++)
             {
                 if (g_MapManager.m_MapPatchCount[i])
                 {
@@ -373,11 +373,11 @@ void CGumpWorldMap::LoadMap(int map)
 
             int maxBlock = wantSize - 1;
 
-            IFOR (bx, 0, g_MapBlockSize[map].Width)
+            for (int bx = 0; bx < g_MapBlockSize[map].Width; bx++)
             {
                 int mapX = (int)bx * 8;
 
-                IFOR (by, 0, g_MapBlockSize[map].Height)
+                for (int by = 0; by < g_MapBlockSize[map].Height; by++)
                 {
                     CIndexMap *indexMap = g_MapManager.GetIndex(map, (int)bx, (int)by);
 
@@ -391,9 +391,9 @@ void CGumpWorldMap::LoadMap(int map)
 
                     int pos = 0;
 
-                    IFOR (y, 0, 8)
+                    for (int y = 0; y < 8; y++)
                     {
-                        IFOR (x, 0, 8)
+                        for (int x = 0; x < 8; x++)
                         {
                             MAP_CELLS &cell = mapBlock->Cells[pos];
                             MAP_CELLS &infoCell = info.Cells[pos];
@@ -409,7 +409,7 @@ void CGumpWorldMap::LoadMap(int map)
                     {
                         int count = indexMap->StaticCount;
 
-                        IFOR (c, 0, count)
+                        for (int c = 0; c < count; c++)
                         {
                             STATICS_BLOCK &staticBlock = sb[c];
 
@@ -432,11 +432,11 @@ void CGumpWorldMap::LoadMap(int map)
 
                     pos = 0;
 
-                    IFOR (y, 0, 8)
+                    for (int y = 0; y < 8; y++)
                     {
                         int block = ((mapY + (int)y) * g_MapSize[map].Width) + mapX;
 
-                        IFOR (x, 0, 8)
+                        for (int x = 0; x < 8; x++)
                         {
                             ushort color =
                                 0x8000 | g_ColorManager.GetRadarColorData(info.Cells[pos].TileID);

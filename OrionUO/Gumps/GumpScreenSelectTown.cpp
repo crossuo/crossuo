@@ -90,7 +90,7 @@ void CGumpScreenSelectTown::UpdateContent()
 
     m_HTMLGump->CalculateDataSize();
 
-    IFOR (i, 0, g_CityList.CityCount())
+    for (int i = 0; i < g_CityList.CityCount(); i++)
     {
         if (g_PacketManager.GetClientVersion() >= CV_70130)
             city = g_CityList.GetCity((uint)i);

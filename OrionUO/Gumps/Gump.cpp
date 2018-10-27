@@ -360,7 +360,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
 
-                    IFOR (j, 0, 5)
+                    for (int j = 0; j < 5; j++)
                     {
                         if (item->Visible && !item->SelectOnly)
                             item->Draw(false);
@@ -480,7 +480,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 
                     CRenderObject *selectedHTML = nullptr;
 
-                    IFOR (j, 0, 4)
+                    for (int j = 0; j < 4; j++)
                     {
                         if (item->Select())
                             selectedHTML = item;
@@ -813,7 +813,7 @@ void CGump::TestItemsLeftMouseDown(
 
                     TestItemsLeftMouseDown(gump, item, currentPage, draw2Page, 5);
 
-                    IFOR (j, 0, 5)
+                    for (int j = 0; j < 5; j++)
                         item = (CBaseGUI *)item->m_Next;
 
                     int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
@@ -1150,7 +1150,7 @@ void CGump::TestItemsScrolling(
 
                         CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
 
-                        IFOR (j, 0, 5)
+                        for (int j = 0; j < 5; j++)
                         {
                             if (item->Type == GOT_SLIDER)
                             {
@@ -1264,7 +1264,7 @@ void CGump::TestItemsDragging(
 
                     TestItemsDragging(gump, item, currentPage, draw2Page, 5);
 
-                    IFOR (j, 0, 5)
+                    for (int j = 0; j < 5; j++)
                         item = (CBaseGUI *)item->m_Next;
 
                     int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;

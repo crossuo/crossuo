@@ -198,7 +198,7 @@ bool CMacroManager::Convert(const os_path &path)
             string upData = ToUpperA(data[0]);
             MACRO_CODE code = MC_NONE;
 
-            IFOR (i, 0, CMacro::MACRO_ACTION_NAME_COUNT)
+            for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
             {
                 if (upData == ToUpperA(CMacro::m_MacroActionName[i]))
                 {
@@ -218,7 +218,7 @@ bool CMacroManager::Convert(const os_path &path)
                     {
                         string args = data[1];
 
-                        IFOR (i, 2, (int)data.size())
+                        for (int i = 2; i < (int)data.size(); i++)
                             args += " " + data[i];
 
                         //LOG("\tSub action string is: %s\n", args.c_str());
@@ -230,12 +230,12 @@ bool CMacroManager::Convert(const os_path &path)
                 {
                     upData = data[1];
 
-                    IFOR (i, 2, (int)data.size())
+                    for (int i = 2; i < (int)data.size(); i++)
                         upData += " " + data[i];
 
                     upData = ToUpperA(upData);
 
-                    IFOR (i, 0, CMacro::MACRO_ACTION_COUNT)
+                    for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
                     {
                         if (upData == ToUpperA(CMacro::m_MacroAction[i]))
                         {
@@ -279,7 +279,7 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 
         short count = file.ReadInt16LE();
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
             Add(CMacro::Load(file));
 
         result = true;

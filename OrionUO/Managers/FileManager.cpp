@@ -125,7 +125,7 @@ bool CFileManager::Load()
     m_SpeechMul.Load(g_App.UOFilesPath("speech.mul"));
     m_LangcodeIff.Load(g_App.UOFilesPath("Langcode.iff"));
 
-    IFOR (i, 0, 6)
+    for (int i = 0; i < 6; i++)
     {
         if (i > 1)
         {
@@ -147,7 +147,7 @@ bool CFileManager::Load()
         m_StaDif[i].Load(g_App.UOFilesPath("stadif%i.mul", i));
     }
 
-    IFOR (i, 0, 20)
+    for (int i = 0; i < 20; i++)
     {
         auto s = i != 0 ? g_App.UOFilesPath("unifont%i.mul", i) : g_App.UOFilesPath("unifont.mul");
         if (m_UnifontMul[i].Load(s))
@@ -245,7 +245,7 @@ bool CFileManager::LoadWithUOP()
     m_SpeechMul.Load(g_App.UOFilesPath("speech.mul"));
     m_LangcodeIff.Load(g_App.UOFilesPath("Langcode.iff"));
 
-    IFOR (i, 0, 6)
+    for (int i = 0; i < 6; i++)
     {
         if (i > 1)
         {
@@ -270,7 +270,7 @@ bool CFileManager::LoadWithUOP()
         m_StaDif[i].Load(g_App.UOFilesPath("stadif%i.mul", i));
     }
 
-    IFOR (i, 0, 20)
+    for (int i = 0; i < 20; i++)
     {
         auto s = i != 0 ? g_App.UOFilesPath("unifont%i.mul", i) : g_App.UOFilesPath("unifont.mul");
         if (m_UnifontMul[i].Load(s))
@@ -321,7 +321,7 @@ void CFileManager::Unload()
 
     m_LangcodeIff.Unload();
 
-    IFOR (i, 0, 6)
+    for (int i = 0; i < 6; i++)
     {
         m_AnimIdx[i].Unload();
         m_AnimMul[i].close();
@@ -340,7 +340,7 @@ void CFileManager::Unload()
         m_StaDif[i].Unload();
     }
 
-    IFOR (i, 0, 20)
+    for (int i = 0; i < 20; i++)
         m_UnifontMul[i].Unload();
 
     m_VerdataMul.Unload();
@@ -370,7 +370,7 @@ void CFileManager::SendFilesInfo()
         CPluginPacketFileInfo(OFI_HUES_MUL, (uint64)m_HuesMul.Start, (uint64)m_HuesMul.Size)
             .SendToPlugin();
 
-    IFOR (i, 0, 6)
+    for (int i = 0; i < 6; i++)
     {
         if (m_MapMul[i].Start != nullptr)
             CPluginPacketFileInfo(
@@ -454,7 +454,7 @@ void CFileManager::TryReadUOPAnimations()
 void CFileManager::ReadTask()
 {
     std::unordered_map<uint64_t, UOPAnimationData> hashes;
-    IFOR (i, 1, 5)
+    for (int i = 1; i < 5; i++)
     {
         char magic[4];
         char version[4];
@@ -490,7 +490,7 @@ void CFileManager::ReadTask()
             animFile->read(fileCount, 4);
             animFile->read(nextBlock, 8);
             int count = *reinterpret_cast<unsigned int *>(fileCount);
-            IFOR (i, 0, count)
+            for (int i = 0; i < count; i++)
             {
                 animFile->read(offset, 8);
                 animFile->read(headerlength, 4);
@@ -525,11 +525,11 @@ void CFileManager::ReadTask()
 
     int maxGroup = 0;
 
-    IFOR (animId, 0, MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    for (int animId = 0; animId < MAX_ANIMATIONS_DATA_INDEX_COUNT; animId++)
     {
         CIndexAnimation *indexAnim = &g_AnimationManager.m_DataIndex[animId];
 
-        IFOR (grpId, 0, ANIMATION_GROUPS_COUNT)
+        for (int grpId = 0; grpId < ANIMATION_GROUPS_COUNT; grpId++)
         {
             CTextureAnimationGroup *group = &(*indexAnim).m_Groups[grpId];
             char hashString[100];
@@ -543,7 +543,7 @@ void CFileManager::ReadTask()
                 UOPAnimationData dataStruct = hashes.at(hash);
                 indexAnim->IsUOP = true;
                 group->m_UOPAnimData = dataStruct;
-                IFOR (dirId, 0, 5)
+                for (int dirId = 0; dirId < 5; dirId++)
                 {
                     CTextureAnimationDirection *dir = &group->m_Direction[dirId];
                     dir->IsUOP = true;
@@ -631,7 +631,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
         int count = file.ReadInt32LE();
         next = file.ReadInt64LE();
 
-        IFOR (i, 0, count)
+        for (int i = 0; i < count; i++)
         {
             uint64 offset = file.ReadInt64LE();
 

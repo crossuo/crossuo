@@ -79,7 +79,7 @@ bool CCustomHouseObjectWall::Parse(const char *text)
 
 int CCustomHouseObjectWall::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic || m_WindowGraphics[i] == graphic)
             return (int)i;
@@ -138,7 +138,7 @@ bool CCustomHouseObjectFloor::Parse(const char *text)
 
 int CCustomHouseObjectFloor::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;
@@ -181,7 +181,7 @@ bool CCustomHouseObjectDoor::Parse(const char *text)
 
 int CCustomHouseObjectDoor::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;
@@ -226,7 +226,7 @@ bool CCustomHouseObjectMisc::Parse(const char *text)
 
 int CCustomHouseObjectMisc::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;
@@ -275,7 +275,7 @@ bool CCustomHouseObjectStair::Parse(const char *text)
 
 int CCustomHouseObjectStair::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;
@@ -334,7 +334,7 @@ bool CCustomHouseObjectTeleport::Parse(const char *text)
 
 int CCustomHouseObjectTeleport::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;
@@ -395,7 +395,7 @@ bool CCustomHouseObjectRoof::Parse(const char *text)
 
 int CCustomHouseObjectRoof::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;
@@ -437,7 +437,7 @@ bool CCustomHouseObjectPlaceInfo::Parse(const char *text)
 
 int CCustomHouseObjectPlaceInfo::Contains(ushort graphic) const
 {
-    IFOR (i, 0, GRAPHICS_COUNT)
+    for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
             return (int)i;

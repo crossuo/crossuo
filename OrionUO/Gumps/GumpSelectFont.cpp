@@ -59,7 +59,7 @@ void CGumpSelectFont::UpdateContent()
     Add(new CGUIGroup(1));
     int count = 0;
 
-    IFOR (i, 0, 20)
+    for (int i = 0; i < 20; i++)
     {
         if (g_FontManager.UnicodeFontExists(i))
         {
@@ -86,7 +86,7 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
     int realFont = -1;
     int count = serial - ID_GSF_FONTS;
 
-    IFOR (i, 0, 20)
+    for (int i = 0; i < 20; i++)
     {
         if (g_FontManager.UnicodeFontExists(i))
         {
