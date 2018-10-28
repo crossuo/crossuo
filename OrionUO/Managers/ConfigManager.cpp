@@ -1,13 +1,5 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ConfigManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "stdafx.h"
 #include "FileSystem.h"
@@ -21,27 +13,16 @@ CConfigManager::CConfigManager()
     Init();
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CConfigManager::Init()
 {
     DEBUG_TRACE_FUNCTION;
     DefaultPage1();
-
     DefaultPage2();
-
     DefaultPage3();
-
     DefaultPage4();
-
     DefaultPage6();
-
     DefaultPage7();
-
     DefaultPage8();
-
     DefaultPage9();
 
     g_CircleOfTransparency.Create(CircleTransRadius);
@@ -233,7 +214,6 @@ void CConfigManager::SetSound(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_Sound = val;
-
     if (this == &g_ConfigManager && !val)
         g_Orion.AdjustSoundEffects(g_Ticks + 100000);
 }
@@ -243,7 +223,6 @@ void CConfigManager::SetMusic(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_Music = val;
-
     if (this == &g_ConfigManager && !val)
     {
         g_SoundManager.StopMusic();
@@ -275,8 +254,8 @@ void CConfigManager::SetMusicVolume(uchar val)
 void CConfigManager::SetClientFPS(uchar val)
 {
     DEBUG_TRACE_FUNCTION;
-    m_ClientFPS = val;
 
+    m_ClientFPS = val;
     if (this == &g_ConfigManager)
     {
         if (m_ClientFPS < MIN_FPS_LIMIT)
@@ -296,8 +275,8 @@ void CConfigManager::SetClientFPS(uchar val)
 void CConfigManager::SetUseScaling(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    m_UseScaling = val;
 
+    m_UseScaling = val;
     if (!val && this == &g_ConfigManager)
         g_GlobalScale = 1.0;
 }
@@ -305,8 +284,8 @@ void CConfigManager::SetUseScaling(bool val)
 void CConfigManager::SetDrawStatusState(uchar val)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar state = val;
 
+    uchar state = val;
     if (!(g_OrionFeaturesFlags & OFF_DRAW_CHARACTERS_STATUS_IN_WORLD))
         state = DCSS_NO_DRAW;
 
@@ -328,8 +307,8 @@ void CConfigManager::SetDrawStatusState(uchar val)
 void CConfigManager::SetDrawStumps(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    bool state = val;
 
+    bool state = val;
     if (!(g_OrionFeaturesFlags & OFF_CHANGE_TREES_TO_STUMPS))
         state = false;
 
@@ -342,8 +321,8 @@ void CConfigManager::SetDrawStumps(bool val)
 void CConfigManager::SetMarkingCaves(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    bool state = val;
 
+    bool state = val;
     if (!(g_OrionFeaturesFlags & OFF_MARKING_CAVES))
         state = false;
 
@@ -356,8 +335,8 @@ void CConfigManager::SetMarkingCaves(bool val)
 void CConfigManager::SetNoVegetation(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    bool state = val;
 
+    bool state = val;
     if (!(g_OrionFeaturesFlags & OFF_NO_VEGETATION))
         state = false;
 
@@ -367,8 +346,8 @@ void CConfigManager::SetNoVegetation(bool val)
 void CConfigManager::SetNoAnimateFields(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    bool state = val;
 
+    bool state = val;
     if (!(g_OrionFeaturesFlags & OFF_NO_FIELDS_ANIMATION))
         state = false;
 
@@ -378,8 +357,8 @@ void CConfigManager::SetNoAnimateFields(bool val)
 void CConfigManager::SetApplyStateColorOnCharacters(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    bool state = val;
 
+    bool state = val;
     if (!(g_OrionFeaturesFlags & OFF_COLORED_CHARACTERS_STATE))
         state = false;
 
@@ -389,8 +368,8 @@ void CConfigManager::SetApplyStateColorOnCharacters(bool val)
 void CConfigManager::SetDrawAuraState(uchar val)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar state = val;
 
+    uchar state = val;
     if (!(g_OrionFeaturesFlags & OFF_DRAW_AURA))
         state = DAS_NEVER;
 
@@ -400,6 +379,7 @@ void CConfigManager::SetDrawAuraState(uchar val)
 void CConfigManager::SetReduceFPSUnactiveWindow(bool val)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (this == &g_ConfigManager)
     {
         if (val)
@@ -416,6 +396,7 @@ void CConfigManager::SetReduceFPSUnactiveWindow(bool val)
 void CConfigManager::SetConsoleNeedEnter(bool val)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (this == &g_ConfigManager && val && g_EntryPointer == &g_GameConsole)
         g_EntryPointer = nullptr;
 
@@ -424,7 +405,7 @@ void CConfigManager::SetConsoleNeedEnter(bool val)
 
 void CConfigManager::SetSpellIconAlpha(uchar val)
 {
-    DEBUG_TRACE_FUNCTION;
+    DEBUG_TRACE_FUNCTION
     if (this == &g_ConfigManager && val != m_SpellIconAlpha)
     {
         float alpha = val / 255.0f;
@@ -450,7 +431,6 @@ void CConfigManager::SetOldStyleStatusbar(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_OldStyleStatusbar = val;
-
     if (this == &g_ConfigManager)
     {
         CGump *gump = g_GumpManager.UpdateGump(g_PlayerSerial, 0, GT_STATUSBAR);
@@ -463,8 +443,8 @@ void CConfigManager::SetOldStyleStatusbar(bool val)
 void CConfigManager::SetOriginalPartyStatusbar(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    m_OriginalPartyStatusbar = val;
 
+    m_OriginalPartyStatusbar = val;
     if (this == &g_ConfigManager)
     {
         if (g_Party.Leader != 0)
@@ -485,8 +465,8 @@ void CConfigManager::SetOriginalPartyStatusbar(bool val)
 void CConfigManager::SetChangeFieldsGraphic(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    m_ChangeFieldsGraphic = val;
 
+    m_ChangeFieldsGraphic = val;
     if (!(g_OrionFeaturesFlags & OFF_TILED_FIELDS))
         m_ChangeFieldsGraphic = false;
 
@@ -505,7 +485,6 @@ void CConfigManager::SetPaperdollSlots(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_PaperdollSlots = val;
-
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
@@ -524,7 +503,6 @@ void CConfigManager::SetScaleImagesInPaperdollSlots(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_ScaleImagesInPaperdollSlots = val;
-
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
@@ -543,7 +521,6 @@ void CConfigManager::SetUseGlobalMapLayer(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_UseGlobalMapLayer = val;
-
     if (this == &g_ConfigManager && val)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
@@ -557,8 +534,8 @@ void CConfigManager::SetUseGlobalMapLayer(bool val)
 void CConfigManager::SetNoDrawRoofs(bool val)
 {
     DEBUG_TRACE_FUNCTION;
-    m_NoDrawRoofs = val;
 
+    m_NoDrawRoofs = val;
     if (!(g_OrionFeaturesFlags & OFF_TILED_FIELDS))
         m_NoDrawRoofs = false;
 
@@ -575,7 +552,6 @@ void CConfigManager::SetUseGLListsForInterface(bool val)
 
     bool old = m_UseGLListsForInterface;
     m_UseGLListsForInterface = (val || !g_GL.CanUseFrameBuffer);
-
     if (this == &g_ConfigManager && g_World != nullptr && old != m_UseGLListsForInterface)
     {
         QFOR(gump, g_GumpManager.m_Items, CGump *)
@@ -599,7 +575,6 @@ void CConfigManager::SetItemPropertiesMode(uchar val)
     DEBUG_TRACE_FUNCTION;
 
     m_ItemPropertiesMode = val;
-
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         CGumpPropertyIcon *gump =
@@ -617,7 +592,6 @@ void CConfigManager::SetItemPropertiesIcon(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_ItemPropertiesIcon = val;
-
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         if (val)
@@ -653,7 +627,6 @@ void CConfigManager::SetCharacterBackpackStyle(uchar val)
     DEBUG_TRACE_FUNCTION;
 
     m_CharacterBackpackStyle = val;
-
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         g_GumpManager.UpdateContent(g_PlayerSerial, 0, GT_PAPERDOLL);
@@ -665,16 +638,11 @@ void CConfigManager::SetCharacterBackpackStyle(uchar val)
     }
 }
 
-/*!
-Получить цвет исходя из "злобности"
-@param [__in] notoriety Злобность
-@return Индекс цвета
-*/
 ushort CConfigManager::GetColorByNotoriety(uchar notoriety)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort color = 0;
 
+    ushort color = 0;
     switch ((NOTORIETY_TYPE)notoriety)
     {
         case NT_INNOCENT: //Blue
@@ -719,17 +687,12 @@ ushort CConfigManager::GetColorByNotoriety(uchar notoriety)
     return color;
 }
 
-/*!
-Загрузка конфига
-@param [__in] path Путь к файлу с конфигом
-@return 
-*/
 bool CConfigManager::LoadBin(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
+
     bool result = false;
     g_DeveloperMode = DM_SHOW_FPS_ONLY;
-
     Wisp::CMappedFile file;
 
     if (file.Load(path) && file.Size)
@@ -1170,10 +1133,8 @@ bool CConfigManager::LoadBin(const os_path &path)
                     windowHeight = 480;
                 }
 
-                SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
-
                 if (zoomed)
-                    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+                    g_OrionWindow.MaximizeWindow();
                 else
                     g_OrionWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
 
@@ -1189,23 +1150,12 @@ bool CConfigManager::LoadBin(const os_path &path)
             }
             else
             {
-                SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
-                SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+                g_OrionWindow.MaximizeWindow();
             }
         }
 
         result = true;
     }
-    /*else
-	{
-		Init();
-
-		if (g_GameState >= GS_GAME)
-		{
-			SendMessage(g_hWnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-			SendMessage(g_hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-		}
-	}*/
 
     if (g_GameState >= GS_GAME)
     {
@@ -1828,11 +1778,9 @@ bool CConfigManager::Load(const os_path &path)
             windowHeight = 480;
         }
 
-        SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
-
         if (zoomed)
         {
-            SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+            g_OrionWindow.MaximizeWindow();
         }
         else
         {
@@ -1843,8 +1791,7 @@ bool CConfigManager::Load(const os_path &path)
     }
     else
     {
-        SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
-        SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+        g_OrionWindow.MaximizeWindow();
     }
 
     return fs_path_exists(path);
@@ -1853,8 +1800,8 @@ bool CConfigManager::Load(const os_path &path)
 void CConfigManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CTextFileWritter writter(path);
 
+    Wisp::CTextFileWritter writter(path);
     if (writter.Opened())
     {
         //Page 1

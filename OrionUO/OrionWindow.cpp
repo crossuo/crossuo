@@ -60,7 +60,7 @@ void COrionWindow::OnDestroy()
 #endif
 }
 
-void COrionWindow::OnResize(Wisp::CSize &newSize)
+void COrionWindow::OnResize()
 {
     DEBUG_TRACE_FUNCTION;
     g_GL.UpdateRect();
@@ -425,8 +425,8 @@ void COrionWindow::OnTimer(uint id)
 void COrionWindow::OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer)
 {
     DEBUG_TRACE_FUNCTION;
-    g_Ticks = nowTime;
 
+    g_Ticks = nowTime;
     if (timer->TimerID == RENDER_TIMER_ID)
     {
         g_Orion.Process(true);
@@ -437,19 +437,24 @@ void COrionWindow::OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer)
     }
 }
 
-LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LPARAM &lParam)
+bool COrionWindow::OnUserMessages(const UserEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    switch (message)
+
+    switch (ev.code)
     {
         case UOMSG_RECV:
-            g_PacketManager.SavePluginReceivePacket((PBYTE)wParam, (int)lParam);
-            return S_OK;
+        {
+            g_PacketManager.SavePluginReceivePacket((PBYTE)ev.data1, (int)ev.data2);
+            return true;
+        }
+        break;
+
         case UOMSG_SEND:
         {
             uint ticks = g_Ticks;
-            puchar buf = (puchar)wParam;
-            int size = (int)lParam;
+            puchar buf = (puchar)ev.data1;
+            int size = (int)ev.data2;
             g_TotalSendSize += size;
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
@@ -473,50 +478,50 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
             {
                 LOG_DUMP(buf, size);
             }
-
-            g_ConnectionManager.Send((PBYTE)wParam, (int)lParam);
-
-            return S_OK;
+            g_ConnectionManager.Send((PBYTE)ev.data1, (int)ev.data2);
+            return true;
         }
+        break;
+
         case UOMSG_PATHFINDING:
-            return (
-                g_PathFinder.WalkTo(
-                    (wParam >> 16) & 0xFFFF,
-                    wParam & 0xFFFF,
-                    (lParam >> 16) & 0xFFFF,
-                    lParam & 0xFFFF) ?
-                    1 :
-                    S_OK);
+        {
+            const auto xy = (uint32_t)ev.data1;
+            const auto zd = (uint32_t)ev.data2;
+            return !g_PathFinder.WalkTo(
+                (xy >> 16) & 0xFFFF, xy & 0xFFFF, (zd >> 16) & 0xFFFF, zd & 0xFFFF);
+        }
+        break;
+
         case UOMSG_WALK:
-            return (g_PathFinder.Walk((bool)(wParam != 0), (uchar)lParam) ? 1 : S_OK);
+        {
+            const auto run = (bool)ev.data1;
+            const auto dir = (uchar)ev.data2;
+            return !g_PathFinder.Walk(run, dir);
+        }
+        break;
+
         case UOMSG_MENU_RESPONSE:
         {
-            PUOI_MENU_RESPONSE data = (PUOI_MENU_RESPONSE)wParam;
-
+            PUOI_MENU_RESPONSE data = (PUOI_MENU_RESPONSE)ev.data1;
             if (!data->Serial && !data->ID)
             {
                 for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
                 {
                     CGump *next = (CGump *)gump->m_Next;
-
                     if (gump->GumpType == GT_MENU || gump->GumpType == GT_GRAY_MENU)
                     {
                         CPacketMenuResponse(gump, data->Code).Send();
                         g_GumpManager.RemoveGump(gump);
                     }
-
                     gump = next;
                 }
-
                 break;
             }
 
             CGump *gump = g_GumpManager.GetGump(data->Serial, data->ID, GT_MENU);
-
             if (gump == nullptr)
             {
                 gump = g_GumpManager.GetGump(data->Serial, data->ID, GT_GRAY_MENU);
-
                 if (gump != nullptr)
                 {
                     CPacketGrayMenuResponse(gump, data->Code).Send();
@@ -528,13 +533,12 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
                 CPacketMenuResponse(gump, data->Code).Send();
                 g_GumpManager.RemoveGump(gump);
             }
-
-            break;
         }
+        break;
+
         case CPingThread::MessageID:
         {
-            PING_INFO_DATA *info = (PING_INFO_DATA *)wParam;
-
+            PING_INFO_DATA *info = (PING_INFO_DATA *)ev.data1;
             if (info != nullptr)
             {
                 if (info->ServerID == 0xFFFFFFFF)
@@ -559,9 +563,7 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
                         if (info->Min < 9999)
                         {
                             server->Ping = info->Average;
-
                             server->PacketsLoss = info->Lost;
-
                             g_ServerScreen.UpdateContent();
                         }
                     }
@@ -574,14 +576,17 @@ LRESULT COrionWindow::OnUserMessages(int message, const WPARAM &wParam, const LP
                     info->Average,
                     info->Lost);
             }
-
-            break;
         }
+        break;
+
         default:
             break;
     }
 
-    g_PluginManager.WindowProc(Handle, message, wParam, lParam);
-
-    return S_OK;
+#if USE_WISP
+    g_PluginManager.WindowProc(Handle, ev.code, ev.data1, ev.data2);
+#else
+    NOT_IMPLEMENTED;
+#endif
+    return true;
 }

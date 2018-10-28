@@ -223,11 +223,7 @@ void CTarget::Plugin_SendTargetObject(int serial)
         if (obj != nullptr && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
         {
             CPacketStatusRequest packet(serial);
-            SendMessage(
-                g_OrionWindow.Handle,
-                UOMSG_SEND,
-                (WPARAM)packet.Data().data(),
-                packet.Data().size());
+            UOMsg_Send(packet.Data().data(), packet.Data().size());
         }
     }
 
@@ -295,7 +291,6 @@ void CTarget::SendTarget()
     if (Type != 2)
         g_Orion.Send(m_Data, sizeof(m_Data));
 
-    //Чистим данные
     memset(m_Data, 0, sizeof(m_Data));
     Targeting = false;
     MultiGraphic = 0;
@@ -306,9 +301,8 @@ void CTarget::SendTarget()
 void CTarget::Plugin_SendTarget()
 {
     DEBUG_TRACE_FUNCTION;
-    SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)m_Data, sizeof(m_Data));
 
-    //Чистим данные
+    UOMsg_Send(m_Data, sizeof(m_Data));
     memset(m_Data, 0, sizeof(m_Data));
     Targeting = false;
     MultiGraphic = 0;
@@ -464,4 +458,3 @@ CMulti *CTarget::GetMultiAtXY(short x, short y)
 
     return multi;
 }
-

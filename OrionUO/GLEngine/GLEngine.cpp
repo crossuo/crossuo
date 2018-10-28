@@ -240,7 +240,8 @@ void CGLEngine::UpdateRect()
     int height = cr.bottom - cr.top;
 #else
     int width, height;
-    SDL_GL_GetDrawableSize(g_OrionWindow.m_window, &width, &height);
+    //SDL_GL_GetDrawableSize(g_OrionWindow.m_window, &width, &height);
+    SDL_GetWindowSize(g_OrionWindow.m_window, &width, &height);
 #endif
 
     ViewPort(0, 0, width, height);

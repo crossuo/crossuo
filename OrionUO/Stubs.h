@@ -180,8 +180,6 @@ struct RECT
 // Bad and very ugly "API" stuff
 int GetSystemMetrics(int);
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t);
-bool SendMessage(void *, int, int, int);
-void PostMessage(void *, int, int, int);
 #define LOBYTE(x) (int)(x & 0xff)
 int GetSystemDefaultLangID();
 int GetProfileStringA(const char *, const char *, const char *, char *, int);

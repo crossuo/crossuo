@@ -88,10 +88,9 @@ void CPingThread::OnExecute(uint32_t nowTime)
     SendMessage(g_OrionWindow.Handle, MessageID, (WPARAM)&info, 0);
 #else
     SDL_Event event;
-    SDL_memset(&event, 0, sizeof(event));
+    SDL_zero(event);
     event.type = m_PingEvent;
     event.user.data1 = (void *)&info;
     SDL_PushEvent(&event);
 #endif
 }
-

@@ -4,6 +4,17 @@
 #include <SDL_video.h>
 #include "Input.h"
 
+#if USE_WISP
+struct UserEvent
+{
+    uint code;
+    WPARAM data1;
+    LPARAM data2;
+};
+#else
+typedef SDL_UserEvent UserEvent;
+#endif
+
 namespace Wisp
 {
 class CWindow
@@ -30,6 +41,8 @@ public:
 
     void GetPositionSize(int *x, int *y, int *width, int *height);
     void SetPositionSize(int x, int y, int width, int height);
+
+    void MaximizeWindow();
 
     SDL_Window *m_window = nullptr;
 
@@ -105,7 +118,7 @@ public:
 protected:
     virtual bool OnCreate() { return true; }
     virtual void OnDestroy() {}
-    virtual void OnResize(Wisp::CSize &newSize) {}
+    virtual void OnResize() {}
     virtual void OnLeftMouseButtonDown() {}
     virtual void OnLeftMouseButtonUp() {}
     virtual bool OnLeftMouseButtonDoubleClick() { return false; }
@@ -129,10 +142,7 @@ protected:
     {
         return (HRESULT)DefWindowProc(Handle, WM_NCPAINT, wParam, lParam);
     }
-    virtual LRESULT OnUserMessages(int message, const WPARAM &wParam, const LPARAM &lParam)
-    {
-        return S_OK;
-    }
+    virtual bool OnUserMessages(const UserEvent &ev) { return true; }
 #if USE_WISP
     virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam) {}
 #else

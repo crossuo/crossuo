@@ -1707,8 +1707,7 @@ void COrion::LoadLocalConfig(int serial)
 
                     if (g_GameState >= GS_GAME)
                     {
-                        SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
-                        SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+                        g_OrionWindow.MaximizeWindow();
                     }
                 }
             }
@@ -6400,8 +6399,7 @@ void COrion::DisplayStatusbarGump(int serial, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     CPacketStatusRequest packet(serial);
-    SendMessage(
-        g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+    UOMsg_Send(packet.Data().data(), packet.Data().size());
 
     CGump *gump = g_GumpManager.GetGump(serial, 0, GT_STATUSBAR);
 

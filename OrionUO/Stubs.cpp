@@ -27,11 +27,6 @@ int MultiByteToWideChar(int, int, const char *, int, wchar_t *, int)
     NOT_IMPLEMENTED;
     return 0;
 }
-bool SendMessage(void *, int, int, int)
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
 void PostMessage(void *, int, int, int)
 {
     NOT_IMPLEMENTED;

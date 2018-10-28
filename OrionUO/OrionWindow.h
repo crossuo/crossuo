@@ -24,7 +24,7 @@ public:
 protected:
     virtual bool OnCreate();
     virtual void OnDestroy();
-    virtual void OnResize(Wisp::CSize &newSize);
+    virtual void OnResize();
     virtual void OnLeftMouseButtonDown();
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();
@@ -44,7 +44,7 @@ protected:
     virtual void OnTimer(uint id);
     virtual void OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer);
     virtual HRESULT OnRepaint(const WPARAM &wParam, const LPARAM &lParam);
-    virtual LRESULT OnUserMessages(int message, const WPARAM &wParam, const LPARAM &lParam);
+    virtual bool OnUserMessages(const UserEvent &ev) override;
 #if USE_WISP
     virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
 #else

@@ -30,6 +30,20 @@ CWindow::~CWindow()
 {
 }
 
+void CWindow::MaximizeWindow()
+{
+#if USE_WISP
+    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
+    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+#else
+    SDL_Event ev;
+    SDL_zero(ev);
+    ev.type = SDL_WINDOWEVENT;
+    ev.window.event = SDL_WINDOWEVENT_MAXIMIZED;
+    SDL_PushEvent(&ev);
+#endif
+}
+
 void CWindow::SetSize(const Wisp::CSize &size)
 {
 #if USE_WISP
@@ -59,10 +73,21 @@ void CWindow::SetSize(const Wisp::CSize &size)
 void CWindow::SetPositionSize(int x, int y, int width, int height)
 {
 #if USE_WISP
+    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetWindowPos(Handle, nullptr, x, y, width, height, 0);
 #else
     SDL_SetWindowPosition(m_window, x, y);
     SDL_SetWindowSize(m_window, width, height);
+    /*
+    SDL_Event ev;
+    SDL_zero(ev);
+    ev.type = SDL_WINDOWEVENT;
+    ev.window.event = SDL_WINDOWEVENT_RESIZED;
+    ev.window.data1 = windowWidth;
+    ev.window.data2 = windowHeight;
+    g_OrionWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
+    SDL_PushEvent(&ev);
+    */
 #endif
 }
 
@@ -421,11 +446,8 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
                 return 0;
             }
 
-            Wisp::CSize newSize(LOWORD(lParam), HIWORD(lParam));
-
-            OnResize(newSize);
-            m_Size = newSize;
-
+            m_Size = { LOWORD(lParam), HIWORD(lParam) };
+            OnResize();
             break;
         }
         case WM_CLOSE:
@@ -680,7 +702,9 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
     }
 
     if (message >= WM_USER)
-        return OnUserMessages(message, wParam, lParam);
+    {
+        return OnUserMessages({ message, wParam, lParam }) ? S_OK : S_FALSE;
+    }
 
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
@@ -689,27 +713,54 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 {
     switch (ev.type)
     {
-        case SDL_WINDOWEVENT_CLOSE:
+        case SDL_WINDOWEVENT:
+        {
+            switch (ev.window.event)
+            {
+                case SDL_WINDOWEVENT_CLOSE:
+                {
+                    OnDestroy();
+                    return true;
+                }
+                break;
+
+                case SDL_WINDOWEVENT_SHOWN:
+                {
+                    OnShow(true); // Plugin
+                    OnActivate(); // Sound + FPS
+                }
+                break;
+
+                case SDL_WINDOWEVENT_RESIZED:
+                {
+                    m_Size = { ev.window.data1, ev.window.data2 };
+                    OnResize();
+                }
+                break;
+
+                case SDL_WINDOWEVENT_MAXIMIZED:
+                {
+                    m_Size = g_OrionWindow.GetMaxSize();
+                    OnResize();
+                }
+                break;
+
+                case SDL_WINDOWEVENT_HIDDEN:
+                {
+                    OnShow(false);  // Plugin
+                    OnDeactivate(); // Sound + FPS
+                }
+                break;
+            }
+        }
+        break;
+
         case SDL_QUIT:
         {
             OnDestroy();
             return true;
             break;
         }
-
-        case SDL_WINDOWEVENT_SHOWN:
-        {
-            OnShow(true); // Plugin
-            OnActivate(); // Sound + FPS
-        }
-        break;
-
-        case SDL_WINDOWEVENT_HIDDEN:
-        {
-            OnShow(false);  // Plugin
-            OnDeactivate(); // Sound + FPS
-        }
-        break;
 
             // FIXME
             //case WM_GETMINMAXINFO:
@@ -750,6 +801,12 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
             const bool isUp = ev.wheel.y > 0;
             OnMidMouseButtonScroll(isUp);
+        }
+        break;
+
+        case SDL_USEREVENT:
+        {
+            return !OnUserMessages(ev.user);
         }
         break;
 

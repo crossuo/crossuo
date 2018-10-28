@@ -1,13 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** CommonInterfaces.cpp
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
 #include "stdafx.h"
 #include "CommonInterfaces.h"
@@ -201,15 +193,22 @@ void CDECL FUNCBODY_SendTargetCancel()
     g_Target.Plugin_SendCancelTarget();
 }
 
+void UOMsg_Send(uchar *data, size_t size)
+{
+#if USE_WISP
+    SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)data, size);
+#else
+    NOT_IMPLEMENTED;
+#endif
+}
+
 void CDECL FUNCBODY_SendCastSpell(int index)
 {
     if (index >= 0)
     {
         g_LastSpellIndex = index;
-
         CPacketCastSpell packet(index);
-        SendMessage(
-            g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+        UOMsg_Send(packet.Data().data(), packet.Data().size());
     }
 }
 
@@ -218,10 +217,8 @@ void CDECL FUNCBODY_SendUseSkill(int index)
     if (index >= 0)
     {
         g_LastSkillIndex = index;
-
         CPacketUseSkill packet(index);
-        SendMessage(
-            g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+        UOMsg_Send(packet.Data().data(), packet.Data().size());
     }
 }
 
@@ -231,8 +228,7 @@ void CDECL FUNCBODY_SendAsciiSpeech(const char *text, unsigned short color)
         color = g_ConfigManager.SpeechColor;
 
     CPacketASCIISpeechRequest packet(text, ST_NORMAL, 3, color);
-    SendMessage(
-        g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+    UOMsg_Send(packet.Data().data(), packet.Data().size());
 }
 
 void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
@@ -241,21 +237,23 @@ void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
         color = g_ConfigManager.SpeechColor;
 
     CPacketUnicodeSpeechRequest packet(text, ST_NORMAL, 3, color, (puchar)g_Language.c_str());
-    SendMessage(
-        g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+    UOMsg_Send(packet.Data().data(), packet.Data().size());
 }
 
 void CDECL FUNCBODY_SendRenameMount(uint serial, const char *text)
 {
     CPacketRenameRequest packet(serial, text);
-    SendMessage(
-        g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+    UOMsg_Send(packet.Data().data(), packet.Data().size());
 }
 
 void CDECL FUNCBODY_SendMenuResponse(unsigned int serial, unsigned int id, int code)
 {
     UOI_MENU_RESPONSE data = { serial, id, code };
+#if USE_WISP
     SendMessage(g_OrionWindow.Handle, UOMSG_MENU_RESPONSE, (WPARAM)&data, 0);
+#else
+    NOT_IMPLEMENTED;
+#endif
 }
 
 void CDECL FUNCBODY_DisplayStatusbarGump(unsigned int serial, int x, int y)
@@ -280,10 +278,8 @@ void CDECL FUNCBODY_SecureTradingCheckState(unsigned int id1, bool state)
     if (gump != nullptr)
     {
         gump->StateMy = state;
-
         CPacketTradeResponse packet(gump, 2);
-        SendMessage(
-            g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+        UOMsg_Send(packet.Data().data(), packet.Data().size());
     }
 }
 
@@ -294,10 +290,8 @@ void CDECL FUNCBODY_SecureTradingClose(unsigned int id1)
     if (gump != nullptr)
     {
         gump->RemoveMark = true;
-
         CPacketTradeResponse packet(gump, 1);
-        SendMessage(
-            g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)packet.Data().data(), packet.Data().size());
+        UOMsg_Send(packet.Data().data(), packet.Data().size());
     }
 }
 
@@ -364,7 +358,12 @@ bool CDECL FUNCBODY_GetCanWalk(unsigned char &direction, int &x, int &y, char &z
 
 bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 {
+#if USE_WISP
     return SendMessage(g_OrionWindow.Handle, UOMSG_WALK, run, direction);
+#else
+    NOT_IMPLEMENTED;
+    return false;
+#endif
 }
 
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
@@ -385,11 +384,16 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
     if (GetDistance(startPoint, Wisp::CPoint2Di(x, y)) <= distance)
         return true;
 
+#if USE_WISP
     bool result = SendMessage(
         g_OrionWindow.Handle,
         UOMSG_PATHFINDING,
         ((x << 16) & 0xFFFF0000) | (y & 0xFFFF),
         ((x << 16) & 0xFFFF0000) | (distance & 0xFFFF));
+#else
+    bool result = false;
+    NOT_IMPLEMENTED;
+#endif
 
     if (result)
     {
@@ -681,8 +685,6 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, ORION_RAW_GUMP_INFO &in
     info.Height = 0;
 }
 
-
-
 IGLEngine g_Interface_GL = { 0,
                              sizeof(IGLEngine),
                              FUNCBODY_PushScissor,
@@ -750,4 +752,3 @@ IFileManager g_Interface_FileManager = { 0,
                                          FUNCBODY_GetLandArtInfo,
                                          FUNCBODY_GetStaticArtInfo,
                                          FUNCBODY_GetGumpArtInfo };
-

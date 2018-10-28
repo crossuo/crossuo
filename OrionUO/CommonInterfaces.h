@@ -1,11 +1,6 @@
-﻿/***********************************************************************************
-**
-** CommonInterfaces.h
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
+
 #pragma once
 
 #if defined(ORION_LINUX)
@@ -58,6 +53,8 @@ struct ORION_RAW_GUMP_INFO
     int Width;
     int Height;
 };
+
+void UOMsg_Send(uchar *data, size_t size);
 
 //IGLEngine
 typedef void CDECL FUNCDEF_PUSH_SCISSOR(int, int, int, int);
