@@ -74,9 +74,9 @@ void CSkillsManager::Clear()
     m_SortedTable.clear();
 }
 
-CSkill *CSkillsManager::Get(int index)
+CSkill *CSkillsManager::Get(uint index)
 {
-    if (index < (uint)Count)
+    if (index < Count)
         return &m_Skills[index];
 
     return nullptr;
@@ -85,7 +85,7 @@ CSkill *CSkillsManager::Get(int index)
 bool CSkillsManager::CompareName(const string &str1, const string &str2)
 {
     //Вычисляем минимальную длину строки для сравнения
-    size_t len = min(str1.length(), str2.length());
+    const auto len = (int)min(str1.length(), str2.length());
 
     bool result = false;
 
@@ -115,7 +115,7 @@ void CSkillsManager::Sort()
     bufTable[0] = 0;
 
     //Пройдемся по всем нвыкам (кроме первого)
-    for (int i = 1; i < Count; i++)
+    for (uint i = 1; i < Count; i++)
     {
         //Пройдемся по обработанным
         for (int j = 0; j < parsed; j++)
@@ -154,9 +154,9 @@ void CSkillsManager::Sort()
         m_SortedTable[i] = bufTable[j];
 }
 
-int CSkillsManager::GetSortedIndex(int index)
+int CSkillsManager::GetSortedIndex(uint index)
 {
-    if (index < (uint)Count)
+    if (index < Count)
         return m_SortedTable[index];
 
     return -1;
@@ -169,4 +169,3 @@ void CSkillsManager::UpdateSkillsSum()
     for (const CSkill &skill : m_Skills)
         SkillsTotal += skill.Value;
 }
-

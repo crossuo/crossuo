@@ -198,7 +198,7 @@ ushort CColorManager::GetColor16(ushort c, ushort color)
 ushort CColorManager::GetRadarColorData(int c)
 {
     DEBUG_TRACE_FUNCTION;
-    if (c < m_Radarcol.size())
+    if (c < (int)m_Radarcol.size())
         return m_Radarcol[c];
 
     return 0;
@@ -311,4 +311,3 @@ ushort CColorManager::FixColor(ushort color, ushort defaultColor)
 
     return fixedColor;
 }
-

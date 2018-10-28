@@ -189,9 +189,9 @@ void CGumpSpellbook::InitToolTip()
     {
         uint serial = g_SelectedObject.Serial;
 
-        if (serial >= ID_GSB_SPELL_ICON_LEFT)
+        if (serial >= (uint)ID_GSB_SPELL_ICON_LEFT)
         {
-            if (serial >= ID_GSB_SPELL_ICON_RIGHT)
+            if (serial >= (uint)ID_GSB_SPELL_ICON_RIGHT)
                 serial -= ID_GSB_SPELL_ICON_RIGHT;
             else
                 serial -= ID_GSB_SPELL_ICON_LEFT;
@@ -223,7 +223,7 @@ void CGumpSpellbook::PrepareContent()
         iconStartGraphic);
 
     if (g_PressedObject.LeftGump == this && Page >= dictionaryPagesCount &&
-        g_PressedObject.LeftSerial >= ID_GSB_SPELL_ICON_LEFT)
+        g_PressedObject.LeftSerial >= (uint)ID_GSB_SPELL_ICON_LEFT)
     {
         Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
@@ -998,12 +998,12 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
         }
         else
         {
-            if (g_PressedObject.LeftSerial >= ID_GSB_SPELL_ICON_LEFT)
+            if (g_PressedObject.LeftSerial >= (uint)ID_GSB_SPELL_ICON_LEFT)
             {
                 int spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_ICON_RIGHT + 1;
 
                 //Было использовано заклинание
-                if (g_PressedObject.LeftSerial < ID_GSB_SPELL_ICON_RIGHT)
+                if (g_PressedObject.LeftSerial < (uint)ID_GSB_SPELL_ICON_RIGHT)
                     spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_ICON_LEFT + 1;
 
                 spellIndex += ((int)BookType * 100);
@@ -1338,4 +1338,3 @@ const SPELL_REQURIES CGumpSpellbook::m_SpellRequries6[SPELLBOOK_6_SPELLS_COUNT] 
 "Boarding",
 "Flaming Shot",
 "Playing The Odds"*/
-

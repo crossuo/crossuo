@@ -531,7 +531,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
             {
                 if (isFixed)
                 {
-                    MULTILINES_FONT_DATA mfd = { si, flags, font, 0, 0xFFFFFFFF };
+                    MULTILINES_FONT_DATA mfd = { (ushort)si, flags, font, 0, 0xFFFFFFFF };
                     ptr->Data.push_back(mfd);
 
                     readWidth += fcd.Width;
@@ -579,7 +579,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
             }
         }
 
-        MULTILINES_FONT_DATA mfd = { si, flags, font, 0, 0xFFFFFFFF };
+        MULTILINES_FONT_DATA mfd = { (ushort)si, flags, font, 0, 0xFFFFFFFF };
         ptr->Data.push_back(mfd);
 
         readWidth += fcd.Width;
@@ -968,7 +968,7 @@ int CFontsManager::CalculateCaretPosW(
         delete ptr;
     }
 
-    if (pos > str.size())
+    if (pos > (int)str.size())
         pos = str.size();
 
     return pos;
@@ -1595,8 +1595,8 @@ void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const string &c
     }
 }
 
-HTML_TAG_TYPE CFontsManager::ParseHTMLTag(
-    const wchar_t *str, int len, int &i, bool &endTag, HTML_DATA_INFO &info)
+HTML_TAG_TYPE
+CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, HTML_DATA_INFO &info)
 {
     DEBUG_TRACE_FUNCTION;
     HTML_TAG_TYPE tag = HTT_NONE;

@@ -28,7 +28,7 @@ public:
 class CSkillsManager
 {
 public:
-    int Count = 0;
+    uint Count = 0;
     bool SkillsRequested = false;
     float SkillsTotal = 0.0f;
 
@@ -48,11 +48,11 @@ public:
 
     void Clear();
 
-    CSkill *Get(int index);
+    CSkill *Get(uint index);
 
     void Sort();
 
-    int GetSortedIndex(int index);
+    int GetSortedIndex(uint index);
 
     void UpdateSkillsSum();
 };

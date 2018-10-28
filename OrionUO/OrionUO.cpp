@@ -12,7 +12,6 @@
 #define CDECL
 #endif
 
-
 typedef void CDECL PLUGIN_INIT_TYPE_OLD(STRING_LIST &, STRING_LIST &, UINT_LIST &);
 typedef void CDECL PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
 
@@ -1415,7 +1414,8 @@ void COrion::Process(bool rendering)
 
                     UOI_SELECTED_TILE uoiSelectedObject;
 
-                    if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
+                    if (g_SelectedObject.Object != nullptr &&
+                        g_SelectedObject.Object->IsWorldObject())
                     {
                         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
 
@@ -1616,7 +1616,7 @@ void COrion::LoadPluginConfig()
         PLUGIN_INFO *pluginsInfo = new PLUGIN_INFO[pluginsInfoCount];
         g_PluginInitNew(pluginsInfo);
 
-        for (int i = 0; i < pluginsInfoCount; i++)
+        for (int i = 0; i < (int)pluginsInfoCount; i++)
         {
             libName.push_back(pluginsInfo[i].FileName);
             functions.push_back(pluginsInfo[i].FunctionName);
@@ -3446,7 +3446,7 @@ void COrion::ReadMulIndexFile(
     PBASE_IDX_BLOCK ptr,
     std::function<PBASE_IDX_BLOCK()> getNewPtrValue)
 {
-    for (int i = 0; i < indexMaxCount; i++)
+    for (int i = 0; i < (int)indexMaxCount; i++)
     {
         CIndexObject *obj = getIdxObj((int)i);
         obj->ReadIndexFile(address, ptr, (ushort)i);
@@ -3470,7 +3470,7 @@ void COrion::ReadUOPIndexFile(
     char basePath[200] = { 0 };
     sprintf_s(basePath, "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 
-    for (int i = startIndex; i < indexMaxCount; i++)
+    for (int i = startIndex; i < (int)indexMaxCount; i++)
     {
         char hashString[200] = { 0 };
         sprintf_s(hashString, basePath, (int)i);
@@ -3502,7 +3502,7 @@ void COrion::ReadUOPIndexFile(
 
 uint64_t COrion::CreateHash(const char *s)
 {
-    const auto l = (int)strlen(s);
+    const auto l = (uint32_t)strlen(s);
     uint32_t eax, ecx, edx, ebx, esi, edi;
 
     eax = ecx = edx = ebx = esi = edi = 0;
@@ -4377,8 +4377,7 @@ void COrion::IndexReplaces()
         g_App.UOFilesPath("gump.def"), " \t", "#;//", "{}"); // FIXME: case insensitive
     Wisp::CTextFileParser multiParser(g_App.UOFilesPath("Multi.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser soundParser(g_App.UOFilesPath("Sound.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser mp3Parser(
-        g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
+    Wisp::CTextFileParser mp3Parser(g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
 
     DEBUGLOG("Replace arts\n");
     while (!artParser.IsEOF())
@@ -4405,8 +4404,7 @@ void COrion::IndexReplaces()
                     continue;
 
                 if (index < MAX_LAND_DATA_INDEX_COUNT && checkIndex < MAX_LAND_DATA_INDEX_COUNT &&
-                    m_LandDataIndex[checkIndex].Address != 0 &&
-                    m_LandDataIndex[index].Address == 0)
+                    m_LandDataIndex[checkIndex].Address != 0 && m_LandDataIndex[index].Address == 0)
                 {
                     m_LandDataIndex[index] = m_LandDataIndex[checkIndex];
                     m_LandDataIndex[index].Texture = 0;
@@ -4584,7 +4582,7 @@ void COrion::IndexReplaces()
                 }
 
                 in.m_WaveFile.clear();
-                in.m_Stream = nullptr;
+                in.m_Stream = 0;
 
                 break;
             }
@@ -4943,7 +4941,7 @@ void COrion::AdjustSoundEffects(int ticks, float volume)
     {
         CIndexSound *obj = *i;
 
-        if (obj->m_Stream != 0 && obj->LastAccessTime + obj->Delay < ticks)
+        if (obj->m_Stream != 0 && static_cast<int>(obj->LastAccessTime + obj->Delay) < ticks)
         {
             if (volume > 0)
                 BASS_ChannelSetAttribute(obj->m_Stream, BASS_ATTRIB_VOL, volume);

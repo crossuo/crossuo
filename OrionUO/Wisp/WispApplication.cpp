@@ -58,8 +58,11 @@ int CApplication::Run(HINSTANCE hinstance)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (!(quit = Wisp::g_WispWindow->OnWindowProc(event)))
-                OnMainLoop();
+            quit = Wisp::g_WispWindow->OnWindowProc(event);
+            if (quit)
+                break;
+
+            OnMainLoop();
         }
     }
 
@@ -82,7 +85,7 @@ string CApplication::GetFileVersion(uint *numericVerion) const
         {
             UCHAR_LIST lpVersionInfo(dwSize, 0);
 
-            if (GetFileVersionInfoW(&szFilename[0], nullptr, dwSize, &lpVersionInfo[0]))
+            if (GetFileVersionInfoW(&szFilename[0], 0, dwSize, &lpVersionInfo[0]))
             {
                 UINT uLen = 0;
                 VS_FIXEDFILEINFO *lpFfi = nullptr;
@@ -167,4 +170,3 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
 }
 
 }; // namespace Wisp
-

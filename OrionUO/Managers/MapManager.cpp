@@ -308,7 +308,8 @@ void CMapManager::UpdatePatched()
             {
                 for (int y = 0; y < 8; y++)
                 {
-                    for (CRenderWorldObject *item = block->GetRender((int)x, (int)y); item != nullptr;
+                    for (CRenderWorldObject *item = block->GetRender((int)x, (int)y);
+                         item != nullptr;
                          item = item->m_NextXY)
                     {
                         if (!item->IsLandObject() && !item->IsStaticObject())
@@ -748,7 +749,7 @@ void CMapManager::AddRender(CRenderWorldObject *item)
 @param [__in] index Индекс блока
 @return Ссылка на блок или nullptr
 */
-CMapBlock *CMapManager::GetBlock(int index)
+CMapBlock *CMapManager::GetBlock(uint index)
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = nullptr;
@@ -769,7 +770,7 @@ CMapBlock *CMapManager::GetBlock(int index)
 @param [__in] index Индекс блока
 @return Ссылка на блок или nullptr
 */
-CMapBlock *CMapManager::AddBlock(int index)
+CMapBlock *CMapManager::AddBlock(uint index)
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)Add(new CMapBlock(index));
@@ -784,7 +785,7 @@ CMapBlock *CMapManager::AddBlock(int index)
 @param [__in] index Индекс блока
 @return 
 */
-void CMapManager::DeleteBlock(int index)
+void CMapManager::DeleteBlock(uint index)
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
@@ -802,4 +803,3 @@ void CMapManager::DeleteBlock(int index)
         block = (CMapBlock *)block->m_Next;
     }
 }
-

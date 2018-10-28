@@ -337,7 +337,7 @@ CPacketClientVersion::CPacketClientVersion(string version)
     : CPacket(4 + version.length())
 {
     WriteUInt8(0xBD);
-    WriteUInt16BE(4 + (int)version.length());
+    WriteUInt16BE(4 + (uint16_t)version.length());
     WriteString(version.c_str(), (int)version.length(), false);
 }
 
@@ -904,7 +904,7 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
 
     int lines = 1;
 
-    size_t msgLen = strlen(message);
+    const auto msgLen = (int)strlen(message);
     int len = 0;
 
     for (int i = 0; i < msgLen; i++)
@@ -1143,7 +1143,7 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(UINT_LIST &list)
     WriteUInt8(0xD6);
     WriteUInt16BE((ushort)size);
 
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < (int)len; i++)
         WriteUInt32BE(list[i]);
 
     if ((int)list.size() > 50)
@@ -1181,7 +1181,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
             size += len;
             const char *str = data.c_str();
 
-            for (int i = 0; i < len; i++)
+            for (int i = 0; i < (int)len; i++)
             {
                 if (*(str + i) == '\n')
                     lineCount++;
@@ -1205,7 +1205,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
         {
             const char *str = data.c_str();
 
-            for (int i = 0; i < len; i++)
+            for (int i = 0; i < (int)len; i++)
             {
                 char ch = *(str + i);
 
@@ -1561,4 +1561,3 @@ CPacketOrionVersion::CPacketOrionVersion(int version)
     WriteUInt16BE(OCT_ORION_VERSION);
     WriteUInt32BE(version);
 }
-

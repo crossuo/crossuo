@@ -32,7 +32,7 @@ void CGumpRacialAbilitiesBook::InitToolTip()
 
     uint serial = g_SelectedObject.Serial;
 
-    if (Page >= DictionaryPagesCount && serial >= ID_GRAB_ICON)
+    if (Page >= DictionaryPagesCount && serial >= (uint)ID_GRAB_ICON)
         g_ToolTip.Set(
             g_ClilocManager.Cliloc(g_Language)->GetW(TooltipOffset + (serial - ID_GRAB_ICON), true),
             150);
@@ -47,7 +47,7 @@ void CGumpRacialAbilitiesBook::PrepareContent()
     GetSummaryBookInfo(abilityOnPage, iconStartGraphic);
 
     if (g_PressedObject.LeftGump == this && Page >= DictionaryPagesCount &&
-        g_PressedObject.LeftSerial >= ID_GRAB_ICON &&
+        g_PressedObject.LeftSerial >= (uint)ID_GRAB_ICON &&
         !((CBaseGUI *)g_PressedObject.LeftObject)->MoveOnDrag)
     {
         Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
@@ -345,7 +345,7 @@ bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 
             result = true;
         }
-        else if (g_PressedObject.LeftSerial >= ID_GRAB_ICON)
+        else if (g_PressedObject.LeftSerial >= (uint)ID_GRAB_ICON)
         {
             CGumpRacialAbility::OnAbilityUse(g_PressedObject.LeftObject->Graphic);
 
@@ -376,4 +376,3 @@ void CGumpRacialAbilitiesBook::ChangePage(int newPage)
 
     g_Orion.PlaySoundEffect(0x0055);
 }
-

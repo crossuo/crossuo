@@ -13,10 +13,10 @@ public:
     bool NoResize = false;
 
 protected:
-    Wisp::CSize m_Size = Wisp::CSize();
+    Wisp::CSize m_Size = Wisp::CSize(100, 100);
     Wisp::CSize m_MinSize = Wisp::CSize(100, 100);
-    Wisp::CSize m_MaxSize =
-        Wisp::CSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    Wisp::CSize m_MaxSize = Wisp::CSize(
+        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)); // SDL_GetDisplayUsableBounds
 
 public:
     Wisp::CSize GetSize() { return m_Size; };
@@ -31,7 +31,6 @@ public:
     void GetPositionSize(int *x, int *y, int *width, int *height);
     void SetPositionSize(int x, int y, int width, int height);
 
-    // GetSystemMetrics -> SDL_GetCurrentDisplayMode
     SDL_Window *m_window = nullptr;
 
 private:

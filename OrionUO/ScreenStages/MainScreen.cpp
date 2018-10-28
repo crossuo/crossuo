@@ -81,7 +81,7 @@ void CMainScreen::SetAccounting(const string &account, const string &password)
     m_Account->SetTextA(account);
     m_Password->SetTextA(password);
 
-    size_t len = password.length();
+    const auto len = (int)password.length();
     m_MainGump.m_PasswordFake->Clear();
 
     for (int i = 0; i < len; i++)
@@ -95,7 +95,7 @@ void CMainScreen::Paste()
     {
         m_Password->Paste();
 
-        size_t len = m_Password->Length();
+        const auto len = (int)m_Password->Length();
         g_EntryPointer->Clear();
 
         for (int i = 0; i < len; i++)
@@ -129,7 +129,7 @@ void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 }
 #else
 void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{    
+{
     DEBUG_TRACE_FUNCTION;
     LOG("SDL_TextInputEvent: %s\n", ev.text);
 
@@ -182,7 +182,9 @@ void CMainScreen::OnKeyDown(const KeyEvent &ev)
             break;
         }
         case KEY_RETURN:
+#if !USE_WISP
         case KEY_RETURN2:
+#endif
         {
             CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
             break;
@@ -280,8 +282,7 @@ void CMainScreen::LoadGlobalConfig()
                     size_t pos = password.find_first_of("=");
                     password = password.substr(pos + 1, password.length() - (pos + 1));
 
-                    size_t len = password.length();
-
+                    const auto len = (int)password.length();
                     if (len)
                     {
                         m_Password->SetTextA(password);
@@ -361,10 +362,7 @@ void CMainScreen::SaveGlobalConfig()
 
     if (m_SavePassword->Checked)
     {
-        sprintf_s(
-            buf,
-            "AcctPassword=%s\n",
-            m_Password->c_str());
+        sprintf_s(buf, "AcctPassword=%s\n", m_Password->c_str());
         fputs(buf, uo_cfg);
         sprintf_s(buf, "RememberAcctPW=yes\n");
         fputs(buf, uo_cfg);

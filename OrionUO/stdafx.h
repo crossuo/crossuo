@@ -38,6 +38,8 @@
 
 #if defined(ORION_WINDOWS)
 
+#define HAVE_M_PI // SDL conflicting with winsdk10
+
 #if !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif

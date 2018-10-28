@@ -414,7 +414,7 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                     //insert data on the next page
                     if (info->Data.size() == 0 || addNewLine)
                         InsertInContent('\n');
-                    for (int i = 0; i < info->Data.size(); i++)
+                    for (int i = 0; i < (int)info->Data.size(); i++)
                         InsertInContent(info->Data[i].item);
 
                     if (goBack)

@@ -14,7 +14,7 @@ CEntryText::CEntryText(int maxLength, int width, int maxWidth, bool numberOnly)
 CEntryText::~CEntryText()
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     if (g_EntryPointer == this)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
@@ -215,7 +215,7 @@ void CEntryText::Remove(bool left, CGump *gump)
             return;
     }
 
-    if (m_Position < Text.length())
+    if (m_Position < (int)Text.length())
         Text.erase(Text.begin() + m_Position);
     else
         Text.erase(Text.length() - 1);
@@ -343,7 +343,7 @@ void CEntryText::SetTextW(const wstring &text)
 string CEntryText::CheckMaxWidthA(uchar font, string str)
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     if (MaxWidth > 0)
     {
         int width = g_FontManager.GetWidthA(font, str);
@@ -362,7 +362,7 @@ string CEntryText::CheckMaxWidthA(uchar font, string str)
 wstring CEntryText::CheckMaxWidthW(uchar font, wstring str)
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     if (MaxWidth > 0)
     {
         int width = g_FontManager.GetWidthW(font, str);
@@ -426,8 +426,7 @@ void CEntryText::CreateTextureA(
     m_Texture.Clear();
     if (m_Position)
     {
-        CaretPos =
-            g_FontManager.GetCaretPosA(font, str.c_str(), m_Position, width, align, flags);
+        CaretPos = g_FontManager.GetCaretPosA(font, str.c_str(), m_Position, width, align, flags);
 
         if (flags & UOFONT_FIXED)
         {
@@ -560,7 +559,7 @@ void CEntryText::DrawMaskA(
 {
     DEBUG_TRACE_FUNCTION;
 
-    const size_t len = Length();
+    const auto len = (int)Length();
     string str = "";
     for (int i = 0; i < len; i++)
     {
@@ -590,7 +589,7 @@ void CEntryText::DrawMaskW(
 {
     DEBUG_TRACE_FUNCTION;
 
-    const size_t len = Length();
+    const auto len = (int)Length();
     wstring str = L"";
     for (int i = 0; i < len; i++)
     {

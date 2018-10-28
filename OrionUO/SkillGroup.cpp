@@ -99,7 +99,7 @@ void CSkillGroupObject::Sort()
     BYTE table[60] = { 0 };
     int Ptr = 0;
 
-    for (int i = 0; i < g_SkillsManager.Count; i++)
+    for (uint i = 0; i < g_SkillsManager.Count; i++)
     {
         for (int j = 0; j < Count; j++)
         {
@@ -124,4 +124,3 @@ void CSkillGroupObject::TransferTo(CSkillGroupObject *group)
 
     group->Sort();
 }
-

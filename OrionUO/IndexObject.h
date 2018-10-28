@@ -59,7 +59,7 @@ public:
     virtual ~CIndexSound();
 
     UCHAR_LIST m_WaveFile;
-    HSTREAM m_Stream{ nullptr };
+    HSTREAM m_Stream{};
 };
 
 class CIndexMulti : public CIndexObject

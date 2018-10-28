@@ -228,7 +228,7 @@ void CSpeechManager::GetKeywords(const wchar_t *text, UINT_LIST &codes)
         g_PacketManager.GetClientVersion() < CV_305D) //Но по факту с 2.0.7 версии клиента
         return;
 
-    size_t size = m_SpeechEntries.size();
+    const auto size = (int)m_SpeechEntries.size();
     wstring input = ToLowerW(text);
     //to lower, case insensitive approach.
 
@@ -264,4 +264,3 @@ void CSpeechManager::GetKeywords(const wchar_t *text, UINT_LIST &codes)
             codes.push_back(entry.Code);
     }
 }
-

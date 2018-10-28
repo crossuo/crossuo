@@ -43,8 +43,8 @@ public:
 private:
     static const int MIDI_MUSIC_COUNT = 57;
     static const MidiInfoStruct MidiInfo[MIDI_MUSIC_COUNT];
-    HSTREAM m_Music{ nullptr };
-    HSTREAM m_WarMusic{ nullptr };
+    HSTREAM m_Music{};
+    HSTREAM m_WarMusic{};
 
     void TraceMusicError(DWORD error);
     //std::map<HSTREAM, BYTE*> streams;

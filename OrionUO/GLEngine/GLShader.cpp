@@ -117,9 +117,9 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         glDeleteProgram(m_Shader);
 
         LOG("shader program failed to link\n");
-        LOG("%s\n", infoLog);
+        LOG("%s\n", infoLog.data());
         std::wstring str(infoLog.begin(), infoLog.end());
-        LOG("%s\n", str);
+        LOG("%ws\n", str.c_str());
         return false;
     }
 
@@ -232,4 +232,3 @@ bool CColorizerShader::Use()
 
     return result;
 }
-

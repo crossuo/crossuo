@@ -67,7 +67,7 @@ CCityItem *CCityList::GetCity(int index)
 {
     DEBUG_TRACE_FUNCTION;
 
-    if (index < m_CityList.size())
+    if (index < (int)m_CityList.size())
         return m_CityList[index];
 
     return nullptr;

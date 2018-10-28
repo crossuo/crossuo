@@ -94,7 +94,7 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
 CServer *CServerList::GetServer(int index)
 {
     DEBUG_TRACE_FUNCTION;
-    if (index < m_Servers.size())
+    if (index < (int)m_Servers.size())
         return &m_Servers[index];
 
     return nullptr;
@@ -131,4 +131,3 @@ CServer *CServerList::Select(int index)
 
     return server;
 }
-

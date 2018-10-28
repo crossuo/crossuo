@@ -61,8 +61,8 @@ void CWindow::SetPositionSize(int x, int y, int width, int height)
 #if USE_WISP
     SetWindowPos(Handle, nullptr, x, y, width, height, 0);
 #else
-    SDL_SetWindowSize(m_window, x, y);
-    SDL_SetWindowPosition(m_window, width, height);
+    SDL_SetWindowPosition(m_window, x, y);
+    SDL_SetWindowSize(m_window, width, height);
 #endif
 }
 
@@ -71,13 +71,13 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
 #if USE_WISP
     RECT rect{};
     GetWindowRect(Handle, &rect);
-    x = rect.left;
-    y = rect.top;
-    width = (rect.right - rect.left);
-    height = (rect.bottom - rect.top);
+    *x = (int)rect.left;
+    *y = (int)rect.top;
+    *width = (int)(rect.right - rect.left);
+    *height = (int)(rect.bottom - rect.top);
 #else
-    SDL_GetWindowSize(m_window, x, y);
-    SDL_GetWindowPosition(m_window, width, height);
+    SDL_GetWindowPosition(m_window, x, y);
+    SDL_GetWindowSize(m_window, width, height);
 #endif
 }
 
@@ -112,7 +112,6 @@ void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
             r.bottom += -r.top;
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
-    }
 #else
         SDL_SetWindowSize(m_window, width, height);
 #endif
@@ -235,7 +234,13 @@ bool CWindow::Create(
 
     m_Size.Width = width;
     m_Size.Height = height;
-    m_window = SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_OPENGL);
+    m_window = SDL_CreateWindow(
+        title,
+        0,
+        0,
+        width,
+        height,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!m_window)
     {
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Coult not create window: %s\n", SDL_GetError());
@@ -304,7 +309,6 @@ bool CWindow::Create(
 
     return OnCreate();
 }
-
 
 void CWindow::Destroy()
 {
@@ -460,8 +464,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
 
             uint ticks = SDL_GetTicks();
 
-            if (Wisp::g_WispMouse->LastLeftButtonClickTimer +
-                    Wisp::g_WispMouse->DoubleClickDelay >=
+            if (Wisp::g_WispMouse->LastLeftButtonClickTimer + Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
             {
                 Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
@@ -553,8 +556,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
 
             uint ticks = SDL_GetTicks();
 
-            if (Wisp::g_WispMouse->LastMidButtonClickTimer +
-                    Wisp::g_WispMouse->DoubleClickDelay >=
+            if (Wisp::g_WispMouse->LastMidButtonClickTimer + Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
             {
                 if (!OnMidMouseButtonDoubleClick())
@@ -610,7 +612,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            OnKeyDown({wParam, lParam});
+            OnKeyDown({ wParam, lParam });
 
             if (wParam == KEY_F4 && (GetAsyncKeyState(KEY_MENU) & 0x80000000)) //Alt + F4
                 break;
@@ -620,7 +622,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            OnKeyUp({wParam, lParam});
+            OnKeyUp({ wParam, lParam });
 
             return 0; //break;
         }
@@ -765,8 +767,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     if (isDown)
                     {
                         Wisp::g_WispMouse->Capture();
-                        Wisp::g_WispMouse->LeftDropPosition =
-                            Wisp::g_WispMouse->Position;
+                        Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint ticks = SDL_GetTicks();
                         if (Wisp::g_WispMouse->LastLeftButtonClickTimer +
@@ -802,8 +803,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     if (isDown)
                     {
                         Wisp::g_WispMouse->Capture();
-                        Wisp::g_WispMouse->MidDropPosition =
-                            Wisp::g_WispMouse->Position;
+                        Wisp::g_WispMouse->MidDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint ticks = SDL_GetTicks();
                         if (Wisp::g_WispMouse->LastMidButtonClickTimer +
@@ -836,8 +836,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     if (isDown)
                     {
                         Wisp::g_WispMouse->Capture();
-                        Wisp::g_WispMouse->RightDropPosition =
-                            Wisp::g_WispMouse->Position;
+                        Wisp::g_WispMouse->RightDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint ticks = SDL_GetTicks();
                         if (Wisp::g_WispMouse->LastRightButtonClickTimer +
@@ -906,8 +905,7 @@ void CWindow::CreateThreadedTimer(
             return;
     }
 
-    Wisp::CThreadedTimer *timer =
-        new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
+    Wisp::CThreadedTimer *timer = new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
     m_ThreadedTimersStack.push_back(timer);
     timer->Run(!oneShot, delay, synchronizedDelay);
 }
@@ -942,6 +940,4 @@ Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint id)
 
     return 0;
 }
-
 }; // namespace Wisp
-

@@ -361,7 +361,7 @@ void CGumpCombatBook::InitToolTip()
 
     if (Page >= DictionaryPagesCount)
     {
-        if (serial >= ID_GCB_ICON)
+        if (serial >= (uint32_t)ID_GCB_ICON)
             g_ToolTip.Set(
                 g_ClilocManager.Cliloc(g_Language)->GetW(1061693 + (serial - ID_GCB_ICON), true),
                 150);
@@ -673,4 +673,3 @@ const string CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
     "Infused Throw", //CV_7000
     "Mystic Arc",         "Disrobe"
 };
-

@@ -97,9 +97,9 @@ void CGumpScreenSelectProfession::UpdateContentOld()
     {
         int yPtr = 4; // 20;
 
-        for (int i = 0; i < g_SkillsManager.Count; i++)
+        for (uint i = 0; i < g_SkillsManager.Count; i++)
         {
-            CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex((uint)i));
+            CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex(i));
 
             if (skill == nullptr)
                 continue;
@@ -192,8 +192,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
             for (int i = 0; i < 3; i++)
             {
-                int skillID = profession->GetSkillIndex((int)i);
-
+                auto skillID = (uint)profession->GetSkillIndex((int)i);
                 if (skillID >= g_SkillsManager.Count)
                     skillID = 0;
 
@@ -234,7 +233,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
-                if (skillID >= g_SkillsManager.Count || skill == nullptr)
+                if (skillID >= (int)g_SkillsManager.Count || skill == nullptr)
                     entry->m_Entry.SetTextA("Click here");
                 else
                     entry->m_Entry.SetTextA(skill->Name);
@@ -382,10 +381,9 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
             yPtr = 4;
 
-            for (int i = 0; i < g_SkillsManager.Count; i++)
+            for (uint i = 0; i < g_SkillsManager.Count; i++)
             {
-                CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex((uint)i));
-
+                CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex(i));
                 if (skill == nullptr)
                     continue;
 
@@ -438,7 +436,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
-                if (skillID >= g_SkillsManager.Count || skill == nullptr)
+                if (skillID >= (int)g_SkillsManager.Count || skill == nullptr)
                     entry->m_Entry.SetTextA("Click here");
                 else
                     entry->m_Entry.SetTextA(skill->Name);
@@ -866,4 +864,3 @@ void CGumpScreenSelectProfession::ShuffleSkills(int id)
     profession->SetSkillValue(1, skills[1]);
     profession->SetSkillValue(2, skills[2]);
 }
-

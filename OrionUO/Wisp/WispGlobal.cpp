@@ -46,13 +46,15 @@ int CalculatePercents(int max, int current, int maxValue)
 
 string EncodeUTF8(const wstring &wstr)
 {
-    int size = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+    int size =
+        WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
     string result = "";
 
     if (size > 0)
     {
         result.resize(size + 1);
-        WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &result[0], size, nullptr, nullptr);
+        WideCharToMultiByte(
+            CP_UTF8, 0, &wstr[0], (int)wstr.size(), &result[0], size, nullptr, nullptr);
         result.resize(size); // result[size] = 0;
     }
 
@@ -128,7 +130,8 @@ string ToString(const wstring &wstr)
 #if USE_WISP
     string str = "";
     int size = (int)wstr.length();
-    int newSize = ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, nullptr, 0, nullptr, nullptr);
+    int newSize =
+        ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, nullptr, 0, nullptr, nullptr);
 
     if (newSize > 0)
     {
@@ -142,7 +145,6 @@ string ToString(const wstring &wstr)
     return converter.to_bytes(wstr);
 #endif
 }
-
 
 wstring ToWString(const string &str)
 {
@@ -276,7 +278,7 @@ void DebugMsg(const wchar_t *format, ...)
 #if USE_WISP
     OutputDebugStringW(buf);
 #else
-    fprintf(stdout, "%s", buf);
+    fprintf(stdout, "%ws", buf);
 #endif
 
     va_end(arg);
@@ -318,4 +320,3 @@ void DebugDump(puchar data, int size)
     }
 }
 #endif
-

@@ -314,8 +314,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
             "monster", "sea_monster", "animal", "human", "equipment"
         };
 
-        Wisp::CTextFileParser mobtypesParser(
-            g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
+        Wisp::CTextFileParser mobtypesParser(g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
 
         while (!mobtypesParser.IsEOF())
         {
@@ -380,8 +379,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
     Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
     Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
 
-    Wisp::CTextFileParser equipConvParser(
-        g_App.UOFilesPath("Equipconv.def"), " \t", "#;//", "");
+    Wisp::CTextFileParser equipConvParser(g_App.UOFilesPath("Equipconv.def"), " \t", "#;//", "");
 
     while (!equipConvParser.IsEOF())
     {
@@ -1616,7 +1614,8 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
 
-        if (m_Sitting && Direction == 3 && sittingData.DrawBack && obj->FindLayer(OL_CLOAK) == nullptr)
+        if (m_Sitting && Direction == 3 && sittingData.DrawBack &&
+            obj->FindLayer(OL_CLOAK) == nullptr)
         {
             for (CRenderWorldObject *ro = obj->m_PrevXY; ro != nullptr; ro = ro->m_PrevXY)
             {
@@ -2126,7 +2125,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     SetData(reinterpret_cast<puchar>(&decLayoutData[0]), decompressedLength);
     vector<UOPFrameData> pixelDataOffsets = ReadUOPFrameDataOffsets();
 
-    direction.FrameCount = (int)pixelDataOffsets.size() / 5;
+    direction.FrameCount = (uchar)pixelDataOffsets.size() / 5; // FIXME: truncate cast
     int dirFrameStartIdx = direction.FrameCount * Direction;
     if (direction.m_Frames == nullptr)
         direction.m_Frames = new CTextureAnimationFrame[direction.FrameCount];
@@ -3081,7 +3080,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
     direction.m_Frames = new CTextureAnimationFrame[frameCount];
 
-    for (int i = 0; i < frameCount; i++)
+    for (uint i = 0; i < (int)frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
 
@@ -3158,4 +3157,3 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
         g_GL_BindTexture16(frame, imageWidth, imageHeight, &data[0]);
     }
 }
-

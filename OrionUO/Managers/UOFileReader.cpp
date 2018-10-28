@@ -457,7 +457,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
     }
     else
     {
-        LOG("UOFileReader::ReadTexture bad data size\n", io.DataSize);
+        LOG("UOFileReader::ReadTexture bad data size: %d\n", io.DataSize);
         delete th;
         return nullptr;
     }
@@ -521,4 +521,3 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 
     return th;
 }
-

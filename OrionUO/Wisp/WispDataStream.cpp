@@ -70,14 +70,14 @@ void CDataWritter::WriteDataLE(const puchar data, size_t size, const intptr_t &o
     DATASTREAM_DEBUG("c4_f6");
     if (AutoResize)
     {
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < (int)size; i++)
             m_Data.push_back(data[i]);
     }
     else if (Ptr != nullptr)
     {
         puchar ptr = Ptr + offset;
 
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < (int)size; i++)
             ptr[i] = data[i];
 
         Ptr += size;
@@ -120,12 +120,12 @@ void CDataWritter::WriteWString(
     {
         if (bigEndian)
         {
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < (int)length; i++)
                 WriteInt16BE(val[i]);
         }
         else
         {
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < (int)length; i++)
                 WriteInt16LE(val[i]);
         }
     }
@@ -133,12 +133,12 @@ void CDataWritter::WriteWString(
     {
         if (bigEndian)
         {
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < (int)size; i++)
                 WriteInt16BE(val[i]);
         }
         else
         {
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < (int)size; i++)
                 WriteInt16LE(val[i]);
         }
 
@@ -196,7 +196,7 @@ void CDataReader::ReadDataBE(puchar data, size_t size, const intptr_t &offset)
 
         if (ptr >= Start && ptr <= End)
         {
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < (int)size; i++)
                 data[i] = *(ptr - i);
 
             Ptr += size;
@@ -213,7 +213,7 @@ void CDataReader::ReadDataLE(puchar data, size_t size, const intptr_t &offset)
 
         if (ptr >= Start && ptr + size <= End)
         {
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < (int)size; i++)
                 data[i] = ptr[i];
 
             Ptr += size;
@@ -283,12 +283,12 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
 
         if (bigEndian)
         {
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < (int)size; i++)
                 result[i] = ReadInt16BE(offset);
         }
         else
         {
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < (int)size; i++)
                 result[i] = ReadInt16LE(offset);
         }
     }

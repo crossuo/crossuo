@@ -108,7 +108,8 @@ void COrionWindow::OnLeftMouseButtonUp()
         g_CurrentScreen->Render(false);
 
         //if ((g_SelectedObject.Object() != nullptr && g_SelectedObject.Object() == g_PressedObject.LeftObject && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
-        if ((g_SelectedObject.Object != nullptr && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
+        if ((g_SelectedObject.Object != nullptr && g_SelectedObject.Serial) ||
+            g_GameState >= GS_GAME)
         {
             g_CurrentScreen->OnLeftMouseButtonUp();
 
@@ -306,7 +307,7 @@ void COrionWindow::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
         g_CurrentScreen->OnCharPress(wParam, lParam);
     else if (wParam == KEY_RETURN)
-        g_CurrentScreen->OnKeyDown(wParam, lParam);
+        g_CurrentScreen->OnKeyDown({ wParam, lParam });
     else if (wParam == 0x16 && g_EntryPointer != nullptr)
     {
         if (g_GameState == GS_MAIN)
@@ -356,8 +357,7 @@ void COrionWindow::OnKeyDown(const KeyEvent &ev)
 #endif
 
     const auto key = EvKey(ev);
-    if (key != KEY_RETURN && g_CurrentScreen != nullptr &&
-        g_ScreenEffectManager.Mode == SEM_NONE)
+    if (key != KEY_RETURN && g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnKeyDown(ev);
     }

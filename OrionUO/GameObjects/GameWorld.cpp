@@ -49,7 +49,7 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
     DEBUG_TRACE_FUNCTION;
     if (g_ConfigManager.FootstepsSound && gc->IsHuman() && !gc->Hidden())
     {
-        if (!gc->m_Steps.empty() && gc->LastStepSoundTime < ticks)
+        if (!gc->m_Steps.empty() && (int)gc->LastStepSoundTime < ticks)
         {
             int incID = gc->StepSoundOffset;
             int soundID = 0x012B;

@@ -78,7 +78,7 @@ CIntloc::~CIntloc()
 wstring CIntloc::Get(int id, bool toCamelCase)
 {
     DEBUG_TRACE_FUNCTION;
-    if (id < m_Strings.size())
+    if (id < (int)m_Strings.size())
     {
         if (toCamelCase)
             return ToCamelCaseW(m_Strings[id]);
@@ -160,4 +160,3 @@ wstring CIntlocManager::Intloc(const string &lang, uint clilocID, bool isNewClil
 
     return str;
 }
-

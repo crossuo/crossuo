@@ -206,7 +206,8 @@ bool CGLEngine::Install()
 
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
-    ViewPort(0, 0, g_OrionWindow.GetSize().Width, g_OrionWindow.GetSize().Height);
+    const auto size = g_OrionWindow.GetSize();
+    ViewPort(0, 0, size.Width, size.Height);
 
     return true;
 }
@@ -452,7 +453,8 @@ void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 void CGLEngine::ViewPort(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    glViewport(x, g_OrionWindow.GetSize().Height - y - height, width, height);
+    const auto size = g_OrionWindow.GetSize();
+    glViewport(x, size.Height - y - height, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(x, width + x, height + y, y, -150.0, 150.0);
@@ -487,8 +489,7 @@ void CGLEngine::PushScissor(int x, int y, const Wisp::CSize &size)
     PushScissor(Wisp::CRect(x, y, size));
 }
 
-void CGLEngine::PushScissor(
-    const Wisp::CPoint2Di &position, const Wisp::CSize &size)
+void CGLEngine::PushScissor(const Wisp::CPoint2Di &position, const Wisp::CSize &size)
 {
     DEBUG_TRACE_FUNCTION;
     PushScissor(Wisp::CRect(position, size));
@@ -1036,7 +1037,6 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
     }
 }
 
-
 void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1444,4 +1444,3 @@ void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
         glTranslatef((GLfloat)-drawX, (GLfloat)-drawY, 0.0f);
     }
 }
-

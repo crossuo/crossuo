@@ -565,8 +565,7 @@ void CGameScreen::AddTileToRenderList(
 
     if (g_ConfigManager.GrayOutOfRangeObjects)
     {
-        if (GetDistance(g_Player, Wisp::CPoint2Di(worldX, worldY)) >
-            g_ConfigManager.UpdateRange)
+        if (GetDistance(g_Player, Wisp::CPoint2Di(worldX, worldY)) > g_ConfigManager.UpdateRange)
             grayColor = 0x038E;
     }
 
@@ -897,7 +896,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
     coordinates.push_back(pair<int, int>(characterX + 2, characterY - 1));
     coordinates.push_back(pair<int, int>(characterX + 1, characterY + 1));
 
-    size_t size = coordinates.size();
+    const auto size = (int)coordinates.size();
 
     int maxZ = obj->PriorityZ;
 
@@ -1144,7 +1143,8 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
 
             char z5 = rwo->GetZ() + 5;
 
-            for (CRenderWorldObject *obj = mb->GetRender(bx, by); obj != nullptr; obj = obj->m_NextXY)
+            for (CRenderWorldObject *obj = mb->GetRender(bx, by); obj != nullptr;
+                 obj = obj->m_NextXY)
             {
                 if (!obj->IsStaticGroupObject() ||
                     (obj->IsGameObject() && ((CGameObject *)obj)->NPC) || obj->NoDrawTile ||
@@ -1932,7 +1932,8 @@ void CGameScreen::Render(bool mode)
                     g_WorldTextRenderer.ToTop((CRenderTextObject *)g_SelectedObject.Object);
             }
 
-            if (g_SelectedObject.Object == nullptr) //Если ничего не выбралось - пройдемся по объектам
+            if (g_SelectedObject.Object ==
+                nullptr) //Если ничего не выбралось - пройдемся по объектам
             {
                 //Если курсор мыши в игровом окне - просканируем его
                 if (g_MouseManager.Position.X < g_RenderBounds.GameWindowPosX ||
@@ -2468,7 +2469,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     const auto key = EvKey(ev);
 
 #if USE_WISP
-    if (key == KEY_TAB && (lParam & 0x40000000))
+    if (key == KEY_TAB && (ev.lParam & 0x40000000))
         return;
 #else
     LOG("FIXME: TAB is pressed condition");
@@ -2632,4 +2633,3 @@ void CGameScreen::OnKeyUp(const KeyEvent &ev)
             g_Orion.ChangeWarmode(0);
     }
 }
-

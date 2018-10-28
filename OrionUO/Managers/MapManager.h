@@ -112,21 +112,21 @@ public:
 	@param [__in] index Индекс блока
 	@return Ссылка на блок или nullptr
 	*/
-    CMapBlock *GetBlock(int index);
+    CMapBlock *GetBlock(uint index);
 
     /*!
 	Добавить блок
 	@param [__in] index Индекс блока
 	@return Ссылка на блок или nullptr
 	*/
-    CMapBlock *AddBlock(int index);
+    CMapBlock *AddBlock(uint index);
 
     /*!
 	Удалить блок
 	@param [__in] index Индекс блока
 	@return 
 	*/
-    void DeleteBlock(int index);
+    void DeleteBlock(uint index);
 
     /*!
 	Удалить неиспользуемые блоки
