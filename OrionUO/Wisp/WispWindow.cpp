@@ -334,6 +334,8 @@ bool CWindow::Create(
     SDL_ShowCursor(showCursor);
 #endif // USE_WISP
 
+    GetDisplaySize(&m_MaxSize.Width, &m_MaxSize.Height);
+
     return OnCreate();
 }
 
@@ -1020,4 +1022,3 @@ void GetDisplaySize(int *x, int *y)
         *y = r.h;
 }
 #endif
-

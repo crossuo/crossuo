@@ -608,7 +608,7 @@ void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     float translateX = x - 22.0f;
     float translateY = y - 22.0f;
 
-    const RECT &rc = land->m_Rect;
+    const auto &rc = land->m_Rect;
     CVector *normals = land->m_Normals;
 
     glTranslatef(translateX, translateY, 0.0f);
@@ -616,19 +616,19 @@ void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f((GLfloat)normals[0].X, (GLfloat)normals[0].Y, (GLfloat)normals[0].Z);
     glTexCoord2i(0, 0);
-    glVertex2i(22, -rc.left); //^
+    glVertex2i(22, -rc.x); //^
 
     glNormal3f((GLfloat)normals[3].X, (GLfloat)normals[3].Y, (GLfloat)normals[3].Z);
     glTexCoord2i(0, 1);
-    glVertex2i(0, 22 - rc.top); //<
+    glVertex2i(0, 22 - rc.y); //<
 
     glNormal3f((GLfloat)normals[1].X, (GLfloat)normals[1].Y, (GLfloat)normals[1].Z);
     glTexCoord2i(1, 0);
-    glVertex2i(44, 22 - rc.bottom); //>
+    glVertex2i(44, 22 - rc.h); //>
 
     glNormal3f((GLfloat)normals[2].X, (GLfloat)normals[2].Y, (GLfloat)normals[2].Z);
     glTexCoord2i(1, 1);
-    glVertex2i(22, 44 - rc.right); //v
+    glVertex2i(22, 44 - rc.w); //v
     glEnd();
 
     glTranslatef(-translateX, -translateY, 0.0f);

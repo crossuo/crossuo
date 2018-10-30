@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** LandObject.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CLandObject::CLandObject(int serial, ushort graphic, ushort color, short x, short y, char z)
     : CMapObject(ROT_LAND_OBJECT, serial, 0, color, x, y, z)
@@ -31,7 +21,7 @@ CLandObject::CLandObject(int serial, ushort graphic, ushort color, short x, shor
 
 #if UO_DEBUG_INFO != 0
     g_LandObjectsCount++;
-#endif //UO_DEBUG_INFO!=0
+#endif
 }
 
 CLandObject::~CLandObject()
@@ -69,11 +59,11 @@ int CLandObject::GetDirectionZ(int direction)
     switch (direction)
     {
         case 1:
-            return (m_Rect.bottom / 4);
+            return (m_Rect.h / 4);
         case 2:
-            return (m_Rect.right / 4);
+            return (m_Rect.w / 4);
         case 3:
-            return (m_Rect.top / 4);
+            return (m_Rect.y / 4);
         default:
             break;
     }
@@ -97,21 +87,18 @@ void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
     DEBUG_TRACE_FUNCTION;
     if (IsStretched)
     {
-        //Сохраним среднее значение Z-координаты
         Serial = ((m_Z + zTop + zRight + zBottom) / 4);
 
-        //Значения для рендера
-        m_Rect.left = m_Z * 4 + 1;
-        m_Rect.top = zTop * 4;
-        m_Rect.right = zRight * 4;
-        m_Rect.bottom = zBottom * 4 + 1;
+        m_Rect.x = m_Z * 4 + 1;
+        m_Rect.y = zTop * 4;
+        m_Rect.w = zRight * 4;
+        m_Rect.h = zBottom * 4 + 1;
 
         if (abs(m_Z - zRight) <= abs(zBottom - zTop))
             AverageZ = (m_Z + zRight) >> 1;
         else
             AverageZ = (zBottom + zTop) >> 1;
 
-        //Минимальная Z-координата из всех
         MinZ = m_Z;
 
         if (zTop < MinZ)
@@ -163,4 +150,3 @@ void CLandObject::Select(int x, int y)
         }
     }
 }
-

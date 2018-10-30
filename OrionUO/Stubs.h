@@ -169,14 +169,6 @@ const unsigned int WM_NCPAINT = 0x85;
 
 #define MAX_PATH 256
 
-struct RECT
-{
-    int left;
-    int top;
-    int right;
-    int bottom;
-};
-
 // Bad and very ugly "API" stuff
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t);
 #define LOBYTE(x) (int)(x & 0xff)

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include <SDL_loadso.h>
 #include <SDL_keyboard.h>
+#include <SDL_rect.h>
 #include "Wisp/WispGlobal.h"
 #include "FileSystem.h"
 #include "Crypt/CryptEntry.h"
@@ -5609,17 +5610,17 @@ bool COrion::LandPixelsInXY(ushort id, int x, int y)
     return false;
 }
 
-bool COrion::LandTexturePixelsInXY(int x, int y, RECT &r)
+bool COrion::LandTexturePixelsInXY(int x, int y, const SDL_Rect &r)
 {
     DEBUG_TRACE_FUNCTION;
     y -= 22;
     int testX = g_MouseManager.Position.X - x;
     int testY = g_MouseManager.Position.Y;
 
-    int y0 = -r.left;
-    int y1 = 22 - r.top;
-    int y2 = 44 - r.right;
-    int y3 = 22 - r.bottom;
+    int y0 = -r.x;
+    int y1 = 22 - r.y;
+    int y2 = 44 - r.w;
+    int y3 = 22 - r.h;
 
     bool result =
         ((testY >= testX * (y1 - y0) / -22 + y + y0) &&

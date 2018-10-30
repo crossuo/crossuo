@@ -177,7 +177,7 @@ public:
     bool StaticPixelsInXYAnimated(ushort id, int x, int y);
     bool StaticPixelsInXYInContainer(ushort id, int x, int y);
     bool LandPixelsInXY(ushort id, int x, int y);
-    bool LandTexturePixelsInXY(int x, int y, RECT &r);
+    bool LandTexturePixelsInXY(int x, int y, const SDL_Rect &r);
     void CreateTextMessageF(uchar font, ushort color, const char *format, ...);
     void CreateUnicodeTextMessageF(uchar font, ushort color, const char *format, ...);
     void CreateTextMessage(
