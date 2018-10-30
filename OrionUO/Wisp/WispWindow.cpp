@@ -38,11 +38,12 @@ void CWindow::MaximizeWindow()
     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 #else
-    SDL_Event ev;
-    SDL_zero(ev);
-    ev.type = SDL_WINDOWEVENT;
-    ev.window.event = SDL_WINDOWEVENT_MAXIMIZED;
-    SDL_PushEvent(&ev);
+    int w, h;
+    GetDisplaySize(&w, &h);
+    SetMaxSize(w, h);
+
+    SDL_SetWindowPosition(m_window, m_BorderSize.Width, m_BorderSize.Height);
+    SDL_SetWindowSize(m_window, m_MaxSize.Width, m_MaxSize.Height);
 #endif
 }
 
@@ -78,18 +79,8 @@ void CWindow::SetPositionSize(int x, int y, int width, int height)
     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetWindowPos(Handle, nullptr, x, y, width, height, 0);
 #else
-    SDL_SetWindowPosition(m_window, x, y);
+    SDL_SetWindowPosition(m_window, m_BorderSize.Width + x, m_BorderSize.Height + y);
     SDL_SetWindowSize(m_window, width, height);
-    /*
-    SDL_Event ev;
-    SDL_zero(ev);
-    ev.type = SDL_WINDOWEVENT;
-    ev.window.event = SDL_WINDOWEVENT_RESIZED;
-    ev.window.data1 = windowWidth;
-    ev.window.data2 = windowHeight;
-    g_OrionWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
-    SDL_PushEvent(&ev);
-    */
 #endif
 }
 
@@ -105,6 +96,10 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
 #else
     SDL_GetWindowPosition(m_window, x, y);
     SDL_GetWindowSize(m_window, width, height);
+    x -= m_BorderSize.Width;
+    y -= m_BorderSize.Height;
+    width += m_BorderSize.Width;
+    height += m_BorderSize.Height;
 #endif
 }
 
@@ -179,7 +174,10 @@ void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
 #else
-        SDL_SetWindowMaximumSize(m_window, newMaxSize.Width, newMaxSize.Height);
+        SDL_SetWindowMaximumSize(
+            m_window,
+            newMaxSize.Width - m_BorderSize.Width,
+            newMaxSize.Height - m_BorderSize.Height);
 #endif
     }
 
@@ -231,6 +229,8 @@ bool CWindow::Create(
         nullptr);
     if (!Handle)
         return false;
+
+    GetDisplaySize(&m_MaxSize.Width, &m_MaxSize.Height);
 
     RECT r = { 0, 0, 0, 0 };
     r.right = width;
@@ -331,10 +331,9 @@ bool CWindow::Create(
 #endif
     }
 
+    SDL_GetWindowBordersSize(m_window, &m_BorderSize.Height, nullptr, nullptr, nullptr);
     SDL_ShowCursor(showCursor);
 #endif // USE_WISP
-
-    GetDisplaySize(&m_MaxSize.Width, &m_MaxSize.Height);
 
     return OnCreate();
 }
@@ -743,8 +742,8 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                 break;
 
                 case SDL_WINDOWEVENT_MAXIMIZED:
+                case SDL_WINDOWEVENT_RESTORED:
                 {
-                    m_Size = g_OrionWindow.GetMaxSize();
                     OnResize();
                 }
                 break;

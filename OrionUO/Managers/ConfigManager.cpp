@@ -1330,6 +1330,8 @@ int CConfigManager::GetConfigKeyCode(const string &key)
 bool CConfigManager::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
+    if (!fs_path_exists(path))
+        return false;
 
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
@@ -1806,7 +1808,7 @@ bool CConfigManager::Load(const os_path &path)
         g_OrionWindow.MaximizeWindow();
     }
 
-    return fs_path_exists(path);
+    return true;
 }
 
 void CConfigManager::Save(const os_path &path)

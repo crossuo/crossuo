@@ -26,8 +26,9 @@ public:
     bool NoResize = false;
 
 protected:
-    Wisp::CSize m_Size = Wisp::CSize(100, 100);
-    Wisp::CSize m_MinSize = Wisp::CSize(100, 100);
+    Wisp::CSize m_BorderSize = Wisp::CSize(0, 0);
+    Wisp::CSize m_Size = Wisp::CSize(640, 480);
+    Wisp::CSize m_MinSize = Wisp::CSize(640, 480);
     Wisp::CSize m_MaxSize = Wisp::CSize(640, 480);
 
 public:
@@ -56,13 +57,13 @@ public:
 
     void SetMinSize(int width, int height)
     {
-        m_MinSize.Width = width;
-        m_MinSize.Height = height;
+        m_MinSize.Width = width - m_BorderSize.Width;
+        m_MinSize.Height = height - m_BorderSize.Height;
     }
     void SetMaxSize(int width, int height)
     {
-        m_MaxSize.Width = width;
-        m_MaxSize.Height = height;
+        m_MaxSize.Width = width - m_BorderSize.Width;
+        m_MaxSize.Height = height - m_BorderSize.Height;
     }
 
     bool Create(
