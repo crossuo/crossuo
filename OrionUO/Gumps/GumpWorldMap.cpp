@@ -315,7 +315,7 @@ void CGumpWorldMap::LoadMap(int map)
         auto path = g_App.ExeFilePath("OrionData/WorldMap%08X.cuo", crc32);
         bool fromFile = false;
 
-        USHORT_LIST buf;
+        vector<uint16_t> buf;
 
         if (fs_path_exists(path))
         {

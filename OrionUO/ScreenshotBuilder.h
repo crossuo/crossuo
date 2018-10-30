@@ -11,7 +11,7 @@ public:
 
     void SaveScreen();
     void SaveScreen(int x, int y, int width, int height);
-    UINT_LIST GetScenePixels(int x, int y, int width, int height);
+    vector<uint32_t> GetScenePixels(int x, int y, int width, int height);
 };
 
 extern CScreenshotBuilder g_ScreenshotBuilder;

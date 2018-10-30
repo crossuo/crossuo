@@ -33,7 +33,7 @@ CMacroManager::~CMacroManager()
 @param [__in] strings Исходные строки, при склейке получим входную строку
 @return Ключ
 */
-Keycode CMacroManager::ConvertStringToKeyCode(const STRING_LIST &strings)
+Keycode CMacroManager::ConvertStringToKeyCode(const vector<string> &strings)
 {
     DEBUG_TRACE_FUNCTION;
     string str = strings[0];

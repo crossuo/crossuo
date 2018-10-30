@@ -347,7 +347,7 @@ int CConnectionManager::Send(puchar buf, int size)
         if (!m_LoginSocket.Connected)
             return 0; //Нет подключения
 
-        UCHAR_LIST cbuf(size); //Буффер для криптованного пакета
+        vector<uint8_t> cbuf(size); //Буффер для криптованного пакета
 
         g_NetworkAction(true, &buf[0], &cbuf[0], size);
 
@@ -358,7 +358,7 @@ int CConnectionManager::Send(puchar buf, int size)
         if (!m_GameSocket.Connected)
             return 0; //Нет подключения
 
-        UCHAR_LIST cbuf(size); //Буффер для криптованного пакета
+        vector<uint8_t> cbuf(size); //Буффер для криптованного пакета
 
         g_NetworkAction(false, &buf[0], &cbuf[0], size);
 
@@ -368,7 +368,7 @@ int CConnectionManager::Send(puchar buf, int size)
     return 0;
 }
 
-int CConnectionManager::Send(const UCHAR_LIST &data)
+int CConnectionManager::Send(const vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
     return Send((puchar)&data[0], (int)data.size());

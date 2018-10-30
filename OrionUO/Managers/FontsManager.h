@@ -202,7 +202,7 @@ public:
     PMULTILINES_FONT_INFO
     GetInfoA(uchar font, const char *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);
 
-    UINT_LIST GeneratePixelsA(
+    vector<uint32_t> GeneratePixelsA(
         uchar font,
         CGLTextTexture &th,
         const char *str,
@@ -261,7 +261,7 @@ public:
     PMULTILINES_FONT_INFO GetInfoW(
         uchar font, const wchar_t *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);
 
-    UINT_LIST GeneratePixelsW(
+    vector<uint32_t> GeneratePixelsW(
         uchar font,
         CGLTextTexture &th,
         const wchar_t *str,

@@ -131,7 +131,7 @@ public:
 	*/
     int Send(puchar buf, int size);
 
-    int Send(const UCHAR_LIST &data);
+    int Send(const vector<uint8_t> &data);
 
     /*!
 	Получить свой IP-адрес

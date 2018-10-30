@@ -195,7 +195,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
     if (g_FontManager.GetWidthW(font, text) > width)
         text = g_FontManager.GetTextByWidthW(font, text, width - 6, true);
 
-    UINT_LIST textData = g_FontManager.GeneratePixelsW(
+    vector<uint32_t> textData = g_FontManager.GeneratePixelsW(
         font, textTexture, text.c_str(), color, cell, width, tat, flags);
 
     if (!textData.size())

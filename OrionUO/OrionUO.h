@@ -17,8 +17,8 @@ private:
 
     uchar m_StaticTilesFilterFlags[0x10000];
 
-    USHORT_LIST m_StumpTiles;
-    USHORT_LIST m_CaveTiles;
+    vector<uint16_t> m_StumpTiles;
+    vector<uint16_t> m_CaveTiles;
 
     deque<CIndexObjectStatic *> m_StaticAnimList;
 
@@ -29,7 +29,7 @@ private:
     deque<CIndexSound *> m_UsedSoundList;
     deque<CIndexObject *> m_UsedLightList;
 
-    UCHAR_LIST m_AnimData;
+    vector<uint8_t> m_AnimData;
 
     string m_GameServerIP = "";
 
@@ -80,7 +80,7 @@ public:
     vector<STATIC_TILES> m_StaticData;
 
 #if defined(ORION_WINDOWS)
-    static UINT_LIST FindPattern(puchar ptr, int size, const UCHAR_LIST &pattern);
+    static vector<uint32_t> FindPattern(puchar ptr, int size, const vector<uint8_t> &pattern);
 #endif
 
     bool Install();
@@ -115,7 +115,7 @@ public:
     void Connect();
     void Disconnect();
     int Send(puchar buf, int size);
-    int Send(const UCHAR_LIST &buf) { return Send((puchar)&buf[0], (int)buf.size()); }
+    int Send(const vector<uint8_t> &buf) { return Send((puchar)&buf[0], (int)buf.size()); }
     void ServerSelection(int pos);
     void RelayServer(const char *ip, int port, puchar gameSeed);
     void CharacterSelection(int pos);

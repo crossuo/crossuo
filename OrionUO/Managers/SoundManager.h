@@ -68,7 +68,7 @@ public:
 
     HSTREAM LoadSoundEffect(CIndexSound &is);
 
-    UCHAR_LIST CreateWaveFile(CIndexSound &is);
+    vector<uint8_t> CreateWaveFile(CIndexSound &is);
 
     //void PlaySoundEffect(Mix_Chunk *mix, int volume);
     void PlaySoundEffect(HSTREAM stream, float volume);

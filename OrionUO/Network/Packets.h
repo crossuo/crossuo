@@ -432,7 +432,7 @@ public:
 class CPacketMegaClilocRequest : public CPacket
 {
 public:
-    CPacketMegaClilocRequest(UINT_LIST &list);
+    CPacketMegaClilocRequest(vector<uint32_t> &list);
 };
 
 class CPacketChangeStatLockStateRequest : public CPacket

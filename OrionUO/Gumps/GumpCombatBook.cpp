@@ -35,10 +35,10 @@ CGumpCombatBook::~CGumpCombatBook()
 {
 }
 
-USHORT_LIST CGumpCombatBook::GetItemsList(uchar index)
+vector<uint16_t> CGumpCombatBook::GetItemsList(uchar index)
 {
     DEBUG_TRACE_FUNCTION;
-    USHORT_LIST list;
+    vector<uint16_t> list;
 
     switch (index)
     {
@@ -494,7 +494,7 @@ void CGumpCombatBook::UpdateContent()
 
         Add(new CGUIGumppicTiled(0x0835, 62, 88, 128, 0));
 
-        USHORT_LIST list = GetItemsList((uchar)i);
+        vector<uint16_t> list = GetItemsList((uchar)i);
 
         int size = (int)list.size();
         size_t maxStaticCount = g_Orion.m_StaticData.size();

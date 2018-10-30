@@ -9,7 +9,7 @@ public:
     puchar Ptr = 0;
 
 protected:
-    UCHAR_LIST m_Data;
+    vector<uint8_t> m_Data;
 
 public:
     CDataWritter();
@@ -17,7 +17,7 @@ public:
 
     virtual ~CDataWritter();
 
-    UCHAR_LIST Data() const { return m_Data; }
+    vector<uint8_t> Data() const { return m_Data; }
     puchar DataPtr() { return &m_Data[0]; }
     size_t Size() { return m_Data.size(); }
 

@@ -233,7 +233,7 @@ bool CSocket::Connect(const string &address, int port)
     return true;
 }
 
-UCHAR_LIST CSocket::Decompression(UCHAR_LIST data)
+vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
 {
     DEBUG_TRACE_FUNCTION;
     if (GameSocket)
@@ -243,7 +243,7 @@ UCHAR_LIST CSocket::Decompression(UCHAR_LIST data)
         if (g_NetworkPostAction != nullptr)
             g_NetworkPostAction(&data[0], &data[0], (int)inSize);
 
-        UCHAR_LIST decBuf(inSize * 4 + 2);
+        vector<uint8_t> decBuf(inSize * 4 + 2);
 
         int outSize = 65536;
 
@@ -255,7 +255,9 @@ UCHAR_LIST CSocket::Decompression(UCHAR_LIST data)
             Disconnect();
         }
         else
+        {
             decBuf.resize(outSize);
+        }
 
         return decBuf;
     }

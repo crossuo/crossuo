@@ -29,7 +29,7 @@ private:
     void GenerateMap();
 
     void CreatePixels(
-        USHORT_LIST &data,
+        vector<uint16_t> &data,
         int color,
         int x,
         int y,

@@ -37,14 +37,14 @@ CUopBlockHeader *CUopMappedFile::GetBlock(uint64 hash)
     return nullptr;
 }
 
-UCHAR_LIST CUopMappedFile::GetData(const CUopBlockHeader &block)
+vector<uint8_t> CUopMappedFile::GetData(const CUopBlockHeader &block)
 {
     ResetPtr();
     Move((int)block.Offset);
 
     uLongf compressedSize = block.CompressedSize;
     uLongf decompressedSize = block.DecompressedSize;
-    UCHAR_LIST result(decompressedSize, 0);
+    vector<uint8_t> result(decompressedSize, 0);
 
     if (compressedSize && compressedSize != decompressedSize)
     {
@@ -579,7 +579,7 @@ char *CFileManager::ReadUOPDataFromFileStream(UOPAnimationData &animData)
 }
 
 bool CFileManager::DecompressUOPFileData(
-    UOPAnimationData &animData, UCHAR_LIST &decLayoutData, char *buf)
+    UOPAnimationData &animData, vector<uint8_t> &decLayoutData, char *buf)
 {
     uLongf cLen = animData.compressedLength;
     uLongf dLen = animData.decompressedLength;
@@ -674,7 +674,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
     {
         LOG("item dump start: %016llX, %i\n", i->first, i->second.CompressedSize);
 
-        UCHAR_LIST data = file.GetData(i->second);
+        vector<uint8_t> data = file.GetData(i->second);
 
         if (data.empty())
             continue;

@@ -9,7 +9,7 @@
 
 ENCRYPTION_TYPE g_EncryptionType = ET_NOCRYPT;
 size_t g_CryptPluginsCount = 0;
-UCHAR_LIST g_RawData;
+vector<uint8_t> g_RawData;
 
 static void Init(const bool &mode, u8 *array)
 {
@@ -101,9 +101,9 @@ static void LoadPlugins(PLUGIN_INFO *result)
     }
 }
 
-UCHAR_LIST ApplyInstall(uchar *address, size_t size)
+vector<uint8_t> ApplyInstall(uchar *address, size_t size)
 {
-    UCHAR_LIST result;
+    vector<uint8_t> result;
 
     if (size)
     {
@@ -186,7 +186,7 @@ size_t GetPluginsCount()
 void CryptInstallNew(uchar *address, size_t size, uchar *result, size_t &resultSize)
 {
     assert(address && result && size && resultSize);
-    UCHAR_LIST buf = ApplyInstall(address, size);
+    vector<uint8_t> buf = ApplyInstall(address, size);
     memset(result, 0, resultSize);
     resultSize = buf.size();
     if (resultSize >= buf.size())

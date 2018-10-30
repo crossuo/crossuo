@@ -20,7 +20,7 @@ UOFileReader g_UOFileReader;
 @param [__in] io Ссылка на данные о гампе
 @return Массив пикселей или nullptr
 */
-USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
+vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
     size_t dataStart = io.Address;
@@ -28,7 +28,7 @@ USHORT_LIST UOFileReader::GetGumpPixels(CIndexObject &io)
 
     int blocksize = io.Width * io.Height;
 
-    USHORT_LIST pixels;
+    vector<uint16_t> pixels;
 
     if (!blocksize)
     {
@@ -87,7 +87,7 @@ CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = nullptr;
 
-    USHORT_LIST pixels = GetGumpPixels(io);
+    vector<uint16_t> pixels = GetGumpPixels(io);
 
     if (pixels.size())
     {
@@ -98,7 +98,7 @@ CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
     return th;
 }
 
-USHORT_LIST
+vector<uint16_t>
 UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, short &height)
 {
     DEBUG_TRACE_FUNCTION;
@@ -107,7 +107,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
     pushort P = (pushort)io.Address;
     ushort color = io.Color;
 
-    USHORT_LIST pixels;
+    vector<uint16_t> pixels;
 
     if (!run) //raw tile
     {
@@ -345,7 +345,7 @@ CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
     short width = 0;
     short height = 0;
 
-    USHORT_LIST pixels = GetArtPixels(id, io, run, width, height);
+    vector<uint16_t> pixels = GetArtPixels(id, io, run, width, height);
 
     if (pixels.size())
     {
@@ -462,7 +462,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
         return nullptr;
     }
 
-    USHORT_LIST pixels(w * h);
+    vector<uint16_t> pixels(w * h);
 
     pushort P = (pushort)io.Address;
 
@@ -499,7 +499,7 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
     CGLTexture *th = new CGLTexture();
     th->Texture = 0;
 
-    USHORT_LIST pixels(io.Width * io.Height);
+    vector<uint16_t> pixels(io.Width * io.Height);
 
     puchar p = (puchar)io.Address;
 

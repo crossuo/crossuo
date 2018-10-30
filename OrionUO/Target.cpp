@@ -331,7 +331,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 
     if (index.UopBlock != nullptr)
     {
-        UCHAR_LIST data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
+        vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
 
         if (data.empty())
             return;

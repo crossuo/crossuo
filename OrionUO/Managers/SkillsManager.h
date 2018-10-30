@@ -34,7 +34,7 @@ public:
 
 private:
     vector<CSkill> m_Skills;
-    UCHAR_LIST m_SortedTable;
+    vector<uint8_t> m_SortedTable;
 
     bool CompareName(const string &str1, const string &str2);
 

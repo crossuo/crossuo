@@ -91,9 +91,9 @@ private:
 
     void AddHTMLGumps(class CGump *gump, vector<HTMLGumpDataInfo> &list);
 
-    UINT_LIST m_MegaClilocRequests;
+    vector<uint32_t> m_MegaClilocRequests;
 
-    deque<UCHAR_LIST> m_PluginData;
+    deque<vector<uint8_t>> m_PluginData;
 
 #if USE_WISP
     CRITICAL_SECTION m_CSPluginNetwork;
@@ -222,7 +222,7 @@ public:
     CPacketManager();
     virtual ~CPacketManager();
 
-    virtual int GetPacketSize(const UCHAR_LIST &packet, int &offsetToSize);
+    virtual int GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize);
 
     CPacketInfo &GetInfo(uchar buf) const { return m_Packets[buf]; }
 

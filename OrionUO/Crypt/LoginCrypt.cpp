@@ -4,7 +4,7 @@
 #include "../Wisp/WispGlobal.h"
 #include "../Wisp/WispDataStream.h"
 #include "aes.h"
-extern UCHAR_LIST g_RawData;
+extern vector<uint8_t> g_RawData;
 CLoginCrypt g_LoginCrypt;
 
 CLoginCrypt::CLoginCrypt()

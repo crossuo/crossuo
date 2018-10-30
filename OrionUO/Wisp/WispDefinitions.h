@@ -12,6 +12,7 @@
 #define DEBUG_TRACE_FUNCTION
 #endif
 
+// REMOVE THESE
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;

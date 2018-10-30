@@ -90,22 +90,26 @@ bool CConnection::Read(int maxSize)
     }
     else if (Connected && m_Socket != nullptr)
     {
-        UCHAR_LIST data(maxSize);
+        vector<uint8_t> data(maxSize);
         const int size = tcp_recv(m_Socket, &data[0], maxSize);
 
         if (size > 0)
         {
-            //LOG("CConnection::Read size=%i\n", size);
+            LOG("CConnection::Read size=%i\n", size);
             data.resize(size);
             data = Decompression(data);
             m_MessageParser->Append(data);
             return true;
         }
         else
+        {
             LOG("CConnection::Read, bad size=%i\n", size);
+        }
     }
     else
+    {
         LOG("CConnection::Read, unknown state, m_Connected=%i\n", Connected);
+    }
 
     return false;
 }
@@ -121,7 +125,7 @@ int CConnection::Send(puchar data, int size)
     return sent;
 }
 
-int CConnection::Send(const UCHAR_LIST &data)
+int CConnection::Send(const vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
     if (!data.size())

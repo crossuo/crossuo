@@ -578,7 +578,7 @@ void CGumpPaperdoll::UpdateContent()
                     {
                         short imageWidth = 0;
                         short imageHeight = 0;
-                        USHORT_LIST pixels = g_UOFileReader.GetArtPixels(
+                        vector<uint16_t> pixels = g_UOFileReader.GetArtPixels(
                             equipment->Graphic, sio, true, imageWidth, imageHeight);
 
                         int wantImageWidth = texture->ImageWidth;
@@ -590,7 +590,7 @@ void CGumpPaperdoll::UpdateContent()
                             continue;
                         }
 
-                        USHORT_LIST wantPixels(wantImageWidth * wantImageHeight, 0);
+                        vector<uint16_t> wantPixels(wantImageWidth * wantImageHeight, 0);
 
                         int imageOffsetX = texture->ImageOffsetX;
                         int imageOffsetY = texture->ImageOffsetY;

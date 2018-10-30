@@ -1693,7 +1693,7 @@ void CGumpManager::Save(const os_path &path)
         }
     }
 
-    UINT_LIST playerContainers;
+    vector<uint32_t> playerContainers;
     playerContainers.push_back(g_PlayerSerial);
 
     while (!playerContainers.empty() && !containerList.empty())

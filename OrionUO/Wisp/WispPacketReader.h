@@ -14,7 +14,7 @@ public:
 
     void Read(class CConnection *connection);
 
-    virtual int GetPacketSize(const UCHAR_LIST &packet, int &offsetToSize) { return 0; }
+    virtual int GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize) { return 0; }
 
 protected:
     virtual void OnPacket() {}
@@ -22,7 +22,7 @@ protected:
     virtual void OnReadFailed() {}
 
 public:
-    deque<UCHAR_LIST> m_PacketsStack;
+    deque<vector<uint8_t>> m_PacketsStack;
 };
 
 }; // namespace Wisp

@@ -646,7 +646,7 @@ bool CFontsManager::GenerateA(
     return GenerateABase(font, th, str, color, width, align, flags);
 }
 
-UINT_LIST CFontsManager::GeneratePixelsA(
+vector<uint32_t> CFontsManager::GeneratePixelsA(
     uchar font,
     CGLTextTexture &th,
     const char *str,
@@ -656,7 +656,7 @@ UINT_LIST CFontsManager::GeneratePixelsA(
     ushort flags)
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST pData;
+    vector<uint32_t> pData;
 
     th.Clear();
 
@@ -803,7 +803,7 @@ bool CFontsManager::GenerateABase(
     ushort flags)
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST pixels = GeneratePixelsA(font, th, str.c_str(), color, width, align, flags);
+    vector<uint32_t> pixels = GeneratePixelsA(font, th, str.c_str(), color, width, align, flags);
     bool result = false;
 
     if (pixels.size())
@@ -1506,7 +1506,7 @@ void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const string &c
     DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser parser({}, " =", "", "\"\"");
 
-    STRING_LIST strings = parser.GetTokens(content.c_str());
+    vector<string> strings = parser.GetTokens(content.c_str());
     int size = (int)strings.size();
 
     for (int i = 0; i < size; i += 2)
@@ -2194,7 +2194,7 @@ bool CFontsManager::GenerateW(
     return GenerateWBase(font, th, str, color, cell, width, align, flags);
 }
 
-UINT_LIST CFontsManager::GeneratePixelsW(
+vector<uint32_t> CFontsManager::GeneratePixelsW(
     uchar font,
     CGLTextTexture &th,
     const wchar_t *str,
@@ -2205,7 +2205,7 @@ UINT_LIST CFontsManager::GeneratePixelsW(
     ushort flags)
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST pData;
+    vector<uint32_t> pData;
 
     if (font >= 20 || !m_UnicodeFontAddress[font])
         return pData;
@@ -2720,7 +2720,7 @@ bool CFontsManager::GenerateWBase(
     ushort flags)
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST pixels = GeneratePixelsW(font, th, str.c_str(), color, cell, width, align, flags);
+    vector<uint32_t> pixels = GeneratePixelsW(font, th, str.c_str(), color, cell, width, align, flags);
     bool result = false;
 
     if (pixels.size())

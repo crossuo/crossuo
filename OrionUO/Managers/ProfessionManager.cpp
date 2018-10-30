@@ -75,7 +75,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 
     while (!file.IsEOF() && !exit)
     {
-        STRING_LIST strings = file.ReadTokens();
+        vector<string> strings = file.ReadTokens();
 
         if (!strings.size())
             continue;

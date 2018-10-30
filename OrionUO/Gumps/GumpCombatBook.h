@@ -34,7 +34,7 @@ public:
     CGumpCombatBook(int x, int y);
     virtual ~CGumpCombatBook();
 
-    static USHORT_LIST GetItemsList(uchar index);
+    static vector<uint16_t> GetItemsList(uchar index);
 
     virtual void DelayedClick(CRenderObject *obj);
 

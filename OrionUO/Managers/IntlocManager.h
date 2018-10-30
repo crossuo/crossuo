@@ -19,7 +19,7 @@ public:
     bool Loaded = false;
 
 private:
-    WSTRING_LIST m_Strings;
+    vector<wstring> m_Strings;
 
 public:
     CIntloc(int fileIndex, const string &lang);

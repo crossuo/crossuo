@@ -34,7 +34,7 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     sprintf_s(buf, "/snapshot_d(%d%d%d)_t(%d%d%d)", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);  
     path += ToPath(buf);
 
-    UINT_LIST pixels = GetScenePixels(x, y, width, height);
+    vector<uint32_t> pixels = GetScenePixels(x, y, width, height);
 
     FIBITMAP *fBmp =
         FreeImage_ConvertFromRawBits((puchar)&pixels[0], width, height, width * 4, 32, 0, 0, 0);
@@ -77,10 +77,10 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
         g_Orion.CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
 }
 
-UINT_LIST CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
+vector<uint32_t> CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST pixels(width * height);
+    vector<uint32_t> pixels(width * height);
 
     glReadPixels(
         x,

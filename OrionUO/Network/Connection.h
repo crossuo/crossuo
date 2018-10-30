@@ -31,7 +31,7 @@ public:
 
     virtual bool Connect(const string &address, int port);
 
-    virtual UCHAR_LIST Decompression(UCHAR_LIST data);
+    virtual vector<uint8_t> Decompression(vector<uint8_t> data);
 };
 
 #endif

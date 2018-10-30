@@ -82,7 +82,7 @@ public:
     bool LoadLangCodes();
 
     //Достаём вектор с кодами словосочетаний найденных в вводе
-    void GetKeywords(const wchar_t *text, UINT_LIST &codes);
+    void GetKeywords(const wchar_t *text, vector<uint32_t> &codes);
 };
 
 //!Ссылка на менеджер cпича

@@ -291,11 +291,11 @@ void CTextFileParser::SaveRawLine()
 }
 
 //Прочитать токены из файла
-STRING_LIST CTextFileParser::ReadTokens(bool trim)
+vector<string> CTextFileParser::ReadTokens(bool trim)
 {
     TEXTPARSER_DEBUG("c11_f14");
     m_Trim = trim;
-    STRING_LIST result;
+    vector<string> result;
 
     //Если не достигли конца файла
     if (!IsEOF())
@@ -333,11 +333,11 @@ STRING_LIST CTextFileParser::ReadTokens(bool trim)
 }
 
 //Прочитать токены из строки
-STRING_LIST CTextFileParser::GetTokens(const char *str, bool trim)
+vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
 {
     TEXTPARSER_DEBUG("c11_f15");
     m_Trim = trim;
-    STRING_LIST result;
+    vector<string> result;
 
     //Сохраним предыдущее значения конца данных
     puchar oldEnd = m_End;

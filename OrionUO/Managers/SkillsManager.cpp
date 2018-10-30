@@ -108,7 +108,7 @@ bool CSkillsManager::CompareName(const string &str1, const string &str2)
 void CSkillsManager::Sort()
 {
     m_SortedTable.resize(Count, 0xFF);
-    UCHAR_LIST bufTable(Count, 0xFF);
+    vector<uint8_t> bufTable(Count, 0xFF);
 
     //Установим первый элемент нулем и количество обработанных навыков - 1
     int parsed = 1;

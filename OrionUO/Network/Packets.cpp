@@ -366,7 +366,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
 
     uchar typeValue = (uchar)type;
 
-    UINT_LIST codes;
+    vector<uint32_t> codes;
     g_SpeechManager.GetKeywords(text, codes);
 
     //encoded
@@ -1129,7 +1129,7 @@ CPacketMegaClilocRequestOld::CPacketMegaClilocRequestOld(int serial)
     WriteUInt32BE(serial);
 }
 
-CPacketMegaClilocRequest::CPacketMegaClilocRequest(UINT_LIST &list)
+CPacketMegaClilocRequest::CPacketMegaClilocRequest(vector<uint32_t> &list)
     : CPacket(1)
 {
     size_t len = list.size();

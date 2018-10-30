@@ -31,7 +31,7 @@ private:
     int m_HuesCount{ 0 };
 
     //!Данные для радара
-    USHORT_LIST m_Radarcol;
+    vector<uint16_t> m_Radarcol;
 
 public:
     CColorManager();

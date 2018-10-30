@@ -549,7 +549,7 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
     }
 }
 
-int CPacketManager::GetPacketSize(const UCHAR_LIST &packet, int &offsetToSize)
+int CPacketManager::GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize)
 {
     DEBUG_TRACE_FUNCTION;
     if (packet.size())
@@ -659,7 +659,7 @@ void CPacketManager::OnPacket()
 void CPacketManager::SavePluginReceivePacket(puchar buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
-    UCHAR_LIST packet(size);
+    vector<uint8_t> packet(size);
 
     memcpy(&packet[0], &buf[0], size);
 
@@ -689,7 +689,7 @@ void CPacketManager::ProcessPluginPackets()
 
     while (!m_PluginData.empty())
     {
-        UCHAR_LIST &packet = m_PluginData.back();
+        vector<uint8_t> &packet = m_PluginData.back();
 
         PluginReceiveHandler(&packet[0], (int)packet.size());
         packet.clear();
@@ -3775,7 +3775,7 @@ PACKET_HANDLER(MegaCliloc)
 
     puchar end = Start + Size;
 
-    WSTRING_LIST list;
+    vector<wstring> list;
 
     while (Ptr < end)
     {
@@ -4434,7 +4434,7 @@ PACKET_HANDLER(OpenGump)
     Wisp::CTextFileParser cmdParser({}, " ", "", "");
     Wisp::CTextFileParser tilepicGraphicParser({}, ",", "", "");
 
-    STRING_LIST commandList = parser.GetTokens(commands.c_str());
+    vector<string> commandList = parser.GetTokens(commands.c_str());
     CBaseGUI *lastGumpObject = nullptr;
 
     bool EntryChanged = false;
@@ -4444,7 +4444,7 @@ PACKET_HANDLER(OpenGump)
 
     for (const string &str : commandList)
     {
-        STRING_LIST list = cmdParser.GetTokens(str.c_str());
+        vector<string> list = cmdParser.GetTokens(str.c_str());
 
         int listSize = (int)list.size();
 
@@ -4718,7 +4718,7 @@ PACKET_HANDLER(OpenGump)
 
                 if (cmd == "tilepic")
                 {
-                    STRING_LIST graphicList = tilepicGraphicParser.GetTokens(list[3].c_str());
+                    vector<string> graphicList = tilepicGraphicParser.GetTokens(list[3].c_str());
 
                     if (graphicList.size() >= 1)
                     {
@@ -4753,7 +4753,7 @@ PACKET_HANDLER(OpenGump)
                 if (listSize >= 5 && m_ClientVersion >= CV_305D)
                 {
                     Wisp::CTextFileParser gumppicParser({}, "=", "", "");
-                    STRING_LIST hueList = gumppicParser.GetTokens(list[4].c_str());
+                    vector<string> hueList = gumppicParser.GetTokens(list[4].c_str());
 
                     if (hueList.size() > 1)
                         color = ToInt(hueList[1]);
@@ -4762,7 +4762,7 @@ PACKET_HANDLER(OpenGump)
 
                     if (listSize >= 6)
                     {
-                        STRING_LIST classList = gumppicParser.GetTokens(list[5].c_str());
+                        vector<string> classList = gumppicParser.GetTokens(list[5].c_str());
 
                         if (hueList.size() > 1)
                         {
@@ -4922,7 +4922,7 @@ PACKET_HANDLER(OpenCompressedGump)
     }
 
     // Layout data.....
-    UCHAR_LIST decLayoutData(dLen);
+    vector<uint8_t> decLayoutData(dLen);
     LOG("Gump layout:\n\tSenderID=0x%08X\n\tGumpID=0x%08X\n\tCLen=%d\n\tDLen=%d\nDecompressing layout gump data...\n",
         senderID,
         gumpID,
@@ -4946,7 +4946,7 @@ PACKET_HANDLER(OpenCompressedGump)
     uint linesCount = ReadUInt32BE(); //Text lines count
     uint cTLen = 0;
     uLongf dTLen = 0;
-    UCHAR_LIST gumpDecText;
+    vector<uint8_t> gumpDecText;
 
     if (linesCount > 0)
     {
@@ -4974,7 +4974,7 @@ PACKET_HANDLER(OpenCompressedGump)
 
     int newsize = 21 + dLen + 2 + dTLen;
 
-    UCHAR_LIST newbufData(newsize);
+    vector<uint8_t> newbufData(newsize);
     puchar newbuf = &newbufData[0];
     newbuf[0] = 0xb0;
     pack16(newbuf + 1, newsize);
@@ -5653,7 +5653,7 @@ PACKET_HANDLER(CustomHouse)
         if (cLen <= 0)
             continue;
 
-        UCHAR_LIST decompressedBytes(dLen);
+        vector<uint8_t> decompressedBytes(dLen);
         int z_err = uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
 
         if (z_err != Z_OK)

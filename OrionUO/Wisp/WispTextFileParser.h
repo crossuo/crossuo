@@ -86,10 +86,10 @@ public:
     bool IsEOF();
 
     //Прочитать токены из файла //Reads token from file
-    STRING_LIST ReadTokens(bool trim = true);
+    vector<string> ReadTokens(bool trim = true);
 
     //Прочитать токены из строки //Read tokens from the string
-    STRING_LIST GetTokens(const char *str, bool trim = true);
+    vector<string> GetTokens(const char *str, bool trim = true);
 };
 
 class CTextFileWritter

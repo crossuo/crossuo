@@ -22,7 +22,7 @@ public:
 	@param [__in] io Ссылка на данные о гампе
 	@return Массив пикселей или nullptr
 	*/
-    USHORT_LIST GetGumpPixels(CIndexObject &io);
+    vector<uint16_t> GetGumpPixels(CIndexObject &io);
 
     /*!
 	Прочитать гамп и сгенерировать текстуру
@@ -31,7 +31,8 @@ public:
 	*/
     CGLTexture *ReadGump(CIndexObject &io);
 
-    USHORT_LIST GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, short &height);
+    vector<uint16_t>
+    GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, short &height);
 
     /*!
 	Прочитать арт и сгенерировать текстуру

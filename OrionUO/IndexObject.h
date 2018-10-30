@@ -58,7 +58,7 @@ public:
     CIndexSound();
     virtual ~CIndexSound();
 
-    UCHAR_LIST m_WaveFile;
+    vector<uint8_t> m_WaveFile;
     HSTREAM m_Stream{};
 };
 

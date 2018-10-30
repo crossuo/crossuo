@@ -16,7 +16,7 @@ CLandObject::CLandObject(int serial, ushort graphic, ushort color, short x, shor
 
     IsStretched = (!tile.TexID && ::IsWet(tile.Flags));
 
-    memset(&m_Rect, 0, sizeof(RECT));
+    memset(&m_Rect, 0, sizeof(m_Rect));
     memset(&m_Normals[0], 0, sizeof(m_Normals));
 
 #if UO_DEBUG_INFO != 0

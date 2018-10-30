@@ -81,7 +81,7 @@ bool CSpeechManager::LoadSpeech()
     LOG("Selected language: %s (%s)\n", g_Language.c_str(), lang.c_str());
 
     Wisp::CDataReader reader;
-    UCHAR_LIST tempData;
+    vector<uint8_t> tempData;
     bool isUOP = false;
 
     if (g_FileManager.m_MainMisc.Start != nullptr)
@@ -221,7 +221,7 @@ bool CSpeechManager::LoadLangCodes()
     return true;
 }
 
-void CSpeechManager::GetKeywords(const wchar_t *text, UINT_LIST &codes)
+void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
 {
     DEBUG_TRACE_FUNCTION;
     if (!m_Loaded ||

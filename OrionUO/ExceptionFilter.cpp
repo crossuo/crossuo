@@ -212,7 +212,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
             bool crashlog = false;
             if (file.Load(fileName))
             {
-                UCHAR_LIST pattern;
+                vector<uint8_t> pattern;
 #if defined(_WIN64)
                 puchar eipBytes = (puchar)exceptionInfo->ContextRecord->Rip;
 #else
@@ -222,7 +222,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                 for (int i = 0; i < 16; i++)
                     pattern.push_back(eipBytes[i]);
 
-                UINT_LIST list = COrion::FindPattern(file.Start, (int)file.Size, pattern);
+                vector<uint32_t> list = COrion::FindPattern(file.Start, (int)file.Size, pattern);
 
                 for (int item : list)
                     CRASHLOG("Address in exe (by EIP): 0x%08X\n", item);
@@ -235,7 +235,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                 {
                     CRASHLOG("\nPackets in stack:\n");
 
-                    for (deque<UCHAR_LIST>::iterator i = g_PacketManager.m_PacketsStack.begin();
+                    for (deque<vector<uint8_t>>::iterator i = g_PacketManager.m_PacketsStack.begin();
                          i != g_PacketManager.m_PacketsStack.end();
                          ++i)
                     {

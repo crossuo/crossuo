@@ -51,7 +51,7 @@ public:
 
     CUopBlockHeader *GetBlock(uint64 hash);
 
-    UCHAR_LIST GetData(const CUopBlockHeader &block);
+    vector<uint8_t> GetData(const CUopBlockHeader &block);
 };
 
 class CFileManager : public Wisp::CDataReader
@@ -131,7 +131,7 @@ public:
 
     //Разжатие данных с кадрами из УОП аним файла.
     static bool
-    DecompressUOPFileData(UOPAnimationData &animData, UCHAR_LIST &decLayoutData, char *buf);
+    DecompressUOPFileData(UOPAnimationData &animData, vector<uint8_t> &decLayoutData, char *buf);
 
     void SendFilesInfo();
 

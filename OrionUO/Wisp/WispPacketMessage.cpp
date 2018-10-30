@@ -19,7 +19,7 @@ CPacketMessage::CPacketMessage(puchar data, int dataSize, bool bigEndian)
     memcpy(&m_Data[0], &data[0], dataSize);
 }
 
-CPacketMessage::CPacketMessage(const UCHAR_LIST &data, bool bigEndian)
+CPacketMessage::CPacketMessage(const vector<uint8_t> &data, bool bigEndian)
     : BigEndian(bigEndian)
     , m_Data(data)
 {
@@ -35,22 +35,22 @@ CPacketMessage::~CPacketMessage()
 void CPacketMessage::Append(puchar data, int dataSize)
 {
     DEBUG_TRACE_FUNCTION;
-    UCHAR_LIST buf(dataSize);
+    vector<uint8_t> buf(dataSize);
     memcpy(&buf[0], &data[0], dataSize);
 
     m_Data.insert(m_Data.end(), buf.begin(), buf.end());
 }
 
-void CPacketMessage::Append(const UCHAR_LIST &data)
+void CPacketMessage::Append(const vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
     m_Data.insert(m_Data.end(), data.begin(), data.end());
 }
 
-UCHAR_LIST CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
+vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
 {
     DEBUG_TRACE_FUNCTION;
-    UCHAR_LIST result;
+    vector<uint8_t> result;
 
     if (!m_Data.size())
         return result;

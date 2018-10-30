@@ -25,7 +25,7 @@ CGLTextureCircleOfTransparency::~CGLTextureCircleOfTransparency()
 }
 
 void CGLTextureCircleOfTransparency::CreatePixels(
-    int radius, short &width, short &height, UINT_LIST &pixels)
+    int radius, short &width, short &height, vector<uint32_t> &pixels)
 {
     DEBUG_TRACE_FUNCTION;
     int fixRadius = radius + 1;
@@ -64,7 +64,7 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
     if (radius == Radius)
         return true;
 
-    UINT_LIST pixels;
+    vector<uint32_t> pixels;
 
     CreatePixels(radius, Width, Height, pixels);
 

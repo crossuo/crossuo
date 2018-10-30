@@ -154,7 +154,7 @@ float CSoundManager::GetVolumeValue(int distance, bool music)
 /// проигрывания.</summary>
 /// <param name="is">ссылка на запись звука в MUL файле</param>
 /// <returns>Wave файл в виде вектора байтов</returns>
-UCHAR_LIST CSoundManager::CreateWaveFile(CIndexSound &is)
+vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
 {
     DEBUG_TRACE_FUNCTION;
     size_t dataSize = is.DataSize - sizeof(SOUND_BLOCK);

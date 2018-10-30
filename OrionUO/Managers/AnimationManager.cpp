@@ -318,7 +318,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
         while (!mobtypesParser.IsEOF())
         {
-            STRING_LIST strings = mobtypesParser.ReadTokens();
+            vector<string> strings = mobtypesParser.ReadTokens();
 
             if (strings.size() >= 3)
             {
@@ -359,7 +359,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
     {
         while (!animParser[i].IsEOF())
         {
-            STRING_LIST strings = animParser[i].ReadTokens();
+            vector<string> strings = animParser[i].ReadTokens();
 
             if (strings.size() < 2)
                 continue;
@@ -383,7 +383,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
     while (!equipConvParser.IsEOF())
     {
-        STRING_LIST strings = equipConvParser.ReadTokens();
+        vector<string> strings = equipConvParser.ReadTokens();
 
         if (strings.size() >= 5)
         {
@@ -432,7 +432,7 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
     while (!bodyconvParser.IsEOF())
     {
-        STRING_LIST strings = bodyconvParser.ReadTokens();
+        vector<string> strings = bodyconvParser.ReadTokens();
 
         if (strings.size() >= 2)
         {
@@ -640,13 +640,13 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
     while (!bodyParser.IsEOF())
     {
-        STRING_LIST strings = bodyParser.ReadTokens();
+        vector<string> strings = bodyParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
             ushort index = atoi(strings[0].c_str());
 
-            STRING_LIST newBody = newBodyParser.GetTokens(strings[1].c_str());
+            vector<string> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || !newBody.size())
                 continue;
@@ -738,13 +738,13 @@ void CAnimationManager::InitIndexReplaces(puint verdata)
 
     while (!corpseParser.IsEOF())
     {
-        STRING_LIST strings = corpseParser.ReadTokens();
+        vector<string> strings = corpseParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
             ushort index = atoi(strings[0].c_str());
 
-            STRING_LIST newBody = newBodyParser.GetTokens(strings[1].c_str());
+            vector<string> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || !newBody.size())
                 continue;
@@ -2004,7 +2004,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
             char *buf = CFileManager::ReadUOPDataFromFileStream(animDataStruct);
 
             //decompressing here
-            UCHAR_LIST decLayoutData(decompressedLength);
+            vector<uint8_t> decLayoutData(decompressedLength);
             bool decompressionRes =
                 CFileManager::DecompressUOPFileData(animDataStruct, decLayoutData, buf);
             if (!decompressionRes)
@@ -2117,7 +2117,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     char *buf = CFileManager::ReadUOPDataFromFileStream(animDataStruct);
 
     //decompressing here
-    UCHAR_LIST decLayoutData(decompressedLength);
+    vector<uint8_t> decLayoutData(decompressedLength);
     bool result = CFileManager::DecompressUOPFileData(animDataStruct, decLayoutData, buf);
     if (!result)
         return false; //decompression failed
@@ -2150,7 +2150,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
         if (!imageWidth || !imageHeight)
             continue;
         int textureSize = imageWidth * imageHeight;
-        USHORT_LIST data(textureSize, 0);
+        vector<uint16_t> data(textureSize, 0);
 
         if (data.size() != textureSize)
         {
@@ -3109,7 +3109,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
         int wantSize = imageWidth * imageHeight;
 
-        USHORT_LIST data(wantSize, 0);
+        vector<uint16_t> data(wantSize, 0);
 
         if (data.size() != wantSize)
         {

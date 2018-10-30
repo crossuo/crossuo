@@ -38,7 +38,7 @@ private:
 	@param [__in] strings Исходные строки, при склейке получим входную строку
 	@return Ключ
 	*/
-    Keycode ConvertStringToKeyCode(const STRING_LIST &strings);
+    Keycode ConvertStringToKeyCode(const vector<string> &strings);
 
 public:
     CMacroManager();

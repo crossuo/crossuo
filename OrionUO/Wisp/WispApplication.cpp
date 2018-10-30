@@ -83,7 +83,7 @@ string CApplication::GetFileVersion(uint *numericVerion) const
 
         if (dwSize > 0)
         {
-            UCHAR_LIST lpVersionInfo(dwSize, 0);
+            vector<uint8_t> lpVersionInfo(dwSize, 0);
 
             if (GetFileVersionInfoW(&szFilename[0], 0, dwSize, &lpVersionInfo[0]))
             {

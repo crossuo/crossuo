@@ -44,7 +44,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
     }
 
     int mapSize = gump->Width * gump->Height;
-    UCHAR_LIST byteMap(mapSize, 0);
+    vector<uint8_t> byteMap(mapSize, 0);
 
     int startX = gump->StartX / 2;
     int endX = gump->EndX / 2;
@@ -121,7 +121,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         pushort huesData =
             (pushort)((puchar)g_ColorManager.GetHuesRangePointer() + 30800); // color = 0x015C
 
-        USHORT_LIST colorTable(maxPixelValue);
+        vector<uint16_t> colorTable(maxPixelValue);
         int colorOffset = 31 * maxPixelValue;
 
         for (int i = 0; i < maxPixelValue; i++)
@@ -130,7 +130,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
             colorTable[i] = 0x8000 | huesData[colorOffset / maxPixelValue];
         }
 
-        USHORT_LIST wordMap(mapSize);
+        vector<uint16_t> wordMap(mapSize);
 
         for (int i = 0; i < mapSize; i++)
         {
@@ -177,7 +177,7 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
     int width = endX - startX;
     int height = endY - startY;
 
-    USHORT_LIST map(width * height);
+    vector<uint16_t> map(width * height);
 
     for (int y = 0; y < mapHeight; y++)
     {

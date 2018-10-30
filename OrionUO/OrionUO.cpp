@@ -13,7 +13,7 @@
 #define CDECL
 #endif
 
-typedef void CDECL PLUGIN_INIT_TYPE_OLD(STRING_LIST &, STRING_LIST &, UINT_LIST &);
+typedef void CDECL PLUGIN_INIT_TYPE_OLD(vector<string> &, vector<string> &, vector<uint32_t> &);
 typedef void CDECL PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
 
 PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = { 0 };
@@ -105,7 +105,7 @@ void COrion::ParseCommandLine() // FIXME: move this out
 
         Wisp::CTextFileParser parser({}, " ,:", "", "''");
 
-        STRING_LIST strings = parser.GetTokens(str.c_str());
+        vector<string> strings = parser.GetTokens(str.c_str());
 
         if (!strings.size())
             continue;
@@ -210,10 +210,10 @@ void COrion::ParseCommandLine() // FIXME: move this out
 }
 
 #if defined(ORION_WINDOWS) // FIXME: Used only by ExceptionFiler
-UINT_LIST COrion::FindPattern(puchar ptr, int size, const UCHAR_LIST &pattern)
+vector<uint32_t> COrion::FindPattern(puchar ptr, int size, const vector<uint8_t> &pattern)
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST result;
+    vector<uint32_t> result;
 
     int patternSize = (int)pattern.size();
 
@@ -833,7 +833,7 @@ void COrion::CheckStaticTileFilterFiles()
 
     while (!caveParser.IsEOF())
     {
-        STRING_LIST strings = caveParser.ReadTokens();
+        vector<string> strings = caveParser.ReadTokens();
 
         if (strings.size() >= 1)
         {
@@ -851,7 +851,7 @@ void COrion::CheckStaticTileFilterFiles()
 
     while (!stumpParser.IsEOF())
     {
-        STRING_LIST strings = stumpParser.ReadTokens();
+        vector<string> strings = stumpParser.ReadTokens();
 
         if (strings.size() >= 2)
         {
@@ -874,7 +874,7 @@ void COrion::CheckStaticTileFilterFiles()
 
     while (!vegetationParser.IsEOF())
     {
-        STRING_LIST strings = vegetationParser.ReadTokens();
+        vector<string> strings = vegetationParser.ReadTokens();
 
         if (strings.size() >= 1)
             m_StaticTilesFilterFlags[TextToGraphic(strings[0].c_str())] |= STFF_VEGETATION;
@@ -978,7 +978,7 @@ void COrion::LoadContainerOffsets()
 
         while (!parser.IsEOF())
         {
-            STRING_LIST strings = parser.ReadTokens();
+            vector<string> strings = parser.ReadTokens();
 
             if (strings.size() >= 7)
             {
@@ -1111,7 +1111,7 @@ bool COrion::LoadClientConfig()
         return false;
     }
 
-    typedef void CDECL installFuncOld(uchar *, int, UCHAR_LIST *);
+    typedef void CDECL installFuncOld(uchar *, int, vector<uint8_t> *);
     typedef void CDECL installFuncNew(uchar *, size_t, uchar *, size_t &);
 
     installFuncOld *installOld = (installFuncOld *)SDL_LoadFunction(orionDll, "Install");
@@ -1134,7 +1134,7 @@ bool COrion::LoadClientConfig()
     if (config.Load(g_App.UOFilesPath("Client.cuo")) ||
         config.Load(g_App.ExeFilePath("Client.cuo")))
     {
-        UCHAR_LIST realData(config.Size * 2, 0);
+        vector<uint8_t> realData(config.Size * 2, 0);
         size_t realSize = 0;
 
         if (installOld != nullptr)
@@ -1235,7 +1235,7 @@ void COrion::LoadAutoLoginNames()
 
     while (!file.IsEOF())
     {
-        STRING_LIST strings = file.ReadTokens(false);
+        vector<string> strings = file.ReadTokens(false);
 
         if (strings.size())
             names += strings[0] + "|";
@@ -1600,9 +1600,9 @@ void COrion::LoadPluginConfig()
     CPluginPacketSpellsList().SendToPlugin();
     CPluginPacketMacrosList().SendToPlugin();
 
-    STRING_LIST libName;
-    STRING_LIST functions;
-    UINT_LIST flags;
+    vector<string> libName;
+    vector<string> functions;
+    vector<uint32_t> flags;
 
     if (g_PluginInitOld != nullptr)
     {
@@ -3348,7 +3348,7 @@ void COrion::LoadLogin(string &login, int &port)
 
     while (!file.IsEOF())
     {
-        STRING_LIST strings = file.ReadTokens();
+        vector<string> strings = file.ReadTokens();
 
         if (strings.size() >= 3)
         {
@@ -3724,7 +3724,7 @@ void COrion::LoadIndexFiles()
              ++i)
         {
             CUopBlockHeader &block = i->second;
-            UCHAR_LIST data = file.GetData(block);
+            vector<uint8_t> data = file.GetData(block);
 
             if (data.empty())
                 continue;
@@ -4382,7 +4382,7 @@ void COrion::IndexReplaces()
     DEBUGLOG("Replace arts\n");
     while (!artParser.IsEOF())
     {
-        STRING_LIST strings = artParser.ReadTokens();
+        vector<string> strings = artParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
@@ -4391,7 +4391,7 @@ void COrion::IndexReplaces()
             if (index < 0 || index >= MAX_LAND_DATA_INDEX_COUNT + (int)m_StaticData.size())
                 continue;
 
-            STRING_LIST newArt = newDataParser.GetTokens(strings[1].c_str());
+            vector<string> newArt = newDataParser.GetTokens(strings[1].c_str());
 
             int size = (int)newArt.size();
 
@@ -4436,7 +4436,7 @@ void COrion::IndexReplaces()
     DEBUGLOG("Replace textures\n");
     while (!textureParser.IsEOF())
     {
-        STRING_LIST strings = textureParser.ReadTokens();
+        vector<string> strings = textureParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
@@ -4446,7 +4446,7 @@ void COrion::IndexReplaces()
                 m_TextureDataIndex[index].Address != 0)
                 continue;
 
-            STRING_LIST newTexture = newDataParser.GetTokens(strings[1].c_str());
+            vector<string> newTexture = newDataParser.GetTokens(strings[1].c_str());
 
             int size = (int)newTexture.size();
 
@@ -4473,7 +4473,7 @@ void COrion::IndexReplaces()
     DEBUGLOG("Replace gumps\n");
     while (!gumpParser.IsEOF())
     {
-        STRING_LIST strings = gumpParser.ReadTokens();
+        vector<string> strings = gumpParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
@@ -4483,7 +4483,7 @@ void COrion::IndexReplaces()
                 m_GumpDataIndex[index].Address != 0)
                 continue;
 
-            STRING_LIST newGump = newDataParser.GetTokens(strings[1].c_str());
+            vector<string> newGump = newDataParser.GetTokens(strings[1].c_str());
 
             int size = (int)newGump.size();
 
@@ -4507,7 +4507,7 @@ void COrion::IndexReplaces()
     DEBUGLOG("Replace multi\n");
     while (!multiParser.IsEOF())
     {
-        STRING_LIST strings = multiParser.ReadTokens();
+        vector<string> strings = multiParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
@@ -4516,7 +4516,7 @@ void COrion::IndexReplaces()
             if (index < 0 || index >= g_MultiIndexCount || m_MultiDataIndex[index].Address != 0)
                 continue;
 
-            STRING_LIST newMulti = newDataParser.GetTokens(strings[1].c_str());
+            vector<string> newMulti = newDataParser.GetTokens(strings[1].c_str());
 
             int size = (int)newMulti.size();
 
@@ -4538,7 +4538,7 @@ void COrion::IndexReplaces()
     DEBUGLOG("Replace sounds\n");
     while (!soundParser.IsEOF())
     {
-        STRING_LIST strings = soundParser.ReadTokens();
+        vector<string> strings = soundParser.ReadTokens();
 
         if (strings.size() >= 2)
         {
@@ -4548,7 +4548,7 @@ void COrion::IndexReplaces()
                 m_SoundDataIndex[index].Address != 0)
                 continue;
 
-            STRING_LIST newSound = newDataParser.GetTokens(strings[1].c_str());
+            vector<string> newSound = newDataParser.GetTokens(strings[1].c_str());
 
             int size = (int)newSound.size();
 
@@ -4592,7 +4592,7 @@ void COrion::IndexReplaces()
     DEBUGLOG("Loading mp3 config\n");
     while (!mp3Parser.IsEOF())
     {
-        STRING_LIST strings = mp3Parser.ReadTokens();
+        vector<string> strings = mp3Parser.ReadTokens();
 
         size_t size = strings.size();
 
@@ -4616,7 +4616,7 @@ void COrion::IndexReplaces()
 void COrion::CreateAuraTexture()
 {
     DEBUG_TRACE_FUNCTION;
-    UINT_LIST pixels;
+    vector<uint32_t> pixels;
     short width = 0;
     short height = 0;
 
@@ -4768,7 +4768,7 @@ void COrion::CreateObjectHandlesBackground()
         if (drawHeight > g_ObjectHandlesHeight)
             drawHeight = g_ObjectHandlesHeight - drawY;
 
-        USHORT_LIST pixels = g_UOFileReader.GetGumpPixels(io);
+        vector<uint16_t> pixels = g_UOFileReader.GetGumpPixels(io);
 
         if (pixels.size())
         {

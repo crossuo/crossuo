@@ -22,11 +22,11 @@ public:
 
     bool ReadyRead();
 
-    virtual UCHAR_LIST Decompression(UCHAR_LIST data) { return data; }
+    virtual vector<uint8_t> Decompression(vector<uint8_t> data) { return data; }
 
     bool Read(int maxSize = 0x1000);
 
     int Send(puchar data, int size);
-    int Send(const UCHAR_LIST &data);
+    int Send(const vector<uint8_t> &data);
 };
 }; // namespace Wisp
