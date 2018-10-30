@@ -586,7 +586,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 #if USE_WISP
     g_PluginManager.WindowProc(Handle, ev.code, ev.data1, ev.data2);
 #else
-    NOT_IMPLEMENTED;
+    // NOT_IMPLEMENTED;
 #endif
     return true;
 }

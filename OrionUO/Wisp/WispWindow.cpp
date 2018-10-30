@@ -5,6 +5,8 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <SDL_timer.h>
+#include <SDL_rect.h>
+
 namespace Wisp
 {
 CWindow *g_WispWindow = nullptr;
@@ -998,3 +1000,24 @@ Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint id)
     return 0;
 }
 }; // namespace Wisp
+
+#if USE_WISP
+void GetDisplaySize(int *x, int *y)
+{
+    if (x)
+        *x = GetSystemMetrics(SM_CXSCREEN);
+    if (y)
+        *y = GetSystemMetrics(SM_CYSCREEN);
+}
+#else
+void GetDisplaySize(int *x, int *y)
+{
+    SDL_Rect r;
+    SDL_GetDisplayUsableBounds(0, &r);
+    if (x)
+        *x = r.w;
+    if (y)
+        *y = r.h;
+}
+#endif
+

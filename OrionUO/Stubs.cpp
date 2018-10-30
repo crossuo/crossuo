@@ -7,29 +7,10 @@
 #include <errno.h>
 
 // Bad and very ugly "API" stuff
-int GetSystemMetrics(int)
-{
-    NOT_IMPLEMENTED;
-    return 0;
-}
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t)
 {
     NOT_IMPLEMENTED;
     return 0;
-}
-int WideCharToMultiByte(int, int, const wchar_t *, int, char *, int, void *, void *)
-{
-    NOT_IMPLEMENTED;
-    return 0;
-}
-int MultiByteToWideChar(int, int, const char *, int, wchar_t *, int)
-{
-    NOT_IMPLEMENTED;
-    return 0;
-}
-void PostMessage(void *, int, int, int)
-{
-    NOT_IMPLEMENTED;
 }
 bool OpenClipboard(void *)
 {

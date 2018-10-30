@@ -1,11 +1,11 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+﻿// MIT License
 
 #include "stdafx.h"
 
 #include <locale>
 #include <codecvt>
 #include <string>
+#include <cwchar>
 #include <SDL_thread.h>
 
 #include "WispThread.h"
@@ -46,32 +46,58 @@ int CalculatePercents(int max, int current, int maxValue)
 
 string EncodeUTF8(const wstring &wstr)
 {
+#if USE_WISP
     int size =
-        WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+        ::WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
     string result = "";
 
     if (size > 0)
     {
         result.resize(size + 1);
-        WideCharToMultiByte(
+        ::WideCharToMultiByte(
             CP_UTF8, 0, &wstr[0], (int)wstr.size(), &result[0], size, nullptr, nullptr);
         result.resize(size); // result[size] = 0;
     }
+#else
+    mbstate_t state{};
+    string result{};
+    auto p = wstr.data();
+    const auto size = wcsrtombs(nullptr, &p, 0, &state);
+    if (size > 0)
+    {
+        result.resize(size + 1);
+        wcsrtombs(&result[0], &p, size, &state);
+        result.resize(size);
+    }
+#endif
 
     return result;
 }
 
 wstring DecodeUTF8(const string &str)
 {
-    int size = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
+#if USE_WISP
+    int size = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
     wstring result = L"";
 
     if (size > 0)
     {
         result.resize(size + 1);
-        MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &result[0], size);
+        ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &result[0], size);
         result.resize(size); // result[size] = 0;
     }
+#else
+    mbstate_t state{};
+    wstring result{};
+    auto p = str.data();
+    const auto size = mbsrtowcs(nullptr, &p, 0, &state);
+    if (size > 0)
+    {
+        result.resize(size + 1);
+        mbsrtowcs(&result[0], &p, size, &state);
+        result.resize(size);
+    }
+#endif
 
     return result;
 }

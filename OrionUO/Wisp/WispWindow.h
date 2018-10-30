@@ -15,6 +15,8 @@ struct UserEvent
 typedef SDL_UserEvent UserEvent;
 #endif
 
+void GetDisplaySize(int *x, int *y);
+
 namespace Wisp
 {
 class CWindow
@@ -26,8 +28,7 @@ public:
 protected:
     Wisp::CSize m_Size = Wisp::CSize(100, 100);
     Wisp::CSize m_MinSize = Wisp::CSize(100, 100);
-    Wisp::CSize m_MaxSize = Wisp::CSize(
-        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)); // SDL_GetDisplayUsableBounds
+    Wisp::CSize m_MaxSize = Wisp::CSize(640, 480);
 
 public:
     Wisp::CSize GetSize() { return m_Size; };

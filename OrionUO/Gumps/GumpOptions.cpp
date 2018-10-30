@@ -1816,6 +1816,12 @@ void CGumpOptions::DrawPage5()
 void CGumpOptions::DrawPage6()
 {
     DEBUG_TRACE_FUNCTION;
+
+    int screenX, screenY;
+    GetDisplaySize(&screenX, &screenY);
+    screenX -= 20;
+    screenY -= 60;
+
     //Interface
     Add(new CGUIPage(6));
 
@@ -1864,7 +1870,7 @@ void CGumpOptions::DrawPage6()
         254,
         78));
     m_ContainerOffsetX->CheckOnSerial = true;
-    m_ContainerOffsetX->m_Entry.MaxLength = GetSystemMetrics(SM_CXSCREEN) - 20;
+    m_ContainerOffsetX->m_Entry.MaxLength = screenX;
     m_ContainerOffsetX->m_Entry.NumberOnly = true;
     m_ContainerOffsetX->m_Entry.SetTextW(std::to_wstring(g_ContainerRect.DefaultX));
 
@@ -1880,7 +1886,7 @@ void CGumpOptions::DrawPage6()
         333,
         77));
     m_ContainerOffsetY->CheckOnSerial = true;
-    m_ContainerOffsetY->m_Entry.MaxLength = GetSystemMetrics(SM_CYSCREEN) - 60;
+    m_ContainerOffsetY->m_Entry.MaxLength = screenY;
     m_ContainerOffsetY->m_Entry.NumberOnly = true;
     m_ContainerOffsetY->m_Entry.SetTextW(std::to_wstring(g_ContainerRect.DefaultY));
 
@@ -1986,6 +1992,12 @@ void CGumpOptions::DrawPage6()
 void CGumpOptions::DrawPage7()
 {
     DEBUG_TRACE_FUNCTION;
+
+    int screenX, screenY;
+    GetDisplaySize(&screenX, &screenY);
+    screenX -= 20;
+    screenY -= 60;
+
     //Display
     Add(new CGUIPage(7));
 
@@ -2013,7 +2025,7 @@ void CGumpOptions::DrawPage7()
         68,
         114));
     m_GameWindowWidth->CheckOnSerial = true;
-    m_GameWindowWidth->m_Entry.MaxLength = GetSystemMetrics(SM_CXSCREEN) - 20;
+    m_GameWindowWidth->m_Entry.MaxLength = screenX;
     m_GameWindowWidth->m_Entry.NumberOnly = true;
     m_GameWindowWidth->m_Entry.SetTextW(std::to_wstring(g_OptionsConfig.GameWindowWidth));
 
@@ -2029,7 +2041,7 @@ void CGumpOptions::DrawPage7()
         143,
         114));
     m_GameWindowHeight->CheckOnSerial = true;
-    m_GameWindowHeight->m_Entry.MaxLength = GetSystemMetrics(SM_CYSCREEN) - 60;
+    m_GameWindowHeight->m_Entry.MaxLength = screenY;
     m_GameWindowHeight->m_Entry.NumberOnly = true;
     m_GameWindowHeight->m_Entry.SetTextW(std::to_wstring(g_OptionsConfig.GameWindowHeight));
 

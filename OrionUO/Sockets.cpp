@@ -253,6 +253,9 @@ void icmp_close(icmp_handle handle)
     SOCKET h = *(SOCKET *)handle;
     assert(h != INVALID_SOCKET);
     closesocket(h);
+
+    delete (int *)handle;
+    handle = nullptr;    
 }
 
 #else
@@ -319,7 +322,7 @@ int tcp_select(tcp_socket socket)
 
     struct timeval tv = { 0, 0 };
 
-    auto r = select(h, &rfds, nullptr, nullptr, &tv);
+    auto r = select(h + 1, &rfds, nullptr, nullptr, &tv);
     LOG("tcp_select: %d\n", r);
     return r;
 }
@@ -434,6 +437,8 @@ void icmp_close(icmp_handle handle)
     int h = *(int *)handle;
     assert(h != -1);
     close(h);
+    delete (int *)handle;
+    handle = nullptr;
     LOG("icmp closed\n");
 }
 

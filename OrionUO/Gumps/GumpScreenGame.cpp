@@ -29,6 +29,12 @@ CGumpScreenGame::~CGumpScreenGame()
 void CGumpScreenGame::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
+
+    int screenX, screenY;
+    GetDisplaySize(&screenX, &screenY);
+    screenX -= 20;
+    screenY -= 60;
+
     if (g_PressedObject.LeftGump == this)
     {
         Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
@@ -41,14 +47,14 @@ void CGumpScreenGame::UpdateContent()
             if (g_RenderBounds.GameWindowWidth < 640)
                 g_RenderBounds.GameWindowWidth = 640;
 
-            if (g_RenderBounds.GameWindowWidth >= GetSystemMetrics(SM_CXSCREEN) - 20)
-                g_RenderBounds.GameWindowWidth = GetSystemMetrics(SM_CXSCREEN) - 20;
+            if (g_RenderBounds.GameWindowWidth >= screenX)
+                g_RenderBounds.GameWindowWidth = screenX;
 
             if (g_RenderBounds.GameWindowHeight < 480)
                 g_RenderBounds.GameWindowHeight = 480;
 
-            if (g_RenderBounds.GameWindowHeight >= GetSystemMetrics(SM_CYSCREEN) - 60)
-                g_RenderBounds.GameWindowHeight = GetSystemMetrics(SM_CYSCREEN) - 60;
+            if (g_RenderBounds.GameWindowHeight >= screenY)
+                g_RenderBounds.GameWindowHeight = screenY;
 
             CGumpOptions *opt = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);
 
@@ -201,6 +207,12 @@ void CGumpScreenGame::OnLeftMouseButtonDown()
 void CGumpScreenGame::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
+
+    int screenX, screenY;
+    GetDisplaySize(&screenX, &screenY);
+    screenX -= 20;
+    screenY -= 60;
+
     Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
     if (g_PressedObject.LeftObject == m_Items) //resizer
@@ -211,14 +223,14 @@ void CGumpScreenGame::OnLeftMouseButtonUp()
         if (g_ConfigManager.GameWindowWidth < 640)
             g_ConfigManager.GameWindowWidth = 640;
 
-        if (g_ConfigManager.GameWindowWidth >= GetSystemMetrics(SM_CXSCREEN) - 20)
-            g_ConfigManager.GameWindowWidth = GetSystemMetrics(SM_CXSCREEN) - 20;
+        if (g_ConfigManager.GameWindowWidth >= screenX)
+            g_ConfigManager.GameWindowWidth = screenX;
 
         if (g_ConfigManager.GameWindowHeight < 480)
             g_ConfigManager.GameWindowHeight = 480;
 
-        if (g_ConfigManager.GameWindowHeight >= GetSystemMetrics(SM_CYSCREEN) - 60)
-            g_ConfigManager.GameWindowHeight = GetSystemMetrics(SM_CYSCREEN) - 60;
+        if (g_ConfigManager.GameWindowHeight >= screenY)
+            g_ConfigManager.GameWindowHeight = screenY;
 
         if (g_PacketManager.GetClientVersion() >= CV_200)
             CPacketGameWindowSize().Send();

@@ -691,6 +691,11 @@ bool CConfigManager::LoadBin(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
 
+    int screenX, screenY;
+    GetDisplaySize(&screenX, &screenY);
+    screenX -= 20;
+    screenY -= 60;
+
     bool result = false;
     g_DeveloperMode = DM_SHOW_FPS_ONLY;
     Wisp::CMappedFile file;
@@ -1118,14 +1123,14 @@ bool CConfigManager::LoadBin(const os_path &path)
                     if (windowWidth < 640)
                         windowWidth = 640;
 
-                    if (windowWidth >= GetSystemMetrics(SM_CXSCREEN) - 20)
-                        windowWidth = GetSystemMetrics(SM_CXSCREEN) - 20;
+                    if (windowWidth >= screenX)
+                        windowWidth = screenX;
 
                     if (windowHeight < 480)
                         windowHeight = 480;
 
-                    if (windowHeight >= GetSystemMetrics(SM_CYSCREEN) - 60)
-                        windowHeight = GetSystemMetrics(SM_CYSCREEN) - 60;
+                    if (windowHeight >= screenY)
+                        windowHeight = screenY;
                 }
                 else
                 {
@@ -1162,14 +1167,14 @@ bool CConfigManager::LoadBin(const os_path &path)
         if (GameWindowWidth < 640)
             GameWindowWidth = 640;
 
-        if (GameWindowWidth >= GetSystemMetrics(SM_CXSCREEN) - 20)
-            GameWindowWidth = GetSystemMetrics(SM_CXSCREEN) - 20;
+        if (GameWindowWidth >= screenX)
+            GameWindowWidth = screenX;
 
         if (GameWindowHeight < 480)
             GameWindowHeight = 480;
 
-        if (GameWindowHeight >= GetSystemMetrics(SM_CYSCREEN) - 60)
-            GameWindowHeight = GetSystemMetrics(SM_CYSCREEN) - 60;
+        if (GameWindowHeight >= screenY)
+            GameWindowHeight = screenY;
     }
     else
     {
@@ -1324,6 +1329,13 @@ int CConfigManager::GetConfigKeyCode(const string &key)
 
 bool CConfigManager::Load(const os_path &path)
 {
+    DEBUG_TRACE_FUNCTION;
+
+    int screenX, screenY;
+    GetDisplaySize(&screenX, &screenY);
+    screenX -= 20;
+    screenY -= 60;
+
     Wisp::CTextFileParser file(path, "=", "#;", "");
 
     bool zoomed = false;
@@ -1763,14 +1775,14 @@ bool CConfigManager::Load(const os_path &path)
             if (windowWidth < 640)
                 windowWidth = 640;
 
-            if (windowWidth >= GetSystemMetrics(SM_CXSCREEN) - 20)
-                windowWidth = GetSystemMetrics(SM_CXSCREEN) - 20;
+            if (windowWidth >= screenX)
+                windowWidth = screenX;
 
             if (windowHeight < 480)
                 windowHeight = 480;
 
-            if (windowHeight >= GetSystemMetrics(SM_CYSCREEN) - 60)
-                windowHeight = GetSystemMetrics(SM_CYSCREEN) - 60;
+            if (windowHeight >= screenY)
+                windowHeight = screenY;
         }
         else
         {

@@ -124,7 +124,9 @@ void CGumpBaseScroll::UpdateHeight()
     if (Height < m_MinHeight)
         Height = m_MinHeight;
 
-    int maxHeight = GetSystemMetrics(SM_CYSCREEN) - 50;
+    int maxHeight;
+    GetDisplaySize(nullptr, &maxHeight);
+    maxHeight -= 50;
 
     if (Height >= maxHeight)
         Height = maxHeight;

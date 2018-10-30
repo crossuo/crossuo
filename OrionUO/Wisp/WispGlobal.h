@@ -1,6 +1,6 @@
+// MIT License
 
-#ifndef WISPGLOBAL_H
-#define WISPGLOBAL_H
+#pragma once
 
 #if !defined(ORION_LINUX)
 #if !defined(_CRT_SECURE_NO_WARNINGS)
@@ -116,5 +116,3 @@ inline void pack16(puchar buf, ushort x)
     buf[0] = x >> 8;
     buf[1] = x & 0xff;
 }
-
-#endif

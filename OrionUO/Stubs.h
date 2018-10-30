@@ -178,7 +178,6 @@ struct RECT
 };
 
 // Bad and very ugly "API" stuff
-int GetSystemMetrics(int);
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t);
 #define LOBYTE(x) (int)(x & 0xff)
 int GetSystemDefaultLangID();
@@ -208,8 +207,6 @@ void SetTimer(void *, unsigned int, unsigned int, void *);
 #define sscanf_s sscanf
 #define vsprintf_s vsprintf
 #define vswprintf_s(a, b, c) vswprintf(a, 0, b, c)
-int WideCharToMultiByte(int, int, const wchar_t *, int, char *, int, void *, void *);
-int MultiByteToWideChar(int, int, const char *, int, wchar_t *, int);
 
 // http://en.cppreference.com/w/cpp/locale/codecvt_utf8
 inline int _wtoi(const wchar_t *a)

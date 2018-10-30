@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpWorldMap.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPWORLDMAP_H
-#define GUMPWORLDMAP_H
+#pragma once
 
 class CGumpWorldMap : public CGump
 {
@@ -53,10 +46,10 @@ private:
     static constexpr int MIN_WORLD_MAP_HEIGHT = 300;
     static constexpr int MIN_WORLD_MAP_WIDTH = 400;
 
-    int m_StartResizeWidth{ 0 };
-    int m_StartResizeHeight{ 0 };
+    int m_StartResizeWidth = 0;
+    int m_StartResizeHeight = 0;
 
-    bool m_MapMoving{ false };
+    bool m_MapMoving = false;
 
     void FixOffsets(int &offsetX, int &offsetY, int &width, int &height);
     void GetScaledDimensions(int &width, int &height, int &playerX, int &playerY);
@@ -66,15 +59,15 @@ private:
 
     int GetCurrentMap();
 
-    CGUIButton *m_Minimizer{ nullptr };
-    CGUIResizepic *m_Background{ nullptr };
-    CGUIResizeButton *m_Resizer{ nullptr };
-    CGUIText *Text{ nullptr };
-    CGUICheckbox *m_Checkbox{ nullptr };
-    CGUIScissor *m_Scissor{ nullptr };
-    CGUIWorldMapTexture *m_MapData{ nullptr };
-    CGUIComboBox *m_ComboboxScale{ nullptr };
-    CGUIComboBox *m_ComboboxMap{ nullptr };
+    CGUIButton *m_Minimizer = nullptr;
+    CGUIResizepic *m_Background = nullptr;
+    CGUIResizeButton *m_Resizer = nullptr;
+    CGUIText *Text = nullptr;
+    CGUICheckbox *m_Checkbox = nullptr;
+    CGUIScissor *m_Scissor = nullptr;
+    CGUIWorldMapTexture *m_MapData = nullptr;
+    CGUIComboBox *m_ComboboxScale = nullptr;
+    CGUIComboBox *m_ComboboxMap = nullptr;
 
 protected:
     virtual void CalculateGumpState();
@@ -103,5 +96,3 @@ public:
     virtual bool OnLeftMouseButtonDoubleClick();
     virtual void OnMidMouseButtonScroll(bool up);
 };
-
-#endif
