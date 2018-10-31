@@ -96,10 +96,8 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
 #else
     SDL_GetWindowPosition(m_window, x, y);
     SDL_GetWindowSize(m_window, width, height);
-    x -= m_BorderSize.Width;
-    y -= m_BorderSize.Height;
-    width += m_BorderSize.Width;
-    height += m_BorderSize.Height;
+    *x -= m_BorderSize.Width;
+    *y -= m_BorderSize.Height;
 #endif
 }
 
