@@ -27,6 +27,7 @@ private:
 
     bool *m_ChangedPage{ nullptr };
     bool *m_PageDataReceived{ nullptr };
+	bool WasAtEnd = false;
 
     void InsertInContent(const Keycode key, bool isCharPress = true);
 

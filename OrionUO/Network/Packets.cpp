@@ -596,7 +596,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
             CGUITextEntry *entry = (CGUITextEntry *)item;
 
             WriteUInt16BE(entry->Serial - 1);
-            size_t len = entry->m_Entry.Length();
+            size_t len = (((entry->m_Entry.Length()) < (MAX_TEXTENTRY_LENGTH)) ? (entry->m_Entry.Length()) : (MAX_TEXTENTRY_LENGTH));
             WriteUInt16BE((ushort)len);
             WriteWString(entry->m_Entry.Data(), len, true, false);
         }
@@ -1160,6 +1160,59 @@ CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uchar stat,
     WriteUInt16BE(0x001A);
     WriteUInt8(stat);
     WriteUInt8(state);
+}
+
+CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump) : CPacket(99)
+{
+	string title = EncodeUTF8(gump->m_EntryTitle->m_Entry.Data());
+	string author = EncodeUTF8(gump->m_EntryAuthor->m_Entry.Data());
+
+	WriteUInt8(0xD4);
+	WriteUInt32BE(gump->Serial);
+	WriteUInt16BE((ushort)0x0000);//flags
+	WriteUInt16BE((ushort)gump->PageCount);
+	WriteString(gump->m_EntryTitle->m_Entry.GetTextA(), 60);
+	WriteString(gump->m_EntryAuthor->m_Entry.GetTextA(), 30);
+}
+
+CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump) : CPacket(1)
+{
+	string title = EncodeUTF8(gump->m_EntryTitle->m_Entry.Data());
+	string author = EncodeUTF8(gump->m_EntryAuthor->m_Entry.Data());
+	size_t titlelen = title.length();
+	size_t authorlen = author.length();
+	size_t size = 16 + title.length() + author.length();
+	Resize(size, true);
+
+	WriteUInt8(0xD4);
+	WriteUInt16BE((ushort)size);
+	WriteUInt32BE(gump->Serial);
+	WriteUInt16BE((ushort)0x0000);//flags
+	WriteUInt16BE((ushort)gump->PageCount);
+	WriteUInt16BE(titlelen);
+	if (titlelen)
+	{
+		const char *str = title.c_str();
+
+		for(int i=0; i<titlelen; i++)
+		{
+			char ch = *(str + i);
+			*Ptr++ = ch;
+		}
+		*Ptr = 0;
+	}
+	WriteUInt16BE(authorlen);
+	if (authorlen)
+	{
+		const char *str = author.c_str();
+
+		for(int i=0; i<authorlen; i++)
+		{
+			char ch = *(str + i);
+			*Ptr++ = ch;
+		}
+		*Ptr = 0;
+	}
 }
 
 CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)

@@ -520,7 +520,7 @@ void COrion::Uninstall()
 
     g_AuraTexture.Clear();
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < MAX_MAPS_COUNT; i++)
         g_MapTexture[i].Clear();
 
     for (int i = 0; i < 2; i++)

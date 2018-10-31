@@ -143,7 +143,7 @@ void CGumpContainer::PrepareContent()
                 CGumpDrag *newgump = new CGumpDrag(
                     g_PressedObject.LeftSerial,
                     g_MouseManager.Position.X - 80,
-                    g_MouseManager.Position.Y - 34);
+                    g_MouseManager.Position.Y - 38);
 
                 g_GumpManager.AddGump(newgump);
                 g_OrionWindow.EmulateOnLeftMouseButtonDown();

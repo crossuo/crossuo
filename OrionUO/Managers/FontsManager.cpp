@@ -191,7 +191,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosA(
             return p;
 
         //if pos is not in this line, just skip this
-        if (pos <= info->CharStart + len)
+        if (pos <= info->CharStart + len && ptr->Data.size() >= len)
         {
             for (int i = 0; i < len; i++)
             {
@@ -771,7 +771,8 @@ vector<uint32_t> CFontsManager::GeneratePixelsA(
 
                         int block = (testY * width) + (x + w);
 
-                        pData[block] = pcl << 8 | 0xFF;
+                        if(block >= 0)
+                            pData[block] = pcl << 8 | 0xFF;
                     }
                 }
             }
@@ -861,7 +862,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
             return p;
 
         //if pos is not in this line, just skip this
-        if (pos <= info->CharStart + len)
+        if (pos <= info->CharStart + len && info->Data.size() >= len)
         {
             for (int i = 0; i < len; i++)
             {
@@ -1096,7 +1097,7 @@ wstring CFontsManager::GetTextByWidthW(uchar font, const wstring &str, int width
         uint offset = table[L'.'];
 
         if (offset && offset != 0xFFFFFFFF)
-            width -= (*((puchar)((size_t)table + offset + 2)) * 3);
+            width -= ((*((puchar)((size_t)table + offset + 2)) * 3) + 3);
     }
 
     int textLength = 0;

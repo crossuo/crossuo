@@ -147,6 +147,9 @@ const float ITALIC_FONT_KOEFFICIENT = 3.3f;
 //!Максимально возможная высота HTML текста
 const int MAX_HTML_TEXT_HEIGHT = 18;
 
+//maximum number of gump textentry characters we are allowed to send to the server, on unmodified derivative servers, sending more than this will cause a forced disconnection
+const int MAX_TEXTENTRY_LENGTH = 239;
+
 //!Смещение от индекса предмета до гаммпа игровой фигуры (для шахмат)
 const int GAME_FIGURE_GUMP_OFFSET = 11369;
 

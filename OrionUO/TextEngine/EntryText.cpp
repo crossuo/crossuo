@@ -50,6 +50,15 @@ void CEntryText::OnClick(
 {
     DEBUG_TRACE_FUNCTION;
 
+	if (g_EntryPointer != this)
+    {
+        CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
+        if (gumpEntry != nullptr)
+            gumpEntry->FrameCreated = false;
+
+        g_EntryPointer = this;
+        Changed = true;
+    }
     if (g_EntryPointer == this)
     {
         int oldPos = m_Position;
@@ -65,15 +74,6 @@ void CEntryText::OnClick(
 
         if (oldPos != m_Position)
             Changed = true;
-    }
-    else
-    {
-        CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
-        if (gumpEntry != nullptr)
-            gumpEntry->FrameCreated = false;
-
-        g_EntryPointer = this;
-        Changed = true;
     }
 
     if (gump != nullptr)
