@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpBook.cpp
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
-#include "stdafx.h"
 #include "GumpBook.h"
 
 CGumpBook::CGumpBook(uint serial, short x, short y, short pageCount, bool writable, bool unicode)
@@ -192,10 +183,10 @@ void CGumpBook::ChangePage(int newPage, bool playSound)
         if (m_ChangedPage[Page + i])
         {
             m_ChangedPage[Page + i] = false;
-			if ((Page + i) < 1)
-				CPacketBookHeaderChange(this).Send();
-			else
-				CPacketBookPageData(this, Page + (int)i).Send();
+            if ((Page + i) < 1)
+                CPacketBookHeaderChange(this).Send();
+            else
+                CPacketBookPageData(this, Page + (int)i).Send();
         }
     }
 
@@ -431,42 +422,42 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
         }
         else
         {
-			if (page > 0)
-			{
-				if (!WasAtEnd)
-				{
-					int pos = g_EntryPointer->Pos();
-					if (pos == g_EntryPointer->Length() && (key == KEY_RIGHT || key == KEY_END))
-					{
-						int nextpage = page + 1;
-						if (nextpage <= PageCount)
-						{
-							entry = GetEntry(nextpage);
-							if (entry->m_Entry.Length() > 0)
-							{
-								if ((page + 1) % 2 == 0)
-									ChangePage(nextpage);
-								SetPagePos(0, nextpage);
-							}
-						}
-					}
-					else if (pos == 0 && (key == KEY_LEFT || key == KEY_BACK || key == KEY_HOME))
-					{
-						int previousPage = page - 2;
-						if (previousPage >= 0)
-						{
-							if (page % 2 == 0)
-								ChangePage(previousPage);
-							SetPagePos(-1, page - 1);
-						}
-					}
-				}
-				else
-					WasAtEnd = false;
-				if(key == KEY_BACK || key == KEY_DELETE)
-					m_ChangedPage[page] = true;
-				WantRedraw = true;
-			}
+            if (page > 0)
+            {
+                if (!WasAtEnd)
+                {
+                    int pos = g_EntryPointer->Pos();
+                    if (pos == g_EntryPointer->Length() && (key == KEY_RIGHT || key == KEY_END))
+                    {
+                        int nextpage = page + 1;
+                        if (nextpage <= PageCount)
+                        {
+                            entry = GetEntry(nextpage);
+                            if (entry->m_Entry.Length() > 0)
+                            {
+                                if ((page + 1) % 2 == 0)
+                                    ChangePage(nextpage);
+                                SetPagePos(0, nextpage);
+                            }
+                        }
+                    }
+                    else if (pos == 0 && (key == KEY_LEFT || key == KEY_BACK || key == KEY_HOME))
+                    {
+                        int previousPage = page - 2;
+                        if (previousPage >= 0)
+                        {
+                            if (page % 2 == 0)
+                                ChangePage(previousPage);
+                            SetPagePos(-1, page - 1);
+                        }
+                    }
+                }
+                else
+                    WasAtEnd = false;
+                if (key == KEY_BACK || key == KEY_DELETE)
+                    m_ChangedPage[page] = true;
+                WantRedraw = true;
+            }
         }
     }
 }
@@ -484,10 +475,10 @@ void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         {
             if (Unicode)
             {
-				if (g_EntryPointer->GetLinesCountW(1) > 1)
-					g_EntryPointer->Remove(true);
-				else
-					m_ChangedPage[0] = true;
+                if (g_EntryPointer->GetLinesCountW(1) > 1)
+                    g_EntryPointer->Remove(true);
+                else
+                    m_ChangedPage[0] = true;
             }
             else
             {
@@ -498,8 +489,8 @@ void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
                 if (g_EntryPointer->GetLinesCountA(4) > count)
                     g_EntryPointer->Remove(true);
-				else
-					m_ChangedPage[0] = true;
+                else
+                    m_ChangedPage[0] = true;
             }
 
             WantRedraw = true;
@@ -542,8 +533,8 @@ void CGumpBook::OnKeyDown(const KeyEvent &ev)
         case KEY_BACK:
         case KEY_DELETE:
         {
-			if (g_EntryPointer->Pos() == 1 || g_EntryPointer->Pos() == g_EntryPointer->Length() - 1)
-				WasAtEnd = true;
+            if (g_EntryPointer->Pos() == 1 || g_EntryPointer->Pos() == g_EntryPointer->Length() - 1)
+                WasAtEnd = true;
             g_EntryPointer->OnKey(this, key);
             InsertInContent(key, false);
             break;

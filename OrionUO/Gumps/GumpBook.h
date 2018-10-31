@@ -1,11 +1,5 @@
-﻿/***********************************************************************************
-**
-** GumpBook.h
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
 #pragma once
 #include "Input.h"
@@ -27,7 +21,7 @@ private:
 
     bool *m_ChangedPage{ nullptr };
     bool *m_PageDataReceived{ nullptr };
-	bool WasAtEnd = false;
+    bool WasAtEnd = false;
 
     void InsertInContent(const Keycode key, bool isCharPress = true);
 
@@ -44,15 +38,12 @@ public:
 
     CGUITextEntry *m_EntryAuthor{ nullptr };
     CGUITextEntry *m_EntryTitle{ nullptr };
-
     CGUITextEntry *GetEntry(int page);
 
     virtual void DelayedClick(CRenderObject *obj);
-
     virtual void PrepareContent();
 
     void SetPageData(int page, const wstring &data);
-
     void ChangePage(int newPage, bool playSound = true);
 
     GUMP_BUTTON_EVENT_H;

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpContainer.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPCONTAINER_H
-#define GUMPCONTAINER_H
+#pragma once
 
 class CGumpContainer : public CGump
 {
@@ -40,13 +33,9 @@ public:
     CTextRenderer *GetTextRenderer() { return &m_TextRenderer; }
 
     virtual void PrepareTextures();
-
     virtual void PrepareContent();
-
     virtual void UpdateContent();
-
     virtual void InitToolTip();
-
     virtual void Draw();
     virtual CRenderObject *Select();
 
@@ -55,5 +44,3 @@ public:
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

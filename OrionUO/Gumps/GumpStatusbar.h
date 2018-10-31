@@ -1,11 +1,5 @@
-/***********************************************************************************
-**
-** GumpStatusbar.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
 #include "Input.h"
@@ -77,7 +71,6 @@ public:
 
     CGumpStatusbar *m_GroupNext{ nullptr };
     CGumpStatusbar *m_GroupPrev{ nullptr };
-
     CGumpStatusbar *GetTopStatusbar();
     CGumpStatusbar *GetNearStatusbar(int &x, int &y);
     bool GetStatusbarGroupOffset(int &x, int &y);
@@ -88,9 +81,7 @@ public:
     bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
     virtual void InitToolTip();
-
     virtual void PrepareContent();
-
     virtual void UpdateContent();
 
     GUMP_BUTTON_EVENT_H;

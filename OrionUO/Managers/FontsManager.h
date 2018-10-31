@@ -40,31 +40,17 @@ typedef struct MULTILINES_FONT_INFO
 
 struct WEB_LINK
 {
-    //!Была посещена
     bool Visited;
-
-    //!Ссылка
     string WebLink;
 };
 
 struct HTML_char
 {
-    //!Индекс символа
     wchar_t Char;
-
-    //!Индекс шрифта
     uchar Font;
-
-    //!Выравнивание
     TEXT_ALIGN_TYPE Align;
-
-    //!Набор флагов
     ushort Flags;
-
-    //!Цвет символа
     uint Color;
-
-    //!Индекс ссылки
     ushort LinkID;
 };
 

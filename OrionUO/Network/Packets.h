@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** Packets.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef PACKETS_H
-#define PACKETS_H
+#pragma once
 
 class CPacket : public Wisp::CDataWritter
 {
@@ -444,13 +437,13 @@ public:
 class CPacketBookHeaderChangeOld : public CPacket
 {
 public:
-	CPacketBookHeaderChangeOld(class CGumpBook *gump);
+    CPacketBookHeaderChangeOld(class CGumpBook *gump);
 };
 
 class CPacketBookHeaderChange : public CPacket
 {
 public:
-	CPacketBookHeaderChange(class CGumpBook *gump);
+    CPacketBookHeaderChange(class CGumpBook *gump);
 };
 
 class CPacketBookPageData : public CPacket
@@ -614,5 +607,3 @@ class CPacketOrionVersion : public CPacket
 public:
     CPacketOrionVersion(int version);
 };
-
-#endif

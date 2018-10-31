@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpContainer.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 const uint CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
@@ -84,7 +74,8 @@ void CGumpContainer::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
-    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsText())
+    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr &&
+        g_PressedObject.LeftObject->IsText())
     {
         g_GumpMovingOffset.Reset();
 
@@ -152,7 +143,7 @@ void CGumpContainer::PrepareContent()
             else if (selobj != nullptr)
             {
                 //if (g_Target.IsTargeting())
-                //	g_Target.SendCancelTarget();
+                //    g_Target.SendCancelTarget();
 
                 g_Orion.PickupItem(selobj, 0, IsGameBoard);
 
@@ -304,8 +295,8 @@ CRenderObject *CGumpContainer::Select()
     if (!Minimized)
     {
         Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-        g_MouseManager.Position = Wisp::CPoint2Di(
-            oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+        g_MouseManager.Position =
+            Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         m_TextRenderer.Select(this);
 
@@ -480,4 +471,3 @@ bool CGumpContainer::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-

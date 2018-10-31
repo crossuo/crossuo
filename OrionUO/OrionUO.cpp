@@ -1,7 +1,6 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include <SDL_loadso.h>
 #include <SDL_keyboard.h>
 #include <SDL_rect.h>

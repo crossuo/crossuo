@@ -1,17 +1,9 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpStatusbar.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "GumpStatusbar.h"
 #include <SDL_rect.h>
+
 int CGumpStatusbar::m_StatusbarDefaultWidth = 154;
 int CGumpStatusbar::m_StatusbarDefaultHeight = 59;
 
@@ -48,7 +40,7 @@ void CGumpStatusbar::InitToolTip()
     uint id = g_SelectedObject.Serial;
 
     //if (Minimized && Serial == g_PlayerSerial)
-    //	g_ToolTip.Set(L"Double click to maximize the statusbar gump");
+    //    g_ToolTip.Set(L"Double click to maximize the statusbar gump");
     if (id && id <= ID_GSB_TEXT_CAST_RECOVERY)
     {
         static const wstring tooltip[ID_GSB_TEXT_CAST_RECOVERY] = {
@@ -125,11 +117,13 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
 
     //154x59 mini-gump
 
-    /*static const int gumpWidth = 154;
-	static const int gumpHeight = 59;
+    /*
+    static const int gumpWidth = 154;
+    static const int gumpHeight = 59;
 
-	const int rangeX = 77;
-	const int rangeY = 29;*/
+    const int rangeX = 77;
+    const int rangeY = 29;
+    */
 
     int gumpWidth = m_StatusbarDefaultWidth;
     int gumpHeight = m_StatusbarDefaultHeight;
@@ -262,7 +256,6 @@ bool CGumpStatusbar::GetStatusbarGroupOffset(int &x, int &y)
 
         while (gump != nullptr)
         {
-            //Если гамп захватили и (может быть) двигают
             if (gump != this && g_PressedObject.LeftGump == gump && gump->CanBeMoved())
             {
                 Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
@@ -374,9 +367,8 @@ void CGumpStatusbar::RemoveFromGroup()
 void CGumpStatusbar::CalculateGumpState()
 {
     DEBUG_TRACE_FUNCTION;
-    CGump::CalculateGumpState();
 
-    //Если гамп захватили и (может быть) двигают
+    CGump::CalculateGumpState();
     if (g_GumpMovingOffset.X || g_GumpMovingOffset.Y)
     {
         if (g_Target.IsTargeting())
@@ -450,31 +442,32 @@ void CGumpStatusbar::UpdateContent()
     bool useUOPGumps = g_FileManager.UseUOPGumps;
     CGUIText *text = nullptr;
 
-    if (Serial == g_PlayerSerial) //Если это статусбар игрока
+    if (Serial == g_PlayerSerial)
     {
-        if (!Minimized) //Если это "полная" версия статусбара
+        if (!Minimized)
         {
             SDL_Point p = { 0, 0 };
 
             if (g_PacketManager.GetClientVersion() >= CV_308D &&
                 !g_ConfigManager.GetOldStyleStatusbar())
+            {
                 Add(new CGUIGumppic(0x2A6C, 0, 0));
+            }
             else
             {
                 p.x = 244;
                 p.y = 112;
-
                 Add(new CGUIGumppic(0x0802, 0, 0));
             }
             int xOffset = 0;
-            //Отрисовка набора характеристик, расположение в зависимости от версии протокола, комментировать не буду...
+            // Client version specifics drawing
             if (g_PacketManager.GetClientVersion() >= CV_308Z &&
                 !g_ConfigManager.GetOldStyleStatusbar())
             {
                 p.x = 389;
                 p.y = 152;
 
-                //Отрисуем имя игрока
+                // Player name
                 if (g_Player->GetName().length())
                 {
                     text = (CGUIText *)Add(new CGUIText(0x0386, useUOPGumps ? 90 : 58, 50));
@@ -483,15 +476,13 @@ void CGumpStatusbar::UpdateContent()
 
                 if (g_PacketManager.GetClientVersion() >= CV_5020)
                 {
-                    //Кнопка вызова гампа бафов
                     Add(new CGUIButton(ID_GSB_BUFF_GUMP, 0x7538, 0x7538, 0x7538, 40, 50));
                 }
 
-                //Кнопочки для изменения роста/лока статов
                 if (g_DrawStatLockers)
                 {
                     //Str
-                    uchar status = g_Player->LockStr; //Статус (вниз/вверх/замок)
+                    uchar status = g_Player->LockStr; // Status (down / up / lock)
                     xOffset = useUOPGumps ? 28 : 40;
                     ushort gumpID = 0x0984; //Up
                     if (status == 1)
@@ -503,7 +494,7 @@ void CGumpStatusbar::UpdateContent()
                         ID_GSB_BUFF_LOCKER_STR, gumpID, gumpID, gumpID, xOffset, 76));
 
                     //Dex
-                    status = g_Player->LockDex; //Статус (вниз/вверх/замок)
+                    status = g_Player->LockDex; // Status (down / up / lock)
 
                     gumpID = 0x0984; //Up
                     if (status == 1)
@@ -515,7 +506,7 @@ void CGumpStatusbar::UpdateContent()
                         ID_GSB_BUFF_LOCKER_DEX, gumpID, gumpID, gumpID, xOffset, 102));
 
                     //Int
-                    status = g_Player->LockInt; //Статус (вниз/вверх/замок)
+                    status = g_Player->LockInt; // Status (down / up / lock)
 
                     gumpID = 0x0984; //Up
                     if (status == 1)
@@ -749,7 +740,6 @@ void CGumpStatusbar::UpdateContent()
                     p.y = 150;
                 }
 
-                //Отрисуем имя игрока
                 if (g_Player->GetName().length())
                 {
                     text = (CGUIText *)Add(new CGUIText(0x0386, 86, 42));
@@ -836,7 +826,7 @@ void CGumpStatusbar::UpdateContent()
                 Add(new CGUIHitBox(ID_GSB_MINIMIZE, p.x, p.y, 16, 16, true));
             }
         }
-        else //Это уменьшенная врсия статусбара (с полосками)
+        else // Reduced status bar version
         {
             if (g_Party.Leader != 0 && !g_ConfigManager.GetOriginalPartyStatusbar()) //inParty
             {
@@ -896,9 +886,9 @@ void CGumpStatusbar::UpdateContent()
             else
             {
                 if (g_Player->Warmode)
-                    Add(new CGUIGumppic(0x0807, 0, 0)); //Версия с включенным вармодом
+                    Add(new CGUIGumppic(0x0807, 0, 0)); // warmode enabled
                 else
-                    Add(new CGUIGumppic(0x0803, 0, 0)); //Гамп статусбара
+                    Add(new CGUIGumppic(0x0803, 0, 0));
 
                 //Hits
                 Add(new CGUIGumppic(0x0805, 34, 12));
@@ -939,7 +929,7 @@ void CGumpStatusbar::UpdateContent()
             m_StatusbarUnlocker->Visible = InGroup();
         }
     }
-    else //Чужой статусбар
+    else
     {
         if (g_Party.Contains(Serial) && !g_ConfigManager.GetOriginalPartyStatusbar())
         {
@@ -1068,7 +1058,6 @@ void CGumpStatusbar::UpdateContent()
             if (obj != nullptr)
             {
                 hitsColor = 0;
-                //Вычисляем цвет статусбара
                 color = g_ConfigManager.GetColorByNotoriety(obj->Notoriety);
 
                 if (obj->Notoriety == NT_CRIMINAL || obj->Notoriety == NT_SOMEONE_GRAY)
@@ -1149,7 +1138,6 @@ void CGumpStatusbar::OnLeftMouseButtonDown()
     if (g_GeneratedMouseDown)
         return;
 
-    //Проверим, может быть есть таргет, который нужно повесить на данного чара
     if (g_Target.IsTargeting())
     {
         g_Target.SendTargetObject(Serial);
@@ -1167,7 +1155,6 @@ void CGumpStatusbar::GUMP_BUTTON_EVENT_C
 
     if (serial == ID_GSB_MINIMIZE && Serial == g_PlayerSerial)
     {
-        //Кнопка минимизации на полной версии гампа
         Minimized = true;
         WantUpdateContent = true;
     }
@@ -1233,7 +1220,6 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
 
     if (!g_PressedObject.LeftSerial && Serial == g_PlayerSerial && Minimized)
     {
-        //Если это статусбар игрока (с полосками) то развернем его до полной версии
         Minimized = false;
 
         if (InGroup())
@@ -1259,17 +1245,14 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
     else if (Serial != g_PlayerSerial)
     {
         if (g_Player->Warmode)
-            g_Orion.Attack(Serial); //Если в вармоде - атакуем
+            g_Orion.Attack(Serial);
         else
-            g_Orion.DoubleClick(Serial); //Или используем предмет
-
+            g_Orion.DoubleClick(Serial);
         return true;
     }
     else if (!Minimized)
     {
-        //По даблклику по полной версии статусбара теперь открывается папердолл
         g_Orion.PaperdollReq(Serial);
-
         return true;
     }
 
@@ -1280,8 +1263,8 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
 void CGumpStatusbar::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
-    //Изменение имени существа
-    if (Serial != g_PlayerSerial) //Только чужие статусбары
+
+    if (Serial != g_PlayerSerial)
     {
         string str = g_EntryPointer->c_str();
 
@@ -1372,12 +1355,9 @@ void CGumpStatusbar::SendRenameRequest()
             continue;
 
         CEntryText *entry = &((CGUITextEntry *)item)->m_Entry;
-
-        if (entry->Length()) //Если в поле для ввода текста что-то есть
+        if (entry->Length())
         {
-            //Отправляем запрос на изменение имени
             CPacketRenameRequest(Serial, entry->c_str()).Send();
         }
     }
 }
-

@@ -6174,13 +6174,13 @@ PACKET_HANDLER(BoatMoving)
         boat->Count,
         boatX,
         boatY,
-        boatZ,
+        (char)boatZ,
         facingDirection,
         boat->Color,
         boat->GetFlags(),
         0,
         UGOT_MULTI,
-        1);
+        (ushort)1);
 
     for (ushort i = 0; i < boatObjectsCount; i++)
     {
@@ -6201,13 +6201,12 @@ PACKET_HANDLER(BoatMoving)
             0,
             boatObjectX,
             boatObjectY,
-            boatObjectZ,
+            (char)boatObjectZ,
             direction,
             boatObject->Color,
             boatObject->GetFlags(),
             0,
             UGOT_ITEM,
-            1);
+            (ushort)1);
     }
 }
-

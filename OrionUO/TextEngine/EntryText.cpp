@@ -50,7 +50,7 @@ void CEntryText::OnClick(
 {
     DEBUG_TRACE_FUNCTION;
 
-	if (g_EntryPointer != this)
+    if (g_EntryPointer != this)
     {
         CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
         if (gumpEntry != nullptr)

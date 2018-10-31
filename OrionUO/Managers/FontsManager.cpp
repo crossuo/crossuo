@@ -1,8 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
-
 CFontsManager g_FontManager;
 
 CFontsManager::CFontsManager()
@@ -191,7 +189,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosA(
             return p;
 
         //if pos is not in this line, just skip this
-        if (pos <= info->CharStart + len && ptr->Data.size() >= len)
+        if (pos <= info->CharStart + len && (int)ptr->Data.size() >= len)
         {
             for (int i = 0; i < len; i++)
             {
@@ -771,7 +769,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsA(
 
                         int block = (testY * width) + (x + w);
 
-                        if(block >= 0)
+                        if (block >= 0)
                             pData[block] = pcl << 8 | 0xFF;
                     }
                 }
@@ -862,7 +860,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
             return p;
 
         //if pos is not in this line, just skip this
-        if (pos <= info->CharStart + len && info->Data.size() >= len)
+        if (pos <= info->CharStart + len && (int)info->Data.size() >= len)
         {
             for (int i = 0; i < len; i++)
             {
@@ -2721,7 +2719,8 @@ bool CFontsManager::GenerateWBase(
     ushort flags)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pixels = GeneratePixelsW(font, th, str.c_str(), color, cell, width, align, flags);
+    vector<uint32_t> pixels =
+        GeneratePixelsW(font, th, str.c_str(), color, cell, width, align, flags);
     bool result = false;
 
     if (pixels.size())

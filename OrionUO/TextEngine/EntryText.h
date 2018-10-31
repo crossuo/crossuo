@@ -26,11 +26,9 @@ public:
     virtual ~CEntryText();
 
     CGLTextTexture m_Texture;
-
     CGLTextTexture m_CaretTexture;
 
     void Clear();
-
     void Paste();
 
     int
@@ -40,25 +38,15 @@ public:
     GetLinesCountW(uchar font, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0, int width = 0);
 
     bool Insert(wchar_t ch, CGump *gump = nullptr);
-
     void Remove(bool left, CGump *gump = nullptr);
-
     void RemoveSequence(int startPos, int length);
-
     void AddPos(int val, CGump *gump = nullptr);
-
     void SetPos(int val, CGump *gump = nullptr);
-
     const wchar_t *Data() const { return Text.c_str(); }
-
     const char *c_str();
-
     void SetTextA(const string &text);
-
     void SetTextW(const wstring &text);
-
     string GetTextA() const;
-
     wstring GetTextW() const;
 
     void OnClick(
@@ -71,17 +59,11 @@ public:
         ushort flags = 0);
 
     void OnKey(CGump *gump, Keycode key);
-
     int Pos() const { return m_Position; }
-
     size_t Length() const { return Text.length(); }
-
     string CheckMaxWidthA(uchar font, string str);
-
     wstring CheckMaxWidthW(uchar font, wstring str);
-
     void FixMaxWidthA(uchar font);
-
     void FixMaxWidthW(uchar font);
 
     void CreateTextureA(
