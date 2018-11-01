@@ -19,7 +19,7 @@ public:
     string Abbreviature = "";
 
     //! Числовая абревиатура группы? локали.
-    uint Unknown = 0;
+    uint32_t Unknown = 0;
 
     //! Название языка.
     string Language = "";
@@ -42,7 +42,7 @@ class CSpeechItem
 {
 public:
     //! Код посылаемый клиенту.
-    ushort Code = 0;
+    uint16_t Code = 0;
 
     //! Строка с ключевым словом для поиска в вводе.
     wstring Data = L"";
@@ -51,7 +51,7 @@ public:
     bool CheckEnd = false;
 
     CSpeechItem() {}
-    CSpeechItem(ushort code, const wstring &data);
+    CSpeechItem(uint16_t code, const wstring &data);
     virtual ~CSpeechItem() {}
 };
 

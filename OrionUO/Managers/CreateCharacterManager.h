@@ -14,10 +14,10 @@
 struct CC_HAIR_STYLE
 {
     //!Индекс гампа
-    ushort GumpID;
+    uint16_t GumpID;
 
     //!Индекс картинки из Art.mul
-    ushort GraphicID;
+    uint16_t GraphicID;
 
     //!Название
     string Name;
@@ -39,13 +39,13 @@ protected:
 public:
     RACE_TYPE GetRace() { return m_Race; };
     void SetRace(RACE_TYPE val);
-    uchar HairStyle = 1;
-    uchar BeardStyle = 0;
-    ushort SkinTone = 0x03EA;
-    ushort ShirtColor = 0x0084;
-    ushort PantsColor = 0x035F;
-    ushort HairColor = 0x044E;
-    ushort BeardColor = 0x044E;
+    uint8_t HairStyle = 1;
+    uint8_t BeardStyle = 0;
+    uint16_t SkinTone = 0x03EA;
+    uint16_t ShirtColor = 0x0084;
+    uint16_t PantsColor = 0x035F;
+    uint16_t HairColor = 0x044E;
+    uint16_t BeardColor = 0x044E;
 
 public:
     static const int HUMAN_MALE_HAIR_COUNT = 10;
@@ -80,13 +80,13 @@ private:
     static const CC_HAIR_STYLE m_GargoyleFemaleHairStyleTable[GARGOYLE_FEMALE_HAIR_COUNT];
     static const CC_HAIR_STYLE m_GargoyleBeardStyleTable[GARGOYLE_MALE_FACIAL_HAIR_COUNT];
 
-    static const ushort m_HumanSkinTone[HUMAN_SKIN_TONE_COUNT];
-    static const ushort m_ElfSkinTone[ELF_SKIN_TONE_COUNT];
-    static const ushort m_GargoyleSkinTone[GARGOYLE_SKIN_TONE_COUNT];
+    static const uint16_t m_HumanSkinTone[HUMAN_SKIN_TONE_COUNT];
+    static const uint16_t m_ElfSkinTone[ELF_SKIN_TONE_COUNT];
+    static const uint16_t m_GargoyleSkinTone[GARGOYLE_SKIN_TONE_COUNT];
 
-    static const ushort m_HumanHairColor[HUMAN_HAIR_COLOR_COUNT];
-    static const ushort m_ElfHairColor[ELF_HAIR_COLOR_COUNT];
-    static const ushort m_GargoyleHairColor[GARGOYLE_HAIR_COLOR_COUNT];
+    static const uint16_t m_HumanHairColor[HUMAN_HAIR_COLOR_COUNT];
+    static const uint16_t m_ElfHairColor[ELF_HAIR_COLOR_COUNT];
+    static const uint16_t m_GargoyleHairColor[GARGOYLE_HAIR_COLOR_COUNT];
 
 public:
     CCreateCharacterManager();
@@ -108,31 +108,31 @@ public:
 
     int GetCurrentFacialHairCount();
 
-    ushort GetBodyGump();
+    uint16_t GetBodyGump();
 
-    ushort GetShirtGump();
+    uint16_t GetShirtGump();
 
-    ushort GetPantsGump();
+    uint16_t GetPantsGump();
 
-    ushort GetBootsGump();
+    uint16_t GetBootsGump();
 
-    pushort GetSkinTonePtr();
+    const uint16_t *GetSkinTonePtr();
 
-    pushort GetHairColorPtr();
+    const uint16_t *GetHairColorPtr();
 
     /*!
 	Получить стиль волос
 	@param [__in] pos Индекс волос
 	@return Структура с данными о волосах
 	*/
-    CC_HAIR_STYLE GetHair(uchar pos) const;
+    CC_HAIR_STYLE GetHair(uint8_t pos) const;
 
     /*!
 	Получить стиль бороды
 	@param [__in] pos Индекс бороды
 	@return Структура с данными о бороде
 	*/
-    CC_HAIR_STYLE GetBeard(uchar pos) const;
+    CC_HAIR_STYLE GetBeard(uint8_t pos) const;
 };
 
 //!Менеджер создания мерсонажа

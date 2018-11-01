@@ -37,7 +37,7 @@ void CGumpRacialAbility::GUMP_BUTTON_EVENT_C
         LockMoving = !LockMoving;
 }
 
-void CGumpRacialAbility::OnAbilityUse(ushort index)
+void CGumpRacialAbility::OnAbilityUse(uint16_t index)
 {
     DEBUG_TRACE_FUNCTION;
     switch (index)
@@ -57,7 +57,7 @@ void CGumpRacialAbility::OnAbilityUse(ushort index)
 bool CGumpRacialAbility::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
-    OnAbilityUse((ushort)Serial);
+    OnAbilityUse((uint16_t)Serial);
 
     return true;
 }

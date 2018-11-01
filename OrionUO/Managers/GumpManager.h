@@ -83,7 +83,7 @@ public:
 	@param [__in] Type Тип гампа
 	@return 
 	*/
-    void CloseGump(uint serial, uint ID, GUMP_TYPE Type);
+    void CloseGump(uint32_t serial, uint32_t ID, GUMP_TYPE Type);
 
     /*!
 	Удалить гамп

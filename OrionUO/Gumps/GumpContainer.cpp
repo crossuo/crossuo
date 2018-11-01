@@ -1,10 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-const uint CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
-const uint CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
+const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
+const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
 
-CGumpContainer::CGumpContainer(uint serial, uint id, short x, short y)
+CGumpContainer::CGumpContainer(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_CONTAINER, serial, x, y)
     , IsGameBoard(id == 0x091A || id == 0x092E)
 {
@@ -18,7 +18,7 @@ CGumpContainer::CGumpContainer(uint serial, uint id, short x, short y)
 
     Add(new CGUIPage(2));
 
-    m_BodyGump = (CGUIGumppic *)Add(new CGUIGumppic((ushort)ID, 0, 0));
+    m_BodyGump = (CGUIGumppic *)Add(new CGUIGumppic((uint16_t)ID, 0, 0));
 
     if (ID == 0x0009)
     {
@@ -158,7 +158,7 @@ void CGumpContainer::PrepareContent()
     {
         if (m_CorpseEyesTicks < g_Ticks)
         {
-            m_CorpseEyesOffset = (uchar)!m_CorpseEyesOffset;
+            m_CorpseEyesOffset = (uint8_t)!m_CorpseEyesOffset;
             m_CorpseEyesTicks = g_Ticks + 750;
 
             m_CorpseEyes->Graphic = 0x0045 + m_CorpseEyesOffset;
@@ -195,9 +195,9 @@ void CGumpContainer::UpdateContent()
     if (container == nullptr)
         return;
 
-    if ((ushort)ID == 0x003C)
+    if ((uint16_t)ID == 0x003C)
     {
-        ushort graphic = (ushort)ID;
+        uint16_t graphic = (uint16_t)ID;
 
         CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
 
@@ -238,7 +238,7 @@ void CGumpContainer::UpdateContent()
             count > 0)
         {
             bool doubleDraw = false;
-            ushort graphic = obj->GetDrawGraphic(doubleDraw);
+            uint16_t graphic = obj->GetDrawGraphic(doubleDraw);
             CGUIGumppicHightlighted *item = nullptr;
 
             if (IsGameBoard)
@@ -323,8 +323,8 @@ void CGumpContainer::OnLeftMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
-    uint dropContainer = Serial;
-    uint selectedSerial = g_SelectedObject.Serial;
+    uint32_t dropContainer = Serial;
+    uint32_t selectedSerial = g_SelectedObject.Serial;
 
     if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled && selectedSerial &&
         selectedSerial != ID_GC_MINIMIZE && selectedSerial != ID_GC_LOCK_MOVING)
@@ -389,7 +389,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
         const CContainerOffsetRect &r = g_ContainerOffset[Graphic].Rect;
 
         bool doubleDraw = false;
-        ushort graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
+        uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
 
         CGLTexture *th = g_Orion.ExecuteStaticArt(graphic);
 

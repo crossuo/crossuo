@@ -17,7 +17,7 @@ CGUISkillGroup::CGUISkillGroup(
 {
     DEBUG_TRACE_FUNCTION;
     const bool isMinimized = !group->Maximized;
-    const ushort graphic = (isMinimized ? 0x0827 : 0x0826);
+    const uint16_t graphic = (isMinimized ? 0x0827 : 0x0826);
     m_Minimizer = new CGUIButton(minimizeSerial, graphic, graphic, graphic, 0, 0);
     SetMinimized(isMinimized);
 
@@ -38,7 +38,7 @@ void CGUISkillGroup::SetMinimized(bool val)
 
     DEBUG_TRACE_FUNCTION;
     m_Minimized = val;
-    const ushort graphic = (val ? 0x0827 : 0x0826);
+    const uint16_t graphic = (val ? 0x0827 : 0x0826);
     m_Minimizer->Graphic = graphic;
     m_Minimizer->GraphicSelected = graphic;
     m_Minimizer->GraphicPressed = graphic;

@@ -52,7 +52,7 @@ void CGumpPropertyIcon::UpdateContent()
 {
     Clear();
 
-    uchar mode = g_ConfigManager.GetItemPropertiesMode();
+    uint8_t mode = g_ConfigManager.GetItemPropertiesMode();
 
     if (mode == OPM_AT_ICON)
     {
@@ -101,7 +101,7 @@ bool CGumpPropertyIcon::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
 
-    uchar mode = g_ConfigManager.GetItemPropertiesMode() + 1;
+    uint8_t mode = g_ConfigManager.GetItemPropertiesMode() + 1;
 
     if (mode > OPM_SINGLE_CLICK)
         mode = OPM_AT_ICON;

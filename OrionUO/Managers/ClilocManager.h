@@ -10,7 +10,7 @@
 #ifndef CLILOCMANAGER_H
 #define CLILOCMANAGER_H
 
-typedef map<uint, string> CLILOC_MAP;
+typedef map<uint32_t, string> CLILOC_MAP;
 
 //!Класс с данными клилок-файла
 class CCliloc : public CBaseQueueItem
@@ -34,7 +34,7 @@ private:
 	@param [__in] id Индекс клилока
 	@return Результат загрузки или сообщение с ошибкой
 	*/
-    string Load(uint &id);
+    string Load(uint32_t &id);
 
     inline wstring CamelCaseTest(bool toCamelCase, const string &result);
 

@@ -18,7 +18,7 @@ public:
     float SpeedY = 0.0f;
     float X = 0.0f;
     float Y = 0.0f;
-    uint ID = 0;
+    uint32_t ID = 0;
     float ScaleRatio = 0.0f;
     float SpeedAngle = 0.0f;
     float SpeedMagnitude = 0.0f;

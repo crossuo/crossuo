@@ -13,8 +13,8 @@
 class COrionApplication : public Wisp::CApplication
 {
 public:
-    uint NextRenderTime = 0;
-    uint NextUpdateTime = 0;
+    uint32_t NextRenderTime = 0;
+    uint32_t NextUpdateTime = 0;
 
 protected:
     virtual void OnMainLoop();

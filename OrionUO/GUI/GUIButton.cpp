@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIButton::CGUIButton(
-    int serial, ushort graphic, ushort graphicSelected, ushort graphicPressed, int x, int y)
+    int serial, uint16_t graphic, uint16_t graphicSelected, uint16_t graphicPressed, int x, int y)
     : CGUIDrawObject(GOT_BUTTON, serial, graphic, 0, x, y)
     , GraphicSelected(graphicSelected)
     , GraphicPressed(graphicPressed)
@@ -31,10 +31,10 @@ void CGUIButton::PrepareTextures()
     g_Orion.ExecuteGump(GraphicPressed);
 }
 
-ushort CGUIButton::GetDrawGraphic()
+uint16_t CGUIButton::GetDrawGraphic()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = Graphic;
+    uint16_t graphic = Graphic;
 
     if (g_GumpPressedElement == this)
         graphic = GraphicPressed;

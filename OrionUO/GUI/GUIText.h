@@ -15,7 +15,7 @@
 class CGUIText : public CBaseGUI
 {
 public:
-    CGUIText(ushort color, int x, int y);
+    CGUIText(uint16_t color, int x, int y);
     virtual ~CGUIText();
 
     //!Текстура текста
@@ -25,20 +25,20 @@ public:
 
     //!Создать обычную текстуру текста
     void CreateTextureA(
-        uchar font,
+        uint8_t font,
         const string &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     //!Создать юникодовскую текстуру текста
     void CreateTextureW(
-        uchar font,
+        uint8_t font,
         const wstring &str,
-        uchar cell = 30,
+        uint8_t cell = 30,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     virtual void Draw(bool checktrans = false);
     virtual bool Select();

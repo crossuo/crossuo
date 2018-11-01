@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpTargetSystem::CGumpTargetSystem(uint serial, short x, short y)
+CGumpTargetSystem::CGumpTargetSystem(uint32_t serial, short x, short y)
     : CGump(GT_TARGET_SYSTEM, serial, x, y)
 {
     m_Locker.Serial = ID_GSB_LOCK_MOVING;
@@ -58,7 +58,7 @@ void CGumpTargetSystem::UpdateContent()
     if (obj != nullptr)
     {
         //Вычисляем цвет статусбара
-        ushort color = 0;
+        uint16_t color = 0;
         CGameCharacter *character = nullptr;
 
         if (obj->NPC)
@@ -169,7 +169,7 @@ bool CGumpTargetSystem::OnLeftMouseButtonDoubleClick()
     if (g_GeneratedMouseDown)
         return false;
 
-    uint serial = g_NewTargetSystem.Serial;
+    uint32_t serial = g_NewTargetSystem.Serial;
 
     if (serial != g_PlayerSerial)
     {

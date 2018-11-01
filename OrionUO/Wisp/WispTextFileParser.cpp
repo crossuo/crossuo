@@ -232,7 +232,7 @@ string CTextFileParser::ObtainQuotedData()
 
             //Смещаем указатель, т.к. кавычку писать не нужно
             m_Ptr++;
-            puchar ptr = m_Ptr;
+            uint8_t *ptr = m_Ptr;
 
             //Пропустим все до конца строки или до закрывающей кавычки
             while (ptr < m_EOL && *ptr && *ptr != '\n' && *ptr != endQuote)
@@ -340,10 +340,10 @@ vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
     vector<string> result;
 
     //Сохраним предыдущее значения конца данных
-    puchar oldEnd = m_End;
+    uint8_t *oldEnd = m_End;
 
-    m_Ptr = (puchar)str;
-    m_End = (puchar)str + strlen(str);
+    m_Ptr = (uint8_t *)str;
+    m_End = (uint8_t *)str + strlen(str);
     m_EOL = m_End;
 
     SaveRawLine();

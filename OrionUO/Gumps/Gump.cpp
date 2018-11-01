@@ -19,7 +19,7 @@ CGump::CGump()
 {
 }
 
-CGump::CGump(GUMP_TYPE type, uint serial, int x, int y)
+CGump::CGump(GUMP_TYPE type, uint32_t serial, int x, int y)
     : CRenderObject(serial, 0, 0, x, y)
     , GumpType(type)
 {
@@ -657,7 +657,7 @@ void CGump::TestItemsLeftMouseDown(
                 }
                 case GOT_RESIZEPIC:
                 {
-                    uint serial = item->Serial;
+                    uint32_t serial = item->Serial;
 
                     if (!serial)
                         break;
@@ -729,7 +729,7 @@ void CGump::TestItemsLeftMouseDown(
                 {
                     CGUIHTMLText *htmlText = (CGUIHTMLText *)item;
 
-                    ushort link = htmlText->m_Texture.WebLinkUnderMouse(item->GetX(), item->GetY());
+                    uint16_t link = htmlText->m_Texture.WebLinkUnderMouse(item->GetX(), item->GetY());
 
                     if (link && link != 0xFFFF)
                     {

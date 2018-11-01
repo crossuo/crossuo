@@ -181,7 +181,7 @@ void CGumpManager::AddGump(CGump *obj)
         {
             case GT_CONTAINER:
             {
-                ushort sound = g_ContainerOffset[obj->Graphic].OpenSound;
+                uint16_t sound = g_ContainerOffset[obj->Graphic].OpenSound;
 
                 if (sound)
                     g_Orion.PlaySoundEffect(sound);
@@ -334,7 +334,7 @@ CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
 @param [__in] Type Тип гампа
 @return
 */
-void CGumpManager::CloseGump(uint serial, uint id, GUMP_TYPE type)
+void CGumpManager::CloseGump(uint32_t serial, uint32_t id, GUMP_TYPE type)
 {
     DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != nullptr;)
@@ -396,7 +396,7 @@ void CGumpManager::RemoveGump(CGump *obj)
     if (obj->GumpType == GT_CONTAINER && obj->Graphic > 0 &&
         obj->Graphic < g_ContainerOffset.size())
     {
-        ushort sound = g_ContainerOffset[obj->Graphic].CloseSound;
+        uint16_t sound = g_ContainerOffset[obj->Graphic].CloseSound;
 
         if (sound)
             g_Orion.PlaySoundEffect(sound);
@@ -1161,22 +1161,22 @@ void CGumpManager::Load(const os_path &path)
 
     if (file.Load(path) && file.Size)
     {
-        uchar version = file.ReadUInt8();
+        uint8_t version = file.ReadUInt8();
 
-        puchar oldPtr = file.Ptr;
+        uint8_t *oldPtr = file.Ptr;
 
         short count = 0;
         short spellGroupsCount = 0;
 
         if (version)
         {
-            file.Ptr = (puchar)file.Start + (file.Size - 8);
+            file.Ptr = (uint8_t *)file.Start + (file.Size - 8);
             spellGroupsCount = file.ReadInt16LE();
             count = file.ReadInt16LE();
         }
         else
         {
-            file.Ptr = (puchar)file.Start + (file.Size - 6);
+            file.Ptr = (uint8_t *)file.Start + (file.Size - 6);
             count = file.ReadInt16LE();
         }
 
@@ -1187,17 +1187,17 @@ void CGumpManager::Load(const os_path &path)
         {
             CGump *gump = nullptr;
 
-            puchar next = file.Ptr;
-            uchar size = file.ReadUInt8();
+            uint8_t *next = file.Ptr;
+            uint8_t size = file.ReadUInt8();
             next += size;
 
             GUMP_TYPE gumpType = (GUMP_TYPE)file.ReadUInt8();
-            ushort gumpX = file.ReadUInt16LE();
-            ushort gumpY = file.ReadUInt16LE();
-            uchar gumpMinimized = file.ReadUInt8();
-            ushort gumpMinimizedX = file.ReadUInt16LE();
-            ushort gumpMinimizedY = file.ReadUInt16LE();
-            uchar gumpLockMoving = file.ReadUInt8();
+            uint16_t gumpX = file.ReadUInt16LE();
+            uint16_t gumpY = file.ReadUInt16LE();
+            uint8_t gumpMinimized = file.ReadUInt8();
+            uint16_t gumpMinimizedX = file.ReadUInt16LE();
+            uint16_t gumpMinimizedY = file.ReadUInt16LE();
+            uint8_t gumpLockMoving = file.ReadUInt8();
 
             switch ((GUMP_TYPE)gumpType)
             {
@@ -1305,11 +1305,11 @@ void CGumpManager::Load(const os_path &path)
                 case GT_SPELLBOOK:
                 case GT_SPELL:
                 {
-                    uint serial = file.ReadUInt32LE();
+                    uint32_t serial = file.ReadUInt32LE();
 
                     if (gumpType == GT_SPELL)
                     {
-                        ushort graphic = file.ReadUInt16LE();
+                        uint16_t graphic = file.ReadUInt16LE();
 
                         SPELLBOOK_TYPE spellType = ST_MAGE;
 
@@ -1343,7 +1343,7 @@ void CGumpManager::Load(const os_path &path)
                 }
                 case GT_SKILL:
                 {
-                    uint serial = file.ReadUInt32LE();
+                    uint32_t serial = file.ReadUInt32LE();
 
                     gump = new CGumpSkill(serial, gumpX, gumpY);
 
@@ -1358,7 +1358,7 @@ void CGumpManager::Load(const os_path &path)
                 }
                 case GT_RACIAL_ABILITY:
                 {
-                    uint serial = file.ReadUInt32LE();
+                    uint32_t serial = file.ReadUInt32LE();
 
                     gump = new CGumpRacialAbility(serial, gumpX, gumpY);
 
@@ -1399,22 +1399,22 @@ void CGumpManager::Load(const os_path &path)
         {
             CGumpSpell *topSpell = nullptr;
 
-            ushort spellsCount = file.ReadUInt16LE();
+            uint16_t spellsCount = file.ReadUInt16LE();
 
             for (int j = 0; j < spellsCount; j++)
             {
-                puchar next = file.Ptr;
-                uchar size = file.ReadUInt8();
+                uint8_t *next = file.Ptr;
+                uint8_t size = file.ReadUInt8();
                 next += size;
 
                 GUMP_TYPE gumpType = (GUMP_TYPE)file.ReadUInt8();
-                ushort gumpX = file.ReadUInt16LE();
-                ushort gumpY = file.ReadUInt16LE();
+                uint16_t gumpX = file.ReadUInt16LE();
+                uint16_t gumpY = file.ReadUInt16LE();
                 file.Move(5); //Minimized state, x, y
-                uchar gumpLockMoving = file.ReadUInt8();
+                uint8_t gumpLockMoving = file.ReadUInt8();
 
-                uint serial = file.ReadUInt32LE();
-                ushort graphic = file.ReadUInt16LE();
+                uint32_t serial = file.ReadUInt32LE();
+                uint16_t graphic = file.ReadUInt16LE();
 
                 SPELLBOOK_TYPE spellType = ST_MAGE;
 
@@ -1573,7 +1573,7 @@ void CGumpManager::Save(const os_path &path)
             case GT_WORLD_MAP:
             case GT_PROPERTY_ICON:
             {
-                uchar size = 12;
+                uint8_t size = 12;
 
                 if (gump->GumpType == GT_JOURNAL)
                     size += 2;
@@ -1698,7 +1698,7 @@ void CGumpManager::Save(const os_path &path)
 
     while (!playerContainers.empty() && !containerList.empty())
     {
-        uint containerSerial = playerContainers.front();
+        uint32_t containerSerial = playerContainers.front();
         playerContainers.erase(playerContainers.begin());
 
         for (vector<CGump *>::iterator it = containerList.begin(); it != containerList.end();)

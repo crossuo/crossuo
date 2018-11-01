@@ -77,7 +77,7 @@ bool CCustomHouseObjectWall::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectWall::Contains(ushort graphic) const
+int CCustomHouseObjectWall::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -136,7 +136,7 @@ bool CCustomHouseObjectFloor::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectFloor::Contains(ushort graphic) const
+int CCustomHouseObjectFloor::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -179,7 +179,7 @@ bool CCustomHouseObjectDoor::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectDoor::Contains(ushort graphic) const
+int CCustomHouseObjectDoor::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -224,7 +224,7 @@ bool CCustomHouseObjectMisc::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectMisc::Contains(ushort graphic) const
+int CCustomHouseObjectMisc::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -273,7 +273,7 @@ bool CCustomHouseObjectStair::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectStair::Contains(ushort graphic) const
+int CCustomHouseObjectStair::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -332,7 +332,7 @@ bool CCustomHouseObjectTeleport::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectTeleport::Contains(ushort graphic) const
+int CCustomHouseObjectTeleport::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -393,7 +393,7 @@ bool CCustomHouseObjectRoof::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectRoof::Contains(ushort graphic) const
+int CCustomHouseObjectRoof::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
@@ -435,7 +435,7 @@ bool CCustomHouseObjectPlaceInfo::Parse(const char *text)
     return result;
 }
 
-int CCustomHouseObjectPlaceInfo::Contains(ushort graphic) const
+int CCustomHouseObjectPlaceInfo::Contains(uint16_t graphic) const
 {
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {

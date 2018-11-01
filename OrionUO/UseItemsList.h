@@ -12,10 +12,10 @@
 
 class CUseItemActions
 {
-    uint Timer = 0;
+    uint32_t Timer = 0;
 
 private:
-    deque<uint> m_List;
+    deque<uint32_t> m_List;
 
 public:
     CUseItemActions() {}

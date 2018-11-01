@@ -8,7 +8,7 @@ public:
     bool OnePerson = false;
     bool Have6Slot = false;
     bool Have7Slot = false;
-    ushort ClientFlag = 0;
+    uint16_t ClientFlag = 0;
 
     string LastCharacterName;
 

@@ -92,7 +92,7 @@ void CWeather::Draw(int x, int y)
     else if (Type == 0xFF || Type == 0xFE)
         return;
 
-    uint passed = g_Ticks - LastTick;
+    uint32_t passed = g_Ticks - LastTick;
 
     if (passed > 7000) // если времени слишком много прошло со старой симуляции
     {

@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpShop::CGumpShop(uint serial, bool isBuyGump, short x, short y)
+CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
     : CGump(GT_SHOP, serial, x, y)
     , IsBuyGump(isBuyGump)
 {
@@ -226,7 +226,7 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
 
     if (deleteItem)
     {
-        uint itemSerial = minmax->Serial;
+        uint32_t itemSerial = minmax->Serial;
         int y = 0;
 
         for (CBaseGUI *item = (CBaseGUI *)m_ItemList[1]->m_Items; item != nullptr;)

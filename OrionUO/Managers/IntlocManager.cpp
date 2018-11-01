@@ -29,13 +29,13 @@ CIntloc::CIntloc(int fileIndex, const string &lang)
         {
             while (!m_File.IsEOF())
             {
-                uint code = m_File.ReadUInt32BE();
+                uint32_t code = m_File.ReadUInt32BE();
 
                 if (code == 'TEXT')
                 {
                     int len = m_File.ReadInt32BE();
 
-                    puchar end = m_File.Ptr + len;
+                    uint8_t *end = m_File.Ptr + len;
 
                     while (m_File.Ptr < end && !m_File.IsEOF())
                     {
@@ -133,7 +133,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
     return nullptr;
 }
 
-wstring CIntlocManager::Intloc(const string &lang, uint clilocID, bool isNewCliloc)
+wstring CIntlocManager::Intloc(const string &lang, uint32_t clilocID, bool isNewCliloc)
 {
     DEBUG_TRACE_FUNCTION;
     string language = ToLowerA(lang).c_str();

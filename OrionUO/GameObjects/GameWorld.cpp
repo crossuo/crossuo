@@ -99,7 +99,7 @@ void CGameWorld::ProcessAnimation()
         if (obj->NPC)
         {
             CGameCharacter *gc = obj->GameCharacterPtr();
-            uchar dir = 0;
+            uint8_t dir = 0;
             gc->UpdateAnimationInfo(dir, true);
 
             ProcessSound(g_Ticks, gc);
@@ -113,7 +113,7 @@ void CGameWorld::ProcessAnimation()
                 else
                     frameIndex++;
 
-                ushort id = gc->GetMountAnimation();
+                uint16_t id = gc->GetMountAnimation();
                 int animGroup = gc->GetAnimationGroup(id);
                 gc->ProcessGargoyleAnims(animGroup);
 
@@ -173,7 +173,7 @@ void CGameWorld::ProcessAnimation()
 
                                     if (gc->AnimationRepeat)
                                     {
-                                        uchar repCount = gc->AnimationRepeatMode;
+                                        uint8_t repCount = gc->AnimationRepeatMode;
 
                                         if (repCount == 2)
                                         {
@@ -198,7 +198,7 @@ void CGameWorld::ProcessAnimation()
 
                                     if (gc->AnimationRepeat)
                                     {
-                                        uchar repCount = gc->AnimationRepeatMode;
+                                        uint8_t repCount = gc->AnimationRepeatMode;
 
                                         if (repCount == 2)
                                         {
@@ -238,13 +238,13 @@ void CGameWorld::ProcessAnimation()
         else if (obj->IsCorpse())
         {
             CGameItem *gi = (CGameItem *)obj;
-            uchar dir = gi->Layer;
+            uint8_t dir = gi->Layer;
 
             if (obj->LastAnimationChangeTime < g_Ticks)
             {
                 char frameIndex = obj->AnimIndex + 1;
 
-                ushort id = obj->GetMountAnimation();
+                uint16_t id = obj->GetMountAnimation();
 
                 bool mirror = false;
 
@@ -488,7 +488,7 @@ void CGameWorld::RemoveObject(CGameObject *obj)
     DEBUG_TRACE_FUNCTION;
     RemoveFromContainer(obj);
 
-    uint serial = obj->Serial;
+    uint32_t serial = obj->Serial;
     m_Map[serial] = nullptr;
     m_Map.erase(serial);
     delete obj;
@@ -502,7 +502,7 @@ void CGameWorld::RemoveObject(CGameObject *obj)
 void CGameWorld::RemoveFromContainer(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
-    uint containerSerial = obj->Container;
+    uint32_t containerSerial = obj->Container;
 
     if (containerSerial != 0xFFFFFFFF)
     {
@@ -813,18 +813,18 @@ CGameObject *CGameWorld::SearchWorldObject(
 
 void CGameWorld::UpdateGameObject(
     int serial,
-    ushort graphic,
-    uchar graphicIncrement,
+    uint16_t graphic,
+    uint8_t graphicIncrement,
     int count,
     int x,
     int y,
     char z,
-    uchar direction,
-    ushort color,
-    uchar flags,
+    uint8_t direction,
+    uint16_t color,
+    uint8_t flags,
     int a11,
     UPDATE_GAME_OBJECT_TYPE updateType,
-    ushort a13)
+    uint16_t a13)
 {
     LOG("UpdateGameObject 0x%08lX:0x%04X 0x%04X (%i) %d:%d:%d %i\n",
         serial,
@@ -1049,14 +1049,14 @@ void CGameWorld::UpdateGameObject(
 
 void CGameWorld::UpdatePlayer(
     int serial,
-    ushort graphic,
-    uchar graphicIncrement,
-    ushort color,
-    uchar flags,
+    uint16_t graphic,
+    uint8_t graphicIncrement,
+    uint16_t color,
+    uint8_t flags,
     int x,
     int y,
-    ushort serverID,
-    uchar direction,
+    uint16_t serverID,
+    uint8_t direction,
     char z)
 {
     if (serial == g_PlayerSerial)
@@ -1079,7 +1079,7 @@ void CGameWorld::UpdatePlayer(
         g_GameScreen.UpdateDrawPos = true;
 
         bool oldDead = g_Player->Dead();
-        ushort oldGraphic = g_Player->Graphic;
+        uint16_t oldGraphic = g_Player->Graphic;
 
         g_Player->Graphic = graphic;
         g_Player->OnGraphicChange();
@@ -1122,7 +1122,7 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
     obj->SetY(y);
     PutContainer(obj, container);
 
-    uint containerSerial = container->Serial;
+    uint32_t containerSerial = container->Serial;
 
     CGump *gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_BULLETIN_BOARD);
 
@@ -1159,13 +1159,13 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
 
 void CGameWorld::UpdateContainedItem(
     int serial,
-    ushort graphic,
-    uchar graphicIncrement,
-    ushort count,
+    uint16_t graphic,
+    uint8_t graphicIncrement,
+    uint16_t count,
     int x,
     int y,
     int containerSerial,
-    ushort color)
+    uint16_t color)
 {
     if (g_ObjectInHand.Serial == serial && g_ObjectInHand.Dropped)
         g_ObjectInHand.Clear();
@@ -1228,7 +1228,7 @@ void CGameWorld::UpdateContainedItem(
 @param [__in_opt] serial Серийник родителя
 @return
 */
-void CGameWorld::Dump(uchar tCount, uint serial)
+void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     LOG("World Dump:\n\n");

@@ -102,7 +102,7 @@ void CGumpScreenCharacterList::InitToolTip()
     if (!g_ConfigManager.UseToolTips)
         return;
 
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
     {

@@ -32,13 +32,13 @@ void CFastWalkStack::AddValue(int value)
     }
 }
 
-uint CFastWalkStack::GetValue()
+uint32_t CFastWalkStack::GetValue()
 {
     DEBUG_TRACE_FUNCTION;
 
     for (int i = 0; i < 5; i++)
     {
-        uint key = m_Keys[i];
+        uint32_t key = m_Keys[i];
 
         if (key)
         {

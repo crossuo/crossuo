@@ -27,7 +27,7 @@ public:
     void AddWebLink(WEB_LINK_RECT &wl) { m_WebLinkRect.push_back(wl); }
 
     //Проверка веб-ссылки под мышкой
-    ushort WebLinkUnderMouse(int x, int y);
+    uint16_t WebLinkUnderMouse(int x, int y);
 };
 
 #endif

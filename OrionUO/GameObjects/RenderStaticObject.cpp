@@ -14,8 +14,8 @@
 CRenderStaticObject::CRenderStaticObject(
     RENDER_OBJECT_TYPE renderType,
     int serial,
-    ushort graphic,
-    ushort color,
+    uint16_t graphic,
+    uint16_t color,
     short x,
     short y,
     char z)
@@ -145,7 +145,7 @@ void CRenderStaticObject::FixTextCoordinates()
     }
 }
 
-bool CRenderStaticObject::IsNoDrawTile(ushort graphic)
+bool CRenderStaticObject::IsNoDrawTile(uint16_t graphic)
 {
     switch (graphic)
     {

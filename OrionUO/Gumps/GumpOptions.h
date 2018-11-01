@@ -15,7 +15,7 @@ class CGumpOptions : public CGump
 private:
     static const char *m_HotkeyText[0x100];
 
-    uint m_LastChangeMacroTime{ 0 };
+    uint32_t m_LastChangeMacroTime{ 0 };
 
     static const int m_MacroListMaxCount = 20;
 
@@ -256,7 +256,7 @@ public:
     CGumpOptions(short x, short y);
     virtual ~CGumpOptions();
 
-    void UpdateColor(const SELECT_COLOR_GUMP_STATE &state, ushort color);
+    void UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t color);
 
     CGUITextEntry *m_GameWindowWidth{ nullptr };
     CGUITextEntry *m_GameWindowHeight{ nullptr };

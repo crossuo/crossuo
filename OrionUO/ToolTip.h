@@ -14,9 +14,9 @@
 class CToolTip
 {
 public:
-    uint Timer = 0;
+    uint32_t Timer = 0;
     wstring Data = L"";
-    uint ClilocID = 0;
+    uint32_t ClilocID = 0;
     int MaxWidth = 0;
     Wisp::CPoint2Di Position = Wisp::CPoint2Di();
     bool Use = false;

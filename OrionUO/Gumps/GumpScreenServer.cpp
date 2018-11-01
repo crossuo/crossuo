@@ -36,7 +36,7 @@ void CGumpScreenServer::UpdateContent()
 
     CCliloc *cliloc = g_ClilocManager.Cliloc(g_Language);
 
-    ushort textColor = 0x0481;
+    uint16_t textColor = 0x0481;
     if (g_PacketManager.GetClientVersion() >= CV_500A)
         textColor = 0xFFFF;
 
@@ -94,7 +94,7 @@ void CGumpScreenServer::UpdateContent()
 
     for (int i = 0; i < g_ServerList.ServersCount(); i++)
     {
-        CServer *server = g_ServerList.GetServer((uint)i);
+        CServer *server = g_ServerList.GetServer((uint32_t)i);
 
         htmlGump->Add(new CGUIHitBox(ID_SS_SERVER_LIST + (int)i, 74, 10 + ((int)i * 25), 280, 25));
 
@@ -134,7 +134,7 @@ void CGumpScreenServer::UpdateContent()
     {
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0481, 243, 420));
 
-        if (g_ServerList.LastServerIndex < (uint)g_ServerList.ServersCount())
+        if (g_ServerList.LastServerIndex < (uint32_t)g_ServerList.ServersCount())
             text->CreateTextureA(9, g_ServerList.GetServer(g_ServerList.LastServerIndex)->Name);
         else
             text->CreateTextureA(9, g_ServerList.GetServer(0)->Name);
@@ -147,7 +147,7 @@ void CGumpScreenServer::InitToolTip()
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
     {

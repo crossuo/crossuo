@@ -13,13 +13,13 @@
 class CGumpMinimap : public CGump
 {
 public:
-    ushort LastX = 0;
-    ushort LastY = 0;
+    uint16_t LastX = 0;
+    uint16_t LastY = 0;
 
 private:
     const int ID_GMM_LOCK_MOVING = 1;
 
-    uchar m_Count{ 0 };
+    uint8_t m_Count{ 0 };
 
     CGLTexture m_Texture{ CGLTexture() };
 

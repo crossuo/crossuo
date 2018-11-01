@@ -51,7 +51,7 @@ void CCreateCharacterScreen::Init()
     m_Gump.WantUpdateContent = true;
 }
 
-void CCreateCharacterScreen::ProcessSmoothAction(uchar action)
+void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
@@ -91,7 +91,7 @@ void CCreateCharacterScreen::OnLeftMouseButtonDown()
 void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uchar)wParam))
+    if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)wParam))
         return;
     else if (g_EntryPointer == nullptr)
         return;

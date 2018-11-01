@@ -25,7 +25,7 @@ private:
     bool m_CanLoot{ false };
 
 public:
-    CGumpPartyManifest(uint serial, short x, short y, bool canLoot);
+    CGumpPartyManifest(uint32_t serial, short x, short y, bool canLoot);
     virtual ~CGumpPartyManifest();
 
     virtual void UpdateContent();

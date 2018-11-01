@@ -14,8 +14,8 @@ typedef deque<Wisp::CRect> SCISSOR_LIST;
 
 class CGLEngine;
 
-typedef void (CGLEngine::*BIND_TEXTURE_16_FUNCTION)(CGLTexture &, int, int, pushort);
-typedef void (CGLEngine::*BIND_TEXTURE_32_FUNCTION)(CGLTexture &, int, int, puint);
+typedef void (CGLEngine::*BIND_TEXTURE_16_FUNCTION)(CGLTexture &, int, int, uint16_t *);
+typedef void (CGLEngine::*BIND_TEXTURE_32_FUNCTION)(CGLTexture &, int, int, uint32_t *);
 
 typedef void (CGLEngine::*DRAW_LAND_TEXTURE_FUNCTION)(
     const CGLTexture &, int, int, class CLandObject *);
@@ -148,8 +148,8 @@ public:
     //Функции OpenGL 1x
 
     //Загрузка текстур 16 и 32 бит
-    void GL1_BindTexture16(CGLTexture &texture, int width, int height, pushort pixels);
-    void GL1_BindTexture32(CGLTexture &texture, int width, int height, puint pixels);
+    void GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels);
+    void GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels);
 
     //Нарисовать текстуру ландшафта
     void GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);
@@ -187,8 +187,8 @@ public:
     void GL2_CreateArrays(CGLTexture &texture, int width, int height);
 
     //Загрузка текстур 16 и 32 бит
-    void GL2_BindTexture16(CGLTexture &texture, int width, int height, pushort pixels);
-    void GL2_BindTexture32(CGLTexture &texture, int width, int height, puint pixels);
+    void GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels);
+    void GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels);
 
     //Нарисовать текстуру ландшафта
     void GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);

@@ -67,7 +67,7 @@ void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
         memcpy(
             &m_HuesRange[index].Entries[i].ColorTable[0],
             &group->Entries[i].ColorTable[0],
-            sizeof(ushort[32]));
+            sizeof(uint16_t[32]));
 }
 
 /*!
@@ -90,7 +90,7 @@ void CColorManager::CreateHuesPalette()
             {
                 int idx = (int)h * 3;
 
-                ushort c = m_HuesRange[i].Entries[j].ColorTable[h];
+                uint16_t c = m_HuesRange[i].Entries[j].ColorTable[h];
 
                 fh.Palette[idx] = (((c >> 10) & 0x1F) / 31.0f);
                 fh.Palette[idx + 1] = (((c >> 5) & 0x1F) / 31.0f);
@@ -105,7 +105,7 @@ void CColorManager::CreateHuesPalette()
 @param [__in] color Индекс цвета
 @return
 */
-void CColorManager::SendColorsToShader(ushort color)
+void CColorManager::SendColorsToShader(uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     if (color != 0)
@@ -132,9 +132,9 @@ void CColorManager::SendColorsToShader(ushort color)
 @param [__in] c 16-битный цвет
 @return 32-битный цвет
 */
-uint CColorManager::Color16To32(ushort c)
+uint32_t CColorManager::Color16To32(uint16_t c)
 {
-    const uchar table[32] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x29, 0x31, 0x39, 0x41, 0x4A, 0x52,
+    const uint8_t table[32] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x29, 0x31, 0x39, 0x41, 0x4A, 0x52,
                               0x5A, 0x62, 0x6A, 0x73, 0x7B, 0x83, 0x8B, 0x94, 0x9C, 0xA4, 0xAC,
                               0xB4, 0xBD, 0xC5, 0xCD, 0xD5, 0xDE, 0xE6, 0xEE, 0xF6, 0xFF };
 
@@ -153,7 +153,7 @@ uint CColorManager::Color16To32(ushort c)
 @param [__in] c 32-битный цвет
 @return 16-битный цвет
 */
-ushort CColorManager::Color32To16(int c)
+uint16_t CColorManager::Color32To16(int c)
 {
     return (((c & 0xFF) * 32) / 256) | (((((c >> 16) & 0xff) * 32) / 256) << 10) |
            (((((c >> 8) & 0xff) * 32) / 256) << 5);
@@ -164,7 +164,7 @@ ushort CColorManager::Color32To16(int c)
 @param [__in] c 16-битный цвет
 @return 16-битный цвет
 */
-ushort CColorManager::ConvertToGray(ushort c)
+uint16_t CColorManager::ConvertToGray(uint16_t c)
 {
     return ((c & 0x1F) * 299 + ((c >> 5) & 0x1F) * 587 + ((c >> 10) & 0x1F) * 114) / 1000;
 }
@@ -175,7 +175,7 @@ ushort CColorManager::ConvertToGray(ushort c)
 @param [__in] color Индекс цвета в палитре
 @return 16-битный цвет
 */
-ushort CColorManager::GetColor16(ushort c, ushort color)
+uint16_t CColorManager::GetColor16(uint16_t c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
@@ -195,7 +195,7 @@ ushort CColorManager::GetColor16(ushort c, ushort color)
 @param [__in] c Исходный 16-битный цвет
 @return 16-битный цвет
 */
-ushort CColorManager::GetRadarColorData(int c)
+uint16_t CColorManager::GetRadarColorData(int c)
 {
     DEBUG_TRACE_FUNCTION;
     if (c < (int)m_Radarcol.size())
@@ -210,7 +210,7 @@ ushort CColorManager::GetRadarColorData(int c)
 @param [__in] color Индекс цвета в палитре
 @return 32-битный цвет
 */
-uint CColorManager::GetPolygoneColor(ushort c, ushort color)
+uint32_t CColorManager::GetPolygoneColor(uint16_t c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
@@ -231,7 +231,7 @@ uint CColorManager::GetPolygoneColor(ushort c, ushort color)
 @param [__in] color Индекс цвета в палитре
 @return 32-битный цвет
 */
-uint CColorManager::GetUnicodeFontColor(ushort &c, ushort color)
+uint32_t CColorManager::GetUnicodeFontColor(uint16_t &c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
@@ -252,7 +252,7 @@ uint CColorManager::GetUnicodeFontColor(ushort &c, ushort color)
 @param [__in] color Индекс цвета в палитре
 @return 32-битный цвет
 */
-uint CColorManager::GetColor(ushort &c, ushort color)
+uint32_t CColorManager::GetColor(uint16_t &c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
@@ -273,7 +273,7 @@ uint CColorManager::GetColor(ushort &c, ushort color)
 @param [__in] color Индекс цвета в палитре
 @return 32-битный цвет
 */
-uint CColorManager::GetPartialHueColor(ushort &c, ushort color)
+uint32_t CColorManager::GetPartialHueColor(uint16_t &c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
@@ -282,7 +282,7 @@ uint CColorManager::GetPartialHueColor(ushort &c, ushort color)
         int g = color / 8;
         int e = color % 8;
 
-        uint cl = Color16To32(c);
+        uint32_t cl = Color16To32(c);
 
         if (ToColorR(cl) == ToColorG(cl) && ToColorB(cl) == ToColorG(cl))
             return Color16To32(m_HuesRange[g].Entries[e].ColorTable[(c >> 10) & 0x1F]);
@@ -293,9 +293,9 @@ uint CColorManager::GetPartialHueColor(ushort &c, ushort color)
     return Color16To32(c);
 }
 
-ushort CColorManager::FixColor(ushort color, ushort defaultColor)
+uint16_t CColorManager::FixColor(uint16_t color, uint16_t defaultColor)
 {
-    ushort fixedColor = color & 0x3FFF;
+    uint16_t fixedColor = color & 0x3FFF;
 
     if (fixedColor)
     {

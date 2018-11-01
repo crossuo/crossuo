@@ -56,7 +56,7 @@ vector<CContainerOffset> g_ContainerOffset;
 @param [__in] gumpID Индекс картинки
 @return 
 */
-void CContainerRect::Calculate(ushort gumpID)
+void CContainerRect::Calculate(uint16_t gumpID)
 {
     DEBUG_TRACE_FUNCTION;
     //!Указатель на текстуру

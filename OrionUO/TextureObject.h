@@ -37,23 +37,23 @@ class CTextureAnimationDirection
 {
 public:
     //Количество кадров
-    uchar FrameCount = 0;
+    uint8_t FrameCount = 0;
     //Адрес в памяти (*.mul / *.uop)
     size_t BaseAddress = 0;
     //Размер данных в памяти (*.mul / *.uop)
-    uint BaseSize = 0;
+    uint32_t BaseSize = 0;
     //Адрес в памяти (Bodyconv.def)
     size_t PatchedAddress = 0;
     //Размер данных в памяти (Bodyconv.def)
-    uint PatchedSize = 0;
+    uint32_t PatchedSize = 0;
     //Индекс файла с анимацией
     int FileIndex = 0;
     //Адрес в памяти
     size_t Address = 0;
     //Размер данных в памяти
-    uint Size = 0;
+    uint32_t Size = 0;
     //Время последнего доступа
-    uint LastAccessTime = 0;
+    uint32_t LastAccessTime = 0;
     //UOP animation indicator
     bool IsUOP = false;
     //Data is within verdata file

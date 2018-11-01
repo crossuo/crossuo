@@ -48,7 +48,7 @@ CGameCharacter::~CGameCharacter()
 
     m_HitsTexture.Clear();
 
-    uint serial = Serial & 0x3FFFFFFF;
+    uint32_t serial = Serial & 0x3FFFFFFF;
 
     if (g_ConfigManager.RemoveStatusbarsWithoutObjects)
         g_GumpManager.CloseGump(serial, 0, GT_STATUSBAR);
@@ -104,7 +104,7 @@ void CGameCharacter::UpdateTextCoordinates()
     }
 }
 
-void CGameCharacter::UpdateHitsTexture(uchar hits)
+void CGameCharacter::UpdateHitsTexture(uint8_t hits)
 {
     DEBUG_TRACE_FUNCTION;
     if (HitsPercent != hits || m_HitsTexture.Empty())
@@ -114,7 +114,7 @@ void CGameCharacter::UpdateHitsTexture(uchar hits)
         char hitsText[10] = { 0 };
         sprintf_s(hitsText, "[%i%%]", hits);
 
-        ushort color = 0x0044;
+        uint16_t color = 0x0044;
 
         if (hits < 30)
             color = 0x0021;
@@ -135,7 +135,7 @@ int CGameCharacter::IsSitting()
 {
     DEBUG_TRACE_FUNCTION;
     int result = 0;
-    ushort testGraphic = Graphic;
+    uint16_t testGraphic = Graphic;
     bool human =
         (((testGraphic >= 0x0190) && (testGraphic <= 0x0193)) || (testGraphic == 0x03DB) ||
          (testGraphic == 0x03DF) || (testGraphic == 0x03E2));
@@ -151,7 +151,7 @@ int CGameCharacter::IsSitting()
         {
             if (obj->IsStaticGroupObject() && abs(m_Z - obj->GetZ()) <= 1) //m_Z == obj->GetZ()
             {
-                ushort graphic = obj->Graphic;
+                uint16_t graphic = obj->Graphic;
 
                 if (obj->IsGameObject())
                 {
@@ -300,7 +300,7 @@ void CGameCharacter::Draw(int x, int y)
     g_RenderedObjectsCountInGameWindow++;
 #endif
 
-    uint lastSBsel = g_StatusbarUnderMouse;
+    uint32_t lastSBsel = g_StatusbarUnderMouse;
 
     if (!IsPlayer() && g_Player->Warmode && g_SelectedObject.Object == this)
         g_StatusbarUnderMouse = Serial;
@@ -394,7 +394,7 @@ void CGameCharacter::OnGraphicChange(int direction)
 @return 
 */
 void CGameCharacter::SetAnimation(
-    uchar id, uchar interval, uchar frameCount, uchar repeatCount, bool repeat, bool frameDirection)
+    uint8_t id, uint8_t interval, uint8_t frameCount, uint8_t repeatCount, bool repeat, bool frameDirection)
 {
     DEBUG_TRACE_FUNCTION;
     AnimationGroup = id;
@@ -415,7 +415,7 @@ void CGameCharacter::SetAnimation(
 @param [__in] val Новое значение группы анимации
 @return
 */
-void CGameCharacter::ResetAnimationGroup(uchar val)
+void CGameCharacter::ResetAnimationGroup(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
     AnimationFrameCount = 0;
@@ -463,10 +463,10 @@ void CGameCharacter::SetRandomFidgetAnimation()
 @param [__inout] animation Индекс группы анимации
 @return
 */
-void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uchar &animation)
+void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation)
 {
     DEBUG_TRACE_FUNCTION;
-    const uchar animAssociateTable[PAG_ANIMATION_COUNT][3] = {
+    const uint8_t animAssociateTable[PAG_ANIMATION_COUNT][3] = {
         { LAG_WALK, HAG_WALK, PAG_WALK_UNARMED },
         { LAG_WALK, HAG_WALK, PAG_WALK_ARMED },
         { LAG_RUN, HAG_FLY, PAG_RUN_UNARMED },
@@ -515,7 +515,7 @@ void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uchar &animation)
 @param [__inout] animation Индекс анимации в группе
 @return 
 */
-void CGameCharacter::CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS group, uchar &animation)
+void CGameCharacter::CorrectAnimationGroup(uint16_t graphic, ANIMATION_GROUPS group, uint8_t &animation)
 {
     DEBUG_TRACE_FUNCTION;
     if (group == AG_LOW)
@@ -579,7 +579,7 @@ void CGameCharacter::CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS grou
 @param [__in] group Индекс группы анимации
 @return Можно изменять направление или нет
 */
-bool CGameCharacter::TestStepNoChangeDirection(uchar group)
+bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
@@ -614,16 +614,16 @@ bool CGameCharacter::TestStepNoChangeDirection(uchar group)
 @param [__in_opt] graphic Индекс картинки персонажа
 @return Индекс группы анимации
 */
-uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
+uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = checkGraphic;
+    uint16_t graphic = checkGraphic;
 
     if (!graphic)
         graphic = GetMountAnimation();
 
     ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(graphic);
-    uchar result = AnimationGroup;
+    uint8_t result = AnimationGroup;
 
     if (result != 0xFF && !(Serial & 0x80000000) && (!AnimationFromServer || checkGraphic))
     {
@@ -647,13 +647,13 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
         if (isWalking)
         {
             if (isRun)
-                result = (uchar)LAG_RUN;
+                result = (uint8_t)LAG_RUN;
             else
-                result = (uchar)LAG_WALK;
+                result = (uint8_t)LAG_WALK;
         }
         else if (AnimationGroup == 0xFF)
         {
-            result = (uchar)LAG_STAND;
+            result = (uint8_t)LAG_STAND;
             AnimIndex = 0;
         }
     }
@@ -661,17 +661,17 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
     {
         if (isWalking)
         {
-            result = (uchar)HAG_WALK;
+            result = (uint8_t)HAG_WALK;
 
             if (isRun)
             {
                 if (g_AnimationManager.AnimationExists(graphic, HAG_FLY))
-                    result = (uchar)HAG_FLY;
+                    result = (uint8_t)HAG_FLY;
             }
         }
         else if (AnimationGroup == 0xFF)
         {
-            result = (uchar)HAG_STAND;
+            result = (uint8_t)HAG_STAND;
             AnimIndex = 0;
         }
 
@@ -691,11 +691,11 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
             if (isRun)
             {
                 if (FindLayer(OL_MOUNT) != nullptr)
-                    result = (uchar)PAG_ONMOUNT_RIDE_FAST;
+                    result = (uint8_t)PAG_ONMOUNT_RIDE_FAST;
                 else if (FindLayer(OL_1_HAND) != nullptr || FindLayer(OL_2_HAND) != nullptr)
-                    result = (uchar)PAG_RUN_ARMED;
+                    result = (uint8_t)PAG_RUN_ARMED;
                 else
-                    result = (uchar)PAG_RUN_UNARMED;
+                    result = (uint8_t)PAG_RUN_UNARMED;
 
                 if (!IsHuman() && !g_AnimationManager.AnimationExists(graphic, result))
                     goto test_walk;
@@ -704,35 +704,35 @@ uchar CGameCharacter::GetAnimationGroup(ushort checkGraphic)
             {
             test_walk:
                 if (FindLayer(OL_MOUNT) != nullptr)
-                    result = (uchar)PAG_ONMOUNT_RIDE_SLOW;
+                    result = (uint8_t)PAG_ONMOUNT_RIDE_SLOW;
                 else if ((FindLayer(OL_1_HAND) != nullptr || FindLayer(OL_2_HAND) != nullptr) && !Dead())
                 {
                     if (InWar)
-                        result = (uchar)PAG_WALK_WARMODE;
+                        result = (uint8_t)PAG_WALK_WARMODE;
                     else
-                        result = (uchar)PAG_WALK_ARMED;
+                        result = (uint8_t)PAG_WALK_ARMED;
                 }
                 else if (InWar && !Dead())
-                    result = (uchar)PAG_WALK_WARMODE;
+                    result = (uint8_t)PAG_WALK_WARMODE;
                 else
-                    result = (uchar)PAG_WALK_UNARMED;
+                    result = (uint8_t)PAG_WALK_UNARMED;
             }
         }
         else if (AnimationGroup == 0xFF)
         {
             if (FindLayer(OL_MOUNT) != nullptr)
-                result = (uchar)PAG_ONMOUNT_STAND;
+                result = (uint8_t)PAG_ONMOUNT_STAND;
             else if (InWar && !Dead())
             {
                 if (FindLayer(OL_1_HAND) != nullptr)
-                    result = (uchar)PAG_STAND_ONEHANDED_ATTACK;
+                    result = (uint8_t)PAG_STAND_ONEHANDED_ATTACK;
                 else if (FindLayer(OL_2_HAND) != nullptr)
-                    result = (uchar)PAG_STAND_TWOHANDED_ATTACK;
+                    result = (uint8_t)PAG_STAND_TWOHANDED_ATTACK;
                 else
-                    result = (uchar)PAG_STAND_ONEHANDED_ATTACK;
+                    result = (uint8_t)PAG_STAND_ONEHANDED_ATTACK;
             }
             else
-                result = (uchar)PAG_STAND;
+                result = (uint8_t)PAG_STAND;
 
             AnimIndex = 0;
         }
@@ -809,10 +809,10 @@ void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
 Получить индекс картинки для вычисления картинки анимации
 @return Индекс картинки персонажа
 */
-ushort CGameCharacter::GetMountAnimation()
+uint16_t CGameCharacter::GetMountAnimation()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = Graphic;
+    uint16_t graphic = Graphic;
 
     switch (graphic)
     {

@@ -114,7 +114,7 @@ bool CConnection::Read(int maxSize)
     return false;
 }
 
-int CConnection::Send(puchar data, int size)
+int CConnection::Send(uint8_t *data, int size)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
@@ -131,7 +131,7 @@ int CConnection::Send(const vector<uint8_t> &data)
     if (!data.size())
         return 0;
 
-    const int sent = Send((puchar)&data[0], (int)data.size());
+    const int sent = Send((uint8_t *)&data[0], (int)data.size());
     LOG("CConnection::Send=>%i\n", sent);
     return sent;
 }

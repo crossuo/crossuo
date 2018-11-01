@@ -11,7 +11,7 @@ public:
     char AverageZ = 0;
     // true - picture from texmaps, false - from art.mul
     bool IsStretched = false;
-    ushort OriginalGraphic = 0;
+    uint16_t OriginalGraphic = 0;
     GLuint PositionBuffer = 0;
     GLuint VertexBuffer = 0;
     GLuint NormalBuffer = 0;
@@ -20,7 +20,7 @@ private:
     int GetDirectionZ(int direction);
 
 public:
-    CLandObject(int serial, ushort graphic, ushort color, short x, short y, char z);
+    CLandObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z);
     virtual ~CLandObject();
 
     SDL_Rect m_Rect;

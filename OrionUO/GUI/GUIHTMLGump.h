@@ -39,7 +39,7 @@ private:
 public:
     CGUIHTMLGump(
         int serial,
-        ushort graphic,
+        uint16_t graphic,
         int x,
         int y,
         int width,

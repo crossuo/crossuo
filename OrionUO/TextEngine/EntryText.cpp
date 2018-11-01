@@ -46,7 +46,7 @@ const char *CEntryText::c_str()
 }
 
 void CEntryText::OnClick(
-    CGump *gump, uchar font, bool unicode, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
+    CGump *gump, uint8_t font, bool unicode, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -121,7 +121,7 @@ void CEntryText::OnKey(CGump *gump, Keycode key)
     }
 }
 
-int CEntryText::GetLinesCountA(uchar font, TEXT_ALIGN_TYPE align, ushort flags, int width)
+int CEntryText::GetLinesCountA(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -143,7 +143,7 @@ int CEntryText::GetLinesCountA(uchar font, TEXT_ALIGN_TYPE align, ushort flags, 
     return count;
 }
 
-int CEntryText::GetLinesCountW(uchar font, TEXT_ALIGN_TYPE align, ushort flags, int width)
+int CEntryText::GetLinesCountW(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -340,7 +340,7 @@ void CEntryText::SetTextW(const wstring &text)
         gump->FrameCreated = false;
 }
 
-string CEntryText::CheckMaxWidthA(uchar font, string str)
+string CEntryText::CheckMaxWidthA(uint8_t font, string str)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -359,7 +359,7 @@ string CEntryText::CheckMaxWidthA(uchar font, string str)
     return str;
 }
 
-wstring CEntryText::CheckMaxWidthW(uchar font, wstring str)
+wstring CEntryText::CheckMaxWidthW(uint8_t font, wstring str)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -378,7 +378,7 @@ wstring CEntryText::CheckMaxWidthW(uchar font, wstring str)
     return str;
 }
 
-void CEntryText::FixMaxWidthA(uchar font)
+void CEntryText::FixMaxWidthA(uint8_t font)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -396,7 +396,7 @@ void CEntryText::FixMaxWidthA(uchar font)
     }
 }
 
-void CEntryText::FixMaxWidthW(uchar font)
+void CEntryText::FixMaxWidthW(uint8_t font)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -414,7 +414,7 @@ void CEntryText::FixMaxWidthW(uchar font)
 }
 
 void CEntryText::CreateTextureA(
-    uchar font, string str, ushort color, int width, TEXT_ALIGN_TYPE align, ushort flags)
+    uint8_t font, string str, uint16_t color, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -457,7 +457,7 @@ void CEntryText::CreateTextureA(
 }
 
 void CEntryText::CreateTextureW(
-    uchar font, wstring str, ushort color, int width, TEXT_ALIGN_TYPE align, ushort flags)
+    uint8_t font, wstring str, uint16_t color, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -494,7 +494,7 @@ void CEntryText::CreateTextureW(
     g_FontManager.GenerateW(font, m_Texture, str, color, 30, Width, align, flags);
 }
 
-void CEntryText::PrepareToDrawA(uchar font, ushort color, TEXT_ALIGN_TYPE align, ushort flags)
+void CEntryText::PrepareToDrawA(uint8_t font, uint16_t color, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -511,7 +511,7 @@ void CEntryText::PrepareToDrawA(uchar font, ushort color, TEXT_ALIGN_TYPE align,
     }
 }
 
-void CEntryText::PrepareToDrawW(uchar font, ushort color, TEXT_ALIGN_TYPE align, ushort flags)
+void CEntryText::PrepareToDrawW(uint8_t font, uint16_t color, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -528,7 +528,7 @@ void CEntryText::PrepareToDrawW(uchar font, ushort color, TEXT_ALIGN_TYPE align,
     }
 }
 
-void CEntryText::DrawA(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
+void CEntryText::DrawA(uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -542,7 +542,7 @@ void CEntryText::DrawA(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE a
     }
 }
 
-void CEntryText::DrawW(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
+void CEntryText::DrawW(uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -555,7 +555,7 @@ void CEntryText::DrawW(uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE a
 }
 
 void CEntryText::DrawMaskA(
-    uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
+    uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -585,7 +585,7 @@ void CEntryText::DrawMaskA(
 }
 
 void CEntryText::DrawMaskW(
-    uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align, ushort flags)
+    uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 

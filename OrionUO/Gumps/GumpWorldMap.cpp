@@ -276,7 +276,7 @@ void CGumpWorldMap::LoadMap(int map)
 
     if (g_MapTexture[map].Texture == 0)
     {
-        uint crc32 = 0;
+        uint32_t crc32 = 0;
 
         if (g_FileManager.m_MapUOP[map].Start == nullptr)
             crc32 = g_Orion.GetFileHashCode(
@@ -430,7 +430,7 @@ void CGumpWorldMap::LoadMap(int map)
 
                         for (int x = 0; x < 8; x++)
                         {
-                            ushort color =
+                            uint16_t color =
                                 0x8000 | g_ColorManager.GetRadarColorData(info.Cells[pos].TileID);
 
                             buf[block] = color;

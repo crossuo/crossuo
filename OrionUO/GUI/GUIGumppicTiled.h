@@ -21,7 +21,7 @@ class CGUIGumppicTiled : public CGUIDrawObject
     int Height = 0;
 
 public:
-    CGUIGumppicTiled(ushort graphic, int x, int y, int width, int height);
+    CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height);
     virtual ~CGUIGumppicTiled();
 
     virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }

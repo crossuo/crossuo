@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "GumpDrag.h"
 
-CGumpDrag::CGumpDrag(uint serial, short x, short y)
+CGumpDrag::CGumpDrag(uint32_t serial, short x, short y)
     : CGump(GT_DRAG, serial, x, y)
 {
 }

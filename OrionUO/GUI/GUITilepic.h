@@ -15,7 +15,7 @@
 class CGUITilepic : public CGUIDrawObject
 {
 public:
-    CGUITilepic(ushort graphic, ushort color, int x, int y);
+    CGUITilepic(uint16_t graphic, uint16_t color, int x, int y);
     virtual ~CGUITilepic();
 
     virtual Wisp::CSize GetSize();

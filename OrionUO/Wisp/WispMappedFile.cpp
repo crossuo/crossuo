@@ -29,7 +29,7 @@ bool CMappedFile::Load()
 
         if (m_Map != nullptr)
         {
-            Start = (puchar)MapViewOfFile(m_Map, FILE_MAP_READ, 0, 0, Size);
+            Start = (uint8_t *)MapViewOfFile(m_Map, FILE_MAP_READ, 0, 0, Size);
 
             result = (Start != nullptr);
 

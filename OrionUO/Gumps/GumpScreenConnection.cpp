@@ -22,7 +22,7 @@ CGumpScreenConnection::~CGumpScreenConnection()
 {
 }
 
-void CGumpScreenConnection::CreateText(int x, int y, string str, uchar font)
+void CGumpScreenConnection::CreateText(int x, int y, string str, uint8_t font)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_ConnectionScreen.GetTextA().length())

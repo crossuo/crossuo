@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CMapObject::CMapObject(
-    RENDER_OBJECT_TYPE type, int serial, ushort graphic, ushort color, short x, short y, char z)
+    RENDER_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CRenderWorldObject(type, serial, graphic, color, x, y, z)
 {
 }

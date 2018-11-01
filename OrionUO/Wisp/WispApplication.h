@@ -22,7 +22,7 @@ public:
 
     int Run(HINSTANCE hinstance);
 
-    string GetFileVersion(uint *numericVerion = nullptr) const;
+    string GetFileVersion(uint32_t *numericVerion = nullptr) const;
     os_path ExeFilePath(const char *str, ...) const;
     os_path UOFilesPath(const char *str, ...) const;
     os_path UOFilesPath(const string &str, ...) const;

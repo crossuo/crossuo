@@ -54,7 +54,7 @@ struct ORION_RAW_GUMP_INFO
     int Height;
 };
 
-void UOMsg_Send(uchar *data, size_t size);
+void UOMsg_Send(uint8_t *data, size_t size);
 
 //IGLEngine
 typedef void CDECL FUNCDEF_PUSH_SCISSOR(int, int, int, int);

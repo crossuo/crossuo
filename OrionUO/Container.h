@@ -35,20 +35,20 @@ class CContainerOffset
 {
 public:
     //!Индекс картинки гампа
-    ushort Gump = 0;
+    uint16_t Gump = 0;
 
     //!Индекс звука открытия (0 - нет звука)
-    ushort OpenSound = 0;
+    uint16_t OpenSound = 0;
 
     //!Индекс звука закрытия (0 - нет звука)
-    ushort CloseSound = 0;
+    uint16_t CloseSound = 0;
 
     //!Координаты в гампе для дропа
     CContainerOffsetRect Rect = CContainerOffsetRect();
 
     CContainerOffset() {}
     CContainerOffset(
-        ushort gump, ushort openSound, ushort closeSound, const CContainerOffsetRect &rect)
+        uint16_t gump, uint16_t openSound, uint16_t closeSound, const CContainerOffsetRect &rect)
         : Gump(gump)
         , OpenSound(openSound)
         , CloseSound(closeSound)
@@ -76,7 +76,7 @@ public:
 	@param [__in] gumpID Индекс картинки
 	@return 
 	*/
-    void Calculate(ushort gumpID);
+    void Calculate(uint16_t gumpID);
 
     /*!
 	Выставим параметры по-умолчанию

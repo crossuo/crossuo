@@ -231,7 +231,7 @@ void CGumpCustomHouse::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
 
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     if (id >= ID_GCH_ITEM_IN_LIST)
     {
@@ -499,7 +499,7 @@ void CGumpCustomHouse::DrawWallSection()
 
             for (int i = 0; i < 8; i++)
             {
-                ushort graphic = (ShowWindow ? item.m_WindowGraphics[i] : item.m_Graphics[i]);
+                uint16_t graphic = (ShowWindow ? item.m_WindowGraphics[i] : item.m_Graphics[i]);
 
                 if (graphic)
                 {
@@ -552,7 +552,7 @@ void CGumpCustomHouse::DrawDoorSection()
 
         for (int i = 0; i < 8; i++)
         {
-            ushort graphic = item.m_Graphics[i];
+            uint16_t graphic = item.m_Graphics[i];
 
             if (graphic)
             {
@@ -681,7 +681,7 @@ void CGumpCustomHouse::DrawFloorSection()
         {
             for (int i = 0; i < 8; i++)
             {
-                ushort graphic = item.m_Graphics[index];
+                uint16_t graphic = item.m_Graphics[index];
 
                 if (graphic)
                 {
@@ -736,7 +736,7 @@ void CGumpCustomHouse::DrawStairSection()
 
             for (int i = start; i < end; i++)
             {
-                ushort graphic = item.m_Graphics[i];
+                uint16_t graphic = item.m_Graphics[i];
 
                 if (graphic)
                 {
@@ -828,7 +828,7 @@ void CGumpCustomHouse::DrawRoofSection()
             {
                 for (int i = 0; i < 8; i++)
                 {
-                    ushort graphic = item.m_Graphics[index];
+                    uint16_t graphic = item.m_Graphics[index];
 
                     if (graphic)
                     {
@@ -934,7 +934,7 @@ void CGumpCustomHouse::DrawMiscSection()
 
             for (int i = 0; i < 8; i++)
             {
-                ushort graphic = item.m_Graphics[i];
+                uint16_t graphic = item.m_Graphics[i];
 
                 if (graphic)
                 {
@@ -1019,7 +1019,7 @@ void CGumpCustomHouse::DrawMenuSection()
 }
 
 template <class T, class A>
-pair<int, int> SeekGraphicInCustomHouseObjectListWithCategory(const vector<A> &list, ushort graphic)
+pair<int, int> SeekGraphicInCustomHouseObjectListWithCategory(const vector<A> &list, uint16_t graphic)
 {
     for (int i = 0; i < (int)list.size(); i++)
     {
@@ -1038,7 +1038,7 @@ pair<int, int> SeekGraphicInCustomHouseObjectListWithCategory(const vector<A> &l
 }
 
 template <class T>
-pair<int, int> SeekGraphicInCustomHouseObjectList(const vector<T> &list, ushort graphic)
+pair<int, int> SeekGraphicInCustomHouseObjectList(const vector<T> &list, uint16_t graphic)
 {
     for (int i = 0; i < (int)list.size(); i++)
     {
@@ -1051,7 +1051,7 @@ pair<int, int> SeekGraphicInCustomHouseObjectList(const vector<T> &list, ushort 
     return pair<int, int>(-1, -1);
 }
 
-pair<int, int> CGumpCustomHouse::ExistsInList(CUSTOM_HOUSE_GUMP_STATE &state, ushort graphic)
+pair<int, int> CGumpCustomHouse::ExistsInList(CUSTOM_HOUSE_GUMP_STATE &state, uint16_t graphic)
 {
     pair<int, int> result = SeekGraphicInCustomHouseObjectListWithCategory<
         CCustomHouseObjectWall,
@@ -1116,12 +1116,12 @@ void CGumpCustomHouse::UpdateContent()
         new CGUIButton(ID_GCH_STATE_ERASE, 0x5666 + (int)Erasing, 0x5667, 0x5668, 9, 100));
     Add(new CGUIButton(ID_GCH_STATE_EYEDROPPER, 0x5669 + (int)SeekTile, 0x566A, 0x566B, 39, 100));
 
-    ushort floorVisionGraphic1[3] = { 0x572E, 0x5734, 0x5731 };
-    ushort floorVisionGraphic2[3] = { 0x5725, 0x5728, 0x572B };
-    ushort floorVisionGraphic3[3] = { 0x571C, 0x571F, 0x5722 };
+    uint16_t floorVisionGraphic1[3] = { 0x572E, 0x5734, 0x5731 };
+    uint16_t floorVisionGraphic2[3] = { 0x5725, 0x5728, 0x572B };
+    uint16_t floorVisionGraphic3[3] = { 0x571C, 0x571F, 0x5722 };
     int associateGraphicTable[7] = { 0, 1, 2, 1, 2, 1, 2 };
 
-    ushort floorVisionGraphic = floorVisionGraphic1[associateGraphicTable[m_FloorVisionState[0]]];
+    uint16_t floorVisionGraphic = floorVisionGraphic1[associateGraphicTable[m_FloorVisionState[0]]];
     int graphicOffset = (CurrentFloor == 1 ? 3 : 0);
     int graphicOffset2 = (CurrentFloor == 1 ? 4 : 0);
     m_DataBoxGUI->Add(new CGUIButton(
@@ -1394,7 +1394,7 @@ void CGumpCustomHouse::UpdateMaxPage()
     }
 }
 
-void CGumpCustomHouse::SeekGraphic(ushort graphic)
+void CGumpCustomHouse::SeekGraphic(uint16_t graphic)
 {
     CUSTOM_HOUSE_GUMP_STATE state;
     pair<int, int> result = ExistsInList(state, graphic);
@@ -1625,7 +1625,7 @@ bool CGumpCustomHouse::CanBuildHere(
     return true;
 }
 
-bool CGumpCustomHouse::ValidateItemPlace(const SDL_Rect &rect, ushort graphic, int x, int y)
+bool CGumpCustomHouse::ValidateItemPlace(const SDL_Rect &rect, uint16_t graphic, int x, int y)
 {
     SDL_Point pos = { x, y };
 
@@ -2013,7 +2013,7 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
                         if (Page >= 0 && Page < (int)m_Stairs.size())
                         {
                             const CCustomHouseObjectStair &stair = m_Stairs[Page];
-                            ushort graphic = 0;
+                            uint16_t graphic = 0;
 
                             if (SelectedGraphic == stair.North)
                                 graphic = stair.MultiNorth;
@@ -2480,7 +2480,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
         z = foundationItem->GetZ() + 7 + 20;
 
-        ushort color = 0x0051;
+        uint16_t color = 0x0051;
 
         for (int i = 1; i < CurrentFloor; i++)
         {
@@ -2488,7 +2488,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
             {
                 for (int y = StartPos.Y; y < EndPos.Y; y++)
                 {
-                    ushort tempColor = color;
+                    uint16_t tempColor = color;
 
                     if (x == StartPos.X || y == StartPos.Y)
                         tempColor++;
@@ -2574,7 +2574,7 @@ void CGumpCustomHouse::GUMP_BUTTON_EVENT_C
         else if (index >= 0 && Page >= 0)
         {
             bool combinedStair = false;
-            ushort graphic = 0;
+            uint16_t graphic = 0;
 
             if (State == CHGS_WALL || State == CHGS_ROOF || State == CHGS_MISC)
             {

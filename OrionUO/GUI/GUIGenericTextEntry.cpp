@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIGenericTextEntry::CGUIGenericTextEntry(
-    int serial, int index, ushort color, int x, int y, int maxWidth, int maxLength)
+    int serial, int index, uint16_t color, int x, int y, int maxWidth, int maxLength)
     : CGUITextEntry(
           serial,
           color,
@@ -22,7 +22,7 @@ CGUIGenericTextEntry::CGUIGenericTextEntry(
           y,
           maxWidth,
           true,
-          (uchar)(g_PacketManager.GetClientVersion() >= CV_305D),
+          (uint8_t)(g_PacketManager.GetClientVersion() >= CV_305D),
           TS_LEFT,
           UOFONT_BLACK_BORDER,
           maxLength)

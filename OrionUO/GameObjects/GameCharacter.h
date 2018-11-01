@@ -39,25 +39,25 @@ public:
     RACE_TYPE Race = RT_HUMAN;
 
     //!Current direction
-    uchar Direction = 0;
+    uint8_t Direction = 0;
 
     //!Character's notoriety
-    uchar Notoriety = 0;
+    uint8_t Notoriety = 0;
 
     //!Player can change the name for this character
     bool CanChangeName = false;
 
     //!Interval between animation playback
-    uchar AnimationInterval = 0;
+    uint8_t AnimationInterval = 0;
 
     //!Current animation frame count
-    uchar AnimationFrameCount = 0;
+    uint8_t AnimationFrameCount = 0;
 
     //!Current animation repeat mode
-    uchar AnimationRepeatMode = 1;
+    uint8_t AnimationRepeatMode = 1;
 
     //!Current animation group
-    uchar AnimationGroup = 0xFF;
+    uint8_t AnimationGroup = 0xFF;
 
     //!Current animation is repeat
     bool AnimationRepeat = false;
@@ -69,13 +69,13 @@ public:
     bool AnimationFromServer = false;
 
     //!Last step sound time stamp
-    uint LastStepSoundTime = 0;
+    uint32_t LastStepSoundTime = 0;
 
     //!Time stamp to fidget animation
-    uint TimeToRandomFidget = 0;
+    uint32_t TimeToRandomFidget = 0;
 
     //!Offset to step sound
-    uchar StepSoundOffset = 0;
+    uint8_t StepSoundOffset = 0;
 
     //!Sprite offset by X coordinate on the tile
     int OffsetX = 0;
@@ -87,13 +87,13 @@ public:
     int OffsetZ = 0;
 
     //!Last step time stamp
-    uint LastStepTime = 0;
+    uint32_t LastStepTime = 0;
 
     //!Character's title
     string Title = "";
 
     //!Percent of hits
-    uchar HitsPercent = 0;
+    uint8_t HitsPercent = 0;
 
 protected:
     /*!
@@ -103,7 +103,7 @@ protected:
 	@param [__inout] animation Animation index
 	@return 
 	*/
-    void CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS group, uchar &animation);
+    void CorrectAnimationGroup(uint16_t graphic, ANIMATION_GROUPS group, uint8_t &animation);
 
     /*!
 	Bonded pets status dead/alive
@@ -144,7 +144,7 @@ public:
 	@param [__in] hits Current hitpoints
 	@return
 	*/
-    void UpdateHitsTexture(uchar hits);
+    void UpdateHitsTexture(uint8_t hits);
 
     /*!
 	Process gargoyle animations
@@ -191,7 +191,7 @@ public:
 	@param [__in] val New animation group index
 	@return
 	*/
-    void ResetAnimationGroup(uchar val);
+    void ResetAnimationGroup(uint8_t val);
 
     /*!
 	Reset animation group index to random fidget
@@ -210,10 +210,10 @@ public:
 	@return
 	*/
     void SetAnimation(
-        uchar id,
-        uchar interval = 0,
-        uchar frameCount = 0,
-        uchar repeatCount = 0,
+        uint8_t id,
+        uint8_t interval = 0,
+        uint8_t frameCount = 0,
+        uint8_t repeatCount = 0,
         bool repeat = false,
         bool frameDirection = false);
 
@@ -221,14 +221,14 @@ public:
 	Get mount animation index
 	@return Graphic
 	*/
-    ushort GetMountAnimation();
+    uint16_t GetMountAnimation();
 
     /*!
 	Get current animation index
 	@param [__in_opt] checkGraphic Current graphic
 	@return Animation group index
 	*/
-    uchar GetAnimationGroup(ushort checkGraphic = 0);
+    uint8_t GetAnimationGroup(uint16_t checkGraphic = 0);
 
     /*!
 	Correct animation index
@@ -236,7 +236,7 @@ public:
 	@param [__out] animation Animation index
 	@return
 	*/
-    void GetAnimationGroup(ANIMATION_GROUPS group, uchar &animation);
+    void GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation);
 
     /*!
 	Staying character state
@@ -249,13 +249,13 @@ public:
 	@param [__in] group Animation group
 	@return true if direction can be changed
 	*/
-    bool TestStepNoChangeDirection(uchar group);
+    bool TestStepNoChangeDirection(uint8_t group);
 
     /*!
 	Character walking state
 	@return true if walking
 	*/
-    virtual bool Walking() { return (LastStepTime > (uint)(g_Ticks - WALKING_DELAY)); }
+    virtual bool Walking() { return (LastStepTime > (uint32_t)(g_Ticks - WALKING_DELAY)); }
 
     /*!
 	Check for animation frame changing
@@ -263,7 +263,7 @@ public:
 	*/
     virtual bool NoIterateAnimIndex()
     {
-        return ((LastStepTime > (uint)(g_Ticks - WALKING_DELAY)) && m_Steps.empty());
+        return ((LastStepTime > (uint32_t)(g_Ticks - WALKING_DELAY)) && m_Steps.empty());
     }
 
     /*!
@@ -272,7 +272,7 @@ public:
 	@param [__in_opt] canChange Can change private fields/stacks
 	@return
 	*/
-    void UpdateAnimationInfo(uchar &dir, bool canChange = false);
+    void UpdateAnimationInfo(uint8_t &dir, bool canChange = false);
 
     /*!
 	Check on humanoid

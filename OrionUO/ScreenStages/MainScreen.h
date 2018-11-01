@@ -25,8 +25,8 @@ public:
     CMainScreen();
     virtual ~CMainScreen();
 
-    static const uchar ID_SMOOTH_MS_QUIT = 1;
-    static const uchar ID_SMOOTH_MS_CONNECT = 2;
+    static const uint8_t ID_SMOOTH_MS_QUIT = 1;
+    static const uint8_t ID_SMOOTH_MS_CONNECT = 2;
 
     CEntryText *m_Account = nullptr;
     CEntryText *m_Password = nullptr;
@@ -37,7 +37,7 @@ public:
 
     void Paste();
 
-    void ProcessSmoothAction(uchar action = 0xFF);
+    void ProcessSmoothAction(uint8_t action = 0xFF);
 
     void LoadGlobalConfig();
 

@@ -11,7 +11,7 @@ CPacketMessage::CPacketMessage(bool bigEndian)
 {
 }
 
-CPacketMessage::CPacketMessage(puchar data, int dataSize, bool bigEndian)
+CPacketMessage::CPacketMessage(uint8_t *data, int dataSize, bool bigEndian)
     : BigEndian(bigEndian)
 {
     DEBUG_TRACE_FUNCTION;
@@ -32,7 +32,7 @@ CPacketMessage::~CPacketMessage()
     m_Data.clear();
 }
 
-void CPacketMessage::Append(puchar data, int dataSize)
+void CPacketMessage::Append(uint8_t *data, int dataSize)
 {
     DEBUG_TRACE_FUNCTION;
     vector<uint8_t> buf(dataSize);
@@ -63,7 +63,7 @@ vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffse
         if (m_Data.size() < 3)
             return result;
 
-        puchar data = &m_Data[1];
+        uint8_t *data = &m_Data[1];
 
         if (BigEndian)
             wantSize = (data[0] << 8) | data[1];

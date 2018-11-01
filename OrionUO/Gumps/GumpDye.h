@@ -13,17 +13,17 @@
 class CGumpDye : public CGumpSelectColor
 {
 private:
-    ushort GetCurrentColor();
+    uint16_t GetCurrentColor();
 
     CGUITilepic *m_Tube{ nullptr };
 
 public:
-    CGumpDye(uint serial, short x, short y, ushort graphic);
+    CGumpDye(uint32_t serial, short x, short y, uint16_t graphic);
     virtual ~CGumpDye();
 
     virtual void UpdateContent();
 
-    virtual void OnSelectColor(ushort color);
+    virtual void OnSelectColor(uint16_t color);
 
     GUMP_BUTTON_EVENT_H;
     GUMP_SLIDER_CLICK_EVENT_H;

@@ -15,7 +15,7 @@
 class CGUIResizepic : public CGUIPolygonal
 {
 public:
-    CGUIResizepic(int serial, ushort graphic, int x, int y, int width, int height);
+    CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height);
     virtual ~CGUIResizepic();
 
     virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }

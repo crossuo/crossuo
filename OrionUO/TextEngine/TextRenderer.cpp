@@ -114,7 +114,7 @@ bool CTextRenderer::ProcessTextRemoveBlending(CTextData &text)
             delta = (255 * delta) / 100;
 
             if (!text.Transparent || delta <= 0x7F)
-                text.Alpha = (uchar)delta;
+                text.Alpha = (uint8_t)delta;
 
             text.Transparent = true;
 
@@ -179,7 +179,7 @@ void CTextRenderer::Draw()
 
         if (text.Timer >= g_Ticks)
         {
-            ushort textColor = text.Color;
+            uint16_t textColor = text.Color;
 
             if (textColor)
             {
@@ -197,7 +197,7 @@ void CTextRenderer::Draw()
 
             if (text.Transparent)
             {
-                uchar alpha = text.Alpha;
+                uint8_t alpha = text.Alpha;
 
                 if (alpha == 0xFF)
                     alpha = 0x7F;
@@ -305,7 +305,7 @@ void CTextRenderer::WorldDraw()
             if (rwo == nullptr || rwo->UseInRender != renderIndex)
                 continue;
 
-            ushort textColor = text.Color;
+            uint16_t textColor = text.Color;
 
             if (text.Type == TT_OBJECT && g_SelectedObject.Object == item &&
                 (((CGameObject *)rwo)->NPC || ((CGameObject *)rwo)->IsCorpse()))
@@ -327,7 +327,7 @@ void CTextRenderer::WorldDraw()
 
             if (text.Transparent)
             {
-                uchar alpha = text.Alpha;
+                uint8_t alpha = text.Alpha;
 
                 if (alpha == 0xFF)
                     alpha = 0x7F;

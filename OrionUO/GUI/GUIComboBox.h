@@ -15,7 +15,7 @@
 class CGUIComboBox : public CBaseGUI
 {
     //!ИД картинки в развернутом состоянии
-    ushort OpenGraphic = 0;
+    uint16_t OpenGraphic = 0;
 
     //!Флаг составного фона, если включено - используются повторяющиеся картинки (5 штук) m_OpenGraphic, в выключенном состоянии выводит Resizepic из m_OpenGraphic
     bool CompositeBackground = false;
@@ -44,7 +44,7 @@ public:
     int ListingDirection = 0;
 
     //!Таймер скроллинга
-    uint ListingTimer = 0;
+    uint32_t ListingTimer = 0;
 
     //!Центрировать развернутое состояние по оси Y
     bool ShowMaximizedCenter = false;
@@ -80,9 +80,9 @@ private:
 public:
     CGUIComboBox(
         int serial,
-        ushort graphic,
+        uint16_t graphic,
         bool compositeBackground,
-        ushort openGraphic,
+        uint16_t openGraphic,
         int x,
         int y,
         int width,

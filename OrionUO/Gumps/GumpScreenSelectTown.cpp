@@ -93,9 +93,9 @@ void CGumpScreenSelectTown::UpdateContent()
     for (int i = 0; i < (int)g_CityList.CityCount(); i++)
     {
         if (g_PacketManager.GetClientVersion() >= CV_70130)
-            city = g_CityList.GetCity((uint)i);
+            city = g_CityList.GetCity((uint32_t)i);
         else
-            city = g_CityList.GetCity((uint)i + 1);
+            city = g_CityList.GetCity((uint32_t)i + 1);
 
         if (city == nullptr)
             continue;
@@ -107,7 +107,7 @@ void CGumpScreenSelectTown::UpdateContent()
         {
             CCityItemNew *newCity = (CCityItemNew *)city;
 
-            uint map = newCity->MapIndex;
+            uint32_t map = newCity->MapIndex;
 
             if (map > 5)
                 map = 5;

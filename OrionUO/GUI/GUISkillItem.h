@@ -20,11 +20,11 @@ public:
 
     //!Статус навыка
 protected:
-    uchar m_Status = 0;
+    uint8_t m_Status = 0;
 
 public:
-    uchar GetStatus() { return m_Status; };
-    void SetStatus(uchar val);
+    uint8_t GetStatus() { return m_Status; };
+    void SetStatus(uint8_t val);
 
 private:
     //!Текустуры текста
@@ -32,7 +32,7 @@ private:
     CGLTextTexture m_ValueText{ CGLTextTexture() };
 
     //!Получить ИД картинки кнопки статуса
-    ushort GetStatusButtonGraphic();
+    uint16_t GetStatusButtonGraphic();
 
 public:
     CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y);

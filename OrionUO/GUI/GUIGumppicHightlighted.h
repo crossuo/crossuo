@@ -15,11 +15,11 @@
 class CGUIGumppicHightlighted : public CGUIDrawObject
 {
     //!Цвет подсветки
-    ushort SelectedColor = 0;
+    uint16_t SelectedColor = 0;
 
 public:
     CGUIGumppicHightlighted(
-        int serial, ushort graphic, ushort color, ushort electedColor, int x, int y);
+        int serial, uint16_t graphic, uint16_t color, uint16_t electedColor, int x, int y);
     virtual ~CGUIGumppicHightlighted();
 
     virtual void SetShaderMode();

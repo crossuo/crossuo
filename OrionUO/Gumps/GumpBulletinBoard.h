@@ -20,7 +20,7 @@ private:
     static const int ID_GBS_HTMLGUMP = 3;
 
 public:
-    CGumpBulletinBoard(uint serial, short x, short y, string name);
+    CGumpBulletinBoard(uint32_t serial, short x, short y, string name);
     virtual ~CGumpBulletinBoard();
 
     CGUIHTMLGump *m_HTMLGump{ nullptr };

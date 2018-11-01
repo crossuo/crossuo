@@ -14,7 +14,7 @@
 //---------------------------------RenderWorldObject--------------------------------
 
 CRenderWorldObject::CRenderWorldObject(
-    RENDER_OBJECT_TYPE renderType, int serial, ushort graphic, ushort color, int x, int y, char z)
+    RENDER_OBJECT_TYPE renderType, int serial, uint16_t graphic, uint16_t color, int x, int y, char z)
     : CRenderObject(serial, graphic, color, x, y)
     , RenderType(renderType)
     , m_Z(z)
@@ -39,7 +39,7 @@ bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.RemoveOrCreateObjectsWithBlending)
     {
-        m_DrawTextureColor[3] = (uchar)maxAlpha;
+        m_DrawTextureColor[3] = (uint8_t)maxAlpha;
 
         return (maxAlpha != 0);
     }
@@ -66,7 +66,7 @@ bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
         result = true;
     }
 
-    m_DrawTextureColor[3] = (uchar)alpha;
+    m_DrawTextureColor[3] = (uint8_t)alpha;
 
     return result;
 }

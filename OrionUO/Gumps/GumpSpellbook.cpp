@@ -16,7 +16,7 @@ string CGumpSpellbook::m_SpellCircleName[8] = { "First Circle",   "Second Circle
                                                 "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
                                                 "Seventh Circle", "Eighth Circle" };
 
-CGumpSpellbook::CGumpSpellbook(uint serial, int x, int y)
+CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)
 {
     Draw2Page = true;
@@ -118,7 +118,7 @@ void CGumpSpellbook::InitStaticData()
         g_ClilocManager.Cliloc(g_Language)->GetA(1028383, false, "Water Elemental");
 }
 
-void CGumpSpellbook::UpdateGraphic(ushort parentGraphic)
+void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
 {
     DEBUG_TRACE_FUNCTION;
     SPELLBOOK_TYPE bookType = BookType;
@@ -187,11 +187,11 @@ void CGumpSpellbook::InitToolTip()
 
     if (Page >= dictionaryPagesCount)
     {
-        uint serial = g_SelectedObject.Serial;
+        uint32_t serial = g_SelectedObject.Serial;
 
-        if (serial >= (uint)ID_GSB_SPELL_ICON_LEFT)
+        if (serial >= (uint32_t)ID_GSB_SPELL_ICON_LEFT)
         {
-            if (serial >= (uint)ID_GSB_SPELL_ICON_RIGHT)
+            if (serial >= (uint32_t)ID_GSB_SPELL_ICON_RIGHT)
                 serial -= ID_GSB_SPELL_ICON_RIGHT;
             else
                 serial -= ID_GSB_SPELL_ICON_LEFT;
@@ -209,9 +209,9 @@ void CGumpSpellbook::PrepareContent()
     int spellsOnPage = 0;
     int dictionaryPagesCount = 0;
     int spellIndexOffset = 0;
-    ushort graphic = 0;
-    ushort minimizedGraphic = 0;
-    ushort iconStartGraphic = 0;
+    uint16_t graphic = 0;
+    uint16_t minimizedGraphic = 0;
+    uint16_t iconStartGraphic = 0;
 
     GetSummaryBookInfo(
         maxSpellsCount,
@@ -223,7 +223,7 @@ void CGumpSpellbook::PrepareContent()
         iconStartGraphic);
 
     if (g_PressedObject.LeftGump == this && Page >= dictionaryPagesCount &&
-        g_PressedObject.LeftSerial >= (uint)ID_GSB_SPELL_ICON_LEFT)
+        g_PressedObject.LeftSerial >= (uint32_t)ID_GSB_SPELL_ICON_LEFT)
     {
         Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
@@ -256,8 +256,8 @@ void CGumpSpellbook::PrepareContent()
         spellIndexOffset = (int)BookType * 100;
 
         bool wantVisible = false;
-        ushort graphicBookmark = 0x08AD;
-        ushort graphicPointer = 0x08AF;
+        uint16_t graphicBookmark = 0x08AD;
+        uint16_t graphicPointer = 0x08AF;
         int wantX = m_LastSpellPointer->GetX();
         int wantY = m_LastSpellPointer->GetY();
 
@@ -419,9 +419,9 @@ void CGumpSpellbook::GetSummaryBookInfo(
     int &dictionaryPagesCount,
     int &spellsOnPage,
     int &spellIndexOffset,
-    ushort &graphic,
-    ushort &minimizedGraphic,
-    ushort &iconStartGraphic)
+    uint16_t &graphic,
+    uint16_t &minimizedGraphic,
+    uint16_t &iconStartGraphic)
 {
     DEBUG_TRACE_FUNCTION;
     switch (BookType)
@@ -626,9 +626,9 @@ void CGumpSpellbook::UpdateContent()
     int spellsOnPage = 0;
     int dictionaryPagesCount = 0;
     int spellIndexOffset = 0;
-    ushort graphic = 0;
-    ushort minimizedGraphic = 0;
-    ushort iconStartGraphic = 0;
+    uint16_t graphic = 0;
+    uint16_t minimizedGraphic = 0;
+    uint16_t iconStartGraphic = 0;
 
     GetSummaryBookInfo(
         maxSpellsCount,
@@ -708,7 +708,7 @@ void CGumpSpellbook::UpdateContent()
         int indexX = 106;
         int dataX = 62;
         int y = 0;
-        uint spellSerial = ID_GSB_SPELL_ICON_LEFT;
+        uint32_t spellSerial = ID_GSB_SPELL_ICON_LEFT;
 
         if (page % 2)
         {
@@ -763,7 +763,7 @@ void CGumpSpellbook::UpdateContent()
         int iconX = 62;
         int topTextX = 87;
         int iconTextX = 112;
-        uint iconSerial = ID_GSB_SPELL_ICON_LEFT + (uint)i;
+        uint32_t iconSerial = ID_GSB_SPELL_ICON_LEFT + (uint32_t)i;
 
         if (page % 2)
         {
@@ -894,9 +894,9 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
         int dictionaryPagesCount = 0;
         int spellsOnPage = 0;
         int spellIndexOffset = 0;
-        ushort graphic = 0;
-        ushort minimizedGraphic = 0;
-        ushort iconStartGraphic = 0;
+        uint16_t graphic = 0;
+        uint16_t minimizedGraphic = 0;
+        uint16_t iconStartGraphic = 0;
 
         GetSummaryBookInfo(
             maxSpellsCount,
@@ -998,12 +998,12 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
         }
         else
         {
-            if (g_PressedObject.LeftSerial >= (uint)ID_GSB_SPELL_ICON_LEFT)
+            if (g_PressedObject.LeftSerial >= (uint32_t)ID_GSB_SPELL_ICON_LEFT)
             {
                 int spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_ICON_RIGHT + 1;
 
                 //Было использовано заклинание
-                if (g_PressedObject.LeftSerial < (uint)ID_GSB_SPELL_ICON_RIGHT)
+                if (g_PressedObject.LeftSerial < (uint32_t)ID_GSB_SPELL_ICON_RIGHT)
                     spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_ICON_LEFT + 1;
 
                 spellIndex += ((int)BookType * 100);

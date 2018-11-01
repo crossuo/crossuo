@@ -65,7 +65,7 @@ int GetDistance(const Wisp::CPoint2Di &current, const Wisp::CPoint2Di &target);
 int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target);
 int GetTopObjDistance(CGameObject *current, CGameObject *target);
 
-const char *GetReagentName(ushort id);
+const char *GetReagentName(uint16_t id);
 
 //!Счетчики объектов (только для отладки)
 extern int g_LandObjectsCount;
@@ -86,18 +86,18 @@ extern bool g_LogoutAfterClick;
 extern int g_FrameDelay[2];
 
 //!Время последней отправки пакета серверу
-extern uint g_LastSendTime;
+extern uint32_t g_LastSendTime;
 
 //!Время последнего пакета от сервера
-extern uint g_LastPacketTime;
+extern uint32_t g_LastPacketTime;
 
 //!Общий размер отправленных пакетов
-extern uint g_TotalSendSize;
+extern uint32_t g_TotalSendSize;
 
 //!Общий размер принятых пакетов
-extern uint g_TotalRecvSize;
+extern uint32_t g_TotalRecvSize;
 
-extern uint g_Ticks;
+extern uint32_t g_Ticks;
 
 extern GLuint ShaderColorTable;
 extern GLuint g_ShaderDrawMode;
@@ -126,23 +126,23 @@ extern bool g_GrayedPixels;
 
 extern bool g_ConfigLoaded;
 
-extern uchar g_LightLevel;
-extern uchar g_PersonalLightLevel;
+extern uint8_t g_LightLevel;
+extern uint8_t g_PersonalLightLevel;
 
 //!Имя выбранного персонажа
 extern char g_SelectedCharName[30];
 
 //!Индекс текущей карты
-extern uchar g_CurrentMap;
+extern uint8_t g_CurrentMap;
 
 //!Время сервера
-extern uchar g_ServerTimeHour;
-extern uchar g_ServerTimeMinute;
-extern uchar g_ServerTimeSecond;
+extern uint8_t g_ServerTimeHour;
+extern uint8_t g_ServerTimeMinute;
+extern uint8_t g_ServerTimeSecond;
 
 extern bool g_PacketLoginComplete;
 
-extern uint g_ClientFlag;
+extern uint32_t g_ClientFlag;
 
 extern bool g_SendLogoutNotification;
 extern bool g_PopupEnabled;
@@ -151,10 +151,10 @@ extern bool g_TooltipsEnabled;
 extern bool g_PaperdollBooks;
 
 //!Сообщение инициализации шифрования серверу
-extern uchar g_GameSeed[4];
+extern uint8_t g_GameSeed[4];
 
 //!Цвет для объектов, вышедших за пределы g_UpdateRange (если это предусмотрено опциями)
-extern ushort g_OutOfRangeColor;
+extern uint16_t g_OutOfRangeColor;
 
 //!Не рисовать крыши
 extern bool g_NoDrawRoof;
@@ -177,8 +177,8 @@ extern bool g_JournalShowObjects;
 //!Отображать в журнале внутренние сообщения клиента
 extern bool g_JournalShowClient;
 
-extern uint g_PlayerSerial;
-extern uint g_StatusbarUnderMouse;
+extern uint32_t g_PlayerSerial;
+extern uint32_t g_StatusbarUnderMouse;
 
 //!Индекс последнего выбранного заклинания
 extern int g_LastSpellIndex;
@@ -187,23 +187,23 @@ extern int g_LastSpellIndex;
 extern int g_LastSkillIndex;
 
 //!Последний использованный объект
-extern uint g_LastUseObject;
+extern uint32_t g_LastUseObject;
 
 //!Последний объект, на который навели прицелом
-extern uint g_LastTargetObject;
+extern uint32_t g_LastTargetObject;
 
 //!Последний атакованный объект
-extern uint g_LastAttackObject;
+extern uint32_t g_LastAttackObject;
 
 extern CHARACTER_SPEED_TYPE g_SpeedMode;
 
 //!Таймер черного экрана от смерти
-extern uint g_DeathScreenTimer;
+extern uint32_t g_DeathScreenTimer;
 
 //!Модификатор расчета анимации персонажа
 extern float g_AnimCharactersDelayValue;
 
-typedef vector<pair<uint, uint>> UINTS_PAIR_LIST;
+typedef vector<pair<uint32_t, uint32_t>> UINTS_PAIR_LIST;
 
 //!Координаты, с которых следует начинать расчет удаления объектов
 extern Wisp::CPoint2Di g_RemoveRangeXY;
@@ -215,16 +215,16 @@ extern int g_GrayMenuCount;
 extern PROMPT_TYPE g_ConsolePrompt;
 
 //!Данные последнего ASCII промпта
-extern uchar g_LastASCIIPrompt[11];
+extern uint8_t g_LastASCIIPrompt[11];
 
 //!Данные последнего Unicode промпта
-extern uchar g_LastUnicodePrompt[11];
+extern uint8_t g_LastUnicodePrompt[11];
 
 //!Серийник для таргета от кнопок пати-гампа
-extern uint g_PartyHelperTarget;
+extern uint32_t g_PartyHelperTarget;
 
 //!Время жизни для таргета от кнопок пати-гампа
-extern uint g_PartyHelperTimer;
+extern uint32_t g_PartyHelperTimer;
 
 extern float g_DrawColor;
 
@@ -232,7 +232,7 @@ extern SEASON_TYPE g_Season;
 extern SEASON_TYPE g_OldSeason;
 extern int g_OldSeasonMusic;
 
-extern uint g_LockedClientFeatures;
+extern uint32_t g_LockedClientFeatures;
 
 extern bool g_GeneratedMouseDown;
 
@@ -248,29 +248,29 @@ extern DEVELOPER_MODE g_OptionsDeveloperMode;
 const int g_ObjectHandlesWidth = 142;
 const int g_ObjectHandlesWidthOffset = g_ObjectHandlesWidth / 2;
 const int g_ObjectHandlesHeight = 20;
-extern ushort g_ObjectHandlesBackgroundPixels[g_ObjectHandlesWidth * g_ObjectHandlesHeight];
+extern uint16_t g_ObjectHandlesBackgroundPixels[g_ObjectHandlesWidth * g_ObjectHandlesHeight];
 
-extern uint g_Ping;
+extern uint32_t g_Ping;
 
 extern bool g_DrawAura;
 
 static const int MAX_ABILITIES_COUNT = 32;
-extern ushort g_AbilityList[MAX_ABILITIES_COUNT];
-extern uchar g_Ability[2];
+extern uint16_t g_AbilityList[MAX_ABILITIES_COUNT];
+extern uint8_t g_Ability[2];
 
 extern bool g_DrawStatLockers;
 
-extern uint g_SelectedGameObjectHandle;
+extern uint32_t g_SelectedGameObjectHandle;
 
 extern bool g_ShowWarnings;
 
-extern uint g_ProcessStaticAnimationTimer;
-extern uint g_ProcessRemoveRangedTimer;
+extern uint32_t g_ProcessStaticAnimationTimer;
+extern uint32_t g_ProcessRemoveRangedTimer;
 extern int g_MaxViewRange;
-extern uint g_OrionFeaturesFlags;
+extern uint32_t g_OrionFeaturesFlags;
 extern struct PING_INFO_DATA g_GameServerPingInfo;
 extern string g_PingString;
-extern uint g_PingTimer;
+extern uint32_t g_PingTimer;
 
 inline bool IsBackground(int64_t flags)
 {

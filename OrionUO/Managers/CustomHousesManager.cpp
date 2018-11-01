@@ -43,7 +43,7 @@ CustomHousesManager::~CustomHousesManager()
 void CustomHousesManager::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    for (unordered_map<uint, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
     {
         CCustomHouse *house = i->second;
         delete house;
@@ -54,7 +54,7 @@ void CustomHousesManager::Clear()
 CCustomHouse *CustomHousesManager::Get(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    for (unordered_map<uint, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
     {
         CCustomHouse *house = i->second;
 
@@ -81,18 +81,18 @@ void CustomHousesManager::Load(const os_path &path)
 
     if (file.Load(path) && file.Size)
     {
-        uchar version = file.ReadUInt8();
+        uint8_t version = file.ReadUInt8();
 
         int count = file.ReadInt32LE();
 
         for (int i = 0; i < count; i++)
         {
-            uint serial = file.ReadUInt32LE();
+            uint32_t serial = file.ReadUInt32LE();
 
             if (!serial)
                 break;
 
-            uint revision = file.ReadUInt32LE();
+            uint32_t revision = file.ReadUInt32LE();
             int itemsCount = file.ReadInt32LE();
 
             CCustomHouse *house = Get(serial);
@@ -109,7 +109,7 @@ void CustomHousesManager::Load(const os_path &path)
 
             for (int j = 0; j < itemsCount; j++)
             {
-                ushort graphic = file.ReadUInt16LE();
+                uint16_t graphic = file.ReadUInt16LE();
                 char x = file.ReadInt8();
                 char y = file.ReadInt8();
                 char z = file.ReadInt8();
@@ -134,7 +134,7 @@ void CustomHousesManager::Save(const os_path &path)
 
     int count = 0;
 
-    for (unordered_map<uint, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
     {
         CCustomHouse *house = i->second;
 
@@ -145,7 +145,7 @@ void CustomHousesManager::Save(const os_path &path)
     writter.WriteInt32LE(count);
     writter.WriteBuffer();
 
-    for (unordered_map<uint, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
     {
         CCustomHouse *house = i->second;
 
@@ -154,7 +154,7 @@ void CustomHousesManager::Save(const os_path &path)
 
         writter.WriteUInt32LE(house->Serial);
         writter.WriteUInt32LE(house->Revision);
-        writter.WriteInt32LE((uint)house->m_Items.size());
+        writter.WriteInt32LE((uint32_t)house->m_Items.size());
         writter.WriteBuffer();
 
         for (const CBuildObject &item : house->m_Items)

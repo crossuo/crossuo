@@ -30,7 +30,7 @@ public:
     //!Рабочая область
     Wisp::CRect WorkSpace = Wisp::CRect();
 
-    CGUIScrollBackground(int serial, ushort graphic, int x, int y, int height);
+    CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height);
     virtual ~CGUIScrollBackground();
 
     //!Обновить высоту

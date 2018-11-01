@@ -13,13 +13,13 @@
 class CPressedObject
 {
 public:
-    uint LeftSerial = 0;
+    uint32_t LeftSerial = 0;
     CRenderObject *LeftObject = nullptr;
     CGump *LeftGump = nullptr;
-    uint RightSerial = 0;
+    uint32_t RightSerial = 0;
     CRenderObject *RightObject = nullptr;
     CGump *RightGump = nullptr;
-    uint MidSerial = 0;
+    uint32_t MidSerial = 0;
     CRenderObject *MidObject = nullptr;
     CGump *MidGump = nullptr;
     CPressedObject();

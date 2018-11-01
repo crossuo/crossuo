@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIComboboxText::CGUIComboboxText(
-    ushort color, uchar font, const string &str, int width, TEXT_ALIGN_TYPE align, ushort flags)
+    uint16_t color, uint8_t font, const string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
     : CGUIText(color, 0, 0)
 {
     DEBUG_TRACE_FUNCTION;
@@ -21,7 +21,7 @@ CGUIComboboxText::CGUIComboboxText(
 }
 
 CGUIComboboxText::CGUIComboboxText(
-    ushort color, uchar font, const wstring &str, int width, TEXT_ALIGN_TYPE align, ushort flags)
+    uint16_t color, uint8_t font, const wstring &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
     : CGUIText(color, 0, 0)
 {
     DEBUG_TRACE_FUNCTION;

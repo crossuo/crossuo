@@ -14,7 +14,7 @@
 #include "GumpMap.h"
 
 CGumpMap::CGumpMap(
-    uint serial, ushort graphic, int startX, int startY, int endX, int endY, int width, int height)
+    uint32_t serial, uint16_t graphic, int startX, int startY, int endX, int endY, int width, int height)
     : CGump(GT_MAP, serial, 0, 0)
     , StartX(startX)
     , StartY(startY)

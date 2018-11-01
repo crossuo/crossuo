@@ -87,25 +87,25 @@ inline int RandomIntMinMax(int n, int m)
     return (rand() % (m - n) + n);
 }
 
-inline uint unpack32(puchar buf)
+inline uint32_t unpack32(uint8_t *buf)
 {
     return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }
 
-inline ushort unpack16(puchar buf)
+inline uint16_t unpack16(uint8_t *buf)
 {
     return (buf[0] << 8) | buf[1];
 }
 
-inline void pack32(puchar buf, uint x)
+inline void pack32(uint8_t *buf, uint32_t x)
 {
-    buf[0] = uchar(x >> 24);
-    buf[1] = uchar((x >> 16) & 0xff);
-    buf[2] = uchar((x >> 8) & 0xff);
-    buf[3] = uchar(x & 0xff);
+    buf[0] = uint8_t(x >> 24);
+    buf[1] = uint8_t((x >> 16) & 0xff);
+    buf[2] = uint8_t((x >> 8) & 0xff);
+    buf[3] = uint8_t(x & 0xff);
 }
 
-inline void pack16(puchar buf, ushort x)
+inline void pack16(uint8_t *buf, uint16_t x)
 {
     buf[0] = x >> 8;
     buf[1] = x & 0xff;

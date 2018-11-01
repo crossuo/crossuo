@@ -84,14 +84,14 @@ void CLogger::VPrint(const wchar_t *format, va_list ap)
     fflush(m_File);
 }
 
-void CLogger::Dump(uchar *buf, int size)
+void CLogger::Dump(uint8_t *buf, int size)
 {
     LogDump(m_File, buf, size);
 }
 
 }; // namespace Wisp
 
-void LogDump(FILE *fp, uchar *buf, int size)
+void LogDump(FILE *fp, uint8_t *buf, int size)
 {
     if (fp == nullptr)
         return;

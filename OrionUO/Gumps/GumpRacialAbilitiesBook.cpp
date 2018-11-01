@@ -30,9 +30,9 @@ void CGumpRacialAbilitiesBook::InitToolTip()
         return;
     }
 
-    uint serial = g_SelectedObject.Serial;
+    uint32_t serial = g_SelectedObject.Serial;
 
-    if (Page >= DictionaryPagesCount && serial >= (uint)ID_GRAB_ICON)
+    if (Page >= DictionaryPagesCount && serial >= (uint32_t)ID_GRAB_ICON)
         g_ToolTip.Set(
             g_ClilocManager.Cliloc(g_Language)->GetW(TooltipOffset + (serial - ID_GRAB_ICON), true),
             150);
@@ -42,12 +42,12 @@ void CGumpRacialAbilitiesBook::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
     int abilityOnPage = 0;
-    ushort iconStartGraphic = 0;
+    uint16_t iconStartGraphic = 0;
 
     GetSummaryBookInfo(abilityOnPage, iconStartGraphic);
 
     if (g_PressedObject.LeftGump == this && Page >= DictionaryPagesCount &&
-        g_PressedObject.LeftSerial >= (uint)ID_GRAB_ICON &&
+        g_PressedObject.LeftSerial >= (uint32_t)ID_GRAB_ICON &&
         !((CBaseGUI *)g_PressedObject.LeftObject)->MoveOnDrag)
     {
         Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
@@ -65,7 +65,7 @@ void CGumpRacialAbilitiesBook::PrepareContent()
     }
 }
 
-void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, ushort &iconStartGraphic)
+void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, uint16_t &iconStartGraphic)
 {
     DEBUG_TRACE_FUNCTION;
     DictionaryPagesCount = 2;
@@ -167,7 +167,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
     Add(new CGUIHitBox(ID_GRAB_BUTTON_MINIMIZE, 6, 100, 16, 16, true));
 
     int abilityOnPage = 0;
-    ushort iconStartGraphic = 0;
+    uint16_t iconStartGraphic = 0;
 
     GetSummaryBookInfo(abilityOnPage, iconStartGraphic);
 
@@ -345,7 +345,7 @@ bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 
             result = true;
         }
-        else if (g_PressedObject.LeftSerial >= (uint)ID_GRAB_ICON)
+        else if (g_PressedObject.LeftSerial >= (uint32_t)ID_GRAB_ICON)
         {
             CGumpRacialAbility::OnAbilityUse(g_PressedObject.LeftObject->Graphic);
 

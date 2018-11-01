@@ -13,18 +13,23 @@
 class CServer
 {
 public:
-    ushort Index = 0;
+    uint16_t Index = 0;
     string Name = "";
-    uchar FullPercent = 0;
-    uchar Timezone = 0;
-    uint IP = 0;
+    uint8_t FullPercent = 0;
+    uint8_t Timezone = 0;
+    uint32_t IP = 0;
     bool Selected = false;
     int Ping = -1;
     int PacketsLoss = -1;
 
     CServer();
     CServer(
-        ushort index, const string &name, uchar fullPercent, uchar timezone, int ip, bool selected);
+        uint16_t index,
+        const string &name,
+        uint8_t fullPercent,
+        uint8_t timezone,
+        int ip,
+        bool selected);
     ~CServer();
 };
 
@@ -33,7 +38,7 @@ class CServerList
 {
 public:
     string LastServerName = "";
-    uint LastServerIndex = 0;
+    uint32_t LastServerIndex = 0;
 
 private:
     vector<CServer> m_Servers;

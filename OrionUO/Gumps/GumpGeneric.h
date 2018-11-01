@@ -13,9 +13,9 @@
 class CGumpGeneric : public CGump
 {
 public:
-    uint MasterGump = 0;
+    uint32_t MasterGump = 0;
 
-    CGumpGeneric(uint serial, short x, short y, uint id);
+    CGumpGeneric(uint32_t serial, short x, short y, uint32_t id);
     virtual ~CGumpGeneric();
 
     void AddText(

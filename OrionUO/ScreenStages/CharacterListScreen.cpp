@@ -54,7 +54,7 @@ void CCharacterListScreen::Init()
 @param [__in_opt] action Идентификатор действия
 @return 
 */
-void CCharacterListScreen::ProcessSmoothAction(uchar action)
+void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)

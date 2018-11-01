@@ -46,7 +46,7 @@ void CDataWritter::Move(const intptr_t &offset)
         Ptr += offset;
 }
 
-void CDataWritter::WriteDataBE(const puchar data, size_t size, const intptr_t &offset)
+void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c4_f5");
     if (AutoResize)
@@ -56,7 +56,7 @@ void CDataWritter::WriteDataBE(const puchar data, size_t size, const intptr_t &o
     }
     else if (Ptr != nullptr)
     {
-        puchar ptr = Ptr + offset + size - 1;
+        uint8_t *ptr = Ptr + offset + size - 1;
 
         for (int i = size - 1; i >= 0; i--)
             *(ptr - i) = data[i];
@@ -65,7 +65,7 @@ void CDataWritter::WriteDataBE(const puchar data, size_t size, const intptr_t &o
     }
 }
 
-void CDataWritter::WriteDataLE(const puchar data, size_t size, const intptr_t &offset)
+void CDataWritter::WriteDataLE(const uint8_t *data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c4_f6");
     if (AutoResize)
@@ -75,7 +75,7 @@ void CDataWritter::WriteDataLE(const puchar data, size_t size, const intptr_t &o
     }
     else if (Ptr != nullptr)
     {
-        puchar ptr = Ptr + offset;
+        uint8_t *ptr = Ptr + offset;
 
         for (int i = 0; i < (int)size; i++)
             ptr[i] = data[i];
@@ -92,17 +92,17 @@ void CDataWritter::WriteString(
         length = val.length();
 
     if (length <= val.length())
-        WriteDataLE((puchar)val.c_str(), length, offset);
+        WriteDataLE((uint8_t *)val.c_str(), length, offset);
     else
     {
-        WriteDataLE((puchar)val.c_str(), val.length(), offset);
+        WriteDataLE((uint8_t *)val.c_str(), val.length(), offset);
         Move(length - val.length());
     }
 
     if (nullTerminated)
     {
-        uchar nullTerminator = 0;
-        WriteDataBE((puchar)&nullTerminator, sizeof(uchar), offset);
+        uint8_t nullTerminator = 0;
+        WriteDataBE((uint8_t *)&nullTerminator, sizeof(uint8_t), offset);
     }
 }
 
@@ -147,8 +147,8 @@ void CDataWritter::WriteWString(
 
     if (nullTerminated)
     {
-        ushort nullTerminator = 0;
-        WriteDataBE((puchar)&nullTerminator, sizeof(ushort), offset);
+        uint16_t nullTerminator = 0;
+        WriteDataBE((uint8_t *)&nullTerminator, sizeof(uint16_t), offset);
     }
 
     Ptr -= offset;
@@ -160,7 +160,7 @@ CDataReader::CDataReader()
 {
 }
 
-CDataReader::CDataReader(puchar start, size_t size)
+CDataReader::CDataReader(uint8_t *start, size_t size)
     : Start(start)
     , Size(size)
     , End(Start + size)
@@ -178,7 +178,7 @@ CDataReader::~CDataReader()
     Ptr = nullptr;
 }
 
-void CDataReader::SetData(puchar start, size_t size, const intptr_t &offset)
+void CDataReader::SetData(uint8_t *start, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f3");
     Start = start;
@@ -187,12 +187,12 @@ void CDataReader::SetData(puchar start, size_t size, const intptr_t &offset)
     Ptr = Start + offset;
 }
 
-void CDataReader::ReadDataBE(puchar data, size_t size, const intptr_t &offset)
+void CDataReader::ReadDataBE(uint8_t *data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f4");
     if (Ptr != nullptr)
     {
-        puchar ptr = Ptr + offset + size - 1;
+        uint8_t *ptr = Ptr + offset + size - 1;
 
         if (ptr >= Start && ptr <= End)
         {
@@ -204,12 +204,12 @@ void CDataReader::ReadDataBE(puchar data, size_t size, const intptr_t &offset)
     }
 }
 
-void CDataReader::ReadDataLE(puchar data, size_t size, const intptr_t &offset)
+void CDataReader::ReadDataLE(uint8_t *data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f5");
     if (Ptr != nullptr)
     {
-        puchar ptr = Ptr + offset;
+        uint8_t *ptr = Ptr + offset;
 
         if (ptr >= Start && ptr + size <= End)
         {
@@ -224,13 +224,13 @@ void CDataReader::ReadDataLE(puchar data, size_t size, const intptr_t &offset)
 string CDataReader::ReadString(size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f6");
-    puchar ptr = Ptr + offset;
+    uint8_t *ptr = Ptr + offset;
 
     if (!size)
     {
         if (ptr >= Start && ptr <= End)
         {
-            puchar buf = ptr;
+            uint8_t *buf = ptr;
 
             while (buf <= End && *buf)
                 buf++;
@@ -244,7 +244,7 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
     if (ptr >= Start && ptr + size <= End)
     {
         result.resize(size, 0);
-        ReadDataLE((puchar)&result[0], size, offset);
+        ReadDataLE((uint8_t *)&result[0], size, offset);
     }
 
     return result.c_str(); // This must be here to trim null bytes
@@ -253,17 +253,17 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
 wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &offset)
 {
     DATASTREAM_DEBUG("c5_f7");
-    puchar ptr = Ptr + offset;
+    uint8_t *ptr = Ptr + offset;
 
     if (!size)
     {
         if (ptr >= Start && ptr <= End)
         {
-            puchar buf = ptr;
+            uint8_t *buf = ptr;
 
             while (buf <= End)
             {
-                ushort val = (bigEndian ? ((buf[0] << 8) | buf[1]) : *(pushort)buf);
+                uint16_t val = (bigEndian ? ((buf[0] << 8) | buf[1]) : *(uint16_t *)buf);
 
                 buf += 2;
 

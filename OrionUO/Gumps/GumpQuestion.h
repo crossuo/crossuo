@@ -12,14 +12,14 @@
 
 class CGumpQuestion : public CGump
 {
-    uchar Variant = 0;
+    uint8_t Variant = 0;
 
 private:
     static const int ID_GQ_BUTTON_CANCEL = 1;
     static const int ID_GQ_BUTTON_OKAY = 2;
 
 public:
-    CGumpQuestion(uint serial, short x, short y, uchar variant);
+    CGumpQuestion(uint32_t serial, short x, short y, uint8_t variant);
     virtual ~CGumpQuestion();
 
     static const int ID_GQ_STATE_QUIT = 1;

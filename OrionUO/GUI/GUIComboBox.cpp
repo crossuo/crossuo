@@ -13,9 +13,9 @@
 
 CGUIComboBox::CGUIComboBox(
     int serial,
-    ushort graphic,
+    uint16_t graphic,
     bool compositeBackground,
-    ushort openGraphic,
+    uint16_t openGraphic,
     int x,
     int y,
     int width,

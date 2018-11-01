@@ -49,7 +49,7 @@ CGameObject::~CGameObject()
 #endif //UO_DEBUG_INFO!=0
 }
 
-void CGameObject::SetFlags(uchar val)
+void CGameObject::SetFlags(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
     bool poisoned = Poisoned();
@@ -185,12 +185,12 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
 
     int width = g_ObjectHandlesWidth - 20;
 
-    uchar font = 1;
+    uint8_t font = 1;
     CGLTextTexture textTexture;
-    ushort color = 0xFFFF;
-    uchar cell = 30;
+    uint16_t color = 0xFFFF;
+    uint8_t cell = 30;
     TEXT_ALIGN_TYPE tat = TS_CENTER;
-    ushort flags = 0;
+    uint16_t flags = 0;
 
     if (g_FontManager.GetWidthW(font, text) > width)
         text = g_FontManager.GetTextByWidthW(font, text, width - 6, true);
@@ -202,7 +202,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
         return;
 
     static const int size = g_ObjectHandlesWidth * g_ObjectHandlesHeight;
-    ushort pixels[size] = { 0 };
+    uint16_t pixels[size] = { 0 };
 
     memcpy(&pixels[0], &g_ObjectHandlesBackgroundPixels[0], size * 2);
 
@@ -221,13 +221,13 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
             {
                 for (int y = 0; y < g_ObjectHandlesHeight; y++)
                 {
-                    ushort &pixel = pixels[(y * g_ObjectHandlesWidth) + x];
+                    uint16_t &pixel = pixels[(y * g_ObjectHandlesWidth) + x];
 
                     if (pixel)
                     {
-                        uchar r = (pixel & 0x1F);
-                        uchar g = ((pixel >> 5) & 0x1F);
-                        uchar b = ((pixel >> 10) & 0x1F);
+                        uint8_t r = (pixel & 0x1F);
+                        uint8_t g = ((pixel >> 5) & 0x1F);
+                        uint8_t b = ((pixel >> 10) & 0x1F);
 
                         if (r == g && r == b)
                             pixel = g_ColorManager.GetColor16(pixel, color) | 0x8000;
@@ -250,12 +250,12 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
             if (gumpDataY >= g_ObjectHandlesHeight)
                 break;
 
-            uint &pixel = textData[(y * textTexture.Width) + x];
+            uint32_t &pixel = textData[(y * textTexture.Width) + x];
 
             if (pixel)
             {
-                puchar bytes = (PBYTE)&pixel;
-                uchar buf = bytes[0];
+                uint8_t *bytes = (PBYTE)&pixel;
+                uint8_t buf = bytes[0];
                 bytes[0] = bytes[3];
                 bytes[3] = buf;
                 buf = bytes[1];
@@ -305,7 +305,7 @@ void CGameObject::AddText(CTextData *msg)
 Получить индекс анимации
 @return Индекс анимации
 */
-ushort CGameObject::GetMountAnimation()
+uint16_t CGameObject::GetMountAnimation()
 {
     DEBUG_TRACE_FUNCTION;
     return Graphic; // + UO->GetStaticPointer(Graphic)->Increment;
@@ -404,7 +404,7 @@ bool CGameObject::Flying()
 Золото ли это
 @return Индекс в таблице золота
 */
-int CGameObject::IsGold(ushort graphic)
+int CGameObject::IsGold(uint16_t graphic)
 {
     DEBUG_TRACE_FUNCTION;
     switch (graphic)
@@ -427,13 +427,13 @@ int CGameObject::IsGold(ushort graphic)
 @param [__out] doubleDraw Двойная отрисовка объекта
 @return Индекс картинки
 */
-ushort CGameObject::GetDrawGraphic(bool &doubleDraw)
+uint16_t CGameObject::GetDrawGraphic(bool &doubleDraw)
 {
     DEBUG_TRACE_FUNCTION;
     int index = IsGold(Graphic);
-    ushort result = Graphic;
+    uint16_t result = Graphic;
 
-    const ushort graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },
+    const uint16_t graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },
                                                  { 0x0EEA, 0x0EEB, 0x0EEC },
                                                  { 0x0EF0, 0x0EF1, 0x0EF2 } };
 
@@ -472,7 +472,7 @@ void CGameObject::DrawEffects(int x, int y)
 
         if (effect->EffectType == EF_LIGHTING)
         {
-            ushort graphic = 0x4E20 + effect->AnimIndex;
+            uint16_t graphic = 0x4E20 + effect->AnimIndex;
 
             Wisp::CSize size = g_Orion.GetGumpDimension(graphic);
 

@@ -193,7 +193,7 @@ void CDECL FUNCBODY_SendTargetCancel()
     g_Target.Plugin_SendCancelTarget();
 }
 
-void UOMsg_Send(uchar *data, size_t size)
+void UOMsg_Send(uint8_t *data, size_t size)
 {
 #if USE_WISP
     SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)data, size);
@@ -236,11 +236,11 @@ void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
     if (!color)
         color = g_ConfigManager.SpeechColor;
 
-    CPacketUnicodeSpeechRequest packet(text, ST_NORMAL, 3, color, (puchar)g_Language.c_str());
+    CPacketUnicodeSpeechRequest packet(text, ST_NORMAL, 3, color, (uint8_t *)g_Language.c_str());
     UOMsg_Send(packet.Data().data(), packet.Data().size());
 }
 
-void CDECL FUNCBODY_SendRenameMount(uint serial, const char *text)
+void CDECL FUNCBODY_SendRenameMount(uint32_t serial, const char *text)
 {
     CPacketRenameRequest packet(serial, text);
     UOMsg_Send(packet.Data().data(), packet.Data().size());

@@ -140,7 +140,7 @@ void CTarget::SendTargetObject(int serial)
     SendTarget();
 }
 
-void CTarget::SendTargetTile(ushort tileID, short x, short y, char z)
+void CTarget::SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
@@ -230,7 +230,7 @@ void CTarget::Plugin_SendTargetObject(int serial)
     Plugin_SendTarget();
 }
 
-void CTarget::Plugin_SendTargetTile(ushort tileID, short x, short y, char z)
+void CTarget::Plugin_SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
@@ -341,12 +341,12 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 
         for (int i = 0; i < count; i++)
         {
-            ushort graphic = reader.ReadUInt16LE();
+            uint16_t graphic = reader.ReadUInt16LE();
             short x = reader.ReadInt16LE();
             short y = reader.ReadInt16LE();
             short z = reader.ReadInt16LE();
-            ushort flags = reader.ReadUInt16LE();
-            uint clilocsCount = reader.ReadUInt32LE();
+            uint16_t flags = reader.ReadUInt16LE();
+            uint32_t clilocsCount = reader.ReadUInt32LE();
 
             if (clilocsCount)
                 reader.Move(clilocsCount * 4);

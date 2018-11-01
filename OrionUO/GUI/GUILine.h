@@ -21,16 +21,16 @@ class CGUILine : public CBaseGUI
     int TargetY = 0;
 
     //!R-компонента цвета
-    uchar ColorR = 0;
+    uint8_t ColorR = 0;
 
     //!G-компонента цвета
-    uchar ColorG = 0;
+    uint8_t ColorG = 0;
 
     //!B-компонента цвета
-    uchar ColorB = 0;
+    uint8_t ColorB = 0;
 
     //!Значение альфа-канала
-    uchar ColorA = 0;
+    uint8_t ColorA = 0;
 
 public:
     CGUILine(int x, int y, int targetX, int targetY, int polygoneColor);

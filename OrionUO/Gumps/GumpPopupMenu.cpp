@@ -13,7 +13,7 @@
 
 CGumpPopupMenu *g_PopupMenu = nullptr;
 
-CGumpPopupMenu::CGumpPopupMenu(uint serial, short x, short y)
+CGumpPopupMenu::CGumpPopupMenu(uint32_t serial, short x, short y)
     : CGump(GT_POPUP_MENU, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -34,10 +34,10 @@ CGumpPopupMenu::~CGumpPopupMenu()
 
 void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 {
-    ushort mode = reader.ReadUInt16BE();
+    uint16_t mode = reader.ReadUInt16BE();
     bool isNewClilocs = (mode >= 2);
-    uint serial = reader.ReadUInt32BE();
-    uchar count = reader.ReadUInt8();
+    uint32_t serial = reader.ReadUInt32BE();
+    uint8_t count = reader.ReadUInt8();
 
     vector<CPopupMenuItemInfo> items;
 

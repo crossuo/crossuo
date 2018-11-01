@@ -31,7 +31,7 @@ void CGameConsole::Send()
     Send(Text);
 }
 
-void CGameConsole::Send(wstring text, ushort defaultColor)
+void CGameConsole::Send(wstring text, uint16_t defaultColor)
 {
     DEBUG_TRACE_FUNCTION;
     size_t len = text.length();
@@ -39,7 +39,7 @@ void CGameConsole::Send(wstring text, ushort defaultColor)
     if (len)
     {
         SPEECH_TYPE speechType = ST_NORMAL;
-        ushort sendColor = g_ConfigManager.SpeechColor;
+        uint16_t sendColor = g_ConfigManager.SpeechColor;
         int offset = 0;
 
         if (len > 1)
@@ -81,7 +81,7 @@ void CGameConsole::Send(wstring text, ushort defaultColor)
                 }
                 else if (type == GCTT_PARTY)
                 {
-                    uint serial = 0;
+                    uint32_t serial = 0;
                     offset = 1;
                     sendColor = g_ConfigManager.PartyMessageColor;
 
@@ -160,7 +160,7 @@ void CGameConsole::Send(wstring text, ushort defaultColor)
             sendColor = defaultColor;
 
         CPacketUnicodeSpeechRequest(
-            text.c_str() + offset, speechType, 3, sendColor, (puchar)g_Language.c_str())
+            text.c_str() + offset, speechType, 3, sendColor, (uint8_t *)g_Language.c_str())
             .Send();
     }
 }

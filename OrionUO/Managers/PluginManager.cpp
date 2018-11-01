@@ -11,7 +11,7 @@
 
 CPluginManager g_PluginManager;
 
-bool CDECL PluginRecvFunction(puchar buf, const int &size)
+bool CDECL PluginRecvFunction(uint8_t *buf, const int &size)
 {
     DEBUG_TRACE_FUNCTION;
     //SendMessage(g_OrionWindow.Handle, UOMSG_RECV, (WPARAM)buf, size);
@@ -19,12 +19,12 @@ bool CDECL PluginRecvFunction(puchar buf, const int &size)
     return true;
 }
 
-bool CDECL PluginSendFunction(puchar buf, const int &size)
+bool CDECL PluginSendFunction(uint8_t *buf, const int &size)
 {
     DEBUG_TRACE_FUNCTION;
 
     //SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)buf, size);
-    uint ticks = g_Ticks;
+    uint32_t ticks = g_Ticks;
     g_TotalSendSize += size;
 
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
@@ -52,7 +52,7 @@ bool CDECL PluginSendFunction(puchar buf, const int &size)
     return true;
 }
 
-CPlugin::CPlugin(uint flags)
+CPlugin::CPlugin(uint32_t flags)
     : CBaseQueueItem()
     , m_Flags(flags)
 {
@@ -100,7 +100,7 @@ LRESULT CPluginManager::WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lp
     return result;
 }
 
-bool CPluginManager::PacketRecv(puchar buf, int size)
+bool CPluginManager::PacketRecv(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -119,7 +119,7 @@ bool CPluginManager::PacketRecv(puchar buf, int size)
     return result;
 }
 
-bool CPluginManager::PacketSend(puchar buf, int size)
+bool CPluginManager::PacketSend(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
 

@@ -41,7 +41,7 @@ void CServerScreen::OnKeyDown(const KeyEvent &ev)
     }
 }
 
-void CServerScreen::ProcessSmoothAction(uchar action)
+void CServerScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
 

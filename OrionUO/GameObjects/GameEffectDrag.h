@@ -21,10 +21,10 @@ public:
     int OffsetY = 0;
 
     //!Last move time stamp
-    uint LastMoveTime = 0;
+    uint32_t LastMoveTime = 0;
 
     //!Delay for moving
-    uchar MoveDelay = 20;
+    uint8_t MoveDelay = 20;
 
     /*!
 	Constructor

@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGUIVirtureGump::CGUIVirtureGump(ushort graphic, int x, int y)
+CGUIVirtureGump::CGUIVirtureGump(uint16_t graphic, int x, int y)
     : CGUIDrawObject(GOT_VIRTURE_GUMP, graphic, graphic, 0, x, y)
 {
 }

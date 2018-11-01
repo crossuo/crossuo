@@ -55,7 +55,7 @@ void CParty::Clear()
 void CParty::ParsePacketData(Wisp::CDataReader &reader)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar code = reader.ReadUInt8();
+    uint8_t code = reader.ReadUInt8();
 
     switch (code)
     {
@@ -64,7 +64,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
         }
         case 2: //Remove member
         {
-            uchar count = reader.ReadUInt8();
+            uint8_t count = reader.ReadUInt8();
 
             if (count <= 1)
             {
@@ -93,7 +93,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
 
             for (int i = 0; i < count; i++)
             {
-                uint serial = reader.ReadUInt32BE();
+                uint32_t serial = reader.ReadUInt32BE();
                 Member[i].Serial = serial;
                 Member[i].Character = g_World->FindWorldCharacter(serial);
                 if (i == 0)
@@ -137,7 +137,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
         case 3: //Private party message
         case 4: //Party message
         {
-            uint serial = reader.ReadUInt32BE();
+            uint32_t serial = reader.ReadUInt32BE();
             wstring name = reader.ReadWString(0, true);
 
             for (int i = 0; i < 10; i++)

@@ -93,13 +93,13 @@ public:
     virtual ~CPathFinder();
 
     //Вычисление новых XY координат
-    void GetNewXY(uchar direction, int &x, int &y);
+    void GetNewXY(uint8_t direction, int &x, int &y);
 
     //Проверка на возможность сделать шаг в указанные координаты
-    bool CanWalk(uchar &direction, int &x, int &y, char &z);
+    bool CanWalk(uint8_t &direction, int &x, int &y, char &z);
 
     //Пойти в указанные координаты
-    bool Walk(bool run, uchar direction);
+    bool Walk(bool run, uint8_t direction);
 
     //Переместиться в указанные координаты
     bool WalkTo(int x, int y, int z, int distance);

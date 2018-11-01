@@ -19,7 +19,7 @@ protected:
     static const int ID_GBBI_REPLY = 4;
     static const int ID_GBBI_REMOVE = 5;
 
-    uchar m_Variant{ 0 };
+    uint8_t m_Variant{ 0 };
 
     CGUIButton *m_ButtonPost{ nullptr };
     CGUIButton *m_ButtonRemove{ nullptr };
@@ -37,7 +37,7 @@ public:
         int serial,
         int x,
         int y,
-        uchar variant,
+        uint8_t variant,
         int id,
         const wstring &poster,
         const wstring &subject,

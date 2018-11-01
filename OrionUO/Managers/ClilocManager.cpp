@@ -46,7 +46,7 @@ CCliloc::~CCliloc()
 @param [__in] id Индекс клилока
 @return Результат загрузки или сообщение с ошибкой
 */
-string CCliloc::Load(uint &id)
+string CCliloc::Load(uint32_t &id)
 {
     DEBUG_TRACE_FUNCTION;
     string result = "";
@@ -124,7 +124,7 @@ wstring CCliloc::Get(int id, bool toCamelCase, string result)
             return CamelCaseTest(toCamelCase, (*i).second);
     }
 
-    uint tmpID = id;
+    uint32_t tmpID = id;
     string loadStr = Load(tmpID);
 
     if (loadStr.length())
@@ -266,7 +266,7 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
 
         if (arguments[i].length() > 1 && *arguments[i].c_str() == L'#')
         {
-            uint id = _wtoi(arguments[i].c_str() + 1);
+            uint32_t id = _wtoi(arguments[i].c_str() + 1);
             arguments[i] = Cliloc(g_Language)->GetW(id, toCamelCase).c_str();
         }
 

@@ -17,15 +17,15 @@ public:
     //!Ожидание таргета от бинтов
     bool WaitingBandageTarget = false;
     //!Время ожидания таргета
-    uint WaitForTargetTimer = 0;
+    uint32_t WaitForTargetTimer = 0;
     bool SendNotificationToPlugin = false;
 
 private:
     //!Время следующего выполнения
-    uint m_NextTimer{ 0 };
+    uint32_t m_NextTimer{ 0 };
 
     //!Таблица скиллов дял использования
-    static uchar m_SkillIndexTable[24];
+    static uint8_t m_SkillIndexTable[24];
 
     /*!
 	Выполнить команды подменю

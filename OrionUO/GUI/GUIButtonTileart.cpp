@@ -13,13 +13,13 @@
 
 CGUIButtonTileart::CGUIButtonTileart(
     int serial,
-    ushort graphic,
-    ushort graphicSelected,
-    ushort graphicPressed,
+    uint16_t graphic,
+    uint16_t graphicSelected,
+    uint16_t graphicPressed,
     int x,
     int y,
-    ushort tileGraphic,
-    ushort tileColor,
+    uint16_t tileGraphic,
+    uint16_t tileColor,
     int tileX,
     int tileY)
     : CGUIButton(serial, graphic, graphicSelected, graphicPressed, x, y)

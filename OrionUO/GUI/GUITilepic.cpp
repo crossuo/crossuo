@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGUITilepic::CGUITilepic(ushort graphic, ushort color, int x, int y)
+CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y)
     : CGUIDrawObject(GOT_TILEPIC, 0, graphic, color, x, y)
 {
 }

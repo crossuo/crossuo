@@ -63,7 +63,7 @@ void CMainScreen::Init()
     m_Gump.PrepareTextures();
 }
 
-void CMainScreen::ProcessSmoothAction(uchar action)
+void CMainScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
@@ -109,7 +109,7 @@ void CMainScreen::Paste()
 void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uchar)wParam))
+    if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)wParam))
         return;
     else if (g_EntryPointer == nullptr)
         g_EntryPointer = m_MainGump.m_PasswordFake;
@@ -133,7 +133,7 @@ void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
     DEBUG_TRACE_FUNCTION;
     LOG("SDL_TextInputEvent: %s\n", ev.text);
 
-    uchar ch = ev.text[0];
+    uint8_t ch = ev.text[0];
     if (!g_FontManager.IsPrintASCII(ch))
         return;
 

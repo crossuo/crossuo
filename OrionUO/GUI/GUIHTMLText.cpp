@@ -13,13 +13,13 @@
 
 CGUIHTMLText::CGUIHTMLText(
     int index,
-    uchar font,
-    ushort color,
+    uint8_t font,
+    uint16_t color,
     int x,
     int y,
     int width,
     TEXT_ALIGN_TYPE align,
-    ushort textFlags,
+    uint16_t textFlags,
     int htmlStartColor)
     : CBaseGUI(GOT_HTMLTEXT, 0, 0, color, x, y)
     , TextID(index)

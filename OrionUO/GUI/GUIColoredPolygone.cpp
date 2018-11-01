@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIColoredPolygone::CGUIColoredPolygone(
-    int serial, ushort color, int x, int y, int width, int height, int polygoneColor)
+    int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)
     : CGUIPolygonal(GOT_COLOREDPOLYGONE, x, y, width, height)
 {
     DEBUG_TRACE_FUNCTION;
@@ -24,7 +24,7 @@ CGUIColoredPolygone::~CGUIColoredPolygone()
 {
 }
 
-void CGUIColoredPolygone::UpdateColor(ushort color, int polygoneColor)
+void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 {
     DEBUG_TRACE_FUNCTION;
     Color = color;

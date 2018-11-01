@@ -38,7 +38,7 @@ void CToolTip::CreateTextTexture(
 
     texture.Clear();
 
-    uchar font = (uchar)g_ConfigManager.ToolTipsTextFont;
+    uint8_t font = (uint8_t)g_ConfigManager.ToolTipsTextFont;
 
     if (!width)
     {

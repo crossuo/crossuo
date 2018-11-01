@@ -13,23 +13,23 @@
 class CUopBlockHeader
 {
 public:
-    uint64 Offset = 0;
-    //uint HeaderSize = 0;
-    uint CompressedSize = 0;
-    uint DecompressedSize = 0;
-    //uint64 Hash = 0;
-    //uint Unknown = 0;
-    //ushort Flags = 0;
+    uint64_t Offset = 0;
+    //uint32_t HeaderSize = 0;
+    uint32_t CompressedSize = 0;
+    uint32_t DecompressedSize = 0;
+    //uint64_t Hash = 0;
+    //uint32_t Unknown = 0;
+    //uint16_t Flags = 0;
 
     CUopBlockHeader() {}
     CUopBlockHeader(
-        uint64 offset,
+        uint64_t offset,
         int headerSize,
         int compresseSize,
         int decompressedSize,
-        uint64 Hash,
+        uint64_t Hash,
         int unknown,
-        ushort flags)
+        uint16_t flags)
         : Offset(offset)
         , CompressedSize(compresseSize)
         , DecompressedSize(decompressedSize)
@@ -41,15 +41,15 @@ public:
 class CUopMappedFile : public Wisp::CMappedFile
 {
 public:
-    std::unordered_map<uint64, CUopBlockHeader> m_Map;
+    std::unordered_map<uint64_t, CUopBlockHeader> m_Map;
 
 public:
     CUopMappedFile();
     virtual ~CUopMappedFile();
 
-    void Add(uint64 hash, const CUopBlockHeader &item);
+    void Add(uint64_t hash, const CUopBlockHeader &item);
 
-    CUopBlockHeader *GetBlock(uint64 hash);
+    CUopBlockHeader *GetBlock(uint64_t hash);
 
     vector<uint8_t> GetData(const CUopBlockHeader &block);
 };

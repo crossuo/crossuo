@@ -223,7 +223,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
         MAP_INDEX_LIST &list = m_BlockData[i];
         Wisp::CSize &size = g_MapBlockSize[i];
 
-        uint maxBlockCount = size.Height * size.Width;
+        uint32_t maxBlockCount = size.Height * size.Width;
 
         if (mapPatchesCount)
         {
@@ -237,7 +237,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 
             for (int j = 0; j < mapPatchesCount; j++)
             {
-                uint blockIndex = difl.ReadUInt32LE();
+                uint32_t blockIndex = difl.ReadUInt32LE();
 
                 if (blockIndex < maxBlockCount)
                     list[blockIndex].MapAddress = (size_t)dif.Ptr;
@@ -259,7 +259,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 
             for (int j = 0; j < staticsPatchesCount; j++)
             {
-                uint blockIndex = difl.ReadUInt32LE();
+                uint32_t blockIndex = difl.ReadUInt32LE();
 
                 PSTAIDX_BLOCK sidx = (PSTAIDX_BLOCK)difi.Ptr;
 
@@ -337,7 +337,7 @@ CIndexMap *CMapManager::GetIndex(int map, int blockX, int blockY)
     if (map >= MAX_MAPS_COUNT)
         return nullptr;
 
-    uint block = (blockX * g_MapBlockSize[map].Height) + blockY;
+    uint32_t block = (blockX * g_MapBlockSize[map].Height) + blockY;
     MAP_INDEX_LIST &list = m_BlockData[map];
 
     if (block >= list.size())
@@ -355,7 +355,7 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
 {
     int blockX = x / 8;
     int blockY = y / 8;
-    uint index = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
+    uint32_t index = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
 
     bool &accessBlock = m_BlockAccessList[(x & 0x3F) + ((y & 0x3F) << 6)];
 
@@ -472,7 +472,7 @@ void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
     DEBUG_TRACE_FUNCTION;
     int blockX = x / 8;
     int blockY = y / 8;
-    uint index = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
+    uint32_t index = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
 
     if (index < MaxBlockIndex)
     {
@@ -508,7 +508,7 @@ void CMapManager::ClearUnusedBlocks()
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
-    uint ticks = g_Ticks - CLEAR_TEXTURES_DELAY;
+    uint32_t ticks = g_Ticks - CLEAR_TEXTURES_DELAY;
     int count = 0;
 
     while (block != nullptr)
@@ -517,7 +517,7 @@ void CMapManager::ClearUnusedBlocks()
 
         if (block->LastAccessTime < ticks && block->HasNoExternalData())
         {
-            uint index = block->Index;
+            uint32_t index = block->Index;
             Delete(block);
 
             m_Blocks[index] = nullptr;
@@ -539,7 +539,7 @@ void CMapManager::ClearUsedBlocks()
     {
         CMapBlock *next = (CMapBlock *)block->m_Next;
 
-        uint index = block->Index;
+        uint32_t index = block->Index;
         Delete(block);
 
         m_Blocks[index] = nullptr;
@@ -599,16 +599,16 @@ void CMapManager::Init(bool delayed)
     if (maxBlockY >= g_MapBlockSize[map].Height)
         maxBlockY = g_MapBlockSize[map].Height - 1;
 
-    uint ticks = g_Ticks;
-    uint maxDelay = g_FrameDelay[1] / 2;
+    uint32_t ticks = g_Ticks;
+    uint32_t maxDelay = g_FrameDelay[1] / 2;
 
     for (int i = minBlockX; i <= maxBlockX; i++)
     {
-        uint index = i * g_MapBlockSize[map].Height;
+        uint32_t index = i * g_MapBlockSize[map].Height;
 
         for (int j = minBlockY; j <= maxBlockY; j++)
         {
-            uint realIndex = index + j;
+            uint32_t realIndex = index + j;
 
             if (realIndex < MaxBlockIndex)
             {
@@ -723,7 +723,7 @@ void CMapManager::AddRender(CRenderWorldObject *item)
     int x = itemX / 8;
     int y = itemY / 8;
 
-    uint index = (x * g_MapBlockSize[g_CurrentMap].Height) + y;
+    uint32_t index = (x * g_MapBlockSize[g_CurrentMap].Height) + y;
 
     if (index < MaxBlockIndex)
     {
@@ -749,7 +749,7 @@ void CMapManager::AddRender(CRenderWorldObject *item)
 @param [__in] index Индекс блока
 @return Ссылка на блок или nullptr
 */
-CMapBlock *CMapManager::GetBlock(uint index)
+CMapBlock *CMapManager::GetBlock(uint32_t index)
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = nullptr;
@@ -770,7 +770,7 @@ CMapBlock *CMapManager::GetBlock(uint index)
 @param [__in] index Индекс блока
 @return Ссылка на блок или nullptr
 */
-CMapBlock *CMapManager::AddBlock(uint index)
+CMapBlock *CMapManager::AddBlock(uint32_t index)
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)Add(new CMapBlock(index));
@@ -785,7 +785,7 @@ CMapBlock *CMapManager::AddBlock(uint index)
 @param [__in] index Индекс блока
 @return 
 */
-void CMapManager::DeleteBlock(uint index)
+void CMapManager::DeleteBlock(uint32_t index)
 {
     DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;

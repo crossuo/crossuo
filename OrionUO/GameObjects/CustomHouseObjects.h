@@ -121,16 +121,16 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 8;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 
     //!Graphics list with replaced windowed walls
-    ushort m_WindowGraphics[GRAPHICS_COUNT];
+    uint16_t m_WindowGraphics[GRAPHICS_COUNT];
 };
 
 //!Category of wall objects
@@ -236,13 +236,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 16;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 /*class CCustomHouseObjectFloorCategory
@@ -311,13 +311,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 8;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 /*class CCustomHouseObjectDoorCategory
@@ -392,13 +392,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 8;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 class CCustomHouseObjectMiscCategory
@@ -493,13 +493,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 9;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 /*class CCustomHouseObjectStairCategory
@@ -592,13 +592,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 16;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 /*class CCustomHouseObjectTeleportCategory
@@ -674,13 +674,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 16;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 class CCustomHouseObjectRoofCategory
@@ -780,13 +780,13 @@ public:
 	@param [__in] graphic Graphic to search
 	@return index if it found or -1 if not found
 	*/
-    int Contains(ushort graphic) const;
+    int Contains(uint16_t graphic) const;
 
     //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 1;
 
     //!Graphics list
-    ushort m_Graphics[GRAPHICS_COUNT];
+    uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 #endif //CUSTOMHOUSEOBJECTS_H

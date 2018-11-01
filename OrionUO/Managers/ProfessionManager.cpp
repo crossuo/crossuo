@@ -61,10 +61,10 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     std::vector<string> childrens;
     string name = "";
     string trueName = "";
-    uint nameClilocID = 0;
-    uint descriptionClilocID = 0;
+    uint32_t nameClilocID = 0;
+    uint32_t descriptionClilocID = 0;
     int descriptionIndex = 0;
-    ushort gump = 0;
+    uint16_t gump = 0;
     bool topLevel = false;
     int skillCount = 0;
     int skillIndex[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -140,7 +140,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
                 {
                     for (int j = 0; j < 54; j++)
                     {
-                        CSkill *skillPtr = g_SkillsManager.Get((uint)j);
+                        CSkill *skillPtr = g_SkillsManager.Get((uint32_t)j);
 
                         if (skillPtr != nullptr && strings[1] == skillPtr->Name)
                         {
@@ -209,8 +209,8 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 
         for (int i = 0; i < 4; i++)
         {
-            temp->SetSkillIndex((int)i, (uchar)skillIndex[i]);
-            temp->SetSkillValue((int)i, (uchar)skillValue[i]);
+            temp->SetSkillIndex((int)i, (uint8_t)skillIndex[i]);
+            temp->SetSkillValue((int)i, (uint8_t)skillValue[i]);
         }
 
         obj = temp;

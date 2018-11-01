@@ -45,7 +45,7 @@ protected:
     virtual void CalculateGumpState();
 
 public:
-    CGumpPaperdoll(uint serial, short x, short y, bool minimized);
+    CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized);
     virtual ~CGumpPaperdoll();
 
     CGUIButton *m_ButtonWarmode{ nullptr };

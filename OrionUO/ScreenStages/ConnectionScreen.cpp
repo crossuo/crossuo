@@ -75,7 +75,7 @@ void CConnectionScreen::SetTextA(const string &val)
     m_Gump.WantUpdateContent = true;
 }
 
-void CConnectionScreen::ProcessSmoothAction(uchar action)
+void CConnectionScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)

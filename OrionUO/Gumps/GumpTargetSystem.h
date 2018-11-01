@@ -22,7 +22,7 @@ private:
     CGUIDataBox *m_DataBox{ nullptr };
 
 public:
-    CGumpTargetSystem(uint serial, short x, short y);
+    CGumpTargetSystem(uint32_t serial, short x, short y);
     virtual ~CGumpTargetSystem();
 
     virtual bool CanBeDisplayed();

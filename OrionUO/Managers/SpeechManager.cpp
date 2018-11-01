@@ -15,7 +15,7 @@ CSpeechManager g_SpeechManager;
 
 //------------------------------------CSpeechItem-----------------------------------
 
-CSpeechItem::CSpeechItem(ushort code, const wstring &data)
+CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
     : Code(code)
     , Data(data)
 {
@@ -129,7 +129,7 @@ bool CSpeechManager::LoadSpeech()
 
         for (const wstring &line : list)
         {
-            ushort code = 0xFFFF;
+            uint16_t code = 0xFFFF;
             temp = L"";
 
             for (const wchar_t c : line)
@@ -155,7 +155,7 @@ bool CSpeechManager::LoadSpeech()
         LOG("Loading speech from MUL\n");
         while (!reader.IsEOF())
         {
-            ushort code = reader.ReadUInt16BE();
+            uint16_t code = reader.ReadUInt16BE();
             int len = reader.ReadUInt16BE();
 
             if (!len)
@@ -194,7 +194,7 @@ bool CSpeechManager::LoadLangCodes()
 
         file.Move(4);
 
-        uint entryLen = file.ReadUInt32BE();
+        uint32_t entryLen = file.ReadUInt32BE();
         langCodeData.Abbreviature = file.ReadString(0);
         langCodeData.Code = file.ReadUInt32LE();
         langCodeData.Language = file.ReadString(0);

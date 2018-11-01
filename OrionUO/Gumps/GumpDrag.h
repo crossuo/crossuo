@@ -23,7 +23,7 @@ private:
     CGUISlider *m_Slider{ nullptr };
 
 public:
-    CGumpDrag(uint serial, short x, short y);
+    CGumpDrag(uint32_t serial, short x, short y);
     virtual ~CGumpDrag();
 
     void UpdateContent();

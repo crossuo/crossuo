@@ -35,7 +35,7 @@ CGumpCombatBook::~CGumpCombatBook()
 {
 }
 
-vector<uint16_t> CGumpCombatBook::GetItemsList(uchar index)
+vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     vector<uint16_t> list;
@@ -357,7 +357,7 @@ void CGumpCombatBook::InitToolTip()
         return;
     }
 
-    uint serial = g_SelectedObject.Serial;
+    uint32_t serial = g_SelectedObject.Serial;
 
     if (Page >= DictionaryPagesCount)
     {
@@ -494,7 +494,7 @@ void CGumpCombatBook::UpdateContent()
 
         Add(new CGUIGumppicTiled(0x0835, 62, 88, 128, 0));
 
-        vector<uint16_t> list = GetItemsList((uchar)i);
+        vector<uint16_t> list = GetItemsList((uint8_t)i);
 
         int size = (int)list.size();
         size_t maxStaticCount = g_Orion.m_StaticData.size();
@@ -510,7 +510,7 @@ void CGumpCombatBook::UpdateContent()
                 textY = 34;
             }
 
-            ushort &id = list[j];
+            uint16_t &id = list[j];
 
             if (id >= maxStaticCount)
                 continue;

@@ -16,10 +16,10 @@ class CGUIShopItem : public CBaseGUI
 {
 public:
     //!Количество
-    uint Count = 0;
+    uint32_t Count = 0;
 
     //!Стоимость
-    uint Price = 0;
+    uint32_t Price = 0;
 
     //!Название товара
     string Name = "";
@@ -47,8 +47,8 @@ private:
 public:
     CGUIShopItem(
         int serial,
-        ushort graphic,
-        ushort color,
+        uint16_t graphic,
+        uint16_t color,
         int count,
         int price,
         const string &name,

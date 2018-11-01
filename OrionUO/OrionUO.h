@@ -10,12 +10,12 @@ public:
     int TexturesDataCount = 0;
     string DefaultLogin = "";
     int DefaultPort = 0;
-    uint OrionVersionNumeric = 0;
+    uint32_t OrionVersionNumeric = 0;
 
 private:
-    uint m_CRC_Table[256];
+    uint32_t m_CRC_Table[256];
 
-    uchar m_StaticTilesFilterFlags[0x10000];
+    uint8_t m_StaticTilesFilterFlags[0x10000];
 
     vector<uint16_t> m_StumpTiles;
     vector<uint16_t> m_CaveTiles;
@@ -39,7 +39,7 @@ private:
     void LoadIndexFiles();
     void UnloadIndexFiles();
     void InitStaticAnimList();
-    ushort CalculateLightColor(ushort id);
+    uint16_t CalculateLightColor(uint16_t id);
     void ProcessStaticAnimList();
     void PatchFiles();
     void IndexReplaces();
@@ -63,7 +63,7 @@ private:
         CUopMappedFile &uopFile,
         int startIndex = 0);
     void GetCurrentLocale();
-    ushort TextToGraphic(const char *text);
+    uint16_t TextToGraphic(const char *text);
     void CheckStaticTileFilterFiles();
     string DecodeArgumentString(const char *text, int length);
     void ParseCommandLine();
@@ -80,7 +80,7 @@ public:
     vector<STATIC_TILES> m_StaticData;
 
 #if defined(ORION_WINDOWS)
-    static vector<uint32_t> FindPattern(puchar ptr, int size, const vector<uint8_t> &pattern);
+    static vector<uint32_t> FindPattern(uint8_t *ptr, int size, const vector<uint8_t> &pattern);
 #endif
 
     bool Install();
@@ -104,122 +104,123 @@ public:
     CIndexMulti m_MultiDataIndex[MAX_MULTI_DATA_INDEX_COUNT];
     CIndexLight m_LightDataIndex[MAX_LIGHTS_DATA_INDEX_COUNT];
 
-    ushort m_WinterTile[MAX_LAND_DATA_INDEX_COUNT];
+    uint16_t m_WinterTile[MAX_LAND_DATA_INDEX_COUNT];
 
-    vector<std::pair<ushort, ushort>> m_IgnoreInFilterTiles;
+    vector<std::pair<uint16_t, uint16_t>> m_IgnoreInFilterTiles;
 
-    bool InTileFilter(ushort graphic);
+    bool InTileFilter(uint16_t graphic);
 
     static string FixServerName(string name);
 
     void Connect();
     void Disconnect();
-    int Send(puchar buf, int size);
-    int Send(const vector<uint8_t> &buf) { return Send((puchar)&buf[0], (int)buf.size()); }
+    int Send(uint8_t *buf, int size);
+    int Send(const vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], (int)buf.size()); }
     void ServerSelection(int pos);
-    void RelayServer(const char *ip, int port, puchar gameSeed);
+    void RelayServer(const char *ip, int port, uint8_t *gameSeed);
     void CharacterSelection(int pos);
     void LoginComplete(bool reload);
     void ChangeSeason(const SEASON_TYPE &season, int music);
 
-    ushort GetLandSeasonGraphic(ushort graphic);
-    ushort GetSeasonGraphic(ushort graphic);
-    ushort GetSpringGraphic(ushort graphic);
-    ushort GetSummerGraphic(ushort graphic);
-    ushort GetFallGraphic(ushort graphic);
-    ushort GetWinterGraphic(ushort graphic);
-    ushort GetDesolationGraphic(ushort graphic);
+    uint16_t GetLandSeasonGraphic(uint16_t graphic);
+    uint16_t GetSeasonGraphic(uint16_t graphic);
+    uint16_t GetSpringGraphic(uint16_t graphic);
+    uint16_t GetSummerGraphic(uint16_t graphic);
+    uint16_t GetFallGraphic(uint16_t graphic);
+    uint16_t GetWinterGraphic(uint16_t graphic);
+    uint16_t GetDesolationGraphic(uint16_t graphic);
 
     int ValueInt(const VALUE_KEY_INT &key, int value = -1);
     string ValueString(const VALUE_KEY_STRING &key, string value = "");
 
     void ClearRemovedStaticsTextures();
     void ClearTreesTextures();
-    bool IsTreeTile(ushort graphic, int &index);
+    bool IsTreeTile(uint16_t graphic, int &index);
     void ClearCaveTextures();
-    bool IsCaveTile(ushort graphic);
-    bool IsVegetation(ushort graphic);
-    uint64 GetLandFlags(ushort id);
-    uint64 GetStaticFlags(ushort id);
-    ushort GetLightColor(ushort id) { return m_StaticDataIndex[id].LightColor; }
-    Wisp::CSize GetStaticArtDimension(ushort id);
-    Wisp::CSize GetGumpDimension(ushort id);
-    CGLTexture *ExecuteGump(ushort id);
-    CGLTexture *ExecuteLandArt(ushort id);
-    CGLTexture *ExecuteStaticArt(ushort id);
-    CGLTexture *ExecuteStaticArtAnimated(ushort id);
-    CGLTexture *ExecuteTexture(ushort id);
-    CGLTexture *ExecuteLight(uchar &id);
-    bool ExecuteGumpPart(ushort id, int count);
-    bool ExecuteResizepic(ushort id) { return ExecuteGumpPart(id, 9); }
-    bool ExecuteButton(ushort id) { return ExecuteGumpPart(id, 3); }
-    void DrawGump(ushort id, ushort color, int x, int y, bool partialHue = false);
+    bool IsCaveTile(uint16_t graphic);
+    bool IsVegetation(uint16_t graphic);
+    uint64_t GetLandFlags(uint16_t id);
+    uint64_t GetStaticFlags(uint16_t id);
+    uint16_t GetLightColor(uint16_t id) { return m_StaticDataIndex[id].LightColor; }
+    Wisp::CSize GetStaticArtDimension(uint16_t id);
+    Wisp::CSize GetGumpDimension(uint16_t id);
+    CGLTexture *ExecuteGump(uint16_t id);
+    CGLTexture *ExecuteLandArt(uint16_t id);
+    CGLTexture *ExecuteStaticArt(uint16_t id);
+    CGLTexture *ExecuteStaticArtAnimated(uint16_t id);
+    CGLTexture *ExecuteTexture(uint16_t id);
+    CGLTexture *ExecuteLight(uint8_t &id);
+    bool ExecuteGumpPart(uint16_t id, int count);
+    bool ExecuteResizepic(uint16_t id) { return ExecuteGumpPart(id, 9); }
+    bool ExecuteButton(uint16_t id) { return ExecuteGumpPart(id, 3); }
+    void DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue = false);
+    void DrawGump(
+        uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue = false);
+    void DrawResizepicGump(uint16_t id, int x, int y, int width, int height);
+    void DrawLandTexture(class CLandObject *land, uint16_t color, int x, int y);
+    void DrawLandArt(uint16_t id, uint16_t color, int x, int y);
+    void DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection = false);
+    void DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, bool selection = false);
+    void DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle);
+    void DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int y, float angle);
     void
-    DrawGump(ushort id, ushort color, int x, int y, int width, int height, bool partialHue = false);
-    void DrawResizepicGump(ushort id, int x, int y, int width, int height);
-    void DrawLandTexture(class CLandObject *land, ushort color, int x, int y);
-    void DrawLandArt(ushort id, ushort color, int x, int y);
-    void DrawStaticArt(ushort id, ushort color, int x, int y, bool selection = false);
-    void DrawStaticArtAnimated(ushort id, ushort color, int x, int y, bool selection = false);
-    void DrawStaticArtRotated(ushort id, ushort color, int x, int y, float angle);
-    void DrawStaticArtAnimatedRotated(ushort id, ushort color, int x, int y, float angle);
-    void DrawStaticArtTransparent(ushort id, ushort color, int x, int y, bool selection = false);
-    void
-    DrawStaticArtAnimatedTransparent(ushort id, ushort color, int x, int y, bool selection = false);
+    DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection = false);
+    void DrawStaticArtAnimatedTransparent(
+        uint16_t id, uint16_t color, int x, int y, bool selection = false);
     void DrawStaticArtInContainer(
-        ushort id, ushort color, int x, int y, bool selection = false, bool onMouse = false);
+        uint16_t id, uint16_t color, int x, int y, bool selection = false, bool onMouse = false);
     void DrawLight(struct LIGHT_DATA &light);
     bool PolygonePixelsInXY(int x, int y, int width, int height);
-    bool GumpPixelsInXY(ushort id, int x, int y);
-    bool GumpPixelsInXY(ushort id, int x, int y, int width, int height);
-    bool ResizepicPixelsInXY(ushort id, int x, int y, int width, int height);
-    bool StaticPixelsInXY(ushort id, int x, int y);
-    bool StaticPixelsInXYAnimated(ushort id, int x, int y);
-    bool StaticPixelsInXYInContainer(ushort id, int x, int y);
-    bool LandPixelsInXY(ushort id, int x, int y);
+    bool GumpPixelsInXY(uint16_t id, int x, int y);
+    bool GumpPixelsInXY(uint16_t id, int x, int y, int width, int height);
+    bool ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height);
+    bool StaticPixelsInXY(uint16_t id, int x, int y);
+    bool StaticPixelsInXYAnimated(uint16_t id, int x, int y);
+    bool StaticPixelsInXYInContainer(uint16_t id, int x, int y);
+    bool LandPixelsInXY(uint16_t id, int x, int y);
     bool LandTexturePixelsInXY(int x, int y, const SDL_Rect &r);
-    void CreateTextMessageF(uchar font, ushort color, const char *format, ...);
-    void CreateUnicodeTextMessageF(uchar font, ushort color, const char *format, ...);
+    void CreateTextMessageF(uint8_t font, uint16_t color, const char *format, ...);
+    void CreateUnicodeTextMessageF(uint8_t font, uint16_t color, const char *format, ...);
     void CreateTextMessage(
         const TEXT_TYPE &type,
         int serial,
-        uchar font,
-        ushort color,
+        uint8_t font,
+        uint16_t color,
         const string &text,
         class CRenderWorldObject *clientObj = nullptr);
     void CreateUnicodeTextMessage(
         const TEXT_TYPE &type,
         int serial,
-        uchar font,
-        ushort color,
+        uint8_t font,
+        uint16_t color,
         const wstring &text,
         class CRenderWorldObject *clientObj = nullptr);
     void AddSystemMessage(class CTextData *msg);
     void AddJournalMessage(class CTextData *msg, const string &name);
-    void ChangeMap(uchar newmap);
+    void ChangeMap(uint8_t newmap);
     void PickupItem(class CGameItem *obj, int count = 0, bool isGameFigure = false);
-    void DropItem(int container, ushort x, ushort y, char z);
-    void EquipItem(uint container = 0);
-    void ChangeWarmode(uchar status = 0xFF);
-    void Click(uint serial);
-    void DoubleClick(uint serial);
-    void PaperdollReq(uint serial);
-    void Attack(uint serial);
-    void AttackReq(uint serial);
+    void DropItem(int container, uint16_t x, uint16_t y, char z);
+    void EquipItem(uint32_t container = 0);
+    void ChangeWarmode(uint8_t status = 0xFF);
+    void Click(uint32_t serial);
+    void DoubleClick(uint32_t serial);
+    void PaperdollReq(uint32_t serial);
+    void Attack(uint32_t serial);
+    void AttackReq(uint32_t serial);
     void SendASCIIText(const char *str, SPEECH_TYPE type);
     void CastSpell(int index);
-    void CastSpellFromBook(int index, uint serial);
+    void CastSpellFromBook(int index, uint32_t serial);
     void UseSkill(int index);
     void OpenDoor();
     void EmoteAction(const char *action);
     void AllNames();
-    uint GetFileHashCode(puchar ptr, size_t size);
+    uint32_t GetFileHashCode(uint8_t *ptr, size_t size);
     void LoadLogin(string &login, int &port);
     void GoToWebLink(const string &url);
     void ResumeSound();
     void PauseSound();
     void PlayMusic(int index, bool warmode = false);
-    void PlaySoundEffect(ushort index, float volume = -1);
+    void PlaySoundEffect(uint16_t index, float volume = -1);
     void AdjustSoundEffects(int ticks, float volume = -1);
     void RemoveRangedObjects();
     void ClearWorld();
@@ -227,7 +228,7 @@ public:
     void ConsolePromptSend();
     void ConsolePromptCancel();
 
-    void OpenStatus(uint serial);
+    void OpenStatus(uint32_t serial);
     void DisplayStatusbarGump(int serial, int x, int y);
     void OpenMinimap();
     void OpenWorldMap();
@@ -239,7 +240,7 @@ public:
     void OpenConfiguration();
     void OpenMail();
     void OpenPartyManifest();
-    void OpenProfile(uint serial = 0);
+    void OpenProfile(uint32_t serial = 0);
     void DisconnectGump();
     void OpenCombatBookGump();
     void OpenRacialAbilitiesBookGump();

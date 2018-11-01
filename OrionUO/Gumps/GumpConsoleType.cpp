@@ -121,7 +121,7 @@ void CGumpConsoleType::SetConsolePrefix()
 void CGumpConsoleType::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint selected = g_SelectedObject.Serial;
+    uint32_t selected = g_SelectedObject.Serial;
 
     switch (selected)
     {

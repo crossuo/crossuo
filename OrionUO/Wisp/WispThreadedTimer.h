@@ -7,17 +7,17 @@ namespace Wisp
 class CThreadedTimer : public Wisp::CThread
 {
 public:
-    uint TimerID = 0;
+    uint32_t TimerID = 0;
     HWND WindowHandle = 0;
     bool WaitForProcessMessage = false;
 
-    CThreadedTimer(uint id, HWND windowHandle, bool wairForProcessMessage = false);
+    CThreadedTimer(uint32_t id, HWND windowHandle, bool wairForProcessMessage = false);
     virtual ~CThreadedTimer();
 
-    static const uint MessageID = WM_USER + 400;
+    static const uint32_t MessageID = WM_USER + 400;
     uint32_t EventID = 0;
 
-    virtual void OnExecute(uint nowTime);
+    virtual void OnExecute(uint32_t nowTime);
     virtual void OnDestroy();
 };
 

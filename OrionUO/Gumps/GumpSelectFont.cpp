@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpSelectFont::CGumpSelectFont(uint serial, short x, short y, SELECT_FONT_GUMP_STATE state)
+CGumpSelectFont::CGumpSelectFont(uint32_t serial, short x, short y, SELECT_FONT_GUMP_STATE state)
     : CGump(GT_SELECT_FONT, serial, x, y)
     , m_State(state)
 {
@@ -66,7 +66,7 @@ void CGumpSelectFont::UpdateContent()
             CGUIRadio *radio = (CGUIRadio *)Add(
                 new CGUIRadio((int)i + ID_GSF_FONTS, 0x00D0, 0x00D1, 0x00D0, 50, drawY));
             radio->Checked = (i == selected);
-            radio->SetTextParameters((uchar)i, L"This font", 0);
+            radio->SetTextParameters((uint8_t)i, L"This font", 0);
             drawY += 22;
             count++;
         }

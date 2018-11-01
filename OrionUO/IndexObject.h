@@ -17,13 +17,13 @@ public:
     int DataSize = 0;
     int Width = 0;
     int Height = 0;
-    ushort ID = 0;
-    ushort Color = 0;
-    uint LastAccessTime = 0;
+    uint16_t ID = 0;
+    uint16_t Color = 0;
+    uint32_t LastAccessTime = 0;
     CUopBlockHeader *UopBlock = nullptr;
     CIndexObject();
     virtual ~CIndexObject();
-    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id);
+    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint16_t id);
     CGLTexture *Texture{ nullptr };
 };
 
@@ -39,11 +39,11 @@ public:
 class CIndexObjectStatic : public CIndexObject
 {
 public:
-    ushort Index = 0;
+    uint16_t Index = 0;
     char Offset = 0;
     char AnimIndex = 0;
-    uint ChangeTime = 0;
-    ushort LightColor = 0;
+    uint32_t ChangeTime = 0;
+    uint16_t LightColor = 0;
     bool IsFiled = false;
 
     CIndexObjectStatic();
@@ -53,7 +53,7 @@ public:
 class CIndexSound : public CIndexObject
 {
 public:
-    uint Delay = 0;
+    uint32_t Delay = 0;
 
     CIndexSound();
     virtual ~CIndexSound();
@@ -65,11 +65,11 @@ public:
 class CIndexMulti : public CIndexObject
 {
 public:
-    uint Count = 0;
+    uint32_t Count = 0;
 
     CIndexMulti();
     virtual ~CIndexMulti();
-    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id) override;
+    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint16_t id) override;
 };
 
 class CIndexGump : public CIndexObject
@@ -77,7 +77,7 @@ class CIndexGump : public CIndexObject
 public:
     CIndexGump();
     virtual ~CIndexGump();
-    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id) override;
+    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint16_t id) override;
 };
 
 class CIndexLight : public CIndexObject
@@ -85,16 +85,16 @@ class CIndexLight : public CIndexObject
 public:
     CIndexLight();
     virtual ~CIndexLight();
-    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const ushort id) override;
+    virtual void ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint16_t id) override;
 };
 
 class CIndexAnimation
 {
 public:
-    ushort Graphic = 0;
-    ushort Color = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
     ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
-    uint Flags = 0;
+    uint32_t Flags = 0;
     char MountedHeightOffset = 0;
     bool IsUOP = false;
 

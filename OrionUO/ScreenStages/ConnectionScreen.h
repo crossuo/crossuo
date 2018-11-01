@@ -62,10 +62,10 @@ public:
     ~CConnectionScreen();
 
     //!Идентификаторы событий для плавного перехода
-    static const uchar ID_SMOOTH_CS_GO_SCREEN_MAIN = 1;
-    static const uchar ID_SMOOTH_CS_GO_SCREEN_CHARACTER = 2;
-    static const uchar ID_SMOOTH_CS_GO_SCREEN_PROFESSION = 3;
-    static const uchar ID_SMOOTH_CS_SEND_DELETE = 4;
+    static const uint8_t ID_SMOOTH_CS_GO_SCREEN_MAIN = 1;
+    static const uint8_t ID_SMOOTH_CS_GO_SCREEN_CHARACTER = 2;
+    static const uint8_t ID_SMOOTH_CS_GO_SCREEN_PROFESSION = 3;
+    static const uint8_t ID_SMOOTH_CS_SEND_DELETE = 4;
 
     /*!
 	Инициализация
@@ -78,7 +78,7 @@ public:
 	@param [__in_opt] action Идентификатор действия
 	@return 
 	*/
-    void ProcessSmoothAction(uchar action = 0xFF);
+    void ProcessSmoothAction(uint8_t action = 0xFF);
 
     virtual void OnKeyDown(const KeyEvent &ev);
 };

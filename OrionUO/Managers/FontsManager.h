@@ -6,10 +6,10 @@
 typedef struct MULTILINES_FONT_DATA
 {
     wchar_t item;
-    ushort flags;
-    uchar font;
-    ushort linkID;
-    uint color;
+    uint16_t flags;
+    uint8_t font;
+    uint16_t linkID;
+    uint32_t color;
 
     MULTILINES_FONT_DATA *Next;
 } * PMULTILINES_FONT_DATA;
@@ -47,24 +47,24 @@ struct WEB_LINK
 struct HTML_char
 {
     wchar_t Char;
-    uchar Font;
+    uint8_t Font;
     TEXT_ALIGN_TYPE Align;
-    ushort Flags;
-    uint Color;
-    ushort LinkID;
+    uint16_t Flags;
+    uint32_t Color;
+    uint16_t LinkID;
 };
 
 struct HTML_DATA_INFO
 {
     HTML_TAG_TYPE Tag;
     TEXT_ALIGN_TYPE Align;
-    ushort Flags;
-    uchar Font;
-    uint Color;
-    ushort Link;
+    uint16_t Flags;
+    uint8_t Font;
+    uint32_t Color;
+    uint16_t Link;
 };
 
-typedef map<ushort, WEB_LINK> WEBLINK_MAP;
+typedef map<uint16_t, WEB_LINK> WEBLINK_MAP;
 typedef vector<HTML_char> HTMLCHAR_LIST;
 typedef vector<HTML_DATA_INFO> HTMLINFO_LIST;
 
@@ -79,64 +79,70 @@ private:
     FONT_DATA *Font = nullptr;
     WEBLINK_MAP m_WebLink;
 
-    static uchar m_FontIndex[256];
+    static uint8_t m_FontIndex[256];
 
     size_t m_UnicodeFontAddress[20];
-    uint m_UnicodeFontSize[20];
+    uint32_t m_UnicodeFontSize[20];
 
     bool m_UseHTML = false;
-    uint m_HTMLColor = 0xFFFFFFFF;
+    uint32_t m_HTMLColor = 0xFFFFFFFF;
     bool m_HTMLBackgroundCanBeColored = false;
 
-    uint m_BackgroundColor = 0;
-    uint m_WebLinkColor = 0;
-    uint m_VisitedWebLinkColor = 0;
+    uint32_t m_BackgroundColor = 0;
+    uint32_t m_WebLinkColor = 0;
+    uint32_t m_VisitedWebLinkColor = 0;
 
     int m_LeftMargin = 0;
     int m_TopMargin = 0;
     int m_RightMargin = 0;
     int m_BottomMargin = 0;
 
-    ushort GetWebLinkID(const string &link, uint &color);
-    ushort GetWebLinkID(const wstring &link, uint &color);
+    uint16_t GetWebLinkID(const string &link, uint32_t &color);
+    uint16_t GetWebLinkID(const wstring &link, uint32_t &color);
 
     HTMLCHAR_LIST
-    GetHTMLData(uchar font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, ushort flags);
+    GetHTMLData(uint8_t font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     HTML_DATA_INFO GetHTMLInfoFromTag(const HTML_TAG_TYPE &tag);
     HTML_DATA_INFO GetCurrentHTMLInfo(const HTMLINFO_LIST &list);
 
     void GetHTMLInfoFromContent(HTML_DATA_INFO &info, const string &content);
     void TrimHTMLString(string &str);
-    uint GetHTMLColorFromText(string &str);
+    uint32_t GetHTMLColorFromText(string &str);
 
     HTML_TAG_TYPE
     ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, HTML_DATA_INFO &info);
 
     HTMLCHAR_LIST
-    GetHTMLDataOld(uchar font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, ushort flags);
+    GetHTMLDataOld(
+        uint8_t font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     PMULTILINES_FONT_INFO GetInfoHTML(
-        uchar font, const wchar_t *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);
+        uint8_t font,
+        const wchar_t *str,
+        int len,
+        TEXT_ALIGN_TYPE align,
+        uint16_t flags,
+        int width);
 
     bool GenerateABase(
-        uchar font,
+        uint8_t font,
         CGLTextTexture &th,
         const string &str,
-        ushort color,
+        uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,
-        ushort flags);
+        uint16_t flags);
 
     bool GenerateWBase(
-        uchar font,
+        uint8_t font,
         CGLTextTexture &th,
         const wstring &str,
-        ushort color,
-        uchar cell,
+        uint16_t color,
+        uint8_t cell,
         int width,
         TEXT_ALIGN_TYPE align,
-        ushort flags);
+        uint16_t flags);
 
 public:
     CFontsManager();
@@ -152,131 +158,142 @@ public:
     bool GetUseHTML() const { return m_UseHTML; }
 
     bool LoadFonts();
-    bool UnicodeFontExists(uchar font);
-    void GoToWebLink(ushort link);
+    bool UnicodeFontExists(uint8_t font);
+    void GoToWebLink(uint16_t link);
 
-    inline bool IsPrintASCII(uchar index) { return (m_FontIndex[index] != 0xFF); }
-    int GetFontOffsetY(uchar font, uchar index);
+    inline bool IsPrintASCII(uint8_t index) { return (m_FontIndex[index] != 0xFF); }
+    int GetFontOffsetY(uint8_t font, uint8_t index);
     Wisp::CPoint2Di GetCaretPosA(
-        uchar font, const string &str, int pos, int width, TEXT_ALIGN_TYPE align, ushort flags);
+        uint8_t font, const string &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int CalculateCaretPosA(
-        uchar font,
+        uint8_t font,
         const string &str,
         int x,
         int y,
         int width,
         TEXT_ALIGN_TYPE align,
-        ushort flags);
+        uint16_t flags);
 
-    int GetWidthA(uchar font, const string &str);
+    int GetWidthA(uint8_t font, const string &str);
 
-    int
-    GetWidthExA(uchar font, const string &str, int maxWidth, TEXT_ALIGN_TYPE align, ushort flags);
+    int GetWidthExA(
+        uint8_t font, const string &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int GetHeightA(
-        uchar font,
+        uint8_t font,
         const string &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     int GetHeightA(PMULTILINES_FONT_INFO info);
 
-    string GetTextByWidthA(uchar font, const string &str, int width, bool isCropped);
+    string GetTextByWidthA(uint8_t font, const string &str, int width, bool isCropped);
 
     PMULTILINES_FONT_INFO
-    GetInfoA(uchar font, const char *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);
+    GetInfoA(
+        uint8_t font, const char *str, int len, TEXT_ALIGN_TYPE align, uint16_t flags, int width);
 
     vector<uint32_t> GeneratePixelsA(
-        uchar font,
+        uint8_t font,
         CGLTextTexture &th,
         const char *str,
-        ushort color,
+        uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,
-        ushort flags);
+        uint16_t flags);
 
     bool GenerateA(
-        uchar font,
+        uint8_t font,
         CGLTextTexture &th,
         const string &str,
-        ushort color = 0,
+        uint16_t color = 0,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     void DrawA(
-        uchar font,
+        uint8_t font,
         const string &str,
-        ushort color,
+        uint16_t color,
         int x,
         int y,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     Wisp::CPoint2Di GetCaretPosW(
-        uchar font, const wstring &str, int pos, int width, TEXT_ALIGN_TYPE align, ushort flags);
+        uint8_t font,
+        const wstring &str,
+        int pos,
+        int width,
+        TEXT_ALIGN_TYPE align,
+        uint16_t flags);
 
     int CalculateCaretPosW(
-        uchar font,
+        uint8_t font,
         const wstring &str,
         int x,
         int y,
         int width,
         TEXT_ALIGN_TYPE align,
-        ushort flags);
+        uint16_t flags);
 
-    int GetWidthW(uchar font, const wstring &str);
+    int GetWidthW(uint8_t font, const wstring &str);
 
-    int
-    GetWidthExW(uchar font, const wstring &str, int maxWidth, TEXT_ALIGN_TYPE align, ushort flags);
+    int GetWidthExW(
+        uint8_t font, const wstring &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int GetHeightW(
-        uchar font,
+        uint8_t font,
         const wstring &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     int GetHeightW(PMULTILINES_FONT_INFO info);
 
-    wstring GetTextByWidthW(uchar font, const wstring &str, int width, bool isCropped);
+    wstring GetTextByWidthW(uint8_t font, const wstring &str, int width, bool isCropped);
 
     PMULTILINES_FONT_INFO GetInfoW(
-        uchar font, const wchar_t *str, int len, TEXT_ALIGN_TYPE align, ushort flags, int width);
+        uint8_t font,
+        const wchar_t *str,
+        int len,
+        TEXT_ALIGN_TYPE align,
+        uint16_t flags,
+        int width);
 
     vector<uint32_t> GeneratePixelsW(
-        uchar font,
+        uint8_t font,
         CGLTextTexture &th,
         const wchar_t *str,
-        ushort color,
-        uchar cell,
+        uint16_t color,
+        uint8_t cell,
         int width,
         TEXT_ALIGN_TYPE align,
-        ushort flags);
+        uint16_t flags);
 
     bool GenerateW(
-        uchar font,
+        uint8_t font,
         CGLTextTexture &th,
         const wstring &str,
-        ushort color = 0,
-        uchar cell = 30,
+        uint16_t color = 0,
+        uint8_t cell = 30,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     void DrawW(
-        uchar font,
+        uint8_t font,
         const wstring &str,
-        ushort color,
+        uint16_t color,
         int x,
         int y,
-        uchar cell = 30,
+        uint8_t cell = 30,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 };
 
 extern CFontsManager g_FontManager;

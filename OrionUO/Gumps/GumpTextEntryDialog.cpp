@@ -13,7 +13,7 @@
 #include "GumpTextEntryDialog.h"
 
 CGumpTextEntryDialog::CGumpTextEntryDialog(
-    uint serial, short x, short y, uchar variant, int maxLength, string text, string description)
+    uint32_t serial, short x, short y, uint8_t variant, int maxLength, string text, string description)
     : CGump(GT_TEXT_ENTRY_DIALOG, serial, x, y)
     , Text(text)
     , m_Description(description)
@@ -42,7 +42,7 @@ void CGumpTextEntryDialog::PrepareContent()
     DEBUG_TRACE_FUNCTION;
     if (m_TextField != nullptr && m_Entry != nullptr)
     {
-        ushort newGraphic = 0x0475; //Text field
+        uint16_t newGraphic = 0x0475; //Text field
 
         if (g_EntryPointer == &m_Entry->m_Entry)
             newGraphic = 0x0477; //Text field (active)

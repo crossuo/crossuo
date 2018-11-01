@@ -50,7 +50,7 @@ void CSelectProfessionScreen::Init()
 @param [__in_opt] action Идентификатор действия
 @return 
 */
-void CSelectProfessionScreen::ProcessSmoothAction(uchar action)
+void CSelectProfessionScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)

@@ -16,7 +16,7 @@ CGumpAbility::CGumpAbility(int serial, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     int index = (Serial != 0 ? 1 : 0);
-    uchar &ability = g_Ability[index];
+    uint8_t &ability = g_Ability[index];
 
     Graphic = 0x5200 + (ability & 0x7F) - 1;
 
@@ -48,7 +48,7 @@ void CGumpAbility::UpdateContent()
     if (m_Colorizer != nullptr && m_Body != nullptr)
     {
         int index = (Serial != 0 ? 1 : 0);
-        uchar &ability = g_Ability[index];
+        uint8_t &ability = g_Ability[index];
 
         m_Colorizer->Enabled = (ability & 0x80);
 
@@ -66,7 +66,7 @@ void CGumpAbility::GUMP_BUTTON_EVENT_C
 void CGumpAbility::OnAbilityUse(int index)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar &ability = g_Ability[index];
+    uint8_t &ability = g_Ability[index];
 
     if (!(ability & 0x80))
     {

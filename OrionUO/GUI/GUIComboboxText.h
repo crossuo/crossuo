@@ -16,19 +16,19 @@ class CGUIComboboxText : public CGUIText
 {
 public:
     CGUIComboboxText(
-        ushort color,
-        uchar font,
+        uint16_t color,
+        uint8_t font,
         const string &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
     CGUIComboboxText(
-        ushort color,
-        uchar font,
+        uint16_t color,
+        uint8_t font,
         const wstring &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
     virtual ~CGUIComboboxText();
 
     virtual void OnMouseEnter();

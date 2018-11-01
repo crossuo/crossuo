@@ -25,7 +25,7 @@ CGumpScreenMain::~CGumpScreenMain()
 void CGumpScreenMain::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    static uint lastArrowTick = 0;
+    static uint32_t lastArrowTick = 0;
     static bool arrowLighted = false;
 
     if (lastArrowTick < g_Ticks && m_Arrow != nullptr)
@@ -110,7 +110,7 @@ void CGumpScreenMain::InitToolTip()
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
     {

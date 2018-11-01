@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIDrawObject::CGUIDrawObject(
-    GUMP_OBJECT_TYPE type, int serial, ushort graphic, ushort color, int x, int y)
+    GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)
     : CBaseGUI(type, serial, graphic, color, x, y)
 {
 }

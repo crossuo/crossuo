@@ -13,10 +13,10 @@
 
 CGUISlider::CGUISlider(
     int serial,
-    ushort graphic,
-    ushort graphicSelected,
-    ushort graphicPressed,
-    ushort backgroundGraphic,
+    uint16_t graphic,
+    uint16_t graphicSelected,
+    uint16_t graphicPressed,
+    uint16_t backgroundGraphic,
     bool compositeBackground,
     bool vertical,
     int x,
@@ -256,12 +256,12 @@ void CGUISlider::CalculateOffset()
 void CGUISlider::SetTextParameters(
     bool haveText,
     SLIDER_TEXT_POSITION textPosition,
-    uchar font,
-    ushort color,
+    uint8_t font,
+    uint16_t color,
     bool unicode,
     int textWidth,
     TEXT_ALIGN_TYPE align,
-    ushort textFlags)
+    uint16_t textFlags)
 {
     DEBUG_TRACE_FUNCTION;
     HaveText = haveText;
@@ -292,10 +292,10 @@ void CGUISlider::PrepareTextures()
     }
 }
 
-ushort CGUISlider::GetDrawGraphic()
+uint16_t CGUISlider::GetDrawGraphic()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = Graphic;
+    uint16_t graphic = Graphic;
 
     if (g_GumpPressedElement == this)
         graphic = GraphicPressed;

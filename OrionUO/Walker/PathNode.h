@@ -22,7 +22,7 @@ class CPathObject
 {
 public:
     //Флаги
-    uint Flags = 0;
+    uint32_t Flags = 0;
 
     //Координата Z точки
     int Z = 0;

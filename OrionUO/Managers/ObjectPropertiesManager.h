@@ -13,8 +13,8 @@
 class CObjectProperty
 {
 public:
-    uint Serial = 0;
-    uint Revision = 0;
+    uint32_t Serial = 0;
+    uint32_t Revision = 0;
     wstring Name = L"";
     wstring Data = L"";
 
@@ -26,11 +26,11 @@ public:
     wstring CreateTextData(bool extended);
 };
 
-typedef map<uint, CObjectProperty> OBJECT_PROPERTIES_MAP;
+typedef map<uint32_t, CObjectProperty> OBJECT_PROPERTIES_MAP;
 
 class CObjectPropertiesManager
 {
-    uint Timer = 0;
+    uint32_t Timer = 0;
 
 private:
     OBJECT_PROPERTIES_MAP m_Map;

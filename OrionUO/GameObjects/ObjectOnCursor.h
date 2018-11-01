@@ -19,25 +19,25 @@ public:
     //!Сброшен
     bool Dropped = false;
     //!Серийник объекта
-    uint Serial = 0;
+    uint32_t Serial = 0;
     //!Индекс картинки
-    ushort Graphic = 0;
+    uint16_t Graphic = 0;
     //!Цвет
-    ushort Color = 0;
+    uint16_t Color = 0;
     //!Количество для перемещения
-    ushort Count = 0;
+    uint16_t Count = 0;
     //!Количество ранее в стеке
-    ushort TotalCount = 0;
+    uint16_t TotalCount = 0;
     //!Слой
-    uchar Layer = 0;
+    uint8_t Layer = 0;
     //!Флаги
-    uchar Flags = 0;
+    uint8_t Flags = 0;
     //!Контейнер
-    uint Container = 0;
+    uint32_t Container = 0;
     //!Координата X
-    ushort X = 0;
+    uint16_t X = 0;
     //!Координата Y
-    ushort Y = 0;
+    uint16_t Y = 0;
     //!Координата Z
     char Z = 0;
     //!Это игровая фигура
@@ -51,7 +51,7 @@ public:
 
     void Clear();
 
-    ushort GetDrawGraphic(bool &doubleDraw);
+    uint16_t GetDrawGraphic(bool &doubleDraw);
 };
 
 //!Указатель на объект в руке (на курсоре)

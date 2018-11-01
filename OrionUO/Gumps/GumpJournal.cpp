@@ -68,7 +68,7 @@ CGumpJournal::~CGumpJournal()
 void CGumpJournal::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
     {
@@ -175,9 +175,9 @@ void CGumpJournal::AddText(CTextData *obj)
     text->MoveOnDrag = true;
     text->Serial = 0;
     text->TextData = obj;
-    text->Graphic = (ushort)obj->Type;
+    text->Graphic = (uint16_t)obj->Type;
 
-    ushort flags = UOFONT_INDENTION;
+    uint16_t flags = UOFONT_INDENTION;
 
     if (obj->Type == TT_OBJECT || obj->Unicode)
         flags |= UOFONT_BLACK_BORDER;

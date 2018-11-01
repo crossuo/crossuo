@@ -13,7 +13,7 @@
 
 CMouseManager g_MouseManager;
 
-ushort g_CursorData[2][16] = { { 0x206A,
+uint16_t g_CursorData[2][16] = { { 0x206A,
                                  0x206B,
                                  0x206C,
                                  0x206D,
@@ -136,11 +136,11 @@ int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_fac
 Получить индекс картинки игрового курсора
 @return Индекс картинки
 */
-ushort CMouseManager::GetGameCursor()
+uint16_t CMouseManager::GetGameCursor()
 {
     DEBUG_TRACE_FUNCTION;
     int war = (int)(g_Player != nullptr && g_Player->Warmode);
-    ushort result = g_CursorData[war][9]; //Main Gump mouse cursor
+    uint16_t result = g_CursorData[war][9]; //Main Gump mouse cursor
 
     if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled)
         return g_CursorData[war][12]; //Targetting cursor
@@ -217,7 +217,7 @@ bool CMouseManager::LoadCursorTextures()
     {
         for (int j = 0; j < 16; j++)
         {
-            ushort id = g_CursorData[i][j];
+            uint16_t id = g_CursorData[i][j];
 
             CGLTexture *pth = g_Orion.ExecuteStaticArt(id);
 
@@ -333,14 +333,14 @@ bool CMouseManager::LoadCursorTextures()
 @param [__in] id Индекс картинки курсора
 @return 
 */
-void CMouseManager::Draw(ushort id)
+void CMouseManager::Draw(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GameState >= GS_GAME)
     {
         if (g_CustomHouseGump != nullptr && g_CustomHouseGump->SelectedGraphic)
         {
-            ushort color = 0;
+            uint16_t color = 0;
 
             vector<CBuildObject> list;
             CUSTOM_HOUSE_BUILD_TYPE type;
@@ -377,9 +377,9 @@ void CMouseManager::Draw(ushort id)
         else if (g_ObjectInHand.Enabled)
         {
             bool doubleDraw = false;
-            ushort ohGraphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
+            uint16_t ohGraphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
 
-            ushort ohColor = g_ObjectInHand.Color;
+            uint16_t ohColor = g_ObjectInHand.Color;
             doubleDraw =
                 (!CGameObject::IsGold(g_ObjectInHand.Graphic) &&
                  IsStackable(g_ObjectInHand.TiledataPtr->Flags) && g_ObjectInHand.Count > 1);
@@ -429,7 +429,7 @@ void CMouseManager::Draw(ushort id)
 
     if (th != nullptr)
     {
-        ushort color = 0;
+        uint16_t color = 0;
 
         if (id < 0x206A)
             id -= 0x2053;
@@ -464,7 +464,7 @@ void CMouseManager::Draw(ushort id)
 
             if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType)
             {
-                uint auraColor = 0;
+                uint32_t auraColor = 0;
 
                 if (g_Target.CursorType == 0)
                     auraColor = g_ColorManager.GetPolygoneColor(16, 0x03B2);

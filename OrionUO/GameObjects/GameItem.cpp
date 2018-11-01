@@ -190,8 +190,8 @@ void CGameItem::Draw(int x, int y)
         {
             bool doubleDraw = false;
             bool selMode = false;
-            ushort objGraphic = GetDrawGraphic(doubleDraw);
-            ushort objColor = Color & 0x3FFF;
+            uint16_t objGraphic = GetDrawGraphic(doubleDraw);
+            uint16_t objColor = Color & 0x3FFF;
 
             if (Hidden())
             {
@@ -296,7 +296,7 @@ void CGameItem::Select(int x, int y)
         else
         {
             bool doubleDraw = false;
-            ushort objGraphic = GetDrawGraphic(doubleDraw);
+            uint16_t objGraphic = GetDrawGraphic(doubleDraw);
 
             if (doubleDraw)
             {
@@ -320,10 +320,10 @@ void CGameItem::Select(int x, int y)
 Получить индекс картинки (для анимации)
 @return Индекс картинки
 */
-ushort CGameItem::GetMountAnimation()
+uint16_t CGameItem::GetMountAnimation()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = Graphic;
+    uint16_t graphic = Graphic;
 
     if (Layer == OL_MOUNT)
     {
@@ -573,7 +573,7 @@ ushort CGameItem::GetMountAnimation()
             graphic = m_TiledataPtr->AnimID;
     }
     else if (IsCorpse())
-        graphic = (ushort)Count;
+        graphic = (uint16_t)Count;
 
     return graphic;
 }
@@ -616,7 +616,7 @@ void CGameItem::ClearCustomHouseMultis(int state)
 @return
 */
 CMultiObject *
-CGameItem::AddMulti(ushort graphic, ushort color, char x, char y, char z, bool isCustomHouseMulti)
+CGameItem::AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti)
 {
     CMultiObject *mo = nullptr;
 
@@ -655,7 +655,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
     int maxX = 0;
     int maxY = 0;
 
-    uchar alpha = 0;
+    uint8_t alpha = 0;
 
     if (!dropAlpha)
         alpha = 0xFF;
@@ -672,12 +672,12 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
         for (int i = 0; i < count; i++)
         {
-            ushort graphic = reader.ReadUInt16LE();
+            uint16_t graphic = reader.ReadUInt16LE();
             short x = reader.ReadInt16LE();
             short y = reader.ReadInt16LE();
             short z = reader.ReadInt16LE();
-            ushort flags = reader.ReadUInt16LE();
-            uint clilocsCount = reader.ReadUInt32LE();
+            uint16_t flags = reader.ReadUInt16LE();
+            uint32_t clilocsCount = reader.ReadUInt32LE();
 
             if (clilocsCount)
                 reader.Move(clilocsCount * 4);
@@ -851,7 +851,7 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
 @param [__in_opt] color Цвет предмета
 @return Ссылка на найденный объект или nullptr
 */
-CGameItem *CGameItem::FindItem(ushort graphic, ushort color)
+CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     CGameItem *item = nullptr;

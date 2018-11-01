@@ -7,7 +7,7 @@
 namespace Wisp
 {
 
-CThreadedTimer::CThreadedTimer(uint id, HWND windowHandle, bool waitForProcessMessage)
+CThreadedTimer::CThreadedTimer(uint32_t id, HWND windowHandle, bool waitForProcessMessage)
     : Wisp::CThread()
     , TimerID(id)
     , WindowHandle(windowHandle)
@@ -22,7 +22,7 @@ CThreadedTimer::~CThreadedTimer()
 {
 }
 
-void CThreadedTimer::OnExecute(uint nowTime)
+void CThreadedTimer::OnExecute(uint32_t nowTime)
 {
     DEBUG_TRACE_FUNCTION;
     if (IsActive())

@@ -51,7 +51,7 @@ void CGameScreen::Init()
 @param [__in_opt] action Идентификатор действия
 @return 
 */
-void CGameScreen::ProcessSmoothAction(uchar action)
+void CGameScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
@@ -74,7 +74,7 @@ void CGameScreen::InitToolTip()
 
     if (obj != nullptr && g_TooltipsEnabled)
     {
-        uint serial = 0;
+        uint32_t serial = 0;
 
         if (obj->IsGameObject())
             serial = g_SelectedObject.Serial;
@@ -264,7 +264,7 @@ void CGameScreen::UpdateMaxDrawZ()
 @param [__in] z Координата Z дерева
 @return 
 */
-void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, int z)
+void CGameScreen::ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y, int z)
 {
     DEBUG_TRACE_FUNCTION;
     int bx = x / 8;
@@ -280,7 +280,7 @@ void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, i
 
         for (CRenderWorldObject *obj = mb->GetRender(tx, ty); obj != nullptr; obj = obj->m_NextXY)
         {
-            ushort testGraphic = obj->Graphic;
+            uint16_t testGraphic = obj->Graphic;
 
             if (obj->IsGameObject() && !((CGameObject *)obj)->NPC && ((CGameItem *)obj)->MultiBody)
                 testGraphic = ((CGameItem *)obj)->MultiTileGraphic;
@@ -299,7 +299,7 @@ void CGameScreen::ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, i
 @param [__in] z Координата Z дерева
 @return 
 */
-void CGameScreen::CheckFoliageUnion(ushort graphic, int x, int y, int z)
+void CGameScreen::CheckFoliageUnion(uint16_t graphic, int x, int y, int z)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -414,7 +414,7 @@ void CGameScreen::CalculateRenderList()
     int maxY = g_RenderBounds.RealMaxRangeY;
 
     int mapBlockHeight = g_MapBlockSize[g_MapManager.GetActualMap()].Height;
-    uint maxBlockIndex = g_MapManager.MaxBlockIndex;
+    uint32_t maxBlockIndex = g_MapManager.MaxBlockIndex;
 
     for (int i = 0; i < 2; i++)
     {
@@ -447,7 +447,7 @@ void CGameScreen::CalculateRenderList()
                     int blockX = x / 8;
                     int blockY = y / 8;
 
-                    uint blockIndex = (blockX * mapBlockHeight) + blockY;
+                    uint32_t blockIndex = (blockX * mapBlockHeight) + blockY;
 
                     if (blockIndex < maxBlockIndex)
                     {
@@ -561,7 +561,7 @@ void CGameScreen::AddTileToRenderList(
     CRenderWorldObject *obj, int worldX, int worldY, bool useObjectHandles, int maxZ)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort grayColor = 0;
+    uint16_t grayColor = 0;
 
     if (g_ConfigManager.GrayOutOfRangeObjects)
     {
@@ -721,7 +721,7 @@ void CGameScreen::AddTileToRenderList(
 
                         if (text->Transparent)
                         {
-                            if ((uchar)text->Color >= DAMAGE_TEXT_ALPHA_STEP)
+                            if ((uint8_t)text->Color >= DAMAGE_TEXT_ALPHA_STEP)
                                 text->Color -= DAMAGE_TEXT_ALPHA_STEP;
                             else
                                 text->Color = 0;
@@ -901,7 +901,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
     int maxZ = obj->PriorityZ;
 
     int mapBlockHeight = g_MapBlockSize[g_CurrentMap].Height;
-    uint maxBlockIndex = g_MapManager.MaxBlockIndex;
+    uint32_t maxBlockIndex = g_MapManager.MaxBlockIndex;
 
     for (int i = 0; i < size; i++)
     {
@@ -918,7 +918,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
         int blockX = x / 8;
         int blockY = y / 8;
 
-        uint blockIndex = (blockX * mapBlockHeight) + blockY;
+        uint32_t blockIndex = (blockX * mapBlockHeight) + blockY;
 
         if (blockIndex < maxBlockIndex)
         {
@@ -1163,7 +1163,7 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
         {
             LIGHT_DATA &light = m_Light[m_LightCount];
 
-            ushort graphic = lightObject->Graphic;
+            uint16_t graphic = lightObject->Graphic;
 
             if ((graphic >= 0x3E02 && graphic <= 0x3E0B) ||
                 (graphic >= 0x3914 && graphic <= 0x3929))
@@ -1171,7 +1171,7 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
             else if (rwo == lightObject && rwo->IsGameObject())
                 light.ID = ((CGameItem *)lightObject)->LightID;
             else
-                light.ID = (uchar)lightObject->GetLightID();
+                light.ID = (uint8_t)lightObject->GetLightID();
 
             if (light.ID >= MAX_LIGHTS_DATA_INDEX_COUNT)
                 return;
@@ -1242,10 +1242,10 @@ void CGameScreen::DrawGameWindow(bool mode)
                     if (g_ConfigManager.DrawStatusForHumanoids && !gc->IsHuman())
                         continue;
 
-                    ushort color = g_ConfigManager.GetColorByNotoriety(gc->Notoriety);
+                    uint16_t color = g_ConfigManager.GetColorByNotoriety(gc->Notoriety);
 
                     //usual color
-                    ushort healthColor = 90;
+                    uint16_t healthColor = 90;
 
                     int width = gc->MaxHits;
 
@@ -1494,7 +1494,7 @@ void CGameScreen::DrawGameWindowText(bool mode)
                             glEnable(GL_BLEND);
                             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-                            glColor4ub(0xFF, 0xFF, 0xFF, (uchar)text->Color);
+                            glColor4ub(0xFF, 0xFF, 0xFF, (uint8_t)text->Color);
 
                             text->m_Texture.Draw(text->RealDrawX, text->RealDrawY);
 
@@ -1604,7 +1604,7 @@ void CGameScreen::Render(bool mode)
 
     if (mode)
     {
-        static uint lastRender = 0;
+        static uint32_t lastRender = 0;
         static int currentFPS = 0;
         static int FPScount = 0;
 
@@ -1623,7 +1623,7 @@ void CGameScreen::Render(bool mode)
         if (DrawSmoothMonitor())
             return;
 
-        uint deathScreenTimer = g_DeathScreenTimer;
+        uint32_t deathScreenTimer = g_DeathScreenTimer;
 
         if (deathScreenTimer && g_ScreenEffectManager.Mode != SEM_NONE)
             deathScreenTimer = 0;
@@ -1833,7 +1833,7 @@ void CGameScreen::Render(bool mode)
                 if (land != nullptr && land->IsStretched)
                     tz = (char)land->Serial;
 
-                uint tiledataFlags = (uint)(
+                uint32_t tiledataFlags = (uint32_t)(
                     selRwo->IsStaticGroupObject() ?
                         ((CRenderStaticObject *)selRwo)->GetStaticData()->Flags :
                         0);
@@ -1880,7 +1880,7 @@ void CGameScreen::Render(bool mode)
 
         // отрисовка ввода игрока
         g_GameConsole.DrawW(
-            (uchar)g_ConfigManager.SpeechFont,
+            (uint8_t)g_ConfigManager.SpeechFont,
             g_ConfigManager.SpeechColor,
             g_RenderBounds.GameWindowPosX,
             g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
@@ -2122,10 +2122,10 @@ void CGameScreen::OnLeftMouseButtonUp()
 
         if (rwo != nullptr)
         {
-            uint drop_container = 0xFFFFFFFF;
+            uint32_t drop_container = 0xFFFFFFFF;
             bool can_drop = false;
-            ushort dropX = 0;
-            ushort dropY = 0;
+            uint16_t dropX = 0;
+            uint16_t dropY = 0;
             char dropZ = 0;
 
             if (rwo->IsGameObject() && g_ObjectInHand.Enabled)
@@ -2204,7 +2204,7 @@ void CGameScreen::OnLeftMouseButtonUp()
 
                         if (td == nullptr || td->Timer < g_Ticks)
                         {
-                            ushort id = rwo->Graphic;
+                            uint16_t id = rwo->Graphic;
 
                             wstring str =
                                 g_ClilocManager.Cliloc(g_Language)
@@ -2248,7 +2248,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
-    uint charUnderMouse = 0;
+    uint32_t charUnderMouse = 0;
 
     if (g_SelectedObject.Gump && g_GumpManager.OnLeftMouseButtonDoubleClick(false))
         result = true;
@@ -2271,7 +2271,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
             if (td->Type == TT_OBJECT)
             {
-                uint serial = td->Serial;
+                uint32_t serial = td->Serial;
 
                 CGameObject *obj = g_World->FindWorldObject(serial);
 

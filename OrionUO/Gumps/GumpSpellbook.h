@@ -12,15 +12,15 @@
 
 struct SPELL_REQURIES
 {
-    uchar ManaCost;
-    uchar MinSkill;
+    uint8_t ManaCost;
+    uint8_t MinSkill;
 };
 
 struct PALADIN_SPELL_REQURIES
 {
-    uchar ManaCost;
-    uchar MinSkill;
-    uchar TithingPoints;
+    uint8_t ManaCost;
+    uint8_t MinSkill;
+    uint8_t TithingPoints;
 };
 
 class CGumpSpellbook : public CGump
@@ -72,7 +72,7 @@ private:
     //static const SPELL_REQURIES m_SpellRequries7[SPELLBOOK_7_SPELLS_COUNT];
 
     int m_SpellCount{ 0 };
-    uchar m_Spells[MAX_SPELLS_COUNT];
+    uint8_t m_Spells[MAX_SPELLS_COUNT];
     int PageCount{ 8 };
 
     CGUIGumppic *m_Body{ nullptr };
@@ -91,21 +91,21 @@ private:
         int &dictionaryPagesCount,
         int &spellsOnPage,
         int &spellIndexOffset,
-        ushort &graphic,
-        ushort &minimizedGraphic,
-        ushort &iconStartGraphic);
+        uint16_t &graphic,
+        uint16_t &minimizedGraphic,
+        uint16_t &iconStartGraphic);
 
     string GetSpellName(int offset, string &abbreviature, string &reagents);
 
     string GetSpellRequries(int offset, int &y);
 
 public:
-    CGumpSpellbook(uint serial, int x, int y);
+    CGumpSpellbook(uint32_t serial, int x, int y);
     virtual ~CGumpSpellbook();
 
     static void InitStaticData();
 
-    void UpdateGraphic(ushort parentGraphic);
+    void UpdateGraphic(uint16_t parentGraphic);
 
     virtual void DelayedClick(CRenderObject *obj);
 

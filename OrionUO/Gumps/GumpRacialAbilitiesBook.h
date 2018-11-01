@@ -33,7 +33,7 @@ private:
     CGUIButton *m_PrevPage{ nullptr };
     CGUIButton *m_NextPage{ nullptr };
 
-    void GetSummaryBookInfo(int &abilityOnPage, ushort &iconStartGraphic);
+    void GetSummaryBookInfo(int &abilityOnPage, uint16_t &iconStartGraphic);
 
     string GetAbilityName(int offset, bool &passive);
 

@@ -70,7 +70,7 @@ int CApplication::Run(HINSTANCE hinstance)
 #endif
 }
 
-string CApplication::GetFileVersion(uint *numericVerion) const
+string CApplication::GetFileVersion(uint32_t *numericVerion) const
 {
 #if USE_WISP
     //File version info

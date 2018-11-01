@@ -21,7 +21,7 @@ CSkillGroupObject::~CSkillGroupObject()
 {
 }
 
-uchar CSkillGroupObject::GetItem(intptr_t index)
+uint8_t CSkillGroupObject::GetItem(intptr_t index)
 {
     DEBUG_TRACE_FUNCTION;
     if (index < 0 || index >= Count)
@@ -30,7 +30,7 @@ uchar CSkillGroupObject::GetItem(intptr_t index)
     return m_Items[index];
 }
 
-void CSkillGroupObject::Add(uchar index)
+void CSkillGroupObject::Add(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     if (Contains(index))
@@ -40,7 +40,7 @@ void CSkillGroupObject::Add(uchar index)
     Count++;
 }
 
-void CSkillGroupObject::AddSorted(uchar index)
+void CSkillGroupObject::AddSorted(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     if (Contains(index))
@@ -52,7 +52,7 @@ void CSkillGroupObject::AddSorted(uchar index)
     Sort();
 }
 
-void CSkillGroupObject::Remove(uchar index)
+void CSkillGroupObject::Remove(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     bool removed = false;
@@ -81,7 +81,7 @@ void CSkillGroupObject::Remove(uchar index)
     }
 }
 
-bool CSkillGroupObject::Contains(uchar index)
+bool CSkillGroupObject::Contains(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < Count; i++)
@@ -99,7 +99,7 @@ void CSkillGroupObject::Sort()
     BYTE table[60] = { 0 };
     int Ptr = 0;
 
-    for (uint i = 0; i < g_SkillsManager.Count; i++)
+    for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
     {
         for (int j = 0; j < Count; j++)
         {

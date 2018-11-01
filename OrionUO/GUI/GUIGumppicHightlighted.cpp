@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIGumppicHightlighted::CGUIGumppicHightlighted(
-    int serial, ushort graphic, ushort color, ushort selectedColor, int x, int y)
+    int serial, uint16_t graphic, uint16_t color, uint16_t selectedColor, int x, int y)
     : CGUIDrawObject(GOT_GUMPPICHIGHTLIGHTED, serial, graphic, color, x, y)
     , SelectedColor(selectedColor)
 {

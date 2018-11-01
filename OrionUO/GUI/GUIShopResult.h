@@ -16,7 +16,7 @@ class CGUIShopResult : public CBaseGUI
 {
 public:
     //!Стоимость
-    uint Price = 0;
+    uint32_t Price = 0;
 
     //!Название
     string Name = "";

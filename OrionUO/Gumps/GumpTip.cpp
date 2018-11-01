@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpTip::CGumpTip(uint serial, short x, short y, string str, bool updates)
+CGumpTip::CGumpTip(uint32_t serial, short x, short y, string str, bool updates)
     : CGumpBaseScroll(GT_TIP, serial, 0x0820, 250, x, y, true)
     , Updates(updates)
 {
@@ -93,11 +93,11 @@ bool CGumpTip::OnLeftMouseButtonDoubleClick()
     return false;
 }
 
-void CGumpTip::SendTipRequest(uchar flag)
+void CGumpTip::SendTipRequest(uint8_t flag)
 {
     DEBUG_TRACE_FUNCTION;
     //Отправляем запрос диалога Tip/Updates
-    CPacketTipRequest((ushort)Serial, flag).Send();
+    CPacketTipRequest((uint16_t)Serial, flag).Send();
 
     //Удаляем использованный гамп
     RemoveMark = true;

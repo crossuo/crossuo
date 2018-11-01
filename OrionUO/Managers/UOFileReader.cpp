@@ -24,7 +24,7 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
     size_t dataStart = io.Address;
-    puint lookupList = (puint)dataStart;
+    uint32_t * lookupList = (uint32_t *)dataStart;
 
     int blocksize = io.Width * io.Height;
 
@@ -44,7 +44,7 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
         return pixels;
     }
 
-    ushort color = io.Color;
+    uint16_t color = io.Color;
 
     for (int y = 0; y < io.Height; y++)
     {
@@ -60,12 +60,12 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 
         for (int i = 0; i < gSize; i++)
         {
-            ushort val = gmul[i].Value;
+            uint16_t val = gmul[i].Value;
 
             if (color && val)
                 val = g_ColorManager.GetColor16(val, color);
 
-            ushort a = (val ? 0x8000 : 0) | val;
+            uint16_t a = (val ? 0x8000 : 0) | val;
 
             int count = gmul[i].Run;
 
@@ -99,13 +99,13 @@ CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
 }
 
 vector<uint16_t>
-UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, short &height)
+UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height)
 {
     DEBUG_TRACE_FUNCTION;
 
-    uint flag = *(puint)io.Address;
-    pushort P = (pushort)io.Address;
-    ushort color = io.Color;
+    uint32_t flag = *(uint32_t *)io.Address;
+    uint16_t *P = (uint16_t *)io.Address;
+    uint16_t color = io.Color;
 
     vector<uint16_t> pixels;
 
@@ -123,7 +123,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
             for (int j = start; j < end; j++)
             {
-                ushort val = *P++;
+                uint16_t val = *P++;
 
                 if (color && val)
                     val = g_ColorManager.GetColor16(val, color);
@@ -142,7 +142,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
             for (int j = i; j < end; j++)
             {
-                ushort val = *P++;
+                uint16_t val = *P++;
 
                 if (color && val)
                     val = g_ColorManager.GetColor16(val, color);
@@ -160,19 +160,19 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
         if (g_Orion.IsTreeTile(id, stumpIndex))
         {
-            pushort ptr = nullptr;
+            uint16_t *ptr = nullptr;
 
             if (stumpIndex == g_StumpHatchedID)
             {
                 width = g_StumpHatchedWidth;
                 height = g_StumpHatchedHeight;
-                ptr = (pushort)g_StumpHatched;
+                ptr = (uint16_t *)g_StumpHatched;
             }
             else
             {
                 width = g_StumpWidth;
                 height = g_StumpHeight;
-                ptr = (pushort)g_Stump;
+                ptr = (uint16_t *)g_Stump;
             }
 
             int blocksize = width * height;
@@ -192,7 +192,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
         }
         else
         {
-            pushort ptr = (pushort)(io.Address + 4);
+            uint16_t *ptr = (uint16_t *)(io.Address + 4);
 
             width = *ptr;
             if (!width || width >= 1024)
@@ -213,13 +213,13 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
             ptr++;
 
-            pushort lineOffsets = ptr;
-            puchar dataStart = (puchar)ptr + (height * 2);
+            uint16_t *lineOffsets = ptr;
+            uint8_t *dataStart = (uint8_t *)ptr + (height * 2);
 
             int X = 0;
             int Y = 0;
-            ushort XOffs = 0;
-            ushort Run = 0;
+            uint16_t XOffs = 0;
+            uint16_t Run = 0;
 
             int blocksize = width * height;
 
@@ -233,7 +233,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
                 return pixels;
             }
 
-            ptr = (pushort)(dataStart + (lineOffsets[0] * 2));
+            ptr = (uint16_t *)(dataStart + (lineOffsets[0] * 2));
 
             while (Y < height)
             {
@@ -254,7 +254,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
                     for (int j = 0; j < Run; j++)
                     {
-                        ushort val = *ptr++;
+                        uint16_t val = *ptr++;
 
                         if (val)
                         {
@@ -273,7 +273,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
                 {
                     X = 0;
                     Y++;
-                    ptr = (pushort)(dataStart + (lineOffsets[Y] * 2));
+                    ptr = (uint16_t *)(dataStart + (lineOffsets[Y] * 2));
                 }
             }
 
@@ -301,7 +301,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 
                     for (int x = 0; x < width; x++)
                     {
-                        ushort &pixel = pixels[y * width + x];
+                        uint16_t &pixel = pixels[y * width + x];
 
                         if (pixel)
                         {
@@ -316,7 +316,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
                                 {
                                     int currentX = (int)x + (int)j;
 
-                                    ushort &currentPixel = pixels[currentY * width + currentX];
+                                    uint16_t &currentPixel = pixels[currentY * width + currentX];
 
                                     if (!currentPixel)
                                         pixel = 0x8000;
@@ -338,7 +338,7 @@ UOFileReader::GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, 
 @param [__in] io Ссылка на данные о арте
 @return Ссылка на данные о текстуре
 */
-CGLTexture *UOFileReader::ReadArt(ushort id, CIndexObject &io, bool run)
+CGLTexture *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *texture = nullptr;
@@ -440,10 +440,10 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = new CGLTexture();
     th->Texture = 0;
-    ushort color = io.Color;
+    uint16_t color = io.Color;
 
-    ushort w = 64;
-    ushort h = 64;
+    uint16_t w = 64;
+    uint16_t h = 64;
 
     if (io.DataSize == 0x2000)
     {
@@ -464,7 +464,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 
     vector<uint16_t> pixels(w * h);
 
-    pushort P = (pushort)io.Address;
+    uint16_t *P = (uint16_t *)io.Address;
 
     for (int i = 0; i < h; i++)
     {
@@ -472,7 +472,7 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 
         for (int j = 0; j < w; j++)
         {
-            ushort val = *P++;
+            uint16_t val = *P++;
 
             if (color)
                 val = g_ColorManager.GetColor16(val, color);
@@ -501,7 +501,7 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 
     vector<uint16_t> pixels(io.Width * io.Height);
 
-    puchar p = (puchar)io.Address;
+    uint8_t *p = (uint8_t *)io.Address;
 
     for (int i = 0; i < io.Height; i++)
     {
@@ -509,7 +509,7 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 
         for (int j = 0; j < io.Width; j++)
         {
-            ushort val = (*p << 10) | (*p << 5) | *p;
+            uint16_t val = (*p << 10) | (*p << 5) | *p;
             p++;
             pixels[pos + j] = (val ? 0x8000 : 0) | val;
         }

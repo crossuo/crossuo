@@ -13,7 +13,7 @@
 class CGumpGrayMenu : public CGump
 {
 public:
-    CGumpGrayMenu(uint serial, uint id, short x, short y);
+    CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y);
     virtual ~CGumpGrayMenu();
 
     static const int ID_GGM_CANCEL = 1000;

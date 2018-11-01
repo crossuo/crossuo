@@ -41,8 +41,8 @@ protected:
     virtual void OnDeactivate();
     virtual void OnShow(bool show);
     virtual void OnSetText(const LPARAM &lParam);
-    virtual void OnTimer(uint id);
-    virtual void OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer);
+    virtual void OnTimer(uint32_t id);
+    virtual void OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer);
     virtual HRESULT OnRepaint(const WPARAM &wParam, const LPARAM &lParam);
     virtual bool OnUserMessages(const UserEvent &ev) override;
 #if USE_WISP

@@ -29,7 +29,7 @@ CPacketFirstLogin::CPacketFirstLogin()
     }
 }
 
-CPacketSelectServer::CPacketSelectServer(uchar index)
+CPacketSelectServer::CPacketSelectServer(uint8_t index)
     : CPacket(3)
 {
     WriteUInt8(0xA0);
@@ -59,7 +59,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     : CPacket(104)
 {
     int skillsCount = 3;
-    uint packetID = 0x00;
+    uint32_t packetID = 0x00;
 
     if (g_PacketManager.GetClientVersion() >= CV_70160)
     {
@@ -78,7 +78,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     //Move(30); //На самом деле, клиент пихает сюда пароль на 30 байт, но по какой-то причине (мб мусор в памяти) - идет то что идет
     WriteUInt16BE(0x0000); //?
 
-    uint clientFlag = 0;
+    uint32_t clientFlag = 0;
     for (int i = 0; i < g_CharacterList.ClientFlag; i++)
         clientFlag |= (1 << i);
 
@@ -87,22 +87,22 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     WriteUInt32BE(0x00000000); //logincount
 
     CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
-    uchar val = (uchar)profession->DescriptionIndex;
+    uint8_t val = (uint8_t)profession->DescriptionIndex;
     WriteUInt8(val); //profession
     Move(15);        //?
 
     if (g_PacketManager.GetClientVersion() < CV_4011D)
     {
-        val = (uchar)g_CreateCharacterManager.GetFemale();
+        val = (uint8_t)g_CreateCharacterManager.GetFemale();
     }
     else
     {
-        val = (uchar)g_CreateCharacterManager.GetRace();
+        val = (uint8_t)g_CreateCharacterManager.GetRace();
 
         if (g_PacketManager.GetClientVersion() < CV_7000)
             val--;
 
-        val = (val * 2) + (uchar)g_CreateCharacterManager.GetFemale();
+        val = (val * 2) + (uint8_t)g_CreateCharacterManager.GetFemale();
     }
 
     WriteUInt8(val);
@@ -136,17 +136,17 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
 
     if (g_PacketManager.GetClientVersion() >= CV_70160)
     {
-        ushort location = g_SelectTownScreen.m_City->LocationIndex;
+        uint16_t location = g_SelectTownScreen.m_City->LocationIndex;
 
         WriteUInt16BE(location); //location
         WriteUInt16BE(0x0000);   //?
 
-        ushort slot = 0xFFFF;
+        uint16_t slot = 0xFFFF;
         for (int i = 0; i < g_CharacterList.Count; i++)
         {
             if (!g_CharacterList.GetName(i).length())
             {
-                slot = (ushort)i;
+                slot = (uint16_t)i;
                 break;
             }
         }
@@ -156,24 +156,24 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     else
     {
         CServer *server = g_ServerList.GetSelectedServer();
-        uchar serverIndex = 0;
+        uint8_t serverIndex = 0;
 
         if (server != nullptr)
-            serverIndex = (uchar)server->Index;
+            serverIndex = (uint8_t)server->Index;
 
         WriteUInt8(serverIndex); //server index
 
-        uchar location = g_SelectTownScreen.m_City->LocationIndex;
+        uint8_t location = g_SelectTownScreen.m_City->LocationIndex;
         if (g_PacketManager.GetClientVersion() < CV_70130)
             location--;
         WriteUInt8(location); //location
 
-        uint slot = 0xFFFFFFFF;
+        uint32_t slot = 0xFFFFFFFF;
         for (int i = 0; i < g_CharacterList.Count; i++)
         {
             if (!g_CharacterList.GetName(i).length())
             {
-                slot = (uint)i;
+                slot = (uint32_t)i;
                 break;
             }
         }
@@ -209,7 +209,7 @@ CPacketSelectCharacter::CPacketSelectCharacter(int index, const string &name)
     WriteString(name.c_str(), 30, false);
     Move(2);
 
-    uint clientFlag = 0;
+    uint32_t clientFlag = 0;
 
     for (int i = 0; i < g_CharacterList.ClientFlag; i++)
         clientFlag |= (1 << i);
@@ -221,7 +221,7 @@ CPacketSelectCharacter::CPacketSelectCharacter(int index, const string &name)
     WriteDataBE(g_ConnectionManager.GetClientIP(), 4);
 }
 
-CPacketPickupRequest::CPacketPickupRequest(uint serial, ushort count)
+CPacketPickupRequest::CPacketPickupRequest(uint32_t serial, uint16_t count)
     : CPacket(7)
 {
     WriteUInt8(0x07);
@@ -230,7 +230,7 @@ CPacketPickupRequest::CPacketPickupRequest(uint serial, ushort count)
 }
 
 CPacketDropRequestOld::CPacketDropRequestOld(
-    uint serial, ushort x, ushort y, char z, uint container)
+    uint32_t serial, uint16_t x, uint16_t y, char z, uint32_t container)
     : CPacket(14)
 {
     WriteUInt8(0x08);
@@ -242,7 +242,7 @@ CPacketDropRequestOld::CPacketDropRequestOld(
 }
 
 CPacketDropRequestNew::CPacketDropRequestNew(
-    uint serial, ushort x, ushort y, char z, uchar slot, uint container)
+    uint32_t serial, uint16_t x, uint16_t y, char z, uint8_t slot, uint32_t container)
     : CPacket(15)
 {
     WriteUInt8(0x08);
@@ -254,7 +254,7 @@ CPacketDropRequestNew::CPacketDropRequestNew(
     WriteUInt32BE(container);
 }
 
-CPacketEquipRequest::CPacketEquipRequest(uint serial, uchar layer, uint container)
+CPacketEquipRequest::CPacketEquipRequest(uint32_t serial, uint8_t layer, uint32_t container)
     : CPacket(10)
 {
     WriteUInt8(0x13);
@@ -263,7 +263,7 @@ CPacketEquipRequest::CPacketEquipRequest(uint serial, uchar layer, uint containe
     WriteUInt32BE(container);
 }
 
-CPacketChangeWarmode::CPacketChangeWarmode(uchar state)
+CPacketChangeWarmode::CPacketChangeWarmode(uint8_t state)
     : CPacket(5)
 {
     WriteUInt8(0x72);
@@ -277,7 +277,7 @@ CPacketHelpRequest::CPacketHelpRequest()
     WriteUInt8(0x9B);
 }
 
-CPacketStatusRequest::CPacketStatusRequest(uint serial)
+CPacketStatusRequest::CPacketStatusRequest(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0x34);
@@ -286,7 +286,7 @@ CPacketStatusRequest::CPacketStatusRequest(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketSkillsRequest::CPacketSkillsRequest(uint serial)
+CPacketSkillsRequest::CPacketSkillsRequest(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0x34);
@@ -295,30 +295,30 @@ CPacketSkillsRequest::CPacketSkillsRequest(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketSkillsStatusChangeRequest::CPacketSkillsStatusChangeRequest(uchar skill, uchar state)
+CPacketSkillsStatusChangeRequest::CPacketSkillsStatusChangeRequest(uint8_t skill, uint8_t state)
     : CPacket(6)
 {
     WriteUInt8(0x3A);
     WriteUInt16BE(0x0006);
-    WriteUInt16BE((ushort)skill);
+    WriteUInt16BE((uint16_t)skill);
     WriteUInt8(state);
 }
 
-CPacketClickRequest::CPacketClickRequest(uint serial)
+CPacketClickRequest::CPacketClickRequest(uint32_t serial)
     : CPacket(5)
 {
     WriteUInt8(0x09);
     WriteUInt32BE(serial);
 }
 
-CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint serial)
+CPacketDoubleClickRequest::CPacketDoubleClickRequest(uint32_t serial)
     : CPacket(5)
 {
     WriteUInt8(0x06);
     WriteUInt32BE(serial);
 }
 
-CPacketAttackRequest::CPacketAttackRequest(uint serial)
+CPacketAttackRequest::CPacketAttackRequest(uint32_t serial)
     : CPacket(5)
 {
     WriteUInt8(0x05);
@@ -334,7 +334,7 @@ CPacketClientVersion::CPacketClientVersion(string version)
 }
 
 CPacketASCIISpeechRequest::CPacketASCIISpeechRequest(
-    const char *text, SPEECH_TYPE type, ushort font, ushort color)
+    const char *text, SPEECH_TYPE type, uint16_t font, uint16_t color)
     : CPacket(1)
 {
     size_t len = strlen(text);
@@ -342,7 +342,7 @@ CPacketASCIISpeechRequest::CPacketASCIISpeechRequest(
     Resize(size, true);
 
     WriteUInt8(0x03);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(type);
     WriteUInt16BE(color);
     WriteUInt16BE(font);
@@ -350,13 +350,13 @@ CPacketASCIISpeechRequest::CPacketASCIISpeechRequest(
 }
 
 CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
-    const wchar_t *text, SPEECH_TYPE type, ushort font, ushort color, puchar language)
+    const wchar_t *text, SPEECH_TYPE type, uint16_t font, uint16_t color, uint8_t *language)
     : CPacket(1)
 {
     size_t len = lstrlenW(text);
     size_t size = 12;
 
-    uchar typeValue = (uchar)type;
+    uint8_t typeValue = (uint8_t)type;
 
     vector<uint32_t> codes;
     g_SpeechManager.GetKeywords(text, codes);
@@ -364,7 +364,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     //encoded
     bool encoded = codes.size() > 0;
     string utf8string = "";
-    vector<uchar> codeBytes;
+    vector<uint8_t> codeBytes;
 
     if (encoded)
     {
@@ -412,7 +412,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     Resize(size, true);
 
     WriteUInt8(0xAD);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(typeValue);
     WriteUInt16BE(color);
     WriteUInt16BE(font);
@@ -457,13 +457,13 @@ CPacketCastSpell::CPacketCastSpell(int index)
         Resize(size, true);
 
         WriteUInt8(0x12);
-        WriteUInt16BE((ushort)size);
+        WriteUInt16BE((uint16_t)size);
         WriteUInt8(0x56);
         WriteString(spell, len, false);
     }
 }
 
-CPacketCastSpellFromBook::CPacketCastSpellFromBook(int index, uint serial)
+CPacketCastSpellFromBook::CPacketCastSpellFromBook(int index, uint32_t serial)
     : CPacket(1)
 {
     char spell[25] = { 0 };
@@ -474,7 +474,7 @@ CPacketCastSpellFromBook::CPacketCastSpellFromBook(int index, uint serial)
     Resize(size, true);
 
     WriteUInt8(0x12);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(0x27);
     WriteString(spell, len, false);
 }
@@ -490,7 +490,7 @@ CPacketUseSkill::CPacketUseSkill(int index)
     Resize(size, true);
 
     WriteUInt8(0x12);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(0x24);
     WriteString(skill, len, false);
 }
@@ -520,7 +520,7 @@ CPacketEmoteAction::CPacketEmoteAction(const char *action)
     Resize(size, true);
 
     WriteUInt8(0x12);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(0xC7);
     WriteString(action, len, false);
 }
@@ -564,7 +564,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     g_PacketManager.SetCachedGumpCoords(gump->ID, gump->GetX(), gump->GetY());
 
     WriteUInt8(0xB1);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
     WriteUInt32BE(gump->MasterGump ? gump->MasterGump : gump->ID);
     WriteUInt32BE(code);
@@ -591,7 +591,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
             size_t len =
                 (((entry->m_Entry.Length()) < (MAX_TEXTENTRY_LENGTH)) ? (entry->m_Entry.Length()) :
                                                                         (MAX_TEXTENTRY_LENGTH));
-            WriteUInt16BE((ushort)len);
+            WriteUInt16BE((uint16_t)len);
             WriteWString(entry->m_Entry.Data(), len, true, false);
         }
     }
@@ -677,18 +677,18 @@ CPacketTextEntryDialogResponse::CPacketTextEntryDialogResponse(
     Resize(size, true);
 
     WriteUInt8(0xAC);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
     WriteUInt8(gump->ButtonID);
     WriteUInt8(0);
     WriteUInt8(code ? 0x01 : 0x00);
 
-    WriteUInt16BE((ushort)len + 1);
+    WriteUInt16BE((uint16_t)len + 1);
 
     WriteString(entry->c_str(), len);
 }
 
-CPacketRenameRequest::CPacketRenameRequest(uint serial, string newName)
+CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, string newName)
     : CPacket(35)
 {
     WriteUInt8(0x75);
@@ -696,7 +696,7 @@ CPacketRenameRequest::CPacketRenameRequest(uint serial, string newName)
     WriteString(newName.c_str(), newName.length(), false);
 }
 
-CPacketTipRequest::CPacketTipRequest(ushort id, uchar flag)
+CPacketTipRequest::CPacketTipRequest(uint16_t id, uint8_t flag)
     : CPacket(4)
 {
     WriteUInt8(0xA7);
@@ -711,8 +711,8 @@ CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(const char *text, size_t 
     Resize(size, true);
 
     WriteDataLE(g_LastASCIIPrompt, 11);
-    pack16(&m_Data[0] + 1, (ushort)size);
-    WriteUInt32BE((uint)((bool)!cancel));
+    pack16(&m_Data[0] + 1, (uint16_t)size);
+    WriteUInt32BE((uint32_t)((bool)!cancel));
 
     WriteString(text, len);
 }
@@ -725,14 +725,14 @@ CPacketUnicodePromptResponse::CPacketUnicodePromptResponse(
     Resize(size, true);
 
     WriteDataLE(g_LastUnicodePrompt, 11);
-    pack16(&m_Data[0] + 1, (ushort)size);
-    WriteUInt32BE((uint)((bool)!cancel));
+    pack16(&m_Data[0] + 1, (uint16_t)size);
+    WriteUInt32BE((uint32_t)((bool)!cancel));
     WriteString(lang, 4, false);
 
     WriteWString(text, len, false, false);
 }
 
-CPacketDyeDataResponse::CPacketDyeDataResponse(uint serial, ushort graphic, ushort color)
+CPacketDyeDataResponse::CPacketDyeDataResponse(uint32_t serial, uint16_t graphic, uint16_t color)
     : CPacket(9)
 {
     WriteUInt8(0x95);
@@ -741,7 +741,7 @@ CPacketDyeDataResponse::CPacketDyeDataResponse(uint serial, ushort graphic, usho
     WriteUInt16BE(color);
 }
 
-CPacketProfileRequest::CPacketProfileRequest(uint serial)
+CPacketProfileRequest::CPacketProfileRequest(uint32_t serial)
     : CPacket(8)
 {
     WriteUInt8(0xB8);
@@ -750,22 +750,22 @@ CPacketProfileRequest::CPacketProfileRequest(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketProfileUpdate::CPacketProfileUpdate(uint serial, const wchar_t *text, size_t len)
+CPacketProfileUpdate::CPacketProfileUpdate(uint32_t serial, const wchar_t *text, size_t len)
     : CPacket(1)
 {
     size_t size = 12 + (len * 2);
     Resize(size, true);
 
     WriteUInt8(0xB8);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(1);
     WriteUInt32BE(serial);
     WriteUInt16BE(0x0001);
-    WriteUInt16BE((ushort)len);
+    WriteUInt16BE((uint16_t)len);
     WriteWString(text, len, true, false);
 }
 
-CPacketCloseStatusbarGump::CPacketCloseStatusbarGump(uint serial)
+CPacketCloseStatusbarGump::CPacketCloseStatusbarGump(uint32_t serial)
     : CPacket(9)
 {
     WriteUInt8(0xBF);
@@ -784,7 +784,7 @@ CPacketPartyInviteRequest::CPacketPartyInviteRequest()
     WriteUInt32BE(0x00000000);
 }
 
-CPacketPartyRemoveRequest::CPacketPartyRemoveRequest(uint serial)
+CPacketPartyRemoveRequest::CPacketPartyRemoveRequest(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0xBF);
@@ -794,7 +794,7 @@ CPacketPartyRemoveRequest::CPacketPartyRemoveRequest(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketPartyChangeLootTypeRequest::CPacketPartyChangeLootTypeRequest(uchar type)
+CPacketPartyChangeLootTypeRequest::CPacketPartyChangeLootTypeRequest(uint8_t type)
     : CPacket(7)
 {
     WriteUInt8(0xBF);
@@ -804,7 +804,7 @@ CPacketPartyChangeLootTypeRequest::CPacketPartyChangeLootTypeRequest(uchar type)
     WriteUInt8(type);
 }
 
-CPacketPartyAccept::CPacketPartyAccept(uint serial)
+CPacketPartyAccept::CPacketPartyAccept(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0xBF);
@@ -814,7 +814,7 @@ CPacketPartyAccept::CPacketPartyAccept(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketPartyDecline::CPacketPartyDecline(uint serial)
+CPacketPartyDecline::CPacketPartyDecline(uint32_t serial)
     : CPacket(10)
 {
     WriteUInt8(0xBF);
@@ -824,14 +824,14 @@ CPacketPartyDecline::CPacketPartyDecline(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketPartyMessage::CPacketPartyMessage(const wchar_t *text, size_t len, uint serial)
+CPacketPartyMessage::CPacketPartyMessage(const wchar_t *text, size_t len, uint32_t serial)
     : CPacket(1)
 {
     size_t size = 10 + (len * 2) + 2;
     Resize(size, true);
 
     WriteUInt8(0xBF);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt16BE(0x0006);
 
     if (serial) //Private message to member
@@ -855,7 +855,7 @@ CPacketGameWindowSize::CPacketGameWindowSize()
     WriteUInt32BE(g_ConfigManager.GameWindowHeight);
 }
 
-CPacketClientViewRange::CPacketClientViewRange(uchar range)
+CPacketClientViewRange::CPacketClientViewRange(uint8_t range)
     : CPacket(2)
 {
     WriteUInt8(0xC8);
@@ -868,7 +868,7 @@ CPacketClientViewRange::CPacketClientViewRange(uchar range)
     WriteUInt8(range);
 }
 
-CPacketBulletinBoardRequestMessage::CPacketBulletinBoardRequestMessage(uint serial, uint msgSerial)
+CPacketBulletinBoardRequestMessage::CPacketBulletinBoardRequestMessage(uint32_t serial, uint32_t msgSerial)
     : CPacket(12)
 {
     WriteUInt8(0x71);
@@ -879,7 +879,7 @@ CPacketBulletinBoardRequestMessage::CPacketBulletinBoardRequestMessage(uint seri
 }
 
 CPacketBulletinBoardRequestMessageSummary::CPacketBulletinBoardRequestMessageSummary(
-    uint serial, uint msgSerial)
+    uint32_t serial, uint32_t msgSerial)
     : CPacket(12)
 {
     WriteUInt8(0x71);
@@ -890,7 +890,7 @@ CPacketBulletinBoardRequestMessageSummary::CPacketBulletinBoardRequestMessageSum
 }
 
 CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
-    uint serial, uint replySerial, const char *subject, const char *message)
+    uint32_t serial, uint32_t replySerial, const char *subject, const char *message)
     : CPacket(1)
 {
     size_t subjectLen = strlen(subject);
@@ -920,12 +920,12 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     Resize(size, true);
 
     WriteUInt8(0x71);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt8(0x05);
     WriteUInt32BE(serial);
     WriteUInt32BE(replySerial);
 
-    WriteUInt8((uchar)subjectLen + 1);
+    WriteUInt8((uint8_t)subjectLen + 1);
     WriteString(subject, subjectLen, false);
     WriteUInt8(0);
 
@@ -958,7 +958,7 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     WriteUInt8(0);
 }
 
-CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(uint serial, uint msgSerial)
+CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(uint32_t serial, uint32_t msgSerial)
     : CPacket(12)
 {
     WriteUInt8(0x71);
@@ -968,14 +968,14 @@ CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(uint serial
     WriteUInt32BE(msgSerial);
 }
 
-CPacketAssistVersion::CPacketAssistVersion(uint version, string clientVersion)
+CPacketAssistVersion::CPacketAssistVersion(uint32_t version, string clientVersion)
     : CPacket(1)
 {
     size_t size = 7 + clientVersion.length() + 1;
     Resize(size, true);
 
     WriteUInt8(0xBE);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(version);
     WriteString(clientVersion.c_str(), clientVersion.length());
 }
@@ -1008,7 +1008,7 @@ CPacketClientType::CPacketClientType()
     WriteUInt16BE(0x000F);
     WriteUInt8(0x0A);
 
-    uint clientFlag = 0;
+    uint32_t clientFlag = 0;
 
     for (int i = 0; i < g_CharacterList.ClientFlag; i++)
         clientFlag |= (1 << i);
@@ -1016,7 +1016,7 @@ CPacketClientType::CPacketClientType()
     WriteUInt32BE(clientFlag);
 }
 
-CPacketRequestPopupMenu::CPacketRequestPopupMenu(uint serial)
+CPacketRequestPopupMenu::CPacketRequestPopupMenu(uint32_t serial)
     : CPacket(9)
 {
     WriteUInt8(0xBF);
@@ -1025,7 +1025,7 @@ CPacketRequestPopupMenu::CPacketRequestPopupMenu(uint serial)
     WriteUInt32BE(serial);
 }
 
-CPacketPopupMenuSelection::CPacketPopupMenuSelection(uint serial, ushort menuID)
+CPacketPopupMenuSelection::CPacketPopupMenuSelection(uint32_t serial, uint16_t menuID)
     : CPacket(11)
 {
     WriteUInt8(0xBF);
@@ -1051,7 +1051,7 @@ CPacketOpenChat::CPacketOpenChat(const wstring &name)
     }
 }
 
-CPacketMapMessage::CPacketMapMessage(uint serial, MAP_MESSAGE action, uchar pin, short x, short y)
+CPacketMapMessage::CPacketMapMessage(uint32_t serial, MAP_MESSAGE action, uint8_t pin, short x, short y)
     : CPacket(11)
 {
     WriteUInt8(0x56);
@@ -1104,7 +1104,7 @@ CPacketVirtureRequest::CPacketVirtureRequest(int buttonID)
     WriteUInt32BE(g_PlayerSerial);
 }
 
-CPacketInvokeVirtureRequest::CPacketInvokeVirtureRequest(uchar id)
+CPacketInvokeVirtureRequest::CPacketInvokeVirtureRequest(uint8_t id)
     : CPacket(6)
 {
     WriteUInt8(0x12);
@@ -1135,7 +1135,7 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(vector<uint32_t> &list)
     Resize(size, true);
 
     WriteUInt8(0xD6);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
 
     for (int i = 0; i < (int)len; i++)
         WriteUInt32BE(list[i]);
@@ -1146,7 +1146,7 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(vector<uint32_t> &list)
         list.clear();
 }
 
-CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uchar stat, uchar state)
+CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uint8_t stat, uint8_t state)
     : CPacket(7)
 {
     WriteUInt8(0xBF);
@@ -1164,8 +1164,8 @@ CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump)
 
     WriteUInt8(0xD4);
     WriteUInt32BE(gump->Serial);
-    WriteUInt16BE((ushort)0x0000); //flags
-    WriteUInt16BE((ushort)gump->PageCount);
+    WriteUInt16BE((uint16_t)0x0000); //flags
+    WriteUInt16BE((uint16_t)gump->PageCount);
     WriteString(gump->m_EntryTitle->m_Entry.GetTextA(), 60);
     WriteString(gump->m_EntryAuthor->m_Entry.GetTextA(), 30);
 }
@@ -1175,16 +1175,16 @@ CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
 {
     string title = EncodeUTF8(gump->m_EntryTitle->m_Entry.Data());
     string author = EncodeUTF8(gump->m_EntryAuthor->m_Entry.Data());
-    auto titlelen = (ushort)title.length();
-    auto authorlen = (ushort)author.length();
+    auto titlelen = (uint16_t)title.length();
+    auto authorlen = (uint16_t)author.length();
     size_t size = 16 + title.length() + author.length();
     Resize(size, true);
 
     WriteUInt8(0xD4);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
-    WriteUInt16BE((ushort)0x0000); //flags
-    WriteUInt16BE((ushort)gump->PageCount);
+    WriteUInt16BE((uint16_t)0x0000); //flags
+    WriteUInt16BE((uint16_t)gump->PageCount);
     WriteUInt16BE(titlelen);
     if (titlelen)
     {
@@ -1243,7 +1243,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
         Resize(size, true);
 
         WriteUInt8(0x66);
-        WriteUInt16BE((ushort)size);
+        WriteUInt16BE((uint16_t)size);
         WriteUInt32BE(gump->Serial);
         WriteUInt16BE(0x0001);
 
@@ -1298,7 +1298,7 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
     Resize(size, true);
 
     WriteUInt8(0x3B);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
 
     if (count)
@@ -1337,7 +1337,7 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     Resize(size, true);
 
     WriteUInt8(0x9F);
-    WriteUInt16BE((ushort)size);
+    WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
     WriteUInt16BE(count);
 
@@ -1351,7 +1351,7 @@ CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)
     }
 }
 
-CPacketUseCombatAbility::CPacketUseCombatAbility(uchar index)
+CPacketUseCombatAbility::CPacketUseCombatAbility(uint8_t index)
     : CPacket(15)
 {
     WriteUInt8(0xD7);
@@ -1415,7 +1415,7 @@ CPacketResend::CPacketResend()
     WriteUInt8(0x22);
 }
 
-CPacketWalkRequest::CPacketWalkRequest(uchar direction, uchar sequence, int fastWalkKey)
+CPacketWalkRequest::CPacketWalkRequest(uint8_t direction, uint8_t sequence, int fastWalkKey)
     : CPacket(7)
 {
     WriteUInt8(0x02);
@@ -1464,7 +1464,7 @@ CPacketCustomHouseBuildingExit::CPacketCustomHouseBuildingExit()
     WriteUInt8(0x0A);
 }
 
-CPacketCustomHouseGoToFloor::CPacketCustomHouseGoToFloor(uchar floor)
+CPacketCustomHouseGoToFloor::CPacketCustomHouseGoToFloor(uint8_t floor)
     : CPacket(15)
 {
     WriteUInt8(0xD7);
@@ -1516,7 +1516,7 @@ CPacketCustomHouseResponse::CPacketCustomHouseResponse()
     WriteUInt8(0x0A);
 }
 
-CPacketCustomHouseAddItem::CPacketCustomHouseAddItem(ushort graphic, int x, int y)
+CPacketCustomHouseAddItem::CPacketCustomHouseAddItem(uint16_t graphic, int x, int y)
     : CPacket(25)
 {
     WriteUInt8(0xD7);
@@ -1532,7 +1532,7 @@ CPacketCustomHouseAddItem::CPacketCustomHouseAddItem(ushort graphic, int x, int 
     WriteUInt8(0x0A);
 }
 
-CPacketCustomHouseDeleteItem::CPacketCustomHouseDeleteItem(ushort graphic, int x, int y, int z)
+CPacketCustomHouseDeleteItem::CPacketCustomHouseDeleteItem(uint16_t graphic, int x, int y, int z)
     : CPacket(30)
 {
     WriteUInt8(0xD7);
@@ -1550,7 +1550,7 @@ CPacketCustomHouseDeleteItem::CPacketCustomHouseDeleteItem(ushort graphic, int x
     WriteUInt8(0x0A);
 }
 
-CPacketCustomHouseAddRoof::CPacketCustomHouseAddRoof(ushort graphic, int x, int y, int z)
+CPacketCustomHouseAddRoof::CPacketCustomHouseAddRoof(uint16_t graphic, int x, int y, int z)
     : CPacket(30)
 {
     WriteUInt8(0xD7);
@@ -1568,7 +1568,7 @@ CPacketCustomHouseAddRoof::CPacketCustomHouseAddRoof(ushort graphic, int x, int 
     WriteUInt8(0x0A);
 }
 
-CPacketCustomHouseDeleteRoof::CPacketCustomHouseDeleteRoof(ushort graphic, int x, int y, int z)
+CPacketCustomHouseDeleteRoof::CPacketCustomHouseDeleteRoof(uint16_t graphic, int x, int y, int z)
     : CPacket(30)
 {
     WriteUInt8(0xD7);
@@ -1586,7 +1586,7 @@ CPacketCustomHouseDeleteRoof::CPacketCustomHouseDeleteRoof(ushort graphic, int x
     WriteUInt8(0x0A);
 }
 
-CPacketCustomHouseAddStair::CPacketCustomHouseAddStair(ushort graphic, int x, int y)
+CPacketCustomHouseAddStair::CPacketCustomHouseAddStair(uint16_t graphic, int x, int y)
     : CPacket(25)
 {
     WriteUInt8(0xD7);

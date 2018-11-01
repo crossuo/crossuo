@@ -11,7 +11,7 @@ public:
     int Width = 0;
     int MaxWidth = 0;
     bool Changed = true;
-    ushort Color = 0;
+    uint16_t Color = 0;
     int DrawOffset = 0;
     Wisp::CPoint2Di CaretPos = {};
     bool NumberOnly = false;
@@ -31,11 +31,11 @@ public:
     void Clear();
     void Paste();
 
-    int
-    GetLinesCountA(uchar font, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0, int width = 0);
+    int GetLinesCountA(
+        uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0);
 
-    int
-    GetLinesCountW(uchar font, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0, int width = 0);
+    int GetLinesCountW(
+        uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0);
 
     bool Insert(wchar_t ch, CGump *gump = nullptr);
     void Remove(bool left, CGump *gump = nullptr);
@@ -51,44 +51,69 @@ public:
 
     void OnClick(
         CGump *gump,
-        uchar font,
+        uint8_t font,
         bool unicode,
         int x,
         int y,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort flags = 0);
+        uint16_t flags = 0);
 
     void OnKey(CGump *gump, Keycode key);
     int Pos() const { return m_Position; }
     size_t Length() const { return Text.length(); }
-    string CheckMaxWidthA(uchar font, string str);
-    wstring CheckMaxWidthW(uchar font, wstring str);
-    void FixMaxWidthA(uchar font);
-    void FixMaxWidthW(uchar font);
+    string CheckMaxWidthA(uint8_t font, string str);
+    wstring CheckMaxWidthW(uint8_t font, wstring str);
+    void FixMaxWidthA(uint8_t font);
+    void FixMaxWidthW(uint8_t font);
 
     void CreateTextureA(
-        uchar font, string str, ushort color, int width, TEXT_ALIGN_TYPE align, ushort flags);
+        uint8_t font, string str, uint16_t color, int width, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     void CreateTextureW(
-        uchar font, wstring str, ushort color, int width, TEXT_ALIGN_TYPE align, ushort flags);
+        uint8_t font,
+        wstring str,
+        uint16_t color,
+        int width,
+        TEXT_ALIGN_TYPE align,
+        uint16_t flags);
 
-    virtual void
-    PrepareToDrawA(uchar font, ushort color, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0);
+    virtual void PrepareToDrawA(
+        uint8_t font, uint16_t color, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0);
 
-    virtual void
-    PrepareToDrawW(uchar font, ushort color, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0);
+    virtual void PrepareToDrawW(
+        uint8_t font, uint16_t color, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0);
 
     virtual void DrawA(
-        uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0);
+        uint8_t font,
+        uint16_t color,
+        int x,
+        int y,
+        TEXT_ALIGN_TYPE align = TS_LEFT,
+        uint16_t flags = 0);
 
     virtual void DrawW(
-        uchar font, ushort color, int x, int y, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0);
+        uint8_t font,
+        uint16_t color,
+        int x,
+        int y,
+        TEXT_ALIGN_TYPE align = TS_LEFT,
+        uint16_t flags = 0);
 
     void DrawMaskA(
-        uchar font, ushort color, int X, int Y, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0);
+        uint8_t font,
+        uint16_t color,
+        int X,
+        int Y,
+        TEXT_ALIGN_TYPE align = TS_LEFT,
+        uint16_t flags = 0);
 
     void DrawMaskW(
-        uchar font, ushort color, int X, int Y, TEXT_ALIGN_TYPE align = TS_LEFT, ushort flags = 0);
+        uint8_t font,
+        uint16_t color,
+        int X,
+        int Y,
+        TEXT_ALIGN_TYPE align = TS_LEFT,
+        uint16_t flags = 0);
 };
 
 extern CEntryText *g_EntryPointer;

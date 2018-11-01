@@ -37,7 +37,7 @@ public:
     int Delay();
     void ChangeDelay(int newDelay);
 
-    virtual void OnExecute(uint nowTime) {}
+    virtual void OnExecute(uint32_t nowTime) {}
     virtual void OnDestroy() {}
 
     static SDL_threadID GetCurrentThreadId();

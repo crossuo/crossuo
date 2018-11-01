@@ -7,7 +7,7 @@
 int CGumpStatusbar::m_StatusbarDefaultWidth = 154;
 int CGumpStatusbar::m_StatusbarDefaultHeight = 59;
 
-CGumpStatusbar::CGumpStatusbar(uint serial, short x, short y, bool minimized)
+CGumpStatusbar::CGumpStatusbar(uint32_t serial, short x, short y, bool minimized)
     : CGump(GT_STATUSBAR, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -37,7 +37,7 @@ CGumpStatusbar::~CGumpStatusbar()
 void CGumpStatusbar::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     //if (Minimized && Serial == g_PlayerSerial)
     //    g_ToolTip.Set(L"Double click to maximize the statusbar gump");
@@ -482,9 +482,9 @@ void CGumpStatusbar::UpdateContent()
                 if (g_DrawStatLockers)
                 {
                     //Str
-                    uchar status = g_Player->LockStr; // Status (down / up / lock)
+                    uint8_t status = g_Player->LockStr; // Status (down / up / lock)
                     xOffset = useUOPGumps ? 28 : 40;
-                    ushort gumpID = 0x0984; //Up
+                    uint16_t gumpID = 0x0984; //Up
                     if (status == 1)
                         gumpID = 0x0986; //Down
                     else if (status == 2)
@@ -897,7 +897,7 @@ void CGumpStatusbar::UpdateContent()
 
                 if (per > 0)
                 {
-                    ushort gumpid = 0x0806; //Character status line (blue)
+                    uint16_t gumpid = 0x0806; //Character status line (blue)
                     if (g_Player->Poisoned())
                         gumpid = 0x0808; //Character status line (green)
                     else if (g_Player->YellowHits())
@@ -955,7 +955,7 @@ void CGumpStatusbar::UpdateContent()
                     {
                         outofRange = true;
                     }
-                    ushort textColor =
+                    uint16_t textColor =
                         outofRange ?
                             912 :
                             g_ConfigManager.GetColorByNotoriety(member.Character->Notoriety);
@@ -1048,9 +1048,9 @@ void CGumpStatusbar::UpdateContent()
         {
             Add(new CGUIShader(&g_ColorizerShader, true));
 
-            ushort color = 0;
-            ushort hitsColor = 0x0386;
-            ushort textColor = 0x0386;
+            uint16_t color = 0;
+            uint16_t hitsColor = 0x0386;
+            uint16_t textColor = 0x0386;
             CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
             string objName = m_Name;
             bool canChangeName = false;
@@ -1087,7 +1087,7 @@ void CGumpStatusbar::UpdateContent()
 
                 if (per > 0)
                 {
-                    ushort gumpid = 0x0806; //Character status line (blue)
+                    uint16_t gumpid = 0x0806; //Character status line (blue)
                     if (obj->Poisoned())
                         gumpid = 0x0808; //Character status line (green)
                     else if (obj->YellowHits())

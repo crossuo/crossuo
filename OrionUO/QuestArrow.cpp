@@ -28,7 +28,7 @@ void CQuestArrow::Draw()
     {
         int dir = g_MouseManager.GetFacing(g_Player->GetX(), g_Player->GetY(), X, Y, 0);
 
-        ushort gumpID = m_Gump + ((dir + 1) % 8);
+        uint16_t gumpID = m_Gump + ((dir + 1) % 8);
 
         Wisp::CSize size = g_Orion.GetGumpDimension(gumpID);
 

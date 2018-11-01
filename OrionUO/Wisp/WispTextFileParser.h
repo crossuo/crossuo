@@ -14,13 +14,13 @@ private:
     CMappedFile m_File;
 
     //Указатель на текущий обрабатываемый символ // Pointer to the character being processed
-    puchar m_Ptr{ 0 };
+    uint8_t *m_Ptr{ 0 };
 
     //Адрес конца строка // End of line address
-    puchar m_EOL{ 0 };
+    uint8_t *m_EOL{ 0 };
 
     //Адрес конца файла // End of file address
-    puchar m_End{ 0 };
+    uint8_t *m_End{ 0 };
 
     //Разделители	// Delimiters
     char m_Delimiters[50];

@@ -14,11 +14,11 @@
 class CClickObject
 {
 public:
-    uint Timer = 0;
-    ushort X = 0;
-    ushort Y = 0;
+    uint32_t Timer = 0;
+    uint16_t X = 0;
+    uint16_t Y = 0;
     bool Enabled = false;
-    uint Page = 0;
+    uint32_t Page = 0;
     CRenderObject *Object = nullptr;
     CGump *Gump = nullptr;
     CClickObject() {}

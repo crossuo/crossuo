@@ -3,7 +3,7 @@
 
 #pragma once
 
-void LogDump(FILE *fp, uchar *buf, int size);
+void LogDump(FILE *fp, uint8_t *buf, int size);
 
 namespace Wisp
 {
@@ -66,7 +66,7 @@ public:
     void VPrint(const char *format, va_list ap);
     void Print(const wchar_t *format, ...);
     void VPrint(const wchar_t *format, va_list ap);
-    void Dump(uchar *buf, int size);
+    void Dump(uint8_t *buf, int size);
 };
 
 extern CLogger g_WispLogger;

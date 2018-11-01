@@ -12,19 +12,6 @@
 #define DEBUG_TRACE_FUNCTION
 #endif
 
-// REMOVE THESE
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef uint64_t uint64;
-typedef uchar *puchar;
-typedef ushort *pushort;
-typedef uint *puint;
-typedef uint64 *puint64;
-typedef char *pchar;
-typedef short *pshort;
-typedef int *pint;
-typedef int64_t *pint64;
 #define NOT_IMPLEMENTED                                                                            \
     fprintf(stdout, "NOT_IMPLEMENTED: %s:%d: %s\n", __FILE__, __LINE__, __FUNCTION__);
 
@@ -33,7 +20,7 @@ typedef int64_t *pint64;
 #if DEBUGGING_OUTPUT == 1
 void DebugMsg(const char *format, ...);
 void DebugMsg(const wchar_t *format, ...);
-void DebugDump(puchar data, int size);
+void DebugDump(uint8_t *data, int size);
 #else
 #define DebugMsg(...)
 #define DebugDump(buf, size)

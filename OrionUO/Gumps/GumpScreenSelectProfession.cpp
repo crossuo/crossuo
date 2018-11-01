@@ -97,7 +97,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
     {
         int yPtr = 4; // 20;
 
-        for (uint i = 0; i < g_SkillsManager.Count; i++)
+        for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
         {
             CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex(i));
 
@@ -192,7 +192,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
             for (int i = 0; i < 3; i++)
             {
-                auto skillID = (uint)profession->GetSkillIndex((int)i);
+                auto skillID = (uint32_t)profession->GetSkillIndex((int)i);
                 if (skillID >= g_SkillsManager.Count)
                     skillID = 0;
 
@@ -216,7 +216,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
             {
                 Add(new CGUIResizepic(ID_SPS_SKILLS_FILED + (int)i, 0x0BB8, 350, yPtr, 105, 25));
 
-                int skillID = profession->GetSkillIndex((uint)i);
+                int skillID = profession->GetSkillIndex((uint32_t)i);
 
                 CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
                     ID_SPS_SKILLS_FILED + (int)i,
@@ -381,7 +381,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
             yPtr = 4;
 
-            for (uint i = 0; i < g_SkillsManager.Count; i++)
+            for (uint32_t i = 0; i < g_SkillsManager.Count; i++)
             {
                 CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex(i));
                 if (skill == nullptr)
@@ -475,7 +475,7 @@ void CGumpScreenSelectProfession::InitToolTip()
     if (!g_ConfigManager.UseToolTips)
         return;
 
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
     {

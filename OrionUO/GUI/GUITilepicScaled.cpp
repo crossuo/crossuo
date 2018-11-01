@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUITilepicScaled::CGUITilepicScaled(
-    ushort graphic, ushort color, int x, int y, int width, int height)
+    uint16_t graphic, uint16_t color, int x, int y, int width, int height)
     : CGUITilepic(graphic, color, x, y)
     , Width(width)
     , Height(height)

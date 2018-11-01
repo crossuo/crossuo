@@ -407,7 +407,7 @@ void COrionWindow::OnSetText(const LPARAM &lParam)
         g_PluginManager.WindowProc(Handle, WM_SETTEXT, 0, lParam);
 }
 
-void COrionWindow::OnTimer(uint id)
+void COrionWindow::OnTimer(uint32_t id)
 {
     DEBUG_TRACE_FUNCTION;
     if (id == UPDATE_TIMER_ID)
@@ -422,7 +422,7 @@ void COrionWindow::OnTimer(uint id)
     }
 }
 
-void COrionWindow::OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer)
+void COrionWindow::OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -452,8 +452,8 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 
         case UOMSG_SEND:
         {
-            uint ticks = g_Ticks;
-            puchar buf = (puchar)ev.data1;
+            uint32_t ticks = g_Ticks;
+            uint8_t *buf = (uint8_t *)ev.data1;
             int size = (int)ev.data2;
             g_TotalSendSize += size;
 
@@ -495,7 +495,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         case UOMSG_WALK:
         {
             const auto run = (bool)ev.data1;
-            const auto dir = (uchar)ev.data2;
+            const auto dir = (uint8_t)ev.data2;
             return !g_PathFinder.Walk(run, dir);
         }
         break;

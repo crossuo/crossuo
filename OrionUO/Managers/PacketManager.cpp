@@ -607,8 +607,8 @@ void CPacketManager::OnReadFailed()
 void CPacketManager::OnPacket()
 {
     DEBUG_TRACE_FUNCTION;
-    uint ticks = g_Ticks;
-    g_TotalRecvSize += (uint)Size;
+    uint32_t ticks = g_Ticks;
+    g_TotalRecvSize += (uint32_t)Size;
 
     CPacketInfo &info = m_Packets[*Start];
 
@@ -656,7 +656,7 @@ void CPacketManager::OnPacket()
     }
 }
 
-void CPacketManager::SavePluginReceivePacket(puchar buf, int size)
+void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
     vector<uint8_t> packet(size);
@@ -704,13 +704,13 @@ void CPacketManager::ProcessPluginPackets()
 #endif
 }
 
-void CPacketManager::PluginReceiveHandler(puchar buf, int size)
+void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
     SetData(buf, size);
 
-    uint ticks = g_Ticks;
-    g_TotalRecvSize += (uint)Size;
+    uint32_t ticks = g_Ticks;
+    g_TotalRecvSize += (uint32_t)Size;
 
     CPacketInfo &info = m_Packets[*Start];
 
@@ -761,7 +761,7 @@ PACKET_HANDLER(RelayServer)
     DEBUG_TRACE_FUNCTION;
     memset(&g_SelectedCharName[0], 0, sizeof(g_SelectedCharName));
     in_addr addr;
-    puint paddr = (puint)Ptr;
+    uint32_t * paddr = (uint32_t *)Ptr;
     Move(4);
 #if !defined(ORION_LINUX)
     addr.S_un.S_addr = *paddr;
@@ -781,7 +781,7 @@ PACKET_HANDLER(CharacterList)
     DEBUG_TRACE_FUNCTION;
     HandleResendCharacterList();
 
-    uchar locCount = ReadUInt8();
+    uint8_t locCount = ReadUInt8();
 
     g_CityList.Clear();
 
@@ -927,7 +927,7 @@ PACKET_HANDLER(SetTime)
 PACKET_HANDLER(EnterWorld)
 {
     DEBUG_TRACE_FUNCTION;
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     ConfigSerial = serial;
     bool loadConfig = false;
 
@@ -1015,7 +1015,7 @@ PACKET_HANDLER(UpdateHitpoints)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
@@ -1035,7 +1035,7 @@ PACKET_HANDLER(UpdateMana)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
@@ -1054,7 +1054,7 @@ PACKET_HANDLER(UpdateStamina)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
@@ -1073,7 +1073,7 @@ PACKET_HANDLER(MobileAttributes)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
@@ -1102,25 +1102,25 @@ PACKET_HANDLER(NewHealthbarUpdate)
     if (*Start == 0x16 && m_ClientVersion < CV_500A)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
     if (obj == nullptr)
         return;
 
-    ushort count = ReadUInt16BE();
+    uint16_t count = ReadUInt16BE();
 
     for (int i = 0; i < count; i++)
     {
-        ushort type = ReadUInt16BE();
-        uchar enable = ReadUInt8(); //enable/disable
+        uint16_t type = ReadUInt16BE();
+        uint8_t enable = ReadUInt8(); //enable/disable
 
-        uchar flags = obj->GetFlags();
+        uint8_t flags = obj->GetFlags();
 
         if (type == 1) //Poison, enable as poisonlevel + 1
         {
-            uchar poisonFlag = 0x04;
+            uint8_t poisonFlag = 0x04;
 
             if (enable)
             {
@@ -1160,15 +1160,15 @@ PACKET_HANDLER(UpdatePlayer)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar graphicIncrement = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    ushort serverID = ReadUInt16BE();
-    uchar direction = ReadUInt8();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
+    uint8_t graphicIncrement = ReadUInt8();
+    uint16_t color = ReadUInt16BE();
+    uint8_t flags = ReadUInt8();
+    uint16_t x = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
+    uint16_t serverID = ReadUInt16BE();
+    uint8_t direction = ReadUInt8();
     char z = ReadUInt8();
 
     LOG("0x%08X 0x%04X %i 0x%04X 0x%02X %i %i %i %i %i\n",
@@ -1192,7 +1192,7 @@ PACKET_HANDLER(CharacterStatus)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
     if (obj == nullptr)
@@ -1206,7 +1206,7 @@ PACKET_HANDLER(CharacterStatus)
 
     obj->CanChangeName = (ReadUInt8() != 0);
 
-    uchar flag = ReadUInt8();
+    uint8_t flag = ReadUInt8();
 
     if (flag > 0)
     {
@@ -1269,7 +1269,7 @@ PACKET_HANDLER(CharacterStatus)
             if (flag >= 5)
             {
                 g_Player->MaxWeight = ReadInt16BE(); //unpack16(buf + 66);
-                uint race = ReadUInt8();
+                uint32_t race = ReadUInt8();
 
                 if (!race)
                     race = 1;
@@ -1337,17 +1337,17 @@ PACKET_HANDLER(UpdateItem)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     if (serial == g_PlayerSerial)
         return;
 
     UPDATE_GAME_OBJECT_TYPE updateType = UGOT_ITEM;
-    ushort count = 0;
-    uchar graphicIncrement = 0;
-    uchar direction = 0;
-    ushort color = 0;
-    uchar flags = 0;
+    uint16_t count = 0;
+    uint8_t graphicIncrement = 0;
+    uint8_t direction = 0;
+    uint16_t color = 0;
+    uint8_t flags = 0;
 
     if (serial & 0x80000000)
     {
@@ -1355,7 +1355,7 @@ PACKET_HANDLER(UpdateItem)
         count = 1;
     }
 
-    ushort graphic = ReadUInt16BE();
+    uint16_t graphic = ReadUInt16BE();
 
     if (g_TheAbyss && (graphic & 0x7FFF) == 0x0E5C)
         return;
@@ -1371,7 +1371,7 @@ PACKET_HANDLER(UpdateItem)
     else
         count++;
 
-    ushort x = ReadUInt16BE();
+    uint16_t x = ReadUInt16BE();
 
     if (x & 0x8000)
     {
@@ -1379,7 +1379,7 @@ PACKET_HANDLER(UpdateItem)
         direction = 1;
     }
 
-    ushort y = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
 
     if (y & 0x8000)
     {
@@ -1435,18 +1435,18 @@ PACKET_HANDLER(UpdateItemSA)
 
     Move(2);
     UPDATE_GAME_OBJECT_TYPE updateType = (UPDATE_GAME_OBJECT_TYPE)ReadUInt8();
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar graphicIncrement = ReadUInt8();
-    ushort count = ReadUInt16BE();
-    ushort unknown = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    uchar z = ReadUInt8();
-    uchar direction = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    ushort unknown2 = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
+    uint8_t graphicIncrement = ReadUInt8();
+    uint16_t count = ReadUInt16BE();
+    uint16_t unknown = ReadUInt16BE();
+    uint16_t x = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
+    uint8_t z = ReadUInt8();
+    uint8_t direction = ReadUInt8();
+    uint16_t color = ReadUInt16BE();
+    uint8_t flags = ReadUInt8();
+    uint16_t unknown2 = ReadUInt16BE();
 
     if (serial != g_PlayerSerial)
         g_World->UpdateGameObject(
@@ -1474,15 +1474,15 @@ PACKET_HANDLER(UpdateObject)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    uchar z = ReadUInt8();
-    uchar direction = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    uchar notoriety = ReadUInt8();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
+    uint16_t x = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
+    uint8_t z = ReadUInt8();
+    uint8_t direction = ReadUInt8();
+    uint16_t color = ReadUInt16BE();
+    uint8_t flags = ReadUInt8();
+    uint8_t notoriety = ReadUInt8();
     bool oldDead = false;
 
     bool isAlreadyExists = (g_World->FindWorldObject(serial) != nullptr);
@@ -1525,13 +1525,13 @@ PACKET_HANDLER(UpdateObject)
     if (*Start != 0x78)
         Move(6);
 
-    uint itemSerial = ReadUInt32BE();
+    uint32_t itemSerial = ReadUInt32BE();
 
     while (itemSerial != 0 && !IsEOF())
     {
-        ushort itemGraphic = ReadUInt16BE();
-        uchar layer = ReadUInt8();
-        ushort itemColor = 0;
+        uint16_t itemGraphic = ReadUInt16BE();
+        uint8_t layer = ReadUInt8();
+        uint16_t itemColor = 0;
 
         if (m_ClientVersion >= CV_70331)
             itemColor = ReadUInt16BE();
@@ -1580,7 +1580,7 @@ PACKET_HANDLER(EquipItem)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameItem *obj = g_World->GetWorldItem(serial);
     obj->MapIndex = g_CurrentMap;
@@ -1591,7 +1591,7 @@ PACKET_HANDLER(EquipItem)
     obj->Graphic = ReadUInt16BE();
     Move(1);
     int layer = ReadUInt8();
-    uint cserial = ReadUInt32BE();
+    uint32_t cserial = ReadUInt32BE();
     obj->Color = g_ColorManager.FixColor(ReadUInt16BE());
 
     if (obj->Container != 0xFFFFFFFF)
@@ -1621,18 +1621,18 @@ PACKET_HANDLER(UpdateContainedItem)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar graphicIncrement = ReadUInt8();
-    ushort count = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
+    uint8_t graphicIncrement = ReadUInt8();
+    uint16_t count = ReadUInt16BE();
+    uint16_t x = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
 
     if (m_ClientVersion >= CV_6017)
         Move(1);
 
-    uint containerSerial = ReadUInt32BE();
-    ushort color = ReadUInt16BE();
+    uint32_t containerSerial = ReadUInt32BE();
+    uint16_t color = ReadUInt16BE();
 
     g_World->UpdateContainedItem(
         serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
@@ -1644,22 +1644,22 @@ PACKET_HANDLER(UpdateContainedItems)
     if (g_World == nullptr)
         return;
 
-    ushort itemsCount = ReadUInt16BE();
+    uint16_t itemsCount = ReadUInt16BE();
 
     for (int i = 0; i < itemsCount; i++)
     {
-        uint serial = ReadUInt32BE();
-        ushort graphic = ReadUInt16BE();
-        uchar graphicIncrement = ReadUInt8();
-        ushort count = ReadUInt16BE();
-        ushort x = ReadUInt16BE();
-        ushort y = ReadUInt16BE();
+        uint32_t serial = ReadUInt32BE();
+        uint16_t graphic = ReadUInt16BE();
+        uint8_t graphicIncrement = ReadUInt8();
+        uint16_t count = ReadUInt16BE();
+        uint16_t x = ReadUInt16BE();
+        uint16_t y = ReadUInt16BE();
 
         if (m_ClientVersion >= CV_6017)
             Move(1);
 
-        uint containerSerial = ReadUInt32BE();
-        ushort color = ReadUInt16BE();
+        uint32_t containerSerial = ReadUInt32BE();
+        uint16_t color = ReadUInt16BE();
 
         if (!i)
         {
@@ -1777,7 +1777,7 @@ PACKET_HANDLER(DenyMoveItem)
         g_ObjectInHand.Clear();
     }
 
-    uchar code = ReadUInt8();
+    uint8_t code = ReadUInt8();
 
     if (code < 5)
     {
@@ -1823,7 +1823,7 @@ PACKET_HANDLER(DeleteObject)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     if (serial == g_PlayerSerial)
         return;
@@ -1833,7 +1833,7 @@ PACKET_HANDLER(DeleteObject)
     if (obj != nullptr)
     {
         bool updateAbilities = false;
-        uint cont = obj->Container & 0x7FFFFFFF;
+        uint32_t cont = obj->Container & 0x7FFFFFFF;
 
         if (obj->Container != 0xFFFFFFFF)
         {
@@ -1926,20 +1926,20 @@ PACKET_HANDLER(UpdateCharacter)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
     if (obj == nullptr)
         return;
 
-    ushort graphic = ReadUInt16BE();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
+    uint16_t graphic = ReadUInt16BE();
+    uint16_t x = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
     char z = ReadUInt8();
-    uchar direction = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    uchar flags = ReadUInt8();
-    uchar notoriety = ReadUInt8();
+    uint8_t direction = ReadUInt8();
+    uint16_t color = ReadUInt16BE();
+    uint8_t flags = ReadUInt8();
+    uint8_t notoriety = ReadUInt8();
 
     obj->Notoriety = notoriety;
 
@@ -1982,7 +1982,7 @@ PACKET_HANDLER(Warmode)
 
     if (gump != nullptr && gump->m_ButtonWarmode != nullptr)
     {
-        ushort graphic = 0x07E5;
+        uint16_t graphic = 0x07E5;
 
         if (g_Player->Warmode)
             graphic += 3;
@@ -2012,13 +2012,13 @@ PACKET_HANDLER(OpenPaperdoll)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
     string text = ReadString(60);
 
-    uchar flags = ReadUInt8();
+    uint8_t flags = ReadUInt8();
 
     if (obj != nullptr)
         obj->Title = text;
@@ -2052,7 +2052,7 @@ PACKET_HANDLER(SetWeather)
     DEBUG_TRACE_FUNCTION;
     g_Weather.Reset();
 
-    uchar type = ReadUInt8();
+    uint8_t type = ReadUInt8();
     g_Weather.Type = type;
     g_Weather.Count = ReadUInt8();
 
@@ -2110,11 +2110,11 @@ PACKET_HANDLER(SetWeather)
 PACKET_HANDLER(PersonalLightLevel)
 {
     DEBUG_TRACE_FUNCTION;
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     if (serial == g_PlayerSerial)
     {
-        uchar level = ReadUInt8();
+        uint8_t level = ReadUInt8();
 
         if (level > 0x1F)
             level = 0x1F;
@@ -2126,7 +2126,7 @@ PACKET_HANDLER(PersonalLightLevel)
 PACKET_HANDLER(LightLevel)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar level = ReadUInt8();
+    uint8_t level = ReadUInt8();
 
     if (level > 0x1F)
         level = 0x1F;
@@ -2153,8 +2153,8 @@ PACKET_HANDLER(OpenContainer)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    ushort gumpid = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t gumpid = ReadUInt16BE();
 
     CGump *gump = nullptr;
 
@@ -2261,13 +2261,13 @@ PACKET_HANDLER(OpenContainer)
     }
     else //Container
     {
-        ushort graphic = 0xFFFF;
+        uint16_t graphic = 0xFFFF;
 
         for (int i = 0; i < (int)g_ContainerOffset.size(); i++)
         {
             if (gumpid == g_ContainerOffset[i].Gump)
             {
-                graphic = (ushort)i;
+                graphic = (uint16_t)i;
                 break;
             }
         }
@@ -2344,7 +2344,7 @@ PACKET_HANDLER(UpdateSkills)
     if (g_World == nullptr)
         return;
 
-    uchar type = ReadUInt8();
+    uint8_t type = ReadUInt8();
     bool haveCap = ((type && type <= 0x03) || type == 0xDF);
     bool isSingleUpdate = (type == 0xFF || type == 0xDF);
     LOG("Skill update type %i (cap=%d)\n", type, haveCap);
@@ -2383,7 +2383,7 @@ PACKET_HANDLER(UpdateSkills)
 
     while (!IsEOF())
     {
-        ushort id = ReadUInt16BE();
+        uint16_t id = ReadUInt16BE();
 
         if (IsEOF())
             break;
@@ -2393,10 +2393,10 @@ PACKET_HANDLER(UpdateSkills)
         else if (!type || type == 0x02)
             id--;
 
-        ushort baseVal = ReadUInt16BE();
-        ushort realVal = ReadUInt16BE();
-        uchar lock = ReadUInt8();
-        ushort cap = 1000;
+        uint16_t baseVal = ReadUInt16BE();
+        uint16_t realVal = ReadUInt16BE();
+        uint8_t lock = ReadUInt8();
+        uint16_t cap = 1000;
 
         if (haveCap)
             cap = ReadUInt16BE();
@@ -2455,7 +2455,7 @@ PACKET_HANDLER(UpdateSkills)
 PACKET_HANDLER(ExtendedCommand)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort cmd = ReadUInt16BE();
+    uint16_t cmd = ReadUInt16BE();
 
     switch (cmd)
     {
@@ -2476,8 +2476,8 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 4: //Close generic gump
         {
-            uint id = ReadUInt32BE();
-            uint button = ReadUInt32BE();
+            uint32_t id = ReadUInt32BE();
+            uint32_t button = ReadUInt32BE();
 
             for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
             {
@@ -2511,14 +2511,14 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0xC: //Close statusbar gump
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             g_GumpManager.CloseGump(serial, 0, GT_STATUSBAR);
 
             break;
         }
         case 0x10: //DisplayEquipmentInfo
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             CGameItem *item = g_World->FindWorldItem(serial);
             if (item == nullptr)
                 return;
@@ -2538,8 +2538,8 @@ PACKET_HANDLER(ExtendedCommand)
             }
 
             str = L"";
-            ushort crafterNameLen = 0;
-            uint next = ReadUInt32BE();
+            uint16_t crafterNameLen = 0;
+            uint32_t next = ReadUInt32BE();
             if (next == 0xFFFFFFFD)
             {
                 crafterNameLen = ReadUInt16BE();
@@ -2553,8 +2553,8 @@ PACKET_HANDLER(ExtendedCommand)
                 str += L"[Unidentified";
 
             // -4 потому что последние 4 байта в пакете 0xFFFFFFFF
-            puchar end = Start + Size - 4;
-            uchar count = 0;
+            uint8_t *end = Start + Size - 4;
+            uint8_t count = 0;
             while (Ptr < end)
             {
                 if (count != 0 || next == 0xFFFFFFFD || next == 0xFFFFFFFC)
@@ -2606,8 +2606,8 @@ PACKET_HANDLER(ExtendedCommand)
             //0x02: Status
             //0x08: Character Profile
             //0x0C: Container
-            uint id = ReadUInt32BE();
-            uint serial = ReadUInt32BE();
+            uint32_t id = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
 
             switch (id)
             {
@@ -2645,8 +2645,8 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x19: //Extended stats
         {
-            uchar version = ReadUInt8();
-            uint serial = ReadUInt32BE();
+            uint8_t version = ReadUInt8();
+            uint32_t serial = ReadUInt32BE();
 
             switch (version)
             {
@@ -2664,8 +2664,8 @@ PACKET_HANDLER(ExtendedCommand)
                 {
                     if (serial == g_PlayerSerial)
                     {
-                        uchar updateGump = ReadUInt8();
-                        uchar state = ReadUInt8();
+                        uint8_t updateGump = ReadUInt8();
+                        uint8_t state = ReadUInt8();
                         g_DrawStatLockers = true;
 
                         g_Player->LockStr = (state >> 4) & 3;
@@ -2701,7 +2701,7 @@ PACKET_HANDLER(ExtendedCommand)
         case 0x1B: //New spellbook content
         {
             Move(2);
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
 
             CGameItem *spellbook = g_World->FindWorldItem(serial);
 
@@ -2713,12 +2713,12 @@ PACKET_HANDLER(ExtendedCommand)
 
             g_World->ClearContainer(spellbook);
 
-            ushort graphic = ReadUInt16BE();
+            uint16_t graphic = ReadUInt16BE();
             SPELLBOOK_TYPE bookType = (SPELLBOOK_TYPE)ReadUInt16BE();
 
             for (int j = 0; j < 2; j++)
             {
-                uint spells = 0;
+                uint32_t spells = 0;
 
                 for (int i = 0; i < 4; i++)
                     spells |= (ReadUInt8() << (i * 8));
@@ -2741,8 +2741,8 @@ PACKET_HANDLER(ExtendedCommand)
         case 0x1D:
         {
             //house revision state, server sends this when player comes in range of a custom house
-            uint serial = ReadUInt32BE();
-            uint revision = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
+            uint32_t revision = ReadUInt32BE();
 
             CCustomHouse *house = g_CustomHousesManager.Get(serial);
             LOG("Seek house: 0x%08X 0x%08X\n", serial, revision);
@@ -2759,12 +2759,12 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x20:
         {
-            uint serial = ReadUInt32BE();
-            uchar type = ReadUInt8();
-            ushort graphic = ReadUInt16BE();
-            ushort x = ReadUInt16BE();
-            ushort y = ReadUInt16BE();
-            uchar z = ReadUInt8();
+            uint32_t serial = ReadUInt32BE();
+            uint8_t type = ReadUInt8();
+            uint16_t graphic = ReadUInt16BE();
+            uint16_t x = ReadUInt16BE();
+            uint16_t y = ReadUInt16BE();
+            uint8_t z = ReadUInt8();
 
             switch (type)
             {
@@ -2818,7 +2818,7 @@ PACKET_HANDLER(ExtendedCommand)
                 return;
 
             Move(1);
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             CGameCharacter *character = g_World->FindWorldCharacter(serial);
 
             if (character != nullptr)
@@ -2859,7 +2859,7 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x26:
         {
-            uchar val = ReadUInt8();
+            uint8_t val = ReadUInt8();
 
             if (val > CST_FAST_UNMOUNT_AND_CANT_RUN)
                 val = 0;
@@ -2881,10 +2881,10 @@ PACKET_HANDLER(DenyWalk)
 
     g_Ping = 0;
 
-    uchar sequence = ReadUInt8();
-    ushort x = ReadUInt16BE();
-    ushort y = ReadUInt16BE();
-    uchar direction = ReadUInt8();
+    uint8_t sequence = ReadUInt8();
+    uint16_t x = ReadUInt16BE();
+    uint16_t y = ReadUInt16BE();
+    uint8_t direction = ReadUInt8();
     char z = ReadUInt8();
 
     g_Walker.DenyWalk(sequence, x, y, z);
@@ -2900,11 +2900,11 @@ PACKET_HANDLER(ConfirmWalk)
     if (g_Player == nullptr)
         return;
 
-    uchar sequence = ReadUInt8();
+    uint8_t sequence = ReadUInt8();
 
     //player->SetDirection(newdir);
 
-    uchar newnoto = ReadUInt8() & (~0x40);
+    uint8_t newnoto = ReadUInt8() & (~0x40);
 
     if (!newnoto || newnoto >= 8)
         newnoto = 0x01;
@@ -2942,11 +2942,11 @@ PACKET_HANDLER(Talk)
     {
         if (g_GameState == GS_GAME_CONNECT)
         {
-            uint serial = ReadUInt32BE();
-            ushort graphic = ReadUInt16BE();
+            uint32_t serial = ReadUInt32BE();
+            uint16_t graphic = ReadUInt16BE();
             SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-            ushort textColor = ReadUInt16BE();
-            ushort font = ReadUInt16BE();
+            uint16_t textColor = ReadUInt16BE();
+            uint16_t font = ReadUInt16BE();
 
             string name(ReadString(0));
             string str = "";
@@ -2962,17 +2962,17 @@ PACKET_HANDLER(Talk)
         return;
     }
 
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-    ushort textColor = ReadUInt16BE();
-    ushort font = ReadUInt16BE();
+    uint16_t textColor = ReadUInt16BE();
+    uint16_t font = ReadUInt16BE();
     string name(ReadString(0));
 
     if (!serial && !graphic && type == ST_NORMAL && font == 0xFFFF && textColor == 0xFFFF &&
         ToLowerA(name) == "system")
     {
-        uchar sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
+        uint8_t sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
                                 0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
                                 0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
                                 0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
@@ -3000,7 +3000,7 @@ PACKET_HANDLER(Talk)
     if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || !serial ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        g_Orion.CreateTextMessage(TT_SYSTEM, serial, (uchar)font, textColor, str);
+        g_Orion.CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, textColor, str);
     }
     else
     {
@@ -3028,7 +3028,7 @@ PACKET_HANDLER(Talk)
                 obj->JournalPrefix = obj->GetName() + ": ";
         }
 
-        g_Orion.CreateTextMessage(TT_OBJECT, serial, (uchar)font, textColor, str);
+        g_Orion.CreateTextMessage(TT_OBJECT, serial, (uint8_t)font, textColor, str);
     }
 }
 
@@ -3039,12 +3039,12 @@ PACKET_HANDLER(UnicodeTalk)
     {
         if (g_GameState == GS_GAME_CONNECT)
         {
-            uint serial = ReadUInt32BE();
-            ushort graphic = ReadUInt16BE();
+            uint32_t serial = ReadUInt32BE();
+            uint16_t graphic = ReadUInt16BE();
             SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-            ushort textColor = ReadUInt16BE();
-            ushort font = ReadUInt16BE();
-            uint language = ReadUInt32BE();
+            uint16_t textColor = ReadUInt16BE();
+            uint16_t font = ReadUInt16BE();
+            uint32_t language = ReadUInt32BE();
 
             string name(ReadString(0));
 
@@ -3059,18 +3059,18 @@ PACKET_HANDLER(UnicodeTalk)
         return;
     }
 
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-    ushort textColor = ReadUInt16BE();
-    ushort font = ReadUInt16BE();
-    uint language = ReadUInt32BE();
+    uint16_t textColor = ReadUInt16BE();
+    uint16_t font = ReadUInt16BE();
+    uint32_t language = ReadUInt32BE();
     string name(ReadString(0));
 
     if (!serial && !graphic && type == ST_NORMAL && font == 0xFFFF && textColor == 0xFFFF &&
         ToLowerA(name) == "system")
     {
-        uchar sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
+        uint8_t sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
                                 0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
                                 0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
                                 0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
@@ -3108,7 +3108,7 @@ PACKET_HANDLER(UnicodeTalk)
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || !serial ||
         (ToLowerA(name) == "system" && obj == nullptr))
         g_Orion.CreateUnicodeTextMessage(
-            TT_SYSTEM, serial, (uchar)g_ConfigManager.SpeechFont, textColor, str);
+            TT_SYSTEM, serial, (uint8_t)g_ConfigManager.SpeechFont, textColor, str);
     else
     {
         if (type == ST_EMOTE && !textColor)
@@ -3136,7 +3136,7 @@ PACKET_HANDLER(UnicodeTalk)
         }
 
         g_Orion.CreateUnicodeTextMessage(
-            TT_OBJECT, serial, (uchar)g_ConfigManager.SpeechFont, textColor, str);
+            TT_OBJECT, serial, (uint8_t)g_ConfigManager.SpeechFont, textColor, str);
     }
 }
 
@@ -3183,8 +3183,8 @@ PACKET_HANDLER(MultiPlacement)
     if (g_World == nullptr)
         return;
 
-    //uint serial = unpack32(buf + 2);
-    //ushort graphic = unpack16(buf + 18);
+    //uint32_t serial = unpack32(buf + 2);
+    //uint16_t graphic = unpack16(buf + 18);
 
     g_Target.SetMultiData(*this);
 }
@@ -3195,14 +3195,14 @@ PACKET_HANDLER(GraphicEffect)
     if (g_World == nullptr)
         return;
 
-    uchar type = ReadUInt8();
+    uint8_t type = ReadUInt8();
 
     if (type > 3)
     {
         if (type == 4 && *Start == 0x70)
         {
             Move(8);
-            ushort val = ReadInt16BE();
+            uint16_t val = ReadInt16BE();
 
             if (val > SET_TO_BLACK_VERY_FAST)
                 val = SET_TO_BLACK_VERY_FAST;
@@ -3213,24 +3213,24 @@ PACKET_HANDLER(GraphicEffect)
         return;
     }
 
-    uint sourceSerial = ReadUInt32BE();
-    uint destSerial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
+    uint32_t sourceSerial = ReadUInt32BE();
+    uint32_t destSerial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
     short sourceX = ReadInt16BE();
     short sourceY = ReadInt16BE();
     char sourceZ = ReadInt8();
     short destX = ReadInt16BE();
     short destY = ReadInt16BE();
     char destZ = ReadInt8();
-    uchar speed = ReadUInt8();
+    uint8_t speed = ReadUInt8();
     short duration = (short)ReadUInt8() * 50;
     //what is in 24-25 bytes?
     Move(2);
-    uchar fixedDirection = ReadUInt8();
-    uchar explode = ReadUInt8();
+    uint8_t fixedDirection = ReadUInt8();
+    uint8_t explode = ReadUInt8();
 
-    uint color = 0;
-    uint renderMode = 0;
+    uint32_t color = 0;
+    uint32_t renderMode = 0;
 
     if (*Start != 0x70)
     {
@@ -3313,7 +3313,7 @@ PACKET_HANDLER(GraphicEffect)
     effect->FixedDirection = (fixedDirection != 0);
     effect->Explode = (explode != 0);
 
-    effect->Color = (ushort)color;
+    effect->Color = (uint16_t)color;
     effect->RenderMode = renderMode;
 
     g_EffectManager.AddEffect(effect);
@@ -3322,7 +3322,7 @@ PACKET_HANDLER(GraphicEffect)
 PACKET_HANDLER(DeathScreen)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar action = ReadUInt8();
+    uint8_t action = ReadUInt8();
 
     if (action != 1)
     {
@@ -3347,10 +3347,10 @@ PACKET_HANDLER(PlaySoundEffect)
 {
     DEBUG_TRACE_FUNCTION;
     Move(1);
-    ushort index = ReadUInt16BE();
-    ushort volume = ReadUInt16BE();
-    ushort xCoord = ReadUInt16BE();
-    ushort yCoord = ReadUInt16BE();
+    uint16_t index = ReadUInt16BE();
+    uint16_t volume = ReadUInt16BE();
+    uint16_t xCoord = ReadUInt16BE();
+    uint16_t yCoord = ReadUInt16BE();
 
     int distance = GetDistance(g_Player, Wisp::CPoint2Di(xCoord, yCoord));
     //LOG("Play sound 0x%04X\n", index);
@@ -3361,7 +3361,7 @@ PACKET_HANDLER(PlaySoundEffect)
 PACKET_HANDLER(PlayMusic)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort index = ReadUInt16BE();
+    uint16_t index = ReadUInt16BE();
 
     //LOG("Play midi music 0x%04X\n", index);
     if (!g_ConfigManager.GetMusic() || !g_OrionWindow.IsActive() ||
@@ -3377,17 +3377,17 @@ PACKET_HANDLER(DragAnimation)
     if (g_World == nullptr)
         return;
 
-    ushort graphic = ReadUInt16BE();
+    uint16_t graphic = ReadUInt16BE();
     graphic += ReadUInt8(); //graphic increment
 
-    ushort color = ReadUInt16BE();
-    ushort count = ReadUInt16BE();
+    uint16_t color = ReadUInt16BE();
+    uint16_t count = ReadUInt16BE();
 
-    uint sourceSerial = ReadUInt32BE();
+    uint32_t sourceSerial = ReadUInt32BE();
     short sourceX = ReadInt16BE();
     short sourceY = ReadInt16BE();
     char sourceZ = ReadInt8();
-    uint destSerial = ReadUInt32BE();
+    uint32_t destSerial = ReadUInt32BE();
     short destX = ReadInt16BE();
     short destY = ReadInt16BE();
     char destZ = ReadInt8();
@@ -3423,7 +3423,7 @@ PACKET_HANDLER(DragAnimation)
 
     CGameEffect *effect = nullptr;
 
-    uchar speed = 5;
+    uint8_t speed = 5;
 
     if (!sourceSerial || !destSerial) //Игрок/НПС кладет предмет в контейнер
     {
@@ -3471,15 +3471,15 @@ PACKET_HANDLER(CorpseEquipment)
     if (g_World == nullptr)
         return;
 
-    uint cserial = ReadUInt32BE();
+    uint32_t cserial = ReadUInt32BE();
 
-    puchar end = Start + Size;
+    uint8_t *end = Start + Size;
 
     int layer = ReadUInt8();
 
     while (layer && Ptr < end)
     {
-        uint serial = ReadUInt32BE();
+        uint32_t serial = ReadUInt32BE();
 
         CGameItem *obj = g_World->FindWorldItem(serial);
 
@@ -3516,23 +3516,23 @@ PACKET_HANDLER(CharacterAnimation)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
     if (obj != nullptr)
     {
-        ushort action = ReadUInt16BE();
-        ushort frameCount = ReadUInt16BE();
+        uint16_t action = ReadUInt16BE();
+        uint16_t frameCount = ReadUInt16BE();
         frameCount = 0;
-        ushort repeatMode = ReadUInt16BE();
+        uint16_t repeatMode = ReadUInt16BE();
         bool frameDirection = (ReadUInt8() == 0); //true - forward, false - backward
         bool repeat = (ReadUInt8() != 0);
-        uchar delay = ReadUInt8();
+        uint8_t delay = ReadUInt8();
         obj->SetAnimation(
             g_AnimationManager.GetReplacedObjectAnimation(obj, action),
             delay,
-            (uchar)frameCount,
-            (uchar)repeatMode,
+            (uint8_t)frameCount,
+            (uint8_t)repeatMode,
             repeat,
             frameDirection);
         obj->AnimationFromServer = true;
@@ -3545,16 +3545,16 @@ PACKET_HANDLER(NewCharacterAnimation)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
     if (obj != nullptr)
     {
-        ushort type = ReadUInt16BE();
-        ushort action = ReadUInt16BE();
-        uchar mode = ReadUInt8();
+        uint16_t type = ReadUInt16BE();
+        uint16_t action = ReadUInt16BE();
+        uint8_t mode = ReadUInt8();
 
-        uchar group = g_AnimationManager.GetObjectNewAnimation(obj, type, action, mode);
+        uint8_t group = g_AnimationManager.GetObjectNewAnimation(obj, type, action, mode);
 
         obj->SetAnimation(group);
 
@@ -3586,7 +3586,7 @@ PACKET_HANDLER(ClientViewRange)
 PACKET_HANDLER(KrriosClientSpecial)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar type = ReadUInt8();
+    uint8_t type = ReadUInt8();
 
     if (type == 0xFE)
         CPacketRazorAnswer().Send();
@@ -3595,7 +3595,7 @@ PACKET_HANDLER(KrriosClientSpecial)
 PACKET_HANDLER(AssistVersion)
 {
     DEBUG_TRACE_FUNCTION;
-    uint version = ReadUInt32BE();
+    uint32_t version = ReadUInt32BE();
 
     CPacketAssistVersion(version, g_Orion.ClientVersionText).Send();
 }
@@ -3612,7 +3612,7 @@ PACKET_HANDLER(CharacterListNotification)
 PACKET_HANDLER(ErrorCode)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar code = ReadUInt8();
+    uint8_t code = ReadUInt8();
 
     g_Orion.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_GAME_LOGIN);
@@ -3642,7 +3642,7 @@ PACKET_HANDLER(Season)
     if (g_World == nullptr)
         return;
 
-    uchar season = ReadUInt8();
+    uint8_t season = ReadUInt8();
 
     if (season > ST_DESOLATION)
         season = 0;
@@ -3665,9 +3665,9 @@ PACKET_HANDLER(DisplayDeath)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    uint corpseSerial = ReadUInt32BE();
-    uint running = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
+    uint32_t corpseSerial = ReadUInt32BE();
+    uint32_t running = ReadUInt32BE();
 
     CGameCharacter *owner = g_World->FindWorldCharacter(serial);
 
@@ -3681,7 +3681,7 @@ PACKET_HANDLER(DisplayDeath)
     if (corpseSerial)
         g_CorpseManager.Add(CCorpse(corpseSerial, serial, owner->Direction, running != 0));
 
-    uchar group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0);
+    uint8_t group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0);
 
     owner->SetAnimation(group, 0, 5, 1, false, false);
 }
@@ -3689,7 +3689,7 @@ PACKET_HANDLER(DisplayDeath)
 PACKET_HANDLER(OpenChat)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar newbuf[4] = { 0xf0, 0x00, 0x04, 0xff };
+    uint8_t newbuf[4] = { 0xf0, 0x00, 0x04, 0xff };
     g_Orion.Send(newbuf, 4);
 }
 
@@ -3699,17 +3699,17 @@ PACKET_HANDLER(DisplayClilocString)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    ushort graphic = ReadUInt16BE();
-    uchar type = ReadUInt8();
-    ushort color = ReadUInt16BE();
-    ushort font = ReadUInt16BE();
-    uint cliloc = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t graphic = ReadUInt16BE();
+    uint8_t type = ReadUInt8();
+    uint16_t color = ReadUInt16BE();
+    uint16_t font = ReadUInt16BE();
+    uint32_t cliloc = ReadUInt32BE();
 
-    if (!g_FontManager.UnicodeFontExists((uchar)font))
+    if (!g_FontManager.UnicodeFontExists((uint8_t)font))
         font = 0;
 
-    uchar flags = 0;
+    uint8_t flags = 0;
 
     if (*Start == 0xCC)
         flags = ReadUInt8();
@@ -3728,7 +3728,7 @@ PACKET_HANDLER(DisplayClilocString)
 
     if (/*type == ST_BROADCAST || type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || !serial ||
         (ToLowerA(name) == "system" && obj == nullptr))
-        g_Orion.CreateUnicodeTextMessage(TT_SYSTEM, serial, (uchar)font, color, message);
+        g_Orion.CreateUnicodeTextMessage(TT_SYSTEM, serial, (uint8_t)font, color, message);
     else
     {
         /*if (type == ST_EMOTE)
@@ -3753,7 +3753,7 @@ PACKET_HANDLER(DisplayClilocString)
             }
         }
 
-        g_Orion.CreateUnicodeTextMessage(TT_OBJECT, serial, (uchar)font, color, message);
+        g_Orion.CreateUnicodeTextMessage(TT_OBJECT, serial, (uint8_t)font, color, message);
     }
 }
 
@@ -3763,23 +3763,23 @@ PACKET_HANDLER(MegaCliloc)
     if (g_World == nullptr)
         return;
 
-    ushort unknown = ReadUInt16BE();
+    uint16_t unknown = ReadUInt16BE();
 
     if (unknown > 1)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     Move(2);
-    uint clilocRevision = ReadUInt32BE();
+    uint32_t clilocRevision = ReadUInt32BE();
 
-    puchar end = Start + Size;
+    uint8_t *end = Start + Size;
 
     vector<wstring> list;
 
     while (Ptr < end)
     {
-        uint cliloc = ReadUInt32BE();
+        uint32_t cliloc = ReadUInt32BE();
 
         if (!cliloc)
             break;
@@ -3916,7 +3916,7 @@ PACKET_HANDLER(Damage)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     CGameCharacter *character = g_World->FindWorldCharacter(serial);
 
     if (character != nullptr)
@@ -4035,17 +4035,17 @@ PACKET_HANDLER(BuffDebuff)
 	dword    Buff Secondary Cliloc (0 for attributes)
 	dword    Buff Third Cliloc (0 for attributes)
 	word    Primary Cliloc Arguments Length (0 for attributes)
-	uchar[*]    Primary Cliloc Arguments
+	uint8_t[*]    Primary Cliloc Arguments
 	word    Secondary Cliloc Arguments Length (0 for attributes)
-	uchar[*]    Secondary Cliloc Arguments
+	uint8_t[*]    Secondary Cliloc Arguments
 	word    Third Cliloc Arguments Length (0 for attributes)
-	uchar[*]    Third Cliloc Arguments
+	uint8_t[*]    Third Cliloc Arguments
 	endloop    Buffs <<<<
 	*/
 
     const int tableCount = 126;
 
-    static const ushort table[tableCount] = {
+    static const uint16_t table[tableCount] = {
         0x754C, 0x754A, 0x0000, 0x0000, 0x755E, 0x7549, 0x7551, 0x7556, 0x753A, 0x754D, 0x754E,
         0x7565, 0x753B, 0x7543, 0x7544, 0x7546, 0x755C, 0x755F, 0x7566, 0x7554, 0x7540, 0x7568,
         0x754F, 0x7550, 0x7553, 0x753E, 0x755D, 0x7563, 0x7562, 0x753F, 0x7559, 0x7557, 0x754B,
@@ -4060,11 +4060,11 @@ PACKET_HANDLER(BuffDebuff)
         0x7614, 0x7615, 0x75C5, 0x75F6, 0x761B
     };
 
-    const ushort buffIconStart = 0x03E9; //0x03EA ???
+    const uint16_t buffIconStart = 0x03E9; //0x03EA ???
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
-    ushort iconID = ReadUInt16BE() - buffIconStart;
+    uint16_t iconID = ReadUInt16BE() - buffIconStart;
 
     if (iconID < tableCount) //buff
     {
@@ -4072,19 +4072,19 @@ PACKET_HANDLER(BuffDebuff)
 
         if (gump != nullptr)
         {
-            ushort mode = ReadUInt16BE();
+            uint16_t mode = ReadUInt16BE();
 
             if (mode)
             {
                 Move(12);
 
-                ushort timer = ReadUInt16BE();
+                uint16_t timer = ReadUInt16BE();
 
                 Move(3);
 
-                uint titleCliloc = ReadUInt32BE();
-                uint descriptionCliloc = ReadUInt32BE();
-                uint wtfCliloc = ReadUInt32BE();
+                uint32_t titleCliloc = ReadUInt32BE();
+                uint32_t descriptionCliloc = ReadUInt32BE();
+                uint32_t wtfCliloc = ReadUInt32BE();
 
                 Move(4);
 
@@ -4126,14 +4126,14 @@ PACKET_HANDLER(SecureTrading)
     if (g_World == nullptr)
         return;
 
-    uchar type = ReadUInt8();
-    uint serial = ReadUInt32BE();
+    uint8_t type = ReadUInt8();
+    uint32_t serial = ReadUInt32BE();
 
     if (type == 0) //Новое трэйд окно
     {
-        uint id1 = ReadUInt32BE();
-        uint id2 = ReadUInt32BE();
-        uchar hasName = ReadUInt8();
+        uint32_t id1 = ReadUInt32BE();
+        uint32_t id2 = ReadUInt32BE();
+        uint8_t hasName = ReadUInt8();
 
         CGumpSecureTrading *gump = new CGumpSecureTrading(id1, 0, 0, id1, id2);
 
@@ -4171,8 +4171,8 @@ PACKET_HANDLER(SecureTrading)
 
         if (gump != nullptr)
         {
-            uint id1 = ReadUInt32BE();
-            uint id2 = ReadUInt32BE();
+            uint32_t id1 = ReadUInt32BE();
+            uint32_t id2 = ReadUInt32BE();
 
             gump->StateMy = (id1 != 0);
             gump->StateOpponent = (id2 != 0);
@@ -4186,15 +4186,15 @@ PACKET_HANDLER(TextEntryDialog)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    uchar parentID = ReadUInt8();
-    uchar buttonID = ReadUInt8();
+    uint32_t serial = ReadUInt32BE();
+    uint8_t parentID = ReadUInt8();
+    uint8_t buttonID = ReadUInt8();
 
     short textLen = ReadInt16BE();
     string text = ReadString(textLen);
 
     bool haveCancel = !ReadUInt8();
-    uchar variant = ReadUInt8();
+    uint8_t variant = ReadUInt8();
     int maxLength = ReadUInt32BE();
 
     short descLen = ReadInt16BE();
@@ -4215,13 +4215,13 @@ PACKET_HANDLER(OpenMenu)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    uint id = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint32_t id = ReadUInt16BE();
 
-    uchar nameLen = ReadUInt8();
+    uint8_t nameLen = ReadUInt8();
     string name = ReadString(nameLen);
 
-    uchar count = ReadUInt8();
+    uint8_t count = ReadUInt8();
 
     if (unpack16(Ptr)) //menu
     {
@@ -4244,8 +4244,8 @@ PACKET_HANDLER(OpenMenu)
 
         for (int i = 0; i < count; i++)
         {
-            ushort graphic = ReadUInt16BE();
-            ushort color = ReadUInt16BE();
+            uint16_t graphic = ReadUInt16BE();
+            uint16_t color = ReadUInt16BE();
 
             nameLen = ReadUInt8();
             name = ReadString(nameLen);
@@ -4352,15 +4352,15 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
         if (data.HaveScrollbar)
             width -= 16;
 
-        uint htmlColor = 0xFFFFFFFF;
-        ushort color = 0;
+        uint32_t htmlColor = 0xFFFFFFFF;
+        uint16_t color = 0;
 
         if (data.Color)
         {
             if (data.Color == 0x00FFFFFF)
                 htmlColor = 0xFFFFFFFE;
             else
-                htmlColor = (g_ColorManager.Color16To32((ushort)data.Color) << 8) | 0xFF;
+                htmlColor = (g_ColorManager.Color16To32((uint16_t)data.Color) << 8) | 0xFF;
         }
         else if (!data.HaveBackground)
         {
@@ -4377,7 +4377,7 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 
         CGUIHTMLText *htmlText = (CGUIHTMLText *)htmlGump->Add(new CGUIHTMLText(
             data.TextID,
-            (uchar)(m_ClientVersion >= CV_305D),
+            (uint8_t)(m_ClientVersion >= CV_305D),
             color,
             0,
             0,
@@ -4408,12 +4408,12 @@ PACKET_HANDLER(OpenGump)
     //TPRINT("Gump dump::\n");
     //TDUMP(buf, size);
 
-    uint serial = ReadUInt32BE();
-    uint id = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
+    uint32_t id = ReadUInt32BE();
     int x = ReadInt32BE();
     int y = ReadInt32BE();
 
-    std::unordered_map<uint, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
+    std::unordered_map<uint32_t, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
 
     if (found != m_GumpsCoordsCache.end())
     {
@@ -4427,7 +4427,7 @@ PACKET_HANDLER(OpenGump)
 
     CGumpGeneric *gump = new CGumpGeneric(serial, x, y, id);
 
-    ushort commandsLength = ReadUInt16BE();
+    uint16_t commandsLength = ReadUInt16BE();
     string commands = ReadString(commandsLength);
 
     Wisp::CTextFileParser parser({}, " ", "", "{}");
@@ -4901,10 +4901,10 @@ PACKET_HANDLER(OpenCompressedGump)
     if (g_World == nullptr)
         return;
 
-    uint senderID = ReadUInt32BE();
-    uint gumpID = ReadUInt32BE();
-    uint x = ReadUInt32BE();
-    uint y = ReadUInt32BE();
+    uint32_t senderID = ReadUInt32BE();
+    uint32_t gumpID = ReadUInt32BE();
+    uint32_t x = ReadUInt32BE();
+    uint32_t y = ReadUInt32BE();
     uLongf cLen = ReadUInt32BE() - 4; //Compressed Length (4 == sizeof(DecompressedLen)
     uLongf dLen = ReadUInt32BE();     //Decompressed Length
 
@@ -4943,8 +4943,8 @@ PACKET_HANDLER(OpenCompressedGump)
 
     Move(cLen);
 
-    uint linesCount = ReadUInt32BE(); //Text lines count
-    uint cTLen = 0;
+    uint32_t linesCount = ReadUInt32BE(); //Text lines count
+    uint32_t cTLen = 0;
     uLongf dTLen = 0;
     vector<uint8_t> gumpDecText;
 
@@ -4975,16 +4975,16 @@ PACKET_HANDLER(OpenCompressedGump)
     int newsize = 21 + dLen + 2 + dTLen;
 
     vector<uint8_t> newbufData(newsize);
-    puchar newbuf = &newbufData[0];
+    uint8_t *newbuf = &newbufData[0];
     newbuf[0] = 0xb0;
     pack16(newbuf + 1, newsize);
     pack32(newbuf + 3, senderID);
     pack32(newbuf + 7, gumpID);
     pack32(newbuf + 11, x);
     pack32(newbuf + 15, y);
-    pack16(newbuf + 19, (ushort)dLen);
+    pack16(newbuf + 19, (uint16_t)dLen);
     memcpy(newbuf + 21, &decLayoutData[0], dLen);
-    pack16(newbuf + 21 + dLen, (ushort)linesCount);
+    pack16(newbuf + 21 + dLen, (uint16_t)linesCount);
 
     if (linesCount > 0)
         memcpy(newbuf + 23 + dLen, &gumpDecText[0], dTLen);
@@ -5003,9 +5003,9 @@ PACKET_HANDLER(OpenCompressedGump)
 PACKET_HANDLER(DyeData)
 {
     DEBUG_TRACE_FUNCTION;
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     Move(2);
-    ushort graphic = ReadUInt16BE();
+    uint16_t graphic = ReadUInt16BE();
 
     Wisp::CSize gumpSize = g_Orion.GetGumpDimension(0x0906);
 
@@ -5023,23 +5023,23 @@ PACKET_HANDLER(DisplayMap)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    ushort gumpid = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint16_t gumpid = ReadUInt16BE();
 
     //TPRINT("gumpid = 0x%04X\n", gumpid);
 
-    ushort startX = ReadUInt16BE();
-    ushort startY = ReadUInt16BE();
-    ushort endX = ReadUInt16BE();
-    ushort endY = ReadUInt16BE();
-    ushort width = ReadUInt16BE();
-    ushort height = ReadUInt16BE();
+    uint16_t startX = ReadUInt16BE();
+    uint16_t startY = ReadUInt16BE();
+    uint16_t endX = ReadUInt16BE();
+    uint16_t endY = ReadUInt16BE();
+    uint16_t width = ReadUInt16BE();
+    uint16_t height = ReadUInt16BE();
 
     CGumpMap *gump = new CGumpMap(serial, gumpid, startX, startY, endX, endY, width, height);
 
     if (*Start == 0xF5 || m_ClientVersion >= CV_308Z) //308z или выше?
     {
-        ushort facet = 0;
+        uint16_t facet = 0;
 
         if (*Start == 0xF5)
             facet = ReadUInt16BE();
@@ -5067,7 +5067,7 @@ PACKET_HANDLER(MapData)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
     CGumpMap *gump = (CGumpMap *)g_GumpManager.UpdateGump(serial, 0, GT_MAP);
 
     if (gump != nullptr && gump->m_DataBox != nullptr)
@@ -5120,11 +5120,11 @@ PACKET_HANDLER(MapData)
 PACKET_HANDLER(TipWindow)
 {
     DEBUG_TRACE_FUNCTION;
-    uchar flag = ReadUInt8();
+    uint8_t flag = ReadUInt8();
 
     if (flag != 1) //1 - ignore
     {
-        uint serial = ReadUInt32BE();
+        uint32_t serial = ReadUInt32BE();
         short len = ReadInt16BE();
 
         string str = ReadString(len);
@@ -5150,7 +5150,7 @@ PACKET_HANDLER(CharacterProfile)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     wstring topText = ToWString(ReadString(0));
 
@@ -5172,7 +5172,7 @@ PACKET_HANDLER(BulletinBoardData)
     {
         case 0: //Open board
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
 
             CGameItem *item = g_World->FindWorldItem(serial);
 
@@ -5214,15 +5214,15 @@ PACKET_HANDLER(BulletinBoardData)
         }
         case 1: //Summary message
         {
-            uint boardSerial = ReadUInt32BE();
+            uint32_t boardSerial = ReadUInt32BE();
 
             CGumpBulletinBoard *gump =
                 (CGumpBulletinBoard *)g_GumpManager.GetGump(boardSerial, 0, GT_BULLETIN_BOARD);
 
             if (gump != nullptr)
             {
-                uint serial = ReadUInt32BE();
-                uint parentID = ReadUInt32BE();
+                uint32_t serial = ReadUInt32BE();
+                uint32_t parentID = ReadUInt32BE();
 
                 //poster
                 int len = ReadUInt8();
@@ -5249,14 +5249,14 @@ PACKET_HANDLER(BulletinBoardData)
         }
         case 2: //Message
         {
-            uint boardSerial = ReadUInt32BE();
+            uint32_t boardSerial = ReadUInt32BE();
 
             CGumpBulletinBoard *gump =
                 (CGumpBulletinBoard *)g_GumpManager.GetGump(boardSerial, 0, GT_BULLETIN_BOARD);
 
             if (gump != nullptr)
             {
-                uint serial = ReadUInt32BE();
+                uint32_t serial = ReadUInt32BE();
 
                 //poster
                 int len = ReadUInt8();
@@ -5273,7 +5273,7 @@ PACKET_HANDLER(BulletinBoardData)
                 //unused, in old clients: user's graphic, color
                 Move(4);
 
-                uchar unknown = ReadUInt8();
+                uint8_t unknown = ReadUInt8();
 
                 if (unknown > 0)
                 {
@@ -5281,12 +5281,12 @@ PACKET_HANDLER(BulletinBoardData)
                     Move(unknown * 4);
                 }
 
-                uchar lines = ReadUInt8();
+                uint8_t lines = ReadUInt8();
                 wstring data = L"";
 
                 for (int i = 0; i < lines; i++)
                 {
-                    uchar linelen = ReadUInt8();
+                    uint8_t linelen = ReadUInt8();
 
                     if (data.length())
                         data += L"\n";
@@ -5295,7 +5295,7 @@ PACKET_HANDLER(BulletinBoardData)
                         data += DecodeUTF8(ReadString(linelen));
                 }
 
-                uchar variant = 1 + (int)(poster == ToWString(g_Player->GetName()));
+                uint8_t variant = 1 + (int)(poster == ToWString(g_Player->GetName()));
                 g_GumpManager.AddGump(new CGumpBulletinBoardItem(
                     serial, 0, 0, variant, boardSerial, poster, subject, dataTime, data));
             }
@@ -5313,8 +5313,8 @@ PACKET_HANDLER(OpenBook) // 0x93
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    uchar flags = ReadUInt8();
+    uint32_t serial = ReadUInt32BE();
+    uint8_t flags = ReadUInt8();
     Move(1);
     WORD pageCount = ReadUInt16BE();
 
@@ -5333,10 +5333,10 @@ PACKET_HANDLER(OpenBookNew) // 0xD4
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
-    uchar flag1 = ReadUInt8();
-    uchar flag2 = ReadUInt8();
-    ushort pageCount = ReadUInt16BE();
+    uint32_t serial = ReadUInt32BE();
+    uint8_t flag1 = ReadUInt8();
+    uint8_t flag2 = ReadUInt8();
+    uint16_t pageCount = ReadUInt16BE();
 
     CGumpBook *gump = new CGumpBook(serial, 0, 0, pageCount, (flag1 + flag2) != 0, true);
 
@@ -5359,22 +5359,22 @@ PACKET_HANDLER(BookData)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGumpBook *gump = (CGumpBook *)g_GumpManager.GetGump(serial, 0, GT_BOOK);
 
     if (gump != nullptr)
     {
-        ushort pageCount = ReadUInt16BE();
+        uint16_t pageCount = ReadUInt16BE();
 
         for (int i = 0; i < pageCount; i++)
         {
-            ushort page = ReadUInt16BE();
+            uint16_t page = ReadUInt16BE();
 
             if (page > gump->PageCount)
                 continue;
 
-            ushort lineCount = ReadUInt16BE();
+            uint16_t lineCount = ReadUInt16BE();
 
             wstring str = L"";
 
@@ -5402,7 +5402,7 @@ PACKET_HANDLER(BuyList)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameItem *container = g_World->FindWorldItem(serial);
 
@@ -5412,7 +5412,7 @@ PACKET_HANDLER(BuyList)
         return;
     }
 
-    uint vendorSerial = container->Container;
+    uint32_t vendorSerial = container->Container;
 
     CGameCharacter *vendor = g_World->FindWorldCharacter(vendorSerial);
 
@@ -5440,7 +5440,7 @@ PACKET_HANDLER(BuyList)
 
     if (container->Layer == OL_BUY_RESTOCK || container->Layer == OL_BUY)
     {
-        uchar count = ReadUInt8();
+        uint8_t count = ReadUInt8();
 
         CGameItem *item = (CGameItem *)container->m_Items;
         //oldp spams this packet twice in a row on NPC verndors. nullptr check is needed t
@@ -5475,7 +5475,7 @@ PACKET_HANDLER(BuyList)
 
             item->Price = ReadUInt32BE();
 
-            uchar nameLen = ReadUInt8();
+            uint8_t nameLen = ReadUInt8();
             string name = ReadString(nameLen);
 
             //try int.parse and read cliloc.
@@ -5510,7 +5510,7 @@ PACKET_HANDLER(SellList)
     if (g_World == nullptr)
         return;
 
-    uint serial = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
 
@@ -5520,7 +5520,7 @@ PACKET_HANDLER(SellList)
         return;
     }
 
-    ushort itemsCount = ReadUInt16BE();
+    uint16_t itemsCount = ReadUInt16BE();
 
     if (!itemsCount)
     {
@@ -5537,11 +5537,11 @@ PACKET_HANDLER(SellList)
 
     for (int i = 0; i < itemsCount; i++)
     {
-        uint itemSerial = ReadUInt32BE();
-        ushort graphic = ReadUInt16BE();
-        ushort color = ReadUInt16BE();
-        ushort count = ReadUInt16BE();
-        ushort price = ReadUInt16BE();
+        uint32_t itemSerial = ReadUInt32BE();
+        uint16_t graphic = ReadUInt16BE();
+        uint16_t color = ReadUInt16BE();
+        uint16_t count = ReadUInt16BE();
+        uint16_t price = ReadUInt16BE();
         int nameLen = ReadInt16BE();
         string name = ReadString(nameLen);
 
@@ -5576,8 +5576,8 @@ PACKET_HANDLER(SellList)
 PACKET_HANDLER(BuyReply)
 {
     DEBUG_TRACE_FUNCTION;
-    uint serial = ReadUInt32BE();
-    uchar flag = ReadUInt8();
+    uint32_t serial = ReadUInt32BE();
+    uint8_t flag = ReadUInt8();
 
     if (!flag) //Close shop gump
         g_GumpManager.CloseGump(serial, 0, GT_SHOP);
@@ -5594,8 +5594,8 @@ PACKET_HANDLER(OPLInfo)
     DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled)
     {
-        uint serial = ReadUInt32BE();
-        uint revision = ReadUInt32BE();
+        uint32_t serial = ReadUInt32BE();
+        uint32_t revision = ReadUInt32BE();
 
         if (!g_ObjectPropertiesManager.RevisionCheck(serial, revision))
             AddMegaClilocRequest(serial);
@@ -5607,8 +5607,8 @@ PACKET_HANDLER(CustomHouse)
     DEBUG_TRACE_FUNCTION;
     bool compressed = ReadUInt8() == 0x03;
     bool enableResponse = ReadUInt8() == 0x01;
-    uint serial = ReadUInt32BE();
-    uint revision = ReadUInt32BE();
+    uint32_t serial = ReadUInt32BE();
+    uint32_t revision = ReadUInt32BE();
     CGameItem *foundationItem = g_World->FindWorldItem(serial);
 
     if (foundationItem == nullptr)
@@ -5640,11 +5640,11 @@ PACKET_HANDLER(CustomHouse)
     short minY = multi->MinY;
     short maxY = multi->MaxY;
 
-    uchar planes = ReadUInt8();
+    uint8_t planes = ReadUInt8();
 
     for (int plane = 0; plane < planes; plane++)
     {
-        uint header = ReadUInt32BE();
+        uint32_t header = ReadUInt32BE();
         uLongf dLen = ((header & 0xFF0000) >> 16) | ((header & 0xF0) << 4);
         int cLen = ((header & 0xFF00) >> 8) | ((header & 0x0F) << 8);
         int planeZ = (header & 0x0F000000) >> 24;
@@ -5664,10 +5664,10 @@ PACKET_HANDLER(CustomHouse)
             continue;
         }
 
-        Wisp::CDataReader tempReader(static_cast<puchar>(&decompressedBytes[0]), dLen);
+        Wisp::CDataReader tempReader(static_cast<uint8_t *>(&decompressedBytes[0]), dLen);
         Move(cLen);
 
-        ushort id = 0;
+        uint16_t id = 0;
         char x = 0;
         char y = 0;
         char z = 0;
@@ -5676,7 +5676,7 @@ PACKET_HANDLER(CustomHouse)
         {
             case 0:
             {
-                for (uint i = 0; i < decompressedBytes.size() / 5; i++)
+                for (uint32_t i = 0; i < decompressedBytes.size() / 5; i++)
                 {
                     id = tempReader.ReadUInt16BE();
                     x = tempReader.ReadUInt8();
@@ -5696,7 +5696,7 @@ PACKET_HANDLER(CustomHouse)
                 else
                     z = 0;
 
-                for (uint i = 0; i < decompressedBytes.size() / 4; i++)
+                for (uint32_t i = 0; i < decompressedBytes.size() / 4; i++)
                 {
                     id = tempReader.ReadUInt16BE();
                     x = tempReader.ReadUInt8();
@@ -5738,7 +5738,7 @@ PACKET_HANDLER(CustomHouse)
                     multiHeight = (maxY - minY) + 1;
                 }
 
-                for (uint i = 0; i < decompressedBytes.size() / 2; i++)
+                for (uint32_t i = 0; i < decompressedBytes.size() / 2; i++)
                 {
                     id = tempReader.ReadUInt16BE();
                     x = i / multiHeight + xOffs;
@@ -5764,8 +5764,8 @@ PACKET_HANDLER(CustomHouse)
 PACKET_HANDLER(OrionMessages)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort command = ReadUInt16BE();
-    uchar type = command >> 12;
+    uint16_t command = ReadUInt16BE();
+    uint8_t type = command >> 12;
     command &= 0x0FFF;
 
     if (type)
@@ -5785,20 +5785,20 @@ PACKET_HANDLER(OrionMessages)
         {
             g_Orion.m_IgnoreInFilterTiles.clear();
 
-            ushort count = ReadUInt16BE();
+            uint16_t count = ReadUInt16BE();
 
             for (int i = 0; i < count; i++)
                 g_Orion.m_IgnoreInFilterTiles.push_back(
-                    std::pair<ushort, ushort>(ReadUInt16BE(), 0));
+                    std::pair<uint16_t, uint16_t>(ReadUInt16BE(), 0));
 
-            ushort countRange = ReadUInt16BE();
+            uint16_t countRange = ReadUInt16BE();
 
             for (int i = 0; i < countRange; i++)
             {
-                ushort rangeStart = ReadUInt16BE();
-                ushort rangeEnd = ReadUInt16BE();
+                uint16_t rangeStart = ReadUInt16BE();
+                uint16_t rangeEnd = ReadUInt16BE();
                 g_Orion.m_IgnoreInFilterTiles.push_back(
-                    std::pair<ushort, ushort>(rangeStart, rangeEnd));
+                    std::pair<uint16_t, uint16_t>(rangeStart, rangeEnd));
             }
 
             break;
@@ -5810,9 +5810,9 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_CLOSE_GENERIC_GUMP_WITHOUT_RESPONSE:
         {
-            uint serial = ReadUInt32BE();
-            uint id = ReadUInt32BE();
-            uchar all = ReadUInt8();
+            uint32_t serial = ReadUInt32BE();
+            uint32_t id = ReadUInt32BE();
+            uint8_t all = ReadUInt8();
 
             QFOR(gump, g_GumpManager.m_Items, CGump *)
             {
@@ -5829,9 +5829,9 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_SELECT_MENU:
         {
-            uint serial = ReadUInt32BE();
-            uint id = ReadUInt32BE();
-            uint code = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
+            uint32_t id = ReadUInt32BE();
+            uint32_t code = ReadUInt32BE();
 
             if (!serial && !id)
             {
@@ -5899,7 +5899,7 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_DRAW_STATUSBAR:
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             int x = ReadInt32BE();
             int y = ReadInt32BE();
             bool minimized = (ReadUInt8() != 0);
@@ -5934,13 +5934,13 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_CLOSE_STATUSBAR:
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             g_GumpManager.CloseGump(serial, 0, GT_STATUSBAR);
             break;
         }
         case OCT_SECURE_TRADE_CHECK:
         {
-            uint id1 = ReadUInt32BE();
+            uint32_t id1 = ReadUInt32BE();
 
             CGumpSecureTrading *gump =
                 (CGumpSecureTrading *)g_GumpManager.UpdateGump(id1, 0, GT_TRADE);
@@ -5955,7 +5955,7 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_SECURE_TRADE_CLOSE:
         {
-            uint id1 = ReadUInt32BE();
+            uint32_t id1 = ReadUInt32BE();
 
             CGumpSecureTrading *gump =
                 (CGumpSecureTrading *)g_GumpManager.GetGump(id1, 0, GT_TRADE);
@@ -5970,7 +5970,7 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_UNICODE_SPEECH_REQUEST:
         {
-            ushort color = ReadUInt16BE();
+            uint16_t color = ReadUInt16BE();
             wstring text = ReadWString(0);
 
             CGameConsole::Send(text, color);
@@ -5979,7 +5979,7 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_RENAME_MOUNT_REQUEST:
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             string text = ReadString(0);
 
             CPacketRenameRequest(serial, text).Send();
@@ -6055,7 +6055,7 @@ PACKET_HANDLER(OrionMessages)
         }
         case OCT_MOVE_PAPERDOLL:
         {
-            uint serial = ReadUInt32BE();
+            uint32_t serial = ReadUInt32BE();
             int x = ReadInt32BE();
             int y = ReadInt32BE();
 
@@ -6098,7 +6098,7 @@ PACKET_HANDLER(PacketsList)
 
     for (int i = 0; i < count; i++)
     {
-        uchar id = ReadUInt8();
+        uint8_t id = ReadUInt8();
 
         if (id == 0xF3)
             HandleUpdateItemSA();
@@ -6116,7 +6116,7 @@ PACKET_HANDLER(MovePlayer)
     if (g_World == nullptr)
         return;
 
-    uchar direction = ReadUInt8();
+    uint8_t direction = ReadUInt8();
     g_PathFinder.Walk(direction & 0x80, direction & 7);
 }
 
@@ -6126,15 +6126,15 @@ PACKET_HANDLER(Pathfinding)
     if (g_World == nullptr)
         return;
 
-    ushort x = ReadInt16BE();
-    ushort y = ReadInt16BE();
-    ushort z = ReadInt16BE();
+    uint16_t x = ReadInt16BE();
+    uint16_t y = ReadInt16BE();
+    uint16_t z = ReadInt16BE();
     g_PathFinder.WalkTo(x, y, z, 0);
 }
 
-void CPacketManager::SetCachedGumpCoords(uint id, int x, int y)
+void CPacketManager::SetCachedGumpCoords(uint32_t id, int x, int y)
 {
-    std::unordered_map<uint, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
+    std::unordered_map<uint32_t, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
 
     if (found != m_GumpsCoordsCache.end())
     {
@@ -6153,19 +6153,19 @@ PACKET_HANDLER(BoatMoving)
 
     //disable BoatMoving for the 0.1.9.6 patch
     return;
-    uint boatSerial = ReadUInt32BE();
+    uint32_t boatSerial = ReadUInt32BE();
 
     CGameObject *boat = g_World->FindWorldObject(boatSerial);
     if (boat == nullptr)
         return;
 
-    uchar boatSpeed = ReadUInt8();
-    uchar movingDirection = ReadUInt8();
-    uchar facingDirection = ReadUInt8();
-    ushort boatX = ReadUInt16BE();
-    ushort boatY = ReadUInt16BE();
-    ushort boatZ = ReadUInt16BE();
-    ushort boatObjectsCount = ReadUInt16BE();
+    uint8_t boatSpeed = ReadUInt8();
+    uint8_t movingDirection = ReadUInt8();
+    uint8_t facingDirection = ReadUInt8();
+    uint16_t boatX = ReadUInt16BE();
+    uint16_t boatY = ReadUInt16BE();
+    uint16_t boatZ = ReadUInt16BE();
+    uint16_t boatObjectsCount = ReadUInt16BE();
 
     g_World->UpdateGameObject(
         boatSerial,
@@ -6180,20 +6180,20 @@ PACKET_HANDLER(BoatMoving)
         boat->GetFlags(),
         0,
         UGOT_MULTI,
-        (ushort)1);
+        (uint16_t)1);
 
-    for (ushort i = 0; i < boatObjectsCount; i++)
+    for (uint16_t i = 0; i < boatObjectsCount; i++)
     {
-        uint boatObjectSerial = ReadUInt32BE();
-        ushort boatObjectX = ReadUInt16BE();
-        ushort boatObjectY = ReadUInt16BE();
-        ushort boatObjectZ = ReadUInt16BE();
+        uint32_t boatObjectSerial = ReadUInt32BE();
+        uint16_t boatObjectX = ReadUInt16BE();
+        uint16_t boatObjectY = ReadUInt16BE();
+        uint16_t boatObjectZ = ReadUInt16BE();
 
         CGameObject *boatObject = g_World->FindWorldObject(boatObjectSerial);
         if (boatObject == nullptr)
             continue;
 
-        uchar direction = boatObject->NPC ? ((CGameCharacter *)boatObject)->Direction : 0;
+        uint8_t direction = boatObject->NPC ? ((CGameCharacter *)boatObject)->Direction : 0;
         g_World->UpdateGameObject(
             boatObjectSerial,
             boatObject->Graphic,
@@ -6207,6 +6207,6 @@ PACKET_HANDLER(BoatMoving)
             boatObject->GetFlags(),
             0,
             UGOT_ITEM,
-            (ushort)1);
+            (uint16_t)1);
     }
 }

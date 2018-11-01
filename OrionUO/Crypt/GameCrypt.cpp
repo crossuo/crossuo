@@ -390,14 +390,14 @@ void CBlowfishCrypt::InitTables()
         memcpy(p_table[key_index], p_box, sizeof(p_box));
         memcpy(s_table[key_index], s_box, sizeof(s_box));
 
-        puchar pkey = g_key_table[key_index];
-        puchar pkey_end = g_key_table[key_index + 1];
+        uint8_t *pkey = g_key_table[key_index];
+        uint8_t *pkey_end = g_key_table[key_index + 1];
 
         // XOR all bits of the key into the P-array until the entire P-array
         // has been processed (wrap at the end of the input key).
         for (i = 0; i < 18; i++)
         {
-            uint mask = *pkey++;
+            uint32_t mask = *pkey++;
             if (pkey >= pkey_end)
                 pkey = g_key_table[key_index];
 
@@ -415,7 +415,7 @@ void CBlowfishCrypt::InitTables()
 
             p_table[key_index][i] ^= mask;
         }
-        uint value[2] = { 0, 0 };
+        uint32_t value[2] = { 0, 0 };
         for (i = 0; i < 18; i += 2)
         {
             RawEncrypt(value, key_index);
@@ -434,7 +434,7 @@ void CBlowfishCrypt::InitTables()
     m_tables_ready = true;
 }
 
-void CBlowfishCrypt::RawEncrypt(uint *values, int table)
+void CBlowfishCrypt::RawEncrypt(uint32_t *values, int table)
 {
     unsigned int left = values[0];
     unsigned int right = values[1];
@@ -464,7 +464,7 @@ void CBlowfishCrypt::RawEncrypt(uint *values, int table)
     values[0] = right;
 }
 
-void CBlowfishCrypt::Encrypt(puchar in, puchar out, int len)
+void CBlowfishCrypt::Encrypt(uint8_t *in, uint8_t *out, int len)
 {
     while (m_stream_pos + len > CRYPT_GAMETABLE_TRIGGER)
     {
@@ -486,7 +486,7 @@ void CBlowfishCrypt::Encrypt(puchar in, puchar out, int len)
     {
         if (m_block_pos == 0)
         {
-            uint values[2];
+            uint32_t values[2];
 
             PBYTE seed = m_seed;
             N2L(seed, values[0]);
@@ -500,7 +500,7 @@ void CBlowfishCrypt::Encrypt(puchar in, puchar out, int len)
         }
         // CFB (Cipher FeedBack) encrypt
 
-        uchar c = (*in++) ^ m_seed[m_block_pos];
+        uint8_t c = (*in++) ^ m_seed[m_block_pos];
         *out++ = c;
 
         m_seed[m_block_pos] = c;
@@ -521,11 +521,11 @@ void CBlowfishCrypt::Init()
     m_block_pos = 0;
 }
 
-void CTwofishCrypt::Init(uchar IP[4])
+void CTwofishCrypt::Init(uint8_t IP[4])
 {
     memcpy(&m_IP, IP, 4);
 
-    uchar tmpBuff[0x100] = { 0 };
+    uint8_t tmpBuff[0x100] = { 0 };
 
     memset(&ki, 0, sizeof(ki));
     memset(&ci, 0, sizeof(ci));
@@ -549,7 +549,7 @@ void CTwofishCrypt::Init(uchar IP[4])
     m_pos = 0;
     dwIndex = 0;
     m_use_md5 = false;
-    uchar l_sm_bData[] = { 0x05, 0x92, 0x66, 0x23, 0x67, 0x14, 0xE3, 0x62,
+    uint8_t l_sm_bData[] = { 0x05, 0x92, 0x66, 0x23, 0x67, 0x14, 0xE3, 0x62,
                            0xDC, 0x60, 0x8C, 0xD6, 0xFE, 0x7C, 0x25, 0x69 };
     memcpy(sm_bData, l_sm_bData, 0x10);
 }
@@ -564,9 +564,9 @@ void CTwofishCrypt::Init_MD5()
     memcpy(sm_bData, m_md5->GetMD5(), 0x10);
 }
 
-void CTwofishCrypt::Encrypt(puchar in, puchar out, int size)
+void CTwofishCrypt::Encrypt(uint8_t *in, uint8_t *out, int size)
 {
-    uchar tmpBuff[0x100] = { 0 };
+    uint8_t tmpBuff[0x100] = { 0 };
 
     for (int i = 0; i < size; i++)
     {
@@ -580,9 +580,9 @@ void CTwofishCrypt::Encrypt(puchar in, puchar out, int size)
     }
 }
 
-void CTwofishCrypt::Decrypt(puchar in, puchar out, int size)
+void CTwofishCrypt::Decrypt(uint8_t *in, uint8_t *out, int size)
 {
-    uint dwTmpIndex = dwIndex;
+    uint32_t dwTmpIndex = dwIndex;
     for (int i = 0; i < size; i++)
     {
         out[i] = in[i] ^ sm_bData[dwTmpIndex % 16];

@@ -80,12 +80,12 @@ public:
     CLIENT_VERSION GetClientVersion() { return m_ClientVersion; };
     void SetClientVersion(CLIENT_VERSION val);
     string AutoLoginNames = "";
-    uint ConfigSerial = 0;
+    uint32_t ConfigSerial = 0;
 
 private:
     static CPacketInfo m_Packets[0x100];
 
-    std::unordered_map<uint, GumpCoords> m_GumpsCoordsCache;
+    std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
 
     bool AutoLoginNameExists(const string &name);
 
@@ -224,19 +224,19 @@ public:
 
     virtual int GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize);
 
-    CPacketInfo &GetInfo(uchar buf) const { return m_Packets[buf]; }
+    CPacketInfo &GetInfo(uint8_t buf) const { return m_Packets[buf]; }
 
     void SendMegaClilocRequests();
 
     void AddMegaClilocRequest(int serial);
 
-    void SavePluginReceivePacket(puchar buf, int size);
+    void SavePluginReceivePacket(uint8_t *buf, int size);
 
     void ProcessPluginPackets();
 
-    void PluginReceiveHandler(puchar buf, int size);
+    void PluginReceiveHandler(uint8_t *buf, int size);
 
-    void SetCachedGumpCoords(uint id, int x, int y);
+    void SetCachedGumpCoords(uint32_t id, int x, int y);
 };
 
 extern CPacketManager g_PacketManager;

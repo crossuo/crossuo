@@ -40,32 +40,33 @@ public:
 class CPluginPacketFileInfo : public CPluginPacket
 {
 public:
-    CPluginPacketFileInfo(int index, uint64 address, uint64 size);
+    CPluginPacketFileInfo(int index, uint64_t address, uint64_t size);
 };
 
 class CPluginPacketFileInfoLocalized : public CPluginPacket
 {
 public:
-    CPluginPacketFileInfoLocalized(int index, uint64 address, uint64 size, const string &language);
+    CPluginPacketFileInfoLocalized(
+        int index, uint64_t address, uint64_t size, const string &language);
 };
 
 class CPluginPacketStaticArtGraphicDataInfo : public CPluginPacket
 {
 public:
     CPluginPacketStaticArtGraphicDataInfo(
-        ushort graphic, uint64 address, uint64 size, uint64 compressedSize);
+        uint16_t graphic, uint64_t address, uint64_t size, uint64_t compressedSize);
 };
 
 class CPluginPacketGumpArtGraphicDataInfo : public CPluginPacket
 {
 public:
     CPluginPacketGumpArtGraphicDataInfo(
-        ushort graphic,
-        uint64 address,
-        uint64 size,
-        uint64 compressedSize,
-        ushort width,
-        ushort height);
+        uint16_t graphic,
+        uint64_t address,
+        uint64_t size,
+        uint64_t compressedSize,
+        uint16_t width,
+        uint16_t height);
 };
 
 class CPluginPacketFilesTransfered : public CPluginPacket

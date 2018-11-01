@@ -166,7 +166,7 @@ vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
     strcpy(waveHeader->subChunkId, "fmt ");
     strcpy(waveHeader->dataChunkId, "data");
 
-    waveHeader->chunkSize = (uint)waveSound.size();
+    waveHeader->chunkSize = (uint32_t)waveSound.size();
     waveHeader->subChunkSize = 16;
     waveHeader->audioFormat = 1;
     waveHeader->numChannels = 1;
@@ -174,7 +174,7 @@ vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
     waveHeader->bitsPerSample = 16;
     waveHeader->bytesPerSecond = 88200;
     waveHeader->blockAlign = 4;
-    waveHeader->dataSize = (uint)dataSize;
+    waveHeader->dataSize = (uint32_t)dataSize;
 
     is.Delay = static_cast<DWORD>((dataSize - 16) / 88.2f);
 

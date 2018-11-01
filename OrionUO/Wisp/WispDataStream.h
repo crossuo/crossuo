@@ -6,7 +6,7 @@ class CDataWritter
 {
 public:
     bool AutoResize = true;
-    puchar Ptr = 0;
+    uint8_t *Ptr = 0;
 
 protected:
     vector<uint8_t> m_Data;
@@ -18,7 +18,7 @@ public:
     virtual ~CDataWritter();
 
     vector<uint8_t> Data() const { return m_Data; }
-    puchar DataPtr() { return &m_Data[0]; }
+    uint8_t *DataPtr() { return &m_Data[0]; }
     size_t Size() { return m_Data.size(); }
 
     void Resize(size_t newSize, bool resetPtr = false);
@@ -26,89 +26,89 @@ public:
 
     void Move(const intptr_t &offset);
 
-    void WriteDataBE(const puchar data, size_t size, const intptr_t &offset = 0);
-    void WriteDataLE(const puchar data, size_t size, const intptr_t &offset = 0);
+    void WriteDataBE(const uint8_t *data, size_t size, const intptr_t &offset = 0);
+    void WriteDataLE(const uint8_t *data, size_t size, const intptr_t &offset = 0);
 
-    void WriteUInt8(uchar val, const intptr_t &offset = 0)
+    void WriteUInt8(uint8_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(uchar), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(uint8_t), offset);
     }
 
-    void WriteUInt16BE(ushort val, const intptr_t &offset = 0)
+    void WriteUInt16BE(uint16_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(ushort), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(uint16_t), offset);
     }
-    void WriteUInt16LE(ushort val, const intptr_t &offset = 0)
+    void WriteUInt16LE(uint16_t val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(ushort), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(uint16_t), offset);
     }
 
     void WriteUInt32BE(int val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(uint), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(uint32_t), offset);
     }
     void WriteUInt32LE(int val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(uint), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(uint32_t), offset);
     }
 
-    void WriteUInt64BE(uint64 val, const intptr_t &offset = 0)
+    void WriteUInt64BE(uint64_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(uint64), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(uint64_t), offset);
     }
-    void WriteUInt64LE(uint64 val, const intptr_t &offset = 0)
+    void WriteUInt64LE(uint64_t val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(uint64), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(uint64_t), offset);
     }
 
     void WriteInt8(char val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(char), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(char), offset);
     }
 
     void WriteInt16BE(short val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(short), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(short), offset);
     }
     void WriteInt16LE(short val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(short), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(short), offset);
     }
 
     void WriteInt32BE(int val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(int), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(int), offset);
     }
     void WriteInt32LE(int val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(int), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(int), offset);
     }
 
     void WriteInt64BE(int64_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(int64_t), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(int64_t), offset);
     }
     void WriteInt64LE(int64_t val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(int64_t), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(int64_t), offset);
     }
 
     void WriteFloatBE(float val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(float), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(float), offset);
     }
     void WriteFloatLE(float val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(float), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(float), offset);
     }
 
     void WriteDoubleBE(double val, const intptr_t &offset = 0)
     {
-        WriteDataBE((puchar)&val, sizeof(double), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(double), offset);
     }
     void WriteDoubleLE(double val, const intptr_t &offset = 0)
     {
-        WriteDataLE((puchar)&val, sizeof(double), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(double), offset);
     }
 
     void WriteString(
@@ -127,141 +127,141 @@ public:
 class CDataReader
 {
 public:
-    puchar Start = 0;
+    uint8_t *Start = 0;
     size_t Size = 0;
-    puchar End = 0;
-    puchar Ptr = 0;
+    uint8_t *End = 0;
+    uint8_t *Ptr = 0;
 
     CDataReader();
-    CDataReader(puchar start, size_t size);
+    CDataReader(uint8_t *start, size_t size);
 
     virtual ~CDataReader();
 
-    void SetData(puchar start, size_t size, const intptr_t &offset = 0);
+    void SetData(uint8_t *start, size_t size, const intptr_t &offset = 0);
     void ResetPtr() { Ptr = Start; }
 
     bool IsEOF() { return Ptr >= End; }
 
     void Move(const intptr_t &offset) { Ptr += offset; }
 
-    void ReadDataBE(puchar data, size_t size, const intptr_t &offset = 0);
-    void ReadDataLE(puchar data, size_t size, const intptr_t &offset = 0);
+    void ReadDataBE(uint8_t *data, size_t size, const intptr_t &offset = 0);
+    void ReadDataLE(uint8_t *data, size_t size, const intptr_t &offset = 0);
 
-    uchar ReadUInt8(const intptr_t &offset = 0)
+    uint8_t ReadUInt8(const intptr_t &offset = 0)
     {
-        uchar val = 0;
-        ReadDataBE((puchar)&val, sizeof(uchar), offset);
-        return val;
-    }
-
-    ushort ReadUInt16BE(const intptr_t &offset = 0)
-    {
-        ushort val = 0;
-        ReadDataBE((puchar)&val, sizeof(ushort), offset);
-        return val;
-    }
-    ushort ReadUInt16LE(const intptr_t &offset = 0)
-    {
-        ushort val = 0;
-        ReadDataLE((puchar)&val, sizeof(ushort), offset);
+        uint8_t val = 0;
+        ReadDataBE((uint8_t *)&val, sizeof(uint8_t), offset);
         return val;
     }
 
-    uint ReadUInt32BE(const intptr_t &offset = 0)
+    uint16_t ReadUInt16BE(const intptr_t &offset = 0)
     {
-        uint val = 0;
-        ReadDataBE((puchar)&val, sizeof(uint), offset);
+        uint16_t val = 0;
+        ReadDataBE((uint8_t *)&val, sizeof(uint16_t), offset);
         return val;
     }
-    uint ReadUInt32LE(const intptr_t &offset = 0)
+    uint16_t ReadUInt16LE(const intptr_t &offset = 0)
     {
-        uint val = 0;
-        ReadDataLE((puchar)&val, sizeof(uint), offset);
+        uint16_t val = 0;
+        ReadDataLE((uint8_t *)&val, sizeof(uint16_t), offset);
+        return val;
+    }
+
+    uint32_t ReadUInt32BE(const intptr_t &offset = 0)
+    {
+        uint32_t val = 0;
+        ReadDataBE((uint8_t *)&val, sizeof(uint32_t), offset);
+        return val;
+    }
+    uint32_t ReadUInt32LE(const intptr_t &offset = 0)
+    {
+        uint32_t val = 0;
+        ReadDataLE((uint8_t *)&val, sizeof(uint32_t), offset);
         return val;
     }
 
     char ReadInt8(const intptr_t &offset = 0)
     {
         char val = 0;
-        ReadDataBE((puchar)&val, sizeof(char), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(char), offset);
         return val;
     }
 
     short ReadInt16BE(const intptr_t &offset = 0)
     {
         short val = 0;
-        ReadDataBE((puchar)&val, sizeof(short), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(short), offset);
         return val;
     }
     short ReadInt16LE(const intptr_t &offset = 0)
     {
         short val = 0;
-        ReadDataLE((puchar)&val, sizeof(short), offset);
+        ReadDataLE((uint8_t *)&val, sizeof(short), offset);
         return val;
     }
 
     int ReadInt32BE(const intptr_t &offset = 0)
     {
         int val = 0;
-        ReadDataBE((puchar)&val, sizeof(int), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(int), offset);
         return val;
     }
     int ReadInt32LE(const intptr_t &offset = 0)
     {
         int val = 0;
-        ReadDataLE((puchar)&val, sizeof(int), offset);
+        ReadDataLE((uint8_t *)&val, sizeof(int), offset);
         return val;
     }
 
     int64_t ReadInt64BE(const intptr_t &offset = 0)
     {
         int64_t val = 0;
-        ReadDataBE((puchar)&val, sizeof(int64_t), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(int64_t), offset);
         return val;
     }
     int64_t ReadInt64LE(const intptr_t &offset = 0)
     {
         int64_t val = 0;
-        ReadDataLE((puchar)&val, sizeof(int64_t), offset);
+        ReadDataLE((uint8_t *)&val, sizeof(int64_t), offset);
         return val;
     }
 
-    uint64 ReadUInt64BE(const intptr_t &offset = 0)
+    uint64_t ReadUInt64BE(const intptr_t &offset = 0)
     {
-        uint64 val = 0;
-        ReadDataBE((puchar)&val, sizeof(uint64), offset);
+        uint64_t val = 0;
+        ReadDataBE((uint8_t *)&val, sizeof(uint64_t), offset);
         return val;
     }
-    uint64 ReadUInt64LE(const intptr_t &offset = 0)
+    uint64_t ReadUInt64LE(const intptr_t &offset = 0)
     {
-        uint64 val = 0;
-        ReadDataLE((puchar)&val, sizeof(uint64), offset);
+        uint64_t val = 0;
+        ReadDataLE((uint8_t *)&val, sizeof(uint64_t), offset);
         return val;
     }
 
     float ReadFloatBE(const intptr_t &offset = 0)
     {
         float val = 0.0f;
-        ReadDataBE((puchar)&val, sizeof(float), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(float), offset);
         return val;
     }
     float ReadFloatLE(const intptr_t &offset = 0)
     {
         float val = 0.0f;
-        ReadDataLE((puchar)&val, sizeof(float), offset);
+        ReadDataLE((uint8_t *)&val, sizeof(float), offset);
         return val;
     }
 
     double ReadDoubleBE(const intptr_t &offset = 0)
     {
         double val = 0.0;
-        ReadDataBE((puchar)&val, sizeof(double), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(double), offset);
         return val;
     }
     double ReadDoubleLE(const intptr_t &offset = 0)
     {
         double val = 0.0;
-        ReadDataLE((puchar)&val, sizeof(double), offset);
+        ReadDataLE((uint8_t *)&val, sizeof(double), offset);
         return val;
     }
 

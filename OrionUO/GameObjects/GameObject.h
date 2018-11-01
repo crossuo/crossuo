@@ -23,18 +23,18 @@ class CGameObject : public CRenderStaticObject
 {
 public:
     //!Серийник контейнера, содержащего объект (0xFFFFFFFF - объект лежит в мире)
-    uint Container = 0xFFFFFFFF;
+    uint32_t Container = 0xFFFFFFFF;
     //!Карта объекта
-    uchar MapIndex = 0;
+    uint8_t MapIndex = 0;
     //!Количество
-    uint Count = 0;
+    uint32_t Count = 0;
     //!Флаги от сервера
 protected:
-    uchar m_Flags = 0;
+    uint8_t m_Flags = 0;
 
 public:
-    uchar GetFlags() { return m_Flags; };
-    void SetFlags(uchar val);
+    uint8_t GetFlags() { return m_Flags; };
+    void SetFlags(uint8_t val);
     //!Имя
 protected:
     string m_Name = "";
@@ -51,7 +51,7 @@ public:
     //!Префикс You see: в журнале
     string JournalPrefix = "";
     //!Время последнего изменения анимации
-    uint LastAnimationChangeTime = 0;
+    uint32_t LastAnimationChangeTime = 0;
     bool SA_Poisoned = false;
     bool ClosedObjectHandle = false;
     bool pvpCaller = false;
@@ -101,7 +101,7 @@ public:
 	Получить индекс анимации
 	@return Индекс анимации
 	*/
-    virtual ushort GetMountAnimation();
+    virtual uint16_t GetMountAnimation();
 
     /*!
 	Событие, вызываемое при изменении индекса картинки
@@ -243,14 +243,14 @@ public:
 	Золото ли это
 	@return Индекс в таблице золота
 	*/
-    static int IsGold(ushort graphic);
+    static int IsGold(uint16_t graphic);
 
     /*!
 	Получить индекс картинки для рисования
 	@param [__out] doubleDraw Двойная отрисовка объекта
 	@return Индекс картинки
 	*/
-    ushort GetDrawGraphic(bool &doubleDraw);
+    uint16_t GetDrawGraphic(bool &doubleDraw);
 
     /*!
 	Это игровой объект

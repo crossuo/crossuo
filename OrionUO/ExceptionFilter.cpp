@@ -67,7 +67,7 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
     CRASHLOG(
         "Address: 0x%08X => 0x%08X Storage: '%s' size: %i blocks: %i path: %s\n",
         vmq.pvBlkBaseAddress,
-        (puchar)vmq.pvBlkBaseAddress + vmq.RgnSize,
+        (uint8_t *)vmq.pvBlkBaseAddress + vmq.RgnSize,
         GetMemStorageText(vmq.dwBlkStorage).c_str(),
         vmq.RgnSize,
         vmq.dwRgnBlocks,
@@ -126,7 +126,7 @@ void DumpLibraryInformation()
 
             DumpRegionInfo(snapshot, process, vmq);
 
-            address = ((puchar)vmq.pvRgnBaseAddress + vmq.RgnSize);
+            address = ((uint8_t *)vmq.pvRgnBaseAddress + vmq.RgnSize);
         }
 
         CloseHandle(snapshot);
@@ -152,10 +152,10 @@ void DumpCurrentRegistersInformation(CONTEXT *CR)
     CRASHLOG("EIP=0x%016LX, EFLAGS=0x%016LX\n\n", CR->Rip, CR->EFlags);
 
     CRASHLOG("Bytes at EIP:\n");
-    CRASHLOG_DUMP((puchar)CR->Rip, 16);
+    CRASHLOG_DUMP((uint8_t *)CR->Rip, 16);
 
     CRASHLOG("Bytes at ESP:\n");
-    CRASHLOG_DUMP((puchar)CR->Rsp, 64);
+    CRASHLOG_DUMP((uint8_t *)CR->Rsp, 64);
 #else
     CRASHLOG(
         "EAX=0x%08X, EBX=0x%08X, ECX=0x%08X, EDX=0x%08X\n", CR->Eax, CR->Ebx, CR->Ecx, CR->Edx);
@@ -164,19 +164,19 @@ void DumpCurrentRegistersInformation(CONTEXT *CR)
     CRASHLOG("EIP=0x%08X, EFLAGS=0x%08X\n\n", CR->Eip, CR->EFlags);
 
     CRASHLOG("Bytes at EIP:\n");
-    CRASHLOG_DUMP((puchar)CR->Eip, 16);
+    CRASHLOG_DUMP((uint8_t *)CR->Eip, 16);
 
     CRASHLOG("Bytes at ESP:\n");
-    CRASHLOG_DUMP((puchar)CR->Esp, 64);
+    CRASHLOG_DUMP((uint8_t *)CR->Esp, 64);
 #endif
 }
 
 LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptionInfo)
 {
     static int errorCount = 0;
-    static uint lastErrorTime = 0;
+    static uint32_t lastErrorTime = 0;
 
-    uint ticks = GetTickCount();
+    uint32_t ticks = GetTickCount();
 
     errorCount++;
 
@@ -214,9 +214,9 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
             {
                 vector<uint8_t> pattern;
 #if defined(_WIN64)
-                puchar eipBytes = (puchar)exceptionInfo->ContextRecord->Rip;
+                uint8_t *eipBytes = (uint8_t *)exceptionInfo->ContextRecord->Rip;
 #else
-                puchar eipBytes = (puchar)exceptionInfo->ContextRecord->Eip;
+                uint8_t *eipBytes = (uint8_t *)exceptionInfo->ContextRecord->Eip;
 #endif
 
                 for (int i = 0; i < 16; i++)
@@ -240,7 +240,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                          ++i)
                     {
                         CRASHLOG("Packet data:\n");
-                        CRASHLOG_DUMP((puchar)i->data(), i->size());
+                        CRASHLOG_DUMP((uint8_t *)i->data(), i->size());
                     }
                 }
                 crashlog = true;

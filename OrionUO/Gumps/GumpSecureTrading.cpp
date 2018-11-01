@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpSecureTrading::CGumpSecureTrading(uint serial, short x, short y, uint id, uint id2)
+CGumpSecureTrading::CGumpSecureTrading(uint32_t serial, short x, short y, uint32_t id, uint32_t id2)
     : CGump(GT_TRADE, serial, x, y)
     , ID2(id2)
 {
@@ -149,7 +149,7 @@ void CGumpSecureTrading::UpdateContent()
         QFOR(item, container->m_Items, CGameItem *)
         {
             bool doubleDraw = false;
-            ushort graphic = item->GetDrawGraphic(doubleDraw);
+            uint16_t graphic = item->GetDrawGraphic(doubleDraw);
 
             CGUITilepicHightlighted *dataObject =
                 (CGUITilepicHightlighted *)m_MyDataBox->Add(new CGUITilepicHightlighted(
@@ -177,7 +177,7 @@ void CGumpSecureTrading::UpdateContent()
         QFOR(item, container->m_Items, CGameItem *)
         {
             bool doubleDraw = false;
-            ushort graphic = item->GetDrawGraphic(doubleDraw);
+            uint16_t graphic = item->GetDrawGraphic(doubleDraw);
 
             CGUITilepicHightlighted *dataObject =
                 (CGUITilepicHightlighted *)m_OpponentDataBox->Add(new CGUITilepicHightlighted(
@@ -288,7 +288,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
                 y = g_MouseManager.Position.Y - y - 70;
 
                 bool doubleDraw = false;
-                ushort graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
+                uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
 
                 CGLTexture *th = g_Orion.ExecuteStaticArt(graphic);
 

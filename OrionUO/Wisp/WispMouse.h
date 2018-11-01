@@ -20,9 +20,9 @@ public:
     int DoubleClickDelay = 350;
     bool CancelDoubleClick = false;
 
-    uint LastLeftButtonClickTimer = 0;
-    uint LastRightButtonClickTimer = 0;
-    uint LastMidButtonClickTimer = 0;
+    uint32_t LastLeftButtonClickTimer = 0;
+    uint32_t LastRightButtonClickTimer = 0;
+    uint32_t LastMidButtonClickTimer = 0;
 
     CMouse();
     virtual ~CMouse();

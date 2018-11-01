@@ -18,7 +18,7 @@ public:
     float BaseValue = 0.0f;
     float Value = 0.0f;
     float Cap = 0.0f;
-    uchar Status = 0;
+    uint8_t Status = 0;
 
     CSkill() {}
     CSkill(bool haveButton, const string &name);
@@ -28,7 +28,7 @@ public:
 class CSkillsManager
 {
 public:
-    uint Count = 0;
+    uint32_t Count = 0;
     bool SkillsRequested = false;
     float SkillsTotal = 0.0f;
 
@@ -48,11 +48,11 @@ public:
 
     void Clear();
 
-    CSkill *Get(uint index);
+    CSkill *Get(uint32_t index);
 
     void Sort();
 
-    int GetSortedIndex(uint index);
+    int GetSortedIndex(uint32_t index);
 
     void UpdateSkillsSum();
 };

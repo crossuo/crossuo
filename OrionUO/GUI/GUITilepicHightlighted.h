@@ -15,7 +15,7 @@
 class CGUITilepicHightlighted : public CGUITilepic
 {
     //!Цвет выбранной компоненты
-    ushort SelectedColor = 0;
+    uint16_t SelectedColor = 0;
 
     //!Дублировать картинку при отображении
     bool DoubleDraw = false;
@@ -23,9 +23,9 @@ class CGUITilepicHightlighted : public CGUITilepic
 public:
     CGUITilepicHightlighted(
         int serial,
-        ushort graphic,
-        ushort color,
-        ushort selectedColor,
+        uint16_t graphic,
+        uint16_t color,
+        uint16_t selectedColor,
         int x,
         int y,
         bool doubleDraw);

@@ -15,24 +15,24 @@ class CTarget
 {
 public:
     //Тип объекта прицела
-    uchar Type = 0;
+    uint8_t Type = 0;
     //Тип прицела
-    uchar CursorType = 0;
+    uint8_t CursorType = 0;
     //Мульти на таргете
-    ushort MultiGraphic = 0;
+    uint16_t MultiGraphic = 0;
     //Мульти на таргете X
-    ushort MultiX = 0;
+    uint16_t MultiX = 0;
     //Мульти на таргете Y
-    ushort MultiY = 0;
+    uint16_t MultiY = 0;
     //Серийник объекта, к которому привязан прицел
-    uint CursorID = 0;
+    uint32_t CursorID = 0;
     //Флаг состояния прицела
     bool Targeting = false;
 
 private:
     //Текущие и последний данные прицела
-    uchar m_Data[19];
-    uchar m_LastData[19];
+    uint8_t m_Data[19];
+    uint8_t m_LastData[19];
 
     //Список объектов мульти на таргете
     CMulti *m_Multi{ nullptr };
@@ -64,7 +64,7 @@ public:
     void SendTargetObject(int Serial);
 
     //Послать таргет на тайл
-    void SendTargetTile(ushort tileID, short x, short Y, char z);
+    void SendTargetTile(uint16_t tileID, short x, short Y, char z);
 
     //Послать отмену таргета
     void SendCancelTarget();
@@ -73,7 +73,7 @@ public:
     void Plugin_SendTargetObject(int Serial);
 
     //Послать таргет на тайл
-    void Plugin_SendTargetTile(ushort tileID, short x, short Y, char z);
+    void Plugin_SendTargetTile(uint16_t tileID, short x, short Y, char z);
 
     //Послать отмену таргета
     void Plugin_SendCancelTarget();

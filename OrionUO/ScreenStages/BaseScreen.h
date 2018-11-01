@@ -15,8 +15,8 @@ class CBaseScreen : public CBaseQueue
 {
 public:
     //!Индекс действия, которое необходимо совершить после окончания плавного перехода затемненного состояния экрана
-    uchar SmoothScreenAction = 0;
-    ushort CursorGraphic = 0x2073;
+    uint8_t SmoothScreenAction = 0;
+    uint16_t CursorGraphic = 0x2073;
 
 protected:
     CGump &m_Gump;
@@ -53,14 +53,14 @@ public:
 	@param [__in] action Идентификатор действия
 	@return 
 	*/
-    virtual void CreateSmoothAction(uchar action);
+    virtual void CreateSmoothAction(uint8_t action);
 
     /*!
 	Обработка события после перехода
 	@param [__in_opt] action Идентификатор действия
 	@return 
 	*/
-    virtual void ProcessSmoothAction(uchar action = 0xFF) {}
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) {}
 
     /*!
 	Вычисление состояния перехода

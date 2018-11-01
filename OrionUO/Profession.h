@@ -16,10 +16,10 @@ public:
     string Name = "";
     string TrueName = "";
     wstring Description = L"";
-    uint NameClilocID = 0;
-    uint DescriptionClilocID = 0;
+    uint32_t NameClilocID = 0;
+    uint32_t DescriptionClilocID = 0;
     PROFESSION_TYPE Type = PT_NO_PROF;
-    ushort Gump = 0;
+    uint16_t Gump = 0;
     bool TopLevel = false;
     int DescriptionIndex = 0;
 
@@ -44,37 +44,37 @@ public:
 class CProfession : public CBaseProfession
 {
 public:
-    uchar Str = 0;
-    uchar Int = 0;
-    uchar Dex = 0;
+    uint8_t Str = 0;
+    uint8_t Int = 0;
+    uint8_t Dex = 0;
 
 private:
-    uchar m_SkillIndex[4];
-    uchar m_SkillValue[4];
+    uint8_t m_SkillIndex[4];
+    uint8_t m_SkillValue[4];
 
 public:
     CProfession();
     virtual ~CProfession();
 
-    void SetSkillIndex(int index, uchar val)
+    void SetSkillIndex(int index, uint8_t val)
     {
         if (index >= 0 && index < 4)
             m_SkillIndex[index] = val;
     }
-    void SetSkillValue(int index, uchar val)
+    void SetSkillValue(int index, uint8_t val)
     {
         if (index >= 0 && index < 4)
             m_SkillValue[index] = val;
     }
 
-    uchar GetSkillIndex(int index) const
+    uint8_t GetSkillIndex(int index) const
     {
         if (index >= 0 && index < 4)
             return m_SkillIndex[index];
         else
             return 0xFF;
     }
-    uchar GetSkillValue(int index) const
+    uint8_t GetSkillValue(int index) const
     {
         if (index >= 0 && index < 4)
             return m_SkillValue[index];

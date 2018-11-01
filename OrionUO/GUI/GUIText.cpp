@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGUIText::CGUIText(ushort color, int x, int y)
+CGUIText::CGUIText(uint16_t color, int x, int y)
     : CBaseGUI(GOT_TEXT, 0, 0, color, x, y)
 {
 }
@@ -23,14 +23,14 @@ CGUIText::~CGUIText()
 }
 
 void CGUIText::CreateTextureA(
-    uchar font, const string &str, int width, TEXT_ALIGN_TYPE align, ushort flags)
+    uint8_t font, const string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     g_FontManager.GenerateA(font, m_Texture, str, Color, width, align, flags);
 }
 
 void CGUIText::CreateTextureW(
-    uchar font, const wstring &str, uchar cell, int width, TEXT_ALIGN_TYPE align, ushort flags)
+    uint8_t font, const wstring &str, uint8_t cell, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     g_FontManager.GenerateW(font, m_Texture, str, Color, cell, width, align, flags);

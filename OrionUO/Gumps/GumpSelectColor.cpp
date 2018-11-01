@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpSelectColor::CGumpSelectColor(uint serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
+CGumpSelectColor::CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
     : CGump(GT_SELECT_COLOR, serial, x, y)
     , m_State(state)
 {
@@ -53,9 +53,9 @@ void CGumpSelectColor::UpdateContent()
     const int cellWidthX = 8;
     const int cellWidthY = 8;
 
-    ushort startColor = m_ColorRef + 1;
+    uint16_t startColor = m_ColorRef + 1;
 
-    puchar huesData = (puchar)g_ColorManager.GetHuesRangePointer() + 32 + 4;
+    uint8_t *huesData = (uint8_t *)g_ColorManager.GetHuesRangePointer() + 32 + 4;
     const int colorOffsetDivider = sizeof(HUES_GROUP) - 4;
 
     for (int y = 0; y < 10; y++)
@@ -65,11 +65,11 @@ void CGumpSelectColor::UpdateContent()
             int colorIndex = (startColor + ((startColor + (startColor << 2)) << 1)) << 3;
 
             colorIndex += (colorIndex / colorOffsetDivider) << 2;
-            ushort color = *(pushort)(huesData + colorIndex);
+            uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-            uint clr = g_ColorManager.Color16To32(color);
+            uint32_t clr = g_ColorManager.Color16To32(color);
 
-            uint serial = ID_GSC_COLORS + ((int)x * 30 + (int)y);
+            uint32_t serial = ID_GSC_COLORS + ((int)x * 30 + (int)y);
             CGUIColoredPolygone *polygone =
                 (CGUIColoredPolygone *)m_DataBox->Add(new CGUIColoredPolygone(
                     serial,
@@ -92,7 +92,7 @@ void CGumpSelectColor::GUMP_BUTTON_EVENT_C
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != nullptr)
     {
-        ushort color = 0;
+        uint16_t color = 0;
 
         QFOR(item, m_DataBox->m_Items, CBaseGUI *)
         {
@@ -130,7 +130,7 @@ void CGumpSelectColor::GUMP_SLIDER_MOVE_EVENT_C
     }
 }
 
-void CGumpSelectColor::OnSelectColor(ushort color)
+void CGumpSelectColor::OnSelectColor(uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     CGumpOptions *gump = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);

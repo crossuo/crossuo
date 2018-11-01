@@ -26,7 +26,7 @@ private:
     void UpdateTotalPrice();
 
 public:
-    CGumpShop(uint serial, bool isBuyGump, short x, short y);
+    CGumpShop(uint32_t serial, bool isBuyGump, short x, short y);
     virtual ~CGumpShop();
 
     CGUIHTMLGump *m_ItemList[2];

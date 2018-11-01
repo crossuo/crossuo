@@ -38,7 +38,7 @@ void CCityManager::Init()
 
     if (file.Load(g_App.UOFilesPath("citytext.enu")))
     {
-        puchar end = file.Ptr + file.Size;
+        uint8_t *end = file.Ptr + file.Size;
 
         while (file.Ptr < end)
         {
@@ -46,8 +46,8 @@ void CCityManager::Init()
             {
                 file.Move(4);
 
-                puchar startBlock = file.Ptr + 4;
-                puchar ptrBlock = startBlock;
+                uint8_t *startBlock = file.Ptr + 4;
+                uint8_t *ptrBlock = startBlock;
                 string name = "";
 
                 while (ptrBlock < end)

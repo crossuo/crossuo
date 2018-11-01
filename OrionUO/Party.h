@@ -14,9 +14,9 @@ class CParty
 {
 public:
     //Серийник лидера пати
-    uint Leader = 0;
+    uint32_t Leader = 0;
     //Серийник пригласившего в пати
-    uint Inviter = 0;
+    uint32_t Inviter = 0;
     //Может ли группа лутать труп игрока
     bool CanLoot = false;
 

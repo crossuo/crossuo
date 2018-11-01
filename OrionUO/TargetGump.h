@@ -16,8 +16,8 @@ public:
     int X = 0;
     int Y = 0;
     int Hits = 0;
-    ushort Color = 0;
-    ushort HealthColor = 0;
+    uint16_t Color = 0;
+    uint16_t HealthColor = 0;
     CGameCharacter *TargetedCharacter = nullptr;
     CTargetGump();
     ~CTargetGump();
@@ -28,17 +28,17 @@ public:
 class CNewTargetSystem
 {
 public:
-    uint Serial = 0;
+    uint32_t Serial = 0;
     int X = 0;
     int TopY = 0;
     int BottomY = 0;
     int GumpX = 20;
     int GumpY = 20;
     int Hits = 0;
-    ushort GumpTop = 0;
-    ushort GumpBottom = 0;
-    ushort ColorGump = 0;
-    ushort HealthColor = 0;
+    uint16_t GumpTop = 0;
+    uint16_t GumpBottom = 0;
+    uint16_t ColorGump = 0;
+    uint16_t HealthColor = 0;
     CGameCharacter *TargetedCharacter = nullptr;
     CNewTargetSystem();
     ~CNewTargetSystem();

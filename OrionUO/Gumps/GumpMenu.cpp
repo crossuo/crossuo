@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpMenu::CGumpMenu(uint serial, uint id, short x, short y)
+CGumpMenu::CGumpMenu(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_MENU, serial, x, y)
 {
     ID = id;

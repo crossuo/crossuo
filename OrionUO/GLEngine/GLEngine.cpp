@@ -250,7 +250,7 @@ void CGLEngine::UpdateRect()
     g_GumpManager.RedrawAll();
 }
 
-void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, pushort pixels)
+void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -293,7 +293,7 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, pu
     }
 }
 
-void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, puint pixels)
+void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t * pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -350,14 +350,14 @@ void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
     texture.MirroredVertexBuffer = vbo[1];
 }
 
-void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, pushort pixels)
+void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GL1_BindTexture16(texture, width, height, pixels);
     GL2_CreateArrays(texture, width, height);
 }
 
-void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, puint pixels)
+void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t * pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GL1_BindTexture32(texture, width, height, pixels);

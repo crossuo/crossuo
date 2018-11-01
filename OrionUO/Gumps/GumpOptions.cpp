@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "GumpOptions.h"
 
-const ushort g_OptionsTextColor = 0;
+const uint16_t g_OptionsTextColor = 0;
 const int g_OptionsPolygoneColorOffset = 12;
 
 CGumpOptions::CGumpOptions(short x, short y)
@@ -142,7 +142,7 @@ void CGumpOptions::Init()
 void CGumpOptions::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
     {
@@ -1349,7 +1349,7 @@ void CGumpOptions::DrawPage3()
 
     Add(new CGUIButton(ID_GO_P3_TEXT_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 151));
 
-    uint color = 0xFF7F7F7F;
+    uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.ToolTipsTextColor != 0xFFFF)
         color = g_ColorManager.GetPolygoneColor(
@@ -1384,7 +1384,7 @@ void CGumpOptions::DrawPage4()
 
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 90));
 
-    uint color = 0xFF7F7F7F;
+    uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
         color = g_ColorManager.GetPolygoneColor(
@@ -1638,7 +1638,7 @@ void CGumpOptions::RedrawMacroData()
     bool alt = false;
     bool ctrl = false;
     bool shift = false;
-    ushort key = 0;
+    uint16_t key = 0;
 
     if (m_MacroPointer != nullptr)
     {
@@ -2076,7 +2076,7 @@ void CGumpOptions::DrawPage7()
 
     Add(new CGUIButton(ID_GO_P7_SPEECH_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 204));
 
-    uint color = 0xFF7F7F7F;
+    uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.SpeechColor != 0xFFFF)
         color = g_ColorManager.GetPolygoneColor(
@@ -2205,7 +2205,7 @@ void CGumpOptions::DrawPage8()
 
     Add(new CGUIButton(ID_GO_P8_INNOCENT_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 90));
 
-    uint color = 0xFF7F7F7F;
+    uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.InnocentColor != 0xFFFF)
         color = g_ColorManager.GetPolygoneColor(
@@ -2382,7 +2382,7 @@ void CGumpOptions::DrawPage10()
     Add(new CGUIGumppic(0x00EA, 576, 309));
 }
 
-void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, ushort color)
+void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     switch (state)

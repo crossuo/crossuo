@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUICheckbox::CGUICheckbox(
-    int serial, ushort graphic, ushort graphicChecked, ushort graphicDisabled, int x, int y)
+    int serial, uint16_t graphic, uint16_t graphicChecked, uint16_t graphicDisabled, int x, int y)
     : CGUIDrawObject(GOT_CHECKBOX, serial, graphic, 0, x, y)
     , GraphicChecked(graphicChecked)
     , GraphicSelected(graphic)
@@ -27,13 +27,13 @@ CGUICheckbox::~CGUICheckbox()
 }
 
 void CGUICheckbox::SetTextParameters(
-    uchar font,
+    uint8_t font,
     const wstring &text,
-    ushort color,
+    uint16_t color,
     SLIDER_TEXT_POSITION textPosition,
     int textWidth,
     TEXT_ALIGN_TYPE align,
-    ushort textFlags)
+    uint16_t textFlags)
 {
     DEBUG_TRACE_FUNCTION;
     TextPosition = textPosition;
@@ -42,13 +42,13 @@ void CGUICheckbox::SetTextParameters(
 }
 
 void CGUICheckbox::SetTextParameters(
-    uchar font,
+    uint8_t font,
     const string &text,
-    ushort color,
+    uint16_t color,
     SLIDER_TEXT_POSITION textPosition,
     int textWidth,
     TEXT_ALIGN_TYPE align,
-    ushort textFlags)
+    uint16_t textFlags)
 {
     DEBUG_TRACE_FUNCTION;
     TextPosition = textPosition;
@@ -151,10 +151,10 @@ void CGUICheckbox::PrepareTextures()
     g_Orion.ExecuteGump(GraphicDisabled);
 }
 
-ushort CGUICheckbox::GetDrawGraphic()
+uint16_t CGUICheckbox::GetDrawGraphic()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = Graphic;
+    uint16_t graphic = Graphic;
 
     if (!Enabled)
         graphic = GraphicDisabled;

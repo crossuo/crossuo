@@ -7,22 +7,22 @@
 class CLoginCrypt
 {
 private:
-    uint m_k1;
-    uint m_k2;
-    uint m_k3;
-    uint m_key[2];
+    uint32_t m_k1;
+    uint32_t m_k2;
+    uint32_t m_k3;
+    uint32_t m_key[2];
 
 public:
     CLoginCrypt();
     ~CLoginCrypt() {}
 
-    uchar m_seed[4];
+    uint8_t m_seed[4];
 
-    void Init(puchar ps);
+    void Init(uint8_t *ps);
 
-    void Encrypt(puchar in, puchar out, int size);
-    void Encrypt_Old(puchar in, puchar out, int size);
-    void Encrypt_1_25_36(puchar in, puchar out, int size);
+    void Encrypt(uint8_t *in, uint8_t *out, int size);
+    void Encrypt_Old(uint8_t *in, uint8_t *out, int size);
+    void Encrypt_1_25_36(uint8_t *in, uint8_t *out, int size);
 };
 
 extern CLoginCrypt g_LoginCrypt;

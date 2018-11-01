@@ -31,19 +31,19 @@ struct ANIMATION_DIMENSIONS
 };
 struct UOPFrameData
 {
-    puchar dataStart;
+    uint8_t *dataStart;
     short frameId;
-    uint pixelDataOffset;
+    uint32_t pixelDataOffset;
 };
 
 class CEquipConvData
 {
 public:
-    ushort Graphic = 0;
-    ushort Gump = 0;
-    ushort Color = 0;
+    uint16_t Graphic = 0;
+    uint16_t Gump = 0;
+    uint16_t Color = 0;
 
-    CEquipConvData(ushort graphic, ushort gump, ushort color)
+    CEquipConvData(uint16_t graphic, uint16_t gump, uint16_t color)
         : Graphic(graphic)
         , Gump(gump)
         , Color(color)
@@ -52,23 +52,23 @@ public:
     ~CEquipConvData() {}
 };
 
-typedef unordered_map<ushort, CEquipConvData> EQUIP_CONV_DATA_MAP;
-typedef unordered_map<ushort, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
+typedef unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
+typedef unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
 
 //!Класс менеджера анимаций
 class CAnimationManager : public Wisp::CDataReader
 {
 public:
     //!Цвет текущего кадра
-    ushort Color = 0;
+    uint16_t Color = 0;
     //!Группа анимаций текущего кадра
-    uchar AnimGroup = 0;
+    uint8_t AnimGroup = 0;
     //!Направление текущего кадра
-    uchar Direction = 0;
+    uint8_t Direction = 0;
     //!Айдишник текущей анимации
-    ushort AnimID = 0;
+    uint16_t AnimID = 0;
     //!Максимальный индекс группы анимаций
-    uchar AnimGroupCount = PAG_ANIMATION_COUNT;
+    uint8_t AnimGroupCount = PAG_ANIMATION_COUNT;
 
 private:
     //!Адреса файлов в памяти
@@ -79,7 +79,12 @@ private:
     int m_CharacterFrameHeight{ 0 };
 
     static void PrepareTargetAttackGump(
-        CTargetGump &gump, int drawX, int drawY, ushort targetColor, int per, CGameCharacter &obj);
+        CTargetGump &gump,
+        int drawX,
+        int drawY,
+        uint16_t targetColor,
+        int per,
+        CGameCharacter &obj);
 
     //!Начало текстуры персонажа ( экранная координата )
     int m_CharacterFrameStartY{ 0 };
@@ -106,20 +111,25 @@ private:
     static const int USED_LAYER_COUNT = 23;
     static const int m_UsedLayers[8][USED_LAYER_COUNT];
 
-    vector<std::pair<ushort, uchar>> m_GroupReplaces[2];
+    vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
 
     //!Список используемых анимаций
     deque<CTextureAnimationDirection *> m_UsedAnimList;
 
     //Проверка пикселей картинки в указанных координатах
     bool TestPixels(
-        class CGameObject *obj, int x, int y, bool mirror, uchar &frameIndex, ushort id = 0x0000);
+        class CGameObject *obj,
+        int x,
+        int y,
+        bool mirror,
+        uint8_t &frameIndex,
+        uint16_t id = 0x0000);
 
     //Корректировка направления сидячего персонажа, согласно тому. на чем он сидит
-    void FixSittingDirection(uchar &layerDirection, bool &mirror, int &x, int &y);
+    void FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y);
 
     //Обобщенная фукнция рисования
-    void Draw(class CGameObject *obj, int x, int y, bool mirror, uchar &frameIndex, int id = 0);
+    void Draw(class CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id = 0);
 
     void DrawIntoFrameBuffer(class CGameCharacter *obj, int x, int y);
 
@@ -130,8 +140,8 @@ private:
         int drawX,
         int drawY,
         bool mirror,
-        uchar layerDir,
-        uchar animIndex,
+        uint8_t layerDir,
+        uint8_t animIndex,
         int lightOffset);
 
     //!Находится-ли данный слой под робой
@@ -139,8 +149,8 @@ private:
 
     bool m_Transform = false;
 
-    ushort m_CharacterLayerGraphic[25];
-    ushort m_CharacterLayerAnimID[25];
+    uint16_t m_CharacterLayerGraphic[25];
+    uint16_t m_CharacterLayerAnimID[25];
 
     bool TryReadUOPAnimDimins(CTextureAnimationDirection &direction);
 
@@ -153,21 +163,21 @@ private:
         short &imageCenterY,
         short &imageWidth,
         short &imageHeight,
-        pushort &palette,
+        uint16_t *&palette,
         UOPFrameData &frameData);
 
-    uchar GetObjectNewAnimationType_0(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_1_2(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_3(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_4(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_5(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_6_14(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_7(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_8(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_9_10(CGameCharacter *obj, ushort action, uchar mode);
-    uchar GetObjectNewAnimationType_11(CGameCharacter *obj, ushort action, uchar mode);
+    uint8_t GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_6_14(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_9_10(CGameCharacter *obj, uint16_t action, uint8_t mode);
+    uint8_t GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode);
 
-    void ReadFrameDimensionData(ANIMATION_DIMENSIONS &result, uchar frameIndex, bool isCorpse);
+    void ReadFrameDimensionData(ANIMATION_DIMENSIONS &result, uint8_t frameIndex, bool isCorpse);
     void ReadFramesPixelData(CTextureAnimationDirection &direction);
 
 public:
@@ -198,7 +208,7 @@ public:
 	@param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
 	@return
 	*/
-    void InitIndexReplaces(puint verdata);
+    void InitIndexReplaces(uint32_t *verdata);
 
     void UpdateAnimationAddressTable();
 
@@ -207,14 +217,14 @@ public:
 	@param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
 	@return 
 	*/
-    void Load(puint verdata);
+    void Load(uint32_t *verdata);
 
     /*!
 	Очистка неиспользуемых текстур
 	@param [__in] ticks Таймер удаления
 	@return 
 	*/
-    void ClearUnusedTextures(uint ticks);
+    void ClearUnusedTextures(uint32_t ticks);
 
     /*!
 	Загрузка картинок для указанного направления персонажа
@@ -229,7 +239,7 @@ public:
 	@param [__inout] mirror Зеркальное отображение
 	@return 
 	*/
-    void GetAnimDirection(uchar &dir, bool &mirror);
+    void GetAnimDirection(uint8_t &dir, bool &mirror);
 
     /*!
 	Коррекция направления и режима зеркального отображения для сидячего персонажа
@@ -239,7 +249,7 @@ public:
 	@param [__inout] y Координата Y
 	@return 
 	*/
-    void GetSittingAnimDirection(uchar &dir, bool &mirror, int &x, int &y);
+    void GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y);
 
     /*!
 	Отрисовать персонажа
@@ -287,14 +297,14 @@ public:
 	@param [__in] second Группа смерти номер 2
 	@return Индекс группы анимации
 	*/
-    uchar GetDieGroupIndex(ushort id, bool second);
+    uint8_t GetDieGroupIndex(uint16_t id, bool second);
 
     /*!
 	Получить индекс группы по индексу картинки
 	@param [__in] id Индекс картинки
 	@return Группа анимаций
 	*/
-    ANIMATION_GROUPS GetGroupIndex(ushort id);
+    ANIMATION_GROUPS GetGroupIndex(uint16_t id);
 
     /*!
 	Существует ли анимация в файле
@@ -302,26 +312,28 @@ public:
 	@param [__in] group Группа анимации
 	@return true в случае успеха
 	*/
-    bool AnimationExists(ushort graphic, uchar group);
+    bool AnimationExists(uint16_t graphic, uint8_t group);
 
     ANIMATION_DIMENSIONS
-    GetAnimationDimensions(uchar frameIndex, ushort id, uchar dir, uchar animGroup, bool isCorpse);
+    GetAnimationDimensions(
+        uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse);
 
     ANIMATION_DIMENSIONS GetAnimationDimensions(
         class CGameObject *obj,
-        uchar frameIndex = 0xFF,
-        uchar defaultDirection = 0,
-        uchar defaultGroup = 0);
+        uint8_t frameIndex = 0xFF,
+        uint8_t defaultDirection = 0,
+        uint8_t defaultGroup = 0);
 
     void CalculateFrameInformation(
-        FRAME_OUTPUT_INFO &info, class CGameObject *obj, bool mirror, uchar animIndex);
+        FRAME_OUTPUT_INFO &info, class CGameObject *obj, bool mirror, uint8_t animIndex);
 
     struct DRAW_FRAME_INFORMATION
     CollectFrameInformation(class CGameObject *gameObject, bool checkLayers = true);
 
-    uchar GetReplacedObjectAnimation(CGameCharacter *obj, ushort index);
+    uint8_t GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index);
 
-    uchar GetObjectNewAnimation(CGameCharacter *obj, ushort type, ushort action, uchar delay);
+    uint8_t
+    GetObjectNewAnimation(CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t delay);
 };
 
 //!Ссылка на менеджер анимаций

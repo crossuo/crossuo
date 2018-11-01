@@ -485,7 +485,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
             Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
             Wisp::g_WispMouse->CancelDoubleClick = false;
 
-            uint ticks = SDL_GetTicks();
+            uint32_t ticks = SDL_GetTicks();
 
             if (Wisp::g_WispMouse->LastLeftButtonClickTimer + Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
@@ -530,7 +530,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
             Wisp::g_WispMouse->RightDropPosition = Wisp::g_WispMouse->Position;
             Wisp::g_WispMouse->CancelDoubleClick = false;
 
-            uint ticks = SDL_GetTicks();
+            uint32_t ticks = SDL_GetTicks();
 
             if (Wisp::g_WispMouse->LastRightButtonClickTimer +
                     Wisp::g_WispMouse->DoubleClickDelay >=
@@ -577,7 +577,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
             Wisp::g_WispMouse->MidDropPosition = Wisp::g_WispMouse->Position;
             Wisp::g_WispMouse->CancelDoubleClick = false;
 
-            uint ticks = SDL_GetTicks();
+            uint32_t ticks = SDL_GetTicks();
 
             if (Wisp::g_WispMouse->LastMidButtonClickTimer + Wisp::g_WispMouse->DoubleClickDelay >=
                 ticks)
@@ -680,13 +680,13 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         }
         case WM_TIMER:
         {
-            OnTimer((uint)wParam);
+            OnTimer((uint32_t)wParam);
 
             break;
         }
         case Wisp::CThreadedTimer::MessageID:
         {
-            OnThreadedTimer((uint)wParam, (Wisp::CThreadedTimer *)lParam);
+            OnThreadedTimer((uint32_t)wParam, (Wisp::CThreadedTimer *)lParam);
 
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", wParam, lParam);
 
@@ -827,7 +827,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                         Wisp::g_WispMouse->Capture();
                         Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
-                        uint ticks = SDL_GetTicks();
+                        uint32_t ticks = SDL_GetTicks();
                         if (Wisp::g_WispMouse->LastLeftButtonClickTimer +
                                 Wisp::g_WispMouse->DoubleClickDelay >=
                             ticks)
@@ -863,7 +863,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                         Wisp::g_WispMouse->Capture();
                         Wisp::g_WispMouse->MidDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
-                        uint ticks = SDL_GetTicks();
+                        uint32_t ticks = SDL_GetTicks();
                         if (Wisp::g_WispMouse->LastMidButtonClickTimer +
                                 Wisp::g_WispMouse->DoubleClickDelay >=
                             ticks)
@@ -896,7 +896,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                         Wisp::g_WispMouse->Capture();
                         Wisp::g_WispMouse->RightDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
-                        uint ticks = SDL_GetTicks();
+                        uint32_t ticks = SDL_GetTicks();
                         if (Wisp::g_WispMouse->LastRightButtonClickTimer +
                                 Wisp::g_WispMouse->DoubleClickDelay >=
                             ticks)
@@ -952,7 +952,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 #endif
 
 void CWindow::CreateThreadedTimer(
-    uint id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
+    uint32_t id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
 {
     DEBUG_TRACE_FUNCTION;
     for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
@@ -968,7 +968,7 @@ void CWindow::CreateThreadedTimer(
     timer->Run(!oneShot, delay, synchronizedDelay);
 }
 
-void CWindow::RemoveThreadedTimer(uint id)
+void CWindow::RemoveThreadedTimer(uint32_t id)
 {
     DEBUG_TRACE_FUNCTION;
     for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
@@ -985,7 +985,7 @@ void CWindow::RemoveThreadedTimer(uint id)
     }
 }
 
-Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint id)
+Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint32_t id)
 {
     DEBUG_TRACE_FUNCTION;
     for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();

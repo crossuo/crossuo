@@ -14,7 +14,7 @@
 
 CMacroManager g_MacroManager;
 
-uchar CMacroManager::m_SkillIndexTable[24] = { 1,  2,  35, 4,  6,  12,
+uint8_t CMacroManager::m_SkillIndexTable[24] = { 1,  2,  35, 4,  6,  12,
                                                14, 15, 16, 19, 21, 0xFF /*imbuing*/,
                                                23, 3,  46, 9,  30, 22,
                                                48, 32, 33, 47, 36, 38 };
@@ -275,7 +275,7 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 
     if (file.Load(path) && file.Size)
     {
-        uchar version = file.ReadUInt8();
+        uint8_t version = file.ReadUInt8();
 
         short count = file.ReadInt16LE();
 
@@ -797,7 +797,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                         st,
                         3,
                         g_ConfigManager.SpeechColor,
-                        (puchar)g_Language.c_str())
+                        (uint8_t *)g_Language.c_str())
                         .Send();
                 else
                     CPacketASCIISpeechRequest(
@@ -809,11 +809,11 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_WALK:
         {
-            uchar dt = (uchar)DT_NW;
+            uint8_t dt = (uint8_t)DT_NW;
 
             if (macro->SubCode != MSC_G1_NW)
             {
-                dt = (uchar)(macro->Code - 2);
+                dt = (uint8_t)(macro->Code - 2);
 
                 if (dt > 7)
                     dt = 0;
@@ -1026,7 +1026,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             }
             else
             {
-                uint backpack = 0;
+                uint32_t backpack = 0;
                 CGameItem *objBackpack = g_Player->FindLayer(OL_BACKPACK);
 
                 if (objBackpack != nullptr)
@@ -1371,7 +1371,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_INVOKE_VIRTURE:
         {
-            uchar id = macro->SubCode - MSC_G5_HONOR + 31;
+            uint8_t id = macro->SubCode - MSC_G5_HONOR + 31;
 
             CPacketInvokeVirtureRequest(id).Send();
 

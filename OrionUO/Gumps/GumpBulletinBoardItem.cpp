@@ -16,7 +16,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     int serial,
     int x,
     int y,
-    uchar variant,
+    uint8_t variant,
     int id,
     const wstring &poster,
     const wstring &subject,
@@ -32,7 +32,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     bool useUnicode = (g_PacketManager.GetClientVersion() >= CV_305D);
     int unicodeFontIndex = 1;
     int unicodeHeightOffset = 0;
-    ushort textColor = 0x0386;
+    uint16_t textColor = 0x0386;
 
     if (useUnicode)
     {
@@ -77,7 +77,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     else
         text->CreateTextureA(6, "Subject:");
 
-    ushort subjectColor = textColor;
+    uint16_t subjectColor = textColor;
 
     if (!m_Variant)
         subjectColor = 0x0008;

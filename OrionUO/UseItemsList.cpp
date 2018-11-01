@@ -16,7 +16,7 @@ CUseItemActions g_UseItemActions;
 void CUseItemActions::Add(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<uint>::iterator i = m_List.begin(); i != m_List.end(); ++i)
+    for (deque<uint32_t>::iterator i = m_List.begin(); i != m_List.end(); ++i)
     {
         if (*i == serial)
             return;
@@ -35,7 +35,7 @@ void CUseItemActions::Process()
         if (m_List.empty())
             return;
 
-        uint serial = m_List.front();
+        uint32_t serial = m_List.front();
         m_List.pop_front();
 
         if (g_World->FindWorldObject(serial) != nullptr)

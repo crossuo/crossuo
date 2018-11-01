@@ -13,16 +13,16 @@
 
 CGUITextEntry::CGUITextEntry(
     int serial,
-    ushort color,
-    ushort colorSelected,
-    ushort colorFocused,
+    uint16_t color,
+    uint16_t colorSelected,
+    uint16_t colorFocused,
     int x,
     int y,
     int maxWidth,
     bool unicode,
-    uchar font,
+    uint8_t font,
     TEXT_ALIGN_TYPE align,
-    ushort textFlags,
+    uint16_t textFlags,
     int maxLength)
     : CBaseGUI(GOT_TEXTENTRY, serial, 0, color, x, y)
     , ColorSelected(colorSelected)
@@ -109,7 +109,7 @@ void CGUITextEntry::OnMouseExit()
 void CGUITextEntry::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort color = Color;
+    uint16_t color = Color;
 
     if (!UseGlobalColor)
     {
@@ -136,7 +136,7 @@ void CGUITextEntry::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
     int y = m_Y;
-    ushort color = Color;
+    uint16_t color = Color;
 
     if (Focused || &m_Entry == g_EntryPointer)
     {

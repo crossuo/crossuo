@@ -23,6 +23,8 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
     , ServerIP(serverIP)
     , RequestsCount(requestsCount)
 {
+    DEBUG_TRACE_FUNCTION;
+
 #if !USE_WISP
     if (!m_PingEvent)
     {
@@ -31,7 +33,6 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
 #endif
 
     LOG("CPingThread => %s\n", serverIP.c_str());
-    DEBUG_TRACE_FUNCTION;
 }
 
 CPingThread::~CPingThread()

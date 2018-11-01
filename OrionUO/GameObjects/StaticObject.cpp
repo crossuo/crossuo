@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CStaticObject::CStaticObject(int serial, ushort graphic, ushort color, short x, short y, char z)
+CStaticObject::CStaticObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CRenderStaticObject(ROT_STATIC_OBJECT, serial, graphic, color, x, y, z)
 {
     DEBUG_TRACE_FUNCTION;
@@ -31,7 +31,7 @@ CStaticObject::CStaticObject(int serial, ushort graphic, ushort color, short x, 
 void CStaticObject::UpdateGraphicBySeason()
 {
     DEBUG_TRACE_FUNCTION;
-    //ushort graphic = Graphic;
+    //uint16_t graphic = Graphic;
 
     Graphic = g_Orion.GetSeasonGraphic(OriginalGraphic);
 

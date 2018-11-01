@@ -14,9 +14,9 @@
 CGUIHTMLButton::CGUIHTMLButton(
     CGUIHTMLGump *htmlGump,
     int serial,
-    ushort graphic,
-    ushort graphicSelected,
-    ushort graphicPressed,
+    uint16_t graphic,
+    uint16_t graphicSelected,
+    uint16_t graphicPressed,
     int x,
     int y)
     : CGUIButton(serial, graphic, graphicSelected, graphicPressed, x, y)

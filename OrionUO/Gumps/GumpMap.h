@@ -32,7 +32,7 @@ private:
     static const int ID_GM_PIN_LIST = 10;
     static const int ID_GM_PIN_LIST_INSERT = 1000;
 
-    uint m_PinTimer{ 0 };
+    uint32_t m_PinTimer{ 0 };
 
     CBaseGUI *m_PinOnCursor{ nullptr };
     CBaseGUI *m_FakeInsertionPin{ nullptr };
@@ -47,8 +47,8 @@ private:
 
 public:
     CGumpMap(
-        uint serial,
-        ushort graphic,
+        uint32_t serial,
+        uint16_t graphic,
         int startX,
         int startY,
         int endX,

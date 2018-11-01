@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIHTMLResizepic::CGUIHTMLResizepic(
-    class CGUIHTMLGump *htmlGump, int serial, ushort graphic, int x, int y, int width, int height)
+    class CGUIHTMLGump *htmlGump, int serial, uint16_t graphic, int x, int y, int width, int height)
     : CGUIResizepic(serial, graphic, x, y, width, height)
     , m_HTMLGump(htmlGump)
 {

@@ -3,7 +3,7 @@
 
 #include "GumpBook.h"
 
-CGumpBook::CGumpBook(uint serial, short x, short y, short pageCount, bool writable, bool unicode)
+CGumpBook::CGumpBook(uint32_t serial, short x, short y, short pageCount, bool writable, bool unicode)
     : CGump(GT_BOOK, serial, x, y)
     , PageCount(pageCount)
     , Writable(writable)
@@ -29,7 +29,7 @@ CGumpBook::CGumpBook(uint serial, short x, short y, short pageCount, bool writab
     text->CreateTextureA(9, "Title");
     g_FontManager.UnusePartialHue = false;
 
-    uchar entryFont = 1;
+    uint8_t entryFont = 1;
 
     if (!Unicode)
         entryFont = 4;
@@ -53,7 +53,7 @@ CGumpBook::CGumpBook(uint serial, short x, short y, short pageCount, bool writab
     m_EntryAuthor->ReadOnly = !Writable;
     m_EntryAuthor->CheckOnSerial = true;
 
-    ushort textColor = 0x0012;
+    uint16_t textColor = 0x0012;
 
     if (Unicode)
         textColor = 0x001B;

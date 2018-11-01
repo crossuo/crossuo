@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUITilepicHightlighted::CGUITilepicHightlighted(
-    int serial, ushort graphic, ushort color, ushort selectedColor, int x, int y, bool doubleDraw)
+    int serial, uint16_t graphic, uint16_t color, uint16_t selectedColor, int x, int y, bool doubleDraw)
     : CGUITilepic(graphic, color, x, y)
     , SelectedColor(selectedColor)
     , DoubleDraw(doubleDraw)

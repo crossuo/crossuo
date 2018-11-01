@@ -14,9 +14,9 @@
 class CRenderObject : public CBaseQueueItem
 {
 public:
-    uint Serial = 0;
-    ushort Graphic = 0;
-    ushort Color = 0;
+    uint32_t Serial = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
 
 protected:
     int m_X = 0;
@@ -37,7 +37,7 @@ public:
     int DrawY = 0;
     bool Changed = true;
 
-    CRenderObject(int serial, ushort graphic, ushort color, short x, short y);
+    CRenderObject(int serial, uint16_t graphic, uint16_t color, short x, short y);
     virtual ~CRenderObject();
 
     //Подготовка текстур

@@ -48,7 +48,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
     Add(new CGUIGumppic(0x0708, 238, 98));
     Add(new CGUIResizepic(0, 0x0E10, 475, 125, 151, 310));
 
-    const ushort toneTextColorRange[2] = { 0x0481, 0x0021 };
+    const uint16_t toneTextColorRange[2] = { 0x0481, 0x0021 };
 
     int facialHairCount = g_CreateCharacterManager.GetCurrentFacialHairCount();
 
@@ -64,7 +64,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
     for (int i = 0; i < facialHairCount; i++)
         combo->Add(
-            new CGUIComboboxText(0x0381, 9, g_CreateCharacterManager.GetBeard((uchar)i).Name));
+            new CGUIComboboxText(0x0381, 9, g_CreateCharacterManager.GetBeard((uint8_t)i).Name));
 
     combo->RecalculateWidth();
 
@@ -80,11 +80,11 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
     for (int i = 0; i < hairCount; i++)
         combo->Add(
-            new CGUIComboboxText(0x0381, 9, g_CreateCharacterManager.GetHair((uchar)i).Name));
+            new CGUIComboboxText(0x0381, 9, g_CreateCharacterManager.GetHair((uint8_t)i).Name));
 
     combo->RecalculateWidth();
 
-    puchar huesData = (puchar)g_ColorManager.GetHuesRangePointer() + 32 + 4;
+    uint8_t *huesData = (uint8_t *)g_ColorManager.GetHuesRangePointer() + 32 + 4;
     int colorOffsetDivider = sizeof(HUES_GROUP) - 4;
 
     if (g_CreateCharacterScreen.GetColorSelection() == 0)
@@ -103,13 +103,13 @@ void CGumpScreenCreateCharacter::UpdateContent()
         entry->CheckOnSerial = true;
         entry->ReadOnly = true;
 
-        ushort color = g_CreateCharacterManager.SkinTone - 1;
+        uint16_t color = g_CreateCharacterManager.SkinTone - 1;
 
         int colorIndex = (color + ((color + (color << 2)) << 1)) << 3;
         colorIndex += (colorIndex / colorOffsetDivider) << 2;
-        color = *(pushort)(huesData + colorIndex);
+        color = *(uint16_t *)(huesData + colorIndex);
 
-        uint clr = g_ColorManager.Color16To32(color);
+        uint32_t clr = g_ColorManager.Color16To32(color);
 
         Add(new CGUIColoredPolygone(ID_CCS_SKIN_TONE, color, 490, 154, 120, 25, clr));
 
@@ -136,7 +136,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
         colorIndex = (color + ((color + (color << 2)) << 1)) << 3;
         colorIndex += (colorIndex / colorOffsetDivider) << 2;
-        color = *(pushort)(huesData + colorIndex);
+        color = *(uint16_t *)(huesData + colorIndex);
 
         clr = g_ColorManager.Color16To32(color);
 
@@ -166,7 +166,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
             colorIndex = (color + ((color + (color << 2)) << 1)) << 3;
             colorIndex += (colorIndex / colorOffsetDivider) << 2;
-            color = *(pushort)(huesData + colorIndex);
+            color = *(uint16_t *)(huesData + colorIndex);
 
             clr = g_ColorManager.Color16To32(color);
 
@@ -192,7 +192,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
         colorIndex = (color + ((color + (color << 2)) << 1)) << 3;
         colorIndex += (colorIndex / colorOffsetDivider) << 2;
-        color = *(pushort)(huesData + colorIndex);
+        color = *(uint16_t *)(huesData + colorIndex);
 
         clr = g_ColorManager.Color16To32(color);
 
@@ -218,7 +218,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
             colorIndex = (color + ((color + (color << 2)) << 1)) << 3;
             colorIndex += (colorIndex / colorOffsetDivider) << 2;
-            color = *(pushort)(huesData + colorIndex);
+            color = *(uint16_t *)(huesData + colorIndex);
 
             clr = g_ColorManager.Color16To32(color);
 
@@ -229,7 +229,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
     {
         if (g_CreateCharacterScreen.GetColorSelection() == CCSID_SKIN_TONE)
         {
-            pushort colorPtr = g_CreateCharacterManager.GetSkinTonePtr();
+            const uint16_t *colorPtr = g_CreateCharacterManager.GetSkinTonePtr();
             int maxX = 8;
             int polygoneWidth = 15;
             int maxY = 8;
@@ -252,13 +252,13 @@ void CGumpScreenCreateCharacter::UpdateContent()
             {
                 for (int x = 0; x < maxX; x++)
                 {
-                    ushort startColor = *colorPtr++;
+                    uint16_t startColor = *colorPtr++;
 
                     int colorIndex = (startColor + ((startColor + (startColor << 2)) << 1)) << 3;
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
-                    ushort color = *(pushort)(huesData + colorIndex);
+                    uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-                    uint clr = g_ColorManager.Color16To32(color);
+                    uint32_t clr = g_ColorManager.Color16To32(color);
 
                     CGUIColoredPolygone *polygone =
                         (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
@@ -279,15 +279,15 @@ void CGumpScreenCreateCharacter::UpdateContent()
         {
             for (int y = 1; y < 48; y++)
             {
-                ushort startColor = (1 << (y % 4)) * 100 + 1 + ((ushort)y / 4);
+                uint16_t startColor = (1 << (y % 4)) * 100 + 1 + ((uint16_t)y / 4);
 
                 for (int x = 0; x < 20; x++)
                 {
                     int colorIndex = (startColor + ((startColor + (startColor << 2)) << 1)) << 3;
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
-                    ushort color = *(pushort)(huesData + colorIndex);
+                    uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-                    uint clr = g_ColorManager.Color16To32(color);
+                    uint32_t clr = g_ColorManager.Color16To32(color);
 
                     CGUIColoredPolygone *polygone =
                         (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
@@ -308,7 +308,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
             g_CreateCharacterScreen.GetColorSelection() == CCSID_HAIR_COLOR ||
             g_CreateCharacterScreen.GetColorSelection() == CCSID_FACIAL_HAIR_COLOR)
         {
-            pushort colorPtr = g_CreateCharacterManager.GetHairColorPtr();
+            const uint16_t *colorPtr = g_CreateCharacterManager.GetHairColorPtr();
             int maxY = 8;
             int polygoneHeight = 35;
 
@@ -327,13 +327,13 @@ void CGumpScreenCreateCharacter::UpdateContent()
             {
                 for (int x = 0; x < 6; x++)
                 {
-                    ushort startColor = *colorPtr++;
+                    uint16_t startColor = *colorPtr++;
 
                     int colorIndex = (startColor + ((startColor + (startColor << 2)) << 1)) << 3;
                     colorIndex += (colorIndex / colorOffsetDivider) << 2;
-                    ushort color = *(pushort)(huesData + colorIndex);
+                    uint16_t color = *(uint16_t *)(huesData + colorIndex);
 
-                    uint clr = g_ColorManager.Color16To32(color);
+                    uint32_t clr = g_ColorManager.Color16To32(color);
 
                     CGUIColoredPolygone *polygone =
                         (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
@@ -352,7 +352,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
     Add(new CGUIShader(&g_ColorizerShader, true));
 
-    ushort gumpID = g_CreateCharacterManager.GetBodyGump();
+    uint16_t gumpID = g_CreateCharacterManager.GetBodyGump();
 
     if (gumpID)
     {
@@ -454,7 +454,7 @@ void CGumpScreenCreateCharacter::InitToolTip()
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
         return;
 
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
     {
@@ -570,7 +570,7 @@ void CGumpScreenCreateCharacter::GUMP_TEXT_ENTRY_EVENT_C
     {
         if (serial >= ID_CCS_COLOR_RANGE)
         {
-            ushort color = g_SelectedObject.Object->Color + 1;
+            uint16_t color = g_SelectedObject.Object->Color + 1;
 
             if (g_CreateCharacterScreen.GetColorSelection() == CCSID_SKIN_TONE)
             {
@@ -624,16 +624,16 @@ void CGumpScreenCreateCharacter::GUMP_COMBOBOX_SELECTION_EVENT_C
     {
         if (serial >= ID_CCS_FACIAL_HAIR_STYLE)
         {
-            uchar index = serial - ID_CCS_FACIAL_HAIR_STYLE;
+            uint8_t index = serial - ID_CCS_FACIAL_HAIR_STYLE;
 
             if (index < g_CreateCharacterManager.GetCurrentFacialHairCount())
-                g_CreateCharacterManager.BeardStyle = (uchar)index;
+                g_CreateCharacterManager.BeardStyle = (uint8_t)index;
 
             WantUpdateContent = true;
         }
         else
         {
-            uchar index = serial - ID_CCS_HAIR_STYLE;
+            uint8_t index = serial - ID_CCS_HAIR_STYLE;
 
             if (index < g_CreateCharacterManager.GetCurrentHairCount())
                 g_CreateCharacterManager.HairStyle = index;

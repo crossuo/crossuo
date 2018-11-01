@@ -13,13 +13,13 @@
 class CBuildObject
 {
 public:
-    ushort Graphic = 0;
+    uint16_t Graphic = 0;
     char X = 0;
     char Y = 0;
     char Z = 0;
 
     CBuildObject() {}
-    CBuildObject(ushort graphic, char x, char y, char z)
+    CBuildObject(uint16_t graphic, char x, char y, char z)
         : Graphic(graphic)
         , X(x)
         , Y(y)
@@ -32,8 +32,8 @@ public:
 class CCustomHouse
 {
 public:
-    uint Serial = 0;
-    uint Revision = 0;
+    uint32_t Serial = 0;
+    uint32_t Revision = 0;
 
     CCustomHouse() {}
     CCustomHouse(int serial, int revision)
@@ -50,7 +50,7 @@ public:
 
 class CustomHousesManager : public Wisp::CDataReader
 {
-    unordered_map<uint, CCustomHouse *> m_Items;
+    unordered_map<uint32_t, CCustomHouse *> m_Items;
 
 public:
     CustomHousesManager() {}

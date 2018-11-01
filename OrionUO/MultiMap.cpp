@@ -118,8 +118,8 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
     if (maxPixelValue >= 1)
     {
-        pushort huesData =
-            (pushort)((puchar)g_ColorManager.GetHuesRangePointer() + 30800); // color = 0x015C
+        uint16_t *huesData =
+            (uint16_t *)((uint8_t *)g_ColorManager.GetHuesRangePointer() + 30800); // color = 0x015C
 
         vector<uint16_t> colorTable(maxPixelValue);
         int colorOffset = 31 * maxPixelValue;
@@ -187,7 +187,7 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
         for (int i = 0; i < colorCount; i++)
         {
             int size = file.ReadUInt8();
-            ushort color = 0x8000 | file.ReadInt16LE();
+            uint16_t color = 0x8000 | file.ReadInt16LE();
 
             for (int j = 0; j < size; j++)
             {

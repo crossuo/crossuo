@@ -13,13 +13,13 @@
 class CCorpse
 {
 public:
-    uint CorpseSerial = 0;
-    uint ObjectSerial = 0;
-    uchar Direction = 0;
+    uint32_t CorpseSerial = 0;
+    uint32_t ObjectSerial = 0;
+    uint8_t Direction = 0;
     bool Running = false;
 
     CCorpse() {}
-    CCorpse(int corpseSerial, int objectSerial, uchar direction, bool running)
+    CCorpse(int corpseSerial, int objectSerial, uint8_t direction, bool running)
         : CorpseSerial(corpseSerial)
         , ObjectSerial(objectSerial)
         , Direction(direction)

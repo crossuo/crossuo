@@ -20,7 +20,7 @@ CServer::CServer()
 }
 
 CServer::CServer(
-    ushort index, const string &name, uchar fullPercent, uchar timezone, int ip, bool selected)
+    uint16_t index, const string &name, uint8_t fullPercent, uint8_t timezone, int ip, bool selected)
     : Index(index)
     , Name(name)
     , FullPercent(fullPercent)
@@ -59,11 +59,11 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
 
     for (uint16_t i = 0; i < numServers; i++)
     {
-        ushort id = reader.ReadUInt16BE();
+        uint16_t id = reader.ReadUInt16BE();
         string name = reader.ReadString(32);
-        uchar fullPercent = reader.ReadUInt8();
-        uchar timezone = reader.ReadUInt8();
-        uint ip = reader.ReadUInt32LE(); //little-endian!!!
+        uint8_t fullPercent = reader.ReadUInt8();
+        uint8_t timezone = reader.ReadUInt8();
+        uint32_t ip = reader.ReadUInt32LE(); //little-endian!!!
         bool selected = (name == g_ServerList.LastServerName);
 
         if (selected)

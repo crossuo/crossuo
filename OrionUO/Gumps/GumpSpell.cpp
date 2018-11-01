@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpSpell::CGumpSpell(uint serial, short x, short y, ushort graphic, SPELLBOOK_TYPE spellType)
+CGumpSpell::CGumpSpell(uint32_t serial, short x, short y, uint16_t graphic, SPELLBOOK_TYPE spellType)
     : CGump(GT_SPELL, serial, x, y)
     , SpellType(spellType)
 {

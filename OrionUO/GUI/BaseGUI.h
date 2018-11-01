@@ -41,11 +41,11 @@ public:
     //!Флаг, отвечающий только за отрисовку компоненты, без ее выбора
     bool DrawOnly = false;
 
-    uint ClilocID = 0;
+    uint32_t ClilocID = 0;
 
     CTextData *TextData = nullptr;
 
-    CBaseGUI(GUMP_OBJECT_TYPE type, int serial, ushort graphic, ushort color, int x, int y);
+    CBaseGUI(GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y);
     virtual ~CBaseGUI();
 
     //!Выявление поля g_EntryPointer в данной компоненте
@@ -55,7 +55,7 @@ public:
     virtual void SetShaderMode() {}
 
     //!Получить ИД картинки для отображения
-    virtual ushort GetDrawGraphic() { return Graphic; }
+    virtual uint16_t GetDrawGraphic() { return Graphic; }
 
     //!Отрисовать компоненту
     //!		checktrans - использовать трафарет +прозрачность

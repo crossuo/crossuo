@@ -13,16 +13,16 @@
 class CStepInfo
 {
 public:
-    uchar Direction = 0;
-    uchar OldDirection = 0;
-    uchar Sequence = 0;
+    uint8_t Direction = 0;
+    uint8_t OldDirection = 0;
+    uint8_t Sequence = 0;
     bool Accepted = false;
     bool Running = false;
     bool NoRotation = false;
-    uint Timer = 0;
-    ushort X = 0;
-    ushort Y = 0;
-    uchar Z = 0;
+    uint32_t Timer = 0;
+    uint16_t X = 0;
+    uint16_t Y = 0;
+    uint8_t Z = 0;
 
     CStepInfo() {}
     ~CStepInfo() {}
@@ -32,16 +32,16 @@ public:
 class CWalker
 {
 public:
-    uint LastStepRequestTime = 0;
+    uint32_t LastStepRequestTime = 0;
     int UnacceptedPacketsCount = 0;
     int StepsCount = 0;
-    uchar WalkSequence = 0;
-    uchar CurrentWalkSequence = 0;
+    uint8_t WalkSequence = 0;
+    uint8_t CurrentWalkSequence = 0;
     bool ResendPacketSended = false;
     bool WantChangeCoordinates = false;
     bool WalkingFailed = false;
-    ushort CurrentPlayerZ = 0;
-    ushort NewPlayerZ = 0;
+    uint16_t CurrentPlayerZ = 0;
+    uint16_t NewPlayerZ = 0;
 
     CWalker();
     ~CWalker() {}
@@ -50,9 +50,9 @@ public:
 
     void Reset();
 
-    void DenyWalk(uchar sequence, int x, int y, char z);
+    void DenyWalk(uint8_t sequence, int x, int y, char z);
 
-    void ConfirmWalk(uchar sequence);
+    void ConfirmWalk(uint8_t sequence);
 };
 
 extern CWalker g_Walker;

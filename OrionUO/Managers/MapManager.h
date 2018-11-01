@@ -15,11 +15,11 @@ class CIndexMap
 public:
     size_t OriginalMapAddress = 0;
     size_t OriginalStaticAddress = 0;
-    uint OriginalStaticCount = 0;
+    uint32_t OriginalStaticCount = 0;
 
     size_t MapAddress = 0;
     size_t StaticAddress = 0;
-    uint StaticCount = 0;
+    uint32_t StaticCount = 0;
 
     CIndexMap();
     virtual ~CIndexMap();
@@ -32,7 +32,7 @@ class CMapManager : public CBaseQueue
 {
 public:
     //!Максимальный индекс блока для текущей карты
-    uint MaxBlockIndex = 0;
+    uint32_t MaxBlockIndex = 0;
     int PatchesCount = 0;
 
 protected:
@@ -112,21 +112,21 @@ public:
 	@param [__in] index Индекс блока
 	@return Ссылка на блок или nullptr
 	*/
-    CMapBlock *GetBlock(uint index);
+    CMapBlock *GetBlock(uint32_t index);
 
     /*!
 	Добавить блок
 	@param [__in] index Индекс блока
 	@return Ссылка на блок или nullptr
 	*/
-    CMapBlock *AddBlock(uint index);
+    CMapBlock *AddBlock(uint32_t index);
 
     /*!
 	Удалить блок
 	@param [__in] index Индекс блока
 	@return 
 	*/
-    void DeleteBlock(uint index);
+    void DeleteBlock(uint32_t index);
 
     /*!
 	Удалить неиспользуемые блоки

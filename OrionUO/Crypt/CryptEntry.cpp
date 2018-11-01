@@ -68,7 +68,7 @@ static void LoadPlugins(PLUGIN_INFO *result)
     {
         Wisp::CDataReader file(&g_RawData[0], (int)g_RawData.size());
 
-        uchar ver = file.ReadUInt8();
+        uint8_t ver = file.ReadUInt8();
 
         file.Move(2);
         int len = file.ReadUInt8();
@@ -101,7 +101,7 @@ static void LoadPlugins(PLUGIN_INFO *result)
     }
 }
 
-vector<uint8_t> ApplyInstall(uchar *address, size_t size)
+vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
 {
     vector<uint8_t> result;
 
@@ -113,7 +113,7 @@ vector<uint8_t> ApplyInstall(uchar *address, size_t size)
         Wisp::CDataReader file(address, size);
         Wisp::CDataWritter writter;
 
-        uchar version = file.ReadInt8();
+        uint8_t version = file.ReadInt8();
         writter.WriteUInt8(version);
         writter.WriteUInt8(0xFE); //dll version
         writter.WriteUInt8(0);    //sub version
@@ -123,7 +123,7 @@ vector<uint8_t> ApplyInstall(uchar *address, size_t size)
 
         int len = file.ReadInt8();
         writter.WriteUInt8(len);
-        writter.WriteDataLE((puchar)file.ReadString(len).data(), len, false);
+        writter.WriteDataLE((uint8_t *)file.ReadString(len).data(), len, false);
 
         file.Move(14); //crypt keys & seed
 #if defined(_M_IX86)
@@ -154,8 +154,8 @@ vector<uint8_t> ApplyInstall(uchar *address, size_t size)
             writter.WriteUInt16LE(file.ReadUInt16LE());
         }
 
-        uchar clientFlag = 0;
-        uchar useVerdata = 0;
+        uint8_t clientFlag = 0;
+        uint8_t useVerdata = 0;
 
         if (version >= 2)
         {
@@ -183,7 +183,7 @@ size_t GetPluginsCount()
     return g_CryptPluginsCount;
 }
 
-void CryptInstallNew(uchar *address, size_t size, uchar *result, size_t &resultSize)
+void CryptInstallNew(uint8_t *address, size_t size, uint8_t *result, size_t &resultSize)
 {
     assert(address && result && size && resultSize);
     vector<uint8_t> buf = ApplyInstall(address, size);

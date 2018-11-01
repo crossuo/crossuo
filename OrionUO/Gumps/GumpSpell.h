@@ -28,7 +28,7 @@ protected:
     CGUIButton *m_SpellUnlocker{ nullptr };
 
 public:
-    CGumpSpell(uint serial, short x, short y, ushort graphic, SPELLBOOK_TYPE spellType);
+    CGumpSpell(uint32_t serial, short x, short y, uint16_t graphic, SPELLBOOK_TYPE spellType);
     virtual ~CGumpSpell();
 
     CGUIAlphaBlending *m_Blender{ nullptr };

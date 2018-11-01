@@ -104,7 +104,7 @@ void CGumpMenubar::SetOpened(bool val)
 void CGumpMenubar::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
     {

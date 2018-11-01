@@ -92,7 +92,7 @@ void CGumpBuff::UpdateBuffIcons()
     }
 }
 
-void CGumpBuff::AddBuff(ushort id, ushort timer, const wstring &text)
+void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const wstring &text)
 {
     DEBUG_TRACE_FUNCTION;
     DWORD ticks = 0xFFFFFFFF;
@@ -123,7 +123,7 @@ void CGumpBuff::AddBuff(ushort id, ushort timer, const wstring &text)
     WantUpdateContent = true;
 }
 
-void CGumpBuff::DeleteBuff(ushort id)
+void CGumpBuff::DeleteBuff(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)

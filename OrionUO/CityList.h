@@ -14,7 +14,7 @@
 class CCityItem
 {
 public:
-    uchar LocationIndex = 0;
+    uint8_t LocationIndex = 0;
     string Name = "";
     string Area = "";
     bool Selected = false;
@@ -42,11 +42,11 @@ public:
 class CCityItemNew : public CCityItem
 {
 public:
-    uint X = 0;
-    uint Y = 0;
-    uint Z = 0;
-    uint MapIndex = 0;
-    uint Cliloc = 0;
+    uint32_t X = 0;
+    uint32_t Y = 0;
+    uint32_t Z = 0;
+    uint32_t MapIndex = 0;
+    uint32_t Cliloc = 0;
 
     CCityItemNew();
     virtual ~CCityItemNew();

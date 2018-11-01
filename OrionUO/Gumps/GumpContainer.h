@@ -8,8 +8,8 @@ class CGumpContainer : public CGump
     bool IsGameBoard = false;
 
 private:
-    uint m_CorpseEyesTicks{ 0 };
-    uchar m_CorpseEyesOffset{ 0 };
+    uint32_t m_CorpseEyesTicks{ 0 };
+    uint8_t m_CorpseEyesOffset{ 0 };
 
     CTextRenderer m_TextRenderer{ CTextRenderer() };
 
@@ -20,11 +20,11 @@ protected:
     virtual void CalculateGumpState();
 
 public:
-    CGumpContainer(uint serial, uint id, short x, short y);
+    CGumpContainer(uint32_t serial, uint32_t id, short x, short y);
     virtual ~CGumpContainer();
 
-    static const uint ID_GC_LOCK_MOVING;
-    static const uint ID_GC_MINIMIZE;
+    static const uint32_t ID_GC_LOCK_MOVING;
+    static const uint32_t ID_GC_MINIMIZE;
 
     CGUIGumppic *m_BodyGump{ nullptr };
 

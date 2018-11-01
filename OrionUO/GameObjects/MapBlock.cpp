@@ -76,7 +76,7 @@ bool CMapBlock::HasNoExternalData()
     return true;
 }
 
-ushort CMapBlock::GetRadarColor(int x, int y)
+uint16_t CMapBlock::GetRadarColor(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];

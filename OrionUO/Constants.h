@@ -77,7 +77,7 @@ const int ORION_ITEMS_ANIMATION_DELAY = 50;
 const int ORIGINAL_CHARACTERS_ANIMATION_DELAY = 100;
 const int ORION_CHARACTERS_ANIMATION_DELAY = 70;
 
-const ushort FIELD_REPLACE_GRAPHIC = 0x1826;
+const uint16_t FIELD_REPLACE_GRAPHIC = 0x1826;
 
 const int MAX_LIGHT_SOURCES = 100;
 
@@ -199,8 +199,8 @@ static const bool LAYER_UNSAFE[30] = { false, //0
 
 struct TREE_UNIONS
 {
-    ushort GraphicStart;
-    ushort GraphicEnd;
+    uint16_t GraphicStart;
+    uint16_t GraphicEnd;
 };
 
 const int TREE_COUNT = 9;
@@ -216,7 +216,7 @@ const int SITTING_OFFSET_X = 8;
 
 struct SITTING_INFO_DATA
 {
-    ushort Graphic;
+    uint16_t Graphic;
 
     // Anim/Character direction
     // 7, 0

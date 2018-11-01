@@ -70,28 +70,28 @@ public:
 	@param [__in] color Индекс цвета
 	@return 
 	*/
-    void SendColorsToShader(ushort color);
+    void SendColorsToShader(uint16_t color);
 
     /*!
 	Конвертирование цвета из 32 бит в 16 бит
 	@param [__in] c 32-битный цвет
 	@return 16-битный цвет
 	*/
-    ushort Color32To16(int c);
+    uint16_t Color32To16(int c);
 
     /*!
 	Конвертирование цвета из 16 бит в 32 бит
 	@param [__in] c 16-битный цвет
 	@return 32-битный цвет
 	*/
-    uint Color16To32(ushort c);
+    uint32_t Color16To32(uint16_t c);
 
     /*!
 	Перевод в серый
 	@param [__in] c 16-битный цвет
 	@return 16-битный цвет
 	*/
-    ushort ConvertToGray(ushort c);
+    uint16_t ConvertToGray(uint16_t c);
 
     /*!
 	Получить 16-битный цвет
@@ -99,14 +99,14 @@ public:
 	@param [__in] color Индекс цвета в палитре
 	@return 16-битный цвет
 	*/
-    ushort GetColor16(ushort c, ushort color);
+    uint16_t GetColor16(uint16_t c, uint16_t color);
 
     /*!
 	Получить 16-битный цвет для радара
 	@param [__in] c Исходный 16-битный цвет
 	@return 16-битный цвет
 	*/
-    ushort GetRadarColorData(int c);
+    uint16_t GetRadarColorData(int c);
 
     /*!
 	Получить 32-битный цвет без конвертирования входящего цвета
@@ -114,7 +114,7 @@ public:
 	@param [__in] color Индекс цвета в палитре
 	@return 32-битный цвет
 	*/
-    uint GetPolygoneColor(ushort c, ushort color);
+    uint32_t GetPolygoneColor(uint16_t c, uint16_t color);
 
     /*!
 	Получить 32-битный цвет для Unicode-шрифтов
@@ -122,7 +122,7 @@ public:
 	@param [__in] color Индекс цвета в палитре
 	@return 32-битный цвет
 	*/
-    uint GetUnicodeFontColor(ushort &c, ushort color);
+    uint32_t GetUnicodeFontColor(uint16_t &c, uint16_t color);
 
     /*!
 	Получить 32-битный цвет
@@ -130,7 +130,7 @@ public:
 	@param [__in] color Индекс цвета в палитре
 	@return 32-битный цвет
 	*/
-    uint GetColor(ushort &c, ushort color);
+    uint32_t GetColor(uint16_t &c, uint16_t color);
 
     /*!
 	Получить 32-битный цвет с учетом оттенков серого
@@ -138,9 +138,9 @@ public:
 	@param [__in] color Индекс цвета в палитре
 	@return 32-битный цвет
 	*/
-    uint GetPartialHueColor(ushort &c, ushort color);
+    uint32_t GetPartialHueColor(uint16_t &c, uint16_t color);
 
-    ushort FixColor(ushort color, ushort defaultColor = 0);
+    uint16_t FixColor(uint16_t color, uint16_t defaultColor = 0);
 };
 
 //!Ссылка на менеджер цветов

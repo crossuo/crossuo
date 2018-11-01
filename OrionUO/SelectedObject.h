@@ -13,7 +13,7 @@
 class CSelectedObject
 {
 public:
-    uint Serial = 0;
+    uint32_t Serial = 0;
     CRenderObject *Object = nullptr;
     CGump *Gump = nullptr;
     CSelectedObject();

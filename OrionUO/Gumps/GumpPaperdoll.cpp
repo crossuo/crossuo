@@ -17,7 +17,7 @@ int CGumpPaperdoll::UsedLayers[m_LayerCount] = {
     OL_EARRINGS, OL_BEARD, OL_HELMET, OL_WAIST, OL_1_HAND, OL_2_HAND,   OL_TALISMAN
 };
 
-CGumpPaperdoll::CGumpPaperdoll(uint serial, short x, short y, bool minimized)
+CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized)
     : CGump(GT_PAPERDOLL, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -145,7 +145,7 @@ void CGumpPaperdoll::CalculateGumpState()
 void CGumpPaperdoll::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
     {
@@ -365,7 +365,7 @@ void CGumpPaperdoll::UpdateContent()
 
     CGUIGumppic *bodyGumppic = nullptr;
 
-    ushort color = obj->Color & 0x3FFF;
+    uint16_t color = obj->Color & 0x3FFF;
 
     if (obj->Graphic == 0x0191 || obj->Graphic == 0x0193)
     {
@@ -479,7 +479,7 @@ void CGumpPaperdoll::UpdateContent()
                     }
                 }
 
-                ushort id = equipment->AnimID;
+                uint16_t id = equipment->AnimID;
 
                 if (bodyIter != equipConv.end())
                 {
@@ -511,7 +511,7 @@ void CGumpPaperdoll::UpdateContent()
 
                 if (equipment == nullptr)
                 {
-                    ushort id = g_ObjectInHand.TiledataPtr->AnimID;
+                    uint16_t id = g_ObjectInHand.TiledataPtr->AnimID;
 
                     if (bodyIter != equipConv.end())
                     {
@@ -554,7 +554,7 @@ void CGumpPaperdoll::UpdateContent()
 
                 if (equipment != nullptr)
                 {
-                    uint slotSerial = ID_GP_ITEMS + equipment->Layer;
+                    uint32_t slotSerial = ID_GP_ITEMS + equipment->Layer;
 
                     CIndexObjectStatic &sio = g_Orion.m_StaticDataIndex[equipment->Graphic];
                     CGLTexture *texture = sio.Texture;
@@ -658,7 +658,7 @@ void CGumpPaperdoll::UpdateContent()
 
     if (equipment != nullptr && equipment->AnimID != 0)
     {
-        ushort backpackGraphic = equipment->AnimID + 50000;
+        uint16_t backpackGraphic = equipment->AnimID + 50000;
 
         if (obj->IsPlayer())
         {
@@ -847,7 +847,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
-    uint serial = g_SelectedObject.Serial;
+    uint32_t serial = g_SelectedObject.Serial;
 
     CGameCharacter *container = g_World->FindWorldCharacter(Serial);
 
@@ -948,7 +948,7 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
     }
 
     bool result = false;
-    uint serial = g_PressedObject.LeftSerial;
+    uint32_t serial = g_PressedObject.LeftSerial;
 
     if (serial < ID_GP_ITEMS)
     {

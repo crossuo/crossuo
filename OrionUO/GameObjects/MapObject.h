@@ -28,8 +28,8 @@ public:
     CMapObject(
         RENDER_OBJECT_TYPE type,
         int serial,
-        ushort graphic,
-        ushort color,
+        uint16_t graphic,
+        uint16_t color,
         short x,
         short y,
         char z);

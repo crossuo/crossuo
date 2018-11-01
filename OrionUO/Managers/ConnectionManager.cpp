@@ -118,7 +118,7 @@ void CConnectionManager::Init()
 @param [__in] GameSeed Ключ для игрового шифрования
 @return Код ошибки
 */
-void CConnectionManager::Init(puchar gameSeed)
+void CConnectionManager::Init(uint8_t *gameSeed)
 {
     DEBUG_TRACE_FUNCTION;
     //Гейм сокет уже открыт, ошибка
@@ -130,7 +130,7 @@ void CConnectionManager::Init(puchar gameSeed)
     g_NetworkInit(false, &gameSeed[0]);
 }
 
-void CConnectionManager::SendIP(CSocket &socket, puchar seed)
+void CConnectionManager::SendIP(CSocket &socket, uint8_t *seed)
 
 {
     DEBUG_TRACE_FUNCTION;
@@ -145,7 +145,7 @@ void CConnectionManager::SendIP(CSocket &socket, puchar seed)
 @param [__in] GameSeed Ключ для шифрования
 @return Код ошибки
 */
-bool CConnectionManager::Connect(const string &address, int port, puchar gameSeed)
+bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameSeed)
 {
     DEBUG_TRACE_FUNCTION;
     if (m_IsLoginSocket) //Логин сокет
@@ -305,7 +305,7 @@ void CConnectionManager::Recv()
 @param [__in] size Размер данных
 @return Размер отправленных данных или код ошибки
 */
-int CConnectionManager::Send(puchar buf, int size)
+int CConnectionManager::Send(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_TheAbyss)
@@ -371,6 +371,6 @@ int CConnectionManager::Send(puchar buf, int size)
 int CConnectionManager::Send(const vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
-    return Send((puchar)&data[0], (int)data.size());
+    return Send((uint8_t *)&data[0], (int)data.size());
 }
 

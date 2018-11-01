@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIMenuObject::CGUIMenuObject(
-    int serial, ushort graphic, ushort color, int x, int y, const string &text)
+    int serial, uint16_t graphic, uint16_t color, int x, int y, const string &text)
     : CGUITilepic(graphic, color, x, y)
     , Text(text)
 {

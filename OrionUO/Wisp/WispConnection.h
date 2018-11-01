@@ -26,7 +26,7 @@ public:
 
     bool Read(int maxSize = 0x1000);
 
-    int Send(puchar data, int size);
+    int Send(uint8_t *data, int size);
     int Send(const vector<uint8_t> &data);
 };
 }; // namespace Wisp

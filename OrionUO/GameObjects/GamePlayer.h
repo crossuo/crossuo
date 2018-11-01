@@ -17,17 +17,17 @@ public:
     short Str = 0;
     short Int = 0;
     short Dex = 0;
-    uchar LockStr = 0;
-    uchar LockInt = 0;
-    uchar LockDex = 0;
-    ushort MaxWeight = 0;
-    ushort Weight = 0;
+    uint8_t LockStr = 0;
+    uint8_t LockInt = 0;
+    uint8_t LockDex = 0;
+    uint16_t MaxWeight = 0;
+    uint16_t Weight = 0;
     short Armor = 0;
-    uint Gold = 0;
+    uint32_t Gold = 0;
     bool Warmode = 0;
-    ushort StatsCap = 0;
-    uchar Followers = 0;
-    uchar MaxFollowers = 5;
+    uint16_t StatsCap = 0;
+    uint8_t Followers = 0;
+    uint8_t MaxFollowers = 5;
     short FireResistance = 0;
     short ColdResistance = 0;
     short PoisonResistance = 0;
@@ -40,7 +40,7 @@ public:
     short Luck = 0;
     short MinDamage = 0;
     short MaxDamage = 0;
-    uint TithingPoints = 0;
+    uint32_t TithingPoints = 0;
     short DefenceChance = 0;
     short MaxDefenceChance = 0;
     short AttackChance = 0;
@@ -94,7 +94,7 @@ public:
 	Player walking state
 	@return true if player if walking
 	*/
-    virtual bool Walking() { return (LastStepTime > (uint)(g_Ticks - PLAYER_WALKING_DELAY)); }
+    virtual bool Walking() { return (LastStepTime > (uint32_t)(g_Ticks - PLAYER_WALKING_DELAY)); }
 
     /*!
 	No iterate animation frames

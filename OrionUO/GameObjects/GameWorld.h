@@ -10,13 +10,13 @@
 #ifndef GAMEWORLD_H
 #define GAMEWORLD_H
 
-typedef map<uint, CGameObject *> WORLD_MAP;
+typedef map<uint32_t, CGameObject *> WORLD_MAP;
 
 //!Класс игрового мира
 class CGameWorld
 {
 public:
-    uint ObjectToRemove = 0;
+    uint32_t ObjectToRemove = 0;
 
 private:
     /*!
@@ -181,7 +181,7 @@ public:
 	@param [__in_opt] serial Серийник родителя
 	@return 
 	*/
-    void Dump(uchar nCount = 0, uint serial = 0xFFFFFFFF);
+    void Dump(uint8_t nCount = 0, uint32_t serial = 0xFFFFFFFF);
 
     /*!
 	Поиск объекта
@@ -196,41 +196,41 @@ public:
 
     void UpdateContainedItem(
         int serial,
-        ushort graphic,
-        uchar graphicIncrement,
-        ushort count,
+        uint16_t graphic,
+        uint8_t graphicIncrement,
+        uint16_t count,
         int x,
         int y,
         int containerSerial,
-        ushort color);
+        uint16_t color);
 
     void UpdateItemInContainer(CGameObject *obj, CGameObject *container, int x, int y);
 
     void UpdateGameObject(
         int serial,
-        ushort graphic,
-        uchar graphicIncrement,
+        uint16_t graphic,
+        uint8_t graphicIncrement,
         int count,
         int x,
         int y,
         char z,
-        uchar direction,
-        ushort color,
-        uchar flags,
+        uint8_t direction,
+        uint16_t color,
+        uint8_t flags,
         int a11,
         UPDATE_GAME_OBJECT_TYPE updateType,
-        ushort a13);
+        uint16_t a13);
 
     void UpdatePlayer(
         int serial,
-        ushort graphic,
-        uchar graphicIncrement,
-        ushort color,
-        uchar flags,
+        uint16_t graphic,
+        uint8_t graphicIncrement,
+        uint16_t color,
+        uint8_t flags,
         int x,
         int y,
-        ushort serverID,
-        uchar direction,
+        uint16_t serverID,
+        uint8_t direction,
         char z);
 };
 

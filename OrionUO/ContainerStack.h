@@ -14,7 +14,7 @@
 class CContainerStackItem
 {
 public:
-    uint Serial = 0;
+    uint32_t Serial = 0;
     short X = 0;
     short Y = 0;
     short MinimizedX = 0;
@@ -37,6 +37,6 @@ public:
 extern deque<CContainerStackItem> g_ContainerStack;
 
 //!Таймер стека открытия контейнеров
-extern uint g_CheckContainerStackTimer;
+extern uint32_t g_CheckContainerStackTimer;
 
 #endif //CONTAINERSTACK_H

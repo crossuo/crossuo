@@ -44,7 +44,7 @@ void CPacketReader::Read(class CConnection *connection)
                     m_PacketsStack.pop_front();
             }
 
-            SetData((puchar)&packet[0], packet.size(), offset);
+            SetData((uint8_t *)&packet[0], packet.size(), offset);
             OnPacket();
         }
     }

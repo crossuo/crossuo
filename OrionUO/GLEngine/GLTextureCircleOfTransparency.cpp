@@ -44,7 +44,7 @@ void CGLTextureCircleOfTransparency::CreatePixels(
         for (int y = -fixRadius; y < fixRadius; y++)
         {
             int r = (int)sqrt(mulX + (y * y));
-            uchar pic = ((r <= radius) ? ((radius - r) & 0xFF) : 0);
+            uint8_t pic = ((r <= radius) ? ((radius - r) & 0xFF) : 0);
 
             int pos = posX + (int)y;
 

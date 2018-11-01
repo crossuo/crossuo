@@ -20,9 +20,9 @@ public:
     ~CSelectTownScreen();
 
     //!Идентификаторы событий для плавного перехода
-    static const uchar ID_SMOOTH_STS_QUIT = 1;
-    static const uchar ID_SMOOTH_STS_GO_SCREEN_CHARACTER = 2;
-    static const uchar ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT = 3;
+    static const uint8_t ID_SMOOTH_STS_QUIT = 1;
+    static const uint8_t ID_SMOOTH_STS_GO_SCREEN_CHARACTER = 2;
+    static const uint8_t ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT = 3;
 
     //!Указатель на выбранный город
     CCityItem *m_City{ nullptr };
@@ -38,7 +38,7 @@ public:
 	@param [__in_opt] action Идентификатор действия
 	@return 
 	*/
-    void ProcessSmoothAction(uchar action = 0xFF);
+    void ProcessSmoothAction(uint8_t action = 0xFF);
 };
 
 extern CSelectTownScreen g_SelectTownScreen;

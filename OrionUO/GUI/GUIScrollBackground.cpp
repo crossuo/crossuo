@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGUIScrollBackground::CGUIScrollBackground(int serial, ushort graphic, int x, int y, int height)
+CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height)
     : CBaseGUI(GOT_SCROLLBACKGROUND, serial, graphic, 0, x, y)
     , Height(height)
 {

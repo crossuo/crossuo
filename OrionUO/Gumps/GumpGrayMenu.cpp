@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpGrayMenu::CGumpGrayMenu(uint serial, uint id, short x, short y)
+CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_GRAY_MENU, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;

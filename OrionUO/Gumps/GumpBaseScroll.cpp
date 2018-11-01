@@ -13,8 +13,8 @@
 
 CGumpBaseScroll::CGumpBaseScroll(
     GUMP_TYPE type,
-    uint serial,
-    ushort graphic,
+    uint32_t serial,
+    uint16_t graphic,
     int height,
     short x,
     short y,

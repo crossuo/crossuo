@@ -73,7 +73,7 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
 
             for (int i = 0; i < count; i++)
             {
-                uchar index = group->GetItem(i); //Получаем индекс скилла по порядковому номеру
+                uint8_t index = group->GetItem(i); //Получаем индекс скилла по порядковому номеру
 
                 if (index < g_SkillsManager.Count) //Он валиден
                     skillGroup->Add(new CGUISkillItem(
@@ -104,7 +104,7 @@ CGumpSkills::~CGumpSkills()
 void CGumpSkills::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
-    uint id = g_SelectedObject.Serial;
+    uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
     {
@@ -313,7 +313,7 @@ void CGumpSkills::CalculateGumpState()
 void CGumpSkills::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    uint serial = g_PressedObject.LeftSerial;
+    uint32_t serial = g_PressedObject.LeftSerial;
 
     if (g_PressedObject.LeftGump == this && serial >= ID_GS_SKILL && serial < ID_GS_SKILL_STATE)
     {
@@ -585,7 +585,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
             if (skill != nullptr)
             {
-                uchar status = skill->Status;
+                uint8_t status = skill->Status;
 
                 if (status < 2)
                     status++;
@@ -748,7 +748,7 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
 
                                 for (int i = 0; i < count; i++)
                                 {
-                                    uchar index = groupItem->GetItem(i);
+                                    uint8_t index = groupItem->GetItem(i);
                                     if (index < g_SkillsManager.Count)
                                     {
                                         first->Add(new CGUISkillItem(

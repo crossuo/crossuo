@@ -72,7 +72,7 @@ public:
     CUSTOM_HOUSE_GUMP_STATE State = CHGS_WALL;
     int Category = -1;
     int MaxPage = 1;
-    ushort SelectedGraphic = 0;
+    uint16_t SelectedGraphic = 0;
     int CurrentFloor = 1;
     int FloorCount = 4;
     int RoofZ = 1;
@@ -163,7 +163,7 @@ private:
 
     void UpdateMaxPage();
 
-    pair<int, int> ExistsInList(CUSTOM_HOUSE_GUMP_STATE &state, ushort graphic);
+    pair<int, int> ExistsInList(CUSTOM_HOUSE_GUMP_STATE &state, uint16_t graphic);
 
     bool
     ValidatePlaceStructure(CGameItem *foundationItem, CMulti *multi, int minZ, int maxZ, int flags);
@@ -181,12 +181,12 @@ public:
 
     void GenerateFloorPlace();
 
-    void SeekGraphic(ushort graphic);
+    void SeekGraphic(uint16_t graphic);
 
     bool CanBuildHere(
         vector<CBuildObject> &list, CRenderWorldObject *place, CUSTOM_HOUSE_BUILD_TYPE &type);
 
-    bool ValidateItemPlace(const SDL_Rect &rect, ushort graphic, int x, int y);
+    bool ValidateItemPlace(const SDL_Rect &rect, uint16_t graphic, int x, int y);
 
     bool ValidateItemPlace(
         CGameItem *foundationItem,

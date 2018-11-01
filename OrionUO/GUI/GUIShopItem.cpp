@@ -14,8 +14,8 @@
 
 CGUIShopItem::CGUIShopItem(
     int serial,
-    ushort graphic,
-    ushort color,
+    uint16_t graphic,
+    uint16_t color,
     int count,
     int price,
     const string &name,
@@ -52,7 +52,7 @@ void CGUIShopItem::UpdateOffsets()
     }
     else
     {
-        uchar group = 0;
+        uint8_t group = 0;
 
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
@@ -126,7 +126,7 @@ void CGUIShopItem::OnClick()
 void CGUIShopItem::CreateNameText()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort textColor = 0x021F;
+    uint16_t textColor = 0x021F;
 
     if (Selected)
         textColor = 0x0021;
@@ -138,7 +138,7 @@ void CGUIShopItem::CreateNameText()
 void CGUIShopItem::CreateCountText(int lostCount)
 {
     DEBUG_TRACE_FUNCTION;
-    ushort textColor = 0x021F;
+    uint16_t textColor = 0x021F;
 
     if (Selected)
         textColor = 0x0021;
@@ -154,7 +154,7 @@ void CGUIShopItem::PrepareTextures()
         g_Orion.ExecuteStaticArt(Graphic);
     else
     {
-        uchar group = 0;
+        uint8_t group = 0;
 
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
@@ -233,7 +233,7 @@ void CGUIShopItem::Draw(bool checktrans)
     }
     else
     {
-        uchar group = 0;
+        uint8_t group = 0;
 
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {

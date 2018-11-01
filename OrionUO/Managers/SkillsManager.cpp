@@ -74,7 +74,7 @@ void CSkillsManager::Clear()
     m_SortedTable.clear();
 }
 
-CSkill *CSkillsManager::Get(uint index)
+CSkill *CSkillsManager::Get(uint32_t index)
 {
     if (index < Count)
         return &m_Skills[index];
@@ -115,7 +115,7 @@ void CSkillsManager::Sort()
     bufTable[0] = 0;
 
     //Пройдемся по всем нвыкам (кроме первого)
-    for (uint i = 1; i < Count; i++)
+    for (uint32_t i = 1; i < Count; i++)
     {
         //Пройдемся по обработанным
         for (int j = 0; j < parsed; j++)
@@ -124,9 +124,9 @@ void CSkillsManager::Sort()
             if (CompareName(m_Skills[bufTable[j]].Name, m_Skills[i].Name))
             {
                 //Запомним индекс навыка
-                uchar buf = bufTable[j];
+                uint8_t buf = bufTable[j];
                 //Перезапишем
-                bufTable[j] = (uchar)i;
+                bufTable[j] = (uint8_t)i;
 
                 //К следующему навыку
                 j++;
@@ -134,7 +134,7 @@ void CSkillsManager::Sort()
                 //Посмотрим остальные обработанные и перезапишем индекс при необходимости
                 for (; j < parsed; j++)
                 {
-                    uchar ptr = bufTable[j];
+                    uint8_t ptr = bufTable[j];
                     bufTable[j] = buf;
                     buf = ptr;
                 }
@@ -154,7 +154,7 @@ void CSkillsManager::Sort()
         m_SortedTable[i] = bufTable[j];
 }
 
-int CSkillsManager::GetSortedIndex(uint index)
+int CSkillsManager::GetSortedIndex(uint32_t index)
 {
     if (index < Count)
         return m_SortedTable[index];

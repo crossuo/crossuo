@@ -16,22 +16,22 @@ class CGUITextEntry : public CBaseGUI
 {
 public:
     //!Цвет текста в выбранном состоянии
-    ushort ColorSelected = 0;
+    uint16_t ColorSelected = 0;
 
     //!Цвет текста в состоянии фокуса
-    ushort ColorFocused = 0;
+    uint16_t ColorFocused = 0;
 
     //!Текст в юникоде
     bool Unicode = false;
 
     //!Шрифт
-    uchar Font = 0;
+    uint8_t Font = 0;
 
     //!Ориентация текста
     TEXT_ALIGN_TYPE Align = TS_LEFT;
 
     //!Флаги текста
-    ushort TextFlags = 0;
+    uint16_t TextFlags = 0;
 
     //!Производить выбор объекта по серийнику может быть выбран фоном, хит-боксом и т.п.)
     bool CheckOnSerial = false;
@@ -46,56 +46,56 @@ public:
     bool UseGlobalColor = false;
 
     //!R-компонента глобального OGL цвета
-    uchar GlobalColorR = 0;
+    uint8_t GlobalColorR = 0;
 
     //!G-компонента глобального OGL цвета
-    uchar GlobalColorG = 0;
+    uint8_t GlobalColorG = 0;
 
     //!B-компонента глобального OGL цвета
-    uchar GlobalColorB = 0;
+    uint8_t GlobalColorB = 0;
 
     //!Альфа-канал глобального OGL цвета
-    uchar GlobalColorA = 0;
+    uint8_t GlobalColorA = 0;
 
     //!R-компонента глобального OGL цвета когда компонента выбрана
-    uchar GlobalColorSelectedR = 0;
+    uint8_t GlobalColorSelectedR = 0;
 
     //!G-компонента глобального OGL цвета когда компонента выбрана
-    uchar GlobalColorSelectedG = 0;
+    uint8_t GlobalColorSelectedG = 0;
 
     //!B-компонента глобального OGL цвета когда компонента выбрана
-    uchar GlobalColorSelectedB = 0;
+    uint8_t GlobalColorSelectedB = 0;
 
     //!Альфа-канал глобального OGL цвета когда компонента выбрана
-    uchar GlobalColorSelectedA = 0;
+    uint8_t GlobalColorSelectedA = 0;
 
     //!R-компонента глобального OGL цвета когда компонента находится в фокусе
-    uchar GlobalColorFocusedR = 0;
+    uint8_t GlobalColorFocusedR = 0;
 
     //!G-компонента глобального OGL цвета когда компонента находится в фокусе
-    uchar GlobalColorFocusedG = 0;
+    uint8_t GlobalColorFocusedG = 0;
 
     //!B-компонента глобального OGL цвета когда компонента находится в фокусе
-    uchar GlobalColorFocusedB = 0;
+    uint8_t GlobalColorFocusedB = 0;
 
     //!Альфа-канал глобального OGL цвета когда компонента находится в фокусе
-    uchar GlobalColorFocusedA = 0;
+    uint8_t GlobalColorFocusedA = 0;
 
     //!Смещение текста когда компонента находится в фокусе
     char FocusedOffsetY = 0;
 
     CGUITextEntry(
         int serial,
-        ushort color,
-        ushort colorSelected,
-        ushort colorFocused,
+        uint16_t color,
+        uint16_t colorSelected,
+        uint16_t colorFocused,
         int x,
         int y,
         int maxWidth = 0,
         bool unicode = true,
-        uchar font = 0,
+        uint8_t font = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort textFlags = 0,
+        uint16_t textFlags = 0,
         int maxLength = 0);
     virtual ~CGUITextEntry();
 

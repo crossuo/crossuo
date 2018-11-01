@@ -35,7 +35,7 @@ void CGameEffect::Draw(int x, int y)
     g_RenderedObjectsCountInGameWindow++;
 #endif
 
-    ushort objGraphic = GetCurrentGraphic();
+    uint16_t objGraphic = GetCurrentGraphic();
 
     ApplyRenderMode();
 
@@ -108,14 +108,14 @@ void CGameEffect::Update(CGameObject *parent)
 Вычислить текущий индекс картинки
 @return Индекс картинки
 */
-ushort CGameEffect::CalculateCurrentGraphic()
+uint16_t CGameEffect::CalculateCurrentGraphic()
 {
     DEBUG_TRACE_FUNCTION;
     uintptr_t addressAnimData = (uintptr_t)g_FileManager.m_AnimdataMul.Start;
 
     if (addressAnimData)
     {
-        uint addr = (Graphic * 68) + 4 * ((Graphic / 8) + 1);
+        uint32_t addr = (Graphic * 68) + 4 * ((Graphic / 8) + 1);
         PANIM_DATA pad = (PANIM_DATA)(addressAnimData + addr);
 
         if (AnimIndex < (int)pad->FrameCount)
@@ -135,7 +135,7 @@ ushort CGameEffect::CalculateCurrentGraphic()
 Получить текущий индекс картинки
 @return Индекс картинки
 */
-ushort CGameEffect::GetCurrentGraphic()
+uint16_t CGameEffect::GetCurrentGraphic()
 {
     DEBUG_TRACE_FUNCTION;
     return Graphic + Increment;

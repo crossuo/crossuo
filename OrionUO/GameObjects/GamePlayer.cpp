@@ -56,7 +56,7 @@ CGameItem *CPlayer::FindBandage()
 void CPlayer::UpdateAbilities()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort equippedGraphic = 0;
+    uint16_t equippedGraphic = 0;
 
     CGameItem *layerObject = g_Player->FindLayer(OL_1_HAND);
 
@@ -77,11 +77,11 @@ void CPlayer::UpdateAbilities()
 
     if (equippedGraphic)
     {
-        ushort graphics[2] = { equippedGraphic, 0 };
-        ushort imageID = layerObject->GetStaticData()->AnimID;
+        uint16_t graphics[2] = { equippedGraphic, 0 };
+        uint16_t imageID = layerObject->GetStaticData()->AnimID;
         int count = 1;
 
-        ushort testGraphic = equippedGraphic - 1;
+        uint16_t testGraphic = equippedGraphic - 1;
 
         if (g_Orion.m_StaticData[testGraphic].AnimID == imageID)
         {

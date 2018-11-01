@@ -14,10 +14,10 @@
 class CStaticObject : public CRenderStaticObject
 {
     //Оригинальный индекс картинки
-    ushort OriginalGraphic = 0;
+    uint16_t OriginalGraphic = 0;
 
 public:
-    CStaticObject(int serial, ushort graphic, ushort color, short x, short y, char z);
+    CStaticObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z);
     virtual ~CStaticObject() {}
 
     virtual void UpdateGraphicBySeason();

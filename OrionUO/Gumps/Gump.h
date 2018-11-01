@@ -21,7 +21,7 @@ class CBaseGUI;
 #define GUMP_RESIZE_START_EVENT_C OnResizeStart(int serial)
 #define GUMP_RESIZE_EVENT_C OnResize(int serial)
 #define GUMP_RESIZE_END_EVENT_C OnResizeEnd(int serial)
-#define GUMP_DIRECT_HTML_LINK_EVENT_C OnDirectHTMLLink(ushort link)
+#define GUMP_DIRECT_HTML_LINK_EVENT_C OnDirectHTMLLink(uint16_t link)
 #define GUMP_COMBOBOX_SELECTION_EVENT_C OnComboboxSelection(int serial)
 #define GUMP_SCROLL_BUTTON_EVENT_C OnScrollButton()
 
@@ -43,7 +43,7 @@ class CGump : public CRenderObject
 {
 public:
     GUMP_TYPE GumpType = GT_NONE;
-    uint ID = 0;
+    uint32_t ID = 0;
     int MinimizedX = 0;
     int MinimizedY = 0;
     bool NoMove = false;
@@ -73,7 +73,7 @@ protected:
 
 public:
     CGump();
-    CGump(GUMP_TYPE type, uint serial, int x, int y);
+    CGump(GUMP_TYPE type, uint32_t serial, int x, int y);
     virtual ~CGump();
 
     virtual void PasteClipboardData(wstring &data);

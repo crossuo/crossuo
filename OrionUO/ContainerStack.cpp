@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 deque<CContainerStackItem> g_ContainerStack;
-uint g_CheckContainerStackTimer = 0;
+uint32_t g_CheckContainerStackTimer = 0;
 
 CContainerStackItem::CContainerStackItem(
     int serial,

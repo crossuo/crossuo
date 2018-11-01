@@ -16,13 +16,13 @@ class CGUICheckbox : public CGUIDrawObject
 {
 public:
     //!ИД картинки в нажатом состоянии
-    ushort GraphicChecked = 0;
+    uint16_t GraphicChecked = 0;
 
     //!ИД картинки в выбранном состоянии
-    ushort GraphicSelected = 0;
+    uint16_t GraphicSelected = 0;
 
     //!ИД картинки в отключенном состоянии
-    ushort GraphicDisabled = 0;
+    uint16_t GraphicDisabled = 0;
 
     //!Состояние компоненты
     bool Checked = false;
@@ -46,29 +46,34 @@ protected:
 
 public:
     CGUICheckbox(
-        int serial, ushort graphic, ushort graphicChecked, ushort graphicDisabled, int x, int y);
+        int serial,
+        uint16_t graphic,
+        uint16_t graphicChecked,
+        uint16_t graphicDisabled,
+        int x,
+        int y);
     virtual ~CGUICheckbox();
 
     //!Установить текст
     void SetTextParameters(
-        uchar font,
+        uint8_t font,
         const wstring &text,
-        ushort color,
+        uint16_t color,
         SLIDER_TEXT_POSITION textPosition = STP_RIGHT,
         int textWidth = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort textFlags = 0);
+        uint16_t textFlags = 0);
     void SetTextParameters(
-        uchar font,
+        uint8_t font,
         const string &text,
-        ushort color,
+        uint16_t color,
         SLIDER_TEXT_POSITION textPosition = STP_RIGHT,
         int textWidth = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort textFlags = 0);
+        uint16_t textFlags = 0);
 
     virtual void PrepareTextures();
-    virtual ushort GetDrawGraphic();
+    virtual uint16_t GetDrawGraphic();
 
     virtual void Draw(bool checktrans = false);
     virtual bool Select();

@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "GumpGeneric.h"
 
-CGumpGeneric::CGumpGeneric(uint serial, short x, short y, uint id)
+CGumpGeneric::CGumpGeneric(uint32_t serial, short x, short y, uint32_t id)
     : CGump(GT_GENERIC, serial, x, y)
 {
     Page = 1;

@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CRenderObject::CRenderObject(int serial, ushort graphic, ushort color, short x, short y)
+CRenderObject::CRenderObject(int serial, uint16_t graphic, uint16_t color, short x, short y)
     : CBaseQueueItem()
     , Serial(serial)
     , Graphic(graphic)

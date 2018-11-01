@@ -46,8 +46,8 @@ struct RENDER_VARIABLES_FOR_GAME_WINDOW
 
 struct LIGHT_DATA
 {
-    uchar ID;
-    ushort Color;
+    uint8_t ID;
+    uint16_t Color;
     int DrawX;
     int DrawY;
 };
@@ -55,16 +55,16 @@ struct LIGHT_DATA
 struct RENDER_OBJECT_DATA
 {
     class CRenderWorldObject *Object;
-    ushort GrayColor;
+    uint16_t GrayColor;
 };
 
 struct OBJECT_HITS_INFO
 {
     int X;
     int Y;
-    ushort Color;
+    uint16_t Color;
     int Width;
-    ushort HealthColor;
+    uint16_t HealthColor;
     CGLTextTexture *HitsTexture;
 };
 
@@ -85,14 +85,14 @@ private:
     int m_RenderListCount = 0;
     int m_LightCount = 0;
     int m_MaxDrawZ = 0;
-    uint m_ProcessAlphaTimer = 0;
+    uint32_t m_ProcessAlphaTimer = 0;
     bool m_CanProcessAlpha = nullptr;
 
     void DrawGameWindow(bool mode);
     void DrawGameWindowLight();
     void DrawGameWindowText(bool mode);
-    void ApplyTransparentFoliageToUnion(ushort graphic, int x, int y, int z);
-    void CheckFoliageUnion(ushort graphic, int x, int y, int z);
+    void ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y, int z);
+    void CheckFoliageUnion(uint16_t graphic, int x, int y, int z);
 
     void AddTileToRenderList(
         class CRenderWorldObject *obj,
@@ -111,10 +111,10 @@ public:
     CGameScreen();
     virtual ~CGameScreen();
 
-    static const uchar ID_SMOOTH_GS_LOGOUT = 1;
+    static const uint8_t ID_SMOOTH_GS_LOGOUT = 1;
 
     void UpdateMaxDrawZ();
-    virtual void ProcessSmoothAction(uchar action = 0xFF);
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF);
     void CalculateGameWindowBounds();
     void CalculateRenderList();
     virtual void Init();

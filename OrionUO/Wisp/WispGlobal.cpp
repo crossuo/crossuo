@@ -310,7 +310,7 @@ void DebugMsg(const wchar_t *format, ...)
     va_end(arg);
 }
 
-void DebugDump(puchar data, int size)
+void DebugDump(uint8_t *data, int size)
 {
     int num_lines = size / 16;
 

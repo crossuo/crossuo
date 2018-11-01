@@ -16,35 +16,35 @@ class CGUIHTMLText : public CBaseGUI
 {
 public:
     //!Индекс текста
-    uint TextID = 0;
+    uint32_t TextID = 0;
 
     //!Начальный цвет текста
-    uint HTMLStartColor = 0;
+    uint32_t HTMLStartColor = 0;
 
     //!Текст
     wstring Text = L"";
 
     //!Шрифт
-    uchar Font = 0;
+    uint8_t Font = 0;
 
     //!Ориентация текста
     TEXT_ALIGN_TYPE Align = TS_LEFT;
 
     //!Флаги текста
-    ushort TextFlags = 0;
+    uint16_t TextFlags = 0;
 
     //!Ширина текста
     int Width = 0;
 
     CGUIHTMLText(
         int index,
-        uchar font,
-        ushort color,
+        uint8_t font,
+        uint16_t color,
         int x,
         int y,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        ushort textFlags = 0,
+        uint16_t textFlags = 0,
         int htmlStartColor = 0xFFFFFFFF);
     virtual ~CGUIHTMLText();
 

@@ -30,13 +30,13 @@ private:
     int m_stream_pos;
 
     void InitTables();
-    void RawEncrypt(uint *values, int table);
+    void RawEncrypt(uint32_t *values, int table);
 
 public:
     CBlowfishCrypt() {}
     ~CBlowfishCrypt() {}
 
-    void Encrypt(puchar in, puchar out, int len);
+    void Encrypt(uint8_t *in, uint8_t *out, int len);
     void Init();
 };
 
@@ -60,8 +60,8 @@ public:
     void Init(BYTE IP[4]);
     void Init_MD5();
 
-    void Encrypt(puchar in, puchar out, int size);
-    void Decrypt(puchar in, puchar out, int size);
+    void Encrypt(uint8_t *in, uint8_t *out, int size);
+    void Decrypt(uint8_t *in, uint8_t *out, int size);
 };
 
 extern CBlowfishCrypt g_BlowfishCrypt;

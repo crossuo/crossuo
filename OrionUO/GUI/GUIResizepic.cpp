@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGUIResizepic::CGUIResizepic(int serial, ushort graphic, int x, int y, int width, int height)
+CGUIResizepic::CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height)
     : CGUIPolygonal(GOT_RESIZEPIC, x, y, width, height)
 {
     Serial = serial;

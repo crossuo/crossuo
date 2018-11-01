@@ -1,7 +1,7 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-CLandObject::CLandObject(int serial, ushort graphic, ushort color, short x, short y, char z)
+CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CMapObject(ROT_LAND_OBJECT, serial, 0, color, x, y, z)
     , MinZ(z)
     , AverageZ(z)
@@ -74,7 +74,7 @@ int CLandObject::GetDirectionZ(int direction)
 int CLandObject::CalculateCurrentAverageZ(int direction)
 {
     DEBUG_TRACE_FUNCTION;
-    int result = GetDirectionZ(((uchar)(direction >> 1) + 1) & 3);
+    int result = GetDirectionZ(((uint8_t)(direction >> 1) + 1) & 3);
 
     if (direction & 1)
         return result;
@@ -117,7 +117,7 @@ void CLandObject::Draw(int x, int y)
     DEBUG_TRACE_FUNCTION;
     if (m_Z <= g_MaxGroundZ)
     {
-        ushort objColor = 0;
+        uint16_t objColor = 0;
 
         if (g_DeveloperMode == DM_DEBUGGING && g_SelectedObject.Object == this)
             objColor = SELECT_LAND_COLOR;

@@ -27,7 +27,7 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
 
         m_Status = skill->Status;
 
-        ushort graphic = GetStatusButtonGraphic();
+        uint16_t graphic = GetStatusButtonGraphic();
         m_ButtonStatus = new CGUIButton(statusSerial, graphic, graphic, graphic, 251, 0);
         m_ButtonStatus->CheckPolygone = true;
 
@@ -47,22 +47,22 @@ CGUISkillItem::~CGUISkillItem()
     RELEASE_POINTER(m_ButtonStatus);
 }
 
-void CGUISkillItem::SetStatus(uchar val)
+void CGUISkillItem::SetStatus(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
     m_Status = val;
 
-    ushort graphic = GetStatusButtonGraphic();
+    uint16_t graphic = GetStatusButtonGraphic();
 
     m_ButtonStatus->Graphic = graphic;
     m_ButtonStatus->GraphicSelected = graphic;
     m_ButtonStatus->GraphicPressed = graphic;
 }
 
-ushort CGUISkillItem::GetStatusButtonGraphic()
+uint16_t CGUISkillItem::GetStatusButtonGraphic()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = 0x0984; //Up
+    uint16_t graphic = 0x0984; //Up
 
     if (m_Status == 1)
         graphic = 0x0986; //Down

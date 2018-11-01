@@ -134,7 +134,7 @@ void CGumpScreenGame::Draw()
         g_RenderBounds.GameWindowWidth + 8,
         0);
 
-    ushort resizeGumpID = 0x0837; //button
+    uint16_t resizeGumpID = 0x0837; //button
     if (g_ConfigManager.LockResizingGameWindow)
         resizeGumpID = 0x082C; //lock
     else if (g_SelectedObject.Object == m_Items)

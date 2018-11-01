@@ -27,7 +27,7 @@ void CPluginPacket::SendToPlugin()
 {
     if (m_Data.size() >= 5)
     {
-        pack16(&m_Data[1], (ushort)m_Data.size());
+        pack16(&m_Data[1], (uint16_t)m_Data.size());
         g_PluginManager.PacketRecv(&m_Data[0], (int)m_Data.size());
     }
 }
@@ -42,7 +42,7 @@ CPluginPacketSkillsList::CPluginPacketSkillsList()
 
     for (int i = 0; i < count; i++)
     {
-        CSkill *skill = g_SkillsManager.Get((uint)i);
+        CSkill *skill = g_SkillsManager.Get((uint32_t)i);
 
         if (skill == nullptr)
             continue;
@@ -117,7 +117,7 @@ CPluginPacketMacrosList::CPluginPacketMacrosList()
     }
 }
 
-CPluginPacketFileInfo::CPluginPacketFileInfo(int index, uint64 address, uint64 size)
+CPluginPacketFileInfo::CPluginPacketFileInfo(int index, uint64_t address, uint64_t size)
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_FILE_INFO);
@@ -127,7 +127,7 @@ CPluginPacketFileInfo::CPluginPacketFileInfo(int index, uint64 address, uint64 s
 }
 
 CPluginPacketFileInfoLocalized::CPluginPacketFileInfoLocalized(
-    int index, uint64 address, uint64 size, const string &language)
+    int index, uint64_t address, uint64_t size, const string &language)
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_FILE_INFO_LOCALIZED);
@@ -138,7 +138,7 @@ CPluginPacketFileInfoLocalized::CPluginPacketFileInfoLocalized(
 }
 
 CPluginPacketStaticArtGraphicDataInfo::CPluginPacketStaticArtGraphicDataInfo(
-    ushort graphic, uint64 address, uint64 size, uint64 compressedSize)
+    uint16_t graphic, uint64_t address, uint64_t size, uint64_t compressedSize)
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_GRAPHIC_DATA_INFO);
@@ -150,7 +150,7 @@ CPluginPacketStaticArtGraphicDataInfo::CPluginPacketStaticArtGraphicDataInfo(
 }
 
 CPluginPacketGumpArtGraphicDataInfo::CPluginPacketGumpArtGraphicDataInfo(
-    ushort graphic, uint64 address, uint64 size, uint64 compressedSize, ushort width, ushort height)
+    uint16_t graphic, uint64_t address, uint64_t size, uint64_t compressedSize, uint16_t width, uint16_t height)
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_GRAPHIC_DATA_INFO);

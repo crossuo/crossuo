@@ -22,7 +22,7 @@ CGLHTMLTextTexture::~CGLHTMLTextTexture()
     m_WebLinkRect.clear();
 }
 
-ushort CGLHTMLTextTexture::WebLinkUnderMouse(int x, int y)
+uint16_t CGLHTMLTextTexture::WebLinkUnderMouse(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     x = g_MouseManager.Position.X - x;

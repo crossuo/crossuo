@@ -67,9 +67,9 @@ thread_int THREADCALL CThreadLoopSynchronizedDelay(void *arg)
             SDL_Delay(1);
 
 #if THREAD_USE_CLOCK == 1
-        uint nowTime = clock();
+        uint32_t nowTime = clock();
 #else
-        uint nowTime = SDL_GetTicks();
+        uint32_t nowTime = SDL_GetTicks();
 #endif
 
         parent->OnExecute(nowTime);

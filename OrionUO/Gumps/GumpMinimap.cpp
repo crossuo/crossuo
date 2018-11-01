@@ -109,7 +109,7 @@ void CGumpMinimap::GenerateMap()
 
     m_Texture.Clear();
 
-    ushort gumpID = 0x1393 - (int)Minimized;
+    uint16_t gumpID = 0x1393 - (int)Minimized;
     CIndexObject &io = g_Orion.m_GumpDataIndex[gumpID];
 
     int gumpWidth = io.Width;
@@ -141,16 +141,16 @@ void CGumpMinimap::GenerateMap()
         minBlockY = 0;
 
     int map = g_MapManager.GetActualMap();
-    uint maxBlockIndex = g_MapManager.MaxBlockIndex;
+    uint32_t maxBlockIndex = g_MapManager.MaxBlockIndex;
     int mapBlockHeight = g_MapBlockSize[map].Height;
 
     for (int i = minBlockX; i <= maxBlockX; i++)
     {
-        uint blockIndexOffset = i * mapBlockHeight;
+        uint32_t blockIndexOffset = i * mapBlockHeight;
 
         for (int j = minBlockY; j <= maxBlockY; j++)
         {
-            uint blockIndex = blockIndexOffset + j;
+            uint32_t blockIndex = blockIndexOffset + j;
 
             if (blockIndex >= maxBlockIndex)
                 break;
@@ -174,12 +174,12 @@ void CGumpMinimap::GenerateMap()
                     int gx = px - py;
                     int gy = px + py;
 
-                    uint color = mb.Cells[x][y].Graphic;
+                    uint32_t color = mb.Cells[x][y].Graphic;
                     char &isLand = mb.Cells[x][y].IsLand;
 
                     if (mapBlock != nullptr)
                     {
-                        ushort multiColor = mapBlock->GetRadarColor((int)x, (int)y);
+                        uint16_t multiColor = mapBlock->GetRadarColor((int)x, (int)y);
 
                         if (multiColor)
                         {
@@ -257,7 +257,7 @@ void CGumpMinimap::PrepareContent()
     else if (!m_Count || m_Count == 6 || WantRedraw)
         WantUpdateContent = true;
 
-    static uint ticks = 0;
+    static uint32_t ticks = 0;
 
     if (ticks < g_Ticks)
     {
@@ -272,7 +272,7 @@ void CGumpMinimap::PrepareContent()
 void CGumpMinimap::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort graphic = 0x1393 - (int)Minimized;
+    uint16_t graphic = 0x1393 - (int)Minimized;
 
     CGLTexture *th = g_Orion.ExecuteGump(graphic);
 
@@ -310,12 +310,12 @@ void CGumpMinimap::UpdateContent()
 
             if (go->NPC && !go->IsPlayer())
             {
-                ushort color =
+                uint16_t color =
                     g_ConfigManager.GetColorByNotoriety(go->GameCharacterPtr()->Notoriety);
 
                 if (color)
                 {
-                    uint pcl = g_ColorManager.GetPolygoneColor(16, color);
+                    uint32_t pcl = g_ColorManager.GetPolygoneColor(16, color);
 
                     int x = go->GetX() - playerX;
                     int y = go->GetY() - playerY;

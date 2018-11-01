@@ -41,8 +41,8 @@ bool CSocket::Connect(const string &address, int port)
             return Wisp::CConnection::Connect(address, port);
         }
 
-        ushort serverPort = htons(port);
-        uint serverIP = inet_addr(address.c_str());
+        uint16_t serverPort = htons(port);
+        uint32_t serverIP = inet_addr(address.c_str());
 
         if (serverIP == 0xFFFFFFFF)
         {

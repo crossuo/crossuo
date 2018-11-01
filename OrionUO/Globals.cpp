@@ -28,12 +28,12 @@ bool g_LogoutAfterClick = false;
 
 int g_FrameDelay[2] = { FRAME_DELAY_UNACTIVE_WINDOW, FRAME_DELAY_ACTIVE_WINDOW };
 
-uint g_LastSendTime = 0;
-uint g_LastPacketTime = 0;
-uint g_TotalSendSize = 0;
-uint g_TotalRecvSize = 0;
+uint32_t g_LastSendTime = 0;
+uint32_t g_LastPacketTime = 0;
+uint32_t g_TotalSendSize = 0;
+uint32_t g_TotalRecvSize = 0;
 
-uint g_Ticks = 0;
+uint32_t g_Ticks = 0;
 
 GLuint ShaderColorTable = 0;
 GLuint g_ShaderDrawMode = 0;
@@ -62,22 +62,22 @@ bool g_GrayedPixels = false;
 
 bool g_ConfigLoaded = false;
 
-uchar g_LightLevel = 0;
-uchar g_PersonalLightLevel = 0;
+uint8_t g_LightLevel = 0;
+uint8_t g_PersonalLightLevel = 0;
 
 char g_SelectedCharName[30] = { 0 };
 
 //!Индекс текущей карты
-uchar g_CurrentMap = 0;
+uint8_t g_CurrentMap = 0;
 
 //!Время сервера
-uchar g_ServerTimeHour = 0;
-uchar g_ServerTimeMinute = 0;
-uchar g_ServerTimeSecond = 0;
+uint8_t g_ServerTimeHour = 0;
+uint8_t g_ServerTimeMinute = 0;
+uint8_t g_ServerTimeSecond = 0;
 
 bool g_PacketLoginComplete = false;
 
-uint g_ClientFlag = 0;
+uint32_t g_ClientFlag = 0;
 
 bool g_SendLogoutNotification = false;
 bool g_PopupEnabled = false;
@@ -85,9 +85,9 @@ bool g_ChatEnabled = false;
 bool g_TooltipsEnabled = false;
 bool g_PaperdollBooks = false;
 
-uchar g_GameSeed[4] = { 0 };
+uint8_t g_GameSeed[4] = { 0 };
 
-ushort g_OutOfRangeColor = 0;
+uint16_t g_OutOfRangeColor = 0;
 char g_MaxGroundZ = 0;
 bool g_NoDrawRoof = false;
 char g_FoliageIndex = 0;
@@ -97,18 +97,18 @@ bool g_JournalShowSystem = true;
 bool g_JournalShowObjects = true;
 bool g_JournalShowClient = true;
 
-uint g_PlayerSerial = 0;
-uint g_StatusbarUnderMouse = 0;
+uint32_t g_PlayerSerial = 0;
+uint32_t g_StatusbarUnderMouse = 0;
 
 int g_LastSpellIndex = 1;
 int g_LastSkillIndex = 1;
-uint g_LastUseObject = 0;
-uint g_LastTargetObject = 0;
-uint g_LastAttackObject = 0;
+uint32_t g_LastUseObject = 0;
+uint32_t g_LastTargetObject = 0;
+uint32_t g_LastAttackObject = 0;
 
 CHARACTER_SPEED_TYPE g_SpeedMode = CST_NORMAL;
 
-uint g_DeathScreenTimer = 0;
+uint32_t g_DeathScreenTimer = 0;
 
 float g_AnimCharactersDelayValue = 80.0f; //0x50
 
@@ -117,11 +117,11 @@ Wisp::CPoint2Di g_RemoveRangeXY;
 int g_GrayMenuCount = 0;
 
 PROMPT_TYPE g_ConsolePrompt = PT_NONE;
-uchar g_LastASCIIPrompt[11] = { 0 };
-uchar g_LastUnicodePrompt[11] = { 0 };
+uint8_t g_LastASCIIPrompt[11] = { 0 };
+uint8_t g_LastUnicodePrompt[11] = { 0 };
 
-uint g_PartyHelperTarget = 0;
-uint g_PartyHelperTimer = 0;
+uint32_t g_PartyHelperTarget = 0;
+uint32_t g_PartyHelperTimer = 0;
 
 float g_DrawColor = 1.0f;
 
@@ -129,20 +129,20 @@ SEASON_TYPE g_Season = ST_SUMMER;
 SEASON_TYPE g_OldSeason = ST_SUMMER;
 int g_OldSeasonMusic = 0;
 
-uint g_LockedClientFeatures = 0;
+uint32_t g_LockedClientFeatures = 0;
 
 bool g_GeneratedMouseDown = false;
 
 DEVELOPER_MODE g_DeveloperMode = DM_SHOW_FPS_ONLY;
 DEVELOPER_MODE g_OptionsDeveloperMode = DM_SHOW_FPS_ONLY;
 
-ushort g_ObjectHandlesBackgroundPixels[g_ObjectHandlesWidth * g_ObjectHandlesHeight] = { 0 };
+uint16_t g_ObjectHandlesBackgroundPixels[g_ObjectHandlesWidth * g_ObjectHandlesHeight] = { 0 };
 
-uint g_Ping = 0;
+uint32_t g_Ping = 0;
 
 bool g_DrawAura = false;
 
-ushort g_AbilityList[MAX_ABILITIES_COUNT] = {
+uint16_t g_AbilityList[MAX_ABILITIES_COUNT] = {
     AT_ARMOR_IGNORE,     AT_BLEED_ATTACK,    AT_CONCUSSION_BLOW,    AT_CRUSHING_BLOW,
     AT_DISARM,           AT_DISMOUNT,        AT_DOUBLE_STRIKE,      AT_INFECTING,
     AT_MORTAL_STRIKE,    AT_MOVING_SHOT,     AT_PARALYZING_BLOW,    AT_SHADOW_STRIKE,
@@ -153,21 +153,21 @@ ushort g_AbilityList[MAX_ABILITIES_COUNT] = {
     AT_FORCE_OF_NATURE,  AT_INFUSED_THROW,   AT_MYSTIC_ARC,         AT_DISROBE
 };
 
-uchar g_Ability[2] = { AT_DISARM, AT_PARALYZING_BLOW };
+uint8_t g_Ability[2] = { AT_DISARM, AT_PARALYZING_BLOW };
 
 bool g_DrawStatLockers = false;
 
-uint g_SelectedGameObjectHandle = 0;
+uint32_t g_SelectedGameObjectHandle = 0;
 
 bool g_ShowWarnings = true;
 
-uint g_ProcessStaticAnimationTimer = 0;
-uint g_ProcessRemoveRangedTimer = 0;
+uint32_t g_ProcessStaticAnimationTimer = 0;
+uint32_t g_ProcessRemoveRangedTimer = 0;
 int g_MaxViewRange = MAX_VIEW_RANGE_OLD;
-uint g_OrionFeaturesFlags = OFF_ALL_FLAGS;
+uint32_t g_OrionFeaturesFlags = OFF_ALL_FLAGS;
 PING_INFO_DATA g_GameServerPingInfo = { 0 };
 string g_PingString = "";
-uint g_PingTimer = 0;
+uint32_t g_PingTimer = 0;
 
 bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point)
 {
@@ -360,7 +360,7 @@ int GetTopObjDistance(CGameObject *current, CGameObject *target)
     return 100500;
 }
 
-const char *GetReagentName(ushort id)
+const char *GetReagentName(uint16_t id)
 {
     switch (id)
     {

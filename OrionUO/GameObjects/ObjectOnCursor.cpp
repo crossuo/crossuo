@@ -30,13 +30,13 @@ void CObjectOnCursor::Clear()
     UpdatedInWorld = false;
 }
 
-ushort CObjectOnCursor::GetDrawGraphic(bool &doubleDraw)
+uint16_t CObjectOnCursor::GetDrawGraphic(bool &doubleDraw)
 {
     DEBUG_TRACE_FUNCTION;
     int index = CGameObject::IsGold(Graphic);
-    ushort result = Graphic;
+    uint16_t result = Graphic;
 
-    const ushort graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },
+    const uint16_t graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },
                                                  { 0x0EEA, 0x0EEB, 0x0EEC },
                                                  { 0x0EF0, 0x0EF1, 0x0EF2 } };
 

@@ -12,7 +12,7 @@
 #include "stdafx.h"
 
 CGUIMinMaxButtons::CGUIMinMaxButtons(
-    int serial, ushort graphic, int x, int y, int minValue, int maxValue, int value)
+    int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)
     : CBaseGUI(GOT_MINMAXBUTTONS, serial, graphic, 0, x, y)
     , MinValue(minValue)
     , MaxValue(maxValue)
@@ -168,12 +168,12 @@ void CGUIMinMaxButtons::OnClick()
 void CGUIMinMaxButtons::SetTextParameters(
     bool haveText,
     SLIDER_TEXT_POSITION textPosition,
-    uchar font,
-    ushort color,
+    uint8_t font,
+    uint16_t color,
     bool unicode,
     int textWidth,
     TEXT_ALIGN_TYPE align,
-    ushort textFlags)
+    uint16_t textFlags)
 {
     DEBUG_TRACE_FUNCTION;
     HaveText = haveText;

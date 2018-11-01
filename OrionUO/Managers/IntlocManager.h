@@ -41,7 +41,7 @@ public:
     CIntlocManager();
     virtual ~CIntlocManager();
 
-    wstring Intloc(const string &lang, uint clilocID, bool isNewCliloc);
+    wstring Intloc(const string &lang, uint32_t clilocID, bool isNewCliloc);
 };
 
 //!Ссылка на менеджер интлоков

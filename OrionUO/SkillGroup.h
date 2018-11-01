@@ -20,7 +20,7 @@ public:
 
 private:
     //Номера навыков
-    uchar m_Items[60];
+    uint8_t m_Items[60];
 
 public:
     //Ссылки на следующую и предыдущую группы
@@ -30,19 +30,19 @@ public:
     CSkillGroupObject();
     ~CSkillGroupObject();
 
-    uchar GetItem(intptr_t index);
+    uint8_t GetItem(intptr_t index);
 
     //Добавить навык в группу
-    void Add(uchar index);
+    void Add(uint8_t index);
 
     //Добавить навык и отсортировать
-    void AddSorted(uchar index);
+    void AddSorted(uint8_t index);
 
     //Удалить навык
-    void Remove(uchar index);
+    void Remove(uint8_t index);
 
     //Проверка, содержит ли группа навык
-    bool Contains(uchar index);
+    bool Contains(uint8_t index);
 
     //Сортировать навыки
     void Sort();

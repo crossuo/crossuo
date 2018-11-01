@@ -75,9 +75,9 @@ private:
     //!Тип сокета. true - Login, false - game
     bool m_IsLoginSocket{ true };
 
-    uchar m_Seed[4];
+    uint8_t m_Seed[4];
 
-    void SendIP(CSocket &socket, puchar seed);
+    void SendIP(CSocket &socket, uint8_t *seed);
 
 public:
     CConnectionManager();
@@ -94,7 +94,7 @@ public:
 	@param [__in] GameSeed Ключ для игрового шифрования
 	@return Код ошибки
 	*/
-    void Init(puchar GameSeed);
+    void Init(uint8_t *GameSeed);
 
     /*!
 	Состояние подключения
@@ -109,7 +109,7 @@ public:
 	@param [__in] GameSeed Ключ для шифрования
 	@return Код ошибки
 	*/
-    bool Connect(const string &address, int port, puchar gameSeed);
+    bool Connect(const string &address, int port, uint8_t *gameSeed);
 
     /*!
 	Разорвать подключение
@@ -129,7 +129,7 @@ public:
 	@param [__in] size Размер данных
 	@return Размер отправленных данных или код ошибки
 	*/
-    int Send(puchar buf, int size);
+    int Send(uint8_t *buf, int size);
 
     int Send(const vector<uint8_t> &data);
 
@@ -137,7 +137,7 @@ public:
 	Получить свой IP-адрес
 	@return 
 	*/
-    puchar GetClientIP() const { return (puchar)m_Seed; }
+    uint8_t *GetClientIP() const { return (uint8_t *)m_Seed; }
 };
 
 //!Менеджер подключения

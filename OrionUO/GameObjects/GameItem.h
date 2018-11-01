@@ -15,11 +15,11 @@ class CGameItem : public CGameObject
 {
 public:
     //!Слой, в котором расположен объект
-    uchar Layer = 0;
+    uint8_t Layer = 0;
     //!Индекс картинки анимации
-    ushort AnimID = 0;
+    uint16_t AnimID = 0;
     //!Используемый предметом слой (из tiledata.mul/verdata)
-    uchar UsedLayer = 0;
+    uint8_t UsedLayer = 0;
     //!Открыт ли контейнер/спеллбук
     bool Opened = false;
     //!Выведен ли гамп разделения количества?
@@ -29,17 +29,17 @@ public:
     //!Необходимо обновить мульти-объект
     bool WantUpdateMulti = true;
     //!Цвет тайла для замены филдов (если 0 - не филд)
-    ushort FieldColor = 0;
+    uint16_t FieldColor = 0;
     //!Бонус дистанции для мульти-объекта
     short MultiDistanceBonus = 0;
     //!Цена для магазина
-    uint Price = 0;
+    uint32_t Price = 0;
     //!Имя из клилока (для гампа магазина)
     bool NameFromCliloc = false;
     //!Тайл мульти для отображения
-    ushort MultiTileGraphic = 0;
+    uint16_t MultiTileGraphic = 0;
     //!Индекс источника света
-    uchar LightID = 0;
+    uint8_t LightID = 0;
 
 protected:
     /*!
@@ -66,7 +66,7 @@ public:
     void ClearCustomHouseMultis(int state);
 
     CMultiObject *
-    AddMulti(ushort graphic, ushort color, char x, char y, char z, bool isCustomHouseMulti);
+    AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti);
 
     /*!
 	Событие изменения картинки объекта
@@ -79,7 +79,7 @@ public:
 	Получить индекс картинки (для анимации)
 	@return Индекс картинки
 	*/
-    ushort GetMountAnimation();
+    uint16_t GetMountAnimation();
 
     /*!
 	Внутренний ли это объект, исключая трупы
@@ -118,7 +118,7 @@ public:
 	@param [__in_opt] color Цвет предмета
 	@return Ссылка на найденный объект или nullptr
 	*/
-    CGameItem *FindItem(ushort graphic, ushort color = 0xFFFF);
+    CGameItem *FindItem(uint16_t graphic, uint16_t color = 0xFFFF);
 };
 
 #endif

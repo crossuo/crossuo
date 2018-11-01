@@ -34,7 +34,7 @@ int CScreenEffectManager::Process()
     else if (Mode == SEM_SUNSET)
     {
         static bool mode = false;
-        static uint timer = 0;
+        static uint32_t timer = 0;
         Alpha += Step;
 
         if (Type == SET_TO_WHITE_THEN_BLACK)

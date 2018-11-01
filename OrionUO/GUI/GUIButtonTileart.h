@@ -15,10 +15,10 @@
 class CGUIButtonTileart : public CGUIButton
 {
     //!ИД картинки статики
-    ushort TileGraphic = 0;
+    uint16_t TileGraphic = 0;
 
     //!Цвет картинки статики
-    ushort TileColor = 0;
+    uint16_t TileColor = 0;
 
     //!Координата по оси X для отображения статики
     int TileX = 0;
@@ -29,13 +29,13 @@ class CGUIButtonTileart : public CGUIButton
 public:
     CGUIButtonTileart(
         int serial,
-        ushort graphic,
-        ushort graphicSelected,
-        ushort graphicPressed,
+        uint16_t graphic,
+        uint16_t graphicSelected,
+        uint16_t graphicPressed,
         int x,
         int y,
-        ushort tileGraphic,
-        ushort tileColor,
+        uint16_t tileGraphic,
+        uint16_t tileColor,
         int tileX,
         int tileY);
     virtual ~CGUIButtonTileart();

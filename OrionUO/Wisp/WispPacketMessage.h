@@ -13,11 +13,11 @@ protected:
 
 public:
     CPacketMessage(bool bigEndian = true);
-    CPacketMessage(puchar data, int dataSizeconst, bool bigEndian = true);
+    CPacketMessage(uint8_t *data, int dataSizeconst, bool bigEndian = true);
     CPacketMessage(const vector<uint8_t> &dataconst, bool bigEndian = true);
     virtual ~CPacketMessage();
 
-    void Append(puchar data, int dataSize);
+    void Append(uint8_t *data, int dataSize);
     void Append(const vector<uint8_t> &data);
 
     void Clear() { m_Data.clear(); }

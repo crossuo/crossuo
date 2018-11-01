@@ -22,8 +22,8 @@ public:
     short PriorityZ = 0;
     RENDER_OBJECT_TYPE RenderType = ROT_GAME_OBJECT;
 #if UO_RENDER_LIST_SORT == 1
-    uchar CurrentRenderIndex = 0;
-    uchar UseInRender = 0;
+    uint8_t CurrentRenderIndex = 0;
+    uint8_t UseInRender = 0;
 #endif
     bool NoDrawTile = false;
 
@@ -31,15 +31,15 @@ public:
     CRenderWorldObject(
         RENDER_OBJECT_TYPE renderType,
         int serial,
-        ushort graphic,
-        ushort color,
+        uint16_t graphic,
+        uint16_t color,
         int x,
         int y,
         char z);
     virtual ~CRenderWorldObject();
 
     //Ссылка на компонентный состав текстуры
-    uchar m_DrawTextureColor[4];
+    uint8_t m_DrawTextureColor[4];
 
     bool ProcessAlpha(int maxAlpha);
 
@@ -62,7 +62,7 @@ public:
     class CLandObject *GetLand();
 
     //Получить индекс света объекта
-    virtual ushort GetLightID() { return 0; }
+    virtual uint16_t GetLightID() { return 0; }
 
     //Отрисовать объект
     virtual void Draw(int x, int y) {}

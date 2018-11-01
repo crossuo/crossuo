@@ -51,7 +51,7 @@ void CSelectTownScreen::Init()
 @param [__in_opt] action Идентификатор действия
 @return 
 */
-void CSelectTownScreen::ProcessSmoothAction(uchar action)
+void CSelectTownScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)

@@ -13,11 +13,11 @@
 class CPopupMenuItemInfo
 {
 public:
-    uint Cliloc = 0;
-    ushort Index = 0;
-    ushort Flags = 0;
-    ushort Color = 0;
-    ushort ReplaceColor = 0;
+    uint32_t Cliloc = 0;
+    uint16_t Index = 0;
+    uint16_t Flags = 0;
+    uint16_t Color = 0;
+    uint16_t ReplaceColor = 0;
 
     CPopupMenuItemInfo() {}
 };
@@ -31,7 +31,7 @@ private:
     CGUIColoredPolygone *m_Polygone{ nullptr };
 
 public:
-    CGumpPopupMenu(uint serial, short x, short y);
+    CGumpPopupMenu(uint32_t serial, short x, short y);
     virtual ~CGumpPopupMenu();
 
     static const int ID_GPM_MAXIMIZE = 0xDEADBEEF;

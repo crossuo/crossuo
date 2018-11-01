@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpPartyManifest::CGumpPartyManifest(uint serial, short x, short y, bool canLoot)
+CGumpPartyManifest::CGumpPartyManifest(uint32_t serial, short x, short y, bool canLoot)
     : CGump(GT_PARTY_MANIFEST, serial, x, y)
     , m_CanLoot(canLoot)
 {
@@ -41,7 +41,7 @@ void CGumpPartyManifest::UpdateContent()
     bool isMember = (g_Party.Leader != 0 && g_Party.Leader != g_PlayerSerial);
 
     int yPtr = 48;
-    ushort gumpID = 0;
+    uint16_t gumpID = 0;
 
     for (int i = 0; i < 10; i++)
     {
@@ -114,7 +114,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
         {
             g_Party.CanLoot = m_CanLoot;
 
-            CPacketPartyChangeLootTypeRequest((uchar)m_CanLoot).Send();
+            CPacketPartyChangeLootTypeRequest((uint8_t)m_CanLoot).Send();
         }
 
         RemoveMark = true;

@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpBulletinBoard::CGumpBulletinBoard(uint serial, short x, short y, string name)
+CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, string name)
     : CGump(GT_BULLETIN_BOARD, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;

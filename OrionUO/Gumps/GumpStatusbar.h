@@ -61,7 +61,7 @@ protected:
     string m_Name = string("");
 
 public:
-    CGumpStatusbar(uint serial, short x, short y, bool minimized);
+    CGumpStatusbar(uint32_t serial, short x, short y, bool minimized);
     virtual ~CGumpStatusbar();
 
     const int ID_GSB_LOCK_MOVING = 10;

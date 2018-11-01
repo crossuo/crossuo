@@ -22,14 +22,14 @@ CUopMappedFile::~CUopMappedFile()
 {
 }
 
-void CUopMappedFile::Add(uint64 hash, const CUopBlockHeader &item)
+void CUopMappedFile::Add(uint64_t hash, const CUopBlockHeader &item)
 {
     m_Map[hash] = item;
 }
 
-CUopBlockHeader *CUopMappedFile::GetBlock(uint64 hash)
+CUopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
 {
-    std::unordered_map<uint64, CUopBlockHeader>::iterator found = m_Map.find(hash);
+    std::unordered_map<uint64_t, CUopBlockHeader>::iterator found = m_Map.find(hash);
 
     if (found != m_Map.end())
         return &found->second;
@@ -350,87 +350,87 @@ void CFileManager::SendFilesInfo()
 {
     if (m_TiledataMul.Start != nullptr)
         CPluginPacketFileInfo(
-            OFI_TILEDATA_MUL, (uint64)m_TiledataMul.Start, (uint64)m_TiledataMul.Size)
+            OFI_TILEDATA_MUL, (uint64_t)m_TiledataMul.Start, (uint64_t)m_TiledataMul.Size)
             .SendToPlugin();
 
     if (m_MultiIdx.Start != nullptr)
-        CPluginPacketFileInfo(OFI_MULTI_IDX, (uint64)m_MultiIdx.Start, (uint64)m_MultiIdx.Size)
+        CPluginPacketFileInfo(OFI_MULTI_IDX, (uint64_t)m_MultiIdx.Start, (uint64_t)m_MultiIdx.Size)
             .SendToPlugin();
 
     if (m_MultiMul.Start != nullptr)
-        CPluginPacketFileInfo(OFI_MULTI_MUL, (uint64)m_MultiMul.Start, (uint64)m_MultiMul.Size)
+        CPluginPacketFileInfo(OFI_MULTI_MUL, (uint64_t)m_MultiMul.Start, (uint64_t)m_MultiMul.Size)
             .SendToPlugin();
 
     if (m_MultiCollection.Start != nullptr)
         CPluginPacketFileInfo(
-            OFI_MULTI_UOP, (uint64)m_MultiCollection.Start, (uint64)m_MultiCollection.Size)
+            OFI_MULTI_UOP, (uint64_t)m_MultiCollection.Start, (uint64_t)m_MultiCollection.Size)
             .SendToPlugin();
 
     if (m_HuesMul.Start != nullptr)
-        CPluginPacketFileInfo(OFI_HUES_MUL, (uint64)m_HuesMul.Start, (uint64)m_HuesMul.Size)
+        CPluginPacketFileInfo(OFI_HUES_MUL, (uint64_t)m_HuesMul.Start, (uint64_t)m_HuesMul.Size)
             .SendToPlugin();
 
     for (int i = 0; i < 6; i++)
     {
         if (m_MapMul[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_MAP_0_MUL + i, (uint64)m_MapMul[i].Start, (uint64)m_MapMul[i].Size)
+                OFI_MAP_0_MUL + i, (uint64_t)m_MapMul[i].Start, (uint64_t)m_MapMul[i].Size)
                 .SendToPlugin();
 
         if (m_MapUOP[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_MAP_0_UOP + i, (uint64)m_MapUOP[i].Start, (uint64)m_MapUOP[i].Size)
+                OFI_MAP_0_UOP + i, (uint64_t)m_MapUOP[i].Start, (uint64_t)m_MapUOP[i].Size)
                 .SendToPlugin();
 
         if (m_MapXUOP[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_MAPX_0_UOP + i, (uint64)m_MapXUOP[i].Start, (uint64)m_MapXUOP[i].Size)
+                OFI_MAPX_0_UOP + i, (uint64_t)m_MapXUOP[i].Start, (uint64_t)m_MapXUOP[i].Size)
                 .SendToPlugin();
 
         if (m_StaticIdx[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_STAIDX_0_MUL + i, (uint64)m_StaticIdx[i].Start, (uint64)m_StaticIdx[i].Size)
+                OFI_STAIDX_0_MUL + i, (uint64_t)m_StaticIdx[i].Start, (uint64_t)m_StaticIdx[i].Size)
                 .SendToPlugin();
 
         if (m_StaticMul[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_STATICS_0_MUL + i, (uint64)m_StaticMul[i].Start, (uint64)m_StaticMul[i].Size)
+                OFI_STATICS_0_MUL + i, (uint64_t)m_StaticMul[i].Start, (uint64_t)m_StaticMul[i].Size)
                 .SendToPlugin();
 
         if (m_MapDif[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_MAP_DIF_0_MUL + i, (uint64)m_MapDif[i].Start, (uint64)m_MapDif[i].Size)
+                OFI_MAP_DIF_0_MUL + i, (uint64_t)m_MapDif[i].Start, (uint64_t)m_MapDif[i].Size)
                 .SendToPlugin();
 
         if (m_MapDifl[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_MAP_DIFL_0_MUL + i, (uint64)m_MapDifl[i].Start, (uint64)m_MapDifl[i].Size)
+                OFI_MAP_DIFL_0_MUL + i, (uint64_t)m_MapDifl[i].Start, (uint64_t)m_MapDifl[i].Size)
                 .SendToPlugin();
 
         if (m_StaDif[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_STA_DIF_0_MUL + i, (uint64)m_StaDif[i].Start, (uint64)m_StaDif[i].Size)
+                OFI_STA_DIF_0_MUL + i, (uint64_t)m_StaDif[i].Start, (uint64_t)m_StaDif[i].Size)
                 .SendToPlugin();
 
         if (m_StaDifi[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_STA_DIFI_0_MUL + i, (uint64)m_StaDifi[i].Start, (uint64)m_StaDifi[i].Size)
+                OFI_STA_DIFI_0_MUL + i, (uint64_t)m_StaDifi[i].Start, (uint64_t)m_StaDifi[i].Size)
                 .SendToPlugin();
 
         if (m_StaDifl[i].Start != nullptr)
             CPluginPacketFileInfo(
-                OFI_STA_DIFL_0_MUL + i, (uint64)m_StaDifl[i].Start, (uint64)m_StaDifl[i].Size)
+                OFI_STA_DIFL_0_MUL + i, (uint64_t)m_StaDifl[i].Start, (uint64_t)m_StaDifl[i].Size)
                 .SendToPlugin();
     }
 
     if (m_VerdataMul.Start != nullptr)
         CPluginPacketFileInfo(
-            OFI_VERDATA_MUL, (uint64)m_VerdataMul.Start, (uint64)m_VerdataMul.Size)
+            OFI_VERDATA_MUL, (uint64_t)m_VerdataMul.Start, (uint64_t)m_VerdataMul.Size)
             .SendToPlugin();
 
     if (m_RadarcolMul.Start != nullptr)
         CPluginPacketFileInfo(
-            OFI_RADARCOL_MUL, (uint64)m_RadarcolMul.Start, (uint64)m_RadarcolMul.Size)
+            OFI_RADARCOL_MUL, (uint64_t)m_RadarcolMul.Start, (uint64_t)m_RadarcolMul.Size)
             .SendToPlugin();
 
     QFOR(item, g_ClilocManager.m_Items, CCliloc *)
@@ -438,8 +438,8 @@ void CFileManager::SendFilesInfo()
         if (item->Loaded && item->m_File.Start != nullptr)
             CPluginPacketFileInfoLocalized(
                 OFI_CLILOC_MUL,
-                (uint64)item->m_File.Start,
-                (uint64)item->m_File.Size,
+                (uint64_t)item->m_File.Start,
+                (uint64_t)item->m_File.Size,
                 item->Language)
                 .SendToPlugin();
     }
@@ -509,7 +509,7 @@ void CFileManager::ReadTask()
 
                 UOPAnimationData dataStruct;
                 dataStruct.offset =
-                    static_cast<uint>(offsetVal + *reinterpret_cast<unsigned int *>(headerlength));
+                    static_cast<uint32_t>(offsetVal + *reinterpret_cast<unsigned int *>(headerlength));
                 dataStruct.compressedLength = *reinterpret_cast<unsigned int *>(compressedlength);
                 dataStruct.decompressedLength =
                     *reinterpret_cast<unsigned int *>(decompressedlength);
@@ -604,7 +604,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
     if (!file.Load(g_App.UOFilesPath(fileName)))
         return false;
 
-    uint formatID = file.ReadUInt32LE();
+    uint32_t formatID = file.ReadUInt32LE();
 
     if (formatID != 0x0050594D)
     {
@@ -612,16 +612,16 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
         return false;
     }
 
-    uint formatVersion = file.ReadUInt32LE();
+    uint32_t formatVersion = file.ReadUInt32LE();
 
     if (formatVersion > 5)
         LOG("WARNING!!! UOP file '%s' version is %i!\n", fileName, formatVersion);
 
     file.Move(4); //Signature?
-    uint64 next = file.ReadUInt64LE();
+    uint64_t next = file.ReadUInt64LE();
 
     file.Move(4); //Block capacity?
-    uint filesCount = file.ReadUInt32LE();
+    uint32_t filesCount = file.ReadUInt32LE();
 
     file.ResetPtr();
     file.Move((int)next);
@@ -633,15 +633,15 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
 
         for (int i = 0; i < count; i++)
         {
-            uint64 offset = file.ReadInt64LE();
+            uint64_t offset = file.ReadInt64LE();
 
-            uint headerSize = file.ReadInt32LE();
-            uint compressedSize = file.ReadInt32LE();
-            uint decompressedSize = file.ReadInt32LE();
+            uint32_t headerSize = file.ReadInt32LE();
+            uint32_t compressedSize = file.ReadInt32LE();
+            uint32_t decompressedSize = file.ReadInt32LE();
 
-            uint64 hash = file.ReadInt64LE();
-            uint unknown = file.ReadInt32LE();
-            ushort flag = file.ReadInt16LE();
+            uint64_t hash = file.ReadInt64LE();
+            uint32_t unknown = file.ReadInt32LE();
+            uint16_t flag = file.ReadInt16LE();
 
             if (!offset || !decompressedSize)
                 continue;
@@ -668,7 +668,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
     //if (string("tileart.uop") != fileName)
     return true;
 
-    for (std::unordered_map<uint64, CUopBlockHeader>::iterator i = file.m_Map.begin();
+    for (std::unordered_map<uint64_t, CUopBlockHeader>::iterator i = file.m_Map.begin();
          i != file.m_Map.end();
          ++i)
     {

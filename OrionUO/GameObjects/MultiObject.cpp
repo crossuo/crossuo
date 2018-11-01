@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CMultiObject::CMultiObject(ushort graphic, short x, short y, char z, int flags)
+CMultiObject::CMultiObject(uint16_t graphic, short x, short y, char z, int flags)
     : CRenderStaticObject(ROT_MULTI_OBJECT, 0, graphic, 0, x, y, z)
     , OnTarget(flags == 2)
 {
@@ -34,7 +34,7 @@ CMultiObject::~CMultiObject()
 void CMultiObject::UpdateGraphicBySeason()
 {
     DEBUG_TRACE_FUNCTION;
-    //ushort graphic = Graphic;
+    //uint16_t graphic = Graphic;
 
     Graphic = g_Orion.GetSeasonGraphic(OriginalGraphic);
 
@@ -48,7 +48,7 @@ void CMultiObject::Draw(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
 
-    ushort color = Color;
+    uint16_t color = Color;
 
     if (State)
     {

@@ -37,7 +37,7 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     vector<uint32_t> pixels = GetScenePixels(x, y, width, height);
 
     FIBITMAP *fBmp =
-        FreeImage_ConvertFromRawBits((puchar)&pixels[0], width, height, width * 4, 32, 0, 0, 0);
+        FreeImage_ConvertFromRawBits((uint8_t *)&pixels[0], width, height, width * 4, 32, 0, 0, 0);
 
     FREE_IMAGE_FORMAT format = FIF_BMP;
 
@@ -91,7 +91,7 @@ vector<uint32_t> CScreenshotBuilder::GetScenePixels(int x, int y, int width, int
         GL_UNSIGNED_INT_8_8_8_8_REV,
         &pixels[0]);
 
-    for (uint &i : pixels)
+    for (uint32_t &i : pixels)
         i |= 0xFF000000;
 
     return pixels;

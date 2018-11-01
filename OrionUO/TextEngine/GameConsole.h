@@ -35,7 +35,7 @@ public:
     //Отправить данные консоли
     void Send();
 
-    static void Send(wstring text, ushort defaultColor = 0);
+    static void Send(wstring text, uint16_t defaultColor = 0);
 
     //Тест данных на не стандартное сообщение
     static wstring

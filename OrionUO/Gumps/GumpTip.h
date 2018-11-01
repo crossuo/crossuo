@@ -25,10 +25,10 @@ private:
     virtual void UpdateHeight();
 
 public:
-    CGumpTip(uint serial, short x, short y, string str, bool updates);
+    CGumpTip(uint32_t serial, short x, short y, string str, bool updates);
     virtual ~CGumpTip();
 
-    void SendTipRequest(uchar flag);
+    void SendTipRequest(uint8_t flag);
 
     GUMP_BUTTON_EVENT_H;
 

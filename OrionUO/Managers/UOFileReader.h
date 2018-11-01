@@ -32,7 +32,7 @@ public:
     CGLTexture *ReadGump(CIndexObject &io);
 
     vector<uint16_t>
-    GetArtPixels(ushort id, CIndexObject &io, bool run, short &width, short &height);
+    GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height);
 
     /*!
 	Прочитать арт и сгенерировать текстуру
@@ -40,7 +40,7 @@ public:
 	@param [__in] io Ссылка на данные о арте
 	@return Ссылка на данные о текстуре
 	*/
-    CGLTexture *ReadArt(ushort id, CIndexObject &io, bool run);
+    CGLTexture *ReadArt(uint16_t id, CIndexObject &io, bool run);
 
     /*!
 	Прочитать текстуру ландшафта и сгенерировать тексруту

@@ -153,7 +153,7 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
 CMacro *CMacro::Load(Wisp::CMappedFile &file)
 {
     DEBUG_TRACE_FUNCTION;
-    puchar next = file.Ptr;
+    uint8_t *next = file.Ptr;
     short size = file.ReadInt16LE();
     next += size;
 
@@ -254,7 +254,7 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
 
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
-        uchar type = 0;
+        uint8_t type = 0;
         if (obj->HaveString())
             type = 2;
 

@@ -16,12 +16,12 @@ class CGUIGenericText : public CGUIText
 {
 public:
     //!Индекс текста
-    uint TextID = 0;
+    uint32_t TextID = 0;
 
     //!Максимальная ширина (для CroppedText)
     int MaxWidth = 0;
 
-    CGUIGenericText(int index, ushort color, int x, int y, int maxWidth = 0);
+    CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth = 0);
     virtual ~CGUIGenericText();
 
     void CreateTexture(const wstring &str);

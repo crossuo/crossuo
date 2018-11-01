@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 
-CGumpDye::CGumpDye(uint serial, short x, short y, ushort graphic)
+CGumpDye::CGumpDye(uint32_t serial, short x, short y, uint16_t graphic)
     : CGumpSelectColor(serial, x, y, SCGS_OPT_TOOLTIP_TEXT)
 {
     NoClose = true;
@@ -23,11 +23,11 @@ CGumpDye::~CGumpDye()
 {
 }
 
-ushort CGumpDye::GetCurrentColor()
+uint16_t CGumpDye::GetCurrentColor()
 {
     DEBUG_TRACE_FUNCTION;
-    ushort startColor = m_ColorRef + 2;
-    ushort color = 0;
+    uint16_t startColor = m_ColorRef + 2;
+    uint16_t color = 0;
 
     for (int y = 0; y < 10 && !color; y++)
     {
@@ -64,7 +64,7 @@ void CGumpDye::UpdateContent()
         m_Tube->Color = GetCurrentColor();
 }
 
-void CGumpDye::OnSelectColor(ushort color)
+void CGumpDye::OnSelectColor(uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
     CPacketDyeDataResponse(Serial, Graphic, color + 1).Send();

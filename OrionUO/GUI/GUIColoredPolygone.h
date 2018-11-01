@@ -16,16 +16,16 @@ class CGUIColoredPolygone : public CGUIPolygonal
 {
 public:
     //!R-компонента цвета
-    uchar ColorR = 0;
+    uint8_t ColorR = 0;
 
     //!G-компонента цвета
-    uchar ColorG = 0;
+    uint8_t ColorG = 0;
 
     //!B-компонента цвета
-    uchar ColorB = 0;
+    uint8_t ColorB = 0;
 
     //!Значение альфа-канала
-    uchar ColorA = 0;
+    uint8_t ColorA = 0;
 
     //!Отрисовывать ли белую точку
     bool DrawDot = false;
@@ -34,11 +34,11 @@ public:
     bool Focused = false;
 
     CGUIColoredPolygone(
-        int serial, ushort color, int x, int y, int width, int height, int polygoneColor);
+        int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor);
     virtual ~CGUIColoredPolygone();
 
     //!Обновить цвет
-    void UpdateColor(ushort color, int polygoneColor);
+    void UpdateColor(uint16_t color, int polygoneColor);
 
     virtual void Draw(bool checktrans = false);
 

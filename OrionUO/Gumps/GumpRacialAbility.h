@@ -19,7 +19,7 @@ public:
     CGumpRacialAbility(int serial, int x, int y);
     virtual ~CGumpRacialAbility();
 
-    static void OnAbilityUse(ushort index);
+    static void OnAbilityUse(uint16_t index);
 
     virtual void InitToolTip();
 

@@ -18,7 +18,7 @@ public:
     bool OnTarget = false;
 
     //!Original object's graphic
-    ushort OriginalGraphic = 0;
+    uint16_t OriginalGraphic = 0;
 
     //!Object's state for custom houses buildings
     int State = 0;
@@ -32,7 +32,7 @@ public:
 	@param [__in] flags Multi object flags
 	@return
 	*/
-    CMultiObject(ushort graphic, short x, short y, char z, int flags);
+    CMultiObject(uint16_t graphic, short x, short y, char z, int flags);
 
     /*!
 	Destructor

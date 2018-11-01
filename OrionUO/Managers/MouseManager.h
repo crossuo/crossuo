@@ -11,7 +11,7 @@
 #define MOUSEMANAGER_H
 
 //!Картинки курсора мышки
-extern ushort g_CursorData[2][16];
+extern uint16_t g_CursorData[2][16];
 
 //!Класс менеджера мыши
 class CMouseManager : public Wisp::CMouse
@@ -56,7 +56,7 @@ public:
 	Получить индекс картинки игрового курсора
 	@return Индекс картинки
 	*/
-    ushort GetGameCursor();
+    uint16_t GetGameCursor();
 
     /*!
 	Обработка движения персонажа
@@ -69,7 +69,7 @@ public:
 	@param [__in] id Индекс картинки курсора
 	@return 
 	*/
-    void Draw(ushort id);
+    void Draw(uint16_t id);
 };
 //--------------------------------------------------------------------------
 //!Менеджер мыши

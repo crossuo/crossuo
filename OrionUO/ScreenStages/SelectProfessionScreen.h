@@ -28,10 +28,10 @@ public:
     virtual ~CSelectProfessionScreen();
 
     //!Идентификаторы событий для плавного перехода
-    static const uchar ID_SMOOTH_SPS_QUIT = 1;
-    static const uchar ID_SMOOTH_SPS_GO_SCREEN_CHARACTER = 2;
-    static const uchar ID_SMOOTH_SPS_GO_SCREEN_GAME_CONNECT = 3;
-    static const uchar ID_SMOOTH_SPS_GO_SCREEN_CREATE = 4;
+    static const uint8_t ID_SMOOTH_SPS_QUIT = 1;
+    static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_CHARACTER = 2;
+    static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_GAME_CONNECT = 3;
+    static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_CREATE = 4;
 
     /*!
 	Инициализация
@@ -44,7 +44,7 @@ public:
 	@param [__in_opt] action Идентификатор действия
 	@return 
 	*/
-    void ProcessSmoothAction(uchar action = 0xFF);
+    void ProcessSmoothAction(uint8_t action = 0xFF);
 };
 
 extern CSelectProfessionScreen g_SelectProfessionScreen;

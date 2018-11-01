@@ -229,7 +229,7 @@ void CConfigManager::SetMusic(bool val)
     }
 }
 
-void CConfigManager::SetSoundVolume(uchar val)
+void CConfigManager::SetSoundVolume(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && m_SoundVolume != val)
@@ -238,7 +238,7 @@ void CConfigManager::SetSoundVolume(uchar val)
     m_SoundVolume = val;
 }
 
-void CConfigManager::SetMusicVolume(uchar val)
+void CConfigManager::SetMusicVolume(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -251,7 +251,7 @@ void CConfigManager::SetMusicVolume(uchar val)
         m_MusicVolume = val;
 }
 
-void CConfigManager::SetClientFPS(uchar val)
+void CConfigManager::SetClientFPS(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -281,11 +281,11 @@ void CConfigManager::SetUseScaling(bool val)
         g_GlobalScale = 1.0;
 }
 
-void CConfigManager::SetDrawStatusState(uchar val)
+void CConfigManager::SetDrawStatusState(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
-    uchar state = val;
+    uint8_t state = val;
     if (!(g_OrionFeaturesFlags & OFF_DRAW_CHARACTERS_STATUS_IN_WORLD))
         state = DCSS_NO_DRAW;
 
@@ -365,11 +365,11 @@ void CConfigManager::SetApplyStateColorOnCharacters(bool val)
     m_ApplyStateColorOnCharacters = state;
 }
 
-void CConfigManager::SetDrawAuraState(uchar val)
+void CConfigManager::SetDrawAuraState(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
-    uchar state = val;
+    uint8_t state = val;
     if (!(g_OrionFeaturesFlags & OFF_DRAW_AURA))
         state = DAS_NEVER;
 
@@ -403,7 +403,7 @@ void CConfigManager::SetConsoleNeedEnter(bool val)
     m_ConsoleNeedEnter = val;
 }
 
-void CConfigManager::SetSpellIconAlpha(uchar val)
+void CConfigManager::SetSpellIconAlpha(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION
     if (this == &g_ConfigManager && val != m_SpellIconAlpha)
@@ -562,15 +562,15 @@ void CConfigManager::SetUseGLListsForInterface(bool val)
     }
 }
 
-void CConfigManager::SetPingTimer(uchar val)
+void CConfigManager::SetPingTimer(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
-    m_PingTimer = max(min(val, uchar(120)), uchar(10));
+    m_PingTimer = max(min(val, uint8_t(120)), uint8_t(10));
     g_PingTimer = 0;
 }
 
-void CConfigManager::SetItemPropertiesMode(uchar val)
+void CConfigManager::SetItemPropertiesMode(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -622,7 +622,7 @@ void CConfigManager::SetItemPropertiesIcon(bool val)
     }
 }
 
-void CConfigManager::SetCharacterBackpackStyle(uchar val)
+void CConfigManager::SetCharacterBackpackStyle(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -638,11 +638,11 @@ void CConfigManager::SetCharacterBackpackStyle(uchar val)
     }
 }
 
-ushort CConfigManager::GetColorByNotoriety(uchar notoriety)
+uint16_t CConfigManager::GetColorByNotoriety(uint8_t notoriety)
 {
     DEBUG_TRACE_FUNCTION;
 
-    ushort color = 0;
+    uint16_t color = 0;
     switch ((NOTORIETY_TYPE)notoriety)
     {
         case NT_INNOCENT: //Blue
@@ -703,10 +703,10 @@ bool CConfigManager::LoadBin(const os_path &path)
     if (file.Load(path) && file.Size)
     {
         UpdateRange = g_MaxViewRange;
-        uchar version = file.ReadUInt8();
+        uint8_t version = file.ReadUInt8();
 
         //Page 1
-        puchar next = file.Ptr;
+        uint8_t *next = file.Ptr;
         char blockSize = file.ReadInt8();
         next += blockSize;
 
@@ -746,7 +746,7 @@ bool CConfigManager::LoadBin(const os_path &path)
         bool paperdollSlots = true;
         RemoveStatusbarsWithoutObjects = false;
         ShowDefaultConsoleEntryMode = true;
-        uchar drawAuraState = DAS_NEVER;
+        uint8_t drawAuraState = DAS_NEVER;
         DrawAuraWithCtrlPressed = true;
         ScreenshotFormat = SF_PNG;
         bool scaleImagesInPaperdollSlots = true;
@@ -791,7 +791,7 @@ bool CConfigManager::LoadBin(const os_path &path)
 
                 if (blockSize > 24)
                 {
-                    uchar auraState = file.ReadUInt8();
+                    uint8_t auraState = file.ReadUInt8();
 
                     drawAuraState = auraState & 0x7F;
                     DrawAuraWithCtrlPressed = (auraState & 0x80);

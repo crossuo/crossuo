@@ -7,7 +7,7 @@
 #if USE_WISP
 struct UserEvent
 {
-    uint code;
+    uint32_t code;
     WPARAM data1;
     LPARAM data2;
 };
@@ -105,17 +105,17 @@ public:
 #endif
 
     // May be done using: SDL_AddTimer / SDL_RemoveTimer
-    void CreateTimer(uint id, int delay) { ::SetTimer(Handle, id, delay, nullptr); }
-    void RemoveTimer(uint id) { ::KillTimer(Handle, id); }
+    void CreateTimer(uint32_t id, int delay) { ::SetTimer(Handle, id, delay, nullptr); }
+    void RemoveTimer(uint32_t id) { ::KillTimer(Handle, id); }
 
     void CreateThreadedTimer(
-        uint id,
+        uint32_t id,
         int delay,
         bool oneShot = false,
         bool waitForProcessMessage = true,
         bool synchronizedDelay = false);
-    void RemoveThreadedTimer(uint id);
-    Wisp::CThreadedTimer *GetThreadedTimer(uint id);
+    void RemoveThreadedTimer(uint32_t id);
+    Wisp::CThreadedTimer *GetThreadedTimer(uint32_t id);
 
 protected:
     virtual bool OnCreate() { return true; }
@@ -137,8 +137,8 @@ protected:
     virtual void OnDeactivate() {}
     virtual void OnShow(bool show) {}
 
-    virtual void OnTimer(uint id) {}
-    virtual void OnThreadedTimer(uint nowTime, Wisp::CThreadedTimer *timer) {}
+    virtual void OnTimer(uint32_t id) {}
+    virtual void OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer) {}
     virtual void OnSetText(const LPARAM &lParam) {}
     virtual HRESULT OnRepaint(const WPARAM &wParam, const LPARAM &lParam)
     {
