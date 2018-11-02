@@ -1,6 +1,6 @@
+// MIT License
 
-#ifndef GameCryptH
-#define GameCryptH
+#pragma once
 
 #include "../Wisp/WispGlobal.h"
 #include "aes.h"
@@ -48,16 +48,16 @@ private:
     keyInstance ki;
     cipherInstance ci;
     DWORD dwIndex;
-    BYTE m_subData3[256];
+    unsigned char m_subData3[256];
     MD5Crypt *m_md5;
     bool m_use_md5;
-    BYTE sm_bData[16];
+    unsigned char sm_bData[16];
 
 public:
     CTwofishCrypt() {}
     ~CTwofishCrypt() {}
 
-    void Init(BYTE IP[4]);
+    void Init(uint8_t seed[4]);
     void Init_MD5();
 
     void Encrypt(uint8_t *in, uint8_t *out, int size);
@@ -66,5 +66,3 @@ public:
 
 extern CBlowfishCrypt g_BlowfishCrypt;
 extern CTwofishCrypt g_TwofishCrypt;
-
-#endif

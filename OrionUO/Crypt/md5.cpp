@@ -1,9 +1,9 @@
+// MIT License
+
 #if !USE_ORIONDLL
 #include <memory.h>
 #include <string.h>
 #include "md5.h"
-
-// MD5 Definitions
 
 #define T_MASK ((unsigned int)~0)
 #define T1 (T_MASK ^ 0x28955b87)
@@ -71,7 +71,6 @@
 #define T63 0x2ad7d2bb
 #define T64 (T_MASK ^ 0x14792c6e)
 
-// Constructor / Destructor
 MD5Crypt::MD5Crypt()
 {
 }
@@ -79,26 +78,22 @@ MD5Crypt::~MD5Crypt()
 {
 }
 
-// Public Member Functions
-
-void MD5Crypt::Init(unsigned char *Data, unsigned int Size)
+void MD5Crypt::Init(unsigned char *data, unsigned int size)
 {
     md5_state tmpMd5;
 
-    TableIdx = 0;
+    m_tableIdx = 0;
 
     start(&tmpMd5);
-    append(&tmpMd5, (const unsigned char *)Data, Size);
-    finish(&tmpMd5, Digest);
+    append(&tmpMd5, (const unsigned char *)data, size);
+    finish(&tmpMd5, m_digest);
 }
 
 void MD5Crypt::Encrypt(unsigned char *in, unsigned char *out, int len)
 {
     for (int i = 0; i < len; i++)
-        out[i] = in[i] ^ Digest[TableIdx++ % 16];
+        out[i] = in[i] ^ m_digest[m_tableIdx++ % 16];
 }
-
-// Protected Member Functions
 
 void MD5Crypt::process(md5_state *pms, const unsigned char *data)
 {

@@ -22,6 +22,7 @@ typedef HOSTENT *LPHOSTENT;
 
 bool socket_init();
 void socket_shutdown();
+uint32_t socket_localaddress();
 
 typedef void *tcp_socket;
 

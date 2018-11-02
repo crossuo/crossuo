@@ -1,3 +1,4 @@
+// MIT License
 
 #if !USE_ORIONDLL
 #include "GameCrypt.h"
@@ -521,9 +522,9 @@ void CBlowfishCrypt::Init()
     m_block_pos = 0;
 }
 
-void CTwofishCrypt::Init(uint8_t IP[4])
+void CTwofishCrypt::Init(uint8_t seed[4])
 {
-    memcpy(&m_IP, IP, 4);
+    memcpy(&m_IP, seed, 4);
 
     uint8_t tmpBuff[0x100] = { 0 };
 

@@ -1,26 +1,19 @@
-﻿/***********************************************************************************
-**
-** ConnectionManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
 #if defined(ORION_LINUX)
 #define CDECL
 #endif
 
-typedef void CDECL NETWORK_INIT_TYPE(const bool &, BYTE *);
-typedef void CDECL NETWORK_ACTION_TYPE(const bool &, BYTE *, BYTE *, const int &);
-typedef void CDECL NETWORK_POST_ACTION_TYPE(BYTE *, BYTE *, const int &);
+typedef void CDECL NETWORK_INIT_TYPE(bool, uint8_t *);
+typedef void CDECL NETWORK_ACTION_TYPE(bool, uint8_t *, uint8_t *, int);
+typedef void CDECL NETWORK_POST_ACTION_TYPE(uint8_t *, uint8_t *, int);
 
 extern NETWORK_INIT_TYPE *g_NetworkInit;
 extern NETWORK_ACTION_TYPE *g_NetworkAction;
 extern NETWORK_POST_ACTION_TYPE *g_NetworkPostAction;
 
-//!Класс менеджера подключения к серверу
 class CConnectionManager
 {
 protected:
@@ -66,79 +59,27 @@ public:
     void SetProxyPassword(const string &val);
 
 private:
-    //!Подключение к сокету авторизации
     CSocket m_LoginSocket{ CSocket(false) };
-
-    //!Подключение к сокету сервера
     CSocket m_GameSocket{ CSocket(true) };
-
-    //!Тип сокета. true - Login, false - game
+    // true - m_LoginSocket, false - m_GameSocket
     bool m_IsLoginSocket{ true };
-
     uint8_t m_Seed[4];
 
-    void SendIP(CSocket &socket, uint8_t *seed);
+    void SendIP(CSocket &socket, uint8_t *ip);
 
 public:
     CConnectionManager();
     ~CConnectionManager();
 
-    /*!
-	Инициализаци логин сокета
-	@return 
-	*/
     void Init();
-
-    /*!
-	Инициализация игрового сокета
-	@param [__in] GameSeed Ключ для игрового шифрования
-	@return Код ошибки
-	*/
-    void Init(uint8_t *GameSeed);
-
-    /*!
-	Состояние подключения
-	@return true - подключено
-	*/
+    void Init(uint8_t *gameSeed);
     bool Connected() { return (m_LoginSocket.Connected || m_GameSocket.Connected); }
-
-    /*!
-	Подключение к серверу
-	@param [__in] IP IP адрес сервера
-	@param [__in] Port Порт сервера
-	@param [__in] GameSeed Ключ для шифрования
-	@return Код ошибки
-	*/
     bool Connect(const string &address, int port, uint8_t *gameSeed);
-
-    /*!
-	Разорвать подключение
-	@return 
-	*/
     void Disconnect();
-
-    /*!
-	Получить данные с сервера
-	@return 
-	*/
     void Recv();
-
-    /*!
-	Отправить сообщение серверу
-	@param [__in] buf Буфер с данными
-	@param [__in] size Размер данных
-	@return Размер отправленных данных или код ошибки
-	*/
     int Send(uint8_t *buf, int size);
-
     int Send(const vector<uint8_t> &data);
-
-    /*!
-	Получить свой IP-адрес
-	@return 
-	*/
-    uint8_t *GetClientIP() const { return (uint8_t *)m_Seed; }
+    const uint8_t *GetClientIP() const { return &m_Seed[0]; }
 };
 
-//!Менеджер подключения
 extern CConnectionManager g_ConnectionManager;

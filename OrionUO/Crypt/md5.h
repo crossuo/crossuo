@@ -1,13 +1,6 @@
-//////////////////////////////////////////////////////////////////////
-//
-// crypt/md5.h
-//
-//////////////////////////////////////////////////////////////////////
+// MIT License
 
-#ifndef md5H
-#define md5H
-
-// Struct for MD5
+#pragma once
 
 typedef struct tagmd5_state
 {
@@ -18,17 +11,14 @@ typedef struct tagmd5_state
 
 class MD5Crypt
 {
-    // Constructor / Destructor
 public:
     MD5Crypt();
     ~MD5Crypt();
 
-    // Member Functions
-
 public:
-    void Init(unsigned char *Data, unsigned int Size);
+    void Init(unsigned char *data, unsigned int size);
     void Encrypt(unsigned char *in, unsigned char *out, int len);
-    unsigned char *GetMD5() { return Digest; }
+    unsigned char *GetMD5() { return m_digest; }
 
 protected:
     void process(md5_state *pms, const unsigned char *data);
@@ -36,8 +26,6 @@ protected:
     void append(md5_state *pms, const unsigned char *data, int nbytes);
     void finish(md5_state *pms, unsigned char digest[16]);
 
-    unsigned int TableIdx;
-    unsigned char Digest[16];
+    unsigned int m_tableIdx;
+    unsigned char m_digest[16];
 };
-
-#endif //__MD5_H__
