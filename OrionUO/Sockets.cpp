@@ -83,7 +83,7 @@ uint32_t socket_localaddress()
     if (!lphost)
         return 0;
 
-    return (((LPIN_ADDR)lphost->h_addr)->s_addr;
+    return ((LPIN_ADDR)lphost->h_addr)->s_addr;
 }
 
 bool socket_init()
