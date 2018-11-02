@@ -87,27 +87,22 @@ void CCreateCharacterScreen::OnLeftMouseButtonDown()
     }
 }
 
-#if USE_WISP
-void CCreateCharacterScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CCreateCharacterScreen::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)wParam))
+
+    const auto ch = EvChar(ev);
+    if (ch >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)ch))
         return;
     else if (g_EntryPointer == nullptr)
         return;
 
     if (g_EntryPointer->Length() < 20) //add char to text field
-        g_EntryPointer->Insert((wchar_t)wParam);
+        g_EntryPointer->Insert(ch);
 
     Name = g_EntryPointer->c_str();
     m_Gump.WantRedraw = true;
 }
-#else
-void CCreateCharacterScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CCreateCharacterScreen::OnKeyDown(const KeyEvent &ev)
 {

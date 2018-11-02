@@ -72,21 +72,15 @@ void CGameBlockedScreen::OnLeftMouseButtonUp()
         g_GumpManager.OnLeftMouseButtonUp(true);
 }
 
-#if USE_WISP
-void CGameBlockedScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGameBlockedScreen::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (g_EntryPointer == nullptr || g_EntryPointer == &g_GameConsole)
         return;
 
-    g_GumpManager.OnCharPress(wParam, lParam, true);
+    g_GumpManager.OnTextInput(ev, true);
 }
-#else
-void CGameBlockedScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGameBlockedScreen::OnKeyDown(const KeyEvent &ev)
 {

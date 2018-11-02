@@ -230,21 +230,14 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
     }
 }
 
-#if USE_WISP
-void CGumpBulletinBoardItem::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpBulletinBoardItem::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    g_EntryPointer->Insert((wchar_t)wParam);
 
+    g_EntryPointer->Insert(EvChar(ev));
     RecalculateHeight();
     WantRedraw = true;
 }
-#else
-void CGumpBulletinBoardItem::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpBulletinBoardItem::OnKeyDown(const KeyEvent &ev)
 {

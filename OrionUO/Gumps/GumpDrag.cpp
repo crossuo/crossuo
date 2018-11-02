@@ -94,11 +94,12 @@ void CGumpDrag::OnOkayPressed()
     }
 }
 
-#if USE_WISP
-void CGumpDrag::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpDrag::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam >= '0' && wParam <= '9')
+
+    const auto ch = EvChar(ev);
+    if (ch >= '0' && ch <= '9')
     {
         if (m_StartText)
         {
@@ -106,10 +107,9 @@ void CGumpDrag::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
             m_StartText = false;
         }
 
-        g_EntryPointer->Insert((wchar_t)wParam);
+        g_EntryPointer->Insert(ch);
 
         int val = 0;
-
         if (g_EntryPointer->Length())
             val = atoi(g_EntryPointer->c_str());
 
@@ -119,18 +119,12 @@ void CGumpDrag::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         WantRedraw = true;
     }
 }
-#else
-void CGumpDrag::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpDrag::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+    
     CGameItem *item = g_World->FindWorldItem(Serial);
-
     if (item == nullptr)
         return;
 

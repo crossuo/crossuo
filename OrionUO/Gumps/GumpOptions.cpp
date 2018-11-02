@@ -3325,21 +3325,21 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
     }
 }
 
-#if USE_WISP
-void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpOptions::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
+    const auto ch = EvChar(ev);
     if (g_EntryPointer == &m_GameWindowWidth->m_Entry ||
         g_EntryPointer == &m_GameWindowHeight->m_Entry ||
         g_EntryPointer == &m_ContainerOffsetX->m_Entry ||
         g_EntryPointer == &m_ContainerOffsetY->m_Entry)
     {
-        if (wParam >= '0' && wParam <= '9')
+        if (ch >= '0' && ch <= '9')
         {
-            g_EntryPointer->Insert((wchar_t)wParam);
+            g_EntryPointer->Insert(ch);
 
             int val = atoi(g_EntryPointer->c_str());
-
             if (val > 2000)
                 g_EntryPointer->Remove(true);
             else
@@ -3349,11 +3349,9 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     else if (g_EntryPointer != &m_MacroKey->m_Entry)
     {
         CMacroObject *obj = m_MacroObjectPointer;
-
         if (obj != nullptr)
         {
             CGUITextEntry *entry = nullptr;
-
             QFOR(item, m_MacroDataBox->m_Items, CBaseGUI *)
             {
                 if (item->Type == GOT_TEXTENTRY &&
@@ -3368,7 +3366,6 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
             {
                 const int maxMacroDraw = 7;
                 int macroCount = 0;
-
                 while (obj != nullptr && macroCount < maxMacroDraw)
                 {
                     if (obj->HasSubMenu == 2 &&
@@ -3384,16 +3381,14 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         if (obj != nullptr)
         {
             bool canAdd = false;
-
             switch (obj->Code)
             {
                 case MC_DELAY:
                 case MC_SET_UPDATE_RANGE:
                 case MC_MODIFY_UPDATE_RANGE:
                 {
-                    if (wParam >= '0' && wParam <= '9')
+                    if (ch >= '0' && ch <= '9')
                         canAdd = true;
-
                     break;
                 }
                 case MC_SAY:
@@ -3402,7 +3397,6 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
                 case MC_YELL:
                 {
                     canAdd = true;
-
                     break;
                 }
                 default:
@@ -3411,19 +3405,13 @@ void CGumpOptions::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
 
             if (canAdd)
             {
-                g_EntryPointer->Insert((wchar_t)wParam);
+                g_EntryPointer->Insert(ch);
                 ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
                 WantRedraw = true;
             }
         }
     }
 }
-#else
-void CGumpOptions::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpOptions::OnKeyDown(const KeyEvent &ev)
 {

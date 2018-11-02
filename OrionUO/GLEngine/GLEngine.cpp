@@ -293,7 +293,7 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     }
 }
 
-void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t * pixels)
+void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -357,7 +357,7 @@ void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, ui
     GL2_CreateArrays(texture, width, height);
 }
 
-void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t * pixels)
+void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GL1_BindTexture32(texture, width, height, pixels);

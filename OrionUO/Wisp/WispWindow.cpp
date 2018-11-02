@@ -456,12 +456,9 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_DESTROY:
         {
             parse = false;
-
             OnDestroy();
-
             //ExitProcess(0);
             PostQuitMessage(0);
-
             return 0;
         }
         case WM_MOUSEMOVE:
@@ -607,7 +604,6 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
 
             Wisp::g_WispMouse->MidButtonPressed = false;
             Wisp::g_WispMouse->Release();
-
             break;
         }
         //Колесико мышки вверх/вниз
@@ -615,7 +611,6 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         {
             Wisp::g_WispMouse->Update();
             OnMidMouseButtonScroll(!(short(HIWORD(wParam)) > 0));
-
             break;
         }
         //Доп. кнопки мыши
@@ -623,20 +618,17 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         {
             Wisp::g_WispMouse->Update();
             OnXMouseButton(!(short(HIWORD(wParam)) > 0));
-
             break;
         }
         case WM_CHAR:
         {
-            OnCharPress(wParam, lParam);
-
+            OnTextInput({ wParam, lParam });
             return 0; //break;
         }
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
             OnKeyDown({ wParam, lParam });
-
             if (wParam == KEY_F4 && (GetAsyncKeyState(KEY_MENU) & 0x80000000)) //Alt + F4
                 break;
 
@@ -646,7 +638,6 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_SYSKEYUP:
         {
             OnKeyUp({ wParam, lParam });
-
             return 0; //break;
         }
         case WM_NCACTIVATE:
@@ -665,31 +656,24 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
         case WM_SHOWWINDOW:
         {
             HRESULT res = (HRESULT)DefWindowProc(Handle, WM_SHOWWINDOW, wParam, lParam);
-
             OnShow(wParam != 0);
-
             return res;
         }
         case WM_SETTEXT:
         {
             HRESULT res = (HRESULT)DefWindowProc(Handle, WM_SETTEXT, wParam, lParam);
-
             OnSetText(lParam);
-
             return res;
         }
         case WM_TIMER:
         {
             OnTimer((uint32_t)wParam);
-
             break;
         }
         case Wisp::CThreadedTimer::MessageID:
         {
             OnThreadedTimer((uint32_t)wParam, (Wisp::CThreadedTimer *)lParam);
-
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", wParam, lParam);
-
             return 0;
         }
         case WM_SYSCHAR:

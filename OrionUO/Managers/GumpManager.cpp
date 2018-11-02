@@ -1,23 +1,10 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "GumpManager.h"
 
 CGumpManager g_GumpManager;
 
-/*!
-Вычислить количество статусбаров без пати
-@return Количество non-party статусбыров
-*/
 int CGumpManager::GetNonpartyStatusbarsCount()
 {
     DEBUG_TRACE_FUNCTION;
@@ -33,11 +20,6 @@ int CGumpManager::GetNonpartyStatusbarsCount()
     return count;
 }
 
-/*!
-Добавить гамп
-@param [__in] obj Ссылка на гамп
-@return 
-*/
 void CGumpManager::AddGump(CGump *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -218,10 +200,6 @@ void CGumpManager::AddGump(CGump *obj)
     }
 }
 
-/*!
-Получить гамп-владелец текущей активной TEntryText
-@return Ссылку на гамп или nullptr
-*/
 CGump *CGumpManager::GetTextEntryOwner()
 {
     DEBUG_TRACE_FUNCTION;
@@ -234,11 +212,6 @@ CGump *CGumpManager::GetTextEntryOwner()
     return nullptr;
 }
 
-/*!
-Проверить, существует ли гамп
-@param [__in] gumpID ID гампа (в памяти)
-@return
-*/
 CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 {
     DEBUG_TRACE_FUNCTION;
@@ -251,13 +224,6 @@ CGump *CGumpManager::GumpExists(uintptr_t gumpID)
     return nullptr;
 }
 
-/*!
-Обновить содержимое гампа
-@param [__in] serial Серийник гампа
-@param [__in] ID ID гампа
-@param [__in] Type Тип гампа
-@return Ссылку на обновленный гамп или nullptr
-*/
 CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
@@ -269,13 +235,6 @@ CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
     return gump;
 }
 
-/*!
-Обновить гамп
-@param [__in] serial Серийник гампа
-@param [__in] ID ID гампа
-@param [__in] Type Тип гампа
-@return Ссылку на обновленный гамп или nullptr
-*/
 CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
@@ -287,13 +246,6 @@ CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
     return gump;
 }
 
-/*!
-Найти гамп
-@param [__in] serial Серийник гампа
-@param [__in] ID ID гампа
-@param [__in] Type Тип гампа
-@return Ссылку на гамп или nullptr
-*/
 CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
@@ -327,13 +279,6 @@ CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
     return gump;
 }
 
-/*!
-Закрыть все гампы с указанными параметрами
-@param [__in] serial Серийник гампа
-@param [__in] ID ID гампа
-@param [__in] Type Тип гампа
-@return
-*/
 void CGumpManager::CloseGump(uint32_t serial, uint32_t id, GUMP_TYPE type)
 {
     DEBUG_TRACE_FUNCTION;
@@ -372,11 +317,6 @@ void CGumpManager::CloseGump(uint32_t serial, uint32_t id, GUMP_TYPE type)
     }
 }
 
-/*!
-Удалить гамп
-@param [__in] obj Ссылка на гамп
-@return
-*/
 void CGumpManager::RemoveGump(CGump *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -407,10 +347,6 @@ void CGumpManager::RemoveGump(CGump *obj)
     delete obj;
 }
 
-/*!
-Событие удаления менеджера (вызывается перед удалением)
-@return 
-*/
 void CGumpManager::OnDelete()
 {
     DEBUG_TRACE_FUNCTION;
@@ -427,10 +363,6 @@ void CGumpManager::OnDelete()
     }
 }
 
-/*!
-Удалить гампы, которые не могут быть досягаемы из-за изменения дистанции до объекта
-@return 
-*/
 void CGumpManager::RemoveRangedGumps()
 {
     DEBUG_TRACE_FUNCTION;
@@ -509,10 +441,6 @@ void CGumpManager::RemoveMarked()
     }
 }
 
-/*!
-Подготовка текстур
-@return 
-*/
 void CGumpManager::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
@@ -602,10 +530,6 @@ void CGumpManager::InitToolTip()
     }
 }
 
-/*!
-Перерисовать все гампы
-@return 
-*/
 void CGumpManager::RedrawAll()
 {
     DEBUG_TRACE_FUNCTION;
@@ -613,11 +537,6 @@ void CGumpManager::RedrawAll()
     gump->WantRedraw = true;
 }
 
-/*!
-Нажатие левой кнопки мыши
-@param [__in] blocked Состояние экрана
-@return 
-*/
 void CGumpManager::OnLeftMouseButtonDown(bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
@@ -644,11 +563,6 @@ void CGumpManager::OnLeftMouseButtonDown(bool blocked)
     RemoveMarked();
 }
 
-/*!
-Отпускание левой кнопки мыши
-@param [__in] blocked Состояние экрана
-@return 
-*/
 bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
@@ -795,11 +709,6 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
     return false;
 }
 
-/*!
-Двойной клик левой кнопкой мыши
-@param [__in] blocked Состояние экрана
-@return true при успешной обработке
-*/
 bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
@@ -825,11 +734,6 @@ bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
     return result;
 }
 
-/*!
-Нажатие правой кнопки мыши
-@param [__in] blocked Состояние экрана
-@return 
-*/
 void CGumpManager::OnRightMouseButtonDown(bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
@@ -856,11 +760,6 @@ void CGumpManager::OnRightMouseButtonDown(bool blocked)
     RemoveMarked();
 }
 
-/*!
-Отпускание правой кнопки мыши
-@param [__in] blocked Состояние экрана
-@return 
-*/
 void CGumpManager::OnRightMouseButtonUp(bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1023,12 +922,6 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
     RemoveMarked();
 }
 
-/*!
-Обработка средней кнопки (колесика) мыши
-@param [__in] state Состояние колесика
-@param [__in] blocked Состояние экрана
-@return 
-*/
 void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1057,50 +950,32 @@ void CGumpManager::OnDragging(bool blocked)
     }
 }
 
-#if USE_WISP
-/*!
-Обработка нажатия клавиши
-@param [__in] wparam не подписанный параметр
-@param [__in] lparam не подписанный параметр
-@param [__in] blocked Состояние экрана
-@return true при успешной обработке
-*/
-bool CGumpManager::OnCharPress(const WPARAM &wParam, const LPARAM &lParam, bool blocked)
+bool CGumpManager::OnTextInput(const TextEvent &ev, bool blocked)
 {
     DEBUG_TRACE_FUNCTION;
+
     CGump *gump = GetTextEntryOwner();
     bool result = false;
-
     if (gump != nullptr && !gump->NoProcess)
     {
         if (g_GameState == GS_GAME_BLOCKED)
         {
             if (gump->GumpType == GT_TEXT_ENTRY_DIALOG)
             {
-                gump->OnCharPress(wParam, lParam);
-
+                gump->OnTextInput(ev);
                 result = true;
             }
         }
         else
         {
-            gump->OnCharPress(wParam, lParam);
-
+            gump->OnTextInput(ev);
             result = true;
         }
     }
 
     RemoveMarked();
-
     return result;
 }
-#else
-bool CGumpManager::OnTextInput(const SDL_TextInputEvent &ev, bool blocked)
-{
-    NOT_IMPLEMENTED; // FIXME
-    return false;
-}
-#endif
 
 bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
 {
@@ -1539,11 +1414,6 @@ void CGumpManager::SaveDefaultGumpProperties(
     writer.WriteInt8(gump->LockMoving);
 };
 
-/*!
-Сохранить гампы в конфиг
-@param [__in] path Путь к файлу кофнига
-@return 
-*/
 void CGumpManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1793,4 +1663,3 @@ void CGumpManager::Save(const os_path &path)
 
     writter.Close();
 }
-

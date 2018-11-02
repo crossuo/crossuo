@@ -849,7 +849,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
     if (info == nullptr)
         return p;
 
-    uint32_t * table = (uint32_t *)m_UnicodeFontAddress[font];
+    uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
 
     //loop throgh lines to get width and height
     while (info != nullptr)
@@ -916,7 +916,7 @@ int CFontsManager::CalculateCaretPosW(
 
     int height = 0;
 
-    uint32_t * table = (uint32_t *)m_UnicodeFontAddress[font];
+    uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
     int pos = 0;
     bool found = false;
 
@@ -979,21 +979,21 @@ int CFontsManager::GetWidthW(uint8_t font, const wstring &str)
     if (font >= 20 || !m_UnicodeFontAddress[font] || str.empty())
         return 0;
 
-    uint32_t * table = (uint32_t *)m_UnicodeFontAddress[font];
+    auto table = (uint32_t *)m_UnicodeFontAddress[font];
     int textLength = 0;
     int maxTextLength = 0;
-
-    for (const wchar_t &c : str)
+    for (const auto &c : str)
     {
         uint32_t &offset = table[c];
-
         if (offset && offset != 0xFFFFFFFF)
         {
             uint8_t *ptr = (uint8_t *)((size_t)table + offset);
             textLength += ((char)ptr[0] + (char)ptr[2] + 1);
         }
         else if (c == L' ')
+        {
             textLength += UNICODE_SPACE_WIDTH;
+        }
         else if (c == L'\n' || c == L'\r')
         {
             maxTextLength = max(maxTextLength, textLength);
@@ -1015,16 +1015,13 @@ int CFontsManager::GetWidthExW(
         GetInfoW(font, str.c_str(), (int)str.length(), align, flags, maxWidth);
 
     int textWidth = 0;
-
     while (info != nullptr)
     {
         if (info->Width > textWidth)
             textWidth = info->Width;
 
         PMULTILINES_FONT_INFO ptr = info;
-
         info = info->m_Next;
-
         ptr->Data.clear();
         delete ptr;
     }
@@ -1088,7 +1085,7 @@ wstring CFontsManager::GetTextByWidthW(uint8_t font, const wstring &str, int wid
     if (font >= 20 || !m_UnicodeFontAddress[font] || str.empty())
         return wstring(L"");
 
-    uint32_t * table = (uint32_t *)m_UnicodeFontAddress[font];
+    uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
 
     if (isCropped)
     {
@@ -1745,7 +1742,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
     for (int i = 0; i < len; i++)
     {
         wchar_t si = htmlData[i].Char;
-        uint32_t * table = (uint32_t *)m_UnicodeFontAddress[htmlData[i].Font];
+        uint32_t *table = (uint32_t *)m_UnicodeFontAddress[htmlData[i].Font];
 
         if (si == 0x000D || si == L'\n')
         {
@@ -1950,7 +1947,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     if (m_UseHTML)
         return GetInfoHTML(font, str, len, align, flags, width);
 
-    uint32_t * table = (uint32_t *)m_UnicodeFontAddress[font];
+    uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
 
     PMULTILINES_FONT_INFO info = new MULTILINES_FONT_INFO();
     info->Reset();
@@ -2291,7 +2288,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsW(
 
     pData.resize(blocksize, 0);
 
-    uint32_t * table = (uint32_t *)m_UnicodeFontAddress[font];
+    uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
 
     int lineOffsY = 1 + m_TopMargin;
 

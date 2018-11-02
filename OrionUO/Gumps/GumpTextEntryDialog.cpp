@@ -100,39 +100,32 @@ void CGumpTextEntryDialog::GUMP_BUTTON_EVENT_C
         SendTextEntryDialogResponse(false);
 }
 
-#if USE_WISP
-void CGumpTextEntryDialog::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpTextEntryDialog::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (Variant == 2) //Только числа
+
+    const auto ch = EvChar(ev);
+    if (Variant == 2) // Only numbers
     {
-        if (wParam >= '0' && wParam <= '9')
+        if (ch >= '0' && ch <= '9')
         {
-            g_EntryPointer->Insert((wchar_t)wParam);
-
+            g_EntryPointer->Insert(ch);
             int val = atoi(g_EntryPointer->c_str());
-
             if (val > m_MaxLength)
                 g_EntryPointer->Remove(true);
             else
                 WantRedraw = true;
         }
     }
-    else if (Variant == 1) //Что угодно, но с ограничением по длине
+    else if (Variant == 1) // Anything, but limited in length
     {
         if ((int)g_EntryPointer->Length() < m_MaxLength)
         {
-            g_EntryPointer->Insert((wchar_t)wParam);
+            g_EntryPointer->Insert(ch);
             WantRedraw = true;
         }
     }
 }
-#else
-void CGumpTextEntryDialog::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpTextEntryDialog::OnKeyDown(const KeyEvent &ev)
 {

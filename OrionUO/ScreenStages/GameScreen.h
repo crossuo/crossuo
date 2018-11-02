@@ -119,13 +119,10 @@ public:
     void CalculateRenderList();
     virtual void Init();
     virtual void InitToolTip();
-
     void
     AddLight(class CRenderWorldObject *rwo, class CRenderWorldObject *lightObject, int x, int y);
-
     virtual void PrepareContent();
     virtual void Render(bool mode);
-
     virtual void OnLeftMouseButtonDown();
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();
@@ -137,11 +134,7 @@ public:
     virtual bool OnMidMouseButtonDoubleClick() { return false; }
     virtual void OnMidMouseButtonScroll(bool up);
     virtual void OnDragging();
-#if USE_WISP
-    virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
-#else
-    virtual void OnTextInput(const SDL_TextInputEvent &ev) override;
-#endif
+    virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
     virtual void OnKeyUp(const KeyEvent &ev) override;
 };

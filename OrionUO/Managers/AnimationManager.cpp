@@ -125,7 +125,7 @@ void CAnimationManager::UpdateAnimationAddressTable()
 @param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
 @return 
 */
-void CAnimationManager::Load(uint32_t * verdata)
+void CAnimationManager::Load(uint32_t *verdata)
 {
     DEBUG_TRACE_FUNCTION;
     size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
@@ -305,7 +305,7 @@ void CAnimationManager::Load(uint32_t * verdata)
 @param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
 @return 
 */
-void CAnimationManager::InitIndexReplaces(uint32_t * verdata)
+void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_500A)
@@ -3054,7 +3054,7 @@ void CAnimationManager::ReadFrameDimensionData(
 
     if (frameIndex < frameCount)
     {
-        uint32_t * frameOffset = (uint32_t *)Ptr;
+        uint32_t *frameOffset = (uint32_t *)Ptr;
         //Move(frameOffset[frameIndex]);
         Ptr = dataStart + frameOffset[frameIndex];
 
@@ -3074,7 +3074,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
     uint32_t frameCount = ReadUInt32LE();
     direction.FrameCount = frameCount;
 
-    uint32_t * frameOffset = (uint32_t *)Ptr;
+    uint32_t *frameOffset = (uint32_t *)Ptr;
 
     //uint16_t color = m_DataIndex[graphic].Color;
 

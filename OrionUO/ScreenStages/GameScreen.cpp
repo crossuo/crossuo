@@ -2422,16 +2422,17 @@ void CGameScreen::OnDragging()
         g_GumpManager.OnDragging(false);
 }
 
-#if USE_WISP
-void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGameScreen::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (g_EntryPointer == nullptr)
         return; //Ignore no print keys
 
-    if (g_EntryPointer != &g_GameConsole && wParam != 0x11 && wParam != 0x17)
+    const auto ch = EvChar(ev);
+    if (g_EntryPointer != &g_GameConsole && ch != 0x11 && ch != 0x17)
     {
-        if (g_GumpManager.OnCharPress(wParam, lParam, false))
+        if (g_GumpManager.OnTextInput(ev, false))
             return;
     }
 
@@ -2447,20 +2448,14 @@ void CGameScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
     const bool ctrlPressed = mod & KMOD_CTRL;
 #endif
 
-    if (g_EntryPointer == &g_GameConsole && (wParam == 0x00000011 || wParam == 0x00000017) &&
+    if (g_EntryPointer == &g_GameConsole && (ch == 0x11 || ch == 0x17) &&
         ctrlPressed)
-        g_GameConsole.ChangeConsoleMessage(wParam == 0x00000017);
+        g_GameConsole.ChangeConsoleMessage(ch == 0x17);
     else if (
         (altGR || (!altPressed && !ctrlPressed)) &&
         (int)g_EntryPointer->Length() < max(g_EntryPointer->MaxLength, 60))
-        g_EntryPointer->Insert((wchar_t)wParam);
+        g_EntryPointer->Insert(ch);
 }
-#else
-void CGameScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGameScreen::OnKeyDown(const KeyEvent &ev)
 {

@@ -462,16 +462,16 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
     }
 }
 
-#if USE_WISP
-void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpBook::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Writable)
         return;
 
+    const auto ch = EvChar(ev);
     if (g_EntryPointer == &m_EntryTitle->m_Entry || g_EntryPointer == &m_EntryAuthor->m_Entry)
     {
-        if (g_EntryPointer->Insert((wchar_t)wParam))
+        if (g_EntryPointer->Insert(ch))
         {
             if (Unicode)
             {
@@ -483,7 +483,6 @@ void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
             else
             {
                 int count = 1;
-
                 if (g_EntryPointer == &m_EntryTitle->m_Entry)
                     count++;
 
@@ -497,14 +496,10 @@ void CGumpBook::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
         }
     }
     else
-        InsertInContent(wParam);
+    {
+        InsertInContent(ch);
+    }
 }
-#else
-void CGumpBook::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpBook::OnKeyDown(const KeyEvent &ev)
 {

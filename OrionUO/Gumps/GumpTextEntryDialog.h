@@ -43,15 +43,10 @@ public:
     void SendTextEntryDialogResponse(bool mode);
 
     virtual void PrepareContent();
-
     virtual void UpdateContent();
 
     GUMP_BUTTON_EVENT_H;
 
-#if USE_WISP
-    void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
-#else
-    virtual void OnTextInput(const SDL_TextInputEvent &ev) override;
-#endif
+    virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

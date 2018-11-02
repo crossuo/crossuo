@@ -5803,17 +5803,14 @@ void COrion::CreateUnicodeTextMessage(
         {
             td->GenerateTexture(TEXT_SYSTEM_MESSAGE_MAX_WIDTH, UOFONT_BLACK_BORDER);
             AddSystemMessage(td);
-
             break;
         }
         case TT_OBJECT:
         {
             CGameObject *obj = g_World->FindWorldObject(serial);
-
             if (obj != nullptr)
             {
                 int width = g_FontManager.GetWidthW(font, text);
-
                 if (width > TEXT_MESSAGE_MAX_WIDTH)
                 {
                     width = g_FontManager.GetWidthExW(
@@ -5821,34 +5818,33 @@ void COrion::CreateUnicodeTextMessage(
                     td->GenerateTexture(width, UOFONT_BLACK_BORDER, TS_LEFT);
                 }
                 else
+                {
                     td->GenerateTexture(0, UOFONT_BLACK_BORDER, TS_CENTER);
+                }
 
                 uint32_t container = obj->Container;
-
                 if (container == 0xFFFFFFFF)
+                {
                     g_WorldTextRenderer.AddText(td);
+                }
                 else if (!obj->NPC)
                 {
                     td->SetX(g_ClickObject.X);
                     td->SetY(g_ClickObject.Y);
 
                     CGump *gump = g_GumpManager.GetGump(container, 0, GT_CONTAINER);
-
                     if (gump == nullptr)
                     {
                         CGameObject *topobj = obj->GetTopObject();
-
                         if (((CGameItem *)obj)->Layer != OL_NONE)
                             gump = g_GumpManager.GetGump(topobj->Serial, 0, GT_PAPERDOLL);
 
                         if (gump == nullptr)
                         {
                             gump = g_GumpManager.GetGump(topobj->Serial, 0, GT_TRADE);
-
                             if (gump == nullptr)
                             {
                                 topobj = (CGameObject *)topobj->m_Items;
-
                                 while (topobj != nullptr && topobj->Graphic != 0x1E5E)
                                     topobj = (CGameObject *)topobj->m_Next;
 
@@ -5861,7 +5857,6 @@ void COrion::CreateUnicodeTextMessage(
                     if (gump != nullptr)
                     {
                         CTextRenderer *tr = gump->GetTextRenderer();
-
                         if (tr != nullptr)
                             tr->AddText(td);
                     }
@@ -5880,18 +5875,18 @@ void COrion::CreateUnicodeTextMessage(
         case TT_CLIENT:
         {
             int width = g_FontManager.GetWidthW(font, text);
-
             if (width > TEXT_MESSAGE_MAX_WIDTH)
             {
                 width = g_FontManager.GetWidthExW(font, text, TEXT_MESSAGE_MAX_WIDTH, TS_LEFT, 0);
                 td->GenerateTexture(width, 0, TS_LEFT);
             }
             else
+            {
                 td->GenerateTexture(0, UOFONT_BLACK_BORDER, TS_LEFT);
+            }
 
             clientObj->AddText(td);
             g_WorldTextRenderer.AddText(td);
-
             break;
         }
     }

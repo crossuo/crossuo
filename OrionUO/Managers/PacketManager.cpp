@@ -761,7 +761,7 @@ PACKET_HANDLER(RelayServer)
     DEBUG_TRACE_FUNCTION;
     memset(&g_SelectedCharName[0], 0, sizeof(g_SelectedCharName));
     in_addr addr;
-    uint32_t * paddr = (uint32_t *)Ptr;
+    uint32_t *paddr = (uint32_t *)Ptr;
     Move(4);
 #if !defined(ORION_LINUX)
     addr.S_un.S_addr = *paddr;
@@ -3696,6 +3696,7 @@ PACKET_HANDLER(OpenChat)
 PACKET_HANDLER(DisplayClilocString)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (g_World == nullptr)
         return;
 
@@ -3703,32 +3704,32 @@ PACKET_HANDLER(DisplayClilocString)
     uint16_t graphic = ReadUInt16BE();
     uint8_t type = ReadUInt8();
     uint16_t color = ReadUInt16BE();
-    uint16_t font = ReadUInt16BE();
+    uint8_t font = (uint8_t)ReadUInt16BE();
     uint32_t cliloc = ReadUInt32BE();
-
-    if (!g_FontManager.UnicodeFontExists((uint8_t)font))
+    if (!g_FontManager.UnicodeFontExists(font))
         font = 0;
 
     uint8_t flags = 0;
-
     if (*Start == 0xCC)
         flags = ReadUInt8();
 
     string name = ReadString(30).c_str();
-
-    wstring affix = L"";
+    wstring affix{};
     if (*Start == 0xCC)
         affix = DecodeUTF8(ReadString()).c_str();
 
-    wstring message =
-        g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, (wchar_t *)Ptr).c_str();
+    auto wc = (wchar_t *)Ptr;
+    auto message =
+        g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, wc).c_str()
+
     message += affix;
 
     CGameObject *obj = g_World->FindWorldObject(serial);
-
     if (/*type == ST_BROADCAST || type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || !serial ||
         (ToLowerA(name) == "system" && obj == nullptr))
-        g_Orion.CreateUnicodeTextMessage(TT_SYSTEM, serial, (uint8_t)font, color, message);
+    {
+        g_Orion.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, color, message);
+    }
     else
     {
         /*if (type == ST_EMOTE)
@@ -3736,7 +3737,6 @@ PACKET_HANDLER(DisplayClilocString)
 			color = ConfigManager.EmoteColor;
 			str = L"*" + str + L"*";
 		}*/
-
         if (obj != nullptr)
         {
             if (!name.length())
@@ -3747,13 +3747,13 @@ PACKET_HANDLER(DisplayClilocString)
             {
                 obj->JournalPrefix = name + ": ";
                 obj->SetName(name);
-
                 if (obj->NPC)
+                {
                     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
+                }
             }
         }
-
-        g_Orion.CreateUnicodeTextMessage(TT_OBJECT, serial, (uint8_t)font, color, message);
+        g_Orion.CreateUnicodeTextMessage(TT_OBJECT, serial, font, color, message);
     }
 }
 

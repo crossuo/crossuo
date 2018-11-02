@@ -34,24 +34,13 @@ public:
     CGUICheckbox *m_AutoLogin = nullptr;
 
     void SetAccounting(const string &account, const string &password);
-
     void Paste();
-
     void ProcessSmoothAction(uint8_t action = 0xFF);
-
     void LoadGlobalConfig();
-
     void LoadCustomPath();
-
     void SaveGlobalConfig();
-
     void Init();
-
-#if USE_WISP
-    virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
-#else
-    virtual void OnTextInput(const SDL_TextInputEvent &ev) override;
-#endif
+    virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 

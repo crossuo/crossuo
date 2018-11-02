@@ -32,11 +32,6 @@ public:
     GUMP_DIRECT_HTML_LINK_EVENT_H;
 
     virtual bool OnLeftMouseButtonDoubleClick();
-
-#if USE_WISP
-    virtual void OnCharPress(const WPARAM &wParam, const LPARAM &lParam);
-#else
-    virtual void OnTextInput(const SDL_TextInputEvent &ev) override;
-#endif
+    virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

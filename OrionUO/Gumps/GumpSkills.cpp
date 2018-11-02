@@ -693,25 +693,18 @@ bool CGumpSkills::OnLeftMouseButtonDoubleClick()
     return false;
 }
 
-#if USE_WISP
-void CGumpSkills::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpSkills::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    g_EntryPointer->Insert((wchar_t)wParam);
 
+    const auto ch = EvChar(ev);
+    g_EntryPointer->Insert(ch);
     int val = g_FontManager.GetWidthA(6, g_EntryPointer->c_str());
-
     if (val > 170)
         g_EntryPointer->Remove(true);
     else
         WantRedraw = true;
 }
-#else
-void CGumpSkills::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpSkills::OnKeyDown(const KeyEvent &ev)
 {

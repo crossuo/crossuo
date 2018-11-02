@@ -367,7 +367,7 @@ int tcp_select(tcp_socket socket)
     struct timeval tv = { 0, 0 };
 
     auto r = select(h + 1, &rfds, nullptr, nullptr, &tv);
-    LOG("tcp_select: %d\n", r);
+    //LOG("tcp_select: %d\n", r);
 
     return r;
 }

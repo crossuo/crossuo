@@ -174,19 +174,14 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
     return false;
 }
 
-#if USE_WISP
-void CGumpGeneric::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpGeneric::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    g_EntryPointer->Insert((wchar_t)wParam);
+
+    const auto ch = EvChar(ev);
+    g_EntryPointer->Insert(ch);
     WantRedraw = true;
 }
-#else
-void CGumpGeneric::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpGeneric::OnKeyDown(const KeyEvent &ev)
 {

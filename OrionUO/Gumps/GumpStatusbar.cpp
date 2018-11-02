@@ -1259,34 +1259,27 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
     return false;
 }
 
-#if USE_WISP
-void CGumpStatusbar::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpStatusbar::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
 
     if (Serial != g_PlayerSerial)
     {
         string str = g_EntryPointer->c_str();
-
         if (g_EntryPointer->Pos() > 0)
             str.resize(g_EntryPointer->Pos());
         else
             str = "";
 
+        const auto ch = EvChar(ev);
         if ((g_EntryPointer->Length() <= 15) && g_FontManager.GetWidthA(1, str) <= 100 &&
-            ((wParam >= 'a' && wParam <= 'z') || (wParam >= 'A' && wParam <= 'Z')))
+            ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')))
         {
-            g_EntryPointer->Insert((wchar_t)wParam);
+            g_EntryPointer->Insert(ch);
             WantRedraw = true;
         }
     }
 }
-#else
-void CGumpStatusbar::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
 {

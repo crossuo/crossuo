@@ -15,8 +15,18 @@ struct KeyEvent
     LPARAM lParam;
 };
 
+struct TextEvent
+{
+    WPARAM wParam;
+    LPARAM lParam;
+};
+
 #define Keycode WPARAM
+#define TextChar WPARAM
 #define EvKey(x) ((Keycode)x.wParam)
+#define EvChar(x) ((wchar_t)x.wParam)
+#define IsPrintable(x) iswprint(x)
+#define AsKeyEvent(x) ((KeyEvent)x)
 
 #define KEY_SHIFT VK_SHIFT
 #define KEY_CONTROL VK_CONTROL
@@ -72,8 +82,22 @@ struct KeyEvent
 #include <SDL_keycode.h>
 
 typedef SDL_KeyboardEvent KeyEvent;
+typedef SDL_TextInputEvent TextEvent;
+
 #define Keycode SDL_Keycode
+#define TextChar char *
 #define EvKey(x) ((Keycode)x.keysym.sym)
+#define EvChar(x) (x.text[0])
+#define IsPrintable(x) iswprint(x)
+
+inline KeyEvent AsKeyEvent(const TextEvent &ev)
+{
+    const auto ch = EvChar(ev);
+    assert(IsPrintable(ch));
+    KeyEvent e;
+    e.keysym.sym = ch;
+    return e;
+}
 
 #define KEY_SHIFT (SDLK_LSHIFT | SDLK_RSHIFT)
 #define KEY_CONTROL (SDLK_LCTRL | SDLK_RCTRL)

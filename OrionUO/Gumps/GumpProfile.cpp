@@ -130,22 +130,15 @@ bool CGumpProfile::OnLeftMouseButtonDoubleClick()
     return false;
 }
 
-#if USE_WISP
-void CGumpProfile::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CGumpProfile::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    g_EntryPointer->Insert((wchar_t)wParam);
 
+    const auto ch = EvChar(ev);
+    g_EntryPointer->Insert(ch);
     RecalculateHeight();
-
     WantRedraw = true;
 }
-#else
-void CGumpProfile::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    NOT_IMPLEMENTED; // FIXME
-}
-#endif
 
 void CGumpProfile::OnKeyDown(const KeyEvent &ev)
 {

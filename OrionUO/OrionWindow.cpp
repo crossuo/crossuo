@@ -295,20 +295,29 @@ void COrionWindow::OnDeactivate()
         g_PluginManager.WindowProc(Handle, WM_NCACTIVATE, 0, 0);
 }
 
-#if USE_WISP
-void COrionWindow::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+
+void COrionWindow::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
+
+#if USE_WISP    
     if (g_PluginManager.WindowProc(Handle, WM_CHAR, wParam, lParam))
         return;
+#endif
 
-    if ((iswprint((wchar_t)wParam) ||
-         (g_GameState >= GS_GAME && (wParam == 0x11 || wParam == 0x17))) &&
-        g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
-        g_CurrentScreen->OnCharPress(wParam, lParam);
-    else if (wParam == KEY_RETURN)
-        g_CurrentScreen->OnKeyDown({ wParam, lParam });
-    else if (wParam == 0x16 && g_EntryPointer != nullptr)
+    const auto ch = EvChar(ev);
+    if ((IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&
+        g_CurrentScreen != nullptr && 
+        g_ScreenEffectManager.Mode == SEM_NONE)
+    {
+        g_CurrentScreen->OnTextInput(ev);
+    }
+    else if (ch == KEY_RETURN)
+    {
+        const auto kev = AsKeyEvent(ev);
+        g_CurrentScreen->OnKeyDown(kev);
+    }
+    else if (ch == 0x16 && g_EntryPointer != nullptr)
     {
         if (g_GameState == GS_MAIN)
             g_MainScreen.Paste();
@@ -316,8 +325,9 @@ void COrionWindow::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
             g_EntryPointer->Paste();
     }
 }
-#else
-void COrionWindow::OnTextInput(const SDL_TextInputEvent &ev)
+
+/*
+void COrionWindow::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
     //if (g_PluginManager.WindowProc(Handle, WM_CHAR, wParam, lParam))
@@ -328,7 +338,7 @@ void COrionWindow::OnTextInput(const SDL_TextInputEvent &ev)
         g_CurrentScreen->OnTextInput(ev);
     }
 }
-/*
+
 void COrionWindow::OnKeyDown(const KeyEvent &ev)
 {
     const bool isCtrl = (SDL_GetModState() & KMOD_CTRL) != 0;
@@ -345,7 +355,6 @@ void COrionWindow::OnKeyDown(const KeyEvent &ev)
         g_CurrentScreen->OnKeyDown(ev);
 }
 */
-#endif
 
 void COrionWindow::OnKeyDown(const KeyEvent &ev)
 {

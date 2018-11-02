@@ -105,39 +105,15 @@ void CMainScreen::Paste()
         g_EntryPointer->Paste();
 }
 
-#if USE_WISP
-void CMainScreen::OnCharPress(const WPARAM &wParam, const LPARAM &lParam)
+void CMainScreen::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    if (wParam >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)wParam))
+
+    const auto ch = EvChar(ev);
+    if (ch >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)ch))
         return;
+
     else if (g_EntryPointer == nullptr)
-        g_EntryPointer = m_MainGump.m_PasswordFake;
-
-    if (g_EntryPointer->Length() < 16) //add char to text field
-    {
-        if (g_EntryPointer == m_MainGump.m_PasswordFake)
-        {
-            if (g_EntryPointer->Insert(L'*'))
-                m_Password->Insert((wchar_t)wParam);
-        }
-        else
-            g_EntryPointer->Insert((wchar_t)wParam);
-    }
-
-    m_Gump.WantRedraw = true;
-}
-#else
-void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
-{
-    DEBUG_TRACE_FUNCTION;
-    LOG("SDL_TextInputEvent: %s\n", ev.text);
-
-    uint8_t ch = ev.text[0];
-    if (!g_FontManager.IsPrintASCII(ch))
-        return;
-
-    if (g_EntryPointer == nullptr)
     {
         g_EntryPointer = m_MainGump.m_PasswordFake;
     }
@@ -155,7 +131,6 @@ void CMainScreen::OnTextInput(const SDL_TextInputEvent &ev)
 
     m_Gump.WantRedraw = true;
 }
-#endif
 
 void CMainScreen::OnKeyDown(const KeyEvent &ev)
 {

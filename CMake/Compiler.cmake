@@ -25,7 +25,7 @@ else()
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     check_and_add_flag(MSEXTENSIONS -fms-extensions) # TODO: GCC does not suppport this, fix code instead
-    check_and_add_flag(INCONSISTENT_MISSING_OVERRIDE_DISABLE -Wno-inconsistent-missing-override) # FIXME: OnCharPress, OnKeyDown, OnLeftMouse... etc.
+    check_and_add_flag(INCONSISTENT_MISSING_OVERRIDE_DISABLE -Wno-inconsistent-missing-override) # FIXME: OnTextInput, OnKeyDown, OnLeftMouse... etc.
     # gcc uses some optimizations which might break stuff without this flag
     #check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
     #check_and_add_flag(NO_EXCEPTIONS -fno-exceptions)
