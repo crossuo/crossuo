@@ -26,7 +26,7 @@ struct TextEvent
 #define EvKey(x) ((Keycode)x.wParam)
 #define EvChar(x) ((wchar_t)x.wParam)
 #define IsPrintable(x) iswprint(x)
-#define AsKeyEvent(x) ((KeyEvent)x)
+#define AsKeyEvent(x) (reinterpret_cast<KeyEvent>(x))
 
 #define KEY_SHIFT VK_SHIFT
 #define KEY_CONTROL VK_CONTROL

@@ -301,7 +301,7 @@ void COrionWindow::OnTextInput(const TextEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
 #if USE_WISP    
-    if (g_PluginManager.WindowProc(Handle, WM_CHAR, wParam, lParam))
+    if (g_PluginManager.WindowProc(Handle, WM_CHAR, ev.wParam, ev.lParam))
         return;
 #endif
 
