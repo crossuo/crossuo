@@ -9,24 +9,21 @@
 
 #if USE_WISP
 
-struct KeyEvent
+struct InputEvent
 {
     WPARAM wParam;
     LPARAM lParam;
 };
 
-struct TextEvent
-{
-    WPARAM wParam;
-    LPARAM lParam;
-};
+typedef InputEvent KeyEvent;
+typedef InputEvent TextEvent;
 
 #define Keycode WPARAM
 #define TextChar WPARAM
 #define EvKey(x) ((Keycode)x.wParam)
 #define EvChar(x) ((wchar_t)x.wParam)
 #define IsPrintable(x) iswprint(x)
-#define AsKeyEvent(x) (reinterpret_cast<const KeyEvent>(x))
+#define AsKeyEvent(x) (static_cast<const KeyEvent>(x))
 
 #define KEY_SHIFT VK_SHIFT
 #define KEY_CONTROL VK_CONTROL
