@@ -1,31 +1,19 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ClilocManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CClilocManager g_ClilocManager;
-
-//--------------------------------------CCliloc-------------------------------------
 
 CCliloc::CCliloc(const string &lang)
     : CBaseQueueItem()
 {
     DEBUG_TRACE_FUNCTION;
+
     Loaded = false;
     Language = lang;
-
     if (Language.length())
     {
-        auto path = g_App.UOFilesPath((std::string("Cliloc.") + std::string(lang.c_str())).c_str());
-
+        auto file = string("Cliloc.") + lang;
+        auto path = g_App.UOFilesPath(file);
         if (m_File.Load(path))
             Loaded = true;
     }
@@ -34,36 +22,27 @@ CCliloc::CCliloc(const string &lang)
 CCliloc::~CCliloc()
 {
     DEBUG_TRACE_FUNCTION;
-    m_File.Unload();
 
+    m_File.Unload();
     m_ClilocSystem.clear();
     m_ClilocRegular.clear();
     m_ClilocSupport.clear();
 }
 
-/*!
-Загрузить клилок
-@param [__in] id Индекс клилока
-@return Результат загрузки или сообщение с ошибкой
-*/
 string CCliloc::Load(uint32_t &id)
 {
     DEBUG_TRACE_FUNCTION;
-    string result = "";
 
+    string result;
     if (Loaded)
     {
         m_File.ResetPtr();
         m_File.Move(6);
-
         while (!m_File.IsEOF())
         {
-            DWORD currentID = m_File.ReadUInt32LE();
-
+            auto currentID = m_File.ReadUInt32LE();
             m_File.Move(1);
-
             short len = m_File.ReadUInt16LE();
-
             if (currentID == id)
             {
                 if (len > 0)
@@ -79,12 +58,12 @@ string CCliloc::Load(uint32_t &id)
                 return result;
             }
             else
+            {
                 m_File.Move(len);
+            }
         }
     }
-
     id = 0;
-
     return result;
 }
 
@@ -96,15 +75,10 @@ wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
     return DecodeUTF8(result);
 }
 
-/*!
-Получить ASCII строку по id (и загрузить при необходимости)
-@param [__in] id Индекс клилока
-@param [__in] result Стандартное сообщение, если клилок не был найден
-@return Полученный результат, замена или сообщение с ошибкой
-*/
-wstring CCliloc::Get(int id, bool toCamelCase, string result)
+wstring CCliloc::GetX(int id, bool toCamelCase, string &result)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (id >= 3000000)
     {
         CLILOC_MAP::iterator i = m_ClilocSupport.find(id);
@@ -125,19 +99,20 @@ wstring CCliloc::Get(int id, bool toCamelCase, string result)
     }
 
     uint32_t tmpID = id;
-    string loadStr = Load(tmpID);
-
-    if (loadStr.length())
+    auto loadStr = Load(tmpID);
+    if (loadStr.length())    
         return CamelCaseTest(toCamelCase, loadStr);
+
     if (tmpID == id && !loadStr.length())
-        return L"";
+        return {};
+
     if (Language != "ENU" && this->Language != "enu")
-        return g_ClilocManager.Cliloc("enu")->Get(id, toCamelCase, result);
+        return g_ClilocManager.Cliloc("enu")->GetW(id, toCamelCase, result);
+
     if (!result.length())
     {
-        char str[50] = { 0 };
+        char str[50]{};
         sprintf_s(str, "Unknown Cliloc #%i", id);
-
         result = str;
     }
 
@@ -147,22 +122,14 @@ wstring CCliloc::Get(int id, bool toCamelCase, string result)
 string CCliloc::GetA(int id, bool toCamelCase, string result)
 {
     DEBUG_TRACE_FUNCTION;
-    return ToString(Get(id, toCamelCase, result));
+    return ToString(GetX(id, toCamelCase, result));
 }
 
-/*!
-Получить Unicode строку по id (и загрузить при необходимости)
-@param [__in] id Индекс клилока
-@param [__in] result Стандартное сообщение, если клилок не был найден
-@return Полученный результат, замена или сообщение с ошибкой
-*/
 wstring CCliloc::GetW(int id, bool toCamelCase, string result)
 {
     DEBUG_TRACE_FUNCTION;
-    return Get(id, toCamelCase, result);
+    return GetX(id, toCamelCase, result);
 }
-
-//-----------------------------------CClilocManager---------------------------------
 
 CClilocManager::CClilocManager()
     : CBaseQueue()
@@ -175,16 +142,11 @@ CClilocManager::~CClilocManager()
     m_LastCliloc = nullptr;
 }
 
-/*!
-Получить ссылку на объект клилока (и загрузить при необходимости)
-@param [__in] lang Расширение клилока
-@return Ссылка на клилок
-*/
 CCliloc *CClilocManager::Cliloc(const string &lang)
 {
     DEBUG_TRACE_FUNCTION;
-    string language = ToLowerA(lang).c_str();
 
+    auto language = ToLowerA(lang);
     if (!language.length())
         language = "enu";
 
@@ -217,29 +179,27 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
     }
 
     CCliloc *obj = (CCliloc *)Add(new CCliloc(language));
-
     if (!obj->Loaded)
         return Cliloc("enu");
 
     m_LastCliloc = obj;
-
     return obj;
 }
 
 wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstring args)
 {
     DEBUG_TRACE_FUNCTION;
+
     while (args.length() && args[0] == L'\t')
+    {
         args.erase(args.begin());
+    }
 
-    wstring message = Cliloc(g_Language)->GetW(cliloc, toCamelCase).c_str();
-
+    wstring message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
     vector<wstring> arguments;
-
     while (true)
     {
         size_t pos = args.find(L"\t");
-
         if (pos != string::npos)
         {
             arguments.push_back(args.substr(0, pos));
@@ -255,19 +215,17 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
     for (int i = 0; i < (int)arguments.size(); i++)
     {
         size_t pos1 = message.find(L"~");
-
         if (pos1 == string::npos)
             break;
 
         size_t pos2 = message.find(L"~", pos1 + 1);
-
         if (pos2 == string::npos)
             break;
 
         if (arguments[i].length() > 1 && *arguments[i].c_str() == L'#')
         {
-            uint32_t id = _wtoi(arguments[i].c_str() + 1);
-            arguments[i] = Cliloc(g_Language)->GetW(id, toCamelCase).c_str();
+            uint32_t id = std::stoi(arguments[i].c_str() + 1);
+            arguments[i] = Cliloc(g_Language)->GetW(id, toCamelCase);
         }
 
         message.replace(pos1, pos2 - pos1 + 1, arguments[i]);
@@ -278,4 +236,3 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
 
     return message;
 }
-

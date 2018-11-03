@@ -1,30 +1,15 @@
-﻿/***********************************************************************************
-**
-** SpeechManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SPEECHMANAGER_H
-#define SPEECHMANAGER_H
+#pragma once
 
 class CLangCode
 {
 public:
     int Code = 0;
-
-    //! Строковая, уникальная абревиатура локали.
     string Abbreviature = "";
-
-    //! Числовая абревиатура группы? локали.
     uint32_t Unknown = 0;
-
-    //! Название языка.
     string Language = "";
-
-    //! Название страны.
     string Country = "";
 
     CLangCode() {}
@@ -41,11 +26,8 @@ public:
 class CSpeechItem
 {
 public:
-    //! Код посылаемый клиенту.
     uint16_t Code = 0;
-
-    //! Строка с ключевым словом для поиска в вводе.
-    wstring Data = L"";
+    wstring Data = {};
 
     bool CheckStart = false;
     bool CheckEnd = false;
@@ -55,7 +37,6 @@ public:
     virtual ~CSpeechItem() {}
 };
 
-//!Класс менеджера cпича
 class CSpeechManager
 {
     CLangCode *CurrentLanguage = nullptr;
@@ -69,23 +50,9 @@ public:
     CSpeechManager();
     ~CSpeechManager();
 
-    /*!
-	Загрузка cпич данных
-	@return true при успешной загрузке
-	*/
     bool LoadSpeech();
-
-    /*!
-	Загрузка данных о локалях
-	@return true при успешной загрузке
-	*/
     bool LoadLangCodes();
-
-    //Достаём вектор с кодами словосочетаний найденных в вводе
     void GetKeywords(const wchar_t *text, vector<uint32_t> &codes);
 };
 
-//!Ссылка на менеджер cпича
 extern CSpeechManager g_SpeechManager;
-
-#endif

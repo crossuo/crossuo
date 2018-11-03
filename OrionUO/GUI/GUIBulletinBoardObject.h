@@ -1,18 +1,11 @@
-﻿/***********************************************************************************
-**
-** GUIBulletinBoardObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIBULLETINBOARDOBJECT_H
-#define GUIBULLETINBOARDOBJECT_H
+#pragma once
 
 class CGUIBulletinBoardObject : public CBaseGUI
 {
-    wstring Text = L"";
+    wstring Text = {};
 
 private:
     CGLTextTexture m_Texture;
@@ -22,9 +15,6 @@ public:
     virtual ~CGUIBulletinBoardObject();
 
     virtual void PrepareTextures();
-
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

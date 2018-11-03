@@ -1,11 +1,7 @@
 ﻿// MIT License
 
-#include "stdafx.h"
-
 #include <locale>
 #include <codecvt>
-#include <string>
-#include <cwchar>
 #include <SDL_thread.h>
 
 #include "WispThread.h"
@@ -78,7 +74,7 @@ wstring DecodeUTF8(const string &str)
 {
 #if USE_WISP
     int size = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
-    wstring result = L"";
+    wstring result = {};
 
     if (size > 0)
     {
@@ -87,18 +83,17 @@ wstring DecodeUTF8(const string &str)
         result.resize(size); // result[size] = 0;
     }
 #else
+    LOG("\nDecodeUTF8: %s\n\n", str.c_str());
     mbstate_t state{};
     wstring result{};
     auto p = str.data();
     const auto size = mbsrtowcs(nullptr, &p, 0, &state);
     if (size > 0)
     {
-        result.resize(size + 1);
-        mbsrtowcs(&result[0], &p, size, &state);
         result.resize(size);
+        mbsrtowcs(&result[0], &p, size, &state);
     }
 #endif
-
     return result;
 }
 
@@ -176,7 +171,7 @@ wstring ToWString(const string &str)
 {
 #if USE_WISP
     int size = (int)str.length();
-    wstring wstr = L"";
+    wstring wstr = {};
 
     if (size > 0)
     {
@@ -209,36 +204,36 @@ int ToInt(const string &str)
     return atoi(str.c_str());
 }
 
-string ToLowerA(string str)
+string ToLowerA(string s)
 {
-    if (str.length())
-        _strlwr(&str[0]);
-
-    return str.c_str();
+    std::transform(s.begin(), s.end(), s.begin(), 
+        [](auto c){ return std::tolower(c); }
+    );
+    return s;
 }
 
-string ToUpperA(string str)
+wstring ToLowerW(wstring s)
 {
-    if (str.length())
-        _strupr(&str[0]);
-
-    return str.c_str();
+    std::transform(s.begin(), s.end(), s.begin(), 
+        [](auto c){ return std::towlower(c); }
+    );
+    return s;
 }
 
-wstring ToLowerW(wstring str)
+string ToUpperA(string s)
 {
-    if (str.length())
-        _wcslwr(&str[0]);
-
-    return str.c_str();
+    std::transform(s.begin(), s.end(), s.begin(), 
+        [](auto c){ return std::toupper(c); }
+    );
+    return s;
 }
 
-wstring ToUpperW(wstring str)
+wstring ToUpperW(wstring s)
 {
-    if (str.length())
-        _wcsupr(&str[0]);
-
-    return str.c_str();
+    std::transform(s.begin(), s.end(), s.begin(), 
+        [](auto c){ return std::towupper(c); }
+    );
+    return s;
 }
 
 bool Int32TryParse(string str, int &result)

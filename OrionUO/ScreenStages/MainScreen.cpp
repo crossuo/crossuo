@@ -41,8 +41,8 @@ void CMainScreen::Init()
 
     if (!m_SavePassword->Checked)
     {
-        m_Password->SetTextW(L"");
-        m_MainGump.m_PasswordFake->SetTextW(L"");
+        m_Password->SetTextW({});
+        m_MainGump.m_PasswordFake->SetTextW({});
     }
 
     g_EntryPointer = m_MainGump.m_PasswordFake;

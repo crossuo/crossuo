@@ -1,4 +1,7 @@
-﻿#include "EntryText.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
+
+#include "EntryText.h"
 
 CEntryText *g_EntryPointer = nullptr;
 
@@ -181,18 +184,18 @@ bool CEntryText::Insert(wchar_t ch, CGump *gump)
         {
             wstring wstr = Text;
             wstr.insert(wstr.begin() + m_Position, ch);
-
-            if (_wtoi(wstr.c_str()) >= MaxLength)
+            if (std::stoi(wstr) >= MaxLength)
                 return false;
         }
         else if ((int)Text.length() >= MaxLength)
+        {
             return false;
+        }
     }
 
     Text.insert(Text.begin() + m_Position, ch);
     m_Position++;
     Changed = true;
-
     if (gump != nullptr)
         gump->FrameCreated = false;
 
@@ -229,7 +232,7 @@ void CEntryText::Clear()
 {
     DEBUG_TRACE_FUNCTION;
 
-    Text = L"";
+    Text = {};
     m_CText = "";
     m_Position = 0;
     Changed = true;
@@ -590,7 +593,7 @@ void CEntryText::DrawMaskW(
     DEBUG_TRACE_FUNCTION;
 
     const auto len = (int)Length();
-    wstring str = L"";
+    wstring str = {};
     for (int i = 0; i < len; i++)
     {
         str += L"*";

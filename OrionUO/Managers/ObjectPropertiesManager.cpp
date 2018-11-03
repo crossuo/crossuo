@@ -32,7 +32,7 @@ wstring CObjectProperty::CreateTextData(bool extended)
 {
     CGameObject *obj = g_World->FindWorldObject(Serial);
     bool coloredStartFont = false;
-    wstring result = L"";
+    wstring result = {};
 
     if (Name.length())
     {

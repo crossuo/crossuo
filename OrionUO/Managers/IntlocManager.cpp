@@ -86,7 +86,7 @@ wstring CIntloc::Get(int id, bool toCamelCase)
         return m_Strings[id];
     }
 
-    return L"";
+    return {};
 }
 
 //-----------------------------------CIntlocManager---------------------------------
@@ -136,13 +136,12 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
 wstring CIntlocManager::Intloc(const string &lang, uint32_t clilocID, bool isNewCliloc)
 {
     DEBUG_TRACE_FUNCTION;
-    string language = ToLowerA(lang).c_str();
 
+    string language = ToLowerA(lang);
     if (!language.length())
         language = "enu";
 
-    wstring str = L"";
-
+    wstring str = {};
     if (!isNewCliloc && false)
     {
         int fileIndex = (clilocID / 1000) % 1000;

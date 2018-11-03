@@ -2074,7 +2074,7 @@ void COrion::LoginComplete(bool reload)
         CPacketSkillsRequest(g_PlayerSerial).Send();
         g_UseItemActions.Add(g_PlayerSerial);
 
-        //CPacketOpenChat(L"").Send();
+        //CPacketOpenChat({}).Send();
         //CPacketRazorAnswer().Send();
 
         if (g_PacketManager.GetClientVersion() >= CV_306E)
@@ -6331,7 +6331,7 @@ void COrion::ConsolePromptCancel()
     if (g_ConsolePrompt == PT_ASCII)
         CPacketASCIIPromptResponse("", 0, true).Send();
     else if (g_ConsolePrompt == PT_UNICODE)
-        CPacketUnicodePromptResponse(L"", 0, g_Language, true).Send();
+        CPacketUnicodePromptResponse({}, 0, g_Language, true).Send();
 
     g_ConsolePrompt = PT_NONE;
 }
@@ -6476,7 +6476,7 @@ void COrion::OpenLogOut()
 void COrion::OpenChat()
 {
     DEBUG_TRACE_FUNCTION;
-    CPacketOpenChat(L"").Send();
+    CPacketOpenChat({}).Send();
 }
 
 void COrion::OpenConfiguration()

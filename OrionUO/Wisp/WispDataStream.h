@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// MIT License
+
+#pragma once
 
 namespace Wisp
 {
@@ -266,6 +268,10 @@ public:
     }
 
     string ReadString(size_t size = 0, const intptr_t &offset = 0);
+    wstring ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
+    wstring ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);
+
+private:
     wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 

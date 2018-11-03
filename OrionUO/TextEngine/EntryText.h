@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
+
+#pragma once
 
 #include "../Wisp/WispGeometry.h"
 

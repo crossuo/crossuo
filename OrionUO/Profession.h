@@ -1,21 +1,14 @@
-﻿/***********************************************************************************
-**
-** Profession.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef PROFESSION_H
-#define PROFESSION_H
+#pragma once
 
 class CBaseProfession : public CBaseQueueItem
 {
 public:
     string Name = "";
     string TrueName = "";
-    wstring Description = L"";
+    wstring Description = {};
     uint32_t NameClilocID = 0;
     uint32_t DescriptionClilocID = 0;
     PROFESSION_TYPE Type = PT_NO_PROF;
@@ -26,7 +19,6 @@ public:
     CBaseProfession();
     virtual ~CBaseProfession();
 
-    //Добавить описание профессии
     bool AddDescription(int desc, string name, const char *val);
 };
 
@@ -82,5 +74,3 @@ public:
             return 0xFF;
     }
 };
-
-#endif

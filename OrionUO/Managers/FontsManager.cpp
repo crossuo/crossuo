@@ -1083,7 +1083,7 @@ wstring CFontsManager::GetTextByWidthW(uint8_t font, const wstring &str, int wid
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= 20 || !m_UnicodeFontAddress[font] || str.empty())
-        return wstring(L"");
+        return wstring({});
 
     uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
 
@@ -1096,7 +1096,7 @@ wstring CFontsManager::GetTextByWidthW(uint8_t font, const wstring &str, int wid
     }
 
     int textLength = 0;
-    wstring result = L"";
+    wstring result = {};
 
     for (const wchar_t &c : str)
     {
@@ -1688,7 +1688,7 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
                     case HTT_A:
                     case HTT_DIV:
                     {
-                        wstring content = L"";
+                        wstring content = {};
                         cmdLen = i - j;
                         //LOG("contentCmdLen = %i\n", cmdLen);
                         content.resize(cmdLen);

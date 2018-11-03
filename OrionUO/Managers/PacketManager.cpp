@@ -2524,7 +2524,7 @@ PACKET_HANDLER(ExtendedCommand)
                 return;
 
             item->JournalPrefix = "";
-            wstring str = L"";
+            wstring str = {};
             int clilocNum = ReadInt32BE();
             if (clilocNum)
             {
@@ -2537,7 +2537,7 @@ PACKET_HANDLER(ExtendedCommand)
                 g_Orion.CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
             }
 
-            str = L"";
+            str = {};
             uint16_t crafterNameLen = 0;
             uint32_t next = ReadUInt32BE();
             if (next == 0xFFFFFFFD)
@@ -2919,7 +2919,7 @@ PACKET_HANDLER(ConfirmWalk)
 PACKET_HANDLER(OpenUrl)
 {
     DEBUG_TRACE_FUNCTION;
-    g_Orion.GoToWebLink(ReadString(0));
+    g_Orion.GoToWebLink(ReadString());
 }
 
 PACKET_HANDLER(Target)
@@ -2948,14 +2948,14 @@ PACKET_HANDLER(Talk)
             uint16_t textColor = ReadUInt16BE();
             uint16_t font = ReadUInt16BE();
 
-            string name(ReadString(0));
+            string name(ReadString());
             string str = "";
 
             if (Size > 44)
             {
                 Ptr = Start + 44;
                 g_ConnectionScreen.SetConnectionFailed(true);
-                g_ConnectionScreen.SetTextA(ReadString(0));
+                g_ConnectionScreen.SetTextA(ReadString());
             }
         }
 
@@ -2967,7 +2967,7 @@ PACKET_HANDLER(Talk)
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
-    string name(ReadString(0));
+    string name(ReadString());
 
     if (!serial && !graphic && type == ST_NORMAL && font == 0xFFFF && textColor == 0xFFFF &&
         ToLowerA(name) == "system")
@@ -2990,7 +2990,7 @@ PACKET_HANDLER(Talk)
     if (Size > 44)
     {
         Ptr = Start + 44;
-        str = ReadString(0);
+        str = ReadString();
     }
 
     LOG("%s: %s\n", name.c_str(), str.c_str());
@@ -3046,13 +3046,13 @@ PACKET_HANDLER(UnicodeTalk)
             uint16_t font = ReadUInt16BE();
             uint32_t language = ReadUInt32BE();
 
-            string name(ReadString(0));
+            string name(ReadString());
 
             if (Size > 48)
             {
                 Ptr = Start + 48;
                 g_ConnectionScreen.SetConnectionFailed(true);
-                g_ConnectionScreen.SetTextA(ToString(ReadWString((Size - 48) / 2)));
+                g_ConnectionScreen.SetTextA(ToString(ReadWStringBE((Size - 48) / 2)));
             }
         }
 
@@ -3065,7 +3065,7 @@ PACKET_HANDLER(UnicodeTalk)
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
     uint32_t language = ReadUInt32BE();
-    string name(ReadString(0));
+    string name(ReadString());
 
     if (!serial && !graphic && type == ST_NORMAL && font == 0xFFFF && textColor == 0xFFFF &&
         ToLowerA(name) == "system")
@@ -3080,18 +3080,16 @@ PACKET_HANDLER(UnicodeTalk)
         return;
     }
 
-    wstring str = L"";
-
+    wstring str = {};
     if (Size > 48)
     {
         Ptr = Start + 48;
-        str = ReadWString((Size - 48) / 2);
+        str = ReadWStringBE((Size - 48) / 2);
     }
 
     LOG("%s: %s\n", name.c_str(), ToString(str).c_str());
 
     CGameObject *obj = g_World->FindWorldObject(serial);
-
     if (type == ST_GUILD_CHAT)
     {
         type = ST_BROADCAST;
@@ -3713,14 +3711,14 @@ PACKET_HANDLER(DisplayClilocString)
     if (*Start == 0xCC)
         flags = ReadUInt8();
 
-    string name = ReadString(30).c_str();
+    string name = ReadString(32);
     wstring affix{};
     if (*Start == 0xCC)
-        affix = DecodeUTF8(ReadString()).c_str();
+        affix = DecodeUTF8(ReadString());
 
-    auto wc = (wchar_t *)Ptr;
+    wstring wc = ReadWStringLE();
     auto message =
-        g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, wc).c_str()
+        g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, wc);
 
     message += affix;
 
@@ -3764,44 +3762,33 @@ PACKET_HANDLER(MegaCliloc)
         return;
 
     uint16_t unknown = ReadUInt16BE();
-
     if (unknown > 1)
         return;
 
     uint32_t serial = ReadUInt32BE();
-
     Move(2);
     uint32_t clilocRevision = ReadUInt32BE();
 
     uint8_t *end = Start + Size;
-
     vector<wstring> list;
-
     while (Ptr < end)
     {
         uint32_t cliloc = ReadUInt32BE();
-
         if (!cliloc)
             break;
 
-        int len = ReadInt16BE();
-
-        wstring argument = L"";
-
+        const int len = ReadInt16BE();
+        wstring argument = {};
         if (len > 0)
         {
-            argument = wstring((wchar_t *)Ptr, len / 2);
-            Ptr += len;
-            //wstring argument = ReadUnicodeStringLE(len / 2);
+            argument = ReadWStringLE(len / 2);
         }
 
         wstring str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
-        //LOG("Cliloc: argstr=%s\n", ToString(str).c_str());
-
-        //LOG("Cliloc: 0x%08X len=%i arg=%s\n", cliloc, len, ToString(argument).c_str());
+        LOG("Cliloc: argstr=%s\n", ToString(str).c_str());
+        LOG("Cliloc: 0x%08X len=%i arg=%s\n", cliloc, len, ToString(argument).c_str());
 
         bool canAdd = true;
-
         for (const wstring &tempStr : list)
         {
             if (tempStr == str)
@@ -3816,23 +3803,23 @@ PACKET_HANDLER(MegaCliloc)
     }
 
     CGameItem *container = nullptr;
-
     CGameObject *obj = g_World->FindWorldObject(serial);
-
     if (obj != nullptr)
+    {
         container = g_World->FindWorldItem(obj->Container);
+    }
 
     bool inBuyList = false;
-
     if (container != nullptr)
+    {
         inBuyList =
             (container->Layer == OL_BUY || container->Layer == OL_BUY_RESTOCK ||
              container->Layer == OL_SELL);
+    }
 
     bool first = true;
-    wstring name = L"";
-    wstring data(L"");
-
+    wstring name = {};
+    wstring data = {};
     if (!list.empty())
     {
         for (const wstring &str : list)
@@ -3840,7 +3827,6 @@ PACKET_HANDLER(MegaCliloc)
             if (first)
             {
                 name = str;
-
                 if (obj != nullptr && !obj->NPC)
                 {
                     obj->SetName(ToString(str));
@@ -3860,29 +3846,23 @@ PACKET_HANDLER(MegaCliloc)
     }
 
     //LOG_DUMP((PBYTE)message.c_str(), message.length() * 2);
-
     g_ObjectPropertiesManager.Add(serial, CObjectProperty(serial, clilocRevision, name, data));
-
     if (obj != nullptr && g_ToolTip.m_Object == obj)
         g_ObjectPropertiesManager.Reset();
 
     //LOG("message=%s\n", ToString(message).c_str());
-
     if (inBuyList && container->Serial)
     {
         CGumpShop *gump = (CGumpShop *)g_GumpManager.GetGump(container->Serial, 0, GT_SHOP);
-
         if (gump != nullptr)
         {
             CGUIHTMLGump *htmlGump = gump->m_ItemList[0];
-
             QFOR(shopItem, htmlGump->m_Items, CBaseGUI *)
             {
                 if (shopItem->Type == GOT_SHOPITEM && shopItem->Serial == serial &&
                     ((CGUIShopItem *)shopItem)->NameFromCliloc)
                 {
                     CGUIShopItem *si = (CGUIShopItem *)shopItem;
-
                     int oldHeight = si->GetSize().Height;
 
                     si->Name = ToString(name);
@@ -3890,7 +3870,6 @@ PACKET_HANDLER(MegaCliloc)
                     si->UpdateOffsets();
 
                     int delta = si->GetSize().Height - oldHeight;
-
                     if (delta && shopItem->m_Next != nullptr)
                     {
                         QFOR(shopItem2, shopItem->m_Next, CBaseGUI *)
@@ -4063,9 +4042,7 @@ PACKET_HANDLER(BuffDebuff)
     const uint16_t buffIconStart = 0x03E9; //0x03EA ???
 
     uint32_t serial = ReadUInt32BE();
-
     uint16_t iconID = ReadUInt16BE() - buffIconStart;
-
     if (iconID < tableCount) //buff
     {
         CGumpBuff *gump = (CGumpBuff *)g_GumpManager.UpdateGump(0, 0, GT_BUFF);
@@ -4073,49 +4050,44 @@ PACKET_HANDLER(BuffDebuff)
         if (gump != nullptr)
         {
             uint16_t mode = ReadUInt16BE();
-
             if (mode)
             {
                 Move(12);
 
                 uint16_t timer = ReadUInt16BE();
-
                 Move(3);
 
                 uint32_t titleCliloc = ReadUInt32BE();
                 uint32_t descriptionCliloc = ReadUInt32BE();
                 uint32_t wtfCliloc = ReadUInt32BE();
-
                 Move(4);
 
-                wstring title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true).c_str();
-                wstring description = L"";
-                wstring wtf = L"";
+                wstring title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true);
+                wstring description = {};
+                wstring wtf = {};
 
                 if (descriptionCliloc)
                 {
-                    //wstring arguments((wchar_t*)Ptr);
-                    wstring arguments = ReadWString(0, false);
-
-                    //LOG("Buff arguments: %s\n", ToString(arguments).c_str());
-                    //LOG("Buff arguments: %s\n", ToString(ClilocManager->ParseArgumentsToClilocString(descriptionCliloc, arguments)).c_str());
-
+                    wstring arguments = ReadWStringLE();
                     description = L'\n' + g_ClilocManager.ParseArgumentsToClilocString(
                                               descriptionCliloc, true, arguments);
 
                     if (description.length() < 2)
-                        description = L"";
+                        description = {};
                 }
 
                 if (wtfCliloc)
-                    wtf = L'\n' + g_ClilocManager.Cliloc(g_Language)->GetW(wtfCliloc, true).c_str();
+                {
+                    wtf = L'\n' + g_ClilocManager.Cliloc(g_Language)->GetW(wtfCliloc, true);
+                }
 
                 wstring text = L"<left>" + title + description + wtf + L"</left>";
-
                 gump->AddBuff(table[iconID], timer, text);
             }
             else
+            {
                 gump->DeleteBuff(table[iconID]);
+            }
         }
     }
 }
@@ -4158,7 +4130,7 @@ PACKET_HANDLER(SecureTrading)
         }
 
         if (hasName && *Ptr)
-            gump->Text = ReadString(0);
+            gump->Text = ReadString();
 
         g_GumpManager.AddGump(gump);
     }
@@ -4884,9 +4856,9 @@ PACKET_HANDLER(OpenGump)
         int linelen = ReadInt16BE();
 
         if (linelen)
-            gump->AddText((int)i, ReadWString(linelen, true));
+            gump->AddText((int)i, ReadWStringBE(linelen));
         else
-            gump->AddText((int)i, L"");
+            gump->AddText((int)i, {});
     }
 
     if (EntryChanged)
@@ -5151,14 +5123,10 @@ PACKET_HANDLER(CharacterProfile)
         return;
 
     uint32_t serial = ReadUInt32BE();
-
-    wstring topText = ToWString(ReadString(0));
-
-    wstring bottomText = ReadWString(0);
-    wstring dataText = ReadWString(0);
-
+    wstring topText = ToWString(ReadString());
+    wstring bottomText = ReadWStringBE();
+    wstring dataText = ReadWStringBE();
     CGumpProfile *gump = new CGumpProfile(serial, 170, 90, topText, bottomText, dataText);
-
     g_GumpManager.AddGump(gump);
 }
 
@@ -5282,7 +5250,7 @@ PACKET_HANDLER(BulletinBoardData)
                 }
 
                 uint8_t lines = ReadUInt8();
-                wstring data = L"";
+                wstring data = {};
 
                 for (int i = 0; i < lines; i++)
                 {
@@ -5376,14 +5344,14 @@ PACKET_HANDLER(BookData)
 
             uint16_t lineCount = ReadUInt16BE();
 
-            wstring str = L"";
+            wstring str = {};
 
             for (int j = 0; j < lineCount; j++)
             {
                 if (j)
                     str += L'\n';
 
-                wstring temp = DecodeUTF8(ReadString(0));
+                wstring temp = DecodeUTF8(ReadString());
 
                 while (temp.length() && (temp.back() == L'\n' || temp.back() == L'\r'))
                     temp.resize(temp.length() - 1);
@@ -5956,10 +5924,8 @@ PACKET_HANDLER(OrionMessages)
         case OCT_SECURE_TRADE_CLOSE:
         {
             uint32_t id1 = ReadUInt32BE();
-
-            CGumpSecureTrading *gump =
+            auto gump =
                 (CGumpSecureTrading *)g_GumpManager.GetGump(id1, 0, GT_TRADE);
-
             if (gump != nullptr)
             {
                 gump->RemoveMark = true;
@@ -5971,19 +5937,15 @@ PACKET_HANDLER(OrionMessages)
         case OCT_UNICODE_SPEECH_REQUEST:
         {
             uint16_t color = ReadUInt16BE();
-            wstring text = ReadWString(0);
-
+            wstring text = ReadWStringBE();
             CGameConsole::Send(text, color);
-
             break;
         }
         case OCT_RENAME_MOUNT_REQUEST:
         {
             uint32_t serial = ReadUInt32BE();
-            string text = ReadString(0);
-
+            string text = ReadString();
             CPacketRenameRequest(serial, text).Send();
-
             break;
         }
         case OCT_RECONNECT:
@@ -6003,8 +5965,8 @@ PACKET_HANDLER(OrionMessages)
 
             for (int m = 0; m < count; m++)
             {
-                string name = ReadString(0);
-                string param = ReadString(0);
+                string name = ReadString();
+                string param = ReadString();
                 MACRO_CODE macroCode = MC_NONE;
 
                 for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)

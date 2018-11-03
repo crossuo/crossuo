@@ -217,7 +217,7 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
             subj += m_EntrySubject->m_Entry.Data();
 
             CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(
-                0, 0, 0, 0, ID, ToWString(g_Player->GetName()), subj, L"Date/Time", L"");
+                0, 0, 0, 0, ID, ToWString(g_Player->GetName()), subj, L"Date/Time", {});
 
             g_GumpManager.AddGump(gump);
         }

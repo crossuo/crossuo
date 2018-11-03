@@ -200,16 +200,6 @@ void SetTimer(void *, unsigned int, unsigned int, void *);
 #define vsprintf_s vsprintf
 #define vswprintf_s(a, b, c) vswprintf(a, 0, b, c)
 
-// http://en.cppreference.com/w/cpp/locale/codecvt_utf8
-inline int _wtoi(const wchar_t *a)
-{
-    return std::stoi(wstring(a));
-}
-char *_strlwr(char *s);
-char *_strupr(char *s);
-wchar_t *_wcslwr(wchar_t *s);
-wchar_t *_wcsupr(wchar_t *s);
-
 // BASS
 #define BASS_OK 0
 #define BASS_ERROR_FILEOPEN 1

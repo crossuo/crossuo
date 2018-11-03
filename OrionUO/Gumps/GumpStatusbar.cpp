@@ -45,15 +45,15 @@ void CGumpStatusbar::InitToolTip()
     {
         static const wstring tooltip[ID_GSB_TEXT_CAST_RECOVERY] = {
             L"Minimize the statusbar gump", //ID_GSB_MINIMIZE
-            L"",                            //ID_GSB_TEXT_FIELD
-            L"",                            //ID_GSB_BUTTON_HEAL_1
-            L"",                            //ID_GSB_BUTTON_HEAL_2
+            {},                            //ID_GSB_TEXT_FIELD
+            {},                            //ID_GSB_BUTTON_HEAL_1
+            {},                            //ID_GSB_BUTTON_HEAL_2
             L"Remove bar from group",       //ID_GSB_BUTTON_REMOVE_FROM_GROUP
             L"Open buff window",            //ID_GSB_BUFF_GUMP
             L"Change strength state",       //ID_GSB_BUFF_LOCKER_STR
             L"Change dexterity state",      //ID_GSB_BUFF_LOCKER_DEX
             L"Change intelligence state",   //ID_GSB_BUFF_LOCKER_INT
-            L"",                            //
+            {},                            //
             L"Strength",                    //ID_GSB_TEXT_STR
             L"Dexterity",                   //ID_GSB_TEXT_DEX
             L"Intelligence",                //ID_GSB_TEXT_INT

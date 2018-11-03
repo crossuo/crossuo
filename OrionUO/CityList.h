@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** CityList.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef CITYLIST_H
-#define CITYLIST_H
+#pragma once
 
-//!Класс города (для старых клиентов)
 class CCityItem
 {
 public:
@@ -22,23 +14,12 @@ public:
     CCityItem();
     virtual ~CCityItem();
 
-    //!Ссылка на описание города
     class CCity m_City;
 
-    /*!
-	Определение версии класса
-	@return Новая или старая
-	*/
     virtual bool IsNewCity() { return false; }
-
-    /*!
-	Инициализация
-	@return 
-	*/
     void InitCity();
 };
-//--------------------------------------------------------------------------
-//!Класс города (для новых клиентов)
+
 class CCityItemNew : public CCityItem
 {
 public:
@@ -51,14 +32,9 @@ public:
     CCityItemNew();
     virtual ~CCityItemNew();
 
-    /*!
-	Определение версии класса
-	@return Новая или старая
-	*/
     bool IsNewCity() { return true; }
 };
-//--------------------------------------------------------------------------
-//!Класс списка городов
+
 class CCityList
 {
 private:
@@ -69,15 +45,9 @@ public:
     virtual ~CCityList();
 
     size_t CityCount() { return m_CityList.size(); }
-
     void AddCity(CCityItem *city) { m_CityList.push_back(city); }
-
     CCityItem *GetCity(int index);
-
     void Clear();
 };
 
-//!Ссылка на список городов
 extern CCityList g_CityList;
-
-#endif

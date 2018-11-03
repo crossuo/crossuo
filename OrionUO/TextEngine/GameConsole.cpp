@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameConsole.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGameConsole g_GameConsole;
 
@@ -170,7 +160,7 @@ wstring CGameConsole::IsSystemCommand(
 {
     DEBUG_TRACE_FUNCTION;
     type = GCTT_NORMAL;
-    wstring result = L"";
+    wstring result = {};
 
     if (*text == g_ConsolePrefix[GCTT_PARTY][0]) //Party
     {
@@ -207,15 +197,17 @@ wstring CGameConsole::IsSystemCommand(
         if (type == GCTT_NORMAL && len >= 4 && len <= 8)
         {
             size_t lLen = 4;
-
             if (len > 4)
                 lLen = len;
 
-            char lBuf[10] = { 0 };
-
+            char lBuf[10]{};
             memcpy(&lBuf[0], cText, lLen);
 
-            _strlwr(lBuf);
+            auto p = &lBuf[0];
+            while (*p++ )
+            {
+                *p = tolower(*p);
+            }
 
             if (!memcmp(&lBuf[0], "/add", 4)) //Party add
                 type = GCTT_PARTY_ADD;
@@ -385,9 +377,8 @@ void CGameConsole::ChangeConsoleMessage(bool next)
 void CGameConsole::ClearStack()
 {
     DEBUG_TRACE_FUNCTION;
-    m_ConsoleStack[0] = L"";
+    m_ConsoleStack[0] = {};
     m_ConsoleStackCount = 0;
     m_ConsoleSelectedIndex = 0;
     m_PositionChanged = false;
 }
-

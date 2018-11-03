@@ -1,19 +1,7 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** SpeechManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CSpeechManager g_SpeechManager;
-
-//------------------------------------CSpeechItem-----------------------------------
 
 CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
     : Code(code)
@@ -34,8 +22,6 @@ CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
     //LOG(L"[0x%04X]=(cs=%i, ce=%i) %s\n", m_Code, m_CheckStart, m_CheckEnd, m_Data.c_str());
 }
 
-//-----------------------------------CSpeechManager---------------------------------
-
 CSpeechManager::CSpeechManager()
 {
 }
@@ -47,10 +33,6 @@ CSpeechManager::~CSpeechManager()
     m_LangCodes.clear();
 }
 
-/*!
-Загрузка данных из Speech.mul
-@return true при успешной загрузке
-*/
 bool CSpeechManager::LoadSpeech()
 {
     DEBUG_TRACE_FUNCTION;
@@ -103,10 +85,9 @@ bool CSpeechManager::LoadSpeech()
     {
         LOG("Loading speech from UOP\n");
         reader.Move(2);
-        wstring mainData = reader.ReadWString(reader.Size - 2, false).c_str();
+        wstring mainData = reader.ReadWStringLE(reader.Size - 2);
         vector<wstring> list;
         wstring temp;
-
         for (const wchar_t &c : mainData)
         {
             if (c == 0x000D || c == 0x000A)
@@ -114,40 +95,45 @@ bool CSpeechManager::LoadSpeech()
                 if (temp.length())
                 {
                     list.push_back(temp);
-                    temp = L"";
+                    temp = {};
                 }
             }
             else
+            {
                 temp.push_back(c);
+            }
         }
 
         if (temp.length())
         {
             list.push_back(temp);
-            temp = L"";
+            temp = {};
         }
 
         for (const wstring &line : list)
         {
             uint16_t code = 0xFFFF;
-            temp = L"";
-
+            temp = {};
             for (const wchar_t c : line)
             {
                 if (c == 0x0009)
                 {
                     if (temp.length())
                     {
-                        code = _wtoi(temp.c_str());
-                        temp = L"";
+                        code = std::stoi(temp);
+                        temp = {};
                     }
                 }
                 else
+                {
                     temp.push_back(c);
+                }
             }
 
             if (temp.length() && code != 0xFFFF)
-                m_SpeechEntries.push_back(CSpeechItem(code, temp.c_str()));
+            {
+                m_SpeechEntries.push_back(CSpeechItem(code, temp));
+            }
         }
     }
     else
@@ -155,56 +141,45 @@ bool CSpeechManager::LoadSpeech()
         LOG("Loading speech from MUL\n");
         while (!reader.IsEOF())
         {
-            uint16_t code = reader.ReadUInt16BE();
-            int len = reader.ReadUInt16BE();
-
+            const uint16_t code = reader.ReadUInt16BE();
+            const int len = reader.ReadUInt16BE();
             if (!len)
                 continue;
 
-            wstring str = DecodeUTF8(reader.ReadString(len)).c_str();
-
+            wstring str = DecodeUTF8(reader.ReadString(len));
             m_SpeechEntries.push_back(CSpeechItem(code, str));
         }
     }
 
     LOG("m_SpeechEntries.size()=%i\n", m_SpeechEntries.size());
-
     m_Loaded = true;
     return true;
 }
 
-/*!
-Загрузка данных из Langcode.iff
-@return true при успешной загрузке
-*/
 bool CSpeechManager::LoadLangCodes()
 {
     DEBUG_TRACE_FUNCTION;
 
     m_LangCodes.push_back(CLangCode("enu", 101, "English", "United States"));
-
     Wisp::CMappedFile &file = g_FileManager.m_LangcodeIff;
 
-    //скипаем заголовок файла
-    file.ReadString(36);
-
+    auto _header = file.ReadString(36);
+    (void)_header;
     while (!file.IsEOF())
     {
         CLangCode langCodeData;
-
         file.Move(4);
 
         uint32_t entryLen = file.ReadUInt32BE();
-        langCodeData.Abbreviature = file.ReadString(0);
+        langCodeData.Abbreviature = file.ReadString();
         langCodeData.Code = file.ReadUInt32LE();
-        langCodeData.Language = file.ReadString(0);
-        langCodeData.Country = file.ReadString(0);
+        langCodeData.Language = file.ReadString();
+        langCodeData.Country = file.ReadString();
 
         //длинна LangName и LangCountry + null terminator всегда являются четным количеством в файле.
         if ((langCodeData.Language.length() + langCodeData.Country.length() + 2) % 2)
         {
             int nullTerminator = file.ReadUInt8();
-
             if (nullTerminator != 0)
             {
                 throw "speechManager @ 138, invalid null terminator in langcodes.iff";

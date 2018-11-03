@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GUIBulletinBoardObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const wstring &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)
@@ -55,4 +45,3 @@ bool CGUIBulletinBoardObject::Select()
 
     return (x >= 0 && y >= 0 && x < 230 && y < 18);
 }
-

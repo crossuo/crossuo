@@ -1,17 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Profession.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
-
-//---------------------------------CBaseProfession----------------------------------
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CBaseProfession::CBaseProfession()
     : CBaseQueueItem()
@@ -25,15 +13,14 @@ CBaseProfession::~CBaseProfession()
 bool CBaseProfession::AddDescription(int desc, string name, const char *val)
 {
     DEBUG_TRACE_FUNCTION;
-    bool result = (DescriptionIndex == desc);
 
+    bool result = (DescriptionIndex == desc);
     if (result)
     {
         if (!NameClilocID)
             Name = name;
 
         g_FontManager.SetUseHTML(true);
-
         if (desc == -2)
             Description = ToWString(val);
         else
@@ -51,8 +38,6 @@ bool CBaseProfession::AddDescription(int desc, string name, const char *val)
     return result;
 }
 
-//---------------------------------CProfessionCategory------------------------------
-
 CProfessionCategory::CProfessionCategory()
     : CBaseProfession()
 {
@@ -66,8 +51,6 @@ void CProfessionCategory::AddChildren(string child)
 {
     Childrens += child + "|";
 }
-
-//-------------------------------------CProfession----------------------------------
 
 CProfession::CProfession()
     : CBaseProfession()

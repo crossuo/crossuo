@@ -369,7 +369,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     if (encoded)
     {
         typeValue |= ST_ENCODED_COMMAND;
-        utf8string = EncodeUTF8(wstring(text)).c_str();
+        utf8string = EncodeUTF8(wstring(text));
         len = (int)utf8string.length();
         size += len;
         size += 1; //null terminator

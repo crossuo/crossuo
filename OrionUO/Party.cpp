@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Party.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CParty g_Party;
 
@@ -24,8 +14,8 @@ CParty::~CParty()
 bool CParty::Contains(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    bool result = false;
 
+    bool result = false;
     if (Leader != 0)
     {
         for (int i = 0; i < 10; i++)
@@ -33,7 +23,6 @@ bool CParty::Contains(int serial)
             if (Member[i].Serial == serial)
             {
                 result = true;
-
                 break;
             }
         }
@@ -88,7 +77,6 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
             Wisp::CPoint2Di oldPos = g_MouseManager.Position;
             Wisp::CPoint2Di mousePos(76, 30);
             g_MouseManager.Position = mousePos;
-
             CGumpStatusbar *prevGump = nullptr;
 
             for (int i = 0; i < count; i++)
@@ -105,7 +93,6 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 if (gump == nullptr)
                 {
                     g_Orion.OpenStatus(serial);
-
                     gump = (CGumpStatusbar *)g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 
                     if (serial == g_PlayerSerial)
@@ -117,7 +104,6 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                         prevGump->AddStatusbar(gump);
 
                     prevGump = gump;
-
                     mousePos.Y += 59;
                     g_MouseManager.Position = mousePos;
                 }
@@ -129,23 +115,20 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
             }
 
             g_MouseManager.Position = oldPos;
-
             g_GumpManager.UpdateContent(0, 0, GT_PARTY_MANIFEST);
-
             break;
         }
         case 3: //Private party message
         case 4: //Party message
         {
             uint32_t serial = reader.ReadUInt32BE();
-            wstring name = reader.ReadWString(0, true);
+            wstring name = reader.ReadWStringBE();
 
             for (int i = 0; i < 10; i++)
             {
                 if (Member[i].Serial == serial)
                 {
                     string str = "[" + Member[i].GetName((int)i) + "]: " + ToString(name);
-
                     g_Orion.CreateTextMessage(
                         TT_SYSTEM, serial, 3, g_ConfigManager.PartyMessageColor, str);
 
@@ -158,11 +141,9 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
         case 7: //Party invition
         {
             g_Party.Inviter = reader.ReadUInt32BE();
-
             break;
         }
         default:
             break;
     }
 }
-

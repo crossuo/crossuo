@@ -15,8 +15,8 @@ class CObjectProperty
 public:
     uint32_t Serial = 0;
     uint32_t Revision = 0;
-    wstring Name = L"";
-    wstring Data = L"";
+    wstring Name = {};
+    wstring Data = {};
 
     CObjectProperty() {}
     CObjectProperty(int serial, int revision, const wstring &name, const wstring &data);

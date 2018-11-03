@@ -67,7 +67,6 @@ int GetProfileStringA(const char *, const char *, const char *, char *, int)
     NOT_IMPLEMENTED;
     return 0;
 }
-
 // Thread
 void KillTimer(void *, unsigned int)
 {
@@ -76,54 +75,6 @@ void KillTimer(void *, unsigned int)
 void SetTimer(void *, unsigned int, unsigned int, void *)
 {
     NOT_IMPLEMENTED;
-}
-
-char *_strlwr(char *s)
-{
-    char *tmp = s;
-
-    for (; *tmp; ++tmp)
-    {
-        *tmp = tolower((unsigned char)*tmp);
-    }
-
-    return s;
-}
-
-char *_strupr(char *s)
-{
-    char *tmp = s;
-
-    for (; *tmp; ++tmp)
-    {
-        *tmp = toupper((unsigned char)*tmp);
-    }
-
-    return s;
-}
-
-wchar_t *_wcslwr(wchar_t *s)
-{
-    wchar_t *tmp = s;
-
-    for (; *tmp; ++tmp)
-    {
-        *tmp = towlower(*tmp);
-    }
-
-    return s;
-}
-
-wchar_t *_wcsupr(wchar_t *s)
-{
-    wchar_t *tmp = s;
-
-    for (; *tmp; ++tmp)
-    {
-        *tmp = towupper(*tmp);
-    }
-
-    return s;
 }
 
 #endif
