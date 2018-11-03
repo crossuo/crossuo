@@ -206,34 +206,62 @@ int ToInt(const string &str)
 
 string ToLowerA(string s)
 {
+#if defined(ORION_WINDOWS)
+    if (s.length())
+        _strlwr(&s[0]);
+
+    return s;
+#else
     std::transform(s.begin(), s.end(), s.begin(), 
         [](auto c){ return std::tolower(c); }
     );
     return s;
+#endif
 }
 
 wstring ToLowerW(wstring s)
 {
+#if defined(ORION_WINDOWS)
+    if (s.length())
+        _wcslwr(&s[0]);
+
+    return s;
+#else
     std::transform(s.begin(), s.end(), s.begin(), 
         [](auto c){ return std::towlower(c); }
     );
     return s;
+#endif
 }
 
 string ToUpperA(string s)
 {
+#if defined(ORION_WINDOWS)
+    if (s.length())
+        _strupr(&s[0]);
+
+    return s;
+#else
     std::transform(s.begin(), s.end(), s.begin(), 
         [](auto c){ return std::toupper(c); }
     );
     return s;
+#endif
 }
 
 wstring ToUpperW(wstring s)
 {
+#if defined(ORION_WINDOWS)
+    if (s.length())
+        _wcsupr(&s[0]);
+
+    return s;
+#else
     std::transform(s.begin(), s.end(), s.begin(), 
         [](auto c){ return std::towupper(c); }
     );
     return s;
+#endif
 }
 
 bool Int32TryParse(string str, int &result)
