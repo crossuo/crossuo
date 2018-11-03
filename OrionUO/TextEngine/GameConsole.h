@@ -16,19 +16,22 @@ public:
     CGameConsole();
     virtual ~CGameConsole();
 
-    static wstring static void Send(wstring text, uint16_t defaultColor = 0);
+    static void Send(wstring text, uint16_t defaultColor = 0);
 
-    void Send();
+    static wstring
     IsSystemCommand(const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type);
+
     void
     DrawW(BYTE font, WORD color, int x, int y, TEXT_ALIGN_TYPE align = TS_LEFT, WORD flags = 0);
+
+    void Send();
     void SaveConsoleMessage();
     void ChangeConsoleMessage(bool next);
     void ClearStack();
 };
 
 static const wstring g_ConsolePrefix[] = {
-    {},     //Normal
+    L"",    //Normal
     L"! ",  //Yell
     L"; ",  //Whisper
     L": ",  //Emote
