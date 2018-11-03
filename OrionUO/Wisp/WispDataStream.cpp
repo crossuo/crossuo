@@ -222,7 +222,6 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
     DATASTREAM_DEBUG;
 
     uint8_t *ptr = Ptr + offset;
-    int nil = 1;
     if (!size)
     {
         if (ptr >= Start && ptr <= End)
@@ -231,18 +230,17 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
             while (buf <= End && *buf)
                 buf++;
             size = (buf - ptr) + 1;
-            nil = 0;
         }
     }
 
-    auto *buf = (char *)alloca(size + nil);
+    auto *buf = (char *)alloca(size);
     if (ptr >= Start && ptr + size <= End)
     {
         ReadDataLE((uint8_t *)buf, size, offset);
     }
-    buf[size] = '\0';
+    buf[size - 1] = '\0';
 
-    return {buf};
+    return { buf };
 }
 
 wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &offset)
@@ -250,7 +248,6 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
     DATASTREAM_DEBUG;
 
     uint8_t *ptr = Ptr + offset;
-    int nil = 1;
     if (!size)
     {
         if (ptr >= Start && ptr <= End)
@@ -265,11 +262,10 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
             }
 
             size = ((buf - ptr) / 2);
-            nil = 0;
         }
     }
 
-    auto *buf = (wchar_t *)alloca((size + nil) * sizeof(wchar_t));
+    auto *buf = (wchar_t *)alloca(size * sizeof(wchar_t));
     if (ptr >= Start && ptr + size <= End)
     {
         if (bigEndian)
@@ -283,9 +279,9 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
                 buf[i] = (wchar_t)ReadInt16LE(offset);
         }
     }
-    buf[size] = 0;
+    buf[size - 1] = 0;
 
-    return {buf};
+    return { buf };
 }
 
 wstring CDataReader::ReadWStringLE(size_t size, const intptr_t &offset)
@@ -298,5 +294,4 @@ wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
     return ReadWString(size, true, offset);
 }
 
-
-};
+}; // namespace Wisp
