@@ -1,11 +1,5 @@
-﻿/***********************************************************************************
-**
-** GumpOptions.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
 #include "Input.h"
@@ -256,18 +250,14 @@ public:
     CGumpOptions(short x, short y);
     virtual ~CGumpOptions();
 
-    void UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t color);
-
     CGUITextEntry *m_GameWindowWidth{ nullptr };
     CGUITextEntry *m_GameWindowHeight{ nullptr };
     CGUITextEntry *m_MacroKey{ nullptr };
 
+    void UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t color);
     virtual void InitToolTip();
-
     virtual void PrepareContent();
-
     virtual void UpdateContent();
-
     void Init();
 
     GUMP_BUTTON_EVENT_H;

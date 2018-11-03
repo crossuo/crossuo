@@ -1,16 +1,13 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpOptions.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "GumpOptions.h"
+
+#if USE_WISP
+#define KeyName(x) m_HotkeyText[x & 0xFF]
+#else
+#define KeyName(x) SDL_GetKeyName(x)
+#endif
 
 const uint16_t g_OptionsTextColor = 0;
 const int g_OptionsPolygoneColorOffset = 12;
@@ -49,7 +46,9 @@ void CGumpOptions::CalculateGumpState()
             }
         }
         else
+        {
             WantRedraw = true;
+        }
     }
 }
 
@@ -1651,16 +1650,16 @@ void CGumpOptions::RedrawMacroData()
     m_MacroCheckboxShift->Checked = shift;
     m_MacroCheckboxAlt->Checked = alt;
     m_MacroCheckboxCtrl->Checked = ctrl;
-
-    m_MacroKey->m_Entry.SetTextA(m_HotkeyText[key & 0xFF]);
+    m_MacroKey->m_Entry.SetTextA(KeyName(key));
 
     CMacroObject *obj = m_MacroObjectPointer;
-
     if (obj != nullptr)
     {
         if (obj->m_Prev != nullptr)
+        {
             m_MacroDataBox->Add(
                 new CGUIButton(ID_GO_P5_BUTTON_UP, 0x0983, 0x0984, 0x0984, 415, 173));
+        }
 
         const int maxMacroDraw = 7;
         int macroCount = 0;
@@ -1683,7 +1682,9 @@ void CGumpOptions::RedrawMacroData()
             combobox->SelectedIndex = obj->Code;
 
             for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
-                combobox->Add(new CGUIComboboxText(0x0386, 1, CMacro::GetActionName((int)i)));
+            {
+                combobox->Add(new CGUIComboboxText(0x0386, 1, CMacro::GetActionName(i)));
+            }
 
             if (obj->HasSubMenu == 1)
             {
@@ -1704,6 +1705,7 @@ void CGumpOptions::RedrawMacroData()
                 combobox->SelectedIndex = obj->SubCode - macroListOffset;
 
                 for (int i = 0; i < macroListCount; i++)
+                {
                     combobox->Add(new CGUIComboboxText(
                         0x0386,
                         1,
@@ -1711,13 +1713,12 @@ void CGumpOptions::RedrawMacroData()
                         150,
                         TS_LEFT,
                         UOFONT_FIXED));
+                }
             }
             else if (obj->HasSubMenu == 2)
             {
                 m_MacroDataBox->Add(new CGUIGumppic(0x098E, 245, y));
-
                 m_MacroDataBox->Add(new CGUIScissor(true, 0, 0, 251, y + 5, 150, 20));
-
                 m_MacroDataBox->Add(new CGUIHitBox(
                     ID_GO_P5_ACTION_SELECTION + (macroCount * 1000), 251, y + 5, 150, 20));
 
@@ -1733,19 +1734,19 @@ void CGumpOptions::RedrawMacroData()
                     1));
                 entry->CheckOnSerial = true;
                 entry->m_Entry.SetTextA(((CMacroObjectString *)obj)->m_String);
-
                 m_MacroDataBox->Add(new CGUIScissor(false));
             }
 
             macroCount++;
             y += 26;
-
             obj = (CMacroObject *)obj->m_Next;
         }
 
         if (macroCount >= maxMacroDraw)
+        {
             m_MacroDataBox->Add(
                 new CGUIButton(ID_GO_P5_BUTTON_DOWN, 0x0985, 0x0986, 0x0986, 415, y /*295 /*269*/));
+        }
     }
 }
 
@@ -2000,7 +2001,6 @@ void CGumpOptions::DrawPage7()
 
     //Display
     Add(new CGUIPage(7));
-
     Add(new CGUIGumppic(0x00E3, 576, 111));
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 84, 22));
@@ -2188,9 +2188,9 @@ void CGumpOptions::DrawPage7()
 void CGumpOptions::DrawPage8()
 {
     DEBUG_TRACE_FUNCTION;
+
     //Reputation System
     Add(new CGUIPage(8));
-
     Add(new CGUIGumppic(0x00E5, 576, 177));
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 84, 22));
@@ -2302,9 +2302,9 @@ void CGumpOptions::DrawPage8()
 void CGumpOptions::DrawPage9()
 {
     DEBUG_TRACE_FUNCTION;
+
     //Miscellaneous
     Add(new CGUIPage(9));
-
     Add(new CGUIGumppic(0x00E7, 576, 243));
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 84, 22));
@@ -2378,7 +2378,6 @@ void CGumpOptions::DrawPage10()
     DEBUG_TRACE_FUNCTION;
     //Filter Options
     Add(new CGUIPage(10));
-
     Add(new CGUIGumppic(0x00EA, 576, 309));
 }
 
@@ -2607,7 +2606,9 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
         RemoveMark = true;
     }
     else if (serial == ID_GO_APPLY) //Apply
+    {
         ApplyPageChanges();
+    }
     else if (serial == ID_GO_DEFAULT) //Default
     {
         switch (Page)
@@ -2645,7 +2646,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage7();
 
-                m_GameWindowWidth->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowWidth));
+                m_GameWindowWidth->m_Entry.SetTextA(
+                    std::to_string(g_OptionsConfig.GameWindowWidth));
                 m_GameWindowHeight->m_Entry.SetTextA(
                     std::to_string(g_OptionsConfig.GameWindowHeight));
 
@@ -2669,15 +2671,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
     }
     else if (serial == ID_GO_OKAY) //Okay
     {
-        /*for (auto i = 0; i < 10; i++)
-		{
-			Page = i;
-			ApplyPageChanges();
-		}*/
-
         ApplyPageChanges();
         g_OptionsMacroManager.Clear();
-
         RemoveMark = true;
     }
     else
@@ -2722,9 +2717,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                     m_MacroPointer = CMacro::CreateBlankMacro();
                     m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
                     g_OptionsMacroManager.Add(m_MacroPointer);
-
-                    m_MacroKey->m_Entry.SetTextA(m_HotkeyText[m_MacroPointer->Key & 0xFF]);
-
+                    m_MacroKey->m_Entry.SetTextA(KeyName(m_MacroPointer->Key));
                     RedrawMacroData();
                 }
                 else if (serial == ID_GO_P5_BUTTON_DELETE) //Delete button
@@ -2737,7 +2730,6 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                             newpointer = (CMacro *)m_MacroPointer->m_Prev;
 
                         g_OptionsMacroManager.Delete(m_MacroPointer);
-
                         if (newpointer == nullptr)
                         {
                             newpointer = CMacro::CreateBlankMacro();
@@ -2746,11 +2738,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
 
                         m_MacroPointer = newpointer;
                         m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
-
-                        m_MacroKey->m_Entry.SetTextA(m_HotkeyText[m_MacroPointer->Key & 0xFF]);
-
+                        m_MacroKey->m_Entry.SetTextA(KeyName(m_MacroPointer->Key));
                         RedrawMacroData();
-
                         m_LastChangeMacroTime = g_Ticks + CHANGE_MACRO_DELAY;
                     }
                 }
@@ -2760,9 +2749,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                     {
                         m_MacroPointer = (CMacro *)m_MacroPointer->m_Prev;
                         m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
-
                         RedrawMacroData();
-
                         m_LastChangeMacroTime = g_Ticks + CHANGE_MACRO_DELAY;
                     }
                 }
@@ -2773,9 +2760,7 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                     {
                         m_MacroPointer = (CMacro *)m_MacroPointer->m_Next;
                         m_MacroObjectPointer = (CMacroObject *)m_MacroPointer->m_Items;
-
                         RedrawMacroData();
-
                         m_LastChangeMacroTime = g_Ticks + CHANGE_MACRO_DELAY;
                     }
                 }
@@ -3421,7 +3406,7 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
     if (g_EntryPointer == &m_MacroKey->m_Entry)
     {
         m_MacroPointer->Key = key & 0xFF;
-        m_MacroKey->m_Entry.SetTextA(m_HotkeyText[key & 0xFF]);
+        m_MacroKey->m_Entry.SetTextA(KeyName(key));
         WantRedraw = true;
     }
     else
@@ -3733,6 +3718,7 @@ void CGumpOptions::ApplyPageChanges()
     }
 }
 
+#if USE_WISP
 const char *CGumpOptions::m_HotkeyText[0x100] = {
     "",               //0x00
     "Left Mouse",     //0x01
@@ -3991,3 +3977,4 @@ const char *CGumpOptions::m_HotkeyText[0x100] = {
     "Clear",          //0xfe
     "0xff"            //0xff
 };
+#endif

@@ -44,6 +44,9 @@ void CWindow::MaximizeWindow()
 
     SDL_SetWindowPosition(m_window, m_BorderSize.Width, m_BorderSize.Height);
     SDL_SetWindowSize(m_window, m_MaxSize.Width, m_MaxSize.Height);
+
+    m_Size = { w - m_BorderSize.Width, h - m_BorderSize.Height };
+    OnResize();
 #endif
 }
 
@@ -799,16 +802,15 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         case SDL_MOUSEBUTTONDOWN:
         {
             Wisp::g_WispMouse->Update();
-
             const bool isDown = ev.type == SDL_MOUSEBUTTONDOWN;
             auto &mouse = ev.button;
             switch (mouse.button)
             {
                 case SDL_BUTTON_LEFT:
-                    Wisp::g_WispMouse->LeftButtonPressed = isDown;
                     if (isDown)
                     {
                         Wisp::g_WispMouse->Capture();
+                        Wisp::g_WispMouse->LeftButtonPressed = true;
                         Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint32_t ticks = SDL_GetTicks();
@@ -836,15 +838,16 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     {
                         if (Wisp::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
                             OnLeftMouseButtonUp();
+                        Wisp::g_WispMouse->LeftButtonPressed = false;
                         Wisp::g_WispMouse->Release();
                     }
                     break;
 
                 case SDL_BUTTON_MIDDLE:
-                    Wisp::g_WispMouse->MidButtonPressed = isDown;
                     if (isDown)
                     {
                         Wisp::g_WispMouse->Capture();
+                        Wisp::g_WispMouse->MidButtonPressed = true;
                         Wisp::g_WispMouse->MidDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint32_t ticks = SDL_GetTicks();
@@ -869,15 +872,16 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     else
                     {
                         OnMidMouseButtonUp();
+                        Wisp::g_WispMouse->MidButtonPressed = false;
                         Wisp::g_WispMouse->Release();
                     }
                     break;
 
                 case SDL_BUTTON_RIGHT:
-                    Wisp::g_WispMouse->RightButtonPressed = isDown;
                     if (isDown)
                     {
                         Wisp::g_WispMouse->Capture();
+                        Wisp::g_WispMouse->RightButtonPressed = true;
                         Wisp::g_WispMouse->RightDropPosition = Wisp::g_WispMouse->Position;
                         Wisp::g_WispMouse->CancelDoubleClick = false;
                         uint32_t ticks = SDL_GetTicks();
@@ -904,6 +908,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     {
                         if (Wisp::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
                             OnRightMouseButtonUp();
+                        Wisp::g_WispMouse->RightButtonPressed = false;
                         Wisp::g_WispMouse->Release();
                     }
                     break;

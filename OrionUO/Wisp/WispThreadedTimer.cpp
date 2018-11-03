@@ -1,12 +1,9 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+﻿// MIT License
 
-#include "stdafx.h"
 #include <SDL_events.h>
 
 namespace Wisp
 {
-
 CThreadedTimer::CThreadedTimer(uint32_t id, HWND windowHandle, bool waitForProcessMessage)
     : Wisp::CThread()
     , TimerID(id)
@@ -52,4 +49,3 @@ void CThreadedTimer::OnDestroy()
 }
 
 }; // namespace Wisp
-

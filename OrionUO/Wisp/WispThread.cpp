@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
-#include "stdafx.h"
+﻿// MIT License
 
 #include <thread>
 #include <SDL_timer.h>
@@ -18,7 +15,6 @@ typedef int thread_int;
 
 namespace Wisp
 {
-
 thread_int THREADCALL CThreadLoop(void *arg)
 {
     DEBUG_TRACE_FUNCTION;
@@ -143,7 +139,8 @@ void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
 
 #if USE_WISP
         if (synchronizedDelay)
-            m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoopSynchronizedDelay, this, 0, &ID);
+            m_Handle =
+                (HANDLE)_beginthreadex(nullptr, 0, CThreadLoopSynchronizedDelay, this, 0, &ID);
         else
             m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoop, this, 0, &ID);
 #else
@@ -283,4 +280,3 @@ SDL_threadID CThread::GetCurrentThreadId()
 }
 
 }; // namespace Wisp
-

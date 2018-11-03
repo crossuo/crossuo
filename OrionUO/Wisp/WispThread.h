@@ -1,4 +1,5 @@
-﻿
+﻿// MIT License
+
 #pragma once
 #include <SDL_thread.h>
 

@@ -219,7 +219,6 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
         {
             wstring start = input.substr(0, data.length());
             size_t hits = start.find(data);
-
             if (hits == wstring::npos)
                 continue;
         }
@@ -228,13 +227,11 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
         {
             wstring end = input.substr(input.length() - data.length());
             size_t hits = end.find(data);
-
             if (hits == wstring::npos)
                 continue;
         }
 
         size_t hits = input.find(data);
-
         if (hits != wstring::npos)
             codes.push_back(entry.Code);
     }

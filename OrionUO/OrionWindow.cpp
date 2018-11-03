@@ -90,9 +90,7 @@ void COrionWindow::OnLeftMouseButtonDown()
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_GeneratedMouseDown = false;
-
         g_CurrentScreen->Render(false);
-
         g_PressedObject.InitLeft(g_SelectedObject);
 
         if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
@@ -295,20 +293,18 @@ void COrionWindow::OnDeactivate()
         g_PluginManager.WindowProc(Handle, WM_NCACTIVATE, 0, 0);
 }
 
-
 void COrionWindow::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
 
-#if USE_WISP    
+#if USE_WISP
     if (g_PluginManager.WindowProc(Handle, WM_CHAR, ev.wParam, ev.lParam))
         return;
 #endif
 
     const auto ch = EvChar(ev);
     if ((IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&
-        g_CurrentScreen != nullptr && 
-        g_ScreenEffectManager.Mode == SEM_NONE)
+        g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnTextInput(ev);
     }

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Gump.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
@@ -28,13 +18,10 @@ CGump::CGump(GUMP_TYPE type, uint32_t serial, int x, int y)
 CGump::~CGump()
 {
     DEBUG_TRACE_FUNCTION;
-    //Если это гамп, блокирующий игровое окно
+
     if (Blocked)
     {
-        //Уменьшаем счетчик блокирующих гампов
         g_GrayMenuCount--;
-
-        //Если таких гампов больше нет - восстанавливаем игровой экран
         if (g_GrayMenuCount <= 0)
         {
             g_GrayMenuCount = 0;
@@ -473,8 +460,8 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                 {
                     CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
-                    g_MouseManager.Position = Wisp::CPoint2Di(
-                        oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
+                    g_MouseManager.Position =
+                        Wisp::CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
 
@@ -729,7 +716,8 @@ void CGump::TestItemsLeftMouseDown(
                 {
                     CGUIHTMLText *htmlText = (CGUIHTMLText *)item;
 
-                    uint16_t link = htmlText->m_Texture.WebLinkUnderMouse(item->GetX(), item->GetY());
+                    uint16_t link =
+                        htmlText->m_Texture.WebLinkUnderMouse(item->GetX(), item->GetY());
 
                     if (link && link != 0xFFFF)
                     {
@@ -806,8 +794,8 @@ void CGump::TestItemsLeftMouseDown(
                     htmlTextBackgroundCanBeColored = !htmlGump->HaveBackground;
 
                     Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-                    g_MouseManager.Position = Wisp::CPoint2Di(
-                        oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
+                    g_MouseManager.Position =
+                        Wisp::CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
 
@@ -1257,8 +1245,8 @@ void CGump::TestItemsDragging(
                     CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
                     Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-                    g_MouseManager.Position = Wisp::CPoint2Di(
-                        oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
+                    g_MouseManager.Position =
+                        Wisp::CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
                     CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
 
@@ -1463,8 +1451,8 @@ CRenderObject *CGump::Select()
     }
 
     Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = Wisp::CPoint2Di(
-        oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+    g_MouseManager.Position =
+        Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
     CRenderObject *selected = nullptr;
 
@@ -1572,8 +1560,7 @@ void CGump::GetItemsSize(
             case GOT_XFMHTMLGUMP:
             case GOT_XFMHTMLTOKEN:
             {
-                Wisp::CPoint2Di htmlOffset(
-                    offset.X + item->GetX(), offset.X + item->GetY());
+                Wisp::CPoint2Di htmlOffset(offset.X + item->GetX(), offset.X + item->GetY());
                 CGump::GetItemsSize(
                     gump,
                     (CBaseGUI *)item->m_Items,
@@ -1666,4 +1653,3 @@ void CGump::OnDragging()
 void CGump::PasteClipboardData(wstring &data)
 {
 }
-

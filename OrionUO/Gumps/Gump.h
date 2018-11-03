@@ -1,11 +1,5 @@
-﻿/***********************************************************************************
-**
-** Gump.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
 #include "Input.h"
@@ -77,14 +71,12 @@ public:
     virtual ~CGump();
 
     virtual void PasteClipboardData(wstring &data);
-
     static void ProcessListing();
 
     static bool
     ApplyTransparent(CBaseGUI *item, int page, int currentPage, const int draw2Page = 0);
 
     static void DrawItems(CBaseGUI *start, int currentPage, int draw2Page = 0);
-
     static class CRenderObject *SelectItems(CBaseGUI *start, int currentPage, int draw2Page = 0);
 
     static void GetItemsSize(
@@ -106,35 +98,22 @@ public:
     TestItemsScrolling(CGump *gump, CBaseGUI *start, bool up, int currentPage, int draw2Page = 0);
 
     virtual void DelayedClick(class CRenderObject *obj) {}
-
     virtual void PrepareContent() {}
-
     virtual void UpdateContent() {}
-
     virtual class CTextRenderer *GetTextRenderer() { return nullptr; }
-
     virtual void PrepareTextures();
-
     virtual void GenerateFrame(bool stop);
-
     virtual bool CanBeDisplayed() { return true; }
 
     void FixCoordinates();
-
     bool CanBeMoved();
-
     void DrawLocker();
-
     bool SelectLocker();
-
     bool TestLockerClick();
 
     virtual bool EntryPointerHere();
-
     virtual void Draw();
-
     virtual class CRenderObject *Select();
-
     virtual void InitToolTip() {}
 
     GUMP_BUTTON_EVENT_H { DebugMsg("OnButton(%i)\n", serial); }
