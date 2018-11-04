@@ -122,8 +122,6 @@ typedef unsigned int UINT;
 #define WM_KEYDOWN 19
 #define WM_MOUSEMOVE 21
 #define WM_SYSCOMMAND 25
-#define SC_MAXIMIZE 0
-#define SC_RESTORE 0
 
 const unsigned int WM_NCPAINT = 0x85;
 #define SM_CXSCREEN 0

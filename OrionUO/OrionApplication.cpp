@@ -23,10 +23,6 @@ void COrionApplication::OnMainLoop()
     {
         NextUpdateTime = g_Ticks + 50;
         NextRenderTime = NextUpdateTime; // g_Ticks + g_OrionWindow.RenderTimerDelay;
-
-#if !USE_WISP
-        g_Orion.Process(true);
-#endif
         g_ConnectionManager.Recv();
         g_PacketManager.ProcessPluginPackets();
         g_PacketManager.SendMegaClilocRequests();
@@ -34,13 +30,8 @@ void COrionApplication::OnMainLoop()
     else if (NextUpdateTime <= g_Ticks)
     {
         NextUpdateTime = g_Ticks + 50;
-
-#if !USE_WISP
-        g_Orion.Process(false);
-#endif
         g_ConnectionManager.Recv();
         g_PacketManager.ProcessPluginPackets();
         g_PacketManager.SendMegaClilocRequests();
     }
 }
-

@@ -212,9 +212,7 @@ string ToLowerA(string s)
 
     return s;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), 
-        [](auto c){ return std::tolower(c); }
-    );
+    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::tolower(c); });
     return s;
 #endif
 }
@@ -227,9 +225,7 @@ wstring ToLowerW(wstring s)
 
     return s;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), 
-        [](auto c){ return std::towlower(c); }
-    );
+    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::towlower(c); });
     return s;
 #endif
 }
@@ -242,9 +238,7 @@ string ToUpperA(string s)
 
     return s;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), 
-        [](auto c){ return std::toupper(c); }
-    );
+    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::toupper(c); });
     return s;
 #endif
 }
@@ -257,9 +251,7 @@ wstring ToUpperW(wstring s)
 
     return s;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), 
-        [](auto c){ return std::towupper(c); }
-    );
+    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::towupper(c); });
     return s;
 #endif
 }
@@ -307,7 +299,7 @@ void DebugMsg(const char *format, ...)
     char buf[512] = { 0 };
     vsprintf_s(buf, format, arg);
 
-#if USE_WISP
+#if defined(ORION_WINDOWS)
     OutputDebugStringA(buf);
 #else
     fprintf(stdout, "%s", buf);

@@ -39,10 +39,12 @@ bool COrionWindow::OnCreate()
 
     g_GL.UpdateRect();
 
-    // TODO: Render and Update events may be done using SDL_AddTimer / SDL_RemoveTimer
     CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
-    //CreateThreadedTimer(UPDATE_TIMER_ID, 10);
+#if !USE_WISP
+    CreateThreadedTimer(UPDATE_TIMER_ID, 10);
+#else
     CreateTimer(UPDATE_TIMER_ID, 10);
+#endif
 
     return true;
 }
@@ -585,7 +587,15 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         break;
 
         default:
-            break;
+        {
+#if !USE_WISP
+            auto nowTime = (uint32_t)ev.data1;
+            auto timer = (Wisp::CThreadedTimer *)ev.data2;
+            OnThreadedTimer(nowTime, timer);
+            //DebugMsg("OnThreadedTimer %i, 0x%08X\n", nowTime, timer);
+#endif
+        }
+        break;
     }
 
 #if USE_WISP

@@ -1,6 +1,5 @@
 ﻿// MIT License
 
-#include "stdafx.h"
 #include "WispWindow.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -38,15 +37,8 @@ void CWindow::MaximizeWindow()
     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 #else
-    int w, h;
-    GetDisplaySize(&w, &h);
-    SetMaxSize(w, h);
-
-    SDL_SetWindowPosition(m_window, m_BorderSize.Width, m_BorderSize.Height);
-    SDL_SetWindowSize(m_window, m_MaxSize.Width, m_MaxSize.Height);
-
-    m_Size = { w - m_BorderSize.Width, h - m_BorderSize.Height };
-    OnResize();
+    SDL_RestoreWindow(m_window);
+    SDL_MaximizeWindow(m_window);
 #endif
 }
 
@@ -82,7 +74,10 @@ void CWindow::SetPositionSize(int x, int y, int width, int height)
     SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetWindowPos(Handle, nullptr, x, y, width, height, 0);
 #else
-    SDL_SetWindowPosition(m_window, m_BorderSize.Width + x, m_BorderSize.Height + y);
+    int borderH;
+    SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+    SDL_RestoreWindow(m_window);
+    SDL_SetWindowPosition(m_window, x, max(y, borderH));
     SDL_SetWindowSize(m_window, width, height);
 #endif
 }
@@ -97,10 +92,11 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
     *width = (int)(rect.right - rect.left);
     *height = (int)(rect.bottom - rect.top);
 #else
+    int borderH;
+    SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
     SDL_GetWindowPosition(m_window, x, y);
+    *y = max(*y, borderH);
     SDL_GetWindowSize(m_window, width, height);
-    *x -= m_BorderSize.Width;
-    *y -= m_BorderSize.Height;
 #endif
 }
 
@@ -136,7 +132,9 @@ void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
 #else
-        SDL_SetWindowSize(m_window, width, height);
+        int borderH;
+        SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+        SDL_SetWindowSize(m_window, width, height - borderH);
 #endif
     }
     m_MinSize = newMinSize;
@@ -175,10 +173,9 @@ void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
 #else
-        SDL_SetWindowMaximumSize(
-            m_window,
-            newMaxSize.Width - m_BorderSize.Width,
-            newMaxSize.Height - m_BorderSize.Height);
+        int borderH;
+        SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+        SDL_SetWindowMaximumSize(m_window, newMaxSize.Width, newMaxSize.Height - borderH);
 #endif
     }
 
@@ -331,8 +328,6 @@ bool CWindow::Create(
         Handle = info.info.win.window;
 #endif
     }
-
-    SDL_GetWindowBordersSize(m_window, &m_BorderSize.Height, nullptr, nullptr, nullptr);
     SDL_ShowCursor(showCursor);
 #endif // USE_WISP
 
@@ -719,6 +714,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                 }
                 break;
 
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
                 case SDL_WINDOWEVENT_RESIZED:
                 {
                     m_Size = { ev.window.data1, ev.window.data2 };
@@ -727,8 +723,17 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                 break;
 
                 case SDL_WINDOWEVENT_MAXIMIZED:
+                {
+                    OnResize();
+                }
+                break;
+
                 case SDL_WINDOWEVENT_RESTORED:
                 {
+                    int x, y, borderH;
+                    SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+                    SDL_GetWindowPosition(m_window, &x, &y);
+                    SDL_SetWindowPosition(m_window, x, max(y, borderH));
                     OnResize();
                 }
                 break;
@@ -749,12 +754,6 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
             return true;
             break;
         }
-
-            // FIXME
-            //case WM_GETMINMAXINFO:
-            //case WM_SIZE:
-            // Wisp::CThreadedTimer::MessageID:
-            //case WM_TIMER:
 
         case SDL_KEYDOWN:
         {
@@ -928,13 +927,12 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
             // - OnRepaint
             // - OnSetText
             // - OnXMouseButton
+            // FIXME FIXME FIXME:
+            //case WM_TIMER:
 
         default:
             break;
     }
-
-    //g_Orion.Process(true);
-    //g_Orion.Process(false);
 
     return false;
 }
@@ -944,15 +942,13 @@ void CWindow::CreateThreadedTimer(
     uint32_t id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
-         i != m_ThreadedTimersStack.end();
-         ++i)
+    for (auto i = m_ThreadedTimersStack.begin(); i != m_ThreadedTimersStack.end(); ++i)
     {
         if ((*i)->TimerID == id)
             return;
     }
 
-    Wisp::CThreadedTimer *timer = new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
+    auto timer = new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
     m_ThreadedTimersStack.push_back(timer);
     timer->Run(!oneShot, delay, synchronizedDelay);
 }
@@ -960,15 +956,12 @@ void CWindow::CreateThreadedTimer(
 void CWindow::RemoveThreadedTimer(uint32_t id)
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
-         i != m_ThreadedTimersStack.end();
-         ++i)
+    for (auto i = m_ThreadedTimersStack.begin(); i != m_ThreadedTimersStack.end(); ++i)
     {
         if ((*i)->TimerID == id)
         {
             (*i)->Stop();
             m_ThreadedTimersStack.erase(i);
-
             break;
         }
     }
@@ -977,9 +970,7 @@ void CWindow::RemoveThreadedTimer(uint32_t id)
 Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint32_t id)
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<Wisp::CThreadedTimer *>::iterator i = m_ThreadedTimersStack.begin();
-         i != m_ThreadedTimersStack.end();
-         ++i)
+    for (auto i = m_ThreadedTimersStack.begin(); i != m_ThreadedTimersStack.end(); ++i)
     {
         if ((*i)->TimerID == id)
             return *i;
