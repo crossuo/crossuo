@@ -73,14 +73,11 @@ void COrionWindow::EmulateOnLeftMouseButtonDown()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
-
+        g_CurrentScreen->SelectObject();
         g_PressedObject.InitLeft(g_SelectedObject);
-
         if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
         {
             Wisp::g_WispMouse->LeftDropPosition = Wisp::g_WispMouse->Position;
-
             g_CurrentScreen->OnLeftMouseButtonDown();
         }
     }
@@ -92,9 +89,8 @@ void COrionWindow::OnLeftMouseButtonDown()
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_GeneratedMouseDown = false;
-        g_CurrentScreen->Render(false);
+        g_CurrentScreen->SelectObject();
         g_PressedObject.InitLeft(g_SelectedObject);
-
         if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
             g_CurrentScreen->OnLeftMouseButtonDown();
     }
@@ -105,14 +101,13 @@ void COrionWindow::OnLeftMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
+        g_CurrentScreen->SelectObject();
 
         //if ((g_SelectedObject.Object() != nullptr && g_SelectedObject.Object() == g_PressedObject.LeftObject && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
         if ((g_SelectedObject.Object != nullptr && g_SelectedObject.Serial) ||
             g_GameState >= GS_GAME)
         {
             g_CurrentScreen->OnLeftMouseButtonUp();
-
             if (g_MovingFromMouse && g_PressedObject.LeftGump == nullptr)
                 g_AutoMoving = true;
         }
@@ -120,7 +115,9 @@ void COrionWindow::OnLeftMouseButtonUp()
         if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
             ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_COMBOBOX &&
             g_PressedObject.LeftGump != nullptr)
+        {
             g_PressedObject.LeftGump->WantRedraw = true;
+        }
 
         g_PressedObject.ClearLeft();
     }
@@ -133,10 +130,8 @@ bool COrionWindow::OnLeftMouseButtonDoubleClick()
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
-
+        g_CurrentScreen->SelectObject();
         g_PressedObject.InitLeft(g_SelectedObject);
-
         result = (g_SelectedObject.Object != nullptr &&
                   g_SelectedObject.Object == g_PressedObject.LeftObject) &&
                  g_CurrentScreen->OnLeftMouseButtonDoubleClick();
@@ -156,12 +151,9 @@ void COrionWindow::OnRightMouseButtonDown()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
-
+        g_CurrentScreen->SelectObject();
         g_PressedObject.InitRight(g_SelectedObject);
-
         g_CurrentScreen->OnRightMouseButtonDown();
-
         if (g_SelectedObject.Gump == nullptr &&
             !(g_MouseManager.Position.X < g_ConfigManager.GameWindowX ||
               g_MouseManager.Position.Y < g_ConfigManager.GameWindowY ||
@@ -181,13 +173,13 @@ void COrionWindow::OnRightMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
-
+        g_CurrentScreen->SelectObject();
         if ((g_SelectedObject.Object != nullptr &&
              g_SelectedObject.Object == g_PressedObject.RightObject && g_SelectedObject.Serial) ||
             g_GameState >= GS_GAME)
+        {
             g_CurrentScreen->OnRightMouseButtonUp();
-
+        }
         g_MovingFromMouse = false;
         g_PressedObject.ClearRight();
     }
@@ -197,19 +189,18 @@ bool COrionWindow::OnRightMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
-
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
-
+        g_CurrentScreen->SelectObject();
         g_PressedObject.InitRight(g_SelectedObject);
-
         result = (g_SelectedObject.Object != nullptr &&
                   g_SelectedObject.Object == g_PressedObject.RightObject) &&
                  g_CurrentScreen->OnRightMouseButtonDoubleClick();
 
         if (result)
+        {
             g_PressedObject.ClearRight();
+        }
     }
 
     return result;
@@ -252,8 +243,7 @@ void COrionWindow::OnMidMouseButtonScroll(bool up)
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->Render(false);
-
+        g_CurrentScreen->SelectObject();
         g_CurrentScreen->OnMidMouseButtonScroll(up);
     }
 }
@@ -419,11 +409,13 @@ void COrionWindow::OnTimer(uint32_t id)
     DEBUG_TRACE_FUNCTION;
     if (id == UPDATE_TIMER_ID)
     {
+        LOG("UPDATE_TIMER_ID\n");
         g_Ticks = SDL_GetTicks();
         g_Orion.Process(false);
     }
     if (id == FASTLOGIN_TIMER_ID)
     {
+        LOG("FASTLOGIN_TIMER_ID\n");
         RemoveTimer(FASTLOGIN_TIMER_ID);
         g_Orion.Connect();
     }
@@ -436,10 +428,12 @@ void COrionWindow::OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer
     g_Ticks = nowTime;
     if (timer->TimerID == RENDER_TIMER_ID)
     {
+        LOG("RENDER_TIMER_ID\n");
         g_Orion.Process(true);
     }
     else if (timer->TimerID == UPDATE_TIMER_ID)
     {
+        LOG("UPDATE_TIMER_ID\n");
         g_Orion.Process(false);
     }
 }

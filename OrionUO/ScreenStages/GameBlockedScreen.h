@@ -1,11 +1,5 @@
-﻿/***********************************************************************************
-**
-** GameBlockedScreen.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
 #include "Input.h"
@@ -20,7 +14,8 @@ public:
     ~CGameBlockedScreen();
 
     virtual void Init();
-    virtual void Render(bool mode);
+    virtual void Render() override;
+    virtual void SelectObject() override;
     virtual void OnLeftMouseButtonDown();
     virtual void OnLeftMouseButtonUp();
     virtual void OnTextInput(const TextEvent &ev) override;

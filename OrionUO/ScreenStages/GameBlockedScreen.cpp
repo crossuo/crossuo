@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameBlockedScreen.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "GameBlockedScreen.h"
 
 CGameBlockedScreen g_GameBlockedScreen;
@@ -28,34 +19,34 @@ void CGameBlockedScreen::Init()
     Code = 0;
 }
 
-void CGameBlockedScreen::Render(bool mode)
+void CGameBlockedScreen::Render()
 {
     DEBUG_TRACE_FUNCTION;
-    if (mode)
+    g_GumpManager.Draw(true);
+    InitToolTip();
+    g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
+}
+
+void CGameBlockedScreen::SelectObject()
+{
+    DEBUG_TRACE_FUNCTION;
+    
+    g_SelectedObject.Clear();
+    g_GumpManager.Select(true);
+    if (g_SelectedObject.Object != g_LastSelectedObject.Object)
     {
-        g_GumpManager.Draw(true);
-
-        InitToolTip();
-
-        g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
-    }
-    else
-    {
-        g_SelectedObject.Clear();
-
-        g_GumpManager.Select(true);
-
-        if (g_SelectedObject.Object != g_LastSelectedObject.Object)
+        if (g_SelectedObject.Object != nullptr)
         {
-            if (g_SelectedObject.Object != nullptr)
-                g_SelectedObject.Object->OnMouseEnter();
-
-            if (g_LastSelectedObject.Object != nullptr)
-                g_LastSelectedObject.Object->OnMouseExit();
+            g_SelectedObject.Object->OnMouseEnter();
         }
 
-        g_LastSelectedObject.Init(g_SelectedObject);
+        if (g_LastSelectedObject.Object != nullptr)
+        {
+            g_LastSelectedObject.Object->OnMouseExit();
+        }
     }
+
+    g_LastSelectedObject.Init(g_SelectedObject);
 }
 
 void CGameBlockedScreen::OnLeftMouseButtonDown()
@@ -96,7 +87,6 @@ void CGameBlockedScreen::OnKeyDown(const KeyEvent &ev)
     else
     {
         CGump *gump = g_GumpManager.GetTextEntryOwner();
-
         if (gump != nullptr && gump->GumpType == GT_TEXT_ENTRY_DIALOG)
             gump->OnKeyDown(ev);
         else if (notify != nullptr)

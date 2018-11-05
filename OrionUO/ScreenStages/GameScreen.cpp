@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameScreen.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include <SDL_rect.h>
 #include "GameScreen.h"
 
@@ -33,10 +24,6 @@ CGameScreen::~CGameScreen()
     DEBUG_TRACE_FUNCTION;
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CGameScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -46,11 +33,6 @@ void CGameScreen::Init()
     SmoothScreenAction = 0;
 }
 
-/*!
-Обработка события после плавного затемнения экрана
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
 void CGameScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
@@ -61,10 +43,6 @@ void CGameScreen::ProcessSmoothAction(uint8_t action)
         g_LogoutAfterClick = true;
 }
 
-/*!
-Инициализация всплывающих подсказок
-@return 
-*/
 void CGameScreen::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
@@ -122,13 +100,6 @@ void CGameScreen::InitToolTip()
             g_GumpManager.InitToolTip();
     }
 }
-
-/*!
-Вычисление значений Z координаты для рендера
-@param [__out] noDrawRoof Не рисовать крыши и верхние этажи строений
-@param [__out] maxGroundZ Максимальная Z координата ландшафта
-@return Максимальная Z координата отрисовки
-*/
 
 void CGameScreen::UpdateMaxDrawZ()
 {
@@ -256,14 +227,6 @@ void CGameScreen::UpdateMaxDrawZ()
     }
 }
 
-/*!
-Применение прозрачности крон деревьев в указанных координатах
-@param [__in] graphic ндекс картинки дерева
-@param [__in] x Координата X дерева
-@param [__in] y Координата Y дерева
-@param [__in] z Координата Z дерева
-@return 
-*/
 void CGameScreen::ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y, int z)
 {
     DEBUG_TRACE_FUNCTION;
@@ -291,14 +254,6 @@ void CGameScreen::ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y,
     }
 }
 
-/*!
-Проверка принадлежности кроны к группе крон (с последующим применением прозрачности всей группе)
-@param [__in] graphic Индекс картинки дерева
-@param [__in] x Координата X дерева
-@param [__in] y Координата Y дерева
-@param [__in] z Координата Z дерева
-@return 
-*/
 void CGameScreen::CheckFoliageUnion(uint16_t graphic, int x, int y, int z)
 {
     DEBUG_TRACE_FUNCTION;
@@ -324,10 +279,6 @@ void CGameScreen::CheckFoliageUnion(uint16_t graphic, int x, int y, int z)
     }
 }
 
-/*!
-Расчет списка объектов рендера, вычисление прозрачности крон деревьев (в т.ч. составных)
-@return 
-*/
 void CGameScreen::CalculateRenderList()
 {
     DEBUG_TRACE_FUNCTION;
@@ -943,10 +894,6 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
     }
 }
 
-/*!
-Вычисление параметров игрового окна
-@return 
-*/
 void CGameScreen::CalculateGameWindowBounds()
 {
     DEBUG_TRACE_FUNCTION;
@@ -1111,14 +1058,6 @@ void CGameScreen::CalculateGameWindowBounds()
     }
 }
 
-/*!
-Функция добавления источника света
-@param [__in] rwo Верхний объект, источающий свет
-@param [__in] lightObject Объект, источающий свет
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@return 
-*/
 void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObject, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1189,20 +1128,13 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
     }
 }
 
-/*!
-Рисование игрового окна
-@param [__in] mode true - отрисовка, false - выбор
-@return 
-*/
-void CGameScreen::DrawGameWindow(bool mode)
+void CGameScreen::DrawGameWindow(bool render)
 {
     DEBUG_TRACE_FUNCTION;
-    int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
-
-    if (mode)
+    const int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
+    if (render)
     {
         glColor4f(g_DrawColor, g_DrawColor, g_DrawColor, 1.0f);
-
         if (g_ConfigManager.UseCircleTrans)
         {
             if (g_CircleOfTransparency.Create(g_ConfigManager.CircleTransRadius))
@@ -1210,49 +1142,37 @@ void CGameScreen::DrawGameWindow(bool mode)
                 int drawX = g_RenderBounds.GameWindowCenterX + g_Player->OffsetX;
                 int drawY = g_RenderBounds.GameWindowCenterY + g_Player->OffsetY -
                             (g_RenderBounds.PlayerZ * 4 + g_Player->OffsetZ);
-
                 g_CircleOfTransparency.Draw(drawX, drawY);
             }
         }
 
         m_HitsStack.clear();
-
         for (int i = 0; i < m_RenderListCount; i++)
         {
             RENDER_OBJECT_DATA &rod = m_RenderList[i];
             CRenderWorldObject *obj = rod.Object;
-
             if (obj != nullptr)
             {
                 g_OutOfRangeColor = rod.GrayColor;
-
                 g_UseCircleTrans =
                     (g_ConfigManager.UseCircleTrans && obj->TranparentTest(playerZPlus5));
 
                 int x = obj->DrawX;
                 int y = obj->DrawY;
-
                 obj->Draw(x, y);
-
                 if (g_ConfigManager.GetDrawStatusState() && obj->IsGameObject() &&
                     ((CGameObject *)obj)->NPC && !((CGameCharacter *)obj)->Dead())
                 {
                     CGameCharacter *gc = (CGameCharacter *)obj;
-
                     if (g_ConfigManager.DrawStatusForHumanoids && !gc->IsHuman())
                         continue;
 
                     uint16_t color = g_ConfigManager.GetColorByNotoriety(gc->Notoriety);
-
-                    //usual color
                     uint16_t healthColor = 90;
-
                     int width = gc->MaxHits;
-
                     if (width > 0)
                     {
                         width = (gc->Hits * 100) / width;
-
                         if (width > 100)
                             width = 100;
 
@@ -1260,7 +1180,9 @@ void CGameScreen::DrawGameWindow(bool mode)
                             width = 0;
                     }
                     else
+                    {
                         continue;
+                    }
 
                     if (g_ConfigManager.DrawStatusConditionState == DCSCS_ALWAYS ||
                         (g_ConfigManager.DrawStatusConditionState == DCSCS_NOT_MAX &&
@@ -1276,15 +1198,12 @@ void CGameScreen::DrawGameWindow(bool mode)
                             ANIMATION_DIMENSIONS dims =
                                 g_AnimationManager.GetAnimationDimensions(gc, 0);
                             y -= (dims.Height + dims.CenterY) + 24;
-
                             gc->UpdateHitsTexture(width);
-
                             x -= (gc->m_HitsTexture.Width / 2) - 3;
                         }
                         else
                         {
                             x -= 20;
-
                             if (g_ConfigManager.GetDrawStatusState() == DCSS_UNDER)
                             {
                                 if (g_TargetGump.TargetedCharacter == obj)
@@ -1310,41 +1229,37 @@ void CGameScreen::DrawGameWindow(bool mode)
         }
 
         glDisable(GL_DEPTH_TEST);
-
         UnuseShader();
-
         for (int i = 0; i < m_ObjectHandlesCount; i++)
+        {
             m_ObjectHandlesList[i]->DrawObjectHandlesTexture();
+        }
 
         g_PluginManager.WorldDraw();
     }
     else
     {
-        bool useCircleTrans =
+        const bool useCircleTrans =
             (g_ConfigManager.UseCircleTrans &&
              g_CircleOfTransparency.Select(g_CircleOfTransparency.X, g_CircleOfTransparency.Y));
 
         for (int i = 0; i < m_RenderListCount; i++)
         {
             CRenderWorldObject *obj = m_RenderList[i].Object;
-
             if (obj != nullptr)
             {
                 g_UseCircleTrans = (useCircleTrans && obj->TranparentTest(playerZPlus5));
-
                 obj->Select(obj->DrawX, obj->DrawY);
             }
         }
 
         for (int i = 0; i < m_ObjectHandlesCount; i++)
+        {
             m_ObjectHandlesList[i]->SelectObjectHandlesTexture();
+        }
     }
 }
 
-/*!
-Отображение источников света
-@return 
-*/
 void CGameScreen::DrawGameWindowLight()
 {
     DEBUG_TRACE_FUNCTION;
@@ -1427,20 +1342,13 @@ void CGameScreen::DrawGameWindowLight()
     UnuseShader();
 }
 
-/*!
-Отображение текста над объектами мира
-@param [__in] mode true - отрисовка, false - выбор
-@return 
-*/
-void CGameScreen::DrawGameWindowText(bool mode)
+void CGameScreen::DrawGameWindowText(bool render)
 {
     DEBUG_TRACE_FUNCTION;
-    if (mode)
+    if (render)
     {
         g_FontColorizerShader.Use();
-
         g_WorldTextRenderer.WorldDraw();
-
         UnuseShader();
 
         if (g_ConfigManager.GetDrawStatusState() && m_HitsStack.size())
@@ -1458,7 +1366,6 @@ void CGameScreen::DrawGameWindowText(bool mode)
             else
             {
                 g_ColorizerShader.Use();
-
                 for (int i = 0; i < 2; i++)
                 {
                     for (vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
@@ -1471,7 +1378,6 @@ void CGameScreen::DrawGameWindowText(bool mode)
                             g_Orion.DrawGump(0x1069, it->HealthColor, it->X, it->Y, it->Width, 0);
                     }
                 }
-
                 UnuseShader();
             }
         }
@@ -1481,7 +1387,6 @@ void CGameScreen::DrawGameWindowText(bool mode)
             if (obj->NPC)
             {
                 CTextContainer &textContainer = obj->GameCharacterPtr()->m_DamageTextControl;
-
                 if (textContainer.Empty())
                     continue;
 
@@ -1501,16 +1406,19 @@ void CGameScreen::DrawGameWindowText(bool mode)
                             glDisable(GL_BLEND);
                         }
                         else
+                        {
                             text->m_Texture.Draw(text->RealDrawX, text->RealDrawY);
+                        }
                     }
                 }
             }
         }
-
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
     else
+    {
         g_WorldTextRenderer.Select(nullptr);
+    }
 }
 
 void CGameScreen::PrepareContent()
@@ -1581,14 +1489,8 @@ void CGameScreen::PrepareContent()
     }
 }
 
-/*!
-Отрисовка/выбор объектов
-@param [__in] mode true - отрисовка, false - выбор
-@return При выборе объектов - идентификатор выбранного объекта
-*/
-void CGameScreen::Render(bool mode)
+void CGameScreen::PreRender()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!RenderListInitalized)
         CalculateRenderList();
 
@@ -1600,443 +1502,421 @@ void CGameScreen::Render(bool mode)
         g_DeathScreenTimer = 0;
     }
     else if (!g_Player->Dead())
-        g_DeathScreenTimer = 0;
-
-    if (mode)
     {
-        static uint32_t lastRender = 0;
-        static int currentFPS = 0;
-        static int FPScount = 0;
+        g_DeathScreenTimer = 0;
+    }
+}
 
-        if (lastRender < g_Ticks)
+void CGameScreen::Render()
+{
+    DEBUG_TRACE_FUNCTION;
+    PreRender();
+
+    static uint32_t lastRender = 0;
+    static int currentFPS = 0;
+    static int FPScount = 0;
+
+    if (lastRender < g_Ticks)
+    {
+        LOG("FPS=%i\n", FPScount);
+        FPScount = currentFPS;
+        currentFPS = 0;
+        lastRender = g_Ticks + 1000;
+    }
+    else
+    {
+        currentFPS++;
+    }
+
+    g_GL.BeginDraw();
+    if (DrawSmoothMonitor())
+        return;
+
+    uint32_t deathScreenTimer = g_DeathScreenTimer;
+    if (deathScreenTimer && g_ScreenEffectManager.Mode != SEM_NONE)
+        deathScreenTimer = 0;
+
+    CSelectedObject tempSelected;
+    CPressedObject tempPressed;
+    if (g_GameState == GS_GAME_BLOCKED)
+    {
+        tempSelected.Init(g_SelectedObject);
+        g_SelectedObject.Clear();
+        tempPressed.Init(g_PressedObject);
+        g_PressedObject.ClearAll();
+    }
+
+    g_RenderedObjectsCountInGameWindow = 0;
+    g_TargetGump.Color = 0;
+    g_TargetGump.TargetedCharacter = nullptr;
+    g_AttackTargetGump.Color = 0;
+    g_AttackTargetGump.TargetedCharacter = nullptr;
+    g_NewTargetSystem.ColorGump = 0;
+    g_NewTargetSystem.TargetedCharacter = nullptr;
+
+    m_LightCount = 0;
+
+    g_GL.ViewPortScaled(
+        g_RenderBounds.GameWindowPosX,
+        g_RenderBounds.GameWindowPosY,
+        g_RenderBounds.GameWindowWidth,
+        g_RenderBounds.GameWindowHeight);
+
+    g_DrawColor = 1.0f;
+
+    if (!g_GL.CanUseFrameBuffer && g_PersonalLightLevel < g_LightLevel)
+    {
+        g_DrawColor = (32 - g_LightLevel + g_PersonalLightLevel) / 32.0f;
+
+        if (!g_ConfigManager.DarkNights)
+            g_DrawColor += 0.2f;
+    }
+
+    if (g_GrayedPixels)
+        g_DeathShader.Use();
+    else
+        g_ColorizerShader.Use();
+
+    DrawGameWindow(true);
+    UnuseShader();
+    if (!deathScreenTimer)
+    {
+        if (!g_GrayedPixels)
         {
-            LOG("FPS=%i\n", FPScount);
-            FPScount = currentFPS;
-            currentFPS = 0;
-            lastRender = g_Ticks + 1000;
-        }
-        else
-            currentFPS++;
-
-        g_GL.BeginDraw();
-
-        if (DrawSmoothMonitor())
-            return;
-
-        uint32_t deathScreenTimer = g_DeathScreenTimer;
-
-        if (deathScreenTimer && g_ScreenEffectManager.Mode != SEM_NONE)
-            deathScreenTimer = 0;
-
-        CSelectedObject tempSelected;
-        CPressedObject tempPressed;
-
-        if (g_GameState == GS_GAME_BLOCKED)
-        {
-            tempSelected.Init(g_SelectedObject);
-            g_SelectedObject.Clear();
-
-            tempPressed.Init(g_PressedObject);
-            g_PressedObject.ClearAll();
+            DrawGameWindowLight();
+            g_ColorizerShader.Use();
+            g_NewTargetSystem.Draw();
+            g_TargetGump.Draw();
+            g_AttackTargetGump.Draw();
+            UnuseShader();
+            g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
         }
 
-        g_RenderedObjectsCountInGameWindow = 0;
-
-        g_TargetGump.Color = 0;
-        g_TargetGump.TargetedCharacter = nullptr;
-        g_AttackTargetGump.Color = 0;
-        g_AttackTargetGump.TargetedCharacter = nullptr;
-        g_NewTargetSystem.ColorGump = 0;
-        g_NewTargetSystem.TargetedCharacter = nullptr;
-
-        m_LightCount = 0;
-
-        g_GL.ViewPortScaled(
+        DrawGameWindowText(true);
+        DrawSmoothMonitorEffect();
+    }
+    else
+    {
+        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+        g_GL.DrawPolygone(
             g_RenderBounds.GameWindowPosX,
             g_RenderBounds.GameWindowPosY,
             g_RenderBounds.GameWindowWidth,
             g_RenderBounds.GameWindowHeight);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-        g_DrawColor = 1.0f;
+        g_FontManager.DrawA(
+            3,
+            "You are dead.",
+            0,
+            g_RenderBounds.GameWindowPosX + (g_RenderBounds.GameWindowWidth / 2) - 50,
+            g_RenderBounds.GameWindowPosY + (g_RenderBounds.GameWindowHeight / 2) - 20);
+    }
 
-        if (!g_GL.CanUseFrameBuffer && g_PersonalLightLevel < g_LightLevel)
-        {
-            g_DrawColor = (32 - g_LightLevel + g_PersonalLightLevel) / 32.0f;
+    g_OutOfRangeColor = 0;
+    g_GrayedPixels = false;
+    UnuseShader();
+    if (!deathScreenTimer)
+    {
+        g_SystemChat.DrawSystemChat(
+            g_RenderBounds.GameWindowPosX,
+            g_RenderBounds.GameWindowPosY,
+            g_RenderBounds.GameWindowHeight);
+        g_QuestArrow.Draw();
+    }
 
-            if (!g_ConfigManager.DarkNights)
-                g_DrawColor += 0.2f;
-        }
-
-        if (g_GrayedPixels)
-            g_DeathShader.Use();
-        else
-            g_ColorizerShader.Use();
-
-        DrawGameWindow(mode);
-
-        UnuseShader();
-
-        if (!deathScreenTimer)
-        {
-            if (!g_GrayedPixels)
-            {
-                DrawGameWindowLight();
-
-                g_ColorizerShader.Use();
-
-                g_NewTargetSystem.Draw();
-                g_TargetGump.Draw();
-                g_AttackTargetGump.Draw();
-
-                UnuseShader();
-
-                g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
-            }
-
-            //Отрисовка текста
-            DrawGameWindowText(mode);
-
-            DrawSmoothMonitorEffect();
-        }
-        else
-        {
-            glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-            g_GL.DrawPolygone(
-                g_RenderBounds.GameWindowPosX,
-                g_RenderBounds.GameWindowPosY,
-                g_RenderBounds.GameWindowWidth,
-                g_RenderBounds.GameWindowHeight);
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-            g_FontManager.DrawA(
-                3,
-                "You are dead.",
-                0,
-                g_RenderBounds.GameWindowPosX + (g_RenderBounds.GameWindowWidth / 2) - 50,
-                g_RenderBounds.GameWindowPosY + (g_RenderBounds.GameWindowHeight / 2) - 20);
-        }
-
-        g_OutOfRangeColor = 0;
-
-        g_GrayedPixels = false;
-
-        UnuseShader();
-
-        if (!deathScreenTimer)
-        {
-            g_SystemChat.DrawSystemChat(
-                g_RenderBounds.GameWindowPosX,
-                g_RenderBounds.GameWindowPosY,
-                g_RenderBounds.GameWindowHeight);
-
-            g_QuestArrow.Draw();
-        }
-
-        //Восстанавливаем размеры рисуемой области
-        g_GL.RestorePort();
-
-        m_GameScreenGump.Draw();
+    g_GL.RestorePort();
+    m_GameScreenGump.Draw();
 
 #if UO_DEBUG_INFO != 0
-        if (g_DeveloperMode == DM_SHOW_FPS_ONLY)
+    if (g_DeveloperMode == DM_SHOW_FPS_ONLY)
+    {
+        char dbf[100] = { 0 };
+
+        sprintf_s(
+            dbf,
+            "FPS=%i (%ims) scale=%.1f\n%s",
+            FPScount,
+            g_FrameDelay[1],
+            g_GlobalScale,
+            g_PingString.c_str());
+
+        g_FontManager.DrawA(
+            3,
+            dbf,
+            0x35,
+            g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth + 10,
+            g_RenderBounds.GameWindowPosY);
+    }
+    else if (g_DeveloperMode == DM_DEBUGGING)
+    {
+        char dbf[150] = { 0 };
+
+        sprintf_s(
+            dbf,
+            "FPS=%i (%ims) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
+            FPScount,
+            g_FrameDelay[1],
+            g_PingString.c_str(),
+            g_Player->Direction,
+            g_RenderBounds.PlayerZ,
+            m_MaxDrawZ,
+            g_GlobalScale);
+
+        g_FontManager.DrawA(3, dbf, 0x35, 20, 30);
+
+        sprintf_s(
+            dbf,
+            "Rendered %i object counts:\nLand=%i Statics=%i Game=%i Multi=%i Lights=%i",
+            g_RenderedObjectsCountInGameWindow,
+            g_LandObjectsCount,
+            g_StaticsObjectsCount,
+            g_GameObjectsCount,
+            g_MultiObjectsCount,
+            m_LightCount);
+
+        g_FontManager.DrawA(3, dbf, 0x35, 20, 54);
+
+        if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
         {
-            char dbf[100] = { 0 };
+            CRenderWorldObject *selRwo = (CRenderWorldObject *)g_SelectedObject.Object;
+            CLandObject *land = selRwo->LandObjectPtr();
+            char soName[20] = "UnknownObject";
 
-            sprintf_s(
-                dbf,
-                "FPS=%i (%ims) scale=%.1f\n%s",
-                FPScount,
-                g_FrameDelay[1],
-                g_GlobalScale,
-                g_PingString.c_str());
-
-            g_FontManager.DrawA(
-                3,
-                dbf,
-                0x35,
-                g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth + 10,
-                g_RenderBounds.GameWindowPosY);
-        }
-        else if (g_DeveloperMode == DM_DEBUGGING)
-        {
-            char dbf[150] = { 0 };
-
-            sprintf_s(
-                dbf,
-                "FPS=%i (%ims) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
-                FPScount,
-                g_FrameDelay[1],
-                g_PingString.c_str(),
-                g_Player->Direction,
-                g_RenderBounds.PlayerZ,
-                m_MaxDrawZ,
-                g_GlobalScale);
-
-            g_FontManager.DrawA(3, dbf, 0x35, 20, 30);
-
-            sprintf_s(
-                dbf,
-                "Rendered %i object counts:\nLand=%i Statics=%i Game=%i Multi=%i Lights=%i",
-                g_RenderedObjectsCountInGameWindow,
-                g_LandObjectsCount,
-                g_StaticsObjectsCount,
-                g_GameObjectsCount,
-                g_MultiObjectsCount,
-                m_LightCount);
-
-            g_FontManager.DrawA(3, dbf, 0x35, 20, 54);
-
-            if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
+            switch (selRwo->RenderType)
             {
-                CRenderWorldObject *selRwo = (CRenderWorldObject *)g_SelectedObject.Object;
-                CLandObject *land = selRwo->LandObjectPtr();
-                char soName[20] = "UnknownObject";
-
-                switch (selRwo->RenderType)
+                case ROT_LAND_OBJECT:
                 {
-                    case ROT_LAND_OBJECT:
-                    {
-                        if (!land->IsStretched)
-                            sprintf_s(soName, "Land");
-                        else
-                            sprintf_s(soName, "LandTex (mz=%i)", land->MinZ);
+                    if (!land->IsStretched)
+                        sprintf_s(soName, "Land");
+                    else
+                        sprintf_s(soName, "LandTex (mz=%i)", land->MinZ);
 
-                        break;
-                    }
-                    case ROT_STATIC_OBJECT:
-                    {
-                        sprintf_s(soName, "Static");
-                        break;
-                    }
-                    case ROT_GAME_OBJECT:
-                    {
-                        sprintf_s(soName, "GameObject");
-                        break;
-                    }
-                    case ROT_MULTI_OBJECT:
-                    {
+                    break;
+                }
+                case ROT_STATIC_OBJECT:
+                {
+                    sprintf_s(soName, "Static");
+                    break;
+                }
+                case ROT_GAME_OBJECT:
+                {
+                    sprintf_s(soName, "GameObject");
+                    break;
+                }
+                case ROT_MULTI_OBJECT:
+                {
+                    sprintf_s(soName, "Multi");
+
+                    if (((CMultiObject *)selRwo)->IsCustomHouseMulti())
+                        sprintf_s(soName, "Multi CH %04X", ((CMultiObject *)selRwo)->State);
+                    else
                         sprintf_s(soName, "Multi");
-
-                        if (((CMultiObject *)selRwo)->IsCustomHouseMulti())
-                            sprintf_s(soName, "Multi CH %04X", ((CMultiObject *)selRwo)->State);
-                        else
-                            sprintf_s(soName, "Multi");
-                        break;
-                    }
-                    default:
-                        break;
+                    break;
                 }
-
-                int tz = selRwo->GetZ();
-
-                //Если это тайл текстуры
-                if (land != nullptr && land->IsStretched)
-                    tz = (char)land->Serial;
-
-                uint32_t tiledataFlags = (uint32_t)(
-                    selRwo->IsStaticGroupObject() ?
-                        ((CRenderStaticObject *)selRwo)->GetStaticData()->Flags :
-                        0);
-
-                sprintf_s(
-                    dbf,
-                    "Selected:\n%s: G=0x%04X C:0x%04X TF=0x%08X X=%i Y=%i Z=%i (%i) PriZ=%i",
-                    soName,
-                    selRwo->Graphic,
-                    selRwo->Color,
-                    tiledataFlags,
-                    selRwo->GetX(),
-                    selRwo->GetY(),
-                    selRwo->GetZ(),
-                    tz,
-                    selRwo->PriorityZ);
-
-                const string flagNames[] = {
-                    "Background", "Weapon",     "Transparent", "Translucent", "Wall",
-                    "Damaging",   "Impassable", "Wet",         "Unknown",     "Surface",
-                    "Bridge",     "Stackable",  "Window",      "NoShoot",     "PrefixA",
-                    "PrefixAn",   "Internal",   "Foliage",     "PartialHue",  "Unknown1",
-                    "Map",        "Container",  "Wearable",    "LightSource", "Animated",
-                    "NoDiagonal", "Unknown2",   "Armor",       "Roof",        "Door",
-                    "StairBack",  "StairRight"
-                };
-
-                string flagsData = "";
-
-                for (int f = 0; f < 32; f++)
-                {
-                    if (tiledataFlags & (1 << f))
-                        flagsData += string("\n") + flagNames[f];
-                }
-
-                flagsData = string(dbf) + flagsData;
-
-                g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
+                default:
+                    break;
             }
+
+            int tz = selRwo->GetZ();
+
+            //Если это тайл текстуры
+            if (land != nullptr && land->IsStretched)
+                tz = (char)land->Serial;
+
+            uint32_t tiledataFlags = (uint32_t)(
+                selRwo->IsStaticGroupObject() ?
+                    ((CRenderStaticObject *)selRwo)->GetStaticData()->Flags :
+                    0);
+
+            sprintf_s(
+                dbf,
+                "Selected:\n%s: G=0x%04X C:0x%04X TF=0x%08X X=%i Y=%i Z=%i (%i) PriZ=%i",
+                soName,
+                selRwo->Graphic,
+                selRwo->Color,
+                tiledataFlags,
+                selRwo->GetX(),
+                selRwo->GetY(),
+                selRwo->GetZ(),
+                tz,
+                selRwo->PriorityZ);
+
+            const string flagNames[] = {
+                "Background", "Weapon",     "Transparent", "Translucent", "Wall",
+                "Damaging",   "Impassable", "Wet",         "Unknown",     "Surface",
+                "Bridge",     "Stackable",  "Window",      "NoShoot",     "PrefixA",
+                "PrefixAn",   "Internal",   "Foliage",     "PartialHue",  "Unknown1",
+                "Map",        "Container",  "Wearable",    "LightSource", "Animated",
+                "NoDiagonal", "Unknown2",   "Armor",       "Roof",        "Door",
+                "StairBack",  "StairRight"
+            };
+
+            string flagsData = "";
+
+            for (int f = 0; f < 32; f++)
+            {
+                if (tiledataFlags & (1 << f))
+                    flagsData += string("\n") + flagNames[f];
+            }
+
+            flagsData = string(dbf) + flagsData;
+
+            g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
         }
+    }
 #endif //UO_DEBUG_INFO!=0
 
-        g_GumpManager.Draw(false);
+    g_GumpManager.Draw(false);
+    g_GameConsole.DrawW(
+        (uint8_t)g_ConfigManager.SpeechFont,
+        g_ConfigManager.SpeechColor,
+        g_RenderBounds.GameWindowPosX,
+        g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
+        TS_LEFT,
+        UOFONT_BLACK_BORDER | UOFONT_FIXED);
 
-        // отрисовка ввода игрока
-        g_GameConsole.DrawW(
-            (uint8_t)g_ConfigManager.SpeechFont,
-            g_ConfigManager.SpeechColor,
-            g_RenderBounds.GameWindowPosX,
-            g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
-            TS_LEFT,
-            UOFONT_BLACK_BORDER | UOFONT_FIXED);
-
-        g_PluginManager.SceneDraw();
-
-        if (g_GameState == GS_GAME_BLOCKED)
-        {
-            g_SelectedObject.Init(tempSelected);
-            g_PressedObject.Init(tempPressed);
-
-            g_GameBlockedScreen.Render(false);
-            g_GameBlockedScreen.Render(true);
-        }
-        else
-        {
-            InitToolTip();
-
-            g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
-        }
-
-        g_GL.EndDraw();
-    }
-    else //Выбор объектов
+    g_PluginManager.SceneDraw();
+    if (g_GameState == GS_GAME_BLOCKED)
     {
-        GLdouble oldScale = g_GlobalScale;
-        g_GlobalScale = 1.0;
-
-        g_SelectedObject.Clear();
-        g_StatusbarUnderMouse = 0;
-
-        g_GumpManager.Select(false);
-
-        if (g_SelectedObject.Gump != nullptr)
-        {
-            if (g_SelectedObject.Object->IsText())
-                ((CRenderTextObject *)g_SelectedObject.Object)->ToTop();
-        }
-        else if (m_GameScreenGump.Select() == nullptr)
-        {
-            if (!g_DeathScreenTimer)
-            {
-                //Проверка текста
-                DrawGameWindowText(mode);
-
-                if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
-                    g_WorldTextRenderer.ToTop((CRenderTextObject *)g_SelectedObject.Object);
-            }
-
-            if (g_SelectedObject.Object ==
-                nullptr) //Если ничего не выбралось - пройдемся по объектам
-            {
-                //Если курсор мыши в игровом окне - просканируем его
-                if (g_MouseManager.Position.X < g_RenderBounds.GameWindowPosX ||
-                    g_MouseManager.Position.Y < g_RenderBounds.GameWindowPosY ||
-                    g_MouseManager.Position.X >
-                        (g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth) ||
-                    g_MouseManager.Position.Y >
-                        (g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight))
-                {
-                }
-                else
-                {
-                    g_GlobalScale = oldScale;
-                    Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
-
-                    //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
-
-                    //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
-
-                    int mouseX =
-                        (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
-                    int mouseY =
-                        (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
-
-                    /*g_MouseManager.Position = Wisp::CPoint2Di
-					(
-						//(int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX)
-						mouseX
-						,
-						//(int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY)
-						mouseY
-					);*/
-
-                    /*GLdouble left = (GLdouble)g_RenderBounds.GameWindowPosX;
-					GLdouble right = (GLdouble)(g_RenderBounds.GameWindowWidth + left);
-					GLdouble top = (GLdouble)g_RenderBounds.GameWindowPosY;
-					GLdouble bottom = (GLdouble)(g_RenderBounds.GameWindowHeight + top);
-
-					GLdouble newRight = right * g_GlobalScale;
-					GLdouble newBottom = bottom * g_GlobalScale;
-
-					g_RenderBounds.GameWindowScaledOffsetX = (int)((left * g_GlobalScale) - (newRight - right));
-					g_RenderBounds.GameWindowScaledOffsetY = (int)((top * g_GlobalScale) - (newBottom - bottom));
-
-					g_RenderBounds.GameWindowScaledWidth = (int)(newRight - g_RenderBounds.GameWindowScaledOffsetX);
-					g_RenderBounds.GameWindowScaledHeight = (int)(newBottom - g_RenderBounds.GameWindowScaledOffsetY);*/
-
-                    DrawGameWindow(mode);
-
-                    g_MouseManager.Position = oldMouse;
-                }
-            }
-        }
-
-        g_GlobalScale = oldScale;
-
-        if (g_SelectedObject.Object != g_LastSelectedObject.Object)
-        {
-            if (g_LastSelectedObject.Object != nullptr)
-                g_LastSelectedObject.Object->OnMouseExit();
-
-            if (g_SelectedObject.Object != nullptr)
-                g_SelectedObject.Object->OnMouseEnter();
-        }
-
-        g_LastSelectedObject.Init(g_SelectedObject);
+        g_SelectedObject.Init(tempSelected);
+        g_PressedObject.Init(tempPressed);
+        g_GameBlockedScreen.SelectObject();
+        g_GameBlockedScreen.Render();
     }
+    else
+    {
+        InitToolTip();
+        g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
+    }
+    g_GL.EndDraw();
 }
 
-/*!
-Нажатие левой кнопки мыши
-@return
-*/
+void CGameScreen::SelectObject()
+{
+    DEBUG_TRACE_FUNCTION;
+
+    GLdouble oldScale = g_GlobalScale;
+    g_GlobalScale = 1.0;
+    g_SelectedObject.Clear();
+    g_StatusbarUnderMouse = 0;
+    g_GumpManager.Select(false);
+    if (g_SelectedObject.Gump != nullptr)
+    {
+        if (g_SelectedObject.Object->IsText())
+        {
+            ((CRenderTextObject *)g_SelectedObject.Object)->ToTop();
+        }
+    }
+    else if (m_GameScreenGump.Select() == nullptr)
+    {
+        if (!g_DeathScreenTimer)
+        {
+            DrawGameWindowText(false);
+            if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
+                g_WorldTextRenderer.ToTop((CRenderTextObject *)g_SelectedObject.Object);
+        }
+
+        if (g_SelectedObject.Object ==
+            nullptr) //Если ничего не выбралось - пройдемся по объектам
+        {
+            //Если курсор мыши в игровом окне - просканируем его
+            if (g_MouseManager.Position.X < g_RenderBounds.GameWindowPosX ||
+                g_MouseManager.Position.Y < g_RenderBounds.GameWindowPosY ||
+                g_MouseManager.Position.X >
+                    (g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth) ||
+                g_MouseManager.Position.Y >
+                    (g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight))
+            {
+                // do nothing
+            }
+            else
+            {
+                g_GlobalScale = oldScale;
+                Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
+
+                //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
+
+                //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
+
+                int mouseX =
+                    (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
+                int mouseY =
+                    (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
+
+                /*g_MouseManager.Position = Wisp::CPoint2Di
+                (
+                    //(int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX)
+                    mouseX
+                    ,
+                    //(int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY)
+                    mouseY
+                );*/
+
+                /*GLdouble left = (GLdouble)g_RenderBounds.GameWindowPosX;
+                GLdouble right = (GLdouble)(g_RenderBounds.GameWindowWidth + left);
+                GLdouble top = (GLdouble)g_RenderBounds.GameWindowPosY;
+                GLdouble bottom = (GLdouble)(g_RenderBounds.GameWindowHeight + top);
+
+                GLdouble newRight = right * g_GlobalScale;
+                GLdouble newBottom = bottom * g_GlobalScale;
+
+                g_RenderBounds.GameWindowScaledOffsetX = (int)((left * g_GlobalScale) - (newRight - right));
+                g_RenderBounds.GameWindowScaledOffsetY = (int)((top * g_GlobalScale) - (newBottom - bottom));
+
+                g_RenderBounds.GameWindowScaledWidth = (int)(newRight - g_RenderBounds.GameWindowScaledOffsetX);
+                g_RenderBounds.GameWindowScaledHeight = (int)(newBottom - g_RenderBounds.GameWindowScaledOffsetY);*/
+
+                DrawGameWindow(false);
+                g_MouseManager.Position = oldMouse;
+            }
+        }
+    }
+
+    g_GlobalScale = oldScale;
+    if (g_SelectedObject.Object != g_LastSelectedObject.Object)
+    {
+        if (g_LastSelectedObject.Object != nullptr)
+            g_LastSelectedObject.Object->OnMouseExit();
+
+        if (g_SelectedObject.Object != nullptr)
+            g_SelectedObject.Object->OnMouseEnter();
+    }
+
+    g_LastSelectedObject.Init(g_SelectedObject);
+}
+
 void CGameScreen::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    CGumpSkills *skillGump = (CGumpSkills *)g_GumpManager.GetGump(0, 0, GT_SKILLS);
 
+    CGumpSkills *skillGump = (CGumpSkills *)g_GumpManager.GetGump(0, 0, GT_SKILLS);
     if (skillGump != nullptr)
+    {
         skillGump->UpdateGroupText();
+    }
 
     if (g_SelectedObject.Gump == &m_GameScreenGump)
+    {
         m_GameScreenGump.OnLeftMouseButtonDown();
+    }
     else if (g_SelectedObject.Gump != nullptr)
     {
         //g_SelectGumpObjects = true;
-
         g_GumpManager.OnLeftMouseButtonDown(false);
-
         //g_SelectGumpObjects = false;
     }
 
     if (g_PopupMenu != nullptr && g_SelectedObject.Gump != g_PopupMenu)
+    {
         g_GumpManager.RemoveGump(g_PopupMenu);
+    }
 }
 
-/*!
-Отпускание левой кнопки мыши
-@return 
-*/
 void CGameScreen::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
+
     if (g_PressedObject.LeftGump == &m_GameScreenGump)
     {
         m_GameScreenGump.OnLeftMouseButtonUp();
@@ -2052,7 +1932,6 @@ void CGameScreen::OnLeftMouseButtonUp()
 
     int gameWindowPosX = g_ConfigManager.GameWindowX - 4;
     int gameWindowPosY = g_ConfigManager.GameWindowY - 4;
-
     if (g_MouseManager.Position.X < gameWindowPosX || g_MouseManager.Position.Y < gameWindowPosY ||
         g_MouseManager.Position.X > (gameWindowPosX + g_ConfigManager.GameWindowWidth) ||
         g_MouseManager.Position.Y > (gameWindowPosY + g_ConfigManager.GameWindowHeight))
@@ -2061,16 +1940,13 @@ void CGameScreen::OnLeftMouseButtonUp()
     if (g_SelectedObject.Object != nullptr)
     {
         CRenderWorldObject *rwo = nullptr;
-
         if (g_SelectedObject.Object->IsWorldObject())
             rwo = (CRenderWorldObject *)g_SelectedObject.Object;
 
         if (g_CustomHouseGump != nullptr && g_Target.IsTargeting())
         {
             g_CustomHouseGump->OnTargetWorld(rwo);
-
             g_MouseManager.LastLeftButtonClickTimer = 0;
-
             return;
         }
 
@@ -2079,43 +1955,39 @@ void CGameScreen::OnLeftMouseButtonUp()
             if (g_SelectedObject.Object->IsText())
             {
                 CTextData *td = (CTextData *)g_SelectedObject.Object;
-
                 if (td->Type == TT_OBJECT)
                 {
                     CGameObject *obj = g_World->FindWorldObject(td->Serial);
-
                     if (obj != nullptr && (obj->NPC || obj->IsCorpse()))
                         g_Target.SendTargetObject(td->Serial);
                 }
-
                 g_MouseManager.LastLeftButtonClickTimer = 0;
-
                 return;
             }
             else if (rwo != nullptr)
             {
                 if (rwo->IsGameObject())
+                {
                     g_Target.SendTargetObject(rwo->Serial);
+                }
                 else if (rwo->IsLandObject())
+                {
                     g_Target.SendTargetTile(
                         0 /*g_SelectedObject->Index*/, rwo->GetX(), rwo->GetY(), rwo->GetZ());
+                }
                 else if (rwo->IsStaticObject() || rwo->IsMultiObject())
                 {
                     STATIC_TILES *st = nullptr;
-
                     if (g_PacketManager.GetClientVersion() >= CV_7090 && rwo->IsSurface())
                         st = ((CRenderStaticObject *)rwo)->GetStaticData();
 
                     short targetZ = rwo->GetZ();
-
                     if (st != nullptr)
                         targetZ += st->Height;
 
                     g_Target.SendTargetTile(rwo->Graphic, rwo->GetX(), rwo->GetY(), (char)targetZ);
                 }
-
                 g_MouseManager.LastLeftButtonClickTimer = 0;
-
                 return;
             }
         }
@@ -2127,13 +1999,10 @@ void CGameScreen::OnLeftMouseButtonUp()
             uint16_t dropX = 0;
             uint16_t dropY = 0;
             char dropZ = 0;
-
             if (rwo->IsGameObject() && g_ObjectInHand.Enabled)
             {
                 CGameObject *target = (CGameObject *)rwo;
-
                 can_drop = (GetDistance(g_Player, target) <= DRAG_ITEMS_DISTANCE);
-
                 if (can_drop && target != nullptr)
                 {
                     if (target->IsContainer() || target->NPC)
@@ -2141,7 +2010,6 @@ void CGameScreen::OnLeftMouseButtonUp()
                         dropX = 0xFFFF;
                         dropY = 0xFFFF;
                         dropZ = 0;
-
                         drop_container = target->Serial;
                     }
                     else if (
@@ -2149,15 +2017,18 @@ void CGameScreen::OnLeftMouseButtonUp()
                         (target->IsStackable() && target->Graphic == g_ObjectInHand.Graphic))
                     {
                         if (!target->IsSurface())
+                        {
                             drop_container = target->Serial;
-
+                        }
                         dropX = target->GetX();
                         dropY = target->GetY();
                         dropZ = target->GetZ();
                     }
                 }
                 else
+                {
                     g_Orion.PlaySoundEffect(0x0051);
+                }
             }
             else if (
                 (rwo->IsLandObject() || rwo->IsStaticObject() || rwo->IsMultiObject()) &&
@@ -2166,7 +2037,6 @@ void CGameScreen::OnLeftMouseButtonUp()
                 can_drop =
                     (GetDistance(g_Player, Wisp::CPoint2Di(rwo->GetX(), rwo->GetY())) <=
                      DRAG_ITEMS_DISTANCE);
-
                 if (can_drop)
                 {
                     dropX = rwo->GetX();
@@ -2174,16 +2044,22 @@ void CGameScreen::OnLeftMouseButtonUp()
                     dropZ = rwo->GetZ();
                 }
                 else
+                {
                     g_Orion.PlaySoundEffect(0x0051);
+                }
             }
 
             if (can_drop /*&& ObjectInHand != nullptr*/)
             {
                 if (drop_container == 0xFFFFFFFF && !dropX && !dropY)
+                {
                     can_drop = false;
+                }
 
                 if (can_drop)
+                {
                     g_Orion.DropItem(drop_container, dropX, dropY, dropZ);
+                }
             }
             else if (!g_ObjectInHand.Enabled)
             {
@@ -2201,23 +2077,24 @@ void CGameScreen::OnLeftMouseButtonUp()
                     {
                         CTextData *td =
                             (CTextData *)rwo->StaticGroupObjectPtr()->m_TextControl->m_Items;
-
                         if (td == nullptr || td->Timer < g_Ticks)
                         {
                             uint16_t id = rwo->Graphic;
-
                             wstring str =
                                 g_ClilocManager.Cliloc(g_Language)
                                     ->GetW(1020000 + id, true, g_Orion.m_StaticData[id].Name);
-
                             if (str.length())
                             {
                                 if (g_PacketManager.GetClientVersion() >= CV_6000)
+                                {
                                     g_Orion.CreateUnicodeTextMessage(
                                         TT_CLIENT, 0, 1, 0x03B2, str, rwo);
+                                }
                                 else
+                                {
                                     g_Orion.CreateTextMessage(
                                         TT_CLIENT, 0, 3, 0x03B2, ToString(str), rwo);
+                                }
                             }
                         }
                     }
@@ -2229,59 +2106,63 @@ void CGameScreen::OnLeftMouseButtonUp()
     if (g_EntryPointer != &g_GameConsole && g_EntryPointer != nullptr)
     {
         CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
-
         if (g_ConfigManager.GetConsoleNeedEnter())
+        {
             g_EntryPointer = nullptr;
+        }
         else
+        {
             g_EntryPointer = &g_GameConsole;
+        }
 
         if (gumpEntry != nullptr)
+        {
             gumpEntry->FrameCreated = false;
+        }
     }
 }
 
-/*!
-Двойной клик левой кнопкой мыши
-@return true при успешной обработке
-*/
 bool CGameScreen::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
     uint32_t charUnderMouse = 0;
-
     if (g_SelectedObject.Gump && g_GumpManager.OnLeftMouseButtonDoubleClick(false))
+    {
         result = true;
+    }
     else if (g_SelectedObject.Object != nullptr)
     {
         if (g_SelectedObject.Object->IsGameObject())
         {
             CGameObject *obj = (CGameObject *)g_SelectedObject.Object;
-
             if (!obj->NPC)
+            {
                 g_Orion.DoubleClick(g_SelectedObject.Serial);
+            }
             else
+            {
                 charUnderMouse = g_SelectedObject.Serial;
-
+            }
             result = true;
         }
         else if (g_SelectedObject.Object->IsText())
         {
             CTextData *td = (CTextData *)g_SelectedObject.Object;
-
             if (td->Type == TT_OBJECT)
             {
                 uint32_t serial = td->Serial;
-
                 CGameObject *obj = g_World->FindWorldObject(serial);
-
                 if (obj != nullptr && (obj->NPC || obj->IsCorpse()))
                 {
                     if (obj->NPC)
+                    {
                         charUnderMouse = serial;
+                    }
                     else
+                    {
                         g_Orion.DoubleClick(serial);
-
+                    }
                     result = true;
                 }
             }
@@ -2295,29 +2176,26 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
         {
             g_GumpManager.CloseGump(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM);
             g_NewTargetSystem.Serial = charUnderMouse;
-
             if (g_GumpManager.UpdateContent(charUnderMouse, 0, GT_TARGET_SYSTEM) == nullptr)
             {
                 CPacketStatusRequest(charUnderMouse).Send();
-
                 g_GumpManager.AddGump(new CGumpTargetSystem(
                     charUnderMouse, g_NewTargetSystem.GumpX, g_NewTargetSystem.GumpY));
             }
         }
 
         if (g_Player->Warmode && charUnderMouse != g_PlayerSerial)
+        {
             g_Orion.Attack(charUnderMouse);
+        }
         else
+        {
             g_Orion.DoubleClick(charUnderMouse);
+        }
     }
-
     return result;
 }
 
-/*!
-Нажатие правой кнопки мыши
-@return
-*/
 void CGameScreen::OnRightMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
@@ -2328,10 +2206,6 @@ void CGameScreen::OnRightMouseButtonDown()
         g_GumpManager.RemoveGump(g_PopupMenu);
 }
 
-/*!
-Отпускание правой кнопки мыши
-@return 
-*/
 void CGameScreen::OnRightMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
@@ -2348,7 +2222,6 @@ void CGameScreen::OnRightMouseButtonUp()
         !g_PathFinder.AutoWalking)
     {
         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
-
         if (rwo->IsLandObject() || rwo->IsSurface())
         {
             if (g_PathFinder.WalkTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
@@ -2357,10 +2230,6 @@ void CGameScreen::OnRightMouseButtonUp()
     }
 }
 
-/*!
-Двойной клик правой кнопкой мыши
-@return true при успешной обработке
-*/
 bool CGameScreen::OnRightMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
@@ -2368,7 +2237,6 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
         g_SelectedObject.Object->IsWorldObject() && !g_PathFinder.AutoWalking)
     {
         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
-
         if (rwo->IsLandObject() || rwo->IsSurface())
         {
             if (g_PathFinder.WalkTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
@@ -2382,11 +2250,6 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
     return false;
 }
 
-/*!
-Обработка средней кнопки (колесика) мыши
-@param [__in] state Состояние колесика
-@return 
-*/
 void CGameScreen::OnMidMouseButtonScroll(bool up)
 {
     DEBUG_TRACE_FUNCTION;
@@ -2450,11 +2313,15 @@ void CGameScreen::OnTextInput(const TextEvent &ev)
 
     if (g_EntryPointer == &g_GameConsole && (ch == 0x11 || ch == 0x17) &&
         ctrlPressed)
+    {
         g_GameConsole.ChangeConsoleMessage(ch == 0x17);
+    }
     else if (
         (altGR || (!altPressed && !ctrlPressed)) &&
         (int)g_EntryPointer->Length() < max(g_EntryPointer->MaxLength, 60))
+    {
         g_EntryPointer->Insert(ch);
+    }
 }
 
 void CGameScreen::OnKeyDown(const KeyEvent &ev)
@@ -2462,7 +2329,6 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
     const auto key = EvKey(ev);
-
 #if USE_WISP
     if (key == KEY_TAB && (ev.lParam & 0x40000000))
         return;
@@ -2485,27 +2351,35 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
                 if (g_EntryPointer == &g_GameConsole)
                 {
                     if (g_ConsolePrompt)
+                    {
                         g_Orion.ConsolePromptSend();
+                    }
                     else if (g_EntryPointer->Length())
                     {
                         g_GameConsole.SaveConsoleMessage();
-
                         g_GameConsole.Send();
                     }
-
                     g_GameConsole.Clear();
                 }
 
                 if (g_ConfigManager.GetConsoleNeedEnter())
+                {
                     g_EntryPointer = nullptr;
+                }
                 else
+                {
                     g_EntryPointer = &g_GameConsole;
+                }
             }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
 
             if (g_GumpConsoleType != nullptr)
+            {
                 g_GumpConsoleType->SetConsolePrefix();
+            }
             break;
         }
         case KEY_PAGEUP:

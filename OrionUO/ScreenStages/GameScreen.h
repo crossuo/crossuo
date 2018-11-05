@@ -88,9 +88,10 @@ private:
     uint32_t m_ProcessAlphaTimer = 0;
     bool m_CanProcessAlpha = nullptr;
 
-    void DrawGameWindow(bool mode);
+    void PreRender();
+    void DrawGameWindow(bool render);
     void DrawGameWindowLight();
-    void DrawGameWindowText(bool mode);
+    void DrawGameWindowText(bool render);
     void ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y, int z);
     void CheckFoliageUnion(uint16_t graphic, int x, int y, int z);
 
@@ -122,7 +123,8 @@ public:
     void
     AddLight(class CRenderWorldObject *rwo, class CRenderWorldObject *lightObject, int x, int y);
     virtual void PrepareContent();
-    virtual void Render(bool mode);
+    virtual void Render() override;
+    virtual void SelectObject() override;
     virtual void OnLeftMouseButtonDown();
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();

@@ -1,11 +1,5 @@
-﻿/***********************************************************************************
-**
-** BaseScreen.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
 #include "Input.h"
@@ -27,7 +21,8 @@ public:
     virtual void UpdateContent() { m_Gump.UpdateContent(); }
     virtual void Init() {}
     virtual void InitToolTip() { m_Gump.InitToolTip(); }
-    virtual void Render(bool mode);
+    virtual void Render();
+    virtual void SelectObject();
     virtual void CreateSmoothAction(uint8_t action);
     virtual void ProcessSmoothAction(uint8_t action = 0xFF) {}
     virtual int DrawSmoothMonitor();

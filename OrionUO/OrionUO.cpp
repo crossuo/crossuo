@@ -1292,8 +1292,8 @@ void COrion::Process(bool rendering)
         Send(ping, 2);
     }
 
-    bool oldCtrl = g_CtrlPressed;
-    bool oldShift = g_ShiftPressed;
+    const bool oldCtrl = g_CtrlPressed;
+    const bool oldShift = g_ShiftPressed;
 
 #if USE_WISP
     g_AltPressed = GetAsyncKeyState(KEY_MENU) & 0x80000000;
@@ -1323,15 +1323,11 @@ void COrion::Process(bool rendering)
         }
 
         g_UseItemActions.Process();
-
         g_ShowGumpLocker = g_ConfigManager.LockGumpsMoving && g_AltPressed && g_CtrlPressed;
-
         ProcessStaticAnimList();
 
         g_EffectManager.UpdateEffects();
-
         CGumpBuff *gumpBuff = (CGumpBuff *)g_GumpManager.GetGump(0, 0, GT_BUFF);
-
         if (gumpBuff != nullptr)
             gumpBuff->UpdateBuffIcons();
 
@@ -1339,23 +1335,18 @@ void COrion::Process(bool rendering)
             g_World->ProcessAnimation();
 
         g_PathFinder.ProcessAutowalk();
-
         bool canRenderSelect = false;
-
         if (g_GameState == GS_GAME)
         {
             g_MouseManager.ProcessWalking();
-
             g_MacroManager.Execute();
-
             ProcessDelayedClicks();
-
             canRenderSelect = true;
-
-            //Game window scope
             if (g_PressedObject.LeftGump == nullptr && g_PressedObject.LeftObject != nullptr &&
                 g_PressedObject.LeftObject->IsGUI())
+            {
                 canRenderSelect = false;
+            }
         }
 
         if (g_World != nullptr)
@@ -1364,13 +1355,10 @@ void COrion::Process(bool rendering)
             {
                 CGameObject *removeObj = g_World->FindWorldObject(g_World->ObjectToRemove);
                 g_World->ObjectToRemove = 0;
-
                 if (removeObj != nullptr)
                 {
                     CGameCharacter *character = g_World->FindWorldCharacter(removeObj->Container);
-
                     g_World->RemoveObject(removeObj);
-
                     if (character != nullptr)
                     {
                         character->m_FrameInfo =
@@ -1383,7 +1371,6 @@ void COrion::Process(bool rendering)
             if (g_ProcessRemoveRangedTimer < g_Ticks)
             {
                 g_Orion.RemoveRangedObjects();
-
                 g_ProcessRemoveRangedTimer = g_Ticks + 50;
             }
 
@@ -1394,26 +1381,20 @@ void COrion::Process(bool rendering)
             if (rendering)
             {
                 g_GameScreen.CalculateGameWindowBounds();
-
                 g_GameScreen.CalculateRenderList();
                 g_GameScreen.RenderListInitalized = true;
-
                 g_SelectedObject.Clear();
                 g_SelectedGameObjectHandle = 0;
-
                 if (!g_OrionWindow.IsMinimizedWindow())
                 {
                     if (canRenderSelect)
-                        g_GameScreen.Render(false);
+                        g_GameScreen.SelectObject();
 
                     CGump::ProcessListing();
-
                     g_GameScreen.PrepareContent();
-
-                    g_GameScreen.Render(true);
+                    g_GameScreen.Render();
 
                     UOI_SELECTED_TILE uoiSelectedObject;
-
                     if (g_SelectedObject.Object != nullptr &&
                         g_SelectedObject.Object->IsWorldObject())
                     {
@@ -1455,11 +1436,8 @@ void COrion::Process(bool rendering)
                     g_PluginManager.WindowProc(
                         g_OrionWindow.Handle, UOMSG_SELECTED_TILE, (WPARAM)&uoiSelectedObject, 0);
                 }
-
                 g_Target.UnloadMulti();
-
                 g_GameScreen.RenderListInitalized = false;
-
                 g_MapManager.Init(true);
             }
         }
@@ -1467,16 +1445,12 @@ void COrion::Process(bool rendering)
     else if (rendering)
     {
         g_SelectedObject.Clear();
-
         if (!g_OrionWindow.IsMinimizedWindow())
         {
-            g_CurrentScreen->Render(false);
-
+            g_CurrentScreen->SelectObject();
             g_CurrentScreen->PrepareContent();
-
             CGump::ProcessListing();
-
-            g_CurrentScreen->Render(true);
+            g_CurrentScreen->Render();
         }
     }
 
