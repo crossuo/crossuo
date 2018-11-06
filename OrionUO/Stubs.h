@@ -72,22 +72,15 @@ using namespace std;
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 
-typedef int SOCKET;
-typedef uint16_t WORD;
 typedef uintptr_t LPARAM;
 typedef uintptr_t LRESULT;
 typedef uintptr_t WPARAM;
 typedef int32_t HRESULT;
-typedef int32_t LONG;
 typedef unsigned char BYTE;
 typedef unsigned char *PBYTE;
 typedef void *PVOID;
 typedef void *LPVOID;
 typedef void *HANDLE;
-typedef void *HWND;
-typedef void *HICON;
-typedef void *HBRUSH;
-typedef void *HCURSOR;
 typedef void *HINSTANCE;
 typedef void *HDC;
 typedef void *HMODULE;
@@ -97,74 +90,27 @@ typedef const void *LPCVOID;
 typedef size_t SIZE_T;
 typedef const char *LPCSTR;
 typedef const wchar_t *LPWSTR;
-typedef const char *LPTSTR;
-typedef const char *LPSTR;
-typedef wchar_t WCHAR;
 typedef unsigned int UINT;
 
 #define S_OK 0x0L
-#define WM_USER 0x0400
 #define WM_MOUSEWHEEL 1
 #define WM_MBUTTONUP 2
 #define WM_MBUTTONDOWN 3
-#define WM_RBUTTONUP 4
-#define WM_RBUTTONDOWN 5
-#define WM_LBUTTONUP 6
-#define WM_LBUTTONDOWN 7
 #define WM_CLOSE 10
 #define WM_XBUTTONDOWN 11
 #define WM_SETTEXT 13
 #define WM_SHOWWINDOW 14
 #define WM_NCACTIVATE 15
-#define WM_SYSKEYUP 16
-#define WM_KEYUP 17
-#define WM_SYSKEYDOWN 18
-#define WM_KEYDOWN 19
-#define WM_MOUSEMOVE 21
-#define WM_SYSCOMMAND 25
-
 const unsigned int WM_NCPAINT = 0x85;
-#define SM_CXSCREEN 0
-#define SM_CYSCREEN 1
-
-#define PM_REMOVE 0x0001
-#define MK_MBUTTON 0
-#define MK_RBUTTON 1
-#define MK_LBUTTON 2
-
-#define GENERIC_READ 0
-#define OPEN_EXISTING 0
-#define FILE_ATTRIBUTE_NORMAL 0
-#define FILE_MAP_READ 0
-#define CP_UTF8 0
-#define CALLBACK
-#define HWND_TOP 0
-#define GWL_STYLE 0
-#define GWL_EXSTYLE 0
-#define CS_HREDRAW 0
-#define CS_OWNDC 0
-#define CS_VREDRAW 0
-#define WS_OVERLAPPEDWINDOW 0
-#define WS_EX_WINDOWEDGE 0
-#define SM_CYFRAME 0
-#define SM_CYCAPTION 0
-#define SM_CXSIZEFRAME 0
-#define COLOR_WINDOW 0
 #define SW_SHOWNORMAL 0
-#define IDI_ORIONUO 0
-#define IDC_CURSOR1 1
-#define MAKEINTRESOURCE(x) x
 #define CF_UNICODETEXT 0
-
 #define LANG_RUSSIAN 0
 #define LANG_FRENCH 1
 #define LANG_GERMAN 2
 #define LANG_SPANISH 3
 #define LANG_JAPANESE 4
 #define LANG_KOREAN 5
-
 #define CF_TEXT 0
-
 #define MAX_PATH 256
 
 // Bad and very ugly "API" stuff

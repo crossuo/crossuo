@@ -4,10 +4,10 @@
 
 namespace Wisp
 {
-CThreadedTimer::CThreadedTimer(uint32_t id, HWND windowHandle, bool waitForProcessMessage)
+CThreadedTimer::CThreadedTimer(uint32_t id, WindowHandle handle, bool waitForProcessMessage)
     : Wisp::CThread()
     , TimerID(id)
-    , WindowHandle(windowHandle)
+    , m_Handle(handle)
     , WaitForProcessMessage(waitForProcessMessage)
 {
 #if !USE_WISP
@@ -26,9 +26,9 @@ void CThreadedTimer::OnExecute(uint32_t nowTime)
     {
 #if USE_WISP
         if (WaitForProcessMessage)
-            SendMessage(WindowHandle, MessageID, nowTime, (LPARAM)this);
+            SendMessage(m_Handle, MessageID, nowTime, (LPARAM)this);
         else
-            PostMessage(WindowHandle, MessageID, nowTime, (LPARAM)this);
+            PostMessage(m_Handle, MessageID, nowTime, (LPARAM)this);
 #else
         SDL_Event event;
         SDL_zero(event);
@@ -45,7 +45,9 @@ void CThreadedTimer::OnDestroy()
 {
     DEBUG_TRACE_FUNCTION;
     if (Wisp::g_WispWindow != nullptr)
+    {
         Wisp::g_WispWindow->RemoveThreadedTimer(TimerID);
+    }
 }
 
-}; // namespace Wisp
+};

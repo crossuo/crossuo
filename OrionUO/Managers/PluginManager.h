@@ -31,7 +31,7 @@ public:
     CPluginManager();
     virtual ~CPluginManager() {}
 
-    LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lparam);
+    LRESULT WindowProc(WindowHandle hWnd, UINT msg, WPARAM wparam, LPARAM lparam);
     bool PacketRecv(uint8_t *buf, int size);
     bool PacketSend(uint8_t *buf, int size);
     void Disconnect();

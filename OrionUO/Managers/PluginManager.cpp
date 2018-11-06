@@ -60,7 +60,7 @@ CPlugin::CPlugin(uint32_t flags)
     m_PPS = new PLUGIN_INTERFACE();
     memset(m_PPS, 0, sizeof(PLUGIN_INTERFACE));
 
-    m_PPS->WindowHandle = g_OrionWindow.Handle;
+    m_PPS->Handle = g_OrionWindow.Handle;
     m_PPS->ClientVersion = g_PacketManager.GetClientVersion();
     m_PPS->ClientFlags = (g_FileManager.UseVerdata ? 0x01 : 0);
 }
@@ -80,7 +80,7 @@ CPluginManager::CPluginManager()
 {
 }
 
-LRESULT CPluginManager::WindowProc(HWND hWnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT CPluginManager::WindowProc(WindowHandle hWnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     DEBUG_TRACE_FUNCTION;
     LRESULT result = 0;

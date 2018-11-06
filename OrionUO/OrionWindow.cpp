@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include <SDL_timer.h>
 
 COrionWindow g_OrionWindow;
@@ -580,14 +579,18 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         }
         break;
 
-        default:
-        {
 #if !USE_WISP
+        case Wisp::CThreadedTimer::MessageID:
+        {
             auto nowTime = (uint32_t)ev.data1;
             auto timer = (Wisp::CThreadedTimer *)ev.data2;
             OnThreadedTimer(nowTime, timer);
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", nowTime, timer);
+        }
+        break;
 #endif
+        default:
+        {
         }
         break;
     }

@@ -30,7 +30,7 @@ public:
     CPingThread(int serverID, const string &serverIP, int requestsCount);
     virtual ~CPingThread();
 
-    static const uint32_t MessageID = WM_USER + 401;
+    static const uint32_t MessageID = USER_MESSAGE_ID + 401;
 #if !USE_WISP
     static uint32_t m_PingEvent;
 #endif

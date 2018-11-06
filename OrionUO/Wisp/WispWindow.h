@@ -22,7 +22,7 @@ namespace Wisp
 class CWindow
 {
 public:
-    HWND Handle = 0;
+    WindowHandle Handle = 0;
     bool NoResize = false;
 
 protected:
@@ -78,7 +78,7 @@ public:
 
 #if USE_WISP
     HINSTANCE hInstance = 0;
-    LRESULT OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM &lParam);
+    LRESULT OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam, LPARAM &lParam);
 #else
     bool OnWindowProc(SDL_Event &ev);
 #endif

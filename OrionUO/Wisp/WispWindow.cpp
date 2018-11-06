@@ -11,7 +11,7 @@ namespace Wisp
 CWindow *g_WispWindow = nullptr;
 
 #if USE_WISP
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProc(WindowHandle hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_WispWindow != nullptr)
@@ -366,7 +366,7 @@ void CWindow::ShowMessage(const wstring &text, const wstring &title)
 }
 
 #if USE_WISP
-LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM &lParam)
+LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam, LPARAM &lParam)
 {
     DEBUG_TRACE_FUNCTION;
     //DebugMsg("m=0x%08X, w0x%08X l0x%08X\n", message, wParam, lParam);
@@ -684,7 +684,7 @@ LRESULT CWindow::OnWindowProc(HWND &hWnd, UINT &message, WPARAM &wParam, LPARAM 
             break;
     }
 
-    if (message >= WM_USER)
+    if (message >= USER_MESSAGE_ID)
     {
         return OnUserMessages({ message, wParam, lParam }) ? S_OK : S_FALSE;
     }
