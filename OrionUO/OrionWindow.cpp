@@ -17,8 +17,7 @@ COrionWindow::~COrionWindow()
 void COrionWindow::SetRenderTimerDelay(int delay)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CThreadedTimer *timer = GetThreadedTimer(RENDER_TIMER_ID);
-
+    auto timer = GetThreadedTimer(RENDER_TIMER_ID);
     if (timer != nullptr)
         timer->ChangeDelay(delay);
 }
@@ -52,9 +51,7 @@ void COrionWindow::OnDestroy()
 {
     DEBUG_TRACE_FUNCTION;
     g_PluginManager.WindowProc(Handle, WM_CLOSE, 0, 0);
-
     g_Orion.Uninstall();
-
     Wisp::g_WispCrashLogger.Close();
 #if USE_WISP
     ::remove(CStringFromPath(Wisp::g_WispCrashLogger.FileName));

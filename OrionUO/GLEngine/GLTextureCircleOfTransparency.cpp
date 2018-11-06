@@ -58,26 +58,23 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
     DEBUG_TRACE_FUNCTION;
     if (radius <= 0)
         return false;
-    else if (radius > 200)
+        
+    if (radius > 200)
         radius = 200;
 
     if (radius == Radius)
         return true;
 
     vector<uint32_t> pixels;
-
     CreatePixels(radius, Width, Height, pixels);
 
     Radius = radius;
-
     if (Texture != 0)
     {
         glDeleteTextures(1, &Texture);
         Texture = 0;
     }
-
     g_GL_BindTexture32(*this, Width, Height, &pixels[0]);
-
     return true;
 }
 
