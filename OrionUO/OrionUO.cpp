@@ -87,6 +87,7 @@ string COrion::DecodeArgumentString(const char *text, int length)
 void COrion::ParseCommandLine() // FIXME: move this out
 {
     DEBUG_TRACE_FUNCTION;
+    
     bool fastLogin = false;
     int argc = 0;
     LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -101,18 +102,14 @@ void COrion::ParseCommandLine() // FIXME: move this out
             continue;
 
         string str = ToString(args[i] + 1);
-
         Wisp::CTextFileParser parser({}, " ,:", "", "''");
-
         vector<string> strings = parser.GetTokens(str.c_str());
-
         if (!strings.size())
             continue;
 
         str = ToLowerA(strings[0]);
         bool haveParam = (strings.size() > 1);
         bool have2Param = (strings.size() > 2);
-
         if (have2Param)
         {
             if (str == "login")
@@ -135,26 +132,27 @@ void COrion::ParseCommandLine() // FIXME: move this out
                     DecodeArgumentString(strings[2].c_str(), (int)strings[2].length()));
             }
             else if (str == "account")
+            {
                 g_MainScreen.SetAccounting(
                     DecodeArgumentString(strings[1].c_str(), (int)strings[1].length()),
                     DecodeArgumentString(strings[2].c_str(), (int)strings[2].length()));
+            }
             else if (str == "plugin")
             {
                 strings = Wisp::CTextFileParser({}, ",:", "", "")
                               .GetTokens(ToString(args[i] + 1).c_str(), false);
-
                 if (strings.size() > 4)
                 {
                     defaultPluginFlags = 0;
-
                     if (ToLowerA(strings[4]).find("0x") == 0)
                     {
                         char *end = nullptr;
                         defaultPluginFlags = strtoul(strings[4].c_str(), &end, 16);
                     }
                     else
+                    {
                         defaultPluginFlags = atoi(strings[4].c_str());
-
+                    }
                     defaultPluginPath = ToPath(strings[1]) + ToPath(":") + ToPath(strings[2]);
                     defaultPluginFunction = strings[3];
                 }
@@ -163,49 +161,59 @@ void COrion::ParseCommandLine() // FIXME: move this out
         else if (str == "autologin")
         {
             bool enabled = true;
-
             if (haveParam)
+            {
                 enabled = atoi(strings[1].c_str());
-
+            }
             g_MainScreen.m_AutoLogin->Checked = enabled;
         }
         else if (str == "savepassword")
         {
             bool enabled = true;
-
             if (haveParam)
+            {
                 enabled = atoi(strings[1].c_str());
-
+            }
             g_MainScreen.m_SavePassword->Checked = enabled;
         }
         else if (str == "fastlogin")
+        {
             fastLogin = true;
+        }
         else if (str == "autologinname")
         {
             if (g_PacketManager.AutoLoginNames.length())
+            {
                 g_PacketManager.AutoLoginNames =
                     string("|") +
                     DecodeArgumentString(strings[1].c_str(), (int)strings[1].length()) +
                     g_PacketManager.AutoLoginNames;
+            }
             else
+            {
                 g_PacketManager.AutoLoginNames =
                     string("|") +
                     DecodeArgumentString(strings[1].c_str(), (int)strings[1].length());
+            }
         }
         else if (str == "nowarnings")
+        {
             g_ShowWarnings = false;
+        }
 #if !USE_ORIONDLL
         else if (str == "nocrypt")
+        {
             g_EncryptionType = ET_NOCRYPT;
+        }
 #endif
     }
 
     LocalFree(args);
-
     LoadPlugin(defaultPluginPath, defaultPluginFunction, defaultPluginFlags);
-
     if (fastLogin)
-        g_OrionWindow.CreateTimer(COrionWindow::FASTLOGIN_TIMER_ID, 50);
+    {
+        g_OrionWindow.CreateTimer(FASTLOGIN_TIMER_ID, 50);
+    }
 }
 
 #if defined(ORION_WINDOWS) // FIXME: Used only by ExceptionFiler
@@ -6551,6 +6559,6 @@ void COrion::StartReconnect()
         LogOut();
         g_MainScreen.m_AutoLogin->Checked = true;
         InitScreen(GS_MAIN);
-        g_OrionWindow.CreateTimer(COrionWindow::FASTLOGIN_TIMER_ID, 50);
+        g_OrionWindow.CreateTimer(FASTLOGIN_TIMER_ID, 50);
     }
 }

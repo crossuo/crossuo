@@ -42,7 +42,7 @@ int CalculatePercents(int max, int current, int maxValue)
 
 string EncodeUTF8(const wstring &wstr)
 {
-#if USE_WISP
+#if USE_WISP || defined(ORION_WINDOWS)
     int size =
         ::WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
     string result = "";
@@ -72,10 +72,9 @@ string EncodeUTF8(const wstring &wstr)
 
 wstring DecodeUTF8(const string &str)
 {
-#if USE_WISP
+#if USE_WISP || defined(ORION_WINDOWS)
     int size = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
     wstring result = {};
-
     if (size > 0)
     {
         result.resize(size + 1);
@@ -84,10 +83,19 @@ wstring DecodeUTF8(const string &str)
     }
 #else
     LOG("\nDecodeUTF8: %s\n\n", str.c_str());
+    LOG_DUMP((uint8_t *)str.data(), str.size());
     mbstate_t state{};
     wstring result{};
     auto p = str.data();
-    const auto size = mbsrtowcs(nullptr, &p, 0, &state);
+
+    const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
+    if (size == -1)
+    {
+        LOG("\nDecodeUTF8 Failed: %s\n\n", str.c_str());
+        LOG_DUMP((uint8_t *)str.data(), str.size());
+        return L"Invalid UTF8 sequence found";
+    }    
+    
     if (size > 0)
     {
         result.resize(size);

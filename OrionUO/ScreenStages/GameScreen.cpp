@@ -1637,7 +1637,7 @@ void CGameScreen::Render()
             dbf,
             "FPS=%i (%ims) scale=%.1f\n%s",
             FPScount,
-            g_FrameDelay[1],
+            g_FrameDelay[WINDOW_ACTIVE],
             g_GlobalScale,
             g_PingString.c_str());
 
@@ -1656,7 +1656,7 @@ void CGameScreen::Render()
             dbf,
             "FPS=%i (%ims) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
             FPScount,
-            g_FrameDelay[1],
+            g_FrameDelay[WINDOW_ACTIVE],
             g_PingString.c_str(),
             g_Player->Direction,
             g_RenderBounds.PlayerZ,

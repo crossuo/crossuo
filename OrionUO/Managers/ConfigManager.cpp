@@ -258,15 +258,19 @@ void CConfigManager::SetClientFPS(uint8_t val)
     if (this == &g_ConfigManager)
     {
         if (m_ClientFPS < MIN_FPS_LIMIT)
+        {
             m_ClientFPS = MIN_FPS_LIMIT;
+        }
         else if (m_ClientFPS > MAX_FPS_LIMIT)
+        {
             m_ClientFPS = MAX_FPS_LIMIT;
+        }
 
-        g_FrameDelay[1] = 1000 / m_ClientFPS;
-
+        g_FrameDelay[WINDOW_ACTIVE] = 1000 / m_ClientFPS;
         if (!m_ReduceFPSUnactiveWindow)
-            g_FrameDelay[0] = g_FrameDelay[1];
-
+        {
+            g_FrameDelay[WINDOW_INACTIVE] = g_FrameDelay[WINDOW_ACTIVE];
+        }
         g_OrionWindow.SetRenderTimerDelay(g_FrameDelay[g_OrionWindow.IsActive()]);
     }
 }
@@ -382,10 +386,13 @@ void CConfigManager::SetReduceFPSUnactiveWindow(bool val)
     if (this == &g_ConfigManager)
     {
         if (val)
-            g_FrameDelay[0] = FRAME_DELAY_UNACTIVE_WINDOW;
+        {
+            g_FrameDelay[WINDOW_INACTIVE] = FRAME_DELAY_INACTIVE_WINDOW;
+        }
         else
-            g_FrameDelay[0] = g_FrameDelay[1];
-
+        {
+            g_FrameDelay[WINDOW_INACTIVE] = g_FrameDelay[WINDOW_ACTIVE];
+        }
         g_OrionWindow.SetRenderTimerDelay(g_FrameDelay[g_OrionWindow.IsActive()]);
     }
 

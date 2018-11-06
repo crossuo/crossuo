@@ -4,22 +4,22 @@
 #pragma once
 #include "Input.h"
 
+enum {
+    RENDER_TIMER_ID = 1,
+    UPDATE_TIMER_ID = 2,
+    FASTLOGIN_TIMER_ID = 3,
+};
+
 class COrionWindow : public Wisp::CWindow
 {
-    //int RenderTimerDelay = FRAME_DELAY_ACTIVE_WINDOW;
-
 public:
     COrionWindow();
     virtual ~COrionWindow();
 
-    //static const int FASTLOGIN_TIMER_ID = 1;
-    static const int RENDER_TIMER_ID = 1;
-    static const int UPDATE_TIMER_ID = 2;
-    static const int FASTLOGIN_TIMER_ID = 3;
-
     void SetRenderTimerDelay(int delay);
-
     void EmulateOnLeftMouseButtonDown();
+
+    static const uint32_t MessageID = USER_MESSAGE_ID + 402;
 
 protected:
     virtual bool OnCreate();

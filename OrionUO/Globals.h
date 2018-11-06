@@ -1,14 +1,12 @@
-﻿/***********************************************************************************
-**
-** Globals.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#pragma once
+
+enum {
+    WINDOW_INACTIVE = 0,
+    WINDOW_ACTIVE = 1,
+};
 
 //!Глобальные состояния нажатия дополнительных клавишь
 extern bool g_AltPressed;
@@ -400,5 +398,3 @@ inline bool IsStairRight(int64_t flags)
 {
     return (flags & 0x80000000);
 }
-
-#endif

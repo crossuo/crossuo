@@ -1,7 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
@@ -25,14 +23,12 @@ CGLTexture g_MapTexture[MAX_MAPS_COUNT];
 CGLTexture g_AuraTexture;
 
 bool g_LogoutAfterClick = false;
-
-int g_FrameDelay[2] = { FRAME_DELAY_UNACTIVE_WINDOW, FRAME_DELAY_ACTIVE_WINDOW };
+int g_FrameDelay[2] = { FRAME_DELAY_INACTIVE_WINDOW, FRAME_DELAY_ACTIVE_WINDOW };
 
 uint32_t g_LastSendTime = 0;
 uint32_t g_LastPacketTime = 0;
 uint32_t g_TotalSendSize = 0;
 uint32_t g_TotalRecvSize = 0;
-
 uint32_t g_Ticks = 0;
 
 GLuint ShaderColorTable = 0;

@@ -8,6 +8,18 @@ COrionWindow g_OrionWindow;
 COrionWindow::COrionWindow()
     : Wisp::CWindow()
 {
+#if 0
+    // Add some tests, this cliloc message seems to use broken UTF8
+    // "Hey buddy... Looking for work?"
+    //            ^^- c2 a0 - is an invalid code point
+    uint8_t d[] = {
+        0x48, 0x65, 0x79, 0x20, 0x62, 0x75, 0x64, 0x64, 0x79, 0x2E, 0xC2, 
+        0xA0, 0x20, 0x4C, 0x6F, 0x6F, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x66, 
+        0x6F, 0x72, 0x20, 0x77, 0x6F, 0x72, 0x6B, 0x3F
+    };
+    std::string s( reinterpret_cast< char const* >( d ) ) ;
+    DecodeUTF8(s);
+#endif
 }
 
 COrionWindow::~COrionWindow()
@@ -36,14 +48,9 @@ bool COrionWindow::OnCreate()
         return false;
 
     g_GL.UpdateRect();
-
     CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
-#if !USE_WISP
-    CreateThreadedTimer(UPDATE_TIMER_ID, 10);
-#else
+    //CreateThreadedTimer(UPDATE_TIMER_ID, 10);
     CreateTimer(UPDATE_TIMER_ID, 10);
-#endif
-
     return true;
 }
 
@@ -262,8 +269,7 @@ void COrionWindow::OnActivate()
 {
     DEBUG_TRACE_FUNCTION;
     g_Orion.ResumeSound();
-    SetRenderTimerDelay(g_FrameDelay[1]);
-
+    SetRenderTimerDelay(g_FrameDelay[WINDOW_ACTIVE]);
     if (!g_PluginManager.Empty())
         g_PluginManager.WindowProc(Handle, WM_NCACTIVATE, 1, 0);
 }
@@ -275,7 +281,7 @@ void COrionWindow::OnDeactivate()
         g_Orion.PauseSound();
 
     if (g_ConfigManager.GetReduceFPSUnactiveWindow())
-        SetRenderTimerDelay(g_FrameDelay[0]);
+       SetRenderTimerDelay(g_FrameDelay[WINDOW_INACTIVE]);
 
     if (!g_PluginManager.Empty())
         g_PluginManager.WindowProc(Handle, WM_NCACTIVATE, 0, 0);
@@ -405,13 +411,11 @@ void COrionWindow::OnTimer(uint32_t id)
     DEBUG_TRACE_FUNCTION;
     if (id == UPDATE_TIMER_ID)
     {
-        LOG("UPDATE_TIMER_ID\n");
         g_Ticks = SDL_GetTicks();
         g_Orion.Process(false);
     }
     if (id == FASTLOGIN_TIMER_ID)
     {
-        LOG("FASTLOGIN_TIMER_ID\n");
         RemoveTimer(FASTLOGIN_TIMER_ID);
         g_Orion.Connect();
     }
@@ -424,12 +428,10 @@ void COrionWindow::OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer
     g_Ticks = nowTime;
     if (timer->TimerID == RENDER_TIMER_ID)
     {
-        LOG("RENDER_TIMER_ID\n");
         g_Orion.Process(true);
     }
     else if (timer->TimerID == UPDATE_TIMER_ID)
     {
-        LOG("UPDATE_TIMER_ID\n");
         g_Orion.Process(false);
     }
 }
@@ -576,7 +578,6 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         }
         break;
 
-#if !USE_WISP
         case Wisp::CThreadedTimer::MessageID:
         {
             auto nowTime = (uint32_t)ev.data1;
@@ -585,7 +586,13 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", nowTime, timer);
         }
         break;
-#endif
+
+        case COrionWindow::MessageID:
+        {
+            OnTimer((uint32_t)ev.data1);
+            break;
+        }
+
         default:
         {
         }
@@ -595,7 +602,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 #if USE_WISP
     g_PluginManager.WindowProc(Handle, ev.code, ev.data1, ev.data2);
 #else
-        // NOT_IMPLEMENTED;
+    // NOT_IMPLEMENTED;
 #endif
     return true;
 }

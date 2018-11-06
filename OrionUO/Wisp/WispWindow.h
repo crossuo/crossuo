@@ -15,6 +15,8 @@ struct UserEvent
 typedef SDL_UserEvent UserEvent;
 #endif
 
+#define PUSH_EVENT(id, data1, data2) Wisp::CWindow::PushEvent(id, (void *)data1, (void *)data2)
+
 void GetDisplaySize(int *x, int *y);
 
 namespace Wisp
@@ -75,6 +77,7 @@ public:
 
     void ShowMessage(const string &text, const string &title);
     void ShowMessage(const wstring &text, const wstring &title);
+    static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
 
 #if USE_WISP
     HINSTANCE hInstance = 0;
@@ -89,8 +92,10 @@ public:
     void ShowWindow(bool show) const { ::ShowWindow(Handle, show ? TRUE : FALSE); }
     bool IsMinimizedWindow() const { return ::IsIconic(Handle); }
     bool IsMaximizedWindow() const { return (::IsZoomed(Handle) != FALSE); }
+    void CreateTimer(uint32_t id, int delay) { ::SetTimer(Handle, id, delay, nullptr); }
+    void RemoveTimer(uint32_t id) { ::KillTimer(Handle, id); }
 #else
-    bool IsActive() const { return SDL_GetGrabbedWindow() == m_window; } // TODO: check
+    bool IsActive() const { return SDL_GetGrabbedWindow() == m_window; }
     void SetTitle(const string &text) const { SDL_SetWindowTitle(m_window, text.c_str()); }
     void ShowWindow(bool show) const { show ? SDL_ShowWindow(m_window) : SDL_HideWindow(m_window); }
     bool IsMinimizedWindow() const
@@ -101,11 +106,9 @@ public:
     {
         return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_MAXIMIZED) != 0;
     }
+    void CreateTimer(uint32_t id, int delay);
+    void RemoveTimer(uint32_t id);
 #endif
-
-    // May be done using: SDL_AddTimer / SDL_RemoveTimer
-    void CreateTimer(uint32_t id, int delay) { ::SetTimer(Handle, id, delay, nullptr); }
-    void RemoveTimer(uint32_t id) { ::KillTimer(Handle, id); }
 
     void CreateThreadedTimer(
         uint32_t id,

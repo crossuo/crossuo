@@ -328,6 +328,7 @@ bool CWindow::Create(
         Handle = info.info.win.window;
 #endif
     }
+    SDL_SetWindowGrab(m_window, SDL_TRUE);
     SDL_ShowCursor(showCursor);
 #endif // USE_WISP
 
@@ -691,6 +692,11 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
 
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
+
+uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
+{
+    return (uint32_t)SendMessage(g_OrionWindow.Handle, id, (WPARAM)data1, (LPARAM)data2);
+}
 #else
 bool CWindow::OnWindowProc(SDL_Event &ev)
 {
@@ -927,8 +933,6 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
             // - OnRepaint
             // - OnSetText
             // - OnXMouseButton
-            // FIXME FIXME FIXME:
-            //case WM_TIMER:
 
         default:
             break;
@@ -936,6 +940,50 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
     return false;
 }
+
+static SDL_TimerID timer_table[FASTLOGIN_TIMER_ID] = {};
+
+static uint32_t TimerCallbackEventPusher(uint32_t interval, void *param)
+{
+    PUSH_EVENT(COrionWindow::MessageID, param, nullptr);
+    return interval;
+}
+
+void CWindow::CreateTimer(uint32_t id, int delay)
+{
+    assert(id > 0 && id < std::size(timer_table));
+    if (timer_table[id - 1] != 0)
+        return;
+
+    auto handle = SDL_AddTimer(delay, TimerCallbackEventPusher, (void *)id);
+    timer_table[id - 1] = handle;
+}
+
+void CWindow::RemoveTimer(uint32_t id)
+{
+    assert(id >= 0 && id < std::size(timer_table));
+    if (timer_table[id - 1] != 0)
+        SDL_RemoveTimer(timer_table[id - 1]);
+    timer_table[id - 1] = 0;
+}
+
+uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
+{
+    SDL_UserEvent userevent;
+    userevent.type = SDL_USEREVENT;
+    userevent.code = id;
+    userevent.data1 = data1;
+    userevent.data2 = data2;
+
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = SDL_USEREVENT;
+    event.user = userevent;
+    SDL_PushEvent(&event);
+
+    return 0;
+}
+
 #endif
 
 void CWindow::CreateThreadedTimer(

@@ -4,7 +4,6 @@
 
 namespace Wisp
 {
-static uint32_t UserEventID = 0;
 
 CThreadedTimer::CThreadedTimer(uint32_t id, WindowHandle handle, bool waitForProcessMessage)
     : Wisp::CThread()
@@ -12,12 +11,6 @@ CThreadedTimer::CThreadedTimer(uint32_t id, WindowHandle handle, bool waitForPro
     , m_Handle(handle)
     , WaitForProcessMessage(waitForProcessMessage)
 {
-#if !USE_WISP
-    if (!UserEventID)
-    {
-        UserEventID = SDL_RegisterEvents(1);
-    }
-#endif
 }
 
 CThreadedTimer::~CThreadedTimer()
@@ -35,13 +28,7 @@ void CThreadedTimer::OnExecute(uint32_t nowTime)
         else
             PostMessage(m_Handle, MessageID, nowTime, (LPARAM)this);
 #else
-        SDL_Event event;
-        SDL_zero(event);
-        event.type = UserEventID;
-        event.user.code = MessageID;
-        event.user.data1 = (void *)nowTime;
-        event.user.data2 = this;
-        SDL_PushEvent(&event);
+        PUSH_EVENT(MessageID, nowTime, this);
 #endif
     }
 }

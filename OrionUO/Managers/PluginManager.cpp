@@ -15,6 +15,7 @@ bool CDECL PluginRecvFunction(uint8_t *buf, const int &size)
 {
     DEBUG_TRACE_FUNCTION;
     //SendMessage(g_OrionWindow.Handle, UOMSG_RECV, (WPARAM)buf, size);
+    PUSH_EVENT(UOMSG_RECV, buf, size);
     g_PacketManager.SavePluginReceivePacket(buf, size);
     return true;
 }
@@ -24,6 +25,8 @@ bool CDECL PluginSendFunction(uint8_t *buf, const int &size)
     DEBUG_TRACE_FUNCTION;
 
     //SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)buf, size);
+    PUSH_EVENT(UOMSG_SEND, buf, size);
+
     uint32_t ticks = g_Ticks;
     g_TotalSendSize += size;
 

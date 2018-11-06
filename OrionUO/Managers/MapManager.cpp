@@ -560,7 +560,6 @@ void CMapManager::Init(bool delayed)
         return;
 
     int map = GetActualMap();
-
     if (!delayed)
     {
         if (m_Blocks != nullptr)
@@ -581,7 +580,6 @@ void CMapManager::Init(bool delayed)
     }
 
     const int XY_Offset = 30; //70;
-
     int minBlockX = (g_Player->GetX() - XY_Offset) / 8 - 1;
     int minBlockY = (g_Player->GetY() - XY_Offset) / 8 - 1;
     int maxBlockX = ((g_Player->GetX() + XY_Offset) / 8) + 1;
@@ -600,20 +598,16 @@ void CMapManager::Init(bool delayed)
         maxBlockY = g_MapBlockSize[map].Height - 1;
 
     uint32_t ticks = g_Ticks;
-    uint32_t maxDelay = g_FrameDelay[1] / 2;
-
+    uint32_t maxDelay = g_FrameDelay[WINDOW_ACTIVE] / 2;
     for (int i = minBlockX; i <= maxBlockX; i++)
     {
         uint32_t index = i * g_MapBlockSize[map].Height;
-
         for (int j = minBlockY; j <= maxBlockY; j++)
         {
             uint32_t realIndex = index + j;
-
             if (realIndex < MaxBlockIndex)
             {
                 CMapBlock *block = GetBlock(realIndex);
-
                 if (block == nullptr)
                 {
                     if (delayed && g_Ticks - ticks >= maxDelay)

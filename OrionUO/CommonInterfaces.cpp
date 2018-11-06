@@ -195,11 +195,7 @@ void CDECL FUNCBODY_SendTargetCancel()
 
 void UOMsg_Send(uint8_t *data, size_t size)
 {
-#if USE_WISP
-    SendMessage(g_OrionWindow.Handle, UOMSG_SEND, (WPARAM)data, size);
-#else
-    NOT_IMPLEMENTED;
-#endif
+    PUSH_EVENT(UOMSG_SEND, data, size);
 }
 
 void CDECL FUNCBODY_SendCastSpell(int index)
@@ -249,11 +245,7 @@ void CDECL FUNCBODY_SendRenameMount(uint32_t serial, const char *text)
 void CDECL FUNCBODY_SendMenuResponse(unsigned int serial, unsigned int id, int code)
 {
     UOI_MENU_RESPONSE data = { serial, id, code };
-#if USE_WISP
-    SendMessage(g_OrionWindow.Handle, UOMSG_MENU_RESPONSE, (WPARAM)&data, 0);
-#else
-    NOT_IMPLEMENTED;
-#endif
+    PUSH_EVENT(UOMSG_MENU_RESPONSE, &data, nullptr);
 }
 
 void CDECL FUNCBODY_DisplayStatusbarGump(unsigned int serial, int x, int y)
@@ -358,12 +350,8 @@ bool CDECL FUNCBODY_GetCanWalk(unsigned char &direction, int &x, int &y, char &z
 
 bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 {
-#if USE_WISP
-    return SendMessage(g_OrionWindow.Handle, UOMSG_WALK, run, direction);
-#else
-    NOT_IMPLEMENTED;
-    return false;
-#endif
+    return PUSH_EVENT(UOMSG_WALK, run, direction);
+    //return SendMessage(g_OrionWindow.Handle, UOMSG_WALK, run, direction);
 }
 
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
