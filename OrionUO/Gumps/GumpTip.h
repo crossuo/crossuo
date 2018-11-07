@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpTip.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPTIP_H
-#define GUMPTIP_H
+#pragma once
 
 class CGumpTip : public CGumpBaseScroll
 {
@@ -34,5 +27,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

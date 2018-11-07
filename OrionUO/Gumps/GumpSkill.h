@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpSkill.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSKILL_H
-#define GUMPSKILL_H
+#pragma once
 
 class CGumpSkill : public CGump
 {
@@ -23,5 +16,3 @@ public:
 
     virtual void OnLeftMouseButtonUp();
 };
-
-#endif

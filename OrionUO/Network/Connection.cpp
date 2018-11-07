@@ -1,16 +1,7 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Connection.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "../Sockets.h"
-#include "stdafx.h"
 
 CSocket::CSocket(bool gameSocket)
     : Wisp::CConnection()

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** CorpseManager.h
-**
-** Copyright (C) August 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2017 Hotride
 
-#ifndef CORPSEMANAGER_H
-#define CORPSEMANAGER_H
+#pragma once
 
 class CCorpse
 {
@@ -29,7 +22,6 @@ public:
     ~CCorpse() {}
 };
 
-//!Класс менеджера трупов
 class CCorpseManager
 {
 private:
@@ -40,17 +32,10 @@ public:
     ~CCorpseManager() {}
 
     void Add(const CCorpse &corpse);
-
     void Remove(int corpseSerial, int objectSerial);
-
     bool InList(int corpseSerial, int objectSerial);
-
     CGameObject *GetCorpseObject(int serial);
-
     void Clear() { m_List.clear(); }
 };
 
-//!Менеджер трупов
 extern CCorpseManager g_CorpseManager;
-
-#endif //CORPSEMANAGER_H

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpRacialAbilitiesBook.cpp
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) December 2016 Hotride
 
 CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
     : CGump(GT_RACIAL_ABILITIES_BOOK, 0, x, y)

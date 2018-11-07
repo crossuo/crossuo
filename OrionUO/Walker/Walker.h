@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** Walker.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef WALKER_H
-#define WALKER_H
+#pragma once
 
 class CStepInfo
 {
@@ -28,7 +21,6 @@ public:
     ~CStepInfo() {}
 };
 
-//Класс для обработки шагов игрока
 class CWalker
 {
 public:
@@ -49,12 +41,8 @@ public:
     CStepInfo m_Step[MAX_STEPS_COUNT];
 
     void Reset();
-
     void DenyWalk(uint8_t sequence, int x, int y, char z);
-
     void ConfirmWalk(uint8_t sequence);
 };
 
 extern CWalker g_Walker;
-
-#endif

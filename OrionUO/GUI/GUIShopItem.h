@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIShopItem.h
-**
-** Компонента для отображения объекта магазина
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUISHOPITEM_H
-#define GUISHOPITEM_H
+#pragma once
 
 class CGUIShopItem : public CBaseGUI
 {
@@ -76,5 +67,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

@@ -1,28 +1,11 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Weather.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 CWeather g_Weather;
-/// <summary>
-/// колебания по синусоиде с частотой freq и амплитудой -range до +range
-/// </summary>
-/// <param name="freq">Частота колебаний в Гц (в сек).</param>
-/// <param name="range">Диапазон колебаний (от -range до +range).</param>
-/// <param name="current_tick">Текущий тик, мс.</param>
-/// <returns>Значение от -range до +range для данного тика</returns>
+
 float SinOscillate(float freq, int range, DWORD current_tick)
 {
     //float anglef = int((current_tick / (1000.0f / 360.0f)) * freq) % 360;
-
     float anglef = (float)(int((current_tick / 2.7777f) * freq) % 360);
     return sinf(deg2radf(anglef)) * range;
 }

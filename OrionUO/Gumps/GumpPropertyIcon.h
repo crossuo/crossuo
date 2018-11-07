@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpPropertyIcon.h
-**
-** Copyright (C) November 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) November 2017 Hotride
 
-#ifndef GUMPPROPERTYICON_H
-#define GUMPPROPERTYICON_H
+#pragma once
 
 class CGumpPropertyIcon : public CGump
 {
@@ -38,5 +31,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif //GUMPPROPERTYICON_H

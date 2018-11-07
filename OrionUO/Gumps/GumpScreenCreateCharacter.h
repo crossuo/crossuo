@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpScreenCreateCharacter.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSCREENCREATECHARACTER_H
-#define GUMPSCREENCREATECHARACTER_H
+#pragma once
 
 class CGumpScreenCreateCharacter : public CGump
 {
@@ -61,5 +54,3 @@ public:
     GUMP_TEXT_ENTRY_EVENT_H;
     GUMP_COMBOBOX_SELECTION_EVENT_H;
 };
-
-#endif

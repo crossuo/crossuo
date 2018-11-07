@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpMenu.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPMENU_H
-#define GUMPMENU_H
+#pragma once
 
 class CGumpMenu : public CGump
 {
@@ -33,5 +26,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

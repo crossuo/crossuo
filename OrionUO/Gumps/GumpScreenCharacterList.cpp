@@ -1,15 +1,6 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpScreenCharacterList.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include <SDL_timer.h>
 
 CGumpScreenCharacterList::CGumpScreenCharacterList()
@@ -192,10 +183,6 @@ void CGumpScreenCharacterList::GUMP_TEXT_ENTRY_EVENT_C
     }
 }
 
-/*!
-Двойной клик левой кнопкой мыши
-@return true при успешной обработке
-*/
 bool CGumpScreenCharacterList::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
@@ -219,4 +206,3 @@ bool CGumpScreenCharacterList::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-

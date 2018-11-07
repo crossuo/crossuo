@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** UseItemsList.h
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2017 Hotride
 
-#ifndef USEITEMSLIST_H
-#define USEITEMSLIST_H
+#pragma once
 
 class CUseItemActions
 {
@@ -29,5 +22,3 @@ public:
 };
 
 extern CUseItemActions g_UseItemActions;
-
-#endif //USEITEMSLIST_H

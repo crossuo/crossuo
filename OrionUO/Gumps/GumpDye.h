@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpDye.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPDYE_H
-#define GUMPDYE_H
+#pragma once
 
 class CGumpDye : public CGumpSelectColor
 {
@@ -29,5 +22,3 @@ public:
     GUMP_SLIDER_CLICK_EVENT_H;
     GUMP_SLIDER_MOVE_EVENT_H;
 };
-
-#endif

@@ -1,13 +1,8 @@
-/***********************************************************************************
-**
-** GumpTextEntryDialog.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
+
 #include "Platform.h"
 
 class CGumpTextEntryDialog : public CGump

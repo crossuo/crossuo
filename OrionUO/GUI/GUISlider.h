@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUISlider.h
-**
-** Компонента для отображения скроллера
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUISLIDER_H
-#define GUISLIDER_H
+#pragma once
 
 class CGUISlider : public CBaseGUI
 {
@@ -145,5 +136,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+
 #include <SDL_rect.h>
 
 class CLandObject : public CMapObject

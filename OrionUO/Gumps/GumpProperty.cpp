@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpProperty.cpp
-**
-** Copyright (C) November 2017 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) November 2017 Hotride
 
 CGumpProperty::CGumpProperty(const wstring &text)
     : CGump(GT_PROPERTY, 0, 0, 0)

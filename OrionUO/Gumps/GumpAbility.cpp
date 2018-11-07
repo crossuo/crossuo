@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpAbility.cpp
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) December 2016 Hotride
 
 CGumpAbility::CGumpAbility(int serial, int x, int y)
     : CGump(GT_ABILITY, serial, x, y)

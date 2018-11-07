@@ -1,18 +1,10 @@
-﻿/***********************************************************************************
-**
-** GLShader.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLSHADER_H
-#define GLSHADER_H
+#pragma once
 
 void UnuseShader();
 
-//Базовый класс для работы с шейдерами
 class CGLShader
 {
 protected:
@@ -45,7 +37,6 @@ public:
     virtual void Resume();
 };
 
-//Класс для работы с шейдером смерти (черно-белый шейдер)
 class CDeathShader : public CGLShader
 {
 public:
@@ -55,7 +46,6 @@ public:
     virtual bool Init(const char *vertexShaderData, const char *fragmentShaderData);
 };
 
-//Класс для работы с цветным шейдером
 class CColorizerShader : public CGLShader
 {
 protected:
@@ -79,5 +69,3 @@ extern CDeathShader g_DeathShader;
 extern CColorizerShader g_ColorizerShader;
 extern CColorizerShader g_FontColorizerShader;
 extern CColorizerShader g_LightColorizerShader;
-
-#endif

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GUITilepicScaled.cpp
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) December 2016 Hotride
 
 CGUITilepicScaled::CGUITilepicScaled(
     uint16_t graphic, uint16_t color, int x, int y, int width, int height)

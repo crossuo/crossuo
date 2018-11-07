@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** Container.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CContainerRect g_ContainerRect;
 vector<CContainerOffset> g_ContainerOffset;
@@ -51,11 +41,6 @@ vector<CContainerOffset> g_ContainerOffset;
 	{ 0x010E, 0x002F, 0x002E, { 0, 20, 168, 115 } }
 };*/
 
-/*!
-Функция вычисления смещения для текущей картинки
-@param [__in] gumpID Индекс картинки
-@return 
-*/
 void CContainerRect::Calculate(uint16_t gumpID)
 {
     DEBUG_TRACE_FUNCTION;
@@ -114,4 +99,3 @@ void CContainerRect::Calculate(uint16_t gumpID)
         }
     }
 }
-

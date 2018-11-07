@@ -1,8 +1,5 @@
 ﻿/**********************************************************************
 *
-* StackWalker.h
-*
-*
 * History:
 *  2005-07-27   v1    - First public release on http://www.codeproject.com/
 *  (for additional changes see History in 'StackWalker.cpp'!

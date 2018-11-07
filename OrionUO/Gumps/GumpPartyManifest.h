@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpPartyManifest.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPPARTYMANIFEST_H
-#define GUMPPARTYMANIFEST_H
+#pragma once
 
 class CGumpPartyManifest : public CGump
 {
@@ -32,5 +25,3 @@ public:
 
     GUMP_BUTTON_EVENT_H;
 };
-
-#endif

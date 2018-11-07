@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** SkillsManager.cpp
-**
-** Copyright (C) Obtober 2017 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) Obtober 2017 Hotride
 
 CSkillsManager g_SkillsManager;
 

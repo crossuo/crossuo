@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIExternalTexture.h
-**
-** Компонента для отображения внешней текстуры
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIEXTERNALTEXTURE_H
-#define GUIEXTERNALTEXTURE_H
+#pragma once
 
 class CGUIExternalTexture : public CBaseGUI
 {
@@ -39,5 +30,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

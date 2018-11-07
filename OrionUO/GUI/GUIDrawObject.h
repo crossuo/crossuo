@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIDrawObject.h
-**
-** Компонента для отображения рисуемых гампов (общая реализация).
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIDRAWOBJECT_H
-#define GUIDRAWOBJECT_H
+#pragma once
 
 class CGUIDrawObject : public CBaseGUI
 {
@@ -27,5 +18,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

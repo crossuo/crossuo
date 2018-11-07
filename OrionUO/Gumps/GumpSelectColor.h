@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpSelectColor.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSELECTCOLOR_H
-#define GUMPSELECTCOLOR_H
+#pragma once
 
 class CGumpSelectColor : public CGump
 {
@@ -36,5 +29,3 @@ public:
 
     virtual void OnSelectColor(uint16_t color);
 };
-
-#endif

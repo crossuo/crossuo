@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** FileManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef FILEMANAGER_H
-#define FILEMANAGER_H
+#pragma once
 
 class CUopBlockHeader
 {
@@ -147,5 +140,3 @@ private:
 };
 
 extern CFileManager g_FileManager;
-
-#endif

@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** CharacterListScreen.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "CharacterListScreen.h"
 
 CCharacterListScreen g_CharacterListScreen;
@@ -23,10 +14,6 @@ CCharacterListScreen::~CCharacterListScreen()
 {
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CCharacterListScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -49,11 +36,6 @@ void CCharacterListScreen::Init()
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Обработка события после перехода
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
 void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;

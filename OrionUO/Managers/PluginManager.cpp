@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
-#include "stdafx.h"
 #if defined(ORION_LINUX)
 #include <stdint.h>
 #define CDECL

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameEffect.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)
@@ -20,14 +10,6 @@ CGameEffect::~CGameEffect()
 {
 }
 
-/*!
-Отрисовать эффект
-@param [__in] mode Режим рисования. true - рисование, false - выбор объектов
-@param [__in] drawX Экранная координата X объекта
-@param [__in] drawY Экранная координата Y объекта
-@param [__in] ticks Таймер рендера
-@return При выборе объектов возвращает выбранный элемент
-*/
 void CGameEffect::Draw(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -104,10 +86,6 @@ void CGameEffect::Update(CGameObject *parent)
     }
 }
 
-/*!
-Вычислить текущий индекс картинки
-@return Индекс картинки
-*/
 uint16_t CGameEffect::CalculateCurrentGraphic()
 {
     DEBUG_TRACE_FUNCTION;
@@ -131,20 +109,12 @@ uint16_t CGameEffect::CalculateCurrentGraphic()
     return Graphic + Increment;
 }
 
-/*!
-Получить текущий индекс картинки
-@return Индекс картинки
-*/
 uint16_t CGameEffect::GetCurrentGraphic()
 {
     DEBUG_TRACE_FUNCTION;
     return Graphic + Increment;
 }
 
-/*!
-Применение режима отображения
-@return 
-*/
 void CGameEffect::ApplyRenderMode()
 {
     DEBUG_TRACE_FUNCTION;
@@ -187,10 +157,6 @@ void CGameEffect::ApplyRenderMode()
     }
 }
 
-/*!
-Отмена режима отображения
-@return 
-*/
 void CGameEffect::RemoveRenderMode()
 {
     DEBUG_TRACE_FUNCTION;

@@ -1,4 +1,5 @@
 ﻿// Copyright (C) August 2016 Hotride
+
 #include "Macro.h"
 #include "Wisp/WispDefinitions.h"
 

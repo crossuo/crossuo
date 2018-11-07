@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIScrollBackground.h
-**
-** Компонента для отображения фона для свиткоподобных гампов
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUISCROLLBACKGROUND_H
-#define GUISCROLLBACKGROUND_H
+#pragma once
 
 class CGUIScrollBackground : public CBaseGUI
 {
@@ -43,5 +34,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

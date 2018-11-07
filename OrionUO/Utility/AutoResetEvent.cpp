@@ -1,6 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-#include "stdafx.h"
 
 AutoResetEvent::AutoResetEvent(bool initial)
     : flag_(initial)
@@ -28,23 +25,3 @@ bool AutoResetEvent::WaitOne()
     flag_ = false; // waiting resets the flag
     return true;
 }
-
-/*
-AutoResetEvent event;
-
-void otherthread()
-{
-	event.WaitOne();
-	printf("Hello from other thread!\n");
-}
-
-
-int main()
-{
-	std::thread h(otherthread);
-	printf("Hello from the first thread\n");
-	event.Set();
-
-	h.join();
-}
-*/

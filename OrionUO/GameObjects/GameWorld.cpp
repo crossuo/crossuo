@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameWorld.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGameWorld *g_World = nullptr;
 
@@ -81,10 +71,6 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
     }
 }
 
-/*!
-Обработка анимации всех персонажей
-@return 
-*/
 void CGameWorld::ProcessAnimation()
 {
     DEBUG_TRACE_FUNCTION;
@@ -296,11 +282,6 @@ void CGameWorld::ProcessAnimation()
     }
 }
 
-/*!
-Создать игрока
-@param [__in] serial Серийник игрока
-@return 
-*/
 void CGameWorld::CreatePlayer(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -321,10 +302,6 @@ void CGameWorld::CreatePlayer(int serial)
     }
 }
 
-/*!
-Удалить игрока
-@return 
-*/
 void CGameWorld::RemovePlayer()
 {
     DEBUG_TRACE_FUNCTION;
@@ -339,11 +316,6 @@ void CGameWorld::RemovePlayer()
     }
 }
 
-/*!
-Установить текущего чара с указанным серийником как основного
-@param [__in] serial Серийник нового игрока
-@return 
-*/
 void CGameWorld::SetPlayer(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -351,11 +323,6 @@ void CGameWorld::SetPlayer(int serial)
         CreatePlayer(serial);
 }
 
-/*!
-Создать (или взять, если уже существует) игровой предмет
-@param [__in] serial Серийник предмета
-@return Ссылка на предмет
-*/
 CGameItem *CGameWorld::GetWorldItem(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -382,11 +349,6 @@ CGameItem *CGameWorld::GetWorldItem(int serial)
     return (CGameItem *)(*i).second;
 }
 
-/*!
-Создать (или взять, если уже существует) игрового персонажа
-@param [__in] serial Серийник персонажа
-@return Ссылка на персонажа
-*/
 CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -413,11 +375,6 @@ CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
     return i->second->GameCharacterPtr();
 }
 
-/*!
-Найти игровой объект в памяти
-@param [__in] serial Серийник объекта
-@return Ссылка на объект или nullptr
-*/
 CGameObject *CGameWorld::FindWorldObject(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -430,11 +387,6 @@ CGameObject *CGameWorld::FindWorldObject(int serial)
     return result;
 }
 
-/*!
-Найти игровой предмет в памяти
-@param [__in] serial Серийник предмета
-@return Ссылка на предмет или nullptr
-*/
 CGameItem *CGameWorld::FindWorldItem(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -447,11 +399,6 @@ CGameItem *CGameWorld::FindWorldItem(int serial)
     return result;
 }
 
-/*!
-Найти игрового персонажа в памяти
-@param [__in] serial Серийник персонажа
-@return Ссылка а персонажа или nullptr
-*/
 CGameCharacter *CGameWorld::FindWorldCharacter(int serial)
 {
     DEBUG_TRACE_FUNCTION;
@@ -478,11 +425,6 @@ void CGameWorld::ReplaceObject(CGameObject *obj, int newSerial)
     obj->Serial = newSerial;
 }
 
-/*!
-Удалить объект из памяти
-@param [__in] obj Ссылка на объект
-@return 
-*/
 void CGameWorld::RemoveObject(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -494,11 +436,6 @@ void CGameWorld::RemoveObject(CGameObject *obj)
     delete obj;
 }
 
-/*!
-Вынуть объект из контейнера
-@param [__in] obj Ссылка на объект
-@return 
-*/
 void CGameWorld::RemoveFromContainer(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -553,11 +490,6 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
     obj->RemoveRender();
 }
 
-/*!
-Очистить указанный контейнер
-@param [__in] obj Ссылка на объект (контейнер)
-@return 
-*/
 void CGameWorld::ClearContainer(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -565,12 +497,6 @@ void CGameWorld::ClearContainer(CGameObject *obj)
         obj->Clear();
 }
 
-/*!
-Положить в контейнер
-@param [__in] obj Ссылка на объект
-@param [__in] container Ссылка на контейнер
-@return 
-*/
 void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
 {
     DEBUG_TRACE_FUNCTION;
@@ -578,11 +504,6 @@ void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
     container->AddItem(obj);
 }
 
-/*!
-Поднять объект вверх в очереди
-@param [__in] obj Ссылка на объект
-@return 
-*/
 void CGameWorld::MoveToTop(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -692,14 +613,6 @@ void CGameWorld::MoveToTop(CGameObject *obj)
     }
 }
 
-/*!
-Поиск объекта
-@param [__in] serialStart Начальный серийник для поиска
-@param [__in] scanDistance Дистанция поиска
-@param [__in] scanType Тип объектов поиска
-@param [__in] scanMode Режим поиска
-@return Ссылка на найденный объект или nullptr
-*/
 CGameObject *CGameWorld::SearchWorldObject(
     int serialStart, int scanDistance, SCAN_TYPE_OBJECT scanType, SCAN_MODE_OBJECT scanMode)
 {
@@ -1221,12 +1134,6 @@ void CGameWorld::UpdateContainedItem(
         color);
 }
 
-/*!
-Дамп предметов, хранящихся в памяти
-@param [__in] nCount Количество отступов
-@param [__in_opt] serial Серийник родителя
-@return
-*/
 void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;

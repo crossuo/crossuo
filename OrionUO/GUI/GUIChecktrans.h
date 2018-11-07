@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIChecktrans.h
-**
-** Компонента применения трафарета на указанную зону
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUICHECKTRANS_H
-#define GUICHECKTRANS_H
+#pragma once
 
 class CGUIChecktrans : public CGUIPolygonal
 {
@@ -21,5 +12,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select() { return false; }
 };
-
-#endif

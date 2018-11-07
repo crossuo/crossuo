@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** CustomHousesManager.cpp
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2017 Hotride
 
-#include "stdafx.h"
 
 CustomHousesManager g_CustomHousesManager;
 
@@ -31,8 +22,6 @@ void CCustomHouse::Paste(CGameItem *foundation)
         g_CustomHouseGump->GenerateFloorPlace();
     }
 }
-
-//--------------------------------CustomHousesManager-------------------------------
 
 CustomHousesManager::~CustomHousesManager()
 {

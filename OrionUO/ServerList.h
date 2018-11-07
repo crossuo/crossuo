@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** ServerList.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SERVERLIST_H
-#define SERVERLIST_H
+#pragma once
 
 class CServer
 {
@@ -33,7 +26,6 @@ public:
     ~CServer();
 };
 
-//Класс для хранения списка серверов
 class CServerList
 {
 public:
@@ -50,12 +42,8 @@ public:
     CServer *GetServer(int index);
     CServer *GetSelectedServer();
     int ServersCount() { return (int)m_Servers.size(); }
-
     CServer *Select(int index);
-
     void ParsePacket(Wisp::CDataReader &reader);
 };
 
 extern CServerList g_ServerList;
-
-#endif

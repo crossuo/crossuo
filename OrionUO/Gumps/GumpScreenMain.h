@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpScreenMain.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSCREENMAIN_H
-#define GUMPSCREENMAIN_H
+#pragma once
 
 class CGumpScreenMain : public CGump
 {
@@ -38,5 +31,3 @@ public:
     GUMP_BUTTON_EVENT_H;
     GUMP_TEXT_ENTRY_EVENT_H;
 };
-
-#endif

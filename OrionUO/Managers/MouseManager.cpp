@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ColorManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CMouseManager g_MouseManager;
 
@@ -46,25 +36,11 @@ uint16_t g_CursorData[2][16] = { { 0x206A,
                                  0x2061,
                                  0x2062 } };
 
-/*!
-Конвертирование значения направления
-@param [__in] val Значение направления
-@return Смещение
-*/
 int CMouseManager::Sgn(int val)
 {
     return (0 < val) - (val < 0);
 }
 
-/*!
-Получить направление курсора относительно центра игрового окна
-@param [__in] x1 Координата X центра
-@param [__in] y1 Координата Y центра
-@param [__in] to_x Координата X мыши
-@param [__in] to_y Координата Y мыши
-@param [__in] current_facing Текущее направление
-@return Направление курсора
-*/
 int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_facing)
 {
     DEBUG_TRACE_FUNCTION;
@@ -132,10 +108,6 @@ int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_fac
     return current_facing;
 }
 
-/*!
-Получить индекс картинки игрового курсора
-@return Индекс картинки
-*/
 uint16_t CMouseManager::GetGameCursor()
 {
     DEBUG_TRACE_FUNCTION;
@@ -162,10 +134,6 @@ uint16_t CMouseManager::GetGameCursor()
                        [GetFacing(gameWindowCenterX, gameWindowCenterY, Position.X, Position.Y, 1)];
 }
 
-/*!
-Обработка движения персонажа
-@return 
-*/
 void CMouseManager::ProcessWalking()
 {
     DEBUG_TRACE_FUNCTION;
@@ -204,10 +172,6 @@ void CMouseManager::ProcessWalking()
     }
 }
 
-/*!
-Загрузка текстур курсора
-@return true при успешной загрузке
-*/
 bool CMouseManager::LoadCursorTextures()
 {
     DEBUG_TRACE_FUNCTION;
@@ -328,11 +292,6 @@ bool CMouseManager::LoadCursorTextures()
     return result;
 }
 
-/*!
-Отрисовать курсор
-@param [__in] id Индекс картинки курсора
-@return 
-*/
 void CMouseManager::Draw(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
@@ -498,4 +457,3 @@ void CMouseManager::Draw(uint16_t id)
         }
     }
 }
-

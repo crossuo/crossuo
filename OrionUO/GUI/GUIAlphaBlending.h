@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIAlphaBlending.h
-**
-** Компонента для применения блендинга по альфа-каналу
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIALPHABLENDING_H
-#define GUIALPHABLENDING_H
+#pragma once
 
 class CGUIAlphaBlending : public CGUIBlending
 {
@@ -23,5 +14,3 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
-
-#endif

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpBaseScroll.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPBASESCROLL_H
-#define GUMPBASESCROLL_H
+#pragma once
 
 class CGumpBaseScroll : public CGump
 {
@@ -51,5 +44,3 @@ public:
     GUMP_RESIZE_EVENT_H;
     GUMP_RESIZE_END_EVENT_H;
 };
-
-#endif

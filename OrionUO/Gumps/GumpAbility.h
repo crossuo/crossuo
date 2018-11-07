@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpAbility.h
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) December 2016 Hotride
 
-#ifndef GUMPABILITY_H
-#define GUMPABILITY_H
+#pragma once
 
 class CGumpAbility : public CGump
 {
@@ -32,5 +25,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

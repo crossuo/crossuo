@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ColorManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CColorManager g_ColorManager;
 
@@ -50,12 +40,6 @@ void CColorManager::Init()
     }
 }
 
-/*!
-Патч блока цветов из вердаты
-@param [__in] index Индекс в списке
-@param [__in] group Указатель на цвета патча
-@return 
-*/
 void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
 {
     DEBUG_TRACE_FUNCTION;
@@ -70,10 +54,6 @@ void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
             sizeof(uint16_t[32]));
 }
 
-/*!
-Создание палитры цветов для шейдера
-@return
-*/
 void CColorManager::CreateHuesPalette()
 {
     DEBUG_TRACE_FUNCTION;
@@ -100,11 +80,6 @@ void CColorManager::CreateHuesPalette()
     }
 }
 
-/*!
-Отправка цветов в шейдер
-@param [__in] color Индекс цвета
-@return
-*/
 void CColorManager::SendColorsToShader(uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
@@ -127,11 +102,6 @@ void CColorManager::SendColorsToShader(uint16_t color)
     }
 }
 
-/*!
-Конвертирование цвета из 16 бит в 32 бит
-@param [__in] c 16-битный цвет
-@return 32-битный цвет
-*/
 uint32_t CColorManager::Color16To32(uint16_t c)
 {
     const uint8_t table[32] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x29, 0x31, 0x39, 0x41, 0x4A, 0x52,
@@ -148,33 +118,17 @@ uint32_t CColorManager::Color16To32(uint16_t c)
 	);*/
 }
 
-/*!
-Конвертирование цвета из 32 бит в 16 бит
-@param [__in] c 32-битный цвет
-@return 16-битный цвет
-*/
 uint16_t CColorManager::Color32To16(int c)
 {
     return (((c & 0xFF) * 32) / 256) | (((((c >> 16) & 0xff) * 32) / 256) << 10) |
            (((((c >> 8) & 0xff) * 32) / 256) << 5);
 }
 
-/*!
-Перевод в серый
-@param [__in] c 16-битный цвет
-@return 16-битный цвет
-*/
 uint16_t CColorManager::ConvertToGray(uint16_t c)
 {
     return ((c & 0x1F) * 299 + ((c >> 5) & 0x1F) * 587 + ((c >> 10) & 0x1F) * 114) / 1000;
 }
 
-/*!
-Получить 16-битный цвет
-@param [__in] c Исходный цвет
-@param [__in] color Индекс цвета в палитре
-@return 16-битный цвет
-*/
 uint16_t CColorManager::GetColor16(uint16_t c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
@@ -190,11 +144,6 @@ uint16_t CColorManager::GetColor16(uint16_t c, uint16_t color)
     return c;
 }
 
-/*!
-Получить 16-битный цвет для радара
-@param [__in] c Исходный 16-битный цвет
-@return 16-битный цвет
-*/
 uint16_t CColorManager::GetRadarColorData(int c)
 {
     DEBUG_TRACE_FUNCTION;
@@ -204,12 +153,6 @@ uint16_t CColorManager::GetRadarColorData(int c)
     return 0;
 }
 
-/*!
-Получить 32-битный цвет без конвертирования входящего цвета
-@param [__in] c Исходный 16-битный цвет
-@param [__in] color Индекс цвета в палитре
-@return 32-битный цвет
-*/
 uint32_t CColorManager::GetPolygoneColor(uint16_t c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
@@ -225,12 +168,6 @@ uint32_t CColorManager::GetPolygoneColor(uint16_t c, uint16_t color)
     return 0xFF010101; //Black
 }
 
-/*!
-Получить 32-битный цвет для Unicode-шрифтов
-@param [__in] c Исходный 16-битный цвет
-@param [__in] color Индекс цвета в палитре
-@return 32-битный цвет
-*/
 uint32_t CColorManager::GetUnicodeFontColor(uint16_t &c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
@@ -246,12 +183,6 @@ uint32_t CColorManager::GetUnicodeFontColor(uint16_t &c, uint16_t color)
     return Color16To32(c);
 }
 
-/*!
-Получить 32-битный цвет
-@param [__in] c Исходный 16-битный цвет
-@param [__in] color Индекс цвета в палитре
-@return 32-битный цвет
-*/
 uint32_t CColorManager::GetColor(uint16_t &c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;
@@ -267,12 +198,6 @@ uint32_t CColorManager::GetColor(uint16_t &c, uint16_t color)
     return Color16To32(c);
 }
 
-/*!
-Получить 32-битный цвет с учетом оттенков серого
-@param [__in] c Исходный 16-битный цвет
-@param [__in] color Индекс цвета в палитре
-@return 32-битный цвет
-*/
 uint32_t CColorManager::GetPartialHueColor(uint16_t &c, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;

@@ -1,13 +1,8 @@
-﻿/***********************************************************************************
-**
-** GumpCustomHouse.h
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2017 Hotride
 
 #pragma once
+
 #include <SDL_rect.h>
 
 enum CUSTOM_HOUSE_GUMP_STATE

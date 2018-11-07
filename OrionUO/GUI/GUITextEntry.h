@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUITextEntry.h
-**
-** Компонента для отображения поля для ввода текста
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUITEXTENTRY_H
-#define GUITEXTENTRY_H
+#pragma once
 
 class CGUITextEntry : public CBaseGUI
 {
@@ -120,5 +111,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpScreenGame.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSCREENGAME_H
-#define GUMPSCREENGAME_H
+#pragma once
 
 class CGumpScreenGame : public CGump
 {
@@ -32,5 +25,3 @@ public:
 
     virtual void OnLeftMouseButtonUp();
 };
-
-#endif

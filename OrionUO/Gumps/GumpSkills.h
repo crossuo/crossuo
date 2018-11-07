@@ -1,13 +1,8 @@
-/***********************************************************************************
-**
-** GumpSkills.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #pragma once
+
 #include "Platform.h"
 
 class CGumpSkills : public CGumpBaseScroll
@@ -26,7 +21,6 @@ private:
     bool m_ShowReal{ false };
     bool m_ShowCap{ false };
 
-    //Получить группу над курсором
     class CSkillGroupObject *GetGroupUnderCursor(int &index);
 
     CGUIGumppic *m_BottomLine{ nullptr };

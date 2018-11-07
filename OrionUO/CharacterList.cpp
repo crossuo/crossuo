@@ -1,4 +1,6 @@
-﻿CCharacterList g_CharacterList;
+﻿// MIT License
+
+CCharacterList g_CharacterList;
 
 CCharacterList::CCharacterList()
 {

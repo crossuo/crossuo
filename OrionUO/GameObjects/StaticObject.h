@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** StaticObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef STATICOBJECT_H
-#define STATICOBJECT_H
+#pragma once
 
-//Класс объекта статики
 class CStaticObject : public CRenderStaticObject
 {
     //Оригинальный индекс картинки
@@ -31,5 +23,3 @@ public:
     //Это объект статики
     bool IsStaticObject() { return true; }
 };
-
-#endif

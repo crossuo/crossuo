@@ -1,7 +1,6 @@
 // MIT License
 // Copyright (c) Hotride
 
-#include "stdafx.h"
 #include "FileSystem.h"
 
 namespace Wisp
@@ -89,7 +88,7 @@ void CLogger::Dump(uint8_t *buf, int size)
     LogDump(m_File, buf, size);
 }
 
-}; // namespace Wisp
+};
 
 void LogDump(FILE *fp, uint8_t *buf, int size)
 {

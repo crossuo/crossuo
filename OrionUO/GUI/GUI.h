@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUI.h
-**
-** Включает все заголовочники GUI-компонент.
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUI_H
-#define GUI_H
+#pragma once
 
 #include "BaseGUI.h"
 #include "GUIPolygonal.h"
@@ -65,5 +56,3 @@ class CGUIHTMLGump;
 #include "GUIHTMLText.h"
 #include "GUIScissor.h"
 #include "GUIHTMLGump.h"
-
-#endif

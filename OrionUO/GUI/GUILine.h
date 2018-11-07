@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUILine.h
-**
-** Компонента для отображения линии
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUILINE_H
-#define GUILINE_H
+#pragma once
 
 class CGUILine : public CBaseGUI
 {
@@ -38,5 +29,3 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
-
-#endif

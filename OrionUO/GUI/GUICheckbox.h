@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUICheckbox.h
-**
-** Компонента для отображения чекбокса
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUICHECKBOX_H
-#define GUICHECKBOX_H
+#pragma once
 
 class CGUICheckbox : public CGUIDrawObject
 {
@@ -81,5 +72,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

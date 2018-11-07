@@ -1,20 +1,10 @@
-﻿/***********************************************************************************
-**
-** GUIMenuObject.h
-**
-** Компонента для отображения объекта меню
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIMENUOBJECT_H
-#define GUIMENUOBJECT_H
+#pragma once
 
 class CGUIMenuObject : public CGUITilepic
 {
-    //!Текст объекта
     string Text = "";
 
 public:
@@ -26,5 +16,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** SelectProfessionScreen.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CSelectProfessionScreen g_SelectProfessionScreen;
 
@@ -28,10 +18,6 @@ void CSelectProfessionScreen::SetSkillSelection(int val)
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CSelectProfessionScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -45,11 +31,6 @@ void CSelectProfessionScreen::Init()
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Обработка события после плавного затемнения экрана
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
 void CSelectProfessionScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
@@ -68,4 +49,3 @@ void CSelectProfessionScreen::ProcessSmoothAction(uint8_t action)
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_CREATE)
         g_Orion.InitScreen(GS_CREATE);
 }
-

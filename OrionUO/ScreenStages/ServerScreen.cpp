@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "ServerScreen.h"
 
 CServerScreen g_ServerScreen;

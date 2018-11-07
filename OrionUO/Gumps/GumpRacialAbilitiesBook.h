@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpRacialAbilitiesBook.h
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) December 2016 Hotride
 
-#ifndef GUMPRACIALABILITIESBOOK_H
-#define GUMPRACIALABILITIESBOOK_H
+#pragma once
 /*
 graphic = 0x2B02;
 minimizedGraphic = 0x2B05;
@@ -55,5 +48,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
-#include "stdafx.h"
+﻿// MIT License
 
 #if 0
 #define TEXTPARSER_DEBUG(x) TEXTPARSER_DEBUG(x)
@@ -37,7 +34,6 @@ CTextFileParser::~CTextFileParser()
     m_File.Unload();
 }
 
-//Проверка на конец файла
 void CTextFileParser::StartupInitalize(
     const char *delimiters, const char *comentaries, const char *quotes)
 {
@@ -67,21 +63,18 @@ void CTextFileParser::StartupInitalize(
     m_End = m_File.End;
 }
 
-//Проверка на конец файла
 void CTextFileParser::Restart()
 {
     TEXTPARSER_DEBUG("c11_f5");
     m_File.ResetPtr();
 }
 
-//Проверка на конец файла
 bool CTextFileParser::IsEOF()
 {
     TEXTPARSER_DEBUG("c11_f6");
     return (m_File.Ptr >= m_End);
 }
 
-//Получить конец строки
 void CTextFileParser::GetEOL()
 {
     TEXTPARSER_DEBUG("c11_f7");
@@ -102,7 +95,6 @@ void CTextFileParser::GetEOL()
     }
 }
 
-//Проверка на разделитель
 bool CTextFileParser::IsDelimiter()
 {
     TEXTPARSER_DEBUG("c11_f8");
@@ -115,7 +107,6 @@ bool CTextFileParser::IsDelimiter()
     return result;
 }
 
-//Пропустить все до данных
 void CTextFileParser::SkipToData()
 {
     TEXTPARSER_DEBUG("c11_f9");
@@ -124,7 +115,6 @@ void CTextFileParser::SkipToData()
         m_Ptr++;
 }
 
-//Проверка на комментарий
 bool CTextFileParser::IsComment()
 {
     TEXTPARSER_DEBUG("c11_f10");
@@ -146,7 +136,6 @@ bool CTextFileParser::IsComment()
     return result;
 }
 
-//Проверка на кавычку
 bool CTextFileParser::IsQuote()
 {
     bool result = (*m_Ptr == '\n');
@@ -165,7 +154,6 @@ bool CTextFileParser::IsQuote()
     return result;
 }
 
-//Проверка на закрывающую кавычку
 bool CTextFileParser::IsSecondQuote()
 {
     bool result = (*m_Ptr == '\n');
@@ -184,7 +172,6 @@ bool CTextFileParser::IsSecondQuote()
     return result;
 }
 
-//Получить следующий токен
 string CTextFileParser::ObtainData()
 {
     TEXTPARSER_DEBUG("c11_f11");
@@ -213,7 +200,6 @@ string CTextFileParser::ObtainData()
     return result;
 }
 
-//Получить следующий фрагмент строки или токен (если кавычки не обнаружены)
 string CTextFileParser::ObtainQuotedData()
 {
     TEXTPARSER_DEBUG("c11_f12");
@@ -272,7 +258,6 @@ string CTextFileParser::ObtainQuotedData()
     return result;
 }
 
-//Прочитать токены из файла
 void CTextFileParser::SaveRawLine()
 {
     TEXTPARSER_DEBUG("c11_f13");
@@ -290,7 +275,6 @@ void CTextFileParser::SaveRawLine()
         RawLine = "";
 }
 
-//Прочитать токены из файла
 vector<string> CTextFileParser::ReadTokens(bool trim)
 {
     TEXTPARSER_DEBUG("c11_f14");
@@ -332,7 +316,6 @@ vector<string> CTextFileParser::ReadTokens(bool trim)
     return result;
 }
 
-//Прочитать токены из строки
 vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
 {
     TEXTPARSER_DEBUG("c11_f15");
@@ -414,5 +397,4 @@ void CTextFileWritter::WriteBool(const string &key, bool value)
         fputs(string(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
 }
 
-}; // namespace Wisp
-
+};

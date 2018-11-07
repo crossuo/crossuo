@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIComboBox.h
-**
-** Компонента для отображения выпадающего списка
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUICOMBOBOX_H
-#define GUICOMBOBOX_H
+#pragma once
 
 class CGUIComboBox : public CBaseGUI
 {
@@ -109,5 +100,3 @@ public:
     //!Получить индекс выбранного элемента, -1 если ничего не выбрано
     int IsSelectedItem();
 };
-
-#endif

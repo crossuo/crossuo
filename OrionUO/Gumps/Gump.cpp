@@ -131,10 +131,6 @@ bool CGump::CanBeMoved()
     return result;
 }
 
-/*!
-Отрисовать замочек гампа
-@return
-*/
 void CGump::DrawLocker()
 {
     DEBUG_TRACE_FUNCTION;

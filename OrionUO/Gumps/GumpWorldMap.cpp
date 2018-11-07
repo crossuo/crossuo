@@ -1,7 +1,6 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "FileSystem.h"
 
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };

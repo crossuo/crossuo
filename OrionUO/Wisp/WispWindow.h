@@ -1,6 +1,7 @@
 ﻿// MIT License
 
 #pragma once
+
 #include <SDL_video.h>
 #include "Platform.h"
 

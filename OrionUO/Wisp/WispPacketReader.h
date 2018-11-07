@@ -1,6 +1,6 @@
-﻿
-#ifndef WISPPACKETREADER_H
-#define WISPPACKETREADER_H
+﻿// MIT License
+
+#pragma once
 
 namespace Wisp
 {
@@ -26,5 +26,3 @@ public:
 };
 
 }; // namespace Wisp
-
-#endif

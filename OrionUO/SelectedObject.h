@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** SelectedObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SELECTEDOBJECT_H
-#define SELECTEDOBJECT_H
+#pragma once
 
 class CSelectedObject
 {
@@ -28,5 +21,3 @@ public:
 
 extern CSelectedObject g_SelectedObject;
 extern CSelectedObject g_LastSelectedObject;
-
-#endif

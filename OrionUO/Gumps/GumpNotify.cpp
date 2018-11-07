@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 
 CGumpNotify::CGumpNotify(short x, short y, uint8_t variant, short width, short height, string text)
     : CGump(GT_NOTIFY, 0, x, y)

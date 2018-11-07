@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** CustomHousesManager.h
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2017 Hotride
 
-#ifndef CUSTOMHOUSESMANAGER_H
-#define CUSTOMHOUSESMANAGER_H
+#pragma once
 
 class CBuildObject
 {
@@ -67,5 +60,3 @@ public:
 };
 
 extern CustomHousesManager g_CustomHousesManager;
-
-#endif

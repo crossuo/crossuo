@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUITilepicScaled.h
-**
-** Компонента для отображения картинки статики (масштабированная
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) December 2016 Hotride
 
-#ifndef GUITILEPICSCALED_H
-#define GUITILEPICSCALED_H
+#pragma once
 
 class CGUITilepicScaled : public CGUITilepic
 {
@@ -24,5 +15,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select() { return false; }
 };
-
-#endif

@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** GLTextTexture.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLTEXTTEXTURE_H
-#define GLTEXTTEXTURE_H
+#pragma once
 
-//Структура данных для хранения информации о веб-ссылке
 struct WEB_LINK_RECT
 {
     //Индекс ссылки
@@ -49,5 +41,3 @@ public:
     //Проверка веб-ссылки под мышкой
     virtual uint16_t WebLinkUnderMouse(int x, int y) { return 0; }
 };
-
-#endif

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GamePlayer.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CPlayer *g_Player = nullptr;
 
@@ -38,10 +28,6 @@ void CPlayer::CloseBank()
     }
 }
 
-/*!
-Поиск бинтов в сумке (и подсумках)
-@return Ссылка на бинт или nullptr
-*/
 CGameItem *CPlayer::FindBandage()
 {
     DEBUG_TRACE_FUNCTION;

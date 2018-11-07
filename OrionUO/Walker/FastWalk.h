@@ -1,20 +1,11 @@
-﻿/***********************************************************************************
-**
-** FastWalk.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef FASTWALK_H
-#define FASTWALK_H
+#pragma once
 
-//Класс для обработки стека fastwalk
 class CFastWalkStack
 {
 private:
-    //fastwalk стек
     uint32_t m_Keys[MAX_FAST_WALK_STACK_SIZE];
 
 public:
@@ -22,10 +13,6 @@ public:
     ~CFastWalkStack() {}
 
     void SetValue(int index, int value);
-
     void AddValue(int value);
-
     uint32_t GetValue();
 };
-
-#endif

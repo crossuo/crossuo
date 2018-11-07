@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GUIWorldMapTexture.cpp
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
 CGUIWorldMapTexture::CGUIWorldMapTexture(int x, int y)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)

@@ -1,4 +1,5 @@
 ﻿// Copyright (C) August 2016 Hotride
+
 #pragma once
 
 #include "BaseQueue.h"

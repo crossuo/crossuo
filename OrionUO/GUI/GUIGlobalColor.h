@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIGlobalColor.h
-**
-** Компонента для применения глобального цвета
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) December 2016 Hotride
 
-#ifndef GUIGLOBALCOLOR_H
-#define GUIGLOBALCOLOR_H
+#pragma once
 
 class CGUIGlobalColor : public CBaseGUI
 {
@@ -32,5 +23,3 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
-
-#endif

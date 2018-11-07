@@ -1,18 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** RenderWorldObject.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
-
-//---------------------------------RenderWorldObject--------------------------------
-
+// MIT License
+// Copyright (C) August 2016 Hotride
 CRenderWorldObject::CRenderWorldObject(
     RENDER_OBJECT_TYPE renderType, int serial, uint16_t graphic, uint16_t color, int x, int y, char z)
     : CRenderObject(serial, graphic, color, x, y)

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** SkillsManager.h
-**
-** Copyright (C) Obtober 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) Obtober 2017 Hotride
 
-#ifndef SKILLSMANAGER_H
-#define SKILLSMANAGER_H
+#pragma once
 
 class CSkill
 {
@@ -43,20 +36,12 @@ public:
     ~CSkillsManager() {}
 
     bool Load();
-
     void Add(const CSkill &skill);
-
     void Clear();
-
     CSkill *Get(uint32_t index);
-
     void Sort();
-
     int GetSortedIndex(uint32_t index);
-
     void UpdateSkillsSum();
 };
 
 extern CSkillsManager g_SkillsManager;
-
-#endif //SKILLSMANAGER_H

@@ -9,15 +9,12 @@ enum
     WINDOW_ACTIVE = 1,
 };
 
-//!Глобальные состояния нажатия дополнительных клавишь
 extern bool g_AltPressed;
 extern bool g_CtrlPressed;
 extern bool g_ShiftPressed;
 
-//!Использование мышки для перемещения персонажа
 extern bool g_MovingFromMouse;
 
-//!Использование автоматического перемещения персонажа за курсором мышки, когда курсор находится в игровом окне
 extern bool g_AutoMoving;
 
 extern bool g_TheAbyss;
@@ -54,7 +51,6 @@ void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);
 
 string ToCamelCase(string text);
 
-//Функции для вычисления дистанции
 class CGameObject;
 int GetDistance(CGameObject *current, CGameObject *target);
 int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target);
@@ -66,7 +62,6 @@ int GetTopObjDistance(CGameObject *current, CGameObject *target);
 
 const char *GetReagentName(uint16_t id);
 
-//!Счетчики объектов (только для отладки)
 extern int g_LandObjectsCount;
 extern int g_StaticsObjectsCount;
 extern int g_GameObjectsCount;
@@ -81,19 +76,14 @@ extern CGLTexture g_AuraTexture;
 
 extern bool g_LogoutAfterClick;
 
-//!Значения задержек в массиве
 extern int g_FrameDelay[2];
 
-//!Время последней отправки пакета серверу
 extern uint32_t g_LastSendTime;
 
-//!Время последнего пакета от сервера
 extern uint32_t g_LastPacketTime;
 
-//!Общий размер отправленных пакетов
 extern uint32_t g_TotalSendSize;
 
-//!Общий размер принятых пакетов
 extern uint32_t g_TotalRecvSize;
 
 extern uint32_t g_Ticks;
@@ -128,13 +118,10 @@ extern bool g_ConfigLoaded;
 extern uint8_t g_LightLevel;
 extern uint8_t g_PersonalLightLevel;
 
-//!Имя выбранного персонажа
 extern char g_SelectedCharName[30];
 
-//!Индекс текущей карты
 extern uint8_t g_CurrentMap;
 
-//!Время сервера
 extern uint8_t g_ServerTimeHour;
 extern uint8_t g_ServerTimeMinute;
 extern uint8_t g_ServerTimeSecond;
@@ -149,80 +136,57 @@ extern bool g_ChatEnabled;
 extern bool g_TooltipsEnabled;
 extern bool g_PaperdollBooks;
 
-//!Сообщение инициализации шифрования серверу
 extern uint8_t g_GameSeed[4];
 
-//!Цвет для объектов, вышедших за пределы g_UpdateRange (если это предусмотрено опциями)
 extern uint16_t g_OutOfRangeColor;
 
-//!Не рисовать крыши
 extern bool g_NoDrawRoof;
 
-//!Максимальное значение Z коордираны ландшафта для рендера
 extern char g_MaxGroundZ;
 
-//!Индекс прозрачности крон деревьев
 extern char g_FoliageIndex;
 
-//!Возможность использования круга прозрачности
 extern bool g_UseCircleTrans;
 
-//!Отображать в журнале системные сообщения
 extern bool g_JournalShowSystem;
 
-//!Отображать в журнале сообщения от объектов
 extern bool g_JournalShowObjects;
 
-//!Отображать в журнале внутренние сообщения клиента
 extern bool g_JournalShowClient;
 
 extern uint32_t g_PlayerSerial;
 extern uint32_t g_StatusbarUnderMouse;
 
-//!Индекс последнего выбранного заклинания
 extern int g_LastSpellIndex;
 
-//!Индекс последнего выбранного навыка
 extern int g_LastSkillIndex;
 
-//!Последний использованный объект
 extern uint32_t g_LastUseObject;
 
-//!Последний объект, на который навели прицелом
 extern uint32_t g_LastTargetObject;
 
-//!Последний атакованный объект
 extern uint32_t g_LastAttackObject;
 
 extern CHARACTER_SPEED_TYPE g_SpeedMode;
 
-//!Таймер черного экрана от смерти
 extern uint32_t g_DeathScreenTimer;
 
-//!Модификатор расчета анимации персонажа
 extern float g_AnimCharactersDelayValue;
 
 typedef vector<pair<uint32_t, uint32_t>> UINTS_PAIR_LIST;
 
-//!Координаты, с которых следует начинать расчет удаления объектов
 extern Wisp::CPoint2Di g_RemoveRangeXY;
 
-//!Количество блокирующих меню
 extern int g_GrayMenuCount;
 
-//!Тип промпта
 extern PROMPT_TYPE g_ConsolePrompt;
 
-//!Данные последнего ASCII промпта
 extern uint8_t g_LastASCIIPrompt[11];
 
-//!Данные последнего Unicode промпта
 extern uint8_t g_LastUnicodePrompt[11];
 
-//!Серийник для таргета от кнопок пати-гампа
 extern uint32_t g_PartyHelperTarget;
 
-//!Время жизни для таргета от кнопок пати-гампа
 extern uint32_t g_PartyHelperTimer;
 
 extern float g_DrawColor;

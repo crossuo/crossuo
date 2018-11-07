@@ -1,17 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpSpellbook.cpp
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) September 2016 Hotride
 
-#include "stdafx.h"
-
-//!Названия кругов заклинаний
 string CGumpSpellbook::m_SpellCircleName[8] = { "First Circle",   "Second Circle", "Third Circle",
                                                 "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
                                                 "Seventh Circle", "Eighth Circle" };

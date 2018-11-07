@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameObject.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include <SDL_timer.h>
 
 CGameObject::CGameObject(int serial)
@@ -87,12 +78,6 @@ void CGameObject::SetName(const string &newName)
     m_Name = newName;
 }
 
-/*!
-Отрисовать текстуру опции Object Handles (автоматически создает текстуру, если она не была создана)
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@return 
-*/
 void CGameObject::DrawObjectHandlesTexture()
 {
     DEBUG_TRACE_FUNCTION;
@@ -128,12 +113,6 @@ void CGameObject::DrawObjectHandlesTexture()
     m_TextureObjectHalndes.Draw(x, y);
 }
 
-/*!
-Выбрать текстуру опции Object Handles
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@return
-*/
 void CGameObject::SelectObjectHandlesTexture()
 {
     DEBUG_TRACE_FUNCTION;
@@ -168,11 +147,6 @@ void CGameObject::SelectObjectHandlesTexture()
     }
 }
 
-/*!
-Создать текстуру для опции Object Handles
-@param [__in] text Текст названия объекта
-@return 
-*/
 void CGameObject::GenerateObjectHandlesTexture(wstring text)
 {
     DEBUG_TRACE_FUNCTION;
@@ -269,11 +243,6 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
     g_GL_BindTexture16(m_TextureObjectHalndes, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
 }
 
-/*!
-Добавить текст в контейнер
-@param [__in] td Ссылка на объект текста
-@return
-*/
 void CGameObject::AddText(CTextData *msg)
 {
     DEBUG_TRACE_FUNCTION;
@@ -300,20 +269,12 @@ void CGameObject::AddText(CTextData *msg)
     g_Orion.AddJournalMessage(msg, JournalPrefix);
 }
 
-/*!
-Получить индекс анимации
-@return Индекс анимации
-*/
 uint16_t CGameObject::GetMountAnimation()
 {
     DEBUG_TRACE_FUNCTION;
     return Graphic; // + UO->GetStaticPointer(Graphic)->Increment;
 }
 
-/*!
-Очистить контейнер
-@return
-*/
 void CGameObject::Clear()
 {
     DEBUG_TRACE_FUNCTION;
@@ -399,10 +360,6 @@ bool CGameObject::Flying()
         return false;
 }
 
-/*!
-Золото ли это
-@return Индекс в таблице золота
-*/
 int CGameObject::IsGold(uint16_t graphic)
 {
     DEBUG_TRACE_FUNCTION;
@@ -421,11 +378,6 @@ int CGameObject::IsGold(uint16_t graphic)
     return 0;
 }
 
-/*!
-Получить индекс картинки для рисования
-@param [__out] doubleDraw Двойная отрисовка объекта
-@return Индекс картинки
-*/
 uint16_t CGameObject::GetDrawGraphic(bool &doubleDraw)
 {
     DEBUG_TRACE_FUNCTION;
@@ -447,13 +399,6 @@ uint16_t CGameObject::GetDrawGraphic(bool &doubleDraw)
     return result;
 }
 
-/*!
-Отрисовать эффект
-@param [__in] drawX Экранная координата X
-@param [__in] drawY Экранная координата Y
-@param [__in] ticks Таймер рендера
-@return 
-*/
 void CGameObject::DrawEffects(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -499,11 +444,6 @@ void CGameObject::UpdateEffects()
     }
 }
 
-/*!
-Добавить эффект
-@param [__in] effect Ссылка на эффект
-@return 
-*/
 void CGameObject::AddEffect(CGameEffect *effect)
 {
     DEBUG_TRACE_FUNCTION;
@@ -522,11 +462,6 @@ void CGameObject::AddEffect(CGameEffect *effect)
     }
 }
 
-/*!
-Удалить эффект
-@param [__in] effect Ссылка на эффект
-@return 
-*/
 void CGameObject::RemoveEffect(CGameEffect *effect)
 {
     DEBUG_TRACE_FUNCTION;
@@ -550,11 +485,6 @@ void CGameObject::RemoveEffect(CGameEffect *effect)
     delete effect;
 }
 
-/*!
-Добавить объект в список объектов текущего контейнера
-@param [__in] obj Ссылка на объект
-@return 
-*/
 void CGameObject::AddObject(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -583,11 +513,6 @@ void CGameObject::AddObject(CGameObject *obj)
     }
 }
 
-/*!
-Добавить объект в контейнер (this - контейнер)
-@param [__in] obj Ссылка на объект
-@return 
-*/
 void CGameObject::AddItem(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -614,11 +539,6 @@ void CGameObject::AddItem(CGameObject *obj)
     obj->Container = Serial;
 }
 
-/*!
-Изъять объект из контейнера
-@param [__in] obj Ссылка на объект
-@return 
-*/
 void CGameObject::Reject(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -659,10 +579,6 @@ void CGameObject::Reject(CGameObject *obj)
     obj->Container = 0xFFFFFFFF;
 }
 
-/*!
-Найти объект в мире, в котором содержится контейнер
-@return Ссылка на объект в мире
-*/
 CGameObject *CGameObject::GetTopObject()
 {
     DEBUG_TRACE_FUNCTION;

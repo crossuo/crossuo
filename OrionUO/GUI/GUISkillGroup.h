@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUISkillGroup.h
-**
-** Компонента для группы скиллов
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUISKILLGROUP_H
-#define GUISKILLGROUP_H
+#pragma once
 
 class CGUISkillGroup : public CBaseGUI
 {
@@ -44,5 +35,3 @@ public:
     //!Получить ссылку на выбранную компоненту или на себя
     CBaseGUI *SelectedItem();
 };
-
-#endif

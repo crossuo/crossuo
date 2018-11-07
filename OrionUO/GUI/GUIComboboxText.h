@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIComboboxText.h
-**
-** Компонента для отображения текста комбобокса
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUICOMBOBOXTEXT_H
-#define GUICOMBOBOXTEXT_H
+#pragma once
 
 class CGUIComboboxText : public CGUIText
 {
@@ -34,5 +25,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpCombatBook.h
-**
-** Copyright (C) December 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) December 2016 Hotride
 
-#ifndef GUMPCOMBATBOOK_H
-#define GUMPCOMBATBOOK_H
+#pragma once
 
 class CGumpCombatBook : public CGump
 {
@@ -50,5 +43,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

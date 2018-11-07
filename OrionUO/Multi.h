@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** Multi.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef MULTI_H
-#define MULTI_H
+#pragma once
 
-//Класс мульти-объекта
 class CMulti : public CBaseQueueItem
 {
 public:
@@ -24,5 +16,3 @@ public:
     CMulti(short x, short y);
     virtual ~CMulti();
 };
-
-#endif

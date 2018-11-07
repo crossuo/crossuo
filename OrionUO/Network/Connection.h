@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** Connection.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef CONNECTION_H
-#define CONNECTION_H
+#pragma once
 
-//!Класс менеджера подключения к серверу
 class CSocket : public Wisp::CConnection
 {
 public:
@@ -30,8 +22,5 @@ public:
     ~CSocket();
 
     virtual bool Connect(const string &address, int port);
-
     virtual vector<uint8_t> Decompression(vector<uint8_t> data);
 };
-
-#endif

@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpSpellbook.h
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) September 2016 Hotride
 
-#ifndef GUMPSPELLBOOK_H
-#define GUMPSPELLBOOK_H
+#pragma once
 
 struct SPELL_REQURIES
 {
@@ -122,5 +115,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

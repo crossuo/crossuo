@@ -1,6 +1,6 @@
-﻿
-#ifndef WISPGEOMETRY_H
-#define WISPGEOMETRY_H
+﻿// MIT License
+
+#pragma once
 
 namespace Wisp
 {
@@ -134,5 +134,3 @@ public:
 };
 
 }; // namespace Wisp
-
-#endif

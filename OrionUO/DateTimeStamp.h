@@ -1,15 +1,6 @@
-/***********************************************************************************
-**
-** DateTimeStamp.h
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) September 2017 Hotride
 
-#ifndef DATETIMESTAMP_H
-#define DATETIMESTAMP_H
+#pragma once
 
 string GetBuildDateTimeStamp();
-
-#endif //DATETIMESTAMP_H

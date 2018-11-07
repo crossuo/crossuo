@@ -1,16 +1,9 @@
-﻿/***********************************************************************************
-**
-** PluginInterface.h
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) September 2016 Hotride
 
 #pragma once
 
 #if defined(ORION_LINUX)
-#include "stdafx.h"
 #define CDECL
 #else
 #include <Windows.h>

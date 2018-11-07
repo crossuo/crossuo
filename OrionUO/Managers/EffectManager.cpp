@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** EffectManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CEffectManager g_EffectManager;
 
@@ -18,11 +8,6 @@ CEffectManager::CEffectManager()
 {
 }
 
-/*!
-Добавить эффект
-@param [__in] effect Ссылка на эффект
-@return 
-*/
 void CEffectManager::AddEffect(CGameEffect *effect)
 {
     DEBUG_TRACE_FUNCTION;
@@ -109,11 +94,6 @@ void CEffectManager::AddEffect(CGameEffect *effect)
     }
 }
 
-/*!
-Удалить эффект
-@param [__in] effect Ссылка на эффект
-@return 
-*/
 void CEffectManager::RemoveEffect(CGameEffect *effect)
 {
     DEBUG_TRACE_FUNCTION;
@@ -124,11 +104,6 @@ void CEffectManager::RemoveEffect(CGameEffect *effect)
     delete effect;
 }
 
-/*!
-Создать эффект взрыва
-@param [__in] effect Ссылка на эффект
-@return 
-*/
 void CEffectManager::CreateExplodeEffect(CGameEffect *effect, const EFFECT_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
@@ -150,10 +125,6 @@ void CEffectManager::CreateExplodeEffect(CGameEffect *effect, const EFFECT_TYPE 
     AddEffect(newEffect);
 }
 
-/*!
-Обновление эффектов
-@return 
-*/
 void CEffectManager::UpdateEffects()
 {
     DEBUG_TRACE_FUNCTION;
@@ -167,12 +138,7 @@ void CEffectManager::UpdateEffects()
     }
 }
 
-/*!
-Удаление эффектов, вышедших за пределы экрана
-@return 
-*/
 void CEffectManager::RemoveRangedEffects()
 {
     DEBUG_TRACE_FUNCTION;
 }
-

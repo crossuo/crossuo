@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GLTexture.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLTEXTURE_H
-#define GLTEXTURE_H
+#pragma once
 
 typedef vector<uint8_t> HIT_MAP_TYPE;
 
@@ -49,5 +42,3 @@ public:
 
     virtual void Clear();
 };
-
-#endif

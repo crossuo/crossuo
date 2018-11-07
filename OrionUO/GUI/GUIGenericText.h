@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIGenericText.h
-**
-** Компонента текста для гампов от сервера
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIGENERICTEXT_H
-#define GUIGENERICTEXT_H
+#pragma once
 
 class CGUIGenericText : public CGUIText
 {
@@ -26,5 +17,3 @@ public:
 
     void CreateTexture(const wstring &str);
 };
-
-#endif

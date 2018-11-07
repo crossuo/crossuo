@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIMinMaxButtons.h
-**
-** Компонента для отображения блока кнопок MinMax
-**
-** Copyright (C) September 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2016 Hotride
 
-#ifndef GUIMINMAXBUTTONS_H
-#define GUIMINMAXBUTTONS_H
+#pragma once
 
 class CGUIMinMaxButtons : public CBaseGUI
 {
@@ -107,5 +98,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpMenubar.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPMENUBAR_H
-#define GUMPMENUBAR_H
+#pragma once
 
 class CGumpMenubar : public CGump
 {
@@ -43,5 +36,3 @@ public:
 
     virtual void OnLeftMouseButtonUp();
 };
-
-#endif

@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+
 #include "Platform.h"
 
 class CBaseGUI;
@@ -32,7 +33,6 @@ class CBaseGUI;
 #define GUMP_COMBOBOX_SELECTION_EVENT_H virtual void GUMP_COMBOBOX_SELECTION_EVENT_C
 #define GUMP_SCROLL_BUTTON_EVENT_H virtual void GUMP_SCROLL_BUTTON_EVENT_C
 
-//!Базовый класс гампов
 class CGump : public CRenderObject
 {
 public:
@@ -145,6 +145,5 @@ public:
     virtual void OnKeyUp(const KeyEvent &ev) {}
 };
 
-//!Ссылка на гамп, который в данный момент изменяет высоту
 extern CGump *g_ResizedGump;
 extern CGump *g_CurrentCheckGump;

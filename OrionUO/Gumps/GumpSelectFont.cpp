@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GumpSelectFont.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGumpSelectFont::CGumpSelectFont(uint32_t serial, short x, short y, SELECT_FONT_GUMP_STATE state)
     : CGump(GT_SELECT_FONT, serial, x, y)

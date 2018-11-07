@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameCharacter.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include <SDL_timer.h>
 
 CGameCharacter::CGameCharacter(int serial)
@@ -127,10 +118,6 @@ void CGameCharacter::UpdateHitsTexture(uint8_t hits)
     }
 }
 
-/*!
-Сидит ли персонаж
-@return Индекс объекта из таблицы, на котором он восседает
-*/
 int CGameCharacter::IsSitting()
 {
     DEBUG_TRACE_FUNCTION;
@@ -282,14 +269,6 @@ int CGameCharacter::IsSitting()
     return result;
 }
 
-/*!
-Отрисовать персонажа
-@param [__in] mode Режим рисования. true - рисование, false - выбор объектов
-@param [__in] drawX Экранная координата X объекта
-@param [__in] drawY Экранная координата Y объекта
-@param [__in] ticks Таймер рендера
-@return При выборе объектов возвращает выбранный элемент
-*/
 void CGameCharacter::Draw(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -319,11 +298,6 @@ void CGameCharacter::Select(int x, int y)
         g_SelectedObject.Init(this);
 }
 
-/*!
-Обновить информацию о поле персонажа, обновление гампов
-@param [__in_opt] direction Направление персонажа
-@return 
-*/
 void CGameCharacter::OnGraphicChange(int direction)
 {
     DEBUG_TRACE_FUNCTION;
@@ -383,16 +357,6 @@ void CGameCharacter::OnGraphicChange(int direction)
     }
 }
 
-/*!
-Установка анимации от сервера
-@param [__in] id Группа анимаци
-@param [__in_opt] interval Задержка между кадрами
-@param [__in_opt] frameCount Количество кадлов анимации
-@param [__in_opt] repeatCount Количество повторов анимации
-@param [__in_opt] repeat Зациклено или нет
-@param [__out_opt] frameDirection Направление прокрутки кадров (вперед/назад)
-@return 
-*/
 void CGameCharacter::SetAnimation(
     uint8_t id, uint8_t interval, uint8_t frameCount, uint8_t repeatCount, bool repeat, bool frameDirection)
 {
@@ -410,11 +374,6 @@ void CGameCharacter::SetAnimation(
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
 }
 
-/*!
-Установка группы анимации
-@param [__in] val Новое значение группы анимации
-@return
-*/
 void CGameCharacter::ResetAnimationGroup(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
@@ -428,10 +387,6 @@ void CGameCharacter::ResetAnimationGroup(uint8_t val)
     AnimationGroup = val;
 }
 
-/*!
-Установка случайной анимации (при длительном простое)
-@return 
-*/
 void CGameCharacter::SetRandomFidgetAnimation()
 {
     DEBUG_TRACE_FUNCTION;
@@ -457,12 +412,6 @@ void CGameCharacter::SetRandomFidgetAnimation()
     }
 }
 
-/*!
-Скорректировать отношение анимаций
-@param [__in] group Группа анимации
-@param [__inout] animation Индекс группы анимации
-@return
-*/
 void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation)
 {
     DEBUG_TRACE_FUNCTION;
@@ -508,13 +457,6 @@ void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animatio
         animation = animAssociateTable[animation][group - 1];
 }
 
-/*!
-Скорректировать отношение индексов групп анимаций
-@param [__in] graphic Индекс картинки
-@param [__in] group Группа анимаций
-@param [__inout] animation Индекс анимации в группе
-@return 
-*/
 void CGameCharacter::CorrectAnimationGroup(uint16_t graphic, ANIMATION_GROUPS group, uint8_t &animation)
 {
     DEBUG_TRACE_FUNCTION;
@@ -574,11 +516,6 @@ void CGameCharacter::CorrectAnimationGroup(uint16_t graphic, ANIMATION_GROUPS gr
     }
 }
 
-/*!
-Проверка на возможность изменения направления персонажа при движении в сидячем положении
-@param [__in] group Индекс группы анимации
-@return Можно изменять направление или нет
-*/
 bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
 {
     DEBUG_TRACE_FUNCTION;
@@ -609,11 +546,6 @@ bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
     return result;
 }
 
-/*!
-Получить текущую группу анимации
-@param [__in_opt] graphic Индекс картинки персонажа
-@return Индекс группы анимации
-*/
 uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
 {
     DEBUG_TRACE_FUNCTION;
@@ -805,10 +737,6 @@ void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
     }
 }
 
-/*!
-Получить индекс картинки для вычисления картинки анимации
-@return Индекс картинки персонажа
-*/
 uint16_t CGameCharacter::GetMountAnimation()
 {
     DEBUG_TRACE_FUNCTION;
@@ -830,12 +758,6 @@ uint16_t CGameCharacter::GetMountAnimation()
     return graphic;
 }
 
-/*!
-не подписанная функция
-@param [__inout] dir не подписанный параметр
-@param [__in] canChange Можно ли изменять состояние стека хотьбы или нет
-@return 
-*/
 void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
 {
     DEBUG_TRACE_FUNCTION;

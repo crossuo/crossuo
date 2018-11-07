@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** WeatherEffect.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef WEATHEREFFECT_H
-#define WEATHEREFFECT_H
+#pragma once
 
-//Класс эффекта погоды
 class CWeatherEffect
 {
 public:
@@ -26,5 +18,3 @@ public:
     CWeatherEffect();
     virtual ~CWeatherEffect() {}
 };
-
-#endif

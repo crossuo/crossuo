@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** StumpsData.h
-**
-** Copyright (C) October 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) October 2016 Hotride
 
-#ifndef STUMPSDATA_H
-#define STUMPSDATA_H
+#pragma once
 
 static const int g_StumpHatchedID = 0;
 static const int g_StumpID = 1;
@@ -510,5 +503,3 @@ static const unsigned short g_Stump[g_StumpWidth * g_StumpHeight] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
-
-#endif

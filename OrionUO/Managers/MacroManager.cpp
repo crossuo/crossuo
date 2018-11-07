@@ -1,15 +1,6 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** MacroManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "FileSystem.h"
 
 CMacroManager g_MacroManager;
@@ -28,11 +19,6 @@ CMacroManager::~CMacroManager()
 {
 }
 
-/*!
-Конвертирование строки в виртуальный код клавиши
-@param [__in] strings Исходные строки, при склейке получим входную строку
-@return Ключ
-*/
 Keycode CMacroManager::ConvertStringToKeyCode(const vector<string> &strings)
 {
     DEBUG_TRACE_FUNCTION;
@@ -128,11 +114,6 @@ Keycode CMacroManager::ConvertStringToKeyCode(const vector<string> &strings)
     return key;
 }
 
-/*!
-Сконвертировать файл макросов оригинального клиента
-@param [__in] path Путь к файлу с макросами
-@return true при успешном конвертировании
-*/
 bool CMacroManager::Convert(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
@@ -260,11 +241,6 @@ bool CMacroManager::Convert(const os_path &path)
     return fs_path_exists(path);
 }
 
-/*!
-Загрузить макросы из конфига
-@param [__in] path Путь к файлу конфига
-@return 
-*/
 bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 {
     DEBUG_TRACE_FUNCTION;
@@ -292,11 +268,6 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
     return result;
 }
 
-/*!
-Сохранить макросы в конфиг
-@param [__in] path Путь к файлу конфига
-@return 
-*/
 void CMacroManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
@@ -319,14 +290,6 @@ void CMacroManager::Save(const os_path &path)
     writter.Close();
 }
 
-/*!
-Поиск макроса
-@param [__in] key Индекс кнопки
-@param [__in] alt Зажатый альт
-@param [__in] ctrl Зажатый контрол
-@param [__in] shift Зажатый шифт
-@return Ссылку на макрос или nullptr
-*/
 CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 {
     DEBUG_TRACE_FUNCTION;
@@ -343,10 +306,6 @@ CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
     return obj;
 }
 
-/*!
-Загрузить макросы из опций
-@return 
-*/
 void CMacroManager::LoadFromOptions()
 {
     DEBUG_TRACE_FUNCTION;
@@ -368,10 +327,6 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
     }
 }
 
-/*!
-Начать выполнение макроса
-@return 
-*/
 void CMacroManager::Execute()
 {
     DEBUG_TRACE_FUNCTION;
@@ -397,10 +352,6 @@ void CMacroManager::Execute()
     }
 }
 
-/*!
-Выполнить команды подменю
-@return 
-*/
 void CMacroManager::ProcessSubMenu()
 {
     DEBUG_TRACE_FUNCTION;
@@ -733,10 +684,6 @@ void CMacroManager::ProcessSubMenu()
     }
 }
 
-/*!
-Выполнить действие макроса (или набор действий)
-@return Код выполнения
-*/
 MACRO_RETURN_CODE CMacroManager::Process()
 {
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
@@ -1413,4 +1360,3 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
     return result;
 }
-

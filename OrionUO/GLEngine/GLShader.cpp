@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GLShader.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CDeathShader g_DeathShader;
 CColorizerShader g_ColorizerShader;
@@ -23,8 +13,6 @@ void UnuseShader()
     ShaderColorTable = 0;
     g_ShaderDrawMode = 0;
 }
-
-//-----------------------------------CGLShader--------------------------------------
 
 CGLShader::CGLShader()
 {
@@ -178,8 +166,6 @@ void CGLShader::Resume()
     glUseProgramObjectARB(m_Shader);
 }
 
-//-----------------------------------CDeathShader-----------------------------------
-
 CDeathShader::CDeathShader()
     : CGLShader()
 {
@@ -195,8 +181,6 @@ bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShader
 
     return (m_Shader != 0);
 }
-
-//----------------------------------CColorizerShader--------------------------------
 
 CColorizerShader::CColorizerShader()
     : CGLShader()

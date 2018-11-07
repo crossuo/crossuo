@@ -1,6 +1,6 @@
+// MIT License
 
-#ifndef WISPBINARYFILEWRITTER_H
-#define WISPBINARYFILEWRITTER_H
+#pragma once
 
 #include "FileSystem.h"
 
@@ -24,5 +24,3 @@ public:
 };
 
 }; // namespace Wisp
-
-#endif

@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIShader.h
-**
-** Компонента для управления шейдерами
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUISHADER_H
-#define GUISHADER_H
+#pragma once
 
 class CGUIShader : public CBaseGUI
 {
@@ -23,5 +14,3 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
-
-#endif

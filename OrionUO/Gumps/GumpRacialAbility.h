@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpRacialAbility.h
-**
-** Copyright (C) January 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) January 2017 Hotride
 
-#ifndef GUMPRACIALABILITY_H
-#define GUMPRACIALABILITY_H
+#pragma once
 
 class CGumpRacialAbility : public CGump
 {
@@ -27,5 +20,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

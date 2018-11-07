@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpShop.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSHOP_H
-#define GUMPSHOP_H
+#pragma once
 
 class CGumpShop : public CGump
 {
@@ -46,5 +39,3 @@ public:
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

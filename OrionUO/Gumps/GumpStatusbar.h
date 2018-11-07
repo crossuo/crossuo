@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+
 #include "Platform.h"
 
 class CGumpStatusbar : public CGump

@@ -1,11 +1,5 @@
-/***********************************************************************************
-**
-** GumpTargetSystem.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #ifndef GumpTargetSystemH
 #define GumpTargetSystemH

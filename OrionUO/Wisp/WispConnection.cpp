@@ -1,5 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+﻿
 
 #include "WispConnection.h"
 #include "WispDefinitions.h"
@@ -135,4 +134,4 @@ int CConnection::Send(const vector<uint8_t> &data)
     LOG("CConnection::Send=>%i\n", sent);
     return sent;
 }
-}; // namespace Wisp
+};

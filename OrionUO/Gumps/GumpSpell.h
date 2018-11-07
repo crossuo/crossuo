@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpSpell.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSPELL_H
-#define GUMPSPELL_H
+#pragma once
 
 class CGumpSpell : public CGump
 {
@@ -53,5 +46,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** MapBlock.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef MAPBLOCK_H
-#define MAPBLOCK_H
+#pragma once
 
-//Класс для работы с блоками карты 8х8
 class CMapBlock : public CBaseQueueItem
 {
 public:
@@ -53,5 +45,3 @@ public:
 
     bool HasNoExternalData();
 };
-
-#endif

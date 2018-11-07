@@ -1,5 +1,4 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 /**********************************************************************
 *
 * StackWalker.cpp
@@ -25,7 +24,6 @@
 *  2005-08-05   v5    - Removed most Lint (http://www.gimpel.com/) errors... thanks to Okko Willeboordse!
 *
 **********************************************************************/
-#include "stdafx.h"
 #include <windows.h>
 #include <tchar.h>
 #include <stdio.h>

@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** ClickObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef CLICKOBJECT_H
-#define CLICKOBJECT_H
+#pragma once
 
-//!Объект клика мышкой
 class CClickObject
 {
 public:
@@ -31,5 +23,3 @@ public:
 };
 
 extern CClickObject g_ClickObject; //Ссылка на объект клика
-
-#endif

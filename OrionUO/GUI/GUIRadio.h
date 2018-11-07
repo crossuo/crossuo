@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIRadio.h
-**
-** Компонента для отображения радио-кнопок
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIRADIO_H
-#define GUIRADIO_H
+#pragma once
 
 class CGUIRadio : public CGUICheckbox
 {
@@ -24,5 +15,3 @@ public:
         int y);
     virtual ~CGUIRadio();
 };
-
-#endif

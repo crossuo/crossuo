@@ -1,5 +1,7 @@
-﻿#pragma once
-//!Класс списка персонажей для экрана выбора персонажей
+﻿// MIT License
+
+#pragma once
+
 class CCharacterList
 {
 public:
@@ -13,38 +15,15 @@ public:
     string LastCharacterName;
 
 private:
-    //!Память под 7 персонажей
     string m_Name[7];
 
 public:
     CCharacterList();
     virtual ~CCharacterList() {}
 
-    /*!
-    Очистка списка
-    @return
-    */
     void Clear();
-
-    /*!
-    Установить имя персонажа в указанном слоте
-    @param [__in] pos Позиция в списке
-    @param [__in] name Новое имя
-    @return
-    */
     void SetName(intptr_t pos, const string &name);
-
-    /*!
-    Получить имя персонажа в указанном слоте
-    @param [__in] pos Позиция в списке
-    @return Имя персонажа
-    */
     string GetName(intptr_t pos) const;
-
-    /*!
-    Получить имя выбранного персонажа
-    @return Имя персонажа
-    */
     string GetSelectedName() const;
 };
 

@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** ObjectOnCursor.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef OBJECTONCURSOR_H
-#define OBJECTONCURSOR_H
+#pragma once
 
-//!Класс объекта на курсоре
 class CObjectOnCursor
 {
 public:
@@ -54,7 +46,4 @@ public:
     uint16_t GetDrawGraphic(bool &doubleDraw);
 };
 
-//!Указатель на объект в руке (на курсоре)
 extern CObjectOnCursor g_ObjectInHand;
-
-#endif

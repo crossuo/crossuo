@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIGumppic.h
-**
-** Компонента для отображения гампа
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIGUMPPIC_H
-#define GUIGUMPPIC_H
+#pragma once
 
 class CGUIGumppic : public CGUIDrawObject
 {
@@ -18,5 +9,3 @@ public:
     CGUIGumppic(uint16_t graphic, int x, int y);
     virtual ~CGUIGumppic();
 };
-
-#endif

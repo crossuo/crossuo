@@ -63,10 +63,8 @@ uint8_t g_PersonalLightLevel = 0;
 
 char g_SelectedCharName[30] = { 0 };
 
-//!Индекс текущей карты
 uint8_t g_CurrentMap = 0;
 
-//!Время сервера
 uint8_t g_ServerTimeHour = 0;
 uint8_t g_ServerTimeMinute = 0;
 uint8_t g_ServerTimeSecond = 0;

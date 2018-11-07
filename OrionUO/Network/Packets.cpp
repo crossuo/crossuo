@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 
 CPacket::CPacket(size_t size, bool autoResize)
     : Wisp::CDataWritter(size, autoResize)

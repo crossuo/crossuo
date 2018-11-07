@@ -1,19 +1,7 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** IntlocManager.cpp
-**
-** Copyright (C) October 2017 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) October 2017 Hotride
 
 CIntlocManager g_IntlocManager;
-
-//--------------------------------------CIntloc-------------------------------------
 
 CIntloc::CIntloc(int fileIndex, const string &lang)
     : CBaseQueueItem()
@@ -69,12 +57,6 @@ CIntloc::~CIntloc()
     m_Strings.clear();
 }
 
-/*!
-Получить ASCII строку по id (и загрузить при необходимости)
-@param [__in] id Индекс клилока
-@param [__in] result Стандартное сообщение, если клилок не был найден
-@return Полученный результат, замена или сообщение с ошибкой
-*/
 wstring CIntloc::Get(int id, bool toCamelCase)
 {
     DEBUG_TRACE_FUNCTION;
@@ -88,8 +70,6 @@ wstring CIntloc::Get(int id, bool toCamelCase)
 
     return {};
 }
-
-//-----------------------------------CIntlocManager---------------------------------
 
 CIntlocManager::CIntlocManager()
     : CBaseQueue()

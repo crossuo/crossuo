@@ -1,15 +1,5 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** AnimationManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 CAnimationManager g_AnimationManager;
 
@@ -120,11 +110,6 @@ void CAnimationManager::UpdateAnimationAddressTable()
     }
 }
 
-/*!
-Загрузка данных
-@param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
-@return 
-*/
 void CAnimationManager::Load(uint32_t *verdata)
 {
     DEBUG_TRACE_FUNCTION;
@@ -300,11 +285,6 @@ void CAnimationManager::Load(uint32_t *verdata)
     }
 }
 
-/*!
-Загрузка файла корректора индексов картинок анимаций
-@param [__in] verdata Ссылка на адрес в памяти файла патчей (verdata.mul)
-@return 
-*/
 void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 {
     DEBUG_TRACE_FUNCTION;
@@ -831,11 +811,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
     }
 }
 
-/*!
-Получить индекс группы по индексу картинки
-@param [__in] id Индекс картинки
-@return Группа анимаций
-*/
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
@@ -861,12 +836,6 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
     return AG_HIGHT;
 }
 
-/*!
-Получить индекс группы смерти анимации
-@param [__in] id BИндекс картинки
-@param [__in] second Группа смерти номер 2
-@return Индекс группы анимации
-*/
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
 {
     DEBUG_TRACE_FUNCTION;
@@ -886,12 +855,6 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
     return 0;
 }
 
-/*!
-Коррекция направления и режима зеркального отображения
-@param [__inout] dir Направление
-@param [__inout] mirror Зеркальное отображение
-@return 
-*/
 void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
 {
     DEBUG_TRACE_FUNCTION;
@@ -938,14 +901,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
     }
 }
 
-/*!
-Коррекция направления и режима зеркального отображения для сидячего персонажа
-@param [__inout] dir Направление
-@param [__inout] mirror Зеркальное отображение
-@param [__inout] x Координата X
-@param [__inout] y Координата Y
-@return 
-*/
 void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -984,11 +939,6 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
     }
 }
 
-/*!
-Очистка неиспользуемых текстур
-@param [__in] ticks Таймер удаления
-@return 
-*/
 void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1022,11 +972,6 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
     LOG("CAnimationManager::ClearUnusedTextures::removed %i\n", count);
 }
 
-/*!
-Загрузка картинок для указанного направления персонажа
-@param [__in] direction Ссылка на направление анимации
-@return true в случае успешной загрузки
-*/
 bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1420,14 +1365,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
     }
 }
 
-/*!
-Отрисовать персонажа
-@param [__in] obj Ссылка на персонажа
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@param [__in] z Координата Z
-@return 
-*/
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
     m_EquipConvItem = nullptr;
@@ -1795,14 +1732,6 @@ void CAnimationManager::PrepareTargetAttackGump(
         gump.HealthColor = 90; //Character status line (blue)
 }
 
-/*!
-Проверить наличие пикселя персонажа в указанных координатах
-@param [__in] obj Ссылка на персонажа
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@param [__in] z Координата Z
-@return true в случае, если хоть 1 пиксель находится под мышкой
-*/
 bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1855,14 +1784,6 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
            DrawEquippedLayers(true, obj, drawX, drawY, mirror, layerDir, animIndex, 0);
 }
 
-/*!
-Отрисовать труп
-@param [__in] obj Ссылка на труп
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@param [__in] z Координата Z
-@return 
-*/
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1889,14 +1810,6 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     DrawEquippedLayers(false, obj, x, y, mirror, Direction, animIndex, 0);
 }
 
-/*!
-Проверить наличие пикселя трупа в указанных координатах
-@param [__in] obj Ссылка на труп
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@param [__in] z Координата Z
-@return 
-*/
 bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1917,12 +1830,6 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
            DrawEquippedLayers(true, obj, x, y, mirror, Direction, animIndex, 0);
 }
 
-/*!
-Существует ли анимация в файле
-@param [__in] graphic Индекс картинки
-@param [__in] group Группа анимации
-@return true в случае успеха
-*/
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
     DEBUG_TRACE_FUNCTION;

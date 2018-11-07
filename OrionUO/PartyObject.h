@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** PartyObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef PARTYOBJECT_H
-#define PARTYOBJECT_H
+#pragma once
 
-//Объект группы
 class CPartyObject
 {
 public:
@@ -21,5 +13,3 @@ public:
     class CGameCharacter *Character{ nullptr };
     string GetName(int index);
 };
-
-#endif

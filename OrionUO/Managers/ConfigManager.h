@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** ConfigManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef CONFIGMANAGER_H
-#define CONFIGMANAGER_H
+#pragma once
 
-//!Класс менеджера конфига
 class CConfigManager
 {
 protected:
@@ -230,10 +222,6 @@ public:
     uint8_t GetCharacterBackpackStyle() { return m_CharacterBackpackStyle; };
     void SetCharacterBackpackStyle(uint8_t val);
 
-    /*!
-	Инициализация
-	@return 
-	*/
     void Init();
 
     //!Проставление значений по-умолчанию
@@ -250,18 +238,8 @@ public:
 
     void UpdateFeatures();
 
-    /*!
-	Получить цвет исходя из "злобности"
-	@param [__in] notoriety Злобность
-	@return Индекс цвета
-	*/
     uint16_t GetColorByNotoriety(uint8_t notoriety);
 
-    /*!
-	Загрузка конфига
-	@param [__in] path Путь к файлу с конфигом
-	@return 
-	*/
     bool LoadBin(const os_path &path);
 
     int GetConfigKeyCode(const string &key);
@@ -400,10 +378,5 @@ public:
     void Save(const os_path &path);
 };
 
-//!Менеджер конфига
 extern CConfigManager g_ConfigManager;
-
-//!Менеджер кофнига для опций
 extern CConfigManager g_OptionsConfig;
-
-#endif

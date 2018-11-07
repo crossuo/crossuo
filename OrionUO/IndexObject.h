@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** IndexObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef INDEXOBJECT_H
-#define INDEXOBJECT_H
+#pragma once
 
 class CIndexObject
 {
@@ -113,5 +106,3 @@ public:
     CIndexMusic();
     virtual ~CIndexMusic();
 };
-
-#endif

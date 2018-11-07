@@ -1,78 +1,20 @@
-﻿/***********************************************************************************
-**
-** MultiObject.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef MULTIOBJECT_H
-#define MULTIOBJECT_H
+#pragma once
 
-//Multi component object
 class CMultiObject : public CRenderStaticObject
 {
 public:
-    //!This object is temp object on mouse (when you placing a house)
     bool OnTarget = false;
-
-    //!Original object's graphic
     uint16_t OriginalGraphic = 0;
-
-    //!Object's state for custom houses buildings
     int State = 0;
 
-    /*!
-	Constructor
-	@param [__in] graphic Multi object's graphic
-	@param [__in] x Coordinate X in the world
-	@param [__in] y Coordinate Y in the world
-	@param [__in] z Coordinate Z in the world
-	@param [__in] flags Multi object flags
-	@return
-	*/
     CMultiObject(uint16_t graphic, short x, short y, char z, int flags);
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CMultiObject();
-
-    /*!
-	Update draw graphic by current season
-	@return
-	*/
     virtual void UpdateGraphicBySeason();
-
-    /*!
-	Draw object in the world
-	@param [__in] x Coordinate X on screen
-	@param [__in] y Coordinate Y on screen
-	@return
-	*/
     virtual void Draw(int x, int y);
-
-    /*!
-	Select object in the world
-	@param [__in] x Coordinate X on screen
-	@param [__in] y Coordinate Y on screen
-	@return
-	*/
     virtual void Select(int x, int y);
-
-    /*!
-	Check on multi component object
-	@return Always true
-	*/
     bool IsMultiObject() { return true; }
-
-    /*!
-	Check on custom house multi component object
-	@return Always false
-	*/
     virtual bool IsCustomHouseMulti() { return false; }
 };
-
-#endif

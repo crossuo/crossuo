@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** GumpBulletinBoard.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPBULLETINBOARD_H
-#define GUMPBULLETINBOARD_H
+#pragma once
 
-//!Класс доски объявлений
 class CGumpBulletinBoard : public CGump
 {
 private:
@@ -29,5 +21,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

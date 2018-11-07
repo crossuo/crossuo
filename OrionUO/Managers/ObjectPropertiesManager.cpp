@@ -1,19 +1,7 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ObjectPropertiesManager.cpp
-**
-** Copyright (C) October 2017 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) October 2017 Hotride
 
 CObjectPropertiesManager g_ObjectPropertiesManager;
-
-//----------------------------------CObjectProperty---------------------------------
 
 CObjectProperty::CObjectProperty(int serial, int revision, const wstring &name, const wstring &data)
     : Serial(serial)
@@ -95,8 +83,6 @@ wstring CObjectProperty::CreateTextData(bool extended)
 
     return result;
 }
-
-//------------------------------CObjectPropertiesManager----------------------------
 
 CObjectPropertiesManager::~CObjectPropertiesManager()
 {

@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpMap.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPMAP_H
-#define GUMPMAP_H
+#pragma once
 
 class CGumpMap : public CGump
 {
@@ -61,9 +54,7 @@ public:
     CGUIDataBox *m_DataBox{ nullptr };
 
     virtual void PrepareContent();
-
     virtual void GenerateFrame(bool stop);
-
     virtual CRenderObject *Select();
 
     GUMP_BUTTON_EVENT_H;
@@ -71,5 +62,3 @@ public:
     void OnLeftMouseButtonDown();
     void OnLeftMouseButtonUp();
 };
-
-#endif

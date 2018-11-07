@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** ScreenEffectManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SCREENEFFECTMANAGER_H
-#define SCREENEFFECTMANAGER_H
+#pragma once
 
-//Класс для работы с плавным переключением экрана
 class CScreenEffectManager
 {
 public:
@@ -37,5 +29,3 @@ public:
 };
 
 extern CScreenEffectManager g_ScreenEffectManager;
-
-#endif

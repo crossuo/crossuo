@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** MulStruct.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef MULSTRUCT_H
-#define MULSTRUCT_H
+#pragma once
 
 #pragma pack(push, 1)
 
@@ -357,5 +350,3 @@ typedef struct SOUND_BLOCK
 } * PSOUND_BLOCK;
 
 #pragma pack(pop)
-
-#endif

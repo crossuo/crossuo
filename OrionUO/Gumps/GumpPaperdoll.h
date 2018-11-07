@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpPaperdoll.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPPAPERDOLL_H
-#define GUMPPAPERDOLL_H
+#pragma once
 
 class CGumpPaperdoll : public CGump
 {
@@ -73,5 +66,3 @@ public:
     virtual void OnLeftMouseButtonUp();
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

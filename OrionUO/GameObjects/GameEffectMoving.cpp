@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameEffectMoving.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGameEffectMoving::CGameEffectMoving()
     : CGameEffectDrag()
@@ -20,10 +10,6 @@ CGameEffectMoving::~CGameEffectMoving()
 {
 }
 
-/*!
-Обновить эффект
-@return
-*/
 void CGameEffectMoving::Update(CGameObject *parent)
 {
     DEBUG_TRACE_FUNCTION;
@@ -237,4 +223,3 @@ void CGameEffectMoving::Update(CGameObject *parent)
         }
     }
 }
-

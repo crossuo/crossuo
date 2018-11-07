@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GUIVirtureGump.cpp
-**
-** Copyright (C) May 2017 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) May 2017 Hotride
 
 CGUIVirtureGump::CGUIVirtureGump(uint16_t graphic, int x, int y)
     : CGUIDrawObject(GOT_VIRTURE_GUMP, graphic, graphic, 0, x, y)

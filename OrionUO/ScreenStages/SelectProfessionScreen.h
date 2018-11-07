@@ -1,18 +1,10 @@
-﻿/***********************************************************************************
-**
-** SelectProfessionScreen.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SELECTPROFESSIONSCREEN_H
-#define SELECTPROFESSIONSCREEN_H
+#pragma once
 
 class CSelectProfessionScreen : public CBaseScreen
 {
-    //!Выбранный навык
 protected:
     int m_SkillSelection = 0;
 
@@ -27,26 +19,13 @@ public:
     CSelectProfessionScreen();
     virtual ~CSelectProfessionScreen();
 
-    //!Идентификаторы событий для плавного перехода
     static const uint8_t ID_SMOOTH_SPS_QUIT = 1;
     static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_CHARACTER = 2;
     static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_GAME_CONNECT = 3;
     static const uint8_t ID_SMOOTH_SPS_GO_SCREEN_CREATE = 4;
 
-    /*!
-	Инициализация
-	@return 
-	*/
     void Init();
-
-    /*!
-	Обработка события после плавного затемнения экрана
-	@param [__in_opt] action Идентификатор действия
-	@return 
-	*/
     void ProcessSmoothAction(uint8_t action = 0xFF);
 };
 
 extern CSelectProfessionScreen g_SelectProfessionScreen;
-
-#endif

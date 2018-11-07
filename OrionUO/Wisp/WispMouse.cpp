@@ -1,12 +1,9 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+﻿
 
-#include "stdafx.h"
 #include <SDL_mouse.h>
 namespace Wisp
 {
 #if defined(_MSC_VER)
-//forcing value to bool 'true' or 'false' (performance warning)
 #pragma warning(disable : 4800)
 #endif
 
@@ -108,5 +105,5 @@ Wisp::CPoint2Di CMouse::MidDroppedOffset()
     return position;
 }
 
-}; // namespace Wisp
+};
 

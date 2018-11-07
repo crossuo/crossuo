@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpSelectFont.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSELECTFONT_H
-#define GUMPSELECTFONT_H
+#pragma once
 
 class CGumpSelectFont : public CGump
 {
@@ -25,5 +18,3 @@ public:
 
     GUMP_RADIO_EVENT_H;
 };
-
-#endif

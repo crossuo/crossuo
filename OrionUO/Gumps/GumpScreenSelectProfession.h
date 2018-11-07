@@ -1,19 +1,11 @@
-﻿/***********************************************************************************
-**
-** GumpScreenSelectProfession.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSCREENSELECTPROFESSION_H
-#define GUMPSCREENSELECTPROFESSION_H
+#pragma once
 
 class CGumpScreenSelectProfession : public CGump
 {
 private:
-    //!Идентификаторы кнопок
     static const int ID_SPS_QUIT = 1;
     static const int ID_SPS_ARROW_PREV = 2;
     static const int ID_SPS_ARROW_NEXT = 3;
@@ -48,5 +40,3 @@ public:
     GUMP_SLIDER_CLICK_EVENT_H;
     GUMP_SLIDER_MOVE_EVENT_H;
 };
-
-#endif

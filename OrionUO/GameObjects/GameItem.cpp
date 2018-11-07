@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GameItem.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)
@@ -56,11 +46,6 @@ void CGameItem::ClearMultiItems()
     WantUpdateMulti = true;
 }
 
-/*!
-Событие изменения картинки объекта
-@param [__in_opt] direction Направление предмета (для трупов)
-@return 
-*/
 void CGameItem::OnGraphicChange(int direction)
 {
     DEBUG_TRACE_FUNCTION;
@@ -265,14 +250,6 @@ void CGameItem::Draw(int x, int y)
     }
 }
 
-/*!
-Отрисовать предмет
-@param [__in] mode Режим рисования. true - рисование, false - выбор объектов
-@param [__in] drawX Экранная координата X объекта
-@param [__in] drawY Экранная координата Y объекта
-@param [__in] ticks Таймер рендера
-@return При выборе объектов возвращает выбранный элемент
-*/
 void CGameItem::Select(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -316,10 +293,6 @@ void CGameItem::Select(int x, int y)
     }
 }
 
-/*!
-Получить индекс картинки (для анимации)
-@return Индекс картинки
-*/
 uint16_t CGameItem::GetMountAnimation()
 {
     DEBUG_TRACE_FUNCTION;
@@ -611,10 +584,6 @@ void CGameItem::ClearCustomHouseMultis(int state)
     }
 }
 
-/*!
-Добавить мульти в текущий объект
-@return
-*/
 CMultiObject *
 CGameItem::AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti)
 {
@@ -631,10 +600,6 @@ CGameItem::AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bo
     return mo;
 }
 
-/*!
-Загрузка мульти в текущий объект
-@return 
-*/
 void CGameItem::LoadMulti(bool dropAlpha)
 {
     DEBUG_TRACE_FUNCTION;
@@ -760,11 +725,6 @@ void CGameItem::LoadMulti(bool dropAlpha)
         minimap->LastX = 0;
 }
 
-/*!
-Добавить объекта-мульти
-@param [__in] obj Ссылка на мульти-объект
-@return 
-*/
 void CGameItem::AddMultiObject(CMultiObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -827,12 +787,6 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
     }
 }
 
-/*!
-Получение объекта мульти в заданных координатах
-@param [__in] x Координата X
-@param [__in] y Координата Y
-@return Ссылка на мульти или nullptr
-*/
 CMulti *CGameItem::GetMultiAtXY(short x, short y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -845,12 +799,6 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
     return nullptr;
 }
 
-/*!
-Найти объект внутри (рекурсивно) по типу с учетом (и без) цвета
-@param [__in] graphic Индекс картинки
-@param [__in_opt] color Цвет предмета
-@return Ссылка на найденный объект или nullptr
-*/
 CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
 {
     DEBUG_TRACE_FUNCTION;

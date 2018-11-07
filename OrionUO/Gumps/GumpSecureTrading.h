@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpSecureTrading.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSECURETRADING_H
-#define GUMPSECURETRADING_H
+#pragma once
 
 class CGumpSecureTrading : public CGump
 {
@@ -51,5 +44,3 @@ public:
 
     virtual void OnLeftMouseButtonUp();
 };
-
-#endif

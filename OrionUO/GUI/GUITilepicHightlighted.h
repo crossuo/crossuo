@@ -1,23 +1,11 @@
-﻿/***********************************************************************************
-**
-** GUITilepicHightlighted.h
-**
-** Компонента для отображения картинки статики с возможностью подсветки
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUITILEPICHIGHTLIGHTED_H
-#define GUITILEPICHIGHTLIGHTED_H
+#pragma once
 
 class CGUITilepicHightlighted : public CGUITilepic
 {
-    //!Цвет выбранной компоненты
     uint16_t SelectedColor = 0;
-
-    //!Дублировать картинку при отображении
     bool DoubleDraw = false;
 
 public:
@@ -39,5 +27,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

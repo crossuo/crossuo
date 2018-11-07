@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GLEngine.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLENGINE_H
-#define GLENGINE_H
+#pragma once
 
 typedef deque<Wisp::CRect> SCISSOR_LIST;
 
@@ -28,33 +21,23 @@ typedef void (CGLEngine::*DRAW_TEXTURE_SHADOW_FUNCTION)(const CGLTexture &, int,
 typedef void (CGLEngine::*DRAW_TEXTURE_STRETCHED_FUNCTION)(const CGLTexture &, int, int, int, int);
 typedef void (CGLEngine::*DRAW_TEXTURE_RESIZEPIC_FUNCTION)(CGLTexture **, int, int, int, int);
 
-//Указатели на функции рисования, в соответствии с текущим контекстом устройства
-//Загрузка текстур 16 и 32 бит
 extern BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr;
 extern BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr;
 
-//Нарисовать текстуру ландшафта
 extern DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr;
 
-//Нарисовать текстуру
 extern DRAW_TEXTURE_FUNCTION g_GL_Draw_Ptr;
 
-//Нарисовать повернутую текстуру
 extern DRAW_TEXTURE_ROTATED_FUNCTION g_GL_DrawRotated_Ptr;
 
-//Нарисовать текстуру с возможностью зеркального отражения
 extern DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr;
 
-//Нарисовать текстуру сидячего персонажа
 extern DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr;
 
-//Нарисовать тень
 extern DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr;
 
-//Замостить текстуру на заданные габариты
 extern DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr;
 
-//Нарисовать фон
 extern DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr;
 
 #define g_GL_BindTexture16 (g_GL.*(g_GL_BindTexture16_Ptr))
@@ -223,5 +206,3 @@ public:
 };
 
 extern CGLEngine g_GL;
-
-#endif

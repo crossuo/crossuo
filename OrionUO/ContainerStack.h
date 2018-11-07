@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** ContainerStack.h
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2017 Hotride
 
-#ifndef CONTAINERSTACK_H
-#define CONTAINERSTACK_H
+#pragma once
 
-//!Класс стека контейнеров, используется для хранения информации при загрузке гапмов контейнеров из конфига при входе в игру
 class CContainerStackItem
 {
 public:
@@ -33,10 +25,6 @@ public:
     ~CContainerStackItem() {}
 };
 
-//!Ссылка на стек открытия контейнеров
 extern deque<CContainerStackItem> g_ContainerStack;
 
-//!Таймер стека открытия контейнеров
 extern uint32_t g_CheckContainerStackTimer;
-
-#endif //CONTAINERSTACK_H

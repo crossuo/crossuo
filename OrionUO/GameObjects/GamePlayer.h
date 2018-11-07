@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** GamePlayer.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GAMEPLAYER_H
-#define GAMEPLAYER_H
+#pragma once
 
-//!Класс игрока
 class CPlayer : public CGameCharacter
 {
 public:
@@ -56,60 +48,17 @@ public:
     short OldY = 0;
     char OldZ = 0;
 
-    /*!
-	Constructor
-	@param [__in] serial Player's serial
-	@return
-	*/
     CPlayer(int serial);
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CPlayer();
 
-    //!Fast Walk Stack
     CFastWalkStack m_FastWalkStack;
 
-    /*!
-	Close bank gump
-	@return
-	*/
     void CloseBank();
-
-    /*!
-	Search bandage in backpack
-	@return Item pointer or nullptr if bandage is not found
-	*/
     class CGameItem *FindBandage();
-
-    /*!
-	Check on player
-	@return Always true
-	*/
     bool IsPlayer() { return true; }
-
-    /*!
-	Player walking state
-	@return true if player if walking
-	*/
     virtual bool Walking() { return (LastStepTime > (uint32_t)(g_Ticks - PLAYER_WALKING_DELAY)); }
-
-    /*!
-	No iterate animation frames
-	@return Always false for player
-	*/
     virtual bool NoIterateAnimIndex() { return false; }
-
-    /*!
-	Update current abilities
-	@return
-	*/
     void UpdateAbilities();
 };
 
-//!Ссылка на игрока
 extern CPlayer *g_Player;
-
-#endif

@@ -6,7 +6,6 @@
 
 CPacketManager g_PacketManager;
 
-//Карта пакетов УО для анализа
 #define UMSG(save, size)                                                                           \
     {                                                                                              \
         save, "?", size, DIR_BOTH, 0                                                               \

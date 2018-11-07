@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpBuff.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPBUFF_H
-#define GUMPBUFF_H
+#pragma once
 
 class CGumpBuff : public CGump
 {
@@ -52,5 +45,3 @@ public:
 
     GUMP_BUTTON_EVENT_H;
 };
-
-#endif

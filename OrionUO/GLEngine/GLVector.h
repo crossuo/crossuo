@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** GLVector.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLVECTOR_H
-#define GLVECTOR_H
+#pragma once
 
-//Класс вектора нормали
 class CVector
 {
 public:
@@ -42,5 +34,3 @@ public:
     //Нормализация
     void Normalize();
 };
-
-#endif

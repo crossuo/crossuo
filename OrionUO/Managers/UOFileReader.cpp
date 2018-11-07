@@ -1,25 +1,8 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** UOFileReader.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 UOFileReader g_UOFileReader;
 
-//----------------------------------CUOFileReader-------------------------------
-
-/*!
-Получить массив пикселей гампа
-@param [__in] io Ссылка на данные о гампе
-@return Массив пикселей или nullptr
-*/
 vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
@@ -77,11 +60,6 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
     return pixels;
 }
 
-/*!
-Прочитать гамп и сгенерировать текстуру
-@param [__in] io Ссылка на данные о гампе
-@return Ссылка на данные о текстуре
-*/
 CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
@@ -332,12 +310,6 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
     return pixels;
 }
 
-/*!
-Прочитать арт и сгенерировать текстуру
-@param [__in] ID Индекс арта
-@param [__in] io Ссылка на данные о арте
-@return Ссылка на данные о текстуре
-*/
 CGLTexture *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
 {
     DEBUG_TRACE_FUNCTION;
@@ -430,11 +402,6 @@ CGLTexture *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
     return texture;
 }
 
-/*!
-Прочитать текстуру ландшафта и сгенерировать тексруту
-@param [__in] io Ссылка на данные о текстуре ландшафта
-@return Ссылка на данные о текстуре
-*/
 CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
@@ -488,11 +455,6 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
     return th;
 }
 
-/*!
-Прочитать освещение и сгенерировать текстуру
-@param [__in] io Ссылка на данные о освещении
-@return Ссылка на данные о текстуре
-*/
 CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** SkillGroupManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CSkillGroupManager g_SkillGroupManager;
 
@@ -21,10 +11,6 @@ CSkillGroupManager::~CSkillGroupManager()
 {
 }
 
-/*!
-Выставить группы по-умолчанию
-@return 
-*/
 void CSkillGroupManager::MakeDefault()
 {
     DEBUG_TRACE_FUNCTION;
@@ -184,10 +170,6 @@ void CSkillGroupManager::MakeDefaultBard()
     Add(group);
 }
 
-/*!
-Очистить список групп
-@return 
-*/
 void CSkillGroupManager::Clear()
 {
     DEBUG_TRACE_FUNCTION;
@@ -206,11 +188,6 @@ void CSkillGroupManager::Clear()
     m_Groups = nullptr;
 }
 
-/*!
-Добавить группу
-@param [__in] group Ссылка на группу
-@return
-*/
 void CSkillGroupManager::Add(CSkillGroupObject *group)
 {
     DEBUG_TRACE_FUNCTION;
@@ -236,11 +213,6 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
     Count++;
 }
 
-/*!
-Удалить группу
-@param [__in] group Ссылка на группу
-@return 
-*/
 bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 {
     DEBUG_TRACE_FUNCTION;
@@ -278,11 +250,6 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
     return true;
 }
 
-/*!
-Загрузка групп из файла конфига
-@param [__in] path Путь к файлу конфига
-@return 
-*/
 bool CSkillGroupManager::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
@@ -337,11 +304,6 @@ bool CSkillGroupManager::Load(const os_path &path)
     return result;
 }
 
-/*!
-Сохранение групп в файл конфиг
-@param [__in] path Путьк  файлу конфига
-@return 
-*/
 void CSkillGroupManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
@@ -391,4 +353,3 @@ void CSkillGroupManager::Save(const os_path &path)
 
     writter.Close();
 }
-

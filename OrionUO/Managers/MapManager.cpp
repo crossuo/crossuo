@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** MapManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CMapManager g_MapManager;
 
@@ -402,13 +392,6 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
     return defaultZ;
 }
 
-/*!
-Получить блок для радара из муллов
-@param [__in] blockX Координата X блока
-@param [__in] blockY Координата Y блока
-@param [__out] mb Ссылка на блок
-@return 
-*/
 void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 {
     DEBUG_TRACE_FUNCTION;
@@ -459,14 +442,6 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
     }
 }
 
-/*!
-Получить значение Z координаты для указанной точки в мире
-@param [__in] x Координата X
-@param [__in] y Координата Y
-@param [__out] groundZ Значение Z коррдинаты земли
-@param [__out] staticZ Значение Z коррдинаты статики
-@return 
-*/
 void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
 {
     DEBUG_TRACE_FUNCTION;
@@ -500,10 +475,6 @@ void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
     }
 }
 
-/*!
-Удалить неиспользуемые блоки
-@return 
-*/
 void CMapManager::ClearUnusedBlocks()
 {
     DEBUG_TRACE_FUNCTION;
@@ -548,11 +519,6 @@ void CMapManager::ClearUsedBlocks()
     }
 }
 
-/*!
-Инициализация
-@param [__in_opt] delayed По истечении времени на загрузку выходить из цикла
-@return 
-*/
 void CMapManager::Init(bool delayed)
 {
     DEBUG_TRACE_FUNCTION;
@@ -623,11 +589,6 @@ void CMapManager::Init(bool delayed)
     }
 }
 
-/*!
-Загрузить блок
-@param [__inout] block Ссылка на блок для загрузки
-@return 
-*/
 void CMapManager::LoadBlock(CMapBlock *block)
 {
     DEBUG_TRACE_FUNCTION;
@@ -688,10 +649,6 @@ void CMapManager::LoadBlock(CMapBlock *block)
     block->CreateLandTextureRect();
 }
 
-/*!
-Получить индекс текущей карты
-@return
-*/
 int CMapManager::GetActualMap()
 {
     DEBUG_TRACE_FUNCTION;
@@ -703,11 +660,6 @@ int CMapManager::GetActualMap()
     return g_CurrentMap;
 }
 
-/*!
-Добавить объект рендера
-@param [__in] item Ссылка на объект
-@return 
-*/
 void CMapManager::AddRender(CRenderWorldObject *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -738,11 +690,6 @@ void CMapManager::AddRender(CRenderWorldObject *item)
     }
 }
 
-/*!
-Получить ссылку на блок
-@param [__in] index Индекс блока
-@return Ссылка на блок или nullptr
-*/
 CMapBlock *CMapManager::GetBlock(uint32_t index)
 {
     DEBUG_TRACE_FUNCTION;
@@ -759,11 +706,6 @@ CMapBlock *CMapManager::GetBlock(uint32_t index)
     return block;
 }
 
-/*!
-Добавить блок
-@param [__in] index Индекс блока
-@return Ссылка на блок или nullptr
-*/
 CMapBlock *CMapManager::AddBlock(uint32_t index)
 {
     DEBUG_TRACE_FUNCTION;
@@ -774,11 +716,6 @@ CMapBlock *CMapManager::AddBlock(uint32_t index)
     return block;
 }
 
-/*!
-Удалить блок
-@param [__in] index Индекс блока
-@return 
-*/
 void CMapManager::DeleteBlock(uint32_t index)
 {
     DEBUG_TRACE_FUNCTION;

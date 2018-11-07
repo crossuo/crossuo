@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIScissor.h
-**
-** Компонента для указания области вывода
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUISCISSOR_H
-#define GUISCISSOR_H
+#pragma once
 
 class CGUIScissor : public CGUIPolygonal
 {
@@ -36,5 +27,3 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
-
-#endif

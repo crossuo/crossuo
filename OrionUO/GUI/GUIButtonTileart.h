@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIButtonTileart.h
-**
-** Компонента для отрисовки кнопки (и всего ее функционала) с картинкой статики
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIBUTTONTILEART_H
-#define GUIBUTTONTILEART_H
+#pragma once
 
 class CGUIButtonTileart : public CGUIButton
 {
@@ -47,5 +38,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

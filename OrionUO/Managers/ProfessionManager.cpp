@@ -1,19 +1,10 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** ProfessionManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 
 CProfessionManager g_ProfessionManager;
 
-//!Ключи конфига
 const string CProfessionManager::m_Keys[m_KeyCount] = {
     "begin", "name", "truename", "desc", "toplevel", "gump", "type",     "children", "skill",
     "stat",  "str",  "int",      "dex",  "end",      "true", "category", "nameid",   "descid"
@@ -29,11 +20,6 @@ CProfessionManager::~CProfessionManager()
 {
 }
 
-/*!
-Получить код кофига по строке
-@param [__in] key Строка из файла
-@return Код конфига
-*/
 int CProfessionManager::GetKeyCode(const string &key)
 {
     DEBUG_TRACE_FUNCTION;
@@ -49,11 +35,6 @@ int CProfessionManager::GetKeyCode(const string &key)
     return result;
 }
 
-/*!
-Обработать часть файла (загрузка профессии)
-@param [__in] file Указатель на файл
-@return true при успешной обработке
-*/
 bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
     DEBUG_TRACE_FUNCTION;
@@ -253,12 +234,6 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     return result;
 }
 
-/*!
-Добавить ребенка в профессию
-@param [__in] parent Ссылка на родителя
-@param [__in] child Ссылка на детишку
-@return true в случае успешного добавления
-*/
 bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *child)
 {
     DEBUG_TRACE_FUNCTION;
@@ -294,10 +269,6 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
     return result;
 }
 
-/*!
-Загрузка профессий из файла
-@return true в случае успешной загрузки
-*/
 bool CProfessionManager::Load()
 {
     DEBUG_TRACE_FUNCTION;
@@ -379,10 +350,6 @@ bool CProfessionManager::Load()
     return result;
 }
 
-/*!
-Загрузка описания профессий
-@return 
-*/
 void CProfessionManager::LoadProfessionDescription()
 {
     DEBUG_TRACE_FUNCTION;
@@ -443,12 +410,6 @@ void CProfessionManager::LoadProfessionDescription()
     }
 }
 
-/*!
-Получить родителя профессии
-@param [__in] obj Ссылка на объект профессии
-@param [__in_opt] check Ссылка на проверочный объект профессии
-@return Ссылка на найденного родителя объекта профессии
-*/
 CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfession *check)
 {
     DEBUG_TRACE_FUNCTION;

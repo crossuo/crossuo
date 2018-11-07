@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUITilepic.h
-**
-** Компонента для отображения картинки статики
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUITILEPIC_H
-#define GUITILEPIC_H
+#pragma once
 
 class CGUITilepic : public CGUIDrawObject
 {
@@ -25,5 +16,3 @@ public:
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };
-
-#endif

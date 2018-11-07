@@ -1,21 +1,11 @@
-﻿/***********************************************************************************
-**
-** GUIHTMLSlider.h
-**
-** Компонента скроллер для HTMLGump'а
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIHTMLSLIDER_H
-#define GUIHTMLSLIDER_H
+#pragma once
 
 class CGUIHTMLSlider : public CGUISlider
 {
 private:
-    //!Гамп-родитель
     class CGUIHTMLGump *m_HTMLGump{ nullptr };
 
 public:
@@ -35,11 +25,6 @@ public:
         int maxValue,
         int value);
     virtual ~CGUIHTMLSlider();
-
-    //!Пересчитать смещения
     virtual void CalculateOffset();
-
     virtual bool IsControlHTML() { return true; }
 };
-
-#endif

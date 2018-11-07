@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** PluginPackets.h
-**
-** Copyright (C) November 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) November 2017 Hotride
 
-#ifndef PLUGINPACKETS_H
-#define PLUGINPACKETS_H
+#pragma once
 
 class CPluginPacket : public Wisp::CDataWritter
 {
@@ -80,5 +73,3 @@ class CPluginPacketOpenMap : public CPluginPacket
 public:
     CPluginPacketOpenMap();
 };
-
-#endif //PLUGINPACKETS_H

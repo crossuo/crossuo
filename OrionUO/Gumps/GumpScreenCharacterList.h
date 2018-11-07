@@ -1,19 +1,11 @@
-﻿/***********************************************************************************
-**
-** GumpScreenCharacterList.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPSCREENCHARACTERLIST_H
-#define GUMPSCREENCHARACTERLIST_H
+#pragma once
 
 class CGumpScreenCharacterList : public CGump
 {
 private:
-    //!Идентификаторы кнопок
     static const int ID_CS_QUIT = 1;
     static const int ID_CS_ARROW_PREV = 2;
     static const int ID_CS_ARROW_NEXT = 3;
@@ -26,7 +18,6 @@ public:
     virtual ~CGumpScreenCharacterList();
 
     virtual void UpdateContent();
-
     virtual void InitToolTip();
 
     GUMP_BUTTON_EVENT_H;
@@ -34,5 +25,3 @@ public:
 
     virtual bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

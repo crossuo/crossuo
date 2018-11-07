@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** DefinitionMacro.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef DEFINITIONMACRO_H
-#define DEFINITIONMACRO_H
+#pragma once
 
 #define UO_RENDER_LIST_SORT 1
 #define UO_CHECKERBOARD_SEQUENCE_RENDER_LIST 1
@@ -17,7 +10,6 @@
 
 #define UO_DEBUG_INFO 1
 
-//!Эффекты шрифта
 #define UOFONT_SOLID 0x01  //!Жирный
 #define UOFONT_ITALIC 0x02 //!Наклонный
 #define UOFONT_INDENTION 0x04 //!Отступ текста (кроме 1 строки) для журнала
@@ -42,5 +34,3 @@
 #define MODKEY_ALT 0x0100
 #define MODKEY_CTRL 0x0200
 #define MODKEY_SHIFT 0x0400
-
-#endif

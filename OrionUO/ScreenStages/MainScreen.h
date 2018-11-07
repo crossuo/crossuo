@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include "Platform.h"
 
 class CMainScreen : public CBaseScreen

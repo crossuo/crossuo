@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** GLFrameBuffer.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CGLFrameBuffer::CGLFrameBuffer()
 {
@@ -22,12 +12,6 @@ CGLFrameBuffer::~CGLFrameBuffer()
     Free();
 }
 
-/*!
-Инициализациия буфера
-@param [__in] width Ширина буфера
-@param [__in] height Высота буфера
-@return true в случае успеха
-*/
 bool CGLFrameBuffer::Init(int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
@@ -67,10 +51,6 @@ bool CGLFrameBuffer::Init(int width, int height)
     return result;
 }
 
-/*!
-Очистка фрэймбуфера
-@return
-*/
 void CGLFrameBuffer::Free()
 {
     DEBUG_TRACE_FUNCTION;
@@ -85,10 +65,6 @@ void CGLFrameBuffer::Free()
     m_OldFrameBuffer = 0;
 }
 
-/*!
-Завершение использования фрэймбуфера
-@return 
-*/
 void CGLFrameBuffer::Release()
 {
     DEBUG_TRACE_FUNCTION;
@@ -103,12 +79,6 @@ void CGLFrameBuffer::Release()
     }
 }
 
-/*!
-Проверка готовности буфера с потенциальным пересозданием
-@param [__in] width Ширина буфера
-@param [__in] height Высота буфера
-@return true в случае готовности
-*/
 bool CGLFrameBuffer::Ready(int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
@@ -123,10 +93,6 @@ bool CGLFrameBuffer::ReadyMinSize(int width, int height)
         g_GL.CanUseFrameBuffer && m_Ready && Texture.Width >= width && Texture.Height >= height);
 }
 
-/*!
-Использование буфера
-@return true в случае успеха
-*/
 bool CGLFrameBuffer::Use()
 {
     DEBUG_TRACE_FUNCTION;
@@ -155,12 +121,6 @@ bool CGLFrameBuffer::Use()
     return result;
 }
 
-/*!
-Отрисовать текстуру буфера
-@param [__in] x Экранная координата X
-@param [__in] y Экранная координата Y
-@return 
-*/
 void CGLFrameBuffer::Draw(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;

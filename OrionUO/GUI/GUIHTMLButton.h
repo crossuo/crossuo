@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIHTMLButton.h
-**
-** Компонента для кнопок HTMLGump'а
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIHTMLBUTTON_H
-#define GUIHTMLBUTTON_H
+#pragma once
 
 class CGUIHTMLButton : public CGUIButton
 {
@@ -36,5 +27,3 @@ public:
 
     virtual bool IsControlHTML() { return true; }
 };
-
-#endif

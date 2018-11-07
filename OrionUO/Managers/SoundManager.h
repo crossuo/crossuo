@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** SoundManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef SOUNDMANAGER_H
-#define SOUNDMANAGER_H
+#pragma once
 
 #pragma pack(push, 1)
 struct MidiInfoStruct
@@ -47,7 +40,7 @@ private:
     HSTREAM m_WarMusic{};
 
     void TraceMusicError(DWORD error);
-    //std::map<HSTREAM, uint8_t*> streams;
+
 public:
     CSoundManager();
     ~CSoundManager();
@@ -56,34 +49,19 @@ public:
     void Free();
     void ResumeSound();
     void PauseSound();
-
-    //Mix_Chunk *LoadSoundEffect(TIndexSound &is);
-
     bool FreeStream(HSTREAM hSteam);
-
     bool IsPlayingNormalMusic();
-
-    //Метод расчета звука. При расчете учитываются: звук клиента, дистанция для эффектов.
     float GetVolumeValue(int distance = -1, bool music = false);
 
     HSTREAM LoadSoundEffect(CIndexSound &is);
-
     vector<uint8_t> CreateWaveFile(CIndexSound &is);
 
-    //void PlaySoundEffect(Mix_Chunk *mix, int volume);
     void PlaySoundEffect(HSTREAM stream, float volume);
-
     void PlayMidi(int index, bool warmode);
-
     void PlayMP3(const os_path &fileName, int index, bool loop, bool warmode = false);
-
     void StopMusic();
-
     void StopWarMusic();
-
     void SetMusicVolume(float volume);
 };
 
 extern CSoundManager g_SoundManager;
-
-#endif

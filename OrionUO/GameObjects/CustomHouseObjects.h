@@ -1,46 +1,20 @@
-﻿/***********************************************************************************
-**
-** CustomHouseObjects.h
-**
-** Copyright (C) September 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) September 2017 Hotride
 
-#ifndef CUSTOMHOUSEOBJECTS_H
-#define CUSTOMHOUSEOBJECTS_H
+#pragma once
 
-//!Base class for Custom House object info
 class CCustomHouseObject
 {
 public:
-    //!Category for object
     int Category = 0;
-
     //!Flag mask to enable/disable objects (in some expansions)
     int FeatureMask = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObject() {}
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObject() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text) { return false; }
 };
 
-//!Wall object for CH
 class CCustomHouseObjectWall : public CCustomHouseObject
 {
 public:
@@ -92,10 +66,6 @@ public:
     //!Item ID with window (east), second, alternative
     int SecondAltWindowE = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectWall()
         : CCustomHouseObject()
     {
@@ -103,60 +73,26 @@ public:
         memset(&m_WindowGraphics[0], 0, sizeof(m_WindowGraphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectWall() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 8;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
-
-    //!Graphics list with replaced windowed walls
     uint16_t m_WindowGraphics[GRAPHICS_COUNT];
 };
 
-//!Category of wall objects
 class CCustomHouseObjectWallCategory
 {
 public:
-    //!Index of category
     int Index = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectWallCategory() {}
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectWallCategory() {}
 
-    //!Wall objects list
     vector<CCustomHouseObjectWall> m_Items;
 };
 
-//!Floor objects for CH
 class CCustomHouseObjectFloor : public CCustomHouseObject
 {
     //!Floor 1 graphic
@@ -208,53 +144,19 @@ class CCustomHouseObjectFloor : public CCustomHouseObject
     int F16 = 0;
 
 public:
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectFloor()
         : CCustomHouseObject()
     {
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectFloor() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 16;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
-
-/*class CCustomHouseObjectFloorCategory
-{
-	int Index = 0;
-
-public:
-	CCustomHouseObjectFloorCategory() {}
-	virtual ~CCustomHouseObjectFloorCategory() {}
-
-	vector<CCustomHouseObjectFloor> m_Items;
-};*/
 
 class CCustomHouseObjectDoor : public CCustomHouseObject
 {
@@ -283,53 +185,19 @@ public:
     //!Door 8 graphic
     int Piece8 = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectDoor()
         : CCustomHouseObject()
     {
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectDoor() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 8;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
-
-/*class CCustomHouseObjectDoorCategory
-{
-	int Index = 0;
-
-public:
-	CCustomHouseObjectDoorCategory() {}
-	virtual ~CCustomHouseObjectDoorCategory() {}
-
-	vector<CCustomHouseObjectDoor> m_Items;
-};*/
 
 class CCustomHouseObjectMisc : public CCustomHouseObject
 {
@@ -364,62 +232,28 @@ public:
     //!Misc 8 graphic
     int Piece8 = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectMisc()
         : CCustomHouseObject()
     {
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectMisc() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 8;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 class CCustomHouseObjectMiscCategory
 {
 public:
-    //!Index of category
     int Index = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectMiscCategory() {}
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectMiscCategory() {}
 
-    //!Misc objects list
     vector<CCustomHouseObjectMisc> m_Items;
 };
 
@@ -465,53 +299,19 @@ public:
     //!Graphic for packet if used Rounded2
     int MultiWest = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectStair()
         : CCustomHouseObject()
     {
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectStair() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 9;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
-
-/*class CCustomHouseObjectStairCategory
-{
-	int Index = 0;
-
-public:
-	CCustomHouseObjectStairCategory() {}
-	virtual ~CCustomHouseObjectStairCategory() {}
-
-	vector<CCustomHouseObjectStair> m_Items;
-};*/
 
 class CCustomHouseObjectTeleport : public CCustomHouseObject
 {
@@ -564,53 +364,19 @@ class CCustomHouseObjectTeleport : public CCustomHouseObject
     int F16 = 0;
 
 public:
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectTeleport()
         : CCustomHouseObject()
     {
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectTeleport() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 16;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
-
-/*class CCustomHouseObjectTeleportCategory
-{
-	int Index = 0;
-
-public:
-	CCustomHouseObjectTeleportCategory() {}
-	virtual ~CCustomHouseObjectTeleportCategory() {}
-
-	vector<CCustomHouseObjectTeleport> m_Items;
-};*/
 
 class CCustomHouseObjectRoof : public CCustomHouseObject
 {
@@ -646,59 +412,26 @@ public:
     int Extra = 0;
     int Piece = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectRoof()
         : CCustomHouseObject()
     {
         memset(&m_Graphics[0], 0, sizeof(m_Graphics));
     }
 
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectRoof() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     virtual bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 16;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
 
 class CCustomHouseObjectRoofCategory
 {
 public:
-    //!Index of category
     int Index = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectRoofCategory() {}
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectRoofCategory() {}
 
     //!Roof objects list
@@ -756,37 +489,11 @@ public:
     //!Flag mask to enable/disable objects (in some expansions)
     int FeatureMask = 0;
 
-    /*!
-	Constructor
-	@return
-	*/
     CCustomHouseObjectPlaceInfo() { memset(&m_Graphics[0], 0, sizeof(m_Graphics)); }
-
-    /*!
-	Destructor
-	@return
-	*/
     virtual ~CCustomHouseObjectPlaceInfo() {}
-
-    /*!
-	Parse text data to class fields
-	@param [__in] text Data for parsing
-	@return
-	*/
     bool Parse(const char *text);
-
-    /*!
-	Search graphic in list
-	@param [__in] graphic Graphic to search
-	@return index if it found or -1 if not found
-	*/
     int Contains(uint16_t graphic) const;
 
-    //!Maximum number of graphics count
     static const int GRAPHICS_COUNT = 1;
-
-    //!Graphics list
     uint16_t m_Graphics[GRAPHICS_COUNT];
 };
-
-#endif //CUSTOMHOUSEOBJECTS_H

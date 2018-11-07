@@ -1,21 +1,9 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** TargetGump.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 CTargetGump g_TargetGump;
 CTargetGump g_AttackTargetGump;
 CNewTargetSystem g_NewTargetSystem;
-
-//-------------------------------------CTargetGump----------------------------------
 
 CTargetGump::CTargetGump()
 {
@@ -36,8 +24,6 @@ void CTargetGump::Draw()
             g_Orion.DrawGump(0x1069, HealthColor, X, Y, Hits, 0);
     }
 }
-
-//----------------------------------CNewTargetSystem--------------------------------
 
 CNewTargetSystem::CNewTargetSystem()
 {

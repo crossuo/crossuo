@@ -1,14 +1,7 @@
-/***********************************************************************************
-**
-** GumpJournal.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPJOURNAL_H
-#define GUMPJOURNAL_H
+#pragma once
 
 class CGumpJournal : public CGumpBaseScroll
 {
@@ -50,5 +43,3 @@ public:
 
     bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

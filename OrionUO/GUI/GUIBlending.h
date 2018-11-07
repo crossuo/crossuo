@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIBlending.h
-**
-** Компонента для применения блендинга
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIBLENDING_H
-#define GUIBLENDING_H
+#pragma once
 
 class CGUIBlending : public CBaseGUI
 {
@@ -26,5 +17,3 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
-
-#endif

@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIButton.h
-**
-** Компонента для отображения кнопки
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIBUTTON_H
-#define GUIBUTTON_H
+#pragma once
 
 class CGUIButton : public CGUIDrawObject
 {
@@ -42,5 +33,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

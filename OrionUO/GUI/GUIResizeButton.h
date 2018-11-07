@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIResizeButton.h
-**
-** Компонента для кнопок изменения размера
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIRESIZEBUTTON_H
-#define GUIRESIZEBUTTON_H
+#pragma once
 
 class CGUIResizeButton : public CGUIButton
 {
@@ -23,8 +14,5 @@ public:
         int x,
         int y);
     virtual ~CGUIResizeButton();
-
     virtual bool IsPressedOuthit() { return true; }
 };
-
-#endif

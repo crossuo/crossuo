@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** CreateCharacterManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CCreateCharacterManager g_CreateCharacterManager;
 
@@ -185,10 +175,6 @@ void CCreateCharacterManager::SetRace(RACE_TYPE newRace)
     BeardColor = (*ptr) + 1;
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CCreateCharacterManager::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -208,10 +194,6 @@ void CCreateCharacterManager::Init()
         g_Orion.ExecuteGump(m_ElfFemaleHairStyleTable[i].GumpID);
 }
 
-/*!
-Очистка
-@return 
-*/
 void CCreateCharacterManager::Clear()
 {
     DEBUG_TRACE_FUNCTION;
@@ -299,11 +281,6 @@ const uint16_t *CCreateCharacterManager::GetHairColorPtr()
     return ptr[m_Race - 1];
 }
 
-/*!
-Получить стиль волос
-@param [__in] pos Индекс волос
-@return Структура с данными о волосах
-*/
 CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
 {
     DEBUG_TRACE_FUNCTION;
@@ -350,11 +327,6 @@ CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
     return m_HumanMaleHairStyleTable[0];
 }
 
-/*!
-Получить стиль бороды
-@param [__in] pos Индекс бороды
-@return Структура с данными о бороде
-*/
 CC_HAIR_STYLE CCreateCharacterManager::GetBeard(uint8_t pos) const
 {
     DEBUG_TRACE_FUNCTION;
@@ -371,4 +343,3 @@ CC_HAIR_STYLE CCreateCharacterManager::GetBeard(uint8_t pos) const
 
     return m_HumanBeardStyleTable[0];
 }
-

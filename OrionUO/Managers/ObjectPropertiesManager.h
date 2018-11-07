@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** ObjectPripertiesManager.h
-**
-** Copyright (C) October 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) October 2017 Hotride
 
-#ifndef OBJECTPROPERTIESMANAGER_H
-#define OBJECTPROPERTIESMANAGER_H
+#pragma once
 
 class CObjectProperty
 {
@@ -20,9 +13,7 @@ public:
 
     CObjectProperty() {}
     CObjectProperty(int serial, int revision, const wstring &name, const wstring &data);
-
     bool Empty();
-
     wstring CreateTextData(bool extended);
 };
 
@@ -34,7 +25,6 @@ class CObjectPropertiesManager
 
 private:
     OBJECT_PROPERTIES_MAP m_Map;
-
     class CRenderObject *m_Object{ nullptr };
 
 public:
@@ -42,16 +32,10 @@ public:
     virtual ~CObjectPropertiesManager();
 
     void Reset();
-
     bool RevisionCheck(int serial, int revision);
-
     void OnItemClicked(int serial);
-
     void Display(int serial);
-
     void Add(int serial, const CObjectProperty &objectProperty);
 };
 
 extern CObjectPropertiesManager g_ObjectPropertiesManager;
-
-#endif //OBJECTPROPERTIESMANAGER_H

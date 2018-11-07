@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIGroup.h
-**
-** Компонента группы
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIGROUP_H
-#define GUIGROUP_H
+#pragma once
 
 class CGUIGroup : public CBaseGUI
 {
@@ -21,5 +12,3 @@ public:
     CGUIGroup(int index);
     virtual ~CGUIGroup();
 };
-
-#endif

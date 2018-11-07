@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpProperty.h
-**
-** Copyright (C) November 2017 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) November 2017 Hotride
 
-#ifndef GUMPPROPERTY_H
-#define GUMPPROPERTY_H
+#pragma once
 
 class CGumpProperty : public CGump
 {
@@ -25,5 +18,3 @@ public:
 
     virtual class CRenderObject *Select() { return nullptr; }
 };
-
-#endif //GUMPPROPERTY_H

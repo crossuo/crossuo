@@ -1,16 +1,8 @@
-﻿/***********************************************************************************
-**
-** IntlocManager.h
-**
-** Copyright (C) October 2017 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) October 2017 Hotride
 
-#ifndef INTLOCMANAGER_H
-#define INTLOCMANAGER_H
+#pragma once
 
-//!Класс с данными интлок-файла
 class CIntloc : public CBaseQueueItem
 {
 public:
@@ -25,13 +17,10 @@ public:
     CIntloc(int fileIndex, const string &lang);
     virtual ~CIntloc();
 
-    //!Указатель на проекцию файла в памяти (оно же ридер)
     Wisp::CMappedFile m_File;
-
     wstring Get(int id, bool toCamelCase = false);
 };
 
-//!Класс менеджера клилоков
 class CIntlocManager : public CBaseQueue
 {
 private:
@@ -44,7 +33,4 @@ public:
     wstring Intloc(const string &lang, uint32_t clilocID, bool isNewCliloc);
 };
 
-//!Ссылка на менеджер интлоков
 extern CIntlocManager g_IntlocManager;
-
-#endif //INTLOCMANAGER_H

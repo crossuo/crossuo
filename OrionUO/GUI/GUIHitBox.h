@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** GUIHitBox.h
-**
-** Компонента для выбора зоны, без отображения чего-либо на ней
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUIHITBOX_H
-#define GUIHITBOX_H
+#pragma once
 
 class CGUIHitBox : public CGUIPolygonal
 {
@@ -24,5 +15,3 @@ public:
     virtual void OnMouseEnter();
     virtual void OnMouseExit();
 };
-
-#endif

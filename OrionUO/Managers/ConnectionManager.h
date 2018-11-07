@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+
 #if defined(ORION_LINUX)
 #define CDECL
 #endif

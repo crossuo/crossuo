@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** TargetGump.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef TARGETGUMP_H
-#define TARGETGUMP_H
+#pragma once
 
 class CTargetGump
 {
@@ -49,5 +42,3 @@ public:
 extern CTargetGump g_TargetGump;
 extern CTargetGump g_AttackTargetGump;
 extern CNewTargetSystem g_NewTargetSystem;
-
-#endif

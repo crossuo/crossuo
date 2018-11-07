@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GLHTMLTextTexture.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GLHTMLTEXTTEXTURE_H
-#define GLHTMLTEXTTEXTURE_H
+#pragma once
 
 class CGLHTMLTextTexture : public CGLTextTexture
 {
@@ -29,5 +22,3 @@ public:
     //Проверка веб-ссылки под мышкой
     uint16_t WebLinkUnderMouse(int x, int y);
 };
-
-#endif

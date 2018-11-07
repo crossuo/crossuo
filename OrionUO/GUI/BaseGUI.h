@@ -1,16 +1,7 @@
-﻿/***********************************************************************************
-**
-** BaseGUI.h
-**
-** Базовый класс компоненты пользовательского интерфейса
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef BASEGUI_H
-#define BASEGUI_H
+#pragma once
 
 class CBaseGUI : public CRenderObject
 {
@@ -79,5 +70,3 @@ public:
     //!Возможность обрабатывать события компонента, если она зажата, но мышка находится где-то еще
     virtual bool IsPressedOuthit() { return false; }
 };
-
-#endif

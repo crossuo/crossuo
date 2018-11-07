@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** ImageBounds.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef IMAGEBOUNDS_H
-#define IMAGEBOUNDS_H
+#pragma once
 
 class CRenderTextObject;
 
@@ -37,5 +30,3 @@ public:
 };
 
 extern CImageBounds g_PlayerRect;
-
-#endif

@@ -1,15 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** SelectTownScreen.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CSelectTownScreen g_SelectTownScreen;
 
@@ -22,10 +12,6 @@ CSelectTownScreen::~CSelectTownScreen()
 {
 }
 
-/*!
-Инициализация
-@return 
-*/
 void CSelectTownScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
@@ -46,11 +32,6 @@ void CSelectTownScreen::Init()
     m_Gump.WantUpdateContent = true;
 }
 
-/*!
-Обработка события после плавного затемнения экрана
-@param [__in_opt] action Идентификатор действия
-@return 
-*/
 void CSelectTownScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
@@ -67,4 +48,3 @@ void CSelectTownScreen::ProcessSmoothAction(uint8_t action)
         g_Orion.InitScreen(GS_GAME_CONNECT);
     }
 }
-

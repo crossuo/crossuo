@@ -1,14 +1,7 @@
-﻿/***********************************************************************************
-**
-** GumpGrayMenu.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef GUMPGRAYMENU_H
-#define GUMPGRAYMENU_H
+#pragma once
 
 class CGumpGrayMenu : public CGump
 {
@@ -23,5 +16,3 @@ public:
 
     GUMP_BUTTON_EVENT_H;
 };
-
-#endif

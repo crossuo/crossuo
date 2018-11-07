@@ -1,17 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** BaseQueue.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
-
-#include "stdafx.h"
-
-//-----------------------------------CBaseQueueItem---------------------------------
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
 CBaseQueueItem::CBaseQueueItem()
     : CBaseQueue()
@@ -46,8 +34,6 @@ CBaseQueueItem::~CBaseQueueItem()
 	}*/
 }
 
-//-------------------------------------CBaseQueue-----------------------------------
-
 CBaseQueue::CBaseQueue()
     : m_Items(nullptr)
 {
@@ -60,10 +46,6 @@ CBaseQueue::~CBaseQueue()
     Clear();
 }
 
-/*!
-Очистка списка
-@return 
-*/
 void CBaseQueue::Clear()
 {
     DEBUG_TRACE_FUNCTION;
@@ -83,11 +65,6 @@ void CBaseQueue::Clear()
     }
 }
 
-/*!
-Добавление элемента в список
-@param [__in] item Ссылка на новый элемент
-@return Ссылка на новый элемент
-*/
 CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -113,11 +90,6 @@ CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
     return item;
 }
 
-/*!
-Удаление указанного элемента из списка
-@param [__in] item Ссылка на элемент
-@return 
-*/
 void CBaseQueue::Delete(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -134,11 +106,6 @@ void CBaseQueue::Delete(CBaseQueueItem *item)
     }
 }
 
-/*!
-Удаление элемента с указанным индексом
-@param [__in] index Индекс элемента
-@return
-*/
 void CBaseQueue::Delete(int index)
 {
     DEBUG_TRACE_FUNCTION;
@@ -146,11 +113,6 @@ void CBaseQueue::Delete(int index)
     Delete(Get(index));
 }
 
-/*!
-Получить индекс указанного элемента
-@param [__in] item Ссылка на элемент
-@return Индекс элемента в очереди
-*/
 int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -170,10 +132,6 @@ int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
     return -1;
 }
 
-/*!
-Получить общее количество элементов в списке
-@return Количество объектов в очереди
-*/
 int CBaseQueue::GetItemsCount()
 {
     DEBUG_TRACE_FUNCTION;
@@ -187,11 +145,6 @@ int CBaseQueue::GetItemsCount()
     return count;
 }
 
-/*!
-Получить элемент с указанным индексом
-@param [__in] index Индекс элемента
-@return Ссылка на элемент или nullptr
-*/
 CBaseQueueItem *CBaseQueue::Get(int index)
 {
     DEBUG_TRACE_FUNCTION;
@@ -204,12 +157,6 @@ CBaseQueueItem *CBaseQueue::Get(int index)
     return item;
 }
 
-/*!
-Осуществляет вставку элемента в очередь
-@param [__in] first Ссылка на предшествующий элемент
-@param [__out] item Ссылка на элемент
-@return 
-*/
 void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -236,11 +183,6 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
     }
 }
 
-/*!
-Осуществляет изъятие указанного элемента из очереди
-@param [__in] item Ссылка на элемент
-@return 
-*/
 void CBaseQueue::Unlink(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -267,11 +209,6 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
     }
 }
 
-/*!
-Поместить элемент в начало очереди
-@param [__in] item Ссылка на элемент
-@return 
-*/
 void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -293,11 +230,6 @@ void CBaseQueue::MoveToFront(CBaseQueueItem *item)
     }
 }
 
-/*!
-Поместить элемент в конец очереди
-@param [__in] item Ссылка на элемент
-@return 
-*/
 void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 {
     DEBUG_TRACE_FUNCTION;
@@ -321,12 +253,6 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
     }
 }
 
-/*!
-Переместить элемент вверх/вниз по очереди
-@param [__in] item Ссылка на элемент
-@param [__in] up Вверх или вниз по очереди
-@return true в случае успешного перемещения
-*/
 bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
 {
     DEBUG_TRACE_FUNCTION;
@@ -401,10 +327,6 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
     return result;
 }
 
-/*!
-Получить указатель на последний элемент
-@return Ссылка на элемент
-*/
 CBaseQueueItem *CBaseQueue::Last()
 {
     DEBUG_TRACE_FUNCTION;
@@ -418,4 +340,3 @@ CBaseQueueItem *CBaseQueue::Last()
     //Вернем что получилось в результате поиска
     return last;
 }
-

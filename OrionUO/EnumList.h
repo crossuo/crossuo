@@ -2,7 +2,6 @@
 
 #pragma once
 
-//!На какой стадии находится рендер (и вообще клиент)
 enum GAME_STATE
 {
     GS_MAIN = 0,       //!Основной гамп (клиент только запустили)
@@ -22,7 +21,6 @@ enum GAME_STATE
 							*/
 };
 
-//!Тип объекта при рендере
 enum RENDER_OBJECT_TYPE
 {
     ROT_NO_OBJECT = 0, //Ничего не выбрано
@@ -33,7 +31,6 @@ enum RENDER_OBJECT_TYPE
     ROT_EFFECT         //Эффект
 };
 
-//!Тип объекта поиска
 enum SCAN_TYPE_OBJECT
 {
     STO_HOSTILE = 0,
@@ -43,7 +40,6 @@ enum SCAN_TYPE_OBJECT
     STO_MOBILES
 };
 
-//!Тип поиска объекта
 enum SCAN_MODE_OBJECT
 {
     SMO_NEXT = 0,
@@ -51,7 +47,6 @@ enum SCAN_MODE_OBJECT
     SMO_NEAREST
 };
 
-//!Тип эффекта
 enum EFFECT_TYPE
 {
     EF_MOVING = 0,     //!Движется
@@ -61,7 +56,6 @@ enum EFFECT_TYPE
     EF_DRAG            //!Анимация перемещения предмета
 };
 
-//!Тип ускорения
 enum CHARACTER_SPEED_TYPE
 {
     CST_NORMAL = 0,   //!Нормальная скорость перемещения
@@ -70,7 +64,6 @@ enum CHARACTER_SPEED_TYPE
     CST_FAST_UNMOUNT_AND_CANT_RUN //!Совокупность предыдущих 2 вариантов (персонаж не может бежать и ускорение только при перемещении без маунта)
 };
 
-//!Тип шифрования
 enum ENCRYPTION_TYPE
 {
     ET_NOCRYPT = 0, //!Без шифрования
@@ -81,7 +74,6 @@ enum ENCRYPTION_TYPE
     ET_TFISH //!TwoFish + MD5
 };
 
-//!Версия клиента (для изменения в протоколе и прочих няшках)
 enum CLIENT_VERSION
 {
     CV_OLD = 0, //Предшествующие клиенту 2.0.0, Остальные по логике, исходя из названия
@@ -114,7 +106,6 @@ enum CLIENT_VERSION
     CV_70331  //
 };
 
-//!На какой стадии находится окно коннекта
 enum CONNECTION_SCREEN_TYPE
 {
     CST_LOGIN = 0,
@@ -125,7 +116,6 @@ enum CONNECTION_SCREEN_TYPE
     CST_GAME
 };
 
-//!Рассы
 enum RACE_TYPE
 {
     RT_HUMAN = 1,
@@ -133,7 +123,6 @@ enum RACE_TYPE
     RT_GARGOYLE
 };
 
-//!Типы профессий
 enum PROFESSION_TYPE
 {
     PT_NO_PROF = 0,
@@ -141,7 +130,6 @@ enum PROFESSION_TYPE
     PT_PROFESSION
 };
 
-//!Состояния ClientFlag для отправки при создании персонажа
 enum CLIENT_FLAG
 {
     CF_T2A = 0x00,
@@ -156,7 +144,6 @@ enum CLIENT_FLAG
     CF_3D = 0x100
 };
 
-//!Расширения для списка персонажей
 enum CHARACTER_LIST_FLAG
 {
     CLF_UNKNOWN = 0x01,
@@ -177,7 +164,6 @@ enum CHARACTER_LIST_FLAG
     CLF_UNLOCK_FELUCCA_AREAS = 0x8000
 };
 
-//!Состояния client features
 enum LOCKED_FEATURE_FLAG
 {
     LFF_T2A = 0x01,
@@ -202,7 +188,6 @@ enum LOCKED_FEATURE_FLAG
     LFF_RUSTIC_HOUSING = 0x80000
 };
 
-//!Типы спеллбук
 enum SPELLBOOK_TYPE
 {
     ST_MAGE = 0,
@@ -214,7 +199,6 @@ enum SPELLBOOK_TYPE
     ST_MYSTICISM
 };
 
-//!Смещение для книг заклинаний
 enum SPELLBOOK_OFFSET
 {
     SO_MAGE = 1,
@@ -226,7 +210,6 @@ enum SPELLBOOK_OFFSET
     SO_MYSTICISM = 601
 };
 
-//!Состояния плавного переключения экранов
 enum SCREEN_EFFECT_MODE
 {
     SEM_NONE = 0,
@@ -234,7 +217,6 @@ enum SCREEN_EFFECT_MODE
     SEM_SUNSET
 };
 
-//!Тип плавного переключения экрана
 enum SCREEN_EFFECT_TYPE
 {
     SET_TO_BLACK,
@@ -244,7 +226,6 @@ enum SCREEN_EFFECT_TYPE
     SET_TO_BLACK_VERY_FAST
 };
 
-//!Состояния плавного переключения экранов
 enum WEATHER_TYPE
 {
     WT_RAIN = 0,
@@ -253,7 +234,6 @@ enum WEATHER_TYPE
     WT_STORM
 };
 
-//!Типы гампов
 enum GUMP_TYPE
 {
     GT_NONE = 0,  //!Нет гампа
@@ -304,7 +284,6 @@ enum GUMP_TYPE
     GT_PROPERTY_ICON
 };
 
-//!Типы объектов гампов
 enum GUMP_OBJECT_TYPE
 {
     GOT_NONE = 0,        //!Нет типа
@@ -634,7 +613,6 @@ enum VALUE_KEY_STRING
     VKS_SPELLBOOK_7_SPELL_NAME
 };
 
-//!Типы текстовых сообщений
 enum OBJECT_LAYERS
 {
     OL_NONE = 0,    //0
@@ -669,7 +647,6 @@ enum OBJECT_LAYERS
     OL_BANK         //29
 };
 
-//!Типы текстовых сообщений
 enum SPEECH_TYPE
 {
     ST_NORMAL = 0,
@@ -726,7 +703,6 @@ enum HTML_TAG_TYPE
     HTT_DIV
 };
 
-//!Типы промптов
 enum PROMPT_TYPE
 {
     PT_NONE = 0,
@@ -831,7 +807,6 @@ enum ORION_INTERNAL_PACKET_MESSAGE_TYPE
     OIPMT_OPEN_MAP = 103
 };
 
-//!Направления чара
 enum DIRECTION_TYPE
 {
     DT_N = 0,
@@ -950,7 +925,6 @@ enum PEOPLE_ANIMATION_GROUP
     PAG_ANIMATION_COUNT
 };
 
-//!Злобность персонажа
 enum NOTORIETY_TYPE
 {
     NT_NONE = 0,
