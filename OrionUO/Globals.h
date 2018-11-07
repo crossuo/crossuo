@@ -3,7 +3,8 @@
 
 #pragma once
 
-enum {
+enum
+{
     WINDOW_INACTIVE = 0,
     WINDOW_ACTIVE = 1,
 };

@@ -272,7 +272,7 @@ wstring CGameConsole::IsSystemCommand(
     return result;
 }
 
-void CGameConsole::DrawW(BYTE font, WORD color, int x, int y, TEXT_ALIGN_TYPE align, WORD flags)
+void CGameConsole::DrawW(uint8_t font, WORD color, int x, int y, TEXT_ALIGN_TYPE align, WORD flags)
 {
     DEBUG_TRACE_FUNCTION;
     int posOffset = 0;

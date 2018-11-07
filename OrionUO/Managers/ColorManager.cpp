@@ -35,7 +35,7 @@ void CColorManager::Init()
         m_HuesCount = (int)entryCount * 8;
         m_HuesRange.resize(entryCount);
 
-        memcpy(&m_HuesRange[0], (PVOID)addr, entryCount * sizeof(HUES_GROUP));
+        memcpy(&m_HuesRange[0], (void *)addr, entryCount * sizeof(HUES_GROUP));
     }
     else
         m_HuesCount = 0;
@@ -45,7 +45,7 @@ void CColorManager::Init()
         m_Radarcol.resize(g_FileManager.m_RadarcolMul.Size / 2);
         memcpy(
             &m_Radarcol[0],
-            (PVOID)g_FileManager.m_RadarcolMul.Start,
+            (void *)g_FileManager.m_RadarcolMul.Start,
             g_FileManager.m_RadarcolMul.Size);
     }
 }

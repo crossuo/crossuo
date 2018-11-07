@@ -244,7 +244,7 @@ void CEntryText::Clear()
 void CEntryText::Paste()
 {
     DEBUG_TRACE_FUNCTION;
-
+    // FIXME: Move clipboard access to Wisp Window
     if (OpenClipboard(g_OrionWindow.Handle))
     {
         HANDLE hData = GetClipboardData(CF_UNICODETEXT);

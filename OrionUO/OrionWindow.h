@@ -2,9 +2,10 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
-#include "Input.h"
+#include "Platform.h"
 
-enum {
+enum
+{
     RENDER_TIMER_ID = 1,
     UPDATE_TIMER_ID = 2,
     FASTLOGIN_TIMER_ID = 3,
@@ -40,10 +41,10 @@ protected:
     virtual void OnActivate();
     virtual void OnDeactivate();
     virtual void OnShow(bool show);
-    virtual void OnSetText(const LPARAM &lParam);
+    virtual void OnSetText(const char *str);
     virtual void OnTimer(uint32_t id);
     virtual void OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer);
-    virtual HRESULT OnRepaint(const WPARAM &wParam, const LPARAM &lParam);
+    virtual bool OnRepaint(const PaintEvent &ev);
     virtual bool OnUserMessages(const UserEvent &ev) override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

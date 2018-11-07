@@ -1,20 +1,12 @@
-﻿/***********************************************************************************
-**
-** PacketManager.h
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#ifndef PACKETMANAGER_H
-#define PACKETMANAGER_H
+#pragma once
 
 class CPacketManager;
 typedef void (CPacketManager::*PACKET_FUNCTION)();
 
 #define ORION_SAVE_ALL_PACKETS 1
-
 #define ORION_SAVE_PACKET 1
 
 #if ORION_SAVE_ALL_PACKETS == 1
@@ -23,7 +15,6 @@ typedef void (CPacketManager::*PACKET_FUNCTION)();
 #define ORION_IGNORE_PACKET 0
 #endif
 
-//!Направление пакета
 enum PACKET_DIRECTION
 {
     DIR_SEND = 0, //!От клиента серверу
@@ -31,23 +22,13 @@ enum PACKET_DIRECTION
     DIR_BOTH      //!В обе стороны
 };
 
-//!Класс для хранения информации о пакетах
 class CPacketInfo
 {
 public:
-    //!Записывать ли пакет в лог
     bool save;
-
-    //!Название пакета
     const char *Name;
-
-    //!Размер пакета
     int Size;
-
-    //!Направление пакета
     PACKET_DIRECTION Direction;
-
-    //!Обработчик пакета
     PACKET_FUNCTION Handler;
 };
 
@@ -83,30 +64,20 @@ public:
     uint32_t ConfigSerial = 0;
 
 private:
+    ProtectedSection m_Mutex;
+
     static CPacketInfo m_Packets[0x100];
-
     std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
-
-    bool AutoLoginNameExists(const string &name);
-
-    void AddHTMLGumps(class CGump *gump, vector<HTMLGumpDataInfo> &list);
-
     vector<uint32_t> m_MegaClilocRequests;
-
     deque<vector<uint8_t>> m_PluginData;
 
-#if USE_WISP
-    CRITICAL_SECTION m_CSPluginNetwork;
-#else
-    SDL_mutex *m_Mutex = nullptr;
-#endif
+    bool AutoLoginNameExists(const string &name);
+    void AddHTMLGumps(class CGump *gump, vector<HTMLGumpDataInfo> &list);
 
 protected:
     virtual void OnPacket();
-
     virtual void OnReadFailed();
 
-    //!Обработчики пакетов
     HANDLER_PACKET(LoginError);
     HANDLER_PACKET(ServerList);
     HANDLER_PACKET(RelayServer);
@@ -223,22 +194,13 @@ public:
     virtual ~CPacketManager();
 
     virtual int GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize);
-
     CPacketInfo &GetInfo(uint8_t buf) const { return m_Packets[buf]; }
-
     void SendMegaClilocRequests();
-
     void AddMegaClilocRequest(int serial);
-
     void SavePluginReceivePacket(uint8_t *buf, int size);
-
     void ProcessPluginPackets();
-
     void PluginReceiveHandler(uint8_t *buf, int size);
-
     void SetCachedGumpCoords(uint32_t id, int x, int y);
 };
 
 extern CPacketManager g_PacketManager;
-
-#endif

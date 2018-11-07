@@ -74,7 +74,7 @@ public:
     typedef BOOL(__stdcall *PReadProcessMemoryRoutine)(
         HANDLE hProcess,
         DWORD64 qwBaseAddress,
-        PVOID lpBuffer,
+        void *lpBuffer,
         DWORD nSize,
         LPDWORD lpNumberOfBytesRead,
         LPVOID pUserData // optional data, which was passed in "ShowCallstack"
@@ -151,7 +151,7 @@ protected:
     static BOOL __stdcall myReadProcMem(
         HANDLE hProcess,
         DWORD64 qwBaseAddress,
-        PVOID lpBuffer,
+        void *lpBuffer,
         DWORD nSize,
         LPDWORD lpNumberOfBytesRead);
 

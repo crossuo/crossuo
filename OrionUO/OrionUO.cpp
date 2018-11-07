@@ -90,7 +90,7 @@ void COrion::ParseCommandLine() // FIXME: move this out
     
     bool fastLogin = false;
     int argc = 0;
-    LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &argc);
+    auto *args = CommandLineToArgvW(GetCommandLineW(), &argc);
 
     auto defaultPluginPath{ g_App.ExeFilePath("OA/OrionAssistant.dll") };
     string defaultPluginFunction = "Install";
@@ -1384,7 +1384,9 @@ void COrion::Process(bool rendering)
 
             if (g_ConfigManager.ObjectHandles && g_CtrlPressed && g_ShiftPressed &&
                 (oldCtrl != g_CtrlPressed || oldShift != g_ShiftPressed))
+            {
                 g_World->ResetObjectHandlesState();
+            }
 
             if (rendering)
             {
@@ -1396,7 +1398,9 @@ void COrion::Process(bool rendering)
                 if (!g_OrionWindow.IsMinimizedWindow())
                 {
                     if (canRenderSelect)
+                    {
                         g_GameScreen.SelectObject();
+                    }
 
                     CGump::ProcessListing();
                     g_GameScreen.PrepareContent();
@@ -1407,13 +1411,18 @@ void COrion::Process(bool rendering)
                         g_SelectedObject.Object->IsWorldObject())
                     {
                         CRenderWorldObject *rwo = (CRenderWorldObject *)g_SelectedObject.Object;
-
                         if (rwo->IsLandObject())
+                        {
                             uoiSelectedObject.Serial = 0xFFFFFFFF;
+                        }
                         else if (!rwo->IsGameObject())
+                        {
                             uoiSelectedObject.Serial = 0;
+                        }
                         else
+                        {
                             uoiSelectedObject.Serial = rwo->Serial;
+                        }
 
                         uoiSelectedObject.Graphic = rwo->Graphic;
                         uoiSelectedObject.Color = rwo->Color;
@@ -1422,7 +1431,6 @@ void COrion::Process(bool rendering)
                         uoiSelectedObject.Z = rwo->GetZ();
 
                         rwo = rwo->GetLand();
-
                         if (rwo != nullptr)
                         {
                             uoiSelectedObject.LandGraphic = rwo->Graphic;
@@ -1439,10 +1447,10 @@ void COrion::Process(bool rendering)
                         }
                     }
                     else
+                    {
                         memset(&uoiSelectedObject, 0, sizeof(uoiSelectedObject));
-
-                    g_PluginManager.WindowProc(
-                        g_OrionWindow.Handle, UOMSG_SELECTED_TILE, (WPARAM)&uoiSelectedObject, 0);
+                    }
+                    PLUGIN_EVENT(UOMSG_SELECTED_TILE, &uoiSelectedObject, 0);
                 }
                 g_Target.UnloadMulti();
                 g_GameScreen.RenderListInitalized = false;
@@ -1534,9 +1542,7 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
         else
         {
             CRASHLOG("Plugin['%s'] loaded at: 0x%08X\n", CStringFromPath(libpath), dll);
-
             plugin->m_PPS->Owner = plugin;
-
             if (plugin->CanClientAccess())
                 plugin->m_PPS->Client = &g_PluginClientInterface;
 
@@ -1547,7 +1553,6 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
                 plugin->m_PPS->Send = PluginSendFunction;
 
             initFunc(plugin->m_PPS);
-
             g_PluginManager.Add(plugin);
         }
     }
@@ -1637,21 +1642,17 @@ void COrion::LoadPluginConfig()
 		CPluginPacketFilesTransfered().SendToPlugin();*/
     }
 
-#if USE_WISP
-    BringWindowToTop(g_OrionWindow.Handle);
-#else
-    SDL_RaiseWindow(g_OrionWindow.m_window);
-#endif
+    g_OrionWindow.Raise();
 }
 
 string COrion::FixServerName(string name)
 {
     DEBUG_TRACE_FUNCTION;
     size_t i = 0;
-
     while ((i = name.find(":")) != string::npos)
+    {
         name.erase(i, 1);
-
+    }
     return name;
 }
 
@@ -1811,7 +1812,7 @@ void COrion::ClearUnusedTextures()
 
     g_Ticks -= CLEAR_TEXTURES_DELAY;
 
-    PVOID lists[5] = {
+    void *lists[5] = {
         &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
     };
 
@@ -1919,9 +1920,7 @@ int COrion::Send(uint8_t *buf, int size)
     DEBUG_TRACE_FUNCTION;
     uint32_t ticks = g_Ticks;
     g_TotalSendSize += size;
-
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
-
     if (type.save)
     {
 #if !defined(ORION_LINUX) // FIXME: localtime_s (use C++ if possible)
@@ -1955,11 +1954,15 @@ int COrion::Send(uint8_t *buf, int size)
     int result = 0;
 
     if (type.Direction != DIR_SEND && type.Direction != DIR_BOTH)
+    {
         LOG("Warning!!! Message direction invalid: 0x%02X\n", *buf);
+    }
     else
     {
         if (g_PluginManager.PacketSend(buf, size))
+        {
             result = g_ConnectionManager.Send(buf, size);
+        }
     }
 
     if (result)
@@ -1976,17 +1979,12 @@ void COrion::ServerSelection(int pos)
     DEBUG_TRACE_FUNCTION;
     InitScreen(GS_SERVER_CONNECT);
     Process(true);
-
     CServer *server = g_ServerList.Select(pos);
-
     if (server != nullptr)
     {
         string name = g_ServerList.GetSelectedServer()->Name;
         g_ServerList.LastServerName = name.c_str();
-
-        g_PluginManager.WindowProc(
-            g_OrionWindow.Handle, UOMSG_SET_SERVER_NAME, (WPARAM)FixServerName(name).c_str(), 0);
-
+        PLUGIN_EVENT(UOMSG_SET_SERVER_NAME, FixServerName(name).c_str(), 0);
         CPacketSelectServer((uint8_t)server->Index).Send();
     }
 }
@@ -1998,11 +1996,9 @@ void COrion::RelayServer(const char *ip, int port, uint8_t *gameSeed)
     g_ConnectionManager.Init(gameSeed);
     m_GameServerIP = ip;
     memset(&g_GameServerPingInfo, 0, sizeof(g_GameServerPingInfo));
-
     if (g_ConnectionManager.Connect(ip, port, gameSeed))
     {
         g_ConnectionScreen.SetConnected(true);
-
         CPacketSecondLogin().Send();
     }
     else
@@ -2017,15 +2013,8 @@ void COrion::CharacterSelection(int pos)
     DEBUG_TRACE_FUNCTION;
     InitScreen(GS_GAME_CONNECT);
     g_ConnectionScreen.SetType(CST_GAME);
-
     g_CharacterList.LastCharacterName = g_CharacterList.GetName(pos);
-
-    g_PluginManager.WindowProc(
-        g_OrionWindow.Handle,
-        UOMSG_SET_PLAYER_NAME,
-        (WPARAM)g_CharacterList.LastCharacterName.c_str(),
-        0);
-
+    PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, g_CharacterList.LastCharacterName.c_str(), 0);
     CPacketSelectCharacter(pos, g_CharacterList.LastCharacterName).Send();
 }
 
@@ -2033,38 +2022,37 @@ void COrion::LoginComplete(bool reload)
 {
     DEBUG_TRACE_FUNCTION;
     bool load = reload;
-
     if (!load && !g_ConnectionScreen.GetCompleted())
     {
         load = true;
         g_ConnectionScreen.SetCompleted(true);
-
         InitScreen(GS_GAME);
     }
 
     if (load && g_Player != nullptr)
     {
         string title = "Ultima Online - " + g_Player->GetName();
-
         CServer *server = g_ServerList.GetSelectedServer();
-
         if (server != nullptr)
+        {
             title += " (" + server->Name + ")";
+        }
 
         g_OrionWindow.SetTitle(title);
-
         CPacketSkillsRequest(g_PlayerSerial).Send();
         g_UseItemActions.Add(g_PlayerSerial);
 
         //CPacketOpenChat({}).Send();
         //CPacketRazorAnswer().Send();
-
         if (g_PacketManager.GetClientVersion() >= CV_306E)
+        {
             CPacketClientType().Send();
+        }
 
         if (g_PacketManager.GetClientVersion() >= CV_305D)
+        {
             CPacketClientViewRange(g_ConfigManager.UpdateRange).Send();
-
+        }
         LoadLocalConfig(g_PacketManager.ConfigSerial);
     }
 }
@@ -2074,7 +2062,6 @@ void COrion::ChangeSeason(const SEASON_TYPE &season, int music)
     DEBUG_TRACE_FUNCTION;
 
     g_Season = season;
-
     QFOR(item, g_MapManager.m_Items, CMapBlock *)
     {
         for (int x = 0; x < 8; x++)

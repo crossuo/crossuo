@@ -1,7 +1,5 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+﻿// MIT License
 
-#include "stdafx.h"
 #include "FileSystem.h"
 #include "WispThread.h"
 #include <SDL_timer.h>
@@ -23,18 +21,15 @@ CApplication::~CApplication()
 {
     DEBUG_TRACE_FUNCTION;
     g_WispApplication = nullptr;
-    Hinstance = 0;
 }
 
+#if USE_WISP
 int CApplication::Run(HINSTANCE hinstance)
 {
     // DEBUG_TRACE_FUNCTION;
-#if USE_WISP
     timeBeginPeriod(1);
     Hinstance = hinstance;
-
     MSG msg = { 0 };
-
     while (msg.message != WM_QUIT)
     {
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -43,15 +38,16 @@ int CApplication::Run(HINSTANCE hinstance)
             DispatchMessage(&msg);
         }
         else
+        {
             SDL_Delay(1);
-
+        }
         OnMainLoop();
     }
-
     timeEndPeriod(1);
-
     return (int)msg.wParam;
 #else
+int CApplication::Run()
+{
     bool quit = false;
     while (!quit)
     {
@@ -65,11 +61,11 @@ int CApplication::Run(HINSTANCE hinstance)
             OnMainLoop();
         }
     }
-
     return EXIT_SUCCESS;
 #endif
 }
 
+// FIXME: Get OrionUO version Id
 string CApplication::GetFileVersion(uint32_t *numericVerion) const
 {
 #if USE_WISP
@@ -87,14 +83,12 @@ string CApplication::GetFileVersion(uint32_t *numericVerion) const
 
             if (GetFileVersionInfoW(&szFilename[0], 0, dwSize, &lpVersionInfo[0]))
             {
-                UINT uLen = 0;
+                auto uLen = 0;
                 VS_FIXEDFILEINFO *lpFfi = nullptr;
-
                 VerQueryValueW(&lpVersionInfo[0], PATH_SEP, (LPVOID *)&lpFfi, &uLen);
 
                 DWORD dwFileVersionMS = 0;
                 DWORD dwFileVersionLS = 0;
-
                 if (lpFfi != nullptr)
                 {
                     dwFileVersionMS = lpFfi->dwFileVersionMS;
@@ -169,4 +163,4 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     return res;
 }
 
-}; // namespace Wisp
+};

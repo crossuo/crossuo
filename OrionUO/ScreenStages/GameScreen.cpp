@@ -1481,8 +1481,7 @@ void CGameScreen::PrepareContent()
                     g_Orion.OpenStatus(selchar->Serial);
                     g_GeneratedMouseDown = true;
                     g_OrionWindow.EmulateOnLeftMouseButtonDown();
-                    g_PluginManager.WindowProc(
-                        g_OrionWindow.Handle, UOMSG_STATUS_REQUEST, (WPARAM)selchar->Serial, 0);
+                    PLUGIN_EVENT(UOMSG_STATUS_REQUEST, selchar->Serial, 0);
                 }
             }
         }

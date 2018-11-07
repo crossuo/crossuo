@@ -98,7 +98,7 @@ void CConnectionManager::Init(uint8_t *gameSeed)
 void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
 {
     DEBUG_TRACE_FUNCTION;
-    g_PluginManager.WindowProc(g_OrionWindow.Handle, UOMSG_IP_SEND, (WPARAM)ip, 4);
+    PLUGIN_EVENT(UOMSG_IP_SEND, ip, 4);
     socket.Send(ip, 4);
 }
 
@@ -124,7 +124,7 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
             }
             else
             {
-                BYTE buf = 0xEF;
+                uint8_t buf = 0xEF;
                 m_LoginSocket.Send(&buf, 1); //0xEF
                 SendIP(m_LoginSocket, m_Seed);
                 Wisp::CDataWritter stream;

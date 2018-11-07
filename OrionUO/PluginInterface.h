@@ -26,7 +26,7 @@ typedef struct PLUGIN_INFO
 
 #pragma pack(pop)
 
-typedef LRESULT WINDOW_PROC(WindowHandle, UINT, WPARAM, LPARAM);
+typedef uint32_t WINDOW_PROC(WindowHandle, uint32_t, void *, void *);
 typedef bool CDECL PACKET_PROC(unsigned char *, const int &);
 typedef void CDECL VOID_PROC();
 typedef bool CDECL WORLD_MAP_DRAW_PROC();

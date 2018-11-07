@@ -8,7 +8,7 @@
 */
 
 #pragma once
-#include "Input.h"
+#include "Platform.h"
 
 class CGumpDrag : public CGump
 {

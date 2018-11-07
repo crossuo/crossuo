@@ -70,7 +70,7 @@ void CBaseScreen::DrawSmoothMonitorEffect()
     g_ScreenEffectManager.Draw();
 }
 
-void CBaseScreen::CreateSmoothAction(BYTE action)
+void CBaseScreen::CreateSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_ScreenEffectManager.UseSunset())

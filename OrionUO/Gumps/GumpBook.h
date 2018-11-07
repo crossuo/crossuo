@@ -2,7 +2,7 @@
 // Copyright (C) September 2016 Hotride
 
 #pragma once
-#include "Input.h"
+#include "Platform.h"
 
 class CGumpBook : public CGump
 {

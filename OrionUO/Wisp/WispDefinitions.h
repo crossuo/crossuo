@@ -41,5 +41,5 @@ void DebugDump(uint8_t *data, int size);
 #define WindowHandle HWND
 #else
 #define USER_MESSAGE_ID 0x0400
-#define WindowHandle void*
+#define WindowHandle void *
 #endif

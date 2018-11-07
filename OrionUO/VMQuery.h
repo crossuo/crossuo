@@ -1,3 +1,4 @@
+#if defined(ORION_WINDOWS)
 /******************************************************************************
 Module:  VMQuery.h
 Notices: Copyright (c) 2000 Jeffrey Richter
@@ -6,7 +7,7 @@ Notices: Copyright (c) 2000 Jeffrey Richter
 typedef struct
 {
     // Region information
-    PVOID pvRgnBaseAddress;
+    void *pvRgnBaseAddress;
     DWORD dwRgnProtection; // PAGE_*
     SIZE_T RgnSize;
     DWORD dwRgnStorage; // MEM_*: Free, Image, Mapped, Private
@@ -15,7 +16,7 @@ typedef struct
     BOOL fRgnIsAStack;    // TRUE if region contains thread stack
 
     // Block information
-    PVOID pvBlkBaseAddress;
+    void *pvBlkBaseAddress;
     DWORD dwBlkProtection; // PAGE_*
     SIZE_T BlkSize;
     DWORD dwBlkStorage; // MEM_*: Free, Reserve, Image, Mapped, Private
@@ -26,3 +27,4 @@ typedef struct
 BOOL VMQuery(HANDLE hProcess, LPCVOID pvAddress, PVMQUERY pVMQ);
 
 //////////////////////////////// End of File //////////////////////////////////
+#endif

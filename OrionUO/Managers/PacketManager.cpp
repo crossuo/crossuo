@@ -1,15 +1,6 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-/***********************************************************************************
-**
-** PacketManager.cpp
-**
-** Copyright (C) August 2016 Hotride
-**
-************************************************************************************
-*/
+﻿// MIT License
+// Copyright (C) August 2016 Hotride
 
-#include "stdafx.h"
 #include "PacketManager.h"
 #include "../Sockets.h"
 
@@ -327,32 +318,22 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
 CPacketManager::CPacketManager()
     : Wisp::CPacketReader()
 {
-#if USE_WISP
-    InitializeCriticalSection(&m_CSPluginNetwork);
-#else
-    m_Mutex = SDL_CreateMutex();
-#endif
+    CREATE_MUTEX(m_Mutex);
 }
 
 CPacketManager::~CPacketManager()
 {
-#if USE_WISP
-    DeleteCriticalSection(&m_CSPluginNetwork);
-#else
-    if (!m_Mutex)
-        SDL_DestroyMutex(m_Mutex);
-    m_Mutex = nullptr;
-#endif
+    RELEASE_MUTEX(m_Mutex);
 }
 
 bool CPacketManager::AutoLoginNameExists(const string &name)
 {
     DEBUG_TRACE_FUNCTION;
+
     if (!AutoLoginNames.length())
         return false;
 
     string search = string("|") + name + "|";
-
     return (AutoLoginNames.find(search) != string::npos);
 }
 
@@ -552,7 +533,7 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
 int CPacketManager::GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize)
 {
     DEBUG_TRACE_FUNCTION;
-    if (packet.size())
+    if (packet.size())    
         return m_Packets[packet[0]].Size;
 
     return 0;
@@ -566,13 +547,16 @@ void CPacketManager::SendMegaClilocRequests()
         if (m_ClientVersion >= CV_500A)
         {
             while (!m_MegaClilocRequests.empty())
+            {
                 CPacketMegaClilocRequest(m_MegaClilocRequests).Send();
+            }
         }
         else
         {
             for (int i : m_MegaClilocRequests)
+            {
                 CPacketMegaClilocRequestOld(i).Send();
-
+            }
             m_MegaClilocRequests.clear();
         }
     }
@@ -593,25 +577,22 @@ void CPacketManager::AddMegaClilocRequest(int serial)
 void CPacketManager::OnReadFailed()
 {
     DEBUG_TRACE_FUNCTION;
+
     LOG("OnReadFailed...Disconnecting...\n");
     g_Orion.DisconnectGump();
-
     //g_Orion.Disconnect();
-
     g_AbyssPacket03First = true;
     g_PluginManager.Disconnect();
-
     g_ConnectionManager.Disconnect();
 }
 
 void CPacketManager::OnPacket()
 {
     DEBUG_TRACE_FUNCTION;
+
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
-
     CPacketInfo &info = m_Packets[*Start];
-
     if (info.save)
     {
 #if !defined(ORION_LINUX) // FIXME: localtime_s (use C++ if possible)
@@ -639,18 +620,19 @@ void CPacketManager::OnPacket()
     }
 
     g_LastPacketTime = ticks;
-
     if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)
+    {
         LOG("message direction invalid: 0x%02X\n", *Start);
+    }
     else if (g_PluginManager.PacketRecv(Start, (int)Size))
     {
         if (info.Handler != 0)
         {
             Ptr = Start + 1;
-
             if (!info.Size)
+            {
                 Ptr += 2;
-
+            }
             (this->*(info.Handler))();
         }
     }
@@ -659,34 +641,20 @@ void CPacketManager::OnPacket()
 void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint8_t> packet(size);
 
+    vector<uint8_t> packet(size);
     memcpy(&packet[0], &buf[0], size);
 
-#if USE_WISP
-    EnterCriticalSection(&m_CSPluginNetwork);
-#else
-    SDL_LockMutex(m_Mutex);
-#endif
-
+    LOCK(m_Mutex);
     m_PluginData.push_front(packet);
-
-#if USE_WISP
-    LeaveCriticalSection(&m_CSPluginNetwork);
-#else
-    SDL_UnlockMutex(m_Mutex);
-#endif
+    UNLOCK(m_Mutex);
 }
 
 void CPacketManager::ProcessPluginPackets()
 {
     DEBUG_TRACE_FUNCTION;
-#if USE_WISP
-    EnterCriticalSection(&m_CSPluginNetwork);
-#else
-    SDL_LockMutex(m_Mutex);
-#endif
 
+    LOCK(m_Mutex);
     while (!m_PluginData.empty())
     {
         vector<uint8_t> &packet = m_PluginData.back();
@@ -696,12 +664,7 @@ void CPacketManager::ProcessPluginPackets()
 
         m_PluginData.pop_back();
     }
-
-#if USE_WISP
-    LeaveCriticalSection(&m_CSPluginNetwork);
-#else
-    SDL_UnlockMutex(m_Mutex);
-#endif
+    UNLOCK(m_Mutex);
 }
 
 void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
@@ -711,9 +674,7 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
 
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
-
     CPacketInfo &info = m_Packets[*Start];
-
     LOG("--- ^(%d) r(+%d => %d) Plugin->Client:: %s\n",
         ticks - g_LastPacketTime,
         Size,
@@ -722,16 +683,17 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
     LOG_DUMP(Start, (int)Size);
 
     g_LastPacketTime = ticks;
-
     if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)
+    {
         LOG("message direction invalid: 0x%02X\n", *buf);
+    }
     else if (info.Handler != 0)
     {
         Ptr = Start + 1;
-
         if (!info.Size)
+        {
             Ptr += 2;
-
+        }
         (this->*(info.Handler))();
     }
 }
@@ -779,12 +741,10 @@ PACKET_HANDLER(RelayServer)
 PACKET_HANDLER(CharacterList)
 {
     DEBUG_TRACE_FUNCTION;
+
     HandleResendCharacterList();
-
     uint8_t locCount = ReadUInt8();
-
     g_CityList.Clear();
-
     if (m_ClientVersion >= CV_70130)
     {
         for (int i = 0; i < locCount; i++)
@@ -855,31 +815,33 @@ PACKET_HANDLER(ResendCharacterList)
     bool haveCharacter = false;
 
     if (numSlots == 0)
+    {
         LOG("Warning!!! No slots in character list\n");
+    }
     else
     {
         int selectedPos = -1;
-
         for (int i = 0; i < numSlots; i++)
         {
             string name = ReadString(30);
             Move(30);
-
             if (name.length())
             {
                 haveCharacter = true;
-
                 g_CharacterList.SetName(i, name);
 
                 if (autoLogin && autoPos == -1 && AutoLoginNameExists(name))
-                    autoPos = (int)i;
+                {
+                    autoPos = i;
+                }
 
                 if (name == g_CharacterList.LastCharacterName)
                 {
-                    g_CharacterList.Selected = (int)i;
-
+                    g_CharacterList.Selected = i;
                     if (autoLogin && selectedPos == -1)
-                        selectedPos = (int)i;
+                    {
+                        selectedPos = i;
+                    }
                 }
             }
 
@@ -896,7 +858,6 @@ PACKET_HANDLER(ResendCharacterList)
             autoPos = 0;
 
         g_CharacterList.Selected = autoPos;
-
         if (g_CharacterList.GetName(autoPos).length())
             g_Orion.CharacterSelection(autoPos);
     }
@@ -912,7 +873,6 @@ PACKET_HANDLER(LoginComplete)
 {
     DEBUG_TRACE_FUNCTION;
     g_PacketLoginComplete = true;
-
     g_Orion.LoginComplete(false);
 }
 
@@ -968,7 +928,7 @@ PACKET_HANDLER(EnterWorld)
     g_RemoveRangeXY.Y = g_Player->GetY();
 
     UOI_PLAYER_XYZ_DATA xyzData = { g_RemoveRangeXY.X, g_RemoveRangeXY.Y, 0 };
-    g_PluginManager.WindowProc(g_OrionWindow.Handle, UOMSG_UPDATE_REMOVE_POS, (WPARAM)&xyzData, 0);
+    PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData, 0);
 
     g_Player->OffsetX = 0;
     g_Player->OffsetY = 0;
@@ -999,11 +959,12 @@ PACKET_HANDLER(EnterWorld)
         g_Orion.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
 
     if (loadConfig)
+    {
         g_Orion.LoginComplete(true);
+    }
     else
     {
         CServer *server = g_ServerList.GetSelectedServer();
-
         if (server != nullptr)
             g_Orion.CreateTextMessageF(3, 0x0037, "Login confirm to %s", server->Name.c_str());
     }
@@ -1016,9 +977,7 @@ PACKET_HANDLER(UpdateHitpoints)
         return;
 
     uint32_t serial = ReadUInt32BE();
-
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
     if (obj == nullptr)
         return;
 
@@ -1038,13 +997,11 @@ PACKET_HANDLER(UpdateMana)
     uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
     if (obj == nullptr)
         return;
 
     obj->MaxMana = ReadInt16BE();
     obj->Mana = ReadInt16BE();
-
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
 
@@ -1057,13 +1014,11 @@ PACKET_HANDLER(UpdateStamina)
     uint32_t serial = ReadUInt32BE();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
     if (obj == nullptr)
         return;
 
     obj->MaxStam = ReadInt16BE();
     obj->Stam = ReadInt16BE();
-
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
 
@@ -1103,25 +1058,19 @@ PACKET_HANDLER(NewHealthbarUpdate)
         return;
 
     uint32_t serial = ReadUInt32BE();
-
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
     if (obj == nullptr)
         return;
 
     uint16_t count = ReadUInt16BE();
-
     for (int i = 0; i < count; i++)
     {
         uint16_t type = ReadUInt16BE();
         uint8_t enable = ReadUInt8(); //enable/disable
-
         uint8_t flags = obj->GetFlags();
-
         if (type == 1) //Poison, enable as poisonlevel + 1
         {
             uint8_t poisonFlag = 0x04;
-
             if (enable)
             {
                 if (m_ClientVersion >= CV_7000)
@@ -3843,7 +3792,7 @@ PACKET_HANDLER(MegaCliloc)
         }
     }
 
-    //LOG_DUMP((PBYTE)message.c_str(), message.length() * 2);
+    //LOG_DUMP((uint8_t *)message.c_str(), message.length() * 2);
     g_ObjectPropertiesManager.Add(serial, CObjectProperty(serial, clilocRevision, name, data));
     if (obj != nullptr && g_ToolTip.m_Object == obj)
         g_ObjectPropertiesManager.Reset();

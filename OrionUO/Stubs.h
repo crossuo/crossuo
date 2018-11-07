@@ -72,27 +72,11 @@ using namespace std;
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 
-typedef uintptr_t LPARAM;
-typedef uintptr_t LRESULT;
-typedef uintptr_t WPARAM;
-typedef int32_t HRESULT;
-typedef unsigned char BYTE;
-typedef unsigned char *PBYTE;
-typedef void *PVOID;
-typedef void *LPVOID;
 typedef void *HANDLE;
-typedef void *HINSTANCE;
 typedef void *HDC;
-typedef void *HMODULE;
 typedef void *HSTREAM;
 typedef void *HGLRC;
-typedef const void *LPCVOID;
-typedef size_t SIZE_T;
-typedef const char *LPCSTR;
-typedef const wchar_t *LPWSTR;
-typedef unsigned int UINT;
 
-#define S_OK 0x0L
 #define WM_MOUSEWHEEL 1
 #define WM_MBUTTONUP 2
 #define WM_MBUTTONDOWN 3

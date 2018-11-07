@@ -111,8 +111,7 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
 
     g_Orion.LoadPluginConfig();
-
-    auto ret = g_App.Run(nullptr);
+    auto ret = g_App.Run();
     SDL_Quit();
     return ret;
 }

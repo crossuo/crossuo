@@ -31,11 +31,22 @@ CWindow::~CWindow()
 {
 }
 
+void CWindow::SetMinSize(int width, int height)
+{
+    m_MinSize.Width = width;
+    m_MinSize.Height = height;
+}
+void CWindow::SetMaxSize(int width, int height)
+{
+    m_MaxSize.Width = width;
+    m_MaxSize.Height = height;
+}
+
 void CWindow::MaximizeWindow()
 {
 #if USE_WISP
-    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
-    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+    SendMessage(Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
+    SendMessage(Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 #else
     SDL_RestoreWindow(m_window);
     SDL_MaximizeWindow(m_window);
@@ -71,7 +82,7 @@ void CWindow::SetSize(const Wisp::CSize &size)
 void CWindow::SetPositionSize(int x, int y, int width, int height)
 {
 #if USE_WISP
-    SendMessage(g_OrionWindow.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
+    SendMessage(Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetWindowPos(Handle, nullptr, x, y, width, height, 0);
 #else
     int borderH;
@@ -651,7 +662,9 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
             return res;
         }
         case WM_NCPAINT:
-            return OnRepaint(wParam, lParam);
+        { 
+            return (HRESULT)OnRepaint({ wParam, lParam });
+        }
         case WM_SHOWWINDOW:
         {
             HRESULT res = (HRESULT)DefWindowProc(Handle, WM_SHOWWINDOW, wParam, lParam);
@@ -661,7 +674,7 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
         case WM_SETTEXT:
         {
             HRESULT res = (HRESULT)DefWindowProc(Handle, WM_SETTEXT, wParam, lParam);
-            OnSetText(lParam);
+            OnSetText((const char *)&lParam); // FIXME: check on windows
             return res;
         }
         case WM_TIMER:
@@ -693,11 +706,63 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+bool CWindow::OnRepaint(const PaintEvent &ev)
+{
+    return (bool)DefWindowProc(Handle, WM_NCPAINT, ev.wParam, ev.lParam);
+}
+
+bool CWindow::IsActive() const
+{
+    return (::GetForegroundWindow() == Handle);
+}
+
+void CWindow::SetTitle(const string &text) const
+{
+    ::SetWindowTextA(Handle, text.c_str()); 
+}
+
+void CWindow::ShowWindow(bool show) const
+{
+    ::ShowWindow(Handle, show ? TRUE : FALSE); 
+}
+
+bool CWindow::IsMinimizedWindow() const
+{
+    return ::IsIconic(Handle); 
+}
+
+bool CWindow::IsMaximizedWindow() const
+{
+    return (::IsZoomed(Handle) != FALSE); 
+}
+
+void CWindow::CreateTimer(uint32_t id, int delay)
+{
+    ::SetTimer(Handle, id, delay, nullptr);
+}
+
+void CWindow::RemoveTimer(uint32_t id)
+{
+    ::KillTimer(Handle, id);
+}
+
 uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
 {
-    return (uint32_t)SendMessage(g_OrionWindow.Handle, id, (WPARAM)data1, (LPARAM)data2);
+    return (uint32_t)SendMessage(Handle, id, (WPARAM)data1, (LPARAM)data2);
 }
+
+uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
+{
+    return (uint32_t)g_PluginManager.WindowProc(Handle, id, (WPARAM)data1, (LPARAM)data2);
+}
+
+void CWindow::Raise()
+{
+    BringWindowToTop(Handle);
+}
+
 #else
+
 bool CWindow::OnWindowProc(SDL_Event &ev)
 {
     switch (ev.type)
@@ -928,7 +993,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-            // Used by plugins only?
+            // FIXME: Used by plugins only?
             // - OnShow
             // - OnRepaint
             // - OnSetText
@@ -939,6 +1004,37 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
     }
 
     return false;
+}
+
+bool CWindow::OnRepaint(const PaintEvent &ev)
+{
+    NOT_IMPLEMENTED;
+    return false;
+}
+
+bool CWindow::IsActive() const
+{
+    return SDL_GetGrabbedWindow() == m_window;
+}
+
+void CWindow::SetTitle(const string &text) const
+{
+    SDL_SetWindowTitle(m_window, text.c_str());
+}
+
+void CWindow::ShowWindow(bool show) const
+{
+    show ? SDL_ShowWindow(m_window) : SDL_HideWindow(m_window);
+}
+
+bool CWindow::IsMinimizedWindow() const
+{
+    return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_MINIMIZED) != 0;
+}
+
+bool CWindow::IsMaximizedWindow() const
+{
+    return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_MAXIMIZED) != 0;
 }
 
 static SDL_TimerID timer_table[FASTLOGIN_TIMER_ID] = {};
@@ -967,6 +1063,11 @@ void CWindow::RemoveTimer(uint32_t id)
     timer_table[id - 1] = 0;
 }
 
+void CWindow::Raise()
+{
+    SDL_RaiseWindow(g_OrionWindow.m_window);
+}
+
 uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
 {
     SDL_UserEvent userevent;
@@ -981,6 +1082,12 @@ uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
     event.user = userevent;
     SDL_PushEvent(&event);
 
+    return 0;
+}
+
+uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
+{
+    // NOT_IMPLEMENTED
     return 0;
 }
 

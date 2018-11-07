@@ -489,7 +489,7 @@ void CBlowfishCrypt::Encrypt(uint8_t *in, uint8_t *out, int len)
         {
             uint32_t values[2];
 
-            PBYTE seed = m_seed;
+            uint8_t *seed = m_seed;
             N2L(seed, values[0]);
             N2L(seed, values[1]);
 

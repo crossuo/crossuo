@@ -294,13 +294,13 @@ bool CSkillGroupManager::Load(const os_path &path)
 
     if (file.Load(path))
     {
-        BYTE version = file.ReadUInt8();
+        uint8_t version = file.ReadUInt8();
 
         short count = file.ReadUInt16LE();
 
         for (int i = 0; i < count; i++)
         {
-            PBYTE next = file.Ptr;
+            uint8_t *next = file.Ptr;
             short size = file.ReadUInt16LE();
             next += size;
 
@@ -314,7 +314,7 @@ bool CSkillGroupManager::Load(const os_path &path)
 
             for (int j = 0; j < skills; j++)
             {
-                BYTE skill = file.ReadUInt8();
+                uint8_t skill = file.ReadUInt8();
 
                 if (skill != 0xFF)
                     group->Add(skill);
@@ -380,7 +380,7 @@ void CSkillGroupManager::Save(const os_path &path)
 
         for (int j = 0; j < count; j++)
         {
-            BYTE skill = group->GetItem(j);
+            uint8_t skill = group->GetItem(j);
             writter.WriteUInt8(skill); //Skill
         }
 

@@ -158,7 +158,7 @@ vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
 {
     DEBUG_TRACE_FUNCTION;
     size_t dataSize = is.DataSize - sizeof(SOUND_BLOCK);
-    auto waveSound = std::vector<BYTE>(dataSize + sizeof(WaveHeader));
+    auto waveSound = std::vector<uint8_t>(dataSize + sizeof(WaveHeader));
     auto waveHeader = reinterpret_cast<WaveHeader *>(waveSound.data());
 
     strcpy(waveHeader->chunkId, "RIFF");
@@ -178,7 +178,7 @@ vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
 
     is.Delay = static_cast<DWORD>((dataSize - 16) / 88.2f);
 
-    auto sndDataPtr = reinterpret_cast<PBYTE>(is.Address + sizeof(SOUND_BLOCK));
+    auto sndDataPtr = reinterpret_cast<uint8_t *>(is.Address + sizeof(SOUND_BLOCK));
     std::copy_n(sndDataPtr + 16, dataSize - 16, waveSound.begin() + sizeof(WaveHeader));
 
     return waveSound;

@@ -1049,13 +1049,13 @@ void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glTranslatef(translateX, translateY, 0.0f);
 
     glBindBuffer(GL_ARRAY_BUFFER, land->VertexBuffer);
-    glVertexPointer(2, GL_INT, 0, (PVOID)0);
+    glVertexPointer(2, GL_INT, 0, (void *)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, land->PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (PVOID)0);
+    glTexCoordPointer(2, GL_INT, 0, (void *)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, land->NormalBuffer);
-    glNormalPointer(GL_FLOAT, 0, (PVOID)0);
+    glNormalPointer(GL_FLOAT, 0, (void *)0);
 
     glEnableClientState(GL_NORMAL_ARRAY);
 
@@ -1077,10 +1077,10 @@ void CGLEngine::GL2_Draw(const CGLTexture &texture, int x, int y)
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
     glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
-    glVertexPointer(2, GL_INT, 0, (PVOID)0);
+    glVertexPointer(2, GL_INT, 0, (void *)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (PVOID)0);
+    glTexCoordPointer(2, GL_INT, 0, (void *)0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1102,10 +1102,10 @@ void CGLEngine::GL2_DrawRotated(const CGLTexture &texture, int x, int y, float a
     glRotatef(angle, 0.0f, 0.0f, 1.0f);
 
     glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
-    glVertexPointer(2, GL_INT, 0, (PVOID)0);
+    glVertexPointer(2, GL_INT, 0, (void *)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (PVOID)0);
+    glTexCoordPointer(2, GL_INT, 0, (void *)0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1128,10 +1128,10 @@ void CGLEngine::GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
     else
         glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
 
-    glVertexPointer(2, GL_INT, 0, (PVOID)0);
+    glVertexPointer(2, GL_INT, 0, (void *)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (PVOID)0);
+    glTexCoordPointer(2, GL_INT, 0, (void *)0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -1296,7 +1296,7 @@ void CGLEngine::GL2_DrawShadow(const CGLTexture &texture, int x, int y, bool mir
     glVertexPointer(2, GL_FLOAT, 0, &verticles[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (PVOID)0);
+    glTexCoordPointer(2, GL_INT, 0, (void *)0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

@@ -1,6 +1,6 @@
+// MIT License
 
-#ifndef WISPAPPLICATION_H
-#define WISPAPPLICATION_H
+#pragma once
 
 #include "FileSystem.h"
 
@@ -9,7 +9,6 @@ namespace Wisp
 class CApplication
 {
 public:
-    HINSTANCE Hinstance = 0;
     os_path m_ExePath;
     os_path m_UOPath;
 
@@ -20,7 +19,12 @@ public:
     CApplication();
     virtual ~CApplication();
 
+#if USE_WISP
+    HINSTANCE Hinstance = 0;
     int Run(HINSTANCE hinstance);
+#else
+    int Run();
+#endif
 
     string GetFileVersion(uint32_t *numericVerion = nullptr) const;
     os_path ExeFilePath(const char *str, ...) const;
@@ -31,5 +35,3 @@ public:
 extern CApplication *g_WispApplication;
 
 }; // namespace Wisp
-
-#endif

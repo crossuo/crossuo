@@ -28,7 +28,7 @@ string GetMemStorageText(int storage)
     return "Unknown";
 }
 
-inline BOOL ModuleFind(const HANDLE &snapshot, PVOID pvBaseAddr, PMODULEENTRY32 pme)
+inline BOOL ModuleFind(const HANDLE &snapshot, void *pvBaseAddr, PMODULEENTRY32 pme)
 {
     for (BOOL ok = Module32First(snapshot, pme); ok; ok = Module32Next(snapshot, pme))
     {
@@ -115,7 +115,7 @@ void DumpLibraryInformation()
             return;
         }
 
-        PVOID address = nullptr;
+        void *address = nullptr;
 
         while (true)
         {

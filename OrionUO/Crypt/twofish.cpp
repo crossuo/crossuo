@@ -37,7 +37,7 @@
 #include <assert.h>
 
 #ifndef _WINDOWS_
-typedef void *PVOID;
+typedef void *void *;
 #endif
 
 #if defined(min_key) && !defined(MIN_KEY)
@@ -719,7 +719,7 @@ int reKey(keyInstance *key)
 #define one128(N, J) sbSet(N, i, J, p8(N##1)[L0[i + J]] ^ k0)
 #define sb128(N)                                                                                   \
     {                                                                                              \
-        Xor256(L0, (PVOID)p8(N##2), b##N(sKey[1]));                                                \
+        Xor256(L0, (void *)p8(N##2), b##N(sKey[1]));                                                \
         {                                                                                          \
             u32 k0 = b##N(sKey[0]);                                                                \
             for (i = 0; i < 256; i += 2)                                                           \
@@ -743,7 +743,7 @@ int reKey(keyInstance *key)
 #define one192(N, J) sbSet(N, i, J, p8(N##1)[p8(N##2)[L0[i + J]] ^ k1] ^ k0)
 #define sb192(N)                                                                                   \
     {                                                                                              \
-        Xor256(L0, (PVOID)p8(N##3), b##N(sKey[2]));                                                \
+        Xor256(L0, (void *)p8(N##3), b##N(sKey[2]));                                                \
         {                                                                                          \
             u32 k0 = b##N(sKey[0]);                                                                \
             u32 k1 = b##N(sKey[1]);                                                                \
@@ -779,7 +779,7 @@ int reKey(keyInstance *key)
 #define one256(N, J) sbSet(N, i, J, p8(N##1)[p8(N##2)[L0[i + J]] ^ k1] ^ k0)
 #define sb256(N)                                                                                   \
     {                                                                                              \
-        Xor256(L1, (PVOID)p8(N##4), b##N(sKey[3]));                                                \
+        Xor256(L1, (void *)p8(N##4), b##N(sKey[3]));                                                \
         for (i = 0; i < 256; i += 2)                                                               \
         {                                                                                          \
             L0[i] = p8(N##3)[L1[i]];                                                               \

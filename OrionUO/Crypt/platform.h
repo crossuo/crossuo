@@ -68,7 +68,7 @@
 #endif
 
 /*  Macros for extracting bytes from dwords (correct for endianness) */
-#define _b(x, N) (((BYTE *)&x)[((N)&3) ^ ADDR_XOR]) /* pick bytes out of a dword */
+#define _b(x, N) (((uint8_t *)&x)[((N)&3) ^ ADDR_XOR]) /* pick bytes out of a dword */
 
 #define b0(x) _b(x, 0) /* extract LSB of DWORD */
 #define b1(x) _b(x, 1)

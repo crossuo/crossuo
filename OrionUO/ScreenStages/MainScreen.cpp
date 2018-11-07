@@ -1,6 +1,6 @@
 #include "MainScreen.h"
 #include "BaseScreen.h"
-#include "Input.h"
+#include "Platform.h"
 #include "../GUI/GUITextEntry.h"
 #include "../Wisp/WispDefinitions.h"
 #include "../TextEngine/EntryText.h"

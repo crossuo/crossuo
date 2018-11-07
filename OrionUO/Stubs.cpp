@@ -7,7 +7,7 @@
 #include <errno.h>
 
 // Bad and very ugly "API" stuff
-int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t)
+uint32_t DefWindowProc(void *, uint32_t, void *, void *)
 {
     NOT_IMPLEMENTED;
     return 0;

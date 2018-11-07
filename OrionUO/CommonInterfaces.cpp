@@ -351,7 +351,6 @@ bool CDECL FUNCBODY_GetCanWalk(unsigned char &direction, int &x, int &y, char &z
 bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 {
     return PUSH_EVENT(UOMSG_WALK, run, direction);
-    //return SendMessage(g_OrionWindow.Handle, UOMSG_WALK, run, direction);
 }
 
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
@@ -360,7 +359,6 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
         return false;
 
     Wisp::CPoint2Di startPoint(g_Player->GetX(), g_Player->GetY());
-
     if (!g_Player->m_Steps.empty())
     {
         CWalkData &wd = g_Player->m_Steps.back();
@@ -372,16 +370,10 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
     if (GetDistance(startPoint, Wisp::CPoint2Di(x, y)) <= distance)
         return true;
 
-#if USE_WISP
-    bool result = SendMessage(
-        g_OrionWindow.Handle,
+    bool result = PUSH_EVENT(
         UOMSG_PATHFINDING,
         ((x << 16) & 0xFFFF0000) | (y & 0xFFFF),
         ((x << 16) & 0xFFFF0000) | (distance & 0xFFFF));
-#else
-    bool result = false;
-    NOT_IMPLEMENTED;
-#endif
 
     if (result)
     {
@@ -392,15 +384,12 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
             return false;
 
         Wisp::CPoint2Di p(g_Player->GetX(), g_Player->GetY());
-
         if (!g_Player->m_Steps.empty())
         {
             CWalkData &wd = g_Player->m_Steps.back();
-
             p.X = wd.X;
             p.Y = wd.Y;
         }
-
         result = (GetDistance(p, Wisp::CPoint2Di(x, y)) <= distance);
     }
 

@@ -1,11 +1,8 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+#if defined(ORION_WINDOWS)
 /******************************************************************************
 Module:  VMQuery.cpp
 Notices: Copyright (c) 2000 Jeffrey Richter
 ******************************************************************************/
-
-#include "stdafx.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,10 +39,10 @@ static BOOL VMQueryHelp(HANDLE hProcess, LPCVOID pvAddress, VMQUERY_HELP *pVMQHe
         return (fOk); // Bad memory address, return failure
 
     // Walk starting at the region's base address (which never changes)
-    PVOID pvRgnBaseAddress = mbi.AllocationBase;
+    void *pvRgnBaseAddress = mbi.AllocationBase;
 
     // Walk starting at the first block in the region (changes in the loop)
-    PVOID pvAddressBlk = pvRgnBaseAddress;
+    void *pvAddressBlk = pvRgnBaseAddress;
 
     // Save the memory type of the physical storage block.
     pVMQHelp->dwRgnStorage = mbi.Type;
@@ -97,7 +94,7 @@ static BOOL VMQueryHelp(HANDLE hProcess, LPCVOID pvAddress, VMQUERY_HELP *pVMQHe
             pVMQHelp->dwRgnStorage = mbi.Type;
 
         // Get the address of the next block.
-        pvAddressBlk = (PVOID)((PBYTE)pvAddressBlk + mbi.RegionSize);
+        pvAddressBlk = (void *)((uint8_t *)pvAddressBlk + mbi.RegionSize);
     }
 
     // After examining the region, check to see whether it is a thread stack
@@ -223,3 +220,4 @@ BOOL VMQuery(HANDLE hProcess, LPCVOID pvAddress, PVMQUERY pVMQ)
 }
 
 //////////////////////////////// End of File //////////////////////////////////
+#endif

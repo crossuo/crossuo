@@ -52,7 +52,7 @@ typedef enum
 typedef struct _IMAGEHLP_LINE64
 {
     DWORD SizeOfStruct; // set to sizeof(IMAGEHLP_LINE64)
-    PVOID Key;          // internal
+    void *Key;          // internal
     DWORD LineNumber;   // line number in file
     PCHAR FileName;     // full filename
     DWORD64 Address;    // first instruction of line
@@ -111,7 +111,7 @@ typedef struct _tagSTACKFRAME64
     ADDRESS64 AddrFrame;  // frame pointer
     ADDRESS64 AddrStack;  // stack pointer
     ADDRESS64 AddrBStore; // backing store pointer
-    PVOID FuncTableEntry; // pointer to pdata/fpo or nullptr
+    void *FuncTableEntry; // pointer to pdata/fpo or nullptr
     DWORD64 Params[4];    // possible arguments to the function
     BOOL Far;             // WOW far call
     BOOL Virtual;         // is this a virtual frame?
@@ -121,10 +121,10 @@ typedef struct _tagSTACKFRAME64
 typedef BOOL(__stdcall *PREAD_PROCESS_MEMORY_ROUTINE64)(
     HANDLE hProcess,
     DWORD64 qwBaseAddress,
-    PVOID lpBuffer,
+    void *lpBuffer,
     DWORD nSize,
     LPDWORD lpNumberOfBytesRead);
-typedef PVOID(__stdcall *PFUNCTION_TABLE_ACCESS_ROUTINE64)(HANDLE hProcess, DWORD64 AddrBase);
+typedef void *(__stdcall *PFUNCTION_TABLE_ACCESS_ROUTINE64)(HANDLE hProcess, DWORD64 AddrBase);
 typedef DWORD64(__stdcall *PGET_MODULE_BASE_ROUTINE64)(HANDLE hProcess, DWORD64 Address);
 typedef DWORD64(__stdcall *PTRANSLATE_ADDRESS_ROUTINE64)(
     HANDLE hProcess, HANDLE hThread, LPADDRESS64 lpaddr);
@@ -349,7 +349,7 @@ public:
     tSC pSC;
 
     // SymFunctionTableAccess64()
-    typedef PVOID(__stdcall *tSFTA)(HANDLE hProcess, DWORD64 AddrBase);
+    typedef void *(__stdcall *tSFTA)(HANDLE hProcess, DWORD64 AddrBase);
     tSFTA pSFTA;
 
     // SymGetLineFromAddr64()
@@ -410,7 +410,7 @@ public:
         HANDLE hProcess,
         HANDLE hThread,
         LPSTACKFRAME64 StackFrame,
-        PVOID ContextRecord,
+        void *ContextRecord,
         PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine,
         PFUNCTION_TABLE_ACCESS_ROUTINE64 FunctionTableAccessRoutine,
         PGET_MODULE_BASE_ROUTINE64 GetModuleBaseRoutine,
@@ -437,7 +437,7 @@ private:
         DWORD th32ProcessID; // owning process
         DWORD GlblcntUsage;  // Global usage count on the module
         DWORD ProccntUsage;  // Module usage count in th32ProcessID's context
-        BYTE *modBaseAddr;   // Base address of module in th32ProcessID's context
+        uint8_t *modBaseAddr;   // Base address of module in th32ProcessID's context
         DWORD modBaseSize;   // Size in bytes of module starting at modBaseAddr
         HMODULE hModule;     // The hModule of this module in th32ProcessID's context
         char szModule[MAX_MODULE_NAME32 + 1];
@@ -1159,7 +1159,7 @@ cleanup:
 BOOL __stdcall StackWalker::myReadProcMem(
     HANDLE hProcess,
     DWORD64 qwBaseAddress,
-    PVOID lpBuffer,
+    void *lpBuffer,
     DWORD nSize,
     LPDWORD lpNumberOfBytesRead)
 {
@@ -1324,7 +1324,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
         versz = GetFileVersionInfoSize(pathS.c_str(), nullptr);
         if (versz != 0)
         {
-            BYTE *ver = new BYTE[versz];
+            uint8_t *ver = new uint8_t[versz];
             if (GetFileVersionInfo(pathS.c_str(), 0, versz, ver) != 0)
             {
                 if (VerQueryValue(ver, L"\\", (LPVOID *)&block, &blocksz))

@@ -81,8 +81,7 @@ void CGameObject::SetName(const string &newName)
             g_OrionWindow.SetTitle(title);
         }
 
-        g_PluginManager.WindowProc(
-            g_OrionWindow.Handle, UOMSG_SET_PLAYER_NAME, (WPARAM)newName.c_str(), 0);
+        PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, newName.c_str(), nullptr);
     }
 
     m_Name = newName;
@@ -254,7 +253,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
 
             if (pixel)
             {
-                uint8_t *bytes = (PBYTE)&pixel;
+                uint8_t *bytes = (uint8_t *)&pixel;
                 uint8_t buf = bytes[0];
                 bytes[0] = bytes[3];
                 bytes[3] = buf;

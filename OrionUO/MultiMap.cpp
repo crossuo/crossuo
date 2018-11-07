@@ -72,8 +72,8 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
     while (!file.IsEOF())
     {
-        BYTE pic = file.ReadUInt8();
-        BYTE size = pic & 0x7F;
+        uint8_t pic = file.ReadUInt8();
+        uint8_t size = pic & 0x7F;
 
         bool colored = (bool)(pic & 0x80);
 
@@ -87,7 +87,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
             {
                 int position = posY + ((width * (x - startX)) >> 8);
 
-                BYTE &pixel = byteMap[position];
+                uint8_t &pixel = byteMap[position];
 
                 if (pixel < 0xFF)
                 {
@@ -134,7 +134,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
         for (int i = 0; i < mapSize; i++)
         {
-            BYTE &pic = byteMap[i];
+            uint8_t &pic = byteMap[i];
 
             wordMap[i] = (pic ? colorTable[pic - 1] : 0);
         }

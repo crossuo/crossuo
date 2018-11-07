@@ -449,7 +449,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
 
         ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(GetMountAnimation());
 
-        const BYTE fidgetAnimTable[3][3] = { { LAG_FIDGET_1, LAG_FIDGET_2, LAG_FIDGET_1 },
+        const uint8_t fidgetAnimTable[3][3] = { { LAG_FIDGET_1, LAG_FIDGET_2, LAG_FIDGET_1 },
                                              { HAG_FIDGET_1, HAG_FIDGET_2, HAG_FIDGET_1 },
                                              { PAG_FIDGET_1, PAG_FIDGET_2, PAG_FIDGET_3 } };
 
@@ -836,7 +836,7 @@ uint16_t CGameCharacter::GetMountAnimation()
 @param [__in] canChange Можно ли изменять состояние стека хотьбы или нет
 @return 
 */
-void CGameCharacter::UpdateAnimationInfo(BYTE &dir, bool canChange)
+void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
 {
     DEBUG_TRACE_FUNCTION;
     dir = Direction & 7;
@@ -917,13 +917,13 @@ void CGameCharacter::UpdateAnimationInfo(BYTE &dir, bool canChange)
                     if (m_X != wd.X || m_Y != wd.Y || m_Z != wd.Z)
                     {
                         UOI_PLAYER_XYZ_DATA xyzData = { wd.X, wd.Y, wd.Z };
-                        g_PluginManager.WindowProc(
-                            g_OrionWindow.Handle, UOMSG_UPDATE_PLAYER_XYZ, (WPARAM)&xyzData, 0);
+                        PLUGIN_EVENT(UOMSG_UPDATE_PLAYER_XYZ, &xyzData, nullptr);
                     }
 
                     if (Direction != wd.Direction)
-                        g_PluginManager.WindowProc(
-                            g_OrionWindow.Handle, UOMSG_UPDATE_PLAYER_DIR, (WPARAM)wd.Direction, 0);
+                    {
+                        PLUGIN_EVENT(UOMSG_UPDATE_PLAYER_DIR, wd.Direction, nullptr);
+                    }
 
                     if (m_Z - wd.Z >= 22)
                     {

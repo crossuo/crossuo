@@ -10,12 +10,11 @@ class CThread
 private:
 #if USE_WISP
     HANDLE m_Handle{ 0 };
-    CRITICAL_SECTION m_CriticalSection;
 #else
     SDL_Thread *m_Handle = nullptr;
-    SDL_mutex *m_Mutex = nullptr;
 #endif
-    UINT ID{ 0 };
+    ProtectedSection m_Mutex;
+    uint32_t ID{ 0 };
     bool m_Paused{ false };
     bool m_Cycled{ false };
     int m_Delay{ 1 };

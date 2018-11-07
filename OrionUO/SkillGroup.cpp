@@ -96,7 +96,7 @@ bool CSkillGroupObject::Contains(uint8_t index)
 void CSkillGroupObject::Sort()
 {
     DEBUG_TRACE_FUNCTION;
-    BYTE table[60] = { 0 };
+    uint8_t table[60] = { 0 };
     int Ptr = 0;
 
     for (uint32_t i = 0; i < g_SkillsManager.Count; i++)

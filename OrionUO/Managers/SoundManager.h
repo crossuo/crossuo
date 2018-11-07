@@ -47,7 +47,7 @@ private:
     HSTREAM m_WarMusic{};
 
     void TraceMusicError(DWORD error);
-    //std::map<HSTREAM, BYTE*> streams;
+    //std::map<HSTREAM, uint8_t*> streams;
 public:
     CSoundManager();
     ~CSoundManager();

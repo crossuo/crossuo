@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
-#include "Input.h"
+#include "Platform.h"
 
 struct RENDER_VARIABLES_FOR_GAME_WINDOW
 {

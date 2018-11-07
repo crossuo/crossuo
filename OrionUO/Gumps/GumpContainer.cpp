@@ -24,7 +24,7 @@ CGumpContainer::CGumpContainer(uint32_t serial, uint32_t id, short x, short y)
     {
         if (m_CorpseEyesTicks < g_Ticks)
         {
-            m_CorpseEyesOffset = (BYTE)!m_CorpseEyesOffset;
+            m_CorpseEyesOffset = (uint8_t)!m_CorpseEyesOffset;
             m_CorpseEyesTicks = g_Ticks + 750;
         }
 
