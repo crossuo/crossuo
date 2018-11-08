@@ -252,10 +252,9 @@ bool COrion::Install()
 #if USE_WISP
     SetUnhandledExceptionFilter(OrionUnhandledExceptionFilter);
 #endif
-    auto orionVersionStr = g_App.GetFileVersion(&OrionVersionNumeric);
     auto buildStamp = GetBuildDateTimeStamp();
-    LOG("Orion version is: %s (build %s)\n", orionVersionStr.c_str(), buildStamp.c_str());
-    CRASHLOG("Orion version is: %s (build %s)\n", orionVersionStr.c_str(), buildStamp.c_str());
+    LOG("Orion version is: %s (build %s)\n", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
+    CRASHLOG("Orion version is: %s (build %s)\n", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
 
     auto clientCuoPath{ g_App.UOFilesPath("Client.cuo") };
     if (!fs_path_exists(clientCuoPath))

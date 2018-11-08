@@ -67,65 +67,6 @@ int CApplication::Run()
 #endif
 }
 
-// FIXME: Get OrionUO version Id
-string CApplication::GetFileVersion(uint32_t *numericVerion) const
-{
-#if USE_WISP
-    //File version info
-    wchar_t szFilename[MAX_PATH] = { 0 };
-
-    if (GetModuleFileName(Hinstance, &szFilename[0], sizeof(szFilename)))
-    {
-        DWORD dummy = 0;
-        DWORD dwSize = GetFileVersionInfoSize(&szFilename[0], &dummy);
-
-        if (dwSize > 0)
-        {
-            vector<uint8_t> lpVersionInfo(dwSize, 0);
-
-            if (GetFileVersionInfoW(&szFilename[0], 0, dwSize, &lpVersionInfo[0]))
-            {
-                auto uLen = 0;
-                VS_FIXEDFILEINFO *lpFfi = nullptr;
-                VerQueryValueW(&lpVersionInfo[0], PATH_SEP, (LPVOID *)&lpFfi, &uLen);
-
-                DWORD dwFileVersionMS = 0;
-                DWORD dwFileVersionLS = 0;
-                if (lpFfi != nullptr)
-                {
-                    dwFileVersionMS = lpFfi->dwFileVersionMS;
-                    dwFileVersionLS = lpFfi->dwFileVersionLS;
-                }
-
-                int dwLeftMost = (int)HIWORD(dwFileVersionMS);
-                int dwSecondLeft = (int)LOWORD(dwFileVersionMS);
-                int dwSecondRight = (int)HIWORD(dwFileVersionLS);
-                int dwRightMost = (int)LOWORD(dwFileVersionLS);
-
-                if (numericVerion != nullptr)
-                    *numericVerion = ((dwLeftMost & 0xFF) << 24) | ((dwSecondLeft & 0xFF) << 16) |
-                                     ((dwSecondRight & 0xFF) << 8) | (dwRightMost & 0xFF);
-
-                char fileVersion[100] = { 0 };
-                sprintf_s(
-                    fileVersion,
-                    "%i.%i.%i.%i",
-                    dwLeftMost,
-                    dwSecondLeft,
-                    dwSecondRight,
-                    dwRightMost);
-
-                return fileVersion;
-            }
-        }
-    }
-
-    return "unknown";
-#else
-    return " Linux";
-#endif
-}
-
 os_path CApplication::ExeFilePath(const char *str, ...) const
 {
     DEBUG_TRACE_FUNCTION;

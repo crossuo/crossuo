@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GitRevision.h"
+
 CGumpScreenMain::CGumpScreenMain()
     : CGump(GT_NONE, 0, 0, 0)
 {
@@ -91,7 +93,7 @@ void CGumpScreenMain::UpdateContent()
     text->CreateTextureA(9, string("UO Version " + g_Orion.ClientVersionText + "."));
 
     text = (CGUIText *)Add(new CGUIText(0x034E, 286, 467));
-    text->CreateTextureA(9, string("Orion beta v") + g_App.GetFileVersion());
+    text->CreateTextureA(9, string("Orion beta v") + RC_PRODUCE_VERSION_STR);
 
     CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
         ID_MS_ACCOUNT, 0x034F, 0x03E3, 0x0021, 335, 343, 190, false, 5, TS_LEFT, 0, 32));

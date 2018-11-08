@@ -1359,7 +1359,7 @@ void CGumpManager::Load(const os_path &path)
                 gump->LockMoving = (gumpLockMoving != 0u);
                 //gump->FixCoordinates();
                 AddGump(gump);
-                assert(dump != nullptr && "AddGump should not delete obj here");
+                assert(gump != nullptr && "AddGump should not delete obj here");
                 gump->WantUpdateContent = true;
             }
 

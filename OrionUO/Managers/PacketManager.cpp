@@ -6267,17 +6267,13 @@ PACKET_HANDLER(OrionMessages)
         case OCT_ORION_FEATURES:
         {
             g_OrionFeaturesFlags = ReadUInt32BE();
-
             g_ConfigManager.UpdateFeatures();
-
             break;
         }
         case OCT_ORION_IGNORE_TILES_IN_FILTER:
         {
             g_Orion.m_IgnoreInFilterTiles.clear();
-
             uint16_t count = ReadUInt16BE();
-
             for (int i = 0; i < count; i++)
             {
                 g_Orion.m_IgnoreInFilterTiles.push_back(
@@ -6285,7 +6281,6 @@ PACKET_HANDLER(OrionMessages)
             }
 
             uint16_t countRange = ReadUInt16BE();
-
             for (int i = 0; i < countRange; i++)
             {
                 uint16_t rangeStart = ReadUInt16BE();
@@ -6293,12 +6288,12 @@ PACKET_HANDLER(OrionMessages)
                 g_Orion.m_IgnoreInFilterTiles.push_back(
                     std::pair<uint16_t, uint16_t>(rangeStart, rangeEnd));
             }
-
             break;
         }
         case OCT_ORION_VERSION:
         {
-            CPacketOrionVersion(g_Orion.OrionVersionNumeric).Send();
+            // FIXME: get numeric version from GitRevision.h
+            CPacketOrionVersion(0).Send();
             break;
         }
         case OCT_CLOSE_GENERIC_GUMP_WITHOUT_RESPONSE:
@@ -6306,13 +6301,11 @@ PACKET_HANDLER(OrionMessages)
             uint32_t serial = ReadUInt32BE();
             uint32_t id = ReadUInt32BE();
             uint8_t all = ReadUInt8();
-
             QFOR(gump, g_GumpManager.m_Items, CGump *)
             {
                 if (gump->GumpType == GT_GENERIC && gump->Serial == serial && gump->ID == id)
                 {
                     gump->RemoveMark = true;
-
                     if (all == 0u)
                     {
                         break;
@@ -6327,19 +6320,16 @@ PACKET_HANDLER(OrionMessages)
             uint32_t serial = ReadUInt32BE();
             uint32_t id = ReadUInt32BE();
             uint32_t code = ReadUInt32BE();
-
             if ((serial == 0u) && (id == 0u))
             {
                 for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
                 {
                     CGump *next = (CGump *)gump->m_Next;
-
                     if (gump->GumpType == GT_MENU || gump->GumpType == GT_GRAY_MENU)
                     {
                         CPacketMenuResponse(gump, code).Send();
                         g_GumpManager.RemoveGump(gump);
                     }
-
                     gump = next;
                 }
 
@@ -6347,11 +6337,9 @@ PACKET_HANDLER(OrionMessages)
             }
 
             CGump *gump = g_GumpManager.GetGump(serial, id, GT_MENU);
-
             if (gump == nullptr)
             {
                 gump = g_GumpManager.GetGump(serial, id, GT_GRAY_MENU);
-
                 if (gump != nullptr)
                 {
                     CPacketGrayMenuResponse(gump, code).Send();
@@ -6363,33 +6351,26 @@ PACKET_HANDLER(OrionMessages)
                 CPacketMenuResponse(gump, code).Send();
                 g_GumpManager.RemoveGump(gump);
             }
-
             break;
         }
         case OCT_CAST_SPELL_REQUEST:
         {
             int id = ReadUInt32BE();
-
             if (id >= 0)
             {
                 g_LastSpellIndex = id;
-
                 CPacketCastSpell(id).Send();
             }
-
             break;
         }
         case OCT_USE_SKILL_REQUEST:
         {
             int id = ReadUInt32BE();
-
             if (id >= 0)
             {
                 g_LastSkillIndex = id;
-
                 CPacketUseSkill(id).Send();
             }
-
             break;
         }
         case OCT_DRAW_STATUSBAR:
@@ -6398,14 +6379,12 @@ PACKET_HANDLER(OrionMessages)
             int x = ReadInt32BE();
             int y = ReadInt32BE();
             bool minimized = (ReadUInt8() != 0);
-
             if (serial != g_PlayerSerial)
             {
                 minimized = true;
             }
 
             CGump *gump = g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
-
             if (gump != nullptr)
             {
                 gump->Minimized = minimized;
@@ -6426,7 +6405,6 @@ PACKET_HANDLER(OrionMessages)
                 CPacketStatusRequest(serial).Send();
                 g_GumpManager.AddGump(new CGumpStatusbar(serial, x, y, minimized));
             }
-
             break;
         }
         case OCT_CLOSE_STATUSBAR:
@@ -6438,16 +6416,13 @@ PACKET_HANDLER(OrionMessages)
         case OCT_SECURE_TRADE_CHECK:
         {
             uint32_t id1 = ReadUInt32BE();
-
             CGumpSecureTrading *gump =
                 (CGumpSecureTrading *)g_GumpManager.UpdateGump(id1, 0, GT_TRADE);
-
             if (gump != nullptr)
             {
                 gump->StateMy = (ReadUInt8() != 0);
                 CPacketTradeResponse(gump, 2).Send();
             }
-
             break;
         }
         case OCT_SECURE_TRADE_CLOSE:
@@ -6459,7 +6434,6 @@ PACKET_HANDLER(OrionMessages)
                 gump->RemoveMark = true;
                 CPacketTradeResponse(gump, 1).Send();
             }
-
             break;
         }
         case OCT_UNICODE_SPEECH_REQUEST:
@@ -6484,19 +6458,16 @@ PACKET_HANDLER(OrionMessages)
         case OCT_PLAY_MACRO:
         {
             int count = ReadUInt16BE();
-
             static CMacro existsMacros(0, false, false, false);
             existsMacros.Clear();
 
             g_MacroPointer = nullptr;
             g_MacroManager.SendNotificationToPlugin = true;
-
             for (int m = 0; m < count; m++)
             {
                 string name = ReadString();
                 string param = ReadString();
                 MACRO_CODE macroCode = MC_NONE;
-
                 for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 {
                     std::string macroName = CMacro::m_MacroActionName[i];
@@ -6514,7 +6485,6 @@ PACKET_HANDLER(OrionMessages)
                 }
 
                 CMacroObject *macro = CMacro::CreateMacro(macroCode);
-
                 if (param.length() != 0u)
                 {
                     if (macro->HaveString())
@@ -6533,16 +6503,13 @@ PACKET_HANDLER(OrionMessages)
                         }
                     }
                 }
-
                 existsMacros.Add(macro);
             }
 
             g_MacroPointer = (CMacroObject *)existsMacros.m_Items;
-
             g_MacroManager.WaitingBandageTarget = false;
             g_MacroManager.WaitForTargetTimer = 0;
             g_MacroManager.Execute();
-
             break;
         }
         case OCT_MOVE_PAPERDOLL:
@@ -6550,9 +6517,7 @@ PACKET_HANDLER(OrionMessages)
             uint32_t serial = ReadUInt32BE();
             int x = ReadInt32BE();
             int y = ReadInt32BE();
-
             CGump *gump = g_GumpManager.UpdateContent(serial, 0, GT_PAPERDOLL);
-
             if (gump != nullptr)
             {
                 if (gump->Minimized)
@@ -6566,13 +6531,11 @@ PACKET_HANDLER(OrionMessages)
                     gump->SetY(y);
                 }
             }
-
             break;
         }
         case OCT_USE_ABILITY:
         {
             CGumpAbility::OnAbilityUse(ReadUInt8() % 2);
-
             break;
         }
         default:
@@ -6589,11 +6552,9 @@ PACKET_HANDLER(PacketsList)
     }
 
     int count = ReadUInt16BE();
-
     for (int i = 0; i < count; i++)
     {
         uint8_t id = ReadUInt8();
-
         if (id == 0xF3)
         {
             HandleUpdateItemSA();
@@ -6651,7 +6612,7 @@ PACKET_HANDLER(BoatMoving)
 {
     DEBUG_TRACE_FUNCTION;
 
-    //disable BoatMoving for the 0.1.9.6 patch
+    // FIXME: disable BoatMoving for the 0.1.9.6 patch
     return;
     uint32_t boatSerial = ReadUInt32BE();
 

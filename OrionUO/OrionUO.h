@@ -10,7 +10,6 @@ public:
     int TexturesDataCount = 0;
     string DefaultLogin = "";
     int DefaultPort = 0;
-    uint32_t OrionVersionNumeric = 0;
 
 private:
     uint32_t m_CRC_Table[256];
