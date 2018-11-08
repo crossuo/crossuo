@@ -336,7 +336,7 @@ void COrionWindow::OnTextInput(const TextEvent &ev)
     {
         g_CurrentScreen->OnTextInput(ev);
     }
-    else if (ch == KEY_RETURN)
+    else if (ch == KEY_RETURN && g_CurrentScreen != nullptr)
     {
         const auto kev = AsKeyEvent(ev);
         g_CurrentScreen->OnKeyDown(kev);

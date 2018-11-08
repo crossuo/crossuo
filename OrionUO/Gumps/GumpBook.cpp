@@ -413,9 +413,9 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                             break;
                         }
                     }
+                    assert(info != nullptr);
 
                     m_ChangedPage[page] = true;
-
                     //determine if we're staying on a new page or going back to the current
                     if (g_EntryPointer->Pos() >= info->CharStart)
                     {

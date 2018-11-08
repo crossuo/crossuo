@@ -864,6 +864,7 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
         }
         else
         {
+            // FIXME: check potential leak
             CMulti *newmulti = new CMulti(obj->GetX(), obj->GetY());
             newmulti->m_Next = nullptr;
             newmulti->m_Items = obj;

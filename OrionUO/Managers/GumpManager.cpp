@@ -22,6 +22,7 @@ int CGumpManager::GetNonpartyStatusbarsCount()
     return count;
 }
 
+// FIXME: This API taking ownership of obj and deleting "sometimes" is not safe
 void CGumpManager::AddGump(CGump *obj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -40,7 +41,6 @@ void CGumpManager::AddGump(CGump *obj)
         QFOR(gump, m_Items, CGump *)
         {
             GUMP_TYPE gumpType = gump->GumpType;
-
             if (gumpType == obj->GumpType && canCheck)
             {
                 if (gump->Serial == obj->Serial)
@@ -56,10 +56,8 @@ void CGumpManager::AddGump(CGump *obj)
                         else if (gumpType == GT_STATUSBAR)
                         {
                             CGumpStatusbar *sb = (CGumpStatusbar *)gump;
-
                             int gx = obj->GetX();
                             int gy = obj->GetY();
-
                             if (obj->Minimized)
                             {
                                 gx = obj->MinimizedX;
@@ -85,10 +83,8 @@ void CGumpManager::AddGump(CGump *obj)
                         else if (gumpType == GT_SPELL)
                         {
                             CGumpSpell *spell = (CGumpSpell *)gump;
-
                             int gx = obj->GetX();
                             int gy = obj->GetY();
-
                             if (spell->InGroup())
                             {
                                 spell->UpdateGroup(-(gump->GetX() - gx), -(gump->GetY() - gy));
@@ -101,6 +97,7 @@ void CGumpManager::AddGump(CGump *obj)
 
                     obj->m_Next = nullptr;
                     delete obj;
+                    obj = nullptr;
 
                     if (gumpType == GT_WORLD_MAP && !((CGumpWorldMap *)gump)->Called)
                     {
@@ -128,9 +125,7 @@ void CGumpManager::AddGump(CGump *obj)
                     }
 
                     MoveToBack(gump);
-
                     gump->FrameCreated = false;
-
                     return;
                 }
             }
@@ -140,7 +135,6 @@ void CGumpManager::AddGump(CGump *obj)
                 gump->m_Next = obj;
                 obj->m_Prev = gump;
                 obj->m_Next = nullptr;
-
                 break;
             }
         }
@@ -150,21 +144,18 @@ void CGumpManager::AddGump(CGump *obj)
         GetNonpartyStatusbarsCount() > 10)
     {
         //RemoveGump(obj);
-
         QFOR(gump, m_Items, CGump *)
         {
             if (gump->GumpType == GT_STATUSBAR && gump->Serial != g_PlayerSerial &&
                 !g_Party.Contains(gump->Serial))
             {
                 RemoveGump(gump);
-
                 g_Orion.CreateTextMessage(
                     TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You have too many non-party status bars");
 
                 break;
             }
         }
-
         obj->PrepareTextures();
     }
     else
@@ -174,12 +165,10 @@ void CGumpManager::AddGump(CGump *obj)
             case GT_CONTAINER:
             {
                 uint16_t sound = g_ContainerOffset[obj->Graphic].OpenSound;
-
                 if (sound != 0u)
                 {
                     g_Orion.PlaySoundEffect(sound);
                 }
-
                 break;
             }
             case GT_SPELLBOOK:
@@ -203,13 +192,11 @@ void CGumpManager::AddGump(CGump *obj)
                 {
                     MoveToFront(obj);
                 }
-
                 break;
             }
             default:
                 break;
         }
-
         obj->PrepareTextures();
     }
 }
@@ -1189,7 +1176,6 @@ void CGumpManager::Load(const os_path &path)
         for (int i = 0; i < count; i++)
         {
             CGump *gump = nullptr;
-
             uint8_t *next = file.Ptr;
             uint8_t size = file.ReadUInt8();
             next += size;
@@ -1207,10 +1193,8 @@ void CGumpManager::Load(const os_path &path)
                 case GT_PAPERDOLL:
                 {
                     gump = new CGumpPaperdoll(g_PlayerSerial, gumpX, gumpY, gumpMinimized != 0u);
-
                     g_Orion.PaperdollReq(g_PlayerSerial);
                     paperdollRequested = true;
-
                     break;
                 }
                 case GT_STATUSBAR:
@@ -1227,16 +1211,13 @@ void CGumpManager::Load(const os_path &path)
                 {
                     gump = new CGumpSkills(gumpX, gumpY, gumpMinimized != 0u, file.ReadInt16LE());
                     gump->Visible = false;
-
                     g_SkillsManager.SkillsRequested = true;
                     CPacketSkillsRequest(g_PlayerSerial).Send();
-
                     break;
                 }
                 case GT_JOURNAL:
                 {
                     gump = new CGumpJournal(gumpX, gumpY, gumpMinimized != 0u, file.ReadInt16LE());
-
                     break;
                 }
                 case GT_WORLD_MAP:
@@ -1282,26 +1263,22 @@ void CGumpManager::Load(const os_path &path)
                     bufficonWindowFound = true;
                     gump = new CGumpBuff(gumpX, gumpY);
                     gump->Graphic = file.ReadUInt16LE();
-
                     break;
                 }
                 case GT_ABILITY:
                 {
                     gump = new CGumpAbility(file.ReadUInt32LE(), gumpX, gumpY);
-
                     break;
                 }
                 case GT_PROPERTY_ICON:
                 {
                     gump = new CGumpPropertyIcon(gumpX, gumpY);
-
                     break;
                 }
                 case GT_COMBAT_BOOK:
                 {
                     gump = new CGumpCombatBook(gumpX, gumpY);
                     gump->Minimized = (gumpMinimized != 0u);
-
                     break;
                 }
                 case GT_CONTAINER:
@@ -1309,18 +1286,14 @@ void CGumpManager::Load(const os_path &path)
                 case GT_SPELL:
                 {
                     uint32_t serial = file.ReadUInt32LE();
-
                     if (gumpType == GT_SPELL)
                     {
                         uint16_t graphic = file.ReadUInt16LE();
-
                         SPELLBOOK_TYPE spellType = ST_MAGE;
-
                         if (size > 18)
                         {
                             spellType = (SPELLBOOK_TYPE)file.ReadUInt8();
                         }
-
                         gump = new CGumpSpell(serial, gumpX, gumpY, graphic, spellType);
                     }
                     else
@@ -1349,24 +1322,19 @@ void CGumpManager::Load(const os_path &path)
                 case GT_SKILL:
                 {
                     uint32_t serial = file.ReadUInt32LE();
-
                     gump = new CGumpSkill(serial, gumpX, gumpY);
-
                     break;
                 }
                 case GT_RACIAL_ABILITIES_BOOK:
                 {
                     gump = new CGumpRacialAbilitiesBook(gumpX, gumpY);
                     gump->Minimized = (gumpMinimized != 0u);
-
                     break;
                 }
                 case GT_RACIAL_ABILITY:
                 {
                     uint32_t serial = file.ReadUInt32LE();
-
                     gump = new CGumpRacialAbility(serial, gumpX, gumpY);
-
                     break;
                 }
                 default:
@@ -1389,11 +1357,9 @@ void CGumpManager::Load(const os_path &path)
                 gump->MinimizedX = gumpMinimizedX;
                 gump->MinimizedY = gumpMinimizedY;
                 gump->LockMoving = (gumpLockMoving != 0u);
-
                 //gump->FixCoordinates();
-
                 AddGump(gump);
-
+                assert(dump != nullptr && "AddGump should not delete obj here");
                 gump->WantUpdateContent = true;
             }
 
@@ -1403,9 +1369,7 @@ void CGumpManager::Load(const os_path &path)
         for (int i = 0; i < spellGroupsCount; i++)
         {
             CGumpSpell *topSpell = nullptr;
-
             uint16_t spellsCount = file.ReadUInt16LE();
-
             for (int j = 0; j < spellsCount; j++)
             {
                 uint8_t *next = file.Ptr;
@@ -1432,7 +1396,7 @@ void CGumpManager::Load(const os_path &path)
                 spell->LockMoving = (gumpLockMoving != 0u);
 
                 AddGump(spell);
-
+                assert(spell != nullptr && "AddGump should not delete obj here");
                 if (topSpell == nullptr)
                 {
                     topSpell = spell;
@@ -1443,7 +1407,6 @@ void CGumpManager::Load(const os_path &path)
                 }
 
                 spell->WantUpdateContent = true;
-
                 file.Ptr = next;
             }
         }
@@ -1474,7 +1437,6 @@ void CGumpManager::Load(const os_path &path)
         }
 
         AddGump(new CGumpPaperdoll(g_PlayerSerial, x, y, false));
-
         x = g_ConfigManager.GameWindowX + g_ConfigManager.GameWindowWidth;
         y = g_ConfigManager.GameWindowY + g_ConfigManager.GameWindowHeight - 50;
 
@@ -1490,11 +1452,9 @@ void CGumpManager::Load(const os_path &path)
 
         AddGump(new CGumpStatusbar(g_PlayerSerial, x, y, false));
         AddGump(new CGumpMinimap(g_ConfigManager.GameWindowX, g_ConfigManager.GameWindowY, true));
-
         if (g_Player != nullptr)
         {
             CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
-
             if (backpack != nullptr)
             {
                 g_ContainerStack.push_back(CContainerStackItem(
@@ -1525,7 +1485,6 @@ void CGumpManager::Load(const os_path &path)
 
         int x = g_ConfigManager.GameWindowX + (int)(g_ConfigManager.GameWindowWidth * 0.7f);
         int y = g_ConfigManager.GameWindowY + g_ConfigManager.GameWindowHeight;
-
         if (x + 100 >= windowSize.Width)
         {
             x = windowSize.Width - 100;

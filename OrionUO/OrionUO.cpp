@@ -2011,9 +2011,7 @@ void COrion::Connect()
 
     string login{};
     int port;
-
     LoadLogin(login, port);
-
     if (g_ConnectionManager.Connect(login, port, g_GameSeed))
     {
         g_ConnectionScreen.SetConnected(true);
@@ -3690,24 +3688,21 @@ bool COrion::IsVegetation(uint16_t graphic)
 void COrion::LoadLogin(string &login, int &port)
 {
     DEBUG_TRACE_FUNCTION;
+
+    login = DefaultLogin;
+    port = DefaultPort;
     if (DefaultPort != 0)
     {
-        login = DefaultLogin;
-        port = DefaultPort;
-
         return;
     }
 
     Wisp::CTextFileParser file(g_App.UOFilesPath("login.cfg"), "=,", "#;", "");
-
     while (!file.IsEOF())
     {
         vector<string> strings = file.ReadTokens();
-
         if (strings.size() >= 3)
         {
             string lo = ToLowerA(strings[0]);
-
             if (lo == "loginserver")
             {
                 login = strings[1];

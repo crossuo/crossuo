@@ -438,6 +438,7 @@ void CTarget::AddMultiObject(CMultiObject *obj)
         }
         else
         {
+            // FIXME: potential leak, validate
             CMulti *newmulti = new CMulti(obj->GetX(), obj->GetY());
             newmulti->m_Next = nullptr;
             newmulti->m_Items = obj;

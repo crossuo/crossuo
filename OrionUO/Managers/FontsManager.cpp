@@ -930,8 +930,8 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
     uint8_t font, const wstring &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CPoint2Di p;
 
+    Wisp::CPoint2Di p;
     if (pos < 1 || font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
     {
         return p;
@@ -950,7 +950,6 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
     }
 
     uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
-
     //loop throgh lines to get width and height
     while (info != nullptr)
     {
@@ -958,6 +957,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
         int len = info->CharCount;
         if (info->CharStart == pos)
         {
+            // FIXME: check possible info leak here
             return p;
         }
 
@@ -969,7 +969,6 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
                 //collect data about width of each character
                 const wchar_t &ch = info->Data[i].item;
                 uint32_t offset = table[ch];
-
                 if ((offset != 0u) && offset != 0xFFFFFFFF)
                 {
                     uint8_t *cptr = (uint8_t *)((size_t)table + offset);
@@ -994,9 +993,7 @@ Wisp::CPoint2Di CFontsManager::GetCaretPosW(
         }
 
         PMULTILINES_FONT_INFO ptr = info;
-
         info = info->m_Next;
-
         ptr->Data.clear();
         delete ptr;
     }

@@ -840,7 +840,6 @@ void CGameWorld::UpdateGameObject(
     CGameCharacter *character = nullptr;
     CGameItem *item = nullptr;
     CGameObject *obj = FindWorldObject(serial);
-
     if (g_ObjectInHand.Enabled && g_ObjectInHand.Serial == serial)
     {
         if ((g_ObjectInHand.Container != 0u) && g_ObjectInHand.Container != 0xFFFFFFFF)
@@ -859,16 +858,13 @@ void CGameWorld::UpdateGameObject(
     }
 
     bool created = false;
-
     if (obj == nullptr)
     {
         created = true;
         LOG("created ");
-
         if (((serial & 0x40000000) == 0) && updateType != 3)
         {
             character = GetWorldCharacter(serial);
-
             if (character == nullptr)
             {
                 LOG("No memory?\n");
@@ -888,20 +884,17 @@ void CGameWorld::UpdateGameObject(
         else
         {
             item = GetWorldItem(serial);
-
             if (item == nullptr)
             {
                 LOG("No memory?\n");
                 return;
             }
-
             obj = item;
         }
     }
     else
     {
         LOG("updated ");
-
         if (obj->Container != 0xFFFFFFFF)
         {
             RemoveFromContainer(obj);
@@ -925,9 +918,14 @@ void CGameWorld::UpdateGameObject(
     }
 
     obj->MapIndex = g_CurrentMap;
-
     if (!obj->NPC)
     {
+        if (item == nullptr)
+        {
+            LOG("item must not be null\n");
+            return;
+        }
+
         if (graphic != 0x2006)
         {
             graphic += graphicIncrement;
@@ -938,13 +936,11 @@ void CGameWorld::UpdateGameObject(
             item->MultiBody = true;
             item->WantUpdateMulti = ((graphic & 0x3FFF) != obj->Graphic) || (obj->GetX() != x) ||
                                     (obj->GetY() != y) || (obj->GetZ() != z);
-
             item->Graphic = graphic & 0x3FFF;
         }
         else
         {
             item->MultiBody = false;
-
             item->Graphic = graphic;
         }
 
@@ -958,14 +954,12 @@ void CGameWorld::UpdateGameObject(
         item->SetY(y);
         item->SetZ(z);
         item->LightID = direction;
-
         if (graphic == 0x2006)
         {
             item->Layer = direction;
         }
 
         item->Color = g_ColorManager.FixColor(color, (color & 0x8000));
-
         if (count == 0)
         {
             count = 1;
@@ -973,9 +967,7 @@ void CGameWorld::UpdateGameObject(
 
         item->Count = count;
         item->SetFlags(flags);
-
         item->OnGraphicChange(direction);
-
         LOG("serial:0x%08X graphic:0x%04X color:0x%04X count:%i xyz:%d,%d,%d light:%i flags:0x%02X\n",
             obj->Serial,
             obj->Graphic,
@@ -989,10 +981,14 @@ void CGameWorld::UpdateGameObject(
     }
     else
     {
+        if (character == nullptr)
+        {
+            LOG("character must not be null\n");
+            return;
+        }
+
         graphic += graphicIncrement;
-
         bool found = false;
-
         if (character->m_Steps.size() != MAX_STEPS_COUNT)
         {
             //if (character->Graphic == graphic && character->Flags == flags)
@@ -1000,7 +996,6 @@ void CGameWorld::UpdateGameObject(
                 if (!character->m_Steps.empty())
                 {
                     CWalkData &wd = character->m_Steps.back();
-
                     if (wd.X == x && wd.Y == y && wd.Z == z && wd.Direction == direction)
                     {
                         found = true;
@@ -1033,9 +1028,7 @@ void CGameWorld::UpdateGameObject(
             character->SetY(y);
             character->SetZ(z);
             character->Direction = direction;
-
             character->m_Steps.clear();
-
             character->OffsetX = 0;
             character->OffsetY = 0;
             character->OffsetZ = 0;

@@ -8,7 +8,6 @@ CMapBlock::CMapBlock(int index)
     , LastAccessTime(SDL_GetTicks())
 {
     DEBUG_TRACE_FUNCTION;
-    //Обнуляем блок
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -21,7 +20,6 @@ CMapBlock::CMapBlock(int index)
 CMapBlock::~CMapBlock()
 {
     DEBUG_TRACE_FUNCTION;
-    //При удалении блока очищаем список отрисовки блока и удаляем элементы
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -75,13 +73,11 @@ uint16_t CMapBlock::GetRadarColor(int x, int y)
     DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
 
-    //Получаем указатель на последний элемент списка
     while (obj != nullptr && obj->m_NextXY != nullptr)
     {
         obj = obj->m_NextXY;
     }
 
-    //Пройдемся по списку с конца до начала и вернем первый подходящий ИД
     for (; obj != nullptr; obj = obj->m_PrevXY)
     {
         if (obj->NoDrawTile)
@@ -100,25 +96,18 @@ uint16_t CMapBlock::GetRadarColor(int x, int y)
                 break;
         }
     }
-
-    //Вернем входящий цвет, если не нашлось ничего подходящего
     return 0;
 }
 
 void CMapBlock::CreateLandTextureRect()
 {
     DEBUG_TRACE_FUNCTION;
-    //Подкорректируем индекс карты
     int map = g_MapManager.GetActualMap();
-
-    //И пройдемся по всем позициям ландшафта блока
     for (int x = 0; x < 8; x++)
     {
         for (int y = 0; y < 8; y++)
         {
-            //Указатель на землю
             CLandObject *obj = GetLand((int)x, (int)y);
-
             if (obj != nullptr)
             {
                 int tileX = obj->GetX();
@@ -126,8 +115,6 @@ void CMapBlock::CreateLandTextureRect()
                 char tileZ1 = obj->GetZ();
 
                 CGLTexture *th = g_Orion.ExecuteTexture(obj->Graphic);
-
-                //Если это тайл воды с отсутствующей текстурой или все Z-координаты равны - укажем что это тайл из артов
                 if (obj->IsStretched || th == nullptr ||
                     !TestStretched(tileX, tileY, tileZ1, map, true))
                 {
@@ -135,7 +122,7 @@ void CMapBlock::CreateLandTextureRect()
 
                     obj->MinZ = tileZ1;
                 }
-                else //Или же - текстура
+                else
                 {
                     obj->IsStretched = true;
 
@@ -284,7 +271,6 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
-
     for (int i = -1; i < 2 && !result; i++)
     {
         for (int j = -1; j < 2 && !result; j++)
@@ -315,8 +301,6 @@ char CMapBlock::GetLandZ(int x, int y, int map)
     }
 
     CIndexMap *blockIndex = g_MapManager.GetIndex(map, x / 8, y / 8);
-
-    //Проверки актуальности данных
     if (blockIndex == nullptr || blockIndex->MapAddress == 0)
     {
         return -125;
@@ -332,11 +316,8 @@ CLandObject *CMapBlock::GetLand(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     CMapObject *obj = Block[x][y];
-
-    //Пройдемся по MapObject'ам блока
     while (obj != nullptr)
     {
-        //Если земля - можно прервать поиск
         if (obj->IsLandObject())
         {
             break;
@@ -371,7 +352,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
         if (item->IsGameObject())
         {
             //priorityZ++;
-
             if (((CGameObject *)item)->NPC || ((CGameObject *)item)->IsCorpse())
             {
                 priorityZ++;
@@ -409,7 +389,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
     item->PriorityZ = priorityZ;
 
     CRenderWorldObject *obj = Block[x][y];
-
     if (obj == item)
     {
         if (obj->m_Prev != nullptr)
@@ -433,7 +412,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 
     CRenderWorldObject *found = nullptr;
     CRenderWorldObject *start = obj;
-
     while (obj != nullptr)
     {
         int testPriorityZ = obj->PriorityZ;
@@ -472,13 +450,10 @@ CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
-
-    //Найдем указатель на первый элемент списка рендера
     while (obj != nullptr && obj->m_PrevXY != nullptr)
     {
         obj = obj->m_PrevXY;
     }
-
     return obj;
 }
 
@@ -488,7 +463,6 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
     if (Block[x][y] != nullptr)
     {
         CMapObject *item = Block[x][y];
-
         while (item != nullptr)
         {
             if (!item->IsLandObject() && item->GetZ() > obj->GetZ())
@@ -503,9 +477,7 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
                 obj->m_Prev = nullptr;
                 obj->m_Next = item;
                 item->m_Prev = obj;
-
                 AddRender(obj, x, y);
-
                 return obj;
             }
             if (item->m_Next == nullptr)
@@ -516,17 +488,15 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
             item = (CMapObject *)item->m_Next;
         }
 
+        assert(item != nullptr);
         CMapObject *next = (CMapObject *)item->m_Next;
-
         item->m_Next = obj;
         obj->m_Next = next;
         obj->m_Prev = item;
-
         if (next != nullptr)
         {
             next->m_Prev = obj;
         }
-
         AddRender(obj, x, y);
     }
     else
