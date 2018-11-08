@@ -21,4 +21,4 @@ public:
     void Unload();
 };
 
-}; // namespace Wisp
+};

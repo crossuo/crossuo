@@ -40,4 +40,4 @@ void CThreadedTimer::OnDestroy()
     }
 }
 
-}; // namespace Wisp
+};

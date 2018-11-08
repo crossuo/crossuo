@@ -227,4 +227,4 @@ SDL_threadID CThread::GetCurrentThreadId()
     return SDL_GetThreadID(nullptr);
 }
 
-}; // namespace Wisp
+};

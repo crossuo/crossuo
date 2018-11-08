@@ -33,4 +33,4 @@ public:
 
 extern CApplication *g_WispApplication;
 
-}; // namespace Wisp
+};

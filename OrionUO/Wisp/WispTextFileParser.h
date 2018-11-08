@@ -64,4 +64,4 @@ public:
     void WriteBool(const string &key, bool value);
 };
 
-}; // namespace Wisp
+};

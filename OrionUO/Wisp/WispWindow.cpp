@@ -9,6 +9,7 @@
 namespace Wisp
 {
 CWindow *g_WispWindow = nullptr;
+WindowHandle CWindow::Handle = 0;
 
 #if USE_WISP
 LRESULT CALLBACK WindowProc(WindowHandle hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1181,7 +1182,7 @@ Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint32_t id)
 
     return 0;
 }
-}; // namespace Wisp
+};
 
 #if USE_WISP
 void GetDisplaySize(int *x, int *y)

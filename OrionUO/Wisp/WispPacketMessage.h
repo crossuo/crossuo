@@ -25,4 +25,4 @@ public:
     vector<uint8_t> Read(class CPacketReader *reader, int &dataOffset);
 };
 
-}; // namespace Wisp
+};

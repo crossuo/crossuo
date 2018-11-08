@@ -43,7 +43,7 @@ void CDataWritter::Move(const intptr_t &offset)
     DATASTREAM_DEBUG;
     if (AutoResize)
     {
-        for (int i = offset; i < 0; i++)
+        for (int i = 0; i < (int)offset; i++)
         {
             m_Data.push_back(0);
         }
@@ -59,7 +59,7 @@ void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t 
     DATASTREAM_DEBUG;
     if (AutoResize)
     {
-        for (int i = size - 1; i >= 0; i--)
+        for (int i = (int)size - 1; i >= 0; i--)
         {
             m_Data.push_back(data[i]);
         }
@@ -68,7 +68,7 @@ void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t 
     {
         uint8_t *ptr = Ptr + offset + size - 1;
 
-        for (int i = size - 1; i >= 0; i--)
+        for (int i = (int)size - 1; i >= 0; i--)
         {
             *(ptr - i) = data[i];
         }
@@ -332,4 +332,4 @@ wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
     return ReadWString(size, true, offset);
 }
 
-}; // namespace Wisp
+};

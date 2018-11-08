@@ -271,7 +271,6 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     texture.Width = width;
     texture.Height = height;
     texture.Texture = tex;
-
     if (IgnoreHitMap)
     {
         return;
@@ -280,14 +279,11 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     HIT_MAP_TYPE &hitMap = texture.m_HitMap;
     hitMap.resize(width * height);
     int pos = 0;
-
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
-            hitMap[pos] = static_cast<__gnu_cxx::__alloc_traits<
-                class std::allocator<unsigned char>,
-                unsigned char>::value_type>(pixels[pos] != 0);
+            hitMap[pos] = (pixels[pos] != 0); // NOLINT
             pos++;
         }
     }

@@ -21,7 +21,7 @@ public:
     bool NoResize = false;
 
     // FIXME: Last API specific public surface on windowing stuff
-    WindowHandle Handle = 0;
+    static WindowHandle Handle;
 #if USE_WISP
     HINSTANCE hInstance = 0;
     LRESULT OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam, LPARAM &lParam);
@@ -112,4 +112,4 @@ protected:
 
 extern CWindow *g_WispWindow;
 
-}; // namespace Wisp
+};

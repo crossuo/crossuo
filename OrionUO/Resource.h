@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by OrionUO.rc
 //
-#define GIT_IS_MASTER 1
 #define IDC_MYICON 2
 #define IDS_APP_TITLE 103
 #define IDI_ORIONUO 107

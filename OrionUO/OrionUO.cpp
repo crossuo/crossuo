@@ -4,6 +4,7 @@
 #include <SDL_loadso.h>
 #include <SDL_keyboard.h>
 #include <SDL_rect.h>
+#include "GitRevision.h"
 #include "Wisp/WispGlobal.h"
 #include "FileSystem.h"
 #include "Crypt/CryptEntry.h"

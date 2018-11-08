@@ -50,4 +50,4 @@ void CPacketReader::Read(class CConnection *connection)
     }
 }
 
-}; // namespace Wisp
+};

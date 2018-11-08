@@ -93,4 +93,4 @@ vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffse
     return result;
 }
 
-}; // namespace Wisp
+};

@@ -19,4 +19,4 @@ public:
     virtual void OnDestroy();
 };
 
-}; // namespace Wisp
+};

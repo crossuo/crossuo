@@ -25,4 +25,4 @@ public:
     deque<vector<uint8_t>> m_PacketsStack;
 };
 
-}; // namespace Wisp
+};

@@ -44,4 +44,4 @@ public:
     static SDL_threadID GetCurrentThreadId();
 };
 
-}; // namespace Wisp
+};

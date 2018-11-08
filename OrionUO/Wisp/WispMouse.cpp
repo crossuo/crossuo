@@ -107,4 +107,4 @@ Wisp::CPoint2Di CMouse::MidDroppedOffset()
     return position;
 }
 
-}; // namespace Wisp
+};
