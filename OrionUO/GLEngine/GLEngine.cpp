@@ -276,14 +276,14 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
         return;
     }
 
-    HIT_MAP_TYPE &hitMap = texture.m_HitMap;
+    vector<uint8_t> &hitMap = texture.m_HitMap;
     hitMap.resize(width * height);
     int pos = 0;
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
-            hitMap[pos] = (pixels[pos] != 0); // NOLINT
+            hitMap[pos] = (uint8_t)(pixels[pos] != 0); // NOLINT
             pos++;
         }
     }
@@ -313,7 +313,7 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
         return;
     }
 
-    HIT_MAP_TYPE &hitMap = texture.m_HitMap;
+    vector<uint8_t> &hitMap = texture.m_HitMap;
     hitMap.resize(width * height);
     int pos = 0;
 
@@ -321,9 +321,7 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     {
         for (int x = 0; x < width; x++)
         {
-            hitMap[pos] = static_cast<__gnu_cxx::__alloc_traits<
-                class std::allocator<unsigned char>,
-                unsigned char>::value_type>(pixels[pos] != 0);
+            hitMap[pos] = (uint8_t)(pixels[pos] != 0); // NOLINT
             pos++;
         }
     }

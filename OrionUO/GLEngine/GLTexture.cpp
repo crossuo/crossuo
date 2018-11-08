@@ -20,15 +20,10 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
             g_GL_Draw(*this, x, y);
-
             glDisable(GL_BLEND);
-
             glEnable(GL_STENCIL_TEST);
-
             g_GL_Draw(*this, x, y);
-
             glDisable(GL_STENCIL_TEST);
         }
         else
@@ -57,15 +52,10 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
             g_GL_DrawStretched(*this, x, y, width, height);
-
             glDisable(GL_BLEND);
-
             glEnable(GL_STENCIL_TEST);
-
             g_GL_DrawStretched(*this, x, y, width, height);
-
             glDisable(GL_STENCIL_TEST);
         }
         else
@@ -92,17 +82,13 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
-
         g_GL_Draw(*this, x, y);
-
         glDisable(GL_BLEND);
 
         if (stencil)
         {
             glEnable(GL_STENCIL_TEST);
-
             g_GL_Draw(*this, x, y);
-
             glDisable(GL_STENCIL_TEST);
         }
     }
@@ -147,7 +133,6 @@ bool CGLTexture::Select(int x, int y, bool pixelCheck)
         }
 
         int pos = (y * Width) + x;
-
         if (pos < (int)m_HitMap.size())
         {
             return (m_HitMap[pos] != 0);
