@@ -23,4 +23,4 @@ public:
     void WriteBuffer();
 };
 
-};
+}; // namespace Wisp

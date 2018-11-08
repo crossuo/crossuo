@@ -16,7 +16,7 @@
 typedef void CDECL PLUGIN_INIT_TYPE_OLD(vector<string> &, vector<string> &, vector<uint32_t> &);
 typedef void CDECL PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
 
-PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = { 0 };
+PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = {};
 PLUGIN_INIT_TYPE_OLD *g_PluginInitOld = nullptr;
 PLUGIN_INIT_TYPE_NEW *g_PluginInitNew = nullptr;
 
@@ -3218,7 +3218,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_MapMul[value].Start;
+                value = checked_cast<int>(g_FileManager.m_MapMul[value].Start);
             }
 
             break;
@@ -3236,7 +3236,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_StaticIdx[value].Start;
+                value = checked_cast<int>(g_FileManager.m_StaticIdx[value].Start);
             }
 
             break;
@@ -3254,7 +3254,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_StaticMul[value].Start;
+                value = checked_cast<int>(g_FileManager.m_StaticMul[value].Start);
             }
 
             break;
@@ -3272,7 +3272,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_MapDifl[value].Start;
+                value = checked_cast<int>(g_FileManager.m_MapDifl[value].Start);
             }
 
             break;
@@ -3290,7 +3290,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_MapDif[value].Start;
+                value = checked_cast<int>(g_FileManager.m_MapDif[value].Start);
             }
 
             break;
@@ -3308,7 +3308,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_StaDifl[value].Start;
+                value = checked_cast<int>(g_FileManager.m_StaDifl[value].Start);
             }
 
             break;
@@ -3326,7 +3326,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_StaDifi[value].Start;
+                value = checked_cast<int>(g_FileManager.m_StaDifi[value].Start);
             }
 
             break;
@@ -3344,7 +3344,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_StaDif[value].Start;
+                value = checked_cast<int>(g_FileManager.m_StaDif[value].Start);
             }
 
             break;
@@ -3360,7 +3360,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         }
         case VKI_VERDATA_ADDRESS:
         {
-            value = (int)g_FileManager.m_VerdataMul.Start;
+            value = checked_cast<int>(g_FileManager.m_VerdataMul.Start);
 
             break;
         }
@@ -3374,7 +3374,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_MapUOP[value].Start;
+                value = checked_cast<int>(g_FileManager.m_MapUOP[value].Start);
             }
 
             break;
@@ -3392,7 +3392,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < 6)
             {
-                value = (int)g_FileManager.m_MapXUOP[value].Start;
+                value = checked_cast<int>(g_FileManager.m_MapXUOP[value].Start);
             }
 
             break;
@@ -3408,7 +3408,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         }
         case VKI_CLILOC_ENU_ADDRESS:
         {
-            value = (int)g_ClilocManager.Cliloc("enu")->m_File.Start;
+            value = checked_cast<int>(g_ClilocManager.Cliloc("enu")->m_File.Start);
 
             break;
         }
@@ -3422,7 +3422,7 @@ int COrion::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < MAX_GUMP_DATA_INDEX_COUNT)
             {
-                value = (int)m_GumpDataIndex[value].Address;
+                value = checked_cast<int>(m_GumpDataIndex[value].Address);
             }
 
             break;

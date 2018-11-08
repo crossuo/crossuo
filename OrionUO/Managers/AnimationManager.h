@@ -9,24 +9,24 @@ static const float LOWER_BODY_RATIO = 0.94f;
 
 struct FRAME_OUTPUT_INFO
 {
-    int StartX;
-    int StartY;
-    int EndX;
-    int EndY;
+    int StartX = 0;
+    int StartY = 0;
+    int EndX = 0;
+    int EndY = 0;
 };
 
 struct ANIMATION_DIMENSIONS
 {
-    int Width;
-    int Height;
-    int CenterX;
-    int CenterY;
+    int Width = 0;
+    int Height = 0;
+    int CenterX = 0;
+    int CenterY = 0;
 };
 struct UOPFrameData
 {
-    uint8_t *dataStart;
-    short frameId;
-    uint32_t pixelDataOffset;
+    uint8_t *dataStart = nullptr;
+    short frameId = 0;
+    uint32_t pixelDataOffset = 0;
 };
 
 class CEquipConvData

@@ -466,7 +466,8 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
     {
         case UOMSG_RECV:
         {
-            g_PacketManager.SavePluginReceivePacket((uint8_t *)ev.data1, (int)ev.data2);
+            g_PacketManager.SavePluginReceivePacket(
+                (uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
         }
         break;
@@ -475,7 +476,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         {
             uint32_t ticks = g_Ticks;
             uint8_t *buf = (uint8_t *)ev.data1;
-            int size = (int)ev.data2;
+            int size = checked_cast<int>(ev.data2);
             g_TotalSendSize += size;
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
@@ -499,15 +500,15 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
             {
                 LOG_DUMP(buf, size);
             }
-            g_ConnectionManager.Send((uint8_t *)ev.data1, (int)ev.data2);
+            g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
         }
         break;
 
         case UOMSG_PATHFINDING:
         {
-            const auto xy = (uint32_t)ev.data1;
-            const auto zd = (uint32_t)ev.data2;
+            const auto xy = checked_cast<uint32_t>(ev.data1);
+            const auto zd = checked_cast<uint32_t>(ev.data2);
             return !g_PathFinder.WalkTo(
                 (xy >> 16) & 0xFFFF, xy & 0xFFFF, (zd >> 16) & 0xFFFF, zd & 0xFFFF);
         }
@@ -516,7 +517,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         case UOMSG_WALK:
         {
             const auto run = (bool)ev.data1;
-            const auto dir = (uint8_t)ev.data2;
+            const auto dir = checked_cast<uint8_t>(ev.data2);
             return !g_PathFinder.Walk(run, dir);
         }
         break;
@@ -602,7 +603,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 
         case Wisp::CThreadedTimer::MessageID:
         {
-            auto nowTime = (uint32_t)ev.data1;
+            auto nowTime = checked_cast<uint32_t>(ev.data1);
             auto timer = (Wisp::CThreadedTimer *)ev.data2;
             OnThreadedTimer(nowTime, timer);
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", nowTime, timer);
@@ -611,7 +612,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 
         case COrionWindow::MessageID:
         {
-            OnTimer((uint32_t)ev.data1);
+            OnTimer(checked_cast<uint32_t>(ev.data1));
             break;
         }
 

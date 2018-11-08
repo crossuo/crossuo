@@ -39,4 +39,4 @@ public:
 
 extern CMouse *g_WispMouse;
 
-};
+}; // namespace Wisp

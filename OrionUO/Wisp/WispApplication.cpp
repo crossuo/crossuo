@@ -106,4 +106,4 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     return res;
 }
 
-};
+}; // namespace Wisp

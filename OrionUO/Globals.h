@@ -3,24 +3,6 @@
 
 #pragma once
 
-enum
-{
-    WINDOW_INACTIVE = 0,
-    WINDOW_ACTIVE = 1,
-};
-
-extern bool g_AltPressed;
-extern bool g_CtrlPressed;
-extern bool g_ShiftPressed;
-
-extern bool g_MovingFromMouse;
-
-extern bool g_AutoMoving;
-
-extern bool g_TheAbyss;
-extern bool g_AbyssPacket03First;
-extern bool g_Asmut;
-
 #include "Wisp/WispGlobal.h"
 #include "Wisp/WispGeometry.h"
 #include "Wisp/WispLogger.h"
@@ -41,14 +23,23 @@ extern bool g_Asmut;
 #define DEBUGLOG(...)
 #endif //CWISPDEBUGLOGGER!=0
 
-#if defined(_MSC_VER)
-#pragma warning(disable : 4800) //forcing value to bool 'true' or 'false' (performance warning)
-#endif
+enum
+{
+    WINDOW_INACTIVE = 0,
+    WINDOW_ACTIVE = 1,
+};
+
+extern bool g_AltPressed;
+extern bool g_CtrlPressed;
+extern bool g_ShiftPressed;
+extern bool g_MovingFromMouse;
+extern bool g_AutoMoving;
+extern bool g_TheAbyss;
+extern bool g_AbyssPacket03First;
+extern bool g_Asmut;
 
 bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point);
-
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);
-
 string ToCamelCase(string text);
 
 class CGameObject;
@@ -234,7 +225,36 @@ extern uint32_t g_OrionFeaturesFlags;
 extern struct PING_INFO_DATA g_GameServerPingInfo;
 extern string g_PingString;
 extern uint32_t g_PingTimer;
-
+inline bool Int32TryParse(const string &str, int &result)
+{
+    char *end = nullptr;
+    auto v = strtol(str.c_str(), &end, 10);
+    if (!*end)
+    {
+        result = v;
+        return true;
+    }
+    result = 0;
+    return false;
+    /*    
+    std::istringstream convert(str);
+    try
+    {
+        convert >> result;
+    }
+    catch (int)
+    {
+        result = 0;
+        return false;
+    }
+    if (!convert.eof())
+    {
+        result = 0;
+        return false;
+    }
+    return true;
+    */
+}
 inline bool IsBackground(int64_t flags)
 {
     return (flags & 0x00000001);
@@ -362,4 +382,20 @@ inline bool IsStairBack(int64_t flags)
 inline bool IsStairRight(int64_t flags)
 {
     return (flags & 0x80000000);
+}
+
+template <typename T, typename U>
+static inline T checked_cast(U value)
+{
+    auto result = static_cast<T>(value);
+    assert(static_cast<U>(result) == value && "Type conversion loses information");
+    return result;
+}
+
+template <typename T, typename U>
+static inline T checked_cast(U *value)
+{
+    auto result = checked_cast<T>((intptr_t)value);
+    assert(static_cast<intptr_t>(result) == (intptr_t)value && "Type conversion loses information");
+    return result;
 }

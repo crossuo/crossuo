@@ -332,4 +332,4 @@ wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
     return ReadWString(size, true, offset);
 }
 
-};
+}; // namespace Wisp

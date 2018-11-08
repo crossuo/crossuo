@@ -159,7 +159,7 @@ uint32_t g_ProcessStaticAnimationTimer = 0;
 uint32_t g_ProcessRemoveRangedTimer = 0;
 int g_MaxViewRange = MAX_VIEW_RANGE_OLD;
 uint32_t g_OrionFeaturesFlags = OFF_ALL_FLAGS;
-PING_INFO_DATA g_GameServerPingInfo = { 0 };
+PING_INFO_DATA g_GameServerPingInfo = {};
 string g_PingString = {};
 uint32_t g_PingTimer = 0;
 

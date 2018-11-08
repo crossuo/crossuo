@@ -7,7 +7,7 @@ endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   compile_definitions(_DEBUG DEBUG_ONLY)
-  #check_and_add_flag(EXCEPTIONS /EHsc)
+  check_and_add_flag(EXCEPTIONS /EHsc)
 
   # Enforce C++ standard conforming conversion rules to catch possible bugs
   add_compile_options(/permissive-)
@@ -24,16 +24,12 @@ else()
   check_and_add_flag(HAVE_WALL -Wall)
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    check_and_add_flag(MSEXTENSIONS -fms-extensions) # TODO: GCC does not suppport this, fix code instead
-    check_and_add_flag(INCONSISTENT_MISSING_OVERRIDE_DISABLE -Wno-inconsistent-missing-override) # FIXME: OnTextInput, OnKeyDown, OnLeftMouse... etc.
-    # gcc uses some optimizations which might break stuff without this flag
-    #check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
-    #check_and_add_flag(NO_EXCEPTIONS -fno-exceptions)
+    check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
   endif()
 
   #check_and_add_flag(EXTRA -Wextra)
-  #check_and_add_flag(MISSING_FIELD_INITIALIZERS -Wmissing-field-initializers)
-  #check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
+  check_and_add_flag(MISSING_FIELD_INITIALIZERS -Wmissing-field-initializers)
+  check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
   #check_and_add_flag(FLOAT_EQUAL -Wfloat-equal)
   #check_and_add_flag(CONVERSION -Wconversion)
   #check_and_add_flag(ZERO_AS_NULL_POINTER_CONSTANT -Wzero-as-null-pointer-constant)
@@ -52,6 +48,7 @@ else()
   check_and_add_flag(VISIBILITY_HIDDEN -fvisibility=hidden)
   check_and_add_flag(PERMISSIVE -fpermissive) # FIXME GCC
   check_and_add_flag(NORTTI -fno-rtti)
+  check_and_add_flag(NO_EXCEPTIONS -fno-exceptions)
   check_and_add_flag(FOMIT_FRAME_POINTER -fomit-frame-pointer RELEASE_ONLY)
 
   check_and_add_flag(GGDB -ggdb DEBUG_ONLY)

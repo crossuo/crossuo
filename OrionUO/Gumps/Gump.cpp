@@ -1414,7 +1414,7 @@ void CGump::GenerateFrame(bool stop)
 
     if (g_ConfigManager.GetUseGLListsForInterface())
     {
-        glNewList((GLuint)this, GL_COMPILE);
+        glNewList(checked_cast<GLuint>(this), GL_COMPILE);
 
         DrawItems((CBaseGUI *)m_Items, Page, Draw2Page);
 
@@ -1542,7 +1542,7 @@ void CGump::Draw()
     }
     else
     {
-        glCallList((GLuint)this);
+        glCallList(checked_cast<GLuint>(this));
         g_GL.OldTexture = 0;
     }
 

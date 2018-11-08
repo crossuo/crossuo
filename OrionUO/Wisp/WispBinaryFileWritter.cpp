@@ -48,4 +48,4 @@ void CBinaryFileWritter::WriteBuffer()
     }
 }
 
-};
+}; // namespace Wisp

@@ -30,4 +30,4 @@ public:
     int Send(uint8_t *data, int size);
     int Send(const vector<uint8_t> &data);
 };
-};
+}; // namespace Wisp

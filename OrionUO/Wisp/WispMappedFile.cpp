@@ -124,4 +124,4 @@ void CMappedFile::Unload()
     SetData(nullptr, 0);
 }
 
-};
+}; // namespace Wisp

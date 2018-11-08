@@ -145,4 +145,4 @@ int CConnection::Send(const vector<uint8_t> &data)
     LOG("CConnection::Send=>%i\n", sent);
     return sent;
 }
-};
+}; // namespace Wisp

@@ -112,4 +112,4 @@ protected:
 
 extern CWindow *g_WispWindow;
 
-};
+}; // namespace Wisp

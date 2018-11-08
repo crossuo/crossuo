@@ -212,7 +212,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
         destAddress.sin_port = 0;
 
         const int ICMP_ECHOREQ = 8;
-        ECHOREQUEST request = { 0 };
+        ECHOREQUEST request = {};
         request.icmpHdr.Type = ICMP_ECHOREQ;
         request.dwTime = *timems;
         memset(request.cData, 80, 64);
@@ -442,7 +442,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
         destAddress.sin_port = 0;
 
         const int ICMP_ECHOREQ = 8;
-        ECHOREQUEST request = { 0 };
+        ECHOREQUEST request = {};
         request.icmpHdr.Type = ICMP_ECHOREQ;
         request.dwTime = *timems;
         memset(request.cData, 80, 64);

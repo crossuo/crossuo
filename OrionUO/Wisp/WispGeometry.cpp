@@ -180,4 +180,4 @@ CPoint3Df::CPoint3Df(const CPoint3Df &point)
 {
 }
 
-};
+}; // namespace Wisp

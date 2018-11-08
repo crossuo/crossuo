@@ -5191,7 +5191,7 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 8)
             {
-                HTMLGumpDataInfo htmlInfo = { 0 };
+                HTMLGumpDataInfo htmlInfo = {};
                 htmlInfo.IsXMF = (cmd != "htmlgump");
                 GumpCoords *gumpCoords = new GumpCoords{ ToInt(list[1]), ToInt(list[2]) };
                 htmlInfo.sGumpCoords = gumpCoords;
@@ -5219,7 +5219,7 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 9)
             {
-                HTMLGumpDataInfo htmlInfo = { 0 };
+                HTMLGumpDataInfo htmlInfo = {};
                 htmlInfo.IsXMF = true;
                 GumpCoords *gumpCoords = new GumpCoords{ ToInt(list[1]), ToInt(list[2]) };
                 htmlInfo.sGumpCoords = gumpCoords;

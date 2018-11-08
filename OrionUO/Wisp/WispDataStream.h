@@ -275,4 +275,4 @@ private:
     wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 
-};
+}; // namespace Wisp

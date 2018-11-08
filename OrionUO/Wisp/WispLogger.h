@@ -72,4 +72,4 @@ public:
 extern CLogger g_WispLogger;
 extern CLogger g_WispCrashLogger;
 
-}
+} // namespace Wisp

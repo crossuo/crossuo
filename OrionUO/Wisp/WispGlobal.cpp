@@ -1,32 +1,15 @@
 ﻿// MIT License
 
+#include "WispGlobal.h"
+
 #include <locale>
 #include <codecvt>
-#include <SDL_thread.h>
-
-#include "WispThread.h"
 
 SDL_threadID g_MainThread;
+
+#if USE_WISP_DEBUG_FUNCTION_NAMES == 1
 deque<string> g_WispDebugFunStack;
-#if USE_WISP_DEBUG_FUNCTION_NAMES == 2
-char *g_WispCurrentFunctionName = nullptr;
 #endif
-
-CWispFunDebug::CWispFunDebug(const char *str)
-{
-    if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
-    {
-        g_WispDebugFunStack.push_back(str);
-    }
-}
-
-CWispFunDebug::~CWispFunDebug()
-{
-    if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
-    {
-        g_WispDebugFunStack.pop_back();
-    }
-}
 
 int CalculatePercents(int max, int current, int maxValue)
 {
@@ -282,26 +265,6 @@ wstring ToUpperW(wstring s)
     std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::towupper(c); });
     return s;
 #endif
-}
-
-bool Int32TryParse(const string &str, int &result)
-{
-    std::istringstream convert(str);
-    try
-    {
-        convert >> result;
-    }
-    catch (int)
-    {
-        result = 0;
-        return false;
-    }
-    if (!convert.eof())
-    {
-        result = 0;
-        return false;
-    }
-    return true;
 }
 
 bool ToBool(const string &str)

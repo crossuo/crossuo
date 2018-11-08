@@ -585,7 +585,9 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
             {
                 if (isFixed)
                 {
-                    MULTILINES_FONT_DATA mfd = { (uint16_t)si, flags, font, 0, 0xFFFFFFFF };
+                    MULTILINES_FONT_DATA mfd = {
+                        (uint16_t)si, flags, font, 0, 0xFFFFFFFF, nullptr
+                    };
                     ptr->Data.push_back(mfd);
 
                     readWidth += fcd.Width;
@@ -643,7 +645,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
             }
         }
 
-        MULTILINES_FONT_DATA mfd = { (uint16_t)si, flags, font, 0, 0xFFFFFFFF };
+        MULTILINES_FONT_DATA mfd = { (uint16_t)si, flags, font, 0, 0xFFFFFFFF, nullptr };
         ptr->Data.push_back(mfd);
 
         readWidth += fcd.Width;
@@ -2166,7 +2168,8 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
                                                  htmlData[i].Flags,
                                                  htmlData[i].Font,
                                                  htmlData[i].LinkID,
-                                                 htmlData[i].Color };
+                                                 htmlData[i].Color,
+                                                 nullptr };
                     ptr->Data.push_back(mfd);
 
                     readWidth += ((char)data[0] + (char)data[2] + 1);
@@ -2225,7 +2228,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
         }
 
         MULTILINES_FONT_DATA mfd = {
-            si, htmlData[i].Flags, htmlData[i].Font, htmlData[i].LinkID, htmlData[i].Color
+            si, htmlData[i].Flags, htmlData[i].Font, htmlData[i].LinkID, htmlData[i].Color, nullptr
         };
         ptr->Data.push_back(mfd);
 
@@ -2421,9 +2424,8 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
             {
                 if (isFixed)
                 {
-                    MULTILINES_FONT_DATA mfd = {
-                        si, current_flags, current_font, 0, current_charcolor
-                    };
+                    MULTILINES_FONT_DATA mfd = { si, current_flags,     current_font,
+                                                 0,  current_charcolor, nullptr };
                     ptr->Data.push_back(mfd);
 
                     readWidth += ((char)data[0] + (char)data[2] + 1);
@@ -2484,7 +2486,9 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
             }
         }
 
-        MULTILINES_FONT_DATA mfd = { si, current_flags, current_font, 0, current_charcolor };
+        MULTILINES_FONT_DATA mfd = {
+            si, current_flags, current_font, 0, current_charcolor, nullptr
+        };
         ptr->Data.push_back(mfd);
 
         if (si == L' ')

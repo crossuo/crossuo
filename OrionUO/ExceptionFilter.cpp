@@ -76,12 +76,6 @@ void DumpLibraryInformation()
     CRASHLOG("trace functions:\n");
     for (const string &str : g_WispDebugFunStack)
         CRASHLOG("%s\n", str.c_str());
-#elif USE_WISP_DEBUG_FUNCTION_NAMES == 2
-    if (g_WispCurrentFunctionName != nullptr)
-    {
-        CRASHLOG("trace function: %s\n", g_WispCurrentFunctionName);
-    }
-#endif
 
     static bool libraryInfoPrinted = false;
 

@@ -351,4 +351,4 @@ void CTextFileWritter::WriteBool(const string &key, bool value)
     }
 }
 
-};
+}; // namespace Wisp

@@ -1182,7 +1182,7 @@ Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint32_t id)
 
     return 0;
 }
-};
+}; // namespace Wisp
 
 #if USE_WISP
 void GetDisplaySize(int *x, int *y)

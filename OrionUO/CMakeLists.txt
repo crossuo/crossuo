@@ -302,7 +302,7 @@ set(orion_src
   Multi.cpp
   MultiMap.cpp
   OrionApplication.cpp
-  OrionUO.cpp                 # FIXME: localtime_s c11
+  OrionUO.cpp
   OrionWindow.cpp
   Party.cpp
   PartyObject.cpp

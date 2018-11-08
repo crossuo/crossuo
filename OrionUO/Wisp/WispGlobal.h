@@ -3,18 +3,23 @@
 #pragma once
 
 #if !defined(ORION_LINUX)
+#if defined(_MSC_VER)
+#pragma warning(disable : 4800) //forcing value to bool 'true' or 'false' (performance warning)
+#endif
 #if !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include <windows.h>
 #endif
-#include <stdio.h>
 
 #include <SDL_thread.h>
+#include <thread>
 
+#include <stdio.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <thread>
+#include <stdlib.h>
+
 #include <string>
 using std::string;
 using std::wstring;
@@ -29,22 +34,12 @@ using std::deque;
 using std::map;
 
 #include <unordered_map>
-using std::unordered_map;
-
 using std::pair;
+using std::unordered_map;
 
 #include "WispDefinitions.h"
 
-class CWispFunDebug
-{
-public:
-    CWispFunDebug(const char *str);
-    ~CWispFunDebug();
-};
-
 extern SDL_threadID g_MainThread;
-extern deque<string> g_WispDebugFunStack;
-
 const int PACKET_VARIABLE_SIZE = 0;
 
 int CalculatePercents(int max, int current, int maxValue);
@@ -64,7 +59,6 @@ string ToLowerA(string str);
 string ToUpperA(string str);
 wstring ToLowerW(wstring str);
 wstring ToUpperW(wstring str);
-bool Int32TryParse(const string &str, int &result);
 bool ToBool(const string &str);
 
 inline float deg2radf(float degr)
@@ -110,3 +104,25 @@ inline void pack16(uint8_t *buf, uint16_t x)
     buf[0] = x >> 8;
     buf[1] = x & 0xff;
 }
+
+#if USE_WISP_DEBUG_FUNCTION_NAMES == 1
+extern deque<string> g_WispDebugFunStack;
+class CWispFunDebug
+{
+public:
+    CWispFunDebug::CWispFunDebug(const char *str)
+    {
+        if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
+        {
+            g_WispDebugFunStack.push_back(str);
+        }
+    }
+    CWispFunDebug::~CWispFunDebug()
+    {
+        if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
+        {
+            g_WispDebugFunStack.pop_back();
+        }
+    }
+};
+#endif

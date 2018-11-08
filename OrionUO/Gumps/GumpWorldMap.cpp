@@ -411,7 +411,7 @@ void CGumpWorldMap::LoadMap(int map)
                     }
 
                     int mapY = (int)by * 8;
-                    MAP_BLOCK info = { 0 };
+                    MAP_BLOCK info = {};
 
                     PMAP_BLOCK mapBlock = (PMAP_BLOCK)indexMap->MapAddress;
 

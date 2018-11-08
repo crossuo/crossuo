@@ -2083,7 +2083,7 @@ bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
 {
-    ANIMATION_DIMENSIONS result = { 0 };
+    ANIMATION_DIMENSIONS result = {};
 
     if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
@@ -2420,7 +2420,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
     m_Sitting = 0;
     Direction = 0;
 
-    DRAW_FRAME_INFORMATION dfInfo = { 0 };
+    DRAW_FRAME_INFORMATION dfInfo = {};
 
     vector<CGameItem *> &list = gameObject->m_DrawLayeredObjects;
 
@@ -2454,7 +2454,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         uint8_t animIndex = obj->AnimIndex;
         uint8_t animGroup = obj->GetAnimationGroup();
 
-        FRAME_OUTPUT_INFO info = { 0 };
+        FRAME_OUTPUT_INFO info = {};
 
         CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
@@ -2521,7 +2521,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         uint8_t animIndex = obj->AnimIndex;
         AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
 
-        FRAME_OUTPUT_INFO info = { 0 };
+        FRAME_OUTPUT_INFO info = {};
 
         CalculateFrameInformation(info, obj, mirror, animIndex);
 
@@ -2824,7 +2824,7 @@ vector<UOPFrameData> CAnimationManager::ReadUOPFrameDataOffsets()
         {
             while (vsize + 1 != data.frameId)
             {
-                pixelDataOffsets.push_back(UOPFrameData{ nullptr });
+                pixelDataOffsets.push_back({});
                 vsize++;
             }
         }
@@ -2835,7 +2835,7 @@ vector<UOPFrameData> CAnimationManager::ReadUOPFrameDataOffsets()
     {
         while (vectorSize != 50)
         {
-            pixelDataOffsets.push_back(UOPFrameData{ nullptr });
+            pixelDataOffsets.push_back({});
             vectorSize++;
         }
     }

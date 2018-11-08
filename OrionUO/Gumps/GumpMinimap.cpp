@@ -152,7 +152,7 @@ void CGumpMinimap::GenerateMap()
                 break;
             }
 
-            RADAR_MAP_BLOCK mb = { 0 };
+            RADAR_MAP_BLOCK mb = {};
             g_MapManager.GetRadarMapBlock(i, j, mb);
 
             CMapBlock *mapBlock = g_MapManager.GetBlock(blockIndex);
