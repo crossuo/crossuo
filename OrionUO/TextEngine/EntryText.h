@@ -70,11 +70,16 @@ public:
     void FixMaxWidthW(uint8_t font);
 
     void CreateTextureA(
-        uint8_t font, string str, uint16_t color, int width, TEXT_ALIGN_TYPE align, uint16_t flags);
+        uint8_t font,
+        const string &str,
+        uint16_t color,
+        int width,
+        TEXT_ALIGN_TYPE align,
+        uint16_t flags);
 
     void CreateTextureW(
         uint8_t font,
-        wstring str,
+        const wstring &str,
         uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,

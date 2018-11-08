@@ -10,7 +10,7 @@ CBaseProfession::~CBaseProfession()
 {
 }
 
-bool CBaseProfession::AddDescription(int desc, string name, const char *val)
+bool CBaseProfession::AddDescription(int desc, const string &name, const char *val)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -55,7 +55,7 @@ CProfessionCategory::~CProfessionCategory()
 {
 }
 
-void CProfessionCategory::AddChildren(string child)
+void CProfessionCategory::AddChildren(const string &child)
 {
     Childrens += child + "|";
 }

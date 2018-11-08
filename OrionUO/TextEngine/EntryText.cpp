@@ -472,7 +472,12 @@ void CEntryText::FixMaxWidthW(uint8_t font)
 }
 
 void CEntryText::CreateTextureA(
-    uint8_t font, string str, uint16_t color, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font,
+    const string &str,
+    uint16_t color,
+    int width,
+    TEXT_ALIGN_TYPE align,
+    uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -523,7 +528,12 @@ void CEntryText::CreateTextureA(
 }
 
 void CEntryText::CreateTextureW(
-    uint8_t font, wstring str, uint16_t color, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font,
+    const wstring &str,
+    uint16_t color,
+    int width,
+    TEXT_ALIGN_TYPE align,
+    uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 

@@ -19,7 +19,12 @@ private:
 
 public:
     CGumpProfile(
-        uint32_t serial, short x, short y, wstring topText, wstring bottomText, wstring dataText);
+        uint32_t serial,
+        short x,
+        short y,
+        const wstring &topText,
+        const wstring &bottomText,
+        const wstring &dataText);
     virtual ~CGumpProfile();
 
     GUMP_BUTTON_EVENT_H;

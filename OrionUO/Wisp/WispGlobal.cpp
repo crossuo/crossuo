@@ -284,7 +284,7 @@ wstring ToUpperW(wstring s)
 #endif
 }
 
-bool Int32TryParse(string str, int &result)
+bool Int32TryParse(const string &str, int &result)
 {
     std::istringstream convert(str);
     try

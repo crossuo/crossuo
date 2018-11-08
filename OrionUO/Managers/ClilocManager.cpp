@@ -231,7 +231,7 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
     vector<wstring> arguments;
     while (true)
     {
-        size_t pos = args.find(L"\t");
+        size_t pos = args.find(L'\t');
         if (pos != string::npos)
         {
             arguments.push_back(args.substr(0, pos));
@@ -246,13 +246,13 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
 
     for (int i = 0; i < (int)arguments.size(); i++)
     {
-        size_t pos1 = message.find(L"~");
+        size_t pos1 = message.find(L'~');
         if (pos1 == string::npos)
         {
             break;
         }
 
-        size_t pos2 = message.find(L"~", pos1 + 1);
+        size_t pos2 = message.find(L'~', pos1 + 1);
         if (pos2 == string::npos)
         {
             break;

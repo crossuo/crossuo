@@ -1735,7 +1735,7 @@ string COrion::FixServerName(string name)
 {
     DEBUG_TRACE_FUNCTION;
     size_t i = 0;
-    while ((i = name.find(":")) != string::npos)
+    while ((i = name.find(':')) != string::npos)
     {
         name.erase(i, 1);
     }
@@ -3809,10 +3809,10 @@ void COrion::LoadTiledata(int landSize, int staticsSize)
 
 void COrion::ReadMulIndexFile(
     size_t indexMaxCount,
-    std::function<CIndexObject *(int index)> getIdxObj,
+    const std::function<CIndexObject *(int index)> &getIdxObj,
     size_t address,
     PBASE_IDX_BLOCK ptr,
-    std::function<PBASE_IDX_BLOCK()> getNewPtrValue)
+    const std::function<PBASE_IDX_BLOCK()> &getNewPtrValue)
 {
     for (int i = 0; i < (int)indexMaxCount; i++)
     {
@@ -3824,7 +3824,7 @@ void COrion::ReadMulIndexFile(
 
 void COrion::ReadUOPIndexFile(
     size_t indexMaxCount,
-    std::function<CIndexObject *(int)> getIdxObj,
+    const std::function<CIndexObject *(int)> &getIdxObj,
     const char *uopFileName,
     int padding,
     const char *extesion,

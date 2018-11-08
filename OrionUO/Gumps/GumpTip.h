@@ -18,7 +18,7 @@ private:
     virtual void UpdateHeight();
 
 public:
-    CGumpTip(uint32_t serial, short x, short y, string str, bool updates);
+    CGumpTip(uint32_t serial, short x, short y, const string &str, bool updates);
     virtual ~CGumpTip();
 
     void SendTipRequest(uint8_t flag);

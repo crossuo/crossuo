@@ -19,7 +19,7 @@ public:
     CBaseProfession();
     virtual ~CBaseProfession();
 
-    bool AddDescription(int desc, string name, const char *val);
+    bool AddDescription(int desc, const string &name, const char *val);
 };
 
 class CProfessionCategory : public CBaseProfession
@@ -30,7 +30,7 @@ public:
     CProfessionCategory();
     virtual ~CProfessionCategory();
 
-    void AddChildren(string child);
+    void AddChildren(const string &child);
 };
 
 class CProfession : public CBaseProfession

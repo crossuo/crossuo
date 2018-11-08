@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, string name)
+CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const string &name)
     : CGump(GT_BULLETIN_BOARD, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;

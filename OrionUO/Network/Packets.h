@@ -123,7 +123,7 @@ public:
 class CPacketClientVersion : public CPacket
 {
 public:
-    CPacketClientVersion(string version);
+    CPacketClientVersion(const string &version);
 };
 
 class CPacketASCIISpeechRequest : public CPacket
@@ -221,7 +221,7 @@ public:
 class CPacketRenameRequest : public CPacket
 {
 public:
-    CPacketRenameRequest(uint32_t serial, string newName);
+    CPacketRenameRequest(uint32_t serial, const string &newName);
 };
 
 class CPacketTipRequest : public CPacket
@@ -342,7 +342,7 @@ public:
 class CPacketAssistVersion : public CPacket
 {
 public:
-    CPacketAssistVersion(uint32_t version, string clientVersion);
+    CPacketAssistVersion(uint32_t version, const string &clientVersion);
 };
 
 class CPacketRazorAnswer : public CPacket

@@ -50,13 +50,13 @@ private:
     void ClearUnusedTextures();
     void ReadMulIndexFile(
         size_t indexMaxCount,
-        std::function<CIndexObject *(int index)> getIdxObj,
+        const std::function<CIndexObject *(int index)> &getIdxObj,
         size_t address,
         PBASE_IDX_BLOCK ptr,
-        std::function<PBASE_IDX_BLOCK()> getNewPtrValue);
+        const std::function<PBASE_IDX_BLOCK()> &getNewPtrValue);
     void ReadUOPIndexFile(
         size_t indexMaxCount,
-        std::function<CIndexObject *(int index)> getIdxObj,
+        const std::function<CIndexObject *(int index)> &getIdxObj,
         const char *uopFileName,
         int padding,
         const char *extesion,

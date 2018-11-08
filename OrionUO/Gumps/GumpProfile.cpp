@@ -4,7 +4,12 @@
 #include "GumpProfile.h"
 
 CGumpProfile::CGumpProfile(
-    uint32_t serial, short x, short y, wstring topText, wstring bottomText, wstring dataText)
+    uint32_t serial,
+    short x,
+    short y,
+    const wstring &topText,
+    const wstring &bottomText,
+    const wstring &dataText)
     : CGumpBaseScroll(GT_PROFILE, serial, 0x0820, 250, x, y, true)
 {
     DEBUG_TRACE_FUNCTION;

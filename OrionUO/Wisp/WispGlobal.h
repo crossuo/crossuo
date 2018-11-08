@@ -64,7 +64,7 @@ string ToLowerA(string str);
 string ToUpperA(string str);
 wstring ToLowerW(wstring str);
 wstring ToUpperW(wstring str);
-bool Int32TryParse(string str, int &result);
+bool Int32TryParse(const string &str, int &result);
 bool ToBool(const string &str);
 
 inline float deg2radf(float degr)

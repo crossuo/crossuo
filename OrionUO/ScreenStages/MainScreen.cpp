@@ -273,7 +273,7 @@ void CMainScreen::LoadGlobalConfig()
                 case MSCC_ACTPWD:
                 {
                     string password = file.RawLine;
-                    size_t pos = password.find_first_of("=");
+                    size_t pos = password.find_first_of('=');
                     password = password.substr(pos + 1, password.length() - (pos + 1));
 
                     const auto len = (int)password.length();

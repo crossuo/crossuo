@@ -3,6 +3,8 @@
 
 #include "GumpTextEntryDialog.h"
 
+#include <utility>
+
 CGumpTextEntryDialog::CGumpTextEntryDialog(
     uint32_t serial,
     short x,
@@ -12,8 +14,8 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
     string text,
     string description)
     : CGump(GT_TEXT_ENTRY_DIALOG, serial, x, y)
-    , Text(text)
-    , m_Description(description)
+    , Text(std::move(text))
+    , m_Description(std::move(description))
     , Variant(variant)
     , m_MaxLength(maxLength)
 {

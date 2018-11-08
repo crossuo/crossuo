@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-CGumpTip::CGumpTip(uint32_t serial, short x, short y, string str, bool updates)
+CGumpTip::CGumpTip(uint32_t serial, short x, short y, const string &str, bool updates)
     : CGumpBaseScroll(GT_TIP, serial, 0x0820, 250, x, y, true)
     , Updates(updates)
 {

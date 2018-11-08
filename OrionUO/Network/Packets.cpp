@@ -339,7 +339,7 @@ CPacketAttackRequest::CPacketAttackRequest(uint32_t serial)
     WriteUInt32BE(serial);
 }
 
-CPacketClientVersion::CPacketClientVersion(string version)
+CPacketClientVersion::CPacketClientVersion(const string &version)
     : CPacket(4 + version.length())
 {
     WriteUInt8(0xBD);
@@ -707,7 +707,7 @@ CPacketTextEntryDialogResponse::CPacketTextEntryDialogResponse(
     WriteString(entry->c_str(), len);
 }
 
-CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, string newName)
+CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, const string &newName)
     : CPacket(35)
 {
     WriteUInt8(0x75);
@@ -1001,7 +1001,7 @@ CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(
     WriteUInt32BE(msgSerial);
 }
 
-CPacketAssistVersion::CPacketAssistVersion(uint32_t version, string clientVersion)
+CPacketAssistVersion::CPacketAssistVersion(uint32_t version, const string &clientVersion)
     : CPacket(1)
 {
     size_t size = 7 + clientVersion.length() + 1;
