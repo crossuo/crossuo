@@ -766,7 +766,7 @@ uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
 
 uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
 {
-    return (uint32_t)g_PluginManager.WindowProc(Handle, id, (WPARAM)data1, (LPARAM)data2);
+    return (uint32_t)g_PluginManager.WindowProc(Handle, id, data1, data2);
 }
 
 void CWindow::Raise()
