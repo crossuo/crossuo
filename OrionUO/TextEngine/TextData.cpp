@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CTextData::CTextData()
-    : CRenderTextObject()
+
 {
     DEBUG_TRACE_FUNCTION;
 }
@@ -59,18 +59,24 @@ void CTextData::GenerateTexture(
     if (Unicode)
     {
         if (font == -1)
+        {
             font = Font;
+        }
 
         g_FontManager.GenerateW(
             (uint8_t)font, m_Texture, UnicodeText, Color, cell, maxWidth, align, flags);
     }
     else
+    {
         g_FontManager.GenerateA((uint8_t)Font, m_Texture, Text, Color, maxWidth, align, flags);
+    }
 
     if (!m_Texture.Empty())
     {
         if (g_ConfigManager.ScaleSpeechDelay)
+        {
             Timer += (((4000 * m_Texture.LinesCount) * g_ConfigManager.SpeechDelay) / 100);
+        }
         else
         {
             uint32_t delay =

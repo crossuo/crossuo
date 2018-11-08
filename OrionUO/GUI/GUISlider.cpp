@@ -42,11 +42,15 @@ void CGUISlider::UpdateText()
     if (HaveText)
     {
         if (Unicode)
+        {
             g_FontManager.GenerateW(
                 Font, Text, std::to_wstring(Value), TextColor, 30, TextWidth, Align, TextFlags);
+        }
         else
+        {
             g_FontManager.GenerateA(
                 Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
+        }
 
         CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
@@ -68,9 +72,13 @@ void CGUISlider::UpdateText()
                 case STP_BOTTOM_CENTER:
                 {
                     if (Vertical)
+                    {
                         textY += Length + DefaultTextOffset;
+                    }
                     else
+                    {
                         textY += th->Height + DefaultTextOffset;
+                    }
 
                     break;
                 }
@@ -87,9 +95,13 @@ void CGUISlider::UpdateText()
                 case STP_RIGHT_CENTER:
                 {
                     if (Vertical)
+                    {
                         textX += th->Width + DefaultTextOffset;
+                    }
                     else
+                    {
                         textX += Length + DefaultTextOffset;
+                    }
 
                     break;
                 }
@@ -106,14 +118,20 @@ void CGUISlider::UpdateText()
                     int sliderWidth = Length;
 
                     if (Vertical)
+                    {
                         sliderWidth = th->Width;
+                    }
 
                     int deltaX = abs(sliderWidth - textWidth) / 2;
 
                     if (sliderWidth > textWidth)
+                    {
                         textX += deltaX;
+                    }
                     else
+                    {
                         textX -= deltaX;
+                    }
 
                     break;
                 }
@@ -124,14 +142,20 @@ void CGUISlider::UpdateText()
                     int sliderHeight = Length;
 
                     if (!Vertical)
+                    {
                         sliderHeight = th->Height;
+                    }
 
                     int deltaY = abs(sliderHeight - textHeight) / 2;
 
                     if (sliderHeight > textHeight)
+                    {
                         textY += deltaY;
+                    }
                     else
+                    {
                         textY -= deltaY;
+                    }
 
                     break;
                 }
@@ -180,14 +204,22 @@ void CGUISlider::OnScroll(bool up, int delay)
     if (LastScrollTime < g_Ticks)
     {
         if (up)
+        {
             Value += ScrollStep;
+        }
         else
+        {
             Value -= ScrollStep;
+        }
 
         if (Value < MinValue)
+        {
             Value = MinValue;
+        }
         else if (Value > MaxValue)
+        {
             Value = MaxValue;
+        }
 
         LastScrollTime = g_Ticks + delay;
 
@@ -199,15 +231,17 @@ void CGUISlider::OnScroll(bool up, int delay)
 void CGUISlider::OnClick(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    int lenght = Length;
+    int length = Length;
     int maxValue = MaxValue - MinValue;
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
     if (th != nullptr)
-        lenght -= (Vertical ? (th->Height / 2) : th->Width);
+    {
+        length -= (Vertical ? (th->Height / 2) : th->Width);
+    }
 
-    float percents = ((Vertical ? y : x) / (float)lenght) * 100.0f;
+    float percents = ((Vertical ? y : x) / (float)length) * 100.0f;
 
     Value = (int)((maxValue * percents) / 100.0f) + MinValue;
 
@@ -219,28 +253,40 @@ void CGUISlider::CalculateOffset()
 {
     DEBUG_TRACE_FUNCTION;
     if (Value < MinValue)
+    {
         Value = MinValue;
+    }
     else if (Value > MaxValue)
+    {
         Value = MaxValue;
+    }
 
     int value = Value - MinValue;
     int maxValue = MaxValue - MinValue;
-    int lenght = Length;
+    int length = Length;
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
     if (th != nullptr)
-        lenght -= (Vertical ? th->Height : th->Width);
+    {
+        length -= (Vertical ? th->Height : th->Width);
+    }
 
     if (maxValue > 0)
+    {
         Percents = ((value / (float)maxValue) * 100.0f);
+    }
     else
+    {
         Percents = 0.0f;
+    }
 
-    Offset = (int)((lenght * Percents) / 100.0f);
+    Offset = (int)((length * Percents) / 100.0f);
 
     if (Offset < 0)
+    {
         Offset = 0;
+    }
 }
 
 void CGUISlider::SetTextParameters(
@@ -273,12 +319,16 @@ void CGUISlider::PrepareTextures()
     g_Orion.ExecuteGump(GraphicSelected);
     g_Orion.ExecuteGump(GraphicPressed);
 
-    if (BackgroundGraphic)
+    if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
+        {
             g_Orion.ExecuteGumpPart(BackgroundGraphic, 3);
+        }
         else
+        {
             g_Orion.ExecuteGump(BackgroundGraphic);
+        }
     }
 }
 
@@ -288,9 +338,13 @@ uint16_t CGUISlider::GetDrawGraphic()
     uint16_t graphic = Graphic;
 
     if (g_GumpPressedElement == this)
+    {
         graphic = GraphicPressed;
+    }
     else if (g_GumpSelectedElement == this)
+    {
         graphic = GraphicSelected;
+    }
 
     return graphic;
 }
@@ -313,7 +367,7 @@ void CGUISlider::Draw(bool checktrans)
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 
-    if (BackgroundGraphic)
+    if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
         {
@@ -324,7 +378,9 @@ void CGUISlider::Draw(bool checktrans)
                 th[i] = g_Orion.ExecuteGump(BackgroundGraphic + (int)i);
 
                 if (th[i] == nullptr)
+                {
                     return;
+                }
             }
 
             if (Vertical)
@@ -357,9 +413,13 @@ void CGUISlider::Draw(bool checktrans)
             if (th != nullptr)
             {
                 if (Vertical)
+                {
                     th->Draw(m_X, m_Y, 0, Length, checktrans);
+                }
                 else
+                {
                     th->Draw(m_X, m_Y, Length, 0, checktrans);
+                }
             }
         }
     }
@@ -369,12 +429,18 @@ void CGUISlider::Draw(bool checktrans)
     if (th != nullptr)
     {
         if (Vertical)
+        {
             th->Draw(m_X, m_Y + Offset, checktrans);
+        }
         else
+        {
             th->Draw(m_X + Offset, m_Y, checktrans);
+        }
 
         if (HaveText)
+        {
             Text.Draw(TextX, TextY, checktrans);
+        }
     }
 }
 
@@ -389,14 +455,20 @@ bool CGUISlider::Select()
         int buttonY = m_Y;
 
         if (Vertical)
+        {
             buttonY += Offset;
+        }
         else
+        {
             buttonX += Offset;
+        }
 
         if (th->Select(buttonX, buttonY, !CheckPolygone))
+        {
             return true;
+        }
 
-        if (BackgroundGraphic)
+        if (BackgroundGraphic != 0u)
         {
             int x = g_MouseManager.Position.X - m_X;
             int y = g_MouseManager.Position.Y - m_Y;
@@ -404,9 +476,12 @@ bool CGUISlider::Select()
             if (x >= 0 && y >= 0)
             {
                 if (Vertical)
+                {
                     return (x < th->Width && y < Length);
-                else
+                }
+                {
                     return (x < Length && y < th->Height);
+                }
             }
         }
     }
@@ -418,13 +493,16 @@ void CGUISlider::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
+    {
         g_SelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUISlider::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
+    {
         g_LastSelectedObject.Gump->WantRedraw = true;
+    }
 }
-

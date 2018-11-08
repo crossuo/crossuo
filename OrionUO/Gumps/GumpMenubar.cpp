@@ -17,11 +17,15 @@ CGumpMenubar::CGumpMenubar(short x, short y)
 
     int smallWidth = 50;
     if (th1 != nullptr)
+    {
         smallWidth = th1->Width;
+    }
 
     int largeWidth = 100;
     if (th2 != nullptr)
+    {
         largeWidth = th2->Width;
+    }
 
     static const int textPosTable[8][5] = { { 0x098B, 30, 32, smallWidth, ID_GMB_MAP },
                                             { 0x098D, 93, 96, largeWidth, ID_GMB_PAPERDOLL },
@@ -84,9 +88,13 @@ void CGumpMenubar::SetOpened(bool val)
     m_Opened = val;
 
     if (val)
+    {
         Page = 2;
+    }
     else
+    {
         Page = 1;
+    }
 
     WantRedraw = true;
 }
@@ -150,7 +158,9 @@ void CGumpMenubar::InitToolTip()
         }
     }
     else
+    {
         g_ToolTip.Set(L"Maximize the menubar gump");
+    }
 }
 
 void CGumpMenubar::GUMP_BUTTON_EVENT_C
@@ -249,4 +259,3 @@ void CGumpMenubar::OnLeftMouseButtonUp()
 
     WantRedraw = true;
 }
-

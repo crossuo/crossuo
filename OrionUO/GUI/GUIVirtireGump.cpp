@@ -26,4 +26,3 @@ bool CGUIVirtureGump::Select()
 
     return select;
 }
-

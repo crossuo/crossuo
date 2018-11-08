@@ -19,13 +19,21 @@ bool CGLFrameBuffer::Init(int width, int height)
 
     bool result = false;
 
-    if (g_GL.CanUseFrameBuffer && width && height)
+    if (g_GL.CanUseFrameBuffer && (width != 0) && (height != 0))
     {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glGenTextures(1, &Texture.Texture);
         glBindTexture(GL_TEXTURE_2D, Texture.Texture);
         glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA8,
+            width,
+            height,
+            0,
+            GL_BGRA,
+            GL_UNSIGNED_INT_8_8_8_8,
+            nullptr);
 
         GLint currentFrameBuffer = 0;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFrameBuffer);
@@ -130,4 +138,3 @@ void CGLFrameBuffer::Draw(int x, int y)
         g_GL.GL1_Draw(Texture, x, y);
     }
 }
-

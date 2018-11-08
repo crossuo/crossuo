@@ -67,17 +67,27 @@ void CSkillGroupManager::MakeDefaultCombat()
     group->Add(27);
 
     if (cnt > 57)
+    {
         group->Add(57); //Throving
+    }
     group->Add(43);
 
     if (cnt > 50)
+    {
         group->Add(50); //Focus
+    }
     if (cnt > 51)
+    {
         group->Add(51); //Chivalry
+    }
     if (cnt > 52)
+    {
         group->Add(52); //Bushido
+    }
     if (cnt > 53)
+    {
         group->Add(53); //Ninjitsu
+    }
 
     Add(group);
 }
@@ -110,17 +120,25 @@ void CSkillGroupManager::MakeDefaultMagic()
     group->Name = "Magic";
     group->Add(16);
     if (cnt > 56)
+    {
         group->Add(56); //Imbuing
+    }
     group->Add(25);
     group->Add(46);
     if (cnt > 55)
+    {
         group->Add(55); //Mysticism
+    }
     group->Add(26);
     if (cnt > 54)
+    {
         group->Add(54); //Spellweaving
+    }
     group->Add(32);
     if (cnt > 49)
+    {
         group->Add(49); //Necromancy
+    }
 
     Add(group);
 }
@@ -204,7 +222,9 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
     CSkillGroupObject *item = m_Groups;
 
     while (item->m_Next != nullptr)
+    {
         item = item->m_Next;
+    }
 
     item->m_Next = group;
     group->m_Next = nullptr;
@@ -231,21 +251,23 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 
         return false;
     }
-    else
+
+    Count--;
+
+    if (Count < 0)
     {
-        Count--;
-
-        if (Count < 0)
-            Count = 0;
-
-        if (group->m_Next != nullptr)
-            group->m_Next->m_Prev = group->m_Prev;
-
-        group->m_Prev->m_Next = group->m_Next;
-
-        group->TransferTo(m_Groups);
-        delete group;
+        Count = 0;
     }
+
+    if (group->m_Next != nullptr)
+    {
+        group->m_Next->m_Prev = group->m_Prev;
+    }
+
+    group->m_Prev->m_Next = group->m_Next;
+
+    group->TransferTo(m_Groups);
+    delete group;
 
     return true;
 }
@@ -284,7 +306,9 @@ bool CSkillGroupManager::Load(const os_path &path)
                 uint8_t skill = file.ReadUInt8();
 
                 if (skill != 0xFF)
+                {
                     group->Add(skill);
+                }
             }
 
             group->Sort();
@@ -299,7 +323,9 @@ bool CSkillGroupManager::Load(const os_path &path)
         result = true;
     }
     else
+    {
         MakeDefault();
+    }
 
     return result;
 }
@@ -334,7 +360,7 @@ void CSkillGroupManager::Save(const os_path &path)
         writter.WriteUInt16LE(size); //Block size
 
         writter.WriteUInt16LE((short)len); //Name length
-        writter.WriteString(str, false);   //Name
+        writter.WriteString(str, 0u);      //Name
 
         short count = group->Count;
 

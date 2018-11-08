@@ -17,7 +17,9 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
         MinimizedY = y;
     }
     else
+    {
         Page = 2;
+    }
 
     Add(new CGUIPage(1));
     Add(new CGUIGumppic(0x0839, 0, 0));
@@ -66,7 +68,8 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
             {
                 uint8_t index = group->GetItem(i); //Получаем индекс скилла по порядковому номеру
 
-                if (index < g_SkillsManager.Count) //Он валиден
+                if (index < g_SkillsManager.Count)
+                { //Он валиден
                     skillGroup->Add(new CGUISkillItem(
                         ID_GS_SKILL + index,
                         ID_GS_SKILL_BUTTON + index,
@@ -74,12 +77,15 @@ CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
                         index,
                         0,
                         (int)i * 17));
+                }
             }
 
             currentY += 19;
 
             if (!skillGroup->GetMinimized())
+            {
                 currentY += count * 17;
+            }
 
             currentIndex++;
         }
@@ -134,17 +140,25 @@ void CGumpSkills::InitToolTip()
             default:
             {
                 if (id >= ID_GS_GROUP_MINIMIZE && id < ID_GS_GROUP)
+                {
                     g_ToolTip.Set(L"Show/hide skills in this group");
+                }
                 else if (id >= ID_GS_SKILL_BUTTON && id < ID_GS_SKILL)
+                {
                     g_ToolTip.Set(L"Use the skill");
+                }
                 else if (id >= ID_GS_SKILL_STATE)
+                {
                     g_ToolTip.Set(L"Change skill state");
+                }
                 break;
             }
         }
     }
     else
+    {
         g_ToolTip.Set(L"Double click to maximize skills gump");
+    }
 }
 
 void CGumpSkills::UpdateHeight()
@@ -177,7 +191,9 @@ void CGumpSkills::UpdateGroupPositions()
             currentY += 19;
 
             if (!skillGroup->GetMinimized())
+            {
                 currentY += group->GetItemsCount() * 17;
+            }
 
             index++;
         }
@@ -194,7 +210,9 @@ CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
         if (group->Type == GOT_SKILLGROUP)
         {
             if (currentIndex == index)
+            {
                 return (CGUISkillGroup *)group;
+            }
 
             currentIndex++;
         }
@@ -213,7 +231,9 @@ CGUISkillItem *CGumpSkills::GetSkill(int index)
             QFOR(item, group->m_Items, CBaseGUI *)
             {
                 if (item->Type == GOT_SKILLITEM && ((CGUISkillItem *)item)->Index == index)
+                {
                     return (CGUISkillItem *)item;
+                }
             }
         }
     }
@@ -237,7 +257,9 @@ void CGumpSkills::UpdateSkillValue(int index)
                     CSkill *skill = g_SkillsManager.Get(index);
 
                     if (skill != nullptr)
+                    {
                         ((CGUISkillItem *)item)->SetStatus(skill->Status);
+                    }
 
                     return;
                 }
@@ -256,7 +278,9 @@ void CGumpSkills::UpdateSkillValues()
             QFOR(item, group->m_Items, CBaseGUI *)
             {
                 if (item->Type == GOT_SKILLITEM)
+                {
                     ((CGUISkillItem *)item)->CreateValueText(m_ShowReal, m_ShowCap);
+                }
             }
         }
     }
@@ -354,10 +378,14 @@ void CGumpSkills::PrepareContent()
                         }
 
                         if (index == currentIndex)
+                        {
                             groupUnderCursor = (CGUISkillGroup *)group;
+                        }
 
                         if (groupPtr != nullptr)
+                        {
                             groupPtr = groupPtr->m_Next;
+                        }
 
                         currentIndex++;
                     }
@@ -377,7 +405,9 @@ void CGumpSkills::PrepareContent()
                     currentGroup->Unlink(skillItem);
 
                     if (groupObject->GetItem(0) == skillIndex)
+                    {
                         groupUnderCursor->Insert(nullptr, skillItem);
+                    }
                     else
                     {
                         CGUISkillGroup *skillInsertElement =
@@ -393,7 +423,9 @@ void CGumpSkills::PrepareContent()
                             }
 
                             if (skillInsertElement != nullptr)
+                            {
                                 skillInsertElement = (CGUISkillGroup *)skillInsertElement->m_Next;
+                            }
                         }
                     }
 
@@ -437,14 +469,18 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
                 int height = ((CGUISkillGroup *)item)->GetSize().Height;
 
                 if (mouseY >= drawY && mouseY < drawY + height)
+                {
                     return group;
+                }
 
                 drawY += height;
 
                 index++;
 
                 if (group != nullptr)
+                {
                     group = group->m_Next;
+                }
             }
         }
     }
@@ -469,9 +505,13 @@ void CGumpSkills::UpdateGroupText()
                     SetGroupTextFromEntry();
 
                     if (g_ConfigManager.GetConsoleNeedEnter())
+                    {
                         g_EntryPointer = nullptr;
+                    }
                     else
+                    {
                         g_EntryPointer = &g_GameConsole;
+                    }
                 }
 
                 group->m_Name->Focused = false;
@@ -499,8 +539,10 @@ void CGumpSkills::SetGroupTextFromEntry()
             {
                 group->m_Name->Focused = false;
 
-                if (!g_EntryPointer->Length())
+                if (g_EntryPointer->Length() == 0u)
+                {
                     g_EntryPointer->SetTextA("NoNameGroup");
+                }
 
                 groupItem->Name = g_EntryPointer->c_str();
 
@@ -512,7 +554,9 @@ void CGumpSkills::SetGroupTextFromEntry()
             index++;
 
             if (groupItem != nullptr)
+            {
                 groupItem = groupItem->m_Next;
+            }
         }
     }
 }
@@ -547,7 +591,9 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
         WantRedraw = true;
     }
     else if (serial == ID_GS_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial == ID_GS_BUTTON_NEW_GROUP) //Создание новой группы
     {
         CSkillGroupObject *group = new CSkillGroupObject();
@@ -567,10 +613,14 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
             int index = serial - ID_GS_SKILL_STATE;
 
             if (index < 0 || index >= (int)g_SkillsManager.Count)
+            {
                 return;
+            }
 
             if (g_Player == nullptr)
+            {
                 return;
+            }
 
             CSkill *skill = g_SkillsManager.Get(index);
 
@@ -579,9 +629,13 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
                 uint8_t status = skill->Status;
 
                 if (status < 2)
+                {
                     status++;
+                }
                 else
+                {
                     status = 0;
+                }
 
                 CPacketSkillsStatusChangeRequest(index, status).Send();
                 skill->Status = status;
@@ -589,7 +643,9 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
                 CGUISkillItem *skillItem = GetSkill(index);
 
                 if (skillItem != nullptr)
+                {
                     skillItem->SetStatus(status);
+                }
             }
         }
         else if (serial >= ID_GS_SKILL_BUTTON) //Выбор кнопки для использования скилла
@@ -597,7 +653,9 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
             int index = serial - ID_GS_SKILL_BUTTON;
 
             if (index < 0 || index >= (int)g_SkillsManager.Count)
+            {
                 return;
+            }
 
             g_Orion.UseSkill(index);
         }
@@ -665,7 +723,9 @@ void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
             group->m_Name->OnClick(this, x, y);
         }
         else
+        {
             group->m_Name->Focused = true;
+        }
     }
 }
 
@@ -692,9 +752,13 @@ void CGumpSkills::OnTextInput(const TextEvent &ev)
     g_EntryPointer->Insert(ch);
     int val = g_FontManager.GetWidthA(6, g_EntryPointer->c_str());
     if (val > 170)
+    {
         g_EntryPointer->Remove(true);
+    }
     else
+    {
         WantRedraw = true;
+    }
 }
 
 void CGumpSkills::OnKeyDown(const KeyEvent &ev)
@@ -718,7 +782,9 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
                     if (group->m_Name->Focused)
                     {
                         if (g_EntryPointer == &group->m_Name->m_Entry)
+                        {
                             break;
+                        }
 
                         if (g_SkillGroupManager.Remove(groupItem))
                         {
@@ -754,12 +820,16 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
                         break;
                     }
 
-                    if (!index)
+                    if (index == 0)
+                    {
                         first = group;
+                    }
 
                     index++;
                     if (groupItem != nullptr)
+                    {
                         groupItem = groupItem->m_Next;
+                    }
                 }
             }
         }
@@ -772,9 +842,13 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
         {
             SetGroupTextFromEntry();
             if (g_ConfigManager.GetConsoleNeedEnter())
+            {
                 g_EntryPointer = nullptr;
+            }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
             WantRedraw = true;
             break;
         }

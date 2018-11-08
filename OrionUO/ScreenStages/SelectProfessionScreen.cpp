@@ -35,17 +35,25 @@ void CSelectProfessionScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
+    {
         action = SmoothScreenAction;
+    }
 
     if (action == ID_SMOOTH_SPS_QUIT)
+    {
         g_OrionWindow.Destroy();
+    }
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_CHARACTER)
+    {
         g_Orion.InitScreen(GS_CHARACTER);
+    }
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_GAME_CONNECT)
     {
         g_Orion.InitScreen(GS_GAME_CONNECT);
         g_ConnectionScreen.SetType(CST_SELECT_PROFESSOIN);
     }
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_CREATE)
+    {
         g_Orion.InitScreen(GS_CREATE);
+    }
 }

@@ -30,7 +30,7 @@ protected:
 
 public:
     string GetName() { return m_Name; };
-    void SetName(const string &val);
+    void SetName(const string &newName);
     bool NPC = false;
     bool Clicked = false;
     char AnimIndex = 0;
@@ -51,7 +51,7 @@ public:
     DRAW_FRAME_INFORMATION m_FrameInfo;
     vector<class CGameItem *> m_DrawLayeredObjects;
 
-    virtual void AddText(CTextData *td);
+    virtual void AddText(CTextData *msg);
     void GenerateObjectHandlesTexture(wstring text);
     void DrawObjectHandlesTexture();
     void SelectObjectHandlesTexture();

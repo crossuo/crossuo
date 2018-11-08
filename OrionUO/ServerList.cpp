@@ -8,7 +8,12 @@ CServer::CServer()
 }
 
 CServer::CServer(
-    uint16_t index, const string &name, uint8_t fullPercent, uint8_t timezone, int ip, bool selected)
+    uint16_t index,
+    const string &name,
+    uint8_t fullPercent,
+    uint8_t timezone,
+    int ip,
+    bool selected)
     : Index(index)
     , Name(name)
     , FullPercent(fullPercent)
@@ -41,7 +46,9 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
     uint16_t numServers = reader.ReadUInt16BE();
 
     if (numServers == 0)
+    {
         LOG("Warning!!! Empty server list\n");
+    }
 
     for (uint16_t i = 0; i < numServers; i++)
     {
@@ -53,7 +60,9 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
         bool selected = (name == g_ServerList.LastServerName);
 
         if (selected)
+        {
             g_ServerList.LastServerIndex = (int)i;
+        }
 
         m_Servers.push_back(CServer(id, name, fullPercent, timezone, ip, selected));
 
@@ -70,9 +79,13 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
     }
 
     if (g_ServerList.LastServerIndex < numServers && g_MainScreen.m_AutoLogin->Checked)
+    {
         g_Orion.ServerSelection(g_ServerList.LastServerIndex);
+    }
     else
+    {
         g_Orion.InitScreen(GS_SERVER);
+    }
 
     g_ServerScreen.UpdateContent();
 }
@@ -81,7 +94,9 @@ CServer *CServerList::GetServer(int index)
 {
     DEBUG_TRACE_FUNCTION;
     if (index < (int)m_Servers.size())
+    {
         return &m_Servers[index];
+    }
 
     return nullptr;
 }
@@ -93,7 +108,9 @@ CServer *CServerList::GetSelectedServer()
     for (CServer &server : m_Servers)
     {
         if (server.Selected)
+        {
             return &server;
+        }
     }
 
     return nullptr;
@@ -112,7 +129,9 @@ CServer *CServerList::Select(int index)
             m_Servers[i].Selected = true;
         }
         else
+        {
             m_Servers[i].Selected = false;
+        }
     }
 
     return server;

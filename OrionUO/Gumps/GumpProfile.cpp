@@ -37,7 +37,9 @@ CGumpProfile::CGumpProfile(
     m_Entry->m_Entry.CreateTextureW(0, dataText, 0, 210, TS_LEFT, 0);
 
     if (m_Entry->m_Entry.m_Texture.Height > 14)
+    {
         m_HitBox->Height = m_Entry->m_Entry.m_Texture.Height;
+    }
 
     offsetY += m_HitBox->Height + 3;
 
@@ -57,7 +59,9 @@ CGumpProfile::~CGumpProfile()
 {
     DEBUG_TRACE_FUNCTION;
     if (Changed && m_Entry != nullptr)
+    {
         CPacketProfileUpdate(Serial, m_Entry->m_Entry.Data(), m_Entry->m_Entry.Length()).Send();
+    }
 }
 
 void CGumpProfile::RecalculateHeight()
@@ -67,9 +71,13 @@ void CGumpProfile::RecalculateHeight()
     m_Entry->m_Entry.CreateTextureW(0, m_Entry->m_Entry.Data(), 0, 210, TS_LEFT, 0);
 
     if (m_Entry->m_Entry.m_Texture.Height > 14)
+    {
         m_HitBox->Height = m_Entry->m_Entry.m_Texture.Height;
+    }
     else
+    {
         m_HitBox->Height = 14;
+    }
 
     offsetY += m_HitBox->Height + 3;
 
@@ -97,9 +105,13 @@ void CGumpProfile::GUMP_BUTTON_EVENT_C
         if (g_EntryPointer == &m_Entry->m_Entry)
         {
             if (g_ConfigManager.GetConsoleNeedEnter())
+            {
                 g_EntryPointer = nullptr;
+            }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
         }
 
         WantRedraw = true;
@@ -146,6 +158,8 @@ void CGumpProfile::OnKeyDown(const KeyEvent &ev)
     {
         g_EntryPointer->OnKey(this, key);
         if (WantRedraw)
+        {
             RecalculateHeight();
+        }
     }
 }

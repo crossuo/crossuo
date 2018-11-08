@@ -13,7 +13,7 @@ CObjectProperty::CObjectProperty(int serial, int revision, const wstring &name, 
 
 bool CObjectProperty::Empty()
 {
-    return (!Name.length() && !Data.length());
+    return ((Name.length() == 0u) && (Data.length() == 0u));
 }
 
 wstring CObjectProperty::CreateTextData(bool extended)
@@ -22,7 +22,7 @@ wstring CObjectProperty::CreateTextData(bool extended)
     bool coloredStartFont = false;
     wstring result = {};
 
-    if (Name.length())
+    if (Name.length() != 0u)
     {
         if (obj != nullptr)
         {
@@ -68,17 +68,25 @@ wstring CObjectProperty::CreateTextData(bool extended)
         result += Name;
 
         if (coloredStartFont)
+        {
             result += L"<basefont color=\"#FFFFFFFF\">";
+        }
     }
 
-    if (Data.length())
+    if (Data.length() != 0u)
+    {
         result += L"\n" + Data;
+    }
     else if (extended)
     {
-        if (result.length())
+        if (result.length() != 0u)
+        {
             result += L"\nNo significant properties...";
+        }
         else
+        {
             result = L"\nNo Data";
+        }
     }
 
     return result;
@@ -100,7 +108,9 @@ bool CObjectPropertiesManager::RevisionCheck(int serial, int revision)
     OBJECT_PROPERTIES_MAP::iterator it = m_Map.find(serial);
 
     if (it == m_Map.end())
+    {
         return false;
+    }
 
     return (it->second.Revision == revision);
 }
@@ -109,12 +119,16 @@ void CObjectPropertiesManager::OnItemClicked(int serial)
 {
     if (!g_ConfigManager.GetItemPropertiesIcon() || !g_TooltipsEnabled ||
         g_ConfigManager.GetItemPropertiesMode() != OPM_SINGLE_CLICK)
+    {
         return;
+    }
 
     OBJECT_PROPERTIES_MAP::iterator it = m_Map.find(serial);
 
     if (it == m_Map.end() || it->second.Empty())
+    {
         return;
+    }
 
     g_GumpManager.CloseGump(0, 0, GT_PROPERTY);
     g_GumpManager.AddGump(new CGumpProperty(it->second.CreateTextData(true)));
@@ -134,7 +148,9 @@ void CObjectPropertiesManager::Display(int serial)
                     (CGumpPropertyIcon *)g_GumpManager.UpdateContent(0, 0, GT_PROPERTY_ICON);
 
                 if (gump != nullptr)
+                {
                     gump->Object = nullptr;
+                }
             }
 
             Reset();
@@ -149,13 +165,17 @@ void CObjectPropertiesManager::Display(int serial)
         g_ToolTip.Set(it->second.CreateTextData(false));
         return;
     }
-    else if (g_ConfigManager.GetItemPropertiesMode() == OPM_SINGLE_CLICK)
+    if (g_ConfigManager.GetItemPropertiesMode() == OPM_SINGLE_CLICK)
+    {
         return;
+    }
 
     CGumpPropertyIcon *gump = (CGumpPropertyIcon *)g_GumpManager.GetGump(0, 0, GT_PROPERTY_ICON);
 
     if (gump == nullptr)
+    {
         return;
+    }
 
     bool condition = (g_ConfigManager.GetItemPropertiesMode() == OPM_ALWAYS_UP);
 
@@ -168,7 +188,9 @@ void CObjectPropertiesManager::Display(int serial)
     }
 
     if (!condition)
+    {
         condition = !(Timer > g_Ticks);
+    }
 
     if (condition && gump->Object != m_Object)
     {
@@ -181,4 +203,3 @@ void CObjectPropertiesManager::Add(int serial, const CObjectProperty &objectProp
 {
     m_Map[serial] = objectProperty;
 }
-

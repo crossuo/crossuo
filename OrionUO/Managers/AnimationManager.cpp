@@ -55,7 +55,7 @@ const int CAnimationManager::m_UsedLayers[8][USED_LAYER_COUNT] = {
 };
 
 CAnimationManager::CAnimationManager()
-    : Wisp::CDataReader()
+
 {
     DEBUG_TRACE_FUNCTION;
     memset(m_AddressIdx, 0, sizeof(m_AddressIdx));
@@ -87,9 +87,13 @@ void CAnimationManager::UpdateAnimationAddressTable()
                 bool replace = (direction.FileIndex >= 4);
 
                 if (direction.FileIndex == 2)
-                    replace = (g_LockedClientFeatures & LFF_LBR);
+                {
+                    replace = ((g_LockedClientFeatures & LFF_LBR) != 0u);
+                }
                 else if (direction.FileIndex == 3)
-                    replace = (g_LockedClientFeatures & LFF_AOS);
+                {
+                    replace = ((g_LockedClientFeatures & LFF_AOS) != 0u);
+                }
                 //else if (direction.FileIndex == 4)
                 //	replace = (g_LockedClientFeatures & LFF_AOS);
                 //else if (direction.FileIndex == 5)
@@ -142,7 +146,9 @@ void CAnimationManager::Load(uint32_t *verdata)
         }
 
         if (findID >= m_SizeIdx[0])
+        {
             break;
+        }
 
         index.Graphic = (int)i;
 
@@ -190,9 +196,11 @@ void CAnimationManager::Load(uint32_t *verdata)
                     (PANIM_IDX_BLOCK)(address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
 
                 if ((size_t)aidx >= maxAddress)
+                {
                     break;
+                }
 
-                if (aidx->Size && aidx->Position != 0xFFFFFFFF && aidx->Size != 0xFFFFFFFF)
+                if ((aidx->Size != 0u) && aidx->Position != 0xFFFFFFFF && aidx->Size != 0xFFFFFFFF)
                 {
                     direction.BaseAddress = aidx->Position;
                     direction.BaseSize = aidx->Size;
@@ -259,7 +267,7 @@ void CAnimationManager::Load(uint32_t *verdata)
                     LOG("Invalid animation patch 0x%04X (0x%08X)\n", id, graphic);
                     continue;
                 }
-                else if (group >= (uint32_t)count)
+                if (group >= (uint32_t)count)
                 {
                     LOG("Invalid group index: %i in animation patch 0x%04X (0x%08X)\n",
                         group,
@@ -305,7 +313,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 uint16_t index = atoi(strings[0].c_str());
 
                 if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+                {
                     continue;
+                }
 
                 string testType = ToLowerA(strings[1]);
 
@@ -342,17 +352,22 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             vector<string> strings = animParser[i].ReadTokens();
 
             if (strings.size() < 2)
+            {
                 continue;
+            }
 
             uint16_t group = (uint16_t)atoi(strings[0].c_str());
             int replaceGroup = atoi(strings[1].c_str());
 
-            m_GroupReplaces[i].push_back(std::pair<uint16_t, uint8_t>(group, (uint8_t)replaceGroup));
+            m_GroupReplaces[i].push_back(
+                std::pair<uint16_t, uint8_t>(group, (uint8_t)replaceGroup));
         }
     }
 
-    if (g_PacketManager.GetClientVersion() < CV_305D) //CV_204C
+    if (g_PacketManager.GetClientVersion() < CV_305D)
+    { //CV_204C
         return;
+    }
 
     Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
     Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
@@ -370,26 +385,38 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             uint16_t body = (uint16_t)atoi(strings[0].c_str());
 
             if (body >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
                 continue;
+            }
 
             uint16_t graphic = (uint16_t)atoi(strings[1].c_str());
 
             if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
                 continue;
+            }
 
             uint16_t newGraphic = (uint16_t)atoi(strings[2].c_str());
 
             if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
                 newGraphic = graphic;
+            }
 
             uint16_t gump = (uint16_t)atoi(strings[3].c_str());
 
             if (gump >= MAX_GUMP_DATA_INDEX_COUNT)
+            {
                 continue;
-            else if (gump == 0)
+            }
+            if (gump == 0)
+            {
                 gump = graphic; // +50000;
+            }
             else if (gump == 0xFFFF)
+            {
                 gump = newGraphic; // +50000;
+            }
 
             uint16_t color = (uint16_t)atoi(strings[4].c_str());
 
@@ -402,7 +429,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 bodyMapIter = m_EquipConv.find(body);
 
                 if (bodyMapIter == m_EquipConv.end())
+                {
                     continue; //?!?!??
+                }
             }
 
             bodyMapIter->second.insert(
@@ -419,7 +448,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             uint16_t index = atoi(strings[0].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
                 continue;
+            }
 
             int anim[4] = { atoi(strings[1].c_str()), -1, -1, -1 };
 
@@ -432,7 +463,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     anim[2] = atoi(strings[3].c_str());
 
                     if (strings.size() >= 5)
+                    {
                         anim[3] = atoi(strings[4].c_str());
+                    }
                 }
             }
 
@@ -449,7 +482,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 realAnimID = anim[0];
 
                 if (realAnimID == 68)
+                {
                     realAnimID = 122;
+                }
 
                 if (realAnimID >= 200) //Low
                 {
@@ -517,7 +552,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 mountedHeightOffset = -9;
 
                 if (realAnimID == 34)
+                {
                     startAnimID = ((realAnimID - 200) * 65) + 22000;
+                }
                 else if (realAnimID >= 200)
                 {
                     if (realAnimID >= 400) //People
@@ -551,16 +588,24 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     {
                         if (realAnimID >= 200)
                         {
-                            if (realAnimID >= 400) //People
+                            if (realAnimID >= 400)
+                            { //People
                                 dataIndex.Type = AGT_HUMAN;
-                            else //Low
+                            }
+                            else
+                            { //Low
                                 dataIndex.Type = AGT_ANIMAL;
+                            }
                         }
                         else
+                        {
                             dataIndex.Type = AGT_MONSTER;
+                        }
                     }
                     else if (groupType != AGT_UNKNOWN)
+                    {
                         dataIndex.Type = groupType;
+                    }
 
                     int count = 0;
 
@@ -602,9 +647,11 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                                 address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
 
                             if ((size_t)aidx >= maxAddress)
+                            {
                                 break;
+                            }
 
-                            if (aidx->Size && aidx->Position != 0xFFFFFFFF &&
+                            if ((aidx->Size != 0u) && aidx->Position != 0xFFFFFFFF &&
                                 aidx->Size != 0xFFFFFFFF)
                             {
                                 direction.PatchedAddress = aidx->Position;
@@ -628,13 +675,17 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
             vector<string> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || !newBody.size())
+            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
+            {
                 continue;
+            }
 
             uint16_t checkIndex = atoi(newBody[0].c_str());
 
             if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
                 continue;
+            }
 
             CIndexAnimation &dataIndex = m_DataIndex[index];
             CIndexAnimation &checkDataIndex = m_DataIndex[checkIndex];
@@ -677,7 +728,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             for (int j = 0; j < count; j++)
             {
                 if (j == ignoreGroups[0] || j == ignoreGroups[1])
+                {
                     continue;
+                }
 
                 CTextureAnimationGroup &group = dataIndex.m_Groups[j];
                 CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[j];
@@ -692,14 +745,14 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
 
-                    if (!direction.PatchedAddress)
+                    if (direction.PatchedAddress == 0u)
                     {
                         direction.PatchedAddress = newDirection.PatchedAddress;
                         direction.PatchedSize = newDirection.PatchedSize;
                         direction.FileIndex = newDirection.FileIndex;
                     }
 
-                    if (!direction.BaseAddress)
+                    if (direction.BaseAddress == 0u)
                     {
                         direction.BaseAddress = direction.PatchedAddress;
                         direction.BaseSize = direction.PatchedSize;
@@ -726,13 +779,17 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
             vector<string> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || !newBody.size())
+            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
+            {
                 continue;
+            }
 
             uint16_t checkIndex = atoi(newBody[0].c_str());
 
             if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
                 continue;
+            }
 
             CIndexAnimation &dataIndex = m_DataIndex[index];
             CIndexAnimation &checkDataIndex = m_DataIndex[checkIndex];
@@ -769,7 +826,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             }
 
             if (ignoreGroups[0] == -1)
+            {
                 continue;
+            }
 
             for (int j = 0; j < 2; j++)
             {
@@ -786,14 +845,14 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
 
-                    if (!direction.PatchedAddress)
+                    if (direction.PatchedAddress == 0u)
                     {
                         direction.PatchedAddress = newDirection.PatchedAddress;
                         direction.PatchedSize = newDirection.PatchedSize;
                         direction.FileIndex = newDirection.FileIndex;
                     }
 
-                    if (!direction.BaseAddress)
+                    if (direction.BaseAddress == 0u)
                     {
                         direction.BaseAddress = direction.PatchedAddress;
                         direction.BaseSize = direction.PatchedSize;
@@ -963,10 +1022,14 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
             it = m_UsedAnimList.erase(it);
 
             if (++count >= MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
+            {
                 break;
+            }
         }
         else
+        {
             it++;
+        }
     }
 
     LOG("CAnimationManager::ClearUnusedTextures::removed %i\n", count);
@@ -977,9 +1040,13 @@ bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction
     DEBUG_TRACE_FUNCTION;
 
     if (direction.IsUOP)
+    {
         return TryReadUOPAnimDimins(direction);
+    }
     if (direction.Address == 0)
+    {
         return false;
+    }
 
     if (!direction.IsVerdata)
     {
@@ -1004,28 +1071,40 @@ bool CAnimationManager::TestPixels(
 {
     DEBUG_TRACE_FUNCTION;
     if (obj == nullptr)
+    {
         return false;
+    }
 
-    if (!id)
+    if (id == 0u)
+    {
         id = obj->GetMountAnimation();
+    }
 
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-        return nullptr;
+    {
+        return nullptr != nullptr;
+    }
 
     CTextureAnimationDirection &direction =
         m_DataIndex[id].m_Groups[AnimGroup].m_Direction[Direction];
     AnimID = id;
     if (direction.FrameCount == 0 && !LoadDirectionGroup(direction))
+    {
         return false;
+    }
 
     int fc = direction.FrameCount;
 
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
+        {
             frameIndex = fc - 1;
+        }
         else
+        {
             frameIndex = 0;
+        }
     }
 
     if (frameIndex < direction.FrameCount)
@@ -1037,12 +1116,18 @@ bool CAnimationManager::TestPixels(
         x = g_MouseManager.Position.X - x;
 
         if (mirror)
+        {
             x += frame.Width - frame.CenterX;
+        }
         else
+        {
             x += frame.CenterX;
+        }
 
         if (mirror)
+        {
             x = frame.Width - x;
+        }
 
         x = g_MouseManager.Position.X - x;
 
@@ -1052,7 +1137,8 @@ bool CAnimationManager::TestPixels(
     return false;
 }
 
-void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
+void CAnimationManager::Draw(
+    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
 {
     DEBUG_TRACE_FUNCTION;
     //if (obj == nullptr)
@@ -1061,28 +1147,40 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_
     bool isShadow = (id >= 0x10000);
 
     if (isShadow)
+    {
         id -= 0x10000;
+    }
 
-    if (!id)
+    if (id == 0)
+    {
         id = obj->GetMountAnimation();
+    }
 
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    {
         return;
+    }
 
     CTextureAnimationDirection &direction =
         m_DataIndex[id].m_Groups[AnimGroup].m_Direction[Direction];
     AnimID = id;
     if (direction.FrameCount == 0 && !LoadDirectionGroup(direction))
+    {
         return;
+    }
 
     int fc = direction.FrameCount;
 
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
+        {
             frameIndex = fc - 1;
+        }
         else
+        {
             frameIndex = 0;
+        }
     }
 
     if (frameIndex < direction.FrameCount)
@@ -1090,12 +1188,18 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_
         CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
 
         if (frame.Texture == 0)
+        {
             return;
+        }
 
         if (mirror)
+        {
             x -= frame.Width - frame.CenterX;
+        }
         else
+        {
             x -= frame.CenterX;
+        }
 
         y -= frame.Height + frame.CenterY;
 
@@ -1109,9 +1213,13 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_
             g_GL_DrawShadow(frame, x, y, mirror);
 
             if (m_UseBlending)
+            {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            }
             else
+            {
                 glDisable(GL_BLEND);
+            }
         }
         else
         {
@@ -1122,30 +1230,34 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_
                 uint16_t color = Color;
                 bool partialHue = false;
 
-                if (!color)
+                if (color == 0u)
                 {
                     color = obj->Color;
                     partialHue = obj->IsPartialHue();
 
-                    if (color & 0x8000)
+                    if ((color & 0x8000) != 0)
                     {
                         partialHue = true;
                         color &= 0x7FFF;
                     }
 
-                    if (!color)
+                    if (color == 0u)
                     {
                         if (direction.Address != direction.PatchedAddress)
+                        {
                             color = m_DataIndex[id].Color;
+                        }
 
-                        if (!color && m_EquipConvItem != nullptr)
+                        if ((color == 0u) && m_EquipConvItem != nullptr)
+                        {
                             color = m_EquipConvItem->Color;
+                        }
 
                         partialHue = false;
                     }
                 }
 
-                if (color & SPECTRAL_COLOR_FLAG)
+                if ((color & SPECTRAL_COLOR_FLAG) != 0)
                 {
                     spectralColor = true;
                     glEnable(GL_BLEND);
@@ -1161,20 +1273,28 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_
                         glUniform1iARB(g_ShaderDrawMode, SDM_SPECTRAL);
                     }
                 }
-                else if (color)
+                else if (color != 0u)
                 {
                     if (partialHue)
+                    {
                         glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+                    }
                     else
+                    {
                         glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                    }
 
                     g_ColorManager.SendColorsToShader(color);
                 }
                 else
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+                }
             }
             else
+            {
                 glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+            }
 
             if (m_Transform)
             {
@@ -1201,62 +1321,92 @@ void CAnimationManager::Draw(CGameObject *obj, int x, int y, bool mirror, uint8_
 
                     //Определяем соотношение верхней части текстуры, до перелома.
                     if (y >= m_StartCharacterWaistY)
+                    {
                         h3mod = 0;
+                    }
                     else if (itemsEndY <= m_StartCharacterWaistY)
+                    {
                         h3mod = 1.0f;
+                    }
                     else
                     {
                         float upperBodyDiff = (float)(m_StartCharacterWaistY - y);
                         h3mod = upperBodyDiff / frame.Height;
                         if (h3mod < 0)
+                        {
                             h3mod = 0;
+                        }
                     }
 
                     //Определяем соотношение средней части, где идет деформация с растягиванием по Х.
                     if (m_StartCharacterWaistY >= itemsEndY || y >= m_StartCharacterKneesY)
+                    {
                         h6mod = 0;
+                    }
                     else if (m_StartCharacterWaistY <= y && itemsEndY <= m_StartCharacterKneesY)
+                    {
                         h6mod = 1.0f;
+                    }
                     else
                     {
                         float midBodyDiff = 0.0f;
                         if (y >= m_StartCharacterWaistY)
+                        {
                             midBodyDiff = (float)(m_StartCharacterKneesY - y);
+                        }
                         else if (itemsEndY <= m_StartCharacterKneesY)
+                        {
                             midBodyDiff = (float)(itemsEndY - m_StartCharacterWaistY);
+                        }
                         else
+                        {
                             midBodyDiff = (float)(m_StartCharacterKneesY - m_StartCharacterWaistY);
+                        }
 
                         h6mod = h3mod + midBodyDiff / frame.Height;
                         if (h6mod < 0)
+                        {
                             h6mod = 0;
+                        }
                     }
 
                     //Определяем соотношение нижней части, она смещена на 8 Х.
                     if (itemsEndY <= m_StartCharacterKneesY)
+                    {
                         h9mod = 0;
+                    }
                     else if (y >= m_StartCharacterKneesY)
+                    {
                         h9mod = 1.0f;
+                    }
                     else
                     {
                         float lowerBodyDiff = itemsEndY - m_StartCharacterKneesY;
                         h9mod = h6mod + lowerBodyDiff / frame.Height;
                         if (h9mod < 0)
+                        {
                             h9mod = 0;
+                        }
                     }
                 }
 
                 g_GL_DrawSitting(frame, x, y, mirror, h3mod, h6mod, h9mod);
             }
             else
+            {
                 g_GL_DrawMirrored(frame, x, y, mirror);
+            }
 
             if (spectralColor)
             {
                 if (m_UseBlending)
+                {
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                }
                 else
+                {
                     glDisable(GL_BLEND);
+                }
             }
         }
     }
@@ -1275,12 +1425,18 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             if (data.Direction1 == -1)
             {
                 if (Direction == 7)
+                {
                     Direction = data.Direction4;
+                }
                 else
+                {
                     Direction = data.Direction2;
+                }
             }
             else
+            {
                 Direction = data.Direction1;
+            }
 
             break;
         }
@@ -1290,12 +1446,18 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             if (data.Direction2 == -1)
             {
                 if (Direction == 1)
+                {
                     Direction = data.Direction1;
+                }
                 else
+                {
                     Direction = data.Direction3;
+                }
             }
             else
+            {
                 Direction = data.Direction2;
+            }
 
             break;
         }
@@ -1305,12 +1467,18 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             if (data.Direction3 == -1)
             {
                 if (Direction == 3)
+                {
                     Direction = data.Direction2;
+                }
                 else
+                {
                     Direction = data.Direction4;
+                }
             }
             else
+            {
                 Direction = data.Direction3;
+            }
 
             break;
         }
@@ -1320,12 +1488,18 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             if (data.Direction4 == -1)
             {
                 if (Direction == 5)
+                {
                     Direction = data.Direction3;
+                }
                 else
+                {
                     Direction = data.Direction1;
+                }
             }
             else
+            {
                 Direction = data.Direction4;
+            }
 
             break;
         }
@@ -1433,7 +1607,9 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
     }
     else if (g_StatusbarUnderMouse == serial)
+    {
         Color = g_ConfigManager.GetColorByNotoriety(obj->Notoriety);
+    }
     else
     {
         Color = 0;
@@ -1441,17 +1617,27 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (g_ConfigManager.GetApplyStateColorOnCharacters())
         {
             if (obj->Poisoned() || obj->SA_Poisoned)
+            {
                 Color = 0x0044;
+            }
             else if (obj->Frozen())
+            {
                 Color = 0x014C;
+            }
             else if (obj->Notoriety != NT_INVULNERABLE && obj->YellowHits() && !obj->NPC)
+            {
                 Color = 0x0030;
+            }
             else if (obj->pvpCaller)
+            {
                 Color = 0x080D;
+            }
         }
 
         if (obj->Dead())
+        {
             Color = 0x0386;
+        }
     }
 
     uint8_t *drawTextureColor = obj->m_DrawTextureColor;
@@ -1473,10 +1659,14 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         targetColor = g_ConfigManager.GetColorByNotoriety(obj->Notoriety);
 
         if (isAttack || serial == g_LastTargetObject)
+        {
             needHPLine = (serial != g_NewTargetSystem.Serial);
+        }
 
         if (isAttack || underMouseTarget)
+        {
             Color = targetColor;
+        }
     }
 
     Direction = 0;
@@ -1504,7 +1694,9 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         int mountedHeightOffset = 0;
 
         if (mountID < MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        {
             mountedHeightOffset = m_DataIndex[mountID].MountedHeightOffset;
+        }
 
         if (drawShadow)
         {
@@ -1514,7 +1706,9 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             Draw(goi, drawX, drawY, mirror, animIndex, mountID + 0x10000);
         }
         else
+        {
             AnimGroup = obj->GetAnimationGroup(mountID);
+        }
 
         Draw(goi, drawX, drawY, mirror, animIndex, mountID);
         drawY += mountedHeightOffset;
@@ -1523,7 +1717,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     {
         m_Sitting = obj->IsSitting();
 
-        if (m_Sitting)
+        if (m_Sitting != 0)
         {
             animGroup = PAG_STAND;
             animIndex = 0;
@@ -1533,12 +1727,18 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             FixSittingDirection(layerDir, mirror, drawX, drawY);
 
             if (Direction == 3)
+            {
                 animGroup = 25;
+            }
             else
+            {
                 m_Transform = true;
+            }
         }
         else if (drawShadow)
+        {
             Draw(obj, drawX, drawY, mirror, animIndex, 0x10000);
+        }
     }
 
     AnimGroup = animGroup;
@@ -1551,7 +1751,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
 
-        if (m_Sitting && Direction == 3 && sittingData.DrawBack &&
+        if ((m_Sitting != 0) && Direction == 3 && sittingData.DrawBack &&
             obj->FindLayer(OL_CLOAK) == nullptr)
         {
             for (CRenderWorldObject *ro = obj->m_PrevXY; ro != nullptr; ro = ro->m_PrevXY)
@@ -1665,12 +1865,18 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                     per = (obj->Hits * 100) / per;
 
                     if (per > 100)
+                    {
                         per = 100;
+                    }
 
                     if (per < 1)
+                    {
                         per = 0;
+                    }
                     else
+                    {
                         per = (34 * per) / 100;
+                    }
                 }
 
                 g_NewTargetSystem.Hits = per;
@@ -1679,11 +1885,17 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                 g_NewTargetSystem.BottomY = drawY + 7;
                 g_NewTargetSystem.TargetedCharacter = obj;
                 if (obj->Poisoned() || obj->SA_Poisoned)
+                {
                     g_NewTargetSystem.HealthColor = 63; //Character status line (green)
+                }
                 else if (obj->YellowHits())
+                {
                     g_NewTargetSystem.HealthColor = 53; //Character status line (green)
+                }
                 else
+                {
                     g_NewTargetSystem.HealthColor = 90; //Character status line (blue)
+                }
             }
         }
     }
@@ -1697,12 +1909,18 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             per = (obj->Hits * 100) / per;
 
             if (per > 100)
+            {
                 per = 100;
+            }
 
             if (per < 1)
+            {
                 per = 0;
+            }
             else
+            {
                 per = (34 * per) / 100;
+            }
         }
 
         if (isAttack)
@@ -1725,11 +1943,17 @@ void CAnimationManager::PrepareTargetAttackGump(
     gump.Hits = per;
     gump.TargetedCharacter = &obj;
     if (obj.Poisoned() || obj.SA_Poisoned)
+    {
         gump.HealthColor = 63; //Character status line (green)
+    }
     else if (obj.YellowHits())
+    {
         gump.HealthColor = 53; //Character status line (green)
+    }
     else
+    {
         gump.HealthColor = 90; //Character status line (blue)
+    }
 }
 
 bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
@@ -1760,12 +1984,16 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
         AnimGroup = obj->GetAnimationGroup(mountID);
 
         if (TestPixels(goi, drawX, drawY, mirror, animIndex, mountID))
+        {
             return true;
+        }
 
         if (mountID < MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        {
             drawY += m_DataIndex[mountID].MountedHeightOffset;
+        }
     }
-    else if (m_Sitting)
+    else if (m_Sitting != 0)
     {
         animGroup = PAG_STAND;
         animIndex = 0;
@@ -1775,7 +2003,9 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
         FixSittingDirection(layerDir, mirror, drawX, drawY);
 
         if (Direction == 3)
+        {
             animGroup = 25;
+        }
     }
 
     AnimGroup = animGroup;
@@ -1789,7 +2019,9 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     DEBUG_TRACE_FUNCTION;
 
     if (g_CorpseManager.InList(obj->Serial, 0))
+    {
         return;
+    }
 
     m_Sitting = 0;
     Direction = (obj->Layer & 0x7F) & 7;
@@ -1798,12 +2030,16 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     GetAnimDirection(Direction, mirror);
 
     if (obj->Hidden())
+    {
         Color = 0x038E;
+    }
     else
+    {
         Color = 0;
+    }
 
     uint8_t animIndex = obj->AnimIndex;
-    AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer);
+    AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
 
     Draw(obj, x, y, mirror, animIndex); //Draw animation
 
@@ -1815,7 +2051,9 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     DEBUG_TRACE_FUNCTION;
 
     if (g_CorpseManager.InList(obj->Serial, 0))
+    {
         return false;
+    }
 
     m_Sitting = 0;
     Direction = (obj->Layer & 0x7F) & 7;
@@ -1824,7 +2062,7 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     GetAnimDirection(Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer);
+    AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
 
     return TestPixels(obj, x, y, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, x, y, mirror, Direction, animIndex, 0);
@@ -1860,9 +2098,13 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
                 if (frameIndex >= fc)
                 {
                     if (isCorpse)
+                    {
                         frameIndex = fc - 1;
+                    }
                     else
+                    {
                         frameIndex = 0;
+                    }
                 }
 
                 if (direction.m_Frames != nullptr)
@@ -1903,8 +2145,10 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
             UOPAnimationData &animDataStruct =
                 m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
 
-            if (!animDataStruct.path.length())
+            if (animDataStruct.path.length() == 0u)
+            {
                 return result;
+            }
 
             //reading compressed data from uop file stream
             auto decompressedLength = animDataStruct.decompressedLength;
@@ -1915,7 +2159,9 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
             bool decompressionRes =
                 CFileManager::DecompressUOPFileData(animDataStruct, decLayoutData, buf);
             if (!decompressionRes)
+            {
                 return result; //decompression failed
+            }
 
             SetData(reinterpret_cast<uint8_t *>(&decLayoutData[0]), decompressedLength);
             //format id?
@@ -1985,26 +2231,34 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     else if (obj->IsCorpse())
     {
         dir = ((CGameItem *)obj)->Layer & 7;
-        animGroup = GetDieGroupIndex(id, ((CGameItem *)obj)->UsedLayer);
+        animGroup = GetDieGroupIndex(id, ((CGameItem *)obj)->UsedLayer != 0u);
         GetAnimDirection(dir, mirror);
     }
-    else if (((CGameItem *)obj)->Layer != OL_MOUNT) //TGameItem
+    else if (((CGameItem *)obj)->Layer != OL_MOUNT)
+    { //TGameItem
         id = ((CGameItem *)obj)->AnimID;
+    }
 
     if (frameIndex == 0xFF)
+    {
         frameIndex = (uint8_t)obj->AnimIndex;
+    }
 
     ANIMATION_DIMENSIONS dims =
         GetAnimationDimensions(frameIndex, id, dir, animGroup, obj->IsCorpse());
 
-    if (!dims.Width && !dims.Height && !dims.CenterX && !dims.CenterY)
+    if ((dims.Width == 0) && (dims.Height == 0) && (dims.CenterX == 0) && (dims.CenterY == 0))
     {
         dims.Width = 20;
 
         if (obj->NPC && obj->FindLayer(OL_MOUNT) != nullptr)
+        {
             dims.Height = 100;
+        }
         else
+        {
             dims.Height = 60;
+        }
     }
 
     return dims;
@@ -2013,7 +2267,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
 bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &direction)
 {
     UOPAnimationData &animDataStruct = m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
-    if (!animDataStruct.path.length())
+    if (animDataStruct.path.length() == 0u)
     {
         //LOG("CAnimationManager::TryReadUOPAnimDimins bad address\n");
         return false;
@@ -2027,7 +2281,9 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     vector<uint8_t> decLayoutData(decompressedLength);
     bool result = CFileManager::DecompressUOPFileData(animDataStruct, decLayoutData, buf);
     if (!result)
+    {
         return false; //decompression failed
+    }
 
     SetData(reinterpret_cast<uint8_t *>(&decLayoutData[0]), decompressedLength);
     vector<UOPFrameData> pixelDataOffsets = ReadUOPFrameDataOffsets();
@@ -2035,18 +2291,24 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     direction.FrameCount = (uint8_t)pixelDataOffsets.size() / 5; // FIXME: truncate cast
     int dirFrameStartIdx = direction.FrameCount * Direction;
     if (direction.m_Frames == nullptr)
+    {
         direction.m_Frames = new CTextureAnimationFrame[direction.FrameCount];
+    }
 
     for (int i = 0; i < direction.FrameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
 
         if (frame.Texture != 0)
+        {
             continue;
+        }
 
         UOPFrameData frameData = pixelDataOffsets[i + dirFrameStartIdx];
         if (frameData.dataStart == nullptr)
+        {
             continue;
+        }
 
         short imageCenterX, imageCenterY, imageWidth, imageHeight;
         uint16_t *palette;
@@ -2054,8 +2316,10 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
         frame.CenterX = imageCenterX;
         frame.CenterY = imageCenterY;
 
-        if (!imageWidth || !imageHeight)
+        if ((imageWidth == 0) || (imageHeight == 0))
+        {
             continue;
+        }
         int textureSize = imageWidth * imageHeight;
         vector<uint16_t> data(textureSize, 0);
 
@@ -2074,13 +2338,17 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
 
             int x = (header >> 22) & 0x03FF;
 
-            if (x & 0x0200)
+            if ((x & 0x0200) != 0)
+            {
                 x |= 0xFFFFFE00;
+            }
 
             int y = (header >> 12) & 0x03FF;
 
-            if (y & 0x0200)
+            if ((y & 0x0200) != 0)
+            {
                 y |= 0xFFFFFE00;
+            }
 
             x += imageCenterX;
             y += imageCenterY + imageHeight;
@@ -2091,8 +2359,10 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
             {
                 uint16_t val = palette[ReadUInt8()];
 
-                if (val)
+                if (val != 0u)
+                {
                     val |= 0x8000;
+                }
 
                 data[block++] = val;
             }
@@ -2118,26 +2388,36 @@ void CAnimationManager::CalculateFrameInformation(
     int x = -dim.CenterX;
 
     if (mirror)
+    {
         x = -(dim.Width - dim.CenterX);
+    }
 
     if (x < info.StartX)
+    {
         info.StartX = x;
+    }
 
     if (y < info.StartY)
+    {
         info.StartY = y;
+    }
 
     if (info.EndX < x + dim.Width)
+    {
         info.EndX = x + dim.Width;
+    }
 
     if (info.EndY < y + dim.Height)
+    {
         info.EndY = y + dim.Height;
+    }
 }
 
 DRAW_FRAME_INFORMATION
 CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLayers)
 {
     DEBUG_TRACE_FUNCTION;
-    m_Sitting = false;
+    m_Sitting = 0;
     Direction = 0;
 
     DRAW_FRAME_INFORMATION dfInfo = { 0 };
@@ -2211,8 +2491,10 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
             {
                 goi = obj->FindLayer(m_UsedLayers[layerDir][l]);
 
-                if (goi == nullptr || !goi->AnimID)
+                if (goi == nullptr || (goi->AnimID == 0u))
+                {
                     continue;
+                }
 
                 if (!IsCovered(goi->Layer, obj))
                 {
@@ -2237,7 +2519,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         GetAnimDirection(Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer);
+        AnimGroup = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
 
         FRAME_OUTPUT_INFO info = { 0 };
 
@@ -2249,7 +2531,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
             {
                 CGameItem *goi = obj->FindLayer(m_UsedLayers[Direction][l]);
 
-                if (goi != nullptr && goi->AnimID)
+                if (goi != nullptr && (goi->AnimID != 0u))
                 {
                     if (!IsCovered(goi->Layer, obj))
                     {
@@ -2287,7 +2569,9 @@ bool CAnimationManager::DrawEquippedLayers(
     uint16_t bodyGraphic = obj->Graphic;
 
     if (obj->IsCorpse())
+    {
         bodyGraphic = obj->Count;
+    }
 
     EQUIP_CONV_BODY_MAP::iterator bodyMapIter = m_EquipConv.find(bodyGraphic);
 
@@ -2302,7 +2586,9 @@ bool CAnimationManager::DrawEquippedLayers(
                 EQUIP_CONV_DATA_MAP::iterator dataIter = bodyMapIter->second.find(id);
 
                 if (dataIter != bodyMapIter->second.end())
+                {
                     id = dataIter->second.Graphic;
+                }
             }
 
             result = TestPixels(*i, drawX, drawY, mirror, animIndex, id);
@@ -2331,7 +2617,9 @@ bool CAnimationManager::DrawEquippedLayers(
             m_EquipConvItem = nullptr;
 
             if (item->IsLightSource() && g_GameScreen.UseLight)
+            {
                 g_GameScreen.AddLight(obj, item, drawX, drawY - lightOffset);
+            }
         }
     }
 
@@ -2349,12 +2637,16 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
         {
             if (m_CharacterLayerGraphic[OL_LEGS] != 0 ||
                 m_CharacterLayerGraphic[OL_PANTS] == 0x1411)
+            {
                 result = true;
+            }
             else if (
                 m_CharacterLayerAnimID[OL_PANTS] == 0x0513 ||
                 m_CharacterLayerAnimID[OL_PANTS] == 0x0514 ||
                 m_CharacterLayerAnimID[OL_ROBE] == 0x0504)
+            {
                 result = true;
+            }
 
             break;
         }
@@ -2364,15 +2656,21 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
             uint16_t pants = m_CharacterLayerAnimID[OL_PANTS];
 
             if (m_CharacterLayerGraphic[OL_LEGS] != 0 || robe == 0x0504)
+            {
                 result = true;
+            }
             if (pants == 0x01EB || pants == 0x03E5 || pants == 0x03EB)
             {
                 uint16_t skirt = m_CharacterLayerAnimID[OL_SKIRT];
 
                 if (skirt != 0x01C7 && skirt != 0x01E4)
+                {
                     result = true;
+                }
                 else if (robe != 0x0229 && (robe <= 0x04E7 || robe > 0x04EB))
+                {
                     result = true;
+                }
             }
 
             break;
@@ -2382,9 +2680,13 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
             uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
 
             if (robe != 0)
+            {
                 result = true;
+            }
             else if (m_CharacterLayerGraphic[OL_TUNIC] == 0x0238)
+            {
                 result = (robe != 0x9985 && robe != 0x9986);
+            }
 
             break;
         }
@@ -2393,16 +2695,22 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
             uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
 
             if (robe != 0 && robe != 0x9985 && robe != 0x9986)
+            {
                 result = true;
+            }
             else
             {
                 uint16_t tunic = m_CharacterLayerGraphic[OL_TUNIC];
                 uint16_t torso = m_CharacterLayerGraphic[OL_TORSO];
 
                 if (tunic != 0 && tunic != 0x1541 && tunic != 0x1542)
+                {
                     result = true;
+                }
                 else if (torso == 0x782A || torso == 0x782B)
+                {
                     result = true;
+                }
             }
 
             break;
@@ -2416,7 +2724,9 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
         }
         case OL_HELMET:
             if (g_ConfigManager.DrawHelmetsOnShroud)
+            {
                 break;
+            }
         case OL_HAIR:
         {
             uint16_t robe = m_CharacterLayerGraphic[OL_ROBE];
@@ -2424,19 +2734,27 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
             if (robe > 0x3173)
             {
                 if ((robe == 0x4B9D || robe == 0x7816) /*&& wat?*/)
+                {
                     result = true;
+                }
             }
             else
             {
                 if (robe <= 0x2687)
                 {
                     if (robe < 0x2683)
+                    {
                         result = (robe >= 0x204E && robe <= 0x204F);
+                    }
                     else
+                    {
                         result = true;
+                    }
                 }
                 else if (robe == 0x2FB9 || robe == 0x3173)
+                {
                     result = true;
+                }
             }
 
             break;
@@ -2544,14 +2862,17 @@ void CAnimationManager::ReadUOPFrameData(
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)
 {
-    auto getReplaceGroup =
-        [](const vector<std::pair<uint16_t, uint8_t>> &list, uint16_t index, uint16_t walkIndex) -> uint16_t {
+    auto getReplaceGroup = [](const vector<std::pair<uint16_t, uint8_t>> &list,
+                              uint16_t index,
+                              uint16_t walkIndex) -> uint16_t {
         for (const std::pair<uint16_t, uint8_t> &item : list)
         {
             if (item.first == index)
             {
                 if (item.second == 0xFF)
+                {
                     return walkIndex;
+                }
 
                 return (uint16_t)item.second;
             }
@@ -2563,15 +2884,21 @@ uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint1
     ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
 
     if (group == AG_LOW)
-        return (uint8_t)(getReplaceGroup(m_GroupReplaces[0], index, LAG_WALK) % LAG_ANIMATION_COUNT);
-    else if (group == AG_PEOPLE)
+    {
+        return (uint8_t)(
+            getReplaceGroup(m_GroupReplaces[0], index, LAG_WALK) % LAG_ANIMATION_COUNT);
+    }
+    if (group == AG_PEOPLE)
+    {
         return (uint8_t)(
             getReplaceGroup(m_GroupReplaces[1], index, PAG_WALK_UNARMED) % PAG_ANIMATION_COUNT);
+    }
 
     return (uint8_t)(index % HAG_ANIMATION_COUNT);
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     if (action <= 10)
     {
@@ -2579,8 +2906,10 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint
 
         ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-        if (ia.Flags & 0x80000000)
+        if ((ia.Flags & 0x80000000) != 0u)
+        {
             type = ia.Type;
+        }
 
         if (type == AGT_MONSTER)
         {
@@ -2591,8 +2920,10 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint
                 case 2:
                     return 6;
                 case 3:
-                    if (ia.Flags & 1)
+                    if ((ia.Flags & 1) != 0u)
+                    {
                         return 12;
+                    }
                 case 0:
                     return 4;
                 default:
@@ -2601,8 +2932,10 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint
         }
         else if (type == AGT_SEA_MONSTER)
         {
-            if (mode % 2)
+            if ((mode % 2) != 0)
+            {
                 return 6;
+            }
 
             return 5;
         }
@@ -2610,48 +2943,52 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint
         {
             if (obj->FindLayer(OL_MOUNT) != nullptr)
             {
-                if (action)
+                if (action != 0u)
                 {
                     if (action == 1)
+                    {
                         return 27;
-                    else if (action == 2)
+                    }
+                    if (action == 2)
+                    {
                         return 28;
+                    }
 
                     return 26;
                 }
 
                 return 29;
             }
-            else
+
+            switch (action)
             {
-                switch (action)
-                {
-                    default:
-                        return 31;
-                    case 1:
-                        return 18;
-                    case 2:
-                        return 19;
-                    case 6:
-                        return 12;
-                    case 7:
-                        return 13;
-                    case 8:
-                        return 14;
-                    case 3:
-                        return 11;
-                    case 4:
-                        return 9;
-                    case 5:
-                        return 10;
-                }
+                default:
+                    return 31;
+                case 1:
+                    return 18;
+                case 2:
+                    return 19;
+                case 6:
+                    return 12;
+                case 7:
+                    return 13;
+                case 8:
+                    return 14;
+                case 3:
+                    return 11;
+                case 4:
+                    return 9;
+                case 5:
+                    return 10;
             }
 
             return 0;
         }
 
-        if (mode % 2)
+        if ((mode % 2) != 0)
+        {
             return 6;
+        }
 
         return 5;
     }
@@ -2659,76 +2996,98 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint
     return 0;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_1_2(
-    CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
     {
         if (type <= AGT_ANIMAL || obj->FindLayer(OL_MOUNT) != nullptr)
+        {
             return 0xFF;
+        }
 
         return 30;
     }
-    else if (mode % 2)
+    if ((mode % 2) != 0)
+    {
         return 15;
+    }
 
     return 16;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
     {
         if (type == AGT_SEA_MONSTER)
-            return 8;
-        else if (type == AGT_ANIMAL)
         {
-            if (mode % 2)
+            return 8;
+        }
+        if (type == AGT_ANIMAL)
+        {
+            if ((mode % 2) != 0)
+            {
                 return 21;
+            }
 
             return 22;
         }
 
-        if (mode % 2)
+        if ((mode % 2) != 0)
+        {
             return 8;
+        }
 
         return 12;
     }
-    else if (mode % 2)
+    if ((mode % 2) != 0)
+    {
         return 2;
+    }
 
     return 3;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
     {
         if (type > AGT_ANIMAL)
         {
             if (obj->FindLayer(OL_MOUNT) != nullptr)
+            {
                 return 0xFF;
+            }
 
             return 20;
         }
@@ -2739,43 +3098,50 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint
     return 10;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type <= AGT_SEA_MONSTER)
     {
-        if (mode % 2)
+        if ((mode % 2) != 0)
+        {
             return 18;
+        }
 
         return 17;
     }
-    else if (type != AGT_ANIMAL)
+    if (type != AGT_ANIMAL)
     {
         if (obj->FindLayer(OL_MOUNT) != nullptr)
+        {
             return 0xFF;
+        }
 
-        if (mode % 2)
+        if ((mode % 2) != 0)
+        {
             return 6;
+        }
 
         return 5;
     }
-    else
+
+    switch (mode % 3)
     {
-        switch (mode % 3)
-        {
-            case 1:
-                return 10;
-            case 2:
-                return 3;
-            default:
-                break;
-        }
+        case 1:
+            return 10;
+        case 2:
+            return 3;
+        default:
+            break;
     }
 
     return 9;
@@ -2788,18 +3154,24 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
     {
         if (type != AGT_SEA_MONSTER)
         {
             if (type == AGT_ANIMAL)
+            {
                 return 3;
+            }
 
             if (obj->FindLayer(OL_MOUNT) != nullptr)
+            {
                 return 0xFF;
+            }
 
             return 34;
         }
@@ -2810,40 +3182,54 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
     return 11;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     if (obj->FindLayer(OL_MOUNT) != nullptr)
+    {
         return 0xFF;
+    }
 
-    if (action)
+    if (action != 0u)
     {
         if (action == 1)
+        {
             return 33;
+        }
     }
     else
+    {
         return 32;
+    }
 
     return 0;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
     {
         if (type != AGT_SEA_MONSTER)
         {
             if (type == AGT_ANIMAL)
+            {
                 return 9;
+            }
 
             if (obj->FindLayer(OL_MOUNT) != nullptr)
+            {
                 return 0xFF;
+            }
 
             return 33;
         }
@@ -2861,31 +3247,39 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
+    {
         return 0xFF;
+    }
 
     return 20;
 }
 
-uint8_t CAnimationManager::GetObjectNewAnimationType_11(
-    CGameCharacter *obj, uint16_t action, uint8_t mode)
+uint8_t
+CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
 
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
 
-    if (ia.Flags & 0x80000000)
+    if ((ia.Flags & 0x80000000) != 0u)
+    {
         type = ia.Type;
+    }
 
     if (type != AGT_MONSTER)
     {
         if (type >= AGT_ANIMAL)
         {
             if (obj->FindLayer(OL_MOUNT) != nullptr)
+            {
                 return 0xFF;
+            }
 
             switch (action)
             {
@@ -2909,7 +3303,9 @@ uint8_t CAnimationManager::GetObjectNewAnimation(
     CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode)
 {
     if (obj->Graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    {
         return 0;
+    }
 
     switch (type)
     {
@@ -2954,9 +3350,13 @@ void CAnimationManager::ReadFrameDimensionData(
     if (frameCount > 0 && frameIndex >= frameCount)
     {
         if (isCorpse)
+        {
             frameIndex = frameCount - 1;
+        }
         else
+        {
             frameIndex = 0;
+        }
     }
 
     if (frameIndex < frameCount)
@@ -2992,7 +3392,9 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
         CTextureAnimationFrame &frame = direction.m_Frames[i];
 
         if (frame.Texture != 0)
+        {
             continue;
+        }
 
         Ptr = dataStart + frameOffset[i];
 
@@ -3006,7 +3408,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
         uint32_t imageHeight = ReadInt16LE();
 
-        if (!imageWidth || !imageHeight)
+        if ((imageWidth == 0u) || (imageHeight == 0u))
         {
             LOG("CAnimationManager::LoadDirectionGroup no image size:%i, %i\n",
                 imageWidth,
@@ -3033,13 +3435,17 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
             int x = (header >> 22) & 0x03FF;
 
-            if (x & 0x0200)
+            if ((x & 0x0200) != 0)
+            {
                 x |= 0xFFFFFE00;
+            }
 
             int y = (header >> 12) & 0x03FF;
 
-            if (y & 0x0200)
+            if ((y & 0x0200) != 0)
+            {
                 y |= 0xFFFFFE00;
+            }
 
             x += imageCenterX;
             y += imageCenterY + imageHeight;
@@ -3050,10 +3456,14 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
             {
                 uint16_t val = palette[ReadUInt8()];
 
-                if (val)
+                if (val != 0u)
+                {
                     data[block] = 0x8000 | val;
+                }
                 else
+                {
                     data[block] = 0;
+                }
 
                 block++;
             }

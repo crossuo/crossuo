@@ -2,9 +2,8 @@
 
 namespace Wisp
 {
-
 CPacketReader::CPacketReader()
-    : Wisp::CDataReader()
+
 {
 }
 
@@ -30,15 +29,19 @@ void CPacketReader::Read(class CConnection *connection)
             int offset = 0;
             vector<uint8_t> packet = parser->Read(this, offset);
 
-            if (!packet.size())
+            if (packet.empty())
+            {
                 break;
+            }
 
-            if (MaxPacketStackSize)
+            if (MaxPacketStackSize != 0)
             {
                 m_PacketsStack.push_back(packet);
 
                 if ((int)m_PacketsStack.size() > MaxPacketStackSize)
+                {
                     m_PacketsStack.pop_front();
+                }
             }
 
             SetData((uint8_t *)&packet[0], packet.size(), offset);
@@ -47,5 +50,4 @@ void CPacketReader::Read(class CConnection *connection)
     }
 }
 
-};
-
+}; // namespace Wisp

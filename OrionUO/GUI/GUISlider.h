@@ -93,7 +93,7 @@ public:
         bool vertical,
         int x,
         int y,
-        int lenght,
+        int length,
         int minValue,
         int maxValue,
         int value);

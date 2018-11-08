@@ -48,18 +48,26 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
             info.Cliloc = reader.ReadUInt16BE() + 3000000;
             info.Flags = reader.ReadUInt16BE();
 
-            if (info.Flags & 0x84)
+            if ((info.Flags & 0x84) != 0)
+            {
                 reader.Move(2);
+            }
 
-            if (info.Flags & 0x40)
+            if ((info.Flags & 0x40) != 0)
+            {
                 reader.Move(2);
+            }
 
-            if (info.Flags & 0x20)
+            if ((info.Flags & 0x20) != 0)
+            {
                 info.ReplaceColor = reader.ReadUInt16BE() & 0x3FFF;
+            }
         }
 
-        if (info.Flags & 0x01)
+        if ((info.Flags & 0x01) != 0)
+        {
             info.Color = 0x0386;
+        }
 
         items.push_back(info);
     }
@@ -92,11 +100,13 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
             true,
             CONTEXT_MENU_FONT);
 
-        if (info.ReplaceColor)
+        if (info.ReplaceColor != 0u)
+        {
             item->SetGlobalColor(
                 true, g_ColorManager.Color16To32(info.ReplaceColor), 0xFFFFFFFE, 0xFFFFFFFE);
+        }
 
-        if ((info.Flags & 0x02) && !arrowAdded)
+        if (((info.Flags & 0x02) != 0) && !arrowAdded)
         {
             arrowAdded = true;
             menu->Add(new CGUIPage(1));
@@ -124,14 +134,18 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
             height += texture.Height;
 
             if (width < texture.Width)
+            {
                 width = texture.Width;
+            }
         }
     }
 
     width += 20;
 
     if (height <= 10 || width <= 20)
+    {
         delete menu;
+    }
     else
     {
         resizepic->Width = width;
@@ -139,10 +153,14 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 
         QFOR(item, menu->m_Items, CBaseGUI *)
         {
-            if (item->Type == GOT_PAGE && ((CGUIPage *)item)->Index)
+            if (item->Type == GOT_PAGE && (((CGUIPage *)item)->Index != 0))
+            {
                 break;
-            else if (item->Type == GOT_HITBOX)
+            }
+            if (item->Type == GOT_HITBOX)
+            {
                 ((CGUIHitBox *)item)->Width = width - 20;
+            }
         }
 
         g_GumpManager.AddGump(menu);
@@ -189,13 +207,17 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
         QFOR(item, m_Items, CBaseGUI *)
         {
             if (item->Type == GOT_RESIZEPIC)
+            {
                 resizepic = (CGUIResizepic *)item;
+            }
             else if (item->Type == GOT_TEXTENTRY)
             {
                 CGLTextTexture &texture = ((CGUITextEntry *)item)->m_Entry.m_Texture;
 
                 if (width < texture.Width)
+                {
                     width = texture.Width;
+                }
 
                 height += texture.Height;
             }
@@ -206,7 +228,9 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
         QFOR(item, m_Items, CBaseGUI *)
         {
             if (item->Type == GOT_HITBOX)
+            {
                 ((CGUIHitBox *)item)->Width = width - 20;
+            }
         }
 
         if (resizepic != nullptr)
@@ -225,4 +249,3 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
         RemoveMark = true;
     }
 }
-

@@ -17,7 +17,8 @@ void CGumpSecureTrading::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
-    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsText())
+    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr &&
+        g_PressedObject.LeftObject->IsText())
     {
         g_GumpMovingOffset.Reset();
 
@@ -25,8 +26,10 @@ void CGumpSecureTrading::CalculateGumpState()
         g_GumpTranslate.Y = (float)m_Y;
     }
 
-    if (g_GumpTranslate.X || g_GumpTranslate.Y)
+    if ((g_GumpTranslate.X != 0.0f) || (g_GumpTranslate.Y != 0.0f))
+    {
         WantRedraw = true;
+    }
 }
 
 void CGumpSecureTrading::PrepareContent()
@@ -71,7 +74,9 @@ void CGumpSecureTrading::PrepareContent()
     }
 
     if (m_TextRenderer.CalculatePositions(false))
+    {
         WantRedraw = true;
+    }
 }
 
 void CGumpSecureTrading::UpdateContent()
@@ -80,7 +85,9 @@ void CGumpSecureTrading::UpdateContent()
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
     if (selobj == nullptr)
+    {
         return; //Объект, к которому привязан гамп - исчез
+    }
 
     if (m_Items == nullptr)
     {
@@ -94,19 +101,27 @@ void CGumpSecureTrading::UpdateContent()
         }
 
         if (StateMy)
+        {
             m_MyCheck =
                 (CGUIButton *)Add(new CGUIButton(ID_GST_CHECKBOX, 0x0869, 0x086A, 0x086A, 52, 29));
+        }
         else
+        {
             m_MyCheck =
                 (CGUIButton *)Add(new CGUIButton(ID_GST_CHECKBOX, 0x0867, 0x0868, 0x0868, 52, 29));
+        }
 
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 84, 40));
         text->CreateTextureA(1, g_Player->GetName());
 
         if (StateOpponent)
+        {
             m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0869, 266, 160));
+        }
         else
+        {
             m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0867, 266, 160));
+        }
 
         int fontWidth = 260 - g_FontManager.GetWidthA(1, Text);
 
@@ -153,10 +168,14 @@ void CGumpSecureTrading::UpdateContent()
             dataObject->PartialHue = IsPartialHue(g_Orion.GetStaticFlags(graphic));
 
             if (dataObject->GetY() >= 150)
+            {
                 dataObject->SetY(120);
+            }
 
             if (dataObject->GetX() >= 155)
+            {
                 dataObject->SetX(125);
+            }
         }
     }
 
@@ -181,10 +200,14 @@ void CGumpSecureTrading::UpdateContent()
             dataObject->PartialHue = IsPartialHue(g_Orion.GetStaticFlags(graphic));
 
             if (dataObject->GetY() >= 150)
+            {
                 dataObject->SetY(120);
+            }
 
             if (dataObject->GetX() >= 302)
+            {
                 dataObject->SetX(272);
+            }
         }
     }
 }
@@ -195,10 +218,14 @@ void CGumpSecureTrading::Draw()
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
     if (selobj == nullptr)
+    {
         return; //Объект, к которому привязан гамп - исчез
+    }
 
     if (g_GumpPressed)
+    {
         WantRedraw = true;
+    }
 
     CGump::Draw();
 
@@ -219,13 +246,15 @@ CRenderObject *CGumpSecureTrading::Select()
     CGameObject *selobj = g_World->FindWorldObject(Serial);
 
     if (selobj == nullptr)
+    {
         return nullptr; //Объект, к которому привязан гамп - исчез
+    }
 
     CRenderObject *selected = CGump::Select();
 
     Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = Wisp::CPoint2Di(
-        oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+    g_MouseManager.Position =
+        Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
     m_TextRenderer.Select(this);
 
@@ -250,7 +279,9 @@ void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
             CGameObject *clickTarget = g_World->FindWorldObject(serial);
 
             if (clickTarget == nullptr)
+            {
                 return;
+            }
 
             g_ClickObject.Init(clickTarget);
             g_ClickObject.Timer = g_Ticks + DCLICK_DELAY;
@@ -288,17 +319,25 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
                     y -= (th->Height / 2);
 
                     if (x + th->Width > 110)
+                    {
                         x = 110 - th->Width;
+                    }
 
                     if (y + th->Height > 80)
+                    {
                         y = 80 - th->Height;
+                    }
                 }
 
                 if (x < 0)
+                {
                     x = 0;
+                }
 
                 if (y < 0)
+                {
                     y = 0;
+                }
 
                 g_Orion.DropItem(ID, x, y, 0);
                 g_MouseManager.CancelDoubleClick = true;
@@ -322,7 +361,8 @@ void CGumpSecureTrading::SendTradingResponse(int code)
     //Ответ на трэйд окно
     CPacketTradeResponse(this, code).Send();
 
-    if (code == 1) //Закрываем окно
+    if (code == 1)
+    { //Закрываем окно
         RemoveMark = true;
+    }
 }
-

@@ -4,7 +4,13 @@
 #include "GumpTextEntryDialog.h"
 
 CGumpTextEntryDialog::CGumpTextEntryDialog(
-    uint32_t serial, short x, short y, uint8_t variant, int maxLength, string text, string description)
+    uint32_t serial,
+    short x,
+    short y,
+    uint8_t variant,
+    int maxLength,
+    string text,
+    string description)
     : CGump(GT_TEXT_ENTRY_DIALOG, serial, x, y)
     , Text(text)
     , m_Description(description)
@@ -15,7 +21,7 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
     NoMove = true;
     Blocked = true;
 
-    if (!g_GrayMenuCount)
+    if (g_GrayMenuCount == 0)
     {
         g_Orion.InitScreen(GS_GAME_BLOCKED);
         g_GameBlockedScreen.Code = 2;
@@ -36,9 +42,13 @@ void CGumpTextEntryDialog::PrepareContent()
         uint16_t newGraphic = 0x0475; //Text field
 
         if (g_EntryPointer == &m_Entry->m_Entry)
+        {
             newGraphic = 0x0477; //Text field (active)
+        }
         else if (g_SelectedObject.Object == m_Entry)
+        {
             newGraphic = 0x0476; //Text field (lighted)
+        }
 
         if (m_TextField->Graphic != newGraphic)
         {
@@ -64,7 +74,9 @@ void CGumpTextEntryDialog::UpdateContent()
     CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
 
     if (gumpEntry != nullptr)
+    {
         gumpEntry->WantRedraw = true;
+    }
 
     m_TextField = (CGUIGumppic *)Add(new CGUIGumppic(0x0477, 60, 130));
     m_TextField->Serial = ID_GTED_TEXT_FIELD;
@@ -79,16 +91,22 @@ void CGumpTextEntryDialog::UpdateContent()
     Add(new CGUIButton(ID_GTED_BUTTON_OKAY, 0x047B, 0x047D, 0x047C, 117, 190));
 
     if (!NoClose)
+    {
         Add(new CGUIButton(ID_GTED_BUTTON_CANCEL, 0x0478, 0x047A, 0x0479, 204, 190));
+    }
 }
 
 void CGumpTextEntryDialog::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_GTED_BUTTON_OKAY) //Button okay
+    if (serial == ID_GTED_BUTTON_OKAY)
+    { //Button okay
         SendTextEntryDialogResponse(true);
-    else if (serial == ID_GTED_BUTTON_CANCEL) //Button cancel
+    }
+    else if (serial == ID_GTED_BUTTON_CANCEL)
+    { //Button cancel
         SendTextEntryDialogResponse(false);
+    }
 }
 
 void CGumpTextEntryDialog::OnTextInput(const TextEvent &ev)
@@ -103,9 +121,13 @@ void CGumpTextEntryDialog::OnTextInput(const TextEvent &ev)
             g_EntryPointer->Insert(ch);
             int val = atoi(g_EntryPointer->c_str());
             if (val > m_MaxLength)
+            {
                 g_EntryPointer->Remove(true);
+            }
             else
+            {
                 WantRedraw = true;
+            }
         }
     }
     else if (Variant == 1) // Anything, but limited in length
@@ -160,4 +182,3 @@ void CGumpTextEntryDialog::SendTextEntryDialogResponse(bool mode)
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-

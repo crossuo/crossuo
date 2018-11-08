@@ -40,15 +40,19 @@ void CMultiObject::Draw(int x, int y)
 
     uint16_t color = Color;
 
-    if (State)
+    if (State != 0)
     {
-        if (State & CHMOF_IGNORE_IN_RENDER)
+        if ((State & CHMOF_IGNORE_IN_RENDER) != 0)
+        {
             return;
+        }
 
-        if (State & CHMOF_INCORRECT_PLACE)
+        if ((State & CHMOF_INCORRECT_PLACE) != 0)
+        {
             color = 0x002B;
+        }
 
-        if (State & CHMOF_TRANSPARENT)
+        if ((State & CHMOF_TRANSPARENT) != 0)
         {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -85,9 +89,13 @@ void CMultiObject::Draw(int x, int y)
         RenderGraphic = Graphic;
 
         if (g_DeveloperMode == DM_DEBUGGING && g_SelectedObject.Object == this)
+        {
             RenderColor = SELECT_MULTI_COLOR;
+        }
         else
+        {
             RenderColor = color;
+        }
 
         CRenderStaticObject::Draw(x, y);
     }
@@ -98,14 +106,18 @@ void CMultiObject::Select(int x, int y)
     DEBUG_TRACE_FUNCTION;
     if (!OnTarget)
     {
-        if (State)
+        if (State != 0)
         {
-            if (State & CHMOF_IGNORE_IN_RENDER)
-                return;
-            else if ((State & CHMOF_TRANSPARENT) && !(State & CHMOF_GENERIC_INTERNAL))
+            if ((State & CHMOF_IGNORE_IN_RENDER) != 0)
             {
-                if (g_CustomHouseGump == nullptr || !g_CustomHouseGump->SelectedGraphic)
+                return;
+            }
+            if (((State & CHMOF_TRANSPARENT) != 0) && ((State & CHMOF_GENERIC_INTERNAL) == 0))
+            {
+                if (g_CustomHouseGump == nullptr || (g_CustomHouseGump->SelectedGraphic == 0u))
+                {
                     return;
+                }
             }
         }
 
@@ -114,4 +126,3 @@ void CMultiObject::Select(int x, int y)
         CRenderStaticObject::Select(x, y);
     }
 }
-

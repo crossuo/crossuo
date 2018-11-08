@@ -21,10 +21,14 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, 
         if (th[i] != nullptr)
         {
             if (width < th[i]->Width)
+            {
                 width = th[i]->Width;
+            }
         }
         else
+        {
             isValid = false;
+        }
     }
 
     if (isValid)
@@ -54,7 +58,9 @@ void CGUIScrollBackground::UpdateHeight(int height)
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
         if (th[i] == nullptr)
+        {
             return;
+        }
     }
 
     WorkSpace = Wisp::CRect(
@@ -77,7 +83,9 @@ void CGUIScrollBackground::Draw(bool checktrans)
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
         if (th[i] == nullptr)
+        {
             return;
+        }
     }
 
     th[0]->Draw(m_X, m_Y, checktrans); //Top scroll
@@ -98,13 +106,16 @@ void CGUIScrollBackground::Draw(bool checktrans)
             if (deltaHeight < th[i]->Height)
             {
                 if (deltaHeight > 0)
+                {
                     th[i]->Draw(bodyX, m_Y + currentY, 0, deltaHeight, checktrans);
+                }
 
                 exit = true;
                 break;
             }
-            else
+            {
                 th[i]->Draw(bodyX, m_Y + currentY, checktrans);
+            }
 
             currentY += th[i]->Height;
         }
@@ -120,10 +131,14 @@ bool CGUIScrollBackground::Select()
     int y = g_MouseManager.Position.Y - m_Y;
 
     if (!(x >= 0 && y >= 0 && x < Width && y < Height))
+    {
         return false;
+    }
 
     if (CheckPolygone)
+    {
         return true;
+    }
 
     bool select = false;
 
@@ -134,7 +149,9 @@ bool CGUIScrollBackground::Select()
         th[i] = g_Orion.ExecuteGump(Graphic + (int)i);
 
         if (th[i] == nullptr)
+        {
             return false;
+        }
     }
 
     y = m_Y;
@@ -157,13 +174,16 @@ bool CGUIScrollBackground::Select()
             if (deltaHeight < th[i]->Height)
             {
                 if (deltaHeight > 0)
+                {
                     select =
                         g_Orion.GumpPixelsInXY(Graphic + (int)i, x, y + currentY, 0, deltaHeight);
+                }
 
                 return select;
             }
-            else
+            {
                 select = g_Orion.GumpPixelsInXY(Graphic + (int)i, x, y + currentY);
+            }
 
             currentY += th[i]->Height;
         }
@@ -171,4 +191,3 @@ bool CGUIScrollBackground::Select()
 
     return select;
 }
-

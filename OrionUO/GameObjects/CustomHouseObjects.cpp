@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) September 2017 Hotride
 
-
 bool CCustomHouseObjectWall::Parse(const char *text)
 {
     DEBUG_TRACE_FUNCTION;
@@ -40,29 +39,41 @@ bool CCustomHouseObjectWall::Parse(const char *text)
 
         memcpy(&m_WindowGraphics[0], &m_Graphics[0], sizeof(m_WindowGraphics));
 
-        if (!AltWindowE && WindowE)
+        if ((AltWindowE == 0) && (WindowE != 0))
         {
             AltWindowE = WindowE;
             WindowE = 0;
         }
 
-        if (WindowS)
+        if (WindowS != 0)
+        {
             m_WindowGraphics[0] = WindowS;
+        }
 
-        if (AltWindowS)
+        if (AltWindowS != 0)
+        {
             m_WindowGraphics[1] = AltWindowS;
+        }
 
-        if (SecondAltWindowS)
+        if (SecondAltWindowS != 0)
+        {
             m_WindowGraphics[2] = SecondAltWindowS;
+        }
 
-        if (WindowE)
+        if (WindowE != 0)
+        {
             m_WindowGraphics[4] = WindowE;
+        }
 
-        if (AltWindowE)
+        if (AltWindowE != 0)
+        {
             m_WindowGraphics[5] = AltWindowE;
+        }
 
-        if (SecondAltWindowE)
+        if (SecondAltWindowE != 0)
+        {
             m_WindowGraphics[6] = SecondAltWindowE;
+        }
     }
 
     return result;
@@ -73,7 +84,9 @@ int CCustomHouseObjectWall::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic || m_WindowGraphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -132,7 +145,9 @@ int CCustomHouseObjectFloor::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -175,7 +190,9 @@ int CCustomHouseObjectDoor::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -220,7 +237,9 @@ int CCustomHouseObjectMisc::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -250,10 +269,10 @@ bool CCustomHouseObjectStair::Parse(const char *text)
 
     if (result)
     {
-        m_Graphics[0] = (MultiNorth ? Squared1 : 0);
-        m_Graphics[1] = (MultiEast ? Squared2 : 0);
-        m_Graphics[2] = (MultiSouth ? Rounded1 : 0);
-        m_Graphics[3] = (MultiWest ? Rounded2 : 0);
+        m_Graphics[0] = (MultiNorth != 0 ? Squared1 : 0);
+        m_Graphics[1] = (MultiEast != 0 ? Squared2 : 0);
+        m_Graphics[2] = (MultiSouth != 0 ? Rounded1 : 0);
+        m_Graphics[3] = (MultiWest != 0 ? Rounded2 : 0);
         m_Graphics[4] = Block;
         m_Graphics[5] = North;
         m_Graphics[6] = East;
@@ -269,7 +288,9 @@ int CCustomHouseObjectStair::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -328,7 +349,9 @@ int CCustomHouseObjectTeleport::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -389,7 +412,9 @@ int CCustomHouseObjectRoof::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -421,7 +446,9 @@ bool CCustomHouseObjectPlaceInfo::Parse(const char *text)
                       &CanGoNWS) >= 16;
 
     if (result)
+    {
         m_Graphics[0] = Graphic;
+    }
 
     return result;
 }
@@ -431,9 +458,10 @@ int CCustomHouseObjectPlaceInfo::Contains(uint16_t graphic) const
     for (int i = 0; i < GRAPHICS_COUNT; i++)
     {
         if (m_Graphics[i] == graphic)
+        {
             return (int)i;
+        }
     }
 
     return -1;
 }
-

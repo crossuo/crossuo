@@ -1,7 +1,13 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 CRenderWorldObject::CRenderWorldObject(
-    RENDER_OBJECT_TYPE renderType, int serial, uint16_t graphic, uint16_t color, int x, int y, char z)
+    RENDER_OBJECT_TYPE renderType,
+    int serial,
+    uint16_t graphic,
+    uint16_t color,
+    int x,
+    int y,
+    char z)
     : CRenderObject(serial, graphic, color, x, y)
     , RenderType(renderType)
     , m_Z(z)
@@ -39,7 +45,9 @@ bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
         alpha -= ALPHA_STEP;
 
         if (alpha < maxAlpha)
+        {
             alpha = maxAlpha;
+        }
 
         result = true;
     }
@@ -48,7 +56,9 @@ bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
         alpha += ALPHA_STEP;
 
         if (alpha > maxAlpha)
+        {
             alpha = maxAlpha;
+        }
 
         result = true;
     }
@@ -62,10 +72,14 @@ void CRenderWorldObject::RemoveRender()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_PrevXY != nullptr)
+    {
         m_PrevXY->m_NextXY = m_NextXY;
+    }
 
     if (m_NextXY != nullptr)
+    {
         m_NextXY->m_PrevXY = m_PrevXY;
+    }
 
     m_NextXY = nullptr;
     m_PrevXY = nullptr;
@@ -83,13 +97,17 @@ CLandObject *CRenderWorldObject::GetLand()
     for (CRenderWorldObject *land = this; land != nullptr; land = land->m_NextXY)
     {
         if (land->IsLandObject())
+        {
             return (CLandObject *)land;
+        }
     }
 
     for (CRenderWorldObject *land = this->m_PrevXY; land != nullptr; land = land->m_PrevXY)
     {
         if (land->IsLandObject())
+        {
             return (CLandObject *)land;
+        }
     }
 
     return nullptr;
@@ -116,4 +134,3 @@ void CRenderWorldObject::UpdateDrawCoordinates()
     UpdateTextCoordinates();
     FixTextCoordinates();
 }
-

@@ -1,6 +1,5 @@
 ﻿
 
-
 int CDecompressingCopier::tree[] = {
     /*   0*/ 1,    2,
     /*   1*/ 3,    4,
@@ -285,10 +284,14 @@ operator()(char *dest, const char *src, int &dest_size, intptr_t &src_size)
             bit_num = 0;
             mask = 0x80;
         }
-        if (value & mask)
+        if ((value & mask) != 0)
+        {
             treepos = tree[treepos * 2];
+        }
         else
+        {
             treepos = tree[treepos * 2 + 1];
+        }
         mask >>= 1; // shift on reck
         bit_num++;
 
@@ -311,4 +314,3 @@ operator()(char *dest, const char *src, int &dest_size, intptr_t &src_size)
         }
     }
 }
-

@@ -19,7 +19,7 @@ uint16_t CGumpDye::GetCurrentColor()
     uint16_t startColor = m_ColorRef + 2;
     uint16_t color = 0;
 
-    for (int y = 0; y < 10 && !color; y++)
+    for (int y = 0; y < 10 && (color == 0u); y++)
     {
         for (int x = 0; x < 20; x++)
         {
@@ -51,7 +51,9 @@ void CGumpDye::UpdateContent()
         Add(new CGUIShader(&g_ColorizerShader, false));
     }
     else
+    {
         m_Tube->Color = GetCurrentColor();
+    }
 }
 
 void CGumpDye::OnSelectColor(uint16_t color)
@@ -67,7 +69,9 @@ void CGumpDye::GUMP_BUTTON_EVENT_C
     CGumpSelectColor::OnButton(serial);
 
     if (serial >= ID_GSC_COLORS && m_Tube != nullptr)
+    {
         m_Tube->Color = GetCurrentColor();
+    }
 }
 
 void CGumpDye::GUMP_SLIDER_CLICK_EVENT_C
@@ -82,6 +86,7 @@ void CGumpDye::GUMP_SLIDER_MOVE_EVENT_C
     CGumpSelectColor::OnSliderMove(serial);
 
     if (m_Tube != nullptr)
+    {
         m_Tube->Color = GetCurrentColor();
+    }
 }
-

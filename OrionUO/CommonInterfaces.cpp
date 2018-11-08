@@ -24,7 +24,7 @@ IOrionString &IOrionString::operator()(const std::string &str)
     RELEASE_POINTER(m_DataA);
 
     m_Unicode = false;
-    if (str.length())
+    if (str.length() != 0u)
     {
         m_DataA = new char[str.length() + 1];
         memcpy(&m_DataA[0], &str[0], str.length());
@@ -39,7 +39,7 @@ IOrionString &IOrionString::operator()(const std::wstring &str)
     RELEASE_POINTER(m_DataW);
 
     m_Unicode = true;
-    if (str.length())
+    if (str.length() != 0u)
     {
         m_DataW = new wchar_t[str.length() + 1];
         memcpy(&m_DataW[0], &str[0], str.length() * 2);
@@ -48,7 +48,6 @@ IOrionString &IOrionString::operator()(const std::wstring &str)
 
     return *this;
 }
-
 
 void CDECL FUNCBODY_PushScissor(int x, int y, int width, int height)
 {
@@ -133,7 +132,6 @@ void CDECL FUNCBODY_DrawGumppic(
     g_Orion.DrawGump(graphic, color, x, y, width, height);
 }
 
-
 uint64_t CDECL FUNCBODY_GetLandFlags(unsigned short graphic)
 {
     return g_Orion.GetLandFlags(graphic);
@@ -170,9 +168,13 @@ void CDECL FUNCBODY_SetTargetData(unsigned char *buf, int size)
     reader.Move(1);
 
     if (*buf == 0x6C)
+    {
         g_Target.SetData(reader);
+    }
     else
+    {
         g_Target.SetMultiData(reader);
+    }
 }
 
 void CDECL FUNCBODY_SendTargetObject(unsigned int serial)
@@ -217,8 +219,10 @@ void CDECL FUNCBODY_SendUseSkill(int index)
 
 void CDECL FUNCBODY_SendAsciiSpeech(const char *text, unsigned short color)
 {
-    if (!color)
+    if (color == 0u)
+    {
         color = g_ConfigManager.SpeechColor;
+    }
 
     CPacketASCIISpeechRequest packet(text, ST_NORMAL, 3, color);
     UOMsg_Send(packet.Data().data(), packet.Data().size());
@@ -226,8 +230,10 @@ void CDECL FUNCBODY_SendAsciiSpeech(const char *text, unsigned short color)
 
 void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
 {
-    if (!color)
+    if (color == 0u)
+    {
         color = g_ConfigManager.SpeechColor;
+    }
 
     CPacketUnicodeSpeechRequest packet(text, ST_NORMAL, 3, color, (uint8_t *)g_Language.c_str());
     UOMsg_Send(packet.Data().data(), packet.Data().size());
@@ -284,7 +290,6 @@ void CDECL FUNCBODY_SecureTradingClose(unsigned int id1)
     }
 }
 
-
 IOrionString *CDECL FUNCBODY_GetClilocA(unsigned int clilocID, const char *defaultText)
 {
     return &g_OrionString(g_ClilocManager.Cliloc(g_Language)->GetA(clilocID, false, defaultText));
@@ -299,7 +304,6 @@ IOrionString *CDECL FUNCBODY_GetClilocArguments(unsigned int clilocID, const wch
 {
     return &g_OrionString(g_ClilocManager.ParseArgumentsToClilocString(clilocID, false, args));
 }
-
 
 int CDECL FUNCBODY_GetHuesCount()
 {
@@ -336,7 +340,6 @@ unsigned int CDECL FUNCBODY_GetPartialHueColor(unsigned short &c, unsigned short
     return g_ColorManager.GetPartialHueColor(c, color);
 }
 
-
 bool CDECL FUNCBODY_GetCanWalk(unsigned char &direction, int &x, int &y, char &z)
 {
     return g_PathFinder.CanWalk(direction, x, y, z);
@@ -350,7 +353,9 @@ bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
 {
     if (g_Player == nullptr)
+    {
         return false;
+    }
 
     Wisp::CPoint2Di startPoint(g_Player->GetX(), g_Player->GetY());
     if (!g_Player->m_Steps.empty())
@@ -362,7 +367,9 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
     }
 
     if (GetDistance(startPoint, Wisp::CPoint2Di(x, y)) <= distance)
+    {
         return true;
+    }
 
     bool result = PUSH_EVENT(
         UOMSG_PATHFINDING,
@@ -372,10 +379,14 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
     if (result)
     {
         while (g_PathFinder.AutoWalking)
+        {
             SDL_Delay(100);
+        }
 
         if (g_Player == nullptr)
+        {
             return false;
+        }
 
         Wisp::CPoint2Di p(g_Player->GetX(), g_Player->GetY());
         if (!g_Player->m_Steps.empty())
@@ -393,14 +404,15 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
 void CDECL FUNCBODY_GetStopAutowalk()
 {
     if (g_PathFinder.PathFindidngCanBeCancelled)
+    {
         g_PathFinder.StopAutoWalk();
+    }
 }
 
 bool CDECL FUNCBODY_GetAutowalking()
 {
     return g_PathFinder.AutoWalking;
 }
-
 
 void CDECL FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
 {
@@ -588,9 +600,13 @@ void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, ORION_RAW_ART_INFO &inf
             info.Size = (uint64_t)landData.DataSize;
 
             if (landData.UopBlock != nullptr)
+            {
                 info.CompressedSize = (uint64_t)landData.UopBlock->CompressedSize;
+            }
             else
+            {
                 info.CompressedSize = 0;
+            }
 
             return;
         }
@@ -613,9 +629,13 @@ void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, ORION_RAW_ART_INFO &i
             info.Size = (uint64_t)staticData.DataSize;
 
             if (staticData.UopBlock != nullptr)
+            {
                 info.CompressedSize = (uint64_t)staticData.UopBlock->CompressedSize;
+            }
             else
+            {
                 info.CompressedSize = 0;
+            }
 
             return;
         }
@@ -640,9 +660,13 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, ORION_RAW_GUMP_INFO &in
             info.Height = gumpData.Height;
 
             if (gumpData.UopBlock != nullptr)
+            {
                 info.CompressedSize = (uint64_t)gumpData.UopBlock->CompressedSize;
+            }
             else
+            {
                 info.CompressedSize = 0;
+            }
 
             return;
         }

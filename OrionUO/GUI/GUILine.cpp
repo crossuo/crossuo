@@ -12,8 +12,10 @@ CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygon
     ColorB = ToColorB(polygoneColor);
     ColorA = ToColorA(polygoneColor);
 
-    if (!ColorA)
+    if (ColorA == 0u)
+    {
         ColorA = 0xFF;
+    }
 }
 
 CGUILine::~CGUILine()
@@ -35,8 +37,9 @@ void CGUILine::Draw(bool checktrans)
         glDisable(GL_BLEND);
     }
     else
+    {
         g_GL.DrawLine(m_X, m_Y, TargetX, TargetY);
+    }
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-

@@ -67,7 +67,9 @@ void CGameObject::SetName(const string &newName)
             CServer *server = g_ServerList.GetSelectedServer();
 
             if (server != nullptr)
+            {
                 title += " (" + server->Name + ")";
+            }
 
             g_OrionWindow.SetTitle(title);
         }
@@ -84,13 +86,17 @@ void CGameObject::DrawObjectHandlesTexture()
     if (m_TextureObjectHalndes.Texture == 0)
     {
         if (NPC || IsCorpse())
+        {
             GenerateObjectHandlesTexture(ToWString(m_Name));
+        }
         else
         {
             wstring name = ToWString(m_Name);
-            if (!name.length())
+            if (name.length() == 0u)
+            {
                 name = g_ClilocManager.Cliloc(g_Language)
                            ->GetW(1020000 + Graphic, true, g_Orion.m_StaticData[Graphic].Name);
+            }
             GenerateObjectHandlesTexture(name);
         }
     }
@@ -108,7 +114,9 @@ void CGameObject::DrawObjectHandlesTexture()
         y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 8);
     }
     else
+    {
         y -= g_Orion.GetStaticArtDimension(Graphic).Height;
+    }
 
     m_TextureObjectHalndes.Draw(x, y);
 }
@@ -131,13 +139,17 @@ void CGameObject::SelectObjectHandlesTexture()
             y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 8);
         }
         else
+        {
             y -= g_Orion.GetStaticArtDimension(Graphic).Height;
+        }
 
         x = g_MouseManager.Position.X - x;
         y = g_MouseManager.Position.Y - y;
 
         if (x < 0 || x >= g_ObjectHandlesWidth || y < 0 || y >= g_ObjectHandlesHeight)
+        {
             return;
+        }
 
         if (g_ObjectHandlesBackgroundPixels[(y * g_ObjectHandlesWidth) + x] != 0)
         {
@@ -166,13 +178,17 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
     uint16_t flags = 0;
 
     if (g_FontManager.GetWidthW(font, text) > width)
+    {
         text = g_FontManager.GetTextByWidthW(font, text, width - 6, true);
+    }
 
     vector<uint32_t> textData = g_FontManager.GeneratePixelsW(
         font, textTexture, text.c_str(), color, cell, width, tat, flags);
 
-    if (!textData.size())
+    if (textData.empty())
+    {
         return;
+    }
 
     static const int size = g_ObjectHandlesWidth * g_ObjectHandlesHeight;
     uint16_t pixels[size] = { 0 };
@@ -184,11 +200,15 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
     if (NPC)
     {
         if (IsPlayer())
+        {
             color = 0x0386;
+        }
         else
+        {
             color = g_ConfigManager.GetColorByNotoriety(GameCharacterPtr()->Notoriety);
+        }
 
-        if (color)
+        if (color != 0u)
         {
             for (int x = 0; x < g_ObjectHandlesWidth; x++)
             {
@@ -196,14 +216,16 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
                 {
                     uint16_t &pixel = pixels[(y * g_ObjectHandlesWidth) + x];
 
-                    if (pixel)
+                    if (pixel != 0u)
                     {
                         uint8_t r = (pixel & 0x1F);
                         uint8_t g = ((pixel >> 5) & 0x1F);
                         uint8_t b = ((pixel >> 10) & 0x1F);
 
                         if (r == g && r == b)
+                        {
                             pixel = g_ColorManager.GetColor16(pixel, color) | 0x8000;
+                        }
                     }
                 }
             }
@@ -221,11 +243,13 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
             int gumpDataY = (int)y + 1;
 
             if (gumpDataY >= g_ObjectHandlesHeight)
+            {
                 break;
+            }
 
             uint32_t &pixel = textData[(y * textTexture.Width) + x];
 
-            if (pixel)
+            if (pixel != 0u)
             {
                 uint8_t *bytes = (uint8_t *)&pixel;
                 uint8_t buf = bytes[0];
@@ -251,7 +275,9 @@ void CGameObject::AddText(CTextData *msg)
     m_TextControl->Add(msg);
 
     if (Container == 0xFFFFFFFF)
+    {
         Changed = true;
+    }
     else
     {
         UpdateTextCoordinates();
@@ -310,10 +336,14 @@ void CGameObject::ClearUnequipped()
             if (((CGameItem *)obj)->Layer != OL_NONE)
             {
                 if (newFirstItem == nullptr)
+                {
                     newFirstItem = obj;
+                }
             }
             else
+            {
                 g_World->RemoveObject(obj);
+            }
 
             obj = next;
         }
@@ -335,7 +365,9 @@ void CGameObject::ClearNotOpenedItems()
 
             if (!obj->NPC && !((CGameItem *)obj)->Opened &&
                 ((CGameItem *)obj)->Layer != OL_BACKPACK)
+            {
                 g_World->RemoveObject(obj);
+            }
 
             obj = next;
         }
@@ -346,18 +378,24 @@ bool CGameObject::Poisoned()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_7000)
+    {
         return SA_Poisoned;
-    else
-        return (m_Flags & 0x04);
+    }
+    {
+        return (m_Flags & 0x04) != 0;
+    }
 }
 
 bool CGameObject::Flying()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_7000)
-        return (m_Flags & 0x04);
-    else
+    {
+        return (m_Flags & 0x04) != 0;
+    }
+    {
         return false;
+    }
 }
 
 int CGameObject::IsGold(uint16_t graphic)
@@ -385,16 +423,18 @@ uint16_t CGameObject::GetDrawGraphic(bool &doubleDraw)
     uint16_t result = Graphic;
 
     const uint16_t graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },
-                                                 { 0x0EEA, 0x0EEB, 0x0EEC },
-                                                 { 0x0EF0, 0x0EF1, 0x0EF2 } };
+                                                   { 0x0EEA, 0x0EEB, 0x0EEC },
+                                                   { 0x0EF0, 0x0EF1, 0x0EF2 } };
 
-    if (index)
+    if (index != 0)
     {
         int graphicIndex = (int)(Count > 1) + (int)(Count > 5);
         result = graphicAssociateTable[index - 1][graphicIndex];
     }
     else
+    {
         doubleDraw = IsStackable() && (Count > 1);
+    }
 
     return result;
 }
@@ -423,7 +463,9 @@ void CGameObject::DrawEffects(int x, int y)
             g_Orion.DrawGump(graphic, effect->Color, x - (size.Width / 2), y - size.Height);
         }
         else
+        {
             g_Orion.DrawStaticArt(effect->GetCurrentGraphic(), effect->Color, x, y);
+        }
 
         effect->RemoveRenderMode();
     }
@@ -470,14 +512,18 @@ void CGameObject::RemoveEffect(CGameEffect *effect)
         m_Effects = (CGameEffect *)effect->m_Next;
 
         if (m_Effects != nullptr)
+        {
             m_Effects->m_Prev = nullptr;
+        }
     }
     else
     {
         effect->m_Prev->m_Next = effect->m_Next;
 
         if (effect->m_Next != nullptr)
+        {
             effect->m_Next->m_Prev = effect->m_Prev;
+        }
     }
 
     effect->m_Next = nullptr;
@@ -503,7 +549,9 @@ void CGameObject::AddObject(CGameObject *obj)
         CGameObject *item = (CGameObject *)m_Next;
 
         while (item->m_Next != nullptr)
+        {
             item = (CGameObject *)item->m_Next;
+        }
 
         item->m_Next = obj;
         obj->m_Next = nullptr;
@@ -517,7 +565,9 @@ void CGameObject::AddItem(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
     if (obj->Container != 0xFFFFFFFF)
+    {
         return;
+    }
 
     g_World->RemoveFromContainer(obj);
 
@@ -543,7 +593,9 @@ void CGameObject::Reject(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
     if (obj->Container != Serial)
+    {
         return;
+    }
 
     if (m_Items != nullptr)
     {
@@ -555,7 +607,9 @@ void CGameObject::Reject(CGameObject *obj)
                 m_Items->m_Prev = nullptr;
             }
             else
+            {
                 m_Items = nullptr;
+            }
         }
         else
         {
@@ -566,11 +620,15 @@ void CGameObject::Reject(CGameObject *obj)
                     obj->m_Prev->m_Next = obj->m_Next;
                     obj->m_Next->m_Prev = obj->m_Prev;
                 }
-                else //WTF???
+                else
+                { //WTF???
                     obj->m_Next->m_Prev = nullptr;
+                }
             }
             else if (obj->m_Prev != nullptr)
+            {
                 obj->m_Prev->m_Next = nullptr;
+            }
         }
     }
 
@@ -585,7 +643,9 @@ CGameObject *CGameObject::GetTopObject()
     CGameObject *obj = this;
 
     while (obj->Container != 0xFFFFFFFF)
+    {
         obj = g_World->FindWorldObject(obj->Container);
+    }
 
     return obj;
 }
@@ -596,7 +656,9 @@ CGameItem *CGameObject::FindLayer(int layer)
     QFOR(obj, m_Items, CGameItem *)
     {
         if (obj->Layer == layer)
+        {
             return obj;
+        }
     }
 
     return nullptr;
@@ -606,8 +668,10 @@ bool CGameObject::Caller()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_7000)
+    {
         return pvpCaller;
-    else
+    }
+    {
         return false;
+    }
 }
-

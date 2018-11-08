@@ -400,19 +400,27 @@ void CBlowfishCrypt::InitTables()
         {
             uint32_t mask = *pkey++;
             if (pkey >= pkey_end)
+            {
                 pkey = g_key_table[key_index];
+            }
 
             mask = (mask << 8) | *pkey++;
             if (pkey >= pkey_end)
+            {
                 pkey = g_key_table[key_index];
+            }
 
             mask = (mask << 8) | *pkey++;
             if (pkey >= pkey_end)
+            {
                 pkey = g_key_table[key_index];
+            }
 
             mask = (mask << 8) | *pkey++;
             if (pkey >= pkey_end)
+            {
                 pkey = g_key_table[key_index];
+            }
 
             p_table[key_index][i] ^= mask;
         }
@@ -514,7 +522,9 @@ void CBlowfishCrypt::Encrypt(uint8_t *in, uint8_t *out, int len)
 void CBlowfishCrypt::Init()
 {
     if (!m_tables_ready)
+    {
         InitTables();
+    }
 
     m_table_index = CRYPT_GAMETABLE_START;
     memcpy(m_seed, g_seed_table[0][m_table_index][0], CRYPT_GAMESEED_LENGTH);
@@ -541,7 +551,9 @@ void CTwofishCrypt::Init(uint8_t seed[4])
     reKey(&ki);
 
     for (int i = 0; i < 256; i++)
+    {
         m_subData3[i] = i;
+    }
 
     blockEncrypt(&ci, &ki, m_subData3, 256 * 8, tmpBuff);
 
@@ -551,21 +563,22 @@ void CTwofishCrypt::Init(uint8_t seed[4])
     dwIndex = 0;
     m_use_md5 = false;
     uint8_t l_sm_bData[] = { 0x05, 0x92, 0x66, 0x23, 0x67, 0x14, 0xE3, 0x62,
-                           0xDC, 0x60, 0x8C, 0xD6, 0xFE, 0x7C, 0x25, 0x69 };
+                             0xDC, 0x60, 0x8C, 0xD6, 0xFE, 0x7C, 0x25, 0x69 };
     memcpy(sm_bData, l_sm_bData, 0x10);
 }
 
 void CTwofishCrypt::Init_MD5()
 {
-    if (m_md5 != nullptr)
+    {
         delete m_md5;
+    }
     m_md5 = new MD5Crypt();
     m_md5->Init(m_subData3, 256);
     m_use_md5 = true;
     memcpy(sm_bData, m_md5->GetMD5(), 0x10);
 }
 
-void CTwofishCrypt::Encrypt(uint8_t *in, uint8_t *out, int size)
+void CTwofishCrypt::Encrypt(const uint8_t *in, uint8_t *out, int size)
 {
     uint8_t tmpBuff[0x100] = { 0 };
 
@@ -581,7 +594,7 @@ void CTwofishCrypt::Encrypt(uint8_t *in, uint8_t *out, int size)
     }
 }
 
-void CTwofishCrypt::Decrypt(uint8_t *in, uint8_t *out, int size)
+void CTwofishCrypt::Decrypt(const uint8_t *in, uint8_t *out, int size)
 {
     uint32_t dwTmpIndex = dwIndex;
     for (int i = 0; i < size; i++)

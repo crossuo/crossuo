@@ -36,5 +36,5 @@ void tcp_close(tcp_socket socket);
 typedef void *icmp_handle;
 
 icmp_handle icmp_open();
-int icmp_query(icmp_handle handle, const char *ip, uint32_t *latency);
+int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems);
 void icmp_close(icmp_handle handle);

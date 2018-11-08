@@ -87,8 +87,10 @@ void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const wstring &text)
     DEBUG_TRACE_FUNCTION;
     DWORD ticks = 0xFFFFFFFF;
 
-    if (timer)
+    if (timer != 0u)
+    {
         ticks = g_Ticks + (timer * 1000);
+    }
 
     QFOR(item, m_Items, CBaseGUI *)
     {
@@ -132,13 +134,17 @@ void CGumpBuff::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Serial == ID_GB_NEXT_WINDOW_DIRECTION)
+    {
         g_ToolTip.Set(L"Change buff window gump");
-    else if (g_SelectedObject.Object)
+    }
+    else if (g_SelectedObject.Object != nullptr)
     {
         QFOR(item, m_Items, CBaseGUI *)
         {
             if (item != g_SelectedObject.Object)
+            {
                 continue;
+            }
 
             if (item->Type == GOT_BUFF)
             {
@@ -165,12 +171,16 @@ void CGumpBuff::InitToolTip()
                     g_ToolTip.Use = true;
                 }
                 else
+                {
                     g_ToolTip.Set(buff->Text);
+                }
 
                 g_FontManager.SetUseHTML(false);
             }
             else
+            {
                 g_ToolTip.Set(L"Buffs and Debuffs will appear here.", 120);
+            }
 
             break;
         }
@@ -246,7 +256,9 @@ void CGumpBuff::GetGumpStatus(
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type != GOT_BUFF)
+        {
             continue;
+        }
 
         bool moved = false;
 
@@ -255,45 +267,69 @@ void CGumpBuff::GetGumpStatus(
         if (useX)
         {
             if (decX)
+            {
                 itemsOfs.X -= gumpDim.Width + BUFF_ITEM_STEP_OFFSET_X;
+            }
             else
+            {
                 itemsOfs.X += gumpDim.Width + BUFF_ITEM_STEP_OFFSET_X;
+            }
         }
         else
         {
             if (decY)
+            {
                 itemsOfs.Y -= gumpDim.Height + BUFF_ITEM_STEP_OFFSET_Y;
+            }
             else
+            {
                 itemsOfs.Y += gumpDim.Height + BUFF_ITEM_STEP_OFFSET_Y;
+            }
         }
     }
 
     if (useX)
     {
         if (decX)
+        {
             itemsOfs.X -= 20;
+        }
         else
+        {
             itemsOfs.X += 20;
+        }
     }
     else
     {
         if (decY)
+        {
             itemsOfs.Y -= 20;
+        }
         else
+        {
             itemsOfs.Y += 20;
+        }
     }
 
     if (itemsOfs.X < startGump.X)
+    {
         startGump.X = itemsOfs.X;
+    }
 
     if (itemsOfs.Y < startGump.Y)
+    {
         startGump.Y = itemsOfs.Y;
+    }
 
     if (itemsOfs.X > endGump.Width)
+    {
         endGump.Width = itemsOfs.X;
+    }
 
     if (itemsOfs.Y > endGump.Height)
+    {
         endGump.Height = itemsOfs.Y;
+    }
 }
 
 void CGumpBuff::PrepareContent()
@@ -343,7 +379,9 @@ void CGumpBuff::UpdateContent()
         if (item->Type != GOT_BUFF)
         {
             if (item->Type == GOT_BLENDING && !item->Enabled)
+            {
                 gui = item;
+            }
 
             continue;
         }
@@ -357,22 +395,32 @@ void CGumpBuff::UpdateContent()
         if (useX)
         {
             if (decX)
+            {
                 startCoordinates.X -= gumpDim.Width + BUFF_ITEM_STEP_OFFSET_X;
+            }
             else
+            {
                 startCoordinates.X += gumpDim.Width + BUFF_ITEM_STEP_OFFSET_X;
+            }
         }
         else
         {
             if (decY)
+            {
                 startCoordinates.Y -= gumpDim.Height + BUFF_ITEM_STEP_OFFSET_Y;
+            }
             else
+            {
                 startCoordinates.Y += gumpDim.Height + BUFF_ITEM_STEP_OFFSET_Y;
+            }
         }
     }
 
     //Выключение прозрачности в задницу очереди
     if (gui != nullptr)
+    {
         MoveToBack(gui);
+    }
 }
 
 void CGumpBuff::GUMP_BUTTON_EVENT_C
@@ -408,6 +456,7 @@ void CGumpBuff::GUMP_BUTTON_EVENT_C
         WantUpdateContent = true;
     }
     else if (serial == ID_GB_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
 }
-

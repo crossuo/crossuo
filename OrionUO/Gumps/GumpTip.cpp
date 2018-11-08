@@ -63,9 +63,13 @@ void CGumpTip::GUMP_BUTTON_EVENT_C
         WantRedraw = true;
     }
     else if (serial == ID_GT_PREV_GUMP)
+    {
         SendTipRequest(0);
+    }
     else if (serial == ID_GT_NEXT_GUMP)
+    {
         SendTipRequest(1);
+    }
 }
 
 bool CGumpTip::OnLeftMouseButtonDoubleClick()
@@ -92,4 +96,3 @@ void CGumpTip::SendTipRequest(uint8_t flag)
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-

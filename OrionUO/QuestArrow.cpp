@@ -29,19 +29,29 @@ void CQuestArrow::Draw()
         int y = g_RenderBounds.GameWindowCenterY + ((gox + goy) * 22) - (size.Height / 2);
 
         if (x < g_RenderBounds.GameWindowPosX)
+        {
             x = g_RenderBounds.GameWindowPosX;
+        }
         else if (x > g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth - size.Width)
+        {
             x = g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth - size.Width;
+        }
 
         if (y < g_RenderBounds.GameWindowPosY)
+        {
             y = g_RenderBounds.GameWindowPosY;
+        }
         else if (y > g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - size.Height)
+        {
             y = g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - size.Height;
+        }
 
         if (Timer < g_Ticks)
         {
             if (Timer + 120 < g_Ticks)
+            {
                 Timer = g_Ticks + 1000;
+            }
 
             g_ColorizerShader.Use();
 
@@ -50,7 +60,8 @@ void CQuestArrow::Draw()
             UnuseShader();
         }
         else
+        {
             g_Orion.DrawGump(gumpID, 0, x, y);
+        }
     }
 }
-

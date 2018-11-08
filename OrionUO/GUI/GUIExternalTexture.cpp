@@ -27,15 +27,23 @@ Wisp::CSize CGUIExternalTexture::GetSize()
 
     if (m_Texture != nullptr)
     {
-        if (DrawWidth)
+        if (DrawWidth != 0)
+        {
             size.Width = DrawWidth;
+        }
         else
+        {
             size.Width = m_Texture->Width;
+        }
 
-        if (DrawHeight)
+        if (DrawHeight != 0)
+        {
             size.Height = DrawHeight;
+        }
         else
+        {
             size.Height = m_Texture->Height;
+        }
     }
 
     return size;
@@ -48,14 +56,20 @@ void CGUIExternalTexture::SetShaderMode()
     if (Color != 0)
     {
         if (PartialHue)
+        {
             glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+        }
         else
+        {
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+        }
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
+    {
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+    }
 }
 
 void CGUIExternalTexture::Draw(bool checktrans)
@@ -65,27 +79,37 @@ void CGUIExternalTexture::Draw(bool checktrans)
     {
         SetShaderMode();
 
-        if (DrawWidth || DrawHeight)
+        if ((DrawWidth != 0) || (DrawHeight != 0))
         {
             CGLTexture tex;
             tex.Texture = m_Texture->Texture;
 
-            if (DrawWidth)
+            if (DrawWidth != 0)
+            {
                 tex.Width = DrawWidth;
+            }
             else
+            {
                 tex.Width = m_Texture->Width;
+            }
 
-            if (DrawHeight)
+            if (DrawHeight != 0)
+            {
                 tex.Height = DrawHeight;
+            }
             else
+            {
                 tex.Height = m_Texture->Height;
+            }
 
             g_GL.GL1_Draw(tex, m_X, m_Y);
 
             tex.Texture = 0;
         }
         else
+        {
             m_Texture->Draw(m_X, m_Y, checktrans);
+        }
     }
 }
 
@@ -93,8 +117,9 @@ bool CGUIExternalTexture::Select()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_Texture != nullptr)
+    {
         return m_Texture->Select(m_X, m_Y, !CheckPolygone);
+    }
 
     return false;
 }
-

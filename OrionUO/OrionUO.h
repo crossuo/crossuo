@@ -220,7 +220,7 @@ public:
     void ResumeSound();
     void PauseSound();
     void PlayMusic(int index, bool warmode = false);
-    void PlaySoundEffect(uint16_t index, float volume = -1);
+    void PlaySoundEffect(uint16_t id, float volume = -1);
     void AdjustSoundEffects(int ticks, float volume = -1);
     void RemoveRangedObjects();
     void ClearWorld();

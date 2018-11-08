@@ -33,7 +33,9 @@ void CDataWritter::Resize(size_t newSize, bool resetPtr)
     m_Data.resize(newSize, 0);
 
     if (resetPtr)
+    {
         Ptr = &m_Data[0];
+    }
 }
 
 void CDataWritter::Move(const intptr_t &offset)
@@ -42,10 +44,14 @@ void CDataWritter::Move(const intptr_t &offset)
     if (AutoResize)
     {
         for (int i = offset; i < 0; i++)
+        {
             m_Data.push_back(0);
+        }
     }
     else if (Ptr != nullptr)
+    {
         Ptr += offset;
+    }
 }
 
 void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t &offset)
@@ -54,14 +60,18 @@ void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t 
     if (AutoResize)
     {
         for (int i = size - 1; i >= 0; i--)
+        {
             m_Data.push_back(data[i]);
+        }
     }
     else if (Ptr != nullptr)
     {
         uint8_t *ptr = Ptr + offset + size - 1;
 
         for (int i = size - 1; i >= 0; i--)
+        {
             *(ptr - i) = data[i];
+        }
 
         Ptr += size;
     }
@@ -73,14 +83,18 @@ void CDataWritter::WriteDataLE(const uint8_t *data, size_t size, const intptr_t 
     if (AutoResize)
     {
         for (int i = 0; i < (int)size; i++)
+        {
             m_Data.push_back(data[i]);
+        }
     }
     else if (Ptr != nullptr)
     {
         uint8_t *ptr = Ptr + offset;
 
         for (int i = 0; i < (int)size; i++)
+        {
             ptr[i] = data[i];
+        }
 
         Ptr += size;
     }
@@ -90,11 +104,15 @@ void CDataWritter::WriteString(
     const string &val, size_t length, bool nullTerminated, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
-    if (!length)
+    if (length == 0u)
+    {
         length = val.length();
+    }
 
     if (length <= val.length())
+    {
         WriteDataLE((uint8_t *)val.c_str(), length, offset);
+    }
     else
     {
         WriteDataLE((uint8_t *)val.c_str(), val.length(), offset);
@@ -112,8 +130,10 @@ void CDataWritter::WriteWString(
     const wstring &val, size_t length, bool bigEndian, bool nullTerminated, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
-    if (!length)
+    if (length == 0u)
+    {
         length = val.length();
+    }
 
     Ptr += offset;
     size_t size = val.length();
@@ -123,12 +143,16 @@ void CDataWritter::WriteWString(
         if (bigEndian)
         {
             for (int i = 0; i < (int)length; i++)
+            {
                 WriteInt16BE(val[i]);
+            }
         }
         else
         {
             for (int i = 0; i < (int)length; i++)
+            {
                 WriteInt16LE(val[i]);
+            }
         }
     }
     else
@@ -136,12 +160,16 @@ void CDataWritter::WriteWString(
         if (bigEndian)
         {
             for (int i = 0; i < (int)size; i++)
+            {
                 WriteInt16BE(val[i]);
+            }
         }
         else
         {
             for (int i = 0; i < (int)size; i++)
+            {
                 WriteInt16LE(val[i]);
+            }
         }
 
         Move((length - size) * 2);
@@ -196,7 +224,9 @@ void CDataReader::ReadDataBE(uint8_t *data, size_t size, const intptr_t &offset)
         if (ptr >= Start && ptr <= End)
         {
             for (int i = 0; i < (int)size; i++)
+            {
                 data[i] = *(ptr - i);
+            }
 
             Ptr += size;
         }
@@ -222,13 +252,15 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
     DATASTREAM_DEBUG;
 
     uint8_t *ptr = Ptr + offset;
-    if (!size)
+    if (size == 0u)
     {
         if (ptr >= Start && ptr <= End)
         {
             uint8_t *buf = ptr;
-            while (buf <= End && *buf)
+            while (buf <= End && (*buf != 0u))
+            {
                 buf++;
+            }
             size = (buf - ptr) + 1;
         }
     }
@@ -248,7 +280,7 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
     DATASTREAM_DEBUG;
 
     uint8_t *ptr = Ptr + offset;
-    if (!size)
+    if (size == 0u)
     {
         if (ptr >= Start && ptr <= End)
         {
@@ -257,8 +289,10 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
             {
                 uint16_t val = (bigEndian ? ((buf[0] << 8) | buf[1]) : *(uint16_t *)buf);
                 buf += 2;
-                if (!val)
+                if (val == 0u)
+                {
                     break;
+                }
             }
 
             size = ((buf - ptr) / 2);
@@ -271,12 +305,16 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
         if (bigEndian)
         {
             for (int i = 0; i < (int)size; i++)
+            {
                 buf[i] = (wchar_t)ReadInt16BE(offset);
+            }
         }
         else
         {
             for (int i = 0; i < (int)size; i++)
+            {
                 buf[i] = (wchar_t)ReadInt16LE(offset);
+            }
         }
     }
     buf[size] = 0;
@@ -294,4 +332,4 @@ wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
     return ReadWString(size, true, offset);
 }
 
-};
+}; // namespace Wisp

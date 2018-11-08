@@ -25,27 +25,36 @@ void CGUIGumppicHightlighted::SetShaderMode()
     else if (Color != 0)
     {
         if (PartialHue)
+        {
             glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+        }
         else
+        {
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+        }
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
+    {
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+    }
 }
 
 void CGUIGumppicHightlighted::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
+    {
         g_SelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUIGumppicHightlighted::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
+    {
         g_LastSelectedObject.Gump->WantRedraw = true;
+    }
 }
-

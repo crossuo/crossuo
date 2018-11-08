@@ -4,8 +4,7 @@
 #include <SDL_timer.h>
 
 CMapBlock::CMapBlock(int index)
-    : CBaseQueueItem()
-    , Index(index)
+    : Index(index)
     , LastAccessTime(SDL_GetTicks())
 {
     DEBUG_TRACE_FUNCTION;
@@ -13,7 +12,9 @@ CMapBlock::CMapBlock(int index)
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
+        {
             Block[i][j] = nullptr;
+        }
     }
 }
 
@@ -59,7 +60,9 @@ bool CMapBlock::HasNoExternalData()
                  obj = obj->m_NextXY)
             {
                 if (!obj->IsLandObject() && !obj->IsStaticObject())
+                {
                     return false;
+                }
             }
         }
     }
@@ -74,13 +77,17 @@ uint16_t CMapBlock::GetRadarColor(int x, int y)
 
     //Получаем указатель на последний элемент списка
     while (obj != nullptr && obj->m_NextXY != nullptr)
+    {
         obj = obj->m_NextXY;
+    }
 
     //Пройдемся по списку с конца до начала и вернем первый подходящий ИД
     for (; obj != nullptr; obj = obj->m_PrevXY)
     {
         if (obj->NoDrawTile)
+        {
             continue;
+        }
 
         switch (obj->RenderType)
         {
@@ -157,7 +164,9 @@ void CMapBlock::CreateLandTextureRect()
                             if (currentZ == leftZ && currentZ == rightZ && currentZ == bottomZ)
                             {
                                 for (int k = 0; k < 4; k++)
+                                {
                                     vec[curI][curJ][k].Link(0.0, 0.0, 1.0);
+                                }
                             }
                             else
                             {
@@ -213,7 +222,7 @@ void CMapBlock::CreateLandTextureRect()
                         GLuint vertexBuffer = obj->VertexBuffer;
                         GLuint normalBuffer = obj->NormalBuffer;
 
-                        if (!positionBuffer || !vertexBuffer || !normalBuffer)
+                        if ((positionBuffer == 0u) || (vertexBuffer == 0u) || (normalBuffer == 0u))
                         {
                             GLuint vbo[3] = { 0 };
                             glGenBuffers(3, &vbo[0]);
@@ -281,7 +290,9 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
         for (int j = -1; j < 2 && !result; j++)
         {
             if (recurse)
+            {
                 result = TestStretched(x + (int)i, y + (int)j, z, map, false);
+            }
             else
             {
                 char testZ = GetLandZ(x + (int)i, y + (int)j, map);
@@ -299,13 +310,17 @@ char CMapBlock::GetLandZ(int x, int y, int map)
     DEBUG_TRACE_FUNCTION;
 
     if (x < 0 || y < 0)
+    {
         return -125;
+    }
 
     CIndexMap *blockIndex = g_MapManager.GetIndex(map, x / 8, y / 8);
 
     //Проверки актуальности данных
     if (blockIndex == nullptr || blockIndex->MapAddress == 0)
+    {
         return -125;
+    }
 
     int mX = x % 8;
     int mY = y % 8;
@@ -323,7 +338,9 @@ CLandObject *CMapBlock::GetLand(int x, int y)
     {
         //Если земля - можно прервать поиск
         if (obj->IsLandObject())
+        {
             break;
+        }
 
         obj = (CMapObject *)obj->m_Next;
     }
@@ -341,9 +358,13 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
     if (item->IsLandObject())
     {
         if (((CLandObject *)item)->IsStretched)
+        {
             priorityZ = ((CLandObject *)item)->AverageZ - 1;
+        }
         else
+        {
             priorityZ--;
+        }
     }
     else if (item->IsStaticGroupObject())
     {
@@ -352,24 +373,38 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
             //priorityZ++;
 
             if (((CGameObject *)item)->NPC || ((CGameObject *)item)->IsCorpse())
+            {
                 priorityZ++;
+            }
             else
+            {
                 goto process_static;
+            }
         }
-        else if (item->IsMultiObject() && (((CMultiObject *)item)->State & CHMOF_GENERIC_INTERNAL))
+        else if (
+            item->IsMultiObject() &&
+            ((((CMultiObject *)item)->State & CHMOF_GENERIC_INTERNAL) != 0))
+        {
             priorityZ--;
+        }
         else
         {
         process_static:
             if (item->IsBackground())
+            {
                 priorityZ--;
+            }
 
-            if (((CRenderStaticObject *)item)->GetStaticHeight())
+            if (((CRenderStaticObject *)item)->GetStaticHeight() != 0u)
+            {
                 priorityZ++;
+            }
         }
     }
     else if (item->IsEffectObject())
+    {
         priorityZ += 2;
+    }
 
     item->PriorityZ = priorityZ;
 
@@ -378,15 +413,23 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
     if (obj == item)
     {
         if (obj->m_Prev != nullptr)
+        {
             obj = (CRenderWorldObject *)obj->m_Prev;
+        }
         else if (obj->m_Next != nullptr)
+        {
             obj = (CRenderWorldObject *)obj->m_Next;
+        }
         else
+        {
             return;
+        }
     }
 
     while (obj != nullptr && obj->m_PrevXY != nullptr)
+    {
         obj = obj->m_PrevXY;
+    }
 
     CRenderWorldObject *found = nullptr;
     CRenderWorldObject *start = obj;
@@ -397,7 +440,9 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 
         if (testPriorityZ > priorityZ ||
             (testPriorityZ == priorityZ && item->IsLandObject() && !obj->IsLandObject()))
+        {
             break;
+        }
 
         found = obj;
         obj = obj->m_NextXY;
@@ -411,7 +456,9 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
         found->m_NextXY = item;
 
         if (next != nullptr)
+        {
             next->m_PrevXY = item;
+        }
     }
     else if (start != nullptr)
     {
@@ -428,7 +475,9 @@ CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 
     //Найдем указатель на первый элемент списка рендера
     while (obj != nullptr && obj->m_PrevXY != nullptr)
+    {
         obj = obj->m_PrevXY;
+    }
 
     return obj;
 }
@@ -459,8 +508,10 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
 
                 return obj;
             }
-            else if (item->m_Next == nullptr)
+            if (item->m_Next == nullptr)
+            {
                 break;
+            }
 
             item = (CMapObject *)item->m_Next;
         }
@@ -472,7 +523,9 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
         obj->m_Prev = item;
 
         if (next != nullptr)
+        {
             next->m_Prev = obj;
+        }
 
         AddRender(obj, x, y);
     }

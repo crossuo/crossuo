@@ -6,7 +6,6 @@
 
 namespace Wisp
 {
-
 CConnection::CConnection()
 {
     DEBUG_TRACE_FUNCTION;
@@ -31,16 +30,24 @@ bool CConnection::Connect(const string &address, uint16_t port)
 {
     DEBUG_TRACE_FUNCTION;
     if (Connected)
+    {
         return false;
+    }
 
     if (m_Socket == nullptr)
+    {
         m_Socket = tcp_open();
+    }
 
     if (m_Socket == nullptr)
+    {
         return false;
+    }
 
     if (!tcp_connect(m_Socket, address.c_str(), port))
+    {
         return false;
+    }
 
     Port = port;
     Connected = true;
@@ -67,7 +74,9 @@ bool CConnection::ReadyRead()
 {
     DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
+    {
         return false;
+    }
 
     DataReady = tcp_select(m_Socket);
     if (DataReady == -1)
@@ -100,10 +109,8 @@ bool CConnection::Read(int maxSize)
             m_MessageParser->Append(data);
             return true;
         }
-        else
-        {
-            LOG("CConnection::Read, bad size=%i\n", size);
-        }
+
+        LOG("CConnection::Read, bad size=%i\n", size);
     }
     else
     {
@@ -117,7 +124,9 @@ int CConnection::Send(uint8_t *data, int size)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
+    {
         return 0;
+    }
 
     const int sent = tcp_send(m_Socket, data, size);
     //LOG("CConnection::Send=>%i\n", sent);
@@ -127,11 +136,13 @@ int CConnection::Send(uint8_t *data, int size)
 int CConnection::Send(const vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
-    if (!data.size())
+    if (data.empty())
+    {
         return 0;
+    }
 
     const int sent = Send((uint8_t *)&data[0], (int)data.size());
     LOG("CConnection::Send=>%i\n", sent);
     return sent;
 }
-};
+}; // namespace Wisp

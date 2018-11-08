@@ -2,7 +2,6 @@
 
 namespace Wisp
 {
-
 CPacketMessage::CPacketMessage(bool bigEndian)
     : BigEndian(bigEndian)
 {
@@ -49,8 +48,10 @@ vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffse
     DEBUG_TRACE_FUNCTION;
     vector<uint8_t> result;
 
-    if (!m_Data.size())
+    if (m_Data.empty())
+    {
         return result;
+    }
 
     int offsetToSize = 0;
     int wantSize = reader->GetPacketSize(m_Data, offsetToSize);
@@ -58,22 +59,32 @@ vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffse
     if (wantSize == PACKET_VARIABLE_SIZE)
     {
         if (m_Data.size() < 3)
+        {
             return result;
+        }
 
         uint8_t *data = &m_Data[1];
 
         if (BigEndian)
+        {
             wantSize = (data[0] << 8) | data[1];
+        }
         else
+        {
             wantSize = (data[1] << 8) | data[0];
+        }
 
         dataOffset = offsetToSize + 2;
     }
     else
+    {
         dataOffset = offsetToSize;
+    }
 
     if ((int)m_Data.size() < wantSize)
+    {
         return result;
+    }
 
     result.insert(result.begin(), m_Data.begin(), m_Data.begin() + wantSize);
 
@@ -82,5 +93,4 @@ vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffse
     return result;
 }
 
-};
-
+}; // namespace Wisp

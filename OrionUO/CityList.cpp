@@ -42,7 +42,9 @@ CCityItem *CCityList::GetCity(int index)
     DEBUG_TRACE_FUNCTION;
 
     if (index < (int)m_CityList.size())
+    {
         return m_CityList[index];
+    }
 
     return nullptr;
 }
@@ -50,9 +52,11 @@ CCityItem *CCityList::GetCity(int index)
 void CCityList::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     for (auto i = m_CityList.begin(); i != m_CityList.end(); ++i)
+    {
         delete *i;
+    }
 
     m_CityList.clear();
 }

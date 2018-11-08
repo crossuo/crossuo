@@ -41,4 +41,3 @@ void CClickObject::Init(CRenderObject *obj, CGump *gump)
     Y = 0;
     Page = 0;
 }
-

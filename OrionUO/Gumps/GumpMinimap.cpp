@@ -88,8 +88,7 @@ void CGumpMinimap::GenerateMap()
 		Wisp::CPoint2Di(2, 0)
 	};*/
 
-    const Wisp::CPoint2Di originalOffsetTable[2] = { Wisp::CPoint2Di(0, 0),
-                                                              Wisp::CPoint2Di(0, 1) };
+    const Wisp::CPoint2Di originalOffsetTable[2] = { Wisp::CPoint2Di(0, 0), Wisp::CPoint2Di(0, 1) };
 
     if (g_Player != nullptr)
     {
@@ -107,8 +106,10 @@ void CGumpMinimap::GenerateMap()
 
     vector<uint16_t> data = g_UOFileReader.GetGumpPixels(io);
 
-    if (!data.size())
+    if (data.empty())
+    {
         return;
+    }
 
     int blockOffsetX = gumpWidth / 4;
     int blockOffsetY = gumpHeight / 4;
@@ -125,10 +126,14 @@ void CGumpMinimap::GenerateMap()
     int maxBlockY = ((LastY + blockOffsetY) / 8) + 1;
 
     if (minBlockX < 0)
+    {
         minBlockX = 0;
+    }
 
     if (minBlockY < 0)
+    {
         minBlockY = 0;
+    }
 
     int map = g_MapManager.GetActualMap();
     uint32_t maxBlockIndex = g_MapManager.MaxBlockIndex;
@@ -143,7 +148,9 @@ void CGumpMinimap::GenerateMap()
             uint32_t blockIndex = blockIndexOffset + j;
 
             if (blockIndex >= maxBlockIndex)
+            {
                 break;
+            }
 
             RADAR_MAP_BLOCK mb = { 0 };
             g_MapManager.GetRadarMapBlock(i, j, mb);
@@ -171,17 +178,21 @@ void CGumpMinimap::GenerateMap()
                     {
                         uint16_t multiColor = mapBlock->GetRadarColor((int)x, (int)y);
 
-                        if (multiColor)
+                        if (multiColor != 0u)
                         {
                             color = multiColor;
-                            isLand = false;
+                            isLand = 0;
                         }
                     }
 
-                    if (!isLand)
+                    if (isLand == 0)
+                    {
                         color = g_Orion.GetSeasonGraphic(color) + 0x4000;
+                    }
                     else
+                    {
                         color = g_Orion.GetLandSeasonGraphic(color);
+                    }
 
                     int tableSize = 2;
                     const Wisp::CPoint2Di *table = &originalOffsetTable[0];
@@ -225,17 +236,23 @@ void CGumpMinimap::CreatePixels(
         int gx = px;
 
         if (gx < 0 || gx >= width)
+        {
             continue;
+        }
 
         int gy = py;
 
         if (gy < 0 || gy >= height)
+        {
             break;
+        }
 
         int block = (gy * width) + gx;
 
         if (data[block] == 0x8421)
+        {
             data[block] = color;
+        }
     }
 }
 
@@ -243,9 +260,13 @@ void CGumpMinimap::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_Player->GetX() != LastX || g_Player->GetY() != LastY || m_Texture.Texture == 0)
+    {
         GenerateMap();
-    else if (!m_Count || m_Count == 6 || WantRedraw)
+    }
+    else if ((m_Count == 0u) || m_Count == 6 || WantRedraw)
+    {
         WantUpdateContent = true;
+    }
 
     static uint32_t ticks = 0;
 
@@ -256,7 +277,9 @@ void CGumpMinimap::PrepareContent()
     }
 
     if (m_Count > 12)
+    {
         m_Count = 0;
+    }
 }
 
 void CGumpMinimap::UpdateContent()
@@ -267,7 +290,9 @@ void CGumpMinimap::UpdateContent()
     CGLTexture *th = g_Orion.ExecuteGump(graphic);
 
     if (th == nullptr)
+    {
         return;
+    }
 
     if (m_Items == nullptr)
     {
@@ -276,7 +301,9 @@ void CGumpMinimap::UpdateContent()
         m_Body->SelectOnly = true;
     }
     else
+    {
         m_DataBox->Clear();
+    }
 
     m_Body->Graphic = graphic;
 
@@ -296,14 +323,16 @@ void CGumpMinimap::UpdateContent()
         QFOR(go, g_World->m_Items, CGameObject *)
         {
             if (go->Container != 0xFFFFFFFF || ((CGameItem *)go)->MultiBody)
+            {
                 continue; //multi
+            }
 
             if (go->NPC && !go->IsPlayer())
             {
                 uint16_t color =
                     g_ConfigManager.GetColorByNotoriety(go->GameCharacterPtr()->Notoriety);
 
-                if (color)
+                if (color != 0u)
                 {
                     uint32_t pcl = g_ColorManager.GetPolygoneColor(16, color);
 
@@ -327,7 +356,9 @@ void CGumpMinimap::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GMM_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
 }
 
 bool CGumpMinimap::OnLeftMouseButtonDoubleClick()
@@ -338,4 +369,3 @@ bool CGumpMinimap::OnLeftMouseButtonDoubleClick()
 
     return true;
 }
-

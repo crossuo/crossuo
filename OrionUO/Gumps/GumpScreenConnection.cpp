@@ -15,8 +15,10 @@ CGumpScreenConnection::~CGumpScreenConnection()
 void CGumpScreenConnection::CreateText(int x, int y, string str, uint8_t font)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_ConnectionScreen.GetTextA().length())
+    if (g_ConnectionScreen.GetTextA().length() != 0u)
+    {
         str = g_ConnectionScreen.GetTextA();
+    }
 
     CGUIText *obj = new CGUIText(0x0386, x, y);
     obj->CreateTextureA(font, str, 260, TS_CENTER);
@@ -34,7 +36,9 @@ void CGumpScreenConnection::UpdateContent()
     Add(new CGUIGumppic(0x1589, 555, 4));
 
     if (g_ConnectionScreen.GetType() != CST_CONLOST)
+    {
         Add(new CGUIResizepic(0, 0x0A28, 142, 134, 356, 212));
+    }
 
     g_ConnectionScreen.CursorGraphic = 0x2073; //Main Gump mouse cursor
 
@@ -64,7 +68,9 @@ void CGumpScreenConnection::UpdateContent()
             };
             int index = g_ConnectionScreen.GetErrorCode();
             if (index >= 6)
+            {
                 index = 5;
+            }
             CreateText(189, 178, text[index], 2);
 
             Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
@@ -96,7 +102,9 @@ void CGumpScreenConnection::UpdateContent()
             };
             int index = g_ConnectionScreen.GetErrorCode();
             if (index >= 3)
+            {
                 index = 2;
+            }
             CreateText(189, 178, text[index], 2);
 
             Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
@@ -153,7 +161,9 @@ void CGumpScreenConnection::UpdateContent()
         };
         int index = g_ConnectionScreen.GetErrorCode();
         if (index >= 10)
+        {
             index = 9;
+        }
         CreateText(189, 178, text[index], 2);
 
         Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
@@ -199,7 +209,9 @@ void CGumpScreenConnection::UpdateContent()
             };
             int index = g_ConnectionScreen.GetErrorCode();
             if (index >= 9)
+            {
                 index = 8;
+            }
             CreateText(189, 178, text[index], 2);
 
             Add(new CGUIButton(ID_CS_OK, 0x0481, 0x0482, 0x0483, 306, 304));
@@ -226,24 +238,35 @@ void CGumpScreenConnection::GUMP_BUTTON_EVENT_C
         if (g_ConnectionScreen.GetType() == CST_CHARACTER_LIST)
         {
             if (!g_ConnectionScreen.GetConnectionFailed())
+            {
                 g_ConnectionScreen.CreateSmoothAction(CConnectionScreen::ID_SMOOTH_CS_SEND_DELETE);
+            }
             else
+            {
                 g_ConnectionScreen.CreateSmoothAction(
                     CConnectionScreen::ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
+            }
         }
         else if (g_ConnectionScreen.GetType() == CST_SELECT_PROFESSOIN)
+        {
             g_ConnectionScreen.CreateSmoothAction(
                 CConnectionScreen::ID_SMOOTH_CS_GO_SCREEN_PROFESSION);
+        }
         else if (
             g_ConnectionScreen.GetType() == CST_GAME ||
             g_ConnectionScreen.GetType() == CST_GAME_LOGIN)
+        {
             g_ConnectionScreen.CreateSmoothAction(
                 CConnectionScreen::ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
+        }
         else if (
             g_ConnectionScreen.GetType() == CST_CONLOST || g_ConnectionScreen.GetConnectionFailed())
+        {
             g_ConnectionScreen.CreateSmoothAction(CConnectionScreen::ID_SMOOTH_CS_GO_SCREEN_MAIN);
+        }
     }
-    else if (serial == ID_CS_CANCEL) //Button x
+    else if (serial == ID_CS_CANCEL)
+    { //Button x
         g_ConnectionScreen.CreateSmoothAction(CConnectionScreen::ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
+    }
 }
-

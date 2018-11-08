@@ -10,7 +10,7 @@ CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
 
     ID = id;
 
-    if (!g_GrayMenuCount)
+    if (g_GrayMenuCount == 0)
     {
         g_Orion.InitScreen(GS_GAME_BLOCKED);
         g_GameBlockedScreen.Code = 1;
@@ -27,7 +27,9 @@ void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GGM_CANCEL)
+    {
         SendMenuResponse(0);
+    }
     else if (serial == ID_GGM_CONTINUE)
     {
         QFOR(item, m_Items, CBaseGUI *)
@@ -58,4 +60,3 @@ void CGumpGrayMenu::SendMenuResponse(int index)
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-

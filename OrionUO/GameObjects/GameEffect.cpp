@@ -29,10 +29,14 @@ void CGameEffect::Draw(int x, int y)
         int drawEffectY = y + moving->OffsetY + moving->OffsetZ;
 
         if (moving->FixedDirection)
+        {
             g_Orion.DrawStaticArt(objGraphic, Color, drawEffectX, drawEffectY);
+        }
         else
+        {
             g_Orion.DrawStaticArtRotated(
                 objGraphic, Color, drawEffectX, drawEffectY, moving->Angle);
+        }
     }
     else if (EffectType == EF_DRAG)
     {
@@ -41,7 +45,9 @@ void CGameEffect::Draw(int x, int y)
         g_Orion.DrawStaticArt(Graphic, Color, x - dragEffect->OffsetX, y - dragEffect->OffsetY);
     }
     else
+    {
         g_Orion.DrawStaticArt(objGraphic, Color, x, y);
+    }
 
     RemoveRenderMode();
 }
@@ -54,9 +60,13 @@ void CGameEffect::Update(CGameObject *parent)
         if (Duration < g_Ticks)
         {
             if (parent != nullptr)
+            {
                 parent->RemoveEffect(this);
+            }
             else
+            {
                 g_EffectManager.RemoveEffect(this);
+            }
         }
         else if (LastChangeFrameTime < g_Ticks)
         {
@@ -69,13 +79,19 @@ void CGameEffect::Update(CGameObject *parent)
                 if (AnimIndex >= 10)
                 {
                     if (parent != nullptr)
+                    {
                         parent->RemoveEffect(this);
+                    }
                     else
+                    {
                         g_EffectManager.RemoveEffect(this);
+                    }
                 }
             }
             else
+            {
                 CalculateCurrentGraphic();
+            }
         }
     }
     else if (LastChangeFrameTime < g_Ticks)
@@ -91,7 +107,7 @@ uint16_t CGameEffect::CalculateCurrentGraphic()
     DEBUG_TRACE_FUNCTION;
     uintptr_t addressAnimData = (uintptr_t)g_FileManager.m_AnimdataMul.Start;
 
-    if (addressAnimData)
+    if (addressAnimData != 0u)
     {
         uint32_t addr = (Graphic * 68) + 4 * ((Graphic / 8) + 1);
         PANIM_DATA pad = (PANIM_DATA)(addressAnimData + addr);
@@ -103,7 +119,9 @@ uint16_t CGameEffect::CalculateCurrentGraphic()
         }
 
         if (AnimIndex >= (int)pad->FrameCount)
+        {
             AnimIndex = 0;
+        }
     }
 
     return Graphic + Increment;

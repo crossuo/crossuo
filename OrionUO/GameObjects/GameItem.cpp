@@ -20,7 +20,9 @@ CGameItem::~CGameItem()
 
         CGump *gump = g_GumpManager.GetGump(Serial, 0, GT_BULLETIN_BOARD);
         if (gump != nullptr)
+        {
             g_GumpManager.RemoveGump(gump);
+        }
 
         Opened = false;
     }
@@ -52,19 +54,23 @@ void CGameItem::OnGraphicChange(int direction)
     if (!MultiBody)
     {
         if (Graphic >= g_Orion.m_StaticData.size())
+        {
             return;
+        }
 
         if (IsCorpse())
         {
             AnimIndex = 99;
 
-            if (direction & 0x80)
+            if ((direction & 0x80) != 0)
             {
                 UsedLayer = 1;
                 direction &= 0x7F;
             }
             else
+            {
                 UsedLayer = 0;
+            }
 
             Layer = direction;
 
@@ -99,9 +105,11 @@ void CGameItem::OnGraphicChange(int direction)
     }
     else if (m_Items == nullptr || WantUpdateMulti)
     {
-        if (!MultiDistanceBonus ||
+        if ((MultiDistanceBonus == 0) ||
             CheckMultiDistance(g_RemoveRangeXY, this, g_ConfigManager.UpdateRange))
+        {
             LoadMulti(m_Items == nullptr);
+        }
     }
 }
 
@@ -111,23 +119,35 @@ void CGameItem::CalculateFieldColor()
     FieldColor = 0;
 
     if (!g_ConfigManager.GetChangeFieldsGraphic())
+    {
         return;
+    }
 
     //fire field
     if (IN_RANGE(Graphic, 0x398C, 0x399F))
+    {
         FieldColor = 0x0020;
-    //paralyze field
+        //paralyze field
+    }
     else if (IN_RANGE(Graphic, 0x3967, 0x397A))
+    {
         FieldColor = 0x0058;
-    //energy field
+        //energy field
+    }
     else if (IN_RANGE(Graphic, 0x3946, 0x3964))
+    {
         FieldColor = 0x0070;
-    //poison field
+        //poison field
+    }
     else if (IN_RANGE(Graphic, 0x3914, 0x3929))
+    {
         FieldColor = 0x0044;
-    //wall of stone
+        //wall of stone
+    }
     else if (Graphic == 0x0080)
+    {
         FieldColor = 0x038A;
+    }
 }
 
 void CGameItem::Draw(int x, int y)
@@ -139,12 +159,16 @@ void CGameItem::Draw(int x, int y)
         {
             RenderGraphic = MultiTileGraphic;
 
-            if (RenderGraphic)
+            if (RenderGraphic != 0u)
             {
                 if (!Locked() && g_SelectedObject.Object == this)
+                {
                     RenderColor = 0x0035;
+                }
                 else
+                {
                     RenderColor = Color;
+                }
 
                 CRenderStaticObject::Draw(x, y);
             }
@@ -169,8 +193,10 @@ void CGameItem::Draw(int x, int y)
                 m_DrawTextureColor[3]);
         }
 
-        if (IsCorpse()) //Трупик
+        if (IsCorpse())
+        { //Трупик
             g_AnimationManager.DrawCorpse(this, x, y - 3);
+        }
         else
         {
             bool doubleDraw = false;
@@ -191,7 +217,9 @@ void CGameItem::Draw(int x, int y)
             }
 
             if (Container == 0xFFFFFFFF)
+            {
                 selMode = false;
+            }
 
             if (doubleDraw)
             {
@@ -200,15 +228,21 @@ void CGameItem::Draw(int x, int y)
             }
             else
             {
-                if (FieldColor)
+                if (FieldColor != 0u)
+                {
                     g_Orion.DrawStaticArt(
                         FIELD_REPLACE_GRAPHIC, FieldColor, x, y, selMode || Hidden());
+                }
                 else
+                {
                     g_Orion.DrawStaticArtAnimated(objGraphic, objColor, x, y, selMode || Hidden());
+                }
             }
 
             if (IsLightSource() && g_GameScreen.UseLight)
+            {
                 g_GameScreen.AddLight(this, this, x, y);
+            }
         }
 
         if (useAlpha)
@@ -259,8 +293,10 @@ void CGameItem::Select(int x, int y)
         {
             RenderGraphic = MultiTileGraphic;
 
-            if (RenderGraphic)
+            if (RenderGraphic != 0u)
+            {
                 CRenderStaticObject::Select(x, y);
+            }
 
             return;
         }
@@ -268,7 +304,9 @@ void CGameItem::Select(int x, int y)
         if (IsCorpse()) //Трупик
         {
             if (g_AnimationManager.CorpsePixelsInXY(this, x, y - 3))
+            {
                 g_SelectedObject.Init(this);
+            }
         }
         else
         {
@@ -278,17 +316,25 @@ void CGameItem::Select(int x, int y)
             if (doubleDraw)
             {
                 if (g_Orion.StaticPixelsInXY(objGraphic, x - 2, y - 5))
+                {
                     g_SelectedObject.Init(this);
+                }
                 else if (g_Orion.StaticPixelsInXY(objGraphic, x + 3, y))
+                {
                     g_SelectedObject.Init(this);
+                }
             }
-            else if (FieldColor)
+            else if (FieldColor != 0u)
             {
                 if (g_Orion.StaticPixelsInXY(FIELD_REPLACE_GRAPHIC, x, y))
+                {
                     g_SelectedObject.Init(this);
+                }
             }
             else if (g_Orion.StaticPixelsInXYAnimated(objGraphic, x, y))
+            {
                 g_SelectedObject.Init(this);
+            }
         }
     }
 }
@@ -543,10 +589,14 @@ uint16_t CGameItem::GetMountAnimation()
         }
 
         if (m_TiledataPtr->AnimID != 0)
+        {
             graphic = m_TiledataPtr->AnimID;
+        }
     }
     else if (IsCorpse())
+    {
         graphic = (uint16_t)Count;
+    }
 
     return graphic;
 }
@@ -572,27 +622,37 @@ void CGameItem::ClearCustomHouseMultis(int state)
 
             if (item->IsCustomHouseMulti())
             {
-                if (!state || item->State & state)
+                if ((state == 0) || ((item->State & state) != 0))
+                {
                     multi->Delete(item);
+                }
             }
             else if (item->GetZ() == checkZ)
+            {
                 item->State = item->State | CHMOF_FLOOR | CHMOF_IGNORE_IN_RENDER;
+            }
         }
 
         if (multi->m_Items == nullptr)
+        {
             Delete(multi);
+        }
     }
 }
 
-CMultiObject *
-CGameItem::AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti)
+CMultiObject *CGameItem::AddMulti(
+    uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti)
 {
     CMultiObject *mo = nullptr;
 
     if (isCustomHouseMulti)
+    {
         mo = new CCustomHouseMultiObject(graphic, color, GetX() + x, GetY() + y, z, 1);
+    }
     else
+    {
         mo = new CMultiObject(graphic, GetX() + x, GetY() + y, z, 1);
+    }
 
     g_MapManager.AddRender(mo);
     AddMultiObject(mo);
@@ -606,7 +666,9 @@ void CGameItem::LoadMulti(bool dropAlpha)
     ClearMultiItems();
 
     if (Graphic >= MAX_MULTI_DATA_INDEX_COUNT)
+    {
         return;
+    }
 
     WantUpdateMulti = false;
 
@@ -623,14 +685,18 @@ void CGameItem::LoadMulti(bool dropAlpha)
     uint8_t alpha = 0;
 
     if (!dropAlpha)
+    {
         alpha = 0xFF;
+    }
 
     if (index.UopBlock != nullptr)
     {
         vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
 
         if (data.empty())
+        {
             return;
+        }
 
         Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
@@ -644,10 +710,12 @@ void CGameItem::LoadMulti(bool dropAlpha)
             uint16_t flags = reader.ReadUInt16LE();
             uint32_t clilocsCount = reader.ReadUInt32LE();
 
-            if (clilocsCount)
+            if (clilocsCount != 0u)
+            {
                 reader.Move(clilocsCount * 4);
+            }
 
-            if (!flags)
+            if (flags == 0u)
             {
                 CMultiObject *mo = new CMultiObject(graphic, m_X + x, m_Y + y, m_Z + (char)z, 1);
 
@@ -656,18 +724,28 @@ void CGameItem::LoadMulti(bool dropAlpha)
                 g_MapManager.AddRender(mo);
                 AddMultiObject(mo);
             }
-            else if (!i)
+            else if (i == 0)
+            {
                 MultiTileGraphic = graphic;
+            }
 
             if (x < minX)
+            {
                 minX = x;
+            }
             if (x > maxX)
+            {
                 maxX = x;
+            }
 
             if (y < minY)
+            {
                 minY = y;
+            }
             if (y > maxY)
+            {
                 maxY = y;
+            }
         }
     }
     else if (address != 0)
@@ -675,13 +753,15 @@ void CGameItem::LoadMulti(bool dropAlpha)
         int itemOffset = sizeof(MULTI_BLOCK);
 
         if (g_PacketManager.GetClientVersion() >= CV_7090)
+        {
             itemOffset = sizeof(MULTI_BLOCK_NEW);
+        }
 
         for (int j = 0; j < count; j++)
         {
             PMULTI_BLOCK pmb = (PMULTI_BLOCK)(address + (j * itemOffset));
 
-            if (pmb->Flags)
+            if (pmb->Flags != 0u)
             {
                 CMultiObject *mo = new CMultiObject(
                     pmb->ID, m_X + pmb->X, m_Y + pmb->Y, m_Z + (char)pmb->Z, pmb->Flags);
@@ -691,18 +771,28 @@ void CGameItem::LoadMulti(bool dropAlpha)
                 g_MapManager.AddRender(mo);
                 AddMultiObject(mo);
             }
-            else if (!j)
+            else if (j == 0)
+            {
                 MultiTileGraphic = pmb->ID;
+            }
 
             if (pmb->X < minX)
+            {
                 minX = pmb->X;
+            }
             if (pmb->X > maxX)
+            {
                 maxX = pmb->X;
+            }
 
             if (pmb->Y < minY)
+            {
                 minY = pmb->Y;
+            }
             if (pmb->Y > maxY)
+            {
                 maxY = pmb->Y;
+            }
         }
     }
 
@@ -722,7 +812,9 @@ void CGameItem::LoadMulti(bool dropAlpha)
     CGumpMinimap *minimap = (CGumpMinimap *)g_GumpManager.GetGump(0, 0, GT_MINIMAP);
 
     if (minimap != nullptr)
+    {
         minimap->LastX = 0;
+    }
 }
 
 void CGameItem::AddMultiObject(CMultiObject *obj)
@@ -747,9 +839,13 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
                 if (obj->GetZ() < multiobj->GetZ())
                 {
                     if (multiobj->m_Prev == nullptr)
+                    {
                         multi->Insert(multiobj->m_Prev, obj);
+                    }
                     else
+                    {
                         multi->Insert(multiobj, obj);
+                    }
 
                     return;
                 }
@@ -793,7 +889,9 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
     QFOR(multi, m_Items, CMulti *)
     {
         if (multi->X == x && multi->Y == y)
+        {
             return multi;
+        }
     }
 
     return nullptr;
@@ -836,14 +934,18 @@ CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
         QFOR(obj, m_Items, CGameItem *)
         {
             if (obj->Graphic == graphic && obj->Color == color)
+            {
                 item = obj;
+            }
 
             if (!obj->Empty())
             {
                 CGameItem *found = obj->FindItem(graphic, color);
 
                 if (found != nullptr)
+                {
                     item = found;
+                }
             }
         }
     }
@@ -856,4 +958,3 @@ CMulti *CGameItem::GetMulti()
     CMulti *multi = (CMulti *)m_Items;
     return multi;
 }
-

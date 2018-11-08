@@ -69,16 +69,26 @@ void CConnectionScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
+    {
         action = SmoothScreenAction;
+    }
 
     if (action == ID_SMOOTH_CS_GO_SCREEN_MAIN)
+    {
         g_Orion.InitScreen(GS_MAIN);
+    }
     else if (action == ID_SMOOTH_CS_GO_SCREEN_CHARACTER)
+    {
         g_Orion.InitScreen(GS_CHARACTER);
+    }
     else if (action == ID_SMOOTH_CS_GO_SCREEN_PROFESSION)
+    {
         g_Orion.InitScreen(GS_PROFESSION_SELECT);
+    }
     else if (action == ID_SMOOTH_CS_SEND_DELETE)
+    {
         CPacketDeleteCharacter(g_CharacterList.Selected).Send();
+    }
 }
 
 void CConnectionScreen::OnKeyDown(const KeyEvent &ev)
@@ -91,32 +101,48 @@ void CConnectionScreen::OnKeyDown(const KeyEvent &ev)
         case KEY_RETURN:
         {
             if (m_Type == CST_CHARACTER_LIST)
+            {
                 CreateSmoothAction(ID_SMOOTH_CS_SEND_DELETE);
+            }
             else if (m_Type == CST_SELECT_PROFESSOIN)
+            {
                 CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_PROFESSION);
+            }
             else if (m_Type == CST_GAME)
             {
                 if (m_ErrorCode > 0)
+                {
                     CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
+                }
             }
             else if (m_Type == CST_CONLOST || m_ConnectionFailed)
+            {
                 CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_MAIN);
+            }
 
             break;
         }
         case KEY_ESCAPE:
         {
             if (m_Type == CST_CHARACTER_LIST)
+            {
                 CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
+            }
             else if (m_Type == CST_SELECT_PROFESSOIN)
+            {
                 CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_PROFESSION);
+            }
             else if (m_Type == CST_GAME)
             {
                 if (m_ErrorCode > 0)
+                {
                     CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_CHARACTER);
+                }
             }
             else if (m_Type == CST_CONLOST || m_ConnectionFailed)
+            {
                 CreateSmoothAction(ID_SMOOTH_CS_GO_SCREEN_MAIN);
+            }
 
             break;
         }
@@ -124,4 +150,3 @@ void CConnectionScreen::OnKeyDown(const KeyEvent &ev)
             break;
     }
 }
-

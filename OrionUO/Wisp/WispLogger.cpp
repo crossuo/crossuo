@@ -5,7 +5,6 @@
 
 namespace Wisp
 {
-
 CLogger g_WispLogger;
 CLogger g_WispCrashLogger;
 
@@ -31,12 +30,16 @@ void CLogger::Close()
 void CLogger::Init(const os_path &filePath)
 {
     if (m_File != nullptr)
+    {
         fs_close(m_File);
+    }
 
     m_File = fs_open(filePath, FS_WRITE);
 
     if (this == &g_WispLogger)
+    {
         LOG("Log opened.\n");
+    }
 
     FileName = filePath;
 }
@@ -44,7 +47,9 @@ void CLogger::Init(const os_path &filePath)
 void CLogger::Print(const char *format, ...)
 {
     if (m_File == nullptr)
+    {
         return;
+    }
 
     va_list arg;
     va_start(arg, format);
@@ -56,7 +61,9 @@ void CLogger::Print(const char *format, ...)
 void CLogger::VPrint(const char *format, va_list ap)
 {
     if (m_File == nullptr)
+    {
         return;
+    }
 
     vfprintf(m_File, format, ap);
     fflush(m_File);
@@ -65,7 +72,9 @@ void CLogger::VPrint(const char *format, va_list ap)
 void CLogger::Print(const wchar_t *format, ...)
 {
     if (m_File == nullptr)
+    {
         return;
+    }
 
     va_list arg;
     va_start(arg, format);
@@ -77,7 +86,9 @@ void CLogger::Print(const wchar_t *format, ...)
 void CLogger::VPrint(const wchar_t *format, va_list ap)
 {
     if (m_File == nullptr)
+    {
         return;
+    }
 
     vfwprintf(m_File, format, ap);
     fflush(m_File);
@@ -88,17 +99,21 @@ void CLogger::Dump(uint8_t *buf, int size)
     LogDump(m_File, buf, size);
 }
 
-};
+}; // namespace Wisp
 
 void LogDump(FILE *fp, uint8_t *buf, int size)
 {
     if (fp == nullptr)
+    {
         return;
+    }
 
     int num_lines = size / 16;
 
     if (size % 16 != 0)
+    {
         num_lines++;
+    }
 
     for (int line = 0; line < num_lines; line++)
     {
@@ -108,9 +123,13 @@ void LogDump(FILE *fp, uint8_t *buf, int size)
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
+            {
                 fprintf(fp, "%02X ", buf[line * 16 + row]);
+            }
             else
+            {
                 fprintf(fp, "-- ");
+            }
         }
 
         fprintf(fp, ": ");
@@ -118,7 +137,9 @@ void LogDump(FILE *fp, uint8_t *buf, int size)
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
-                fputc(isprint(buf[line * 16 + row]) ? buf[line * 16 + row] : '.', fp);
+            {
+                fputc(isprint(buf[line * 16 + row]) != 0 ? buf[line * 16 + row] : '.', fp);
+            }
         }
 
         fputc('\n', fp);

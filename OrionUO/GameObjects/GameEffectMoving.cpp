@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CGameEffectMoving::CGameEffectMoving()
-    : CGameEffectDrag()
+
 {
 }
 
@@ -14,7 +14,9 @@ void CGameEffectMoving::Update(CGameObject *parent)
 {
     DEBUG_TRACE_FUNCTION;
     if (LastMoveTime > g_Ticks)
+    {
         return;
+    }
 
     LastMoveTime = g_Ticks + MoveDelay;
 
@@ -91,14 +93,18 @@ void CGameEffectMoving::Update(CGameObject *parent)
         realDrawX += tempXY[x];
 
         if (realDrawX > drawDestX)
+        {
             realDrawX = drawDestX;
+        }
     }
     else
     {
         realDrawX -= tempXY[x];
 
         if (realDrawX < drawDestX)
+        {
             realDrawX = drawDestX;
+        }
     }
 
     if (realDrawY < drawDestY)
@@ -106,14 +112,18 @@ void CGameEffectMoving::Update(CGameObject *parent)
         realDrawY += tempXY[(x + 1) % 2];
 
         if (realDrawY > drawDestY)
+        {
             realDrawY = drawDestY;
+        }
     }
     else
     {
         realDrawY -= tempXY[(x + 1) % 2];
 
         if (realDrawY < drawDestY)
+        {
             realDrawY = drawDestY;
+        }
     }
 
     int newOffsetX = (realDrawX - screenCenterX) / 22;
@@ -134,7 +144,9 @@ void CGameEffectMoving::Update(CGameObject *parent)
             EFFECT_TYPE type = EF_STAY_AT_POS;
 
             if (g_World->FindWorldObject(Serial) != nullptr)
+            {
                 type = EF_STAY_AT_SOURCE;
+            }
 
             m_Z = DestZ;
             g_EffectManager.CreateExplodeEffect(this, type);
@@ -163,24 +175,34 @@ void CGameEffectMoving::Update(CGameObject *parent)
             int stepsCountY = countY / (tempXY[(x + 1) % 2] + 1);
 
             if (stepsCountX < stepsCountY)
+            {
                 stepsCountX = stepsCountY;
+            }
 
             if (stepsCountX <= 0)
+            {
                 stepsCountX = 1;
+            }
 
             int totalOffsetZ = 0;
 
             bool incZ = m_Z < DestZ;
 
             if (incZ)
+            {
                 totalOffsetZ = (DestZ - m_Z) * 4;
+            }
             else
+            {
                 totalOffsetZ = (m_Z - DestZ) * 4;
+            }
 
             totalOffsetZ /= stepsCountX;
 
-            if (!totalOffsetZ)
+            if (totalOffsetZ == 0)
+            {
                 totalOffsetZ = 1;
+            }
 
             OffsetZ += totalOffsetZ;
 
@@ -189,14 +211,22 @@ void CGameEffectMoving::Update(CGameObject *parent)
                 int countZ = 1; // m_OffsetZ / 4;
 
                 if (incZ)
+                {
                     m_Z += countZ;
+                }
                 else
+                {
                     m_Z -= countZ;
+                }
 
                 if (m_Z == DestZ)
+                {
                     OffsetZ = 0;
+                }
                 else
+                {
                     OffsetZ %= 8;
+                }
                 //m_OffsetZ -= countZ * 4;
 
                 wantUpdateInRenderList = true;

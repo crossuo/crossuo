@@ -4,8 +4,7 @@
 CJournal g_Journal(150);
 
 CJournal::CJournal(int maxSize)
-    : CBaseQueue()
-    , MaxSize(maxSize)
+    : MaxSize(maxSize)
 {
 }
 
@@ -29,18 +28,23 @@ void CJournal::Add(CTextData *obj)
     CGumpJournal *gump = (CGumpJournal *)g_GumpManager.UpdateGump(0, 0, GT_JOURNAL);
 
     if (gump != nullptr)
+    {
         gump->AddText(obj);
+    }
 
     if (Size >= MaxSize)
     {
         CTextData *item = (CTextData *)m_Items;
 
         if (gump != nullptr)
+        {
             gump->DeleteText(item);
+        }
 
         Delete(item);
     }
     else
+    {
         Size++;
+    }
 }
-

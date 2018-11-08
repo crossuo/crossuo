@@ -3,12 +3,10 @@
 
 #if !defined(ORION_LINUX)
 
-
 string GetBuildDateTimeStamp()
 {
     return string(__DATE__);
 }
-
 
 #else
 

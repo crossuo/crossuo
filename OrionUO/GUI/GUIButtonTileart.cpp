@@ -43,19 +43,27 @@ Wisp::CSize CGUIButtonTileart::GetSize()
     int endX = m_X + gumpSize.Width;
 
     if (TileX < startX)
+    {
         startX = TileX;
+    }
 
     if (TileX + tileSize.Width > endX)
+    {
         endX = TileX + tileSize.Width;
+    }
 
     int startY = m_Y;
     int endY = m_Y + gumpSize.Height;
 
     if (TileY < startY)
+    {
         startY = TileY;
+    }
 
     if (TileY + tileSize.Height > endY)
+    {
         endY = TileY + tileSize.Height;
+    }
 
     return Wisp::CSize(abs(endX) - abs(startX), abs(endY) - abs(startY));
 }
@@ -87,13 +95,16 @@ bool CGUIButtonTileart::Select()
 {
     DEBUG_TRACE_FUNCTION;
     if (CGUIDrawObject::Select())
+    {
         return true;
+    }
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
 
     if (th != nullptr)
+    {
         return th->Select(m_X, m_Y, !CheckPolygone);
+    }
 
     return false;
 }
-

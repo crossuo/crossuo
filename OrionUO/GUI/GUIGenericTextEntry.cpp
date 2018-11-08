@@ -23,4 +23,3 @@ CGUIGenericTextEntry::CGUIGenericTextEntry(
 CGUIGenericTextEntry::~CGUIGenericTextEntry()
 {
 }
-

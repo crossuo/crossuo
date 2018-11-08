@@ -17,7 +17,7 @@ public:
 
 public:
     void Init(unsigned char *data, unsigned int size);
-    void Encrypt(unsigned char *in, unsigned char *out, int len);
+    void Encrypt(const unsigned char *in, unsigned char *out, int len);
     unsigned char *GetMD5() { return m_digest; }
 
 protected:

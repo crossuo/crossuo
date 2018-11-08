@@ -23,9 +23,13 @@ void CGumpScreenMain::PrepareContent()
         arrowLighted = !arrowLighted;
 
         if (arrowLighted)
+        {
             m_Arrow->Graphic = 0x15A5;
+        }
         else
+        {
             m_Arrow->Graphic = 0x15A4;
+        }
 
         lastArrowTick = g_Ticks + 500;
 
@@ -37,7 +41,9 @@ void CGumpScreenMain::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_Items != nullptr)
+    {
         return;
+    }
 
     //Clear();
 
@@ -46,13 +52,17 @@ void CGumpScreenMain::UpdateContent()
     Add(new CGUIGumppic(0x157C, 0, 0));
 
     if (g_PacketManager.GetClientVersion() >= CV_500A)
+    {
         Add(new CGUIGumppic(0x2329, 0, 0));
+    }
 
     Add(new CGUIGumppic(0x15A0, 0, 4));
     Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
 
     if (g_PacketManager.GetClientVersion() < CV_500A)
+    {
         Add(new CGUIGumppic(0x058A, 286, 45));
+    }
 
     Add(new CGUIButton(ID_MS_QUIT, 0x1589, 0x158A, 0x158B, 555, 4));
 
@@ -98,7 +108,9 @@ void CGumpScreenMain::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
+    {
         return;
+    }
 
     uint32_t id = g_SelectedObject.Serial;
 
@@ -142,16 +154,21 @@ void CGumpScreenMain::InitToolTip()
 void CGumpScreenMain::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_MS_QUIT) //x button
+    if (serial == ID_MS_QUIT)
+    { //x button
         g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_QUIT);
-    else if (serial == ID_MS_ARROW_NEXT) //> button
+    }
+    else if (serial == ID_MS_ARROW_NEXT)
+    { //> button
         g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_CONNECT);
+    }
 }
 
 void CGumpScreenMain::GUMP_TEXT_ENTRY_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_MS_PASSWORD)
+    {
         g_MainScreen.m_Password->SetPos(m_PasswordFake->Pos());
+    }
 }
-

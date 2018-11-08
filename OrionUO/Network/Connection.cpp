@@ -4,8 +4,7 @@
 #include "../Sockets.h"
 
 CSocket::CSocket(bool gameSocket)
-    : Wisp::CConnection()
-    , GameSocket(gameSocket)
+    : GameSocket(gameSocket)
 {
 }
 
@@ -21,7 +20,9 @@ bool CSocket::Connect(const string &address, int port)
     if (UseProxy)
     {
         if (Connected)
+        {
             return false;
+        }
         LOG("Connecting using proxy %s:%d\n", ProxyAddress.c_str(), ProxyPort);
         if (!CConnection::Connect(ProxyAddress, ProxyPort))
         {
@@ -80,93 +81,90 @@ bool CSocket::Connect(const string &address, int port)
                 LOG("Connecting...%s:%i\n", address.c_str(), port);
                 return Wisp::CConnection::Connect(address, port);
             }
-            else
+
+            if ((str[1] == 0) || (str[1] == 2))
             {
-                if ((str[1] == 0) || (str[1] == 2))
+                if (str[1] == 2)
                 {
-                    if (str[1] == 2)
-                    {
-                        LOG("Proxy wants Username/Password\n");
-                        int totalSize =
-                            3 + (int)ProxyAccount.length() + (int)ProxyPassword.length();
-                        vector<char> buffer(totalSize, 0);
-                        sprintf(&buffer[0], "  %s %s", ProxyAccount.c_str(), ProxyPassword.c_str());
-                        buffer[0] = 1;
-                        buffer[1] = (char)ProxyAccount.length();
-                        buffer[2 + (int)ProxyAccount.length()] = (char)ProxyPassword.length();
-                        tcp_send(m_Socket, (unsigned char *)&buffer[0], totalSize);
-                        tcp_recv(m_Socket, str, 255);
-                        if (str[1] != 0)
-                        {
-                            LOG("Wrong Username/Password\n");
-                            tcp_close(m_Socket);
-                            m_Socket = nullptr;
-                            Connected = false;
-                            LOG("Connecting...%s:%i\n", address.c_str(), port);
-                            return Wisp::CConnection::Connect(address, port);
-                        }
-                    }
-                    memset(str, 0, 10);
-                    str[0] = 5;
-                    str[1] = 1;
-                    str[2] = 0;
-                    str[3] = 1;
-                    memcpy(&str[4], &serverIP, 4);
-                    memcpy(&str[8], &serverPort, 2);
-                    tcp_send(m_Socket, str, 10);
-                    num = tcp_recv(m_Socket, str, 255);
+                    LOG("Proxy wants Username/Password\n");
+                    int totalSize = 3 + (int)ProxyAccount.length() + (int)ProxyPassword.length();
+                    vector<char> buffer(totalSize, 0);
+                    sprintf(&buffer[0], "  %s %s", ProxyAccount.c_str(), ProxyPassword.c_str());
+                    buffer[0] = 1;
+                    buffer[1] = (char)ProxyAccount.length();
+                    buffer[2 + (int)ProxyAccount.length()] = (char)ProxyPassword.length();
+                    tcp_send(m_Socket, (unsigned char *)&buffer[0], totalSize);
+                    tcp_recv(m_Socket, str, 255);
                     if (str[1] != 0)
                     {
-                        switch (str[1])
-                        {
-                            case 1:
-                                LOG("general SOCKS server failure\n");
-                                break;
-                            case 2:
-                                LOG("connection not allowed by ruleset\n");
-                                break;
-                            case 3:
-                                LOG("Network unreachable\n");
-                                break;
-                            case 4:
-                                LOG("Host unreachable\n");
-                                break;
-                            case 5:
-                                LOG("Connection refused\n");
-                                break;
-                            case 6:
-                                LOG("TTL expired\n");
-                                break;
-                            case 7:
-                                LOG("Command not supported\n");
-                                break;
-                            case 8:
-                                LOG("Address type not supported\n");
-                                break;
-                            case 9:
-                                LOG("to X'FF' unassigned\n");
-                                break;
-                            default:
-                                LOG("Unknown Error <%d> recieved\n", str[1]);
-                        }
-
+                        LOG("Wrong Username/Password\n");
                         tcp_close(m_Socket);
                         m_Socket = nullptr;
                         Connected = false;
                         LOG("Connecting...%s:%i\n", address.c_str(), port);
                         return Wisp::CConnection::Connect(address, port);
                     }
-                    LOG("Connected to server via proxy\n");
                 }
-                else
+                memset(str, 0, 10);
+                str[0] = 5;
+                str[1] = 1;
+                str[2] = 0;
+                str[3] = 1;
+                memcpy(&str[4], &serverIP, 4);
+                memcpy(&str[8], &serverPort, 2);
+                tcp_send(m_Socket, str, 10);
+                num = tcp_recv(m_Socket, str, 255);
+                if (str[1] != 0)
                 {
-                    LOG("No acceptable methods\n");
+                    switch (str[1])
+                    {
+                        case 1:
+                            LOG("general SOCKS server failure\n");
+                            break;
+                        case 2:
+                            LOG("connection not allowed by ruleset\n");
+                            break;
+                        case 3:
+                            LOG("Network unreachable\n");
+                            break;
+                        case 4:
+                            LOG("Host unreachable\n");
+                            break;
+                        case 5:
+                            LOG("Connection refused\n");
+                            break;
+                        case 6:
+                            LOG("TTL expired\n");
+                            break;
+                        case 7:
+                            LOG("Command not supported\n");
+                            break;
+                        case 8:
+                            LOG("Address type not supported\n");
+                            break;
+                        case 9:
+                            LOG("to X'FF' unassigned\n");
+                            break;
+                        default:
+                            LOG("Unknown Error <%d> recieved\n", str[1]);
+                    }
+
                     tcp_close(m_Socket);
                     m_Socket = nullptr;
                     Connected = false;
                     LOG("Connecting...%s:%i\n", address.c_str(), port);
                     return Wisp::CConnection::Connect(address, port);
                 }
+                LOG("Connected to server via proxy\n");
+            }
+            else
+            {
+                LOG("No acceptable methods\n");
+                tcp_close(m_Socket);
+                m_Socket = nullptr;
+                Connected = false;
+                LOG("Connecting...%s:%i\n", address.c_str(), port);
+                return Wisp::CConnection::Connect(address, port);
             }
         }
         else
@@ -219,7 +217,9 @@ bool CSocket::Connect(const string &address, int port)
         }
     }
     else
+    {
         return Wisp::CConnection::Connect(address, port);
+    }
 
     return true;
 }
@@ -232,7 +232,9 @@ vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
         intptr_t inSize = (intptr_t)data.size();
 
         if (g_NetworkPostAction != nullptr)
+        {
             g_NetworkPostAction(&data[0], &data[0], (int)inSize);
+        }
 
         vector<uint8_t> decBuf(inSize * 4 + 2);
 
@@ -255,4 +257,3 @@ vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
 
     return data;
 }
-

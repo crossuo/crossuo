@@ -4,7 +4,7 @@
 CEffectManager g_EffectManager;
 
 CEffectManager::CEffectManager()
-    : CBaseQueue()
+
 {
 }
 
@@ -42,7 +42,9 @@ void CEffectManager::AddEffect(CGameEffect *effect)
                         EFFECT_TYPE type = EF_STAY_AT_POS;
 
                         if (obj != nullptr)
+                        {
                             type = EF_STAY_AT_SOURCE;
+                        }
 
                         CreateExplodeEffect(moving, type);
                     }
@@ -85,7 +87,9 @@ void CEffectManager::AddEffect(CGameEffect *effect)
                 obj->AddEffect(effect);
             }
             else
+            {
                 delete effect;
+            }
 
             break;
         }

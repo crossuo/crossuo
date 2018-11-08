@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CGLTextTexture::CGLTextTexture()
-    : CGLTexture()
+
 {
 }
 
@@ -38,6 +38,8 @@ void CGLTextTexture::Draw(int x, int y, bool checktrans)
             glDisable(GL_STENCIL_TEST);
         }
         else
+        {
             g_GL_Draw(*this, x, y);
+        }
     }
 }

@@ -55,24 +55,30 @@ void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focuse
         GlobalColorB = ToColorB(color);
         GlobalColorA = ToColorA(color);
 
-        if (!GlobalColorA)
+        if (GlobalColorA == 0u)
+        {
             GlobalColorA = 0xFF;
+        }
 
         GlobalColorSelectedR = ToColorR(selected);
         GlobalColorSelectedG = ToColorG(selected);
         GlobalColorSelectedB = ToColorB(selected);
         GlobalColorSelectedA = ToColorA(selected);
 
-        if (!GlobalColorSelectedA)
+        if (GlobalColorSelectedA == 0u)
+        {
             GlobalColorSelectedA = 0xFF;
+        }
 
         GlobalColorFocusedR = ToColorR(focused);
         GlobalColorFocusedG = ToColorG(focused);
         GlobalColorFocusedB = ToColorB(focused);
         GlobalColorFocusedA = ToColorA(focused);
 
-        if (!GlobalColorFocusedA)
+        if (GlobalColorFocusedA == 0u)
+        {
             GlobalColorFocusedA = 0xFF;
+        }
     }
 }
 
@@ -86,14 +92,18 @@ void CGUITextEntry::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
+    {
         g_SelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUITextEntry::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
+    {
         g_LastSelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUITextEntry::PrepareTextures()
@@ -104,22 +114,32 @@ void CGUITextEntry::PrepareTextures()
     if (!UseGlobalColor)
     {
         if (Focused || &m_Entry == g_EntryPointer)
+        {
             color = ColorFocused;
+        }
         else if (
             g_GumpSelectedElement == this ||
             (CheckOnSerial && g_CurrentCheckGump != nullptr &&
              g_CurrentCheckGump == g_SelectedObject.Gump && Serial == g_SelectedObject.Serial &&
              g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsGUI()))
+        {
             color = ColorSelected;
+        }
     }
 
-    if (color && Unicode)
+    if ((color != 0u) && Unicode)
+    {
         color++;
+    }
 
     if (Unicode)
+    {
         m_Entry.PrepareToDrawW(Font, color, Align, TextFlags);
+    }
     else
+    {
         m_Entry.PrepareToDrawA(Font, color, Align, TextFlags);
+    }
 }
 
 void CGUITextEntry::Draw(bool checktrans)
@@ -131,10 +151,14 @@ void CGUITextEntry::Draw(bool checktrans)
     if (Focused || &m_Entry == g_EntryPointer)
     {
         if (UseGlobalColor)
+        {
             glColor4ub(
                 GlobalColorFocusedR, GlobalColorFocusedG, GlobalColorFocusedB, GlobalColorFocusedA);
+        }
         else
+        {
             color = ColorFocused;
+        }
 
         y += FocusedOffsetY;
     }
@@ -145,19 +169,27 @@ void CGUITextEntry::Draw(bool checktrans)
          g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsGUI()))
     {
         if (UseGlobalColor)
+        {
             glColor4ub(
                 GlobalColorSelectedR,
                 GlobalColorSelectedG,
                 GlobalColorSelectedB,
                 GlobalColorSelectedA);
+        }
         else
+        {
             color = ColorSelected;
+        }
     }
     else if (UseGlobalColor)
+    {
         glColor4ub(GlobalColorR, GlobalColorG, GlobalColorB, GlobalColorA);
+    }
 
-    if (color && Unicode)
+    if ((color != 0u) && Unicode)
+    {
         color++;
+    }
 
     if (checktrans)
     {
@@ -165,31 +197,45 @@ void CGUITextEntry::Draw(bool checktrans)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         if (Unicode)
+        {
             m_Entry.DrawW(Font, color, m_X, y, Align, TextFlags);
+        }
         else
+        {
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
+        }
 
         glDisable(GL_BLEND);
 
         glEnable(GL_STENCIL_TEST);
 
         if (Unicode)
+        {
             m_Entry.DrawW(Font, color, m_X, y, Align, TextFlags);
+        }
         else
+        {
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
+        }
 
         glDisable(GL_STENCIL_TEST);
     }
     else
     {
         if (Unicode)
+        {
             m_Entry.DrawW(Font, color, m_X, y, Align, TextFlags);
+        }
         else
+        {
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
+        }
     }
 
     if (UseGlobalColor)
+    {
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
 }
 
 bool CGUITextEntry::Select()
@@ -200,4 +246,3 @@ bool CGUITextEntry::Select()
 
     return (x >= 0 && y >= 0 && x < m_Entry.m_Texture.Width && y < m_Entry.m_Texture.Height);
 }
-

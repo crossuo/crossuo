@@ -2,8 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CBaseQueueItem::CBaseQueueItem()
-    : CBaseQueue()
-    , m_Next(nullptr)
+    : m_Next(nullptr)
     , m_Prev(nullptr)
 {
 }
@@ -73,13 +72,17 @@ CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
     {
         //Если очередь пуста -  вставим элемент в самое начало очереди
         if (m_Items == nullptr)
+        {
             m_Items = item;
+        }
         else //Или, найдем последний элемент и запихаем его в зад
         {
             CBaseQueueItem *current = m_Items;
 
             while (current->m_Next != nullptr)
+            {
                 current = current->m_Next;
+            }
 
             current->m_Next = item;
             item->m_Prev = current;
@@ -123,7 +126,9 @@ int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
     {
         //Если элемент нашелся - возвращаем вычисленный индекс
         if (current == item)
+        {
             return index;
+        }
 
         index++;
     }
@@ -151,8 +156,10 @@ CBaseQueueItem *CBaseQueue::Get(int index)
     CBaseQueueItem *item = m_Items;
 
     //Пройдемся по всем элементам очереди до нахождения нужного или окончания списка
-    for (; item != nullptr && index; item = item->m_Next, index--)
+    for (; item != nullptr && (index != 0); item = item->m_Next, index--)
+    {
         ;
+    }
 
     return item;
 }
@@ -166,7 +173,9 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
         item->m_Prev = nullptr;
 
         if (m_Items != nullptr)
+        {
             m_Items->m_Prev = item;
+        }
 
         m_Items = item;
     }
@@ -179,7 +188,9 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
         first->m_Next = item;
 
         if (next != nullptr)
+        {
             next->m_Prev = item;
+        }
     }
 }
 
@@ -196,7 +207,9 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
             m_Items = m_Items->m_Next;
 
             if (m_Items != nullptr)
+            {
                 m_Items->m_Prev = nullptr;
+            }
         }
         else
         {
@@ -204,7 +217,9 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
             item->m_Prev->m_Next = item->m_Next;
 
             if (item->m_Next != nullptr)
+            {
                 item->m_Next->m_Prev = item->m_Prev;
+            }
         }
     }
 }
@@ -220,7 +235,9 @@ void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 
         //Перелинкуем с началом очереди
         if (m_Items != nullptr)
+        {
             m_Items->m_Prev = item;
+        }
 
         item->m_Next = m_Items;
         item->m_Prev = nullptr;
@@ -244,9 +261,13 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 
         //Перелинкуем элемент с последним элементом (или с началом очереди при пустой очереди)
         if (last == nullptr)
+        {
             m_Items = item;
+        }
         else
+        {
             last->m_Next = item;
+        }
 
         item->m_Prev = last;
         item->m_Next = nullptr;
@@ -335,7 +356,9 @@ CBaseQueueItem *CBaseQueue::Last()
 
     //Пройдемся по всем элементам очереди до конца (если очередь не пуста)
     while (last != nullptr && last->m_Next != nullptr)
+    {
         last = last->m_Next;
+    }
 
     //Вернем что получилось в результате поиска
     return last;

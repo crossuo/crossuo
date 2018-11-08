@@ -24,8 +24,10 @@ void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
     ColorB = ToColorB(polygoneColor);
     ColorA = ToColorA(polygoneColor);
 
-    if (!ColorA)
+    if (ColorA == 0u)
+    {
         ColorA = 0xFF;
+    }
 }
 
 void CGUIColoredPolygone::Draw(bool checktrans)
@@ -43,25 +45,32 @@ void CGUIColoredPolygone::Draw(bool checktrans)
         glDisable(GL_BLEND);
     }
     else
+    {
         g_GL.DrawPolygone(m_X, m_Y, Width, Height);
+    }
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     if (Focused || (DrawDot && g_GumpSelectedElement == this))
+    {
         g_GL.DrawPolygone(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2);
+    }
 }
 
 void CGUIColoredPolygone::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
     if (DrawDot && g_SelectedObject.Gump != nullptr)
+    {
         g_SelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUIColoredPolygone::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
     if (DrawDot && g_LastSelectedObject.Gump != nullptr)
+    {
         g_LastSelectedObject.Gump->WantRedraw = true;
+    }
 }
-

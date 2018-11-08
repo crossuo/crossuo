@@ -20,7 +20,12 @@ void CGUIText::CreateTextureA(
 }
 
 void CGUIText::CreateTextureW(
-    uint8_t font, const wstring &str, uint8_t cell, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font,
+    const wstring &str,
+    uint8_t cell,
+    int width,
+    TEXT_ALIGN_TYPE align,
+    uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     g_FontManager.GenerateW(font, m_Texture, str, Color, cell, width, align, flags);
@@ -40,4 +45,3 @@ bool CGUIText::Select()
 
     return (x >= 0 && y >= 0 && x < m_Texture.Width && y < m_Texture.Height);
 }
-

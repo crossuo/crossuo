@@ -22,6 +22,7 @@ void CGUIBlending::Draw(bool checktrans)
         glBlendFunc(SFactor, DFactor);
     }
     else
+    {
         glDisable(GL_BLEND);
+    }
 }
-

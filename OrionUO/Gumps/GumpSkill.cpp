@@ -17,7 +17,9 @@ CGumpSkill::CGumpSkill(int serial, int x, int y)
         CSkill *skill = g_SkillsManager.Get(Serial);
 
         if (skill != nullptr)
+        {
             text->CreateTextureW(1, ToWString(skill->Name), 30, 120, TS_CENTER);
+        }
 
         resizepic->Height = 20 + text->m_Texture.Height;
     }
@@ -31,7 +33,9 @@ void CGumpSkill::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
 }
 
 void CGumpSkill::OnLeftMouseButtonUp()
@@ -47,9 +51,10 @@ void CGumpSkill::OnLeftMouseButtonUp()
         {
             Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
-            if (!offset.X && !offset.Y)
+            if ((offset.X == 0) && (offset.Y == 0))
+            {
                 g_Orion.UseSkill(Serial);
+            }
         }
     }
 }
-

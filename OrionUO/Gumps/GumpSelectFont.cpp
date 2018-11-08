@@ -71,7 +71,9 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (!state)
+    {
         return;
+    }
 
     int realFont = -1;
     int count = serial - ID_GSF_FONTS;
@@ -80,7 +82,7 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
     {
         if (g_FontManager.UnicodeFontExists(i))
         {
-            if (!count)
+            if (count == 0)
             {
                 realFont = i;
                 break;
@@ -91,7 +93,9 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
     }
 
     if (realFont == -1)
+    {
         return;
+    }
 
     switch (m_State)
     {
@@ -120,4 +124,3 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
             break;
     }
 }
-

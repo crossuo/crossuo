@@ -46,4 +46,3 @@ void CSelectedObject::Init(const CSelectedObject &obj)
     Gump = obj.Gump;
     Serial = (obj.Object != nullptr ? obj.Object->Serial : 0);
 }
-

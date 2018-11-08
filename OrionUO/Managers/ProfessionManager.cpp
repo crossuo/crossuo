@@ -2,7 +2,6 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-
 CProfessionManager g_ProfessionManager;
 
 const string CProfessionManager::m_Keys[m_KeyCount] = {
@@ -11,8 +10,7 @@ const string CProfessionManager::m_Keys[m_KeyCount] = {
 };
 
 CProfessionManager::CProfessionManager()
-    : CBaseQueue()
-    , Selected(nullptr)
+    : Selected(nullptr)
 {
 }
 
@@ -26,10 +24,12 @@ int CProfessionManager::GetKeyCode(const string &key)
     string str = ToLowerA(key);
     int result = 0;
 
-    for (int i = 0; i < m_KeyCount && !result; i++)
+    for (int i = 0; i < m_KeyCount && (result == 0); i++)
     {
         if (str == m_Keys[i])
+        {
             result = (int)i + 1;
+        }
     }
 
     return result;
@@ -40,8 +40,8 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     DEBUG_TRACE_FUNCTION;
     PROFESSION_TYPE type = PT_NO_PROF;
     std::vector<string> childrens;
-    string name = "";
-    string trueName = "";
+    string name{};
+    string trueName{};
     uint32_t nameClilocID = 0;
     uint32_t descriptionClilocID = 0;
     int descriptionIndex = 0;
@@ -53,16 +53,16 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     int stats[3] = { 0 };
 
     bool exit = false;
-
     while (!file.IsEOF() && !exit)
     {
         vector<string> strings = file.ReadTokens();
 
-        if (!strings.size())
+        if (strings.empty())
+        {
             continue;
+        }
 
         int code = GetKeyCode(strings[0]);
-
         switch (code)
         {
             case PM_CODE_BEGIN:
@@ -102,16 +102,22 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             case PM_CODE_TYPE:
             {
                 if (GetKeyCode(strings[1]) == PM_CODE_CATEGORY)
+                {
                     type = PT_CATEGORY;
+                }
                 else
+                {
                     type = PT_PROFESSION;
+                }
 
                 break;
             }
             case PM_CODE_CHILDREN:
             {
                 for (int j = 1; j < (int)strings.size(); j++)
+                {
                     childrens.push_back(strings[j]);
+                }
 
                 break;
             }
@@ -144,11 +150,17 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
                     int val = atoi(strings[2].c_str());
 
                     if (code == PM_CODE_STR)
+                    {
                         stats[0] = val;
+                    }
                     else if (code == PM_CODE_INT)
+                    {
                         stats[1] = val;
+                    }
                     else if (code == PM_CODE_DEX)
+                    {
                         stats[2] = val;
+                    }
                 }
 
                 break;
@@ -176,7 +188,9 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
         CProfessionCategory *temp = new CProfessionCategory();
 
         for (int i = 0; i < (int)childrens.size(); i++)
+        {
             temp->AddChildren(childrens[i]);
+        }
 
         obj = temp;
     }
@@ -211,7 +225,9 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
         obj->Type = type;
 
         if (topLevel)
+        {
             m_Items->Add(obj);
+        }
         else
         {
             CBaseProfession *parent = (CBaseProfession *)m_Items;
@@ -227,7 +243,9 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             }
 
             if (!result)
+            {
                 delete obj;
+            }
         }
     }
 
@@ -259,7 +277,9 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
                 result = AddChild(item, child);
 
                 if (result)
+                {
                     break;
+                }
 
                 item = (CBaseProfession *)item->m_Next;
             }
@@ -291,14 +311,16 @@ bool CProfessionManager::Load()
         {
             std::vector<std::string> strings = file.ReadTokens();
 
-            if (strings.size() > 0)
+            if (!strings.empty())
             {
                 if (ToLowerA(strings[0]) == string("begin"))
                 {
                     result = ParseFilePart(file);
 
                     if (!result)
+                    {
                         break;
+                    }
                 }
             }
         }
@@ -345,7 +367,9 @@ bool CProfessionManager::Load()
         LoadProfessionDescription();
     }
     else
+    {
         LOG("Could not find prof.txt in your UO directory. Character creation professions loading failed.\n");
+    }
 
     return result;
 }
@@ -364,13 +388,13 @@ void CProfessionManager::LoadProfessionDescription()
 
         while (ptr < end)
         {
-            if (!memcmp(ptr, "TEXT", 4))
+            if (memcmp(ptr, "TEXT", 4) == 0)
             {
                 ptr += 8;
 
                 while (ptr < end)
                 {
-                    if (!(*(ptr - 1)) && !(*ptr)) //end of names section
+                    if (((*(ptr - 1)) == 0) && ((*ptr) == 0)) //end of names section
                     {
                         ptr++;
 
@@ -414,10 +438,14 @@ CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfes
 {
     DEBUG_TRACE_FUNCTION;
     if (check == nullptr)
+    {
         check = (CBaseProfession *)m_Items;
+    }
 
     if (obj == m_Items)
+    {
         return obj;
+    }
 
     CBaseProfession *item = (CBaseProfession *)check->m_Items;
     CBaseProfession *result = nullptr;
@@ -425,13 +453,16 @@ CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfes
     while (item != nullptr && result == nullptr)
     {
         if (obj == item)
+        {
             result = check;
+        }
         else
+        {
             result = GetParent(obj, item);
+        }
 
         item = (CBaseProfession *)item->m_Next;
     }
 
     return result;
 }
-

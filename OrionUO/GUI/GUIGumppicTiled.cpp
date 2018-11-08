@@ -32,7 +32,9 @@ bool CGUIGumppicTiled::Select()
     int y = g_MouseManager.Position.Y - m_Y;
 
     if (x < 0 || y < 0 || (Width > 0 && x >= Width) || (Height > 0 && y >= Height))
+    {
         return false;
+    }
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
@@ -42,10 +44,14 @@ bool CGUIGumppicTiled::Select()
         int height = Height;
 
         if (width == 0)
+        {
             width = th->Width;
+        }
 
         if (height == 0)
+        {
             height = th->Height;
+        }
 
         while (x > th->Width && width > th->Width)
         {
@@ -60,20 +66,25 @@ bool CGUIGumppicTiled::Select()
         }
 
         if (x > width || y > height)
+        {
             return false;
+        }
 
         if (x >= 0 && y >= 0 && x < th->Width && y < th->Height)
         {
             if (CheckPolygone)
+            {
                 return true;
+            }
 
             int pos = (y * th->Width) + x;
 
             if (pos < (int)th->m_HitMap.size())
+            {
                 return (th->m_HitMap[pos] != 0);
+            }
         }
     }
 
     return false;
 }
-

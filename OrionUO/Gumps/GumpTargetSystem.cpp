@@ -15,7 +15,7 @@ CGumpTargetSystem::~CGumpTargetSystem()
 
 bool CGumpTargetSystem::CanBeDisplayed()
 {
-    return !(g_ConfigManager.DisableNewTargetSystem || !g_NewTargetSystem.Serial);
+    return !(g_ConfigManager.DisableNewTargetSystem || (g_NewTargetSystem.Serial == 0u));
 }
 
 void CGumpTargetSystem::PrepareContent()
@@ -33,8 +33,10 @@ void CGumpTargetSystem::PrepareContent()
 void CGumpTargetSystem::UpdateContent()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_ConfigManager.DisableNewTargetSystem || !g_NewTargetSystem.Serial)
+    if (g_ConfigManager.DisableNewTargetSystem || (g_NewTargetSystem.Serial == 0u))
+    {
         return;
+    }
 
     if (m_Items == nullptr)
     {
@@ -59,22 +61,28 @@ void CGumpTargetSystem::UpdateContent()
             color = g_ConfigManager.GetColorByNotoriety(noto);
 
             if (noto == NT_CRIMINAL || noto == NT_SOMEONE_GRAY)
+            {
                 color = 0;
+            }
         }
 
-        if (color)
+        if (color != 0u)
+        {
             m_DataBox->Add(new CGUIShader(&g_ColorizerShader, true));
+        }
 
         //Гамп статус бара
         CGUIGumppic *gumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x0804, 0, 0));
         gumppic->Color = color;
 
-        if (color)
+        if (color != 0u)
+        {
             m_DataBox->Add(new CGUIShader(&g_ColorizerShader, false));
+        }
 
         OldName = obj->GetName();
 
-        if (!obj->NPC && !OldName.length())
+        if (!obj->NPC && (OldName.length() == 0u))
         {
             STATIC_TILES *st = obj->StaticGroupObjectPtr()->GetStaticData();
 
@@ -96,9 +104,13 @@ void CGumpTargetSystem::UpdateContent()
             {
                 WORD gumpid = 0x0806; //Character status line (blue)
                 if (obj->Poisoned())
+                {
                     gumpid = 0x0808; //Character status line (green)
+                }
                 else if (obj->YellowHits())
+                {
                     gumpid = 0x0809; //Character status line (yellow)
+                }
 
                 m_DataBox->Add(new CGUIGumppicTiled(gumpid, 34, 38, per, 0));
             }
@@ -127,9 +139,11 @@ void CGumpTargetSystem::OnLeftMouseDown()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return;
+    }
 
-    if (!g_PressedObject.LeftSerial)
+    if (g_PressedObject.LeftSerial == 0u)
     {
         //Проверим, может быть есть таргет, который нужно повесить на данного чара
         if (g_Target.IsTargeting())
@@ -144,7 +158,9 @@ void CGumpTargetSystem::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return;
+    }
 
     if (serial == ID_GSB_LOCK_MOVING)
     {
@@ -157,7 +173,9 @@ bool CGumpTargetSystem::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return false;
+    }
 
     uint32_t serial = g_NewTargetSystem.Serial;
 
@@ -166,10 +184,14 @@ bool CGumpTargetSystem::OnLeftMouseButtonDoubleClick()
         if (g_Player->Warmode)
         {
             if (serial < 0x40000000)
+            {
                 g_Orion.Attack(serial); //Если в вармоде - атакуем
+            }
         }
         else
+        {
             g_Orion.DoubleClick(serial); //Или используем предмет
+        }
 
         return true;
     }

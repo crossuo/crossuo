@@ -58,8 +58,10 @@ void CGumpGeneric::InitToolTip()
 
             g_ToolTip.Set(1051000 + offset, "Some virture gump item", 100);
         }
-        else if (obj->ClilocID)
+        else if (obj->ClilocID != 0u)
+        {
             g_ToolTip.Set(obj->ClilocID, "");
+        }
     }
 }
 
@@ -68,7 +70,9 @@ void CGumpGeneric::AddText(
 {
     DEBUG_TRACE_FUNCTION;
     if (start == nullptr)
+    {
         start = (CBaseGUI *)m_Items;
+    }
 
     QFOR(item, start, CBaseGUI *)
     {
@@ -79,7 +83,9 @@ void CGumpGeneric::AddText(
                 CGUIGenericText *gt = (CGUIGenericText *)item;
 
                 if (gt->TextID == index)
+                {
                     gt->CreateTexture(text);
+                }
 
                 break;
             }
@@ -88,7 +94,9 @@ void CGumpGeneric::AddText(
                 CGUIGenericTextEntry *gte = (CGUIGenericTextEntry *)item;
 
                 if (gte->TextID == index)
+                {
                     gte->m_Entry.SetTextW(text);
+                }
 
                 break;
             }
@@ -148,7 +156,9 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return false;
+    }
 
     if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
         ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_VIRTURE_GUMP)
@@ -177,14 +187,18 @@ void CGumpGeneric::OnTextInput(const TextEvent &ev)
 void CGumpGeneric::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     auto key = EvKey(ev);
     if (key == KEY_RETURN)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
+        {
             g_EntryPointer = nullptr;
+        }
         else
+        {
             g_EntryPointer = &g_GameConsole;
+        }
 
         WantRedraw = true;
     }

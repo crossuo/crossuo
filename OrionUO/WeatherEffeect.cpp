@@ -7,4 +7,3 @@ CWeatherEffect::CWeatherEffect()
 
     ScaleRatio = (float)(ID % 20) / 13.0f;
 }
-

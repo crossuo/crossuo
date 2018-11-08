@@ -17,7 +17,9 @@ void CGumpMenu::CalculateGumpState()
     CGump::CalculateGumpState();
 
     if (g_GumpPressed)
+    {
         FrameCreated = false;
+    }
 }
 
 void CGumpMenu::PrepareContent()
@@ -29,10 +31,14 @@ void CGumpMenu::PrepareContent()
 
         if (m_TextObject != nullptr)
         {
-            if (Text.length())
+            if (Text.length() != 0u)
+            {
                 m_TextObject->CreateTextureA(1, Text, 200, TS_LEFT, UOFONT_FIXED);
+            }
             else
+            {
                 m_TextObject->m_Texture.Clear();
+            }
 
             WantRedraw = true;
         }
@@ -42,7 +48,7 @@ void CGumpMenu::PrepareContent()
 bool CGumpMenu::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PressedObject.LeftSerial && g_PressedObject.LeftSerial != ID_GM_HTMLGUMP)
+    if ((g_PressedObject.LeftSerial != 0u) && g_PressedObject.LeftSerial != ID_GM_HTMLGUMP)
     {
         SendMenuResponse(g_PressedObject.LeftSerial);
 
@@ -61,4 +67,3 @@ void CGumpMenu::SendMenuResponse(int index)
     //Удаляем использованный гамп
     RemoveMark = true;
 }
-

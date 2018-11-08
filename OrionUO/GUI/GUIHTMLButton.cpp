@@ -28,6 +28,7 @@ void CGUIHTMLButton::Scroll(bool up, int delay)
 {
     DEBUG_TRACE_FUNCTION;
     if (m_HTMLGump != nullptr)
+    {
         m_HTMLGump->Scroll(up, delay);
+    }
 }
-

@@ -15,7 +15,9 @@ CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     int maxCount = shopItem->Count;
 
     if (maxCount > 999)
+    {
         maxCount = 999;
+    }
 
     m_MinMaxButtons =
         new CGUIMinMaxButtons(Serial, 0x0037, 156, m_NameText.Height / 2, 0, maxCount, 1);
@@ -38,7 +40,9 @@ CBaseGUI *CGUIShopResult::SelectedItem()
 
     if (g_Orion.PolygonePixelsInXY(
             m_X + m_MinMaxButtons->GetX(), m_Y + m_MinMaxButtons->GetY(), size.Width, size.Height))
+    {
         result = m_MinMaxButtons;
+    }
 
     return result;
 }
@@ -70,4 +74,3 @@ bool CGUIShopResult::Select()
 
     return (x >= 0 && y >= 0 && x < 200 && y < m_NameText.Height);
 }
-

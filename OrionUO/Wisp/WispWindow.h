@@ -31,11 +31,11 @@ public:
 #endif
 
     Wisp::CSize GetSize() { return m_Size; };
-    void SetSize(const Wisp::CSize &val);
+    void SetSize(const Wisp::CSize &size);
     Wisp::CSize GetMinSize() { return m_MinSize; };
-    void SetMinSize(const Wisp::CSize &val);
+    void SetMinSize(const Wisp::CSize &newMinSize);
     Wisp::CSize GetMaxSize() { return m_MaxSize; };
-    void SetMaxSize(const Wisp::CSize &val);
+    void SetMaxSize(const Wisp::CSize &newMaxSize);
     void GetPositionSize(int *x, int *y, int *width, int *height);
     void SetPositionSize(int x, int y, int width, int height);
     void MaximizeWindow();

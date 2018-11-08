@@ -28,7 +28,7 @@ public:
     CVector m_Normals[4];
 
     virtual void UpdateGraphicBySeason();
-    int CalculateCurrentAverageZ(int z);
+    int CalculateCurrentAverageZ(int direction);
     virtual void Draw(int x, int y);
     virtual void Select(int x, int y);
     bool IsLandObject() { return true; }

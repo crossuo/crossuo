@@ -54,4 +54,3 @@ void CGUIMenuObject::OnMouseExit()
         }
     }
 }
-

@@ -3,9 +3,8 @@
 
 namespace Wisp
 {
-
 CMappedFile::CMappedFile()
-    : Wisp::CDataReader()
+
 {
 }
 
@@ -74,13 +73,15 @@ bool CMappedFile::Load(const os_path &path)
         else
             LOG("INVALID_HANDLE_VALUE for CreateFileW  %s\n", CStringFromPath(path));
 #else
-        Start = fs_map(path.c_str(), &Size);
+        Start = fs_map(path, &Size);
         result = Start != nullptr;
         SetData(Start, Size);
 #endif
     }
     else
+    {
         LOG("File not found %s\n", CStringFromPath(path));
+    }
 
     if (!result)
     {
@@ -115,11 +116,12 @@ void CMappedFile::Unload()
     }
 #else
     if (Start != nullptr)
+    {
         fs_unmap(Start, Size);
+    }
 #endif
 
     SetData(nullptr, 0);
 }
 
-};
-
+}; // namespace Wisp

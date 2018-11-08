@@ -29,7 +29,9 @@ CGumpBaseScroll::CGumpBaseScroll(
         CGLTexture *th = g_Orion.ExecuteGump(0x082D);
 
         if (th != nullptr)
+        {
             offsetY = th->Height - 3;
+        }
     }
 
     m_Minimizer =
@@ -41,9 +43,13 @@ CGumpBaseScroll::CGumpBaseScroll(
     Wisp::CRect rect = m_Background->WorkSpace;
 
     if (type != GT_SKILLS)
+    {
         m_Minimizer->SetX(137);
+    }
     else
+    {
         m_Minimizer->SetX(170);
+    }
 
     int heightDecBonus = ScissorOffsetHeight;
 
@@ -97,9 +103,13 @@ CGumpBaseScroll::CGumpBaseScroll(
         ID_GBS_BUTTON_RESIZE, 0x082E, 0x082F, 0x082F, 0, offsetY + Height - 3));
 
     if (type != GT_SKILLS)
+    {
         m_Resizer->SetX(137);
+    }
     else
+    {
         m_Resizer->SetX(170);
+    }
 }
 
 CGumpBaseScroll::~CGumpBaseScroll()
@@ -112,28 +122,36 @@ void CGumpBaseScroll::UpdateHeight()
     Height = StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
 
     if (Height < m_MinHeight)
+    {
         Height = m_MinHeight;
+    }
 
     int maxHeight;
     GetDisplaySize(nullptr, &maxHeight);
     maxHeight -= 50;
 
     if (Height >= maxHeight)
+    {
         Height = maxHeight;
+    }
 
     int offsetY = 0;
 
     CGLTexture *th = g_Orion.ExecuteGump(0x082D);
 
     if (th != nullptr && m_Minimizer->Visible)
+    {
         offsetY = th->Height - 3;
+    }
 
     m_Background->UpdateHeight(Height);
 
     int heightDecBonus = ScissorOffsetHeight;
 
     if (HaveBackgroundLines)
+    {
         heightDecBonus += 16;
+    }
 
     m_HTMLGump->UpdateHeight(
         m_Background->WorkSpace.Size.Height - ScrollerOffsetY - heightDecBonus);
@@ -150,7 +168,7 @@ void CGumpBaseScroll::GUMP_RESIZE_START_EVENT_C
 void CGumpBaseScroll::GUMP_RESIZE_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (StartResizeHeight)
+    if (StartResizeHeight != 0)
     {
         UpdateHeight();
         RecalculateSize();
@@ -160,7 +178,8 @@ void CGumpBaseScroll::GUMP_RESIZE_EVENT_C
 void CGumpBaseScroll::GUMP_RESIZE_END_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (StartResizeHeight)
+    if (StartResizeHeight != 0)
+    {
         StartResizeHeight = 0;
+    }
 }
-

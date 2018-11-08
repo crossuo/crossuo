@@ -6,10 +6,14 @@ CSkillsManager g_SkillsManager;
 CSkill::CSkill(bool haveButton, const string &name)
     : Button(haveButton)
 {
-    if (name.length())
+    if (name.length() != 0u)
+    {
         Name = name;
+    }
     else
+    {
         Name = "NoNameSkill";
+    }
 
     //LOG("Skill loaded (button:%i): %s\n", m_Button, m_Name.c_str());
 }
@@ -17,8 +21,11 @@ CSkill::CSkill(bool haveButton, const string &name)
 bool CSkillsManager::Load()
 {
     DEBUG_TRACE_FUNCTION;
-    if (!g_FileManager.m_SkillsIdx.Size || !g_FileManager.m_SkillsMul.Size || Count)
+    if ((g_FileManager.m_SkillsIdx.Size == 0u) || (g_FileManager.m_SkillsMul.Size == 0u) ||
+        (Count != 0u))
+    {
         return false;
+    }
 
     Wisp::CMappedFile &idx = g_FileManager.m_SkillsIdx;
     Wisp::CMappedFile &mul = g_FileManager.m_SkillsMul;
@@ -28,7 +35,8 @@ bool CSkillsManager::Load()
         PSKILLS_IDX_BLOCK idxBlock = (PSKILLS_IDX_BLOCK)idx.Ptr;
         idx.Move(sizeof(SKILLS_IDX_BLOCK));
 
-        if (idxBlock->Size && idxBlock->Position != 0xFFFFFFFF && idxBlock->Size != 0xFFFFFFFF)
+        if ((idxBlock->Size != 0u) && idxBlock->Position != 0xFFFFFFFF &&
+            idxBlock->Size != 0xFFFFFFFF)
         {
             mul.Ptr = mul.Start + idxBlock->Position;
 
@@ -67,7 +75,9 @@ void CSkillsManager::Clear()
 CSkill *CSkillsManager::Get(uint32_t index)
 {
     if (index < Count)
+    {
         return &m_Skills[index];
+    }
 
     return nullptr;
 }
@@ -86,9 +96,13 @@ bool CSkillsManager::CompareName(const string &str1, const string &str2)
         char c2 = str2.at(i);
 
         if (c1 < c2)
+        {
             return true;
-        else if (c1 > c2)
+        }
+        if (c1 > c2)
+        {
             return false;
+        }
     }
 
     //Вернем что получилось
@@ -141,13 +155,17 @@ void CSkillsManager::Sort()
     }
 
     for (int i = 0, j = parsed - 1; i < parsed; i++, j--)
+    {
         m_SortedTable[i] = bufTable[j];
+    }
 }
 
 int CSkillsManager::GetSortedIndex(uint32_t index)
 {
     if (index < Count)
+    {
         return m_SortedTable[index];
+    }
 
     return -1;
 }
@@ -157,5 +175,7 @@ void CSkillsManager::UpdateSkillsSum()
     SkillsTotal = 0.0f;
 
     for (const CSkill &skill : m_Skills)
+    {
         SkillsTotal += skill.Value;
+    }
 }

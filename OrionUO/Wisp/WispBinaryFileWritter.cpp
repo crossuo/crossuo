@@ -2,9 +2,8 @@
 
 namespace Wisp
 {
-
 CBinaryFileWritter::CBinaryFileWritter()
-    : Wisp::CDataWritter()
+
 {
 }
 
@@ -42,12 +41,11 @@ void CBinaryFileWritter::Close()
 void CBinaryFileWritter::WriteBuffer()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_File != nullptr && m_Data.size() > 0)
+    if (m_File != nullptr && !m_Data.empty())
     {
         fwrite(&m_Data[0], m_Data.size(), 1, m_File);
         m_Data.clear();
     }
 }
 
-};
-
+}; // namespace Wisp

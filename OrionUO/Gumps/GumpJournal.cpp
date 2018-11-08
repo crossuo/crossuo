@@ -15,7 +15,9 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
         MinimizedY = y;
     }
     else
+    {
         Page = 2;
+    }
 
     Add(new CGUIPage(1));
     Add(new CGUIGumppic(0x0830, 0, 0));
@@ -104,7 +106,9 @@ void CGumpJournal::InitToolTip()
         }
     }
     else
+    {
         g_ToolTip.Set(L"Double click to maximize journal gump");
+    }
 }
 
 void CGumpJournal::UpdateHeight()
@@ -125,7 +129,9 @@ void CGumpJournal::UpdateHeight()
     m_TextShowClient->SetY(Height - 2);
 
     if (!m_TextLocker->Visible)
+    {
         m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
+    }
 }
 
 int CGumpJournal::RecalculateHeight()
@@ -142,16 +148,24 @@ int CGumpJournal::RecalculateHeight()
             bool visible = true;
 
             if (item->Graphic == TT_SYSTEM)
+            {
                 visible = g_JournalShowSystem;
+            }
             else if (item->Graphic == TT_OBJECT)
+            {
                 visible = g_JournalShowObjects;
+            }
             else if (item->Graphic == TT_CLIENT)
+            {
                 visible = g_JournalShowClient;
+            }
 
             item->Visible = visible;
 
             if (visible)
+            {
                 height += ((CGUIText *)item)->m_Texture.Height;
+            }
         }
     }
 
@@ -170,12 +184,18 @@ void CGumpJournal::AddText(CTextData *obj)
     uint16_t flags = UOFONT_INDENTION;
 
     if (obj->Type == TT_OBJECT || obj->Unicode)
+    {
         flags |= UOFONT_BLACK_BORDER;
+    }
 
     if (obj->Unicode)
+    {
         text->CreateTextureW(obj->Font, obj->UnicodeText, 30, 214, TS_LEFT, flags);
+    }
     else
+    {
         text->CreateTextureA(obj->Font, obj->Text, 214, TS_LEFT, flags);
+    }
 
     m_HTMLGump->CalculateDataSize();
 
@@ -211,7 +231,9 @@ void CGumpJournal::GUMP_BUTTON_EVENT_C
         Page = 1;
     }
     else if (serial == ID_GJ_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial == ID_GJ_BUTTON_LOCK)
     {
         m_HTMLGump->m_Slider->Value = m_HTMLGump->m_Slider->MaxValue;
@@ -275,4 +297,3 @@ bool CGumpJournal::OnLeftMouseButtonDoubleClick()
 
     return false;
 }
-

@@ -6,8 +6,7 @@
 CMacroObject *g_MacroPointer = nullptr;
 
 CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode)
-    : CBaseQueueItem()
-    , Code(code)
+    : Code(code)
     , SubCode(subCode)
 {
     DEBUG_TRACE_FUNCTION;
@@ -65,7 +64,6 @@ CMacroObject::~CMacroObject()
 {
 }
 
-
 CMacroObjectString::CMacroObjectString(
     const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str)
     : CMacroObject(code, subCode)
@@ -77,10 +75,8 @@ CMacroObjectString::~CMacroObjectString()
 {
 }
 
-
 CMacro::CMacro(Keycode key, bool alt, bool ctrl, bool shift)
-    : CBaseQueueItem()
-    , Key(key)
+    : Key(key)
     , Alt(alt)
     , Ctrl(ctrl)
     , Shift(shift)
@@ -139,12 +135,18 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
     obj->m_Next = source->m_Next;
 
     if (source->m_Prev == nullptr)
+    {
         m_Items = obj;
+    }
     else
+    {
         source->m_Prev->m_Next = obj;
+    }
 
     if (source->m_Next != nullptr)
+    {
         source->m_Next->m_Prev = obj;
+    }
 
     source->m_Prev = nullptr;
     source->m_Next = nullptr;
@@ -160,21 +162,21 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
 
     auto key = file.ReadUInt16LE();
     bool alt = false;
-    if (key & MODKEY_ALT)
+    if ((key & MODKEY_ALT) != 0)
     {
         key -= MODKEY_ALT;
         alt = true;
     }
 
     bool ctrl = false;
-    if (key & MODKEY_CTRL)
+    if ((key & MODKEY_CTRL) != 0)
     {
         key -= MODKEY_CTRL;
         ctrl = true;
     }
 
     bool shift = false;
-    if (key & MODKEY_SHIFT)
+    if ((key & MODKEY_SHIFT) != 0)
     {
         key -= MODKEY_SHIFT;
         shift = true;
@@ -212,7 +214,9 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
         }
 
         if (obj != nullptr)
+        {
             macro->Add(obj);
+        }
     }
 
     file.Ptr = next;
@@ -242,13 +246,19 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
 
     auto key = Key;
     if (Alt)
+    {
         key += MODKEY_ALT;
+    }
 
     if (Ctrl)
+    {
         key += MODKEY_CTRL;
+    }
 
     if (Shift)
+    {
         key += MODKEY_SHIFT;
+    }
 
     writter.WriteUInt16LE(key);
     writter.WriteUInt16LE(count);
@@ -257,7 +267,9 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
     {
         uint8_t type = 0;
         if (obj->HaveString())
+        {
             type = 2;
+        }
 
         writter.WriteUInt8(type);
         writter.WriteUInt16LE(obj->Code);
@@ -288,16 +300,22 @@ CMacro *CMacro::GetCopy()
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         if (obj->HaveString())
+        {
             macro->Add(new CMacroObjectString(
                 obj->Code, obj->SubCode, ((CMacroObjectString *)obj)->m_String));
+        }
         else
+        {
             macro->Add(new CMacroObject(obj->Code, obj->SubCode));
+        }
 
         oldCode = obj->Code;
     }
 
     if (oldCode != MC_NONE)
+    {
         macro->Add(new CMacroObject(MC_NONE, MSC_NONE));
+    }
 
     return macro;
 }

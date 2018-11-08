@@ -28,32 +28,46 @@ void CGumpScreenServer::UpdateContent()
 
     uint16_t textColor = 0x0481;
     if (g_PacketManager.GetClientVersion() >= CV_500A)
+    {
         textColor = 0xFFFF;
+    }
 
     CGUIText *text = new CGUIText(textColor, 155, 70);
 
     if (g_PacketManager.GetClientVersion() >= CV_500A)
+    {
         text->CreateTextureW(0, cliloc->GetW(1044579, false, "Select which shard to play on:"));
+    }
     else
+    {
         text->CreateTextureA(9, "Select which shard to play on:");
+    }
 
     Add(text);
 
     text = new CGUIText(textColor, 400, 70);
 
     if (g_PacketManager.GetClientVersion() >= CV_500A)
+    {
         text->CreateTextureW(0, cliloc->GetW(1044577, false, "Latency:"));
+    }
     else
+    {
         text->CreateTextureA(9, "Latency:");
+    }
 
     Add(text);
 
     text = new CGUIText(textColor, 470, 70);
 
     if (g_PacketManager.GetClientVersion() >= CV_500A)
+    {
         text->CreateTextureW(0, cliloc->GetW(1044578, false, "Packet Loss:"));
+    }
     else
+    {
         text->CreateTextureA(9, "Packet Loss:");
+    }
 
     Add(text);
 
@@ -66,9 +80,13 @@ void CGumpScreenServer::UpdateContent()
     text = new CGUIText(textColor, 153, 368);
 
     if (g_PacketManager.GetClientVersion() >= CV_500A)
+    {
         text->CreateTextureW(0, cliloc->GetW(1044580, false, "Sort by:"));
+    }
     else
+    {
         text->CreateTextureA(9, "Sort by:");
+    }
 
     Add(text);
 
@@ -98,9 +116,13 @@ void CGumpScreenServer::UpdateContent()
         entry = new CGUITextEntry(
             ID_SS_SERVER_LIST + (int)i, 0x034F, 0x0021, 0x0021, 250, 10 + offsetY, 0, false, 5);
         if (server->Ping == -1)
+        {
             entry->m_Entry.SetTextA("-");
+        }
         else
+        {
             entry->m_Entry.SetTextA(std::to_string(server->Ping) + "ms");
+        }
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
         htmlGump->Add(entry);
@@ -108,9 +130,13 @@ void CGumpScreenServer::UpdateContent()
         entry = new CGUITextEntry(
             ID_SS_SERVER_LIST + (int)i, 0x034F, 0x0021, 0x0021, 320, 10 + offsetY, 0, false, 5);
         if (server->PacketsLoss == -1)
+        {
             entry->m_Entry.SetTextA("-");
+        }
         else
+        {
             entry->m_Entry.SetTextA(std::to_string(server->PacketsLoss) + "%");
+        }
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
         htmlGump->Add(entry);
@@ -125,9 +151,13 @@ void CGumpScreenServer::UpdateContent()
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0481, 243, 420));
 
         if (g_ServerList.LastServerIndex < (uint32_t)g_ServerList.ServersCount())
+        {
             text->CreateTextureA(9, g_ServerList.GetServer(g_ServerList.LastServerIndex)->Name);
+        }
         else
+        {
             text->CreateTextureA(9, g_ServerList.GetServer(0)->Name);
+        }
     }
 }
 
@@ -135,7 +165,9 @@ void CGumpScreenServer::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
+    {
         return;
+    }
 
     uint32_t id = g_SelectedObject.Serial;
 
@@ -177,10 +209,14 @@ void CGumpScreenServer::InitToolTip()
 void CGumpScreenServer::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_SS_QUIT) //x button
+    if (serial == ID_SS_QUIT)
+    { //x button
         g_ServerScreen.CreateSmoothAction(CServerScreen::ID_SMOOTH_SS_QUIT);
-    else if (serial == ID_SS_ARROW_PREV) //< button
+    }
+    else if (serial == ID_SS_ARROW_PREV)
+    { //< button
         g_ServerScreen.CreateSmoothAction(CServerScreen::ID_SMOOTH_SS_GO_SCREEN_MAIN);
+    }
     else if (serial == ID_SS_ARROW_NEXT || serial == ID_SS_EARTH) //> button
     {
         g_ServerScreen.SelectionServerTempValue = g_ServerList.LastServerIndex;
@@ -197,4 +233,3 @@ void CGumpScreenServer::GUMP_TEXT_ENTRY_EVENT_C
         g_ServerScreen.CreateSmoothAction(CServerScreen::ID_SMOOTH_SS_SELECT_SERVER);
     }
 }
-

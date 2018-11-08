@@ -1126,7 +1126,7 @@ void CGumpOptions::DrawPage2()
 
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P2_TRANSPARENT_SPELL_ICONS, 0x00D2, 0x00D3, 0x00D2, 0, 450));
-    checkbox->Checked = g_OptionsConfig.TransparentSpellIcons;
+    checkbox->Checked = (g_OptionsConfig.TransparentSpellIcons != 0u);
     checkbox->SetTextParameters(0, L"Transparent spell icons, alpha:", g_OptionsTextColor);
 
     m_SliderSpellIconsAlpha = (CGUISlider *)html->Add(new CGUISlider(
@@ -1351,8 +1351,10 @@ void CGumpOptions::DrawPage3()
     uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.ToolTipsTextColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ToolTipsTextColor);
+    }
 
     m_ColorTooltipText = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P3_TEXT_COLOR, g_OptionsConfig.ToolTipsTextColor, 67, 154, 13, 14, color));
@@ -1386,8 +1388,10 @@ void CGumpOptions::DrawPage4()
     uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
 
     m_ColorInputText = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR, g_OptionsConfig.ChatColorInputText, 67, 93, 13, 14, color));
@@ -1399,10 +1403,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 1, 0x00D4, 0x00D4, 0x00D4, 64, 109));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorMenuOption = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 1, g_OptionsConfig.ChatColorInputText, 67, 112, 13, 14, color));
@@ -1414,10 +1422,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 2, 0x00D4, 0x00D4, 0x00D4, 64, 128));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorPlayerColorInMemberList = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 2, g_OptionsConfig.ChatColorInputText, 67, 131, 13, 14, color));
@@ -1429,10 +1441,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 3, 0x00D4, 0x00D4, 0x00D4, 64, 147));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorChatText = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 3, g_OptionsConfig.ChatColorInputText, 67, 150, 13, 14, color));
@@ -1444,10 +1460,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 4, 0x00D4, 0x00D4, 0x00D4, 64, 166));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorPlayerNameWithoutSpeakingPrivileges = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 4, g_OptionsConfig.ChatColorInputText, 67, 169, 13, 14, color));
@@ -1459,10 +1479,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 5, 0x00D4, 0x00D4, 0x00D4, 64, 201));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorMutedText = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 5, g_OptionsConfig.ChatColorInputText, 67, 204, 13, 14, color));
@@ -1474,10 +1498,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 6, 0x00D4, 0x00D4, 0x00D4, 64, 220));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorChannelModeratorName = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 6, g_OptionsConfig.ChatColorInputText, 67, 223, 13, 14, color));
@@ -1489,10 +1517,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 7, 0x00D4, 0x00D4, 0x00D4, 64, 239));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorChannelModeratorText = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 7, g_OptionsConfig.ChatColorInputText, 67, 242, 13, 14, color));
@@ -1504,10 +1536,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 8, 0x00D4, 0x00D4, 0x00D4, 64, 258));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorMyName = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 8, g_OptionsConfig.ChatColorInputText, 67, 261, 13, 14, color));
@@ -1519,10 +1555,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 9, 0x00D4, 0x00D4, 0x00D4, 64, 277));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorMyText = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 9, g_OptionsConfig.ChatColorInputText, 67, 280, 13, 14, color));
@@ -1534,10 +1574,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 10, 0x00D4, 0x00D4, 0x00D4, 64, 296));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorSystemMessage = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 10, g_OptionsConfig.ChatColorInputText, 67, 299, 13, 14, color));
@@ -1549,10 +1593,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 11, 0x00D4, 0x00D4, 0x00D4, 300, 90));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorTextOutputBackground = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 11, g_OptionsConfig.ChatColorInputText, 303, 93, 13, 14, color));
@@ -1564,10 +1612,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 12, 0x00D4, 0x00D4, 0x00D4, 300, 109));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorTextInputBackground = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 12, g_OptionsConfig.ChatColorInputText, 303, 112, 13, 14, color));
@@ -1579,10 +1631,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 13, 0x00D4, 0x00D4, 0x00D4, 300, 128));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorUserListBackground = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 13, g_OptionsConfig.ChatColorInputText, 303, 131, 13, 14, color));
@@ -1594,10 +1650,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 14, 0x00D4, 0x00D4, 0x00D4, 300, 147));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorConferenceListBackground = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 14, g_OptionsConfig.ChatColorInputText, 303, 150, 13, 14, color));
@@ -1609,10 +1669,14 @@ void CGumpOptions::DrawPage4()
     Add(new CGUIButton(ID_GO_P4_TEXT_COLOR + 15, 0x00D4, 0x00D4, 0x00D4, 300, 166));
 
     if (g_OptionsConfig.ChatColorInputText != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.ChatColorInputText);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorCommandListBackground = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P4_TEXT_COLOR + 15, g_OptionsConfig.ChatColorInputText, 303, 169, 13, 14, color));
@@ -2079,8 +2143,10 @@ void CGumpOptions::DrawPage7()
     uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.SpeechColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.SpeechColor);
+    }
 
     m_ColorSpeech = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P7_SPEECH_COLOR, g_OptionsConfig.SpeechColor, 67, 207, 13, 14, color));
@@ -2092,10 +2158,14 @@ void CGumpOptions::DrawPage7()
     Add(new CGUIButton(ID_GO_P7_EMOTE_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 223));
 
     if (g_OptionsConfig.EmoteColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.EmoteColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorEmote = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P7_EMOTE_COLOR, g_OptionsConfig.EmoteColor, 67, 226, 13, 14, color));
@@ -2107,10 +2177,14 @@ void CGumpOptions::DrawPage7()
     Add(new CGUIButton(ID_GO_P7_PARTY_MESSAGE_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 242));
 
     if (g_OptionsConfig.PartyMessageColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.PartyMessageColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorPartyMessage = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P7_PARTY_MESSAGE_COLOR, g_OptionsConfig.PartyMessageColor, 67, 245, 13, 14, color));
@@ -2134,10 +2208,14 @@ void CGumpOptions::DrawPage7()
         Add(new CGUIButton(ID_GO_P7_GUILD_MESSAGE_COLOR, 0x00D4, 0x00D4, 0x00D4, 354, 204));
 
         if (g_OptionsConfig.GuildMessageColor != 0xFFFF)
+        {
             color = g_ColorManager.GetPolygoneColor(
                 g_OptionsPolygoneColorOffset, g_OptionsConfig.GuildMessageColor);
+        }
         else
+        {
             color = 0xFF7F7F7F;
+        }
 
         m_ColorGuildMessage = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
             ID_GO_P7_GUILD_MESSAGE_COLOR,
@@ -2155,10 +2233,14 @@ void CGumpOptions::DrawPage7()
         Add(new CGUIButton(ID_GO_P7_ALLIANCE_MESSAGE_COLOR, 0x00D4, 0x00D4, 0x00D4, 354, 223));
 
         if (g_OptionsConfig.AllianceMessageColor != 0xFFFF)
+        {
             color = g_ColorManager.GetPolygoneColor(
                 g_OptionsPolygoneColorOffset, g_OptionsConfig.AllianceMessageColor);
+        }
         else
+        {
             color = 0xFF7F7F7F;
+        }
 
         m_ColorAllianceMessage = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
             ID_GO_P7_ALLIANCE_MESSAGE_COLOR,
@@ -2208,8 +2290,10 @@ void CGumpOptions::DrawPage8()
     uint32_t color = 0xFF7F7F7F;
 
     if (g_OptionsConfig.InnocentColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.InnocentColor);
+    }
 
     m_ColorInnocent = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P8_INNOCENT_COLOR, g_OptionsConfig.InnocentColor, 67, 93, 13, 14, color));
@@ -2221,10 +2305,14 @@ void CGumpOptions::DrawPage8()
     Add(new CGUIButton(ID_GO_P8_FRIENDLY_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 109));
 
     if (g_OptionsConfig.FriendlyColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.FriendlyColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorFriendly = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P8_FRIENDLY_COLOR, g_OptionsConfig.FriendlyColor, 67, 112, 13, 14, color));
@@ -2236,10 +2324,14 @@ void CGumpOptions::DrawPage8()
     Add(new CGUIButton(ID_GO_P8_SOMEONE_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 128));
 
     if (g_OptionsConfig.SomeoneColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.SomeoneColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorSomeone = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P8_SOMEONE_COLOR, g_OptionsConfig.SomeoneColor, 67, 131, 13, 14, color));
@@ -2251,10 +2343,14 @@ void CGumpOptions::DrawPage8()
     Add(new CGUIButton(ID_GO_P8_CRIMINAL_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 147));
 
     if (g_OptionsConfig.CriminalColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.CriminalColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorCriminal = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P8_CRIMINAL_COLOR, g_OptionsConfig.CriminalColor, 67, 150, 13, 14, color));
@@ -2266,10 +2362,14 @@ void CGumpOptions::DrawPage8()
     Add(new CGUIButton(ID_GO_P8_ENEMY_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 166));
 
     if (g_OptionsConfig.EnemyColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.EnemyColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorEnemy = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P8_ENEMY_COLOR, g_OptionsConfig.EnemyColor, 67, 169, 13, 14, color));
@@ -2281,10 +2381,14 @@ void CGumpOptions::DrawPage8()
     Add(new CGUIButton(ID_GO_P8_MURDERER_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 185));
 
     if (g_OptionsConfig.MurdererColor != 0xFFFF)
+    {
         color = g_ColorManager.GetPolygoneColor(
             g_OptionsPolygoneColorOffset, g_OptionsConfig.MurdererColor);
+    }
     else
+    {
         color = 0xFF7F7F7F;
+    }
 
     m_ColorMurderer = (CGUIColoredPolygone *)Add(new CGUIColoredPolygone(
         ID_GO_P8_MURDERER_COLOR, g_OptionsConfig.MurdererColor, 67, 188, 13, 14, color));
@@ -2689,24 +2793,32 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             }
             case 3: //Language
             {
-                if (serial == ID_GO_P3_TEXT_COLOR) //Color of Tool-tip text
+                if (serial == ID_GO_P3_TEXT_COLOR)
+                { //Color of Tool-tip text
                     g_GumpManager.AddGump(new CGumpSelectColor(0, 100, 100, SCGS_OPT_TOOLTIP_TEXT));
-                else if (serial == ID_GO_P3_TEXT_FONT) //Font
+                }
+                else if (serial == ID_GO_P3_TEXT_FONT)
+                { //Font
                     g_GumpManager.AddGump(new CGumpSelectFont(0, 320, 240, SFGS_OPT_TOOLTIP));
+                }
 
                 break;
             }
             case 4: //Chat
             {
-                if (serial >= ID_GO_P4_TEXT_COLOR) //Input text color
+                if (serial >= ID_GO_P4_TEXT_COLOR)
+                { //Input text color
                     g_GumpManager.AddGump(new CGumpSelectColor(
                         0,
                         100,
                         100,
                         (SELECT_COLOR_GUMP_STATE)(
                             SCGS_OPT_CHAT_INPUT_TEXT + (serial - ID_GO_P4_TEXT_COLOR))));
-                else if (serial == ID_GO_P4_TEXT_FONT) //Font
+                }
+                else if (serial == ID_GO_P4_TEXT_FONT)
+                { //Font
                     g_GumpManager.AddGump(new CGumpSelectFont(0, 320, 240, SFGS_OPT_CHAT));
+                }
 
                 break;
             }
@@ -2727,7 +2839,9 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
                         CMacro *newpointer = (CMacro *)m_MacroPointer->m_Next;
 
                         if (newpointer == nullptr)
+                        {
                             newpointer = (CMacro *)m_MacroPointer->m_Prev;
+                        }
 
                         g_OptionsMacroManager.Delete(m_MacroPointer);
                         if (newpointer == nullptr)
@@ -2789,34 +2903,38 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             }
             case 7: //Display
             {
-                if (serial >= ID_GO_P7_SPEECH_COLOR &&
-                    serial <= ID_GO_P7_ALLIANCE_MESSAGE_COLOR) //Speech color
+                if (serial >= ID_GO_P7_SPEECH_COLOR && serial <= ID_GO_P7_ALLIANCE_MESSAGE_COLOR)
+                { //Speech color
                     g_GumpManager.AddGump(new CGumpSelectColor(
                         0,
                         100,
                         100,
                         (SELECT_COLOR_GUMP_STATE)(
                             SCGS_OPT_DISPLAY_SPEECH + (serial - ID_GO_P7_SPEECH_COLOR))));
+                }
 
                 break;
             }
             case 8: //Reputation System
             {
-                if (serial >= ID_GO_P8_INNOCENT_COLOR &&
-                    serial <= ID_GO_P8_MURDERER_COLOR) //Innocent highlight color
+                if (serial >= ID_GO_P8_INNOCENT_COLOR && serial <= ID_GO_P8_MURDERER_COLOR)
+                { //Innocent highlight color
                     g_GumpManager.AddGump(new CGumpSelectColor(
                         0,
                         100,
                         100,
                         (SELECT_COLOR_GUMP_STATE)(
                             SCGS_OPT_REPSYS_INNOCENT + (serial - ID_GO_P8_INNOCENT_COLOR))));
+                }
 
                 break;
             }
             case 9: //Miscellaneous
             {
-                if (serial == ID_GO_P9_SPEECH_FONT) //Speech Font
+                if (serial == ID_GO_P9_SPEECH_FONT)
+                { //Speech Font
                     g_GumpManager.AddGump(new CGumpSelectFont(0, 320, 240, SFGS_OPT_MISCELLANEOUS));
+                }
 
                 break;
             }
@@ -2837,101 +2955,179 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
     {
         case 1: //Sound and Music
         {
-            if (serial == ID_GO_P1_SOUND_ON_OFF) //Sound on/off
+            if (serial == ID_GO_P1_SOUND_ON_OFF)
+            { //Sound on/off
                 g_OptionsConfig.SetSound(state);
-            else if (serial == ID_GO_P1_MUSIC_ON_OFF) //Music on/off
+            }
+            else if (serial == ID_GO_P1_MUSIC_ON_OFF)
+            { //Music on/off
                 g_OptionsConfig.SetMusic(state);
-            else if (serial == ID_GO_P1_PLAY_FOOTSTEP_SOUNDS) //Play footstep sounds
+            }
+            else if (serial == ID_GO_P1_PLAY_FOOTSTEP_SOUNDS)
+            { //Play footstep sounds
                 g_OptionsConfig.FootstepsSound = state;
-            else if (serial == ID_GO_P1_PLAY_COMBAT_MUSIC) //Play combat music
+            }
+            else if (serial == ID_GO_P1_PLAY_COMBAT_MUSIC)
+            { //Play combat music
                 g_OptionsConfig.CombatMusic = state;
-            else if (serial == ID_GO_P1_BACKGROUND_SOUND) //Play sounds in background
+            }
+            else if (serial == ID_GO_P1_BACKGROUND_SOUND)
+            { //Play sounds in background
                 g_OptionsConfig.BackgroundSound = state;
+            }
             break;
         }
         case 2: //Orion's configuration
         {
-            if (serial == ID_GO_P2_ENABLE_SCALING) //Use scaling in game window
+            if (serial == ID_GO_P2_ENABLE_SCALING)
+            { //Use scaling in game window
                 g_OptionsConfig.SetUseScaling(state);
-            else if (
-                serial ==
-                ID_GO_P2_REMOVE_TEXT_WITH_BLENDING) //Remove object's text with alpha-blending
+            }
+            else if (serial == ID_GO_P2_REMOVE_TEXT_WITH_BLENDING)
+            { //Remove object's text with alpha-blending
                 g_OptionsConfig.RemoveTextWithBlending = state;
+            }
             else if (serial == ID_GO_P2_DRAW_STUMPS)
+            {
                 g_OptionsConfig.SetDrawStumps(state);
+            }
             else if (serial == ID_GO_P2_MARKING_CAVES)
+            {
                 g_OptionsConfig.SetMarkingCaves(state);
+            }
             else if (serial == ID_GO_P2_NO_VEGETATION)
+            {
                 g_OptionsConfig.SetNoVegetation(state);
+            }
             else if (serial == ID_GO_P2_NO_ANIMATE_FIELDS)
+            {
                 g_OptionsConfig.SetNoAnimateFields(state);
-            else if (
-                serial == ID_GO_P2_REDUCE_FPS_UNACTIVE_WINDOW) //Reduce FPS when Window is Unactive
+            }
+            else if (serial == ID_GO_P2_REDUCE_FPS_UNACTIVE_WINDOW)
+            { //Reduce FPS when Window is Unactive
                 g_OptionsConfig.SetReduceFPSUnactiveWindow(state);
-            else if (
-                serial == ID_GO_P2_CHARACTERS_ANIMATION_DELAY) //Standard characters animation delay
+            }
+            else if (serial == ID_GO_P2_CHARACTERS_ANIMATION_DELAY)
+            { //Standard characters animation delay
                 g_OptionsConfig.StandartCharactersAnimationDelay = state;
-            else if (serial == ID_GO_P2_ITEMS_ANIMATION_DELAY) //Standard items animation delay
+            }
+            else if (serial == ID_GO_P2_ITEMS_ANIMATION_DELAY)
+            { //Standard items animation delay
                 g_OptionsConfig.StandartItemsAnimationDelay = state;
-            else if (serial == ID_GO_P2_LOCK_GUMP_MOVING) //Lock gump moving
+            }
+            else if (serial == ID_GO_P2_LOCK_GUMP_MOVING)
+            { //Lock gump moving
                 g_OptionsConfig.LockGumpsMoving = state;
-            else if (serial == ID_GO_P2_CONSOLE_ENTER) //Console need press 'Enter' to activate it.
+            }
+            else if (serial == ID_GO_P2_CONSOLE_ENTER)
+            { //Console need press 'Enter' to activate it.
                 g_OptionsConfig.SetConsoleNeedEnter(state);
+            }
             else if (serial == ID_GO_P2_USE_HIDDEN_MODE_ONLY_FOR_SELF)
+            {
                 g_OptionsConfig.UseHiddenModeOnlyForSelf = state;
+            }
             else if (serial == ID_GO_P2_TRANSPARENT_SPELL_ICONS)
-                g_OptionsConfig.TransparentSpellIcons = state;
+            {
+                g_OptionsConfig.TransparentSpellIcons = static_cast<uint8_t>(state);
+            }
             else if (serial == ID_GO_P2_OLD_STYLE_STATUSBAR)
+            {
                 g_OptionsConfig.SetOldStyleStatusbar(state);
+            }
             else if (serial == ID_GO_P2_ORIGINAL_PARTY_STATUSBAR)
+            {
                 g_OptionsConfig.SetOriginalPartyStatusbar(state);
+            }
             else if (serial == ID_GO_P2_APPLY_STATE_COLOR_ON_CHARACTERS)
+            {
                 g_OptionsConfig.SetApplyStateColorOnCharacters(state);
+            }
             else if (serial == ID_GO_P2_CHANGE_FIELDS_GRAPHIC)
+            {
                 g_OptionsConfig.SetChangeFieldsGraphic(state);
+            }
             else if (serial == ID_GO_P2_PAPERDOLL_SLOTS)
+            {
                 g_OptionsConfig.SetPaperdollSlots(state);
+            }
             else if (serial == ID_GO_P2_REMOVE_STATUSBARS_WITHOUT_OBJECTS)
+            {
                 g_OptionsConfig.RemoveStatusbarsWithoutObjects = state;
+            }
             else if (serial == ID_GO_P2_SHOW_CONSOLE_ENTRY_MODE)
+            {
                 g_OptionsConfig.ShowDefaultConsoleEntryMode = state;
+            }
             else if (serial == ID_GO_P2_DRAW_AURA_WITH_CTRL_PRESSED)
+            {
                 g_OptionsConfig.DrawAuraWithCtrlPressed = state;
+            }
             else if (serial == ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS)
+            {
                 g_OptionsConfig.SetScaleImagesInPaperdollSlots(state);
+            }
             else if (serial == ID_GO_P2_REMOVE_OR_CREATE_OBJECTS_WITH_BLENDING)
+            {
                 g_OptionsConfig.RemoveOrCreateObjectsWithBlending = state;
+            }
             else if (serial == ID_GO_P2_DRAW_HELMETS_ON_SHROUD)
+            {
                 g_OptionsConfig.DrawHelmetsOnShroud = state;
+            }
             else if (serial == ID_GO_P2_USE_GLOBAL_MAP_LAYER)
+            {
                 g_OptionsConfig.SetUseGlobalMapLayer(state);
+            }
             else if (serial == ID_GO_P2_NO_DRAW_ROOFS)
+            {
                 g_OptionsConfig.SetNoDrawRoofs(state);
+            }
             else if (serial == ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE)
+            {
                 g_OptionsConfig.HighlightTargetByType = state;
+            }
             else if (serial == ID_GO_P2_AUTO_DISPLAY_WORLD_MAP)
+            {
                 g_OptionsConfig.AutoDisplayWorldMap = state;
+            }
             else if (serial == ID_GO_P2_USE_GL_LISTS_FOR_INTERFACE)
+            {
                 g_OptionsConfig.SetUseGLListsForInterface(state);
+            }
             else if (serial == ID_GO_P2_CHECK_PING)
+            {
                 g_OptionsConfig.CheckPing = state;
+            }
             else if (serial == ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC)
+            {
                 g_OptionsConfig.CancelNewTargetSystemOnShiftEsc = state;
+            }
             else if (serial == ID_GO_P2_DRAW_STATUS_FOR_HUMANOIDS)
+            {
                 g_OptionsConfig.DrawStatusForHumanoids = state;
+            }
             else if (serial == ID_GO_P2_DEV_MODE_1)
+            {
                 g_OptionsDeveloperMode = DM_NO_DEBUG;
+            }
             else if (serial == ID_GO_P2_DEV_MODE_2)
+            {
                 g_OptionsDeveloperMode = DM_SHOW_FPS_ONLY;
+            }
             else if (serial == ID_GO_P2_DEV_MODE_3)
+            {
                 g_OptionsDeveloperMode = DM_DEBUGGING;
+            }
 
             break;
         }
         case 3: //Language
         {
-            if (serial == ID_GO_P3_USE_TOOLTIP) //Use Tool-tips
+            if (serial == ID_GO_P3_USE_TOOLTIP)
+            { //Use Tool-tips
                 g_OptionsConfig.UseToolTips = state;
+            }
 
             break;
         }
@@ -2941,88 +3137,126 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
         }
         case 5: //Macro Options
         {
-            if (serial == ID_GO_P5_BUTTON_SHIFT) //Shift checkbox
+            if (serial == ID_GO_P5_BUTTON_SHIFT)
+            { //Shift checkbox
                 m_MacroPointer->Shift = state;
-            else if (serial == ID_GO_P5_BUTTON_ALT) //Alt checkbox
+            }
+            else if (serial == ID_GO_P5_BUTTON_ALT)
+            { //Alt checkbox
                 m_MacroPointer->Alt = state;
-            else if (serial == ID_GO_P5_BUTTON_CTRL) //Ctrl checkbox
+            }
+            else if (serial == ID_GO_P5_BUTTON_CTRL)
+            { //Ctrl checkbox
                 m_MacroPointer->Ctrl = state;
+            }
 
             break;
         }
         case 6: //Interface
         {
-            if (serial == ID_GO_P6_ENABLE_PATHFINDING) //Enable pathfinding with double-right-click
+            if (serial == ID_GO_P6_ENABLE_PATHFINDING)
+            { //Enable pathfinding with double-right-click
                 g_OptionsConfig.EnablePathfind = state;
-            else if (
-                serial ==
-                ID_GO_P6_HOLD_TAB_FOR_COMBAT) //Hold down TAB key for combat, instead of tapping it to toggle combat mode
+            }
+            else if (serial == ID_GO_P6_HOLD_TAB_FOR_COMBAT)
+            { //Hold down TAB key for combat, instead of tapping it to toggle combat mode
                 g_OptionsConfig.HoldTabForCombat = state;
-            else if (
-                serial ==
-                ID_GO_P6_OFFSET_INTERFACE_WINDOWS) //Offset interface windows rather than perfectly stacking them
+            }
+            else if (serial == ID_GO_P6_OFFSET_INTERFACE_WINDOWS)
+            { //Offset interface windows rather than perfectly stacking them
                 g_OptionsConfig.OffsetInterfaceWindows = state;
-            else if (
-                serial ==
-                ID_GO_P6_AUTO_ARRANGE_MINIMIZED_WINDOWS) //Automatically arrange minimized windows
+            }
+            else if (serial == ID_GO_P6_AUTO_ARRANGE_MINIMIZED_WINDOWS)
+            { //Automatically arrange minimized windows
                 g_OptionsConfig.AutoArrange = state;
-            else if (
-                serial == ID_GO_P6_ALWAYS_RUN) //Your character will always run if this is checked
+            }
+            else if (serial == ID_GO_P6_ALWAYS_RUN)
+            { //Your character will always run if this is checked
                 g_OptionsConfig.AlwaysRun = state;
-            else if (serial == ID_GO_P6_DISABLE_MENUBAR) //Disable the Menu Bar
+            }
+            else if (serial == ID_GO_P6_DISABLE_MENUBAR)
+            { //Disable the Menu Bar
                 g_OptionsConfig.DisableMenubar = state;
-            else if (serial == ID_GO_P6_GRAY_OUT_OF_RANGE_OBJECTS) //Gray out of range objects
+            }
+            else if (serial == ID_GO_P6_GRAY_OUT_OF_RANGE_OBJECTS)
+            { //Gray out of range objects
                 g_OptionsConfig.GrayOutOfRangeObjects = state;
-            else if (serial == ID_GO_P6_DISABLE_NEW_TARGET_SYSTEM) //Disable New Target System
+            }
+            else if (serial == ID_GO_P6_DISABLE_NEW_TARGET_SYSTEM)
+            { //Disable New Target System
                 g_OptionsConfig.DisableNewTargetSystem = state;
-            else if (serial == ID_GO_P6_OBJECT_HANDLES) //Object Handles
+            }
+            else if (serial == ID_GO_P6_OBJECT_HANDLES)
+            { //Object Handles
                 g_OptionsConfig.ObjectHandles = state;
-            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_ICON) //Display Item Properties Icon
+            }
+            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_ICON)
+            { //Display Item Properties Icon
                 g_OptionsConfig.SetItemPropertiesIcon(state);
-            else if (serial == ID_GO_P6_HOLD_SHIFT_FOR_CONTEXT_MENUS) //Hold Shift For Context Menus
+            }
+            else if (serial == ID_GO_P6_HOLD_SHIFT_FOR_CONTEXT_MENUS)
+            { //Hold Shift For Context Menus
                 g_OptionsConfig.HoldShiftForContextMenus = state;
-            else if (
-                serial ==
-                ID_GO_P6_HOLD_SHIFT_FOR_ENABLE_PATHFINDING) //Hold Shift For Enable Pathfinding
+            }
+            else if (serial == ID_GO_P6_HOLD_SHIFT_FOR_ENABLE_PATHFINDING)
+            { //Hold Shift For Enable Pathfinding
                 g_OptionsConfig.HoldShiftForEnablePathfind = state;
+            }
 
             break;
         }
         case 7: //Display
         {
-            if (serial == ID_GO_P7_SCALE_SPEECH_DURATION) //Scale speech duration based on length
+            if (serial == ID_GO_P7_SCALE_SPEECH_DURATION)
+            { //Scale speech duration based on length
                 g_OptionsConfig.ScaleSpeechDelay = state;
-            else if (serial == ID_GO_P7_IGNORE_GUILD_MESSAGE) //Ignore Guild Messages
+            }
+            else if (serial == ID_GO_P7_IGNORE_GUILD_MESSAGE)
+            { //Ignore Guild Messages
                 g_OptionsConfig.IgnoreGuildMessage = state;
-            else if (serial == ID_GO_P7_IGNORE_ALLIANCE_MESSAGE) //Ignore Alliance Messages
+            }
+            else if (serial == ID_GO_P7_IGNORE_ALLIANCE_MESSAGE)
+            { //Ignore Alliance Messages
                 g_OptionsConfig.IgnoreAllianceMessage = state;
-            else if (serial == ID_GO_P7_DARK_NIGHTS) //Dark Nights
+            }
+            else if (serial == ID_GO_P7_DARK_NIGHTS)
+            { //Dark Nights
                 g_OptionsConfig.DarkNights = state;
-            else if (serial == ID_GO_P7_COLORED_LIGHTING) //Colored Lighting
+            }
+            else if (serial == ID_GO_P7_COLORED_LIGHTING)
+            { //Colored Lighting
                 g_OptionsConfig.ColoredLighting = state;
-            else if (serial == ID_GO_P7_LOCK_GAME_WINDOW_RESIZING) //Lock game window resizing
+            }
+            else if (serial == ID_GO_P7_LOCK_GAME_WINDOW_RESIZING)
+            { //Lock game window resizing
                 g_OptionsConfig.LockResizingGameWindow = state;
+            }
 
             break;
         }
         case 8: //Reputation System
         {
-            if (serial ==
-                ID_GO_P8_QUERY_CRIMINAL_ACTIONS) //Query before performing criminal actions
+            if (serial == ID_GO_P8_QUERY_CRIMINAL_ACTIONS)
+            { //Query before performing criminal actions
                 g_OptionsConfig.CriminalActionsQuery = state;
+            }
 
             break;
         }
         case 9: //Miscellaneous
         {
-            if (serial == ID_GO_P9_SHOW_APPROACHING_NAMES) //Show Names of Approaching Players
+            if (serial == ID_GO_P9_SHOW_APPROACHING_NAMES)
+            { //Show Names of Approaching Players
                 g_OptionsConfig.ShowIncomingNames = state;
-            else if (serial == ID_GO_P9_USE_CIRCLE_OF_TRANSPARENCY) //Use circle of transparency
+            }
+            else if (serial == ID_GO_P9_USE_CIRCLE_OF_TRANSPARENCY)
+            { //Use circle of transparency
                 g_OptionsConfig.UseCircleTrans = state;
-            else if (
-                serial ==
-                ID_GO_P9_INFORM_STATS) //Inform me of increases in strength, dexterity, and intelligence.
+            }
+            else if (serial == ID_GO_P9_INFORM_STATS)
+            { //Inform me of increases in strength, dexterity, and intelligence.
                 g_OptionsConfig.StatReport = state;
+            }
 
             break;
         }
@@ -3039,7 +3273,9 @@ void CGumpOptions::GUMP_RADIO_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (!state)
+    {
         return;
+    }
 
     switch (Page)
     {
@@ -3049,46 +3285,86 @@ void CGumpOptions::GUMP_RADIO_EVENT_C
         }
         case 2: //Orion's configuration
         {
-            if (serial == ID_GO_P2_NO_DRAW_CHARACTERS_STATUS) //No draw
+            if (serial == ID_GO_P2_NO_DRAW_CHARACTERS_STATUS)
+            { //No draw
                 g_OptionsConfig.SetDrawStatusState(DCSS_NO_DRAW);
-            else if (serial == ID_GO_P2_DRAW_CHARACTERS_STATUS_TOP) //Above character
+            }
+            else if (serial == ID_GO_P2_DRAW_CHARACTERS_STATUS_TOP)
+            { //Above character
                 g_OptionsConfig.SetDrawStatusState(DCSS_ABOVE);
-            else if (serial == ID_GO_P2_DRAW_CHARACTERS_STATUS_BOTTOM) //Under character
+            }
+            else if (serial == ID_GO_P2_DRAW_CHARACTERS_STATUS_BOTTOM)
+            { //Under character
                 g_OptionsConfig.SetDrawStatusState(DCSS_UNDER);
+            }
             else if (serial == ID_GO_P2_HIDDEN_CHARACTES_MODE_1)
+            {
                 g_OptionsConfig.HiddenCharactersRenderMode = HCRM_ORIGINAL;
+            }
             else if (serial == ID_GO_P2_HIDDEN_CHARACTES_MODE_2)
+            {
                 g_OptionsConfig.HiddenCharactersRenderMode = HCRM_ALPHA_BLENDING;
+            }
             else if (serial == ID_GO_P2_HIDDEN_CHARACTES_MODE_3)
+            {
                 g_OptionsConfig.HiddenCharactersRenderMode = HCRM_SPECTRAL_COLOR;
+            }
             else if (serial == ID_GO_P2_HIDDEN_CHARACTES_MODE_4)
+            {
                 g_OptionsConfig.HiddenCharactersRenderMode = HCRM_SPECIAL_SPECTRAL_COLOR;
+            }
             else if (serial == ID_GO_P2_DRAW_CHARACTER_BARS_ALWAYS)
+            {
                 g_OptionsConfig.DrawStatusConditionState = DCSCS_ALWAYS;
+            }
             else if (serial == ID_GO_P2_DRAW_CHARACTER_BARS_NOT_MAX)
+            {
                 g_OptionsConfig.DrawStatusConditionState = DCSCS_NOT_MAX;
+            }
             else if (serial == ID_GO_P2_DRAW_CHARACTER_BARS_LOWER)
+            {
                 g_OptionsConfig.DrawStatusConditionState = DCSCS_LOWER;
+            }
             else if (serial == ID_GO_P2_DRAW_AURA_NEVER)
+            {
                 g_OptionsConfig.SetDrawAuraState(DAS_NEVER);
+            }
             else if (serial == ID_GO_P2_DRAW_AURA_IN_WARMODE)
+            {
                 g_OptionsConfig.SetDrawAuraState(DAS_IN_WARMODE);
+            }
             else if (serial == ID_GO_P2_DRAW_AURA_ALWAYS)
+            {
                 g_OptionsConfig.SetDrawAuraState(DAS_ALWAYS);
+            }
             else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_BMP)
+            {
                 g_OptionsConfig.ScreenshotFormat = SF_BMP;
+            }
             else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_PNG)
+            {
                 g_OptionsConfig.ScreenshotFormat = SF_PNG;
+            }
             else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_TIFF)
+            {
                 g_OptionsConfig.ScreenshotFormat = SF_TIFF;
+            }
             else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_JPEG)
+            {
                 g_OptionsConfig.ScreenshotFormat = SF_JPEG;
+            }
             else if (serial == ID_GO_P2_DEV_MODE_1)
+            {
                 g_OptionsDeveloperMode = DM_NO_DEBUG;
+            }
             else if (serial == ID_GO_P2_DEV_MODE_2)
+            {
                 g_OptionsDeveloperMode = DM_SHOW_FPS_ONLY;
+            }
             else if (serial == ID_GO_P2_DEV_MODE_3)
+            {
                 g_OptionsDeveloperMode = DM_DEBUGGING;
+            }
 
             break;
         }
@@ -3106,22 +3382,38 @@ void CGumpOptions::GUMP_RADIO_EVENT_C
         }
         case 6: //Interface
         {
-            if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_AT_ICON) //At Icon
+            if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_AT_ICON)
+            { //At Icon
                 g_OptionsConfig.SetItemPropertiesMode(OPM_AT_ICON);
-            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_ALWAYS_UP) //Always Up
+            }
+            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_ALWAYS_UP)
+            { //Always Up
                 g_OptionsConfig.SetItemPropertiesMode(OPM_ALWAYS_UP);
-            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_FOLLOW_MOUSE) //Follow Mouse
+            }
+            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_FOLLOW_MOUSE)
+            { //Follow Mouse
                 g_OptionsConfig.SetItemPropertiesMode(OPM_FOLLOW_MOUSE);
-            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_SINGLE_CLICK) //Single Click
+            }
+            else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_SINGLE_CLICK)
+            { //Single Click
                 g_OptionsConfig.SetItemPropertiesMode(OPM_SINGLE_CLICK);
-            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_DEFAULT) //Default
+            }
+            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_DEFAULT)
+            { //Default
                 g_OptionsConfig.SetCharacterBackpackStyle(CBS_DEFAULT);
-            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_SUEDE) //Suede
+            }
+            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_SUEDE)
+            { //Suede
                 g_OptionsConfig.SetCharacterBackpackStyle(CBS_SUEDE);
-            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_POLAR_BEAR) //Polar Bear
+            }
+            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_POLAR_BEAR)
+            { //Polar Bear
                 g_OptionsConfig.SetCharacterBackpackStyle(CBS_POLAR_BEAR);
-            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_GHOUL_SKIN) //Ghoul Skin
+            }
+            else if (serial == ID_GO_P6_CHARACTER_BACKPACK_STYLE_GHOUL_SKIN)
+            { //Ghoul Skin
                 g_OptionsConfig.SetCharacterBackpackStyle(CBS_GHOUL_SKIN);
+            }
 
             break;
         }
@@ -3160,31 +3452,47 @@ void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
         case 1: //Sound and Music
         {
             if (serial == ID_GO_P1_SOUND_VOLUME)
+            {
                 g_OptionsConfig.SetSoundVolume(m_SliderSound->Value);
+            }
             else if (serial == ID_GO_P1_MUSIC_VOLUME)
+            {
                 g_OptionsConfig.SetMusicVolume(m_SliderMusic->Value);
+            }
 
             break;
         }
         case 2: //Orion's configuration
         {
             if (serial == ID_GO_P2_CLIENT_FPS)
+            {
                 g_OptionsConfig.SetClientFPS(m_SliderClientFPS->Value);
+            }
             else if (serial == ID_GO_P2_HIDDEN_ALPHA)
+            {
                 g_OptionsConfig.HiddenAlpha = m_SliderHiddenAlpha->Value;
+            }
             else if (serial == ID_GO_P2_SPELL_ICONS_ALPHA)
+            {
                 g_OptionsConfig.SetSpellIconAlpha(m_SliderSpellIconsAlpha->Value);
+            }
             else if (serial == ID_GO_P2_DRAW_CHARACTER_BARS_LOWER_VALUE)
+            {
                 g_OptionsConfig.DrawStatusConditionValue = m_SliderDrawStatusConditionValue->Value;
+            }
             else if (serial == ID_GO_P2_PING_TIMER)
+            {
                 g_OptionsConfig.SetPingTimer(m_SliderPingTimer->Value);
+            }
 
             break;
         }
         case 3: //Language
         {
             if (serial == ID_GO_P3_DELAY_BEFORE_TOOLTIP)
+            {
                 g_OptionsConfig.ToolTipsDelay = m_SliderTooltipDelay->Value;
+            }
 
             break;
         }
@@ -3203,7 +3511,9 @@ void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
         case 7: //Display
         {
             if (serial == ID_GO_P7_AJUST_LONG_SPEECH)
+            {
                 g_OptionsConfig.SpeechDelay = m_SliderSpeechDuration->Value;
+            }
 
             break;
         }
@@ -3214,9 +3524,13 @@ void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
         case 9: //Miscellaneous
         {
             if (serial == ID_GO_P9_TRANSPARENCY_RADIUS)
+            {
                 g_OptionsConfig.CircleTransRadius = m_SliderCircleTransparency->Value;
+            }
             else if (serial == ID_GO_P9_INFORM_SKILLS)
+            {
                 g_OptionsConfig.SkillReport = m_SliderInformSkills->Value;
+            }
             break;
         }
         case 10: //Filter Options
@@ -3258,7 +3572,9 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
         while (obj != nullptr && macroCount < maxMacroDraw)
         {
             if (macroCount == macroIndex)
+            {
                 break;
+            }
 
             macroCount++;
             obj = (CMacroObject *)obj->m_Next;
@@ -3276,7 +3592,9 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
                 CMacroObject *newobj = CMacro::CreateMacro(code);
 
                 if (obj == m_MacroObjectPointer)
+                {
                     m_MacroObjectPointer = newobj;
+                }
 
                 m_MacroPointer->ChangeObject(obj, newobj);
                 obj = newobj;
@@ -3285,14 +3603,18 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
             if (code != MC_NONE)
             {
                 if (obj->m_Next == nullptr)
+                {
                     m_MacroPointer->Add(new CMacroObject(MC_NONE, MSC_NONE));
+                }
             }
             else if (
                 obj->m_Next != nullptr && obj->m_Next->m_Next == nullptr &&
                 ((CMacroObject *)obj->m_Next)->Code == MC_NONE)
             {
                 if (obj == m_MacroObjectPointer)
+                {
                     m_MacroObjectPointer = (CMacroObject *)obj->m_Next;
+                }
 
                 m_MacroPointer->Delete(obj);
             }
@@ -3326,9 +3648,13 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
 
             int val = atoi(g_EntryPointer->c_str());
             if (val > 2000)
+            {
                 g_EntryPointer->Remove(true);
+            }
             else
+            {
                 WantRedraw = true;
+            }
         }
     }
     else if (g_EntryPointer != &m_MacroKey->m_Entry)
@@ -3355,7 +3681,9 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
                 {
                     if (obj->HasSubMenu == 2 &&
                         entry->Serial == ID_GO_P5_ACTION_SELECTION + (macroCount * 1000))
+                    {
                         break;
+                    }
 
                     macroCount++;
                     obj = (CMacroObject *)obj->m_Next;
@@ -3373,7 +3701,9 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
                 case MC_MODIFY_UPDATE_RANGE:
                 {
                     if (ch >= '0' && ch <= '9')
+                    {
                         canAdd = true;
+                    }
                     break;
                 }
                 case MC_SAY:
@@ -3414,9 +3744,13 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
         if (key == KEY_RETURN)
         {
             if (g_ConfigManager.GetConsoleNeedEnter())
+            {
                 g_EntryPointer = nullptr;
+            }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
             WantRedraw = true;
         }
         else
@@ -3453,7 +3787,9 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
                         {
                             if (obj->HasSubMenu == 2 &&
                                 entry->Serial == ID_GO_P5_ACTION_SELECTION + (macroCount * 1000))
+                            {
                                 break;
+                            }
 
                             macroCount++;
                             obj = (CMacroObject *)obj->m_Next;
@@ -3462,7 +3798,9 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
                 }
 
                 if (obj != nullptr)
+                {
                     ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
+                }
             }
         }
     }
@@ -3597,7 +3935,9 @@ void CGumpOptions::ApplyPageChanges()
 
             if (g_ConfigManager.OffsetInterfaceWindows != g_OptionsConfig.OffsetInterfaceWindows &&
                 g_OptionsConfig.OffsetInterfaceWindows)
+            {
                 g_ContainerRect.MakeDefault();
+            }
 
             g_ConfigManager.OffsetInterfaceWindows = g_OptionsConfig.OffsetInterfaceWindows;
             g_ConfigManager.AutoArrange = g_OptionsConfig.AutoArrange;
@@ -3614,21 +3954,29 @@ void CGumpOptions::ApplyPageChanges()
 
             int curX = g_ContainerRect.DefaultX;
 
-            if (m_ContainerOffsetX->m_Entry.Length())
+            if (m_ContainerOffsetX->m_Entry.Length() != 0u)
+            {
                 curX = atoi(m_ContainerOffsetX->m_Entry.c_str());
+            }
 
             int curY = g_ContainerRect.DefaultY;
 
-            if (m_ContainerOffsetY->m_Entry.Length())
+            if (m_ContainerOffsetY->m_Entry.Length() != 0u)
+            {
                 curY = atoi(m_ContainerOffsetY->m_Entry.c_str());
+            }
 
             g_ContainerRect.DefaultX = curX;
             g_ContainerRect.DefaultY = curY;
 
             if (g_OptionsConfig.DisableMenubar)
+            {
                 g_GumpManager.CloseGump(0, 0, GT_MENUBAR);
+            }
             else
+            {
                 g_GumpManager.AddGump(new CGumpMenubar(0, 0));
+            }
 
             break;
         }
@@ -3636,32 +3984,46 @@ void CGumpOptions::ApplyPageChanges()
         {
             int curX = 0;
 
-            if (m_GameWindowWidth->m_Entry.Length())
+            if (m_GameWindowWidth->m_Entry.Length() != 0u)
+            {
                 curX = atoi(m_GameWindowWidth->m_Entry.c_str());
+            }
 
             if (curX < 640)
+            {
                 curX = 640;
+            }
             else if (curX > (g_OrionWindow.GetSize().Width - 20))
+            {
                 curX = g_OrionWindow.GetSize().Width - 20;
+            }
 
             g_OptionsConfig.GameWindowWidth = curX;
             g_ConfigManager.GameWindowWidth = curX;
 
             int curY = 0;
 
-            if (m_GameWindowHeight->m_Entry.Length())
+            if (m_GameWindowHeight->m_Entry.Length() != 0u)
+            {
                 curY = atoi(m_GameWindowHeight->m_Entry.c_str());
+            }
 
             if (curY < 480)
+            {
                 curY = 480;
+            }
             else if (curY > (g_OrionWindow.GetSize().Height - 40))
+            {
                 curY = (g_OrionWindow.GetSize().Height - 40);
+            }
 
             g_OptionsConfig.GameWindowHeight = curY;
             g_ConfigManager.GameWindowHeight = curY;
 
             if (g_PacketManager.GetClientVersion() >= CV_200)
+            {
                 CPacketGameWindowSize().Send();
+            }
 
             g_ConfigManager.SpeechDelay = g_OptionsConfig.SpeechDelay;
             g_ConfigManager.ScaleSpeechDelay = g_OptionsConfig.ScaleSpeechDelay;
@@ -3691,7 +4053,9 @@ void CGumpOptions::ApplyPageChanges()
             QFOR(gump, g_GumpManager.m_Items, CGump *)
             {
                 if (gump->GumpType == GT_STATUSBAR)
+                {
                     gump->WantUpdateContent = true;
+                }
             }
 
             break;

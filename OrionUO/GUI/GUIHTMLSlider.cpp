@@ -12,7 +12,7 @@ CGUIHTMLSlider::CGUIHTMLSlider(
     bool vertical,
     int x,
     int y,
-    int lenght,
+    int length,
     int minValue,
     int maxValue,
     int value)
@@ -26,7 +26,7 @@ CGUIHTMLSlider::CGUIHTMLSlider(
           vertical,
           x,
           y,
-          lenght,
+          length,
           minValue,
           maxValue,
           value)
@@ -49,11 +49,14 @@ void CGUIHTMLSlider::CalculateOffset()
         Wisp::CPoint2Di availableOffset = m_HTMLGump->AvailableOffset;
 
         if (Vertical)
+        {
             currentOffset.Y = (int)((availableOffset.Y * Percents) / 100.0f);
+        }
         else
+        {
             currentOffset.X = (int)((availableOffset.X * Percents) / 100.0f);
+        }
 
         m_HTMLGump->CurrentOffset = currentOffset;
     }
 }
-

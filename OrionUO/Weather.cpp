@@ -36,13 +36,17 @@ void CWeather::Generate()
     LastTick = g_Ticks;
 
     if (Type == 0xFF || Type == 0xFE)
+    {
         return;
+    }
 
     int drawX = g_ConfigManager.GameWindowX;
     int drawY = g_ConfigManager.GameWindowY;
 
     if (Count > 70)
+    {
         Count = 70;
+    }
 
     WindTimer = 0;
 
@@ -67,13 +71,17 @@ void CWeather::Draw(int x, int y)
     if (Timer < g_Ticks)
     {
         //if (CurrentCount) Reset();
-        if (!CurrentCount)
+        if (CurrentCount == 0u)
+        {
             return;
+        }
 
         removeEffects = true;
     }
     else if (Type == 0xFF || Type == 0xFE)
+    {
         return;
+    }
 
     uint32_t passed = g_Ticks - LastTick;
 
@@ -87,8 +95,10 @@ void CWeather::Draw(int x, int y)
 
     if (WindTimer < g_Ticks)
     {
-        if (!WindTimer)
+        if (WindTimer == 0u)
+        {
             windChanged = true; //Для установки стартовых значений снежинок
+        }
 
         WindTimer = g_Ticks + (RandomIntMinMax(7, 13) * 1000);
 
@@ -96,16 +106,24 @@ void CWeather::Draw(int x, int y)
 
         Wind = RandomInt(4);
 
-        if (RandomInt(2))
+        if (RandomInt(2) != 0)
+        {
             Wind *= (-1);
+        }
 
         if (Wind < 0 && lastWind > 0)
+        {
             Wind = 0;
+        }
         else if (Wind > 0 && lastWind < 0)
+        {
             Wind = 0;
+        }
 
         if (lastWind != Wind)
+        {
             windChanged = true;
+        }
     }
 
     switch (Type)
@@ -138,17 +156,19 @@ void CWeather::Draw(int x, int y)
                 effect = m_Effects.erase(effect);
 
                 if (CurrentCount > 0)
+                {
                     CurrentCount--;
+                }
                 else
+                {
                     CurrentCount = 0;
+                }
 
                 continue;
             }
-            else
-            {
-                effect->X = (float)(x + RandomInt(g_ConfigManager.GameWindowWidth));
-                effect->Y = (float)(y + RandomInt(g_ConfigManager.GameWindowHeight));
-            }
+
+            effect->X = (float)(x + RandomInt(g_ConfigManager.GameWindowWidth));
+            effect->Y = (float)(y + RandomInt(g_ConfigManager.GameWindowHeight));
         }
 
         switch (Type)
@@ -228,14 +248,22 @@ void CWeather::Draw(int x, int y)
                 const float maxOffsetXY = 5.0f;
 
                 if (ofsx >= maxOffsetXY)
+                {
                     oldX = (int)(effect->X - maxOffsetXY);
+                }
                 else if (ofsx <= -maxOffsetXY)
+                {
                     oldX = (int)(effect->X + maxOffsetXY);
+                }
 
                 if (ofsy >= maxOffsetXY)
+                {
                     oldY = (int)(effect->Y - maxOffsetXY);
+                }
                 else if (ofsy <= -maxOffsetXY)
+                {
                     oldY = (int)(effect->Y + maxOffsetXY);
+                }
 
                 g_GL.DrawLine(x + oldX, y + oldY, x + (int)effect->X, y + (int)effect->Y);
 

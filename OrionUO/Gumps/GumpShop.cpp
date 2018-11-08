@@ -9,9 +9,13 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
     Visible = !isBuyGump;
 
     if (isBuyGump)
+    {
         Add(new CGUIGumppic(0x0870, 0, 0));
+    }
     else
+    {
         Add(new CGUIGumppic(0x0872, 0, 0));
+    }
 
     Add(new CGUIShader(&g_ColorizerShader, true));
     m_ItemList[0] =
@@ -19,9 +23,13 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
     Add(new CGUIShader(&g_ColorizerShader, false));
 
     if (isBuyGump)
+    {
         Add(new CGUIGumppic(0x0871, 170, 214));
+    }
     else
+    {
         Add(new CGUIGumppic(0x0873, 170, 214));
+    }
 
     m_ItemList[1] =
         (CGUIHTMLGump *)Add(new CGUIHTMLGump(ID_GB_SHOP_RESULT, 0, 200, 280, 215, 92, false, true));
@@ -57,10 +65,14 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
             button->GraphicPressed = 0x0824;
             button->CheckPolygone = true;
 
-            if (!i)
+            if (i == 0)
+            {
                 button->SetY(button->GetY() - 11);
+            }
             else
+            {
                 button->SetY(button->GetY() - 16);
+            }
         }
 
         button = m_ItemList[i]->m_ButtonDown;
@@ -72,8 +84,10 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
             button->GraphicPressed = 0x0825;
             button->CheckPolygone = true;
 
-            if (!i)
+            if (i == 0)
+            {
                 button->SetY(button->GetY() - 25);
+            }
             else
             {
                 button->SetX(button->GetX() - 1);
@@ -90,7 +104,7 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
             slider->GraphicPressed = 0x001F;
             slider->BackgroundGraphic = 0;
 
-            if (!i)
+            if (i == 0)
             {
                 slider->SetY(slider->GetY() - 11);
                 slider->Length -= 14;
@@ -114,12 +128,18 @@ void CGumpShop::SendList()
     CGameCharacter *vendor = g_World->FindWorldCharacter(Serial);
 
     if (vendor == nullptr)
+    {
         return;
+    }
 
     if (IsBuyGump)
+    {
         CPacketBuyRequest(this).Send();
+    }
     else
+    {
         CPacketSellRequest(this).Send();
+    }
 }
 
 void CGumpShop::UpdateTotalPrice()
@@ -152,7 +172,9 @@ void CGumpShop::PrepareContent()
         int len = (int)name.length();
 
         if (m_ContinueCounter > len)
+        {
             m_ContinueCounter = len;
+        }
 
         name.resize(m_ContinueCounter);
 
@@ -163,16 +185,20 @@ void CGumpShop::PrepareContent()
             NoProcess = false;
             SendList();
         }
-        else if (!counterCount)
+        else if (counterCount == 0)
         {
             if (m_ContinueCounter < len)
+            {
                 m_ContinueCounter++;
+            }
         }
 
         counterCount++;
 
         if (counterCount >= 3)
+        {
             counterCount = 0;
+        }
 
         m_NameText->CreateTextureA(5, name);
 
@@ -188,8 +214,10 @@ void CGumpShop::GUMP_BUTTON_EVENT_C
         NoProcess = true;
         m_ContinueCounter = 0;
     }
-    else if (serial == ID_GB_BUTTON_CLEAR) //Clear
+    else if (serial == ID_GB_BUTTON_CLEAR)
+    { //Clear
         m_ContinueCounter = 0;
+    }
 }
 
 void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
@@ -198,7 +226,9 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
     CGUIMinMaxButtons *minmax = (CGUIMinMaxButtons *)g_PressedObject.LeftObject;
 
     if (minmax == nullptr)
+    {
         return;
+    }
 
     bool deleteItem = false;
 
@@ -226,7 +256,9 @@ void CGumpShop::GUMP_SCROLL_BUTTON_EVENT_C
             if (item->Type == GOT_SHOPRESULT)
             {
                 if (item->Serial == itemSerial)
+                {
                     m_ItemList[1]->Delete(item);
+                }
                 else
                 {
                     item->SetY(y);
@@ -289,9 +321,13 @@ bool CGumpShop::OnLeftMouseButtonDoubleClick()
                 if (minmax->Value < minmax->MaxValue)
                 {
                     if (g_ShiftPressed)
+                    {
                         minmax->Value = minmax->MaxValue;
+                    }
                     else
+                    {
                         minmax->Value += 1;
+                    }
 
                     minmax->UpdateText();
                     shopItem->CreateCountText(minmax->Value);
@@ -324,4 +360,3 @@ bool CGumpShop::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-

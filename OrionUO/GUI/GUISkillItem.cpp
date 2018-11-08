@@ -10,10 +10,14 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
 
     if (skill != nullptr)
     {
-        if (skill->Button != 0)
+        if (static_cast<int>(skill->Button) != 0)
+        {
             m_ButtonUse = new CGUIButton(useSerial, 0x0837, 0x0838, 0x0838, 8, 0);
+        }
         else
+        {
             m_ButtonUse = nullptr;
+        }
 
         m_Status = skill->Status;
 
@@ -55,9 +59,13 @@ uint16_t CGUISkillItem::GetStatusButtonGraphic()
     uint16_t graphic = 0x0984; //Up
 
     if (m_Status == 1)
+    {
         graphic = 0x0986; //Down
+    }
     else if (m_Status == 2)
+    {
         graphic = 0x082C; //Lock
+    }
 
     return graphic;
 }
@@ -72,9 +80,13 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
         //Значение скилла (учитывая выбранный флаг отображения)
         float val = skill->BaseValue;
         if (showReal)
+        {
             val = skill->Value;
+        }
         else if (showCap)
+        {
             val = skill->Cap;
+        }
 
         char sbf[10] = { 0 };
         sprintf_s(sbf, "%.1f", val);
@@ -87,7 +99,9 @@ void CGUISkillItem::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_ButtonUse != nullptr)
+    {
         m_ButtonUse->PrepareTextures();
+    }
 
     m_ButtonStatus->PrepareTextures();
 }
@@ -99,12 +113,16 @@ CBaseGUI *CGUISkillItem::SelectedItem()
 
     if (g_Orion.PolygonePixelsInXY(
             m_X + m_ButtonStatus->GetX(), m_Y + m_ButtonStatus->GetY(), 14, 14))
+    {
         selected = m_ButtonStatus;
+    }
     else if (m_ButtonUse != nullptr)
     {
         if (g_Orion.GumpPixelsInXY(
                 m_ButtonUse->Graphic, m_X + m_ButtonUse->GetX(), m_Y + m_ButtonUse->GetY()))
+        {
             selected = m_ButtonUse;
+        }
     }
 
     return selected;
@@ -116,10 +134,14 @@ void CGUISkillItem::Draw(bool checktrans)
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
     if (m_ButtonUse != nullptr)
+    {
         m_ButtonUse->Draw(checktrans);
+    }
 
     if (g_PressedObject.LeftObject == this)
+    {
         g_GL.DrawPolygone(20, 0, 250, 14);
+    }
 
     m_NameText.Draw(22, 0, checktrans);
 
@@ -138,4 +160,3 @@ bool CGUISkillItem::Select()
 
     return (x >= 0 && y >= 0 && x < 255 && y < 17);
 }
-

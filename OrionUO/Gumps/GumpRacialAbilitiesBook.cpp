@@ -4,7 +4,7 @@
 CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
     : CGump(GT_RACIAL_ABILITIES_BOOK, 0, x, y)
 {
-    Draw2Page = true;
+    Draw2Page = 1;
 }
 
 CGumpRacialAbilitiesBook::~CGumpRacialAbilitiesBook()
@@ -23,9 +23,11 @@ void CGumpRacialAbilitiesBook::InitToolTip()
     uint32_t serial = g_SelectedObject.Serial;
 
     if (Page >= DictionaryPagesCount && serial >= (uint32_t)ID_GRAB_ICON)
+    {
         g_ToolTip.Set(
             g_ClilocManager.Cliloc(g_Language)->GetW(TooltipOffset + (serial - ID_GRAB_ICON), true),
             150);
+    }
 }
 
 void CGumpRacialAbilitiesBook::PrepareContent()
@@ -92,7 +94,7 @@ void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, uint16_t &
 string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 {
     DEBUG_TRACE_FUNCTION;
-    string result = "";
+    string result{};
     passive = true;
 
     static const string humanNames[] = {
@@ -121,8 +123,10 @@ string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
         }
         case RT_GARGOYLE:
         {
-            if (!offset)
+            if (offset == 0)
+            {
                 passive = false;
+            }
 
             result = gargoyleNames[offset];
 
@@ -173,7 +177,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         int dataX = 62;
         int y = 0;
 
-        if (page % 2)
+        if ((page % 2) != 0)
         {
             indexX = 269;
             dataX = 225;
@@ -185,7 +189,9 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         for (int i = 0; i < abilityOnPage; i++)
         {
             if (offs >= AbilityCount)
+            {
                 break;
+            }
 
             CGUIHitBox *box = (CGUIHitBox *)Add(
                 new CGUIHitBox(ID_GRAB_DICTIONARY_ICON + offs, dataX, 52 + y, 100, 16, true));
@@ -211,7 +217,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         int iconX = 62;
         int iconTextX = 112;
 
-        if (page % 2)
+        if ((page % 2) != 0)
         {
             iconX = 225;
             iconTextX = 275;
@@ -263,7 +269,9 @@ void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
             newPage = Page - 2;
 
             if (newPage < 0)
+            {
                 newPage = 0;
+            }
         }
     }
     else if (serial == ID_GRAB_BUTTON_NEXT)
@@ -273,7 +281,9 @@ void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
             newPage = Page + 2;
 
             if (newPage >= PagesCount)
+            {
                 newPage = PagesCount - 1;
+            }
         }
     }
     else if (serial == ID_GRAB_BUTTON_MINIMIZE)
@@ -282,17 +292,23 @@ void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
         WantUpdateContent = true;
     }
     else if (serial == ID_GRAB_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial >= ID_GRAB_DICTIONARY_ICON)
     {
-        if (Page < DictionaryPagesCount) //List of spells
+        if (Page < DictionaryPagesCount)
+        { //List of spells
             newPage = DictionaryPagesCount + (serial - ID_GRAB_DICTIONARY_ICON);
+        }
     }
 
     if (newPage > -1 && !g_ClickObject.Enabled)
     {
-        if (newPage % 2)
+        if ((newPage % 2) != 0)
+        {
             newPage--;
+        }
 
         g_ClickObject.Init(g_PressedObject.LeftObject, this);
         g_ClickObject.Timer = g_Ticks + g_MouseManager.DoubleClickDelay;
@@ -326,8 +342,10 @@ bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
         {
             int newPage = PagesCount - 1;
 
-            if (newPage % 2)
+            if ((newPage % 2) != 0)
+            {
                 newPage--;
+            }
 
             ChangePage(newPage);
 

@@ -94,7 +94,9 @@ void CTarget::SendTargetObject(int serial)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     //Пишем серийник объекта, на который ткнули прицелом, остальное - затираем
     pack32(m_Data + 7, serial);
@@ -124,7 +126,9 @@ void CTarget::SendTargetObject(int serial)
         memcpy(m_LastData, m_Data, sizeof(m_Data));
 
         if (obj != nullptr && obj->NPC && ((CGameCharacter *)obj)->MaxHits == 0)
+        {
             CPacketStatusRequest(serial).Send();
+        }
     }
 
     SendTarget();
@@ -134,7 +138,9 @@ void CTarget::SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     m_Data[1] = 1;
 
@@ -158,7 +164,9 @@ void CTarget::SendCancelTarget()
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     //Уходят только нули
     pack32(m_Data + 7, 0);
@@ -181,7 +189,9 @@ void CTarget::Plugin_SendTargetObject(int serial)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     //Пишем серийник объекта, на который ткнули прицелом, остальное - затираем
     pack32(m_Data + 7, serial);
@@ -224,7 +234,9 @@ void CTarget::Plugin_SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     m_Data[1] = 1;
 
@@ -248,7 +260,9 @@ void CTarget::Plugin_SendCancelTarget()
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     //Уходят только нули
     pack32(m_Data + 7, 0);
@@ -262,7 +276,9 @@ void CTarget::SendLastTarget()
 {
     DEBUG_TRACE_FUNCTION;
     if (!Targeting)
+    {
         return; //Если в клиенте нет таргета - выход
+    }
 
     //Восстановим пакет последнего актуального таргета
     memcpy(m_Data, m_LastData, sizeof(m_Data));
@@ -279,7 +295,9 @@ void CTarget::SendTarget()
     DEBUG_TRACE_FUNCTION;
 
     if (Type != 2)
+    {
         g_Orion.Send(m_Data, sizeof(m_Data));
+    }
 
     memset(m_Data, 0, sizeof(m_Data));
     Targeting = false;
@@ -324,7 +342,9 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
         vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
 
         if (data.empty())
+        {
             return;
+        }
 
         Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
@@ -338,8 +358,10 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
             uint16_t flags = reader.ReadUInt16LE();
             uint32_t clilocsCount = reader.ReadUInt32LE();
 
-            if (clilocsCount)
+            if (clilocsCount != 0u)
+            {
                 reader.Move(clilocsCount * 4);
+            }
 
             CMultiObject *mo =
                 new CMultiObject(graphic, x + offsetX, y + offsetY, (char)z + (char)offsetZ, 2);
@@ -352,7 +374,9 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
         int itemOffset = sizeof(MULTI_BLOCK);
 
         if (g_PacketManager.GetClientVersion() >= CV_7090)
+        {
             itemOffset = sizeof(MULTI_BLOCK_NEW);
+        }
 
         for (int j = 0; j < count; j++)
         {
@@ -389,9 +413,13 @@ void CTarget::AddMultiObject(CMultiObject *obj)
                 if (obj->GetZ() < multiobj->GetZ())
                 {
                     if (multiobj->m_Prev == nullptr)
+                    {
                         multi->Insert(multiobj->m_Prev, obj);
+                    }
                     else
+                    {
                         multi->Insert(multiobj, obj);
+                    }
 
                     return;
                 }
@@ -441,7 +469,9 @@ CMulti *CTarget::GetMultiAtXY(short x, short y)
     while (multi != nullptr)
     {
         if (multi->X == x && multi->Y == y)
+        {
             break;
+        }
 
         multi = (CMulti *)multi->m_Next;
     }

@@ -103,9 +103,13 @@ void CGUICheckbox::UpdateTextPosition()
                 int deltaX = abs(sliderWidth - textWidth) / 2;
 
                 if (sliderWidth > textWidth)
+                {
                     textX += deltaX;
+                }
                 else
+                {
                     textX -= deltaX;
+                }
 
                 break;
             }
@@ -118,9 +122,13 @@ void CGUICheckbox::UpdateTextPosition()
                 int deltaY = abs(sliderHeight - textHeight) / 2;
 
                 if (sliderHeight > textHeight)
+                {
                     textY += deltaY;
+                }
                 else
+                {
                     textY -= deltaY;
+                }
 
                 break;
             }
@@ -147,11 +155,17 @@ uint16_t CGUICheckbox::GetDrawGraphic()
     uint16_t graphic = Graphic;
 
     if (!Enabled)
+    {
         graphic = GraphicDisabled;
+    }
     else if (Checked)
+    {
         graphic = GraphicChecked;
+    }
     else if (g_SelectedObject.Object == this)
+    {
         graphic = GraphicSelected;
+    }
 
     return graphic;
 }
@@ -184,13 +198,16 @@ void CGUICheckbox::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
     if (Graphic != GraphicSelected && g_SelectedObject.Gump != nullptr)
+    {
         g_SelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUICheckbox::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
     if (Graphic != GraphicSelected && g_LastSelectedObject.Gump != nullptr)
+    {
         g_LastSelectedObject.Gump->WantRedraw = true;
+    }
 }
-

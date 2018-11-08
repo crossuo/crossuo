@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CGameEffectDrag::CGameEffectDrag()
-    : CGameEffect()
+
 {
 }
 
@@ -14,7 +14,9 @@ void CGameEffectDrag::Update(CGameObject *parent)
 {
     DEBUG_TRACE_FUNCTION;
     if (LastMoveTime > g_Ticks)
+    {
         return;
+    }
 
     OffsetX += 8;
     OffsetY += 8;
@@ -22,6 +24,7 @@ void CGameEffectDrag::Update(CGameObject *parent)
     LastMoveTime = g_Ticks + MoveDelay;
 
     if (Duration < g_Ticks)
+    {
         g_EffectManager.RemoveEffect(this);
+    }
 }
-

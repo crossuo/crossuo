@@ -56,15 +56,19 @@ void CWalker::DenyWalk(uint8_t sequence, int x, int y, char z)
 
 void CWalker::ConfirmWalk(uint8_t sequence)
 {
-    if (UnacceptedPacketsCount)
+    if (UnacceptedPacketsCount != 0)
+    {
         UnacceptedPacketsCount--;
+    }
 
     int stepIndex = 0;
 
     for (int i = 0; i < StepsCount; i++)
     {
         if (m_Step[i].Sequence == sequence)
+        {
             break;
+        }
 
         stepIndex++;
     }
@@ -79,7 +83,7 @@ void CWalker::ConfirmWalk(uint8_t sequence)
             g_RemoveRangeXY.X = m_Step[stepIndex].X;
             g_RemoveRangeXY.Y = m_Step[stepIndex].Y;
         }
-        else if (!stepIndex)
+        else if (stepIndex == 0)
         {
             g_RemoveRangeXY.X = m_Step[0].X;
             g_RemoveRangeXY.Y = m_Step[0].Y;
@@ -92,8 +96,10 @@ void CWalker::ConfirmWalk(uint8_t sequence)
             StepsCount--;
             CurrentWalkSequence--;
         }
-        else //if (stepIndex)
+        else
+        { //if (stepIndex)
             isBadStep = true;
+        }
     }
 
     if (isBadStep)
@@ -114,4 +120,3 @@ void CWalker::ConfirmWalk(uint8_t sequence)
         PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData, 0);
     }
 }
-

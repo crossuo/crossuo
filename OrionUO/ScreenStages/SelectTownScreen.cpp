@@ -16,13 +16,17 @@ void CSelectTownScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_PacketManager.GetClientVersion() >= CV_70130)
+    {
         m_City = g_CityList.GetCity(0);
+    }
     else
     {
         m_City = g_CityList.GetCity(3);
 
         if (m_City == nullptr)
+        {
             m_City = g_CityList.GetCity(0);
+        }
     }
 
     g_ScreenEffectManager.UseSunrise();
@@ -36,12 +40,18 @@ void CSelectTownScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
+    {
         action = SmoothScreenAction;
+    }
 
     if (action == ID_SMOOTH_STS_QUIT)
+    {
         g_OrionWindow.Destroy();
+    }
     else if (action == ID_SMOOTH_STS_GO_SCREEN_CHARACTER)
+    {
         g_Orion.InitScreen(GS_CHARACTER);
+    }
     else if (action == ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT)
     {
         CPacketCreateCharacter(g_CreateCharacterScreen.Name).Send();

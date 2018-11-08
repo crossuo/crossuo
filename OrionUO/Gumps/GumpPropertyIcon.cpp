@@ -47,7 +47,9 @@ void CGumpPropertyIcon::UpdateContent()
     if (mode == OPM_AT_ICON)
     {
         if (Object == nullptr)
+        {
             Add(new CGUIGumppic(0x00E3, 0, 0));
+        }
         else
         {
             Add(new CGUIColoredPolygone(
@@ -63,7 +65,9 @@ void CGumpPropertyIcon::UpdateContent()
         int height = m_Texture.Height;
 
         if (height < 150)
+        {
             height = 150;
+        }
 
         Add(new CGUIColoredPolygone(0, 0, 0, 0, m_Texture.Width + 12, height + 8, 0xC07F7F7F));
         Add(new CGUIColoredPolygone(0, 0, 6, 20, m_Texture.Width, height - 16, 0xC0000000));
@@ -73,18 +77,26 @@ void CGumpPropertyIcon::UpdateContent()
         Add(new CGUIButton(ID_GPI_MINIMIZE, 0x0A96, 0x0A97, 0x0A97, m_Texture.Width - 10, 0));
     }
     else if (mode == OPM_FOLLOW_MOUSE)
+    {
         Add(new CGUIGumppic(0x00E1, 0, 0));
+    }
     else if (mode == OPM_SINGLE_CLICK)
+    {
         Add(new CGUIGumppic(0x00EC, 0, 0));
+    }
 }
 
 void CGumpPropertyIcon::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPI_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial == ID_GPI_MINIMIZE)
+    {
         g_ConfigManager.SetItemPropertiesMode(OPM_FOLLOW_MOUSE);
+    }
 }
 
 bool CGumpPropertyIcon::OnLeftMouseButtonDoubleClick()
@@ -94,10 +106,11 @@ bool CGumpPropertyIcon::OnLeftMouseButtonDoubleClick()
     uint8_t mode = g_ConfigManager.GetItemPropertiesMode() + 1;
 
     if (mode > OPM_SINGLE_CLICK)
+    {
         mode = OPM_AT_ICON;
+    }
 
     g_ConfigManager.SetItemPropertiesMode(mode);
 
     return true;
 }
-

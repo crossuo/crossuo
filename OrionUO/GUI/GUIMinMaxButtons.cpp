@@ -22,11 +22,15 @@ void CGUIMinMaxButtons::UpdateText()
     if (HaveText)
     {
         if (Unicode)
+        {
             g_FontManager.GenerateW(
                 Font, Text, std::to_wstring(Value), TextColor, 30, TextWidth, Align, TextFlags);
+        }
         else
+        {
             g_FontManager.GenerateA(
                 Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
+        }
 
         CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 
@@ -82,9 +86,13 @@ void CGUIMinMaxButtons::UpdateText()
                     int deltaX = abs(sliderWidth - textWidth) / 2;
 
                     if (sliderWidth > textWidth)
+                    {
                         textX += deltaX;
+                    }
                     else
+                    {
                         textX -= deltaX;
+                    }
 
                     break;
                 }
@@ -97,9 +105,13 @@ void CGUIMinMaxButtons::UpdateText()
                     int deltaY = abs(sliderHeight - textHeight) / 2;
 
                     if (sliderHeight > textHeight)
+                    {
                         textY += deltaY;
+                    }
                     else
+                    {
                         textY -= deltaY;
+                    }
 
                     break;
                 }
@@ -116,17 +128,25 @@ void CGUIMinMaxButtons::UpdateText()
 void CGUIMinMaxButtons::Scroll(int delay)
 {
     DEBUG_TRACE_FUNCTION;
-    if (LastScrollTime < g_Ticks && m_ScrollMode)
+    if (LastScrollTime < g_Ticks && (m_ScrollMode != 0))
     {
         if (m_ScrollMode == 1)
+        {
             Value += ScrollStep;
+        }
         else
+        {
             Value -= ScrollStep;
+        }
 
         if (Value < MinValue)
+        {
             Value = MinValue;
+        }
         else if (Value > MaxValue)
+        {
             Value = MaxValue;
+        }
 
         ScrollStep++;
         LastScrollTime = g_Ticks + delay;
@@ -144,12 +164,18 @@ void CGUIMinMaxButtons::OnClick()
     if (x >= 0 && y >= 0 && y < 18)
     {
         if (x < 18)
+        {
             m_ScrollMode = 1;
+        }
         else
+        {
             m_ScrollMode = 2;
+        }
     }
     else
+    {
         m_ScrollMode = 0;
+    }
 
     LastScrollTime = g_Ticks + 100;
     ScrollStep = BaseScrollStep;
@@ -195,11 +221,15 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
         CGLTexture *th = g_Orion.ExecuteGump(Graphic + (int)i);
 
         if (th != nullptr)
+        {
             th->Draw(m_X + ((int)i * 18), m_Y, checktrans);
+        }
     }
 
     if (HaveText)
+    {
         Text.Draw(TextX, TextY, checktrans);
+    }
 }
 
 bool CGUIMinMaxButtons::Select()
@@ -210,4 +240,3 @@ bool CGUIMinMaxButtons::Select()
 
     return (x >= 0 && y >= 0 && x < 36 && y < 18);
 }
-

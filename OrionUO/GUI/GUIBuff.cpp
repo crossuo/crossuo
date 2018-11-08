@@ -15,7 +15,7 @@ CGUIBuff::~CGUIBuff()
 void CGUIBuff::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
     if (th != nullptr)
     {

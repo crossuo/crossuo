@@ -50,8 +50,7 @@ bool CDECL PluginSendFunction(uint8_t *buf, const int &size)
 }
 
 CPlugin::CPlugin(uint32_t flags)
-    : CBaseQueueItem()
-    , m_Flags(flags)
+    : m_Flags(flags)
 {
     DEBUG_TRACE_FUNCTION;
     m_PPS = new PLUGIN_INTERFACE();
@@ -72,11 +71,11 @@ CPlugin::~CPlugin()
 }
 
 CPluginManager::CPluginManager()
-    : CBaseQueue()
+
 {
 }
 
-uint32_t CPluginManager::WindowProc(WindowHandle wnd, uint32_t msg, void  *data1, void *data2)
+uint32_t CPluginManager::WindowProc(WindowHandle wnd, uint32_t msg, void *data1, void *data2)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -171,7 +170,7 @@ void CPluginManager::SceneDraw()
 void CPluginManager::WorldMapDraw()
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != nullptr)
@@ -180,4 +179,3 @@ void CPluginManager::WorldMapDraw()
         }
     }
 }
-

@@ -17,14 +17,14 @@ protected:
 
 public:
     bool GetFemale() { return m_Female; };
-    void SetFemale(bool val);
+    void SetFemale(bool female);
 
 protected:
     RACE_TYPE m_Race = RT_HUMAN;
 
 public:
     RACE_TYPE GetRace() { return m_Race; };
-    void SetRace(RACE_TYPE val);
+    void SetRace(RACE_TYPE newRace);
     uint8_t HairStyle = 1;
     uint8_t BeardStyle = 0;
     uint16_t SkinTone = 0x03EA;

@@ -1,5 +1,5 @@
 // GPLv3 License
-// Copyright (c) 2018 Danny Angelo Carminati Grein 
+// Copyright (c) 2018 Danny Angelo Carminati Grein
 
 #include "Sockets.h"
 #include <cassert>
@@ -54,10 +54,14 @@ uint16_t icmp_checksum(const uint16_t *addr, int count)
     }
 
     if (count > 0)
+    {
         checksum += *(unsigned char *)addr;
+    }
 
-    while (checksum >> 16)
+    while ((checksum >> 16) != 0)
+    {
         checksum = (checksum & 0xffff) + (checksum >> 16);
+    }
 
     return ~checksum;
 }
@@ -66,7 +70,7 @@ uint16_t icmp_checksum(const uint16_t *addr, int count)
 
 static bool wsa_initialized = false;
 
-template<class T>
+template <class T>
 inline static SOCKET socket_fd(T socket)
 {
     assert(socket && *(int *)socket != INVALID_SOCKET);
@@ -254,7 +258,7 @@ void icmp_close(icmp_handle handle)
     auto h = socket_fd(handle);
     closesocket(h);
     delete (int *)handle;
-    handle = nullptr;    
+    handle = nullptr;
 }
 
 #else
@@ -263,7 +267,7 @@ void icmp_close(icmp_handle handle)
 #include <stropts.h>
 #include <ifaddrs.h>
 
-template<class T>
+template <class T>
 inline static int socket_fd(T socket)
 {
     assert(socket && *(int *)socket != -1);
@@ -280,15 +284,19 @@ uint32_t socket_localaddress()
     getifaddrs(&addrs);
     for (ifa = addrs; ifa != nullptr; ifa = ifa->ifa_next)
     {
-        if (!ifa->ifa_addr)
+        if (ifa->ifa_addr == nullptr)
+        {
             continue;
+        }
 
         if (ifa->ifa_addr->sa_family == AF_INET)
         {
             tmp = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             r = *(uint32_t *)tmp;
             if (r == 0x0100007f)
+            {
                 continue;
+            }
 
             char buff[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmp, buff, INET_ADDRSTRLEN);
@@ -296,8 +304,10 @@ uint32_t socket_localaddress()
             break;
         }
     }
-    if (addrs)
+    if (addrs != nullptr)
+    {
         freeifaddrs(addrs);
+    }
 
     return r;
 }
@@ -315,7 +325,9 @@ tcp_socket tcp_open()
 {
     int h = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
     if (h == -1)
+    {
         return nullptr;
+    }
 
     LOG("socket opened\n");
     int *s = new int;
@@ -347,7 +359,9 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
     {
         he = gethostbyname(address);
         if (he == nullptr)
+        {
             return false;
+        }
 
         memcpy(&caddr.sin_addr, he->h_addr, he->h_length);
     }
@@ -403,7 +417,9 @@ icmp_handle icmp_open()
 {
     int h = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (h == -1)
+    {
         return nullptr;
+    }
 
     LOG("icmp opened\n");
     int *s = new int;
@@ -443,7 +459,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
         FD_SET(h, &readfds);
 
         timeval tv = { 1, 0 };
-        if (select(1, &readfds, nullptr, nullptr, &tv))
+        if (select(1, &readfds, nullptr, nullptr, &tv) != 0)
         {
             ECHOREPLY answer;
             sockaddr_in sourceAddress;
@@ -458,8 +474,9 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
                 LOG("icmp: %d\n", *timems);
                 return 0;
             }
-            else
+            {
                 return -1;
+            }
         }
         return -2;
     }

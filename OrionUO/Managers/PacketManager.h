@@ -59,7 +59,7 @@ protected:
 
 public:
     CLIENT_VERSION GetClientVersion() { return m_ClientVersion; };
-    void SetClientVersion(CLIENT_VERSION val);
+    void SetClientVersion(CLIENT_VERSION newClientVersion);
     string AutoLoginNames = "";
     uint32_t ConfigSerial = 0;
 

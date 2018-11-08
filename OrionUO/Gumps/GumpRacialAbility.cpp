@@ -24,7 +24,9 @@ void CGumpRacialAbility::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
 }
 
 void CGumpRacialAbility::OnAbilityUse(uint16_t index)
@@ -35,7 +37,9 @@ void CGumpRacialAbility::OnAbilityUse(uint16_t index)
         case 0x5DDA:
         {
             if (g_Player->Race == RT_GARGOYLE)
+            {
                 CPacketToggleGargoyleFlying().Send();
+            }
 
             break;
         }
@@ -51,4 +55,3 @@ bool CGumpRacialAbility::OnLeftMouseButtonDoubleClick()
 
     return true;
 }
-

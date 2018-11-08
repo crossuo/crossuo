@@ -4,10 +4,8 @@
 
 namespace Wisp
 {
-
 CThreadedTimer::CThreadedTimer(uint32_t id, WindowHandle handle, bool waitForProcessMessage)
-    : Wisp::CThread()
-    , TimerID(id)
+    : TimerID(id)
     , m_Handle(handle)
     , WaitForProcessMessage(waitForProcessMessage)
 {
@@ -42,4 +40,4 @@ void CThreadedTimer::OnDestroy()
     }
 }
 
-};
+}; // namespace Wisp

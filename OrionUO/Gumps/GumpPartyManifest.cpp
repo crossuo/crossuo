@@ -39,8 +39,10 @@ void CGumpPartyManifest::UpdateContent()
             ID_GPM_BUTTON_TELL_MEMBER + (int)i, 0x0FAB, 0x0FAC, 0x0FAD, 40, yPtr + 2));
 
         if (isLeader)
+        {
             Add(new CGUIButton(
                 ID_GPM_BUTTON_KICK_MEMBER + (int)i, 0x0FB1, 0x0FB2, 0x0FB3, 80, yPtr + 2));
+        }
 
         Add(new CGUIGumppic(0x0475, 130, yPtr));
 
@@ -110,13 +112,19 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
         RemoveMark = true;
     }
     else if (serial == ID_GPM_BUTTON_CANCEL)
+    {
         RemoveMark = true;
+    }
     else if (serial == ID_GPM_BUTTON_SEND_MESSAGE)
     {
         if (g_Party.Leader == 0)
+        {
             g_Orion.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
+        }
         else
+        {
             g_GameConsole.SetTextW(L"/");
+        }
     }
     else if (serial == ID_GPM_BUTTON_LOOT_TYPE)
     {
@@ -126,14 +134,18 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
     else if (serial == ID_GPM_BUTTON_LEAVE)
     {
         if (g_Party.Leader == 0)
+        {
             g_Orion.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
+        }
         else
         {
             //???????????????
             for (int i = 0; i < 10; i++)
             {
                 if (g_Party.Member[i].Serial != 0)
+                {
                     CPacketPartyRemoveRequest(g_Party.Member[i].Serial).Send();
+                }
             }
             //???????????????
         }
@@ -141,15 +153,19 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
     else if (serial == ID_GPM_BUTTON_ADD)
     {
         if (g_Party.Leader == 0 || g_Party.Leader == g_PlayerSerial)
+        {
             CPacketPartyInviteRequest().Send();
+        }
     }
     else if (serial >= ID_GPM_BUTTON_TELL_MEMBER && serial < ID_GPM_BUTTON_KICK_MEMBER)
     {
         int memberIndex = serial - ID_GPM_BUTTON_TELL_MEMBER;
 
         if (g_Party.Member[memberIndex].Serial == 0)
+        {
             g_Orion.CreateTextMessage(
                 TT_SYSTEM, 0xFFFFFFFF, 3, 0, "There is no one in that party slot.");
+        }
         else
         {
             char buf[10] = { 0 };
@@ -162,10 +178,13 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
         int memberIndex = serial - ID_GPM_BUTTON_KICK_MEMBER;
 
         if (g_Party.Member[memberIndex].Serial == 0)
+        {
             g_Orion.CreateTextMessage(
                 TT_SYSTEM, 0xFFFFFFFF, 3, 0, "There is no one in that party slot.");
+        }
         else
+        {
             CPacketPartyRemoveRequest(g_Party.Member[memberIndex].Serial).Send();
+        }
     }
 }
-

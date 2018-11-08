@@ -1,5 +1,5 @@
 // GPLv3 License
-// Copyright (c) 2018 Danny Angelo Carminati Grein 
+// Copyright (c) 2018 Danny Angelo Carminati Grein
 
 #include "FileSystem.h"
 
@@ -109,13 +109,13 @@ void fs_unmap(unsigned char *ptr, size_t length)
 FILE *fs_open(const std::string &path_str, fs_mode mode)
 {
     string m;
-    m = mode & FS_WRITE ? m + "w" : m;
-    m = mode & FS_READ ? m + "r" : m;
+    m = (mode & FS_WRITE) != 0 ? m + "w" : m;
+    m = (mode & FS_READ) != 0 ? m + "r" : m;
 
     const char *fname = path_str.c_str();
     const char *mstr = m.c_str();
     auto fp = fopen(fname, mstr);
-    if (!fp)
+    if (fp == nullptr)
     {
         LOG("Error loading file: %s (%d)", strerror(errno), errno);
         return nullptr;
@@ -154,7 +154,9 @@ bool fs_path_create(const std::string &path_str)
     assert(!path_str.empty());
 
     if (fs_path_exists(path_str))
+    {
         return false;
+    }
 
     return mkdir(path_str.c_str(), 0777) == 0;
 }
@@ -175,15 +177,21 @@ unsigned char *fs_map(const os_path &path, size_t *length)
 #if USE_MMAP
     int fd = open(path.c_str(), O_RDONLY);
     if (fd < 0)
+    {
         return nullptr;
+    }
 
     size_t size = lseek(fd, 0, SEEK_END);
     if (size <= 0)
+    {
         goto fail;
+    }
 
     ptr = (unsigned char *)mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
     if (ptr == MAP_FAILED)
+    {
         ptr = nullptr;
+    }
 fail:
     close(fd);
 #else
@@ -210,8 +218,10 @@ fail:
     fclose(fd);
 #endif
 
-    if (length)
+    if (length != nullptr)
+    {
         *length = size;
+    }
     return ptr;
 }
 

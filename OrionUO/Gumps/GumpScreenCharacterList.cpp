@@ -48,12 +48,12 @@ void CGumpScreenCharacterList::UpdateContent()
     {
         size_t len = g_CharacterList.GetName(i).length();
 
-        if (!testField || len != 0 || !i)
+        if (!testField || len != 0 || (i == 0))
         {
             Add(new CGUIResizepic(
                 ID_CS_CHARACTERS + (int)i, 0x0BB8, 224, yOffset + (posInList * 40), 280, 30));
 
-            if (len)
+            if (len != 0u)
             {
                 CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
                     ID_CS_CHARACTERS + (int)i,
@@ -80,7 +80,9 @@ void CGumpScreenCharacterList::UpdateContent()
     }
 
     if (!g_CharacterList.OnePerson)
+    {
         Add(new CGUIButton(ID_CS_NEW, 0x159D, 0x159E, 0x159F, 224, 350 + yBonus));
+    }
 
     Add(new CGUIButton(ID_CS_DELETE, 0x159A, 0x159B, 0x159C, 442, 350 + yBonus));
     Add(new CGUIButton(ID_CS_ARROW_PREV, 0x15A1, 0x15A2, 0x15A3, 586, 445));
@@ -91,7 +93,9 @@ void CGumpScreenCharacterList::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips)
+    {
         return;
+    }
 
     uint32_t id = g_SelectedObject.Serial;
 
@@ -132,7 +136,7 @@ void CGumpScreenCharacterList::InitToolTip()
 
         for (int i = 0; i < g_CharacterList.Count; i++)
         {
-            if (!testField || !i || g_CharacterList.GetName(i).length() != 0)
+            if (!testField || (i == 0) || g_CharacterList.GetName(i).length() != 0)
             {
                 if (id == (ID_CS_CHARACTERS + i))
                 {
@@ -148,19 +152,29 @@ void CGumpScreenCharacterList::InitToolTip()
 void CGumpScreenCharacterList::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_CS_QUIT) //x button
+    if (serial == ID_CS_QUIT)
+    { //x button
         g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::ID_SMOOTH_CLS_QUIT);
-    else if (serial == ID_CS_ARROW_PREV) //< button
+    }
+    else if (serial == ID_CS_ARROW_PREV)
+    { //< button
         g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::ID_SMOOTH_CLS_CONNECT);
-    else if (serial == ID_CS_ARROW_NEXT) //> button
+    }
+    else if (serial == ID_CS_ARROW_NEXT)
+    { //> button
         g_CharacterListScreen.CreateSmoothAction(
             CCharacterListScreen::ID_SMOOTH_CLS_SELECT_CHARACTER);
-    else if (serial == ID_CS_NEW) //New button
+    }
+    else if (serial == ID_CS_NEW)
+    { //New button
         g_CharacterListScreen.CreateSmoothAction(
             CCharacterListScreen::ID_SMOOTH_CLS_GO_SCREEN_PROFESSION_SELECT);
-    else if (serial == ID_CS_DELETE) //Delete button
+    }
+    else if (serial == ID_CS_DELETE)
+    { //Delete button
         g_CharacterListScreen.CreateSmoothAction(
             CCharacterListScreen::ID_SMOOTH_CLS_GO_SCREEN_DELETE);
+    }
 }
 
 void CGumpScreenCharacterList::GUMP_TEXT_ENTRY_EVENT_C
@@ -175,7 +189,9 @@ void CGumpScreenCharacterList::GUMP_TEXT_ENTRY_EVENT_C
             QFOR(item, m_Items, CBaseGUI *)
             {
                 if (item->Type == GOT_TEXTENTRY)
+                {
                     ((CGUITextEntry *)item)->Focused = item->Serial == serial;
+                }
             }
 
             break;
@@ -190,9 +206,11 @@ bool CGumpScreenCharacterList::OnLeftMouseButtonDoubleClick()
     {
         if (g_SelectedObject.Serial == (ID_CS_CHARACTERS + i))
         {
-            if (!g_CharacterList.GetName(i).length())
+            if (g_CharacterList.GetName(i).length() == 0u)
+            {
                 g_CharacterListScreen.CreateSmoothAction(
                     CCharacterListScreen::ID_SMOOTH_CLS_GO_SCREEN_PROFESSION_SELECT);
+            }
             else
             {
                 g_CharacterListScreen.CreateSmoothAction(

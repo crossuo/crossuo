@@ -189,7 +189,7 @@ public:
     uint8_t GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index);
 
     uint8_t
-    GetObjectNewAnimation(CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t delay);
+    GetObjectNewAnimation(CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode);
 };
 
 extern CAnimationManager g_AnimationManager;

@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CBaseProfession::CBaseProfession()
-    : CBaseQueueItem()
+
 {
 }
 
@@ -17,14 +17,20 @@ bool CBaseProfession::AddDescription(int desc, string name, const char *val)
     bool result = (DescriptionIndex == desc);
     if (result)
     {
-        if (!NameClilocID)
+        if (NameClilocID == 0u)
+        {
             Name = name;
+        }
 
         g_FontManager.SetUseHTML(true);
         if (desc == -2)
+        {
             Description = ToWString(val);
+        }
         else
+        {
             Description = ToWString(name + "\n" + val);
+        }
 
         g_FontManager.SetUseHTML(false);
     }
@@ -32,7 +38,9 @@ bool CBaseProfession::AddDescription(int desc, string name, const char *val)
     {
         for (CBaseProfession *obj = (CBaseProfession *)m_Items; obj != nullptr && !result;
              obj = (CBaseProfession *)obj->m_Next)
+        {
             result = obj->AddDescription(desc, name, val);
+        }
     }
 
     return result;

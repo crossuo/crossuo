@@ -16,10 +16,14 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, string
         (CGUIHTMLGump *)Add(new CGUIHTMLGump(ID_GBS_HTMLGUMP, 0, 127, 159, 241, 195, false, true));
 
     if (m_HTMLGump->m_Background != nullptr)
+    {
         m_HTMLGump->m_Background->Height -= 30;
+    }
 
     if (m_HTMLGump->m_Scissor != nullptr)
+    {
         m_HTMLGump->m_Scissor->Height -= 30;
+    }
 
     CGUIHTMLButton *button = m_HTMLGump->m_ButtonUp;
 
@@ -94,4 +98,3 @@ bool CGumpBulletinBoard::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-

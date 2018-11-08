@@ -5,12 +5,14 @@ CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)
 {
     DEBUG_TRACE_FUNCTION;
-    Draw2Page = true;
+    Draw2Page = 1;
 
     if (g_PacketManager.GetClientVersion() < CV_7000)
     {
         if (g_PacketManager.GetClientVersion() >= CV_500A)
+        {
             AbilityCount = 29;
+        }
         else
         {
             AbilityCount = 13;
@@ -352,20 +354,26 @@ void CGumpCombatBook::InitToolTip()
     if (Page >= DictionaryPagesCount)
     {
         if (serial >= (uint32_t)ID_GCB_ICON)
+        {
             g_ToolTip.Set(
                 g_ClilocManager.Cliloc(g_Language)->GetW(1061693 + (serial - ID_GCB_ICON), true),
                 150);
+        }
     }
     else
     {
         if (serial == ID_GCB_ICON_FIRST)
+        {
             g_ToolTip.Set(
                 g_ClilocManager.Cliloc(g_Language)->GetW(1028838 + (g_Ability[0] & 0x7F) - 1, true),
                 80);
+        }
         else if (serial == ID_GCB_ICON_SECOND)
+        {
             g_ToolTip.Set(
                 g_ClilocManager.Cliloc(g_Language)->GetW(1028838 + (g_Ability[1] & 0x7F) - 1, true),
                 80);
+        }
     }
 }
 
@@ -382,7 +390,7 @@ void CGumpCombatBook::PrepareContent()
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
         {
             g_GumpManager.AddGump(new CGumpAbility(
-                g_PressedObject.LeftSerial == ID_GCB_ICON_SECOND,
+                static_cast<int>(g_PressedObject.LeftSerial == ID_GCB_ICON_SECOND),
                 g_MouseManager.Position.X - 20,
                 g_MouseManager.Position.Y - 20));
 
@@ -423,7 +431,7 @@ void CGumpCombatBook::UpdateContent()
         int y = 0;
         int spellsOnPage = 9;
 
-        if (page % 2)
+        if ((page % 2) != 0)
         {
             indexX = 259;
             dataX = 215;
@@ -436,7 +444,9 @@ void CGumpCombatBook::UpdateContent()
         for (int i = 0; i < spellsOnPage; i++)
         {
             if (offs >= AbilityCount)
+            {
                 break;
+            }
 
             CGUIHitBox *box =
                 (CGUIHitBox *)Add(new CGUIHitBox(ID_GCB_ICON + offs, dataX, 42 + y, 100, 16, true));
@@ -503,7 +513,9 @@ void CGumpCombatBook::UpdateContent()
             uint16_t &id = list[j];
 
             if (id >= maxStaticCount)
+            {
                 continue;
+            }
 
             CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, textX, textY));
             text->CreateTextureA(9, ToCamelCase(g_Orion.m_StaticData[id].Name));
@@ -534,7 +546,9 @@ void CGumpCombatBook::GUMP_BUTTON_EVENT_C
             newPage = Page - 2;
 
             if (newPage < 0)
+            {
                 newPage = 0;
+            }
         }
     }
     else if (serial == ID_GCB_BUTTON_NEXT)
@@ -544,7 +558,9 @@ void CGumpCombatBook::GUMP_BUTTON_EVENT_C
             newPage = Page + 2;
 
             if (newPage >= PagesCount)
+            {
                 newPage = PagesCount - 1;
+            }
         }
     }
     else if (serial == ID_GCB_BUTTON_MINIMIZE)
@@ -553,17 +569,23 @@ void CGumpCombatBook::GUMP_BUTTON_EVENT_C
         WantUpdateContent = true;
     }
     else if (serial == ID_GCB_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial >= ID_GCB_ICON)
     {
-        if (Page < DictionaryPagesCount) //List of spells
+        if (Page < DictionaryPagesCount)
+        { //List of spells
             newPage = DictionaryPagesCount + ((serial - ID_GCB_ICON) * 2);
+        }
     }
 
     if (newPage > -1 && !g_ClickObject.Enabled)
     {
-        if (newPage % 2)
+        if ((newPage % 2) != 0)
+        {
             newPage--;
+        }
 
         g_ClickObject.Init(g_PressedObject.LeftObject, this);
         g_ClickObject.Timer = g_Ticks + g_MouseManager.DoubleClickDelay;
@@ -597,8 +619,10 @@ bool CGumpCombatBook::OnLeftMouseButtonDoubleClick()
         {
             int newPage = PagesCount - 1;
 
-            if (newPage % 2)
+            if ((newPage % 2) != 0)
+            {
                 newPage--;
+            }
 
             ChangePage(newPage);
 

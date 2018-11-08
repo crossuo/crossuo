@@ -16,4 +16,3 @@ void CPathNode::Reset()
     Used = false;
     X = Y = Z = Direction = Cost = DistFromStartCost = DistFromGoalCost = 0;
 }
-

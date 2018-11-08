@@ -46,12 +46,18 @@ void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
+    {
         action = SmoothScreenAction;
+    }
 
     if (action == ID_SMOOTH_CCS_QUIT)
+    {
         g_OrionWindow.Destroy();
+    }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_CHARACTER)
+    {
         g_Orion.InitScreen(GS_CHARACTER);
+    }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_CONNECT)
     {
         g_Orion.InitScreen(GS_GAME_CONNECT);
@@ -60,7 +66,9 @@ void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
         g_ConnectionScreen.SetErrorCode(1);
     }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_SELECT_TOWN)
+    {
         g_Orion.InitScreen(GS_SELECT_TOWN);
+    }
 }
 
 void CCreateCharacterScreen::OnLeftMouseButtonDown()
@@ -84,12 +92,18 @@ void CCreateCharacterScreen::OnTextInput(const TextEvent &ev)
 
     const auto ch = EvChar(ev);
     if (ch >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)ch))
+    {
         return;
-    else if (g_EntryPointer == nullptr)
+    }
+    if (g_EntryPointer == nullptr)
+    {
         return;
+    }
 
-    if (g_EntryPointer->Length() < 20) //add char to text field
+    if (g_EntryPointer->Length() < 20)
+    { //add char to text field
         g_EntryPointer->Insert(ch);
+    }
 
     Name = g_EntryPointer->c_str();
     m_Gump.WantRedraw = true;
@@ -98,7 +112,7 @@ void CCreateCharacterScreen::OnTextInput(const TextEvent &ev)
 void CCreateCharacterScreen::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     const auto key = EvKey(ev);
     if (g_EntryPointer != nullptr)
     {

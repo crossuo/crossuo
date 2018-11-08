@@ -42,7 +42,7 @@ public:
     virtual void Select(int x, int y);
 
     //Добавить текст в контейнер
-    virtual void AddText(CTextData *td);
+    virtual void AddText(CTextData *msg);
 
     //Проверка прозрачности (для круга прозрачности)
     virtual bool TranparentTest(int playerZPlus5);

@@ -28,14 +28,22 @@ void CGUIResizepic::Draw(bool checktrans)
         CGLTexture *pth = g_Orion.ExecuteGump(Graphic + (int)i);
 
         if (pth == nullptr)
+        {
             return;
+        }
 
         if (i == 4)
+        {
             th[8] = pth;
+        }
         else if (i > 4)
+        {
             th[i - 1] = pth;
+        }
         else
+        {
             th[i] = pth;
+        }
     }
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
@@ -56,15 +64,18 @@ void CGUIResizepic::Draw(bool checktrans)
         glDisable(GL_STENCIL_TEST);
     }
     else
+    {
         g_GL_DrawResizepic(th, m_X, m_Y, Width, Height);
+    }
 }
 
 bool CGUIResizepic::Select()
 {
     DEBUG_TRACE_FUNCTION;
     if (CheckPolygone)
+    {
         return CGUIPolygonal::Select();
+    }
 
     return g_Orion.ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, Height);
 }
-

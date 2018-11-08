@@ -131,9 +131,11 @@ int makeKey(keyInstance *key, u8 direction, int keyLen, char *keyMaterial);
 
 int cipherInit(cipherInstance *cipher, u8 mode, char *IV);
 
-int blockEncrypt(cipherInstance *cipher, keyInstance *key, u8 *input, int inputLen, u8 *outBuffer);
+int blockEncrypt(
+    cipherInstance *cipher, keyInstance *key, const u8 *input, int inputLen, u8 *outBuffer);
 
-int blockDecrypt(cipherInstance *cipher, keyInstance *key, u8 *input, int inputLen, u8 *outBuffer);
+int blockDecrypt(
+    cipherInstance *cipher, keyInstance *key, const u8 *input, int inputLen, u8 *outBuffer);
 
 int reKey(keyInstance *key); /* do key schedule using modified key.keyu32s */
 

@@ -16,10 +16,14 @@ void CRenderTextObject::UnlinkDraw()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_NextDraw != nullptr)
+    {
         m_NextDraw->m_PrevDraw = m_PrevDraw;
+    }
 
     if (m_PrevDraw != nullptr)
+    {
         m_PrevDraw->m_NextDraw = m_NextDraw;
+    }
 
     m_NextDraw = nullptr;
     m_PrevDraw = nullptr;
@@ -33,7 +37,9 @@ void CRenderTextObject::ToTop()
     while (obj != nullptr)
     {
         if (obj->m_PrevDraw == nullptr)
+        {
             break;
+        }
 
         obj = obj->m_PrevDraw;
     }
@@ -41,4 +47,3 @@ void CRenderTextObject::ToTop()
     CTextRenderer *tr = (CTextRenderer *)obj;
     tr->ToTop(this);
 }
-

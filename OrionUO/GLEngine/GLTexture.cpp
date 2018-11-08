@@ -32,7 +32,9 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
             glDisable(GL_STENCIL_TEST);
         }
         else
+        {
             g_GL_Draw(*this, x, y);
+        }
     }
 }
 
@@ -41,11 +43,15 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
     DEBUG_TRACE_FUNCTION;
     if (Texture != 0)
     {
-        if (!width)
+        if (width == 0)
+        {
             width = Width;
+        }
 
-        if (!height)
+        if (height == 0)
+        {
             height = Height;
+        }
 
         if (checktrans)
         {
@@ -63,7 +69,9 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
             glDisable(GL_STENCIL_TEST);
         }
         else
+        {
             g_GL_DrawStretched(*this, x, y, width, height);
+        }
     }
 }
 
@@ -71,7 +79,9 @@ void CGLTexture::DrawRotated(int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
     if (Texture != 0)
+    {
         g_GL_DrawRotated(*this, x, y, angle);
+    }
 }
 
 void CGLTexture::DrawTransparent(int x, int y, bool stencil)
@@ -132,14 +142,17 @@ bool CGLTexture::Select(int x, int y, bool pixelCheck)
     if (x >= 0 && y >= 0 && x < Width && y < Height)
     {
         if (!pixelCheck)
+        {
             return true;
+        }
 
         int pos = (y * Width) + x;
 
         if (pos < (int)m_HitMap.size())
+        {
             return (m_HitMap[pos] != 0);
+        }
     }
 
     return false;
 }
-

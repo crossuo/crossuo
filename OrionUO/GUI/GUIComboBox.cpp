@@ -48,8 +48,10 @@ CGUIComboBox::CGUIComboBox(
 
         th = g_Orion.ExecuteGump(Graphic);
 
-        if (th != nullptr && !Width)
+        if (th != nullptr && (Width == 0))
+        {
             m_MinimizedArrowX = th->Width - 16;
+        }
     }
 }
 
@@ -77,14 +79,18 @@ void CGUIComboBox::RecalculateWidth()
                 CGUIText *text = (CGUIText *)item;
 
                 if (OpenedWidth < text->m_Texture.Width)
+                {
                     OpenedWidth = text->m_Texture.Width;
+                }
             }
         }
 
         OpenedWidth += 8;
 
         if (OpenedWidth < Width)
+        {
             OpenedWidth = Width;
+        }
 
         m_WorkWidth = OpenedWidth - 6;
     }
@@ -150,7 +156,9 @@ void CGUIComboBox::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
     if (Text != nullptr)
+    {
         Text->m_Texture.Draw(m_X + Text->GetX(), m_Y + Text->GetY() + TextOffsetY, checktrans);
+    }
 
     if (g_PressedObject.LeftObject == this) //maximized
     {
@@ -158,7 +166,9 @@ void CGUIComboBox::Draw(bool checktrans)
         int currentY = m_Y + 3;
 
         if (ShowMaximizedCenter)
+        {
             currentY -= m_WorkHeight / 2;
+        }
 
         if (CompositeBackground)
         {
@@ -192,16 +202,22 @@ void CGUIComboBox::Draw(bool checktrans)
             g_Orion.DrawGump(0x0985, 0, m_X + m_ArrowX, bodyY);
         }
         else
+        {
             g_Orion.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6);
+        }
 
         if (!g_ConfigManager.GetUseGLListsForInterface())
+        {
             g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
+        }
         else
+        {
             g_GL.PushScissor(
                 (int)g_GumpTranslate.X + currentX,
                 g_OrionWindow.GetSize().Height - ((int)g_GumpTranslate.Y + currentY) - m_WorkHeight,
                 m_WorkWidth,
                 m_WorkHeight);
+        }
 
         CBaseGUI *start = SkipToStart();
         int count = 0;
@@ -225,7 +241,9 @@ void CGUIComboBox::Draw(bool checktrans)
                 count++;
 
                 if (count > m_ShowItemsCount)
+                {
                     break;
+                }
             }
         }
 
@@ -252,21 +270,29 @@ void CGUIComboBox::Draw(bool checktrans)
 
         if (CompositeBackground)
         {
-            if (Width)
+            if (Width != 0)
+            {
                 g_Orion.DrawGump(Graphic, 0, m_X, m_Y, Width, 0);
+            }
             else
+            {
                 g_Orion.DrawGump(Graphic, 0, m_X, m_Y);
+            }
 
             if (selected != nullptr)
             {
                 if (!g_ConfigManager.GetUseGLListsForInterface())
+                {
                     g_GL.PushScissor(m_X + 6, m_Y, m_MinimizedArrowX, 20);
+                }
                 else
+                {
                     g_GL.PushScissor(
                         (int)g_GumpTranslate.X + m_X + 6,
                         g_OrionWindow.GetSize().Height - ((int)g_GumpTranslate.Y + m_Y) - 20,
                         m_MinimizedArrowX,
                         20);
+                }
 
                 selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
                 g_GL.PopScissor();
@@ -281,13 +307,17 @@ void CGUIComboBox::Draw(bool checktrans)
             if (selected != nullptr)
             {
                 if (!g_ConfigManager.GetUseGLListsForInterface())
+                {
                     g_GL.PushScissor(m_X + 3, m_Y, Width - 6, 20);
+                }
                 else
+                {
                     g_GL.PushScissor(
                         (int)g_GumpTranslate.X + m_X + 3,
                         g_OrionWindow.GetSize().Height - ((int)g_GumpTranslate.Y + m_Y) - 20,
                         Width - 6,
                         20);
+                }
 
                 selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
                 g_GL.PopScissor();
@@ -316,29 +346,41 @@ bool CGUIComboBox::Select()
         }
 
         if (ShowMaximizedCenter)
+        {
             currentY -= m_WorkHeight / 2;
+        }
 
         select = g_Orion.PolygonePixelsInXY(currentX, currentY, m_WorkWidth, m_WorkHeight);
 
         if (!select)
         {
             if (g_MouseManager.Position.Y < currentY)
+            {
                 ListingDirection = 1;
+            }
             else if (g_MouseManager.Position.Y > currentY + m_WorkHeight)
+            {
                 ListingDirection = 2;
+            }
         }
     }
     else
     {
         if (CompositeBackground)
         {
-            if (Width)
+            if (Width != 0)
+            {
                 select = g_Orion.GumpPixelsInXY(Graphic, m_X, m_Y, Width, 0);
+            }
             else
+            {
                 select = g_Orion.GumpPixelsInXY(Graphic, m_X, m_Y);
+            }
         }
         else
+        {
             select = g_Orion.ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, 20);
+        }
     }
 
     return select;
@@ -361,7 +403,9 @@ CBaseGUI *CGUIComboBox::SelectedItem()
         }
 
         if (ShowMaximizedCenter)
+        {
             currentY -= m_WorkHeight / 2;
+        }
 
         CBaseGUI *start = SkipToStart();
         int count = 0;
@@ -381,7 +425,9 @@ CBaseGUI *CGUIComboBox::SelectedItem()
                 count++;
 
                 if (count > m_ShowItemsCount)
+                {
                     break;
+                }
             }
         }
     }
@@ -412,11 +458,12 @@ int CGUIComboBox::IsSelectedItem()
                 count++;
 
                 if (count > m_ShowItemsCount)
+                {
                     break;
+                }
             }
         }
     }
 
     return select;
 }
-

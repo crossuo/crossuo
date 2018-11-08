@@ -39,7 +39,9 @@ void CGUIShopItem::UpdateOffsets()
         CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 
         if (th != nullptr)
+        {
             m_MaxOffset = th->Height;
+        }
     }
     else
     {
@@ -69,12 +71,14 @@ void CGUIShopItem::UpdateOffsets()
         ANIMATION_DIMENSIONS dims =
             g_AnimationManager.GetAnimationDimensions(0, Graphic, 1, group, false);
 
-        if (dims.Height)
+        if (dims.Height != 0)
         {
             m_MaxOffset = dims.Height;
 
             if (m_MaxOffset > 35)
+            {
                 m_MaxOffset = 35;
+            }
         }
     }
 
@@ -84,7 +88,9 @@ void CGUIShopItem::UpdateOffsets()
         m_MaxOffset = m_NameText.Height;
     }
     else
+    {
         m_TextOffset = ((m_MaxOffset - m_NameText.Height) / 2);
+    }
 }
 
 void CGUIShopItem::OnClick()
@@ -120,7 +126,9 @@ void CGUIShopItem::CreateNameText()
     uint16_t textColor = 0x021F;
 
     if (Selected)
+    {
         textColor = 0x0021;
+    }
 
     string str = Name + " at " + std::to_string(Price) + "gp";
     g_FontManager.GenerateA(9, m_NameText, str, textColor, 90);
@@ -132,7 +140,9 @@ void CGUIShopItem::CreateCountText(int lostCount)
     uint16_t textColor = 0x021F;
 
     if (Selected)
+    {
         textColor = 0x0021;
+    }
 
     g_FontManager.GenerateA(9, m_CountText, std::to_string(Count - lostCount), textColor);
 }
@@ -142,7 +152,9 @@ void CGUIShopItem::PrepareTextures()
     DEBUG_TRACE_FUNCTION;
 
     if (Serial >= 0x40000000)
+    {
         g_Orion.ExecuteStaticArt(Graphic);
+    }
     else
     {
         uint8_t group = 0;
@@ -176,7 +188,9 @@ void CGUIShopItem::PrepareTextures()
         g_AnimationManager.Direction = 1;
 
         if (direction.FrameCount == 0)
+        {
             g_AnimationManager.LoadDirectionGroup(direction);
+        }
     }
 
     g_Orion.ExecuteGump(0x0039);
@@ -191,14 +205,20 @@ void CGUIShopItem::SetShaderMode()
     if (Color != 0)
     {
         if (PartialHue)
+        {
             glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+        }
         else
+        {
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+        }
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
+    {
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+    }
 }
 
 void CGUIShopItem::Draw(bool checktrans)
@@ -220,7 +240,9 @@ void CGUIShopItem::Draw(bool checktrans)
         th = g_Orion.ExecuteStaticArt(Graphic);
 
         if (th != nullptr)
+        {
             th->Draw(2, m_ImageOffset, checktrans);
+        }
     }
     else
     {
@@ -254,20 +276,28 @@ void CGUIShopItem::Draw(bool checktrans)
         {
             CGLTexture &originalTexture = direction.m_Frames[0];
 
-            if (originalTexture.Texture)
+            if (originalTexture.Texture != 0u)
             {
                 CGLTexture tex;
                 tex.Texture = originalTexture.Texture;
 
                 if (originalTexture.Width > 35)
+                {
                     tex.Width = 35;
+                }
                 else
+                {
                     tex.Width = originalTexture.Width;
+                }
 
                 if (originalTexture.Height > 35)
+                {
                     tex.Height = 35;
+                }
                 else
+                {
                     tex.Height = originalTexture.Height;
+                }
 
                 g_GL.GL1_Draw(tex, 2, m_ImageOffset);
 
@@ -283,17 +313,23 @@ void CGUIShopItem::Draw(bool checktrans)
     th = g_Orion.ExecuteGump(0x0039);
 
     if (th != nullptr)
+    {
         th->Draw(2, m_MaxOffset, checktrans);
+    }
 
     th = g_Orion.ExecuteGump(0x003A);
 
     if (th != nullptr)
+    {
         th->Draw(32, m_MaxOffset, 140, 0, checktrans);
+    }
 
     th = g_Orion.ExecuteGump(0x003B);
 
     if (th != nullptr)
+    {
         th->Draw(166, m_MaxOffset, checktrans);
+    }
 
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 }
@@ -306,4 +342,3 @@ bool CGUIShopItem::Select()
 
     return (x >= 0 && y >= -10 && x < 200 && y < m_MaxOffset);
 }
-

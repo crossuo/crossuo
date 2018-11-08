@@ -15,33 +15,49 @@ CRenderStaticObject::CRenderStaticObject(
     m_TiledataPtr = &g_Orion.m_StaticData[graphic];
 
     if (m_TiledataPtr->Height > 5)
+    {
         CanBeTransparent = 1;
+    }
     else if (IsRoof() || (IsSurface() && IsBackground()) || IsWall())
+    {
         CanBeTransparent = 1;
+    }
     else if (m_TiledataPtr->Height == 5 && IsSurface() && !IsBackground())
+    {
         CanBeTransparent = 1;
+    }
     else
+    {
         CanBeTransparent = 0;
+    }
 
     if (renderType == ROT_GAME_OBJECT)
     {
         m_TextControl = new CTextContainer(5);
 
         if (IsSurface() || (IsBackground() && IsUnknown2()))
+        {
             CanBeTransparent |= 0x10;
+        }
     }
     else
     {
         if (IsWet())
+        {
             m_DrawTextureColor[3] = 0xFF;
+        }
 
         if (IsTranslucent())
+        {
             m_DrawTextureColor[3] = TRANSLUCENT_ALPHA;
+        }
 
         m_TextControl = new CTextContainer(1);
 
         if (IsSurface() || (IsBackground() && IsUnknown2()) || IsRoof())
+        {
             CanBeTransparent |= 0x10;
+        }
     }
 }
 
@@ -66,8 +82,10 @@ void CRenderStaticObject::UpdateTextCoordinates()
         {
             CTextData &text = *item;
 
-            if (!offset && text.Timer < g_Ticks)
+            if ((offset == 0) && text.Timer < g_Ticks)
+            {
                 continue;
+            }
 
             offset += text.m_Texture.Height;
 
@@ -84,8 +102,10 @@ void CRenderStaticObject::UpdateTextCoordinates()
         {
             CTextData &text = *item;
 
-            if (!offset && text.Timer < g_Ticks)
+            if ((offset == 0) && text.Timer < g_Ticks)
+            {
                 continue;
+            }
 
             offset += text.m_Texture.Height;
 
@@ -98,7 +118,9 @@ void CRenderStaticObject::UpdateTextCoordinates()
 void CRenderStaticObject::FixTextCoordinates()
 {
     if (IsGameObject() && ((CGameObject *)this)->Container != 0xFFFFFFFF)
+    {
         return;
+    }
 
     int offsetY = 0;
 
@@ -113,25 +135,35 @@ void CRenderStaticObject::FixTextCoordinates()
         CTextData &text = *item;
 
         if (text.Timer < g_Ticks)
+        {
             continue;
+        }
 
         int startX = text.RealDrawX;
         int endX = startX + text.m_Texture.Width;
 
         if (startX < minX)
+        {
             text.RealDrawX += minX - startX;
+        }
 
         if (endX > maxX)
+        {
             text.RealDrawX -= endX - maxX;
+        }
 
         int startY = text.RealDrawY;
         int endY = startY + text.m_Texture.Height;
 
-        if (startY < minY && !offsetY)
+        if (startY < minY && (offsetY == 0))
+        {
             offsetY = minY - startY;
+        }
 
-        if (offsetY)
+        if (offsetY != 0)
+        {
             text.RealDrawY += offsetY;
+        }
     }
 }
 
@@ -153,13 +185,17 @@ bool CRenderStaticObject::IsNoDrawTile(uint16_t graphic)
     if (graphic != 0x63D3)
     {
         if (graphic >= 0x2198 && graphic <= 0x21A4)
+        {
             return true;
+        }
 
         long long flags = g_Orion.GetStaticFlags(graphic);
 
         if (!::IsNoDiagonal(flags) ||
             (::IsAnimated(flags) && g_Player != nullptr && g_Player->Race == RT_GARGOYLE))
+        {
             return false;
+        }
     }
 
     return true;
@@ -186,9 +222,13 @@ void CRenderStaticObject::Draw(int x, int y)
     }
 
     if (g_UseCircleTrans)
+    {
         g_Orion.DrawStaticArtAnimatedTransparent(RenderGraphic, RenderColor, x, y);
+    }
     else
+    {
         g_Orion.DrawStaticArtAnimated(RenderGraphic, RenderColor, x, y);
+    }
 
     if (useAlpha)
     {
@@ -197,7 +237,9 @@ void CRenderStaticObject::Draw(int x, int y)
     }
 
     if (IsLightSource() && g_GameScreen.UseLight)
+    {
         g_GameScreen.AddLight(this, this, x, y);
+    }
 }
 
 void CRenderStaticObject::Select(int x, int y)
@@ -206,11 +248,15 @@ void CRenderStaticObject::Select(int x, int y)
     if (m_DrawTextureColor[3] != 0xFF)
     {
         if (!IsTranslucent() || m_DrawTextureColor[3] != TRANSLUCENT_ALPHA)
+        {
             return;
+        }
     }
 
     if (!g_UseCircleTrans && g_Orion.StaticPixelsInXYAnimated(RenderGraphic, x, y))
+    {
         g_SelectedObject.Init(this);
+    }
 }
 
 void CRenderStaticObject::AddText(CTextData *msg)
@@ -249,9 +295,13 @@ bool CRenderStaticObject::TranparentTest(int playerZPlus5)
     bool result = true;
 
     if (m_Z <= playerZPlus5 - m_TiledataPtr->Height)
+    {
         result = false;
-    else if (playerZPlus5 < m_Z && !(CanBeTransparent & 0xF))
+    }
+    else if (playerZPlus5 < m_Z && ((CanBeTransparent & 0xF) == 0))
+    {
         result = false;
+    }
 
     return result;
 }
@@ -263,7 +313,9 @@ bool CRenderStaticObject::CheckDrawFoliage()
         if (g_Season < ST_WINTER)
         {
             if (g_ConfigManager.GetDrawStumps())
+            {
                 return g_Orion.InTileFilter(Graphic);
+            }
 
             return true;
         }
@@ -277,8 +329,9 @@ bool CRenderStaticObject::CheckDrawFoliage()
 bool CRenderStaticObject::CheckDrawVegetation()
 {
     if (g_ConfigManager.GetNoVegetation() && Vegetation)
+    {
         return g_Orion.InTileFilter(Graphic);
+    }
 
     return true;
 }
-

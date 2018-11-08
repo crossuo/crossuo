@@ -5,7 +5,14 @@
 #include "GumpMap.h"
 
 CGumpMap::CGumpMap(
-    uint32_t serial, uint16_t graphic, int startX, int startY, int endX, int endY, int width, int height)
+    uint32_t serial,
+    uint16_t graphic,
+    int startX,
+    int startY,
+    int endX,
+    int endY,
+    int width,
+    int height)
     : CGump(GT_MAP, serial, 0, 0)
     , StartX(startX)
     , StartY(startY)
@@ -68,7 +75,9 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
     float testOfsX = (float)tempX;
 
     if (testOfsX == 0.0f)
+    {
         testOfsX = 1.0f;
+    }
 
     float pi = (float)M_PI;
 
@@ -77,9 +86,13 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
     bool inverseCheck = false;
 
     if (x1 >= x2 && y1 <= y2)
+    {
         inverseCheck = true;
+    }
     else if (x1 >= x2 && y1 >= y2)
+    {
         inverseCheck = true;
+    }
 
     float sinA = sin(a * pi / 180.f);
     float cosA = cos(a * pi / 180.f);
@@ -108,7 +121,7 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
             x1 - polyOffset, y1 - polyOffset, endX2 + polyOffset, endY2 + polyOffset
         };
 
-        if (SDL_PointInRect(&mousePoint, &lineRect))
+        if (SDL_PointInRect(&mousePoint, &lineRect) != 0u)
         {
             x1 = x1 + ((x2 - x1) / 2);
             y1 = y1 + ((y2 - y1) / 2);
@@ -122,7 +135,7 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
             endX2 - polyOffset, endY2 - polyOffset, x1 + polyOffset, y1 + polyOffset
         };
 
-        if (SDL_PointInRect(&mousePoint, &lineRect))
+        if (SDL_PointInRect(&mousePoint, &lineRect) != 0u)
         {
             x1 = x2 + ((x1 - x2) / 2);
             y1 = y2 + ((y1 - y2) / 2);
@@ -149,15 +162,19 @@ void CGumpMap::PrepareContent()
         }
 
         //Если окошко захвачено для перемещения - вычислим оффсеты
-        if (g_PressedObject.LeftGump == this && g_PressedObject.LeftObject != nullptr && m_PlotState)
+        if (g_PressedObject.LeftGump == this && g_PressedObject.LeftObject != nullptr &&
+            (m_PlotState != 0))
         {
             if (m_PinOnCursor == nullptr)
             {
                 Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
-                if ((offset.X || offset.Y) && g_PressedObject.LeftSerial > ID_GM_PIN_LIST &&
+                if (((offset.X != 0) || (offset.Y != 0)) &&
+                    g_PressedObject.LeftSerial > ID_GM_PIN_LIST &&
                     g_PressedObject.LeftSerial < ID_GM_PIN_LIST_INSERT && m_PinTimer > g_Ticks)
+                {
                     m_PinOnCursor = (CBaseGUI *)g_PressedObject.LeftObject;
+                }
             }
 
             if (m_PinOnCursor != nullptr)
@@ -201,7 +218,9 @@ void CGumpMap::GenerateFrame(bool stop)
                     m_Labels.push_back(text);
                 }
                 else
+                {
                     text = m_Labels[idx];
+                }
 
                 idx++;
                 text->CreateTextureA(0, std::to_string(idx));
@@ -228,9 +247,13 @@ void CGumpMap::GenerateFrame(bool stop)
                 int nextDrawY = next->GetY() + 30;
 
                 if (next == m_PinOnCursor || item == m_PinOnCursor)
+                {
                     glColor4f(0.87f, 0.87f, 0.87f, 1.0f);
+                }
                 else
+                {
                     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                }
 
                 g_GL.DrawLine(drawX + 2, drawY + 8, nextDrawX, nextDrawY);
 
@@ -242,8 +265,10 @@ void CGumpMap::GenerateFrame(bool stop)
                     int checkX = drawX + 2;
                     int checkY = drawY + 8;
 
-                    if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY))
+                    if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY) != 0)
+                    {
                         g_Orion.DrawGump(0x139B, 0, checkX - 2, checkY - 8);
+                    }
                 }
             }
 
@@ -263,7 +288,9 @@ void CGumpMap::GenerateFrame(bool stop)
     }
 
     if (g_ConfigManager.GetUseGLListsForInterface())
+    {
         glEndList();
+    }
 }
 
 CRenderObject *CGumpMap::Select()
@@ -274,8 +301,8 @@ CRenderObject *CGumpMap::Select()
     if (m_DataBox != nullptr)
     {
         Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-        g_MouseManager.Position = Wisp::CPoint2Di(
-            oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+        g_MouseManager.Position =
+            Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         QFOR(item, m_DataBox->m_Items, CBaseGUI *)
         {
@@ -292,7 +319,7 @@ CRenderObject *CGumpMap::Select()
                 int checkX = drawX + 2;
                 int checkY = drawY + 8;
 
-                if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY))
+                if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY) != 0)
                 {
                     g_SelectedObject.Init(item, this);
                     g_SelectedObject.Serial = item->Serial + ID_GM_PIN_LIST_INSERT;
@@ -318,7 +345,7 @@ void CGumpMap::GUMP_BUTTON_EVENT_C
     if (serial == ID_GM_PLOT_COURSE || serial == ID_GM_STOP_PLOTTING) //Plot Course /Stop Plotting
     {
         CPacketMapMessage(Serial, MM_EDIT, m_PlotState).Send();
-        SetPlotState(!m_PlotState);
+        SetPlotState(static_cast<int>(static_cast<int>(m_PlotState) == 0));
 
         WantRedraw = true;
     }
@@ -347,7 +374,7 @@ void CGumpMap::OnLeftMouseButtonUp()
 
     if (m_DataBox != nullptr && g_PressedObject.LeftObject != nullptr)
     {
-        if (m_PlotState && m_PinOnCursor == nullptr && m_PinTimer > g_Ticks)
+        if ((m_PlotState != 0) && m_PinOnCursor == nullptr && m_PinTimer > g_Ticks)
         {
             if (g_PressedObject.LeftSerial >= ID_GM_PIN_LIST_INSERT)
             {
@@ -373,7 +400,7 @@ void CGumpMap::OnLeftMouseButtonUp()
                         int checkX = drawX + 2;
                         int checkY = drawY + 8;
 
-                        if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY))
+                        if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY) != 0)
                         {
                             checkX = checkX - (x + 20);
                             checkY = checkY - (y + 29);

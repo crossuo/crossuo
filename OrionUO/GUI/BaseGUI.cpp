@@ -1,7 +1,8 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-CBaseGUI::CBaseGUI(GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)
+CBaseGUI::CBaseGUI(
+    GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)
     : CRenderObject(serial, graphic, color, x, y)
     , Type(type)
 {
@@ -10,4 +11,3 @@ CBaseGUI::CBaseGUI(GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t
 CBaseGUI::~CBaseGUI()
 {
 }
-

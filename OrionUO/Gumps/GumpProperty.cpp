@@ -12,12 +12,16 @@ CGumpProperty::CGumpProperty(const wstring &text)
     m_X = g_MouseManager.Position.X - (m_Texture.Width + 8);
 
     if (m_X < 0)
+    {
         m_X = 0;
+    }
 
     m_Y = g_MouseManager.Position.Y - (m_Texture.Height + 8);
 
     if (m_Y < 0)
+    {
         m_Y = 0;
+    }
 
     Add(new CGUIColoredPolygone(
         0, 0, 0, 0, m_Texture.Width + 12, m_Texture.Height + 8, 0x7F000000));
@@ -32,6 +36,7 @@ CGumpProperty::~CGumpProperty()
 void CGumpProperty::PrepareContent()
 {
     if (Timer < g_Ticks)
+    {
         RemoveMark = true;
+    }
 }
-

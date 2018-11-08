@@ -7,13 +7,13 @@ CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
     : Code(code)
     , Data(data)
 {
-    if (Data.length() && Data[Data.length() - 1] == L'*')
+    if ((Data.length() != 0u) && Data[Data.length() - 1] == L'*')
     {
         CheckEnd = true;
         Data.resize(Data.length() - 1);
     }
 
-    if (Data.length() && Data[0] == L'*')
+    if ((Data.length() != 0u) && Data[0] == L'*')
     {
         CheckStart = true;
         Data.erase(Data.begin());
@@ -40,10 +40,14 @@ bool CSpeechManager::LoadSpeech()
 
     string lang(255, 0);
 
-    if (!GetProfileStringA("intl", "sLanguage", "default", &lang[0], 4))
+    if (GetProfileStringA("intl", "sLanguage", "default", &lang[0], 4) == 0)
+    {
         g_Language = m_LangCodes[0].Abbreviature;
+    }
     else
-        g_Language = lang.c_str();
+    {
+        g_Language = lang;
+    }
 
     for (int i = 0; i < (int)m_LangCodes.size(); i++)
     {
@@ -79,7 +83,9 @@ bool CSpeechManager::LoadSpeech()
     }
 
     if (reader.Start == nullptr)
+    {
         reader.SetData(g_FileManager.m_SpeechMul.Start, g_FileManager.m_SpeechMul.Size);
+    }
 
     if (isUOP)
     {
@@ -92,7 +98,7 @@ bool CSpeechManager::LoadSpeech()
         {
             if (c == 0x000D || c == 0x000A)
             {
-                if (temp.length())
+                if (temp.length() != 0u)
                 {
                     list.push_back(temp);
                     temp = {};
@@ -104,7 +110,7 @@ bool CSpeechManager::LoadSpeech()
             }
         }
 
-        if (temp.length())
+        if (temp.length() != 0u)
         {
             list.push_back(temp);
             temp = {};
@@ -118,7 +124,7 @@ bool CSpeechManager::LoadSpeech()
             {
                 if (c == 0x0009)
                 {
-                    if (temp.length())
+                    if (temp.length() != 0u)
                     {
                         code = std::stoi(temp);
                         temp = {};
@@ -130,7 +136,7 @@ bool CSpeechManager::LoadSpeech()
                 }
             }
 
-            if (temp.length() && code != 0xFFFF)
+            if ((temp.length() != 0u) && code != 0xFFFF)
             {
                 m_SpeechEntries.push_back(CSpeechItem(code, temp));
             }
@@ -143,8 +149,10 @@ bool CSpeechManager::LoadSpeech()
         {
             const uint16_t code = reader.ReadUInt16BE();
             const int len = reader.ReadUInt16BE();
-            if (!len)
+            if (len == 0)
+            {
                 continue;
+            }
 
             wstring str = DecodeUTF8(reader.ReadString(len));
             m_SpeechEntries.push_back(CSpeechItem(code, str));
@@ -177,7 +185,7 @@ bool CSpeechManager::LoadLangCodes()
         langCodeData.Country = file.ReadString();
 
         //длинна LangName и LangCountry + null terminator всегда являются четным количеством в файле.
-        if ((langCodeData.Language.length() + langCodeData.Country.length() + 2) % 2)
+        if (((langCodeData.Language.length() + langCodeData.Country.length() + 2) % 2) != 0u)
         {
             int nullTerminator = file.ReadUInt8();
             if (nullTerminator != 0)
@@ -199,9 +207,10 @@ bool CSpeechManager::LoadLangCodes()
 void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
 {
     DEBUG_TRACE_FUNCTION;
-    if (!m_Loaded ||
-        g_PacketManager.GetClientVersion() < CV_305D) //Но по факту с 2.0.7 версии клиента
+    if (!m_Loaded || g_PacketManager.GetClientVersion() < CV_305D)
+    { //Но по факту с 2.0.7 версии клиента
         return;
+    }
 
     const auto size = (int)m_SpeechEntries.size();
     wstring input = ToLowerW(text);
@@ -213,14 +222,18 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
         wstring data = entry.Data;
 
         if (data.length() > input.length() || data.length() == 0)
+        {
             continue;
+        }
 
         if (!entry.CheckStart)
         {
             wstring start = input.substr(0, data.length());
             size_t hits = start.find(data);
             if (hits == wstring::npos)
+            {
                 continue;
+            }
         }
 
         if (!entry.CheckEnd)
@@ -228,11 +241,15 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
             wstring end = input.substr(input.length() - data.length());
             size_t hits = end.find(data);
             if (hits == wstring::npos)
+            {
                 continue;
+            }
         }
 
         size_t hits = input.find(data);
         if (hits != wstring::npos)
+        {
             codes.push_back(entry.Code);
+        }
     }
 }

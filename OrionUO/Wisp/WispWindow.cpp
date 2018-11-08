@@ -120,10 +120,14 @@ void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
         int height = m_Size.Height;
 
         if (width < newMinSize.Width)
+        {
             width = newMinSize.Width;
+        }
 
         if (height < newMinSize.Height)
+        {
             height = newMinSize.Height;
+        }
 
 #if USE_WISP
         RECT pos = { 0, 0, 0, 0 };
@@ -161,10 +165,14 @@ void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
         int height = m_Size.Height;
 
         if (width > newMaxSize.Width)
+        {
             width = newMaxSize.Width;
+        }
 
         if (height > newMaxSize.Height)
+        {
             height = newMaxSize.Height;
+        }
 
 #if USE_WISP
         RECT pos = { 0, 0, 0, 0 };
@@ -266,7 +274,9 @@ bool CWindow::Create(
     ::UpdateWindow(Handle);
 #else
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
+    {
         return false;
+    }
 
     m_Size.Width = width;
     m_Size.Height = height;
@@ -277,7 +287,7 @@ bool CWindow::Create(
         width,
         height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    if (!m_window)
+    if (m_window == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Coult not create window: %s\n", SDL_GetError());
         return false;
@@ -285,7 +295,7 @@ bool CWindow::Create(
 
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
-    if (SDL_GetWindowWMInfo(m_window, &info))
+    if (SDL_GetWindowWMInfo(m_window, &info) != 0u)
     {
         SDL_Log("SDL %d.%d.%d\n", info.version.major, info.version.minor, info.version.patch);
 
@@ -340,7 +350,7 @@ bool CWindow::Create(
 #endif
     }
     SDL_SetWindowGrab(m_window, SDL_TRUE);
-    SDL_ShowCursor(showCursor);
+    SDL_ShowCursor(static_cast<int>(showCursor));
 #endif // USE_WISP
 
     return OnCreate();
@@ -352,8 +362,10 @@ void CWindow::Destroy()
 #if USE_WISP
     PostMessage(Handle, WM_CLOSE, 0, 0);
 #else
-    if (m_window)
+    if (m_window != nullptr)
+    {
         SDL_DestroyWindow(m_window);
+    }
 #endif
 }
 
@@ -662,7 +674,7 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
             return res;
         }
         case WM_NCPAINT:
-        { 
+        {
             return (HRESULT)OnRepaint({ wParam, lParam });
         }
         case WM_SHOWWINDOW:
@@ -718,22 +730,22 @@ bool CWindow::IsActive() const
 
 void CWindow::SetTitle(const string &text) const
 {
-    ::SetWindowTextA(Handle, text.c_str()); 
+    ::SetWindowTextA(Handle, text.c_str());
 }
 
 void CWindow::ShowWindow(bool show) const
 {
-    ::ShowWindow(Handle, show ? TRUE : FALSE); 
+    ::ShowWindow(Handle, show ? TRUE : FALSE);
 }
 
 bool CWindow::IsMinimizedWindow() const
 {
-    return ::IsIconic(Handle); 
+    return ::IsIconic(Handle);
 }
 
 bool CWindow::IsMaximizedWindow() const
 {
-    return (::IsZoomed(Handle) != FALSE); 
+    return (::IsZoomed(Handle) != FALSE);
 }
 
 void CWindow::CreateTimer(uint32_t id, int delay)
@@ -849,7 +861,9 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         {
             Wisp::g_WispMouse->Update();
             if (Wisp::g_WispMouse->Dragging)
+            {
                 OnDragging();
+            }
         }
         break;
 
@@ -890,24 +904,34 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                         {
                             Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
                             if (!OnLeftMouseButtonDoubleClick())
+                            {
                                 OnLeftMouseButtonDown();
+                            }
                             else
+                            {
                                 Wisp::g_WispMouse->LastLeftButtonClickTimer = 0xFFFFFFFF;
+                            }
                             break;
                         }
 
                         OnLeftMouseButtonDown();
 
                         if (Wisp::g_WispMouse->CancelDoubleClick)
+                        {
                             Wisp::g_WispMouse->LastLeftButtonClickTimer = 0;
+                        }
                         else
+                        {
                             Wisp::g_WispMouse->LastLeftButtonClickTimer = ticks;
+                        }
                         break;
                     }
                     else
                     {
                         if (Wisp::g_WispMouse->LastLeftButtonClickTimer != 0xFFFFFFFF)
+                        {
                             OnLeftMouseButtonUp();
+                        }
                         Wisp::g_WispMouse->LeftButtonPressed = false;
                         Wisp::g_WispMouse->Release();
                     }
@@ -926,7 +950,9 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                             ticks)
                         {
                             if (!OnMidMouseButtonDoubleClick())
+                            {
                                 OnMidMouseButtonDown();
+                            }
 
                             Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
                             break;
@@ -935,9 +961,13 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                         OnMidMouseButtonDown();
 
                         if (Wisp::g_WispMouse->CancelDoubleClick)
+                        {
                             Wisp::g_WispMouse->LastMidButtonClickTimer = 0;
+                        }
                         else
+                        {
                             Wisp::g_WispMouse->LastMidButtonClickTimer = ticks;
+                        }
                     }
                     else
                     {
@@ -961,23 +991,33 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                         {
                             Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
                             if (!OnRightMouseButtonDoubleClick())
+                            {
                                 OnRightMouseButtonDown();
+                            }
                             else
+                            {
                                 Wisp::g_WispMouse->LastRightButtonClickTimer = 0xFFFFFFFF;
+                            }
                             break;
                         }
 
                         OnRightMouseButtonDown();
 
                         if (Wisp::g_WispMouse->CancelDoubleClick)
+                        {
                             Wisp::g_WispMouse->LastRightButtonClickTimer = 0;
+                        }
                         else
+                        {
                             Wisp::g_WispMouse->LastRightButtonClickTimer = ticks;
+                        }
                     }
                     else
                     {
                         if (Wisp::g_WispMouse->LastRightButtonClickTimer != 0xFFFFFFFF)
+                        {
                             OnRightMouseButtonUp();
+                        }
                         Wisp::g_WispMouse->RightButtonPressed = false;
                         Wisp::g_WispMouse->Release();
                     }
@@ -1049,7 +1089,9 @@ void CWindow::CreateTimer(uint32_t id, int delay)
 {
     assert(id > 0 && id < std::size(timer_table));
     if (timer_table[id - 1] != 0)
+    {
         return;
+    }
 
     auto handle = SDL_AddTimer(delay, TimerCallbackEventPusher, (void *)id);
     timer_table[id - 1] = handle;
@@ -1059,7 +1101,9 @@ void CWindow::RemoveTimer(uint32_t id)
 {
     assert(id >= 0 && id < std::size(timer_table));
     if (timer_table[id - 1] != 0)
+    {
         SDL_RemoveTimer(timer_table[id - 1]);
+    }
     timer_table[id - 1] = 0;
 }
 
@@ -1100,7 +1144,9 @@ void CWindow::CreateThreadedTimer(
     for (auto i = m_ThreadedTimersStack.begin(); i != m_ThreadedTimersStack.end(); ++i)
     {
         if ((*i)->TimerID == id)
+        {
             return;
+        }
     }
 
     auto timer = new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
@@ -1128,12 +1174,14 @@ Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint32_t id)
     for (auto i = m_ThreadedTimersStack.begin(); i != m_ThreadedTimersStack.end(); ++i)
     {
         if ((*i)->TimerID == id)
+        {
             return *i;
+        }
     }
 
     return 0;
 }
-};
+}; // namespace Wisp
 
 #if USE_WISP
 void GetDisplaySize(int *x, int *y)
@@ -1148,9 +1196,13 @@ void GetDisplaySize(int *x, int *y)
 {
     SDL_Rect r;
     SDL_GetDisplayUsableBounds(0, &r);
-    if (x)
+    if (x != nullptr)
+    {
         *x = r.w;
-    if (y)
+    }
+    if (y != nullptr)
+    {
         *y = r.h;
+    }
 }
 #endif

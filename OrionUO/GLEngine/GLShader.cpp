@@ -73,7 +73,9 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         glValidateProgramARB(m_Shader);
     }
     else
+    {
         return false;
+    }
 
     glGetShaderiv(m_Shader, GL_COMPILE_STATUS, &val);
     if (val != GL_TRUE)
@@ -175,9 +177,13 @@ CDeathShader::CDeathShader()
 bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
 {
     if (CGLShader::Init(vertexShaderData, fragmentShaderData))
+    {
         m_TexturePointer = glGetUniformLocationARB(m_Shader, "usedTexture");
+    }
     else
+    {
         LOG("Failed to create DeathShader\n");
+    }
 
     return (m_Shader != 0);
 }
@@ -197,7 +203,9 @@ bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentSh
         m_DrawModePointer = glGetUniformLocationARB(m_Shader, "drawMode");
     }
     else
+    {
         LOG("Failed to create ColorizerShader\n");
+    }
 
     return (m_Shader != 0);
 }

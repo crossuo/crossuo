@@ -52,11 +52,13 @@ int CApplication::Run()
     while (!quit)
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_PollEvent(&event) != 0)
         {
             quit = Wisp::g_WispWindow->OnWindowProc(event);
             if (quit)
+            {
                 break;
+            }
 
             OnMainLoop();
         }
@@ -135,7 +137,7 @@ os_path CApplication::ExeFilePath(const char *str, ...) const
 
     va_end(arg);
 
-    os_path res{ m_ExePath.c_str() };
+    os_path res{ m_ExePath };
     res.append(PATH_SEP);
     res.append(ToPath(out));
     return res;
@@ -157,10 +159,10 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
 
     va_end(arg);
 
-    os_path res{ m_UOPath.c_str() };
+    os_path res{ m_UOPath };
     res.append(PATH_SEP);
     res.append(ToPath(out));
     return res;
 }
 
-};
+}; // namespace Wisp

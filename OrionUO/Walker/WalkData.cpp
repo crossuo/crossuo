@@ -73,9 +73,13 @@ void CWalkData::GetOffset(float &x, float &y, float &steps)
     if (abs(valueX) > checkX)
     {
         if (valueX < 0)
+        {
             x = -(float)checkX;
+        }
         else
+        {
             x = (float)checkX;
+        }
     }
 
     int valueY = (int)y;
@@ -83,9 +87,12 @@ void CWalkData::GetOffset(float &x, float &y, float &steps)
     if (abs(valueY) > checkY)
     {
         if (valueY < 0)
+        {
             y = -(float)checkY;
+        }
         else
+        {
             y = (float)checkY;
+        }
     }
 }
-

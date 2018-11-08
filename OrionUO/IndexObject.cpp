@@ -90,13 +90,15 @@ void CIndexObject::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint
     Address = ptr->Position;
     DataSize = ptr->Size;
 
-    if (Address == 0xFFFFFFFF || !DataSize || DataSize == 0xFFFFFFFF)
+    if (Address == 0xFFFFFFFF || (DataSize == 0) || DataSize == 0xFFFFFFFF)
     {
         Address = 0;
         DataSize = 0;
     }
     else
+    {
         Address = Address + address;
+    }
 
     ID = id;
 };
@@ -105,9 +107,13 @@ void CIndexMulti::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint1
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
     if (g_PacketManager.GetClientVersion() >= CV_7090)
+    {
         Count = (uint16_t)(DataSize / sizeof(MULTI_BLOCK_NEW));
+    }
     else
+    {
         Count = (uint16_t)(DataSize / sizeof(MULTI_BLOCK));
+    }
 };
 
 void CIndexLight::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint16_t id)
@@ -125,4 +131,3 @@ void CIndexGump::ReadIndexFile(size_t address, PBASE_IDX_BLOCK ptr, const uint16
     Width = realPtr->Width;
     Height = realPtr->Height;
 };
-

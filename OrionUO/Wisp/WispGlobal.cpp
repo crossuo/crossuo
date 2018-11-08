@@ -15,13 +15,17 @@ char *g_WispCurrentFunctionName = nullptr;
 CWispFunDebug::CWispFunDebug(const char *str)
 {
     if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
+    {
         g_WispDebugFunStack.push_back(str);
+    }
 }
 
 CWispFunDebug::~CWispFunDebug()
 {
     if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
+    {
         g_WispDebugFunStack.pop_back();
+    }
 }
 
 int CalculatePercents(int max, int current, int maxValue)
@@ -31,10 +35,14 @@ int CalculatePercents(int max, int current, int maxValue)
         max = (current * 100) / max;
 
         if (max > 100)
+        {
             max = 100;
+        }
 
         if (max > 1)
+        {
             max = (maxValue * max) / 100;
+        }
     }
 
     return max;
@@ -94,8 +102,8 @@ wstring DecodeUTF8(const string &str)
         LOG("\nDecodeUTF8 Failed: %s\n\n", str.c_str());
         LOG_DUMP((uint8_t *)str.data(), str.size());
         return L"Invalid UTF8 sequence found";
-    }    
-    
+    }
+
     if (size > 0)
     {
         result.resize(size);
@@ -113,13 +121,17 @@ string ToCamelCaseA(string str)
     for (char &c : str)
     {
         if (c == ' ')
+        {
             lastSpace = true;
+        }
         else if (lastSpace)
         {
             lastSpace = false;
 
             if (c >= 'a' && c <= 'z')
+            {
                 c -= offset;
+            }
         }
     }
 
@@ -134,13 +146,17 @@ wstring ToCamelCaseW(wstring str)
     for (wchar_t &c : str)
     {
         if (c == L' ')
+        {
             lastSpace = true;
+        }
         else if (lastSpace)
         {
             lastSpace = false;
 
             if (c >= L'a' && c <= L'z')
+            {
                 c -= offset;
+            }
         }
     }
 
@@ -197,12 +213,16 @@ wstring ToWString(const string &str)
 string Trim(const string &str)
 {
     string::const_iterator it = str.begin();
-    for (; it != str.end() && isspace(*it); ++it)
+    for (; it != str.end() && (isspace(*it) != 0); ++it)
+    {
         ;
+    }
 
     string::const_reverse_iterator rit = str.rbegin();
-    for (; rit.base() != it && isspace(*rit); ++rit)
+    for (; rit.base() != it && (isspace(*rit) != 0); ++rit)
+    {
         ;
+    }
 
     return string(it, rit.base());
 }
@@ -293,7 +313,9 @@ bool ToBool(const string &str)
     bool result = false;
 
     for (int i = 0; i < countOfTrue && !result; i++)
+    {
         result = (data == m_TrueValues[i]);
+    }
 
     return result;
 }
@@ -338,7 +360,9 @@ void DebugDump(uint8_t *data, int size)
     int num_lines = size / 16;
 
     if (size % 16 != 0)
+    {
         num_lines++;
+    }
 
     for (int line = 0; line < num_lines; line++)
     {
@@ -349,9 +373,13 @@ void DebugDump(uint8_t *data, int size)
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
+            {
                 DebugMsg("%02x ", data[line * 16 + row]);
+            }
             else
+            {
                 DebugMsg("-- ");
+            }
         }
 
         DebugMsg(": ");
@@ -361,7 +389,9 @@ void DebugDump(uint8_t *data, int size)
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
-                buf[row] = (isprint(data[line * 16 + row]) ? data[line * 16 + row] : '.');
+            {
+                buf[row] = (isprint(data[line * 16 + row]) != 0 ? data[line * 16 + row] : '.');
+            }
         }
 
         DebugMsg(buf);

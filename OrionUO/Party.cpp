@@ -63,11 +63,15 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 {
                     CPartyObject &member = Member[i];
                     if (member.Character == nullptr)
+                    {
                         break;
+                    }
                     CGumpStatusbar *gump = (CGumpStatusbar *)g_GumpManager.UpdateContent(
                         member.Character->Serial, 0, GT_STATUSBAR);
                     if (gump != nullptr)
+                    {
                         gump->WantRedraw = true;
+                    }
                 }
                 Clear();
                 g_GumpManager.UpdateContent(0, 0, GT_PARTY_MANIFEST);
@@ -85,7 +89,9 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 Member[i].Serial = serial;
                 Member[i].Character = g_World->FindWorldCharacter(serial);
                 if (i == 0)
+                {
                     g_Party.Leader = serial;
+                }
 
                 CGumpStatusbar *gump =
                     (CGumpStatusbar *)g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
@@ -101,7 +107,9 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                     }
 
                     if (prevGump != nullptr)
+                    {
                         prevGump->AddStatusbar(gump);
+                    }
 
                     prevGump = gump;
                     mousePos.Y += 59;

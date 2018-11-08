@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) September 2017 Hotride
 
-
 deque<CContainerStackItem> g_ContainerStack;
 uint32_t g_CheckContainerStackTimer = 0;
 
@@ -22,4 +21,3 @@ CContainerStackItem::CContainerStackItem(
     , LockMoving(lockMoving)
 {
 }
-

@@ -109,8 +109,10 @@ bool CGLEngine::Install()
         GL_ARB_framebuffer_object,
         glGetString(GL_VERSION),
         GL_ARB_shader_objects);
-    if (glewInitResult)
+    if (glewInitResult != 0)
+    {
         return false;
+    }
 
     LOG("Graphics Successfully Initialized\n");
     LOG("OpenGL Info:\n");
@@ -153,7 +155,9 @@ bool CGLEngine::Install()
     LOG("g_UseFrameBuffer = %i; CanUseBuffer = %i\n", CanUseFrameBuffer, CanUseBuffer);
 
     if (!CanUseFrameBuffer && g_ShowWarnings)
+    {
         g_OrionWindow.ShowMessage("Your graphics card does not support Frame Buffers!", "Warning!");
+    }
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
     glShadeModel(GL_SMOOTH);              // Enables Smooth Color Shading
@@ -215,8 +219,10 @@ void CGLEngine::Uninstall()
         RC = 0;
     }
 #else
-    if (m_context)
+    if (m_context != nullptr)
+    {
         SDL_GL_DeleteContext(m_context);
+    }
 #endif
 }
 
@@ -267,7 +273,9 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     texture.Texture = tex;
 
     if (IgnoreHitMap)
+    {
         return;
+    }
 
     HIT_MAP_TYPE &hitMap = texture.m_HitMap;
     hitMap.resize(width * height);
@@ -277,7 +285,9 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     {
         for (int x = 0; x < width; x++)
         {
-            hitMap[pos] = (pixels[pos] != 0);
+            hitMap[pos] = static_cast<__gnu_cxx::__alloc_traits<
+                class std::allocator<unsigned char>,
+                unsigned char>::value_type>(pixels[pos] != 0);
             pos++;
         }
     }
@@ -303,7 +313,9 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     texture.Texture = tex;
 
     if (IgnoreHitMap)
+    {
         return;
+    }
 
     HIT_MAP_TYPE &hitMap = texture.m_HitMap;
     hitMap.resize(width * height);
@@ -313,7 +325,9 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     {
         for (int x = 0; x < width; x++)
         {
-            hitMap[pos] = (pixels[pos] != 0);
+            hitMap[pos] = static_cast<__gnu_cxx::__alloc_traits<
+                class std::allocator<unsigned char>,
+                unsigned char>::value_type>(pixels[pos] != 0);
             pos++;
         }
     }
@@ -402,7 +416,7 @@ void CGLEngine::BeginStencil()
     DEBUG_TRACE_FUNCTION;
     glEnable(GL_STENCIL_TEST);
 
-    glColorMask(false, false, false, false);
+    glColorMask(0u, 0u, 0u, 0u);
 
     glStencilFunc(GL_ALWAYS, 1, 1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -411,7 +425,7 @@ void CGLEngine::BeginStencil()
 void CGLEngine::EndStencil()
 {
     DEBUG_TRACE_FUNCTION;
-    glColorMask(true, true, true, true);
+    glColorMask(1u, 1u, 1u, 1u);
 
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glStencilFunc(GL_NOTEQUAL, 1, 1);
@@ -500,10 +514,14 @@ void CGLEngine::PopScissor()
 {
     DEBUG_TRACE_FUNCTION;
     if (!m_ScissorList.empty())
+    {
         m_ScissorList.pop_back();
+    }
 
     if (m_ScissorList.empty())
+    {
         glDisable(GL_SCISSOR_TEST);
+    }
     else
     {
         Wisp::CRect &rect = m_ScissorList.back();
@@ -572,8 +590,10 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 
     glVertex2i(0, 0);
 
-    if (gradientMode)
+    if (gradientMode != 0)
+    {
         glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+    }
 
     float pi = (float)M_PI * 2.0f;
 
@@ -737,7 +757,7 @@ void CGLEngine::GL1_DrawSitting(
 
     if (mirror)
     {
-        if (h3mod)
+        if (h3mod != 0.0f)
         {
             glTexCoord2f(0.0f, 0.0f);
             glVertex2f(width, 0);
@@ -749,9 +769,9 @@ void CGLEngine::GL1_DrawSitting(
             glVertex2f(0, h03);
         }
 
-        if (h6mod)
+        if (h6mod != 0.0f)
         {
-            if (!h3mod)
+            if (h3mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(width, 0);
@@ -765,9 +785,9 @@ void CGLEngine::GL1_DrawSitting(
             glVertex2f(SittingCharacterOffset, h06);
         }
 
-        if (h9mod)
+        if (h9mod != 0.0f)
         {
-            if (!h6mod)
+            if (h6mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(widthOffset, 0);
@@ -783,7 +803,7 @@ void CGLEngine::GL1_DrawSitting(
     }
     else
     {
-        if (h3mod)
+        if (h3mod != 0.0f)
         {
             glTexCoord2f(0.0f, 0.0f);
             glVertex2f(SittingCharacterOffset, 0);
@@ -795,9 +815,9 @@ void CGLEngine::GL1_DrawSitting(
             glVertex2f(widthOffset, h03);
         }
 
-        if (h6mod)
+        if (h6mod != 0.0f)
         {
-            if (!h3mod)
+            if (h3mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(SittingCharacterOffset, 0);
@@ -811,9 +831,9 @@ void CGLEngine::GL1_DrawSitting(
             glVertex2f(width, h06);
         }
 
-        if (h9mod)
+        if (h9mod != 0.0f)
         {
-            if (!h6mod)
+            if (h6mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(0, 0);
@@ -1009,7 +1029,9 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
         }
 
         if (drawWidth < 1 || drawHeight < 1)
+        {
             continue;
+        }
 
         glTranslatef((GLfloat)drawX, (GLfloat)drawY, 0.0f);
 
@@ -1114,9 +1136,13 @@ void CGLEngine::GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
     if (mirror)
+    {
         glBindBuffer(GL_ARRAY_BUFFER, texture.MirroredVertexBuffer);
+    }
     else
+    {
         glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
+    }
 
     glVertexPointer(2, GL_INT, 0, (void *)0);
 
@@ -1148,7 +1174,7 @@ void CGLEngine::GL2_DrawSitting(
 
     if (mirror)
     {
-        if (h3mod)
+        if (h3mod != 0.0f)
         {
             glTexCoord2f(0.0f, 0.0f);
             glVertex2f(width, 0);
@@ -1160,9 +1186,9 @@ void CGLEngine::GL2_DrawSitting(
             glVertex2f(0, h03);
         }
 
-        if (h6mod)
+        if (h6mod != 0.0f)
         {
-            if (!h3mod)
+            if (h3mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(width, 0);
@@ -1176,9 +1202,9 @@ void CGLEngine::GL2_DrawSitting(
             glVertex2f(SittingCharacterOffset, h06);
         }
 
-        if (h9mod)
+        if (h9mod != 0.0f)
         {
-            if (!h6mod)
+            if (h6mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(widthOffset, 0);
@@ -1194,7 +1220,7 @@ void CGLEngine::GL2_DrawSitting(
     }
     else
     {
-        if (h3mod)
+        if (h3mod != 0.0f)
         {
             glTexCoord2f(0.0f, 0.0f);
             glVertex2f(SittingCharacterOffset, 0);
@@ -1206,9 +1232,9 @@ void CGLEngine::GL2_DrawSitting(
             glVertex2f(widthOffset, h03);
         }
 
-        if (h6mod)
+        if (h6mod != 0.0f)
         {
-            if (!h3mod)
+            if (h3mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(SittingCharacterOffset, 0);
@@ -1222,9 +1248,9 @@ void CGLEngine::GL2_DrawSitting(
             glVertex2f(width, h06);
         }
 
-        if (h9mod)
+        if (h9mod != 0.0f)
         {
-            if (!h6mod)
+            if (h6mod == 0.0f)
             {
                 glTexCoord2f(0.0f, 0.0f);
                 glVertex2f(0, 0);
@@ -1417,7 +1443,9 @@ void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
         }
 
         if (drawWidth < 1 || drawHeight < 1)
+        {
             continue;
+        }
 
         glTranslatef((GLfloat)drawX, (GLfloat)drawY, 0.0f);
 

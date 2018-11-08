@@ -16,7 +16,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
     DEBUG_TRACE_FUNCTION;
     Wisp::CMappedFile &file = g_FileManager.m_MultiMap;
 
-    if (!file.Size)
+    if (file.Size == 0u)
     {
         LOG("MultiMap.rle is not loaded!\n");
         return;
@@ -41,16 +41,20 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
     int widthDivizor = endX - startX;
 
-    if (!widthDivizor)
+    if (widthDivizor == 0)
+    {
         widthDivizor++;
+    }
 
     int startY = gump->StartY / 2;
     int endY = gump->EndY / 2;
 
     int heightDivizor = endY - startY;
 
-    if (!heightDivizor)
+    if (heightDivizor == 0)
+    {
         heightDivizor++;
+    }
 
     int width = (gump->Width << 8) / widthDivizor;
     int height = (gump->Height << 8) / heightDivizor;
@@ -82,7 +86,9 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
                 if (pixel < 0xFF)
                 {
                     if (pixel == maxPixelValue)
+                    {
                         maxPixelValue++;
+                    }
 
                     pixel++;
                 }
@@ -126,7 +132,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         {
             uint8_t &pic = byteMap[i];
 
-            wordMap[i] = (pic ? colorTable[pic - 1] : 0);
+            wordMap[i] = (pic != 0u ? colorTable[pic - 1] : 0);
         }
 
         g_GL_BindTexture16(*mapObject->m_Texture, gump->Width, gump->Height, &wordMap[0]);
@@ -146,7 +152,7 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
     Wisp::CMappedFile &file = g_FileManager.m_FacetMul[facet];
     file.ResetPtr();
 
-    if (!file.Size)
+    if (file.Size == 0u)
     {
         LOG("Facet %i is not loaded!\n", facet);
 
@@ -182,7 +188,9 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
             for (int j = 0; j < size; j++)
             {
                 if ((x >= startX && x < endX) && (y >= startY && y < endY))
+                {
                     map[((y - startY) * width) + (x - startX)] = color;
+                }
 
                 x++;
             }
@@ -197,4 +205,3 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
 
     return true;
 }
-

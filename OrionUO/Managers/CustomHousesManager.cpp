@@ -1,20 +1,23 @@
 ﻿// MIT License
 // Copyright (C) September 2017 Hotride
 
-
 CustomHousesManager g_CustomHousesManager;
 
 void CCustomHouse::Paste(CGameItem *foundation)
 {
     DEBUG_TRACE_FUNCTION;
     if (foundation == nullptr)
+    {
         return;
+    }
 
     foundation->ClearCustomHouseMultis(0);
     int z = foundation->GetZ();
 
     for (const CBuildObject &item : m_Items)
+    {
         foundation->AddMulti(item.Graphic, 0, item.X, item.Y, item.Z + z, true);
+    }
 
     if (g_CustomHouseGump != nullptr && g_CustomHouseGump->Serial == Serial)
     {
@@ -32,7 +35,8 @@ CustomHousesManager::~CustomHousesManager()
 void CustomHousesManager::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
+         ++i)
     {
         CCustomHouse *house = i->second;
         delete house;
@@ -43,12 +47,15 @@ void CustomHousesManager::Clear()
 CCustomHouse *CustomHousesManager::Get(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
+         ++i)
     {
         CCustomHouse *house = i->second;
 
         if (house != nullptr && house->Serial == serial)
+        {
             return i->second;
+        }
     }
 
     return nullptr;
@@ -58,7 +65,9 @@ void CustomHousesManager::Add(CCustomHouse *house)
 {
     DEBUG_TRACE_FUNCTION;
     if (house != nullptr)
+    {
         m_Items[house->Serial] = house;
+    }
 }
 
 void CustomHousesManager::Load(const os_path &path)
@@ -68,7 +77,7 @@ void CustomHousesManager::Load(const os_path &path)
 
     Wisp::CMappedFile file;
 
-    if (file.Load(path) && file.Size)
+    if (file.Load(path) && (file.Size != 0u))
     {
         uint8_t version = file.ReadUInt8();
 
@@ -78,8 +87,10 @@ void CustomHousesManager::Load(const os_path &path)
         {
             uint32_t serial = file.ReadUInt32LE();
 
-            if (!serial)
+            if (serial == 0u)
+            {
                 break;
+            }
 
             uint32_t revision = file.ReadUInt32LE();
             int itemsCount = file.ReadInt32LE();
@@ -94,7 +105,9 @@ void CustomHousesManager::Load(const os_path &path)
                 g_CustomHousesManager.Add(house);
             }
             else
+            {
                 house->Revision = revision;
+            }
 
             for (int j = 0; j < itemsCount; j++)
             {
@@ -123,23 +136,29 @@ void CustomHousesManager::Save(const os_path &path)
 
     int count = 0;
 
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
+         ++i)
     {
         CCustomHouse *house = i->second;
 
-        if (house != nullptr && house->m_Items.size())
+        if (house != nullptr && (static_cast<unsigned int>(!house->m_Items.empty()) != 0u))
+        {
             count++;
+        }
     }
 
     writter.WriteInt32LE(count);
     writter.WriteBuffer();
 
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end(); ++i)
+    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
+         ++i)
     {
         CCustomHouse *house = i->second;
 
-        if (house == nullptr || !house->m_Items.size())
+        if (house == nullptr || house->m_Items.empty())
+        {
             continue;
+        }
 
         writter.WriteUInt32LE(house->Serial);
         writter.WriteUInt32LE(house->Revision);
@@ -161,4 +180,3 @@ void CustomHousesManager::Save(const os_path &path)
 
     writter.Close();
 }
-

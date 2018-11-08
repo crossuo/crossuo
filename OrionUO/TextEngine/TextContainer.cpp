@@ -26,9 +26,13 @@ void CTextContainer::Add(CTextData *obj)
     CBaseQueue::Add(obj);
 
     if (Size >= MaxSize)
+    {
         CBaseQueue::Delete(m_Items);
+    }
     else
+    {
         Size++;
+    }
 }
 
 void CTextContainer::Delete(CTextData *obj)
@@ -53,9 +57,10 @@ void CTextContainer::DrawSystemChat(int x, int y, int height)
         offset -= tth.Height;
 
         if (td->Timer >= g_Ticks)
+        {
             tth.Draw(x, offset);
+        }
 
         td = (CTextData *)td->m_Prev;
     }
 }
-

@@ -17,8 +17,11 @@ void CGUIAlphaBlending::Draw(bool checktrans)
     CGUIBlending::Draw(checktrans);
 
     if (Enabled)
+    {
         glColor4f(1.0f, 1.0f, 1.0f, Alpha);
+    }
     else
+    {
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
 }
-

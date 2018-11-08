@@ -225,7 +225,9 @@ int TableOp(int op)
         case TAB_QUERY:
             queryCnt++;
             if (queryCnt < TAB_MIN_QUERY)
+            {
                 return FALSE;
+            }
     }
     return TRUE;
 }
@@ -252,7 +254,7 @@ int TableOp(int op)
 *   happens automatically below.
 *
 -****************************************************************************/
-int ParseHexDword(int bits, CONST char *srcTxt, u32 *d, char *dstTxt)
+int ParseHexDword(int bits, CONST const char *srcTxt, u32 *d, char *dstTxt)
 {
     int i;
     char c;
@@ -265,7 +267,9 @@ int ParseHexDword(int bits, CONST char *srcTxt, u32 *d, char *dstTxt)
     } v;
     v.d[0] = 1;
     if (v.b[0 ^ ADDR_XOR] != 1)
+    {
         return BAD_ENDIAN; /* make sure compile-time switch is set ok */
+    }
 
 #if VALIDATE_PARMS
 #if ALIGN32
@@ -275,21 +279,33 @@ int ParseHexDword(int bits, CONST char *srcTxt, u32 *d, char *dstTxt)
 #endif
 
     for (i = 0; i * 32 < bits; i++)
+    {
         d[i] = 0; /* first, zero the field */
+    }
 
     for (i = 0; i * 4 < bits; i++) /* parse one nibble at a time */
     {                              /* case out the hexadecimal characters */
         c = srcTxt[i];
-        if (dstTxt)
+        if (dstTxt != nullptr)
+        {
             dstTxt[i] = c;
+        }
         if ((c >= '0') && (c <= '9'))
+        {
             b = c - '0';
+        }
         else if ((c >= 'a') && (c <= 'f'))
+        {
             b = c - 'a' + 10;
+        }
         else if ((c >= 'A') && (c <= 'F'))
+        {
             b = c - 'A' + 10;
+        }
         else
+        {
             return BAD_KEY_MAT; /* invalid hex character */
+        }
         /* works for big and little endian! */
         d[i / 8] |= b << (4 * ((i ^ 1) & 7));
     }
@@ -391,8 +407,8 @@ u32 RS_MDS_Encode(u32 k0, u32 k1)
 
     for (i = r = 0; i < 2; i++)
     {
-        r ^= (i) ? k0 : k1;     /* merge in 32 more key bits */
-        for (j = 0; j < 4; j++) /* shift one byte at a time */
+        r ^= (i) != 0 ? k0 : k1; /* merge in 32 more key bits */
+        for (j = 0; j < 4; j++)  /* shift one byte at a time */
             RS_rem(r);
     }
     return r;
@@ -631,8 +647,10 @@ int reKey(keyInstance *key)
 #endif
 #endif
 
-    if (needToBuildMDS) /* do this one time only */
+    if (needToBuildMDS != 0)
+    { /* do this one time only */
         BuildMDS();
+    }
 
 #define F32(res, x, k32)                                                                           \
     {                                                                                              \
@@ -719,7 +737,7 @@ int reKey(keyInstance *key)
 #define one128(N, J) sbSet(N, i, J, p8(N##1)[L0[i + J]] ^ k0)
 #define sb128(N)                                                                                   \
     {                                                                                              \
-        Xor256(L0, (void *)p8(N##2), b##N(sKey[1]));                                                \
+        Xor256(L0, (void *)p8(N##2), b##N(sKey[1]));                                               \
         {                                                                                          \
             u32 k0 = b##N(sKey[0]);                                                                \
             for (i = 0; i < 256; i += 2)                                                           \
@@ -743,7 +761,7 @@ int reKey(keyInstance *key)
 #define one192(N, J) sbSet(N, i, J, p8(N##1)[p8(N##2)[L0[i + J]] ^ k1] ^ k0)
 #define sb192(N)                                                                                   \
     {                                                                                              \
-        Xor256(L0, (void *)p8(N##3), b##N(sKey[2]));                                                \
+        Xor256(L0, (void *)p8(N##3), b##N(sKey[2]));                                               \
         {                                                                                          \
             u32 k0 = b##N(sKey[0]);                                                                \
             u32 k1 = b##N(sKey[1]);                                                                \
@@ -779,7 +797,7 @@ int reKey(keyInstance *key)
 #define one256(N, J) sbSet(N, i, J, p8(N##1)[p8(N##2)[L0[i + J]] ^ k1] ^ k0)
 #define sb256(N)                                                                                   \
     {                                                                                              \
-        Xor256(L1, (void *)p8(N##4), b##N(sKey[3]));                                                \
+        Xor256(L1, (void *)p8(N##4), b##N(sKey[3]));                                               \
         for (i = 0; i < 256; i += 2)                                                               \
         {                                                                                          \
             L0[i] = p8(N##3)[L1[i]];                                                               \
@@ -845,7 +863,9 @@ int reKey(keyInstance *key)
 #endif /* CHECK_TABLE */
 
     if (key->direction == DIR_ENCRYPT)
+    {
         ReverseRoundSubkeys(key, DIR_ENCRYPT); /* reverse the round subkey order */
+    }
 
     return TRUE;
 }
@@ -890,10 +910,14 @@ int makeKey(keyInstance *key, u8 direction, int keyLen, CONST char *keyMaterial)
     key->keyMaterial[MAX_KEY_SIZE] = 0;        /* terminate ASCII string */
 
     if ((keyMaterial == nullptr) || (keyMaterial[0] == 0))
+    {
         return TRUE; /* allow a "dummy" call */
+    }
 
-    if (ParseHexDword(keyLen, keyMaterial, key->key32, key->keyMaterial))
+    if (ParseHexDword(keyLen, keyMaterial, key->key32, key->keyMaterial) != 0)
+    {
         return BAD_KEY_MAT;
+    }
 
     return reKey(key); /* generate round subkeys */
 }
@@ -928,12 +952,16 @@ int cipherInit(cipherInstance *cipher, u8 mode, CONST char *IV)
 #endif
 #endif
 
-    if ((mode != MODE_ECB) && (IV)) /* parse the IV */
+    if ((mode != MODE_ECB) && ((IV) != nullptr)) /* parse the IV */
     {
-        if (ParseHexDword(BLOCK_SIZE, IV, cipher->iv32, nullptr))
+        if (ParseHexDword(BLOCK_SIZE, IV, cipher->iv32, nullptr) != 0)
+        {
             return BAD_IV_MAT;
-        for (i = 0; i < BLOCK_SIZE / 32; i++) /* make byte-oriented copy for CFB1 */
+        }
+        for (i = 0; i < BLOCK_SIZE / 32; i++)
+        { /* make byte-oriented copy for CFB1 */
             ((u32 *)cipher->IV)[i] = Bswap(cipher->iv32[i]);
+        }
     }
 
     cipher->mode = mode;
@@ -964,7 +992,7 @@ int cipherInit(cipherInstance *cipher, u8 mode, CONST char *IV)
 *
 -****************************************************************************/
 int blockEncrypt(
-    cipherInstance *cipher, keyInstance *key, CONST u8 *input, int inputLen, u8 *outBuffer)
+    cipherInstance *cipher, keyInstance *key, CONST const u8 *input, int inputLen, u8 *outBuffer)
 {
     int i, n;                    /* loop counters */
     u32 x[BLOCK_SIZE / 32];      /* block being encrypted */
@@ -1017,7 +1045,9 @@ int blockEncrypt(
 
     /* here for ECB, CBC modes */
     if (key->direction != DIR_ENCRYPT)
+    {
         ReverseRoundSubkeys(key, DIR_ENCRYPT); /* reverse the round subkey order */
+    }
 
 #ifdef USE_ASM
     if ((useAsm & 1) && (inputLen))
@@ -1031,7 +1061,7 @@ int blockEncrypt(
     /* make local copy of subkeys for speed */
     memcpy(sk, key->subKeys, sizeof(u32) * (ROUND_SUBKEYS + 2 * rounds));
     if (mode == MODE_CBC)
-        BlockCopy(IV, cipher->iv32) else IV[0] = IV[1] = IV[2] = IV[3] = 0;
+        BlockCopy(IV, cipher->iv32) else { IV[0] = IV[1] = IV[2] = IV[3] = 0; }
 
     for (n = 0; n < inputLen; n += BLOCK_SIZE, input += BLOCK_SIZE / 8, outBuffer += BLOCK_SIZE / 8)
     {
@@ -1142,7 +1172,7 @@ int blockEncrypt(
 *
 -****************************************************************************/
 int blockDecrypt(
-    cipherInstance *cipher, keyInstance *key, CONST u8 *input, int inputLen, u8 *outBuffer)
+    cipherInstance *cipher, keyInstance *key, CONST const u8 *input, int inputLen, u8 *outBuffer)
 {
     int i, n;                    /* loop counters */
     u32 x[BLOCK_SIZE / 32];      /* block being encrypted */
@@ -1196,7 +1226,9 @@ int blockDecrypt(
 
     /* here for ECB, CBC modes */
     if (key->direction != DIR_DECRYPT)
+    {
         ReverseRoundSubkeys(key, DIR_DECRYPT); /* reverse the round subkey order */
+    }
 #ifdef USE_ASM
     if ((useAsm & 2) && (inputLen))
 #ifdef COMPILE_KEY
@@ -1209,7 +1241,7 @@ int blockDecrypt(
     /* make local copy of subkeys for speed */
     memcpy(sk, key->subKeys, sizeof(u32) * (ROUND_SUBKEYS + 2 * rounds));
     if (mode == MODE_CBC)
-        BlockCopy(IV, cipher->iv32) else IV[0] = IV[1] = IV[2] = IV[3] = 0;
+        BlockCopy(IV, cipher->iv32) else { IV[0] = IV[1] = IV[2] = IV[3] = 0; }
 
     for (n = 0; n < inputLen; n += BLOCK_SIZE, input += BLOCK_SIZE / 8, outBuffer += BLOCK_SIZE / 8)
     {
@@ -1279,18 +1311,16 @@ int blockDecrypt(
 #undef StoreBlockD
             continue;
         }
-        else
-        {
+
 #define StoreBlockD(N)                                                                             \
     x[N] ^= sk[INPUT_WHITEN + N] ^ IV[N];                                                          \
     IV[N] = Bswap(((u32 *)input)[N]);                                                              \
     ((u32 *)outBuffer)[N] = Bswap(x[N]);
-            StoreBlockD(0);
-            StoreBlockD(1);
-            StoreBlockD(2);
-            StoreBlockD(3);
+        StoreBlockD(0);
+        StoreBlockD(1);
+        StoreBlockD(2);
+        StoreBlockD(3);
 #undef StoreBlockD
-        }
     }
     if (mode == MODE_CBC) /* restore iv32 to cipher */
         BlockCopy(cipher->iv32, IV)

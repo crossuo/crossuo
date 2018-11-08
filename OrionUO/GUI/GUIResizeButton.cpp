@@ -11,4 +11,3 @@ CGUIResizeButton::CGUIResizeButton(
 CGUIResizeButton::~CGUIResizeButton()
 {
 }
-

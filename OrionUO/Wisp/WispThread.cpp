@@ -23,7 +23,9 @@ thread_int THREADCALL CThreadLoop(void *arg)
     while (parent->IsActive())
     {
         while (parent->Paused())
+        {
             SDL_Delay(1);
+        }
 
 #if THREAD_USE_CLOCK == 1
         parent->OnExecute(clock());
@@ -32,13 +34,15 @@ thread_int THREADCALL CThreadLoop(void *arg)
 #endif
 
         if (!parent->Cycled())
-            break;
-        else
         {
-            int delay = parent->Delay();
+            break;
+        }
 
-            if (delay > 0)
-                SDL_Delay(delay);
+        int delay = parent->Delay();
+
+        if (delay > 0)
+        {
+            SDL_Delay(delay);
         }
     }
 
@@ -60,7 +64,9 @@ thread_int THREADCALL CThreadLoopSynchronizedDelay(void *arg)
     while (parent->IsActive())
     {
         while (parent->Paused())
+        {
             SDL_Delay(1);
+        }
 
 #if THREAD_USE_CLOCK == 1
         uint32_t nowTime = clock();
@@ -71,17 +77,17 @@ thread_int THREADCALL CThreadLoopSynchronizedDelay(void *arg)
         parent->OnExecute(nowTime);
 
         if (!parent->Cycled())
-            break;
-        else
         {
+            break;
+        }
+
 #if THREAD_USE_CLOCK == 1
-            int delay = (int)((nowTime + parent->Delay()) - clock());
+        int delay = (int)((nowTime + parent->Delay()) - clock());
 #else
-            int delay = (int)((nowTime + parent->Delay()) - SDL_GetTicks());
+        int delay = (int)((nowTime + parent->Delay()) - SDL_GetTicks());
 #endif
 
-            SDL_Delay(delay > 0 ? delay : 1);
-        }
+        SDL_Delay(delay > 0 ? delay : 1);
     }
 
     parent->OnDestroy();
@@ -110,8 +116,10 @@ CThread::~CThread()
     m_Handle = 0;
 #else
     int ret = 0;
-    if (m_Handle)
+    if (m_Handle != nullptr)
+    {
         SDL_WaitThread(m_Handle, &ret);
+    }
     m_Handle = nullptr;
 #endif
     ID = 0;
@@ -134,10 +142,14 @@ void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
             m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoop, this, 0, &ID);
 #else
         if (synchronizedDelay)
+        {
             m_Handle = SDL_CreateThread(
                 CThreadLoopSynchronizedDelay, "CThreadLoopSynchronizedDelay", (void *)this);
+        }
         else
+        {
             m_Handle = SDL_CreateThread(CThreadLoop, "CThreadLoop", (void *)this);
+        }
 #endif
     }
 }
@@ -215,4 +227,4 @@ SDL_threadID CThread::GetCurrentThreadId()
     return SDL_GetThreadID(nullptr);
 }
 
-};
+}; // namespace Wisp

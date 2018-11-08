@@ -14,7 +14,7 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
 
     LAND_TILES &tile = g_Orion.m_LandData[graphic];
 
-    IsStretched = (!tile.TexID && ::IsWet(tile.Flags));
+    IsStretched = ((tile.TexID == 0u) && ::IsWet(tile.Flags));
 
     memset(&m_Rect, 0, sizeof(m_Rect));
     memset(&m_Normals[0], 0, sizeof(m_Normals));
@@ -76,8 +76,10 @@ int CLandObject::CalculateCurrentAverageZ(int direction)
     DEBUG_TRACE_FUNCTION;
     int result = GetDirectionZ(((uint8_t)(direction >> 1) + 1) & 3);
 
-    if (direction & 1)
+    if ((direction & 1) != 0)
+    {
         return result;
+    }
 
     return (result + GetDirectionZ(direction >> 1)) >> 1;
 }
@@ -95,20 +97,30 @@ void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
         m_Rect.h = zBottom * 4 + 1;
 
         if (abs(m_Z - zRight) <= abs(zBottom - zTop))
+        {
             AverageZ = (m_Z + zRight) >> 1;
+        }
         else
+        {
             AverageZ = (zBottom + zTop) >> 1;
+        }
 
         MinZ = m_Z;
 
         if (zTop < MinZ)
+        {
             MinZ = zTop;
+        }
 
         if (zRight < MinZ)
+        {
             MinZ = zRight;
+        }
 
         if (zBottom < MinZ)
+        {
             MinZ = zBottom;
+        }
     }
 }
 
@@ -120,16 +132,22 @@ void CLandObject::Draw(int x, int y)
         uint16_t objColor = 0;
 
         if (g_DeveloperMode == DM_DEBUGGING && g_SelectedObject.Object == this)
+        {
             objColor = SELECT_LAND_COLOR;
+        }
 
 #if UO_DEBUG_INFO != 0
         g_RenderedObjectsCountInGameWindow++;
 #endif
 
         if (!IsStretched)
+        {
             g_Orion.DrawLandArt(Graphic, objColor, x, y);
+        }
         else
+        {
             g_Orion.DrawLandTexture(this, objColor, x, y);
+        }
     }
 }
 
@@ -141,12 +159,16 @@ void CLandObject::Select(int x, int y)
         if (!IsStretched)
         {
             if (g_Orion.LandPixelsInXY(Graphic, x, y))
+            {
                 g_SelectedObject.Init(this);
+            }
         }
         else
         {
             if (g_Orion.LandTexturePixelsInXY(x, y + (m_Z * 4), m_Rect))
+            {
                 g_SelectedObject.Init(this);
+            }
         }
     }
 }

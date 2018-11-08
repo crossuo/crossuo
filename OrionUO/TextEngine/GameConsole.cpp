@@ -12,7 +12,9 @@ CGameConsole::~CGameConsole()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == this)
+    {
         g_EntryPointer = nullptr;
+    }
 }
 
 void CGameConsole::Send()
@@ -26,7 +28,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
     DEBUG_TRACE_FUNCTION;
     size_t len = text.length();
 
-    if (len)
+    if (len != 0u)
     {
         SPEECH_TYPE speechType = ST_NORMAL;
         uint16_t sendColor = g_ConfigManager.SpeechColor;
@@ -76,10 +78,14 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     sendColor = g_ConfigManager.PartyMessageColor;
 
                     if (member != -1)
+                    {
                         serial = g_Party.Member[member].Serial;
+                    }
 
                     if (g_Party.Leader != 0)
+                    {
                         CPacketPartyMessage(text.c_str() + offset, len - offset, serial).Send();
+                    }
                     else
                     {
                         string str = "Note to self: " + ToString(text.c_str() + offset);
@@ -98,8 +104,10 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                         g_Party.Inviter = 0;
                     }
                     else
+                    {
                         g_Orion.CreateTextMessage(
                             TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
+                    }
 
                     return;
                 }
@@ -113,17 +121,23 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                         g_Party.Inviter = 0;
                     }
                     else
+                    {
                         g_Orion.CreateTextMessage(
                             TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
+                    }
 
                     return;
                 }
                 else if (type == GCTT_PARTY_ADD)
                 {
                     if (g_Party.Leader == 0 || g_Party.Leader == g_PlayerSerial)
+                    {
                         CPacketPartyInviteRequest().Send();
+                    }
                     else
+                    {
                         g_Orion.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "You are not party leader.");
+                    }
 
                     return;
                 }
@@ -134,20 +148,26 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                         for (int i = 0; i < 10; i++)
                         {
                             if (g_Party.Member[i].Serial != 0)
+                            {
                                 CPacketPartyRemoveRequest(g_Party.Member[i].Serial).Send();
+                            }
                         }
                     }
                     else
+                    {
                         g_Orion.CreateTextMessage(
                             TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
+                    }
 
                     return;
                 }
             }
         }
 
-        if (defaultColor)
+        if (defaultColor != 0u)
+        {
             sendColor = defaultColor;
+        }
 
         CPacketUnicodeSpeechRequest(
             text.c_str() + offset, speechType, 3, sendColor, (uint8_t *)g_Language.c_str())
@@ -170,7 +190,9 @@ wstring CGameConsole::IsSystemCommand(
         char *ptr = (char *)cText + 1;
 
         while (ptr < cText + len && *ptr == ' ')
+        {
             ptr++;
+        }
 
         if (ptr < cText + len)
         {
@@ -183,9 +205,13 @@ wstring CGameConsole::IsSystemCommand(
                 char pmBuf[50] = { 0 };
 
                 if (g_Party.Member[i - 1].Serial != 0)
+                {
                     sprintf_s(pmBuf, "Tell [%s]:", g_Party.Member[i - 1].GetName(i).c_str());
+                }
                 else
+                {
                     sprintf_s(pmBuf, "Tell []:");
+                }
 
                 result = ToWString(pmBuf);
 
@@ -198,51 +224,61 @@ wstring CGameConsole::IsSystemCommand(
         {
             size_t lLen = 4;
             if (len > 4)
+            {
                 lLen = len;
+            }
 
             char lBuf[10]{};
             memcpy(&lBuf[0], cText, lLen);
 
             auto p = &lBuf[0];
-            while (*p++ )
+            while (*p++ != 0)
             {
                 *p = tolower(*p);
             }
 
-            if (!memcmp(&lBuf[0], "/add", 4)) //Party add
+            if (memcmp(&lBuf[0], "/add", 4) == 0)
+            { //Party add
                 type = GCTT_PARTY_ADD;
-            else if (
-                (!memcmp(&lBuf[0], "/quit", 5)) ||
-                (!memcmp(&lBuf[0], "/leave", 6))) //Party leave & quit
+            }
+            else if ((memcmp(&lBuf[0], "/quit", 5) == 0) || (memcmp(&lBuf[0], "/leave", 6) == 0))
+            { //Party leave & quit
                 type = GCTT_PARTY_LEAVE;
-            else if (!memcmp(&lBuf[0], "/accept", 7)) //Party accept
+            }
+            else if (memcmp(&lBuf[0], "/accept", 7) == 0)
+            { //Party accept
                 type = GCTT_PARTY_ACCEPT;
-            else if (!memcmp(&lBuf[0], "/decline", 8)) //Party decline
+            }
+            else if (memcmp(&lBuf[0], "/decline", 8) == 0)
+            { //Party decline
                 type = GCTT_PARTY_DECLINE;
+            }
         }
 
         if ((type == GCTT_PARTY_ADD || type == GCTT_PARTY_LEAVE || type == GCTT_PARTY_ACCEPT ||
              type == GCTT_PARTY_DECLINE) &&
-            !result.length())
+            (result.length() == 0u))
+        {
             result = L"Party:";
+        }
 
-        if (type == GCTT_NORMAL && !result.length())
+        if (type == GCTT_NORMAL && (result.length() == 0u))
         {
             result = L"Party:";
             type = GCTT_PARTY;
         }
     }
-    else if (!memcmp(&text[0], g_ConsolePrefix[GCTT_YELL].c_str(), 4)) //Yell
+    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_YELL].c_str(), 4) == 0) //Yell
     {
         result = L"Yell:";
         type = GCTT_YELL;
     }
-    else if (!memcmp(&text[0], g_ConsolePrefix[GCTT_WHISPER].c_str(), 4)) //Whisper
+    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_WHISPER].c_str(), 4) == 0) //Whisper
     {
         result = L"Whisper:";
         type = GCTT_WHISPER;
     }
-    else if (!memcmp(&text[0], g_ConsolePrefix[GCTT_EMOTE].c_str(), 4)) //Emote
+    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_EMOTE].c_str(), 4) == 0) //Emote
     {
         result = L"Emote:";
         type = GCTT_EMOTE;
@@ -253,17 +289,17 @@ wstring CGameConsole::IsSystemCommand(
         result = L"C:";
         type = GCTT_C;
     }
-    else if (!memcmp(&text[0], g_ConsolePrefix[GCTT_BROADCAST].c_str(), 4)) //Broadcast
+    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_BROADCAST].c_str(), 4) == 0) //Broadcast
     {
         result = L"Broadcast:";
         type = GCTT_BROADCAST;
     }
-    else if (!memcmp(&text[0], g_ConsolePrefix[GCTT_GUILD].c_str(), 4)) //Guild
+    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_GUILD].c_str(), 4) == 0) //Guild
     {
         result = L"Guild:";
         type = GCTT_GUILD;
     }
-    else if (!memcmp(&text[0], g_ConsolePrefix[GCTT_ALLIANCE].c_str(), 4)) //Alliance
+    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_ALLIANCE].c_str(), 4) == 0) //Alliance
     {
         result = L"Alliance:";
         type = GCTT_ALLIANCE;
@@ -279,7 +315,9 @@ void CGameConsole::DrawW(uint8_t font, WORD color, int x, int y, TEXT_ALIGN_TYPE
     wstring wtext = Data();
 
     if (Changed || Color != color)
+    {
         FixMaxWidthW(font);
+    }
 
     size_t len = Length();
     const wchar_t *text = Data();
@@ -289,7 +327,7 @@ void CGameConsole::DrawW(uint8_t font, WORD color, int x, int y, TEXT_ALIGN_TYPE
         int member = 0;
         wstring sysStr = IsSystemCommand(text, len, member, m_Type);
 
-        if (sysStr.length())
+        if (sysStr.length() != 0u)
         {
             posOffset = g_FontManager.GetWidthW(font, sysStr);
 
@@ -317,7 +355,7 @@ void CGameConsole::DrawW(uint8_t font, WORD color, int x, int y, TEXT_ALIGN_TYPE
 
     if (this == g_EntryPointer)
     {
-        if (m_Position)
+        if (m_Position != 0)
         {
             wtext.resize(m_Position);
             x += (g_FontManager.GetWidthW(font, wtext) + posOffset);
@@ -336,7 +374,9 @@ void CGameConsole::SaveConsoleMessage()
         m_ConsoleStackCount++;
 
         if (m_ConsoleStackCount > 1100)
+        {
             m_ConsoleStackCount -= 1000;
+        }
     }
 
     m_ConsoleSelectedIndex = (m_ConsoleStackCount - 1) % MAX_CONSOLE_STACK_SIZE;
@@ -346,7 +386,7 @@ void CGameConsole::SaveConsoleMessage()
 void CGameConsole::ChangeConsoleMessage(bool next)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_ConsoleStackCount)
+    if (m_ConsoleStackCount != 0)
     {
         if (m_PositionChanged)
         {
@@ -355,18 +395,24 @@ void CGameConsole::ChangeConsoleMessage(bool next)
                 m_ConsoleSelectedIndex = (m_ConsoleSelectedIndex + 1) % MAX_CONSOLE_STACK_SIZE;
 
                 if (m_ConsoleSelectedIndex >= m_ConsoleStackCount)
+                {
                     m_ConsoleSelectedIndex = 0;
+                }
             }
             else
             {
                 m_ConsoleSelectedIndex--;
 
                 if (m_ConsoleSelectedIndex < 0)
+                {
                     m_ConsoleSelectedIndex = (m_ConsoleStackCount - 1) % MAX_CONSOLE_STACK_SIZE;
+                }
             }
         }
         else if (next)
+        {
             m_ConsoleSelectedIndex = 0;
+        }
 
         SetTextW(m_ConsoleStack[m_ConsoleSelectedIndex]);
         SetPos((int)m_ConsoleStack[m_ConsoleSelectedIndex].length());

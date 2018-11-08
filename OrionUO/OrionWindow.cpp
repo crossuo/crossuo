@@ -6,7 +6,7 @@
 COrionWindow g_OrionWindow;
 
 COrionWindow::COrionWindow()
-    : Wisp::CWindow()
+
 {
 #if 0
     // Add some tests, this cliloc message seems to use broken UTF8
@@ -31,7 +31,9 @@ void COrionWindow::SetRenderTimerDelay(int delay)
     DEBUG_TRACE_FUNCTION;
     auto timer = GetThreadedTimer(RENDER_TIMER_ID);
     if (timer != nullptr)
+    {
         timer->ChangeDelay(delay);
+    }
 }
 
 bool COrionWindow::OnCreate()
@@ -45,7 +47,9 @@ bool COrionWindow::OnCreate()
     }
 
     if (!g_Orion.Install())
+    {
         return false;
+    }
 
     g_GL.UpdateRect();
     CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
@@ -95,7 +99,9 @@ void COrionWindow::OnLeftMouseButtonDown()
         g_CurrentScreen->SelectObject();
         g_PressedObject.InitLeft(g_SelectedObject);
         if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
+        {
             g_CurrentScreen->OnLeftMouseButtonDown();
+        }
     }
 }
 
@@ -107,12 +113,14 @@ void COrionWindow::OnLeftMouseButtonUp()
         g_CurrentScreen->SelectObject();
 
         //if ((g_SelectedObject.Object() != nullptr && g_SelectedObject.Object() == g_PressedObject.LeftObject && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
-        if ((g_SelectedObject.Object != nullptr && g_SelectedObject.Serial) ||
+        if ((g_SelectedObject.Object != nullptr && (g_SelectedObject.Serial != 0u)) ||
             g_GameState >= GS_GAME)
         {
             g_CurrentScreen->OnLeftMouseButtonUp();
             if (g_MovingFromMouse && g_PressedObject.LeftGump == nullptr)
+            {
                 g_AutoMoving = true;
+            }
         }
 
         if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
@@ -178,7 +186,8 @@ void COrionWindow::OnRightMouseButtonUp()
     {
         g_CurrentScreen->SelectObject();
         if ((g_SelectedObject.Object != nullptr &&
-             g_SelectedObject.Object == g_PressedObject.RightObject && g_SelectedObject.Serial) ||
+             g_SelectedObject.Object == g_PressedObject.RightObject &&
+             (g_SelectedObject.Serial != 0u)) ||
             g_GameState >= GS_GAME)
         {
             g_CurrentScreen->OnRightMouseButtonUp();
@@ -213,27 +222,37 @@ void COrionWindow::OnMidMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(WM_MBUTTONDOWN, 0, 0))
+    {
         return;
+    }
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
+    {
         g_CurrentScreen->OnMidMouseButtonDown();
+    }
 }
 
 void COrionWindow::OnMidMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(WM_MBUTTONUP, 0, 0))
+    {
         return;
+    }
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
+    {
         g_CurrentScreen->OnMidMouseButtonUp();
+    }
 }
 
 bool COrionWindow::OnMidMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
+    {
         return g_CurrentScreen->OnMidMouseButtonDoubleClick();
+    }
 
     return false;
 }
@@ -242,7 +261,9 @@ void COrionWindow::OnMidMouseButtonScroll(bool up)
 {
     DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(WM_MOUSEWHEEL, (up ? 0 : 0x11110000), 0))
+    {
         return;
+    }
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
@@ -255,7 +276,9 @@ void COrionWindow::OnXMouseButton(bool up)
 {
     DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(WM_XBUTTONDOWN, (up ? 0 : 0x11110000), 0))
+    {
         return;
+    }
 }
 
 void COrionWindow::OnDragging()
@@ -288,7 +311,7 @@ void COrionWindow::OnDeactivate()
 
     if (g_ConfigManager.GetReduceFPSUnactiveWindow())
     {
-       SetRenderTimerDelay(g_FrameDelay[WINDOW_INACTIVE]);
+        SetRenderTimerDelay(g_FrameDelay[WINDOW_INACTIVE]);
     }
 
     if (!g_PluginManager.Empty())
@@ -321,9 +344,13 @@ void COrionWindow::OnTextInput(const TextEvent &ev)
     else if (ch == 0x16 && g_EntryPointer != nullptr)
     {
         if (g_GameState == GS_MAIN)
+        {
             g_MainScreen.Paste();
+        }
         else
+        {
             g_EntryPointer->Paste();
+        }
     }
 }
 
@@ -370,7 +397,7 @@ bool COrionWindow::OnRepaint(const PaintEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
 
-#if USE_WISP        
+#if USE_WISP
     // FIXME: Send struct events to plugins
     if (!g_PluginManager.Empty())
     {
@@ -497,7 +524,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         case UOMSG_MENU_RESPONSE:
         {
             PUOI_MENU_RESPONSE data = (PUOI_MENU_RESPONSE)ev.data1;
-            if (!data->Serial && !data->ID)
+            if ((data->Serial == 0u) && (data->ID == 0u))
             {
                 for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
                 {
@@ -597,7 +624,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 #if USE_WISP
     PLUGIN_EVENT(ev.code, ev.data1, ev.data2);
 #else
-    // NOT_IMPLEMENTED;
+        // NOT_IMPLEMENTED;
 #endif
     return true;
 }

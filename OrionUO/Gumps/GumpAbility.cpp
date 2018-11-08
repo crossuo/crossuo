@@ -13,7 +13,7 @@ CGumpAbility::CGumpAbility(int serial, int x, int y)
     m_Locker.Serial = ID_GS_LOCK_MOVING;
 
     m_Colorizer =
-        (CGUIGlobalColor *)Add(new CGUIGlobalColor((ability & 0x80), 1.0f, 0.25f, 0.5f, 1.0f));
+        (CGUIGlobalColor *)Add(new CGUIGlobalColor((ability & 0x80) != 0, 1.0f, 0.25f, 0.5f, 1.0f));
 
     m_Body = (CGUIGumppic *)Add(new CGUIGumppic(Graphic, 0, 0));
 }
@@ -40,7 +40,7 @@ void CGumpAbility::UpdateContent()
         int index = (Serial != 0 ? 1 : 0);
         uint8_t &ability = g_Ability[index];
 
-        m_Colorizer->Enabled = (ability & 0x80);
+        m_Colorizer->Enabled = ((ability & 0x80) != 0);
 
         m_Body->Graphic = 0x5200 + (ability & 0x7F) - 1;
     }
@@ -50,7 +50,9 @@ void CGumpAbility::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
 }
 
 void CGumpAbility::OnAbilityUse(int index)
@@ -58,15 +60,19 @@ void CGumpAbility::OnAbilityUse(int index)
     DEBUG_TRACE_FUNCTION;
     uint8_t &ability = g_Ability[index];
 
-    if (!(ability & 0x80))
+    if ((ability & 0x80) == 0)
     {
         for (int i = 0; i < 2; i++)
+        {
             g_Ability[i] &= 0x7F;
+        }
 
         CPacketUseCombatAbility(ability).Send();
     }
     else
+    {
         CPacketUseCombatAbility(0).Send();
+    }
 
     ability ^= 0x80;
 
@@ -81,4 +87,3 @@ bool CGumpAbility::OnLeftMouseButtonDoubleClick()
 
     return true;
 }
-

@@ -134,4 +134,3 @@ bool CPressedObject::TestMoveOnDrag()
     DEBUG_TRACE_FUNCTION;
     return (LeftObject != nullptr && LeftObject->IsGUI() && ((CBaseGUI *)LeftObject)->MoveOnDrag);
 }
-

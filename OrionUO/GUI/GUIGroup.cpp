@@ -10,4 +10,3 @@ CGUIGroup::CGUIGroup(int index)
 CGUIGroup::~CGUIGroup()
 {
 }
-

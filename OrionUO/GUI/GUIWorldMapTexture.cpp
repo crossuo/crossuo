@@ -37,8 +37,9 @@ bool CGUIWorldMapTexture::Select()
     int y = g_MouseManager.Position.Y - m_Y;
 
     if (x >= 0 && y >= 0 && x < Width && y < Height)
+    {
         select = true;
+    }
 
     return select;
 }
-

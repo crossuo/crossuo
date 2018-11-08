@@ -30,7 +30,15 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     auto t = time(nullptr);
     auto now = *localtime(&t);
     char buf[100]{};
-    sprintf_s(buf, "/snapshot_d(%d%d%d)_t(%d%d%d)", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);  
+    sprintf_s(
+        buf,
+        "/snapshot_d(%d%d%d)_t(%d%d%d)",
+        now.tm_year + 1900,
+        now.tm_mon,
+        now.tm_mday,
+        now.tm_hour,
+        now.tm_min,
+        now.tm_sec);
     path += ToPath(buf);
 
     vector<uint32_t> pixels = GetScenePixels(x, y, width, height);
@@ -73,7 +81,9 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     FreeImage_Unload(fBmp);
 
     if (g_GameState >= GS_GAME)
+    {
         g_Orion.CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
+    }
 }
 
 vector<uint32_t> CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
@@ -91,7 +101,9 @@ vector<uint32_t> CScreenshotBuilder::GetScenePixels(int x, int y, int width, int
         &pixels[0]);
 
     for (uint32_t &i : pixels)
+    {
         i |= 0xFF000000;
+    }
 
     return pixels;
 }

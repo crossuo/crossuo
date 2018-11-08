@@ -16,9 +16,9 @@ public:
     ~CLoginCrypt() {}
 
     void Init(uint8_t ps[4]);
-    void Encrypt(uint8_t *in, uint8_t *out, int size);
-    void Encrypt_Old(uint8_t *in, uint8_t *out, int size);
-    void Encrypt_1_25_36(uint8_t *in, uint8_t *out, int size);
+    void Encrypt(const uint8_t *in, uint8_t *out, int size);
+    void Encrypt_Old(const uint8_t *in, uint8_t *out, int size);
+    void Encrypt_1_25_36(const uint8_t *in, uint8_t *out, int size);
 };
 
 extern CLoginCrypt g_LoginCrypt;

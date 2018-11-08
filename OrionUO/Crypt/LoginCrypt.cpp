@@ -33,7 +33,7 @@ void CLoginCrypt::Init(uint8_t ps[4])
     m_key[1] = ((seed ^ 0x43210000) >> 16) | (((~seed) ^ 0xabcdffff) & 0xffff0000);
 }
 
-void CLoginCrypt::Encrypt(uint8_t *in, uint8_t *out, int size)
+void CLoginCrypt::Encrypt(const uint8_t *in, uint8_t *out, int size)
 {
     for (int i = 0; i < size; i++)
     {
@@ -47,7 +47,7 @@ void CLoginCrypt::Encrypt(uint8_t *in, uint8_t *out, int size)
     }
 }
 
-void CLoginCrypt::Encrypt_Old(uint8_t *in, uint8_t *out, int size)
+void CLoginCrypt::Encrypt_Old(const uint8_t *in, uint8_t *out, int size)
 {
     for (int i = 0; i < size; i++)
     {
@@ -61,7 +61,7 @@ void CLoginCrypt::Encrypt_Old(uint8_t *in, uint8_t *out, int size)
     }
 }
 
-void CLoginCrypt::Encrypt_1_25_36(uint8_t *in, uint8_t *out, int size)
+void CLoginCrypt::Encrypt_1_25_36(const uint8_t *in, uint8_t *out, int size)
 {
     for (int i = 0; i < size; i++)
     {

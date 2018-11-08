@@ -23,7 +23,9 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
     uint32_t blockIndex = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
 
     if (blockIndex >= g_MapManager.MaxBlockIndex)
+    {
         return false;
+    }
 
     CMapBlock *block = g_MapManager.GetBlock(blockIndex);
 
@@ -47,7 +49,9 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
     for (CRenderWorldObject *obj = block->GetRender(bx, by); obj != nullptr; obj = obj->m_NextXY)
     {
         if (g_CustomHouseGump != nullptr && obj->GetZ() < g_Player->GetZ())
+        {
             continue;
+        }
 
         uint16_t graphic = obj->Graphic;
 
@@ -63,15 +67,21 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
                 if (stepState == PSS_ON_SEA_HORSE)
                 {
                     if (IsWet(tiledataFlags))
+                    {
                         flags = POF_IMPASSABLE_OR_SURFACE | POF_SURFACE | POF_BRIDGE;
+                    }
                 }
                 else
                 {
                     if (!IsImpassable(tiledataFlags))
+                    {
                         flags = POF_IMPASSABLE_OR_SURFACE | POF_SURFACE | POF_BRIDGE;
+                    }
 
                     if (stepState == PSS_FLYING && IsNoDiagonal(tiledataFlags))
+                    {
                         flags |= POF_NO_DIAGONAL;
+                    }
                 }
 
                 int landMinZ = land->MinZ;
@@ -97,30 +107,39 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
                     CGameCharacter *gc = (CGameCharacter *)obj;
 
                     if (!ignoreGameCharacters && !gc->Dead() && !gc->IgnoreCharacters())
+                    {
                         list.push_back(CPathObject(
                             POF_IMPASSABLE_OR_SURFACE,
                             obj->GetZ(),
                             obj->GetZ() + DEFAULT_CHARACTER_HEIGHT,
                             DEFAULT_CHARACTER_HEIGHT,
                             obj));
+                    }
 
                     canBeAdd = false;
                 }
-                else if (
-                    ((CGameItem *)obj)->MultiBody || obj->IsInternal()) //isMulti || InternalItem
+                else if (((CGameItem *)obj)->MultiBody || obj->IsInternal())
+                { //isMulti || InternalItem
                     canBeAdd = false;
+                }
                 else if (
                     stepState == PSS_DEAD_OR_GM &&
                     (go->IsDoor() || tileInfo->Weight <= 0x5A || (isGM && !go->Locked())))
+                {
                     dropFlags = true;
+                }
                 else
+                {
                     dropFlags = ((graphic >= 0x3946 && graphic <= 0x3964) || graphic == 0x0082);
+                }
             }
             else if (
                 g_CustomHouseGump != nullptr && obj->IsMultiObject() &&
                 ((CMultiObject *)obj)->IsCustomHouseMulti() &&
-                !(((CMultiObject *)obj)->State & CHMOF_GENERIC_INTERNAL))
+                ((((CMultiObject *)obj)->State & CHMOF_GENERIC_INTERNAL) == 0))
+            {
                 canBeAdd = false;
+            }
 
             if (canBeAdd)
             {
@@ -129,20 +148,28 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
                 if (stepState == PSS_ON_SEA_HORSE)
                 {
                     if (obj->IsWet())
+                    {
                         flags = POF_SURFACE | POF_BRIDGE;
+                    }
                 }
                 else
                 {
                     if (obj->IsImpassable() || obj->IsSurface())
+                    {
                         flags = POF_IMPASSABLE_OR_SURFACE;
+                    }
 
                     if (!obj->IsImpassable())
                     {
                         if (obj->IsSurface())
+                        {
                             flags |= POF_SURFACE;
+                        }
 
                         if (obj->IsBridge())
+                        {
                             flags |= POF_BRIDGE;
+                        }
                     }
 
                     if (stepState == PSS_DEAD_OR_GM)
@@ -151,27 +178,37 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
                         {
                             if (!(graphic != 0x0846 && graphic != 0x0692 &&
                                   (graphic <= 0x06F4 || graphic > 0x06F6)))
+                            {
                                 dropFlags = true;
+                            }
                         }
                         else if (graphic == 0x0873)
+                        {
                             dropFlags = true;
+                        }
                     }
 
                     if (dropFlags)
+                    {
                         flags &= 0xFFFFFFFE;
+                    }
 
                     if (stepState == PSS_FLYING && obj->IsNoDiagonal())
+                    {
                         flags |= POF_NO_DIAGONAL;
+                    }
                 }
 
-                if (flags)
+                if (flags != 0u)
                 {
                     int objZ = obj->GetZ();
                     int staticHeight = tileInfo->Height;
                     int staticAverageZ = staticHeight;
 
                     if (obj->IsBridge())
+                    {
                         staticAverageZ /= 2;
+                    }
 
                     list.push_back(
                         CPathObject(flags, objZ, staticAverageZ + objZ, staticHeight, obj));
@@ -201,8 +238,10 @@ int CPathFinder::CalculateMinMaxZ(
 
     vector<CPathObject> list;
 
-    if (!CreateItemsList(list, newX, newY, stepState) || !list.size())
+    if (!CreateItemsList(list, newX, newY, stepState) || list.empty())
+    {
         return 0;
+    }
 
     for (const CPathObject &obj : list)
     {
@@ -214,26 +253,37 @@ int CPathFinder::CalculateMinMaxZ(
             int avgZ = ((CLandObject *)rwo)->CalculateCurrentAverageZ(newDirection);
 
             if (minZ < avgZ)
+            {
                 minZ = avgZ;
+            }
 
             if (maxZ < avgZ)
+            {
                 maxZ = avgZ;
+            }
         }
         else
         {
-            if ((obj.Flags & POF_IMPASSABLE_OR_SURFACE) && averageZ <= currentZ && minZ < averageZ)
+            if (((obj.Flags & POF_IMPASSABLE_OR_SURFACE) != 0u) && averageZ <= currentZ &&
+                minZ < averageZ)
+            {
                 minZ = averageZ;
+            }
 
-            if ((obj.Flags & POF_BRIDGE) && currentZ == averageZ)
+            if (((obj.Flags & POF_BRIDGE) != 0u) && currentZ == averageZ)
             {
                 int z = obj.Z;
                 int height = z + obj.Height;
 
                 if (maxZ < height)
+                {
                     maxZ = height;
+                }
 
                 if (minZ > z)
+                {
                     minZ = z;
+                }
             }
         }
     }
@@ -254,14 +304,18 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
     }
     else
     {
-        if (g_Player->Flying()) // && no mount?
+        if (g_Player->Flying())
+        { // && no mount?
             stepState = PSS_FLYING;
+        }
         else
         {
             CGameItem *mount = g_Player->FindLayer(OL_MOUNT);
 
-            if (mount != nullptr && mount->Graphic == 0x3EB3) //Sea horse
+            if (mount != nullptr && mount->Graphic == 0x3EB3)
+            { //Sea horse
                 stepState = PSS_ON_SEA_HORSE;
+            }
         }
     }
 
@@ -280,12 +334,16 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
                           g_CustomHouseGump->EndPos.Y };
         SDL_Point pos = { x, y };
 
-        if (!SDL_PointInRect(&pos, &rect))
+        if (SDL_PointInRect(&pos, &rect) == 0u)
+        {
             return false;
+        }
     }
 
-    if (!CreateItemsList(list, x, y, stepState) || !list.size())
+    if (!CreateItemsList(list, x, y, stepState) || list.empty())
+    {
         return false;
+    }
 
     auto compareFunction = [](const void *obj1, const void *obj2) {
         int result = 0;
@@ -294,8 +352,10 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
         {
             result = ((CPathObject *)obj1)->Z - ((CPathObject *)obj2)->Z;
 
-            if (!result)
+            if (result == 0)
+            {
                 result = (((CPathObject *)obj1)->Height - ((CPathObject *)obj2)->Height);
+            }
         }
 
         return result;
@@ -308,7 +368,9 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
     int resultZ = -128;
 
     if (z < minZ)
+    {
         z = (char)minZ;
+    }
 
     int currentTempObjZ = 1000000;
     int currentZ = -128;
@@ -319,7 +381,7 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
     {
         const CPathObject &obj = list[i];
 
-        if ((obj.Flags & POF_NO_DIAGONAL) && stepState == PSS_FLYING)
+        if (((obj.Flags & POF_NO_DIAGONAL) != 0u) && stepState == PSS_FLYING)
         {
             int objAverageZ = obj.AverageZ;
 
@@ -328,15 +390,19 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
             if (delta <= 25)
             {
                 if (objAverageZ != -128)
+                {
                     resultZ = objAverageZ;
+                }
                 else
+                {
                     resultZ = currentZ;
+                }
 
                 break;
             }
         }
 
-        if (obj.Flags & POF_IMPASSABLE_OR_SURFACE)
+        if ((obj.Flags & POF_IMPASSABLE_OR_SURFACE) != 0u)
         {
             int objZ = obj.Z;
 
@@ -346,14 +412,14 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
                 {
                     const CPathObject &tempObj = list[j];
 
-                    if (tempObj.Flags & (POF_SURFACE | POF_BRIDGE))
+                    if ((tempObj.Flags & (POF_SURFACE | POF_BRIDGE)) != 0u)
                     {
                         int tempAverageZ = tempObj.AverageZ;
 
                         if (tempAverageZ >= currentZ &&
                             objZ - tempAverageZ >= DEFAULT_BLOCK_HEIGHT &&
-                            ((tempAverageZ <= maxZ && (tempObj.Flags & POF_SURFACE)) ||
-                             ((tempObj.Flags & POF_BRIDGE) && tempObj.Z <= maxZ)))
+                            ((tempAverageZ <= maxZ && ((tempObj.Flags & POF_SURFACE) != 0u)) ||
+                             (((tempObj.Flags & POF_BRIDGE) != 0u) && tempObj.Z <= maxZ)))
                         {
                             int delta = abs((int)z - tempAverageZ);
 
@@ -370,10 +436,14 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
             int averageZ = obj.AverageZ;
 
             if (minZ < averageZ)
+            {
                 minZ = averageZ;
+            }
 
             if (currentZ < averageZ)
+            {
                 currentZ = averageZ;
+            }
         }
     }
 
@@ -446,7 +516,7 @@ bool CPathFinder::CanWalk(uint8_t &direction, int &x, int &y, char &z)
 
     bool passed = CalculateNewZ(newX, newY, newZ, direction);
 
-    if ((char)direction % 2) //diagonal
+    if (((char)direction % 2) != 0) //diagonal
     {
         const char dirOffset[2] = { 1, -1 };
 
@@ -508,13 +578,19 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     DEBUG_TRACE_FUNCTION;
     if (BlockMoving || g_Walker.WalkingFailed || g_Walker.LastStepRequestTime > g_Ticks ||
         g_Walker.StepsCount >= MAX_STEPS_COUNT || g_Player == nullptr ||
-        /*!g_Player->Frozen() ||*/ g_DeathScreenTimer || g_GameState != GS_GAME)
+        /*!g_Player->Frozen() ||*/ (g_DeathScreenTimer != 0u) || g_GameState != GS_GAME)
+    {
         return false;
+    }
 
     if (g_SpeedMode >= CST_CANT_RUN)
+    {
         run = false;
+    }
     else if (!run)
+    {
         run = g_ConfigManager.AlwaysRun;
+    }
 
     int x = g_Player->GetX();
     int y = g_Player->GetY();
@@ -539,7 +615,9 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     uint16_t walkTime = TURN_DELAY;
 
     if (FastRotation)
+    {
         walkTime = TURN_DELAY_FAST;
+    }
 
     if ((oldDirection & 7) == (direction & 7)) //Повернуты куда надо
     {
@@ -549,10 +627,14 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
         char newZ = z;
 
         if (!CanWalk(newDir, newX, newY, newZ))
+        {
             return false;
+        }
 
         if ((direction & 7) != newDir)
+        {
             direction = newDir;
+        }
         else
         {
             direction = newDir;
@@ -573,7 +655,9 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
         if (!CanWalk(newDir, newX, newY, newZ))
         {
             if ((oldDirection & 7) == newDir)
+            {
                 return false;
+            }
         }
 
         if ((oldDirection & 7) == newDir)
@@ -593,7 +677,9 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     if (emptyStack)
     {
         if (!g_Player->Walking())
+        {
             g_Player->SetAnimation(0xFF);
+        }
 
         g_Player->LastStepTime = g_Ticks;
     }
@@ -613,7 +699,9 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     g_Walker.StepsCount++;
 
     if (run)
+    {
         direction += 0x80;
+    }
 
     g_Player->m_Steps.push_back(
         CWalkData(x, y, z, direction, g_Player->Graphic, g_Player->GetFlags()));
@@ -622,9 +710,13 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
         .Send();
 
     if (g_Walker.WalkSequence == 0xFF)
+    {
         g_Walker.WalkSequence = 1;
+    }
     else
+    {
         g_Walker.WalkSequence++;
+    }
 
     g_Walker.UnacceptedPacketsCount++;
 
@@ -644,12 +736,16 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
         nowDelta = (g_Ticks - lastStepTime) - walkTime + lastDelta;
 
         if (abs(nowDelta) > 70)
+        {
             nowDelta = 0;
+        }
 
         lastDelta = nowDelta;
     }
     else
+    {
         lastDelta = 0;
+    }
 
     lastStepTime = g_Ticks;
 
@@ -657,9 +753,13 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     lastMount = onMount;
 
     if (walkTime == TURN_DELAY_FAST)
+    {
         lastDir = -1;
+    }
     else
+    {
         lastDir = direction;
+    }
 
     g_Walker.LastStepRequestTime = g_Ticks + walkTime - nowDelta;
     g_Player->GetAnimationGroup();
@@ -715,7 +815,7 @@ int CPathFinder::AddNodeToList(
     int list, int direction, int x, int y, int z, CPathNode *parentNode, int cost)
 {
     DEBUG_TRACE_FUNCTION;
-    if (!list)
+    if (list == 0)
     {
         if (!DoesNotExistOnClosedList(x, y, z))
         {
@@ -780,7 +880,9 @@ int CPathFinder::AddNodeToList(
             }
         }
         else
+        {
             return 0;
+        }
     }
     else
     {
@@ -831,11 +933,13 @@ bool CPathFinder::OpenNodes(CPathNode *node)
         if (CanWalk(direction, x, y, z))
         {
             if (direction != oldDirection)
+            {
                 continue;
+            }
 
             int diagonal = i % 2;
 
-            if (diagonal)
+            if (diagonal != 0)
             {
                 uint8_t wantDirection = (uint8_t)i;
                 int wantX = node->X;
@@ -844,13 +948,19 @@ bool CPathFinder::OpenNodes(CPathNode *node)
                 GetNewXY(wantDirection, wantX, wantY);
 
                 if (x != wantX || y != wantY)
+                {
                     diagonal = -1;
+                }
             }
 
             if (diagonal >= 0 && AddNodeToList(0, direction, x, y, z, node, 1 + diagonal) != -1)
+            {
                 found = true;
+            }
             else
+            {
                 continue;
+            }
         }
     }
 
@@ -878,7 +988,9 @@ int CPathFinder::FindCheapestNode()
     int result = -1;
 
     if (cheapestNode != -1)
+    {
         result = AddNodeToList(1, 0, 0, 0, 0, &m_OpenList[cheapestNode], 2);
+    }
 
     return result;
 }
@@ -933,10 +1045,14 @@ bool CPathFinder::FindPath(int maxNodes)
         curNode = FindCheapestNode();
 
         if (curNode == -1)
+        {
             return false;
+        }
 
         if (m_ActiveClosedNodes >= maxNodes)
+        {
             return false;
+        }
     }
 
     return true;
@@ -946,10 +1062,14 @@ bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
+    {
         m_OpenList[i].Reset();
+    }
 
     for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
+    {
         m_ClosedList[i].Reset();
+    }
 
     m_StartPoint.X = g_Player->GetX();
     m_StartPoint.Y = g_Player->GetY();
@@ -972,7 +1092,9 @@ bool CPathFinder::WalkTo(int x, int y, int z, int distance)
         ProcessAutowalk();
     }
     else
+    {
         AutoWalking = false;
+    }
 
     return (m_PathSize != 0);
 }
@@ -980,7 +1102,7 @@ bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 void CPathFinder::ProcessAutowalk()
 {
     DEBUG_TRACE_FUNCTION;
-    if (AutoWalking && g_Player != nullptr && !g_DeathScreenTimer &&
+    if (AutoWalking && g_Player != nullptr && (g_DeathScreenTimer == 0u) &&
         g_Walker.StepsCount < MAX_STEPS_COUNT && g_Walker.LastStepRequestTime <= g_Ticks)
     {
         if (m_PointIndex >= 0 && m_PointIndex < m_PathSize)
@@ -990,16 +1112,24 @@ void CPathFinder::ProcessAutowalk()
             uint8_t olddir = g_Player->Direction;
 
             if (!g_Player->m_Steps.empty())
+            {
                 olddir = g_Player->m_Steps.back().Direction;
+            }
 
             if ((olddir & 7) == p->Direction)
+            {
                 m_PointIndex++;
+            }
 
             if (!Walk(g_ConfigManager.AlwaysRun, p->Direction))
+            {
                 StopAutoWalk();
+            }
         }
         else
+        {
             StopAutoWalk();
+        }
     }
 }
 
@@ -1009,4 +1139,3 @@ void CPathFinder::StopAutoWalk()
     AutoWalking = false;
     m_PathSize = 0;
 }
-

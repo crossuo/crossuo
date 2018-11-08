@@ -89,10 +89,12 @@ void MD5Crypt::Init(unsigned char *data, unsigned int size)
     finish(&tmpMd5, m_digest);
 }
 
-void MD5Crypt::Encrypt(unsigned char *in, unsigned char *out, int len)
+void MD5Crypt::Encrypt(const unsigned char *in, unsigned char *out, int len)
 {
     for (int i = 0; i < len; i++)
+    {
         out[i] = in[i] ^ m_digest[m_tableIdx++ % 16];
+    }
 }
 
 void MD5Crypt::process(md5_state *pms, const unsigned char *data)
@@ -103,13 +105,15 @@ void MD5Crypt::process(md5_state *pms, const unsigned char *data)
     const unsigned char *xp = data;
 
     for (int i = 0; i < 16; ++i, xp += 4)
+    {
         X[i] = xp[0] + (xp[1] << 8) + (xp[2] << 16) + (xp[3] << 24);
+    }
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
 
-        // Round 1
-        // Let [abcd k s i] denote the operation
-        // a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s)
+    // Round 1
+    // Let [abcd k s i] denote the operation
+    // a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s)
 #define F(x, y, z) (((x) & (y)) | (~(x) & (z)))
 #define SET(a, b, c, d, k, s, Ti)                                                                  \
     t = a + F(b, c, d) + X[k] + Ti;                                                                \
@@ -236,22 +240,28 @@ void MD5Crypt::append(md5_state *pms, const unsigned char *data, int nbytes)
     int left = nbytes, offset = (pms->count[0] >> 3) & 63;
 
     if (nbytes <= 0)
+    {
         return;
+    }
 
     // Update the message length
     pms->count[1] += nbytes >> 29;
     pms->count[0] += nbits;
     if (pms->count[0] < nbits)
+    {
         pms->count[1]++;
+    }
 
     // Process an initial partial block
-    if (offset)
+    if (offset != 0)
     {
         int copy = (offset + nbytes > 64 ? 64 - offset : nbytes);
         memcpy(pms->buf + offset, p, copy);
 
         if (offset + copy < 64)
+        {
             return;
+        }
 
         p += copy;
         left -= copy;
@@ -260,13 +270,17 @@ void MD5Crypt::append(md5_state *pms, const unsigned char *data, int nbytes)
 
     // Process full blocks
     for (; left >= 64; p += 64, left -= 64)
+    {
         process(pms, p);
+    }
 
     // Process a final partial block
-    if (left)
+    if (left != 0)
     {
         if (left > 63)
+        {
             left = 63;
+        }
         memcpy(pms->buf, p, left);
     }
 }
@@ -282,7 +296,9 @@ void MD5Crypt::finish(md5_state *pms, unsigned char digest[16])
 
     // Save the length before padding
     for (int i = 0; i < 8; ++i)
+    {
         data[i] = (unsigned char)(pms->count[i >> 2] >> ((i & 3) << 3));
+    }
 
     // Pad to 56 bytes mod 64
     append(pms, pad, ((55 - (pms->count[0] >> 3)) & 63) + 1);
@@ -290,6 +306,8 @@ void MD5Crypt::finish(md5_state *pms, unsigned char digest[16])
     // Append the length
     append(pms, data, 8);
     for (int i = 0; i < 16; ++i)
+    {
         digest[i] = (unsigned char)(pms->abcd[i >> 2] >> ((i & 3) << 3));
+    }
 }
 #endif

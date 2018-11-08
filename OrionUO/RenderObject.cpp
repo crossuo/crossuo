@@ -2,8 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CRenderObject::CRenderObject(int serial, uint16_t graphic, uint16_t color, short x, short y)
-    : CBaseQueueItem()
-    , Serial(serial)
+    : Serial(serial)
     , Graphic(graphic)
     , Color(color)
     , m_X(x)
@@ -32,4 +31,3 @@ void CRenderObject::SetY(int val)
     m_Y = val;
     UpdateRealDrawCoordinates();
 }
-

@@ -34,7 +34,9 @@ CGameItem *CPlayer::FindBandage()
     CGameItem *item = FindLayer(OL_BACKPACK);
 
     if (item != nullptr)
+    {
         item = item->FindItem(0x0E21);
+    }
 
     return item;
 }
@@ -55,13 +57,15 @@ void CPlayer::UpdateAbilities()
         layerObject = g_Player->FindLayer(OL_2_HAND);
 
         if (layerObject != nullptr)
+        {
             equippedGraphic = layerObject->Graphic;
+        }
     }
 
     g_Ability[0] = 0xFF;
     g_Ability[1] = 0xFF;
 
-    if (equippedGraphic)
+    if (equippedGraphic != 0u)
     {
         uint16_t graphics[2] = { equippedGraphic, 0 };
         uint16_t imageID = layerObject->GetStaticData()->AnimID;
@@ -710,7 +714,9 @@ void CPlayer::UpdateAbilities()
             }
 
             if (g_Ability[0] != 0xFF)
+            {
                 break;
+            }
         }
     }
 

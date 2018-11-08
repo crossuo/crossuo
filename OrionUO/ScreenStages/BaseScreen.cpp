@@ -4,8 +4,7 @@
 CBaseScreen *g_CurrentScreen = nullptr;
 
 CBaseScreen::CBaseScreen(CGump &gump)
-    : CBaseQueue()
-    , m_Gump(gump)
+    : m_Gump(gump)
 {
 }
 
@@ -14,8 +13,10 @@ void CBaseScreen::Render()
     DEBUG_TRACE_FUNCTION;
 
     g_GL.BeginDraw();
-    if (DrawSmoothMonitor())
+    if (DrawSmoothMonitor() != 0)
+    {
         return;
+    }
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     m_Gump.Draw();
@@ -28,7 +29,7 @@ void CBaseScreen::Render()
 void CBaseScreen::SelectObject()
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     g_SelectedObject.Clear();
     CRenderObject *selected = m_Gump.Select();
     if (selected != nullptr)
@@ -55,7 +56,7 @@ void CBaseScreen::SelectObject()
 int CBaseScreen::DrawSmoothMonitor()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_ScreenEffectManager.Process() && SmoothScreenAction)
+    if ((g_ScreenEffectManager.Process() != 0) && (SmoothScreenAction != 0u))
     {
         ProcessSmoothAction();
         g_GL.EndDraw();

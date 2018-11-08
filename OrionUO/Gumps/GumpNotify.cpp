@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-
 CGumpNotify::CGumpNotify(short x, short y, uint8_t variant, short width, short height, string text)
     : CGump(GT_NOTIFY, 0, x, y)
     , Variant(variant)
@@ -31,7 +30,9 @@ void CGumpNotify::GUMP_BUTTON_EVENT_C
     DEBUG_TRACE_FUNCTION;
 
     if (serial == ID_GN_BUTTON_OK)
+    {
         Process();
+    }
 }
 
 void CGumpNotify::OnKeyDown(const KeyEvent &ev)
@@ -40,12 +41,18 @@ void CGumpNotify::OnKeyDown(const KeyEvent &ev)
 
     const auto key = EvKey(ev);
     if (key != KEY_RETURN)
+    {
         return;
+    }
 
     if (g_ConfigManager.GetConsoleNeedEnter())
+    {
         g_EntryPointer = nullptr;
+    }
     else
+    {
         g_EntryPointer = &g_GameConsole;
+    }
 
     Process();
 }
@@ -55,7 +62,11 @@ void CGumpNotify::Process()
     DEBUG_TRACE_FUNCTION;
 
     if (Variant == ID_GN_STATE_LOGOUT)
+    {
         g_GameScreen.CreateSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);
+    }
     else if (Variant == ID_GN_STATE_NOTIFICATION)
+    {
         RemoveMark = true;
+    }
 }

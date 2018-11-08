@@ -1,7 +1,6 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-
 CPacket::CPacket(size_t size, bool autoResize)
     : Wisp::CDataWritter(size, autoResize)
 {
@@ -9,8 +8,10 @@ CPacket::CPacket(size_t size, bool autoResize)
 
 void CPacket::Send()
 {
-    if (m_Data.size())
+    if (static_cast<unsigned int>(!m_Data.empty()) != 0u)
+    {
         g_Orion.Send(m_Data);
+    }
 }
 
 CPacketFirstLogin::CPacketFirstLogin()
@@ -19,7 +20,9 @@ CPacketFirstLogin::CPacketFirstLogin()
     WriteUInt8(0x80);
 
     if (g_TheAbyss)
+    {
         m_Data[61] = 0xFF;
+    }
     else
     {
         WriteString(g_MainScreen.m_Account->c_str(), 30, false);
@@ -72,14 +75,16 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     WriteUInt16BE(0xFFFF);
     WriteUInt16BE(0xFFFF);
     WriteUInt8(0x00);
-    WriteString(name.c_str(), 30, false);
+    WriteString(name, 30, false);
 
     //Move(30); //На самом деле, клиент пихает сюда пароль на 30 байт, но по какой-то причине (мб мусор в памяти) - идет то что идет
     WriteUInt16BE(0x0000); //?
 
     uint32_t clientFlag = 0;
     for (int i = 0; i < g_CharacterList.ClientFlag; i++)
+    {
         clientFlag |= (1 << i);
+    }
 
     WriteUInt32BE(clientFlag); //clientflag
     WriteUInt32BE(0x00000001); //?
@@ -99,7 +104,9 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
         val = (uint8_t)g_CreateCharacterManager.GetRace();
 
         if (g_PacketManager.GetClientVersion() < CV_7000)
+        {
             val--;
+        }
 
         val = (val * 2) + (uint8_t)g_CreateCharacterManager.GetFemale();
     }
@@ -143,7 +150,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
         uint16_t slot = 0xFFFF;
         for (int i = 0; i < g_CharacterList.Count; i++)
         {
-            if (!g_CharacterList.GetName(i).length())
+            if (g_CharacterList.GetName(i).length() == 0u)
             {
                 slot = (uint16_t)i;
                 break;
@@ -158,19 +165,23 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
         uint8_t serverIndex = 0;
 
         if (server != nullptr)
+        {
             serverIndex = (uint8_t)server->Index;
+        }
 
         WriteUInt8(serverIndex); //server index
 
         uint8_t location = g_SelectTownScreen.m_City->LocationIndex;
         if (g_PacketManager.GetClientVersion() < CV_70130)
+        {
             location--;
+        }
         WriteUInt8(location); //location
 
         uint32_t slot = 0xFFFFFFFF;
         for (int i = 0; i < g_CharacterList.Count; i++)
         {
-            if (!g_CharacterList.GetName(i).length())
+            if (g_CharacterList.GetName(i).length() == 0u)
             {
                 slot = (uint32_t)i;
                 break;
@@ -199,19 +210,23 @@ CPacketSelectCharacter::CPacketSelectCharacter(int index, const string &name)
     int copyLen = (int)name.length();
 
     if (copyLen > 30)
+    {
         copyLen = 30;
+    }
 
     memcpy(&g_SelectedCharName[0], name.c_str(), copyLen);
 
     WriteUInt8(0x5D);
     WriteUInt32BE(0xEDEDEDED);
-    WriteString(name.c_str(), 30, false);
+    WriteString(name, 30, false);
     Move(2);
 
     uint32_t clientFlag = 0;
 
     for (int i = 0; i < g_CharacterList.ClientFlag; i++)
+    {
         clientFlag |= (1 << i);
+    }
 
     WriteUInt32BE(clientFlag);
 
@@ -329,7 +344,7 @@ CPacketClientVersion::CPacketClientVersion(string version)
 {
     WriteUInt8(0xBD);
     WriteUInt16BE(4 + (uint16_t)version.length());
-    WriteString(version.c_str(), (int)version.length(), false);
+    WriteString(version, (int)version.length(), false);
 }
 
 CPacketASCIISpeechRequest::CPacketASCIISpeechRequest(
@@ -361,10 +376,9 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     g_SpeechManager.GetKeywords(text, codes);
 
     //encoded
-    bool encoded = codes.size() > 0;
-    string utf8string = "";
+    bool encoded = !codes.empty();
+    string utf8string{};
     vector<uint8_t> codeBytes;
-
     if (encoded)
     {
         typeValue |= ST_ENCODED_COMMAND;
@@ -399,7 +413,9 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
         }
 
         if (!flag)
+        {
             codeBytes.push_back(num3 << 4);
+        }
         size += codeBytes.size();
     }
     else
@@ -539,7 +555,9 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
             case GOT_RADIO:
             {
                 if (((CGUICheckbox *)item)->Checked)
+                {
                     switchesCount++;
+                }
 
                 break;
             }
@@ -565,7 +583,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     WriteUInt8(0xB1);
     WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
-    WriteUInt32BE(gump->MasterGump ? gump->MasterGump : gump->ID);
+    WriteUInt32BE(gump->MasterGump != 0u ? gump->MasterGump : gump->ID);
     WriteUInt32BE(code);
     WriteUInt32BE(switchesCount);
 
@@ -574,7 +592,9 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
         if (item->Type == GOT_CHECKBOX || item->Type == GOT_RADIO)
         {
             if (((CGUICheckbox *)item)->Checked)
+            {
                 WriteUInt32BE(((CGUICheckbox *)item)->Serial);
+            }
         }
     }
 
@@ -615,7 +635,7 @@ CPacketMenuResponse::CPacketMenuResponse(CGump *gump, int code)
     WriteUInt32BE(gump->Serial);
     WriteUInt16BE(gump->ID);
 
-    if (code)
+    if (code != 0)
     {
         WriteUInt16BE(code);
 
@@ -656,7 +676,7 @@ CPacketTradeResponse::CPacketTradeResponse(CGumpSecureTrading *gump, int code)
     {
         WriteUInt8(0x02);
         WriteUInt32BE(gump->ID);
-        WriteUInt32BE(gump->StateMy);
+        WriteUInt32BE(static_cast<int>(gump->StateMy));
     }
 }
 
@@ -692,7 +712,7 @@ CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, string newName)
 {
     WriteUInt8(0x75);
     WriteUInt32BE(serial);
-    WriteString(newName.c_str(), newName.length(), false);
+    WriteString(newName, newName.length(), false);
 }
 
 CPacketTipRequest::CPacketTipRequest(uint16_t id, uint8_t flag)
@@ -833,13 +853,15 @@ CPacketPartyMessage::CPacketPartyMessage(const wchar_t *text, size_t len, uint32
     WriteUInt16BE((uint16_t)size);
     WriteUInt16BE(0x0006);
 
-    if (serial) //Private message to member
+    if (serial != 0u) //Private message to member
     {
         WriteUInt8(0x03);
         WriteUInt32BE(serial);
     }
-    else //Message to full party
+    else
+    { //Message to full party
         WriteUInt8(0x04);
+    }
 
     WriteWString(text, len, true, false);
 }
@@ -860,14 +882,19 @@ CPacketClientViewRange::CPacketClientViewRange(uint8_t range)
     WriteUInt8(0xC8);
 
     if (range < MIN_VIEW_RANGE)
+    {
         range = MIN_VIEW_RANGE;
+    }
     else if (range > g_MaxViewRange)
+    {
         range = g_MaxViewRange;
+    }
 
     WriteUInt8(range);
 }
 
-CPacketBulletinBoardRequestMessage::CPacketBulletinBoardRequestMessage(uint32_t serial, uint32_t msgSerial)
+CPacketBulletinBoardRequestMessage::CPacketBulletinBoardRequestMessage(
+    uint32_t serial, uint32_t msgSerial)
     : CPacket(12)
 {
     WriteUInt8(0x71);
@@ -911,7 +938,9 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
             lines++;
         }
         else
+        {
             len++;
+        }
     }
 
     size += len + 2;
@@ -941,7 +970,9 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
             WriteUInt8(len);
 
             if (len > 1)
+            {
                 WriteString(msgPtr, len - 1, false);
+            }
 
             WriteUInt8(0);
 
@@ -949,7 +980,9 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
             len = 0;
         }
         else
+        {
             len++;
+        }
     }
 
     WriteUInt8(len + 1);
@@ -957,7 +990,8 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     WriteUInt8(0);
 }
 
-CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(uint32_t serial, uint32_t msgSerial)
+CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(
+    uint32_t serial, uint32_t msgSerial)
     : CPacket(12)
 {
     WriteUInt8(0x71);
@@ -976,7 +1010,7 @@ CPacketAssistVersion::CPacketAssistVersion(uint32_t version, string clientVersio
     WriteUInt8(0xBE);
     WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(version);
-    WriteString(clientVersion.c_str(), clientVersion.length());
+    WriteString(clientVersion, clientVersion.length());
 }
 
 CPacketRazorAnswer::CPacketRazorAnswer()
@@ -1010,7 +1044,9 @@ CPacketClientType::CPacketClientType()
     uint32_t clientFlag = 0;
 
     for (int i = 0; i < g_CharacterList.ClientFlag; i++)
+    {
         clientFlag |= (1 << i);
+    }
 
     WriteUInt32BE(clientFlag);
 }
@@ -1044,13 +1080,16 @@ CPacketOpenChat::CPacketOpenChat(const wstring &name)
     if (len > 0)
     {
         if (len > 30)
+        {
             len = 30;
+        }
 
         WriteWString(name, len, false, false);
     }
 }
 
-CPacketMapMessage::CPacketMapMessage(uint32_t serial, MAP_MESSAGE action, uint8_t pin, short x, short y)
+CPacketMapMessage::CPacketMapMessage(
+    uint32_t serial, MAP_MESSAGE action, uint8_t pin, short x, short y)
     : CPacket(11)
 {
     WriteUInt8(0x56);
@@ -1128,7 +1167,9 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(vector<uint32_t> &list)
     size_t len = list.size();
 
     if (len > 50)
+    {
         len = 50;
+    }
 
     size_t size = 3 + (len * 4);
     Resize(size, true);
@@ -1137,12 +1178,18 @@ CPacketMegaClilocRequest::CPacketMegaClilocRequest(vector<uint32_t> &list)
     WriteUInt16BE((uint16_t)size);
 
     for (int i = 0; i < (int)len; i++)
+    {
         WriteUInt32BE(list[i]);
+    }
 
     if ((int)list.size() > 50)
+    {
         list.erase(list.begin(), list.begin() + 50);
+    }
     else
+    {
         list.clear();
+    }
 }
 
 CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uint8_t stat, uint8_t state)
@@ -1185,7 +1232,7 @@ CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
     WriteUInt16BE((uint16_t)0x0000); //flags
     WriteUInt16BE((uint16_t)gump->PageCount);
     WriteUInt16BE(titlelen);
-    if (titlelen)
+    if (titlelen != 0u)
     {
         const char *str = title.c_str();
 
@@ -1197,7 +1244,7 @@ CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
         *Ptr = 0;
     }
     WriteUInt16BE(authorlen);
-    if (authorlen)
+    if (authorlen != 0u)
     {
         const char *str = author.c_str();
 
@@ -1224,7 +1271,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
         size_t len = data.length();
         size_t size = 9 + 4 + 1;
 
-        if (len)
+        if (len != 0u)
         {
             size += len;
             const char *str = data.c_str();
@@ -1232,11 +1279,15 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
             for (int i = 0; i < (int)len; i++)
             {
                 if (*(str + i) == '\n')
+                {
                     lineCount++;
+                }
             }
 
             if (str[len - 1] != '\n')
+            {
                 lineCount++;
+            }
         }
 
         Resize(size, true);
@@ -1249,7 +1300,7 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
         WriteUInt16BE(page);
         WriteUInt16BE(lineCount);
 
-        if (len)
+        if (len != 0u)
         {
             const char *str = data.c_str();
 
@@ -1258,7 +1309,9 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
                 char ch = *(str + i);
 
                 if (ch == '\n')
+                {
                     ch = 0;
+                }
 
                 *Ptr++ = ch;
             }
@@ -1300,7 +1353,7 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
     WriteUInt16BE((uint16_t)size);
     WriteUInt32BE(gump->Serial);
 
-    if (count)
+    if (count != 0)
     {
         WriteUInt8(0x02);
 
@@ -1315,7 +1368,9 @@ CPacketBuyRequest::CPacketBuyRequest(CGumpShop *gump)
         }
     }
     else
+    {
         WriteUInt8(0x00);
+    }
 }
 
 CPacketSellRequest::CPacketSellRequest(CGumpShop *gump)

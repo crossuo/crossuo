@@ -12,7 +12,7 @@ public:
     uint32_t TimerID = 0;
     bool WaitForProcessMessage = false;
 
-    CThreadedTimer(uint32_t id, WindowHandle handle, bool wairForProcessMessage = false);
+    CThreadedTimer(uint32_t id, WindowHandle handle, bool waitForProcessMessage = false);
     virtual ~CThreadedTimer();
 
     virtual void OnExecute(uint32_t nowTime);

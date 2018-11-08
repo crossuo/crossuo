@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CGLHTMLTextTexture::CGLHTMLTextTexture()
-    : CGLTextTexture()
+
 {
 }
 
@@ -24,7 +24,9 @@ uint16_t CGLHTMLTextTexture::WebLinkUnderMouse(int x, int y)
         if (y >= (*it).StartY && y < (*it).StartY + (*it).EndY)
         {
             if (x >= (*it).StartX && x < (*it).StartX + (*it).EndX)
+            {
                 return it->LinkID;
+            }
         }
     }
 

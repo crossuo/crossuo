@@ -8,12 +8,16 @@ CPartyObject::CPartyObject()
 string CPartyObject::GetName(int index)
 {
     DEBUG_TRACE_FUNCTION;
-    if (Serial)
+    if (Serial != 0u)
     {
         if (Character == nullptr)
+        {
             Character = g_World->FindWorldCharacter(Serial);
+        }
         if (Character != nullptr)
+        {
             return Character->GetName();
+        }
     }
 
     char buf[10] = { 0 };
@@ -21,4 +25,3 @@ string CPartyObject::GetName(int index)
 
     return string(buf);
 }
-

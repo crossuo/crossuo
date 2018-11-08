@@ -61,8 +61,10 @@ void CVector::Merge(double x, double y, double z)
 void CVector::Normalize()
 {
     DEBUG_TRACE_FUNCTION;
-    if (!X && !Y && !Z)
+    if ((X == 0.0) && (Y == 0.0) && (Z == 0.0))
+    {
         return;
+    }
 
     double result = X * X + Y * Y + Z * Z;
 
@@ -75,4 +77,3 @@ void CVector::Normalize()
         Z /= result;
     }
 }
-

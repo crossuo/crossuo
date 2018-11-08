@@ -47,7 +47,9 @@ void CMouse::Release() const
         ::ReleaseCapture();
 #else
     if (!(LeftButtonPressed || RightButtonPressed || MidButtonPressed))
+    {
         SDL_CaptureMouse(SDL_FALSE);
+    }
 #endif
 }
 
@@ -105,5 +107,4 @@ Wisp::CPoint2Di CMouse::MidDroppedOffset()
     return position;
 }
 
-};
-
+}; // namespace Wisp

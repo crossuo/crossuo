@@ -22,4 +22,3 @@ bool CGUIPolygonal::Select()
 
     return (x >= 0 && y >= 0 && x < Width && y < Height);
 }
-

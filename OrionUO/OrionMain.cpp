@@ -24,7 +24,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     char buf[100]{};
     auto t = time(nullptr);
     auto now = *localtime(&t);
-    sprintf_s(buf, "/crash_%d%d%d_%d_%d_%d.txt", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
+    sprintf_s(
+        buf,
+        "/crash_%d%d%d_%d_%d_%d.txt",
+        now.tm_year + 1900,
+        now.tm_mon,
+        now.tm_mday,
+        now.tm_hour,
+        now.tm_min,
+        now.tm_sec);
     path += ToPath(buf);
     INITCRASHLOGGER(path);
 
@@ -56,8 +64,6 @@ ENCRYPTION_TYPE g_EncryptionType;
 static bool g_isHeadless = false;
 extern ENCRYPTION_TYPE g_EncryptionType;
 
-extern COrionWindow g_OrionWindow;
-
 int main(int argc, char **argv)
 {
     DEBUG_TRACE_FUNCTION;
@@ -66,10 +72,14 @@ int main(int argc, char **argv)
     // keep this simple for now just for travis-ci
     for (int i = 0; i < argc; i++)
     {
-        if (!strcmp(argv[i], "--headless"))
+        if (strcmp(argv[i], "--headless") == 0)
+        {
             g_isHeadless = true;
-        else if (!strcmp(argv[i], "--nocrypt"))
+        }
+        else if (strcmp(argv[i], "--nocrypt") == 0)
+        {
             g_EncryptionType = ET_NOCRYPT;
+        }
     }
 
     if (SDL_Init(SDL_INIT_TIMER) < 0)
@@ -107,7 +117,9 @@ int main(int argc, char **argv)
 
     // FIXME: headless: lets end here so we can run on travis for now
     if (g_isHeadless)
+    {
         return EXIT_SUCCESS;
+    }
 
     g_Orion.LoadPluginConfig();
     auto ret = g_App.Run();

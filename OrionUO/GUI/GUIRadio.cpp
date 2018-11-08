@@ -11,4 +11,3 @@ CGUIRadio::CGUIRadio(
 CGUIRadio::~CGUIRadio()
 {
 }
-

@@ -1,7 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-CGumpSpell::CGumpSpell(uint32_t serial, short x, short y, uint16_t graphic, SPELLBOOK_TYPE spellType)
+CGumpSpell::CGumpSpell(
+    uint32_t serial, short x, short y, uint16_t graphic, SPELLBOOK_TYPE spellType)
     : CGump(GT_SPELL, serial, x, y)
     , SpellType(spellType)
 {
@@ -11,7 +12,7 @@ CGumpSpell::CGumpSpell(uint32_t serial, short x, short y, uint16_t graphic, SPEL
     BigIcon = false; // (graphic >= 0x5300 && graphic < 0x5500);
 
     m_Blender = (CGUIAlphaBlending *)Add(new CGUIAlphaBlending(
-        g_ConfigManager.TransparentSpellIcons, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
+        g_ConfigManager.TransparentSpellIcons != 0u, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
     Add(new CGUIGumppic(Graphic, 0, 0));
 
     /*if (BigIcon)
@@ -36,7 +37,9 @@ void CGumpSpell::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Serial == ID_GS_BUTTON_REMOVE_FROM_GROUP)
+    {
         g_ToolTip.Set(L"Remove spell from group", 80);
+    }
     else
     {
         int tooltipOffset = 0;
@@ -113,7 +116,8 @@ void CGumpSpell::GetTooltipSpellInfo(int &tooltipOffset, int &spellIndexOffset)
 void CGumpSpell::PrepareContent()
 {
     DEBUG_TRACE_FUNCTION;
-    bool wantBlender = (g_ConfigManager.TransparentSpellIcons && g_SelectedObject.Gump != this);
+    bool wantBlender =
+        ((g_ConfigManager.TransparentSpellIcons != 0u) && g_SelectedObject.Gump != this);
 
     if (m_Blender->Enabled != wantBlender)
     {
@@ -134,15 +138,21 @@ CGumpSpell *CGumpSpell::GetTopSpell()
 {
     DEBUG_TRACE_FUNCTION;
     if (!InGroup())
+    {
         return nullptr;
+    }
 
     if (m_GroupPrev == nullptr)
+    {
         return this;
+    }
 
     CGumpSpell *gump = m_GroupPrev;
 
     while (gump != nullptr && gump->m_GroupPrev != nullptr)
+    {
         gump = gump->m_GroupPrev;
+    }
 
     return gump;
 }
@@ -151,7 +161,9 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     if (InGroup())
+    {
         return nullptr;
+    }
 
     int gumpWidth = 44;
     int gumpHeight = 44;
@@ -183,17 +195,25 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
             int passed = 0;
 
             if (x >= gumpX && x <= (gumpX + gumpWidth))
+            {
                 passed = 2;
-            else if (offsetX < rangeOffsetX) //left part of gump
+            }
+            else if (offsetX < rangeOffsetX)
+            { //left part of gump
                 passed = 1;
+            }
             else
             {
                 offsetX = abs(x - (gumpX + gumpWidth));
 
-                if (offsetX < rangeOffsetX) //right part of gump
+                if (offsetX < rangeOffsetX)
+                { //right part of gump
                     passed = -1;
+                }
                 else if (x >= (gumpX - rangeX) && x <= (gumpX + gumpWidth + rangeX))
+                {
                     passed = 2;
+                }
             }
 
             int gumpY = gump->GetY();
@@ -201,26 +221,34 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
             if (abs(passed) == 1)
             {
                 if (y < (gumpY - rangeY) || y > (gumpY + gumpHeight + rangeY))
+                {
                     passed = 0;
+                }
             }
             else if (passed == 2) //in gump range X
             {
                 int offsetY = abs(y - gumpY);
 
-                if (offsetY < rangeOffsetY) //top part of gump
+                if (offsetY < rangeOffsetY)
+                { //top part of gump
                     passed = 2;
+                }
                 else
                 {
                     offsetY = abs(y - (gumpY + gumpHeight));
 
-                    if (offsetY < rangeOffsetY) //bottom part of gump
+                    if (offsetY < rangeOffsetY)
+                    { //bottom part of gump
                         passed = -2;
+                    }
                     else
+                    {
                         passed = 0;
+                    }
                 }
             }
 
-            if (passed)
+            if (passed != 0)
             {
                 int testX = gumpX;
                 int testY = gumpY;
@@ -259,7 +287,9 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                         ((CGumpSpell *)testGump)->BigIcon == BigIcon)
                     {
                         if (testGump->GetX() == testX && testGump->GetY() == testY)
+                        {
                             break;
+                        }
                     }
 
                     testGump = (CGump *)testGump->m_Next;
@@ -285,7 +315,7 @@ bool CGumpSpell::GetSpellGroupOffset(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     if (InGroup() && g_MouseManager.LeftButtonPressed && g_PressedObject.LeftGump != nullptr &&
-        !g_PressedObject.LeftSerial)
+        (g_PressedObject.LeftSerial == 0u))
     {
         CGumpSpell *gump = GetTopSpell();
 
@@ -313,7 +343,9 @@ void CGumpSpell::UpdateGroup(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     if (!InGroup())
+    {
         return;
+    }
 
     CGumpSpell *gump = GetTopSpell();
 
@@ -348,7 +380,9 @@ void CGumpSpell::AddSpell(CGumpSpell *spell)
         CGumpSpell *gump = m_GroupNext;
 
         while (gump != nullptr && gump->m_GroupNext != nullptr)
+        {
             gump = gump->m_GroupNext;
+        }
 
         gump->m_GroupNext = spell;
         spell->m_GroupPrev = gump;
@@ -378,7 +412,9 @@ void CGumpSpell::RemoveFromGroup()
         m_GroupNext->m_GroupPrev = m_GroupPrev;
 
         if (m_GroupNext->m_SpellUnlocker != nullptr)
+        {
             m_GroupNext->m_SpellUnlocker->Visible = m_GroupNext->InGroup();
+        }
     }
 
     if (m_GroupPrev != nullptr)
@@ -387,7 +423,9 @@ void CGumpSpell::RemoveFromGroup()
         m_GroupPrev->m_GroupNext = m_GroupNext;
 
         if (m_GroupPrev->m_SpellUnlocker != nullptr)
+        {
             m_GroupPrev->m_SpellUnlocker->Visible = m_GroupPrev->InGroup();
+        }
     }
 
     m_GroupNext = nullptr;
@@ -406,7 +444,7 @@ void CGumpSpell::CalculateGumpState()
     CGump::CalculateGumpState();
 
     //Если гамп захватили и (может быть) двигают
-    if (g_GumpMovingOffset.X || g_GumpMovingOffset.Y)
+    if ((g_GumpMovingOffset.X != 0) || (g_GumpMovingOffset.Y != 0))
     {
         if (!InGroup())
         {
@@ -436,13 +474,17 @@ void CGumpSpell::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial == ID_GS_BUTTON_REMOVE_FROM_GROUP)
     {
         CGumpSpell *oldGroup = m_GroupNext;
 
         if (oldGroup == nullptr)
+        {
             oldGroup = m_GroupPrev;
+        }
 
         RemoveFromGroup();
 
@@ -468,4 +510,3 @@ bool CGumpSpell::OnLeftMouseButtonDoubleClick()
 
     return true;
 }
-

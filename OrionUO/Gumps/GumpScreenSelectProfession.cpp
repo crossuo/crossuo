@@ -33,9 +33,13 @@ void CGumpScreenSelectProfession::UpdateContent()
     }
 
     if (g_PacketManager.GetClientVersion() >= CV_308Z)
+    {
         UpdateContentNew();
+    }
     else
+    {
         UpdateContentOld();
+    }
 }
 
 void CGumpScreenSelectProfession::UpdateContentOld()
@@ -71,7 +75,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         new CGUIHTMLGump(ID_SPS_HTMLGUMP, 0x0BB8, 120, 137, 221, 214, true, true);
     Add(htmlGump);
 
-    if (!g_SelectProfessionScreen.GetSkillSelection())
+    if (g_SelectProfessionScreen.GetSkillSelection() == 0)
     {
         //!Используем обработку HTML-тэгов при создании текстуры текста
         g_FontManager.SetUseHTML(true);
@@ -92,7 +96,9 @@ void CGumpScreenSelectProfession::UpdateContentOld()
             CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex(i));
 
             if (skill == nullptr)
+            {
                 continue;
+            }
 
             CGUITextEntry *entry = new CGUITextEntry(
                 ID_SPS_SKILLS_LIST + (int)i, 1, 0x0035, 0x0035, 3, yPtr, 0, false, 9);
@@ -184,14 +190,18 @@ void CGumpScreenSelectProfession::UpdateContentOld()
             {
                 auto skillID = (uint32_t)profession->GetSkillIndex((int)i);
                 if (skillID >= g_SkillsManager.Count)
+                {
                     skillID = 0;
+                }
 
                 CGUIText *text = new CGUIText(1, 360, yPtr);
 
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
                 if (skill != nullptr)
+                {
                     text->CreateTextureA(1, skill->Name, 90, TS_LEFT, UOFONT_FIXED);
+                }
 
                 Add(text);
 
@@ -224,9 +234,13 @@ void CGumpScreenSelectProfession::UpdateContentOld()
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
                 if (skillID >= (int)g_SkillsManager.Count || skill == nullptr)
+                {
                     entry->m_Entry.SetTextA("Click here");
+                }
                 else
+                {
                     entry->m_Entry.SetTextA(skill->Name);
+                }
 
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
@@ -316,13 +330,15 @@ void CGumpScreenSelectProfession::UpdateContentNew()
                 265 + offsX,
                 155 + offsY));
 
-            if (offsX)
+            if (offsX != 0)
             {
                 offsX = 0;
                 offsY += 70;
             }
             else
+            {
                 offsX = 195;
+            }
 
             index++;
         }
@@ -364,7 +380,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
         //Skills
 
-        if (g_SelectProfessionScreen.GetSkillSelection())
+        if (g_SelectProfessionScreen.GetSkillSelection() != 0)
         {
             CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)Add(
                 new CGUIHTMLGump(ID_SPS_HTMLGUMP, 0x0BB8, 320, 168, 197, 215, true, true));
@@ -375,7 +391,9 @@ void CGumpScreenSelectProfession::UpdateContentNew()
             {
                 CSkill *skill = g_SkillsManager.Get(g_SkillsManager.GetSortedIndex(i));
                 if (skill == nullptr)
+                {
                     continue;
+                }
 
                 CGUITextEntry *entry = new CGUITextEntry(
                     ID_SPS_SKILLS_LIST + (int)i, 1, 0x0035, 0x0035, 2, yPtr, 0, false, 9);
@@ -427,9 +445,13 @@ void CGumpScreenSelectProfession::UpdateContentNew()
                 CSkill *skill = g_SkillsManager.Get(skillID);
 
                 if (skillID >= (int)g_SkillsManager.Count || skill == nullptr)
+                {
                     entry->m_Entry.SetTextA("Click here");
+                }
                 else
+                {
                     entry->m_Entry.SetTextA(skill->Name);
+                }
 
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
@@ -463,7 +485,9 @@ void CGumpScreenSelectProfession::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips)
+    {
         return;
+    }
 
     uint32_t id = g_SelectedObject.Serial;
 
@@ -504,8 +528,10 @@ void CGumpScreenSelectProfession::InitToolTip()
         {
             if (id == ID_SPS_LABEL + index)
             {
-                if (child->DescriptionClilocID)
+                if (child->DescriptionClilocID != 0u)
+                {
                     g_ToolTip.Set(child->DescriptionClilocID, "Description", 350, false);
+                }
 
                 break;
             }
@@ -521,8 +547,10 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
     CBaseProfession *obj = g_ProfessionManager.Selected;
     CProfession *profession = (CProfession *)obj;
 
-    if (serial == ID_SPS_QUIT) //x button
+    if (serial == ID_SPS_QUIT)
+    { //x button
         g_SelectProfessionScreen.CreateSmoothAction(CSelectProfessionScreen::ID_SMOOTH_SPS_QUIT);
+    }
     else if (serial == ID_SPS_ARROW_PREV) //< button
     {
         if (g_PacketManager.GetClientVersion() >= CV_308Z &&
@@ -535,9 +563,10 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
 
             return;
         }
-        else
+        {
             g_SelectProfessionScreen.CreateSmoothAction(
                 CSelectProfessionScreen::ID_SMOOTH_SPS_GO_SCREEN_CHARACTER);
+        }
     }
     else if (serial == ID_SPS_ARROW_NEXT) //> button
     {
@@ -550,7 +579,9 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
                 int skillsCount = 3;
 
                 if (g_PacketManager.GetClientVersion() >= CV_70160)
+                {
                     skillsCount++;
+                }
 
                 for (int i = 0; i < skillsCount; i++)
                 {
@@ -575,8 +606,10 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
             }
 
             if (passed)
+            {
                 g_SelectProfessionScreen.CreateSmoothAction(
                     CSelectProfessionScreen::ID_SMOOTH_SPS_GO_SCREEN_CREATE);
+            }
         }
     }
     else if (
@@ -601,8 +634,10 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
 
                 if (g_PacketManager.GetClientVersion() >= CV_308Z && child->Type == PT_PROFESSION &&
                     child->DescriptionIndex != -1)
+                {
                     g_SelectProfessionScreen.CreateSmoothAction(
                         CSelectProfessionScreen::ID_SMOOTH_SPS_GO_SCREEN_CREATE);
+                }
 
                 return;
             }
@@ -628,7 +663,9 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
             int skillsCount = 3;
 
             if (g_PacketManager.GetClientVersion() >= CV_70160)
+            {
                 skillsCount++;
+            }
 
             for (int i = 0; i < skillsCount; i++)
             {
@@ -655,7 +692,9 @@ void CGumpScreenSelectProfession::GUMP_SLIDER_MOVE_EVENT_C
     int skillsCount = 3;
 
     if (g_PacketManager.GetClientVersion() >= CV_70160)
+    {
         skillsCount++;
+    }
 
     //Stats
     if (serial >= ID_SPS_STATS_SPHERE && (int)serial < ID_SPS_STATS_SPHERE + skillsCount)
@@ -663,17 +702,25 @@ void CGumpScreenSelectProfession::GUMP_SLIDER_MOVE_EVENT_C
         if (g_PacketManager.GetClientVersion() >= CV_308Z)
         {
             if (g_PacketManager.GetClientVersion() >= CV_70160)
+            {
                 ShuffleStats(serial - ID_SPS_STATS_SPHERE, 90, 60);
+            }
             else
+            {
                 ShuffleStats(serial - ID_SPS_STATS_SPHERE, 80, 60);
+            }
         }
         else
+        {
             ShuffleStats(serial - ID_SPS_STATS_SPHERE, 65, 45);
+        }
     }
 
     //Skills
     if (serial >= ID_SPS_SKILLS_SPHERE && (int)serial < ID_SPS_SKILLS_SPHERE + skillsCount)
+    {
         ShuffleSkills(serial - ID_SPS_SKILLS_SPHERE);
+    }
 }
 
 void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
@@ -687,7 +734,9 @@ void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
 
     others_stat[0] = 0;
     if (others_stat[0] == used_stat)
+    {
         others_stat[0]++;
+    }
 
     others_stat[1] = others_stat[0] + 1;
     if (others_stat[1] == used_stat)
@@ -695,7 +744,9 @@ void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
         others_stat[1]++;
 
         if (others_stat[1] == 3)
+        {
             others_stat[1] = 0;
+        }
     }
 
     stats[used_stat] = m_StatsSliders[id]->Value;
@@ -717,7 +768,9 @@ void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
                 stats[others_stat[1]]++;
             }
             else
+            {
                 break;
+            }
         }
     }
     else if (stat_sum < 0) //stat will increase
@@ -735,7 +788,9 @@ void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
                 stats[others_stat[1]]--;
             }
             else
+            {
                 break;
+            }
         }
     }
 
@@ -765,12 +820,16 @@ void CGumpScreenSelectProfession::ShuffleSkills(int id)
     others_skills[0] = 0;
 
     if (others_skills[0] == used_skill)
+    {
         others_skills[0]++;
+    }
 
     others_skills[1] = others_skills[0] + 1;
 
     if (others_skills[1] == used_skill)
+    {
         others_skills[1]++;
+    }
 
     others_skills[2] = others_skills[1] + 1;
 
@@ -779,7 +838,9 @@ void CGumpScreenSelectProfession::ShuffleSkills(int id)
         others_skills[2]++;
 
         if (others_skills[2] == 5)
+        {
             others_skills[2] = 0;
+        }
     }
 
     int skillsCount = 3;
@@ -816,7 +877,9 @@ void CGumpScreenSelectProfession::ShuffleSkills(int id)
                 skills[others_skills[2]]++;
             }
             else
+            {
                 break;
+            }
         }
     }
     else if (skills_sum < 0) //skill will increase
@@ -839,7 +902,9 @@ void CGumpScreenSelectProfession::ShuffleSkills(int id)
                 skills[others_skills[2]]--;
             }
             else
+            {
                 break;
+            }
         }
     }
 

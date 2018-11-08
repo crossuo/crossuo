@@ -19,7 +19,9 @@ CGumpStatusbar::CGumpStatusbar(uint32_t serial, short x, short y, bool minimized
     }
 
     if (!g_ConfigManager.DisableNewTargetSystem && Serial == g_NewTargetSystem.Serial)
+    {
         g_GumpManager.UpdateGump(Serial, 0, GT_TARGET_SYSTEM);
+    }
 
     m_Locker.Serial = ID_GSB_LOCK_MOVING;
 }
@@ -29,7 +31,9 @@ CGumpStatusbar::~CGumpStatusbar()
     DEBUG_TRACE_FUNCTION;
     if (g_ConnectionManager.Connected() && g_PacketManager.GetClientVersion() >= CV_200 &&
         g_World != nullptr && g_World->FindWorldObject(Serial) != nullptr)
+    {
         CPacketCloseStatusbarGump(Serial).Send();
+    }
 
     RemoveFromGroup();
 }
@@ -41,19 +45,19 @@ void CGumpStatusbar::InitToolTip()
 
     //if (Minimized && Serial == g_PlayerSerial)
     //    g_ToolTip.Set(L"Double click to maximize the statusbar gump");
-    if (id && id <= ID_GSB_TEXT_CAST_RECOVERY)
+    if ((id != 0u) && id <= ID_GSB_TEXT_CAST_RECOVERY)
     {
         static const wstring tooltip[ID_GSB_TEXT_CAST_RECOVERY] = {
             L"Minimize the statusbar gump", //ID_GSB_MINIMIZE
-            {},                            //ID_GSB_TEXT_FIELD
-            {},                            //ID_GSB_BUTTON_HEAL_1
-            {},                            //ID_GSB_BUTTON_HEAL_2
+            {},                             //ID_GSB_TEXT_FIELD
+            {},                             //ID_GSB_BUTTON_HEAL_1
+            {},                             //ID_GSB_BUTTON_HEAL_2
             L"Remove bar from group",       //ID_GSB_BUTTON_REMOVE_FROM_GROUP
             L"Open buff window",            //ID_GSB_BUFF_GUMP
             L"Change strength state",       //ID_GSB_BUFF_LOCKER_STR
             L"Change dexterity state",      //ID_GSB_BUFF_LOCKER_DEX
             L"Change intelligence state",   //ID_GSB_BUFF_LOCKER_INT
-            {},                            //
+            {},                             //
             L"Strength",                    //ID_GSB_TEXT_STR
             L"Dexterity",                   //ID_GSB_TEXT_DEX
             L"Intelligence",                //ID_GSB_TEXT_INT
@@ -87,8 +91,10 @@ void CGumpStatusbar::InitToolTip()
 
         const wstring &text = tooltip[id - 1];
 
-        if (text.length())
+        if (text.length() != 0u)
+        {
             g_ToolTip.Set(text, 80);
+        }
     }
 }
 
@@ -96,15 +102,21 @@ CGumpStatusbar *CGumpStatusbar::GetTopStatusbar()
 {
     DEBUG_TRACE_FUNCTION;
     if (!InGroup())
+    {
         return nullptr;
+    }
 
     if (m_GroupPrev == nullptr)
+    {
         return this;
+    }
 
     CGumpStatusbar *gump = m_GroupPrev;
 
     while (gump != nullptr && gump->m_GroupPrev != nullptr)
+    {
         gump = gump->m_GroupPrev;
+    }
 
     return gump;
 }
@@ -113,7 +125,9 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     if (InGroup() || !Minimized)
+    {
         return nullptr;
+    }
 
     //154x59 mini-gump
 
@@ -145,17 +159,25 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
             int passed = 0;
 
             if (x >= gumpX && x <= (gumpX + gumpWidth))
+            {
                 passed = 2;
-            else if (offsetX < rangeOffsetX) //left part of gump
+            }
+            else if (offsetX < rangeOffsetX)
+            { //left part of gump
                 passed = 1;
+            }
             else
             {
                 offsetX = abs(x - (gumpX + gumpWidth));
 
-                if (offsetX < rangeOffsetX) //right part of gump
+                if (offsetX < rangeOffsetX)
+                { //right part of gump
                     passed = -1;
+                }
                 else if (x >= (gumpX - rangeX) && x <= (gumpX + gumpWidth + rangeX))
+                {
                     passed = 2;
+                }
             }
 
             int gumpY = gump->MinimizedY;
@@ -163,26 +185,34 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
             if (abs(passed) == 1)
             {
                 if (y < (gumpY - rangeY) || y > (gumpY + gumpHeight + rangeY))
+                {
                     passed = 0;
+                }
             }
             else if (passed == 2) //in gump range X
             {
                 int offsetY = abs(y - gumpY);
 
-                if (offsetY < rangeOffsetY) //top part of gump
+                if (offsetY < rangeOffsetY)
+                { //top part of gump
                     passed = 2;
+                }
                 else
                 {
                     offsetY = abs(y - (gumpY + gumpHeight));
 
-                    if (offsetY < rangeOffsetY) //bottom part of gump
+                    if (offsetY < rangeOffsetY)
+                    { //bottom part of gump
                         passed = -2;
+                    }
                     else
+                    {
                         passed = 0;
+                    }
                 }
             }
 
-            if (passed)
+            if (passed != 0)
             {
                 int testX = gumpX;
                 int testY = gumpY;
@@ -221,7 +251,9 @@ CGumpStatusbar *CGumpStatusbar::GetNearStatusbar(int &x, int &y)
                         testGump->Minimized)
                     {
                         if (testGump->MinimizedX == testX && testGump->MinimizedY == testY)
+                        {
                             break;
+                        }
                     }
 
                     testGump = (CGump *)testGump->m_Next;
@@ -277,7 +309,9 @@ void CGumpStatusbar::UpdateGroup(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     if (!InGroup())
+    {
         return;
+    }
 
     CGumpStatusbar *gump = GetTopStatusbar();
 
@@ -312,7 +346,9 @@ void CGumpStatusbar::AddStatusbar(CGumpStatusbar *bar)
         CGumpStatusbar *gump = m_GroupNext;
 
         while (gump != nullptr && gump->m_GroupNext != nullptr)
+        {
             gump = gump->m_GroupNext;
+        }
 
         gump->m_GroupNext = bar;
         bar->m_GroupPrev = gump;
@@ -342,7 +378,9 @@ void CGumpStatusbar::RemoveFromGroup()
         m_GroupNext->m_GroupPrev = m_GroupPrev;
 
         if (m_GroupNext->m_StatusbarUnlocker != nullptr)
+        {
             m_GroupNext->m_StatusbarUnlocker->Visible = m_GroupNext->InGroup();
+        }
     }
 
     if (m_GroupPrev != nullptr)
@@ -351,7 +389,9 @@ void CGumpStatusbar::RemoveFromGroup()
         m_GroupPrev->m_GroupNext = m_GroupNext;
 
         if (m_GroupPrev->m_StatusbarUnlocker != nullptr)
+        {
             m_GroupPrev->m_StatusbarUnlocker->Visible = m_GroupPrev->InGroup();
+        }
     }
 
     m_GroupNext = nullptr;
@@ -369,10 +409,12 @@ void CGumpStatusbar::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
 
     CGump::CalculateGumpState();
-    if (g_GumpMovingOffset.X || g_GumpMovingOffset.Y)
+    if ((g_GumpMovingOffset.X != 0) || (g_GumpMovingOffset.Y != 0))
     {
         if (g_Target.IsTargeting())
+        {
             g_GeneratedMouseDown = true;
+        }
 
         if (!InGroup())
         {
@@ -468,7 +510,7 @@ void CGumpStatusbar::UpdateContent()
                 p.y = 152;
 
                 // Player name
-                if (g_Player->GetName().length())
+                if (g_Player->GetName().length() != 0u)
                 {
                     text = (CGUIText *)Add(new CGUIText(0x0386, useUOPGumps ? 90 : 58, 50));
                     text->CreateTextureA(1, g_Player->GetName(), 320, TS_CENTER);
@@ -486,9 +528,13 @@ void CGumpStatusbar::UpdateContent()
                     xOffset = useUOPGumps ? 28 : 40;
                     uint16_t gumpID = 0x0984; //Up
                     if (status == 1)
+                    {
                         gumpID = 0x0986; //Down
+                    }
                     else if (status == 2)
+                    {
                         gumpID = 0x082C; //Lock
+                    }
 
                     Add(new CGUIButton(
                         ID_GSB_BUFF_LOCKER_STR, gumpID, gumpID, gumpID, xOffset, 76));
@@ -498,9 +544,13 @@ void CGumpStatusbar::UpdateContent()
 
                     gumpID = 0x0984; //Up
                     if (status == 1)
+                    {
                         gumpID = 0x0986; //Down
+                    }
                     else if (status == 2)
+                    {
                         gumpID = 0x082C; //Lock
+                    }
 
                     Add(new CGUIButton(
                         ID_GSB_BUFF_LOCKER_DEX, gumpID, gumpID, gumpID, xOffset, 102));
@@ -510,9 +560,13 @@ void CGumpStatusbar::UpdateContent()
 
                     gumpID = 0x0984; //Up
                     if (status == 1)
+                    {
                         gumpID = 0x0986; //Down
+                    }
                     else if (status == 2)
+                    {
                         gumpID = 0x082C; //Lock
+                    }
 
                     Add(new CGUIButton(
                         ID_GSB_BUFF_LOCKER_INT, gumpID, gumpID, gumpID, xOffset, 132));
@@ -526,7 +580,9 @@ void CGumpStatusbar::UpdateContent()
                     Add(new CGUIHitBox(ID_GSB_TEXT_HIT_CHANCE, 58, 154, 59, 24));
                 }
                 else
+                {
                     xOffset = 88;
+                }
 
                 text = (CGUIText *)Add(new CGUIText(0x0386, xOffset, 77));
                 text->CreateTextureA(1, std::to_string(g_Player->Str));
@@ -554,7 +610,9 @@ void CGumpStatusbar::UpdateContent()
                     Add(new CGUIHitBox(ID_GSB_TEXT_DEFENCE_CHANCE, 124, 154, 59, 24));
                 }
                 else
+                {
                     xOffset = 146;
+                }
                 //Hits
                 text = (CGUIText *)Add(new CGUIText(0x0386, xOffset, 70));
                 text->CreateTextureA(1, std::to_string(g_Player->Hits), textWidth, TS_CENTER);
@@ -592,7 +650,9 @@ void CGumpStatusbar::UpdateContent()
                     Add(new CGUIHitBox(ID_GSB_TEXT_LOWER_MANA, 205, 154, 65, 24));
                 }
                 else
+                {
                     xOffset = 220;
+                }
                 text = (CGUIText *)Add(new CGUIText(0x0386, xOffset, 77));
                 text->CreateTextureA(1, std::to_string(g_Player->StatsCap));
 
@@ -734,13 +794,13 @@ void CGumpStatusbar::UpdateContent()
             }
             else
             {
-                if (!p.x)
+                if (p.x == 0)
                 {
                     p.x = 243;
                     p.y = 150;
                 }
 
-                if (g_Player->GetName().length())
+                if (g_Player->GetName().length() != 0u)
                 {
                     text = (CGUIText *)Add(new CGUIText(0x0386, 86, 42));
                     text->CreateTextureA(1, g_Player->GetName());
@@ -818,7 +878,9 @@ void CGumpStatusbar::UpdateContent()
             }
 
             if (!useUOPGumps)
+            {
                 Add(new CGUIHitBox(ID_GSB_MINIMIZE, p.x, p.y, 16, 16, true));
+            }
             else
             {
                 p.x = 540;
@@ -841,9 +903,13 @@ void CGumpStatusbar::UpdateContent()
 
                 int color = 0;
                 if (g_Player->Poisoned())
+                {
                     color = 63; //Character status line (green)
+                }
                 else if (g_Player->YellowHits())
+                {
                     color = 353; //Character status line (yellow)
+                }
 
                 //Hits
                 Add(new CGUIGumppic(0x0028, 34, 20));
@@ -886,9 +952,13 @@ void CGumpStatusbar::UpdateContent()
             else
             {
                 if (g_Player->Warmode)
+                {
                     Add(new CGUIGumppic(0x0807, 0, 0)); // warmode enabled
+                }
                 else
+                {
                     Add(new CGUIGumppic(0x0803, 0, 0));
+                }
 
                 //Hits
                 Add(new CGUIGumppic(0x0805, 34, 12));
@@ -899,9 +969,13 @@ void CGumpStatusbar::UpdateContent()
                 {
                     uint16_t gumpid = 0x0806; //Character status line (blue)
                     if (g_Player->Poisoned())
+                    {
                         gumpid = 0x0808; //Character status line (green)
+                    }
                     else if (g_Player->YellowHits())
+                    {
                         gumpid = 0x0809; //Character status line (yellow)
+                    }
 
                     Add(new CGUIGumppicTiled(gumpid, 34, 12, per, 0));
                 }
@@ -912,7 +986,9 @@ void CGumpStatusbar::UpdateContent()
                 per = CalculatePercents(g_Player->MaxMana, g_Player->Mana, 109);
 
                 if (per > 0)
+                {
                     Add(new CGUIGumppicTiled(0x0806, 34, 25, per, 0));
+                }
 
                 //Stam
                 Add(new CGUIGumppic(0x0805, 34, 38));
@@ -920,7 +996,9 @@ void CGumpStatusbar::UpdateContent()
                 per = CalculatePercents(g_Player->MaxStam, g_Player->Stam, 109);
 
                 if (per > 0)
+                {
                     Add(new CGUIGumppicTiled(0x0806, 34, 38, per, 0));
+                }
             }
 
             m_StatusbarUnlocker = (CGUIButton *)Add(
@@ -943,7 +1021,9 @@ void CGumpStatusbar::UpdateContent()
                         member.Character = g_World->FindWorldCharacter(member.Serial);
 
                         if (member.Character == nullptr)
+                        {
                             break;
+                        }
                     }
 
                     CGUIGumppic *bodyGump = (CGUIGumppic *)Add(new CGUIGumppic(0x0803, 0, 0));
@@ -977,9 +1057,13 @@ void CGumpStatusbar::UpdateContent()
                     m_Entry->CheckOnSerial = true;
 
                     if (member.Character->CanChangeName)
+                    {
                         m_Entry->ReadOnly = false;
+                    }
                     else
+                    {
                         m_Entry->ReadOnly = true;
+                    }
 
                     if (!outofRange)
                     {
@@ -988,12 +1072,18 @@ void CGumpStatusbar::UpdateContent()
                     }
                     int color = 0;
                     if (member.Character->Poisoned())
+                    {
                         color = 63; //Character status line (green)
+                    }
                     else if (member.Character->YellowHits())
+                    {
                         color = 353; //Character status line (yellow)
+                    }
 
                     if (outofRange)
+                    {
                         color = 912;
+                    }
                     Add(new CGUIShader(&g_ColorizerShader, true));
                     //Hits
                     CGUIGumppic *g = new CGUIGumppic(0x0028, 34, 20);
@@ -1061,7 +1151,9 @@ void CGumpStatusbar::UpdateContent()
                 color = g_ConfigManager.GetColorByNotoriety(obj->Notoriety);
 
                 if (obj->Notoriety == NT_CRIMINAL || obj->Notoriety == NT_SOMEONE_GRAY)
+                {
                     color = 0;
+                }
 
                 objName = obj->GetName();
                 m_Name = objName;
@@ -1089,9 +1181,13 @@ void CGumpStatusbar::UpdateContent()
                 {
                     uint16_t gumpid = 0x0806; //Character status line (blue)
                     if (obj->Poisoned())
+                    {
                         gumpid = 0x0808; //Character status line (green)
+                    }
                     else if (obj->YellowHits())
+                    {
                         gumpid = 0x0809; //Character status line (yellow)
+                    }
 
                     Add(new CGUIGumppicTiled(gumpid, 34, 38, per, 0));
                 }
@@ -1114,9 +1210,13 @@ void CGumpStatusbar::UpdateContent()
             m_Entry->CheckOnSerial = true;
 
             if (canChangeName)
+            {
                 m_Entry->ReadOnly = false;
+            }
             else
+            {
                 m_Entry->ReadOnly = true;
+            }
         }
 
         m_StatusbarUnlocker = (CGUIButton *)Add(
@@ -1128,7 +1228,9 @@ void CGumpStatusbar::UpdateContent()
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Serial != ID_GSB_MINIMIZE)
+        {
             item->MoveOnDrag = true;
+        }
     }
 }
 
@@ -1136,7 +1238,9 @@ void CGumpStatusbar::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return;
+    }
 
     if (g_Target.IsTargeting())
     {
@@ -1144,14 +1248,18 @@ void CGumpStatusbar::OnLeftMouseButtonDown()
         g_MouseManager.CancelDoubleClick = true;
     }
     else
+    {
         CGump::OnLeftMouseButtonDown();
+    }
 }
 
 void CGumpStatusbar::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return;
+    }
 
     if (serial == ID_GSB_MINIMIZE && Serial == g_PlayerSerial)
     {
@@ -1159,7 +1267,9 @@ void CGumpStatusbar::GUMP_BUTTON_EVENT_C
         WantUpdateContent = true;
     }
     else if (serial == ID_GSB_LOCK_MOVING)
+    {
         LockMoving = !LockMoving;
+    }
     else if (serial == ID_GSB_BUTTON_HEAL_1)
     {
         g_Orion.CastSpell(29);
@@ -1177,7 +1287,9 @@ void CGumpStatusbar::GUMP_BUTTON_EVENT_C
         CGumpStatusbar *oldGroup = m_GroupNext;
 
         if (oldGroup == nullptr)
+        {
             oldGroup = m_GroupPrev;
+        }
 
         RemoveFromGroup();
 
@@ -1188,7 +1300,9 @@ void CGumpStatusbar::GUMP_BUTTON_EVENT_C
         }
     }
     else if (serial == ID_GSB_BUFF_GUMP)
+    {
         g_ConfigManager.ToggleBufficonWindow = true;
+    }
     else if (serial == ID_GSB_BUFF_LOCKER_STR)
     {
         g_Player->LockStr = (g_Player->LockStr + 1) % 3;
@@ -1216,9 +1330,11 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
+    {
         return false;
+    }
 
-    if (!g_PressedObject.LeftSerial && Serial == g_PlayerSerial && Minimized)
+    if ((g_PressedObject.LeftSerial == 0u) && Serial == g_PlayerSerial && Minimized)
     {
         Minimized = false;
 
@@ -1227,7 +1343,9 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
             CGumpStatusbar *oldGroup = m_GroupNext;
 
             if (oldGroup == nullptr)
+            {
                 oldGroup = m_GroupPrev;
+            }
 
             RemoveFromGroup();
 
@@ -1242,15 +1360,19 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
 
         return true;
     }
-    else if (Serial != g_PlayerSerial)
+    if (Serial != g_PlayerSerial)
     {
         if (g_Player->Warmode)
+        {
             g_Orion.Attack(Serial);
+        }
         else
+        {
             g_Orion.DoubleClick(Serial);
+        }
         return true;
     }
-    else if (!Minimized)
+    if (!Minimized)
     {
         g_Orion.PaperdollReq(Serial);
         return true;
@@ -1267,9 +1389,13 @@ void CGumpStatusbar::OnTextInput(const TextEvent &ev)
     {
         string str = g_EntryPointer->c_str();
         if (g_EntryPointer->Pos() > 0)
+        {
             str.resize(g_EntryPointer->Pos());
+        }
         else
+        {
             str = "";
+        }
 
         const auto ch = EvChar(ev);
         if ((g_EntryPointer->Length() <= 15) && g_FontManager.GetWidthA(1, str) <= 100 &&
@@ -1290,7 +1416,7 @@ void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
     {
         case KEY_RETURN:
         {
-            if (g_EntryPointer->Length())
+            if (g_EntryPointer->Length() != 0u)
             {
                 SendRenameRequest();
             }
@@ -1298,13 +1424,19 @@ void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
             {
                 CGameObject *obj = g_World->FindWorldObject(Serial);
                 if (obj != nullptr)
+                {
                     g_EntryPointer->SetTextA(obj->GetName());
+                }
             }
 
             if (g_ConfigManager.GetConsoleNeedEnter())
+            {
                 g_EntryPointer = nullptr;
+            }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
 
             WantRedraw = true;
             break;
@@ -1324,12 +1456,18 @@ void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
         {
             CGameObject *obj = g_World->FindWorldObject(Serial);
             if (obj != nullptr)
+            {
                 g_EntryPointer->SetTextA(obj->GetName());
+            }
 
             if (g_ConfigManager.GetConsoleNeedEnter())
+            {
                 g_EntryPointer = nullptr;
+            }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
 
             WantRedraw = true;
             break;
@@ -1345,10 +1483,12 @@ void CGumpStatusbar::SendRenameRequest()
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type != GOT_TEXTENTRY)
+        {
             continue;
+        }
 
         CEntryText *entry = &((CGUITextEntry *)item)->m_Entry;
-        if (entry->Length())
+        if (entry->Length() != 0u)
         {
             CPacketRenameRequest(Serial, entry->c_str()).Send();
         }

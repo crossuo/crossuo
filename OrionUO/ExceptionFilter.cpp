@@ -231,7 +231,8 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                 {
                     CRASHLOG("\nPackets in stack:\n");
 
-                    for (deque<vector<uint8_t>>::iterator i = g_PacketManager.m_PacketsStack.begin();
+                    for (deque<vector<uint8_t>>::iterator i =
+                             g_PacketManager.m_PacketsStack.begin();
                          i != g_PacketManager.m_PacketsStack.end();
                          ++i)
                     {
@@ -252,12 +253,12 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
             bool reportSent = CreateProcessW(
                 L"OrionCrashReporter.exe",
                 &crashlogPath[0], // Command line
-                nullptr,             // Process handle not inheritable
-                nullptr,             // Thread handle not inheritable
+                nullptr,          // Process handle not inheritable
+                nullptr,          // Thread handle not inheritable
                 FALSE,            // Set handle inheritance to FALSE
                 0,                // No creation flags
-                nullptr,             // Use parent's environment block
-                nullptr,             // Use parent's starting directory
+                nullptr,          // Use parent's environment block
+                nullptr,          // Use parent's starting directory
                 &si,              // Pointer to STARTUPINFO structure
                 &pi);
 
@@ -290,4 +291,3 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 #endif // ORION_WINDOWS
-

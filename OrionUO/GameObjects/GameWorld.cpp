@@ -47,7 +47,7 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
 
             if (gc->FindLayer(OL_MOUNT) != nullptr)
             {
-                if (gc->m_Steps.back().Direction & 0x80)
+                if ((gc->m_Steps.back().Direction & 0x80) != 0)
                 {
                     soundID = 0x0129;
                     delaySound = 150;
@@ -60,7 +60,9 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
             }
 
             if (g_ConfigManager.StandartCharactersAnimationDelay)
+            {
                 delaySound = delaySound * 13 / 10;
+            }
             soundID += incID;
             gc->StepSoundOffset = (incID + 1) % 2;
 
@@ -95,9 +97,13 @@ void CGameWorld::ProcessAnimation()
                 char frameIndex = gc->AnimIndex;
 
                 if (gc->AnimationFromServer && !gc->AnimationDirection)
+                {
                     frameIndex--;
+                }
                 else
+                {
                     frameIndex++;
+                }
 
                 uint16_t id = gc->GetMountAnimation();
                 int animGroup = gc->GetAnimationGroup(id);
@@ -135,7 +141,9 @@ void CGameWorld::ProcessAnimation()
                     g_AnimationManager.AnimGroup = animGroup;
                     g_AnimationManager.Direction = dir;
                     if (direction.FrameCount == 0)
+                    {
                         g_AnimationManager.LoadDirectionGroup(direction);
+                    }
 
                     if (direction.Address != 0 || direction.IsUOP)
                     {
@@ -146,10 +154,14 @@ void CGameWorld::ProcessAnimation()
                         {
                             currentDelay += currentDelay * (int)(gc->AnimationInterval + 1);
 
-                            if (!gc->AnimationFrameCount)
+                            if (gc->AnimationFrameCount == 0u)
+                            {
                                 gc->AnimationFrameCount = fc;
+                            }
                             else
+                            {
                                 fc = gc->AnimationFrameCount;
+                            }
 
                             if (gc->AnimationDirection) //forward
                             {
@@ -167,20 +179,28 @@ void CGameWorld::ProcessAnimation()
                                             gc->AnimationRepeatMode = repCount;
                                         }
                                         else if (repCount == 1)
+                                        {
                                             gc->SetAnimation(0xFF);
+                                        }
                                     }
                                     else
+                                    {
                                         gc->SetAnimation(0xFF);
+                                    }
                                 }
                             }
                             else //backward
                             {
                                 if (frameIndex < 0)
                                 {
-                                    if (!fc)
+                                    if (fc == 0)
+                                    {
                                         frameIndex = 0;
+                                    }
                                     else
+                                    {
                                         frameIndex = fc - 1;
+                                    }
 
                                     if (gc->AnimationRepeat)
                                     {
@@ -192,10 +212,14 @@ void CGameWorld::ProcessAnimation()
                                             gc->AnimationRepeatMode = repCount;
                                         }
                                         else if (repCount == 1)
+                                        {
                                             gc->SetAnimation(0xFF);
+                                        }
                                     }
                                     else
+                                    {
                                         gc->SetAnimation(0xFF);
+                                    }
                                 }
                             }
                         }
@@ -205,18 +229,24 @@ void CGameWorld::ProcessAnimation()
                             {
                                 frameIndex = 0;
 
-                                if (obj->Serial & 0x80000000)
+                                if ((obj->Serial & 0x80000000) != 0u)
+                                {
                                     toRemove.push_back(obj);
+                                }
                             }
                         }
 
                         gc->AnimIndex = frameIndex;
                     }
-                    else if (obj->Serial & 0x80000000)
+                    else if ((obj->Serial & 0x80000000) != 0u)
+                    {
                         toRemove.push_back(obj);
+                    }
                 }
-                else if (obj->Serial & 0x80000000)
+                else if ((obj->Serial & 0x80000000) != 0u)
+                {
                     toRemove.push_back(obj);
+                }
 
                 gc->LastAnimationChangeTime = g_Ticks + currentDelay;
             }
@@ -238,7 +268,7 @@ void CGameWorld::ProcessAnimation()
 
                 if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < 5)
                 {
-                    int animGroup = g_AnimationManager.GetDieGroupIndex(id, gi->UsedLayer);
+                    int animGroup = g_AnimationManager.GetDieGroupIndex(id, gi->UsedLayer != 0u);
 
                     CTextureAnimationDirection &direction =
                         g_AnimationManager.m_DataIndex[id].m_Groups[animGroup].m_Direction[dir];
@@ -246,7 +276,9 @@ void CGameWorld::ProcessAnimation()
                     g_AnimationManager.AnimGroup = animGroup;
                     g_AnimationManager.Direction = dir;
                     if (direction.FrameCount == 0)
+                    {
                         g_AnimationManager.LoadDirectionGroup(direction);
+                    }
 
                     if (direction.Address != 0 || direction.IsUOP)
                     {
@@ -293,7 +325,9 @@ void CGameWorld::CreatePlayer(int serial)
     m_Map[serial] = g_Player;
 
     if (m_Items != nullptr)
+    {
         m_Items->Add(g_Player);
+    }
     else
     {
         m_Items = g_Player;
@@ -320,7 +354,9 @@ void CGameWorld::SetPlayer(int serial)
 {
     DEBUG_TRACE_FUNCTION;
     if (serial != g_Player->Serial)
+    {
         CreatePlayer(serial);
+    }
 }
 
 CGameItem *CGameWorld::GetWorldItem(int serial)
@@ -335,7 +371,9 @@ CGameItem *CGameWorld::GetWorldItem(int serial)
         m_Map[serial] = obj;
 
         if (m_Items != nullptr)
+        {
             m_Items->AddObject(obj);
+        }
         else
         {
             m_Items = obj;
@@ -361,7 +399,9 @@ CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
         m_Map[serial] = obj;
 
         if (m_Items != nullptr)
+        {
             m_Items->AddObject(obj);
+        }
         else
         {
             m_Items = obj;
@@ -382,7 +422,9 @@ CGameObject *CGameWorld::FindWorldObject(int serial)
 
     WORLD_MAP::iterator i = m_Map.find(serial);
     if (i != m_Map.end())
+    {
         result = (*i).second;
+    }
 
     return result;
 }
@@ -394,7 +436,9 @@ CGameItem *CGameWorld::FindWorldItem(int serial)
 
     WORLD_MAP::iterator i = m_Map.find(serial);
     if (i != m_Map.end() && !((*i).second)->NPC)
+    {
         result = (CGameItem *)(*i).second;
+    }
 
     return result;
 }
@@ -406,7 +450,9 @@ CGameCharacter *CGameWorld::FindWorldCharacter(int serial)
 
     WORLD_MAP::iterator i = m_Map.find(serial);
     if (i != m_Map.end() && ((*i).second)->NPC)
+    {
         result = i->second->GameCharacterPtr();
+    }
 
     return result;
 }
@@ -444,16 +490,24 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
     if (containerSerial != 0xFFFFFFFF)
     {
         if (containerSerial < 0x40000000)
+        {
             g_GumpManager.UpdateContent(containerSerial, 0, GT_PAPERDOLL);
+        }
         else
+        {
             g_GumpManager.UpdateContent(containerSerial, 0, GT_CONTAINER);
+        }
 
         CGameObject *container = FindWorldObject(containerSerial);
 
         if (container != nullptr)
+        {
             container->Reject(obj);
+        }
         else
+        {
             obj->Container = 0xFFFFFFFF;
+        }
     }
     else
     {
@@ -465,7 +519,9 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
             {
                 m_Items = (CGameObject *)m_Items->m_Next;
                 if (m_Items != nullptr)
+                {
                     m_Items->m_Prev = nullptr;
+                }
             }
             else
             {
@@ -476,11 +532,15 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
                         obj->m_Prev->m_Next = obj->m_Next;
                         obj->m_Next->m_Prev = obj->m_Prev;
                     }
-                    else //WTF???
+                    else
+                    { //WTF???
                         obj->m_Next->m_Prev = nullptr;
+                    }
                 }
                 else if (obj->m_Prev != nullptr)
+                {
                     obj->m_Prev->m_Next = nullptr;
+                }
             }
         }
     }
@@ -494,7 +554,9 @@ void CGameWorld::ClearContainer(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
     if (!obj->Empty())
+    {
         obj->Clear();
+    }
 }
 
 void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
@@ -508,13 +570,19 @@ void CGameWorld::MoveToTop(CGameObject *obj)
 {
     DEBUG_TRACE_FUNCTION;
     if (obj == nullptr)
+    {
         return;
+    }
 
     if (obj->Container == 0xFFFFFFFF)
+    {
         g_MapManager.AddRender(obj);
+    }
 
     if (obj->m_Next == nullptr)
+    {
         return;
+    }
 
     if (obj->Container == 0xFFFFFFFF)
     {
@@ -566,7 +634,9 @@ void CGameWorld::MoveToTop(CGameObject *obj)
         CGameObject *container = FindWorldObject(obj->Container);
 
         if (container == nullptr)
+        {
             return;
+        }
 
         if (obj->m_Prev == nullptr)
         {
@@ -632,7 +702,9 @@ CGameObject *CGameWorld::SearchWorldObject(
             startI = 1;
         }
         else
+        {
             start = (CGameObject *)start->m_Prev;
+        }
     }
     else
     {
@@ -642,7 +714,9 @@ CGameObject *CGameWorld::SearchWorldObject(
             startI = 1;
         }
         else
+        {
             start = (CGameObject *)start->m_Next;
+        }
     }
 
     if (start != nullptr)
@@ -653,14 +727,16 @@ CGameObject *CGameWorld::SearchWorldObject(
 
         for (int i = startI; i < count && result == nullptr; i++)
         {
-            if (i)
+            if (i != 0)
             {
                 obj = m_Items;
 
                 if (scanMode == SMO_PREV)
                 {
                     while (obj != nullptr && obj->m_Next != nullptr)
+                    {
                         obj = (CGameObject *)obj->m_Next;
+                    }
                 }
             }
 
@@ -673,7 +749,9 @@ CGameObject *CGameWorld::SearchWorldObject(
                     bool condition = false;
 
                     if (scanType == STO_OBJECTS)
+                    {
                         condition = (!obj->NPC && !((CGameItem *)obj)->MultiBody);
+                    }
                     else if (obj->NPC && !obj->IsPlayer())
                     {
                         if (scanType == STO_HOSTILE)
@@ -684,11 +762,15 @@ CGameObject *CGameWorld::SearchWorldObject(
                                 (gc->Notoriety >= NT_SOMEONE_GRAY && gc->Notoriety <= NT_MURDERER);
                         }
                         else if (scanType == STO_PARTY)
+                        {
                             condition = g_Party.Contains(obj->Serial);
-                        //else if (scanType == STO_FOLLOWERS)
-                        //	condition = false;
-                        else //if (scanType == STO_MOBILES)
+                            //else if (scanType == STO_FOLLOWERS)
+                            //	condition = false;
+                        }
+                        else
+                        { //if (scanType == STO_MOBILES)
                             condition = true;
+                        }
                     }
 
                     if (condition)
@@ -711,14 +793,20 @@ CGameObject *CGameWorld::SearchWorldObject(
                 }
 
                 if (scanMode == SMO_PREV)
+                {
                     obj = (CGameObject *)obj->m_Prev;
+                }
                 else
+                {
                     obj = (CGameObject *)obj->m_Next;
+                }
             }
         }
 
         if (distanceResult != nullptr)
+        {
             result = distanceResult;
+        }
     }
 
     return result;
@@ -755,12 +843,16 @@ void CGameWorld::UpdateGameObject(
 
     if (g_ObjectInHand.Enabled && g_ObjectInHand.Serial == serial)
     {
-        if (g_ObjectInHand.Container && g_ObjectInHand.Container != 0xFFFFFFFF)
+        if ((g_ObjectInHand.Container != 0u) && g_ObjectInHand.Container != 0xFFFFFFFF)
         {
-            if (!g_ObjectInHand.Layer)
+            if (g_ObjectInHand.Layer == 0u)
+            {
                 g_GumpManager.UpdateContent(g_ObjectInHand.Container, 0, GT_CONTAINER);
+            }
             else
+            {
                 g_GumpManager.UpdateContent(g_ObjectInHand.Container, 0, GT_PAPERDOLL);
+            }
         }
 
         g_ObjectInHand.UpdatedInWorld = true;
@@ -773,7 +865,7 @@ void CGameWorld::UpdateGameObject(
         created = true;
         LOG("created ");
 
-        if (!(serial & 0x40000000) && updateType != 3)
+        if (((serial & 0x40000000) == 0) && updateType != 3)
         {
             character = GetWorldCharacter(serial);
 
@@ -818,20 +910,28 @@ void CGameWorld::UpdateGameObject(
         }
 
         if (obj->NPC)
+        {
             character = (CGameCharacter *)obj;
+        }
         else
+        {
             item = (CGameItem *)obj;
+        }
     }
 
     if (obj == nullptr)
+    {
         return;
+    }
 
     obj->MapIndex = g_CurrentMap;
 
     if (!obj->NPC)
     {
         if (graphic != 0x2006)
+        {
             graphic += graphicIncrement;
+        }
 
         if (updateType == UGOT_MULTI)
         {
@@ -860,12 +960,16 @@ void CGameWorld::UpdateGameObject(
         item->LightID = direction;
 
         if (graphic == 0x2006)
+        {
             item->Layer = direction;
+        }
 
         item->Color = g_ColorManager.FixColor(color, (color & 0x8000));
 
-        if (!count)
+        if (count == 0)
+        {
             count = 1;
+        }
 
         item->Count = count;
         item->SetFlags(flags);
@@ -913,7 +1017,9 @@ void CGameWorld::UpdateGameObject(
             if (!found)
             {
                 if (character->m_Steps.empty())
+                {
                     character->LastStepTime = g_Ticks;
+                }
 
                 character->m_Steps.push_back(
                     CWalkData(x, y, z, direction, graphic & 0x3FFF, flags));
@@ -951,10 +1057,13 @@ void CGameWorld::UpdateGameObject(
             character->Notoriety);
     }
 
-    if (created && g_ConfigManager.ShowIncomingNames && !obj->Clicked && !obj->GetName().length())
+    if (created && g_ConfigManager.ShowIncomingNames && !obj->Clicked &&
+        (obj->GetName().length() == 0u))
     {
         if (obj->NPC || obj->IsCorpse())
+        {
             g_Orion.Click(obj->Serial);
+        }
     }
 
     MoveToTop(obj);
@@ -1006,18 +1115,24 @@ void CGameWorld::UpdatePlayer(
         g_Walker.DenyWalk(-1, -1, -1, -1);
         g_Weather.Reset();
 
-        if (oldGraphic && oldGraphic != g_Player->Graphic)
+        if ((oldGraphic != 0u) && oldGraphic != g_Player->Graphic)
         {
             if (g_Player->Dead())
+            {
                 g_Target.Reset();
+            }
         }
 
         if (oldDead != g_Player->Dead())
         {
             if (g_Player->Dead())
+            {
                 g_Orion.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
+            }
             else
+            {
                 g_Orion.ChangeSeason(g_OldSeason, g_OldSeasonMusic);
+            }
         }
 
         g_Walker.ResendPacketSended = false;
@@ -1038,8 +1153,10 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
 
     CGump *gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_BULLETIN_BOARD);
 
-    if (gump != nullptr) //Message board item
+    if (gump != nullptr)
+    { //Message board item
         CPacketBulletinBoardRequestMessageSummary(containerSerial, obj->Serial).Send();
+    }
     else
     {
         gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_SPELLBOOK);
@@ -1049,7 +1166,9 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
             gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_CONTAINER);
 
             if (gump != nullptr && gump->GumpType == GT_CONTAINER)
+            {
                 ((CGumpContainer *)gump)->UpdateItemCoordinates(obj);
+            }
         }
 
         if (gump != nullptr && !container->NPC)
@@ -1065,7 +1184,9 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
         top = top->FindSecureTradeBox();
 
         if (top != nullptr)
+        {
             g_GumpManager.UpdateContent(0, top->Serial, GT_TRADE);
+        }
     }
 }
 
@@ -1080,12 +1201,16 @@ void CGameWorld::UpdateContainedItem(
     uint16_t color)
 {
     if (g_ObjectInHand.Serial == serial && g_ObjectInHand.Dropped)
+    {
         g_ObjectInHand.Clear();
+    }
 
     CGameObject *container = FindWorldObject(containerSerial);
 
     if (container == nullptr)
+    {
         return;
+    }
 
     CGameObject *obj = FindWorldObject(serial);
 
@@ -1097,10 +1222,14 @@ void CGameWorld::UpdateContainedItem(
 
     if (obj == nullptr)
     {
-        if (serial & 0x40000000)
+        if ((serial & 0x40000000) != 0)
+        {
             obj = GetWorldItem(serial);
+        }
         else
+        {
             obj = GetWorldCharacter(serial);
+        }
     }
 
     if (obj == nullptr)
@@ -1115,8 +1244,10 @@ void CGameWorld::UpdateContainedItem(
     obj->OnGraphicChange();
     obj->Color = g_ColorManager.FixColor(color, (color & 0x8000));
 
-    if (!count)
+    if (count == 0u)
+    {
         count = 1;
+    }
 
     obj->Count = count;
 
@@ -1145,7 +1276,9 @@ void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
     {
         obj = FindWorldObject(serial);
         if (obj != nullptr)
+        {
             obj = (CGameObject *)obj->m_Items;
+        }
     }
 
     while (obj != nullptr)
@@ -1153,10 +1286,14 @@ void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
         if (obj->Container == serial)
         {
             if (obj->Serial == g_Player->Serial)
+            {
                 LOG("---Player---\n");
+            }
 
             for (int i = 0; i < tCount; i++)
+            {
                 LOG("\t");
+            }
 
             LOG("%s%08X:%04X[%04X](%%02X)*%i\tin 0x%08X XYZ=%i,%i,%i on Map %i\n",
                 (obj->NPC ? "NPC: " : "Item: "),
@@ -1171,7 +1308,9 @@ void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
                 obj->MapIndex);
 
             if (obj->m_Items != nullptr)
+            {
                 Dump(tCount + 1, obj->Container);
+            }
         }
 
         obj = (CGameObject *)obj->m_Next;

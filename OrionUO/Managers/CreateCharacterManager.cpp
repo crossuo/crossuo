@@ -157,10 +157,14 @@ void CCreateCharacterManager::SetFemale(bool female)
     m_Female = female;
 
     if (HairStyle >= GetCurrentHairCount())
+    {
         HairStyle = 0;
+    }
 
     if (!m_Female && BeardStyle >= GetCurrentFacialHairCount())
+    {
         BeardStyle = 0;
+    }
 }
 
 void CCreateCharacterManager::SetRace(RACE_TYPE newRace)
@@ -179,19 +183,29 @@ void CCreateCharacterManager::Init()
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 1; i < HUMAN_MALE_HAIR_COUNT; i++)
+    {
         g_Orion.ExecuteGump(m_HumanMaleHairStyleTable[i].GumpID);
+    }
 
     for (int i = 1; i < HUMAN_FEMALE_HAIR_COUNT; i++)
+    {
         g_Orion.ExecuteGump(m_HumanFemaleHairStyleTable[i].GumpID);
+    }
 
     for (int i = 1; i < HUMAN_MALE_FACIAL_HAIR_COUNT; i++)
+    {
         g_Orion.ExecuteGump(m_HumanBeardStyleTable[i].GumpID);
+    }
 
     for (int i = 1; i < ELF_MALE_HAIR_COUNT; i++)
+    {
         g_Orion.ExecuteGump(m_ElfMaleHairStyleTable[i].GumpID);
+    }
 
     for (int i = 1; i < ELF_FEMALE_HAIR_COUNT; i++)
+    {
         g_Orion.ExecuteGump(m_ElfFemaleHairStyleTable[i].GumpID);
+    }
 }
 
 void CCreateCharacterManager::Clear()
@@ -232,7 +246,9 @@ int CCreateCharacterManager::GetCurrentFacialHairCount()
 uint16_t CCreateCharacterManager::GetBodyGump()
 {
     DEBUG_TRACE_FUNCTION;
-    static const uint16_t gump[3][2] = { { 0x0761, 0x0760 }, { 0x0766, 0x0765 }, { 0x076B, 0x076A } };
+    static const uint16_t gump[3][2] = { { 0x0761, 0x0760 },
+                                         { 0x0766, 0x0765 },
+                                         { 0x076B, 0x076A } };
 
     return gump[m_Race - 1][m_Female];
 }
@@ -240,7 +256,9 @@ uint16_t CCreateCharacterManager::GetBodyGump()
 uint16_t CCreateCharacterManager::GetShirtGump()
 {
     DEBUG_TRACE_FUNCTION;
-    static const uint16_t gump[3][2] = { { 0x0739, 0x0714 }, { 0x0739, 0x0714 }, { 0x0778, 0x07A7 } };
+    static const uint16_t gump[3][2] = { { 0x0739, 0x0714 },
+                                         { 0x0739, 0x0714 },
+                                         { 0x0778, 0x07A7 } };
 
     return gump[m_Race - 1][m_Female];
 }
@@ -265,8 +283,8 @@ const uint16_t *CCreateCharacterManager::GetSkinTonePtr()
 {
     DEBUG_TRACE_FUNCTION;
     static const uint16_t *ptr[3] = { (uint16_t *)&m_HumanSkinTone[0],
-                                    (uint16_t *)&m_ElfSkinTone[0],
-                                    (uint16_t *)&m_GargoyleSkinTone[0] };
+                                      (uint16_t *)&m_ElfSkinTone[0],
+                                      (uint16_t *)&m_GargoyleSkinTone[0] };
 
     return ptr[m_Race - 1];
 }
@@ -275,8 +293,8 @@ const uint16_t *CCreateCharacterManager::GetHairColorPtr()
 {
     DEBUG_TRACE_FUNCTION;
     static const uint16_t *ptr[3] = { (uint16_t *)&m_HumanHairColor[0],
-                                    (uint16_t *)&m_ElfHairColor[0],
-                                    (uint16_t *)&m_GargoyleHairColor[0] };
+                                      (uint16_t *)&m_ElfHairColor[0],
+                                      (uint16_t *)&m_GargoyleHairColor[0] };
 
     return ptr[m_Race - 1];
 }
@@ -289,12 +307,16 @@ CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
         if (m_Female)
         {
             if (pos < HUMAN_FEMALE_HAIR_COUNT)
+            {
                 return m_HumanFemaleHairStyleTable[pos];
+            }
         }
         else
         {
             if (pos < HUMAN_MALE_HAIR_COUNT)
+            {
                 return m_HumanMaleHairStyleTable[pos];
+            }
         }
     }
     else if (m_Race == RT_ELF)
@@ -302,12 +324,16 @@ CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
         if (m_Female)
         {
             if (pos < ELF_FEMALE_HAIR_COUNT)
+            {
                 return m_ElfFemaleHairStyleTable[pos];
+            }
         }
         else
         {
             if (pos < ELF_MALE_HAIR_COUNT)
+            {
                 return m_ElfMaleHairStyleTable[pos];
+            }
         }
     }
     else if (m_Race == RT_GARGOYLE)
@@ -315,12 +341,16 @@ CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
         if (m_Female)
         {
             if (pos < GARGOYLE_FEMALE_HAIR_COUNT)
+            {
                 return m_GargoyleFemaleHairStyleTable[pos];
+            }
         }
         else
         {
             if (pos < GARGOYLE_MALE_HAIR_COUNT)
+            {
                 return m_GargoyleMaleHairStyleTable[pos];
+            }
         }
     }
 
@@ -333,12 +363,16 @@ CC_HAIR_STYLE CCreateCharacterManager::GetBeard(uint8_t pos) const
     if (m_Race == RT_HUMAN)
     {
         if (pos < HUMAN_MALE_FACIAL_HAIR_COUNT)
+        {
             return m_HumanBeardStyleTable[pos];
+        }
     }
     else if (m_Race == RT_GARGOYLE)
     {
         if (pos < GARGOYLE_MALE_FACIAL_HAIR_COUNT)
+        {
             return m_GargoyleBeardStyleTable[pos];
+        }
     }
 
     return m_HumanBeardStyleTable[0];

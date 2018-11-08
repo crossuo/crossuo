@@ -21,7 +21,9 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
         Page = 1;
     }
     else
+    {
         Page = 2;
+    }
 
     int partyManifestX = 37;
     int profileX = 23;
@@ -41,14 +43,20 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
         Add(new CGUIButton(ID_GP_BUTTON_LOGOUT, 0x07D9, 0x07DB, 0x07DA, 185, 98));
 
         if (g_PacketManager.GetClientVersion() >= CV_500A)
+        {
             Add(new CGUIButton(ID_GP_BUTTON_JOURNAL_OR_QUESTS, 0x57B5, 0x57B6, 0x57B7, 185, 125));
+        }
         else
+        {
             Add(new CGUIButton(ID_GP_BUTTON_JOURNAL_OR_QUESTS, 0x07DC, 0x07DE, 0x07DD, 185, 125));
+        }
 
         Add(new CGUIButton(ID_GP_BUTTON_SKILLS, 0x07DF, 0x07E1, 0x07E0, 185, 152));
 
         if (g_PacketManager.GetClientVersion() >= CV_500A)
+        {
             Add(new CGUIButton(ID_GP_BUTTON_CHAT_OR_GUILD, 0x57B2, 0x57B3, 0x57B4, 185, 179));
+        }
         else
         {
             if (!g_ChatEnabled)
@@ -58,15 +66,21 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
                 Add(new CGUIShader(&g_DeathShader, false));
             }
             else
+            {
                 Add(new CGUIButton(ID_GP_BUTTON_CHAT_OR_GUILD, 0x07E2, 0x07E4, 0x07E3, 185, 179));
+            }
         }
 
         if (g_Player->Warmode)
+        {
             m_ButtonWarmode = (CGUIButton *)Add(
                 new CGUIButton(ID_GP_BUTTON_WARMODE, 0x07E8, 0x07EA, 0x07E9, 185, 206));
+        }
         else
+        {
             m_ButtonWarmode = (CGUIButton *)Add(
                 new CGUIButton(ID_GP_BUTTON_WARMODE, 0x07E5, 0x07E7, 0x07E6, 185, 206));
+        }
 
         //UO->DrawGump(0x0FA1, 0, posX + 80, posY + 4); //Paperdoll mail bag
         Add(new CGUIButton(ID_GP_BUTTON_VIRTURE, 0x0071, 0x0071, 0x0071, 80, 4));
@@ -115,7 +129,8 @@ void CGumpPaperdoll::CalculateGumpState()
     DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
-    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsText())
+    if (g_GumpPressed && g_PressedObject.LeftObject != nullptr &&
+        g_PressedObject.LeftObject->IsText())
     {
         g_GumpMovingOffset.Reset();
 
@@ -159,9 +174,13 @@ void CGumpPaperdoll::InitToolTip()
             case ID_GP_BUTTON_JOURNAL_OR_QUESTS:
             {
                 if (g_PacketManager.GetClientVersion() >= CV_500A)
+                {
                     g_ToolTip.Set(L"Open the quests gump");
+                }
                 else
+                {
                     g_ToolTip.Set(L"Open the journal gump");
+                }
 
                 break;
             }
@@ -173,9 +192,13 @@ void CGumpPaperdoll::InitToolTip()
             case ID_GP_BUTTON_CHAT_OR_GUILD:
             {
                 if (g_PacketManager.GetClientVersion() >= CV_500A)
+                {
                     g_ToolTip.Set(L"Open the guild gump");
+                }
                 else
+                {
                     g_ToolTip.Set(L"Open the chat gump");
+                }
 
                 break;
             }
@@ -229,7 +252,9 @@ void CGumpPaperdoll::InitToolTip()
         }
     }
     else
+    {
         g_ToolTip.Set(L"Double click to maximize paperdoll gump");
+    }
 }
 
 void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
@@ -250,16 +275,22 @@ void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
         string text = "Party Manifest";
 
         if (obj->Serial == ID_GP_PROFILE_SCROLL)
+        {
             text = "Character Profile";
+        }
 
         td->Text = text;
 
         int width = g_FontManager.GetWidthA(3, text);
 
         if (width > TEXT_MESSAGE_MAX_WIDTH)
+        {
             td->GenerateTexture(TEXT_MESSAGE_MAX_WIDTH, 0, TS_CENTER);
+        }
         else
+        {
             td->GenerateTexture(0, 0, TS_CENTER);
+        }
 
         m_TextContainer.Add(td);
         m_TextRenderer.AddText(td);
@@ -274,7 +305,9 @@ void CGumpPaperdoll::PrepareContent()
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == nullptr)
+    {
         return;
+    }
 
     if (!g_Player->Dead() && (CanLift || Serial == g_PlayerSerial) &&
         g_PressedObject.LeftGump == this && !g_ObjectInHand.Enabled &&
@@ -303,7 +336,9 @@ void CGumpPaperdoll::PrepareContent()
                     g_MouseManager.LeftDropPosition = g_MouseManager.Position;
 
                     if (layer == OL_1_HAND || layer == OL_2_HAND)
+                    {
                         g_Player->UpdateAbilities();
+                    }
                 }
             }
         }
@@ -312,7 +347,7 @@ void CGumpPaperdoll::PrepareContent()
     bool wantTransparent = false;
 
     if (g_SelectedObject.Gump == this && g_ObjectInHand.Enabled &&
-        g_ObjectInHand.TiledataPtr->AnimID)
+        (g_ObjectInHand.TiledataPtr->AnimID != 0u))
     {
         if (obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer) == nullptr)
         {
@@ -333,7 +368,9 @@ void CGumpPaperdoll::PrepareContent()
     }
 
     if (!Minimized && m_TextRenderer.CalculatePositions(false))
+    {
         WantRedraw = true;
+    }
 }
 
 void CGumpPaperdoll::UpdateContent()
@@ -344,7 +381,9 @@ void CGumpPaperdoll::UpdateContent()
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == nullptr)
+    {
         return;
+    }
 
     m_DataBox->Clear();
 
@@ -476,15 +515,19 @@ void CGumpPaperdoll::UpdateContent()
                     EQUIP_CONV_DATA_MAP::iterator dataIter = bodyIter->second.find(id);
 
                     if (dataIter != bodyIter->second.end())
+                    {
                         id = dataIter->second.Gump;
+                    }
                 }
 
-                if (id)
+                if (id != 0u)
                 {
                     int cOfs = gumpOffset;
 
                     if (obj->Female && g_Orion.ExecuteGump(id + cOfs) == nullptr)
+                    {
                         cOfs = MALE_GUMP_OFFSET;
+                    }
 
                     bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(id + cOfs, 8, 19));
                     bodyGumppic->Color = equipment->Color & 0x3FFF;
@@ -495,7 +538,7 @@ void CGumpPaperdoll::UpdateContent()
             else if (
                 m_WantTransparentContent && g_ObjectInHand.Enabled &&
                 UsedLayers[i] == g_ObjectInHand.TiledataPtr->Layer &&
-                g_ObjectInHand.TiledataPtr->AnimID)
+                (g_ObjectInHand.TiledataPtr->AnimID != 0u))
             {
                 equipment = obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer);
 
@@ -508,19 +551,23 @@ void CGumpPaperdoll::UpdateContent()
                         EQUIP_CONV_DATA_MAP::iterator dataIter = bodyIter->second.find(id);
 
                         if (dataIter != bodyIter->second.end())
+                        {
                             id = dataIter->second.Gump;
+                        }
                     }
 
                     int cOfs = gumpOffset;
 
-                    if (obj->Female && !g_Orion.ExecuteGump(id + cOfs))
+                    if (obj->Female && (g_Orion.ExecuteGump(id + cOfs) == nullptr))
+                    {
                         cOfs = MALE_GUMP_OFFSET;
+                    }
 
                     m_DataBox->Add(new CGUIAlphaBlending(true, 0.7f));
 
                     bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(id + cOfs, 8, 19));
                     bodyGumppic->Color = g_ObjectInHand.Color & 0x3FFF;
-                    bodyGumppic->PartialHue = (g_ObjectInHand.Color & 0x8000);
+                    bodyGumppic->PartialHue = ((g_ObjectInHand.Color & 0x8000) != 0);
 
                     m_DataBox->Add(new CGUIAlphaBlending(false, 0.0f));
                 }
@@ -550,7 +597,9 @@ void CGumpPaperdoll::UpdateContent()
                     CGLTexture *texture = sio.Texture;
 
                     if (texture == nullptr)
+                    {
                         texture = g_Orion.ExecuteStaticArt(equipment->Graphic);
+                    }
 
                     if (texture == nullptr)
                     {
@@ -574,7 +623,7 @@ void CGumpPaperdoll::UpdateContent()
                         int wantImageWidth = texture->ImageWidth;
                         int wantImageHeight = texture->ImageHeight;
 
-                        if (pixels.size() == 0 || !wantImageWidth || !wantImageHeight)
+                        if (pixels.empty() || (wantImageWidth == 0) || (wantImageHeight == 0))
                         {
                             yPtr += 21;
                             continue;
@@ -591,7 +640,9 @@ void CGumpPaperdoll::UpdateContent()
                             int destPos = y * wantImageWidth;
 
                             for (int x = 0; x < wantImageWidth; x++)
+                            {
                                 wantPixels[destPos + x] = pixels[srcPos + x];
+                            }
                         }
 
                         texture = new CGLTexture();
@@ -599,23 +650,31 @@ void CGumpPaperdoll::UpdateContent()
                             *texture, wantImageWidth, wantImageHeight, &wantPixels[0]);
 
                         if (wantImageWidth < 14)
+                        {
                             tileX += 7 - (wantImageWidth / 2);
+                        }
                         else
                         {
                             tileX -= 2;
 
                             if (wantImageWidth > 18)
+                            {
                                 wantImageWidth = 18;
+                            }
                         }
 
                         if (wantImageHeight < 14)
+                        {
                             tileY += 7 - (wantImageHeight / 2);
+                        }
                         else
                         {
                             tileY -= 2;
 
                             if (wantImageHeight > 18)
+                            {
                                 wantImageHeight = 18;
+                            }
                         }
 
                         CGUIExternalTexture *ext =
@@ -668,13 +727,17 @@ void CGumpPaperdoll::UpdateContent()
             }
 
             if (g_Orion.ExecuteGump(backpackGraphic) == nullptr)
+            {
                 backpackGraphic = equipment->AnimID + 50000;
+            }
         }
 
         int bpX = 8;
 
         if (g_PaperdollBooks)
+        {
             bpX = 2;
+        }
 
         bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(backpackGraphic, bpX, 19));
         bodyGumppic->Color = equipment->Color & 0x3FFF;
@@ -703,7 +766,9 @@ void CGumpPaperdoll::Draw()
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == nullptr)
+    {
         return;
+    }
 
     //if (g_LastObjectType == SOT_TEXT_OBJECT)
     //	g_GumpPressedElement = false;
@@ -730,15 +795,17 @@ CRenderObject *CGumpPaperdoll::Select()
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == nullptr)
+    {
         return nullptr;
+    }
 
     CRenderObject *selected = CGump::Select();
 
     if (!Minimized)
     {
         Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-        g_MouseManager.Position = Wisp::CPoint2Di(
-            oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+        g_MouseManager.Position =
+            Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         m_TextRenderer.Select(this);
 
@@ -771,9 +838,13 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
         case ID_GP_BUTTON_JOURNAL_OR_QUESTS: //Paperdoll button Journal
         {
             if (g_PacketManager.GetClientVersion() >= CV_500A)
+            {
                 CPacketQuestMenuRequest().Send();
+            }
             else
+            {
                 g_Orion.OpenJournal();
+            }
             break;
         }
         case ID_GP_BUTTON_SKILLS: //Paperdoll button Skills
@@ -784,9 +855,13 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
         case ID_GP_BUTTON_CHAT_OR_GUILD: //Paperdoll button Chat
         {
             if (g_PacketManager.GetClientVersion() >= CV_500A)
+            {
                 CPacketGuildMenuRequest().Send();
+            }
             else
+            {
                 g_Orion.OpenChat();
+            }
             break;
         }
         case ID_GP_BUTTON_WARMODE: //Paperdoll button Peace/War
@@ -842,17 +917,21 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
     CGameCharacter *container = g_World->FindWorldCharacter(Serial);
 
     if (container == nullptr && serial >= ID_GP_ITEMS)
+    {
         return;
+    }
 
     //Что-то в руке
-    if ((!serial || serial >= ID_GP_ITEMS) && g_ObjectInHand.Enabled)
+    if (((serial == 0u) || serial >= ID_GP_ITEMS) && g_ObjectInHand.Enabled)
     {
         int layer = serial - ID_GP_ITEMS;
         bool canWear = true;
 
         if (layer != OL_BACKPACK && Serial != g_PlayerSerial &&
             GetDistance(g_Player, container) >= DRAG_ITEMS_DISTANCE)
+        {
             canWear = false;
+        }
 
         if (canWear && container != nullptr)
         {
@@ -863,9 +942,13 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
                 if (equipment != nullptr)
                 {
                     if (Serial != g_PlayerSerial)
+                    {
                         g_Orion.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
+                    }
                     else
+                    {
                         g_Orion.DropItem(equipment->Serial, 0xFFFF, 0xFFFF, 0);
+                    }
 
                     g_MouseManager.LeftDropPosition = g_MouseManager.Position;
                     g_MouseManager.CancelDoubleClick = true;
@@ -882,9 +965,13 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
                 if (equipment == nullptr) //На этом слое ничего нет
                 {
                     if (Serial != g_PlayerSerial)
+                    {
                         g_Orion.EquipItem(container->Serial);
+                    }
                     else
+                    {
                         g_Orion.EquipItem();
+                    }
 
                     g_MouseManager.LeftDropPosition = g_MouseManager.Position;
                     g_MouseManager.CancelDoubleClick = true;
@@ -896,7 +983,9 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
             }
         }
         else
+        {
             g_Orion.PlaySoundEffect(0x0051);
+        }
     }
 
     if (g_PressedObject.LeftSerial == serial && serial >= ID_GP_ITEMS && !g_ObjectInHand.Enabled)
@@ -994,4 +1083,3 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
 
     return result;
 }
-

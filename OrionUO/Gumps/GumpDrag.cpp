@@ -23,15 +23,19 @@ void CGumpDrag::UpdateContent()
     CGameItem *selobj = g_World->FindWorldItem(Serial);
 
     if (selobj != nullptr)
+    {
         count = selobj->Count;
+    }
 
     m_Slider = (CGUISlider *)Add(new CGUISlider(
-        ID_GD_SCROLL, 0x0845, 0x0846, 0x0846, 0, 0, false, 29, 16, 105, 0, count, count));
+        ID_GD_SCROLL, 0x0845, 0x0846, 0x0846, 0, false, false, 29, 16, 105, 0, count, count));
 
     CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
 
     if (gumpEntry != nullptr)
+    {
         gumpEntry->WantRedraw = true;
+    }
 
     Add(new CGUIHitBox(ID_GD_TEXT_FIELD, 28, 40, 60, 16));
 
@@ -48,8 +52,10 @@ void CGumpDrag::UpdateContent()
 void CGumpDrag::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_GD_OKAY) //Button Okay
+    if (serial == ID_GD_OKAY)
+    { //Button Okay
         OnOkayPressed();
+    }
 }
 
 void CGumpDrag::GUMP_SLIDER_CLICK_EVENT_C
@@ -62,10 +68,14 @@ void CGumpDrag::GUMP_SLIDER_MOVE_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (m_StartText)
+    {
         m_StartText = false;
+    }
 
     if (m_Entry != nullptr)
+    {
         m_Entry->m_Entry.SetTextW(std::to_wstring(m_Slider->Value));
+    }
 }
 
 void CGumpDrag::OnOkayPressed()
@@ -75,12 +85,14 @@ void CGumpDrag::OnOkayPressed()
     {
         RemoveMark = true;
 
-        if (m_Slider->Value)
+        if (m_Slider->Value != 0)
         {
             CGameItem *obj = g_World->FindWorldItem(Serial);
 
             if (obj != nullptr)
+            {
                 g_Orion.PickupItem(obj, m_Slider->Value);
+            }
         }
     }
 }
@@ -101,8 +113,10 @@ void CGumpDrag::OnTextInput(const TextEvent &ev)
         g_EntryPointer->Insert(ch);
 
         int val = 0;
-        if (g_EntryPointer->Length())
+        if (g_EntryPointer->Length() != 0u)
+        {
             val = atoi(g_EntryPointer->c_str());
+        }
 
         m_Slider->Value = val;
         m_Slider->CalculateOffset();
@@ -114,10 +128,12 @@ void CGumpDrag::OnTextInput(const TextEvent &ev)
 void CGumpDrag::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     CGameItem *item = g_World->FindWorldItem(Serial);
     if (item == nullptr)
+    {
         return;
+    }
 
     auto key = EvKey(ev);
     switch (key)
@@ -126,9 +142,13 @@ void CGumpDrag::OnKeyDown(const KeyEvent &ev)
         {
             OnOkayPressed();
             if (g_ConfigManager.GetConsoleNeedEnter())
+            {
                 g_EntryPointer = nullptr;
+            }
             else
+            {
                 g_EntryPointer = &g_GameConsole;
+            }
             break;
         }
         case KEY_HOME:
@@ -139,7 +159,9 @@ void CGumpDrag::OnKeyDown(const KeyEvent &ev)
             g_EntryPointer->OnKey(this, key);
 
             if (m_StartText)
+            {
                 m_StartText = false;
+            }
 
             WantRedraw = true;
             break;
@@ -150,12 +172,16 @@ void CGumpDrag::OnKeyDown(const KeyEvent &ev)
             g_EntryPointer->OnKey(this, key);
 
             if (m_StartText)
+            {
                 m_StartText = false;
+            }
 
             int val = 0;
 
-            if (g_EntryPointer->Length())
+            if (g_EntryPointer->Length() != 0u)
+            {
                 val = atoi(g_EntryPointer->c_str());
+            }
 
             m_Slider->Value = val;
             m_Slider->CalculateOffset();

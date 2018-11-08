@@ -4,14 +4,14 @@
 CIntlocManager g_IntlocManager;
 
 CIntloc::CIntloc(int fileIndex, const string &lang)
-    : CBaseQueueItem()
+
 {
     DEBUG_TRACE_FUNCTION;
     Loaded = false;
     Language = lang;
     FileIndex = fileIndex;
 
-    if (Language.length())
+    if (Language.length() != 0u)
     {
         if (m_File.Load(g_App.UOFilesPath("intloc%02i.%s", fileIndex, lang.c_str())))
         {
@@ -31,7 +31,9 @@ CIntloc::CIntloc(int fileIndex, const string &lang)
                     }
                 }
                 else if (code == 'FORM')
+                {
                     m_File.Move(4);
+                }
                 else if (code == 'INFO')
                 {
                     int len = m_File.ReadInt32BE();
@@ -41,10 +43,12 @@ CIntloc::CIntloc(int fileIndex, const string &lang)
                 {
                 }
                 else
+                {
                     break;
+                }
             }
 
-            Loaded = (m_Strings.size() != 0);
+            Loaded = (!m_Strings.empty());
         }
     }
 }
@@ -63,7 +67,9 @@ wstring CIntloc::Get(int id, bool toCamelCase)
     if (id < (int)m_Strings.size())
     {
         if (toCamelCase)
+        {
             return ToCamelCaseW(m_Strings[id]);
+        }
 
         return m_Strings[id];
     }
@@ -72,7 +78,7 @@ wstring CIntloc::Get(int id, bool toCamelCase)
 }
 
 CIntlocManager::CIntlocManager()
-    : CBaseQueue()
+
 {
 }
 
@@ -88,7 +94,9 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
         if (obj->Language == lang && obj->FileIndex == fileIndex)
         {
             if (!obj->Loaded)
+            {
                 return nullptr;
+            }
 
             return obj;
         }
@@ -97,14 +105,18 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
     CIntloc *obj = (CIntloc *)Add(new CIntloc(fileIndex, lang));
 
     if (obj->Loaded)
+    {
         return obj;
+    }
 
     QFOR(obj, m_Items, CIntloc *)
     {
         if (obj->Language == "enu" && obj->FileIndex == fileIndex)
         {
             if (obj->Loaded)
+            {
                 return obj;
+            }
 
             break;
         }
@@ -118,24 +130,17 @@ wstring CIntlocManager::Intloc(const string &lang, uint32_t clilocID, bool isNew
     DEBUG_TRACE_FUNCTION;
 
     string language = ToLowerA(lang);
-    if (!language.length())
-        language = "enu";
-
-    wstring str = {};
-    if (!isNewCliloc && false)
+    if (language.length() == 0u)
     {
-        int fileIndex = (clilocID / 1000) % 1000;
-        CIntloc *obj = Intloc(fileIndex, language);
-
-        if (obj == nullptr && language != "enu")
-            obj = Intloc(fileIndex, "enu");
-
-        if (obj != nullptr)
-            str = obj->Get(clilocID % 1000, true);
+        language = "enu";
     }
 
-    if (!str.length())
+    wstring str = {};
+
+    if (str.length() == 0u)
+    {
         str = g_ClilocManager.Cliloc(lang)->GetW(clilocID, true);
+    }
 
     return str;
 }

@@ -174,7 +174,9 @@ void CGumpConsoleType::UpdateContent()
     obj->CreateTextureA(3, "Default entry text mode:");
 
     if (Minimized)
+    {
         Add(new CGUIButton(ID_GCT_MINIMIZE, 0x0985, 0x0986, 0x0986, 0, 6));
+    }
     else
     {
         Add(new CGUIButton(ID_GCT_MINIMIZE, 0x0983, 0x0984, 0x0984, 0, 6));
@@ -196,7 +198,7 @@ void CGumpConsoleType::UpdateContent()
             entry->SetGlobalColor(true, 0xFFFFFFFF, 0xFF267FFF, 0xFF00FF00);
             entry->Focused = (i == m_SelectedType);
 
-            if (m_ShowFullText || !i)
+            if (m_ShowFullText || (i == 0))
             {
                 entry->m_Entry.SetTextA(text[i]);
                 entry->m_Entry.CreateTextureA(3, text[i], 0, 0, TS_LEFT, 0);
@@ -204,17 +206,21 @@ void CGumpConsoleType::UpdateContent()
             else
             {
                 string str = " ";
-                str += ToString(g_ConsolePrefix[i].c_str());
+                str += ToString(g_ConsolePrefix[i]);
 
                 if (str.length() < 3)
+                {
                     str += " ";
+                }
 
                 entry->m_Entry.SetTextA(str);
                 entry->m_Entry.CreateTextureA(3, str, 0, 0, TS_LEFT, 0);
             }
 
-            if (!i)
+            if (i == 0)
+            {
                 text0Height = entry->m_Entry.m_Texture.Height;
+            }
 
             Add(new CGUIColoredPolygone(
                 (int)i + 1,
@@ -298,4 +304,3 @@ void CGumpConsoleType::GUMP_TEXT_ENTRY_EVENT_C
 
     WantRedraw = true;
 }
-

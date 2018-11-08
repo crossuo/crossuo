@@ -2,7 +2,7 @@
 // Copyright (C) November 2017 Hotride
 
 CPluginPacket::CPluginPacket()
-    : Wisp::CDataWritter()
+
 {
     WriteUInt8(0xFC);
     WriteUInt16BE(0); //size reserved
@@ -35,9 +35,11 @@ CPluginPacketSkillsList::CPluginPacketSkillsList()
         CSkill *skill = g_SkillsManager.Get((uint32_t)i);
 
         if (skill == nullptr)
+        {
             continue;
+        }
 
-        WriteUInt8(skill->Button);
+        WriteUInt8(static_cast<uint8_t>(skill->Button));
         WriteString(skill->Name);
     }
 }
@@ -51,37 +53,51 @@ CPluginPacketSpellsList::CPluginPacketSpellsList()
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName1[i][0]);
+    }
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName2[i][0]);
+    }
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName3[i][0]);
+    }
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName4[i]);
+    }
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName5[i]);
+    }
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName6[i][0]);
+    }
 
     WriteUInt16BE(CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT);
 
     for (int i = 0; i < CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT; i++)
+    {
         WriteString(CGumpSpellbook::m_SpellName7[i][0]);
+    }
 }
 
 CPluginPacketMacrosList::CPluginPacketMacrosList()
@@ -140,7 +156,12 @@ CPluginPacketStaticArtGraphicDataInfo::CPluginPacketStaticArtGraphicDataInfo(
 }
 
 CPluginPacketGumpArtGraphicDataInfo::CPluginPacketGumpArtGraphicDataInfo(
-    uint16_t graphic, uint64_t address, uint64_t size, uint64_t compressedSize, uint16_t width, uint16_t height)
+    uint16_t graphic,
+    uint64_t address,
+    uint64_t size,
+    uint64_t compressedSize,
+    uint16_t width,
+    uint16_t height)
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_GRAPHIC_DATA_INFO);
@@ -164,4 +185,3 @@ CPluginPacketOpenMap::CPluginPacketOpenMap()
 {
     WriteUInt16BE(OIPMT_OPEN_MAP);
 }
-

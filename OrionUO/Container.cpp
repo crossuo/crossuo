@@ -61,7 +61,7 @@ void CContainerRect::Calculate(uint16_t gumpID)
             int passed = 0;
 
             //!Цикл в 4 итерации и пока не будут валидные координаты
-            for (int i = 0; i < 4 && !passed; i++)
+            for (int i = 0; i < 4 && (passed == 0); i++)
             {
                 //!Пора изменять смещение по оси Y и обнулять по оси X
                 if (X + tex->Width + CONTAINERS_RECT_STEP > g_OrionWindow.GetSize().Width)
@@ -70,27 +70,39 @@ void CContainerRect::Calculate(uint16_t gumpID)
 
                     //!Если смещение по оси Y достигло максимума - выставим стандартное значение
                     if (Y + tex->Height + CONTAINERS_RECT_LINESTEP > g_OrionWindow.GetSize().Height)
+                    {
                         Y = CONTAINERS_RECT_DEFAULT_POS;
+                    }
                     else
+                    {
                         Y += CONTAINERS_RECT_LINESTEP;
+                    }
                 }
                 //!Пора изменять смещение по оси X и обнулять по оси Y
                 else if (Y + tex->Height + CONTAINERS_RECT_STEP > g_OrionWindow.GetSize().Height)
                 {
                     //!Если смещение по оси X достигло максимума - выставим стандартное значение
                     if (X + tex->Width + CONTAINERS_RECT_LINESTEP > g_OrionWindow.GetSize().Width)
+                    {
                         X = CONTAINERS_RECT_DEFAULT_POS;
+                    }
                     else
+                    {
                         X += CONTAINERS_RECT_LINESTEP;
+                    }
 
                     Y = CONTAINERS_RECT_DEFAULT_POS;
                 }
-                else //!Все отлично, пропускаем дальше
+                else
+                { //!Все отлично, пропускаем дальше
                     passed = (int)i + 1;
+                }
             }
 
-            if (!passed) //!Смещение не вычислено. Выставим значение по-умолчанию
+            if (passed == 0)
+            { //!Смещение не вычислено. Выставим значение по-умолчанию
                 MakeDefault();
+            }
             else if (passed == 1) //!Прошло с 1 раза, можно изменить смещение
             {
                 X += CONTAINERS_RECT_STEP;

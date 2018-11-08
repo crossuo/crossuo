@@ -5,8 +5,7 @@
 #include <SDL_timer.h>
 
 CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount)
-    : Wisp::CThread()
-    , ServerID(serverID)
+    : ServerID(serverID)
     , ServerIP(serverIP)
     , RequestsCount(requestsCount)
 {
@@ -22,13 +21,17 @@ CPingThread::~CPingThread()
 int CPingThread::CalculatePing()
 {
     auto handle = icmp_open();
-    if (!handle)
+    if (handle == nullptr)
+    {
         return -4;
+    }
 
     uint32_t timems = SDL_GetTicks();
     int result = icmp_query(handle, ServerIP.c_str(), &timems);
-    if (!result)
+    if (result == 0)
+    {
         result = (SDL_GetTicks() - timems);
+    }
 
     icmp_close(handle);
     return result;
@@ -39,7 +42,9 @@ void CPingThread::OnExecute(uint32_t nowTime)
     DEBUG_TRACE_FUNCTION;
 
     if (ServerIP.empty() || RequestsCount < 1)
+    {
         return;
+    }
 
     PING_INFO_DATA info = { ServerID, 9999, 0, 0, 0 };
     for (int i = 0; i < RequestsCount; i++)
@@ -48,7 +53,9 @@ void CPingThread::OnExecute(uint32_t nowTime)
         if (ping < 0)
         {
             if (ping == -1)
+            {
                 info.Lost++;
+            }
 
             continue;
         }

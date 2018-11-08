@@ -9,4 +9,3 @@ CGUIGumppic::CGUIGumppic(uint16_t graphic, int x, int y)
 CGUIGumppic::~CGUIGumppic()
 {
 }
-

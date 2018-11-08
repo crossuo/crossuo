@@ -12,4 +12,3 @@ CCustomHouseMultiObject::CCustomHouseMultiObject(
 CCustomHouseMultiObject::~CCustomHouseMultiObject()
 {
 }
-

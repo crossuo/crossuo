@@ -69,12 +69,13 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
     CBaseGUI *selected = m_Name;
 
     if (g_Orion.PolygonePixelsInXY(m_X + m_Minimizer->GetX(), m_Y + m_Minimizer->GetY(), 14, 14))
+    {
         selected = m_Minimizer;
+    }
     else if (!GetMinimized())
     {
         Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
-        g_MouseManager.Position =
-            Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
+        g_MouseManager.Position = Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
         QFOR(item, m_Items, CBaseGUI *)
         {
@@ -83,7 +84,9 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
                 selected = item;
 
                 if (item->Type == GOT_SKILLITEM)
+                {
                     selected = ((CGUISkillItem *)item)->SelectedItem();
+                }
 
                 break;
             }
@@ -101,7 +104,9 @@ Wisp::CSize CGUISkillGroup::GetSize()
     Wisp::CSize size(220, 19);
 
     if (!GetMinimized() && m_Items != nullptr)
+    {
         size.Height += GetItemsCount() * 17;
+    }
 
     return size;
 }
@@ -121,7 +126,9 @@ void CGUISkillGroup::Draw(bool checktrans)
         g_GL.DrawPolygone(16, 0, 200, 14);
     }
     else if (m_Name->Focused)
+    {
         g_GL.DrawPolygone(16, 0, m_Name->m_Entry.m_Texture.Width, 14);
+    }
 
     m_Name->Draw(checktrans);
 
@@ -131,7 +138,9 @@ void CGUISkillGroup::Draw(bool checktrans)
         int width = 215 - x;
 
         if (x > 0)
+        {
             g_Orion.DrawGump(0x0835, 0, x, 5, width, 0);
+        }
     }
 
     if (!GetMinimized() && m_Items != nullptr)
@@ -158,8 +167,7 @@ bool CGUISkillGroup::Select()
     if (!GetMinimized() && !result)
     {
         Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
-        g_MouseManager.Position =
-            Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
+        g_MouseManager.Position = Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
         QFOR(item, m_Items, CBaseGUI *)
         {
@@ -175,4 +183,3 @@ bool CGUISkillGroup::Select()
 
     return result;
 }
-

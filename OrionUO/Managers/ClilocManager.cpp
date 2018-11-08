@@ -4,18 +4,20 @@
 CClilocManager g_ClilocManager;
 
 CCliloc::CCliloc(const string &lang)
-    : CBaseQueueItem()
+
 {
     DEBUG_TRACE_FUNCTION;
 
     Loaded = false;
     Language = lang;
-    if (Language.length())
+    if (Language.length() != 0u)
     {
         auto file = string("Cliloc.") + lang;
         auto path = g_App.UOFilesPath(file);
         if (m_File.Load(path))
+        {
             Loaded = true;
+        }
     }
 }
 
@@ -46,21 +48,27 @@ string CCliloc::Load(uint32_t &id)
             if (currentID == id)
             {
                 if (len > 0)
+                {
                     result = m_File.ReadString(len);
+                }
 
                 if (id >= 3000000)
+                {
                     m_ClilocSupport[currentID] = result;
+                }
                 else if (id >= 1000000)
+                {
                     m_ClilocRegular[currentID] = result;
+                }
                 else
+                {
                     m_ClilocSystem[currentID] = result;
+                }
 
                 return result;
             }
-            else
-            {
-                m_File.Move(len);
-            }
+
+            m_File.Move(len);
         }
     }
     id = 0;
@@ -70,7 +78,9 @@ string CCliloc::Load(uint32_t &id)
 wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
 {
     if (toCamelCase)
+    {
         return ToCamelCaseW(DecodeUTF8(result));
+    }
 
     return DecodeUTF8(result);
 }
@@ -82,34 +92,46 @@ wstring CCliloc::GetX(int id, bool toCamelCase, string &result)
     if (id >= 3000000)
     {
         CLILOC_MAP::iterator i = m_ClilocSupport.find(id);
-        if (i != m_ClilocSupport.end() && (*i).second.length())
+        if (i != m_ClilocSupport.end() && ((*i).second.length() != 0u))
+        {
             return CamelCaseTest(toCamelCase, (*i).second);
+        }
     }
     else if (id >= 1000000)
     {
         CLILOC_MAP::iterator i = m_ClilocRegular.find(id);
-        if (i != m_ClilocRegular.end() && (*i).second.length())
+        if (i != m_ClilocRegular.end() && ((*i).second.length() != 0u))
+        {
             return CamelCaseTest(toCamelCase, (*i).second);
+        }
     }
     else
     {
         CLILOC_MAP::iterator i = m_ClilocSystem.find(id);
-        if (i != m_ClilocSystem.end() && (*i).second.length())
+        if (i != m_ClilocSystem.end() && ((*i).second.length() != 0u))
+        {
             return CamelCaseTest(toCamelCase, (*i).second);
+        }
     }
 
     uint32_t tmpID = id;
     auto loadStr = Load(tmpID);
-    if (loadStr.length())    
+    if (loadStr.length() != 0u)
+    {
         return CamelCaseTest(toCamelCase, loadStr);
+    }
 
-    if (tmpID == id && !loadStr.length())
+    if (tmpID == id && (loadStr.length() == 0u))
+    {
         return {};
+    }
 
     if (Language != "ENU" && this->Language != "enu")
+    {
         return g_ClilocManager.Cliloc("enu")->GetW(id, toCamelCase, result);
+    }
 
-    if (!result.length())
+    if (result.length() == 0u)
     {
         char str[50]{};
         sprintf_s(str, "Unknown Cliloc #%i", id);
@@ -132,7 +154,7 @@ wstring CCliloc::GetW(int id, bool toCamelCase, string result)
 }
 
 CClilocManager::CClilocManager()
-    : CBaseQueue()
+
 {
 }
 
@@ -147,13 +169,17 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
     DEBUG_TRACE_FUNCTION;
 
     auto language = ToLowerA(lang);
-    if (!language.length())
+    if (language.length() == 0u)
+    {
         language = "enu";
+    }
 
     if (language == "enu")
     {
         if (m_ENUCliloc == nullptr)
+        {
             m_ENUCliloc = (CCliloc *)Add(new CCliloc(language));
+        }
 
         return m_ENUCliloc;
     }
@@ -161,7 +187,9 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
     if (m_LastCliloc != nullptr && m_LastCliloc->Language == language)
     {
         if (!m_LastCliloc->Loaded)
+        {
             return m_ENUCliloc;
+        }
 
         return m_LastCliloc;
     }
@@ -171,7 +199,9 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
         if (obj->Language == language)
         {
             if (!obj->Loaded)
+            {
                 return m_ENUCliloc;
+            }
 
             m_LastCliloc = obj;
             return obj;
@@ -180,7 +210,9 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
 
     CCliloc *obj = (CCliloc *)Add(new CCliloc(language));
     if (!obj->Loaded)
+    {
         return Cliloc("enu");
+    }
 
     m_LastCliloc = obj;
     return obj;
@@ -190,7 +222,7 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
 {
     DEBUG_TRACE_FUNCTION;
 
-    while (args.length() && args[0] == L'\t')
+    while ((args.length() != 0u) && args[0] == L'\t')
     {
         args.erase(args.begin());
     }
@@ -216,11 +248,15 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
     {
         size_t pos1 = message.find(L"~");
         if (pos1 == string::npos)
+        {
             break;
+        }
 
         size_t pos2 = message.find(L"~", pos1 + 1);
         if (pos2 == string::npos)
+        {
             break;
+        }
 
         if (arguments[i].length() > 1 && *arguments[i].c_str() == L'#')
         {
@@ -232,7 +268,9 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
     }
 
     if (toCamelCase)
+    {
         return ToCamelCaseW(message);
+    }
 
     return message;
 }

@@ -21,7 +21,9 @@ void CTargetGump::Draw()
         g_Orion.DrawGump(0x1068, Color, X, Y);
 
         if (Hits > 0)
+        {
             g_Orion.DrawGump(0x1069, HealthColor, X, Y, Hits, 0);
+        }
     }
 }
 
@@ -47,7 +49,8 @@ void CNewTargetSystem::Draw()
         g_Orion.DrawGump(GumpBottom, 0, x, BottomY);
 
         if (Hits > 0)
+        {
             g_Orion.DrawGump(0x1069, HealthColor, X - 16, BottomY + 15, Hits, 0);
+        }
     }
 }
-

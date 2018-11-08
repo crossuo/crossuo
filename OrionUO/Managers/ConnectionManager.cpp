@@ -15,10 +15,14 @@ CConnectionManager::~CConnectionManager()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_LoginSocket.Connected)
+    {
         m_LoginSocket.Disconnect();
+    }
 
     if (m_GameSocket.Connected)
+    {
         m_GameSocket.Disconnect();
+    }
 }
 
 void CConnectionManager::SetUseProxy(bool val)
@@ -73,7 +77,9 @@ void CConnectionManager::Init()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_LoginSocket.Connected)
+    {
         return;
+    }
 
     m_IsLoginSocket = true;
     const auto localIp = socket_localaddress();
@@ -89,7 +95,9 @@ void CConnectionManager::Init(uint8_t *gameSeed)
 {
     DEBUG_TRACE_FUNCTION;
     if (m_GameSocket.Connected)
+    {
         return;
+    }
 
     m_IsLoginSocket = false;
     g_NetworkInit(false, gameSeed);
@@ -109,7 +117,9 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
     if (m_IsLoginSocket)
     {
         if (m_LoginSocket.Connected)
+        {
             return true;
+        }
 
         bool result = m_LoginSocket.Connect(address, port);
         if (result)
@@ -129,7 +139,7 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
                 SendIP(m_LoginSocket, m_Seed);
                 Wisp::CDataWritter stream;
                 auto &str = g_Orion.ClientVersionText;
-                if (str.length())
+                if (str.length() != 0u)
                 {
                     char ver[20] = { 0 };
                     char *ptr = ver;
@@ -146,7 +156,9 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
                             idx++;
 
                             if (idx > 3)
+                            {
                                 break;
+                            }
                         }
                     }
 
@@ -163,24 +175,24 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
         }
         return result;
     }
-    else
+
+    if (m_GameSocket.Connected)
     {
-        if (m_GameSocket.Connected)
-            return true;
-
-        g_TotalSendSize = 4;
-        g_LastPacketTime = g_Ticks;
-        g_LastSendTime = g_LastPacketTime;
-
-        const bool result = m_GameSocket.Connect(address, port);
-        if (result)
-        {
-            SendIP(m_GameSocket, gameSeed);
-        }
-
-        m_LoginSocket.Disconnect();
-        return result;
+        return true;
     }
+
+    g_TotalSendSize = 4;
+    g_LastPacketTime = g_Ticks;
+    g_LastSendTime = g_LastPacketTime;
+
+    const bool result = m_GameSocket.Connect(address, port);
+    if (result)
+    {
+        SendIP(m_GameSocket, gameSeed);
+    }
+
+    m_LoginSocket.Disconnect();
+    return result;
 
     return false;
 }
@@ -189,10 +201,14 @@ void CConnectionManager::Disconnect()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_LoginSocket.Connected)
+    {
         m_LoginSocket.Disconnect();
+    }
 
     if (m_GameSocket.Connected)
+    {
         m_GameSocket.Disconnect();
+    }
 }
 
 void CConnectionManager::Recv()
@@ -201,7 +217,9 @@ void CConnectionManager::Recv()
     if (m_IsLoginSocket)
     {
         if (!m_LoginSocket.Connected)
+        {
             return;
+        }
 
         if (!m_LoginSocket.ReadyRead())
         {
@@ -219,7 +237,9 @@ void CConnectionManager::Recv()
     else
     {
         if (!m_GameSocket.Connected)
+        {
             return;
+        }
 
         if (!m_GameSocket.ReadyRead())
         {
@@ -227,7 +247,7 @@ void CConnectionManager::Recv()
             {
                 LOG("Failed to Recv()...Disconnecting...\n");
                 if (g_GameState == GS_GAME ||
-                    (g_GameState == GS_GAME_BLOCKED && g_GameBlockedScreen.Code))
+                    (g_GameState == GS_GAME_BLOCKED && (g_GameBlockedScreen.Code != 0u)))
                 {
                     g_Orion.DisconnectGump();
                 }
@@ -277,29 +297,35 @@ int CConnectionManager::Send(uint8_t *buf, int size)
     else if (g_Asmut)
     {
         if (buf[0] == 0x02)
+        {
             buf[0] = 0x04;
+        }
         else if (buf[0] == 0x07)
+        {
             buf[0] = 0x0A;
+        }
     }
 
     if (m_IsLoginSocket)
     {
         if (!m_LoginSocket.Connected)
+        {
             return 0;
+        }
 
         vector<uint8_t> cbuf(size);
         g_NetworkAction(true, &buf[0], &cbuf[0], size);
         return m_LoginSocket.Send(cbuf);
     }
-    else
-    {
-        if (!m_GameSocket.Connected)
-            return 0;
 
-        vector<uint8_t> cbuf(size);
-        g_NetworkAction(false, &buf[0], &cbuf[0], size);
-        return m_GameSocket.Send(cbuf);
+    if (!m_GameSocket.Connected)
+    {
+        return 0;
     }
+
+    vector<uint8_t> cbuf(size);
+    g_NetworkAction(false, &buf[0], &cbuf[0], size);
+    return m_GameSocket.Send(cbuf);
 
     return 0;
 }

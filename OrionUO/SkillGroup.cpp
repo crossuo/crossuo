@@ -15,7 +15,9 @@ uint8_t CSkillGroupObject::GetItem(intptr_t index)
 {
     DEBUG_TRACE_FUNCTION;
     if (index < 0 || index >= Count)
+    {
         return 0xFF;
+    }
 
     return m_Items[index];
 }
@@ -24,7 +26,9 @@ void CSkillGroupObject::Add(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     if (Contains(index))
+    {
         return;
+    }
 
     m_Items[Count] = index;
     Count++;
@@ -34,7 +38,9 @@ void CSkillGroupObject::AddSorted(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
     if (Contains(index))
+    {
         return;
+    }
 
     m_Items[Count] = index;
     Count++;
@@ -54,7 +60,9 @@ void CSkillGroupObject::Remove(uint8_t index)
             removed = true;
 
             for (; i < Count - 1; i++)
+            {
                 m_Items[i] = m_Items[i + 1];
+            }
 
             break;
         }
@@ -65,7 +73,9 @@ void CSkillGroupObject::Remove(uint8_t index)
         Count--;
 
         if (Count < 0)
+        {
             Count = 0;
+        }
 
         m_Items[Count] = 0xFF;
     }
@@ -77,7 +87,9 @@ bool CSkillGroupObject::Contains(uint8_t index)
     for (int i = 0; i < Count; i++)
     {
         if (m_Items[i] == index)
+        {
             return true;
+        }
     }
 
     return false;
@@ -103,14 +115,18 @@ void CSkillGroupObject::Sort()
     }
 
     for (int j = 0; j < Count; j++)
+    {
         m_Items[j] = table[j];
+    }
 }
 
 void CSkillGroupObject::TransferTo(CSkillGroupObject *group)
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < Count; i++)
+    {
         group->Add(m_Items[i]);
+    }
 
     group->Sort();
 }

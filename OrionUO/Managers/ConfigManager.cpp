@@ -36,9 +36,13 @@ void CConfigManager::Init()
     GameWindowY = 0;
 
     if (g_PacketManager.GetClientVersion() >= CV_70331)
+    {
         g_MaxViewRange = MAX_VIEW_RANGE_NEW;
+    }
     else
+    {
         g_MaxViewRange = MAX_VIEW_RANGE_OLD;
+    }
 
     UpdateRange = g_MaxViewRange;
 }
@@ -76,7 +80,7 @@ void CConfigManager::DefaultPage2()
     HiddenCharactersRenderMode = 0;
     HiddenAlpha = 0x7F;
     UseHiddenModeOnlyForSelf = true;
-    TransparentSpellIcons = true;
+    TransparentSpellIcons = 1u;
     m_SpellIconAlpha = 0x7F;
     m_OldStyleStatusbar = false;
     m_ApplyStateColorOnCharacters = false;
@@ -214,7 +218,9 @@ void CConfigManager::SetSound(bool val)
 
     m_Sound = val;
     if (this == &g_ConfigManager && !val)
+    {
         g_Orion.AdjustSoundEffects(g_Ticks + 100000);
+    }
 }
 
 void CConfigManager::SetMusic(bool val)
@@ -232,7 +238,9 @@ void CConfigManager::SetSoundVolume(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && m_SoundVolume != val)
+    {
         g_Orion.AdjustSoundEffects(g_Ticks + 100000, val);
+    }
 
     m_SoundVolume = val;
 }
@@ -247,7 +255,9 @@ void CConfigManager::SetMusicVolume(uint8_t val)
         g_SoundManager.SetMusicVolume(g_SoundManager.GetVolumeValue(-1, true));
     }
     else
+    {
         m_MusicVolume = val;
+    }
 }
 
 void CConfigManager::SetClientFPS(uint8_t val)
@@ -281,7 +291,9 @@ void CConfigManager::SetUseScaling(bool val)
 
     m_UseScaling = val;
     if (!val && this == &g_ConfigManager)
+    {
         g_GlobalScale = 1.0;
+    }
 }
 
 void CConfigManager::SetDrawStatusState(uint8_t val)
@@ -289,17 +301,21 @@ void CConfigManager::SetDrawStatusState(uint8_t val)
     DEBUG_TRACE_FUNCTION;
 
     uint8_t state = val;
-    if (!(g_OrionFeaturesFlags & OFF_DRAW_CHARACTERS_STATUS_IN_WORLD))
+    if ((g_OrionFeaturesFlags & OFF_DRAW_CHARACTERS_STATUS_IN_WORLD) == 0u)
+    {
         state = DCSS_NO_DRAW;
+    }
 
     if (this == &g_ConfigManager)
     {
-        if (state && !m_DrawStatusState)
+        if ((state != 0u) && (m_DrawStatusState == 0u))
         {
             QFOR(item, g_World->m_Items, CGameObject *)
             {
                 if (item->NPC)
+                {
                     CPacketStatusRequest(item->Serial).Send();
+                }
             }
         }
     }
@@ -312,11 +328,15 @@ void CConfigManager::SetDrawStumps(bool val)
     DEBUG_TRACE_FUNCTION;
 
     bool state = val;
-    if (!(g_OrionFeaturesFlags & OFF_CHANGE_TREES_TO_STUMPS))
+    if ((g_OrionFeaturesFlags & OFF_CHANGE_TREES_TO_STUMPS) == 0u)
+    {
         state = false;
+    }
 
     if (m_DrawStumps != state && this == &g_ConfigManager)
+    {
         g_Orion.ClearTreesTextures();
+    }
 
     m_DrawStumps = state;
 }
@@ -326,11 +346,15 @@ void CConfigManager::SetMarkingCaves(bool val)
     DEBUG_TRACE_FUNCTION;
 
     bool state = val;
-    if (!(g_OrionFeaturesFlags & OFF_MARKING_CAVES))
+    if ((g_OrionFeaturesFlags & OFF_MARKING_CAVES) == 0u)
+    {
         state = false;
+    }
 
     if (m_MarkingCaves != state && this == &g_ConfigManager)
+    {
         g_Orion.ClearCaveTextures();
+    }
 
     m_MarkingCaves = state;
 }
@@ -340,8 +364,10 @@ void CConfigManager::SetNoVegetation(bool val)
     DEBUG_TRACE_FUNCTION;
 
     bool state = val;
-    if (!(g_OrionFeaturesFlags & OFF_NO_VEGETATION))
+    if ((g_OrionFeaturesFlags & OFF_NO_VEGETATION) == 0u)
+    {
         state = false;
+    }
 
     m_NoVegetation = state;
 }
@@ -351,8 +377,10 @@ void CConfigManager::SetNoAnimateFields(bool val)
     DEBUG_TRACE_FUNCTION;
 
     bool state = val;
-    if (!(g_OrionFeaturesFlags & OFF_NO_FIELDS_ANIMATION))
+    if ((g_OrionFeaturesFlags & OFF_NO_FIELDS_ANIMATION) == 0u)
+    {
         state = false;
+    }
 
     m_NoAnimateFields = state;
 }
@@ -362,8 +390,10 @@ void CConfigManager::SetApplyStateColorOnCharacters(bool val)
     DEBUG_TRACE_FUNCTION;
 
     bool state = val;
-    if (!(g_OrionFeaturesFlags & OFF_COLORED_CHARACTERS_STATE))
+    if ((g_OrionFeaturesFlags & OFF_COLORED_CHARACTERS_STATE) == 0u)
+    {
         state = false;
+    }
 
     m_ApplyStateColorOnCharacters = state;
 }
@@ -373,8 +403,10 @@ void CConfigManager::SetDrawAuraState(uint8_t val)
     DEBUG_TRACE_FUNCTION;
 
     uint8_t state = val;
-    if (!(g_OrionFeaturesFlags & OFF_DRAW_AURA))
+    if ((g_OrionFeaturesFlags & OFF_DRAW_AURA) == 0u)
+    {
         state = DAS_NEVER;
+    }
 
     m_DrawAuraState = state;
 }
@@ -404,7 +436,9 @@ void CConfigManager::SetConsoleNeedEnter(bool val)
     DEBUG_TRACE_FUNCTION;
 
     if (this == &g_ConfigManager && val && g_EntryPointer == &g_GameConsole)
+    {
         g_EntryPointer = nullptr;
+    }
 
     m_ConsoleNeedEnter = val;
 }
@@ -415,7 +449,7 @@ void CConfigManager::SetSpellIconAlpha(uint8_t val)
     if (this == &g_ConfigManager && val != m_SpellIconAlpha)
     {
         float alpha = val / 255.0f;
-        bool redraw = g_ConfigManager.TransparentSpellIcons;
+        bool redraw = g_ConfigManager.TransparentSpellIcons != 0u;
 
         QFOR(gump, g_GumpManager.m_Items, CGump *)
         {
@@ -424,7 +458,9 @@ void CConfigManager::SetSpellIconAlpha(uint8_t val)
                 ((CGumpSpell *)gump)->m_Blender->Alpha = alpha;
 
                 if (redraw)
+                {
                     gump->WantRedraw = true;
+                }
             }
         }
     }
@@ -442,7 +478,9 @@ void CConfigManager::SetOldStyleStatusbar(bool val)
         CGump *gump = g_GumpManager.UpdateGump(g_PlayerSerial, 0, GT_STATUSBAR);
 
         if (gump != nullptr && !gump->Minimized)
+        {
             gump->WantUpdateContent = true;
+        }
     }
 }
 
@@ -473,15 +511,19 @@ void CConfigManager::SetChangeFieldsGraphic(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_ChangeFieldsGraphic = val;
-    if (!(g_OrionFeaturesFlags & OFF_TILED_FIELDS))
+    if ((g_OrionFeaturesFlags & OFF_TILED_FIELDS) == 0u)
+    {
         m_ChangeFieldsGraphic = false;
+    }
 
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         QFOR(item, g_World->m_Items, CGameObject *)
         {
             if (!item->NPC)
+            {
                 ((CGameItem *)item)->CalculateFieldColor();
+            }
         }
     }
 }
@@ -532,7 +574,9 @@ void CConfigManager::SetUseGlobalMapLayer(bool val)
         QFOR(gump, g_GumpManager.m_Items, CGump *)
         {
             if (gump->GumpType == GT_WORLD_MAP)
+            {
                 g_GumpManager.MoveToFront(gump);
+            }
         }
     }
 }
@@ -542,8 +586,10 @@ void CConfigManager::SetNoDrawRoofs(bool val)
     DEBUG_TRACE_FUNCTION;
 
     m_NoDrawRoofs = val;
-    if (!(g_OrionFeaturesFlags & OFF_TILED_FIELDS))
+    if ((g_OrionFeaturesFlags & OFF_TILED_FIELDS) == 0u)
+    {
         m_NoDrawRoofs = false;
+    }
 
     if (this == &g_ConfigManager && g_Player != nullptr)
     {
@@ -587,7 +633,9 @@ void CConfigManager::SetItemPropertiesMode(uint8_t val)
             (CGumpPropertyIcon *)g_GumpManager.UpdateContent(0, 0, GT_PROPERTY_ICON);
 
         if (gump != nullptr && (val == OPM_AT_ICON || val == OPM_ALWAYS_UP))
+        {
             gump->SetTextW(gump->GetTextW());
+        }
 
         g_ObjectPropertiesManager.Reset();
     }
@@ -612,10 +660,14 @@ void CConfigManager::SetItemPropertiesIcon(bool val)
                 int y = GameWindowY + GameWindowHeight;
 
                 if (x + 100 >= windowSize.Width)
+                {
                     x = windowSize.Width - 100;
+                }
 
                 if (y + 60 >= windowSize.Height)
+                {
                     y = windowSize.Height - 60;
+                }
 
                 g_GumpManager.AddGump(new CGumpPropertyIcon(x, y));
             }
@@ -640,7 +692,9 @@ void CConfigManager::SetCharacterBackpackStyle(uint8_t val)
         CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
 
         if (backpack != nullptr)
+        {
             g_GumpManager.UpdateContent(backpack->Serial, 0, GT_CONTAINER);
+        }
     }
 }
 
@@ -706,7 +760,7 @@ bool CConfigManager::LoadBin(const os_path &path)
     g_DeveloperMode = DM_SHOW_FPS_ONLY;
     Wisp::CMappedFile file;
 
-    if (file.Load(path) && file.Size)
+    if (file.Load(path) && (file.Size != 0u))
     {
         UpdateRange = g_MaxViewRange;
         uint8_t version = file.ReadUInt8();
@@ -718,13 +772,13 @@ bool CConfigManager::LoadBin(const os_path &path)
 
         if (file.ReadInt8() == 1)
         {
-            SetSound(file.ReadUInt8());
-            SetMusic(file.ReadUInt8());
-            FootstepsSound = file.ReadUInt8();
-            CombatMusic = file.ReadUInt8();
+            SetSound(file.ReadUInt8() != 0u);
+            SetMusic(file.ReadUInt8() != 0u);
+            FootstepsSound = (file.ReadUInt8() != 0u);
+            CombatMusic = (file.ReadUInt8() != 0u);
             m_SoundVolume = file.ReadUInt8();
             m_MusicVolume = file.ReadUInt8();
-            BackgroundSound = file.ReadUInt8();
+            BackgroundSound = (file.ReadUInt8() != 0u);
         }
 
         file.Ptr = next;
@@ -743,7 +797,7 @@ bool CConfigManager::LoadBin(const os_path &path)
         bool markingCaves = false;
         bool noAnimateFields = false;
         bool noVegetation = false;
-        TransparentSpellIcons = true;
+        TransparentSpellIcons = 1u;
         m_SpellIconAlpha = 0x7F;
         m_OldStyleStatusbar = false;
         m_OriginalPartyStatusbar = false;
@@ -772,35 +826,35 @@ bool CConfigManager::LoadBin(const os_path &path)
             if (blockSize > 23)
             {
                 SetClientFPS(file.ReadUInt8());
-                m_UseScaling = file.ReadUInt8();
-                RemoveTextWithBlending = file.ReadUInt8();
+                m_UseScaling = (file.ReadUInt8() != 0u);
+                RemoveTextWithBlending = (file.ReadUInt8() != 0u);
                 m_DrawStatusState = file.ReadUInt8();
-                drawStumps = file.ReadUInt8();
-                markingCaves = file.ReadUInt8();
-                noAnimateFields = file.ReadUInt8();
-                noVegetation = file.ReadUInt8();
+                drawStumps = (file.ReadUInt8() != 0u);
+                markingCaves = (file.ReadUInt8() != 0u);
+                noAnimateFields = (file.ReadUInt8() != 0u);
+                noVegetation = (file.ReadUInt8() != 0u);
                 HiddenCharactersRenderMode = file.ReadUInt8();
                 HiddenAlpha = file.ReadUInt8();
-                UseHiddenModeOnlyForSelf = file.ReadUInt8();
+                UseHiddenModeOnlyForSelf = (file.ReadUInt8() != 0u);
                 TransparentSpellIcons = file.ReadUInt8();
                 m_SpellIconAlpha = file.ReadUInt8();
-                m_OldStyleStatusbar = file.ReadUInt8();
-                m_OriginalPartyStatusbar = file.ReadUInt8();
-                applyStateColorOnCharacters = file.ReadUInt8();
-                changeFieldsGraphic = file.ReadUInt8();
-                paperdollSlots = file.ReadUInt8();
+                m_OldStyleStatusbar = (file.ReadUInt8() != 0u);
+                m_OriginalPartyStatusbar = (file.ReadUInt8() != 0u);
+                applyStateColorOnCharacters = (file.ReadUInt8() != 0u);
+                changeFieldsGraphic = (file.ReadUInt8() != 0u);
+                paperdollSlots = (file.ReadUInt8() != 0u);
                 DrawStatusConditionState = file.ReadUInt8();
                 DrawStatusConditionValue = file.ReadUInt8();
-                RemoveStatusbarsWithoutObjects = file.ReadUInt8();
+                RemoveStatusbarsWithoutObjects = (file.ReadUInt8() != 0u);
 
-                ShowDefaultConsoleEntryMode = file.ReadUInt8();
+                ShowDefaultConsoleEntryMode = (file.ReadUInt8() != 0u);
 
                 if (blockSize > 24)
                 {
                     uint8_t auraState = file.ReadUInt8();
 
                     drawAuraState = auraState & 0x7F;
-                    DrawAuraWithCtrlPressed = (auraState & 0x80);
+                    DrawAuraWithCtrlPressed = ((auraState & 0x80) != 0);
 
                     if (blockSize > 25)
                     {
@@ -808,26 +862,28 @@ bool CConfigManager::LoadBin(const os_path &path)
 
                         if (blockSize > 26)
                         {
-                            scaleImagesInPaperdollSlots = file.ReadUInt8();
+                            scaleImagesInPaperdollSlots = (file.ReadUInt8() != 0u);
 
                             if (blockSize > 27)
                             {
-                                RemoveOrCreateObjectsWithBlending = file.ReadUInt8();
+                                RemoveOrCreateObjectsWithBlending = (file.ReadUInt8() != 0u);
 
                                 if (blockSize > 28)
                                 {
-                                    DrawHelmetsOnShroud = file.ReadUInt8();
+                                    DrawHelmetsOnShroud = (file.ReadUInt8() != 0u);
 
                                     if (blockSize > 29)
                                     {
-                                        useGlobalMapLayer = file.ReadUInt8();
+                                        useGlobalMapLayer = (file.ReadUInt8() != 0u);
 
                                         if (blockSize > 30)
                                         {
-                                            noDrawRoofs = file.ReadUInt8();
+                                            noDrawRoofs = (file.ReadUInt8() != 0u);
 
                                             if (blockSize > 31)
-                                                HighlightTargetByType = file.ReadUInt8();
+                                            {
+                                                HighlightTargetByType = (file.ReadUInt8() != 0u);
+                                            }
                                         }
                                     }
                                 }
@@ -842,25 +898,25 @@ bool CConfigManager::LoadBin(const os_path &path)
 
                 if (blockSize > 3)
                 {
-                    m_UseScaling = file.ReadUInt8();
+                    m_UseScaling = (file.ReadUInt8() != 0u);
 
                     if (blockSize > 4)
                     {
-                        RemoveTextWithBlending = file.ReadUInt8();
+                        RemoveTextWithBlending = (file.ReadUInt8() != 0u);
                         m_DrawStatusState = file.ReadUInt8();
 
                         if (blockSize > 6)
                         {
-                            drawStumps = file.ReadUInt8();
-                            markingCaves = file.ReadUInt8();
-                            noAnimateFields = file.ReadUInt8();
+                            drawStumps = (file.ReadUInt8() != 0u);
+                            markingCaves = (file.ReadUInt8() != 0u);
+                            noAnimateFields = (file.ReadUInt8() != 0u);
 
                             if (blockSize > 9)
                             {
-                                noVegetation = file.ReadUInt8();
+                                noVegetation = (file.ReadUInt8() != 0u);
                                 HiddenCharactersRenderMode = file.ReadUInt8();
                                 HiddenAlpha = file.ReadUInt8();
-                                UseHiddenModeOnlyForSelf = file.ReadUInt8();
+                                UseHiddenModeOnlyForSelf = (file.ReadUInt8() != 0u);
 
                                 if (blockSize > 13)
                                 {
@@ -869,17 +925,17 @@ bool CConfigManager::LoadBin(const os_path &path)
 
                                     if (blockSize > 15)
                                     {
-                                        m_OldStyleStatusbar = file.ReadUInt8();
-                                        m_OriginalPartyStatusbar = file.ReadUInt8();
-                                        applyStateColorOnCharacters = file.ReadUInt8();
+                                        m_OldStyleStatusbar = (file.ReadUInt8() != 0u);
+                                        m_OriginalPartyStatusbar = (file.ReadUInt8() != 0u);
+                                        applyStateColorOnCharacters = (file.ReadUInt8() != 0u);
 
                                         if (blockSize > 18)
                                         {
-                                            changeFieldsGraphic = file.ReadUInt8();
+                                            changeFieldsGraphic = (file.ReadUInt8() != 0u);
 
                                             if (blockSize > 19)
                                             {
-                                                paperdollSlots = file.ReadUInt8();
+                                                paperdollSlots = (file.ReadUInt8() != 0u);
 
                                                 if (blockSize > 21)
                                                 {
@@ -887,8 +943,10 @@ bool CConfigManager::LoadBin(const os_path &path)
                                                     DrawStatusConditionValue = file.ReadUInt8();
 
                                                     if (blockSize > 22)
+                                                    {
                                                         RemoveStatusbarsWithoutObjects =
-                                                            file.ReadUInt8();
+                                                            (file.ReadUInt8() != 0u);
+                                                    }
                                                 }
                                             }
                                         }
@@ -900,10 +958,14 @@ bool CConfigManager::LoadBin(const os_path &path)
                 }
             }
             else
+            {
                 SetClientFPS(32);
+            }
         }
         else
+        {
             SetClientFPS(32);
+        }
 
         SetDrawStumps(drawStumps);
         SetMarkingCaves(markingCaves);
@@ -926,7 +988,7 @@ bool CConfigManager::LoadBin(const os_path &path)
 
         if (file.ReadInt8() == 3)
         {
-            UseToolTips = file.ReadUInt8();
+            UseToolTips = (file.ReadUInt8() != 0u);
             ToolTipsTextColor = file.ReadUInt16LE();
             ToolTipsTextFont = file.ReadUInt16LE();
             ToolTipsDelay = file.ReadUInt16LE();
@@ -969,31 +1031,31 @@ bool CConfigManager::LoadBin(const os_path &path)
 
         if (file.ReadInt8() == 6)
         {
-            EnablePathfind = file.ReadUInt8();
-            HoldTabForCombat = file.ReadUInt8();
-            OffsetInterfaceWindows = file.ReadUInt8();
-            AutoArrange = file.ReadUInt8();
-            AlwaysRun = file.ReadUInt8();
-            DisableMenubar = file.ReadUInt8();
-            GrayOutOfRangeObjects = file.ReadUInt8();
+            EnablePathfind = (file.ReadUInt8() != 0u);
+            HoldTabForCombat = (file.ReadUInt8() != 0u);
+            OffsetInterfaceWindows = (file.ReadUInt8() != 0u);
+            AutoArrange = (file.ReadUInt8() != 0u);
+            AlwaysRun = (file.ReadUInt8() != 0u);
+            DisableMenubar = (file.ReadUInt8() != 0u);
+            GrayOutOfRangeObjects = (file.ReadUInt8() != 0u);
             HoldShiftForContextMenus = true;
             HoldShiftForEnablePathfind = false;
 
             if (blockSize > 9)
             {
-                DisableNewTargetSystem = file.ReadUInt8();
+                DisableNewTargetSystem = (file.ReadUInt8() != 0u);
                 m_ItemPropertiesMode = file.ReadUInt8();
-                m_ItemPropertiesIcon = file.ReadUInt8();
-                ObjectHandles = file.ReadUInt8();
-                SetReduceFPSUnactiveWindow(file.ReadUInt8());
+                m_ItemPropertiesIcon = (file.ReadUInt8() != 0u);
+                ObjectHandles = (file.ReadUInt8() != 0u);
+                SetReduceFPSUnactiveWindow(file.ReadUInt8() != 0u);
 
                 if (blockSize > 14)
                 {
-                    HoldShiftForContextMenus = file.ReadUInt8();
+                    HoldShiftForContextMenus = (file.ReadUInt8() != 0u);
 
                     if (blockSize > 15)
                     {
-                        HoldShiftForEnablePathfind = file.ReadUInt8();
+                        HoldShiftForEnablePathfind = (file.ReadUInt8() != 0u);
 
                         if (blockSize > 16)
                         {
@@ -1025,20 +1087,20 @@ bool CConfigManager::LoadBin(const os_path &path)
             GameWindowWidth = file.ReadUInt16LE();
             GameWindowHeight = file.ReadUInt16LE();
             SpeechDelay = file.ReadUInt16LE();
-            ScaleSpeechDelay = file.ReadUInt16LE();
+            ScaleSpeechDelay = (file.ReadUInt16LE() != 0u);
             SpeechColor = file.ReadUInt16LE();
             EmoteColor = file.ReadUInt16LE();
             PartyMessageColor = file.ReadUInt16LE();
             GuildMessageColor = file.ReadUInt16LE();
             AllianceMessageColor = file.ReadUInt16LE();
-            IgnoreGuildMessage = file.ReadUInt8();
-            IgnoreAllianceMessage = file.ReadUInt8();
-            DarkNights = file.ReadUInt8();
-            ColoredLighting = file.ReadUInt8();
-            StandartCharactersAnimationDelay = file.ReadUInt8();
-            StandartItemsAnimationDelay = file.ReadUInt8();
-            LockResizingGameWindow = file.ReadUInt8();
-            LockGumpsMoving = file.ReadUInt8();
+            IgnoreGuildMessage = (file.ReadUInt8() != 0u);
+            IgnoreAllianceMessage = (file.ReadUInt8() != 0u);
+            DarkNights = (file.ReadUInt8() != 0u);
+            ColoredLighting = (file.ReadUInt8() != 0u);
+            StandartCharactersAnimationDelay = (file.ReadUInt8() != 0u);
+            StandartItemsAnimationDelay = (file.ReadUInt8() != 0u);
+            LockResizingGameWindow = (file.ReadUInt8() != 0u);
+            LockGumpsMoving = (file.ReadUInt8() != 0u);
         }
 
         file.Ptr = next;
@@ -1056,7 +1118,7 @@ bool CConfigManager::LoadBin(const os_path &path)
             CriminalColor = file.ReadUInt16LE();
             EnemyColor = file.ReadUInt16LE();
             MurdererColor = file.ReadUInt16LE();
-            CriminalActionsQuery = file.ReadUInt8();
+            CriminalActionsQuery = (file.ReadUInt8() != 0u);
         }
 
         file.Ptr = next;
@@ -1068,10 +1130,10 @@ bool CConfigManager::LoadBin(const os_path &path)
 
         if (file.ReadInt8() == 9)
         {
-            ShowIncomingNames = file.ReadUInt8();
-            UseCircleTrans = file.ReadUInt8();
-            StatReport = file.ReadUInt8();
-            SetConsoleNeedEnter(file.ReadUInt8());
+            ShowIncomingNames = (file.ReadUInt8() != 0u);
+            UseCircleTrans = (file.ReadUInt8() != 0u);
+            StatReport = (file.ReadUInt8() != 0u);
+            SetConsoleNeedEnter(file.ReadUInt8() != 0u);
             CircleTransRadius = file.ReadUInt8();
             SkillReport = file.ReadUInt8();
             SpeechFont = file.ReadUInt16LE();
@@ -1095,31 +1157,39 @@ bool CConfigManager::LoadBin(const os_path &path)
         //No page
         blockSize = file.ReadInt8();
 
-        if (!file.ReadInt8())
+        if (file.ReadInt8() == 0)
         {
             GameWindowX = file.ReadInt16LE();
 
             if (GameWindowX < 0)
+            {
                 GameWindowX = 0;
+            }
 
             GameWindowY = file.ReadInt16LE();
 
             if (GameWindowY < 0)
+            {
                 GameWindowY = 0;
+            }
 
             if (blockSize > 6)
             {
-                bool zoomed = file.ReadUInt8();
+                bool zoomed = file.ReadUInt8() != 0u;
 
                 int windowX = file.ReadInt16LE();
 
                 if (windowX < 0)
+                {
                     windowX = 0;
+                }
 
                 int windowY = file.ReadInt16LE();
 
                 if (windowY < 0)
+                {
                     windowY = 0;
+                }
 
                 int windowWidth = file.ReadInt16LE();
                 int windowHeight = file.ReadInt16LE();
@@ -1127,16 +1197,24 @@ bool CConfigManager::LoadBin(const os_path &path)
                 if (g_GameState >= GS_GAME)
                 {
                     if (windowWidth < 640)
+                    {
                         windowWidth = 640;
+                    }
 
                     if (windowWidth >= screenX)
+                    {
                         windowWidth = screenX;
+                    }
 
                     if (windowHeight < 480)
+                    {
                         windowHeight = 480;
+                    }
 
                     if (windowHeight >= screenY)
+                    {
                         windowHeight = screenY;
+                    }
                 }
                 else
                 {
@@ -1145,18 +1223,24 @@ bool CConfigManager::LoadBin(const os_path &path)
                 }
 
                 if (zoomed)
+                {
                     g_OrionWindow.MaximizeWindow();
+                }
                 else
+                {
                     g_OrionWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
+                }
 
                 g_GL.UpdateRect();
 
                 if (blockSize > 15)
                 {
-                    ToggleBufficonWindow = file.ReadUInt8();
+                    ToggleBufficonWindow = (file.ReadUInt8() != 0u);
 
                     if (blockSize == 17)
+                    {
                         g_DeveloperMode = (DEVELOPER_MODE)file.ReadUInt8();
+                    }
                 }
             }
             else
@@ -1171,16 +1255,24 @@ bool CConfigManager::LoadBin(const os_path &path)
     if (g_GameState >= GS_GAME)
     {
         if (GameWindowWidth < 640)
+        {
             GameWindowWidth = 640;
+        }
 
         if (GameWindowWidth >= screenX)
+        {
             GameWindowWidth = screenX;
+        }
 
         if (GameWindowHeight < 480)
+        {
             GameWindowHeight = 480;
+        }
 
         if (GameWindowHeight >= screenY)
+        {
             GameWindowHeight = screenY;
+        }
     }
     else
     {
@@ -1327,7 +1419,9 @@ int CConfigManager::GetConfigKeyCode(const string &key)
     for (int i = 0; i < CMKC_COUNT; i++)
     {
         if (str == ToLowerA(keys[i]))
+        {
             return (int)i;
+        }
     }
 
     return -1;
@@ -1337,7 +1431,9 @@ bool CConfigManager::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     if (!fs_path_exists(path))
+    {
         return false;
+    }
 
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
@@ -1362,7 +1458,9 @@ bool CConfigManager::Load(const os_path &path)
             int code = GetConfigKeyCode(strings[0]);
 
             if (code == -1)
+            {
                 continue;
+            }
 
             switch (code)
             {
@@ -1749,11 +1847,15 @@ bool CConfigManager::Load(const os_path &path)
                     break;
                 case CMKC_LAST_SERVER:
                     if (g_World == nullptr)
+                    {
                         g_ServerList.LastServerName = strings[1];
+                    }
                     break;
                 case CMKC_LAST_CHARACTER:
                     if (g_World == nullptr)
+                    {
                         g_CharacterList.LastCharacterName = strings[1];
+                    }
                     break;
                 case CMKC_CHARACTER_BACKPACK_STYLE:
                     m_CharacterBackpackStyle = atoi(strings[1].c_str());
@@ -1765,32 +1867,48 @@ bool CConfigManager::Load(const os_path &path)
     }
 
     if (GameWindowX < 0)
+    {
         GameWindowX = 0;
+    }
 
     if (GameWindowY < 0)
+    {
         GameWindowY = 0;
+    }
 
     if (windowX != -1 && windowY != -1 && windowWidth != -1 && windowHeight != -1)
     {
         if (windowX < 0)
+        {
             windowX = 0;
+        }
 
         if (windowY < 0)
+        {
             windowY = 0;
+        }
 
         if (g_GameState >= GS_GAME)
         {
             if (windowWidth < 640)
+            {
                 windowWidth = 640;
+            }
 
             if (windowWidth >= screenX)
+            {
                 windowWidth = screenX;
+            }
 
             if (windowHeight < 480)
+            {
                 windowHeight = 480;
+            }
 
             if (windowHeight >= screenY)
+            {
                 windowHeight = screenY;
+            }
         }
         else
         {

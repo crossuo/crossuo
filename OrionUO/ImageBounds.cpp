@@ -23,29 +23,27 @@ bool CImageBounds::InRect(const CImageBounds &ib)
     if (X < ib.X)
     {
         if (ib.X < X + Width)
+        {
             inRect = true;
+        }
     }
     else
     {
         if (X < ib.X + ib.Width)
+        {
             inRect = true;
+        }
     }
 
     if (inRect)
     {
         if (Y < ib.Y)
         {
-            if (ib.Y < Y + Height)
-                inRect = true;
-            else
-                inRect = false;
+            inRect = ib.Y < Y + Height;
         }
         else
         {
-            if (Y < ib.Y + ib.Height)
-                inRect = true;
-            else
-                inRect = false;
+            inRect = Y < ib.Y + ib.Height;
         }
     }
 
@@ -68,4 +66,3 @@ CTextImageBounds::~CTextImageBounds()
 {
     Text = nullptr;
 }
-

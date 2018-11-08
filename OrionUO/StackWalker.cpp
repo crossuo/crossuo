@@ -257,9 +257,9 @@ public:
         pSLM = (tSLM)GetProcAddress(m_hDbhHelp, "SymLoadModule64");
         pSGSP = (tSGSP)GetProcAddress(m_hDbhHelp, "SymGetSearchPath");
 
-        if (pSC == nullptr || pSFTA == nullptr || pSGMB == nullptr || pSGMI == nullptr || pSGO == nullptr ||
-            pSGSFA == nullptr || pSI == nullptr || pSSO == nullptr || pSW == nullptr || pUDSN == nullptr ||
-            pSLM == nullptr)
+        if (pSC == nullptr || pSFTA == nullptr || pSGMB == nullptr || pSGMI == nullptr ||
+            pSGO == nullptr || pSGSFA == nullptr || pSI == nullptr || pSSO == nullptr ||
+            pSW == nullptr || pUDSN == nullptr || pSLM == nullptr)
         {
             FreeLibrary(m_hDbhHelp);
             m_hDbhHelp = nullptr;
@@ -431,13 +431,13 @@ private:
     typedef struct tagMODULEENTRY32
     {
         DWORD dwSize;
-        DWORD th32ModuleID;  // This module
-        DWORD th32ProcessID; // owning process
-        DWORD GlblcntUsage;  // Global usage count on the module
-        DWORD ProccntUsage;  // Module usage count in th32ProcessID's context
-        uint8_t *modBaseAddr;   // Base address of module in th32ProcessID's context
-        DWORD modBaseSize;   // Size in bytes of module starting at modBaseAddr
-        HMODULE hModule;     // The hModule of this module in th32ProcessID's context
+        DWORD th32ModuleID;   // This module
+        DWORD th32ProcessID;  // owning process
+        DWORD GlblcntUsage;   // Global usage count on the module
+        DWORD ProccntUsage;   // Module usage count in th32ProcessID's context
+        uint8_t *modBaseAddr; // Base address of module in th32ProcessID's context
+        DWORD modBaseSize;    // Size in bytes of module starting at modBaseAddr
+        HMODULE hModule;      // The hModule of this module in th32ProcessID's context
         char szModule[MAX_MODULE_NAME32 + 1];
         char szExePath[MAX_PATH];
     } MODULEENTRY32;

@@ -58,7 +58,9 @@ const char *BASS_ErrorGetDescription()
     for (int i = 0; i < 38; i++)
     {
         if (BASS_ErrorTable[i].errorCode == currentErrorCode)
+        {
             return BASS_ErrorTable[i].desc;
+        }
     }
 
     return BASS_ErrorTable[0].desc;
@@ -82,17 +84,20 @@ bool CSoundManager::Init()
         LOG("Can't initialize device: %s\n", BASS_ErrorGetDescription());
         return false;
     }
-    else
-    {
-        LOG("Sound init successfull.\n");
-        BASS_SetConfig(BASS_CONFIG_SRC, 3); // interpolation method
 
-        if (!BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_FULL))
-            LOG("Error setting 3d sound: %s\n", BASS_ErrorGetDescription());
-        auto path = g_App.ExeFilePath("uo_4mb_2.sf2");
-        if (!BASS_SetConfigPtr(BASS_CONFIG_MIDI_DEFFONT, CStringFromPath(path)))
-            LOG("Could not load soundfont file for midi");
+    LOG("Sound init successfull.\n");
+    BASS_SetConfig(BASS_CONFIG_SRC, 3); // interpolation method
+
+    if (!BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_FULL))
+    {
+        LOG("Error setting 3d sound: %s\n", BASS_ErrorGetDescription());
     }
+    auto path = g_App.ExeFilePath("uo_4mb_2.sf2");
+    if (!BASS_SetConfigPtr(BASS_CONFIG_MIDI_DEFFONT, CStringFromPath(path)))
+    {
+        LOG("Could not load soundfont file for midi");
+    }
+
     return true;
 }
 
@@ -128,16 +133,18 @@ float CSoundManager::GetVolumeValue(int distance, bool music)
     WORD clientConfigVolume =
         music ? g_ConfigManager.GetMusicVolume() : g_ConfigManager.GetSoundVolume();
     if (volume == 0 || clientConfigVolume == 0)
+    {
         return 0;
+    }
     float clientsVolumeValue = (static_cast<float>(255) / static_cast<float>(clientConfigVolume));
     volume /= clientsVolumeValue;
     if (distance > g_ConfigManager.UpdateRange || distance < 1)
-        return volume;
-    else
     {
-        float soundValuePerDistance = volume / g_ConfigManager.UpdateRange;
-        return volume - (soundValuePerDistance * distance);
+        return volume;
     }
+
+    float soundValuePerDistance = volume / g_ConfigManager.UpdateRange;
+    return volume - (soundValuePerDistance * distance);
 }
 
 /// <summary>Создаёт в памяти 16 битный wave файл для последующего
@@ -205,12 +212,16 @@ void CSoundManager::PlaySoundEffect(HSTREAM hStream, float volume)
 {
     DEBUG_TRACE_FUNCTION;
     if (hStream == 0 || (!g_OrionWindow.IsActive() && !g_ConfigManager.BackgroundSound))
+    {
         return;
+    }
 
     BASS_ChannelSetAttribute(hStream, BASS_ATTRIB_VOL, volume);
 
     if (!BASS_ChannelPlay(hStream, false))
+    {
         LOG("Bass sound play error: %s\n", BASS_ErrorGetDescription());
+    }
 }
 
 /// <summary>Очистка звукового потока и высвобождение памяти.</summary>
@@ -232,12 +243,18 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     if (index >= 0 && index < MIDI_MUSIC_COUNT)
     {
         if (warmode && m_WarMusic != 0)
+        {
             return;
+        }
 
         if (warmode)
+        {
             BASS_ChannelStop(m_Music);
+        }
         else
+        {
             StopMusic();
+        }
 
         char musicPath[100] = { 0 };
         MidiInfoStruct midiInfo = MidiInfo[index];
@@ -250,7 +267,9 @@ void CSoundManager::PlayMidi(int index, bool warmode)
         BASS_ChannelSetAttribute(streamHandle, BASS_ATTRIB_VOL, volume);
         BASS_ChannelPlay(streamHandle, midiInfo.loop);
         if (warmode)
+        {
             m_WarMusic = streamHandle;
+        }
         else
         {
             CurrentMusicIndex = index;
@@ -258,25 +277,35 @@ void CSoundManager::PlayMidi(int index, bool warmode)
         }
     }
     else
+    {
         LOG("Music ID is out of range: %i\n", index);
+    }
 }
 
 void CSoundManager::PlayMP3(const os_path &fileName, int index, bool loop, bool warmode)
 {
     DEBUG_TRACE_FUNCTION;
     if (warmode && m_WarMusic != 0)
+    {
         return;
+    }
 
     if (warmode)
+    {
         BASS_ChannelStop(m_Music);
+    }
     else
+    {
         StopMusic();
+    }
     HSTREAM streamHandle =
         BASS_StreamCreateFile(FALSE, fileName.c_str(), 0, 0, loop ? BASS_SAMPLE_LOOP : 0);
     BASS_ChannelSetAttribute(streamHandle, BASS_ATTRIB_VOL, GetVolumeValue(-1, true));
     BASS_ChannelPlay(streamHandle, 0);
     if (warmode)
+    {
         m_WarMusic = streamHandle;
+    }
     else
     {
         m_Music = streamHandle;
@@ -291,7 +320,9 @@ void CSoundManager::StopWarMusic()
     m_WarMusic = 0;
 
     if (m_Music != 0 && !BASS_ChannelIsActive(m_Music))
+    {
         BASS_ChannelPlay(m_Music, 1);
+    }
 }
 
 void CSoundManager::StopMusic()
@@ -307,23 +338,31 @@ void CSoundManager::SetMusicVolume(float volume)
 {
     DEBUG_TRACE_FUNCTION;
     if (m_Music != 0 && BASS_ChannelIsActive(m_Music))
+    {
         BASS_ChannelSetAttribute(m_Music, BASS_ATTRIB_VOL, volume);
+    }
 
     if (m_WarMusic != 0 && BASS_ChannelIsActive(m_WarMusic))
+    {
         BASS_ChannelSetAttribute(m_WarMusic, BASS_ATTRIB_VOL, volume);
+    }
 }
 
 void CSoundManager::TraceMusicError(DWORD error)
 {
     DEBUG_TRACE_FUNCTION;
-    if (error)
+    if (error != 0u)
     {
         wchar_t szBuf[MAXERRORLENGTH];
 
         if (mciGetErrorString(error, szBuf, MAXERRORLENGTH))
+        {
             LOG("Midi error: %s\n", ToString(szBuf).c_str());
+        }
         else
+        {
             LOG("Midi error: #%i\n", error);
+        }
     }
 }
 
@@ -348,4 +387,3 @@ const MidiInfoStruct CSoundManager::MidiInfo[MIDI_MUSIC_COUNT] = {
     { "oldult04.mid", false }, { "dragflit.mid", false }, { "create1.mid", false },
     { "approach.mid", false }, { "combat3.mid", false },  { "jungle_a.mid", false }
 };
-

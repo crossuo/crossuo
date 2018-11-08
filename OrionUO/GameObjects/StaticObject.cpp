@@ -39,9 +39,13 @@ void CStaticObject::Draw(int x, int y)
     RenderGraphic = Graphic;
 
     if (g_DeveloperMode == DM_DEBUGGING && g_SelectedObject.Object == this)
+    {
         RenderColor = SELECT_STATIC_COLOR;
+    }
     else
+    {
         RenderColor = Color;
+    }
 
     CRenderStaticObject::Draw(x, y);
 }
@@ -53,4 +57,3 @@ void CStaticObject::Select(int x, int y)
 
     CRenderStaticObject::Select(x, y);
 }
-

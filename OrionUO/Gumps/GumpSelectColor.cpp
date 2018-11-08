@@ -38,7 +38,9 @@ void CGumpSelectColor::UpdateContent()
         m_DataBox = (CGUIDataBox *)Add(new CGUIDataBox());
     }
     else
+    {
         m_DataBox->Clear();
+    }
 
     const int cellWidthX = 8;
     const int cellWidthY = 8;
@@ -126,8 +128,9 @@ void CGumpSelectColor::OnSelectColor(uint16_t color)
     CGumpOptions *gump = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);
 
     if (gump != nullptr)
+    {
         gump->UpdateColor(m_State, color);
+    }
 
     RemoveMark = true;
 }
-

@@ -67,12 +67,18 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
 {
     DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
+    {
         action = SmoothScreenAction;
+    }
 
     if (action == ID_SMOOTH_MS_CONNECT)
+    {
         g_Orion.Connect();
+    }
     else if (action == ID_SMOOTH_MS_QUIT)
+    {
         g_OrionWindow.Destroy();
+    }
 }
 
 void CMainScreen::SetAccounting(const string &account, const string &password)
@@ -85,7 +91,9 @@ void CMainScreen::SetAccounting(const string &account, const string &password)
     m_MainGump.m_PasswordFake->Clear();
 
     for (int i = 0; i < len; i++)
+    {
         m_MainGump.m_PasswordFake->Insert(L'*');
+    }
 }
 
 void CMainScreen::Paste()
@@ -99,10 +107,14 @@ void CMainScreen::Paste()
         g_EntryPointer->Clear();
 
         for (int i = 0; i < len; i++)
+        {
             g_EntryPointer->Insert(L'*');
+        }
     }
     else
+    {
         g_EntryPointer->Paste();
+    }
 }
 
 void CMainScreen::OnTextInput(const TextEvent &ev)
@@ -111,9 +123,10 @@ void CMainScreen::OnTextInput(const TextEvent &ev)
 
     const auto ch = EvChar(ev);
     if (ch >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)ch))
+    {
         return;
-
-    else if (g_EntryPointer == nullptr)
+    }
+    if (g_EntryPointer == nullptr)
     {
         g_EntryPointer = m_MainGump.m_PasswordFake;
     }
@@ -123,10 +136,14 @@ void CMainScreen::OnTextInput(const TextEvent &ev)
         if (g_EntryPointer == m_MainGump.m_PasswordFake)
         {
             if (g_EntryPointer->Insert(L'*'))
+            {
                 m_Password->Insert(ch);
+            }
         }
         else
+        {
             g_EntryPointer->Insert(ch);
+        }
     }
 
     m_Gump.WantRedraw = true;
@@ -190,10 +207,12 @@ int CMainScreen::GetConfigKeyCode(const string &key)
     string str = ToLowerA(key);
     int result = 0;
 
-    for (int i = 0; i < keyCount && !result; i++)
+    for (int i = 0; i < keyCount && (result == 0); i++)
     {
         if (str == m_Keys[i])
+        {
             result = (int)i + 1;
+        }
     }
 
     return result;
@@ -258,12 +277,14 @@ void CMainScreen::LoadGlobalConfig()
                     password = password.substr(pos + 1, password.length() - (pos + 1));
 
                     const auto len = (int)password.length();
-                    if (len)
+                    if (len != 0)
                     {
                         m_Password->SetTextA(password);
 
                         for (int zv = 0; zv < len; zv++)
+                        {
                             m_MainGump.m_PasswordFake->Insert(L'*');
+                        }
 
                         m_Password->SetPos((int)len);
                     }
@@ -328,7 +349,9 @@ void CMainScreen::SaveGlobalConfig()
     LOG("Saving global config to " ORIONUO_CONFIG "\n");
     FILE *uo_cfg = fs_open(g_App.ExeFilePath(ORIONUO_CONFIG), FS_WRITE);
     if (uo_cfg == nullptr)
+    {
         return;
+    }
 
     char buf[128] = { 0 };
 

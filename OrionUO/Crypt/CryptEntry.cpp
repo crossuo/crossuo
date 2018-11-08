@@ -20,13 +20,17 @@ static void Init(bool is_login, uint8_t seed[4])
     else
     {
         if (g_EncryptionType != ET_NOCRYPT)
+        {
             g_BlowfishCrypt.Init();
+        }
 
         if (g_EncryptionType == ET_203 || g_EncryptionType == ET_TFISH)
         {
             g_TwofishCrypt.Init(seed);
             if (g_EncryptionType == ET_TFISH)
+            {
                 g_TwofishCrypt.Init_MD5();
+            }
         }
     }
 }
@@ -40,11 +44,17 @@ static void Send(bool is_login, uint8_t *src, uint8_t *dest, int size)
     else if (is_login)
     {
         if (g_EncryptionType == ET_OLD_BFISH)
+        {
             g_LoginCrypt.Encrypt_Old(src, dest, size);
+        }
         else if (g_EncryptionType == ET_1_25_36)
+        {
             g_LoginCrypt.Encrypt_1_25_36(src, dest, size);
+        }
         else if (g_EncryptionType != ET_NOCRYPT)
+        {
             g_LoginCrypt.Encrypt(src, dest, size);
+        }
     }
     else if (g_EncryptionType == ET_203)
     {
@@ -52,22 +62,30 @@ static void Send(bool is_login, uint8_t *src, uint8_t *dest, int size)
         g_TwofishCrypt.Encrypt(dest, dest, size);
     }
     else if (g_EncryptionType == ET_TFISH)
+    {
         g_TwofishCrypt.Encrypt(src, dest, size);
+    }
     else
+    {
         g_BlowfishCrypt.Encrypt(src, dest, size);
+    }
 }
 
 static void Decrypt(uint8_t *src, uint8_t *dest, int size)
 {
     if (g_EncryptionType == ET_TFISH)
+    {
         g_TwofishCrypt.Decrypt(src, dest, size);
+    }
     else
+    {
         memcpy(dest, src, size);
+    }
 }
 
 static void LoadPlugins(PLUGIN_INFO *result)
 {
-    if (g_RawData.size())
+    if (static_cast<unsigned int>(!g_RawData.empty()) != 0u)
     {
         Wisp::CDataReader file(&g_RawData[0], (int)g_RawData.size());
 
@@ -82,7 +100,9 @@ static void LoadPlugins(PLUGIN_INFO *result)
             file.Move(1);
 
             if (ver >= 3)
+            {
                 file.Move(1);
+            }
 
             char count = file.ReadInt8();
 
@@ -90,7 +110,7 @@ static void LoadPlugins(PLUGIN_INFO *result)
             {
                 short len = file.ReadInt16LE();
                 string fileName = file.ReadString(len);
-                memcpy(&result[i].FileName[0], &fileName.data()[0], fileName.length());
+                memcpy(&result[i].FileName[0], &fileName[0], fileName.length());
 
                 file.Move(2);
                 result[i].Flags = file.ReadUInt32LE();
@@ -98,7 +118,7 @@ static void LoadPlugins(PLUGIN_INFO *result)
 
                 len = file.ReadInt16LE();
                 string functionName = file.ReadString(len);
-                memcpy(&result[i].FunctionName[0], &functionName.data()[0], functionName.length());
+                memcpy(&result[i].FunctionName[0], &functionName[0], functionName.length());
             }
         }
     }
@@ -108,7 +128,7 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
 {
     vector<uint8_t> result;
 
-    if (size)
+    if (size != 0u)
     {
         g_RawData.resize(size);
         memcpy(&g_RawData[0], &address[0], size);
@@ -126,7 +146,7 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
 
         int len = file.ReadInt8();
         writter.WriteUInt8(len);
-        writter.WriteDataLE((uint8_t *)file.ReadString(len).data(), len, false);
+        writter.WriteDataLE((uint8_t *)file.ReadString(len).data(), len, 0);
 
         file.Move(14); //crypt keys & seed
 #if defined(_M_IX86)
@@ -144,7 +164,9 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
         int mapsCount = 6;
 
         if (version < 4)
+        {
             writter.WriteUInt8(file.ReadInt8()); //InverseBuylist
+        }
         else
         {
             mapsCount = file.ReadInt8();
@@ -165,7 +187,9 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
             clientFlag = file.ReadInt8();
 
             if (version >= 3)
+            {
                 useVerdata = file.ReadInt8();
+            }
 
             g_CryptPluginsCount = file.ReadInt8();
         }
@@ -193,6 +217,8 @@ void CryptInstallNew(uint8_t *address, size_t size, uint8_t *result, size_t &res
     memset(result, 0, resultSize);
     resultSize = buf.size();
     if (resultSize >= buf.size())
+    {
         memcpy(result, &buf[0], buf.size());
+    }
 }
 #endif

@@ -2,8 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CTextureAnimationFrame::CTextureAnimationFrame()
-    : CGLTexture()
-    , CenterX(0)
+    : CenterX(0)
     , CenterY(0)
 {
 }
@@ -38,4 +37,3 @@ CTextureAnimationGroup::CTextureAnimationGroup()
 CTextureAnimationGroup::~CTextureAnimationGroup()
 {
 }
-

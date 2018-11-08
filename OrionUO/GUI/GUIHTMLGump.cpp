@@ -13,10 +13,7 @@ CGUIHTMLGump::CGUIHTMLGump(
     : CGUIPolygonal(GOT_HTMLGUMP, x, y, width, height)
     , HaveBackground(haveBackground)
     , HaveScrollbar(haveScrollbar)
-    , DataSize()
-    , DataOffset()
-    , CurrentOffset()
-    , AvailableOffset()
+
 {
     DEBUG_TRACE_FUNCTION;
     Serial = serial;
@@ -86,7 +83,9 @@ void CGUIHTMLGump::Initalize(bool menu)
             CGLTexture *th = g_Orion.ExecuteGump(0x00FE);
 
             if (th != nullptr)
+            {
                 offsetWidth -= th->Width;
+            }
         }
 
         m_Background = new CGUIHTMLResizepic(this, 0, Graphic, 0, 0, offsetWidth, Height);
@@ -100,7 +99,9 @@ void CGUIHTMLGump::Initalize(bool menu)
         int sliderHeight = Height;
 
         if (thDown != nullptr)
+        {
             sliderHeight -= thDown->Height;
+        }
 
         m_ButtonDown =
             new CGUIHTMLButton(this, Serial, 0x00FC, 0x00FC, 0x00FC, offsetWidth, sliderHeight);
@@ -157,7 +158,9 @@ void CGUIHTMLGump::UpdateHeight(int height)
     int sliderHeight = height;
 
     if (thDown != nullptr)
+    {
         sliderHeight -= thDown->Height;
+    }
 
     m_ButtonDown->SetY(sliderHeight);
 
@@ -191,18 +194,24 @@ void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, i
     for (; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_HITBOX || !item->Visible)
+        {
             continue;
-        else if (item->Type == GOT_DATABOX)
+        }
+        if (item->Type == GOT_DATABOX)
         {
             CalculateDataSize((CBaseGUI *)item->m_Items, startX, startY, endX, endY);
             continue;
         }
 
         if (item->GetX() < startX)
+        {
             startX = item->GetX();
+        }
 
         if (item->GetY() < startY)
+        {
             startY = item->GetY();
+        }
 
         Wisp::CSize size = item->GetSize();
 
@@ -210,10 +219,14 @@ void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, i
         int curY = item->GetY() + size.Height;
 
         if (curX > endX)
+        {
             endX = curX;
+        }
 
         if (curY > endY)
+        {
             endY = curY;
+        }
     }
 }
 
@@ -223,7 +236,9 @@ void CGUIHTMLGump::CalculateDataSize()
     CBaseGUI *item = (CBaseGUI *)m_Items;
 
     for (int i = 0; i < 5; i++)
+    {
         item = (CBaseGUI *)item->m_Next;
+    }
 
     int startX = 0;
     int startY = 0;
@@ -241,19 +256,27 @@ void CGUIHTMLGump::CalculateDataSize()
     AvailableOffset.X = DataSize.Width - m_Scissor->Width;
 
     if (AvailableOffset.X < 0)
+    {
         AvailableOffset.X = 0;
+    }
 
     AvailableOffset.Y = DataSize.Height - m_Scissor->Height;
 
     if (AvailableOffset.Y < 0)
+    {
         AvailableOffset.Y = 0;
+    }
 
     m_Slider->MinValue = 0;
 
     if (m_Slider->Vertical)
+    {
         m_Slider->MaxValue = AvailableOffset.Y;
+    }
     else
+    {
         m_Slider->MaxValue = AvailableOffset.X;
+    }
 
     m_Slider->CalculateOffset();
 }
@@ -264,7 +287,9 @@ bool CGUIHTMLGump::EntryPointerHere()
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
+        {
             return true;
+        }
     }
 
     return false;
@@ -296,5 +321,7 @@ void CGUIHTMLGump::Scroll(bool up, int delay)
 {
     DEBUG_TRACE_FUNCTION;
     if (m_Slider != nullptr)
+    {
         m_Slider->OnScroll(up, delay);
+    }
 }

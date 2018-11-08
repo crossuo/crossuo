@@ -9,9 +9,13 @@ CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const
     MoveOnDrag = true;
 
     if (g_PacketManager.GetClientVersion() >= CV_305D)
+    {
         g_FontManager.GenerateW(1, m_Texture, text, 0);
+    }
     else
+    {
         g_FontManager.GenerateA(9, m_Texture, ToString(text), 0x0386);
+    }
 }
 
 CGUIBulletinBoardObject::~CGUIBulletinBoardObject()
@@ -32,7 +36,9 @@ void CGUIBulletinBoardObject::Draw(bool checktrans)
     CGLTexture *th = g_Orion.ExecuteGump(0x1523);
 
     if (th != nullptr)
+    {
         th->Draw(m_X, m_Y, checktrans);
+    }
 
     m_Texture.Draw(m_X + 23, m_Y + 1);
 }

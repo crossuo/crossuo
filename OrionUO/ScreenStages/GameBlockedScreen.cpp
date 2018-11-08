@@ -13,7 +13,7 @@ CGameBlockedScreen::CGameBlockedScreen()
 CGameBlockedScreen::~CGameBlockedScreen()
 {
 }
- 
+
 void CGameBlockedScreen::Init()
 {
     Code = 0;
@@ -30,7 +30,7 @@ void CGameBlockedScreen::Render()
 void CGameBlockedScreen::SelectObject()
 {
     DEBUG_TRACE_FUNCTION;
-    
+
     g_SelectedObject.Clear();
     g_GumpManager.Select(true);
     if (g_SelectedObject.Object != g_LastSelectedObject.Object)
@@ -53,14 +53,18 @@ void CGameBlockedScreen::OnLeftMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
+    {
         g_GumpManager.OnLeftMouseButtonDown(true);
+    }
 }
 
 void CGameBlockedScreen::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != nullptr)
+    {
         g_GumpManager.OnLeftMouseButtonUp(true);
+    }
 }
 
 void CGameBlockedScreen::OnTextInput(const TextEvent &ev)
@@ -68,7 +72,9 @@ void CGameBlockedScreen::OnTextInput(const TextEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
     if (g_EntryPointer == nullptr || g_EntryPointer == &g_GameConsole)
+    {
         return;
+    }
 
     g_GumpManager.OnTextInput(ev, true);
 }
@@ -82,14 +88,20 @@ void CGameBlockedScreen::OnKeyDown(const KeyEvent &ev)
     if (g_EntryPointer == nullptr || g_EntryPointer == &g_GameConsole)
     {
         if (key == KEY_RETURN && notify != nullptr)
+        {
             notify->OnKeyDown(ev);
+        }
     }
     else
     {
         CGump *gump = g_GumpManager.GetTextEntryOwner();
         if (gump != nullptr && gump->GumpType == GT_TEXT_ENTRY_DIALOG)
+        {
             gump->OnKeyDown(ev);
+        }
         else if (notify != nullptr)
+        {
             notify->OnKeyDown(ev);
+        }
     }
 }

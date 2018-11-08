@@ -32,7 +32,9 @@ void CGumpScreenSelectTown::UpdateContent()
     CCityItem *city = g_SelectTownScreen.m_City;
 
     if (city == nullptr)
+    {
         return;
+    }
 
     wstring description = city->m_City.Description;
     int map = 0;
@@ -60,7 +62,9 @@ void CGumpScreenSelectTown::UpdateContent()
         mapName->CreateTextureW(0, townNames[map], 24, 0, TS_LEFT, UOFONT_BLACK_BORDER);
     }
     else
+    {
         Add(new CGUIGumppic(0x1598, 57, 49));
+    }
 
     Add(new CGUIButton(ID_STS_QUIT, 0x1589, 0x158A, 0x158B, 555, 4));
     Add(new CGUIButton(ID_STS_ARROW_PREV, 0x15A1, 0x15A2, 0x15A3, 586, 445));
@@ -83,12 +87,18 @@ void CGumpScreenSelectTown::UpdateContent()
     for (int i = 0; i < (int)g_CityList.CityCount(); i++)
     {
         if (g_PacketManager.GetClientVersion() >= CV_70130)
+        {
             city = g_CityList.GetCity((uint32_t)i);
+        }
         else
+        {
             city = g_CityList.GetCity((uint32_t)i + 1);
+        }
 
         if (city == nullptr)
+        {
             continue;
+        }
 
         int x = 0;
         int y = 0;
@@ -100,7 +110,9 @@ void CGumpScreenSelectTown::UpdateContent()
             uint32_t map = newCity->MapIndex;
 
             if (map > 5)
+            {
                 map = 5;
+            }
 
             x = 62 + CalculatePercents(g_MapSize[map].Width - 2048, newCity->X, 383);
             y = 54 + CalculatePercents(g_MapSize[map].Height, newCity->Y, 384);
@@ -115,8 +127,10 @@ void CGumpScreenSelectTown::UpdateContent()
 
         y -= 20;
 
-        if (i == 3) //Moonglow
+        if (i == 3)
+        { //Moonglow
             x -= 60;
+        }
 
         CGUITextEntry *entry = (CGUITextEntry *)Add(
             new CGUITextEntry(ID_STS_TOWN + (int)i, 0x0058, 0x0099, 0x0481, x, y, 0, false, 3));
@@ -130,13 +144,19 @@ void CGumpScreenSelectTown::UpdateContent()
 void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_STS_QUIT) //x button
+    if (serial == ID_STS_QUIT)
+    { //x button
         g_SelectTownScreen.CreateSmoothAction(CSelectTownScreen::ID_SMOOTH_STS_QUIT);
-    else if (serial == ID_STS_ARROW_PREV) //< button
+    }
+    else if (serial == ID_STS_ARROW_PREV)
+    { //< button
         g_SelectTownScreen.CreateSmoothAction(CSelectTownScreen::ID_SMOOTH_STS_GO_SCREEN_CHARACTER);
-    else if (serial == ID_STS_ARROW_NEXT || serial >= ID_STS_TOWN) //> button
+    }
+    else if (serial == ID_STS_ARROW_NEXT || serial >= ID_STS_TOWN)
+    { //> button
         g_SelectTownScreen.CreateSmoothAction(
             CSelectTownScreen::ID_SMOOTH_STS_GO_SCREEN_GAME_CONNECT);
+    }
 }
 
 void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
@@ -151,7 +171,9 @@ void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
                 CCityItem *city = g_CityList.GetCity(serial - ID_STS_TOWN + 1);
 
                 if (city == nullptr || g_SelectTownScreen.m_City->Name == city->Name)
+                {
                     break;
+                }
 
                 g_SelectTownScreen.m_City = city;
 
@@ -168,7 +190,9 @@ void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
                 g_FontManager.SetUseHTML(true);
 
                 if (m_Description != nullptr)
+                {
                     m_Description->CreateTextureW(1, description, 30, 150);
+                }
 
                 //!Выключаем обработку HTML-тэгов
                 g_FontManager.SetUseHTML(false);
@@ -182,7 +206,9 @@ void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
                 ((CGUITextEntry *)item)->Focused = true;
             }
             else
+            {
                 ((CGUITextEntry *)item)->Focused = false;
+            }
         }
     }
 }

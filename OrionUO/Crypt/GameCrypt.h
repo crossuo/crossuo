@@ -60,8 +60,8 @@ public:
     void Init(uint8_t seed[4]);
     void Init_MD5();
 
-    void Encrypt(uint8_t *in, uint8_t *out, int size);
-    void Decrypt(uint8_t *in, uint8_t *out, int size);
+    void Encrypt(const uint8_t *in, uint8_t *out, int size);
+    void Decrypt(const uint8_t *in, uint8_t *out, int size);
 };
 
 extern CBlowfishCrypt g_BlowfishCrypt;

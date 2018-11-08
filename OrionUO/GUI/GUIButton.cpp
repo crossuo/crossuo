@@ -27,9 +27,13 @@ uint16_t CGUIButton::GetDrawGraphic()
     uint16_t graphic = Graphic;
 
     if (g_GumpPressedElement == this)
+    {
         graphic = GraphicPressed;
+    }
     else if (g_GumpSelectedElement == this)
+    {
         graphic = GraphicSelected;
+    }
 
     return graphic;
 }
@@ -38,13 +42,16 @@ void CGUIButton::OnMouseEnter()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
+    {
         g_SelectedObject.Gump->WantRedraw = true;
+    }
 }
 
 void CGUIButton::OnMouseExit()
 {
     DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
+    {
         g_LastSelectedObject.Gump->WantRedraw = true;
+    }
 }
-

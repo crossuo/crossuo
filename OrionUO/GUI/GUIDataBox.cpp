@@ -23,9 +23,10 @@ bool CGUIDataBox::EntryPointerHere()
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
+        {
             return true;
+        }
     }
 
     return false;
 }
-

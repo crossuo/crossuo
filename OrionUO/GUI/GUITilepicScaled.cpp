@@ -25,4 +25,3 @@ void CGUITilepicScaled::Draw(bool checktrans)
         g_GL_Draw(*th, m_X, m_Y);
     }
 }
-

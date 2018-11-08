@@ -24,7 +24,7 @@ CGumpContainer::CGumpContainer(uint32_t serial, uint32_t id, short x, short y)
     {
         if (m_CorpseEyesTicks < g_Ticks)
         {
-            m_CorpseEyesOffset = (uint8_t)!m_CorpseEyesOffset;
+            m_CorpseEyesOffset = static_cast<uint8_t>((uint8_t)m_CorpseEyesOffset == 0u);
             m_CorpseEyesTicks = g_Ticks + 750;
         }
 
@@ -56,16 +56,24 @@ void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
         const CContainerOffsetRect &rect = g_ContainerOffset[Graphic].Rect;
 
         if (item->GetX() < rect.MinX)
+        {
             item->SetX(rect.MinX);
+        }
 
         if (item->GetY() < rect.MinY)
+        {
             item->SetY(rect.MinY);
+        }
 
         if (item->GetX() > rect.MinX + rect.MaxX)
+        {
             item->SetX(rect.MinX + rect.MaxX);
+        }
 
         if (item->GetY() > rect.MinY + rect.MaxY)
+        {
             item->SetY(rect.MinY + rect.MaxY);
+        }
     }
 }
 
@@ -105,12 +113,18 @@ void CGumpContainer::InitToolTip()
     if (!Minimized)
     {
         if (g_SelectedObject.Serial == ID_GC_MINIMIZE)
+        {
             g_ToolTip.Set(L"Minimize the container gump");
+        }
         else if (g_SelectedObject.Serial == ID_GC_LOCK_MOVING)
+        {
             g_ToolTip.Set(L"Lock moving/closing the container gump");
+        }
     }
     else
+    {
         g_ToolTip.Set(L"Double click to maximize container gump");
+    }
 }
 
 void CGumpContainer::PrepareContent()
@@ -158,7 +172,7 @@ void CGumpContainer::PrepareContent()
     {
         if (m_CorpseEyesTicks < g_Ticks)
         {
-            m_CorpseEyesOffset = (uint8_t)!m_CorpseEyesOffset;
+            m_CorpseEyesOffset = static_cast<uint8_t>((uint8_t)m_CorpseEyesOffset == 0u);
             m_CorpseEyesTicks = g_Ticks + 750;
 
             m_CorpseEyes->Graphic = 0x0045 + m_CorpseEyesOffset;
@@ -183,7 +197,9 @@ void CGumpContainer::PrepareContent()
         }
 
         if (m_TextRenderer.CalculatePositions(false))
+        {
             WantRedraw = true;
+        }
     }
 }
 
@@ -193,7 +209,9 @@ void CGumpContainer::UpdateContent()
     CGameItem *container = g_World->FindWorldItem(Serial);
 
     if (container == nullptr)
+    {
         return;
+    }
 
     if ((uint16_t)ID == 0x003C)
     {
@@ -220,7 +238,9 @@ void CGumpContainer::UpdateContent()
             }
 
             if (g_Orion.ExecuteGump(graphic) == nullptr)
+            {
                 graphic = 0x003C;
+            }
 
             m_BodyGump->Graphic = graphic;
         }
@@ -310,7 +330,9 @@ void CGumpContainer::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
     if (!Minimized && serial == ID_GC_MINIMIZE && ID == 0x003C)
+    {
         Minimized = true;
+    }
     else if (serial == ID_GC_LOCK_MOVING)
     {
         LockMoving = !LockMoving;
@@ -326,7 +348,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
     uint32_t dropContainer = Serial;
     uint32_t selectedSerial = g_SelectedObject.Serial;
 
-    if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled && selectedSerial &&
+    if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled && (selectedSerial != 0u) &&
         selectedSerial != ID_GC_MINIMIZE && selectedSerial != ID_GC_LOCK_MOVING)
     {
         g_Target.SendTargetObject(selectedSerial);
@@ -339,7 +361,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
         (GetTopObjDistance(g_Player, g_World->FindWorldObject(dropContainer)) <=
          DRAG_ITEMS_DISTANCE);
 
-    if (canDrop && selectedSerial && selectedSerial != ID_GC_MINIMIZE &&
+    if (canDrop && (selectedSerial != 0u) && selectedSerial != ID_GC_MINIMIZE &&
         selectedSerial != ID_GC_LOCK_MOVING)
     {
         canDrop = false;
@@ -353,9 +375,13 @@ void CGumpContainer::OnLeftMouseButtonUp()
             if (target != nullptr)
             {
                 if (target->IsContainer())
+                {
                     dropContainer = target->Serial;
+                }
                 else if (target->IsStackable() && target->Graphic == g_ObjectInHand.Graphic)
+                {
                     dropContainer = target->Serial;
+                }
                 else
                 {
                     switch (target->Graphic)
@@ -379,7 +405,9 @@ void CGumpContainer::OnLeftMouseButtonUp()
     }
 
     if (!canDrop && g_ObjectInHand.Enabled)
+    {
         g_Orion.PlaySoundEffect(0x0051);
+    }
 
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
@@ -405,17 +433,25 @@ void CGumpContainer::OnLeftMouseButtonUp()
             y -= (th->Height / 2);
 
             if (x + th->Width > r.MaxX)
+            {
                 x = r.MaxX - th->Width;
+            }
 
             if (y + th->Height > r.MaxY)
+            {
                 y = r.MaxY - th->Height;
+            }
         }
 
         if (x < r.MinX)
+        {
             x = r.MinX;
+        }
 
         if (y < r.MinY)
+        {
             y = r.MinY;
+        }
 
         if (dropContainer != Serial)
         {
@@ -453,7 +489,7 @@ bool CGumpContainer::OnLeftMouseButtonDoubleClick()
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    if (!g_PressedObject.LeftSerial && Minimized && ID == 0x003C)
+    if ((g_PressedObject.LeftSerial == 0u) && Minimized && ID == 0x003C)
     {
         Minimized = false;
         Page = 2;
@@ -461,7 +497,7 @@ bool CGumpContainer::OnLeftMouseButtonDoubleClick()
 
         result = true;
     }
-    else if (g_PressedObject.LeftSerial && g_PressedObject.LeftSerial != ID_GC_MINIMIZE)
+    else if ((g_PressedObject.LeftSerial != 0u) && g_PressedObject.LeftSerial != ID_GC_MINIMIZE)
     {
         g_Orion.DoubleClick(g_PressedObject.LeftSerial);
         FrameCreated = false;

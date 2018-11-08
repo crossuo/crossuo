@@ -4,8 +4,7 @@
 CTextRenderer g_WorldTextRenderer;
 
 CTextRenderer::CTextRenderer()
-    : CRenderTextObject()
-    , m_TextItems(this)
+    : m_TextItems(this)
     , m_DrawPointer(nullptr)
 {
 }
@@ -58,7 +57,9 @@ void CTextRenderer::ToTop(CRenderTextObject *obj)
     obj->m_NextDraw = next;
 
     if (next != nullptr)
+    {
         next->m_PrevDraw = obj;
+    }
 }
 
 bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
@@ -96,15 +97,21 @@ bool CTextRenderer::ProcessTextRemoveBlending(CTextData &text)
             delta = delta / 10;
 
             if (delta > 100)
+            {
                 delta = 100;
+            }
 
             if (delta < 1)
+            {
                 delta = 0;
+            }
 
             delta = (255 * delta) / 100;
 
             if (!text.Transparent || delta <= 0x7F)
+            {
                 text.Alpha = (uint8_t)delta;
+            }
 
             text.Transparent = true;
 
@@ -121,7 +128,9 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
     bool changed = false;
 
     if (!noCalculate)
+    {
         ClearRect();
+    }
 
     for (m_DrawPointer = m_TextItems; m_DrawPointer != nullptr;
          m_DrawPointer = m_DrawPointer->m_NextDraw)
@@ -135,12 +144,16 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
                 CRenderWorldObject *rwo = nullptr;
 
                 if (text.Type == TT_OBJECT)
+                {
                     rwo = g_World->FindWorldObject(text.Serial);
+                }
 
                 bool transparent = InRect((CTextData *)m_DrawPointer, rwo);
 
                 if (text.Transparent != transparent)
+                {
                     changed = true;
+                }
 
                 text.Transparent = transparent;
 
@@ -149,7 +162,9 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
         }
 
         if (m_DrawPointer->m_NextDraw == nullptr)
+        {
             break;
+        }
     }
 
     return changed;
@@ -163,7 +178,9 @@ void CTextRenderer::Draw()
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
     {
         if (!item->IsText())
+        {
             continue;
+        }
 
         CTextData &text = *(CTextData *)item;
 
@@ -171,26 +188,36 @@ void CTextRenderer::Draw()
         {
             uint16_t textColor = text.Color;
 
-            if (textColor)
+            if (textColor != 0u)
             {
                 g_ColorManager.SendColorsToShader(textColor);
 
                 if (text.Unicode)
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_TEXT_COLORED_NO_BLACK);
+                }
                 else if (text.Font != 5 && text.Font != 8)
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+                }
                 else
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                }
             }
             else
+            {
                 glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+            }
 
             if (text.Transparent)
             {
                 uint8_t alpha = text.Alpha;
 
                 if (alpha == 0xFF)
+                {
                     alpha = 0x7F;
+                }
 
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -202,7 +229,9 @@ void CTextRenderer::Draw()
                 glDisable(GL_BLEND);
             }
             else
+            {
                 text.m_Texture.Draw(text.RealDrawX, text.RealDrawY);
+            }
         }
     }
 }
@@ -211,29 +240,42 @@ void CTextRenderer::Select(CGump *gump)
 {
     DEBUG_TRACE_FUNCTION;
     if (gump != nullptr)
+    {
         CalculatePositions(true);
+    }
     else
+    {
         CalculateWorldPositions(true);
+    }
 
     int renderIndex = g_GameScreen.RenderIndex - 1;
 
     if (renderIndex < 1)
+    {
         renderIndex = 99;
+    }
 
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
     {
         if (!item->IsText())
+        {
             continue;
+        }
 
         CTextData &text = *(CTextData *)item;
 
         if (text.Timer >= g_Ticks)
         {
-            if (gump == nullptr && (text.Owner == nullptr || text.Owner->UseInRender != renderIndex))
+            if (gump == nullptr &&
+                (text.Owner == nullptr || text.Owner->UseInRender != renderIndex))
+            {
                 continue;
+            }
 
             if (text.m_Texture.Select(text.RealDrawX, text.RealDrawY))
+            {
                 g_SelectedObject.Init(item, gump);
+            }
         }
     }
 }
@@ -244,7 +286,9 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
     bool changed = false;
 
     if (!noCalculate)
+    {
         ClearRect();
+    }
 
     for (m_DrawPointer = m_TextItems; m_DrawPointer != nullptr;
          m_DrawPointer = m_DrawPointer->m_NextDraw)
@@ -265,7 +309,9 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
         }
 
         if (m_DrawPointer->m_NextDraw == nullptr)
+        {
             break;
+        }
     }
 
     return changed;
@@ -279,12 +325,16 @@ void CTextRenderer::WorldDraw()
     int renderIndex = g_GameScreen.RenderIndex - 1;
 
     if (renderIndex < 1)
+    {
         renderIndex = 99;
+    }
 
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
     {
         if (!item->IsText())
+        {
             continue;
+        }
 
         CTextData &text = *(CTextData *)item;
 
@@ -293,34 +343,48 @@ void CTextRenderer::WorldDraw()
             CRenderWorldObject *rwo = text.Owner;
 
             if (rwo == nullptr || rwo->UseInRender != renderIndex)
+            {
                 continue;
+            }
 
             uint16_t textColor = text.Color;
 
             if (text.Type == TT_OBJECT && g_SelectedObject.Object == item &&
                 (((CGameObject *)rwo)->NPC || ((CGameObject *)rwo)->IsCorpse()))
+            {
                 textColor = 0x0035;
+            }
 
-            if (textColor)
+            if (textColor != 0u)
             {
                 g_ColorManager.SendColorsToShader(textColor);
 
                 if (text.Unicode)
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_TEXT_COLORED_NO_BLACK);
+                }
                 else if (text.Font != 5 && text.Font != 8)
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+                }
                 else
+                {
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                }
             }
             else
+            {
                 glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+            }
 
             if (text.Transparent)
             {
                 uint8_t alpha = text.Alpha;
 
                 if (alpha == 0xFF)
+                {
                     alpha = 0x7F;
+                }
 
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -332,8 +396,9 @@ void CTextRenderer::WorldDraw()
                 glDisable(GL_BLEND);
             }
             else
+            {
                 text.m_Texture.Draw(text.RealDrawX, text.RealDrawY);
+            }
         }
     }
 }
-

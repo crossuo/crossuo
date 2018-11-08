@@ -4,7 +4,7 @@
 COptionsMacroManager g_OptionsMacroManager;
 
 COptionsMacroManager::COptionsMacroManager()
-    : CBaseQueue()
+
 {
 }
 
@@ -20,5 +20,7 @@ void COptionsMacroManager::LoadFromMacro()
     QFOR(obj, g_MacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }
 
     if (m_Items == nullptr)
+    {
         Add(CMacro::CreateBlankMacro());
+    }
 }

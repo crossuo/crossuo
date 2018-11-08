@@ -160,24 +160,28 @@ uint32_t g_ProcessRemoveRangedTimer = 0;
 int g_MaxViewRange = MAX_VIEW_RANGE_OLD;
 uint32_t g_OrionFeaturesFlags = OFF_ALL_FLAGS;
 PING_INFO_DATA g_GameServerPingInfo = { 0 };
-string g_PingString = "";
+string g_PingString = {};
 uint32_t g_PingTimer = 0;
 
 bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point)
 {
     if (g_Target.IsTargeting())
+    {
         return (
             abs(point.X) >= DRAG_PIXEL_RANGE_WITH_TARGET ||
             abs(point.Y) >= DRAG_PIXEL_RANGE_WITH_TARGET);
+    }
 
     return (abs(point.X) >= DRAG_ITEMS_PIXEL_RANGE || abs(point.Y) >= DRAG_ITEMS_PIXEL_RANGE);
 }
 
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y)
 {
-    if (!ofsX)
+    if (ofsX == 0)
+    {
         x = y = ofsY / 2;
-    else if (!ofsY)
+    }
+    else if (ofsY == 0)
     {
         x = ofsX / 2;
         y = -x;
@@ -191,24 +195,36 @@ void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y)
         if (ofsY > ofsX)
         {
             if (ofsX < 0 && ofsY < 0)
+            {
                 y = absX - absY;
+            }
             else if (ofsX > 0 && ofsY > 0)
+            {
                 y = absY - absX;
+            }
         }
         else if (ofsX > ofsY)
         {
             if (ofsX < 0 && ofsY < 0)
+            {
                 y = -(absY - absX);
+            }
             else if (ofsX > 0 && ofsY > 0)
+            {
                 y = -(absX - absY);
+            }
         }
 
-        if (!y && ofsY != ofsX)
+        if ((y == 0) && ofsY != ofsX)
         {
             if (ofsY < 0)
+            {
                 y = -(absX + absY);
+            }
             else
+            {
                 y = absX + absY;
+            }
         }
 
         y /= 2;
@@ -223,7 +239,9 @@ string ToCamelCase(string text)
     for (char &c : text)
     {
         if (lastSpace && (c >= 'a' && c <= 'z'))
+        {
             c = 'A' + (c - 'a');
+        }
 
         lastSpace = (c == ' ');
     }
@@ -239,7 +257,9 @@ int GetDistance(CGameObject *current, CGameObject *target)
         int disty = abs(target->GetY() - current->GetY());
 
         if (disty > distx)
+        {
             distx = disty;
+        }
 
         return distx;
     }
@@ -255,7 +275,9 @@ int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target)
         int disty = abs(target.Y - current->GetY());
 
         if (disty > distx)
+        {
             distx = disty;
+        }
 
         return distx;
     }
@@ -271,7 +293,9 @@ int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target)
         int disty = abs(target->GetY() - current.Y);
 
         if (disty > distx)
+        {
             distx = disty;
+        }
 
         return distx;
     }
@@ -296,7 +320,9 @@ int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target)
         int disty = abs(targetPoint.Y - current.Y);
 
         if (disty > distx)
+        {
             distx = disty;
+        }
 
         return distx;
     }
@@ -304,8 +330,7 @@ int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target)
     return 100500;
 }
 
-bool CheckMultiDistance(
-    const Wisp::CPoint2Di &current, CGameObject *target, int maxDistance)
+bool CheckMultiDistance(const Wisp::CPoint2Di &current, CGameObject *target, int maxDistance)
 {
     bool result = false;
 
@@ -327,7 +352,9 @@ int GetDistance(const Wisp::CPoint2Di &current, const Wisp::CPoint2Di &target)
     int disty = abs(target.Y - current.Y);
 
     if (disty > distx)
+    {
         distx = disty;
+    }
 
     return distx;
 }
@@ -337,7 +364,9 @@ int GetTopObjDistance(CGameObject *current, CGameObject *target)
     if (current != nullptr && target != nullptr)
     {
         while (target != nullptr && target->Container != 0xFFFFFFFF)
+        {
             target = g_World->FindWorldObject(target->Container);
+        }
 
         if (target != nullptr)
         {
@@ -345,7 +374,9 @@ int GetTopObjDistance(CGameObject *current, CGameObject *target)
             int disty = abs(target->GetY() - current->GetY());
 
             if (disty > distx)
+            {
                 distx = disty;
+            }
 
             return distx;
         }
@@ -380,4 +411,3 @@ const char *GetReagentName(uint16_t id)
 
     return "";
 }
-

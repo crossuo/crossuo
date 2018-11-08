@@ -27,7 +27,7 @@ void CCityManager::Init()
         uint8_t *end = file.Ptr + file.Size;
         while (file.Ptr < end)
         {
-            if (!memcmp(&file.Ptr[0], "END\0", 4))
+            if (memcmp(&file.Ptr[0], "END\0", 4) == 0)
             {
                 file.Move(4);
 
@@ -50,12 +50,16 @@ void CCityManager::Init()
                 while (file.Ptr < end)
                 {
                     string str = file.ReadString();
-                    if (text.length())
+                    if (text.length() != 0u)
+                    {
                         text += "\n\n";
+                    }
 
                     text += str;
-                    if (*file.Ptr == 0x2E || !memcmp(&file.Ptr[0], "END\0", 4))
+                    if (*file.Ptr == 0x2E || (memcmp(&file.Ptr[0], "END\0", 4) == 0))
+                    {
                         break;
+                    }
                 }
                 m_CityList.push_back(CCity(name, ToWString(text)));
             }
@@ -95,7 +99,9 @@ CCity CCityManager::GetCity(const string &name)
     for (auto &city : m_CityList)
     {
         if (city.Name == name)
+        {
             return city;
+        }
     }
     return CCity();
 }

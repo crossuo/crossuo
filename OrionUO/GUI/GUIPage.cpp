@@ -10,4 +10,3 @@ CGUIPage::CGUIPage(int index)
 CGUIPage::~CGUIPage()
 {
 }
-
