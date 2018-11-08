@@ -78,10 +78,6 @@ public:
     vector<LAND_TILES> m_LandData;
     vector<STATIC_TILES> m_StaticData;
 
-#if defined(ORION_WINDOWS)
-    static vector<uint32_t> FindPattern(uint8_t *ptr, int size, const vector<uint8_t> &pattern);
-#endif
-
     bool Install();
     void Uninstall();
 

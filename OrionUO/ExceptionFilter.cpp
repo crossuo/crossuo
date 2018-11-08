@@ -161,13 +161,27 @@ void DumpCurrentRegistersInformation(CONTEXT *CR)
 #endif
 }
 
+std::vector<uint32_t> FindPattern(uint8_t *ptr, int size, const vector<uint8_t> &pattern)
+{
+    vector<uint32_t> result;
+    int patternSize = (int)pattern.size();
+    int count = size - patternSize - 1;
+    for (int i = 0; i < count; i++)
+    {
+        if (!memcmp(&ptr[0], &pattern[0], patternSize))
+            result.push_back(0x00400000 + (int)i);
+
+        ptr++;
+    }
+    return result;
+}
+
 LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptionInfo)
 {
     static int errorCount = 0;
     static uint32_t lastErrorTime = 0;
 
     uint32_t ticks = GetTickCount();
-
     errorCount++;
 
     if (exceptionInfo->ExceptionRecord)
@@ -212,19 +226,20 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                 for (int i = 0; i < 16; i++)
                     pattern.push_back(eipBytes[i]);
 
-                vector<uint32_t> list = COrion::FindPattern(file.Start, (int)file.Size, pattern);
-
+                auto list = FindPattern(file.Start, (int)file.Size, pattern);
                 for (int item : list)
+                {
                     CRASHLOG("Address in exe (by EIP): 0x%08X\n", item);
+                }
 
                 file.Unload();
-
                 if (g_PacketManager.m_PacketsStack.empty())
+                {
                     CRASHLOG("\nPackets stack is empty.\n");
+                }
                 else
                 {
                     CRASHLOG("\nPackets in stack:\n");
-
                     for (deque<vector<uint8_t>>::iterator i =
                              g_PacketManager.m_PacketsStack.begin();
                          i != g_PacketManager.m_PacketsStack.end();

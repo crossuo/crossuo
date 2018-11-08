@@ -223,28 +223,6 @@ void COrion::ParseCommandLine() // FIXME: move this out
     }
 }
 
-#if defined(ORION_WINDOWS) // FIXME: Used only by ExceptionFiler
-vector<uint32_t> COrion::FindPattern(uint8_t *ptr, int size, const vector<uint8_t> &pattern)
-{
-    DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> result;
-
-    int patternSize = (int)pattern.size();
-
-    int count = size - patternSize - 1;
-
-    for (int i = 0; i < count; i++)
-    {
-        if (!memcmp(&ptr[0], &pattern[0], patternSize))
-            result.push_back(0x00400000 + (int)i);
-
-        ptr++;
-    }
-
-    return result;
-}
-#endif // ORION_WINDOWS
-
 bool COrion::Install()
 {
     DEBUG_TRACE_FUNCTION;
@@ -2043,7 +2021,7 @@ int COrion::Send(uint8_t *buf, int size)
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
     if (type.save)
     {
-#if !defined(ORION_LINUX) // FIXME: localtime_s (use C++ if possible)
+#if !defined(ORION_LINUX)
         time_t rawtime;
         struct tm timeinfo;
         char buffer[80];
