@@ -365,7 +365,7 @@ void CWindow::Destroy()
 #else
     if (m_window != nullptr)
     {
-        SDL_DestroyWindow(m_window);
+        PushEvent(SDL_QUIT, nullptr, nullptr);
     }
 #endif
 }
@@ -879,7 +879,12 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
         case SDL_USEREVENT:
         {
-            return !OnUserMessages(ev.user);
+            if (ev.user.code == SDL_QUIT)
+            {
+                OnDestroy();
+                return true;
+            }
+            OnUserMessages(ev.user);
         }
         break;
 

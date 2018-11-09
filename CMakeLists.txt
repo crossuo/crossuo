@@ -60,10 +60,6 @@ if(ORION_WINDOWS)
 
 	set(ZLIB_INCLUDE_DIRS "${DEP_INCLUDE_DIR}")
 	set(ZLIB_LIBRARIES "${DEP_LIB_DIR}zlib.lib")
-
-	set(FREEIMAGE_INCLUDE_DIR "${DEP_INCLUDE_DIR}")
-	set(FREEIMAGE_LIBRARIES "${DEP_LIB_DIR}freeimage.lib")
-
 	#set(OPENGL_INCLUDE_DIR "${DEP_INCLUDE_DIR}")
 	#set(OPENGL_LIBRARIES "${DEP_LIB_DIR}")
 
@@ -80,11 +76,10 @@ if(ORION_WINDOWS)
 	set(SDL2_LIBRARIES ${SDL2_LIBRARIES} "${DEP_LIB_DIR}bass.lib" "${DEP_LIB_DIR}bassmidi.lib" "${DEP_LIB_DIR}psapi.lib")
 else()
 	set(ORION_DLL_STATIC ON)
-	set(ORION_WISP OFF)	
+	set(ORION_WISP OFF)
 	find_package(ZLIB REQUIRED)
 	find_package(SDL2 REQUIRED)
 	find_package(SDL2_image REQUIRED)
-	find_package(FreeImage REQUIRED)
 	find_package(GLEW REQUIRED)
 	# Set the preferred opengl library to GLVND if there is GLVND and Legacy.
 	# Only if there is no GLVND Legacy will be used.
@@ -100,7 +95,6 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(${SDL2_IMAGE_INCLUDE_DIR})
-include_directories(${FREEIMAGE_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
 #
 # Project Files
