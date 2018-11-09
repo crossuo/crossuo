@@ -79,7 +79,13 @@ bool CSoundManager::Init()
     DEBUG_TRACE_FUNCTION;
     LOG("Initializing bass sound system.\n");
     // initialize default output device
-    if (!BASS_Init(-1, 48000, BASS_DEVICE_3D, g_OrionWindow.Handle, nullptr))
+#if defined(ORION_WINDOWS)
+    auto hwnd = (HWND)g_OrionWindow.Handle;
+#else
+    auto hwnd = g_OrionWindow.Handle;
+#endif
+
+    if (!BASS_Init(-1, 48000, BASS_DEVICE_3D, hwnd, nullptr))
     {
         LOG("Can't initialize device: %s\n", BASS_ErrorGetDescription());
         return false;

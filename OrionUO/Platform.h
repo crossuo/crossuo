@@ -96,6 +96,7 @@ typedef CRITICAL_SECTION ProtectedSection;
 #else
 
 #include <SDL_keycode.h>
+#include <SDL_thread.h>
 
 typedef SDL_KeyboardEvent KeyEvent;
 typedef SDL_TextInputEvent TextEvent;

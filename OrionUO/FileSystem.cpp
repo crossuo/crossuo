@@ -43,7 +43,7 @@ bool fs_path_create(const os_path &path_str)
 os_path fs_path_current()
 {
     wstring path;
-    path.resize(MAX_PATH, 0);
+    path.reserve(MAX_PATH);
     GetCurrentDirectoryW(MAX_PATH, &path[0]);
     return path;
 }

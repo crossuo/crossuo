@@ -78,7 +78,7 @@ void CGumpScreenConnection::UpdateContent()
         else
         {
             char buf[80] = { 0 };
-            sprintf_s(buf, "Permanently delete %s?", g_CharacterList.GetSelectedName());
+            sprintf_s(buf, "Permanently delete %s?", g_CharacterList.GetSelectedName().c_str());
 
             CreateText(193, 184, buf, 2);
 

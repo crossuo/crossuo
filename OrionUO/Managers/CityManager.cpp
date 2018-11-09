@@ -79,7 +79,7 @@ void CCityManager::Init()
         CCliloc *cliloc = g_ClilocManager.Cliloc(g_Language);
         if (cliloc != nullptr)
         {
-            for (int i = 0; i < std::size(cityNames); i++)
+            for (int i = 0; i < (int)std::size(cityNames); i++)
             {
                 m_CityList.push_back(CCity(cityNames[i], cliloc->GetW(1075072 + i)));
             }

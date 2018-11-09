@@ -95,6 +95,7 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
+include_directories(${DEP_INCLUDE_DIR})
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${SDL2_INCLUDE_DIRS})

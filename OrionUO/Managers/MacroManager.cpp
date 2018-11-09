@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "FileSystem.h"
+#include <SDL_clipboard.h>
 
 CMacroManager g_MacroManager;
 
@@ -908,6 +909,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             if (g_EntryPointer != nullptr)
             {
+#if USE_WISP
                 // FIXME: move clipboard access to wisp window
                 if (OpenClipboard(g_OrionWindow.Handle))
                 {
@@ -928,6 +930,14 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
                     CloseClipboard();
                 }
+#else
+                auto chBuffer = SDL_GetClipboardText();
+                if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
+                {
+                    wstring str = g_EntryPointer->Data() + ToWString(chBuffer);
+                    g_EntryPointer->SetTextW(str);
+                }
+#endif
             }
 
             break;
