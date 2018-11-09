@@ -57,7 +57,6 @@
 #include "../Dependencies/include/wglew.h"
 #include "../Dependencies/include/bass.h"
 #include "../Dependencies/include/bassmidi.h"
-#include "../Dependencies/include/FreeImage.h"
 #include "../Dependencies/include/zlib.h"
 
 #pragma comment(lib, "Winmm.lib")
@@ -70,7 +69,6 @@
 #pragma comment(lib, "../Dependencies/lib/Win32/glew32.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/bass.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/bassmidi.lib")
-#pragma comment(lib, "../Dependencies/lib/Win32/FreeImage.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/Psapi.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/zlib.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2.lib")
@@ -81,7 +79,6 @@
 #pragma comment(lib, "../Dependencies/lib/x64/glew32.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/bass.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/bassmidi.lib")
-#pragma comment(lib, "../Dependencies/lib/x64/FreeImage.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/Psapi.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/zdll.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/SDL2.lib")
