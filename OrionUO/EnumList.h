@@ -752,8 +752,8 @@ enum SCREENSHOT_FORMAT
 {
     SF_BMP = 0,
     SF_PNG,
-    SF_TIFF,
-    SF_JPEG
+    SF_TGA,
+    SF_JPG
 };
 
 enum OBJECT_PROPERTIES_MODE

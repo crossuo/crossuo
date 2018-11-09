@@ -4,6 +4,9 @@
 #include "FileSystem.h"
 #include <time.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 CScreenshotBuilder g_ScreenshotBuilder;
 
 CScreenshotBuilder::CScreenshotBuilder()
@@ -40,14 +43,12 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
         now.tm_min,
         now.tm_sec);
     path += ToPath(buf);
-
     vector<uint32_t> pixels = GetScenePixels(x, y, width, height);
 
+#if USE_FREEIMAGE
     FIBITMAP *fBmp =
         FreeImage_ConvertFromRawBits((uint8_t *)&pixels[0], width, height, width * 4, 32, 0, 0, 0);
-
     FREE_IMAGE_FORMAT format = FIF_BMP;
-
     switch (g_ConfigManager.ScreenshotFormat)
     {
         case SF_PNG:
@@ -56,13 +57,13 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
             format = FIF_PNG;
             break;
         }
-        case SF_TIFF:
+        case SF_TGA:
         {
             path += ToPath(".tiff");
             format = FIF_TIFF;
             break;
         }
-        case SF_JPEG:
+        case SF_JPG:
         {
             path += ToPath(".jpeg");
             format = FIF_JPEG;
@@ -75,10 +76,45 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
             break;
         }
     }
-
     FreeImage_Save(format, fBmp, CStringFromPath(path));
-
     FreeImage_Unload(fBmp);
+#else
+    int result = 0;
+    auto data = (void *)&pixels[0];
+    stbi_flip_vertically_on_write(true);
+    switch (g_ConfigManager.ScreenshotFormat)
+    {
+        case SF_PNG:
+        {
+            path += ToPath(".png");
+            result = stbi_write_png(CStringFromPath(path), width, height, 4, data, width * 4);
+            break;
+        }
+        case SF_TGA:
+        {
+            path += ToPath(".tga");
+            result = stbi_write_tga(CStringFromPath(path), width, height, 4, data);
+            break;
+        }
+        case SF_JPG:
+        {
+            path += ToPath(".jpg");
+            result = stbi_write_jpg(CStringFromPath(path), width, height, 4, data, 100);
+            break;
+        }
+        default:
+        {
+            path += ToPath(".bmp");
+            result = stbi_write_bmp(CStringFromPath(path), width, height, 4, data);
+            break;
+        }
+    }
+    if (result == 0)
+    {
+        g_Orion.CreateTextMessageF(3, 0, "Failed to write screenshot");
+        return;
+    }
+#endif
 
     if (g_GameState >= GS_GAME)
     {
@@ -96,7 +132,11 @@ vector<uint32_t> CScreenshotBuilder::GetScenePixels(int x, int y, int width, int
         g_OrionWindow.GetSize().Height - y - height,
         width,
         height,
+#if USE_FREEIMAGE        
         GL_BGRA,
+#else
+        GL_RGBA,
+#endif
         GL_UNSIGNED_INT_8_8_8_8_REV,
         &pixels[0]);
 

@@ -450,14 +450,14 @@ void CGumpOptions::InitToolTip()
             g_ToolTip.Set(L"Save screen shots in PNG format");
             break;
         }
-        case ID_GO_P2_SCREENSHOT_FORMAT_TIFF:
+        case ID_GO_P2_SCREENSHOT_FORMAT_TGA:
         {
-            g_ToolTip.Set(L"Save screen shots in TIFF format");
+            g_ToolTip.Set(L"Save screen shots in TGA format");
             break;
         }
-        case ID_GO_P2_SCREENSHOT_FORMAT_JPEG:
+        case ID_GO_P2_SCREENSHOT_FORMAT_JPG:
         {
-            g_ToolTip.Set(L"Save screen shots in JPEG format (maybe crashes)");
+            g_ToolTip.Set(L"Save screen shots in JPG format");
             break;
         }
         case ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS:
@@ -1227,14 +1227,14 @@ void CGumpOptions::DrawPage2()
     radio->SetTextParameters(0, L"PNG", g_OptionsTextColor);
 
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_TIFF, 0x00D0, 0x00D1, 0x00D2, 190, 730));
-    radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_TIFF);
-    radio->SetTextParameters(0, L"TIFF", g_OptionsTextColor);
+        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_TGA, 0x00D0, 0x00D1, 0x00D2, 190, 730));
+    radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_TGA);
+    radio->SetTextParameters(0, L"TGA", g_OptionsTextColor);
 
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_JPEG, 0x00D0, 0x00D1, 0x00D2, 280, 730));
-    radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_JPEG);
-    radio->SetTextParameters(0, L"JPEG (maybe crashes)", g_OptionsTextColor);
+        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_JPG, 0x00D0, 0x00D1, 0x00D2, 280, 730));
+    radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_JPG);
+    radio->SetTextParameters(0, L"JPG", g_OptionsTextColor);
 
     checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
         ID_GO_P2_REMOVE_OR_CREATE_OBJECTS_WITH_BLENDING, 0x00D2, 0x00D3, 0x00D2, 0, 760));
@@ -3345,13 +3345,13 @@ void CGumpOptions::GUMP_RADIO_EVENT_C
             {
                 g_OptionsConfig.ScreenshotFormat = SF_PNG;
             }
-            else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_TIFF)
+            else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_TGA)
             {
-                g_OptionsConfig.ScreenshotFormat = SF_TIFF;
+                g_OptionsConfig.ScreenshotFormat = SF_TGA;
             }
-            else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_JPEG)
+            else if (serial == ID_GO_P2_SCREENSHOT_FORMAT_JPG)
             {
-                g_OptionsConfig.ScreenshotFormat = SF_JPEG;
+                g_OptionsConfig.ScreenshotFormat = SF_JPG;
             }
             else if (serial == ID_GO_P2_DEV_MODE_1)
             {

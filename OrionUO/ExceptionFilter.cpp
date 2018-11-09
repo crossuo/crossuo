@@ -122,6 +122,7 @@ void DumpLibraryInformation()
         CloseHandle(snapshot);
         CloseHandle(process);
     }
+#endif
 }
 
 void DumpCurrentRegistersInformation(CONTEXT *CR)
