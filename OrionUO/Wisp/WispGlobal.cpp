@@ -73,8 +73,8 @@ wstring DecodeUTF8(const string &str)
         result.resize(size); // result[size] = 0;
     }
 #else
-    LOG("\nDecodeUTF8: %s\n\n", str.c_str());
-    LOG_DUMP((uint8_t *)str.data(), str.size());
+    //LOG("\nDecodeUTF8: %s\n\n", str.c_str());
+    //LOG_DUMP((uint8_t *)str.data(), str.size());
     mbstate_t state{};
     wstring result{};
     auto p = str.data();

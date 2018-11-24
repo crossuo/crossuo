@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "PluginInterface.h"
+
 #include <cmath>
 #include <stdio.h>
 #include <stdarg.h>

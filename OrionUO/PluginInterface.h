@@ -3,27 +3,19 @@
 
 #pragma once
 
-#if defined(ORION_LINUX)
-#define CDECL
-#else
+#include <stdlib.h>
+#include <stdint.h>
+
+#if _WIN32
 #include <Windows.h>
+#define USER_MESSAGE_ID WM_USER
+#define WindowHandle HWND
+#else
+#define USER_MESSAGE_ID 0x0400
+#define WindowHandle void *
 #endif
 
-#pragma pack(push, 1)
-typedef struct PLUGIN_INFO
-{
-    char FileName[MAX_PATH];
-    char FunctionName[100];
-    uint64_t Flags;
-} * PPLUGIN_INFO;
-
-#pragma pack(pop)
-
-typedef uint32_t WINDOW_PROC(WindowHandle, uint32_t, void *, void *);
-typedef bool CDECL PACKET_PROC(unsigned char *, const int &);
-typedef void CDECL VOID_PROC();
-typedef bool CDECL WORLD_MAP_DRAW_PROC();
-
+#define MAX_PATH 256
 #define UOMSG_SET_SERVER_NAME USER_MESSAGE_ID + 660
 #define UOMSG_SET_PLAYER_NAME USER_MESSAGE_ID + 661
 #define UOMSG_UPDATE_PLAYER_XYZ USER_MESSAGE_ID + 662
@@ -39,15 +31,27 @@ typedef bool CDECL WORLD_MAP_DRAW_PROC();
 #define UOMSG_END_MACRO_PAYING USER_MESSAGE_ID + 672
 #define UOMSG_UPDATE_REMOVE_POS USER_MESSAGE_ID + 673
 
+typedef uint32_t WINDOW_PROC(WindowHandle, uint32_t, void *, void *);
+typedef bool __cdecl PACKET_PROC(uint8_t *buf, size_t size);
+typedef void __cdecl VOID_PROC();
+typedef bool __cdecl WORLD_MAP_DRAW_PROC();
+
 #pragma pack(push, 1)
-typedef struct UOI_PLAYER_XYZ_DATA
+struct PLUGIN_INFO
+{
+    char FileName[MAX_PATH];
+    char FunctionName[100];
+    uint64_t Flags;
+};
+
+struct UOI_PLAYER_XYZ_DATA
 {
     int X;
     int Y;
     int Z;
-} * PUOI_PLAYER_XYZ_DATA;
+};
 
-typedef struct UOI_SELECTED_TILE
+struct UOI_SELECTED_TILE
 {
     unsigned int Serial;
     unsigned short Graphic;
@@ -59,19 +63,16 @@ typedef struct UOI_SELECTED_TILE
     int LandX;
     int LandY;
     int LandZ;
-} * PUOI_SELECTED_TILE;
+};
 
-typedef struct UOI_MENU_RESPONSE
+struct UOI_MENU_RESPONSE
 {
     unsigned int Serial;
     unsigned int ID;
     int Code;
-} * PUOI_MENU_RESPONSE;
+};
 
-bool CDECL PluginRecvFunction(unsigned char *buf, const int &size);
-bool CDECL PluginSendFunction(unsigned char *buf, const int &size);
-
-typedef struct PLUGIN_INTERFACE
+struct PLUGIN_INTERFACE
 {
     int InterfaceVersion;
     int Size;
@@ -93,5 +94,18 @@ typedef struct PLUGIN_INTERFACE
     VOID_PROC *OnWorldDraw;
     VOID_PROC *OnSceneDraw;
     WORLD_MAP_DRAW_PROC *OnWorldMapDraw;
-} * PPLUGIN_INTERFACE;
+};
+
+typedef void __cdecl dllFunc(PLUGIN_INTERFACE *);
+typedef void (*pfInstall)(PLUGIN_INTERFACE *intr);
+typedef int (*pfcm)(int, char **);
+typedef void (*pfri)(void *);
+
+struct REVERSE_PLUGIN_INTERFACE
+{
+    pfInstall Install;
+};
 #pragma pack(pop)
+
+extern REVERSE_PLUGIN_INTERFACE g_oaReverse;
+#define ORIONUO_CLIENT "OrionUO/orion.so"

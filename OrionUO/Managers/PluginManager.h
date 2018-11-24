@@ -22,7 +22,7 @@ public:
     bool CanEnterSceneRender() { return (m_Flags & PLUGIN_FLAGS_SCENE_DRAW); }
     bool CanEnterWorldMapRender() { return (m_Flags & PLUGIN_FLAGS_WORLD_MAP_DRAW); }
 
-    PPLUGIN_INTERFACE m_PPS;
+    PLUGIN_INTERFACE * m_PPS;
 };
 
 class CPluginManager : public CBaseQueue
@@ -32,8 +32,8 @@ public:
     virtual ~CPluginManager() {}
 
     uint32_t WindowProc(WindowHandle hWnd, uint32_t msg, void *data1, void *data2);
-    bool PacketRecv(uint8_t *buf, int size);
-    bool PacketSend(uint8_t *buf, int size);
+    bool PacketRecv(uint8_t *buf, size_t size);
+    bool PacketSend(uint8_t *buf, size_t size);
     void Disconnect();
     void WorldDraw();
     void SceneDraw();

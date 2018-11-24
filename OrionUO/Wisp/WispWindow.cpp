@@ -350,7 +350,8 @@ bool CWindow::Create(
         Handle = info.info.win.window;
 #endif
     }
-    SDL_SetWindowGrab(m_window, SDL_TRUE);
+    //SDL_SetWindowGrab(m_window, SDL_TRUE);
+    SDL_RaiseWindow(m_window);
     SDL_ShowCursor(static_cast<int>(showCursor));
 #endif // USE_WISP
 
@@ -1055,7 +1056,7 @@ bool CWindow::OnRepaint(const PaintEvent &ev)
 
 bool CWindow::IsActive() const
 {
-    return SDL_GetGrabbedWindow() == m_window;
+    return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_INPUT_FOCUS) != 0;
 }
 
 void CWindow::SetTitle(const string &text) const

@@ -3,14 +3,14 @@
 
 #if defined(ORION_LINUX)
 #include <stdint.h>
-#define CDECL
+#define __cdecl
 #else
 #include <Windows.h>
 #endif
 
 CPluginManager g_PluginManager;
 
-bool CDECL PluginRecvFunction(uint8_t *buf, const int &size)
+bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
     PUSH_EVENT(UOMSG_RECV, buf, size);
@@ -18,7 +18,7 @@ bool CDECL PluginRecvFunction(uint8_t *buf, const int &size)
     return true;
 }
 
-bool CDECL PluginSendFunction(uint8_t *buf, const int &size)
+bool __cdecl PluginSendFunction(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -71,7 +71,6 @@ CPlugin::~CPlugin()
 }
 
 CPluginManager::CPluginManager()
-
 {
 }
 
@@ -90,7 +89,7 @@ uint32_t CPluginManager::WindowProc(WindowHandle wnd, uint32_t msg, void *data1,
     return result;
 }
 
-bool CPluginManager::PacketRecv(uint8_t *buf, int size)
+bool CPluginManager::PacketRecv(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -109,7 +108,7 @@ bool CPluginManager::PacketRecv(uint8_t *buf, int size)
     return result;
 }
 
-bool CPluginManager::PacketSend(uint8_t *buf, int size)
+bool CPluginManager::PacketSend(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
 

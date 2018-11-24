@@ -57,6 +57,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 #else
 
+#define ORION_EXPORT extern "C" __attribute__((visibility("default")))
+
+#include <dlfcn.h>
+#include "PluginInterface.h"
+
 #if USE_ORIONDLL
 ENCRYPTION_TYPE g_EncryptionType;
 #endif
@@ -64,7 +69,7 @@ ENCRYPTION_TYPE g_EncryptionType;
 static bool g_isHeadless = false;
 extern ENCRYPTION_TYPE g_EncryptionType;
 
-int main(int argc, char **argv)
+ORION_EXPORT int plugin_main(int argc, char **argv)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -88,6 +93,7 @@ int main(int argc, char **argv)
             SDL_LOG_CATEGORY_APPLICATION, "Unable to initialize SDL: %s\n", SDL_GetError());
         return EXIT_FAILURE;
     }
+
     SDL_Log("SDL Initialized.");
 
     INITLOGGER("uolog.txt");
@@ -125,6 +131,11 @@ int main(int argc, char **argv)
     auto ret = g_App.Run();
     SDL_Quit();
     return ret;
+}
+
+ORION_EXPORT void set_install(REVERSE_PLUGIN_INTERFACE *p)
+{
+    g_oaReverse.Install = p->Install;
 }
 
 #endif

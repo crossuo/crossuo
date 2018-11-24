@@ -36,10 +36,4 @@ void DebugDump(uint8_t *data, int size);
 #define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
 #define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))
 
-#if USE_WISP
-#define USER_MESSAGE_ID WM_USER
-#define WindowHandle HWND
-#else
-#define USER_MESSAGE_ID 0x0400
-#define WindowHandle void *
-#endif
+

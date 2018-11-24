@@ -10,18 +10,19 @@
 #include "Crypt/CryptEntry.h"
 
 #if defined(ORION_LINUX)
-#define CDECL
+#define __cdecl
+REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
 
-typedef void CDECL PLUGIN_INIT_TYPE_OLD(vector<string> &, vector<string> &, vector<uint32_t> &);
-typedef void CDECL PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
+typedef void __cdecl PLUGIN_INIT_TYPE_OLD(vector<string> &, vector<string> &, vector<uint32_t> &);
+typedef void __cdecl PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
 
 PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = {};
 PLUGIN_INIT_TYPE_OLD *g_PluginInitOld = nullptr;
 PLUGIN_INIT_TYPE_NEW *g_PluginInitNew = nullptr;
 
 #if USE_ORIONDLL
-typedef size_t CDECL PLUGIN_GET_COUNT_FUNC();
+typedef size_t __cdecl PLUGIN_GET_COUNT_FUNC();
 PLUGIN_GET_COUNT_FUNC *GetPluginsCount = nullptr;
 #else
 extern ENCRYPTION_TYPE g_EncryptionType;
@@ -92,12 +93,18 @@ void COrion::ParseCommandLine() // FIXME: move this out
     DEBUG_TRACE_FUNCTION;
 
     bool fastLogin = false;
+    uint32_t defaultPluginFlags = 0xFFFFFFFF;
+
+#if defined(ORION_WINDOWS)
     int argc = 0;
     auto *args = CommandLineToArgvW(GetCommandLineW(), &argc);
-
     auto defaultPluginPath{ g_App.ExeFilePath("OA/OrionAssistant.dll") };
     string defaultPluginFunction = "Install";
-    uint32_t defaultPluginFlags = 0xFFFFFFFF;
+#else
+    // FIXME: again, move this out! and receive args from the real main
+    int argc = 0;
+    const char *args[] = { nullptr };
+#endif
 
     for (int i = 0; i < argc; i++)
     {
@@ -144,6 +151,7 @@ void COrion::ParseCommandLine() // FIXME: move this out
                     DecodeArgumentString(strings[1].c_str(), (int)strings[1].length()),
                     DecodeArgumentString(strings[2].c_str(), (int)strings[2].length()));
             }
+#if defined(ORION_WINDOWS)
             else if (str == "plugin")
             {
                 strings = Wisp::CTextFileParser({}, ",:", "", "")
@@ -164,6 +172,7 @@ void COrion::ParseCommandLine() // FIXME: move this out
                     defaultPluginFunction = strings[3];
                 }
             }
+#endif
         }
         else if (str == "autologin")
         {
@@ -215,8 +224,13 @@ void COrion::ParseCommandLine() // FIXME: move this out
 #endif
     }
 
+#if defined(ORION_WINDOWS)
     LocalFree(args);
     LoadPlugin(defaultPluginPath, defaultPluginFunction, defaultPluginFlags);
+#else
+    InstallPlugin(g_oaReverse.Install, defaultPluginFlags);
+#endif
+
     if (fastLogin)
     {
         g_OrionWindow.CreateTimer(FASTLOGIN_TIMER_ID, 50);
@@ -1144,8 +1158,8 @@ bool COrion::LoadClientConfig()
         return false;
     }
 
-    typedef void CDECL installFuncOld(uint8_t *, int, vector<uint8_t> *);
-    typedef void CDECL installFuncNew(uint8_t *, size_t, uint8_t *, size_t &);
+    typedef void __cdecl installFuncOld(uint8_t *, int, vector<uint8_t> *);
+    typedef void __cdecl installFuncNew(uint8_t *, size_t, uint8_t *, size_t &);
 
     installFuncOld *installOld = (installFuncOld *)SDL_LoadFunction(orionDll, "Install");
     installFuncNew *installNew = (installFuncNew *)SDL_LoadFunction(orionDll, "InstallNew");
@@ -1577,44 +1591,13 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
     auto dll = SDL_LoadObject(CStringFromPath(libpath));
     if (dll != nullptr)
     {
-        typedef void CDECL dllFunc(PPLUGIN_INTERFACE);
-
         dllFunc *initFunc = (dllFunc *)SDL_LoadFunction(dll, function.c_str());
-        CPlugin *plugin = nullptr;
-
-        if (initFunc != nullptr)
-        {
-            plugin = new CPlugin(flags);
-
-            initFunc(plugin->m_PPS);
-        }
-
-        if (plugin == nullptr)
+        if (!InstallPlugin(initFunc, flags))
         {
             SDL_UnloadObject(dll);
         }
-        else
-        {
-            CRASHLOG("Plugin['%s'] loaded at: 0x%08X\n", CStringFromPath(libpath), dll);
-            plugin->m_PPS->Owner = plugin;
-            if (plugin->CanClientAccess())
-            {
-                plugin->m_PPS->Client = &g_PluginClientInterface;
-            }
-
-            if (plugin->CanParseRecv())
-            {
-                plugin->m_PPS->Recv = PluginRecvFunction;
-            }
-
-            if (plugin->CanParseSend())
-            {
-                plugin->m_PPS->Send = PluginSendFunction;
-            }
-
-            initFunc(plugin->m_PPS);
-            g_PluginManager.Add(plugin);
-        }
+        CRASHLOG("Plugin['%s'] loaded at: 0x%08X\n", CStringFromPath(libpath), dll);
+        // FIXME: dll leaks, pass handle into CPlugin to be closed
     }
     else
     {
@@ -1625,6 +1608,41 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
         LOG("Error code: %s\n", SDL_GetError());
 #endif
     }
+}
+
+bool COrion::InstallPlugin(dllFunc *initFunc, int flags)
+{
+    CPlugin *plugin = nullptr;
+    if (initFunc != nullptr)
+    {
+        plugin = new CPlugin(flags);
+        initFunc(plugin->m_PPS);
+    }
+
+    if (plugin == nullptr)
+    {
+        return false;
+    }
+
+    plugin->m_PPS->Owner = plugin;
+    if (plugin->CanClientAccess())
+    {
+        plugin->m_PPS->Client = &g_PluginClientInterface;
+    }
+
+    if (plugin->CanParseRecv())
+    {
+        plugin->m_PPS->Recv = PluginRecvFunction;
+    }
+
+    if (plugin->CanParseSend())
+    {
+        plugin->m_PPS->Send = PluginSendFunction;
+    }
+
+    initFunc(plugin->m_PPS);
+    g_PluginManager.Add(plugin);
+    return true;
 }
 
 void COrion::LoadPluginConfig()

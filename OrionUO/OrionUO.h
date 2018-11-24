@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "PluginInterface.h"
+
+bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size);
+bool __cdecl PluginSendFunction(uint8_t *buf, size_t size);
+
 class COrion
 {
 public:
@@ -67,6 +72,7 @@ private:
     string DecodeArgumentString(const char *text, int length);
     void ParseCommandLine();
     void LoadPlugin(const os_path &libpath, const string &function, int flags);
+    bool InstallPlugin(dllFunc *initFunc, int flags);
     void LoadContainerOffsets();
 
 public:
@@ -110,7 +116,7 @@ public:
     void Connect();
     void Disconnect();
     int Send(uint8_t *buf, int size);
-    int Send(const vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], (int)buf.size()); }
+    int Send(const vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], buf.size()); }
     void ServerSelection(int pos);
     void RelayServer(const char *ip, int port, uint8_t *gameSeed);
     void CharacterSelection(int pos);

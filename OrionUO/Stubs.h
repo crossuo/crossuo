@@ -95,7 +95,6 @@ const unsigned int WM_NCPAINT = 0x85;
 #define LANG_JAPANESE 4
 #define LANG_KOREAN 5
 #define CF_TEXT 0
-#define MAX_PATH 256
 
 // Bad and very ugly "API" stuff
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t);
