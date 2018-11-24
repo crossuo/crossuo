@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "EntryText.h"
+#include <SDL_clipboard.h>
 
 CEntryText *g_EntryPointer = nullptr;
 
@@ -271,6 +272,7 @@ void CEntryText::Clear()
 void CEntryText::Paste()
 {
     DEBUG_TRACE_FUNCTION;
+#if USE_WISP
     // FIXME: Move clipboard access to Wisp Window
     if (OpenClipboard(g_OrionWindow.Handle))
     {
@@ -297,6 +299,14 @@ void CEntryText::Paste()
 
         CloseClipboard();
     }
+#else
+    auto chBuffer = SDL_GetClipboardText();
+    if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
+    {
+        wstring str = g_EntryPointer->Data() + ToWString(chBuffer);
+        g_EntryPointer->SetTextW(str);
+    }
+#endif
 }
 
 void CEntryText::AddPos(int val, CGump *gump)

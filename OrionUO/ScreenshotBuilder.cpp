@@ -9,6 +9,28 @@
 
 CScreenshotBuilder g_ScreenshotBuilder;
 
+static vector<uint32_t> GetScenePixels(int x, int y, int width, int height)
+{
+    DEBUG_TRACE_FUNCTION;
+    vector<uint32_t> pixels(width * height);
+
+    glReadPixels(
+        x,
+        g_OrionWindow.GetSize().Height - y - height,
+        width,
+        height,
+        GL_RGBA,
+        GL_UNSIGNED_INT_8_8_8_8_REV,
+        &pixels[0]);
+
+    for (uint32_t &i : pixels)
+    {
+        i |= 0xFF000000;
+    }
+
+    return pixels;
+}
+
 CScreenshotBuilder::CScreenshotBuilder()
 {
 }
@@ -43,42 +65,8 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
         now.tm_min,
         now.tm_sec);
     path += ToPath(buf);
-    vector<uint32_t> pixels = GetScenePixels(x, y, width, height);
 
-#if USE_FREEIMAGE
-    FIBITMAP *fBmp =
-        FreeImage_ConvertFromRawBits((uint8_t *)&pixels[0], width, height, width * 4, 32, 0, 0, 0);
-    FREE_IMAGE_FORMAT format = FIF_BMP;
-    switch (g_ConfigManager.ScreenshotFormat)
-    {
-        case SF_PNG:
-        {
-            path += ToPath(".png");
-            format = FIF_PNG;
-            break;
-        }
-        case SF_TGA:
-        {
-            path += ToPath(".tiff");
-            format = FIF_TIFF;
-            break;
-        }
-        case SF_JPG:
-        {
-            path += ToPath(".jpeg");
-            format = FIF_JPEG;
-            break;
-        }
-        default:
-        {
-            path += ToPath(".bmp");
-            format = FIF_BMP;
-            break;
-        }
-    }
-    FreeImage_Save(format, fBmp, CStringFromPath(path));
-    FreeImage_Unload(fBmp);
-#else
+    auto pixels = GetScenePixels(x, y, width, height);
     int result = 0;
     auto data = (void *)&pixels[0];
     stbi_flip_vertically_on_write(true);
@@ -114,7 +102,6 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
         g_Orion.CreateTextMessageF(3, 0, "Failed to write screenshot");
         return;
     }
-#endif
 
     if (g_GameState >= GS_GAME)
     {
@@ -122,28 +109,3 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     }
 }
 
-vector<uint32_t> CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
-{
-    DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pixels(width * height);
-
-    glReadPixels(
-        x,
-        g_OrionWindow.GetSize().Height - y - height,
-        width,
-        height,
-#if USE_FREEIMAGE        
-        GL_BGRA,
-#else
-        GL_RGBA,
-#endif
-        GL_UNSIGNED_INT_8_8_8_8_REV,
-        &pixels[0]);
-
-    for (uint32_t &i : pixels)
-    {
-        i |= 0xFF000000;
-    }
-
-    return pixels;
-}

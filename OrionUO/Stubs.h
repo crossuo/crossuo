@@ -15,7 +15,6 @@
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
 #include <zlib.h>
-#include <FreeImage.h>
 
 using namespace std;
 

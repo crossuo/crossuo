@@ -1586,8 +1586,8 @@ void COrion::LoadStartupConfig(int serial)
 
 void COrion::LoadPlugin(const os_path &libpath, const string &function, int flags)
 {
-    LOG("Trying to load %s into memory...\n", CStringFromPath(libpath));
     DEBUG_TRACE_FUNCTION;
+    LOG("Loading plugin: %s\n", CStringFromPath(libpath));
     auto dll = SDL_LoadObject(CStringFromPath(libpath));
     if (dll != nullptr)
     {
@@ -1601,11 +1601,10 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
     }
     else
     {
-        LOG("Failed to LoadLibrary %s\n", CStringFromPath(libpath));
 #if USE_WISP
-        LOG("Error code: %i\n", GetLastError());
+        LOG("Failed with error code: %i\n", GetLastError());
 #else
-        LOG("Error code: %s\n", SDL_GetError());
+        LOG("Failed with error: %s\n", SDL_GetError());
 #endif
     }
 }

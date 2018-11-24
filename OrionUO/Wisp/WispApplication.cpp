@@ -13,7 +13,8 @@ CApplication::CApplication()
     g_MainThread = CThread::GetCurrentThreadId();
     DEBUG_TRACE_FUNCTION;
     g_WispApplication = this;
-    m_UOPath = m_ExePath = fs_path_current();
+    m_ExePath = fs_path_current();
+    m_UOPath = fs_path_current();
     g_MainScreen.LoadCustomPath();
 }
 
@@ -75,13 +76,10 @@ os_path CApplication::ExeFilePath(const char *str, ...) const
 
     char out[MAX_PATH] = { 0 };
     vsprintf_s(out, str, arg);
-
     va_end(arg);
 
-    os_path res{ m_ExePath };
-    res.append(PATH_SEP);
-    res.append(ToPath(out));
-    return res;
+    os_path res = m_ExePath.c_str();
+    return res + PATH_SEP + ToPath(out);
 }
 
 os_path CApplication::UOFilesPath(const string &str, ...) const
@@ -97,13 +95,10 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
 
     char out[MAX_PATH] = { 0 };
     vsprintf_s(out, str, arg);
-
     va_end(arg);
 
-    os_path res{ m_UOPath };
-    res.append(PATH_SEP);
-    res.append(ToPath(out));
-    return res;
+    os_path res = m_UOPath.c_str();
+    return res + PATH_SEP + ToPath(out);
 }
 
 }; // namespace Wisp
