@@ -47,7 +47,7 @@ private:
     int m_pos;
     keyInstance ki;
     cipherInstance ci;
-    DWORD dwIndex;
+    uint32_t dwIndex;
     unsigned char m_subData3[256];
     MD5Crypt *m_md5;
     bool m_use_md5;

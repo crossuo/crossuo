@@ -3,7 +3,7 @@
 
 CWeather g_Weather;
 
-float SinOscillate(float freq, int range, DWORD current_tick)
+float SinOscillate(float freq, int range, uint32_t current_tick)
 {
     //float anglef = int((current_tick / (1000.0f / 360.0f)) * freq) % 360;
     float anglef = (float)(int((current_tick / 2.7777f) * freq) % 360);

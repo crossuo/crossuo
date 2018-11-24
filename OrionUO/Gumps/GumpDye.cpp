@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-CGumpDye::CGumpDye(uint32_t serial, short x, short y, uint16_t graphic)
+CGumpDye::CGumpDye(uint32_t serial, int16_t x, int16_t y, uint16_t graphic)
     : CGumpSelectColor(serial, x, y, SCGS_OPT_TOOLTIP_TEXT)
 {
     NoClose = true;

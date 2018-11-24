@@ -39,7 +39,7 @@ private:
     HSTREAM m_Music{};
     HSTREAM m_WarMusic{};
 
-    void TraceMusicError(DWORD error);
+    void TraceMusicError(uint32_t error);
 
 public:
     CSoundManager();

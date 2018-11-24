@@ -822,7 +822,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 {
     DEBUG_TRACE_FUNCTION;
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
-    static DWORD itemInHand[2] = { 0, 0 };
+    static int itemInHand[2] = { 0, 0 };
 
     switch (macro->Code)
     {

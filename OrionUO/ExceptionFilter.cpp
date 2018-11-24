@@ -50,7 +50,7 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
         else
         {
             wchar_t filename[MAX_PATH + 1];
-            DWORD d = GetMappedFileName(hProcess, vmq.pvRgnBaseAddress, filename, MAX_PATH);
+            uint32_t d = GetMappedFileName(hProcess, vmq.pvRgnBaseAddress, filename, MAX_PATH);
 
             if (d)
                 filePath = ToString(filename);
@@ -85,7 +85,7 @@ void DumpLibraryInformation()
 
         CRASHLOG("Library information:\n");
 
-        DWORD processId = 0;
+        uint32_t processId = 0;
         GetWindowThreadProcessId(g_OrionWindow.Handle, &processId);
 
         HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);

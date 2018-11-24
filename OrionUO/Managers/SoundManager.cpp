@@ -9,7 +9,7 @@ struct BASS_ErrorDescription
     char desc[64];
 };
 
-BASS_ErrorDescription BASS_ErrorTable[38] = {
+static BASS_ErrorDescription BASS_ErrorTable[38] = {
     { -2, "unspecified error" },
     { BASS_OK, "OK" },
     { BASS_ERROR_MEM, "memory error" },
@@ -136,7 +136,7 @@ float CSoundManager::GetVolumeValue(int distance, bool music)
 {
     DEBUG_TRACE_FUNCTION;
     float volume = BASS_GetVolume();
-    WORD clientConfigVolume =
+    uint16_t clientConfigVolume =
         music ? g_ConfigManager.GetMusicVolume() : g_ConfigManager.GetSoundVolume();
     if (volume == 0 || clientConfigVolume == 0)
     {
@@ -169,7 +169,7 @@ vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
     strcpy(waveHeader->subChunkId, "fmt ");
     strcpy(waveHeader->dataChunkId, "data");
 
-    waveHeader->chunkSize = (uint32_t)waveSound.size();
+    waveHeader->chunkSize = uint32_t(waveSound.size());
     waveHeader->subChunkSize = 16;
     waveHeader->audioFormat = 1;
     waveHeader->numChannels = 1;
@@ -177,9 +177,9 @@ vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
     waveHeader->bitsPerSample = 16;
     waveHeader->bytesPerSecond = 88200;
     waveHeader->blockAlign = 4;
-    waveHeader->dataSize = (uint32_t)dataSize;
+    waveHeader->dataSize = uint32_t(dataSize);
 
-    is.Delay = static_cast<DWORD>((dataSize - 16) / 88.2f);
+    is.Delay = uint32_t((dataSize - 16) / 88.2f);
 
     auto sndDataPtr = reinterpret_cast<uint8_t *>(is.Address + sizeof(SOUND_BLOCK));
     std::copy_n(sndDataPtr + 16, dataSize - 16, waveSound.begin() + sizeof(WaveHeader));
@@ -354,7 +354,7 @@ void CSoundManager::SetMusicVolume(float volume)
     }
 }
 
-void CSoundManager::TraceMusicError(DWORD error)
+void CSoundManager::TraceMusicError(uint32_t error)
 {
     DEBUG_TRACE_FUNCTION;
     if (error != 0u)

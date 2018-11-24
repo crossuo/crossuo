@@ -13,9 +13,9 @@ public:
     bool HaveBackgroundLines = false;
 
 protected:
-    static const int ID_GBS_HTMLGUMP = 0xFFFFFFF0;
-    static const int ID_GBS_BUTTON_MINIMIZE = 0xFFFFFFF1;
-    static const int ID_GBS_BUTTON_RESIZE = 0xFFFFFFF2;
+    static const uint32_t ID_GBS_HTMLGUMP = 0xFFFFFFF0;
+    static const uint32_t ID_GBS_BUTTON_MINIMIZE = 0xFFFFFFF1;
+    static const uint32_t ID_GBS_BUTTON_RESIZE = 0xFFFFFFF2;
 
     CGUIButton *m_Minimizer{ nullptr };
     CGUIScrollBackground *m_Background{ nullptr };

@@ -1,5 +1,6 @@
 
 #if !USE_ORIONDLL
+#include "CryptEntry.h"
 #include "../Wisp/WispGlobal.h"
 #include "../Wisp/WispDataStream.h"
 #include "../EnumList.h"
@@ -8,7 +9,7 @@
 #include "GameCrypt.h"
 
 ENCRYPTION_TYPE g_EncryptionType = ET_NOCRYPT;
-size_t g_CryptPluginsCount = 0;
+static size_t s_CryptPluginsCount = 0;
 vector<uint8_t> g_RawData;
 
 static void Init(bool is_login, uint8_t seed[4])
@@ -191,7 +192,7 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
                 useVerdata = file.ReadInt8();
             }
 
-            g_CryptPluginsCount = file.ReadInt8();
+            s_CryptPluginsCount = file.ReadInt8();
         }
 
         writter.WriteUInt8(clientFlag);
@@ -207,7 +208,7 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
 
 size_t GetPluginsCount()
 {
-    return g_CryptPluginsCount;
+    return s_CryptPluginsCount;
 }
 
 void CryptInstallNew(uint8_t *address, size_t size, uint8_t *result, size_t &resultSize)

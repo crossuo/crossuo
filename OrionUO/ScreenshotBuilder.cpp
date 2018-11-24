@@ -4,6 +4,8 @@
 #include "FileSystem.h"
 #include <time.h>
 
+#define STBIWDEF static inline
+#define STB_IMAGE_WRITE_STATIC
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 

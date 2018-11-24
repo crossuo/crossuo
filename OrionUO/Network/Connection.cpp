@@ -12,7 +12,7 @@ CSocket::~CSocket()
 {
 }
 
-bool CSocket::Connect(const string &address, int port)
+bool CSocket::Connect(const string &address, uint16_t port)
 {
     DEBUG_TRACE_FUNCTION;
     LOG("Connecting...%s:%i\n", address.c_str(), port);

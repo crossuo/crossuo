@@ -890,6 +890,8 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
             return AG_PEOPLE;
+        case AGT_UNKNOWN:
+            break;
     }
 
     return AG_HIGHT;
@@ -909,6 +911,8 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
             return (uint8_t)(second ? PAG_DIE_2 : PAG_DIE_1);
+        case AGT_UNKNOWN:
+            break;
     }
 
     return 0;

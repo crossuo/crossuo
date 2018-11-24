@@ -5420,9 +5420,8 @@ PACKET_HANDLER(DyeData)
 
     Wisp::CSize gumpSize = g_Orion.GetGumpDimension(0x0906);
 
-    int x = (WORD)((g_OrionWindow.GetSize().Width / 2) - (gumpSize.Width / 2));
-    int y = (WORD)((g_OrionWindow.GetSize().Height / 2) - (gumpSize.Height / 2));
-
+    auto x = int16_t((g_OrionWindow.GetSize().Width / 2) - (gumpSize.Width / 2));
+    auto y = int16_t((g_OrionWindow.GetSize().Height / 2) - (gumpSize.Height / 2));
     CGumpDye *gump = new CGumpDye(serial, x, y, graphic);
 
     g_GumpManager.AddGump(gump);
@@ -5747,8 +5746,7 @@ PACKET_HANDLER(OpenBook) // 0x93
     uint32_t serial = ReadUInt32BE();
     uint8_t flags = ReadUInt8();
     Move(1);
-    WORD pageCount = ReadUInt16BE();
-
+    auto pageCount = ReadUInt16BE();
     CGumpBook *gump = new CGumpBook(
         serial, 0, 0, pageCount, flags != 0, (g_PacketManager.GetClientVersion() >= CV_308Z));
 

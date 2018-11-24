@@ -14,12 +14,14 @@
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
 
+// REMOVE
 typedef void __cdecl PLUGIN_INIT_TYPE_OLD(vector<string> &, vector<string> &, vector<uint32_t> &);
-typedef void __cdecl PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
+static PLUGIN_INIT_TYPE_OLD *g_PluginInitOld = nullptr; // FIXME: REMOVE
 
 PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = {};
-PLUGIN_INIT_TYPE_OLD *g_PluginInitOld = nullptr;
-PLUGIN_INIT_TYPE_NEW *g_PluginInitNew = nullptr;
+
+typedef void __cdecl PLUGIN_INIT_TYPE_NEW(PLUGIN_INFO *);
+static PLUGIN_INIT_TYPE_NEW *g_PluginInitNew = nullptr;
 
 #if USE_ORIONDLL
 typedef size_t __cdecl PLUGIN_GET_COUNT_FUNC();
@@ -641,7 +643,7 @@ void COrion::InitScreen(GAME_STATE state)
 void COrion::GetCurrentLocale()
 {
     DEBUG_TRACE_FUNCTION;
-    switch (LOBYTE(GetSystemDefaultLangID()))
+    switch (GetSystemDefaultLangID() & 0xff)
     {
         case LANG_RUSSIAN:
         {
@@ -4275,8 +4277,8 @@ uint16_t COrion::CalculateLightColor(uint16_t id)
                                     {
                                         if (id < 0x19AB || id > 0x19B6)
                                         {
-                                            if (id >= 0x1ECD && id <= 0x1ECF ||
-                                                id >= 0x1ED0 && id <= 0x1ED2)
+                                            if ((id >= 0x1ECD && id <= 0x1ECF) ||
+                                                (id >= 0x1ED0 && id <= 0x1ED2))
                                             {
                                                 color = 1;
                                             }
@@ -4377,8 +4379,8 @@ uint16_t COrion::CalculateLightColor(uint16_t id)
                                                                 color = 32;
                                                                 break;
                                                             default:
-                                                                if (id >= 0x983B && id <= 0x983D ||
-                                                                    id >= 0x983F && id <= 0x9841)
+                                                                if ((id >= 0x983B && id <= 0x983D) ||
+                                                                    (id >= 0x983F && id <= 0x9841))
                                                                 {
                                                                     color = 30;
                                                                 }
@@ -4724,7 +4726,7 @@ void COrion::PatchFiles()
         {
             m_MultiDataIndex[vh->BlockID].Address = vAddr + vh->Position;
             m_MultiDataIndex[vh->BlockID].DataSize = vh->Size;
-            m_MultiDataIndex[vh->BlockID].Count = (WORD)(vh->Size / sizeof(MULTI_IDX_BLOCK));
+            m_MultiDataIndex[vh->BlockID].Count = uint16_t(vh->Size / sizeof(MULTI_IDX_BLOCK));
         }
         else if (vh->FileID == 16 && (int)vh->BlockID < g_SkillsManager.Count) //Skills
         {

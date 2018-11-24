@@ -4,7 +4,7 @@
 #include "GumpBook.h"
 
 CGumpBook::CGumpBook(
-    uint32_t serial, short x, short y, short pageCount, bool writable, bool unicode)
+    uint32_t serial, int16_t x, int16_t y, uint16_t pageCount, bool writable, bool unicode)
     : CGump(GT_BOOK, serial, x, y)
     , PageCount(pageCount)
     , Writable(writable)
@@ -31,7 +31,6 @@ CGumpBook::CGumpBook(
     g_FontManager.UnusePartialHue = false;
 
     uint8_t entryFont = 1;
-
     if (!Unicode)
     {
         entryFont = 4;

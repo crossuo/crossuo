@@ -43,6 +43,8 @@ endif()
 #include(CheckLib)
 include(CheckCXXSourceRuns)
 
+set(EXTERNAL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external")
+
 if(ORION_WINDOWS)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
@@ -90,6 +92,7 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
+include_directories(${EXTERNAL_INCLUDE_DIR})
 include_directories(${DEP_INCLUDE_DIR})
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${ZLIB_INCLUDE_DIRS})

@@ -9,7 +9,7 @@ class CGumpBook : public CGump
 {
 public:
     bool Writable = false;
-    short PageCount = 0;
+    uint16_t PageCount = 0;
     bool Unicode = false;
 
 private:
@@ -32,7 +32,7 @@ private:
     void SetPagePos(int val, int page);
 
 public:
-    CGumpBook(uint32_t serial, short x, short y, short pageCount, bool writable, bool unicode);
+    CGumpBook(uint32_t serial, int16_t x, int16_t y, uint16_t pageCount, bool writable, bool unicode);
     virtual ~CGumpBook();
 
     virtual void PasteClipboardData(wstring &data) override;

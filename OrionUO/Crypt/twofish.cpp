@@ -36,10 +36,6 @@
 #include <memory.h>
 #include <assert.h>
 
-#ifndef _WINDOWS_
-typedef void *void *;
-#endif
-
 #if defined(min_key) && !defined(MIN_KEY)
 #define MIN_KEY 1 /* toupper() */
 #elif defined(part_key) && !defined(PART_KEY)
@@ -69,8 +65,8 @@ extern u32 cdecl TwofishAsmCodeSize(void);
 #undef CONST  // [2009-1-25 Yoko]
 #define CONST /* help syntax from C++, NOP here */
 
-CONST fullSbox MDStab;  /* not actually const.  Initialized ONE time */
-int needToBuildMDS = 1; /* is MDStab initialized yet? */
+static CONST fullSbox MDStab;  /* not actually const.  Initialized ONE time */
+static int needToBuildMDS = 1; /* is MDStab initialized yet? */
 
 #define BIG_TAB 0
 
@@ -80,7 +76,7 @@ u8 bigTab[4][256][256]; /* pre-computed S-box */
 
 /* number of rounds for various key sizes:  128, 192, 256 */
 /* (ignored for now in optimized code!) */
-CONST int numRounds[4] = { 0, ROUNDS_128, ROUNDS_192, ROUNDS_256 };
+static CONST int numRounds[4] = { 0, ROUNDS_128, ROUNDS_192, ROUNDS_256 };
 
 #if REENTRANT
 #define _sBox_ key->sBox8x32

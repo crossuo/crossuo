@@ -87,7 +87,7 @@ private:
     int m_LightCount = 0;
     int m_MaxDrawZ = 0;
     uint32_t m_ProcessAlphaTimer = 0;
-    bool m_CanProcessAlpha = nullptr;
+    bool m_CanProcessAlpha = false;
 
     void PreRender();
     void DrawGameWindow(bool render);

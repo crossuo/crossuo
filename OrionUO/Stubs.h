@@ -27,22 +27,13 @@ using namespace std;
     "-Winconsistent-missing-override" // FIXME: OnTextInput, OnKeyDown, OnLeftMouse... etc.
 #pragma clang diagnostic ignored                                                                   \
     "-Woverloaded-virtual" // FIXME: CGameItem::GetLightID, CTextContainer::Add, CJournal::Add etc.
-#pragma clang diagnostic ignored "-Wlogical-op-parentheses" // FIXME!!!!!!!!!!!!!!!!!!!!!!!!
-#pragma clang diagnostic ignored "-Wnull-conversion" // FIXME: nullptr to bool m_CanProcessAlpha
-#pragma clang diagnostic ignored "-Wnull-arithmetic" // FIXME: comparing nullptr to non-pointer
 #pragma clang diagnostic ignored "-Wsign-compare"
 #pragma clang diagnostic ignored "-Wshadow"  // FIXME: shadowing local variables
 #pragma clang diagnostic ignored "-Wreorder" // FIXME: Initialization order in class fields
 #pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
-#pragma clang diagnostic ignored "-Wmissing-braces"
-#pragma clang diagnostic ignored "-Wnon-pod-varargs" // FIXME: glshader
-#pragma clang diagnostic ignored "-Wswitch"
 #pragma clang diagnostic ignored "-Wformat"               // %li
-#pragma clang diagnostic ignored "-Wstring-plus-char"     // FIXME: PacketManager.cpp wtf
 #pragma clang diagnostic ignored "-Wmultichar"            // FIXME: 'ENU'
 #pragma clang diagnostic ignored "-Wchar-subscripts"      // FIXME: [' ']
-#pragma clang diagnostic ignored "-Wc++11-narrowing"      // FIXME: ID_BGS_BUTTON_*
 #pragma clang diagnostic ignored "-Wunused-private-field" // FIXME: m_FakeInsertionPin
 #pragma clang diagnostic ignored "-Wcomment"
 #elif defined(__GNUC__)
@@ -71,7 +62,6 @@ using namespace std;
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 
-typedef void *HANDLE;
 typedef void *HDC;
 typedef void *HSTREAM;
 typedef void *HGLRC;
@@ -84,35 +74,21 @@ typedef void *HGLRC;
 #define WM_SETTEXT 13
 #define WM_SHOWWINDOW 14
 #define WM_NCACTIVATE 15
-const unsigned int WM_NCPAINT = 0x85;
 #define SW_SHOWNORMAL 0
-#define CF_UNICODETEXT 0
 #define LANG_RUSSIAN 0
 #define LANG_FRENCH 1
 #define LANG_GERMAN 2
 #define LANG_SPANISH 3
 #define LANG_JAPANESE 4
 #define LANG_KOREAN 5
-#define CF_TEXT 0
 
 // Bad and very ugly "API" stuff
 int DefWindowProc(void *, unsigned int, uintptr_t, uintptr_t);
-#define LOBYTE(x) (int)(x & 0xff)
 int GetSystemDefaultLangID();
 int GetProfileStringA(const char *, const char *, const char *, char *, int);
-void *GlobalLock(void *);
-bool GlobalUnlock(void *);
 
 // cmd line
-wchar_t *GetCommandLineW();
-const wchar_t **CommandLineToArgvW(wchar_t *, int *);
 void *ShellExecuteA(void *, const char *, const char *, const char *, const char *, int);
-void *LocalFree(void *p);
-
-// Input
-bool OpenClipboard(void *);
-void *GetClipboardData(unsigned);
-bool CloseClipboard();
 
 // Thread
 void KillTimer(void *, unsigned int);

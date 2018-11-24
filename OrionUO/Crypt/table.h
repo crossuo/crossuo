@@ -7,13 +7,13 @@
         John Kelsey,    Counterpane Systems
         Chris Hall,     Counterpane Systems
         David Wagner,   UC Berkeley
-            
+
     Code Author:        Doug Whiting,   Hi/fn
-        
+
     Version  1.00       April 1998
-        
+
     Copyright 1998, Hi/fn and Counterpane Systems.  All rights reserved.
-        
+
     Notes:
         *   Tab size is set to 4 characters in this file
         *   These definitions should be used in optimized and unoptimized
@@ -33,8 +33,8 @@
 #define RS_rem(x)                                                                                  \
     {                                                                                              \
         uint8_t b = (uint8_t)(x >> 24);                                                            \
-        DWORD g2 = ((b << 1) ^ ((b & 0x80) ? RS_GF_FDBK : 0)) & 0xFF;                              \
-        DWORD g3 = ((b >> 1) & 0x7F) ^ ((b & 1) ? RS_GF_FDBK >> 1 : 0) ^ g2;                       \
+        uint32_t g2 = ((b << 1) ^ ((b & 0x80) ? RS_GF_FDBK : 0)) & 0xFF;                           \
+        uint32_t g3 = ((b >> 1) & 0x7F) ^ ((b & 1) ? RS_GF_FDBK >> 1 : 0) ^ g2;                    \
         x = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;                                    \
     }
 
@@ -52,10 +52,10 @@
 *             102    76    41    24     8     4     1     3     0     0     0
 * Runs[8]:      2     4     5     6     7     8     9    11
 * MSBs[8]:      1     4    15     8    18    38    40    43
-* HW= 8: 05040705 0A080E0A 14101C14 28203828 50407050 01499101 A080E0A0 
-* HW= 9: 04050707 080A0E0E 10141C1C 20283838 40507070 80A0E0E0 C6432020 07070504 
-*        0E0E0A08 1C1C1410 38382820 70705040 E0E0A080 202043C6 05070407 0A0E080E 
-*        141C101C 28382038 50704070 A0E080E0 4320C620 02924B02 089A4508 
+* HW= 8: 05040705 0A080E0A 14101C14 28203828 50407050 01499101 A080E0A0
+* HW= 9: 04050707 080A0E0E 10141C1C 20283838 40507070 80A0E0E0 C6432020 07070504
+*        0E0E0A08 1C1C1410 38382820 70705040 E0E0A080 202043C6 05070407 0A0E080E
+*        141C101C 28382038 50704070 A0E080E0 4320C620 02924B02 089A4508
 * Min Hamming weight (two byte difference) =  3. Max=28.  Total = 390150.
 * Prob[3]:      7    18    55   149   270   914  2185  5761 11363 20719 32079
 *           43492 51612 53851 52098 42015 31117 20854 11538  6223  2492  1033
@@ -67,9 +67,9 @@
 #define LFSR2(x)                                                                                   \
     (((x) >> 2) ^ (((x)&0x02) ? MDS_GF_FDBK / 2 : 0) ^ (((x)&0x01) ? MDS_GF_FDBK / 4 : 0))
 
-#define Mx_1(x) ((DWORD)(x))                         /* force result to dword so << will work */
-#define Mx_X(x) ((DWORD)((x) ^ LFSR2(x)))            /* 5B */
-#define Mx_Y(x) ((DWORD)((x) ^ LFSR1(x) ^ LFSR2(x))) /* EF */
+#define Mx_1(x) ((uint32_t)(x))                         /* force result to dword so << will work */
+#define Mx_X(x) ((uint32_t)((x) ^ LFSR2(x)))            /* 5B */
+#define Mx_Y(x) ((uint32_t)((x) ^ LFSR1(x) ^ LFSR2(x))) /* EF */
 
 #define M00 Mul_1
 #define M01 Mul_Y
@@ -95,7 +95,7 @@
 #define Mul_X Mx_X
 #define Mul_Y Mx_Y
 
-/*  Define the fixed p0/p1 permutations used in keyed S-box lookup.  
+/*  Define the fixed p0/p1 permutations used in keyed S-box lookup.
     By changing the following constant definitions for P_ij, the S-boxes will
     automatically get changed in all the Twofish source code. Note that P_i0 is
     the "outermost" 8x8 permutation applied.  See the f32() function to see
@@ -131,22 +131,22 @@
 
 /***********************************************************************
 *  07:07:14  05/30/98  [4x4]  TestCnt=256. keySize=128. CRC=4BD14D9E.
-* maxKeyed:  dpMax = 18. lpMax =100. fixPt =  8. skXor =  0. skDup =  6. 
+* maxKeyed:  dpMax = 18. lpMax =100. fixPt =  8. skXor =  0. skDup =  6.
 * log2(dpMax[ 6..18])=   --- 15.42  1.33  0.89  4.05  7.98 12.05
 * log2(lpMax[ 7..12])=  9.32  1.01  1.16  4.23  8.02 12.45
 * log2(fixPt[ 0.. 8])=  1.44  1.44  2.44  4.06  6.01  8.21 11.07 14.09 17.00
 * log2(skXor[ 0.. 0])
 * log2(skDup[ 0.. 6])=   ---  2.37  0.44  3.94  8.36 13.04 17.99
 ***********************************************************************/
-CONST uint8_t P8x8[2][256] = {
+static  CONST uint8_t P8x8[2][256] = {
     /*  p0:   */
     /*  dpMax      = 10.  lpMax      = 64.  cycleCnt=   1  1  1  0.         */
     /* 817D6F320B59ECA4.ECB81235F4A6709D.BA5E6D90C8F32471.D7F4126E9B3085CA. */
     /* Karnaugh maps:
-*  0111 0001 0011 1010. 0001 1001 1100 1111. 1001 1110 0011 1110. 1101 0101 1111 1001. 
-*  0101 1111 1100 0100. 1011 0101 0010 0000. 0101 1000 1100 0101. 1000 0111 0011 0010. 
-*  0000 1001 1110 1101. 1011 1000 1010 0011. 0011 1001 0101 0000. 0100 0010 0101 1011. 
-*  0111 0100 0001 0110. 1000 1011 1110 1001. 0011 0011 1001 1101. 1101 0101 0000 1100. 
+*  0111 0001 0011 1010. 0001 1001 1100 1111. 1001 1110 0011 1110. 1101 0101 1111 1001.
+*  0101 1111 1100 0100. 1011 0101 0010 0000. 0101 1000 1100 0101. 1000 0111 0011 0010.
+*  0000 1001 1110 1101. 1011 1000 1010 0011. 0011 1001 0101 0000. 0100 0010 0101 1011.
+*  0111 0100 0001 0110. 1000 1011 1110 1001. 0011 0011 1001 1101. 1101 0101 0000 1100.
 */
     { 0xA9, 0x67, 0xB3, 0xE8, 0x04, 0xFD, 0xA3, 0x76, 0x9A, 0x92, 0x80, 0x78, 0xE4, 0xDD, 0xD1,
       0x38, 0x0D, 0xC6, 0x35, 0x98, 0x18, 0xF7, 0xEC, 0x6C, 0x43, 0x75, 0x37, 0x26, 0xFA, 0x13,
@@ -170,10 +170,10 @@ CONST uint8_t P8x8[2][256] = {
     /*  dpMax      = 10.  lpMax      = 64.  cycleCnt=   2  0  0  1.         */
     /* 28BDF76E31940AC5.1E2B4C376DA5F908.4C75169A0ED82B3F.B951C3DE647F208A. */
     /* Karnaugh maps:
-*  0011 1001 0010 0111. 1010 0111 0100 0110. 0011 0001 1111 0100. 1111 1000 0001 1100. 
-*  1100 1111 1111 1010. 0011 0011 1110 0100. 1001 0110 0100 0011. 0101 0110 1011 1011. 
-*  0010 0100 0011 0101. 1100 1000 1000 1110. 0111 1111 0010 0110. 0000 1010 0000 0011. 
-*  1101 1000 0010 0001. 0110 1001 1110 0101. 0001 0100 0101 0111. 0011 1011 1111 0010. 
+*  0011 1001 0010 0111. 1010 0111 0100 0110. 0011 0001 1111 0100. 1111 1000 0001 1100.
+*  1100 1111 1111 1010. 0011 0011 1110 0100. 1001 0110 0100 0011. 0101 0110 1011 1011.
+*  0010 0100 0011 0101. 1100 1000 1000 1110. 0111 1111 0010 0110. 0000 1010 0000 0011.
+*  1101 1000 0010 0001. 0110 1001 1110 0101. 0001 0100 0101 0111. 0011 1011 1111 0010.
 */
     { 0x75, 0xF3, 0xC6, 0xF4, 0xDB, 0x7B, 0xFB, 0xC8, 0x4A, 0xD3, 0xE6, 0x6B, 0x45, 0x7D, 0xE8,
       0x4B, 0xD6, 0x32, 0xD8, 0xFD, 0x37, 0x71, 0xF1, 0xE1, 0x30, 0x0F, 0xF8, 0x1B, 0x87, 0xFA,

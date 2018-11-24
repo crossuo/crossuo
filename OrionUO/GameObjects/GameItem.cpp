@@ -905,8 +905,7 @@ CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
 
     if (color == 0xFFFF) //Поиск по минимальному цвету
     {
-        WORD minColor = 0xFFFF;
-
+        uint16_t minColor = 0xFFFF;
         QFOR(obj, m_Items, CGameItem *)
         {
             if (obj->Graphic == graphic)

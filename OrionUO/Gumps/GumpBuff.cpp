@@ -85,8 +85,7 @@ void CGumpBuff::UpdateBuffIcons()
 void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const wstring &text)
 {
     DEBUG_TRACE_FUNCTION;
-    DWORD ticks = 0xFFFFFFFF;
-
+    uint32_t ticks = 0xFFFFFFFF;
     if (timer != 0u)
     {
         ticks = g_Ticks + (timer * 1000);

@@ -12,31 +12,6 @@ uint32_t DefWindowProc(void * /*unused*/, uint32_t /*unused*/, void * /*unused*/
     NOT_IMPLEMENTED;
     return 0;
 }
-bool OpenClipboard(void * /*unused*/)
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
-void *GetClipboardData(unsigned /*unused*/)
-{
-    NOT_IMPLEMENTED;
-    return nullptr;
-}
-bool CloseClipboard()
-{
-    NOT_IMPLEMENTED;
-    return false;
-}
-wchar_t *GetCommandLineW()
-{
-    NOT_IMPLEMENTED;
-    return nullptr;
-}
-const wchar_t **CommandLineToArgvW(wchar_t * /*unused*/, int * /*unused*/)
-{
-    NOT_IMPLEMENTED;
-    return nullptr;
-}
 int GetSystemDefaultLangID()
 {
     NOT_IMPLEMENTED;
@@ -52,21 +27,6 @@ void *ShellExecuteA(
 {
     NOT_IMPLEMENTED;
     return nullptr;
-}
-void *LocalFree(void *p)
-{
-    free(p); /*wtf*/
-    return nullptr;
-}
-void *GlobalLock(void * /*unused*/)
-{
-    NOT_IMPLEMENTED;
-    return nullptr;
-}
-bool GlobalUnlock(void * /*unused*/)
-{
-    NOT_IMPLEMENTED;
-    return false;
 }
 int GetProfileStringA(
     const char * /*unused*/,

@@ -305,6 +305,9 @@ bool CWindow::Create(
         {
             case SDL_SYSWM_UNKNOWN:
                 break;
+            case SDL_SYSWM_OS2:
+                subsystem = "IBM OS/2";
+                break;
             case SDL_SYSWM_WINDOWS:
                 subsystem = "Microsoft Windows(TM)";
                 break;

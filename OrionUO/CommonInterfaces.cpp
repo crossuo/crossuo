@@ -4,7 +4,7 @@
 #include "CommonInterfaces.h"
 #include <SDL_timer.h>
 
-IOrionString g_OrionString;
+static IOrionString g_OrionString;
 
 IOrionString::IOrionString()
     : m_Unicode(false)
@@ -577,7 +577,7 @@ void __cdecl FUNCBODY_GetFileInfo(unsigned int index, ORION_RAW_FILE_INFO &info)
 
     if (file != nullptr)
     {
-        info.Address = file->Start;
+        info.Address = intptr_t(file->Start);
         info.Size = file->Size;
         info.Extra = extra;
     }

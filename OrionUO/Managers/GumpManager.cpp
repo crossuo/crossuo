@@ -1114,6 +1114,8 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
                     result = true;
                     break;
                 }
+                default:
+                    break;
             }
         }
         else if (key == KEY_DELETE)
