@@ -22,7 +22,7 @@ public:
     bool CanEnterSceneRender() { return (m_Flags & PLUGIN_FLAGS_SCENE_DRAW); }
     bool CanEnterWorldMapRender() { return (m_Flags & PLUGIN_FLAGS_WORLD_MAP_DRAW); }
 
-    PLUGIN_INTERFACE * m_PPS;
+    PLUGIN_INTERFACE *m_PPS;
 };
 
 class CPluginManager : public CBaseQueue

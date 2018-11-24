@@ -35,5 +35,3 @@ void DebugDump(uint8_t *data, int size);
 
 #define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
 #define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))
-
-

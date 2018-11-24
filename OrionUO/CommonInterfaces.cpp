@@ -73,7 +73,8 @@ void __cdecl FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void __cdecl FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radius, int gradientMode)
+void __cdecl FUNCBODY_DrawCircle(
+    unsigned int color, float x, float y, float radius, int gradientMode)
 {
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawCircle(x, y, radius, gradientMode);

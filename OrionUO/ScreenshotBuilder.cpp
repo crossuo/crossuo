@@ -108,4 +108,3 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
         g_Orion.CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
     }
 }
-

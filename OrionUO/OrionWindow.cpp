@@ -524,7 +524,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 
         case UOMSG_MENU_RESPONSE:
         {
-            UOI_MENU_RESPONSE * data = (UOI_MENU_RESPONSE *)ev.data1;
+            auto *data = reinterpret_cast<UOI_MENU_RESPONSE *>(ev.data1);
             if ((data->Serial == 0u) && (data->ID == 0u))
             {
                 for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
