@@ -1377,7 +1377,7 @@ void COrion::Process(bool rendering)
             return;
         }
 
-        if (g_ConfigManager.CheckPing && g_PingTimer < g_Ticks)
+        if (!g_DisablePing && g_ConfigManager.CheckPing && g_PingTimer < g_Ticks)
         {
             CPingThread *pingThread = new CPingThread(0xFFFFFFFF, m_GameServerIP, 10);
             pingThread->Run();
@@ -4379,7 +4379,8 @@ uint16_t COrion::CalculateLightColor(uint16_t id)
                                                                 color = 32;
                                                                 break;
                                                             default:
-                                                                if ((id >= 0x983B && id <= 0x983D) ||
+                                                                if ((id >= 0x983B &&
+                                                                     id <= 0x983D) ||
                                                                     (id >= 0x983F && id <= 0x9841))
                                                                 {
                                                                     color = 30;

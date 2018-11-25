@@ -57,25 +57,27 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
         uint8_t fullPercent = reader.ReadUInt8();
         uint8_t timezone = reader.ReadUInt8();
         uint32_t ip = reader.ReadUInt32LE(); //little-endian!!!
-        bool selected = (name == g_ServerList.LastServerName);
 
+        const bool selected = (name == g_ServerList.LastServerName);
         if (selected)
         {
             g_ServerList.LastServerIndex = (int)i;
         }
-
         m_Servers.push_back(CServer(id, name, fullPercent, timezone, ip, selected));
 
-        char ipString[30] = { 0 };
-        sprintf_s(
-            ipString,
-            "%i.%i.%i.%i",
-            (ip >> 24) & 0xFF,
-            (ip >> 16) & 0xFF,
-            (ip >> 8) & 0xFF,
-            ip & 0xFF);
-        CPingThread *pingThread = new CPingThread(i, ipString, 100);
-        pingThread->Run();
+        if (!g_DisablePing)
+        {
+            char ipString[30] = { 0 };
+            sprintf_s(
+                ipString,
+                "%i.%i.%i.%i",
+                (ip >> 24) & 0xFF,
+                (ip >> 16) & 0xFF,
+                (ip >> 8) & 0xFF,
+                ip & 0xFF);
+            CPingThread *pingThread = new CPingThread(i, ipString, 100);
+            pingThread->Run();
+        }
     }
 
     if (g_ServerList.LastServerIndex < numServers && g_MainScreen.m_AutoLogin->Checked)

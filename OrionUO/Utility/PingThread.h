@@ -5,11 +5,11 @@
 
 struct PING_INFO_DATA
 {
-    uint32_t ServerID;
-    int Min;
-    int Max;
-    int Average;
-    int Lost;
+    uint32_t ServerID = 0;
+    int Min = 9999;
+    int Max = 0;
+    int Average = 0;
+    int Lost = 0;
 };
 
 class CPingThread : public Wisp::CThread
@@ -26,6 +26,5 @@ public:
     virtual ~CPingThread();
 
     virtual void OnExecute(uint32_t nowTime);
-
     static const uint32_t MessageID = USER_MESSAGE_ID + 401;
 };

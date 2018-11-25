@@ -579,7 +579,6 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
                 else
                 {
                     CServer *server = g_ServerList.GetServer(info->ServerID);
-
                     if (server != nullptr)
                     {
                         if (info->Min < 9999)

@@ -75,7 +75,6 @@ thread_int THREADCALL CThreadLoopSynchronizedDelay(void *arg)
 #endif
 
         parent->OnExecute(nowTime);
-
         if (!parent->Cycled())
         {
             break;

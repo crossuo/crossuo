@@ -21,8 +21,13 @@ public:
     static wstring
     IsSystemCommand(const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type);
 
-    void
-    DrawW(uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0);
+    void DrawW(
+        uint8_t font,
+        uint16_t color,
+        int x,
+        int y,
+        TEXT_ALIGN_TYPE align = TS_LEFT,
+        uint16_t flags = 0);
 
     void Send();
     void SaveConsoleMessage();

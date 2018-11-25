@@ -3,6 +3,9 @@
 
 #include <SDL_events.h>
 #include <SDL_timer.h>
+#include <atomic>
+
+static std::atomic<int32_t> s_pingCnt;
 
 CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount)
     : ServerID(serverID)
@@ -10,12 +13,16 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
     , RequestsCount(requestsCount)
 {
     DEBUG_TRACE_FUNCTION;
+    assert(s_pingCnt == 0 && "Multiple ping threads running at the same time");
+    s_pingCnt++;
     LOG("CPingThread => %s\n", serverIP.c_str());
 }
 
 CPingThread::~CPingThread()
 {
     DEBUG_TRACE_FUNCTION;
+    assert(s_pingCnt == 1 && "Multiple ping threads running at the same time");
+    s_pingCnt--;
 }
 
 int CPingThread::CalculatePing()
@@ -26,11 +33,11 @@ int CPingThread::CalculatePing()
         return -4;
     }
 
-    uint32_t timems = SDL_GetTicks();
-    int result = icmp_query(handle, ServerIP.c_str(), &timems);
+    uint32_t start = SDL_GetTicks();
+    int result = icmp_query(handle, ServerIP.c_str(), &start);
     if (result == 0)
     {
-        result = (SDL_GetTicks() - timems);
+        result = (SDL_GetTicks() - start);
     }
 
     icmp_close(handle);
@@ -56,7 +63,6 @@ void CPingThread::OnExecute(uint32_t nowTime)
             {
                 info.Lost++;
             }
-
             continue;
         }
 

@@ -3882,7 +3882,6 @@ PACKET_HANDLER(KrriosClientSpecial)
 {
     DEBUG_TRACE_FUNCTION;
     uint8_t type = ReadUInt8();
-
     if (type == 0xFE)
     {
         CPacketRazorAnswer().Send();
@@ -3893,7 +3892,6 @@ PACKET_HANDLER(AssistVersion)
 {
     DEBUG_TRACE_FUNCTION;
     uint32_t version = ReadUInt32BE();
-
     CPacketAssistVersion(version, g_Orion.ClientVersionText).Send();
 }
 

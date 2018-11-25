@@ -6,6 +6,8 @@
 #include <string.h>
 #include <SDL_timer.h>
 
+bool g_DisablePing = false;
+
 struct ICMPHDR
 {
     unsigned char Type;
@@ -215,7 +217,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
         ECHOREQUEST request = {};
         request.icmpHdr.Type = ICMP_ECHOREQ;
         request.dwTime = *timems;
-        memset(request.cData, 80, 64);
+        memset(request.cData, 80, sizeof(request.cData));
 
         const auto rs = sizeof(ECHOREQUEST);
         request.icmpHdr.Checksum = icmp_checksum((uint16_t *)&request, rs);
@@ -266,6 +268,7 @@ void icmp_close(icmp_handle handle)
 #include <sys/ioctl.h>
 #include <stropts.h>
 #include <ifaddrs.h>
+#include <string.h>
 
 template <class T>
 inline static int socket_fd(T socket)
@@ -415,9 +418,21 @@ void tcp_close(tcp_socket socket)
 
 icmp_handle icmp_open()
 {
+    if (g_DisablePing)
+    {
+        return nullptr;
+    }
+
     int h = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (h == -1)
     {
+        auto e = errno;
+        LOG("ERROR: %d - %s\n", e, strerror(e));
+        if (e == 1)
+        {
+            g_DisablePing = true;
+            LOG("\tPING disabled, not enough permission to create raw socket");
+        }
         return nullptr;
     }
 
@@ -445,7 +460,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
         ECHOREQUEST request = {};
         request.icmpHdr.Type = ICMP_ECHOREQ;
         request.dwTime = *timems;
-        memset(request.cData, 80, 64);
+        memset(request.cData, 80, sizeof(request.cData));
 
         const auto rs = sizeof(ECHOREQUEST);
         request.icmpHdr.Checksum = icmp_checksum((uint16_t *)&request, rs);
