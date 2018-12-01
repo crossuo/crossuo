@@ -224,20 +224,18 @@ void CMainScreen::LoadCustomPath()
 
     LOG("Loading custom path from " ORIONUO_CONFIG "\n");
     Wisp::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
-
     while (!file.IsEOF())
     {
-        std::vector<std::string> strings = file.ReadTokens(false);
-
+        auto strings = file.ReadTokens(false);
         if (strings.size() >= 2)
         {
-            int code = GetConfigKeyCode(strings[0]);
-
+            const int code = GetConfigKeyCode(strings[0]);
             switch (code)
             {
                 case MSCC_CUSTOM_PATH:
                 {
                     g_App.m_UOPath = ToPath(strings[1]);
+                    fs_case_insensitive_init(g_App.m_UOPath);
                 }
             }
         }
@@ -255,19 +253,16 @@ void CMainScreen::LoadGlobalConfig()
 
     while (!file.IsEOF())
     {
-        std::vector<std::string> strings = file.ReadTokens();
-
+        auto strings = file.ReadTokens();
         if (strings.size() >= 2)
         {
-            int code = GetConfigKeyCode(strings[0]);
-
+            const int code = GetConfigKeyCode(strings[0]);
             switch (code)
             {
                 case MSCC_ACTID:
                 {
                     m_Account->SetTextA(strings[1]);
                     m_Account->SetPos((int)strings[1].length());
-
                     break;
                 }
                 case MSCC_ACTPWD:
@@ -275,17 +270,14 @@ void CMainScreen::LoadGlobalConfig()
                     string password = file.RawLine;
                     size_t pos = password.find_first_of('=');
                     password = password.substr(pos + 1, password.length() - (pos + 1));
-
                     const auto len = (int)password.length();
                     if (len != 0)
                     {
                         m_Password->SetTextA(password);
-
                         for (int zv = 0; zv < len; zv++)
                         {
                             m_MainGump.m_PasswordFake->Insert(L'*');
                         }
-
                         m_Password->SetPos((int)len);
                     }
                     else
@@ -295,13 +287,11 @@ void CMainScreen::LoadGlobalConfig()
                         m_Password->SetTextA("");
                         m_Password->SetPos(0);
                     }
-
                     break;
                 }
                 case MSCC_REMEMBERPWD:
                 {
                     m_SavePassword->Checked = ToBool(strings[1]);
-
                     if (!m_SavePassword->Checked)
                     {
                         m_MainGump.m_PasswordFake->SetTextA("");
@@ -309,31 +299,26 @@ void CMainScreen::LoadGlobalConfig()
                         m_Password->SetTextA("");
                         m_Password->SetPos(0);
                     }
-
                     break;
                 }
                 case MSCC_AUTOLOGIN:
                 {
                     m_AutoLogin->Checked = ToBool(strings[1]);
-
                     break;
                 }
                 case MSCC_SMOOTHMONITOR:
                 {
                     g_ScreenEffectManager.Enabled = ToBool(strings[1]);
-
                     break;
                 }
                 case MSCC_THE_ABYSS:
                 {
                     g_TheAbyss = ToBool(strings[1]);
-
                     break;
                 }
                 case MSCC_ASMUT:
                 {
                     g_Asmut = ToBool(strings[1]);
-
                     break;
                 }
                 default:

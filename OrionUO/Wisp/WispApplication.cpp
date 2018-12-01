@@ -5,14 +5,15 @@
 #include <SDL_timer.h>
 namespace Wisp
 {
-CApplication *g_WispApplication = nullptr;
-
 CApplication::CApplication()
+{
+}
+
+void CApplication::Init()
 {
     LOG("INITIATING CAPPLICATION\n");
     g_MainThread = CThread::GetCurrentThreadId();
     DEBUG_TRACE_FUNCTION;
-    g_WispApplication = this;
     m_ExePath = fs_path_current();
     m_UOPath = fs_path_current();
     g_MainScreen.LoadCustomPath();
@@ -21,7 +22,6 @@ CApplication::CApplication()
 CApplication::~CApplication()
 {
     DEBUG_TRACE_FUNCTION;
-    g_WispApplication = nullptr;
 }
 
 #if USE_WISP
@@ -98,7 +98,7 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     va_end(arg);
 
     os_path res = m_UOPath.c_str();
-    return res + PATH_SEP + ToPath(out);
+    return fs_insensitive(res + PATH_SEP + ToPath(out));
 }
 
 }; // namespace Wisp

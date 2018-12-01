@@ -18,6 +18,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
         return EXIT_FAILURE;
     }
 
+    g_App.Init();
     auto path = g_App.ExeFilePath("crashlogs");
     fs_path_create(path);
 
@@ -95,7 +96,7 @@ ORION_EXPORT int plugin_main(int argc, char **argv)
     }
 
     SDL_Log("SDL Initialized.");
-
+    g_App.Init();
     INITLOGGER("uolog.txt");
     auto path = g_App.ExeFilePath("crashlogs");
     fs_path_create(path);

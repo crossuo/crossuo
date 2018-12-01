@@ -5,6 +5,15 @@
 
 #if defined(ORION_WINDOWS)
 
+void fs_case_insensitive_init(const os_path &path)
+{
+}
+
+inline os_path fs_insensitive(const os_path &path)
+{
+    return path;
+}
+
 FILE *fs_open(const os_path &path_str, fs_mode mode)
 {
     // we do not support text mode, any decent modern text editor can deal with it
@@ -105,6 +114,64 @@ void fs_unmap(unsigned char *ptr, size_t length)
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
+
+static std::vector<std::string> s_files;
+static std::vector<std::string> s_lower;
+
+std::string fs_insensitive(const std::string &path)
+{
+    std::string p = path;
+    std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+    auto it = std::find(s_lower.begin(), s_lower.end(), p);
+    if (it != s_lower.end())
+    {
+        int i = it - s_lower.begin();
+        return s_files[i];
+    }
+    return path;
+}
+
+static void fs_list_recursive(const char *name)
+{
+    DIR *dir;
+    struct dirent *entry;
+    if (!(dir = opendir(name)))
+    {
+        return;
+    }
+
+    char path[512]{};
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        if (entry->d_type == DT_DIR)
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            {
+                continue;
+            }
+            snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
+            fs_list_recursive(path);
+        }
+        else
+        {
+            snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
+            int len = strlen(path);
+            s_files.emplace_back(std::string(path, len));
+            auto p = std::string(path, len);
+            std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+            s_lower.emplace_back(p);
+            //fprintf(stdout, ">> %s\n", p.c_str());
+        }
+    }
+    closedir(dir);
+}
+
+void fs_case_insensitive_init(const std::string &path)
+{
+    s_files.reserve(1024);
+    s_lower.reserve(1024);
+    fs_list_recursive(path.c_str());
+}
 
 FILE *fs_open(const std::string &path_str, fs_mode mode)
 {

@@ -26,6 +26,9 @@ enum fs_mode
     FS_WRITE = 0x02,
 };
 
+void fs_case_insensitive_init(const os_path &path);
+os_path fs_insensitive(const os_path &path);
+
 FILE *fs_open(const os_path &path_str, fs_mode mode);
 void fs_close(FILE *fp);
 size_t fs_size(FILE *fp);

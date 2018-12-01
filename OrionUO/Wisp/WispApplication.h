@@ -19,6 +19,8 @@ public:
     CApplication();
     virtual ~CApplication();
 
+    virtual void Init();
+
 #if USE_WISP
     HINSTANCE Hinstance = 0;
     int Run(HINSTANCE hinstance);
@@ -30,7 +32,5 @@ public:
     os_path UOFilesPath(const char *str, ...) const;
     os_path UOFilesPath(const string &str, ...) const;
 };
-
-extern CApplication *g_WispApplication;
 
 }; // namespace Wisp
