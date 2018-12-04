@@ -8,8 +8,6 @@ CConfigManager g_OptionsConfig;
 
 CConfigManager::CConfigManager()
 {
-    DEBUG_TRACE_FUNCTION;
-    Init();
 }
 
 void CConfigManager::Init()
@@ -252,7 +250,7 @@ void CConfigManager::SetMusicVolume(uint8_t val)
     if (this == &g_ConfigManager && m_MusicVolume != val)
     {
         m_MusicVolume = val;
-        g_SoundManager.SetMusicVolume(g_SoundManager.GetVolumeValue(-1, true));
+        g_SoundManager.SetMusicVolume(m_MusicVolume);
     }
     else
     {
@@ -445,7 +443,7 @@ void CConfigManager::SetConsoleNeedEnter(bool val)
 
 void CConfigManager::SetSpellIconAlpha(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION
+    DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && val != m_SpellIconAlpha)
     {
         float alpha = val / 255.0f;
