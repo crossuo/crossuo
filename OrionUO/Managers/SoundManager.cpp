@@ -456,7 +456,7 @@ bool CSoundManager::IsPlayingNormalMusic()
 #endif
 }
 
-void CSoundManager::PlayMP3(const os_path &fileName, int index, bool loop, bool warmode)
+void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, bool warmode)
 {
     SOUND_DEBUG_TRACE;
 
@@ -468,7 +468,7 @@ void CSoundManager::PlayMP3(const os_path &fileName, int index, bool loop, bool 
 
     if (warmode)
     {
-        StopWarMusic()
+        StopWarMusic();
     }
     else
     {
@@ -603,7 +603,7 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     if (!tsfLoaded)
     {
         tsfLoaded = true;
-        auto path = g_App.ExeFilePath("uo_4mb_2.sf2");
+        auto path = ToString(g_App.ExeFilePath("uo_4mb_2.sf2"));
         s_Sf2.load(path.c_str());
     }
 

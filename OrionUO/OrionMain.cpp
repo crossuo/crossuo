@@ -59,9 +59,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 #else
 
-#define ORION_EXPORT extern "C" __attribute__((visibility("default")))
 
+#if !defined(ORION_WINDOWS)
 #include <dlfcn.h>
+#define ORION_EXPORT extern "C" __attribute__((visibility("default")))
+#else
+#define ORION_EXPORT
+#endif
+
 #include "PluginInterface.h"
 
 #if USE_ORIONDLL
@@ -71,7 +76,11 @@ ENCRYPTION_TYPE g_EncryptionType;
 static bool g_isHeadless = false;
 extern ENCRYPTION_TYPE g_EncryptionType;
 
+#if !defined(ORION_WINDOWS)
 ORION_EXPORT int plugin_main(int argc, char **argv)
+#else
+int main(int argc, char **argv)
+#endif
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -136,9 +145,11 @@ ORION_EXPORT int plugin_main(int argc, char **argv)
     return ret;
 }
 
+#if !defined(ORION_WINDOWS)
 ORION_EXPORT void set_install(REVERSE_PLUGIN_INTERFACE *p)
 {
     g_oaReverse.Install = p->Install;
 }
+#endif
 
 #endif

@@ -34,7 +34,7 @@
 #define ToColorA(x) ((x >> 24) & 0xff)
 
 #if USE_WISP
-typedef HSTREAM SoundHandle;
+typedef DWORD SoundHandle;
 #define SOUND_NULL 0
 #else
 struct SoundInfo;

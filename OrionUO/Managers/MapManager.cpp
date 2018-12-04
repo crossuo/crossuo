@@ -59,8 +59,7 @@ void CMapManager::CreateBlockTable(int map)
     size_t endMapAddress = mapAddress + g_FileManager.m_MapMul[map].Size;
 
     CUopMappedFile &uopFile = g_FileManager.m_MapUOP[map];
-    bool isUop = (uopFile.Start != nullptr);
-
+    const bool isUop = (uopFile.Start != nullptr);
     if (isUop)
     {
         mapAddress = (size_t)uopFile.Start;
@@ -69,10 +68,8 @@ void CMapManager::CreateBlockTable(int map)
 
     size_t staticIdxAddress = (size_t)g_FileManager.m_StaticIdx[map].Start;
     size_t endStaticIdxAddress = staticIdxAddress + g_FileManager.m_StaticIdx[map].Size;
-
     size_t staticAddress = (size_t)g_FileManager.m_StaticMul[map].Start;
     size_t endStaticAddress = staticAddress + g_FileManager.m_StaticMul[map].Size;
-
     if ((mapAddress == 0u) || (staticIdxAddress == 0u) || (staticAddress == 0u))
     {
         return;
@@ -80,22 +77,17 @@ void CMapManager::CreateBlockTable(int map)
 
     int fileNumber = -1;
     size_t uopOffset = 0;
-
     for (int block = 0; block < maxBlockCount; block++)
     {
         CIndexMap &index = list[block];
-
         size_t realMapAddress = 0;
         size_t realStaticAddress = 0;
         int realStaticCount = 0;
-
         int blockNumber = (int)block;
-
         if (isUop)
         {
             blockNumber &= 4095;
             int shifted = (int)block >> 12;
-
             if (fileNumber != shifted)
             {
                 fileNumber = shifted;
@@ -103,7 +95,6 @@ void CMapManager::CreateBlockTable(int map)
                 sprintf_s(mapFilePath, "build/map%ilegacymul/%08i.dat", map, shifted);
 
                 CUopBlockHeader *uopBlock = uopFile.GetBlock(COrion::CreateHash(mapFilePath));
-
                 if (uopBlock != nullptr)
                 {
                     uopOffset = (size_t)uopBlock->Offset;
@@ -116,23 +107,19 @@ void CMapManager::CreateBlockTable(int map)
         }
 
         size_t address = mapAddress + uopOffset + (blockNumber * sizeof(MAP_BLOCK));
-
         if (address < endMapAddress)
         {
             realMapAddress = address;
         }
 
         PSTAIDX_BLOCK sidx = (PSTAIDX_BLOCK)(staticIdxAddress + block * sizeof(STAIDX_BLOCK));
-
         if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
         {
             size_t address = staticAddress + sidx->Position;
-
             if (address < endStaticAddress)
             {
                 realStaticAddress = address;
                 realStaticCount = sidx->Size / sizeof(STATICS_BLOCK);
-
                 if (realStaticCount > 1024)
                 {
                     realStaticCount = 1024;

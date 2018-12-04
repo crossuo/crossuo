@@ -199,7 +199,6 @@ bool CMacroManager::Convert(const os_path &path)
     Wisp::CTextFileParser file(path, "", "", "");
     Wisp::CTextFileParser unicodeParser({}, " ", "", "");
 
-    //Позиции доп. кнопок в списке, индексация с конца, т.е. strings.size() - position
     const int MACRO_POSITION_ALT = 2;
     const int MACRO_POSITION_CTRL = 3;
     const int MACRO_POSITION_SHIFT = 1;
@@ -217,7 +216,7 @@ bool CMacroManager::Convert(const os_path &path)
 
         if (size < 4 || size > 5)
         {
-            LOG("Error!!! Macros converter. Unwaited start args count = %i!!!\n", size);
+            LOG("Error! Macros converter: unexpected start args count = %zi\n", size);
             continue;
         }
 

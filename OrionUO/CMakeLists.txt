@@ -419,11 +419,10 @@ else()
     add_custom_command(TARGET orion_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "unity/liborion.so" "orion.so")
     add_executable(OrionUO OrionApp.cpp)
     target_link_libraries(OrionUO PUBLIC -ldl ${THREAD})
+  else()
+    add_executable(OrionUO ${SRCS} ${headers})
   endif()
 endif()
-
-
-
 
 target_link_libraries(OrionUO PUBLIC ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
 

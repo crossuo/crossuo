@@ -116,7 +116,7 @@ public:
     void Connect();
     void Disconnect();
     int Send(uint8_t *buf, int size);
-    int Send(const vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], buf.size()); }
+    int Send(const vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], int(buf.size())); }
     void ServerSelection(int pos);
     void RelayServer(const char *ip, int port, uint8_t *gameSeed);
     void CharacterSelection(int pos);

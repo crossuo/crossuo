@@ -9,7 +9,7 @@ void fs_case_insensitive_init(const os_path &path)
 {
 }
 
-inline os_path fs_insensitive(const os_path &path)
+os_path fs_insensitive(const os_path &path)
 {
     return path;
 }

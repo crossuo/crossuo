@@ -20,8 +20,7 @@ void CUopMappedFile::Add(uint64_t hash, const CUopBlockHeader &item)
 
 CUopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
 {
-    std::unordered_map<uint64_t, CUopBlockHeader>::iterator found = m_Map.find(hash);
-
+    auto found = m_Map.find(hash);
     if (found != m_Map.end())
     {
         return &found->second;

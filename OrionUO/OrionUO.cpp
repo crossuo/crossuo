@@ -9,7 +9,7 @@
 #include "FileSystem.h"
 #include "Crypt/CryptEntry.h"
 
-#if defined(ORION_LINUX)
+#if !defined(ORION_WINDOWS)
 #define __cdecl
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
@@ -5070,7 +5070,7 @@ void COrion::IndexReplaces()
             }
             if (size > 1)
             {
-                mp3.FilePath = g_App.UOFilesPath(name);
+                mp3.FilePath = ToString(g_App.UOFilesPath(name));
             }
 
             if (size > 2)
@@ -5380,7 +5380,7 @@ void COrion::PlayMusic(int index, bool warmode)
 
 void COrion::PlaySoundEffectAtPosition(uint16_t id, int x, int y)
 {
-    float distance = GetDistance(g_Player, Wisp::CPoint2Di(x, y));
+    auto distance = GetDistance(g_Player, Wisp::CPoint2Di(x, y));
     g_Orion.PlaySoundEffect(id, g_SoundManager.GetVolumeValue(distance));
 }
 

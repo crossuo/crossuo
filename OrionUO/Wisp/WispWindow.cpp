@@ -1064,6 +1064,7 @@ bool CWindow::OnRepaint(const PaintEvent &ev)
 
 bool CWindow::IsActive() const
 {
+
     return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_INPUT_FOCUS) != 0;
 }
 
@@ -1141,8 +1142,7 @@ uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
 
 uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
 {
-    // NOT_IMPLEMENTED
-    return 0;
+    return (uint32_t)g_PluginManager.WindowProc(Handle, id, data1, data2);
 }
 
 #endif

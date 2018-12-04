@@ -123,7 +123,7 @@ CServer *CServerList::Select(int index)
     DEBUG_TRACE_FUNCTION;
     CServer *server = nullptr;
 
-    for (int i = m_Servers.size() - 1; i >= 0; i--)
+    for (int i = int(m_Servers.size()) - 1; i >= 0; i--)
     {
         if (index == i)
         {

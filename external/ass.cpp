@@ -1,19 +1,20 @@
 // ASS - Audio Stupidly Simple
 
 #define WITH_SDL2
-#define WITH_OPENAL
 
 #if __APPLE__
 #define WITH_PORTAUDIO
+#define WITH_OPENAL
 #endif
 
 #if _WIN32
-#define WITH_WASAPI
-#define WITH_WINMM
-#define WITH_XAUDIO2
+//#define WITH_WASAPI
+//#define WITH_WINMM
+//#define WITH_XAUDIO2
 #endif
 
 #if __linux__
+#define WITH_OPENAL
 #define WITH_ALSA
 #define WITH_OSS
 #endif
@@ -46,7 +47,7 @@
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #undef OPENAL
-#else
+#elif __linux__
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
@@ -2330,7 +2331,7 @@ namespace SoLoud
         {
             return;
         }
-		aData->soloud->mixSigned16((short *)buffer, aFrames);
+        aData->soloud->mixSigned16((short *)buffer, aFrames);
         aData->renderClient->ReleaseBuffer(aFrames, 0);
     }
 
