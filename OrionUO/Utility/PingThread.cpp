@@ -53,7 +53,8 @@ void CPingThread::OnExecute(uint32_t nowTime)
         return;
     }
 
-    PING_INFO_DATA info = { ServerID, 9999, 0, 0, 0 };
+    auto info = (PING_INFO_DATA *)malloc(sizeof(PING_INFO_DATA));
+    info->ServerID = ServerID;
     for (int i = 0; i < RequestsCount; i++)
     {
         const int ping = CalculatePing();
@@ -61,16 +62,16 @@ void CPingThread::OnExecute(uint32_t nowTime)
         {
             if (ping == -1)
             {
-                info.Lost++;
+                info->Lost++;
             }
             continue;
         }
 
-        info.Min = min(info.Min, ping);
-        info.Max = max(info.Max, ping);
-        info.Average += (info.Max - info.Min);
+        info->Min = min(info->Min, ping);
+        info->Max = max(info->Max, ping);
+        info->Average += (info->Max - info->Min);
     }
 
-    info.Average = info.Min + (info.Average / RequestsCount);
-    PUSH_EVENT(MessageID, &info, nullptr);
+    info->Average = info->Min + (info->Average / RequestsCount);
+    PUSH_EVENT(MessageID, info, nullptr);
 }

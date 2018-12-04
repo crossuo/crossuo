@@ -10,16 +10,16 @@ class CThread
 {
 private:
 #if USE_WISP
-    HANDLE m_Handle{ 0 };
+    HANDLE m_Handle = 0;
 #else
     SDL_Thread *m_Handle = nullptr;
 #endif
     ProtectedSection m_Mutex;
-    uint32_t ID{ 0 };
-    bool m_Paused{ false };
-    bool m_Cycled{ false };
-    int m_Delay{ 1 };
-    bool m_Active{ false };
+    uint32_t m_ID = 0;
+    bool m_Paused = false;
+    bool m_Cycled = false;
+    int m_Delay = 1;
+    bool m_Active = false;
 
 public:
     CThread();
@@ -39,7 +39,7 @@ public:
     void ChangeDelay(int newDelay);
 
     virtual void OnExecute(uint32_t nowTime) {}
-    virtual void OnDestroy() {}
+    virtual void OnDestroy();
 
     static SDL_threadID GetCurrentThreadId();
 };

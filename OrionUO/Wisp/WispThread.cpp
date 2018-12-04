@@ -107,6 +107,10 @@ CThread::CThread()
 
 CThread::~CThread()
 {
+}
+
+void CThread::OnDestroy()
+{
     DEBUG_TRACE_FUNCTION;
     RELEASE_MUTEX(m_Mutex);
 #if USE_WISP
@@ -114,14 +118,13 @@ CThread::~CThread()
         ::CloseHandle(m_Handle);
     m_Handle = 0;
 #else
-    int ret = 0;
     if (m_Handle != nullptr)
     {
-        SDL_WaitThread(m_Handle, &ret);
+        SDL_DetachThread(m_Handle);
     }
     m_Handle = nullptr;
 #endif
-    ID = 0;
+    m_ID = 0;
 }
 
 void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
@@ -136,9 +139,9 @@ void CThread::Run(bool cycled, int delay, bool synchronizedDelay)
 #if USE_WISP
         if (synchronizedDelay)
             m_Handle =
-                (HANDLE)_beginthreadex(nullptr, 0, CThreadLoopSynchronizedDelay, this, 0, &ID);
+                (HANDLE)_beginthreadex(nullptr, 0, CThreadLoopSynchronizedDelay, this, 0, &m_ID);
         else
-            m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoop, this, 0, &ID);
+            m_Handle = (HANDLE)_beginthreadex(nullptr, 0, CThreadLoop, this, 0, &m_ID);
 #else
         if (synchronizedDelay)
         {

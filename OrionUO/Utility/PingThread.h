@@ -25,6 +25,6 @@ public:
     CPingThread(int serverID, const string &serverIP, int requestsCount);
     virtual ~CPingThread();
 
-    virtual void OnExecute(uint32_t nowTime);
+    virtual void OnExecute(uint32_t nowTime) override;
     static const uint32_t MessageID = USER_MESSAGE_ID + 401;
 };
