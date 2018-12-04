@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
@@ -405,7 +405,7 @@ bool COrionWindow::OnRepaint(const PaintEvent &ev)
     }
     return DefWindowProc(Handle, WM_NCPAINT, ev.wParam, ev.lParam) != 0;
 #else
-    // NOT_IMPLEMENTED
+    // ORION_NOT_IMPLEMENTED
     return false;
 #endif
 }
@@ -625,7 +625,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 #if USE_WISP
     PLUGIN_EVENT(ev.code, ev.data1, ev.data2);
 #else
-        // NOT_IMPLEMENTED;
+        // ORION_NOT_IMPLEMENTED;
 #endif
     return true;
 }

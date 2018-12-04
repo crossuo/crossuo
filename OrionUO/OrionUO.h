@@ -218,16 +218,18 @@ public:
     uint32_t GetFileHashCode(uint8_t *ptr, size_t size);
     void LoadLogin(string &login, int &port);
     void GoToWebLink(const string &url);
-    void ResumeSound();
-    void PauseSound();
-    void PlayMusic(int index, bool warmode = false);
-    void PlaySoundEffect(uint16_t id, float volume = -1);
-    void AdjustSoundEffects(int ticks, float volume = -1);
     void RemoveRangedObjects();
     void ClearWorld();
     void LogOut();
     void ConsolePromptSend();
     void ConsolePromptCancel();
+
+    void PlayMusic(int index, bool warmode = false);
+    void PlaySoundEffect(uint16_t id, float volume = -1);
+    void PlaySoundEffectAtPosition(uint16_t id, int x, int y);
+    void AdjustSoundEffects(int ticks, float volume = -1);
+    void PauseSound() const;
+    void ResumeSound() const;
 
     void OpenStatus(uint32_t serial);
     void DisplayStatusbarGump(int serial, int x, int y);

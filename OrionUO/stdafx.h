@@ -33,6 +33,16 @@
 #define ToColorB(x) ((x >> 16) & 0xff)
 #define ToColorA(x) ((x >> 24) & 0xff)
 
+#if USE_WISP
+typedef HSTREAM SoundHandle;
+#define SOUND_NULL 0
+#else
+struct SoundInfo;
+typedef SoundInfo* SoundHandle;
+#define SOUND_NULL nullptr
+#endif
+
+
 #if defined(ORION_WINDOWS)
 
 #define HAVE_M_PI // SDL conflicting with winsdk10

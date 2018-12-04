@@ -51,8 +51,8 @@ public:
     CIndexSound();
     virtual ~CIndexSound();
 
-    vector<uint8_t> m_WaveFile;
-    HSTREAM m_Stream{};
+    uint8_t *m_WaveFile;
+    SoundHandle m_Stream = SOUND_NULL;
 };
 
 class CIndexMulti : public CIndexObject

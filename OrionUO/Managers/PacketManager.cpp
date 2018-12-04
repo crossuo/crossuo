@@ -3614,13 +3614,9 @@ PACKET_HANDLER(PlaySoundEffect)
     Move(1);
     uint16_t index = ReadUInt16BE();
     uint16_t volume = ReadUInt16BE();
-    uint16_t xCoord = ReadUInt16BE();
+    uint16_t xCoord = ReadUInt16BE(); // CHECK: unsigned for position?
     uint16_t yCoord = ReadUInt16BE();
-
-    int distance = GetDistance(g_Player, Wisp::CPoint2Di(xCoord, yCoord));
-    //LOG("Play sound 0x%04X\n", index);
-
-    g_Orion.PlaySoundEffect(index, g_SoundManager.GetVolumeValue(distance));
+    g_Orion.PlaySoundEffectAtPosition(index, xCoord, yCoord);
 }
 
 PACKET_HANDLER(PlayMusic)
@@ -4112,8 +4108,8 @@ PACKET_HANDLER(MegaCliloc)
         }
 
         wstring str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
-        LOG("Cliloc: argstr=%s\n", ToString(str).c_str());
-        LOG("Cliloc: 0x%08X len=%i arg=%s\n", cliloc, len, ToString(argument).c_str());
+        //LOG("Cliloc: argstr=%s\n", ToString(str).c_str());
+        //LOG("Cliloc: 0x%08X len=%i arg=%s\n", cliloc, len, ToString(argument).c_str());
 
         bool canAdd = true;
         for (const wstring &tempStr : list)

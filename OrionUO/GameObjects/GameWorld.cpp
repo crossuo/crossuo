@@ -65,9 +65,7 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
             }
             soundID += incID;
             gc->StepSoundOffset = (incID + 1) % 2;
-
-            g_Orion.PlaySoundEffect(soundID, g_SoundManager.GetVolumeValue()); //0x0129 - 0x0134
-
+            g_Orion.PlaySoundEffect(soundID); //0x0129 - 0x0134
             gc->LastStepSoundTime = ticks + delaySound;
         }
     }

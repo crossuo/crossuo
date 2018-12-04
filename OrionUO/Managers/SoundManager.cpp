@@ -1,7 +1,84 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-CSoundManager g_SoundManager;
+
+#define SOUND_DEBUG_TRACE_FUNCTION                                                                 \
+    do                                                                                             \
+    {                                                                                              \
+        fprintf(stdout, "CALL: %s\n", __FUNCTION__);                                               \
+    } while (0)
+
+#if 1
+#define SOUND_DEBUG_TRACE SOUND_DEBUG_TRACE_FUNCTION
+#else
+#define SOUND_DEBUG_TRACE
+#endif
+
+#if !USE_WISP
+#include <ass.h>
+using namespace SoLoud;
+static handle s_musicGroup;
+static handle s_soundGroup;
+static Soloud s_backend;
+
+static SoundFont s_Sf2;
+static Midi s_MusicMidi[2];
+static WavStream s_MusicStream[2];
+static AudioSource *s_MusicSource[] = { &s_MusicStream[0], &s_MusicStream[1] };
+static handle s_Music[] = {0, 0};
+
+#define GetErrorDescription() __FUNCTION__
+#define MAX_SOUNDS 256
+#define VOLUME_FACTOR 1.5f
+
+struct SoundInfo
+{
+    AudioSource *source = nullptr;
+    void *data = nullptr;
+    size_t len = 0;
+    handle h = 0;
+};
+
+static std::unordered_map<void *, AudioSource *> s_audioSources;
+static SoundInfo *getSound(void *data, size_t len)
+{
+    static bool init = false;
+    if (!init)
+    {
+        s_audioSources.reserve(MAX_SOUNDS);
+        init = false;
+    }
+    assert(s_audioSources.size() < MAX_SOUNDS);
+
+    auto it = s_audioSources.find(data);
+    auto *sfx = new SoundInfo;
+    assert(sfx && "Could not allocate SoundInfo");
+    if (it == s_audioSources.end())
+    {
+        Wav *w = new Wav;
+        w->loadMem((unsigned char *)data, len, false, false);
+        sfx->source = w;
+        sfx->data = data;
+        sfx->len = len;
+        sfx->h = s_backend.play(*w, VOLUME_FACTOR);
+        //s_backend.addVoiceToGroup(s_soundGroup, sfx->h);
+        s_audioSources.emplace(std::make_pair(data, w));
+        return sfx;
+    }
+
+    AudioSource *w = s_audioSources[data];
+    sfx->source = w;
+    sfx->data = data;
+    sfx->len = len;
+    sfx->h = s_backend.play(*w, VOLUME_FACTOR);
+    //s_backend.addVoiceToGroup(s_soundGroup, sfx->h);
+    return sfx;
+}
+
+#else
+HSTREAM s_Music = 0;
+HSTREAM s_WarMusic = 0;
+#define VOLUME_FACTOR 1.0f
 
 struct BASS_ErrorDescription
 {
@@ -50,11 +127,9 @@ static BASS_ErrorDescription BASS_ErrorTable[38] = {
     { BASS_ERROR_UNKNOWN, "some other mystery problem" },
 };
 
-const char *BASS_ErrorGetDescription()
+static inline const char *GetErrorDescription()
 {
-    DEBUG_TRACE_FUNCTION;
     int currentErrorCode = BASS_ErrorGetCode();
-
     for (int i = 0; i < 38; i++)
     {
         if (BASS_ErrorTable[i].errorCode == currentErrorCode)
@@ -62,317 +137,37 @@ const char *BASS_ErrorGetDescription()
             return BASS_ErrorTable[i].desc;
         }
     }
-
     return BASS_ErrorTable[0].desc;
 }
-
-CSoundManager::CSoundManager()
-{
-}
-
-CSoundManager::~CSoundManager()
-{
-}
-
-bool CSoundManager::Init()
-{
-    DEBUG_TRACE_FUNCTION;
-    LOG("Initializing bass sound system.\n");
-    // initialize default output device
-#if defined(ORION_WINDOWS)
-    auto hwnd = (HWND)g_OrionWindow.Handle;
-#else
-    auto hwnd = g_OrionWindow.Handle;
 #endif
 
-    if (!BASS_Init(-1, 48000, BASS_DEVICE_3D, hwnd, nullptr))
-    {
-        LOG("Can't initialize device: %s\n", BASS_ErrorGetDescription());
-        return false;
-    }
-
-    LOG("Sound init successfull.\n");
-    BASS_SetConfig(BASS_CONFIG_SRC, 3); // interpolation method
-
-    if (!BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_FULL))
-    {
-        LOG("Error setting 3d sound: %s\n", BASS_ErrorGetDescription());
-    }
-    auto path = g_App.ExeFilePath("uo_4mb_2.sf2");
-    if (!BASS_SetConfigPtr(BASS_CONFIG_MIDI_DEFFONT, CStringFromPath(path)))
-    {
-        LOG("Could not load soundfont file for midi");
-    }
-
-    return true;
-}
-
-void CSoundManager::Free()
+#pragma pack(push, 1)
+struct MidiInfoStruct
 {
-    DEBUG_TRACE_FUNCTION;
-    StopMusic();
-    BASS_Free();
-}
-
-void CSoundManager::PauseSound()
+    const char *musicName;
+    bool loop;
+};
+struct WaveHeader
 {
-    DEBUG_TRACE_FUNCTION;
-    BASS_Pause();
-    g_Orion.AdjustSoundEffects(g_Ticks + 100000);
-}
+    char chunkId[4];
+    uint32_t chunkSize;
+    char format[4];
+    char subChunkId[4];
+    uint32_t subChunkSize;
+    uint16_t audioFormat;
+    uint16_t numChannels;
+    uint32_t sampleRate;
+    uint32_t bytesPerSecond;
+    uint16_t blockAlign;
+    uint16_t bitsPerSample;
+    char dataChunkId[4];
+    uint32_t dataSize;
+    //data;
+};
+#pragma pack(pop)
 
-void CSoundManager::ResumeSound()
-{
-    DEBUG_TRACE_FUNCTION;
-    BASS_Start();
-}
-
-/// <summary>Расчитывает громкость звука с учетом громкости в клиенте
-/// и возможной дистанции для эффетов.</summary>
-/// <param name="distance">расстояние для эффектов.
-///При значении -1 расстояние не учитывается.</param>
-/// <returns>громкость для BASS библиотеки.</returns>
-float CSoundManager::GetVolumeValue(int distance, bool music)
-{
-    DEBUG_TRACE_FUNCTION;
-    float volume = BASS_GetVolume();
-    uint16_t clientConfigVolume =
-        music ? g_ConfigManager.GetMusicVolume() : g_ConfigManager.GetSoundVolume();
-    if (volume == 0 || clientConfigVolume == 0)
-    {
-        return 0;
-    }
-    float clientsVolumeValue = (static_cast<float>(255) / static_cast<float>(clientConfigVolume));
-    volume /= clientsVolumeValue;
-    if (distance > g_ConfigManager.UpdateRange || distance < 1)
-    {
-        return volume;
-    }
-
-    float soundValuePerDistance = volume / g_ConfigManager.UpdateRange;
-    return volume - (soundValuePerDistance * distance);
-}
-
-/// <summary>Создаёт в памяти 16 битный wave файл для последующего
-/// проигрывания.</summary>
-/// <param name="is">ссылка на запись звука в MUL файле</param>
-/// <returns>Wave файл в виде вектора байтов</returns>
-vector<uint8_t> CSoundManager::CreateWaveFile(CIndexSound &is)
-{
-    DEBUG_TRACE_FUNCTION;
-    size_t dataSize = is.DataSize - sizeof(SOUND_BLOCK);
-    auto waveSound = std::vector<uint8_t>(dataSize + sizeof(WaveHeader));
-    auto waveHeader = reinterpret_cast<WaveHeader *>(waveSound.data());
-
-    strcpy(waveHeader->chunkId, "RIFF");
-    strcpy(waveHeader->format, "WAVE");
-    strcpy(waveHeader->subChunkId, "fmt ");
-    strcpy(waveHeader->dataChunkId, "data");
-
-    waveHeader->chunkSize = uint32_t(waveSound.size());
-    waveHeader->subChunkSize = 16;
-    waveHeader->audioFormat = 1;
-    waveHeader->numChannels = 1;
-    waveHeader->sampleRate = 22050;
-    waveHeader->bitsPerSample = 16;
-    waveHeader->bytesPerSecond = 88200;
-    waveHeader->blockAlign = 4;
-    waveHeader->dataSize = uint32_t(dataSize);
-
-    is.Delay = uint32_t((dataSize - 16) / 88.2f);
-
-    auto sndDataPtr = reinterpret_cast<uint8_t *>(is.Address + sizeof(SOUND_BLOCK));
-    std::copy_n(sndDataPtr + 16, dataSize - 16, waveSound.begin() + sizeof(WaveHeader));
-
-    return waveSound;
-}
-
-HSTREAM CSoundManager::LoadSoundEffect(CIndexSound &is)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (is.m_WaveFile.empty())
-    {
-        auto wav = CreateWaveFile(is);
-        is.m_WaveFile.swap(wav);
-    }
-
-    size_t waveFileSize = is.DataSize - sizeof(SOUND_BLOCK) + sizeof(WaveHeader);
-
-    auto hStream = BASS_StreamCreateFile(
-        true,
-        is.m_WaveFile.data(),
-        0,
-        is.m_WaveFile.size() - 16,
-        BASS_SAMPLE_FLOAT | BASS_SAMPLE_3D | BASS_SAMPLE_SOFTWARE);
-
-    if (hStream == 0)
-    {
-        LOG("BASS create stream error: %s\n", BASS_ErrorGetDescription());
-        is.m_WaveFile.clear();
-    }
-
-    return hStream;
-}
-
-void CSoundManager::PlaySoundEffect(HSTREAM hStream, float volume)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (hStream == 0 || (!g_OrionWindow.IsActive() && !g_ConfigManager.BackgroundSound))
-    {
-        return;
-    }
-
-    BASS_ChannelSetAttribute(hStream, BASS_ATTRIB_VOL, volume);
-
-    if (!BASS_ChannelPlay(hStream, false))
-    {
-        LOG("Bass sound play error: %s\n", BASS_ErrorGetDescription());
-    }
-}
-
-/// <summary>Очистка звукового потока и высвобождение памяти.</summary>
-/// <param name="hSteam">stream handle</param>
-bool CSoundManager::FreeStream(HSTREAM hSteam)
-{
-    DEBUG_TRACE_FUNCTION;
-    return BASS_StreamFree(hSteam);
-}
-bool CSoundManager::IsPlayingNormalMusic()
-{
-    DEBUG_TRACE_FUNCTION;
-    return BASS_ChannelIsActive(m_Music);
-}
-
-void CSoundManager::PlayMidi(int index, bool warmode)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (index >= 0 && index < MIDI_MUSIC_COUNT)
-    {
-        if (warmode && m_WarMusic != 0)
-        {
-            return;
-        }
-
-        if (warmode)
-        {
-            BASS_ChannelStop(m_Music);
-        }
-        else
-        {
-            StopMusic();
-        }
-
-        char musicPath[100] = { 0 };
-        MidiInfoStruct midiInfo = MidiInfo[index];
-        sprintf_s(musicPath, "music\\%s", midiInfo.musicName);
-
-        wstring midiName = ToWString(musicPath);
-        HSTREAM streamHandle =
-            BASS_MIDI_StreamCreateFile(FALSE, midiName.c_str(), 0, 0, BASS_MIDI_DECAYEND, 0);
-        float volume = GetVolumeValue(-1, true);
-        BASS_ChannelSetAttribute(streamHandle, BASS_ATTRIB_VOL, volume);
-        BASS_ChannelPlay(streamHandle, midiInfo.loop);
-        if (warmode)
-        {
-            m_WarMusic = streamHandle;
-        }
-        else
-        {
-            CurrentMusicIndex = index;
-            m_Music = streamHandle;
-        }
-    }
-    else
-    {
-        LOG("Music ID is out of range: %i\n", index);
-    }
-}
-
-void CSoundManager::PlayMP3(const os_path &fileName, int index, bool loop, bool warmode)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (warmode && m_WarMusic != 0)
-    {
-        return;
-    }
-
-    if (warmode)
-    {
-        BASS_ChannelStop(m_Music);
-    }
-    else
-    {
-        StopMusic();
-    }
-    HSTREAM streamHandle =
-        BASS_StreamCreateFile(FALSE, fileName.c_str(), 0, 0, loop ? BASS_SAMPLE_LOOP : 0);
-    BASS_ChannelSetAttribute(streamHandle, BASS_ATTRIB_VOL, GetVolumeValue(-1, true));
-    BASS_ChannelPlay(streamHandle, 0);
-    if (warmode)
-    {
-        m_WarMusic = streamHandle;
-    }
-    else
-    {
-        m_Music = streamHandle;
-        CurrentMusicIndex = index;
-    }
-}
-
-void CSoundManager::StopWarMusic()
-{
-    DEBUG_TRACE_FUNCTION;
-    BASS_ChannelStop(m_WarMusic);
-    m_WarMusic = 0;
-
-    if (m_Music != 0 && !BASS_ChannelIsActive(m_Music))
-    {
-        BASS_ChannelPlay(m_Music, 1);
-    }
-}
-
-void CSoundManager::StopMusic()
-{
-    DEBUG_TRACE_FUNCTION;
-    BASS_ChannelStop(m_Music);
-    m_Music = 0;
-    BASS_ChannelStop(m_WarMusic);
-    m_WarMusic = 0;
-}
-
-void CSoundManager::SetMusicVolume(float volume)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (m_Music != 0 && BASS_ChannelIsActive(m_Music))
-    {
-        BASS_ChannelSetAttribute(m_Music, BASS_ATTRIB_VOL, volume);
-    }
-
-    if (m_WarMusic != 0 && BASS_ChannelIsActive(m_WarMusic))
-    {
-        BASS_ChannelSetAttribute(m_WarMusic, BASS_ATTRIB_VOL, volume);
-    }
-}
-
-void CSoundManager::TraceMusicError(uint32_t error)
-{
-    DEBUG_TRACE_FUNCTION;
-    if (error != 0u)
-    {
-        wchar_t szBuf[MAXERRORLENGTH];
-
-        if (mciGetErrorString(error, szBuf, MAXERRORLENGTH))
-        {
-            LOG("Midi error: %s\n", ToString(szBuf).c_str());
-        }
-        else
-        {
-            LOG("Midi error: #%i\n", error);
-        }
-    }
-}
-
-const MidiInfoStruct CSoundManager::MidiInfo[MIDI_MUSIC_COUNT] = {
+static const int MIDI_MUSIC_COUNT = 57;
+static const MidiInfoStruct s_MidiInfo[MIDI_MUSIC_COUNT] = {
     { "oldult01.mid", true },  { "create1.mid", false },  { "dragflit.mid", false },
     { "oldult02.mid", true },  { "oldult03.mid", true },  { "oldult04.mid", true },
     { "oldult05.mid", true },  { "oldult06.mid", true },  { "stones2.mid", true },
@@ -393,3 +188,443 @@ const MidiInfoStruct CSoundManager::MidiInfo[MIDI_MUSIC_COUNT] = {
     { "oldult04.mid", false }, { "dragflit.mid", false }, { "create1.mid", false },
     { "approach.mid", false }, { "combat3.mid", false },  { "jungle_a.mid", false }
 };
+
+CSoundManager g_SoundManager;
+
+static uint8_t* CreateWaveFile(CIndexSound &is)
+{
+    SOUND_DEBUG_TRACE;
+    size_t dataSize = is.DataSize - sizeof(SOUND_BLOCK);
+    auto waveSound = (uint8_t *)malloc(dataSize + sizeof(WaveHeader));
+    auto waveHeader = reinterpret_cast<WaveHeader *>(waveSound);
+
+    strcpy(waveHeader->chunkId, "RIFF");
+    strcpy(waveHeader->format, "WAVE");
+    strcpy(waveHeader->subChunkId, "fmt ");
+    strcpy(waveHeader->dataChunkId, "data");
+
+    waveHeader->chunkSize = uint32_t(dataSize + sizeof(WaveHeader));
+    waveHeader->subChunkSize = 16;
+    waveHeader->audioFormat = 1;
+    waveHeader->numChannels = 1;
+    waveHeader->sampleRate = 22050;
+    waveHeader->bitsPerSample = 16;
+    waveHeader->bytesPerSecond = 88200;
+    waveHeader->blockAlign = 4;
+    waveHeader->dataSize = uint32_t(dataSize);
+
+    is.Delay = uint32_t((dataSize - 16) / 88.2f);
+    auto sndDataPtr = reinterpret_cast<uint8_t *>(is.Address + sizeof(SOUND_BLOCK));
+    memcpy(waveSound + sizeof(WaveHeader), sndDataPtr + 16, dataSize - 16);
+
+    return waveSound;
+}
+
+
+CSoundManager::CSoundManager()
+{
+}
+
+CSoundManager::~CSoundManager()
+{
+}
+
+bool CSoundManager::Init()
+{
+    SOUND_DEBUG_TRACE;
+    LOG("Initializing bass sound system.\n");
+    // initialize default output device
+#if USE_WISP
+    auto hwnd = (HWND)g_OrionWindow.Handle;
+    if (!BASS_Init(-1, 48000, BASS_DEVICE_3D, hwnd, nullptr))
+    {
+        LOG("Can't initialize device: %s\n", GetErrorDescription());
+        return false;
+    }
+
+    BASS_SetConfig(BASS_CONFIG_SRC, 3); // interpolation method
+    if (!BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_FULL))
+    {
+        LOG("Error setting 3d sound: %s\n", GetErrorDescription());
+    }
+    auto path = g_App.ExeFilePath("uo_4mb_2.sf2");
+    if (!BASS_SetConfigPtr(BASS_CONFIG_MIDI_DEFFONT, CStringFromPath(path)))
+    {
+        LOG("Could not load soundfont file for midi");
+    }
+#else
+    s_backend.init();
+    s_musicGroup = s_backend.createVoiceGroup();
+    s_soundGroup = s_backend.createVoiceGroup();
+#endif
+    LOG("Sound init successfull.\n");
+
+    return true;
+}
+
+void CSoundManager::Free()
+{
+    SOUND_DEBUG_TRACE;
+    StopMusic();
+#if USE_WISP
+    BASS_Free();
+#else
+    s_backend.deinit();
+#endif
+}
+
+void CSoundManager::PauseSound()
+{
+    SOUND_DEBUG_TRACE;
+#if USE_WISP
+    BASS_Pause();
+#else
+    s_backend.setPauseAll(true);
+#endif
+    g_Orion.AdjustSoundEffects(g_Ticks + 100000);
+}
+
+void CSoundManager::ResumeSound()
+{
+    SOUND_DEBUG_TRACE;
+#if USE_WISP
+    BASS_Start();
+#else
+    s_backend.setPauseAll(false);
+#endif
+}
+
+bool CSoundManager::UpdateSoundEffect(SoundHandle stream, float volume)
+{
+#if USE_WISP
+    if (volume > 0)
+    {
+        BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, volume);
+        return true;
+    }
+#else
+    if (stream && volume > 0)
+    {
+        s_backend.setVolume(stream->h, VOLUME_FACTOR * volume);
+        return true;
+    }
+#endif
+    FreeSound(stream);
+    return false;
+}
+
+float CSoundManager::GetVolumeValue(int distance, bool music)
+{
+    SOUND_DEBUG_TRACE;
+    uint16_t clientConfigVolume =
+        music ? g_ConfigManager.GetMusicVolume() : g_ConfigManager.GetSoundVolume();
+
+#if USE_WISP
+    float volume = BASS_GetVolume();
+#else
+    float volume = music ?
+        s_backend.getVolume(s_Music[0]) : s_backend.getVolume(s_soundGroup);
+    fprintf(stdout, "Get global volume: %f\n", volume);
+#endif
+
+    if (volume == 0 || clientConfigVolume == 0)
+    {
+        return 0;
+    }
+    float clientsVolumeValue = (255.f / float(clientConfigVolume));
+    volume /= clientsVolumeValue;
+    if (distance > g_ConfigManager.UpdateRange || distance < 1)
+    {
+        return volume;
+    }
+
+    float soundValuePerDistance = volume / g_ConfigManager.UpdateRange;
+    return volume - (soundValuePerDistance * distance);
+}
+
+SoundHandle CSoundManager::LoadSoundEffect(CIndexSound &is)
+{
+    SOUND_DEBUG_TRACE;
+
+    if (is.m_WaveFile == nullptr)
+    {
+        is.m_WaveFile = CreateWaveFile(is);
+    }
+    size_t waveFileSize = is.DataSize - sizeof(SOUND_BLOCK) + sizeof(WaveHeader);
+#if USE_WISP
+    auto stream = BASS_StreamCreateFile(
+        true,
+        is.m_WaveFile,
+        0,
+        waveFileSize - 16,
+        BASS_SAMPLE_FLOAT | BASS_SAMPLE_3D | BASS_SAMPLE_SOFTWARE);
+#else
+    auto stream = getSound(is.m_WaveFile, waveFileSize - 16);
+    //SoundHandle stream = SOUND_NULL;
+#endif
+
+    if (stream == SOUND_NULL)
+    {
+        LOG("Error creating sound voice: %s\n", GetErrorDescription());
+        free(is.m_WaveFile);
+        is.m_WaveFile = nullptr;
+    }
+
+    return stream;
+}
+
+void CSoundManager::PlaySoundEffect(SoundHandle stream, float volume)
+{
+    SOUND_DEBUG_TRACE;
+    if (stream == SOUND_NULL || (!g_OrionWindow.IsActive() && !g_ConfigManager.BackgroundSound))
+    {
+        return;
+    }
+
+#if USE_WISP
+    BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, volume);
+    if (!BASS_ChannelPlay(stream, false))
+    {
+        LOG("Bass sound play error: %s\n", GetErrorDescription());
+    }
+#else
+    if (stream->source)
+    {
+        stream->h = s_backend.play(*stream->source, VOLUME_FACTOR);
+        //s_backend.setVolume(stream->h, VOLUME_FACTOR * volume);
+    }
+    else
+    {
+        LOG("Trying to play unallocated sound");
+    }
+#endif
+}
+
+void CSoundManager::FreeSound(SoundHandle stream)
+{
+    SOUND_DEBUG_TRACE;
+#if USE_WISP
+    BASS_StreamFree(stream);
+#else
+    if (stream == SOUND_NULL)
+    {
+        return;
+    }
+
+    if (stream->source)
+    {
+        s_backend.stop(stream->h);
+        s_backend.trimVoiceGroup(s_soundGroup);
+    }
+    else
+    {
+        LOG("Trying to free unallocated sound");
+    }
+#endif
+
+    stream = SOUND_NULL;
+}
+
+void CSoundManager::SetMusicVolume(float volume)
+{
+    SOUND_DEBUG_TRACE;
+#if USE_WISP
+    if (s_Music != 0 && IsPlayingNormalMusic())
+    {
+        BASS_ChannelSetAttribute(s_Music, BASS_ATTRIB_VOL, volume);
+    }
+
+    if (s_WarMusic != 0 && BASS_ChannelIsActive(s_WarMusic))
+    {
+        BASS_ChannelSetAttribute(s_WarMusic, BASS_ATTRIB_VOL, volume);
+    }
+#else
+    float v = VOLUME_FACTOR * volume / 255.0f;
+    fprintf(stdout, "Set volume: %f %f\n", volume, v);
+    s_backend.setVolume(s_musicGroup, v);
+#endif
+}
+
+bool CSoundManager::IsPlayingNormalMusic()
+{
+    SOUND_DEBUG_TRACE;
+
+#if USE_WISP
+    return BASS_ChannelIsActive(s_Music);
+#else
+    return s_backend.isValidVoiceHandle(s_Music[0]);
+#endif
+}
+
+void CSoundManager::PlayMP3(const os_path &fileName, int index, bool loop, bool warmode)
+{
+    SOUND_DEBUG_TRACE;
+
+#if USE_WISP
+    if (warmode && s_WarMusic != 0)
+    {
+        return;
+    }
+
+    if (warmode)
+    {
+        StopWarMusic()
+    }
+    else
+    {
+        StopMusic();
+    }
+
+    HSTREAM streamHandle =
+        BASS_StreamCreateFile(FALSE, fileName.c_str(), 0, 0, loop ? BASS_SAMPLE_LOOP : 0);
+    BASS_ChannelSetAttribute(streamHandle, BASS_ATTRIB_VOL, GetVolumeValue(-1, true));
+    BASS_ChannelPlay(streamHandle, 0);
+
+    if (warmode)
+    {
+        s_WarMusic = streamHandle;
+    }
+    else
+    {
+        s_Music = streamHandle;
+        CurrentMusicIndex = index;
+    }
+#else
+    fprintf(stdout, "Play MP3: %s\n", fileName.c_str());
+
+    int cur = warmode ? 1 : 0;
+    int old = warmode ? 0 : 1;
+    if (s_Music[cur])
+    {
+        s_backend.stop(s_Music[cur]);
+    }
+
+    s_MusicStream[cur].load(fileName.c_str());
+    s_MusicStream[cur].setLooping(loop);
+    s_Music[cur] = s_backend.play(s_MusicStream[cur], 0, 0);
+    s_backend.fadeVolume(s_Music[cur], VOLUME_FACTOR, 2);
+    s_backend.fadeVolume(s_Music[old], 0, 2);
+    //s_backend.addVoiceToGroup(s_musicGroup, s_Music[cur]);
+
+    if (!warmode)
+    {
+        CurrentMusicIndex = index;
+    }
+#endif
+}
+
+void CSoundManager::StopWarMusic()
+{
+    SOUND_DEBUG_TRACE;
+
+#if USE_WISP
+    BASS_ChannelStop(s_WarMusic);
+    s_WarMusic = 0;
+    if (s_Music != 0 && !IsPlayingNormalMusic())
+    {
+        BASS_ChannelPlay(s_Music, 1);
+    }
+#else
+    s_backend.stop(s_Music[1]);
+    if (s_Music[0] != 0 && !IsPlayingNormalMusic())
+    {
+        s_backend.fadeVolume(s_Music[0], VOLUME_FACTOR, 2);
+    }
+#endif
+}
+
+void CSoundManager::StopMusic()
+{
+    SOUND_DEBUG_TRACE;
+
+#if USE_WISP
+    BASS_ChannelStop(s_Music);
+    BASS_ChannelStop(s_WarMusic);
+    s_Music = 0;
+    s_WarMusic = 0;
+#else
+    s_backend.stop(s_Music[0]);
+    s_backend.stop(s_Music[1]);
+    s_backend.stopAudioSource(s_MusicStream[0]);
+    s_backend.stopAudioSource(s_MusicStream[1]);
+    s_backend.stopAudioSource(s_MusicMidi[0]);
+    s_backend.stopAudioSource(s_MusicMidi[1]);
+    s_Music[0] = 0;
+    s_Music[1] = 0;
+#endif
+}
+
+void CSoundManager::PlayMidi(int index, bool warmode)
+{
+    SOUND_DEBUG_TRACE;
+    if (index < 0 || index >= MIDI_MUSIC_COUNT)
+    {
+        LOG("Music ID is out of range: %i\n", index);
+        return;
+    }
+
+    char musicPath[100] = { 0 };
+    MidiInfoStruct midiInfo = s_MidiInfo[index];
+    sprintf_s(musicPath, "music/%s", midiInfo.musicName);
+
+
+#if USE_WISP
+    if (warmode && s_WarMusic != 0)
+    {
+        return;
+    }
+
+    if (warmode)
+    {
+        BASS_ChannelStop(s_WarMusic);
+    }
+    else
+    {
+        StopMusic();
+    }
+
+    wstring midiName = ToWString(musicPath);
+    HSTREAM streamHandle =
+        BASS_MIDI_StreamCreateFile(FALSE, midiName.c_str(), 0, 0, BASS_MIDI_DECAYEND, 0);
+    float volume = GetVolumeValue(-1, true);
+    BASS_ChannelSetAttribute(streamHandle, BASS_ATTRIB_VOL, volume);
+    BASS_ChannelPlay(streamHandle, midiInfo.loop);
+    if (warmode)
+    {
+        s_WarMusic = streamHandle;
+    }
+    else
+    {
+        CurrentMusicIndex = index;
+        s_Music = streamHandle;
+    }
+#else
+    static bool tsfLoaded = false;
+    if (!tsfLoaded)
+    {
+        tsfLoaded = true;
+        auto path = g_App.ExeFilePath("uo_4mb_2.sf2");
+        s_Sf2.load(path.c_str());
+    }
+
+    s_MusicSource[0] = &s_MusicMidi[0];
+    s_MusicSource[1] = &s_MusicMidi[1];
+
+    int cur = warmode ? 1 : 0;
+    int old = warmode ? 0 : 1;
+    if (s_Music[cur])
+    {
+        s_backend.stop(s_Music[cur]);
+    }
+
+    s_MusicMidi[cur].load(musicPath, s_Sf2);
+    s_MusicMidi[cur].setLooping(midiInfo.loop);
+    s_Music[cur] = s_backend.play(s_MusicMidi[cur], VOLUME_FACTOR, 0, 0);
+    //s_backend.addVoiceToGroup(s_musicGroup, s_Music[cur]);
+
+    if (!warmode)
+    {
+        CurrentMusicIndex = index;
+    }
+#endif
+}

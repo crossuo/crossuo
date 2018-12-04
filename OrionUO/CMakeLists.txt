@@ -7,6 +7,14 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
   add_definitions(-D_SCL_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+else()
+  #thread sanitizer - issues to fix
+  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-memory-use-after-dtor -fsanitize-blacklist=blacklist.txt")
+  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-memory-use-after-dtor -fsanitize-blacklist=blacklist.txt")
+  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
+  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
 endif()
 
 if(ORION_DLL_STATIC)
@@ -382,6 +390,11 @@ if(ORION_BUILD_MODULES)
 
   string(REPLACE ".cpp" ".h" orion_hdr "${orion_src}")
   string(REPLACE "WeatherEffeect.h" "WeatherEffect.h" orion_hdr "${orion_hdr}")
+
+  if(NOT ORION_WISP)
+    set(orion_src ${orion_src} ../external/ass.cpp)
+  endif()
+
   add_executable(OrionUO ${orion_src} ${orion_hdr})
   target_link_libraries(screenstages PRIVATE gumps)
   target_link_libraries(gumps PRIVATE managers)
@@ -394,6 +407,10 @@ else()
   string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   source_group(TREE "${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
 
+  if(NOT ORION_WISP)
+    set(SRCS ${SRCS} ../external/ass.cpp)
+  endif()
+
   if(NOT ORION_WINDOWS)
     add_library(orion SHARED ${SRCS} ${headers})
     target_link_libraries(orion PUBLIC ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES} ${FREEIMAGE_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
@@ -402,8 +419,11 @@ else()
     add_custom_command(TARGET orion_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "unity/liborion.so" "orion.so")
     add_executable(OrionUO OrionApp.cpp)
     target_link_libraries(OrionUO PUBLIC -ldl ${THREAD})
-    endif()
+  endif()
 endif()
+
+
+
 
 target_link_libraries(OrionUO PUBLIC ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
 

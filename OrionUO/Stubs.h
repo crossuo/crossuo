@@ -63,7 +63,6 @@ using namespace std;
 #endif
 
 typedef void *HDC;
-typedef void *HSTREAM;
 typedef void *HGLRC;
 
 #define WM_MOUSEWHEEL 1
@@ -101,72 +100,5 @@ void SetTimer(void *, unsigned int, unsigned int, void *);
 #define sscanf_s sscanf
 #define vsprintf_s vsprintf
 #define vswprintf_s(a, b, c) vswprintf(a, 0, b, c)
-
-// BASS
-#define BASS_OK 0
-#define BASS_ERROR_FILEOPEN 1
-#define BASS_ERROR_DRIVER 2
-#define BASS_ERROR_BUFLOST 3
-#define BASS_ERROR_HANDLE 4
-#define BASS_ERROR_FORMAT 5
-#define BASS_ERROR_POSITION 6
-#define BASS_ERROR_INIT 7
-#define BASS_ERROR_START 8
-#define BASS_ERROR_SSL 9
-#define BASS_ERROR_ALREADY 10
-#define BASS_ERROR_NOCHAN 11
-#define BASS_ERROR_ILLTYPE 12
-#define BASS_ERROR_ILLPARAM 13
-#define BASS_ERROR_NO3D 14
-#define BASS_ERROR_NOEAX 15
-#define BASS_ERROR_DEVICE 16
-#define BASS_ERROR_NOPLAY 17
-#define BASS_ERROR_UNKNOWN 18
-#define BASS_ERROR_BUSY 19
-#define BASS_ERROR_ENDED 19
-#define BASS_ERROR_CODEC 19
-#define BASS_ERROR_VERSION 19
-#define BASS_ERROR_SPEAKER 19
-#define BASS_ERROR_FILEFORM 19
-#define BASS_ERROR_TIMEOUT 19
-#define BASS_ERROR_DX 19
-#define BASS_ERROR_DECODE 19
-#define BASS_ERROR_NOTAVAIL 19
-#define BASS_ERROR_NOFX 19
-#define BASS_ERROR_CREATE 19
-#define BASS_ERROR_NONET 19
-#define BASS_ERROR_NOHW 19
-#define BASS_ERROR_EMPTY 19
-#define BASS_ERROR_NOTFILE 19
-#define BASS_ERROR_FREQ 19
-#define BASS_ERROR_MEM 19
-#define BASS_ErrorGetCode() 0
-#define BASS_SAMPLE_FLOAT 0
-#define BASS_SAMPLE_3D 0
-#define BASS_SAMPLE_SOFTWARE 0
-#define BASS_ChannelPlay(x, y) false
-#define BASS_StreamFree(x) false
-#define BASS_ChannelIsActive(x) false
-#define BASS_ChannelStop(x)
-#define BASS_ATTRIB_VOL 0
-#define BASS_MIDI_DECAYEND 0
-#define BASS_SAMPLE_LOOP 0
-#define MAXERRORLENGTH 64
-#define BASS_GetVolume() 0.0f
-#define BASS_Start()
-#define BASS_Pause()
-#define BASS_Free()
-#define BASS_CONFIG_MIDI_DEFFONT 0
-#define BASS_3DALG_FULL 0
-#define BASS_CONFIG_3DALGORITHM 0
-#define BASS_CONFIG_SRC 0
-#define BASS_DEVICE_3D 0
-#define BASS_Init(a, b, c, d, e) true
-#define BASS_SetConfig(a, b) true
-#define BASS_StreamCreateFile(a, b, c, d, e) nullptr
-#define BASS_ChannelSetAttribute(a, b, c)
-#define BASS_MIDI_StreamCreateFile(a, b, c, d, e, f) nullptr
-#define BASS_SetConfigPtr(a, b) false
-#define mciGetErrorString(a, b, c) false
 
 #endif

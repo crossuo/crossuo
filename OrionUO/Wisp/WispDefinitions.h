@@ -12,7 +12,7 @@
 #define DEBUG_TRACE_FUNCTION
 #endif
 
-#define NOT_IMPLEMENTED                                                                            \
+#define ORION_NOT_IMPLEMENTED                                                                            \
     fprintf(stdout, "NOT_IMPLEMENTED: %s:%d: %s\n", __FILE__, __LINE__, __FUNCTION__);
 
 #define DEBUGGING_OUTPUT 1

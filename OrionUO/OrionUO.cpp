@@ -397,16 +397,9 @@ bool COrion::Install()
         return false;
     }
 
-    if (!g_SoundManager.Init())
+    if (!g_SoundManager.Init() && g_ShowWarnings)
     {
-        //LOG("Error install BASS audio: %s\n", BASS_error());
-
-        if (g_ShowWarnings)
-        {
-            g_OrionWindow.ShowMessage("Failed to init BASS audio.", "Sound error!");
-        }
-
-        //return false;
+        g_OrionWindow.ShowMessage("Failed to init audio system.", "Sound error!");
     }
 
     LoadContainerOffsets();
@@ -1574,7 +1567,6 @@ void COrion::LoadStartupConfig(int serial)
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
-
     if (!g_ConfigManager.GetSound())
     {
         AdjustSoundEffects(g_Ticks + 100000);
@@ -1801,7 +1793,6 @@ void COrion::LoadLocalConfig(int serial)
 
     g_GumpManager.Load(path + ToPath("/gumps_debug.cuo"));
     g_CustomHousesManager.Load(path + ToPath("/customhouses_debug.cuo"));
-
     if (g_ConfigManager.OffsetInterfaceWindows)
     {
         g_ContainerRect.MakeDefault();
@@ -1817,7 +1808,6 @@ void COrion::LoadLocalConfig(int serial)
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
-
     if (!g_ConfigManager.GetSound())
     {
         AdjustSoundEffects(g_Ticks + 100000);
@@ -1827,7 +1817,6 @@ void COrion::LoadLocalConfig(int serial)
     {
         g_SoundManager.StopMusic();
     }
-
     g_ConfigLoaded = true;
 }
 
@@ -1936,13 +1925,12 @@ void COrion::ClearUnusedTextures()
     for (int i = 0; i < 5; i++)
     {
         int count = 0;
-        deque<CIndexObject *> *list = (deque<CIndexObject *> *)lists[i];
+        auto *list = (deque<CIndexObject *> *)lists[i];
         int &maxCount = counts[i];
 
-        for (deque<CIndexObject *>::iterator it = list->begin(); it != list->end();)
+        for (auto it = list->begin(); it != list->end();)
         {
             CIndexObject *obj = *it;
-
             if (obj->LastAccessTime < g_Ticks)
             {
                 if (obj->Texture != nullptr)
@@ -1952,7 +1940,6 @@ void COrion::ClearUnusedTextures()
                 }
 
                 it = list->erase(it);
-
                 if (++count >= maxCount)
                 {
                     break;
@@ -1966,21 +1953,18 @@ void COrion::ClearUnusedTextures()
     }
 
     int count = 0;
-
-    for (deque<CIndexSound *>::iterator it = m_UsedSoundList.begin(); it != m_UsedSoundList.end();)
+    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end();)
     {
         CIndexSound *obj = *it;
-
         if (obj->LastAccessTime < g_Ticks)
         {
-            if (obj->m_Stream != 0)
+            if (obj->m_Stream != SOUND_NULL)
             {
-                BASS_StreamFree(obj->m_Stream);
-                obj->m_Stream = 0;
+                g_SoundManager.UpdateSoundEffect(obj->m_Stream, -1);
+                obj->m_Stream = SOUND_NULL;
             }
 
             it = m_UsedSoundList.erase(it);
-
             if (++count >= MAX_SOUND_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
             {
                 break;
@@ -1993,7 +1977,6 @@ void COrion::ClearUnusedTextures()
     }
 
     AdjustSoundEffects(g_Ticks);
-
     g_Ticks += CLEAR_TEXTURES_DELAY;
 }
 
@@ -4134,34 +4117,28 @@ void COrion::UnloadIndexFiles()
 
     for (int i = 0; i < 5; i++)
     {
-        deque<CIndexObject *> &list = *lists[i];
-
-        for (deque<CIndexObject *>::iterator it = list.begin(); it != list.end(); ++it)
+        auto &list = *lists[i];
+        for (auto it = list.begin(); it != list.end(); ++it)
         {
             CIndexObject *obj = *it;
-
             if (obj->Texture != nullptr)
             {
                 delete obj->Texture;
                 obj->Texture = nullptr;
             }
         }
-
         list.clear();
     }
 
-    for (deque<CIndexSound *>::iterator it = m_UsedSoundList.begin(); it != m_UsedSoundList.end();
-         ++it)
+    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end(); ++it)
     {
         CIndexSound *obj = *it;
-
-        if (obj->m_Stream != 0)
+        if (obj->m_Stream != SOUND_NULL)
         {
-            BASS_StreamFree(obj->m_Stream);
-            obj->m_Stream = 0;
+            g_SoundManager.UpdateSoundEffect(obj->m_Stream, -1);
+            obj->m_Stream = SOUND_NULL;
         }
     }
-
     m_UsedSoundList.clear();
 }
 
@@ -5066,8 +5043,9 @@ void COrion::IndexReplaces()
                     in.LastAccessTime = out.LastAccessTime;
                 }
 
-                in.m_WaveFile.clear();
-                in.m_Stream = 0;
+                free(in.m_WaveFile);
+                in.m_WaveFile = nullptr;
+                in.m_Stream = SOUND_NULL;
 
                 break;
             }
@@ -5078,14 +5056,13 @@ void COrion::IndexReplaces()
     while (!mp3Parser.IsEOF())
     {
         vector<string> strings = mp3Parser.ReadTokens();
-
         size_t size = strings.size();
 
         if (size > 0)
         {
             uint32_t index = std::atoi(strings[0].c_str());
             CIndexMusic &mp3 = m_MP3Data[index];
-            string name = "Music/Digital/" + strings[1];
+            string name = "music/digital/" + strings[1];
             string extension = ".mp3";
             if (name.find(extension) == string::npos)
             {
@@ -5360,7 +5337,6 @@ void COrion::LoadClientStartupConfig()
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
-
     if (g_ConfigManager.GetMusic())
     {
         if (g_PacketManager.GetClientVersion() >= CV_7000)
@@ -5402,16 +5378,10 @@ void COrion::PlayMusic(int index, bool warmode)
     }
 }
 
-void COrion::PauseSound()
+void COrion::PlaySoundEffectAtPosition(uint16_t id, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-    g_SoundManager.PauseSound();
-}
-
-void COrion::ResumeSound()
-{
-    DEBUG_TRACE_FUNCTION;
-    g_SoundManager.ResumeSound();
+    float distance = GetDistance(g_Player, Wisp::CPoint2Di(x, y));
+    g_Orion.PlaySoundEffect(id, g_SoundManager.GetVolumeValue(distance));
 }
 
 void COrion::PlaySoundEffect(uint16_t id, float volume)
@@ -5423,21 +5393,18 @@ void COrion::PlaySoundEffect(uint16_t id, float volume)
     }
 
     CIndexSound &is = m_SoundDataIndex[id];
-
     if (is.Address == 0)
     {
         return;
     }
 
-    if (is.m_Stream == 0)
+    if (is.m_Stream == SOUND_NULL)
     {
         is.m_Stream = g_SoundManager.LoadSoundEffect(is);
-
-        if (is.m_Stream == 0)
+        if (is.m_Stream == SOUND_NULL)
         {
             return;
         }
-
         m_UsedSoundList.push_back(&m_SoundDataIndex[id]);
     }
     else
@@ -5446,9 +5413,7 @@ void COrion::PlaySoundEffect(uint16_t id, float volume)
         {
             return;
         }
-
-        g_SoundManager.FreeStream(is.m_Stream);
-
+        g_SoundManager.FreeSound(is.m_Stream);
         is.m_Stream = g_SoundManager.LoadSoundEffect(is);
     }
 
@@ -5467,30 +5432,33 @@ void COrion::PlaySoundEffect(uint16_t id, float volume)
 void COrion::AdjustSoundEffects(int ticks, float volume)
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<CIndexSound *>::iterator i = m_UsedSoundList.begin(); i != m_UsedSoundList.end();)
+    for (auto i = m_UsedSoundList.begin(); i != m_UsedSoundList.end();)
     {
         CIndexSound *obj = *i;
-
-        if (obj->m_Stream != 0 && static_cast<int>(obj->LastAccessTime + obj->Delay) < ticks)
-        {
-            if (volume > 0)
-            {
-                BASS_ChannelSetAttribute(obj->m_Stream, BASS_ATTRIB_VOL, volume);
-            }
-            else
-            {
-                BASS_StreamFree(obj->m_Stream);
-
-                obj->m_Stream = 0;
-            }
-
-            i = m_UsedSoundList.erase(i);
-        }
-        else
+        if (obj->m_Stream == SOUND_NULL)
         {
             ++i;
+            continue;
+        }
+        if (static_cast<int>(obj->LastAccessTime + obj->Delay) < ticks)
+        {
+            if (!g_SoundManager.UpdateSoundEffect(obj->m_Stream, volume))
+            {
+                obj->m_Stream = SOUND_NULL;
+            }
+            i = m_UsedSoundList.erase(i);
         }
     }
+}
+
+void COrion::PauseSound() const
+{
+    g_SoundManager.PauseSound();
+}
+
+void COrion::ResumeSound() const
+{
+    g_SoundManager.ResumeSound();
 }
 
 CGLTexture *COrion::ExecuteGump(uint16_t id)
