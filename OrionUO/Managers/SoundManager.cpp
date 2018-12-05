@@ -7,7 +7,7 @@
 #define SOUND_DEBUG_TRACE
 #endif
 
-#if !USE_WISP
+#if !USE_BASS
 #include <ass.h>
 using namespace SoLoud;
 static Soloud s_backend;
@@ -222,7 +222,7 @@ bool CSoundManager::Init()
     SOUND_DEBUG_TRACE;
     LOG("Initializing bass sound system.\n");
     // initialize default output device
-#if USE_WISP
+#if USE_BASS
     auto hwnd = (HWND)g_OrionWindow.Handle;
     if (!BASS_Init(-1, 48000, BASS_DEVICE_3D, hwnd, nullptr))
     {
@@ -253,7 +253,7 @@ void CSoundManager::Free()
 {
     SOUND_DEBUG_TRACE;
     StopMusic();
-#if USE_WISP
+#if USE_BASS
     BASS_Free();
 #else
     s_backend.deinit();
@@ -263,7 +263,7 @@ void CSoundManager::Free()
 void CSoundManager::PauseSound()
 {
     SOUND_DEBUG_TRACE;
-#if USE_WISP
+#if USE_BASS
     BASS_Pause();
 #else
     s_backend.setPauseAll(true);
@@ -274,7 +274,7 @@ void CSoundManager::PauseSound()
 void CSoundManager::ResumeSound()
 {
     SOUND_DEBUG_TRACE;
-#if USE_WISP
+#if USE_BASS
     BASS_Start();
 #else
     s_backend.setPauseAll(false);
@@ -283,7 +283,7 @@ void CSoundManager::ResumeSound()
 
 bool CSoundManager::UpdateSoundEffect(SoundHandle stream, float volume)
 {
-#if USE_WISP
+#if USE_BASS
     if (volume > 0)
     {
         BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, volume);
@@ -306,7 +306,7 @@ float CSoundManager::GetVolumeValue(int distance, bool music)
     uint16_t clientConfigVolume =
         music ? g_ConfigManager.GetMusicVolume() : g_ConfigManager.GetSoundVolume();
 
-#if USE_WISP
+#if USE_BASS
     float volume = BASS_GetVolume();
 #else
     float volume = s_backend.getGlobalVolume();
@@ -346,7 +346,7 @@ SoundHandle CSoundManager::LoadSoundEffect(CIndexSound &is)
 #endif
     }
     size_t waveFileSize = is.DataSize - sizeof(SOUND_BLOCK) + sizeof(WaveHeader);
-#if USE_WISP
+#if USE_BASS
     auto stream = BASS_StreamCreateFile(
         true,
         is.m_WaveFile,
@@ -375,7 +375,7 @@ void CSoundManager::PlaySoundEffect(SoundHandle stream, float volume)
         return;
     }
 
-#if USE_WISP
+#if USE_BASS
     BASS_ChannelSetAttribute(stream, BASS_ATTRIB_VOL, volume);
     if (!BASS_ChannelPlay(stream, false))
     {
@@ -396,7 +396,7 @@ void CSoundManager::PlaySoundEffect(SoundHandle stream, float volume)
 void CSoundManager::FreeSound(SoundHandle stream)
 {
     SOUND_DEBUG_TRACE;
-#if USE_WISP
+#if USE_BASS
     BASS_StreamFree(stream);
 #else
     if (stream == SOUND_NULL)
@@ -421,7 +421,7 @@ void CSoundManager::FreeSound(SoundHandle stream)
 void CSoundManager::SetMusicVolume(float volume)
 {
     SOUND_DEBUG_TRACE;
-#if USE_WISP
+#if USE_BASS
     if (s_Music != 0 && IsPlayingNormalMusic())
     {
         BASS_ChannelSetAttribute(s_Music, BASS_ATTRIB_VOL, volume);
@@ -442,7 +442,7 @@ bool CSoundManager::IsPlayingNormalMusic()
 {
     SOUND_DEBUG_TRACE;
 
-#if USE_WISP
+#if USE_BASS
     return BASS_ChannelIsActive(s_Music);
 #else
     return s_backend.isValidVoiceHandle(s_Music[0]);
@@ -453,7 +453,7 @@ void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, b
 {
     SOUND_DEBUG_TRACE;
 
-#if USE_WISP
+#if USE_BASS
     if (warmode && s_WarMusic != 0)
     {
         return;
@@ -507,7 +507,7 @@ void CSoundManager::StopWarMusic()
 {
     SOUND_DEBUG_TRACE;
 
-#if USE_WISP
+#if USE_BASS
     BASS_ChannelStop(s_WarMusic);
     s_WarMusic = 0;
     if (s_Music != 0 && !IsPlayingNormalMusic())
@@ -527,7 +527,7 @@ void CSoundManager::StopMusic()
 {
     SOUND_DEBUG_TRACE;
 
-#if USE_WISP
+#if USE_BASS
     BASS_ChannelStop(s_Music);
     BASS_ChannelStop(s_WarMusic);
     s_Music = 0;
@@ -558,7 +558,7 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     sprintf_s(musicPath, "music/%s", midiInfo.musicName);
 
 
-#if USE_WISP
+#if USE_BASS
     if (warmode && s_WarMusic != 0)
     {
         return;

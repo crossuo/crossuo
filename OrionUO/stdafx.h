@@ -33,7 +33,7 @@
 #define ToColorB(x) ((x >> 16) & 0xff)
 #define ToColorA(x) ((x >> 24) & 0xff)
 
-#if USE_WISP
+#if USE_BASS
 typedef DWORD SoundHandle;
 #define SOUND_NULL 0
 #else

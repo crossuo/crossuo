@@ -264,7 +264,7 @@ bool CWindow::Create(
 
     SetWindowPos(Handle, HWND_TOP, 0, 0, r.right, r.bottom, 0);
 
-    srand(unsigned(time(nullptr)));
+    srand(unsigned(::time(nullptr)));
 
     GetClientRect(Handle, &r);
     m_Size.Width = r.right - r.left;

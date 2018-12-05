@@ -29,6 +29,12 @@ else()
   add_definitions(-DUSE_WISP=0)
 endif()
 
+if(ORION_BASS)
+  add_definitions(-DUSE_BASS=1)
+else()
+  add_definitions(-DUSE_BASS=0)
+endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   # enable the latest C++ standard feature set,
   # and also disable MSVC specific extensions
@@ -407,7 +413,7 @@ else()
   string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   source_group(TREE "${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
 
-  if(NOT ORION_WISP)
+  if(NOT ORION_BASS)
     set(SRCS ${SRCS} ../external/ass.cpp)
   endif()
 

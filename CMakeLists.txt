@@ -11,6 +11,7 @@ option(ENABLE_LTO "Enables Link Time Optimization" OFF)
 option(ORION_BUILD_MODULES "Enables Modular Project Structure" OFF)
 option(ORION_DLL_STATIC "Use Builtin Orion Crypto Library (Windows option)" ON)
 option(ORION_WISP "Use WISP pure Win32 API Implementation (Windows option)" ON)
+option(ORION_BASS "Use BASS for audio playback (DEPRECATED)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake
@@ -79,6 +80,7 @@ if(ORION_WINDOWS)
 else()
 	set(ORION_DLL_STATIC ON)
 	set(ORION_WISP OFF)
+    set(ORION_BASS OFF)
 	find_package(ZLIB REQUIRED)
 	find_package(SDL2 REQUIRED)
 	find_package(SDL2_image REQUIRED)
