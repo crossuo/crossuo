@@ -1,15 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-
-#define SOUND_DEBUG_TRACE_FUNCTION                                                                 \
-    do                                                                                             \
-    {                                                                                              \
-        fprintf(stdout, "CALL: %s\n", __FUNCTION__);                                               \
-    } while (0)
-
-#if 1
-#define SOUND_DEBUG_TRACE SOUND_DEBUG_TRACE_FUNCTION
+#if 0
+#define SOUND_DEBUG_TRACE DEBUG_TRACE_FUNCTION
 #else
 #define SOUND_DEBUG_TRACE
 #endif
@@ -17,8 +10,6 @@
 #if !USE_WISP
 #include <ass.h>
 using namespace SoLoud;
-static handle s_musicGroup;
-static handle s_soundGroup;
 static Soloud s_backend;
 
 static SoundFont s_Sf2;
@@ -29,7 +20,7 @@ static handle s_Music[] = {0, 0};
 
 #define GetErrorDescription() __FUNCTION__
 #define MAX_SOUNDS 256
-#define VOLUME_FACTOR 1.5f
+#define VOLUME_FACTOR 1.0f
 
 struct SoundInfo
 {
@@ -39,6 +30,7 @@ struct SoundInfo
     handle h = 0;
 };
 
+// FIXME: this is a temporary hack, we shoud use AudioSource directly as SoundStream
 static std::unordered_map<void *, AudioSource *> s_audioSources;
 static SoundInfo *getSound(void *data, size_t len)
 {
@@ -56,12 +48,10 @@ static SoundInfo *getSound(void *data, size_t len)
     if (it == s_audioSources.end())
     {
         Wav *w = new Wav;
-        w->loadMem((unsigned char *)data, len, false, false);
+        w->loadMem((unsigned char *)data, checked_cast<int>(len), false, false);
         sfx->source = w;
         sfx->data = data;
         sfx->len = len;
-        sfx->h = s_backend.play(*w, VOLUME_FACTOR);
-        //s_backend.addVoiceToGroup(s_soundGroup, sfx->h);
         s_audioSources.emplace(std::make_pair(data, w));
         return sfx;
     }
@@ -70,8 +60,6 @@ static SoundInfo *getSound(void *data, size_t len)
     sfx->source = w;
     sfx->data = data;
     sfx->len = len;
-    sfx->h = s_backend.play(*w, VOLUME_FACTOR);
-    //s_backend.addVoiceToGroup(s_soundGroup, sfx->h);
     return sfx;
 }
 
@@ -254,8 +242,7 @@ bool CSoundManager::Init()
     }
 #else
     s_backend.init();
-    s_musicGroup = s_backend.createVoiceGroup();
-    s_soundGroup = s_backend.createVoiceGroup();
+    s_backend.setGlobalVolume(0.30f);
 #endif
     LOG("Sound init successfull.\n");
 
@@ -322,9 +309,7 @@ float CSoundManager::GetVolumeValue(int distance, bool music)
 #if USE_WISP
     float volume = BASS_GetVolume();
 #else
-    float volume = music ?
-        s_backend.getVolume(s_Music[0]) : s_backend.getVolume(s_soundGroup);
-    fprintf(stdout, "Get global volume: %f\n", volume);
+    float volume = s_backend.getGlobalVolume();
 #endif
 
     if (volume == 0 || clientConfigVolume == 0)
@@ -349,6 +334,16 @@ SoundHandle CSoundManager::LoadSoundEffect(CIndexSound &is)
     if (is.m_WaveFile == nullptr)
     {
         is.m_WaveFile = CreateWaveFile(is);
+#if 0
+        static int sid = 0;
+        char fname[64];
+        snprintf(fname, 64, "sound%02d.wav", sid);
+        FILE *fp = fopen(fname, "wb");
+        size_t waveFileSize = is.DataSize - sizeof(SOUND_BLOCK) + sizeof(WaveHeader);
+        fwrite(is.m_WaveFile, 1, waveFileSize, fp);
+        fclose(fp);
+        sid++;
+#endif
     }
     size_t waveFileSize = is.DataSize - sizeof(SOUND_BLOCK) + sizeof(WaveHeader);
 #if USE_WISP
@@ -360,7 +355,6 @@ SoundHandle CSoundManager::LoadSoundEffect(CIndexSound &is)
         BASS_SAMPLE_FLOAT | BASS_SAMPLE_3D | BASS_SAMPLE_SOFTWARE);
 #else
     auto stream = getSound(is.m_WaveFile, waveFileSize - 16);
-    //SoundHandle stream = SOUND_NULL;
 #endif
 
     if (stream == SOUND_NULL)
@@ -390,8 +384,7 @@ void CSoundManager::PlaySoundEffect(SoundHandle stream, float volume)
 #else
     if (stream->source)
     {
-        stream->h = s_backend.play(*stream->source, VOLUME_FACTOR);
-        //s_backend.setVolume(stream->h, VOLUME_FACTOR * volume);
+        stream->h = s_backend.play(*stream->source, VOLUME_FACTOR * volume);
     }
     else
     {
@@ -414,7 +407,7 @@ void CSoundManager::FreeSound(SoundHandle stream)
     if (stream->source)
     {
         s_backend.stop(stream->h);
-        s_backend.trimVoiceGroup(s_soundGroup);
+        delete stream;
     }
     else
     {
@@ -440,8 +433,8 @@ void CSoundManager::SetMusicVolume(float volume)
     }
 #else
     float v = VOLUME_FACTOR * volume / 255.0f;
-    fprintf(stdout, "Set volume: %f %f\n", volume, v);
-    s_backend.setVolume(s_musicGroup, v);
+    s_backend.setVolume(s_Music[0], v);
+    s_backend.setVolume(s_Music[1], v);
 #endif
 }
 
@@ -490,8 +483,6 @@ void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, b
         CurrentMusicIndex = index;
     }
 #else
-    fprintf(stdout, "Play MP3: %s\n", fileName.c_str());
-
     int cur = warmode ? 1 : 0;
     int old = warmode ? 0 : 1;
     if (s_Music[cur])
@@ -504,7 +495,6 @@ void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, b
     s_Music[cur] = s_backend.play(s_MusicStream[cur], 0, 0);
     s_backend.fadeVolume(s_Music[cur], VOLUME_FACTOR, 2);
     s_backend.fadeVolume(s_Music[old], 0, 2);
-    //s_backend.addVoiceToGroup(s_musicGroup, s_Music[cur]);
 
     if (!warmode)
     {
@@ -620,7 +610,6 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     s_MusicMidi[cur].load(musicPath, s_Sf2);
     s_MusicMidi[cur].setLooping(midiInfo.loop);
     s_Music[cur] = s_backend.play(s_MusicMidi[cur], VOLUME_FACTOR, 0, 0);
-    //s_backend.addVoiceToGroup(s_musicGroup, s_Music[cur]);
 
     if (!warmode)
     {

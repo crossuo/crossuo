@@ -608,14 +608,14 @@ void CPacketManager::OnPacket()
         time(&rawtime);
         localtime_s(&timeinfo, &rawtime);
         strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &timeinfo);
-        LOG("--- ^(%d) r(+%d => %d) %s Server:: %s\n",
+        LOG("--- ^(%d) r(+%zd => %d) %s Server:: %s\n",
             ticks - g_LastPacketTime,
             Size,
             g_TotalRecvSize,
             buffer,
             info.Name);
 #else
-        LOG("--- ^(%d) r(+%d => %d) Server:: %s\n",
+        LOG("--- ^(%d) r(+%zd => %d) Server:: %s\n",
             ticks - g_LastPacketTime,
             Size,
             g_TotalRecvSize,
@@ -680,7 +680,7 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
     CPacketInfo &info = m_Packets[*Start];
-    LOG("--- ^(%d) r(+%d => %d) Plugin->Client:: %s\n",
+    LOG("--- ^(%d) r(+%zd => %d) Plugin->Client:: %s\n",
         ticks - g_LastPacketTime,
         Size,
         g_TotalRecvSize,
@@ -854,7 +854,7 @@ PACKET_HANDLER(ResendCharacterList)
                 }
             }
 
-            LOG("%d: %s (%d)\n", i, name.c_str(), name.length());
+            LOG("%d: %s (%zd)\n", i, name.c_str(), name.length());
         }
 
         if (autoLogin && autoPos == -1)

@@ -247,7 +247,7 @@ LONG __stdcall OrionUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *excepti
                          ++i)
                     {
                         CRASHLOG("Packet data:\n");
-                        CRASHLOG_DUMP((uint8_t *)i->data(), i->size());
+                        CRASHLOG_DUMP((uint8_t *)i->data(), int(i->size()));
                     }
                 }
                 crashlog = true;

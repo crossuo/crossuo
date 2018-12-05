@@ -186,7 +186,7 @@ void tcp_close(tcp_socket socket)
 icmp_handle icmp_open()
 {
     socket_init();
-    auto h = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    auto h = ::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (h == INVALID_SOCKET)
         return nullptr;
 
@@ -224,16 +224,16 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
 
         const auto r = (LPSTR)&request;
         const auto dst = (LPSOCKADDR)&destAddress;
-        sendto(h, r, rs, 0, dst, sizeof(SOCKADDR_IN));
+        ::sendto(h, r, rs, 0, dst, sizeof(SOCKADDR_IN));
 
-        timeval tomeoutInfo;
-        fd_set readfds = {};
-        readfds.fd_count = 1;
-        readfds.fd_array[0] = *(SOCKET *)socket;
-        tomeoutInfo.tv_sec = 1;
-        tomeoutInfo.tv_usec = 0;
+        timeval timeoutInfo;
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(h, &readfds);
+        timeoutInfo.tv_sec = 1;
+        timeoutInfo.tv_usec = 0;
 
-        if (select(1, &readfds, nullptr, nullptr, &tomeoutInfo))
+        if (::select(1, &readfds, nullptr, nullptr, &timeoutInfo))
         {
             ECHOREPLY answer;
             sockaddr_in sourceAddress;
@@ -242,7 +242,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
             const auto a = (LPSTR)&answer;
             const auto as = sizeof(ECHOREPLY);
             const auto src = (LPSOCKADDR)&sourceAddress;
-            if (recvfrom(h, a, as, 0, src, &length) != -1)
+            if (::recvfrom(h, a, as, 0, src, &length) != -1)
             {
                 *timems = answer.echoRequest.dwTime;
                 return 0;

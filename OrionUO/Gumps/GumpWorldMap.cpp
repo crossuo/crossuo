@@ -369,7 +369,7 @@ void CGumpWorldMap::LoadMap(int map)
 
                 if (readed != size)
                 {
-                    LOG("Error reading world map file, want=%i, readed=%i\n", size, readed);
+                    LOG("Error reading world map file, want=%i, readed=%zi\n", size, readed);
                     fromFile = false;
                 }
                 else
@@ -489,7 +489,7 @@ void CGumpWorldMap::LoadMap(int map)
                 size_t written = fwrite(&buf[0], sizeof(short), buf.size(), mapFile);
                 fs_close(mapFile);
 
-                LOG("Write world map file, want=%i, written=%i\n", buf.size(), written);
+                LOG("Write world map file, want=%zi, written=%zi\n", buf.size(), written);
             }
         }
 
@@ -502,7 +502,7 @@ void CGumpWorldMap::LoadMap(int map)
         }
         else
         {
-            LOG("World map build error: buffer=%i, want=%i\n",
+            LOG("World map build error: buffer=%zi, want=%i\n",
                 buf.size(),
                 g_MapSize[map].Width * g_MapSize[map].Height);
         }

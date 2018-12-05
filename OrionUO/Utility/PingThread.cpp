@@ -13,7 +13,7 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
     , RequestsCount(requestsCount)
 {
     DEBUG_TRACE_FUNCTION;
-    assert(s_pingCnt == 0 && "Multiple ping threads running at the same time");
+    //assert(s_pingCnt == 0 && "Multiple ping threads running at the same time");
     s_pingCnt++;
     LOG("CPingThread => %s\n", serverIP.c_str());
 }
@@ -21,7 +21,7 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
 CPingThread::~CPingThread()
 {
     DEBUG_TRACE_FUNCTION;
-    assert(s_pingCnt == 1 && "Multiple ping threads running at the same time");
+    //assert(s_pingCnt == 1 && "Multiple ping threads running at the same time");
     s_pingCnt--;
 }
 
@@ -53,7 +53,7 @@ void CPingThread::OnExecute(uint32_t nowTime)
         return;
     }
 
-    auto info = (PING_INFO_DATA *)malloc(sizeof(PING_INFO_DATA));
+    auto *info = new PING_INFO_DATA;
     info->ServerID = ServerID;
     for (int i = 0; i < RequestsCount; i++)
     {

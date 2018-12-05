@@ -596,7 +596,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
                     info->Max,
                     info->Average,
                     info->Lost);
-                free(info);
+                delete info;
             }
         }
         break;

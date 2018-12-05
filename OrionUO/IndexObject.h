@@ -51,7 +51,7 @@ public:
     CIndexSound();
     virtual ~CIndexSound();
 
-    uint8_t *m_WaveFile;
+    uint8_t *m_WaveFile = nullptr;
     SoundHandle m_Stream = SOUND_NULL;
 };
 

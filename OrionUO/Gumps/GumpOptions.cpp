@@ -1708,7 +1708,7 @@ void CGumpOptions::RedrawMacroData()
         alt = m_MacroPointer->Alt;
         ctrl = m_MacroPointer->Ctrl;
         shift = m_MacroPointer->Shift;
-        key = m_MacroPointer->Key;
+        key = checked_cast<uint16_t>(m_MacroPointer->Key);
     }
 
     m_MacroCheckboxShift->Checked = shift;

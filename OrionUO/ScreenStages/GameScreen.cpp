@@ -864,13 +864,13 @@ void CGameScreen::AddTileToRenderList(
 
             if (m_RenderList.size() != newSize)
             {
-                LOG("Allocation pixels memory for Render List failed (want size: %i)\n", newSize);
+                LOG("Allocation pixels memory for Render List failed (want size: %zi)\n", newSize);
 
                 m_RenderList.resize(newSize - 1000);
 
                 if (m_RenderList.size() != newSize - 1000)
                 {
-                    LOG("Allocation pixels memory for Render List failed SECOND STEP!!! (want size: %i)\n",
+                    LOG("Allocation pixels memory for Render List failed SECOND STEP!!! (want size: %zi)\n",
                         newSize - 1000);
                     m_RenderListCount = 0;
                     return;

@@ -50,7 +50,9 @@ freely, subject to the following restrictions:
 #ifdef _MSC_VER
 #include <stdio.h> // for sprintf in asserts
 #define VC_EXTRALEAN
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h> // only needed for OutputDebugStringA, should be solved somehow.
 #define SOLOUD_ASSERT(x) if (!(x)) { char temp[200]; sprintf(temp, "%s(%d): assert(%s) failed.\n", __FILE__, __LINE__, #x); OutputDebugStringA(temp); __debugbreak(); }
 #else

@@ -380,14 +380,14 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                     PMULTILINES_FONT_INFO info = Unicode ? g_FontManager.GetInfoW(
                                                                1,
                                                                g_EntryPointer->GetTextW().c_str(),
-                                                               g_EntryPointer->Length(),
+                                                               int(g_EntryPointer->Length()),
                                                                TS_LEFT,
                                                                0,
                                                                155) :
                                                            g_FontManager.GetInfoA(
                                                                4,
                                                                g_EntryPointer->GetTextA().c_str(),
-                                                               g_EntryPointer->Length(),
+                                                               int(g_EntryPointer->Length()),
                                                                TS_LEFT,
                                                                0,
                                                                155);
@@ -424,7 +424,7 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                     //remove characters which do not fit on current page
                     if (info->CharCount == 0)
                     {
-                        g_EntryPointer->RemoveSequence(g_EntryPointer->Length() - 1, 1);
+                        g_EntryPointer->RemoveSequence(checked_cast<int>(g_EntryPointer->Length() - 1), 1);
                     }
                     else
                     {
@@ -639,7 +639,7 @@ void CGumpBook::SetPagePos(int val, int page)
 
     if (val == -1)
     {
-        val = g_EntryPointer->Length();
+        val = checked_cast<int>(g_EntryPointer->Length());
     }
     g_EntryPointer->SetPos(val, this);
 }

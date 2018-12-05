@@ -1051,7 +1051,7 @@ void COrion::LoadContainerOffsets()
         }
     }
 
-    LOG("g_ContainerOffset.size()=%i\n", g_ContainerOffset.size());
+    LOG("g_ContainerOffset.size()=%zd\n", g_ContainerOffset.size());
 }
 
 #if !USE_ORIONDLL
@@ -1880,7 +1880,7 @@ void COrion::SaveLocalConfig(int serial)
     if (g_Player != nullptr)
     {
         LOG("player exists\n");
-        LOG("name len: %i\n", g_Player->GetName().length());
+        LOG("name len: %zd\n", g_Player->GetName().length());
         path += ToPath("_") + ToPath(g_Player->GetName()) + ToPath(".cuo");
 
         if (!fs_path_exists(path))
@@ -5432,12 +5432,12 @@ void COrion::PlaySoundEffect(uint16_t id, float volume)
 void COrion::AdjustSoundEffects(int ticks, float volume)
 {
     DEBUG_TRACE_FUNCTION;
-    for (auto i = m_UsedSoundList.begin(); i != m_UsedSoundList.end();)
+    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end();)
     {
-        CIndexSound *obj = *i;
+        CIndexSound *obj = *it;
         if (obj->m_Stream == SOUND_NULL)
         {
-            ++i;
+            ++it;
             continue;
         }
         if (static_cast<int>(obj->LastAccessTime + obj->Delay) < ticks)
@@ -5446,7 +5446,11 @@ void COrion::AdjustSoundEffects(int ticks, float volume)
             {
                 obj->m_Stream = SOUND_NULL;
             }
-            i = m_UsedSoundList.erase(i);
+            it = m_UsedSoundList.erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
 }

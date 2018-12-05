@@ -1094,7 +1094,7 @@ int CFontsManager::CalculateCaretPosW(
 
     if (pos > (int)str.size())
     {
-        pos = str.size();
+        pos = checked_cast<int>(str.size());
     }
 
     return pos;

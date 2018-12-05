@@ -14,7 +14,7 @@ bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
     PUSH_EVENT(UOMSG_RECV, buf, size);
-    g_PacketManager.SavePluginReceivePacket(buf, size);
+    g_PacketManager.SavePluginReceivePacket(buf, checked_cast<int>(size));
     return true;
 }
 
@@ -24,9 +24,9 @@ bool __cdecl PluginSendFunction(uint8_t *buf, size_t size)
 
     PUSH_EVENT(UOMSG_SEND, buf, size);
     uint32_t ticks = g_Ticks;
-    g_TotalSendSize += size;
+    g_TotalSendSize += checked_cast<int>(size);
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
-    LOG("--- ^(%d) s(+%d => %d) Plugin->Server:: %s\n",
+    LOG("--- ^(%d) s(+%zd => %d) Plugin->Server:: %s\n",
         ticks - g_LastPacketTime,
         size,
         g_TotalSendSize,
@@ -37,15 +37,15 @@ bool __cdecl PluginSendFunction(uint8_t *buf, size_t size)
     if (*buf == 0x80 || *buf == 0x91)
     {
         LOG_DUMP(buf, 1);
-        SAFE_LOG_DUMP(buf, size);
+        SAFE_LOG_DUMP(buf, int(size));
         LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
     }
     else
     {
-        LOG_DUMP(buf, size);
+        LOG_DUMP(buf, int(size));
     }
 
-    g_ConnectionManager.Send(buf, size);
+    g_ConnectionManager.Send(buf, checked_cast<int>(size));
     return true;
 }
 

@@ -260,7 +260,7 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
         key += MODKEY_SHIFT;
     }
 
-    writter.WriteUInt16LE(key);
+    writter.WriteUInt16LE(checked_cast<uint16_t>(key));
     writter.WriteUInt16LE(count);
 
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
