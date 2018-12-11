@@ -8,12 +8,22 @@
 #endif
 
 #if !USE_BASS
+#define WITH_SDL2
+
+#define TSF_IMPLEMENTATION
+#define TSF_NO_STDIO
+#include <tsf.h>
+#define TML_IMPLEMENTATION
+#define TML_NO_STDIO
+#include <tml.h>
+
+#define ASS_IMPLEMENTATION
 #include <ass.h>
 using namespace SoLoud;
 static Soloud s_backend;
 
-static SoundFont s_Sf2;
-static Midi s_MusicMidi[2];
+//static SoundFont s_Sf2;
+//static Midi s_MusicMidi[2];
 static WavStream s_MusicStream[2];
 static AudioSource *s_MusicSource[] = { &s_MusicStream[0], &s_MusicStream[1] };
 static handle s_Music[] = {0, 0};
@@ -537,8 +547,8 @@ void CSoundManager::StopMusic()
     s_backend.stop(s_Music[1]);
     s_backend.stopAudioSource(s_MusicStream[0]);
     s_backend.stopAudioSource(s_MusicStream[1]);
-    s_backend.stopAudioSource(s_MusicMidi[0]);
-    s_backend.stopAudioSource(s_MusicMidi[1]);
+    //s_backend.stopAudioSource(s_MusicMidi[0]);
+    //s_backend.stopAudioSource(s_MusicMidi[1]);
     s_Music[0] = 0;
     s_Music[1] = 0;
 #endif
@@ -589,6 +599,7 @@ void CSoundManager::PlayMidi(int index, bool warmode)
         s_Music = streamHandle;
     }
 #else
+/*
     static bool tsfLoaded = false;
     if (!tsfLoaded)
     {
@@ -615,5 +626,6 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     {
         CurrentMusicIndex = index;
     }
+    */
 #endif
 }

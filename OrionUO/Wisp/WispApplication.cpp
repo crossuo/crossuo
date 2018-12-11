@@ -98,7 +98,8 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     va_end(arg);
 
     os_path res = m_UOPath.c_str();
-    return fs_insensitive(res + PATH_SEP + ToPath(out));
+    auto tmp = res + PATH_SEP + ToPath(out);
+    return fs_insensitive(tmp);
 }
 
 }; // namespace Wisp

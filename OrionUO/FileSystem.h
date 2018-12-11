@@ -11,7 +11,7 @@
 #define ToPath(x) ToWString(x)
 #define StringFromPath(x) ToString(x)
 #define CStringFromPath(x) ToString(x).c_str()
-#define PATH_SEP L"\\"
+#define PATH_SEP ToPath("/")
 #else
 #define os_path string
 #define ToPath(x) x

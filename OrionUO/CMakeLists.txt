@@ -397,10 +397,6 @@ if(ORION_BUILD_MODULES)
   string(REPLACE ".cpp" ".h" orion_hdr "${orion_src}")
   string(REPLACE "WeatherEffeect.h" "WeatherEffect.h" orion_hdr "${orion_hdr}")
 
-  if(NOT ORION_WISP)
-    set(orion_src ${orion_src} ../external/ass.cpp)
-  endif()
-
   add_executable(OrionUO ${orion_src} ${orion_hdr})
   target_link_libraries(screenstages PRIVATE gumps)
   target_link_libraries(gumps PRIVATE managers)
@@ -412,10 +408,6 @@ else()
   string(REPLACE "GUI/GUIVirtireGump.h" "GUI/GUIVirtureGump.h" headers "${headers}")
   string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   source_group(TREE "${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
-
-  if(NOT ORION_BASS)
-    set(SRCS ${SRCS} ../external/ass.cpp)
-  endif()
 
   if(NOT ORION_WINDOWS)
     add_library(orion SHARED ${SRCS} ${headers})
