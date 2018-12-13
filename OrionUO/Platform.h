@@ -247,7 +247,8 @@ typedef SDL_mutex *ProtectedSection;
 
 #endif
 
-namespace Platform {
+namespace Platform
+{
 void SetLanguageFromSystemLocale();
 void OpenBrowser(const std::string &url);
-}
+} // namespace Platform

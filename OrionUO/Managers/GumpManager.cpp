@@ -1508,8 +1508,7 @@ void CGumpManager::Load(const os_path &path)
     AddGump(new CGumpConsoleType(minimizedConsoleType, showFullTextConsoleType));
 }
 
-void CGumpManager::SaveDefaultGumpProperties(
-    Wisp::CBinaryFileWriter &writer, CGump *gump, int size)
+void CGumpManager::SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CGump *gump, int size)
 {
     DEBUG_TRACE_FUNCTION;
     writer.WriteInt8(size);

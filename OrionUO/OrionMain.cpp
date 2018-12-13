@@ -59,7 +59,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 #else
 
-
 #if !defined(ORION_WINDOWS)
 #include <dlfcn.h>
 #define ORION_EXPORT extern "C" __attribute__((visibility("default")))

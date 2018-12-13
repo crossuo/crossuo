@@ -1064,7 +1064,6 @@ bool CWindow::OnRepaint(const PaintEvent &ev)
 
 bool CWindow::IsActive() const
 {
-
     return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_INPUT_FOCUS) != 0;
 }
 

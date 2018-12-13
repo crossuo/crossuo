@@ -26,7 +26,7 @@ static Soloud s_backend;
 //static Midi s_MusicMidi[2];
 static WavStream s_MusicStream[2];
 static AudioSource *s_MusicSource[] = { &s_MusicStream[0], &s_MusicStream[1] };
-static handle s_Music[] = {0, 0};
+static handle s_Music[] = { 0, 0 };
 
 #define GetErrorDescription() __FUNCTION__
 #define MAX_SOUNDS 256
@@ -189,7 +189,7 @@ static const MidiInfoStruct s_MidiInfo[MIDI_MUSIC_COUNT] = {
 
 CSoundManager g_SoundManager;
 
-static uint8_t* CreateWaveFile(CIndexSound &is)
+static uint8_t *CreateWaveFile(CIndexSound &is)
 {
     SOUND_DEBUG_TRACE;
     size_t dataSize = is.DataSize - sizeof(SOUND_BLOCK);
@@ -217,7 +217,6 @@ static uint8_t* CreateWaveFile(CIndexSound &is)
 
     return waveSound;
 }
-
 
 CSoundManager::CSoundManager()
 {
@@ -566,7 +565,6 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     char musicPath[100] = { 0 };
     MidiInfoStruct midiInfo = s_MidiInfo[index];
     sprintf_s(musicPath, "music/%s", midiInfo.musicName);
-
 
 #if USE_BASS
     if (warmode && s_WarMusic != 0)

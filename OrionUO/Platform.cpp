@@ -4,8 +4,8 @@
 #include "Platform.h"
 #include "Globals.h"
 
-namespace Platform {
-
+namespace Platform
+{
 #if _WIN32
 
 // FIXME: Add support to all Langcode.iff codes.
@@ -154,4 +154,4 @@ void OpenBrowser(const std::string &url)
 }
 #endif
 
-}
+} // namespace Platform

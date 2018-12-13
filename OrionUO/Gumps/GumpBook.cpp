@@ -424,7 +424,8 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                     //remove characters which do not fit on current page
                     if (info->CharCount == 0)
                     {
-                        g_EntryPointer->RemoveSequence(checked_cast<int>(g_EntryPointer->Length() - 1), 1);
+                        g_EntryPointer->RemoveSequence(
+                            checked_cast<int>(g_EntryPointer->Length() - 1), 1);
                     }
                     else
                     {

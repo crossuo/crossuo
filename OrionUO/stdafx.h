@@ -39,7 +39,7 @@ typedef DWORD SoundHandle;
 #define SOUND_NULL 0
 #else
 struct SoundInfo;
-typedef SoundInfo* SoundHandle;
+typedef SoundInfo *SoundHandle;
 #define SOUND_NULL nullptr
 #endif
 
