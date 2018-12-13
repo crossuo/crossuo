@@ -224,7 +224,7 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     return macro;
 }
 
-void CMacro::Save(Wisp::CBinaryFileWritter &writter)
+void CMacro::Save(Wisp::CBinaryFileWriter &writer)
 {
     DEBUG_TRACE_FUNCTION;
     short size = 10;
@@ -242,7 +242,7 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
         }
     }
 
-    writter.WriteUInt16LE(size);
+    writer.WriteUInt16LE(size);
 
     auto key = Key;
     if (Alt)
@@ -260,8 +260,8 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
         key += MODKEY_SHIFT;
     }
 
-    writter.WriteUInt16LE(checked_cast<uint16_t>(key));
-    writter.WriteUInt16LE(count);
+    writer.WriteUInt16LE(checked_cast<uint16_t>(key));
+    writer.WriteUInt16LE(count);
 
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
@@ -271,24 +271,24 @@ void CMacro::Save(Wisp::CBinaryFileWritter &writter)
             type = 2;
         }
 
-        writter.WriteUInt8(type);
-        writter.WriteUInt16LE(obj->Code);
-        writter.WriteUInt16LE(obj->SubCode);
+        writer.WriteUInt8(type);
+        writer.WriteUInt16LE(obj->Code);
+        writer.WriteUInt16LE(obj->SubCode);
 
         if (type == 2) //with string
         {
             string str = ((CMacroObjectString *)obj)->m_String;
             int len = (int)str.length();
 
-            writter.WriteInt16LE(len + 1);
-            writter.WriteString(str);
+            writer.WriteInt16LE(len + 1);
+            writer.WriteString(str);
         }
 
-        writter.WriteBuffer();
+        writer.WriteBuffer();
     }
 
-    writter.WriteUInt32LE(0); //EOM
-    writter.WriteBuffer();
+    writer.WriteUInt32LE(0); //EOM
+    writer.WriteBuffer();
 }
 
 CMacro *CMacro::GetCopy()

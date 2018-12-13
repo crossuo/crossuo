@@ -360,23 +360,23 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
 void CMacroManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CBinaryFileWritter writter;
-    writter.Open(path);
+    Wisp::CBinaryFileWriter writer;
+    writer.Open(path);
 
-    writter.WriteUInt8(0); //verison
+    writer.WriteUInt8(0); //verison
 
     short count = GetItemsCount();
 
-    writter.WriteInt16LE(count);
-    writter.WriteBuffer();
+    writer.WriteInt16LE(count);
+    writer.WriteBuffer();
 
     QFOR(obj, m_Items, CMacro *)
-    obj->Save(writter);
+    obj->Save(writer);
 
-    writter.WriteUInt32LE(0); //EOF
-    writter.WriteBuffer();
+    writer.WriteUInt32LE(0); //EOF
+    writer.WriteBuffer();
 
-    writter.Close();
+    writer.Close();
 }
 
 CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)

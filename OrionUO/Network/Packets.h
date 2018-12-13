@@ -3,7 +3,7 @@
 
 #pragma once
 
-class CPacket : public Wisp::CDataWritter
+class CPacket : public Wisp::CDataWriter
 {
 public:
     CPacket(size_t size, bool autoResize = false);

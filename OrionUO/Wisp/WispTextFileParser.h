@@ -48,14 +48,14 @@ public:
     vector<string> GetTokens(const char *str, bool trim = true);
 };
 
-class CTextFileWritter
+class CTextFileWriter
 {
 private:
     FILE *m_File{ nullptr };
 
 public:
-    CTextFileWritter(const os_path &path);
-    ~CTextFileWritter();
+    CTextFileWriter(const os_path &path);
+    ~CTextFileWriter();
 
     bool Opened() { return (m_File != nullptr); };
     void Close();

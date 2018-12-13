@@ -8,11 +8,11 @@
 
 namespace Wisp
 {
-CDataWritter::CDataWritter()
+CDataWriter::CDataWriter()
 {
 }
 
-CDataWritter::CDataWritter(size_t size, bool autoResize)
+CDataWriter::CDataWriter(size_t size, bool autoResize)
     : AutoResize(autoResize)
 {
     DATASTREAM_DEBUG;
@@ -20,14 +20,14 @@ CDataWritter::CDataWritter(size_t size, bool autoResize)
     Ptr = &m_Data[0];
 }
 
-CDataWritter::~CDataWritter()
+CDataWriter::~CDataWriter()
 {
     DATASTREAM_DEBUG;
     m_Data.clear();
     Ptr = nullptr;
 }
 
-void CDataWritter::Resize(size_t newSize, bool resetPtr)
+void CDataWriter::Resize(size_t newSize, bool resetPtr)
 {
     DATASTREAM_DEBUG;
     m_Data.resize(newSize, 0);
@@ -38,7 +38,7 @@ void CDataWritter::Resize(size_t newSize, bool resetPtr)
     }
 }
 
-void CDataWritter::Move(const intptr_t &offset)
+void CDataWriter::Move(const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     if (AutoResize)
@@ -54,7 +54,7 @@ void CDataWritter::Move(const intptr_t &offset)
     }
 }
 
-void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t &offset)
+void CDataWriter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     if (AutoResize)
@@ -77,7 +77,7 @@ void CDataWritter::WriteDataBE(const uint8_t *data, size_t size, const intptr_t 
     }
 }
 
-void CDataWritter::WriteDataLE(const uint8_t *data, size_t size, const intptr_t &offset)
+void CDataWriter::WriteDataLE(const uint8_t *data, size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     if (AutoResize)
@@ -100,7 +100,7 @@ void CDataWritter::WriteDataLE(const uint8_t *data, size_t size, const intptr_t 
     }
 }
 
-void CDataWritter::WriteString(
+void CDataWriter::WriteString(
     const string &val, size_t length, bool nullTerminated, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
@@ -126,7 +126,7 @@ void CDataWritter::WriteString(
     }
 }
 
-void CDataWritter::WriteWString(
+void CDataWriter::WriteWString(
     const wstring &val, size_t length, bool bigEndian, bool nullTerminated, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;

@@ -1509,7 +1509,7 @@ void CGumpManager::Load(const os_path &path)
 }
 
 void CGumpManager::SaveDefaultGumpProperties(
-    Wisp::CBinaryFileWritter &writer, CGump *gump, int size)
+    Wisp::CBinaryFileWriter &writer, CGump *gump, int size)
 {
     DEBUG_TRACE_FUNCTION;
     writer.WriteInt8(size);
@@ -1534,12 +1534,12 @@ void CGumpManager::SaveDefaultGumpProperties(
 void CGumpManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CBinaryFileWritter writter;
+    Wisp::CBinaryFileWriter writer;
 
-    writter.Open(path);
+    writer.Open(path);
 
-    writter.WriteInt8(1); //version
-    writter.WriteBuffer();
+    writer.WriteInt8(1); //version
+    writer.WriteBuffer();
 
     short count = 0;
 
@@ -1577,32 +1577,32 @@ void CGumpManager::Save(const os_path &path)
                     size += 11;
                 }
 
-                SaveDefaultGumpProperties(writter, gump, size);
+                SaveDefaultGumpProperties(writer, gump, size);
 
                 if (gump->GumpType == GT_JOURNAL)
                 {
-                    writter.WriteUInt16LE(((CGumpJournal *)gump)->Height);
+                    writer.WriteUInt16LE(((CGumpJournal *)gump)->Height);
                 }
                 else if (gump->GumpType == GT_SKILLS)
                 {
-                    writter.WriteUInt16LE(((CGumpSkills *)gump)->Height);
+                    writer.WriteUInt16LE(((CGumpSkills *)gump)->Height);
                 }
                 else if (gump->GumpType == GT_WORLD_MAP)
                 {
                     CGumpWorldMap *wmg = (CGumpWorldMap *)gump;
 
-                    writter.WriteUInt8(wmg->GetMap());
-                    writter.WriteUInt8(wmg->GetScale());
-                    writter.WriteUInt8(static_cast<uint8_t>(wmg->GetLinkWithPlayer()));
+                    writer.WriteUInt8(wmg->GetMap());
+                    writer.WriteUInt8(wmg->GetScale());
+                    writer.WriteUInt8(static_cast<uint8_t>(wmg->GetLinkWithPlayer()));
 
-                    writter.WriteInt16LE(wmg->Width);
-                    writter.WriteInt16LE(wmg->Height);
+                    writer.WriteInt16LE(wmg->Width);
+                    writer.WriteInt16LE(wmg->Height);
 
-                    writter.WriteInt16LE(wmg->OffsetX);
-                    writter.WriteInt16LE(wmg->OffsetY);
+                    writer.WriteInt16LE(wmg->OffsetX);
+                    writer.WriteInt16LE(wmg->OffsetY);
                 }
 
-                writter.WriteBuffer();
+                writer.WriteBuffer();
                 count++;
 
                 break;
@@ -1611,20 +1611,20 @@ void CGumpManager::Save(const os_path &path)
             case GT_COMBAT_BOOK:
             case GT_RACIAL_ABILITIES_BOOK:
             {
-                SaveDefaultGumpProperties(writter, gump, 12);
+                SaveDefaultGumpProperties(writer, gump, 12);
 
-                writter.WriteBuffer();
+                writer.WriteBuffer();
                 count++;
 
                 break;
             }
             case GT_BUFF:
             {
-                SaveDefaultGumpProperties(writter, gump, 14);
+                SaveDefaultGumpProperties(writer, gump, 14);
 
-                writter.WriteUInt16LE(gump->Graphic);
+                writer.WriteUInt16LE(gump->Graphic);
 
-                writter.WriteBuffer();
+                writer.WriteBuffer();
                 count++;
 
                 break;
@@ -1658,12 +1658,12 @@ void CGumpManager::Save(const os_path &path)
                     break;
                 }
 
-                SaveDefaultGumpProperties(writter, gump, 19);
+                SaveDefaultGumpProperties(writer, gump, 19);
 
-                writter.WriteUInt32LE(gump->Serial);
-                writter.WriteUInt16LE(gump->Graphic);
-                writter.WriteUInt8(((CGumpSpell *)gump)->SpellType);
-                writter.WriteBuffer();
+                writer.WriteUInt32LE(gump->Serial);
+                writer.WriteUInt16LE(gump->Graphic);
+                writer.WriteUInt8(((CGumpSpell *)gump)->SpellType);
+                writer.WriteBuffer();
 
                 count++;
 
@@ -1671,22 +1671,22 @@ void CGumpManager::Save(const os_path &path)
             }
             case GT_CONSOLE_TYPE:
             {
-                SaveDefaultGumpProperties(writter, gump, 13);
+                SaveDefaultGumpProperties(writer, gump, 13);
 
-                writter.WriteUInt8(
+                writer.WriteUInt8(
                     static_cast<uint8_t>(((CGumpConsoleType *)gump)->GetShowFullText()));
 
-                writter.WriteBuffer();
+                writer.WriteBuffer();
                 count++;
             }
             case GT_SKILL:
             case GT_ABILITY:
             case GT_RACIAL_ABILITY:
             {
-                SaveDefaultGumpProperties(writter, gump, 16);
+                SaveDefaultGumpProperties(writer, gump, 16);
 
-                writter.WriteUInt32LE(gump->Serial);
-                writter.WriteBuffer();
+                writer.WriteUInt32LE(gump->Serial);
+                writer.WriteBuffer();
 
                 count++;
 
@@ -1711,10 +1711,10 @@ void CGumpManager::Save(const os_path &path)
 
             if (gump->Serial == containerSerial)
             {
-                SaveDefaultGumpProperties(writter, gump, 16);
+                SaveDefaultGumpProperties(writer, gump, 16);
 
-                writter.WriteUInt32LE(gump->Serial);
-                writter.WriteBuffer();
+                writer.WriteUInt32LE(gump->Serial);
+                writer.WriteBuffer();
 
                 count++;
 
@@ -1780,25 +1780,25 @@ void CGumpManager::Save(const os_path &path)
                 spellsCount++;
             }
 
-            writter.WriteInt16LE(spellsCount);
+            writer.WriteInt16LE(spellsCount);
 
             for (CGumpSpell *spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
                  spell = spell->m_GroupNext)
             {
-                SaveDefaultGumpProperties(writter, spell, 19);
+                SaveDefaultGumpProperties(writer, spell, 19);
 
-                writter.WriteUInt32LE(spell->Serial);
-                writter.WriteUInt16LE(spell->Graphic);
-                writter.WriteUInt8(spell->SpellType);
-                writter.WriteBuffer();
+                writer.WriteUInt32LE(spell->Serial);
+                writer.WriteUInt16LE(spell->Graphic);
+                writer.WriteUInt8(spell->SpellType);
+                writer.WriteBuffer();
             }
         }
     }
 
-    writter.WriteInt16LE(spellGroupsCount);
-    writter.WriteInt16LE(count);
-    writter.WriteUInt32LE(0); //EOF
-    writter.WriteBuffer();
+    writer.WriteInt16LE(spellGroupsCount);
+    writer.WriteInt16LE(count);
+    writer.WriteUInt32LE(0); //EOF
+    writer.WriteBuffer();
 
-    writter.Close();
+    writer.Close();
 }

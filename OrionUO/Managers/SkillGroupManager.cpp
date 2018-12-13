@@ -333,11 +333,11 @@ bool CSkillGroupManager::Load(const os_path &path)
 void CSkillGroupManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CBinaryFileWritter writter;
+    Wisp::CBinaryFileWriter writer;
 
-    writter.Open(path);
+    writer.Open(path);
 
-    writter.WriteUInt8(0); //version
+    writer.WriteUInt8(0); //version
 
     Count = 0;
     CSkillGroupObject *group = m_Groups;
@@ -347,7 +347,7 @@ void CSkillGroupManager::Save(const os_path &path)
         group = group->m_Next;
     }
 
-    writter.WriteUInt16LE(Count); //Count
+    writer.WriteUInt16LE(Count); //Count
 
     group = m_Groups;
 
@@ -357,25 +357,25 @@ void CSkillGroupManager::Save(const os_path &path)
         size_t len = str.length() + 1;
 
         short size = (short)len + 2 + 2 + 2 + group->Count;
-        writter.WriteUInt16LE(size); //Block size
+        writer.WriteUInt16LE(size); //Block size
 
-        writter.WriteUInt16LE((short)len); //Name length
-        writter.WriteString(str, 0u);      //Name
+        writer.WriteUInt16LE((short)len); //Name length
+        writer.WriteString(str, 0u);      //Name
 
         short count = group->Count;
 
-        writter.WriteUInt16LE(count); //Skills count
+        writer.WriteUInt16LE(count); //Skills count
 
         for (int j = 0; j < count; j++)
         {
             uint8_t skill = group->GetItem(j);
-            writter.WriteUInt8(skill); //Skill
+            writer.WriteUInt8(skill); //Skill
         }
 
-        writter.WriteBuffer();
+        writer.WriteBuffer();
 
         group = group->m_Next;
     }
 
-    writter.Close();
+    writer.Close();
 }

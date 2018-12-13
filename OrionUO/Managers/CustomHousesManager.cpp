@@ -127,12 +127,12 @@ void CustomHousesManager::Load(const os_path &path)
 void CustomHousesManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CBinaryFileWritter writter;
+    Wisp::CBinaryFileWriter writer;
 
-    writter.Open(path);
+    writer.Open(path);
 
-    writter.WriteInt8(1); //version
-    writter.WriteBuffer();
+    writer.WriteInt8(1); //version
+    writer.WriteBuffer();
 
     int count = 0;
 
@@ -147,8 +147,8 @@ void CustomHousesManager::Save(const os_path &path)
         }
     }
 
-    writter.WriteInt32LE(count);
-    writter.WriteBuffer();
+    writer.WriteInt32LE(count);
+    writer.WriteBuffer();
 
     for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
          ++i)
@@ -160,23 +160,23 @@ void CustomHousesManager::Save(const os_path &path)
             continue;
         }
 
-        writter.WriteUInt32LE(house->Serial);
-        writter.WriteUInt32LE(house->Revision);
-        writter.WriteInt32LE((uint32_t)house->m_Items.size());
-        writter.WriteBuffer();
+        writer.WriteUInt32LE(house->Serial);
+        writer.WriteUInt32LE(house->Revision);
+        writer.WriteInt32LE((uint32_t)house->m_Items.size());
+        writer.WriteBuffer();
 
         for (const CBuildObject &item : house->m_Items)
         {
-            writter.WriteUInt16LE(item.Graphic);
-            writter.WriteInt8(item.X);
-            writter.WriteInt8(item.Y);
-            writter.WriteInt8(item.Z);
-            writter.WriteBuffer();
+            writer.WriteUInt16LE(item.Graphic);
+            writer.WriteInt8(item.X);
+            writer.WriteInt8(item.Y);
+            writer.WriteInt8(item.Z);
+            writer.WriteBuffer();
         }
     }
 
-    writter.WriteUInt32LE(0); //EOF
-    writter.WriteBuffer();
+    writer.WriteUInt32LE(0); //EOF
+    writer.WriteBuffer();
 
-    writter.Close();
+    writer.Close();
 }

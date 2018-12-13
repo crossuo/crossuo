@@ -135,49 +135,49 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
         memcpy(&g_RawData[0], &address[0], size);
 
         Wisp::CDataReader file(address, size);
-        Wisp::CDataWritter writter;
+        Wisp::CDataWriter writer;
 
         uint8_t version = file.ReadInt8();
-        writter.WriteUInt8(version);
-        writter.WriteUInt8(0xFE); //dll version
-        writter.WriteUInt8(0);    //sub version
+        writer.WriteUInt8(version);
+        writer.WriteUInt8(0xFE); //dll version
+        writer.WriteUInt8(0);    //sub version
 
         g_EncryptionType = (ENCRYPTION_TYPE)file.ReadInt8();
-        writter.WriteUInt8(file.ReadInt8()); //ClientVersion
+        writer.WriteUInt8(file.ReadInt8()); //ClientVersion
 
         int len = file.ReadInt8();
-        writter.WriteUInt8(len);
-        writter.WriteDataLE((uint8_t *)file.ReadString(len).data(), len, 0);
+        writer.WriteUInt8(len);
+        writer.WriteDataLE((uint8_t *)file.ReadString(len).data(), len, 0);
 
         file.Move(14); //crypt keys & seed
 #if defined(_M_IX86)
-        writter.WriteUInt32LE((size_t)Init);
-        writter.WriteUInt32LE((size_t)Send);
-        writter.WriteUInt32LE((size_t)Decrypt);
-        writter.WriteUInt32LE((size_t)LoadPlugins);
+        writer.WriteUInt32LE((size_t)Init);
+        writer.WriteUInt32LE((size_t)Send);
+        writer.WriteUInt32LE((size_t)Decrypt);
+        writer.WriteUInt32LE((size_t)LoadPlugins);
 #else
-        writter.WriteUInt64LE((size_t)Init);
-        writter.WriteUInt64LE((size_t)Send);
-        writter.WriteUInt64LE((size_t)Decrypt);
-        writter.WriteUInt64LE((size_t)LoadPlugins);
+        writer.WriteUInt64LE((size_t)Init);
+        writer.WriteUInt64LE((size_t)Send);
+        writer.WriteUInt64LE((size_t)Decrypt);
+        writer.WriteUInt64LE((size_t)LoadPlugins);
 #endif
 
         int mapsCount = 6;
 
         if (version < 4)
         {
-            writter.WriteUInt8(file.ReadInt8()); //InverseBuylist
+            writer.WriteUInt8(file.ReadInt8()); //InverseBuylist
         }
         else
         {
             mapsCount = file.ReadInt8();
-            writter.WriteUInt8(mapsCount);
+            writer.WriteUInt8(mapsCount);
         }
 
         for (int i = 0; i < mapsCount; i++)
         {
-            writter.WriteUInt16LE(file.ReadUInt16LE());
-            writter.WriteUInt16LE(file.ReadUInt16LE());
+            writer.WriteUInt16LE(file.ReadUInt16LE());
+            writer.WriteUInt16LE(file.ReadUInt16LE());
         }
 
         uint8_t clientFlag = 0;
@@ -195,10 +195,10 @@ vector<uint8_t> ApplyInstall(uint8_t *address, size_t size)
             s_CryptPluginsCount = file.ReadInt8();
         }
 
-        writter.WriteUInt8(clientFlag);
-        writter.WriteUInt8(useVerdata);
+        writer.WriteUInt8(clientFlag);
+        writer.WriteUInt8(useVerdata);
 
-        result = writter.Data();
+        result = writer.Data();
     }
 
     //ParseCommandLine();

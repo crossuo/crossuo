@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 CPacket::CPacket(size_t size, bool autoResize)
-    : Wisp::CDataWritter(size, autoResize)
+    : Wisp::CDataWriter(size, autoResize)
 {
 }
 

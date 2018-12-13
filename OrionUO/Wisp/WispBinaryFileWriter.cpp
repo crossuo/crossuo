@@ -2,17 +2,17 @@
 
 namespace Wisp
 {
-CBinaryFileWritter::CBinaryFileWritter()
+CBinaryFileWriter::CBinaryFileWriter()
 
 {
 }
 
-CBinaryFileWritter::~CBinaryFileWritter()
+CBinaryFileWriter::~CBinaryFileWriter()
 {
     Close();
 }
 
-bool CBinaryFileWritter::Open(const os_path &path)
+bool CBinaryFileWriter::Open(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
@@ -26,7 +26,7 @@ bool CBinaryFileWritter::Open(const os_path &path)
     return result;
 }
 
-void CBinaryFileWritter::Close()
+void CBinaryFileWriter::Close()
 {
     DEBUG_TRACE_FUNCTION;
     WriteBuffer();
@@ -38,7 +38,7 @@ void CBinaryFileWritter::Close()
     }
 }
 
-void CBinaryFileWritter::WriteBuffer()
+void CBinaryFileWriter::WriteBuffer()
 {
     DEBUG_TRACE_FUNCTION;
     if (m_File != nullptr && !m_Data.empty())

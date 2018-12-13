@@ -9,7 +9,7 @@ class CGumpManager : public CBaseQueue
 {
 private:
     int GetNonpartyStatusbarsCount();
-    void SaveDefaultGumpProperties(Wisp::CBinaryFileWritter &writer, CGump *gump, int size);
+    void SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CGump *gump, int size);
 
 public:
     CGumpManager()

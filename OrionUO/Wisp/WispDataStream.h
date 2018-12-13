@@ -4,7 +4,7 @@
 
 namespace Wisp
 {
-class CDataWritter
+class CDataWriter
 {
 public:
     bool AutoResize = true;
@@ -14,10 +14,10 @@ protected:
     vector<uint8_t> m_Data;
 
 public:
-    CDataWritter();
-    CDataWritter(size_t size, bool autoResize = true);
+    CDataWriter();
+    CDataWriter(size_t size, bool autoResize = true);
 
-    virtual ~CDataWritter();
+    virtual ~CDataWriter();
 
     vector<uint8_t> Data() const { return m_Data; }
     uint8_t *DataPtr() { return &m_Data[0]; }

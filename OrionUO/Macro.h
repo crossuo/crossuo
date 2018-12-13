@@ -50,7 +50,7 @@ public:
     static const char *GetAction(int index) { return m_MacroAction[index]; }
 
     void ChangeObject(CMacroObject *source, CMacroObject *obj);
-    void Save(Wisp::CBinaryFileWritter &writter);
+    void Save(Wisp::CBinaryFileWriter &writer);
 
     CMacro *GetCopy();
 

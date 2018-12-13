@@ -308,17 +308,17 @@ vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
     return result;
 }
 
-CTextFileWritter::CTextFileWritter(const os_path &path)
+CTextFileWriter::CTextFileWriter(const os_path &path)
 {
     m_File = fs_open(path, FS_WRITE);
 }
 
-CTextFileWritter::~CTextFileWritter()
+CTextFileWriter::~CTextFileWriter()
 {
     Close();
 }
 
-void CTextFileWritter::Close()
+void CTextFileWriter::Close()
 {
     if (m_File != nullptr)
     {
@@ -327,7 +327,7 @@ void CTextFileWritter::Close()
     }
 }
 
-void CTextFileWritter::WriteString(const string &key, const string &value)
+void CTextFileWriter::WriteString(const string &key, const string &value)
 {
     if (m_File != nullptr)
     {
@@ -335,7 +335,7 @@ void CTextFileWritter::WriteString(const string &key, const string &value)
     }
 }
 
-void CTextFileWritter::WriteInt(const string &key, int value)
+void CTextFileWriter::WriteInt(const string &key, int value)
 {
     if (m_File != nullptr)
     {
@@ -343,7 +343,7 @@ void CTextFileWritter::WriteInt(const string &key, int value)
     }
 }
 
-void CTextFileWritter::WriteBool(const string &key, bool value)
+void CTextFileWriter::WriteBool(const string &key, bool value)
 {
     if (m_File != nullptr)
     {

@@ -3,7 +3,7 @@
 
 #pragma once
 
-class CPluginPacket : public Wisp::CDataWritter
+class CPluginPacket : public Wisp::CDataWriter
 {
 public:
     CPluginPacket();

@@ -1937,158 +1937,158 @@ void CConfigManager::Save(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
 
-    Wisp::CTextFileWritter writter(path);
-    if (writter.Opened())
+    Wisp::CTextFileWriter writer(path);
+    if (writer.Opened())
     {
         //Page 1
-        writter.WriteBool("Sound", m_Sound);
-        writter.WriteInt("SoundVolume", m_SoundVolume);
-        writter.WriteBool("Music", m_Music);
-        writter.WriteInt("MusicVolume", m_MusicVolume);
-        writter.WriteBool("FootstepsSound", FootstepsSound);
-        writter.WriteBool("CombatMusic", CombatMusic);
-        writter.WriteBool("BackgroundSound", BackgroundSound);
+        writer.WriteBool("Sound", m_Sound);
+        writer.WriteInt("SoundVolume", m_SoundVolume);
+        writer.WriteBool("Music", m_Music);
+        writer.WriteInt("MusicVolume", m_MusicVolume);
+        writer.WriteBool("FootstepsSound", FootstepsSound);
+        writer.WriteBool("CombatMusic", CombatMusic);
+        writer.WriteBool("BackgroundSound", BackgroundSound);
 
         //Page 2
-        writter.WriteInt("ClientFPS", m_ClientFPS);
-        writter.WriteBool("UseScaling", m_UseScaling);
-        writter.WriteBool("RemoveTextWithBlending", RemoveTextWithBlending);
-        writter.WriteInt("DrawStatusState", m_DrawStatusState);
-        writter.WriteBool("DrawStumps", m_DrawStumps);
-        writter.WriteBool("MarkingCaves", m_MarkingCaves);
-        writter.WriteBool("NoAnimateFields", m_NoAnimateFields);
-        writter.WriteBool("NoVegetation", m_NoVegetation);
-        writter.WriteInt("HiddenCharactersRenderMode", HiddenCharactersRenderMode);
-        writter.WriteInt("HiddenAlpha", HiddenAlpha);
-        writter.WriteBool("UseHiddenModeOnlyForSelf", UseHiddenModeOnlyForSelf);
-        writter.WriteInt("TransparentSpellIcons", TransparentSpellIcons);
-        writter.WriteInt("SpellIconAlpha", m_SpellIconAlpha);
-        writter.WriteBool("OldStyleStatusbar", m_OldStyleStatusbar);
-        writter.WriteBool("OriginalPartyStatusbar", m_OriginalPartyStatusbar);
-        writter.WriteBool("ApplyStateColorOnCharacters", m_ApplyStateColorOnCharacters);
-        writter.WriteBool("ChangeFieldsGraphic", m_ChangeFieldsGraphic);
-        writter.WriteBool("PaperdollSlots", m_PaperdollSlots);
-        writter.WriteInt("DrawStatusConditionState", DrawStatusConditionState);
-        writter.WriteInt("DrawStatusConditionValue", DrawStatusConditionValue);
-        writter.WriteBool("RemoveStatusbarsWithoutObjects", RemoveStatusbarsWithoutObjects);
-        writter.WriteBool("ShowDefaultConsoleEntryMode", ShowDefaultConsoleEntryMode);
-        writter.WriteInt("DrawAuraState", m_DrawAuraState);
-        writter.WriteBool("DrawAuraWithCtrlPressed", DrawAuraWithCtrlPressed);
-        writter.WriteInt("ScreenshotFormat", ScreenshotFormat);
-        writter.WriteBool("ScaleImagesInPaperdollSlots", m_ScaleImagesInPaperdollSlots);
-        writter.WriteBool("RemoveOrCreateObjectsWithBlending", RemoveOrCreateObjectsWithBlending);
-        writter.WriteBool("DrawHelmetsOnShroud", DrawHelmetsOnShroud);
-        writter.WriteBool("UseGlobalMapLayer", m_UseGlobalMapLayer);
-        writter.WriteBool("NoDrawRoofs", m_NoDrawRoofs);
-        writter.WriteBool("HighlightTargetByType", HighlightTargetByType);
-        writter.WriteBool("AutoDisplayWorldMap", AutoDisplayWorldMap);
-        writter.WriteBool("UseGLListsForInterface", m_UseGLListsForInterface);
-        writter.WriteBool("CheckPing", CheckPing);
-        writter.WriteInt("PingTimer", m_PingTimer);
-        writter.WriteBool("CancelNewTargetSystemOnShiftEsc", CancelNewTargetSystemOnShiftEsc);
-        writter.WriteBool("DrawStatusForHumanoids", DrawStatusForHumanoids);
+        writer.WriteInt("ClientFPS", m_ClientFPS);
+        writer.WriteBool("UseScaling", m_UseScaling);
+        writer.WriteBool("RemoveTextWithBlending", RemoveTextWithBlending);
+        writer.WriteInt("DrawStatusState", m_DrawStatusState);
+        writer.WriteBool("DrawStumps", m_DrawStumps);
+        writer.WriteBool("MarkingCaves", m_MarkingCaves);
+        writer.WriteBool("NoAnimateFields", m_NoAnimateFields);
+        writer.WriteBool("NoVegetation", m_NoVegetation);
+        writer.WriteInt("HiddenCharactersRenderMode", HiddenCharactersRenderMode);
+        writer.WriteInt("HiddenAlpha", HiddenAlpha);
+        writer.WriteBool("UseHiddenModeOnlyForSelf", UseHiddenModeOnlyForSelf);
+        writer.WriteInt("TransparentSpellIcons", TransparentSpellIcons);
+        writer.WriteInt("SpellIconAlpha", m_SpellIconAlpha);
+        writer.WriteBool("OldStyleStatusbar", m_OldStyleStatusbar);
+        writer.WriteBool("OriginalPartyStatusbar", m_OriginalPartyStatusbar);
+        writer.WriteBool("ApplyStateColorOnCharacters", m_ApplyStateColorOnCharacters);
+        writer.WriteBool("ChangeFieldsGraphic", m_ChangeFieldsGraphic);
+        writer.WriteBool("PaperdollSlots", m_PaperdollSlots);
+        writer.WriteInt("DrawStatusConditionState", DrawStatusConditionState);
+        writer.WriteInt("DrawStatusConditionValue", DrawStatusConditionValue);
+        writer.WriteBool("RemoveStatusbarsWithoutObjects", RemoveStatusbarsWithoutObjects);
+        writer.WriteBool("ShowDefaultConsoleEntryMode", ShowDefaultConsoleEntryMode);
+        writer.WriteInt("DrawAuraState", m_DrawAuraState);
+        writer.WriteBool("DrawAuraWithCtrlPressed", DrawAuraWithCtrlPressed);
+        writer.WriteInt("ScreenshotFormat", ScreenshotFormat);
+        writer.WriteBool("ScaleImagesInPaperdollSlots", m_ScaleImagesInPaperdollSlots);
+        writer.WriteBool("RemoveOrCreateObjectsWithBlending", RemoveOrCreateObjectsWithBlending);
+        writer.WriteBool("DrawHelmetsOnShroud", DrawHelmetsOnShroud);
+        writer.WriteBool("UseGlobalMapLayer", m_UseGlobalMapLayer);
+        writer.WriteBool("NoDrawRoofs", m_NoDrawRoofs);
+        writer.WriteBool("HighlightTargetByType", HighlightTargetByType);
+        writer.WriteBool("AutoDisplayWorldMap", AutoDisplayWorldMap);
+        writer.WriteBool("UseGLListsForInterface", m_UseGLListsForInterface);
+        writer.WriteBool("CheckPing", CheckPing);
+        writer.WriteInt("PingTimer", m_PingTimer);
+        writer.WriteBool("CancelNewTargetSystemOnShiftEsc", CancelNewTargetSystemOnShiftEsc);
+        writer.WriteBool("DrawStatusForHumanoids", DrawStatusForHumanoids);
 
         //Page 3
-        writter.WriteBool("UseToolTips", UseToolTips);
-        writter.WriteInt("ToolTipsTextColor", ToolTipsTextColor);
-        writter.WriteInt("ToolTipsTextFont", ToolTipsTextFont);
-        writter.WriteInt("ToolTipsDelay", ToolTipsDelay);
+        writer.WriteBool("UseToolTips", UseToolTips);
+        writer.WriteInt("ToolTipsTextColor", ToolTipsTextColor);
+        writer.WriteInt("ToolTipsTextFont", ToolTipsTextFont);
+        writer.WriteInt("ToolTipsDelay", ToolTipsDelay);
 
         //Page 4
-        writter.WriteInt("ChatColorInputText", ChatColorInputText);
-        writter.WriteInt("ChatColorMenuOption", ChatColorMenuOption);
-        writter.WriteInt("ChatColorPlayerInMemberList", ChatColorPlayerInMemberList);
-        writter.WriteInt("ChatColorText", ChatColorText);
-        writter.WriteInt("ChatColorPlayerNameWithout", ChatColorPlayerNameWithout);
-        writter.WriteInt("ChatColorMuted", ChatColorMuted);
-        writter.WriteInt("ChatColorChannelModeratorName", ChatColorChannelModeratorName);
-        writter.WriteInt("ChatColorChannelModeratorText", ChatColorChannelModeratorText);
-        writter.WriteInt("ChatColorMyName", ChatColorMyName);
-        writter.WriteInt("ChatColorMyText", ChatColorMyText);
-        writter.WriteInt("ChatColorSystemMessage", ChatColorSystemMessage);
-        writter.WriteInt("ChatFont", ChatFont);
-        writter.WriteInt("ChatColorBGOutputText", ChatColorBGOutputText);
-        writter.WriteInt("ChatColorBGInputText", ChatColorBGInputText);
-        writter.WriteInt("ChatColorBGUserList", ChatColorBGUserList);
-        writter.WriteInt("ChatColorBGConfList", ChatColorBGConfList);
-        writter.WriteInt("ChatColorBGCommandList", ChatColorBGCommandList);
+        writer.WriteInt("ChatColorInputText", ChatColorInputText);
+        writer.WriteInt("ChatColorMenuOption", ChatColorMenuOption);
+        writer.WriteInt("ChatColorPlayerInMemberList", ChatColorPlayerInMemberList);
+        writer.WriteInt("ChatColorText", ChatColorText);
+        writer.WriteInt("ChatColorPlayerNameWithout", ChatColorPlayerNameWithout);
+        writer.WriteInt("ChatColorMuted", ChatColorMuted);
+        writer.WriteInt("ChatColorChannelModeratorName", ChatColorChannelModeratorName);
+        writer.WriteInt("ChatColorChannelModeratorText", ChatColorChannelModeratorText);
+        writer.WriteInt("ChatColorMyName", ChatColorMyName);
+        writer.WriteInt("ChatColorMyText", ChatColorMyText);
+        writer.WriteInt("ChatColorSystemMessage", ChatColorSystemMessage);
+        writer.WriteInt("ChatFont", ChatFont);
+        writer.WriteInt("ChatColorBGOutputText", ChatColorBGOutputText);
+        writer.WriteInt("ChatColorBGInputText", ChatColorBGInputText);
+        writer.WriteInt("ChatColorBGUserList", ChatColorBGUserList);
+        writer.WriteInt("ChatColorBGConfList", ChatColorBGConfList);
+        writer.WriteInt("ChatColorBGCommandList", ChatColorBGCommandList);
 
         //Page 6
-        writter.WriteBool("EnablePathfind", EnablePathfind);
-        writter.WriteBool("HoldTabForCombat", HoldTabForCombat);
-        writter.WriteBool("OffsetInterfaceWindows", OffsetInterfaceWindows);
-        writter.WriteBool("AutoArrange", AutoArrange);
-        writter.WriteBool("AlwaysRun", AlwaysRun);
-        writter.WriteBool("DisableMenubar", DisableMenubar);
-        writter.WriteBool("GrayOutOfRangeObjects", GrayOutOfRangeObjects);
-        writter.WriteBool("DisableNewTargetSystem", DisableNewTargetSystem);
-        writter.WriteInt("ItemPropertiesMode", m_ItemPropertiesMode);
-        writter.WriteBool("ItemPropertiesIcon", m_ItemPropertiesIcon);
-        writter.WriteBool("ObjectHandles", ObjectHandles);
-        writter.WriteBool("ReduceFPSUnactiveWindow", m_ReduceFPSUnactiveWindow);
-        writter.WriteBool("HoldShiftForContextMenus", HoldShiftForContextMenus);
-        writter.WriteBool("HoldShiftForEnablePathfind", HoldShiftForEnablePathfind);
-        writter.WriteInt("ContainerDefaultX", g_ContainerRect.DefaultX);
-        writter.WriteInt("ContainerDefaultY", g_ContainerRect.DefaultY);
-        writter.WriteInt("CharacterBackpackStyle", GetCharacterBackpackStyle());
+        writer.WriteBool("EnablePathfind", EnablePathfind);
+        writer.WriteBool("HoldTabForCombat", HoldTabForCombat);
+        writer.WriteBool("OffsetInterfaceWindows", OffsetInterfaceWindows);
+        writer.WriteBool("AutoArrange", AutoArrange);
+        writer.WriteBool("AlwaysRun", AlwaysRun);
+        writer.WriteBool("DisableMenubar", DisableMenubar);
+        writer.WriteBool("GrayOutOfRangeObjects", GrayOutOfRangeObjects);
+        writer.WriteBool("DisableNewTargetSystem", DisableNewTargetSystem);
+        writer.WriteInt("ItemPropertiesMode", m_ItemPropertiesMode);
+        writer.WriteBool("ItemPropertiesIcon", m_ItemPropertiesIcon);
+        writer.WriteBool("ObjectHandles", ObjectHandles);
+        writer.WriteBool("ReduceFPSUnactiveWindow", m_ReduceFPSUnactiveWindow);
+        writer.WriteBool("HoldShiftForContextMenus", HoldShiftForContextMenus);
+        writer.WriteBool("HoldShiftForEnablePathfind", HoldShiftForEnablePathfind);
+        writer.WriteInt("ContainerDefaultX", g_ContainerRect.DefaultX);
+        writer.WriteInt("ContainerDefaultY", g_ContainerRect.DefaultY);
+        writer.WriteInt("CharacterBackpackStyle", GetCharacterBackpackStyle());
 
         //Page 7
-        writter.WriteInt("GameWindowWidth", GameWindowWidth);
-        writter.WriteInt("GameWindowHeight", GameWindowHeight);
-        writter.WriteInt("SpeechDelay", SpeechDelay);
-        writter.WriteBool("ScaleSpeechDelay", ScaleSpeechDelay);
-        writter.WriteInt("SpeechColor", SpeechColor);
-        writter.WriteInt("EmoteColor", EmoteColor);
-        writter.WriteInt("PartyMessageColor", PartyMessageColor);
-        writter.WriteInt("GuildMessageColor", GuildMessageColor);
-        writter.WriteInt("AllianceMessageColor", AllianceMessageColor);
-        writter.WriteBool("IgnoreGuildMessage", IgnoreGuildMessage);
-        writter.WriteBool("IgnoreAllianceMessage", IgnoreAllianceMessage);
-        writter.WriteBool("DarkNights", DarkNights);
-        writter.WriteBool("ColoredLighting", ColoredLighting);
-        writter.WriteBool("StandartCharactersAnimationDelay", StandartCharactersAnimationDelay);
-        writter.WriteBool("StandartItemsAnimationDelay", StandartItemsAnimationDelay);
-        writter.WriteBool("LockResizingGameWindow", LockResizingGameWindow);
-        writter.WriteBool("LockGumpsMoving", LockGumpsMoving);
+        writer.WriteInt("GameWindowWidth", GameWindowWidth);
+        writer.WriteInt("GameWindowHeight", GameWindowHeight);
+        writer.WriteInt("SpeechDelay", SpeechDelay);
+        writer.WriteBool("ScaleSpeechDelay", ScaleSpeechDelay);
+        writer.WriteInt("SpeechColor", SpeechColor);
+        writer.WriteInt("EmoteColor", EmoteColor);
+        writer.WriteInt("PartyMessageColor", PartyMessageColor);
+        writer.WriteInt("GuildMessageColor", GuildMessageColor);
+        writer.WriteInt("AllianceMessageColor", AllianceMessageColor);
+        writer.WriteBool("IgnoreGuildMessage", IgnoreGuildMessage);
+        writer.WriteBool("IgnoreAllianceMessage", IgnoreAllianceMessage);
+        writer.WriteBool("DarkNights", DarkNights);
+        writer.WriteBool("ColoredLighting", ColoredLighting);
+        writer.WriteBool("StandartCharactersAnimationDelay", StandartCharactersAnimationDelay);
+        writer.WriteBool("StandartItemsAnimationDelay", StandartItemsAnimationDelay);
+        writer.WriteBool("LockResizingGameWindow", LockResizingGameWindow);
+        writer.WriteBool("LockGumpsMoving", LockGumpsMoving);
 
         //Page 8
-        writter.WriteInt("InnocentColor", InnocentColor);
-        writter.WriteInt("FriendlyColor", FriendlyColor);
-        writter.WriteInt("SomeoneColor", SomeoneColor);
-        writter.WriteInt("CriminalColor", CriminalColor);
-        writter.WriteInt("EnemyColor", EnemyColor);
-        writter.WriteInt("MurdererColor", MurdererColor);
-        writter.WriteBool("CriminalActionsQuery", CriminalActionsQuery);
+        writer.WriteInt("InnocentColor", InnocentColor);
+        writer.WriteInt("FriendlyColor", FriendlyColor);
+        writer.WriteInt("SomeoneColor", SomeoneColor);
+        writer.WriteInt("CriminalColor", CriminalColor);
+        writer.WriteInt("EnemyColor", EnemyColor);
+        writer.WriteInt("MurdererColor", MurdererColor);
+        writer.WriteBool("CriminalActionsQuery", CriminalActionsQuery);
 
         //Page 9
-        writter.WriteBool("ShowIncomingNames", ShowIncomingNames);
-        writter.WriteBool("UseCircleTrans", UseCircleTrans);
-        writter.WriteBool("StatReport", StatReport);
-        writter.WriteBool("ConsoleNeedEnter", m_ConsoleNeedEnter);
-        writter.WriteInt("CircleTransRadius", CircleTransRadius);
-        writter.WriteInt("SkillReport", SkillReport);
-        writter.WriteInt("SpeechFont", SpeechFont);
+        writer.WriteBool("ShowIncomingNames", ShowIncomingNames);
+        writer.WriteBool("UseCircleTrans", UseCircleTrans);
+        writer.WriteBool("StatReport", StatReport);
+        writer.WriteBool("ConsoleNeedEnter", m_ConsoleNeedEnter);
+        writer.WriteInt("CircleTransRadius", CircleTransRadius);
+        writer.WriteInt("SkillReport", SkillReport);
+        writer.WriteInt("SpeechFont", SpeechFont);
 
         //No page
-        writter.WriteInt("GameWindowX", GameWindowX);
-        writter.WriteInt("GameWindowY", GameWindowY);
+        writer.WriteInt("GameWindowX", GameWindowX);
+        writer.WriteInt("GameWindowY", GameWindowY);
 
-        writter.WriteBool("Zoomed", g_OrionWindow.IsMaximizedWindow());
+        writer.WriteBool("Zoomed", g_OrionWindow.IsMaximizedWindow());
 
         int x, y, w, h;
         g_OrionWindow.GetPositionSize(&x, &y, &w, &h);
 
-        writter.WriteInt("RealX", x);
-        writter.WriteInt("RealY", y);
-        writter.WriteInt("RealWidth", w);
-        writter.WriteInt("RealHeight", h);
+        writer.WriteInt("RealX", x);
+        writer.WriteInt("RealY", y);
+        writer.WriteInt("RealWidth", w);
+        writer.WriteInt("RealHeight", h);
 
-        writter.WriteBool("ToggleBufficonWindow", ToggleBufficonWindow);
-        writter.WriteInt("DeveloperMode", g_DeveloperMode);
+        writer.WriteBool("ToggleBufficonWindow", ToggleBufficonWindow);
+        writer.WriteInt("DeveloperMode", g_DeveloperMode);
 
-        writter.WriteString("LastServer", g_ServerList.LastServerName);
-        writter.WriteString("LastCharacter", g_CharacterList.LastCharacterName);
+        writer.WriteString("LastServer", g_ServerList.LastServerName);
+        writer.WriteString("LastCharacter", g_CharacterList.LastCharacterName);
 
-        writter.Close();
+        writer.Close();
     }
 }

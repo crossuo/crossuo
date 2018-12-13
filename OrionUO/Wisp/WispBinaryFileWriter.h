@@ -6,15 +6,15 @@
 
 namespace Wisp
 {
-class CBinaryFileWritter : public Wisp::CDataWritter
+class CBinaryFileWriter : public Wisp::CDataWriter
 {
 private:
     FILE *m_File{ nullptr };
 
 public:
-    CBinaryFileWritter();
+    CBinaryFileWriter();
 
-    virtual ~CBinaryFileWritter();
+    virtual ~CBinaryFileWriter();
 
     bool Open(const os_path &path);
 

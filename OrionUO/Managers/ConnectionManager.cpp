@@ -137,7 +137,7 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
                 uint8_t buf = 0xEF;
                 m_LoginSocket.Send(&buf, 1); //0xEF
                 SendIP(m_LoginSocket, m_Seed);
-                Wisp::CDataWritter stream;
+                Wisp::CDataWriter stream;
                 auto &str = g_Orion.ClientVersionText;
                 if (str.length() != 0u)
                 {
