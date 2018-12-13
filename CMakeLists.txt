@@ -30,6 +30,7 @@ include(CompileDefinitions)
 include(Compiler)
 include(CheckCCompilerFlag)
 include(CCache)
+include(ClangFormat)
 include(Revision)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -41,7 +42,6 @@ endif()
 # Dependencies
 #
 
-#include(CheckLib)
 include(CheckCXXSourceRuns)
 
 set(EXTERNAL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external")
@@ -63,8 +63,6 @@ if(ORION_WINDOWS)
 
 	set(ZLIB_INCLUDE_DIRS "${DEP_INCLUDE_DIR}")
 	set(ZLIB_LIBRARIES "${DEP_LIB_DIR}zlib.lib")
-	#set(OPENGL_INCLUDE_DIR "${DEP_INCLUDE_DIR}")
-	#set(OPENGL_LIBRARIES "${DEP_LIB_DIR}")
 
 	set(GLEW_INCLUDE_DIR "${DEP_INCLUDE_DIR}")
 	set(GLEW_LIBRARIES "${DEP_LIB_DIR}glew32.lib")
@@ -72,24 +70,20 @@ if(ORION_WINDOWS)
 	set(SDL2_INCLUDE_DIRS "${DEP_INCLUDE_DIR}/SDL2")
 	set(SDL2_LIBRARIES "${DEP_LIB_DIR}sdl2.lib" "${DEP_LIB_DIR}sdl2main.lib")
 
-	#set(SDL2_IMAGE_INCLUDE_DIRS "${DEP_INCLUDE_DIR}/SDL2")
-	#set(SDL2_IMAGE_LIBRARIES "${DEP_LIB_DIR}")
-
 	# temporary hijacking to use other libs
 	set(SDL2_LIBRARIES ${SDL2_LIBRARIES} "${DEP_LIB_DIR}bass.lib" "${DEP_LIB_DIR}bassmidi.lib" "${DEP_LIB_DIR}psapi.lib")
 else()
 	set(ORION_DLL_STATIC ON)
 	set(ORION_WISP OFF)
-    set(ORION_BASS OFF)
+	set(ORION_BASS OFF)
 	find_package(ZLIB REQUIRED)
 	find_package(SDL2 REQUIRED)
-	find_package(SDL2_image REQUIRED)
 	find_package(GLEW REQUIRED)
 	# Set the preferred opengl library to GLVND if there is GLVND and Legacy.
 	# Only if there is no GLVND Legacy will be used.
 	# The that is the default with cmake-3.11. Legacy is deprecated.
 	# See cmake --help-policy CMP0072
-	set (OpenGL_GL_PREFERENCE GLVND)
+	set(OpenGL_GL_PREFERENCE GLVND)
 endif()
 
 find_package(OpenGL REQUIRED)
