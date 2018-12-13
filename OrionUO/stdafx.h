@@ -43,8 +43,6 @@ typedef SoundInfo* SoundHandle;
 #define SOUND_NULL nullptr
 #endif
 
-using namespace std;
-
 #if defined(ORION_WINDOWS)
 
 #define HAVE_M_PI // SDL conflicting with winsdk10

@@ -67,8 +67,8 @@ void CPingThread::OnExecute(uint32_t nowTime)
             continue;
         }
 
-        info->Min = min(info->Min, ping);
-        info->Max = max(info->Max, ping);
+        info->Min = std::min(info->Min, ping);
+        info->Max = std::max(info->Max, ping);
         info->Average += (info->Max - info->Min);
     }
 

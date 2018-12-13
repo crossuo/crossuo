@@ -406,10 +406,10 @@ CGLTexture *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
                 {
                     if (pixels[pos++] != 0u)
                     {
-                        minX = min(minX, int(x));
-                        maxX = max(maxX, int(x));
-                        minY = min(minY, int(y));
-                        maxY = max(maxY, int(y));
+                        minX = std::min(minX, int(x));
+                        maxX = std::max(maxX, int(x));
+                        minY = std::min(minY, int(y));
+                        maxY = std::max(maxY, int(y));
                     }
                 }
             }
