@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
-#include "PluginInterface.h"
+#include "plugin/plugininterface.h"
 
 int main(int argc, char **argv)
 {

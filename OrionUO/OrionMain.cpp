@@ -67,7 +67,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 #define ORION_EXPORT
 #endif
 
-#include "PluginInterface.h"
+#include "plugin/plugininterface.h"
 
 #if USE_ORIONDLL
 ENCRYPTION_TYPE g_EncryptionType;

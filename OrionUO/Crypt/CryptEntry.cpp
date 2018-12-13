@@ -4,7 +4,7 @@
 #include "../Wisp/WispGlobal.h"
 #include "../Wisp/WispDataStream.h"
 #include "../EnumList.h"
-#include "../PluginInterface.h"
+#include "../plugin/plugininterface.h"
 #include "LoginCrypt.h"
 #include "GameCrypt.h"
 

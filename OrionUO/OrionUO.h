@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "PluginInterface.h"
+#include "plugin/plugininterface.h"
 
 bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size);
 bool __cdecl PluginSendFunction(uint8_t *buf, size_t size);

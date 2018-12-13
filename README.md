@@ -6,9 +6,9 @@
 
 * OrionUO Client - is a linux fork of OrioUO Open Source Ultima Online client.
 
-* Platforms: Windows and Linux (in progress)
+* Platforms: Windows 7, Windows 10, Linux and MacOSX.
 
-* Rendering: OpenGL 2.0 and higher
+* Rendering: OpenGL 2.0 and higher.
 
 ### Downloading OrionUO
 

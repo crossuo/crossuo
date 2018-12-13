@@ -1,7 +1,7 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
-#include "CommonInterfaces.h"
+#include "plugin/commoninterfaces.h"
 #include <SDL_timer.h>
 
 static IOrionString g_OrionString;

@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "PluginInterface.h"
+#include "plugin/plugininterface.h"
+#include "plugin/commoninterfaces.h"
 
 #include <cmath>
 #include <stdio.h>
@@ -158,7 +159,6 @@ class CGump;
 
 #include "CharacterList.h"
 #include "ClickObject.h"
-#include "CommonInterfaces.h"
 #include "Container.h"
 #include "ContainerStack.h"
 #include "UseItemsList.h"
@@ -178,7 +178,6 @@ class CGump;
 #include "OrionWindow.h"
 #include "PartyObject.h"
 #include "Party.h"
-#include "PluginInterface.h"
 #include "SelectedObject.h"
 #include "PressedObject.h"
 #include "Profession.h"
