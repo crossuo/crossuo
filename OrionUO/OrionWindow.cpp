@@ -336,11 +336,13 @@ void COrionWindow::OnTextInput(const TextEvent &ev)
     {
         g_CurrentScreen->OnTextInput(ev);
     }
+#if USE_WISP
     else if (ch == KEY_RETURN && g_CurrentScreen != nullptr)
     {
         const auto kev = AsKeyEvent(ev);
         g_CurrentScreen->OnKeyDown(kev);
     }
+#endif
     else if (ch == 0x16 && g_EntryPointer != nullptr)
     {
         if (g_GameState == GS_MAIN)
@@ -365,7 +367,14 @@ void COrionWindow::OnKeyDown(const KeyEvent &ev)
 #endif
 
     const auto key = EvKey(ev);
-    if (key != KEY_RETURN && g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
+
+#if USE_WISP
+    // FIXME: quirks of wm_char? see OnTextInput
+    const bool acceptKey = key != KEY_RETURN;
+#else
+    const bool acceptKey = true;
+#endif
+    if (acceptKey && g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnKeyDown(ev);
     }

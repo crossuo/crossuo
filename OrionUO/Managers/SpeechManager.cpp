@@ -38,17 +38,6 @@ bool CSpeechManager::LoadSpeech()
     DEBUG_TRACE_FUNCTION;
     LoadLangCodes();
 
-    string lang(255, 0);
-
-    if (GetProfileStringA("intl", "sLanguage", "default", &lang[0], 4) == 0)
-    {
-        g_Language = m_LangCodes[0].Abbreviature;
-    }
-    else
-    {
-        g_Language = lang;
-    }
-
     for (int i = 0; i < (int)m_LangCodes.size(); i++)
     {
         if (m_LangCodes[i].Abbreviature == g_Language)
@@ -63,17 +52,14 @@ bool CSpeechManager::LoadSpeech()
         CurrentLanguage = &m_LangCodes[0];
         g_Language = m_LangCodes[0].Abbreviature;
     }
-
-    LOG("Selected language: %s (%s)\n", g_Language.c_str(), lang.c_str());
+    LOG("Selected language: %s\n", g_Language.c_str());
 
     Wisp::CDataReader reader;
     vector<uint8_t> tempData;
     bool isUOP = false;
-
     if (g_FileManager.m_MainMisc.Start != nullptr)
     {
         CUopBlockHeader *block = g_FileManager.m_MainMisc.GetBlock(0x0891F809004D8081);
-
         if (block != nullptr)
         {
             tempData = g_FileManager.m_MainMisc.GetData(*block);
@@ -171,20 +157,17 @@ bool CSpeechManager::LoadLangCodes()
     m_LangCodes.push_back(CLangCode("enu", 101, "English", "United States"));
     Wisp::CMappedFile &file = g_FileManager.m_LangcodeIff;
 
-    auto _header = file.ReadString(36);
-    (void)_header;
+    file.ReadString(36);
     while (!file.IsEOF())
     {
         CLangCode langCodeData;
         file.Move(4);
 
-        uint32_t entryLen = file.ReadUInt32BE();
+        const uint32_t entryLen = file.ReadUInt32BE();
         langCodeData.Abbreviature = file.ReadString();
         langCodeData.Code = file.ReadUInt32LE();
         langCodeData.Language = file.ReadString();
         langCodeData.Country = file.ReadString();
-
-        //длинна LangName и LangCountry + null terminator всегда являются четным количеством в файле.
         if (((langCodeData.Language.length() + langCodeData.Country.length() + 2) % 2) != 0u)
         {
             int nullTerminator = file.ReadUInt8();
@@ -194,7 +177,7 @@ bool CSpeechManager::LoadLangCodes()
         }
 
         m_LangCodes.push_back(langCodeData);
-        //LOG("[0x%04X]: %s\n", langCodeData.Code, langCodeData.Abbreviature.c_str());
+        LOG("[0x%04X]: %s\n", langCodeData.Code, langCodeData.Abbreviature.c_str());
     }
 
     //if (m_LangCodes.size() != 135)
@@ -207,14 +190,12 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
 {
     DEBUG_TRACE_FUNCTION;
     if (!m_Loaded || g_PacketManager.GetClientVersion() < CV_305D)
-    { //Но по факту с 2.0.7 версии клиента
-        return;
+    {
+        return; // But in fact from the client version 2.0.7
     }
 
     const auto size = (int)m_SpeechEntries.size();
     wstring input = ToLowerW(text);
-    //to lower, case insensitive approach.
-
     for (int i = 0; i < size; i++)
     {
         CSpeechItem entry = m_SpeechEntries[i];

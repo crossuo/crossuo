@@ -66,7 +66,6 @@ private:
         const char *extesion,
         CUopMappedFile &uopFile,
         int startIndex = 0);
-    void GetCurrentLocale();
     uint16_t TextToGraphic(const char *text);
     void CheckStaticTileFilterFiles();
     string DecodeArgumentString(const char *text, int length);

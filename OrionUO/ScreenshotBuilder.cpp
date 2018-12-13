@@ -51,7 +51,7 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
 
-    auto path = g_App.ExeFilePath("snapshots");
+    auto path = g_App.ExeFilePath("screenshots");
     fs_path_create(path);
 
     auto t = time(nullptr);
@@ -59,7 +59,7 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     char buf[100]{};
     sprintf_s(
         buf,
-        "/snapshot_d(%d%d%d)_t(%d%d%d)",
+        "/%d%d%d_%d%d%d",
         now.tm_year + 1900,
         now.tm_mon,
         now.tm_mday,

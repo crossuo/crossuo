@@ -280,8 +280,8 @@ bool COrion::Install()
         m_CRC_Table[i] = Reflect(m_CRC_Table[i], 32);
     }
 
-    //GetCurrentLocale();
-    fs_path_create(g_App.ExeFilePath("snapshots"));
+    Platform::SetLanguageFromSystemLocale();
+    fs_path_create(g_App.ExeFilePath("screenshots"));
 
     LOG("Loading client config.\n");
     if (!LoadClientConfig())
@@ -631,82 +631,6 @@ void COrion::InitScreen(GAME_STATE state)
     {
         g_CurrentScreen->Init();
     }
-}
-
-void COrion::GetCurrentLocale()
-{
-    DEBUG_TRACE_FUNCTION;
-    switch (GetSystemDefaultLangID() & 0xff)
-    {
-        case LANG_RUSSIAN:
-        {
-            g_Language = "RUS";
-            break;
-        }
-        case LANG_FRENCH:
-        {
-            g_Language = "FRA";
-            break;
-        }
-        case LANG_GERMAN:
-        {
-            g_Language = "DEU";
-            break;
-        }
-        case LANG_SPANISH:
-        {
-            g_Language = "ESP";
-            break;
-        }
-        case LANG_JAPANESE:
-        {
-            g_Language = "JPN";
-            break;
-        }
-        case LANG_KOREAN:
-        {
-            g_Language = "KOR";
-            break;
-        }
-        default:
-        {
-            g_Language = "ENU";
-            break;
-        }
-    }
-
-    LOG("Locale set to: %s\n", g_Language.c_str());
-
-    //https://msdn.microsoft.com/en-us/library/cc233982.aspx
-
-    /*wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = { 0 };
-
-	if (GetSystemDefaultLocaleName(&localeName[0], LOCALE_NAME_MAX_LENGTH))
-	{
-		for (auto i = 0; i < 10; i++)
-		{
-			if (!localeName[i])
-				break;
-			else if (localeName[i] == L'-')
-			{
-				localeName[i] = 0;
-				break;
-			}
-		}
-
-		wstring locale = ToLowerW(localeName);
-
-		if (locale == L"ru")
-			g_Language = "RUS";
-		else if (locale == L"fr")
-			g_Language = "FRA";
-		else if (locale == L"de")
-			g_Language = "DEU";
-
-		LOG("Locale set to: %s\n", g_Language.c_str());
-	}
-	else
-		LOG("Locale set to default value: ENU\n");*/
 }
 
 uint16_t COrion::TextToGraphic(const char *text)
@@ -3705,11 +3629,11 @@ void COrion::GoToWebLink(const string &url)
         const string header = "http://";
         if (found != std::string::npos)
         {
-            ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            Platform::OpenBrowser(url.c_str());
         }
         else
         {
-            ShellExecuteA(0, "Open", (header + url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            Platform::OpenBrowser((header + url).c_str());
         }
     }
 }

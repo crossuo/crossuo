@@ -33,6 +33,7 @@
 /Makefile*
 /ipch
 /OrionUO/snapshots
+/OrionUO/screenshots
 /OrionAssistConfig
 /Release
 /Debug

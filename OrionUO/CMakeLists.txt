@@ -67,7 +67,7 @@ set(wisp_src
   Wisp/WispPacketReader.cpp
   Wisp/WispThread.cpp
   Wisp/WispWindow.cpp
-  Wisp/WispBinaryFileWritter.cpp
+  Wisp/WispBinaryFileWriter.cpp
   Wisp/WispDataStream.cpp
   Wisp/WispGlobal.cpp
   Wisp/WispMappedFile.cpp
@@ -159,7 +159,7 @@ set(gui_src
   GUI/GUITilepic.cpp
   GUI/GUITilepicHightlighted.cpp
   GUI/GUITilepicScaled.cpp
-  GUI/GUIVirtireGump.cpp             # FIXME: filename GUIVirtureGump
+  GUI/GUIVirtueGump.cpp
   GUI/GUIWorldMapTexture.cpp
 )
 
@@ -336,12 +336,12 @@ set(orion_src
   ToolTip.cpp
   UseItemsList.cpp
   Weather.cpp
-  WeatherEffeect.cpp            # FIXME: filename
+  WeatherEffect.cpp
 
   FileSystem.cpp
   Sockets.cpp
   OrionMain.cpp
-  Stubs.cpp                     # FIXME: temporary stubbed stuff
+  Platform.cpp
 )
 
 if(ORION_WINDOWS)
@@ -373,7 +373,6 @@ endif()
 
 macro(orion_library TARGET SRCS)
   string(REPLACE ".cpp" ".h" headers "${SRCS}")
-  string(REPLACE "GUI/GUIVirtireGump.h" "GUI/GUIVirtureGump.h" headers "${headers}")
   string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   add_library(${TARGET} ${SRCS} ${headers})
   set_target_properties(${TARGET} PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "stdafx.h")
@@ -395,7 +394,6 @@ if(ORION_BUILD_MODULES)
   orion_library(crypt "${crypt_src}")
 
   string(REPLACE ".cpp" ".h" orion_hdr "${orion_src}")
-  string(REPLACE "WeatherEffeect.h" "WeatherEffect.h" orion_hdr "${orion_hdr}")
 
   add_executable(OrionUO ${orion_src} ${orion_hdr})
   target_link_libraries(screenstages PRIVATE gumps)
@@ -404,8 +402,6 @@ if(ORION_BUILD_MODULES)
 else()
   set(SRCS ${orion_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
   string(REPLACE ".cpp" ".h" headers "${SRCS}")
-  string(REPLACE "WeatherEffeect.h" "WeatherEffect.h" headers "${headers}")
-  string(REPLACE "GUI/GUIVirtireGump.h" "GUI/GUIVirtureGump.h" headers "${headers}")
   string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   source_group(TREE "${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
 

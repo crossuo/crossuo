@@ -46,7 +46,7 @@
 #include "GUITilepicHightlighted.h"
 #include "GUITilepicScaled.h"
 #include "GUIMenuObject.h"
-#include "GUIVirtureGump.h"
+#include "GUIVirtueGump.h"
 #include "GUIWorldMapTexture.h"
 class CGUIHTMLGump;
 #include "GUIHTMLButton.h"

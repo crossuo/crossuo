@@ -161,7 +161,6 @@ bool CFileManager::Load()
 
     m_SpeechMul.Load(g_App.UOFilesPath("speech.mul"));
     m_LangcodeIff.Load(g_App.UOFilesPath("Langcode.iff"));
-
     for (int i = 0; i < 6; i++)
     {
         if (i > 1)

@@ -42,6 +42,7 @@ typedef SoundInfo* SoundHandle;
 #define SOUND_NULL nullptr
 #endif
 
+using namespace std;
 
 #if defined(ORION_WINDOWS)
 
@@ -99,13 +100,21 @@ typedef SoundInfo* SoundHandle;
 #endif
 #endif
 
-using namespace std;
-
 #include "targetver.h"
 #include "Resource.h"
 
 #else
-#include "Stubs.h"
+
+#include <unistd.h>
+#include <chrono>
+#include <thread>
+
+#define NO_SDL_GLEXT
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <SDL2/SDL.h>
+#include <zlib.h>
+
 #endif
 
 #include "Platform.h"
@@ -114,7 +123,7 @@ using namespace std;
 #include "Wisp/WispGlobal.h"
 #include "Wisp/WispApplication.h"
 #include "Wisp/WispDataStream.h"
-#include "Wisp/WispBinaryFileWritter.h"
+#include "Wisp/WispBinaryFileWriter.h"
 #include "Wisp/WispConnection.h"
 #include "Wisp/WispGeometry.h"
 #include "Wisp/WispLogger.h"

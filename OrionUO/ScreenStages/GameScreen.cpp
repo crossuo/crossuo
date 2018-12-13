@@ -2587,7 +2587,8 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     if (key == KEY_TAB && (ev.lParam & 0x40000000))
         return;
 #else
-    LOG("FIXME: TAB is pressed condition");
+    if (key == KEY_TAB && ev.repeat)
+        return;
 #endif
 
     if (g_GumpManager.OnKeyDown(ev, false))

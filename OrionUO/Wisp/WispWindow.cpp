@@ -1058,7 +1058,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
 bool CWindow::OnRepaint(const PaintEvent &ev)
 {
-    NOT_IMPLEMENTED;
+    ORION_NOT_IMPLEMENTED;
     return false;
 }
 
