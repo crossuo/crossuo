@@ -2572,7 +2572,7 @@ void CGameScreen::OnTextInput(const TextEvent &ev)
     }
     else if (
         (altGR || (!altPressed && !ctrlPressed)) &&
-        (int)g_EntryPointer->Length() < max(g_EntryPointer->MaxLength, 60))
+        (int)g_EntryPointer->Length() < std::max(g_EntryPointer->MaxLength, 60))
     {
         g_EntryPointer->Insert(ch);
     }

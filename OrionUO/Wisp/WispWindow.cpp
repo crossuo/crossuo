@@ -89,7 +89,7 @@ void CWindow::SetPositionSize(int x, int y, int width, int height)
     int borderH;
     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
     SDL_RestoreWindow(m_window);
-    SDL_SetWindowPosition(m_window, x, max(y, borderH));
+    SDL_SetWindowPosition(m_window, x, std::max(y, borderH));
     SDL_SetWindowSize(m_window, width, height);
 #endif
 }
@@ -107,7 +107,7 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
     int borderH;
     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
     SDL_GetWindowPosition(m_window, x, y);
-    *y = max(*y, borderH);
+    *y = std::max(*y, borderH);
     SDL_GetWindowSize(m_window, width, height);
 #endif
 }
@@ -821,7 +821,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
                     int x, y, borderH;
                     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
                     SDL_GetWindowPosition(m_window, &x, &y);
-                    SDL_SetWindowPosition(m_window, x, max(y, borderH));
+                    SDL_SetWindowPosition(m_window, x, std::max(y, borderH));
                     OnResize();
                 }
                 break;

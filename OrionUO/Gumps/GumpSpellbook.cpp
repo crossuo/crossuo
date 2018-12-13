@@ -509,7 +509,7 @@ void CGumpSpellbook::GetSummaryBookInfo(
             break;
     }
 
-    spellsOnPage = min(maxSpellsCount / 2, 8);
+    spellsOnPage = std::min(maxSpellsCount / 2, 8);
 
     dictionaryPagesCount = (int)ceilf(maxSpellsCount / 8.0f);
 

@@ -1125,12 +1125,12 @@ int CFontsManager::GetWidthW(uint8_t font, const wstring &str)
         }
         else if (c == L'\n' || c == L'\r')
         {
-            maxTextLength = max(maxTextLength, textLength);
+            maxTextLength = std::max(maxTextLength, textLength);
             textLength = 0;
         }
     }
 
-    return max(maxTextLength, textLength);
+    return std::max(maxTextLength, textLength);
 }
 
 int CFontsManager::GetWidthExW(

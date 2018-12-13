@@ -806,7 +806,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
         multi->MaxX = maxX;
         multi->MaxY = maxY;
 
-        MultiDistanceBonus = max(max(abs(minX), maxX), max(abs(minY), maxY));
+        MultiDistanceBonus = std::max(std::max(abs(minX), maxX), std::max(abs(minY), maxY));
     }
 
     CGumpMinimap *minimap = (CGumpMinimap *)g_GumpManager.GetGump(0, 0, GT_MINIMAP);

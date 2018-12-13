@@ -616,7 +616,7 @@ void CConfigManager::SetPingTimer(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
 
-    m_PingTimer = max(min(val, uint8_t(120)), uint8_t(10));
+    m_PingTimer = std::max(std::min(val, uint8_t(120)), uint8_t(10));
     g_PingTimer = 0;
 }
 

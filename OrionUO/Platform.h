@@ -144,6 +144,7 @@ typedef CRITICAL_SECTION ProtectedSection;
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 
+#if !_WIN32
 typedef void *HDC;
 typedef void *HGLRC;
 
@@ -163,6 +164,7 @@ typedef void *HGLRC;
 #define sscanf_s sscanf
 #define vsprintf_s vsprintf
 #define vswprintf_s(a, b, c) vswprintf(a, 0, b, c)
+#endif
 
 // ^Need cleanup everything inside this block
 

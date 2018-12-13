@@ -231,7 +231,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
             Wisp::CMappedFile &difl = g_FileManager.m_MapDifl[i];
             Wisp::CMappedFile &dif = g_FileManager.m_MapDif[i];
 
-            mapPatchesCount = min(mapPatchesCount, (intptr_t)difl.Size / 4);
+            mapPatchesCount = std::min(mapPatchesCount, (intptr_t)difl.Size / 4);
 
             difl.ResetPtr();
             dif.ResetPtr();
@@ -255,7 +255,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
             Wisp::CMappedFile &difi = g_FileManager.m_StaDifi[i];
             size_t startAddress = (size_t)g_FileManager.m_StaDif[i].Start;
 
-            staticsPatchesCount = min(staticsPatchesCount, (intptr_t)difl.Size / 4);
+            staticsPatchesCount = std::min(staticsPatchesCount, (intptr_t)difl.Size / 4);
 
             difl.ResetPtr();
             difi.ResetPtr();

@@ -6009,10 +6009,10 @@ bool COrion::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int heigh
         }
     }
 
-    int offsetTop = max(th[0]->Height, th[2]->Height) - th[1]->Height;
-    int offsetBottom = max(th[5]->Height, th[7]->Height) - th[6]->Height;
-    int offsetLeft = max(th[0]->Width, th[5]->Width) - th[3]->Width;
-    int offsetRight = max(th[2]->Width, th[7]->Width) - th[4]->Width;
+    int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
+    int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
+    int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;
+    int offsetRight = std::max(th[2]->Width, th[7]->Width) - th[4]->Width;
 
     for (int i = 0; i < 9; i++)
     {
