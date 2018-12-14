@@ -14,7 +14,6 @@ bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
     PUSH_EVENT(UOMSG_RECV, buf, size);
-    g_PacketManager.SavePluginReceivePacket(buf, checked_cast<int>(size));
     return true;
 }
 
