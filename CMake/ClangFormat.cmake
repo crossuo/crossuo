@@ -11,13 +11,13 @@ find_program(CLANG_FORMAT
       clang-format
     PATHS
       /usr/bin
-      ${PROJECT_BINARY_DIR}/Dependencies
+      ${PROJECT_BINARY_DIR}/downloads
       $ENV{PATH}
     )
 if (NOT CLANG_FORMAT)
     if (WIN32)
         message(STATUS "Clang format not found! Downloading...")
-        set(CLANG_FORMAT "${PROJECT_BINARY_DIR}/Dependencies/clang-format${CLANG_FORMAT_POSTFIX}.exe")
+        set(CLANG_FORMAT "${PROJECT_BINARY_DIR}/downloads/clang-format${CLANG_FORMAT_POSTFIX}.exe")
         file(DOWNLOAD
             https://github.com/OrionUO/dep-build-win/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
             "${CLANG_FORMAT}" SHOW_PROGRESS

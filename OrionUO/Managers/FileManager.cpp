@@ -2,6 +2,10 @@
 // Copyright (C) August 2016 Hotride
 
 #include "FileSystem.h"
+
+#define MINIZ_IMPLEMENTATION
+#include <miniz.h>
+
 CFileManager g_FileManager;
 
 CUopMappedFile::CUopMappedFile()
@@ -37,11 +41,9 @@ vector<uint8_t> CUopMappedFile::GetData(const CUopBlockHeader &block)
     uLongf compressedSize = block.CompressedSize;
     uLongf decompressedSize = block.DecompressedSize;
     vector<uint8_t> result(decompressedSize, 0);
-
     if ((compressedSize != 0u) && compressedSize != decompressedSize)
     {
-        int z_err = uncompress(&result[0], &decompressedSize, Ptr, compressedSize);
-
+        int z_err = mz_uncompress(&result[0], &decompressedSize, Ptr, compressedSize);
         if (z_err != Z_OK)
         {
             LOG("Uncompress error: %i\n", z_err);
@@ -52,7 +54,6 @@ vector<uint8_t> CUopMappedFile::GetData(const CUopBlockHeader &block)
     {
         memcpy(&result[0], &Ptr[0], decompressedSize);
     }
-
     return result;
 }
 
@@ -716,9 +717,8 @@ bool CFileManager::DecompressUOPFileData(
     uLongf dLen = animData.decompressedLength;
 
     int z_err =
-        uncompress(&decLayoutData[0], &dLen, reinterpret_cast<unsigned char const *>(buf), cLen);
+        mz_uncompress(&decLayoutData[0], &dLen, reinterpret_cast<unsigned char const *>(buf), cLen);
     delete[] buf;
-
     if (z_err != Z_OK)
     {
         LOG("UOP anim decompression failed %d\n", z_err);

@@ -2,8 +2,9 @@ dist: trusty
 sudo: require
 language: cpp
 compiler: clang
-os: 
+os:
     - linux
+    - osx
 env:
   - CXX_COMPILER=/usr/bin/clang++-7 CC_COMPILER=/usr/bin/clang-7
   - CXX_COMPILER=gcc++-7 CC_COMPILER=gcc-7
@@ -25,9 +26,6 @@ addons:
       - libgles2-mesa-dev
       - xorg-dev
       - libsdl2-dev
-      - libsdl2-image-dev
-      - libsdl2-mixer-dev
-      - libfreeimage-dev
       - libglew-dev
       - libsndio-dev
       - libxkbcommon-dev

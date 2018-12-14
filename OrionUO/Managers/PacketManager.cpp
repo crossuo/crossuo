@@ -3,6 +3,7 @@
 
 #include "PacketManager.h"
 #include "../Sockets.h"
+#include <miniz.h>
 
 CPacketManager g_PacketManager;
 
@@ -5330,12 +5331,10 @@ PACKET_HANDLER(OpenCompressedGump)
         cLen,
         dLen);
 
-    int z_err = uncompress(&decLayoutData[0], &dLen, Ptr, cLen);
-
+    int z_err = mz_uncompress(&decLayoutData[0], &dLen, Ptr, cLen);
     if (z_err != Z_OK)
     {
         LOG("Decompress layout gump error %d\n", z_err);
-
         return;
     }
 
@@ -5355,15 +5354,12 @@ PACKET_HANDLER(OpenCompressedGump)
         dTLen = ReadUInt32BE(); //Decompressed lines length
 
         gumpDecText.resize(dTLen);
-
         LOG("Decompressing text gump data...\n");
 
-        z_err = uncompress(&gumpDecText[0], &dTLen, Ptr, cTLen);
-
+        z_err = mz_uncompress(&gumpDecText[0], &dTLen, Ptr, cTLen);
         if (z_err != Z_OK)
         {
             LOG("Decompress text gump error %d\n", z_err);
-
             return;
         }
 
@@ -6119,8 +6115,7 @@ PACKET_HANDLER(CustomHouse)
         }
 
         vector<uint8_t> decompressedBytes(dLen);
-        int z_err = uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
-
+        int z_err = mz_uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
         if (z_err != Z_OK)
         {
             LOG("Bad CustomHouseStruct compressed data received from server, house serial:%i\n",

@@ -3,6 +3,7 @@
 
 CCreateCharacterManager g_CreateCharacterManager;
 
+// clang-format off
 const CC_HAIR_STYLE CCreateCharacterManager::m_HumanMaleHairStyleTable[HUMAN_MALE_HAIR_COUNT] = {
     { 0, 0, "NONE" },
     { 0x0753, 0x203B, "Short" },
@@ -142,6 +143,7 @@ const uint16_t CCreateCharacterManager::m_GargoyleHairColor[GARGOYLE_HAIR_COLOR_
     0x0708, 0x070A, 0x070C, 0x070E, 0x0710, 0x0762, 0x0764, 0x0767, 0x076A,
     0x06F2, 0x06F0, 0x06EE, 0x06E3, 0x06E1, 0x06DF, 0x0708, 0x070A, 0x070C
 };
+// clang-format on
 
 CCreateCharacterManager::CCreateCharacterManager()
 {

@@ -67,9 +67,10 @@ typedef SoundInfo *SoundHandle;
 // FIXME
 #include "../Dependencies/include/glew.h"
 #include "../Dependencies/include/wglew.h"
+#if USE_BASS
 #include "../Dependencies/include/bass.h"
 #include "../Dependencies/include/bassmidi.h"
-#include "../Dependencies/include/zlib.h"
+#endif
 
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -79,23 +80,25 @@ typedef SoundInfo *SoundHandle;
 #if !defined(ORION_CMAKE)
 #if defined(_M_IX86)
 #pragma comment(lib, "../Dependencies/lib/Win32/glew32.lib")
+#if USE_BASS
 #pragma comment(lib, "../Dependencies/lib/Win32/bass.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/bassmidi.lib")
+#endif
 #pragma comment(lib, "../Dependencies/lib/Win32/Psapi.lib")
-#pragma comment(lib, "../Dependencies/lib/Win32/zlib.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2main.lib")
-#pragma comment(lib, "../Dependencies/lib/Win32/SDL2test.lib")
+//#pragma comment(lib, "../Dependencies/lib/Win32/SDL2test.lib")
 
 #else
 #pragma comment(lib, "../Dependencies/lib/x64/glew32.lib")
+#if USE_BASS
 #pragma comment(lib, "../Dependencies/lib/x64/bass.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/bassmidi.lib")
+#endif
 #pragma comment(lib, "../Dependencies/lib/x64/Psapi.lib")
-#pragma comment(lib, "../Dependencies/lib/x64/zdll.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/SDL2.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/SDL2main.lib")
-#pragma comment(lib, "../Dependencies/lib/x64/SDL2test.lib")
+//#pragma comment(lib, "../Dependencies/lib/x64/SDL2test.lib")
 #endif
 #endif
 
@@ -116,7 +119,6 @@ typedef SoundInfo *SoundHandle;
 #include <GL/gl.h>
 #endif
 #include <SDL2/SDL.h>
-#include <zlib.h>
 
 #endif
 
