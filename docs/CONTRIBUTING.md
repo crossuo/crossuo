@@ -12,9 +12,9 @@ We want to ensure that anyone can contribute to OrionUO with only the next bug t
 
 ## Copyright / Contributor License Agreement
 
-Any code you submit will become part of the repository and be distributed under the [OrionUO license](../LICENSE). By submitting code to the project you agree that the code is your own work and that you have the ability to give it to the project.
+Any code you submit will become part of the repository and be distributed under the [OrionUO license](../LICENSE). By submitting code to the project you agree that the code is your own work and that you have the ability to give it and transfer rights to the project.
 
-You also agree by submitting your code that you grant all transferrable rights to the code to the project maintainers, including for example re-licensing the code, modifying the code, distributing in source or binary forms. Specifically this includes a requirement that you assign copyright to the project maintainers.
+**You also agree by submitting your code that you grant all transferrable rights to the code to the project maintainers, including for example re-licensing the code, modifying the code, distributing in source or binary forms. Specifically this includes a requirement that you assign copyright to the project maintainers.**
 
 ## Contributing information
 
