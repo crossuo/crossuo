@@ -4,7 +4,6 @@
 #include "Sockets.h"
 #include <cassert>
 #include <string.h>
-#include <SDL_timer.h>
 
 bool g_DisablePing = false;
 
@@ -265,10 +264,7 @@ void icmp_close(icmp_handle handle)
 
 #else
 
-#include <sys/ioctl.h>
-#include <stropts.h>
 #include <ifaddrs.h>
-#include <string.h>
 
 template <class T>
 inline static int socket_fd(T socket)
