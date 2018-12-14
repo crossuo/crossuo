@@ -38,9 +38,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
             auto error = glGetError();
             if (error != 0)
             {
-                auto errorStr = gluErrorString(error);
                 LOG("CGLShader::Init vertex shader error Code: %i\n", error);
-                LOG("CGLShader::Init vertex shader error string: %s\n", errorStr);
             }
             return false;
         }
@@ -59,9 +57,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
             auto error = glGetError();
             if (error != 0)
             {
-                auto errorStr = gluErrorString(error);
                 LOG("CGLShader::Init fragment shader error Code: %i\n", error);
-                LOG("CGLShader::Init fragment shader error string: %s\n", errorStr);
             }
             return false;
         }
@@ -84,9 +80,7 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         auto error = glGetError();
         if (error != 0)
         {
-            auto errorStr = gluErrorString(error);
             LOG("CGLShader::Init shader program error Code: %i\n", error);
-            LOG("CGLShader::Init shader program error string: %s\n", errorStr);
         }
         return false;
     }

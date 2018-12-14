@@ -11,10 +11,8 @@
 #include "GLEngine/GLTexture.h"
 #if defined(__APPLE__)
 #include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
 #else
 #include <GL/gl.h>
-#include <GL/glu.h>
 #endif
 #include "EnumList.h"
 #include "DefinitionMacro.h"
@@ -241,7 +239,7 @@ inline bool Int32TryParse(const string &str, int &result)
     }
     result = 0;
     return false;
-    /*    
+    /*
     std::istringstream convert(str);
     try
     {
