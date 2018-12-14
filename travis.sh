@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+
 clang-format-7 --version
 echo Validating code formatting.
 
@@ -52,3 +54,18 @@ fi
 #mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && time ninja OrionUO_unity -j8
 #file ./OrionUO/unity/OrionUO
 ##./OrionUO/unity/OrionUO --headless
+
+else
+
+brew update
+brew install sdl2 ninja glew
+brew outdated cmake || brew upgrade cmake
+
+echo Building Release
+mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja orion_unity -j8
+cd ..
+
+echo Building Debug
+mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja orion_unity -j8
+
+fi;
