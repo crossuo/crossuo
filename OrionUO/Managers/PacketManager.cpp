@@ -601,7 +601,7 @@ void CPacketManager::OnPacket()
     CPacketInfo &info = m_Packets[*Start];
     if (info.save)
     {
-#if !defined(ORION_LINUX) // FIXME: localtime_s (use C++ if possible)
+#if defined(ORION_WINDOWS) // FIXME: localtime_s (use C++ if possible)
         time_t rawtime;
         struct tm timeinfo;
         char buffer[80];
@@ -731,7 +731,7 @@ PACKET_HANDLER(RelayServer)
     in_addr addr;
     uint32_t *paddr = (uint32_t *)Ptr;
     Move(4);
-#if !defined(ORION_LINUX)
+#if defined(ORION_WINDOWS)
     addr.S_un.S_addr = *paddr;
 #else
     addr.s_addr = *paddr;

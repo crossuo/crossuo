@@ -146,7 +146,7 @@ wstring ToCamelCaseW(wstring str)
     return str;
 }
 
-#if defined(ORION_LINUX)
+#if !defined(ORION_WINDOWS)
 const string &ToString(const string &str)
 {
     return str;

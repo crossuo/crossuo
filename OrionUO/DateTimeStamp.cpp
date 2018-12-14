@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (C) September 2017 Hotride
 
-#if !defined(ORION_LINUX)
+#if defined(ORION_WINDOWS)
 
 string GetBuildDateTimeStamp()
 {

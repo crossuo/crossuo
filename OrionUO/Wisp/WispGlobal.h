@@ -2,7 +2,7 @@
 
 #pragma once
 
-#if !defined(ORION_LINUX)
+#if defined(ORION_WINDOWS)
 #if defined(_MSC_VER)
 #pragma warning(disable : 4800) //forcing value to bool 'true' or 'false' (performance warning)
 #endif
@@ -48,7 +48,7 @@ string EncodeUTF8(const wstring &str);
 wstring DecodeUTF8(const string &str);
 string ToCamelCaseA(string str);
 wstring ToCamelCaseW(wstring str);
-#if defined(ORION_LINUX)
+#if !defined(ORION_WINDOWS)
 const string &ToString(const string &str);
 #endif
 string ToString(const wstring &wstr);

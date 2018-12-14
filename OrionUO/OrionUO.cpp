@@ -1947,7 +1947,7 @@ int COrion::Send(uint8_t *buf, int size)
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
     if (type.save)
     {
-#if !defined(ORION_LINUX)
+#if defined(ORION_WINDOWS)
         time_t rawtime;
         struct tm timeinfo;
         char buffer[80];

@@ -1,11 +1,11 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
-#if defined(ORION_LINUX)
+#if defined(ORION_WINDOWS)
+#include <Windows.h>
+#else
 #include <stdint.h>
 #define __cdecl
-#else
-#include <Windows.h>
 #endif
 
 CPluginManager g_PluginManager;

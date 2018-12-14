@@ -44,7 +44,7 @@ bool CSocket::Connect(const string &address, uint16_t port)
             {
                 sockaddr_in caddr;
                 memcpy(&caddr.sin_addr, uohe->h_addr, uohe->h_length);
-#if !defined(ORION_LINUX)
+#if defined(ORION_WINDOWS)
                 serverIP = caddr.sin_addr.S_un.S_addr;
 #else
                 serverIP = caddr.sin_addr.s_addr;
