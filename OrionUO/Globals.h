@@ -9,8 +9,13 @@
 #include "OrionApplication.h"
 #include "GLEngine/GLFrameBuffer.h"
 #include "GLEngine/GLTexture.h"
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 #include "EnumList.h"
 #include "DefinitionMacro.h"
 #include "Constants.h"
