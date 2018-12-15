@@ -106,7 +106,6 @@ int main(int argc, char **argv)
 
     SDL_Log("SDL Initialized.");
     g_App.Init();
-    g_ConfigManager.Init();
     INITLOGGER("uolog.txt");
     auto path = g_App.ExeFilePath("crashlogs");
     fs_path_create(path);
@@ -131,6 +130,7 @@ int main(int argc, char **argv)
             g_isHeadless = true;
         }
     }
+    g_ConfigManager.Init();
 
     // FIXME: headless: lets end here so we can run on travis for now
     if (g_isHeadless)

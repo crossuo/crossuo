@@ -110,4 +110,4 @@ struct REVERSE_PLUGIN_INTERFACE
 #pragma pack(pop)
 
 extern REVERSE_PLUGIN_INTERFACE g_oaReverse;
-#define ORIONUO_CLIENT "OrionUO/orion.so"
+#define ORIONUO_CLIENT "orion.so"
