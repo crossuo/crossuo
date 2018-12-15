@@ -18,6 +18,8 @@
 #include "DefinitionMacro.h"
 #include "Constants.h"
 
+#define countof(xarray) (sizeof(xarray)/sizeof(xarray[0]))
+
 #define CWISPDEBUGLOGGER 0
 
 #if CWISPDEBUGLOGGER != 0
