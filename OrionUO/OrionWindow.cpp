@@ -52,7 +52,7 @@ bool COrionWindow::OnCreate()
     }
 
     g_GL.UpdateRect();
-    CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
+    m_TimerThread = CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
     //CreateThreadedTimer(UPDATE_TIMER_ID, 10);
     CreateTimer(UPDATE_TIMER_ID, 10);
     return true;
@@ -61,6 +61,11 @@ bool COrionWindow::OnCreate()
 void COrionWindow::OnDestroy()
 {
     DEBUG_TRACE_FUNCTION;
+    m_TimerThread->Stop();
+    m_TimerThread = nullptr;
+
+    g_SoundManager.Free();
+
     PLUGIN_EVENT(WM_CLOSE, 0, 0);
     g_Orion.Uninstall();
     Wisp::g_WispCrashLogger.Close();

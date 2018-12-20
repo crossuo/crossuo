@@ -15,6 +15,8 @@ enum
 class COrionWindow : public Wisp::CWindow
 {
 public:
+    Wisp::CThreadedTimer *m_TimerThread = nullptr;
+
     COrionWindow();
     virtual ~COrionWindow();
 

@@ -68,7 +68,7 @@ public:
     void RemoveTimer(uint32_t id);
     void Raise();
 
-    void CreateThreadedTimer(
+    CThreadedTimer *CreateThreadedTimer(
         uint32_t id,
         int delay,
         bool oneShot = false,

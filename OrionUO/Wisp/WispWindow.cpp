@@ -1146,7 +1146,7 @@ uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
 
 #endif
 
-void CWindow::CreateThreadedTimer(
+CThreadedTimer *CWindow::CreateThreadedTimer(
     uint32_t id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1154,13 +1154,15 @@ void CWindow::CreateThreadedTimer(
     {
         if ((*i)->TimerID == id)
         {
-            return;
+            return nullptr;
         }
     }
 
     auto timer = new Wisp::CThreadedTimer(id, Handle, waitForProcessMessage);
     m_ThreadedTimersStack.push_back(timer);
     timer->Run(!oneShot, delay, synchronizedDelay);
+
+    return timer;
 }
 
 void CWindow::RemoveThreadedTimer(uint32_t id)
