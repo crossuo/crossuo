@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 
 #include "FileSystem.h"
 #include "WispThread.h"
@@ -52,6 +52,7 @@ int CApplication::Run()
     bool quit = false;
     while (!quit)
     {
+#if USE_TIMERTHREAD
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0)
         {
@@ -63,6 +64,25 @@ int CApplication::Run()
 
             OnMainLoop();
         }
+#else
+        // 1] Handle all SDL events. Mouse, keyboard, windows etc..
+        SDL_Event event;
+        while (SDL_PollEvent(&event) != 0)
+        {
+            quit = Wisp::g_WispWindow->OnWindowProc(event);
+            if (quit)
+                break;
+        }
+
+        // 2] Run main loop, packets, rendering etc..
+        OnMainLoop();
+
+        // 3] Calculate proper delay based on settings and frame time.
+        int32_t iDynamicFPS = SDL_GetTicks() - g_Ticks;
+        int32_t iDelay = g_OrionWindow.GetRenderDelay();
+
+        SDL_Delay(std::max(iDelay - iDynamicFPS, CPU_USAGE_DELAY));
+#endif // USE_TIMERTHREAD
     }
     return EXIT_SUCCESS;
 #endif

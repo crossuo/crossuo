@@ -43,7 +43,8 @@ typedef InputEvent TextEvent;
 #define KEY_CAPITAL VK_CAPITAL
 
 #define KEY_RETURN VK_RETURN
-#define KEY_RETURN2 VK_RETURN
+#define KEY_RETURN2                                                                                \
+    -1 // Used by SDL. Here it's same as VK_RETURN, but we don't want defines for wisp everywhere. -1 is invalid.
 #define KEY_ESCAPE VK_ESCAPE
 #define KEY_TAB VK_TAB
 #define KEY_MENU VK_MENU
@@ -192,7 +193,7 @@ inline KeyEvent AsKeyEvent(const TextEvent &ev)
 #define KEY_CAPITAL SDLK_CAPSLOCK
 
 #define KEY_RETURN SDLK_RETURN
-#define KEY_RETURN2 SDLK_RETURN2
+#define KEY_RETURN2 SDLK_KP_ENTER
 #define KEY_ESCAPE SDLK_ESCAPE
 #define KEY_TAB SDLK_TAB
 #define KEY_MENU SDLK_MENU

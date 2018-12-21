@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "CharacterListScreen.h"
@@ -86,7 +86,7 @@ void CCharacterListScreen::OnKeyDown(const KeyEvent &ev)
     m_Gump.OnKeyDown(ev);
 
     const auto key = EvKey(ev);
-    if (key == KEY_RETURN)
+    if (key == KEY_RETURN || key == KEY_RETURN2)
     {
         CreateSmoothAction(ID_SMOOTH_CLS_SELECT_CHARACTER);
     }

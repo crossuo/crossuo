@@ -5,10 +5,11 @@
 
 class COrionApplication : public Wisp::CApplication
 {
+#if USE_TIMERTHREAD
 public:
     uint32_t NextRenderTime = 0;
     uint32_t NextUpdateTime = 0;
-
+#endif // USE_TIMERTHREAD
 protected:
     virtual void OnMainLoop();
 

@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GumpOptions.h"
@@ -1701,14 +1701,14 @@ void CGumpOptions::RedrawMacroData()
     bool alt = false;
     bool ctrl = false;
     bool shift = false;
-    uint16_t key = 0;
+    Keycode key = 0;
 
     if (m_MacroPointer != nullptr)
     {
         alt = m_MacroPointer->Alt;
         ctrl = m_MacroPointer->Ctrl;
         shift = m_MacroPointer->Shift;
-        key = checked_cast<uint16_t>(m_MacroPointer->Key);
+        key = m_MacroPointer->Key;
     }
 
     m_MacroCheckboxShift->Checked = shift;
@@ -3735,13 +3735,13 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
     const auto key = EvKey(ev);
     if (g_EntryPointer == &m_MacroKey->m_Entry)
     {
-        m_MacroPointer->Key = key & 0xFF;
+        m_MacroPointer->Key = key;
         m_MacroKey->m_Entry.SetTextA(KeyName(key));
         WantRedraw = true;
     }
     else
     {
-        if (key == KEY_RETURN)
+        if (key == KEY_RETURN || key == KEY_RETURN2)
         {
             if (g_ConfigManager.GetConsoleNeedEnter())
             {

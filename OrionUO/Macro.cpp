@@ -1,4 +1,4 @@
-﻿// Copyright (C) August 2016 Hotride
+// Copyright (C) August 2016 Hotride
 
 #include "Macro.h"
 #include "Wisp/WispDefinitions.h"
@@ -160,7 +160,7 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     short size = file.ReadInt16LE();
     next += size;
 
-    auto key = file.ReadUInt16LE();
+    auto key = file.ReadInt32LE();
     bool alt = false;
     if ((key & MODKEY_ALT) != 0)
     {
@@ -227,7 +227,7 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
 void CMacro::Save(Wisp::CBinaryFileWriter &writer)
 {
     DEBUG_TRACE_FUNCTION;
-    short size = 10;
+    short size = 12;
     short count = 0;
 
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
@@ -260,7 +260,7 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
         key += MODKEY_SHIFT;
     }
 
-    writer.WriteUInt16LE(checked_cast<uint16_t>(key));
+    writer.WriteInt32LE(key);
     writer.WriteUInt16LE(count);
 
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)

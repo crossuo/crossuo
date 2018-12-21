@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
@@ -6,7 +6,7 @@
 COrionWindow g_OrionWindow;
 
 COrionWindow::COrionWindow()
-
+    : m_iRenderDelay(0)
 {
 #if 0
     // Add some tests, this cliloc message seems to use broken UTF8
@@ -29,11 +29,15 @@ COrionWindow::~COrionWindow()
 void COrionWindow::SetRenderTimerDelay(int delay)
 {
     DEBUG_TRACE_FUNCTION;
+#if USE_TIMERTHREAD
     auto timer = GetThreadedTimer(RENDER_TIMER_ID);
     if (timer != nullptr)
     {
         timer->ChangeDelay(delay);
     }
+#else
+    m_iRenderDelay = delay;
+#endif // USE_TIMERTHREAD
 }
 
 bool COrionWindow::OnCreate()
@@ -52,17 +56,25 @@ bool COrionWindow::OnCreate()
     }
 
     g_GL.UpdateRect();
-    m_TimerThread = CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
+
+#if USE_TIMERTHREAD
+    m_TimerThread =
+        CreateThreadedTimer(RENDER_TIMER_ID, FRAME_DELAY_ACTIVE_WINDOW, false, true, true);
     //CreateThreadedTimer(UPDATE_TIMER_ID, 10);
     CreateTimer(UPDATE_TIMER_ID, 10);
+#endif // USE_TIMERTHREAD
+
     return true;
 }
 
 void COrionWindow::OnDestroy()
 {
     DEBUG_TRACE_FUNCTION;
+
+#if USE_TIMERTHREAD
     m_TimerThread->Stop();
     m_TimerThread = nullptr;
+#endif // USE_TIMERTHREAD
 
     g_SoundManager.Free();
 
@@ -93,6 +105,11 @@ void COrionWindow::EmulateOnLeftMouseButtonDown()
             g_CurrentScreen->OnLeftMouseButtonDown();
         }
     }
+}
+
+int COrionWindow::GetRenderDelay()
+{
+    return m_iRenderDelay;
 }
 
 void COrionWindow::OnLeftMouseButtonDown()
@@ -445,11 +462,14 @@ void COrionWindow::OnSetText(const char *str)
 void COrionWindow::OnTimer(uint32_t id)
 {
     DEBUG_TRACE_FUNCTION;
+
+#if USE_TIMERTHREAD
     if (id == UPDATE_TIMER_ID)
     {
         g_Ticks = SDL_GetTicks();
         g_Orion.Process(false);
     }
+#endif // USE_TIMERTHREAD
     if (id == FASTLOGIN_TIMER_ID)
     {
         RemoveTimer(FASTLOGIN_TIMER_ID);
@@ -457,6 +477,7 @@ void COrionWindow::OnTimer(uint32_t id)
     }
 }
 
+#if USE_TIMERTHREAD
 void COrionWindow::OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer)
 {
     DEBUG_TRACE_FUNCTION;
@@ -471,6 +492,7 @@ void COrionWindow::OnThreadedTimer(uint32_t nowTime, Wisp::CThreadedTimer *timer
         g_Orion.Process(false);
     }
 }
+#endif // USE_TIMERTHREAD
 
 bool COrionWindow::OnUserMessages(const UserEvent &ev)
 {
@@ -615,6 +637,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         }
         break;
 
+#if USE_TIMERTHREAD
         case Wisp::CThreadedTimer::MessageID:
         {
             auto nowTime = checked_cast<uint32_t>(ev.data1);
@@ -623,6 +646,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", nowTime, timer);
         }
         break;
+#endif // USE_TIMERTHREAD
 
         case COrionWindow::MessageID:
         {

@@ -1,4 +1,6 @@
-﻿// MIT License
+// MIT License
+
+#if USE_TIMERTHREAD
 
 #include <SDL_events.h>
 
@@ -41,3 +43,5 @@ void CThreadedTimer::OnDestroy()
 }
 
 }; // namespace Wisp
+
+#endif // USE_TIMERTHREAD

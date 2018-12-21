@@ -150,6 +150,7 @@ void CGumpTextEntryDialog::OnKeyDown(const KeyEvent &ev)
     switch (key)
     {
         case KEY_RETURN:
+        case KEY_RETURN2:
         case KEY_ESCAPE:
         {
             SendTextEntryDialogResponse(key == KEY_RETURN);

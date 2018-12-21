@@ -42,7 +42,7 @@ void CGumpNotify::OnKeyDown(const KeyEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
     const auto key = EvKey(ev);
-    if (key != KEY_RETURN)
+    if (key != KEY_RETURN && key != KEY_RETURN2)
     {
         return;
     }

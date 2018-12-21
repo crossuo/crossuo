@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GumpStatusbar.h"
@@ -1415,6 +1415,7 @@ void CGumpStatusbar::OnKeyDown(const KeyEvent &ev)
     switch (key)
     {
         case KEY_RETURN:
+        case KEY_RETURN2:
         {
             if (g_EntryPointer->Length() != 0u)
             {

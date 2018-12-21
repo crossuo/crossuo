@@ -839,6 +839,7 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
     switch (key)
     {
         case KEY_RETURN:
+        case KEY_RETURN2:
         {
             SetGroupTextFromEntry();
             if (g_ConfigManager.GetConsoleNeedEnter())

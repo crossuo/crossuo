@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 
 #include "WispWindow.h"
 #include <SDL.h>
@@ -699,12 +699,14 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
             OnTimer((uint32_t)wParam);
             break;
         }
+#if USE_TIMERTHREAD
         case Wisp::CThreadedTimer::MessageID:
         {
             OnThreadedTimer((uint32_t)wParam, (Wisp::CThreadedTimer *)lParam);
             //DebugMsg("OnThreadedTimer %i, 0x%08X\n", wParam, lParam);
             return 0;
         }
+#endif // USE_TIMERTHREAD
         case WM_SYSCHAR:
         {
             if (wParam == KEY_F4 && (GetAsyncKeyState(KEY_MENU) & 0x80000000)) //Alt + F4
@@ -1145,6 +1147,7 @@ uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
 }
 
 #endif
+#if USE_TIMERTHREAD
 
 CThreadedTimer *CWindow::CreateThreadedTimer(
     uint32_t id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
@@ -1192,7 +1195,8 @@ Wisp::CThreadedTimer *CWindow::GetThreadedTimer(uint32_t id)
 
     return 0;
 }
-}; // namespace Wisp
+#endif // USE_TIMERTHREAD
+};     // namespace Wisp
 
 #if USE_WISP
 void GetDisplaySize(int *x, int *y)

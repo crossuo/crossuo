@@ -189,7 +189,7 @@ void CGumpGeneric::OnKeyDown(const KeyEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
     auto key = EvKey(ev);
-    if (key == KEY_RETURN)
+    if (key == KEY_RETURN || key == KEY_RETURN2)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
         {

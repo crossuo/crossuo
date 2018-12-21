@@ -268,7 +268,8 @@ void CGumpBulletinBoardItem::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
     auto key = EvKey(ev);
-    if (key == KEY_RETURN && m_Entry != nullptr && g_EntryPointer == &m_Entry->m_Entry)
+    if ((key == KEY_RETURN || key == KEY_RETURN2) && m_Entry != nullptr &&
+        g_EntryPointer == &m_Entry->m_Entry)
     {
         g_EntryPointer->Insert(L'\n');
         RecalculateHeight();

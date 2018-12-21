@@ -1,4 +1,6 @@
-﻿// MIT License
+// MIT License
+
+#if USE_TIMERTHREAD
 
 #pragma once
 
@@ -20,3 +22,5 @@ public:
 };
 
 }; // namespace Wisp
+
+#endif // USE_TIMERTHREAD

@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_rect.h>
@@ -471,14 +471,14 @@ void CGameScreen::CalculateRenderList()
         {
             int blockIndex = (bx * g_MapBlockSize[g_CurrentMap].Height) + by;
 
-            CMapBlock *mb = g_MapManager->GetBlock(blockIndex);
+            CMapBlock *mb = g_MapManager.GetBlock(blockIndex);
 
             if (mb == nullptr)
             {
-                mb = g_MapManager->AddBlock(blockIndex);
-                mb->SetX(bx);
-                mb->SetY(by);
-                g_MapManager->LoadBlock(mb);
+                mb = g_MapManager.AddBlock(blockIndex);
+                mb->X = bx;
+                mb->Y = by;
+                g_MapManager.LoadBlock(mb);
             }
 
             for (int x = 0; x < 8; x++)
@@ -497,8 +497,7 @@ void CGameScreen::CalculateRenderList()
                         currentY > g_RenderBounds.RealMaxRangeY)
                         continue;
 
-                    AddTileToRenderList(
-                        mb->GetRender(x, y), currentX, currentY, renderIndex, useObjectHandles);
+                    AddTileToRenderList(mb->GetRender(x, y), currentX, currentY, useObjectHandles);
                 }
             }
         }
@@ -922,24 +921,18 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
     int characterX = obj->GetX();
     int characterY = obj->GetY();
 
-    //ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(obj);
     CGameCharacter *character = obj->GameCharacterPtr();
+
+    // Make all characters draw in right order.
+    // TODO: Some cases are still broken. It moves tiles to different layers etc. But it should not be directly player related.
+    bool bAdjust =
+        character &&
+        ((character->Direction & 7) == 6 || (character->Direction & 7) == 2 ||
+         (!character->m_Steps.empty() && ((character->m_Steps.back().Direction & 7) == 6 ||
+                                          (character->m_Steps.back().Direction & 7) == 2)));
 
     DRAW_FRAME_INFORMATION &dfInfo = obj->m_FrameInfo;
     int offsetY = dfInfo.Height - dfInfo.OffsetY;
-    bool fullDrawLastItem = false;
-    int dropMaxZIndex = -1;
-
-    if (character != nullptr)
-    {
-        //g_GL.DrawPolygone(drawX - dfInfo.OffsetX, drawY, dfInfo.Width, dfInfo.Height - dfInfo.OffsetY);
-
-        if (!character->m_Steps.empty() && (character->m_Steps.back().Direction & 7) == 2)
-        {
-            fullDrawLastItem = true;
-            dropMaxZIndex = 0; //X + 1, Y - 1 : wall
-        }
-    }
 
     vector<pair<int, int>> coordinates;
 
@@ -994,10 +987,9 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
 
             int currentMaxZ = maxZ;
 
-            if (i == dropMaxZIndex)
-            {
-                currentMaxZ += 20;
-            }
+            // Draw whole character in front of walls.
+            if (i <= 1 && bAdjust)
+                currentMaxZ += 30;
 
             AddTileToRenderList(
                 block->GetRender(x % 8, y % 8), x, y, useObjectHandles, currentMaxZ);
@@ -1711,7 +1703,7 @@ void CGameScreen::Render()
     {
         LOG("FPS=%i\n", FPScount);
         FPScount = currentFPS;
-        currentFPS = 0;
+        currentFPS = 1;
         lastRender = g_Ticks + 1000;
     }
     else
@@ -2604,6 +2596,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     switch (key)
     {
         case KEY_RETURN:
+        case KEY_RETURN2:
         {
             if (g_EntryPointer != nullptr)
             {

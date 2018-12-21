@@ -12,6 +12,7 @@ option(ORION_BUILD_MODULES "Enables Modular Project Structure" OFF)
 option(ORION_DLL_STATIC "Use Builtin Orion Crypto Library (Windows option)" ON)
 option(ORION_WISP "Use WISP pure Win32 API Implementation (Windows option)" ON)
 option(ORION_BASS "Use BASS for audio playback (DEPRECATED)" OFF)
+option(ORION_THREADED "Use threaded render." OFF)
 
 list(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake

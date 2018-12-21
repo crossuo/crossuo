@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GameBlockedScreen.h"
@@ -87,7 +87,7 @@ void CGameBlockedScreen::OnKeyDown(const KeyEvent &ev)
     const auto key = EvKey(ev);
     if (g_EntryPointer == nullptr || g_EntryPointer == &g_GameConsole)
     {
-        if (key == KEY_RETURN && notify != nullptr)
+        if ((key == KEY_RETURN || key == KEY_RETURN2) && notify != nullptr)
         {
             notify->OnKeyDown(ev);
         }

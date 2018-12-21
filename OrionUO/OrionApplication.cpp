@@ -10,6 +10,7 @@ void COrionApplication::OnMainLoop()
     //DEBUG_TRACE_FUNCTION;
     g_Ticks = SDL_GetTicks();
 
+#if USE_TIMERTHREAD
     if (NextRenderTime <= g_Ticks)
     {
         NextUpdateTime = g_Ticks + 50;
@@ -25,4 +26,10 @@ void COrionApplication::OnMainLoop()
         g_PacketManager.ProcessPluginPackets();
         g_PacketManager.SendMegaClilocRequests();
     }
+#else
+    g_ConnectionManager.Recv();
+    g_PacketManager.ProcessPluginPackets();
+    g_PacketManager.SendMegaClilocRequests();
+    g_Orion.Process(true);
+#endif // USE_TIMERTHREAD
 }

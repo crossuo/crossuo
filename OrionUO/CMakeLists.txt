@@ -35,6 +35,12 @@ else()
   add_definitions(-DUSE_BASS=0)
 endif()
 
+if(ORION_THREADED)
+    add_definitions(-DUSE_TIMERTHREAD=1)
+else()
+    add_definitions(-DUSE_TIMERTHREAD=0)
+endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   # enable the latest C++ standard feature set,
   # and also disable MSVC specific extensions
@@ -415,8 +421,8 @@ else()
     set_target_properties(orion PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "stdafx.h")
     cotire(orion)
     if(ORION_OSX)
-      add_custom_command(TARGET orion POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "liborion.dylib" "${CMAKE_BINARY_DIR}/orion.so")
-      add_custom_command(TARGET orion_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "unity/liborion.dylib" "${CMAKE_BINARY_DIR}/orion.so")
+      add_custom_command(TARGET orion POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/liborion.dylib" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/orion.so")
+      add_custom_command(TARGET orion_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/unity/liborion.dylib" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/orion.so")
     else()
       add_custom_command(TARGET orion POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "liborion.so" "${CMAKE_BINARY_DIR}/orion.so")
       add_custom_command(TARGET orion_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "unity/liborion.so" "${CMAKE_BINARY_DIR}/orion.so")

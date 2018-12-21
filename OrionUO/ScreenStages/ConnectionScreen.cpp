@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 CConnectionScreen g_ConnectionScreen;
@@ -99,6 +99,7 @@ void CConnectionScreen::OnKeyDown(const KeyEvent &ev)
     switch (key)
     {
         case KEY_RETURN:
+        case KEY_RETURN2:
         {
             if (m_Type == CST_CHARACTER_LIST)
             {

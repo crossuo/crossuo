@@ -174,9 +174,7 @@ void CMainScreen::OnKeyDown(const KeyEvent &ev)
             break;
         }
         case KEY_RETURN:
-#if !USE_WISP
         case KEY_RETURN2:
-#endif
         {
             CreateSmoothAction(ID_SMOOTH_MS_CONNECT);
             break;

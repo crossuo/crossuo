@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) September 2016 Hotride
 
 #include "GumpBook.h"
@@ -594,6 +594,7 @@ void CGumpBook::OnKeyDown(const KeyEvent &ev)
     switch (key)
     {
         case KEY_RETURN:
+        case KEY_RETURN2:
         {
             if (g_EntryPointer != &m_EntryTitle->m_Entry &&
                 g_EntryPointer != &m_EntryAuthor->m_Entry)

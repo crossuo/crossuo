@@ -8,7 +8,7 @@
 #endif
 
 #if !USE_BASS
-#define WITH_SDL2
+#define WITH_SDL2_STATIC
 
 #define TSF_IMPLEMENTATION
 #define TSF_NO_STDIO

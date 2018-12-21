@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "ServerScreen.h"
@@ -33,7 +33,7 @@ void CServerScreen::OnKeyDown(const KeyEvent &ev)
     m_Gump.OnKeyDown(ev);
 
     const auto key = EvKey(ev);
-    if (key == KEY_RETURN)
+    if (key == KEY_RETURN || key == KEY_RETURN2)
     {
         SelectionServerTempValue = g_ServerList.LastServerIndex;
         CreateSmoothAction(ID_SMOOTH_SS_SELECT_SERVER);
