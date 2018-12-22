@@ -18,27 +18,16 @@ void CGUIScissor::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {
-        if (!g_ConfigManager.GetUseGLListsForInterface())
-        {
-            int x = m_X;
-            int y = m_Y;
+        int x = m_X;
+        int y = m_Y;
 
-            if (GumpParent != nullptr)
-            {
-                x -= GumpParent->GumpRect.Position.X;
-                y -= GumpParent->GumpRect.Position.Y;
-            }
-
-            g_GL.PushScissor(BaseX + x, BaseY + y, Width, Height);
-        }
-        else
+        if (GumpParent != nullptr)
         {
-            g_GL.PushScissor(
-                (int)g_GumpTranslate.X + BaseX + m_X,
-                g_OrionWindow.GetSize().Height - ((int)g_GumpTranslate.Y + BaseY + m_Y) - Height,
-                Width,
-                Height);
+            x -= GumpParent->GumpRect.Position.X;
+            y -= GumpParent->GumpRect.Position.Y;
         }
+
+        g_GL.PushScissor(BaseX + x, BaseY + y, Width, Height);
     }
     else
     {

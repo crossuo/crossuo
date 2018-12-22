@@ -1412,21 +1412,7 @@ void CGump::GenerateFrame(bool stop)
 
     PrepareTextures();
 
-    if (g_ConfigManager.GetUseGLListsForInterface())
-    {
-        glNewList(checked_cast<GLuint>(this), GL_COMPILE);
-
-        DrawItems((CBaseGUI *)m_Items, Page, Draw2Page);
-
-        if (stop)
-        {
-            glEndList();
-        }
-    }
-    else
-    {
-        DrawItems((CBaseGUI *)m_Items, Page, Draw2Page);
-    }
+    DrawItems((CBaseGUI *)m_Items, Page, Draw2Page);
 
     WantRedraw = true;
     FrameCreated = true;
@@ -1449,66 +1435,59 @@ void CGump::Draw()
     {
     loc_create_frame:
 
-        if (!g_ConfigManager.GetUseGLListsForInterface())
+        if (!m_FrameBuffer.Ready(GumpRect.Size))
         {
-            if (!m_FrameBuffer.Ready(GumpRect.Size))
+            m_FrameBuffer.Init(GumpRect.Size);
+        }
+
+        if (m_FrameBuffer.Use())
+        {
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+            glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
+
+            GenerateFrame(true);
+
+            if (g_DeveloperMode == DM_DEBUGGING)
             {
-                m_FrameBuffer.Init(GumpRect.Size);
-            }
-
-            if (m_FrameBuffer.Use())
-            {
-                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-                glClear(GL_COLOR_BUFFER_BIT);
-                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-                glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
-
-                GenerateFrame(true);
-
-                if (g_DeveloperMode == DM_DEBUGGING)
+                if (g_SelectedObject.Gump == this)
                 {
-                    if (g_SelectedObject.Gump == this)
-                    {
-                        glColor4f(0.0f, 1.0f, 0.0f, 0.2f);
-                    }
-                    else
-                    {
-                        glColor4f(1.0f, 1.0f, 1.0f, 0.2f);
-                    }
-
-                    g_GL.DrawLine(
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + 1,
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + 1);
-                    g_GL.DrawLine(
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + 1,
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + GumpRect.Size.Height);
-                    g_GL.DrawLine(
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + GumpRect.Size.Height,
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + GumpRect.Size.Height);
-                    g_GL.DrawLine(
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + GumpRect.Size.Height,
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + 1);
-
-                    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                    glColor4f(0.0f, 1.0f, 0.0f, 0.2f);
+                }
+                else
+                {
+                    glColor4f(1.0f, 1.0f, 1.0f, 0.2f);
                 }
 
-                glTranslatef((GLfloat)GumpRect.Position.X, (GLfloat)GumpRect.Position.Y, 0.0f);
+                g_GL.DrawLine(
+                    GumpRect.Position.X + 1,
+                    GumpRect.Position.Y + 1,
+                    GumpRect.Position.X + GumpRect.Size.Width,
+                    GumpRect.Position.Y + 1);
+                g_GL.DrawLine(
+                    GumpRect.Position.X + GumpRect.Size.Width,
+                    GumpRect.Position.Y + 1,
+                    GumpRect.Position.X + GumpRect.Size.Width,
+                    GumpRect.Position.Y + GumpRect.Size.Height);
+                g_GL.DrawLine(
+                    GumpRect.Position.X + GumpRect.Size.Width,
+                    GumpRect.Position.Y + GumpRect.Size.Height,
+                    GumpRect.Position.X + 1,
+                    GumpRect.Position.Y + GumpRect.Size.Height);
+                g_GL.DrawLine(
+                    GumpRect.Position.X + 1,
+                    GumpRect.Position.Y + GumpRect.Size.Height,
+                    GumpRect.Position.X + 1,
+                    GumpRect.Position.Y + 1);
 
-                m_FrameBuffer.Release();
+                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             }
-        }
-        else
-        {
-            GenerateFrame(true);
+
+            glTranslatef((GLfloat)GumpRect.Position.X, (GLfloat)GumpRect.Position.Y, 0.0f);
+
+            m_FrameBuffer.Release();
         }
     }
     else if (WantRedraw)
@@ -1520,31 +1499,20 @@ void CGump::Draw()
     GLfloat posX = g_GumpTranslate.X;
     GLfloat posY = g_GumpTranslate.Y;
 
-    if (!g_ConfigManager.GetUseGLListsForInterface())
-    {
-        posX += (GLfloat)GumpRect.Position.X;
-        posY += (GLfloat)GumpRect.Position.Y;
-    }
+    posX += (GLfloat)GumpRect.Position.X;
+    posY += (GLfloat)GumpRect.Position.Y;
 
     glTranslatef(posX, posY, 0.0f);
 
-    if (!g_ConfigManager.GetUseGLListsForInterface())
-    {
-        glEnable(GL_BLEND);
-        //glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    //glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-        m_FrameBuffer.Draw(0, 0);
+    m_FrameBuffer.Draw(0, 0);
 
-        glDisable(GL_BLEND);
-    }
-    else
-    {
-        glCallList(checked_cast<GLuint>(this));
-        g_GL.OldTexture = 0;
-    }
+    glDisable(GL_BLEND);
 
     DrawLocker();
 

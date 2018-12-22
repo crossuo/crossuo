@@ -99,7 +99,7 @@ private:
     static const int ID_GO_P2_NO_DRAW_ROOFS = 246;
     static const int ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE = 247;
     static const int ID_GO_P2_AUTO_DISPLAY_WORLD_MAP = 248;
-    static const int ID_GO_P2_USE_GL_LISTS_FOR_INTERFACE = 249;
+
     static const int ID_GO_P2_CHECK_PING = 250;
     static const int ID_GO_P2_PING_TIMER = 251;
     static const int ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC = 252;

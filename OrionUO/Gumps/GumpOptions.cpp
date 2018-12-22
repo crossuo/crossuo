@@ -495,11 +495,6 @@ void CGumpOptions::InitToolTip()
             g_ToolTip.Set(L"Display a world map immediately after entering the world");
             break;
         }
-        case ID_GO_P2_USE_GL_LISTS_FOR_INTERFACE:
-        {
-            g_ToolTip.Set(L"Use GL lists for draw interface gumps");
-            break;
-        }
         case ID_GO_P2_CHECK_PING:
         {
             g_ToolTip.Set(L"Send ping requests in game");
@@ -1268,11 +1263,6 @@ void CGumpOptions::DrawPage2()
     checkbox->Checked = g_OptionsConfig.AutoDisplayWorldMap;
     checkbox->SetTextParameters(
         0, L"Display a world map immediately after entering the world", g_OptionsTextColor);
-
-    checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_USE_GL_LISTS_FOR_INTERFACE, 0x00D2, 0x00D3, 0x00D2, 0, 880));
-    checkbox->Checked = g_OptionsConfig.GetUseGLListsForInterface();
-    checkbox->SetTextParameters(0, L"Use GL lists for draw interface gumps", g_OptionsTextColor);
 
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P2_CHECK_PING, 0x00D2, 0x00D3, 0x00D2, 0, 900));
@@ -3091,10 +3081,6 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             {
                 g_OptionsConfig.AutoDisplayWorldMap = state;
             }
-            else if (serial == ID_GO_P2_USE_GL_LISTS_FOR_INTERFACE)
-            {
-                g_OptionsConfig.SetUseGLListsForInterface(state);
-            }
             else if (serial == ID_GO_P2_CHECK_PING)
             {
                 g_OptionsConfig.CheckPing = state;
@@ -3879,7 +3865,6 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.SetNoDrawRoofs(g_OptionsConfig.GetNoDrawRoofs());
             g_ConfigManager.HighlightTargetByType = g_OptionsConfig.HighlightTargetByType;
             g_ConfigManager.AutoDisplayWorldMap = g_OptionsConfig.AutoDisplayWorldMap;
-            g_ConfigManager.SetUseGLListsForInterface(g_OptionsConfig.GetUseGLListsForInterface());
             g_ConfigManager.CheckPing = g_OptionsConfig.CheckPing;
             g_ConfigManager.SetPingTimer(g_OptionsConfig.GetPingTimer());
             g_ConfigManager.CancelNewTargetSystemOnShiftEsc =

@@ -97,7 +97,6 @@ void CConfigManager::DefaultPage2()
     m_NoDrawRoofs = false;
     HighlightTargetByType = true;
     AutoDisplayWorldMap = false;
-    m_UseGLListsForInterface = false;
     CheckPing = true;
     m_PingTimer = 10;
     CancelNewTargetSystemOnShiftEsc = false;
@@ -596,22 +595,6 @@ void CConfigManager::SetNoDrawRoofs(bool val)
     }
 }
 
-void CConfigManager::SetUseGLListsForInterface(bool val)
-{
-    DEBUG_TRACE_FUNCTION;
-
-    bool old = m_UseGLListsForInterface;
-    m_UseGLListsForInterface = (val || !g_GL.CanUseFrameBuffer);
-    if (this == &g_ConfigManager && g_World != nullptr && old != m_UseGLListsForInterface)
-    {
-        QFOR(gump, g_GumpManager.m_Items, CGump *)
-        {
-            gump->WantRedraw = true;
-            gump->WantUpdateContent = true;
-        }
-    }
-}
-
 void CConfigManager::SetPingTimer(uint8_t val)
 {
     DEBUG_TRACE_FUNCTION;
@@ -813,7 +796,6 @@ bool CConfigManager::LoadBin(const os_path &path)
         bool noDrawRoofs = false;
         HighlightTargetByType = true;
         AutoDisplayWorldMap = false;
-        SetUseGLListsForInterface(false);
         CheckPing = true;
         m_PingTimer = 10;
         CancelNewTargetSystemOnShiftEsc = false;
@@ -1326,7 +1308,6 @@ int CConfigManager::GetConfigKeyCode(const string &key)
                                              "NoDrawRoofs",
                                              "HighlightTargetByType",
                                              "AutoDisplayWorldMap",
-                                             "UseGLListsForInterface",
                                              "UseToolTips",
                                              "ToolTipsTextColor",
                                              "ToolTipsTextFont",
@@ -1581,9 +1562,6 @@ bool CConfigManager::Load(const os_path &path)
                     break;
                 case CMKC_AUTO_DISPLAY_WORLD_MAP:
                     AutoDisplayWorldMap = ToBool(strings[1]);
-                    break;
-                case CMKC_USE_GL_LISTS_FOR_INTERFACE:
-                    SetUseGLListsForInterface(ToBool(strings[1]));
                     break;
                 case CMKC_CHECK_PING:
                     CheckPing = ToBool(strings[1]);
@@ -1982,7 +1960,6 @@ void CConfigManager::Save(const os_path &path)
         writer.WriteBool("NoDrawRoofs", m_NoDrawRoofs);
         writer.WriteBool("HighlightTargetByType", HighlightTargetByType);
         writer.WriteBool("AutoDisplayWorldMap", AutoDisplayWorldMap);
-        writer.WriteBool("UseGLListsForInterface", m_UseGLListsForInterface);
         writer.WriteBool("CheckPing", CheckPing);
         writer.WriteInt("PingTimer", m_PingTimer);
         writer.WriteBool("CancelNewTargetSystemOnShiftEsc", CancelNewTargetSystemOnShiftEsc);

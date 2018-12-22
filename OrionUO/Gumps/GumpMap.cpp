@@ -286,11 +286,6 @@ void CGumpMap::GenerateFrame(bool stop)
             }
         }
     }
-
-    if (g_ConfigManager.GetUseGLListsForInterface())
-    {
-        glEndList();
-    }
 }
 
 CRenderObject *CGumpMap::Select()

@@ -29,7 +29,6 @@ protected:
     bool m_ScaleImagesInPaperdollSlots = false;
     bool m_UseGlobalMapLayer = false;
     bool m_NoDrawRoofs = false;
-    bool m_UseGLListsForInterface = false;
     uint8_t m_PingTimer = 10;
     uint8_t m_ItemPropertiesMode = OPM_FOLLOW_MOUSE;
     bool m_ItemPropertiesIcon = false;
@@ -207,9 +206,6 @@ public:
     bool GetNoDrawRoofs() { return m_NoDrawRoofs; };
     void SetNoDrawRoofs(bool val);
 
-    bool GetUseGLListsForInterface() { return m_UseGLListsForInterface; };
-    void SetUseGLListsForInterface(bool val);
-
     uint8_t GetPingTimer() { return m_PingTimer; };
     void SetPingTimer(uint8_t val);
 
@@ -285,7 +281,7 @@ public:
         CMKC_NO_DRAW_ROOFS,
         CMKC_HIGHLIGHT_TARGET_BY_TYPE,
         CMKC_AUTO_DISPLAY_WORLD_MAP,
-        CMKC_USE_GL_LISTS_FOR_INTERFACE,
+        CMKC_UNUSED, // WAS GL DISPLAY LIST
         CMKC_USE_TOOLTIPS,
         CMKC_TOOLTIPS_TEXT_COLOR,
         CMKC_TOOLTIPS_TEXT_FONT,
