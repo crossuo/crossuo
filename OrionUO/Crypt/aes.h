@@ -2,7 +2,7 @@
 
 /* ---------- See examples at end of this file for typical usage -------- */
 
-/* AES Cipher header file for ANSI C Submissions  
+/* AES Cipher header file for ANSI C Submissions
     Lawrence E. Bassham III
     Computer Security Division
     National Institute of Standards and Technology
@@ -10,7 +10,7 @@
     This sample is to assist implementers developing to the
 Cryptographic API Profile for AES Candidate Algorithm Submissions.
 Please consult this document as a cross-reference.
-    
+
     ANY CHANGES, WHERE APPROPRIATE, TO INFORMATION PROVIDED IN THIS FILE
 MUST BE DOCUMENTED. CHANGES ARE ONLY APPROPRIATE WHERE SPECIFIED WITH
 THE STRING "CHANGE POSSIBLE". FUNCTION CALLS AND THEIR PARAMETERS
@@ -77,8 +77,8 @@ INCLUDE IMPLEMENTATION SPECIFIC INFORMATION.
     parameters at the bottom of the structs as appropriate.
 */
 
-typedef unsigned char u8;
-typedef unsigned long u32; /* 32-bit unsigned quantity */
+typedef uint8_t u8;
+typedef uint32_t u32; /* 32-bit unsigned quantity */
 typedef u32 fullSbox[4][256];
 
 /* The structure for key information */

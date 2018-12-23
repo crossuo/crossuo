@@ -43,7 +43,7 @@ public:
 class CTwofishCrypt
 {
 private:
-    unsigned long m_IP;
+    uint32_t m_IP;
     int m_pos;
     keyInstance ki;
     cipherInstance ci;

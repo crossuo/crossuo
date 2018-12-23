@@ -427,7 +427,7 @@ icmp_handle icmp_open()
         if (e == 1)
         {
             g_DisablePing = true;
-            LOG("\tPING disabled, not enough permission to create raw socket");
+            LOG("\tPING disabled, not enough permission to create raw socket\n");
         }
         return nullptr;
     }
