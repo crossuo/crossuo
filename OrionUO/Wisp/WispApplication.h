@@ -11,6 +11,8 @@ class CApplication
 public:
     os_path m_ExePath;
     os_path m_UOPath;
+    string m_ServerAddress;
+    uint16_t m_ServerPort = 2593;
 
 protected:
     virtual void OnMainLoop() {}

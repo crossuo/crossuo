@@ -177,7 +177,7 @@ bool CSpeechManager::LoadLangCodes()
         }
 
         m_LangCodes.push_back(langCodeData);
-        LOG("[0x%04X]: %s\n", langCodeData.Code, langCodeData.Abbreviature.c_str());
+        //LOG("[0x%04X]: %s\n", langCodeData.Code, langCodeData.Abbreviature.c_str());
     }
 
     //if (m_LangCodes.size() != 135)

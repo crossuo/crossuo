@@ -11,6 +11,53 @@
 
 CMainScreen g_MainScreen;
 
+enum eConfigKey
+{
+    MSCC_NONE,
+    MSCC_ACTID,
+    MSCC_ACTPWD,
+    MSCC_REMEMBERPWD,
+    MSCC_AUTOLOGIN,
+    MSCC_SMOOTHMONITOR,
+    MSCC_THE_ABYSS,
+    MSCC_ASMUT,
+    MSCC_CUSTOM_PATH,
+    MSCC_LOGIN_SERVER,
+    MSCC_COUNT,
+};
+
+struct ConfigEntry
+{
+    eConfigKey key;
+    const char *key_name;
+};
+
+static const ConfigEntry s_Keys[] = {
+    { MSCC_ACTID, "acctid" },
+    { MSCC_ACTPWD, "acctpassword" },
+    { MSCC_REMEMBERPWD, "rememberacctpw" },
+    { MSCC_AUTOLOGIN, "autologin" },
+    { MSCC_SMOOTHMONITOR, "smoothmonitor" },
+    { MSCC_THE_ABYSS, "theabyss" },
+    { MSCC_ASMUT, "asmut" },
+    { MSCC_CUSTOM_PATH, "custompath" },
+    { MSCC_LOGIN_SERVER, "loginserver" },
+    { MSCC_COUNT, nullptr },
+};
+
+eConfigKey GetConfigKey(const string &key)
+{
+    auto str = ToLowerA(key);
+    for (int i = 0; s_Keys[i].key_name; i++)
+    {
+        if (str == s_Keys[i].key_name)
+        {
+            return s_Keys[i].key;
+        }
+    }
+    return MSCC_NONE;
+}
+
 CMainScreen::CMainScreen()
     : CBaseScreen(m_MainGump)
     , m_Account(nullptr)
@@ -193,33 +240,10 @@ void CMainScreen::OnKeyDown(const KeyEvent &ev)
     m_Gump.WantRedraw = true;
 }
 
-int CMainScreen::GetConfigKeyCode(const string &key)
-{
-    //DEBUG_TRACE_FUNCTION;
-    const int keyCount = MSCC_COUNT - 1;
-
-    static const string m_Keys[keyCount] = { "acctid",    "acctpassword",  "rememberacctpw",
-                                             "autologin", "smoothmonitor", "theabyss",
-                                             "asmut",     "custompath" };
-
-    string str = ToLowerA(key);
-    int result = 0;
-
-    for (int i = 0; i < keyCount && (result == 0); i++)
-    {
-        if (str == m_Keys[i])
-        {
-            result = (int)i + 1;
-        }
-    }
-
-    return result;
-}
-
+// FIXME: Merge with LoadGlobalConfig and do it early in the executable load
 void CMainScreen::LoadCustomPath()
 {
     DEBUG_TRACE_FUNCTION;
-
     LOG("Loading custom path from " ORIONUO_CONFIG "\n");
     Wisp::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
     while (!file.IsEOF())
@@ -227,14 +251,18 @@ void CMainScreen::LoadCustomPath()
         auto strings = file.ReadTokens(false);
         if (strings.size() >= 2)
         {
-            const int code = GetConfigKeyCode(strings[0]);
-            switch (code)
+            const auto key = GetConfigKey(strings[0]);
+            switch (key)
             {
                 case MSCC_CUSTOM_PATH:
                 {
                     g_App.m_UOPath = ToPath(strings[1]);
                     fs_case_insensitive_init(g_App.m_UOPath);
                 }
+                break;
+
+                default:
+                break;
             }
         }
     }
@@ -247,15 +275,16 @@ void CMainScreen::LoadGlobalConfig()
     g_ScreenEffectManager.Enabled = false;
 
     LOG("Loading global config from " ORIONUO_CONFIG "\n");
-    Wisp::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=", "#;", "");
+    Wisp::CTextFileParser file(g_App.ExeFilePath(ORIONUO_CONFIG), "=,", "#;", "");
 
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens();
         if (strings.size() >= 2)
         {
-            const int code = GetConfigKeyCode(strings[0]);
-            switch (code)
+            const auto key = GetConfigKey(strings[0]);
+            LOG("Key: %d for %s\n", key, strings[0].c_str());
+            switch (key)
             {
                 case MSCC_ACTID:
                 {
@@ -319,6 +348,12 @@ void CMainScreen::LoadGlobalConfig()
                     g_Asmut = ToBool(strings[1]);
                     break;
                 }
+                case MSCC_LOGIN_SERVER:
+                {
+                    g_App.m_ServerAddress = strings[1];
+                    g_App.m_ServerPort = ToInt(strings[2]);
+                    break;
+                }
                 default:
                     break;
             }
@@ -330,47 +365,39 @@ void CMainScreen::SaveGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
     LOG("Saving global config to " ORIONUO_CONFIG "\n");
-    FILE *uo_cfg = fs_open(g_App.ExeFilePath(ORIONUO_CONFIG), FS_WRITE);
-    if (uo_cfg == nullptr)
+    FILE *cfg = fs_open(g_App.ExeFilePath(ORIONUO_CONFIG), FS_WRITE);
+    if (cfg == nullptr)
     {
         return;
     }
 
-    char buf[128] = { 0 };
-
-    sprintf_s(buf, "AcctID=%s\n", m_Account->c_str());
-    fputs(buf, uo_cfg);
-
+    fprintf(cfg, "AcctID=%s\n", m_Account->c_str());
     if (m_SavePassword->Checked)
     {
-        sprintf_s(buf, "AcctPassword=%s\n", m_Password->c_str());
-        fputs(buf, uo_cfg);
-        sprintf_s(buf, "RememberAcctPW=yes\n");
-        fputs(buf, uo_cfg);
+        fprintf(cfg, "AcctPassword=%s\n", m_Password->c_str());
+        fprintf(cfg, "RememberAcctPW=yes\n");
     }
     else
     {
-        fputs("AcctPassword=\n", uo_cfg);
-        sprintf_s(buf, "RememberAcctPW=no\n");
-        fputs(buf, uo_cfg);
+        fprintf(cfg, "AcctPassword=\n");
+        fprintf(cfg, "RememberAcctPW=no\n");
     }
 
-    sprintf_s(buf, "AutoLogin=%s\n", (m_AutoLogin->Checked ? "yes" : "no"));
-    fputs(buf, uo_cfg);
-
-    sprintf_s(buf, "SmoothMonitor=%s\n", (g_ScreenEffectManager.Enabled ? "yes" : "no"));
-    fputs(buf, uo_cfg);
-
-    sprintf_s(buf, "TheAbyss=%s\n", (g_TheAbyss ? "yes" : "no"));
-    fputs(buf, uo_cfg);
-
-    sprintf_s(buf, "Asmut=%s\n", (g_Asmut ? "yes" : "no"));
-    fputs(buf, uo_cfg);
+    fprintf(cfg, "AutoLogin=%s\n", (m_AutoLogin->Checked ? "yes" : "no"));
+    fprintf(cfg, "SmoothMonitor=%s\n", (g_ScreenEffectManager.Enabled ? "yes" : "no"));
+    fprintf(cfg, "TheAbyss=%s\n", (g_TheAbyss ? "yes" : "no"));
+    fprintf(cfg, "Asmut=%s\n", (g_Asmut ? "yes" : "no"));
 
     if (g_App.m_UOPath != g_App.m_ExePath)
     {
-        sprintf_s(buf, "CustomPath=%s\n", CStringFromPath(g_App.m_UOPath));
-        fputs(buf, uo_cfg);
+        fprintf(cfg, "CustomPath=%s\n", CStringFromPath(g_App.m_UOPath));
     }
-    fs_close(uo_cfg);
+
+    if (!g_App.m_ServerAddress.empty())
+    {
+        fprintf(cfg, "LoginServer=%s,%d\n", g_App.m_ServerAddress.c_str(), g_App.m_ServerPort);
+    }
+
+    fflush(cfg);
+    fs_close(cfg);
 }

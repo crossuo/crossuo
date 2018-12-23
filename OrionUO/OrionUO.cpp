@@ -130,8 +130,8 @@ void COrion::ParseCommandLine() // FIXME: move this out
         {
             if (str == "login")
             {
-                DefaultLogin = strings[1];
-                DefaultPort = atoi(strings[2].c_str());
+                m_OverrideServerAddress = strings[1];
+                m_OverrideServerPort = atoi(strings[2].c_str());
             }
             else if (str == "proxyhost")
             {
@@ -3593,17 +3593,24 @@ void COrion::LoadLogin(string &login, int &port)
 {
     DEBUG_TRACE_FUNCTION;
 
-    login = DefaultLogin;
-    port = DefaultPort;
-    if (DefaultPort != 0)
+    login = m_OverrideServerAddress;
+    port = m_OverrideServerPort;
+    if (m_OverrideServerPort != 0)
     {
+        return;
+    }
+
+    if (!g_App.m_ServerAddress.empty())
+    {
+        login = g_App.m_ServerAddress;
+        port = g_App.m_ServerPort;
         return;
     }
 
     Wisp::CTextFileParser file(g_App.UOFilesPath("login.cfg"), "=,", "#;", "");
     while (!file.IsEOF())
     {
-        vector<string> strings = file.ReadTokens();
+        auto strings = file.ReadTokens();
         if (strings.size() >= 3)
         {
             string lo = ToLowerA(strings[0]);

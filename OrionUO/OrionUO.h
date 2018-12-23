@@ -13,8 +13,8 @@ class COrion
 public:
     string ClientVersionText = "2.0.3";
     int TexturesDataCount = 0;
-    string DefaultLogin = "";
-    int DefaultPort = 0;
+    string m_OverrideServerAddress;
+    int m_OverrideServerPort = 0;
 
 private:
     uint32_t m_CRC_Table[256];
