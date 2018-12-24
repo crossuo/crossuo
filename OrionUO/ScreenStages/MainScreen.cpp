@@ -11,6 +11,8 @@
 
 CMainScreen g_MainScreen;
 
+namespace
+{
 enum eConfigKey
 {
     MSCC_NONE,
@@ -57,6 +59,8 @@ static eConfigKey GetConfigKey(const string &key)
     }
     return MSCC_NONE;
 }
+
+} // namespace
 
 CMainScreen::CMainScreen()
     : CBaseScreen(m_MainGump)

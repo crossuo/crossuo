@@ -17,8 +17,9 @@ enum
     ID_GSB_SPELL_ICON_RIGHT = 1000,
 };
 
-string s_SpellCircleName[] = { "First Circle", "Second Circle", "Third Circle",   "Fourth Circle",
-                               "Fifth Circle", "Sixth Circle",  "Seventh Circle", "Eighth Circle" };
+static string s_SpellCircleName[] = { "First Circle",   "Second Circle", "Third Circle",
+                                      "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
+                                      "Seventh Circle", "Eighth Circle" };
 
 CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)

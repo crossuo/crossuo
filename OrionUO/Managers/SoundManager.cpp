@@ -18,7 +18,19 @@
 #include <tml.h>
 
 #define ASS_IMPLEMENTATION
+#if _MSC_VER
+#pragma warning(push, 0)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwritable-strings"
+#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
+#endif
 #include <ass.h>
+#if _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 using namespace SoLoud;
 static Soloud s_backend;
 

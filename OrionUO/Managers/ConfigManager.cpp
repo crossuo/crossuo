@@ -6,6 +6,8 @@
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;
 
+namespace
+{
 enum eConfigKey
 {
     CMKC_NONE = -1,
@@ -283,6 +285,8 @@ static eConfigKey GetConfigKey(const string &key)
     }
     return CMKC_NONE;
 }
+
+} // namespace
 
 CConfigManager::CConfigManager()
 {
