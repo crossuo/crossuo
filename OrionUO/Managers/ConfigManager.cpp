@@ -6,9 +6,7 @@
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;
 
-namespace
-{
-enum eConfigKey
+enum
 {
     CMKC_NONE = -1,
 
@@ -139,9 +137,11 @@ enum eConfigKey
     CMKC_COUNT
 };
 
+namespace cmkc
+{
 struct ConfigEntry
 {
-    eConfigKey key;
+    uint32_t key;
     const char *key_name;
 };
 
@@ -273,7 +273,7 @@ static const ConfigEntry s_Keys[] = {
 
 static_assert(countof(s_Keys) == CMKC_COUNT, "Missing key string for configuration option");
 
-static eConfigKey GetConfigKey(const string &key)
+static uint32_t GetConfigKey(const string &key)
 {
     auto str = ToLowerA(key);
     for (int i = 0; s_Keys[i].key_name; i++)
@@ -286,7 +286,7 @@ static eConfigKey GetConfigKey(const string &key)
     return CMKC_NONE;
 }
 
-} // namespace
+} // namespace cmkc
 
 CConfigManager::CConfigManager()
 {
@@ -1574,7 +1574,7 @@ bool CConfigManager::Load(const os_path &path)
         auto strings = file.ReadTokens();
         if (strings.size() >= 2)
         {
-            const int code = GetConfigKey(strings[0]);
+            const int code = cmkc::GetConfigKey(strings[0]);
             if (code == CMKC_NONE)
             {
                 continue;
