@@ -1,6 +1,28 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenSelectProfession.h"
+
+enum
+{
+    ID_SPS_QUIT = 1,
+    ID_SPS_ARROW_PREV = 2,
+    ID_SPS_ARROW_NEXT = 3,
+    ID_SPS_ARROW_BACK_PROFESSION = 4,
+    ID_SPS_LABEL_BACK_PROFESSION = 5,
+    ID_SPS_HTMLGUMP = 6,
+
+    ID_SPS_STATS_SPHERE = 10,
+
+    ID_SPS_SKILLS_SPHERE = 20,
+
+    ID_SPS_SKILLS_FILED = 30,
+
+    ID_SPS_LABEL = 50,
+
+    ID_SPS_SKILLS_LIST = 100,
+};
+
 CGumpScreenSelectProfession::CGumpScreenSelectProfession()
     : CGump(GT_NONE, 0, 0, 0)
 {

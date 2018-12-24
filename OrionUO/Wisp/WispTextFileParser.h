@@ -11,16 +11,16 @@ public:
 
 private:
     CMappedFile m_File;
-    uint8_t *m_Ptr{ 0 };
-    uint8_t *m_EOL{ 0 };
-    uint8_t *m_End{ 0 };
+    uint8_t *m_Ptr = 0;
+    uint8_t *m_EOL = 0;
+    uint8_t *m_End = 0;
     char m_Delimiters[50];
-    int m_DelimitersSize{ 0 };
+    int m_DelimitersSize = 0;
     char m_Comentaries[50];
-    int m_ComentariesSize{ 0 };
+    int m_ComentariesSize = 0;
     char m_Quotes[50];
-    int m_QuotesSize{ 0 };
-    bool m_Trim{ false };
+    int m_QuotesSize = 0;
+    bool m_Trim = false;
 
     void GetEOL();
     bool IsDelimiter();

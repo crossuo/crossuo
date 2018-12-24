@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpSelectColor.h"
+
 CGumpSelectColor::CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
     : CGump(GT_SELECT_COLOR, serial, x, y)
     , m_State(state)

@@ -1,6 +1,19 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpTip.h"
+
+enum
+{
+    ID_GT_NONE,
+
+    ID_GT_PREV_GUMP,
+    ID_GT_REMOVE_GUMP,
+    ID_GT_NEXT_GUMP,
+
+    ID_GT_COUNT,
+};
+
 CGumpTip::CGumpTip(uint32_t serial, short x, short y, const string &str, bool updates)
     : CGumpBaseScroll(GT_TIP, serial, 0x0820, 250, x, y, true)
     , Updates(updates)

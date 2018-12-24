@@ -6,22 +6,16 @@
 class CGumpScreenGame : public CGump
 {
 private:
-    //!Идентификаторы кнопок
     static const int ID_GS_RESIZE = 1;
 
 public:
     CGumpScreenGame();
     virtual ~CGumpScreenGame();
 
-    virtual void UpdateContent();
-
-    virtual void InitToolTip();
-
-    virtual void Draw();
-
-    virtual CRenderObject *Select();
-
-    virtual void OnLeftMouseButtonDown();
-
-    virtual void OnLeftMouseButtonUp();
+    virtual void UpdateContent() override;
+    virtual void InitToolTip() override;
+    virtual void Draw() override;
+    virtual CRenderObject *Select() override;
+    virtual void OnLeftMouseButtonDown() override;
+    virtual void OnLeftMouseButtonUp() override;
 };

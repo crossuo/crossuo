@@ -1,6 +1,25 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpMenubar.h"
+
+enum
+{
+    ID_GMB_NONE,
+
+    ID_GMB_MINIMIZE,
+    ID_GMB_MAP,
+    ID_GMB_PAPERDOLL,
+    ID_GMB_INVENTORY,
+    ID_GMB_JOURNAL,
+    ID_GMB_CHAT,
+    ID_GMB_HELP,
+    ID_GMB_WORLD_MAP,
+    ID_GMB_INFO,
+
+    ID_GMB_COUNT,
+};
+
 CGumpMenubar::CGumpMenubar(short x, short y)
     : CGump(GT_MENUBAR, 0, x, y)
 {

@@ -6,11 +6,11 @@
 class CGameConsole : public CEntryText
 {
 private:
-    GAME_CONSOLE_TEXT_TYPE m_Type{ GCTT_NORMAL };
+    GAME_CONSOLE_TEXT_TYPE m_Type = GCTT_NORMAL;
     wstring m_ConsoleStack[MAX_CONSOLE_STACK_SIZE];
-    int m_ConsoleStackCount{ 0 };
-    int m_ConsoleSelectedIndex{ 0 };
-    bool m_PositionChanged{ false };
+    int m_ConsoleStackCount = 0;
+    int m_ConsoleSelectedIndex = 0;
+    bool m_PositionChanged = false;
 
 public:
     CGameConsole();

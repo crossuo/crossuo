@@ -1,6 +1,24 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpPartyManifest.h"
+
+enum
+{
+    ID_GPM_NONE,
+
+    ID_GPM_BUTTON_OKAY,
+    ID_GPM_BUTTON_CANCEL,
+    ID_GPM_BUTTON_SEND_MESSAGE,
+    ID_GPM_BUTTON_LOOT_TYPE,
+    ID_GPM_BUTTON_LEAVE,
+    ID_GPM_BUTTON_ADD,
+    ID_GPM_BUTTON_TELL_MEMBER,
+    ID_GPM_BUTTON_KICK_MEMBER,
+
+    ID_GPM_COUNT,
+};
+
 CGumpPartyManifest::CGumpPartyManifest(uint32_t serial, short x, short y, bool canLoot)
     : CGump(GT_PARTY_MANIFEST, serial, x, y)
     , m_CanLoot(canLoot)

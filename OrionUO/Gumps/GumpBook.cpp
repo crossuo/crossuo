@@ -3,6 +3,20 @@
 
 #include "GumpBook.h"
 
+enum
+{
+    ID_GB_NONE,
+
+    ID_GB_TEXT_AREA_AUTHOR,
+    ID_GB_TEXT_AREA_TITLE,
+    ID_GB_TEXT_AREA_PAGE_LEFT,
+    ID_GB_TEXT_AREA_PAGE_RIGHT,
+    ID_GB_BUTTON_PREV,
+    ID_GB_BUTTON_NEXT,
+
+    ID_GB_COUNT,
+};
+
 CGumpBook::CGumpBook(
     uint32_t serial, int16_t x, int16_t y, uint16_t pageCount, bool writable, bool unicode)
     : CGump(GT_BOOK, serial, x, y)

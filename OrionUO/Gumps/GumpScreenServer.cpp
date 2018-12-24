@@ -1,6 +1,25 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenServer.h"
+
+enum
+{
+    ID_SS_NONE,
+
+    ID_SS_QUIT,
+    ID_SS_ARROW_PREV,
+    ID_SS_ARROW_NEXT,
+    ID_SS_TIME_ZONE,
+    ID_SS_FULL,
+    ID_SS_CONNECTION,
+    ID_SS_EARTH,
+    ID_SS_HTML_GUMP,
+    ID_SS_SERVER_LIST,
+
+    ID_SS_COUNT,
+};
+
 CGumpScreenServer::CGumpScreenServer()
     : CGump(GT_NONE, 0, 0, 0)
 {

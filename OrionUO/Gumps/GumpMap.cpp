@@ -4,6 +4,16 @@
 #include <SDL_rect.h>
 #include "GumpMap.h"
 
+enum
+{
+    ID_GM_PLOT_COURSE = 1,
+    ID_GM_STOP_PLOTTING = 2,
+    ID_GM_CLEAR_COURSE = 3,
+
+    ID_GM_PIN_LIST = 10,
+    ID_GM_PIN_LIST_INSERT = 1000,
+};
+
 CGumpMap::CGumpMap(
     uint32_t serial,
     uint16_t graphic,

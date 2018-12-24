@@ -6,9 +6,9 @@
 class CGLFrameBuffer
 {
 private:
-    bool m_Ready{ false };
-    GLint m_OldFrameBuffer{ 0 };
-    GLuint m_FrameBuffer{ 0 };
+    bool m_Ready = false;
+    GLint m_OldFrameBuffer = 0;
+    GLuint m_FrameBuffer = 0;
 
 public:
     CGLFrameBuffer();

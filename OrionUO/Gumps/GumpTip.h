@@ -6,12 +6,6 @@
 class CGumpTip : public CGumpBaseScroll
 {
     bool Updates = false;
-
-private:
-    static const int ID_GT_PREV_GUMP = 1;
-    static const int ID_GT_REMOVE_GUMP = 2;
-    static const int ID_GT_NEXT_GUMP = 3;
-
     CGUIButton *m_ButtonPrevGump{ nullptr };
     CGUIButton *m_ButtonNextGump{ nullptr };
 
@@ -25,5 +19,5 @@ public:
 
     GUMP_BUTTON_EVENT_H;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

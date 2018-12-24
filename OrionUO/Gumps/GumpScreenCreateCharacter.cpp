@@ -1,6 +1,35 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenCreateCharacter.h"
+
+enum
+{
+    ID_CCS_NONE,
+
+    ID_CCS_QUIT,
+    ID_CCS_ARROW_PREV,
+    ID_CCS_ARROW_NEXT,
+    ID_CCS_NAME_FIELD,
+    ID_CCS_MALE_BUTTON,
+    ID_CCS_FEMALE_BUTTON,
+    ID_CCS_HUMAN_RACE_BUTTON,
+    ID_CCS_ELF_RACE_BUTTON,
+    ID_CCS_GARGOYLE_RACE_BUTTON,
+
+    ID_CCS_SKIN_TONE,
+    ID_CCS_SHIRT_COLOR,
+    ID_CCS_SKIRT_OR_PANTS_COLOR,
+    ID_CCS_HAIR_COLOR,
+    ID_CCS_FACIAL_HAIR_COLOR,
+
+    ID_CCS_COUNT,
+
+    ID_CCS_HAIR_STYLE = 20,
+    ID_CCS_FACIAL_HAIR_STYLE = 40,
+    ID_CCS_COLOR_RANGE = 100,
+};
+
 CGumpScreenCreateCharacter::CGumpScreenCreateCharacter()
     : CGump(GT_NONE, 0, 0, 0)
 {

@@ -3,6 +3,17 @@
 
 #include "GumpDrag.h"
 
+enum
+{
+    ID_GD_NONE,
+
+    ID_GD_SCROLL,
+    ID_GD_OKAY,
+    ID_GD_TEXT_FIELD,
+
+    ID_GD_COUNT,
+};
+
 CGumpDrag::CGumpDrag(uint32_t serial, short x, short y)
     : CGump(GT_DRAG, serial, x, y)
 {

@@ -1,7 +1,22 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenCharacterList.h"
 #include <SDL_timer.h>
+
+enum
+{
+    ID_CS_NONE,
+
+    ID_CS_QUIT,
+    ID_CS_ARROW_PREV,
+    ID_CS_ARROW_NEXT,
+    ID_CS_NEW,
+    ID_CS_DELETE,
+    ID_CS_CHARACTERS,
+
+    ID_CS_COUNT,
+};
 
 CGumpScreenCharacterList::CGumpScreenCharacterList()
     : CGump(GT_NONE, 0, 0, 0)

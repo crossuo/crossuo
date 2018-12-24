@@ -3,6 +3,19 @@
 
 #include "GumpBulletinBoardItem.h"
 
+enum
+{
+    ID_GBBI_NONE,
+
+    ID_GBBI_SUBJECT_TEXT_FIELD,
+    ID_GBBI_TEXT_FIELD,
+    ID_GBBI_POST,
+    ID_GBBI_REPLY,
+    ID_GBBI_REMOVE,
+
+    ID_GBBI_COUNT,
+};
+
 CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     int serial,
     int x,

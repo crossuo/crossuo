@@ -1,7 +1,22 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenMain.h"
 #include "GitRevision.h"
+
+enum
+{
+    ID_MS_NONE,
+
+    ID_MS_QUIT,
+    ID_MS_ARROW_NEXT,
+    ID_MS_ACCOUNT,
+    ID_MS_PASSWORD,
+    ID_MS_SAVEPASSWORD,
+    ID_MS_AUTOLOGIN,
+
+    ID_MS_COUNT,
+};
 
 CGumpScreenMain::CGumpScreenMain()
     : CGump(GT_NONE, 0, 0, 0)

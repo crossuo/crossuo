@@ -1,7 +1,26 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpConsoleType.h"
+
 CGumpConsoleType *g_GumpConsoleType = nullptr;
+
+enum
+{
+    ID_GCT_NONE,
+
+    ID_GCT_NORMAL,
+    ID_GCT_YELL,
+    ID_GCT_WHISPER,
+    ID_GCT_EMOTE,
+    ID_GCT_COMMAND,
+    ID_GCT_BROADCAST,
+    ID_GCT_PARTY,
+    ID_GCT_MINIMIZE,
+    ID_GCT_SHOW_FULL_TEXT,
+
+    ID_GCT_COUNT,
+};
 
 CGumpConsoleType::CGumpConsoleType(bool minimized, bool showFullText)
     : CGump(GT_CONSOLE_TYPE, 0, 0, 0)

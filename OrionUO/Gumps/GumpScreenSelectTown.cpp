@@ -1,6 +1,20 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenSelectTown.h"
+
+enum
+{
+    ID_STS_NONE,
+
+    ID_STS_QUIT,
+    ID_STS_ARROW_PREV,
+    ID_STS_ARROW_NEXT,
+    ID_STS_HTML_GUMP,
+
+    ID_STS_TOWN = 10,
+};
+
 CGumpScreenSelectTown::CGumpScreenSelectTown()
     : CGump(GT_NONE, 0, 0, 0)
 {

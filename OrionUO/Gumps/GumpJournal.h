@@ -6,12 +6,6 @@
 class CGumpJournal : public CGumpBaseScroll
 {
 private:
-    static const int ID_GJ_SHOW_SYSTEM = 1;
-    static const int ID_GJ_SHOW_OBJECTS = 2;
-    static const int ID_GJ_SHOW_CLIENT = 3;
-    static const int ID_GJ_BUTTON_LOCK = 4;
-    static constexpr int ID_GJ_LOCK_MOVING = 5;
-
     CGUIGumppic *m_BottomLine{ nullptr };
     CGUIButton *m_TextLocker{ nullptr };
     CGUICheckbox *m_CheckboxShowSystem{ nullptr };
@@ -22,8 +16,7 @@ private:
     CGUIText *m_TextShowClient{ nullptr };
 
 protected:
-    virtual void UpdateHeight();
-
+    virtual void UpdateHeight() override;
     int RecalculateHeight();
 
 public:
@@ -33,7 +26,7 @@ public:
     void AddText(class CTextData *obj);
     void DeleteText(class CTextData *obj);
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
     GUMP_BUTTON_EVENT_H;
     GUMP_CHECKBOX_EVENT_H;
@@ -41,5 +34,5 @@ public:
     GUMP_SLIDER_MOVE_EVENT_H { m_TextLocker->Visible = true; }
     GUMP_SCROLL_BUTTON_EVENT_H { m_TextLocker->Visible = true; }
 
-    bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

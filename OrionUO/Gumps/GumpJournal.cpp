@@ -1,6 +1,21 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpJournal.h"
+
+enum
+{
+    ID_GJ_NONE,
+
+    ID_GJ_SHOW_SYSTEM,
+    ID_GJ_SHOW_OBJECTS,
+    ID_GJ_SHOW_CLIENT,
+    ID_GJ_BUTTON_LOCK,
+    ID_GJ_LOCK_MOVING,
+
+    ID_GJ_COUNT,
+};
+
 CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     : CGumpBaseScroll(GT_JOURNAL, 0, 0x0820, height, x, y, true, 0, true)
 {

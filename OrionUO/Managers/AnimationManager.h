@@ -61,7 +61,7 @@ private:
     size_t m_AddressIdx[6];
     size_t m_SizeIdx[6];
 
-    int m_CharacterFrameHeight{ 0 };
+    int m_CharacterFrameHeight = 0;
 
     static void PrepareTargetAttackGump(
         CTargetGump &gump,
@@ -71,12 +71,12 @@ private:
         int per,
         CGameCharacter &obj);
 
-    int m_CharacterFrameStartY{ 0 };
-    int m_StartCharacterWaistY{ 0 };
-    int m_StartCharacterKneesY{ 0 };
-    int m_StartCharacterFeetY{ 0 };
-    int m_Sitting{ 0 };
-    bool m_UseBlending{ false };
+    int m_CharacterFrameStartY = 0;
+    int m_StartCharacterWaistY = 0;
+    int m_StartCharacterKneesY = 0;
+    int m_StartCharacterFeetY = 0;
+    int m_Sitting = 0;
+    bool m_UseBlending = false;
 
     EQUIP_CONV_BODY_MAP m_EquipConv;
 

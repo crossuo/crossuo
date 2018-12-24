@@ -1,9 +1,24 @@
 // MIT License
 // Copyright (C) September 2016 Hotride
 
-string CGumpSpellbook::m_SpellCircleName[8] = { "First Circle",   "Second Circle", "Third Circle",
-                                                "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
-                                                "Seventh Circle", "Eighth Circle" };
+#include "GumpSpellbook.h"
+
+enum
+{
+    ID_GSB_BUTTON_PREV = 1,
+    ID_GSB_BUTTON_NEXT = 2,
+    ID_GSB_BUTTON_CIRCLE_1_2 = 3,
+    ID_GSB_BUTTON_CIRCLE_3_4 = 4,
+    ID_GSB_BUTTON_CIRCLE_5_6 = 5,
+    ID_GSB_BUTTON_CIRCLE_7_8 = 6,
+    ID_GSB_BUTTON_MINIMIZE = 7,
+    ID_GSB_LOCK_MOVING = 8,
+    ID_GSB_SPELL_ICON_LEFT = 100,
+    ID_GSB_SPELL_ICON_RIGHT = 1000,
+};
+
+string s_SpellCircleName[] = { "First Circle", "Second Circle", "Third Circle",   "Fourth Circle",
+                               "Fifth Circle", "Sixth Circle",  "Seventh Circle", "Eighth Circle" };
 
 CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)
@@ -20,17 +35,17 @@ void CGumpSpellbook::InitStaticData()
 {
     return;
 
-    m_SpellCircleName[0] = g_ClilocManager.Cliloc(g_Language)->GetA(1028384, false, "First Circle");
-    m_SpellCircleName[1] =
+    s_SpellCircleName[0] = g_ClilocManager.Cliloc(g_Language)->GetA(1028384, false, "First Circle");
+    s_SpellCircleName[1] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028385, false, "Second Circle");
-    m_SpellCircleName[2] = g_ClilocManager.Cliloc(g_Language)->GetA(1028386, false, "Third Circle");
-    m_SpellCircleName[3] =
+    s_SpellCircleName[2] = g_ClilocManager.Cliloc(g_Language)->GetA(1028386, false, "Third Circle");
+    s_SpellCircleName[3] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028387, false, "Fourth Circle");
-    m_SpellCircleName[4] = g_ClilocManager.Cliloc(g_Language)->GetA(1028388, false, "Fifth Circle");
-    m_SpellCircleName[5] = g_ClilocManager.Cliloc(g_Language)->GetA(1028389, false, "Sixth Circle");
-    m_SpellCircleName[6] =
+    s_SpellCircleName[4] = g_ClilocManager.Cliloc(g_Language)->GetA(1028388, false, "Fifth Circle");
+    s_SpellCircleName[5] = g_ClilocManager.Cliloc(g_Language)->GetA(1028389, false, "Sixth Circle");
+    s_SpellCircleName[6] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028390, false, "Seventh Circle");
-    m_SpellCircleName[7] =
+    s_SpellCircleName[7] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028391, false, "Eighth Circle");
 
     m_SpellName1[0][0] = g_ClilocManager.Cliloc(g_Language)->GetA(1028320, false, "Clumsy");
@@ -736,7 +751,7 @@ void CGumpSpellbook::UpdateContent()
         if (isMageSpellbook)
         {
             text = (CGUIText *)Add(new CGUIText(0x0288, dataX, 30));
-            text->CreateTextureA(6, m_SpellCircleName[page]);
+            text->CreateTextureA(6, s_SpellCircleName[page]);
         }
 
         for (int i = 0; i < spellsOnPage; i++)
@@ -799,7 +814,7 @@ void CGumpSpellbook::UpdateContent()
 
         if (isMageSpellbook)
         {
-            text->CreateTextureA(6, m_SpellCircleName[i / 8]);
+            text->CreateTextureA(6, s_SpellCircleName[i / 8]);
 
             text = (CGUIText *)Add(new CGUIText(0x0288, iconTextX, 34));
             text->CreateTextureA(6, spellName, 80);

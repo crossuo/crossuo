@@ -3,6 +3,19 @@
 
 #include "GumpSkills.h"
 
+enum
+{
+    ID_GS_SHOW_REAL = 1,
+    ID_GS_SHOW_CAP = 2,
+    ID_GS_BUTTON_NEW_GROUP = 3,
+    ID_GS_LOCK_MOVING = 4,
+    ID_GS_GROUP_MINIMIZE = 10000,
+    ID_GS_GROUP = 11000,
+    ID_GS_SKILL_BUTTON = 12000,
+    ID_GS_SKILL = 13000,
+    ID_GS_SKILL_STATE = 14000,
+};
+
 CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
     : CGumpBaseScroll(GT_SKILLS, 0, 0x1F40, height, x, y, true, 0, true, 15)
 {

@@ -45,7 +45,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_COUNT, nullptr },
 };
 
-eConfigKey GetConfigKey(const string &key)
+static eConfigKey GetConfigKey(const string &key)
 {
     auto str = ToLowerA(key);
     for (int i = 0; s_Keys[i].key_name; i++)
@@ -262,7 +262,7 @@ void CMainScreen::LoadCustomPath()
                 break;
 
                 default:
-                break;
+                    break;
             }
         }
     }

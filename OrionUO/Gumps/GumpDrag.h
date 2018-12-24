@@ -8,12 +8,7 @@
 class CGumpDrag : public CGump
 {
 private:
-    static const int ID_GD_SCROLL = 1;
-    static const int ID_GD_OKAY = 2;
-    static const int ID_GD_TEXT_FIELD = 3;
-
-    bool m_StartText{ true };
-
+    bool m_StartText = true;
     CGUITextEntry *m_Entry{ nullptr };
     CGUISlider *m_Slider{ nullptr };
 

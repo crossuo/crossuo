@@ -8,23 +8,13 @@
 class CGumpBulletinBoardItem : public CGumpBaseScroll
 {
 protected:
-    static const int ID_GBBI_SUBJECT_TEXT_FIELD = 1;
-    static const int ID_GBBI_TEXT_FIELD = 2;
-    static const int ID_GBBI_POST = 3;
-    static const int ID_GBBI_REPLY = 4;
-    static const int ID_GBBI_REMOVE = 5;
-
     uint8_t m_Variant{ 0 };
-
     CGUIButton *m_ButtonPost{ nullptr };
     CGUIButton *m_ButtonRemove{ nullptr };
     CGUIButton *m_ButtonReply{ nullptr };
-
     CGUIHitBox *m_HitBox{ nullptr };
 
     void RecalculateHeight();
-
-protected:
     virtual void UpdateHeight();
 
 public:

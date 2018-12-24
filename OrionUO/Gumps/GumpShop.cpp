@@ -1,6 +1,20 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpShop.h"
+
+enum
+{
+    ID_GB_NONE,
+
+    ID_GB_BUTTON_ACCEPT,
+    ID_GB_BUTTON_CLEAR,
+    ID_GB_SHOP_LIST,
+    ID_GB_SHOP_RESULT,
+
+    ID_GB_COUNT,
+};
+
 CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
     : CGump(GT_SHOP, serial, x, y)
     , IsBuyGump(isBuyGump)

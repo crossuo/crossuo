@@ -21,6 +21,7 @@ class CGumpSpellbook : public CGump
     SPELLBOOK_TYPE BookType = ST_MAGE;
 
 public:
+    static const int MAX_SPELLS_COUNT = 64;
     static const int SPELLBOOK_1_SPELLS_COUNT = 64;
     static const int SPELLBOOK_2_SPELLS_COUNT = 17;
     static const int SPELLBOOK_3_SPELLS_COUNT = 10;
@@ -40,23 +41,7 @@ public:
     static string m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT];
 
 private:
-    const int ID_GSB_BUTTON_PREV = 1;
-    const int ID_GSB_BUTTON_NEXT = 2;
-    const int ID_GSB_BUTTON_CIRCLE_1_2 = 3;
-    const int ID_GSB_BUTTON_CIRCLE_3_4 = 4;
-    const int ID_GSB_BUTTON_CIRCLE_5_6 = 5;
-    const int ID_GSB_BUTTON_CIRCLE_7_8 = 6;
-    const int ID_GSB_BUTTON_MINIMIZE = 7;
-    const int ID_GSB_LOCK_MOVING = 8;
-    const int ID_GSB_SPELL_ICON_LEFT = 100;
-    const int ID_GSB_SPELL_ICON_RIGHT = 1000;
-
-    static const int MAX_SPELLS_COUNT = 64;
-
-    static string m_SpellCircleName[8];
-
     static const string m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT];
-
     static const SPELL_REQURIES m_SpellRequries2[SPELLBOOK_2_SPELLS_COUNT];
     static const PALADIN_SPELL_REQURIES m_SpellRequries3[SPELLBOOK_3_SPELLS_COUNT];
     static const SPELL_REQURIES m_SpellRequries4[SPELLBOOK_4_SPELLS_COUNT];
@@ -78,7 +63,6 @@ private:
     CGUIGumppic *m_LastSpellBookmark{ nullptr };
 
     void GetTooltipBookInfo(int &dictionaryPagesCount, int &tooltipOffset);
-
     void GetSummaryBookInfo(
         int &maxSpellsCount,
         int &dictionaryPagesCount,
@@ -89,7 +73,6 @@ private:
         uint16_t &iconStartGraphic);
 
     string GetSpellName(int offset, string &abbreviature, string &reagents);
-
     string GetSpellRequries(int offset, int &y);
 
 public:
@@ -97,21 +80,16 @@ public:
     virtual ~CGumpSpellbook();
 
     static void InitStaticData();
-
     void UpdateGraphic(uint16_t parentGraphic);
-
-    virtual void DelayedClick(CRenderObject *obj);
-
     void ChangePage(int newPage);
 
-    virtual void InitToolTip();
-
-    virtual void PrepareContent();
-
-    virtual void UpdateContent();
+    virtual void InitToolTip() override;
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
+    virtual void DelayedClick(CRenderObject *obj) override;
 
     GUMP_BUTTON_EVENT_H;
     GUMP_TEXT_ENTRY_EVENT_H;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

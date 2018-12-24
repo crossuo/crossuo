@@ -1,6 +1,19 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpBulletinBoard.h"
+
+enum
+{
+    ID_GBB_NONE,
+
+    ID_GBB_POST_MESSAGE,
+    ID_GBB_MESSAGE,
+    ID_GBS_HTMLGUMP,
+
+    ID_GBS_COUNT,
+};
+
 CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const string &name)
     : CGump(GT_BULLETIN_BOARD, serial, x, y)
 {

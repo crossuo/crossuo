@@ -18,7 +18,7 @@ public:
     IOrionString &operator()(const std::string &str);
     IOrionString &operator()(const std::wstring &str);
 
-    bool m_Unicode{ false };
+    bool m_Unicode = false;
     char *m_DataA{ nullptr };
     wchar_t *m_DataW{ nullptr };
 };

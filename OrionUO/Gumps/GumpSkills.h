@@ -8,18 +8,8 @@
 class CGumpSkills : public CGumpBaseScroll
 {
 private:
-    static constexpr int ID_GS_SHOW_REAL = 1;
-    static constexpr int ID_GS_SHOW_CAP = 2;
-    static constexpr int ID_GS_BUTTON_NEW_GROUP = 3;
-    static constexpr int ID_GS_LOCK_MOVING = 4;
-    static constexpr int ID_GS_GROUP_MINIMIZE = 10000;
-    static constexpr int ID_GS_GROUP = 11000;
-    static constexpr int ID_GS_SKILL_BUTTON = 12000;
-    static constexpr int ID_GS_SKILL = 13000;
-    static constexpr int ID_GS_SKILL_STATE = 14000;
-
-    bool m_ShowReal{ false };
-    bool m_ShowCap{ false };
+    bool m_ShowReal = false;
+    bool m_ShowCap = false;
 
     class CSkillGroupObject *GetGroupUnderCursor(int &index);
 

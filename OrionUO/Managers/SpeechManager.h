@@ -27,7 +27,7 @@ class CSpeechItem
 {
 public:
     uint16_t Code = 0;
-    wstring Data = {};
+    wstring Data;
 
     bool CheckStart = false;
     bool CheckEnd = false;
@@ -44,7 +44,7 @@ class CSpeechManager
 private:
     vector<CSpeechItem> m_SpeechEntries;
     vector<CLangCode> m_LangCodes;
-    bool m_Loaded{ false };
+    bool m_Loaded = false;
 
 public:
     CSpeechManager();

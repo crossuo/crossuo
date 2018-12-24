@@ -5,12 +5,6 @@
 
 class CGumpBulletinBoard : public CGump
 {
-private:
-    //!Идентификаторы кнопок
-    static const int ID_GBB_POST_MESSAGE = 1;
-    static const int ID_GBB_MESSAGE = 2;
-    static const int ID_GBS_HTMLGUMP = 3;
-
 public:
     CGumpBulletinBoard(uint32_t serial, short x, short y, const string &name);
     virtual ~CGumpBulletinBoard();

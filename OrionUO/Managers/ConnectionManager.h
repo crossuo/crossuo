@@ -63,7 +63,7 @@ private:
     CSocket m_LoginSocket{ CSocket(false) };
     CSocket m_GameSocket{ CSocket(true) };
     // true - m_LoginSocket, false - m_GameSocket
-    bool m_IsLoginSocket{ true };
+    bool m_IsLoginSocket = true;
     uint8_t m_Seed[4];
 
     void SendIP(CSocket &socket, uint8_t *ip);

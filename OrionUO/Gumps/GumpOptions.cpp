@@ -4,13 +4,437 @@
 #include "GumpOptions.h"
 
 #if USE_WISP
-#define KeyName(x) m_HotkeyText[x & 0xFF]
+#define KeyName(x) s_HotkeyText[x & 0xFF]
+const char *s_HotkeyText[0x100] = {
+    "",               //0x00
+    "Left Mouse",     //0x01
+    "Right Mouse",    //0x02
+    "Ctrl-Break",     //0x03
+    "Middle Mouse",   //0x04
+    "0x05",           //0x05
+    "0x06",           //0x06
+    "0x07",           //0x07
+    "Backspace",      //0x08
+    "Tab",            //0x09
+    "0x0a",           //0x0a
+    "0x0b",           //0x0b
+    "Clear",          //0x0c
+    "Enter",          //0x0d
+    "0x0e",           //0x0e
+    "0x0f",           //0x0f
+    "Shift",          //0x10
+    "Ctrl",           //0x11
+    "Alt",            //0x12
+    "Pause",          //0x13
+    "Caps Lock",      //0x14
+    "0x15",           //0x15
+    "0x16",           //0x16
+    "0x17",           //0x17
+    "0x18",           //0x18
+    "0x19",           //0x19
+    "0x1a",           //0x1a
+    "Esc",            //0x1b
+    "0x1c",           //0x1c
+    "0x1d",           //0x1d
+    "0x1e",           //0x1e
+    "0x1f",           //0x1f
+    "Space",          //0x20
+    "Page Up",        //0x21
+    "Page Down",      //0x22
+    "End",            //0x23
+    "Home",           //0x24
+    "Left Arrow",     //0x25
+    "Up Arrow",       //0x26
+    "Right Arrow",    //0x27
+    "Down Arrow",     //0x28
+    "Select",         //0x29
+    "OEM 2A",         //0x2a
+    "Execute",        //0x2b
+    "Print Screen",   //0x2c
+    "Ins",            //0x2d
+    "Del",            //0x2e
+    "Help",           //0x2f
+    "0",              //0x30
+    "1",              //0x31
+    "2",              //0x32
+    "3",              //0x33
+    "4",              //0x34
+    "5",              //0x35
+    "6",              //0x36
+    "7",              //0x37
+    "8",              //0x38
+    "9",              //0x39
+    "0x3a",           //0x3a
+    "0x3b",           //0x3b
+    "0x3c",           //0x3c
+    "0x3d",           //0x3d
+    "0x3e",           //0x3e
+    "0x3f",           //0x3f
+    "0x40",           //0x40
+    "A",              //0x41
+    "B",              //0x42
+    "C",              //0x43
+    "D",              //0x44
+    "E",              //0x45
+    "F",              //0x46
+    "G",              //0x47
+    "H",              //0x48
+    "I",              //0x49
+    "J",              //0x4a
+    "K",              //0x4b
+    "L",              //0x4c
+    "M",              //0x4d
+    "N",              //0x4e
+    "O",              //0x4f
+    "P",              //0x50
+    "Q",              //0x51
+    "R",              //0x52
+    "S",              //0x53
+    "T",              //0x54
+    "U",              //0x55
+    "V",              //0x56
+    "W",              //0x57
+    "X",              //0x58
+    "Y",              //0x59
+    "Z",              //0x5a
+    "Left Win",       //0x5b
+    "Right Win",      //0x5c
+    "Apps",           //0x5d
+    "0x5e",           //0x5e
+    "0x5f",           //0x5f
+    "Num 0",          //0x60
+    "Num 1",          //0x61
+    "Num 2",          //0x62
+    "Num 3",          //0x63
+    "Num 4",          //0x64
+    "Num 5",          //0x65
+    "Num 6",          //0x66
+    "Num 7",          //0x67
+    "Num 8",          //0x68
+    "Num 9",          //0x69
+    "Num *",          //0x6a
+    "Num +",          //0x6b
+    "Separator",      //0x6c
+    "Num -",          //0x6d
+    "Num .",          //0x6e
+    "Num /",          //0x6f
+    "F1",             //0x70
+    "F2",             //0x71
+    "F3",             //0x72
+    "F4",             //0x73
+    "F5",             //0x74
+    "F6",             //0x75
+    "F7",             //0x76
+    "F8",             //0x77
+    "F9",             //0x78
+    "F10",            //0x79
+    "F11",            //0x7a
+    "F12",            //0x7b
+    "Wheel Click",    //"F13",	//0x7c
+    "Wheel Up",       //"F14",	//0x7d
+    "Wheel Down",     //"F15",	//0x7e
+    "Mouse+ Forward", //"F16",	//0x7f
+    "Mouse+ Back",    //"F17",	//0x80
+    "F18",            //0x81
+    "F19",            //0x82
+    "F20",            //0x83
+    "F21",            //0x84
+    "F22",            //0x85
+    "F23",            //0x86
+    "F24",            //0x87
+    "0x88",           //0x88
+    "0x89",           //0x89
+    "0x8a",           //0x8a
+    "0x8b",           //0x8b
+    "0x8c",           //0x8c
+    "0x8d",           //0x8d
+    "0x8e",           //0x8e
+    "0x8f",           //0x8f
+    "Num Lock",       //0x90
+    "Scroll Lock",    //0x91
+    "0x92",           //0x92
+    "0x93",           //0x93
+    "0x94",           //0x94
+    "0x95",           //0x95
+    "0x96",           //0x96
+    "0x97",           //0x97
+    "0x98",           //0x98
+    "0x99",           //0x99
+    "0x9a",           //0x9a
+    "0x9b",           //0x9b
+    "0x9c",           //0x9c
+    "0x9d",           //0x9d
+    "0x9e",           //0x9e
+    "0x9f",           //0x9f
+    "0xa0",           //0xa0
+    "0xa1",           //0xa1
+    "0xa2",           //0xa2
+    "0xa3",           //0xa3
+    "0xa4",           //0xa4
+    "0xa5",           //0xa5
+    "0xa6",           //0xa6
+    "0xa7",           //0xa7
+    "0xa8",           //0xa8
+    "0xa9",           //0xa9
+    "0xaa",           //0xaa
+    "0xab",           //0xab
+    "0xac",           //0xac
+    "0xad",           //0xad
+    "0xae",           //0xae
+    "0xaf",           //0xaf
+    "0xb0",           //0xb0
+    "0xb1",           //0xb1
+    "0xb2",           //0xb2
+    "0xb3",           //0xb3
+    "0xb4",           //0xb4
+    "0xb5",           //0xb5
+    "0xb6",           //0xb6
+    "0xb7",           //0xb7
+    "0xb8",           //0xb8
+    "0xb9",           //0xb9
+    ";",              //0xba
+    "=",              //0xbb
+    ",",              //0xbc
+    "-",              //0xbd
+    ".",              //0xbe
+    "/",              //0xbf
+    "`",              //0xc0
+    "0xc1",           //0xc1
+    "0xc2",           //0xc2
+    "0xc3",           //0xc3
+    "0xc4",           //0xc4
+    "0xc5",           //0xc5
+    "0xc6",           //0xc6
+    "0xc7",           //0xc7
+    "0xc8",           //0xc8
+    "0xc9",           //0xc9
+    "0xca",           //0xca
+    "0xcb",           //0xcb
+    "0xcc",           //0xcc
+    "0xcd",           //0xcd
+    "0xce",           //0xce
+    "0xcf",           //0xcf
+    "0xd0",           //0xd0
+    "0xd1",           //0xd1
+    "0xd2",           //0xd2
+    "0xd3",           //0xd3
+    "0xd4",           //0xd4
+    "0xd5",           //0xd5
+    "0xd6",           //0xd6
+    "0xd7",           //0xd7
+    "0xd8",           //0xd8
+    "0xd9",           //0xd9
+    "0xda",           //0xda
+    "[",              //0xdb
+    "\\",             //0xdc
+    "]",              //0xdd
+    "'",              //0xde
+    "OEM DF",         //0xdf
+    "OEM E0",         //0xe0
+    "OEM E1",         //0xe1
+    "OEM E2",         //0x32
+    "OEM E3",         //0xe3
+    "OEM E4",         //0xe4
+    "0xe5",           //0xe5
+    "OEM E6",         //0xe6
+    "0xe7",           //0xe7
+    "0xe8",           //0xe8
+    "OEM E9",         //0xe9
+    "OEM EA",         //0xea
+    "OEM EB",         //0xeb
+    "OEM EC",         //0xec
+    "OEM ED",         //0xed
+    "OEM EE",         //0xee
+    "OEM EF",         //0xef
+    "OEM F0",         //0xf0
+    "OEM F1",         //0xf1
+    "OEM F2",         //0xf2
+    "OEM F3",         //0xf3
+    "OEM F4",         //0xf4
+    "OEM F5",         //0xf5
+    "Attn",           //0xf6
+    "Crsel",          //0xf7
+    "Exsel",          //0xf8
+    "Erase EOF",      //0xf9
+    "Play",           //0xfa
+    "Zoom",           //0xfb
+    "0xfc",           //0xfc
+    "PA1",            //0xfd
+    "Clear",          //0xfe
+    "0xff"            //0xff
+};
 #else
 #define KeyName(x) SDL_GetKeyName(x)
 #endif
 
 const uint16_t g_OptionsTextColor = 0;
 const int g_OptionsPolygoneColorOffset = 12;
+
+enum
+{
+    ID_GO_NONE,
+
+    ID_GO_PAGE_1,
+    ID_GO_PAGE_2,
+    ID_GO_PAGE_3,
+    ID_GO_PAGE_4,
+    ID_GO_PAGE_5,
+    ID_GO_PAGE_6,
+    ID_GO_PAGE_7,
+    ID_GO_PAGE_8,
+    ID_GO_PAGE_9,
+    ID_GO_PAGE_10,
+    ID_GO_CANCEL,
+    ID_GO_APPLY,
+    ID_GO_DEFAULT,
+    ID_GO_OKAY,
+
+    ID_GO_P1_SOUND_ON_OFF,
+    ID_GO_P1_MUSIC_ON_OFF,
+    ID_GO_P1_PLAY_FOOTSTEP_SOUNDS,
+    ID_GO_P1_PLAY_COMBAT_MUSIC,
+    ID_GO_P1_SOUND_VOLUME,
+    ID_GO_P1_MUSIC_VOLUME,
+    ID_GO_P1_BACKGROUND_SOUND,
+
+    ID_GO_P2_CLIENT_FPS,
+    ID_GO_P2_REDUCE_FPS_UNACTIVE_WINDOW,
+    ID_GO_P2_CHARACTERS_ANIMATION_DELAY,
+    ID_GO_P2_ITEMS_ANIMATION_DELAY,
+    ID_GO_P2_ENABLE_SCALING,
+    ID_GO_P2_REMOVE_TEXT_WITH_BLENDING,
+    ID_GO_P2_NO_DRAW_CHARACTERS_STATUS,
+    ID_GO_P2_DRAW_CHARACTERS_STATUS_TOP,
+    ID_GO_P2_DRAW_CHARACTERS_STATUS_BOTTOM,
+    ID_GO_P2_DRAW_STUMPS,
+    ID_GO_P2_MARKING_CAVES,
+    ID_GO_P2_NO_VEGETATION,
+    ID_GO_P2_NO_ANIMATE_FIELDS,
+    ID_GO_P2_LOCK_GUMP_MOVING,
+    ID_GO_P2_CONSOLE_ENTER,
+    ID_GO_P2_HIDDEN_CHARACTES_MODE_1,
+    ID_GO_P2_HIDDEN_CHARACTES_MODE_2,
+    ID_GO_P2_HIDDEN_CHARACTES_MODE_3,
+    ID_GO_P2_HIDDEN_CHARACTES_MODE_4,
+    ID_GO_P2_HIDDEN_ALPHA,
+    ID_GO_P2_USE_HIDDEN_MODE_ONLY_FOR_SELF,
+    ID_GO_P2_TRANSPARENT_SPELL_ICONS,
+    ID_GO_P2_SPELL_ICONS_ALPHA,
+    ID_GO_P2_OLD_STYLE_STATUSBAR,
+    ID_GO_P2_ORIGINAL_PARTY_STATUSBAR,
+    ID_GO_P2_APPLY_STATE_COLOR_ON_CHARACTERS,
+    ID_GO_P2_CHANGE_FIELDS_GRAPHIC,
+    ID_GO_P2_PAPERDOLL_SLOTS,
+    ID_GO_P2_DRAW_CHARACTER_BARS_ALWAYS,
+    ID_GO_P2_DRAW_CHARACTER_BARS_NOT_MAX,
+    ID_GO_P2_DRAW_CHARACTER_BARS_LOWER,
+    ID_GO_P2_DRAW_CHARACTER_BARS_LOWER_VALUE,
+    ID_GO_P2_REMOVE_STATUSBARS_WITHOUT_OBJECTS,
+    ID_GO_P2_SHOW_CONSOLE_ENTRY_MODE,
+    ID_GO_P2_DRAW_AURA_NEVER,
+    ID_GO_P2_DRAW_AURA_IN_WARMODE,
+    ID_GO_P2_DRAW_AURA_ALWAYS,
+    ID_GO_P2_DRAW_AURA_WITH_CTRL_PRESSED,
+    ID_GO_P2_SCREENSHOT_FORMAT_BMP,
+    ID_GO_P2_SCREENSHOT_FORMAT_PNG,
+    ID_GO_P2_SCREENSHOT_FORMAT_TGA,
+    ID_GO_P2_SCREENSHOT_FORMAT_JPG,
+    ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS,
+    ID_GO_P2_REMOVE_OR_CREATE_OBJECTS_WITH_BLENDING,
+    ID_GO_P2_DRAW_HELMETS_ON_SHROUD,
+    ID_GO_P2_USE_GLOBAL_MAP_LAYER,
+    ID_GO_P2_NO_DRAW_ROOFS,
+    ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE,
+    ID_GO_P2_AUTO_DISPLAY_WORLD_MAP,
+
+    ID_GO_P2_CHECK_PING,
+    ID_GO_P2_PING_TIMER,
+    ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
+    ID_GO_P2_DRAW_STATUS_FOR_HUMANOIDS,
+    ID_GO_P2_DEV_MODE_1,
+    ID_GO_P2_DEV_MODE_2,
+    ID_GO_P2_DEV_MODE_3,
+
+    ID_GO_P3_USE_TOOLTIP,
+    ID_GO_P3_TEXT_COLOR,
+    ID_GO_P3_TEXT_FONT,
+    ID_GO_P3_DELAY_BEFORE_TOOLTIP,
+
+    ID_GO_P4_TEXT_FONT,
+    ID_GO_P4_TEXT_COLOR,
+
+    ID_GO_P5_BUTTON_ADD,
+    ID_GO_P5_BUTTON_DELETE,
+    ID_GO_P5_BUTTON_PREVEOUS,
+    ID_GO_P5_BUTTON_NEXT,
+    ID_GO_P5_KEY_BOX,
+    ID_GO_P5_BUTTON_SHIFT,
+    ID_GO_P5_BUTTON_ALT,
+    ID_GO_P5_BUTTON_CTRL,
+    ID_GO_P5_BUTTON_UP,
+    ID_GO_P5_BUTTON_DOWN,
+    ID_GO_P5_LEFT_BOX,
+    ID_GO_P5_RIGHT_BOX,
+    ID_GO_P5_EMPTY_BOX,
+
+    ID_GO_P5_MACRO_SELECTION,
+    ID_GO_P5_ACTION_SELECTION,
+
+    ID_GO_P6_ENABLE_PATHFINDING,
+    ID_GO_P6_HOLD_TAB_FOR_COMBAT,
+    ID_GO_P6_OFFSET_INTERFACE_WINDOWS,
+    ID_GO_P6_AUTO_ARRANGE_MINIMIZED_WINDOWS,
+    ID_GO_P6_ALWAYS_RUN,
+    ID_GO_P6_DISABLE_MENUBAR,
+    ID_GO_P6_GRAY_OUT_OF_RANGE_OBJECTS,
+    ID_GO_P6_DISABLE_NEW_TARGET_SYSTEM,
+    ID_GO_P6_OBJECT_HANDLES,
+    ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_AT_ICON,
+    ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_ALWAYS_UP,
+    ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_FOLLOW_MOUSE,
+    ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_SINGLE_CLICK,
+    ID_GO_P6_DISPLAY_ITEM_PROPERTIES_ICON,
+    ID_GO_P6_HOLD_SHIFT_FOR_CONTEXT_MENUS,
+    ID_GO_P6_HOLD_SHIFT_FOR_ENABLE_PATHFINDING,
+    ID_GO_P6_CONTAINER_OFFSET_X,
+    ID_GO_P6_CONTAINER_OFFSET_Y,
+    ID_GO_P6_CHARACTER_BACKPACK_STYLE_DEFAULT,
+    ID_GO_P6_CHARACTER_BACKPACK_STYLE_SUEDE,
+    ID_GO_P6_CHARACTER_BACKPACK_STYLE_POLAR_BEAR,
+    ID_GO_P6_CHARACTER_BACKPACK_STYLE_GHOUL_SKIN,
+
+    ID_GO_P7_SCALE_SPEECH_DURATION,
+    ID_GO_P7_SPEECH_COLOR,
+    ID_GO_P7_EMOTE_COLOR,
+    ID_GO_P7_PARTY_MESSAGE_COLOR,
+    ID_GO_P7_GUILD_MESSAGE_COLOR,
+    ID_GO_P7_ALLIANCE_MESSAGE_COLOR,
+    ID_GO_P7_IGNORE_GUILD_MESSAGE,
+    ID_GO_P7_IGNORE_ALLIANCE_MESSAGE,
+    ID_GO_P7_DARK_NIGHTS,
+    ID_GO_P7_COLORED_LIGHTING,
+    ID_GO_P7_AJUST_LONG_SPEECH,
+    ID_GO_P7_GAME_WINDOW_WIDTH,
+    ID_GO_P7_GAME_WINDOW_HEIGHT,
+    ID_GO_P7_LOCK_GAME_WINDOW_RESIZING,
+
+    ID_GO_P8_INNOCENT_COLOR,
+    ID_GO_P8_FRIENDLY_COLOR,
+    ID_GO_P8_SOMEONE_COLOR,
+    ID_GO_P8_CRIMINAL_COLOR,
+    ID_GO_P8_ENEMY_COLOR,
+    ID_GO_P8_MURDERER_COLOR,
+    ID_GO_P8_QUERY_CRIMINAL_ACTIONS,
+
+    ID_GO_P9_SHOW_APPROACHING_NAMES,
+    ID_GO_P9_USE_CIRCLE_OF_TRANSPARENCY,
+    ID_GO_P9_INFORM_STATS,
+    ID_GO_P9_SPEECH_FONT,
+    ID_GO_P9_TRANSPARENCY_RADIUS,
+    ID_GO_P9_INFORM_SKILLS,
+
+    ID_GO_COUNT,
+};
 
 CGumpOptions::CGumpOptions(short x, short y)
     : CGump(GT_OPTIONS, 0, x, y)
@@ -4066,264 +4490,3 @@ void CGumpOptions::ApplyPageChanges()
             break;
     }
 }
-
-#if USE_WISP
-const char *CGumpOptions::m_HotkeyText[0x100] = {
-    "",               //0x00
-    "Left Mouse",     //0x01
-    "Right Mouse",    //0x02
-    "Ctrl-Break",     //0x03
-    "Middle Mouse",   //0x04
-    "0x05",           //0x05
-    "0x06",           //0x06
-    "0x07",           //0x07
-    "Backspace",      //0x08
-    "Tab",            //0x09
-    "0x0a",           //0x0a
-    "0x0b",           //0x0b
-    "Clear",          //0x0c
-    "Enter",          //0x0d
-    "0x0e",           //0x0e
-    "0x0f",           //0x0f
-    "Shift",          //0x10
-    "Ctrl",           //0x11
-    "Alt",            //0x12
-    "Pause",          //0x13
-    "Caps Lock",      //0x14
-    "0x15",           //0x15
-    "0x16",           //0x16
-    "0x17",           //0x17
-    "0x18",           //0x18
-    "0x19",           //0x19
-    "0x1a",           //0x1a
-    "Esc",            //0x1b
-    "0x1c",           //0x1c
-    "0x1d",           //0x1d
-    "0x1e",           //0x1e
-    "0x1f",           //0x1f
-    "Space",          //0x20
-    "Page Up",        //0x21
-    "Page Down",      //0x22
-    "End",            //0x23
-    "Home",           //0x24
-    "Left Arrow",     //0x25
-    "Up Arrow",       //0x26
-    "Right Arrow",    //0x27
-    "Down Arrow",     //0x28
-    "Select",         //0x29
-    "OEM 2A",         //0x2a
-    "Execute",        //0x2b
-    "Print Screen",   //0x2c
-    "Ins",            //0x2d
-    "Del",            //0x2e
-    "Help",           //0x2f
-    "0",              //0x30
-    "1",              //0x31
-    "2",              //0x32
-    "3",              //0x33
-    "4",              //0x34
-    "5",              //0x35
-    "6",              //0x36
-    "7",              //0x37
-    "8",              //0x38
-    "9",              //0x39
-    "0x3a",           //0x3a
-    "0x3b",           //0x3b
-    "0x3c",           //0x3c
-    "0x3d",           //0x3d
-    "0x3e",           //0x3e
-    "0x3f",           //0x3f
-    "0x40",           //0x40
-    "A",              //0x41
-    "B",              //0x42
-    "C",              //0x43
-    "D",              //0x44
-    "E",              //0x45
-    "F",              //0x46
-    "G",              //0x47
-    "H",              //0x48
-    "I",              //0x49
-    "J",              //0x4a
-    "K",              //0x4b
-    "L",              //0x4c
-    "M",              //0x4d
-    "N",              //0x4e
-    "O",              //0x4f
-    "P",              //0x50
-    "Q",              //0x51
-    "R",              //0x52
-    "S",              //0x53
-    "T",              //0x54
-    "U",              //0x55
-    "V",              //0x56
-    "W",              //0x57
-    "X",              //0x58
-    "Y",              //0x59
-    "Z",              //0x5a
-    "Left Win",       //0x5b
-    "Right Win",      //0x5c
-    "Apps",           //0x5d
-    "0x5e",           //0x5e
-    "0x5f",           //0x5f
-    "Num 0",          //0x60
-    "Num 1",          //0x61
-    "Num 2",          //0x62
-    "Num 3",          //0x63
-    "Num 4",          //0x64
-    "Num 5",          //0x65
-    "Num 6",          //0x66
-    "Num 7",          //0x67
-    "Num 8",          //0x68
-    "Num 9",          //0x69
-    "Num *",          //0x6a
-    "Num +",          //0x6b
-    "Separator",      //0x6c
-    "Num -",          //0x6d
-    "Num .",          //0x6e
-    "Num /",          //0x6f
-    "F1",             //0x70
-    "F2",             //0x71
-    "F3",             //0x72
-    "F4",             //0x73
-    "F5",             //0x74
-    "F6",             //0x75
-    "F7",             //0x76
-    "F8",             //0x77
-    "F9",             //0x78
-    "F10",            //0x79
-    "F11",            //0x7a
-    "F12",            //0x7b
-    "Wheel Click",    //"F13",	//0x7c
-    "Wheel Up",       //"F14",	//0x7d
-    "Wheel Down",     //"F15",	//0x7e
-    "Mouse+ Forward", //"F16",	//0x7f
-    "Mouse+ Back",    //"F17",	//0x80
-    "F18",            //0x81
-    "F19",            //0x82
-    "F20",            //0x83
-    "F21",            //0x84
-    "F22",            //0x85
-    "F23",            //0x86
-    "F24",            //0x87
-    "0x88",           //0x88
-    "0x89",           //0x89
-    "0x8a",           //0x8a
-    "0x8b",           //0x8b
-    "0x8c",           //0x8c
-    "0x8d",           //0x8d
-    "0x8e",           //0x8e
-    "0x8f",           //0x8f
-    "Num Lock",       //0x90
-    "Scroll Lock",    //0x91
-    "0x92",           //0x92
-    "0x93",           //0x93
-    "0x94",           //0x94
-    "0x95",           //0x95
-    "0x96",           //0x96
-    "0x97",           //0x97
-    "0x98",           //0x98
-    "0x99",           //0x99
-    "0x9a",           //0x9a
-    "0x9b",           //0x9b
-    "0x9c",           //0x9c
-    "0x9d",           //0x9d
-    "0x9e",           //0x9e
-    "0x9f",           //0x9f
-    "0xa0",           //0xa0
-    "0xa1",           //0xa1
-    "0xa2",           //0xa2
-    "0xa3",           //0xa3
-    "0xa4",           //0xa4
-    "0xa5",           //0xa5
-    "0xa6",           //0xa6
-    "0xa7",           //0xa7
-    "0xa8",           //0xa8
-    "0xa9",           //0xa9
-    "0xaa",           //0xaa
-    "0xab",           //0xab
-    "0xac",           //0xac
-    "0xad",           //0xad
-    "0xae",           //0xae
-    "0xaf",           //0xaf
-    "0xb0",           //0xb0
-    "0xb1",           //0xb1
-    "0xb2",           //0xb2
-    "0xb3",           //0xb3
-    "0xb4",           //0xb4
-    "0xb5",           //0xb5
-    "0xb6",           //0xb6
-    "0xb7",           //0xb7
-    "0xb8",           //0xb8
-    "0xb9",           //0xb9
-    ";",              //0xba
-    "=",              //0xbb
-    ",",              //0xbc
-    "-",              //0xbd
-    ".",              //0xbe
-    "/",              //0xbf
-    "`",              //0xc0
-    "0xc1",           //0xc1
-    "0xc2",           //0xc2
-    "0xc3",           //0xc3
-    "0xc4",           //0xc4
-    "0xc5",           //0xc5
-    "0xc6",           //0xc6
-    "0xc7",           //0xc7
-    "0xc8",           //0xc8
-    "0xc9",           //0xc9
-    "0xca",           //0xca
-    "0xcb",           //0xcb
-    "0xcc",           //0xcc
-    "0xcd",           //0xcd
-    "0xce",           //0xce
-    "0xcf",           //0xcf
-    "0xd0",           //0xd0
-    "0xd1",           //0xd1
-    "0xd2",           //0xd2
-    "0xd3",           //0xd3
-    "0xd4",           //0xd4
-    "0xd5",           //0xd5
-    "0xd6",           //0xd6
-    "0xd7",           //0xd7
-    "0xd8",           //0xd8
-    "0xd9",           //0xd9
-    "0xda",           //0xda
-    "[",              //0xdb
-    "\\",             //0xdc
-    "]",              //0xdd
-    "'",              //0xde
-    "OEM DF",         //0xdf
-    "OEM E0",         //0xe0
-    "OEM E1",         //0xe1
-    "OEM E2",         //0x32
-    "OEM E3",         //0xe3
-    "OEM E4",         //0xe4
-    "0xe5",           //0xe5
-    "OEM E6",         //0xe6
-    "0xe7",           //0xe7
-    "0xe8",           //0xe8
-    "OEM E9",         //0xe9
-    "OEM EA",         //0xea
-    "OEM EB",         //0xeb
-    "OEM EC",         //0xec
-    "OEM ED",         //0xed
-    "OEM EE",         //0xee
-    "OEM EF",         //0xef
-    "OEM F0",         //0xf0
-    "OEM F1",         //0xf1
-    "OEM F2",         //0xf2
-    "OEM F3",         //0xf3
-    "OEM F4",         //0xf4
-    "OEM F5",         //0xf5
-    "Attn",           //0xf6
-    "Crsel",          //0xf7
-    "Exsel",          //0xf8
-    "Erase EOF",      //0xf9
-    "Play",           //0xfa
-    "Zoom",           //0xfb
-    "0xfc",           //0xfc
-    "PA1",            //0xfd
-    "Clear",          //0xfe
-    "0xff"            //0xff
-};
-#endif

@@ -7,19 +7,7 @@
 
 class CGumpBook : public CGump
 {
-public:
-    bool Writable = false;
-    uint16_t PageCount = 0;
-    bool Unicode = false;
-
 private:
-    static const int ID_GB_TEXT_AREA_AUTHOR = 1;
-    static const int ID_GB_TEXT_AREA_TITLE = 2;
-    static const int ID_GB_TEXT_AREA_PAGE_LEFT = 3;
-    static const int ID_GB_TEXT_AREA_PAGE_RIGHT = 4;
-    static const int ID_GB_BUTTON_PREV = 5;
-    static const int ID_GB_BUTTON_NEXT = 6;
-
     bool *m_ChangedPage{ nullptr };
     bool *m_PageDataReceived{ nullptr };
     bool WasAtEnd = false;
@@ -32,6 +20,10 @@ private:
     void SetPagePos(int val, int page);
 
 public:
+    bool Writable = false;
+    uint16_t PageCount = 0;
+    bool Unicode = false;
+
     CGumpBook(
         uint32_t serial, int16_t x, int16_t y, uint16_t pageCount, bool writable, bool unicode);
     virtual ~CGumpBook();
