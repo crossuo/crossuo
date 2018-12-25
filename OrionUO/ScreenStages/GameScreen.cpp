@@ -2764,7 +2764,10 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     }
 
     auto macro = g_MacroManager.FindMacro(key, altPressed, ctrlPressed, shiftPressed);
-    if (macro != nullptr)
+    const bool canExecuteMacro =
+        !(g_ConfigManager.DisableMacroInChat && g_EntryPointer == &g_GameConsole &&
+          g_GameConsole.InChat());
+    if (macro != nullptr && canExecuteMacro)
     {
         g_MacroManager.ChangePointer((CMacroObject *)macro->m_Items);
         g_MacroManager.WaitingBandageTarget = false;

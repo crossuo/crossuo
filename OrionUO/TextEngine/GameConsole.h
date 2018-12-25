@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -28,6 +28,7 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
+    bool InChat() const;
     void Send();
     void SaveConsoleMessage();
     void ChangeConsoleMessage(bool next);

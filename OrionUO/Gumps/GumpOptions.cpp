@@ -348,7 +348,7 @@ enum
     ID_GO_P2_NO_DRAW_ROOFS,
     ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE,
     ID_GO_P2_AUTO_DISPLAY_WORLD_MAP,
-
+    ID_GO_P2_DISABLE_MACRO_IN_CHAT,
     ID_GO_P2_CHECK_PING,
     ID_GO_P2_PING_TIMER,
     ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
@@ -929,6 +929,11 @@ void CGumpOptions::InitToolTip()
         case ID_GO_P2_AUTO_DISPLAY_WORLD_MAP:
         {
             g_ToolTip.Set(L"Display a world map immediately after entering the world");
+            break;
+        }
+        case ID_GO_P2_DISABLE_MACRO_IN_CHAT:
+        {
+            g_ToolTip.Set(L"Disables macro use when chat is active");
             break;
         }
         case ID_GO_P2_CHECK_PING:
@@ -1699,6 +1704,12 @@ void CGumpOptions::DrawPage2()
     checkbox->Checked = g_OptionsConfig.AutoDisplayWorldMap;
     checkbox->SetTextParameters(
         0, L"Display a world map immediately after entering the world", g_OptionsTextColor);
+
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P2_DISABLE_MACRO_IN_CHAT, 0x00D2, 0x00D3, 0x00D2, 0, 880));
+    checkbox->Checked = g_OptionsConfig.DisableMacroInChat;
+    checkbox->SetTextParameters(
+        0, L"Disables macro activation when chat is active", g_OptionsTextColor);
 
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P2_CHECK_PING, 0x00D2, 0x00D3, 0x00D2, 0, 900));
@@ -3521,6 +3532,10 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             {
                 g_OptionsConfig.AutoDisplayWorldMap = state;
             }
+            else if (serial == ID_GO_P2_DISABLE_MACRO_IN_CHAT)
+            {
+                g_OptionsConfig.DisableMacroInChat = state;
+            }
             else if (serial == ID_GO_P2_CHECK_PING)
             {
                 g_OptionsConfig.CheckPing = state;
@@ -4305,6 +4320,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.SetNoDrawRoofs(g_OptionsConfig.GetNoDrawRoofs());
             g_ConfigManager.HighlightTargetByType = g_OptionsConfig.HighlightTargetByType;
             g_ConfigManager.AutoDisplayWorldMap = g_OptionsConfig.AutoDisplayWorldMap;
+            g_ConfigManager.DisableMacroInChat = g_OptionsConfig.DisableMacroInChat;
             g_ConfigManager.CheckPing = g_OptionsConfig.CheckPing;
             g_ConfigManager.SetPingTimer(g_OptionsConfig.GetPingTimer());
             g_ConfigManager.CancelNewTargetSystemOnShiftEsc =

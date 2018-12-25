@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
 CGameConsole g_GameConsole;
@@ -21,6 +21,7 @@ void CGameConsole::Send()
 {
     DEBUG_TRACE_FUNCTION;
     Send(Text);
+    m_Type = GCTT_NORMAL;
 }
 
 void CGameConsole::Send(wstring text, uint16_t defaultColor)
@@ -297,12 +298,21 @@ wstring CGameConsole::IsSystemCommand(
     return result;
 }
 
+bool CGameConsole::InChat() const
+{
+    return (m_Type > GCTT_NORMAL);
+}
+
 void CGameConsole::DrawW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     int posOffset = 0;
     wstring wtext = Data();
+    if (wtext.empty())
+    {
+        m_Type = GCTT_NORMAL;
+    }
 
     if (Changed || Color != color)
     {

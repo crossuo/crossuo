@@ -56,6 +56,7 @@ public:
     bool DrawHelmetsOnShroud = false;
     bool HighlightTargetByType = true;
     bool AutoDisplayWorldMap = false;
+    bool DisableMacroInChat = false;
     bool CheckPing = true;
     bool CancelNewTargetSystemOnShiftEsc = false;
     bool DrawStatusForHumanoids = true;
