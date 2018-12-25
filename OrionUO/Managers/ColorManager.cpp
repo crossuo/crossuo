@@ -42,7 +42,7 @@ void CColorManager::Init()
     }
 }
 
-void CColorManager::SetHuesBlock(int index, PVERDATA_HUES_GROUP group)
+void CColorManager::SetHuesBlock(int index, VERDATA_HUES_GROUP *group)
 {
     DEBUG_TRACE_FUNCTION;
     if (index < 0 || index >= m_HuesCount)

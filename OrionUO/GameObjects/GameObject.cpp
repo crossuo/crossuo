@@ -74,7 +74,7 @@ void CGameObject::SetName(const string &newName)
             g_OrionWindow.SetTitle(title);
         }
 
-        PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, newName.c_str(), nullptr);
+        PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, newName.c_str());
     }
 
     m_Name = newName;

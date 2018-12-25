@@ -12,20 +12,20 @@
 struct UserEvent
 {
     uint32_t code;
-    WPARAM data1;
-    LPARAM data2;
+    void *data1;
+    void *data2;
 };
 
 struct PaintEvent
 {
-    WPARAM wParam;
-    LPARAM lParam;
+    void *wParam;
+    void *lParam;
 };
 
 struct InputEvent
 {
-    WPARAM wParam;
-    LPARAM lParam;
+    void *wParam;
+    void *lParam;
 };
 
 typedef InputEvent KeyEvent;

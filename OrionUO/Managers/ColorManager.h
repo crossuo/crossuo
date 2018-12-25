@@ -22,9 +22,9 @@ public:
 
     void Init();
 
-    PHUES_GROUP GetHuesRangePointer() { return &m_HuesRange[0]; }
+    HUES_GROUP *GetHuesRangePointer() { return &m_HuesRange[0]; }
     int GetHuesCount() const { return m_HuesCount; }
-    void SetHuesBlock(int index, PVERDATA_HUES_GROUP group);
+    void SetHuesBlock(int index, VERDATA_HUES_GROUP *group);
     void CreateHuesPalette();
     void SendColorsToShader(uint16_t color);
     uint16_t Color32To16(int c);

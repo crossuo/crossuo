@@ -1661,7 +1661,7 @@ void CGameScreen::PrepareContent()
                     g_Orion.OpenStatus(selchar->Serial);
                     g_GeneratedMouseDown = true;
                     g_OrionWindow.EmulateOnLeftMouseButtonDown();
-                    PLUGIN_EVENT(UOMSG_STATUS_REQUEST, selchar->Serial, 0);
+                    PLUGIN_EVENT(UOMSG_STATUS_REQUEST, selchar->Serial);
                 }
             }
         }
@@ -2576,7 +2576,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
 
     const auto key = EvKey(ev);
 #if USE_WISP
-    if (key == KEY_TAB && (ev.lParam & 0x40000000))
+    if (key == KEY_TAB && ((LPARAM)ev.lParam & 0x40000000))
         return;
 #else
     if (key == KEY_TAB && ev.repeat)

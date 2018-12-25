@@ -192,8 +192,8 @@ void CAnimationManager::Load(uint32_t *verdata)
             {
                 CTextureAnimationDirection &direction = group.m_Direction[d];
 
-                PANIM_IDX_BLOCK aidx =
-                    (PANIM_IDX_BLOCK)(address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
+                ANIM_IDX_BLOCK *aidx =
+                    (ANIM_IDX_BLOCK *)(address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
 
                 if ((size_t)aidx >= maxAddress)
                 {
@@ -217,8 +217,8 @@ void CAnimationManager::Load(uint32_t *verdata)
 
         for (int j = 0; j < dataCount; j++)
         {
-            PVERDATA_HEADER vh =
-                (PVERDATA_HEADER)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
+            VERDATA_HEADER *vh =
+                (VERDATA_HEADER *)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
 
             if (vh->FileID == 0x06) //Anim
             {
@@ -643,8 +643,9 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                         {
                             CTextureAnimationDirection &direction = group.m_Direction[d];
 
-                            PANIM_IDX_BLOCK aidx = (PANIM_IDX_BLOCK)(
-                                address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
+                            ANIM_IDX_BLOCK *aidx =
+                                (ANIM_IDX_BLOCK
+                                     *)(address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
 
                             if ((size_t)aidx >= maxAddress)
                             {

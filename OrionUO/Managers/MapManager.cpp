@@ -112,7 +112,7 @@ void CMapManager::CreateBlockTable(int map)
             realMapAddress = address;
         }
 
-        PSTAIDX_BLOCK sidx = (PSTAIDX_BLOCK)(staticIdxAddress + block * sizeof(STAIDX_BLOCK));
+        STAIDX_BLOCK *sidx = (STAIDX_BLOCK *)(staticIdxAddress + block * sizeof(STAIDX_BLOCK));
         if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
         {
             size_t address = staticAddress + sidx->Position;
@@ -264,7 +264,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
             {
                 uint32_t blockIndex = difl.ReadUInt32LE();
 
-                PSTAIDX_BLOCK sidx = (PSTAIDX_BLOCK)difi.Ptr;
+                STAIDX_BLOCK *sidx = (STAIDX_BLOCK *)difi.Ptr;
 
                 difi.Move(sizeof(STAIDX_BLOCK));
 
@@ -441,7 +441,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
         return;
     }
 
-    PMAP_BLOCK pmb = (PMAP_BLOCK)indexMap->MapAddress;
+    MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
 
     for (int x = 0; x < 8; x++)
     {
@@ -455,7 +455,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
         }
     }
 
-    PSTATICS_BLOCK sb = (PSTATICS_BLOCK)indexMap->StaticAddress;
+    STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
 
     if (sb != nullptr)
     {
@@ -661,7 +661,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
         return;
     }
 
-    PMAP_BLOCK pmb = (PMAP_BLOCK)indexMap->MapAddress;
+    MAP_BLOCK *pmb = (MAP_BLOCK *)indexMap->MapAddress;
 
     int bx = block->X * 8;
     int by = block->Y * 8;
@@ -682,7 +682,7 @@ void CMapManager::LoadBlock(CMapBlock *block)
         }
     }
 
-    PSTATICS_BLOCK sb = (PSTATICS_BLOCK)indexMap->StaticAddress;
+    STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
 
     if (sb != nullptr)
     {

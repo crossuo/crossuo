@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -14,7 +14,7 @@
 #else
 #include <GL/gl.h>
 #endif
-#include "EnumList.h"
+#include "plugin/enumlist.h"
 #include "DefinitionMacro.h"
 #include "Constants.h"
 
@@ -404,3 +404,27 @@ static inline T checked_cast(U *value)
     assert(static_cast<intptr_t>(result) == (intptr_t)value && "Type conversion loses information");
     return result;
 }
+
+template <typename T>
+static inline std::unique_ptr<T> unique_cast(void *value)
+{
+    return std::unique_ptr<T>((T *)value);
+}
+
+struct AutoFree
+{
+    AutoFree(void *p)
+        : _p(p)
+    {
+    }
+    ~AutoFree()
+    {
+        if (_p)
+        {
+            free(_p);
+        }
+    }
+
+private:
+    void *_p = nullptr;
+};

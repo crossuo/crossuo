@@ -71,7 +71,9 @@ int CApplication::Run()
         {
             quit = Wisp::g_WispWindow->OnWindowProc(event);
             if (quit)
+            {
                 break;
+            }
         }
 
         // 2] Run main loop, packets, rendering etc..

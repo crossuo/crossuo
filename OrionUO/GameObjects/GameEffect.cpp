@@ -110,7 +110,7 @@ uint16_t CGameEffect::CalculateCurrentGraphic()
     if (addressAnimData != 0u)
     {
         uint32_t addr = (Graphic * 68) + 4 * ((Graphic / 8) + 1);
-        PANIM_DATA pad = (PANIM_DATA)(addressAnimData + addr);
+        ANIM_DATA *pad = (ANIM_DATA *)(addressAnimData + addr);
 
         if (AnimIndex < (int)pad->FrameCount)
         {

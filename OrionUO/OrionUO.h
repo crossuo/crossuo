@@ -56,8 +56,8 @@ private:
         size_t indexMaxCount,
         const std::function<CIndexObject *(int index)> &getIdxObj,
         size_t address,
-        PBASE_IDX_BLOCK ptr,
-        const std::function<PBASE_IDX_BLOCK()> &getNewPtrValue);
+        BASE_IDX_BLOCK *ptr,
+        const std::function<BASE_IDX_BLOCK *()> &getNewPtrValue);
     void ReadUOPIndexFile(
         size_t indexMaxCount,
         const std::function<CIndexObject *(int index)> &getIdxObj,
@@ -71,7 +71,7 @@ private:
     string DecodeArgumentString(const char *text, int length);
     void ParseCommandLine();
     void LoadPlugin(const os_path &libpath, const string &function, int flags);
-    bool InstallPlugin(dllFunc *initFunc, int flags);
+    bool InstallPlugin(PluginEntry *initFunc, int flags);
     void LoadContainerOffsets();
 
 public:

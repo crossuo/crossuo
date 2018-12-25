@@ -309,7 +309,7 @@ char CMapBlock::GetLandZ(int x, int y, int map)
     int mX = x % 8;
     int mY = y % 8;
 
-    return ((PMAP_BLOCK)blockIndex->MapAddress)->Cells[mY * 8 + mX].Z;
+    return ((MAP_BLOCK *)blockIndex->MapAddress)->Cells[mY * 8 + mX].Z;
 }
 
 CLandObject *CMapBlock::GetLand(int x, int y)

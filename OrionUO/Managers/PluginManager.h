@@ -16,7 +16,7 @@ public:
     bool CanParseSend() { return (m_Flags & PLUGIN_FLAGS_PARSE_SEND); }
     bool CanRecv() { return (m_Flags & PLUGIN_FLAGS_RECV); }
     bool CanSend() { return (m_Flags & PLUGIN_FLAGS_SEND); }
-    bool CanWindowProc() { return (m_Flags & PLUGIN_FLAGS_WINDOW_PROC); }
+    bool CanEvent() { return (m_Flags & PLUGIN_FLAGS_EVENT_PROC); }
     bool CanClientAccess() { return (m_Flags & PLUGIN_FLAGS_CLIENT_ACCESS); }
     bool CanEnterWorldRender() { return (m_Flags & PLUGIN_FLAGS_GAME_WORLD_DRAW); }
     bool CanEnterSceneRender() { return (m_Flags & PLUGIN_FLAGS_SCENE_DRAW); }
@@ -31,7 +31,7 @@ public:
     CPluginManager();
     virtual ~CPluginManager() {}
 
-    uint32_t WindowProc(WindowHandle hWnd, uint32_t msg, void *data1, void *data2);
+    uint32_t OnEvent(uint32_t msg, const void *data);
     bool PacketRecv(uint8_t *buf, size_t size);
     bool PacketSend(uint8_t *buf, size_t size);
     void Disconnect();

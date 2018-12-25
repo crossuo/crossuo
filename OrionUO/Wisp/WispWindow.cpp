@@ -649,13 +649,13 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
         }
         case WM_CHAR:
         {
-            OnTextInput({ wParam, lParam });
+            OnTextInput({ (void *)wParam, (void *)lParam });
             return 0; //break;
         }
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            OnKeyDown({ wParam, lParam });
+            OnKeyDown({ (void *)wParam, (void *)lParam });
             if (wParam == KEY_F4 && (GetAsyncKeyState(KEY_MENU) & 0x80000000)) //Alt + F4
                 break;
 
@@ -664,7 +664,7 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            OnKeyUp({ wParam, lParam });
+            OnKeyUp({ (void *)wParam, (void *)lParam });
             return 0; //break;
         }
         case WM_NCACTIVATE:
@@ -680,7 +680,7 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
         }
         case WM_NCPAINT:
         {
-            return (HRESULT)OnRepaint({ wParam, lParam });
+            return (HRESULT)OnRepaint({ (void *)wParam, (void *)lParam });
         }
         case WM_SHOWWINDOW:
         {
@@ -719,7 +719,7 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
 
     if (message >= USER_MESSAGE_ID)
     {
-        return OnUserMessages({ message, wParam, lParam }) ? S_OK : S_FALSE;
+        return OnUserMessages({ message, (void *)wParam, (void *)lParam }) ? S_OK : S_FALSE;
     }
 
     return DefWindowProc(hWnd, message, wParam, lParam);
@@ -727,7 +727,7 @@ LRESULT CWindow::OnWindowProc(WindowHandle &hWnd, UINT &message, WPARAM &wParam,
 
 bool CWindow::OnRepaint(const PaintEvent &ev)
 {
-    return (bool)DefWindowProc(Handle, WM_NCPAINT, ev.wParam, ev.lParam);
+    return (bool)DefWindowProc(Handle, WM_NCPAINT, (WPARAM)ev.wParam, (LPARAM)ev.lParam);
 }
 
 bool CWindow::IsActive() const
@@ -768,11 +768,6 @@ void CWindow::RemoveTimer(uint32_t id)
 uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
 {
     return (uint32_t)SendMessage(Handle, id, (WPARAM)data1, (LPARAM)data2);
-}
-
-uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
-{
-    return (uint32_t)g_PluginManager.WindowProc(Handle, id, data1, data2);
 }
 
 void CWindow::Raise()
@@ -1141,14 +1136,14 @@ uint32_t CWindow::PushEvent(uint32_t id, void *data1, void *data2)
     return 0;
 }
 
-uint32_t CWindow::PluginEvent(uint32_t id, void *data1, void *data2)
+#endif
+
+uint32_t CWindow::PluginEvent(uint32_t id, const void *data)
 {
-    return (uint32_t)g_PluginManager.WindowProc(Handle, id, data1, data2);
+    return g_PluginManager.OnEvent(id, data);
 }
 
-#endif
 #if USE_TIMERTHREAD
-
 CThreadedTimer *CWindow::CreateThreadedTimer(
     uint32_t id, int delay, bool oneShot, bool waitForProcessMessage, bool synchronizedDelay)
 {

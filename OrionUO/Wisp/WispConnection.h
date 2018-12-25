@@ -15,6 +15,7 @@ public:
 
     CConnection();
     virtual ~CConnection();
+    void Init();
 
     class CPacketMessage *m_MessageParser;
 

@@ -942,12 +942,12 @@ void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
                     if (m_X != wd.X || m_Y != wd.Y || m_Z != wd.Z)
                     {
                         UOI_PLAYER_XYZ_DATA xyzData = { wd.X, wd.Y, wd.Z };
-                        PLUGIN_EVENT(UOMSG_UPDATE_PLAYER_XYZ, &xyzData, nullptr);
+                        PLUGIN_EVENT(UOMSG_UPDATE_PLAYER_XYZ, &xyzData);
                     }
 
                     if (Direction != wd.Direction)
                     {
-                        PLUGIN_EVENT(UOMSG_UPDATE_PLAYER_DIR, wd.Direction, nullptr);
+                        PLUGIN_EVENT(UOMSG_UPDATE_PLAYER_DIR, wd.Direction);
                     }
 
                     if (m_Z - wd.Z >= 22)

@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "PacketManager.h"
@@ -950,7 +950,7 @@ PACKET_HANDLER(EnterWorld)
     g_RemoveRangeXY.Y = g_Player->GetY();
 
     UOI_PLAYER_XYZ_DATA xyzData = { g_RemoveRangeXY.X, g_RemoveRangeXY.Y, 0 };
-    PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData, 0);
+    PLUGIN_EVENT(UOMSG_UPDATE_REMOVE_POS, &xyzData);
 
     g_Player->OffsetX = 0;
     g_Player->OffsetY = 0;
@@ -3563,7 +3563,8 @@ PACKET_HANDLER(GraphicEffect)
 
     if (addressAnimData != 0u)
     {
-        PANIM_DATA pad = (PANIM_DATA)(addressAnimData + ((graphic * 68) + 4 * ((graphic / 8) + 1)));
+        ANIM_DATA *pad =
+            (ANIM_DATA *)(addressAnimData + ((graphic * 68) + 4 * ((graphic / 8) + 1)));
 
         effect->Speed = pad->FrameInterval * 45;
         //effect->Speed = (pad->FrameInterval - effect->Speed) * 45;
@@ -3731,7 +3732,8 @@ PACKET_HANDLER(DragAnimation)
 
     if (addressAnimData != 0u)
     {
-        PANIM_DATA pad = (PANIM_DATA)(addressAnimData + ((graphic * 68) + 4 * ((graphic / 8) + 1)));
+        ANIM_DATA *pad =
+            (ANIM_DATA *)(addressAnimData + ((graphic * 68) + 4 * ((graphic / 8) + 1)));
 
         effect->Speed = pad->FrameInterval * 45;
     }

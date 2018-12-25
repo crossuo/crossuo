@@ -195,6 +195,8 @@ void __cdecl FUNCBODY_SendTargetCancel()
 
 void UOMsg_Send(uint8_t *data, size_t size)
 {
+    auto owned = new uint8_t[size];
+    memcpy(owned, data, size);
     PUSH_EVENT(UOMSG_SEND, data, size);
 }
 
@@ -248,8 +250,12 @@ void __cdecl FUNCBODY_SendRenameMount(uint32_t serial, const char *text)
 
 void __cdecl FUNCBODY_SendMenuResponse(unsigned int serial, unsigned int id, int code)
 {
-    UOI_MENU_RESPONSE data = { serial, id, code };
-    PUSH_EVENT(UOMSG_MENU_RESPONSE, &data, nullptr);
+    //UOI_MENU_RESPONSE data = { serial, id, code };
+    auto *data = new UOI_MENU_RESPONSE;
+    data->Serial = serial;
+    data->ID = id;
+    data->Code = code;
+    PUSH_EVENT(UOMSG_MENU_RESPONSE, data, nullptr);
 }
 
 void __cdecl FUNCBODY_DisplayStatusbarGump(unsigned int serial, int x, int y)

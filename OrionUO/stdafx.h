@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <SDL2/SDL.h>
+
+#include "plugin/enumlist.h"
 #include "plugin/plugininterface.h"
 #include "plugin/commoninterfaces.h"
 
@@ -118,8 +121,6 @@ typedef SoundInfo *SoundHandle;
 #else
 #include <GL/gl.h>
 #endif
-#include <SDL2/SDL.h>
-
 #endif
 
 #include "Platform.h"
@@ -140,9 +141,9 @@ typedef SoundInfo *SoundHandle;
 #include "Wisp/WispThread.h"
 #include "Wisp/WispThreadedTimer.h"
 #include "Wisp/WispWindow.h"
+#include "plugin/mulstruct.h"
 
 #include "DefinitionMacro.h"
-#include "EnumList.h"
 #include "BaseQueue.h"
 #include "Constants.h"
 #include "DateTimeStamp.h"
@@ -168,7 +169,6 @@ class CGump;
 #include "UseItemsList.h"
 #include "ExceptionFilter.h"
 #include "ImageBounds.h"
-#include "MulStruct.h"
 #include "TextureObject.h"
 #include "Utility/AutoResetEvent.h"
 #include "Managers/FileManager.h"

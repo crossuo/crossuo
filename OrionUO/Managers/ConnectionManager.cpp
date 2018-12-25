@@ -81,6 +81,9 @@ void CConnectionManager::Init()
         return;
     }
 
+    m_LoginSocket.Init();
+    m_GameSocket.Init();
+
     m_IsLoginSocket = true;
     const auto localIp = socket_localaddress();
     m_Seed[0] = static_cast<unsigned char>((localIp >> 24) & 0xff);
@@ -106,7 +109,8 @@ void CConnectionManager::Init(uint8_t *gameSeed)
 void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
 {
     DEBUG_TRACE_FUNCTION;
-    PLUGIN_EVENT(UOMSG_IP_SEND, ip, 4);
+    PluginEvent ev = { ip, (void *)4 };
+    PLUGIN_EVENT(UOMSG_IP_SEND, &ev);
     socket.Send(ip, 4);
 }
 

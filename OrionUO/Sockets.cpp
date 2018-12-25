@@ -93,15 +93,19 @@ uint32_t socket_localaddress()
 
 bool socket_init()
 {
-    WSADATA wsaData = { 0 };
-    wsa_initialized = !WSAStartup(MAKEWORD(2, 2), &wsaData);
-
+    if (!wsa_initialized)
+    {
+        WSADATA wsaData = { 0 };
+        wsa_initialized = !WSAStartup(MAKEWORD(2, 2), &wsaData);
+    }
     return wsa_initialized;
 }
 
 void socket_shutdown()
 {
+    assert(wsa_initialized);
     WSACleanup();
+    wsa_initialized = false;
 }
 
 tcp_socket tcp_open()

@@ -32,7 +32,7 @@ bool CSkillsManager::Load()
 
     while (!idx.IsEOF())
     {
-        PSKILLS_IDX_BLOCK idxBlock = (PSKILLS_IDX_BLOCK)idx.Ptr;
+        SKILLS_IDX_BLOCK *idxBlock = (SKILLS_IDX_BLOCK *)idx.Ptr;
         idx.Move(sizeof(SKILLS_IDX_BLOCK));
 
         if ((idxBlock->Size != 0u) && idxBlock->Position != 0xFFFFFFFF &&

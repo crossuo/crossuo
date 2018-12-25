@@ -38,7 +38,7 @@ bool CFontsManager::LoadFonts()
 
         for (int i = 0; i < 224; i++)
         {
-            PFONT_HEADER fh = (PFONT_HEADER)fontFile.Ptr;
+            FONT_HEADER *fh = (FONT_HEADER *)fontFile.Ptr;
             fontFile.Move(sizeof(FONT_HEADER));
 
             int bcount = fh->Width * fh->Height * 2;

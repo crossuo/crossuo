@@ -78,7 +78,7 @@ void COrionWindow::OnDestroy()
 
     g_SoundManager.Free();
 
-    PLUGIN_EVENT(WM_CLOSE, 0, 0);
+    PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
     g_Orion.Uninstall();
     Wisp::g_WispCrashLogger.Close();
 #if USE_WISP
@@ -243,7 +243,7 @@ bool COrionWindow::OnRightMouseButtonDoubleClick()
 void COrionWindow::OnMidMouseButtonDown()
 {
     DEBUG_TRACE_FUNCTION;
-    if (PLUGIN_EVENT(WM_MBUTTONDOWN, 0, 0))
+    if (PLUGIN_EVENT(UOMSG_INPUT_MBUTTONDOWN, 0x11110000))
     {
         return;
     }
@@ -257,7 +257,7 @@ void COrionWindow::OnMidMouseButtonDown()
 void COrionWindow::OnMidMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
-    if (PLUGIN_EVENT(WM_MBUTTONUP, 0, 0))
+    if (PLUGIN_EVENT(UOMSG_INPUT_MBUTTONDOWN, 0))
     {
         return;
     }
@@ -282,7 +282,7 @@ bool COrionWindow::OnMidMouseButtonDoubleClick()
 void COrionWindow::OnMidMouseButtonScroll(bool up)
 {
     DEBUG_TRACE_FUNCTION;
-    if (PLUGIN_EVENT(WM_MOUSEWHEEL, (up ? 0 : 0x11110000), 0))
+    if (PLUGIN_EVENT(UOMSG_INPUT_MOUSEWHEEL, (up ? 0 : 0x11110000)))
     {
         return;
     }
@@ -297,7 +297,7 @@ void COrionWindow::OnMidMouseButtonScroll(bool up)
 void COrionWindow::OnXMouseButton(bool up)
 {
     DEBUG_TRACE_FUNCTION;
-    if (PLUGIN_EVENT(WM_XBUTTONDOWN, (up ? 0 : 0x11110000), 0))
+    if (PLUGIN_EVENT(UOMSG_INPUT_XBUTTONDOWN, (up ? 0 : 0x11110000)))
     {
         return;
     }
@@ -319,7 +319,7 @@ void COrionWindow::OnActivate()
     SetRenderTimerDelay(g_FrameDelay[WINDOW_ACTIVE]);
     if (!g_PluginManager.Empty())
     {
-        PLUGIN_EVENT(WM_NCACTIVATE, 1, 0);
+        PLUGIN_EVENT(UOMSG_WIN_ACTIVATE, 1);
     }
 }
 
@@ -338,7 +338,7 @@ void COrionWindow::OnDeactivate()
 
     if (!g_PluginManager.Empty())
     {
-        PLUGIN_EVENT(WM_NCACTIVATE, 0, 0);
+        PLUGIN_EVENT(UOMSG_WIN_ACTIVATE, 0);
     }
 }
 
@@ -346,13 +346,12 @@ void COrionWindow::OnTextInput(const TextEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
 
-    // FIXME: Send struct events to plugins
-#if USE_WISP
-    if (PLUGIN_EVENT(WM_CHAR, ev.wParam, ev.lParam))
-        return;
-#endif
-
     const auto ch = EvChar(ev);
+    if (PLUGIN_EVENT(UOMSG_INPUT_CHAR, &ev))
+    {
+        return;
+    }
+
     if ((IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&
         g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
@@ -382,14 +381,12 @@ void COrionWindow::OnKeyDown(const KeyEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
 
-    // FIXME: Send struct events to plugins
-#if USE_WISP
-    if (PLUGIN_EVENT(WM_KEYDOWN, ev.wParam, ev.lParam))
+    if (PLUGIN_EVENT(UOMSG_INPUT_KEYDOWN, &ev))
+    {
         return;
-#endif
+    }
 
     const auto key = EvKey(ev);
-
 #if USE_WISP
     // FIXME: quirks of wm_char? see OnTextInput
     const bool acceptKey = key != KEY_RETURN;
@@ -407,10 +404,10 @@ void COrionWindow::OnKeyUp(const KeyEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
     // FIXME: Send struct events to plugins
-#if USE_WISP
-    if (PLUGIN_EVENT(WM_KEYUP, ev.wParam, ev.lParam))
+    if (PLUGIN_EVENT(UOMSG_INPUT_KEYUP, &ev))
+    {
         return;
-#endif
+    }
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
@@ -428,15 +425,13 @@ bool COrionWindow::OnRepaint(const PaintEvent &ev)
 {
     DEBUG_TRACE_FUNCTION;
 
-#if USE_WISP
-    // FIXME: Send struct events to plugins
     if (!g_PluginManager.Empty())
     {
-        return PLUGIN_EVENT(WM_NCPAINT, ev.wParam, ev.lParam);
+        return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev);
     }
-    return DefWindowProc(Handle, WM_NCPAINT, ev.wParam, ev.lParam) != 0;
+#if USE_WISP
+    return DefWindowProc(Handle, WM_NCPAINT, (WPARAM)ev.wParam, (LPARAM)ev.lParam) != 0;
 #else
-    // ORION_NOT_IMPLEMENTED
     return false;
 #endif
 }
@@ -446,7 +441,7 @@ void COrionWindow::OnShow(bool show)
     DEBUG_TRACE_FUNCTION;
     if (!g_PluginManager.Empty())
     {
-        PLUGIN_EVENT(WM_SHOWWINDOW, show, 0);
+        PLUGIN_EVENT(UOMSG_WIN_SHOW, show);
     }
 }
 
@@ -455,7 +450,9 @@ void COrionWindow::OnSetText(const char *str)
     DEBUG_TRACE_FUNCTION;
     if (!g_PluginManager.Empty())
     {
-        PLUGIN_EVENT(WM_SETTEXT, 0, str);
+        // CHECK: str was second parameter, why?
+        // Anyway, we're wilingly breaking compatibility with old stuff
+        PLUGIN_EVENT(UOMSG_WIN_SETTEXT, str);
     }
 }
 
@@ -502,6 +499,8 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
     {
         case UOMSG_RECV:
         {
+            AutoFree p(ev.data1);
+
             g_PacketManager.SavePluginReceivePacket(
                 (uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
@@ -510,9 +509,12 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 
         case UOMSG_SEND:
         {
+            AutoFree p(ev.data1);
+
             uint32_t ticks = g_Ticks;
             uint8_t *buf = (uint8_t *)ev.data1;
             int size = checked_cast<int>(ev.data2);
+
             g_TotalSendSize += size;
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
@@ -560,7 +562,7 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
 
         case UOMSG_MENU_RESPONSE:
         {
-            auto *data = reinterpret_cast<UOI_MENU_RESPONSE *>(ev.data1);
+            auto data = unique_cast<UOI_MENU_RESPONSE>(ev.data1);
             if ((data->Serial == 0u) && (data->ID == 0u))
             {
                 for (CGump *gump = (CGump *)g_GumpManager.m_Items; gump != nullptr;)
@@ -660,10 +662,5 @@ bool COrionWindow::OnUserMessages(const UserEvent &ev)
         break;
     }
 
-#if USE_WISP
-    PLUGIN_EVENT(ev.code, ev.data1, ev.data2);
-#else
-        // ORION_NOT_IMPLEMENTED;
-#endif
     return true;
 }

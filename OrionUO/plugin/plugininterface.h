@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) September 2016 Hotride
 
 #pragma once
@@ -30,15 +30,64 @@
 #define UOMSG_MENU_RESPONSE USER_MESSAGE_ID + 669
 #define UOMSG_STATUS_REQUEST USER_MESSAGE_ID + 670
 #define UOMSG_SELECTED_TILE USER_MESSAGE_ID + 671
-#define UOMSG_END_MACRO_PAYING USER_MESSAGE_ID + 672
+#define UOMSG_END_MACRO_PLAYING USER_MESSAGE_ID + 672
 #define UOMSG_UPDATE_REMOVE_POS USER_MESSAGE_ID + 673
 
-typedef uint32_t WINDOW_PROC(WindowHandle, uint32_t, void *, void *);
-typedef bool __cdecl PACKET_PROC(uint8_t *buf, size_t size);
-typedef void __cdecl VOID_PROC();
-typedef bool __cdecl WORLD_MAP_DRAW_PROC();
+#define UOMSG_WIN_CLOSE USER_MESSAGE_ID + 1454
+#define UOMSG_WIN_SHOW USER_MESSAGE_ID + 1455
+#define UOMSG_WIN_PAINT USER_MESSAGE_ID + 1456
+#define UOMSG_WIN_ACTIVATE USER_MESSAGE_ID + 1457
+#define UOMSG_WIN_SETTEXT USER_MESSAGE_ID + 1458
+
+#define UOMSG_INPUT_KEYDOWN USER_MESSAGE_ID + 1754
+#define UOMSG_INPUT_KEYUP USER_MESSAGE_ID + 1755
+#define UOMSG_INPUT_MOUSEWHEEL USER_MESSAGE_ID + 1756
+#define UOMSG_INPUT_MBUTTONDOWN USER_MESSAGE_ID + 1757
+#define UOMSG_INPUT_XBUTTONDOWN USER_MESSAGE_ID + 1758
+#define UOMSG_INPUT_CHAR USER_MESSAGE_ID + 1759
+
+typedef uint32_t EVENT_PROC(uint32_t, const void *);
+typedef bool PACKET_PROC(uint8_t *, size_t);
+typedef void VOID_PROC();
+typedef bool WORLD_MAP_DRAW_PROC();
 
 #pragma pack(push, 1)
+struct PluginEvent
+{
+    void *data1 = nullptr;
+    void *data2 = nullptr;
+};
+
+#ifndef SDL_h_
+// Because we share events with Orion Assistant
+
+typedef uint32_t Keycode;
+typedef uint16_t Keymod;
+
+struct TextEvent
+{
+    // FIXME: this is not utf8 compatible, also SDL gives 32 bytes
+    // this is a hack to keep compatibility with previous implementation
+    char ch = 0;
+};
+
+struct KeyEvent
+{
+    // Subset from SDL_KeyboardEvent
+    int8_t repeat = 0; // non-zero if this is a key repeat
+    Keymod mod = 0;    // key modifiers
+    // SDL virtual key representation (https://wiki.libsdl.org/SDL_Keycode)
+    Keycode keycode = 0;
+    // SDL physical key code (https://wiki.libsdl.org/SDL_Scancode)
+    // values from: http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
+    // should be avoided
+    int32_t scancode = 0;
+    // For compatibility purposes with old win32 api:
+    // keycode = wparam
+    // scancode = lparam
+};
+#endif // SDL_h_
+
 struct PLUGIN_INFO
 {
     char FileName[MAX_PATH];
@@ -89,7 +138,7 @@ struct PLUGIN_INTERFACE
 
     class CPlugin *Owner;
 
-    WINDOW_PROC *WindowProc;
+    EVENT_PROC *OnEvent;
     PACKET_PROC *OnRecv;
     PACKET_PROC *OnSend;
     VOID_PROC *OnDisconnect;
@@ -98,8 +147,8 @@ struct PLUGIN_INTERFACE
     WORLD_MAP_DRAW_PROC *OnWorldMapDraw;
 };
 
-typedef void __cdecl dllFunc(PLUGIN_INTERFACE *);
-typedef void (*pfInstall)(PLUGIN_INTERFACE *intr);
+typedef void PluginEntry(PLUGIN_INTERFACE *);
+typedef void (*pfInstall)(PLUGIN_INTERFACE *);
 typedef int (*pfcm)(int, char **);
 typedef void (*pfri)(void *);
 

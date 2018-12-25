@@ -759,7 +759,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
         for (int j = 0; j < count; j++)
         {
-            PMULTI_BLOCK pmb = (PMULTI_BLOCK)(address + (j * itemOffset));
+            MULTI_BLOCK *pmb = (MULTI_BLOCK *)(address + (j * itemOffset));
 
             if (pmb->Flags != 0u)
             {

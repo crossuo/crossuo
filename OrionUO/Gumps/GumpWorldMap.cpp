@@ -413,7 +413,7 @@ void CGumpWorldMap::LoadMap(int map)
                     int mapY = (int)by * 8;
                     MAP_BLOCK info = {};
 
-                    PMAP_BLOCK mapBlock = (PMAP_BLOCK)indexMap->MapAddress;
+                    MAP_BLOCK *mapBlock = (MAP_BLOCK *)indexMap->MapAddress;
 
                     int pos = 0;
 
@@ -429,7 +429,7 @@ void CGumpWorldMap::LoadMap(int map)
                         }
                     }
 
-                    PSTATICS_BLOCK sb = (PSTATICS_BLOCK)indexMap->StaticAddress;
+                    STATICS_BLOCK *sb = (STATICS_BLOCK *)indexMap->StaticAddress;
 
                     if (sb != nullptr)
                     {

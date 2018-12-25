@@ -8,6 +8,10 @@ namespace Wisp
 {
 CConnection::CConnection()
 {
+}
+
+void CConnection::Init()
+{
     DEBUG_TRACE_FUNCTION;
 
     m_Socket = tcp_open();

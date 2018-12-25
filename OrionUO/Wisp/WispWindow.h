@@ -6,8 +6,7 @@
 #include "Platform.h"
 
 #define PUSH_EVENT(id, data1, data2) Wisp::CWindow::PushEvent(id, (void *)(data1), (void *)(data2))
-#define PLUGIN_EVENT(id, data1, data2)                                                             \
-    Wisp::CWindow::PluginEvent(id, (void *)(data1), (void *)(data2))
+#define PLUGIN_EVENT(id, data) Wisp::CWindow::PluginEvent(id, (const void *)(data))
 
 void GetDisplaySize(int *x, int *y);
 
@@ -55,7 +54,7 @@ public:
     void Destroy();
 
     static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
-    static uint32_t PluginEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
+    static uint32_t PluginEvent(uint32_t id, const void *data = nullptr);
 
     void ShowMessage(const string &text, const string &title);
     void ShowMessage(const wstring &text, const wstring &title);

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "BaseQueue.h"
-#include "EnumList.h"
+#include "plugin/enumlist.h"
 
 class CMacroObject : public CBaseQueueItem
 {

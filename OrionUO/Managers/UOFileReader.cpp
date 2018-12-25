@@ -42,7 +42,7 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
             gSize = (io.DataSize / 4) - lookupList[y];
         }
 
-        PGUMP_BLOCK gmul = (PGUMP_BLOCK)(dataStart + lookupList[y] * 4);
+        GUMP_BLOCK *gmul = (GUMP_BLOCK *)(dataStart + lookupList[y] * 4);
         int pos = (int)y * io.Width;
 
         for (int i = 0; i < gSize; i++)

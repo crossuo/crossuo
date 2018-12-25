@@ -1425,7 +1425,7 @@ void COrion::Process(bool rendering)
                     {
                         memset(&uoiSelectedObject, 0, sizeof(uoiSelectedObject));
                     }
-                    PLUGIN_EVENT(UOMSG_SELECTED_TILE, &uoiSelectedObject, 0);
+                    PLUGIN_EVENT(UOMSG_SELECTED_TILE, &uoiSelectedObject);
                 }
                 g_Target.UnloadMulti();
                 g_GameScreen.RenderListInitalized = false;
@@ -1509,7 +1509,7 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
     auto dll = SDL_LoadObject(CStringFromPath(libpath));
     if (dll != nullptr)
     {
-        dllFunc *initFunc = (dllFunc *)SDL_LoadFunction(dll, function.c_str());
+        auto initFunc = (PluginEntry *)SDL_LoadFunction(dll, function.c_str());
         if (!InstallPlugin(initFunc, flags))
         {
             SDL_UnloadObject(dll);
@@ -1527,7 +1527,7 @@ void COrion::LoadPlugin(const os_path &libpath, const string &function, int flag
     }
 }
 
-bool COrion::InstallPlugin(dllFunc *initFunc, int flags)
+bool COrion::InstallPlugin(PluginEntry *initFunc, int flags)
 {
     CPlugin *plugin = nullptr;
     if (initFunc != nullptr)
@@ -2008,7 +2008,9 @@ void COrion::ServerSelection(int pos)
     {
         string name = g_ServerList.GetSelectedServer()->Name;
         g_ServerList.LastServerName = name;
-        PLUGIN_EVENT(UOMSG_SET_SERVER_NAME, FixServerName(name).c_str(), 0);
+        static string sn = FixServerName(name);
+        const char *data = sn.c_str();
+        PLUGIN_EVENT(UOMSG_SET_SERVER_NAME, data);
         CPacketSelectServer((uint8_t)server->Index).Send();
     }
 }
@@ -2038,7 +2040,7 @@ void COrion::CharacterSelection(int pos)
     InitScreen(GS_GAME_CONNECT);
     g_ConnectionScreen.SetType(CST_GAME);
     g_CharacterList.LastCharacterName = g_CharacterList.GetName(pos);
-    PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, g_CharacterList.LastCharacterName.c_str(), 0);
+    PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, g_CharacterList.LastCharacterName.c_str());
     CPacketSelectCharacter(pos, g_CharacterList.LastCharacterName).Send();
 }
 
@@ -3717,8 +3719,8 @@ void COrion::ReadMulIndexFile(
     size_t indexMaxCount,
     const std::function<CIndexObject *(int index)> &getIdxObj,
     size_t address,
-    PBASE_IDX_BLOCK ptr,
-    const std::function<PBASE_IDX_BLOCK()> &getNewPtrValue)
+    BASE_IDX_BLOCK *ptr,
+    const std::function<BASE_IDX_BLOCK *()> &getNewPtrValue)
 {
     for (int i = 0; i < (int)indexMaxCount; i++)
     {
@@ -3882,14 +3884,15 @@ uint64_t COrion::CreateHash(const char *s)
 
 void COrion::LoadIndexFiles()
 {
-    PART_IDX_BLOCK LandArtPtr = (PART_IDX_BLOCK)g_FileManager.m_ArtIdx.Start;
-    PART_IDX_BLOCK StaticArtPtr = (PART_IDX_BLOCK)(
-        (size_t)g_FileManager.m_ArtIdx.Start + (m_LandData.size() * sizeof(ART_IDX_BLOCK)));
-    PGUMP_IDX_BLOCK GumpArtPtr = (PGUMP_IDX_BLOCK)g_FileManager.m_GumpIdx.Start;
-    PTEXTURE_IDX_BLOCK TexturePtr = (PTEXTURE_IDX_BLOCK)g_FileManager.m_TextureIdx.Start;
-    PMULTI_IDX_BLOCK MultiPtr = (PMULTI_IDX_BLOCK)g_FileManager.m_MultiIdx.Start;
-    PSOUND_IDX_BLOCK SoundPtr = (PSOUND_IDX_BLOCK)g_FileManager.m_SoundIdx.Start;
-    PLIGHT_IDX_BLOCK LightPtr = (PLIGHT_IDX_BLOCK)g_FileManager.m_LightIdx.Start;
+    ART_IDX_BLOCK *LandArtPtr = (ART_IDX_BLOCK *)g_FileManager.m_ArtIdx.Start;
+    ART_IDX_BLOCK *StaticArtPtr =
+        (ART_IDX_BLOCK
+             *)((size_t)g_FileManager.m_ArtIdx.Start + (m_LandData.size() * sizeof(ART_IDX_BLOCK)));
+    GUMP_IDX_BLOCK *GumpArtPtr = (GUMP_IDX_BLOCK *)g_FileManager.m_GumpIdx.Start;
+    TEXTURE_IDX_BLOCK *TexturePtr = (TEXTURE_IDX_BLOCK *)g_FileManager.m_TextureIdx.Start;
+    MULTI_IDX_BLOCK *MultiPtr = (MULTI_IDX_BLOCK *)g_FileManager.m_MultiIdx.Start;
+    SOUND_IDX_BLOCK *SoundPtr = (SOUND_IDX_BLOCK *)g_FileManager.m_SoundIdx.Start;
+    LIGHT_IDX_BLOCK *LightPtr = (LIGHT_IDX_BLOCK *)g_FileManager.m_LightIdx.Start;
 
     if (g_FileManager.m_MultiCollection.Start != nullptr)
     {
@@ -4528,7 +4531,7 @@ void COrion::ProcessStaticAnimList()
             if (obj.ChangeTime < g_Ticks)
             {
                 uint32_t addr = (obj.Index * 68) + 4 * ((obj.Index / 8) + 1);
-                ANIM_DATA &pad = *(PANIM_DATA)(&m_AnimData[0] + addr);
+                ANIM_DATA &pad = *(ANIM_DATA *)(&m_AnimData[0] + addr);
 
                 int offset = obj.AnimIndex;
 
@@ -4604,7 +4607,7 @@ void COrion::PatchFiles()
 
     for (int i = 0; i < dataCount; i++)
     {
-        PVERDATA_HEADER vh = (PVERDATA_HEADER)(vAddr + 4 + (i * sizeof(VERDATA_HEADER)));
+        VERDATA_HEADER *vh = (VERDATA_HEADER *)(vAddr + 4 + (i * sizeof(VERDATA_HEADER)));
 
         if (vh->FileID == 0) //Map0
         {
@@ -4720,7 +4723,7 @@ void COrion::PatchFiles()
         {
             if ((int)vh->BlockID < g_ColorManager.GetHuesCount())
             {
-                PVERDATA_HUES_GROUP group = (PVERDATA_HUES_GROUP)(vAddr + vh->Position);
+                VERDATA_HUES_GROUP *group = (VERDATA_HUES_GROUP *)(vAddr + vh->Position);
                 g_ColorManager.SetHuesBlock(vh->BlockID, group);
             }
         }
