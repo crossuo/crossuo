@@ -33,9 +33,12 @@ To make things easier for everyone, we've adopted clang-format for keeping code 
 
 If you want to format a single file, run: `clang-format -i file.cpp`.
 
-On Visual Studio 2017 or later, clang-format is already integrated, please setup it accordingly. Go to `Tools > Options > LLVM/Clang > Enable = True`, and everything should be fine. We'll use clang-format 7.0 by default as this is the version that comes with Visual Studio 2017.
-
 All intermediate commits should follow the formatting conventions. Having several intermediate commits with mismatched formatting then a single 'reformatted code' commit at the end makes history harder to read, which is an important tool for others to understand your code. It is much easier to enforce proper formatting on each commit as you go along, than to try and untangle and merge formatting changes in after the fact.
+
+If you're on Windows, our CMake project will automatically download the correct clang-format-7 required to do the formatting.
+Inside the generated solution, you'll see a project called `clang-format`, it suffice to `Build` it and it will reformat all the source as required by our standards.
+
+On MacOSX and Linux, make sure you have `clang-format-7` installed, then before commiting it is enough to run `ninja clang-format` to reformat your changes accordingly to ouur standards.
 
 ## Branch history
 
