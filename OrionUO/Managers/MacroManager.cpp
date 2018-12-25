@@ -12,7 +12,6 @@ uint8_t CMacroManager::m_SkillIndexTable[24] = { 1,  2,  35, 4,  6,  12,
                                                  48, 32, 33, 47, 36, 38 };
 
 CMacroManager::CMacroManager()
-
 {
 }
 
@@ -402,9 +401,7 @@ void CMacroManager::LoadFromOptions()
     DEBUG_TRACE_FUNCTION;
     Clear();
     ChangePointer(nullptr);
-
-    QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *)
-    Add(obj->GetCopy());
+    QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }
 }
 
 void CMacroManager::ChangePointer(CMacroObject *macro)
@@ -431,7 +428,9 @@ void CMacroManager::Execute()
                 return;
             }
             case MRC_BREAK_PARSER:
+            {
                 return;
+            }
             case MRC_PARSE_NEXT:
             {
                 ChangePointer((CMacroObject *)g_MacroPointer->m_Next);
@@ -455,31 +454,26 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_CONFIGURATION:
                 {
                     g_Orion.OpenConfiguration();
-
                     break;
                 }
                 case MSC_G2_PAPERDOLL:
                 {
                     g_Orion.PaperdollReq(g_PlayerSerial);
-
                     break;
                 }
                 case MSC_G2_STATUS:
                 {
                     g_Orion.OpenStatus(g_PlayerSerial);
-
                     break;
                 }
                 case MSC_G2_JOURNAL:
                 {
                     g_Orion.OpenJournal();
-
                     break;
                 }
                 case MSC_G2_SKILLS:
                 {
                     g_Orion.OpenSkills();
-
                     break;
                 }
                 case MSC_G2_MAGE_SPELLBOOK:
@@ -539,43 +533,36 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_BACKPACK:
                 {
                     CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
-
                     if (backpack != nullptr)
                     {
                         g_Orion.DoubleClick(backpack->Serial);
                     }
-
                     break;
                 }
                 case MSC_G2_OWERVIEW:
                 {
                     g_Orion.OpenMinimap();
-
                     break;
                 }
                 case MSC_G2_WORLD_MAP:
                 {
                     g_Orion.OpenWorldMap();
-
                     break;
                 }
                 case MSC_G2_MAIL:
                 case MSC_G2_PARTY_MANIFEST:
                 {
                     g_Orion.OpenPartyManifest();
-
                     break;
                 }
                 case MSC_G2_GUILD:
                 {
                     CPacketGuildMenuRequest().Send();
-
                     break;
                 }
                 case MSC_G2_QUEST_LOG:
                 {
                     CPacketQuestMenuRequest().Send();
-
                     break;
                 }
                 case MSC_G2_PARTY_CHAT:
@@ -602,33 +589,27 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_CONFIGURATION:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_OPTIONS);
-
                     g_OptionsMacroManager.Clear();
-
                     break;
                 }
                 case MSC_G2_PAPERDOLL:
                 {
                     gump = g_GumpManager.GetGump(g_PlayerSerial, 0, GT_PAPERDOLL);
-
                     break;
                 }
                 case MSC_G2_STATUS:
                 {
                     gump = g_GumpManager.GetGump(g_PlayerSerial, 0, GT_STATUSBAR);
-
                     break;
                 }
                 case MSC_G2_JOURNAL:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_JOURNAL);
-
                     break;
                 }
                 case MSC_G2_SKILLS:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_SKILLS);
-
                     break;
                 }
                 case MSC_G2_MAGE_SPELLBOOK:
@@ -646,7 +627,6 @@ void CMacroManager::ProcessSubMenu()
                         if (item->GumpType == GT_SPELLBOOK)
                         {
                             CGameItem *gi = g_World->FindWorldItem(item->Serial);
-
                             if (gi != nullptr)
                             {
                                 switch (g_MacroPointer->SubCode)
@@ -657,7 +637,6 @@ void CMacroManager::ProcessSubMenu()
                                         {
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     case MSC_G2_NECRO_SPELLBOOK:
@@ -666,7 +645,6 @@ void CMacroManager::ProcessSubMenu()
                                         {
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     case MSC_G2_PALADIN_SPELLBOOK:
@@ -675,7 +653,6 @@ void CMacroManager::ProcessSubMenu()
                                         {
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     case MSC_G2_BUSHIDO_SPELLBOOK:
@@ -684,7 +661,6 @@ void CMacroManager::ProcessSubMenu()
                                         {
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     case MSC_G2_NINJITSU_SPELLBOOK:
@@ -693,7 +669,6 @@ void CMacroManager::ProcessSubMenu()
                                         {
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     case MSC_G2_SPELL_WEAVING_SPELLBOOK:
@@ -702,7 +677,6 @@ void CMacroManager::ProcessSubMenu()
                                         {
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     case MSC_G2_MYSTICISM_SPELLBOOK:
@@ -711,7 +685,6 @@ void CMacroManager::ProcessSubMenu()
                                         { //??????????
                                             gump = item;
                                         }
-
                                         break;
                                     }
                                     default:
@@ -725,42 +698,35 @@ void CMacroManager::ProcessSubMenu()
                             }
                         }
                     }
-
                     break;
                 }
                 case MSC_G2_CHAT:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_CHAT);
-
                     break;
                 }
                 case MSC_G2_BACKPACK:
                 {
                     CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
-
                     if (backpack != nullptr)
                     {
                         g_GumpManager.CloseGump(backpack->Serial, 0, GT_SPELLBOOK);
                     }
-
                     break;
                 }
                 case MSC_G2_OWERVIEW:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_MINIMAP);
-
                     break;
                 }
                 case MSC_G2_MAIL:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_MAIL);
-
                     break;
                 }
                 case MSC_G2_PARTY_MANIFEST:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_PARTY_MANIFEST);
-
                     break;
                 }
                 case MSC_G2_PARTY_CHAT:
@@ -785,7 +751,6 @@ void CMacroManager::ProcessSubMenu()
                 else
                 {
                     gump->Minimized = (g_MacroPointer->Code == MC_MINIMIZE);
-
                     gump->WantRedraw = true;
                 }
             }
@@ -800,7 +765,6 @@ void CMacroManager::ProcessSubMenu()
 MACRO_RETURN_CODE CMacroManager::Process()
 {
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
-
     if (g_MacroPointer == nullptr)
     {
         result = MRC_STOP;
@@ -813,7 +777,6 @@ MACRO_RETURN_CODE CMacroManager::Process()
     {
         result = MRC_BREAK_PARSER;
     }
-
     return result;
 }
 
@@ -947,41 +910,34 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         case MC_MAXIMIZE:
         {
             ProcessSubMenu();
-
             break;
         }
         case MC_OPEN_DOOR:
         {
             g_Orion.OpenDoor();
-
             break;
         }
         case MC_USE_SKILL:
         {
             int skill = (macro->SubCode - MSC_G3_ANATOMY);
-
             if (skill >= 0 && skill < 24)
             {
                 skill = m_SkillIndexTable[skill];
-
                 if (skill != 0xFF)
                 {
                     g_Orion.UseSkill(skill);
                 }
             }
-
             break;
         }
         case MC_LAST_SKILL:
         {
             g_Orion.UseSkill(g_LastSkillIndex);
-
             break;
         }
         case MC_CAST_SPELL:
         {
             int spell = (macro->SubCode - MSC_G6_CLUMSY + 1);
-
             if (spell > 0 && spell <= 151)
             {
                 const int spellsCountTable[7] = { CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT,
@@ -994,11 +950,9 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 
                 int totalCount = 0;
                 int spellType = 0;
-
                 for (spellType = 0; spellType < 7; spellType++)
                 {
                     totalCount += spellsCountTable[spellType];
-
                     if (spell < totalCount)
                     {
                         break;
@@ -1008,22 +962,18 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 if (spellType < 7)
                 {
                     spell += spellType * 100;
-
                     if (spellType > 2)
                     {
                         spell += 100;
                     }
-
                     g_Orion.CastSpell(spell);
                 }
             }
-
             break;
         }
         case MC_LAST_SPELL:
         {
             g_Orion.CastSpell(g_LastSpellIndex);
-
             break;
         }
         case MC_LAST_OBJECT:
@@ -1032,30 +982,24 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 g_Orion.DoubleClick(g_LastUseObject);
             }
-
             break;
         }
         case MC_BOW:
         case MC_SALUTE:
         {
             const char *emote[2] = { "bow", "salute" };
-
             int index = macro->Code - MC_BOW;
-
             g_Orion.EmoteAction(emote[index]);
-
             break;
         }
         case MC_QUIT_GAME:
         {
             g_Orion.OpenLogOut();
-
             break;
         }
         case MC_ALL_NAMES:
         {
             g_Orion.AllNames();
-
             break;
         }
         case MC_LAST_TARGET:
@@ -1099,7 +1043,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             if (g_Target.IsTargeting())
             {
                 g_Target.SendTargetObject(g_PlayerSerial);
-
                 WaitForTargetTimer = 0;
             }
             else if (WaitForTargetTimer < g_Ticks)
@@ -1116,7 +1059,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         case MC_ARM_DISARM:
         {
             int handIndex = 1 - (macro->SubCode - MSC_G4_LEFT_HAND);
-
             if (handIndex < 0 || handIndex > 1 || g_ObjectInHand.Enabled)
             {
                 break;
@@ -1125,20 +1067,17 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             if (itemInHand[handIndex] != 0u)
             {
                 CGameItem *objHand = g_World->FindWorldItem(itemInHand[handIndex]);
-
                 if (objHand != nullptr)
                 {
                     g_Orion.PickupItem(objHand, 1, false);
                     g_Orion.EquipItem(g_PlayerSerial);
                 }
-
                 itemInHand[handIndex] = 0;
             }
             else
             {
                 uint32_t backpack = 0;
                 CGameItem *objBackpack = g_Player->FindLayer(OL_BACKPACK);
-
                 if (objBackpack != nullptr)
                 {
                     backpack = objBackpack->Serial;
@@ -1150,18 +1089,14 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 }
 
                 CGameItem *objHand = g_Player->FindLayer(OL_1_HAND + handIndex);
-
                 if (objHand != nullptr)
                 {
                     itemInHand[handIndex] = objHand->Serial;
-
                     g_Orion.PickupItem(objHand, 1, false);
                     g_Orion.DropItem(backpack, 0xFFFF, 0xFFFF, 0);
-
                     g_GumpManager.UpdateGump(g_PlayerSerial, 0, GT_PAPERDOLL);
                 }
             }
-
             break;
         }
         case MC_WAIT_FOR_TARGET:
@@ -1179,7 +1114,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 result = MRC_BREAK_PARSER;
             }
-
             break;
         }
         case MC_TARGET_NEXT:
@@ -1198,42 +1132,34 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 g_LastAttackObject = obj->Serial;
                 PLUGIN_EVENT(UOMSG_STATUS_REQUEST, obj->Serial);
             }
-
             break;
         }
         case MC_ATTACK_LAST:
         {
             g_Orion.Attack(g_LastAttackObject);
-
             break;
         }
         case MC_DELAY:
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
-
             string str = mos->m_String;
-
             if (str.length() != 0u)
             {
                 m_NextTimer = g_Ticks + std::atoi(str.c_str());
             }
-
             break;
         }
         case MC_CIRCLE_TRANS:
         {
             g_ConfigManager.UseCircleTrans = !g_ConfigManager.UseCircleTrans;
-
             break;
         }
         case MC_CLOSE_GUMPS:
         {
             CGump *gump = (CGump *)g_GumpManager.m_Items;
-
             while (gump != nullptr)
             {
                 CGump *next = (CGump *)gump->m_Next;
-
                 if (gump->GumpType == GT_OPTIONS)
                 {
                     g_OptionsMacroManager.Clear();
@@ -1244,40 +1170,33 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 {
                     g_GumpManager.RemoveGump(gump);
                 }
-
                 gump = next;
             }
-
             break;
         }
         case MC_ALWAYS_RUN:
         {
             g_ConfigManager.AlwaysRun = !g_ConfigManager.AlwaysRun;
-
             break;
         }
         case MC_SAVE_DESKTOP:
         {
             g_Orion.SaveLocalConfig(g_PacketManager.ConfigSerial);
-
             break;
         }
         case MC_ENABLE_RANGE_COLOR:
         {
             g_ConfigManager.GrayOutOfRangeObjects = true;
-
             break;
         }
         case MC_DISABLE_RANGE_COLOR:
         {
             g_ConfigManager.GrayOutOfRangeObjects = false;
-
             break;
         }
         case MC_TOGGLE_RANGE_COLOR:
         {
             g_ConfigManager.GrayOutOfRangeObjects = !g_ConfigManager.GrayOutOfRangeObjects;
-
             break;
         }
         case MC_ATTACK_SELECTED_TARGET:
@@ -1287,7 +1206,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 g_Orion.Attack(g_NewTargetSystem.Serial);
             }
-
             break;
         }
         case MC_USE_SELECTED_TARGET:
@@ -1296,7 +1214,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 g_Orion.DoubleClick(g_NewTargetSystem.Serial);
             }
-
             break;
         }
         case MC_CURRENT_TARGET:
@@ -1323,13 +1240,11 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     result = MRC_BREAK_PARSER;
                 }
             }
-
             break;
         }
         case MC_TARGET_SYSTEM_ON_OFF:
         {
             g_ConfigManager.DisableNewTargetSystem = !g_ConfigManager.DisableNewTargetSystem;
-
             break;
         }
         case MC_BANDAGE_SELF:
@@ -1374,12 +1289,10 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 else
                 {
                     CGameItem *bandage = g_Player->FindBandage();
-
                     if (bandage != nullptr)
                     {
                         WaitingBandageTarget = true;
                         g_Orion.DoubleClick(bandage->Serial);
-
                         result = MRC_BREAK_PARSER;
                     }
                 }
@@ -1387,7 +1300,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             else
             {
                 CGameItem *bandage = g_Player->FindBandage();
-
                 if (bandage != nullptr)
                 {
                     if (macro->Code == MC_BANDAGE_SELF)
@@ -1403,20 +1315,16 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     }
                 }
             }
-
             break;
         }
         case MC_SET_UPDATE_RANGE:
         case MC_MODIFY_UPDATE_RANGE:
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
-
             string str = mos->m_String;
-
             if (str.length() != 0u)
             {
                 g_ConfigManager.UpdateRange = std::atoi(str.c_str());
-
                 if (g_ConfigManager.UpdateRange < MIN_VIEW_RANGE)
                 {
                     g_ConfigManager.UpdateRange = MIN_VIEW_RANGE;
@@ -1426,58 +1334,49 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     g_ConfigManager.UpdateRange = g_MaxViewRange;
                 }
             }
-
             break;
         }
         case MC_INCREASE_UPDATE_RANGE:
         {
             g_ConfigManager.UpdateRange += 1;
-
             if (g_ConfigManager.UpdateRange > g_MaxViewRange)
             {
                 g_ConfigManager.UpdateRange = g_MaxViewRange;
             }
-
             break;
         }
         case MC_DECREASE_UPDATE_RANGE:
         {
             g_ConfigManager.UpdateRange -= 1;
-
             if (g_ConfigManager.UpdateRange < MIN_VIEW_RANGE)
             {
                 g_ConfigManager.UpdateRange = MIN_VIEW_RANGE;
             }
-
             break;
         }
         case MC_MAX_UPDATE_RANGE:
         {
             g_ConfigManager.UpdateRange = g_MaxViewRange;
-
             break;
         }
         case MC_MIN_UPDATE_RANGE:
         {
             g_ConfigManager.UpdateRange = MIN_VIEW_RANGE;
-
             break;
         }
         case MC_DEFAULT_UPDATE_RANGE:
         {
             g_ConfigManager.UpdateRange = g_MaxViewRange;
-
             break;
         }
         case MC_UPDATE_RANGE_INFO:
         {
             g_Orion.CreateTextMessageF(
                 3, 0, "Current update range is %i", g_ConfigManager.UpdateRange);
-
             break;
         }
         case MC_SELECT_NEXT:
-        case MC_SELECT_PREVEOUS:
+        case MC_SELECT_PREVIOUS:
         case MC_SELECT_NEAREST:
         {
             if (g_ConfigManager.DisableNewTargetSystem)
@@ -1486,7 +1385,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             }
 
             SCAN_TYPE_OBJECT scanType = (SCAN_TYPE_OBJECT)(macro->SubCode - MSC_G7_HOSTILE);
-
             CGameObject *obj = g_World->SearchWorldObject(
                 g_NewTargetSystem.Serial,
                 10,
@@ -1496,9 +1394,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             if (obj != nullptr)
             {
                 g_GumpManager.CloseGump(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM);
-
                 g_NewTargetSystem.Serial = obj->Serial;
-
                 if (g_GumpManager.UpdateContent(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM) ==
                     nullptr)
                 {
@@ -1506,7 +1402,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     {
                         CPacketStatusRequest(g_NewTargetSystem.Serial).Send();
                     }
-
                     g_GumpManager.AddGump(new CGumpTargetSystem(
                         g_NewTargetSystem.Serial,
                         g_NewTargetSystem.GumpX,
@@ -1522,33 +1417,27 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 g_Orion.CreateUnicodeTextMessageF(
                     0, 0x038A, "There are no %s on the screen to select.", resultNames[scanType]);
             }
-
             break;
         }
         case MC_TOGGLE_BUICON_WINDOW:
         {
             g_ConfigManager.ToggleBufficonWindow = !g_ConfigManager.ToggleBufficonWindow;
-
             break;
         }
         case MC_INVOKE_VIRTURE:
         {
             uint8_t id = macro->SubCode - MSC_G5_HONOR + 31;
-
             CPacketInvokeVirtureRequest(id).Send();
-
             break;
         }
         case MC_PRIMARY_ABILITY:
         {
             CGumpAbility::OnAbilityUse(0);
-
             break;
         }
         case MC_SECONDARY_ABILITY:
         {
             CGumpAbility::OnAbilityUse(1);
-
             break;
         }
         case MC_TOGGLE_GARGOYLE_FLYING:
@@ -1557,7 +1446,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             {
                 CPacketToggleGargoyleFlying().Send();
             }
-
             break;
         }
         case MC_EQUIP_LAST_WEAPON:
@@ -1568,7 +1456,6 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         case MC_KILL_GUMP_OPEN:
         {
             g_Orion.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0x77, "That macro is not work now");
-
             break;
         }
         default:

@@ -527,7 +527,7 @@ void CGumpScreenSelectProfession::InitToolTip()
         }
         case ID_SPS_ARROW_PREV:
         {
-            g_ToolTip.Set(L"Preveous screen");
+            g_ToolTip.Set(L"Previous screen");
             break;
         }
         case ID_SPS_ARROW_BACK_PROFESSION:

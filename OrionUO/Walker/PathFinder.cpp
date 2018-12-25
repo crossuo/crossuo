@@ -20,15 +20,13 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
     int blockX = x / 8;
     int blockY = y / 8;
 
-    uint32_t blockIndex = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
-
+    const uint32_t blockIndex = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
     if (blockIndex >= g_MapManager.MaxBlockIndex)
     {
         return false;
     }
 
     CMapBlock *block = g_MapManager.GetBlock(blockIndex);
-
     if (block == nullptr)
     {
         block = g_MapManager.AddBlock(blockIndex);
@@ -44,8 +42,7 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
     bool ignoreGameCharacters =
         (IgnoreStaminaCheck || (stepState == PSS_DEAD_OR_GM) || g_Player->IgnoreCharacters() ||
          g_Player->Stam >= g_Player->MaxStam);
-    bool isGM = (g_Player->Graphic == 0x03DB);
-
+    const bool isGM = (g_Player->Graphic == 0x03DB);
     for (CRenderWorldObject *obj = block->GetRender(bx, by); obj != nullptr; obj = obj->m_NextXY)
     {
         if (g_CustomHouseGump != nullptr && obj->GetZ() < g_Player->GetZ())
@@ -53,17 +50,14 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
             continue;
         }
 
-        uint16_t graphic = obj->Graphic;
-
+        const uint16_t graphic = obj->Graphic;
         if (obj->IsLandObject())
         {
             if ((graphic < 0x01AE && graphic != 2) || (graphic > 0x01B5 && graphic != 0x01DB))
             {
                 CLandObject *land = (CLandObject *)obj;
-
                 uint32_t flags = POF_IMPASSABLE_OR_SURFACE;
-                uint64_t tiledataFlags = g_Orion.GetLandFlags(graphic);
-
+                const uint64_t tiledataFlags = g_Orion.GetLandFlags(graphic);
                 if (stepState == PSS_ON_SEA_HORSE)
                 {
                     if (IsWet(tiledataFlags))
@@ -84,10 +78,9 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
                     }
                 }
 
-                int landMinZ = land->MinZ;
-                int landAverageZ = land->AverageZ;
-                int landHeight = landAverageZ - landMinZ;
-
+                const int landMinZ = land->MinZ;
+                const int landAverageZ = land->AverageZ;
+                const int landHeight = landAverageZ - landMinZ;
                 list.push_back(CPathObject(flags, landMinZ, landAverageZ, landHeight, obj));
             }
         }
@@ -95,13 +88,10 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
         {
             bool canBeAdd = true;
             bool dropFlags = false;
-
             STATIC_TILES *tileInfo = obj->StaticGroupObjectPtr()->GetStaticData();
-
             if (obj->IsGameObject())
             {
-                CGameObject *go = (CGameObject *)obj;
-
+                auto go = (CGameObject *)obj;
                 if (go->NPC)
                 {
                     CGameCharacter *gc = (CGameCharacter *)obj;
@@ -115,7 +105,6 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
                             DEFAULT_CHARACTER_HEIGHT,
                             obj));
                     }
-
                     canBeAdd = false;
                 }
                 else if (((CGameItem *)obj)->MultiBody || obj->IsInternal())
@@ -144,7 +133,6 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
             if (canBeAdd)
             {
                 uint32_t flags = 0;
-
                 if (stepState == PSS_ON_SEA_HORSE)
                 {
                     if (obj->IsWet())
@@ -201,15 +189,13 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
 
                 if (flags != 0u)
                 {
-                    int objZ = obj->GetZ();
-                    int staticHeight = tileInfo->Height;
+                    const int objZ = obj->GetZ();
+                    const int staticHeight = tileInfo->Height;
                     int staticAverageZ = staticHeight;
-
                     if (obj->IsBridge())
                     {
                         staticAverageZ /= 2;
                     }
-
                     list.push_back(
                         CPathObject(flags, objZ, staticAverageZ + objZ, staticHeight, obj));
                 }

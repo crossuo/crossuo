@@ -68,15 +68,26 @@ public:
     void Clear();
     void ClearUnequipped();
     void ClearNotOpenedItems();
+
+    // Object Flags
+    // RunUO:
+    // - https://github.com/runuo/runuo/blob/d715573172fc432a673825b0136444bdab7863b5/Server/Mobile.cs#L7832
+    // - https://github.com/runuo/runuo/blob/d715573172fc432a673825b0136444bdab7863b5/Server/Item.cs#L1867
+    // - https://github.com/runuo/runuo/blob/d715573172fc432a673825b0136444bdab7863b5/Scripts/Mobiles/PlayerMobile.cs#L676
+    // POL: ?
+    // Sphere:
+    // https://github.com/Sphereserver/Source-experimental/blob/c8ddf528c803fe70b7593c5acb121f1829b22d16/src/game/chars/CCharStatus.cpp#L618
     bool Frozen() { return (m_Flags & 0x01); }
-    bool Poisoned();
-    bool Flying();
-    bool Caller();
+    // 0x02 = Female
+    bool Poisoned(); // 0x04 if < 7.0.0
+    bool Flying(); // 0x04 if >= 7.0.0
     bool YellowHits() { return (m_Flags & 0x08); }
     bool IgnoreCharacters() { return (m_Flags & 0x10); }
     bool Locked() { return (!(m_Flags & 0x20) && m_TiledataPtr->Weight > 90); }
     bool InWarMode() { return (m_Flags & 0x40); }
     bool Hidden() { return (m_Flags & 0x80); }
+
+    bool Caller();
     virtual bool IsHuman() { return false; }
     virtual bool IsPlayer() { return false; }
     static int IsGold(uint16_t graphic);

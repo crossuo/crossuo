@@ -23,7 +23,7 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
         case MC_INVOKE_VIRTURE:
         case MC_CAST_SPELL:
         case MC_SELECT_NEXT:
-        case MC_SELECT_PREVEOUS:
+        case MC_SELECT_PREVIOUS:
         case MC_SELECT_NEAREST:
         {
             if (subCode == MSC_NONE)
@@ -33,9 +33,7 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
                 CMacro::GetBoundByCode(code, count, offset);
                 SubCode = (MACRO_SUB_CODE)offset;
             }
-
             HasSubMenu = 1;
-
             break;
         }
         //With entry text
@@ -48,13 +46,11 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
         case MC_MODIFY_UPDATE_RANGE:
         {
             HasSubMenu = 2;
-
             break;
         }
         default:
         {
             HasSubMenu = 0;
-
             break;
         }
     }
@@ -90,10 +86,8 @@ CMacro::~CMacro()
 CMacro *CMacro::CreateBlankMacro()
 {
     DEBUG_TRACE_FUNCTION;
-    CMacro *obj = new CMacro(0, false, false, false);
-
+    auto obj = new CMacro(0, false, false, false);
     obj->Add(new CMacroObject(MC_NONE, MSC_NONE));
-
     return obj;
 }
 
@@ -101,7 +95,6 @@ CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
 {
     DEBUG_TRACE_FUNCTION;
     CMacroObject *obj = nullptr;
-
     switch (code)
     {
         //With entry text
@@ -114,13 +107,11 @@ CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
         case MC_MODIFY_UPDATE_RANGE:
         {
             obj = new CMacroObjectString(code, MSC_NONE, "");
-
             break;
         }
         default:
         {
             obj = new CMacroObject(code, MSC_NONE);
-
             break;
         }
     }
@@ -133,7 +124,6 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
     DEBUG_TRACE_FUNCTION;
     obj->m_Prev = source->m_Prev;
     obj->m_Next = source->m_Next;
-
     if (source->m_Prev == nullptr)
     {
         m_Items = obj;
@@ -147,7 +137,6 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
     {
         source->m_Next->m_Prev = obj;
     }
-
     source->m_Prev = nullptr;
     source->m_Next = nullptr;
     delete source;
@@ -183,15 +172,13 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
     }
 
     int count = file.ReadInt16LE();
-    CMacro *macro = new CMacro(key, alt, ctrl, shift);
-
+    auto macro = new CMacro(key, alt, ctrl, shift);
     for (int i = 0; i < count; i++)
     {
         auto type = file.ReadUInt8();
         MACRO_CODE code = (MACRO_CODE)file.ReadUInt16LE();
         MACRO_SUB_CODE subCode = (MACRO_SUB_CODE)file.ReadUInt16LE();
         CMacroObject *obj = nullptr;
-
         switch (type)
         {
             case 0: //original
@@ -202,25 +189,19 @@ CMacro *CMacro::Load(Wisp::CMappedFile &file)
             case 2: //with string
             {
                 short len = file.ReadUInt16LE();
-
                 string str = file.ReadString(len);
-
                 obj = new CMacroObjectString(code, subCode, str);
-
                 break;
             }
             default:
                 break;
         }
-
         if (obj != nullptr)
         {
             macro->Add(obj);
         }
     }
-
     file.Ptr = next;
-
     return macro;
 }
 
@@ -229,12 +210,10 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
     DEBUG_TRACE_FUNCTION;
     short size = 12;
     short count = 0;
-
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         size += 5;
         count++;
-
         if (obj->HaveString()) //with string
         {
             string str = ((CMacroObjectString *)obj)->m_String;
@@ -243,7 +222,6 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
     }
 
     writer.WriteUInt16LE(size);
-
     auto key = Key;
     if (Alt)
     {
@@ -262,7 +240,6 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
 
     writer.WriteInt32LE(key);
     writer.WriteUInt16LE(count);
-
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         uint8_t type = 0;
@@ -274,19 +251,15 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
         writer.WriteUInt8(type);
         writer.WriteUInt16LE(obj->Code);
         writer.WriteUInt16LE(obj->SubCode);
-
         if (type == 2) //with string
         {
             string str = ((CMacroObjectString *)obj)->m_String;
             int len = (int)str.length();
-
             writer.WriteInt16LE(len + 1);
             writer.WriteString(str);
         }
-
         writer.WriteBuffer();
     }
-
     writer.WriteUInt32LE(0); //EOM
     writer.WriteBuffer();
 }
@@ -296,7 +269,6 @@ CMacro *CMacro::GetCopy()
     DEBUG_TRACE_FUNCTION;
     CMacro *macro = new CMacro(Key, Alt, Ctrl, Shift);
     MACRO_CODE oldCode = MC_NONE;
-
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
     {
         if (obj->HaveString())
@@ -308,7 +280,6 @@ CMacro *CMacro::GetCopy()
         {
             macro->Add(new CMacroObject(obj->Code, obj->SubCode));
         }
-
         oldCode = obj->Code;
     }
 
@@ -316,7 +287,6 @@ CMacro *CMacro::GetCopy()
     {
         macro->Add(new CMacroObject(MC_NONE, MSC_NONE));
     }
-
     return macro;
 }
 
@@ -365,7 +335,7 @@ void CMacro::GetBoundByCode(const MACRO_CODE &code, int &count, int &offset)
             break;
         }
         case MC_SELECT_NEXT:
-        case MC_SELECT_PREVEOUS:
+        case MC_SELECT_PREVIOUS:
         case MC_SELECT_NEAREST:
         {
             offset = MSC_G7_HOSTILE;
@@ -427,7 +397,7 @@ const char *CMacro::m_MacroActionName[MACRO_ACTION_NAME_COUNT] = { "(NONE)",
                                                                    "ToggleRangeColor",
                                                                    "InvoreVirture",
                                                                    "SelectNext",
-                                                                   "SelectPreveous",
+                                                                   "SelectPrevious",
                                                                    "SelectNearest",
                                                                    "AttackSelectedTarget",
                                                                    "UseSelectedTarget",

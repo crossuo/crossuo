@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -17,7 +17,6 @@ public:
     virtual ~CGameConsole();
 
     static void Send(wstring text, uint16_t defaultColor = 0);
-
     static wstring
     IsSystemCommand(const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type);
 

@@ -381,9 +381,7 @@ bool CGameObject::Poisoned()
     {
         return SA_Poisoned;
     }
-    {
-        return (m_Flags & 0x04) != 0;
-    }
+    return (m_Flags & 0x04) != 0;
 }
 
 bool CGameObject::Flying()
@@ -393,9 +391,7 @@ bool CGameObject::Flying()
     {
         return (m_Flags & 0x04) != 0;
     }
-    {
-        return false;
-    }
+    return false;
 }
 
 int CGameObject::IsGold(uint16_t graphic)
@@ -406,7 +402,7 @@ int CGameObject::IsGold(uint16_t graphic)
         case 0x0EED:
             return 1;
         /*case 0x0EEA:
-			return 2;*/
+            return 2;*/
         case 0x0EF0:
             return 3;
         default:
@@ -646,7 +642,6 @@ CGameObject *CGameObject::GetTopObject()
     {
         obj = g_World->FindWorldObject(obj->Container);
     }
-
     return obj;
 }
 
@@ -671,7 +666,5 @@ bool CGameObject::Caller()
     {
         return pvpCaller;
     }
-    {
-        return false;
-    }
+    return false;
 }

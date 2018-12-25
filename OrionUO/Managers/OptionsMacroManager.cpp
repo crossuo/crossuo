@@ -4,7 +4,6 @@
 COptionsMacroManager g_OptionsMacroManager;
 
 COptionsMacroManager::COptionsMacroManager()
-
 {
 }
 
