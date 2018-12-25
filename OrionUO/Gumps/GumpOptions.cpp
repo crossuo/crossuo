@@ -382,9 +382,7 @@ enum
     ID_GO_P5_RIGHT_BOX,
     ID_GO_P5_EMPTY_BOX,
 
-    ID_GO_P5_MACRO_SELECTION,
-    ID_GO_P5_ACTION_SELECTION,
-
+    // Interface Page
     ID_GO_P6_ENABLE_PATHFINDING,
     ID_GO_P6_HOLD_TAB_FOR_COMBAT,
     ID_GO_P6_OFFSET_INTERFACE_WINDOWS,
@@ -442,7 +440,13 @@ enum
     ID_GO_P9_INFORM_SKILLS,
 
     ID_GO_COUNT,
+
+    ID_GO_P5_MACRO_START = 1000,
+    ID_GO_P5_MACRO_SELECTION = 2000,
+    ID_GO_P5_ACTION_SELECTION = 10000,
 };
+
+static_assert(ID_GO_COUNT < ID_GO_P5_MACRO_START, "Options page id overflow");
 
 CGumpOptions::CGumpOptions(short x, short y)
     : CGump(GT_OPTIONS, 0, x, y)
@@ -1000,12 +1004,12 @@ void CGumpOptions::InitToolTip()
         }
         case ID_GO_P5_BUTTON_PREVIOUS:
         {
-            g_ToolTip.Set(L"Seek to previous macro");
+            g_ToolTip.Set(L"Go to previous macro");
             break;
         }
         case ID_GO_P5_BUTTON_NEXT:
         {
-            g_ToolTip.Set(L"Seek to next macro");
+            g_ToolTip.Set(L"Go to next macro");
             break;
         }
         case ID_GO_P5_KEY_BOX:
@@ -1015,17 +1019,17 @@ void CGumpOptions::InitToolTip()
         }
         case ID_GO_P5_BUTTON_SHIFT:
         {
-            g_ToolTip.Set(L"Macro running if only shift key pressed");
+            g_ToolTip.Set(L"Run macro if shift is pressed");
             break;
         }
         case ID_GO_P5_BUTTON_ALT:
         {
-            g_ToolTip.Set(L"Macro running if only alt key pressed");
+            g_ToolTip.Set(L"Run macro if alt is pressed");
             break;
         }
         case ID_GO_P5_BUTTON_CTRL:
         {
-            g_ToolTip.Set(L"Macro running if only ctrl key pressed");
+            g_ToolTip.Set(L"Run macro if ctrl is pressed");
             break;
         }
         case ID_GO_P5_BUTTON_UP:
@@ -2156,7 +2160,7 @@ void CGumpOptions::RedrawMacroData()
         while (obj != nullptr && macroCount < maxMacroDraw)
         {
             CGUIComboBox *combobox = (CGUIComboBox *)m_MacroDataBox->Add(new CGUIComboBox(
-                ID_GO_P5_MACRO_SELECTION + (macroCount * 1000),
+                ID_GO_P5_MACRO_SELECTION + (macroCount * ID_GO_P5_MACRO_START),
                 0x098D,
                 true,
                 0x09B5,
@@ -2179,7 +2183,7 @@ void CGumpOptions::RedrawMacroData()
                 CMacro::GetBoundByCode(obj->Code, macroListCount, macroListOffset);
 
                 combobox = (CGUIComboBox *)m_MacroDataBox->Add(new CGUIComboBox(
-                    ID_GO_P5_ACTION_SELECTION + (macroCount * 1000),
+                    ID_GO_P5_ACTION_SELECTION + (macroCount * ID_GO_P5_MACRO_START),
                     0x098E,
                     true,
                     0x09B5,
@@ -2206,10 +2210,14 @@ void CGumpOptions::RedrawMacroData()
                 m_MacroDataBox->Add(new CGUIGumppic(0x098E, 245, y));
                 m_MacroDataBox->Add(new CGUIScissor(true, 0, 0, 251, y + 5, 150, 20));
                 m_MacroDataBox->Add(new CGUIHitBox(
-                    ID_GO_P5_ACTION_SELECTION + (macroCount * 1000), 251, y + 5, 150, 20));
+                    ID_GO_P5_ACTION_SELECTION + (macroCount * ID_GO_P5_MACRO_START),
+                    251,
+                    y + 5,
+                    150,
+                    20));
 
                 CGUITextEntry *entry = (CGUITextEntry *)m_MacroDataBox->Add(new CGUITextEntry(
-                    ID_GO_P5_ACTION_SELECTION + (macroCount * 1000),
+                    ID_GO_P5_ACTION_SELECTION + (macroCount * ID_GO_P5_MACRO_START),
                     0x0386,
                     0x0386,
                     0x0386,
@@ -3972,10 +3980,9 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
     }
 
     int macroIndex = 0;
-
-    while (index >= 1000)
+    while (index >= ID_GO_P5_MACRO_START)
     {
-        index -= 1000;
+        index -= ID_GO_P5_MACRO_START;
         macroIndex++;
     }
 
@@ -4097,7 +4104,8 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
                 while (obj != nullptr && macroCount < maxMacroDraw)
                 {
                     if (obj->HasSubMenu == 2 &&
-                        entry->Serial == ID_GO_P5_ACTION_SELECTION + (macroCount * 1000))
+                        entry->Serial ==
+                            ID_GO_P5_ACTION_SELECTION + (macroCount * ID_GO_P5_MACRO_START))
                     {
                         break;
                     }
@@ -4203,7 +4211,8 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
                         while (obj != nullptr && macroCount < maxMacroDraw)
                         {
                             if (obj->HasSubMenu == 2 &&
-                                entry->Serial == ID_GO_P5_ACTION_SELECTION + (macroCount * 1000))
+                                entry->Serial ==
+                                    ID_GO_P5_ACTION_SELECTION + (macroCount * ID_GO_P5_MACRO_START))
                             {
                                 break;
                             }
