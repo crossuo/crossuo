@@ -868,7 +868,7 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         {
             Wisp::g_WispMouse->Update();
 
-            const bool isUp = ev.wheel.y > 0;
+            const bool isUp = ev.wheel.y < 0;
             OnMidMouseButtonScroll(isUp);
         }
         break;
