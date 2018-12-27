@@ -80,7 +80,7 @@ public:
     bool Frozen() { return (m_Flags & 0x01); }
     // 0x02 = Female
     bool Poisoned(); // 0x04 if < 7.0.0
-    bool Flying(); // 0x04 if >= 7.0.0
+    bool Flying();   // 0x04 if >= 7.0.0
     bool YellowHits() { return (m_Flags & 0x08); }
     bool IgnoreCharacters() { return (m_Flags & 0x10); }
     bool Locked() { return (!(m_Flags & 0x20) && m_TiledataPtr->Weight > 90); }
