@@ -109,7 +109,9 @@ void CConnectionManager::Init(uint8_t *gameSeed)
 void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
 {
     DEBUG_TRACE_FUNCTION;
-    PluginEvent ev = { ip, (void *)4 };
+    PluginEvent ev;
+    ev.data1 = ip;
+    ev.data2 = (void *)4;
     PLUGIN_EVENT(UOMSG_IP_SEND, &ev);
     socket.Send(ip, 4);
 }
