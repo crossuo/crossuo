@@ -6527,6 +6527,11 @@ PACKET_HANDLER(OrionMessages)
             CGumpAbility::OnAbilityUse(ReadUInt8() % 2);
             break;
         }
+        case OCT_OPEN_DOOR:
+        {
+            g_Orion.OpenDoor();
+            break;
+        }
         default:
             break;
     }
