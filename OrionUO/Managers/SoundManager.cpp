@@ -41,7 +41,7 @@ static AudioSource *s_MusicSource[] = { &s_MusicStream[0], &s_MusicStream[1] };
 static handle s_Music[] = { 0, 0 };
 
 #define GetErrorDescription() __FUNCTION__
-#define MAX_SOUNDS 256
+#define MAX_SOUNDS 2048
 #define VOLUME_FACTOR 1.0f
 
 struct SoundInfo
