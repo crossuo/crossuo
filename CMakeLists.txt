@@ -9,10 +9,9 @@ project(OrionUO)
 #
 option(ENABLE_LTO "Enables Link Time Optimization" OFF)
 option(ORION_BUILD_MODULES "Enables Modular Project Structure" OFF)
-option(ORION_DLL_STATIC "Use Builtin Orion Crypto Library (Windows option)" ON)
-option(ORION_WISP "Use WISP pure Win32 API Implementation (Windows option)" ON)
+option(ORION_WISP "Use WISP pure Win32 API Implementation (DEPRECATED)" OFF)
 option(ORION_BASS "Use BASS for audio playback (DEPRECATED)" OFF)
-option(ORION_THREADED "Use threaded render." OFF)
+option(ORION_THREADED "Use threaded render (DEPRECATED)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake
@@ -72,7 +71,6 @@ if(ORION_WINDOWS)
 	# temporary hijacking to use other libs
 	set(SDL2_LIBRARIES ${SDL2_LIBRARIES} "${DEP_LIB_DIR}psapi.lib")
 else()
-	set(ORION_DLL_STATIC ON)
 	set(ORION_WISP OFF)
 	set(ORION_BASS OFF)
 	find_package(SDL2 REQUIRED)

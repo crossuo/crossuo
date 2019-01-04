@@ -17,12 +17,6 @@ else()
   #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
 endif()
 
-if(ORION_DLL_STATIC)
-  add_definitions(-DUSE_ORIONDLL=0)
-else()
-  add_definitions(-DUSE_ORIONDLL=1)
-endif()
-
 if(ORION_WISP)
   add_definitions(-DUSE_WISP=1)
 else()

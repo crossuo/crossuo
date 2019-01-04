@@ -10,7 +10,8 @@ int main(int argc, char **argv)
     void *so = dlopen(ORIONUO_CLIENT, RTLD_LAZY);
     if (!so)
     {
-        fprintf(stderr, "Could not find '%s'\n", ORIONUO_CLIENT);
+        fprintf(stderr, "Could not load shared object '%s'\n", ORIONUO_CLIENT);
+        fprintf(stderr, "Reason: dlopen failed with: %s\n", dlerror());
         return -1;
     }
 

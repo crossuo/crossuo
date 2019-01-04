@@ -13,10 +13,10 @@ public:
     void SetZ(char val);
     short PriorityZ = 0;
     RENDER_OBJECT_TYPE RenderType = ROT_GAME_OBJECT;
-#if UO_RENDER_LIST_SORT == 1
+
     uint8_t CurrentRenderIndex = 0;
     uint8_t UseInRender = 0;
-#endif
+
     bool NoDrawTile = false;
 
 public:
