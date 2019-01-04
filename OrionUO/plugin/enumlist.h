@@ -155,7 +155,8 @@ enum CLIENT_FLAG
     CF_SA = 0x20,
     CF_UO3D = 0x40,
     CF_RESERVED = 0x80,
-    CF_3D = 0x100
+    CF_3D = 0x100,
+    CF_UNDEFINED = 0xFFFF,
 };
 
 enum CHARACTER_LIST_FLAG

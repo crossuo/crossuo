@@ -13,6 +13,7 @@ struct Config
     std::string CustomPath;
     std::string ServerAddress;
     uint16_t ServerPort = 2593;
+    uint16_t ClientFlag = 0;
     bool SavePassword = false;
     bool AutoLogin = false;
     bool TheAbyss = false;
@@ -27,7 +28,6 @@ struct Config
     uint32_t Key3 = 0;
     uint32_t ClientVersion = 0;
     uint32_t EncryptionType = 0;
-    uint16_t ClientFlag = 0;
 };
 
 void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t *proto = nullptr);

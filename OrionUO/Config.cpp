@@ -31,11 +31,19 @@ enum
     MSCC_LOGIN_SERVER,
     MSCC_CLIENT_VERSION,
     MSCC_USE_CRYPT,
+    MSCC_USE_VERDATA,
+    MSCC_CLIENT_TYPE,
     MSCC_COUNT,
 };
 
 namespace config
 {
+struct Modified
+{
+    bool UseVerdata = false;
+    bool ClientFlag = false;
+};
+
 struct ConfigEntry
 {
     uint32_t key;
@@ -53,6 +61,8 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_LOGIN_SERVER, "loginserver" },
     { MSCC_CLIENT_VERSION, "clientversion" },
     { MSCC_USE_CRYPT, "crypt" },
+    { MSCC_USE_VERDATA, "useverdata" },
+    { MSCC_CLIENT_TYPE, "clienttype" },
     { MSCC_COUNT, nullptr },
 };
 
@@ -70,6 +80,8 @@ static uint32_t GetConfigKey(const string &key)
 }
 
 } // namespace config
+
+static config::Modified s_Mark;
 
 static void SetClientVersion(const char *versionStr)
 {
@@ -99,26 +111,66 @@ static void SetClientVersion(const char *versionStr)
         }
     }
 
-    LOG("\tClient Version: %s\n", versionStr);
     g_Config.ClientVersion = VERSION(a, b, c, d);
+}
 
-    /*
-    // This was to keep compatibility, but using
-    // g_Config.ClientVersion is wrong!
-    static CLIENT_VERSION protocolVersion[] = {
-        CV_OLD,  CV_200,  CV_200X,  CV_300,   CV_305D,  CV_306E,  CV_308,   CV_308D,
-        CV_308J, CV_308Z, CV_400B,  CV_405A,  CV_4011D, CV_500A,  CV_5020,  CV_5090,
-        CV_6000, CV_6013, CV_60144, CV_6017,  CV_6040,  CV_6060,  CV_60142, CV_60144,
-        CV_7000, CV_7090, CV_70130, CV_70160, CV_70180, CV_70240, CV_70331
-    };
-
-    for (int i = countof(protocolVersion) - 1; i > 0; --i)
+static CLIENT_FLAG GetClientTypeFromString(const std::string &str)
+{
+    auto client = ToLowerA(str);
+    if (client == "t2a")
     {
-        if (g_Config.ClientVersion >= (int32_t)protocolVersion[i])
-            return protocolVersion[i];
+        return CF_T2A;
     }
-    return CV_OLD;
-*/
+    if (client == "re")
+    {
+        return CF_RE;
+    }
+    if (client == "td")
+    {
+        return CF_TD;
+    }
+    if (client == "lbr")
+    {
+        return CF_LBR;
+    }
+    if (client == "aos")
+    {
+        return CF_AOS;
+    }
+    if (client == "se")
+    {
+        return CF_SE;
+    }
+    if (client == "sa")
+    {
+        return CF_SA;
+    }
+
+    return CF_UNDEFINED;
+}
+
+static const char *GetClientTypeString(uint16_t clientFlag)
+{
+    switch (clientFlag)
+    {
+        case CF_T2A:
+            return "t2a";
+        case CF_RE:
+            return "re";
+        case CF_TD:
+            return "td";
+        case CF_LBR:
+            return "lbr";
+        case CF_AOS:
+            return "aos";
+        case CF_SE:
+            return "se";
+        case CF_SA:
+            return "sa";
+        default:
+            return "";
+    }
+    return "";
 }
 
 static const char *GetClientTypeName(CLIENT_FLAG clientFlag)
@@ -139,14 +191,10 @@ static const char *GetClientTypeName(CLIENT_FLAG clientFlag)
             return "Samurai Empire";
         case CF_SA:
             return "Stygian Abyss";
-        case CF_UO3D:
-            return "UO3D";
-        case CF_RESERVED:
-            return "Reserved";
-        case CF_3D:
-            return "3D Client";
+        default:
+            return "";
     }
-    return "Unknown";
+    return "";
 }
 
 static CLIENT_FLAG GetClientType(uint32_t version)
@@ -230,7 +278,6 @@ static void ClientVersionFixup(const char *versionStr)
 {
     DEBUG_TRACE_FUNCTION;
 
-    LOG("Client Emulation:\n");
     SetClientVersion(versionStr);
     SetClientCrypt(g_Config.ClientVersion);
 
@@ -242,31 +289,6 @@ static void ClientVersionFixup(const char *versionStr)
         g_MapSize[0].Width = 6144;
         g_MapSize[1].Width = 6144;
     }
-
-    int a = (g_Config.ClientVersion >> 24) & 0xff;
-    int b = (g_Config.ClientVersion >> 16) & 0xff;
-    int c = (g_Config.ClientVersion >> 8) & 0xff;
-    int d = (g_Config.ClientVersion & 0xff);
-    char p1[64], p2[8];
-    snprintf(p1, sizeof(p1), "%d.%d.%d", a, b, c);
-    if (d >= 'a' && d <= 'z')
-    {
-        snprintf(p2, sizeof(p2), "%c", d);
-    }
-    else
-    {
-        snprintf(p2, sizeof(p2), ".%d", d);
-    }
-
-    LOG("\tEmulation Compatibility Version: %s%s (0x%08x)\n", p1, p2, g_Config.ClientVersion);
-    LOG("\tCryptography: %08x %08x %08x %04x (%d)\n",
-        g_Config.Key1,
-        g_Config.Key2,
-        g_Config.Key3,
-        g_Config.Seed,
-        g_Config.EncryptionType);
-    LOG("\tClient Type: %s (%d)\n", GetClientTypeName(clientType), clientType);
-    LOG("\tUse Verdata: %d\n", useVerdata);
 
     if (!g_Config.UseCrypt)
     {
@@ -283,8 +305,15 @@ static void ClientVersionFixup(const char *versionStr)
     }
 
     g_PacketManager.ConfigureClientVersion(g_Config.ClientVersion);
-    g_Config.ClientFlag = clientType;
-    g_Config.UseVerdata = useVerdata;
+
+    if (!s_Mark.ClientFlag)
+    {
+        g_Config.ClientFlag = clientType;
+    }
+    if (!s_Mark.UseVerdata)
+    {
+        g_Config.UseVerdata = useVerdata;
+    }
 }
 
 void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t *proto)
@@ -319,7 +348,7 @@ void LoadGlobalConfig()
 
     while (!file.IsEOF())
     {
-        auto strings = file.ReadTokens();
+        auto strings = file.ReadTokens(false); // Trim remove spaces from paths
         if (strings.size() >= 2)
         {
             const auto key = config::GetConfigKey(strings[0]);
@@ -380,11 +409,56 @@ void LoadGlobalConfig()
                     g_Config.UseCrypt = ToBool(strings[1]);
                     break;
                 }
+                case MSCC_USE_VERDATA:
+                {
+                    s_Mark.UseVerdata = true;
+                    g_Config.UseVerdata = ToBool(strings[1]);
+                    break;
+                }
+                case MSCC_CLIENT_TYPE:
+                {
+                    auto type = GetClientTypeFromString(strings[1]);
+                    if (type != CF_UNDEFINED)
+                    {
+                        s_Mark.ClientFlag = true;
+                        g_Config.ClientFlag = type;
+                    }
+                    break;
+                }
                 default:
                     break;
             }
         }
     }
+
+    int a = (g_Config.ClientVersion >> 24) & 0xff;
+    int b = (g_Config.ClientVersion >> 16) & 0xff;
+    int c = (g_Config.ClientVersion >> 8) & 0xff;
+    int d = (g_Config.ClientVersion & 0xff);
+    char p1[64], p2[8];
+    snprintf(p1, sizeof(p1), "%d.%d.%d", a, b, c);
+    if (d >= 'a' && d <= 'z')
+    {
+        snprintf(p2, sizeof(p2), "%c", d);
+    }
+    else
+    {
+        snprintf(p2, sizeof(p2), ".%d", d);
+    }
+
+    LOG("Client Emulation:\n");
+    LOG("\tClient Version: %s\n", g_Config.ClientVersionString.c_str());
+    LOG("\tEmulation Compatibility Version: %s%s (0x%08x)\n", p1, p2, g_Config.ClientVersion);
+    LOG("\tCryptography: %08x %08x %08x %04x (%d)\n",
+        g_Config.Key1,
+        g_Config.Key2,
+        g_Config.Key3,
+        g_Config.Seed,
+        g_Config.EncryptionType);
+    LOG("\tClient Type: %s (%d)\n",
+        GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
+        g_Config.ClientFlag);
+    LOG("\tUse Verdata: %d\n", g_Config.UseVerdata);
 }
 
 void SaveGlobalConfig()
@@ -413,6 +487,16 @@ void SaveGlobalConfig()
     fprintf(cfg, "TheAbyss=%s\n", (g_Config.TheAbyss ? "yes" : "no"));
     fprintf(cfg, "Asmut=%s\n", (g_Config.Asmut ? "yes" : "no"));
 
+    if (s_Mark.ClientFlag)
+    {
+        fprintf(cfg, "ClientType=%s\n", GetClientTypeString(g_Config.ClientFlag));
+    }
+    if (s_Mark.UseVerdata)
+    {
+        fprintf(cfg, "UseVerdata=%s\n", (g_Config.UseVerdata ? "yes" : "no"));
+    }
+
+    fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
     if (g_App.m_UOPath != g_App.m_ExePath)
     {
         fprintf(cfg, "CustomPath=%s\n", CStringFromPath(g_App.m_UOPath));
@@ -424,8 +508,6 @@ void SaveGlobalConfig()
     }
 
     fprintf(cfg, "ClientVersion=%s\n", g_Config.ClientVersionString.c_str());
-    fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
-
     fflush(cfg);
     fs_close(cfg);
 }
