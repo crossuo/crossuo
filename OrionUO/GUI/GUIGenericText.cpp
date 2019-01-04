@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIGenericText.h"
+#include "../Config.h"
+
 CGUIGenericText::CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth)
     : CGUIText(color, x, y)
     , TextID(index)
@@ -22,11 +25,5 @@ void CGUIGenericText::CreateTexture(const wstring &str)
         flags |= UOFONT_CROPPED;
     }
 
-    CreateTextureW(
-        (uint8_t)(g_PacketManager.GetClientVersion() >= CV_305D),
-        str,
-        30,
-        MaxWidth,
-        TS_LEFT,
-        flags);
+    CreateTextureW((uint8_t)(g_Config.ClientVersion >= CV_305D), str, 30, MaxWidth, TS_LEFT, flags);
 }

@@ -1,6 +1,5 @@
 // MIT License
 
-#if !USE_ORIONDLL
 #include <memory.h>
 #include <string.h>
 #include "md5.h"
@@ -310,4 +309,3 @@ void MD5Crypt::finish(md5_state *pms, unsigned char digest[16])
         digest[i] = (unsigned char)(pms->abcd[i >> 2] >> ((i & 3) << 3));
     }
 }
-#endif

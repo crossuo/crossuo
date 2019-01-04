@@ -3,6 +3,7 @@
 
 #include "GumpScreenCharacterList.h"
 #include <SDL_timer.h>
+#include "../Config.h"
 
 enum
 {
@@ -35,13 +36,13 @@ void CGumpScreenCharacterList::UpdateContent()
     Clear();
 
     int count = g_CharacterList.Count;
-    bool testField = (g_PacketManager.GetClientVersion() >= CV_305D);
+    bool testField = (g_Config.ClientVersion >= CV_305D);
     int posInList = 0;
     int yOffset = 150;
     int yBonus = 0;
     int listTitleY = 106;
 
-    if (g_PacketManager.GetClientVersion() >= CV_6040)
+    if (g_Config.ClientVersion >= CV_6040)
     {
         listTitleY = 96;
         yOffset = 125;
@@ -147,7 +148,7 @@ void CGumpScreenCharacterList::InitToolTip()
 
     if (id >= ID_CS_CHARACTERS)
     {
-        bool testField = (g_PacketManager.GetClientVersion() >= CV_305D);
+        bool testField = (g_Config.ClientVersion >= CV_305D);
 
         for (int i = 0; i < g_CharacterList.Count; i++)
         {

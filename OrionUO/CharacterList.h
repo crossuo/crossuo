@@ -10,7 +10,6 @@ public:
     bool OnePerson = false;
     bool Have6Slot = false;
     bool Have7Slot = false;
-    uint16_t ClientFlag = 0;
 
     string LastCharacterName;
 

@@ -54,12 +54,8 @@ struct HTMLGumpDataInfo
 
 class CPacketManager : public Wisp::CPacketReader
 {
-protected:
-    CLIENT_VERSION m_ClientVersion = CV_OLD;
-
 public:
-    CLIENT_VERSION GetClientVersion() { return m_ClientVersion; };
-    void SetClientVersion(CLIENT_VERSION newClientVersion);
+    void ConfigureClientVersion(uint32_t newClientVersion);
     string AutoLoginNames = "";
     uint32_t ConfigSerial = 0;
 

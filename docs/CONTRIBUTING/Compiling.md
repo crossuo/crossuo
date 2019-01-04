@@ -44,7 +44,7 @@ $ cd OrionUO
 $ ./OrionUO
 ```
 
-  > You'll need a `Client.cuo` and a `OrionUO.cfg` in the working directory. Inside `OrionUO.cfg` you need to add a line `CustomPath=/path/to/uo/data`, so OrionUO will be able to find your original client data files.
+  > You'll need a `OrionUO.cfg` in the working directory. Please use Orion Launcher to configure the client.
 
 ### MacOSX
 
@@ -67,6 +67,6 @@ $ ninja orion -j8
 $ cd OrionUO
 $ ./OrionUO
 ```
-  > You'll need a `Client.cuo` and a `OrionUO.cfg` in the working directory. Inside `OrionUO.cfg` you need to add line `CustomPath=/path/to/uo/data`, so OrionUO will be able to find your original client data files.
+  > You'll need a `OrionUO.cfg` in the working directory. Please use Orion Launcher to configure the client.
 
 Then you should have an `OrionUO` inside `build/OrionUO`

@@ -1,12 +1,16 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
+#include "PluginManager.h"
+
 #if defined(ORION_WINDOWS)
 #include <Windows.h>
 #else
 #include <stdint.h>
 #define __cdecl
 #endif
+
+#include "../Config.h"
 
 CPluginManager g_PluginManager;
 
@@ -59,8 +63,8 @@ CPlugin::CPlugin(uint32_t flags)
     m_PPS = new PLUGIN_INTERFACE();
     memset(m_PPS, 0, sizeof(PLUGIN_INTERFACE));
     m_PPS->Handle = g_OrionWindow.Handle;
-    m_PPS->ClientVersion = g_PacketManager.GetClientVersion();
-    m_PPS->ClientFlags = (g_FileManager.UseVerdata ? 0x01 : 0);
+    m_PPS->ClientVersion = g_Config.ClientVersion;
+    m_PPS->ClientFlags = (g_Config.UseVerdata ? 0x01 : 0);
 }
 
 CPlugin::~CPlugin()

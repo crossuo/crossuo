@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "AnimationManager.h"
+#include "../Config.h"
+
 CAnimationManager g_AnimationManager;
 
 const int CAnimationManager::m_UsedLayers[8][USED_LAYER_COUNT] = {
@@ -296,7 +299,7 @@ void CAnimationManager::Load(uint32_t *verdata)
 void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         static const string typeNames[5] = {
             "monster", "sea_monster", "animal", "human", "equipment"
@@ -364,7 +367,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
         }
     }
 
-    if (g_PacketManager.GetClientVersion() < CV_305D)
+    if (g_Config.ClientVersion < CV_305D)
     { //CV_204C
         return;
     }
@@ -584,7 +587,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     CIndexAnimation &dataIndex = m_DataIndex[index];
                     dataIndex.MountedHeightOffset = mountedHeightOffset;
 
-                    if (g_PacketManager.GetClientVersion() < CV_500A || groupType == AGT_UNKNOWN)
+                    if (g_Config.ClientVersion < CV_500A || groupType == AGT_UNKNOWN)
                     {
                         if (realAnimID >= 200)
                         {

@@ -358,6 +358,7 @@ void CEntryText::SetTextA(const string &text)
     DEBUG_TRACE_FUNCTION;
     wstring wtext = ToWString(text);
     SetTextW(wtext);
+    m_CText = text;
 }
 
 void CEntryText::SetTextW(const wstring &text)

@@ -39,9 +39,7 @@ extern bool g_CtrlPressed;
 extern bool g_ShiftPressed;
 extern bool g_MovingFromMouse;
 extern bool g_AutoMoving;
-extern bool g_TheAbyss;
 extern bool g_AbyssPacket03First;
-extern bool g_Asmut;
 
 bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point);
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);

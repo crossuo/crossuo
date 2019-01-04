@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "IndexObject.h"
+#include "Config.h"
+
 CIndexObject::CIndexObject()
 {
 }
@@ -106,7 +109,7 @@ void CIndexObject::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint
 void CIndexMulti::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
-    if (g_PacketManager.GetClientVersion() >= CV_7090)
+    if (g_Config.ClientVersion >= CV_7090)
     {
         Count = (uint16_t)(DataSize / sizeof(MULTI_BLOCK_NEW));
     }

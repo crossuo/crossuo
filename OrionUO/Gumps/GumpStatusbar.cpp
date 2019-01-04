@@ -3,6 +3,7 @@
 
 #include "GumpStatusbar.h"
 #include <SDL_rect.h>
+#include "../Config.h"
 
 int CGumpStatusbar::m_StatusbarDefaultWidth = 154;
 int CGumpStatusbar::m_StatusbarDefaultHeight = 59;
@@ -120,8 +121,8 @@ CGumpStatusbar::CGumpStatusbar(uint32_t serial, short x, short y, bool minimized
 CGumpStatusbar::~CGumpStatusbar()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_ConnectionManager.Connected() && g_PacketManager.GetClientVersion() >= CV_200 &&
-        g_World != nullptr && g_World->FindWorldObject(Serial) != nullptr)
+    if (g_ConnectionManager.Connected() && g_Config.ClientVersion >= CV_200 && g_World != nullptr &&
+        g_World->FindWorldObject(Serial) != nullptr)
     {
         CPacketCloseStatusbarGump(Serial).Send();
     }
@@ -539,8 +540,7 @@ void CGumpStatusbar::UpdateContent()
         {
             SDL_Point p = { 0, 0 };
 
-            if (g_PacketManager.GetClientVersion() >= CV_308D &&
-                !g_ConfigManager.GetOldStyleStatusbar())
+            if (g_Config.ClientVersion >= CV_308D && !g_ConfigManager.GetOldStyleStatusbar())
             {
                 Add(new CGUIGumppic(0x2A6C, 0, 0));
             }
@@ -552,8 +552,7 @@ void CGumpStatusbar::UpdateContent()
             }
             int xOffset = 0;
             // Client version specifics drawing
-            if (g_PacketManager.GetClientVersion() >= CV_308Z &&
-                !g_ConfigManager.GetOldStyleStatusbar())
+            if (g_Config.ClientVersion >= CV_308Z && !g_ConfigManager.GetOldStyleStatusbar())
             {
                 p.x = 389;
                 p.y = 152;
@@ -565,7 +564,7 @@ void CGumpStatusbar::UpdateContent()
                     text->CreateTextureA(1, g_Player->GetName(), 320, TS_CENTER);
                 }
 
-                if (g_PacketManager.GetClientVersion() >= CV_5020)
+                if (g_Config.ClientVersion >= CV_5020)
                 {
                     Add(new CGUIButton(ID_GSB_BUFF_GUMP, 0x7538, 0x7538, 0x7538, 40, 50));
                 }
@@ -902,14 +901,14 @@ void CGumpStatusbar::UpdateContent()
 
                 if (!g_ConfigManager.GetOldStyleStatusbar())
                 {
-                    if (g_PacketManager.GetClientVersion() == CV_308D)
+                    if (g_Config.ClientVersion == CV_308D)
                     {
                         text = (CGUIText *)Add(new CGUIText(0x0386, 171, 124));
                         text->CreateTextureA(1, std::to_string(g_Player->StatsCap));
 
                         Add(new CGUIHitBox(ID_GSB_TEXT_MAX_STATS, 171, 124, 34, 12));
                     }
-                    else if (g_PacketManager.GetClientVersion() == CV_308J)
+                    else if (g_Config.ClientVersion == CV_308J)
                     {
                         text = (CGUIText *)Add(new CGUIText(0x0386, 180, 131));
                         text->CreateTextureA(1, std::to_string(g_Player->StatsCap));

@@ -11,7 +11,6 @@ bool __cdecl PluginSendFunction(uint8_t *buf, size_t size);
 class COrion
 {
 public:
-    string ClientVersionText = "2.0.3";
     int TexturesDataCount = 0;
     string m_OverrideServerAddress;
     int m_OverrideServerPort = 0;
@@ -37,7 +36,6 @@ private:
 
     string m_GameServerIP = "";
 
-    bool LoadClientConfig();
     void LoadAutoLoginNames();
     void LoadTiledata(int landSize, int staticsSize);
     void LoadIndexFiles();

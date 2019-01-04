@@ -3,18 +3,6 @@
 
 #pragma once
 
-#if defined(ORION_LINUX)
-#define __cdecl
-#endif
-
-typedef void __cdecl NETWORK_INIT_TYPE(bool, uint8_t *);
-typedef void __cdecl NETWORK_ACTION_TYPE(bool, uint8_t *, uint8_t *, int);
-typedef void __cdecl NETWORK_POST_ACTION_TYPE(uint8_t *, uint8_t *, int);
-
-extern NETWORK_INIT_TYPE *g_NetworkInit;
-extern NETWORK_ACTION_TYPE *g_NetworkAction;
-extern NETWORK_POST_ACTION_TYPE *g_NetworkPostAction;
-
 class CConnectionManager
 {
 protected:

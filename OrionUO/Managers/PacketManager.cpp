@@ -3,6 +3,7 @@
 
 #include "PacketManager.h"
 #include "../Sockets.h"
+#include "../Config.h"
 #include <miniz.h>
 
 CPacketManager g_PacketManager;
@@ -347,10 +348,9 @@ bool CPacketManager::AutoLoginNameExists(const string &name)
 #define CVPRINT(s)
 #endif //CV_PRINT!=0
 
-void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
+void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 {
     DEBUG_TRACE_FUNCTION;
-    m_ClientVersion = newClientVersion;
 
     if (newClientVersion >= CV_500A)
     {
@@ -465,11 +465,11 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
         CVPRINT("Set new length for packet 0xEF (>= 7.0.0.0)\n");
         m_Packets[0xEF].Size = 0x2000;
         /*CVPRINT("Set new length for packet 0xF0 (>= 7.0.0.0)\n");
-		m_Packets[0xF0].size = 0x2000;
-		CVPRINT("Set new length for packet 0xF1 (>= 7.0.0.0)\n");
-		m_Packets[0xF1].size = 0x2000;
-		CVPRINT("Set new length for packet 0xF2 (>= 7.0.0.0)\n");
-		m_Packets[0xF2].size = 0x2000;*/
+        m_Packets[0xF0].size = 0x2000;
+        CVPRINT("Set new length for packet 0xF1 (>= 7.0.0.0)\n");
+        m_Packets[0xF1].size = 0x2000;
+        CVPRINT("Set new length for packet 0xF2 (>= 7.0.0.0)\n");
+        m_Packets[0xF2].size = 0x2000;*/
     }
     else
     {
@@ -478,11 +478,11 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
         CVPRINT("Set standart length for packet 0xEF (<= 7.0.0.0)\n");
         m_Packets[0xEF].Size = 0x15;
         /*CVPRINT("Set standart length for packet 0xF0 (<= 7.0.0.0)\n");
-		m_Packets[0xF0].size = PACKET_VARIABLE_SIZE;
-		CVPRINT("Set standart length for packet 0xF1 (<= 7.0.0.0)\n");
-		m_Packets[0xF1].size = PACKET_VARIABLE_SIZE;
-		CVPRINT("Set standart length for packet 0xF2 (<= 7.0.0.0)\n");
-		m_Packets[0xF2].size = PACKET_VARIABLE_SIZE;*/
+        m_Packets[0xF0].size = PACKET_VARIABLE_SIZE;
+        CVPRINT("Set standart length for packet 0xF1 (<= 7.0.0.0)\n");
+        m_Packets[0xF1].size = PACKET_VARIABLE_SIZE;
+        CVPRINT("Set standart length for packet 0xF2 (<= 7.0.0.0)\n");
+        m_Packets[0xF2].size = PACKET_VARIABLE_SIZE;*/
     }
 
     if (newClientVersion >= CV_7090)
@@ -496,7 +496,7 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
         CVPRINT("Set new length for packet 0xF3 (>= 7.0.9.0)\n");
         m_Packets[0xF3].Size = 0x1A;
 
-        //В клиенте 7.0.8.2 уже изменено
+        // Already changed in client 7.0.8.2
         CVPRINT("Set new length for packet 0xF1 (>= 7.0.9.0)\n");
         m_Packets[0xF1].Size = 0x09;
         CVPRINT("Set new length for packet 0xF2 (>= 7.0.9.0)\n");
@@ -513,7 +513,7 @@ void CPacketManager::SetClientVersion(CLIENT_VERSION newClientVersion)
         CVPRINT("Set standart length for packet 0xF3 (<= 7.0.9.0)\n");
         m_Packets[0xF3].Size = 0x18;
 
-        //В клиенте 7.0.8.2 уже изменено
+        // Already changed in client 7.0.8.2
         CVPRINT("Set standart length for packet 0xF1 (<= 7.0.9.0)\n");
         m_Packets[0xF1].Size = PACKET_VARIABLE_SIZE;
         CVPRINT("Set standart length for packet 0xF2 (<= 7.0.9.0)\n");
@@ -548,7 +548,7 @@ void CPacketManager::SendMegaClilocRequests()
     DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled && !m_MegaClilocRequests.empty())
     {
-        if (m_ClientVersion >= CV_500A)
+        if (g_Config.ClientVersion >= CV_500A)
         {
             while (!m_MegaClilocRequests.empty())
             {
@@ -751,7 +751,7 @@ PACKET_HANDLER(CharacterList)
     HandleResendCharacterList();
     uint8_t locCount = ReadUInt8();
     g_CityList.Clear();
-    if (m_ClientVersion >= CV_70130)
+    if (g_Config.ClientVersion >= CV_70130)
     {
         for (int i = 0; i < locCount; i++)
         {
@@ -796,7 +796,7 @@ PACKET_HANDLER(CharacterList)
     //g_SendLogoutNotification = (bool)(g_ClientFlag & LFF_RE);
     g_PopupEnabled = (bool)(g_ClientFlag & CLF_CONTEXT_MENU);
     g_TooltipsEnabled =
-        (bool)(((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) && (g_PacketManager.GetClientVersion() >= CV_308Z));
+        (bool)(((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) && (g_Config.ClientVersion >= CV_308Z));
     g_PaperdollBooks = (bool)(g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS);
 
     g_CharacterListScreen.UpdateContent();
@@ -966,14 +966,14 @@ PACKET_HANDLER(EnterWorld)
     g_LastSpellIndex = 1;
     g_LastSkillIndex = 1;
 
-    CPacketClientVersion(g_Orion.ClientVersionText).Send();
+    CPacketClientVersion(g_Config.ClientVersionString).Send();
 
-    if (m_ClientVersion >= CV_200)
+    if (g_Config.ClientVersion >= CV_200)
     {
         CPacketGameWindowSize().Send();
     }
 
-    if (m_ClientVersion >= CV_200)
+    if (g_Config.ClientVersion >= CV_200)
     {
         CPacketLanguage(g_Language).Send();
     }
@@ -1102,7 +1102,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
         return;
     }
 
-    if (*Start == 0x16 && m_ClientVersion < CV_500A)
+    if (*Start == 0x16 && g_Config.ClientVersion < CV_500A)
     {
         return;
     }
@@ -1125,7 +1125,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
             uint8_t poisonFlag = 0x04;
             if (enable != 0u)
             {
-                if (m_ClientVersion >= CV_7000)
+                if (g_Config.ClientVersion >= CV_7000)
                 {
                     obj->SA_Poisoned = true;
                 }
@@ -1136,7 +1136,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
             }
             else
             {
-                if (m_ClientVersion >= CV_7000)
+                if (g_Config.ClientVersion >= CV_7000)
                 {
                     obj->SA_Poisoned = false;
                 }
@@ -1299,7 +1299,7 @@ PACKET_HANDLER(CharacterStatus)
             }
             else
             {
-                if (m_ClientVersion >= CV_500A)
+                if (g_Config.ClientVersion >= CV_500A)
                 {
                     g_Player->MaxWeight = 7 * (g_Player->Str / 2) + 40;
                 }
@@ -1388,7 +1388,7 @@ PACKET_HANDLER(UpdateItem)
 
     uint16_t graphic = ReadUInt16BE();
 
-    if (g_TheAbyss && (graphic & 0x7FFF) == 0x0E5C)
+    if (g_Config.TheAbyss && (graphic & 0x7FFF) == 0x0E5C)
     {
         return;
     }
@@ -1590,7 +1590,7 @@ PACKET_HANDLER(UpdateObject)
         uint8_t layer = ReadUInt8();
         uint16_t itemColor = 0;
 
-        if (m_ClientVersion >= CV_70331)
+        if (g_Config.ClientVersion >= CV_70331)
         {
             itemColor = ReadUInt16BE();
         }
@@ -1705,7 +1705,7 @@ PACKET_HANDLER(UpdateContainedItem)
     uint16_t x = ReadUInt16BE();
     uint16_t y = ReadUInt16BE();
 
-    if (m_ClientVersion >= CV_6017)
+    if (g_Config.ClientVersion >= CV_6017)
     {
         Move(1);
     }
@@ -1736,7 +1736,7 @@ PACKET_HANDLER(UpdateContainedItems)
         uint16_t x = ReadUInt16BE();
         uint16_t y = ReadUInt16BE();
 
-        if (m_ClientVersion >= CV_6017)
+        if (g_Config.ClientVersion >= CV_6017)
         {
             Move(1);
         }
@@ -2163,7 +2163,7 @@ PACKET_HANDLER(OpenPaperdoll)
 PACKET_HANDLER(ClientVersion)
 {
     DEBUG_TRACE_FUNCTION;
-    CPacketClientVersion(g_Orion.ClientVersionText).Send();
+    CPacketClientVersion(g_Config.ClientVersionString).Send();
 }
 
 PACKET_HANDLER(Ping)
@@ -2276,7 +2276,7 @@ PACKET_HANDLER(LightLevel)
 PACKET_HANDLER(EnableLockedFeatures)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_ClientVersion >= CV_60142)
+    if (g_Config.ClientVersion >= CV_60142)
     {
         g_LockedClientFeatures = ReadUInt32BE();
     }
@@ -3891,7 +3891,7 @@ PACKET_HANDLER(AssistVersion)
 {
     DEBUG_TRACE_FUNCTION;
     uint32_t version = ReadUInt32BE();
-    CPacketAssistVersion(version, g_Orion.ClientVersionText).Send();
+    CPacketAssistVersion(version, g_Config.ClientVersionString).Send();
 }
 
 PACKET_HANDLER(CharacterListNotification)
@@ -4719,7 +4719,7 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 
         CGUIHTMLText *htmlText = (CGUIHTMLText *)htmlGump->Add(new CGUIHTMLText(
             data.TextID,
-            (uint8_t)(m_ClientVersion >= CV_305D),
+            (uint8_t)(g_Config.ClientVersion >= CV_305D),
             color,
             0,
             0,
@@ -5128,7 +5128,7 @@ PACKET_HANDLER(OpenGump)
                 int graphic = ToInt(list[3]);
                 int color = 0;
 
-                if (listSize >= 5 && m_ClientVersion >= CV_305D)
+                if (listSize >= 5 && g_Config.ClientVersion >= CV_305D)
                 {
                     Wisp::CTextFileParser gumppicParser({}, "=", "", "");
                     vector<string> hueList = gumppicParser.GetTokens(list[4].c_str());
@@ -5441,7 +5441,7 @@ PACKET_HANDLER(DisplayMap)
 
     CGumpMap *gump = new CGumpMap(serial, gumpid, startX, startY, endX, endY, width, height);
 
-    if (*Start == 0xF5 || m_ClientVersion >= CV_308Z) //308z или выше?
+    if (*Start == 0xF5 || g_Config.ClientVersion >= CV_308Z) //308z или выше?
     {
         uint16_t facet = 0;
 
@@ -5739,8 +5739,8 @@ PACKET_HANDLER(OpenBook) // 0x93
     uint8_t flags = ReadUInt8();
     Move(1);
     auto pageCount = ReadUInt16BE();
-    CGumpBook *gump = new CGumpBook(
-        serial, 0, 0, pageCount, flags != 0, (g_PacketManager.GetClientVersion() >= CV_308Z));
+    CGumpBook *gump =
+        new CGumpBook(serial, 0, 0, pageCount, flags != 0, (g_Config.ClientVersion >= CV_308Z));
 
     gump->m_EntryTitle->m_Entry.SetTextA(ReadString(60));
     gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(30));

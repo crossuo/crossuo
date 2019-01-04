@@ -348,6 +348,7 @@ set(orion_src
   Sockets.cpp
   OrionMain.cpp
   Platform.cpp
+  Config.cpp
 )
 
 if(ORION_WINDOWS)

@@ -1,13 +1,11 @@
 // MIT License
 
-#if !USE_ORIONDLL
-
 #include "LoginCrypt.h"
 #include "../Wisp/WispGlobal.h"
 #include "../Wisp/WispDataStream.h"
 #include "aes.h"
+#include "../Config.h"
 
-extern vector<uint8_t> g_RawData;
 CLoginCrypt g_LoginCrypt;
 
 CLoginCrypt::CLoginCrypt()
@@ -20,14 +18,10 @@ void CLoginCrypt::Init(uint8_t ps[4])
     memcpy(m_seed, ps, 4);
     const uint32_t seed = (ps[0] << 24) | (ps[1] << 16) | (ps[2] << 8) | ps[3];
 
-    Wisp::CDataReader reader(&g_RawData[0], (int)g_RawData.size());
-    reader.Move(3);
-    const int len = reader.ReadUInt8();
-
-    m_k1 = reader.ReadUInt32LE(len);
-    m_k2 = reader.ReadUInt32LE(len);
-    m_k3 = reader.ReadUInt32LE(len);
-    const uint32_t seed_key = reader.ReadUInt16LE(len);
+    m_k1 = g_Config.Key1;
+    m_k2 = g_Config.Key2;
+    m_k3 = g_Config.Key3;
+    const uint32_t seed_key = g_Config.Seed;
 
     m_key[0] = (((~seed) ^ seed_key) << 16) | ((seed ^ 0xffffaaaa) & 0x0000ffff);
     m_key[1] = ((seed ^ 0x43210000) >> 16) | (((~seed) ^ 0xabcdffff) & 0xffff0000);
@@ -79,5 +73,3 @@ void CLoginCrypt::Encrypt_1_25_36(const uint8_t *in, uint8_t *out, int size)
                    (m_key[1] * m_key[1] * 0x4c3a1353) + 0x16ef783f;
     }
 }
-
-#endif

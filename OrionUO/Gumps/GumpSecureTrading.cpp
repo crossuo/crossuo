@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpSecureTrading.h"
+#include "../Config.h"
+
 CGumpSecureTrading::CGumpSecureTrading(uint32_t serial, short x, short y, uint32_t id, uint32_t id2)
     : CGump(GT_TRADE, serial, x, y)
     , ID2(id2)
@@ -93,7 +96,7 @@ void CGumpSecureTrading::UpdateContent()
     {
         Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
 
-        if (g_PacketManager.GetClientVersion() < CV_500A)
+        if (g_Config.ClientVersion < CV_500A)
         {
             Add(new CGUIColoredPolygone(0, 0, 45, 90, 110, 60, 0xFF000001));
 

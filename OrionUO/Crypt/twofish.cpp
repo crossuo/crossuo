@@ -1,5 +1,3 @@
-#if !USE_ORIONDLL
-
 /***************************************************************************
 	TWOFISH2.C  -- Optimized C API calls for TWOFISH AES submission
 
@@ -1335,4 +1333,3 @@ u32 TwofishCodeSize(void)
     return x - TwofishCodeStart();
 };
 #endif
-#endif // USE_ORIONDLL

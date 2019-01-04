@@ -1,15 +1,18 @@
 // MIT License
 // Copyright (C) December 2016 Hotride
 
+#include "GumpCombatBook.h"
+#include "../Config.h"
+
 CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)
 {
     DEBUG_TRACE_FUNCTION;
     Draw2Page = 1;
 
-    if (g_PacketManager.GetClientVersion() < CV_7000)
+    if (g_Config.ClientVersion < CV_7000)
     {
-        if (g_PacketManager.GetClientVersion() >= CV_500A)
+        if (g_Config.ClientVersion >= CV_500A)
         {
             AbilityCount = 29;
         }

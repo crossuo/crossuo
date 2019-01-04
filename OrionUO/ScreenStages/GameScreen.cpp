@@ -1,8 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include <SDL_rect.h>
 #include "GameScreen.h"
+#include <SDL_rect.h>
+#include "../Config.h"
 
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
@@ -609,9 +610,8 @@ void CGameScreen::AddTileToRenderList(
 
         bool aphaChanged = false;
 
-#if UO_RENDER_LIST_SORT == 1
         int z = obj->GetZ();
-
+#if UO_RENDER_LIST_SORT == 1
         int maxObjectZ = obj->PriorityZ;
 
         CRenderStaticObject *rso = obj->StaticGroupObjectPtr();
@@ -2193,7 +2193,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 else if (rwo->IsStaticObject() || rwo->IsMultiObject())
                 {
                     STATIC_TILES *st = nullptr;
-                    if (g_PacketManager.GetClientVersion() >= CV_7090 && rwo->IsSurface())
+                    if (g_Config.ClientVersion >= CV_7090 && rwo->IsSurface())
                     {
                         st = ((CRenderStaticObject *)rwo)->GetStaticData();
                     }
@@ -2304,7 +2304,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                                     ->GetW(1020000 + id, true, g_Orion.m_StaticData[id].Name);
                             if (str.length() != 0u)
                             {
-                                if (g_PacketManager.GetClientVersion() >= CV_6000)
+                                if (g_Config.ClientVersion >= CV_6000)
                                 {
                                     g_Orion.CreateUnicodeTextMessage(
                                         TT_CLIENT, 0, 1, 0x03B2, str, rwo);

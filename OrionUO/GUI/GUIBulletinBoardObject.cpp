@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIBulletinBoardObject.h"
+#include "../Config.h"
+
 CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const wstring &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)
     , Text(text)
@@ -8,7 +11,7 @@ CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const
     DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
-    if (g_PacketManager.GetClientVersion() >= CV_305D)
+    if (g_Config.ClientVersion >= CV_305D)
     {
         g_FontManager.GenerateW(1, m_Texture, text, 0);
     }

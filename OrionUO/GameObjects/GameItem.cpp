@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GameItem.h"
+#include "Config.h"
+
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)
 {
@@ -752,7 +755,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
     {
         int itemOffset = sizeof(MULTI_BLOCK);
 
-        if (g_PacketManager.GetClientVersion() >= CV_7090)
+        if (g_Config.ClientVersion >= CV_7090)
         {
             itemOffset = sizeof(MULTI_BLOCK_NEW);
         }

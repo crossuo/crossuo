@@ -3,6 +3,7 @@
 
 #include "GumpScreenMain.h"
 #include "GitRevision.h"
+#include "../Config.h"
 
 enum
 {
@@ -68,7 +69,7 @@ void CGumpScreenMain::UpdateContent()
 
     Add(new CGUIGumppic(0x157C, 0, 0));
 
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         Add(new CGUIGumppic(0x2329, 0, 0));
     }
@@ -76,7 +77,7 @@ void CGumpScreenMain::UpdateContent()
     Add(new CGUIGumppic(0x15A0, 0, 4));
     Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
 
-    if (g_PacketManager.GetClientVersion() < CV_500A)
+    if (g_Config.ClientVersion < CV_500A)
     {
         Add(new CGUIGumppic(0x058A, 286, 45));
     }
@@ -105,7 +106,7 @@ void CGumpScreenMain::UpdateContent()
     text->CreateTextureA(2, "Password");
 
     text = (CGUIText *)Add(new CGUIText(0x034E, 286, 455));
-    text->CreateTextureA(9, string("UO Version " + g_Orion.ClientVersionText + "."));
+    text->CreateTextureA(9, string("UO Version " + g_Config.ClientVersionString + "."));
 
     text = (CGUIText *)Add(new CGUIText(0x034E, 286, 467));
     text->CreateTextureA(9, string("Orion beta v") + RC_PRODUCE_VERSION_STR);

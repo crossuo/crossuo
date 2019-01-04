@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpPaperdoll.h"
+#include "../Config.h"
 
 enum
 {
@@ -67,7 +68,7 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
         Add(new CGUIButton(ID_GP_BUTTON_OPTIONS, 0x07D6, 0x07D8, 0x07D7, 185, 71));
         Add(new CGUIButton(ID_GP_BUTTON_LOGOUT, 0x07D9, 0x07DB, 0x07DA, 185, 98));
 
-        if (g_PacketManager.GetClientVersion() >= CV_500A)
+        if (g_Config.ClientVersion >= CV_500A)
         {
             Add(new CGUIButton(ID_GP_BUTTON_JOURNAL_OR_QUESTS, 0x57B5, 0x57B6, 0x57B7, 185, 125));
         }
@@ -78,7 +79,7 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
 
         Add(new CGUIButton(ID_GP_BUTTON_SKILLS, 0x07DF, 0x07E1, 0x07E0, 185, 152));
 
-        if (g_PacketManager.GetClientVersion() >= CV_500A)
+        if (g_Config.ClientVersion >= CV_500A)
         {
             Add(new CGUIButton(ID_GP_BUTTON_CHAT_OR_GUILD, 0x57B2, 0x57B3, 0x57B4, 185, 179));
         }
@@ -114,7 +115,7 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
         {
             Add(new CGUIButton(ID_GP_COMBAT_BOOK, 0x2B34, 0x2B34, 0x2B34, 156, 200));
 
-            if (g_PacketManager.GetClientVersion() >= CV_7000)
+            if (g_Config.ClientVersion >= CV_7000)
             {
                 Add(new CGUIButton(ID_GP_RACIAL_ABILITIES_BOOK, 0x2B28, 0x2B28, 0x2B28, 23, 200));
                 profileX += SCROLLS_STEP;
@@ -198,7 +199,7 @@ void CGumpPaperdoll::InitToolTip()
             }
             case ID_GP_BUTTON_JOURNAL_OR_QUESTS:
             {
-                if (g_PacketManager.GetClientVersion() >= CV_500A)
+                if (g_Config.ClientVersion >= CV_500A)
                 {
                     g_ToolTip.Set(L"Open the quests gump");
                 }
@@ -216,7 +217,7 @@ void CGumpPaperdoll::InitToolTip()
             }
             case ID_GP_BUTTON_CHAT_OR_GUILD:
             {
-                if (g_PacketManager.GetClientVersion() >= CV_500A)
+                if (g_Config.ClientVersion >= CV_500A)
                 {
                     g_ToolTip.Set(L"Open the guild gump");
                 }
@@ -862,7 +863,7 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
         }
         case ID_GP_BUTTON_JOURNAL_OR_QUESTS: //Paperdoll button Journal
         {
-            if (g_PacketManager.GetClientVersion() >= CV_500A)
+            if (g_Config.ClientVersion >= CV_500A)
             {
                 CPacketQuestMenuRequest().Send();
             }
@@ -879,7 +880,7 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
         }
         case ID_GP_BUTTON_CHAT_OR_GUILD: //Paperdoll button Chat
         {
-            if (g_PacketManager.GetClientVersion() >= CV_500A)
+            if (g_Config.ClientVersion >= CV_500A)
             {
                 CPacketGuildMenuRequest().Send();
             }

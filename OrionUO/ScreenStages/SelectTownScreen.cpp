@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "SelectTownScreen.h"
+#include "../Config.h"
+
 CSelectTownScreen g_SelectTownScreen;
 
 CSelectTownScreen::CSelectTownScreen()
@@ -15,7 +18,7 @@ CSelectTownScreen::~CSelectTownScreen()
 void CSelectTownScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PacketManager.GetClientVersion() >= CV_70130)
+    if (g_Config.ClientVersion >= CV_70130)
     {
         m_City = g_CityList.GetCity(0);
     }

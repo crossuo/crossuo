@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpOptions.h"
+#include "../Config.h"
 
 #if USE_WISP
 #define KeyName(x) s_HotkeyText[x & 0xFF]
@@ -2644,7 +2645,7 @@ void CGumpOptions::DrawPage7()
     checkbox->Checked = g_OptionsConfig.ColoredLighting;
     checkbox->SetTextParameters(0, L"Colored Lighting", g_OptionsTextColor);
 
-    if (g_PacketManager.GetClientVersion() >= CV_6000)
+    if (g_Config.ClientVersion >= CV_6000)
     {
         Add(new CGUIButton(ID_GO_P7_GUILD_MESSAGE_COLOR, 0x00D4, 0x00D4, 0x00D4, 354, 204));
 
@@ -4461,7 +4462,7 @@ void CGumpOptions::ApplyPageChanges()
             g_OptionsConfig.GameWindowHeight = curY;
             g_ConfigManager.GameWindowHeight = curY;
 
-            if (g_PacketManager.GetClientVersion() >= CV_200)
+            if (g_Config.ClientVersion >= CV_200)
             {
                 CPacketGameWindowSize().Send();
             }

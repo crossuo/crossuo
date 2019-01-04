@@ -1,5 +1,8 @@
+// GPLv3 License
+// Copyright (C) 2019 Danny Angelo Carminati Grein
 
 #include "FileSystem.h"
+#include "Config.h"
 #include <SDL.h>
 #include <time.h>
 
@@ -19,6 +22,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
     }
 
     g_App.Init();
+    LoadGlobalConfig();
     g_ConfigManager.Init();
     auto path = g_App.ExeFilePath("crashlogs");
     fs_path_create(path);
@@ -68,12 +72,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 #include "plugin/plugininterface.h"
 
-#if USE_ORIONDLL
-ENCRYPTION_TYPE g_EncryptionType;
-#endif
-
 static bool g_isHeadless = false;
-extern ENCRYPTION_TYPE g_EncryptionType;
 
 #if !defined(ORION_WINDOWS)
 ORION_EXPORT int plugin_main(int argc, char **argv)
@@ -82,20 +81,6 @@ int main(int argc, char **argv)
 #endif
 {
     DEBUG_TRACE_FUNCTION;
-
-    // TODO: good cli parsing api
-    // keep this simple for now just for travis-ci
-    for (int i = 0; i < argc; i++)
-    {
-        if (strcmp(argv[i], "--headless") == 0)
-        {
-            g_isHeadless = true;
-        }
-        else if (strcmp(argv[i], "--nocrypt") == 0)
-        {
-            g_EncryptionType = ET_NOCRYPT;
-        }
-    }
 
     if (SDL_Init(SDL_INIT_TIMER) < 0)
     {
@@ -107,11 +92,26 @@ int main(int argc, char **argv)
     SDL_Log("SDL Initialized.");
     g_App.Init();
     INITLOGGER("uolog.txt");
-    auto path = g_App.ExeFilePath("crashlogs");
-    fs_path_create(path);
+    LoadGlobalConfig();
+
+    // TODO: good cli parsing api
+    // keep this simple for now just for travis-ci
+    for (int i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--headless") == 0)
+        {
+            g_isHeadless = true;
+        }
+        else if (strcmp(argv[i], "--nocrypt") == 0)
+        {
+            g_Config.EncryptionType = ET_NOCRYPT;
+        }
+    }
 
     // FIXME: log stuff
     /*
+    auto path = g_App.ExeFilePath("crashlogs");
+    fs_path_create(path);
     char buf[100]{};
     auto t = time(nullptr);
     auto now = *localtime(&t);

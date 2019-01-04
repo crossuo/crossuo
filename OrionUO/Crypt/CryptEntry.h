@@ -1,8 +1,10 @@
 #pragma once
 
-extern ENCRYPTION_TYPE g_EncryptionType;
+namespace Crypt
+{
+void Init(bool is_login, uint8_t seed[4]);
+void Encrypt(bool is_login, uint8_t *src, uint8_t *dest, int size);
+void Decrypt(uint8_t *src, uint8_t *dest, int size);
+size_t GetPluginsCount(); // FIXME: move this out
 
-#if !USE_ORIONDLL
-size_t GetPluginsCount();
-void CryptInstallNew(uint8_t *address, size_t size, uint8_t *result, size_t &resultSize);
-#endif
+} // namespace Crypt

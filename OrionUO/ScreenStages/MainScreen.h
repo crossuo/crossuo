@@ -7,6 +7,8 @@ class CMainScreen : public CBaseScreen
 private:
     CGumpScreenMain m_MainGump;
 
+    void Load();
+
 public:
     enum
     {
@@ -26,13 +28,12 @@ public:
     void SetAccounting(const string &account, const string &password);
     void Paste();
     void ProcessSmoothAction(uint8_t action = 0xFF);
-    void LoadGlobalConfig();
-    void LoadCustomPath();
-    void SaveGlobalConfig();
     void Init();
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
+
+    void Save();
 };
 
 extern CMainScreen g_MainScreen;

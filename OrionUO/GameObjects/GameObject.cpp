@@ -1,7 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GameObject.h"
 #include <SDL_timer.h>
+#include "Config.h"
 
 CGameObject::CGameObject(int serial)
     : CRenderStaticObject(ROT_GAME_OBJECT, serial, 0, 0, 0, 0, 0)
@@ -377,7 +379,7 @@ void CGameObject::ClearNotOpenedItems()
 bool CGameObject::Poisoned()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PacketManager.GetClientVersion() >= CV_7000)
+    if (g_Config.ClientVersion >= CV_7000)
     {
         return SA_Poisoned;
     }
@@ -387,7 +389,7 @@ bool CGameObject::Poisoned()
 bool CGameObject::Flying()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PacketManager.GetClientVersion() >= CV_7000)
+    if (g_Config.ClientVersion >= CV_7000)
     {
         return (m_Flags & 0x04) != 0;
     }
@@ -662,7 +664,7 @@ CGameItem *CGameObject::FindLayer(int layer)
 bool CGameObject::Caller()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_PacketManager.GetClientVersion() >= CV_7000)
+    if (g_Config.ClientVersion >= CV_7000)
     {
         return pvpCaller;
     }

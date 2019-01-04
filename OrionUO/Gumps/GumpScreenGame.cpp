@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpScreenGame.h"
+#include "../Config.h"
+
 CGumpScreenGame::CGumpScreenGame()
     : CGump(GT_NONE, 0, 0, 0)
 {
@@ -268,7 +271,7 @@ void CGumpScreenGame::OnLeftMouseButtonUp()
             g_ConfigManager.GameWindowHeight = screenY;
         }
 
-        if (g_PacketManager.GetClientVersion() >= CV_200)
+        if (g_Config.ClientVersion >= CV_200)
         {
             CPacketGameWindowSize().Send();
         }

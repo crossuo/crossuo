@@ -1,11 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-CConnectionManager g_ConnectionManager;
+#include "../Config.h"
+#include <SDL_stdinc.h>
+#include "../Crypt/CryptEntry.h"
 
-NETWORK_INIT_TYPE *g_NetworkInit = nullptr;
-NETWORK_ACTION_TYPE *g_NetworkAction = nullptr;
-NETWORK_POST_ACTION_TYPE *g_NetworkPostAction = nullptr;
+CConnectionManager g_ConnectionManager;
 
 CConnectionManager::CConnectionManager()
 {
@@ -91,7 +91,7 @@ void CConnectionManager::Init()
     m_Seed[2] = static_cast<unsigned char>((localIp >> 8) & 0xff);
     m_Seed[3] = static_cast<unsigned char>(localIp & 0xff);
 
-    g_NetworkInit(true, m_Seed);
+    Crypt::Init(true, m_Seed);
 }
 
 void CConnectionManager::Init(uint8_t *gameSeed)
@@ -103,7 +103,7 @@ void CConnectionManager::Init(uint8_t *gameSeed)
     }
 
     m_IsLoginSocket = false;
-    g_NetworkInit(false, gameSeed);
+    Crypt::Init(false, gameSeed);
 }
 
 void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
@@ -134,7 +134,7 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
             g_TotalSendSize = 4;
             g_LastPacketTime = g_Ticks;
             g_LastSendTime = g_LastPacketTime;
-            if (g_PacketManager.GetClientVersion() < CV_6060)
+            if (g_Config.ClientVersion < CV_6060)
             {
                 SendIP(m_LoginSocket, m_Seed);
             }
@@ -144,32 +144,17 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
                 m_LoginSocket.Send(&buf, 1); //0xEF
                 SendIP(m_LoginSocket, m_Seed);
                 Wisp::CDataWriter stream;
-                auto &str = g_Orion.ClientVersionText;
-                if (str.length() != 0u)
+
+                uint32_t major = 0, minor = 0, rev = 0, prot = 0;
+                GetClientVersion(&major, &minor, &rev, &prot);
+                stream.WriteUInt32BE(major);
+                stream.WriteUInt32BE(minor);
+                stream.WriteUInt32BE(rev);
+                if (prot >= 'a')
                 {
-                    char ver[20] = { 0 };
-                    char *ptr = ver;
-                    strncpy_s(ver, str.c_str(), str.length());
-                    int idx = 0;
-
-                    for (int i = 0; i < (int)str.length(); i++)
-                    {
-                        if (ver[i] == '.')
-                        {
-                            ver[i] = 0;
-                            stream.WriteUInt32BE(atoi(ptr));
-                            ptr = ver + (i + 1);
-                            idx++;
-
-                            if (idx > 3)
-                            {
-                                break;
-                            }
-                        }
-                    }
-
-                    stream.WriteUInt32BE(atoi(ptr));
+                    prot = 0;
                 }
+                stream.WriteUInt32BE(prot);
 
                 g_TotalSendSize = 21;
                 m_LoginSocket.Send(stream.Data()); // Client version, 16 bytes
@@ -274,7 +259,7 @@ void CConnectionManager::Recv()
 int CConnectionManager::Send(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_TheAbyss)
+    if (g_Config.TheAbyss)
     {
         switch (buf[0])
         {
@@ -300,7 +285,7 @@ int CConnectionManager::Send(uint8_t *buf, int size)
                 break;
         }
     }
-    else if (g_Asmut)
+    else if (g_Config.Asmut)
     {
         if (buf[0] == 0x02)
         {
@@ -320,7 +305,7 @@ int CConnectionManager::Send(uint8_t *buf, int size)
         }
 
         vector<uint8_t> cbuf(size);
-        g_NetworkAction(true, &buf[0], &cbuf[0], size);
+        Crypt::Encrypt(true, &buf[0], &cbuf[0], size);
         return m_LoginSocket.Send(cbuf);
     }
 
@@ -330,7 +315,7 @@ int CConnectionManager::Send(uint8_t *buf, int size)
     }
 
     vector<uint8_t> cbuf(size);
-    g_NetworkAction(false, &buf[0], &cbuf[0], size);
+    Crypt::Encrypt(false, &buf[0], &cbuf[0], size);
     return m_GameSocket.Send(cbuf);
 
     return 0;

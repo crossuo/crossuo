@@ -50,7 +50,6 @@ public:
 class CFileManager : public Wisp::CDataReader
 {
 public:
-    bool UseVerdata = false;
     bool UseUOPGumps = false;
     int UnicodeFontsCount = 0;
 

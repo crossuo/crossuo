@@ -2,6 +2,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ProfessionManager.h"
+#include "../Config.h"
+
 CProfessionManager g_ProfessionManager;
 
 const string CProfessionManager::m_Keys[m_KeyCount] = {
@@ -339,7 +342,7 @@ bool CProfessionManager::Load()
         apc->SetSkillIndex(2, 0xFF);
         apc->SetSkillIndex(3, 0xFF);
 
-        if (g_PacketManager.GetClientVersion() >= CV_70160)
+        if (g_Config.ClientVersion >= CV_70160)
         {
             apc->Str = 45;
             apc->Int = 35;

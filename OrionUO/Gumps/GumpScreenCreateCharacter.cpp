@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpScreenCreateCharacter.h"
+#include "../Config.h"
 
 enum
 {
@@ -433,7 +434,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
 
     Add(new CGUIShader(nullptr, false));
 
-    if (g_PacketManager.GetClientVersion() < CV_4011D)
+    if (g_Config.ClientVersion < CV_4011D)
     {
         if (g_CreateCharacterManager.GetFemale())
         {
@@ -472,7 +473,7 @@ void CGumpScreenCreateCharacter::UpdateContent()
         Add(new CGUIButton(ID_CCS_HUMAN_RACE_BUTTON, 0x0702, 0x0703, 0x0704, 200, 435));
         Add(new CGUIButton(ID_CCS_ELF_RACE_BUTTON, 0x0705, 0x0706, 0x0707, 200, 455));
 
-        if (g_PacketManager.GetClientVersion() >= CV_60144)
+        if (g_Config.ClientVersion >= CV_60144)
         {
             radio = (CGUIRadio *)Add(
                 new CGUIRadio(ID_CCS_GARGOYLE_RACE_BUTTON, 0x0768, 0x0767, 0x0767, 60, 435));

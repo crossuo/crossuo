@@ -4,12 +4,9 @@
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
 bool g_ShiftPressed = false;
-
 bool g_MovingFromMouse = false;
 bool g_AutoMoving = false;
-bool g_TheAbyss = false;
 bool g_AbyssPacket03First = true;
-bool g_Asmut = false;
 
 int g_LandObjectsCount = 0;
 int g_StaticsObjectsCount = 0;
@@ -40,7 +37,10 @@ GAME_STATE g_GameState = GS_MAIN;
 
 CGLTexture g_TextureGumpState[2];
 
-Wisp::CSize g_MapSize[MAX_MAPS_COUNT];
+Wisp::CSize g_MapSize[MAX_MAPS_COUNT] = {
+    // Felucca      Trammel         Ilshenar        Malas           Tokuno          TerMur
+    { 7168, 4096 }, { 7168, 4096 }, { 2304, 1600 }, { 2560, 2048 }, { 1448, 1448 }, { 1280, 4096 },
+};
 Wisp::CSize g_MapBlockSize[MAX_MAPS_COUNT];
 
 int g_MultiIndexCount = 0;

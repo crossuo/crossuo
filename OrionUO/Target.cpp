@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Target.h"
+#include "Config.h"
+
 CTarget g_Target;
 
 CTarget::CTarget()
@@ -373,7 +376,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
     {
         int itemOffset = sizeof(MULTI_BLOCK);
 
-        if (g_PacketManager.GetClientVersion() >= CV_7090)
+        if (g_Config.ClientVersion >= CV_7090)
         {
             itemOffset = sizeof(MULTI_BLOCK_NEW);
         }

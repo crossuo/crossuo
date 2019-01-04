@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpScreenSelectTown.h"
+#include "../Config.h"
 
 enum
 {
@@ -64,7 +65,7 @@ void CGumpScreenSelectTown::UpdateContent()
     Add(new CGUIGumppic(0x157C, 0, 0));
     Add(new CGUIGumppic(0x15A0, 0, 4));
 
-    if (g_PacketManager.GetClientVersion() >= CV_70130)
+    if (g_Config.ClientVersion >= CV_70130)
     {
         Add(new CGUIGumppic(0x15D9 + map, 62, 54));
         Add(new CGUIGumppic(0x15DF, 57, 49));
@@ -100,7 +101,7 @@ void CGumpScreenSelectTown::UpdateContent()
 
     for (int i = 0; i < (int)g_CityList.CityCount(); i++)
     {
-        if (g_PacketManager.GetClientVersion() >= CV_70130)
+        if (g_Config.ClientVersion >= CV_70130)
         {
             city = g_CityList.GetCity((uint32_t)i);
         }

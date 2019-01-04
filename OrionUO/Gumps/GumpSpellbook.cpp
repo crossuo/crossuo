@@ -2,6 +2,7 @@
 // Copyright (C) September 2016 Hotride
 
 #include "GumpSpellbook.h"
+#include "../Config.h"
 
 enum
 {
@@ -1067,7 +1068,7 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 
                 spellIndex += ((int)BookType * 100);
 
-                if (g_PacketManager.GetClientVersion() < CV_308Z)
+                if (g_Config.ClientVersion < CV_308Z)
                 {
                     g_Orion.CastSpellFromBook(spellIndex, Serial);
                 }

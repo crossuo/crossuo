@@ -1,7 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "FileSystem.h"
+#include "ConfigManager.h"
+#include "../FileSystem.h"
+#include "../Config.h"
 
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;
@@ -317,7 +319,7 @@ void CConfigManager::Init()
     GameWindowX = 0;
     GameWindowY = 0;
 
-    if (g_PacketManager.GetClientVersion() >= CV_70331)
+    if (g_Config.ClientVersion >= CV_70331)
     {
         g_MaxViewRange = MAX_VIEW_RANGE_NEW;
     }

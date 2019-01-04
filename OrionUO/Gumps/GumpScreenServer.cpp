@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpScreenServer.h"
+#include "../Config.h"
 
 enum
 {
@@ -46,14 +47,14 @@ void CGumpScreenServer::UpdateContent()
     CCliloc *cliloc = g_ClilocManager.Cliloc(g_Language);
 
     uint16_t textColor = 0x0481;
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         textColor = 0xFFFF;
     }
 
     CGUIText *text = new CGUIText(textColor, 155, 70);
 
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         text->CreateTextureW(0, cliloc->GetW(1044579, false, "Select which shard to play on:"));
     }
@@ -66,7 +67,7 @@ void CGumpScreenServer::UpdateContent()
 
     text = new CGUIText(textColor, 400, 70);
 
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         text->CreateTextureW(0, cliloc->GetW(1044577, false, "Latency:"));
     }
@@ -79,7 +80,7 @@ void CGumpScreenServer::UpdateContent()
 
     text = new CGUIText(textColor, 470, 70);
 
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         text->CreateTextureW(0, cliloc->GetW(1044578, false, "Packet Loss:"));
     }
@@ -98,7 +99,7 @@ void CGumpScreenServer::UpdateContent()
 
     text = new CGUIText(textColor, 153, 368);
 
-    if (g_PacketManager.GetClientVersion() >= CV_500A)
+    if (g_Config.ClientVersion >= CV_500A)
     {
         text->CreateTextureW(0, cliloc->GetW(1044580, false, "Sort by:"));
     }

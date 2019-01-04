@@ -1,6 +1,5 @@
 // MIT License
 
-#if !USE_ORIONDLL
 #include "GameCrypt.h"
 
 CBlowfishCrypt g_BlowfishCrypt;
@@ -604,4 +603,3 @@ void CTwofishCrypt::Decrypt(const uint8_t *in, uint8_t *out, int size)
     }
     dwIndex = dwTmpIndex;
 }
-#endif
