@@ -131,7 +131,7 @@ void CGameWorld::ProcessAnimation()
 
                 int currentDelay = delay;
 
-                if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < 5)
+                if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
                     CTextureAnimationDirection &direction =
                         g_AnimationManager.m_DataIndex[id].m_Groups[animGroup].m_Direction[dir];
@@ -264,7 +264,7 @@ void CGameWorld::ProcessAnimation()
 
                 g_AnimationManager.GetAnimDirection(dir, mirror);
 
-                if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < 5)
+                if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
                     int animGroup = g_AnimationManager.GetDieGroupIndex(id, gi->UsedLayer != 0u);
 

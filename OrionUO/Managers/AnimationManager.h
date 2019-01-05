@@ -3,6 +3,7 @@
 
 #pragma once
 
+static const int MAX_LAYER_DIRECTIONS = 8;
 static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;
 static const float LOWER_BODY_RATIO = 0.94f;
@@ -83,7 +84,7 @@ private:
     CEquipConvData *m_EquipConvItem{ nullptr };
 
     static const int USED_LAYER_COUNT = 23;
-    static const int m_UsedLayers[8][USED_LAYER_COUNT];
+    static const int m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT];
 
     vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
 

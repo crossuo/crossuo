@@ -1186,6 +1186,9 @@ PACKET_HANDLER(UpdatePlayer)
     uint8_t direction = ReadUInt8();
     char z = ReadUInt8();
 
+    // Invert character wakthrough bit.
+    flags ^= 0x10;
+
     LOG("0x%08X 0x%04X %i 0x%04X 0x%02X %i %i %i %i %i\n",
         serial,
         graphic,
@@ -2057,6 +2060,19 @@ PACKET_HANDLER(UpdateCharacter)
     uint16_t color = ReadUInt16BE();
     uint8_t flags = ReadUInt8();
     uint8_t notoriety = ReadUInt8();
+
+    // Bug #78
+    // Outlands server somewhat sends back what seems to be invalid direction data
+    // Looking at RunUO source, mobile directions flag is valid to be at most 0x87
+    // https://github.com/runuo/runuo/blob/d715573172fc432a673825b0136444bdab7863b5/Server/Mobile.cs#L390-L405
+    // But in Outlands when a Mobile has low HP and start running away, if the player
+    // forces it to change direction by circling it, eventually a bad packet with a
+    // direction of 0x08 will come in.
+    if ((direction & 0x87) != direction)
+    {
+        LOG("Clamping invalid/unknown direction: %d\n", direction);
+        direction &= 0x87;
+    }
 
     obj->Notoriety = notoriety;
 

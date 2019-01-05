@@ -3,6 +3,8 @@
 
 #pragma once
 
+const int MAX_MOBILE_DIRECTIONS = 5;
+
 const int CONTAINERS_RECT_DEFAULT_POS = 40;
 
 const int CONTAINERS_RECT_LINESTEP = 800;

@@ -3,12 +3,9 @@
 [![Travis Build Status](https://travis-ci.org/OrionUO/OrionUO.svg?branch=master)](https://travis-ci.org/OrionUO/OrionUO)
 [![Build status](https://ci.appveyor.com/api/projects/status/gmkwveaysxb12uog?svg=true)](https://ci.appveyor.com/project/fungos/orionuo)
 
+* Supported Platforms: Windows 7, Windows 10, Linux and MacOSX.
 
-* OrionUO Client - is a linux fork of OrioUO Open Source Ultima Online client.
-
-* Platforms: Windows 7, Windows 10, Linux and MacOSX.
-
-* Rendering: OpenGL 2.0 and higher.
+* Graphics: OpenGL 2.0 and higher.
 
 ### Downloading OrionUO
 
@@ -19,3 +16,7 @@
 ## Contributing
 
 Please read [CONTRIBUTING](docs/CONTRIBUTING.md) before doing any contribution to the project.
+
+## Building
+
+For instructions about building from source, read the section [Compiling](docs/CONTRIBUTING/Compiling.md).
