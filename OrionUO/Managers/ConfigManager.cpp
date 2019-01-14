@@ -149,6 +149,7 @@ struct ConfigEntry
 };
 
 static const ConfigEntry s_Keys[] = {
+    { CMKC_SOUND, "sound" },
     { CMKC_SOUND_VOLUME, "soundvolume" },
     { CMKC_MUSIC, "music" },
     { CMKC_MUSIC_VOLUME, "musicvolume" },
@@ -275,7 +276,7 @@ static const ConfigEntry s_Keys[] = {
     { CMKC_COUNT, nullptr },
 };
 
-static_assert(countof(s_Keys) == CMKC_COUNT, "Missing key string for configuration option");
+static_assert(countof(s_Keys) == CMKC_COUNT + 1, "Missing key string for configuration option");
 
 static uint32_t GetConfigKey(const string &key)
 {
