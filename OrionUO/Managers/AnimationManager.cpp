@@ -92,11 +92,11 @@ void CAnimationManager::UpdateAnimationAddressTable()
 
                 if (direction.FileIndex == 2)
                 {
-                    replace = ((g_LockedClientFeatures & LFF_LBR) != 0u);
+                    replace = (g_Config.ClientFlag >= CF_LBR);
                 }
                 else if (direction.FileIndex == 3)
                 {
-                    replace = ((g_LockedClientFeatures & LFF_AOS) != 0u);
+                    replace = (g_Config.ClientFlag >= CF_AOS);
                 }
                 //else if (direction.FileIndex == 4)
                 //	replace = (g_LockedClientFeatures & LFF_AOS);
