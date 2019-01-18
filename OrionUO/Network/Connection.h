@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "UOHuffman.h"
+
 class CSocket : public Wisp::CConnection
 {
 public:

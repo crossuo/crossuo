@@ -1,6 +1,14 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpPopupMenu.h"
+#include "../SelectedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/IntlocManager.h"
+#include "../Network/Packets.h"
+
 CGumpPopupMenu *g_PopupMenu = nullptr;
 
 CGumpPopupMenu::CGumpPopupMenu(uint32_t serial, short x, short y)

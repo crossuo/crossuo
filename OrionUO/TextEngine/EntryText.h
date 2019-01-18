@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "../Wisp/WispGeometry.h"
+#include "../Point.h"
+#include "../Backend.h"
 
 class CGump;
 
@@ -16,7 +17,7 @@ public:
     bool Changed = true;
     uint16_t Color = 0;
     int DrawOffset = 0;
-    Wisp::CPoint2Di CaretPos = {};
+    CPoint2Di CaretPos = {};
     bool NumberOnly = false;
 
 protected:

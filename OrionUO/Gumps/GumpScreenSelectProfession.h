@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpScreenSelectProfession : public CGump
 {
 private:

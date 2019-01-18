@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Container.h"
+#include "OrionUO.h"
+#include "OrionWindow.h"
+#include "Managers/ConfigManager.h"
+
 CContainerRect g_ContainerRect;
 vector<CContainerOffset> g_ContainerOffset;
 

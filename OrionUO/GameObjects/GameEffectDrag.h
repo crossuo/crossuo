@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "GameEffect.h"
+
+class CGameObject;
+
 class CGameEffectDrag : public CGameEffect
 {
 public:
@@ -13,5 +17,5 @@ public:
 
     CGameEffectDrag();
     virtual ~CGameEffectDrag();
-    virtual void Update(class CGameObject *parent);
+    virtual void Update(CGameObject *parent);
 };

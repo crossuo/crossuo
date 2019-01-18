@@ -1,8 +1,13 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "../Config.h"
+#include "ConnectionManager.h"
+#include "PacketManager.h"
 #include <SDL_stdinc.h>
+#include "../Config.h"
+#include "../OrionUO.h"
+#include "../ScreenStages/ConnectionScreen.h"
+#include "../ScreenStages/GameBlockedScreen.h"
 #include "../Crypt/CryptEntry.h"
 
 CConnectionManager g_ConnectionManager;

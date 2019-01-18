@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "RenderTextObject.h"
+#include "TextRenderer.h"
+#include "SelectedObject.h"
+
 CRenderTextObject::CRenderTextObject()
     : CRenderObject(0, 0, 0, 0, 0)
 {

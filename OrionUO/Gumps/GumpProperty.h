@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpProperty : public CGump
 {
     uint32_t Timer = 0;

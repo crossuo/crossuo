@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "GameObject.h"
+#include "../Walker/WalkData.h"
+#include "../TextEngine/TextContainer.h"
+
 class CGameCharacter : public CGameObject
 {
 public:

@@ -100,7 +100,7 @@ void fs_unmap(unsigned char *ptr, size_t length)
 
 #else
 
-#include "Wisp/WispGlobal.h"
+#include "Misc.h"
 
 #include <stdio.h>
 #include <string>
@@ -115,12 +115,12 @@ void fs_unmap(unsigned char *ptr, size_t length)
 #include <sys/types.h>
 #include <sys/mman.h>
 
-static std::vector<std::string> s_files;
-static std::vector<std::string> s_lower;
+static std::vector<string> s_files;
+static std::vector<string> s_lower;
 
-std::string fs_insensitive(const std::string &path)
+string fs_insensitive(const string &path)
 {
-    std::string p = path;
+    string p = path;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
     auto it = std::find(s_lower.begin(), s_lower.end(), p);
     if (it != s_lower.end())
@@ -156,8 +156,8 @@ static void fs_list_recursive(const char *name)
         {
             snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
             int len = strlen(path);
-            s_files.emplace_back(std::string(path, len));
-            auto p = std::string(path, len);
+            s_files.emplace_back(string(path, len));
+            auto p = string(path, len);
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
             s_lower.emplace_back(p);
             //fprintf(stdout, ">> %s\n", p.c_str());
@@ -166,14 +166,14 @@ static void fs_list_recursive(const char *name)
     closedir(dir);
 }
 
-void fs_case_insensitive_init(const std::string &path)
+void fs_case_insensitive_init(const string &path)
 {
     s_files.reserve(1024);
     s_lower.reserve(1024);
     fs_list_recursive(path.c_str());
 }
 
-FILE *fs_open(const std::string &path_str, fs_mode mode)
+FILE *fs_open(const string &path_str, fs_mode mode)
 {
     string m;
     m = (mode & FS_WRITE) != 0 ? m + "w" : m;
@@ -209,14 +209,14 @@ size_t fs_size(FILE *fp)
     return size;
 }
 
-bool fs_path_exists(const std::string &path_str)
+bool fs_path_exists(const string &path_str)
 {
     assert(!path_str.empty());
     struct stat buffer;
     return stat(path_str.c_str(), &buffer) == 0;
 }
 
-bool fs_path_create(const std::string &path_str)
+bool fs_path_create(const string &path_str)
 {
     assert(!path_str.empty());
 

@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "Gump.h"
+#include "../TextEngine/TextContainer.h"
+#include "../TextEngine/EntryText.h"
+#include "../TextEngine/TextRenderer.h"
+
 class CGumpSecureTrading : public CGump
 {
 public:

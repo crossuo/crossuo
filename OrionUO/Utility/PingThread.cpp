@@ -5,6 +5,8 @@
 #include <SDL_timer.h>
 #include <atomic>
 
+#include "PingThread.h"
+
 static std::atomic<int32_t> s_pingCnt;
 
 CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount)

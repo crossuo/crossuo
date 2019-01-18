@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GLTexture.h"
+
 class CGLTextureCircleOfTransparency : public CGLTexture
 {
 public:

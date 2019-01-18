@@ -1,6 +1,16 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIHTMLGump.h"
+#include "GUIHTMLResizepic.h"
+#include "GUIHTMLHitBox.h"
+#include "GUIHTMLSlider.h"
+#include "GUIHTMLButton.h"
+#include "GUIScissor.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+#include "../Managers/MouseManager.h"
+
 CGUIHTMLGump::CGUIHTMLGump(
     int serial,
     uint16_t graphic,
@@ -213,7 +223,7 @@ void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, i
             startY = item->GetY();
         }
 
-        Wisp::CSize size = item->GetSize();
+        CSize size = item->GetSize();
 
         int curX = item->GetX() + size.Width;
         int curY = item->GetY() + size.Height;
@@ -298,8 +308,8 @@ bool CGUIHTMLGump::EntryPointerHere()
 bool CGUIHTMLGump::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-    g_MouseManager.Position = Wisp::CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
+    CPoint2Di oldPos = g_MouseManager.Position;
+    g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
 
     bool selected = false;
 

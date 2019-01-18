@@ -3,10 +3,8 @@
 
 #include "FileSystem.h"
 
-namespace Wisp
-{
-CLogger g_WispLogger;
-CLogger g_WispCrashLogger;
+CLogger g_Logger;
+CLogger g_CrashLogger;
 
 CLogger::CLogger()
 {
@@ -36,7 +34,7 @@ void CLogger::Init(const os_path &filePath)
 
     m_File = fs_open(filePath, FS_WRITE);
 
-    if (this == &g_WispLogger)
+    if (this == &g_Logger)
     {
         LOG("Log opened.\n");
     }
@@ -98,8 +96,6 @@ void CLogger::Dump(uint8_t *buf, int size)
 {
     LogDump(m_File, buf, size);
 }
-
-}; // namespace Wisp
 
 void LogDump(FILE *fp, uint8_t *buf, int size)
 {

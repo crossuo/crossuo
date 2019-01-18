@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIHitBox.h"
+
 class CGUIHTMLHitBox : public CGUIHitBox
 {
 private:

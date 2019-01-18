@@ -1,8 +1,13 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ScreenshotBuilder.h"
 #include "FileSystem.h"
+#include "OrionWindow.h"
+#include "OrionApplication.h"
 #include <time.h>
+#include "OrionUO.h"
+#include "Managers/ConfigManager.h"
 
 #define STBIWDEF static inline
 #define STB_IMAGE_WRITE_STATIC

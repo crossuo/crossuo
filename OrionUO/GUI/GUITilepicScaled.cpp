@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) December 2016 Hotride
 
+#include "GUITilepicScaled.h"
+#include "../OrionUO.h"
+
 CGUITilepicScaled::CGUITilepicScaled(
     uint16_t graphic, uint16_t color, int x, int y, int width, int height)
     : CGUITilepic(graphic, color, x, y)

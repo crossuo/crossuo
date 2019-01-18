@@ -3,6 +3,7 @@
 
 #include "GUIGenericText.h"
 #include "../Config.h"
+#include "../DefinitionMacro.h"
 
 CGUIGenericText::CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth)
     : CGUIText(color, x, y)

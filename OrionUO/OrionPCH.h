@@ -3,14 +3,20 @@
 
 #pragma once
 
-#include <SDL2/SDL.h>
+#if defined(__GNUC__) && __GNUC__ <= 5 && !__clang__
+#define USE_PCH 0
+#else
+#define USE_PCH 1
+#endif
 
-#include "plugin/enumlist.h"
-#include "plugin/plugininterface.h"
-#include "plugin/commoninterfaces.h"
+#include <math.h> // M_PI
 
-#include <cmath>
+#include <SDL.h>
+
+#include "Definitions.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <string.h>
@@ -18,8 +24,12 @@
 #include <algorithm>
 #include <stdint.h>
 
+#include <string>
+#include <vector>
 #include <thread>
 #include <mutex>
+#include <deque>
+#include <map>
 #include <condition_variable>
 #include <unordered_map>
 #include <locale>
@@ -30,6 +40,14 @@
 #include <algorithm>
 #include <functional>
 #include <cassert>
+
+using std::deque;
+using std::map;
+using std::pair;
+using std::string;
+using std::unordered_map;
+using std::vector;
+using std::wstring;
 
 #define UNUSED(x) (void)x
 #define ToColorR(x) ((x)&0xff)
@@ -67,9 +85,6 @@ typedef SoundInfo *SoundHandle;
 #include <Mmsystem.h>
 #include <tchar.h>
 
-// FIXME
-#include "../Dependencies/include/glew.h"
-#include "../Dependencies/include/wglew.h"
 #if USE_BASS
 #include "../Dependencies/include/bass.h"
 #include "../Dependencies/include/bassmidi.h"
@@ -86,7 +101,7 @@ typedef SoundInfo *SoundHandle;
 #if USE_BASS
 #pragma comment(lib, "../Dependencies/lib/Win32/bass.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/bassmidi.lib")
-#endif
+#endif // USE_BASS
 #pragma comment(lib, "../Dependencies/lib/Win32/Psapi.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2.lib")
 #pragma comment(lib, "../Dependencies/lib/Win32/SDL2main.lib")
@@ -97,7 +112,7 @@ typedef SoundInfo *SoundHandle;
 #if USE_BASS
 #pragma comment(lib, "../Dependencies/lib/x64/bass.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/bassmidi.lib")
-#endif
+#endif // USE_BASS
 #pragma comment(lib, "../Dependencies/lib/x64/Psapi.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/SDL2.lib")
 #pragma comment(lib, "../Dependencies/lib/x64/SDL2main.lib")
@@ -108,76 +123,40 @@ typedef SoundInfo *SoundHandle;
 #include "targetver.h"
 #include "Resource.h"
 
-#else
+#else // ORION_WINDOWS
 
 #include <unistd.h>
 #include <chrono>
 #include <thread>
 
-#define NO_SDL_GLEXT
-#include <GL/glew.h>
-#if defined(__APPLE__)
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-#endif
-
-#include "Platform.h"
-
-#include "Wisp/WispDefinitions.h"
-#include "Wisp/WispGlobal.h"
-#include "Wisp/WispApplication.h"
-#include "Wisp/WispDataStream.h"
-#include "Wisp/WispBinaryFileWriter.h"
-#include "Wisp/WispConnection.h"
-#include "Wisp/WispGeometry.h"
-#include "Wisp/WispLogger.h"
-#include "Wisp/WispMappedFile.h"
-#include "Wisp/WispMouse.h"
-#include "Wisp/WispPacketMessage.h"
-#include "Wisp/WispPacketReader.h"
-#include "Wisp/WispTextFileParser.h"
-#include "Wisp/WispThread.h"
-#include "Wisp/WispThreadedTimer.h"
-#include "Wisp/WispWindow.h"
-#include "plugin/mulstruct.h"
-
-#include "DefinitionMacro.h"
-#include "BaseQueue.h"
-#include "Constants.h"
-#include "DateTimeStamp.h"
-
-#include "GLEngine/GLTexture.h"
-#include "GLEngine/GLTextTexture.h"
-#include "GLEngine/GLHTMLTextTexture.h"
-#include "GLEngine/GLTextureCircleOfTransparency.h"
-#include "GLEngine/GLShader.h"
-#include "GLEngine/GLVector.h"
-#include "GLEngine/GLFrameBuffer.h"
-#include "GLEngine/GLEngine.h"
+#endif // ORION_WINDOWS
 
 #include "Globals.h"
-#include "Utility/PingThread.h"
 
-class CGump;
+#if USE_PCH
+
+#include "Wisp.h"
+#include "Backend.h"
+
+#include "Platform.h"
+#include "plugin/mulstruct.h"
+#include "BaseQueue.h"
+#include "Utility/PingThread.h"
+#include "Utility/AutoResetEvent.h"
 
 #include "CharacterList.h"
 #include "ClickObject.h"
 #include "Container.h"
 #include "ContainerStack.h"
 #include "UseItemsList.h"
-#include "ExceptionFilter.h"
 #include "ImageBounds.h"
 #include "TextureObject.h"
-#include "Utility/AutoResetEvent.h"
 #include "Managers/FileManager.h"
 #include "IndexObject.h"
 #include "Macro.h"
 #include "Multi.h"
 #include "MultiMap.h"
 #include "OrionApplication.h"
-#include "OrionStackWalker.h"
 #include "OrionUO.h"
 #include "OrionWindow.h"
 #include "PartyObject.h"
@@ -192,12 +171,17 @@ class CGump;
 #include "ServerList.h"
 #include "ShaderData.h"
 #include "SkillGroup.h"
-#include "StackWalker.h"
 #include "StumpsData.h"
 #include "TargetGump.h"
-#include "VMQuery.h"
 #include "WeatherEffect.h"
 #include "Weather.h"
+
+#if defined(ORION_WINDOWS)
+#include "ExceptionFilter.h"
+#include "StackWalker.h"
+#include "OrionStackWalker.h"
+#include "VMQuery.h"
+#endif
 
 #include "Network/UOHuffman.h"
 #include "Network/Packets.h"
@@ -242,8 +226,8 @@ class CGump;
 #include "GameObjects/ObjectOnCursor.h"
 
 #include "Target.h"
-#include "Managers/CustomHousesManager.h"
 
+#include "Managers/CustomHousesManager.h"
 #include "Gumps/GumpAbility.h"
 #include "Gumps/GumpBaseScroll.h"
 #include "Gumps/GumpBook.h"
@@ -334,3 +318,5 @@ class CGump;
 #include "ScreenStages/SelectProfessionScreen.h"
 #include "ScreenStages/SelectTownScreen.h"
 #include "ScreenStages/ServerScreen.h"
+
+#endif // USE_PCH

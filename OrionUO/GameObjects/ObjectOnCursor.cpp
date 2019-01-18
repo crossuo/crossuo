@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ObjectOnCursor.h"
+#include "GameObject.h"
+#include "../plugin/mulstruct.h"
+
 CObjectOnCursor g_ObjectInHand;
 
 void CObjectOnCursor::Clear()

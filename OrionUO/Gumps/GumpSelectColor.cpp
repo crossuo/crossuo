@@ -2,6 +2,9 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpSelectColor.h"
+#include "GumpOptions.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/GumpManager.h"
 
 CGumpSelectColor::CGumpSelectColor(uint32_t serial, short x, short y, SELECT_COLOR_GUMP_STATE state)
     : CGump(GT_SELECT_COLOR, serial, x, y)

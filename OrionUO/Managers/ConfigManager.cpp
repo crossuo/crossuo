@@ -2,8 +2,25 @@
 // Copyright (C) August 2016 Hotride
 
 #include "ConfigManager.h"
+#include "GumpManager.h"
+#include "SoundManager.h"
+#include "ObjectPropertiesManager.h"
+#include "../Point.h"
 #include "../FileSystem.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../Party.h"
+#include "../ServerList.h"
+#include "../OrionWindow.h"
+#include "../Container.h"
+#include "../CharacterList.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Gumps/Gump.h"
+#include "../Gumps/GumpSpell.h"
+#include "../Gumps/GumpPropertyIcon.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../Network/Packets.h"
 
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;
@@ -923,7 +940,7 @@ void CConfigManager::SetItemPropertiesIcon(bool val)
 
             if (gump == nullptr)
             {
-                Wisp::CSize windowSize = g_OrionWindow.GetSize();
+                CSize windowSize = g_OrionWindow.GetSize();
 
                 int x = GameWindowX + (int)(GameWindowWidth * 0.9f);
                 int y = GameWindowY + GameWindowHeight;

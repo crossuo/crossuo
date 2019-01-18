@@ -1,6 +1,14 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "QuestArrow.h"
+#include "OrionUO.h"
+#include "Point.h"
+#include "Managers/MouseManager.h"
+#include "ScreenStages/MainScreen.h"
+#include "ScreenStages/GameScreen.h"
+#include "GameObjects/GamePlayer.h"
+
 CQuestArrow g_QuestArrow;
 
 CQuestArrow::CQuestArrow()
@@ -20,7 +28,7 @@ void CQuestArrow::Draw()
 
         uint16_t gumpID = m_Gump + ((dir + 1) % 8);
 
-        Wisp::CSize size = g_Orion.GetGumpDimension(gumpID);
+        CSize size = g_Orion.GetGumpDimension(gumpID);
 
         int gox = X - g_Player->GetX();
         int goy = Y - g_Player->GetY();

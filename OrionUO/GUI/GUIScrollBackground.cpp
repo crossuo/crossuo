@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIScrollBackground.h"
+#include "../OrionUO.h"
+#include "../Managers/MouseManager.h"
+
 CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height)
     : CBaseGUI(GOT_SCROLLBACKGROUND, serial, graphic, 0, x, y)
     , Height(height)
@@ -63,7 +67,7 @@ void CGUIScrollBackground::UpdateHeight(int height)
         }
     }
 
-    WorkSpace = Wisp::CRect(
+    WorkSpace = CRect(
         OffsetX + 10, th[0]->Height, th[1]->Width - 20, Height - (th[0]->Height + th[3]->Height));
 }
 

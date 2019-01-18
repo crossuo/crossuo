@@ -2,6 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
+#include "MapBlock.h"
+#include "LandObject.h"
+#include "CustomHouseMultiObject.h"
+#include "../OrionUO.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/CustomHousesManager.h"
+#include "../Gumps/GumpCustomHouse.h"
 
 CMapBlock::CMapBlock(int index)
     : Index(index)

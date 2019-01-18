@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIPolygonal.h"
+#include "../Managers/MouseManager.h"
+
 CGUIPolygonal::CGUIPolygonal(
     GUMP_OBJECT_TYPE type, int x, int y, int width, int height, bool callOnMouseUp)
     : CBaseGUI(type, 0, 0, 0, x, y)

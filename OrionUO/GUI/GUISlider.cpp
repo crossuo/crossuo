@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUISlider.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+#include "../SelectedObject.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Gumps/Gump.h"
+
 CGUISlider::CGUISlider(
     int serial,
     uint16_t graphic,
@@ -169,10 +177,10 @@ void CGUISlider::UpdateText()
     }
 }
 
-Wisp::CSize CGUISlider::GetSize()
+CSize CGUISlider::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CSize size;
+    CSize size;
 
     CGLTexture *th = g_Orion.ExecuteGump(Graphic);
 

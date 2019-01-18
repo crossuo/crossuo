@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "SelectProfessionScreen.h"
+#include "ConnectionScreen.h"
+#include "../ToolTip.h"
+#include "../OrionUO.h"
+#include "../OrionWindow.h"
+#include "../Managers/ProfessionManager.h"
+#include "../Managers/ScreenEffectManager.h"
+
 CSelectProfessionScreen g_SelectProfessionScreen;
 
 CSelectProfessionScreen::CSelectProfessionScreen()

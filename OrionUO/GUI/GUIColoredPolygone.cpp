@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIColoredPolygone.h"
+#include "../SelectedObject.h"
+#include "../Gumps/Gump.h"
+
 CGUIColoredPolygone::CGUIColoredPolygone(
     int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)
     : CGUIPolygonal(GOT_COLOREDPOLYGONE, x, y, width, height)

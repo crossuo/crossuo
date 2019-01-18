@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpCombatBook : public CGump
 {
     int DictionaryPagesCount = 6;

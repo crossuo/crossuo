@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIPolygonal.h"
+
 class CGUIChecktrans : public CGUIPolygonal
 {
 public:

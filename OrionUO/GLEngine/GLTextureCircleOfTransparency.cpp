@@ -1,10 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "../Managers/ConfigManager.h"
+
 CGLTextureCircleOfTransparency g_CircleOfTransparency;
 
 CGLTextureCircleOfTransparency::CGLTextureCircleOfTransparency()
-
 {
 }
 

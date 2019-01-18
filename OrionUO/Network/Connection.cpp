@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Connection.h"
 #include "../Sockets.h"
 #include "../Crypt/CryptEntry.h"
 

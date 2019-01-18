@@ -1,9 +1,14 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "GumpTextEntryDialog.h"
-
 #include <utility>
+
+#include "GumpTextEntryDialog.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../Managers/GumpManager.h"
+#include "../ScreenStages/GameBlockedScreen.h"
+#include "../Network/Packets.h"
 
 CGumpTextEntryDialog::CGumpTextEntryDialog(
     uint32_t serial,

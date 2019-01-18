@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "RenderTextObject.h"
+#include "ImageBounds.h"
+
+class CRenderWorldObject;
+
 class CTextRenderer : public CRenderTextObject
 {
 private:

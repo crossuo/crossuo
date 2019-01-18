@@ -2,6 +2,23 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
+#include "GameItem.h"
+#include "../OrionUO.h"
+#include "../TargetGump.h"
+#include "../Party.h"
+#include "../SelectedObject.h"
+#include "../DefinitionMacro.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MapManager.h"
+#include "../Network/Packets.h"
+#include "../Gumps/GumpTargetSystem.h"
+#include "../Walker/Walker.h"
+#include "../Walker/PathFinder.h"
+#include "../TextEngine/TextData.h"
+#include "../GameObjects/GamePlayer.h"
 
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)

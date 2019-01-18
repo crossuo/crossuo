@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../IndexObject.h"
+
 class CSoundManager
 {
 public:
@@ -23,7 +25,7 @@ public:
     bool UpdateSoundEffect(SoundHandle stream, float volume);
     void PlaySoundEffect(SoundHandle stream, float volume);
     void PlayMidi(int index, bool warmode);
-    void PlayMP3(const std::string &fileName, int index, bool loop, bool warmode = false);
+    void PlayMP3(const string &fileName, int index, bool loop, bool warmode = false);
     void StopMusic();
     void StopWarMusic();
     void SetMusicVolume(float volume);

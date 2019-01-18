@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIDrawObject : public CBaseGUI
 {
 public:
@@ -10,7 +12,7 @@ public:
         GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y);
     virtual ~CGUIDrawObject();
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     virtual void SetShaderMode();
     virtual void PrepareTextures();

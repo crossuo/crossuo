@@ -2,6 +2,12 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpDrag.h"
+#include "../OrionUO.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/GumpManager.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../TextEngine/GameConsole.h"
 
 enum
 {

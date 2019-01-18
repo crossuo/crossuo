@@ -1,6 +1,12 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUITextEntry.h"
+#include "../Point.h"
+#include "../SelectedObject.h"
+#include "../Gumps/Gump.h"
+#include "../Managers/MouseManager.h"
+
 CGUITextEntry::CGUITextEntry(
     int serial,
     uint16_t color,
@@ -37,10 +43,10 @@ bool CGUITextEntry::EntryPointerHere()
     return (g_EntryPointer == &m_Entry);
 }
 
-Wisp::CSize CGUITextEntry::GetSize()
+CSize CGUITextEntry::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    return Wisp::CSize(m_Entry.m_Texture.Width, m_Entry.m_Texture.Height);
+    return CSize(m_Entry.m_Texture.Width, m_Entry.m_Texture.Height);
 }
 
 void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focused)

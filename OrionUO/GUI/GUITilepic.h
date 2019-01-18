@@ -3,13 +3,15 @@
 
 #pragma once
 
+#include "GUIDrawObject.h"
+
 class CGUITilepic : public CGUIDrawObject
 {
 public:
     CGUITilepic(uint16_t graphic, uint16_t color, int x, int y);
     virtual ~CGUITilepic();
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     virtual void PrepareTextures();
 

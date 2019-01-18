@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "Gump.h"
+#include "../Platform.h"
 
 class CGumpOptions : public CGump
 {

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIDrawObject.h"
+
 class CGUIButton : public CGUIDrawObject
 {
 public:

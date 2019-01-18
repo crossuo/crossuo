@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "BaseScreen.h"
+#include "../Platform.h"
 
 class CGameBlockedScreen : public CBaseScreen
 {

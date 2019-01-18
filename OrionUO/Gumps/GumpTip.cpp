@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpTip.h"
+#include "../Network/Packets.h"
 
 enum
 {

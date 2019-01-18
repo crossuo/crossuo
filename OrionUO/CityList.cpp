@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "CityList.h"
+#include "Managers/CityManager.h"
+
 CCityList g_CityList;
 
 CCityItem::CCityItem()

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIGlobalColor : public CBaseGUI
 {
     //!R компонента цвета

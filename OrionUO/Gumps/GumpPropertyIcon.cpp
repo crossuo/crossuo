@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) November 2017 Hotride
 
+#include "GumpPropertyIcon.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/ObjectPropertiesManager.h"
+
 CGumpPropertyIcon::CGumpPropertyIcon(int x, int y)
     : CGump(GT_PROPERTY_ICON, 0, x, y)
 {

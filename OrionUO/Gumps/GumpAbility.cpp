@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) December 2016 Hotride
 
+#include "GumpAbility.h"
+#include "../ToolTip.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Network/Packets.h"
+
 CGumpAbility::CGumpAbility(int serial, int x, int y)
     : CGump(GT_ABILITY, serial, x, y)
 {

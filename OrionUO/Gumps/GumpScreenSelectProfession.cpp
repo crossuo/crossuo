@@ -3,6 +3,17 @@
 
 #include "GumpScreenSelectProfession.h"
 #include "../Config.h"
+#include "../ToolTip.h"
+#include "../Profession.h"
+#include "../SelectedObject.h"
+#include "../OrionWindow.h"
+#include "../DefinitionMacro.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/SkillsManager.h"
+#include "../Managers/ProfessionManager.h"
+#include "../ScreenStages/SelectProfessionScreen.h"
 
 enum
 {
@@ -310,8 +321,8 @@ void CGumpScreenSelectProfession::UpdateContentNew()
     Add(new CGUIGumppic(0x058B, 213, 57));
     Add(new CGUIGumppic(0x0589, 290, 44));
 
-    string str = g_ClilocManager.Cliloc(g_Language)
-                     ->GetA(3000326, false, "Choose a Trade for Your Character");
+    auto str = g_ClilocManager.Cliloc(g_Language)
+                   ->GetA(3000326, false, "Choose a Trade for Your Character");
     CGUIText *text = new CGUIText(0x0386, 120, 126);
     text->CreateTextureA(2, str, 432, TS_CENTER);
     Add(text);

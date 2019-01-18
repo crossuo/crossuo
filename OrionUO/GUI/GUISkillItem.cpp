@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUISkillItem.h"
+#include "GUIButton.h"
+#include "../OrionUO.h"
+#include "../PressedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/SkillsManager.h"
+#include "../Managers/FontsManager.h"
+
 CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y)
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)
     , Index(index)

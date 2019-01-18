@@ -2,6 +2,27 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
+#include "OrionWindow.h"
+#include "OrionUO.h"
+#include "ServerList.h"
+#include "PressedObject.h"
+#include "SelectedObject.h"
+#include "ScreenshotBuilder.h"
+#include "ClickObject.h"
+#include "Managers/ConfigManager.h"
+#include "Managers/PluginManager.h"
+#include "Managers/ScreenEffectManager.h"
+#include "Managers/SoundManager.h"
+#include "Managers/GumpManager.h"
+#include "Managers/PacketManager.h"
+#include "Managers/ConnectionManager.h"
+#include "Managers/MouseManager.h"
+#include "Network/Packets.h"
+#include "ScreenStages/MainScreen.h"
+#include "ScreenStages/ServerScreen.h"
+#include "Gumps/Gump.h"
+#include "Walker/PathFinder.h"
+#include "Utility/PingThread.h"
 
 COrionWindow g_OrionWindow;
 
@@ -17,7 +38,7 @@ COrionWindow::COrionWindow()
         0xA0, 0x20, 0x4C, 0x6F, 0x6F, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x66,
         0x6F, 0x72, 0x20, 0x77, 0x6F, 0x72, 0x6B, 0x3F
     };
-    std::string s( reinterpret_cast< char const* >( d ) ) ;
+    string s( reinterpret_cast< char const* >( d ) ) ;
     DecodeUTF8(s);
 #endif
 }
@@ -80,9 +101,9 @@ void COrionWindow::OnDestroy()
 
     PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
     g_Orion.Uninstall();
-    Wisp::g_WispCrashLogger.Close();
+    g_CrashLogger.Close();
 #if USE_WISP
-    ::remove(CStringFromPath(Wisp::g_WispCrashLogger.FileName));
+    ::remove(CStringFromPath(g_CrashLogger.FileName));
 #endif
 }
 

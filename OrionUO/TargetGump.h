@@ -3,6 +3,8 @@
 
 #pragma once
 
+class CGameCharacter;
+
 class CTargetGump
 {
 public:

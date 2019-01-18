@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
+class CMacroObject;
+
 class CMacroManager : public CBaseQueue
 {
 public:

@@ -3,6 +3,17 @@
 
 #include <SDL_rect.h>
 #include "PathFinder.h"
+#include "Walker.h"
+#include "../OrionUO.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/CustomHousesManager.h"
+#include "../Managers/MapManager.h"
+#include "../GameObjects/MapBlock.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../GameObjects/LandObject.h"
+#include "../GameObjects/CustomHouseMultiObject.h"
+#include "../Network/Packets.h"
+#include "../Gumps/GumpCustomHouse.h"
 
 CPathFinder g_PathFinder;
 
@@ -753,7 +764,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     return true;
 }
 
-int CPathFinder::GetGoalDistCost(const Wisp::CPoint2Di &p, int cost)
+int CPathFinder::GetGoalDistCost(const CPoint2Di &p, int cost)
 {
     DEBUG_TRACE_FUNCTION;
     return (abs(m_EndPoint.X - p.X) + abs(m_EndPoint.Y - p.Y)) * cost;
@@ -819,7 +830,7 @@ int CPathFinder::AddNodeToList(
                         node.X = x;
                         node.Y = y;
                         node.Z = z;
-                        Wisp::CPoint2Di p(x, y);
+                        CPoint2Di p(x, y);
 
                         node.DistFromGoalCost = GetGoalDistCost(p, cost);
                         node.DistFromStartCost = parentNode->DistFromStartCost + cost;

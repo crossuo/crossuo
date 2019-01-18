@@ -1,7 +1,13 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIShopItem.h"
 #include <SDL_timer.h>
+#include "../OrionUO.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/FontsManager.h"
 
 CGUIShopItem::CGUIShopItem(
     int serial,

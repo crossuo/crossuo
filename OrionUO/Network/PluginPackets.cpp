@@ -1,8 +1,13 @@
 // MIT License
 // Copyright (C) November 2017 Hotride
 
-CPluginPacket::CPluginPacket()
+#include "PluginPackets.h"
+#include "../Macro.h"
+#include "../Managers/SkillsManager.h"
+#include "../Managers/PluginManager.h"
+#include "../Gumps/GumpSpellbook.h"
 
+CPluginPacket::CPluginPacket()
 {
     WriteUInt8(0xFC);
     WriteUInt16BE(0); //size reserved

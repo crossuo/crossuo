@@ -1,23 +1,163 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include <SDL_loadso.h>
-#include <SDL_keyboard.h>
-#include <SDL_rect.h>
+#include "OrionUO.h"
+
+#include <SDL.h>
+
 #include "GitRevision.h"
 #include "Config.h"
-#include "Wisp/WispGlobal.h"
-#include "FileSystem.h"
+#include "Misc.h"
+
+#include "Point.h"
+#include "Macro.h"
+#include "DefinitionMacro.h"
+#include "CityList.h"
+#include "Target.h"
+#include "Weather.h"
+#include "TargetGump.h"
+#include "StumpsData.h"
+#include "Party.h"
+#include "ShaderData.h"
+#include "ServerList.h"
+#include "PressedObject.h"
+#include "SelectedObject.h"
+#include "ClickObject.h"
+#include "OrionWindow.h"
+#include "UseItemsList.h"
+#include "ContainerStack.h"
+#include "Container.h"
+#include "CharacterList.h"
+#include "DateTimeStamp.h"
+#include "OrionApplication.h"
+
+#include "Utility/PingThread.h"
 #include "Crypt/CryptEntry.h"
+#include "plugin/commoninterfaces.h"
+
+#include "Walker/Walker.h"
+#include "Walker/PathFinder.h"
+
+#include "GameObjects/LandObject.h"
+#include "GameObjects/GamePlayer.h"
+#include "GameObjects/ObjectOnCursor.h"
+#include "GameObjects/MapBlock.h"
+#include "GameObjects/GameCharacter.h"
+
+#include "TextEngine/EntryText.h"
+#include "TextEngine/GameConsole.h"
+#include "TextEngine/Journal.h"
+#include "TextEngine/RenderTextObject.h"
+#include "TextEngine/TextData.h"
+#include "TextEngine/TextRenderer.h"
+
+#include "Network/UOHuffman.h"
+#include "Network/Packets.h"
+#include "Network/PluginPackets.h"
+#include "Network/Connection.h"
+
+#include "Managers/FileManager.h"
+#include "Managers/AnimationManager.h"
+#include "Managers/CityManager.h"
+#include "Managers/ClilocManager.h"
+#include "Managers/CustomHousesManager.h"
+#include "Managers/IntlocManager.h"
+#include "Managers/ObjectPropertiesManager.h"
+#include "Managers/ColorManager.h"
+#include "Managers/ConfigManager.h"
+#include "Managers/ConnectionManager.h"
+#include "Managers/CreateCharacterManager.h"
+#include "Managers/EffectManager.h"
+#include "Managers/FontsManager.h"
+#include "Managers/GumpManager.h"
+#include "Managers/MacroManager.h"
+#include "Managers/MapManager.h"
+#include "Managers/MouseManager.h"
+#include "Managers/OptionsMacroManager.h"
+#include "Managers/PacketManager.h"
+#include "Managers/PluginManager.h"
+#include "Managers/ProfessionManager.h"
+#include "Managers/ScreenEffectManager.h"
+#include "Managers/SkillGroupManager.h"
+#include "Managers/SoundManager.h"
+#include "Managers/SpeechManager.h"
+#include "Managers/UOFileReader.h"
+#include "Managers/CorpseManager.h"
+#include "Managers/SkillsManager.h"
+
+#include "ScreenStages/BaseScreen.h"
+#include "ScreenStages/CharacterListScreen.h"
+#include "ScreenStages/ConnectionScreen.h"
+#include "ScreenStages/CreateCharacterScreen.h"
+#include "ScreenStages/GameBlockedScreen.h"
+#include "ScreenStages/GameScreen.h"
+#include "ScreenStages/MainScreen.h"
+#include "ScreenStages/SelectProfessionScreen.h"
+#include "ScreenStages/SelectTownScreen.h"
+#include "ScreenStages/ServerScreen.h"
+
+#include "Gumps/GumpAbility.h"
+#include "Gumps/GumpBaseScroll.h"
+#include "Gumps/GumpBook.h"
+#include "Gumps/GumpBuff.h"
+#include "Gumps/GumpBulletinBoard.h"
+#include "Gumps/GumpBulletinBoardItem.h"
+#include "Gumps/GumpCombatBook.h"
+#include "Gumps/GumpConsoleType.h"
+#include "Gumps/GumpContainer.h"
+#include "Gumps/GumpCustomHouse.h"
+#include "Gumps/GumpDrag.h"
+#include "Gumps/GumpSelectColor.h"
+#include "Gumps/GumpDye.h"
+#include "Gumps/GumpGeneric.h"
+#include "Gumps/GumpGrayMenu.h"
+#include "Gumps/GumpJournal.h"
+#include "Gumps/GumpMap.h"
+#include "Gumps/GumpMenu.h"
+#include "Gumps/GumpMenubar.h"
+#include "Gumps/GumpMinimap.h"
+#include "Gumps/GumpNotify.h"
+#include "Gumps/GumpOptions.h"
+#include "Gumps/GumpPaperdoll.h"
+#include "Gumps/GumpPartyManifest.h"
+#include "Gumps/GumpPopupMenu.h"
+#include "Gumps/GumpProfile.h"
+#include "Gumps/GumpQuestion.h"
+#include "Gumps/GumpRacialAbilitiesBook.h"
+#include "Gumps/GumpRacialAbility.h"
+#include "Gumps/GumpScreenCharacterList.h"
+#include "Gumps/GumpScreenConnection.h"
+#include "Gumps/GumpScreenCreateCharacter.h"
+#include "Gumps/GumpScreenGame.h"
+#include "Gumps/GumpScreenMain.h"
+#include "Gumps/GumpScreenSelectProfession.h"
+#include "Gumps/GumpScreenSelectTown.h"
+#include "Gumps/GumpScreenServer.h"
+#include "Gumps/GumpSecureTrading.h"
+#include "Gumps/GumpSelectFont.h"
+#include "Gumps/GumpShop.h"
+#include "Gumps/GumpSkill.h"
+#include "Gumps/GumpSkills.h"
+#include "Gumps/GumpSpell.h"
+#include "Gumps/GumpSpellbook.h"
+#include "Gumps/GumpStatusbar.h"
+#include "Gumps/GumpTargetSystem.h"
+#include "Gumps/GumpTextEntryDialog.h"
+#include "Gumps/GumpTip.h"
+#include "Gumps/GumpWorldMap.h"
+#include "Gumps/GumpProperty.h"
+#include "Gumps/GumpPropertyIcon.h"
 
 #if !defined(ORION_WINDOWS)
-#define __cdecl
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
 
 PLUGIN_CLIENT_INTERFACE g_PluginClientInterface = {};
 
-typedef void __cdecl PLUGIN_INIT_TYPE(PLUGIN_INFO *);
+bool CDECL PluginRecvFunction(uint8_t *buf, size_t size);
+bool CDECL PluginSendFunction(uint8_t *buf, size_t size);
+
+typedef void CDECL PLUGIN_INIT_TYPE(PLUGIN_INFO *);
 static PLUGIN_INIT_TYPE *g_PluginInit = nullptr;
 
 COrion g_Orion;
@@ -350,7 +490,7 @@ bool COrion::Install()
 
     CheckStaticTileFilterFiles();
 
-    Wisp::CSize statusbarDims = GetGumpDimension(0x0804);
+    CSize statusbarDims = GetGumpDimension(0x0804);
 
     CGumpStatusbar::m_StatusbarDefaultWidth = statusbarDims.Width;
     CGumpStatusbar::m_StatusbarDefaultHeight = statusbarDims.Height;
@@ -636,7 +776,7 @@ void COrion::CheckStaticTileFilterFiles()
     auto filePath{ path + PATH_SEP + ToPath("cave.txt") };
     if (!fs_path_exists(filePath))
     {
-        Wisp::CLogger file;
+        CLogger file;
 
         file.Init(filePath);
         file.Print("#Format: graphic\n");
@@ -651,7 +791,7 @@ void COrion::CheckStaticTileFilterFiles()
     }
 
     filePath = path + PATH_SEP + ToPath("vegetation.txt");
-    Wisp::CLogger vegetationFile;
+    CLogger vegetationFile;
 
     if (!fs_path_exists(filePath))
     {
@@ -696,7 +836,7 @@ void COrion::CheckStaticTileFilterFiles()
 
     if (!fs_path_exists(filePath))
     {
-        Wisp::CLogger file;
+        CLogger file;
 
         file.Init(filePath);
         file.Print("#Format: graphic hatched\n");
@@ -926,7 +1066,7 @@ void COrion::LoadContainerOffsets()
 
     if (!fs_path_exists(filePath))
     {
-        Wisp::CLogger file;
+        CLogger file;
 
         file.Init(filePath);
         file.Print("#Format: gump open_sound close_sound minX minY maxX maxY\n");
@@ -3378,12 +3518,12 @@ void COrion::GoToWebLink(const string &url)
     if (url.length() != 0u)
     {
         std::size_t found = url.find("http://");
-        if (found == std::string::npos)
+        if (found == string::npos)
         {
             found = url.find("https://");
         }
         const string header = "http://";
-        if (found != std::string::npos)
+        if (found != string::npos)
         {
             Platform::OpenBrowser(url.c_str());
         }
@@ -4501,7 +4641,7 @@ void COrion::IndexReplaces()
     Wisp::CTextFileParser soundParser(g_App.UOFilesPath("Sound.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser mp3Parser(g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
 
-    DEBUGLOG("Replace arts\n");
+    LOG("Replace arts\n");
     while (!artParser.IsEOF())
     {
         vector<string> strings = artParser.ReadTokens();
@@ -4558,7 +4698,7 @@ void COrion::IndexReplaces()
         }
     }
 
-    DEBUGLOG("Replace textures\n");
+    LOG("Replace textures\n");
     while (!textureParser.IsEOF())
     {
         vector<string> strings = textureParser.ReadTokens();
@@ -4599,7 +4739,7 @@ void COrion::IndexReplaces()
         }
     }
 
-    DEBUGLOG("Replace gumps\n");
+    LOG("Replace gumps\n");
     while (!gumpParser.IsEOF())
     {
         vector<string> strings = gumpParser.ReadTokens();
@@ -4637,7 +4777,7 @@ void COrion::IndexReplaces()
         }
     }
 
-    DEBUGLOG("Replace multi\n");
+    LOG("Replace multi\n");
     while (!multiParser.IsEOF())
     {
         vector<string> strings = multiParser.ReadTokens();
@@ -4672,7 +4812,7 @@ void COrion::IndexReplaces()
         }
     }
 
-    DEBUGLOG("Replace sounds\n");
+    LOG("Replace sounds\n");
     while (!soundParser.IsEOF())
     {
         vector<string> strings = soundParser.ReadTokens();
@@ -4733,7 +4873,7 @@ void COrion::IndexReplaces()
         }
     }
 
-    DEBUGLOG("Loading mp3 config\n");
+    LOG("Loading mp3 config\n");
     while (!mp3Parser.IsEOF())
     {
         vector<string> strings = mp3Parser.ReadTokens();
@@ -5061,7 +5201,7 @@ void COrion::PlayMusic(int index, bool warmode)
 
 void COrion::PlaySoundEffectAtPosition(uint16_t id, int x, int y)
 {
-    auto distance = GetDistance(g_Player, Wisp::CPoint2Di(x, y));
+    auto distance = GetDistance(g_Player, CPoint2Di(x, y));
     g_Orion.PlaySoundEffect(id, g_SoundManager.GetVolumeValue(distance));
 }
 
@@ -6762,7 +6902,7 @@ uint64_t COrion::GetStaticFlags(uint16_t id)
     return 0;
 }
 
-Wisp::CSize COrion::GetStaticArtDimension(uint16_t id)
+CSize COrion::GetStaticArtDimension(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -6770,23 +6910,23 @@ Wisp::CSize COrion::GetStaticArtDimension(uint16_t id)
 
     if (th != nullptr)
     {
-        return Wisp::CSize(th->Width, th->Height);
+        return CSize(th->Width, th->Height);
     }
 
-    return Wisp::CSize();
+    return CSize();
 }
 
-Wisp::CSize COrion::GetGumpDimension(uint16_t id)
+CSize COrion::GetGumpDimension(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = ExecuteGump(id);
 
     if (th != nullptr)
     {
-        return Wisp::CSize(th->Width, th->Height);
+        return CSize(th->Width, th->Height);
     }
 
-    return Wisp::CSize();
+    return CSize();
 }
 
 void COrion::OpenStatus(uint32_t serial)

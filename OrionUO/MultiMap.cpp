@@ -1,6 +1,14 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "MultiMap.h"
+#include "Logging.h"
+#include "Gumps/GumpMap.h"
+#include "Managers/ColorManager.h"
+#include "Managers/FileManager.h"
+#include "Wisp/WispMappedFile.h"
+#include "Wisp/WispDataStream.h"
+
 CMultiMap g_MultiMap;
 
 CMultiMap::CMultiMap()

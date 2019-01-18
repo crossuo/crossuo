@@ -2,6 +2,9 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpProfile.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/ConfigManager.h"
+#include "../Network/Packets.h"
 
 CGumpProfile::CGumpProfile(
     uint32_t serial,

@@ -1,6 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "StaticObject.h"
+#include "GameCharacter.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+
 CStaticObject::CStaticObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CRenderStaticObject(ROT_STATIC_OBJECT, serial, graphic, color, x, y, z)
 {

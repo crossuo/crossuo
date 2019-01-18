@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIBlending.h"
+
 class CGUIAlphaBlending : public CGUIBlending
 {
 public:

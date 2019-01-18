@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "SelectedObject.h"
+#include "RenderObject.h"
+
 CSelectedObject g_SelectedObject;
 CSelectedObject g_LastSelectedObject;
 

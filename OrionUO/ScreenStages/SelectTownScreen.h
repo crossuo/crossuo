@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "BaseScreen.h"
+#include "../Gumps/GumpScreenSelectTown.h"
+
+class CCityItem;
+
 class CSelectTownScreen : public CBaseScreen
 {
 private:

@@ -3,6 +3,9 @@
 
 #pragma once
 
+class CGameItem;
+class CMultiObject;
+
 class CBuildObject
 {
 public:

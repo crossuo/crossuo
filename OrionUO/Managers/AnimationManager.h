@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "../IndexObject.h"
+
+class CTargetGump;
+class CGameCharacter;
+
 static const int MAX_LAYER_DIRECTIONS = 8;
 static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;

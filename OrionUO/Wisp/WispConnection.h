@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿
+#ifndef WISP_CON_H
+#define WISP_CON_H
 
 #include "../Sockets.h"
 namespace Wisp
@@ -32,3 +34,5 @@ public:
     int Send(const vector<uint8_t> &data);
 };
 }; // namespace Wisp
+
+#endif // WISP_CON_H

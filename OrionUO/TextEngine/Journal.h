@@ -1,8 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#ifndef TextDataH
-#define TextDataH
+#pragma once
+
+#include "../BaseQueue.h"
+
+class CTextData;
 
 class CJournal : public CBaseQueue
 {
@@ -18,5 +21,3 @@ public:
 };
 
 extern CJournal g_Journal;
-
-#endif

@@ -1,6 +1,18 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpTargetSystem.h"
+#include "../OrionUO.h"
+#include "../Target.h"
+#include "../TargetGump.h"
+#include "../PressedObject.h"
+#include "../DefinitionMacro.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/GamePlayer.h"
+
 CGumpTargetSystem::CGumpTargetSystem(uint32_t serial, short x, short y)
     : CGump(GT_TARGET_SYSTEM, serial, x, y)
 {

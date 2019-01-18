@@ -4,6 +4,7 @@
 #pragma once
 
 class CRenderTextObject;
+class CTextData;
 
 class CImageBounds
 {

@@ -4,6 +4,8 @@
 #ifndef GumpQuestionH
 #define GumpQuestionH
 
+#include "Gump.h"
+
 class CGumpQuestion : public CGump
 {
     uint8_t Variant = 0;

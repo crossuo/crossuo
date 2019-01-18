@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpSkill.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/SkillsManager.h"
+
 CGumpSkill::CGumpSkill(int serial, int x, int y)
     : CGump(GT_SKILL, serial, x, y)
 {
@@ -49,7 +55,7 @@ void CGumpSkill::OnLeftMouseButtonUp()
 
         if (skill != nullptr && skill->Button)
         {
-            Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+            CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
             if ((offset.X == 0) && (offset.Y == 0))
             {

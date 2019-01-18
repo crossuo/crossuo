@@ -1,6 +1,25 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GameWorld.h"
+#include "ObjectOnCursor.h"
+#include "GamePlayer.h"
+#include "../OrionUO.h"
+#include "../Party.h"
+#include "../Target.h"
+#include "../Weather.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/CorpseManager.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/FileManager.h"
+#include "../Network/Packets.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../Gumps/GumpContainer.h"
+#include "../Walker/Walker.h"
+
 CGameWorld *g_World = nullptr;
 
 CGameWorld::CGameWorld(int serial)

@@ -2,7 +2,17 @@
 // Copyright (C) December 2016 Hotride
 
 #include "GumpCombatBook.h"
+#include "GumpAbility.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../OrionWindow.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/ClilocManager.h"
 
 CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)
@@ -387,7 +397,7 @@ void CGumpCombatBook::PrepareContent()
         (g_PressedObject.LeftSerial == ID_GCB_ICON_FIRST ||
          g_PressedObject.LeftSerial == ID_GCB_ICON_SECOND))
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))

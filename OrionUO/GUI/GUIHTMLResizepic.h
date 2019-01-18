@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIResizepic.h"
+
 class CGUIHTMLResizepic : public CGUIResizepic
 {
 private:

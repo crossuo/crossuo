@@ -2,7 +2,22 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GameItem.h"
-#include "Config.h"
+#include "CustomHouseMultiObject.h"
+#include "../Config.h"
+#include "../Point.h"
+#include "../OrionUO.h"
+#include "../TargetGump.h"
+#include "../SelectedObject.h"
+#include "../Multi.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/CustomHousesManager.h"
+#include "../Managers/FileManager.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../Gumps/GumpMinimap.h"
+#include "../Gumps/GumpCustomHouse.h"
 
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)
@@ -257,7 +272,7 @@ void CGameItem::Draw(int x, int y)
         if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == Serial &&
             !Locked())
         {
-            Wisp::CSize size = g_Orion.GetStaticArtDimension(Graphic);
+            CSize size = g_Orion.GetStaticArtDimension(Graphic);
 
             if (size.Width >= 80)
             {

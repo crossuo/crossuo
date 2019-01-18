@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUITilepic.h"
+
 class CGUITilepicScaled : public CGUITilepic
 {
     int Width = 0;

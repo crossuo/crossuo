@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GumpSelectColor.h"
+
 class CGumpDye : public CGumpSelectColor
 {
 private:

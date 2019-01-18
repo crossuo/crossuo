@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 struct SPELL_REQURIES
 {
     uint8_t ManaCost;

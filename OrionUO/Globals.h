@@ -3,30 +3,14 @@
 
 #pragma once
 
-#include "Wisp/WispGlobal.h"
-#include "Wisp/WispGeometry.h"
-#include "Wisp/WispLogger.h"
-#include "OrionApplication.h"
-#include "GLEngine/GLFrameBuffer.h"
-#include "GLEngine/GLTexture.h"
-#if defined(__APPLE__)
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-#include "plugin/enumlist.h"
-#include "DefinitionMacro.h"
+#include "Point.h"
 #include "Constants.h"
+#include "plugin/enumlist.h"
+#include "Backend.h" // CGLTexture, GLuint
+
+class CGump;
 
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
-
-#define CWISPDEBUGLOGGER 0
-
-#if CWISPDEBUGLOGGER != 0
-#define DEBUGLOG LOG
-#else //CWISPDEBUGLOGGER == 0
-#define DEBUGLOG(...)
-#endif //CWISPDEBUGLOGGER!=0
 
 enum
 {
@@ -41,17 +25,17 @@ extern bool g_MovingFromMouse;
 extern bool g_AutoMoving;
 extern bool g_AbyssPacket03First;
 
-bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point);
+bool CanBeDraggedByOffset(const CPoint2Di &point);
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);
 string ToCamelCase(string text);
 
 class CGameObject;
 int GetDistance(CGameObject *current, CGameObject *target);
-int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target);
-bool CheckMultiDistance(const Wisp::CPoint2Di &current, CGameObject *target, int maxDistance);
-int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target);
-int GetDistance(const Wisp::CPoint2Di &current, const Wisp::CPoint2Di &target);
-int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target);
+int GetDistance(CGameObject *current, const CPoint2Di &target);
+bool CheckMultiDistance(const CPoint2Di &current, CGameObject *target, int maxDistance);
+int GetDistance(const CPoint2Di &current, CGameObject *target);
+int GetDistance(const CPoint2Di &current, const CPoint2Di &target);
+int GetRemoveDistance(const CPoint2Di &current, CGameObject *target);
 int GetTopObjDistance(CGameObject *current, CGameObject *target);
 
 const char *GetReagentName(uint16_t id);
@@ -91,8 +75,8 @@ extern GAME_STATE g_GameState;
 
 extern CGLTexture g_TextureGumpState[2];
 
-extern Wisp::CSize g_MapSize[MAX_MAPS_COUNT];
-extern Wisp::CSize g_MapBlockSize[MAX_MAPS_COUNT];
+extern CSize g_MapSize[MAX_MAPS_COUNT];
+extern CSize g_MapBlockSize[MAX_MAPS_COUNT];
 
 extern int g_MultiIndexCount;
 
@@ -101,8 +85,8 @@ extern class CGLFrameBuffer g_LightBuffer;
 extern bool g_GumpPressed;
 extern class CRenderObject *g_GumpSelectedElement;
 extern class CRenderObject *g_GumpPressedElement;
-extern Wisp::CPoint2Di g_GumpMovingOffset;
-extern Wisp::CPoint2Df g_GumpTranslate;
+extern CPoint2Di g_GumpMovingOffset;
+extern CPoint2Df g_GumpTranslate;
 extern bool g_ShowGumpLocker;
 
 extern bool g_GrayedPixels;
@@ -169,7 +153,7 @@ extern float g_AnimCharactersDelayValue;
 
 typedef vector<pair<uint32_t, uint32_t>> UINTS_PAIR_LIST;
 
-extern Wisp::CPoint2Di g_RemoveRangeXY;
+extern CPoint2Di g_RemoveRangeXY;
 
 extern int g_GrayMenuCount;
 
@@ -258,133 +242,134 @@ inline bool Int32TryParse(const string &str, int &result)
     return true;
     */
 }
+
 inline bool IsBackground(int64_t flags)
 {
-    return (flags & 0x00000001);
+    return (flags & 0x00000001) != 0;
 }
 inline bool IsWeapon(int64_t flags)
 {
-    return (flags & 0x00000002);
+    return (flags & 0x00000002) != 0;
 }
 inline bool IsTransparent(int64_t flags)
 {
-    return (flags & 0x00000004);
+    return (flags & 0x00000004) != 0;
 }
 inline bool IsTranslucent(int64_t flags)
 {
-    return (flags & 0x00000008);
+    return (flags & 0x00000008) != 0;
 }
 inline bool IsWall(int64_t flags)
 {
-    return (flags & 0x00000010);
+    return (flags & 0x00000010) != 0;
 }
 inline bool IsDamaging(int64_t flags)
 {
-    return (flags & 0x00000020);
+    return (flags & 0x00000020) != 0;
 }
 inline bool IsImpassable(int64_t flags)
 {
-    return (flags & 0x00000040);
+    return (flags & 0x00000040) != 0;
 }
 inline bool IsWet(int64_t flags)
 {
-    return (flags & 0x00000080);
+    return (flags & 0x00000080) != 0;
 }
 inline bool IsUnknown(int64_t flags)
 {
-    return (flags & 0x00000100);
+    return (flags & 0x00000100) != 0;
 }
 inline bool IsSurface(int64_t flags)
 {
-    return (flags & 0x00000200);
+    return (flags & 0x00000200) != 0;
 }
 inline bool IsBridge(int64_t flags)
 {
-    return (flags & 0x00000400);
+    return (flags & 0x00000400) != 0;
 }
 inline bool IsStackable(int64_t flags)
 {
-    return (flags & 0x00000800);
+    return (flags & 0x00000800) != 0;
 }
 inline bool IsWindow(int64_t flags)
 {
-    return (flags & 0x00001000);
+    return (flags & 0x00001000) != 0;
 }
 inline bool IsNoShoot(int64_t flags)
 {
-    return (flags & 0x00002000);
+    return (flags & 0x00002000) != 0;
 }
 inline bool IsPrefixA(int64_t flags)
 {
-    return (flags & 0x00004000);
+    return (flags & 0x00004000) != 0;
 }
 inline bool IsPrefixAn(int64_t flags)
 {
-    return (flags & 0x00008000);
+    return (flags & 0x00008000) != 0;
 }
 inline bool IsInternal(int64_t flags)
 {
-    return (flags & 0x00010000);
+    return (flags & 0x00010000) != 0;
 }
 inline bool IsFoliage(int64_t flags)
 {
-    return (flags & 0x00020000);
+    return (flags & 0x00020000) != 0;
 }
 inline bool IsPartialHue(int64_t flags)
 {
-    return (flags & 0x00040000);
+    return (flags & 0x00040000) != 0;
 }
 inline bool IsUnknown1(int64_t flags)
 {
-    return (flags & 0x00080000);
+    return (flags & 0x00080000) != 0;
 }
 inline bool IsMap(int64_t flags)
 {
-    return (flags & 0x00100000);
+    return (flags & 0x00100000) != 0;
 }
 inline bool IsContainer(int64_t flags)
 {
-    return (flags & 0x00200000);
+    return (flags & 0x00200000) != 0;
 }
 inline bool IsWearable(int64_t flags)
 {
-    return (flags & 0x00400000);
+    return (flags & 0x00400000) != 0;
 }
 inline bool IsLightSource(int64_t flags)
 {
-    return (flags & 0x00800000);
+    return (flags & 0x00800000) != 0;
 }
 inline bool IsAnimated(int64_t flags)
 {
-    return (flags & 0x01000000);
+    return (flags & 0x01000000) != 0;
 }
 inline bool IsNoDiagonal(int64_t flags)
 {
-    return (flags & 0x02000000);
+    return (flags & 0x02000000) != 0;
 }
 inline bool IsUnknown2(int64_t flags)
 {
-    return (flags & 0x04000000);
+    return (flags & 0x04000000) != 0;
 }
 inline bool IsArmor(int64_t flags)
 {
-    return (flags & 0x08000000);
+    return (flags & 0x08000000) != 0;
 }
 inline bool IsRoof(int64_t flags)
 {
-    return (flags & 0x10000000);
+    return (flags & 0x10000000) != 0;
 }
 inline bool IsDoor(int64_t flags)
 {
-    return (flags & 0x20000000);
+    return (flags & 0x20000000) != 0;
 }
 inline bool IsStairBack(int64_t flags)
 {
-    return (flags & 0x40000000);
+    return (flags & 0x40000000) != 0;
 }
 inline bool IsStairRight(int64_t flags)
 {
-    return (flags & 0x80000000);
+    return (flags & 0x80000000) != 0;
 }
 
 template <typename T, typename U>

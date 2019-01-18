@@ -1,5 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+
+#include "RenderWorldObject.h"
+#include "Managers/ConfigManager.h"
+#include "ScreenStages/GameScreen.h"
+
 CRenderWorldObject::CRenderWorldObject(
     RENDER_OBJECT_TYPE renderType,
     int serial,

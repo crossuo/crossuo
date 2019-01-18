@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpScreenMain : public CGump
 {
     CGUIButton *m_Arrow{ nullptr };

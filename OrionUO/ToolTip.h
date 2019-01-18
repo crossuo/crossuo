@@ -10,7 +10,7 @@ public:
     wstring Data = {};
     uint32_t ClilocID = 0;
     int MaxWidth = 0;
-    Wisp::CPoint2Di Position = Wisp::CPoint2Di();
+    CPoint2Di Position = CPoint2Di();
     bool Use = false;
     CGLTextTexture Texture;
     class CRenderObject *m_Object{ nullptr };

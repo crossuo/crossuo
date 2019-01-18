@@ -1,5 +1,8 @@
 // MIT License
 
+#ifndef WISP_TT_H
+#define WISP_TT_H
+
 #if USE_TIMERTHREAD
 
 #pragma once
@@ -24,3 +27,5 @@ public:
 }; // namespace Wisp
 
 #endif // USE_TIMERTHREAD
+
+#endif // WISP_TT_H

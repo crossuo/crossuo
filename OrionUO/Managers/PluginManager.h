@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+#include "../DefinitionMacro.h"
+
 class CPlugin : public CBaseQueueItem
 {
 private:
@@ -12,15 +15,15 @@ public:
     CPlugin(uint32_t flags);
     virtual ~CPlugin();
 
-    bool CanParseRecv() { return (m_Flags & PLUGIN_FLAGS_PARSE_RECV); }
-    bool CanParseSend() { return (m_Flags & PLUGIN_FLAGS_PARSE_SEND); }
-    bool CanRecv() { return (m_Flags & PLUGIN_FLAGS_RECV); }
-    bool CanSend() { return (m_Flags & PLUGIN_FLAGS_SEND); }
-    bool CanEvent() { return (m_Flags & PLUGIN_FLAGS_EVENT_PROC); }
-    bool CanClientAccess() { return (m_Flags & PLUGIN_FLAGS_CLIENT_ACCESS); }
-    bool CanEnterWorldRender() { return (m_Flags & PLUGIN_FLAGS_GAME_WORLD_DRAW); }
-    bool CanEnterSceneRender() { return (m_Flags & PLUGIN_FLAGS_SCENE_DRAW); }
-    bool CanEnterWorldMapRender() { return (m_Flags & PLUGIN_FLAGS_WORLD_MAP_DRAW); }
+    bool CanParseRecv() { return (m_Flags & PLUGIN_FLAGS_PARSE_RECV) != 0; }
+    bool CanParseSend() { return (m_Flags & PLUGIN_FLAGS_PARSE_SEND) != 0; }
+    bool CanRecv() { return (m_Flags & PLUGIN_FLAGS_RECV) != 0; }
+    bool CanSend() { return (m_Flags & PLUGIN_FLAGS_SEND) != 0; }
+    bool CanEvent() { return (m_Flags & PLUGIN_FLAGS_EVENT_PROC) != 0; }
+    bool CanClientAccess() { return (m_Flags & PLUGIN_FLAGS_CLIENT_ACCESS) != 0; }
+    bool CanEnterWorldRender() { return (m_Flags & PLUGIN_FLAGS_GAME_WORLD_DRAW) != 0; }
+    bool CanEnterSceneRender() { return (m_Flags & PLUGIN_FLAGS_SCENE_DRAW) != 0; }
+    bool CanEnterWorldMapRender() { return (m_Flags & PLUGIN_FLAGS_WORLD_MAP_DRAW) != 0; }
 
     PLUGIN_INTERFACE *m_PPS;
 };

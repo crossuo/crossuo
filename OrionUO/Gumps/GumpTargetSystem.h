@@ -1,8 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#ifndef GumpTargetSystemH
-#define GumpTargetSystemH
+#pragma once
+
+#include "Gump.h"
 
 class CGumpTargetSystem : public CGump
 {
@@ -29,5 +30,3 @@ public:
     void OnLeftMouseDown();
     bool OnLeftMouseButtonDoubleClick();
 };
-
-#endif

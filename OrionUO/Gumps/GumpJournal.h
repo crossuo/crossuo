@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GumpBaseScroll.h"
+
 class CGumpJournal : public CGumpBaseScroll
 {
 private:

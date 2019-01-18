@@ -1,6 +1,8 @@
 ﻿// MIT License
 // Copyright (C) September 2017 Hotride
 
+#include "CustomHouseObjects.h"
+
 bool CCustomHouseObjectWall::Parse(const char *text)
 {
     DEBUG_TRACE_FUNCTION;

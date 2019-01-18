@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ServerList.h"
+#include "OrionUO.h"
+#include "ScreenStages/MainScreen.h"
+#include "ScreenStages/ServerScreen.h"
+#include "Utility/PingThread.h"
+
 CServerList g_ServerList;
 
 CServer::CServer()

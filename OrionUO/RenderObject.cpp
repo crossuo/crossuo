@@ -1,6 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "RenderObject.h"
+#include "PressedObject.h"
+#include "SelectedObject.h"
+#include "ClickObject.h"
+
 CRenderObject::CRenderObject(int serial, uint16_t graphic, uint16_t color, short x, short y)
     : Serial(serial)
     , Graphic(graphic)

@@ -3,7 +3,11 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "../Platform.h"
+#include "BaseScreen.h"
+#include "../Gumps/GumpScreenGame.h"
+
+class CGameObject;
 
 struct RENDER_VARIABLES_FOR_GAME_WINDOW
 {

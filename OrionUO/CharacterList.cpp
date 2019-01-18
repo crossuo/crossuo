@@ -1,5 +1,7 @@
 ﻿// MIT License
 
+#include "CharacterList.h"
+
 CCharacterList g_CharacterList;
 
 CCharacterList::CCharacterList()

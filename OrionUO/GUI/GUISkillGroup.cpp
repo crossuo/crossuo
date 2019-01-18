@@ -1,6 +1,15 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUISkillGroup.h"
+#include "GUIButton.h"
+#include "GUITextEntry.h"
+#include "GUISkillItem.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+#include "../SkillGroup.h"
+#include "../Managers/MouseManager.h"
+
 CGUISkillGroup::CGUISkillGroup(
     int serial, int minimizeSerial, CSkillGroupObject *group, int x, int y)
     : CBaseGUI(GOT_SKILLGROUP, serial, 0, 0, x, y)
@@ -74,8 +83,8 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
     }
     else if (!GetMinimized())
     {
-        Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
-        g_MouseManager.Position = Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
+        CPoint2Di oldMouse = g_MouseManager.Position;
+        g_MouseManager.Position = CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
         QFOR(item, m_Items, CBaseGUI *)
         {
@@ -98,10 +107,10 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
     return selected;
 }
 
-Wisp::CSize CGUISkillGroup::GetSize()
+CSize CGUISkillGroup::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CSize size(220, 19);
+    CSize size(220, 19);
 
     if (!GetMinimized() && m_Items != nullptr)
     {
@@ -166,8 +175,8 @@ bool CGUISkillGroup::Select()
 
     if (!GetMinimized() && !result)
     {
-        Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
-        g_MouseManager.Position = Wisp::CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
+        CPoint2Di oldMouse = g_MouseManager.Position;
+        g_MouseManager.Position = CPoint2Di(oldMouse.X - m_X, oldMouse.Y - (m_Y + 19));
 
         QFOR(item, m_Items, CBaseGUI *)
         {

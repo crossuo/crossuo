@@ -3,10 +3,12 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpScreenSelectTown : public CGump
 {
 private:
-    vector<Wisp::CPoint2Di> m_TownButtonText;
+    vector<CPoint2Di> m_TownButtonText;
     CGUIHTMLGump *m_HTMLGump{ nullptr };
     CGUIText *m_Description{ nullptr };
 

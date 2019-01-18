@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
+#include "GUIMinMaxButtons.h"
+#include "../OrionUO.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
+
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)
     : CBaseGUI(GOT_MINMAXBUTTONS, serial, graphic, 0, x, y)

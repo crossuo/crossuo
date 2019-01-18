@@ -2,19 +2,17 @@
 // Copyright (C) September 2016 Hotride
 
 #include "PluginManager.h"
+#include "../Platform.h"
+#include "plugin/commoninterfaces.h"
 
-#if defined(ORION_WINDOWS)
-#include <Windows.h>
-#else
-#include <stdint.h>
-#define __cdecl
-#endif
-
+#include "PacketManager.h"
+#include "ConnectionManager.h"
 #include "../Config.h"
+#include "../OrionWindow.h"
 
 CPluginManager g_PluginManager;
 
-bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size)
+bool CDECL PluginRecvFunction(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
     auto owned = (uint8_t *)malloc(size);
@@ -23,7 +21,7 @@ bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size)
     return true;
 }
 
-bool __cdecl PluginSendFunction(uint8_t *buf, size_t size)
+bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
 {
     DEBUG_TRACE_FUNCTION;
 

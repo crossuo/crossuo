@@ -5,7 +5,7 @@
 #if defined(ORION_WINDOWS)
 
 #include "StackWalker.h"
-#include "Wisp/WispLogger.h"
+#include "Logging.h"
 
 class OrionStackWalker : public StackWalker
 {

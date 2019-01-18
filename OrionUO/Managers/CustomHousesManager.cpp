@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) September 2017 Hotride
 
+#include "CustomHousesManager.h"
+#include "../Gumps/GumpCustomHouse.h"
+#include "../GameObjects/GameItem.h"
+
 CustomHousesManager g_CustomHousesManager;
 
 void CCustomHouse::Paste(CGameItem *foundation)

@@ -2,8 +2,6 @@
 
 #pragma once
 
-namespace Wisp
-{
 class CPoint2Df;
 class CPoint3Df;
 
@@ -132,5 +130,3 @@ public:
         Z = 0.0f;
     }
 };
-
-}; // namespace Wisp

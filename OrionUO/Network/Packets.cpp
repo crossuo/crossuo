@@ -1,7 +1,27 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Packets.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../CityList.h"
+#include "../ServerList.h"
+#include "../Profession.h"
+#include "../CharacterList.h"
+#include "../ScreenStages/MainScreen.h"
+#include "../ScreenStages/SelectTownScreen.h"
+#include "../Managers/PacketManager.h"
+#include "../Managers/ProfessionManager.h"
+#include "../Managers/CreateCharacterManager.h"
+#include "../Managers/ConnectionManager.h"
+#include "../Managers/SpeechManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../GUI/BaseGUI.h"
+#include "../Gumps/GumpGeneric.h"
+#include "../Gumps/GumpShop.h"
+#include "../Gumps/GumpBook.h"
+#include "../Gumps/GumpTextEntryDialog.h"
+#include "../Gumps/GumpSecureTrading.h"
 
 CPacket::CPacket(size_t size, bool autoResize)
     : Wisp::CDataWriter(size, autoResize)
@@ -618,7 +638,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
     }
 }
 
-CPacketVirtureGumpResponse::CPacketVirtureGumpResponse(CGump *gump, int code)
+CPacketVirtueGumpResponse::CPacketVirtueGumpResponse(CGump *gump, int code)
     : CPacket(15)
 {
     g_PacketManager.SetCachedGumpCoords(gump->ID, gump->GetX(), gump->GetY());
@@ -1132,7 +1152,7 @@ CPacketEquipLastWeapon::CPacketEquipLastWeapon()
     WriteUInt8(0x0A);
 }
 
-CPacketVirtureRequest::CPacketVirtureRequest(int buttonID)
+CPacketVirtueRequest::CPacketVirtueRequest(int buttonID)
     : CPacket(23)
 {
     WriteUInt8(0xB1);
@@ -1144,7 +1164,7 @@ CPacketVirtureRequest::CPacketVirtureRequest(int buttonID)
     WriteUInt32BE(g_PlayerSerial);
 }
 
-CPacketInvokeVirtureRequest::CPacketInvokeVirtureRequest(uint8_t id)
+CPacketInvokeVirtueRequest::CPacketInvokeVirtueRequest(uint8_t id)
     : CPacket(6)
 {
     WriteUInt8(0x12);

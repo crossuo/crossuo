@@ -1,7 +1,7 @@
 // MIT License
 
 #pragma once
-
+/*
 #if defined(ORION_WINDOWS)
 #if defined(_MSC_VER)
 #pragma warning(disable : 4800) //forcing value to bool 'true' or 'false' (performance warning)
@@ -37,8 +37,8 @@ using std::map;
 using std::pair;
 using std::unordered_map;
 
-#include "WispDefinitions.h"
-
+#include "../Definitions.h"
+*/
 extern SDL_threadID g_MainThread;
 const int PACKET_VARIABLE_SIZE = 0;
 
@@ -105,23 +105,23 @@ inline void pack16(uint8_t *buf, uint16_t x)
     buf[1] = x & 0xff;
 }
 
-#if USE_WISP_DEBUG_FUNCTION_NAMES == 1
-extern deque<string> g_WispDebugFunStack;
-class CWispFunDebug
+#if USE_DEBUG_FUNCTION_NAMES == 1
+extern deque<string> g_DebugFuncStack;
+class CFuncDebug
 {
 public:
-    CWispFunDebug::CWispFunDebug(const char *str)
+    CFuncDebug::CFuncDebug(const char *str)
     {
         if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
         {
-            g_WispDebugFunStack.push_back(str);
+            g_DebugFuncStack.push_back(str);
         }
     }
-    CWispFunDebug::~CWispFunDebug()
+    CFuncDebug::~CFuncDebug()
     {
         if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
         {
-            g_WispDebugFunStack.pop_back();
+            g_DebugFuncStack.pop_back();
         }
     }
 };

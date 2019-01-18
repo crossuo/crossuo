@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIDrawObject.h"
+
 class CGUIGumppicHightlighted : public CGUIDrawObject
 {
     uint16_t SelectedColor = 0;

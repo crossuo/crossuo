@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIGroup : public CBaseGUI
 {
 public:

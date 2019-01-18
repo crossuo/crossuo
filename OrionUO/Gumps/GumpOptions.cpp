@@ -2,7 +2,24 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpOptions.h"
+#include "GumpSelectColor.h"
+#include "GumpSelectFont.h"
+#include "GumpMenubar.h"
 #include "../Config.h"
+#include "../Macro.h"
+#include "../DefinitionMacro.h"
+#include "../ToolTip.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../OrionWindow.h"
+#include "../Container.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/MacroManager.h"
+#include "../Managers/OptionsMacroManager.h"
+#include "../Managers/ColorManager.h"
+#include "../Network/Packets.h"
 
 #if USE_WISP
 #define KeyName(x) s_HotkeyText[x & 0xFF]

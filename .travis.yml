@@ -1,35 +1,64 @@
-dist: trusty
-sudo: require
 language: cpp
-compiler: clang
-os:
-    - linux
-    - osx
-env:
-  - CXX_COMPILER=/usr/bin/clang++-7 CC_COMPILER=/usr/bin/clang-7
-  - CXX_COMPILER=gcc++-7 CC_COMPILER=gcc-7
-addons:
-  apt:
-    sources:
-      - llvm-toolchain-trusty-7
-      - ubuntu-toolchain-r-test
-    packages:
-      - ninja-build
-      - clang-7
-      - clang++-7
-      - g++-7
-      - gcc-7
-      - cppcheck
-      - clang-format-7
-      - libglu1-mesa-dev
-      - libegl1-mesa-dev
-      - libgles2-mesa-dev
-      - xorg-dev
-      - libsdl2-dev
-      - libglew-dev
-      - libsndio-dev
-      - libxkbcommon-dev
-script:
-    - export CC=${CC_COMPILER}
-    - export CXX=${CXX_COMPILER}
-    - ./travis.sh
+matrix:
+  include:
+    - os: linux
+      compiler: clang
+      name: clang-ninja
+      sudo: required
+      env: TASK=clang
+      dist: xenial
+      cache: ccache
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - ninja-build
+            - libglu1-mesa-dev
+            - libegl1-mesa-dev
+            - libgles2-mesa-dev
+            - xorg-dev
+            - libsdl2-dev
+            - libglew-dev
+            - libsndio-dev
+            - libxkbcommon-dev
+      script: ./travis.sh
+    - os: linux
+      compiler: gcc
+      name: gcc-make
+      sudo: required
+      env: TASK=gcc
+      dist: xenial
+      cache: ccache
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - libglu1-mesa-dev
+            - libegl1-mesa-dev
+            - libgles2-mesa-dev
+            - xorg-dev
+            - libsdl2-dev
+            - libglew-dev
+            - libsndio-dev
+            - libxkbcommon-dev
+      script: ./travis.sh
+    - os: linux
+      name: format-check
+      sudo: required
+      env: TASK=clang-format
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-7
+          packages:
+            - clang-format-7
+      script: ./travis.sh
+    - os: osx
+      sudo: false
+      osx_image: xcode10
+      cache: ccache
+      script:
+        - ./travis.sh

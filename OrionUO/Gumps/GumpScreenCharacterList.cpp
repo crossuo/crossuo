@@ -4,6 +4,12 @@
 #include "GumpScreenCharacterList.h"
 #include <SDL_timer.h>
 #include "../Config.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../CharacterList.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../ScreenStages/CharacterListScreen.h"
 
 enum
 {

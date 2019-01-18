@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <string>
 #include <stdio.h>
 
 #if defined(ORION_WINDOWS)

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIText : public CBaseGUI
 {
 public:
@@ -11,7 +13,7 @@ public:
 
     CGLTextTexture m_Texture{ CGLTextTexture() };
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(m_Texture.Width, m_Texture.Height); }
+    virtual CSize GetSize() { return CSize(m_Texture.Width, m_Texture.Height); }
 
     void CreateTextureA(
         uint8_t font,

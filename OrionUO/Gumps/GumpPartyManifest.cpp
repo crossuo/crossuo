@@ -2,6 +2,10 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpPartyManifest.h"
+#include "../OrionUO.h"
+#include "../Party.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Network/Packets.h"
 
 enum
 {

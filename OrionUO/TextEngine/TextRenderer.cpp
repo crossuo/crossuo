@@ -1,6 +1,14 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "TextRenderer.h"
+#include "TextData.h"
+#include "../SelectedObject.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../GameObjects/GameWorld.h"
+
 CTextRenderer g_WorldTextRenderer;
 
 CTextRenderer::CTextRenderer()
@@ -68,8 +76,7 @@ bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
     bool result = false;
     CTextImageBounds rect(text);
 
-    for (std::deque<CTextImageBounds>::iterator it = m_TextRect.begin(); it != m_TextRect.end();
-         ++it)
+    for (auto it = m_TextRect.begin(); it != m_TextRect.end(); ++it)
     {
         if (it->InRect(rect))
         {

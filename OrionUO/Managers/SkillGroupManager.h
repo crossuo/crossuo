@@ -3,6 +3,8 @@
 
 #pragma once
 
+class CSkillGroupObject;
+
 class CSkillGroupManager
 {
     int Count = 0;

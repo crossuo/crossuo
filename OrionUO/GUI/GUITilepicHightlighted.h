@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUITilepic.h"
+
 class CGUITilepicHightlighted : public CGUITilepic
 {
     uint16_t SelectedColor = 0;

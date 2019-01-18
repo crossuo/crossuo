@@ -1,8 +1,15 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "EntryText.h"
 #include <SDL_clipboard.h>
+
+#include "EntryText.h"
+#include "../DefinitionMacro.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Gumps/Gump.h"
 
 CEntryText *g_EntryPointer = nullptr;
 

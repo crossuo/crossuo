@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIDrawObject.h"
+
 class CGUIBuff : public CGUIDrawObject
 {
 public:

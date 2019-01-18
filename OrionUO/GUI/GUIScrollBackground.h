@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIScrollBackground : public CBaseGUI
 {
 public:
@@ -19,7 +21,7 @@ public:
     int Width = 0;
 
     //!Рабочая область
-    Wisp::CRect WorkSpace = Wisp::CRect();
+    CRect WorkSpace = CRect();
 
     CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height);
     virtual ~CGUIScrollBackground();
@@ -27,7 +29,7 @@ public:
     //!Обновить высоту
     void UpdateHeight(int height);
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
+    virtual CSize GetSize() { return CSize(Width, Height); }
 
     virtual void PrepareTextures();
 

@@ -2,6 +2,9 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpGrayMenu.h"
+#include "../OrionUO.h"
+#include "../ScreenStages/GameBlockedScreen.h"
+#include "../Network/Packets.h"
 
 CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_GRAY_MENU, serial, x, y)

@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
+class CTextData;
+
 class CTextContainer : public CBaseQueue
 {
 public:

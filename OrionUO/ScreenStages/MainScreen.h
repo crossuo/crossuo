@@ -1,6 +1,11 @@
 ﻿#pragma once
 
-#include "Platform.h"
+#include "BaseScreen.h"
+#include "../Platform.h"
+#include "../Gumps/GumpScreenMain.h"
+
+class CEntryText;
+class CGUICheckbox;
 
 class CMainScreen : public CBaseScreen
 {

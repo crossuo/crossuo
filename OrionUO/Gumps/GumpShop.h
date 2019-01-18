@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpShop : public CGump
 {
     int m_ContinueCounter = 0;

@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIShopResult.h"
+#include "GUIMinMaxButtons.h"
+#include "GUIShopItem.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/FontsManager.h"
+
 CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     : CBaseGUI(GOT_SHOPRESULT, shopItem->Serial, shopItem->Graphic, shopItem->Color, x, y)
     , Price(shopItem->Price)
@@ -36,7 +44,7 @@ CBaseGUI *CGUIShopResult::SelectedItem()
 {
     DEBUG_TRACE_FUNCTION;
     CBaseGUI *result = this;
-    Wisp::CSize size = m_MinMaxButtons->GetSize();
+    CSize size = m_MinMaxButtons->GetSize();
 
     if (g_Orion.PolygonePixelsInXY(
             m_X + m_MinMaxButtons->GetX(), m_Y + m_MinMaxButtons->GetY(), size.Width, size.Height))

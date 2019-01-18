@@ -3,6 +3,8 @@
 
 #pragma once
 
+struct STATIC_TILES;
+
 class CObjectOnCursor
 {
 public:

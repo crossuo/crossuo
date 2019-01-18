@@ -1,6 +1,8 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUILine.h"
+
 CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygoneColor)
     : CBaseGUI(GOT_LINE, 0, 0, 0, startX, startY)
     , TargetX(targetX)

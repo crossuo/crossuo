@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+#include "../TextEngine/EntryText.h"
+
 class CGUITextEntry : public CBaseGUI
 {
 public:
@@ -97,7 +100,7 @@ public:
 
     virtual bool EntryPointerHere();
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     //!Установить глобальный OGL цвет перед отрисовкой текста
     void SetGlobalColor(bool use, int color, int selected, int focused);

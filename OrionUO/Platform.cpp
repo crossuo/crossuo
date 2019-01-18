@@ -69,7 +69,7 @@ void SetLanguageFromSystemLocale()
     LOG("Locale: %s\n", g_Language.c_str());
 }
 
-void OpenBrowser(const std::string &url)
+void OpenBrowser(const string &url)
 {
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
@@ -129,7 +129,7 @@ void SetLanguageFromSystemLocale()
     LOG("Locale: %s\n", g_Language.c_str());
 }
 
-void OpenBrowser(const std::string &url)
+void OpenBrowser(const string &url)
 {
 #if __APPLE__
 #define OPEN_CMD "open "
@@ -137,7 +137,7 @@ void OpenBrowser(const std::string &url)
 #define OPEN_CMD "xdg-open "
 #endif
 
-    auto cmd = std::string(OPEN_CMD) + url;
+    auto cmd = string(OPEN_CMD) + url;
     system(cmd.c_str()); // orion adds http in the url, we're a bit safer.
 
 #undef OPEN_CMD
@@ -148,7 +148,7 @@ void SetLanguageFromSystemLocale()
 {
     ORION_NOT_IMPLEMENTED;
 }
-void OpenBrowser(const std::string &url)
+void OpenBrowser(const string &url)
 {
     ORION_NOT_IMPLEMENTED;
 }

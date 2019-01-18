@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Weather.h"
+#include "Managers/ConfigManager.h"
+
 CWeather g_Weather;
 
 float SinOscillate(float freq, int range, uint32_t current_tick)

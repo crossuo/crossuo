@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIShopItem : public CBaseGUI
 {
 public:
@@ -58,7 +60,7 @@ public:
     //!Создать текстуру количества
     void CreateCountText(int lostCount);
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(200, m_MaxOffset + 20); }
+    virtual CSize GetSize() { return CSize(200, m_MaxOffset + 20); }
 
     virtual void PrepareTextures();
 

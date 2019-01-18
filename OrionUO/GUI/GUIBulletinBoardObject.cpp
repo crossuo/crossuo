@@ -3,6 +3,9 @@
 
 #include "GUIBulletinBoardObject.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
 
 CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const wstring &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)

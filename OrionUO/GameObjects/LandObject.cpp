@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "LandObject.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+
 CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CMapObject(ROT_LAND_OBJECT, serial, 0, color, x, y, z)
     , MinZ(z)

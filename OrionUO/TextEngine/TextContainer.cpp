@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "TextContainer.h"
+#include "TextEngine/TextData.h"
+
 CTextContainer g_SystemChat(30);
 
 CTextContainer::CTextContainer(int maxSize)

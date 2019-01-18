@@ -1,6 +1,16 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Party.h"
+#include "OrionUO.h"
+#include "Network/Packets.h"
+#include "Managers/ConfigManager.h"
+#include "Managers/GumpManager.h"
+#include "Managers/MouseManager.h"
+#include "GameObjects/GameWorld.h"
+#include "GameObjects/GameCharacter.h"
+#include "Gumps/GumpStatusbar.h"
+
 CParty g_Party;
 
 CParty::CParty()
@@ -78,8 +88,8 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 break;
             }
             Clear();
-            Wisp::CPoint2Di oldPos = g_MouseManager.Position;
-            Wisp::CPoint2Di mousePos(76, 30);
+            CPoint2Di oldPos = g_MouseManager.Position;
+            CPoint2Di mousePos(76, 30);
             g_MouseManager.Position = mousePos;
             CGumpStatusbar *prevGump = nullptr;
 

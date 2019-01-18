@@ -1,6 +1,16 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "MapManager.h"
+#include "GumpManager.h"
+#include "FileManager.h"
+#include "../OrionUO.h"
+#include "../Gumps/GumpMinimap.h"
+#include "../GameObjects/MapBlock.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../GameObjects/LandObject.h"
+#include "../GameObjects/StaticObject.h"
+
 CMapManager g_MapManager;
 
 CIndexMap::CIndexMap()
@@ -43,7 +53,7 @@ void CMapManager::CreateBlockTable(int map)
 {
     DEBUG_TRACE_FUNCTION;
     MAP_INDEX_LIST &list = m_BlockData[map];
-    Wisp::CSize &size = g_MapBlockSize[map];
+    CSize &size = g_MapBlockSize[map];
 
     int maxBlockCount = size.Width * size.Height;
 
@@ -141,7 +151,7 @@ void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
 {
     DEBUG_TRACE_FUNCTION;
     MAP_INDEX_LIST &list = m_BlockData[0];
-    Wisp::CSize &size = g_MapBlockSize[0];
+    CSize &size = g_MapBlockSize[0];
 
     int maxBlockCount = size.Width * size.Height;
 
@@ -160,7 +170,7 @@ void CMapManager::ResetPatchesInBlockTable()
     for (int map = 0; map < MAX_MAPS_COUNT; map++)
     {
         MAP_INDEX_LIST &list = m_BlockData[map];
-        Wisp::CSize &size = g_MapBlockSize[map];
+        CSize &size = g_MapBlockSize[map];
 
         int maxBlockCount = size.Width * size.Height;
 
@@ -222,7 +232,7 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
         m_StaticPatchCount[i] = (int)staticsPatchesCount;
 
         MAP_INDEX_LIST &list = m_BlockData[i];
-        Wisp::CSize &size = g_MapBlockSize[i];
+        CSize &size = g_MapBlockSize[i];
 
         uint32_t maxBlockCount = size.Height * size.Width;
 

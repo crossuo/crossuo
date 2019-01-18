@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
+class CGameEffect;
+
 class CEffectManager : public CBaseQueue
 {
 public:

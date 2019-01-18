@@ -143,6 +143,7 @@ typedef CRITICAL_SECTION ProtectedSection;
 #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
 #pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
 #if !_WIN32
@@ -251,5 +252,5 @@ typedef SDL_mutex *ProtectedSection;
 namespace Platform
 {
 void SetLanguageFromSystemLocale();
-void OpenBrowser(const std::string &url);
+void OpenBrowser(const string &url);
 } // namespace Platform

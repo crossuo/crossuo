@@ -1,6 +1,16 @@
 // MIT License
 // Copyright (C) October 2017 Hotride
 
+#include "ObjectPropertiesManager.h"
+#include "ConfigManager.h"
+#include "GumpManager.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../Gumps/GumpProperty.h"
+#include "../Gumps/GumpPropertyIcon.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/GameCharacter.h"
+
 CObjectPropertiesManager g_ObjectPropertiesManager;
 
 CObjectProperty::CObjectProperty(int serial, int revision, const wstring &name, const wstring &data)

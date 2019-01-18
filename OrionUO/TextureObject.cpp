@@ -1,6 +1,8 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "TextureObject.h"
+
 CTextureAnimationFrame::CTextureAnimationFrame()
     : CenterX(0)
     , CenterY(0)

@@ -1,7 +1,7 @@
 ﻿
 
+#include "../Definitions.h"
 #include "WispConnection.h"
-#include "WispDefinitions.h"
 #include "WispPacketMessage.h"
 
 namespace Wisp

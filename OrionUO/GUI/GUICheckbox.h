@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "GUIDrawObject.h"
+#include "../plugin/enumlist.h"
+
 class CGUICheckbox : public CGUIDrawObject
 {
 public:

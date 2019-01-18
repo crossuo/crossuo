@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIExternalTexture.h"
+#include "../Managers/ColorManager.h"
+#include "../Point.h"
+
 CGUIExternalTexture::CGUIExternalTexture(
     CGLTexture *texture, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)
@@ -20,10 +24,10 @@ CGUIExternalTexture::~CGUIExternalTexture()
     }
 }
 
-Wisp::CSize CGUIExternalTexture::GetSize()
+CSize CGUIExternalTexture::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CSize size;
+    CSize size;
 
     if (m_Texture != nullptr)
     {

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIPolygonal.h"
+
 class CGUIDataBox : public CGUIPolygonal
 {
 public:

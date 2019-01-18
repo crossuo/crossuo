@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUITilepic.h"
+
 class CGUIMenuObject : public CGUITilepic
 {
     string Text = "";

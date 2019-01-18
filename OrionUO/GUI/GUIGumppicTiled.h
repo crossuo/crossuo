@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIDrawObject.h"
+
 class CGUIGumppicTiled : public CGUIDrawObject
 {
     int Width = 0;
@@ -11,7 +13,7 @@ class CGUIGumppicTiled : public CGUIDrawObject
 public:
     CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height);
     virtual ~CGUIGumppicTiled();
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
+    virtual CSize GetSize() { return CSize(Width, Height); }
     virtual void Draw(bool checktrans = false);
     virtual bool Select();
 };

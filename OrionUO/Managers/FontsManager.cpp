@@ -1,6 +1,13 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "FontsManager.h"
+#include "ColorManager.h"
+#include "FileManager.h"
+#include "../OrionUO.h"
+#include "../DefinitionMacro.h"
+#include "../OrionApplication.h"
+
 CFontsManager g_FontManager;
 
 CFontsManager::CFontsManager()
@@ -160,11 +167,11 @@ int CFontsManager::GetFontOffsetY(uint8_t font, uint8_t index)
     return 0;
 }
 
-Wisp::CPoint2Di CFontsManager::GetCaretPosA(
+CPoint2Di CFontsManager::GetCaretPosA(
     uint8_t font, const string &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CPoint2Di p;
+    CPoint2Di p;
 
     if (font >= FontCount || pos < 1 || str.empty())
     {
@@ -928,12 +935,12 @@ void CFontsManager::DrawA(
     }
 }
 
-Wisp::CPoint2Di CFontsManager::GetCaretPosW(
+CPoint2Di CFontsManager::GetCaretPosW(
     uint8_t font, const wstring &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
 
-    Wisp::CPoint2Di p;
+    CPoint2Di p;
     if (pos < 1 || font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
     {
         return p;

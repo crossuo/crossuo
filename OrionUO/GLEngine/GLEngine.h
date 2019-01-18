@@ -3,8 +3,11 @@
 
 #pragma once
 
-typedef deque<Wisp::CRect> SCISSOR_LIST;
+#include "../Point.h"
 
+typedef deque<CRect> SCISSOR_LIST;
+
+class CGLTexture;
 class CGLEngine;
 
 typedef void (CGLEngine::*BIND_TEXTURE_16_FUNCTION)(CGLTexture &, int, int, uint16_t *);
@@ -108,10 +111,10 @@ public:
 
     //Указать область рисования (ножницами, сохраняет мартицу)
     void PushScissor(int x, int y, int width, int height);
-    void PushScissor(const Wisp::CPoint2Di &position, int width, int height);
-    void PushScissor(int x, int y, const Wisp::CSize &size);
-    void PushScissor(const Wisp::CPoint2Di &position, const Wisp::CSize &size);
-    void PushScissor(const Wisp::CRect &rect);
+    void PushScissor(const CPoint2Di &position, int width, int height);
+    void PushScissor(int x, int y, const CSize &size);
+    void PushScissor(const CPoint2Di &position, const CSize &size);
+    void PushScissor(const CRect &rect);
 
     void PopScissor();
 

@@ -1,6 +1,16 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpSpell.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/ClilocManager.h"
+
 CGumpSpell::CGumpSpell(
     uint32_t serial, short x, short y, uint16_t graphic, SPELLBOOK_TYPE spellType)
     : CGump(GT_SPELL, serial, x, y)
@@ -324,7 +334,7 @@ bool CGumpSpell::GetSpellGroupOffset(int &x, int &y)
             //Если гамп захватили и (может быть) двигают
             if (gump != this && g_PressedObject.LeftGump == gump && gump->CanBeMoved())
             {
-                Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+                CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
                 x += offset.X;
                 y += offset.Y;

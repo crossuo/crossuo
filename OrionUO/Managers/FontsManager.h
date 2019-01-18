@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../plugin/mulstruct.h"
+
 typedef struct MULTILINES_FONT_DATA
 {
     wchar_t item;
@@ -163,7 +165,7 @@ public:
 
     inline bool IsPrintASCII(uint8_t index) { return (m_FontIndex[index] != 0xFF); }
     int GetFontOffsetY(uint8_t font, uint8_t index);
-    Wisp::CPoint2Di GetCaretPosA(
+    CPoint2Di GetCaretPosA(
         uint8_t font, const string &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int CalculateCaretPosA(
@@ -223,7 +225,7 @@ public:
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
-    Wisp::CPoint2Di GetCaretPosW(
+    CPoint2Di GetCaretPosW(
         uint8_t font,
         const wstring &str,
         int pos,

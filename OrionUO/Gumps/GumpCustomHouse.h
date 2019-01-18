@@ -4,6 +4,12 @@
 #pragma once
 
 #include <SDL_rect.h>
+#include "Gump.h"
+#include "../GameObjects/CustomHouseObjects.h"
+#include "../Managers/CustomHousesManager.h"
+
+class CMulti;
+class CRenderWorldObject;
 
 enum CUSTOM_HOUSE_GUMP_STATE
 {
@@ -80,8 +86,8 @@ public:
     bool SeekTile = false;
     bool ShowWindow = false;
     bool CombinedStair = false;
-    Wisp::CPoint2Di StartPos = Wisp::CPoint2Di();
-    Wisp::CPoint2Di EndPos = Wisp::CPoint2Di();
+    CPoint2Di StartPos = CPoint2Di();
+    CPoint2Di EndPos = CPoint2Di();
 
 private:
     vector<CCustomHouseObjectWallCategory> m_Walls;
@@ -188,7 +194,7 @@ public:
         CMultiObject *item,
         int minZ,
         int maxZ,
-        vector<Wisp::CPoint2Di> &validatedFloors);
+        vector<CPoint2Di> &validatedFloors);
 
     bool CanEraseHere(CRenderWorldObject *place, CUSTOM_HOUSE_BUILD_TYPE &type);
 

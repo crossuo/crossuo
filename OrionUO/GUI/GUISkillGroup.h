@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+class CGUIButton;
+class CGUITextEntry;
+
 class CGUISkillGroup : public CBaseGUI
 {
     //!Свернута или развернута группа
@@ -23,7 +27,7 @@ public:
 
     void UpdateDataPositions();
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     virtual void PrepareTextures();
 

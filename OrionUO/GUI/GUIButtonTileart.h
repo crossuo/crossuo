@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIButton.h"
+
 class CGUIButtonTileart : public CGUIButton
 {
     //!ИД картинки статики
@@ -31,7 +33,7 @@ public:
         int tileY);
     virtual ~CGUIButtonTileart();
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     virtual void PrepareTextures();
 

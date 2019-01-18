@@ -1,6 +1,7 @@
 ﻿// MIT License
 
-#pragma once
+#ifndef WISP_PCKT_H
+#define WISP_PCKT_H
 
 namespace Wisp
 {
@@ -26,3 +27,5 @@ public:
 };
 
 }; // namespace Wisp
+
+#endif // WISP_PCKT_H

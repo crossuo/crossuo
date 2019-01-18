@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpMenubar : public CGump
 {
     bool m_Opened = true;

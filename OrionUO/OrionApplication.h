@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Wisp/WispApplication.h"
+
 class COrionApplication : public Wisp::CApplication
 {
 #if USE_TIMERTHREAD

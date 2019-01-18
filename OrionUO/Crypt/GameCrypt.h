@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../Wisp/WispGlobal.h"
+#include "../Misc.h"
 #include "aes.h"
 #include "md5.h"
 

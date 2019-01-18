@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUISlider : public CBaseGUI
 {
 public:
@@ -101,7 +103,7 @@ public:
 
     virtual bool IsPressedOuthit() { return true; }
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     //!Скроллинг
     virtual void OnScroll(bool up, int delay);

@@ -1,6 +1,16 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "RenderStaticObject.h"
+#include "GamePlayer.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../plugin/mulstruct.h"
+#include "../Managers/ConfigManager.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../TextEngine/TextContainer.h"
+#include "../TextEngine/TextData.h"
+
 CRenderStaticObject::CRenderStaticObject(
     RENDER_OBJECT_TYPE renderType,
     int serial,

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "MultiObject.h"
+
 class CCustomHouseMultiObject : public CMultiObject
 {
 public:

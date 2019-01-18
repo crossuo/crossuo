@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GameItem.h"
+
 typedef map<uint32_t, CGameObject *> WORLD_MAP;
 
 class CGameWorld

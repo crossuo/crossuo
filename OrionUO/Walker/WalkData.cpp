@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "WalkData.h"
+
 void CWalkData::GetOffset(float &x, float &y, float &steps)
 {
     DEBUG_TRACE_FUNCTION;

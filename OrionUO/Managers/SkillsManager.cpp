@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) Obtober 2017 Hotride
 
+#include "SkillsManager.h"
+#include "FileManager.h"
+#include "../plugin/mulstruct.h"
+
 CSkillsManager g_SkillsManager;
 
 CSkill::CSkill(bool haveButton, const string &name)

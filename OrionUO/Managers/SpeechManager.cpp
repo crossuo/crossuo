@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "SpeechManager.h"
+#include "FileManager.h"
 #include "../Config.h"
 
 CSpeechManager g_SpeechManager;

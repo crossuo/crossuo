@@ -3,10 +3,12 @@
 
 #pragma once
 
-class CGUIVirtureGump : public CGUIDrawObject
+#include "GUIDrawObject.h"
+
+class CGUIVirtueGump : public CGUIDrawObject
 {
 public:
-    CGUIVirtureGump(uint16_t graphic, int x, int y);
-    virtual ~CGUIVirtureGump();
+    CGUIVirtueGump(uint16_t graphic, int x, int y);
+    virtual ~CGUIVirtueGump();
     virtual bool Select();
 };

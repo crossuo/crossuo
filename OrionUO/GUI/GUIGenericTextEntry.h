@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUITextEntry.h"
+
 class CGUIGenericTextEntry : public CGUITextEntry
 {
 public:

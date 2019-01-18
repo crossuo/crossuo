@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "BaseScreen.h"
+#include "../Gumps/GumpScreenSelectProfession.h"
+
 class CSelectProfessionScreen : public CBaseScreen
 {
 protected:

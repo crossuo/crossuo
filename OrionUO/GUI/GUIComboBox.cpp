@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIComboBox.h"
+#include "GUIText.h"
+#include "../Point.h"
+#include "../OrionUO.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../Managers/MouseManager.h"
+
 CGUIComboBox::CGUIComboBox(
     int serial,
     uint16_t graphic,
@@ -103,11 +111,11 @@ void CGUIComboBox::SetShowItemsCount(int val)
     m_ShowItemsCount = val;
 }
 
-Wisp::CSize CGUIComboBox::GetSize()
+CSize CGUIComboBox::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
 
-    return Wisp::CSize(m_WorkWidth, m_WorkHeight);
+    return CSize(m_WorkWidth, m_WorkHeight);
 }
 
 void CGUIComboBox::PrepareTextures()

@@ -3,6 +3,8 @@
 
 #pragma once
 
+class CSelectedObject;
+
 class CPressedObject
 {
 public:

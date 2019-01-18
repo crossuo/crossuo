@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIGumppicTiled.h"
+#include "../OrionUO.h"
+#include "../Managers/MouseManager.h"
+
 CGUIGumppicTiled::CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height)
     : CGUIDrawObject(GOT_GUMPPICTILED, 0, graphic, 0, x, y)
     , Width(width)

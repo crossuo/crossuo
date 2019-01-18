@@ -3,6 +3,11 @@
 
 #include "GumpScreenSelectTown.h"
 #include "../Config.h"
+#include "../CityList.h"
+#include "../DefinitionMacro.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/FontsManager.h"
+#include "../ScreenStages/SelectTownScreen.h"
 
 enum
 {
@@ -24,15 +29,15 @@ CGumpScreenSelectTown::CGumpScreenSelectTown()
     NoClose = true;
 
     //!Список точек для отображения кнопок городов
-    m_TownButtonText.push_back(Wisp::CPoint2Di(105, 130));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(245, 90));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(165, 200));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(395, 160));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(200, 305));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(335, 250));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(160, 395));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(100, 250));
-    m_TownButtonText.push_back(Wisp::CPoint2Di(270, 130));
+    m_TownButtonText.push_back(CPoint2Di(105, 130));
+    m_TownButtonText.push_back(CPoint2Di(245, 90));
+    m_TownButtonText.push_back(CPoint2Di(165, 200));
+    m_TownButtonText.push_back(CPoint2Di(395, 160));
+    m_TownButtonText.push_back(CPoint2Di(200, 305));
+    m_TownButtonText.push_back(CPoint2Di(335, 250));
+    m_TownButtonText.push_back(CPoint2Di(160, 395));
+    m_TownButtonText.push_back(CPoint2Di(100, 250));
+    m_TownButtonText.push_back(CPoint2Di(270, 130));
 }
 
 CGumpScreenSelectTown::~CGumpScreenSelectTown()

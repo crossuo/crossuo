@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpBuff : public CGump
 {
 private:
@@ -17,13 +19,13 @@ private:
     const int ID_GB_BUFF_ITEM = 10;
 
     void GetGumpStatus(
-        Wisp::CPoint2Di &ball,
-        Wisp::CPoint2Di &items,
+        CPoint2Di &ball,
+        CPoint2Di &items,
         bool &useX,
         bool &decX,
         bool &decY,
-        Wisp::CPoint2Di &startGump,
-        Wisp::CSize &endGump);
+        CPoint2Di &startGump,
+        CSize &endGump);
 
 public:
     CGumpBuff(short x, short y);

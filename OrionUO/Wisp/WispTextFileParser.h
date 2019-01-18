@@ -1,6 +1,7 @@
 // MIT License
 
-#pragma once
+#ifndef WISP_TFP_H
+#define WISP_TFP_H
 
 namespace Wisp
 {
@@ -65,3 +66,5 @@ public:
 };
 
 }; // namespace Wisp
+
+#endif // WISP_TFP_H

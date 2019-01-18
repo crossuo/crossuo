@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "WeatherEffect.h"
+
 class CWeather
 {
 public:

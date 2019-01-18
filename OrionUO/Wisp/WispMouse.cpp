@@ -65,10 +65,10 @@ void CMouse::Capture() const
 #endif
 }
 
-Wisp::CPoint2Di CMouse::LeftDroppedOffset()
+CPoint2Di CMouse::LeftDroppedOffset()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CPoint2Di position;
+    CPoint2Di position;
 
     if (LeftButtonPressed)
     {
@@ -79,10 +79,10 @@ Wisp::CPoint2Di CMouse::LeftDroppedOffset()
     return position;
 }
 
-Wisp::CPoint2Di CMouse::RightDroppedOffset()
+CPoint2Di CMouse::RightDroppedOffset()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CPoint2Di position;
+    CPoint2Di position;
 
     if (RightButtonPressed)
     {
@@ -93,10 +93,10 @@ Wisp::CPoint2Di CMouse::RightDroppedOffset()
     return position;
 }
 
-Wisp::CPoint2Di CMouse::MidDroppedOffset()
+CPoint2Di CMouse::MidDroppedOffset()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CPoint2Di position;
+    CPoint2Di position;
 
     if (MidButtonPressed)
     {

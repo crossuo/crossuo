@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+#include "../Backend.h"
+
 class CGUIBlending : public CBaseGUI
 {
     //!Функция для исходных пикселей

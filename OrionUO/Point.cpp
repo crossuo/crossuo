@@ -1,7 +1,7 @@
 ﻿// MIT License
 
-namespace Wisp
-{
+#include "Point.h"
+
 CSize::CSize()
 {
 }
@@ -179,5 +179,3 @@ CPoint3Df::CPoint3Df(const CPoint3Df &point)
     , Z(point.Z)
 {
 }
-
-}; // namespace Wisp

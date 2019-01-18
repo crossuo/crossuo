@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "../Platform.h"
+#include "../BaseQueue.h"
+#include "../Gumps/Gump.h"
 
 class CBaseScreen : public CBaseQueue
 {

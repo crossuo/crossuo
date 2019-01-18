@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIButtonTileart.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+
 CGUIButtonTileart::CGUIButtonTileart(
     int serial,
     uint16_t graphic,
@@ -25,11 +29,11 @@ CGUIButtonTileart::~CGUIButtonTileart()
 {
 }
 
-Wisp::CSize CGUIButtonTileart::GetSize()
+CSize CGUIButtonTileart::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CSize gumpSize = CGUIDrawObject::GetSize();
-    Wisp::CSize tileSize;
+    CSize gumpSize = CGUIDrawObject::GetSize();
+    CSize tileSize;
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(TileGraphic);
 
@@ -65,7 +69,7 @@ Wisp::CSize CGUIButtonTileart::GetSize()
         endY = TileY + tileSize.Height;
     }
 
-    return Wisp::CSize(abs(endX) - abs(startX), abs(endY) - abs(startY));
+    return CSize(abs(endX) - abs(startX), abs(endY) - abs(startY));
 }
 
 void CGUIButtonTileart::PrepareTextures()

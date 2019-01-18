@@ -2,6 +2,14 @@
 // Copyright (C) September 2016 Hotride
 
 #include "GumpBook.h"
+#include "../OrionUO.h"
+#include "../PressedObject.h"
+#include "../ClickObject.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Network/Packets.h"
 
 enum
 {

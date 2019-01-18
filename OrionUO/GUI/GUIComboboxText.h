@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIText.h"
+
 class CGUIComboboxText : public CGUIText
 {
 public:

@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "../Platform.h"
+#include "BaseScreen.h"
+#include "../Gumps/GumpScreenServer.h"
 
 class CServerScreen : public CBaseScreen
 {

@@ -1,8 +1,18 @@
+// MIT License
+// Copyright (C) August 2016 Hotride
+
 #include "MainScreen.h"
 #include "BaseScreen.h"
 #include "../Config.h"
+#include "../Point.h"
+#include "../Definitions.h"
+#include "../OrionUO.h"
+#include "../QuestArrow.h"
+#include "../OrionWindow.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ScreenEffectManager.h"
+#include "../Managers/AnimationManager.h"
 #include "../GUI/GUITextEntry.h"
-#include "../Wisp/WispDefinitions.h"
 #include "../TextEngine/EntryText.h"
 
 CMainScreen g_MainScreen;
@@ -32,7 +42,7 @@ void CMainScreen::Init()
 
     Load();
 
-    g_OrionWindow.SetSize(Wisp::CSize(640, 480));
+    g_OrionWindow.SetSize(CSize(640, 480));
     g_OrionWindow.NoResize = true;
     g_OrionWindow.SetTitle("Ultima Online");
     g_GL.UpdateRect();

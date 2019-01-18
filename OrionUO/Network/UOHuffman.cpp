@@ -1,4 +1,5 @@
 ﻿
+#include "UOHuffman.h"
 
 int CDecompressingCopier::tree[] = {
     /*   0*/ 1,    2,

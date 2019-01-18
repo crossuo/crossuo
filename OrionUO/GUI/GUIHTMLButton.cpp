@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIHTMLButton.h"
+#include "GUIHTMLGump.h"
+
 CGUIHTMLButton::CGUIHTMLButton(
     CGUIHTMLGump *htmlGump,
     int serial,

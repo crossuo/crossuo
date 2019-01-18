@@ -1,6 +1,19 @@
 // MIT License
 // Copyright (C) December 2016 Hotride
 
+#include "GumpRacialAbilitiesBook.h"
+#include "GumpRacialAbility.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../OrionWindow.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/GumpManager.h"
+#include "../GameObjects/GamePlayer.h"
+
 CGumpRacialAbilitiesBook::CGumpRacialAbilitiesBook(int x, int y)
     : CGump(GT_RACIAL_ABILITIES_BOOK, 0, x, y)
 {
@@ -42,7 +55,7 @@ void CGumpRacialAbilitiesBook::PrepareContent()
         g_PressedObject.LeftSerial >= (uint32_t)ID_GRAB_ICON &&
         !((CBaseGUI *)g_PressedObject.LeftObject)->MoveOnDrag)
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))

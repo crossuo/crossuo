@@ -1,6 +1,6 @@
 
 #include "CryptEntry.h"
-#include "../Wisp/WispGlobal.h"
+#include "../Misc.h"
 #include "../Wisp/WispDataStream.h"
 #include "../plugin/enumlist.h"
 #include "../plugin/plugininterface.h"

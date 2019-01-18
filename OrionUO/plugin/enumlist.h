@@ -345,7 +345,7 @@ enum GUMP_OBJECT_TYPE
     GOT_XFMHTMLGUMP,  //!ХТМЛ гамп из клилока (цветной там же)
     GOT_XFMHTMLTOKEN, //
     GOT_TOOLTIP,      //
-    GOT_VIRTURE_GUMP  //
+    GOT_VIRTUE_GUMP   //
 };
 
 enum SLIDER_TEXT_POSITION
@@ -1020,7 +1020,7 @@ enum MACRO_CODE
     MC_ENABLE_RANGE_COLOR,
     MC_DISABLE_RANGE_COLOR,
     MC_TOGGLE_RANGE_COLOR,
-    MC_INVOKE_VIRTURE,
+    MC_INVOKE_VIRTUE,
     MC_SELECT_NEXT,
     MC_SELECT_PREVIOUS,
     MC_SELECT_NEAREST,
@@ -1095,7 +1095,7 @@ enum MACRO_SUB_CODE
     MSC_G3_TRACKING,
     MSC_G4_LEFT_HAND, ///Arm/Disarm group
     MSC_G4_RIGHT_HAND,
-    MSC_G5_HONOR, //Invoke Virture group
+    MSC_G5_HONOR, //Invoke Virtue group
     MSC_G5_SACRIFICE,
     MSC_G5_VALOR,
     MSC_G6_CLUMSY, //Cast Spell group

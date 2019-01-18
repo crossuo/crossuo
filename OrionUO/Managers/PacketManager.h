@@ -63,7 +63,7 @@ private:
     ProtectedSection m_Mutex;
 
     static CPacketInfo m_Packets[0x100];
-    std::unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
+    unordered_map<uint32_t, GumpCoords> m_GumpsCoordsCache;
     vector<uint32_t> m_MegaClilocRequests;
     deque<vector<uint8_t>> m_PluginData;
 

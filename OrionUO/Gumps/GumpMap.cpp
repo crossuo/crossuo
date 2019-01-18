@@ -3,6 +3,11 @@
 
 #include <SDL_rect.h>
 #include "GumpMap.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../PressedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Network/Packets.h"
 
 enum
 {
@@ -177,7 +182,7 @@ void CGumpMap::PrepareContent()
         {
             if (m_PinOnCursor == nullptr)
             {
-                Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+                CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
                 if (((offset.X != 0) || (offset.Y != 0)) &&
                     g_PressedObject.LeftSerial > ID_GM_PIN_LIST &&
@@ -305,9 +310,9 @@ CRenderObject *CGumpMap::Select()
 
     if (m_DataBox != nullptr)
     {
-        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+        CPoint2Di oldPos = g_MouseManager.Position;
         g_MouseManager.Position =
-            Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+            CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         QFOR(item, m_DataBox->m_Items, CBaseGUI *)
         {

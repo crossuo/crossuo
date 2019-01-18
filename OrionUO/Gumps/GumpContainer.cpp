@@ -1,6 +1,24 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpContainer.h"
+#include "GumpDrag.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../Target.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../OrionWindow.h"
+#include "../Container.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/GumpManager.h"
+#include "../GameObjects/GameItem.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+
 const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
 
@@ -136,7 +154,7 @@ void CGumpContainer::PrepareContent()
         g_PressedObject.LeftSerial != ID_GC_MINIMIZE &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (CanBeDraggedByOffset(offset) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -314,9 +332,9 @@ CRenderObject *CGumpContainer::Select()
 
     if (!Minimized)
     {
-        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+        CPoint2Di oldPos = g_MouseManager.Position;
         g_MouseManager.Position =
-            Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+            CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         m_TextRenderer.Select(this);
 

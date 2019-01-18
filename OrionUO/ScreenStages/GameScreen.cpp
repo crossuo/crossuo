@@ -1,9 +1,50 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "GameScreen.h"
 #include <SDL_rect.h>
+
+#include "GameScreen.h"
+#include "GameBlockedScreen.h"
 #include "../Config.h"
+#include "../Macro.h"
+#include "../Target.h"
+#include "../Weather.h"
+#include "../TargetGump.h"
+#include "../OrionUO.h"
+#include "../QuestArrow.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../OrionWindow.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/PluginManager.h"
+#include "../Managers/MacroManager.h"
+#include "../Managers/ObjectPropertiesManager.h"
+#include "../Managers/ScreenEffectManager.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/MapBlock.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../GameObjects/LandObject.h"
+#include "../GameObjects/CustomHouseMultiObject.h"
+#include "../Gumps/GumpMap.h"
+#include "../Gumps/GumpDrag.h"
+#include "../Gumps/GumpPaperdoll.h"
+#include "../Gumps/GumpCustomHouse.h"
+#include "../Gumps/GumpConsoleType.h"
+#include "../Gumps/GumpTargetSystem.h"
+#include "../Gumps/GumpSkills.h"
+#include "../Gumps/GumpContainer.h"
+#include "../Gumps/GumpPopupMenu.h"
+#include "../Network/Packets.h"
+#include "../Walker/PathFinder.h"
+#include "../TextEngine/GameConsole.h"
+#include "../TextEngine/TextData.h"
 
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
@@ -565,7 +606,7 @@ void CGameScreen::AddTileToRenderList(
 
     if (g_ConfigManager.GrayOutOfRangeObjects)
     {
-        if (GetDistance(g_Player, Wisp::CPoint2Di(worldX, worldY)) > g_ConfigManager.UpdateRange)
+        if (GetDistance(g_Player, CPoint2Di(worldX, worldY)) > g_ConfigManager.UpdateRange)
         {
             grayColor = 0x038E;
         }
@@ -1622,7 +1663,7 @@ void CGameScreen::PrepareContent()
     if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGameObject() &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (CanBeDraggedByOffset(offset) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -2037,18 +2078,18 @@ void CGameScreen::SelectObject()
             else
             {
                 g_GlobalScale = oldScale;
-                Wisp::CPoint2Di oldMouse = g_MouseManager.Position;
+                CPoint2Di oldMouse = g_MouseManager.Position;
 
-                //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
+                //g_MouseManager.Position = CPoint2Di((int)((oldMouse.X - (g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX, (int)((oldMouse.Y - (g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale)) * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY);
 
-                //g_MouseManager.Position = Wisp::CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
+                //g_MouseManager.Position = CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
 
                 int mouseX =
                     (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
                 int mouseY =
                     (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
 
-                /*g_MouseManager.Position = Wisp::CPoint2Di
+                /*g_MouseManager.Position = CPoint2Di
                 (
                     //(int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX)
                     mouseX
@@ -2254,7 +2295,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 g_ObjectInHand.Enabled)
             {
                 can_drop =
-                    (GetDistance(g_Player, Wisp::CPoint2Di(rwo->GetX(), rwo->GetY())) <=
+                    (GetDistance(g_Player, CPoint2Di(rwo->GetX(), rwo->GetY())) <=
                      DRAG_ITEMS_DISTANCE);
                 if (can_drop)
                 {

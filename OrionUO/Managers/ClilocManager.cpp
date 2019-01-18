@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ClilocManager.h"
+#include "../OrionApplication.h"
+
 CClilocManager g_ClilocManager;
 
 CCliloc::CCliloc(const string &lang)

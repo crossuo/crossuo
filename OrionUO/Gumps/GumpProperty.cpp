@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) November 2017 Hotride
 
+#include "GumpProperty.h"
+#include "../ToolTip.h"
+#include "../Managers/MouseManager.h"
+
 CGumpProperty::CGumpProperty(const wstring &text)
     : CGump(GT_PROPERTY, 0, 0, 0)
 {

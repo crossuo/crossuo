@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIHTMLText : public CBaseGUI
 {
 public:
@@ -28,7 +30,7 @@ public:
 
     CGLHTMLTextTexture m_Texture{ CGLHTMLTextTexture() };
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(m_Texture.Width, m_Texture.Height); }
+    virtual CSize GetSize() { return CSize(m_Texture.Width, m_Texture.Height); }
     void CreateTexture(bool backgroundCanBeColored);
 
     virtual void Draw(bool checktrans = false);

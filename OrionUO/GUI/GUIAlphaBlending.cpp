@@ -1,6 +1,8 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIAlphaBlending.h"
+
 CGUIAlphaBlending::CGUIAlphaBlending(bool enabled, float alpha)
     : CGUIBlending(enabled, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     , Alpha(alpha)

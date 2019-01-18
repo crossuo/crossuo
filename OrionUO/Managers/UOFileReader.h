@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../IndexObject.h"
+
 class UOFileReader
 {
 public:

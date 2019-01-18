@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUISlider.h"
+
 class CGUIHTMLSlider : public CGUISlider
 {
 private:

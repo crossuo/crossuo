@@ -3,10 +3,12 @@
 
 #pragma once
 
+#include "FileSystem.h"
+#include "IndexObject.h"
+#include "GameObjects/GameWorld.h"
 #include "plugin/plugininterface.h"
 
-bool __cdecl PluginRecvFunction(uint8_t *buf, size_t size);
-bool __cdecl PluginSendFunction(uint8_t *buf, size_t size);
+class CUopMappedFile;
 
 class COrion
 {
@@ -140,8 +142,8 @@ public:
     uint64_t GetLandFlags(uint16_t id);
     uint64_t GetStaticFlags(uint16_t id);
     uint16_t GetLightColor(uint16_t id) { return m_StaticDataIndex[id].LightColor; }
-    Wisp::CSize GetStaticArtDimension(uint16_t id);
-    Wisp::CSize GetGumpDimension(uint16_t id);
+    CSize GetStaticArtDimension(uint16_t id);
+    CSize GetGumpDimension(uint16_t id);
     CGLTexture *ExecuteGump(uint16_t id);
     CGLTexture *ExecuteLandArt(uint16_t id);
     CGLTexture *ExecuteStaticArt(uint16_t id);

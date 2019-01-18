@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "Gump.h"
+#include "../TextEngine/TextRenderer.h"
+
 class CGumpContainer : public CGump
 {
     bool IsGameBoard = false;

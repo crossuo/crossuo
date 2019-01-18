@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIMinMaxButtons : public CBaseGUI
 {
 public:
@@ -71,7 +73,7 @@ public:
 
     virtual bool IsPressedOuthit() { return true; }
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(36, 18); }
+    virtual CSize GetSize() { return CSize(36, 18); }
 
     //Прокрутка
     virtual void Scroll(int delay);

@@ -1317,7 +1317,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
 
     if (GetSystemDirectory(path, MAX_PATH) != 0)
     {
-        std::wstring pathS(path);
+        wstring pathS(path);
         pathS += L"\\kernel32.dll";
         versz = GetFileVersionInfoSize(pathS.c_str(), nullptr);
         if (versz != 0)

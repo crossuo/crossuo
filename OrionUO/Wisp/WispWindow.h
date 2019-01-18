@@ -1,9 +1,11 @@
 // MIT License
 
-#pragma once
+#ifndef WISP_WIN_H
+#define WISP_WIN_H
 
 #include <SDL_video.h>
 #include "Platform.h"
+#include "plugin/plugininterface.h"
 
 #define PUSH_EVENT(id, data1, data2) Wisp::CWindow::PushEvent(id, (void *)(data1), (void *)(data2))
 #define PLUGIN_EVENT(id, data) Wisp::CWindow::PluginEvent(id, (const void *)(data))
@@ -31,12 +33,12 @@ public:
     bool OnWindowProc(SDL_Event &ev);
 #endif
 
-    Wisp::CSize GetSize() { return m_Size; };
-    void SetSize(const Wisp::CSize &size);
-    Wisp::CSize GetMinSize() { return m_MinSize; };
-    void SetMinSize(const Wisp::CSize &newMinSize);
-    Wisp::CSize GetMaxSize() { return m_MaxSize; };
-    void SetMaxSize(const Wisp::CSize &newMaxSize);
+    CSize GetSize() { return m_Size; };
+    void SetSize(const CSize &size);
+    CSize GetMinSize() { return m_MinSize; };
+    void SetMinSize(const CSize &newMinSize);
+    CSize GetMaxSize() { return m_MaxSize; };
+    void SetMaxSize(const CSize &newMaxSize);
     void GetPositionSize(int *x, int *y, int *width, int *height);
     void SetPositionSize(int x, int y, int width, int height);
     void MaximizeWindow();
@@ -81,9 +83,9 @@ public:
 #endif // USE_TIMERTHREAD
 
 protected:
-    Wisp::CSize m_Size = Wisp::CSize(640, 480);
-    Wisp::CSize m_MinSize = Wisp::CSize(640, 480);
-    Wisp::CSize m_MaxSize = Wisp::CSize(640, 480);
+    CSize m_Size = CSize(640, 480);
+    CSize m_MinSize = CSize(640, 480);
+    CSize m_MaxSize = CSize(640, 480);
 
     virtual bool OnCreate() { return true; }
     virtual void OnDestroy() {}
@@ -118,3 +120,5 @@ protected:
 extern CWindow *g_WispWindow;
 
 }; // namespace Wisp
+
+#endif //WISP_WIN_H

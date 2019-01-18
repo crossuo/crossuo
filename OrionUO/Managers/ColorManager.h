@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../plugin/mulstruct.h"
+
 struct FLOAT_HUES
 {
     float Palette[32 * 3];

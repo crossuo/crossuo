@@ -1,6 +1,16 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpMinimap.h"
+#include "../OrionUO.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/UOFileReader.h"
+#include "../GameObjects/GameItem.h"
+#include "../GameObjects/MapBlock.h"
+#include "../GameObjects/GamePlayer.h"
+
 CGumpMinimap::CGumpMinimap(short x, short y, bool minimized)
     : CGump(GT_MINIMAP, 0, x, y)
 {
@@ -31,64 +41,64 @@ void CGumpMinimap::GenerateMap()
 {
     DEBUG_TRACE_FUNCTION;
 
-    /*const Wisp::CPoint2Di foliageOffsetTable[17 * 3] =
+    /*const CPoint2Di foliageOffsetTable[17 * 3] =
 	{
-		Wisp::CPoint2Di(0, 0),
-		Wisp::CPoint2Di(-2, 1),
-		Wisp::CPoint2Di(-2, -2),
-		Wisp::CPoint2Di(-1, -1),
-		Wisp::CPoint2Di(-1, 0),
-		Wisp::CPoint2Di(-1, 1),
-		Wisp::CPoint2Di(-1, 2),
-		Wisp::CPoint2Di(-1, -1),
-		Wisp::CPoint2Di(0, 1),
-		Wisp::CPoint2Di(0, 2),
-		Wisp::CPoint2Di(0, -2),
-		Wisp::CPoint2Di(1, -1),
-		Wisp::CPoint2Di(1, 0),
-		Wisp::CPoint2Di(1, 1),
-		Wisp::CPoint2Di(1, -1),
-		Wisp::CPoint2Di(2, 0),
-		Wisp::CPoint2Di(2, 0),
+		CPoint2Di(0, 0),
+		CPoint2Di(-2, 1),
+		CPoint2Di(-2, -2),
+		CPoint2Di(-1, -1),
+		CPoint2Di(-1, 0),
+		CPoint2Di(-1, 1),
+		CPoint2Di(-1, 2),
+		CPoint2Di(-1, -1),
+		CPoint2Di(0, 1),
+		CPoint2Di(0, 2),
+		CPoint2Di(0, -2),
+		CPoint2Di(1, -1),
+		CPoint2Di(1, 0),
+		CPoint2Di(1, 1),
+		CPoint2Di(1, -1),
+		CPoint2Di(2, 0),
+		CPoint2Di(2, 0),
 
-		Wisp::CPoint2Di(0, -1),
-		Wisp::CPoint2Di(-2, 0),
-		Wisp::CPoint2Di(-2, -1),
-		Wisp::CPoint2Di(-1, 0),
-		Wisp::CPoint2Di(-1, 1),
-		Wisp::CPoint2Di(-1, 2),
-		Wisp::CPoint2Di(-1, -2),
-		Wisp::CPoint2Di(0, -1),
-		Wisp::CPoint2Di(0, 1),
-		Wisp::CPoint2Di(0, 2),
-		Wisp::CPoint2Di(0, -2),
-		Wisp::CPoint2Di(1, -1),
-		Wisp::CPoint2Di(1, 0),
-		Wisp::CPoint2Di(1, 1),
-		Wisp::CPoint2Di(1, 0),
-		Wisp::CPoint2Di(2, 1),
-		Wisp::CPoint2Di(2, 0),
+		CPoint2Di(0, -1),
+		CPoint2Di(-2, 0),
+		CPoint2Di(-2, -1),
+		CPoint2Di(-1, 0),
+		CPoint2Di(-1, 1),
+		CPoint2Di(-1, 2),
+		CPoint2Di(-1, -2),
+		CPoint2Di(0, -1),
+		CPoint2Di(0, 1),
+		CPoint2Di(0, 2),
+		CPoint2Di(0, -2),
+		CPoint2Di(1, -1),
+		CPoint2Di(1, 0),
+		CPoint2Di(1, 1),
+		CPoint2Di(1, 0),
+		CPoint2Di(2, 1),
+		CPoint2Di(2, 0),
 
-		Wisp::CPoint2Di(0, -1),
-		Wisp::CPoint2Di(-2, 1),
-		Wisp::CPoint2Di(-2, -2),
-		Wisp::CPoint2Di(-1, -1),
-		Wisp::CPoint2Di(-1, 0),
-		Wisp::CPoint2Di(-1, 1),
-		Wisp::CPoint2Di(-1, 2),
-		Wisp::CPoint2Di(-1, -1),
-		Wisp::CPoint2Di(0, 1),
-		Wisp::CPoint2Di(0, -2),
-		Wisp::CPoint2Di(1, -1),
-		Wisp::CPoint2Di(1, 0),
-		Wisp::CPoint2Di(1, 1),
-		Wisp::CPoint2Di(1, 2),
-		Wisp::CPoint2Di(1, -1),
-		Wisp::CPoint2Di(2, 1),
-		Wisp::CPoint2Di(2, 0)
+		CPoint2Di(0, -1),
+		CPoint2Di(-2, 1),
+		CPoint2Di(-2, -2),
+		CPoint2Di(-1, -1),
+		CPoint2Di(-1, 0),
+		CPoint2Di(-1, 1),
+		CPoint2Di(-1, 2),
+		CPoint2Di(-1, -1),
+		CPoint2Di(0, 1),
+		CPoint2Di(0, -2),
+		CPoint2Di(1, -1),
+		CPoint2Di(1, 0),
+		CPoint2Di(1, 1),
+		CPoint2Di(1, 2),
+		CPoint2Di(1, -1),
+		CPoint2Di(2, 1),
+		CPoint2Di(2, 0)
 	};*/
 
-    const Wisp::CPoint2Di originalOffsetTable[2] = { Wisp::CPoint2Di(0, 0), Wisp::CPoint2Di(0, 1) };
+    const CPoint2Di originalOffsetTable[2] = { CPoint2Di(0, 0), CPoint2Di(0, 1) };
 
     if (g_Player != nullptr)
     {
@@ -195,7 +205,7 @@ void CGumpMinimap::GenerateMap()
                     }
 
                     int tableSize = 2;
-                    const Wisp::CPoint2Di *table = &originalOffsetTable[0];
+                    const CPoint2Di *table = &originalOffsetTable[0];
 
                     /*if (color > 0x4000 && ::IsFoliage(g_Orion.GetStaticFlags(color - 0x4000)))
 					{
@@ -223,7 +233,7 @@ void CGumpMinimap::CreatePixels(
     int y,
     int width,
     int height,
-    const Wisp::CPoint2Di *table,
+    const CPoint2Di *table,
     int count)
 {
     int px = x;

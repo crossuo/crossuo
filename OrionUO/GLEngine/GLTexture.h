@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GLHeaders.h"
+
 class CGLTexture
 {
 public:

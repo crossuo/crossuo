@@ -2,6 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "CharacterListScreen.h"
+#include "ConnectionScreen.h"
+#include "MainScreen.h"
+#include "../OrionUO.h"
+#include "../ServerList.h"
+#include "../OrionWindow.h"
+#include "../CharacterList.h"
+#include "../Managers/ScreenEffectManager.h"
 
 CCharacterListScreen g_CharacterListScreen;
 

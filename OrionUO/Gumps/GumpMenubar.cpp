@@ -2,6 +2,11 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpMenubar.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../Managers/ClilocManager.h"
+#include "../Network/Packets.h"
 
 enum
 {

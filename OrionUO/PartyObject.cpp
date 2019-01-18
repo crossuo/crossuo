@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "PartyObject.h"
+#include "GameWorld.h"
+#include "GameCharacter.h"
+
 CPartyObject::CPartyObject()
 {
 }

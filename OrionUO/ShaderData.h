@@ -3,6 +3,8 @@
 
 #pragma once
 
+#if UO_USE_SHADER_FILES == 0
+
 static const char *g_Vert_ShaderData =
     "varying vec3 l;\r\n"
     "varying vec3 n;\r\n"
@@ -135,3 +137,5 @@ static const char *g_Frag_ColorizerShaderData =
     "	else\r\n"
     "		gl_FragColor = textureColor * gl_Color;\r\n"
     "}";
+
+#endif

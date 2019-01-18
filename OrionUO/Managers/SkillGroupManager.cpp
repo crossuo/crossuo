@@ -1,6 +1,15 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "SkillGroupManager.h"
+#include "GumpManager.h"
+#include "SkillsManager.h"
+#include "ConfigManager.h"
+#include "../OrionUO.h"
+#include "../SkillGroup.h"
+#include "../Gumps/GumpNotify.h"
+#include "../ScreenStages/GameBlockedScreen.h"
+
 CSkillGroupManager g_SkillGroupManager;
 
 CSkillGroupManager::CSkillGroupManager()

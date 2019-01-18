@@ -2,9 +2,26 @@
 // Copyright (C) August 2016 Hotride
 
 #include "MacroManager.h"
+#include "OptionsMacroManager.h"
+#include "ConfigManager.h"
+#include "GumpManager.h"
+#include "PacketManager.h"
 #include <SDL_clipboard.h>
 #include "../FileSystem.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../Macro.h"
+#include "../Target.h"
+#include "../TargetGump.h"
+#include "../GameObjects/GameItem.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../Gumps/Gump.h"
+#include "../Gumps/GumpAbility.h"
+#include "../Gumps/GumpTargetSystem.h"
+#include "../Gumps/GumpSpellbook.h"
+#include "../Network/Packets.h"
+#include "../Walker/PathFinder.h"
 
 CMacroManager g_MacroManager;
 
@@ -364,7 +381,7 @@ void CMacroManager::Save(const os_path &path)
     Wisp::CBinaryFileWriter writer;
     writer.Open(path);
 
-    writer.WriteUInt8(0); //verison
+    writer.WriteUInt8(0); //version
 
     short count = GetItemsCount();
 
@@ -1426,10 +1443,10 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             g_ConfigManager.ToggleBufficonWindow = !g_ConfigManager.ToggleBufficonWindow;
             break;
         }
-        case MC_INVOKE_VIRTURE:
+        case MC_INVOKE_VIRTUE:
         {
             uint8_t id = macro->SubCode - MSC_G5_HONOR + 31;
-            CPacketInvokeVirtureRequest(id).Send();
+            CPacketInvokeVirtueRequest(id).Send();
             break;
         }
         case MC_PRIMARY_ABILITY:

@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "RenderTextObject.h"
+
+class CRenderWorldObject;
+
 class CTextData : public CRenderTextObject
 {
 public:

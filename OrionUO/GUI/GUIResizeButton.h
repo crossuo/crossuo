@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIButton.h"
+
 class CGUIResizeButton : public CGUIButton
 {
 public:

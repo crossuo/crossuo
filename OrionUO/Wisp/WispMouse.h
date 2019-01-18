@@ -1,5 +1,5 @@
-﻿
-#pragma once
+﻿#ifndef WISP_MOUSE_H
+#define WISP_MOUSE_H
 
 #include <SDL_events.h>
 
@@ -8,11 +8,11 @@ namespace Wisp
 class CMouse
 {
 public:
-    Wisp::CPoint2Di RealPosition = Wisp::CPoint2Di();
-    Wisp::CPoint2Di Position = Wisp::CPoint2Di();
-    Wisp::CPoint2Di LeftDropPosition = Wisp::CPoint2Di();
-    Wisp::CPoint2Di RightDropPosition = Wisp::CPoint2Di();
-    Wisp::CPoint2Di MidDropPosition = Wisp::CPoint2Di();
+    CPoint2Di RealPosition = CPoint2Di();
+    CPoint2Di Position = CPoint2Di();
+    CPoint2Di LeftDropPosition = CPoint2Di();
+    CPoint2Di RightDropPosition = CPoint2Di();
+    CPoint2Di MidDropPosition = CPoint2Di();
 
     bool LeftButtonPressed = false;
     bool RightButtonPressed = false;
@@ -32,11 +32,13 @@ public:
     void Release() const;
     void Capture() const;
 
-    Wisp::CPoint2Di LeftDroppedOffset();
-    Wisp::CPoint2Di RightDroppedOffset();
-    Wisp::CPoint2Di MidDroppedOffset();
+    CPoint2Di LeftDroppedOffset();
+    CPoint2Di RightDroppedOffset();
+    CPoint2Di MidDroppedOffset();
 };
 
 extern CMouse *g_WispMouse;
 
 }; // namespace Wisp
+
+#endif // WISP_MOUSE_H

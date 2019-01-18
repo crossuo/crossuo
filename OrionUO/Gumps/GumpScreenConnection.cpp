@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Connection.h"
+#include "GumpScreenConnection.h"
+#include "../CharacterList.h"
+#include "../Managers/ClilocManager.h"
+#include "../ScreenStages/ConnectionScreen.h"
+
 CGumpScreenConnection::CGumpScreenConnection()
     : CGump(GT_NONE, 0, 0, 0)
 {

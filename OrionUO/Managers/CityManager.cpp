@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "CityManager.h"
+#include "ClilocManager.h"
+#include "../OrionApplication.h"
+
 CCityManager g_CityManager;
 
 CCity::CCity(const string &name, const wstring &description)

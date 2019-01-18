@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+#include "../GLEngine/GLTextTexture.h"
+class CGUIButton;
+
 class CGUISkillItem : public CBaseGUI
 {
 public:
@@ -36,7 +40,7 @@ public:
     //!Создать текстуру значения навыка
     void CreateValueText(bool showReal = false, bool showCap = false);
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(255, 17); }
+    virtual CSize GetSize() { return CSize(255, 17); }
 
     virtual void PrepareTextures();
 

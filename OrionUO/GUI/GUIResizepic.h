@@ -3,12 +3,14 @@
 
 #pragma once
 
+#include "GUIPolygonal.h"
+
 class CGUIResizepic : public CGUIPolygonal
 {
 public:
     CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height);
     virtual ~CGUIResizepic();
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
+    virtual CSize GetSize() { return CSize(Width, Height); }
     virtual void PrepareTextures();
     virtual void Draw(bool checktrans = false);
     virtual bool Select();

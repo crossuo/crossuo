@@ -1,6 +1,14 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpBuff.h"
+#include "../Point.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ConfigManager.h"
+
 CGumpBuff::CGumpBuff(short x, short y)
     : CGump(GT_BUFF, 0, x, y)
 {
@@ -187,13 +195,13 @@ void CGumpBuff::InitToolTip()
 }
 
 void CGumpBuff::GetGumpStatus(
-    Wisp::CPoint2Di &ball,
-    Wisp::CPoint2Di &items,
+    CPoint2Di &ball,
+    CPoint2Di &items,
     bool &useX,
     bool &decX,
     bool &decY,
-    Wisp::CPoint2Di &startGump,
-    Wisp::CSize &endGump)
+    CPoint2Di &startGump,
+    CSize &endGump)
 {
     DEBUG_TRACE_FUNCTION;
     startGump.X = 0;
@@ -250,7 +258,7 @@ void CGumpBuff::GetGumpStatus(
         }
     }
 
-    Wisp::CPoint2Di itemsOfs = items;
+    CPoint2Di itemsOfs = items;
 
     QFOR(item, m_Items, CBaseGUI *)
     {
@@ -261,7 +269,7 @@ void CGumpBuff::GetGumpStatus(
 
         bool moved = false;
 
-        Wisp::CSize gumpDim = g_Orion.GetGumpDimension(item->Graphic);
+        CSize gumpDim = g_Orion.GetGumpDimension(item->Graphic);
 
         if (useX)
         {
@@ -348,10 +356,10 @@ void CGumpBuff::UpdateContent()
     bool decY = false;
     bool useX = true;
 
-    Wisp::CPoint2Di ballCoordinates;
-    Wisp::CPoint2Di startCoordinates;
-    Wisp::CPoint2Di startGump;
-    Wisp::CSize endGump;
+    CPoint2Di ballCoordinates;
+    CPoint2Di startCoordinates;
+    CPoint2Di startGump;
+    CSize endGump;
 
     GetGumpStatus(ballCoordinates, startCoordinates, useX, decX, decY, startGump, endGump);
 
@@ -387,7 +395,7 @@ void CGumpBuff::UpdateContent()
 
         CGUIBuff *buff = (CGUIBuff *)item;
 
-        Wisp::CSize gumpDim = g_Orion.GetGumpDimension(buff->Graphic);
+        CSize gumpDim = g_Orion.GetGumpDimension(buff->Graphic);
         buff->SetX(startCoordinates.X);
         buff->SetY(startCoordinates.Y);
 

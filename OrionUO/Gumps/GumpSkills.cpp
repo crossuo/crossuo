@@ -2,6 +2,21 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpSkills.h"
+#include "GumpSkill.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../SkillGroup.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/SkillsManager.h"
+#include "../Managers/SkillGroupManager.h"
+#include "../Network/Packets.h"
+#include "../GameObjects/GamePlayer.h"
 
 enum
 {
@@ -586,7 +601,7 @@ void CGumpSkills::OnLeftMouseButtonUp()
 
         if (g_SelectedObject.Gump != this)
         {
-            Wisp::CPoint2Di pos = g_MouseManager.Position;
+            CPoint2Di pos = g_MouseManager.Position;
 
             g_GumpManager.AddGump(
                 new CGumpSkill(g_PressedObject.LeftSerial - ID_GS_SKILL, pos.X - 70, pos.Y - 10));

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "EntryText.h"
+
 class CGameConsole : public CEntryText
 {
 private:

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIShopResult : public CBaseGUI
 {
 public:
@@ -26,7 +28,7 @@ public:
     //!Получить ссылку на выбранную компоненту или ссылку на себя
     CBaseGUI *SelectedItem();
 
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(200, m_NameText.Height); }
+    virtual CSize GetSize() { return CSize(200, m_NameText.Height); }
 
     virtual void PrepareTextures();
 

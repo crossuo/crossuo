@@ -5,6 +5,8 @@
 
 const int PATHFINDER_MAX_NODES = 10000;
 
+#include "PathNode.h"
+
 enum PATH_STEP_STATE
 {
     PSS_NORMAL = 0,
@@ -38,8 +40,8 @@ protected:
 
     bool CreateItemsList(vector<CPathObject> &list, int x, int y, int stepState);
 
-    Wisp::CPoint2Di m_StartPoint{ Wisp::CPoint2Di() };
-    Wisp::CPoint2Di m_EndPoint{ Wisp::CPoint2Di() };
+    CPoint2Di m_StartPoint{ CPoint2Di() };
+    CPoint2Di m_EndPoint{ CPoint2Di() };
 
     int m_GoalNode{ 0 };
     bool m_GoalFound{ 0 };
@@ -52,7 +54,7 @@ protected:
     int m_PointIndex{ 0 };
     int m_PathSize{ 0 };
 
-    int GetGoalDistCost(const Wisp::CPoint2Di &p, int cost);
+    int GetGoalDistCost(const CPoint2Di &p, int cost);
     bool DoesNotExistOnOpenList(int x, int y, int z);
     bool DoesNotExistOnClosedList(int x, int y, int z);
 

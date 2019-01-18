@@ -1,8 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-CTextData::CTextData()
+#include "TextData.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/FontsManager.h"
 
+CTextData::CTextData()
 {
     DEBUG_TRACE_FUNCTION;
 }

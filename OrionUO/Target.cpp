@@ -3,6 +3,18 @@
 
 #include "Target.h"
 #include "Config.h"
+#include "OrionUO.h"
+#include "Multi.h"
+#include "plugin/mulstruct.h"
+#include "plugin/commoninterfaces.h"
+#include "Network/Packets.h"
+#include "Managers/FileManager.h"
+#include "Managers/MouseManager.h"
+#include "Managers/MapManager.h"
+#include "Managers/CustomHousesManager.h"
+#include "GameObjects/GameCharacter.h"
+#include "GameObjects/CustomHouseMultiObject.h"
+#include "Gumps/GumpCustomHouse.h"
 
 CTarget g_Target;
 

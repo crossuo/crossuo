@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
+#include "GUIWorldMapTexture.h"
+#include "../Managers/MouseManager.h"
+
 CGUIWorldMapTexture::CGUIWorldMapTexture(int x, int y)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)
 {

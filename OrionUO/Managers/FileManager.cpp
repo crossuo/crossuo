@@ -2,8 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "FileManager.h"
+#include "AnimationManager.h"
+#include "ClilocManager.h"
+#include "../OrionUO.h"
+#include "../OrionApplication.h"
 #include "../FileSystem.h"
 #include "../Config.h"
+#include "../Network/PluginPackets.h"
 
 #define MINIZ_IMPLEMENTATION
 #include <miniz.h>
@@ -71,8 +76,6 @@ CFileManager::~CFileManager()
 bool CFileManager::Load()
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("Client Verison: %d\n", g_Config.ClientVersion);
-
     if (g_Config.ClientVersion >= CV_7000 && LoadUOPFile(m_MainMisc, "MainMisc.uop"))
     {
         return LoadWithUOP();

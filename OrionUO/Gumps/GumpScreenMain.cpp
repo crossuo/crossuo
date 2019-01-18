@@ -4,6 +4,10 @@
 #include "GumpScreenMain.h"
 #include "GitRevision.h"
 #include "../Config.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../Managers/ConfigManager.h"
+#include "../ScreenStages/MainScreen.h"
 
 enum
 {

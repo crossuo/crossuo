@@ -1,6 +1,12 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUITilepicHightlighted.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../Managers/ColorManager.h"
+#include "../Gumps/Gump.h"
+
 CGUITilepicHightlighted::CGUITilepicHightlighted(
     int serial,
     uint16_t graphic,

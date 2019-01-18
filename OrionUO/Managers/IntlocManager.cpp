@@ -1,10 +1,13 @@
 ﻿// MIT License
 // Copyright (C) October 2017 Hotride
 
+#include "IntlocManager.h"
+#include "ClilocManager.h"
+#include "../OrionApplication.h"
+
 CIntlocManager g_IntlocManager;
 
 CIntloc::CIntloc(int fileIndex, const string &lang)
-
 {
     DEBUG_TRACE_FUNCTION;
     Loaded = false;

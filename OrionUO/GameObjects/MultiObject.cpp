@@ -1,6 +1,13 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "MultiObject.h"
+#include "CustomHouseMultiObject.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../Managers/CustomHousesManager.h"
+#include "../Gumps/GumpCustomHouse.h"
+
 CMultiObject::CMultiObject(uint16_t graphic, short x, short y, char z, int flags)
     : CRenderStaticObject(ROT_MULTI_OBJECT, 0, graphic, 0, x, y, z)
     , OnTarget(flags == 2)

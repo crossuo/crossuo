@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Platform.h"
+#include "../BaseQueue.h"
 
 class CGumpManager : public CBaseQueue
 {

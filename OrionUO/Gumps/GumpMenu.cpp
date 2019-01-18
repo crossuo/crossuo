@@ -1,6 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpMenu.h"
+#include "../DefinitionMacro.h"
+#include "../PressedObject.h"
+#include "../Network/Packets.h"
+
 CGumpMenu::CGumpMenu(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_MENU, serial, x, y)
 {

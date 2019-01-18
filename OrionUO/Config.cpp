@@ -3,16 +3,15 @@
 
 #include "Config.h"
 
-#include <string>
-
 #include "Globals.h"
+#include "Definitions.h"
 #include "FileSystem.h"
 #include "OrionApplication.h"
+#include "Logging.h"
 #include "plugin/enumlist.h"
 #include "Crypt/CryptEntry.h"
-#include "Wisp/WispDefinitions.h"
-#include "Wisp/WispLogger.h"
 #include "Wisp/WispTextFileParser.h"
+#include "Managers/PacketManager.h"
 
 #define ORIONUO_CONFIG "OrionUO.cfg"
 
@@ -114,7 +113,7 @@ static void SetClientVersion(const char *versionStr)
     g_Config.ClientVersion = VERSION(a, b, c, d);
 }
 
-static CLIENT_FLAG GetClientTypeFromString(const std::string &str)
+static CLIENT_FLAG GetClientTypeFromString(const string &str)
 {
     auto client = ToLowerA(str);
     if (client == "t2a")

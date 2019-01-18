@@ -3,6 +3,23 @@
 
 #include "GumpPaperdoll.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../Target.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/UOFileReader.h"
+#include "../GameObjects/GameItem.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../Network/Packets.h"
+#include "../TextEngine/TextData.h"
 
 enum
 {
@@ -19,7 +36,7 @@ enum
     ID_GP_BUTTON_MINIMIZE,
     ID_GP_PROFILE_SCROLL,
     ID_GP_PARTY_MANIFEST_SCROLL,
-    ID_GP_BUTTON_VIRTURE,
+    ID_GP_BUTTON_VIRTUE,
     ID_GP_COMBAT_BOOK,
     ID_GP_RACIAL_ABILITIES_BOOK,
     ID_GP_LOCK_MOVING,
@@ -109,7 +126,7 @@ CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized
         }
 
         //UO->DrawGump(0x0FA1, 0, posX + 80, posY + 4); //Paperdoll mail bag
-        Add(new CGUIButton(ID_GP_BUTTON_VIRTURE, 0x0071, 0x0071, 0x0071, 80, 4));
+        Add(new CGUIButton(ID_GP_BUTTON_VIRTUE, 0x0071, 0x0071, 0x0071, 80, 4));
 
         if (g_PaperdollBooks)
         {
@@ -253,9 +270,9 @@ void CGumpPaperdoll::InitToolTip()
                 g_ToolTip.Set(L"Double click for open party manifest gump");
                 break;
             }
-            case ID_GP_BUTTON_VIRTURE:
+            case ID_GP_BUTTON_VIRTUE:
             {
-                g_ToolTip.Set(L"Open server's virture gump");
+                g_ToolTip.Set(L"Open server's virtue gump");
                 break;
             }
             case ID_GP_COMBAT_BOOK:
@@ -340,7 +357,7 @@ void CGumpPaperdoll::PrepareContent()
         g_PressedObject.LeftSerial != 0xFFFFFFFF &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if (CanBeDraggedByOffset(offset) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
@@ -829,9 +846,9 @@ CRenderObject *CGumpPaperdoll::Select()
 
     if (!Minimized)
     {
-        Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+        CPoint2Di oldPos = g_MouseManager.Position;
         g_MouseManager.Position =
-            Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+            CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
         m_TextRenderer.Select(this);
 
@@ -1069,9 +1086,9 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
 
             result = true;
         }
-        else if (serial == ID_GP_BUTTON_VIRTURE)
+        else if (serial == ID_GP_BUTTON_VIRTUE)
         {
-            CPacketVirtureRequest(1).Send();
+            CPacketVirtueRequest(1).Send();
 
             result = true;
         }

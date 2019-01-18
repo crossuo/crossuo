@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ConnectionScreen.h"
+#include "../OrionUO.h"
+#include "../CharacterList.h"
+#include "../Managers/ScreenEffectManager.h"
+#include "../Network/Packets.h"
+
 CConnectionScreen g_ConnectionScreen;
 
 CConnectionScreen::CConnectionScreen()

@@ -2,6 +2,11 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpJournal.h"
+#include "../DefinitionMacro.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../TextEngine/TextData.h"
+#include "../TextEngine/Journal.h"
 
 enum
 {

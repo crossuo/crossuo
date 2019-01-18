@@ -2,6 +2,11 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpConsoleType.h"
+#include "../ToolTip.h"
+#include "../SelectedObject.h"
+#include "../Managers/ConfigManager.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../TextEngine/GameConsole.h"
 
 CGumpConsoleType *g_GumpConsoleType = nullptr;
 

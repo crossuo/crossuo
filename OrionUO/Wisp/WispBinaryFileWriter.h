@@ -1,6 +1,7 @@
 // MIT License
 
-#pragma once
+#ifndef WISP_BFW_H
+#define WISP_BFW_H
 
 #include "FileSystem.h"
 
@@ -24,3 +25,5 @@ public:
 };
 
 }; // namespace Wisp
+
+#endif // WISP_BFW_H

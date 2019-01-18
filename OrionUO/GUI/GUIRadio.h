@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUICheckbox.h"
+
 class CGUIRadio : public CGUICheckbox
 {
 public:

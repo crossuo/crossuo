@@ -1,6 +1,7 @@
 ﻿// MIT License
 
-#pragma once
+#ifndef WISP_DW_H
+#define WISP_DW_H
 
 namespace Wisp
 {
@@ -276,3 +277,5 @@ private:
 };
 
 }; // namespace Wisp
+
+#endif // WISP_DW_H

@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "RenderStaticObject.h"
+
+class CGameEffect;
+
 struct DRAW_FRAME_INFORMATION
 {
     int OffsetX;
@@ -41,7 +45,7 @@ public:
     bool pvpCaller = false;
 
 protected:
-    class CGameEffect *m_Effects{ nullptr };
+    CGameEffect *m_Effects{ nullptr };
     CGLTexture m_TextureObjectHalndes{ CGLTexture() };
 
 public:
@@ -77,15 +81,15 @@ public:
     // POL: ?
     // Sphere:
     // https://github.com/Sphereserver/Source-experimental/blob/c8ddf528c803fe70b7593c5acb121f1829b22d16/src/game/chars/CCharStatus.cpp#L618
-    bool Frozen() { return (m_Flags & 0x01); }
+    bool Frozen() { return (m_Flags & 0x01) != 0; }
     // 0x02 = Female
     bool Poisoned(); // 0x04 if < 7.0.0
     bool Flying();   // 0x04 if >= 7.0.0
-    bool YellowHits() { return (m_Flags & 0x08); }
-    bool IgnoreCharacters() { return (m_Flags & 0x10); }
+    bool YellowHits() { return (m_Flags & 0x08) != 0; }
+    bool IgnoreCharacters() { return (m_Flags & 0x10) != 0; }
     bool Locked() { return (!(m_Flags & 0x20) && m_TiledataPtr->Weight > 90); }
-    bool InWarMode() { return (m_Flags & 0x40); }
-    bool Hidden() { return (m_Flags & 0x80); }
+    bool InWarMode() { return (m_Flags & 0x40) != 0; }
+    bool Hidden() { return (m_Flags & 0x80) != 0; }
 
     bool Caller();
     virtual bool IsHuman() { return false; }

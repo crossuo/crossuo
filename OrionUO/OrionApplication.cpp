@@ -2,6 +2,10 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
+#include "OrionApplication.h"
+#include "OrionUO.h"
+#include "Managers/ConnectionManager.h"
+#include "Managers/PacketManager.h"
 
 COrionApplication g_App;
 

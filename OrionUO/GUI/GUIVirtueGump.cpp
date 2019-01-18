@@ -1,16 +1,20 @@
 // MIT License
 // Copyright (C) May 2017 Hotride
 
-CGUIVirtureGump::CGUIVirtureGump(uint16_t graphic, int x, int y)
-    : CGUIDrawObject(GOT_VIRTURE_GUMP, graphic, graphic, 0, x, y)
+#include "GUIVirtueGump.h"
+#include "../OrionUO.h"
+#include "../Managers/MouseManager.h"
+
+CGUIVirtueGump::CGUIVirtueGump(uint16_t graphic, int x, int y)
+    : CGUIDrawObject(GOT_VIRTUE_GUMP, graphic, graphic, 0, x, y)
 {
 }
 
-CGUIVirtureGump::~CGUIVirtureGump()
+CGUIVirtueGump::~CGUIVirtueGump()
 {
 }
 
-bool CGUIVirtureGump::Select()
+bool CGUIVirtueGump::Select()
 {
     bool select = false;
 

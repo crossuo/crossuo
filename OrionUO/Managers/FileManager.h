@@ -3,6 +3,13 @@
 
 #pragma once
 
+#include "../FileSystem.h"
+#include "../Wisp/WispMappedFile.h"
+#include "../Utility/AutoResetEvent.h"
+
+struct UOPAnimationData;
+class CTextureAnimationDirection;
+
 class CUopBlockHeader
 {
 public:
@@ -34,7 +41,7 @@ public:
 class CUopMappedFile : public Wisp::CMappedFile
 {
 public:
-    std::unordered_map<uint64_t, CUopBlockHeader> m_Map;
+    unordered_map<uint64_t, CUopBlockHeader> m_Map;
 
 public:
     CUopMappedFile();

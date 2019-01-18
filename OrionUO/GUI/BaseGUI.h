@@ -3,6 +3,12 @@
 
 #pragma once
 
+#include "../RenderObject.h"
+#include "../Point.h"
+#include "../plugin/enumlist.h"
+
+class CTextData;
+
 class CBaseGUI : public CRenderObject
 {
 public:
@@ -56,7 +62,7 @@ public:
     virtual bool Select() { return false; }
 
     //!Получить конечные габариты компоненты
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(); }
+    virtual CSize GetSize() { return CSize(); }
 
     //!Это компонента пользовательского интерфейса
     virtual bool IsGUI() { return true; }

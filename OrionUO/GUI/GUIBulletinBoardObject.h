@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIBulletinBoardObject : public CBaseGUI
 {
     wstring Text = {};

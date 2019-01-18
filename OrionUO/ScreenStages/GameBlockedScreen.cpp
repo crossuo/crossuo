@@ -2,6 +2,12 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GameBlockedScreen.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Gumps/GumpNotify.h"
 
 CGameBlockedScreen g_GameBlockedScreen;
 

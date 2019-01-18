@@ -1,6 +1,12 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GameEffect.h"
+#include "GameEffectMoving.h"
+#include "../OrionUO.h"
+#include "../Managers/EffectManager.h"
+#include "../Managers/FileManager.h"
+
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)
 {

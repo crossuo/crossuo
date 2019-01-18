@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIGumppicHightlighted.h"
+#include "../SelectedObject.h"
+#include "../Gumps/Gump.h"
+#include "../Managers/ColorManager.h"
+
 CGUIGumppicHightlighted::CGUIGumppicHightlighted(
     int serial, uint16_t graphic, uint16_t color, uint16_t selectedColor, int x, int y)
     : CGUIDrawObject(GOT_GUMPPICHIGHTLIGHTED, serial, graphic, color, x, y)

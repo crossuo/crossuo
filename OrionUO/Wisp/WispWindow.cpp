@@ -5,6 +5,9 @@
 #include <SDL_syswm.h>
 #include <SDL_timer.h>
 #include <SDL_rect.h>
+#include "../Point.h"
+#include "../OrionWindow.h"
+#include "../Managers/PluginManager.h"
 
 namespace Wisp
 {
@@ -54,7 +57,7 @@ void CWindow::MaximizeWindow()
 #endif
 }
 
-void CWindow::SetSize(const Wisp::CSize &size)
+void CWindow::SetSize(const CSize &size)
 {
 #if USE_WISP
     DEBUG_TRACE_FUNCTION;
@@ -86,8 +89,12 @@ void CWindow::SetPositionSize(int x, int y, int width, int height)
     SendMessage(Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetWindowPos(Handle, nullptr, x, y, width, height, 0);
 #else
+#if SDL_VERSION_ATLEAST(2, 0, 5)
     int borderH;
     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+#else
+    int borderH = 0;
+#endif
     SDL_RestoreWindow(m_window);
     SDL_SetWindowPosition(m_window, x, std::max(y, borderH));
     SDL_SetWindowSize(m_window, width, height);
@@ -104,15 +111,19 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
     *width = (int)(rect.right - rect.left);
     *height = (int)(rect.bottom - rect.top);
 #else
+#if SDL_VERSION_ATLEAST(2, 0, 5)
     int borderH;
     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+#else
+    int borderH = 0;
+#endif
     SDL_GetWindowPosition(m_window, x, y);
     *y = std::max(*y, borderH);
     SDL_GetWindowSize(m_window, width, height);
 #endif
 }
 
-void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
+void CWindow::SetMinSize(const CSize &newMinSize)
 {
     DEBUG_TRACE_FUNCTION;
     if (m_Size.Width < newMinSize.Width || m_Size.Height < newMinSize.Height)
@@ -148,15 +159,19 @@ void CWindow::SetMinSize(const Wisp::CSize &newMinSize)
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
 #else
+#if SDL_VERSION_ATLEAST(2, 0, 5)
         int borderH;
         SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+#else
+        int borderH = 0;
+#endif
         SDL_SetWindowSize(m_window, width, height - borderH);
 #endif
     }
     m_MinSize = newMinSize;
 }
 
-void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
+void CWindow::SetMaxSize(const CSize &newMaxSize)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -193,8 +208,12 @@ void CWindow::SetMaxSize(const Wisp::CSize &newMaxSize)
 
         SetWindowPos(Handle, HWND_TOP, pos.left, pos.top, r.right, r.bottom, 0);
 #else
+#if SDL_VERSION_ATLEAST(2, 0, 5)
         int borderH;
         SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+#else
+        int borderH = 0;
+#endif
         SDL_SetWindowMaximumSize(m_window, newMaxSize.Width, newMaxSize.Height - borderH);
 #endif
     }
@@ -300,9 +319,11 @@ bool CWindow::Create(
         {
             case SDL_SYSWM_UNKNOWN:
                 break;
+#if SDL_VERSION_ATLEAST(2, 0, 5)
             case SDL_SYSWM_OS2:
                 subsystem = "IBM OS/2";
                 break;
+#endif
             case SDL_SYSWM_WINDOWS:
                 subsystem = "Microsoft Windows(TM)";
                 break;
@@ -810,8 +831,10 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
 
                 case SDL_WINDOWEVENT_RESTORED:
                 {
-                    int x, y, borderH;
+                    int x, y, borderH = 0;
+#if SDL_VERSION_ATLEAST(2, 0, 5)
                     SDL_GetWindowBordersSize(m_window, &borderH, nullptr, nullptr, nullptr);
+#endif
                     SDL_GetWindowPosition(m_window, &x, &y);
                     SDL_SetWindowPosition(m_window, x, std::max(y, borderH));
                     OnResize();
@@ -1199,6 +1222,7 @@ void GetDisplaySize(int *x, int *y)
 #else
 void GetDisplaySize(int *x, int *y)
 {
+#if SDL_VERSION_ATLEAST(2, 0, 5)
     SDL_Rect r;
     SDL_GetDisplayUsableBounds(0, &r);
     if (x != nullptr)
@@ -1209,5 +1233,17 @@ void GetDisplaySize(int *x, int *y)
     {
         *y = r.h;
     }
+#else
+    SDL_DisplayMode dm;
+    SDL_GetCurrentDisplayMode(0, &dm);
+    if (x != nullptr)
+    {
+        *x = dm.w;
+    }
+    if (y != nullptr)
+    {
+        *y = dm.h;
+    }
+#endif
 }
 #endif

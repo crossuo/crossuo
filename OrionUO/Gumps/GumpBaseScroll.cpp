@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpBaseScroll.h"
+#include "../OrionUO.h"
+#include "../Managers/MouseManager.h"
+
 CGumpBaseScroll::CGumpBaseScroll(
     GUMP_TYPE type,
     uint32_t serial,
@@ -40,7 +44,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     m_Background =
         (CGUIScrollBackground *)Add(new CGUIScrollBackground(0, graphic, 0, offsetY, Height));
-    Wisp::CRect rect = m_Background->WorkSpace;
+    CRect rect = m_Background->WorkSpace;
 
     if (type != GT_SKILLS)
     {

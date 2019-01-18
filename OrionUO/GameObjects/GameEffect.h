@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "RenderWorldObject.h"
+
 class CGameEffect : public CRenderWorldObject
 {
 public:

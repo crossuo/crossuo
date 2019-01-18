@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIPolygonal : public CBaseGUI
 {
 public:
@@ -14,5 +16,5 @@ public:
         GUMP_OBJECT_TYPE type, int x, int y, int width, int height, bool callOnMouseUp = false);
     virtual ~CGUIPolygonal();
     virtual bool Select();
-    virtual Wisp::CSize GetSize() { return Wisp::CSize(Width, Height); }
+    virtual CSize GetSize() { return CSize(Width, Height); }
 };

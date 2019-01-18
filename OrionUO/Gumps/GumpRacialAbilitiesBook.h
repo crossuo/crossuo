@@ -7,6 +7,7 @@ graphic = 0x2B02;
 minimizedGraphic = 0x2B05;
 iconStartGraphic = 0x5200;
 */
+#include "Gump.h"
 
 class CGumpRacialAbilitiesBook : public CGump
 {

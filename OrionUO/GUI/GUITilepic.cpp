@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUITilepic.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+
 CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y)
     : CGUIDrawObject(GOT_TILEPIC, 0, graphic, color, x, y)
 {
@@ -10,10 +14,10 @@ CGUITilepic::~CGUITilepic()
 {
 }
 
-Wisp::CSize CGUITilepic::GetSize()
+CSize CGUITilepic::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CSize size;
+    CSize size;
 
     CGLTexture *th = g_Orion.ExecuteStaticArt(Graphic);
 

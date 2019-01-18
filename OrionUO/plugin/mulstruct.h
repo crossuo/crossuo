@@ -135,7 +135,7 @@ struct LAND_TILES
 {
     uint64_t Flags;
     unsigned short TexID;
-    std::string Name;
+    string Name;
 };
 
 struct LAND_GROUP
@@ -154,7 +154,7 @@ struct STATIC_TILES
     unsigned short Hue;
     unsigned short LightIndex;
     unsigned char Height;
-    std::string Name;
+    string Name;
 };
 
 struct STATIC_GROUP

@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
+class CMapObject;
+class CRenderWorldObject;
+
 class CMapBlock : public CBaseQueueItem
 {
 public:

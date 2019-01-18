@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "TextureObject.h"
+#include "plugin/mulstruct.h"
+
+class CUopBlockHeader;
+
 class CIndexObject
 {
 public:

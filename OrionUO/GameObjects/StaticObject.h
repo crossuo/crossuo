@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "RenderStaticObject.h"
+
 class CStaticObject : public CRenderStaticObject
 {
     //Оригинальный индекс картинки

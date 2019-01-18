@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "Gump.h"
+#include "../TextEngine/TextRenderer.h"
+#include "../TextEngine/TextContainer.h"
+
 class CGumpPaperdoll : public CGump
 {
 protected:

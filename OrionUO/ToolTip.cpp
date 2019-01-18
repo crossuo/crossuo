@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ToolTip.h"
+#include "SelectedObject.h"
+#include "DefinitionMacro.h"
+#include "Managers/FontsManager.h"
+#include "Managers/ConfigManager.h"
+#include "Managers/MouseManager.h"
+#include "Managers/ClilocManager.h"
+
 CToolTip g_ToolTip;
 
 CToolTip::CToolTip()

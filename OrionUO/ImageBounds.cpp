@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ImageBounds.h"
+#include "TextEngine/TextData.h"
+
 CImageBounds g_PlayerRect(0, 0, 0, 0);
 
 CImageBounds::CImageBounds(int x, int y, int width, int height)

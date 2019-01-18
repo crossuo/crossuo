@@ -3,8 +3,12 @@
 
 #include "FileSystem.h"
 #include "Config.h"
+#include "OrionUO.h"
+#include "OrionWindow.h"
+#include "OrionApplication.h"
 #include <SDL.h>
 #include <time.h>
+#include "Managers/ConfigManager.h"
 
 #if USE_WISP
 

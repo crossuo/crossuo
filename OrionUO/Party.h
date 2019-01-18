@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "PartyObject.h"
+
 class CParty
 {
 public:

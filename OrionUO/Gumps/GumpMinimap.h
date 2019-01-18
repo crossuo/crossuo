@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Gump.h"
+
 class CGumpMinimap : public CGump
 {
 public:
@@ -28,7 +30,7 @@ private:
         int y,
         int width,
         int height,
-        const Wisp::CPoint2Di *table,
+        const CPoint2Di *table,
         int count);
 
 protected:

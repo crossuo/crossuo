@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GLEngine.h"
+#include "../Point.h"
+#include "../OrionWindow.h"
+#include "../Managers/GumpManager.h"
+#include "../GameObjects/LandObject.h"
+
 CGLEngine g_GL;
 
 BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
@@ -473,28 +479,28 @@ void CGLEngine::RestorePort()
 void CGLEngine::PushScissor(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    PushScissor(Wisp::CRect(x, y, width, height));
+    PushScissor(CRect(x, y, width, height));
 }
 
-void CGLEngine::PushScissor(const Wisp::CPoint2Di &position, int width, int height)
+void CGLEngine::PushScissor(const CPoint2Di &position, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    PushScissor(Wisp::CRect(position, width, height));
+    PushScissor(CRect(position, width, height));
 }
 
-void CGLEngine::PushScissor(int x, int y, const Wisp::CSize &size)
+void CGLEngine::PushScissor(int x, int y, const CSize &size)
 {
     DEBUG_TRACE_FUNCTION;
-    PushScissor(Wisp::CRect(x, y, size));
+    PushScissor(CRect(x, y, size));
 }
 
-void CGLEngine::PushScissor(const Wisp::CPoint2Di &position, const Wisp::CSize &size)
+void CGLEngine::PushScissor(const CPoint2Di &position, const CSize &size)
 {
     DEBUG_TRACE_FUNCTION;
-    PushScissor(Wisp::CRect(position, size));
+    PushScissor(CRect(position, size));
 }
 
-void CGLEngine::PushScissor(const Wisp::CRect &rect)
+void CGLEngine::PushScissor(const CRect &rect)
 {
     DEBUG_TRACE_FUNCTION;
     m_ScissorList.push_back(rect);
@@ -518,7 +524,7 @@ void CGLEngine::PopScissor()
     }
     else
     {
-        Wisp::CRect &rect = m_ScissorList.back();
+        CRect &rect = m_ScissorList.back();
         glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
     }
 }

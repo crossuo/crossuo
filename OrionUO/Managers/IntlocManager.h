@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
 class CIntloc : public CBaseQueueItem
 {
 public:

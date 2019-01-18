@@ -2,6 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "CreateCharacterScreen.h"
+#include "ConnectionScreen.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../OrionWindow.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ScreenEffectManager.h"
+#include "../Managers/CreateCharacterManager.h"
 
 CCreateCharacterScreen g_CreateCharacterScreen;
 

@@ -2,8 +2,23 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GameObject.h"
+#include "GameEffect.h"
+#include "GameCharacter.h"
 #include <SDL_timer.h>
-#include "Config.h"
+#include "../Config.h"
+#include "../Point.h"
+#include "../OrionUO.h"
+#include "../ServerList.h"
+#include "../SelectedObject.h"
+#include "../OrionWindow.h"
+#include "../Managers/AnimationManager.h"
+#include "../Managers/GumpManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Managers/ColorManager.h"
+#include "../TextEngine/TextData.h"
 
 CGameObject::CGameObject(int serial)
     : CRenderStaticObject(ROT_GAME_OBJECT, serial, 0, 0, 0, 0, 0)
@@ -64,7 +79,7 @@ void CGameObject::SetName(const string &newName)
     {
         if (g_GameState >= GS_GAME)
         {
-            string title = "Ultima Online - " + g_Player->GetName();
+            string title = "Ultima Online - " + newName;
 
             CServer *server = g_ServerList.GetSelectedServer();
 
@@ -73,7 +88,7 @@ void CGameObject::SetName(const string &newName)
                 title += " (" + server->Name + ")";
             }
 
-            g_OrionWindow.SetTitle(title);
+            g_OrionWindow.SetTitle(title); // FIXME: remove this dependency from here
         }
 
         PLUGIN_EVENT(UOMSG_SET_PLAYER_NAME, newName.c_str());
@@ -456,7 +471,7 @@ void CGameObject::DrawEffects(int x, int y)
         {
             uint16_t graphic = 0x4E20 + effect->AnimIndex;
 
-            Wisp::CSize size = g_Orion.GetGumpDimension(graphic);
+            CSize size = g_Orion.GetGumpDimension(graphic);
 
             g_Orion.DrawGump(graphic, effect->Color, x - (size.Width / 2), y - size.Height);
         }

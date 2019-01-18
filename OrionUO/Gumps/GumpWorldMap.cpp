@@ -1,7 +1,18 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "FileSystem.h"
+#include "GumpWorldMap.h"
+#include "../FileSystem.h"
+#include "../OrionUO.h"
+#include "../OrionApplication.h"
+#include "../PressedObject.h"
+#include "../DefinitionMacro.h"
+#include "../Managers/ColorManager.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/FileManager.h"
+#include "../Network/Packets.h"
+#include "../GameObjects/GamePlayer.h"
 
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };
 
@@ -596,7 +607,7 @@ void CGumpWorldMap::PrepareContent()
     }
     else if (m_MapMoving)
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         CurrentOffsetX += offset.X;
         CurrentOffsetY += offset.Y;
@@ -647,7 +658,7 @@ void CGumpWorldMap::OnLeftMouseButtonUp()
     {
         if (m_MapMoving)
         {
-            Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+            CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
             OffsetX += offset.X;
             OffsetY += offset.Y;
             FixOffsets(OffsetX, OffsetY, Width, Height);
@@ -849,7 +860,7 @@ void CGumpWorldMap::GUMP_RESIZE_EVENT_C
     DEBUG_TRACE_FUNCTION;
     if ((m_StartResizeWidth != 0) && (m_StartResizeHeight != 0))
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
         Width = m_StartResizeWidth + offset.X;
         Height = m_StartResizeHeight + offset.Y;
         UpdateSize();

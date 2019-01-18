@@ -1,14 +1,13 @@
 ﻿// MIT License
 
-#include "WispGlobal.h"
-
+#include "Misc.h"
 #include <locale>
 #include <codecvt>
 
 SDL_threadID g_MainThread;
 
-#if USE_WISP_DEBUG_FUNCTION_NAMES == 1
-deque<string> g_WispDebugFunStack;
+#if USE_DEBUG_FUNCTION_NAMES == 1
+std::deque<std::string> g_DebugFuncStack;
 #endif
 
 int CalculatePercents(int max, int current, int maxValue)
@@ -31,12 +30,12 @@ int CalculatePercents(int max, int current, int maxValue)
     return max;
 }
 
-string EncodeUTF8(const wstring &wstr)
+std::string EncodeUTF8(const std::wstring &wstr)
 {
 #if USE_WISP || defined(ORION_WINDOWS)
     int size =
         ::WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
-    string result = "";
+    std::string result = "";
 
     if (size > 0)
     {
@@ -47,7 +46,7 @@ string EncodeUTF8(const wstring &wstr)
     }
 #else
     mbstate_t state{};
-    string result{};
+    std::string result{};
     auto p = wstr.data();
     const auto size = wcsrtombs(nullptr, &p, 0, &state);
     if (size > 0)
@@ -61,11 +60,11 @@ string EncodeUTF8(const wstring &wstr)
     return result;
 }
 
-wstring DecodeUTF8(const string &str)
+std::wstring DecodeUTF8(const std::string &str)
 {
 #if USE_WISP || defined(ORION_WINDOWS)
     int size = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
-    wstring result = {};
+    std::wstring result = {};
     if (size > 0)
     {
         result.resize(size + 1);
@@ -76,7 +75,7 @@ wstring DecodeUTF8(const string &str)
     //LOG("\nDecodeUTF8: %s\n\n", str.c_str());
     //LOG_DUMP((uint8_t *)str.data(), str.size());
     mbstate_t state{};
-    wstring result{};
+    std::wstring result{};
     auto p = str.data();
 
     const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
@@ -96,7 +95,7 @@ wstring DecodeUTF8(const string &str)
     return result;
 }
 
-string ToCamelCaseA(string str)
+std::string ToCamelCaseA(std::string str)
 {
     int offset = 'a' - 'A';
     bool lastSpace = true;
@@ -121,7 +120,7 @@ string ToCamelCaseA(string str)
     return str;
 }
 
-wstring ToCamelCaseW(wstring str)
+std::wstring ToCamelCaseW(std::wstring str)
 {
     int offset = L'a' - L'A';
     bool lastSpace = true;
@@ -147,16 +146,16 @@ wstring ToCamelCaseW(wstring str)
 }
 
 #if !defined(ORION_WINDOWS)
-const string &ToString(const string &str)
+const std::string &ToString(const std::string &str)
 {
     return str;
 }
 #endif
 
-string ToString(const wstring &wstr)
+std::string ToString(const std::wstring &wstr)
 {
 #if USE_WISP
-    string str = "";
+    std::string str = "";
     int size = (int)wstr.length();
     int newSize =
         ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, nullptr, 0, nullptr, nullptr);
@@ -174,11 +173,11 @@ string ToString(const wstring &wstr)
 #endif
 }
 
-wstring ToWString(const string &str)
+std::wstring ToWString(const std::string &str)
 {
 #if USE_WISP
     int size = (int)str.length();
-    wstring wstr = {};
+    std::wstring wstr = {};
 
     if (size > 0)
     {
@@ -193,7 +192,7 @@ wstring ToWString(const string &str)
 #endif
 }
 
-string Trim(const string &str)
+std::string Trim(const std::string &str)
 {
     string::const_iterator it = str.begin();
     for (; it != str.end() && (isspace(*it) != 0); ++it)
@@ -207,15 +206,15 @@ string Trim(const string &str)
         ;
     }
 
-    return string(it, rit.base());
+    return std::string(it, rit.base());
 }
 
-int ToInt(const string &str)
+int ToInt(const std::string &str)
 {
     return atoi(str.c_str());
 }
 
-string ToLowerA(string s)
+std::string ToLowerA(std::string s)
 {
 #if defined(ORION_WINDOWS)
     if (s.length())
@@ -228,7 +227,7 @@ string ToLowerA(string s)
 #endif
 }
 
-wstring ToLowerW(wstring s)
+std::wstring ToLowerW(std::wstring s)
 {
 #if defined(ORION_WINDOWS)
     if (s.length())
@@ -241,7 +240,7 @@ wstring ToLowerW(wstring s)
 #endif
 }
 
-string ToUpperA(string s)
+std::string ToUpperA(std::string s)
 {
 #if defined(ORION_WINDOWS)
     if (s.length())
@@ -254,7 +253,7 @@ string ToUpperA(string s)
 #endif
 }
 
-wstring ToUpperW(wstring s)
+std::wstring ToUpperW(std::wstring s)
 {
 #if defined(ORION_WINDOWS)
     if (s.length())
@@ -267,9 +266,9 @@ wstring ToUpperW(wstring s)
 #endif
 }
 
-bool ToBool(const string &str)
+bool ToBool(const std::string &str)
 {
-    string data = ToLowerA(str);
+    std::string data = ToLowerA(str);
 
     const int countOfTrue = 3;
     const string m_TrueValues[countOfTrue] = { "on", "yes", "true" };

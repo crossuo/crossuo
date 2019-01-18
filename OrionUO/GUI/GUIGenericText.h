@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIText.h"
+
 class CGUIGenericText : public CGUIText
 {
 public:

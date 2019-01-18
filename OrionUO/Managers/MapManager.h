@@ -3,6 +3,12 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
+class CMapBlock;
+class CRenderWorldObject;
+struct RADAR_MAP_BLOCK;
+
 class CIndexMap
 {
 public:

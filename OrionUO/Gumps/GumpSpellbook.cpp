@@ -2,7 +2,19 @@
 // Copyright (C) September 2016 Hotride
 
 #include "GumpSpellbook.h"
+#include "GumpSpell.h"
 #include "../Config.h"
+#include "../ToolTip.h"
+#include "../OrionUO.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../OrionWindow.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../Managers/GumpManager.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../GameObjects/GameWorld.h"
 
 enum
 {
@@ -237,7 +249,7 @@ void CGumpSpellbook::PrepareContent()
     if (g_PressedObject.LeftGump == this && Page >= dictionaryPagesCount &&
         g_PressedObject.LeftSerial >= (uint32_t)ID_GSB_SPELL_ICON_LEFT)
     {
-        Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+        CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))

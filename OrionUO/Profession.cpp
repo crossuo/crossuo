@@ -1,8 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-CBaseProfession::CBaseProfession()
+#include "Profession.h"
+#include "Managers/FontsManager.h"
 
+CBaseProfession::CBaseProfession()
 {
 }
 

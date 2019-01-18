@@ -1,6 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIMenuObject.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+#include "../SelectedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Gumps/Gump.h"
+#include "../Gumps/GumpMenu.h"
+
 CGUIMenuObject::CGUIMenuObject(
     int serial, uint16_t graphic, uint16_t color, int x, int y, const string &text)
     : CGUITilepic(graphic, color, x, y)
@@ -20,7 +28,7 @@ bool CGUIMenuObject::Select()
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
-    Wisp::CSize size = g_Orion.GetStaticArtDimension(Graphic);
+    CSize size = g_Orion.GetStaticArtDimension(Graphic);
 
     return (x >= 0 && y >= 0 && x < size.Width && y < size.Height);
 }

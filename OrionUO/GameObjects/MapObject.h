@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../RenderWorldObject.h"
+
 class CMapObject : public CRenderWorldObject
 {
 public:

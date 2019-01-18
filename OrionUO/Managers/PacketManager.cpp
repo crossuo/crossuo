@@ -1,10 +1,84 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <miniz.h>
+
 #include "PacketManager.h"
+#include "GumpManager.h"
+#include "ConfigManager.h"
+#include "CustomHousesManager.h"
+#include "ClilocManager.h"
+#include "MacroManager.h"
+#include "ObjectPropertiesManager.h"
+#include "ColorManager.h"
+#include "FontsManager.h"
+#include "AnimationManager.h"
+#include "EffectManager.h"
+#include "ScreenEffectManager.h"
+#include "CorpseManager.h"
+#include "SkillsManager.h"
+#include "MapManager.h"
+#include "ConnectionManager.h"
+#include "PluginManager.h"
+#include "FileManager.h"
+#include "MultiMap.h"
+#include "../Point.h"
 #include "../Sockets.h"
 #include "../Config.h"
-#include <miniz.h>
+#include "../OrionUO.h"
+#include "../Macro.h"
+#include "../CityList.h"
+#include "../ToolTip.h"
+#include "../Target.h"
+#include "../Weather.h"
+#include "../TargetGump.h"
+#include "../Party.h"
+#include "../ServerList.h"
+#include "../QuestArrow.h"
+#include "../OrionWindow.h"
+#include "../Multi.h"
+#include "../ContainerStack.h"
+#include "../Container.h"
+#include "../CharacterList.h"
+#include "../TextEngine/GameConsole.h"
+#include "../GameObjects/GameItem.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../GameObjects/GameEffectMoving.h"
+#include "../Gumps/Gump.h"
+#include "../Gumps/GumpAbility.h"
+#include "../Gumps/GumpSecureTrading.h"
+#include "../Gumps/GumpStatusbar.h"
+#include "../Gumps/GumpShop.h"
+#include "../Gumps/GumpBook.h"
+#include "../Gumps/GumpMap.h"
+#include "../Gumps/GumpTip.h"
+#include "../Gumps/GumpProfile.h"
+#include "../Gumps/GumpDye.h"
+#include "../Gumps/GumpGeneric.h"
+#include "../Gumps/GumpMenu.h"
+#include "../Gumps/GumpBuff.h"
+#include "../Gumps/GumpGrayMenu.h"
+#include "../Gumps/GumpPopupMenu.h"
+#include "../Gumps/GumpSpellbook.h"
+#include "../Gumps/GumpPaperdoll.h"
+#include "../Gumps/GumpTextEntryDialog.h"
+#include "../Gumps/GumpBulletinBoard.h"
+#include "../Gumps/GumpBulletinBoardItem.h"
+#include "../Gumps/GumpCustomHouse.h"
+#include "../Gumps/GumpContainer.h"
+#include "../Gumps/GumpSkills.h"
+#include "../GUI/GUIShopItem.h"
+#include "../GUI/GUIHTMLGump.h"
+#include "../ScreenStages/MainScreen.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../ScreenStages/ConnectionScreen.h"
+#include "../ScreenStages/CharacterListScreen.h"
+#include "../Network/Packets.h"
+#include "../Walker/Walker.h"
+#include "../Walker/PathFinder.h"
+#include "../TextEngine/TextData.h"
 
 CPacketManager g_PacketManager;
 
@@ -4594,7 +4668,7 @@ PACKET_HANDLER(OpenMenu)
             nameLen = ReadUInt8();
             name = ReadString(nameLen);
 
-            Wisp::CSize size = g_Orion.GetStaticArtDimension(graphic);
+            CSize size = g_Orion.GetStaticArtDimension(graphic);
 
             if ((size.Width != 0) && (size.Height != 0))
             {
@@ -4773,8 +4847,7 @@ PACKET_HANDLER(OpenGump)
     int x = ReadInt32BE();
     int y = ReadInt32BE();
 
-    std::unordered_map<uint32_t, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
-
+    auto found = m_GumpsCoordsCache.find(id);
     if (found != m_GumpsCoordsCache.end())
     {
         x = found->second.X;
@@ -5167,7 +5240,7 @@ PACKET_HANDLER(OpenGump)
                             if (ToLowerA(classList[0]) == "class" &&
                                 ToLowerA(Trim(classList[1])) == "virtuegumpitem")
                             {
-                                go = new CGUIVirtureGump(graphic, x, y);
+                                go = new CGUIVirtueGump(graphic, x, y);
                             }
                         }
                     }
@@ -5426,7 +5499,7 @@ PACKET_HANDLER(DyeData)
     Move(2);
     uint16_t graphic = ReadUInt16BE();
 
-    Wisp::CSize gumpSize = g_Orion.GetGumpDimension(0x0906);
+    CSize gumpSize = g_Orion.GetGumpDimension(0x0906);
 
     auto x = int16_t((g_OrionWindow.GetSize().Width / 2) - (gumpSize.Width / 2));
     auto y = int16_t((g_OrionWindow.GetSize().Height / 2) - (gumpSize.Height / 2));
@@ -6475,7 +6548,7 @@ PACKET_HANDLER(OrionMessages)
                 MACRO_CODE macroCode = MC_NONE;
                 for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 {
-                    std::string macroName = CMacro::m_MacroActionName[i];
+                    string macroName = CMacro::m_MacroActionName[i];
                     if (strcmp(name.c_str(), macroName.c_str()) == 0)
                     {
                         macroCode = (MACRO_CODE)i;
@@ -6605,8 +6678,7 @@ PACKET_HANDLER(Pathfinding)
 
 void CPacketManager::SetCachedGumpCoords(uint32_t id, int x, int y)
 {
-    std::unordered_map<uint32_t, GumpCoords>::iterator found = m_GumpsCoordsCache.find(id);
-
+    auto found = m_GumpsCoordsCache.find(id);
     if (found != m_GumpsCoordsCache.end())
     {
         found->second.X = x;

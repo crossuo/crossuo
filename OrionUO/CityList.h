@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Managers/CityManager.h"
+
 class CCityItem
 {
 public:
@@ -14,7 +16,7 @@ public:
     CCityItem();
     virtual ~CCityItem();
 
-    class CCity m_City;
+    CCity m_City;
 
     virtual bool IsNewCity() { return false; }
     void InitCity();

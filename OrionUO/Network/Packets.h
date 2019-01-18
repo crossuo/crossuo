@@ -181,10 +181,10 @@ public:
     CPacketGumpResponse(class CGumpGeneric *gump, int code);
 };
 
-class CPacketVirtureGumpResponse : public CPacket
+class CPacketVirtueGumpResponse : public CPacket
 {
 public:
-    CPacketVirtureGumpResponse(class CGump *gump, int code);
+    CPacketVirtueGumpResponse(class CGump *gump, int code);
 };
 
 class CPacketMenuResponse : public CPacket
@@ -406,16 +406,16 @@ public:
     CPacketEquipLastWeapon();
 };
 
-class CPacketVirtureRequest : public CPacket
+class CPacketVirtueRequest : public CPacket
 {
 public:
-    CPacketVirtureRequest(int buttonID);
+    CPacketVirtueRequest(int buttonID);
 };
 
-class CPacketInvokeVirtureRequest : public CPacket
+class CPacketInvokeVirtueRequest : public CPacket
 {
 public:
-    CPacketInvokeVirtureRequest(uint8_t id);
+    CPacketInvokeVirtueRequest(uint8_t id);
 };
 
 class CPacketMegaClilocRequestOld : public CPacket

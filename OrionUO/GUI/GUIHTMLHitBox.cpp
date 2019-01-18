@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIHTMLHitBox.h"
+#include "GUIHTMLGump.h"
+
 CGUIHTMLHitBox::CGUIHTMLHitBox(
     CGUIHTMLGump *htmlGump, int serial, int x, int y, int width, int height, bool callOnMouseUp)
     : CGUIHitBox(serial, x, y, width, height, callOnMouseUp)

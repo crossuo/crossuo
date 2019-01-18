@@ -3,6 +3,9 @@
 
 #pragma once
 
+class CMulti;
+class CMultiObject;
+
 class CTarget
 {
 public:

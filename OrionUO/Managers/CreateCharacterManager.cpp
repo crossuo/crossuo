@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "CreateCharacterManager.h"
+#include "../OrionUO.h"
+
 CCreateCharacterManager g_CreateCharacterManager;
 
 // clang-format off

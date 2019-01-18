@@ -3,6 +3,8 @@
 #include "FileSystem.h"
 #include "WispThread.h"
 #include <SDL_timer.h>
+#include "../OrionWindow.h"
+
 namespace Wisp
 {
 CApplication::CApplication()

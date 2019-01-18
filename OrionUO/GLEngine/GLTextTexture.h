@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GLTexture.h"
+
 struct WEB_LINK_RECT
 {
     //Индекс ссылки

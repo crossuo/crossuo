@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIDrawObject.h"
+#include "../OrionUO.h"
+#include "../Point.h"
+#include "../Managers/ColorManager.h"
+
 CGUIDrawObject::CGUIDrawObject(
     GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)
     : CBaseGUI(type, serial, graphic, color, x, y)
@@ -11,10 +16,10 @@ CGUIDrawObject::~CGUIDrawObject()
 {
 }
 
-Wisp::CSize CGUIDrawObject::GetSize()
+CSize CGUIDrawObject::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CSize size;
+    CSize size;
     CGLTexture *th = g_Orion.ExecuteGump(GetDrawGraphic());
 
     if (th != nullptr)

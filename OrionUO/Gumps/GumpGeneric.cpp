@@ -2,6 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpGeneric.h"
+#include "../ToolTip.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Network/Packets.h"
 
 CGumpGeneric::CGumpGeneric(uint32_t serial, short x, short y, uint32_t id)
     : CGump(GT_GENERIC, serial, x, y)
@@ -22,7 +29,7 @@ void CGumpGeneric::InitToolTip()
     {
         CBaseGUI *obj = (CBaseGUI *)g_SelectedObject.Object;
 
-        if (obj->Type == GOT_VIRTURE_GUMP)
+        if (obj->Type == GOT_VIRTUE_GUMP)
         {
             int offset = 0;
 
@@ -56,7 +63,7 @@ void CGumpGeneric::InitToolTip()
                     break;
             }
 
-            g_ToolTip.Set(1051000 + offset, "Some virture gump item", 100);
+            g_ToolTip.Set(1051000 + offset, "Some virtue gump item", 100);
         }
         else if (obj->ClilocID != 0u)
         {
@@ -161,10 +168,10 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
     }
 
     if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI() &&
-        ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_VIRTURE_GUMP)
+        ((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_VIRTUE_GUMP)
     {
         //Ответ на гамп
-        CPacketVirtureGumpResponse(this, g_PressedObject.LeftSerial).Send();
+        CPacketVirtueGumpResponse(this, g_PressedObject.LeftSerial).Send();
 
         //Удаляем использованный гамп
         RemoveMark = true;

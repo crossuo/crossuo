@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUILine : public CBaseGUI
 {
     //!Целевая координата по оси X

@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIBuff.h"
+#include "../OrionUO.h"
+
 CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const wstring &text)
     : CGUIDrawObject(GOT_BUFF, 0, graphic, 0, 0, 0)
     , Timer(timer)

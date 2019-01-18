@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIPolygonal.h"
+
 class CGUIColoredPolygone : public CGUIPolygonal
 {
 public:

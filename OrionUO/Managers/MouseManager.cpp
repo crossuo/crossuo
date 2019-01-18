@@ -1,6 +1,21 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "MouseManager.h"
+#include "ColorManager.h"
+#include "MapManager.h"
+#include "ConfigManager.h"
+#include "CustomHousesManager.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../Target.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../Gumps/GumpCustomHouse.h"
+#include "../Walker/PathFinder.h"
+
 CMouseManager g_MouseManager;
 
 uint16_t g_CursorData[2][16] = { { 0x206A,

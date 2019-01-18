@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIButton.h"
+
 class CGUIHTMLButton : public CGUIButton
 {
 private:

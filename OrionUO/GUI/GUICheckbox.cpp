@@ -1,6 +1,13 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUICheckbox.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
+#include "../Gumps/Gump.h"
+
 CGUICheckbox::CGUICheckbox(
     int serial, uint16_t graphic, uint16_t graphicChecked, uint16_t graphicDisabled, int x, int y)
     : CGUIDrawObject(GOT_CHECKBOX, serial, graphic, 0, x, y)

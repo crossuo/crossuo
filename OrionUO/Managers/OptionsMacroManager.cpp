@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "OptionsMacroManager.h"
+#include "MacroManager.h"
+#include "../Macro.h"
+
 COptionsMacroManager g_OptionsMacroManager;
 
 COptionsMacroManager::COptionsMacroManager()

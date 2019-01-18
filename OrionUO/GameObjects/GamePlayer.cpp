@@ -1,6 +1,12 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GamePlayer.h"
+#include "GameItem.h"
+#include "../OrionUO.h"
+#include "../Managers/GumpManager.h"
+#include "../Network/Packets.h"
+
 CPlayer *g_Player = nullptr;
 
 CPlayer::CPlayer(int serial)
@@ -46,7 +52,7 @@ void CPlayer::UpdateAbilities()
     DEBUG_TRACE_FUNCTION;
     uint16_t equippedGraphic = 0;
 
-    CGameItem *layerObject = g_Player->FindLayer(OL_1_HAND);
+    CGameItem *layerObject = FindLayer(OL_1_HAND);
 
     if (layerObject != nullptr)
     {
@@ -54,7 +60,7 @@ void CPlayer::UpdateAbilities()
     }
     else
     {
-        layerObject = g_Player->FindLayer(OL_2_HAND);
+        layerObject = FindLayer(OL_2_HAND);
 
         if (layerObject != nullptr)
         {

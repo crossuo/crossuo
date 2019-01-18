@@ -1,6 +1,12 @@
 // MIT License
 // Copyright (C) December 2016 Hotride
 
+#include "GumpRacialAbility.h"
+#include "../ToolTip.h"
+#include "../Managers/ClilocManager.h"
+#include "../Network/Packets.h"
+#include "../GameObjects/GamePlayer.h"
+
 CGumpRacialAbility::CGumpRacialAbility(int serial, int x, int y)
     : CGump(GT_RACIAL_ABILITY, serial, x, y)
 {

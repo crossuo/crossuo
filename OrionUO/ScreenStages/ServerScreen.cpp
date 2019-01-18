@@ -2,6 +2,11 @@
 // Copyright (C) August 2016 Hotride
 
 #include "ServerScreen.h"
+#include "MainScreen.h"
+#include "../OrionUO.h"
+#include "../ServerList.h"
+#include "../OrionWindow.h"
+#include "../Managers/ScreenEffectManager.h"
 
 CServerScreen g_ServerScreen;
 

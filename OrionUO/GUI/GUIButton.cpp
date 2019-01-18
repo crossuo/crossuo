@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIButton.h"
+#include "../OrionUO.h"
+#include "../SelectedObject.h"
+#include "../Gumps/Gump.h"
+
 CGUIButton::CGUIButton(
     int serial, uint16_t graphic, uint16_t graphicSelected, uint16_t graphicPressed, int x, int y)
     : CGUIDrawObject(GOT_BUTTON, serial, graphic, 0, x, y)

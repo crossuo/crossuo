@@ -1,8 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-CGameEffectMoving::CGameEffectMoving()
+#include "GameEffectMoving.h"
+#include "GameWorld.h"
+#include "../ScreenStages/GameScreen.h"
+#include "../Managers/EffectManager.h"
+#include "../Managers/MapManager.h"
+#include "../GameObjects/GamePlayer.h"
 
+CGameEffectMoving::CGameEffectMoving()
 {
 }
 

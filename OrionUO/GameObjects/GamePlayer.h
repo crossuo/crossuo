@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "GameCharacter.h"
+#include "../Walker/FastWalk.h"
+
 class CPlayer : public CGameCharacter
 {
 public:

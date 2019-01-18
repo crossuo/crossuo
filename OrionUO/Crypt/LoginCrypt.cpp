@@ -1,7 +1,7 @@
 // MIT License
 
 #include "LoginCrypt.h"
-#include "../Wisp/WispGlobal.h"
+#include "../Misc.h"
 #include "../Wisp/WispDataStream.h"
 #include "aes.h"
 #include "../Config.h"

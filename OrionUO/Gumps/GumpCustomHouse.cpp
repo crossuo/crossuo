@@ -3,7 +3,22 @@
 
 #include <SDL_rect.h>
 #include "GumpCustomHouse.h"
-#include "FileSystem.h"
+#include "../Point.h"
+#include "../FileSystem.h"
+#include "../OrionUO.h"
+#include "../ToolTip.h"
+#include "../Target.h"
+#include "../SelectedObject.h"
+#include "../Multi.h"
+#include "../OrionApplication.h"
+#include "../Managers/MapManager.h"
+#include "../Managers/ClilocManager.h"
+#include "../GameObjects/GameItem.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../GameObjects/CustomHouseMultiObject.h"
+#include "../Network/Packets.h"
+
 CGumpCustomHouse *g_CustomHouseGump = nullptr;
 
 template <class T, class A>
@@ -491,7 +506,7 @@ void CGumpCustomHouse::DrawWallSection()
                 continue;
             }
 
-            Wisp::CSize dims = g_Orion.GetStaticArtDimension(vec[0].East1);
+            CSize dims = g_Orion.GetStaticArtDimension(vec[0].East1);
 
             int offsetX = x + 121 + (48 - dims.Width) / 2;
             int offsetY = y + 36;
@@ -531,7 +546,7 @@ void CGumpCustomHouse::DrawWallSection()
 
                 if (graphic != 0u)
                 {
-                    Wisp::CSize dims = g_Orion.GetStaticArtDimension(graphic);
+                    CSize dims = g_Orion.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 130 + (48 - dims.Width) / 2;
                     int offsetY = y + 36 + (120 - dims.Height) / 2;
@@ -588,7 +603,7 @@ void CGumpCustomHouse::DrawDoorSection()
 
             if (graphic != 0u)
             {
-                Wisp::CSize dims = g_Orion.GetStaticArtDimension(graphic);
+                CSize dims = g_Orion.GetStaticArtDimension(graphic);
 
                 int offsetX = x + 138 + (48 - dims.Width) / 2;
 
@@ -719,7 +734,7 @@ void CGumpCustomHouse::DrawFloorSection()
 
                 if (graphic != 0u)
                 {
-                    Wisp::CSize dims = g_Orion.GetStaticArtDimension(graphic);
+                    CSize dims = g_Orion.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 123 + (48 - dims.Width) / 2;
                     int offsetY = y + 36 + (60 - dims.Height) / 2;
@@ -775,7 +790,7 @@ void CGumpCustomHouse::DrawStairSection()
 
                 if (graphic != 0u)
                 {
-                    Wisp::CSize dims = g_Orion.GetStaticArtDimension(graphic);
+                    CSize dims = g_Orion.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 123 + (48 - dims.Width) / 2;
                     int offsetY = y + 36 + (60 - dims.Height) / 2;
@@ -827,7 +842,7 @@ void CGumpCustomHouse::DrawRoofSection()
                 continue;
             }
 
-            Wisp::CSize dims = g_Orion.GetStaticArtDimension(vec[0].NSCrosspiece);
+            CSize dims = g_Orion.GetStaticArtDimension(vec[0].NSCrosspiece);
 
             int offsetX = x + 121 + (48 - dims.Width) / 2;
             int offsetY = y + 36;
@@ -871,7 +886,7 @@ void CGumpCustomHouse::DrawRoofSection()
 
                     if (graphic != 0u)
                     {
-                        Wisp::CSize dims = g_Orion.GetStaticArtDimension(graphic);
+                        CSize dims = g_Orion.GetStaticArtDimension(graphic);
 
                         int offsetX = x + 130 + (48 - dims.Width) / 2;
                         int offsetY = y + 44 + (60 - dims.Height) / 2;
@@ -941,7 +956,7 @@ void CGumpCustomHouse::DrawMiscSection()
                 continue;
             }
 
-            Wisp::CSize dims = g_Orion.GetStaticArtDimension(vec[0].Piece5);
+            CSize dims = g_Orion.GetStaticArtDimension(vec[0].Piece5);
 
             int offsetX = x + 121 + (48 - dims.Width) / 2;
             int offsetY = y + 36;
@@ -981,7 +996,7 @@ void CGumpCustomHouse::DrawMiscSection()
 
                 if (graphic != 0u)
                 {
-                    Wisp::CSize dims = g_Orion.GetStaticArtDimension(graphic);
+                    CSize dims = g_Orion.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 130 + (48 - dims.Width) / 2;
                     int offsetY = y + 44 + (120 - dims.Height) / 2;
@@ -1768,7 +1783,7 @@ bool CGumpCustomHouse::ValidatePlaceStructure(
 
     QFOR(item, multi->m_Items, CMultiObject *)
     {
-        vector<Wisp::CPoint2Di> validatedFloors;
+        vector<CPoint2Di> validatedFloors;
 
         if (item->IsCustomHouseMulti() &&
             ((item->State & (CHMOF_FLOOR | CHMOF_STAIR | CHMOF_ROOF | CHMOF_FIXTURE)) == 0) &&
@@ -1879,7 +1894,7 @@ bool CGumpCustomHouse::ValidateItemPlace(
     CMultiObject *item,
     int minZ,
     int maxZ,
-    vector<Wisp::CPoint2Di> &validatedFloors)
+    vector<CPoint2Di> &validatedFloors)
 {
     if (item == nullptr || !item->IsCustomHouseMulti())
     {
@@ -1887,9 +1902,8 @@ bool CGumpCustomHouse::ValidateItemPlace(
     }
     if ((item->State & CHMOF_FLOOR) != 0)
     {
-        auto existsInList = [](vector<Wisp::CPoint2Di> &validatedFloors,
-                               const Wisp::CPoint2Di &testPoint) {
-            for (const Wisp::CPoint2Di &point : validatedFloors)
+        auto existsInList = [](vector<CPoint2Di> &validatedFloors, const CPoint2Di &testPoint) {
+            for (const CPoint2Di &point : validatedFloors)
             {
                 if (testPoint.X == point.X && testPoint.Y == point.Y)
                 {
@@ -1900,7 +1914,7 @@ bool CGumpCustomHouse::ValidateItemPlace(
             return false;
         };
 
-        //if (existsInList(validatedFloors, Wisp::CPoint2Di(item->GetX(), item->GetY())))
+        //if (existsInList(validatedFloors, CPoint2Di(item->GetX(), item->GetY())))
         //	return false;
 
         if (ValidatePlaceStructure(
@@ -1922,14 +1936,13 @@ bool CGumpCustomHouse::ValidateItemPlace(
                 maxZ - 20,
                 CHVCF_DIRECT_SUPPORT | CHVCF_CANGO_N))
         {
-            const Wisp::CPoint2Di table[4] = { Wisp::CPoint2Di(-1, 0),
-                                               Wisp::CPoint2Di(0, -1),
-                                               Wisp::CPoint2Di(1, 0),
-                                               Wisp::CPoint2Di(0, 1) };
+            const CPoint2Di table[4] = {
+                CPoint2Di(-1, 0), CPoint2Di(0, -1), CPoint2Di(1, 0), CPoint2Di(0, 1)
+            };
 
             for (int i = 0; i < 4; i++)
             {
-                Wisp::CPoint2Di testPoint(item->GetX() + table[i].X, item->GetY() + table[i].Y);
+                CPoint2Di testPoint(item->GetX() + table[i].X, item->GetY() + table[i].Y);
 
                 if (!existsInList(validatedFloors, testPoint))
                 {
@@ -2540,7 +2553,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
             for (int j = 0; j < 2; j++)
             {
-                vector<Wisp::CPoint2Di> validatedFloors;
+                vector<CPoint2Di> validatedFloors;
 
                 for (int x = StartPos.X; x < EndPos.X + 1; x++)
                 {
@@ -2601,7 +2614,7 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
                 if ((i != 0) && (j == 0))
                 {
-                    for (const Wisp::CPoint2Di &point : validatedFloors)
+                    for (const CPoint2Di &point : validatedFloors)
                     {
                         CMulti *multi = foundationItem->GetMultiAtXY(point.X, point.Y);
 

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIComboBox : public CBaseGUI
 {
     //!ИД картинки в развернутом состоянии
@@ -87,7 +89,7 @@ public:
     //!Пересчитать ширину
     void RecalculateWidth();
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     virtual void PrepareTextures();
 

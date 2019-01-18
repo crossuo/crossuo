@@ -1,7 +1,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Macro.h"
-#include "Wisp/WispDefinitions.h"
+#include "Definitions.h"
+#include "DefinitionMacro.h"
 
 CMacroObject *g_MacroPointer = nullptr;
 
@@ -20,7 +21,7 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
         case MC_MAXIMIZE:
         case MC_USE_SKILL:
         case MC_ARM_DISARM:
-        case MC_INVOKE_VIRTURE:
+        case MC_INVOKE_VIRTUE:
         case MC_CAST_SPELL:
         case MC_SELECT_NEXT:
         case MC_SELECT_PREVIOUS:
@@ -322,7 +323,7 @@ void CMacro::GetBoundByCode(const MACRO_CODE &code, int &count, int &offset)
             count = MSC_G5_HONOR - MSC_G4_LEFT_HAND;
             break;
         }
-        case MC_INVOKE_VIRTURE:
+        case MC_INVOKE_VIRTUE:
         {
             offset = MSC_G5_HONOR;
             count = MSC_G6_CLUMSY - MSC_G5_HONOR;
@@ -395,7 +396,7 @@ const char *CMacro::m_MacroActionName[MACRO_ACTION_NAME_COUNT] = { "(NONE)",
                                                                    "EnableRangeColor",
                                                                    "DisableRangeColor",
                                                                    "ToggleRangeColor",
-                                                                   "InvoreVirture",
+                                                                   "InvokeVirtue",
                                                                    "SelectNext",
                                                                    "SelectPrevious",
                                                                    "SelectNearest",
@@ -468,7 +469,7 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Tracking",
     "Left Hand", ///Arm/Disarm group
     "Right Hand",
-    "Honor", //Invoke Virture group
+    "Honor", //Invoke Virtue group
     "Sacrifice",
     "Valor",
     "Clumsy", //Cast Spell group

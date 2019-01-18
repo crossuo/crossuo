@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GUIPolygonal.h"
+
 class CGUIScissor : public CGUIPolygonal
 {
     //!Координата компоненты по оси X контейнера, в котором находится элемент, относительно начала гампа

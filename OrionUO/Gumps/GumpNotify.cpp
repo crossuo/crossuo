@@ -3,6 +3,11 @@
 
 #include <utility>
 
+#include "GumpNotify.h"
+#include "../TextEngine/GameConsole.h"
+#include "../Managers/ConfigManager.h"
+#include "../ScreenStages/GameScreen.h"
+
 CGumpNotify::CGumpNotify(short x, short y, uint8_t variant, short width, short height, string text)
     : CGump(GT_NOTIFY, 0, x, y)
     , Variant(variant)

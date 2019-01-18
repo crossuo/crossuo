@@ -1,6 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpQuestion.h"
+#include "../OrionUO.h"
+#include "../ScreenStages/GameScreen.h"
+
 CGumpQuestion::CGumpQuestion(uint32_t serial, short x, short y, uint8_t variant)
     : CGump(GT_QUESTION, serial, x, y)
     , Variant(variant)

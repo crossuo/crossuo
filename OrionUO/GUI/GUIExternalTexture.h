@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIExternalTexture : public CBaseGUI
 {
     //!Удалять ли текстуру при удалении объекта
@@ -24,7 +26,7 @@ public:
     //!Ссылка на текстуру
     CGLTexture *m_Texture;
 
-    virtual Wisp::CSize GetSize();
+    virtual CSize GetSize();
 
     virtual void SetShaderMode();
     virtual void Draw(bool checktrans = false);

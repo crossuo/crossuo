@@ -3,7 +3,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "ProfessionManager.h"
+#include "SkillsManager.h"
+#include "ClilocManager.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../OrionApplication.h"
+#include "../Profession.h"
+#include "../OrionWindow.h"
 
 CProfessionManager g_ProfessionManager;
 
@@ -42,7 +48,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
     DEBUG_TRACE_FUNCTION;
     PROFESSION_TYPE type = PT_NO_PROF;
-    std::vector<string> childrens;
+    vector<string> childrens;
     string name{};
     string trueName{};
     uint32_t nameClilocID = 0;
@@ -312,8 +318,7 @@ bool CProfessionManager::Load()
     {
         while (!file.IsEOF())
         {
-            std::vector<std::string> strings = file.ReadTokens();
-
+            auto strings = file.ReadTokens();
             if (!strings.empty())
             {
                 if (ToLowerA(strings[0]) == string("begin"))

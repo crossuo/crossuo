@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "ColorManager.h"
+#include "FileManager.h"
+
 CColorManager g_ColorManager;
 
 CColorManager::CColorManager()

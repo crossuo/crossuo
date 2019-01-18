@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include "GameObject.h"
+
+class CMulti;
+class CMultiObject;
+
 class CGameItem : public CGameObject
 {
 public:

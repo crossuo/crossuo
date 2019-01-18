@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "BaseScreen.h"
+#include "../SelectedObject.h"
+#include "../Managers/MouseManager.h"
+#include "../Managers/ScreenEffectManager.h"
+
 CBaseScreen *g_CurrentScreen = nullptr;
 
 CBaseScreen::CBaseScreen(CGump &gump)

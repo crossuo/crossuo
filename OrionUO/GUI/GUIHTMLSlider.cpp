@@ -1,6 +1,9 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIHTMLSlider.h"
+#include "GUIHTMLGump.h"
+
 CGUIHTMLSlider::CGUIHTMLSlider(
     CGUIHTMLGump *htmlGump,
     int serial,
@@ -45,8 +48,8 @@ void CGUIHTMLSlider::CalculateOffset()
 
     if (m_HTMLGump != nullptr)
     {
-        Wisp::CPoint2Di currentOffset = m_HTMLGump->CurrentOffset;
-        Wisp::CPoint2Di availableOffset = m_HTMLGump->AvailableOffset;
+        CPoint2Di currentOffset = m_HTMLGump->CurrentOffset;
+        CPoint2Di availableOffset = m_HTMLGump->AvailableOffset;
 
         if (Vertical)
         {

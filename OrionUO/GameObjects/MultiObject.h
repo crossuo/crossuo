@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "RenderStaticObject.h"
+
 class CMultiObject : public CRenderStaticObject
 {
 public:

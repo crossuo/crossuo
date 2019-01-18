@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GumpDye.h"
+#include "../Network/Packets.h"
+
 CGumpDye::CGumpDye(uint32_t serial, int16_t x, int16_t y, uint16_t graphic)
     : CGumpSelectColor(serial, x, y, SCGS_OPT_TOOLTIP_TEXT)
 {

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../RenderObject.h"
+
 class CRenderTextObject : public CRenderObject
 {
 public:

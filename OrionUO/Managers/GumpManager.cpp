@@ -2,6 +2,48 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpManager.h"
+#include "ConfigManager.h"
+#include "SkillsManager.h"
+#include "MacroManager.h"
+#include "OptionsMacroManager.h"
+#include "MouseManager.h"
+#include "../Point.h"
+#include "../OrionUO.h"
+#include "../Party.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../OrionWindow.h"
+#include "../UseItemsList.h"
+#include "../ContainerStack.h"
+#include "../Container.h"
+#include "../TextEngine/GameConsole.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../Gumps/Gump.h"
+#include "../Gumps/GumpMenubar.h"
+#include "../Gumps/GumpMinimap.h"
+#include "../Gumps/GumpSkills.h"
+#include "../Gumps/GumpSkill.h"
+#include "../Gumps/GumpJournal.h"
+#include "../Gumps/GumpBook.h"
+#include "../Gumps/GumpSpell.h"
+#include "../Gumps/GumpConsoleType.h"
+#include "../Gumps/GumpBuff.h"
+#include "../Gumps/GumpStatusbar.h"
+#include "../Gumps/GumpPaperdoll.h"
+#include "../Gumps/GumpWorldMap.h"
+#include "../Gumps/GumpAbility.h"
+#include "../Gumps/GumpRacialAbility.h"
+#include "../Gumps/GumpRacialAbilitiesBook.h"
+#include "../Gumps/GumpPropertyIcon.h"
+#include "../Gumps/GumpCombatBook.h"
+#include "../Gumps/GumpSecureTrading.h"
+#include "../Gumps/GumpCustomHouse.h"
+#include "../Gumps/GumpPopupMenu.h"
+#include "../Gumps/GumpOptions.h"
+#include "../Gumps/GumpMenu.h"
+#include "../Gumps/GumpGeneric.h"
+#include "../Network/Packets.h"
 
 CGumpManager g_GumpManager;
 
@@ -672,7 +714,7 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 
             if (canMove && gump->CanBeMoved() && !gump->NoMove && !g_ObjectInHand.Enabled)
             {
-                Wisp::CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
+                CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
 
                 if (gump->GumpType == GT_STATUSBAR)
                 {
@@ -1423,7 +1465,7 @@ void CGumpManager::Load(const os_path &path)
             g_ConfigManager.GameWindowY = 40;
         }
 
-        Wisp::CSize windowSize = g_OrionWindow.GetSize();
+        CSize windowSize = g_OrionWindow.GetSize();
 
         int x = g_ConfigManager.GameWindowX + g_ConfigManager.GameWindowWidth;
         int y = g_ConfigManager.GameWindowY;
@@ -1483,7 +1525,7 @@ void CGumpManager::Load(const os_path &path)
 
     if (!bufficonWindowFound)
     {
-        Wisp::CSize windowSize = g_OrionWindow.GetSize();
+        CSize windowSize = g_OrionWindow.GetSize();
 
         int x = g_ConfigManager.GameWindowX + (int)(g_ConfigManager.GameWindowWidth * 0.7f);
         int y = g_ConfigManager.GameWindowY + g_ConfigManager.GameWindowHeight;

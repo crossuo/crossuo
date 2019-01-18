@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "BaseGUI.h"
+
 class CGUIWorldMapTexture : public CBaseGUI
 {
 public:

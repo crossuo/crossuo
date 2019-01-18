@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
+class CBaseProfession;
+
 class CProfessionManager : public CBaseQueue
 {
 private:

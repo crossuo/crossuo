@@ -2,7 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "SelectTownScreen.h"
+#include "CreateCharacterScreen.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../CityList.h"
+#include "../OrionWindow.h"
+#include "../Managers/ScreenEffectManager.h"
+#include "../Network/Packets.h"
 
 CSelectTownScreen g_SelectTownScreen;
 

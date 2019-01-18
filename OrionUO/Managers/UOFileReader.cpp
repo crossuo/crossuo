@@ -1,6 +1,11 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "UOFileReader.h"
+#include "ColorManager.h"
+#include "../OrionUO.h"
+#include "../StumpsData.h"
+
 UOFileReader g_UOFileReader;
 
 vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)

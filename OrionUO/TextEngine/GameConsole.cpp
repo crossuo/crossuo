@@ -1,6 +1,15 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GameConsole.h"
+#include "../OrionUO.h"
+#include "../Party.h"
+#include "../DefinitionMacro.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/ConfigManager.h"
+#include "../Network/Packets.h"
+#include "../GameObjects/GamePlayer.h"
+
 CGameConsole g_GameConsole;
 
 CGameConsole::CGameConsole()

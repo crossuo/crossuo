@@ -3,6 +3,17 @@
 
 #include "GumpSecureTrading.h"
 #include "../Config.h"
+#include "../OrionUO.h"
+#include "../Target.h"
+#include "../PressedObject.h"
+#include "../SelectedObject.h"
+#include "../ClickObject.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
+#include "../GameObjects/GameWorld.h"
+#include "../GameObjects/ObjectOnCursor.h"
+#include "../GameObjects/GamePlayer.h"
+#include "../Network/Packets.h"
 
 CGumpSecureTrading::CGumpSecureTrading(uint32_t serial, short x, short y, uint32_t id, uint32_t id2)
     : CGump(GT_TRADE, serial, x, y)
@@ -255,9 +266,9 @@ CRenderObject *CGumpSecureTrading::Select()
 
     CRenderObject *selected = CGump::Select();
 
-    Wisp::CPoint2Di oldPos = g_MouseManager.Position;
+    CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position =
-        Wisp::CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
+        CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
 
     m_TextRenderer.Select(this);
 

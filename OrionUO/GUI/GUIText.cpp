@@ -1,6 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GUIText.h"
+#include "../Managers/FontsManager.h"
+#include "../Managers/MouseManager.h"
+
 CGUIText::CGUIText(uint16_t color, int x, int y)
     : CBaseGUI(GOT_TEXT, 0, 0, color, x, y)
 {

@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "../Platform.h"
+#include "BaseScreen.h"
+#include "../Gumps/GumpScreenCharacterList.h"
 
 class CCharacterListScreen : public CBaseScreen
 {

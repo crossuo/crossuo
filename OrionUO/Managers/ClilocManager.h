@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../BaseQueue.h"
+
 typedef map<uint32_t, string> CLILOC_MAP;
 
 class CCliloc : public CBaseQueueItem

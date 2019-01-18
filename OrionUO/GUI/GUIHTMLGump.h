@@ -3,15 +3,22 @@
 
 #pragma once
 
+#include "GUIPolygonal.h"
+class CGUIHTMLResizepic;
+class CGUIHTMLButton;
+class CGUIHTMLHitBox;
+class CGUIScissor;
+class CGUIHTMLSlider;
+
 class CGUIHTMLGump : public CGUIPolygonal
 {
 public:
     bool HaveBackground = false;
     bool HaveScrollbar = false;
-    Wisp::CSize DataSize = Wisp::CSize();
-    Wisp::CPoint2Di DataOffset = Wisp::CPoint2Di();
-    Wisp::CPoint2Di CurrentOffset = Wisp::CPoint2Di();
-    Wisp::CPoint2Di AvailableOffset = Wisp::CPoint2Di();
+    CSize DataSize = CSize();
+    CPoint2Di DataOffset = CPoint2Di();
+    CPoint2Di CurrentOffset = CPoint2Di();
+    CPoint2Di AvailableOffset = CPoint2Di();
 
 private:
     void CalculateDataSize(CBaseGUI *item, int &startX, int &startY, int &endX, int &endY);

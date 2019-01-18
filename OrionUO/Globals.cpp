@@ -1,6 +1,12 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Target.h"
+#include "Point.h"
+#include "GameObjects/GameWorld.h"
+#include "GameObjects/GameCharacter.h"
+#include "Utility/PingThread.h"
+
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
 bool g_ShiftPressed = false;
@@ -37,11 +43,11 @@ GAME_STATE g_GameState = GS_MAIN;
 
 CGLTexture g_TextureGumpState[2];
 
-Wisp::CSize g_MapSize[MAX_MAPS_COUNT] = {
+CSize g_MapSize[MAX_MAPS_COUNT] = {
     // Felucca      Trammel         Ilshenar        Malas           Tokuno          TerMur
     { 7168, 4096 }, { 7168, 4096 }, { 2304, 1600 }, { 2560, 2048 }, { 1448, 1448 }, { 1280, 4096 },
 };
-Wisp::CSize g_MapBlockSize[MAX_MAPS_COUNT];
+CSize g_MapBlockSize[MAX_MAPS_COUNT];
 
 int g_MultiIndexCount = 0;
 
@@ -50,8 +56,8 @@ CGLFrameBuffer g_LightBuffer;
 bool g_GumpPressed = false;
 class CRenderObject *g_GumpSelectedElement = nullptr;
 class CRenderObject *g_GumpPressedElement = nullptr;
-Wisp::CPoint2Di g_GumpMovingOffset;
-Wisp::CPoint2Df g_GumpTranslate;
+CPoint2Di g_GumpMovingOffset;
+CPoint2Df g_GumpTranslate;
 bool g_ShowGumpLocker = false;
 
 bool g_GrayedPixels = false;
@@ -106,7 +112,7 @@ uint32_t g_DeathScreenTimer = 0;
 
 float g_AnimCharactersDelayValue = 80.0f; //0x50
 
-Wisp::CPoint2Di g_RemoveRangeXY;
+CPoint2Di g_RemoveRangeXY;
 
 int g_GrayMenuCount = 0;
 
@@ -163,7 +169,7 @@ PING_INFO_DATA g_GameServerPingInfo = {};
 string g_PingString = {};
 uint32_t g_PingTimer = 0;
 
-bool CanBeDraggedByOffset(const Wisp::CPoint2Di &point)
+bool CanBeDraggedByOffset(const CPoint2Di &point)
 {
     if (g_Target.IsTargeting())
     {
@@ -267,7 +273,7 @@ int GetDistance(CGameObject *current, CGameObject *target)
     return 100500;
 }
 
-int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target)
+int GetDistance(CGameObject *current, const CPoint2Di &target)
 {
     if (current != nullptr)
     {
@@ -285,7 +291,7 @@ int GetDistance(CGameObject *current, const Wisp::CPoint2Di &target)
     return 100500;
 }
 
-int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target)
+int GetDistance(const CPoint2Di &current, CGameObject *target)
 {
     if (target != nullptr)
     {
@@ -303,17 +309,17 @@ int GetDistance(const Wisp::CPoint2Di &current, CGameObject *target)
     return 100500;
 }
 
-int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target)
+int GetRemoveDistance(const CPoint2Di &current, CGameObject *target)
 {
     if (target != nullptr)
     {
-        Wisp::CPoint2Di targetPoint(target->GetX(), target->GetY());
+        CPoint2Di targetPoint(target->GetX(), target->GetY());
 
         if (target->NPC && !((CGameCharacter *)target)->m_Steps.empty())
         {
             CWalkData &wd = ((CGameCharacter *)target)->m_Steps.back();
 
-            targetPoint = Wisp::CPoint2Di(wd.X, wd.Y);
+            targetPoint = CPoint2Di(wd.X, wd.Y);
         }
 
         int distx = abs(targetPoint.X - current.X);
@@ -330,7 +336,7 @@ int GetRemoveDistance(const Wisp::CPoint2Di &current, CGameObject *target)
     return 100500;
 }
 
-bool CheckMultiDistance(const Wisp::CPoint2Di &current, CGameObject *target, int maxDistance)
+bool CheckMultiDistance(const CPoint2Di &current, CGameObject *target, int maxDistance)
 {
     bool result = false;
 
@@ -346,7 +352,7 @@ bool CheckMultiDistance(const Wisp::CPoint2Di &current, CGameObject *target, int
     return result;
 }
 
-int GetDistance(const Wisp::CPoint2Di &current, const Wisp::CPoint2Di &target)
+int GetDistance(const CPoint2Di &current, const CPoint2Di &target)
 {
     int distx = abs(target.X - current.X);
     int disty = abs(target.Y - current.Y);

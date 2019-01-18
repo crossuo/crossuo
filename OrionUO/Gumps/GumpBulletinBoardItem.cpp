@@ -3,6 +3,9 @@
 
 #include "GumpBulletinBoardItem.h"
 #include "../Config.h"
+#include "../Managers/GumpManager.h"
+#include "../Network/Packets.h"
+#include "../GameObjects/GamePlayer.h"
 
 enum
 {

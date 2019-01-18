@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "../Platform.h"
+#include "../GUI/GUI.h"
+#include "../RenderObject.h"
 
 class CBaseGUI;
 
@@ -54,7 +56,7 @@ public:
     bool RemoveMark = false;
     bool NoProcess = false;
     bool Visible = true;
-    Wisp::CRect GumpRect = Wisp::CRect();
+    CRect GumpRect = CRect();
 
 protected:
     CGUIButton m_Locker{ CGUIButton(0, 0, 0, 0, 0, 0) };
@@ -82,9 +84,9 @@ public:
     static void GetItemsSize(
         CGump *gump,
         CBaseGUI *start,
-        Wisp::CPoint2Di &minPosition,
-        Wisp::CPoint2Di &maxPosition,
-        Wisp::CPoint2Di &offset,
+        CPoint2Di &minPosition,
+        CPoint2Di &maxPosition,
+        CPoint2Di &offset,
         int count,
         int currentPage,
         int draw2Page);

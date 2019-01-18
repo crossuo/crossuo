@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "GumpBaseScroll.h"
+
 class CGumpTip : public CGumpBaseScroll
 {
     bool Updates = false;
