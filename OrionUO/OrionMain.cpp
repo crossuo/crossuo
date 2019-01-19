@@ -15,7 +15,7 @@
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
     DEBUG_TRACE_FUNCTION;
-    INITLOGGER(L"uolog.txt");
+    INITLOGGER(L"orionuo.log");
 
     //ParseCommandLine(); // FIXME
     if (SDL_Init(SDL_INIT_TIMER) < 0)
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
     SDL_Log("SDL Initialized.");
     g_App.Init();
-    INITLOGGER("uolog.txt");
+    INITLOGGER("orionuo.log");
     LoadGlobalConfig();
 
     // TODO: good cli parsing api

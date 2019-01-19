@@ -230,7 +230,7 @@ void COrion::ParseCommandLine() // FIXME: move this out
 #if defined(ORION_WINDOWS)
     int argc = 0;
     auto *args = CommandLineToArgvW(GetCommandLineW(), &argc);
-    auto defaultPluginPath{ g_App.ExeFilePath("OA/OrionAssistant.dll") };
+    auto defaultPluginPath{ g_App.ExeFilePath("OrionAssistant.dll") };
     string defaultPluginFunction = "Install";
 #else
     // FIXME: again, move this out! and receive args from the real main

@@ -7,6 +7,7 @@
 #include "enumlist.h"
 
 #if defined(_MSC_VER)
+#undef CDECL
 #define CDECL __cdecl
 #else
 #define CDECL

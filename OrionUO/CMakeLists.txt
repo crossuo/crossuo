@@ -409,7 +409,12 @@ else()
   string(REPLACE ".cpp" ".h" headers "${SRCS}")
   string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   string(REPLACE "CommonInterfaces.h" "plugin/commoninterfaces.h" headers "${headers}")
-  source_group("${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
+
+  if(${CMAKE_VERSION} VERSION_LESS "3.8.0") 
+    source_group("${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
+  else()
+    source_group(TREE "${PROJECT_SOURCE_DIR}/OrionUO/" FILES ${SRCS} ${headers})
+  endif()
 
   if(NOT ORION_WINDOWS)
     add_library(orion SHARED ${SRCS} ${headers})
