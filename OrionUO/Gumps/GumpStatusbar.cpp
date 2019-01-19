@@ -572,7 +572,7 @@ void CGumpStatusbar::UpdateContent()
             int xOffset = 0;
             // Client version specifics drawing
 #define USE_CUSTOM_STATUSBAR 0
-#ifdef USE_CUSTOM_STATUSBAR
+#if USE_CUSTOM_STATUSBAR
             {
                 static const int ROW_0_Y = 26;
                 static const int ROW_1_Y = 56;
