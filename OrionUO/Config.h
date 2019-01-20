@@ -24,7 +24,7 @@ struct Config
     uint32_t Key1 = 0;
     uint32_t Key2 = 0;
     uint32_t Key3 = 0;
-    uint32_t ClientVersion = 0;
+    uint32_t ClientVersion = CV_LATEST;
     uint32_t EncryptionType = 0;
 };
 
