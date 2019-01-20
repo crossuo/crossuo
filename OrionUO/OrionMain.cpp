@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
     SDL_Log("SDL Initialized.");
     g_App.Init();
-    INITLOGGER("orionuo.log");
+    INITLOGGER(ToPath("orionuo.log"));
     LoadGlobalConfig();
 
     // TODO: good cli parsing api
