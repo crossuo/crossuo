@@ -43,5 +43,5 @@ only_commits:
   files:
     - CMakeLists.txt
     - appveyor.yml
-    - CrossUO/
+    - src/
     - CMake/

@@ -40,7 +40,7 @@ $ mkdir build
 $ cd build
 $ cmake -G Ninja ../crossuo -DCMAKE_BUILD_TYPE=Release
 $ ninja crossuo -j8
-$ cd crossuo
+$ cd src
 $ ./crossuo
 ```
 
@@ -64,7 +64,7 @@ $ mkdir build
 $ cd build
 $ cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
 $ ninja crossuo -j8
-$ cd crossuo
+$ cd src
 $ ./crossuo
 ```
   > You'll need a `crossuo.cfg` in the working directory. Please use X:UO Launcher to configure the client.
