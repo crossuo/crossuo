@@ -332,7 +332,7 @@ set(crossuo_src
 )
 
 if(XUO_WINDOWS)
-  set(cross_src ${cross_src}
+  set(crossuo_src ${crossuo_src}
     VMQuery.cpp                 # FIXME: windows only, rap, coredump
     StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
     ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
