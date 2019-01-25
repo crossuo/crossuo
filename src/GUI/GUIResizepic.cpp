@@ -18,7 +18,7 @@ CGUIResizepic::~CGUIResizepic()
 void CGUIResizepic::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteResizepic(Graphic);
+    g_Game.ExecuteResizepic(Graphic);
 }
 
 void CGUIResizepic::Draw(bool checktrans)
@@ -28,7 +28,7 @@ void CGUIResizepic::Draw(bool checktrans)
 
     for (int i = 0; i < 9; i++)
     {
-        CGLTexture *pth = g_Game. ExecuteGump(Graphic + (int)i);
+        CGLTexture *pth = g_Game.ExecuteGump(Graphic + (int)i);
 
         if (pth == nullptr)
         {
@@ -80,5 +80,5 @@ bool CGUIResizepic::Select()
         return CGUIPolygonal::Select();
     }
 
-    return g_Game. ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, Height);
+    return g_Game.ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, Height);
 }

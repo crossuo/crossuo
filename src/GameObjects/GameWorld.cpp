@@ -84,7 +84,7 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
             }
             soundID += incID;
             gc->StepSoundOffset = (incID + 1) % 2;
-            g_Game. PlaySoundEffect(soundID); //0x0129 - 0x0134
+            g_Game.PlaySoundEffect(soundID); //0x0129 - 0x0134
             gc->LastStepSoundTime = ticks + delaySound;
         }
     }
@@ -1072,7 +1072,7 @@ void CGameWorld::UpdateGameObject(
     {
         if (obj->NPC || obj->IsCorpse())
         {
-            g_Game. Click(obj->Serial);
+            g_Game.Click(obj->Serial);
         }
     }
 
@@ -1137,11 +1137,11 @@ void CGameWorld::UpdatePlayer(
         {
             if (g_Player->Dead())
             {
-                g_Game. ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
+                g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
             }
             else
             {
-                g_Game. ChangeSeason(g_OldSeason, g_OldSeasonMusic);
+                g_Game.ChangeSeason(g_OldSeason, g_OldSeasonMusic);
             }
         }
 

@@ -59,28 +59,28 @@ void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
     }
     else if (action == ID_SMOOTH_CLS_CONNECT)
     {
-        g_Game. Connect();
+        g_Game.Connect();
     }
     else if (action == ID_SMOOTH_CLS_SELECT_CHARACTER)
     {
         if (g_CharacterList.GetName(g_CharacterList.Selected).length() == 0u)
         {
-            g_Game. InitScreen(GS_PROFESSION_SELECT);
+            g_Game.InitScreen(GS_PROFESSION_SELECT);
         }
         else
         {
-            g_Game. CharacterSelection(g_CharacterList.Selected);
+            g_Game.CharacterSelection(g_CharacterList.Selected);
         }
     }
     else if (action == ID_SMOOTH_CLS_GO_SCREEN_PROFESSION_SELECT)
     {
-        g_Game. InitScreen(GS_PROFESSION_SELECT);
+        g_Game.InitScreen(GS_PROFESSION_SELECT);
     }
     else if (action == ID_SMOOTH_CLS_GO_SCREEN_DELETE)
     {
         if (g_CharacterList.GetSelectedName().length() != 0u)
         {
-            g_Game. InitScreen(GS_DELETE);
+            g_Game.InitScreen(GS_DELETE);
             g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
         }
     }

@@ -521,7 +521,7 @@ void CConfigManager::SetSound(bool val)
     m_Sound = val;
     if (this == &g_ConfigManager && !val)
     {
-        g_Game. AdjustSoundEffects(g_Ticks + 100000);
+        g_Game.AdjustSoundEffects(g_Ticks + 100000);
     }
 }
 
@@ -541,7 +541,7 @@ void CConfigManager::SetSoundVolume(uint8_t val)
     DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && m_SoundVolume != val)
     {
-        g_Game. AdjustSoundEffects(g_Ticks + 100000, val);
+        g_Game.AdjustSoundEffects(g_Ticks + 100000, val);
     }
 
     m_SoundVolume = val;
@@ -637,7 +637,7 @@ void CConfigManager::SetDrawStumps(bool val)
 
     if (m_DrawStumps != state && this == &g_ConfigManager)
     {
-        g_Game. ClearTreesTextures();
+        g_Game.ClearTreesTextures();
     }
 
     m_DrawStumps = state;
@@ -655,7 +655,7 @@ void CConfigManager::SetMarkingCaves(bool val)
 
     if (m_MarkingCaves != state && this == &g_ConfigManager)
     {
-        g_Game. ClearCaveTextures();
+        g_Game.ClearCaveTextures();
     }
 
     m_MarkingCaves = state;

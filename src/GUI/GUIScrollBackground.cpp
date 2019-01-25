@@ -20,7 +20,7 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, 
 
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game. ExecuteGump(Graphic + (int)i);
+        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
 
         if (th[i] != nullptr)
         {
@@ -59,7 +59,7 @@ void CGUIScrollBackground::UpdateHeight(int height)
 
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game. ExecuteGump(Graphic + (int)i);
+        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
 
         if (th[i] == nullptr)
         {
@@ -74,7 +74,7 @@ void CGUIScrollBackground::UpdateHeight(int height)
 void CGUIScrollBackground::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGumpPart(Graphic, 4);
+    g_Game.ExecuteGumpPart(Graphic, 4);
 }
 
 void CGUIScrollBackground::Draw(bool checktrans)
@@ -84,7 +84,7 @@ void CGUIScrollBackground::Draw(bool checktrans)
 
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game. ExecuteGump(Graphic + (int)i);
+        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
 
         if (th[i] == nullptr)
         {
@@ -150,7 +150,7 @@ bool CGUIScrollBackground::Select()
 
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game. ExecuteGump(Graphic + (int)i);
+        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
 
         if (th[i] == nullptr)
         {
@@ -160,8 +160,8 @@ bool CGUIScrollBackground::Select()
 
     y = m_Y;
 
-    select = g_Game. GumpPixelsInXY(Graphic, m_X, y) ||
-             g_Game. GumpPixelsInXY(
+    select = g_Game.GumpPixelsInXY(Graphic, m_X, y) ||
+             g_Game.GumpPixelsInXY(
                  Graphic + 3, m_X + BottomOffsetX, y + Height - th[3]->Height); //Top/Bottom scrolls
 
     x = m_X + OffsetX;
@@ -180,13 +180,13 @@ bool CGUIScrollBackground::Select()
                 if (deltaHeight > 0)
                 {
                     select =
-                        g_Game. GumpPixelsInXY(Graphic + (int)i, x, y + currentY, 0, deltaHeight);
+                        g_Game.GumpPixelsInXY(Graphic + (int)i, x, y + currentY, 0, deltaHeight);
                 }
 
                 return select;
             }
             {
-                select = g_Game. GumpPixelsInXY(Graphic + (int)i, x, y + currentY);
+                select = g_Game.GumpPixelsInXY(Graphic + (int)i, x, y + currentY);
             }
 
             currentY += th[i]->Height;

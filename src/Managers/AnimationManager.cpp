@@ -1793,7 +1793,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                         20,
                         40);
                     bool selected = g_SelectedObject.Object == ro;
-                    g_Game. DrawStaticArt(
+                    g_Game.DrawStaticArt(
                         sittingData.Graphic,
                         selected ? 0x0035 : ro->Color,
                         ro->RealDrawX,

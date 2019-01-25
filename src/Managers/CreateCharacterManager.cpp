@@ -189,27 +189,27 @@ void CCreateCharacterManager::Init()
     DEBUG_TRACE_FUNCTION;
     for (int i = 1; i < HUMAN_MALE_HAIR_COUNT; i++)
     {
-        g_Game. ExecuteGump(m_HumanMaleHairStyleTable[i].GumpID);
+        g_Game.ExecuteGump(m_HumanMaleHairStyleTable[i].GumpID);
     }
 
     for (int i = 1; i < HUMAN_FEMALE_HAIR_COUNT; i++)
     {
-        g_Game. ExecuteGump(m_HumanFemaleHairStyleTable[i].GumpID);
+        g_Game.ExecuteGump(m_HumanFemaleHairStyleTable[i].GumpID);
     }
 
     for (int i = 1; i < HUMAN_MALE_FACIAL_HAIR_COUNT; i++)
     {
-        g_Game. ExecuteGump(m_HumanBeardStyleTable[i].GumpID);
+        g_Game.ExecuteGump(m_HumanBeardStyleTable[i].GumpID);
     }
 
     for (int i = 1; i < ELF_MALE_HAIR_COUNT; i++)
     {
-        g_Game. ExecuteGump(m_ElfMaleHairStyleTable[i].GumpID);
+        g_Game.ExecuteGump(m_ElfMaleHairStyleTable[i].GumpID);
     }
 
     for (int i = 1; i < ELF_FEMALE_HAIR_COUNT; i++)
     {
-        g_Game. ExecuteGump(m_ElfFemaleHairStyleTable[i].GumpID);
+        g_Game.ExecuteGump(m_ElfFemaleHairStyleTable[i].GumpID);
     }
 }
 

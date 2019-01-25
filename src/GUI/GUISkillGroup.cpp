@@ -59,7 +59,7 @@ void CGUISkillGroup::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
     m_Minimizer->PrepareTextures();
-    g_Game. ExecuteGump(0x0835);
+    g_Game.ExecuteGump(0x0835);
     m_Name->PrepareTextures();
 
     QFOR(item, m_Items, CBaseGUI *)
@@ -77,7 +77,7 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
     DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = m_Name;
 
-    if (g_Game. PolygonePixelsInXY(m_X + m_Minimizer->GetX(), m_Y + m_Minimizer->GetY(), 14, 14))
+    if (g_Game.PolygonePixelsInXY(m_X + m_Minimizer->GetX(), m_Y + m_Minimizer->GetY(), 14, 14))
     {
         selected = m_Minimizer;
     }
@@ -148,7 +148,7 @@ void CGUISkillGroup::Draw(bool checktrans)
 
         if (x > 0)
         {
-            g_Game. DrawGump(0x0835, 0, x, 5, width, 0);
+            g_Game.DrawGump(0x0835, 0, x, 5, width, 0);
         }
     }
 

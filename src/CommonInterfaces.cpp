@@ -121,58 +121,58 @@ void CDECL FUNCBODY_DrawTextW(
 
 void CDECL FUNCBODY_DrawArt(int x, int y, unsigned short graphic, unsigned short color)
 {
-    g_Game. DrawStaticArt(graphic, color, x, y);
+    g_Game.DrawStaticArt(graphic, color, x, y);
 }
 
 void CDECL FUNCBODY_DrawArtAnimated(int x, int y, unsigned short graphic, unsigned short color)
 {
-    g_Game. DrawStaticArtAnimated(graphic, color, x, y);
+    g_Game.DrawStaticArtAnimated(graphic, color, x, y);
 }
 
 void CDECL FUNCBODY_DrawResizepicGump(int x, int y, unsigned short graphic, int width, int height)
 {
-    g_Game. DrawResizepicGump(graphic, x, y, width, height);
+    g_Game.DrawResizepicGump(graphic, x, y, width, height);
 }
 
 void CDECL FUNCBODY_DrawGump(int x, int y, unsigned short graphic, unsigned short color)
 {
-    g_Game. DrawGump(graphic, color, x, y);
+    g_Game.DrawGump(graphic, color, x, y);
 }
 
 void CDECL FUNCBODY_DrawGumppic(
     int x, int y, unsigned short graphic, unsigned short color, int width, int height)
 {
-    g_Game. DrawGump(graphic, color, x, y, width, height);
+    g_Game.DrawGump(graphic, color, x, y, width, height);
 }
 
 uint64_t CDECL FUNCBODY_GetLandFlags(unsigned short graphic)
 {
-    return g_Game. GetLandFlags(graphic);
+    return g_Game.GetLandFlags(graphic);
 }
 
 uint64_t CDECL FUNCBODY_GetStaticFlags(unsigned short graphic)
 {
-    return g_Game. GetStaticFlags(graphic);
+    return g_Game.GetStaticFlags(graphic);
 }
 
 int CDECL FUNCBODY_GetValueInt(VALUE_KEY_INT key, int value)
 {
-    return g_Game. ValueInt(key, value);
+    return g_Game.ValueInt(key, value);
 }
 
 void CDECL FUNCBODY_SetValueInt(VALUE_KEY_INT key, int value)
 {
-    g_Game. ValueInt(key, value);
+    g_Game.ValueInt(key, value);
 }
 
 IGameString *CDECL FUNCBODY_GetValueString(VALUE_KEY_STRING key, const char *value)
 {
-    return &g_GameString(g_Game. ValueString(key, value));
+    return &g_GameString(g_Game.ValueString(key, value));
 }
 
 void CDECL FUNCBODY_SetValueString(VALUE_KEY_STRING key, const char *value)
 {
-    g_Game. ValueString(key, value);
+    g_Game.ValueString(key, value);
 }
 
 void CDECL FUNCBODY_SetTargetData(unsigned char *buf, int size)
@@ -272,7 +272,7 @@ void CDECL FUNCBODY_SendMenuResponse(unsigned int serial, unsigned int id, int c
 
 void CDECL FUNCBODY_DisplayStatusbarGump(unsigned int serial, int x, int y)
 {
-    g_Game. DisplayStatusbarGump(serial, x, y);
+    g_Game.DisplayStatusbarGump(serial, x, y);
 }
 
 void CDECL FUNCBODY_CloseStatusbarGump(unsigned int serial)
@@ -282,7 +282,7 @@ void CDECL FUNCBODY_CloseStatusbarGump(unsigned int serial)
 
 void CDECL FUNCBODY_Logout()
 {
-    g_Game. LogOut();
+    g_Game.LogOut();
 }
 
 void CDECL FUNCBODY_SecureTradingCheckState(unsigned int id1, bool state)
@@ -611,7 +611,7 @@ void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, XUO_RAW_ART_INFO &info)
 {
     if (index < MAX_LAND_DATA_INDEX_COUNT)
     {
-        CIndexObjectLand &landData = g_Game. m_LandDataIndex[index];
+        CIndexObjectLand &landData = g_Game.m_LandDataIndex[index];
 
         if (landData.Address != 0)
         {
@@ -640,7 +640,7 @@ void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, XUO_RAW_ART_INFO &inf
 {
     if (index < MAX_STATIC_DATA_INDEX_COUNT)
     {
-        CIndexObjectStatic &staticData = g_Game. m_StaticDataIndex[index];
+        CIndexObjectStatic &staticData = g_Game.m_StaticDataIndex[index];
 
         if (staticData.Address != 0)
         {
@@ -669,7 +669,7 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, XUO_RAW_GUMP_INFO &info
 {
     if (index < MAX_GUMP_DATA_INDEX_COUNT)
     {
-        CIndexGump &gumpData = g_Game. m_GumpDataIndex[index];
+        CIndexGump &gumpData = g_Game.m_GumpDataIndex[index];
 
         if (gumpData.Address != 0)
         {

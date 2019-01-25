@@ -685,7 +685,7 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
                 return;
             }
 
-            g_Game. UseSkill(index);
+            g_Game.UseSkill(index);
         }
         else if (serial >= ID_GS_GROUP_MINIMIZE) //Скрыть/раскрыть группу
         {

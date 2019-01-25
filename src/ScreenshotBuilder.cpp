@@ -106,12 +106,12 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     }
     if (result == 0)
     {
-        g_Game. CreateTextMessageF(3, 0, "Failed to write screenshot");
+        g_Game.CreateTextMessageF(3, 0, "Failed to write screenshot");
         return;
     }
 
     if (g_GameState >= GS_GAME)
     {
-        g_Game. CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
+        g_Game.CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
     }
 }

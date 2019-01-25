@@ -198,7 +198,7 @@ void CSoundManager::PauseSound()
 {
     SOUND_DEBUG_TRACE;
     s_backend.setPauseAll(true);
-    g_Game. AdjustSoundEffects(g_Ticks + 100000);
+    g_Game.AdjustSoundEffects(g_Ticks + 100000);
 }
 
 void CSoundManager::ResumeSound()
@@ -369,7 +369,7 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     char musicPath[100] = { 0 };
     MidiInfoStruct midiInfo = s_MidiInfo[index];
     sprintf_s(musicPath, "music/%s", midiInfo.musicName);
-/*
+    /*
     static bool tsfLoaded = false;
     if (!tsfLoaded)
     {

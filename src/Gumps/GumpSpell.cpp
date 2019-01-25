@@ -516,7 +516,7 @@ bool CGumpSpell::OnLeftMouseButtonDoubleClick()
 
     int spellIndex = Serial - spellIndexOffset + ((int)SpellType * 100);
 
-    g_Game. CastSpell(spellIndex);
+    g_Game.CastSpell(spellIndex);
 
     return true;
 }

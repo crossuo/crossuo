@@ -28,7 +28,7 @@ void CQuestArrow::Draw()
 
         uint16_t gumpID = m_Gump + ((dir + 1) % 8);
 
-        CSize size = g_Game. GetGumpDimension(gumpID);
+        CSize size = g_Game.GetGumpDimension(gumpID);
 
         int gox = X - g_Player->GetX();
         int goy = Y - g_Player->GetY();
@@ -63,13 +63,13 @@ void CQuestArrow::Draw()
 
             g_ColorizerShader.Use();
 
-            g_Game. DrawGump(gumpID, 0x0021, x, y);
+            g_Game.DrawGump(gumpID, 0x0021, x, y);
 
             UnuseShader();
         }
         else
         {
-            g_Game. DrawGump(gumpID, 0, x, y);
+            g_Game.DrawGump(gumpID, 0, x, y);
         }
     }
 }

@@ -338,7 +338,7 @@ void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
         m_TextContainer.Add(td);
         m_TextRenderer.AddText(td);
 
-        g_Game. AddJournalMessage(td, "");
+        g_Game.AddJournalMessage(td, "");
     }
 }
 
@@ -373,7 +373,7 @@ void CGumpPaperdoll::PrepareContent()
                     //if (g_Target.IsTargeting())
                     //	g_Target.SendCancelTarget();
 
-                    g_Game. PickupItem(equipment);
+                    g_Game.PickupItem(equipment);
                     //g_LastGumpLeftMouseDown = 0;
                     g_PressedObject.ClearLeft();
                     g_MouseManager.LeftDropPosition = g_MouseManager.Position;
@@ -567,7 +567,7 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     int cOfs = gumpOffset;
 
-                    if (obj->Female && g_Game. ExecuteGump(id + cOfs) == nullptr)
+                    if (obj->Female && g_Game.ExecuteGump(id + cOfs) == nullptr)
                     {
                         cOfs = MALE_GUMP_OFFSET;
                     }
@@ -601,7 +601,7 @@ void CGumpPaperdoll::UpdateContent()
 
                     int cOfs = gumpOffset;
 
-                    if (obj->Female && (g_Game. ExecuteGump(id + cOfs) == nullptr))
+                    if (obj->Female && (g_Game.ExecuteGump(id + cOfs) == nullptr))
                     {
                         cOfs = MALE_GUMP_OFFSET;
                     }
@@ -636,12 +636,12 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     uint32_t slotSerial = ID_GP_ITEMS + equipment->Layer;
 
-                    CIndexObjectStatic &sio = g_Game. m_StaticDataIndex[equipment->Graphic];
+                    CIndexObjectStatic &sio = g_Game.m_StaticDataIndex[equipment->Graphic];
                     CGLTexture *texture = sio.Texture;
 
                     if (texture == nullptr)
                     {
-                        texture = g_Game. ExecuteStaticArt(equipment->Graphic);
+                        texture = g_Game.ExecuteStaticArt(equipment->Graphic);
                     }
 
                     if (texture == nullptr)
@@ -769,7 +769,7 @@ void CGumpPaperdoll::UpdateContent()
                     break;
             }
 
-            if (g_Game. ExecuteGump(backpackGraphic) == nullptr)
+            if (g_Game.ExecuteGump(backpackGraphic) == nullptr)
             {
                 backpackGraphic = equipment->AnimID + 50000;
             }
@@ -870,12 +870,12 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
         }
         case ID_GP_BUTTON_OPTIONS: //Paperdoll button Options
         {
-            g_Game. OpenConfiguration();
+            g_Game.OpenConfiguration();
             break;
         }
         case ID_GP_BUTTON_LOGOUT: //Paperdoll button Log Out
         {
-            g_Game. OpenLogOut();
+            g_Game.OpenLogOut();
             break;
         }
         case ID_GP_BUTTON_JOURNAL_OR_QUESTS: //Paperdoll button Journal
@@ -886,13 +886,13 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
             }
             else
             {
-                g_Game. OpenJournal();
+                g_Game.OpenJournal();
             }
             break;
         }
         case ID_GP_BUTTON_SKILLS: //Paperdoll button Skills
         {
-            g_Game. OpenSkills();
+            g_Game.OpenSkills();
             break;
         }
         case ID_GP_BUTTON_CHAT_OR_GUILD: //Paperdoll button Chat
@@ -903,18 +903,18 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
             }
             else
             {
-                g_Game. OpenChat();
+                g_Game.OpenChat();
             }
             break;
         }
         case ID_GP_BUTTON_WARMODE: //Paperdoll button Peace/War
         {
-            g_Game. ChangeWarmode();
+            g_Game.ChangeWarmode();
             break;
         }
         case ID_GP_BUTTON_STATUS: //Paperdoll button Status
         {
-            g_Game. OpenStatus(Serial);
+            g_Game.OpenStatus(Serial);
             g_MouseManager.LastLeftButtonClickTimer = 0;
             break;
         }
@@ -986,11 +986,11 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
                 {
                     if (Serial != g_PlayerSerial)
                     {
-                        g_Game. DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
+                        g_Game.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
                     }
                     else
                     {
-                        g_Game. DropItem(equipment->Serial, 0xFFFF, 0xFFFF, 0);
+                        g_Game.DropItem(equipment->Serial, 0xFFFF, 0xFFFF, 0);
                     }
 
                     g_MouseManager.LeftDropPosition = g_MouseManager.Position;
@@ -1009,11 +1009,11 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
                 {
                     if (Serial != g_PlayerSerial)
                     {
-                        g_Game. EquipItem(container->Serial);
+                        g_Game.EquipItem(container->Serial);
                     }
                     else
                     {
-                        g_Game. EquipItem();
+                        g_Game.EquipItem();
                     }
 
                     g_MouseManager.LeftDropPosition = g_MouseManager.Position;
@@ -1027,7 +1027,7 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
         }
         else
         {
-            g_Game. PlaySoundEffect(0x0051);
+            g_Game.PlaySoundEffect(0x0051);
         }
     }
 
@@ -1076,13 +1076,13 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
     {
         if (serial == ID_GP_PROFILE_SCROLL)
         {
-            g_Game. OpenProfile(Serial);
+            g_Game.OpenProfile(Serial);
 
             result = true;
         }
         else if (serial == ID_GP_PARTY_MANIFEST_SCROLL)
         {
-            g_Game. OpenPartyManifest();
+            g_Game.OpenPartyManifest();
 
             result = true;
         }
@@ -1094,13 +1094,13 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
         }
         else if (serial == ID_GP_COMBAT_BOOK)
         {
-            g_Game. OpenCombatBookGump();
+            g_Game.OpenCombatBookGump();
 
             result = true;
         }
         else if (serial == ID_GP_RACIAL_ABILITIES_BOOK)
         {
-            g_Game. OpenRacialAbilitiesBookGump();
+            g_Game.OpenRacialAbilitiesBookGump();
 
             result = true;
         }
@@ -1117,7 +1117,7 @@ bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
 
             if (equipment != nullptr)
             {
-                g_Game. DoubleClick(equipment->Serial);
+                g_Game.DoubleClick(equipment->Serial);
 
                 result = true;
             }

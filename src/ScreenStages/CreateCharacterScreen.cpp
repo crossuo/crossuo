@@ -63,18 +63,18 @@ void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
     }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_CHARACTER)
     {
-        g_Game. InitScreen(GS_CHARACTER);
+        g_Game.InitScreen(GS_CHARACTER);
     }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_CONNECT)
     {
-        g_Game. InitScreen(GS_GAME_CONNECT);
+        g_Game.InitScreen(GS_GAME_CONNECT);
         g_ConnectionScreen.SetType(CST_GAME);
         g_ConnectionScreen.SetConnectionFailed(true);
         g_ConnectionScreen.SetErrorCode(1);
     }
     else if (action == ID_SMOOTH_CCS_GO_SCREEN_SELECT_TOWN)
     {
-        g_Game. InitScreen(GS_SELECT_TOWN);
+        g_Game.InitScreen(GS_SELECT_TOWN);
     }
 }
 

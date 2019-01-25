@@ -46,7 +46,7 @@ CBaseGUI *CGUIShopResult::SelectedItem()
     CBaseGUI *result = this;
     CSize size = m_MinMaxButtons->GetSize();
 
-    if (g_Game. PolygonePixelsInXY(
+    if (g_Game.PolygonePixelsInXY(
             m_X + m_MinMaxButtons->GetX(), m_Y + m_MinMaxButtons->GetY(), size.Width, size.Height))
     {
         result = m_MinMaxButtons;

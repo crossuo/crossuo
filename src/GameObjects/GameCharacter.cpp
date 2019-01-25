@@ -969,7 +969,7 @@ void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
 
                     if (m_Z - wd.Z >= 22)
                     {
-                        g_Game. CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Ouch!");
+                        g_Game.CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Ouch!");
                         //play sound (5) ?
                     }
 

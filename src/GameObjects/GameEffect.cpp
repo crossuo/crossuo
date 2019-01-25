@@ -36,23 +36,22 @@ void CGameEffect::Draw(int x, int y)
 
         if (moving->FixedDirection)
         {
-            g_Game. DrawStaticArt(objGraphic, Color, drawEffectX, drawEffectY);
+            g_Game.DrawStaticArt(objGraphic, Color, drawEffectX, drawEffectY);
         }
         else
         {
-            g_Game. DrawStaticArtRotated(
-                objGraphic, Color, drawEffectX, drawEffectY, moving->Angle);
+            g_Game.DrawStaticArtRotated(objGraphic, Color, drawEffectX, drawEffectY, moving->Angle);
         }
     }
     else if (EffectType == EF_DRAG)
     {
         CGameEffectDrag *dragEffect = (CGameEffectDrag *)this;
 
-        g_Game. DrawStaticArt(Graphic, Color, x - dragEffect->OffsetX, y - dragEffect->OffsetY);
+        g_Game.DrawStaticArt(Graphic, Color, x - dragEffect->OffsetX, y - dragEffect->OffsetY);
     }
     else
     {
-        g_Game. DrawStaticArt(objGraphic, Color, x, y);
+        g_Game.DrawStaticArt(objGraphic, Color, x, y);
     }
 
     RemoveRenderMode();

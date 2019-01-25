@@ -28,11 +28,11 @@ void CStaticObject::UpdateGraphicBySeason()
     DEBUG_TRACE_FUNCTION;
     //uint16_t graphic = Graphic;
 
-    Graphic = g_Game. GetSeasonGraphic(OriginalGraphic);
+    Graphic = g_Game.GetSeasonGraphic(OriginalGraphic);
 
     //if (Graphic != graphic)
     {
-        Vegetation = g_Game. IsVegetation(Graphic);
+        Vegetation = g_Game.IsVegetation(Graphic);
     }
 
     NoDrawTile = IsNoDrawTile(Graphic);

@@ -22,11 +22,11 @@ void CTargetGump::Draw()
     DEBUG_TRACE_FUNCTION;
     if (Color != 0)
     {
-        g_Game. DrawGump(0x1068, Color, X, Y);
+        g_Game.DrawGump(0x1068, Color, X, Y);
 
         if (Hits > 0)
         {
-            g_Game. DrawGump(0x1069, HealthColor, X, Y, Hits, 0);
+            g_Game.DrawGump(0x1069, HealthColor, X, Y, Hits, 0);
         }
     }
 }
@@ -44,17 +44,17 @@ void CNewTargetSystem::Draw()
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.DisableNewTargetSystem && ColorGump != 0)
     {
-        CIndexObject &top = g_Game. m_GumpDataIndex[GumpTop];
+        CIndexObject &top = g_Game.m_GumpDataIndex[GumpTop];
 
         int x = X - (top.Width / 2);
 
-        g_Game. DrawGump(GumpTop, 0, x, TopY - top.Height);
-        g_Game. DrawGump(ColorGump, 0, x, TopY - top.Height);
-        g_Game. DrawGump(GumpBottom, 0, x, BottomY);
+        g_Game.DrawGump(GumpTop, 0, x, TopY - top.Height);
+        g_Game.DrawGump(ColorGump, 0, x, TopY - top.Height);
+        g_Game.DrawGump(GumpBottom, 0, x, BottomY);
 
         if (Hits > 0)
         {
-            g_Game. DrawGump(0x1069, HealthColor, X - 16, BottomY + 15, Hits, 0);
+            g_Game.DrawGump(0x1069, HealthColor, X - 16, BottomY + 15, Hits, 0);
         }
     }
 }

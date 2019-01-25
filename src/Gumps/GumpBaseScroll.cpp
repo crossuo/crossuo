@@ -30,7 +30,7 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     if (haveMinimizer)
     {
-        CGLTexture *th = g_Game. ExecuteGump(0x082D);
+        CGLTexture *th = g_Game.ExecuteGump(0x082D);
 
         if (th != nullptr)
         {
@@ -141,7 +141,7 @@ void CGumpBaseScroll::UpdateHeight()
 
     int offsetY = 0;
 
-    CGLTexture *th = g_Game. ExecuteGump(0x082D);
+    CGLTexture *th = g_Game.ExecuteGump(0x082D);
 
     if (th != nullptr && m_Minimizer->Visible)
     {

@@ -49,7 +49,7 @@ void CGumpQuestion::GUMP_BUTTON_EVENT_C
         }
         else if (Variant == ID_GQ_STATE_ATTACK_REQUEST)
         {
-            g_Game. AttackReq(ID);
+            g_Game.AttackReq(ID);
             RemoveMark = true;
         }
     }

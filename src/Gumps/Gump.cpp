@@ -175,7 +175,7 @@ bool CGump::SelectLocker()
     DEBUG_TRACE_FUNCTION;
     return (
         (m_Locker.Serial != 0u) && g_ShowGumpLocker &&
-        g_Game. PolygonePixelsInXY(m_Locker.GetX(), m_Locker.GetY(), 10, 14));
+        g_Game.PolygonePixelsInXY(m_Locker.GetX(), m_Locker.GetY(), 10, 14));
 }
 
 bool CGump::TestLockerClick()

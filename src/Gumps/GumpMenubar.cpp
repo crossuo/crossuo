@@ -36,8 +36,8 @@ CGumpMenubar::CGumpMenubar(short x, short y)
     Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A1, 0x15A1, 0x15A1, 5, 3));
 
     Add(new CGUIPage(2));
-    CGLTexture *th1 = g_Game. ExecuteGump(0x098B);
-    CGLTexture *th2 = g_Game. ExecuteGump(0x098D);
+    CGLTexture *th1 = g_Game.ExecuteGump(0x098B);
+    CGLTexture *th2 = g_Game.ExecuteGump(0x098D);
 
     int smallWidth = 50;
     if (th1 != nullptr)
@@ -203,31 +203,31 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
         }
         case ID_GMB_MAP:
         {
-            g_Game. OpenMinimap();
+            g_Game.OpenMinimap();
 
             break;
         }
         case ID_GMB_PAPERDOLL:
         {
-            g_Game. PaperdollReq(g_PlayerSerial);
+            g_Game.PaperdollReq(g_PlayerSerial);
 
             break;
         }
         case ID_GMB_INVENTORY:
         {
-            g_Game. OpenBackpack();
+            g_Game.OpenBackpack();
 
             break;
         }
         case ID_GMB_JOURNAL:
         {
-            g_Game. OpenJournal();
+            g_Game.OpenJournal();
 
             break;
         }
         case ID_GMB_CHAT:
         {
-            g_Game. OpenChat();
+            g_Game.OpenChat();
 
             break;
         }
@@ -239,7 +239,7 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
         }
         case ID_GMB_WORLD_MAP:
         {
-            g_Game. OpenWorldMap();
+            g_Game.OpenWorldMap();
 
             break;
         }

@@ -21,9 +21,9 @@ CGUIButton::~CGUIButton()
 void CGUIButton::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGump(Graphic);
-    g_Game. ExecuteGump(GraphicSelected);
-    g_Game. ExecuteGump(GraphicPressed);
+    g_Game.ExecuteGump(Graphic);
+    g_Game.ExecuteGump(GraphicSelected);
+    g_Game.ExecuteGump(GraphicPressed);
 }
 
 uint16_t CGUIButton::GetDrawGraphic()

@@ -28,7 +28,7 @@ bool CGUIMenuObject::Select()
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
-    CSize size = g_Game. GetStaticArtDimension(Graphic);
+    CSize size = g_Game.GetStaticArtDimension(Graphic);
 
     return (x >= 0 && y >= 0 && x < size.Width && y < size.Height);
 }

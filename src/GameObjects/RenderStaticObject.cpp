@@ -22,7 +22,7 @@ CRenderStaticObject::CRenderStaticObject(
     : CMapObject(renderType, serial, graphic, color, x, y, z)
 {
     DEBUG_TRACE_FUNCTION;
-    m_TiledataPtr = &g_Game. m_StaticData[graphic];
+    m_TiledataPtr = &g_Game.m_StaticData[graphic];
 
     if (m_TiledataPtr->Height > 5)
     {
@@ -199,7 +199,7 @@ bool CRenderStaticObject::IsNoDrawTile(uint16_t graphic)
             return true;
         }
 
-        long long flags = g_Game. GetStaticFlags(graphic);
+        long long flags = g_Game.GetStaticFlags(graphic);
 
         if (!::IsNoDiagonal(flags) ||
             (::IsAnimated(flags) && g_Player != nullptr && g_Player->Race == RT_GARGOYLE))
@@ -233,11 +233,11 @@ void CRenderStaticObject::Draw(int x, int y)
 
     if (g_UseCircleTrans)
     {
-        g_Game. DrawStaticArtAnimatedTransparent(RenderGraphic, RenderColor, x, y);
+        g_Game.DrawStaticArtAnimatedTransparent(RenderGraphic, RenderColor, x, y);
     }
     else
     {
-        g_Game. DrawStaticArtAnimated(RenderGraphic, RenderColor, x, y);
+        g_Game.DrawStaticArtAnimated(RenderGraphic, RenderColor, x, y);
     }
 
     if (useAlpha)
@@ -263,7 +263,7 @@ void CRenderStaticObject::Select(int x, int y)
         }
     }
 
-    if (!g_UseCircleTrans && g_Game. StaticPixelsInXYAnimated(RenderGraphic, x, y))
+    if (!g_UseCircleTrans && g_Game.StaticPixelsInXYAnimated(RenderGraphic, x, y))
     {
         g_SelectedObject.Init(this);
     }
@@ -278,7 +278,7 @@ void CRenderStaticObject::AddText(CTextData *msg)
         m_TextControl->Add(msg);
         Changed = true;
 
-        g_Game. AddJournalMessage(msg, "You see: ");
+        g_Game.AddJournalMessage(msg, "You see: ");
     }
 }
 
@@ -324,7 +324,7 @@ bool CRenderStaticObject::CheckDrawFoliage()
         {
             if (g_ConfigManager.GetDrawStumps())
             {
-                return g_Game. InTileFilter(Graphic);
+                return g_Game.InTileFilter(Graphic);
             }
 
             return true;
@@ -340,7 +340,7 @@ bool CRenderStaticObject::CheckDrawVegetation()
 {
     if (g_ConfigManager.GetNoVegetation() && Vegetation)
     {
-        return g_Game. InTileFilter(Graphic);
+        return g_Game.InTileFilter(Graphic);
     }
 
     return true;

@@ -19,7 +19,7 @@ CGUITilepicScaled::~CGUITilepicScaled()
 void CGUITilepicScaled::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteStaticArt(Graphic);
+    CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
     if (th != nullptr)
     {
         SetShaderMode();

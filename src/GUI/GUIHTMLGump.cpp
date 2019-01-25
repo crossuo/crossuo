@@ -90,7 +90,7 @@ void CGUIHTMLGump::Initalize(bool menu)
 
         if (HaveScrollbar)
         {
-            CGLTexture *th = g_Game. ExecuteGump(0x00FE);
+            CGLTexture *th = g_Game.ExecuteGump(0x00FE);
 
             if (th != nullptr)
             {
@@ -104,7 +104,7 @@ void CGUIHTMLGump::Initalize(bool menu)
         m_ButtonUp = new CGUIHTMLButton(this, Serial, 0x00FA, 0x00FA, 0x00FA, offsetWidth, 0);
         m_ButtonUp->Visible = HaveScrollbar;
 
-        CGLTexture *thDown = g_Game. ExecuteGump(0x00FC);
+        CGLTexture *thDown = g_Game.ExecuteGump(0x00FC);
 
         int sliderHeight = Height;
 
@@ -118,7 +118,7 @@ void CGUIHTMLGump::Initalize(bool menu)
         m_ButtonDown->Color = 1;
         m_ButtonDown->Visible = HaveScrollbar;
 
-        CGLTexture *thUp = g_Game. ExecuteGump(0x00FA);
+        CGLTexture *thUp = g_Game.ExecuteGump(0x00FA);
 
         int sliderStartY = 0;
 
@@ -163,7 +163,7 @@ void CGUIHTMLGump::UpdateHeight(int height)
 
     m_Background->Height = height;
 
-    CGLTexture *thDown = g_Game. ExecuteGump(m_ButtonDown->Graphic);
+    CGLTexture *thDown = g_Game.ExecuteGump(m_ButtonDown->Graphic);
 
     int sliderHeight = height;
 
@@ -174,7 +174,7 @@ void CGUIHTMLGump::UpdateHeight(int height)
 
     m_ButtonDown->SetY(sliderHeight);
 
-    CGLTexture *thUp = g_Game. ExecuteGump(m_ButtonUp->Graphic);
+    CGLTexture *thUp = g_Game.ExecuteGump(m_ButtonUp->Graphic);
 
     int sliderStartY = 0;
 

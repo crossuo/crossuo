@@ -108,7 +108,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
 
                 if (gump == nullptr)
                 {
-                    g_Game. OpenStatus(serial);
+                    g_Game.OpenStatus(serial);
                     gump = (CGumpStatusbar *)g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 
                     if (serial == g_PlayerSerial)
@@ -147,7 +147,7 @@ void CParty::ParsePacketData(Wisp::CDataReader &reader)
                 if (Member[i].Serial == serial)
                 {
                     string str = "[" + Member[i].GetName((int)i) + "]: " + ToString(name);
-                    g_Game. CreateTextMessage(
+                    g_Game.CreateTextMessage(
                         TT_SYSTEM, serial, 3, g_ConfigManager.PartyMessageColor, str);
 
                     break;

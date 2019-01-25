@@ -20,7 +20,7 @@ CSize CGUIDrawObject::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
     CSize size;
-    CGLTexture *th = g_Game. ExecuteGump(GetDrawGraphic());
+    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
 
     if (th != nullptr)
     {
@@ -57,13 +57,13 @@ void CGUIDrawObject::SetShaderMode()
 void CGUIDrawObject::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGump(Graphic);
+    g_Game.ExecuteGump(Graphic);
 }
 
 void CGUIDrawObject::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteGump(GetDrawGraphic());
+    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
 
     if (th != nullptr)
     {
@@ -76,7 +76,7 @@ void CGUIDrawObject::Draw(bool checktrans)
 bool CGUIDrawObject::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {

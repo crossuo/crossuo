@@ -230,7 +230,7 @@ void CGumpBook::ChangePage(int newPage, bool playSound)
 
     if (playSound && Page != newPage)
     {
-        g_Game. PlaySoundEffect(0x0055);
+        g_Game.PlaySoundEffect(0x0055);
     }
 
     Page = newPage;

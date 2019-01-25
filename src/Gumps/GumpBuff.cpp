@@ -207,7 +207,7 @@ void CGumpBuff::GetGumpStatus(
     startGump.X = 0;
     startGump.Y = 0;
 
-    endGump = g_Game. GetGumpDimension(Graphic);
+    endGump = g_Game.GetGumpDimension(Graphic);
 
     switch (Graphic)
     {
@@ -269,7 +269,7 @@ void CGumpBuff::GetGumpStatus(
 
         bool moved = false;
 
-        CSize gumpDim = g_Game. GetGumpDimension(item->Graphic);
+        CSize gumpDim = g_Game.GetGumpDimension(item->Graphic);
 
         if (useX)
         {
@@ -395,7 +395,7 @@ void CGumpBuff::UpdateContent()
 
         CGUIBuff *buff = (CGUIBuff *)item;
 
-        CSize gumpDim = g_Game. GetGumpDimension(buff->Graphic);
+        CSize gumpDim = g_Game.GetGumpDimension(buff->Graphic);
         buff->SetX(startCoordinates.X);
         buff->SetY(startCoordinates.Y);
 

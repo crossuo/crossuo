@@ -822,7 +822,7 @@ void CGame::CheckStaticTileFilterFiles()
 
         for (int i = 0; i < vegetationTilesCount; i++)
         {
-            int64_t flags = g_Game. GetStaticFlags(vegetationTiles[i]);
+            int64_t flags = g_Game.GetStaticFlags(vegetationTiles[i]);
             if ((flags & 0x00000040) != 0)
             {
                 continue;
@@ -878,7 +878,7 @@ void CGame::CheckStaticTileFilterFiles()
                     break;
             }
 
-            int64_t flags = g_Game. GetStaticFlags(graphic);
+            int64_t flags = g_Game.GetStaticFlags(graphic);
 
             if ((flags & 0x00000040) == 0)
             {
@@ -1243,7 +1243,7 @@ void CGame::Process(bool rendering)
 
             if (g_ProcessRemoveRangedTimer < g_Ticks)
             {
-                g_Game. RemoveRangedObjects();
+                g_Game.RemoveRangedObjects();
                 g_ProcessRemoveRangedTimer = g_Ticks + 50;
             }
 
@@ -1988,7 +1988,7 @@ void CGame::ChangeSeason(const SEASON_TYPE &season, int music)
 
     if (music != 0)
     {
-        g_Game. PlayMusic(music, true);
+        g_Game.PlayMusic(music, true);
     }
 }
 
@@ -5192,7 +5192,7 @@ void CGame::PlayMusic(int index, bool warmode)
 void CGame::PlaySoundEffectAtPosition(uint16_t id, int x, int y)
 {
     auto distance = GetDistance(g_Player, CPoint2Di(x, y));
-    g_Game. PlaySoundEffect(id, g_SoundManager.GetVolumeValue(distance));
+    g_Game.PlaySoundEffect(id, g_SoundManager.GetVolumeValue(distance));
 }
 
 void CGame::PlaySoundEffect(uint16_t id, float volume)
@@ -7064,7 +7064,7 @@ void CGame::DisconnectGump()
     DEBUG_TRACE_FUNCTION;
     CServer *server = g_ServerList.GetSelectedServer();
     string str = "Disconnected from " + (server != nullptr ? server->Name : "server name...");
-    g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0x21, str);
+    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x21, str);
 
     int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 100;
     int y = g_ConfigManager.GameWindowY + (g_ConfigManager.GameWindowHeight / 2) - 62;
@@ -7074,7 +7074,7 @@ void CGame::DisconnectGump()
 
     g_GumpManager.AddGump(gump);
 
-    g_Game. InitScreen(GS_GAME_BLOCKED);
+    g_Game.InitScreen(GS_GAME_BLOCKED);
     g_GameBlockedScreen.Code = 0;
 }
 

@@ -192,7 +192,7 @@ void CGumpManager::AddGump(CGump *obj)
                 !g_Party.Contains(gump->Serial))
             {
                 RemoveGump(gump);
-                g_Game. CreateTextMessage(
+                g_Game.CreateTextMessage(
                     TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You have too many non-party status bars");
 
                 break;
@@ -209,7 +209,7 @@ void CGumpManager::AddGump(CGump *obj)
                 uint16_t sound = g_ContainerOffset[obj->Graphic].OpenSound;
                 if (sound != 0u)
                 {
-                    g_Game. PlaySoundEffect(sound);
+                    g_Game.PlaySoundEffect(sound);
                 }
                 break;
             }
@@ -415,7 +415,7 @@ void CGumpManager::RemoveGump(CGump *obj)
 
         if (sound != 0u)
         {
-            g_Game. PlaySoundEffect(sound);
+            g_Game.PlaySoundEffect(sound);
         }
     }
 
@@ -1048,7 +1048,7 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 				}*/
                 case GT_SPELLBOOK:
                 {
-                    g_Game. PlaySoundEffect(0x0055);
+                    g_Game.PlaySoundEffect(0x0055);
                     CloseGump(gump->Serial, gump->ID, gump->GumpType);
 
                     break;
@@ -1237,7 +1237,7 @@ void CGumpManager::Load(const os_path &path)
                 case GT_PAPERDOLL:
                 {
                     gump = new CGumpPaperdoll(g_PlayerSerial, gumpX, gumpY, gumpMinimized != 0u);
-                    g_Game. PaperdollReq(g_PlayerSerial);
+                    g_Game.PaperdollReq(g_PlayerSerial);
                     paperdollRequested = true;
                     break;
                 }
@@ -1544,7 +1544,7 @@ void CGumpManager::Load(const os_path &path)
 
     if (!paperdollRequested)
     {
-        g_Game. PaperdollReq(g_PlayerSerial);
+        g_Game.PaperdollReq(g_PlayerSerial);
     }
 
     AddGump(new CGumpConsoleType(minimizedConsoleType, showFullTextConsoleType));

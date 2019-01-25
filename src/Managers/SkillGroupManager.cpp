@@ -255,7 +255,7 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 
         g_GumpManager.AddGump(gump);
 
-        g_Game. InitScreen(GS_GAME_BLOCKED);
+        g_Game.InitScreen(GS_GAME_BLOCKED);
         g_GameBlockedScreen.Code = 4;
 
         return false;

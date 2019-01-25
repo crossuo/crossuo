@@ -19,7 +19,7 @@ void CGUIBuff::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
 
-    CGLTexture *th = g_Game. ExecuteGump(GetDrawGraphic());
+    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
     if (th != nullptr)
     {
         glColor4ub(0xFF, 0xFF, 0xFF, Alpha);

@@ -30,7 +30,7 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
 
     if (g_GrayMenuCount == 0)
     {
-        g_Game. InitScreen(GS_GAME_BLOCKED);
+        g_Game.InitScreen(GS_GAME_BLOCKED);
         g_GameBlockedScreen.Code = 2;
     }
 

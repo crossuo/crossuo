@@ -42,7 +42,7 @@ void CGUIShopItem::UpdateOffsets()
 {
     if (Serial >= 0x40000000)
     {
-        CGLTexture *th = g_Game. ExecuteStaticArt(Graphic);
+        CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
 
         if (th != nullptr)
         {
@@ -159,7 +159,7 @@ void CGUIShopItem::PrepareTextures()
 
     if (Serial >= 0x40000000)
     {
-        g_Game. ExecuteStaticArt(Graphic);
+        g_Game.ExecuteStaticArt(Graphic);
     }
     else
     {
@@ -199,9 +199,9 @@ void CGUIShopItem::PrepareTextures()
         }
     }
 
-    g_Game. ExecuteGump(0x0039);
-    g_Game. ExecuteGump(0x003A);
-    g_Game. ExecuteGump(0x003B);
+    g_Game.ExecuteGump(0x0039);
+    g_Game.ExecuteGump(0x003A);
+    g_Game.ExecuteGump(0x003B);
 }
 
 void CGUIShopItem::SetShaderMode()
@@ -243,7 +243,7 @@ void CGUIShopItem::Draw(bool checktrans)
 
     if (Serial >= 0x40000000)
     {
-        th = g_Game. ExecuteStaticArt(Graphic);
+        th = g_Game.ExecuteStaticArt(Graphic);
 
         if (th != nullptr)
         {
@@ -316,21 +316,21 @@ void CGUIShopItem::Draw(bool checktrans)
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 
-    th = g_Game. ExecuteGump(0x0039);
+    th = g_Game.ExecuteGump(0x0039);
 
     if (th != nullptr)
     {
         th->Draw(2, m_MaxOffset, checktrans);
     }
 
-    th = g_Game. ExecuteGump(0x003A);
+    th = g_Game.ExecuteGump(0x003A);
 
     if (th != nullptr)
     {
         th->Draw(32, m_MaxOffset, 140, 0, checktrans);
     }
 
-    th = g_Game. ExecuteGump(0x003B);
+    th = g_Game.ExecuteGump(0x003B);
 
     if (th != nullptr)
     {

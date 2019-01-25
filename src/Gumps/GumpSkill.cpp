@@ -59,7 +59,7 @@ void CGumpSkill::OnLeftMouseButtonUp()
 
             if ((offset.X == 0) && (offset.Y == 0))
             {
-                g_Game. UseSkill(Serial);
+                g_Game.UseSkill(Serial);
             }
         }
     }

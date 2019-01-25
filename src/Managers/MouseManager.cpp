@@ -216,7 +216,7 @@ bool CMouseManager::LoadCursorTextures()
         {
             uint16_t id = g_CursorData[i][j];
 
-            CGLTexture *pth = g_Game. ExecuteStaticArt(id);
+            CGLTexture *pth = g_Game.ExecuteStaticArt(id);
 
             if (i == 0)
             {
@@ -369,12 +369,12 @@ void CMouseManager::Draw(uint16_t id)
                     int x = g_MouseManager.Position.X + (item.X - item.Y) * 22;
                     int y = g_MouseManager.Position.Y + (item.X + item.Y) * 22 - (item.Z * 4);
 
-                    g_Game. DrawStaticArt(item.Graphic, color, x, y, false);
+                    g_Game.DrawStaticArt(item.Graphic, color, x, y, false);
                 }
             }
             else
             {
-                g_Game. DrawStaticArtInContainer(
+                g_Game.DrawStaticArtInContainer(
                     g_CustomHouseGump->SelectedGraphic,
                     color,
                     g_MouseManager.Position.X,
@@ -407,11 +407,11 @@ void CMouseManager::Draw(uint16_t id)
             {
                 ohGraphic -= GAME_FIGURE_GUMP_OFFSET;
 
-                CGLTexture *to = g_Game. ExecuteGump(ohGraphic);
+                CGLTexture *to = g_Game.ExecuteGump(ohGraphic);
 
                 if (to != nullptr)
                 {
-                    g_Game. DrawGump(
+                    g_Game.DrawGump(
                         ohGraphic,
                         ohColor,
                         g_MouseManager.Position.X - (to->Width / 2),
@@ -420,7 +420,7 @@ void CMouseManager::Draw(uint16_t id)
             }
             else
             {
-                g_Game. DrawStaticArtInContainer(
+                g_Game.DrawStaticArtInContainer(
                     ohGraphic,
                     ohColor,
                     g_MouseManager.Position.X,
@@ -430,7 +430,7 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (doubleDraw)
                 {
-                    g_Game. DrawStaticArtInContainer(
+                    g_Game.DrawStaticArtInContainer(
                         ohGraphic,
                         ohColor,
                         g_MouseManager.Position.X + 5,
@@ -447,7 +447,7 @@ void CMouseManager::Draw(uint16_t id)
         }
     }
 
-    CGLTexture *th = g_Game. ExecuteStaticArt(id);
+    CGLTexture *th = g_Game.ExecuteStaticArt(id);
 
     if (th != nullptr)
     {

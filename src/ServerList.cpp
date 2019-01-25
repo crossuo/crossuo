@@ -88,11 +88,11 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
 
     if (g_ServerList.LastServerIndex < numServers && g_MainScreen.m_AutoLogin->Checked)
     {
-        g_Game. ServerSelection(g_ServerList.LastServerIndex);
+        g_Game.ServerSelection(g_ServerList.LastServerIndex);
     }
     else
     {
-        g_Game. InitScreen(GS_SERVER);
+        g_Game.InitScreen(GS_SERVER);
     }
 
     g_ServerScreen.UpdateContent();

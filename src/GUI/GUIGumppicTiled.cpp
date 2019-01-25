@@ -19,7 +19,7 @@ CGUIGumppicTiled::~CGUIGumppicTiled()
 void CGUIGumppicTiled::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {
@@ -40,7 +40,7 @@ bool CGUIGumppicTiled::Select()
         return false;
     }
 
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {

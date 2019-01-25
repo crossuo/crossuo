@@ -79,7 +79,7 @@ void CPlayer::UpdateAbilities()
 
         uint16_t testGraphic = equippedGraphic - 1;
 
-        if (g_Game. m_StaticData[testGraphic].AnimID == imageID)
+        if (g_Game.m_StaticData[testGraphic].AnimID == imageID)
         {
             graphics[1] = testGraphic;
             count = 2;
@@ -88,7 +88,7 @@ void CPlayer::UpdateAbilities()
         {
             testGraphic = equippedGraphic + 1;
 
-            if (g_Game. m_StaticData[testGraphic].AnimID == imageID)
+            if (g_Game.m_StaticData[testGraphic].AnimID == imageID)
             {
                 graphics[1] = testGraphic;
                 count = 2;

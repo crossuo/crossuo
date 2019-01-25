@@ -75,7 +75,7 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
 
     if (action == ID_SMOOTH_MS_CONNECT)
     {
-        g_Game. Connect();
+        g_Game.Connect();
     }
     else if (action == ID_SMOOTH_MS_QUIT)
     {

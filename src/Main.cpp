@@ -87,7 +87,7 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    g_Game. LoadPluginConfig();
+    g_Game.LoadPluginConfig();
     auto ret = g_App.Run();
     SDL_Quit();
     return ret;

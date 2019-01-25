@@ -157,7 +157,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
     {
         int stumpIndex = 0;
 
-        if (g_Game. IsTreeTile(id, stumpIndex))
+        if (g_Game.IsTreeTile(id, stumpIndex))
         {
             uint16_t *ptr = nullptr;
 
@@ -295,7 +295,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                     pixels[i * width + width - 1] = 0;
                 }
             }
-            else if (g_Game. IsCaveTile(id))
+            else if (g_Game.IsCaveTile(id))
             {
                 for (int y = 0; y < height; y++)
                 {

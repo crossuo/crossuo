@@ -83,7 +83,7 @@ void CEffectManager::AddEffect(CGameEffect *effect)
             {
                 if (effect->EffectType == EF_LIGHTING)
                 {
-                    g_Game. ExecuteGumpPart(0x4E20, 10);
+                    g_Game.ExecuteGumpPart(0x4E20, 10);
 
                     effect->Duration = g_Ticks + 400;
                     effect->Speed = 50;

@@ -197,12 +197,12 @@ bool CGumpTargetSystem::OnLeftMouseButtonDoubleClick()
         {
             if (serial < 0x40000000)
             {
-                g_Game. Attack(serial); //Если в вармоде - атакуем
+                g_Game.Attack(serial); //Если в вармоде - атакуем
             }
         }
         else
         {
-            g_Game. DoubleClick(serial); //Или используем предмет
+            g_Game.DoubleClick(serial); //Или используем предмет
         }
 
         return true;

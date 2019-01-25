@@ -18,7 +18,7 @@ bool CGUIVirtueGump::Select()
 {
     bool select = false;
 
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {

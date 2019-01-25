@@ -311,7 +311,7 @@ void CTarget::SendTarget()
 
     if (Type != 2)
     {
-        g_Game. Send(m_Data, sizeof(m_Data));
+        g_Game.Send(m_Data, sizeof(m_Data));
     }
 
     memset(m_Data, 0, sizeof(m_Data));
@@ -348,7 +348,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
     DEBUG_TRACE_FUNCTION;
     UnloadMulti();
 
-    CIndexMulti &index = g_Game. m_MultiDataIndex[MultiGraphic - 1];
+    CIndexMulti &index = g_Game.m_MultiDataIndex[MultiGraphic - 1];
 
     int count = (int)index.Count;
 

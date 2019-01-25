@@ -56,7 +56,7 @@ void CServerScreen::ProcessSmoothAction(uint8_t action)
 
     if (action == ID_SMOOTH_SS_SELECT_SERVER)
     {
-        g_Game. ServerSelection(SelectionServerTempValue);
+        g_Game.ServerSelection(SelectionServerTempValue);
     }
     else if (action == ID_SMOOTH_SS_QUIT)
     {
@@ -64,7 +64,7 @@ void CServerScreen::ProcessSmoothAction(uint8_t action)
     }
     else if (action == ID_SMOOTH_SS_GO_SCREEN_MAIN)
     {
-        g_Game. Disconnect();
-        g_Game. InitScreen(GS_MAIN);
+        g_Game.Disconnect();
+        g_Game.InitScreen(GS_MAIN);
     }
 }

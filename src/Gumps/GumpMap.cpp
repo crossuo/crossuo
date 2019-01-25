@@ -282,14 +282,14 @@ void CGumpMap::GenerateFrame(bool stop)
 
                     if (LineUnderMouse(checkX, checkY, nextDrawX, nextDrawY) != 0)
                     {
-                        g_Game. DrawGump(0x139B, 0, checkX - 2, checkY - 8);
+                        g_Game.DrawGump(0x139B, 0, checkX - 2, checkY - 8);
                     }
                 }
             }
 
             if (item != m_PinOnCursor)
             {
-                g_Game. DrawGump(0x139B, 0, drawX, drawY);
+                g_Game.DrawGump(0x139B, 0, drawX, drawY);
 
                 if (idx - 1 < (int)m_Labels.size())
                 {
@@ -336,7 +336,7 @@ CRenderObject *CGumpMap::Select()
                 }
             }
 
-            if (g_Game. PolygonePixelsInXY(drawX, drawY, 10, 10))
+            if (g_Game.PolygonePixelsInXY(drawX, drawY, 10, 10))
             {
                 g_SelectedObject.Init(item, this);
                 g_SelectedObject.Serial = item->Serial + ID_GM_PIN_LIST;
@@ -428,7 +428,7 @@ void CGumpMap::OnLeftMouseButtonUp()
                 int x = m_X + 24;
                 int y = m_Y + 32;
 
-                if (g_Game. PolygonePixelsInXY(x, y, Width, Height))
+                if (g_Game.PolygonePixelsInXY(x, y, Width, Height))
                 {
                     x = g_MouseManager.Position.X - x - 4;
                     y = g_MouseManager.Position.Y - y - 2;
@@ -449,7 +449,7 @@ void CGumpMap::OnLeftMouseButtonUp()
 
         int idx = g_PressedObject.LeftSerial - ID_GM_PIN_LIST - 1;
 
-        if (g_Game. PolygonePixelsInXY(x, y, Width, Height))
+        if (g_Game.PolygonePixelsInXY(x, y, Width, Height))
         {
             x = g_MouseManager.Position.X - (x - 4);
             y = g_MouseManager.Position.Y - (y - 2);

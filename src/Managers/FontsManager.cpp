@@ -135,7 +135,7 @@ void CFontsManager::GoToWebLink(uint16_t link)
     if (it != m_WebLink.end())
     {
         it->second.Visited = true;
-        g_Game. GoToWebLink(it->second.WebLink);
+        g_Game.GoToWebLink(it->second.WebLink);
     }
 }
 

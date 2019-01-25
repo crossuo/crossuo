@@ -19,7 +19,7 @@ CSize CGUITilepic::GetSize()
     DEBUG_TRACE_FUNCTION;
     CSize size;
 
-    CGLTexture *th = g_Game. ExecuteStaticArt(Graphic);
+    CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
 
     if (th != nullptr)
     {
@@ -33,13 +33,13 @@ CSize CGUITilepic::GetSize()
 void CGUITilepic::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteStaticArt(Graphic);
+    g_Game.ExecuteStaticArt(Graphic);
 }
 
 void CGUITilepic::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteStaticArt(Graphic);
+    CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
 
     if (th != nullptr)
     {
@@ -54,7 +54,7 @@ bool CGUITilepic::Select()
     DEBUG_TRACE_FUNCTION;
     //if (CGUIDrawObject::Select())
     //	return true;
-    CGLTexture *th = g_Game. m_StaticDataIndex[Graphic].Texture;
+    CGLTexture *th = g_Game.m_StaticDataIndex[Graphic].Texture;
 
     if (th != nullptr)
     {

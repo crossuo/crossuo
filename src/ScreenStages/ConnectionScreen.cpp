@@ -81,15 +81,15 @@ void CConnectionScreen::ProcessSmoothAction(uint8_t action)
 
     if (action == ID_SMOOTH_CS_GO_SCREEN_MAIN)
     {
-        g_Game. InitScreen(GS_MAIN);
+        g_Game.InitScreen(GS_MAIN);
     }
     else if (action == ID_SMOOTH_CS_GO_SCREEN_CHARACTER)
     {
-        g_Game. InitScreen(GS_CHARACTER);
+        g_Game.InitScreen(GS_CHARACTER);
     }
     else if (action == ID_SMOOTH_CS_GO_SCREEN_PROFESSION)
     {
-        g_Game. InitScreen(GS_PROFESSION_SELECT);
+        g_Game.InitScreen(GS_PROFESSION_SELECT);
     }
     else if (action == ID_SMOOTH_CS_SEND_DELETE)
     {

@@ -38,7 +38,7 @@ CGUIComboBox::CGUIComboBox(
 
     if (CompositeBackground)
     {
-        CGLTexture *th = g_Game. ExecuteGump(OpenGraphic);
+        CGLTexture *th = g_Game.ExecuteGump(OpenGraphic);
 
         if (th != nullptr)
         {
@@ -46,7 +46,7 @@ CGUIComboBox::CGUIComboBox(
             m_OffsetY = th->Height;
         }
 
-        th = g_Game. ExecuteGump(OpenGraphic + 1);
+        th = g_Game.ExecuteGump(OpenGraphic + 1);
 
         if (th != nullptr)
         {
@@ -54,7 +54,7 @@ CGUIComboBox::CGUIComboBox(
             m_WorkWidth = th->Width - 12;
         }
 
-        th = g_Game. ExecuteGump(Graphic);
+        th = g_Game.ExecuteGump(Graphic);
 
         if (th != nullptr && (Width == 0))
         {
@@ -123,16 +123,16 @@ void CGUIComboBox::PrepareTextures()
     DEBUG_TRACE_FUNCTION;
     if (CompositeBackground)
     {
-        g_Game. ExecuteGump(Graphic);
-        g_Game. ExecuteGump(0x0985);
-        g_Game. ExecuteGump(0x0983);
-        g_Game. ExecuteGumpPart(OpenGraphic, 5);
+        g_Game.ExecuteGump(Graphic);
+        g_Game.ExecuteGump(0x0985);
+        g_Game.ExecuteGump(0x0983);
+        g_Game.ExecuteGumpPart(OpenGraphic, 5);
     }
     else
     {
-        g_Game. ExecuteResizepic(Graphic);
-        g_Game. ExecuteResizepic(OpenGraphic);
-        g_Game. ExecuteGump(0x00FC);
+        g_Game.ExecuteResizepic(Graphic);
+        g_Game.ExecuteResizepic(OpenGraphic);
+        g_Game.ExecuteGump(0x00FC);
     }
 }
 
@@ -194,24 +194,24 @@ void CGUIComboBox::Draw(bool checktrans)
                 bodyY -= m_WorkHeight / 2;
             }
 
-            g_Game. DrawGump(OpenGraphic, 0, m_X, posY);
-            g_Game. DrawGump(0x0983, 0, m_X + m_ArrowX, posY + 2);
+            g_Game.DrawGump(OpenGraphic, 0, m_X, posY);
+            g_Game.DrawGump(0x0983, 0, m_X + m_ArrowX, posY + 2);
 
             int graphicOffset = 0;
 
             for (int i = 0; i < m_ShowItemsCount; i++)
             {
-                g_Game. DrawGump(OpenGraphic + 1 + graphicOffset, 0, m_X + 5, bodyY);
+                g_Game.DrawGump(OpenGraphic + 1 + graphicOffset, 0, m_X + 5, bodyY);
                 graphicOffset = (graphicOffset + 1) % 3;
                 bodyY += bodyStep;
             }
 
-            g_Game. DrawGump(OpenGraphic + 4, 0, m_X, bodyY);
-            g_Game. DrawGump(0x0985, 0, m_X + m_ArrowX, bodyY);
+            g_Game.DrawGump(OpenGraphic + 4, 0, m_X, bodyY);
+            g_Game.DrawGump(0x0985, 0, m_X + m_ArrowX, bodyY);
         }
         else
         {
-            g_Game. DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6);
+            g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6);
         }
 
         g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
@@ -269,11 +269,11 @@ void CGUIComboBox::Draw(bool checktrans)
         {
             if (Width != 0)
             {
-                g_Game. DrawGump(Graphic, 0, m_X, m_Y, Width, 0);
+                g_Game.DrawGump(Graphic, 0, m_X, m_Y, Width, 0);
             }
             else
             {
-                g_Game. DrawGump(Graphic, 0, m_X, m_Y);
+                g_Game.DrawGump(Graphic, 0, m_X, m_Y);
             }
 
             if (selected != nullptr)
@@ -283,11 +283,11 @@ void CGUIComboBox::Draw(bool checktrans)
                 g_GL.PopScissor();
             }
 
-            g_Game. DrawGump(0x0985, 0, m_X + m_MinimizedArrowX, m_Y + 6);
+            g_Game.DrawGump(0x0985, 0, m_X + m_MinimizedArrowX, m_Y + 6);
         }
         else
         {
-            g_Game. DrawResizepicGump(Graphic, m_X, m_Y, Width, 20);
+            g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, 20);
 
             if (selected != nullptr)
             {
@@ -296,7 +296,7 @@ void CGUIComboBox::Draw(bool checktrans)
                 g_GL.PopScissor();
             }
 
-            g_Game. DrawGump(0x00FC, 0, m_X + m_MinimizedArrowX, m_Y - 1);
+            g_Game.DrawGump(0x00FC, 0, m_X + m_MinimizedArrowX, m_Y - 1);
         }
     }
 }
@@ -323,7 +323,7 @@ bool CGUIComboBox::Select()
             currentY -= m_WorkHeight / 2;
         }
 
-        select = g_Game. PolygonePixelsInXY(currentX, currentY, m_WorkWidth, m_WorkHeight);
+        select = g_Game.PolygonePixelsInXY(currentX, currentY, m_WorkWidth, m_WorkHeight);
 
         if (!select)
         {
@@ -343,16 +343,16 @@ bool CGUIComboBox::Select()
         {
             if (Width != 0)
             {
-                select = g_Game. GumpPixelsInXY(Graphic, m_X, m_Y, Width, 0);
+                select = g_Game.GumpPixelsInXY(Graphic, m_X, m_Y, Width, 0);
             }
             else
             {
-                select = g_Game. GumpPixelsInXY(Graphic, m_X, m_Y);
+                select = g_Game.GumpPixelsInXY(Graphic, m_X, m_Y);
             }
         }
         else
         {
-            select = g_Game. ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, 20);
+            select = g_Game.ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, 20);
         }
     }
 
@@ -387,7 +387,7 @@ CBaseGUI *CGUIComboBox::SelectedItem()
         {
             if (item->Type == GOT_TEXT)
             {
-                if (g_Game. PolygonePixelsInXY(currentX, currentY, m_WorkWidth, 14))
+                if (g_Game.PolygonePixelsInXY(currentX, currentY, m_WorkWidth, 14))
                 {
                     select = item;
                     break;

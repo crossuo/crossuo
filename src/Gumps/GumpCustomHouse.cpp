@@ -506,7 +506,7 @@ void CGumpCustomHouse::DrawWallSection()
                 continue;
             }
 
-            CSize dims = g_Game. GetStaticArtDimension(vec[0].East1);
+            CSize dims = g_Game.GetStaticArtDimension(vec[0].East1);
 
             int offsetX = x + 121 + (48 - dims.Width) / 2;
             int offsetY = y + 36;
@@ -546,7 +546,7 @@ void CGumpCustomHouse::DrawWallSection()
 
                 if (graphic != 0u)
                 {
-                    CSize dims = g_Game. GetStaticArtDimension(graphic);
+                    CSize dims = g_Game.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 130 + (48 - dims.Width) / 2;
                     int offsetY = y + 36 + (120 - dims.Height) / 2;
@@ -603,7 +603,7 @@ void CGumpCustomHouse::DrawDoorSection()
 
             if (graphic != 0u)
             {
-                CSize dims = g_Game. GetStaticArtDimension(graphic);
+                CSize dims = g_Game.GetStaticArtDimension(graphic);
 
                 int offsetX = x + 138 + (48 - dims.Width) / 2;
 
@@ -734,7 +734,7 @@ void CGumpCustomHouse::DrawFloorSection()
 
                 if (graphic != 0u)
                 {
-                    CSize dims = g_Game. GetStaticArtDimension(graphic);
+                    CSize dims = g_Game.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 123 + (48 - dims.Width) / 2;
                     int offsetY = y + 36 + (60 - dims.Height) / 2;
@@ -790,7 +790,7 @@ void CGumpCustomHouse::DrawStairSection()
 
                 if (graphic != 0u)
                 {
-                    CSize dims = g_Game. GetStaticArtDimension(graphic);
+                    CSize dims = g_Game.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 123 + (48 - dims.Width) / 2;
                     int offsetY = y + 36 + (60 - dims.Height) / 2;
@@ -842,7 +842,7 @@ void CGumpCustomHouse::DrawRoofSection()
                 continue;
             }
 
-            CSize dims = g_Game. GetStaticArtDimension(vec[0].NSCrosspiece);
+            CSize dims = g_Game.GetStaticArtDimension(vec[0].NSCrosspiece);
 
             int offsetX = x + 121 + (48 - dims.Width) / 2;
             int offsetY = y + 36;
@@ -886,7 +886,7 @@ void CGumpCustomHouse::DrawRoofSection()
 
                     if (graphic != 0u)
                     {
-                        CSize dims = g_Game. GetStaticArtDimension(graphic);
+                        CSize dims = g_Game.GetStaticArtDimension(graphic);
 
                         int offsetX = x + 130 + (48 - dims.Width) / 2;
                         int offsetY = y + 44 + (60 - dims.Height) / 2;
@@ -956,7 +956,7 @@ void CGumpCustomHouse::DrawMiscSection()
                 continue;
             }
 
-            CSize dims = g_Game. GetStaticArtDimension(vec[0].Piece5);
+            CSize dims = g_Game.GetStaticArtDimension(vec[0].Piece5);
 
             int offsetX = x + 121 + (48 - dims.Width) / 2;
             int offsetY = y + 36;
@@ -996,7 +996,7 @@ void CGumpCustomHouse::DrawMiscSection()
 
                 if (graphic != 0u)
                 {
-                    CSize dims = g_Game. GetStaticArtDimension(graphic);
+                    CSize dims = g_Game.GetStaticArtDimension(graphic);
 
                     int offsetX = x + 130 + (48 - dims.Width) / 2;
                     int offsetY = y + 44 + (120 - dims.Height) / 2;

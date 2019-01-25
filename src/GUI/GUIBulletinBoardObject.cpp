@@ -33,13 +33,13 @@ CGUIBulletinBoardObject::~CGUIBulletinBoardObject()
 void CGUIBulletinBoardObject::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGump(0x1523);
+    g_Game.ExecuteGump(0x1523);
 }
 
 void CGUIBulletinBoardObject::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteGump(0x1523);
+    CGLTexture *th = g_Game.ExecuteGump(0x1523);
 
     if (th != nullptr)
     {

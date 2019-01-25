@@ -71,7 +71,7 @@ void CGameItem::OnGraphicChange(int direction)
     DEBUG_TRACE_FUNCTION;
     if (!MultiBody)
     {
-        if (Graphic >= g_Game. m_StaticData.size())
+        if (Graphic >= g_Game.m_StaticData.size())
         {
             return;
         }
@@ -96,7 +96,7 @@ void CGameItem::OnGraphicChange(int direction)
         }
         else
         {
-            m_TiledataPtr = &g_Game. m_StaticData[Graphic];
+            m_TiledataPtr = &g_Game.m_StaticData[Graphic];
             STATIC_TILES &tile = *m_TiledataPtr;
 
             NoDrawTile = IsNoDrawTile(Graphic);
@@ -105,8 +105,8 @@ void CGameItem::OnGraphicChange(int direction)
             {
                 AnimID = tile.AnimID;
 
-                g_Game. ExecuteGump(tile.AnimID + MALE_GUMP_OFFSET);
-                g_Game. ExecuteGump(tile.AnimID + FEMALE_GUMP_OFFSET);
+                g_Game.ExecuteGump(tile.AnimID + MALE_GUMP_OFFSET);
+                g_Game.ExecuteGump(tile.AnimID + FEMALE_GUMP_OFFSET);
 
                 UsedLayer = tile.Layer;
             }
@@ -118,7 +118,7 @@ void CGameItem::OnGraphicChange(int direction)
 
             CalculateFieldColor();
 
-            g_Game. ExecuteStaticArt(Graphic);
+            g_Game.ExecuteStaticArt(Graphic);
         }
     }
     else if (m_Items == nullptr || WantUpdateMulti)
@@ -241,19 +241,19 @@ void CGameItem::Draw(int x, int y)
 
             if (doubleDraw)
             {
-                g_Game. DrawStaticArt(objGraphic, objColor, x - 2, y - 5, selMode || Hidden());
-                g_Game. DrawStaticArt(objGraphic, objColor, x + 3, y, selMode || Hidden());
+                g_Game.DrawStaticArt(objGraphic, objColor, x - 2, y - 5, selMode || Hidden());
+                g_Game.DrawStaticArt(objGraphic, objColor, x + 3, y, selMode || Hidden());
             }
             else
             {
                 if (FieldColor != 0u)
                 {
-                    g_Game. DrawStaticArt(
+                    g_Game.DrawStaticArt(
                         FIELD_REPLACE_GRAPHIC, FieldColor, x, y, selMode || Hidden());
                 }
                 else
                 {
-                    g_Game. DrawStaticArtAnimated(objGraphic, objColor, x, y, selMode || Hidden());
+                    g_Game.DrawStaticArtAnimated(objGraphic, objColor, x, y, selMode || Hidden());
                 }
             }
 
@@ -272,7 +272,7 @@ void CGameItem::Draw(int x, int y)
         if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == Serial &&
             !Locked())
         {
-            CSize size = g_Game. GetStaticArtDimension(Graphic);
+            CSize size = g_Game.GetStaticArtDimension(Graphic);
 
             if (size.Width >= 80)
             {
@@ -333,23 +333,23 @@ void CGameItem::Select(int x, int y)
 
             if (doubleDraw)
             {
-                if (g_Game. StaticPixelsInXY(objGraphic, x - 2, y - 5))
+                if (g_Game.StaticPixelsInXY(objGraphic, x - 2, y - 5))
                 {
                     g_SelectedObject.Init(this);
                 }
-                else if (g_Game. StaticPixelsInXY(objGraphic, x + 3, y))
+                else if (g_Game.StaticPixelsInXY(objGraphic, x + 3, y))
                 {
                     g_SelectedObject.Init(this);
                 }
             }
             else if (FieldColor != 0u)
             {
-                if (g_Game. StaticPixelsInXY(FIELD_REPLACE_GRAPHIC, x, y))
+                if (g_Game.StaticPixelsInXY(FIELD_REPLACE_GRAPHIC, x, y))
                 {
                     g_SelectedObject.Init(this);
                 }
             }
-            else if (g_Game. StaticPixelsInXYAnimated(objGraphic, x, y))
+            else if (g_Game.StaticPixelsInXYAnimated(objGraphic, x, y))
             {
                 g_SelectedObject.Init(this);
             }
@@ -690,7 +690,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
     WantUpdateMulti = false;
 
-    CIndexMulti &index = g_Game. m_MultiDataIndex[Graphic];
+    CIndexMulti &index = g_Game.m_MultiDataIndex[Graphic];
 
     size_t address = index.Address;
     int count = index.Count;

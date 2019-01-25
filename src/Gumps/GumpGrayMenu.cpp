@@ -17,7 +17,7 @@ CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
 
     if (g_GrayMenuCount == 0)
     {
-        g_Game. InitScreen(GS_GAME_BLOCKED);
+        g_Game.InitScreen(GS_GAME_BLOCKED);
         g_GameBlockedScreen.Code = 1;
     }
 
@@ -51,7 +51,7 @@ void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
         }
 
         //Ничего не выбрали
-        g_Game. CreateTextMessage(
+        g_Game.CreateTextMessage(
             TT_SYSTEM, 0xFFFFFFFF, 3, 0x0021, "You must choose the section of menu.");
     }
 }

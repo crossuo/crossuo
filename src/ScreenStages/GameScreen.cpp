@@ -860,7 +860,7 @@ void CGameScreen::AddTileToRenderList(
 
             if (foliageCanBeChecked)
             {
-                CGLTexture *texturePtr = g_Game. ExecuteStaticArt(obj->Graphic);
+                CGLTexture *texturePtr = g_Game.ExecuteStaticArt(obj->Graphic);
 
                 if (texturePtr != nullptr)
                 {
@@ -1045,7 +1045,7 @@ void CGameScreen::CalculateGameWindowBounds()
 
     if (g_GrayedPixels && g_Season != ST_DESOLATION)
     {
-        g_Game. ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
+        g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
     }
 
     g_RenderBounds.PlayerX = g_Player->GetX();
@@ -1295,7 +1295,7 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
 
             if (g_ConfigManager.ColoredLighting)
             {
-                light.Color = g_Game. GetLightColor(graphic);
+                light.Color = g_Game.GetLightColor(graphic);
             }
             else
             {
@@ -1504,7 +1504,7 @@ void CGameScreen::DrawGameWindowLight()
 
             for (int i = 0; i < m_LightCount; i++)
             {
-                g_Game. DrawLight(m_Light[i]);
+                g_Game.DrawLight(m_Light[i]);
             }
 
             glTranslatef(-translateOffsetX, -translateOffsetY, 0.0f);
@@ -1543,7 +1543,7 @@ void CGameScreen::DrawGameWindowLight()
 
         for (int i = 0; i < m_LightCount; i++)
         {
-            g_Game. DrawLight(m_Light[i]);
+            g_Game.DrawLight(m_Light[i]);
         }
 
         glDisable(GL_BLEND);
@@ -1585,11 +1585,11 @@ void CGameScreen::DrawGameWindowText(bool render)
                     {
                         if (i == 0)
                         {
-                            g_Game. DrawGump(0x1068, it->Color, it->X, it->Y);
+                            g_Game.DrawGump(0x1068, it->Color, it->X, it->Y);
                         }
                         else if (it->Width != 0)
                         {
-                            g_Game. DrawGump(0x1069, it->HealthColor, it->X, it->Y, it->Width, 0);
+                            g_Game.DrawGump(0x1069, it->HealthColor, it->X, it->Y, it->Width, 0);
                         }
                     }
                 }
@@ -1688,7 +1688,7 @@ void CGameScreen::PrepareContent()
                     }
                     else if (!g_Target.IsTargeting())
                     {
-                        g_Game. PickupItem(selobj);
+                        g_Game.PickupItem(selobj);
                         g_PressedObject.ClearLeft(); //g_LastObjectLeftMouseDown = 0;
                     }
                 }
@@ -1699,7 +1699,7 @@ void CGameScreen::PrepareContent()
 
                 if (selchar != nullptr) //Character selection
                 {
-                    g_Game. OpenStatus(selchar->Serial);
+                    g_Game.OpenStatus(selchar->Serial);
                     g_GeneratedMouseDown = true;
                     g_GameWindow.EmulateOnLeftMouseButtonDown();
                     PLUGIN_EVENT(UOMSG_STATUS_REQUEST, selchar->Serial);
@@ -2287,7 +2287,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 }
                 else
                 {
-                    g_Game. PlaySoundEffect(0x0051);
+                    g_Game.PlaySoundEffect(0x0051);
                 }
             }
             else if (
@@ -2305,7 +2305,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                 }
                 else
                 {
-                    g_Game. PlaySoundEffect(0x0051);
+                    g_Game.PlaySoundEffect(0x0051);
                 }
             }
 
@@ -2318,7 +2318,7 @@ void CGameScreen::OnLeftMouseButtonUp()
 
                 if (can_drop)
                 {
-                    g_Game. DropItem(drop_container, dropX, dropY, dropZ);
+                    g_Game.DropItem(drop_container, dropX, dropY, dropZ);
                 }
             }
             else if (!g_ObjectInHand.Enabled)
@@ -2342,17 +2342,17 @@ void CGameScreen::OnLeftMouseButtonUp()
                             uint16_t id = rwo->Graphic;
                             wstring str =
                                 g_ClilocManager.Cliloc(g_Language)
-                                    ->GetW(1020000 + id, true, g_Game. m_StaticData[id].Name);
+                                    ->GetW(1020000 + id, true, g_Game.m_StaticData[id].Name);
                             if (str.length() != 0u)
                             {
                                 if (g_Config.ClientVersion >= CV_6000)
                                 {
-                                    g_Game. CreateUnicodeTextMessage(
+                                    g_Game.CreateUnicodeTextMessage(
                                         TT_CLIENT, 0, 1, 0x03B2, str, rwo);
                                 }
                                 else
                                 {
-                                    g_Game. CreateTextMessage(
+                                    g_Game.CreateTextMessage(
                                         TT_CLIENT, 0, 3, 0x03B2, ToString(str), rwo);
                                 }
                             }
@@ -2398,7 +2398,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
             CGameObject *obj = (CGameObject *)g_SelectedObject.Object;
             if (!obj->NPC)
             {
-                g_Game. DoubleClick(g_SelectedObject.Serial);
+                g_Game.DoubleClick(g_SelectedObject.Serial);
             }
             else
             {
@@ -2421,7 +2421,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
                     }
                     else
                     {
-                        g_Game. DoubleClick(serial);
+                        g_Game.DoubleClick(serial);
                     }
                     result = true;
                 }
@@ -2446,11 +2446,11 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
         if (g_Player->Warmode && charUnderMouse != g_PlayerSerial)
         {
-            g_Game. Attack(charUnderMouse);
+            g_Game.Attack(charUnderMouse);
         }
         else
         {
-            g_Game. DoubleClick(charUnderMouse);
+            g_Game.DoubleClick(charUnderMouse);
         }
     }
     return result;
@@ -2494,7 +2494,7 @@ void CGameScreen::OnRightMouseButtonUp()
         {
             if (g_PathFinder.WalkTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
             {
-                g_Game. CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Pathfinding!");
+                g_Game.CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Pathfinding!");
             }
         }
     }
@@ -2511,7 +2511,7 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
         {
             if (g_PathFinder.WalkTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
             {
-                g_Game. CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Pathfinding!");
+                g_Game.CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Pathfinding!");
                 return true;
             }
         }
@@ -2635,7 +2635,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
                 {
                     if (g_ConsolePrompt != 0u)
                     {
-                        g_Game. ConsolePromptSend();
+                        g_Game.ConsolePromptSend();
                     }
                     else if (g_EntryPointer->Length() != 0u)
                     {
@@ -2756,7 +2756,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
 
             if (g_ConsolePrompt != 0u)
             {
-                g_Game. ConsolePromptCancel();
+                g_Game.ConsolePromptCancel();
             }
             break;
         }
@@ -2768,11 +2768,11 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     {
         if (g_ConfigManager.HoldTabForCombat)
         {
-            g_Game. ChangeWarmode(1);
+            g_Game.ChangeWarmode(1);
         }
         else
         {
-            g_Game. ChangeWarmode();
+            g_Game.ChangeWarmode();
         }
     }
 
@@ -2810,7 +2810,7 @@ void CGameScreen::OnKeyUp(const KeyEvent &ev)
     {
         if (g_ConfigManager.HoldTabForCombat)
         {
-            g_Game. ChangeWarmode(0);
+            g_Game.ChangeWarmode(0);
         }
     }
 }

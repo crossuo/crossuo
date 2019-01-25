@@ -141,7 +141,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
     {
         if (g_Party.Leader == 0)
         {
-            g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
+            g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
         }
         else
         {
@@ -157,7 +157,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
     {
         if (g_Party.Leader == 0)
         {
-            g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
+            g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
         }
         else
         {
@@ -185,7 +185,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
 
         if (g_Party.Member[memberIndex].Serial == 0)
         {
-            g_Game. CreateTextMessage(
+            g_Game.CreateTextMessage(
                 TT_SYSTEM, 0xFFFFFFFF, 3, 0, "There is no one in that party slot.");
         }
         else
@@ -201,7 +201,7 @@ void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
 
         if (g_Party.Member[memberIndex].Serial == 0)
         {
-            g_Game. CreateTextMessage(
+            g_Game.CreateTextMessage(
                 TT_SYSTEM, 0xFFFFFFFF, 3, 0, "There is no one in that party slot.");
         }
         else

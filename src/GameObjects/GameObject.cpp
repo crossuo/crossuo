@@ -112,7 +112,7 @@ void CGameObject::DrawObjectHandlesTexture()
             if (name.length() == 0u)
             {
                 name = g_ClilocManager.Cliloc(g_Language)
-                           ->GetW(1020000 + Graphic, true, g_Game. m_StaticData[Graphic].Name);
+                           ->GetW(1020000 + Graphic, true, g_Game.m_StaticData[Graphic].Name);
             }
             GenerateObjectHandlesTexture(name);
         }
@@ -132,7 +132,7 @@ void CGameObject::DrawObjectHandlesTexture()
     }
     else
     {
-        y -= g_Game. GetStaticArtDimension(Graphic).Height;
+        y -= g_Game.GetStaticArtDimension(Graphic).Height;
     }
 
     m_TextureObjectHalndes.Draw(x, y);
@@ -157,7 +157,7 @@ void CGameObject::SelectObjectHandlesTexture()
         }
         else
         {
-            y -= g_Game. GetStaticArtDimension(Graphic).Height;
+            y -= g_Game.GetStaticArtDimension(Graphic).Height;
         }
 
         x = g_MouseManager.Position.X - x;
@@ -309,7 +309,7 @@ void CGameObject::AddText(CTextData *msg)
 			msgname = m_Name + ": ";
 	}*/
 
-    g_Game. AddJournalMessage(msg, JournalPrefix);
+    g_Game.AddJournalMessage(msg, JournalPrefix);
 }
 
 uint16_t CGameObject::GetMountAnimation()
@@ -471,13 +471,13 @@ void CGameObject::DrawEffects(int x, int y)
         {
             uint16_t graphic = 0x4E20 + effect->AnimIndex;
 
-            CSize size = g_Game. GetGumpDimension(graphic);
+            CSize size = g_Game.GetGumpDimension(graphic);
 
-            g_Game. DrawGump(graphic, effect->Color, x - (size.Width / 2), y - size.Height);
+            g_Game.DrawGump(graphic, effect->Color, x - (size.Width / 2), y - size.Height);
         }
         else
         {
-            g_Game. DrawStaticArt(effect->GetCurrentGraphic(), effect->Color, x, y);
+            g_Game.DrawStaticArt(effect->GetCurrentGraphic(), effect->Color, x, y);
         }
 
         effect->RemoveRenderMode();

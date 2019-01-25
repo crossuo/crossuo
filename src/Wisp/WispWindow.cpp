@@ -605,7 +605,7 @@ uint32_t CWindow::PluginEvent(uint32_t id, const void *data)
 {
     return g_PluginManager.OnEvent(id, data);
 }
-};     // namespace Wisp
+}; // namespace Wisp
 
 void GetDisplaySize(int *x, int *y)
 {

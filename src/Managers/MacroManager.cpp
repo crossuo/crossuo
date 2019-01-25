@@ -472,27 +472,27 @@ void CMacroManager::ProcessSubMenu()
             {
                 case MSC_G2_CONFIGURATION:
                 {
-                    g_Game. OpenConfiguration();
+                    g_Game.OpenConfiguration();
                     break;
                 }
                 case MSC_G2_PAPERDOLL:
                 {
-                    g_Game. PaperdollReq(g_PlayerSerial);
+                    g_Game.PaperdollReq(g_PlayerSerial);
                     break;
                 }
                 case MSC_G2_STATUS:
                 {
-                    g_Game. OpenStatus(g_PlayerSerial);
+                    g_Game.OpenStatus(g_PlayerSerial);
                     break;
                 }
                 case MSC_G2_JOURNAL:
                 {
-                    g_Game. OpenJournal();
+                    g_Game.OpenJournal();
                     break;
                 }
                 case MSC_G2_SKILLS:
                 {
-                    g_Game. OpenSkills();
+                    g_Game.OpenSkills();
                     break;
                 }
                 case MSC_G2_MAGE_SPELLBOOK:
@@ -554,24 +554,24 @@ void CMacroManager::ProcessSubMenu()
                     CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
                     if (backpack != nullptr)
                     {
-                        g_Game. DoubleClick(backpack->Serial);
+                        g_Game.DoubleClick(backpack->Serial);
                     }
                     break;
                 }
                 case MSC_G2_OWERVIEW:
                 {
-                    g_Game. OpenMinimap();
+                    g_Game.OpenMinimap();
                     break;
                 }
                 case MSC_G2_WORLD_MAP:
                 {
-                    g_Game. OpenWorldMap();
+                    g_Game.OpenWorldMap();
                     break;
                 }
                 case MSC_G2_MAIL:
                 case MSC_G2_PARTY_MANIFEST:
                 {
-                    g_Game. OpenPartyManifest();
+                    g_Game.OpenPartyManifest();
                     break;
                 }
                 case MSC_G2_GUILD:
@@ -882,7 +882,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_WAR_PEACE:
         {
-            g_Game. ChangeWarmode();
+            g_Game.ChangeWarmode();
 
             break;
         }
@@ -910,7 +910,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_OPEN_DOOR:
         {
-            g_Game. OpenDoor();
+            g_Game.OpenDoor();
             break;
         }
         case MC_USE_SKILL:
@@ -921,14 +921,14 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 skill = m_SkillIndexTable[skill];
                 if (skill != 0xFF)
                 {
-                    g_Game. UseSkill(skill);
+                    g_Game.UseSkill(skill);
                 }
             }
             break;
         }
         case MC_LAST_SKILL:
         {
-            g_Game. UseSkill(g_LastSkillIndex);
+            g_Game.UseSkill(g_LastSkillIndex);
             break;
         }
         case MC_CAST_SPELL:
@@ -962,21 +962,21 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     {
                         spell += 100;
                     }
-                    g_Game. CastSpell(spell);
+                    g_Game.CastSpell(spell);
                 }
             }
             break;
         }
         case MC_LAST_SPELL:
         {
-            g_Game. CastSpell(g_LastSpellIndex);
+            g_Game.CastSpell(g_LastSpellIndex);
             break;
         }
         case MC_LAST_OBJECT:
         {
             if (g_World->FindWorldObject(g_LastUseObject) != nullptr)
             {
-                g_Game. DoubleClick(g_LastUseObject);
+                g_Game.DoubleClick(g_LastUseObject);
             }
             break;
         }
@@ -985,17 +985,17 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             const char *emote[2] = { "bow", "salute" };
             int index = macro->Code - MC_BOW;
-            g_Game. EmoteAction(emote[index]);
+            g_Game.EmoteAction(emote[index]);
             break;
         }
         case MC_QUIT_GAME:
         {
-            g_Game. OpenLogOut();
+            g_Game.OpenLogOut();
             break;
         }
         case MC_ALL_NAMES:
         {
-            g_Game. AllNames();
+            g_Game.AllNames();
             break;
         }
         case MC_LAST_TARGET:
@@ -1065,8 +1065,8 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 CGameItem *objHand = g_World->FindWorldItem(itemInHand[handIndex]);
                 if (objHand != nullptr)
                 {
-                    g_Game. PickupItem(objHand, 1, false);
-                    g_Game. EquipItem(g_PlayerSerial);
+                    g_Game.PickupItem(objHand, 1, false);
+                    g_Game.EquipItem(g_PlayerSerial);
                 }
                 itemInHand[handIndex] = 0;
             }
@@ -1088,8 +1088,8 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 if (objHand != nullptr)
                 {
                     itemInHand[handIndex] = objHand->Serial;
-                    g_Game. PickupItem(objHand, 1, false);
-                    g_Game. DropItem(backpack, 0xFFFF, 0xFFFF, 0);
+                    g_Game.PickupItem(objHand, 1, false);
+                    g_Game.DropItem(backpack, 0xFFFF, 0xFFFF, 0);
                     g_GumpManager.UpdateGump(g_PlayerSerial, 0, GT_PAPERDOLL);
                 }
             }
@@ -1132,7 +1132,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_ATTACK_LAST:
         {
-            g_Game. Attack(g_LastAttackObject);
+            g_Game.Attack(g_LastAttackObject);
             break;
         }
         case MC_DELAY:
@@ -1177,7 +1177,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_SAVE_DESKTOP:
         {
-            g_Game. SaveLocalConfig(g_PacketManager.ConfigSerial);
+            g_Game.SaveLocalConfig(g_PacketManager.ConfigSerial);
             break;
         }
         case MC_ENABLE_RANGE_COLOR:
@@ -1200,7 +1200,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             if (!g_ConfigManager.DisableNewTargetSystem && (g_NewTargetSystem.Serial != 0u) &&
                 g_NewTargetSystem.Serial < 0x40000000)
             {
-                g_Game. Attack(g_NewTargetSystem.Serial);
+                g_Game.Attack(g_NewTargetSystem.Serial);
             }
             break;
         }
@@ -1208,7 +1208,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         {
             if (!g_ConfigManager.DisableNewTargetSystem && (g_NewTargetSystem.Serial != 0u))
             {
-                g_Game. DoubleClick(g_NewTargetSystem.Serial);
+                g_Game.DoubleClick(g_NewTargetSystem.Serial);
             }
             break;
         }
@@ -1288,7 +1288,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     if (bandage != nullptr)
                     {
                         WaitingBandageTarget = true;
-                        g_Game. DoubleClick(bandage->Serial);
+                        g_Game.DoubleClick(bandage->Serial);
                         result = MRC_BREAK_PARSER;
                     }
                 }
@@ -1367,7 +1367,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_UPDATE_RANGE_INFO:
         {
-            g_Game. CreateTextMessageF(
+            g_Game.CreateTextMessageF(
                 3, 0, "Current update range is %i", g_ConfigManager.UpdateRange);
             break;
         }
@@ -1410,7 +1410,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                     "Hostiles", "Party Members", "Followers", "Objects", "Mobiles"
                 };
 
-                g_Game. CreateUnicodeTextMessageF(
+                g_Game.CreateUnicodeTextMessageF(
                     0, 0x038A, "There are no %s on the screen to select.", resultNames[scanType]);
             }
             break;
@@ -1451,7 +1451,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         }
         case MC_KILL_GUMP_OPEN:
         {
-            g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0x77, "That macro is not work now");
+            g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0x77, "That macro is not work now");
             break;
         }
         default:

@@ -40,11 +40,11 @@ void CUseItemActions::Process()
         {
             if (serial < 0x40000000)
             { //NPC
-                g_Game. PaperdollReq(serial);
+                g_Game.PaperdollReq(serial);
             }
             else
             { //item
-                g_Game. DoubleClick(serial);
+                g_Game.DoubleClick(serial);
             }
         }
     }

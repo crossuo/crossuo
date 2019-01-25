@@ -395,5 +395,5 @@ void CGumpRacialAbilitiesBook::ChangePage(int newPage)
     m_PrevPage->Visible = (Page != 0);
     m_NextPage->Visible = (Page + 2 < PagesCount);
 
-    g_Game. PlaySoundEffect(0x0055);
+    g_Game.PlaySoundEffect(0x0055);
 }

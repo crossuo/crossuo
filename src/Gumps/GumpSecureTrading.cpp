@@ -179,7 +179,7 @@ void CGumpSecureTrading::UpdateContent()
                     45 + item->GetX(),
                     70 + item->GetY(),
                     doubleDraw));
-            dataObject->PartialHue = IsPartialHue(g_Game. GetStaticFlags(graphic));
+            dataObject->PartialHue = IsPartialHue(g_Game.GetStaticFlags(graphic));
 
             if (dataObject->GetY() >= 150)
             {
@@ -211,7 +211,7 @@ void CGumpSecureTrading::UpdateContent()
                     192 + item->GetX(),
                     70 + item->GetY(),
                     doubleDraw));
-            dataObject->PartialHue = IsPartialHue(g_Game. GetStaticFlags(graphic));
+            dataObject->PartialHue = IsPartialHue(g_Game.GetStaticFlags(graphic));
 
             if (dataObject->GetY() >= 150)
             {
@@ -315,7 +315,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
         int x = m_X;
         int y = m_Y;
 
-        if (g_Game. PolygonePixelsInXY(x + 45, y + 70, 110, 80))
+        if (g_Game.PolygonePixelsInXY(x + 45, y + 70, 110, 80))
         {
             //if (GetTopObjDistance(g_Player, g_World->FindWorldObject(ID2)) <= DRAG_ITEMS_DISTANCE)
             {
@@ -325,7 +325,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
                 bool doubleDraw = false;
                 uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
 
-                CGLTexture *th = g_Game. ExecuteStaticArt(graphic);
+                CGLTexture *th = g_Game.ExecuteStaticArt(graphic);
 
                 if (th != nullptr)
                 {
@@ -353,7 +353,7 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
                     y = 0;
                 }
 
-                g_Game. DropItem(ID, x, y, 0);
+                g_Game.DropItem(ID, x, y, 0);
                 g_MouseManager.CancelDoubleClick = true;
             }
             //else

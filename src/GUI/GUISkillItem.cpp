@@ -119,14 +119,14 @@ CBaseGUI *CGUISkillItem::SelectedItem()
     DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = this;
 
-    if (g_Game. PolygonePixelsInXY(
+    if (g_Game.PolygonePixelsInXY(
             m_X + m_ButtonStatus->GetX(), m_Y + m_ButtonStatus->GetY(), 14, 14))
     {
         selected = m_ButtonStatus;
     }
     else if (m_ButtonUse != nullptr)
     {
-        if (g_Game. GumpPixelsInXY(
+        if (g_Game.GumpPixelsInXY(
                 m_ButtonUse->Graphic, m_X + m_ButtonUse->GetX(), m_Y + m_ButtonUse->GetY()))
         {
             selected = m_ButtonUse;

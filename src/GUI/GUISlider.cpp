@@ -60,7 +60,7 @@ void CGUISlider::UpdateText()
                 Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
-        CGLTexture *th = g_Game. ExecuteGump(Graphic);
+        CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
         if (th != nullptr)
         {
@@ -182,7 +182,7 @@ CSize CGUISlider::GetSize()
     DEBUG_TRACE_FUNCTION;
     CSize size;
 
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {
@@ -242,7 +242,7 @@ void CGUISlider::OnClick(int x, int y)
     int length = Length;
     int maxValue = MaxValue - MinValue;
 
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {
@@ -273,7 +273,7 @@ void CGUISlider::CalculateOffset()
     int maxValue = MaxValue - MinValue;
     int length = Length;
 
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {
@@ -323,19 +323,19 @@ void CGUISlider::SetTextParameters(
 void CGUISlider::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGump(Graphic);
-    g_Game. ExecuteGump(GraphicSelected);
-    g_Game. ExecuteGump(GraphicPressed);
+    g_Game.ExecuteGump(Graphic);
+    g_Game.ExecuteGump(GraphicSelected);
+    g_Game.ExecuteGump(GraphicPressed);
 
     if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
         {
-            g_Game. ExecuteGumpPart(BackgroundGraphic, 3);
+            g_Game.ExecuteGumpPart(BackgroundGraphic, 3);
         }
         else
         {
-            g_Game. ExecuteGump(BackgroundGraphic);
+            g_Game.ExecuteGump(BackgroundGraphic);
         }
     }
 }
@@ -383,7 +383,7 @@ void CGUISlider::Draw(bool checktrans)
 
             for (int i = 0; i < 3; i++)
             {
-                th[i] = g_Game. ExecuteGump(BackgroundGraphic + (int)i);
+                th[i] = g_Game.ExecuteGump(BackgroundGraphic + (int)i);
 
                 if (th[i] == nullptr)
                 {
@@ -416,7 +416,7 @@ void CGUISlider::Draw(bool checktrans)
         }
         else
         {
-            CGLTexture *th = g_Game. ExecuteGump(BackgroundGraphic);
+            CGLTexture *th = g_Game.ExecuteGump(BackgroundGraphic);
 
             if (th != nullptr)
             {
@@ -432,7 +432,7 @@ void CGUISlider::Draw(bool checktrans)
         }
     }
 
-    CGLTexture *th = g_Game. ExecuteGump(GetDrawGraphic());
+    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
 
     if (th != nullptr)
     {
@@ -455,7 +455,7 @@ void CGUISlider::Draw(bool checktrans)
 bool CGUISlider::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {

@@ -16,5 +16,5 @@ void CApplication::OnMainLoop()
     g_ConnectionManager.Recv();
     g_PacketManager.ProcessPluginPackets();
     g_PacketManager.SendMegaClilocRequests();
-    g_Game. Process(true);
+    g_Game.Process(true);
 }

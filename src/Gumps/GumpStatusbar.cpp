@@ -1657,13 +1657,13 @@ void CGumpStatusbar::GUMP_BUTTON_EVENT_C
     }
     else if (serial == ID_GSB_BUTTON_HEAL_1)
     {
-        g_Game. CastSpell(29);
+        g_Game.CastSpell(29);
         g_PartyHelperTimer = g_Ticks + 500;
         g_PartyHelperTarget = Serial;
     }
     else if (serial == ID_GSB_BUTTON_HEAL_2)
     {
-        g_Game. CastSpell(11);
+        g_Game.CastSpell(11);
         g_PartyHelperTimer = g_Ticks + 500;
         g_PartyHelperTarget = Serial;
     }
@@ -1749,17 +1749,17 @@ bool CGumpStatusbar::OnLeftMouseButtonDoubleClick()
     {
         if (g_Player->Warmode)
         {
-            g_Game. Attack(Serial);
+            g_Game.Attack(Serial);
         }
         else
         {
-            g_Game. DoubleClick(Serial);
+            g_Game.DoubleClick(Serial);
         }
         return true;
     }
     if (!Minimized)
     {
-        g_Game. PaperdollReq(Serial);
+        g_Game.PaperdollReq(Serial);
         return true;
     }
 

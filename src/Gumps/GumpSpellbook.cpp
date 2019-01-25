@@ -1082,11 +1082,11 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 
                 if (g_Config.ClientVersion < CV_308Z)
                 {
-                    g_Game. CastSpellFromBook(spellIndex, Serial);
+                    g_Game.CastSpellFromBook(spellIndex, Serial);
                 }
                 else
                 {
-                    g_Game. CastSpell(spellIndex);
+                    g_Game.CastSpell(spellIndex);
                 }
 
                 //Сворачиваем книгу
@@ -1119,7 +1119,7 @@ void CGumpSpellbook::ChangePage(int newPage)
     m_PrevPage->Visible = (Page != 0);
     m_NextPage->Visible = (Page + 2 < PageCount);
 
-    g_Game. PlaySoundEffect(0x0055);
+    g_Game.PlaySoundEffect(0x0055);
 }
 
 string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {

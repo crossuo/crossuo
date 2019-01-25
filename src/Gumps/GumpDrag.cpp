@@ -108,7 +108,7 @@ void CGumpDrag::OnOkayPressed()
 
             if (obj != nullptr)
             {
-                g_Game. PickupItem(obj, m_Slider->Value);
+                g_Game.PickupItem(obj, m_Slider->Value);
             }
         }
     }

@@ -50,7 +50,7 @@ void CContainerRect::Calculate(uint16_t gumpID)
 {
     DEBUG_TRACE_FUNCTION;
     //!Указатель на текстуру
-    CGLTexture *tex = g_Game. ExecuteGump(gumpID);
+    CGLTexture *tex = g_Game.ExecuteGump(gumpID);
 
     //!Если текстура есть в памяти
     if (tex != nullptr)

@@ -68,7 +68,7 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
             {
                 CLandObject *land = (CLandObject *)obj;
                 uint32_t flags = POF_IMPASSABLE_OR_SURFACE;
-                const uint64_t tiledataFlags = g_Game. GetLandFlags(graphic);
+                const uint64_t tiledataFlags = g_Game.GetLandFlags(graphic);
                 if (stepState == PSS_ON_SEA_HORSE)
                 {
                     if (IsWet(tiledataFlags))

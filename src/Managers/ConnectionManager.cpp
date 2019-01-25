@@ -222,7 +222,7 @@ void CConnectionManager::Recv()
             if (m_LoginSocket.DataReady == -1)
             {
                 LOG("Failed to Recv()...Disconnecting...\n");
-                g_Game. InitScreen(GS_MAIN_CONNECT);
+                g_Game.InitScreen(GS_MAIN_CONNECT);
                 g_ConnectionScreen.SetType(CST_CONLOST);
             }
             return;
@@ -245,11 +245,11 @@ void CConnectionManager::Recv()
                 if (g_GameState == GS_GAME ||
                     (g_GameState == GS_GAME_BLOCKED && (g_GameBlockedScreen.Code != 0u)))
                 {
-                    g_Game. DisconnectGump();
+                    g_Game.DisconnectGump();
                 }
                 else
                 {
-                    g_Game. InitScreen(GS_MAIN_CONNECT);
+                    g_Game.InitScreen(GS_MAIN_CONNECT);
                     g_ConnectionScreen.SetType(CST_CONLOST);
                 }
             }

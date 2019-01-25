@@ -329,10 +329,7 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xCB*/ UMSG(XUO_SAVE_PACKET, 0x07),
     /*0xCC*/
     RMSGH(
-        XUO_IGNORE_PACKET,
-        "Localized Text Plus String",
-        PACKET_VARIABLE_SIZE,
-        DisplayClilocString),
+        XUO_IGNORE_PACKET, "Localized Text Plus String", PACKET_VARIABLE_SIZE, DisplayClilocString),
     /*0xCD*/ UMSG(XUO_SAVE_PACKET, 0x01),
     /*0xCE*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE),
     /*0xCF*/ UMSG(XUO_SAVE_PACKET, 0x4e),
@@ -659,7 +656,7 @@ void CPacketManager::OnReadFailed()
     DEBUG_TRACE_FUNCTION;
 
     LOG("OnReadFailed...Disconnecting...\n");
-    g_Game. DisconnectGump();
+    g_Game.DisconnectGump();
     //g_Game. Disconnect();
     g_AbyssPacket03First = true;
     g_PluginManager.Disconnect();
@@ -813,7 +810,7 @@ PACKET_HANDLER(RelayServer)
     char relayIP[30] = { 0 };
     memcpy(&relayIP[0], inet_ntoa(addr), 29);
     int relayPort = ReadUInt16BE();
-    g_Game. RelayServer(relayIP, relayPort, Ptr);
+    g_Game.RelayServer(relayIP, relayPort, Ptr);
     g_PacketLoginComplete = false;
     g_CurrentMap = 0;
 }
@@ -879,7 +876,7 @@ PACKET_HANDLER(CharacterList)
 PACKET_HANDLER(ResendCharacterList)
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. InitScreen(GS_CHARACTER);
+    g_Game.InitScreen(GS_CHARACTER);
 
     int numSlots = ReadInt8();
     if (*Start == 0x86)
@@ -948,7 +945,7 @@ PACKET_HANDLER(ResendCharacterList)
         g_CharacterList.Selected = autoPos;
         if (g_CharacterList.GetName(autoPos).length() != 0u)
         {
-            g_Game. CharacterSelection(autoPos);
+            g_Game.CharacterSelection(autoPos);
         }
     }
 
@@ -959,7 +956,7 @@ PACKET_HANDLER(ResendCharacterList)
 
     if (!haveCharacter)
     {
-        g_Game. InitScreen(GS_PROFESSION_SELECT);
+        g_Game.InitScreen(GS_PROFESSION_SELECT);
     }
 }
 
@@ -967,7 +964,7 @@ PACKET_HANDLER(LoginComplete)
 {
     DEBUG_TRACE_FUNCTION;
     g_PacketLoginComplete = true;
-    g_Game. LoginComplete(false);
+    g_Game.LoginComplete(false);
 }
 
 PACKET_HANDLER(SetTime)
@@ -989,13 +986,13 @@ PACKET_HANDLER(EnterWorld)
     {
         LOG("Warning!!! Duplicate enter world message\n");
 
-        g_Game. SaveLocalConfig(g_PacketManager.ConfigSerial);
+        g_Game.SaveLocalConfig(g_PacketManager.ConfigSerial);
         ConfigSerial = g_PlayerSerial;
         g_ConfigLoaded = false;
         loadConfig = true;
     }
 
-    g_Game. ClearWorld();
+    g_Game.ClearWorld();
 
     g_World = new CGameWorld(serial);
 
@@ -1035,7 +1032,7 @@ PACKET_HANDLER(EnterWorld)
     g_MapManager.Init();
     g_MapManager.AddRender(g_Player);
 
-    g_Game. LoadStartupConfig(ConfigSerial);
+    g_Game.LoadStartupConfig(ConfigSerial);
 
     g_LastSpellIndex = 1;
     g_LastSkillIndex = 1;
@@ -1052,24 +1049,24 @@ PACKET_HANDLER(EnterWorld)
         CPacketLanguage(g_Language).Send();
     }
 
-    g_Game. Click(g_PlayerSerial);
+    g_Game.Click(g_PlayerSerial);
     CPacketStatusRequest(g_PlayerSerial).Send();
 
     if (g_Player->Dead())
     {
-        g_Game. ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
+        g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
     }
 
     if (loadConfig)
     {
-        g_Game. LoginComplete(true);
+        g_Game.LoginComplete(true);
     }
     else
     {
         CServer *server = g_ServerList.GetSelectedServer();
         if (server != nullptr)
         {
-            g_Game. CreateTextMessageF(3, 0x0037, "Login confirm to %s", server->Name.c_str());
+            g_Game.CreateTextMessageF(3, 0x0037, "Login confirm to %s", server->Name.c_str());
         }
     }
 }
@@ -1329,14 +1326,14 @@ PACKET_HANDLER(CharacterStatus)
                 {
                     sprintf_s(
                         str, "Your strength has changed by %d.  It is now %d.", deltaStr, newStr);
-                    g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0x0170, str);
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0170, str);
                 }
 
                 if (deltaDex != 0)
                 {
                     sprintf_s(
                         str, "Your dexterity has changed by %d.  It is now %d.", deltaDex, newDex);
-                    g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0x0170, str);
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0170, str);
                 }
 
                 if (deltaInt != 0)
@@ -1346,7 +1343,7 @@ PACKET_HANDLER(CharacterStatus)
                         "Your intelligence has changed by %d.  It is now %d.",
                         deltaInt,
                         newInt);
-                    g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0x0170, str);
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x0170, str);
                 }
             }
 
@@ -1426,7 +1423,7 @@ PACKET_HANDLER(CharacterStatus)
 
             if (!g_ConnectionScreen.GetCompleted() && g_PacketLoginComplete)
             {
-                g_Game. LoginComplete(false);
+                g_Game.LoginComplete(false);
             }
         }
     }
@@ -1700,11 +1697,11 @@ PACKET_HANDLER(UpdateObject)
         {
             if (g_Player->Dead())
             {
-                g_Game. ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
+                g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
             }
             else
             {
-                g_Game. ChangeSeason(g_OldSeason, g_OldSeasonMusic);
+                g_Game.ChangeSeason(g_OldSeason, g_OldSeasonMusic);
             }
         }
 
@@ -1961,7 +1958,7 @@ PACKET_HANDLER(DenyMoveItem)
             "You are already holding an item."
         };
 
-        g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, errorMessages[code]);
+        g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, errorMessages[code]);
     }
 }
 
@@ -2288,7 +2285,7 @@ PACKET_HANDLER(SetWeather)
         {
             if (showMessage)
             {
-                g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "It begins to rain.");
+                g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "It begins to rain.");
             }
 
             break;
@@ -2297,8 +2294,7 @@ PACKET_HANDLER(SetWeather)
         {
             if (showMessage)
             {
-                g_Game. CreateTextMessage(
-                    TT_SYSTEM, 0xFFFFFFFF, 3, 0, "A fierce storm approaches.");
+                g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "A fierce storm approaches.");
             }
 
             break;
@@ -2307,7 +2303,7 @@ PACKET_HANDLER(SetWeather)
         {
             if (showMessage)
             {
-                g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "It begins to snow.");
+                g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "It begins to snow.");
             }
 
             break;
@@ -2316,7 +2312,7 @@ PACKET_HANDLER(SetWeather)
         {
             if (showMessage)
             {
-                g_Game. CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "A storm is brewing.");
+                g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "A storm is brewing.");
             }
 
             break;
@@ -2414,7 +2410,7 @@ PACKET_HANDLER(OpenContainer)
         }
 
         gump = new CGumpSpellbook(serial, x, y);
-        g_Game. PlaySoundEffect(0x0055);
+        g_Game.PlaySoundEffect(0x0055);
     }
     else if (gumpid == 0x0030) //Buylist
     {
@@ -2530,7 +2526,7 @@ PACKET_HANDLER(OpenContainer)
 
         gump = new CGumpContainer(serial, gumpid, g_ContainerRect.X, g_ContainerRect.Y);
         gump->Graphic = graphic;
-        g_Game. ExecuteGump(gumpid);
+        g_Game.ExecuteGump(gumpid);
     }
 
     if (gump == nullptr)
@@ -2693,7 +2689,7 @@ PACKET_HANDLER(UpdateSkills)
                         std::abs(change),
                         skill->BaseValue + change);
                     //else if (change > 0) sprintf(str, "Your skill in %s has increased by %.1f%%.  It is now %.1f%%.", UO->m_Skills[id].m_Name.c_str(), change, obj->GetSkillBaseValue(id) + change);
-                    g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0x58, str);
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x58, str);
                 }
             }
 
@@ -2788,7 +2784,7 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 8: //Set cursor / map
         {
-            g_Game. ChangeMap(ReadUInt8());
+            g_Game.ChangeMap(ReadUInt8());
 
             break;
         }
@@ -2819,7 +2815,7 @@ PACKET_HANDLER(ExtendedCommand)
                     item->SetName(ToString(str));
                 }
 
-                g_Game. CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
+                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
             }
 
             str = {};
@@ -2885,7 +2881,7 @@ PACKET_HANDLER(ExtendedCommand)
 
             if (str.length() != 0u)
             {
-                g_Game. CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
+                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
             }
             CPacketMegaClilocRequestOld(serial).Send();
             break;
@@ -3246,7 +3242,7 @@ PACKET_HANDLER(ConfirmWalk)
 PACKET_HANDLER(OpenUrl)
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. GoToWebLink(ReadString());
+    g_Game.GoToWebLink(ReadString());
 }
 
 PACKET_HANDLER(Target)
@@ -3302,7 +3298,7 @@ PACKET_HANDLER(Talk)
                                   0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
                                   0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
 
-        g_Game. Send(sbuffer, 0x28);
+        g_Game.Send(sbuffer, 0x28);
 
         return;
     }
@@ -3326,7 +3322,7 @@ PACKET_HANDLER(Talk)
     if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        g_Game. CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, textColor, str);
+        g_Game.CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, textColor, str);
     }
     else
     {
@@ -3360,7 +3356,7 @@ PACKET_HANDLER(Talk)
             }
         }
 
-        g_Game. CreateTextMessage(TT_OBJECT, serial, (uint8_t)font, textColor, str);
+        g_Game.CreateTextMessage(TT_OBJECT, serial, (uint8_t)font, textColor, str);
     }
 }
 
@@ -3407,7 +3403,7 @@ PACKET_HANDLER(UnicodeTalk)
                                   0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
                                   0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
 
-        g_Game. Send(sbuffer, 0x28);
+        g_Game.Send(sbuffer, 0x28);
 
         return;
     }
@@ -3438,7 +3434,7 @@ PACKET_HANDLER(UnicodeTalk)
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        g_Game. CreateUnicodeTextMessage(
+        g_Game.CreateUnicodeTextMessage(
             TT_SYSTEM, serial, (uint8_t)g_ConfigManager.SpeechFont, textColor, str);
     }
     else
@@ -3473,7 +3469,7 @@ PACKET_HANDLER(UnicodeTalk)
             }
         }
 
-        g_Game. CreateUnicodeTextMessage(
+        g_Game.CreateUnicodeTextMessage(
             TT_OBJECT, serial, (uint8_t)g_ConfigManager.SpeechFont, textColor, str);
     }
 }
@@ -3691,10 +3687,10 @@ PACKET_HANDLER(DeathScreen)
 
         if (g_ConfigManager.GetMusic())
         {
-            g_Game. PlayMusic(42, true);
+            g_Game.PlayMusic(42, true);
         }
 
-        g_Game. ChangeWarmode(0);
+        g_Game.ChangeWarmode(0);
 
         g_DeathScreenTimer = g_Ticks + DEATH_SCREEN_DELAY;
     }
@@ -3708,7 +3704,7 @@ PACKET_HANDLER(PlaySoundEffect)
     uint16_t volume = ReadUInt16BE();
     uint16_t xCoord = ReadUInt16BE(); // CHECK: unsigned for position?
     uint16_t yCoord = ReadUInt16BE();
-    g_Game. PlaySoundEffectAtPosition(index, xCoord, yCoord);
+    g_Game.PlaySoundEffectAtPosition(index, xCoord, yCoord);
 }
 
 PACKET_HANDLER(PlayMusic)
@@ -3723,7 +3719,7 @@ PACKET_HANDLER(PlayMusic)
         return;
     }
 
-    g_Game. PlayMusic(index);
+    g_Game.PlayMusic(index);
 }
 
 PACKET_HANDLER(DragAnimation)
@@ -3987,7 +3983,7 @@ PACKET_HANDLER(AssistVersion)
 PACKET_HANDLER(CharacterListNotification)
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. InitScreen(GS_DELETE);
+    g_Game.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
     g_ConnectionScreen.SetConnectionFailed(true);
     g_ConnectionScreen.SetErrorCode(ReadUInt8());
@@ -3998,7 +3994,7 @@ PACKET_HANDLER(ErrorCode)
     DEBUG_TRACE_FUNCTION;
     uint8_t code = ReadUInt8();
 
-    g_Game. InitScreen(GS_DELETE);
+    g_Game.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_GAME_LOGIN);
     g_ConnectionScreen.SetErrorCode(code);
 
@@ -4052,7 +4048,7 @@ PACKET_HANDLER(Season)
         g_OldSeasonMusic = DEATH_MUSIC_INDEX;
     }
 
-    g_Game. ChangeSeason((SEASON_TYPE)season, g_OldSeasonMusic);
+    g_Game.ChangeSeason((SEASON_TYPE)season, g_OldSeasonMusic);
 }
 
 PACKET_HANDLER(DisplayDeath)
@@ -4092,7 +4088,7 @@ PACKET_HANDLER(OpenChat)
 {
     DEBUG_TRACE_FUNCTION;
     uint8_t newbuf[4] = { 0xf0, 0x00, 0x04, 0xff };
-    g_Game. Send(newbuf, 4);
+    g_Game.Send(newbuf, 4);
 }
 
 PACKET_HANDLER(DisplayClilocString)
@@ -4136,7 +4132,7 @@ PACKET_HANDLER(DisplayClilocString)
     if (/*type == ST_BROADCAST || type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        g_Game. CreateUnicodeTextMessage(TT_SYSTEM, serial, font, color, message);
+        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, color, message);
     }
     else
     {
@@ -4161,7 +4157,7 @@ PACKET_HANDLER(DisplayClilocString)
                 }
             }
         }
-        g_Game. CreateUnicodeTextMessage(TT_OBJECT, serial, font, color, message);
+        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, color, message);
     }
 }
 
@@ -4668,7 +4664,7 @@ PACKET_HANDLER(OpenMenu)
             nameLen = ReadUInt8();
             name = ReadString(nameLen);
 
-            CSize size = g_Game. GetStaticArtDimension(graphic);
+            CSize size = g_Game.GetStaticArtDimension(graphic);
 
             if ((size.Width != 0) && (size.Height != 0))
             {
@@ -5499,7 +5495,7 @@ PACKET_HANDLER(DyeData)
     Move(2);
     uint16_t graphic = ReadUInt16BE();
 
-    CSize gumpSize = g_Game. GetGumpDimension(0x0906);
+    CSize gumpSize = g_Game.GetGumpDimension(0x0906);
 
     auto x = int16_t((g_GameWindow.GetSize().Width / 2) - (gumpSize.Width / 2));
     auto y = int16_t((g_GameWindow.GetSize().Height / 2) - (gumpSize.Height / 2));
@@ -6128,7 +6124,7 @@ PACKET_HANDLER(BuyReply)
 PACKET_HANDLER(Logout)
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. LogOut();
+    g_Game.LogOut();
 }
 
 PACKET_HANDLER(OPLInfo)
@@ -6350,11 +6346,11 @@ PACKET_HANDLER(CrossMessages)
         }
         case OCT_XUO_IGNORE_TILES_IN_FILTER:
         {
-            g_Game. m_IgnoreInFilterTiles.clear();
+            g_Game.m_IgnoreInFilterTiles.clear();
             uint16_t count = ReadUInt16BE();
             for (int i = 0; i < count; i++)
             {
-                g_Game. m_IgnoreInFilterTiles.push_back(
+                g_Game.m_IgnoreInFilterTiles.push_back(
                     std::pair<uint16_t, uint16_t>(ReadUInt16BE(), 0));
             }
 
@@ -6363,7 +6359,7 @@ PACKET_HANDLER(CrossMessages)
             {
                 uint16_t rangeStart = ReadUInt16BE();
                 uint16_t rangeEnd = ReadUInt16BE();
-                g_Game. m_IgnoreInFilterTiles.push_back(
+                g_Game.m_IgnoreInFilterTiles.push_back(
                     std::pair<uint16_t, uint16_t>(rangeStart, rangeEnd));
             }
             break;
@@ -6530,7 +6526,7 @@ PACKET_HANDLER(CrossMessages)
         }
         case OCT_RECONNECT:
         {
-            g_Game. StartReconnect();
+            g_Game.StartReconnect();
             break;
         }
         case OCT_PLAY_MACRO:
@@ -6618,7 +6614,7 @@ PACKET_HANDLER(CrossMessages)
         }
         case OCT_OPEN_DOOR:
         {
-            g_Game. OpenDoor();
+            g_Game.OpenDoor();
             break;
         }
         default:

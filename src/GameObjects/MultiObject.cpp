@@ -33,11 +33,11 @@ void CMultiObject::UpdateGraphicBySeason()
     DEBUG_TRACE_FUNCTION;
     //uint16_t graphic = Graphic;
 
-    Graphic = g_Game. GetSeasonGraphic(OriginalGraphic);
+    Graphic = g_Game.GetSeasonGraphic(OriginalGraphic);
 
     //if (Graphic != graphic)
     {
-        Vegetation = g_Game. IsVegetation(Graphic);
+        Vegetation = g_Game.IsVegetation(Graphic);
     }
 }
 
@@ -65,7 +65,7 @@ void CMultiObject::Draw(int x, int y)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glColor4f(1.0f, 1.0f, 1.0f, 0.75f);
 
-            g_Game. DrawStaticArt(Graphic, color, x, y);
+            g_Game.DrawStaticArt(Graphic, color, x, y);
 
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             glDisable(GL_BLEND);
@@ -87,7 +87,7 @@ void CMultiObject::Draw(int x, int y)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
 
-        g_Game. DrawStaticArt(Graphic, color, x, y);
+        g_Game.DrawStaticArt(Graphic, color, x, y);
 
         glDisable(GL_BLEND);
     }

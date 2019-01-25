@@ -122,7 +122,7 @@ void CGumpContainer::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
     CGump::PrepareTextures();
-    g_Game. ExecuteGumpPart(0x0045, 2); //Corpse eyes
+    g_Game.ExecuteGumpPart(0x0045, 2); //Corpse eyes
 }
 
 void CGumpContainer::InitToolTip()
@@ -177,7 +177,7 @@ void CGumpContainer::PrepareContent()
                 //if (g_Target.IsTargeting())
                 //    g_Target.SendCancelTarget();
 
-                g_Game. PickupItem(selobj, 0, IsGameBoard);
+                g_Game.PickupItem(selobj, 0, IsGameBoard);
 
                 g_PressedObject.ClearLeft();
 
@@ -255,7 +255,7 @@ void CGumpContainer::UpdateContent()
                     break;
             }
 
-            if (g_Game. ExecuteGump(graphic) == nullptr)
+            if (g_Game.ExecuteGump(graphic) == nullptr)
             {
                 graphic = 0x003C;
             }
@@ -300,7 +300,7 @@ void CGumpContainer::UpdateContent()
                     obj->GetX(),
                     obj->GetY(),
                     doubleDraw));
-                item->PartialHue = IsPartialHue(g_Game. GetStaticFlags(graphic));
+                item->PartialHue = IsPartialHue(g_Game.GetStaticFlags(graphic));
             }
         }
     }
@@ -424,7 +424,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
 
     if (!canDrop && g_ObjectInHand.Enabled)
     {
-        g_Game. PlaySoundEffect(0x0051);
+        g_Game.PlaySoundEffect(0x0051);
     }
 
     int x = g_MouseManager.Position.X - m_X;
@@ -437,11 +437,11 @@ void CGumpContainer::OnLeftMouseButtonUp()
         bool doubleDraw = false;
         uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
 
-        CGLTexture *th = g_Game. ExecuteStaticArt(graphic);
+        CGLTexture *th = g_Game.ExecuteStaticArt(graphic);
 
         if (IsGameBoard)
         {
-            th = g_Game. ExecuteGump(graphic - GAME_FIGURE_GUMP_OFFSET);
+            th = g_Game.ExecuteGump(graphic - GAME_FIGURE_GUMP_OFFSET);
             y += 20;
         }
 
@@ -482,7 +482,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
             }
         }
 
-        g_Game. DropItem(dropContainer, x, y, 0);
+        g_Game.DropItem(dropContainer, x, y, 0);
         g_MouseManager.CancelDoubleClick = true;
     }
     else if (!g_ObjectInHand.Enabled)
@@ -517,7 +517,7 @@ bool CGumpContainer::OnLeftMouseButtonDoubleClick()
     }
     else if ((g_PressedObject.LeftSerial != 0u) && g_PressedObject.LeftSerial != ID_GC_MINIMIZE)
     {
-        g_Game. DoubleClick(g_PressedObject.LeftSerial);
+        g_Game.DoubleClick(g_PressedObject.LeftSerial);
         FrameCreated = false;
 
         result = true;

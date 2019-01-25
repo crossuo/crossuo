@@ -63,7 +63,7 @@ bool CGameWindow::OnCreate()
         return false;
     }
 
-    if (!g_Game. Install())
+    if (!g_Game.Install())
     {
         return false;
     }
@@ -77,7 +77,7 @@ void CGameWindow::OnDestroy()
     DEBUG_TRACE_FUNCTION;
     g_SoundManager.Free();
     PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
-    g_Game. Uninstall();
+    g_Game.Uninstall();
     g_CrashLogger.Close();
 #if defined(XUO_WINDOWS)
     ::remove(CStringFromPath(g_CrashLogger.FileName));
@@ -313,7 +313,7 @@ void CGameWindow::OnDragging()
 void CGameWindow::OnActivate()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ResumeSound();
+    g_Game.ResumeSound();
     SetRenderTimerDelay(g_FrameDelay[WINDOW_ACTIVE]);
     if (!g_PluginManager.Empty())
     {
@@ -326,7 +326,7 @@ void CGameWindow::OnDeactivate()
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.BackgroundSound)
     {
-        g_Game. PauseSound();
+        g_Game.PauseSound();
     }
 
     if (g_ConfigManager.GetReduceFPSUnactiveWindow())
@@ -444,7 +444,7 @@ void CGameWindow::OnTimer(uint32_t id)
     if (id == FASTLOGIN_TIMER_ID)
     {
         RemoveTimer(FASTLOGIN_TIMER_ID);
-        g_Game. Connect();
+        g_Game.Connect();
     }
 }
 

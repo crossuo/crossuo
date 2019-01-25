@@ -95,7 +95,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     else
                     {
                         string str = "Note to self: " + ToString(text.c_str() + offset);
-                        g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
+                        g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
                     }
                     return;
                 }
@@ -109,7 +109,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        g_Game. CreateTextMessage(
+                        g_Game.CreateTextMessage(
                             TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
                     }
                     return;
@@ -124,7 +124,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        g_Game. CreateTextMessage(
+                        g_Game.CreateTextMessage(
                             TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
                     }
                     return;
@@ -137,7 +137,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        g_Game. CreateTextMessage(TT_SYSTEM, 0, 3, 0, "You are not party leader.");
+                        g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "You are not party leader.");
                     }
                     return;
                 }
@@ -155,7 +155,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        g_Game. CreateTextMessage(
+                        g_Game.CreateTextMessage(
                             TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
                     }
                     return;

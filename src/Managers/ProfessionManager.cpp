@@ -104,8 +104,8 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             {
                 gump = atoi(strings[1].c_str());
 
-                g_Game. ExecuteGump(gump);
-                g_Game. ExecuteGump(gump + 1);
+                g_Game.ExecuteGump(gump);
+                g_Game.ExecuteGump(gump + 1);
                 break;
             }
             case PM_CODE_TYPE:
@@ -333,8 +333,8 @@ bool CProfessionManager::Load()
             }
         }
 
-        g_Game. ExecuteGump(0x15A9);
-        g_Game. ExecuteGump(0x15AA);
+        g_Game.ExecuteGump(0x15A9);
+        g_Game.ExecuteGump(0x15AA);
 
         CProfession *apc = new CProfession();
         apc->TrueName = "advanced";

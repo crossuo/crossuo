@@ -16,7 +16,7 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
 
     m_DrawTextureColor[3] = 0xFF;
 
-    LAND_TILES &tile = g_Game. m_LandData[graphic];
+    LAND_TILES &tile = g_Game.m_LandData[graphic];
 
     IsStretched = ((tile.TexID == 0u) && ::IsWet(tile.Flags));
 
@@ -53,7 +53,7 @@ CLandObject::~CLandObject()
 void CLandObject::UpdateGraphicBySeason()
 {
     DEBUG_TRACE_FUNCTION;
-    Graphic = g_Game. GetLandSeasonGraphic(OriginalGraphic);
+    Graphic = g_Game.GetLandSeasonGraphic(OriginalGraphic);
     NoDrawTile = (Graphic == 2);
 }
 
@@ -146,11 +146,11 @@ void CLandObject::Draw(int x, int y)
 
         if (!IsStretched)
         {
-            g_Game. DrawLandArt(Graphic, objColor, x, y);
+            g_Game.DrawLandArt(Graphic, objColor, x, y);
         }
         else
         {
-            g_Game. DrawLandTexture(this, objColor, x, y);
+            g_Game.DrawLandTexture(this, objColor, x, y);
         }
     }
 }
@@ -162,14 +162,14 @@ void CLandObject::Select(int x, int y)
     {
         if (!IsStretched)
         {
-            if (g_Game. LandPixelsInXY(Graphic, x, y))
+            if (g_Game.LandPixelsInXY(Graphic, x, y))
             {
                 g_SelectedObject.Init(this);
             }
         }
         else
         {
-            if (g_Game. LandTexturePixelsInXY(x, y + (m_Z * 4), m_Rect))
+            if (g_Game.LandTexturePixelsInXY(x, y + (m_Z * 4), m_Rect))
             {
                 g_SelectedObject.Init(this);
             }

@@ -32,7 +32,7 @@ void CPacket::Send()
 {
     if (static_cast<unsigned int>(!m_Data.empty()) != 0u)
     {
-        g_Game. Send(m_Data);
+        g_Game.Send(m_Data);
     }
 }
 

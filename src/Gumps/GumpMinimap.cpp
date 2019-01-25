@@ -109,7 +109,7 @@ void CGumpMinimap::GenerateMap()
     m_Texture.Clear();
 
     uint16_t gumpID = 0x1393 - (int)Minimized;
-    CIndexObject &io = g_Game. m_GumpDataIndex[gumpID];
+    CIndexObject &io = g_Game.m_GumpDataIndex[gumpID];
 
     int gumpWidth = io.Width;
     int gumpHeight = io.Height;
@@ -197,11 +197,11 @@ void CGumpMinimap::GenerateMap()
 
                     if (isLand == 0)
                     {
-                        color = g_Game. GetSeasonGraphic(color) + 0x4000;
+                        color = g_Game.GetSeasonGraphic(color) + 0x4000;
                     }
                     else
                     {
-                        color = g_Game. GetLandSeasonGraphic(color);
+                        color = g_Game.GetLandSeasonGraphic(color);
                     }
 
                     int tableSize = 2;
@@ -297,7 +297,7 @@ void CGumpMinimap::UpdateContent()
     DEBUG_TRACE_FUNCTION;
     uint16_t graphic = 0x1393 - (int)Minimized;
 
-    CGLTexture *th = g_Game. ExecuteGump(graphic);
+    CGLTexture *th = g_Game.ExecuteGump(graphic);
 
     if (th == nullptr)
     {
@@ -375,7 +375,7 @@ bool CGumpMinimap::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
 
-    g_Game. OpenMinimap();
+    g_Game.OpenMinimap();
 
     return true;
 }

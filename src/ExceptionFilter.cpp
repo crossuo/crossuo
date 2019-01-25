@@ -272,7 +272,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
                 &si,              // Pointer to STARTUPINFO structure
                 &pi);
 
-            g_Game. Uninstall();
+            g_Game.Uninstall();
 
             if (!reportSent)
             {

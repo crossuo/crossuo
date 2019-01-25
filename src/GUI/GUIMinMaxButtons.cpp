@@ -37,7 +37,7 @@ void CGUIMinMaxButtons::UpdateText()
                 Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
-        CGLTexture *th = g_Game. ExecuteGump(Graphic);
+        CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
         if (th != nullptr)
         {
@@ -212,8 +212,8 @@ void CGUIMinMaxButtons::SetTextParameters(
 void CGUIMinMaxButtons::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGump(Graphic);
-    g_Game. ExecuteGump(Graphic + 1);
+    g_Game.ExecuteGump(Graphic);
+    g_Game.ExecuteGump(Graphic + 1);
 }
 
 void CGUIMinMaxButtons::Draw(bool checktrans)
@@ -223,7 +223,7 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 
     for (int i = 0; i < 2; i++)
     {
-        CGLTexture *th = g_Game. ExecuteGump(Graphic + (int)i);
+        CGLTexture *th = g_Game.ExecuteGump(Graphic + (int)i);
 
         if (th != nullptr)
         {

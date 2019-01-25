@@ -53,15 +53,15 @@ void CSelectProfessionScreen::ProcessSmoothAction(uint8_t action)
     }
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_CHARACTER)
     {
-        g_Game. InitScreen(GS_CHARACTER);
+        g_Game.InitScreen(GS_CHARACTER);
     }
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_GAME_CONNECT)
     {
-        g_Game. InitScreen(GS_GAME_CONNECT);
+        g_Game.InitScreen(GS_GAME_CONNECT);
         g_ConnectionScreen.SetType(CST_SELECT_PROFESSOIN);
     }
     else if (action == ID_SMOOTH_SPS_GO_SCREEN_CREATE)
     {
-        g_Game. InitScreen(GS_CREATE);
+        g_Game.InitScreen(GS_CREATE);
     }
 }

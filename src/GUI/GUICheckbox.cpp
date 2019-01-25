@@ -59,7 +59,7 @@ void CGUICheckbox::UpdateTextPosition()
     int textX = m_X;
     int textY = m_Y;
 
-    CGLTexture *th = g_Game. ExecuteGump(Graphic);
+    CGLTexture *th = g_Game.ExecuteGump(Graphic);
 
     if (th != nullptr)
     {
@@ -151,9 +151,9 @@ void CGUICheckbox::UpdateTextPosition()
 void CGUICheckbox::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    g_Game. ExecuteGump(Graphic);
-    g_Game. ExecuteGump(GraphicChecked);
-    g_Game. ExecuteGump(GraphicDisabled);
+    g_Game.ExecuteGump(Graphic);
+    g_Game.ExecuteGump(GraphicChecked);
+    g_Game.ExecuteGump(GraphicDisabled);
 }
 
 uint16_t CGUICheckbox::GetDrawGraphic()
