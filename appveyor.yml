@@ -2,7 +2,7 @@ version: 1.0.{build}
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
-clone_folder: c:\projects\orion
+clone_folder: c:\projects\crossuo
 image:
 #- Visual Studio 2013 # Need remove constexpr to struct enum so it will compile with 2013 again
 - Visual Studio 2015
@@ -36,12 +36,12 @@ before_build:
     cmake --version
     cmake .. -G %generator%
 build:
-  project: c:\projects\orion\build\orionuo.sln
+  project: c:\projects\crossuo\build\crossuo.sln
   verbosity: minimal
   parallel: true
 only_commits:
   files:
     - CMakeLists.txt
     - appveyor.yml
-    - OrionUO/
+    - CrossUO/
     - CMake/

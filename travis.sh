@@ -4,7 +4,7 @@ if [[ "$TASK" == "clang-format" ]]; then
 	clang-format-7 --version
 	echo Validating code formatting.
 
-	clang-format-7 --style=file -i OrionUO/*.{h,cpp} OrionUO/*/*.{h,cpp}
+	clang-format-7 --style=file -i src/*.{h,cpp} src/*/*.{h,cpp}
 	dirty=$(git ls-files --modified)
 	if [[ $dirty ]]; then
 		echo Failed. The following files are incorrectly formatted:
@@ -19,32 +19,32 @@ fi
 
 if [[ "$TASK" == "clang" ]]; then
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && time ninja orion_unity -j8
-	file ./OrionUO/OrionUO
-	file ./OrionUO/orion.so
-	##./OrionUO/OrionUO --headless
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && time ninja crossuo_unity -j8
+	file ./crossuo/crossuo
+	file ./crossuo/crossuo.so
+	##./crossuo/crossuo --headless
 	cd ..
 
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && time ninja orion_unity -j8
-	file ./OrionUO/OrionUO
-	file ./OrionUO/orion.so
-	#./OrionUO/OrionUO --headless
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && time ninja crossuo_unity -j8
+	file ./crossuo/crossuo
+	file ./crossuo/crossuo.so
+	#./crossuo/crossuo --headless
 fi
 
 if [[ "$TASK" == "gcc" ]]; then
 	echo Building Release
 	mkdir release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release && time make -j8
-	file ./OrionUO/OrionUO
-	file ./OrionUO/orion.so
-	##./OrionUO/OrionUO --headless
+	file ./crossuo/crossuo
+	file ./crossuo/crossuo.so
+	##./crossuo/crossuo --headless
 	cd ..
 
 	echo Building Debug
 	mkdir debug && cd debug && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Debug && time make -j8
-	file ./OrionUO/OrionUO
-	file ./OrionUO/orion.so
-	#./OrionUO/OrionUO --headless
+	file ./crossuo/crossuo
+	file ./crossuo/crossuo.so
+	#./crossuo/crossuo --headless
 fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -53,9 +53,9 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	brew outdated cmake || brew upgrade cmake
 
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja orion_unity -j8
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja crossuo_unity -j8
 	cd ..
 
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja orion_unity -j8
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja crossuo_unity -j8
 fi;

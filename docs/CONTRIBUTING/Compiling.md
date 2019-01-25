@@ -10,7 +10,7 @@ The required dependencies for windows will be automatically downloaded by CMake.
 
 #### Building
 
-On Windows, to generate the Visual Studio solution, go inside your cloned OrionUO folder and do:
+On Windows, to generate the Visual Studio solution, go inside your cloned CrossUO folder and do:
 
 ```bat
 md build
@@ -35,16 +35,16 @@ Or, you can use CMake-GUI to configure and generate the solution. For a step-by-
 #### Building
 
 ```bash
-$ git clone https://github.com/OrionUO/OrionUO
+$ git clone https://github.com/crossuo/crossuo
 $ mkdir build
 $ cd build
-$ cmake -G Ninja ../OrionUO -DCMAKE_BUILD_TYPE=Release
-$ ninja orion -j8
-$ cd OrionUO
-$ ./OrionUO
+$ cmake -G Ninja ../crossuo -DCMAKE_BUILD_TYPE=Release
+$ ninja crossuo -j8
+$ cd crossuo
+$ ./crossuo
 ```
 
-  > You'll need a `OrionUO.cfg` in the working directory. Please use Orion Launcher to configure the client.
+  > You'll need a `crossuo.cfg` in the working directory. Please use X:UO Launcher to configure the client.
 
 ### MacOSX
 
@@ -59,14 +59,14 @@ $ ./OrionUO
 #### Building
 
 ```
-$ git clone https://github.com/OrionUO/OrionUO
+$ git clone https://github.com/crossuo/crossuo
 $ mkdir build
 $ cd build
 $ cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
-$ ninja orion -j8
-$ cd OrionUO
-$ ./OrionUO
+$ ninja crossuo -j8
+$ cd crossuo
+$ ./crossuo
 ```
-  > You'll need a `OrionUO.cfg` in the working directory. Please use Orion Launcher to configure the client.
+  > You'll need a `crossuo.cfg` in the working directory. Please use X:UO Launcher to configure the client.
 
-Then you should have an `OrionUO` inside `build/OrionUO`
+Then you should have an `crossuo` inside `build/crossuo`

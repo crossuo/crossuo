@@ -1,4 +1,4 @@
-# Contributing to OrionUO
+# Contributing to CrossUO
 
 This document is split up and organised into several sections to aid reading and linking. For small changes like one-line fixes or minor tweaks then you can just read the [quick start section](#quick-start) below.
 
@@ -8,11 +8,11 @@ If you're a regular contributor or if you have a larger amount of code to change
 
 ## Code of Conduct
 
-We want to ensure that anyone can contribute to OrionUO with only the next bug to worry about. For that reason the project has adopted the [contributor covenent](CODE_OF_CONDUCT.md) as a code of conduct to be enforced for anyone taking part in OrionUO development. This includes any comments on issues or any public discussion e.g. in the OrionUO discord channel.
+We want to ensure that anyone can contribute to CrossUO with only the next bug to worry about. For that reason the project has adopted the [contributor covenent](CODE_OF_CONDUCT.md) as a code of conduct to be enforced for anyone taking part in CrossUO development. This includes any comments on issues or any public discussion e.g. in the CrossUO discord channel.
 
 ## Copyright / Contributor License Agreement
 
-Any code you submit will become part of the repository and be distributed under the [OrionUO license](../LICENSE). By submitting code to the project you agree that the code is your own work and that you have the ability to give it and transfer rights to the project.
+Any code you submit will become part of the repository and be distributed under the [CrossUO license](../LICENSE). By submitting code to the project you agree that the code is your own work and that you have the ability to give it and transfer rights to the project.
 
 **You also agree by submitting your code that you grant all transferrable rights to the code to the project maintainers, including for example re-licensing the code, modifying the code, distributing in source or binary forms. Specifically this includes a requirement that you assign copyright to the project maintainers.**
 
@@ -37,7 +37,7 @@ For more information, check the section about [code formatting](CONTRIBUTING/Pre
 
 ## Where to Start
 
-There are always plenty of things to do, check out the [planning](https://github.com/orgs/OrionUO/projects) page for tasks to tackle, or have a look at the [issues](https://github.com/OrionUO/OrionUO/issues) for outstanding bugs. We'll try and tag things that seem like small changes that would be a good way for someone to get started with.
+There are always plenty of things to do, check out the [planning](https://github.com/orgs/CrossUO/projects) page for tasks to tackle, or have a look at the [issues](https://github.com/CrossUO/CrossUO/issues) for outstanding bugs. We'll try and tag things that seem like small changes that would be a good way for someone to get started with.
 
 If you have a change you'd like to see make it into `master`, create a fork, make your changes to a branch, and open a pull request on github. You can look around for instructions on that - it's pretty simple.
 

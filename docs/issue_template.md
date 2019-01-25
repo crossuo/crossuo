@@ -13,14 +13,14 @@ about what you'd like to do and also why you'd like to do it.
 <!--
 This only applies for bugs - please outline the steps you took to hit the bug.
 
-If you are able to share a screenshot from OrionUO AND original client demonstrating
+If you are able to share a screenshot from CrossUO AND original client demonstrating
 the issue, please upload and link it here as this is REALLY useful.
 Also upload and share your uolog.txt.
 -->
 
 ## Environment
 
-* OrionUO version: e.g. 1.2.0, build from code at master or commit hash
+* CrossUO version: e.g. 1.2.0, build from code at master or commit hash
 * Operating System: e.g. Windows 10, Windows 7, Ubuntu Linux, etc
 * Server Info: sphere v0.99g, POL 100, RunUO 2.7, etc.
 * Server Address: uo.server.com,2599

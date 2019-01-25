@@ -1,4 +1,4 @@
-We want OrionUO to be an open and welcoming project, and for that reason I want to make sure that people feel secure joining the project by outlining and enforcing expected behaviour from members of the community. This code is used in many open source projects and embodies that spirit of inclusiveness well.
+We want CrossUO to be an open and welcoming project, and for that reason I want to make sure that people feel secure joining the project by outlining and enforcing expected behaviour from members of the community. This code is used in many open source projects and embodies that spirit of inclusiveness well.
 
 # Contributor Covenant Code of Conduct
 
@@ -57,10 +57,10 @@ further defined and clarified by project maintainers.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by email directly. All complaints will be reviewed and investigated and 
-will result in a response that is deemed necessary and appropriate to the 
-circumstances. The project team is obligated to maintain confidentiality with 
-regard to the reporter of an incident. Further details of specific enforcement 
+reported by email directly. All complaints will be reviewed and investigated and
+will result in a response that is deemed necessary and appropriate to the
+circumstances. The project team is obligated to maintain confidentiality with
+regard to the reporter of an incident. Further details of specific enforcement
 policies may be posted separately.
 
 Project maintainers who do not follow or enforce the Code of Conduct in good

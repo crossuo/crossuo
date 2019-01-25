@@ -28,7 +28,7 @@ To make things easier for everyone, we've adopted clang-format for keeping code 
 | :warning: |                                                                                                                                         | :warning: |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | :warning: | **Unfortunately clang-format output changes between versions even with the same config.**                                               | :warning: |
-| :warning: | **We have fixed the version used for OrionUO at clang-format-7.0.**                     | :warning: |
+| :warning: | **We have fixed the version used for CrossUO at clang-format-7.0.**                     | :warning: |
 | :warning: | **This formatting is enforced by CI checks that run on PRs, so if you aren't running the same version locally it will show up there.**  | :warning: |
 
 If you want to format a single file, run: `clang-format -i file.cpp`.

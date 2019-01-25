@@ -4,7 +4,7 @@ function(download_package package_name)
     if (NOT EXISTS "${PROJECT_SOURCE_DIR}/${package_name}")
         message(STATUS "Downloading package: ${package_name}.zip...")
         file(DOWNLOAD
-            https://github.com/OrionUO/dep-build-win/raw/master/${package_name}.zip
+            https://github.com/CrossUO/dep-build-win/raw/master/${package_name}.zip
             "${CMAKE_BINARY_DIR}/downloads/${package_name}.zip" SHOW_PROGRESS)
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/downloads/${package_name}.zip"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

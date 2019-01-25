@@ -1,0 +1,8 @@
+#define GIT_REV_STR "${XUO_WC_REVISION}"
+#define GIT_DESC_STR "${XUO_WC_DESCRIBE}"
+#define GIT_BRANCH_STR "${XUO_WC_BRANCH}"
+#define GIT_IS_MASTER ${XUO_WC_IS_STABLE}
+
+// Window Resource
+#define RC_PRODUCT_VERSION 		0,1,30,1
+#define RC_PRODUCE_VERSION_STR "0.1.30.1 (${XUO_WC_DESCRIBE})"

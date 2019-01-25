@@ -1,15 +1,15 @@
-# OrionUO Client
+# CrossUO Client
 
-[![Travis Build Status](https://travis-ci.org/OrionUO/OrionUO.svg?branch=master)](https://travis-ci.org/OrionUO/OrionUO)
-[![Build status](https://ci.appveyor.com/api/projects/status/gmkwveaysxb12uog?svg=true)](https://ci.appveyor.com/project/fungos/orionuo)
+[![Travis Build Status](https://travis-ci.org/crossuo/crossuo.svg?branch=master)](https://travis-ci.org/crossuo/crossuo)
+[![Build status](https://ci.appveyor.com/api/projects/status/gmkwveaysxb12uog?svg=true)](https://ci.appveyor.com/project/fungos/crossuo)
 
 * Supported Platforms: Windows 7, Windows 10, Linux and MacOSX.
 
-* Graphics: OpenGL 2.0 and higher.
+* Graphics: OpenGL.
 
-### Downloading OrionUO
+### Downloading CrossUO
 
-* Download [Orion Launcher](https://github.com/OrionUO/OrionLauncher/releases) to set everything up and play right away!
+* Download [X:UO Launcher](https://github.com/crossuo/xuolauncher/releases) to set everything up and play right away!
 
 --------------
 
