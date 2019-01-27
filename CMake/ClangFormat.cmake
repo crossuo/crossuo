@@ -19,7 +19,7 @@ if (NOT CLANG_FORMAT)
         message(STATUS "Clang format not found! Downloading...")
         set(CLANG_FORMAT "${PROJECT_BINARY_DIR}/downloads/clang-format${CLANG_FORMAT_POSTFIX}.exe")
         file(DOWNLOAD
-            https://github.com/CrossUO/dep-build-win/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
+            https://github.com/crossuo/dep-build-win/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
             "${CLANG_FORMAT}" SHOW_PROGRESS
             STATUS DOWNLOAD_SUCCESS)
         if (NOT DOWNLOAD_SUCCESS EQUAL 0)
@@ -33,8 +33,8 @@ if (NOT CLANG_FORMAT)
 endif()
 
 if (CLANG_FORMAT)
-    set(SRCS ${PROJECT_SOURCE_DIR}/CrossUO)
-    set(CCOMMENT "Running clang format against all the .h and .cpp files in CrossUO/")
+    set(SRCS ${PROJECT_SOURCE_DIR}/src)
+    set(CCOMMENT "Running clang format against all the .h and .cpp files in src/")
     if (WIN32)
         add_custom_target(clang-format
             COMMAND powershell.exe -Command "Get-ChildItem ${SRCS}/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}"
