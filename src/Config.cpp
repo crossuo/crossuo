@@ -29,6 +29,7 @@ enum
     MSCC_CUSTOM_PATH,
     MSCC_LOGIN_SERVER,
     MSCC_CLIENT_VERSION,
+    MSCC_PROTOCOL_CLIENT_VERSION,
     MSCC_USE_CRYPT,
     MSCC_USE_VERDATA,
     MSCC_CLIENT_TYPE,
@@ -41,6 +42,7 @@ struct Modified
 {
     bool UseVerdata = false;
     bool ClientFlag = false;
+    bool ProtocolVersion = false;
 };
 
 struct ConfigEntry
@@ -59,6 +61,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_CUSTOM_PATH, "custompath" },
     { MSCC_LOGIN_SERVER, "loginserver" },
     { MSCC_CLIENT_VERSION, "clientversion" },
+    { MSCC_PROTOCOL_CLIENT_VERSION, "protocolclientversion" },
     { MSCC_USE_CRYPT, "crypt" },
     { MSCC_USE_VERDATA, "useverdata" },
     { MSCC_CLIENT_TYPE, "clienttype" },
@@ -82,14 +85,13 @@ static uint32_t GetConfigKey(const string &key)
 
 static config::Modified s_Mark;
 
-static void SetClientVersion(const char *versionStr)
+static uint32_t ParseVersion(const char *versionStr)
 {
     DEBUG_TRACE_FUNCTION;
 
     if (!versionStr || !versionStr[0])
     {
-        g_Config.ClientVersion = CV_LATEST;
-        return;
+        return CV_LATEST;
     }
 
     int a = 0, b = 0, c = 0, d = 0;
@@ -110,7 +112,7 @@ static void SetClientVersion(const char *versionStr)
         }
     }
 
-    g_Config.ClientVersion = VERSION(a, b, c, d);
+    return VERSION(a, b, c, d);
 }
 
 static CLIENT_FLAG GetClientTypeFromString(const string &str)
@@ -273,12 +275,21 @@ static void SetClientCrypt(uint32_t version)
     }
 }
 
-static void ClientVersionFixup(const char *versionStr)
+static void ClientVersionFixup(bool overrideProtocolVersion)
 {
     DEBUG_TRACE_FUNCTION;
 
-    SetClientVersion(versionStr);
-    SetClientCrypt(g_Config.ClientVersion);
+    g_Config.ClientVersion = ParseVersion(g_Config.ClientVersionString.c_str());
+    g_Config.ProtocolClientVersion = g_Config.ClientVersion;
+    if (overrideProtocolVersion)
+    {
+        g_Config.ProtocolClientVersion = ParseVersion(g_Config.ProtocolClientVersionString.c_str());
+    }
+    else
+    {
+        g_Config.ProtocolClientVersionString = g_Config.ClientVersionString;
+    }
+    SetClientCrypt(g_Config.ProtocolClientVersion);
 
     const bool useVerdata = g_Config.ClientVersion < CV_500A;
     const auto clientType = GetClientType(g_Config.ClientVersion);
@@ -356,7 +367,12 @@ void LoadGlobalConfig()
                 case MSCC_CLIENT_VERSION:
                 {
                     g_Config.ClientVersionString = strings[1];
-                    ClientVersionFixup(strings[1].c_str());
+                }
+                break;
+                case MSCC_PROTOCOL_CLIENT_VERSION:
+                {
+                    g_Config.ProtocolClientVersionString = strings[1];
+                    s_Mark.ProtocolVersion = true;
                 }
                 break;
                 case MSCC_CUSTOM_PATH:
@@ -429,6 +445,8 @@ void LoadGlobalConfig()
             }
         }
     }
+
+    ClientVersionFixup(s_Mark.ProtocolVersion);
 
     int a = (g_Config.ClientVersion >> 24) & 0xff;
     int b = (g_Config.ClientVersion >> 16) & 0xff;
@@ -507,6 +525,11 @@ void SaveGlobalConfig()
     }
 
     fprintf(cfg, "ClientVersion=%s\n", g_Config.ClientVersionString.c_str());
+
+    if (s_Mark.ProtocolVersion)
+    {
+        fprintf(cfg, "ProtocolClientVersion=%s\n", g_Config.ProtocolClientVersionString.c_str());
+    }
     fflush(cfg);
     fs_close(cfg);
 }
