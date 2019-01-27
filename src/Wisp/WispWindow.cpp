@@ -565,7 +565,7 @@ void CWindow::CreateTimer(uint32_t id, int delay)
         return;
     }
 
-    auto handle = SDL_AddTimer(delay, TimerCallbackEventPusher, (void *)id);
+    auto handle = SDL_AddTimer(delay, TimerCallbackEventPusher, (void *)(intptr_t)(id));
     timer_table[id - 1] = handle;
 }
 

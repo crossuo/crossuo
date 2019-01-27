@@ -278,7 +278,6 @@ set(crypt_src
   Crypt/GameCrypt.cpp
   Crypt/LoginCrypt.cpp
   Crypt/md5.cpp
-  Crypt/twofish.cpp
   Crypt/CryptEntry.cpp
 )
 
@@ -340,18 +339,18 @@ if(XUO_WINDOWS)
   )
 endif()
 
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/GameObjects")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/GLEngine")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/GUI")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/Gumps")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/Managers")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/Network")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/ScreenStages")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/TextEngine")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/Utility")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/Walker")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/Wisp")
-include_directories("${PROJECT_SOURCE_DIR}/CrossUO/")
+include_directories("${PROJECT_SOURCE_DIR}/src/GameObjects")
+include_directories("${PROJECT_SOURCE_DIR}/src/GLEngine")
+include_directories("${PROJECT_SOURCE_DIR}/src/GUI")
+include_directories("${PROJECT_SOURCE_DIR}/src/Gumps")
+include_directories("${PROJECT_SOURCE_DIR}/src/Managers")
+include_directories("${PROJECT_SOURCE_DIR}/src/Network")
+include_directories("${PROJECT_SOURCE_DIR}/src/ScreenStages")
+include_directories("${PROJECT_SOURCE_DIR}/src/TextEngine")
+include_directories("${PROJECT_SOURCE_DIR}/src/Utility")
+include_directories("${PROJECT_SOURCE_DIR}/src/Walker")
+include_directories("${PROJECT_SOURCE_DIR}/src/Wisp")
+include_directories("${PROJECT_SOURCE_DIR}/src/")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   #target_link_libraries(wisp PUBLIC dl rt)

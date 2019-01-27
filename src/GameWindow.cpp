@@ -280,7 +280,7 @@ bool CGameWindow::OnMidMouseButtonDoubleClick()
 void CGameWindow::OnMidMouseButtonScroll(bool up)
 {
     DEBUG_TRACE_FUNCTION;
-    if (PLUGIN_EVENT(UOMSG_INPUT_MOUSEWHEEL, (up ? 0 : 0x11110000)))
+    if (PLUGIN_EVENT(UOMSG_INPUT_MOUSEWHEEL, up ? 0 : 0x11110000))
     {
         return;
     }
@@ -295,7 +295,7 @@ void CGameWindow::OnMidMouseButtonScroll(bool up)
 void CGameWindow::OnXMouseButton(bool up)
 {
     DEBUG_TRACE_FUNCTION;
-    if (PLUGIN_EVENT(UOMSG_INPUT_XBUTTONDOWN, (up ? 0 : 0x11110000)))
+    if (PLUGIN_EVENT(UOMSG_INPUT_XBUTTONDOWN, up ? 0 : 0x11110000))
     {
         return;
     }
