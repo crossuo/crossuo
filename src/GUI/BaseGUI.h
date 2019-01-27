@@ -12,67 +12,67 @@ class CTextData;
 class CBaseGUI : public CRenderObject
 {
 public:
-    //!Тип компоненты
+    // Component Type
     GUMP_OBJECT_TYPE Type = GOT_NONE;
 
-    //!Возможность перемещения гампа, если компонента зажата
+    // The ability to move the gump, if the component is clamped
     bool MoveOnDrag = false;
 
-    //!Флаг использования PartialHue
+    // Flag for using PartialHue
     bool PartialHue = false;
 
-    //!Метод использования функции выбора
-    //!			true - проверяет нахождение курсора мышки в пределах полигона (для CGUIPolygonal и компонент с шириной и высотой, либо берет габариты картинки исходного состояния Graphic)
-    //!			false - стандартная функция проверки пикселей
+    // Method of using the selection function
+    // true - checks if the mouse cursor is within the polygon (for CGUIPolygonal and a component with a width and height, or takes the dimensions of the original Graphic state image)
+    // false - standard pixel check function
     bool CheckPolygone = false;
 
-    //!Включение выключение обработки компоненты (компонента отображается)
+    // Turning off the processing of the component (the component is displayed)
     bool Enabled = true;
 
-    //!Показать/скрыть компоненту и ее обработку
+    // Show / hide component and its processing
     bool Visible = true;
 
-    //!Флаг, отвечающий только за выбор компоненты, без ее отображения в гампе
+    // Flag, responsible only for the selection of components, without its display in the gump
     bool SelectOnly = false;
 
-    //!Флаг, отвечающий только за отрисовку компоненты, без ее выбора
+    // Flag that is responsible only for drawing the component, without selecting it
     bool DrawOnly = false;
-
     uint32_t ClilocID = 0;
 
     CTextData *TextData = nullptr;
 
+public:
     CBaseGUI(GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y);
     virtual ~CBaseGUI();
 
-    //!Выявление поля g_EntryPointer в данной компоненте
+    // Identify the g_EntryPointer field in this component
     virtual bool EntryPointerHere() { return false; }
 
-    //!Установить данные для шейдера
+    // Set data for shader
     virtual void SetShaderMode() {}
 
-    //!Получить ИД картинки для отображения
+    // Get the ID of the image to display
     virtual uint16_t GetDrawGraphic() { return Graphic; }
 
-    //!Отрисовать компоненту
-    //!		checktrans - использовать трафарет +прозрачность
+    // Draw component
+    // checktrans - use stencil + transparency
     virtual void Draw(bool checktrans = false) {}
 
-    //!Проверить компоненту на возможность выбора
+    // Check component for selection
     virtual bool Select() { return false; }
 
-    //!Получить конечные габариты компоненты
+    // Get the final dimensions of the components
     virtual CSize GetSize() { return CSize(); }
 
-    //!Это компонента пользовательского интерфейса
+    // This is a user interface component.
     virtual bool IsGUI() { return true; }
 
-    //!Это HTMLGump компонента
+    // This is the HTMLGump component
     virtual bool IsHTMLGump() { return false; }
 
-    //!Это компонента HTMLGump'а (кнопки скроллинга, скроллер, фон, область вывода)
+    // This is the component of HTMLGump (scroll buttons, scroller, background, output area)
     virtual bool IsControlHTML() { return false; }
 
-    //!Возможность обрабатывать события компонента, если она зажата, но мышка находится где-то еще
+    // Ability to handle component events if it is clamped, but the mouse is somewhere else
     virtual bool IsPressedOuthit() { return false; }
 };

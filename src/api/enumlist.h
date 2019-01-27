@@ -1,35 +1,35 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// Copyright (c) 2019 CrossUO Team
 
 #pragma once
 
 enum GAME_STATE
 {
-    GS_MAIN = 0,       //!Основной гамп (клиент только запустили)
-    GS_MAIN_CONNECT,   //!Гамп коннекта к серверу авторизации
-    GS_SERVER,         //!Гамп списка серверов
-    GS_SERVER_CONNECT, //!Гамп коннекта к гейм серверу
-    GS_CHARACTER,      //!Гамп списока чаров
-    GS_DELETE,         //!Гамп удаления персонажа
-    GS_PROFESSION_SELECT, //!Гамп выбора профессии
-    GS_CREATE,            //!Гамп создания персонажа
-    GS_SELECT_TOWN,       //!Гамп выбора стартового города
-    GS_GAME_CONNECT,      //!Гамп входа в игру
-    GS_GAME,        //!Игровой гамп (отображение мира и прочего)
-    GS_GAME_BLOCKED /*!Модификация игрового гампа, всё отображается, но заблокировано
-							для кликов, перемещений и изменения чего-либо, кроме гампа (гампов)
-							вызвавшего эту стадию рендера
-							*/
+    GS_MAIN = 0,          // The main gump (the client just started)
+    GS_MAIN_CONNECT,      // Gump connect to the authorization server
+    GS_SERVER,            // Server list gump
+    GS_SERVER_CONNECT,    // Connection to the game server
+    GS_CHARACTER,         // Enchantment Gump
+    GS_DELETE,            // Character removal gump
+    GS_PROFESSION_SELECT, // Gump choice of profession
+    GS_CREATE,            // Character creation gump
+    GS_SELECT_TOWN,       // Gump selection of the starting city
+    GS_GAME_CONNECT,      // Game entry gump
+    GS_GAME,              // Game gump (world mapping and other things)
+    GS_GAME_BLOCKED       /*!Modification of the game board, everything is displayed, but blocked
+    for clicks, movements and changes of anything other than a gump
+        caused this stage render */
 };
 
 enum RENDER_OBJECT_TYPE
 {
-    ROT_NO_OBJECT = 0, //Ничего не выбрано
-    ROT_GAME_OBJECT,   //Игровой объект
-    ROT_STATIC_OBJECT, //Статика
-    ROT_LAND_OBJECT,   //Ландшафт
-    ROT_MULTI_OBJECT,  //Мульти
-    ROT_EFFECT         //Эффект
+    ROT_NO_OBJECT = 0, // Nothing selected
+    ROT_GAME_OBJECT,   // Game object
+    ROT_STATIC_OBJECT, // Static
+    ROT_LAND_OBJECT,   // Landscape
+    ROT_MULTI_OBJECT,  // Multi
+    ROT_EFFECT         // Effect
 };
 
 enum SCAN_TYPE_OBJECT
@@ -251,49 +251,49 @@ enum WEATHER_TYPE
 
 enum GUMP_TYPE
 {
-    GT_NONE = 0,  //!Нет гампа
-    GT_PAPERDOLL, //!Папердолл 100%
-    GT_STATUSBAR, //!Статус бар (все виды) 100%
-    GT_DYE, //!Гамп выбора цвета 100% (напрямую зависит от GT_SELECT_COLOR)
-    GT_OPTIONS,   //!Опции 90%
-    GT_GENERIC,   //!Гамп от сервера 100%
-    GT_MENU,      //!Меню от сервера 100%
-    GT_GRAY_MENU, //!"Серое" меню от сервера (блокирующий) 100%
-    GT_TRADE,     //!Трэйд гамп 100%
-    GT_SHOP,      //!Гампы покупки/продажи 100% / 100%
-    GT_MINIMAP,   //!Мини-карта 100%
-    GT_MAP,       //!Карта (городов/кладов) 100%
-    GT_SKILLS,    //!Скиллы 100%
-    GT_JOURNAL,   //!Журнал 100%
-    GT_CONTAINER, //!Контейнеры 100%
-    GT_SPELLBOOK, //!Спеллбука 100%
-    GT_SPELL,     //!Иконка спелла 100%
-    GT_DRAG, //!Разделение стакуемых предметов (больше 1 штуки в стеке) 100%
-    GT_TEXT_ENTRY_DIALOG, //!Гамп ввода текста от сервера (блокирующий) 100%
-    GT_QUESTION,              //!Гамп вопроса (блокирующий) 100%
-    GT_SELECT_COLOR,          //!Гамп выбора цвета (для опций) 100%
-    GT_SELECT_FONT,           //!Гамп выбора шрифта (для опций) 100%
-    GT_NOTIFY,                //!Гамп сообщения (блокирующий) 100%
-    GT_BOOK,                  //!Гамп книг 10%
-    GT_TIP,                   //!Tip window 90%
-    GT_PARTY_MANIFEST,        //!Пати манифест гамп 100%
-    GT_MAIL,                  //!Гамп почты 0%
-    GT_PROFILE,               //!Гамп профиля 100%
-    GT_MENUBAR,               //!Гамп менюбара 90%
-    GT_BUFF,                  //!Гамп баффов 100%
-    GT_CHAT,                  //!Гамп чата 0%
-    GT_BULLETIN_BOARD,        //!Гамп доски объявлений 100%
-    GT_BULLETIN_BOARD_ITEM,   //!Гамп предмета доски объявлений 100%
-    GT_WORLD_MAP,             //!Гамп карты мира 100%
-    GT_PLUGIN,                //!Гампы плагинов 0%
-    GT_TARGET_SYSTEM,         //!Гамп таргет системы (статусбар) 100%
-    GT_POPUP_MENU,            //!Гамп всплывающего меню 100%
-    GT_CONSOLE_TYPE,          //!Гамп типа консоли 100%
-    GT_SKILL,                 //!Гамп навыка 100%
-    GT_COMBAT_BOOK,           //!Гамп книги абилок 100%
-    GT_ABILITY,               //!Гамп абилки 100%
-    GT_RACIAL_ABILITIES_BOOK, //!Гамп книги рассовых абилок 100%
-    GT_RACIAL_ABILITY,        //!Гамп рассовой абилки 100%
+    GT_NONE = 0,              // No gump
+    GT_PAPERDOLL,             // Paperdoll 100%
+    GT_STATUSBAR,             // Status bar (all types) 100%
+    GT_DYE,                   // Color selection gump 100% (directly depends on GT_SELECT_COLOR)
+    GT_OPTIONS,               // Options 90%
+    GT_GENERIC,               // Gump from the server 100%
+    GT_MENU,                  // Menu from the server 100%
+    GT_GRAY_MENU,             // "Gray" menu from the server (blocking) 100%
+    GT_TRADE,                 // Trade Gump 100%
+    GT_SHOP,                  // Purchase / sale gumps 100% / 100%
+    GT_MINIMAP,               // Minimap 100%
+    GT_MAP,                   // Map (cities / treasures) 100%
+    GT_SKILLS,                // Skills 100%
+    GT_JOURNAL,               // Magazine 100%
+    GT_CONTAINER,             // Containers 100%
+    GT_SPELLBOOK,             // Spellbook 100%
+    GT_SPELL,                 // Spell icon 100%
+    GT_DRAG,                  // Separation of stackable items (more than 1 in the stack) 100%
+    GT_TEXT_ENTRY_DIALOG,     // Server input text input (blocking) 100%
+    GT_QUESTION,              // Question gump (Blocking) 100%
+    GT_SELECT_COLOR,          // Color selection gump (for options) 100%
+    GT_SELECT_FONT,           // Font selection gump (for options) 100%
+    GT_NOTIFY,                // Message gump (blocking) 100%
+    GT_BOOK,                  // Gump books 10%
+    GT_TIP,                   // Tip window 90%
+    GT_PARTY_MANIFEST,        // Party manifesto gump 100%
+    GT_MAIL,                  // Gump mail 0%
+    GT_PROFILE,               // Profile gump 100%
+    GT_MENUBAR,               // Gump menu bar 90%
+    GT_BUFF,                  // Gump buffs 100%
+    GT_CHAT,                  // Gump chat 0%
+    GT_BULLETIN_BOARD,        // Gump message boards 100%
+    GT_BULLETIN_BOARD_ITEM,   // Item Board Bulletin 100%
+    GT_WORLD_MAP,             // Hamp World Maps 100%
+    GT_PLUGIN,                // Plugins 0%
+    GT_TARGET_SYSTEM,         // Gump system target (statusbar) 100%
+    GT_POPUP_MENU,            // Gump pop-up menu 100%
+    GT_CONSOLE_TYPE,          // Gump console type 100%
+    GT_SKILL,                 // Gump skill 100%
+    GT_COMBAT_BOOK,           // Gump books abilok 100%
+    GT_ABILITY,               // Gump skills 100%
+    GT_RACIAL_ABILITIES_BOOK, // Gump books of race abilities 100%
+    GT_RACIAL_ABILITY,        // Gump racial abilities 100%
     GT_CUSTOM_HOUSE,
     GT_PROPERTY,
     GT_PROPERTY_ICON
@@ -301,51 +301,51 @@ enum GUMP_TYPE
 
 enum GUMP_OBJECT_TYPE
 {
-    GOT_NONE = 0,        //!Нет типа
-    GOT_PAGE,            //!Идентификатор страницы
-    GOT_GROUP,           //!Идентификатор группы (для радио-кнопок)
-    GOT_MASTERGUMP,      //!Шта?
-    GOT_RESIZEPIC,       //!Фон (лепится из 9 кусков)
-    GOT_SCOPE,           //!Рамка (лепится из 4 кусков)
-    GOT_CHECKTRANS,      //!Полупрозрачная зона на гампе
-    GOT_SCISSOR,         //!Ножницы
-    GOT_COLOREDPOLYGONE, //!Цветной прямоугольник
-    GOT_LINE,            //!Линия
-    GOT_SLIDER,          //!Ползунок
-    GOT_MINMAXBUTTONS,   //!Кнопки регулировки мин/макс значения
-    GOT_SHADER,          //!Шейдерная программа
-    GOT_HITBOX,          //!Область выделения (для текста)
-    GOT_DATABOX, //!Предметы для отрисовке (актуально использовать в гампах папердолла, контейнера и т.п, содержащих предметы мира)
-    GOT_BUTTON,  //!Кнопка
-    GOT_RESIZEBUTTON,        //!Кнопка изменения размера
-    GOT_BUTTONTILEART,       //!Кнопка с картинкой
-    GOT_BLENDING,            //!Блендинг цветов
-    GOT_GLOBAL_COLOR,        //!Глобальный цвет
-    GOT_BUFF,                //!Иконка баффа\дебаффа
-    GOT_SHOPITEM,            //!Предмет магазина
-    GOT_SHOPRESULT,          //!Предмет магазина (результат)
-    GOT_SKILLITEM,           //!Объект скиллов
-    GOT_SKILLGROUP,          //!Объект группы скиллов
-    GOT_BB_OBJECT,           //!Объект доски объявлений (Bulletin Board)
-    GOT_SCROLLBACKGROUND,    //!Фон в виде скролла
-    GOT_MENUOBJECT,          //!Объект меню
-    GOT_COMBOBOX,            //!Комбо-бокс
-    GOT_CHECKBOX,            //!Чекбокс
-    GOT_RADIO,               //!Радио-кнопка
-    GOT_EXTERNALTEXTURE,     //!Внешняя текстура
-    GOT_TILEPIC,             //!Картинка из статики
-    GOT_TILEPICHIGHTLIGHTED, //!Картинка из статики, цветная с подсветкой с серийником
-    GOT_GUMPPIC,             //!Картинка из гампа
-    GOT_GUMPPICTILED,        //!Картинка из гампа (повторяющаяся)
-    GOT_GUMPPICHIGHTLIGHTED, //!Картинка из гампа, цветная с подсветкой с серийником
-    GOT_TEXT,         //!Текст
-    GOT_HTMLTEXT,     //!Текст с поддержкой HTML разметки
-    GOT_TEXTENTRY,    //!Ввод текста
-    GOT_HTMLGUMP,     //!ХТМЛ гамп
-    GOT_XFMHTMLGUMP,  //!ХТМЛ гамп из клилока (цветной там же)
-    GOT_XFMHTMLTOKEN, //
-    GOT_TOOLTIP,      //
-    GOT_VIRTUE_GUMP   //
+    GOT_NONE = 0,        // No type
+    GOT_PAGE,            // Page ID
+    GOT_GROUP,           // Group ID (for radio buttons)
+    GOT_MASTERGUMP,      // ?
+    GOT_RESIZEPIC,       // Background (molded from 9 pieces)
+    GOT_SCOPE,           // Frame (molded from 4 pieces)
+    GOT_CHECKTRANS,      // Translucent zone on the gump
+    GOT_SCISSOR,         // Scissors
+    GOT_COLOREDPOLYGONE, // Colored rectangle
+    GOT_LINE,            // Line
+    GOT_SLIDER,          // Slider
+    GOT_MINMAXBUTTONS,   // Adjustment buttons for min / max values
+    GOT_SHADER,          // Shader program
+    GOT_HITBOX,          // Selection area (for text)
+    GOT_DATABOX, // Objects for drawing (actual use in the guards of the paperdoll, container, etc., containing objects of the world)
+    GOT_BUTTON,  // Button
+    GOT_RESIZEBUTTON,        // Resize button
+    GOT_BUTTONTILEART,       // Button with a picture
+    GOT_BLENDING,            // Color blending
+    GOT_GLOBAL_COLOR,        // Global color
+    GOT_BUFF,                // Buff icon / debuff
+    GOT_SHOPITEM,            // Store item
+    GOT_SHOPRESULT,          // Store item (result)
+    GOT_SKILLITEM,           // Skill Object
+    GOT_SKILLGROUP,          // Skill group object
+    GOT_BB_OBJECT,           // Bulletin Board Object
+    GOT_SCROLLBACKGROUND,    // Background as a scroll
+    GOT_MENUOBJECT,          // Menu object
+    GOT_COMBOBOX,            // Combo Box
+    GOT_CHECKBOX,            // Checkbox
+    GOT_RADIO,               // Radio button
+    GOT_EXTERNALTEXTURE,     // External texture
+    GOT_TILEPIC,             // Static picture
+    GOT_TILEPICHIGHTLIGHTED, // Static picture, color backlit with serial
+    GOT_GUMPPIC,             // Picture from the gump
+    GOT_GUMPPICTILED,        // Picture from the gump (repeated)
+    GOT_GUMPPICHIGHTLIGHTED, // Picture from a gump, color backlit with serial
+    GOT_TEXT,                // Text
+    GOT_HTMLTEXT,            // Text with HTML markup support
+    GOT_TEXTENTRY,           // Enter text
+    GOT_HTMLGUMP,            // CTML Gump
+    GOT_XFMHTMLGUMP,         // XTML clump gump (color ibid)
+    GOT_XFMHTMLTOKEN,        //
+    GOT_TOOLTIP,             //
+    GOT_VIRTUE_GUMP          //
 };
 
 enum SLIDER_TEXT_POSITION
