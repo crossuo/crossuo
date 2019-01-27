@@ -1947,12 +1947,12 @@ void CGame::LoginComplete(bool reload)
 
         //CPacketOpenChat({}).Send();
         //CPacketRazorAnswer().Send();
-        if (g_Config.ClientVersion >= CV_306E)
+        if (g_Config.ProtocolClientVersion >= CV_306E)
         {
             CPacketClientType().Send();
         }
 
-        if (g_Config.ClientVersion >= CV_305D)
+        if (g_Config.ProtocolClientVersion >= CV_305D)
         {
             CPacketClientViewRange(g_ConfigManager.UpdateRange).Send();
         }
@@ -6503,7 +6503,7 @@ void CGame::DropItem(int container, uint16_t x, uint16_t y, char z)
     DEBUG_TRACE_FUNCTION;
     if (g_ObjectInHand.Enabled && g_ObjectInHand.Serial != container)
     {
-        if (g_Config.ClientVersion >= CV_6017)
+        if (g_Config.ProtocolClientVersion >= CV_6017)
         {
             CPacketDropRequestNew(g_ObjectInHand.Serial, x, y, z, 0, container).Send();
         }

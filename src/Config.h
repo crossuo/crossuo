@@ -8,6 +8,7 @@ struct Config
     string Login;
     string Password;
     string ClientVersionString = "7.0.33.1";
+    string ProtocolClientVersionString = "7.0.33.1";
     string CustomPath;
     string ServerAddress;
     uint16_t ServerPort = 2593;
@@ -25,6 +26,7 @@ struct Config
     uint32_t Key2 = 0;
     uint32_t Key3 = 0;
     uint32_t ClientVersion = CV_LATEST;
+    uint32_t ProtocolClientVersion = CV_LATEST;
     uint32_t EncryptionType = 0;
 };
 

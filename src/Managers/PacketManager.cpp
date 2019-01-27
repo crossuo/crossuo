@@ -619,7 +619,7 @@ void CPacketManager::SendMegaClilocRequests()
     DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled && !m_MegaClilocRequests.empty())
     {
-        if (g_Config.ClientVersion >= CV_500A)
+        if (g_Config.ProtocolClientVersion >= CV_500A)
         {
             while (!m_MegaClilocRequests.empty())
             {
@@ -822,7 +822,7 @@ PACKET_HANDLER(CharacterList)
     HandleResendCharacterList();
     uint8_t locCount = ReadUInt8();
     g_CityList.Clear();
-    if (g_Config.ClientVersion >= CV_70130)
+    if (g_Config.ProtocolClientVersion >= CV_70130)
     {
         for (int i = 0; i < locCount; i++)
         {
@@ -867,7 +867,7 @@ PACKET_HANDLER(CharacterList)
     //g_SendLogoutNotification = (bool)(g_ClientFlag & LFF_RE);
     g_PopupEnabled = (bool)(g_ClientFlag & CLF_CONTEXT_MENU);
     g_TooltipsEnabled =
-        (bool)(((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) && (g_Config.ClientVersion >= CV_308Z));
+        (bool)(((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) && (g_Config.ProtocolClientVersion >= CV_308Z));
     g_PaperdollBooks = (bool)(g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS);
 
     g_CharacterListScreen.UpdateContent();
@@ -1037,14 +1037,14 @@ PACKET_HANDLER(EnterWorld)
     g_LastSpellIndex = 1;
     g_LastSkillIndex = 1;
 
-    CPacketClientVersion(g_Config.ClientVersionString).Send();
+    CPacketClientVersion(g_Config.ProtocolClientVersionString).Send();
 
-    if (g_Config.ClientVersion >= CV_200)
+    if (g_Config.ProtocolClientVersion >= CV_200)
     {
         CPacketGameWindowSize().Send();
     }
 
-    if (g_Config.ClientVersion >= CV_200)
+    if (g_Config.ProtocolClientVersion >= CV_200)
     {
         CPacketLanguage(g_Language).Send();
     }
@@ -1173,7 +1173,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
         return;
     }
 
-    if (*Start == 0x16 && g_Config.ClientVersion < CV_500A)
+    if (*Start == 0x16 && g_Config.ProtocolClientVersion < CV_500A)
     {
         return;
     }
@@ -1196,7 +1196,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
             uint8_t poisonFlag = 0x04;
             if (enable != 0u)
             {
-                if (g_Config.ClientVersion >= CV_7000)
+                if (g_Config.ProtocolClientVersion >= CV_7000)
                 {
                     obj->SA_Poisoned = true;
                 }
@@ -1207,7 +1207,7 @@ PACKET_HANDLER(NewHealthbarUpdate)
             }
             else
             {
-                if (g_Config.ClientVersion >= CV_7000)
+                if (g_Config.ProtocolClientVersion >= CV_7000)
                 {
                     obj->SA_Poisoned = false;
                 }
@@ -1373,7 +1373,7 @@ PACKET_HANDLER(CharacterStatus)
             }
             else
             {
-                if (g_Config.ClientVersion >= CV_500A)
+                if (g_Config.ProtocolClientVersion >= CV_500A)
                 {
                     g_Player->MaxWeight = 7 * (g_Player->Str / 2) + 40;
                 }
@@ -1664,7 +1664,7 @@ PACKET_HANDLER(UpdateObject)
         uint8_t layer = ReadUInt8();
         uint16_t itemColor = 0;
 
-        if (g_Config.ClientVersion >= CV_70331)
+        if (g_Config.ProtocolClientVersion >= CV_70331)
         {
             itemColor = ReadUInt16BE();
         }
@@ -1779,7 +1779,7 @@ PACKET_HANDLER(UpdateContainedItem)
     uint16_t x = ReadUInt16BE();
     uint16_t y = ReadUInt16BE();
 
-    if (g_Config.ClientVersion >= CV_6017)
+    if (g_Config.ProtocolClientVersion >= CV_6017)
     {
         Move(1);
     }
@@ -1810,7 +1810,7 @@ PACKET_HANDLER(UpdateContainedItems)
         uint16_t x = ReadUInt16BE();
         uint16_t y = ReadUInt16BE();
 
-        if (g_Config.ClientVersion >= CV_6017)
+        if (g_Config.ProtocolClientVersion >= CV_6017)
         {
             Move(1);
         }
@@ -2250,7 +2250,8 @@ PACKET_HANDLER(OpenPaperdoll)
 PACKET_HANDLER(ClientVersion)
 {
     DEBUG_TRACE_FUNCTION;
-    CPacketClientVersion(g_Config.ClientVersionString).Send();
+    CPacketClientVersion(g_Config.ClientVersionString)
+        .Send(); // Send client data version instead protocol version
 }
 
 PACKET_HANDLER(Ping)
@@ -2362,7 +2363,7 @@ PACKET_HANDLER(LightLevel)
 PACKET_HANDLER(EnableLockedFeatures)
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Config.ClientVersion >= CV_60142)
+    if (g_Config.ProtocolClientVersion >= CV_60142)
     {
         g_LockedClientFeatures = ReadUInt32BE();
     }
@@ -3977,7 +3978,8 @@ PACKET_HANDLER(AssistVersion)
 {
     DEBUG_TRACE_FUNCTION;
     uint32_t version = ReadUInt32BE();
-    CPacketAssistVersion(version, g_Config.ClientVersionString).Send();
+    // CHECK: if this is correct for the use case where ClientVersion != ProtocolClientVersion
+    CPacketAssistVersion(version, g_Config.ProtocolClientVersionString).Send();
 }
 
 PACKET_HANDLER(CharacterListNotification)
@@ -5526,7 +5528,7 @@ PACKET_HANDLER(DisplayMap)
 
     CGumpMap *gump = new CGumpMap(serial, gumpid, startX, startY, endX, endY, width, height);
 
-    if (*Start == 0xF5 || g_Config.ClientVersion >= CV_308Z) //308z или выше?
+    if (*Start == 0xF5 || g_Config.ProtocolClientVersion >= CV_308Z) //308z или выше?
     {
         uint16_t facet = 0;
 
@@ -5824,8 +5826,8 @@ PACKET_HANDLER(OpenBook) // 0x93
     uint8_t flags = ReadUInt8();
     Move(1);
     auto pageCount = ReadUInt16BE();
-    CGumpBook *gump =
-        new CGumpBook(serial, 0, 0, pageCount, flags != 0, (g_Config.ClientVersion >= CV_308Z));
+    CGumpBook *gump = new CGumpBook(
+        serial, 0, 0, pageCount, flags != 0, (g_Config.ProtocolClientVersion >= CV_308Z));
 
     gump->m_EntryTitle->m_Entry.SetTextA(ReadString(60));
     gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(30));

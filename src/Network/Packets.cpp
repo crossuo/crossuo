@@ -85,7 +85,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     int skillsCount = 3;
     uint32_t packetID = 0x00;
 
-    if (g_Config.ClientVersion >= CV_70160)
+    if (g_Config.ProtocolClientVersion >= CV_70160)
     {
         skillsCount++;
         Resize(106, true);
@@ -117,7 +117,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     WriteUInt8(val); //profession
     Move(15);        //?
 
-    if (g_Config.ClientVersion < CV_4011D)
+    if (g_Config.ProtocolClientVersion < CV_4011D)
     {
         val = (uint8_t)g_CreateCharacterManager.GetFemale();
     }
@@ -125,7 +125,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     {
         val = (uint8_t)g_CreateCharacterManager.GetRace();
 
-        if (g_Config.ClientVersion < CV_7000)
+        if (g_Config.ProtocolClientVersion < CV_7000)
         {
             val--;
         }
@@ -162,7 +162,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
     WriteUInt16BE(g_CreateCharacterManager.GetBeard(g_CreateCharacterManager.BeardStyle).GraphicID);
     WriteUInt16BE(g_CreateCharacterManager.BeardColor);
 
-    if (g_Config.ClientVersion >= CV_70160)
+    if (g_Config.ProtocolClientVersion >= CV_70160)
     {
         uint16_t location = g_SelectTownScreen.m_City->LocationIndex;
 
@@ -194,7 +194,7 @@ CPacketCreateCharacter::CPacketCreateCharacter(const string &name)
         WriteUInt8(serverIndex); //server index
 
         uint8_t location = g_SelectTownScreen.m_City->LocationIndex;
-        if (g_Config.ClientVersion < CV_70130)
+        if (g_Config.ProtocolClientVersion < CV_70130)
         {
             location--;
         }
@@ -474,7 +474,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
 CPacketCastSpell::CPacketCastSpell(int index)
     : CPacket(1)
 {
-    if (g_Config.ClientVersion >= CV_60142)
+    if (g_Config.ProtocolClientVersion >= CV_60142)
     {
         Resize(9, true);
 
