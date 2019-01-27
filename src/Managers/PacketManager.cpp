@@ -2250,7 +2250,8 @@ PACKET_HANDLER(OpenPaperdoll)
 PACKET_HANDLER(ClientVersion)
 {
     DEBUG_TRACE_FUNCTION;
-    CPacketClientVersion(g_Config.ClientVersionString).Send(); // Send client data version instead protocol version
+    CPacketClientVersion(g_Config.ClientVersionString)
+        .Send(); // Send client data version instead protocol version
 }
 
 PACKET_HANDLER(Ping)
@@ -5825,8 +5826,8 @@ PACKET_HANDLER(OpenBook) // 0x93
     uint8_t flags = ReadUInt8();
     Move(1);
     auto pageCount = ReadUInt16BE();
-    CGumpBook *gump =
-        new CGumpBook(serial, 0, 0, pageCount, flags != 0, (g_Config.ProtocolClientVersion >= CV_308Z));
+    CGumpBook *gump = new CGumpBook(
+        serial, 0, 0, pageCount, flags != 0, (g_Config.ProtocolClientVersion >= CV_308Z));
 
     gump->m_EntryTitle->m_Entry.SetTextA(ReadString(60));
     gump->m_EntryAuthor->m_Entry.SetTextA(ReadString(30));
