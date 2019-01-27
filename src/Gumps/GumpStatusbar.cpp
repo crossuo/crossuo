@@ -559,20 +559,18 @@ void CGumpStatusbar::UpdateContent()
         {
             SDL_Point p = { 0, 0 };
 
-            if (g_Config.ClientVersion >= CV_308D && !g_ConfigManager.GetOldStyleStatusbar())
-            {
-                Add(new CGUIGumppic(0x2A6C, 0, 0));
-            }
-            else
+            uint16_t gumpId = 0x2A6C;
+            if (g_Config.ClientVersion < CV_308D || g_ConfigManager.GetOldStyleStatusbar())
             {
                 p.x = 244;
                 p.y = 112;
-                Add(new CGUIGumppic(0x0802, 0, 0));
+                gumpId = 0x0802;
             }
+            Add(new CGUIGumppic(gumpId, 0, 0));
+            auto &io = g_Game.m_GumpDataIndex[gumpId];
             int xOffset = 0;
-            // Client version specifics drawing
-#define USE_CUSTOM_STATUSBAR 0
-#if USE_CUSTOM_STATUSBAR
+
+            if (io.DataSize == 169884 && io.Height == 171 && io.Width == 409)
             {
                 static const int ROW_0_Y = 26;
                 static const int ROW_1_Y = 56;
@@ -603,8 +601,6 @@ void CGumpStatusbar::UpdateContent()
                 static const int COLUMN_5_X = 300;
                 static const int COLUMN_5_WIDTH = 80;
                 static const int COLUMN_5_ICON_WIDTH = 55;
-
-                Add(new CGUIGumppic(0x2A6C, 0, 0));
 
                 Add(new CGUIGumppic(0x0805, 34, 12));
                 int percent = CalculatePercents(g_Player->MaxHits, g_Player->Hits, 109);
@@ -888,8 +884,7 @@ void CGumpStatusbar::UpdateContent()
                     20,
                     true));
             }
-#else
-            if (g_Config.ClientVersion >= CV_308Z && !g_ConfigManager.GetOldStyleStatusbar())
+            else if (g_Config.ClientVersion >= CV_308Z && !g_ConfigManager.GetOldStyleStatusbar())
             {
                 p.x = 389;
                 p.y = 152;
@@ -1261,7 +1256,7 @@ void CGumpStatusbar::UpdateContent()
                     }
                 }
             }
-#endif
+
             if (!useUOPGumps)
             {
                 Add(new CGUIHitBox(ID_GSB_MINIMIZE, p.x, p.y, 16, 16, true));

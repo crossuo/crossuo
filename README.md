@@ -1,7 +1,7 @@
 # CrossUO Client
 
 [![Travis Build Status](https://travis-ci.org/crossuo/crossuo.svg?branch=master)](https://travis-ci.org/crossuo/crossuo)
-[![Build status](https://ci.appveyor.com/api/projects/status/gmkwveaysxb12uog?svg=true)](https://ci.appveyor.com/project/fungos/crossuo)
+[![Build status](https://ci.appveyor.com/api/projects/status/t7rtpwwv6m0fguc4?svg=true)](https://ci.appveyor.com/project/fungos/crossuo)
 
 * Supported Platforms: Windows 7, Windows 10, Linux and MacOSX.
 
