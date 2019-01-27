@@ -379,7 +379,7 @@ static unsigned int s_table[CRYPT_GAMEKEY_COUNT][1024];
              S[0x0300 + ((R)&0xff)]
 
 // static
-bool CBlowfishCrypt::m_tables_ready = false;
+static bool s_tables_ready = false;
 
 void CBlowfishCrypt::InitTables()
 {
@@ -439,7 +439,7 @@ void CBlowfishCrypt::InitTables()
             s_table[key_index][i + 1] = value[1];
         }
     }
-    m_tables_ready = true;
+    s_tables_ready = true;
 }
 
 void CBlowfishCrypt::RawEncrypt(uint32_t *values, int table)
@@ -448,24 +448,11 @@ void CBlowfishCrypt::RawEncrypt(uint32_t *values, int table)
     unsigned int right = values[1];
 
     left ^= p_table[table][0];
-
-    ROUND(right, left, s_table[table], p_table[table][1]);
-    ROUND(left, right, s_table[table], p_table[table][2]);
-    ROUND(right, left, s_table[table], p_table[table][3]);
-    ROUND(left, right, s_table[table], p_table[table][4]);
-    ROUND(right, left, s_table[table], p_table[table][5]);
-    ROUND(left, right, s_table[table], p_table[table][6]);
-    ROUND(right, left, s_table[table], p_table[table][7]);
-    ROUND(left, right, s_table[table], p_table[table][8]);
-    ROUND(right, left, s_table[table], p_table[table][9]);
-    ROUND(left, right, s_table[table], p_table[table][10]);
-    ROUND(right, left, s_table[table], p_table[table][11]);
-    ROUND(left, right, s_table[table], p_table[table][12]);
-    ROUND(right, left, s_table[table], p_table[table][13]);
-    ROUND(left, right, s_table[table], p_table[table][14]);
-    ROUND(right, left, s_table[table], p_table[table][15]);
-    ROUND(left, right, s_table[table], p_table[table][16]);
-
+    for (int i = 1; i < 16; i += 2)
+    {
+        ROUND(right, left, s_table[table], p_table[table][i]);
+        ROUND(left, right, s_table[table], p_table[table][i + 1]);
+    }
     right ^= p_table[table][17];
 
     values[1] = left;
@@ -520,7 +507,7 @@ void CBlowfishCrypt::Encrypt(uint8_t *in, uint8_t *out, int len)
 
 void CBlowfishCrypt::Init()
 {
-    if (!m_tables_ready)
+    if (!s_tables_ready)
     {
         InitTables();
     }
@@ -529,6 +516,283 @@ void CBlowfishCrypt::Init()
     memcpy(m_seed, g_seed_table[0][m_table_index][0], CRYPT_GAMESEED_LENGTH);
     m_stream_pos = 0;
     m_block_pos = 0;
+}
+
+// Two-Fish Crypt Table
+// clang-format off
+unsigned char P8x8[2][256] = {
+    {0xA9, 0x67, 0xB3, 0xE8, 0x04, 0xFD, 0xA3, 0x76, 0x9A, 0x92, 0x80, 0x78, 0xE4, 0xDD, 0xD1,
+    0x38, 0x0D, 0xC6, 0x35, 0x98, 0x18, 0xF7, 0xEC, 0x6C, 0x43, 0x75, 0x37, 0x26, 0xFA, 0x13,
+    0x94, 0x48, 0xF2, 0xD0, 0x8B, 0x30, 0x84, 0x54, 0xDF, 0x23, 0x19, 0x5B, 0x3D, 0x59, 0xF3,
+    0xAE, 0xA2, 0x82, 0x63, 0x01, 0x83, 0x2E, 0xD9, 0x51, 0x9B, 0x7C, 0xA6, 0xEB, 0xA5, 0xBE,
+    0x16, 0x0C, 0xE3, 0x61, 0xC0, 0x8C, 0x3A, 0xF5, 0x73, 0x2C, 0x25, 0x0B, 0xBB, 0x4E, 0x89,
+    0x6B, 0x53, 0x6A, 0xB4, 0xF1, 0xE1, 0xE6, 0xBD, 0x45, 0xE2, 0xF4, 0xB6, 0x66, 0xCC, 0x95,
+    0x03, 0x56, 0xD4, 0x1C, 0x1E, 0xD7, 0xFB, 0xC3, 0x8E, 0xB5, 0xE9, 0xCF, 0xBF, 0xBA, 0xEA,
+    0x77, 0x39, 0xAF, 0x33, 0xC9, 0x62, 0x71, 0x81, 0x79, 0x09, 0xAD, 0x24, 0xCD, 0xF9, 0xD8,
+    0xE5, 0xC5, 0xB9, 0x4D, 0x44, 0x08, 0x86, 0xE7, 0xA1, 0x1D, 0xAA, 0xED, 0x06, 0x70, 0xB2,
+    0xD2, 0x41, 0x7B, 0xA0, 0x11, 0x31, 0xC2, 0x27, 0x90, 0x20, 0xF6, 0x60, 0xFF, 0x96, 0x5C,
+    0xB1, 0xAB, 0x9E, 0x9C, 0x52, 0x1B, 0x5F, 0x93, 0x0A, 0xEF, 0x91, 0x85, 0x49, 0xEE, 0x2D,
+    0x4F, 0x8F, 0x3B, 0x47, 0x87, 0x6D, 0x46, 0xD6, 0x3E, 0x69, 0x64, 0x2A, 0xCE, 0xCB, 0x2F,
+    0xFC, 0x97, 0x05, 0x7A, 0xAC, 0x7F, 0xD5, 0x1A, 0x4B, 0x0E, 0xA7, 0x5A, 0x28, 0x14, 0x3F,
+    0x29, 0x88, 0x3C, 0x4C, 0x02, 0xB8, 0xDA, 0xB0, 0x17, 0x55, 0x1F, 0x8A, 0x7D, 0x57, 0xC7,
+    0x8D, 0x74, 0xB7, 0xC4, 0x9F, 0x72, 0x7E, 0x15, 0x22, 0x12, 0x58, 0x07, 0x99, 0x34, 0x6E,
+    0x50, 0xDE, 0x68, 0x65, 0xBC, 0xDB, 0xF8, 0xC8, 0xA8, 0x2B, 0x40, 0xDC, 0xFE, 0x32, 0xA4,
+    0xCA, 0x10, 0x21, 0xF0, 0xD3, 0x5D, 0x0F, 0x00, 0x6F, 0x9D, 0x36, 0x42, 0x4A, 0x5E, 0xC1,
+    0xE0},
+    {0x75, 0xF3, 0xC6, 0xF4, 0xDB, 0x7B, 0xFB, 0xC8, 0x4A, 0xD3, 0xE6, 0x6B, 0x45, 0x7D, 0xE8,
+    0x4B, 0xD6, 0x32, 0xD8, 0xFD, 0x37, 0x71, 0xF1, 0xE1, 0x30, 0x0F, 0xF8, 0x1B, 0x87, 0xFA,
+    0x06, 0x3F, 0x5E, 0xBA, 0xAE, 0x5B, 0x8A, 0x00, 0xBC, 0x9D, 0x6D, 0xC1, 0xB1, 0x0E, 0x80,
+    0x5D, 0xD2, 0xD5, 0xA0, 0x84, 0x07, 0x14, 0xB5, 0x90, 0x2C, 0xA3, 0xB2, 0x73, 0x4C, 0x54,
+    0x92, 0x74, 0x36, 0x51, 0x38, 0xB0, 0xBD, 0x5A, 0xFC, 0x60, 0x62, 0x96, 0x6C, 0x42, 0xF7,
+    0x10, 0x7C, 0x28, 0x27, 0x8C, 0x13, 0x95, 0x9C, 0xC7, 0x24, 0x46, 0x3B, 0x70, 0xCA, 0xE3,
+    0x85, 0xCB, 0x11, 0xD0, 0x93, 0xB8, 0xA6, 0x83, 0x20, 0xFF, 0x9F, 0x77, 0xC3, 0xCC, 0x03,
+    0x6F, 0x08, 0xBF, 0x40, 0xE7, 0x2B, 0xE2, 0x79, 0x0C, 0xAA, 0x82, 0x41, 0x3A, 0xEA, 0xB9,
+    0xE4, 0x9A, 0xA4, 0x97, 0x7E, 0xDA, 0x7A, 0x17, 0x66, 0x94, 0xA1, 0x1D, 0x3D, 0xF0, 0xDE,
+    0xB3, 0x0B, 0x72, 0xA7, 0x1C, 0xEF, 0xD1, 0x53, 0x3E, 0x8F, 0x33, 0x26, 0x5F, 0xEC, 0x76,
+    0x2A, 0x49, 0x81, 0x88, 0xEE, 0x21, 0xC4, 0x1A, 0xEB, 0xD9, 0xC5, 0x39, 0x99, 0xCD, 0xAD,
+    0x31, 0x8B, 0x01, 0x18, 0x23, 0xDD, 0x1F, 0x4E, 0x2D, 0xF9, 0x48, 0x4F, 0xF2, 0x65, 0x8E,
+    0x78, 0x5C, 0x58, 0x19, 0x8D, 0xE5, 0x98, 0x57, 0x67, 0x7F, 0x05, 0x64, 0xAF, 0x63, 0xB6,
+    0xFE, 0xF5, 0xB7, 0x3C, 0xA5, 0xCE, 0xE9, 0x68, 0x44, 0xE0, 0x4D, 0x43, 0x69, 0x29, 0x2E,
+    0xAC, 0x15, 0x59, 0xA8, 0x0A, 0x9E, 0x6E, 0x47, 0xDF, 0x34, 0x35, 0x6A, 0xCF, 0xDC, 0x22,
+    0xC9, 0xC0, 0x9B, 0x89, 0xD4, 0xED, 0xAB, 0x12, 0xA2, 0x0D, 0x52, 0xBB, 0x02, 0x2F, 0xA9,
+    0xD7, 0x61, 0x1E, 0xB4, 0x50, 0x04, 0xF6, 0xC2, 0x16, 0x25, 0x86, 0x56, 0x55, 0x09, 0xBE,
+    0x91}};
+
+#define p8( N ) P8x8[P_##N]
+#define RS_rem( x )                                                                \
+  {                                                                                \
+    unsigned char b = (unsigned char)( x >> 24 );                                  \
+    unsigned int g2 = ( ( b << 1 ) ^ ( ( b & 0x80 ) ? 0x14D : 0 ) ) & 0xFF;        \
+    unsigned int g3 = ( ( b >> 1 ) & 0x7F ) ^ ( ( b & 1 ) ? 0x14D >> 1 : 0 ) ^ g2; \
+    x = ( x << 8 ) ^ ( g3 << 24 ) ^ ( g2 << 16 ) ^ ( g3 << 8 ) ^ b;                \
+  }
+
+#define LFSR1( x ) ( ( ( x ) >> 1 ) ^ ( ( (x)&0x01 ) ? 0x169 / 2 : 0 ) )
+#define LFSR2( x ) \
+  ( ( ( x ) >> 2 ) ^ ( ( (x)&0x02 ) ? 0x169 / 2 : 0 ) ^ ( ( (x)&0x01 ) ? 0x169 / 4 : 0 ) )
+#define Mx_1( x ) ( (unsigned int)( x ) )
+#define Mx_X( x ) ( (unsigned int)( ( x ) ^ LFSR2( x ) ) )
+#define Mx_Y( x ) ( (unsigned int)( ( x ) ^ LFSR1( x ) ^ LFSR2( x ) ) )
+#define M00 Mul_1
+#define M01 Mul_Y
+#define M02 Mul_X
+#define M03 Mul_X
+#define M10 Mul_X
+#define M11 Mul_Y
+#define M12 Mul_Y
+#define M13 Mul_1
+#define M20 Mul_Y
+#define M21 Mul_X
+#define M22 Mul_1
+#define M23 Mul_Y
+#define M30 Mul_Y
+#define M31 Mul_1
+#define M32 Mul_Y
+#define M33 Mul_X
+#define Mul_1 Mx_1
+#define Mul_X Mx_X
+#define Mul_Y Mx_Y
+#define P_00 1
+#define P_01 0
+#define P_02 0
+#define P_03 ( P_01 ^ 1 )
+#define P_04 1
+#define P_10 0
+#define P_11 0
+#define P_12 1
+#define P_13 ( P_11 ^ 1 )
+#define P_14 0
+#define P_20 1
+#define P_21 1
+#define P_22 0
+#define P_23 ( P_21 ^ 1 )
+#define P_24 0
+#define P_30 0
+#define P_31 1
+#define P_32 1
+#define P_33 ( P_31 ^ 1 )
+#define P_34 1
+#define ROL( x, n ) ( ( ( x ) << ( (n)&0x1F ) ) | ( ( x ) >> ( 32 - ( (n)&0x1F ) ) ) )
+#define ROR( x, n ) ( ( ( x ) >> ( (n)&0x1F ) ) | ( ( x ) << ( 32 - ( (n)&0x1F ) ) ) )
+#define Bswap( x ) ( x )
+#define _b( x, N ) ( ( (unsigned char*)&x )[( (N)&3 ) ^ 0] )
+
+#ifdef _MSC_VER
+#include <stdlib.h> /* get prototypes for rotation functions */
+#undef ROL
+#undef ROR
+#pragma intrinsic(_lrotl, _lrotr) /* use intrinsic compiler rotations */
+#define ROL(x, n) _lrotl(x, n)
+#define ROR(x, n) _lrotr(x, n)
+#endif
+// clang-format on
+
+static unsigned int F32(unsigned int x, unsigned int *k32, int keyLen)
+{
+    unsigned char b[4];
+
+    *((unsigned int *)b) = Bswap(x);
+    switch (((keyLen + 63) / 64) & 3)
+    {
+        case 0:
+            b[0] = p8(04)[b[0]] ^ _b(k32[3], 0);
+            b[1] = p8(14)[b[1]] ^ _b(k32[3], 1);
+            b[2] = p8(24)[b[2]] ^ _b(k32[3], 2);
+            b[3] = p8(34)[b[3]] ^ _b(k32[3], 3);
+        // fall through
+        case 3:
+            b[0] = p8(03)[b[0]] ^ _b(k32[2], 0);
+            b[1] = p8(13)[b[1]] ^ _b(k32[2], 1);
+            b[2] = p8(23)[b[2]] ^ _b(k32[2], 2);
+            b[3] = p8(33)[b[3]] ^ _b(k32[2], 3);
+        // fall through
+        case 2:
+            b[0] = p8(00)[p8(01)[p8(02)[b[0]] ^ _b(k32[1], 0)] ^ _b(k32[0], 0)];
+            b[1] = p8(10)[p8(11)[p8(12)[b[1]] ^ _b(k32[1], 1)] ^ _b(k32[0], 1)];
+            b[2] = p8(20)[p8(21)[p8(22)[b[2]] ^ _b(k32[1], 2)] ^ _b(k32[0], 2)];
+            b[3] = p8(30)[p8(31)[p8(32)[b[3]] ^ _b(k32[1], 3)] ^ _b(k32[0], 3)];
+    }
+
+    return ((M00(b[0]) ^ M01(b[1]) ^ M02(b[2]) ^ M03(b[3]))) ^
+           ((M10(b[0]) ^ M11(b[1]) ^ M12(b[2]) ^ M13(b[3])) << 8) ^
+           ((M20(b[0]) ^ M21(b[1]) ^ M22(b[2]) ^ M23(b[3])) << 16) ^
+           ((M30(b[0]) ^ M31(b[1]) ^ M32(b[2]) ^ M33(b[3])) << 24);
+}
+
+static unsigned int RS_MDS_Encode(unsigned int k0, unsigned int k1)
+{
+    unsigned int r = 0;
+    for (int i = r = 0; i < 2; i++)
+    {
+        r ^= (i) ? k0 : k1;
+        for (int j = 0; j < 4; j++)
+            RS_rem(r);
+    }
+    return r;
+}
+
+static void reKey(keyInstance *key)
+{
+    int keyLen = key->keyLen;
+    int subkeyCnt = 8 + 2 * key->numRounds;
+    unsigned int k32e[4], k32o[4];
+    unsigned int A = 0, B = 0;
+
+    int k64Cnt = (keyLen + 63) / 64;
+
+    for (int i = 0; i < k64Cnt; i++)
+    {
+        k32e[i] = key->key32[2 * i];
+        k32o[i] = key->key32[2 * i + 1];
+        key->sboxKeys[k64Cnt - 1 - i] = RS_MDS_Encode(k32e[i], k32o[i]);
+    }
+
+    for (int i = 0; i < subkeyCnt / 2; i++)
+    {
+        A = F32(i * 0x02020202u, k32e, keyLen);
+        B = F32(i * 0x02020202u + 0x01010101u, k32o, keyLen);
+        B = ROL(B, 8);
+        key->subKeys[2 * i] = A + B;
+        key->subKeys[2 * i + 1] = ROL(A + 2 * B, 9);
+    }
+}
+
+static void cipherInit(cipherInstance *cipher, unsigned char mode, char *IV)
+{
+    cipher->cipherSig = 0x48534946;
+    if ((mode != 1) && (IV))
+    {
+        for (int i = 0; i < 4; i++)
+            ((unsigned int *)cipher->IV)[i] = Bswap(cipher->iv32[i]);
+    }
+    cipher->mode = mode;
+}
+
+static int s_numRounds[4];
+
+static void makeKey(keyInstance *key, unsigned char direction, int keyLen, char *keyMaterial)
+{
+    assert(keyMaterial == nullptr && "User supplied key-material is not implemented");
+    (void)keyMaterial;
+    key->keySig = 0x48534946;
+    key->direction = direction;
+    key->keyLen = (keyLen + 63) & ~63;
+    key->numRounds = s_numRounds[(keyLen - 1) / 64];
+    for (int i = 0; i < 8; i++)
+        key->key32[i] = 0;
+    key->keyMaterial[64] = 0;
+}
+
+static void blockEncrypt(
+    cipherInstance *cipher,
+    keyInstance *key,
+    unsigned char *input,
+    int inputLen,
+    unsigned char *outBuffer)
+{
+    int rounds = key->numRounds;
+    unsigned int x[4];
+    unsigned int t0, t1, tmp;
+    unsigned char bit = 0, ctBit = 0, carry = 0;
+
+    if (cipher->mode == 3)
+    {
+        cipher->mode = 1;
+        for (int n = 0; n < inputLen; n++)
+        {
+            blockEncrypt(cipher, key, cipher->IV, 128, (unsigned char *)x);
+            bit = 0x80 >> (n & 7);
+            ctBit = (input[n / 8] & bit) ^ ((((unsigned char *)x)[0] & 0x80) >> (n & 7));
+            outBuffer[n / 8] = (outBuffer[n / 8] & ~bit) | ctBit;
+            carry = ctBit >> (7 - (n & 7));
+            for (int i = 15; i >= 0; i--)
+            {
+                bit = cipher->IV[i] >> 7;
+                cipher->IV[i] = (cipher->IV[i] << 1) ^ carry;
+                carry = bit;
+            }
+        }
+
+        cipher->mode = 3;
+    }
+
+    for (int n = 0; n < inputLen; n += 128, input += 16, outBuffer += 16)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            x[i] = Bswap(((unsigned int *)input)[i]) ^ key->subKeys[i];
+            if (cipher->mode == 2)
+                x[i] ^= cipher->iv32[i];
+        }
+
+        for (int r = 0; r < rounds; r++)
+        {
+            t0 = F32(x[0], key->sboxKeys, key->keyLen);
+            t1 = F32(ROL(x[1], 8), key->sboxKeys, key->keyLen);
+
+            x[3] = ROL(x[3], 1);
+            x[2] ^= t0 + t1 + key->subKeys[8 + 2 * r];
+            x[3] ^= t0 + 2 * t1 + key->subKeys[8 + 2 * r + 1];
+            x[2] = ROR(x[2], 1);
+
+            if (r < rounds - 1)
+            {
+                tmp = x[0];
+                x[0] = x[2];
+                x[2] = tmp;
+                tmp = x[1];
+                x[1] = x[3];
+                x[3] = tmp;
+            }
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            ((unsigned int *)outBuffer)[i] = Bswap(x[i] ^ key->subKeys[4 + i]);
+            if (cipher->mode == 2)
+                cipher->iv32[i] = Bswap(((unsigned int *)outBuffer)[i]);
+        }
+    }
 }
 
 void CTwofishCrypt::Init(uint8_t seed[4])
@@ -540,13 +804,13 @@ void CTwofishCrypt::Init(uint8_t seed[4])
     memset(&ki, 0, sizeof(ki));
     memset(&ci, 0, sizeof(ci));
 
-    makeKey(&ki, DIR_DECRYPT, 0x80, nullptr);
+    s_numRounds[0] = 0;
+    s_numRounds[1] = s_numRounds[2] = s_numRounds[3] = 0x10;
 
+    makeKey(&ki, DIR_DECRYPT, 0x80, nullptr);
     cipherInit(&ci, MODE_ECB, nullptr);
 
-    ki.key32[0] = ki.key32[1] = ki.key32[2] = ki.key32[3] =
-        m_IP; //0x0100007f or 0x8edb49ad or may be client_ip xor 0x8fdb49d2
-
+    ki.key32[0] = ki.key32[1] = ki.key32[2] = ki.key32[3] = m_IP;
     reKey(&ki);
 
     for (int i = 0; i < 256; i++)
@@ -555,11 +819,11 @@ void CTwofishCrypt::Init(uint8_t seed[4])
     }
 
     blockEncrypt(&ci, &ki, m_subData3, 256 * 8, tmpBuff);
-
     memcpy(m_subData3, tmpBuff, 256);
 
     m_pos = 0;
     dwIndex = 0;
+
     m_use_md5 = false;
     uint8_t l_sm_bData[] = { 0x05, 0x92, 0x66, 0x23, 0x67, 0x14, 0xE3, 0x62,
                              0xDC, 0x60, 0x8C, 0xD6, 0xFE, 0x7C, 0x25, 0x69 };
@@ -568,6 +832,7 @@ void CTwofishCrypt::Init(uint8_t seed[4])
 
 void CTwofishCrypt::Init_MD5()
 {
+    if (m_md5)
     {
         delete m_md5;
     }
@@ -579,11 +844,10 @@ void CTwofishCrypt::Init_MD5()
 
 void CTwofishCrypt::Encrypt(const uint8_t *in, uint8_t *out, int size)
 {
-    uint8_t tmpBuff[0x100] = { 0 };
-
+    uint8_t tmpBuff[0x100];
     for (int i = 0; i < size; i++)
     {
-        if (m_pos == 0x100)
+        if (m_pos >= 0x100)
         {
             blockEncrypt(&ci, &ki, m_subData3, 0x800, tmpBuff);
             memcpy(m_subData3, tmpBuff, 0x100);

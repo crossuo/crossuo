@@ -7,8 +7,9 @@
 #include "../Platform.h"
 #include "../api/plugininterface.h"
 
-#define PUSH_EVENT(id, data1, data2) Wisp::CWindow::PushEvent(id, (void *)(data1), (void *)(data2))
-#define PLUGIN_EVENT(id, data) Wisp::CWindow::PluginEvent(id, (const void *)(data))
+#define PUSH_EVENT(id, data1, data2)                                                               \
+    Wisp::CWindow::PushEvent(id, (void *)(uintptr_t)(data1), (void *)(uintptr_t)(data2))
+#define PLUGIN_EVENT(id, data) Wisp::CWindow::PluginEvent(id, (const void *)(uintptr_t)(data))
 
 void GetDisplaySize(int *x, int *y);
 
