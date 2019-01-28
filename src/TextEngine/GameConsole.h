@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -35,6 +35,7 @@ public:
     void SaveConsoleMessage();
     void ChangeConsoleMessage(bool next);
     void ClearStack();
+    wstring GetLastConsoleStack();
 };
 
 static const wstring g_ConsolePrefix[] = {
