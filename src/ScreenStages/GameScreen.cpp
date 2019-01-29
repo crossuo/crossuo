@@ -2787,6 +2787,10 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     {
         return;
     }
+    else if (key == SDLK_q && ctrlPressed)
+    {
+        g_GameConsole.Send(g_GameConsole.GetLastConsoleText());
+    }
 
     auto macro = g_MacroManager.FindMacro(key, altPressed, ctrlPressed, shiftPressed);
     const bool canExecuteMacro =

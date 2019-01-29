@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GameConsole.h"
@@ -423,4 +423,8 @@ void CGameConsole::ClearStack()
     m_ConsoleStackCount = 0;
     m_ConsoleSelectedIndex = 0;
     m_PositionChanged = false;
+}
+wstring CGameConsole::GetLastConsoleText()
+{
+    return m_ConsoleStack[m_ConsoleStackCount - 1];
 }
