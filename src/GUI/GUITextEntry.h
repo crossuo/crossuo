@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -9,73 +9,73 @@
 class CGUITextEntry : public CBaseGUI
 {
 public:
-    //!Цвет текста в выбранном состоянии
+    //The color of the text in the selected state
     uint16_t ColorSelected = 0;
 
-    //!Цвет текста в состоянии фокуса
+    //Text color in focus state
     uint16_t ColorFocused = 0;
 
-    //!Текст в юникоде
+    //The text is in Unicode
     bool Unicode = false;
 
-    //!Шрифт
+    //The typeface
     uint8_t Font = 0;
 
-    //!Ориентация текста
+    //Text orientation
     TEXT_ALIGN_TYPE Align = TS_LEFT;
 
-    //!Флаги текста
+    //Flags of text
     uint16_t TextFlags = 0;
 
-    //!Производить выбор объекта по серийнику может быть выбран фоном, хит-боксом и т.п.)
+    //To select an object by serial number can be selected by background, hit-box, etc.)
     bool CheckOnSerial = false;
 
-    //!Только для чтения
+    //Read only
     bool ReadOnly = false;
 
-    //!Флаг фокуса
+    //Flag the focus
     bool Focused = false;
 
-    //!Флаг использования глобального цвета
+    //Flag of global color use
     bool UseGlobalColor = false;
 
-    //!R-компонента глобального OGL цвета
+    //R-component of global OGL color
     uint8_t GlobalColorR = 0;
 
-    //!G-компонента глобального OGL цвета
+    //G-component of global OGL color
     uint8_t GlobalColorG = 0;
 
-    //!B-компонента глобального OGL цвета
+    //B-component of global OGL color
     uint8_t GlobalColorB = 0;
 
-    //!Альфа-канал глобального OGL цвета
+    //Alpha-channel global OGL color
     uint8_t GlobalColorA = 0;
 
-    //!R-компонента глобального OGL цвета когда компонента выбрана
+    //R-component of global OGL color when the component is selected
     uint8_t GlobalColorSelectedR = 0;
 
-    //!G-компонента глобального OGL цвета когда компонента выбрана
+    //G-component of global OGL color when the component is selected
     uint8_t GlobalColorSelectedG = 0;
 
-    //!B-компонента глобального OGL цвета когда компонента выбрана
+    //B-component of global OGL color when the component is selected
     uint8_t GlobalColorSelectedB = 0;
 
-    //!Альфа-канал глобального OGL цвета когда компонента выбрана
+    //Alpha-channel global OGL colors when a component is selected
     uint8_t GlobalColorSelectedA = 0;
 
-    //!R-компонента глобального OGL цвета когда компонента находится в фокусе
+    //R-component of global OGL color when the component is in focus
     uint8_t GlobalColorFocusedR = 0;
 
-    //!G-компонента глобального OGL цвета когда компонента находится в фокусе
+    //G-component of global OGL color when the component is in focus
     uint8_t GlobalColorFocusedG = 0;
 
-    //!B-компонента глобального OGL цвета когда компонента находится в фокусе
+    //B-component of global OGL color when the component is in focus
     uint8_t GlobalColorFocusedB = 0;
 
-    //!Альфа-канал глобального OGL цвета когда компонента находится в фокусе
+    //Alpha channel global OGL colors when the component is in focus
     uint8_t GlobalColorFocusedA = 0;
 
-    //!Смещение текста когда компонента находится в фокусе
+    //Text offset when component is in focus
     char FocusedOffsetY = 0;
 
     CGUITextEntry(
@@ -93,7 +93,7 @@ public:
         int maxLength = 0);
     virtual ~CGUITextEntry();
 
-    //!Объект класса для ввода текста
+    //The class object for text input
     class CEntryText m_Entry;
 
     virtual void PrepareTextures();
@@ -102,10 +102,10 @@ public:
 
     virtual CSize GetSize();
 
-    //!Установить глобальный OGL цвет перед отрисовкой текста
+    //Set global OGL color before drawing text
     void SetGlobalColor(bool use, int color, int selected, int focused);
 
-    //!Нажатие на компоненту
+    //Pressing the component
     void OnClick(CGump *gump, int x, int y);
 
     virtual void OnMouseEnter();
