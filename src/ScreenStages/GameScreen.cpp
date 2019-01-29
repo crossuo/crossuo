@@ -69,10 +69,20 @@ CGameScreen::~CGameScreen()
 void CGameScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
-    g_GameWindow.NoResize = false;
+
+    g_GameWindow.SetWindowResizable(true);
+    if (m_Maximized)
+    {
+        g_GameWindow.MaximizeWindow();
+    }
 
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
+}
+
+void CGameScreen::SetMaximized(bool maximized)
+{
+    m_Maximized = maximized;
 }
 
 void CGameScreen::ProcessSmoothAction(uint8_t action)

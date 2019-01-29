@@ -42,8 +42,7 @@ void CMainScreen::Init()
 
     Load();
 
-    g_GameWindow.SetSize(CSize(640, 480));
-    g_GameWindow.NoResize = true;
+    Reset();
     g_GameWindow.SetTitle("Ultima Online");
     g_GL.UpdateRect();
 
@@ -63,6 +62,13 @@ void CMainScreen::Init()
     SmoothScreenAction = 0;
 
     m_Gump.PrepareTextures();
+}
+
+void CMainScreen::Reset() const
+{
+    g_GameWindow.RestoreWindow();
+    g_GameWindow.SetSize(CSize(640, 480));
+    g_GameWindow.SetWindowResizable(false);
 }
 
 void CMainScreen::ProcessSmoothAction(uint8_t action)

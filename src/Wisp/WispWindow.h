@@ -18,8 +18,6 @@ namespace Wisp
 class CWindow
 {
 public:
-    bool NoResize = false;
-
     // FIXME: Last API specific public surface on windowing stuff
     static WindowHandle Handle;
     SDL_Window *m_window = nullptr;
