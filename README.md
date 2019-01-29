@@ -9,7 +9,7 @@
 
 ### Downloading CrossUO
 
-* Download [X:UO Launcher](https://github.com/crossuo/crossuo/releases) to set everything up and play right away!
+* Download [X:UO Launcher](https://github.com/crossuo/xuolauncher/releases) to set everything up and play right away!
 
 --------------
 
