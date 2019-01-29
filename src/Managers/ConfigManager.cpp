@@ -1510,7 +1510,7 @@ bool CConfigManager::LoadBin(const os_path &path)
 
                 if (zoomed)
                 {
-                    g_GameWindow.MaximizeWindow();
+                    g_GameScreen.SetMaximized(true);
                 }
                 else
                 {
@@ -1531,7 +1531,7 @@ bool CConfigManager::LoadBin(const os_path &path)
             }
             else
             {
-                g_GameWindow.MaximizeWindow();
+                g_GameScreen.SetMaximized(true);
             }
         }
 
@@ -2060,7 +2060,7 @@ bool CConfigManager::Load(const os_path &path)
 
         if (zoomed)
         {
-            g_GameWindow.MaximizeWindow();
+            g_GameScreen.SetMaximized(true);
         }
         else
         {
@@ -2071,7 +2071,7 @@ bool CConfigManager::Load(const os_path &path)
     }
     else
     {
-        g_GameWindow.MaximizeWindow();
+        g_GameScreen.SetMaximized(true);
     }
 
     return true;

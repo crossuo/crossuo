@@ -92,6 +92,7 @@ private:
     int m_MaxDrawZ = 0;
     uint32_t m_ProcessAlphaTimer = 0;
     bool m_CanProcessAlpha = false;
+    bool m_Maximized = false;
 
     void PreRender();
     void DrawGameWindow(bool render);
@@ -119,6 +120,7 @@ public:
 
     static const uint8_t ID_SMOOTH_GS_LOGOUT = 1;
 
+    void SetMaximized(bool maximized);
     void UpdateMaxDrawZ();
     virtual void ProcessSmoothAction(uint8_t action = 0xFF);
     void CalculateGameWindowBounds();

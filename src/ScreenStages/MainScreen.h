@@ -39,6 +39,7 @@ public:
     virtual void OnKeyDown(const KeyEvent &ev) override;
 
     void Save();
+    void Reset() const;
 };
 
 extern CMainScreen g_MainScreen;

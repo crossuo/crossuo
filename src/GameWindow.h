@@ -19,6 +19,8 @@ public:
     void SetRenderTimerDelay(int delay);
     void EmulateOnLeftMouseButtonDown();
     int GetRenderDelay();
+    void SetWindowResizable(bool windowResizable) const;
+    void RestoreWindow() const;
 
     static const uint32_t MessageID = USER_MESSAGE_ID + 402;
 
