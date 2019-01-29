@@ -35,7 +35,7 @@ public:
     void SaveConsoleMessage();
     void ChangeConsoleMessage(bool next);
     void ClearStack();
-    wstring GetLastConsoleStack();
+    wstring GetLastConsoleText();
 };
 
 static const wstring g_ConsolePrefix[] = {

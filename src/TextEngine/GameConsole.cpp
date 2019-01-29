@@ -424,7 +424,7 @@ void CGameConsole::ClearStack()
     m_ConsoleSelectedIndex = 0;
     m_PositionChanged = false;
 }
-wstring CGameConsole::GetLastConsoleStack()
+wstring CGameConsole::GetLastConsoleText()
 {
     return m_ConsoleStack[m_ConsoleStackCount - 1];
 }
