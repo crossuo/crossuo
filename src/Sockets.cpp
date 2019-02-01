@@ -376,6 +376,7 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
         he = gethostbyname(address);
         if (he == nullptr)
         {
+            SOCKET_LOG("ERROR: gethostbyname: %d - %s\n", h_errno, hstrerror(h_errno));
             return false;
         }
 
