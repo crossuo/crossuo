@@ -467,7 +467,9 @@ void LoadGlobalConfig()
     LOG("Client Emulation:\n");
     LOG("\tClient Version: %s\n", g_Config.ClientVersionString.c_str());
     LOG("\tEmulation Compatibility Version: %s%s (0x%08x)\n", p1, p2, g_Config.ClientVersion);
-    LOG("\tProtocol Compatibility Version: %s (0x%08x)\n", g_Config.ProtocolClientVersionString.c_str(), g_Config.ProtocolClientVersion);
+    LOG("\tProtocol Compatibility Version: %s (0x%08x)\n",
+        g_Config.ProtocolClientVersionString.c_str(),
+        g_Config.ProtocolClientVersion);
     LOG("\tCryptography: %08x %08x %08x %04x (%d)\n",
         g_Config.Key1,
         g_Config.Key2,
