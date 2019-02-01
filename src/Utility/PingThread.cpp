@@ -1,6 +1,8 @@
 ﻿// MIT License
 // Copyright (C) December 2017 Hotride
 
+#if USE_PING
+
 #include <SDL_events.h>
 #include <SDL_timer.h>
 #include <atomic>
@@ -77,3 +79,5 @@ void CPingThread::OnExecute(uint32_t nowTime)
     info->Average = info->Min + (info->Average / RequestsCount);
     PUSH_EVENT(MessageID, info, nullptr);
 }
+
+#endif // USE_PING

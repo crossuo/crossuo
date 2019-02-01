@@ -31,7 +31,10 @@
 #include "DateTimeStamp.h"
 #include "Application.h"
 
+#if USE_PING
 #include "Utility/PingThread.h"
+#endif // USE_PING
+
 #include "Crypt/CryptEntry.h"
 #include "api/commoninterfaces.h"
 
@@ -1184,12 +1187,14 @@ void CGame::Process(bool rendering)
             return;
         }
 
+#if USE_PING
         if (!g_DisablePing && g_ConfigManager.CheckPing && g_PingTimer < g_Ticks)
         {
             CPingThread *pingThread = new CPingThread(0xFFFFFFFF, m_GameServerIP, 10);
             pingThread->Run();
-            g_PingTimer = g_Ticks + (g_ConfigManager.GetPingTimer() * 1000);
+            g_PingTimer = g_Ticks + (g_ConfigManager.PingTimer * 1000);
         }
+#endif // USE_PING
 
         g_UseItemActions.Process();
         g_ShowGumpLocker = g_ConfigManager.LockGumpsMoving && g_AltPressed && g_CtrlPressed;
@@ -1898,7 +1903,9 @@ void CGame::RelayServer(const char *ip, int port, uint8_t *gameSeed)
     memcpy(&g_GameSeed[0], &gameSeed[0], 4);
     g_ConnectionManager.Init(gameSeed);
     m_GameServerIP = ip;
+#if USE_PING
     memset(&g_GameServerPingInfo, 0, sizeof(g_GameServerPingInfo));
+#endif // USE_PING
     if (g_ConnectionManager.Connect(ip, port, gameSeed))
     {
         g_ConnectionScreen.SetConnected(true);

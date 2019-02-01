@@ -35,8 +35,11 @@ int tcp_recv(tcp_socket socket, unsigned char *data, size_t max_size);
 int tcp_send(tcp_socket socket, unsigned char *data, size_t size);
 void tcp_close(tcp_socket socket);
 
-typedef void *icmp_handle;
+#if USE_PING
 
+typedef void *icmp_handle;
 icmp_handle icmp_open();
 int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems);
 void icmp_close(icmp_handle handle);
+
+#endif // USE_PING

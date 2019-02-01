@@ -71,6 +71,7 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
         }
         m_Servers.push_back(CServer(id, name, fullPercent, timezone, ip, selected));
 
+#if USE_PING
         if (!g_DisablePing)
         {
             char ipString[30] = { 0 };
@@ -84,6 +85,7 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
             CPingThread *pingThread = new CPingThread(i, ipString, 100);
             pingThread->Run();
         }
+#endif // USE_PING
     }
 
     if (g_ServerList.LastServerIndex < numServers && g_MainScreen.m_AutoLogin->Checked)

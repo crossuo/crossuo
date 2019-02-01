@@ -24,5 +24,5 @@ int main(int argc, char **argv)
 
     int r = run(argc, argv);
     dlclose(so);
-    exit(r); // FIXME: segfault closing some thread, probably ping thread
+    exit(r);
 }

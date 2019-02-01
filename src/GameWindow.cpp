@@ -22,7 +22,10 @@
 #include "ScreenStages/ServerScreen.h"
 #include "Gumps/Gump.h"
 #include "Walker/PathFinder.h"
+
+#if USE_PING
 #include "Utility/PingThread.h"
+#endif // USE_PING
 
 CGameWindow g_GameWindow;
 
@@ -553,6 +556,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
         }
         break;
 
+#if USE_PING
         case CPingThread::MessageID:
         {
             PING_INFO_DATA *info = (PING_INFO_DATA *)ev.data1;
@@ -595,6 +599,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
             }
         }
         break;
+#endif // USE_PING
 
         case CGameWindow::MessageID:
         {
