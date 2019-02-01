@@ -15,7 +15,7 @@
 #define XUO_NOT_IMPLEMENTED                                                                        \
     fprintf(stdout, "NOT_IMPLEMENTED: %s:%d: %s\n", __FILE__, __LINE__, __FUNCTION__);
 
-#define DEBUGGING_OUTPUT 1
+#define DEBUGGING_OUTPUT 0
 
 #if DEBUGGING_OUTPUT == 1
 void DebugMsg(const char *format, ...);

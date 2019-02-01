@@ -2,7 +2,6 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
-
 #include "Point.h"
 #include "Constants.h"
 #include "api/enumlist.h"
