@@ -3,6 +3,7 @@
 
 #pragma once
 
+#if USE_PING
 struct PING_INFO_DATA
 {
     uint32_t ServerID = 0;
@@ -28,3 +29,4 @@ public:
     virtual void OnExecute(uint32_t nowTime) override;
     static const uint32_t MessageID = USER_MESSAGE_ID + 401;
 };
+#endif // USE_PING

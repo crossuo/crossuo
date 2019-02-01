@@ -13,6 +13,7 @@
 #define SOCKET_DUMP(...)
 #endif
 
+#if USE_PING
 bool g_DisablePing = false;
 
 struct ICMPHDR
@@ -74,6 +75,8 @@ uint16_t icmp_checksum(const uint16_t *addr, int count)
 
     return ~checksum;
 }
+
+#endif // USE_PING
 
 #if defined(XUO_WINDOWS)
 
@@ -194,6 +197,7 @@ void tcp_close(tcp_socket socket)
     socket = nullptr;
 }
 
+#if USE_PING
 icmp_handle icmp_open()
 {
     socket_init();
@@ -273,6 +277,7 @@ void icmp_close(icmp_handle handle)
     delete (int *)handle;
     handle = nullptr;
 }
+#endif // USE_PING
 
 #else
 
@@ -424,6 +429,8 @@ void tcp_close(tcp_socket socket)
     socket = nullptr;
 }
 
+#if USE_PING
+
 icmp_handle icmp_open()
 {
     if (g_DisablePing)
@@ -514,5 +521,7 @@ void icmp_close(icmp_handle handle)
     handle = nullptr;
     SOCKET_LOG("icmp closed\n");
 }
+
+#endif // USE_PING
 
 #endif

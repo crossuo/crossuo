@@ -191,8 +191,6 @@ const int g_ObjectHandlesWidthOffset = g_ObjectHandlesWidth / 2;
 const int g_ObjectHandlesHeight = 20;
 extern uint16_t g_ObjectHandlesBackgroundPixels[g_ObjectHandlesWidth * g_ObjectHandlesHeight];
 
-extern uint32_t g_Ping;
-
 extern bool g_DrawAura;
 
 static const int MAX_ABILITIES_COUNT = 32;
@@ -209,9 +207,6 @@ extern uint32_t g_ProcessStaticAnimationTimer;
 extern uint32_t g_ProcessRemoveRangedTimer;
 extern int g_MaxViewRange;
 extern uint32_t g_GameFeaturesFlags;
-extern struct PING_INFO_DATA g_GameServerPingInfo;
-extern string g_PingString;
-extern uint32_t g_PingTimer;
 inline bool Int32TryParse(const string &str, int &result)
 {
     char *end = nullptr;
@@ -411,3 +406,11 @@ struct AutoFree
 private:
     void *_p = nullptr;
 };
+
+#if USE_PING
+extern struct PING_INFO_DATA g_GameServerPingInfo;
+extern uint32_t g_PingTimer;
+#endif // USE_PING
+
+extern uint32_t g_Ping;     // From packet 0x73
+extern string g_PingString; // Debug Info

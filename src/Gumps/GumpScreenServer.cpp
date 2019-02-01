@@ -141,6 +141,7 @@ void CGumpScreenServer::UpdateContent()
 
         entry = new CGUITextEntry(
             ID_SS_SERVER_LIST + (int)i, 0x034F, 0x0021, 0x0021, 250, 10 + offsetY, 0, false, 5);
+#if USE_PING
         if (server->Ping == -1)
         {
             entry->m_Entry.SetTextA("-");
@@ -149,6 +150,10 @@ void CGumpScreenServer::UpdateContent()
         {
             entry->m_Entry.SetTextA(std::to_string(server->Ping) + "ms");
         }
+#else
+        entry->m_Entry.SetTextA("-");
+#endif // USE_PING
+
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
         htmlGump->Add(entry);

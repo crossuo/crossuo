@@ -121,8 +121,11 @@ typedef SoundInfo *SoundHandle;
 #include "Platform.h"
 #include "api/mulstruct.h"
 #include "BaseQueue.h"
-#include "Utility/PingThread.h"
 #include "Utility/AutoResetEvent.h"
+
+#if USE_PING
+#include "Utility/PingThread.h"
+#endif // USE_PING
 
 #include "CharacterList.h"
 #include "ClickObject.h"

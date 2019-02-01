@@ -29,7 +29,6 @@ protected:
     bool m_ScaleImagesInPaperdollSlots = false;
     bool m_UseGlobalMapLayer = false;
     bool m_NoDrawRoofs = false;
-    uint8_t m_PingTimer = 10;
     uint8_t m_ItemPropertiesMode = OPM_FOLLOW_MOUSE;
     bool m_ItemPropertiesIcon = false;
     uint8_t m_CharacterBackpackStyle = CBS_DEFAULT;
@@ -57,7 +56,10 @@ public:
     bool HighlightTargetByType = true;
     bool AutoDisplayWorldMap = false;
     bool DisableMacroInChat = false;
+#if USE_PING
     bool CheckPing = true;
+    uint8_t PingTimer = 10;
+#endif // USE_PING
     bool CancelNewTargetSystemOnShiftEsc = false;
     bool DrawStatusForHumanoids = true;
 
@@ -206,9 +208,6 @@ public:
 
     bool GetNoDrawRoofs() { return m_NoDrawRoofs; };
     void SetNoDrawRoofs(bool val);
-
-    uint8_t GetPingTimer() { return m_PingTimer; };
-    void SetPingTimer(uint8_t val);
 
     bool GetItemPropertiesIcon() { return m_ItemPropertiesIcon; };
     void SetItemPropertiesIcon(bool val);

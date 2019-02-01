@@ -5,7 +5,15 @@
 #include "Point.h"
 #include "GameObjects/GameWorld.h"
 #include "GameObjects/GameCharacter.h"
+
+#if USE_PING
 #include "Utility/PingThread.h"
+PING_INFO_DATA g_GameServerPingInfo = {};
+uint32_t g_PingTimer = 0;
+#endif // USE_PING
+
+uint32_t g_Ping = 0; // From packet 0x73
+string g_PingString; // Debug Info
 
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
@@ -138,8 +146,6 @@ DEVELOPER_MODE g_OptionsDeveloperMode = DM_SHOW_FPS_ONLY;
 
 uint16_t g_ObjectHandlesBackgroundPixels[g_ObjectHandlesWidth * g_ObjectHandlesHeight] = { 0 };
 
-uint32_t g_Ping = 0;
-
 bool g_DrawAura = false;
 
 uint16_t g_AbilityList[MAX_ABILITIES_COUNT] = {
@@ -165,9 +171,6 @@ uint32_t g_ProcessStaticAnimationTimer = 0;
 uint32_t g_ProcessRemoveRangedTimer = 0;
 int g_MaxViewRange = MAX_VIEW_RANGE_OLD;
 uint32_t g_GameFeaturesFlags = OFF_ALL_FLAGS;
-PING_INFO_DATA g_GameServerPingInfo = {};
-string g_PingString = {};
-uint32_t g_PingTimer = 0;
 
 bool CanBeDraggedByOffset(const CPoint2Di &point)
 {

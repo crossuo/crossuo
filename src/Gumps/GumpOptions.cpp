@@ -105,8 +105,10 @@ enum
     ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE,
     ID_GO_P2_AUTO_DISPLAY_WORLD_MAP,
     ID_GO_P2_DISABLE_MACRO_IN_CHAT,
+#if USE_PING
     ID_GO_P2_CHECK_PING,
     ID_GO_P2_PING_TIMER,
+#endif // USE_PING
     ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
     ID_GO_P2_DRAW_STATUS_FOR_HUMANOIDS,
     ID_GO_P2_DEV_MODE_1,
@@ -692,6 +694,7 @@ void CGumpOptions::InitToolTip()
             g_ToolTip.Set(L"Disables macro use when chat is active");
             break;
         }
+#if USE_PING
         case ID_GO_P2_CHECK_PING:
         {
             g_ToolTip.Set(L"Send ping requests in game");
@@ -702,6 +705,7 @@ void CGumpOptions::InitToolTip()
             g_ToolTip.Set(L"Delay between ping requests");
             break;
         }
+#endif // USE_PING
         case ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC:
         {
             g_ToolTip.Set(L"Cancel new target system target on Shift+Esc only");
@@ -1467,8 +1471,15 @@ void CGumpOptions::DrawPage2()
     checkbox->SetTextParameters(
         0, L"Disables macro activation when chat is active", g_OptionsTextColor);
 
+    checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
+        ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, 0x00D2, 0x00D3, 0x00D2, 0, 900));
+    checkbox->Checked = g_OptionsConfig.CancelNewTargetSystemOnShiftEsc;
+    checkbox->SetTextParameters(
+        0, L"Cancel new target system target on Shift+Esc only", g_OptionsTextColor);
+
+#if USE_PING
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_CHECK_PING, 0x00D2, 0x00D3, 0x00D2, 0, 900));
+        new CGUICheckbox(ID_GO_P2_CHECK_PING, 0x00D2, 0x00D3, 0x00D2, 0, _fixme_));
     checkbox->Checked = g_OptionsConfig.CheckPing;
     checkbox->SetTextParameters(0, L"Check ping in game, timer in seconds:", g_OptionsTextColor);
 
@@ -1485,14 +1496,9 @@ void CGumpOptions::DrawPage2()
         90,
         10,
         120,
-        g_OptionsConfig.GetPingTimer()));
+        g_OptionsConfig.PingTimer));
     m_SliderPingTimer->SetTextParameters(true, STP_RIGHT, 0, g_OptionsTextColor, true);
-
-    checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, 0x00D2, 0x00D3, 0x00D2, 0, 920));
-    checkbox->Checked = g_OptionsConfig.CancelNewTargetSystemOnShiftEsc;
-    checkbox->SetTextParameters(
-        0, L"Cancel new target system target on Shift+Esc only", g_OptionsTextColor);
+#endif // USE_PING
 
     html->CalculateDataSize();
 }
@@ -3292,10 +3298,12 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             {
                 g_OptionsConfig.DisableMacroInChat = state;
             }
+#if USE_PING
             else if (serial == ID_GO_P2_CHECK_PING)
             {
                 g_OptionsConfig.CheckPing = state;
             }
+#endif // USE_PING
             else if (serial == ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC)
             {
                 g_OptionsConfig.CancelNewTargetSystemOnShiftEsc = state;
@@ -3677,11 +3685,12 @@ void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
             {
                 g_OptionsConfig.DrawStatusConditionValue = m_SliderDrawStatusConditionValue->Value;
             }
+#if USE_PING
             else if (serial == ID_GO_P2_PING_TIMER)
             {
                 g_OptionsConfig.SetPingTimer(m_SliderPingTimer->Value);
             }
-
+#endif // USE_PING
             break;
         }
         case 3: //Language
@@ -4077,8 +4086,10 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.HighlightTargetByType = g_OptionsConfig.HighlightTargetByType;
             g_ConfigManager.AutoDisplayWorldMap = g_OptionsConfig.AutoDisplayWorldMap;
             g_ConfigManager.DisableMacroInChat = g_OptionsConfig.DisableMacroInChat;
+#if USE_PING
             g_ConfigManager.CheckPing = g_OptionsConfig.CheckPing;
-            g_ConfigManager.SetPingTimer(g_OptionsConfig.GetPingTimer());
+            g_ConfigManager.PingTimer = g_OptionsConfig.PingTimer;
+#endif // USE_PING
             g_ConfigManager.CancelNewTargetSystemOnShiftEsc =
                 g_OptionsConfig.CancelNewTargetSystemOnShiftEsc;
             g_ConfigManager.DrawStatusForHumanoids = g_OptionsConfig.DrawStatusForHumanoids;
