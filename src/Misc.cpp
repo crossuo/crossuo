@@ -83,7 +83,7 @@ std::wstring DecodeUTF8(const std::string &str)
     {
         LOG("\nDecodeUTF8 Failed: %s\n\n", str.c_str());
         LOG_DUMP((uint8_t *)str.data(), str.size());
-        return L"Invalid UTF8 sequence found";
+        return ToWString(str);
     }
 
     if (size > 0)
