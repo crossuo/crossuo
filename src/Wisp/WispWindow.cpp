@@ -165,7 +165,7 @@ bool CWindow::Create(
 #endif
 
     SDL_Surface *icon = SDL_CreateRGBSurfaceFrom(
-        (void *)g_icon_pixels,
+        (void *)g_icon.pixel_data,
         g_icon.width,
         g_icon.height,
         g_icon.bytes_per_pixel * 8,
