@@ -381,7 +381,6 @@ if(XUO_BUILD_MODULES)
   xuo_library(crypt "${crypt_src}")
 
   string(REPLACE ".cpp" ".h" crossuo_hdr "${crossuo_src}")
-  string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
 
   add_executable(CrossUO ${crossuo_src} ${crossuo_hdr})
@@ -391,7 +390,6 @@ if(XUO_BUILD_MODULES)
 else()
   set(SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
   string(REPLACE ".cpp" ".h" headers "${SRCS}")
-  string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
   string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
 
   if(${CMAKE_VERSION} VERSION_LESS "3.8.0")
