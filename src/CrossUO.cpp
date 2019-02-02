@@ -1383,13 +1383,7 @@ void CGame::LoadStartupConfig(int serial)
     if (!g_ConfigManager.Load(crossuoFilesPath + ToPath("/options.cfg")))
     {
         auto uoFilesPath{ g_App.UOFilesPath(buf) };
-        if (!g_ConfigManager.Load(uoFilesPath + ToPath("/options.cfg")))
-        {
-            if (!g_ConfigManager.LoadBin(crossuoFilesPath + ToPath("/options.cuo")))
-            {
-                g_ConfigManager.LoadBin(uoFilesPath + ToPath("/options.cuo"));
-            }
-        }
+        g_ConfigManager.Load(uoFilesPath + ToPath("/options.cfg"));
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
@@ -1571,22 +1565,14 @@ void CGame::LoadLocalConfig(int serial)
     }
 
     auto path = g_App.ExeFilePath(buf);
-
     if (!g_ConfigManager.Load(path + ToPath("/options.cfg")))
     {
         if (!g_ConfigManager.Load(g_App.UOFilesPath("options.cfg")))
         {
-            if (!g_ConfigManager.LoadBin(path + ToPath("/options.cuo")))
+            g_ConfigManager.Init();
+            if (g_GameState >= GS_GAME)
             {
-                if (!g_ConfigManager.LoadBin(g_App.UOFilesPath("options.cuo")))
-                {
-                    g_ConfigManager.Init();
-
-                    if (g_GameState >= GS_GAME)
-                    {
-                        g_GameWindow.MaximizeWindow();
-                    }
-                }
+                g_GameWindow.MaximizeWindow();
             }
         }
     }
@@ -1680,7 +1666,7 @@ void CGame::SaveLocalConfig(int serial)
     }
 
     LOG("managers:saving\n");
-    g_ConfigManager.Save(path + ToPath("/_options.cfg"));
+    g_ConfigManager.Save(path + ToPath("/options.cfg"));
     g_SkillGroupManager.Save(path + ToPath("/skills.cuo"));
     g_MacroManager.Save(path + ToPath("/macros.cuo"));
     g_GumpManager.Save(path + ToPath("/gumps.cuo"));
@@ -5152,13 +5138,7 @@ void CGame::LoadClientStartupConfig()
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.Load(g_App.ExeFilePath("options.cfg")))
     {
-        if (!g_ConfigManager.Load(g_App.UOFilesPath("options.cfg")))
-        {
-            if (!g_ConfigManager.LoadBin(g_App.ExeFilePath("options.cuo")))
-            {
-                g_ConfigManager.LoadBin(g_App.UOFilesPath("options.cuo"));
-            }
-        }
+        g_ConfigManager.Load(g_App.UOFilesPath("options.cfg"));
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
