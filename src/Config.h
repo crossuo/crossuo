@@ -11,6 +11,7 @@ struct Config
     string ProtocolClientVersionString = "7.0.33.1";
     string CustomPath;
     string ServerAddress;
+    string LocaleOverride;
     uint16_t ServerPort = 2593;
     uint16_t ClientFlag = 0;
     bool SavePassword = false;

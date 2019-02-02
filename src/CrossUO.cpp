@@ -399,7 +399,14 @@ bool CGame::Install()
         g_MapBlockSize[i].Height = g_MapSize[i].Height / 8;
     }
 
-    Platform::SetLanguageFromSystemLocale();
+    if (g_Config.LocaleOverride.empty())
+    {
+        Platform::SetLanguageFromSystemLocale();
+    }
+    else
+    {
+        g_Language = g_Config.LocaleOverride;
+    }
     fs_path_create(g_App.ExeFilePath("screenshots"));
 
     LOG("Client config loaded!\n");
