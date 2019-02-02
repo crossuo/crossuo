@@ -618,7 +618,9 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
 void CGameWindow::SetWindowResizable(const bool windowResizable) const
 {
+#if SDL_VERSION_ATLEAST(2, 0, 5)
     SDL_SetWindowResizable(m_window, windowResizable ? SDL_TRUE : SDL_FALSE);
+#endif
 }
 
 void CGameWindow::RestoreWindow() const
