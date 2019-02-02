@@ -234,7 +234,6 @@ public:
 
     void UpdateFeatures();
     uint16_t GetColorByNotoriety(uint8_t notoriety);
-    bool LoadBin(const os_path &path);
     int GetConfigKeyCode(const string &key);
 
     bool Load(const os_path &path);
