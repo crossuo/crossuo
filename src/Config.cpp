@@ -33,6 +33,7 @@ enum
     MSCC_USE_CRYPT,
     MSCC_USE_VERDATA,
     MSCC_CLIENT_TYPE,
+    MSCC_LOCALE_OVERRIDE,
     MSCC_COUNT,
 };
 
@@ -65,6 +66,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_USE_CRYPT, "crypt" },
     { MSCC_USE_VERDATA, "useverdata" },
     { MSCC_CLIENT_TYPE, "clienttype" },
+    { MSCC_LOCALE_OVERRIDE, "language" },
     { MSCC_COUNT, nullptr },
 };
 
@@ -441,6 +443,11 @@ void LoadGlobalConfig()
                     }
                     break;
                 }
+                case MSCC_LOCALE_OVERRIDE:
+                {
+                    g_Config.LocaleOverride = ToUpperA(strings[1]);
+                }
+                break;
                 default:
                     break;
             }
@@ -515,6 +522,11 @@ void SaveGlobalConfig()
     if (s_Mark.UseVerdata)
     {
         fprintf(cfg, "UseVerdata=%s\n", (g_Config.UseVerdata ? "yes" : "no"));
+    }
+
+    if (!g_Config.LocaleOverride.empty())
+    {
+        fprintf(cfg, "Language=%s\n", g_Config.LocaleOverride.c_str());
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
