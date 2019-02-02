@@ -164,8 +164,16 @@ bool CWindow::Create(
     amask = (g_icon.bytes_per_pixel == 3) ? 0 : 0xff000000;
 #endif
 
-    SDL_Surface* icon = SDL_CreateRGBSurfaceFrom((void*)g_icon.pixel_data, g_icon.width, g_icon.height, g_icon.bytes_per_pixel*8, g_icon.bytes_per_pixel*g_icon.width,
-    rmask, gmask, bmask, amask);
+    SDL_Surface *icon = SDL_CreateRGBSurfaceFrom(
+        (void *)g_icon.pixel_data,
+        g_icon.width,
+        g_icon.height,
+        g_icon.bytes_per_pixel * 8,
+        g_icon.bytes_per_pixel * g_icon.width,
+        rmask,
+        gmask,
+        bmask,
+        amask);
     SDL_SetWindowIcon(m_window, icon);
     SDL_FreeSurface(icon);
 
