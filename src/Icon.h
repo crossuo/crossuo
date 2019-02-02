@@ -5,10 +5,9 @@ static const struct
     unsigned int width;
     unsigned int height;
     unsigned int bytes_per_pixel; /* 3:RGB, 4:RGBA */
-    unsigned char pixel_data[192 * 192 * 4 + 1];
-} g_icon = { 192,
-             192,
-             4,
+} g_icon = { 192, 192, 4 };
+
+static const char g_icon_pixels[] = {
              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
