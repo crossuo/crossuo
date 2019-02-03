@@ -74,7 +74,7 @@ void OpenBrowser(const string &url)
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
-#elif __unix__ // Linux and MacOSX
+#else // Linux and MacOSX
 
 #include <stdlib.h>
 
@@ -139,19 +139,6 @@ void OpenBrowser(const string &url)
 
     auto cmd = string(OPEN_CMD) + url;
     system(cmd.c_str()); // crossuo adds http in the url, we're a bit safer.
-
-#undef OPEN_CMD
-}
-#else
-
-void SetLanguageFromSystemLocale()
-{
-    XUO_NOT_IMPLEMENTED;
-}
-void OpenBrowser(const string &url)
-{
-    XUO_NOT_IMPLEMENTED;
 }
 #endif
-
 } // namespace Platform
