@@ -38,3 +38,4 @@ Dependencies/
 /x64
 /build/
 /desktop
+*.DS_Store
