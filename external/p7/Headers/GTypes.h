@@ -30,15 +30,15 @@
    || defined(__x86_64__)\
    || defined(__ppc64__)\
    || defined(__aarch64__)
-    #define GTX64  
+    #define GTX64
 #else
-    #define GTX32  
+    #define GTX32
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //WINDOWS specific definitions & types
 #if defined(_WIN32) || defined(_WIN64)
-    
+
     #if !defined(_WINSOCKAPI_)
         #include <winsock2.h>
     #endif
@@ -58,7 +58,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //LINUX specific definitions & types
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
     #define UTF8_ENCODING
 
     //Text marco, allow to use char automatically
@@ -83,7 +83,7 @@
 
     #ifndef __forceinline
         #if defined(GTX64) || defined(__PIC__)
-            #define __forceinline  
+            #define __forceinline
         #else
             #define __forceinline  __attribute__((always_inline))
         #endif
@@ -97,10 +97,10 @@
     #define PRAGMA_PACK_ENTER(x)  __pragma(pack(push, x))
     #define PRAGMA_PACK_EXIT()   __pragma(pack(pop))
     #define ATTR_PACK(x)
-    #define UNUSED_FUNC 
+    #define UNUSED_FUNC
 #else
-    #define PRAGMA_PACK_ENTER(x) 
-    #define PRAGMA_PACK_EXIT(x) 
+    #define PRAGMA_PACK_ENTER(x)
+    #define PRAGMA_PACK_EXIT(x)
     #define ATTR_PACK(x) __attribute__ ((aligned(x), packed))
     #define UNUSED_FUNC __attribute__ ((unused))
 #endif
@@ -125,7 +125,7 @@ typedef char                 tINT8;
 typedef char                 tACHAR;
 //platfrorm specific char, Windows - wchar_t, Linix - char,
 //XCHAR defined in PTypes.hpp specific for each platform or project.
-#define tXCHAR               XCHAR  
+#define tXCHAR               XCHAR
 //typedef XCHAR                tXCHAR;
 typedef unsigned int         tBOOL;
 typedef double               tDOUBLE;
