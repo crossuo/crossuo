@@ -414,7 +414,6 @@ extern uint32_t g_PingTimer;
 extern uint32_t g_Ping;     // From packet 0x73
 extern string g_PingString; // Debug Info
 
-
 #define USE_DEBUG_TRACE_FUNCTION 0
 
 #if USE_DEBUG_TRACE_FUNCTION != 0
@@ -457,12 +456,12 @@ void DebugDump(uint8_t *data, int size);
 
 #define UOFONT_SOLID 0x01
 #define UOFONT_ITALIC 0x02
-#define UOFONT_INDENTION 0x04 //! Indent text (except 1 line)
-#define UOFONT_BLACK_BORDER 0x08 //! Black stroke
-#define UOFONT_UNDERLINE 0x10 //! Underlined
-#define UOFONT_FIXED 0x20 //! Fixed Length
-#define UOFONT_CROPPED 0x40 //! Fixed length with ellipsis
-#define UOFONT_BQ 0x80 //! Indent for the BQ tag
+#define UOFONT_INDENTION 0x04    // Indent text (except 1 line)
+#define UOFONT_BLACK_BORDER 0x08 // Black stroke
+#define UOFONT_UNDERLINE 0x10    // Underlined
+#define UOFONT_FIXED 0x20        // Fixed Length
+#define UOFONT_CROPPED 0x40      // Fixed length with ellipsis
+#define UOFONT_BQ 0x80           // Indent for the BQ tag
 
 #define PLUGIN_FLAGS_PARSE_RECV 0x01
 #define PLUGIN_FLAGS_PARSE_SEND 0x02
