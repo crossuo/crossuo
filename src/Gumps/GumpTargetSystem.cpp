@@ -6,7 +6,6 @@
 #include "../Target.h"
 #include "../TargetGump.h"
 #include "../PressedObject.h"
-#include "../DefinitionMacro.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ClilocManager.h"

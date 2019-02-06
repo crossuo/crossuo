@@ -12,7 +12,6 @@
 #include "../Party.h"
 #include "../PressedObject.h"
 #include "../SelectedObject.h"
-#include "../DefinitionMacro.h"
 #include "../TextEngine/GameConsole.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ConnectionManager.h"

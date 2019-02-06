@@ -7,7 +7,6 @@
 #include "../TargetGump.h"
 #include "../Party.h"
 #include "../SelectedObject.h"
-#include "../DefinitionMacro.h"
 #include "../Managers/AnimationManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Managers/ConfigManager.h"

@@ -413,3 +413,64 @@ extern uint32_t g_PingTimer;
 
 extern uint32_t g_Ping;     // From packet 0x73
 extern string g_PingString; // Debug Info
+
+#define USE_DEBUG_TRACE_FUNCTION 0
+
+#if USE_DEBUG_TRACE_FUNCTION != 0
+#define DEBUG_TRACE_FUNCTION                                                                       \
+    do                                                                                             \
+    {                                                                                              \
+        fprintf(stdout, "CALL: %s\n", __FUNCTION__);                                               \
+    } while (0)
+#else
+#define DEBUG_TRACE_FUNCTION
+#endif
+
+#define DEBUGGING_OUTPUT 0
+
+#if DEBUGGING_OUTPUT == 1
+void DebugMsg(const char *format, ...);
+void DebugMsg(const wchar_t *format, ...);
+void DebugDump(uint8_t *data, int size);
+#else
+#define DebugMsg(...)
+#define DebugDump(buf, size)
+#endif
+
+#define RELEASE_POINTER(ptr)                                                                       \
+    if (ptr != nullptr)                                                                            \
+    {                                                                                              \
+        delete ptr;                                                                                \
+        ptr = nullptr;                                                                             \
+    }
+
+#define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
+#define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))
+
+#define UO_RENDER_LIST_SORT 1
+#define UO_CHECKERBOARD_SEQUENCE_RENDER_LIST 1
+
+#define UO_USE_SHADER_FILES 0
+
+#define UO_DEBUG_INFO 1
+
+#define UOFONT_SOLID 0x01
+#define UOFONT_ITALIC 0x02
+#define UOFONT_INDENTION 0x04    // Indent text (except 1 line)
+#define UOFONT_BLACK_BORDER 0x08 // Black stroke
+#define UOFONT_UNDERLINE 0x10    // Underlined
+#define UOFONT_FIXED 0x20        // Fixed Length
+#define UOFONT_CROPPED 0x40      // Fixed length with ellipsis
+#define UOFONT_BQ 0x80           // Indent for the BQ tag
+
+#define PLUGIN_FLAGS_PARSE_RECV 0x01
+#define PLUGIN_FLAGS_PARSE_SEND 0x02
+#define PLUGIN_FLAGS_RECV 0x04
+#define PLUGIN_FLAGS_SEND 0x08
+#define PLUGIN_FLAGS_EVENT_PROC 0x10
+#define PLUGIN_FLAGS_CLIENT_ACCESS 0x20
+#define PLUGIN_FLAGS_GAME_WORLD_DRAW 0x40
+#define PLUGIN_FLAGS_SCENE_DRAW 0x80
+#define PLUGIN_FLAGS_WORLD_MAP_DRAW 0x100
+
+#define RANDOM_FIDGET_ANIMATION_DELAY (30000 + (rand() % 30000))

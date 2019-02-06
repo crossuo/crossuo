@@ -4,7 +4,6 @@
 #include <SDL_clipboard.h>
 
 #include "EntryText.h"
-#include "../DefinitionMacro.h"
 #include "../TextEngine/GameConsole.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/FontsManager.h"

@@ -7,7 +7,6 @@
 #include "../Profession.h"
 #include "../SelectedObject.h"
 #include "../GameWindow.h"
-#include "../DefinitionMacro.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ClilocManager.h"
 #include "../Managers/FontsManager.h"

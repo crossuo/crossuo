@@ -84,8 +84,8 @@ protected:
     virtual void OnDeactivate() {}
     virtual void OnShow(bool show) {}
     virtual void OnTimer(uint32_t id) {}
-    virtual void OnSetText(const char *text) {}
-    virtual bool OnRepaint(const PaintEvent &ev);
+    virtual void OnSetText(const char *text){};
+    virtual bool OnRepaint(const PaintEvent &ev) { return false; };
     virtual bool OnUserMessages(const UserEvent &ev) { return true; }
     virtual void OnTextInput(const TextEvent &ev) {}
     virtual void OnKeyDown(const KeyEvent &ev) {}

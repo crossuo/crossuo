@@ -3,7 +3,6 @@
 
 #include "ToolTip.h"
 #include "SelectedObject.h"
-#include "DefinitionMacro.h"
 #include "Managers/FontsManager.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/MouseManager.h"

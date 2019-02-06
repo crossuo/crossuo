@@ -4,7 +4,6 @@
 #include "GameConsole.h"
 #include "../CrossUO.h"
 #include "../Party.h"
-#include "../DefinitionMacro.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../Network/Packets.h"

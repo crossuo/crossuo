@@ -3,7 +3,6 @@
 #ifndef WISP_H
 #define WISP_H
 
-#include "Definitions.h"
 #include "Logging.h"
 #include "Point.h"
 #include "Misc.h"
