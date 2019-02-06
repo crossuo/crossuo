@@ -531,22 +531,10 @@ bool CWindow::OnWindowProc(SDL_Event &ev)
         }
         break;
 
-            // FIXME: Used by plugins only?
-            // - OnShow
-            // - OnRepaint
-            // - OnSetText
-            // - OnXMouseButton
-
         default:
             break;
     }
 
-    return false;
-}
-
-bool CWindow::OnRepaint(const PaintEvent &ev)
-{
-    XUO_NOT_IMPLEMENTED;
     return false;
 }
 

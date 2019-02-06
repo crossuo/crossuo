@@ -7,7 +7,6 @@
 #include "GumpMenubar.h"
 #include "../Config.h"
 #include "../Macro.h"
-#include "../DefinitionMacro.h"
 #include "../ToolTip.h"
 #include "../PressedObject.h"
 #include "../SelectedObject.h"

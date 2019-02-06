@@ -1,8 +1,10 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Macro.h"
-#include "Definitions.h"
-#include "DefinitionMacro.h"
+
+#define MODKEY_ALT 0x0100
+#define MODKEY_CTRL 0x0200
+#define MODKEY_SHIFT 0x0400
 
 CMacroObject *g_MacroPointer = nullptr;
 

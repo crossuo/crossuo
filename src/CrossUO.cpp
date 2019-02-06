@@ -11,7 +11,6 @@
 
 #include "Point.h"
 #include "Macro.h"
-#include "DefinitionMacro.h"
 #include "CityList.h"
 #include "Target.h"
 #include "Weather.h"

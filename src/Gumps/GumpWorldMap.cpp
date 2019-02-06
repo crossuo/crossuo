@@ -6,7 +6,6 @@
 #include "../CrossUO.h"
 #include "../Application.h"
 #include "../PressedObject.h"
-#include "../DefinitionMacro.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/MapManager.h"
 #include "../Managers/MouseManager.h"

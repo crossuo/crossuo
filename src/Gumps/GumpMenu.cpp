@@ -2,7 +2,6 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpMenu.h"
-#include "../DefinitionMacro.h"
 #include "../PressedObject.h"
 #include "../Network/Packets.h"
 

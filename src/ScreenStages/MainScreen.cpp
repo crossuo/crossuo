@@ -5,7 +5,6 @@
 #include "BaseScreen.h"
 #include "../Config.h"
 #include "../Point.h"
-#include "../Definitions.h"
 #include "../CrossUO.h"
 #include "../QuestArrow.h"
 #include "../GameWindow.h"

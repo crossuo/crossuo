@@ -5,7 +5,6 @@
 #include "ColorManager.h"
 #include "FileManager.h"
 #include "../CrossUO.h"
-#include "../DefinitionMacro.h"
 #include "../Application.h"
 
 CFontsManager g_FontManager;

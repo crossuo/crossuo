@@ -1,44 +1,7 @@
 // MIT License
 
 #pragma once
-/*
-#if defined(XUO_WINDOWS)
-#if defined(_MSC_VER)
-#pragma warning(disable : 4800) //forcing value to bool 'true' or 'false' (performance warning)
-#endif
-#if !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-#include <windows.h>
-#endif
 
-#include <SDL_thread.h>
-#include <thread>
-
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <stdlib.h>
-
-#include <string>
-using std::string;
-using std::wstring;
-
-#include <vector>
-using std::vector;
-
-#include <deque>
-using std::deque;
-
-#include <map>
-using std::map;
-
-#include <unordered_map>
-using std::pair;
-using std::unordered_map;
-
-#include "../Definitions.h"
-*/
 extern SDL_threadID g_MainThread;
 const int PACKET_VARIABLE_SIZE = 0;
 

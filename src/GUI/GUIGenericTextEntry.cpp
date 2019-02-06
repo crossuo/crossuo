@@ -3,7 +3,6 @@
 
 #include "GUIGenericTextEntry.h"
 #include "../Config.h"
-#include "../DefinitionMacro.h"
 
 CGUIGenericTextEntry::CGUIGenericTextEntry(
     int serial, int index, uint16_t color, int x, int y, int maxWidth, int maxLength)
