@@ -75,7 +75,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         uint8_t pic = file.ReadUInt8();
         uint8_t size = pic & 0x7F;
 
-        bool colored = (bool)(pic & 0x80);
+        bool colored = (pic & 0x80) != 0u;
 
         int startHeight = startY * height;
         int currentHeight = y * height;

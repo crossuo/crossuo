@@ -18,8 +18,8 @@ private:
     static constexpr int ID_GTED_BUTTON_CANCEL = 2;
     static constexpr int ID_GTED_TEXT_FIELD = 3;
 
-    string Text = string("");
-    string m_Description = string("");
+    string Text;
+    string m_Description;
     int m_MaxLength{ 0 };
 
     CGUIGumppic *m_TextField{ nullptr };

@@ -23,7 +23,6 @@ protected:
     CGUIScrollBackground *m_Background{ nullptr };
     CGUIHTMLGump *m_HTMLGump{ nullptr };
     CGUIResizeButton *m_Resizer{ nullptr };
-
     int m_MinHeight{ 160 };
 
     virtual void UpdateHeight();

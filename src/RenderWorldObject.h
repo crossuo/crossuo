@@ -16,12 +16,11 @@ protected:
 public:
     char GetZ() { return m_Z; };
     void SetZ(char val);
+
     short PriorityZ = 0;
     RENDER_OBJECT_TYPE RenderType = ROT_GAME_OBJECT;
-
     uint8_t CurrentRenderIndex = 0;
     uint8_t UseInRender = 0;
-
     bool NoDrawTile = false;
 
 public:

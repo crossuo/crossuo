@@ -1852,6 +1852,7 @@ FMT_CONSTEXPR const Char *parse_align(
   if (begin + 1 != end) ++i;
   do {
     switch (static_cast<char>(begin[i])) {
+    default:break;
     case '<':
       align = ALIGN_LEFT;
       break;

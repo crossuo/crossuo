@@ -137,7 +137,7 @@ void OpenBrowser(const string &url)
 #endif
 
     auto cmd = string(OPEN_CMD) + url;
-    system(cmd.c_str()); // crossuo adds http in the url, we're a bit safer.
+    (void)system(cmd.c_str()); // crossuo adds http in the url, we're a bit safer.
 }
 #endif
 } // namespace Platform

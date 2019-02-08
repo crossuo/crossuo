@@ -9,7 +9,6 @@ class CGUIExternalTexture : public CBaseGUI
 {
     //!Удалять ли текстуру при удалении объекта
     bool DeleteTextureOnDestroy = false;
-
     short DrawWidth = 0;
     short DrawHeight = 0;
 

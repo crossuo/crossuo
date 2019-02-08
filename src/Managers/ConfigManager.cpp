@@ -21,6 +21,7 @@
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
+#include "../ScreenStages/GameScreen.h"
 
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;

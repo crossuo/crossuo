@@ -33,7 +33,7 @@ void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const os_path &path
         while (!feof(file))
         {
             char buf[256] = { 0 };
-            fgets(&buf[0], 256, file);
+            (void)fgets(&buf[0], 256, file);
 
             if (!strlen(buf))
             {
@@ -93,7 +93,7 @@ void ParseCustomHouseObjectFile(vector<T> &list, const os_path &path)
         while (!feof(file))
         {
             char buf[256] = { 0 };
-            fgets(&buf[0], 256, file);
+            (void)fgets(&buf[0], 256, file);
 
             if (!strlen(buf))
             {

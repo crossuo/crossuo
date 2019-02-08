@@ -21,8 +21,8 @@ private:
     void SetPagePos(int val, int page);
 
 public:
-    bool Writable = false;
     uint16_t PageCount = 0;
+    bool Writable = false;
     bool Unicode = false;
 
     CGumpBook(

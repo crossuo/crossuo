@@ -412,7 +412,7 @@ bool CGameWindow::OnRepaint(const PaintEvent &ev)
 
     if (!g_PluginManager.Empty())
     {
-        return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev);
+        return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev) != 0u;
     }
     return false;
 }
@@ -512,7 +512,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
         case UOMSG_WALK:
         {
-            const auto run = (bool)ev.data1;
+            const auto run = (ev.data1 != 0u);
             const auto dir = checked_cast<uint8_t>(ev.data2);
             return !g_PathFinder.Walk(run, dir);
         }

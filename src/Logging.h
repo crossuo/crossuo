@@ -3,6 +3,8 @@
 
 #pragma once
 
+#undef ERROR
+
 #if !defined(DISABLE_LOG)
 
 #include <spdlog/spdlog.h>

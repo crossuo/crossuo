@@ -41,12 +41,12 @@ size_t fs_size(FILE *fp)
 
 bool fs_path_exists(const os_path &path_str)
 {
-    return PathFileExistsW(path_str.c_str());
+    return PathFileExistsW(path_str.c_str()) != 0u;
 }
 
 bool fs_path_create(const os_path &path_str)
 {
-    return CreateDirectoryW(path_str.c_str(), nullptr);
+    return CreateDirectoryW(path_str.c_str(), nullptr) != 0u;
 }
 
 os_path fs_path_current()
@@ -77,7 +77,7 @@ unsigned char *fs_map(const os_path &path, size_t *length)
     if (size == INVALID_FILE_SIZE || size == 0)
         goto fail;
 
-    map = CreateFileMappingA(fd, nullptr, PAGE_READONLY, 0, size, nullptr);
+    map = CreateFileMappingA(fd, nullptr, PAGE_READONLY, 0, DWORD(size), nullptr);
     if (!map)
         goto fail;
 

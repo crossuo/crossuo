@@ -2010,8 +2010,8 @@ void CGumpOptions::RedrawMacroData()
 
         if (macroCount >= maxMacroDraw)
         {
-            m_MacroDataBox->Add(
-                new CGUIButton(ID_GO_P5_BUTTON_DOWN, 0x0985, 0x0986, 0x0986, 415, y /*295 /*269*/));
+            m_MacroDataBox->Add(new CGUIButton(
+                ID_GO_P5_BUTTON_DOWN, 0x0985, 0x0986, 0x0986, 415, y /*295*/ /*269*/));
         }
     }
 }

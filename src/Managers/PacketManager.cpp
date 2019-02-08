@@ -869,12 +869,12 @@ PACKET_HANDLER(CharacterList)
 
     g_ClientFlag = ReadUInt32BE();
 
-    g_CharacterList.OnePerson = (bool)(g_ClientFlag & CLF_ONE_CHARACTER_SLOT);
-    //g_SendLogoutNotification = (bool)(g_ClientFlag & LFF_RE);
-    g_PopupEnabled = (bool)(g_ClientFlag & CLF_CONTEXT_MENU);
-    g_TooltipsEnabled =
-        (bool)(((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) && (g_Config.ProtocolClientVersion >= CV_308Z));
-    g_PaperdollBooks = (bool)(g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS);
+    g_CharacterList.OnePerson = (g_ClientFlag & CLF_ONE_CHARACTER_SLOT) != 0u;
+    //g_SendLogoutNotification = (g_ClientFlag & LFF_RE) != 0u;
+    g_PopupEnabled = (g_ClientFlag & CLF_CONTEXT_MENU) != 0u;
+    g_TooltipsEnabled = ((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) &&
+                        (g_Config.ProtocolClientVersion >= CV_308Z);
+    g_PaperdollBooks = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u;
 
     g_CharacterListScreen.UpdateContent();
 }

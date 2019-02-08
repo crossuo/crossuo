@@ -27,7 +27,7 @@ else()
 
   #check_and_add_flag(EXTRA -Wextra)
   check_and_add_flag(MISSING_FIELD_INITIALIZERS -Wmissing-field-initializers)
-  check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
+  #check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
   #check_and_add_flag(FLOAT_EQUAL -Wfloat-equal)
   #check_and_add_flag(CONVERSION -Wconversion)
   #check_and_add_flag(ZERO_AS_NULL_POINTER_CONSTANT -Wzero-as-null-pointer-constant)

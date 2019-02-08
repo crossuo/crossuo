@@ -2449,7 +2449,7 @@ static drmp3_uint32 drmp3_decode_next_frame_ex(drmp3* pMP3, drmp3d_sample_t* pPC
             for (size_t i = 0; i < leftoverDataSize; ++i) {
                 pMP3->pData[i] = pMP3->pData[i + (size_t)info.frame_bytes];
             }
-                
+
             pMP3->dataSize = leftoverDataSize;
             pMP3->pcmFramesConsumedInMP3Frame = 0;
             pMP3->pcmFramesRemainingInMP3Frame = pcmFramesRead;
@@ -2637,7 +2637,7 @@ drmp3_bool32 drmp3_init_internal(drmp3* pMP3, drmp3_read_proc onRead, drmp3_seek
         drmp3_uninit(pMP3);
         return DRMP3_FALSE;
     }
-    
+
     // Decode the first frame to confirm that it is indeed a valid MP3 stream.
     if (!drmp3_decode_next_frame(pMP3)) {
         drmp3_uninit(pMP3);
@@ -2762,7 +2762,7 @@ void drmp3_uninit(drmp3* pMP3)
     if (pMP3 == NULL) {
         return;
     }
-    
+
 #ifndef DR_MP3_NO_STDIO
     if (pMP3->onRead == drmp3__on_read_stdio) {
         fclose((FILE*)pMP3->pUserData);
@@ -2905,7 +2905,7 @@ drmp3_uint64 drmp3_get_pcm_frame_count(drmp3* pMP3)
 
     // We'll need to seek back to where we were, so grab the PCM frame we're currently sitting on so we can restore later.
     drmp3_uint64 currentPCMFrame = pMP3->currentPCMFrame;
-    
+
     if (!drmp3_seek_to_start_of_stream(pMP3)) {
         return 0;
     }
@@ -2954,7 +2954,7 @@ drmp3_uint64 drmp3_get_mp3_frame_count(drmp3* pMP3)
 
     // We'll need to seek back to where we were, so grab the PCM frame we're currently sitting on so we can restore later.
     drmp3_uint64 currentPCMFrame = pMP3->currentPCMFrame;
-    
+
     if (!drmp3_seek_to_start_of_stream(pMP3)) {
         return 0;
     }
@@ -3588,7 +3588,7 @@ typedef struct
 
     // The size in bytes of the data chunk.
     drwav_uint64 dataChunkDataSize;
-    
+
     // The position in the stream of the first byte of the data chunk. This is used for seeking.
     drwav_uint64 dataChunkDataPos;
 
@@ -3617,7 +3617,7 @@ typedef struct
     {
         drwav_uint64 iCurrentSample;    // The index of the next sample that will be read by drwav_read_*(). This is used with "totalSampleCount" to ensure we don't read excess samples at the end of the last block.
     } compressed;
-    
+
     // Microsoft ADPCM specific data.
     struct
     {
@@ -4517,7 +4517,7 @@ static drwav_bool32 drwav__on_seek_memory(void* pUserData, int offset, drwav_see
             return DRWAV_FALSE; // Trying to seek too far forward.
         }
     }
-    
+
     return DRWAV_TRUE;
 }
 
@@ -4584,7 +4584,7 @@ static drwav_bool32 drwav__on_seek_memory_write(void* pUserData, int offset, drw
             memory->currentWritePos = memory->dataSize;  // Trying to seek too far forward.
         }
     }
-    
+
     return DRWAV_TRUE;
 }
 
@@ -4893,7 +4893,7 @@ drwav_bool32 drwav_init_ex(drwav* pWav, drwav_read_proc onRead, drwav_seek_proc 
                 }
             }
         }
-        
+
 
         if (!foundDataChunk) {
             pWav->dataChunkDataPos = cursor;
@@ -5023,7 +5023,7 @@ drwav_bool32 drwav_init_ex(drwav* pWav, drwav_read_proc onRead, drwav_seek_proc 
         }
         cursor = pWav->dataChunkDataPos;
     }
-    
+
 
     // At this point we should be sitting on the first byte of the raw audio data.
 
@@ -5234,7 +5234,7 @@ drwav_bool32 drwav_init_write__internal(drwav* pWav, const drwav_data_format* pF
             return DRWAV_FALSE;
         }
     }
-    
+
 
 
     // Set some properties for the client's convenience.
@@ -5281,7 +5281,7 @@ void drwav_uninit(drwav* pWav)
         } else {
             paddingSize = (drwav_uint32)(pWav->dataChunkDataSize % 8);
         }
-        
+
         if (paddingSize > 0) {
             drwav_uint64 paddingData = 0;
             pWav->onWrite(pWav->pUserData, &paddingData, paddingSize);
@@ -5436,7 +5436,7 @@ drwav_bool32 drwav_seek_to_first_sample(drwav* pWav)
     if (drwav__is_compressed_format_tag(pWav->translatedFormatTag)) {
         pWav->compressed.iCurrentSample = 0;
     }
-    
+
     pWav->bytesRemaining = pWav->dataChunkDataSize;
     return DRWAV_TRUE;
 }
@@ -5468,7 +5468,7 @@ drwav_bool32 drwav_seek_to_sample(drwav* pWav, drwav_uint64 sample)
     // to seek back to the start.
     if (drwav__is_compressed_format_tag(pWav->translatedFormatTag)) {
         // TODO: This can be optimized.
-        
+
         // If we're seeking forward it's simple - just keep reading samples until we hit the sample we're requesting. If we're seeking backwards,
         // we first need to seek back to the start and then just do the same thing as a forward seek.
         if (sample < pWav->compressed.iCurrentSample) {
@@ -5678,9 +5678,9 @@ drwav_uint64 drwav_read_s16__msadpcm(drwav* pWav, drwav_uint64 samplesToRead, dr
                 drwav_int32 nibble0 = ((nibbles & 0xF0) >> 4); if ((nibbles & 0x80)) { nibble0 |= 0xFFFFFFF0UL; }
                 drwav_int32 nibble1 = ((nibbles & 0x0F) >> 0); if ((nibbles & 0x08)) { nibble1 |= 0xFFFFFFF0UL; }
 
-                static drwav_int32 adaptationTable[] = { 
-                    230, 230, 230, 230, 307, 409, 512, 614, 
-                    768, 614, 512, 409, 307, 230, 230, 230 
+                static drwav_int32 adaptationTable[] = {
+                    230, 230, 230, 230, 307, 409, 512, 614,
+                    768, 614, 512, 409, 307, 230, 230, 230
                 };
                 static drwav_int32 coeff1Table[] = { 256, 512, 0, 192, 240, 460,  392 };
                 static drwav_int32 coeff2Table[] = { 0,  -256, 0, 64,  0,  -208, -232 };
@@ -5831,16 +5831,16 @@ drwav_uint64 drwav_read_s16__ima(drwav* pWav, drwav_uint64 samplesToRead, drwav_
                     -1, -1, -1, -1, 2, 4, 6, 8
                 };
 
-                static drwav_int32 stepTable[89] = { 
-                    7,     8,     9,     10,    11,    12,    13,    14,    16,    17, 
-                    19,    21,    23,    25,    28,    31,    34,    37,    41,    45, 
-                    50,    55,    60,    66,    73,    80,    88,    97,    107,   118, 
+                static drwav_int32 stepTable[89] = {
+                    7,     8,     9,     10,    11,    12,    13,    14,    16,    17,
+                    19,    21,    23,    25,    28,    31,    34,    37,    41,    45,
+                    50,    55,    60,    66,    73,    80,    88,    97,    107,   118,
                     130,   143,   157,   173,   190,   209,   230,   253,   279,   307,
                     337,   371,   408,   449,   494,   544,   598,   658,   724,   796,
-                    876,   963,   1060,  1166,  1282,  1411,  1552,  1707,  1878,  2066, 
+                    876,   963,   1060,  1166,  1282,  1411,  1552,  1707,  1878,  2066,
                     2272,  2499,  2749,  3024,  3327,  3660,  4026,  4428,  4871,  5358,
-                    5894,  6484,  7132,  7845,  8630,  9493,  10442, 11487, 12635, 13899, 
-                    15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767 
+                    5894,  6484,  7132,  7845,  8630,  9493,  10442, 11487, 12635, 13899,
+                    15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
                 };
 
                 // From what I can tell with stereo streams, it looks like every 4 bytes (8 samples) is for one channel. So it goes 4 bytes for the
@@ -5897,40 +5897,40 @@ drwav_uint64 drwav_read_s16__ima(drwav* pWav, drwav_uint64 samplesToRead, drwav_
 
 #ifndef DR_WAV_NO_CONVERSION_API
 static unsigned short g_drwavAlawTable[256] = {
-    0xEA80, 0xEB80, 0xE880, 0xE980, 0xEE80, 0xEF80, 0xEC80, 0xED80, 0xE280, 0xE380, 0xE080, 0xE180, 0xE680, 0xE780, 0xE480, 0xE580, 
-    0xF540, 0xF5C0, 0xF440, 0xF4C0, 0xF740, 0xF7C0, 0xF640, 0xF6C0, 0xF140, 0xF1C0, 0xF040, 0xF0C0, 0xF340, 0xF3C0, 0xF240, 0xF2C0, 
-    0xAA00, 0xAE00, 0xA200, 0xA600, 0xBA00, 0xBE00, 0xB200, 0xB600, 0x8A00, 0x8E00, 0x8200, 0x8600, 0x9A00, 0x9E00, 0x9200, 0x9600, 
-    0xD500, 0xD700, 0xD100, 0xD300, 0xDD00, 0xDF00, 0xD900, 0xDB00, 0xC500, 0xC700, 0xC100, 0xC300, 0xCD00, 0xCF00, 0xC900, 0xCB00, 
-    0xFEA8, 0xFEB8, 0xFE88, 0xFE98, 0xFEE8, 0xFEF8, 0xFEC8, 0xFED8, 0xFE28, 0xFE38, 0xFE08, 0xFE18, 0xFE68, 0xFE78, 0xFE48, 0xFE58, 
-    0xFFA8, 0xFFB8, 0xFF88, 0xFF98, 0xFFE8, 0xFFF8, 0xFFC8, 0xFFD8, 0xFF28, 0xFF38, 0xFF08, 0xFF18, 0xFF68, 0xFF78, 0xFF48, 0xFF58, 
-    0xFAA0, 0xFAE0, 0xFA20, 0xFA60, 0xFBA0, 0xFBE0, 0xFB20, 0xFB60, 0xF8A0, 0xF8E0, 0xF820, 0xF860, 0xF9A0, 0xF9E0, 0xF920, 0xF960, 
-    0xFD50, 0xFD70, 0xFD10, 0xFD30, 0xFDD0, 0xFDF0, 0xFD90, 0xFDB0, 0xFC50, 0xFC70, 0xFC10, 0xFC30, 0xFCD0, 0xFCF0, 0xFC90, 0xFCB0, 
-    0x1580, 0x1480, 0x1780, 0x1680, 0x1180, 0x1080, 0x1380, 0x1280, 0x1D80, 0x1C80, 0x1F80, 0x1E80, 0x1980, 0x1880, 0x1B80, 0x1A80, 
-    0x0AC0, 0x0A40, 0x0BC0, 0x0B40, 0x08C0, 0x0840, 0x09C0, 0x0940, 0x0EC0, 0x0E40, 0x0FC0, 0x0F40, 0x0CC0, 0x0C40, 0x0DC0, 0x0D40, 
-    0x5600, 0x5200, 0x5E00, 0x5A00, 0x4600, 0x4200, 0x4E00, 0x4A00, 0x7600, 0x7200, 0x7E00, 0x7A00, 0x6600, 0x6200, 0x6E00, 0x6A00, 
-    0x2B00, 0x2900, 0x2F00, 0x2D00, 0x2300, 0x2100, 0x2700, 0x2500, 0x3B00, 0x3900, 0x3F00, 0x3D00, 0x3300, 0x3100, 0x3700, 0x3500, 
-    0x0158, 0x0148, 0x0178, 0x0168, 0x0118, 0x0108, 0x0138, 0x0128, 0x01D8, 0x01C8, 0x01F8, 0x01E8, 0x0198, 0x0188, 0x01B8, 0x01A8, 
-    0x0058, 0x0048, 0x0078, 0x0068, 0x0018, 0x0008, 0x0038, 0x0028, 0x00D8, 0x00C8, 0x00F8, 0x00E8, 0x0098, 0x0088, 0x00B8, 0x00A8, 
-    0x0560, 0x0520, 0x05E0, 0x05A0, 0x0460, 0x0420, 0x04E0, 0x04A0, 0x0760, 0x0720, 0x07E0, 0x07A0, 0x0660, 0x0620, 0x06E0, 0x06A0, 
+    0xEA80, 0xEB80, 0xE880, 0xE980, 0xEE80, 0xEF80, 0xEC80, 0xED80, 0xE280, 0xE380, 0xE080, 0xE180, 0xE680, 0xE780, 0xE480, 0xE580,
+    0xF540, 0xF5C0, 0xF440, 0xF4C0, 0xF740, 0xF7C0, 0xF640, 0xF6C0, 0xF140, 0xF1C0, 0xF040, 0xF0C0, 0xF340, 0xF3C0, 0xF240, 0xF2C0,
+    0xAA00, 0xAE00, 0xA200, 0xA600, 0xBA00, 0xBE00, 0xB200, 0xB600, 0x8A00, 0x8E00, 0x8200, 0x8600, 0x9A00, 0x9E00, 0x9200, 0x9600,
+    0xD500, 0xD700, 0xD100, 0xD300, 0xDD00, 0xDF00, 0xD900, 0xDB00, 0xC500, 0xC700, 0xC100, 0xC300, 0xCD00, 0xCF00, 0xC900, 0xCB00,
+    0xFEA8, 0xFEB8, 0xFE88, 0xFE98, 0xFEE8, 0xFEF8, 0xFEC8, 0xFED8, 0xFE28, 0xFE38, 0xFE08, 0xFE18, 0xFE68, 0xFE78, 0xFE48, 0xFE58,
+    0xFFA8, 0xFFB8, 0xFF88, 0xFF98, 0xFFE8, 0xFFF8, 0xFFC8, 0xFFD8, 0xFF28, 0xFF38, 0xFF08, 0xFF18, 0xFF68, 0xFF78, 0xFF48, 0xFF58,
+    0xFAA0, 0xFAE0, 0xFA20, 0xFA60, 0xFBA0, 0xFBE0, 0xFB20, 0xFB60, 0xF8A0, 0xF8E0, 0xF820, 0xF860, 0xF9A0, 0xF9E0, 0xF920, 0xF960,
+    0xFD50, 0xFD70, 0xFD10, 0xFD30, 0xFDD0, 0xFDF0, 0xFD90, 0xFDB0, 0xFC50, 0xFC70, 0xFC10, 0xFC30, 0xFCD0, 0xFCF0, 0xFC90, 0xFCB0,
+    0x1580, 0x1480, 0x1780, 0x1680, 0x1180, 0x1080, 0x1380, 0x1280, 0x1D80, 0x1C80, 0x1F80, 0x1E80, 0x1980, 0x1880, 0x1B80, 0x1A80,
+    0x0AC0, 0x0A40, 0x0BC0, 0x0B40, 0x08C0, 0x0840, 0x09C0, 0x0940, 0x0EC0, 0x0E40, 0x0FC0, 0x0F40, 0x0CC0, 0x0C40, 0x0DC0, 0x0D40,
+    0x5600, 0x5200, 0x5E00, 0x5A00, 0x4600, 0x4200, 0x4E00, 0x4A00, 0x7600, 0x7200, 0x7E00, 0x7A00, 0x6600, 0x6200, 0x6E00, 0x6A00,
+    0x2B00, 0x2900, 0x2F00, 0x2D00, 0x2300, 0x2100, 0x2700, 0x2500, 0x3B00, 0x3900, 0x3F00, 0x3D00, 0x3300, 0x3100, 0x3700, 0x3500,
+    0x0158, 0x0148, 0x0178, 0x0168, 0x0118, 0x0108, 0x0138, 0x0128, 0x01D8, 0x01C8, 0x01F8, 0x01E8, 0x0198, 0x0188, 0x01B8, 0x01A8,
+    0x0058, 0x0048, 0x0078, 0x0068, 0x0018, 0x0008, 0x0038, 0x0028, 0x00D8, 0x00C8, 0x00F8, 0x00E8, 0x0098, 0x0088, 0x00B8, 0x00A8,
+    0x0560, 0x0520, 0x05E0, 0x05A0, 0x0460, 0x0420, 0x04E0, 0x04A0, 0x0760, 0x0720, 0x07E0, 0x07A0, 0x0660, 0x0620, 0x06E0, 0x06A0,
     0x02B0, 0x0290, 0x02F0, 0x02D0, 0x0230, 0x0210, 0x0270, 0x0250, 0x03B0, 0x0390, 0x03F0, 0x03D0, 0x0330, 0x0310, 0x0370, 0x0350
 };
 
 static unsigned short g_drwavMulawTable[256] = {
-    0x8284, 0x8684, 0x8A84, 0x8E84, 0x9284, 0x9684, 0x9A84, 0x9E84, 0xA284, 0xA684, 0xAA84, 0xAE84, 0xB284, 0xB684, 0xBA84, 0xBE84, 
-    0xC184, 0xC384, 0xC584, 0xC784, 0xC984, 0xCB84, 0xCD84, 0xCF84, 0xD184, 0xD384, 0xD584, 0xD784, 0xD984, 0xDB84, 0xDD84, 0xDF84, 
-    0xE104, 0xE204, 0xE304, 0xE404, 0xE504, 0xE604, 0xE704, 0xE804, 0xE904, 0xEA04, 0xEB04, 0xEC04, 0xED04, 0xEE04, 0xEF04, 0xF004, 
-    0xF0C4, 0xF144, 0xF1C4, 0xF244, 0xF2C4, 0xF344, 0xF3C4, 0xF444, 0xF4C4, 0xF544, 0xF5C4, 0xF644, 0xF6C4, 0xF744, 0xF7C4, 0xF844, 
-    0xF8A4, 0xF8E4, 0xF924, 0xF964, 0xF9A4, 0xF9E4, 0xFA24, 0xFA64, 0xFAA4, 0xFAE4, 0xFB24, 0xFB64, 0xFBA4, 0xFBE4, 0xFC24, 0xFC64, 
-    0xFC94, 0xFCB4, 0xFCD4, 0xFCF4, 0xFD14, 0xFD34, 0xFD54, 0xFD74, 0xFD94, 0xFDB4, 0xFDD4, 0xFDF4, 0xFE14, 0xFE34, 0xFE54, 0xFE74, 
-    0xFE8C, 0xFE9C, 0xFEAC, 0xFEBC, 0xFECC, 0xFEDC, 0xFEEC, 0xFEFC, 0xFF0C, 0xFF1C, 0xFF2C, 0xFF3C, 0xFF4C, 0xFF5C, 0xFF6C, 0xFF7C, 
-    0xFF88, 0xFF90, 0xFF98, 0xFFA0, 0xFFA8, 0xFFB0, 0xFFB8, 0xFFC0, 0xFFC8, 0xFFD0, 0xFFD8, 0xFFE0, 0xFFE8, 0xFFF0, 0xFFF8, 0x0000, 
-    0x7D7C, 0x797C, 0x757C, 0x717C, 0x6D7C, 0x697C, 0x657C, 0x617C, 0x5D7C, 0x597C, 0x557C, 0x517C, 0x4D7C, 0x497C, 0x457C, 0x417C, 
-    0x3E7C, 0x3C7C, 0x3A7C, 0x387C, 0x367C, 0x347C, 0x327C, 0x307C, 0x2E7C, 0x2C7C, 0x2A7C, 0x287C, 0x267C, 0x247C, 0x227C, 0x207C, 
-    0x1EFC, 0x1DFC, 0x1CFC, 0x1BFC, 0x1AFC, 0x19FC, 0x18FC, 0x17FC, 0x16FC, 0x15FC, 0x14FC, 0x13FC, 0x12FC, 0x11FC, 0x10FC, 0x0FFC, 
-    0x0F3C, 0x0EBC, 0x0E3C, 0x0DBC, 0x0D3C, 0x0CBC, 0x0C3C, 0x0BBC, 0x0B3C, 0x0ABC, 0x0A3C, 0x09BC, 0x093C, 0x08BC, 0x083C, 0x07BC, 
-    0x075C, 0x071C, 0x06DC, 0x069C, 0x065C, 0x061C, 0x05DC, 0x059C, 0x055C, 0x051C, 0x04DC, 0x049C, 0x045C, 0x041C, 0x03DC, 0x039C, 
-    0x036C, 0x034C, 0x032C, 0x030C, 0x02EC, 0x02CC, 0x02AC, 0x028C, 0x026C, 0x024C, 0x022C, 0x020C, 0x01EC, 0x01CC, 0x01AC, 0x018C, 
-    0x0174, 0x0164, 0x0154, 0x0144, 0x0134, 0x0124, 0x0114, 0x0104, 0x00F4, 0x00E4, 0x00D4, 0x00C4, 0x00B4, 0x00A4, 0x0094, 0x0084, 
+    0x8284, 0x8684, 0x8A84, 0x8E84, 0x9284, 0x9684, 0x9A84, 0x9E84, 0xA284, 0xA684, 0xAA84, 0xAE84, 0xB284, 0xB684, 0xBA84, 0xBE84,
+    0xC184, 0xC384, 0xC584, 0xC784, 0xC984, 0xCB84, 0xCD84, 0xCF84, 0xD184, 0xD384, 0xD584, 0xD784, 0xD984, 0xDB84, 0xDD84, 0xDF84,
+    0xE104, 0xE204, 0xE304, 0xE404, 0xE504, 0xE604, 0xE704, 0xE804, 0xE904, 0xEA04, 0xEB04, 0xEC04, 0xED04, 0xEE04, 0xEF04, 0xF004,
+    0xF0C4, 0xF144, 0xF1C4, 0xF244, 0xF2C4, 0xF344, 0xF3C4, 0xF444, 0xF4C4, 0xF544, 0xF5C4, 0xF644, 0xF6C4, 0xF744, 0xF7C4, 0xF844,
+    0xF8A4, 0xF8E4, 0xF924, 0xF964, 0xF9A4, 0xF9E4, 0xFA24, 0xFA64, 0xFAA4, 0xFAE4, 0xFB24, 0xFB64, 0xFBA4, 0xFBE4, 0xFC24, 0xFC64,
+    0xFC94, 0xFCB4, 0xFCD4, 0xFCF4, 0xFD14, 0xFD34, 0xFD54, 0xFD74, 0xFD94, 0xFDB4, 0xFDD4, 0xFDF4, 0xFE14, 0xFE34, 0xFE54, 0xFE74,
+    0xFE8C, 0xFE9C, 0xFEAC, 0xFEBC, 0xFECC, 0xFEDC, 0xFEEC, 0xFEFC, 0xFF0C, 0xFF1C, 0xFF2C, 0xFF3C, 0xFF4C, 0xFF5C, 0xFF6C, 0xFF7C,
+    0xFF88, 0xFF90, 0xFF98, 0xFFA0, 0xFFA8, 0xFFB0, 0xFFB8, 0xFFC0, 0xFFC8, 0xFFD0, 0xFFD8, 0xFFE0, 0xFFE8, 0xFFF0, 0xFFF8, 0x0000,
+    0x7D7C, 0x797C, 0x757C, 0x717C, 0x6D7C, 0x697C, 0x657C, 0x617C, 0x5D7C, 0x597C, 0x557C, 0x517C, 0x4D7C, 0x497C, 0x457C, 0x417C,
+    0x3E7C, 0x3C7C, 0x3A7C, 0x387C, 0x367C, 0x347C, 0x327C, 0x307C, 0x2E7C, 0x2C7C, 0x2A7C, 0x287C, 0x267C, 0x247C, 0x227C, 0x207C,
+    0x1EFC, 0x1DFC, 0x1CFC, 0x1BFC, 0x1AFC, 0x19FC, 0x18FC, 0x17FC, 0x16FC, 0x15FC, 0x14FC, 0x13FC, 0x12FC, 0x11FC, 0x10FC, 0x0FFC,
+    0x0F3C, 0x0EBC, 0x0E3C, 0x0DBC, 0x0D3C, 0x0CBC, 0x0C3C, 0x0BBC, 0x0B3C, 0x0ABC, 0x0A3C, 0x09BC, 0x093C, 0x08BC, 0x083C, 0x07BC,
+    0x075C, 0x071C, 0x06DC, 0x069C, 0x065C, 0x061C, 0x05DC, 0x059C, 0x055C, 0x051C, 0x04DC, 0x049C, 0x045C, 0x041C, 0x03DC, 0x039C,
+    0x036C, 0x034C, 0x032C, 0x030C, 0x02EC, 0x02CC, 0x02AC, 0x028C, 0x026C, 0x024C, 0x022C, 0x020C, 0x01EC, 0x01CC, 0x01AC, 0x018C,
+    0x0174, 0x0164, 0x0154, 0x0144, 0x0134, 0x0124, 0x0114, 0x0104, 0x00F4, 0x00E4, 0x00D4, 0x00C4, 0x00B4, 0x00A4, 0x0094, 0x0084,
     0x0078, 0x0070, 0x0068, 0x0060, 0x0058, 0x0050, 0x0048, 0x0040, 0x0038, 0x0030, 0x0028, 0x0020, 0x0018, 0x0010, 0x0008, 0x0000
 };
 
@@ -6016,7 +6016,7 @@ drwav_uint64 drwav_read_s16__pcm(drwav* pWav, drwav_uint64 samplesToRead, drwav_
     if (pWav->translatedFormatTag == DR_WAVE_FORMAT_PCM && pWav->bitsPerSample == 16) {
         return drwav_read(pWav, samplesToRead, pBufferOut);
     }
-    
+
     if (pWav->bytesPerSample == 0) {
         return 0;
     }
@@ -6367,7 +6367,7 @@ drwav_uint64 drwav_read_f32__ieee(drwav* pWav, drwav_uint64 samplesToRead, float
     if (pWav->translatedFormatTag == DR_WAVE_FORMAT_IEEE_FLOAT && pWav->bitsPerSample == 32) {
         return drwav_read(pWav, samplesToRead, pBufferOut);
     }
-    
+
     if (pWav->bytesPerSample == 0) {
         return 0;
     }
@@ -6645,7 +6645,7 @@ drwav_uint64 drwav_read_s32__pcm(drwav* pWav, drwav_uint64 samplesToRead, drwav_
     if (pWav->translatedFormatTag == DR_WAVE_FORMAT_PCM && pWav->bitsPerSample == 32) {
         return drwav_read(pWav, samplesToRead, pBufferOut);
     }
-    
+
     if (pWav->bytesPerSample == 0) {
         return 0;
     }
@@ -8246,7 +8246,7 @@ void drflac_init_cuesheet_track_iterator(drflac_cuesheet_track_iterator* pIter, 
 drflac_bool32 drflac_next_cuesheet_track(drflac_cuesheet_track_iterator* pIter, drflac_cuesheet_track* pCuesheetTrack);
 
 
-//// Deprecated APIs //// 
+//// Deprecated APIs ////
 DRFLAC_DEPRECATED drflac_uint64 drflac_read_s32(drflac* pFlac, drflac_uint64 samplesToRead, drflac_int32* pBufferOut);    // Use drflac_read_pcm_frames_s32() instead.
 DRFLAC_DEPRECATED drflac_uint64 drflac_read_s16(drflac* pFlac, drflac_uint64 samplesToRead, drflac_int16* pBufferOut);    // Use drflac_read_pcm_frames_s16() instead.
 DRFLAC_DEPRECATED drflac_uint64 drflac_read_f32(drflac* pFlac, drflac_uint64 samplesToRead, float* pBufferOut);           // Use drflac_read_pcm_frames_f32() instead.
@@ -10439,7 +10439,7 @@ static DRFLAC_INLINE drflac_bool32 drflac__read_rice_parts_x1(drflac_bs* bs, drf
             // Before reloading the cache we need to grab the size in bits of the low part.
             drflac_uint32 riceParamPartLoBitCount = bs_consumedBits - riceParamPlus1MaxConsumedBits;
             drflac_assert(riceParamPartLoBitCount > 0 && riceParamPartLoBitCount < 32);
-                
+
             // Now reload the cache.
             if (bs->nextL2Line < DRFLAC_CACHE_L2_LINE_COUNT(bs)) {
             #ifndef DR_FLAC_NO_CRC
@@ -10550,7 +10550,7 @@ static DRFLAC_INLINE drflac_bool32 drflac__read_rice_parts_x4(drflac_bs* bs, drf
 
                 // Before reloading the cache we need to grab the size in bits of the low part.
                 drflac_uint32 riceParamPartLoBitCount = bs_consumedBits - riceParamPlus1MaxConsumedBits;
-                
+
                 // Now reload the cache.
                 if (bs->nextL2Line < DRFLAC_CACHE_L2_LINE_COUNT(bs)) {
                 #ifndef DR_FLAC_NO_CRC
@@ -10652,7 +10652,7 @@ static DRFLAC_INLINE drflac_bool32 drflac__seek_rice_parts(drflac_bs* bs, drflac
             // Before reloading the cache we need to grab the size in bits of the low part.
             drflac_uint32 riceParamPartLoBitCount = bs_consumedBits - riceParamPlus1MaxConsumedBits;
             drflac_assert(riceParamPartLoBitCount > 0 && riceParamPartLoBitCount < 32);
-                
+
             // Now reload the cache.
             if (bs->nextL2Line < DRFLAC_CACHE_L2_LINE_COUNT(bs)) {
             #ifndef DR_FLAC_NO_CRC
@@ -10800,7 +10800,7 @@ static drflac_bool32 drflac__decode_samples_with_residual__rice__scalar(drflac_b
         }
     }
 
-    
+
 
     drflac_uint32 i = ((count >> 2) << 2);
     while (i < count) {
@@ -10825,7 +10825,7 @@ static drflac_bool32 drflac__decode_samples_with_residual__rice__scalar(drflac_b
         i += 1;
         pSamplesOut += 1;
     }
-    
+
     return DRFLAC_TRUE;
 }
 
@@ -13574,7 +13574,7 @@ drflac* drflac_open_with_metadata_private(drflac_read_proc onRead, drflac_seek_p
         }
     }
 
-    
+
 
     // If we get here, but don't have a STREAMINFO block, it means we've opened the stream in relaxed mode and need to decode
     // the first frame.
@@ -13991,7 +13991,7 @@ drflac_uint64 drflac_read_s32(drflac* pFlac, drflac_uint64 samplesToRead, drflac
                     for (drflac_uint64 i = 0; i < alignedSampleCountPerChannel; ++i) {
                         int mid  = pDecodedSamples0[i] << pFlac->currentFrame.subframes[0].wastedBitsPerSample;
                         int side = pDecodedSamples1[i] << pFlac->currentFrame.subframes[1].wastedBitsPerSample;
-                        
+
                         mid = (((drflac_uint32)mid) << 1) | (side & 0x01);
 
                         bufferOut[i*2+0] = ((mid + side) >> 1) << (unusedBitsPerSample);
@@ -14422,7 +14422,7 @@ static DRFLAC_INLINE void drflac_read_pcm_frames_f32__decode_mid_side__reference
     for (drflac_uint64 i = 0; i < frameCount; ++i) {
         int mid  = pInputSamples0[i] << pFlac->currentFrame.subframes[0].wastedBitsPerSample;
         int side = pInputSamples1[i] << pFlac->currentFrame.subframes[1].wastedBitsPerSample;
-                        
+
         mid = (((drflac_uint32)mid) << 1) | (side & 0x01);
 
         pOutputSamples[i*2+0] = (float)((((mid + side) >> 1) << (unusedBitsPerSample)) / 2147483648.0);
@@ -14516,7 +14516,7 @@ static DRFLAC_INLINE void drflac_read_pcm_frames_f32__decode_mid_side__scalar(dr
     for (drflac_uint64 i = (frameCount4 << 2); i < frameCount; ++i) {
         int mid  = pInputSamples0[i] << pFlac->currentFrame.subframes[0].wastedBitsPerSample;
         int side = pInputSamples1[i] << pFlac->currentFrame.subframes[1].wastedBitsPerSample;
-                        
+
         mid = (((drflac_uint32)mid) << 1) | (side & 0x01);
 
         pOutputSamples[i*2+0] = (float)((((mid + side) >> 1) << unusedBitsPerSample) * factor);
@@ -14568,7 +14568,7 @@ static DRFLAC_INLINE void drflac_read_pcm_frames_f32__decode_mid_side__sse2(drfl
         for (drflac_uint64 i = (frameCount4 << 2); i < frameCount; ++i) {
             int mid  = pInputSamples0[i] << pFlac->currentFrame.subframes[0].wastedBitsPerSample;
             int side = pInputSamples1[i] << pFlac->currentFrame.subframes[1].wastedBitsPerSample;
-                        
+
             mid = (((drflac_uint32)mid) << 1) | (side & 0x01);
 
             pOutputSamples[i*2+0] = (float)(((mid + side) >> 1) * factor);
@@ -14603,7 +14603,7 @@ static DRFLAC_INLINE void drflac_read_pcm_frames_f32__decode_mid_side__sse2(drfl
         for (drflac_uint64 i = (frameCount4 << 2); i < frameCount; ++i) {
             int mid  = pInputSamples0[i] << pFlac->currentFrame.subframes[0].wastedBitsPerSample;
             int side = pInputSamples1[i] << pFlac->currentFrame.subframes[1].wastedBitsPerSample;
-                        
+
             mid = (((drflac_uint32)mid) << 1) | (side & 0x01);
 
             pOutputSamples[i*2+0] = (float)((((mid + side) >> 1) << shift) * factor);
@@ -14776,7 +14776,7 @@ drflac_uint64 drflac_read_pcm_frames_f32(drflac* pFlac, drflac_uint64 framesToRe
                     {
                         drflac_read_pcm_frames_f32__decode_right_side(pFlac, frameCountThisIteration, unusedBitsPerSample, pDecodedSamples0, pDecodedSamples1, pBufferOut);
                     } break;
-                
+
                     case DRFLAC_CHANNEL_ASSIGNMENT_MID_SIDE:
                     {
                         drflac_read_pcm_frames_f32__decode_mid_side(pFlac, frameCountThisIteration, unusedBitsPerSample, pDecodedSamples0, pDecodedSamples1, pBufferOut);
@@ -15837,7 +15837,7 @@ namespace SoLoud
 		unsigned int mParamChanged;
 		float *mParam;
 		Fader *mParamFader;
-		
+
 
 		FilterInstance();
 		virtual result initParams(int aNumParams);
@@ -15925,10 +15925,10 @@ namespace SoLoud
 		void set(float aFrom, float aTo, time aTime, time aStartTime);
 		// Get the current fading value
 		float get(time aCurrentTime);
-	}; 
+	};
 };
 
-#endif 
+#endif
 
 // END file: #include "soloud_fader.h"
 
@@ -15967,7 +15967,7 @@ freely, subject to the following restrictions:
 
 namespace SoLoud
 {
-	class AudioSource;	
+	class AudioSource;
 	class AudioSourceInstance;
 	class AudioSourceInstance3dData;
 
@@ -16023,7 +16023,7 @@ namespace SoLoud
 		int mColliderData;
 
 		// Doppler sample rate multiplier
-		float mDopplerValue;		
+		float mDopplerValue;
 		// Overall 3d volume
 		float m3dVolume;
 		// Channel volume
@@ -16039,7 +16039,7 @@ namespace SoLoud
 	{
 	public:
 		enum FLAGS
-		{			
+		{
 			// This audio instance loops (if supported)
 			LOOPING = 1,
 			// This audio instance is protected - won't get stopped if we run out of voices
@@ -16212,7 +16212,7 @@ namespace SoLoud
 		void setLooping(bool aLoop);
 		// Set whether only one instance of this sound should ever be playing at the same time
 		void setSingleInstance(bool aSingleInstance);
-		
+
 		// Set the minimum and maximum distances for 3d audio source (closer to min distance = max vol)
 		void set3dMinMaxDistance(float aMinDistance, float aMaxDistance);
 		// Set attenuation model and rolloff factor for 3d audio source
@@ -16323,7 +16323,7 @@ namespace SoLoud
 		result setChannels(unsigned int aChannels);
 		// Enable or disable visualization data gathering
 		void setVisualizationEnable(bool aEnable);
-		
+
 		// Calculate and get 256 floats of FFT data for visualization. Visualization has to be enabled before use.
 		float *calcFFT();
 
@@ -16410,14 +16410,14 @@ namespace SoLoud
 		result setParamsFromAudioSource(AudioSource &aSound);
 		// Set params manually
 		result setParams(float aSamplerate, unsigned int aChannels = 2);
-		
+
 	public:
 	    unsigned int mReadIndex, mWriteIndex, mCount;
 	    AudioSourceInstance *mSource[SOLOUD_QUEUE_MAX];
 		QueueInstance *mInstance;
 		handle mQueueHandle;
 		void findQueueHandle();
-		
+
 	};
 };
 
@@ -17247,7 +17247,7 @@ namespace SoLoud
 
 		// Perform 256 unit FFT. Buffer must have 256 floats, and will be overwritten
 		void fft256(float *aBuffer);
-		
+
 		// Perform 256 unit IFFT. Buffer must have 256 floats, and will be overwritten
 		void ifft256(float *aBuffer);
 
@@ -17380,13 +17380,13 @@ freely, subject to the following restrictions:
 See soloud_file_hack_on.h
 */
 
-#undef FILE  
-#undef fgetc 
-#undef fread 
-#undef fseek 
-#undef ftell 
+#undef FILE
+#undef fgetc
+#undef fread
+#undef fseek
+#undef ftell
 #undef fclose
-#undef fopen 
+#undef fopen
 // file: soloud/include\soloud_file_hack_on.h
 /*
 SoLoud audio engine
@@ -17580,7 +17580,7 @@ namespace SoLoud
 	// OSS back-end initialization call
 	result oss_init(SoLoud::Soloud *aSoloud, unsigned int aFlags = Soloud::CLIP_ROUNDOFF, unsigned int aSamplerate = 44100, unsigned int aBuffer = 2048, unsigned int aChannels = 2);
 
-	// PS Vita homebrew back-end initialization call	
+	// PS Vita homebrew back-end initialization call
 	result vita_homebrew_init(SoLoud::Soloud *aSoloud, unsigned int aFlags = Soloud::CLIP_ROUNDOFF, unsigned int aSamplerate = 44100, unsigned int aBuffer = 2048, unsigned int aChannels = 2);
 
 	// ALSA back-end initialization call
@@ -17631,7 +17631,7 @@ namespace SoLoud
 #define FOR_ALL_VOICES_POST_3D \
 						} \
 			h_++; \
-						} 
+						}
 
 #endif
 // file: soloud/include\soloud_lofifilter.h
@@ -17683,7 +17683,7 @@ namespace SoLoud
 			BITDEPTH
 		};
 		LofiChannelData mChannelData[2];
-		
+
 		LofiFilter *mParent;
 	public:
 		virtual void filterChannel(float *aBuffer, unsigned int aSamples, float aSamplerate, time aTime, unsigned int aChannel, unsigned int aChannels);
@@ -17965,7 +17965,7 @@ namespace SoLoud
 	class WaveShaperFilter;
 
 	class WaveShaperFilterInstance : public FilterInstance
-	{	
+	{
 		WaveShaperFilter *mParent;
 	public:
 		virtual void filterChannel(float *aBuffer, unsigned int aSamples, float aSamplerate, time aTime, unsigned int aChannel, unsigned int aChannels);
@@ -18082,7 +18082,7 @@ namespace SoLoud
 		result loadMem(unsigned char *aData, unsigned int aDataLen, bool aCopy = false, bool aTakeOwnership = true);
 		result loadToMem(const char *aFilename);
 		result loadFile(File *aFile);
-		result loadFileToMem(File *aFile);		
+		result loadFileToMem(File *aFile);
 		virtual AudioSourceInstance *createInstance();
 		time getLength();
 
@@ -18201,7 +18201,7 @@ extern Soloud_Filehack * Soloud_Filehack_fopen(const char *aFilename, char *aMod
 //    1.14    - 2018-02-11 - delete bogus dealloca usage
 //    1.13    - 2018-01-29 - fix truncation of last frame (hopefully)
 //    1.12    - 2017-11-21 - limit residue begin/end to blocksize/2 to avoid large temp allocs in bad/corrupt files
-//    1.11    - 2017-07-23 - fix MinGW compilation 
+//    1.11    - 2017-07-23 - fix MinGW compilation
 //    1.10    - 2017-03-03 - more robust seeking; fix negative ilog(); clear error in open_memory
 //    1.09    - 2016-04-04 - back out 'truncation of last frame' fix from previous version
 //    1.08    - 2016-04-02 - warnings; setup memory leaks; truncation of last frame
@@ -18987,7 +18987,7 @@ struct stb_vorbis
    int    current_loc_valid;
 
   // per-blocksize precomputed data
-   
+
    // twiddle factors
    float *A[2],*B[2],*C[2];
    float *window[2];
@@ -19309,7 +19309,7 @@ static void compute_sorted_huffman(Codebook *c, uint8 *lengths, uint32 *values)
    if (!c->sparse) {
       int k = 0;
       for (i=0; i < c->entries; ++i)
-         if (include_in_sort(c, lengths[i])) 
+         if (include_in_sort(c, lengths[i]))
             c->sorted_codewords[k++] = bit_reverse(c->codewords[i]);
       assert(k == c->sorted_entries);
    } else {
@@ -19490,7 +19490,7 @@ static int getn(vorb *z, uint8 *data, int n)
       return 1;
    }
 
-   #ifndef STB_VORBIS_NO_STDIO   
+   #ifndef STB_VORBIS_NO_STDIO
    if (fread(data, n, 1, z->f) == 1)
       return 1;
    else {
@@ -19570,7 +19570,7 @@ static int start_page_no_capturepattern(vorb *f)
    // header flag
    f->page_flag = get8(f);
    // absolute granule position
-   loc0 = get32(f); 
+   loc0 = get32(f);
    loc1 = get32(f);
    // @TODO: validate loc0,loc1 as valid positions?
    // stream serial number -- vorbis doesn't interleave, so discard
@@ -20055,69 +20055,69 @@ static int predict_point(int x, int x0, int x1, int y0, int y1)
 // the following table is block-copied from the specification
 static float inverse_db_table[256] =
 {
-  1.0649863e-07f, 1.1341951e-07f, 1.2079015e-07f, 1.2863978e-07f, 
-  1.3699951e-07f, 1.4590251e-07f, 1.5538408e-07f, 1.6548181e-07f, 
-  1.7623575e-07f, 1.8768855e-07f, 1.9988561e-07f, 2.1287530e-07f, 
-  2.2670913e-07f, 2.4144197e-07f, 2.5713223e-07f, 2.7384213e-07f, 
-  2.9163793e-07f, 3.1059021e-07f, 3.3077411e-07f, 3.5226968e-07f, 
-  3.7516214e-07f, 3.9954229e-07f, 4.2550680e-07f, 4.5315863e-07f, 
-  4.8260743e-07f, 5.1396998e-07f, 5.4737065e-07f, 5.8294187e-07f, 
-  6.2082472e-07f, 6.6116941e-07f, 7.0413592e-07f, 7.4989464e-07f, 
-  7.9862701e-07f, 8.5052630e-07f, 9.0579828e-07f, 9.6466216e-07f, 
-  1.0273513e-06f, 1.0941144e-06f, 1.1652161e-06f, 1.2409384e-06f, 
-  1.3215816e-06f, 1.4074654e-06f, 1.4989305e-06f, 1.5963394e-06f, 
-  1.7000785e-06f, 1.8105592e-06f, 1.9282195e-06f, 2.0535261e-06f, 
-  2.1869758e-06f, 2.3290978e-06f, 2.4804557e-06f, 2.6416497e-06f, 
-  2.8133190e-06f, 2.9961443e-06f, 3.1908506e-06f, 3.3982101e-06f, 
-  3.6190449e-06f, 3.8542308e-06f, 4.1047004e-06f, 4.3714470e-06f, 
-  4.6555282e-06f, 4.9580707e-06f, 5.2802740e-06f, 5.6234160e-06f, 
-  5.9888572e-06f, 6.3780469e-06f, 6.7925283e-06f, 7.2339451e-06f, 
-  7.7040476e-06f, 8.2047000e-06f, 8.7378876e-06f, 9.3057248e-06f, 
-  9.9104632e-06f, 1.0554501e-05f, 1.1240392e-05f, 1.1970856e-05f, 
-  1.2748789e-05f, 1.3577278e-05f, 1.4459606e-05f, 1.5399272e-05f, 
-  1.6400004e-05f, 1.7465768e-05f, 1.8600792e-05f, 1.9809576e-05f, 
-  2.1096914e-05f, 2.2467911e-05f, 2.3928002e-05f, 2.5482978e-05f, 
-  2.7139006e-05f, 2.8902651e-05f, 3.0780908e-05f, 3.2781225e-05f, 
-  3.4911534e-05f, 3.7180282e-05f, 3.9596466e-05f, 4.2169667e-05f, 
-  4.4910090e-05f, 4.7828601e-05f, 5.0936773e-05f, 5.4246931e-05f, 
-  5.7772202e-05f, 6.1526565e-05f, 6.5524908e-05f, 6.9783085e-05f, 
-  7.4317983e-05f, 7.9147585e-05f, 8.4291040e-05f, 8.9768747e-05f, 
-  9.5602426e-05f, 0.00010181521f, 0.00010843174f, 0.00011547824f, 
-  0.00012298267f, 0.00013097477f, 0.00013948625f, 0.00014855085f, 
-  0.00015820453f, 0.00016848555f, 0.00017943469f, 0.00019109536f, 
-  0.00020351382f, 0.00021673929f, 0.00023082423f, 0.00024582449f, 
-  0.00026179955f, 0.00027881276f, 0.00029693158f, 0.00031622787f, 
-  0.00033677814f, 0.00035866388f, 0.00038197188f, 0.00040679456f, 
-  0.00043323036f, 0.00046138411f, 0.00049136745f, 0.00052329927f, 
-  0.00055730621f, 0.00059352311f, 0.00063209358f, 0.00067317058f, 
-  0.00071691700f, 0.00076350630f, 0.00081312324f, 0.00086596457f, 
-  0.00092223983f, 0.00098217216f, 0.0010459992f,  0.0011139742f, 
-  0.0011863665f,  0.0012634633f,  0.0013455702f,  0.0014330129f, 
-  0.0015261382f,  0.0016253153f,  0.0017309374f,  0.0018434235f, 
-  0.0019632195f,  0.0020908006f,  0.0022266726f,  0.0023713743f, 
-  0.0025254795f,  0.0026895994f,  0.0028643847f,  0.0030505286f, 
-  0.0032487691f,  0.0034598925f,  0.0036847358f,  0.0039241906f, 
-  0.0041792066f,  0.0044507950f,  0.0047400328f,  0.0050480668f, 
-  0.0053761186f,  0.0057254891f,  0.0060975636f,  0.0064938176f, 
-  0.0069158225f,  0.0073652516f,  0.0078438871f,  0.0083536271f, 
-  0.0088964928f,  0.009474637f,   0.010090352f,   0.010746080f, 
-  0.011444421f,   0.012188144f,   0.012980198f,   0.013823725f, 
-  0.014722068f,   0.015678791f,   0.016697687f,   0.017782797f, 
-  0.018938423f,   0.020169149f,   0.021479854f,   0.022875735f, 
-  0.024362330f,   0.025945531f,   0.027631618f,   0.029427276f, 
-  0.031339626f,   0.033376252f,   0.035545228f,   0.037855157f, 
-  0.040315199f,   0.042935108f,   0.045725273f,   0.048696758f, 
-  0.051861348f,   0.055231591f,   0.058820850f,   0.062643361f, 
-  0.066714279f,   0.071049749f,   0.075666962f,   0.080584227f, 
-  0.085821044f,   0.091398179f,   0.097337747f,   0.10366330f, 
-  0.11039993f,    0.11757434f,    0.12521498f,    0.13335215f, 
-  0.14201813f,    0.15124727f,    0.16107617f,    0.17154380f, 
-  0.18269168f,    0.19456402f,    0.20720788f,    0.22067342f, 
-  0.23501402f,    0.25028656f,    0.26655159f,    0.28387361f, 
-  0.30232132f,    0.32196786f,    0.34289114f,    0.36517414f, 
-  0.38890521f,    0.41417847f,    0.44109412f,    0.46975890f, 
-  0.50028648f,    0.53279791f,    0.56742212f,    0.60429640f, 
-  0.64356699f,    0.68538959f,    0.72993007f,    0.77736504f, 
+  1.0649863e-07f, 1.1341951e-07f, 1.2079015e-07f, 1.2863978e-07f,
+  1.3699951e-07f, 1.4590251e-07f, 1.5538408e-07f, 1.6548181e-07f,
+  1.7623575e-07f, 1.8768855e-07f, 1.9988561e-07f, 2.1287530e-07f,
+  2.2670913e-07f, 2.4144197e-07f, 2.5713223e-07f, 2.7384213e-07f,
+  2.9163793e-07f, 3.1059021e-07f, 3.3077411e-07f, 3.5226968e-07f,
+  3.7516214e-07f, 3.9954229e-07f, 4.2550680e-07f, 4.5315863e-07f,
+  4.8260743e-07f, 5.1396998e-07f, 5.4737065e-07f, 5.8294187e-07f,
+  6.2082472e-07f, 6.6116941e-07f, 7.0413592e-07f, 7.4989464e-07f,
+  7.9862701e-07f, 8.5052630e-07f, 9.0579828e-07f, 9.6466216e-07f,
+  1.0273513e-06f, 1.0941144e-06f, 1.1652161e-06f, 1.2409384e-06f,
+  1.3215816e-06f, 1.4074654e-06f, 1.4989305e-06f, 1.5963394e-06f,
+  1.7000785e-06f, 1.8105592e-06f, 1.9282195e-06f, 2.0535261e-06f,
+  2.1869758e-06f, 2.3290978e-06f, 2.4804557e-06f, 2.6416497e-06f,
+  2.8133190e-06f, 2.9961443e-06f, 3.1908506e-06f, 3.3982101e-06f,
+  3.6190449e-06f, 3.8542308e-06f, 4.1047004e-06f, 4.3714470e-06f,
+  4.6555282e-06f, 4.9580707e-06f, 5.2802740e-06f, 5.6234160e-06f,
+  5.9888572e-06f, 6.3780469e-06f, 6.7925283e-06f, 7.2339451e-06f,
+  7.7040476e-06f, 8.2047000e-06f, 8.7378876e-06f, 9.3057248e-06f,
+  9.9104632e-06f, 1.0554501e-05f, 1.1240392e-05f, 1.1970856e-05f,
+  1.2748789e-05f, 1.3577278e-05f, 1.4459606e-05f, 1.5399272e-05f,
+  1.6400004e-05f, 1.7465768e-05f, 1.8600792e-05f, 1.9809576e-05f,
+  2.1096914e-05f, 2.2467911e-05f, 2.3928002e-05f, 2.5482978e-05f,
+  2.7139006e-05f, 2.8902651e-05f, 3.0780908e-05f, 3.2781225e-05f,
+  3.4911534e-05f, 3.7180282e-05f, 3.9596466e-05f, 4.2169667e-05f,
+  4.4910090e-05f, 4.7828601e-05f, 5.0936773e-05f, 5.4246931e-05f,
+  5.7772202e-05f, 6.1526565e-05f, 6.5524908e-05f, 6.9783085e-05f,
+  7.4317983e-05f, 7.9147585e-05f, 8.4291040e-05f, 8.9768747e-05f,
+  9.5602426e-05f, 0.00010181521f, 0.00010843174f, 0.00011547824f,
+  0.00012298267f, 0.00013097477f, 0.00013948625f, 0.00014855085f,
+  0.00015820453f, 0.00016848555f, 0.00017943469f, 0.00019109536f,
+  0.00020351382f, 0.00021673929f, 0.00023082423f, 0.00024582449f,
+  0.00026179955f, 0.00027881276f, 0.00029693158f, 0.00031622787f,
+  0.00033677814f, 0.00035866388f, 0.00038197188f, 0.00040679456f,
+  0.00043323036f, 0.00046138411f, 0.00049136745f, 0.00052329927f,
+  0.00055730621f, 0.00059352311f, 0.00063209358f, 0.00067317058f,
+  0.00071691700f, 0.00076350630f, 0.00081312324f, 0.00086596457f,
+  0.00092223983f, 0.00098217216f, 0.0010459992f,  0.0011139742f,
+  0.0011863665f,  0.0012634633f,  0.0013455702f,  0.0014330129f,
+  0.0015261382f,  0.0016253153f,  0.0017309374f,  0.0018434235f,
+  0.0019632195f,  0.0020908006f,  0.0022266726f,  0.0023713743f,
+  0.0025254795f,  0.0026895994f,  0.0028643847f,  0.0030505286f,
+  0.0032487691f,  0.0034598925f,  0.0036847358f,  0.0039241906f,
+  0.0041792066f,  0.0044507950f,  0.0047400328f,  0.0050480668f,
+  0.0053761186f,  0.0057254891f,  0.0060975636f,  0.0064938176f,
+  0.0069158225f,  0.0073652516f,  0.0078438871f,  0.0083536271f,
+  0.0088964928f,  0.009474637f,   0.010090352f,   0.010746080f,
+  0.011444421f,   0.012188144f,   0.012980198f,   0.013823725f,
+  0.014722068f,   0.015678791f,   0.016697687f,   0.017782797f,
+  0.018938423f,   0.020169149f,   0.021479854f,   0.022875735f,
+  0.024362330f,   0.025945531f,   0.027631618f,   0.029427276f,
+  0.031339626f,   0.033376252f,   0.035545228f,   0.037855157f,
+  0.040315199f,   0.042935108f,   0.045725273f,   0.048696758f,
+  0.051861348f,   0.055231591f,   0.058820850f,   0.062643361f,
+  0.066714279f,   0.071049749f,   0.075666962f,   0.080584227f,
+  0.085821044f,   0.091398179f,   0.097337747f,   0.10366330f,
+  0.11039993f,    0.11757434f,    0.12521498f,    0.13335215f,
+  0.14201813f,    0.15124727f,    0.16107617f,    0.17154380f,
+  0.18269168f,    0.19456402f,    0.20720788f,    0.22067342f,
+  0.23501402f,    0.25028656f,    0.26655159f,    0.28387361f,
+  0.30232132f,    0.32196786f,    0.34289114f,    0.36517414f,
+  0.38890521f,    0.41417847f,    0.44109412f,    0.46975890f,
+  0.50028648f,    0.53279791f,    0.56742212f,    0.60429640f,
+  0.64356699f,    0.68538959f,    0.72993007f,    0.77736504f,
   0.82788260f,    0.88168307f,    0.9389798f,     1.0f
 };
 
@@ -20426,7 +20426,7 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
   done:
    CHECK(f);
    #ifndef STB_VORBIS_DIVIDES_IN_RESIDUE
-   temp_free(f,part_classdata);
+   (void)temp_free(f,part_classdata);
    #else
    temp_free(f,classifications);
    #endif
@@ -20518,11 +20518,11 @@ void inverse_mdct_slow(float *buffer, int n, vorb *f, int blocktype)
 #if LIBVORBIS_MDCT
 // directly call the vorbis MDCT using an interface documented
 // by Jeff Roberts... useful for performance comparison
-typedef struct 
+typedef struct
 {
   int n;
   int log2n;
-  
+
   float *trig;
   int   *bitrev;
 
@@ -20541,7 +20541,7 @@ void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
    if (M1.n == n) M = &M1;
    else if (M2.n == n) M = &M2;
    else if (M1.n == 0) { mdct_init(&M1, n); M = &M1; }
-   else { 
+   else {
       if (M2.n) __asm int 3;
       mdct_init(&M2, n);
       M = &M2;
@@ -20954,7 +20954,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
          d1[0] = u[k4+1];
          d0[1] = u[k4+2];
          d0[0] = u[k4+3];
-         
+
          d0 -= 4;
          d1 -= 4;
          bitrev += 2;
@@ -21035,7 +21035,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
          float p0,p1,p2,p3;
 
          p3 =  e[6]*B[7] - e[7]*B[6];
-         p2 = -e[6]*B[6] - e[7]*B[7]; 
+         p2 = -e[6]*B[6] - e[7]*B[7];
 
          d0[0] =   p3;
          d1[3] = - p3;
@@ -21043,7 +21043,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
          d3[3] =   p2;
 
          p1 =  e[4]*B[5] - e[5]*B[4];
-         p0 = -e[4]*B[4] - e[5]*B[5]; 
+         p0 = -e[4]*B[4] - e[5]*B[5];
 
          d0[1] =   p1;
          d1[2] = - p1;
@@ -21051,7 +21051,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
          d3[2] =   p0;
 
          p3 =  e[2]*B[3] - e[3]*B[2];
-         p2 = -e[2]*B[2] - e[3]*B[3]; 
+         p2 = -e[2]*B[2] - e[3]*B[3];
 
          d0[2] =   p3;
          d1[1] = - p3;
@@ -21059,7 +21059,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
          d3[1] =   p2;
 
          p1 =  e[0]*B[1] - e[1]*B[0];
-         p0 = -e[0]*B[0] - e[1]*B[1]; 
+         p0 = -e[0]*B[0] - e[1]*B[1];
 
          d0[3] =   p1;
          d1[0] = - p1;
@@ -21075,7 +21075,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
       }
    }
 
-   temp_free(f,buf2);
+   (void)temp_free(f,buf2);
    temp_alloc_restore(f,save_point);
 }
 
@@ -21693,7 +21693,7 @@ static int is_whole_packet_present(stb_vorbis *f, int end_page)
       first = FALSE;
    }
    for (; s == -1;) {
-      uint8 *q; 
+      uint8 *q;
       int n;
 
       // check that we have the page header ready
@@ -22046,7 +22046,7 @@ static int start_decoder(vorb *f)
       } else {
          stbv__floor_ordering p[31*8+2];
          Floor1 *g = &f->floor_config[i].floor1;
-         int max_class = -1; 
+         int max_class = -1;
          g->partitions = get_bits(f, 5);
          for (j=0; j < g->partitions; ++j) {
             g->partition_class_list[j] = get_bits(f, 4);
@@ -22156,7 +22156,7 @@ static int start_decoder(vorb *f)
    if (f->mapping == NULL) return error(f, VORBIS_outofmem);
    memset(f->mapping, 0, f->mapping_count * sizeof(*f->mapping));
    for (i=0; i < f->mapping_count; ++i) {
-      Mapping *m = f->mapping + i;      
+      Mapping *m = f->mapping + i;
       int mapping_type = get_bits(f,16);
       if (mapping_type != 0) return error(f, VORBIS_invalid_setup);
       m->chan = (MappingChannel *) setup_malloc(f, f->channels * sizeof(*m->chan));
@@ -23141,7 +23141,7 @@ stb_vorbis * stb_vorbis_open_file(FILE *file, int close_on_free, int *error, con
 stb_vorbis * stb_vorbis_open_filename(const char *filename, int *error, const stb_vorbis_alloc *alloc)
 {
    FILE *f = fopen(filename, "rb");
-   if (f) 
+   if (f)
       return stb_vorbis_open_file(f, TRUE, error, alloc);
    if (error) *error = VORBIS_file_open_failure;
    return NULL;
@@ -23204,7 +23204,7 @@ static int8 channel_position[7][6] =
    #define MAGIC(SHIFT) (1.5f * (1 << (23-SHIFT)) + 0.5f/(1 << SHIFT))
    #define ADDEND(SHIFT) (((150-SHIFT) << 23) + (1 << 22))
    #define FAST_SCALED_FLOAT_TO_INT(temp,x,s) (temp.f = (x) + MAGIC(s), temp.i - ADDEND(s))
-   #define check_endianness()  
+   #define check_endianness()
 #else
    #define FAST_SCALED_FLOAT_TO_INT(temp,x,s) ((int) ((x) * (1 << (s))))
    #define check_endianness()
@@ -23530,13 +23530,13 @@ int stb_vorbis_get_samples_float(stb_vorbis *f, int channels, float **buffer, in
 
 /* Version history
     1.12    - 2017-11-21 - limit residue begin/end to blocksize/2 to avoid large temp allocs in bad/corrupt files
-    1.11    - 2017-07-23 - fix MinGW compilation 
+    1.11    - 2017-07-23 - fix MinGW compilation
     1.10    - 2017-03-03 - more robust seeking; fix negative ilog(); clear error in open_memory
     1.09    - 2016-04-04 - back out 'avoid discarding last frame' fix from previous version
     1.08    - 2016-04-02 - fixed multiple warnings; fix setup memory leaks;
                            avoid discarding last frame of audio data
     1.07    - 2015-01-16 - fixed some warnings, fix mingw, const-correct API
-                           some more crash fixes when out of memory or with corrupt files 
+                           some more crash fixes when out of memory or with corrupt files
     1.06    - 2015-08-31 - full, correct support for seeking API (Dougall Johnson)
                            some crash fixes when out of memory or with corrupt files
     1.05    - 2015-04-19 - don't define __forceinline if it's redundant
@@ -23592,38 +23592,38 @@ This software is available under 2 licenses -- choose whichever you prefer.
 ------------------------------------------------------------------------------
 ALTERNATIVE A - MIT License
 Copyright (c) 2017 Sean Barrett
-Permission is hereby granted, free of charge, to any person obtaining a copy of 
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
-of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all 
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ------------------------------------------------------------------------------
 ALTERNATIVE B - Public Domain (www.unlicense.org)
 This is free and unencumbered software released into the public domain.
-Anyone is free to copy, modify, publish, use, compile, sell, or distribute this 
-software, either in source code form or as a compiled binary, for any purpose, 
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
 commercial or non-commercial, and by any means.
-In jurisdictions that recognize copyright laws, the author or authors of this 
-software dedicate any and all copyright interest in the software to the public 
-domain. We make this dedication for the benefit of the public at large and to 
-the detriment of our heirs and successors. We intend this dedication to be an 
-overt act of relinquishment in perpetuity of all present and future rights to 
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
 this software under copyright law.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 */
@@ -23660,13 +23660,13 @@ freely, subject to the following restrictions:
 See soloud_file_hack_on.h
 */
 
-#undef FILE  
-#undef fgetc 
-#undef fread 
-#undef fseek 
-#undef ftell 
+#undef FILE
+#undef fgetc
+#undef fread
+#undef fseek
+#undef ftell
 #undef fclose
-#undef fopen 
+#undef fopen
 
 
 // file: patch_alsa.cpp
@@ -23751,21 +23751,21 @@ namespace SoLoud
 
     static void alsaThread(void *aParam)
     {
-        
+
         ALSAData *data = static_cast<ALSAData*>(aParam);
-        while (!data->audioProcessingDone) 
-        {            
-            data->soloud->mix(data->buffer, data->samples);            
+        while (!data->audioProcessingDone)
+        {
+            data->soloud->mix(data->buffer, data->samples);
             for (int i=0;i<data->samples*data->channels;++i)
             {
-                data->sampleBuffer[i] = static_cast<short>(floor(data->buffer[i] 
+                data->sampleBuffer[i] = static_cast<short>(floor(data->buffer[i]
                                                           * static_cast<float>(0x7fff)));
             }
             if (snd_pcm_writei(data->alsaDeviceHandle, data->sampleBuffer, data->samples) == -EPIPE)
                 snd_pcm_prepare(data->alsaDeviceHandle);
-                
+
         }
-        
+
     }
 
     static void alsaCleanup(Soloud *aSoloud)
@@ -23812,9 +23812,9 @@ namespace SoLoud
         {
             return UNKNOWN_ERROR;
         }
-        
+
         data->alsaDeviceHandle = handle;
-        
+
         snd_pcm_hw_params_t *params;
         snd_pcm_hw_params_alloca(&params);
         snd_pcm_hw_params_any(handle, params);
@@ -23823,7 +23823,7 @@ namespace SoLoud
         snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16_LE);
         snd_pcm_hw_params_set_channels(handle, params, 2);
         snd_pcm_hw_params_set_buffer_size(handle, params, aBuffer);
-        
+
         unsigned int val = aSamplerate;
         int dir = 0;
         rc = snd_pcm_hw_params_set_rate_near(handle, params, &val, &dir);
@@ -23833,7 +23833,7 @@ namespace SoLoud
         }
 
         rc = snd_pcm_hw_params(handle, params);
-        if (rc < 0) 
+        if (rc < 0)
         {
             return UNKNOWN_ERROR;
         }
@@ -23903,7 +23903,7 @@ namespace SoLoud
 	}
 
 	unsigned int WavInstance::getAudio(float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize)
-	{		
+	{
 		if (mParent->mData == NULL)
 			return 0;
 
@@ -23943,7 +23943,7 @@ namespace SoLoud
 		mData = NULL;
 		mSampleCount = 0;
 	}
-	
+
 	Wav::~Wav()
 	{
 		stop();
@@ -23994,7 +23994,7 @@ namespace SoLoud
 	}
 
 	result Wav::loadogg(MemoryFile *aReader)
-	{	
+	{
 		int e = 0;
 		stb_vorbis *vorbis = 0;
 		vorbis = stb_vorbis_open_memory(aReader->getMemPtr(), aReader->length(), &e, 0);
@@ -24060,7 +24060,7 @@ namespace SoLoud
 		mBaseSamplerate = (float)decoder.sampleRate;
 		mSampleCount = (unsigned int)samples;
 		mChannels = decoder.channels;
-		drmp3_seek_to_pcm_frame(&decoder, 0); 
+		drmp3_seek_to_pcm_frame(&decoder, 0);
 
 		unsigned int i, j, k;
 		for (i = 0; i<mSampleCount; i += 512)
@@ -24068,9 +24068,9 @@ namespace SoLoud
 			float tmp[512 * MAX_CHANNELS];
 			unsigned int blockSize = (mSampleCount - i) > 512 ? 512 : mSampleCount - i;
 			drmp3_read_pcm_frames_f32(&decoder, blockSize, tmp);
-			for (j = 0; j < blockSize; j++) 
+			for (j = 0; j < blockSize; j++)
 			{
-				for (k = 0; k < decoder.channels; k++) 
+				for (k = 0; k < decoder.channels; k++)
 				{
 					mData[k * mSampleCount + i + j] = tmp[j * decoder.channels + k];
 				}
@@ -24130,12 +24130,12 @@ namespace SoLoud
 		mSampleCount = 0;
 		mChannels = 1;
         int tag = aReader->read32();
-		if (tag == MAKEDWORD('O','g','g','S')) 
+		if (tag == MAKEDWORD('O','g','g','S'))
         {
 			return loadogg(aReader);
 
-		} 
-        else if (tag == MAKEDWORD('R','I','F','F')) 
+		}
+        else if (tag == MAKEDWORD('R','I','F','F'))
         {
 			return loadwav(aReader);
 		}
@@ -24208,7 +24208,7 @@ namespace SoLoud
 			return INVALID_PARAMETER;
 		stop();
 		delete[] mData;
-		mData = new float[aLength];	
+		mData = new float[aLength];
 		mSampleCount = aLength / aChannels;
 		mChannels = aChannels;
 		mBaseSamplerate = aSamplerate;
@@ -24370,7 +24370,7 @@ namespace SoLoud
 		{
 			return;
 		}
-		
+
 		if (mFile)
 		{
 			if (mParent->mFiletype == WAVSTREAM_WAV)
@@ -24470,7 +24470,7 @@ namespace SoLoud
 	}
 
 	static int getOggData(float **aOggOutputs, float *aBuffer, int aSamples, int aPitch, int aFrameSize, int aFrameOffset, int aChannels)
-	{			
+	{
 		if (aFrameSize <= 0)
 			return 0;
 
@@ -24488,10 +24488,10 @@ namespace SoLoud
 		return samples;
 	}
 
-	
+
 
 	unsigned int WavStreamInstance::getAudio(float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize)
-	{			
+	{
 		unsigned int offset = 0;
 		if (mFile == NULL)
 			return 0;
@@ -24645,14 +24645,14 @@ namespace SoLoud
 		mMemFile = 0;
 		mStreamFile = 0;
 	}
-	
+
 	WavStream::~WavStream()
 	{
 		stop();
 		delete[] mFilename;
 		delete mMemFile;
 	}
-	
+
 #define MAKEDWORD(a,b,c,d) (((d) << 24) | ((c) << 16) | ((b) << 8) | (a))
 
 	result WavStream::loadwav(File * fp)
@@ -24708,7 +24708,7 @@ namespace SoLoud
 
 		if (decoder == NULL)
 			return FILE_LOAD_FAILED;
-		
+
 		mChannels = decoder->channels;
 		if (mChannels > MAX_CHANNELS)
 		{
@@ -24758,12 +24758,12 @@ namespace SoLoud
 		int res = fp.open(aFilename);
 		if (res != SO_NO_ERROR)
 			return res;
-		
+
 		int len = (int)strlen(aFilename);
-		mFilename = new char[len+1];		
+		mFilename = new char[len+1];
 		memcpy(mFilename, aFilename, len);
 		mFilename[len] = 0;
-		
+
 		res = parse(&fp);
 
 		if (res != SO_NO_ERROR)
@@ -24972,7 +24972,7 @@ namespace SoLoud
 		AudioQueueStop(audioQueue, true);
 		AudioQueueDispose(audioQueue, false);
 	}
-	
+
 	static void coreaudio_mutex_lock(void *mutex)
 	{
 		Thread::lockMutex(mutex);
@@ -25039,7 +25039,7 @@ namespace SoLoud
 
         aSoloud->mBackendString = "CoreAudio";
 		return 0;
-	}	
+	}
 };
 #endif
 // file: soloud/src/backend/null\soloud_null.cpp
@@ -25199,7 +25199,7 @@ namespace SoLoud
 		dll_alc_MakeContextCurrent(NULL);
 		dll_alc_DestroyContext(context);
 		dll_alc_CloseDevice(device);
-		
+
 		free(bufferdata);
 
 		device = NULL;
@@ -25211,7 +25211,7 @@ namespace SoLoud
 		buffersize = 0;
 		bufferdata = 0;
 	}
-	
+
 	static void openal_mutex_lock(void * mutex)
 	{
 		Thread::lockMutex(mutex);
@@ -25229,7 +25229,7 @@ namespace SoLoud
 		ALint state;
 		dll_al_GetSourcei(source, AL_BUFFERS_PROCESSED, &buffersProcessed);
 
-		while (buffersProcessed--) 
+		while (buffersProcessed--)
 		{
 			aSoloud->mixSigned16(bufferdata,buffersize);
 
@@ -25293,7 +25293,7 @@ namespace SoLoud
 
         aSoloud->mBackendString = "OpenAL";
 		return 0;
-	}	
+	}
 };
 #endif
 // file: soloud/src/backend/openal\soloud_openal_dll.c
@@ -25638,12 +25638,12 @@ namespace SoLoud
 namespace SoLoud
 {
     static const int OSS_DEVICE_COUNT = 4;
-    static const char *OSS_DEVICES[OSS_DEVICE_COUNT] = 
-    { 
-        "/dev/dsp", 
-        "/dev/dsp0.0", 
-        "/dev/dsp1.0", 
-        "/dev/dsp2.0" 
+    static const char *OSS_DEVICES[OSS_DEVICE_COUNT] =
+    {
+        "/dev/dsp",
+        "/dev/dsp0.0",
+        "/dev/dsp1.0",
+        "/dev/dsp2.0"
     };
 
     struct OSSData
@@ -25661,15 +25661,15 @@ namespace SoLoud
     static void ossThread(void *aParam)
     {
         OSSData *data = static_cast<OSSData*>(aParam);
-        while (!data->audioProcessingDone) 
+        while (!data->audioProcessingDone)
         {
             data->soloud->mix(data->buffer, data->samples);
             for (int i=0;i<data->samples*data->channels;++i)
             {
-                data->sampleBuffer[i] = static_cast<short>(floor(data->buffer[i] 
+                data->sampleBuffer[i] = static_cast<short>(floor(data->buffer[i]
                                                                  * static_cast<float>(0x7fff)));
             }
-            write(data->ossDeviceHandle, data->sampleBuffer, 
+            write(data->ossDeviceHandle, data->sampleBuffer,
                   sizeof(short)*data->samples*data->channels);
         }
     }
@@ -25687,7 +25687,7 @@ namespace SoLoud
             Thread::wait(data->threadHandle);
             Thread::release(data->threadHandle);
         }
-        ioctl(data->ossDeviceHandle, SNDCTL_DSP_RESET, 0);       
+        ioctl(data->ossDeviceHandle, SNDCTL_DSP_RESET, 0);
         if (0 != data->sampleBuffer)
         {
             delete[] data->sampleBuffer;
@@ -25728,7 +25728,7 @@ namespace SoLoud
         if (-1 == fcntl(data->ossDeviceHandle, F_SETFL, flags))
         {
             return UNKNOWN_ERROR;
-        }        
+        }
         int format = AFMT_S16_NE;
         if (-1 == ioctl(data->ossDeviceHandle, SNDCTL_DSP_SETFMT, &format))
         {
@@ -25901,7 +25901,7 @@ namespace SoLoud
         aSoloud->mBackendString = "SDL2 (dynamic)";
 		return 0;
 	}
-	
+
 };
 #endif
 // file: soloud/src/backend/sdl\soloud_sdl2_dll.c
@@ -26179,7 +26179,7 @@ namespace SoLoud
 		SDL_PauseAudioDevice(gAudioDeviceID, 0);
 		aSoloud->mBackendString = "SDL2 (static)";
 		return 0;
-	}	
+	}
 };
 #endif
 // file: soloud/src/backend/wasapi\soloud_wasapi.cpp
@@ -26265,7 +26265,7 @@ namespace SoLoud
         WASAPIData *data = static_cast<WASAPIData*>(aParam);
         wasapiSubmitBuffer(data, data->bufferFrames);
         data->audioClient->Start();
-        while (WAIT_OBJECT_0 != WaitForSingleObject(data->audioProcessingDoneEvent, 0)) 
+        while (WAIT_OBJECT_0 != WaitForSingleObject(data->audioProcessingDoneEvent, 0))
         {
             WaitForSingleObject(data->bufferEndEvent, INFINITE);
             UINT32 padding = 0;
@@ -26315,7 +26315,7 @@ namespace SoLoud
         ZeroMemory(data, sizeof(WASAPIData));
         aSoloud->mBackendData = data;
         aSoloud->mBackendCleanupFunc = wasapiCleanup;
-		
+
         data->bufferEndEvent = CreateEvent(0, FALSE, FALSE, 0);
         if (0 == data->bufferEndEvent)
         {
@@ -26326,19 +26326,19 @@ namespace SoLoud
         {
             return UNKNOWN_ERROR;
         }
-        if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), 0, CLSCTX_ALL, 
-                   __uuidof(IMMDeviceEnumerator), 
-                   reinterpret_cast<void**>(&data->deviceEnumerator)))) 
+        if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), 0, CLSCTX_ALL,
+                   __uuidof(IMMDeviceEnumerator),
+                   reinterpret_cast<void**>(&data->deviceEnumerator))))
         {
             return UNKNOWN_ERROR;
         }
-        if (FAILED(data->deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, 
-                                                                   &data->device))) 
+        if (FAILED(data->deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole,
+                                                                   &data->device)))
         {
             return UNKNOWN_ERROR;
         }
-        if (FAILED(data->device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, 0, 
-                                          reinterpret_cast<void**>(&data->audioClient)))) 
+        if (FAILED(data->device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, 0,
+                                          reinterpret_cast<void**>(&data->audioClient))))
         {
             return UNKNOWN_ERROR;
         }
@@ -26355,7 +26355,7 @@ namespace SoLoud
 		HRESULT res = data->audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
 			AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
 			dur, 0, &format, 0);
-		if (FAILED(res)) 
+		if (FAILED(res))
         {
             return UNKNOWN_ERROR;
         }
@@ -26364,8 +26364,8 @@ namespace SoLoud
         {
             return UNKNOWN_ERROR;
         }
-        if (FAILED(data->audioClient->GetService(__uuidof(IAudioRenderClient), 
-                                                 reinterpret_cast<void**>(&data->renderClient)))) 
+        if (FAILED(data->audioClient->GetService(__uuidof(IAudioRenderClient),
+                                                 reinterpret_cast<void**>(&data->renderClient))))
         {
             return UNKNOWN_ERROR;
         }
@@ -26453,20 +26453,20 @@ namespace SoLoud
     static void winMMThread(LPVOID aParam)
     {
         SoLoudWinMMData *data = static_cast<SoLoudWinMMData*>(aParam);
-        while (WAIT_OBJECT_0 != WaitForSingleObject(data->audioProcessingDoneEvent, 0)) 
+        while (WAIT_OBJECT_0 != WaitForSingleObject(data->audioProcessingDoneEvent, 0))
         {
-            for (int i=0;i<BUFFER_COUNT;++i) 
+            for (int i=0;i<BUFFER_COUNT;++i)
             {
-                if (0 != (data->header[i].dwFlags & WHDR_INQUEUE)) 
+                if (0 != (data->header[i].dwFlags & WHDR_INQUEUE))
                 {
                     continue;
                 }
                 short *tgtBuf = data->sampleBuffer[i];
-				
+
 				data->soloud->mixSigned16(tgtBuf, data->samples);
 
-				if (MMSYSERR_NOERROR != waveOutWrite(data->waveOut, &data->header[i], 
-                                                     sizeof(WAVEHDR))) 
+				if (MMSYSERR_NOERROR != waveOutWrite(data->waveOut, &data->header[i],
+                                                     sizeof(WAVEHDR)))
                 {
                     return;
                 }
@@ -26490,7 +26490,7 @@ namespace SoLoud
 			Thread::release(data->threadHandle);
 		}
         waveOutReset(data->waveOut);
-        for (int i=0;i<BUFFER_COUNT;++i) 
+        for (int i=0;i<BUFFER_COUNT;++i)
         {
             waveOutUnprepareHeader(data->waveOut, &data->header[i], sizeof(WAVEHDR));
             if (0 != data->sampleBuffer[i])
@@ -26531,20 +26531,20 @@ namespace SoLoud
         format.wBitsPerSample = sizeof(short)*8;
         format.nBlockAlign = (format.nChannels*format.wBitsPerSample)/8;
         format.nAvgBytesPerSec = format.nSamplesPerSec*format.nBlockAlign;
-        if (MMSYSERR_NOERROR != waveOutOpen(&data->waveOut, WAVE_MAPPER, &format, 
-                            reinterpret_cast<DWORD_PTR>(data->bufferEndEvent), 0, CALLBACK_EVENT)) 
+        if (MMSYSERR_NOERROR != waveOutOpen(&data->waveOut, WAVE_MAPPER, &format,
+                            reinterpret_cast<DWORD_PTR>(data->bufferEndEvent), 0, CALLBACK_EVENT))
         {
             return UNKNOWN_ERROR;
         }
         data->buffer.init(data->samples*format.nChannels);
-        for (int i=0;i<BUFFER_COUNT;++i) 
+        for (int i=0;i<BUFFER_COUNT;++i)
         {
             data->sampleBuffer[i] = new short[data->samples*format.nChannels];
             ZeroMemory(&data->header[i], sizeof(WAVEHDR));
             data->header[i].dwBufferLength = data->samples*sizeof(short)*format.nChannels;
             data->header[i].lpData = reinterpret_cast<LPSTR>(data->sampleBuffer[i]);
-            if (MMSYSERR_NOERROR != waveOutPrepareHeader(data->waveOut, &data->header[i], 
-                                                         sizeof(WAVEHDR))) 
+            if (MMSYSERR_NOERROR != waveOutPrepareHeader(data->waveOut, &data->header[i],
+                                                         sizeof(WAVEHDR)))
             {
                 return UNKNOWN_ERROR;
             }
@@ -26632,7 +26632,7 @@ namespace SoLoud
     class VoiceCallback : public IXAudio2VoiceCallback
     {
     public:
-        VoiceCallback(HANDLE aBufferEndEvent) 
+        VoiceCallback(HANDLE aBufferEndEvent)
             : IXAudio2VoiceCallback(), mBufferEndEvent(aBufferEndEvent) {}
         virtual ~VoiceCallback() {}
 
@@ -26652,7 +26652,7 @@ namespace SoLoud
 
         // Called when this voice has just finished processing a buffer.
         // The buffer can now be reused or destroyed.
-        void __stdcall OnBufferEnd(void *aBufferContext) 
+        void __stdcall OnBufferEnd(void *aBufferContext)
         {
             SetEvent(mBufferEndEvent);
         }
@@ -26674,11 +26674,11 @@ namespace SoLoud
     {
         XAudio2Data *data = static_cast<XAudio2Data*>(aParam);
         int bufferIndex = 0;
-        while (WAIT_OBJECT_0 != WaitForSingleObject(data->audioProcessingDoneEvent, 0)) 
+        while (WAIT_OBJECT_0 != WaitForSingleObject(data->audioProcessingDoneEvent, 0))
         {
             XAUDIO2_VOICE_STATE state;
             data->sourceVoice->GetState(&state);
-            while (state.BuffersQueued < BUFFER_COUNT) 
+            while (state.BuffersQueued < BUFFER_COUNT)
             {
                 data->soloud->mix(data->buffer[bufferIndex], data->samples);
                 XAUDIO2_BUFFER info = {0};
@@ -26707,7 +26707,7 @@ namespace SoLoud
         SetEvent(data->bufferEndEvent);
         Thread::wait(data->thread);
         Thread::release(data->thread);
-        if (0 != data->sourceVoice) 
+        if (0 != data->sourceVoice)
         {
             data->sourceVoice->Stop();
             data->sourceVoice->FlushSourceBuffers();
@@ -26732,7 +26732,7 @@ namespace SoLoud
         {
             data->xaudio2->Release();
         }
-        for (int i=0;i<BUFFER_COUNT;++i) 
+        for (int i=0;i<BUFFER_COUNT;++i)
         {
             if (0 != data->buffer[i])
             {
@@ -26778,14 +26778,14 @@ namespace SoLoud
         {
             return UNKNOWN_ERROR;
         }
-        if (FAILED(data->xaudio2->CreateMasteringVoice(&data->masteringVoice, 
-                                                       format.nChannels, aSamplerate))) 
+        if (FAILED(data->xaudio2->CreateMasteringVoice(&data->masteringVoice,
+                                                       format.nChannels, aSamplerate)))
         {
             return UNKNOWN_ERROR;
         }
         data->voiceCb = new VoiceCallback(data->bufferEndEvent);
-        if (FAILED(data->xaudio2->CreateSourceVoice(&data->sourceVoice, 
-                   &format, XAUDIO2_VOICE_NOSRC|XAUDIO2_VOICE_NOPITCH, 2.f, data->voiceCb))) 
+        if (FAILED(data->xaudio2->CreateSourceVoice(&data->sourceVoice,
+                   &format, XAUDIO2_VOICE_NOSRC|XAUDIO2_VOICE_NOPITCH, 2.f, data->voiceCb)))
         {
             return UNKNOWN_ERROR;
         }
@@ -26924,7 +26924,7 @@ namespace SoLoud
 		mAudioThreadMutex = NULL;
 		mPostClipScaler = 0;
 		mBackendCleanupFunc = NULL;
-		mChannels = 2;		
+		mChannels = 2;
 		mStreamTime = 0;
 		mLastClockedTime = 0;
 		mAudioSourceID = 1;
@@ -26965,10 +26965,10 @@ namespace SoLoud
 		m3dAt[2] = -1;
 		m3dUp[0] = 0;
 		m3dUp[1] = 1;
-		m3dUp[2] = 0;		
+		m3dUp[2] = 0;
 		m3dVelocity[0] = 0;
 		m3dVelocity[1] = 0;
-		m3dVelocity[2] = 0;		
+		m3dVelocity[2] = 0;
 		m3dSoundSpeed = 343.3f;
 		mMaxActiveVoices = 16;
 		mHighestVoice = 0;
@@ -27006,7 +27006,7 @@ namespace SoLoud
 	}
 
 	result Soloud::init(unsigned int aFlags, unsigned int aBackend, unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aChannels)
-	{		
+	{
 		if (aBackend >= BACKEND_MAX || aChannels == 3 || aChannels == 5 || aChannels == 7 || aChannels > MAX_CHANNELS)
 			return INVALID_PARAMETER;
 
@@ -27026,7 +27026,7 @@ namespace SoLoud
 
 #if defined(WITH_SDL1_STATIC)
 		if (!inited &&
-			(aBackend == Soloud::SDL1 || 
+			(aBackend == Soloud::SDL1 ||
 			aBackend == Soloud::AUTO))
 		{
 			if (aBufferSize == Soloud::AUTO) buffersize = 2048;
@@ -27039,7 +27039,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27083,7 +27083,7 @@ namespace SoLoud
 
 #if defined(WITH_SDL1)
 		if (!inited &&
-			(aBackend == Soloud::SDL1 || 
+			(aBackend == Soloud::SDL1 ||
 			aBackend == Soloud::AUTO))
 		{
 			if (aBufferSize == Soloud::AUTO) buffersize = 2048;
@@ -27096,7 +27096,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27115,7 +27115,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27134,7 +27134,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27153,7 +27153,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27173,7 +27173,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27192,7 +27192,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27211,7 +27211,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27230,7 +27230,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27249,7 +27249,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27268,13 +27268,13 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
 #if defined(WITH_VITA_HOMEBREW)
 		if (!inited &&
-			(aBackend == Soloud::VITA_HOMEBREW || 
+			(aBackend == Soloud::VITA_HOMEBREW ||
 			aBackend == Soloud::AUTO))
 		{
 			int ret = vita_homebrew_init(this, aFlags, samplerate, buffersize, aChannels);
@@ -27285,7 +27285,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0 && aBackend != Soloud::AUTO)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27303,7 +27303,7 @@ namespace SoLoud
 			}
 
 			if (ret != 0)
-				return ret;			
+				return ret;
 		}
 #endif
 
@@ -27315,7 +27315,7 @@ namespace SoLoud
 	}
 
 	void Soloud::postinit(unsigned int aSamplerate, unsigned int aBufferSize, unsigned int aFlags, unsigned int aChannels)
-	{		
+	{
 		mGlobalVolume = 1;
 		mChannels = aChannels;
 		mSamplerate = aSamplerate;
@@ -27374,7 +27374,7 @@ namespace SoLoud
 			m3dSpeakerPosition[1 * 3 + 1] = 0;
 			m3dSpeakerPosition[1 * 3 + 2] = 1;
 
-			// center and subwoofer. 
+			// center and subwoofer.
 			m3dSpeakerPosition[2 * 3 + 0] = 0;
 			m3dSpeakerPosition[2 * 3 + 1] = 0;
 			m3dSpeakerPosition[2 * 3 + 2] = 1;
@@ -27400,7 +27400,7 @@ namespace SoLoud
 			m3dSpeakerPosition[1 * 3 + 1] = 0;
 			m3dSpeakerPosition[1 * 3 + 2] = 1;
 
-			// center and subwoofer. 
+			// center and subwoofer.
 			m3dSpeakerPosition[2 * 3 + 0] = 0;
 			m3dSpeakerPosition[2 * 3 + 1] = 0;
 			m3dSpeakerPosition[2 * 3 + 2] = 1;
@@ -27579,7 +27579,7 @@ namespace SoLoud
 			for (j = 0; j < mChannels; j++)
 			{
 				__m128 vol = _mm_load_ps(volumes.mData);
-				for (i = 0; i < samplequads; i++) 
+				for (i = 0; i < samplequads; i++)
 				{
 					//float f1 = aBuffer.mData[c] * v; c++; v += vd;
 					__m128 f = _mm_load_ps(&aBuffer.mData[c]);
@@ -27640,7 +27640,7 @@ namespace SoLoud
 			for (j = 0; j < mChannels; j++)
 			{
 				v = aVolume0;
-				for (i = 0; i < samplequads; i++) 
+				for (i = 0; i < samplequads; i++)
 				{
 					float f1 = aBuffer.mData[c] * v; c++; v += vd;
 					float f2 = aBuffer.mData[c] * v; c++; v += vd;
@@ -27667,11 +27667,11 @@ namespace SoLoud
 #define FIXPOINT_FRAC_MASK ((1 << FIXPOINT_FRAC_BITS) - 1)
 
 	void resample(float *aSrc,
-		          float *aSrc1, 
-				  float *aDst, 
+		          float *aSrc1,
+				  float *aDst,
 				  int aSrcOffset,
 				  int aDstSampleCount,
-				  float aSrcSamplerate, 
+				  float aSrcSamplerate,
 				  float aDstSamplerate,
 				  int aStepFixed)
 	{
@@ -28163,7 +28163,7 @@ namespace SoLoud
 			}
 		}
 
-		// Accumulate sound sources		
+		// Accumulate sound sources
 		for (i = 0; i < mActiveVoiceCount; i++)
 		{
 			AudioSourceInstance *voice = mVoice[mActiveVoice[i]];
@@ -28179,7 +28179,7 @@ namespace SoLoud
 					step = 0;
 				unsigned int step_fixed = (int)floor(step * FIXPOINT_FRAC_MUL);
 				unsigned int outofs = 0;
-			
+
 				if (voice->mDelaySamples)
 				{
 					if (voice->mDelaySamples > aSamplesToRead)
@@ -28192,13 +28192,13 @@ namespace SoLoud
 						outofs = voice->mDelaySamples;
 						voice->mDelaySamples = 0;
 					}
-					
+
 					// Clear scratch where we're skipping
 					for (j = 0; j < voice->mChannels; j++)
 					{
-						memset(aScratch + j * aBufferSize, 0, sizeof(float) * outofs); 
+						memset(aScratch + j * aBufferSize, 0, sizeof(float) * outofs);
 					}
-				}												
+				}
 
 				while (step_fixed != 0 && outofs < aSamplesToRead)
 				{
@@ -28249,7 +28249,7 @@ namespace SoLoud
 							voice->mSrcOffset -= SAMPLE_GRANULARITY * FIXPOINT_FRAC_MUL;
 						}
 
-					
+
 						// Run the per-stream filters to get our source data
 
 						for (j = 0; j < FILTERS_PER_STREAM; j++)
@@ -28258,7 +28258,7 @@ namespace SoLoud
 							{
 								voice->mFilter[j]->filter(
 									voice->mResampleData[0]->mData,
-									SAMPLE_GRANULARITY, 
+									SAMPLE_GRANULARITY,
 									voice->mChannels,
 									voice->mSamplerate,
 									mStreamTime);
@@ -28299,7 +28299,7 @@ namespace SoLoud
 						{
 							resample(voice->mResampleData[0]->mData + SAMPLE_GRANULARITY * j,
 								voice->mResampleData[1]->mData + SAMPLE_GRANULARITY * j,
-									 aScratch + aBufferSize * j + outofs, 
+									 aScratch + aBufferSize * j + outofs,
 									 voice->mSrcOffset,
 									 writesamples,
 									 voice->mSamplerate,
@@ -28314,7 +28314,7 @@ namespace SoLoud
 					// Move source pointer onwards (writesamples may be zero)
 					voice->mSrcOffset += writesamples * step_fixed;
 				}
-				
+
 				// Handle panning and channel expansion (and/or shrinking)
 				panAndExpand(voice, aBuffer, aSamplesToRead, aBufferSize, aScratch, aChannels);
 
@@ -28542,37 +28542,37 @@ namespace SoLoud
 		int len = candidates - mustlive;
 		unsigned int *data = mActiveVoice + mustlive;
 		int k = mActiveVoiceCount;
-		for (;;) 
-		{                                 
-			for (; left + 1 < len; len++) 
-			{                
-				if (pos == 24) len = stack[pos = 0]; 
+		for (;;)
+		{
+			for (; left + 1 < len; len++)
+			{
+				if (pos == 24) len = stack[pos = 0];
 				int pivot = data[left];
 				float pivotvol = mVoice[pivot]->mOverallVolume;
-				stack[pos++] = len;      
-				for (right = left - 1;;) 
+				stack[pos++] = len;
+				for (right = left - 1;;)
 				{
-					do 
+					do
 					{
 						right++;
-					} 
+					}
 					while (mVoice[data[right]]->mOverallVolume > pivotvol);
 					do
 					{
 						len--;
 					}
 					while (pivotvol > mVoice[data[len]]->mOverallVolume);
-					if (right >= len) break;       
+					if (right >= len) break;
 					int temp = data[right];
 					data[right] = data[len];
 					data[len] = temp;
-				}                        
+				}
 			}
-			if (pos == 0) break;         
+			if (pos == 0) break;
 			if (left >= k) break;
-			left = len;                  
-			len = stack[--pos];          
-		}	
+			left = len;
+			len = stack[--pos];
+		}
 		// TODO: should the rest of the voices be flagged INAUDIBLE?
 		mapResampleBuffers();
 	}
@@ -28625,7 +28625,7 @@ namespace SoLoud
 				mVoice[i]->mStreamPosition += buffertime;
 
 				// TODO: this is actually unstable, because mStreamTime depends on the relative
-				// play speed. 
+				// play speed.
 				if (mVoice[i]->mRelativePlaySpeedFader.mActive > 0)
 				{
 					float speed = mVoice[i]->mRelativePlaySpeedFader.get(mVoice[i]->mStreamTime);
@@ -28680,7 +28680,7 @@ namespace SoLoud
 			mScratchSize = mScratchNeeded;
 			mScratch.init(mScratchSize * MAX_CHANNELS);
 		}
-		
+
 		mixBus(mOutputScratch.mData, aSamples, aSamples, mScratch.mData, 0, (float)mSamplerate, mChannels);
 
 		for (i = 0; i < FILTERS_PER_STREAM; i++)
@@ -28885,7 +28885,7 @@ namespace SoLoud
 		// Default all volumes to 1.0 so sound behind N mix busses isn't super quiet.
 		int i;
 		for (i = 0; i < MAX_CHANNELS; i++)
-			mChannelVolume[i] = 1.0f;		
+			mChannelVolume[i] = 1.0f;
 		mSetVolume = 1.0f;
 		mBaseSamplerate = 44100.0f;
 		mSamplerate = 44100.0f;
@@ -28921,7 +28921,7 @@ namespace SoLoud
 		for (i = 0; i < FILTERS_PER_STREAM; i++)
 		{
 			delete mFilter[i];
-		}		
+		}
 	}
 
 	void AudioSourceInstance::init(AudioSource &aSource, int aPlayIndex)
@@ -28988,15 +28988,15 @@ namespace SoLoud
 	}
 
 
-	AudioSource::AudioSource() 
-	{ 
+	AudioSource::AudioSource()
+	{
 		int i;
 		for (i = 0; i < FILTERS_PER_STREAM; i++)
 		{
 			mFilter[i] = 0;
 		}
-		mFlags = 0; 
-		mBaseSamplerate = 44100; 
+		mFlags = 0;
+		mBaseSamplerate = 44100;
 		mAudioSourceID = 0;
 		mSoloud = 0;
 		mChannels = 1;
@@ -29012,7 +29012,7 @@ namespace SoLoud
 		mLoopPoint = 0;
 	}
 
-	AudioSource::~AudioSource() 
+	AudioSource::~AudioSource()
 	{
 		stop();
 	}
@@ -29182,11 +29182,11 @@ namespace SoLoud
 		mScratchSize = 0;
 		mFlags |= PROTECTED | INAUDIBLE_TICK;
 	}
-	
+
 	unsigned int BusInstance::getAudio(float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize)
 	{
 		int handle = mParent->mChannelHandle;
-		if (handle == 0) 
+		if (handle == 0)
 		{
 			// Avoid reuse of scratch data if this bus hasn't played anything yet
 			unsigned int i;
@@ -29194,14 +29194,14 @@ namespace SoLoud
 				aBuffer[i] = 0;
 			return aSamplesToRead;
 		}
-		
+
 		Soloud *s = mParent->mSoloud;
 		if (s->mScratchNeeded != mScratchSize)
 		{
 			mScratchSize = s->mScratchNeeded;
 			mScratch.init(mScratchSize * MAX_CHANNELS);
 		}
-		
+
 		s->mixBus(aBuffer, aSamplesToRead, aBufferSize, mScratch.mData, handle, mSamplerate, mChannels);
 
 		int i;
@@ -29272,7 +29272,7 @@ namespace SoLoud
 		mInstance = 0;
 		mChannels = 2;
 	}
-	
+
 	BusInstance * Bus::createInstance()
 	{
 		if (mChannelHandle)
@@ -29315,7 +29315,7 @@ namespace SoLoud
 			return 0;
 		}
 		return mSoloud->play(aSound, aVolume, aPan, aPaused, mChannelHandle);
-	}	
+	}
 
 
 	handle Bus::playClocked(time aSoundTime, AudioSource &aSound, float aVolume, float aPan)
@@ -29333,7 +29333,7 @@ namespace SoLoud
 		}
 
 		return mSoloud->playClocked(aSoundTime, aSound, aVolume, aPan, mChannelHandle);
-	}	
+	}
 
 	handle Bus::play3d(AudioSource &aSound, float aPosX, float aPosY, float aPosZ, float aVelX, float aVelY, float aVelZ, float aVolume, bool aPaused)
 	{
@@ -29380,7 +29380,7 @@ namespace SoLoud
 			mSoloud->lockAudioMutex();
 			delete mInstance->mFilter[aFilterId];
 			mInstance->mFilter[aFilterId] = 0;
-		
+
 			if (aFilter)
 			{
 				mInstance->mFilter[aFilterId] = mFilter[aFilterId]->createInstance();
@@ -29408,7 +29408,7 @@ namespace SoLoud
 			mFlags &= ~AudioSource::VISUALIZATION_DATA;
 		}
 	}
-		
+
 	float * Bus::calcFFT()
 	{
 		if (mInstance && mSoloud)
@@ -29519,7 +29519,7 @@ namespace SoLoud
 		{
 			return (float)sqrt(mX * mX + mY * mY + mZ * mZ);
 		}
-		
+
 		void normalize()
 		{
 			float m = mag();
@@ -29532,12 +29532,12 @@ namespace SoLoud
 			mY /= m;
 			mZ /= m;
 		}
-		
+
 		float dot(vec3 a)
 		{
 			return mX * a.mX + mY * a.mY + mZ * a.mZ;
 		}
-		
+
 		vec3 sub(vec3 a)
 		{
 			vec3 r;
@@ -29836,7 +29836,7 @@ namespace SoLoud
 		handle h = play(aSound, aVolume, 0, 1, aBus);
 		lockAudioMutex();
 		int v = getVoiceFromHandle(h);
-		if (v < 0) 
+		if (v < 0)
 		{
 			unlockAudioMutex();
 			return h;
@@ -29871,7 +29871,7 @@ namespace SoLoud
 		}
 
 		updateVoiceVolume(v);
-		
+
 		// Fix initial voice volume ramp up
 		int i;
 		for (i = 0; i < MAX_CHANNELS; i++)
@@ -29906,7 +29906,7 @@ namespace SoLoud
 		handle h = play(aSound, aVolume, 0, 1, aBus);
 		lockAudioMutex();
 		int v = getVoiceFromHandle(h);
-		if (v < 0) 
+		if (v < 0)
 		{
 			unlockAudioMutex();
 			return h;
@@ -29915,7 +29915,7 @@ namespace SoLoud
 		mVoice[v]->mFlags |= AudioSourceInstance::PROCESS_3D;
 		set3dSourceParameters(h, aPosX, aPosY, aPosZ, aVelX, aVelY, aVelZ);
 		time lasttime = mLastClockedTime;
-		if (lasttime == 0) 
+		if (lasttime == 0)
 			mLastClockedTime = aSoundTime;
 		vec3 pos;
 		pos.mX = aPosX;
@@ -29974,7 +29974,7 @@ namespace SoLoud
 	}
 
 
-	
+
 	result Soloud::set3dSoundSpeed(float aSpeed)
 	{
 		if (aSpeed <= 0)
@@ -29983,13 +29983,13 @@ namespace SoLoud
 		return SO_NO_ERROR;
 	}
 
-	
+
 	float Soloud::get3dSoundSpeed()
 	{
 		return m3dSoundSpeed;
 	}
 
-	
+
 	void Soloud::set3dListenerParameters(float aPosX, float aPosY, float aPosZ, float aAtX, float aAtY, float aAtZ, float aUpX, float aUpY, float aUpZ, float aVelocityX, float aVelocityY, float aVelocityZ)
 	{
 		m3dPosition[0] = aPosX;
@@ -30006,7 +30006,7 @@ namespace SoLoud
 		m3dVelocity[2] = aVelocityZ;
 	}
 
-	
+
 	void Soloud::set3dListenerPosition(float aPosX, float aPosY, float aPosZ)
 	{
 		m3dPosition[0] = aPosX;
@@ -30014,7 +30014,7 @@ namespace SoLoud
 		m3dPosition[2] = aPosZ;
 	}
 
-	
+
 	void Soloud::set3dListenerAt(float aAtX, float aAtY, float aAtZ)
 	{
 		m3dAt[0] = aAtX;
@@ -30022,7 +30022,7 @@ namespace SoLoud
 		m3dAt[2] = aAtZ;
 	}
 
-	
+
 	void Soloud::set3dListenerUp(float aUpX, float aUpY, float aUpZ)
 	{
 		m3dUp[0] = aUpX;
@@ -30030,7 +30030,7 @@ namespace SoLoud
 		m3dUp[2] = aUpZ;
 	}
 
-	
+
 	void Soloud::set3dListenerVelocity(float aVelocityX, float aVelocityY, float aVelocityZ)
 	{
 		m3dVelocity[0] = aVelocityX;
@@ -30038,7 +30038,7 @@ namespace SoLoud
 		m3dVelocity[2] = aVelocityZ;
 	}
 
-	
+
 	void Soloud::set3dSourceParameters(handle aVoiceHandle, float aPosX, float aPosY, float aPosZ, float aVelocityX, float aVelocityY, float aVelocityZ)
 	{
 		FOR_ALL_VOICES_PRE_3D
@@ -30051,7 +30051,7 @@ namespace SoLoud
 		FOR_ALL_VOICES_POST_3D
 	}
 
-	
+
 	void Soloud::set3dSourcePosition(handle aVoiceHandle, float aPosX, float aPosY, float aPosZ)
 	{
 		FOR_ALL_VOICES_PRE_3D
@@ -30061,7 +30061,7 @@ namespace SoLoud
 		FOR_ALL_VOICES_POST_3D
 	}
 
-	
+
 	void Soloud::set3dSourceVelocity(handle aVoiceHandle, float aVelocityX, float aVelocityY, float aVelocityZ)
 	{
 		FOR_ALL_VOICES_PRE_3D
@@ -30071,7 +30071,7 @@ namespace SoLoud
 		FOR_ALL_VOICES_POST_3D
 	}
 
-	
+
 	void Soloud::set3dSourceMinMaxDistance(handle aVoiceHandle, float aMinDistance, float aMaxDistance)
 	{
 		FOR_ALL_VOICES_PRE_3D
@@ -30080,7 +30080,7 @@ namespace SoLoud
 		FOR_ALL_VOICES_POST_3D
 	}
 
-	
+
 	void Soloud::set3dSourceAttenuation(handle aVoiceHandle, unsigned int aAttenuationModel, float aAttenuationRolloffFactor)
 	{
 		FOR_ALL_VOICES_PRE_3D
@@ -30089,7 +30089,7 @@ namespace SoLoud
 		FOR_ALL_VOICES_POST_3D
 	}
 
-	
+
 	void Soloud::set3dSourceDopplerFactor(handle aVoiceHandle, float aDopplerFactor)
 	{
 		FOR_ALL_VOICES_PRE_3D
@@ -30144,7 +30144,7 @@ namespace SoLoud
 
 		lockAudioMutex();
 		int ch = findFreeVoice();
-		if (ch < 0) 
+		if (ch < 0)
 		{
 			unlockAudioMutex();
 			delete instance;
@@ -30164,7 +30164,7 @@ namespace SoLoud
 		mPlayIndex++;
 
 		// 20 bits, skip the last one (top bits full = voice group)
-		if (mPlayIndex == 0xfffff) 
+		if (mPlayIndex == 0xfffff)
 		{
 			mPlayIndex = 0;
 		}
@@ -30184,7 +30184,7 @@ namespace SoLoud
 			setVoiceVolume(ch, aVolume);
 		}
 
-		// Fix initial voice volume ramp up		
+		// Fix initial voice volume ramp up
 		int i;
 		for (i = 0; i < MAX_CHANNELS; i++)
 		{
@@ -30192,7 +30192,7 @@ namespace SoLoud
 		}
 
 		setVoiceRelativePlaySpeed(ch, 1);
-		
+
 		for (i = 0; i < FILTERS_PER_STREAM; i++)
 		{
 			if (aSound.mFilter[i])
@@ -30214,7 +30214,7 @@ namespace SoLoud
 		handle h = play(aSound, aVolume, aPan, 1, aBus);
 		lockAudioMutex();
 		time lasttime = mLastClockedTime;
-		if (lasttime == 0) 
+		if (lasttime == 0)
 			mLastClockedTime = aSoundTime;
 		unlockAudioMutex();
 		int samples = 0;
@@ -30259,7 +30259,7 @@ namespace SoLoud
 		if (aSound.mAudioSourceID)
 		{
 			lockAudioMutex();
-			
+
 			int i;
 			for (i = 0; i < (signed)mHighestVoice; i++)
 			{
@@ -30445,7 +30445,7 @@ namespace SoLoud
 			setRelativePlaySpeed(aVoiceHandle, aTo);
 			return;
 		}
-		
+
 		FOR_ALL_VOICES_PRE
 		mVoice[ch]->mRelativePlaySpeedFader.setLFO(aFrom, aTo, aTime, mVoice[ch]->mStreamTime);
 		FOR_ALL_VOICES_POST
@@ -30500,7 +30500,7 @@ namespace SoLoud
 		lockAudioMutex();
 		delete mFilterInstance[aFilterId];
 		mFilterInstance[aFilterId] = 0;
-		
+
 		mFilter[aFilterId] = aFilter;
 		if (aFilter)
 		{
@@ -30517,7 +30517,7 @@ namespace SoLoud
 
 		if (aVoiceHandle == 0)
 		{
-			lockAudioMutex();		
+			lockAudioMutex();
 			if (mFilterInstance[aFilterId])
 			{
 				ret = mFilterInstance[aFilterId]->getFilterParameter(aAttributeId);
@@ -30527,18 +30527,18 @@ namespace SoLoud
 		}
 
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			return ret;
 		}
-		lockAudioMutex();		
+		lockAudioMutex();
 		if (mVoice[ch] &&
 			mVoice[ch]->mFilter[aFilterId])
 		{
 			ret = mVoice[ch]->mFilter[aFilterId]->getFilterParameter(aAttributeId);
 		}
 		unlockAudioMutex();
-		
+
 		return ret;
 	}
 
@@ -30549,7 +30549,7 @@ namespace SoLoud
 
 		if (aVoiceHandle == 0)
 		{
-			lockAudioMutex();		
+			lockAudioMutex();
 			if (mFilterInstance[aFilterId])
 			{
 				mFilterInstance[aFilterId]->setFilterParameter(aAttributeId, aValue);
@@ -30574,7 +30574,7 @@ namespace SoLoud
 
 		if (aVoiceHandle == 0)
 		{
-			lockAudioMutex();		
+			lockAudioMutex();
 			if (mFilterInstance[aFilterId])
 			{
 				mFilterInstance[aFilterId]->fadeFilterParameter(aAttributeId, aTo, aTime, mStreamTime);
@@ -30599,7 +30599,7 @@ namespace SoLoud
 
 		if (aVoiceHandle == 0)
 		{
-			lockAudioMutex();		
+			lockAudioMutex();
 			if (mFilterInstance[aFilterId])
 			{
 				mFilterInstance[aFilterId]->oscillateFilterParameter(aAttributeId, aFrom, aTo, aTime, mStreamTime);
@@ -30677,7 +30677,7 @@ namespace SoLoud
 		handle *h = voiceGroupHandleToArray(aVoiceHandle);
 		if (h != NULL) aVoiceHandle = *h;
 
-		if (aVoiceHandle == 0) 
+		if (aVoiceHandle == 0)
 		{
 			return -1;
 		}
@@ -30689,7 +30689,7 @@ namespace SoLoud
 		{
 			return ch;
 		}
-		return -1;		
+		return -1;
 	}
 
 	unsigned int Soloud::getMaxActiveVoiceCount() const
@@ -30714,7 +30714,7 @@ namespace SoLoud
 		int c = 0;
 		for (i = 0; i < (signed)mHighestVoice; i++)
 		{
-			if (mVoice[i]) 
+			if (mVoice[i])
 			{
 				c++;
 			}
@@ -30730,7 +30730,7 @@ namespace SoLoud
 			return 0;
 
 		lockAudioMutex();
-		if (getVoiceFromHandle(aVoiceHandle) != -1) 
+		if (getVoiceFromHandle(aVoiceHandle) != -1)
 		{
 			unlockAudioMutex();
 			return 1;
@@ -30786,7 +30786,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -30814,7 +30814,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -30828,7 +30828,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -30856,7 +30856,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 1;
@@ -30870,7 +30870,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -30884,7 +30884,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -30898,7 +30898,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -30913,11 +30913,11 @@ namespace SoLoud
 		int i;
 		unsigned int lowest_play_index_value = 0xffffffff;
 		int lowest_play_index = -1;
-		
+
 		// (slowly) drag the highest active voice index down
 		if (mHighestVoice > 0 && mVoice[mHighestVoice - 1] == NULL)
 			mHighestVoice--;
-		
+
 		for (i = 0; i < VOICE_COUNT; i++)
 		{
 			if (mVoice[i] == NULL)
@@ -30928,7 +30928,7 @@ namespace SoLoud
 				}
 				return i;
 			}
-			if (((mVoice[i]->mFlags & AudioSourceInstance::PROTECTED) == 0) && 
+			if (((mVoice[i]->mFlags & AudioSourceInstance::PROTECTED) == 0) &&
 				mVoice[i]->mPlayIndex < lowest_play_index_value)
 			{
 				lowest_play_index_value = mVoice[i]->mPlayIndex;
@@ -30943,7 +30943,7 @@ namespace SoLoud
 	{
 		lockAudioMutex();
 		int ch = getVoiceFromHandle(aVoiceHandle);
-		if (ch == -1) 
+		if (ch == -1)
 		{
 			unlockAudioMutex();
 			return 0;
@@ -31037,7 +31037,7 @@ namespace SoLoud
 	{
 		mGlobalVolumeFader.mActive = 0;
 		mGlobalVolume = aVolume;
-	}		
+	}
 
 	result Soloud::setRelativePlaySpeed(handle aVoiceHandle, float aSpeed)
 	{
@@ -31053,7 +31053,7 @@ namespace SoLoud
 	{
 		FOR_ALL_VOICES_PRE
 			mVoice[ch]->mBaseSamplerate = aSamplerate;
-			updateVoiceRelativePlaySpeed(ch);		
+			updateVoiceRelativePlaySpeed(ch);
 		FOR_ALL_VOICES_POST
 	}
 
@@ -31110,7 +31110,7 @@ namespace SoLoud
 	}
 
 	void Soloud::setPan(handle aVoiceHandle, float aPan)
-	{		
+	{
 		FOR_ALL_VOICES_PRE
 			setVoicePan(ch, aPan);
 		FOR_ALL_VOICES_POST
@@ -31119,8 +31119,8 @@ namespace SoLoud
 	void Soloud::setPanAbsolute(handle aVoiceHandle, float aLVolume, float aRVolume, float aLBVolume, float aRBVolume, float aCVolume, float aSVolume)
 	{
 		FOR_ALL_VOICES_PRE
-			mVoice[ch]->mPanFader.mActive = 0;	
-			mVoice[ch]->mChannelVolume[0] = aLVolume;			
+			mVoice[ch]->mPanFader.mActive = 0;
+			mVoice[ch]->mChannelVolume[0] = aLVolume;
 			mVoice[ch]->mChannelVolume[1] = aRVolume;
 			if (mVoice[ch]->mChannels == 4)
 			{
@@ -31273,7 +31273,7 @@ namespace SoLoud
 				mVoiceGroup[i][1] = 0;
 				unlockAudioMutex();
 				return 0xfffff000 | i;
-			}		
+			}
 		}
 		if (mVoiceGroupCount == 4096)
 		{
@@ -31318,13 +31318,13 @@ namespace SoLoud
 		return 0xfffff000 | i;
 	}
 
-	// Destroy a voice group. 
+	// Destroy a voice group.
 	result Soloud::destroyVoiceGroup(handle aVoiceGroupHandle)
 	{
 		if (!isVoiceGroup(aVoiceGroupHandle))
 			return INVALID_PARAMETER;
 		int c = aVoiceGroupHandle & 0xfff;
-		
+
 		lockAudioMutex();
 		delete[] mVoiceGroup[c];
 		mVoiceGroup[c] = NULL;
@@ -31337,13 +31337,13 @@ namespace SoLoud
 	{
 		if (!isVoiceGroup(aVoiceGroupHandle))
 			return INVALID_PARAMETER;
-		
+
 		// Don't consider adding invalid voice handles as an error, since the voice may just have ended.
 		if (!isValidVoiceHandle(aVoiceHandle))
 			return SO_NO_ERROR;
 
 		trimVoiceGroup(aVoiceGroupHandle);
-		
+
 		int c = aVoiceGroupHandle & 0xfff;
 		unsigned int i;
 
@@ -31361,12 +31361,12 @@ namespace SoLoud
 			{
 				mVoiceGroup[c][i] = aVoiceHandle;
 				mVoiceGroup[c][i + 1] = 0;
-				
+
 				unlockAudioMutex();
 				return SO_NO_ERROR;
 			}
 		}
-		
+
 		// Full group, allocate more memory
 		unsigned int * n = new unsigned int[mVoiceGroup[c][0] * 2 + 1];
 		if (n == NULL)
@@ -31394,8 +31394,8 @@ namespace SoLoud
 		if (c >= mVoiceGroupCount)
 			return 0;
 
-		lockAudioMutex();		
-		bool res = mVoiceGroup[c] != NULL;		
+		lockAudioMutex();
+		bool res = mVoiceGroup[c] != NULL;
 		unlockAudioMutex();
 
 		return res;
@@ -31440,7 +31440,7 @@ namespace SoLoud
 				unlockAudioMutex();
 				return;
 			}
-			
+
 			unlockAudioMutex();
 			while (!isValidVoiceHandle(mVoiceGroup[c][i])) // function locks mutex, so we need to unlock it before the call
 			{
@@ -31452,7 +31452,7 @@ namespace SoLoud
 					if (mVoiceGroup[c][j] == 0)
 						break;
 				}
-				mVoiceGroup[c][mVoiceGroup[c][0] - 1] = 0;				
+				mVoiceGroup[c][mVoiceGroup[c][0] - 1] = 0;
 				if (mVoiceGroup[c][i] == 0)
 				{
 					unlockAudioMutex();
@@ -31704,7 +31704,7 @@ namespace SoLoud
 			}
 			double t = aCurrentTime - mStartTime;
 			return (float)(sin(t * mEndTime) * mDelta + (mFrom + mDelta));
-			
+
 		}
 		if (mStartTime > aCurrentTime)
 		{
@@ -31760,9 +31760,9 @@ freely, subject to the following restrictions:
 namespace fftimpl
 {
 // Based on http://www.kurims.kyoto-u.ac.jp/~ooura/fft.html
-// "Copyright Takuya OOURA, 1996-2001 
-//  You may use, copy, modify and distribute this code for any purpose 
-//  (include commercial use) and without fee. Please refer to this package 
+// "Copyright Takuya OOURA, 1996-2001
+//  You may use, copy, modify and distribute this code for any purpose
+//  (include commercial use) and without fee. Please refer to this package
 //  when you modify this code."
 
 
@@ -34174,14 +34174,14 @@ namespace SoLoud
     {
         void fft1024(float *aBuffer)
         {
-			fft(aBuffer, 1024);			
-        }    
+			fft(aBuffer, 1024);
+        }
 
         void fft256(float *aBuffer)
         {
 			fft(aBuffer, 256);
         }
-        
+
         void ifft256(float *aBuffer)
         {
 			ifft(aBuffer, 256);
@@ -34234,310 +34234,310 @@ freely, subject to the following restrictions:
 /* SoLoud Lookup Table Generator (c)2015 Jari Komppa http://iki.fi/sol/ */
 
 int Soloud_fft_bitrev_10[1024] = {
-0, 512, 256, 768, 128, 640, 384, 896, 64, 576, 320, 832, 192, 704, 448, 
-960, 32, 544, 288, 800, 160, 672, 416, 928, 96, 608, 352, 864, 224, 736, 
-480, 992, 16, 528, 272, 784, 144, 656, 400, 912, 80, 592, 336, 848, 208, 
-720, 464, 976, 48, 560, 304, 816, 176, 688, 432, 944, 112, 624, 368, 880, 
-240, 752, 496, 1008, 8, 520, 264, 776, 136, 648, 392, 904, 72, 584, 328, 
-840, 200, 712, 456, 968, 40, 552, 296, 808, 168, 680, 424, 936, 104, 616, 
-360, 872, 232, 744, 488, 1000, 24, 536, 280, 792, 152, 664, 408, 920, 88, 
-600, 344, 856, 216, 728, 472, 984, 56, 568, 312, 824, 184, 696, 440, 952, 
-120, 632, 376, 888, 248, 760, 504, 1016, 4, 516, 260, 772, 132, 644, 388, 
-900, 68, 580, 324, 836, 196, 708, 452, 964, 36, 548, 292, 804, 164, 676, 
-420, 932, 100, 612, 356, 868, 228, 740, 484, 996, 20, 532, 276, 788, 148, 
-660, 404, 916, 84, 596, 340, 852, 212, 724, 468, 980, 52, 564, 308, 820, 
-180, 692, 436, 948, 116, 628, 372, 884, 244, 756, 500, 1012, 12, 524, 268, 
-780, 140, 652, 396, 908, 76, 588, 332, 844, 204, 716, 460, 972, 44, 556, 
-300, 812, 172, 684, 428, 940, 108, 620, 364, 876, 236, 748, 492, 1004, 
-28, 540, 284, 796, 156, 668, 412, 924, 92, 604, 348, 860, 220, 732, 476, 
-988, 60, 572, 316, 828, 188, 700, 444, 956, 124, 636, 380, 892, 252, 764, 
-508, 1020, 2, 514, 258, 770, 130, 642, 386, 898, 66, 578, 322, 834, 194, 
-706, 450, 962, 34, 546, 290, 802, 162, 674, 418, 930, 98, 610, 354, 866, 
-226, 738, 482, 994, 18, 530, 274, 786, 146, 658, 402, 914, 82, 594, 338, 
-850, 210, 722, 466, 978, 50, 562, 306, 818, 178, 690, 434, 946, 114, 626, 
-370, 882, 242, 754, 498, 1010, 10, 522, 266, 778, 138, 650, 394, 906, 74, 
-586, 330, 842, 202, 714, 458, 970, 42, 554, 298, 810, 170, 682, 426, 938, 
-106, 618, 362, 874, 234, 746, 490, 1002, 26, 538, 282, 794, 154, 666, 410, 
-922, 90, 602, 346, 858, 218, 730, 474, 986, 58, 570, 314, 826, 186, 698, 
-442, 954, 122, 634, 378, 890, 250, 762, 506, 1018, 6, 518, 262, 774, 134, 
-646, 390, 902, 70, 582, 326, 838, 198, 710, 454, 966, 38, 550, 294, 806, 
-166, 678, 422, 934, 102, 614, 358, 870, 230, 742, 486, 998, 22, 534, 278, 
-790, 150, 662, 406, 918, 86, 598, 342, 854, 214, 726, 470, 982, 54, 566, 
-310, 822, 182, 694, 438, 950, 118, 630, 374, 886, 246, 758, 502, 1014, 
-14, 526, 270, 782, 142, 654, 398, 910, 78, 590, 334, 846, 206, 718, 462, 
-974, 46, 558, 302, 814, 174, 686, 430, 942, 110, 622, 366, 878, 238, 750, 
-494, 1006, 30, 542, 286, 798, 158, 670, 414, 926, 94, 606, 350, 862, 222, 
-734, 478, 990, 62, 574, 318, 830, 190, 702, 446, 958, 126, 638, 382, 894, 
-254, 766, 510, 1022, 1, 513, 257, 769, 129, 641, 385, 897, 65, 577, 321, 
-833, 193, 705, 449, 961, 33, 545, 289, 801, 161, 673, 417, 929, 97, 609, 
-353, 865, 225, 737, 481, 993, 17, 529, 273, 785, 145, 657, 401, 913, 81, 
-593, 337, 849, 209, 721, 465, 977, 49, 561, 305, 817, 177, 689, 433, 945, 
-113, 625, 369, 881, 241, 753, 497, 1009, 9, 521, 265, 777, 137, 649, 393, 
-905, 73, 585, 329, 841, 201, 713, 457, 969, 41, 553, 297, 809, 169, 681, 
-425, 937, 105, 617, 361, 873, 233, 745, 489, 1001, 25, 537, 281, 793, 153, 
-665, 409, 921, 89, 601, 345, 857, 217, 729, 473, 985, 57, 569, 313, 825, 
-185, 697, 441, 953, 121, 633, 377, 889, 249, 761, 505, 1017, 5, 517, 261, 
-773, 133, 645, 389, 901, 69, 581, 325, 837, 197, 709, 453, 965, 37, 549, 
-293, 805, 165, 677, 421, 933, 101, 613, 357, 869, 229, 741, 485, 997, 21, 
-533, 277, 789, 149, 661, 405, 917, 85, 597, 341, 853, 213, 725, 469, 981, 
-53, 565, 309, 821, 181, 693, 437, 949, 117, 629, 373, 885, 245, 757, 501, 
-1013, 13, 525, 269, 781, 141, 653, 397, 909, 77, 589, 333, 845, 205, 717, 
-461, 973, 45, 557, 301, 813, 173, 685, 429, 941, 109, 621, 365, 877, 237, 
-749, 493, 1005, 29, 541, 285, 797, 157, 669, 413, 925, 93, 605, 349, 861, 
-221, 733, 477, 989, 61, 573, 317, 829, 189, 701, 445, 957, 125, 637, 381, 
-893, 253, 765, 509, 1021, 3, 515, 259, 771, 131, 643, 387, 899, 67, 579, 
-323, 835, 195, 707, 451, 963, 35, 547, 291, 803, 163, 675, 419, 931, 99, 
-611, 355, 867, 227, 739, 483, 995, 19, 531, 275, 787, 147, 659, 403, 915, 
-83, 595, 339, 851, 211, 723, 467, 979, 51, 563, 307, 819, 179, 691, 435, 
-947, 115, 627, 371, 883, 243, 755, 499, 1011, 11, 523, 267, 779, 139, 651, 
-395, 907, 75, 587, 331, 843, 203, 715, 459, 971, 43, 555, 299, 811, 171, 
-683, 427, 939, 107, 619, 363, 875, 235, 747, 491, 1003, 27, 539, 283, 795, 
-155, 667, 411, 923, 91, 603, 347, 859, 219, 731, 475, 987, 59, 571, 315, 
-827, 187, 699, 443, 955, 123, 635, 379, 891, 251, 763, 507, 1019, 7, 519, 
-263, 775, 135, 647, 391, 903, 71, 583, 327, 839, 199, 711, 455, 967, 39, 
-551, 295, 807, 167, 679, 423, 935, 103, 615, 359, 871, 231, 743, 487, 999, 
-23, 535, 279, 791, 151, 663, 407, 919, 87, 599, 343, 855, 215, 727, 471, 
-983, 55, 567, 311, 823, 183, 695, 439, 951, 119, 631, 375, 887, 247, 759, 
-503, 1015, 15, 527, 271, 783, 143, 655, 399, 911, 79, 591, 335, 847, 207, 
-719, 463, 975, 47, 559, 303, 815, 175, 687, 431, 943, 111, 623, 367, 879, 
-239, 751, 495, 1007, 31, 543, 287, 799, 159, 671, 415, 927, 95, 607, 351, 
-863, 223, 735, 479, 991, 63, 575, 319, 831, 191, 703, 447, 959, 127, 639, 
+0, 512, 256, 768, 128, 640, 384, 896, 64, 576, 320, 832, 192, 704, 448,
+960, 32, 544, 288, 800, 160, 672, 416, 928, 96, 608, 352, 864, 224, 736,
+480, 992, 16, 528, 272, 784, 144, 656, 400, 912, 80, 592, 336, 848, 208,
+720, 464, 976, 48, 560, 304, 816, 176, 688, 432, 944, 112, 624, 368, 880,
+240, 752, 496, 1008, 8, 520, 264, 776, 136, 648, 392, 904, 72, 584, 328,
+840, 200, 712, 456, 968, 40, 552, 296, 808, 168, 680, 424, 936, 104, 616,
+360, 872, 232, 744, 488, 1000, 24, 536, 280, 792, 152, 664, 408, 920, 88,
+600, 344, 856, 216, 728, 472, 984, 56, 568, 312, 824, 184, 696, 440, 952,
+120, 632, 376, 888, 248, 760, 504, 1016, 4, 516, 260, 772, 132, 644, 388,
+900, 68, 580, 324, 836, 196, 708, 452, 964, 36, 548, 292, 804, 164, 676,
+420, 932, 100, 612, 356, 868, 228, 740, 484, 996, 20, 532, 276, 788, 148,
+660, 404, 916, 84, 596, 340, 852, 212, 724, 468, 980, 52, 564, 308, 820,
+180, 692, 436, 948, 116, 628, 372, 884, 244, 756, 500, 1012, 12, 524, 268,
+780, 140, 652, 396, 908, 76, 588, 332, 844, 204, 716, 460, 972, 44, 556,
+300, 812, 172, 684, 428, 940, 108, 620, 364, 876, 236, 748, 492, 1004,
+28, 540, 284, 796, 156, 668, 412, 924, 92, 604, 348, 860, 220, 732, 476,
+988, 60, 572, 316, 828, 188, 700, 444, 956, 124, 636, 380, 892, 252, 764,
+508, 1020, 2, 514, 258, 770, 130, 642, 386, 898, 66, 578, 322, 834, 194,
+706, 450, 962, 34, 546, 290, 802, 162, 674, 418, 930, 98, 610, 354, 866,
+226, 738, 482, 994, 18, 530, 274, 786, 146, 658, 402, 914, 82, 594, 338,
+850, 210, 722, 466, 978, 50, 562, 306, 818, 178, 690, 434, 946, 114, 626,
+370, 882, 242, 754, 498, 1010, 10, 522, 266, 778, 138, 650, 394, 906, 74,
+586, 330, 842, 202, 714, 458, 970, 42, 554, 298, 810, 170, 682, 426, 938,
+106, 618, 362, 874, 234, 746, 490, 1002, 26, 538, 282, 794, 154, 666, 410,
+922, 90, 602, 346, 858, 218, 730, 474, 986, 58, 570, 314, 826, 186, 698,
+442, 954, 122, 634, 378, 890, 250, 762, 506, 1018, 6, 518, 262, 774, 134,
+646, 390, 902, 70, 582, 326, 838, 198, 710, 454, 966, 38, 550, 294, 806,
+166, 678, 422, 934, 102, 614, 358, 870, 230, 742, 486, 998, 22, 534, 278,
+790, 150, 662, 406, 918, 86, 598, 342, 854, 214, 726, 470, 982, 54, 566,
+310, 822, 182, 694, 438, 950, 118, 630, 374, 886, 246, 758, 502, 1014,
+14, 526, 270, 782, 142, 654, 398, 910, 78, 590, 334, 846, 206, 718, 462,
+974, 46, 558, 302, 814, 174, 686, 430, 942, 110, 622, 366, 878, 238, 750,
+494, 1006, 30, 542, 286, 798, 158, 670, 414, 926, 94, 606, 350, 862, 222,
+734, 478, 990, 62, 574, 318, 830, 190, 702, 446, 958, 126, 638, 382, 894,
+254, 766, 510, 1022, 1, 513, 257, 769, 129, 641, 385, 897, 65, 577, 321,
+833, 193, 705, 449, 961, 33, 545, 289, 801, 161, 673, 417, 929, 97, 609,
+353, 865, 225, 737, 481, 993, 17, 529, 273, 785, 145, 657, 401, 913, 81,
+593, 337, 849, 209, 721, 465, 977, 49, 561, 305, 817, 177, 689, 433, 945,
+113, 625, 369, 881, 241, 753, 497, 1009, 9, 521, 265, 777, 137, 649, 393,
+905, 73, 585, 329, 841, 201, 713, 457, 969, 41, 553, 297, 809, 169, 681,
+425, 937, 105, 617, 361, 873, 233, 745, 489, 1001, 25, 537, 281, 793, 153,
+665, 409, 921, 89, 601, 345, 857, 217, 729, 473, 985, 57, 569, 313, 825,
+185, 697, 441, 953, 121, 633, 377, 889, 249, 761, 505, 1017, 5, 517, 261,
+773, 133, 645, 389, 901, 69, 581, 325, 837, 197, 709, 453, 965, 37, 549,
+293, 805, 165, 677, 421, 933, 101, 613, 357, 869, 229, 741, 485, 997, 21,
+533, 277, 789, 149, 661, 405, 917, 85, 597, 341, 853, 213, 725, 469, 981,
+53, 565, 309, 821, 181, 693, 437, 949, 117, 629, 373, 885, 245, 757, 501,
+1013, 13, 525, 269, 781, 141, 653, 397, 909, 77, 589, 333, 845, 205, 717,
+461, 973, 45, 557, 301, 813, 173, 685, 429, 941, 109, 621, 365, 877, 237,
+749, 493, 1005, 29, 541, 285, 797, 157, 669, 413, 925, 93, 605, 349, 861,
+221, 733, 477, 989, 61, 573, 317, 829, 189, 701, 445, 957, 125, 637, 381,
+893, 253, 765, 509, 1021, 3, 515, 259, 771, 131, 643, 387, 899, 67, 579,
+323, 835, 195, 707, 451, 963, 35, 547, 291, 803, 163, 675, 419, 931, 99,
+611, 355, 867, 227, 739, 483, 995, 19, 531, 275, 787, 147, 659, 403, 915,
+83, 595, 339, 851, 211, 723, 467, 979, 51, 563, 307, 819, 179, 691, 435,
+947, 115, 627, 371, 883, 243, 755, 499, 1011, 11, 523, 267, 779, 139, 651,
+395, 907, 75, 587, 331, 843, 203, 715, 459, 971, 43, 555, 299, 811, 171,
+683, 427, 939, 107, 619, 363, 875, 235, 747, 491, 1003, 27, 539, 283, 795,
+155, 667, 411, 923, 91, 603, 347, 859, 219, 731, 475, 987, 59, 571, 315,
+827, 187, 699, 443, 955, 123, 635, 379, 891, 251, 763, 507, 1019, 7, 519,
+263, 775, 135, 647, 391, 903, 71, 583, 327, 839, 199, 711, 455, 967, 39,
+551, 295, 807, 167, 679, 423, 935, 103, 615, 359, 871, 231, 743, 487, 999,
+23, 535, 279, 791, 151, 663, 407, 919, 87, 599, 343, 855, 215, 727, 471,
+983, 55, 567, 311, 823, 183, 695, 439, 951, 119, 631, 375, 887, 247, 759,
+503, 1015, 15, 527, 271, 783, 143, 655, 399, 911, 79, 591, 335, 847, 207,
+719, 463, 975, 47, 559, 303, 815, 175, 687, 431, 943, 111, 623, 367, 879,
+239, 751, 495, 1007, 31, 543, 287, 799, 159, 671, 415, 927, 95, 607, 351,
+863, 223, 735, 479, 991, 63, 575, 319, 831, 191, 703, 447, 959, 127, 639,
 383, 895, 255, 767, 511, 1023};
 
 int Soloud_fft_bitrev_8[256] = {
-0, 128, 64, 192, 32, 160, 96, 224, 16, 144, 80, 208, 48, 176, 112, 240, 
-8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248, 
-4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244, 
-12, 140, 76, 204, 44, 172, 108, 236, 28, 156, 92, 220, 60, 188, 124, 252, 
-2, 130, 66, 194, 34, 162, 98, 226, 18, 146, 82, 210, 50, 178, 114, 242, 
-10, 138, 74, 202, 42, 170, 106, 234, 26, 154, 90, 218, 58, 186, 122, 250, 
-6, 134, 70, 198, 38, 166, 102, 230, 22, 150, 86, 214, 54, 182, 118, 246, 
-14, 142, 78, 206, 46, 174, 110, 238, 30, 158, 94, 222, 62, 190, 126, 254, 
-1, 129, 65, 193, 33, 161, 97, 225, 17, 145, 81, 209, 49, 177, 113, 241, 
-9, 137, 73, 201, 41, 169, 105, 233, 25, 153, 89, 217, 57, 185, 121, 249, 
-5, 133, 69, 197, 37, 165, 101, 229, 21, 149, 85, 213, 53, 181, 117, 245, 
-13, 141, 77, 205, 45, 173, 109, 237, 29, 157, 93, 221, 61, 189, 125, 253, 
-3, 131, 67, 195, 35, 163, 99, 227, 19, 147, 83, 211, 51, 179, 115, 243, 
-11, 139, 75, 203, 43, 171, 107, 235, 27, 155, 91, 219, 59, 187, 123, 251, 
-7, 135, 71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247, 
+0, 128, 64, 192, 32, 160, 96, 224, 16, 144, 80, 208, 48, 176, 112, 240,
+8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248,
+4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244,
+12, 140, 76, 204, 44, 172, 108, 236, 28, 156, 92, 220, 60, 188, 124, 252,
+2, 130, 66, 194, 34, 162, 98, 226, 18, 146, 82, 210, 50, 178, 114, 242,
+10, 138, 74, 202, 42, 170, 106, 234, 26, 154, 90, 218, 58, 186, 122, 250,
+6, 134, 70, 198, 38, 166, 102, 230, 22, 150, 86, 214, 54, 182, 118, 246,
+14, 142, 78, 206, 46, 174, 110, 238, 30, 158, 94, 222, 62, 190, 126, 254,
+1, 129, 65, 193, 33, 161, 97, 225, 17, 145, 81, 209, 49, 177, 113, 241,
+9, 137, 73, 201, 41, 169, 105, 233, 25, 153, 89, 217, 57, 185, 121, 249,
+5, 133, 69, 197, 37, 165, 101, 229, 21, 149, 85, 213, 53, 181, 117, 245,
+13, 141, 77, 205, 45, 173, 109, 237, 29, 157, 93, 221, 61, 189, 125, 253,
+3, 131, 67, 195, 35, 163, 99, 227, 19, 147, 83, 211, 51, 179, 115, 243,
+11, 139, 75, 203, 43, 171, 107, 235, 27, 155, 91, 219, 59, 187, 123, 251,
+7, 135, 71, 199, 39, 167, 103, 231, 23, 151, 87, 215, 55, 183, 119, 247,
 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255
 };
 
 float Soloud_fft_trig_10[508] = {
-1.000000000000000000f, 0.923879504203796390f, 0.707106769084930420f, 
-0.382683396339416500f, 1.000000000000000000f, 0.980785250663757320f, 
-0.923879504203796390f, 0.831469595432281490f, 0.707106769084930420f, 
-0.555570185184478760f, 0.382683396339416500f, 0.195090278983116150f, 
-1.000000000000000000f, 0.995184719562530520f, 0.980785250663757320f, 
-0.956940352916717530f, 0.923879504203796390f, 0.881921231746673580f, 
-0.831469595432281490f, 0.773010432720184330f, 0.707106769084930420f, 
-0.634393274784088130f, 0.555570185184478760f, 0.471396714448928830f, 
-0.382683396339416500f, 0.290284633636474610f, 0.195090278983116150f, 
-0.098017096519470215f, 1.000000000000000000f, 0.998795449733734130f, 
-0.995184719562530520f, 0.989176511764526370f, 0.980785250663757320f, 
-0.970031261444091800f, 0.956940352916717530f, 0.941544055938720700f, 
-0.923879504203796390f, 0.903989315032958980f, 0.881921231746673580f, 
-0.857728600502014160f, 0.831469595432281490f, 0.803207516670227050f, 
-0.773010432720184330f, 0.740951120853424070f, 0.707106769084930420f, 
-0.671558916568756100f, 0.634393274784088130f, 0.595699310302734380f, 
-0.555570185184478760f, 0.514102697372436520f, 0.471396714448928830f, 
-0.427555054426193240f, 0.382683396339416500f, 0.336889833211898800f, 
-0.290284633636474610f, 0.242980137467384340f, 0.195090278983116150f, 
-0.146730437874794010f, 0.098017096519470215f, 0.049067631363868713f, 
-1.000000000000000000f, 0.999698817729949950f, 0.998795449733734130f, 
-0.997290432453155520f, 0.995184719562530520f, 0.992479562759399410f, 
-0.989176511764526370f, 0.985277652740478520f, 0.980785250663757320f, 
-0.975702106952667240f, 0.970031261444091800f, 0.963776051998138430f, 
-0.956940352916717530f, 0.949528157711029050f, 0.941544055938720700f, 
-0.932992815971374510f, 0.923879504203796390f, 0.914209723472595210f, 
-0.903989315032958980f, 0.893224298954010010f, 0.881921231746673580f, 
-0.870086967945098880f, 0.857728600502014160f, 0.844853579998016360f, 
-0.831469595432281490f, 0.817584812641143800f, 0.803207516670227050f, 
-0.788346409797668460f, 0.773010432720184330f, 0.757208824157714840f, 
-0.740951120853424070f, 0.724247097969055180f, 0.707106769084930420f, 
-0.689540505409240720f, 0.671558916568756100f, 0.653172850608825680f, 
-0.634393274784088130f, 0.615231573581695560f, 0.595699310302734380f, 
-0.575808167457580570f, 0.555570185184478760f, 0.534997582435607910f, 
-0.514102697372436520f, 0.492898166179656980f, 0.471396714448928830f, 
-0.449611306190490720f, 0.427555054426193240f, 0.405241280794143680f, 
-0.382683396339416500f, 0.359894990921020510f, 0.336889833211898800f, 
-0.313681721687316890f, 0.290284633636474610f, 0.266712725162506100f, 
-0.242980137467384340f, 0.219101205468177800f, 0.195090278983116150f, 
-0.170961856842041020f, 0.146730437874794010f, 0.122410632669925690f, 
-0.098017096519470215f, 0.073564521968364716f, 0.049067631363868713f, 
-0.024541186168789864f, 1.000000000000000000f, 0.999924719333648680f, 
-0.999698817729949950f, 0.999322354793548580f, 0.998795449733734130f, 
-0.998118102550506590f, 0.997290432453155520f, 0.996312618255615230f, 
-0.995184719562530520f, 0.993906974792480470f, 0.992479562759399410f, 
-0.990902662277221680f, 0.989176511764526370f, 0.987301409244537350f, 
-0.985277652740478520f, 0.983105480670928960f, 0.980785250663757320f, 
-0.978317379951477050f, 0.975702106952667240f, 0.972939968109130860f, 
-0.970031261444091800f, 0.966976463794708250f, 0.963776051998138430f, 
-0.960430502891540530f, 0.956940352916717530f, 0.953306019306182860f, 
-0.949528157711029050f, 0.945607304573059080f, 0.941544055938720700f, 
-0.937339007854461670f, 0.932992815971374510f, 0.928506076335906980f, 
-0.923879504203796390f, 0.919113874435424800f, 0.914209723472595210f, 
-0.909168004989624020f, 0.903989315032958980f, 0.898674488067626950f, 
-0.893224298954010010f, 0.887639641761779790f, 0.881921231746673580f, 
-0.876070082187652590f, 0.870086967945098880f, 0.863972842693328860f, 
-0.857728600502014160f, 0.851355195045471190f, 0.844853579998016360f, 
-0.838224709033966060f, 0.831469595432281490f, 0.824589312076568600f, 
-0.817584812641143800f, 0.810457170009613040f, 0.803207516670227050f, 
-0.795836865901947020f, 0.788346409797668460f, 0.780737221240997310f, 
-0.773010432720184330f, 0.765167236328125000f, 0.757208824157714840f, 
-0.749136388301849370f, 0.740951120853424070f, 0.732654273509979250f, 
-0.724247097969055180f, 0.715730786323547360f, 0.707106769084930420f, 
-0.698376238346099850f, 0.689540505409240720f, 0.680601000785827640f, 
-0.671558916568756100f, 0.662415742874145510f, 0.653172850608825680f, 
-0.643831551074981690f, 0.634393274784088130f, 0.624859452247619630f, 
-0.615231573581695560f, 0.605511009693145750f, 0.595699310302734380f, 
-0.585797846317291260f, 0.575808167457580570f, 0.565731763839721680f, 
-0.555570185184478760f, 0.545324981212615970f, 0.534997582435607910f, 
-0.524589657783508300f, 0.514102697372436520f, 0.503538370132446290f, 
-0.492898166179656980f, 0.482183754444122310f, 0.471396714448928830f, 
-0.460538685321807860f, 0.449611306190490720f, 0.438616216182708740f, 
-0.427555054426193240f, 0.416429519653320310f, 0.405241280794143680f, 
-0.393992006778717040f, 0.382683396339416500f, 0.371317178010940550f, 
-0.359894990921020510f, 0.348418653011322020f, 0.336889833211898800f, 
-0.325310260057449340f, 0.313681721687316890f, 0.302005916833877560f, 
-0.290284633636474610f, 0.278519660234451290f, 0.266712725162506100f, 
-0.254865616559982300f, 0.242980137467384340f, 0.231058076024055480f, 
-0.219101205468177800f, 0.207111343741416930f, 0.195090278983116150f, 
-0.183039844036102290f, 0.170961856842041020f, 0.158858105540275570f, 
-0.146730437874794010f, 0.134580671787261960f, 0.122410632669925690f, 
-0.110222168266773220f, 0.098017096519470215f, 0.085797272622585297f, 
-0.073564521968364716f, 0.061320696026086807f, 0.049067631363868713f, 
-0.036807179450988770f, 0.024541186168789864f, 0.012271494604647160f, 
-1.000000000000000000f, 0.999981164932250980f, 0.999924719333648680f, 
-0.999830603599548340f, 0.999698817729949950f, 0.999529421329498290f, 
-0.999322354793548580f, 0.999077737331390380f, 0.998795449733734130f, 
-0.998475551605224610f, 0.998118102550506590f, 0.997723042964935300f, 
-0.997290432453155520f, 0.996820271015167240f, 0.996312618255615230f, 
-0.995767414569854740f, 0.995184719562530520f, 0.994564592838287350f, 
-0.993906974792480470f, 0.993211925029754640f, 0.992479562759399410f, 
-0.991709768772125240f, 0.990902662277221680f, 0.990058183670043950f, 
-0.989176511764526370f, 0.988257586956024170f, 0.987301409244537350f, 
-0.986308097839355470f, 0.985277652740478520f, 0.984210073947906490f, 
-0.983105480670928960f, 0.981963872909545900f, 0.980785250663757320f, 
-0.979569792747497560f, 0.978317379951477050f, 0.977028131484985350f, 
-0.975702106952667240f, 0.974339365959167480f, 0.972939968109130860f, 
-0.971503913402557370f, 0.970031261444091800f, 0.968522071838378910f, 
-0.966976463794708250f, 0.965394437313079830f, 0.963776051998138430f, 
-0.962121427059173580f, 0.960430502891540530f, 0.958703458309173580f, 
-0.956940352916717530f, 0.955141186714172360f, 0.953306019306182860f, 
-0.951435029506683350f, 0.949528157711029050f, 0.947585582733154300f, 
-0.945607304573059080f, 0.943593442440032960f, 0.941544055938720700f, 
-0.939459204673767090f, 0.937339007854461670f, 0.935183525085449220f, 
-0.932992815971374510f, 0.930766940116882320f, 0.928506076335906980f, 
-0.926210224628448490f, 0.923879504203796390f, 0.921514034271240230f, 
-0.919113874435424800f, 0.916679084300994870f, 0.914209723472595210f, 
-0.911706030368804930f, 0.909168004989624020f, 0.906595706939697270f, 
-0.903989315032958980f, 0.901348829269409180f, 0.898674488067626950f, 
-0.895966231822967530f, 0.893224298954010010f, 0.890448689460754390f, 
-0.887639641761779790f, 0.884797096252441410f, 0.881921231746673580f, 
-0.879012227058410640f, 0.876070082187652590f, 0.873094975948333740f, 
-0.870086967945098880f, 0.867046236991882320f, 0.863972842693328860f, 
-0.860866904258728030f, 0.857728600502014160f, 0.854557991027832030f, 
-0.851355195045471190f, 0.848120331764221190f, 0.844853579998016360f, 
-0.841554939746856690f, 0.838224709033966060f, 0.834862887859344480f, 
-0.831469595432281490f, 0.828045010566711430f, 0.824589312076568600f, 
-0.821102499961853030f, 0.817584812641143800f, 0.814036309719085690f, 
-0.810457170009613040f, 0.806847572326660160f, 0.803207516670227050f, 
-0.799537241458892820f, 0.795836865901947020f, 0.792106568813323970f, 
-0.788346409797668460f, 0.784556567668914790f, 0.780737221240997310f, 
-0.776888430118560790f, 0.773010432720184330f, 0.769103348255157470f, 
-0.765167236328125000f, 0.761202394962310790f, 0.757208824157714840f, 
-0.753186762332916260f, 0.749136388301849370f, 0.745057761669158940f, 
-0.740951120853424070f, 0.736816525459289550f, 0.732654273509979250f, 
-0.728464365005493160f, 0.724247097969055180f, 0.720002472400665280f, 
-0.715730786323547360f, 0.711432158946990970f, 0.707106769084930420f, 
-0.702754735946655270f, 0.698376238346099850f, 0.693971455097198490f, 
-0.689540505409240720f, 0.685083627700805660f, 0.680601000785827640f, 
-0.676092684268951420f, 0.671558916568756100f, 0.666999876499176030f, 
-0.662415742874145510f, 0.657806694507598880f, 0.653172850608825680f, 
-0.648514389991760250f, 0.643831551074981690f, 0.639124453067779540f, 
-0.634393274784088130f, 0.629638195037841800f, 0.624859452247619630f, 
-0.620057165622711180f, 0.615231573581695560f, 0.610382795333862300f, 
-0.605511009693145750f, 0.600616455078125000f, 0.595699310302734380f, 
-0.590759694576263430f, 0.585797846317291260f, 0.580813944339752200f, 
-0.575808167457580570f, 0.570780694484710690f, 0.565731763839721680f, 
-0.560661554336547850f, 0.555570185184478760f, 0.550457954406738280f, 
-0.545324981212615970f, 0.540171444416046140f, 0.534997582435607910f, 
-0.529803574085235600f, 0.524589657783508300f, 0.519355952739715580f, 
-0.514102697372436520f, 0.508830130100250240f, 0.503538370132446290f, 
-0.498227655887603760f, 0.492898166179656980f, 0.487550139427185060f, 
-0.482183754444122310f, 0.476799190044403080f, 0.471396714448928830f, 
-0.465976476669311520f, 0.460538685321807860f, 0.455083549022674560f, 
-0.449611306190490720f, 0.444122105836868290f, 0.438616216182708740f, 
-0.433093786239624020f, 0.427555054426193240f, 0.422000229358673100f, 
-0.416429519653320310f, 0.410843133926391600f, 0.405241280794143680f, 
-0.399624168872833250f, 0.393992006778717040f, 0.388345003128051760f, 
-0.382683396339416500f, 0.377007365226745610f, 0.371317178010940550f, 
-0.365612953901290890f, 0.359894990921020510f, 0.354163497686386110f, 
-0.348418653011322020f, 0.342660695314407350f, 0.336889833211898800f, 
-0.331106275320053100f, 0.325310260057449340f, 0.319501996040344240f, 
-0.313681721687316890f, 0.307849615812301640f, 0.302005916833877560f, 
-0.296150863170623780f, 0.290284633636474610f, 0.284407496452331540f, 
-0.278519660234451290f, 0.272621333599090580f, 0.266712725162506100f, 
-0.260794073343276980f, 0.254865616559982300f, 0.248927563428878780f, 
-0.242980137467384340f, 0.237023577094078060f, 0.231058076024055480f, 
-0.225083872675895690f, 0.219101205468177800f, 0.213110283017158510f, 
-0.207111343741416930f, 0.201104596257209780f, 0.195090278983116150f, 
-0.189068630337715150f, 0.183039844036102290f, 0.177004188299179080f, 
-0.170961856842041020f, 0.164913088083267210f, 0.158858105540275570f, 
-0.152797147631645200f, 0.146730437874794010f, 0.140658199787139890f, 
-0.134580671787261960f, 0.128498077392578130f, 0.122410632669925690f, 
-0.116318590939044950f, 0.110222168266773220f, 0.104121595621109010f, 
-0.098017096519470215f, 0.091908916831016541f, 0.085797272622585297f, 
-0.079682394862174988f, 0.073564521968364716f, 0.067443877458572388f, 
-0.061320696026086807f, 0.055195201188325882f, 0.049067631363868713f, 
-0.042938213795423508f, 0.036807179450988770f, 0.030674761161208153f, 
-0.024541186168789864f, 0.018406687304377556f, 0.012271494604647160f, 
+1.000000000000000000f, 0.923879504203796390f, 0.707106769084930420f,
+0.382683396339416500f, 1.000000000000000000f, 0.980785250663757320f,
+0.923879504203796390f, 0.831469595432281490f, 0.707106769084930420f,
+0.555570185184478760f, 0.382683396339416500f, 0.195090278983116150f,
+1.000000000000000000f, 0.995184719562530520f, 0.980785250663757320f,
+0.956940352916717530f, 0.923879504203796390f, 0.881921231746673580f,
+0.831469595432281490f, 0.773010432720184330f, 0.707106769084930420f,
+0.634393274784088130f, 0.555570185184478760f, 0.471396714448928830f,
+0.382683396339416500f, 0.290284633636474610f, 0.195090278983116150f,
+0.098017096519470215f, 1.000000000000000000f, 0.998795449733734130f,
+0.995184719562530520f, 0.989176511764526370f, 0.980785250663757320f,
+0.970031261444091800f, 0.956940352916717530f, 0.941544055938720700f,
+0.923879504203796390f, 0.903989315032958980f, 0.881921231746673580f,
+0.857728600502014160f, 0.831469595432281490f, 0.803207516670227050f,
+0.773010432720184330f, 0.740951120853424070f, 0.707106769084930420f,
+0.671558916568756100f, 0.634393274784088130f, 0.595699310302734380f,
+0.555570185184478760f, 0.514102697372436520f, 0.471396714448928830f,
+0.427555054426193240f, 0.382683396339416500f, 0.336889833211898800f,
+0.290284633636474610f, 0.242980137467384340f, 0.195090278983116150f,
+0.146730437874794010f, 0.098017096519470215f, 0.049067631363868713f,
+1.000000000000000000f, 0.999698817729949950f, 0.998795449733734130f,
+0.997290432453155520f, 0.995184719562530520f, 0.992479562759399410f,
+0.989176511764526370f, 0.985277652740478520f, 0.980785250663757320f,
+0.975702106952667240f, 0.970031261444091800f, 0.963776051998138430f,
+0.956940352916717530f, 0.949528157711029050f, 0.941544055938720700f,
+0.932992815971374510f, 0.923879504203796390f, 0.914209723472595210f,
+0.903989315032958980f, 0.893224298954010010f, 0.881921231746673580f,
+0.870086967945098880f, 0.857728600502014160f, 0.844853579998016360f,
+0.831469595432281490f, 0.817584812641143800f, 0.803207516670227050f,
+0.788346409797668460f, 0.773010432720184330f, 0.757208824157714840f,
+0.740951120853424070f, 0.724247097969055180f, 0.707106769084930420f,
+0.689540505409240720f, 0.671558916568756100f, 0.653172850608825680f,
+0.634393274784088130f, 0.615231573581695560f, 0.595699310302734380f,
+0.575808167457580570f, 0.555570185184478760f, 0.534997582435607910f,
+0.514102697372436520f, 0.492898166179656980f, 0.471396714448928830f,
+0.449611306190490720f, 0.427555054426193240f, 0.405241280794143680f,
+0.382683396339416500f, 0.359894990921020510f, 0.336889833211898800f,
+0.313681721687316890f, 0.290284633636474610f, 0.266712725162506100f,
+0.242980137467384340f, 0.219101205468177800f, 0.195090278983116150f,
+0.170961856842041020f, 0.146730437874794010f, 0.122410632669925690f,
+0.098017096519470215f, 0.073564521968364716f, 0.049067631363868713f,
+0.024541186168789864f, 1.000000000000000000f, 0.999924719333648680f,
+0.999698817729949950f, 0.999322354793548580f, 0.998795449733734130f,
+0.998118102550506590f, 0.997290432453155520f, 0.996312618255615230f,
+0.995184719562530520f, 0.993906974792480470f, 0.992479562759399410f,
+0.990902662277221680f, 0.989176511764526370f, 0.987301409244537350f,
+0.985277652740478520f, 0.983105480670928960f, 0.980785250663757320f,
+0.978317379951477050f, 0.975702106952667240f, 0.972939968109130860f,
+0.970031261444091800f, 0.966976463794708250f, 0.963776051998138430f,
+0.960430502891540530f, 0.956940352916717530f, 0.953306019306182860f,
+0.949528157711029050f, 0.945607304573059080f, 0.941544055938720700f,
+0.937339007854461670f, 0.932992815971374510f, 0.928506076335906980f,
+0.923879504203796390f, 0.919113874435424800f, 0.914209723472595210f,
+0.909168004989624020f, 0.903989315032958980f, 0.898674488067626950f,
+0.893224298954010010f, 0.887639641761779790f, 0.881921231746673580f,
+0.876070082187652590f, 0.870086967945098880f, 0.863972842693328860f,
+0.857728600502014160f, 0.851355195045471190f, 0.844853579998016360f,
+0.838224709033966060f, 0.831469595432281490f, 0.824589312076568600f,
+0.817584812641143800f, 0.810457170009613040f, 0.803207516670227050f,
+0.795836865901947020f, 0.788346409797668460f, 0.780737221240997310f,
+0.773010432720184330f, 0.765167236328125000f, 0.757208824157714840f,
+0.749136388301849370f, 0.740951120853424070f, 0.732654273509979250f,
+0.724247097969055180f, 0.715730786323547360f, 0.707106769084930420f,
+0.698376238346099850f, 0.689540505409240720f, 0.680601000785827640f,
+0.671558916568756100f, 0.662415742874145510f, 0.653172850608825680f,
+0.643831551074981690f, 0.634393274784088130f, 0.624859452247619630f,
+0.615231573581695560f, 0.605511009693145750f, 0.595699310302734380f,
+0.585797846317291260f, 0.575808167457580570f, 0.565731763839721680f,
+0.555570185184478760f, 0.545324981212615970f, 0.534997582435607910f,
+0.524589657783508300f, 0.514102697372436520f, 0.503538370132446290f,
+0.492898166179656980f, 0.482183754444122310f, 0.471396714448928830f,
+0.460538685321807860f, 0.449611306190490720f, 0.438616216182708740f,
+0.427555054426193240f, 0.416429519653320310f, 0.405241280794143680f,
+0.393992006778717040f, 0.382683396339416500f, 0.371317178010940550f,
+0.359894990921020510f, 0.348418653011322020f, 0.336889833211898800f,
+0.325310260057449340f, 0.313681721687316890f, 0.302005916833877560f,
+0.290284633636474610f, 0.278519660234451290f, 0.266712725162506100f,
+0.254865616559982300f, 0.242980137467384340f, 0.231058076024055480f,
+0.219101205468177800f, 0.207111343741416930f, 0.195090278983116150f,
+0.183039844036102290f, 0.170961856842041020f, 0.158858105540275570f,
+0.146730437874794010f, 0.134580671787261960f, 0.122410632669925690f,
+0.110222168266773220f, 0.098017096519470215f, 0.085797272622585297f,
+0.073564521968364716f, 0.061320696026086807f, 0.049067631363868713f,
+0.036807179450988770f, 0.024541186168789864f, 0.012271494604647160f,
+1.000000000000000000f, 0.999981164932250980f, 0.999924719333648680f,
+0.999830603599548340f, 0.999698817729949950f, 0.999529421329498290f,
+0.999322354793548580f, 0.999077737331390380f, 0.998795449733734130f,
+0.998475551605224610f, 0.998118102550506590f, 0.997723042964935300f,
+0.997290432453155520f, 0.996820271015167240f, 0.996312618255615230f,
+0.995767414569854740f, 0.995184719562530520f, 0.994564592838287350f,
+0.993906974792480470f, 0.993211925029754640f, 0.992479562759399410f,
+0.991709768772125240f, 0.990902662277221680f, 0.990058183670043950f,
+0.989176511764526370f, 0.988257586956024170f, 0.987301409244537350f,
+0.986308097839355470f, 0.985277652740478520f, 0.984210073947906490f,
+0.983105480670928960f, 0.981963872909545900f, 0.980785250663757320f,
+0.979569792747497560f, 0.978317379951477050f, 0.977028131484985350f,
+0.975702106952667240f, 0.974339365959167480f, 0.972939968109130860f,
+0.971503913402557370f, 0.970031261444091800f, 0.968522071838378910f,
+0.966976463794708250f, 0.965394437313079830f, 0.963776051998138430f,
+0.962121427059173580f, 0.960430502891540530f, 0.958703458309173580f,
+0.956940352916717530f, 0.955141186714172360f, 0.953306019306182860f,
+0.951435029506683350f, 0.949528157711029050f, 0.947585582733154300f,
+0.945607304573059080f, 0.943593442440032960f, 0.941544055938720700f,
+0.939459204673767090f, 0.937339007854461670f, 0.935183525085449220f,
+0.932992815971374510f, 0.930766940116882320f, 0.928506076335906980f,
+0.926210224628448490f, 0.923879504203796390f, 0.921514034271240230f,
+0.919113874435424800f, 0.916679084300994870f, 0.914209723472595210f,
+0.911706030368804930f, 0.909168004989624020f, 0.906595706939697270f,
+0.903989315032958980f, 0.901348829269409180f, 0.898674488067626950f,
+0.895966231822967530f, 0.893224298954010010f, 0.890448689460754390f,
+0.887639641761779790f, 0.884797096252441410f, 0.881921231746673580f,
+0.879012227058410640f, 0.876070082187652590f, 0.873094975948333740f,
+0.870086967945098880f, 0.867046236991882320f, 0.863972842693328860f,
+0.860866904258728030f, 0.857728600502014160f, 0.854557991027832030f,
+0.851355195045471190f, 0.848120331764221190f, 0.844853579998016360f,
+0.841554939746856690f, 0.838224709033966060f, 0.834862887859344480f,
+0.831469595432281490f, 0.828045010566711430f, 0.824589312076568600f,
+0.821102499961853030f, 0.817584812641143800f, 0.814036309719085690f,
+0.810457170009613040f, 0.806847572326660160f, 0.803207516670227050f,
+0.799537241458892820f, 0.795836865901947020f, 0.792106568813323970f,
+0.788346409797668460f, 0.784556567668914790f, 0.780737221240997310f,
+0.776888430118560790f, 0.773010432720184330f, 0.769103348255157470f,
+0.765167236328125000f, 0.761202394962310790f, 0.757208824157714840f,
+0.753186762332916260f, 0.749136388301849370f, 0.745057761669158940f,
+0.740951120853424070f, 0.736816525459289550f, 0.732654273509979250f,
+0.728464365005493160f, 0.724247097969055180f, 0.720002472400665280f,
+0.715730786323547360f, 0.711432158946990970f, 0.707106769084930420f,
+0.702754735946655270f, 0.698376238346099850f, 0.693971455097198490f,
+0.689540505409240720f, 0.685083627700805660f, 0.680601000785827640f,
+0.676092684268951420f, 0.671558916568756100f, 0.666999876499176030f,
+0.662415742874145510f, 0.657806694507598880f, 0.653172850608825680f,
+0.648514389991760250f, 0.643831551074981690f, 0.639124453067779540f,
+0.634393274784088130f, 0.629638195037841800f, 0.624859452247619630f,
+0.620057165622711180f, 0.615231573581695560f, 0.610382795333862300f,
+0.605511009693145750f, 0.600616455078125000f, 0.595699310302734380f,
+0.590759694576263430f, 0.585797846317291260f, 0.580813944339752200f,
+0.575808167457580570f, 0.570780694484710690f, 0.565731763839721680f,
+0.560661554336547850f, 0.555570185184478760f, 0.550457954406738280f,
+0.545324981212615970f, 0.540171444416046140f, 0.534997582435607910f,
+0.529803574085235600f, 0.524589657783508300f, 0.519355952739715580f,
+0.514102697372436520f, 0.508830130100250240f, 0.503538370132446290f,
+0.498227655887603760f, 0.492898166179656980f, 0.487550139427185060f,
+0.482183754444122310f, 0.476799190044403080f, 0.471396714448928830f,
+0.465976476669311520f, 0.460538685321807860f, 0.455083549022674560f,
+0.449611306190490720f, 0.444122105836868290f, 0.438616216182708740f,
+0.433093786239624020f, 0.427555054426193240f, 0.422000229358673100f,
+0.416429519653320310f, 0.410843133926391600f, 0.405241280794143680f,
+0.399624168872833250f, 0.393992006778717040f, 0.388345003128051760f,
+0.382683396339416500f, 0.377007365226745610f, 0.371317178010940550f,
+0.365612953901290890f, 0.359894990921020510f, 0.354163497686386110f,
+0.348418653011322020f, 0.342660695314407350f, 0.336889833211898800f,
+0.331106275320053100f, 0.325310260057449340f, 0.319501996040344240f,
+0.313681721687316890f, 0.307849615812301640f, 0.302005916833877560f,
+0.296150863170623780f, 0.290284633636474610f, 0.284407496452331540f,
+0.278519660234451290f, 0.272621333599090580f, 0.266712725162506100f,
+0.260794073343276980f, 0.254865616559982300f, 0.248927563428878780f,
+0.242980137467384340f, 0.237023577094078060f, 0.231058076024055480f,
+0.225083872675895690f, 0.219101205468177800f, 0.213110283017158510f,
+0.207111343741416930f, 0.201104596257209780f, 0.195090278983116150f,
+0.189068630337715150f, 0.183039844036102290f, 0.177004188299179080f,
+0.170961856842041020f, 0.164913088083267210f, 0.158858105540275570f,
+0.152797147631645200f, 0.146730437874794010f, 0.140658199787139890f,
+0.134580671787261960f, 0.128498077392578130f, 0.122410632669925690f,
+0.116318590939044950f, 0.110222168266773220f, 0.104121595621109010f,
+0.098017096519470215f, 0.091908916831016541f, 0.085797272622585297f,
+0.079682394862174988f, 0.073564521968364716f, 0.067443877458572388f,
+0.061320696026086807f, 0.055195201188325882f, 0.049067631363868713f,
+0.042938213795423508f, 0.036807179450988770f, 0.030674761161208153f,
+0.024541186168789864f, 0.018406687304377556f, 0.012271494604647160f,
 0.006135840900242329f
 };
 
 float Soloud_fft_trig_8[124] = {
-1.000000000000000000f, 0.923879504203796390f, 0.707106769084930420f, 
-0.382683396339416500f, 1.000000000000000000f, 0.980785250663757320f, 
-0.923879504203796390f, 0.831469595432281490f, 0.707106769084930420f, 
-0.555570185184478760f, 0.382683396339416500f, 0.195090278983116150f, 
-1.000000000000000000f, 0.995184719562530520f, 0.980785250663757320f, 
-0.956940352916717530f, 0.923879504203796390f, 0.881921231746673580f, 
-0.831469595432281490f, 0.773010432720184330f, 0.707106769084930420f, 
-0.634393274784088130f, 0.555570185184478760f, 0.471396714448928830f, 
-0.382683396339416500f, 0.290284633636474610f, 0.195090278983116150f, 
-0.098017096519470215f, 1.000000000000000000f, 0.998795449733734130f, 
-0.995184719562530520f, 0.989176511764526370f, 0.980785250663757320f, 
-0.970031261444091800f, 0.956940352916717530f, 0.941544055938720700f, 
-0.923879504203796390f, 0.903989315032958980f, 0.881921231746673580f, 
-0.857728600502014160f, 0.831469595432281490f, 0.803207516670227050f, 
-0.773010432720184330f, 0.740951120853424070f, 0.707106769084930420f, 
-0.671558916568756100f, 0.634393274784088130f, 0.595699310302734380f, 
-0.555570185184478760f, 0.514102697372436520f, 0.471396714448928830f, 
-0.427555054426193240f, 0.382683396339416500f, 0.336889833211898800f, 
-0.290284633636474610f, 0.242980137467384340f, 0.195090278983116150f, 
-0.146730437874794010f, 0.098017096519470215f, 0.049067631363868713f, 
-1.000000000000000000f, 0.999698817729949950f, 0.998795449733734130f, 
-0.997290432453155520f, 0.995184719562530520f, 0.992479562759399410f, 
-0.989176511764526370f, 0.985277652740478520f, 0.980785250663757320f, 
-0.975702106952667240f, 0.970031261444091800f, 0.963776051998138430f, 
-0.956940352916717530f, 0.949528157711029050f, 0.941544055938720700f, 
-0.932992815971374510f, 0.923879504203796390f, 0.914209723472595210f, 
-0.903989315032958980f, 0.893224298954010010f, 0.881921231746673580f, 
-0.870086967945098880f, 0.857728600502014160f, 0.844853579998016360f, 
-0.831469595432281490f, 0.817584812641143800f, 0.803207516670227050f, 
-0.788346409797668460f, 0.773010432720184330f, 0.757208824157714840f, 
-0.740951120853424070f, 0.724247097969055180f, 0.707106769084930420f, 
-0.689540505409240720f, 0.671558916568756100f, 0.653172850608825680f, 
-0.634393274784088130f, 0.615231573581695560f, 0.595699310302734380f, 
-0.575808167457580570f, 0.555570185184478760f, 0.534997582435607910f, 
-0.514102697372436520f, 0.492898166179656980f, 0.471396714448928830f, 
-0.449611306190490720f, 0.427555054426193240f, 0.405241280794143680f, 
-0.382683396339416500f, 0.359894990921020510f, 0.336889833211898800f, 
-0.313681721687316890f, 0.290284633636474610f, 0.266712725162506100f, 
-0.242980137467384340f, 0.219101205468177800f, 0.195090278983116150f, 
-0.170961856842041020f, 0.146730437874794010f, 0.122410632669925690f, 
-0.098017096519470215f, 0.073564521968364716f, 0.049067631363868713f, 
+1.000000000000000000f, 0.923879504203796390f, 0.707106769084930420f,
+0.382683396339416500f, 1.000000000000000000f, 0.980785250663757320f,
+0.923879504203796390f, 0.831469595432281490f, 0.707106769084930420f,
+0.555570185184478760f, 0.382683396339416500f, 0.195090278983116150f,
+1.000000000000000000f, 0.995184719562530520f, 0.980785250663757320f,
+0.956940352916717530f, 0.923879504203796390f, 0.881921231746673580f,
+0.831469595432281490f, 0.773010432720184330f, 0.707106769084930420f,
+0.634393274784088130f, 0.555570185184478760f, 0.471396714448928830f,
+0.382683396339416500f, 0.290284633636474610f, 0.195090278983116150f,
+0.098017096519470215f, 1.000000000000000000f, 0.998795449733734130f,
+0.995184719562530520f, 0.989176511764526370f, 0.980785250663757320f,
+0.970031261444091800f, 0.956940352916717530f, 0.941544055938720700f,
+0.923879504203796390f, 0.903989315032958980f, 0.881921231746673580f,
+0.857728600502014160f, 0.831469595432281490f, 0.803207516670227050f,
+0.773010432720184330f, 0.740951120853424070f, 0.707106769084930420f,
+0.671558916568756100f, 0.634393274784088130f, 0.595699310302734380f,
+0.555570185184478760f, 0.514102697372436520f, 0.471396714448928830f,
+0.427555054426193240f, 0.382683396339416500f, 0.336889833211898800f,
+0.290284633636474610f, 0.242980137467384340f, 0.195090278983116150f,
+0.146730437874794010f, 0.098017096519470215f, 0.049067631363868713f,
+1.000000000000000000f, 0.999698817729949950f, 0.998795449733734130f,
+0.997290432453155520f, 0.995184719562530520f, 0.992479562759399410f,
+0.989176511764526370f, 0.985277652740478520f, 0.980785250663757320f,
+0.975702106952667240f, 0.970031261444091800f, 0.963776051998138430f,
+0.956940352916717530f, 0.949528157711029050f, 0.941544055938720700f,
+0.932992815971374510f, 0.923879504203796390f, 0.914209723472595210f,
+0.903989315032958980f, 0.893224298954010010f, 0.881921231746673580f,
+0.870086967945098880f, 0.857728600502014160f, 0.844853579998016360f,
+0.831469595432281490f, 0.817584812641143800f, 0.803207516670227050f,
+0.788346409797668460f, 0.773010432720184330f, 0.757208824157714840f,
+0.740951120853424070f, 0.724247097969055180f, 0.707106769084930420f,
+0.689540505409240720f, 0.671558916568756100f, 0.653172850608825680f,
+0.634393274784088130f, 0.615231573581695560f, 0.595699310302734380f,
+0.575808167457580570f, 0.555570185184478760f, 0.534997582435607910f,
+0.514102697372436520f, 0.492898166179656980f, 0.471396714448928830f,
+0.449611306190490720f, 0.427555054426193240f, 0.405241280794143680f,
+0.382683396339416500f, 0.359894990921020510f, 0.336889833211898800f,
+0.313681721687316890f, 0.290284633636474610f, 0.266712725162506100f,
+0.242980137467384340f, 0.219101205468177800f, 0.195090278983116150f,
+0.170961856842041020f, 0.146730437874794010f, 0.122410632669925690f,
+0.098017096519470215f, 0.073564521968364716f, 0.049067631363868713f,
 0.024541186168789864f
 };
 
@@ -34884,7 +34884,7 @@ namespace SoLoud
 	Filter::~Filter()
 	{
 	}
-	
+
 	FilterInstance::FilterInstance()
 	{
 		mNumParams = 0;
@@ -34894,7 +34894,7 @@ namespace SoLoud
 	}
 
 	result FilterInstance::initParams(int aNumParams)
-	{		
+	{
 		mNumParams = aNumParams;
 		delete[] mParam;
 		delete[] mParamFader;
@@ -35024,12 +35024,12 @@ namespace SoLoud
 		mParent = aParent;
 		mFlags |= PROTECTED;
 	}
-	
+
 	unsigned int QueueInstance::getAudio(float *aBuffer, unsigned int aSamplesToRead, unsigned int aBufferSize)
 	{
 		if (mParent->mCount == 0)
 		{
-			return 0;			
+			return 0;
 		}
 		unsigned int copycount = aSamplesToRead;
 		unsigned int copyofs = 0;
@@ -35066,7 +35066,7 @@ namespace SoLoud
 		mWriteIndex = 0;
 		mCount = 0;
 	}
-	
+
 	QueueInstance * Queue::createInstance()
 	{
 		if (mInstance)
@@ -35097,7 +35097,7 @@ namespace SoLoud
 		{
 			return INVALID_PARAMETER;
 		}
-	
+
 		findQueueHandle();
 
 		if (mQueueHandle == 0)
@@ -35157,7 +35157,7 @@ namespace SoLoud
 
 	    return SO_NO_ERROR;
 	}
-	
+
 	result Queue::setParams(float aSamplerate, unsigned int aChannels)
 	{
 	    if (aChannels < 1 || aChannels > MAX_CHANNELS)
@@ -35299,12 +35299,12 @@ namespace SoLoud
 		{
 			pthread_mutex_t *mutex;
 			mutex = new pthread_mutex_t;
-		
+
 			pthread_mutexattr_t attr;
 			pthread_mutexattr_init(&attr);
 
 			pthread_mutex_init(mutex, &attr);
-		
+
 			return (void*)mutex;
 		}
 
@@ -35447,7 +35447,7 @@ namespace SoLoud
 				if (mWorkMutex) lockMutex(mWorkMutex);
 				if (mMaxTask == MAX_THREADPOOL_TASKS)
 				{
-					// If we're at max tasks, do the task on calling thread 
+					// If we're at max tasks, do the task on calling thread
 					// (we're in trouble anyway, might as well slow down adding more work)
 					if (mWorkMutex) unlockMutex(mWorkMutex);
 					aTask->work();
@@ -35570,7 +35570,7 @@ freely, subject to the following restrictions:
 
 --
 
-Based on "Using the Biquad Resonant Filter", 
+Based on "Using the Biquad Resonant Filter",
 Phil Burk, Game Programming Gems 3, p. 606
 */
 
@@ -35638,7 +35638,7 @@ namespace SoLoud
 		mFilterType = aParent->mFilterType;
 
 		initParams(4);
-		
+
 		mParam[SAMPLERATE] = aParent->mSampleRate;
 		mParam[RESONANCE] = aParent->mResonance;
 		mParam[FREQUENCY] = aParent->mFrequency;
@@ -35691,7 +35691,7 @@ namespace SoLoud
 
 		// Apply a small impulse to filter to prevent arithmetic underflow,
 		// which can cause the FPU to interrupt the CPU.
-		s.mY1 += (float) 1.0E-26;		
+		s.mY1 += (float) 1.0E-26;
 	}
 
 
@@ -35796,14 +35796,14 @@ namespace SoLoud
 			{
 				int chofs = j * mBufferLength;
 				int bchofs = j * aSamples;
-								
+
 				float n = aBuffer[i + bchofs];
 				mTotals[j] -= mBuffer[mOffset + chofs];
 				mTotals[j] += n;
 				mBuffer[mOffset + chofs] = n;
-			    
+
 			    n -= mTotals[j] / mBufferLength;
-			    
+
 				aBuffer[i + bchofs] += (n - aBuffer[i + bchofs]) * mParam[0];
 			}
 			prevofs = mOffset;
@@ -35828,7 +35828,7 @@ namespace SoLoud
 			return INVALID_PARAMETER;
 
         mLength = aLength;
-		
+
 		return 0;
 	}
 
@@ -35902,9 +35902,9 @@ namespace SoLoud
 			{
 				int chofs = j * mBufferLength;
 				int bchofs = j * aSamples;
-				
+
 				mBuffer[mOffset + chofs] = mParent->mFilter * mBuffer[prevofs + chofs] + (1 - mParent->mFilter) * mBuffer[mOffset + chofs];
-				
+
 				float n = aBuffer[i + bchofs] + mBuffer[mOffset + chofs] * decay;
 				mBuffer[mOffset + chofs] = n;
 
@@ -35935,7 +35935,7 @@ namespace SoLoud
 		mDecay = aDecay;
 		mDelay = aDelay;
 		mFilter = aFilter;
-		
+
 		return 0;
 	}
 
@@ -36023,7 +36023,7 @@ namespace SoLoud
 		unsigned int ofs = 0;
 		unsigned int chofs = 512 * aChannel;
 		unsigned int bofs = mOffset[aChannel];
-		
+
 		while (ofs < aSamples)
 		{
 			for (i = 0; i < 128; i++)
@@ -36031,7 +36031,7 @@ namespace SoLoud
 				mInputBuffer[chofs + ((bofs + i + 128) & 511)] = aBuffer[ofs + i];
 				mMixBuffer[chofs + ((bofs + i + 128) & 511)] = 0;
 			}
-			
+
 			for (i = 0; i < 256; i++)
 			{
 				b[i] = mInputBuffer[chofs + ((bofs + i) & 511)];
@@ -36040,14 +36040,14 @@ namespace SoLoud
 
 			// do magic
 			fftFilterChannel(b, 128, aSamplerate, aTime, aChannel, aChannels);
-			
+
 			FFT::ifft256(b);
 
 			for (i = 0; i < 256; i++)
 			{
 				mMixBuffer[chofs + ((bofs + i) & 511)] += b[i] * (128 - abs(128 - i)) * (1.0f / 128.0f);
-			}			
-			
+			}
+
 			for (i = 0; i < 128; i++)
 			{
 				aBuffer[ofs + i] += (mMixBuffer[chofs + ((bofs + i) & 511)] - aBuffer[ofs + i]) * mParam[0];
@@ -36189,7 +36189,7 @@ namespace SoLoud
 
 		mDelay = aDelay;
 		mFreq = aFreq;
-		
+
 		return 0;
 	}
 
@@ -36402,7 +36402,7 @@ namespace SoLoud
 		if (mParam[1] == 1)
 			k = 2 * mParam[1] / 0.01f;
 		else
-			k = 2 * mParam[1] / (1 - mParam[1]);	
+			k = 2 * mParam[1] / (1 - mParam[1]);
 
 		for (i = 0; i < aSamples; i++)
 		{

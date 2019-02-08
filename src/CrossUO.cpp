@@ -2441,10 +2441,8 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
             }
             else
             {
-                g_ConfigManager.DisableNewTargetSystem =
-                    (value == 0); //������ == 0!!! �.�. � ������� ��� Target System enable/disable
+                g_ConfigManager.DisableNewTargetSystem = (value == 0);
             }
-
             break;
         }
         case VKI_OBJECT_HANDLES:
@@ -6573,7 +6571,7 @@ void CGame::ChangeWarmode(uint8_t status)
 
     if (status != 0xFF)
     {
-        if (g_Player->Warmode == (bool)status)
+        if (g_Player->Warmode == bool(status))
         {
             return;
         }
