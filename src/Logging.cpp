@@ -1,111 +1,65 @@
-// MIT License
-// Copyright (c) Hotride
+// GPLv3
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
-#include "FileSystem.h"
+#include "Logging.h"
 
-CLogger g_Logger;
-CLogger g_CrashLogger;
+#if !defined(DISABLE_LOG)
 
-CLogger::CLogger()
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+
+#define LOG_FORMAT "[%T.%f] [%n] [%^%l%$] [%s:%#] [%!] %v"
+
+#if defined(XUO_WINDOWS)
+#include <spdlog/sinks/msvc_sink.h>
+using stdout_sink = spdlog::sinks::msvc_sink_mt;
+#else
+using stdout_sink = spdlog::sinks::stdout_color_sink_st;
+#endif
+using file_sink = spdlog::sinks::rotating_file_sink_mt;
+
+eLogSystem g_LogEnabled = LogSystemAll;
+
+static std::shared_ptr<file_sink> s_logFile;
+static std::shared_ptr<stdout_sink> s_logOut;
+
+#define LOG_SYSTEM(id, name) LOG_DECLARE_SYSTEM(name)
+#include "Loggers.h"
+#undef LOG_SYSTEM
+
+void LogInit(const char *filename)
 {
+    s_logFile = std::make_shared<file_sink>(filename, 1024 * 1024 * 2, 5, true);
+    s_logOut = std::make_shared<stdout_sink>();
+    std::vector<spdlog::sink_ptr> sinks{ s_logFile, s_logOut };
+
+#define LOG_SYSTEM(id, name) LOG_DEFINE_SYSTEM(name)
+#include "Loggers.h"
+#undef LOG_SYSTEM
+
+    spdlog::set_default_logger(g_logClient);
+    spdlog::set_pattern(LOG_FORMAT);
 }
 
-CLogger::~CLogger()
+void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
-    Close();
-}
-
-void CLogger::Close()
-{
-    if (m_File != nullptr)
+    auto logger = g_logClient;
+    switch (sys)
     {
-        LOG("Log closed.\n");
-        fs_close(m_File);
-        m_File = nullptr;
-    }
-}
-
-void CLogger::Init(const os_path &filePath)
-{
-    if (m_File != nullptr)
-    {
-        fs_close(m_File);
-    }
-
-    m_File = fs_open(filePath, FS_WRITE);
-
-    if (this == &g_Logger)
-    {
-        LOG("Log opened.\n");
-    }
-
-    FileName = filePath;
-}
-
-void CLogger::Print(const char *format, ...)
-{
-    if (m_File == nullptr)
-    {
-        return;
-    }
-
-    va_list arg;
-    va_start(arg, format);
-    vfprintf(m_File, format, arg);
-    va_end(arg);
-    fflush(m_File);
-}
-
-void CLogger::VPrint(const char *format, va_list ap)
-{
-    if (m_File == nullptr)
-    {
-        return;
+#define LOG_SYSTEM(id, name)                                                                       \
+    case eLogSystem::LogSystem##name:                                                              \
+        logger = g_log##name;                                                                      \
+        break;
+#include "Loggers.h"
+#undef LOG_SYSTEM
+        default:
+            break;
     }
 
-    vfprintf(m_File, format, ap);
-    fflush(m_File);
-}
+    auto lvl = (spdlog::level::level_enum)level;
 
-void CLogger::Print(const wchar_t *format, ...)
-{
-    if (m_File == nullptr)
-    {
-        return;
-    }
-
-    va_list arg;
-    va_start(arg, format);
-    vfwprintf(m_File, format, arg);
-    va_end(arg);
-    fflush(m_File);
-}
-
-void CLogger::VPrint(const wchar_t *format, va_list ap)
-{
-    if (m_File == nullptr)
-    {
-        return;
-    }
-
-    vfwprintf(m_File, format, ap);
-    fflush(m_File);
-}
-
-void CLogger::Dump(uint8_t *buf, int size)
-{
-    LogDump(m_File, buf, size);
-}
-
-void LogDump(FILE *fp, uint8_t *buf, int size)
-{
-    if (fp == nullptr)
-    {
-        return;
-    }
-
+    logger->log(lvl, title);
     int num_lines = size / 16;
-
     if (size % 16 != 0)
     {
         num_lines++;
@@ -113,33 +67,55 @@ void LogDump(FILE *fp, uint8_t *buf, int size)
 
     for (int line = 0; line < num_lines; line++)
     {
+        char out[128];
+        char *cur = out;
+        char *end = cur + sizeof(out);
         int row = 0;
-        fprintf(fp, "%04X: ", line * 16);
-
+        int r = 0;
+        r = snprintf(cur, end - cur, "%04X: ", line * 16);
+        assert(r >= 0 && r < end - cur && end - cur >= 0);
+        cur += r;
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
             {
-                fprintf(fp, "%02X ", buf[line * 16 + row]);
+                r = snprintf(cur, end - cur, "%02X ", buf[line * 16 + row]);
+                assert(r >= 0 && r < end - cur && end - cur >= 0);
+                cur += r;
             }
             else
             {
-                fprintf(fp, "-- ");
+                r = snprintf(cur, end - cur, "-- ");
+                assert(r >= 0 && r < end - cur && end - cur >= 0);
+                cur += r;
             }
         }
-
-        fprintf(fp, ": ");
-
+        r = snprintf(cur, end - cur, ": ");
+        assert(r >= 0 && r < end - cur && end - cur >= 0);
+        cur += r;
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
             {
-                fputc(isprint(buf[line * 16 + row]) != 0 ? buf[line * 16 + row] : '.', fp);
+                const char ch = isprint(buf[line * 16 + row]) != 0 ? buf[line * 16 + row] : '.';
+                r = snprintf(cur, end - cur, "%c", ch);
+                assert(r >= 0);
+                assert(r < end - cur);
+                assert(end - cur >= 0);
+                cur += r;
             }
         }
-
-        fputc('\n', fp);
+        logger->log(lvl, out);
     }
-
-    fflush(fp);
 }
+
+#else
+
+void LogInit(const char *filename)
+{
+}
+void LogHexBuffer(const char *title, uint8_t *buf, int size)
+{
+}
+
+#endif

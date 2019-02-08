@@ -13,7 +13,7 @@ CApplication::CApplication()
 
 void CApplication::Init()
 {
-    LOG("INITIATING CAPPLICATION\n");
+    INFO(Client, "initializing");
     g_MainThread = CThread::GetCurrentThreadId();
     DEBUG_TRACE_FUNCTION;
     m_ExePath = fs_path_current();

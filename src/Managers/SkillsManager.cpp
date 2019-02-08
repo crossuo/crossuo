@@ -19,7 +19,7 @@ CSkill::CSkill(bool haveButton, const string &name)
         Name = "NoNameSkill";
     }
 
-    //LOG("Skill loaded (button:%i): %s\n", m_Button, m_Name.c_str());
+    DEBUG(Client, "skill loaded (button: {}): {}", Button, Name);
 }
 
 bool CSkillsManager::Load()
@@ -50,12 +50,10 @@ bool CSkillsManager::Load()
         }
     }
 
-    LOG("Skills count: %i\n", Count);
-
+    INFO(Client, "skills count: {}", Count);
     if (Count < 2 || Count > 100)
     {
         Count = 0;
-
         return false;
     }
 

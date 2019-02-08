@@ -831,6 +831,7 @@ FMT_CONSTEXPR typename internal::result_of<Visitor(int)>::type
     visit_format_arg(Visitor &&vis, const basic_format_arg<Context> &arg) {
   typedef typename Context::char_type char_type;
   switch (arg.type_) {
+  default:
   case internal::none_type:
     break;
   case internal::named_arg_type:

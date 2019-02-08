@@ -24,7 +24,7 @@ CGumpCustomHouse *g_CustomHouseGump = nullptr;
 template <class T, class A>
 void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const os_path &path)
 {
-    LOG("parse CH file (CAT): %s\n", CStringFromPath(path));
+    INFO(Data, "parse custom house file (CAT): %s\n", CStringFromPath(path));
     FILE *file = fs_open(path, FS_READ); //"r"
     if (file != nullptr)
     {
@@ -84,7 +84,7 @@ void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const os_path &path
 template <class T>
 void ParseCustomHouseObjectFile(vector<T> &list, const os_path &path)
 {
-    LOG("parse CH file: %s\n", CStringFromPath(path));
+    INFO(Data, "parse custom house file: %s\n", CStringFromPath(path));
     FILE *file = fs_open(path, FS_READ); //"r"
     if (file != nullptr)
     {
@@ -182,8 +182,14 @@ CGumpCustomHouse::CGumpCustomHouse(int serial, int x, int y)
         MaxFixtures = MaxComponents / 20;
     }
 
-    LOG("CH multi Bounds: %i %i %i %i\n", StartPos.X, StartPos.Y, EndPos.X, EndPos.Y);
-    LOG("MaxComponents=%i, MaxFixtures=%i\n", MaxComponents, MaxFixtures);
+    INFO(
+        Client,
+        "custom house multi Bounds: %i %i %i %i",
+        StartPos.X,
+        StartPos.Y,
+        EndPos.X,
+        EndPos.Y);
+    INFO(Client, "MaxComponents=%i, MaxFixtures=%i", MaxComponents, MaxFixtures);
 
     Add(new CGUIPage(0));
     Add(new CGUIGumppicTiled(0x0E14, 121, 36, 397, 120));

@@ -146,7 +146,7 @@ bool CWindow::Create(
         SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (m_window == nullptr)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Coult not create window: %s\n", SDL_GetError());
+        ERROR(Client, "couldn't create window: {}", SDL_GetError());
         return false;
     }
 
@@ -181,8 +181,7 @@ bool CWindow::Create(
     SDL_VERSION(&info.version);
     if (SDL_GetWindowWMInfo(m_window, &info) != 0u)
     {
-        SDL_Log("SDL %d.%d.%d\n", info.version.major, info.version.minor, info.version.patch);
-
+        INFO(Client, "SDL {}.{}.{}", info.version.major, info.version.minor, info.version.patch);
         const char *subsystem = "Unknown";
         switch (info.subsystem)
         {
@@ -233,7 +232,7 @@ bool CWindow::Create(
 #endif
         }
 
-        SDL_Log("System: %s\n", subsystem);
+        INFO(Client, "System: {}", subsystem);
 #if defined(XUO_WINDOWS)
         Handle = info.info.win.window;
 #endif
@@ -257,13 +256,13 @@ void CWindow::Destroy()
 void CWindow::ShowMessage(const string &text, const string &title)
 {
     DEBUG_TRACE_FUNCTION;
-    SDL_Log("%s: %s\n", title.c_str(), text.c_str());
+    WARN(Client, "{}: {}", title, text);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, title.c_str(), text.c_str(), nullptr);
 }
 
 void CWindow::ShowMessage(const wstring &text, const wstring &title)
 {
-    DEBUG_TRACE_FUNCTION;
-    SDL_Log("%s: %s\n", title.c_str(), text.c_str());
+    ShowMessage(ToString(title), ToString(text));
 }
 
 bool CWindow::OnWindowProc(SDL_Event &ev)

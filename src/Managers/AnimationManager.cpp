@@ -248,8 +248,7 @@ void CAnimationManager::Load(uint32_t *verdata)
                 uint32_t offset = 0;
                 int count = 0;
 
-                //LOG("vh->ID = 0x%02X vh->BlockID = 0x%08X\n", vh->FileID, graphic);
-
+                DEBUG(Data, "vh->ID = 0x{:0>2x} vh->BlockID = 0x{:0>8x}", vh->FileID, graphic);
                 if (graphic < 35000)
                 {
                     if (graphic < 22000) //monsters
@@ -282,12 +281,14 @@ void CAnimationManager::Load(uint32_t *verdata)
 
                 if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
                 {
-                    LOG("Invalid animation patch 0x%04X (0x%08X)\n", id, graphic);
+                    WARN(Data, "invalid animation patch 0x{:0>4x} (0x{:0>8x})", id, graphic);
                     continue;
                 }
                 if (group >= (uint32_t)count)
                 {
-                    LOG("Invalid group index: %i in animation patch 0x%04X (0x%08X)\n",
+                    WARN(
+                        Data,
+                        "invalid group index: {} in animation patch 0x{:0>4x} (0x{:0>8x})",
                         group,
                         id,
                         graphic);
@@ -895,7 +896,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
-        //LOG("GetGroupIndex: Invalid ID: 0x%04X\n", id);
+        WARN(Data, "invalid id: 0x{:0>4x}", id);
         return AG_HIGHT;
     }
 
@@ -919,7 +920,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
 {
     DEBUG_TRACE_FUNCTION;
-    //LOG("gr: 0x%04X, %i\n", id, m_DataIndex[id].Type);
+    DEBUG(Data, "gr: 0x{:0>4x}, {}", id, m_DataIndex[id].Type);
     switch (m_DataIndex[id].Type)
     {
         case AGT_ANIMAL:
@@ -1055,7 +1056,7 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
         }
     }
 
-    LOG("CAnimationManager::ClearUnusedTextures::removed %i\n", count);
+    INFO(Data, "CAnimationManager::ClearUnusedTextures::removed {}", count);
 }
 
 bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction)
@@ -2295,7 +2296,7 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     UOPAnimationData &animDataStruct = m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
     if (animDataStruct.path.length() == 0u)
     {
-        //LOG("CAnimationManager::TryReadUOPAnimDimins bad address\n");
+        WARN(Data, "CAnimationManager::TryReadUOPAnimDimins bad address");
         return false;
     }
 
@@ -2351,7 +2352,9 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
 
         if (data.size() != textureSize)
         {
-            LOG("Allocation pixels memory for TryReadUOPAnimDimins failed (want size: %i)\n",
+            WARN(
+                Data,
+                "pixel memory allocation for TryReadUOPAnimDimins failed (size needed: {})",
                 textureSize);
             continue;
         }
@@ -3438,7 +3441,9 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
         if ((imageWidth == 0u) || (imageHeight == 0u))
         {
-            LOG("CAnimationManager::LoadDirectionGroup no image size:%i, %i\n",
+            WARN(
+                Data,
+                "CAnimationManager::LoadDirectionGroup no image size:{}, {}",
                 imageWidth,
                 imageHeight);
             continue;
@@ -3450,7 +3455,9 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
         if (data.size() != wantSize)
         {
-            LOG("Allocation pixels memory for LoadDirectionGroup failed (want size: %i)\n",
+            WARN(
+                Data,
+                "pixel memory allocation for LoadDirectionGroup failed (size neeeded: {})",
                 wantSize);
             continue;
         }

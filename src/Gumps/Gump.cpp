@@ -76,7 +76,7 @@ CGump::~CGump()
 void CGump::GUMP_DIRECT_HTML_LINK_EVENT_C
 {
     g_FontManager.GoToWebLink(link);
-    DebugMsg("OnDirectHTMLLink(%i)\n", link);
+    TRACE(Client, "OnDirectHTMLLink({})", link);
 }
 
 void CGump::FixCoordinates()

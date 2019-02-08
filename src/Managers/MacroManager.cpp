@@ -234,11 +234,11 @@ bool CMacroManager::Convert(const os_path &path)
 
         if (size < 4 || size > 5)
         {
-            LOG("Error! Macros converter: unexpected start args count = %zi\n", size);
+            ERROR(Client, "macros converter: unexpected start args count = {}", size);
             continue;
         }
 
-        //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]\n", strings[0].c_str(), atoi(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION].c_str()));
+        //TRACE(Client, "Key: {} [alt={} ctrl={} shift={}]", strings[0], atoi(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION].c_str()));
         bool macroAdded = false;
 
         CMacro *macro = new CMacro(
@@ -247,7 +247,7 @@ bool CMacroManager::Convert(const os_path &path)
             atoi(strings[size - MACRO_POSITION_CTRL].c_str()) != 0,
             atoi(strings[size - MACRO_POSITION_SHIFT].c_str()) != 0);
 
-        string TestLine{};
+        string TestLine;
         while (!file.IsEOF())
         {
             vector<string> datas = file.ReadTokens();
@@ -283,7 +283,7 @@ bool CMacroManager::Convert(const os_path &path)
                 if (upData == ToUpperA(CMacro::m_MacroActionName[i]))
                 {
                     code = (MACRO_CODE)i;
-                    //LOG("Action found (%i): %s\n", i, CMacro::m_MacroActionName[i]);
+                    DEBUG(Client, "action found ({}): {}", i, CMacro::m_MacroActionName[i]);
                     break;
                 }
             }
@@ -300,9 +300,7 @@ bool CMacroManager::Convert(const os_path &path)
                         {
                             args += " " + data[i];
                         }
-
-                        //LOG("\tSub action string is: %s\n", args.c_str());
-
+                        DEBUG(Client, "\tsub action string is: {}", args.c_str());
                         ((CMacroObjectString *)obj)->m_String = args;
                     }
                 }
@@ -322,9 +320,7 @@ bool CMacroManager::Convert(const os_path &path)
                         if (upData == ToUpperA(CMacro::m_MacroAction[i]))
                         {
                             obj->SubCode = (MACRO_SUB_CODE)i;
-
-                            //LOG("\tSub action found (%i): %s\n", i, CMacro::m_MacroAction[i]);
-
+                            DEBUG(Client, "sub action found ({}): {}", i, CMacro::m_MacroAction[i]);
                             break;
                         }
                     }
@@ -333,8 +329,7 @@ bool CMacroManager::Convert(const os_path &path)
             }
         }
 
-        //LOG("Cycle ends with add: %i\n", macroAdded);
-
+        DEBUG(Client, "cycle ends with add: {}", macroAdded);
         if (!macroAdded)
         {
             Add(macro);

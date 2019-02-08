@@ -508,9 +508,10 @@ void CGameScreen::CalculateRenderList()
 
                     AddTileToRenderList(block->GetRender(x % 8, y % 8), x, y, useObjectHandles);
                 }
-                //else
-                //	LOG("Expected: %i %i\n", blockIndex, g_MapManager->MaxBlockIndex);
-
+                else
+                {
+                    TRACE(Renderer, "expected: {} {}", blockIndex, g_MapManager.MaxBlockIndex);
+                }
                 x++;
                 y--;
             }
@@ -909,18 +910,19 @@ void CGameScreen::AddTileToRenderList(
         if (m_RenderListCount >= (int)m_RenderList.size())
         {
             size_t newSize = m_RenderList.size() + 1000;
-
             m_RenderList.resize(newSize);
-
             if (m_RenderList.size() != newSize)
             {
-                LOG("Allocation pixels memory for Render List failed (want size: %zi)\n", newSize);
-
+                WARN(
+                    Renderer,
+                    "pixel memory allocation for render list failed (size needed: {})",
+                    newSize);
                 m_RenderList.resize(newSize - 1000);
-
                 if (m_RenderList.size() != newSize - 1000)
                 {
-                    LOG("Allocation pixels memory for Render List failed SECOND STEP!!! (want size: %zi)\n",
+                    WARN(
+                        Renderer,
+                        "pixel memory alloation for render list failed - SECOND TRY (size needed: {})",
                         newSize - 1000);
                     m_RenderListCount = 0;
                     return;
@@ -928,8 +930,14 @@ void CGameScreen::AddTileToRenderList(
             }
         }
 
-        //LOG("Item[0x%04X]: x=%i y=%i (dx=%i, dy=%i)\n", obj->Graphic, drawX, drawY, obj->DrawX, obj->DrawY);
-
+        TRACE(
+            Renderer,
+            "Item[0x{:0>4x}]: x={} y={} (dx={}, dy={})",
+            obj->Graphic,
+            drawX,
+            drawY,
+            obj->DrawX,
+            obj->DrawY);
         m_RenderList[m_RenderListCount].Object = obj;
         m_RenderList[m_RenderListCount].GrayColor = grayColor;
         obj->UseInRender = RenderIndex;
@@ -938,7 +946,6 @@ void CGameScreen::AddTileToRenderList(
             obj == g_SelectedObject.Object)
         {
             int zOffset = 0;
-
             if (g_CustomHouseGump->CurrentFloor == 1)
             {
                 zOffset = -7;
@@ -1752,7 +1759,7 @@ void CGameScreen::Render()
 
     if (lastRender < g_Ticks)
     {
-        LOG("FPS=%i\n", FPScount);
+        TRACE(Renderer, "FPS={}", FPScount);
         FPScount = currentFPS;
         currentFPS = 1;
         lastRender = g_Ticks + 1000;

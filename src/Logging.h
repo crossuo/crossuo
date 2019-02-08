@@ -1,56 +1,90 @@
-// MIT License
-// Copyright (c) Hotride
+// GPLv3
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #pragma once
 
-#include "FileSystem.h"
+#if !defined(DISABLE_LOG)
 
-void LogDump(FILE *fp, uint8_t *buf, int size);
+#include <spdlog/spdlog.h>
+#include <spdlog/async.h>
 
-#define LOG_LEVEL 2
+using logger = spdlog::logger;
 
-#if LOG_LEVEL == 1
-#define INITLOGGER(path)
-#define LOG(...) fprintf(stdout, " LOG: " __VA_ARGS__)
-#define LOG_DUMP(...)      //LogDump(stdout, __VA_ARGS__)
-#define SAFE_LOG_DUMP(...) //LogDump(stdout, __VA_ARGS__)
-#elif LOG_LEVEL == 2
-#define INITLOGGER(path) g_Logger.Init(path);
-#define LOG(...) g_Logger.Print(__VA_ARGS__) //fprintf(stdout, " LOG: " __VA_ARGS__)
-#define LOG_DUMP(...)                        //LogDump(stdout, __VA_ARGS__)
-#define SAFE_LOG_DUMP(...)                   //LogDump(stdout, __VA_ARGS__)
-#else                                        //LOG_LEVEL == 0
-#define INITLOGGER(path)
-#define LOG(...)
-#define LOG_DUMP(...)
-#define SAFE_LOG_DUMP(...)
-#endif //LOG_LEVEL!=0
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define LOG_DECLARE_EXTERN(name) extern std::shared_ptr<logger> g_log##name;
+#define LOG_DECLARE_SYSTEM(name) std::shared_ptr<logger> g_log##name;
+#define LOG_DEFINE_SYSTEM(name)                                                                    \
+    g_log##name = std::make_shared<spdlog::logger>(TOSTRING(name), begin(sinks), end(sinks));
 
-#define INITCRASHLOGGER(path) g_CrashLogger.Init(path);
-#define CRASHLOG g_CrashLogger.Print
-#define CRASHLOG_DUMP g_CrashLogger.Dump
+using LogSystem = uint32_t;
 
-class CLogger
+enum eLogSystem : LogSystem
 {
-public:
-    os_path FileName;
-
-protected:
-    FILE *m_File{ nullptr };
-
-public:
-    CLogger();
-    ~CLogger();
-
-    void Close();
-    bool Ready() const { return m_File != nullptr; }
-    void Init(const os_path &filePath);
-    void Print(const char *format, ...);
-    void VPrint(const char *format, va_list ap);
-    void Print(const wchar_t *format, ...);
-    void VPrint(const wchar_t *format, va_list ap);
-    void Dump(uint8_t *buf, int size);
+#define LOG_SYSTEM(id, name) LogSystem##name = 1 << id,
+#include "Loggers.h"
+#undef LOG_SYSTEM
+    LogSystemAll = ~0u,
 };
 
-extern CLogger g_Logger;
-extern CLogger g_CrashLogger;
+extern eLogSystem g_LogEnabled;
+
+#define LOG_SYSTEM(id, name) LOG_DECLARE_EXTERN(name)
+#include "Loggers.h"
+#undef LOG_SYSTEM
+
+#define LOG_(system, logger, level, ...)                                                           \
+    if ((g_LogEnabled & system) && logger->should_log(level))                                      \
+    logger->log(                                                                                   \
+        spdlog::source_loc{ SPDLOG_FILE_BASENAME(__FILE__), __LINE__, SPDLOG_FUNCTION },           \
+        level,                                                                                     \
+        __VA_ARGS__)
+
+#define LOG_DUMP_(system, level, ...)                                                              \
+    if ((g_LogEnabled & eLogSystem::LogSystem##system) && g_log##system->should_log(level))        \
+    LogHexBuffer(eLogSystem::LogSystem##system, int(level), __VA_ARGS__)
+
+#define INFO(system, ...)                                                                          \
+    LOG_(eLogSystem::LogSystem##system, g_log##system, spdlog::level::info, __VA_ARGS__)
+#define WARN(system, ...)                                                                          \
+    LOG_(eLogSystem::LogSystem##system, g_log##system, spdlog::level::warn, __VA_ARGS__)
+#define ERROR(system, ...)                                                                         \
+    LOG_(eLogSystem::LogSystem##system, g_log##system, spdlog::level::err, __VA_ARGS__)
+#define CRITICAL(system, ...)                                                                      \
+    LOG_(eLogSystem::LogSystem##system, g_log##system, spdlog::level::critical, __VA_ARGS__)
+
+#define INFO_DUMP(system, ...) LOG_DUMP_(system, spdlog::level::info, __VA_ARGS__)
+
+#if defined(XUO_DEBUG)
+#define TRACE(system, ...)                                                                         \
+    LOG_(eLogSystem::LogSystem##system, g_log##system, spdlog::level::trace, __VA_ARGS__)
+#define DEBUG(system, ...)                                                                         \
+    LOG_(eLogSystem::LogSystem##system, g_log##system, spdlog::level::debug, __VA_ARGS__)
+#define TRACE_DUMP(system, ...) LOG_DUMP_(system, spdlog::level::trace, __VA_ARGS__)
+#define DEBUG_DUMP(system, ...) LOG_DUMP_(system, spdlog::level::debug, __VA_ARGS__)
+#define SAFE_DEBUG_DUMP(system, ...) DEBUG_DUMP(system, __VA_ARGS__)
+#else
+#define TRACE(...)
+#define DEBUG(...)
+#define TRACE_DUMP(...)
+#define DEBUG_DUMP(...)
+#define SAFE_DEBUG_DUMP(...)
+#endif
+
+#else
+
+#define TRACE(...)
+#define DEBUG(...)
+#define INFO(...)
+#define WARN(...)
+#define ERROR(...)
+#define CRITICAL(...)
+#define TRACE_DUMP(...)
+#define DEBUG_DUMP(...)
+#define INFO_DUMP(...)
+#define SAFE_DEBUG_DUMP(...)
+
+#endif
+
+void LogHexBuffer(eLogSystem system, int level, const char *title, uint8_t *buf, int size);
+void LogInit(const char *filename);

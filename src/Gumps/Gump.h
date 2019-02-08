@@ -118,18 +118,18 @@ public:
     virtual class CRenderObject *Select();
     virtual void InitToolTip() {}
 
-    GUMP_BUTTON_EVENT_H { DebugMsg("OnButton(%i)\n", serial); }
-    GUMP_CHECKBOX_EVENT_H { DebugMsg("OnCheckbox(%i, %i)\n", serial, state); }
-    GUMP_RADIO_EVENT_H { DebugMsg("OnRadio(%i, %i)\n", serial, state); }
-    GUMP_TEXT_ENTRY_EVENT_H { DebugMsg("OnTextEntry(%i)\n", serial); }
-    GUMP_SLIDER_CLICK_EVENT_H { DebugMsg("OnSliderClick(%i)\n", serial); }
-    GUMP_SLIDER_MOVE_EVENT_H { DebugMsg("OnSliderMove(%i)\n", serial); }
-    GUMP_RESIZE_START_EVENT_H { DebugMsg("OnResizeStart(%i)\n", serial); }
-    GUMP_RESIZE_EVENT_H { DebugMsg("OnResize(%i)\n", serial); }
-    GUMP_RESIZE_END_EVENT_H { DebugMsg("OnResizeEnd(%i)\n", serial); }
+    GUMP_BUTTON_EVENT_H { TRACE(Client, "OnButton({})", serial); }
+    GUMP_CHECKBOX_EVENT_H { TRACE(Client, "OnCheckbox({}, {})", serial, state); }
+    GUMP_RADIO_EVENT_H { TRACE(Client, "OnRadio({}, {})", serial, state); }
+    GUMP_TEXT_ENTRY_EVENT_H { TRACE(Client, "OnTextEntry({})", serial); }
+    GUMP_SLIDER_CLICK_EVENT_H { TRACE(Client, "OnSliderClick({})", serial); }
+    GUMP_SLIDER_MOVE_EVENT_H { TRACE(Client, "OnSliderMove({})", serial); }
+    GUMP_RESIZE_START_EVENT_H { TRACE(Client, "OnResizeStart({})", serial); }
+    GUMP_RESIZE_EVENT_H { TRACE(Client, "OnResize({})", serial); }
+    GUMP_RESIZE_END_EVENT_H { TRACE(Client, "OnResizeEnd({})", serial); }
     GUMP_DIRECT_HTML_LINK_EVENT_H;
-    GUMP_COMBOBOX_SELECTION_EVENT_H { DebugMsg("OnComboboxSelection(%i)\n", serial); }
-    GUMP_SCROLL_BUTTON_EVENT_H { DebugMsg("OnScrollButton()\n"); }
+    GUMP_COMBOBOX_SELECTION_EVENT_H { TRACE(Client, "OnComboboxSelection({})", serial); }
+    GUMP_SCROLL_BUTTON_EVENT_H { TRACE(Client, "OnScrollButton()"); }
 
     virtual void OnLeftMouseButtonDown();
     virtual void OnLeftMouseButtonUp();

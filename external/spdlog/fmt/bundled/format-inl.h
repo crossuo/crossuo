@@ -675,6 +675,7 @@ FMT_FUNC gen_digits_params process_specs(const core_format_specs &specs,
   auto params = gen_digits_params();
   int num_digits = specs.precision >= 0 ? specs.precision : 6;
   switch (specs.type) {
+  default:break;
   case 'G':
     params.upper = true;
     FMT_FALLTHROUGH

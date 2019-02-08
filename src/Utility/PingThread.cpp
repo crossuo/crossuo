@@ -19,7 +19,7 @@ CPingThread::CPingThread(int serverID, const string &serverIP, int requestsCount
     DEBUG_TRACE_FUNCTION;
     //assert(s_pingCnt == 0 && "Multiple ping threads running at the same time");
     s_pingCnt++;
-    LOG("CPingThread => %s\n", serverIP.c_str());
+    TRACE(Client, "CPingThread => {}", serverIP);
 }
 
 CPingThread::~CPingThread()

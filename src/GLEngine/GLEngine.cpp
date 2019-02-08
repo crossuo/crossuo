@@ -47,7 +47,9 @@ bool CGLEngine::Install()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     int glewInitResult = glewInit();
-    LOG("glewInit() = %i fb=%i v(%s) (shader: %i)\n",
+    INFO(
+        Renderer,
+        "glewInit() = {} fb={} v({}) (shader: {})",
         glewInitResult,
         GL_ARB_framebuffer_object,
         glGetString(GL_VERSION),
@@ -57,12 +59,12 @@ bool CGLEngine::Install()
         return false;
     }
 
-    LOG("Graphics Successfully Initialized\n");
-    LOG("OpenGL Info:\n");
-    LOG("    Version: %s\n", glGetString(GL_VERSION));
-    LOG("     Vendor: %s\n", glGetString(GL_VENDOR));
-    LOG("   Renderer: %s\n", glGetString(GL_RENDERER));
-    LOG("    Shading: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    INFO(Renderer, "Graphics Successfully Initialized");
+    INFO(Renderer, "OpenGL Info:");
+    INFO(Renderer, "    Version: {}", glGetString(GL_VERSION));
+    INFO(Renderer, "     Vendor: {}", glGetString(GL_VENDOR));
+    INFO(Renderer, "   Renderer: {}", glGetString(GL_RENDERER));
+    INFO(Renderer, "    Shading: {}", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     CanUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
@@ -95,11 +97,10 @@ bool CGLEngine::Install()
         g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
     }
 
-    LOG("g_UseFrameBuffer = %i; CanUseBuffer = %i\n", CanUseFrameBuffer, CanUseBuffer);
-
+    INFO(Renderer, "g_UseFrameBuffer = {}; CanUseBuffer = {}", CanUseFrameBuffer, CanUseBuffer);
     if (!CanUseFrameBuffer && g_ShowWarnings)
     {
-        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers!", "Warning!");
+        g_GameWindow.ShowMessage("Your graphics card does not support frame buffers", "Warning");
     }
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background

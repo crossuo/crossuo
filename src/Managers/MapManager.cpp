@@ -111,7 +111,7 @@ void CMapManager::CreateBlockTable(int map)
                 }
                 else
                 {
-                    LOG("Hash not found in uop map %i file.\n", map);
+                    INFO(Data, "UOP: hash not found in uop map {} file.", map);
                 }
             }
         }

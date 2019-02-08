@@ -211,6 +211,7 @@ private:
 
         switch (incoming_async_msg.msg_type)
         {
+        default:break;
         case async_msg_type::log:
         {
             auto msg = incoming_async_msg.to_log_msg();

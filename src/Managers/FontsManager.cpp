@@ -1883,11 +1883,11 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
     if (j != i && i < len)
     {
         int cmdLen = i - j;
-        //LOG("cmdLen = %i\n", cmdLen);
+        //TRACE(Client, "cmdLen = {}", cmdLen);
         wstring cmd;
         cmd.resize(cmdLen);
         memcpy(&cmd[0], &str[j], cmdLen * 2);
-        //LOG(L"cmd[%s] = %s\n", (endTag ? L"end" : L"start"), cmd.c_str());
+        //TRACE(Client, "cmd[{}] = {}", (endTag ? "end" : "start"), cmd;
         cmd = ToLowerW(cmd);
 
         j = i;
@@ -1997,10 +1997,10 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
                     {
                         wstring content = {};
                         cmdLen = i - j;
-                        //LOG("contentCmdLen = %i\n", cmdLen);
+                        //TRACE(Client, "contentCmdLen = {}", cmdLen);
                         content.resize(cmdLen);
                         memcpy(&content[0], &str[j], cmdLen * 2);
-                        //LOG(L"contentCmd = %s\n", content.c_str());
+                        //TRACE(Client, "contentCmd = {}", content);
 
                         if (static_cast<unsigned int>(!content.empty()) != 0u)
                         {

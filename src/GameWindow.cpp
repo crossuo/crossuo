@@ -61,8 +61,8 @@ bool CGameWindow::OnCreate()
     DEBUG_TRACE_FUNCTION;
     if (!g_GL.Install())
     {
-        LOG("Error install OpenGL\n");
-        ShowMessage("Error install OpenGL", "Error install OpenGL!");
+        ERROR(Renderer, "Initializating OpenGL.");
+        ShowMessage("OpenGL Error", "Error initializing OpenGL.");
         return false;
     }
 
@@ -81,10 +81,6 @@ void CGameWindow::OnDestroy()
     g_SoundManager.Free();
     PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
     g_Game.Uninstall();
-    g_CrashLogger.Close();
-#if defined(XUO_WINDOWS)
-    ::remove(CStringFromPath(g_CrashLogger.FileName));
-#endif
 }
 
 void CGameWindow::OnResize()
@@ -479,7 +475,9 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
 
-            LOG("--- ^(%d) s(+%d => %d) Plugin->Server:: %s\n",
+            INFO(
+                Plugin,
+                "--- ^({}) s(+{} => {}) Plugin->Server:: {}",
                 ticks - g_LastPacketTime,
                 size,
                 g_TotalSendSize,
@@ -490,13 +488,13 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
             if (*buf == 0x80 || *buf == 0x91)
             {
-                LOG_DUMP(buf, 1);
-                SAFE_LOG_DUMP(buf, size);
-                LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
+                INFO_DUMP(Plugin, "SEND:", buf, 1);
+                SAFE_DEBUG_DUMP(Plugin, "SEND:", buf, size);
+                INFO(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
             }
             else
             {
-                LOG_DUMP(buf, size);
+                INFO_DUMP(Plugin, "SEND:", buf, size);
             }
             g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
@@ -589,7 +587,9 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
                     }
                 }
 
-                LOG("Ping info: id:%i min:%i max:%i average:%i lost:%i\n",
+                INFO(
+                    Client,
+                    "Ping info: id:%i min:%i max:%i average:%i lost:%i",
                     info->ServerID,
                     info->Min,
                     info->Max,

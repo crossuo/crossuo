@@ -160,7 +160,6 @@ static void fs_list_recursive(const char *name)
             auto p = string(path, len);
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
             s_lower.emplace_back(p);
-            //fprintf(stdout, ">> %s\n", p.c_str());
         }
     }
     closedir(dir);
@@ -184,7 +183,7 @@ FILE *fs_open(const string &path_str, fs_mode mode)
     auto fp = fopen(fname, mstr);
     if (fp == nullptr)
     {
-        LOG("Error loading file: %s (%d)", strerror(errno), errno);
+        ERROR(Filesystem, "Loading file: {} ({})", strerror(errno), errno);
         return nullptr;
     }
 

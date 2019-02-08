@@ -6,11 +6,11 @@
 #include <string.h>
 
 #if 0
-#define SOCKET_LOG(...) LOG(__VA_ARGS__)
-#define SOCKET_DUMP(...) LOG_DUMP(__VA_ARGS__)
-#else
 #define SOCKET_LOG(...)
 #define SOCKET_DUMP(...)
+#else
+#define SOCKET_LOG(...) TRACE(Network, __VA_ARGS__)
+#define SOCKET_DUMP(...) TRACE_DUMP(Network, "SOCKET", __VA_ARGS__)
 #endif
 
 #if USE_PING
@@ -316,7 +316,7 @@ uint32_t socket_localaddress()
 
             char buff[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmp, buff, INET_ADDRSTRLEN);
-            SOCKET_LOG("%s IP Address %s (%x)\n", ifa->ifa_name, buff, r);
+            SOCKET_LOG("{} IP Address {} ({})", ifa->ifa_name, buff, r);
             break;
         }
     }
@@ -345,7 +345,7 @@ tcp_socket tcp_open()
         return nullptr;
     }
 
-    SOCKET_LOG("socket opened\n");
+    SOCKET_LOG("socket opened");
     int *s = new int;
     *s = h;
 
@@ -376,13 +376,13 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
         he = gethostbyname(address);
         if (he == nullptr)
         {
-            SOCKET_LOG("ERROR: gethostbyname: %d - %s\n", h_errno, hstrerror(h_errno));
+            SOCKET_LOG("ERROR: gethostbyname: {} - {}", h_errno, hstrerror(h_errno));
             return false;
         }
 
         memcpy(&caddr.sin_addr, he->h_addr, he->h_length);
     }
-    SOCKET_LOG("socket connected\n");
+    SOCKET_LOG("socket connected");
     caddr.sin_port = htons(port);
     return (connect(h, (struct sockaddr *)&caddr, sizeof(caddr)) != -1);
 }
@@ -396,10 +396,7 @@ int tcp_select(tcp_socket socket)
     FD_SET(h, &rfds);
 
     struct timeval tv = { 0, 0 };
-
     auto r = select(h + 1, &rfds, nullptr, nullptr, &tv);
-    //SOCKET_LOG("tcp_select: %d\n", r);
-
     return r;
 }
 
@@ -407,7 +404,7 @@ int tcp_recv(tcp_socket socket, unsigned char *data, size_t max_size)
 {
     auto h = socket_fd(socket);
     auto r = recv(h, data, max_size, 0);
-    SOCKET_LOG("RECV: %d\n", r);
+    SOCKET_LOG("RECV: {}", r);
     SOCKET_DUMP(data, r);
     return r;
 }
@@ -416,7 +413,7 @@ int tcp_send(tcp_socket socket, unsigned char *data, size_t size)
 {
     auto h = socket_fd(socket);
     auto r = send(h, data, size, 0);
-    SOCKET_LOG("SEND: %d\n", r);
+    SOCKET_LOG("SEND: {}", r);
     SOCKET_DUMP(data, r);
     return r;
 }
@@ -425,7 +422,7 @@ void tcp_close(tcp_socket socket)
 {
     auto h = socket_fd(socket);
     close(h);
-    SOCKET_LOG("socket closed\n");
+    SOCKET_LOG("socket closed");
     delete (int *)socket;
     socket = nullptr;
 }
@@ -443,16 +440,16 @@ icmp_handle icmp_open()
     if (h == -1)
     {
         auto e = errno;
-        SOCKET_LOG("ERROR: %d - %s\n", e, strerror(e));
+        SOCKET_LOG("ERROR: {} - {}", e, strerror(e));
         if (e == 1)
         {
             g_DisablePing = true;
-            SOCKET_LOG("\tPING disabled, not enough permission to create raw socket\n");
+            SOCKET_LOG("\tPING disabled, not enough permission to create raw socket");
         }
         return nullptr;
     }
 
-    SOCKET_LOG("icmp opened\n");
+    SOCKET_LOG("icmp opened");
     int *s = new int;
     *s = h;
     return (icmp_handle)s;
@@ -462,11 +459,11 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
 {
     assert(timems);
     auto h = socket_fd(handle);
-    SOCKET_LOG("icmp query\n");
+    SOCKET_LOG("icmp query");
     auto lpHost = gethostbyname(ip);
     if (lpHost != nullptr)
     {
-        SOCKET_LOG("icmp %x\n", (uint32_t)((in_addr *)lpHost->h_addr_list[0])->s_addr);
+        SOCKET_LOG("icmp {:x}", (uint32_t)((in_addr *)lpHost->h_addr_list[0])->s_addr);
         sockaddr_in destAddress;
         destAddress.sin_addr.s_addr = ((in_addr *)lpHost->h_addr_list[0])->s_addr;
         destAddress.sin_family = AF_INET;
@@ -502,7 +499,7 @@ int icmp_query(icmp_handle handle, const char *ip, uint32_t *timems)
             if (recvfrom(h, a, as, 0, src, &length) != -1)
             {
                 *timems = answer.echoRequest.dwTime;
-                SOCKET_LOG("icmp: %d\n", *timems);
+                SOCKET_LOG("icmp: {}", *timems);
                 return 0;
             }
             {
@@ -520,7 +517,7 @@ void icmp_close(icmp_handle handle)
     close(h);
     delete (int *)handle;
     handle = nullptr;
-    SOCKET_LOG("icmp closed\n");
+    SOCKET_LOG("icmp closed");
 }
 
 #endif // USE_PING

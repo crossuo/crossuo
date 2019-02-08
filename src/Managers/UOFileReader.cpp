@@ -15,25 +15,21 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
     uint32_t *lookupList = (uint32_t *)dataStart;
 
     int blocksize = io.Width * io.Height;
-
     vector<uint16_t> pixels;
-
     if (blocksize == 0)
     {
-        LOG("UOFileReader::GetGumpPixels bad size:%i, %i\n", io.Width, io.Height);
+        WARN(Data, "UOFileReader::GetGumpPixels bad size:{}, {}", io.Width, io.Height);
         return pixels;
     }
 
     pixels.resize(blocksize);
-
     if (pixels.size() != blocksize)
     {
-        LOG("Allocation pixels memory for GetGumpPixels failed (want size: %i)\n", blocksize);
+        WARN(Data, "pixel memory allocation for GetGumpPixels failed (size needed: {})", blocksize);
         return pixels;
     }
 
     uint16_t color = io.Color;
-
     for (int y = 0; y < io.Height; y++)
     {
         int gSize = 0;
@@ -180,7 +176,9 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
 
             if (pixels.size() != blocksize)
             {
-                LOG("Allocation pixels memory for ReadArt::LandTile failed (want size: %i)\n",
+                WARN(
+                    Data,
+                    "pixel memory allocation for ReadArt::LandTile failed (size needed: {})",
                     blocksize);
                 pixels.clear();
                 return pixels;
@@ -198,7 +196,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             width = *ptr;
             if ((width == 0) || width >= 1024)
             {
-                LOG("UOFileReader::ReadArt bad width:%i\n", width);
+                WARN(Data, "UOFileReader::ReadArt bad width: {}", width);
                 return pixels;
             }
 
@@ -208,7 +206,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
 
             if ((height == 0) || (height * 2) > 5120)
             {
-                LOG("UOFileReader::ReadArt bad height:%i\n", height);
+                WARN(Data, "UOFileReader::ReadArt bad height:{}", height);
                 return pixels;
             }
 
@@ -223,19 +221,18 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             uint16_t Run = 0;
 
             int blocksize = width * height;
-
             pixels.resize(blocksize, 0);
-
             if (pixels.size() != blocksize)
             {
-                LOG("Allocation pixels memory for ReadArt::StaticTile failed (want size: %i)\n",
+                WARN(
+                    Data,
+                    "pixel memory allocation for ReadArt::StaticTile failed (size needed: {})",
                     blocksize);
                 pixels.clear();
                 return pixels;
             }
 
             ptr = (uint16_t *)(dataStart + (lineOffsets[0] * 2));
-
             while (Y < height)
             {
                 XOffs = *ptr;
@@ -244,7 +241,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 ptr++;
                 if (XOffs + Run >= 2048)
                 {
-                    LOG("UOFileReader::ReadArt bad offset:%i, %i\n", XOffs, Run);
+                    WARN(Data, "UOFileReader::ReadArt bad offset:{}, {}", XOffs, Run);
                     pixels.clear();
                     return pixels;
                 }
@@ -455,15 +452,13 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
     }
     else
     {
-        LOG("UOFileReader::ReadTexture bad data size: %d\n", io.DataSize);
+        ERROR(Data, "UOFileReader::ReadTexture bad data size: {}", io.DataSize);
         delete th;
         return nullptr;
     }
 
     vector<uint16_t> pixels(w * h);
-
     uint16_t *P = (uint16_t *)io.Address;
-
     for (int i = 0; i < h; i++)
     {
         int pos = (int)i * w;

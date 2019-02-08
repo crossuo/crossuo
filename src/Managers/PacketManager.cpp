@@ -414,7 +414,7 @@ bool CPacketManager::AutoLoginNameExists(const string &name)
 #define CV_PRINT 0
 
 #if CV_PRINT != 0
-#define CVPRINT(s) LOG(s)
+#define CVPRINT(s) TRACE(Netwrok, s)
 #else //CV_PRINT==0
 #define CVPRINT(s)
 #endif //CV_PRINT!=0
@@ -425,180 +425,180 @@ void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 
     if (newClientVersion >= CV_500A)
     {
-        CVPRINT("Set new length for packet 0x0B (>= 5.0.0a)\n");
+        CVPRINT("Set new length for packet 0x0B (>= 5.0.0a)");
         m_Packets[0x0B].Size = 0x07;
-        CVPRINT("Set new length for packet 0x16 (>= 5.0.0a)\n");
+        CVPRINT("Set new length for packet 0x16 (>= 5.0.0a)");
         m_Packets[0x16].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set new length for packet 0x31 (>= 5.0.0a)\n");
+        CVPRINT("Set new length for packet 0x31 (>= 5.0.0a)");
         m_Packets[0x31].Size = PACKET_VARIABLE_SIZE;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0x0B (< 5.0.0a)\n");
+        CVPRINT("Set standard length for packet 0x0B (< 5.0.0a)");
         m_Packets[0x0B].Size = 0x10A;
-        CVPRINT("Set standart length for packet 0x16 (< 5.0.0a)\n");
+        CVPRINT("Set standard length for packet 0x16 (< 5.0.0a)");
         m_Packets[0x16].Size = 0x01;
-        CVPRINT("Set standart length for packet 0x31 (< 5.0.0a)\n");
+        CVPRINT("Set standard length for packet 0x31 (< 5.0.0a)");
         m_Packets[0x31].Size = 0x01;
     }
 
     if (newClientVersion >= CV_5090)
     {
-        CVPRINT("Set new length for packet 0xE1 (>= 5.0.9.0)\n");
+        CVPRINT("Set new length for packet 0xE1 (>= 5.0.9.0)");
         m_Packets[0xE1].Size = PACKET_VARIABLE_SIZE;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0xE1 (<= 5.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0xE1 (<= 5.0.9.0)");
         m_Packets[0xE1].Size = 0x09;
     }
 
     if (newClientVersion >= CV_6013)
     {
-        CVPRINT("Set new length for packet 0xE3 (>= 6.0.1.3)\n");
+        CVPRINT("Set new length for packet 0xE3 (>= 6.0.1.3)");
         m_Packets[0xE3].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set new length for packet 0xE6 (>= 6.0.1.3)\n");
+        CVPRINT("Set new length for packet 0xE6 (>= 6.0.1.3)");
         m_Packets[0xE6].Size = 0x05;
-        CVPRINT("Set new length for packet 0xE7 (>= 6.0.1.3)\n");
+        CVPRINT("Set new length for packet 0xE7 (>= 6.0.1.3)");
         m_Packets[0xE7].Size = 0x0C;
-        CVPRINT("Set new length for packet 0xE8 (>= 6.0.1.3)\n");
+        CVPRINT("Set new length for packet 0xE8 (>= 6.0.1.3)");
         m_Packets[0xE8].Size = 0x0D;
-        CVPRINT("Set new length for packet 0xE9 (>= 6.0.1.3)\n");
+        CVPRINT("Set new length for packet 0xE9 (>= 6.0.1.3)");
         m_Packets[0xE9].Size = 0x4B;
-        CVPRINT("Set new length for packet 0xEA (>= 6.0.1.3)\n");
+        CVPRINT("Set new length for packet 0xEA (>= 6.0.1.3)");
         m_Packets[0xEA].Size = 0x03;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0xE3 (<= 6.0.1.3)\n");
+        CVPRINT("Set standard length for packet 0xE3 (<= 6.0.1.3)");
         m_Packets[0xE3].Size = 0x4D;
-        CVPRINT("Set standart length for packet 0xE6 (<= 6.0.1.3)\n");
+        CVPRINT("Set standard length for packet 0xE6 (<= 6.0.1.3)");
         m_Packets[0xE6].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xE7 (<= 6.0.1.3)\n");
+        CVPRINT("Set standard length for packet 0xE7 (<= 6.0.1.3)");
         m_Packets[0xE7].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xE8 (<= 6.0.1.3)\n");
+        CVPRINT("Set standard length for packet 0xE8 (<= 6.0.1.3)");
         m_Packets[0xE8].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xE9 (<= 6.0.1.3)\n");
+        CVPRINT("Set standard length for packet 0xE9 (<= 6.0.1.3)");
         m_Packets[0xE9].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xEA (<= 6.0.1.3)\n");
+        CVPRINT("Set standard length for packet 0xEA (<= 6.0.1.3)");
         m_Packets[0xEA].Size = PACKET_VARIABLE_SIZE;
     }
 
     if (newClientVersion >= CV_6017)
     {
-        CVPRINT("Set new length for packet 0x08 (>= 6.0.1.7)\n");
+        CVPRINT("Set new length for packet 0x08 (>= 6.0.1.7)");
         m_Packets[0x08].Size = 0x0F;
-        CVPRINT("Set new length for packet 0x25 (>= 6.0.1.7)\n");
+        CVPRINT("Set new length for packet 0x25 (>= 6.0.1.7)");
         m_Packets[0x25].Size = 0x15;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0x08 (<= 6.0.1.7)\n");
+        CVPRINT("Set standard length for packet 0x08 (<= 6.0.1.7)");
         m_Packets[0x08].Size = 0x0E;
-        CVPRINT("Set standart length for packet 0x25 (<= 6.0.1.7)\n");
+        CVPRINT("Set standard length for packet 0x25 (<= 6.0.1.7)");
         m_Packets[0x25].Size = 0x14;
     }
 
     if (newClientVersion == CV_6060)
     {
-        CVPRINT("Set new length for packet 0xEE (>= 6.0.6.0)\n");
+        CVPRINT("Set new length for packet 0xEE (>= 6.0.6.0)");
         m_Packets[0xEE].Size = 0x2000;
-        CVPRINT("Set new length for packet 0xEF (>= 6.0.6.0)\n");
+        CVPRINT("Set new length for packet 0xEF (>= 6.0.6.0)");
         m_Packets[0xEF].Size = 0x2000;
-        CVPRINT("Set new length for packet 0xF1 (>= 6.0.6.0)\n");
+        CVPRINT("Set new length for packet 0xF1 (>= 6.0.6.0)");
         m_Packets[0xF1].Size = 0x09;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0xEE (<= 6.0.6.0)\n");
+        CVPRINT("Set standard length for packet 0xEE (<= 6.0.6.0)");
         m_Packets[0xEE].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xEF (<= 6.0.6.0)\n");
+        CVPRINT("Set standard length for packet 0xEF (<= 6.0.6.0)");
         m_Packets[0xEF].Size = 0x15;
-        CVPRINT("Set standart length for packet 0xF1 (<= 6.0.6.0)\n");
+        CVPRINT("Set standard length for packet 0xF1 (<= 6.0.6.0)");
         m_Packets[0xF1].Size = PACKET_VARIABLE_SIZE;
     }
 
     if (newClientVersion >= CV_60142)
     {
-        CVPRINT("Set new length for packet 0xB9 (>= 6.0.14.2)\n");
+        CVPRINT("Set new length for packet 0xB9 (>= 6.0.14.2)");
         m_Packets[0xB9].Size = 0x05;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0xB9 (<= 6.0.14.2)\n");
+        CVPRINT("Set standard length for packet 0xB9 (<= 6.0.14.2)");
         m_Packets[0xB9].Size = 0x03;
     }
 
     if (newClientVersion >= CV_7000)
     {
-        CVPRINT("Set new length for packet 0xEE (>= 7.0.0.0)\n");
+        CVPRINT("Set new length for packet 0xEE (>= 7.0.0.0)");
         m_Packets[0xEE].Size = 0x2000;
-        CVPRINT("Set new length for packet 0xEF (>= 7.0.0.0)\n");
+        CVPRINT("Set new length for packet 0xEF (>= 7.0.0.0)");
         m_Packets[0xEF].Size = 0x2000;
-        /*CVPRINT("Set new length for packet 0xF0 (>= 7.0.0.0)\n");
+        /*CVPRINT("Set new length for packet 0xF0 (>= 7.0.0.0)");
         m_Packets[0xF0].size = 0x2000;
-        CVPRINT("Set new length for packet 0xF1 (>= 7.0.0.0)\n");
+        CVPRINT("Set new length for packet 0xF1 (>= 7.0.0.0)");
         m_Packets[0xF1].size = 0x2000;
-        CVPRINT("Set new length for packet 0xF2 (>= 7.0.0.0)\n");
+        CVPRINT("Set new length for packet 0xF2 (>= 7.0.0.0)");
         m_Packets[0xF2].size = 0x2000;*/
     }
     else
     {
-        CVPRINT("Set standart length for packet 0xEE (<= 7.0.0.0)\n");
+        CVPRINT("Set standard length for packet 0xEE (<= 7.0.0.0)");
         m_Packets[0xEE].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xEF (<= 7.0.0.0)\n");
+        CVPRINT("Set standard length for packet 0xEF (<= 7.0.0.0)");
         m_Packets[0xEF].Size = 0x15;
-        /*CVPRINT("Set standart length for packet 0xF0 (<= 7.0.0.0)\n");
+        /*CVPRINT("Set standard length for packet 0xF0 (<= 7.0.0.0)");
         m_Packets[0xF0].size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xF1 (<= 7.0.0.0)\n");
+        CVPRINT("Set standard length for packet 0xF1 (<= 7.0.0.0)");
         m_Packets[0xF1].size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xF2 (<= 7.0.0.0)\n");
+        CVPRINT("Set standard length for packet 0xF2 (<= 7.0.0.0)");
         m_Packets[0xF2].size = PACKET_VARIABLE_SIZE;*/
     }
 
     if (newClientVersion >= CV_7090)
     {
-        CVPRINT("Set new length for packet 0x24 (>= 7.0.9.0)\n");
+        CVPRINT("Set new length for packet 0x24 (>= 7.0.9.0)");
         m_Packets[0x24].Size = 0x09;
-        CVPRINT("Set new length for packet 0x99 (>= 7.0.9.0)\n");
+        CVPRINT("Set new length for packet 0x99 (>= 7.0.9.0)");
         m_Packets[0x99].Size = 0x1E;
-        CVPRINT("Set new length for packet 0xBA (>= 7.0.9.0)\n");
+        CVPRINT("Set new length for packet 0xBA (>= 7.0.9.0)");
         m_Packets[0xBA].Size = 0x0A;
-        CVPRINT("Set new length for packet 0xF3 (>= 7.0.9.0)\n");
+        CVPRINT("Set new length for packet 0xF3 (>= 7.0.9.0)");
         m_Packets[0xF3].Size = 0x1A;
 
         // Already changed in client 7.0.8.2
-        CVPRINT("Set new length for packet 0xF1 (>= 7.0.9.0)\n");
+        CVPRINT("Set new length for packet 0xF1 (>= 7.0.9.0)");
         m_Packets[0xF1].Size = 0x09;
-        CVPRINT("Set new length for packet 0xF2 (>= 7.0.9.0)\n");
+        CVPRINT("Set new length for packet 0xF2 (>= 7.0.9.0)");
         m_Packets[0xF2].Size = 0x19;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0x24 (<= 7.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0x24 (<= 7.0.9.0)");
         m_Packets[0x24].Size = 0x07;
-        CVPRINT("Set standart length for packet 0x99 (<= 7.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0x99 (<= 7.0.9.0)");
         m_Packets[0x99].Size = 0x1A;
-        CVPRINT("Set standart length for packet 0xBA (<= 7.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0xBA (<= 7.0.9.0)");
         m_Packets[0xBA].Size = 0x06;
-        CVPRINT("Set standart length for packet 0xF3 (<= 7.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0xF3 (<= 7.0.9.0)");
         m_Packets[0xF3].Size = 0x18;
 
         // Already changed in client 7.0.8.2
-        CVPRINT("Set standart length for packet 0xF1 (<= 7.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0xF1 (<= 7.0.9.0)");
         m_Packets[0xF1].Size = PACKET_VARIABLE_SIZE;
-        CVPRINT("Set standart length for packet 0xF2 (<= 7.0.9.0)\n");
+        CVPRINT("Set standard length for packet 0xF2 (<= 7.0.9.0)");
         m_Packets[0xF2].Size = PACKET_VARIABLE_SIZE;
     }
 
     if (newClientVersion >= CV_70180)
     {
-        CVPRINT("Set new length for packet 0x00 (>= 7.0.18.0)\n");
+        CVPRINT("Set new length for packet 0x00 (>= 7.0.18.0)");
         m_Packets[0x00].Size = 0x6A;
     }
     else
     {
-        CVPRINT("Set standart length for packet 0x24 (<= 7.0.18.0)\n");
+        CVPRINT("Set standard length for packet 0x24 (<= 7.0.18.0)");
         m_Packets[0x00].Size = 0x68;
     }
 }
@@ -655,7 +655,7 @@ void CPacketManager::OnReadFailed()
 {
     DEBUG_TRACE_FUNCTION;
 
-    LOG("OnReadFailed...Disconnecting...\n");
+    INFO(Network, "disconnecting");
     g_Game.DisconnectGump();
     //g_Game. Disconnect();
     g_AbyssPacket03First = true;
@@ -680,26 +680,30 @@ void CPacketManager::OnPacket()
         time(&rawtime);
         localtime_s(&timeinfo, &rawtime);
         strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &timeinfo);
-        LOG("--- ^(%d) r(+%zd => %d) %s Server:: %s\n",
+        INFO(
+            Network,
+            "--- ^({}) r(+{} => {}) {} Server:: {}",
             ticks - g_LastPacketTime,
             Size,
             g_TotalRecvSize,
             buffer,
             info.Name);
 #else
-        LOG("--- ^(%d) r(+%zd => %d) Server:: %s\n",
+        INFO(
+            Network,
+            "--- ^({}) r(+{} => {}) Server:: {}",
             ticks - g_LastPacketTime,
             Size,
             g_TotalRecvSize,
             info.Name);
 #endif
-        LOG_DUMP(Start, (int)Size);
+        INFO_DUMP(Network, "RECV:", Start, (int)Size);
     }
 
     g_LastPacketTime = ticks;
     if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)
     {
-        LOG("message direction invalid: 0x%02X\n", *Start);
+        WARN(Network, "message direction invalid: 0x{:0>2x}", *Start);
     }
     else if (g_PluginManager.PacketRecv(Start, (int)Size))
     {
@@ -752,17 +756,19 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
     CPacketInfo &info = m_Packets[*Start];
-    LOG("--- ^(%d) r(+%zd => %d) Plugin->Client:: %s\n",
+    INFO(
+        Plugin,
+        "--- ^({}) r(+{} => {}) Plugin->Client:: {}",
         ticks - g_LastPacketTime,
         Size,
         g_TotalRecvSize,
         info.Name);
-    LOG_DUMP(Start, (int)Size);
+    INFO_DUMP(Plugin, "RECV:", Start, (int)Size);
 
     g_LastPacketTime = ticks;
     if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)
     {
-        LOG("message direction invalid: 0x%02X\n", *buf);
+        WARN(Plugin, "message direction invalid: 0x{:0>2x}", *buf);
     }
     else if (info.Handler != 0)
     {
@@ -881,11 +887,11 @@ PACKET_HANDLER(ResendCharacterList)
     int numSlots = ReadInt8();
     if (*Start == 0x86)
     {
-        LOG("/======Resend chars===\n");
+        INFO(Network, "{:=^30}", "resend chars");
     }
     else
     {
-        LOG("/======Chars===\n");
+        INFO(Network, "{:=^30}", "chars");
     }
 
     g_CharacterList.Clear();
@@ -897,7 +903,7 @@ PACKET_HANDLER(ResendCharacterList)
 
     if (numSlots == 0)
     {
-        LOG("Warning!!! No slots in character list\n");
+        WARN(Network, "no slots in character list");
     }
     else
     {
@@ -926,7 +932,7 @@ PACKET_HANDLER(ResendCharacterList)
                 }
             }
 
-            LOG("%d: %s (%zd)\n", i, name.c_str(), name.length());
+            INFO(Network, "{}: {} ({})", i, name, name.length());
         }
 
         if (autoLogin && autoPos == -1)
@@ -984,8 +990,7 @@ PACKET_HANDLER(EnterWorld)
 
     if (g_World != nullptr)
     {
-        LOG("Warning!!! Duplicate enter world message\n");
-
+        WARN(Network, "duplicate enter world message");
         g_Game.SaveLocalConfig(g_PacketManager.ConfigSerial);
         ConfigSerial = g_PlayerSerial;
         g_ConfigLoaded = false;
@@ -1027,7 +1032,7 @@ PACKET_HANDLER(EnterWorld)
     g_Player->OffsetY = 0;
     g_Player->OffsetZ = 0;
 
-    LOG("Player 0x%08lX entered the world.\n", serial);
+    INFO(Network, "player 0x{:0>8x} entered the world", serial);
 
     g_MapManager.Init();
     g_MapManager.AddRender(g_Player);
@@ -1260,7 +1265,9 @@ PACKET_HANDLER(UpdatePlayer)
     // Invert character wakthrough bit.
     flags ^= 0x10;
 
-    LOG("0x%08X 0x%04X %i 0x%04X 0x%02X %i %i %i %i %i\n",
+    INFO(
+        Network,
+        "0x{:0>8x} 0x{:0>4x} {} 0x{:0>4x} 0x{:0>2x} {} {} {} {} {}",
         serial,
         graphic,
         graphicIncrement,
@@ -1684,7 +1691,13 @@ PACKET_HANDLER(UpdateObject)
         g_World->PutEquipment(item, obj, layer);
         item->OnGraphicChange();
 
-        LOG("\t0x%08X:%04X [%d] %04X\n", item->Serial, item->Graphic, layer, item->Color);
+        INFO(
+            Network,
+            "\t0x{:0>8x}:{:0>4x} [{}] {:0>4x}",
+            item->Serial,
+            item->Graphic,
+            layer,
+            item->Color);
 
         g_World->MoveToTop(item);
 
@@ -1824,7 +1837,7 @@ PACKET_HANDLER(UpdateContainedItems)
 
             if (container != nullptr)
             {
-                LOG("Making %08X empty...\n", containerSerial);
+                INFO(Network, "making {:0>8x} empty...", containerSerial);
 
                 if (container->IsCorpse())
                 {
@@ -2141,12 +2154,12 @@ PACKET_HANDLER(UpdateCharacter)
     // direction of 0x08 will come in.
     if ((direction & 0x87) != direction)
     {
-        LOG("Clamping invalid/unknown direction: %d\n", direction);
         direction &= 0x87;
+        direction |= 0x80; // set bad orionuo running bit
+        // FIXME: rework walkdata/pathfind
     }
 
     obj->Notoriety = notoriety;
-
     if (obj->IsPlayer())
     {
         obj->SetFlags(flags);
@@ -2428,23 +2441,20 @@ PACKET_HANDLER(OpenContainer)
             for (int layer = OL_BUY_RESTOCK; layer < OL_BUY + 1; layer++)
             {
                 CGameItem *item = vendor->FindLayer((int)layer);
-
                 if (item == nullptr)
                 {
-                    LOG("Buy layer %i not found!\n", layer);
+                    WARN(Network, "buy layer {} not found", layer);
                     continue;
                 }
 
                 item = (CGameItem *)item->m_Items;
-
                 if (item == nullptr)
                 {
-                    LOG("Buy items not found!\n");
+                    WARN(Network, "buy item not found");
                     continue;
                 }
 
                 bool reverse = (item->GetX() > 1);
-
                 if (reverse)
                 {
                     while (item != nullptr && item->m_Next != nullptr)
@@ -2502,7 +2512,7 @@ PACKET_HANDLER(OpenContainer)
         }
         else
         {
-            LOG("Buy vendor not found!\n");
+            WARN(Network, "buy vendor not found");
         }
     }
     else //Container
@@ -2609,7 +2619,7 @@ PACKET_HANDLER(UpdateSkills)
     uint8_t type = ReadUInt8();
     bool haveCap = (((type != 0u) && type <= 0x03) || type == 0xDF);
     bool isSingleUpdate = (type == 0xFF || type == 0xDF);
-    LOG("Skill update type %i (cap=%d)\n", type, haveCap);
+    INFO(Network, "skill update type {} (cap={})", type, haveCap);
 
     if (type == 0xFE)
     {
@@ -2704,13 +2714,19 @@ PACKET_HANDLER(UpdateSkills)
                 gump->UpdateSkillValue(id);
             }
 
-            /*if (haveCap)
-				LOG("Skill %i is %i|%i|%i\n", id, baseVal, realVal, cap);
-			else
-				LOG("Skill %i is %i|%i\n", id, baseVal, realVal);*/
+            if (haveCap)
+            {
+                DEBUG(Network, "skill {} is {}|{}|{}", id, baseVal, realVal, cap);
+            }
+            else
+            {
+                DEBUG(Network, "skill {} is {}|{}", id, baseVal, realVal);
+            }
         }
-        //else
-        //	LOG("Unknown skill update %d\n", id);
+        else
+        {
+            DEBUG(Network, "unknown skill update {}", id);
+        }
 
         if (isSingleUpdate)
         {
@@ -2725,7 +2741,7 @@ PACKET_HANDLER(UpdateSkills)
         gump->UpdateSkillsSum();
     }
 
-    LOG("Skill(s) updated!\n");
+    INFO(Network, "skill(s) updated");
 }
 
 PACKET_HANDLER(ExtendedCommand)
@@ -3006,10 +3022,9 @@ PACKET_HANDLER(ExtendedCommand)
             uint32_t serial = ReadUInt32BE();
 
             CGameItem *spellbook = g_World->FindWorldItem(serial);
-
             if (spellbook == nullptr)
             {
-                LOG("Where is a spellbook?!?\n");
+                WARN(Network, "spellbook not found");
                 return;
             }
 
@@ -3049,11 +3064,10 @@ PACKET_HANDLER(ExtendedCommand)
             uint32_t revision = ReadUInt32BE();
 
             CCustomHouse *house = g_CustomHousesManager.Get(serial);
-            LOG("Seek house: 0x%08X 0x%08X\n", serial, revision);
-
+            INFO(Network, "searching house: 0x{:0>8x} 0x{:0>8x}", serial, revision);
             if (house != nullptr)
             {
-                LOG("House found: 0x%08X 0x%08X\n", house->Serial, house->Revision);
+                INFO(Network, "found house: 0x{:0>8x} 0x{:0>8x}", house->Serial, house->Revision);
             }
 
             if (house == nullptr || house->Revision != revision)
@@ -3316,7 +3330,7 @@ PACKET_HANDLER(Talk)
         str = ReadString();
     }
 
-    LOG("%s: %s\n", name.c_str(), str.c_str());
+    INFO(Network, "{} said: {}", name, str);
 
     CGameObject *obj = g_World->FindWorldObject(serial);
 
@@ -3416,7 +3430,7 @@ PACKET_HANDLER(UnicodeTalk)
         str = ReadWStringBE((Size - 48) / 2);
     }
 
-    LOG("%s: %s\n", name.c_str(), ToString(str).c_str());
+    INFO(Network, "{} said: {}", name, ToString(str));
 
     CGameObject *obj = g_World->FindWorldObject(serial);
     if (type == ST_GUILD_CHAT)
@@ -3713,7 +3727,7 @@ PACKET_HANDLER(PlayMusic)
     DEBUG_TRACE_FUNCTION;
     uint16_t index = ReadUInt16BE();
 
-    //LOG("Play midi music 0x%04X\n", index);
+    INFO(Network, "play music 0x{:0>4x}", index);
     if (!g_ConfigManager.GetMusic() || !g_GameWindow.IsActive() ||
         g_ConfigManager.GetMusicVolume() < 1)
     {
@@ -4199,8 +4213,8 @@ PACKET_HANDLER(MegaCliloc)
         }
 
         wstring str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
-        //LOG("Cliloc: argstr=%s\n", ToString(str).c_str());
-        //LOG("Cliloc: 0x%08X len=%i arg=%s\n", cliloc, len, ToString(argument).c_str());
+        DEBUG(Network, "cliloc: argstr={}", ToString(str));
+        DEBUG(Network, "cliloc: 0x{:0>8x} len={} arg={}", cliloc, len, ToString(argument));
 
         bool canAdd = true;
         for (const wstring &tempStr : list)
@@ -4263,14 +4277,12 @@ PACKET_HANDLER(MegaCliloc)
         }
     }
 
-    //LOG_DUMP((uint8_t *)message.c_str(), message.length() * 2);
     g_ObjectPropertiesManager.Add(serial, CObjectProperty(serial, clilocRevision, name, data));
     if (obj != nullptr && g_ToolTip.m_Object == obj)
     {
         g_ObjectPropertiesManager.Reset();
     }
 
-    //LOG("message=%s\n", ToString(message).c_str());
     if (inBuyList && (container->Serial != 0u))
     {
         CGumpShop *gump = (CGumpShop *)g_GumpManager.GetGump(container->Serial, 0, GT_SHOP);
@@ -4836,10 +4848,6 @@ PACKET_HANDLER(OpenGump)
     }
 
     vector<HTMLGumpDataInfo> htmlGumlList;
-
-    //TPRINT("Gump dump::\n");
-    //TDUMP(buf, size);
-
     uint32_t serial = ReadUInt32BE();
     uint32_t id = ReadUInt32BE();
     int x = ReadInt32BE();
@@ -5401,33 +5409,31 @@ PACKET_HANDLER(OpenCompressedGump)
 
     if (cLen < 1)
     {
-        LOG("CLen=%d\nServer Sends bad Compressed Gumpdata!\n", cLen);
-
+        WARN(Network, "bad compressed gumpdata, len={}", cLen);
         return;
     }
     if ((int)(28 + cLen) > Size)
     {
-        LOG("Server Sends bad Compressed Gumpdata!\n");
-
+        WARN(Network, "bad compressed gumpdata");
         return;
     }
 
     // Layout data.....
     vector<uint8_t> decLayoutData(dLen);
-    LOG("Gump layout:\n\tSenderID=0x%08X\n\tGumpID=0x%08X\n\tCLen=%d\n\tDLen=%d\nDecompressing layout gump data...\n",
-        senderID,
-        gumpID,
-        cLen,
-        dLen);
-
+    INFO(Network, "gump layout:");
+    INFO(Network, "\tSenderID=0x{:0>8x}", senderID);
+    INFO(Network, "\tGumpID=0x{:0>8x}", gumpID);
+    INFO(Network, "\tCLen={}", cLen);
+    INFO(Network, "\tDLen={}", dLen);
+    INFO(Network, "decompressing layout gump data...");
     int z_err = mz_uncompress(&decLayoutData[0], &dLen, Ptr, cLen);
     if (z_err != Z_OK)
     {
-        LOG("Decompress layout gump error %d\n", z_err);
+        WARN(Network, "gump layout decompression error: {}", z_err);
         return;
     }
 
-    LOG("Layout gump data decompressed!\n");
+    INFO(Network, "gump layout data decompressed");
     // Text data.....
 
     Move(cLen);
@@ -5443,19 +5449,18 @@ PACKET_HANDLER(OpenCompressedGump)
         dTLen = ReadUInt32BE(); //Decompressed lines length
 
         gumpDecText.resize(dTLen);
-        LOG("Decompressing text gump data...\n");
-
+        INFO(Network, "decompressing text gump data");
         z_err = mz_uncompress(&gumpDecText[0], &dTLen, Ptr, cTLen);
         if (z_err != Z_OK)
         {
-            LOG("Decompress text gump error %d\n", z_err);
+            WARN(Network, "text gump decompression error: {}", z_err);
             return;
         }
 
-        LOG("Text gump data decompressed!\nGump text lines:\n\tLinesCount=%d\n\tCTLen=%d\n\tDTLen=%d\n",
-            linesCount,
-            cTLen,
-            dTLen);
+        INFO(Network, "text gump data decompressed, text lines:");
+        INFO(Network, "\tLinesCount={}", linesCount);
+        INFO(Network, "\tCTLen={}", cTLen);
+        INFO(Network, "\tDTLen={}", dTLen);
     }
 
     int newsize = 21 + dLen + 2 + dTLen;
@@ -5481,8 +5486,7 @@ PACKET_HANDLER(OpenCompressedGump)
         newbuf[newsize - 1] = 0x00;
     }
 
-    LOG("Gump decompressed! newsize=%d\n", newsize);
-
+    INFO(Network, "gump decompressed. newsize={}", newsize);
     Size = newsize;
     Start = newbuf;
     End = Start + Size;
@@ -5516,9 +5520,6 @@ PACKET_HANDLER(DisplayMap)
 
     uint32_t serial = ReadUInt32BE();
     uint16_t gumpid = ReadUInt16BE();
-
-    //TPRINT("gumpid = 0x%04X\n", gumpid);
-
     uint16_t startX = ReadUInt16BE();
     uint16_t startY = ReadUInt16BE();
     uint16_t endX = ReadUInt16BE();
@@ -5527,16 +5528,13 @@ PACKET_HANDLER(DisplayMap)
     uint16_t height = ReadUInt16BE();
 
     CGumpMap *gump = new CGumpMap(serial, gumpid, startX, startY, endX, endY, width, height);
-
     if (*Start == 0xF5 || g_Config.ProtocolClientVersion >= CV_308Z) //308z или выше?
     {
         uint16_t facet = 0;
-
         if (*Start == 0xF5)
         {
             facet = ReadUInt16BE();
         }
-
         g_MultiMap.LoadFacet(gump, gump->m_Texture, facet);
     }
     else
@@ -5544,14 +5542,13 @@ PACKET_HANDLER(DisplayMap)
         g_MultiMap.LoadMap(gump, gump->m_Texture);
     }
 
-    //TPRINT("GumpX=%d GumpY=%d\n", startX, startY);
-    //TPRINT("GumpTX=%d GumpTY=%d\n", endX, endY);
-    //TPRINT("GumpW=%d GumpH=%d\n", width, height);
+    TRACE(Network, "gumpid = 0x{:0>4x}", gumpid);
+    TRACE(Network, "gumpx={} gumpy={}", startX, startY);
+    TRACE(Network, "gumptx={} gumpty={}", endX, endY);
+    TRACE(Network, "gumpw={} gumph={}", width, height);
 
     g_GumpManager.AddGump(gump);
-
     CGameItem *obj = g_World->FindWorldItem(serial);
-
     if (obj != nullptr)
     {
         obj->Opened = true;
@@ -5927,27 +5924,22 @@ PACKET_HANDLER(BuyList)
     }
 
     uint32_t serial = ReadUInt32BE();
-
     CGameItem *container = g_World->FindWorldItem(serial);
-
     if (container == nullptr)
     {
-        LOG("Error!!! Buy container is not found!!!\n");
+        ERROR(Network, "buy container not found");
         return;
     }
 
     uint32_t vendorSerial = container->Container;
-
     CGameCharacter *vendor = g_World->FindWorldCharacter(vendorSerial);
-
     if (vendor == nullptr)
     {
-        LOG("Error!!! Buy vendor is not found!!!\n");
+        ERROR(Network, "buy vendor not found");
         return;
     }
 
     CGumpShop *gump = (CGumpShop *)g_GumpManager.GetGump(vendorSerial, 0, GT_SHOP);
-
     if (gump != nullptr && (gump->Serial != vendorSerial || !gump->IsBuyGump))
     {
         g_GumpManager.RemoveGump(gump);
@@ -5961,7 +5953,6 @@ PACKET_HANDLER(BuyList)
     }
 
     gump->WantRedraw = true;
-
     if (container->Layer == OL_BUY_RESTOCK || container->Layer == OL_BUY)
     {
         uint8_t count = ReadUInt8();
@@ -5999,7 +5990,7 @@ PACKET_HANDLER(BuyList)
         {
             if (item == nullptr)
             {
-                LOG("Error!!! Buy item is not found!!!\n");
+                ERROR(Network, "buy item not found");
                 break;
             }
 
@@ -6036,7 +6027,7 @@ PACKET_HANDLER(BuyList)
     }
     else
     {
-        LOG("Unknown layer for buy container!!!\n");
+        WARN(Network, "unknown layer for buy container");
     }
 }
 
@@ -6049,20 +6040,17 @@ PACKET_HANDLER(SellList)
     }
 
     uint32_t serial = ReadUInt32BE();
-
     CGameCharacter *vendor = g_World->FindWorldCharacter(serial);
-
     if (vendor == nullptr)
     {
-        LOG("Error!!! Sell vendor is not found!!!\n");
+        ERROR(Network, "sell vendor not found");
         return;
     }
 
     uint16_t itemsCount = ReadUInt16BE();
-
     if (itemsCount == 0u)
     {
-        LOG("Error!!! Sell list is empty.\n");
+        ERROR(Network, "sell list is empty");
         return;
     }
 
@@ -6169,7 +6157,6 @@ PACKET_HANDLER(CustomHouse)
     ReadUInt16BE();
 
     CCustomHouse *house = g_CustomHousesManager.Get(serial);
-
     if (house == nullptr)
     {
         house = new CCustomHouse(serial, revision);
@@ -6180,8 +6167,7 @@ PACKET_HANDLER(CustomHouse)
         house->Revision = revision;
     }
 
-    LOG("House update in cache: 0x%08X 0x%08X\n", serial, revision);
-
+    INFO(Network, "house update in cache: 0x{:0>8x} 0x{:0>8x}", serial, revision);
     house->m_Items.clear();
 
     short minX = multi->MinX;
@@ -6189,7 +6175,6 @@ PACKET_HANDLER(CustomHouse)
     short maxY = multi->MaxY;
 
     uint8_t planes = ReadUInt8();
-
     for (int plane = 0; plane < planes; plane++)
     {
         uint32_t header = ReadUInt32BE();
@@ -6207,9 +6192,10 @@ PACKET_HANDLER(CustomHouse)
         int z_err = mz_uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
         if (z_err != Z_OK)
         {
-            LOG("Bad CustomHouseStruct compressed data received from server, house serial:%i\n",
+            WARN(
+                Network,
+                "bad CustomHouseStruct compressed data received from server, house serial: {}",
                 serial);
-            //LOG("House plane idx:%i\n", idx);
             continue;
         }
 
@@ -6556,7 +6542,7 @@ PACKET_HANDLER(CrossMessages)
 
                 if (macroCode == MC_NONE)
                 {
-                    LOG("Invalid macro name: %s\n", name.c_str());
+                    WARN(Plugin, "invalid macro name: {}", name);
                     continue;
                 }
 
@@ -6642,7 +6628,7 @@ PACKET_HANDLER(PacketsList)
         }
         else
         {
-            LOG("Unknown packet ID=0x%02X in packet 0xF7!!!\n", id);
+            WARN(Network, "unknown packet ID=0x{:0>2X} in packet 0xF7", id);
             break;
         }
     }

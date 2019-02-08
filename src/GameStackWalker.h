@@ -18,7 +18,7 @@ public:
 protected:
     virtual void OnOutput(LPCSTR szText)
     {
-        CRASHLOG(szText);
+        INFO(Client, szText);
         StackWalker::OnOutput(szText);
     }
 };

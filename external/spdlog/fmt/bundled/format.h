@@ -1910,6 +1910,7 @@ FMT_CONSTEXPR const Char *parse_format_specs(
 
   // Parse sign.
   switch (static_cast<char>(*begin)) {
+  default:break;
   case '+':
     handler.on_plus();
     ++begin;

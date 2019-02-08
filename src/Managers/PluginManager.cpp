@@ -31,7 +31,9 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
     uint32_t ticks = g_Ticks;
     g_TotalSendSize += checked_cast<int>(size);
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
-    LOG("--- ^(%d) s(+%zd => %d) Plugin->Server:: %s\n",
+    INFO(
+        Plugin,
+        "--- ^({}) s(+{} => {}) Plugin->Server:: {}",
         ticks - g_LastPacketTime,
         size,
         g_TotalSendSize,
@@ -41,13 +43,13 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
     g_LastSendTime = ticks;
     if (*buf == 0x80 || *buf == 0x91)
     {
-        LOG_DUMP(buf, 1);
-        SAFE_LOG_DUMP(buf, int(size));
-        LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
+        INFO_DUMP(Plugin, "SEND:", buf, 1);
+        SAFE_DEBUG_DUMP(Plugin, "SEND2:", buf, int(size));
+        INFO(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
     }
     else
     {
-        LOG_DUMP(buf, int(size));
+        INFO_DUMP(Plugin, "SEND:", buf, int(size));
     }
 
     g_ConnectionManager.Send(buf, checked_cast<int>(size));

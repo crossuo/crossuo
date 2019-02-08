@@ -4,7 +4,6 @@
 namespace Wisp
 {
 CMappedFile::CMappedFile()
-
 {
 }
 
@@ -16,7 +15,7 @@ CMappedFile::~CMappedFile()
 bool CMappedFile::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("Mmaping  %s\n", CStringFromPath(path));
+    TRACE(Filesystem, "mmaping: {}", CStringFromPath(path));
     bool result = false;
 
     if (fs_path_exists(path))
@@ -28,13 +27,17 @@ bool CMappedFile::Load(const os_path &path)
     }
     else
     {
-        LOG("File not found %s\n", CStringFromPath(path));
+        DEBUG(Filesystem, "file not found: {}", CStringFromPath(path));
     }
 
     if (!result)
     {
         auto errorCode = errno;
-        LOG("Failed to memory map, error code: %i\n", errorCode);
+        DEBUG(
+            Filesystem,
+            "failed to memory map file {} with error code: {}",
+            CStringFromPath(path),
+            errorCode);
     }
 
     return result;
@@ -42,7 +45,7 @@ bool CMappedFile::Load(const os_path &path)
 
 void CMappedFile::Unload()
 {
-    //DEBUG_TRACE_FUNCTION;
+    DEBUG_TRACE_FUNCTION;
     if (Start != nullptr)
     {
         fs_unmap(Start, Size);

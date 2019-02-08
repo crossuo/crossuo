@@ -1,5 +1,8 @@
 ﻿// MIT License
 
+#include "WispTextFileParser.h"
+#include "../FileSystem.h"
+
 #if 0
 #define TEXTPARSER_TRACE_FUNCTION DEBUG_TRACE_FUNCTION
 #else

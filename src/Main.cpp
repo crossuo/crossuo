@@ -27,18 +27,17 @@ XUO_EXPORT int plugin_main(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
+    LogInit("crossuo.log");
     DEBUG_TRACE_FUNCTION;
 
     if (SDL_Init(SDL_INIT_TIMER) < 0)
     {
-        SDL_LogError(
-            SDL_LOG_CATEGORY_APPLICATION, "Unable to initialize SDL: %s\n", SDL_GetError());
+        ERROR(Client, "unable to initialize SDL {}", SDL_GetError());
         return EXIT_FAILURE;
     }
 
-    SDL_Log("SDL Initialized.");
+    INFO(Client, "SDL Initialized.");
     g_App.Init();
-    INITLOGGER(ToPath("crossuo.log"));
     LoadGlobalConfig();
 
     // TODO: good cli parsing api
@@ -55,27 +54,14 @@ int main(int argc, char **argv)
         }
     }
 
-    // FIXME: log stuff
-    /*
-    auto path = g_App.ExeFilePath("crashlogs");
-    fs_path_create(path);
-    char buf[100]{};
-    auto t = time(nullptr);
-    auto now = *localtime(&t);
-    sprintf_s(buf, "/crash_%d%d%d_%d_%d_%d.txt", now.tm_year + 1900, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
-    path += ToPath(buf);
-    INITCRASHLOGGER(path);
-	*/
-
     if (!g_isHeadless)
     {
         if (!g_GameWindow.Create("CrossUO Client", "Ultima Online", false, 640, 480))
         {
-            SDL_ShowSimpleMessageBox(
-                SDL_MESSAGEBOX_ERROR,
-                "Error",
-                "Failed to create CrossUO client window. May be caused by a missing configuration file.\n",
-                nullptr);
+            const char *errMsg =
+                "Failed to create CrossUO client window. May be caused by a missing configuration file.";
+            ERROR(Client, errMsg);
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errMsg, nullptr);
             return -1;
         }
     }

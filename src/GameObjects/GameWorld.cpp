@@ -844,7 +844,9 @@ void CGameWorld::UpdateGameObject(
     UPDATE_GAME_OBJECT_TYPE updateType,
     uint16_t a13)
 {
-    LOG("UpdateGameObject 0x%08lX:0x%04X 0x%04X (%i) %d:%d:%d %i\n",
+    INFO(
+        Client,
+        "UpdateGameObject 0x{:0>8x}:0x{:0>4x} 0x{:0>4x} ({}) {}:{}:{} {}",
         serial,
         graphic,
         color,
@@ -878,13 +880,13 @@ void CGameWorld::UpdateGameObject(
     if (obj == nullptr)
     {
         created = true;
-        LOG("created ");
+        INFO(Client, "created: ");
         if (((serial & 0x40000000) == 0) && updateType != 3)
         {
             character = GetWorldCharacter(serial);
             if (character == nullptr)
             {
-                LOG("No memory?\n");
+                WARN(Client, "no memory?");
                 return;
             }
 
@@ -903,7 +905,7 @@ void CGameWorld::UpdateGameObject(
             item = GetWorldItem(serial);
             if (item == nullptr)
             {
-                LOG("No memory?\n");
+                WARN(Client, "no memory?");
                 return;
             }
             obj = item;
@@ -911,7 +913,7 @@ void CGameWorld::UpdateGameObject(
     }
     else
     {
-        LOG("updated ");
+        INFO(Client, "updated:");
         if (obj->Container != 0xFFFFFFFF)
         {
             RemoveFromContainer(obj);
@@ -939,7 +941,7 @@ void CGameWorld::UpdateGameObject(
     {
         if (item == nullptr)
         {
-            LOG("item must not be null\n");
+            WARN(Client, "item must not be null");
             return;
         }
 
@@ -985,7 +987,9 @@ void CGameWorld::UpdateGameObject(
         item->Count = count;
         item->SetFlags(flags);
         item->OnGraphicChange(direction);
-        LOG("serial:0x%08X graphic:0x%04X color:0x%04X count:%i xyz:%d,%d,%d light:%i flags:0x%02X\n",
+        INFO(
+            Client,
+            "serial:0x{:0>8x} graphic:0x{:0>4x} color:0x{:0>4x} count:{} xyz:{},{},{} light:{} flags:0x{:0>2x}",
             obj->Serial,
             obj->Graphic,
             obj->Color,
@@ -1000,7 +1004,7 @@ void CGameWorld::UpdateGameObject(
     {
         if (character == nullptr)
         {
-            LOG("character must not be null\n");
+            WARN(Client, "character must not be null");
             return;
         }
 
@@ -1055,7 +1059,9 @@ void CGameWorld::UpdateGameObject(
         character->Color = g_ColorManager.FixColor(color, (color & 0x8000));
         character->SetFlags(flags);
 
-        LOG("NPC serial:0x%08X graphic:0x%04X color:0x%04X xyz:%d,%d,%d flags:0x%02X direction:%d notoriety:%d\n",
+        INFO(
+            Client,
+            "NPC serial:0x{:0>8x} graphic:0x{:0>4x} color:0x{:0>4x} xyz:{},{},{} flags:0x{:0>2x} direction:{} notoriety:{}",
             obj->Serial,
             obj->Graphic,
             obj->Color,
@@ -1244,7 +1250,7 @@ void CGameWorld::UpdateContainedItem(
 
     if (obj == nullptr)
     {
-        LOG("No memory?\n");
+        WARN(Client, "no memory?");
         return;
     }
 
@@ -1265,7 +1271,9 @@ void CGameWorld::UpdateContainedItem(
 
     MoveToTop(obj);
 
-    LOG("\t|0x%08X<0x%08X:%04X*%d (%d,%d) %04X\n",
+    INFO(
+        Client,
+        "\t|0x{:0>8x}<0x{:0>8x}:{:0>4x}*{} ({},{}) {:0>4x}",
         containerSerial,
         serial,
         graphic + graphicIncrement,
@@ -1278,7 +1286,7 @@ void CGameWorld::UpdateContainedItem(
 void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("World Dump:\n\n");
+    INFO(Client, "world dump:");
 
     CGameObject *obj = m_Items;
 
@@ -1297,16 +1305,14 @@ void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
         {
             if (obj->Serial == g_Player->Serial)
             {
-                LOG("---Player---\n");
+                INFO(Client, "---player---");
             }
 
-            for (int i = 0; i < tCount; i++)
-            {
-                LOG("\t");
-            }
-
-            LOG("%s%08X:%04X[%04X](%%02X)*%i\tin 0x%08X XYZ=%i,%i,%i on Map %i\n",
-                (obj->NPC ? "NPC: " : "Item: "),
+            INFO(
+                Client,
+                "{:\t>{}}{}{:0>8x}:{:0>4x}[{:0>4x}](%%{:0>2x})*{}\tin 0x{:0>8x} XYZ={},{},{} on map {}",
+                tCount,
+                (obj->NPC ? "npc: " : "item: "),
                 obj->Serial,
                 obj->Graphic,
                 obj->Color,
