@@ -79,6 +79,9 @@ else()
 	set(OpenGL_GL_PREFERENCE GLVND)
 endif()
 
+compile_definitions(XUO_DEBUG DEBUG_ONLY)
+compile_definitions(XUO_RELEASE RELEASE_ONLY)
+
 find_package(OpenGL REQUIRED)
 
 include_directories(${EXTERNAL_INCLUDE_DIR})
