@@ -136,10 +136,16 @@ public:
     bool IsHuman()
     {
         return (
-            IN_RANGE(Graphic, 0x0190, 0x0193) || IN_RANGE(Graphic, 0x00B7, 0x00BA) ||
-            IN_RANGE(Graphic, 0x025D, 0x0260) || IN_RANGE(Graphic, 0x029A, 0x029B) ||
-            IN_RANGE(Graphic, 0x02B6, 0x02B7) || (Graphic == 0x03DB) || (Graphic == 0x03DF) ||
-            (Graphic == 0x03E2));
+            /*h_male,h_female*/ IN_RANGE(Graphic, 0x0190, 0x0193) ||
+            /*Savage_Male,Savage_Female*/ IN_RANGE(Graphic, 0x00B7, 0x00BA) ||
+            /*Elf h_male1,Elf h_female1*/ IN_RANGE(Graphic, 0x025D, 0x0260) ||
+            /**/ IN_RANGE(Graphic, 0x029A, 0x029B) ||
+            /**/ IN_RANGE(Graphic, 0x02B6, 0x02B7) ||
+            /**/ (Graphic == 0x03DB) ||
+            /*character_blackthorn*/ (Graphic == 0x03DF) ||
+            /*character_dupre*/ (Graphic == 0x03E2) ||
+            /*h_male3*/ (Graphic == 0x02E8) ||
+            /*h_female3*/ (Graphic == 0x02E9));
     }
 
     bool Dead()
