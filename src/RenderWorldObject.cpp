@@ -14,8 +14,8 @@ CRenderWorldObject::CRenderWorldObject(
     int y,
     char z)
     : CRenderObject(serial, graphic, color, x, y)
-    , RenderType(renderType)
     , m_Z(z)
+    , RenderType(renderType)
 {
     DEBUG_TRACE_FUNCTION;
     m_DrawTextureColor[0] = 0xFF;

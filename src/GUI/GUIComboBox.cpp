@@ -24,8 +24,8 @@ CGUIComboBox::CGUIComboBox(
     , CompositeBackground(compositeBackground)
     , m_ShowItemsCount(showItemsCount)
     , Width(width)
-    , ShowMaximizedCenter(showMaximizedCenter)
     , OpenedWidth(width)
+    , ShowMaximizedCenter(showMaximizedCenter)
 {
     DEBUG_TRACE_FUNCTION;
     MoveOnDrag = false;

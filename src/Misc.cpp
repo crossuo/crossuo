@@ -72,8 +72,6 @@ std::wstring DecodeUTF8(const std::string &str)
         result.resize(size); // result[size] = 0;
     }
 #else
-    //LOG("\nDecodeUTF8: %s\n\n", str.c_str());
-    //LOG_DUMP((uint8_t *)str.data(), str.size());
     mbstate_t state{};
     std::wstring result{};
     auto p = str.data();
@@ -81,8 +79,8 @@ std::wstring DecodeUTF8(const std::string &str)
     const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
     if (size == -1)
     {
-        LOG("\nDecodeUTF8 Failed: %s\n\n", str.c_str());
-        LOG_DUMP((uint8_t *)str.data(), str.size());
+        Warning(Client, "DecodeUTF8 Failed: %s", str.c_str());
+        INFO_DUMP(Client, "DecodeUTF8 Failed:", (uint8_t *)str.data(), str.size());
         return ToWString(str);
     }
 
@@ -281,79 +279,3 @@ bool ToBool(const std::string &str)
 
     return result;
 }
-
-#if DEBUGGING_OUTPUT == 1
-void DebugMsg(const char *format, ...)
-{
-    va_list arg;
-    va_start(arg, format);
-
-    char buf[512] = { 0 };
-    vsprintf_s(buf, format, arg);
-
-#if defined(XUO_WINDOWS)
-    OutputDebugStringA(buf);
-#endif
-    fprintf(stdout, "%s", buf);
-    va_end(arg);
-}
-
-void DebugMsg(const wchar_t *format, ...)
-{
-    va_list arg;
-    va_start(arg, format);
-
-    wchar_t buf[512] = { 0 };
-    vswprintf_s(buf, format, arg);
-
-#if defined(XUO_WINDOWS)
-    OutputDebugStringW(buf);
-#endif
-    fprintf(stdout, "%ws", buf);
-    va_end(arg);
-}
-
-void DebugDump(uint8_t *data, int size)
-{
-    int num_lines = size / 16;
-
-    if (size % 16 != 0)
-    {
-        num_lines++;
-    }
-
-    for (int line = 0; line < num_lines; line++)
-    {
-        int row = 0;
-
-        DebugMsg("%04x: ", line * 16);
-
-        for (row = 0; row < 16; row++)
-        {
-            if (line * 16 + row < size)
-            {
-                DebugMsg("%02x ", data[line * 16 + row]);
-            }
-            else
-            {
-                DebugMsg("-- ");
-            }
-        }
-
-        DebugMsg(": ");
-
-        char buf[17] = { 0 };
-
-        for (row = 0; row < 16; row++)
-        {
-            if (line * 16 + row < size)
-            {
-                buf[row] = (isprint(data[line * 16 + row]) != 0 ? data[line * 16 + row] : '.');
-            }
-        }
-
-        DebugMsg(buf);
-        DebugMsg("\n");
-    }
-}
-#endif

@@ -16,7 +16,7 @@ CMappedFile::~CMappedFile()
 bool CMappedFile::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("Mmaping  %s\n", CStringFromPath(path));
+    Info(Filesystem, "mmaping %s", CStringFromPath(path));
     bool result = false;
 
     if (fs_path_exists(path))
@@ -28,13 +28,13 @@ bool CMappedFile::Load(const os_path &path)
     }
     else
     {
-        LOG("File not found %s\n", CStringFromPath(path));
+        Warning(Filesystem, "file not found %s", CStringFromPath(path));
     }
 
     if (!result)
     {
         auto errorCode = errno;
-        LOG("Failed to memory map, error code: %i\n", errorCode);
+        Error(Filesystem, "failed to memory map, error code: %i", errorCode);
     }
 
     return result;

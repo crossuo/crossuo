@@ -508,8 +508,10 @@ void CGameScreen::CalculateRenderList()
 
                     AddTileToRenderList(block->GetRender(x % 8, y % 8), x, y, useObjectHandles);
                 }
-                //else
-                //	LOG("Expected: %i %i\n", blockIndex, g_MapManager->MaxBlockIndex);
+                else
+                {
+                    DEBUG(Client, "expected: %i %i\n", blockIndex, g_MapManager.MaxBlockIndex);
+                }
 
                 x++;
                 y--;
@@ -914,13 +916,13 @@ void CGameScreen::AddTileToRenderList(
 
             if (m_RenderList.size() != newSize)
             {
-                LOG("Allocation pixels memory for Render List failed (want size: %zi)\n", newSize);
-
+                Warning(Client, "out of memory for render list (need size: %zi)", newSize);
                 m_RenderList.resize(newSize - 1000);
-
                 if (m_RenderList.size() != newSize - 1000)
                 {
-                    LOG("Allocation pixels memory for Render List failed SECOND STEP!!! (want size: %zi)\n",
+                    Error(
+                        Client,
+                        "out of memory for render list - SECOND TRY (need size: %zi)",
                         newSize - 1000);
                     m_RenderListCount = 0;
                     return;
@@ -928,7 +930,14 @@ void CGameScreen::AddTileToRenderList(
             }
         }
 
-        //LOG("Item[0x%04X]: x=%i y=%i (dx=%i, dy=%i)\n", obj->Graphic, drawX, drawY, obj->DrawX, obj->DrawY);
+        TRACE(
+            Client,
+            "Item[0x%04X]: x=%i y=%i (dx=%i, dy=%i)\n",
+            obj->Graphic,
+            drawX,
+            drawY,
+            obj->DrawX,
+            obj->DrawY);
 
         m_RenderList[m_RenderListCount].Object = obj;
         m_RenderList[m_RenderListCount].GrayColor = grayColor;
@@ -1752,7 +1761,7 @@ void CGameScreen::Render()
 
     if (lastRender < g_Ticks)
     {
-        LOG("FPS=%i\n", FPScount);
+        DEBUG(Client, "FPS=%i", FPScount);
         FPScount = currentFPS;
         currentFPS = 1;
         lastRender = g_Ticks + 1000;

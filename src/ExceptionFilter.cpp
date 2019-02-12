@@ -60,8 +60,9 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
     if (vmq.fRgnIsAStack)
         filePath = "Thread Stack";
 
-    CRASHLOG(
-        "Address: 0x%08X => 0x%08X Storage: '%s' size: %i blocks: %i path: %s\n",
+    Info(
+        Client,
+        "Address: 0x%08X => 0x%08X Storage: '%s' size: %i blocks: %i path: %s",
         vmq.pvBlkBaseAddress,
         (uint8_t *)vmq.pvBlkBaseAddress + vmq.RgnSize,
         GetMemStorageText(vmq.dwBlkStorage).c_str(),
@@ -73,9 +74,9 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
 void DumpLibraryInformation()
 {
 #if USE_DEBUG_FUNCTION_NAMES == 1
-    CRASHLOG("trace functions:\n");
+    Info(Client, "trace functions:");
     for (const string &str : g_DebugFuncStack)
-        CRASHLOG("%s\n", str.c_str());
+        Info(Client, "%s", str.c_str());
 
     static bool libraryInfoPrinted = false;
 
@@ -83,7 +84,7 @@ void DumpLibraryInformation()
     {
         libraryInfoPrinted = true;
 
-        CRASHLOG("Library information:\n");
+        Info(Client, "Library information:");
 
         uint32_t processId = 0;
         GetWindowThreadProcessId(g_GameWindow.Handle, &processId);
@@ -92,7 +93,7 @@ void DumpLibraryInformation()
 
         if (process == nullptr)
         {
-            CRASHLOG("::OpenProcess failed!\n");
+            Info(Client, "::OpenProcess failed!");
             return;
         }
 
@@ -100,7 +101,7 @@ void DumpLibraryInformation()
 
         if (snapshot == nullptr)
         {
-            CRASHLOG("::CreateToolhelp32Snapshot failed!\n");
+            Info(Client, "::CreateToolhelp32Snapshot failed!");
             CloseHandle(process);
             return;
         }
@@ -128,37 +129,41 @@ void DumpLibraryInformation()
 void DumpCurrentRegistersInformation(CONTEXT *CR)
 {
 #if defined(_WIN64)
-    CRASHLOG(
-        "EAX=0x%016LX, EBX=0x%016LX, ECX=0x%016LX, EDX=0x%016LX\n",
+    Info(
+        Client,
+        "EAX=0x%016LX, EBX=0x%016LX, ECX=0x%016LX, EDX=0x%016LX",
         CR->Rax,
         CR->Rbx,
         CR->Rcx,
         CR->Rdx);
-    CRASHLOG(
-        "ESI=0x%016LX, EDI=0x%016LX, ESP=0x%016LX, EBP=0x%016LX\n",
+    Info(
+        Client,
+        "ESI=0x%016LX, EDI=0x%016LX, ESP=0x%016LX, EBP=0x%016LX",
         CR->Rsi,
         CR->Rdi,
         CR->Rsp,
         CR->Rbp);
-    CRASHLOG("EIP=0x%016LX, EFLAGS=0x%016LX\n\n", CR->Rip, CR->EFlags);
-
-    CRASHLOG("Bytes at EIP:\n");
-    CRASHLOG_DUMP((uint8_t *)CR->Rip, 16);
-
-    CRASHLOG("Bytes at ESP:\n");
-    CRASHLOG_DUMP((uint8_t *)CR->Rsp, 64);
+    Info(Client, "EIP=0x%016LX, EFLAGS=0x%016LX", CR->Rip, CR->EFlags);
+    INFO_DUMP(Client, "Bytes at EIP:", (uint8_t *)CR->Rip, 16);
+    INFO_DUMP(Client, "Bytes at ESP:", (uint8_t *)CR->Rsp, 64);
 #else
-    CRASHLOG(
-        "EAX=0x%08X, EBX=0x%08X, ECX=0x%08X, EDX=0x%08X\n", CR->Eax, CR->Ebx, CR->Ecx, CR->Edx);
-    CRASHLOG(
-        "ESI=0x%08X, EDI=0x%08X, ESP=0x%08X, EBP=0x%08X\n", CR->Esi, CR->Edi, CR->Esp, CR->Ebp);
-    CRASHLOG("EIP=0x%08X, EFLAGS=0x%08X\n\n", CR->Eip, CR->EFlags);
-
-    CRASHLOG("Bytes at EIP:\n");
-    CRASHLOG_DUMP((uint8_t *)CR->Eip, 16);
-
-    CRASHLOG("Bytes at ESP:\n");
-    CRASHLOG_DUMP((uint8_t *)CR->Esp, 64);
+    Info(
+        Client,
+        "EAX=0x%08X, EBX=0x%08X, ECX=0x%08X, EDX=0x%08X",
+        CR->Eax,
+        CR->Ebx,
+        CR->Ecx,
+        CR->Edx);
+    Info(
+        Client,
+        "ESI=0x%08X, EDI=0x%08X, ESP=0x%08X, EBP=0x%08X",
+        CR->Esi,
+        CR->Edi,
+        CR->Esp,
+        CR->Ebp);
+    Info(Client, "EIP=0x%08X, EFLAGS=0x%08X", CR->Eip, CR->EFlags);
+    INFO_DUMP(Client, "Bytes at EIP:", (uint8_t *)CR->Eip, 16);
+    INFO_DUMP(Client, "Bytes at ESP:", (uint8_t *)CR->Esp, 64);
 #endif
 }
 
@@ -188,14 +193,16 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
     if (exceptionInfo->ExceptionRecord)
     {
 #if defined(_WIN64)
-        CRASHLOG(
-            "Unhandled exception #%i: 0x%016LX at %016LX\n",
+        Info(
+            Client,
+            "Unhandled exception #%i: 0x%016LX at %016LX",
             errorCount,
             exceptionInfo->ExceptionRecord->ExceptionCode,
             exceptionInfo->ExceptionRecord->ExceptionAddress);
 #else
-        CRASHLOG(
-            "Unhandled exception #%i: 0x%08X at %08X\n",
+        Info(
+            Client,
+            "Unhandled exception #%i: 0x%08X at %08X",
             errorCount,
             exceptionInfo->ExceptionRecord->ExceptionCode,
             exceptionInfo->ExceptionRecord->ExceptionAddress);
@@ -230,29 +237,28 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
                 auto list = FindPattern(file.Start, (int)file.Size, pattern);
                 for (int item : list)
                 {
-                    CRASHLOG("Address in exe (by EIP): 0x%08X\n", item);
+                    Info(Client, "Address in exe (by EIP): 0x%08X", item);
                 }
 
                 file.Unload();
                 if (g_PacketManager.m_PacketsStack.empty())
                 {
-                    CRASHLOG("\nPackets stack is empty.\n");
+                    Info(Client, "\nPackets stack is empty.");
                 }
                 else
                 {
-                    CRASHLOG("\nPackets in stack:\n");
+                    Info(Client, "\nPackets in stack:");
                     for (deque<vector<uint8_t>>::iterator i =
                              g_PacketManager.m_PacketsStack.begin();
                          i != g_PacketManager.m_PacketsStack.end();
                          ++i)
                     {
-                        CRASHLOG("Packet data:\n");
-                        CRASHLOG_DUMP((uint8_t *)i->data(), int(i->size()));
+                        INFO_DUMP(Client, "Packet data:", (uint8_t *)i->data(), int(i->size()));
                     }
                 }
                 crashlog = true;
             }
-
+            /*
             g_CrashLogger.Close();
             os_path crashlogPath = L"\"" + g_CrashLogger.FileName + L"\"";
             STARTUPINFOW si;
@@ -271,10 +277,10 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
                 nullptr,          // Use parent's starting directory
                 &si,              // Pointer to STARTUPINFO structure
                 &pi);
-
+*/
             g_Game.Uninstall();
 
-            if (!reportSent)
+            if (1) //!reportSent)
             {
                 string msg = "CrossUO client performed an unrecoverable operation.";
                 if (crashlog)

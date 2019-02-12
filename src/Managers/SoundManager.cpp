@@ -179,10 +179,10 @@ CSoundManager::~CSoundManager()
 bool CSoundManager::Init()
 {
     SOUND_DEBUG_TRACE;
-    LOG("Initializing bass sound system.\n");
+    Info(Client, "initializing sound system");
     s_backend.init();
     s_backend.setGlobalVolume(0.30f);
-    LOG("Sound init successfull.\n");
+    Info(Client, "sound init successfull");
 
     return true;
 }
@@ -252,7 +252,7 @@ SoundHandle CSoundManager::LoadSoundEffect(CIndexSound &is)
     auto stream = getSound(is.m_WaveFile, waveFileSize - 16);
     if (stream == SOUND_NULL)
     {
-        LOG("Error creating sound voice: %s\n", GetErrorDescription());
+        Warning(Client, "creating sound voice: %s", GetErrorDescription());
         free(is.m_WaveFile);
         is.m_WaveFile = nullptr;
     }
@@ -274,7 +274,7 @@ void CSoundManager::PlaySoundEffect(SoundHandle stream, float volume)
     }
     else
     {
-        LOG("Trying to play unallocated sound");
+        Error(Client, "trying to play unallocated sound");
     }
 }
 
@@ -293,7 +293,7 @@ void CSoundManager::FreeSound(SoundHandle stream)
     }
     else
     {
-        LOG("Trying to free unallocated sound");
+        Warning(Client, "trying to free unallocated sound");
     }
     stream = SOUND_NULL;
 }
@@ -362,7 +362,7 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     SOUND_DEBUG_TRACE;
     if (index < 0 || index >= MIDI_MUSIC_COUNT)
     {
-        LOG("Music ID is out of range: %i\n", index);
+        Warning(Client, "music id is out of range: %i", index);
         return;
     }
 

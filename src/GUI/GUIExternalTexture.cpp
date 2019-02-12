@@ -8,10 +8,10 @@
 CGUIExternalTexture::CGUIExternalTexture(
     CGLTexture *texture, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)
-    , m_Texture(texture)
     , DeleteTextureOnDestroy(deleteTextureOnDestroy)
     , DrawWidth(drawWidth)
     , DrawHeight(drawHeight)
+    , m_Texture(texture)
 {
 }
 

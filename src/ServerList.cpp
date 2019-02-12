@@ -53,7 +53,7 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
 
     if (numServers == 0)
     {
-        LOG("Warning!!! Empty server list\n");
+        Warning(Network, "empty server list");
     }
 
     for (uint16_t i = 0; i < numServers; i++)

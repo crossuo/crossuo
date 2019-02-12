@@ -4,6 +4,7 @@
 #include "SpeechManager.h"
 #include "FileManager.h"
 #include "../Config.h"
+#include "../Misc.h"
 
 CSpeechManager g_SpeechManager;
 
@@ -22,8 +23,8 @@ CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
         CheckStart = true;
         Data.erase(Data.begin());
     }
-
-    //LOG(L"[0x%04X]=(cs=%i, ce=%i) %s\n", m_Code, m_CheckStart, m_CheckEnd, m_Data.c_str());
+    //TRACE_DUMP(Client, "SPEECH:", (uint8_t*)Data.data(), Data.size()*2);
+    TRACE(Client, "[0x%04X]=(cs=%i, ce=%i) %ls", Code, CheckStart, CheckEnd, Data.c_str());
 }
 
 CSpeechManager::CSpeechManager()
@@ -56,7 +57,7 @@ bool CSpeechManager::LoadSpeech()
         CurrentLanguage = &m_LangCodes[0];
         g_Language = m_LangCodes[0].Abbreviature;
     }
-    LOG("Selected language: %s\n", g_Language.c_str());
+    Info(Client, "selected language: %s", g_Language.c_str());
 
     Wisp::CDataReader reader;
     vector<uint8_t> tempData;
@@ -79,7 +80,7 @@ bool CSpeechManager::LoadSpeech()
 
     if (isUOP)
     {
-        LOG("Loading speech from UOP\n");
+        Info(Client, "loading speech from UOP");
         reader.Move(2);
         wstring mainData = reader.ReadWStringLE(reader.Size - 2);
         vector<wstring> list;
@@ -134,7 +135,7 @@ bool CSpeechManager::LoadSpeech()
     }
     else
     {
-        LOG("Loading speech from MUL\n");
+        Info(Client, "loading speech from MUL");
         while (!reader.IsEOF())
         {
             const uint16_t code = reader.ReadUInt16BE();
@@ -149,7 +150,7 @@ bool CSpeechManager::LoadSpeech()
         }
     }
 
-    LOG("m_SpeechEntries.size()=%zi\n", m_SpeechEntries.size());
+    Info(Client, "m_SpeechEntries.size()=%zi", m_SpeechEntries.size());
     m_Loaded = true;
     return true;
 }
@@ -181,7 +182,7 @@ bool CSpeechManager::LoadLangCodes()
         }
 
         m_LangCodes.push_back(langCodeData);
-        //LOG("[0x%04X]: %s\n", langCodeData.Code, langCodeData.Abbreviature.c_str());
+        TRACE(Client, "[0x%04X]: %s", langCodeData.Code, langCodeData.Abbreviature.c_str());
     }
 
     //if (m_LangCodes.size() != 135)

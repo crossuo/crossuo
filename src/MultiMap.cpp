@@ -26,7 +26,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
     if (file.Size == 0u)
     {
-        LOG("MultiMap.rle is not loaded!\n");
+        Warning(Data, "MultiMap.rle is not loaded!");
         return;
     }
 
@@ -37,7 +37,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 
     if (Width < 1 || Height < 1)
     {
-        LOG("Failed to load bounds from MultiMap.rle\n");
+        Warning(Data, "Failed to load bounds from MultiMap.rle");
         return;
     }
 
@@ -77,7 +77,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
         uint8_t pic = file.ReadUInt8();
         uint8_t size = pic & 0x7F;
 
-        bool colored = (bool)(pic & 0x80);
+        bool colored = (pic & 0x80) != 0u;
 
         int startHeight = startY * height;
         int currentHeight = y * height;
@@ -152,8 +152,7 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
     DEBUG_TRACE_FUNCTION;
     if (facet < 0 || facet > 5)
     {
-        LOG("Invalid facet index: %i\n", facet);
-
+        Warning(Data, "Invalid facet index: %i", facet);
         return false;
     }
 
@@ -162,15 +161,12 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
 
     if (file.Size == 0u)
     {
-        LOG("Facet %i is not loaded!\n", facet);
-
+        Warning(Data, "Facet %i is not loaded!", facet);
         return false;
     }
 
     int mapWidth = file.ReadInt16LE();
     int mapHeight = file.ReadInt16LE();
-
-    //DebugMsg("Facet w:%i h:%i\n", mapWidth, mapHeight);
 
     int startX = gump->StartX;
     int endX = gump->EndX;

@@ -234,11 +234,11 @@ bool CMacroManager::Convert(const os_path &path)
 
         if (size < 4 || size > 5)
         {
-            LOG("Error! Macros converter: unexpected start args count = %zi\n", size);
+            Error(Client, "macros converter: unexpected start args count = %zi", size);
             continue;
         }
 
-        //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]\n", strings[0].c_str(), atoi(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION].c_str()));
+        //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]", strings[0].c_str(), atoi(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION].c_str()));
         bool macroAdded = false;
 
         CMacro *macro = new CMacro(
@@ -283,7 +283,7 @@ bool CMacroManager::Convert(const os_path &path)
                 if (upData == ToUpperA(CMacro::m_MacroActionName[i]))
                 {
                     code = (MACRO_CODE)i;
-                    //LOG("Action found (%i): %s\n", i, CMacro::m_MacroActionName[i]);
+                    TRACE(Client, "action found (%i): %s", i, CMacro::m_MacroActionName[i]);
                     break;
                 }
             }
@@ -301,7 +301,7 @@ bool CMacroManager::Convert(const os_path &path)
                             args += " " + data[i];
                         }
 
-                        //LOG("\tSub action string is: %s\n", args.c_str());
+                        TRACE(Client, "\tsub action string is: %s", args.c_str());
 
                         ((CMacroObjectString *)obj)->m_String = args;
                     }
@@ -322,9 +322,8 @@ bool CMacroManager::Convert(const os_path &path)
                         if (upData == ToUpperA(CMacro::m_MacroAction[i]))
                         {
                             obj->SubCode = (MACRO_SUB_CODE)i;
-
-                            //LOG("\tSub action found (%i): %s\n", i, CMacro::m_MacroAction[i]);
-
+                            TRACE(
+                                Client, "\tsub action found (%i): %s", i, CMacro::m_MacroAction[i]);
                             break;
                         }
                     }
@@ -333,8 +332,7 @@ bool CMacroManager::Convert(const os_path &path)
             }
         }
 
-        //LOG("Cycle ends with add: %i\n", macroAdded);
-
+        TRACE(Client, "cycle ends with add: %i", macroAdded);
         if (!macroAdded)
         {
             Add(macro);

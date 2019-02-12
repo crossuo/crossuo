@@ -1,111 +1,67 @@
-// MIT License
-// Copyright (c) Hotride
+// GPLv3
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
-#include "FileSystem.h"
+#include "Logging.h"
 
-CLogger g_Logger;
-CLogger g_CrashLogger;
+#if !defined(DISABLE_LOG)
 
-CLogger::CLogger()
+#define LOGURU_IMPLEMENTATION
+#include <loguru.h>
+
+eLogSystem g_LogEnabled = LogSystemAll;
+
+#define LOG_SYSTEM(id, name) LOG_DECLARE_SYSTEM(name)
+#include "Loggers.h"
+#undef LOG_SYSTEM
+
+namespace loguru
 {
-}
-
-CLogger::~CLogger()
+const char *log_system_name(int sys)
 {
-    Close();
-}
-
-void CLogger::Close()
-{
-    if (m_File != nullptr)
+    switch (sys)
     {
-        LOG("Log closed.\n");
-        fs_close(m_File);
-        m_File = nullptr;
+#define LOG_SYSTEM(id, name)                                                                       \
+    case eLogSystem::LogSystem##name:                                                              \
+        return TOSTRING(name);
+#include "Loggers.h"
+#undef LOG_SYSTEM
+        default:
+            break;
     }
+    return "Unknown";
+}
+}; // namespace loguru
+
+void LogInit(int argc, char *argv[], const char *filename)
+{
+    loguru::init(argc, argv);
+    loguru::add_file(filename, loguru::Truncate, loguru::Verbosity_INFO);
+    loguru::g_stderr_verbosity = 1;
+    loguru::g_preamble_date = false;
+    loguru::g_preamble_time = false;
+
+#define LOG_SYSTEM(id, name) LOG_DEFINE_SYSTEM(name)
+#include "Loggers.h"
+#undef LOG_SYSTEM
 }
 
-void CLogger::Init(const os_path &filePath)
+void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
-    if (m_File != nullptr)
+    auto logger = g_logClient;
+    switch (sys)
     {
-        fs_close(m_File);
-    }
-
-    m_File = fs_open(filePath, FS_WRITE);
-
-    if (this == &g_Logger)
-    {
-        LOG("Log opened.\n");
-    }
-
-    FileName = filePath;
-}
-
-void CLogger::Print(const char *format, ...)
-{
-    if (m_File == nullptr)
-    {
-        return;
-    }
-
-    va_list arg;
-    va_start(arg, format);
-    vfprintf(m_File, format, arg);
-    va_end(arg);
-    fflush(m_File);
-}
-
-void CLogger::VPrint(const char *format, va_list ap)
-{
-    if (m_File == nullptr)
-    {
-        return;
+#define LOG_SYSTEM(id, name)                                                                       \
+    case eLogSystem::LogSystem##name:                                                              \
+        logger = g_log##name;                                                                      \
+        break;
+#include "Loggers.h"
+#undef LOG_SYSTEM
+        default:
+            break;
     }
 
-    vfprintf(m_File, format, ap);
-    fflush(m_File);
-}
-
-void CLogger::Print(const wchar_t *format, ...)
-{
-    if (m_File == nullptr)
-    {
-        return;
-    }
-
-    va_list arg;
-    va_start(arg, format);
-    vfwprintf(m_File, format, arg);
-    va_end(arg);
-    fflush(m_File);
-}
-
-void CLogger::VPrint(const wchar_t *format, va_list ap)
-{
-    if (m_File == nullptr)
-    {
-        return;
-    }
-
-    vfwprintf(m_File, format, ap);
-    fflush(m_File);
-}
-
-void CLogger::Dump(uint8_t *buf, int size)
-{
-    LogDump(m_File, buf, size);
-}
-
-void LogDump(FILE *fp, uint8_t *buf, int size)
-{
-    if (fp == nullptr)
-    {
-        return;
-    }
-
+    VLOG_F(sys, level, title);
     int num_lines = size / 16;
-
     if (size % 16 != 0)
     {
         num_lines++;
@@ -113,33 +69,55 @@ void LogDump(FILE *fp, uint8_t *buf, int size)
 
     for (int line = 0; line < num_lines; line++)
     {
+        char out[128];
+        char *cur = out;
+        char *end = cur + sizeof(out);
         int row = 0;
-        fprintf(fp, "%04X: ", line * 16);
-
+        int r = 0;
+        r = snprintf(cur, end - cur, "%04X: ", line * 16);
+        assert(r >= 0 && r < end - cur && end - cur >= 0);
+        cur += r;
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
             {
-                fprintf(fp, "%02X ", buf[line * 16 + row]);
+                r = snprintf(cur, end - cur, "%02X ", buf[line * 16 + row]);
+                assert(r >= 0 && r < end - cur && end - cur >= 0);
+                cur += r;
             }
             else
             {
-                fprintf(fp, "-- ");
+                r = snprintf(cur, end - cur, "-- ");
+                assert(r >= 0 && r < end - cur && end - cur >= 0);
+                cur += r;
             }
         }
-
-        fprintf(fp, ": ");
-
+        r = snprintf(cur, end - cur, ": ");
+        assert(r >= 0 && r < end - cur && end - cur >= 0);
+        cur += r;
         for (row = 0; row < 16; row++)
         {
             if (line * 16 + row < size)
             {
-                fputc(isprint(buf[line * 16 + row]) != 0 ? buf[line * 16 + row] : '.', fp);
+                const char ch = isprint(buf[line * 16 + row]) != 0 ? buf[line * 16 + row] : '.';
+                r = snprintf(cur, end - cur, "%c", ch);
+                assert(r >= 0);
+                assert(r < end - cur);
+                assert(end - cur >= 0);
+                cur += r;
             }
         }
-
-        fputc('\n', fp);
+        VLOG_F(sys, level, out);
     }
-
-    fflush(fp);
 }
+
+#else
+
+void LogInit(const char *filename)
+{
+}
+void LogHexBuffer(const char *title, uint8_t *buf, int size)
+{
+}
+
+#endif
