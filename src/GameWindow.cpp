@@ -61,8 +61,8 @@ bool CGameWindow::OnCreate()
     DEBUG_TRACE_FUNCTION;
     if (!g_GL.Install())
     {
-        LOG("Error install OpenGL\n");
-        ShowMessage("Error install OpenGL", "Error install OpenGL!");
+        Info(Client, "error initializing OpenGL");
+        ShowMessage("Error initializing OpenGL", "Error");
         return false;
     }
 
@@ -81,10 +81,6 @@ void CGameWindow::OnDestroy()
     g_SoundManager.Free();
     PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
     g_Game.Uninstall();
-    g_CrashLogger.Close();
-#if defined(XUO_WINDOWS)
-    ::remove(CStringFromPath(g_CrashLogger.FileName));
-#endif
 }
 
 void CGameWindow::OnResize()
@@ -416,7 +412,7 @@ bool CGameWindow::OnRepaint(const PaintEvent &ev)
 
     if (!g_PluginManager.Empty())
     {
-        return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev);
+        return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev) != 0u;
     }
     return false;
 }
@@ -479,7 +475,9 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
 
-            LOG("--- ^(%d) s(+%d => %d) Plugin->Server:: %s\n",
+            Info(
+                Plugin,
+                "--- ^(%d) s(+%d => %d) Plugin->Server:: %s",
                 ticks - g_LastPacketTime,
                 size,
                 g_TotalSendSize,
@@ -490,13 +488,13 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
             if (*buf == 0x80 || *buf == 0x91)
             {
-                LOG_DUMP(buf, 1);
-                SAFE_LOG_DUMP(buf, size);
-                LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
+                INFO_DUMP(Plugin, "SEND:", buf, 1);
+                SAFE_DEBUG_DUMP(Plugin, "SEND:", buf, size);
+                Info(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
             }
             else
             {
-                LOG_DUMP(buf, size);
+                INFO_DUMP(Plugin, "SEND:", buf, size);
             }
             g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
@@ -514,7 +512,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
         case UOMSG_WALK:
         {
-            const auto run = (bool)ev.data1;
+            const auto run = (ev.data1 != 0u);
             const auto dir = checked_cast<uint8_t>(ev.data2);
             return !g_PathFinder.Walk(run, dir);
         }
@@ -589,7 +587,9 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
                     }
                 }
 
-                LOG("Ping info: id:%i min:%i max:%i average:%i lost:%i\n",
+                Info(
+                    Client,
+                    "Ping info: id:%i min:%i max:%i average:%i lost:%i",
                     info->ServerID,
                     info->Min,
                     info->Max,

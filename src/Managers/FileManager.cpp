@@ -53,7 +53,7 @@ vector<uint8_t> CUopMappedFile::GetData(const CUopBlockHeader &block)
         int z_err = mz_uncompress(&result[0], &decompressedSize, Ptr, compressedSize);
         if (z_err != Z_OK)
         {
-            LOG("Uncompress error: %i\n", z_err);
+            Error(Filesystem, "uncompress error: %i", z_err);
             result.clear();
         }
     }
@@ -701,7 +701,7 @@ bool CFileManager::FileExists(const os_path &filename)
 {
     DEBUG_TRACE_FUNCTION;
     auto r = fs_path_exists(filename);
-    LOG("FileExists: %s = %d\n", CStringFromPath(filename), r);
+    Info(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(filename), r);
     return r;
 }
 
@@ -726,9 +726,9 @@ bool CFileManager::DecompressUOPFileData(
     delete[] buf;
     if (z_err != Z_OK)
     {
-        LOG("UOP anim decompression failed %d\n", z_err);
-        LOG("Anim file: %s\n", CStringFromPath(animData.path));
-        LOG("Anim offset: %d\n", animData.offset);
+        Error(Filesystem, "UOP anim decompression failed %d", z_err);
+        Error(Filesystem, "anim file: %s", CStringFromPath(animData.path));
+        Error(Filesystem, "anim offset: %d", animData.offset);
         return false;
     }
     return true;
@@ -736,7 +736,7 @@ bool CFileManager::DecompressUOPFileData(
 
 bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
 {
-    LOG("Loading UOP fileName: %s\n", fileName);
+    Info(Filesystem, "loading UOP: %s", fileName);
     if (!file.Load(g_App.UOFilesPath(fileName)))
     {
         return false;
@@ -746,7 +746,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
 
     if (formatID != 0x0050594D)
     {
-        LOG("WARNING!!! UOP file '%s' formatID is %i!\n", fileName, formatID);
+        Warning(Filesystem, "invalid UOP file '%s' formatID %i", fileName, formatID);
         return false;
     }
 
@@ -754,7 +754,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
 
     if (formatVersion > 5)
     {
-        LOG("WARNING!!! UOP file '%s' version is %i!\n", fileName, formatVersion);
+        Warning(Filesystem, "invalid UOP file '%s' version %i", fileName, formatVersion);
     }
 
     file.Move(4); //Signature?
@@ -812,43 +812,33 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
     //if (string("tileart.uop") != fileName)
     return true;
 
-    for (std::unordered_map<uint64_t, CUopBlockHeader>::iterator i = file.m_Map.begin();
-         i != file.m_Map.end();
-         ++i)
+    for (auto i = file.m_Map.begin(); i != file.m_Map.end(); ++i)
     {
-        LOG("item dump start: %016llX, %i\n", i->first, i->second.CompressedSize);
-
+        Info(Data, "item dump start: %016llX, %i", i->first, i->second.CompressedSize);
         vector<uint8_t> data = file.GetData(i->second);
-
         if (data.empty())
         {
             continue;
         }
 
         Wisp::CDataReader reader(&data[0], data.size());
-
-        //LOG("%s\n", reader.ReadString(decompressedSize));
-
-        LOG_DUMP(reader.Start, (int)reader.Size);
-
-        LOG("item dump end:\n");
+        INFO_DUMP(Data, "UOP:", reader.Start, (int)reader.Size);
+        Info(Data, "item dump end:");
     }
-
     file.ResetPtr();
-
     return true;
 }
 
 bool CFileManager::TryOpenFileStream(std::fstream &fileStream, const os_path &filePath)
 {
-    LOG("Trying to open file stream for %s\n", CStringFromPath(filePath));
+    Info(Filesystem, "trying to open file stream for %s", CStringFromPath(filePath));
     if (!FileExists(filePath))
     {
-        LOG("%s doesnt exist\n", CStringFromPath(filePath));
+        Info(Filesystem, "%s doesnt exist", CStringFromPath(filePath));
         return false;
     }
     fileStream.open(filePath, std::ios::binary | std::ios::in);
-    LOG("Opened file stream for %s\n", CStringFromPath(filePath));
+    Info(Filesystem, "opened file stream for %s", CStringFromPath(filePath));
     return true;
 }
 

@@ -19,8 +19,8 @@ CGumpBaseScroll::CGumpBaseScroll(
     : CGump(type, serial, x, y)
     , Height(height)
     , ScrollerOffsetY(scrollerOffsetY)
-    , HaveBackgroundLines(haveBackgroundLines)
     , ScissorOffsetHeight(scissorOffsetHeight)
+    , HaveBackgroundLines(haveBackgroundLines)
 {
     DEBUG_TRACE_FUNCTION;
     Page = 2;

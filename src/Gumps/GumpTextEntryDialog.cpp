@@ -19,9 +19,9 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
     string text,
     string description)
     : CGump(GT_TEXT_ENTRY_DIALOG, serial, x, y)
+    , Variant(variant)
     , Text(std::move(text))
     , m_Description(std::move(description))
-    , Variant(variant)
     , m_MaxLength(maxLength)
 {
     DEBUG_TRACE_FUNCTION;

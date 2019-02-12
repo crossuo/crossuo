@@ -181,7 +181,7 @@ bool CWindow::Create(
     SDL_VERSION(&info.version);
     if (SDL_GetWindowWMInfo(m_window, &info) != 0u)
     {
-        SDL_Log("SDL %d.%d.%d\n", info.version.major, info.version.minor, info.version.patch);
+        Info(Client, "SDL %d.%d.%d", info.version.major, info.version.minor, info.version.patch);
 
         const char *subsystem = "Unknown";
         switch (info.subsystem)
@@ -233,7 +233,7 @@ bool CWindow::Create(
 #endif
         }
 
-        SDL_Log("System: %s\n", subsystem);
+        Info(Client, "System: %s", subsystem);
 #if defined(XUO_WINDOWS)
         Handle = info.info.win.window;
 #endif

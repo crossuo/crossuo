@@ -9,15 +9,16 @@ class CLangCode
 {
 public:
     int Code = 0;
-    string Abbreviature = "";
     uint32_t Unknown = 0;
-    string Language = "";
-    string Country = "";
+    string Abbreviature;
+    string Language;
+    string Country;
 
     CLangCode() {}
     CLangCode(const string &abbreviature, int code, const string &language, const string &country)
-        : Abbreviature(abbreviature)
-        , Code(code)
+        : Code(code)
+        , Unknown(0)
+        , Abbreviature(abbreviature)
         , Language(language)
         , Country(country)
     {

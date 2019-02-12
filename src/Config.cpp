@@ -354,7 +354,7 @@ void LoadGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
 
-    LOG("Loading global config from " CROSSUO_CONFIG "\n");
+    Info(Config, "loading global config from " CROSSUO_CONFIG);
     const auto cfg = g_App.ExeFilePath(CROSSUO_CONFIG);
     Wisp::CTextFileParser file(cfg, "=,", "#;", "");
 
@@ -470,28 +470,35 @@ void LoadGlobalConfig()
         snprintf(p2, sizeof(p2), ".%d", d);
     }
 
-    LOG("Client Emulation:\n");
-    LOG("\tClient Version: %s\n", g_Config.ClientVersionString.c_str());
-    LOG("\tEmulation Compatibility Version: %s%s (0x%08x)\n", p1, p2, g_Config.ClientVersion);
-    LOG("\tProtocol Compatibility Version: %s (0x%08x)\n",
+    Info(Client, "Client Emulation:");
+    Info(Client, "\tClient Version: %s", g_Config.ClientVersionString.c_str());
+    Info(
+        Client, "\tEmulation Compatibility Version: %s%s (0x%08x)", p1, p2, g_Config.ClientVersion);
+    Info(
+        Client,
+        "\tProtocol Compatibility Version: %s (0x%08x)",
         g_Config.ProtocolClientVersionString.c_str(),
         g_Config.ProtocolClientVersion);
-    LOG("\tCryptography: %08x %08x %08x %04x (%d)\n",
+    Info(
+        Client,
+        "\tCryptography: %08x %08x %08x %04x (%d)",
         g_Config.Key1,
         g_Config.Key2,
         g_Config.Key3,
         g_Config.Seed,
         g_Config.EncryptionType);
-    LOG("\tClient Type: %s (%d)\n",
+    Info(
+        Client,
+        "\tClient Type: %s (%d)",
         GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
         g_Config.ClientFlag);
-    LOG("\tUse Verdata: %d\n", g_Config.UseVerdata);
+    Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
 }
 
 void SaveGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("Saving global config to " CROSSUO_CONFIG "\n");
+    Info(Config, "saving global config to " CROSSUO_CONFIG);
     FILE *cfg = fs_open(g_App.ExeFilePath(CROSSUO_CONFIG), FS_WRITE);
     if (cfg == nullptr)
     {

@@ -84,7 +84,7 @@ bool CConnection::ReadyRead()
     DataReady = tcp_select(m_Socket);
     if (DataReady == -1)
     {
-        LOG("CConnection::ReadyRead SOCKET_ERROR\n");
+        Error(Network, "CConnection::ReadyRead SOCKET_ERROR");
         Disconnect();
     }
 
@@ -96,7 +96,7 @@ bool CConnection::Read(int maxSize)
     DEBUG_TRACE_FUNCTION;
     if (DataReady == -1)
     {
-        LOG("CConnection::Read, m_DataReady=%i\n", DataReady);
+        Error(Network, "CConnection::Read, m_DataReady=%i", DataReady);
         Disconnect();
     }
     else if (Connected && m_Socket != nullptr)
@@ -106,20 +106,19 @@ bool CConnection::Read(int maxSize)
 
         if (size > 0)
         {
-            LOG("CConnection::Read size=%i\n", size);
+            Info(Network, "CConnection::Read size=%i", size);
             data.resize(size);
             data = Decompression(data);
             m_MessageParser->Append(data);
             return true;
         }
 
-        LOG("CConnection::Read, bad size=%i\n", size);
+        Error(Network, "CConnection::Read, bad size=%i", size);
     }
     else
     {
-        LOG("CConnection::Read, unknown state, m_Connected=%i\n", Connected);
+        Error(Network, "CConnection::Read, unknown state, m_Connected=%i", Connected);
     }
-
     return false;
 }
 
@@ -132,7 +131,7 @@ int CConnection::Send(uint8_t *data, int size)
     }
 
     const int sent = tcp_send(m_Socket, data, size);
-    //LOG("CConnection::Send=>%i\n", sent);
+    //Info(Network,  "CConnection::Send=>%i", sent);
     return sent;
 }
 
@@ -145,7 +144,7 @@ int CConnection::Send(const vector<uint8_t> &data)
     }
 
     const int sent = Send((uint8_t *)&data[0], (int)data.size());
-    LOG("CConnection::Send=>%i\n", sent);
+    Info(Network, "CConnection::Send=>%i", sent);
     return sent;
 }
 }; // namespace Wisp

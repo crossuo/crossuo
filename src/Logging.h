@@ -1,56 +1,83 @@
-// MIT License
-// Copyright (c) Hotride
+// GPLv3
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #pragma once
 
-#include "FileSystem.h"
+#undef ERROR
 
-void LogDump(FILE *fp, uint8_t *buf, int size);
+#if !defined(DISABLE_LOG)
 
-#define LOG_LEVEL 2
+#include <loguru.h>
 
-#if LOG_LEVEL == 1
-#define INITLOGGER(path)
-#define LOG(...) fprintf(stdout, " LOG: " __VA_ARGS__)
-#define LOG_DUMP(...)      //LogDump(stdout, __VA_ARGS__)
-#define SAFE_LOG_DUMP(...) //LogDump(stdout, __VA_ARGS__)
-#elif LOG_LEVEL == 2
-#define INITLOGGER(path) g_Logger.Init(path);
-#define LOG(...) g_Logger.Print(__VA_ARGS__) //fprintf(stdout, " LOG: " __VA_ARGS__)
-#define LOG_DUMP(...)                        //LogDump(stdout, __VA_ARGS__)
-#define SAFE_LOG_DUMP(...)                   //LogDump(stdout, __VA_ARGS__)
-#else                                        //LOG_LEVEL == 0
-#define INITLOGGER(path)
-#define LOG(...)
-#define LOG_DUMP(...)
-#define SAFE_LOG_DUMP(...)
-#endif //LOG_LEVEL!=0
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define LOG_DECLARE_EXTERN(name) extern int g_log##name;
+#define LOG_DECLARE_SYSTEM(name) int g_log##name;
+#define LOG_DEFINE_SYSTEM(name) g_log##name = (int)eLogSystem::LogSystem##name;
 
-#define INITCRASHLOGGER(path) g_CrashLogger.Init(path);
-#define CRASHLOG g_CrashLogger.Print
-#define CRASHLOG_DUMP g_CrashLogger.Dump
+using LogSystem = uint32_t;
 
-class CLogger
+enum eLogSystem : LogSystem
 {
-public:
-    os_path FileName;
-
-protected:
-    FILE *m_File{ nullptr };
-
-public:
-    CLogger();
-    ~CLogger();
-
-    void Close();
-    bool Ready() const { return m_File != nullptr; }
-    void Init(const os_path &filePath);
-    void Print(const char *format, ...);
-    void VPrint(const char *format, va_list ap);
-    void Print(const wchar_t *format, ...);
-    void VPrint(const wchar_t *format, va_list ap);
-    void Dump(uint8_t *buf, int size);
+#define LOG_SYSTEM(id, name) LogSystem##name = 1 << id,
+#include "Loggers.h"
+#undef LOG_SYSTEM
+    LogSystemAll = ~0u,
 };
 
-extern CLogger g_Logger;
-extern CLogger g_CrashLogger;
+extern eLogSystem g_LogEnabled;
+
+#define LOG_SYSTEM(id, name) LOG_DECLARE_EXTERN(name)
+#include "Loggers.h"
+#undef LOG_SYSTEM
+
+#define LOG_(system, level, ...)                                                                   \
+    VLOG_IF_F(                                                                                     \
+        (int)eLogSystem::LogSystem##system,                                                        \
+        loguru::Verbosity_##level,                                                                 \
+        (g_LogEnabled & eLogSystem::LogSystem##system),                                            \
+        __VA_ARGS__)
+
+#define LOG_DUMP_(system, level, ...)                                                              \
+    if ((g_LogEnabled & eLogSystem::LogSystem##system) &&                                          \
+        loguru::current_verbosity_cutoff() > level)                                                \
+    LogHexBuffer(eLogSystem::LogSystem##system, int(level), __VA_ARGS__)
+
+#define Info(system, ...) LOG_(system, INFO, __VA_ARGS__)
+#define Warning(system, ...) LOG_(system, WARNING, __VA_ARGS__)
+#define Error(system, ...) LOG_(system, ERROR, __VA_ARGS__)
+#define Fatal(system, ...) LOG_(system, FATAL, __VA_ARGS__)
+
+#define INFO_DUMP(system, ...) LOG_DUMP_(system, 0, __VA_ARGS__)
+
+#if defined(XUO_DEBUG)
+#define TRACE(system, ...) LOG_(system, 9, __VA_ARGS__)
+#define DEBUG(system, ...) LOG_(system, 1, __VA_ARGS__)
+#define TRACE_DUMP(system, ...) LOG_DUMP_(system, 9, __VA_ARGS__)
+#define DEBUG_DUMP(system, ...) LOG_DUMP_(system, 1, __VA_ARGS__)
+#define SAFE_DEBUG_DUMP(system, ...) DEBUG_DUMP(system, __VA_ARGS__)
+#else
+#define TRACE(...)
+#define DEBUG(...)
+#define TRACE_DUMP(...)
+#define DEBUG_DUMP(...)
+#define SAFE_DEBUG_DUMP(...)
+#endif
+
+#else
+
+#define TRACE(...)
+#define DEBUG(...)
+#define Info(...)
+#define Warning(...)
+#define Error(...)
+#define Fatal(...)
+#define TRACE_DUMP(...)
+#define DEBUG_DUMP(...)
+#define INFO_DUMP(...)
+#define SAFE_DEBUG_DUMP(...)
+
+#endif
+
+void LogHexBuffer(eLogSystem system, int level, const char *title, uint8_t *buf, int size);
+void LogInit(int argc, char *argv[], const char *filename);

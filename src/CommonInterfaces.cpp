@@ -366,7 +366,7 @@ bool CDECL FUNCBODY_GetCanWalk(unsigned char &direction, int &x, int &y, char &z
 
 bool CDECL FUNCBODY_GetWalk(bool run, unsigned char direction)
 {
-    return PUSH_EVENT(UOMSG_WALK, run, direction);
+    return PUSH_EVENT(UOMSG_WALK, run, direction) != 0u;
 }
 
 bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)

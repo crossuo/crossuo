@@ -376,7 +376,9 @@ bool CProfessionManager::Load()
     }
     else
     {
-        LOG("Could not find prof.txt in your UO directory. Character creation professions loading failed.\n");
+        Warning(
+            Data,
+            "could not find prof.txt in your UO directory. character creation professions loading failed");
     }
 
     return result;
@@ -420,7 +422,7 @@ void CProfessionManager::LoadProfessionDescription()
                 {
                     if (!((CBaseProfession *)m_Items)->AddDescription((int)i - 1, list[i], ptr))
                     {
-                        //LOG("Failed to add description! (%s)\n", list[i].c_str());
+                        TRACE(Data, "failed to add description: %s", list[i].c_str());
                     }
                     ptr += strlen(ptr) + 1;
                 }
@@ -437,7 +439,7 @@ void CProfessionManager::LoadProfessionDescription()
     }
     else
     {
-        LOG("Failed to load professn.enu\n");
+        Warning(Data, "failed to load professn.enu");
         g_GameWindow.ShowMessage("Failed to load professn.enu", "Failed to load");
     }
 }

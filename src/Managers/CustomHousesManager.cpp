@@ -101,8 +101,7 @@ void CustomHousesManager::Load(const os_path &path)
 
             CCustomHouse *house = Get(serial);
 
-            LOG("Load house from cache file: 0x%08X 0x%08X\n", serial, revision);
-
+            Info(Client, "load house from cache file: 0x%08X 0x%08X", serial, revision);
             if (house == nullptr)
             {
                 house = new CCustomHouse(serial, revision);

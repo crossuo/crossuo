@@ -124,7 +124,7 @@ void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
 bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameSeed)
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("Connecting %s:%d\n", address.c_str(), port);
+    Info(Network, "Connecting %s:%d", address.c_str(), port);
     if (m_IsLoginSocket)
     {
         if (m_LoginSocket.Connected)
@@ -135,7 +135,7 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
         bool result = m_LoginSocket.Connect(address, port);
         if (result)
         {
-            LOG("connected\n");
+            Info(Network, "connected");
             g_TotalSendSize = 4;
             g_LastPacketTime = g_Ticks;
             g_LastSendTime = g_LastPacketTime;
@@ -221,7 +221,7 @@ void CConnectionManager::Recv()
         {
             if (m_LoginSocket.DataReady == -1)
             {
-                LOG("Failed to Recv()...Disconnecting...\n");
+                Info(Network, "Failed to Recv()...Disconnecting...");
                 g_Game.InitScreen(GS_MAIN_CONNECT);
                 g_ConnectionScreen.SetType(CST_CONLOST);
             }
@@ -241,7 +241,7 @@ void CConnectionManager::Recv()
         {
             if (m_GameSocket.DataReady == -1)
             {
-                LOG("Failed to Recv()...Disconnecting...\n");
+                Info(Network, "Failed to Recv()...Disconnecting...");
                 if (g_GameState == GS_GAME ||
                     (g_GameState == GS_GAME_BLOCKED && (g_GameBlockedScreen.Code != 0u)))
                 {

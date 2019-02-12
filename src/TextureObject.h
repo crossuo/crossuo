@@ -39,11 +39,10 @@ public:
     uint32_t LastAccessTime = 0;
     bool IsUOP = false;
     bool IsVerdata = false;
+    CTextureAnimationFrame *m_Frames;
 
     CTextureAnimationDirection();
     virtual ~CTextureAnimationDirection();
-
-    CTextureAnimationFrame *m_Frames;
 };
 
 class CTextureAnimationGroup

@@ -162,6 +162,50 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size);
 typedef void CDECL PLUGIN_INIT_TYPE(PLUGIN_INFO *);
 static PLUGIN_INIT_TYPE *g_PluginInit = nullptr;
 
+struct CFileWriter
+{
+    CFileWriter() {}
+    ~CFileWriter() { Close(); }
+
+    void Close()
+    {
+        if (m_File == nullptr)
+        {
+            return;
+        }
+
+        fs_close(m_File);
+        m_File = nullptr;
+    }
+
+    void Init(const os_path &filePath)
+    {
+        if (m_File != nullptr)
+        {
+            fs_close(m_File);
+        }
+        m_File = fs_open(filePath, FS_WRITE);
+        FileName = filePath;
+    }
+
+    void Print(const char *format, ...)
+    {
+        if (m_File == nullptr)
+        {
+            return;
+        }
+
+        va_list arg;
+        va_start(arg, format);
+        vfprintf(m_File, format, arg);
+        va_end(arg);
+        fflush(m_File);
+    }
+
+    FILE *m_File = nullptr;
+    os_path FileName;
+};
+
 CGame g_Game;
 
 CGame::CGame()
@@ -373,13 +417,12 @@ bool CGame::Install()
 {
     DEBUG_TRACE_FUNCTION;
 
-    LOG("CGame::Install()\n");
+    Info(Client, "CGame::Install()");
 #if defined(XUO_WINDOWS)
     SetUnhandledExceptionFilter(GameUnhandledExceptionFilter);
 #endif
     auto buildStamp = GetBuildDateTimeStamp();
-    LOG("CrossUO version is: %s (build %s)\n", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
-    CRASHLOG("CrossUO version is: %s (build %s)\n", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
+    Info(Client, "CrossUO version is: %s (build %s)", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
 
     for (int i = 0; i < 256; i++)
     {
@@ -408,7 +451,7 @@ bool CGame::Install()
     }
     fs_path_create(g_App.ExeFilePath("screenshots"));
 
-    LOG("Client config loaded!\n");
+    Info(Config, "client config loaded");
     if (g_Config.ClientVersion >= CV_305D)
     {
         CGumpSpellbook::m_SpellReagents1[4] = "Sulfurous ash";                 //Magic Arrow
@@ -419,8 +462,7 @@ bool CGame::Install()
 
     LoadAutoLoginNames();
 
-    LOG("Load files\n");
-
+    Info(Client, "loading files");
     if (g_Config.ClientVersion >= CV_7000)
     {
         g_FileManager.TryReadUOPAnimations();
@@ -445,10 +487,8 @@ bool CGame::Install()
 
     g_ColorManager.Init();
 
-    LOG("Load tiledata\n");
-
+    Info(Client, "loading tiledata");
     int staticsCount = 512;
-
     if (g_Config.ClientVersion >= CV_7090)
     {
         staticsCount = (int)(g_FileManager.m_TiledataMul.Size - (512 * sizeof(LAND_GROUP_NEW))) /
@@ -465,36 +505,34 @@ bool CGame::Install()
         staticsCount = 2048;
     }
 
-    LOG("staticsCount=%i\n", staticsCount);
+    Info(Client, "staticsCount=%i", staticsCount);
     LoadTiledata(512, staticsCount);
-    LOG("Load indexes\n");
+    Info(Client, "loading indexes");
     LoadIndexFiles();
     InitStaticAnimList();
 
-    LOG("Load fonts.\n");
+    Info(Client, "loading fonts");
     if (!g_FontManager.LoadFonts())
     {
-        LOG("Error loading fonts\n");
-        g_GameWindow.ShowMessage("Error loading fonts", "Error loading fonts!");
-
+        Error(Client, "loading fonts");
+        g_GameWindow.ShowMessage("Error loading fonts", "Error");
         return false;
     }
 
-    LOG("Load skills.\n");
+    Info(Client, "loading skills");
     if (!g_SkillsManager.Load())
     {
-        LOG("Error loading skills\n");
-        g_GameWindow.ShowMessage("Error loading skills", "Error loading skills!");
-
+        Error(Client, "loading skills");
+        g_GameWindow.ShowMessage("Error loading skills", "Error");
         return false;
     }
 
-    LOG("Create map blocksTable\n");
+    Info(Client, "creating map blocksTable");
     g_MapManager.CreateBlocksTable();
 
-    LOG("Patch files\n");
+    Info(Client, "patching files");
     PatchFiles();
-    LOG("Replaces...\n");
+    Info(Client, "replacing indexes");
     IndexReplaces();
 
     CheckStaticTileFilterFiles();
@@ -504,21 +542,20 @@ bool CGame::Install()
     CGumpStatusbar::m_StatusbarDefaultWidth = statusbarDims.Width;
     CGumpStatusbar::m_StatusbarDefaultHeight = statusbarDims.Height;
 
-    LOG("Sort skills...\n");
+    Info(Client, "sorting skills");
     g_SkillsManager.Sort();
 
-    LOG("Load cursors.\n");
+    Info(Client, "loading cursors");
     if (!g_MouseManager.LoadCursorTextures())
     {
-        LOG("Error loading cursors\n");
-        g_GameWindow.ShowMessage("Error loading cursors", "Error loading cursors!");
-
+        Info(Client, "loading cursors");
+        g_GameWindow.ShowMessage("Error loading cursors", "Error");
         return false;
     }
 
     if (!g_SoundManager.Init() && g_ShowWarnings)
     {
-        g_GameWindow.ShowMessage("Failed to init audio system.", "Sound error!");
+        g_GameWindow.ShowMessage("Failed to init audio system.", "Error");
     }
 
     LoadContainerOffsets();
@@ -527,7 +564,7 @@ bool CGame::Install()
 
     g_EntryPointer = nullptr;
 
-    LOG("Load prof.\n");
+    Info(Client, "load prof");
     g_ProfessionManager.Load();
     g_ProfessionManager.Selected = (CBaseProfession *)g_ProfessionManager.m_Items;
 
@@ -547,7 +584,7 @@ bool CGame::Install()
 
     g_AnimationManager.InitIndexReplaces((uint32_t *)g_FileManager.m_VerdataMul.Start);
 
-    LOG("Load client startup.\n");
+    Info(Client, "loading client startup config");
     LoadClientStartupConfig();
 
     uint16_t b = 0x0000;
@@ -606,41 +643,39 @@ bool CGame::Install()
     m_WinterTile[1539] = 0x011C;
     m_WinterTile[1540] = 0x011D;
 
-    LOG("Init light buffer.\n");
+    Info(Client, "initializing light buffer");
     g_LightBuffer.Init(640, 480);
 
-    LOG("Create object handles.\n");
+    Info(Client, "creating object handles");
     CreateObjectHandlesBackground();
 
-    LOG("Create aura.\n");
+    Info(Client, "creating aura");
     CreateAuraTexture();
 
-    LOG("Load shaders.\n");
+    Info(Client, "loading shaders");
     LoadShaders();
 
-    LOG("Update main screen content\n");
+    Info(Client, "updating main screen content");
     g_MainScreen.UpdateContent();
 
-    LOG("Init screen...\n");
-
+    Info(Client, "initializing screen");
     InitScreen(GS_MAIN);
 
     if (g_Config.ClientVersion >= CV_7000)
     {
-        LOG("Waiting for FileManager to try & load AnimationFrame files\n");
+        Info(Client, "waiting for file manager to try & load AnimationFrame files");
         g_FileManager.m_AutoResetEvent.WaitOne();
-        LOG("FileManager.TryReadUOPAnimations() done!\n");
+        Info(Client, "FileManager.TryReadUOPAnimations() done");
     }
 
-    LOG("Installation completed!\n");
-
+    Info(Client, "initialization completed");
     return true;
 }
 
 void CGame::Uninstall()
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("CGame::Uninstall()\n");
+    Info(Client, "CGame::Uninstall()");
     SaveLocalConfig(g_PacketManager.ConfigSerial);
     g_MainScreen.Save();
     SaveGlobalConfig();
@@ -785,11 +820,9 @@ void CGame::CheckStaticTileFilterFiles()
     auto filePath{ path + PATH_SEP + ToPath("cave.txt") };
     if (!fs_path_exists(filePath))
     {
-        CLogger file;
-
+        CFileWriter file;
         file.Init(filePath);
         file.Print("#Format: graphic\n");
-
         for (int i = 0x053B; i < 0x0553 + 1; i++)
         {
             if (i != 0x0550)
@@ -800,15 +833,12 @@ void CGame::CheckStaticTileFilterFiles()
     }
 
     filePath = path + PATH_SEP + ToPath("vegetation.txt");
-    CLogger vegetationFile;
-
+    CFileWriter vegetationFile;
     if (!fs_path_exists(filePath))
     {
         vegetationFile.Init(filePath);
         vegetationFile.Print("#Format: graphic\n");
-
         static const int vegetationTilesCount = 178;
-
         static const uint16_t vegetationTiles[vegetationTilesCount] = {
             0x0D45, 0x0D46, 0x0D47, 0x0D48, 0x0D49, 0x0D4A, 0x0D4B, 0x0D4C, 0x0D4D, 0x0D4E, 0x0D4F,
             0x0D50, 0x0D51, 0x0D52, 0x0D53, 0x0D54, 0x0D5C, 0x0D5D, 0x0D5E, 0x0D5F, 0x0D60, 0x0D61,
@@ -836,22 +866,17 @@ void CGame::CheckStaticTileFilterFiles()
             {
                 continue;
             }
-
             vegetationFile.Print("0x%04X\n", vegetationTiles[i]);
         }
     }
 
     filePath = path + PATH_SEP + ToPath("stumps.txt");
-
     if (!fs_path_exists(filePath))
     {
-        CLogger file;
-
+        CFileWriter file;
         file.Init(filePath);
         file.Print("#Format: graphic hatched\n");
-
         static const int treeTilesCount = 53;
-
         static const uint16_t treeTiles[treeTilesCount] = {
             0x0CCA, 0x0CCB, 0x0CCC, 0x0CCD, 0x0CD0, 0x0CD3, 0x0CD6, 0x0CD8, 0x0CDA, 0x0CDD, 0x0CE0,
             0x0CE3, 0x0CE6, 0x0D41, 0x0D42, 0x0D43, 0x0D44, 0x0D57, 0x0D58, 0x0D59, 0x0D5A, 0x0D5B,
@@ -901,56 +926,41 @@ void CGame::CheckStaticTileFilterFiles()
     }
 
     filePath = path + PATH_SEP + ToPath("cave.txt");
-
     Wisp::CTextFileParser caveParser(filePath, " \t", "#;//", "");
-
     while (!caveParser.IsEOF())
     {
         vector<string> strings = caveParser.ReadTokens();
-
         if (!strings.empty())
         {
             uint16_t graphic = TextToGraphic(strings[0].c_str());
-
             m_StaticTilesFilterFlags[graphic] |= STFF_CAVE;
-
             m_CaveTiles.push_back(graphic);
         }
     }
 
     filePath = path + PATH_SEP + ToPath("stumps.txt");
-
     Wisp::CTextFileParser stumpParser(filePath, " \t", "#;//", "");
-
     while (!stumpParser.IsEOF())
     {
         vector<string> strings = stumpParser.ReadTokens();
-
         if (strings.size() >= 2)
         {
             uint8_t flag = STFF_STUMP;
-
             if (atoi(strings[1].c_str()) != 0)
             {
                 flag |= STFF_STUMP_HATCHED;
             }
-
             uint16_t graphic = TextToGraphic(strings[0].c_str());
-
             m_StaticTilesFilterFlags[graphic] |= flag;
-
             m_StumpTiles.push_back(graphic);
         }
     }
 
     filePath = path + PATH_SEP + ToPath("vegetation.txt");
-
     Wisp::CTextFileParser vegetationParser(filePath, " \t", "#;//", "");
-
     while (!vegetationParser.IsEOF())
     {
         vector<string> strings = vegetationParser.ReadTokens();
-
         if (!strings.empty())
         {
             m_StaticTilesFilterFlags[TextToGraphic(strings[0].c_str())] |= STFF_VEGETATION;
@@ -964,7 +974,7 @@ void CGame::LoadContainerOffsets()
     fs_path_create(path);
 
     auto filePath{ path + PATH_SEP + ToPath("containers.txt") };
-    LOG("Containers: %s\n", CStringFromPath(filePath));
+    Info(Client, "containers: %s", CStringFromPath(filePath));
     if (!fs_path_exists(filePath))
     {
         //												Gump   OpenSnd  CloseSnd					minX minY maxX maxY
@@ -1075,11 +1085,9 @@ void CGame::LoadContainerOffsets()
 
     if (!fs_path_exists(filePath))
     {
-        CLogger file;
-
+        CFileWriter file;
         file.Init(filePath);
         file.Print("#Format: gump open_sound close_sound minX minY maxX maxY\n");
-
         for (const CContainerOffset &item : g_ContainerOffset)
         {
             file.Print(
@@ -1094,7 +1102,7 @@ void CGame::LoadContainerOffsets()
         }
     }
 
-    LOG("g_ContainerOffset.size()=%zd\n", g_ContainerOffset.size());
+    Info(Client, "g_ContainerOffset.size()=%zd", g_ContainerOffset.size());
 }
 
 void CGame::LoadAutoLoginNames()
@@ -1400,7 +1408,7 @@ void CGame::LoadStartupConfig(int serial)
 void CGame::LoadPlugin(const os_path &libpath, const string &function, int flags)
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("Loading plugin: %s\n", CStringFromPath(libpath));
+    Info(Client, "Loading plugin: %s", CStringFromPath(libpath));
     auto dll = SDL_LoadObject(CStringFromPath(libpath));
     if (dll != nullptr)
     {
@@ -1409,12 +1417,11 @@ void CGame::LoadPlugin(const os_path &libpath, const string &function, int flags
         {
             SDL_UnloadObject(dll);
         }
-        CRASHLOG("Plugin['%s'] loaded at: 0x%08X\n", CStringFromPath(libpath), dll);
         // FIXME: dll leaks, pass handle into CPlugin to be closed
     }
     else
     {
-        LOG("Failed with error: %s\n", SDL_GetError());
+        Info(Client, "Failed with error: %s", SDL_GetError());
     }
 }
 
@@ -1630,7 +1637,7 @@ void CGame::SaveLocalConfig(int serial)
 
     if (!fs_path_exists(path))
     {
-        LOG("%s Does not exist, creating.\n", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
         fs_path_create(path);
     }
 
@@ -1638,7 +1645,7 @@ void CGame::SaveLocalConfig(int serial)
 
     if (!fs_path_exists(path))
     {
-        LOG("%s Does not exist, creating.\n", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
         fs_path_create(path);
     }
     CServer *server = g_ServerList.GetSelectedServer();
@@ -1648,7 +1655,7 @@ void CGame::SaveLocalConfig(int serial)
     }
     if (!fs_path_exists(path))
     {
-        LOG("%s Does not exist, creating.\n", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
         fs_path_create(path);
     }
     char serbuf[20] = { 0 };
@@ -1656,44 +1663,44 @@ void CGame::SaveLocalConfig(int serial)
     path += ToPath(serbuf);
     if (!fs_path_exists(path))
     {
-        LOG("%s Does not exist, creating.\n", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
         fs_path_create(path);
     }
     else
     {
-        LOG("SaveLocalConfig using path: %s\n", CStringFromPath(path));
+        Info(Client, "SaveLocalConfig using path: %s", CStringFromPath(path));
     }
 
-    LOG("managers:saving\n");
+    Info(Client, "managers:saving");
     g_ConfigManager.Save(path + ToPath("/options.cfg"));
     g_SkillGroupManager.Save(path + ToPath("/skills.cuo"));
     g_MacroManager.Save(path + ToPath("/macros.cuo"));
     g_GumpManager.Save(path + ToPath("/gumps.cuo"));
     g_CustomHousesManager.Save(path + ToPath("/customhouses.cuo"));
 
-    LOG("managers:saving in to root\n");
+    Info(Client, "managers:saving in to root");
     g_ConfigManager.Save(g_App.UOFilesPath("options.cfg"));
     g_MacroManager.Save(g_App.UOFilesPath("macros.cuo"));
 
     if (g_Player != nullptr)
     {
-        LOG("player exists\n");
-        LOG("name len: %zd\n", g_Player->GetName().length());
+        Info(Client, "player exists");
+        Info(Client, "name len: %zd", g_Player->GetName().length());
         path += ToPath("_") + ToPath(g_Player->GetName()) + ToPath(".cuo");
 
         if (!fs_path_exists(path))
         {
-            LOG("file saving\n");
+            Info(Client, "file saving");
             FILE *file = fs_open(path, FS_WRITE); // "wb"
 
-            LOG("file closing\n");
+            Info(Client, "file closing");
             if (file != nullptr)
             {
                 fs_close(file);
             }
         }
     }
-    LOG("SaveLocalConfig end\n");
+    Info(Client, "SaveLocalConfig end");
 }
 
 void CGame::ClearUnusedTextures()
@@ -1829,7 +1836,9 @@ int CGame::Send(uint8_t *buf, int size)
         time(&rawtime);
         localtime_s(&timeinfo, &rawtime);
         strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &timeinfo);
-        LOG("--- ^(%d) s(+%d => %d) %s Client:: %s\n",
+        Info(
+            Network,
+            "--- ^(%d) s(+%d => %d) %s Client:: %s",
             ticks - g_LastPacketTime,
             size,
             g_TotalSendSize,
@@ -1839,13 +1848,13 @@ int CGame::Send(uint8_t *buf, int size)
 
         if (*buf == 0x80 || *buf == 0x91)
         {
-            LOG_DUMP(buf, 1);
-            SAFE_LOG_DUMP(buf, size);
-            LOG("**** ACCOUNT AND PASSWORD CENSORED ****\n");
+            INFO_DUMP(Network, "SEND:", buf, 1);
+            SAFE_DEBUG_DUMP(Network, "SEND:", buf, size);
+            Info(Network, "**** ACCOUNT AND PASSWORD CENSORED ****");
         }
         else
         {
-            LOG_DUMP(buf, size);
+            INFO_DUMP(Network, "SEND:", buf, size);
         }
     }
 
@@ -1853,7 +1862,7 @@ int CGame::Send(uint8_t *buf, int size)
 
     if (type.Direction != DIR_SEND && type.Direction != DIR_BOTH)
     {
-        LOG("Warning!!! Message direction invalid: 0x%02X\n", *buf);
+        Info(Network, "invalid message direction: 0x%02X", *buf);
     }
     else
     {
@@ -4605,7 +4614,8 @@ void CGame::PatchFiles()
         }
         else if (vh->FileID != 5 && vh->FileID != 6) //no Anim / Animidx
         {
-            LOG("Unused verdata block (fileID) = %i (BlockID+ %i\n", vh->FileID, vh->BlockID);
+            Info(
+                Client, "Unused verdata block (fileID) = %i (BlockID+ %i", vh->FileID, vh->BlockID);
         }
     }
 
@@ -4630,7 +4640,7 @@ void CGame::IndexReplaces()
     Wisp::CTextFileParser soundParser(g_App.UOFilesPath("Sound.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser mp3Parser(g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
 
-    LOG("Replace arts\n");
+    Info(Client, "replacing arts");
     while (!artParser.IsEOF())
     {
         vector<string> strings = artParser.ReadTokens();
@@ -4687,7 +4697,7 @@ void CGame::IndexReplaces()
         }
     }
 
-    LOG("Replace textures\n");
+    Info(Client, "replacing textures");
     while (!textureParser.IsEOF())
     {
         vector<string> strings = textureParser.ReadTokens();
@@ -4728,7 +4738,7 @@ void CGame::IndexReplaces()
         }
     }
 
-    LOG("Replace gumps\n");
+    Info(Client, "replacing gumps");
     while (!gumpParser.IsEOF())
     {
         vector<string> strings = gumpParser.ReadTokens();
@@ -4766,7 +4776,7 @@ void CGame::IndexReplaces()
         }
     }
 
-    LOG("Replace multi\n");
+    Info(Client, "replacing multi");
     while (!multiParser.IsEOF())
     {
         vector<string> strings = multiParser.ReadTokens();
@@ -4801,7 +4811,7 @@ void CGame::IndexReplaces()
         }
     }
 
-    LOG("Replace sounds\n");
+    Info(Client, "replacing sounds");
     while (!soundParser.IsEOF())
     {
         vector<string> strings = soundParser.ReadTokens();
@@ -4862,7 +4872,7 @@ void CGame::IndexReplaces()
         }
     }
 
-    LOG("Loading mp3 config\n");
+    Info(Client, "loading music config");
     while (!mp3Parser.IsEOF())
     {
         vector<string> strings = mp3Parser.ReadTokens();
@@ -4932,7 +4942,7 @@ void CGame::CreateObjectHandlesBackground()
 
         if (pth == nullptr)
         {
-            LOG("Error!!! Failed to create Object Handles background data!\n");
+            Info(Client, "Error!!! Failed to create Object Handles background data!");
             return;
         }
 
@@ -6768,15 +6778,15 @@ void CGame::ClearWorld()
     g_SkillsManager.SkillsRequested = false;
 
     RELEASE_POINTER(g_World)
-    LOG("\tWorld removed?\n");
+    Info(Client, "\tworld removed");
 
     g_PopupMenu = nullptr;
 
     g_GumpManager.Clear();
-    LOG("\tGump Manager cleared?\n");
+    Info(Client, "\tgump Manager cleared");
 
     g_EffectManager.Clear();
-    LOG("\tEffect List cleared?\n");
+    Info(Client, "\teffect List cleared");
 
     g_GameConsole.Clear();
 
@@ -6786,13 +6796,13 @@ void CGame::ClearWorld()
     g_Target.Reset();
 
     g_SystemChat.Clear();
-    LOG("\tSystem chat cleared?\n");
+    Info(Client, "\tsystem chat cleared");
 
     g_Journal.Clear();
-    LOG("\tJournal cleared?\n");
+    Info(Client, "\tjournal cleared");
 
     g_MapManager.Clear();
-    LOG("\tMap cleared?\n");
+    Info(Client, "\tmap cleared");
 
     g_CurrentMap = 0;
 
@@ -6811,7 +6821,7 @@ void CGame::ClearWorld()
 void CGame::LogOut()
 {
     DEBUG_TRACE_FUNCTION;
-    LOG("CGame::LogOut->Start\n");
+    Info(Client, "CGame::LogOut->Start");
     SaveLocalConfig(g_PacketManager.ConfigSerial);
 
     if (g_SendLogoutNotification)
@@ -6820,11 +6830,11 @@ void CGame::LogOut()
     }
 
     Disconnect();
-    LOG("\tDisconnected?\n");
+    Info(Client, "\tdisconnected");
 
     ClearWorld();
 
-    LOG("CGame::LogOut->End\n");
+    Info(Client, "CGame::LogOut->End");
     InitScreen(GS_MAIN);
 }
 

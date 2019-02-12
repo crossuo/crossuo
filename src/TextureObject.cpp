@@ -22,9 +22,9 @@ CTextureAnimationDirection::CTextureAnimationDirection()
     , Address(0)
     , Size(0)
     , LastAccessTime(0)
-    , m_Frames(nullptr)
     , IsUOP(false)
     , IsVerdata(false)
+    , m_Frames(nullptr)
 {
 }
 

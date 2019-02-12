@@ -34,15 +34,15 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         glGetShaderiv(m_VertexShader, GL_COMPILE_STATUS, &val);
         if (val != GL_TRUE)
         {
-            LOG("CGLShader::Init vertex shader compilation error:\n");
+            Info(Renderer, "CGLShader::Init vertex shader compilation error:");
             auto error = glGetError();
             if (error != 0)
             {
-                LOG("CGLShader::Init vertex shader error Code: %i\n", error);
+                Info(Renderer, "CGLShader::Init vertex shader error Code: %i", error);
             }
             return false;
         }
-        LOG("vertex shader compiled successfully\n");
+        Info(Renderer, "vertex shader compiled successfully");
 
         glAttachObjectARB(m_Shader, m_VertexShader);
 
@@ -53,15 +53,15 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         glGetShaderiv(m_FragmentShader, GL_COMPILE_STATUS, &val);
         if (val != GL_TRUE)
         {
-            LOG("CGLShader::Init fragment shader compilation error:\n");
+            Info(Renderer, "CGLShader::Init fragment shader compilation error:");
             auto error = glGetError();
             if (error != 0)
             {
-                LOG("CGLShader::Init fragment shader error Code: %i\n", error);
+                Info(Renderer, "CGLShader::Init fragment shader error Code: %i", error);
             }
             return false;
         }
-        LOG("fragment shader compiled successfully\n");
+        Info(Renderer, "fragment shader compiled successfully");
 
         glAttachObjectARB(m_Shader, m_FragmentShader);
 
@@ -76,15 +76,15 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
     glGetShaderiv(m_Shader, GL_COMPILE_STATUS, &val);
     if (val != GL_TRUE)
     {
-        LOG("CGLShader::Init shader program compilation error:\n");
+        Info(Renderer, "CGLShader::Init shader program compilation error:");
         auto error = glGetError();
         if (error != 0)
         {
-            LOG("CGLShader::Init shader program error Code: %i\n", error);
+            Info(Renderer, "CGLShader::Init shader program error Code: %i", error);
         }
         return false;
     }
-    LOG("shader program compiled successfully\n");
+    Info(Renderer, "shader program compiled successfully");
 
     GLint isLinked = 0;
     glGetProgramiv(m_Shader, GL_LINK_STATUS, &isLinked);
@@ -100,10 +100,10 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         // The program is useless now. So delete it.
         glDeleteProgram(m_Shader);
 
-        LOG("shader program failed to link\n");
-        LOG("%s\n", infoLog.data());
+        Info(Renderer, "shader program failed to link");
+        Info(Renderer, "%s", infoLog.data());
         wstring str(infoLog.begin(), infoLog.end());
-        LOG("%ws\n", str.c_str());
+        Info(Renderer, "%ws", str.c_str());
         return false;
     }
 
@@ -176,7 +176,7 @@ bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShader
     }
     else
     {
-        LOG("Failed to create DeathShader\n");
+        Info(Renderer, "Failed to create DeathShader");
     }
 
     return (m_Shader != 0);
@@ -198,7 +198,7 @@ bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentSh
     }
     else
     {
-        LOG("Failed to create ColorizerShader\n");
+        Info(Renderer, "Failed to create ColorizerShader");
     }
 
     return (m_Shader != 0);

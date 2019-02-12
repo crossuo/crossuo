@@ -369,7 +369,7 @@ void CGumpWorldMap::LoadMap(int map)
 
                 if (buf.size() != size)
                 {
-                    LOG("Allocation pixels memory for World Map failed (want size: %i)\n", size);
+                    Error(Client, "world map allocation failed (size: %i)", size);
                     fs_close(mapFile);
                     return;
                 }
@@ -379,17 +379,17 @@ void CGumpWorldMap::LoadMap(int map)
 
                 if (readed != size)
                 {
-                    LOG("Error reading world map file, want=%i, readed=%zi\n", size, readed);
+                    Error(Client, "reading world map file, need=%i, read=%zi\n", size, readed);
                     fromFile = false;
                 }
                 else
                 {
-                    LOG("World map readed from file!\n");
+                    Info(Client, "world map readed from file");
                 }
             }
             else
             {
-                LOG("Error open world map file: %s\n", CStringFromPath(path));
+                Error(Client, "error opening world map file: %s", CStringFromPath(path));
             }
         }
 
@@ -401,7 +401,7 @@ void CGumpWorldMap::LoadMap(int map)
 
             if (buf.size() != wantSize)
             {
-                LOG("Allocation pixels memory for World Map failed (want size: %i)\n", wantSize);
+                Error(Client, "world map allocation failed (need size: %i)", wantSize);
                 return;
             }
 
@@ -496,10 +496,9 @@ void CGumpWorldMap::LoadMap(int map)
             FILE *mapFile = fs_open(path, FS_WRITE); // "wb"
             if (mapFile != nullptr)
             {
-                size_t written = fwrite(&buf[0], sizeof(short), buf.size(), mapFile);
+                size_t writen = fwrite(&buf[0], sizeof(short), buf.size(), mapFile);
                 fs_close(mapFile);
-
-                LOG("Write world map file, want=%zi, written=%zi\n", buf.size(), written);
+                Error(Client, "writing world map file, need=%zi, writen=%zi\n", buf.size(), writen);
             }
         }
 
@@ -512,7 +511,9 @@ void CGumpWorldMap::LoadMap(int map)
         }
         else
         {
-            LOG("World map build error: buffer=%zi, want=%i\n",
+            Error(
+                Client,
+                "world map build error: buffer=%zi, want=%i",
                 buf.size(),
                 g_MapSize[map].Width * g_MapSize[map].Height);
         }
@@ -712,7 +713,7 @@ void CGumpWorldMap::GUMP_COMBOBOX_SELECTION_EVENT_C
             mapTest--;
         }
 
-        DebugMsg("g_MapTexture[mapTest].Texture = %i\n", g_MapTexture[mapTest].Texture);
+        TRACE(Renderer, "g_MapTexture[mapTest].Texture = %i", g_MapTexture[mapTest].Texture);
         if (g_MapTexture[mapTest].Texture == 0)
         {
             LoadMap(mapTest);

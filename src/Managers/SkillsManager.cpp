@@ -50,12 +50,10 @@ bool CSkillsManager::Load()
         }
     }
 
-    LOG("Skills count: %i\n", Count);
-
+    Info(Client, "skills count: %i", Count);
     if (Count < 2 || Count > 100)
     {
         Count = 0;
-
         return false;
     }
 

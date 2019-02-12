@@ -66,7 +66,7 @@ void SetLanguageFromSystemLocale()
             }
         }
     }
-    LOG("Locale: %s\n", g_Language.c_str());
+    Info(Client, "Locale: %s", g_Language.c_str());
 }
 
 void OpenBrowser(const string &url)
@@ -126,7 +126,7 @@ void SetLanguageFromSystemLocale()
         g_Language = "PTG";
     }
 
-    LOG("Locale: %s\n", g_Language.c_str());
+    Info(Client, "locale: %s", g_Language.c_str());
 }
 
 void OpenBrowser(const string &url)

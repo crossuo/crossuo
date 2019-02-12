@@ -47,7 +47,9 @@ bool CGLEngine::Install()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     int glewInitResult = glewInit();
-    LOG("glewInit() = %i fb=%i v(%s) (shader: %i)\n",
+    Info(
+        Renderer,
+        "glewInit() = %i fb=%i v(%s) (shader: %i)",
         glewInitResult,
         GL_ARB_framebuffer_object,
         glGetString(GL_VERSION),
@@ -57,12 +59,12 @@ bool CGLEngine::Install()
         return false;
     }
 
-    LOG("Graphics Successfully Initialized\n");
-    LOG("OpenGL Info:\n");
-    LOG("    Version: %s\n", glGetString(GL_VERSION));
-    LOG("     Vendor: %s\n", glGetString(GL_VENDOR));
-    LOG("   Renderer: %s\n", glGetString(GL_RENDERER));
-    LOG("    Shading: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    Info(Renderer, "Graphics Successfully Initialized");
+    Info(Renderer, "OpenGL Info:");
+    Info(Renderer, "    Version: %s", glGetString(GL_VERSION));
+    Info(Renderer, "     Vendor: %s", glGetString(GL_VENDOR));
+    Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
+    Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
     CanUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
@@ -95,7 +97,7 @@ bool CGLEngine::Install()
         g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
     }
 
-    LOG("g_UseFrameBuffer = %i; CanUseBuffer = %i\n", CanUseFrameBuffer, CanUseBuffer);
+    Info(Renderer, "g_UseFrameBuffer = %i; CanUseBuffer = %i", CanUseFrameBuffer, CanUseBuffer);
 
     if (!CanUseFrameBuffer && g_ShowWarnings)
     {

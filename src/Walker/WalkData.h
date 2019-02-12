@@ -25,6 +25,6 @@ public:
     }
     ~CWalkData() {}
 
-    bool Run() { return (Direction & 0x80); }
+    bool Run() { return (Direction & 0x80) != 0; } // FIXME
     void GetOffset(float &x, float &y, float &steps);
 };
