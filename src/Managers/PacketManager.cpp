@@ -1085,8 +1085,8 @@ PACKET_HANDLER(UpdateHitpoints)
         return;
     }
 
-    obj->MaxHits = ReadInt16BE();
-    obj->Hits = ReadInt16BE();
+    obj->MaxHits = ReadUInt16BE();
+    obj->Hits = ReadUInt16BE();
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
@@ -1108,8 +1108,8 @@ PACKET_HANDLER(UpdateMana)
         return;
     }
 
-    obj->MaxMana = ReadInt16BE();
-    obj->Mana = ReadInt16BE();
+    obj->MaxMana = ReadUInt16BE();
+    obj->Mana = ReadUInt16BE();
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
 
@@ -1129,8 +1129,8 @@ PACKET_HANDLER(UpdateStamina)
         return;
     }
 
-    obj->MaxStam = ReadInt16BE();
-    obj->Stam = ReadInt16BE();
+    obj->MaxStam = ReadUInt16BE();
+    obj->Stam = ReadUInt16BE();
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
 }
 
@@ -1151,14 +1151,14 @@ PACKET_HANDLER(MobileAttributes)
         return;
     }
 
-    obj->MaxHits = ReadInt16BE();
-    obj->Hits = ReadInt16BE();
+    obj->MaxHits = ReadUInt16BE();
+    obj->Hits = ReadUInt16BE();
 
-    obj->MaxMana = ReadInt16BE();
-    obj->Mana = ReadInt16BE();
+    obj->MaxMana = ReadUInt16BE();
+    obj->Mana = ReadUInt16BE();
 
-    obj->MaxStam = ReadInt16BE();
-    obj->Stam = ReadInt16BE();
+    obj->MaxStam = ReadUInt16BE();
+    obj->Stam = ReadUInt16BE();
 
     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
     g_GumpManager.UpdateContent(serial, 0, GT_TARGET_SYSTEM);
@@ -1294,8 +1294,8 @@ PACKET_HANDLER(CharacterStatus)
     string name = ReadString(30);
     obj->SetName(name);
 
-    obj->Hits = ReadInt16BE();
-    obj->MaxHits = ReadInt16BE();
+    obj->Hits = ReadUInt16BE();
+    obj->MaxHits = ReadUInt16BE();
     obj->CanChangeName = (ReadUInt8() != 0);
     const uint8_t flag = ReadUInt8();
     if (flag > 0)
@@ -1303,19 +1303,19 @@ PACKET_HANDLER(CharacterStatus)
         obj->Gender = ReadUInt8() == 0 ? GENDER_MALE : GENDER_FEMALE;
         if (serial == g_PlayerSerial)
         {
-            const short newStr = ReadInt16BE();
-            const short newDex = ReadInt16BE();
-            const short newInt = ReadInt16BE();
+            const auto newStr = ReadUInt16BE();
+            const auto newDex = ReadUInt16BE();
+            const auto newInt = ReadUInt16BE();
 
             if (g_ConfigManager.StatReport && (g_Player->Str != 0))
             {
-                const short currentStr = g_Player->Str;
-                const short currentDex = g_Player->Dex;
-                const short currentInt = g_Player->Int;
+                const auto currentStr = g_Player->Str;
+                const auto currentDex = g_Player->Dex;
+                const auto currentInt = g_Player->Int;
 
-                const short deltaStr = newStr - currentStr;
-                const short deltaDex = newDex - currentDex;
-                const short deltaInt = newInt - currentInt;
+                const auto deltaStr = newStr - currentStr;
+                const auto deltaDex = newDex - currentDex;
+                const auto deltaInt = newInt - currentInt;
 
                 char str[64] = { 0 };
                 if (deltaStr != 0)
@@ -1347,10 +1347,10 @@ PACKET_HANDLER(CharacterStatus)
             g_Player->Dex = newDex;
             g_Player->Int = newInt;
 
-            g_Player->Stam = ReadInt16BE();
-            g_Player->MaxStam = ReadInt16BE();
-            g_Player->Mana = ReadInt16BE();
-            g_Player->MaxMana = ReadInt16BE();
+            g_Player->Stam = ReadUInt16BE();
+            g_Player->MaxStam = ReadUInt16BE();
+            g_Player->Mana = ReadUInt16BE();
+            g_Player->MaxMana = ReadUInt16BE();
             g_Player->Gold = ReadUInt32BE();
             g_Player->Armor = ReadInt16BE();
             g_Player->Weight = ReadInt16BE(); //+64

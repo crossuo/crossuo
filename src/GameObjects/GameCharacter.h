@@ -10,12 +10,12 @@
 class CGameCharacter : public CGameObject
 {
 public:
-    short Hits = 0;
-    short MaxHits = 0;
-    short Mana = 0;
-    short MaxMana = 0;
-    short Stam = 0;
-    short MaxStam = 0;
+    uint16_t Hits = 0;
+    uint16_t MaxHits = 0;
+    uint16_t Mana = 0;
+    uint16_t MaxMana = 0;
+    uint16_t Stam = 0;
+    uint16_t MaxStam = 0;
     GENDER Gender = GENDER_MALE;
     RACE_TYPE Race = RT_HUMAN;
     uint8_t Direction = 0;
