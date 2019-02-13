@@ -1284,8 +1284,7 @@ PACKET_HANDLER(CharacterStatus)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-
+    const uint32_t serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
     if (obj == nullptr)
     {
@@ -1297,30 +1296,26 @@ PACKET_HANDLER(CharacterStatus)
 
     obj->Hits = ReadInt16BE();
     obj->MaxHits = ReadInt16BE();
-
     obj->CanChangeName = (ReadUInt8() != 0);
-
-    uint8_t flag = ReadUInt8();
-
+    const uint8_t flag = ReadUInt8();
     if (flag > 0)
     {
-        obj->Female = (ReadUInt8() != 0); //buf[43];
-
+        obj->Gender = ReadUInt8() == 0 ? GENDER_MALE : GENDER_FEMALE;
         if (serial == g_PlayerSerial)
         {
-            short newStr = ReadInt16BE();
-            short newDex = ReadInt16BE();
-            short newInt = ReadInt16BE();
+            const short newStr = ReadInt16BE();
+            const short newDex = ReadInt16BE();
+            const short newInt = ReadInt16BE();
 
             if (g_ConfigManager.StatReport && (g_Player->Str != 0))
             {
-                short currentStr = g_Player->Str;
-                short currentDex = g_Player->Dex;
-                short currentInt = g_Player->Int;
+                const short currentStr = g_Player->Str;
+                const short currentDex = g_Player->Dex;
+                const short currentInt = g_Player->Int;
 
-                short deltaStr = newStr - currentStr;
-                short deltaDex = newDex - currentDex;
-                short deltaInt = newInt - currentInt;
+                const short deltaStr = newStr - currentStr;
+                const short deltaDex = newDex - currentDex;
+                const short deltaInt = newInt - currentInt;
 
                 char str[64] = { 0 };
                 if (deltaStr != 0)
@@ -1363,13 +1358,11 @@ PACKET_HANDLER(CharacterStatus)
             if (flag >= 5)
             {
                 g_Player->MaxWeight = ReadInt16BE(); //unpack16(buf + 66);
-                uint32_t race = ReadUInt8();
-
+                const uint32_t race = ReadUInt8();
                 if (race == 0u)
                 {
                     race = 1;
                 }
-
                 g_Player->Race = (RACE_TYPE)race;
             }
             else

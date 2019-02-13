@@ -344,44 +344,43 @@ void CGameCharacter::Select(int x, int y)
 void CGameCharacter::OnGraphicChange(int direction)
 {
     DEBUG_TRACE_FUNCTION;
-    //!Обновления пола и расы в зависимости от индекса картинки персонажа
     switch (Graphic)
     {
         case 0x0190:
         case 0x0192:
         {
-            Female = false;
+            Gender = GENDER_MALE;
             Race = RT_HUMAN;
             break;
         }
         case 0x0191:
         case 0x0193:
         {
-            Female = true;
+            Gender = GENDER_FEMALE;
             Race = RT_HUMAN;
             break;
         }
         case 0x025D:
         {
-            Female = false;
+            Gender = GENDER_MALE;
             Race = RT_ELF;
             break;
         }
         case 0x025E:
         {
-            Female = true;
+            Gender = GENDER_FEMALE;
             Race = RT_ELF;
             break;
         }
         case 0x029A:
         {
-            Female = false;
+            Gender = GENDER_MALE;
             Race = RT_GARGOYLE;
             break;
         }
         case 0x029B:
         {
-            Female = true;
+            Gender = GENDER_FEMALE;
             Race = RT_GARGOYLE;
             break;
         }

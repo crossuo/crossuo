@@ -10,85 +10,32 @@
 class CGameCharacter : public CGameObject
 {
 public:
-    //!Hitpoints
     short Hits = 0;
-
-    //!Max hitpoints
     short MaxHits = 0;
-
-    //!Mana
     short Mana = 0;
-
-    //!Max mana
     short MaxMana = 0;
-
-    //!Stamina
     short Stam = 0;
-
-    //!Max stamina
     short MaxStam = 0;
-
-    //!Is female
-    bool Female = false;
-
-    //!Character's race
+    GENDER Gender = GENDER_MALE;
     RACE_TYPE Race = RT_HUMAN;
-
-    //!Current direction
     uint8_t Direction = 0;
-
-    //!Character's notoriety
     uint8_t Notoriety = 0;
-
-    //!Player can change the name for this character
     bool CanChangeName = false;
-
-    //!Interval between animation playback
     uint8_t AnimationInterval = 0;
-
-    //!Current animation frame count
     uint8_t AnimationFrameCount = 0;
-
-    //!Current animation repeat mode
     uint8_t AnimationRepeatMode = 1;
-
-    //!Current animation group
     uint8_t AnimationGroup = 0xFF;
-
-    //!Current animation is repeat
     bool AnimationRepeat = false;
-
-    //!Current animation direction (front or back)
     bool AnimationDirection = false;
-
-    //!Current animation called from the server
     bool AnimationFromServer = false;
-
-    //!Last step sound time stamp
     uint32_t LastStepSoundTime = 0;
-
-    //!Time stamp to fidget animation
     uint32_t TimeToRandomFidget = 0;
-
-    //!Offset to step sound
     uint8_t StepSoundOffset = 0;
-
-    //!Sprite offset by X coordinate on the tile
-    int OffsetX = 0;
-
-    //!Sprite offset by Y coordinate on the tile
+    int OffsetX = 0; // Sprite Offset
     int OffsetY = 0;
-
-    //!Sprite offset by Z coordinate on the tile
     int OffsetZ = 0;
-
-    //!Last step time stamp
     uint32_t LastStepTime = 0;
-
-    //!Character's title
-    string Title = "";
-
-    //!Percent of hits
+    string Title;
     uint8_t HitsPercent = 0;
 
 protected:
