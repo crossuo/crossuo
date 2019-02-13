@@ -69,7 +69,6 @@ private:
     uint16_t TextToGraphic(const char *text);
     void CheckStaticTileFilterFiles();
     string DecodeArgumentString(const char *text, int length);
-    void ParseCommandLine();
     void LoadPlugin(const os_path &libpath, const string &function, int flags);
     bool InstallPlugin(PluginEntry *initFunc, int flags);
     void LoadContainerOffsets();
@@ -85,13 +84,14 @@ public:
 
     bool Install();
     void Uninstall();
+    void LoadPlugins();
+    void ProcessCommandLine();
 
     void InitScreen(GAME_STATE state);
     void ProcessDelayedClicks();
 
     void Process(bool rendering = false);
     void LoadStartupConfig(int serial);
-    void LoadPluginConfig();
     void LoadLocalConfig(int serial);
     void SaveLocalConfig(int serial);
 

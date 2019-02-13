@@ -1027,12 +1027,9 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
     DEBUG_TRACE_FUNCTION;
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
-
-    for (deque<CTextureAnimationDirection *>::iterator it = m_UsedAnimList.begin();
-         it != m_UsedAnimList.end();)
+    for (auto it = m_UsedAnimList.begin(); it != m_UsedAnimList.end();)
     {
         CTextureAnimationDirection *obj = *it;
-
         if (obj->LastAccessTime < ticks)
         {
             if (obj->m_Frames != nullptr)
@@ -1056,7 +1053,10 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
         }
     }
 
-    Info(Data, "CAnimationManager::ClearUnusedTextures::removed %i", count);
+    if (count)
+    {
+        Info(Data, "CAnimationManager::ClearUnusedTextures::removed %i", count);
+    }
 }
 
 bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction)
