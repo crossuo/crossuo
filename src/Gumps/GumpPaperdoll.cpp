@@ -488,7 +488,7 @@ void CGumpPaperdoll::UpdateContent()
         bodyGumppic->Color = color;
     }
 
-    int gumpOffset = (obj->Female ? FEMALE_GUMP_OFFSET : MALE_GUMP_OFFSET);
+    const int gumpOffset = (obj->Gender == GENDER_FEMALE ? FEMALE_GUMP_OFFSET : MALE_GUMP_OFFSET);
 
     //Draw equipment & backpack
     CGameItem *equipment = nullptr;
@@ -567,7 +567,7 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     int cOfs = gumpOffset;
 
-                    if (obj->Female && g_Game.ExecuteGump(id + cOfs) == nullptr)
+                    if (obj->Gender == GENDER_FEMALE && g_Game.ExecuteGump(id + cOfs) == nullptr)
                     {
                         cOfs = MALE_GUMP_OFFSET;
                     }
@@ -601,7 +601,7 @@ void CGumpPaperdoll::UpdateContent()
 
                     int cOfs = gumpOffset;
 
-                    if (obj->Female && (g_Game.ExecuteGump(id + cOfs) == nullptr))
+                    if (obj->Gender == GENDER_FEMALE && (g_Game.ExecuteGump(id + cOfs) == nullptr))
                     {
                         cOfs = MALE_GUMP_OFFSET;
                     }

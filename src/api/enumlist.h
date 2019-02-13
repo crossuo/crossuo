@@ -130,6 +130,12 @@ enum CONNECTION_SCREEN_TYPE
     CST_GAME
 };
 
+enum GENDER : uint8_t
+{
+    GENDER_MALE = 0,
+    GENDER_FEMALE,
+};
+
 enum RACE_TYPE
 {
     RT_HUMAN = 1,
