@@ -200,8 +200,6 @@ extern bool g_DrawStatLockers;
 
 extern uint32_t g_SelectedGameObjectHandle;
 
-extern bool g_ShowWarnings;
-
 extern uint32_t g_ProcessStaticAnimationTimer;
 extern uint32_t g_ProcessRemoveRangedTimer;
 extern int g_MaxViewRange;

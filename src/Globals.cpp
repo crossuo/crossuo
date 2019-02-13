@@ -164,9 +164,6 @@ uint8_t g_Ability[2] = { AT_DISARM, AT_PARALYZING_BLOW };
 bool g_DrawStatLockers = false;
 
 uint32_t g_SelectedGameObjectHandle = 0;
-
-bool g_ShowWarnings = true;
-
 uint32_t g_ProcessStaticAnimationTimer = 0;
 uint32_t g_ProcessRemoveRangedTimer = 0;
 int g_MaxViewRange = MAX_VIEW_RANGE_OLD;

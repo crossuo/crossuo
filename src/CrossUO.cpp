@@ -150,6 +150,9 @@
 #include "Gumps/GumpProperty.h"
 #include "Gumps/GumpPropertyIcon.h"
 
+#include <popts.h>
+extern po::parser g_cli;
+
 #if !defined(XUO_WINDOWS)
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
@@ -266,150 +269,75 @@ string CGame::DecodeArgumentString(const char *text, int length)
     return result;
 }
 
-void CGame::ParseCommandLine() // FIXME: move this out
+void CGame::ProcessCommandLine()
 {
-    DEBUG_TRACE_FUNCTION;
-
-    bool fastLogin = false;
-    uint32_t defaultPluginFlags = 0xFFFFFFFF;
-
-#if defined(XUO_WINDOWS)
-    int argc = 0;
-    auto *args = CommandLineToArgvW(GetCommandLineW(), &argc);
-    auto defaultPluginPath{ g_App.ExeFilePath("xuoassist.dll") };
-    string defaultPluginFunction = "Install";
-#else
-    // FIXME: again, move this out! and receive args from the real main
-    int argc = 0;
-    const char *args[] = { nullptr };
-#endif
-
-    for (int i = 0; i < argc; i++)
+    if (g_cli["nocrypt"].was_set())
     {
-        if ((args[i] == nullptr) || *args[i] != L'-')
-        {
-            continue;
-        }
-
-        string str = ToString(args[i] + 1);
-        Wisp::CTextFileParser parser({}, " ,:", "", "''");
-        vector<string> strings = parser.GetTokens(str.c_str());
-        if (strings.empty())
-        {
-            continue;
-        }
-
-        str = ToLowerA(strings[0]);
-        bool haveParam = (strings.size() > 1);
-        bool have2Param = (strings.size() > 2);
-        if (have2Param)
-        {
-            if (str == "login")
-            {
-                m_OverrideServerAddress = strings[1];
-                m_OverrideServerPort = atoi(strings[2].c_str());
-            }
-            else if (str == "proxyhost")
-            {
-                g_ConnectionManager.SetUseProxy(true);
-                g_ConnectionManager.SetProxyAddress(strings[1]);
-                g_ConnectionManager.SetProxyPort(atoi(strings[2].c_str()));
-            }
-            else if (str == "proxyaccount")
-            {
-                g_ConnectionManager.SetProxySocks5(true);
-                g_ConnectionManager.SetProxyAccount(
-                    DecodeArgumentString(strings[1].c_str(), (int)strings[1].length()));
-                g_ConnectionManager.SetProxyPassword(
-                    DecodeArgumentString(strings[2].c_str(), (int)strings[2].length()));
-            }
-            else if (str == "account")
-            {
-                g_MainScreen.SetAccounting(
-                    DecodeArgumentString(strings[1].c_str(), (int)strings[1].length()),
-                    DecodeArgumentString(strings[2].c_str(), (int)strings[2].length()));
-            }
-#if defined(XUO_WINDOWS)
-            else if (str == "plugin")
-            {
-                strings = Wisp::CTextFileParser({}, ",:", "", "")
-                              .GetTokens(ToString(args[i] + 1).c_str(), false);
-                if (strings.size() > 4)
-                {
-                    defaultPluginFlags = 0;
-                    if (ToLowerA(strings[4]).find("0x") == 0)
-                    {
-                        char *end = nullptr;
-                        defaultPluginFlags = strtoul(strings[4].c_str(), &end, 16);
-                    }
-                    else
-                    {
-                        defaultPluginFlags = atoi(strings[4].c_str());
-                    }
-                    defaultPluginPath = ToPath(strings[1]) + ToPath(":") + ToPath(strings[2]);
-                    defaultPluginFunction = strings[3];
-                }
-            }
-#endif
-        }
-        else if (str == "autologin")
-        {
-            bool enabled = true;
-            if (haveParam)
-            {
-                enabled = (atoi(strings[1].c_str()) != 0);
-            }
-            g_MainScreen.m_AutoLogin->Checked = enabled;
-        }
-        else if (str == "savepassword")
-        {
-            bool enabled = true;
-            if (haveParam)
-            {
-                enabled = (atoi(strings[1].c_str()) != 0);
-            }
-            g_MainScreen.m_SavePassword->Checked = enabled;
-        }
-        else if (str == "fastlogin")
-        {
-            fastLogin = true;
-        }
-        else if (str == "autologinname")
-        {
-            if (g_PacketManager.AutoLoginNames.length() != 0u)
-            {
-                g_PacketManager.AutoLoginNames =
-                    string("|") +
-                    DecodeArgumentString(strings[1].c_str(), (int)strings[1].length()) +
-                    g_PacketManager.AutoLoginNames;
-            }
-            else
-            {
-                g_PacketManager.AutoLoginNames =
-                    string("|") +
-                    DecodeArgumentString(strings[1].c_str(), (int)strings[1].length());
-            }
-        }
-        else if (str == "nowarnings")
-        {
-            g_ShowWarnings = false;
-        }
-        else if (str == "nocrypt")
-        {
-            g_Config.EncryptionType = ET_NOCRYPT;
-        }
+        g_Config.EncryptionType = ET_NOCRYPT;
     }
 
-#if defined(XUO_WINDOWS)
-    LocalFree(args);
-    LoadPlugin(defaultPluginPath, defaultPluginFunction, defaultPluginFlags);
-#else
-    InstallPlugin(g_oaReverse.Install, defaultPluginFlags);
-#endif
-
-    if (fastLogin)
+    if (g_cli["fastlogin"].was_set())
     {
         g_GameWindow.CreateTimer(FASTLOGIN_TIMER_ID, 50);
+    }
+
+    if (g_cli["autologin"].was_set())
+    {
+        g_MainScreen.m_AutoLogin->Checked = g_cli["autologin"].get().u32 != 0;
+    }
+
+    if (g_cli["savepassword"].was_set())
+    {
+        g_MainScreen.m_SavePassword->Checked = g_cli["savepassword"].get().u32 != 0;
+    }
+
+    if (g_cli["host"].was_set())
+    {
+        m_OverrideServerAddress = g_cli["host"].get().string;
+        m_OverrideServerPort = g_cli["port"].get().u32;
+    }
+
+    if (g_cli["port"].was_set())
+    {
+        m_OverrideServerPort = g_cli["port"].get().u32;
+    }
+
+    if (g_cli["proxy-host"].was_set() && g_cli["proxy-port"].was_set())
+    {
+        g_ConnectionManager.SetUseProxy(true);
+        g_ConnectionManager.SetProxyAddress(g_cli["proxy-host"].get().string);
+        g_ConnectionManager.SetProxyPort(g_cli["proxy-port"].get().u32);
+    }
+
+    if (g_cli["proxy-user"].was_set())
+    {
+        g_ConnectionManager.SetProxySocks5(true);
+        g_ConnectionManager.SetProxyAccount(g_cli["proxy-user"].get().string);
+    }
+
+    if (g_cli["proxy-password"].was_set())
+    {
+        g_ConnectionManager.SetProxyPassword(g_cli["proxy-password"].get().string);
+    }
+
+    if (g_cli["login"].was_set())
+    {
+        auto l = g_cli["login"].get().string;
+        auto p = g_cli["password"].get().string;
+        g_MainScreen.SetAccounting(l, p);
+    }
+
+    if (g_cli["character"].was_set())
+    {
+        auto name = g_cli["character"].get().string;
+        if (g_PacketManager.AutoLoginNames.length() != 0u)
+        {
+            g_PacketManager.AutoLoginNames = string("|") + name + g_PacketManager.AutoLoginNames;
+        }
+        else
+        {
+            g_PacketManager.AutoLoginNames = string("|") + name;
+        }
     }
 }
 
@@ -553,9 +481,9 @@ bool CGame::Install()
         return false;
     }
 
-    if (!g_SoundManager.Init() && g_ShowWarnings)
+    if (!g_SoundManager.Init())
     {
-        g_GameWindow.ShowMessage("Failed to init audio system.", "Error");
+        g_GameWindow.ShowMessage("Failed to init audio system.", "Warning");
     }
 
     LoadContainerOffsets();
@@ -1460,7 +1388,7 @@ bool CGame::InstallPlugin(PluginEntry *initFunc, int flags)
     return true;
 }
 
-void CGame::LoadPluginConfig()
+void CGame::LoadPlugins()
 {
     DEBUG_TRACE_FUNCTION;
     g_PluginClientInterface.Version = 2;
@@ -1472,12 +1400,18 @@ void CGame::LoadPluginConfig()
     g_PluginClientInterface.PathFinder = &g_Interface_PathFinder;
     g_PluginClientInterface.FileManager = &g_Interface_FileManager;
 
-    ParseCommandLine();
+    // Load X:UO Assist first, it is a special plugin due Qt mainthread issue
+#if defined(XUO_WINDOWS)
+    LoadPlugin(g_App.ExeFilePath("xuoassist.dll"), "Install", 0xFFFFFFFF);
+#else
+    InstallPlugin(g_oaReverse.Install, 0xFFFFFFFF);
+#endif
 
-    // FIXME Delete this after sorting out the Module/UOA hotmess
     CPluginPacketSkillsList().SendToPlugin();
     CPluginPacketSpellsList().SendToPlugin();
     CPluginPacketMacrosList().SendToPlugin();
+
+    // FIXME: Load any additional plugin here
 
     vector<string> libName;
     vector<string> functions;

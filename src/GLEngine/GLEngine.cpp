@@ -99,9 +99,9 @@ bool CGLEngine::Install()
 
     Info(Renderer, "g_UseFrameBuffer = %i; CanUseBuffer = %i", CanUseFrameBuffer, CanUseBuffer);
 
-    if (!CanUseFrameBuffer && g_ShowWarnings)
+    if (!CanUseFrameBuffer)
     {
-        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers!", "Warning!");
+        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Warning");
     }
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
