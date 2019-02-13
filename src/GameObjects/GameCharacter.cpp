@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
@@ -158,11 +158,9 @@ int CGameCharacter::IsSitting()
     DEBUG_TRACE_FUNCTION;
     int result = 0;
     uint16_t testGraphic = Graphic;
-    bool human =
-        (((testGraphic >= 0x0190) && (testGraphic <= 0x0193)) || (testGraphic == 0x03DB) ||
-         (testGraphic == 0x03DF) || (testGraphic == 0x03E2));
 
-    if (human && FindLayer(OL_MOUNT) == nullptr && !TestStepNoChangeDirection(GetAnimationGroup()))
+    if (IsHuman() && FindLayer(OL_MOUNT) == nullptr &&
+        !TestStepNoChangeDirection(GetAnimationGroup()))
     {
         CRenderWorldObject *obj = this;
 
