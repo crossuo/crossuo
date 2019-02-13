@@ -4838,8 +4838,8 @@ PACKET_HANDLER(OpenGump)
 
     vector<HTMLGumpDataInfo> htmlGumlList;
 
-    uint32_t serial = ReadUInt32BE();
-    uint32_t id = ReadUInt32BE();
+    const uint32_t serial = ReadUInt32BE();
+    const uint32_t id = ReadUInt32BE();
     int x = ReadInt32BE();
     int y = ReadInt32BE();
 
@@ -4863,7 +4863,7 @@ PACKET_HANDLER(OpenGump)
     Wisp::CTextFileParser cmdParser({}, " ", "", "");
     Wisp::CTextFileParser tilepicGraphicParser({}, ",", "", "");
 
-    vector<string> commandList = parser.GetTokens(commands.c_str());
+    auto commandList = parser.GetTokens(commands.c_str());
     CBaseGUI *lastGumpObject = nullptr;
 
     bool EntryChanged = false;
@@ -4873,19 +4873,15 @@ PACKET_HANDLER(OpenGump)
 
     for (const string &str : commandList)
     {
-        vector<string> list = cmdParser.GetTokens(str.c_str(), false);
-
-        int listSize = (int)list.size();
-
+        auto list = cmdParser.GetTokens(str.c_str(), false);
+        const int listSize = (int)list.size();
         if (listSize == 0)
         {
             continue;
         }
 
         string cmd = ToLowerA(list[0]);
-
         CBaseGUI *go = nullptr;
-
         if (cmd == "nodispose")
         {
         }
@@ -4902,8 +4898,7 @@ PACKET_HANDLER(OpenGump)
             if (listSize >= 2)
             {
                 AddHTMLGumps(gump, htmlGumlList);
-
-                int page = ToInt(list[1]);
+                const int page = ToInt(list[1]);
                 go = new CGUIPage(page);
                 if (FirstPage == 0)
                 {
@@ -4916,7 +4911,7 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 2)
             {
-                int group = ToInt(list[1]);
+                const int group = ToInt(list[1]);
                 go = new CGUIGroup(group);
             }
         }
@@ -4928,12 +4923,11 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 6)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int graphic = ToInt(list[3]);
-                int width = ToInt(list[4]);
-                int height = ToInt(list[5]);
-
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int graphic = ToInt(list[3]);
+                const int width = ToInt(list[4]);
+                const int height = ToInt(list[5]);
                 go = new CGUIResizepic(0, graphic, x, y, width, height);
                 go->DrawOnly = true;
             }
@@ -4942,11 +4936,10 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int width = ToInt(list[3]);
-                int height = ToInt(list[4]);
-
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int width = ToInt(list[3]);
+                const int height = ToInt(list[4]);
                 go = new CGUIChecktrans(x, y, width, height);
             }
         }
@@ -4954,14 +4947,13 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int up = ToInt(list[3]);
-                int down = ToInt(list[4]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int up = ToInt(list[3]);
+                const int down = ToInt(list[4]);
                 int action = 0;
                 int toPage = 0;
                 int index = 0;
-
                 if (listSize >= 6)
                 {
                     action = ToInt(list[5]);
@@ -4974,15 +4966,12 @@ PACKET_HANDLER(OpenGump)
                 {
                     index = ToInt(list[7]);
                 }
-
                 if (action != 0)
                 {
                     toPage = -1;
                 }
-
                 go = new CGUIButton(index, up, up, down, x, y);
                 go->CheckPolygone = true;
-
                 ((CGUIButton *)go)->ToPage = toPage;
             }
         }
@@ -4990,23 +4979,21 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 12)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int up = ToInt(list[3]);
-                int down = ToInt(list[4]);
-                int action = ToInt(list[5]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int up = ToInt(list[3]);
+                const int down = ToInt(list[4]);
+                const int action = ToInt(list[5]);
                 int toPage = ToInt(list[6]);
-                int index = ToInt(list[7]);
-                int tileGraphic = ToInt(list[8]);
-                int tileColor = ToInt(list[9]);
-                int tileX = ToInt(list[10]);
-                int tileY = ToInt(list[11]);
-
+                const int index = ToInt(list[7]);
+                const int tileGraphic = ToInt(list[8]);
+                const int tileColor = ToInt(list[9]);
+                const int tileX = ToInt(list[10]);
+                const int tileY = ToInt(list[11]);
                 if (action != 0)
                 {
                     toPage = -1;
                 }
-
                 go = new CGUIButtonTileart(
                     index, up, up, down, x, y, tileGraphic, tileColor, tileX, tileY);
 
@@ -5017,13 +5004,12 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int up = ToInt(list[3]);
-                int down = ToInt(list[4]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int up = ToInt(list[3]);
+                const int down = ToInt(list[4]);
                 int state = 0;
                 int index = 0;
-
                 if (listSize >= 6)
                 {
                     state = ToInt(list[5]);
@@ -5032,9 +5018,7 @@ PACKET_HANDLER(OpenGump)
                 {
                     index = ToInt(list[6]);
                 }
-
                 go = new CGUICheckbox(index, up, down, up, x, y);
-
                 ((CGUICheckbox *)go)->Checked = (state != 0);
             }
         }
@@ -5042,13 +5026,12 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int up = ToInt(list[3]);
-                int down = ToInt(list[4]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int up = ToInt(list[3]);
+                const int down = ToInt(list[4]);
                 int state = 0;
                 int index = 0;
-
                 if (listSize >= 6)
                 {
                     state = ToInt(list[5]);
@@ -5057,9 +5040,7 @@ PACKET_HANDLER(OpenGump)
                 {
                     index = ToInt(list[6]);
                 }
-
                 go = new CGUIRadio(index, up, down, up, x, y);
-
                 ((CGUIRadio *)go)->Checked = (state != 0);
             }
         }
@@ -5067,10 +5048,10 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
                 int color = ToInt(list[3]);
-                int index = ToInt(list[4]);
+                const int index = ToInt(list[4]);
 
                 if (color != 0)
                 {
@@ -5085,12 +5066,12 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 7)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int width = ToInt(list[3]);
-                int height = ToInt(list[4]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int width = ToInt(list[3]);
+                const int height = ToInt(list[4]);
                 int color = ToInt(list[5]);
-                int index = ToInt(list[6]);
+                const int index = ToInt(list[6]);
 
                 if (color != 0)
                 {
@@ -5105,13 +5086,13 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 8)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int width = ToInt(list[3]);
-                int height = ToInt(list[4]);
-                int color = ToInt(list[5]);
-                int index = ToInt(list[6]);
-                int textIndex = ToInt(list[7]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int width = ToInt(list[3]);
+                const int height = ToInt(list[4]);
+                const int color = ToInt(list[5]);
+                const int index = ToInt(list[6]);
+                const int textIndex = ToInt(list[7]);
 
                 //if (color)
                 //	color++;
@@ -5135,14 +5116,14 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 9)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int width = ToInt(list[3]);
-                int height = ToInt(list[4]);
-                int color = ToInt(list[5]);
-                int index = ToInt(list[6]);
-                int textIndex = ToInt(list[7]);
-                int length = ToInt(list[8]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int width = ToInt(list[3]);
+                const int height = ToInt(list[4]);
+                const int color = ToInt(list[5]);
+                const int index = ToInt(list[6]);
+                const int textIndex = ToInt(list[7]);
+                const int length = ToInt(list[8]);
 
                 //if (color)
                 //	color++;
@@ -5166,19 +5147,16 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 4)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
                 int color = 0;
                 int graphic = 0;
-
                 if (cmd == "tilepic")
                 {
-                    vector<string> graphicList = tilepicGraphicParser.GetTokens(list[3].c_str());
-
+                    auto graphicList = tilepicGraphicParser.GetTokens(list[3].c_str());
                     if (!graphicList.empty())
                     {
                         graphic = ToInt(graphicList[0]);
-
                         if (graphicList.size() >= 2)
                         {
                             color = ToInt(graphicList[1]);
@@ -5194,12 +5172,10 @@ PACKET_HANDLER(OpenGump)
                 {
                     color = ToInt(list[4]);
                 }
-
                 if (color != 0)
                 {
                     gump->Add(new CGUIShader(&g_ColorizerShader, true));
                 }
-
                 go = new CGUITilepic(graphic, color, x, y);
                 go->DrawOnly = true;
             }
@@ -5208,16 +5184,14 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 4)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int graphic = ToInt(list[3]);
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int graphic = ToInt(list[3]);
                 int color = 0;
-
                 if (listSize >= 5 && g_Config.ClientVersion >= CV_305D)
                 {
                     Wisp::CTextFileParser gumppicParser({}, "=", "", "");
-                    vector<string> hueList = gumppicParser.GetTokens(list[4].c_str());
-
+                    auto hueList = gumppicParser.GetTokens(list[4].c_str());
                     if (hueList.size() > 1)
                     {
                         color = ToInt(hueList[1]);
@@ -5229,8 +5203,7 @@ PACKET_HANDLER(OpenGump)
 
                     if (listSize >= 6)
                     {
-                        vector<string> classList = gumppicParser.GetTokens(list[5].c_str());
-
+                        auto classList = gumppicParser.GetTokens(list[5].c_str());
                         if (hueList.size() > 1)
                         {
                             if (ToLowerA(classList[0]) == "class" &&
@@ -5248,9 +5221,8 @@ PACKET_HANDLER(OpenGump)
                     {
                         gump->Add(new CGUIShader(&g_ColorizerShader, true));
                     }
-
                     go = new CGUIGumppic(graphic, x, y);
-                    go->Color = color;
+                    go->Color = color + 1; // PARITY: check parity
                     go->DrawOnly = true;
                 }
             }
@@ -5259,14 +5231,16 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 6)
             {
-                int x = ToInt(list[1]);
-                int y = ToInt(list[2]);
-                int width = ToInt(list[3]);
-                int height = ToInt(list[4]);
-                int graphic = ToInt(list[5]);
-
-                go = new CGUIGumppicTiled(graphic, x, y, width, height);
-                go->DrawOnly = true;
+                const int x = ToInt(list[1]);
+                const int y = ToInt(list[2]);
+                const int width = ToInt(list[3]);
+                const int height = ToInt(list[4]);
+                const int graphic = ToInt(list[5]);
+                if (width > 0 && height > 0)
+                {
+                    go = new CGUIGumppicTiled(graphic, x, y, width, height);
+                    go->DrawOnly = true;
+                }
             }
         }
         else if (cmd == "htmlgump" || cmd == "xmfhtmlgump" || cmd == "xmfhtmlgumpcolor")
@@ -5283,17 +5257,14 @@ PACKET_HANDLER(OpenGump)
                 htmlInfo.HaveBackground = ToInt(list[6]);
                 htmlInfo.HaveScrollbar = ToInt(list[7]);
                 htmlInfo.Color = 0;
-
                 if (cmd == "xmfhtmlgumpcolor" && listSize >= 9)
                 {
                     htmlInfo.Color = ToInt(list[8]);
-
                     if (htmlInfo.Color == 0x7FFF)
                     {
                         htmlInfo.Color = 0x00FFFFFF;
                     }
                 }
-
                 htmlGumlList.push_back(htmlInfo);
             }
         }
@@ -5310,19 +5281,15 @@ PACKET_HANDLER(OpenGump)
                 htmlInfo.HaveBackground = ToInt(list[5]);
                 htmlInfo.HaveScrollbar = ToInt(list[6]);
                 htmlInfo.Color = ToInt(list[7]);
-
                 if (htmlInfo.Color == 0x7FFF)
                 {
                     htmlInfo.Color = 0x00FFFFFF;
                 }
-
                 htmlInfo.TextID = ToInt(list[8]);
                 htmlInfo.Args = ToWString(list[9]);
-
                 if (listSize >= 10)
                 {
                 }
-
                 htmlGumlList.push_back(htmlInfo);
             }
         }
@@ -5340,12 +5307,10 @@ PACKET_HANDLER(OpenGump)
                 gump->MasterGump = ToInt(list[1]);
             }
         }
-
         if (go != nullptr)
         {
             lastGumpObject = go;
             gump->Add(go);
-
             if ((go->Type == GOT_TILEPIC || go->Type == GOT_GUMPPIC) && (go->Color != 0u))
             {
                 gump->Add(new CGUIShader(&g_ColorizerShader, false));
@@ -5358,28 +5323,23 @@ PACKET_HANDLER(OpenGump)
     }
 
     AddHTMLGumps(gump, htmlGumlList);
-
-    int textLinesCount = ReadInt16BE();
-
+    const int textLinesCount = ReadInt16BE();
     for (int i = 0; i < textLinesCount; i++)
     {
-        int linelen = ReadInt16BE();
-
+        const int linelen = ReadInt16BE();
         if (linelen != 0)
         {
-            gump->AddText((int)i, ReadWStringBE(linelen));
+            gump->AddText(i, ReadWStringBE(linelen));
         }
         else
         {
-            gump->AddText((int)i, {});
+            gump->AddText(i, {});
         }
     }
-
     if (EntryChanged)
     {
         g_EntryPointer = ChangeEntry;
     }
-
     g_GumpManager.AddGump(gump);
 }
 
