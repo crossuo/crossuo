@@ -2364,6 +2364,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                                     ->GetW(1020000 + id, true, g_Game.m_StaticData[id].Name);
                             if (str.length() != 0u)
                             {
+                                // const uint8_t font = g_ConfigManager.ToolTipsTextFont; ?
                                 if (g_Config.ClientVersion >= CV_6000)
                                 {
                                     g_Game.CreateUnicodeTextMessage(
