@@ -509,6 +509,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 {
                     startAnimID = ((realAnimID - 200) * 65) + 22000;
                     groupType = AGT_ANIMAL;
+                    mountedHeightOffset = +8;
                 }
                 else //Hight
                 {
@@ -532,6 +533,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     {
                         startAnimID = ((realAnimID - 200) * 110) + 22000;
                         groupType = AGT_ANIMAL;
+                        mountedHeightOffset = +8;
                     }
                 }
                 else //Hight
@@ -556,6 +558,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     {
                         startAnimID = ((realAnimID - 200) * 65) + 22000;
                         groupType = AGT_ANIMAL;
+                        mountedHeightOffset = +8;
                     }
                 }
                 else //Hight
@@ -568,7 +571,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             {
                 animFile = 5;
                 realAnimID = anim[3];
-                mountedHeightOffset = -9;
 
                 if (realAnimID == 34)
                 {
@@ -585,6 +587,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     {
                         startAnimID = ((realAnimID - 200) * 65) + 22000;
                         groupType = AGT_ANIMAL;
+                        mountedHeightOffset = +8;
                     }
                 }
                 else //Hight
@@ -614,6 +617,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                             else
                             { //Low
                                 dataIndex.Type = AGT_ANIMAL;
+                                mountedHeightOffset = +8;
                             }
                         }
                         else
