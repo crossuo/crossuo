@@ -1409,7 +1409,10 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 };
 
                 g_Game.CreateUnicodeTextMessageF(
-                    0, 0x038A, "There are no %s on the screen to select.", resultNames[scanType]);
+                    g_ConfigManager.ChatFont,
+                    0x038A,
+                    "There are no %s on the screen to select.",
+                    resultNames[scanType]);
             }
             break;
         }

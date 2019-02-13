@@ -25,8 +25,7 @@ void CGumpSelectFont::UpdateContent()
     CGUIText *text = (CGUIText *)Add(new CGUIText(0, 60, 22));
     text->CreateTextureW(0, L"Select font");
 
-    int selected = 0;
-
+    auto selected = 0;
     switch (m_State)
     {
         case SFGS_OPT_TOOLTIP:

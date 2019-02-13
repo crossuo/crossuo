@@ -1358,7 +1358,7 @@ PACKET_HANDLER(CharacterStatus)
             if (flag >= 5)
             {
                 g_Player->MaxWeight = ReadInt16BE(); //unpack16(buf + 66);
-                const uint32_t race = ReadUInt8();
+                auto race = ReadUInt8();
                 if (race == 0u)
                 {
                     race = 1;
@@ -2799,7 +2799,7 @@ PACKET_HANDLER(ExtendedCommand)
         }
         case 0x10: //DisplayEquipmentInfo
         {
-            uint32_t serial = ReadUInt32BE();
+            const uint32_t serial = ReadUInt32BE();
             CGameItem *item = g_World->FindWorldItem(serial);
             if (item == nullptr)
             {
@@ -2817,7 +2817,8 @@ PACKET_HANDLER(ExtendedCommand)
                     item->SetName(ToString(str));
                 }
 
-                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
+                const uint8_t font = g_ConfigManager.ChatFont; // 0x03
+                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
             }
 
             str = {};
@@ -2883,7 +2884,8 @@ PACKET_HANDLER(ExtendedCommand)
 
             if (str.length() != 0u)
             {
-                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, 0x03, 0x3B2, str);
+                const uint8_t font = g_ConfigManager.ChatFont; // 0x03
+                g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
             }
             CPacketMegaClilocRequestOld(serial).Send();
             break;
@@ -3435,8 +3437,8 @@ PACKET_HANDLER(UnicodeTalk)
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        g_Game.CreateUnicodeTextMessage(
-            TT_SYSTEM, serial, (uint8_t)g_ConfigManager.SpeechFont, textColor, str);
+        const uint8_t font = g_ConfigManager.SpeechFont;
+        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, textColor, str);
     }
     else
     {
@@ -3470,8 +3472,8 @@ PACKET_HANDLER(UnicodeTalk)
             }
         }
 
-        g_Game.CreateUnicodeTextMessage(
-            TT_OBJECT, serial, (uint8_t)g_ConfigManager.SpeechFont, textColor, str);
+        const uint8_t font = g_ConfigManager.SpeechFont;
+        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, textColor, str);
     }
 }
 
@@ -4110,7 +4112,7 @@ PACKET_HANDLER(DisplayClilocString)
     uint32_t cliloc = ReadUInt32BE();
     if (!g_FontManager.UnicodeFontExists(font))
     {
-        font = 0;
+        font = g_ConfigManager.ChatFont;
     }
 
     uint8_t flags = 0;
