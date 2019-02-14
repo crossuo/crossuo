@@ -2330,15 +2330,15 @@ void CGumpOptions::DrawPage7()
         64,
         160,
         90,
-        0,
-        999,
+        30,
+        100,
         g_OptionsConfig.SpeechDelay));
     m_SliderSpeechDuration->SetTextParameters(true, STP_RIGHT, 0, g_OptionsTextColor, true);
 
     checkbox = (CGUICheckbox *)Add(
         new CGUICheckbox(ID_GO_P7_SCALE_SPEECH_DURATION, 0x00D2, 0x00D3, 0x00D2, 64, 182));
     checkbox->Checked = g_OptionsConfig.ScaleSpeechDelay;
-    checkbox->SetTextParameters(0, L"Scale speech duration based on length", g_OptionsTextColor);
+    checkbox->SetTextParameters(0, L"Scale speech duration by length", g_OptionsTextColor);
 
     Add(new CGUIButton(ID_GO_P7_SPEECH_COLOR, 0x00D4, 0x00D4, 0x00D4, 64, 204));
 
