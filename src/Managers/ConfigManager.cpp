@@ -44,6 +44,7 @@ enum
     CMKC_DRAW_STUMPS,
     CMKC_MARKING_CAVES,
     CMKC_NO_ANIMATE_FIELDS,
+    CMKC_AUTO_OPEN_DOOR,
     CMKC_NO_VEGETATION,
     CMKC_HIDDEN_CHARACTERS_RENDER_MODE,
     CMKC_HIDDEN_ALPHA,
@@ -193,6 +194,7 @@ static const ConfigEntry s_Keys[] = {
     { CMKC_ORIGINAL_PARTY_STATUSBAR, "originalpartystatusbar" },
     { CMKC_APPLY_STATE_COLOR_ON_CHARACTERS, "applystatecoloroncharacters" },
     { CMKC_CHANGE_FIELDS_GRAPHIC, "changefieldsgraphic" },
+    { CMKC_AUTO_OPEN_DOOR, "autoopendoors" },
     { CMKC_PAPERDOLL_SLOTS, "paperdollslots" },
     { CMKC_DRAW_STATUS_CONDITION_STATE, "drawstatusconditionstate" },
     { CMKC_DRAW_STATUS_CONDITION_VALUE, "drawstatusconditionvalue" },
@@ -1122,6 +1124,9 @@ bool CConfigManager::Load(const os_path &path)
                 case CMKC_NO_ANIMATE_FIELDS:
                     SetNoAnimateFields(ToBool(strings[1]));
                     break;
+                case CMKC_AUTO_OPEN_DOOR:
+                    AutoOpenDoors = ToBool(strings[1]);
+                    break;
                 case CMKC_NO_VEGETATION:
                     SetNoVegetation(ToBool(strings[1]));
                     break;
@@ -1597,6 +1602,7 @@ void CConfigManager::Save(const os_path &path)
         writer.WriteBool("DrawHelmetsOnShroud", DrawHelmetsOnShroud);
         writer.WriteBool("UseGlobalMapLayer", m_UseGlobalMapLayer);
         writer.WriteBool("NoDrawRoofs", m_NoDrawRoofs);
+        writer.WriteBool("AutoOpenDoors", AutoOpenDoors);
         writer.WriteBool("HighlightTargetByType", HighlightTargetByType);
         writer.WriteBool("AutoDisplayWorldMap", AutoDisplayWorldMap);
         writer.WriteBool("DisableMacroInChat", DisableMacroInChat);

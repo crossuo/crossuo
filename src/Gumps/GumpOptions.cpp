@@ -67,6 +67,7 @@ enum
     ID_GO_P2_MARKING_CAVES,
     ID_GO_P2_NO_VEGETATION,
     ID_GO_P2_NO_ANIMATE_FIELDS,
+    ID_GO_P2_OPEN_DOORS,
     ID_GO_P2_LOCK_GUMP_MOVING,
     ID_GO_P2_CONSOLE_ENTER,
     ID_GO_P2_HIDDEN_CHARACTES_MODE_1,
@@ -552,6 +553,11 @@ void CGumpOptions::InitToolTip()
         case ID_GO_P2_NO_ANIMATE_FIELDS:
         {
             g_ToolTip.Set(L"Disable the field animation");
+            break;
+        }
+        case ID_GO_P2_OPEN_DOORS:
+        {
+            g_ToolTip.Set(L"Automatically Open Doors");
             break;
         }
         case ID_GO_P2_LOCK_GUMP_MOVING:
@@ -1112,6 +1118,7 @@ void CGumpOptions::DrawPage1()
 void CGumpOptions::DrawPage2()
 {
     DEBUG_TRACE_FUNCTION;
+
     //CrossUO's configuration
     Add(new CGUIPage(2));
 
@@ -1165,67 +1172,70 @@ void CGumpOptions::DrawPage2()
     checkbox->Checked = g_OptionsConfig.GetReduceFPSUnactiveWindow();
     checkbox->SetTextParameters(0, L"Reduce FPS when UO window is unactive", g_OptionsTextColor);
 
+    const int h = 20;
+    int y = 40;
+
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_CHARACTERS_ANIMATION_DELAY, 0x00D2, 0x00D3, 0x00D2, 0, 40));
+        new CGUICheckbox(ID_GO_P2_CHARACTERS_ANIMATION_DELAY, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.StandartCharactersAnimationDelay;
     checkbox->SetTextParameters(0, L"Standard characters animation delay", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_ITEMS_ANIMATION_DELAY, 0x00D2, 0x00D3, 0x00D2, 0, 60));
+        new CGUICheckbox(ID_GO_P2_ITEMS_ANIMATION_DELAY, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.StandartItemsAnimationDelay;
     checkbox->SetTextParameters(0, L"Standard items animation delay", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_ENABLE_SCALING, 0x00D2, 0x00D3, 0x00D2, 0, 80));
+        new CGUICheckbox(ID_GO_P2_ENABLE_SCALING, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetUseScaling();
     checkbox->SetTextParameters(
         0, L"Use scaling in game window (BETA VERSION!!!)", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_REMOVE_TEXT_WITH_BLENDING, 0x00D2, 0x00D3, 0x00D2, 0, 100));
+        new CGUICheckbox(ID_GO_P2_REMOVE_TEXT_WITH_BLENDING, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.RemoveTextWithBlending;
     checkbox->SetTextParameters(0, L"Remove object's text with alpha-blending", g_OptionsTextColor);
-
-    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 120));
+    y += h;
+    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, y));
     text->CreateTextureW(0, L"Draw character's status in game window");
-
+    // same line
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_DRAW_STATUS_FOR_HUMANOIDS, 0x00D2, 0x00D3, 0x00D2, 300, 120));
+        new CGUICheckbox(ID_GO_P2_DRAW_STATUS_FOR_HUMANOIDS, 0x00D2, 0x00D3, 0x00D2, 300, y));
     checkbox->Checked = g_OptionsConfig.DrawStatusForHumanoids;
     checkbox->SetTextParameters(0, L"For humanoids only", g_OptionsTextColor);
-
+    y += h;
     html->Add(new CGUIGroup(1));
     CGUIRadio *radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_NO_DRAW_CHARACTERS_STATUS, 0x00D0, 0x00D1, 0x00D2, 10, 140));
+        new CGUIRadio(ID_GO_P2_NO_DRAW_CHARACTERS_STATUS, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.GetDrawStatusState() == DCSS_NO_DRAW);
     radio->SetTextParameters(0, L"No draw", g_OptionsTextColor);
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_CHARACTERS_STATUS_TOP, 0x00D0, 0x00D1, 0x00D2, 10, 160));
+        new CGUIRadio(ID_GO_P2_DRAW_CHARACTERS_STATUS_TOP, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.GetDrawStatusState() == DCSS_ABOVE);
     radio->SetTextParameters(0, L"Above character (Text)", g_OptionsTextColor);
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_CHARACTERS_STATUS_BOTTOM, 0x00D0, 0x00D1, 0x00D2, 10, 180));
+        new CGUIRadio(ID_GO_P2_DRAW_CHARACTERS_STATUS_BOTTOM, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.GetDrawStatusState() == DCSS_UNDER);
     radio->SetTextParameters(0, L"Under character (Line)", g_OptionsTextColor);
-
+    y = 140;
     html->Add(new CGUIGroup(2));
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_CHARACTER_BARS_ALWAYS, 0x00D0, 0x00D1, 0x00D2, 230, 140));
+        new CGUIRadio(ID_GO_P2_DRAW_CHARACTER_BARS_ALWAYS, 0x00D0, 0x00D1, 0x00D2, 230, y));
     radio->Checked = (g_OptionsConfig.DrawStatusConditionState == DCSCS_ALWAYS);
     radio->SetTextParameters(0, L"Always", g_OptionsTextColor);
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_CHARACTER_BARS_NOT_MAX, 0x00D0, 0x00D1, 0x00D2, 230, 160));
+        new CGUIRadio(ID_GO_P2_DRAW_CHARACTER_BARS_NOT_MAX, 0x00D0, 0x00D1, 0x00D2, 230, y));
     radio->Checked = (g_OptionsConfig.DrawStatusConditionState == DCSCS_NOT_MAX);
     radio->SetTextParameters(0, L"HP <> MaxHP", g_OptionsTextColor);
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_CHARACTER_BARS_LOWER, 0x00D0, 0x00D1, 0x00D2, 230, 180));
+        new CGUIRadio(ID_GO_P2_DRAW_CHARACTER_BARS_LOWER, 0x00D0, 0x00D1, 0x00D2, 230, y));
     radio->Checked = (g_OptionsConfig.DrawStatusConditionState == DCSCS_LOWER);
     radio->SetTextParameters(0, L"HP lower %", g_OptionsTextColor);
-
+    y += 3; // slicer v-alignment offset
     m_SliderDrawStatusConditionValue = (CGUISlider *)html->Add(new CGUISlider(
         ID_GO_P2_DRAW_CHARACTER_BARS_LOWER_VALUE,
         0x00D8,
@@ -1235,68 +1245,51 @@ void CGumpOptions::DrawPage2()
         true,
         false,
         342,
-        182,
+        y,
         90,
         10,
         100,
         g_OptionsConfig.DrawStatusConditionValue));
     m_SliderDrawStatusConditionValue->SetTextParameters(
         true, STP_RIGHT_CENTER, 0, g_OptionsTextColor, true);
-
+    y += h + 2; // additional spacing from radio button
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_DRAW_STUMPS, 0x00D2, 0x00D3, 0x00D2, 0, 205));
+        new CGUICheckbox(ID_GO_P2_DRAW_STUMPS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetDrawStumps();
     checkbox->SetTextParameters(0, L"Change trees to stumps", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_MARKING_CAVES, 0x00D2, 0x00D3, 0x00D2, 0, 225));
+        new CGUICheckbox(ID_GO_P2_MARKING_CAVES, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetMarkingCaves();
     checkbox->SetTextParameters(0, L"Marking cave tiles", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_NO_VEGETATION, 0x00D2, 0x00D3, 0x00D2, 0, 245));
+        new CGUICheckbox(ID_GO_P2_NO_VEGETATION, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetNoVegetation();
     checkbox->SetTextParameters(0, L"Hide vegetation", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_NO_ANIMATE_FIELDS, 0x00D2, 0x00D3, 0x00D2, 0, 265));
+        new CGUICheckbox(ID_GO_P2_NO_ANIMATE_FIELDS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetNoAnimateFields();
     checkbox->SetTextParameters(0, L"No fields animation", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_LOCK_GUMP_MOVING, 0x00D2, 0x00D3, 0x00D2, 0, 285));
+        new CGUICheckbox(ID_GO_P2_OPEN_DOORS, 0x00D2, 0x00D3, 0x00D2, 0, y));
+    checkbox->Checked = g_OptionsConfig.AutoOpenDoors;
+    checkbox->SetTextParameters(0, L"Auto Open Doors", g_OptionsTextColor);
+    y += h;
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P2_LOCK_GUMP_MOVING, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.LockGumpsMoving;
     checkbox->SetTextParameters(0, L"Lock gumps moving", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_CONSOLE_ENTER, 0x00D2, 0x00D3, 0x00D2, 0, 305));
+        new CGUICheckbox(ID_GO_P2_CONSOLE_ENTER, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetConsoleNeedEnter();
     checkbox->SetTextParameters(0, L"Chat need press 'Enter' to activate it.", g_OptionsTextColor);
-
-    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 325));
+    y += h;
+    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, y));
     text->CreateTextureW(0, L"Hidden characters display mode:");
-
-    html->Add(new CGUIGroup(3));
-    radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_1, 0x00D0, 0x00D1, 0x00D2, 10, 345));
-    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_ORIGINAL);
-    radio->SetTextParameters(0, L"Original", g_OptionsTextColor);
-
-    radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_2, 0x00D0, 0x00D1, 0x00D2, 10, 365));
-    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_ALPHA_BLENDING);
-    radio->SetTextParameters(0, L"With alpha-blending, alpha:", g_OptionsTextColor);
-
-    radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_3, 0x00D0, 0x00D1, 0x00D2, 10, 385));
-    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_SPECTRAL_COLOR);
-    radio->SetTextParameters(0, L"With spectral color", g_OptionsTextColor);
-
-    radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_4, 0x00D0, 0x00D1, 0x00D2, 10, 405));
-    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_SPECIAL_SPECTRAL_COLOR);
-    radio->SetTextParameters(0, L"With special spectral color", g_OptionsTextColor);
-
     m_SliderHiddenAlpha = (CGUISlider *)html->Add(new CGUISlider(
         ID_GO_P2_HIDDEN_ALPHA,
         0x00D8,
@@ -1306,24 +1299,45 @@ void CGumpOptions::DrawPage2()
         true,
         false,
         225,
-        369,
+        y + 3,
         90,
         20,
         255,
         g_OptionsConfig.HiddenAlpha));
     m_SliderHiddenAlpha->SetTextParameters(true, STP_RIGHT, 0, g_OptionsTextColor, true);
-
+    y += h;
+    html->Add(new CGUIGroup(3));
+    radio = (CGUIRadio *)html->Add(
+        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_1, 0x00D0, 0x00D1, 0x00D2, 10, y));
+    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_ORIGINAL);
+    radio->SetTextParameters(0, L"Original", g_OptionsTextColor);
+    y += h;
+    radio = (CGUIRadio *)html->Add(
+        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_2, 0x00D0, 0x00D1, 0x00D2, 10, y));
+    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_ALPHA_BLENDING);
+    radio->SetTextParameters(0, L"With alpha-blending, alpha:", g_OptionsTextColor);
+    y += h;
+    radio = (CGUIRadio *)html->Add(
+        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_3, 0x00D0, 0x00D1, 0x00D2, 10, y));
+    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_SPECTRAL_COLOR);
+    radio->SetTextParameters(0, L"With spectral color", g_OptionsTextColor);
+    y += h;
+    radio = (CGUIRadio *)html->Add(
+        new CGUIRadio(ID_GO_P2_HIDDEN_CHARACTES_MODE_4, 0x00D0, 0x00D1, 0x00D2, 10, y));
+    radio->Checked = (g_OptionsConfig.HiddenCharactersRenderMode == HCRM_SPECIAL_SPECTRAL_COLOR);
+    radio->SetTextParameters(0, L"With special spectral color", g_OptionsTextColor);
+    y += h + 2;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_USE_HIDDEN_MODE_ONLY_FOR_SELF, 0x00D2, 0x00D3, 0x00D2, 0, 430));
+        new CGUICheckbox(ID_GO_P2_USE_HIDDEN_MODE_ONLY_FOR_SELF, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.UseHiddenModeOnlyForSelf;
     checkbox->SetTextParameters(
         0, L"Change hidden characters mode only for your person", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_TRANSPARENT_SPELL_ICONS, 0x00D2, 0x00D3, 0x00D2, 0, 450));
+        new CGUICheckbox(ID_GO_P2_TRANSPARENT_SPELL_ICONS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = (g_OptionsConfig.TransparentSpellIcons != 0u);
     checkbox->SetTextParameters(0, L"Transparent spell icons, alpha:", g_OptionsTextColor);
-
+    // same line
     m_SliderSpellIconsAlpha = (CGUISlider *)html->Add(new CGUISlider(
         ID_GO_P2_SPELL_ICONS_ALPHA,
         0x00D8,
@@ -1333,152 +1347,153 @@ void CGumpOptions::DrawPage2()
         true,
         false,
         232,
-        454,
+        y + 3,
         90,
         30,
         255,
         g_OptionsConfig.GetSpellIconAlpha()));
     m_SliderSpellIconsAlpha->SetTextParameters(true, STP_RIGHT, 0, g_OptionsTextColor, true);
-
+    y += h + 2;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_OLD_STYLE_STATUSBAR, 0x00D2, 0x00D3, 0x00D2, 0, 470));
+        new CGUICheckbox(ID_GO_P2_OLD_STYLE_STATUSBAR, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetOldStyleStatusbar();
     checkbox->SetTextParameters(0, L"Old style maximized statusbar", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_ORIGINAL_PARTY_STATUSBAR, 0x00D2, 0x00D3, 0x00D2, 0, 490));
+        new CGUICheckbox(ID_GO_P2_ORIGINAL_PARTY_STATUSBAR, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetOriginalPartyStatusbar();
     checkbox->SetTextParameters(0, L"Original party statusbar gump", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_APPLY_STATE_COLOR_ON_CHARACTERS, 0x00D2, 0x00D3, 0x00D2, 0, 510));
+        new CGUICheckbox(ID_GO_P2_APPLY_STATE_COLOR_ON_CHARACTERS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetApplyStateColorOnCharacters();
     checkbox->SetTextParameters(0, L"Colorize characters by state", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_CHANGE_FIELDS_GRAPHIC, 0x00D2, 0x00D3, 0x00D2, 0, 530));
+        new CGUICheckbox(ID_GO_P2_CHANGE_FIELDS_GRAPHIC, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetChangeFieldsGraphic();
     checkbox->SetTextParameters(0, L"Change animated fields to tiles", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_PAPERDOLL_SLOTS, 0x00D2, 0x00D3, 0x00D2, 0, 550));
+        new CGUICheckbox(ID_GO_P2_PAPERDOLL_SLOTS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetPaperdollSlots();
     checkbox->SetTextParameters(0, L"Add paperdoll slots", g_OptionsTextColor);
-
+    // same line
     checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS, 0x00D2, 0x00D3, 0x00D2, 200, 550));
+        ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS, 0x00D2, 0x00D3, 0x00D2, 200, y));
     checkbox->Checked = g_OptionsConfig.GetScaleImagesInPaperdollSlots();
     checkbox->SetTextParameters(0, L"Scale images in slots", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_REMOVE_STATUSBARS_WITHOUT_OBJECTS, 0x00D2, 0x00D3, 0x00D2, 0, 570));
+        ID_GO_P2_REMOVE_STATUSBARS_WITHOUT_OBJECTS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.RemoveStatusbarsWithoutObjects;
     checkbox->SetTextParameters(0, L"Remove statusbars without objects", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_SHOW_CONSOLE_ENTRY_MODE, 0x00D2, 0x00D3, 0x00D2, 0, 590));
+        new CGUICheckbox(ID_GO_P2_SHOW_CONSOLE_ENTRY_MODE, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.ShowDefaultConsoleEntryMode;
     checkbox->SetTextParameters(
         0, L"Show console entry mode under game window", g_OptionsTextColor);
-
-    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 610));
+    y += h;
+    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, y));
     text->CreateTextureW(0, L"Draw aura under characters mode:");
 
     html->Add(new CGUIGroup(4));
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_AURA_NEVER, 0x00D0, 0x00D1, 0x00D2, 10, 630));
+        new CGUIRadio(ID_GO_P2_DRAW_AURA_NEVER, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.GetDrawAuraState() == DAS_NEVER);
     radio->SetTextParameters(0, L"Never", g_OptionsTextColor);
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_AURA_IN_WARMODE, 0x00D0, 0x00D1, 0x00D2, 10, 650));
+        new CGUIRadio(ID_GO_P2_DRAW_AURA_IN_WARMODE, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.GetDrawAuraState() == DAS_IN_WARMODE);
     radio->SetTextParameters(0, L"Only in war mode", g_OptionsTextColor);
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_DRAW_AURA_ALWAYS, 0x00D0, 0x00D1, 0x00D2, 10, 670));
+        new CGUIRadio(ID_GO_P2_DRAW_AURA_ALWAYS, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.GetDrawAuraState() == DAS_ALWAYS);
     radio->SetTextParameters(0, L"Always", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_DRAW_AURA_WITH_CTRL_PRESSED, 0x00D2, 0x00D3, 0x00D2, 0, 690));
+        new CGUICheckbox(ID_GO_P2_DRAW_AURA_WITH_CTRL_PRESSED, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.DrawAuraWithCtrlPressed;
     checkbox->SetTextParameters(0, L"Draw aura only if Ctrl pressed", g_OptionsTextColor);
-
-    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 710));
+    y += h;
+    text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, y));
     text->CreateTextureW(0, L"Screenshots format:");
 
     html->Add(new CGUIGroup(5));
-
+    y += h;
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_BMP, 0x00D0, 0x00D1, 0x00D2, 10, 730));
+        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_BMP, 0x00D0, 0x00D1, 0x00D2, 10, y));
     radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_BMP);
     radio->SetTextParameters(0, L"BMP", g_OptionsTextColor);
 
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_PNG, 0x00D0, 0x00D1, 0x00D2, 100, 730));
+        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_PNG, 0x00D0, 0x00D1, 0x00D2, 100, y));
     radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_PNG);
     radio->SetTextParameters(0, L"PNG", g_OptionsTextColor);
 
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_TGA, 0x00D0, 0x00D1, 0x00D2, 190, 730));
+        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_TGA, 0x00D0, 0x00D1, 0x00D2, 190, y));
     radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_TGA);
     radio->SetTextParameters(0, L"TGA", g_OptionsTextColor);
 
     radio = (CGUIRadio *)html->Add(
-        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_JPG, 0x00D0, 0x00D1, 0x00D2, 280, 730));
+        new CGUIRadio(ID_GO_P2_SCREENSHOT_FORMAT_JPG, 0x00D0, 0x00D1, 0x00D2, 280, y));
     radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_JPG);
     radio->SetTextParameters(0, L"JPG", g_OptionsTextColor);
-
+    y += h + 3;
     checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_OBJECT_FADE_IN_OUT, 0x00D2, 0x00D3, 0x00D2, 0, 760));
+        ID_GO_P2_OBJECT_FADE_IN_OUT, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.RemoveOrCreateObjectsWithBlending;
     checkbox->SetTextParameters(
         0, L"Fade in/out objects", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_DRAW_HELMETS_ON_SHROUD, 0x00D2, 0x00D3, 0x00D2, 0, 780));
+        new CGUICheckbox(ID_GO_P2_DRAW_HELMETS_ON_SHROUD, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.DrawHelmetsOnShroud;
     checkbox->SetTextParameters(0, L"Draw helmets on shroud in the world", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_USE_GLOBAL_MAP_LAYER, 0x00D2, 0x00D3, 0x00D2, 0, 800));
+        new CGUICheckbox(ID_GO_P2_USE_GLOBAL_MAP_LAYER, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetUseGlobalMapLayer();
     checkbox->SetTextParameters(0, L"Draw world map before all gumps", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_NO_DRAW_ROOFS, 0x00D2, 0x00D3, 0x00D2, 0, 820));
+        new CGUICheckbox(ID_GO_P2_NO_DRAW_ROOFS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.GetNoDrawRoofs();
     checkbox->SetTextParameters(0, L"No draw roofs", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE, 0x00D2, 0x00D3, 0x00D2, 0, 840));
+        new CGUICheckbox(ID_GO_P2_HIGHLIGHT_TARGET_BY_TYPE, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.HighlightTargetByType;
     checkbox->SetTextParameters(
         0, L"Highlight target by type (netural, harmful, helpful)", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_AUTO_DISPLAY_WORLD_MAP, 0x00D2, 0x00D3, 0x00D2, 0, 860));
+        new CGUICheckbox(ID_GO_P2_AUTO_DISPLAY_WORLD_MAP, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.AutoDisplayWorldMap;
     checkbox->SetTextParameters(
         0, L"Display a world map immediately after entering the world", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_DISABLE_MACRO_IN_CHAT, 0x00D2, 0x00D3, 0x00D2, 0, 880));
+        new CGUICheckbox(ID_GO_P2_DISABLE_MACRO_IN_CHAT, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.DisableMacroInChat;
     checkbox->SetTextParameters(
         0, L"Disables macro activation when chat is active", g_OptionsTextColor);
-
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, 0x00D2, 0x00D3, 0x00D2, 0, 900));
+        ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.CancelNewTargetSystemOnShiftEsc;
     checkbox->SetTextParameters(
         0, L"Cancel new target system target on Shift+Esc only", g_OptionsTextColor);
 
 #if USE_PING
+    y += h;
     checkbox = (CGUICheckbox *)html->Add(
-        new CGUICheckbox(ID_GO_P2_CHECK_PING, 0x00D2, 0x00D3, 0x00D2, 0, _fixme_));
+        new CGUICheckbox(ID_GO_P2_CHECK_PING, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.CheckPing;
     checkbox->SetTextParameters(0, L"Check ping in game, timer in seconds:", g_OptionsTextColor);
 
@@ -3205,6 +3220,10 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             {
                 g_OptionsConfig.SetNoAnimateFields(state);
             }
+            else if (serial == ID_GO_P2_OPEN_DOORS)
+            {
+                g_OptionsConfig.AutoOpenDoors = state;
+            }
             else if (serial == ID_GO_P2_REDUCE_FPS_UNACTIVE_WINDOW)
             { //Reduce FPS when Window is Unactive
                 g_OptionsConfig.SetReduceFPSUnactiveWindow(state);
@@ -4047,6 +4066,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.SetMarkingCaves(g_OptionsConfig.GetMarkingCaves());
             g_ConfigManager.SetNoVegetation(g_OptionsConfig.GetNoVegetation());
             g_ConfigManager.SetNoAnimateFields(g_OptionsConfig.GetNoAnimateFields());
+            g_ConfigManager.AutoOpenDoors = g_OptionsConfig.AutoOpenDoors;
             g_ConfigManager.SetConsoleNeedEnter(g_OptionsConfig.GetConsoleNeedEnter());
             g_ConfigManager.SetReduceFPSUnactiveWindow(
                 g_OptionsConfig.GetReduceFPSUnactiveWindow());
