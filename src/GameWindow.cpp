@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
@@ -115,7 +115,10 @@ void CGameWindow::OnLeftMouseButtonDown()
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_GeneratedMouseDown = false;
-        g_CurrentScreen->SelectObject();
+        if (g_Target.MultiGraphic == 0)
+        {
+            g_CurrentScreen->SelectObject();
+        }
         g_PressedObject.InitLeft(g_SelectedObject);
         if (g_SelectedObject.Object != nullptr || g_GameState == GS_GAME)
         {
@@ -129,8 +132,10 @@ void CGameWindow::OnLeftMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->SelectObject();
-
+        if (g_Target.MultiGraphic == 0)
+        {
+            g_CurrentScreen->SelectObject();
+        }
         //if ((g_SelectedObject.Object() != nullptr && g_SelectedObject.Object() == g_PressedObject.LeftObject && g_SelectedObject.Serial) || g_GameState >= GS_GAME)
         if ((g_SelectedObject.Object != nullptr && (g_SelectedObject.Serial != 0u)) ||
             g_GameState >= GS_GAME)
@@ -181,7 +186,10 @@ void CGameWindow::OnRightMouseButtonDown()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->SelectObject();
+        if (g_Target.MultiGraphic == 0)
+        {
+            g_CurrentScreen->SelectObject();
+        }
         g_PressedObject.InitRight(g_SelectedObject);
         g_CurrentScreen->OnRightMouseButtonDown();
         if (g_SelectedObject.Gump == nullptr &&
@@ -203,7 +211,10 @@ void CGameWindow::OnRightMouseButtonUp()
     DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        g_CurrentScreen->SelectObject();
+        if (g_Target.MultiGraphic == 0)
+        {
+            g_CurrentScreen->SelectObject();
+        }
         if ((g_SelectedObject.Object != nullptr &&
              g_SelectedObject.Object == g_PressedObject.RightObject &&
              (g_SelectedObject.Serial != 0u)) ||
