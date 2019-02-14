@@ -371,7 +371,7 @@ void CConfigManager::DefaultPage1()
 void CConfigManager::DefaultPage2()
 {
     DEBUG_TRACE_FUNCTION;
-    m_ClientFPS = 32;
+    m_ClientFPS = DEFAULT_FPS;
     m_ReduceFPSUnactiveWindow = true;
     StandartCharactersAnimationDelay = false;
     StandartItemsAnimationDelay = true;
@@ -571,7 +571,7 @@ void CConfigManager::SetMusicVolume(uint8_t val)
     }
 }
 
-void CConfigManager::SetClientFPS(uint8_t val)
+void CConfigManager::SetClientFPS(int val)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -587,7 +587,15 @@ void CConfigManager::SetClientFPS(uint8_t val)
             m_ClientFPS = MAX_FPS_LIMIT;
         }
 
-        g_FrameDelay[WINDOW_ACTIVE] = 1000 / m_ClientFPS;
+        if (m_ClientFPS == MIN_FPS_LIMIT)
+        {
+            g_FrameDelay[WINDOW_ACTIVE]  = 80;
+        }
+        else
+        {
+            g_FrameDelay[WINDOW_ACTIVE]  = 1000 / m_ClientFPS;
+        }
+
         if (!m_ReduceFPSUnactiveWindow)
         {
             g_FrameDelay[WINDOW_INACTIVE] = g_FrameDelay[WINDOW_ACTIVE];

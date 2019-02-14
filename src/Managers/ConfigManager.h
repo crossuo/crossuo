@@ -10,7 +10,7 @@ protected:
     bool m_Music = false;
     uint8_t m_SoundVolume = 255;
     uint8_t m_MusicVolume = 255;
-    uint8_t m_ClientFPS = 32;
+    int m_ClientFPS = DEFAULT_FPS;
     bool m_UseScaling = false;
     uint8_t m_DrawStatusState = 0;
     bool m_DrawStumps = false;
@@ -153,8 +153,8 @@ public:
     uint8_t GetMusicVolume() { return m_MusicVolume; };
     void SetMusicVolume(uint8_t val);
 
-    uint8_t GetClientFPS() { return m_ClientFPS; };
-    void SetClientFPS(uint8_t val);
+    int GetClientFPS() { return m_ClientFPS; };
+    void SetClientFPS(int val);
 
     bool GetUseScaling() { return m_UseScaling; };
     void SetUseScaling(bool val);
