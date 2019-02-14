@@ -430,8 +430,12 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
                 }
             }
 
-            int averageZ = obj.AverageZ;
+            if (g_ConfigManager.AutoOpenDoors && obj.m_Object && obj.m_Object->IsDoor())
+            {
+                g_Game.OpenDoor();
+            }
 
+            const int averageZ = obj.AverageZ;
             if (minZ < averageZ)
             {
                 minZ = averageZ;
@@ -443,9 +447,7 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
             }
         }
     }
-
     z = (char)resultZ;
-
     return (resultZ != -128);
 }
 

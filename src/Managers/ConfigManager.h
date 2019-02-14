@@ -56,6 +56,7 @@ public:
     bool HighlightTargetByType = true;
     bool AutoDisplayWorldMap = false;
     bool DisableMacroInChat = false;
+    bool AutoOpenDoors = false;
 #if USE_PING
     bool CheckPing = true;
     uint8_t PingTimer = 10;
