@@ -2345,8 +2345,8 @@ void CGumpOptions::DrawPage7()
         64,
         160,
         90,
-        30,
-        100,
+        0,
+        999,
         g_OptionsConfig.SpeechDelay));
     m_SliderSpeechDuration->SetTextParameters(true, STP_RIGHT, 0, g_OptionsTextColor, true);
 

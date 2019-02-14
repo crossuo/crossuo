@@ -6653,7 +6653,7 @@ PACKET_HANDLER(BoatMoving)
     DEBUG_TRACE_FUNCTION;
 
     // FIXME: disable BoatMoving for the 0.1.9.6 patch
-    return;
+    //return;
     uint32_t boatSerial = ReadUInt32BE();
 
     CGameObject *boat = g_World->FindWorldObject(boatSerial);
