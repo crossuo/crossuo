@@ -467,14 +467,14 @@ namespace loguru
 	{
 #ifdef _WIN32
 		int bytes_needed = _vscprintf(format, vlist);
-		CHECK_F(bytes_needed >= 0, "Bad string format: '%s'", format);
+		//CHECK_F(bytes_needed >= 0, "Bad string format: '%s'", format); // crossuo - dump packet
 		char* buff = (char*)malloc(bytes_needed+1);
 		vsnprintf(buff, bytes_needed+1, format, vlist);
 		return Text(buff);
 #else
 		char* buff = nullptr;
 		int result = vasprintf(&buff, format, vlist);
-		CHECK_F(result >= 0, "Bad string format: '%s'", format);
+		//CHECK_F(result >= 0, "Bad string format: '%s'", format); // crossuo - dump packets
 		return Text(buff);
 #endif
 	}
