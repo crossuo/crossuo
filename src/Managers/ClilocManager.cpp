@@ -1,6 +1,5 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
-
 #include "ClilocManager.h"
 #include "../Application.h"
 
@@ -230,6 +229,62 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
         args.erase(args.begin());
     }
 
+    wstring message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
+    vector<wstring> arguments;
+    while (true)
+    {
+        size_t pos = args.find(L'\t');
+        if (pos != string::npos)
+        {
+            arguments.push_back(args.substr(0, pos));
+            args = args.substr(pos + 1);
+        }
+        else
+        {
+            arguments.push_back(args);
+            break;
+        }
+    }
+
+    for (int i = 0; i < (int)arguments.size(); i++)
+    {
+        size_t pos1 = message.find(L'~');
+        if (pos1 == string::npos)
+        {
+            break;
+        }
+
+        size_t pos2 = message.find(L'~', pos1 + 1);
+        if (pos2 == string::npos)
+        {
+            break;
+        }
+
+        if (arguments[i].length() > 1 && *arguments[i].c_str() == L'#')
+        {
+            uint32_t id = std::stoi(arguments[i].c_str() + 1);
+            arguments[i] = Cliloc(g_Language)->GetW(id, toCamelCase);
+        }
+
+        message.replace(pos1, pos2 - pos1 + 1, arguments[i]);
+    }
+
+    if (toCamelCase)
+    {
+        return ToCamelCaseW(message);
+    }
+
+    return message;
+}
+
+wstring CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args)
+{
+    DEBUG_TRACE_FUNCTION;
+
+    while ((args.length() != 0u) && args[0] == L'@')
+    {
+        args.erase(remove(args.begin(), args.end(), L'@'), args.end());
+    }
     wstring message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
     vector<wstring> arguments;
     while (true)

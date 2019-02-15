@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -49,6 +49,7 @@ public:
 
     CCliloc *Cliloc(const string &lang);
     wstring ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstring args);
+    wstring ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args);
 };
 
 extern CClilocManager g_ClilocManager;
