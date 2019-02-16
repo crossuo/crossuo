@@ -105,9 +105,10 @@ void CGumpSecureTrading::UpdateContent()
 
     if (m_Items == nullptr)
     {
-        if (g_Config.ClientVersion >= CV_7000) //need to find the proper version
+        if (g_Config.ClientVersion >=
+            CV_7000) // FIXME: find proper client version where new trade window was introduced
         {
-            Add(new CGUIGumppic(0x088A, 0, 0)); //Trade Gump New one
+            Add(new CGUIGumppic(0x088A, 0, 0)); // New trade window gump
 
             if (StateMy)
             {
