@@ -4878,8 +4878,7 @@ PACKET_HANDLER(OpenGump)
 
     for (const string &str : commandList)
     {
-        vector<string> list = cmdParser.GetTokens(str.c_str());
-        vector<string> listNt = cmdParser.GetTokens(str.c_str(), false);
+        vector<string> list = cmdParser.GetTokens(str.c_str(), false);
 
         int listSize = (int)list.size();
 
@@ -5322,8 +5321,8 @@ PACKET_HANDLER(OpenGump)
                     htmlInfo.Color = 0x00FFFFFF;
                 }
 
-                htmlInfo.TextID = ToInt(listNt[8]);
-                htmlInfo.Args = ToWString(listNt[9]);
+                htmlInfo.TextID = ToInt(list[8]);
+                htmlInfo.Args = ToWString(list[9]);
 
                 if (listSize >= 10)
                 {

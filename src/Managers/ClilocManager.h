@@ -42,6 +42,7 @@ class CClilocManager : public CBaseQueue
 private:
     CCliloc *m_LastCliloc{ nullptr };
     CCliloc *m_ENUCliloc{ nullptr };
+    wstring ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args);
 
 public:
     CClilocManager();
