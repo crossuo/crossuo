@@ -105,7 +105,7 @@ void CGumpSecureTrading::UpdateContent()
 
     if (m_Items == nullptr)
     {
-        if (g_Config.ClientVersion >= CV_60144) //need to find the proper version
+        if (g_Config.ClientVersion >= CV_7000) //need to find the proper version
         {
             Add(new CGUIGumppic(0x088A, 0, 0)); //Trade Gump New one
 
@@ -131,7 +131,7 @@ void CGumpSecureTrading::UpdateContent()
             {
                 m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0867, 258, 240));
             }
-            int fontWidth = 250 - g_FontManager.GetWidthA(1, Text);
+            int fontWidth = 250 - g_FontManager.GetWidthA(3, Text);
 
             text = (CGUIText *)Add(new CGUIText(0x0481, fontWidth, 244));
             text->CreateTextureA(3, Text);
