@@ -51,6 +51,7 @@ void CGumpSecureTrading::PrepareContent()
     DEBUG_TRACE_FUNCTION;
     if (m_MyCheck != nullptr)
     {
+        //new id 0x088A
         if (StateMy)
         {
             if (m_MyCheck->Graphic != 0x0869)
@@ -105,7 +106,14 @@ void CGumpSecureTrading::UpdateContent()
 
     if (m_Items == nullptr)
     {
-        Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
+        if (g_Config.ClientVersion >= CV_60144)//need to find the proper version
+        {
+            Add(new CGUIGumppic(0x088A, 0, 0)); //Trade Gump New one
+        }
+        else
+        {
+            Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
+        }
 
         if (g_Config.ClientVersion < CV_500A)
         {
