@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -44,6 +44,7 @@ struct HTMLGumpDataInfo
     int Width;
     int Height;
     int TextID;
+    wstring Args;
     int HaveBackground;
     int HaveScrollbar;
     int Color;

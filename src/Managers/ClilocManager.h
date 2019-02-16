@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -42,6 +42,7 @@ class CClilocManager : public CBaseQueue
 private:
     CCliloc *m_LastCliloc{ nullptr };
     CCliloc *m_ENUCliloc{ nullptr };
+    wstring ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args);
 
 public:
     CClilocManager();
@@ -49,6 +50,7 @@ public:
 
     CCliloc *Cliloc(const string &lang);
     wstring ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstring args);
+    wstring ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args);
 };
 
 extern CClilocManager g_ClilocManager;

@@ -4823,7 +4823,8 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
 
         if (data.IsXMF)
         {
-            htmlText->Text = g_ClilocManager.Cliloc(g_Language)->GetW(data.TextID);
+            htmlText->Text =
+                g_ClilocManager.ParseXmfHtmlArgumentsToCliloc(data.TextID, false, data.Args);
             htmlText->CreateTexture(data.HaveBackground == 0);
             htmlGump->CalculateDataSize();
         }
@@ -4877,7 +4878,7 @@ PACKET_HANDLER(OpenGump)
 
     for (const string &str : commandList)
     {
-        vector<string> list = cmdParser.GetTokens(str.c_str());
+        vector<string> list = cmdParser.GetTokens(str.c_str(), false);
 
         int listSize = (int)list.size();
 
@@ -5321,6 +5322,7 @@ PACKET_HANDLER(OpenGump)
                 }
 
                 htmlInfo.TextID = ToInt(list[8]);
+                htmlInfo.Args = ToWString(list[9]);
 
                 if (listSize >= 10)
                 {

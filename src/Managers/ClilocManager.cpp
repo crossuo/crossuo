@@ -1,6 +1,5 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
-
 #include "ClilocManager.h"
 #include "../Application.h"
 
@@ -229,6 +228,25 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
     {
         args.erase(args.begin());
     }
+
+    return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
+}
+
+wstring CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args)
+{
+    DEBUG_TRACE_FUNCTION;
+
+    while ((args.length() != 0u) && args[0] == L'@')
+    {
+        args.erase(remove(args.begin(), args.end(), L'@'), args.end());
+    }
+
+    return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
+}
+
+wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args)
+{
+    DEBUG_TRACE_FUNCTION;
 
     wstring message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
     vector<wstring> arguments;
