@@ -2611,12 +2611,7 @@ void CGameScreen::OnTextInput(const TextEvent &ev)
     const bool altPressed = (mod & KMOD_ALT) != 0;
     const bool ctrlPressed = (mod & KMOD_CTRL) != 0;
 
-    if (g_EntryPointer == &g_GameConsole && (ch == 0x11 || ch == 0x17) && ctrlPressed)
-    {
-        g_GameConsole.ChangeConsoleMessage(ch == 0x17);
-    }
-    else if (
-        (altGR || (!altPressed && !ctrlPressed)) &&
+    if ((altGR || (!altPressed && !ctrlPressed)) &&
         (int)g_EntryPointer->Length() < std::max(g_EntryPointer->MaxLength, 60))
     {
         g_EntryPointer->Insert(ch);
@@ -2808,7 +2803,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
     }
     else if (key == SDLK_q && ctrlPressed)
     {
-        g_GameConsole.Send(g_GameConsole.GetLastConsoleText());
+        g_GameConsole.ChangeConsoleMessage(false);
     }
 
     auto macro = g_MacroManager.FindMacro(key, altPressed, ctrlPressed, shiftPressed);
