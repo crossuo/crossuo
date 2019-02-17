@@ -365,17 +365,6 @@ void CGameWindow::OnTextInput(const TextEvent &ev)
     {
         g_CurrentScreen->OnTextInput(ev);
     }
-    else if (ch == 0x16 && g_EntryPointer != nullptr)
-    {
-        if (g_GameState == GS_MAIN)
-        {
-            g_MainScreen.Paste();
-        }
-        else
-        {
-            g_EntryPointer->Paste();
-        }
-    }
 }
 
 void CGameWindow::OnKeyDown(const KeyEvent &ev)
@@ -391,6 +380,18 @@ void CGameWindow::OnKeyDown(const KeyEvent &ev)
     const bool acceptKey = true;
     if (acceptKey && g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
+        if (g_CtrlPressed && key == SDLK_v && g_EntryPointer != nullptr) // FIXME: OSX CMD Key
+        {
+            if (g_GameState == GS_MAIN)
+            {
+                g_MainScreen.Paste();
+            }
+            else
+            {
+                g_EntryPointer->Paste();
+            }
+        }
+
         g_CurrentScreen->OnKeyDown(ev);
     }
 }
