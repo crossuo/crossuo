@@ -367,14 +367,12 @@ void CGameConsole::DrawW(
 void CGameConsole::SaveConsoleMessage()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_ConsoleStack[m_ConsoleSelectedIndex % MAX_CONSOLE_STACK_SIZE] != Text)
+
+    m_ConsoleStack[m_ConsoleStackCount % MAX_CONSOLE_STACK_SIZE] = Text;
+    m_ConsoleStackCount++;
+    if (m_ConsoleStackCount > 1100)
     {
-        m_ConsoleStack[m_ConsoleStackCount % MAX_CONSOLE_STACK_SIZE] = Text;
-        m_ConsoleStackCount++;
-        if (m_ConsoleStackCount > 1100)
-        {
-            m_ConsoleStackCount -= 1000;
-        }
+        m_ConsoleStackCount -= 1000;
     }
     m_ConsoleSelectedIndex = (m_ConsoleStackCount - 1) % MAX_CONSOLE_STACK_SIZE;
     m_PositionChanged = false;
