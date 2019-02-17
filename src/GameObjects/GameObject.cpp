@@ -102,7 +102,7 @@ void CGameObject::DrawObjectHandlesTexture()
     DEBUG_TRACE_FUNCTION;
     if (m_TextureObjectHalndes.Texture == 0)
     {
-        if (NPC || IsCorpse())
+        if (NPC)
         {
             GenerateObjectHandlesTexture(ToWString(m_Name));
         }
