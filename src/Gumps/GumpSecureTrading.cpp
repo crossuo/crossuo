@@ -105,7 +105,70 @@ void CGumpSecureTrading::UpdateContent()
 
     if (m_Items == nullptr)
     {
-        Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
+        if (g_Config.ClientVersion >=
+            CV_7000) // FIXME: find proper client version where new trade window was introduced
+        {
+            Add(new CGUIGumppic(0x088A, 0, 0)); // New trade window gump
+
+            if (StateMy)
+            {
+                m_MyCheck = (CGUIButton *)Add(
+                    new CGUIButton(ID_GST_CHECKBOX, 0x0869, 0x086A, 0x086A, 37, 29));
+            }
+            else
+            {
+                m_MyCheck = (CGUIButton *)Add(
+                    new CGUIButton(ID_GST_CHECKBOX, 0x0867, 0x0868, 0x0868, 37, 29));
+            }
+
+            CGUIText *text = (CGUIText *)Add(new CGUIText(0x0481, 73, 32));
+            text->CreateTextureA(3, g_Player->GetName());
+
+            if (StateOpponent)
+            {
+                m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0869, 258, 240));
+            }
+            else
+            {
+                m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0867, 258, 240));
+            }
+            int fontWidth = 250 - g_FontManager.GetWidthA(3, Text);
+
+            text = (CGUIText *)Add(new CGUIText(0x0481, fontWidth, 244));
+            text->CreateTextureA(3, Text);
+        }
+        else //older client version old trade
+        {
+            Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
+
+            if (StateMy)
+            {
+                m_MyCheck = (CGUIButton *)Add(
+                    new CGUIButton(ID_GST_CHECKBOX, 0x0869, 0x086A, 0x086A, 52, 29));
+            }
+            else
+            {
+                m_MyCheck = (CGUIButton *)Add(
+                    new CGUIButton(ID_GST_CHECKBOX, 0x0867, 0x0868, 0x0868, 52, 29));
+            }
+
+            CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 84, 40));
+            text->CreateTextureA(1, g_Player->GetName());
+
+            if (StateOpponent)
+            {
+                m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0869, 266, 160));
+            }
+            else
+            {
+                m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0867, 266, 160));
+            }
+
+            int fontWidth = 260 - g_FontManager.GetWidthA(1, Text);
+
+            text = (CGUIText *)Add(new CGUIText(0x0386, fontWidth, 170));
+            text->CreateTextureA(1, Text);
+        }
 
         if (g_Config.ClientVersion < CV_500A)
         {
@@ -113,34 +176,6 @@ void CGumpSecureTrading::UpdateContent()
 
             Add(new CGUIColoredPolygone(0, 0, 192, 70, 110, 60, 0xFF000001));
         }
-
-        if (StateMy)
-        {
-            m_MyCheck =
-                (CGUIButton *)Add(new CGUIButton(ID_GST_CHECKBOX, 0x0869, 0x086A, 0x086A, 52, 29));
-        }
-        else
-        {
-            m_MyCheck =
-                (CGUIButton *)Add(new CGUIButton(ID_GST_CHECKBOX, 0x0867, 0x0868, 0x0868, 52, 29));
-        }
-
-        CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 84, 40));
-        text->CreateTextureA(1, g_Player->GetName());
-
-        if (StateOpponent)
-        {
-            m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0869, 266, 160));
-        }
-        else
-        {
-            m_OpponentCheck = (CGUIGumppic *)Add(new CGUIGumppic(0x0867, 266, 160));
-        }
-
-        int fontWidth = 260 - g_FontManager.GetWidthA(1, Text);
-
-        text = (CGUIText *)Add(new CGUIText(0x0386, fontWidth, 170));
-        text->CreateTextureA(1, Text);
 
         Add(new CGUIShader(&g_ColorizerShader, true));
 
