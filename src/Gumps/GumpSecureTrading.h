@@ -12,9 +12,11 @@ class CGumpSecureTrading : public CGump
 {
 public:
     uint32_t ID2 = 0;
-    bool StateMy = false;
+    uint32_t Gold = 0;
+    uint32_t Platinum = 0;
+    bool StateMine = false;
     bool StateOpponent = false;
-    string Text = "";
+    string Text;
 
 private:
     static const int ID_GST_CHECKBOX = 1;

@@ -51,7 +51,7 @@ void CGumpSecureTrading::PrepareContent()
     DEBUG_TRACE_FUNCTION;
     if (m_MyCheck != nullptr)
     {
-        if (StateMy)
+        if (StateMine)
         {
             if (m_MyCheck->Graphic != 0x0869)
             {
@@ -100,17 +100,18 @@ void CGumpSecureTrading::UpdateContent()
 
     if (selobj == nullptr)
     {
-        return; //Объект, к которому привязан гамп - исчез
+        // The object to which the gump is attached disappeared
+        return;
     }
 
     if (m_Items == nullptr)
     {
-        if (g_Config.ClientVersion >=
-            CV_7000) // FIXME: find proper client version where new trade window was introduced
+        // FIXME: find proper client version where new trade window was introduced
+        if (g_Config.ClientVersion >= VERSION(7, 0, 45, 65))
         {
             Add(new CGUIGumppic(0x088A, 0, 0)); // New trade window gump
 
-            if (StateMy)
+            if (StateMine)
             {
                 m_MyCheck = (CGUIButton *)Add(
                     new CGUIButton(ID_GST_CHECKBOX, 0x0869, 0x086A, 0x086A, 37, 29));
@@ -141,7 +142,7 @@ void CGumpSecureTrading::UpdateContent()
         {
             Add(new CGUIGumppic(0x0866, 0, 0)); //Trade Gump
 
-            if (StateMy)
+            if (StateMine)
             {
                 m_MyCheck = (CGUIButton *)Add(
                     new CGUIButton(ID_GST_CHECKBOX, 0x0869, 0x086A, 0x086A, 52, 29));
@@ -195,7 +196,7 @@ void CGumpSecureTrading::UpdateContent()
         m_OpponentDataBox->Clear();
     }
 
-    //Отрисовка нашего товара (при наличии товара)
+    // Draw sending item (if available)
     CGameObject *container = g_World->FindWorldObject(ID);
 
     if (container != nullptr && container->m_Items != nullptr)
@@ -228,7 +229,7 @@ void CGumpSecureTrading::UpdateContent()
         }
     }
 
-    //Отрисовка нашего опонента (при наличии товара)
+    // Draw receiving item (if available)
     container = g_World->FindWorldObject(ID2);
     if (container != nullptr && container->m_Items != nullptr)
     {
@@ -268,7 +269,8 @@ void CGumpSecureTrading::Draw()
 
     if (selobj == nullptr)
     {
-        return; //Объект, к которому привязан гамп - исчез
+        // The object to which the gump is attached disappeared
+        return;
     }
 
     if (g_GumpPressed)
@@ -296,7 +298,8 @@ CRenderObject *CGumpSecureTrading::Select()
 
     if (selobj == nullptr)
     {
-        return nullptr; //Объект, к которому привязан гамп - исчез
+        // The object to which the gump is attached disappeared
+        return nullptr;
     }
 
     CRenderObject *selected = CGump::Select();
@@ -315,9 +318,10 @@ CRenderObject *CGumpSecureTrading::Select()
 void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
 {
     DEBUG_TRACE_FUNCTION;
-    if (serial == ID_GST_CHECKBOX) //Изменение состояния чекбокса
+    // Update checkbox status
+    if (serial == ID_GST_CHECKBOX)
     {
-        StateMy = !StateMy;
+        StateMine = !StateMine;
 
         SendTradingResponse(2);
     }
@@ -407,11 +411,10 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
 void CGumpSecureTrading::SendTradingResponse(int code)
 {
     DEBUG_TRACE_FUNCTION;
-    //Ответ на трэйд окно
+    // Reply the trade window
     CPacketTradeResponse(this, code).Send();
-
-    if (code == 1)
-    { //Закрываем окно
+    if (code == SECURE_TRADE_CLOSE)
+    {
         RemoveMark = true;
     }
 }

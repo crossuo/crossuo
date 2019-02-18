@@ -291,7 +291,7 @@ void CDECL FUNCBODY_SecureTradingCheckState(unsigned int id1, bool state)
 
     if (gump != nullptr)
     {
-        gump->StateMy = state;
+        gump->StateMine = state;
         CPacketTradeResponse packet(gump, 2);
         UOMsg_Send(packet.Data().data(), packet.Data().size());
     }

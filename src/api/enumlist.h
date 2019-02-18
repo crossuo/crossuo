@@ -75,6 +75,9 @@ enum ENCRYPTION_TYPE
     ET_TFISH // TwoFish + MD5
 };
 
+// A useful list with specific features on specific client versions here:
+// https://github.com/Sphereserver/Source-experimental/blob/addff8a9ba29d737ea281544a9bd7878dd8fa8cc/src/common/sphereproto.h#L1006
+
 #define VERSION(a, b, c, d)                                                                        \
     (((a & 0xff) << 24) | ((b & 0xff) << 16) | ((c & 0xff) << 8) | (d & 0xff))
 
@@ -1323,4 +1326,14 @@ enum ABILITY_TYPE
     AT_INFUSED_THROW,
     AT_MYSTIC_ARC,
     AT_DISROBE
+};
+
+enum SECURE_TRADE_TYPE
+{
+    // SecureTrade Action types.
+    SECURE_TRADE_OPEN = 0,
+    SECURE_TRADE_CLOSE = 1,
+    SECURE_TRADE_CHANGE = 2,
+    SECURE_TRADE_UPDATEGOLD = 3,
+    SECURE_TRADE_UPDATELEDGER = 4
 };
