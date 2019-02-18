@@ -379,14 +379,11 @@ void CGameWorld::SetPlayer(int serial)
 CGameItem *CGameWorld::GetWorldItem(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    WORLD_MAP::iterator i = m_Map.find(serial);
-
-    if (i == m_Map.end() || (*i).second == nullptr)
+    auto it = m_Map.find(serial);
+    if (it == m_Map.end() || (*it).second == nullptr)
     {
         CGameItem *obj = new CGameItem(serial);
-
         m_Map[serial] = obj;
-
         if (m_Items != nullptr)
         {
             m_Items->AddObject(obj);
@@ -397,24 +394,19 @@ CGameItem *CGameWorld::GetWorldItem(int serial)
             m_Items->m_Next = nullptr;
             m_Items->m_Prev = nullptr;
         }
-
         return obj;
     }
-
-    return (CGameItem *)(*i).second;
+    return (CGameItem *)(*it).second;
 }
 
 CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    WORLD_MAP::iterator i = m_Map.find(serial);
-
-    if (i == m_Map.end() || (*i).second == nullptr)
+    auto it = m_Map.find(serial);
+    if (it == m_Map.end() || (*it).second == nullptr)
     {
         CGameCharacter *obj = new CGameCharacter(serial);
-
         m_Map[serial] = obj;
-
         if (m_Items != nullptr)
         {
             m_Items->AddObject(obj);
@@ -425,24 +417,20 @@ CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
             m_Items->m_Next = nullptr;
             m_Items->m_Prev = nullptr;
         }
-
         return obj;
     }
-
-    return i->second->GameCharacterPtr();
+    return it->second->GameCharacterPtr();
 }
 
 CGameObject *CGameWorld::FindWorldObject(int serial)
 {
     DEBUG_TRACE_FUNCTION;
     CGameObject *result = nullptr;
-
-    WORLD_MAP::iterator i = m_Map.find(serial);
-    if (i != m_Map.end())
+    auto it = m_Map.find(serial);
+    if (it != m_Map.end())
     {
-        result = (*i).second;
+        result = (*it).second;
     }
-
     return result;
 }
 
@@ -450,13 +438,11 @@ CGameItem *CGameWorld::FindWorldItem(int serial)
 {
     DEBUG_TRACE_FUNCTION;
     CGameItem *result = nullptr;
-
-    WORLD_MAP::iterator i = m_Map.find(serial);
-    if (i != m_Map.end() && !((*i).second)->NPC)
+    auto it = m_Map.find(serial);
+    if (it != m_Map.end() && !((*it).second)->NPC)
     {
-        result = (CGameItem *)(*i).second;
+        result = (CGameItem *)(*it).second;
     }
-
     return result;
 }
 
@@ -464,13 +450,11 @@ CGameCharacter *CGameWorld::FindWorldCharacter(int serial)
 {
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *result = nullptr;
-
-    WORLD_MAP::iterator i = m_Map.find(serial);
-    if (i != m_Map.end() && ((*i).second)->NPC)
+    auto it = m_Map.find(serial);
+    if (it != m_Map.end() && ((*it).second)->NPC)
     {
-        result = i->second->GameCharacterPtr();
+        result = it->second->GameCharacterPtr();
     }
-
     return result;
 }
 
