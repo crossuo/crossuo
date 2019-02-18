@@ -589,11 +589,11 @@ void CConfigManager::SetClientFPS(int val)
 
         if (m_ClientFPS == MIN_FPS_LIMIT)
         {
-            g_FrameDelay[WINDOW_ACTIVE]  = 80;
+            g_FrameDelay[WINDOW_ACTIVE] = 80;
         }
         else
         {
-            g_FrameDelay[WINDOW_ACTIVE]  = 1000 / m_ClientFPS;
+            g_FrameDelay[WINDOW_ACTIVE] = 1000 / m_ClientFPS;
         }
 
         if (!m_ReduceFPSUnactiveWindow)

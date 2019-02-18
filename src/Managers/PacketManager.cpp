@@ -4533,16 +4533,14 @@ PACKET_HANDLER(SecureTrading)
     uint8_t type = ReadUInt8();
     uint32_t serial = ReadUInt32BE();
 
-    if (type == 0) //Новое трэйд окно
+    if (type == SECURE_TRADE_OPEN)
     {
         uint32_t id1 = ReadUInt32BE();
         uint32_t id2 = ReadUInt32BE();
         uint8_t hasName = ReadUInt8();
 
         CGumpSecureTrading *gump = new CGumpSecureTrading(id1, 0, 0, id1, id2);
-
         CGameObject *obj = g_World->FindWorldObject(id1);
-
         if (obj != nullptr)
         {
             obj = obj->GetTopObject()->FindSecureTradeBox();
@@ -4554,11 +4552,9 @@ PACKET_HANDLER(SecureTrading)
         }
 
         obj = g_World->FindWorldObject(id2);
-
         if (obj != nullptr)
         {
             obj = obj->GetTopObject()->FindSecureTradeBox();
-
             if (obj != nullptr)
             {
                 obj->Clear();
@@ -4572,22 +4568,29 @@ PACKET_HANDLER(SecureTrading)
 
         g_GumpManager.AddGump(gump);
     }
-    else if (type == 1)
-    { //Отмена
+    else if (type == SECURE_TRADE_CLOSE)
+    {
         g_GumpManager.CloseGump(serial, 0, GT_TRADE);
     }
-    else if (type == 2) //Обновление
+    else if (type == SECURE_TRADE_CHANGE)
     {
-        CGumpSecureTrading *gump =
-            (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
-
+        auto gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
         if (gump != nullptr)
         {
             uint32_t id1 = ReadUInt32BE();
             uint32_t id2 = ReadUInt32BE();
 
-            gump->StateMy = (id1 != 0);
+            gump->StateMine = (id1 != 0);
             gump->StateOpponent = (id2 != 0);
+        }
+    }
+    else if (type == SECURE_TRADE_UPDATEGOLD || type == SECURE_TRADE_UPDATELEDGER)
+    {
+        auto gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
+        if (gump != nullptr)
+        {
+            gump->Gold = ReadUInt32BE();
+            gump->Platinum = ReadUInt32BE();
         }
     }
 }
@@ -6456,7 +6459,7 @@ PACKET_HANDLER(CrossMessages)
                 (CGumpSecureTrading *)g_GumpManager.UpdateGump(id1, 0, GT_TRADE);
             if (gump != nullptr)
             {
-                gump->StateMy = (ReadUInt8() != 0);
+                gump->StateMine = (ReadUInt8() != 0);
                 CPacketTradeResponse(gump, 2).Send();
             }
             break;

@@ -1379,13 +1379,13 @@ void CGumpOptions::DrawPage2()
     checkbox->Checked = g_OptionsConfig.GetPaperdollSlots();
     checkbox->SetTextParameters(0, L"Add paperdoll slots", g_OptionsTextColor);
     // same line
-    checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS, 0x00D2, 0x00D3, 0x00D2, 200, y));
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P2_SCALE_IMAGES_IN_PAPERDOLL_SLOTS, 0x00D2, 0x00D3, 0x00D2, 200, y));
     checkbox->Checked = g_OptionsConfig.GetScaleImagesInPaperdollSlots();
     checkbox->SetTextParameters(0, L"Scale images in slots", g_OptionsTextColor);
     y += h;
-    checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_REMOVE_STATUSBARS_WITHOUT_OBJECTS, 0x00D2, 0x00D3, 0x00D2, 0, y));
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P2_REMOVE_STATUSBARS_WITHOUT_OBJECTS, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.RemoveStatusbarsWithoutObjects;
     checkbox->SetTextParameters(0, L"Remove statusbars without objects", g_OptionsTextColor);
     y += h;
@@ -1445,11 +1445,10 @@ void CGumpOptions::DrawPage2()
     radio->Checked = (g_OptionsConfig.ScreenshotFormat == SF_JPG);
     radio->SetTextParameters(0, L"JPG", g_OptionsTextColor);
     y += h + 3;
-    checkbox = (CGUICheckbox *)html->Add(new CGUICheckbox(
-        ID_GO_P2_OBJECT_FADE_IN_OUT, 0x00D2, 0x00D3, 0x00D2, 0, y));
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P2_OBJECT_FADE_IN_OUT, 0x00D2, 0x00D3, 0x00D2, 0, y));
     checkbox->Checked = g_OptionsConfig.RemoveOrCreateObjectsWithBlending;
-    checkbox->SetTextParameters(
-        0, L"Fade in/out objects", g_OptionsTextColor);
+    checkbox->SetTextParameters(0, L"Fade in/out objects", g_OptionsTextColor);
     y += h;
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P2_DRAW_HELMETS_ON_SHROUD, 0x00D2, 0x00D3, 0x00D2, 0, y));

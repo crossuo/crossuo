@@ -698,7 +698,7 @@ CPacketTradeResponse::CPacketTradeResponse(CGumpSecureTrading *gump, int code)
     {
         WriteUInt8(0x02);
         WriteUInt32BE(gump->ID);
-        WriteUInt32BE(static_cast<int>(gump->StateMy));
+        WriteUInt32BE(static_cast<int>(gump->StateMine));
     }
 }
 
