@@ -1221,14 +1221,16 @@ void CGameWorld::UpdateContainedItem(
         g_ObjectInHand.Clear();
     }
 
-    CGameObject *container = FindWorldObject(containerSerial);
-    if (container == nullptr)
-    {
-        return;
-    }
-
+    // GetWorldItem will try to find and if it can't find, it will create a new game object
+    // FindWorldObject will just try to find and return null.
+    // So if we're updating an item inside a container (the server said so), the container
+    // must exist. If it does not exist, we create it right here.
+    // This fixes one issue with new trading system (with the platinum currency) implemented
+    // on RunUO/ServUO 2+, but this will probably fix other hidden issues and hopefully not be
+    // problematic.
+    CGameObject *container = g_World->GetWorldItem(containerSerial);
     CGameObject *obj = FindWorldObject(serial);
-
+    assert(container && !container->NPC && "container should not be a mobile - please report this");
     if (obj != nullptr && (!container->IsCorpse() || ((CGameItem *)obj)->Layer == OL_NONE))
     {
         RemoveObject(obj);
@@ -1249,7 +1251,7 @@ void CGameWorld::UpdateContainedItem(
 
     if (obj == nullptr)
     {
-        Warning(Client, "no memory?");
+        Warning(Client, "could not find/create object serial:%08x", serial);
         return;
     }
 

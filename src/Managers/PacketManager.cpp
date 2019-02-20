@@ -1784,6 +1784,19 @@ PACKET_HANDLER(UpdateContainedItem)
 
     const uint32_t containerSerial = ReadUInt32BE();
     const uint16_t color = ReadUInt16BE();
+
+    if (IS_MOBILE(containerSerial))
+    {
+        // RunUO/ServUO send 0x6F SecureTrading SECURE_TRADE_CHANGE before any SECURE_TRADE_OPEN
+        // with mobs as the container serial followed by items packets
+        // See: https://github.com/ServUO/ServUO/blob/c4a4e62b61b2d9753abb8b9d66b90021d6f120db/Server/SecureTrade.cs#L32-L52
+        // and: https://github.com/ServUO/ServUO/blob/c4a4e62b61b2d9753abb8b9d66b90021d6f120db/Server/SecureTrade.cs#L54-L92
+        // based on the working implementation (as per POL and Sphere)
+        // Need check OSI packets on starting trade and adding second item to it
+
+        return;
+    }
+
     TRACE(
         Network,
         "update container:%08x item:%08x graphic:%04x %04x count:%d x:%d y:%d color:%04x",
@@ -4543,21 +4556,20 @@ PACKET_HANDLER(SecureTrading)
         return;
     }
 
-    uint8_t type = ReadUInt8();
-    uint32_t serial = ReadUInt32BE();
+    CGumpSecureTrading *gump = nullptr;
 
+    const uint8_t type = ReadUInt8();
+    const uint32_t serial = ReadUInt32BE();
     if (type == SECURE_TRADE_OPEN)
     {
-        uint32_t id1 = ReadUInt32BE();
-        uint32_t id2 = ReadUInt32BE();
-        uint8_t hasName = ReadUInt8();
-
-        CGumpSecureTrading *gump = new CGumpSecureTrading(id1, 0, 0, id1, id2);
+        const uint32_t id1 = ReadUInt32BE();
+        const uint32_t id2 = ReadUInt32BE();
+        const uint8_t hasName = ReadUInt8();
+        gump = new CGumpSecureTrading(id1, 0, 0, id1, id2);
         CGameObject *obj = g_World->FindWorldObject(id1);
         if (obj != nullptr)
         {
             obj = obj->GetTopObject()->FindSecureTradeBox();
-
             if (obj != nullptr)
             {
                 obj->Clear();
@@ -4578,7 +4590,6 @@ PACKET_HANDLER(SecureTrading)
         {
             gump->Text = ReadString();
         }
-
         g_GumpManager.AddGump(gump);
     }
     else if (type == SECURE_TRADE_CLOSE)
@@ -4587,24 +4598,28 @@ PACKET_HANDLER(SecureTrading)
     }
     else if (type == SECURE_TRADE_CHANGE)
     {
-        auto gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
+        gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
         if (gump != nullptr)
         {
-            uint32_t id1 = ReadUInt32BE();
-            uint32_t id2 = ReadUInt32BE();
-
+            const uint32_t id1 = ReadUInt32BE();
+            const uint32_t id2 = ReadUInt32BE();
             gump->StateMine = (id1 != 0);
             gump->StateOpponent = (id2 != 0);
         }
     }
     else if (type == SECURE_TRADE_UPDATEGOLD || type == SECURE_TRADE_UPDATELEDGER)
     {
-        auto gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
+        gump = (CGumpSecureTrading *)g_GumpManager.UpdateGump(serial, 0, GT_TRADE);
         if (gump != nullptr)
         {
             gump->Gold = ReadUInt32BE();
             gump->Platinum = ReadUInt32BE();
         }
+    }
+
+    if (gump != nullptr)
+    {
+        gump->WantUpdateContent = true;
     }
 }
 
