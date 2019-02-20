@@ -2,6 +2,11 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+
+#define IS_MOBILE(serial) ((serial & 0x40000000) == 0)
+#define IS_ITEM(serial) ((serial & 0x40000000) != 0)
+#define IS_PLAYER(serial) (serial == g_PlayerSerial)
+
 #include "Point.h"
 #include "Constants.h"
 #include "api/enumlist.h"
