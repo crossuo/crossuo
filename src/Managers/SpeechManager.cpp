@@ -23,8 +23,6 @@ CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
         CheckStart = true;
         Data.erase(Data.begin());
     }
-    //TRACE_DUMP(Client, "SPEECH:", (uint8_t*)Data.data(), Data.size()*2);
-    TRACE(Client, "[0x%04X]=(cs=%i, ce=%i) %ls", Code, CheckStart, CheckEnd, Data.c_str());
 }
 
 CSpeechManager::CSpeechManager()

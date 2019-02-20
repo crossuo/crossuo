@@ -13,51 +13,34 @@ public:
     uint32_t ObjectToRemove = 0;
 
 private:
-    void CreatePlayer(int serial);
+    void CreatePlayer(uint32_t serial);
     void RemovePlayer();
 
 public:
-    CGameWorld(int serial);
+    CGameWorld(uint32_t serial);
     ~CGameWorld();
 
     WORLD_MAP m_Map;
-    CGameObject *m_Items{ nullptr };
+    CGameObject *m_Items = nullptr;
 
     void ResetObjectHandlesState();
     void ProcessAnimation();
     void ProcessSound(int ticks, CGameCharacter *gc);
-    void SetPlayer(int serial);
-    CGameItem *GetWorldItem(int serial);
-    CGameCharacter *GetWorldCharacter(int serial);
-    CGameObject *FindWorldObject(int serial);
-    CGameItem *FindWorldItem(int serial);
-    CGameCharacter *FindWorldCharacter(int serial);
-    void ReplaceObject(CGameObject *obj, int newSerial);
+    void SetPlayer(uint32_t serial);
+    CGameItem *GetWorldItem(uint32_t serial);
+    CGameCharacter *GetWorldCharacter(uint32_t serial);
+    CGameObject *FindWorldObject(uint32_t serial);
+    CGameItem *FindWorldItem(uint32_t serial);
+    CGameCharacter *FindWorldCharacter(uint32_t serial);
+    void ReplaceObject(CGameObject *obj, uint32_t newSerial);
     void RemoveObject(CGameObject *obj);
     void RemoveFromContainer(CGameObject *obj);
     void ClearContainer(CGameObject *obj);
 
-    void PutContainer(CGameObject *obj, int containerSerial)
-    {
-        CGameObject *cnt = FindWorldObject(containerSerial);
-        if (cnt != nullptr)
-            PutContainer(obj, cnt);
-    }
-
+    void PutContainer(CGameObject *obj, uint32_t containerSerial);
     void PutContainer(CGameObject *obj, CGameObject *container);
-
-    void PutEquipment(CGameItem *obj, int containerSerial, int layer)
-    {
-        CGameObject *cnt = FindWorldObject(containerSerial);
-        if (cnt != nullptr)
-            PutEquipment(obj, cnt, layer);
-    }
-
-    void PutEquipment(CGameItem *obj, CGameObject *container, int layer)
-    {
-        PutContainer(obj, container);
-        obj->Layer = layer;
-    }
+    void PutEquipment(CGameItem *obj, uint32_t containerSerial, int layer);
+    void PutEquipment(CGameItem *obj, CGameObject *container, int layer);
 
     void MoveToTop(CGameObject *obj);
     void Dump(uint8_t tCount = 0, uint32_t serial = 0xFFFFFFFF);
@@ -65,7 +48,7 @@ public:
         int serialStart, int scanDistance, SCAN_TYPE_OBJECT scanType, SCAN_MODE_OBJECT scanMode);
 
     void UpdateContainedItem(
-        int serial,
+        uint32_t serial,
         uint16_t graphic,
         uint8_t graphicIncrement,
         uint16_t count,
@@ -77,7 +60,7 @@ public:
     void UpdateItemInContainer(CGameObject *obj, CGameObject *container, int x, int y);
 
     void UpdateGameObject(
-        int serial,
+        uint32_t serial,
         uint16_t graphic,
         uint8_t graphicIncrement,
         int count,
@@ -92,7 +75,7 @@ public:
         uint16_t a13);
 
     void UpdatePlayer(
-        int serial,
+        uint32_t serial,
         uint16_t graphic,
         uint8_t graphicIncrement,
         uint16_t color,

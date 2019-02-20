@@ -271,7 +271,7 @@ CGump *CGumpManager::GumpExists(uintptr_t gumpID)
     return nullptr;
 }
 
-CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
+CGump *CGumpManager::UpdateContent(uint32_t serial, int id, const GUMP_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
     CGump *gump = GetGump(serial, id, type);
@@ -280,11 +280,10 @@ CGump *CGumpManager::UpdateContent(int serial, int id, const GUMP_TYPE &type)
     {
         gump->WantUpdateContent = true;
     }
-
     return gump;
 }
 
-CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
+CGump *CGumpManager::UpdateGump(uint32_t serial, int id, const GUMP_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
     CGump *gump = GetGump(serial, id, type);
@@ -293,15 +292,13 @@ CGump *CGumpManager::UpdateGump(int serial, int id, const GUMP_TYPE &type)
     {
         gump->WantRedraw = true;
     }
-
     return gump;
 }
 
-CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
+CGump *CGumpManager::GetGump(uint32_t serial, int id, const GUMP_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
-
     while (gump != nullptr)
     {
         if (gump->GumpType == type)
@@ -333,10 +330,8 @@ CGump *CGumpManager::GetGump(int serial, int id, const GUMP_TYPE &type)
                 }
             }
         }
-
         gump = (CGump *)gump->m_Next;
     }
-
     return gump;
 }
 

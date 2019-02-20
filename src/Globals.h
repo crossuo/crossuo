@@ -418,7 +418,7 @@ extern string g_PingString; // Debug Info
 #define DEBUG_TRACE_FUNCTION                                                                       \
     do                                                                                             \
     {                                                                                              \
-        fprintf(stdout, "CALL: %s\n", __FUNCTION__);                                               \
+        fprintf(stdout, "CALL: %s:%d: %s\n", __FILE__, __LINE__, __FUNCTION__);                    \
     } while (0)
 #else
 #define DEBUG_TRACE_FUNCTION

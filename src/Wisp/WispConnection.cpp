@@ -1,4 +1,4 @@
-﻿
+
 
 #include "WispConnection.h"
 #include "WispPacketMessage.h"
@@ -106,7 +106,7 @@ bool CConnection::Read(int maxSize)
 
         if (size > 0)
         {
-            Info(Network, "CConnection::Read size=%i", size);
+            //TRACE(Network, "CConnection::Read size=%i", size);
             data.resize(size);
             data = Decompression(data);
             m_MessageParser->Append(data);
@@ -144,7 +144,7 @@ int CConnection::Send(const vector<uint8_t> &data)
     }
 
     const int sent = Send((uint8_t *)&data[0], (int)data.size());
-    Info(Network, "CConnection::Send=>%i", sent);
+    //TRACE(Network, "CConnection::Send=>%i", sent);
     return sent;
 }
 }; // namespace Wisp
