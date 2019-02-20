@@ -34,9 +34,9 @@ const char *log_system_name(int sys)
 
 void LogInit(int argc, char *argv[], const char *filename)
 {
+    loguru::g_stderr_verbosity = 1;
     loguru::init(argc, argv);
     loguru::add_file(filename, loguru::Truncate, loguru::Verbosity_INFO);
-    loguru::g_stderr_verbosity = 1;
     loguru::g_preamble_date = false;
     loguru::g_preamble_time = false;
 
@@ -60,7 +60,10 @@ void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, in
             break;
     }
 
-    VLOG_F(sys, level, title);
+    if (title && title[0] != '\0')
+    {
+        VLOG_F(sys, level, title);
+    }
     int num_lines = size / 16;
     if (size % 16 != 0)
     {

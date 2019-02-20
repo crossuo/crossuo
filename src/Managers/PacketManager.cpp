@@ -1713,31 +1713,36 @@ PACKET_HANDLER(EquipItem)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
+    const uint32_t serial = ReadUInt32BE();
+    const uint16_t graphic = ReadUInt16BE();
+    Move(1); // probably padding
+    const uint8_t layer = ReadUInt8();
+    const uint32_t containerSerial = ReadUInt32BE();
+    const uint16_t color = ReadUInt16BE();
 
     CGameItem *obj = g_World->GetWorldItem(serial);
     obj->MapIndex = g_CurrentMap;
-
     if ((obj->Graphic != 0u) && obj->Layer != OL_BACKPACK)
     {
         obj->Clear();
     }
-
-    obj->Graphic = ReadUInt16BE();
-    Move(1);
-    int layer = ReadUInt8();
-    uint32_t cserial = ReadUInt32BE();
-    obj->Color = g_ColorManager.FixColor(ReadUInt16BE());
-
+    obj->Graphic = graphic;
+    obj->Color = g_ColorManager.FixColor(color);
     if (obj->Container != 0xFFFFFFFF)
     {
         g_GumpManager.UpdateContent(obj->Container, 0, GT_CONTAINER);
         g_GumpManager.UpdateContent(obj->Container, 0, GT_PAPERDOLL);
     }
 
-    g_World->PutEquipment(obj, cserial, layer);
+    TRACE(
+        Network,
+        "player:%08x equip item:%08x into container:%08x layer:%02x",
+        g_PlayerSerial,
+        serial,
+        containerSerial,
+        layer);
+    g_World->PutEquipment(obj, containerSerial, layer);
     obj->OnGraphicChange();
-
     if (g_NewTargetSystem.Serial == serial)
     {
         g_NewTargetSystem.Serial = 0;
@@ -1749,10 +1754,10 @@ PACKET_HANDLER(EquipItem)
     }
     else if (layer < OL_MOUNT)
     {
-        g_GumpManager.UpdateContent(cserial, 0, GT_PAPERDOLL);
+        g_GumpManager.UpdateContent(containerSerial, 0, GT_PAPERDOLL);
     }
 
-    if (cserial == g_PlayerSerial && (layer == OL_1_HAND || layer == OL_2_HAND))
+    if (containerSerial == g_PlayerSerial && (layer == OL_1_HAND || layer == OL_2_HAND))
     {
         g_Player->UpdateAbilities();
     }
@@ -1766,20 +1771,30 @@ PACKET_HANDLER(UpdateContainedItem)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-    uint16_t graphic = ReadUInt16BE();
-    uint8_t graphicIncrement = ReadUInt8();
-    uint16_t count = ReadUInt16BE();
-    uint16_t x = ReadUInt16BE();
-    uint16_t y = ReadUInt16BE();
-
+    const uint32_t serial = ReadUInt32BE();
+    const uint16_t graphic = ReadUInt16BE();
+    const uint8_t graphicIncrement = ReadUInt8();
+    const uint16_t count = ReadUInt16BE();
+    const uint16_t x = ReadUInt16BE();
+    const uint16_t y = ReadUInt16BE();
     if (g_Config.ProtocolClientVersion >= CV_6017)
     {
-        Move(1);
+        Move(1); // Grid Location?
     }
 
-    uint32_t containerSerial = ReadUInt32BE();
-    uint16_t color = ReadUInt16BE();
+    const uint32_t containerSerial = ReadUInt32BE();
+    const uint16_t color = ReadUInt16BE();
+    TRACE(
+        Network,
+        "update container:%08x item:%08x graphic:%04x %04x count:%d x:%d y:%d color:%04x",
+        containerSerial,
+        serial,
+        graphic,
+        graphicIncrement,
+        count,
+        x,
+        y,
+        color);
 
     g_World->UpdateContainedItem(
         serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
@@ -1793,38 +1808,36 @@ PACKET_HANDLER(UpdateContainedItems)
         return;
     }
 
-    uint16_t itemsCount = ReadUInt16BE();
-
+    const uint16_t itemsCount = ReadUInt16BE();
     for (int i = 0; i < itemsCount; i++)
     {
-        uint32_t serial = ReadUInt32BE();
-        uint16_t graphic = ReadUInt16BE();
-        uint8_t graphicIncrement = ReadUInt8();
-        uint16_t count = ReadUInt16BE();
-        uint16_t x = ReadUInt16BE();
-        uint16_t y = ReadUInt16BE();
-
+        const uint32_t serial = ReadUInt32BE();
+        const uint16_t graphic = ReadUInt16BE();
+        const uint8_t graphicIncrement = ReadUInt8();
+        const uint16_t count = ReadUInt16BE();
+        const uint16_t x = ReadUInt16BE();
+        const uint16_t y = ReadUInt16BE();
         if (g_Config.ProtocolClientVersion >= CV_6017)
         {
-            Move(1);
+            Move(1); // Grid Location?
         }
 
-        uint32_t containerSerial = ReadUInt32BE();
-        uint16_t color = ReadUInt16BE();
-
+        const uint32_t containerSerial = ReadUInt32BE();
+        const uint16_t color = ReadUInt16BE();
         if (i == 0)
         {
             CGameObject *container = g_World->FindWorldObject(containerSerial);
-
             if (container != nullptr)
             {
-                Info(Network, "clearing container %08X", containerSerial);
+                TRACE(Network, "clearing container serial:%08x", containerSerial);
                 if (container->IsCorpse())
                 {
+                    TRACE(Network, "container is a corpse");
                     container->ClearUnequipped();
                 }
                 else
                 {
+                    TRACE(Network, "contaienr cleared");
                     container->Clear();
                 }
 
@@ -1852,6 +1865,19 @@ PACKET_HANDLER(UpdateContainedItems)
             }
         }
 
+        // CHECK: https://github.com/andreakarasho/ClassicUO/blob/master/src/Network/PacketHandlers.cs#L1231-L1244
+
+        TRACE(
+            Network,
+            "- update container:%08x item:%08x graphic:%04x %04x count:%d x:%d y:%d color:%04x",
+            containerSerial,
+            serial,
+            graphic,
+            graphicIncrement,
+            count,
+            x,
+            y,
+            color);
         g_World->UpdateContainedItem(
             serial, graphic, graphicIncrement, count, x, y, containerSerial, color);
     }
@@ -1991,24 +2017,20 @@ PACKET_HANDLER(DeleteObject)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-
+    const uint32_t serial = ReadUInt32BE();
     if (serial == g_PlayerSerial)
     {
         return;
     }
 
     CGameObject *obj = g_World->FindWorldObject(serial);
-
     if (obj != nullptr)
     {
         bool updateAbilities = false;
-        uint32_t cont = obj->Container & 0x7FFFFFFF;
-
+        const uint32_t cont = obj->Container & 0x7FFFFFFF;
         if (obj->Container != 0xFFFFFFFF)
         {
             CGameObject *top = obj->GetTopObject();
-
             if (top != nullptr)
             {
                 if (top->IsPlayer())
@@ -2018,7 +2040,6 @@ PACKET_HANDLER(DeleteObject)
                 }
 
                 CGameObject *tradeBox = top->FindSecureTradeBox();
-
                 if (tradeBox != nullptr)
                 {
                     g_GumpManager.UpdateContent(0, tradeBox->Serial, GT_TRADE);
@@ -2036,11 +2057,9 @@ PACKET_HANDLER(DeleteObject)
             }
 
             CGump *gump = g_GumpManager.UpdateContent(cont, 0, GT_CONTAINER);
-
             if (obj->Graphic == 0x0EB0)
             {
                 g_GumpManager.CloseGump(serial, cont, GT_BULLETIN_BOARD_ITEM);
-
                 CGumpBulletinBoard *bbGump =
                     (CGumpBulletinBoard *)g_GumpManager.UpdateGump(cont, 0, GT_BULLETIN_BOARD);
 
@@ -2051,9 +2070,7 @@ PACKET_HANDLER(DeleteObject)
                         if (go->Serial == serial)
                         {
                             bbGump->m_HTMLGump->Delete(go);
-
                             int posY = 0;
-
                             QFOR(go1, bbGump->m_HTMLGump->m_Items, CBaseGUI *)
                             {
                                 if (go1->Type == GOT_BB_OBJECT)
@@ -2062,9 +2079,7 @@ PACKET_HANDLER(DeleteObject)
                                     posY += 18;
                                 }
                             }
-
                             bbGump->m_HTMLGump->CalculateDataSize();
-
                             break;
                         }
                     }
@@ -2079,7 +2094,6 @@ PACKET_HANDLER(DeleteObject)
                 if (g_Party.Contains(obj->Serial))
                 {
                     g_GumpManager.UpdateContent(obj->Serial, 0, GT_STATUSBAR);
-
                     obj->RemoveRender();
                 }
                 else
@@ -2090,7 +2104,6 @@ PACKET_HANDLER(DeleteObject)
             else
             {
                 g_World->RemoveObject(obj);
-
                 if (updateAbilities)
                 {
                     g_Player->UpdateAbilities();

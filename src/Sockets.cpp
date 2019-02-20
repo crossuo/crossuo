@@ -6,12 +6,12 @@
 #include <cassert>
 #include <string.h>
 
-#if 0
-#define SOCKET_LOG(...)
+#if 1
 #define SOCKET_DUMP(...)
+#define SOCKET_LOG(...)
 #else
 #define SOCKET_LOG(...) DEBUG(Network, __VA_ARGS__)
-#define SOCKET_DUMP(...) DEBUG_DUMP(Network, "", __VA_ARGS__)
+#define SOCKET_DUMP(...) DEBUG_DUMP(Network, "<raw>", __VA_ARGS__)
 #endif
 
 #if USE_PING

@@ -20,9 +20,9 @@ public:
     virtual ~CGumpManager() {}
 
     void AddGump(CGump *obj);
-    CGump *UpdateContent(int serial, int id, const GUMP_TYPE &type);
-    CGump *UpdateGump(int serial, int id, const GUMP_TYPE &type);
-    CGump *GetGump(int serial, int id, const GUMP_TYPE &type);
+    CGump *UpdateContent(uint32_t serial, int id, const GUMP_TYPE &type);
+    CGump *UpdateGump(uint32_t serial, int id, const GUMP_TYPE &type);
+    CGump *GetGump(uint32_t serial, int id, const GUMP_TYPE &type);
     CGump *GetTextEntryOwner();
     CGump *GumpExists(uintptr_t gumpID);
     void CloseGump(uint32_t serial, uint32_t ID, GUMP_TYPE Type);

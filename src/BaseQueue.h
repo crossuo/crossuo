@@ -14,7 +14,7 @@ public:
     CBaseQueue();
     virtual ~CBaseQueue();
 
-    CBaseQueueItem *m_Items;
+    CBaseQueueItem *m_Items = nullptr;
 
     virtual void Clear();
     virtual CBaseQueueItem *Add(CBaseQueueItem *item);

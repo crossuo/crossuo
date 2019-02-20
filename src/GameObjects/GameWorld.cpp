@@ -22,7 +22,7 @@
 
 CGameWorld *g_World = nullptr;
 
-CGameWorld::CGameWorld(int serial)
+CGameWorld::CGameWorld(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     CreatePlayer(serial);
@@ -49,8 +49,7 @@ CGameWorld::~CGameWorld()
 
 void CGameWorld::ResetObjectHandlesState()
 {
-    QFOR(obj, m_Items, CGameObject *)
-    obj->ClosedObjectHandle = false;
+    QFOR(obj, m_Items, CGameObject *) { obj->ClosedObjectHandle = false; }
 }
 
 void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
@@ -331,7 +330,7 @@ void CGameWorld::ProcessAnimation()
     }
 }
 
-void CGameWorld::CreatePlayer(int serial)
+void CGameWorld::CreatePlayer(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     RemovePlayer();
@@ -367,7 +366,7 @@ void CGameWorld::RemovePlayer()
     }
 }
 
-void CGameWorld::SetPlayer(int serial)
+void CGameWorld::SetPlayer(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     if (serial != g_Player->Serial)
@@ -376,7 +375,7 @@ void CGameWorld::SetPlayer(int serial)
     }
 }
 
-CGameItem *CGameWorld::GetWorldItem(int serial)
+CGameItem *CGameWorld::GetWorldItem(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     auto it = m_Map.find(serial);
@@ -399,7 +398,7 @@ CGameItem *CGameWorld::GetWorldItem(int serial)
     return (CGameItem *)(*it).second;
 }
 
-CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
+CGameCharacter *CGameWorld::GetWorldCharacter(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     auto it = m_Map.find(serial);
@@ -422,7 +421,7 @@ CGameCharacter *CGameWorld::GetWorldCharacter(int serial)
     return it->second->GameCharacterPtr();
 }
 
-CGameObject *CGameWorld::FindWorldObject(int serial)
+CGameObject *CGameWorld::FindWorldObject(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     CGameObject *result = nullptr;
@@ -434,7 +433,7 @@ CGameObject *CGameWorld::FindWorldObject(int serial)
     return result;
 }
 
-CGameItem *CGameWorld::FindWorldItem(int serial)
+CGameItem *CGameWorld::FindWorldItem(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     CGameItem *result = nullptr;
@@ -446,7 +445,7 @@ CGameItem *CGameWorld::FindWorldItem(int serial)
     return result;
 }
 
-CGameCharacter *CGameWorld::FindWorldCharacter(int serial)
+CGameCharacter *CGameWorld::FindWorldCharacter(uint32_t serial)
 {
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *result = nullptr;
@@ -458,7 +457,7 @@ CGameCharacter *CGameWorld::FindWorldCharacter(int serial)
     return result;
 }
 
-void CGameWorld::ReplaceObject(CGameObject *obj, int newSerial)
+void CGameWorld::ReplaceObject(CGameObject *obj, uint32_t newSerial)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -560,11 +559,34 @@ void CGameWorld::ClearContainer(CGameObject *obj)
     }
 }
 
+void CGameWorld::PutContainer(CGameObject *obj, uint32_t containerSerial)
+{
+    CGameObject *cnt = FindWorldObject(containerSerial);
+    if (cnt != nullptr)
+    {
+        PutContainer(obj, cnt);
+    }
+}
+
 void CGameWorld::PutContainer(CGameObject *obj, CGameObject *container)
 {
-    DEBUG_TRACE_FUNCTION;
     RemoveFromContainer(obj);
     container->AddItem(obj);
+}
+
+void CGameWorld::PutEquipment(CGameItem *obj, uint32_t containerSerial, int layer)
+{
+    CGameObject *cnt = FindWorldObject(containerSerial);
+    if (cnt != nullptr)
+    {
+        PutEquipment(obj, cnt, layer);
+    }
+}
+
+void CGameWorld::PutEquipment(CGameItem *obj, CGameObject *container, int layer)
+{
+    PutContainer(obj, container);
+    obj->Layer = layer;
 }
 
 void CGameWorld::MoveToTop(CGameObject *obj)
@@ -814,7 +836,7 @@ CGameObject *CGameWorld::SearchWorldObject(
 }
 
 void CGameWorld::UpdateGameObject(
-    int serial,
+    uint32_t serial,
     uint16_t graphic,
     uint8_t graphicIncrement,
     int count,
@@ -1045,7 +1067,7 @@ void CGameWorld::UpdateGameObject(
 
         Info(
             Client,
-            "NPC serial:0x%08X graphic:0x%04X color:0x%04X xyz:%d,%d,%d flags:0x%02X direction:%d notoriety:%d",
+            "NPC serial:0x%08x graphic:0x%04x color:0x%04x xyz:%d,%d,%d flags:0x%02x direction:%d notoriety:%d",
             obj->Serial,
             obj->Graphic,
             obj->Color,
@@ -1070,7 +1092,7 @@ void CGameWorld::UpdateGameObject(
 }
 
 void CGameWorld::UpdatePlayer(
-    int serial,
+    uint32_t serial,
     uint16_t graphic,
     uint8_t graphicIncrement,
     uint16_t color,
@@ -1148,29 +1170,25 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
     obj->SetX(x);
     obj->SetY(y);
     PutContainer(obj, container);
-
-    uint32_t containerSerial = container->Serial;
+    const uint32_t containerSerial = container->Serial;
 
     CGump *gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_BULLETIN_BOARD);
-
+    // Message board item
     if (gump != nullptr)
-    { //Message board item
+    {
         CPacketBulletinBoardRequestMessageSummary(containerSerial, obj->Serial).Send();
     }
     else
     {
         gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_SPELLBOOK);
-
         if (gump == nullptr)
         {
             gump = g_GumpManager.UpdateContent(containerSerial, 0, GT_CONTAINER);
-
             if (gump != nullptr && gump->GumpType == GT_CONTAINER)
             {
                 ((CGumpContainer *)gump)->UpdateItemCoordinates(obj);
             }
         }
-
         if (gump != nullptr && !container->NPC)
         {
             ((CGameItem *)container)->Opened = true;
@@ -1178,11 +1196,9 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
     }
 
     CGameObject *top = container->GetTopObject();
-
     if (top != nullptr)
     {
         top = top->FindSecureTradeBox();
-
         if (top != nullptr)
         {
             g_GumpManager.UpdateContent(0, top->Serial, GT_TRADE);
@@ -1191,7 +1207,7 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
 }
 
 void CGameWorld::UpdateContainedItem(
-    int serial,
+    uint32_t serial,
     uint16_t graphic,
     uint8_t graphicIncrement,
     uint16_t count,
@@ -1206,7 +1222,6 @@ void CGameWorld::UpdateContainedItem(
     }
 
     CGameObject *container = FindWorldObject(containerSerial);
-
     if (container == nullptr)
     {
         return;
@@ -1239,20 +1254,15 @@ void CGameWorld::UpdateContainedItem(
     }
 
     obj->MapIndex = g_CurrentMap;
-
     obj->Graphic = graphic + graphicIncrement;
     obj->OnGraphicChange();
     obj->Color = g_ColorManager.FixColor(color, (color & 0x8000));
-
     if (count == 0u)
     {
         count = 1;
     }
-
     obj->Count = count;
-
     UpdateItemInContainer(obj, container, x, y);
-
     MoveToTop(obj);
 
     Info(
