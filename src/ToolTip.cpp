@@ -32,22 +32,17 @@ void CToolTip::CreateTextTexture(
 {
     g_FontManager.SetUseHTML(true);
     g_FontManager.RecalculateWidthByInfo = true;
-
     texture.Clear();
-
-    uint8_t font = (uint8_t)g_ConfigManager.ToolTipsTextFont;
-
+    auto font = (uint8_t)g_ConfigManager.ToolTipsTextFont;
     if (width == 0)
     {
         width = g_FontManager.GetWidthW(font, str);
-
         if (width > 600)
         {
             width = 600;
         }
 
         width = g_FontManager.GetWidthExW(font, str, width, TS_CENTER, UOFONT_BLACK_BORDER);
-
         if (width > 600)
         {
             width = 600;
@@ -82,9 +77,7 @@ void CToolTip::Set(const wstring &str, int maxWidth)
     }
 
     Use = !(Timer > g_Ticks);
-
     CRenderObject *object = g_SelectedObject.Object;
-
     if (object == m_Object || object == nullptr)
     { //Уже забиндено или нет объекта для бинда
         return;
@@ -96,7 +89,6 @@ void CToolTip::Set(const wstring &str, int maxWidth)
     Data = str;
     ClilocID = 0;
     MaxWidth = maxWidth;
-
     Position.X = 0;
     Position.Y = 0;
 
@@ -107,7 +99,6 @@ void CToolTip::Set(int clilocID, const string &str, int maxWidth, bool toCamelCa
 {
     DEBUG_TRACE_FUNCTION;
     Set(g_ClilocManager.Cliloc(g_Language)->GetW(clilocID, toCamelCase, str), maxWidth);
-
     ClilocID = clilocID;
 }
 
@@ -128,7 +119,6 @@ void CToolTip::Draw(int cursorWidth, int cursorHeight)
     {
         int x = Position.X;
         int y = Position.Y;
-
         if (x == 0)
         {
             x = g_MouseManager.Position.X - (Texture.Width + 8);
@@ -153,17 +143,11 @@ void CToolTip::Draw(int cursorWidth, int cursorHeight)
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-
         g_GL.DrawPolygone(x, y, Texture.Width + 8, Texture.Height + 8);
-
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
         glDisable(GL_BLEND);
-
         g_GL_Draw(Texture, x + 6, y + 4);
     }
-
     Use = false;
 }

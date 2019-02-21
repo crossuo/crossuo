@@ -83,7 +83,6 @@ static const wstring tooltip[] = {
     L"Change strength state",       //ID_GSB_BUFF_LOCKER_STR
     L"Change dexterity state",      //ID_GSB_BUFF_LOCKER_DEX
     L"Change intelligence state",   //ID_GSB_BUFF_LOCKER_INT
-    L"",                            //
     L"Strength",                    //ID_GSB_TEXT_STR
     L"Dexterity",                   //ID_GSB_TEXT_DEX
     L"Intelligence",                //ID_GSB_TEXT_INT
@@ -92,7 +91,7 @@ static const wstring tooltip[] = {
     L"Hit Points",                  //ID_GSB_TEXT_HITS
     L"Stamina",                     //ID_GSB_TEXT_STAM
     L"Mana",                        //ID_GSB_TEXT_MANA
-    L"Maximum stats",               //ID_GSB_TEXT_MAX_STATS
+    L"Maximum Stats",               //ID_GSB_TEXT_MAX_STATS
     L"Luck",                        //ID_GSB_TEXT_LUCK
     L"Weight",                      //ID_GSB_TEXT_WEIGHT
     L"Damage",                      //ID_GSB_TEXT_DAMAGE
@@ -115,7 +114,7 @@ static const wstring tooltip[] = {
     L"Faster Cast Recovery"         //ID_GSB_TEXT_CAST_RECOVERY
 };
 
-static_assert(countof(tooltip) - 1 == ID_GSB_COUNT, "Wrong amount of entries in tooltip table");
+static_assert(countof(tooltip) == ID_GSB_COUNT, "Wrong amount of entries in tooltip table");
 
 CGumpStatusbar::CGumpStatusbar(uint32_t serial, short x, short y, bool minimized)
     : CGump(GT_STATUSBAR, serial, x, y)
@@ -1049,7 +1048,8 @@ void CGumpStatusbar::UpdateContent()
                 text->CreateTextureA(1, std::to_string(g_Player->MaxWeight), textWidth, TS_CENTER);
 
                 xOffset = useUOPGumps ? 205 : 188;
-                Add(new CGUIHitBox(ID_GSB_TEXT_TITHING_POINTS, xOffset, 70, 65, 24));
+                Add(new CGUIHitBox(ID_GSB_TEXT_MAX_STATS, xOffset, 70, 65, 24));
+                //Add(new CGUIHitBox(ID_GSB_TEXT_TITHING_POINTS, xOffset, 70, 65, 24)); // Find which client version had Tithing Points
                 Add(new CGUIHitBox(ID_GSB_TEXT_LUCK, xOffset, 98, 65, 24));
                 Add(new CGUIHitBox(ID_GSB_TEXT_WEIGHT, xOffset, 126, 65, 24));
 

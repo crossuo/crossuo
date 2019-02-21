@@ -5,6 +5,8 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
 
+static const int ID_GSF_FONTS = 1;
+
 CGumpSelectFont::CGumpSelectFont(uint32_t serial, short x, short y, SELECT_FONT_GUMP_STATE state)
     : CGump(GT_SELECT_FONT, serial, x, y)
     , m_State(state)
@@ -21,10 +23,8 @@ void CGumpSelectFont::UpdateContent()
     Clear();
 
     CGUIResizepic *background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x0A28, 0, 0, 200, 70));
-
     CGUIText *text = (CGUIText *)Add(new CGUIText(0, 60, 22));
-    text->CreateTextureW(0, L"Select font");
-
+    text->CreateTextureW(0, L"Select Font");
     auto selected = 0;
     switch (m_State)
     {
@@ -47,11 +47,9 @@ void CGumpSelectFont::UpdateContent()
             break;
     }
 
-    int drawY = 46;
-
     Add(new CGUIGroup(1));
+    int drawY = 46;
     int count = 0;
-
     for (int i = 0; i < 20; i++)
     {
         if (g_FontManager.UnicodeFontExists(i))
@@ -59,14 +57,12 @@ void CGumpSelectFont::UpdateContent()
             CGUIRadio *radio = (CGUIRadio *)Add(
                 new CGUIRadio((int)i + ID_GSF_FONTS, 0x00D0, 0x00D1, 0x00D0, 50, drawY));
             radio->Checked = (i == selected);
-            radio->SetTextParameters((uint8_t)i, L"This font", 0);
+            radio->SetTextParameters((uint8_t)i, L"This Font", 0);
             drawY += 22;
             count++;
         }
     }
-
     background->Height = 70 + (count * 22);
-
     Add(new CGUIGroup(0));
 }
 
@@ -80,7 +76,6 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
 
     int realFont = -1;
     int count = serial - ID_GSF_FONTS;
-
     for (int i = 0; i < 20; i++)
     {
         if (g_FontManager.UnicodeFontExists(i))
@@ -90,7 +85,6 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
                 realFont = i;
                 break;
             }
-
             count--;
         }
     }
@@ -106,21 +100,18 @@ void CGumpSelectFont::GUMP_RADIO_EVENT_C
         {
             g_OptionsConfig.ToolTipsTextFont = realFont;
             RemoveMark = true;
-
             break;
         }
         case SFGS_OPT_CHAT:
         {
             g_OptionsConfig.ChatFont = realFont;
             RemoveMark = true;
-
             break;
         }
         case SFGS_OPT_MISCELLANEOUS:
         {
             g_OptionsConfig.SpeechFont = realFont;
             RemoveMark = true;
-
             break;
         }
         default:

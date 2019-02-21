@@ -66,7 +66,7 @@ public:
 
     bool UseToolTips = false;
     uint16_t ToolTipsTextColor = 0;
-    uint16_t ToolTipsTextFont = 0;
+    uint16_t ToolTipsTextFont = 1; // As per client 7.0.47.0
     uint16_t ToolTipsDelay = 0;
 
     uint16_t ChatColorInputText = 0;

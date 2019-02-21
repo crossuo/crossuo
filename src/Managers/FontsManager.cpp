@@ -1625,94 +1625,91 @@ void CFontsManager::TrimHTMLString(string &str)
     }
 }
 
-uint32_t CFontsManager::GetHTMLColorFromText(string &str)
+uint32_t CFontsManager::GetHTMLColorFromText(string &str1)
 {
     DEBUG_TRACE_FUNCTION;
     uint32_t color = 0;
-
-    if (str.length() > 1)
+    const char *str = str1.data();
+    if (str1.length() > 1)
     {
         if (str[0] == '#')
         {
             char *end;
-            color = strtoul(str.c_str() + 1, &end, 16);
-
+            color = strtoul(str + 1, &end, 16);
             uint8_t *clrBuf = (uint8_t *)&color;
             color = (clrBuf[0] << 24) | (clrBuf[1] << 16) | (clrBuf[2] << 8) | 0xFF;
         }
         else
         {
-            str = ToLowerA(str);
-
-            if (str == "red")
+            if (!SDL_strcasecmp(str, "red"))
             {
                 color = 0x0000FFFF;
             }
-            else if (str == "cyan")
+            else if (!SDL_strcasecmp(str, "cyan"))
             {
                 color = 0xFFFF00FF;
             }
-            else if (str == "blue")
+            else if (!SDL_strcasecmp(str, "blue"))
             {
                 color = 0xFF0000FF;
             }
-            else if (str == "darkblue")
+            else if (!SDL_strcasecmp(str, "darkblue"))
             {
                 color = 0xA00000FF;
             }
-            else if (str == "lightblue")
+            else if (!SDL_strcasecmp(str, "lightblue"))
             {
                 color = 0xE6D8ADFF;
             }
-            else if (str == "purple")
+            else if (!SDL_strcasecmp(str, "purple"))
             {
                 color = 0x800080FF;
             }
-            else if (str == "yellow")
+            else if (!SDL_strcasecmp(str, "yellow"))
             {
                 color = 0x00FFFFFF;
             }
-            else if (str == "lime")
+            else if (!SDL_strcasecmp(str, "lime"))
             {
                 color = 0x00FF00FF;
             }
-            else if (str == "magenta")
+            else if (!SDL_strcasecmp(str, "magenta"))
             {
                 color = 0xFF00FFFF;
             }
-            else if (str == "white")
+            else if (!SDL_strcasecmp(str, "white"))
             {
                 color = 0xFFFEFEFF;
             }
-            else if (str == "silver")
+            else if (!SDL_strcasecmp(str, "silver"))
             {
                 color = 0xC0C0C0FF;
             }
-            else if (str == "gray" || str == "grey")
+            else if (!SDL_strcasecmp(str, "gray") || !SDL_strcasecmp(str, "grey"))
             {
                 color = 0x808080FF;
             }
-            else if (str == "black")
+            else if (!SDL_strcasecmp(str, "black"))
             {
                 color = 0x010101FF;
             }
-            else if (str == "orange")
+            else if (!SDL_strcasecmp(str, "orange"))
             {
                 color = 0x00A5FFFF;
             }
-            else if (str == "brown")
+            else if (!SDL_strcasecmp(str, "brown"))
             {
                 color = 0x2A2AA5FF;
             }
-            else if (str == "maroon")
+            else if (!SDL_strcasecmp(str, "maroon"))
             {
                 color = 0x000080FF;
             }
-            else if (str == "green")
+            else if (!SDL_strcasecmp(str, "green"))
             {
                 color = 0x008000FF;
             }
-            else if (str == "olive")
+            else if (!SDL_strcasecmp(str, "olive"))
             {
                 color = 0x008080FF;
             }
@@ -1884,9 +1881,9 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
     {
         int cmdLen = i - j;
         //LOG("cmdLen = %i\n", cmdLen);
-        wstring cmd;
-        cmd.resize(cmdLen);
-        memcpy(&cmd[0], &str[j], cmdLen * 2);
+        wstring cmd(&str[j], cmdLen);
+        //cmd.resize(cmdLen);
+        //memcpy(&cmd[0], &str[j], cmdLen * 2);
         //LOG(L"cmd[%s] = %s\n", (endTag ? L"end" : L"start"), cmd.c_str());
         cmd = ToLowerW(cmd);
 
@@ -1995,11 +1992,10 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
                     case HTT_A:
                     case HTT_DIV:
                     {
-                        wstring content = {};
                         cmdLen = i - j;
                         //LOG("contentCmdLen = %i\n", cmdLen);
-                        content.resize(cmdLen);
-                        memcpy(&content[0], &str[j], cmdLen * 2);
+                        wstring content(&str[j], cmdLen);
+                        //memcpy(&content[0], &str[j], cmdLen * 2);
                         //LOG(L"contentCmd = %s\n", content.c_str());
 
                         if (static_cast<unsigned int>(!content.empty()) != 0u)
