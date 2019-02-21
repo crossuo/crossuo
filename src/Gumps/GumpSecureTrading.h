@@ -19,6 +19,10 @@ public:
     string Text;
 
 private:
+    uint8_t mdbx = 45;
+    uint8_t mdby = 70;
+    uint8_t odbx = 192;
+    uint8_t odby = 70;
     CTextRenderer m_TextRenderer = CTextRenderer();
     CGUIButton *m_MyCheck = nullptr;
     CGUIGumppic *m_OpponentCheck = nullptr;
