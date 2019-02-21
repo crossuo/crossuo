@@ -422,7 +422,7 @@ void CConfigManager::DefaultPage3()
     DEBUG_TRACE_FUNCTION;
     UseToolTips = true;
     ToolTipsTextColor = 0xFFFF;
-    ToolTipsTextFont = 0;
+    ToolTipsTextFont = 1;
     ToolTipsDelay = 200;
 }
 

@@ -2052,7 +2052,7 @@ void CGumpOptions::DrawPage5()
     button->ProcessPressedState = true;
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 134, 82));
-    text->CreateTextureW(0, L"Keystroke");
+    text->CreateTextureW(1, L"Keystroke");
 
     //KeyBox
     Add(new CGUIGumppic(0x098B, 133, 112));
@@ -2062,7 +2062,7 @@ void CGumpOptions::DrawPage5()
     m_MacroKey->CheckOnSerial = true;
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 200, 111));
-    text->CreateTextureW(0, L"Key");
+    text->CreateTextureW(1, L"Key");
 
     //Shift checkbox
     m_MacroCheckboxShift = (CGUICheckbox *)Add(
@@ -2070,7 +2070,7 @@ void CGumpOptions::DrawPage5()
     m_MacroCheckboxShift->GraphicSelected = 0x0868;
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 280, 82));
-    text->CreateTextureW(0, L"Shift");
+    text->CreateTextureW(1, L"Shift");
 
     //Alt checkbox
     m_MacroCheckboxAlt = (CGUICheckbox *)Add(
@@ -2078,7 +2078,7 @@ void CGumpOptions::DrawPage5()
     m_MacroCheckboxAlt->GraphicSelected = 0x0868;
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 280, 111));
-    text->CreateTextureW(0, L"Alt");
+    text->CreateTextureW(1, L"Alt");
 
     //Ctrl checkbox
     m_MacroCheckboxCtrl = (CGUICheckbox *)Add(
@@ -2086,10 +2086,10 @@ void CGumpOptions::DrawPage5()
     m_MacroCheckboxCtrl->GraphicSelected = 0x0868;
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 280, 140));
-    text->CreateTextureW(0, L"Ctrl");
+    text->CreateTextureW(1, L"Ctrl");
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 134, 163));
-    text->CreateTextureW(0, L"Actions");
+    text->CreateTextureW(1, L"Actions");
 
     m_MacroDataBox = (CGUIDataBox *)Add(new CGUIDataBox());
 }
