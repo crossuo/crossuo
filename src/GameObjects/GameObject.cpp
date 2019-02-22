@@ -140,7 +140,13 @@ void CGameObject::DrawObjectHandlesTexture()
         y -= g_Game.GetStaticArtDimension(Graphic).Height;
     }
 
-    m_TextureObjectHalndes.Draw(x, y);
+    if (g_ConfigManager.ObjectHandlesNoBodies && IsCorpse())
+    {
+    }
+    else
+    {
+        m_TextureObjectHalndes.Draw(x, y);
+    }
 }
 
 void CGameObject::SelectObjectHandlesTexture()

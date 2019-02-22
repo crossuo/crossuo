@@ -149,6 +149,7 @@ enum
     ID_GO_P6_GRAY_OUT_OF_RANGE_OBJECTS,
     ID_GO_P6_DISABLE_NEW_TARGET_SYSTEM,
     ID_GO_P6_OBJECT_HANDLES,
+    ID_GO_P6_OBJECT_HANDLES_NO_BODIES,
     ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_AT_ICON,
     ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_ALWAYS_UP,
     ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_FOLLOW_MOUSE,
@@ -850,6 +851,11 @@ void CGumpOptions::InitToolTip()
         case ID_GO_P6_OBJECT_HANDLES:
         {
             g_ToolTip.Set(L"Use objects handles in game window (pressing Ctrl + Shift)");
+            break;
+        }
+        case ID_GO_P6_OBJECT_HANDLES_NO_BODIES:
+        {
+            g_ToolTip.Set(L"Do not show object handles on bodies");
             break;
         }
         case ID_GO_P6_DISPLAY_ITEM_PROPERTIES_MODE_AT_ICON:
@@ -2183,12 +2189,19 @@ void CGumpOptions::DrawPage6()
     checkbox->Checked = g_OptionsConfig.DisableNewTargetSystem;
     checkbox->SetTextParameters(0, L"Disable New Targeting System", g_OptionsTextColor);
 
+    html->Add(new CGUIGroup(6));
+
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P6_OBJECT_HANDLES, 0x00D2, 0x00D3, 0x00D2, 0, 196));
     checkbox->Checked = g_OptionsConfig.ObjectHandles;
     checkbox->SetTextParameters(0, L"Object Handles", g_OptionsTextColor);
 
-    html->Add(new CGUIGroup(6));
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P6_OBJECT_HANDLES_NO_BODIES, 0x00D2, 0x00D3, 0x00D2, 175, 196));
+    checkbox->Checked = g_OptionsConfig.ObjectHandlesNoBodies;
+    checkbox->SetTextParameters(0, L"Disable Handles on Bodies", g_OptionsTextColor);
+
+    html->Add(new CGUIGroup(7));
 
     text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 216));
     text->CreateTextureW(0, L"Item Properties Display Mode:");
@@ -2228,7 +2241,7 @@ void CGumpOptions::DrawPage6()
     checkbox->Checked = g_OptionsConfig.HoldShiftForEnablePathfind;
     checkbox->SetTextParameters(0, L"Hold Shift For Enable Pathfinding", g_OptionsTextColor);
 
-    html->Add(new CGUIGroup(7));
+    html->Add(new CGUIGroup(8));
 
     text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 376));
     text->CreateTextureW(0, L"Select Character Backpack Style");
@@ -3394,6 +3407,10 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             { //Object Handles
                 g_OptionsConfig.ObjectHandles = state;
             }
+            else if (serial == ID_GO_P6_OBJECT_HANDLES_NO_BODIES)
+            { //Object Handles No Bodies
+                g_OptionsConfig.ObjectHandlesNoBodies = state;
+            }
             else if (serial == ID_GO_P6_DISPLAY_ITEM_PROPERTIES_ICON)
             { //Display Item Properties Icon
                 g_OptionsConfig.SetItemPropertiesIcon(state);
@@ -4153,6 +4170,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.GrayOutOfRangeObjects = g_OptionsConfig.GrayOutOfRangeObjects;
             g_ConfigManager.DisableNewTargetSystem = g_OptionsConfig.DisableNewTargetSystem;
             g_ConfigManager.ObjectHandles = g_OptionsConfig.ObjectHandles;
+            g_ConfigManager.ObjectHandlesNoBodies = g_OptionsConfig.ObjectHandlesNoBodies;
             g_ConfigManager.SetItemPropertiesIcon(g_OptionsConfig.GetItemPropertiesIcon());
             g_ConfigManager.SetItemPropertiesMode(g_OptionsConfig.GetItemPropertiesMode());
             g_ConfigManager.HoldShiftForContextMenus = g_OptionsConfig.HoldShiftForContextMenus;
