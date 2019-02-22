@@ -6175,8 +6175,13 @@ void CGame::CreateTextMessage(
                         }
                     }
                 }
-
-                obj->AddText(td);
+                if (g_ConfigManager.AlwaysDisplayHumanoidsName && obj->IsHuman())
+                {
+                }
+                else
+                {
+                    obj->AddText(td);
+                }
             }
             else
             {
@@ -6298,8 +6303,13 @@ void CGame::CreateUnicodeTextMessage(
                         }
                     }
                 }
-
-                obj->AddText(td);
+                if (g_ConfigManager.AlwaysDisplayHumanoidsName && obj->IsHuman())
+                {
+                }
+                else
+                {
+                    obj->AddText(td);
+                }
             }
             else
             {

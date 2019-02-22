@@ -57,6 +57,7 @@ public:
     bool AutoDisplayWorldMap = false;
     bool DisableMacroInChat = false;
     bool AutoOpenDoors = false;
+    bool AlwaysDisplayHumanoidsName = false;
 #if USE_PING
     bool CheckPing = true;
     uint8_t PingTimer = 10;
