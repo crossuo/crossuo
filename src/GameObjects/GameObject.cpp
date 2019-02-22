@@ -128,7 +128,12 @@ void CGameObject::DrawObjectHandlesTexture()
         ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(this);
 
         x += gc->OffsetX;
-        y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 8);
+        y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 25);
+    }
+    else if (IsCorpse())
+    {
+        x += 20;
+        y -= (g_Game.GetStaticArtDimension(Graphic).Height + 15);
     }
     else
     {
