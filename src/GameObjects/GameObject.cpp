@@ -94,7 +94,7 @@ void CGameObject::DrawObjectHandlesTexture()
     DEBUG_TRACE_FUNCTION;
     if (m_TextureObjectHalndes.Texture == 0)
     {
-        if (NPC || IsCorpse())
+        if (NPC)
         {
             GenerateObjectHandlesTexture(ToWString(m_Name));
         }
@@ -117,14 +117,25 @@ void CGameObject::DrawObjectHandlesTexture()
         CGameCharacter *gc = (CGameCharacter *)this;
         ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(this);
         x += gc->OffsetX;
-        y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 8);
+        y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 25);
+    }
+    else if (IsCorpse())
+    {
+        x += 20;
+        y -= (g_Game.GetStaticArtDimension(Graphic).Height + 15);
     }
     else
     {
         y -= g_Game.GetStaticArtDimension(Graphic).Height;
     }
 
-    m_TextureObjectHalndes.Draw(x, y);
+    if (g_ConfigManager.ObjectHandlesNoBodies && IsCorpse())
+    {
+    }
+    else
+    {
+        m_TextureObjectHalndes.Draw(x, y);
+    }
 }
 
 void CGameObject::SelectObjectHandlesTexture()
