@@ -130,6 +130,10 @@ void CGumpSecureTrading::UpdateContent()
             const int fontWidth = 250 - g_FontManager.GetWidthA(3, Text);
             text = (CGUIText *)Add(new CGUIText(0x0481, fontWidth, 244));
             text->CreateTextureA(3, Text);
+            mdbx = 40;
+            mdby = 110;
+            odbx = 192;
+            odby = 110;
         }
         else //older client version old trade
         {
@@ -167,10 +171,10 @@ void CGumpSecureTrading::UpdateContent()
         }
 
         Add(new CGUIShader(&g_ColorizerShader, true));
-        Add(new CGUIScissor(true, 0, 0, 45, 70, 110, 80));
+        Add(new CGUIScissor(true, 0, 0, mdbx, mdby, 110, 80));
         m_MyDataBox = (CGUIDataBox *)Add(new CGUIDataBox());
         Add(new CGUIScissor(false));
-        Add(new CGUIScissor(true, 0, 0, 192, 70, 110, 80));
+        Add(new CGUIScissor(true, 0, 0, odbx, odby, 110, 80));
         m_OpponentDataBox = (CGUIDataBox *)Add(new CGUIDataBox());
         Add(new CGUIScissor(false));
         Add(new CGUIShader(&g_ColorizerShader, false));
@@ -197,8 +201,8 @@ void CGumpSecureTrading::UpdateContent()
                     graphic,
                     item->Color & 0x3FFF,
                     0x0035,
-                    45 + item->GetX(),
-                    70 + item->GetY(),
+                    mdbx + item->GetX(),
+                    mdby + item->GetY(),
                     doubleDraw));
             dataObject->PartialHue = IsPartialHue(g_Game.GetStaticFlags(graphic));
             if (dataObject->GetY() >= 150)
@@ -228,8 +232,8 @@ void CGumpSecureTrading::UpdateContent()
                     graphic,
                     item->Color & 0x3FFF,
                     0x0035,
-                    192 + item->GetX(),
-                    70 + item->GetY(),
+                    odbx + item->GetX(),
+                    odby + item->GetY(),
                     doubleDraw));
             dataObject->PartialHue = IsPartialHue(g_Game.GetStaticFlags(graphic));
             if (dataObject->GetY() >= 150)
