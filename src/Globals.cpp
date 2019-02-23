@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "Target.h"
@@ -90,6 +90,7 @@ uint32_t g_ClientFlag = 0;
 bool g_SendLogoutNotification = false;
 bool g_PopupEnabled = false;
 bool g_ChatEnabled = false;
+bool g_Pal_Necro_Creation = false;
 bool g_TooltipsEnabled = false;
 bool g_PaperdollBooks = false;
 
