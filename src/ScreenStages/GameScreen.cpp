@@ -842,6 +842,15 @@ void CGameScreen::AddTileToRenderList(
                 m_ObjectHandlesCount++;
             }
 
+            else if (go->IsHuman() && g_ConfigManager.AlwaysDisplayHumanoidsName)
+            {
+                int index = m_ObjectHandlesCount % MAX_OBJECT_HANDLES;
+
+                m_ObjectHandlesList[index] = go;
+
+                m_ObjectHandlesCount++;
+            }
+
 #if UO_RENDER_LIST_SORT == 1
             if (go->NPC || go->IsCorpse())
             {

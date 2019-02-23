@@ -111,6 +111,7 @@ enum
 #endif // USE_PING
     ID_GO_P2_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
     ID_GO_P2_DRAW_STATUS_FOR_HUMANOIDS,
+    ID_GO_P2_ALWAYS_DISPLAY_HUMANOIDS_NAME,
     ID_GO_P2_DEV_MODE_1,
     ID_GO_P2_DEV_MODE_2,
     ID_GO_P2_DEV_MODE_3,
@@ -1518,6 +1519,11 @@ void CGumpOptions::DrawPage2()
         g_OptionsConfig.PingTimer));
     m_SliderPingTimer->SetTextParameters(true, STP_RIGHT, 0, g_OptionsTextColor, true);
 #endif // USE_PING
+    y += h;
+    checkbox = (CGUICheckbox *)html->Add(
+        new CGUICheckbox(ID_GO_P2_ALWAYS_DISPLAY_HUMANOIDS_NAME, 0x00D2, 0x00D3, 0x00D2, 0, y));
+    checkbox->Checked = g_OptionsConfig.AlwaysDisplayHumanoidsName;
+    checkbox->SetTextParameters(0, L"Always Display Humanoid Name", g_OptionsTextColor);
 
     html->CalculateDataSize();
 }
@@ -3236,6 +3242,10 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             {
                 g_OptionsConfig.AutoOpenDoors = state;
             }
+            else if (serial == ID_GO_P2_ALWAYS_DISPLAY_HUMANOIDS_NAME)
+            {
+                g_OptionsConfig.AlwaysDisplayHumanoidsName = state;
+            }
             else if (serial == ID_GO_P2_REDUCE_FPS_UNACTIVE_WINDOW)
             { //Reduce FPS when Window is Unactive
                 g_OptionsConfig.SetReduceFPSUnactiveWindow(state);
@@ -4083,6 +4093,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.SetNoVegetation(g_OptionsConfig.GetNoVegetation());
             g_ConfigManager.SetNoAnimateFields(g_OptionsConfig.GetNoAnimateFields());
             g_ConfigManager.AutoOpenDoors = g_OptionsConfig.AutoOpenDoors;
+            g_ConfigManager.AlwaysDisplayHumanoidsName = g_OptionsConfig.AlwaysDisplayHumanoidsName;
             g_ConfigManager.SetConsoleNeedEnter(g_OptionsConfig.GetConsoleNeedEnter());
             g_ConfigManager.SetReduceFPSUnactiveWindow(
                 g_OptionsConfig.GetReduceFPSUnactiveWindow());

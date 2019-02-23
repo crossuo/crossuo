@@ -110,7 +110,8 @@ void CGameCharacter::UpdateTextCoordinates()
     int x = DrawX + OffsetX;
     int y = DrawY + (OffsetY - OffsetZ) - ((dims.Height + dims.CenterY) + 8);
 
-    if (g_ConfigManager.GetDrawStatusState() == DCSS_ABOVE)
+    if (g_ConfigManager.GetDrawStatusState() == DCSS_ABOVE ||
+        g_ConfigManager.AlwaysDisplayHumanoidsName == true)
     {
         y -= 14;
     }

@@ -6175,8 +6175,15 @@ void CGame::CreateTextMessage(
                         }
                     }
                 }
-
-                obj->AddText(td);
+                if (g_ConfigManager.AlwaysDisplayHumanoidsName && obj->IsHuman() &&
+                    obj->GetName() == td->Text)
+                {
+                    AddJournalMessage(td, "You see: ");
+                }
+                else
+                {
+                    obj->AddText(td);
+                }
             }
             else
             {
@@ -6298,8 +6305,15 @@ void CGame::CreateUnicodeTextMessage(
                         }
                     }
                 }
-
-                obj->AddText(td);
+                if (g_ConfigManager.AlwaysDisplayHumanoidsName && obj->IsHuman() &&
+                    obj->GetName() == td->Text)
+                {
+                    AddJournalMessage(td, "You see: ");
+                }
+                else
+                {
+                    obj->AddText(td);
+                }
             }
             else
             {

@@ -45,6 +45,7 @@ enum
     CMKC_MARKING_CAVES,
     CMKC_NO_ANIMATE_FIELDS,
     CMKC_AUTO_OPEN_DOOR,
+    CMKC_ALWAYS_DISPLAY_HUMANOIDS_NAME,
     CMKC_NO_VEGETATION,
     CMKC_HIDDEN_CHARACTERS_RENDER_MODE,
     CMKC_HIDDEN_ALPHA,
@@ -196,6 +197,7 @@ static const ConfigEntry s_Keys[] = {
     { CMKC_APPLY_STATE_COLOR_ON_CHARACTERS, "applystatecoloroncharacters" },
     { CMKC_CHANGE_FIELDS_GRAPHIC, "changefieldsgraphic" },
     { CMKC_AUTO_OPEN_DOOR, "autoopendoors" },
+    { CMKC_ALWAYS_DISPLAY_HUMANOIDS_NAME, "alwaysdisplayhumanoidsname" },
     { CMKC_PAPERDOLL_SLOTS, "paperdollslots" },
     { CMKC_DRAW_STATUS_CONDITION_STATE, "drawstatusconditionstate" },
     { CMKC_DRAW_STATUS_CONDITION_VALUE, "drawstatusconditionvalue" },
@@ -1138,6 +1140,9 @@ bool CConfigManager::Load(const os_path &path)
                 case CMKC_AUTO_OPEN_DOOR:
                     AutoOpenDoors = ToBool(strings[1]);
                     break;
+                case CMKC_ALWAYS_DISPLAY_HUMANOIDS_NAME:
+                    AlwaysDisplayHumanoidsName = ToBool(strings[1]);
+                    break;
                 case CMKC_NO_VEGETATION:
                     SetNoVegetation(ToBool(strings[1]));
                     break;
@@ -1626,6 +1631,7 @@ void CConfigManager::Save(const os_path &path)
 #endif // USE_PING
         writer.WriteBool("CancelNewTargetSystemOnShiftEsc", CancelNewTargetSystemOnShiftEsc);
         writer.WriteBool("DrawStatusForHumanoids", DrawStatusForHumanoids);
+        writer.WriteBool("AlwaysDisplayHumanoidsName", AlwaysDisplayHumanoidsName);
 
         //Page 3
         writer.WriteBool("UseToolTips", UseToolTips);
