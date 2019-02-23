@@ -1535,6 +1535,102 @@ void CGame::LoadLocalConfig(int serial)
         if (!g_MacroManager.Load(
                 g_App.UOFilesPath("/macros.cuo"), g_App.UOFilesPath("/macros.txt")))
         {
+            //Nothing found make the default Macros
+            CMacro *mac = new CMacro(SDLK_s, true, false, false);
+            CMacroObject *obj = new CMacroObject(MC_OPEN, MSC_G2_STATUS);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_t, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_CHAT);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_b, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_MAGE_SPELLBOOK);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_c, true, false, false);
+            obj = new CMacroObject(MC_WAR_PEACE, MSC_NONE);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_p, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_PAPERDOLL);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_k, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_SKILLS);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_j, false, true, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_JOURNAL);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_q, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_QUEST_LOG);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_w, false, true, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_SPELL_WEAVING_SPELLBOOK);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_i, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_BACKPACK);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_r, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_OWERVIEW);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_o, true, false, false);
+            obj = new CMacroObject(MC_OPEN, MSC_G2_CONFIGURATION);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_x, true, false, false);
+            obj = new CMacroObject(MC_QUIT_GAME, MSC_NONE);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_b, false, true, false);
+            obj = new CMacroObject(MC_BOW, MSC_NONE);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_s, false, true, false);
+            obj = new CMacroObject(MC_SALUTE, MSC_NONE);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
+
+            mac = new CMacro(SDLK_s, true, true, true);
+            obj = new CMacroObject(MC_SAVE_DESKTOP, MSC_NONE);
+
+            mac->Add(obj);
+            g_MacroManager.Add(mac);
         }
     }
 
