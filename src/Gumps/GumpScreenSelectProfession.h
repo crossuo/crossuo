@@ -10,6 +10,7 @@ class CGumpScreenSelectProfession : public CGump
 private:
     void UpdateContentOld();
     void UpdateContentNew();
+    void NoFeatureError();
 
     void ShuffleStats(int id, int maxSum, int maxVal);
     void ShuffleSkills(int id);

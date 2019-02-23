@@ -115,6 +115,7 @@ extern uint32_t g_ClientFlag;
 extern bool g_SendLogoutNotification;
 extern bool g_PopupEnabled;
 extern bool g_ChatEnabled;
+extern bool g_Pal_Necro_Creation;
 extern bool g_TooltipsEnabled;
 extern bool g_PaperdollBooks;
 

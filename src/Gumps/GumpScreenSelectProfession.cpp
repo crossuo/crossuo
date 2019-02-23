@@ -32,6 +32,8 @@ enum
     ID_SPS_LABEL = 50,
 
     ID_SPS_SKILLS_LIST = 100,
+
+    ID_SPS_ERROR_OK = 110,
 };
 
 CGumpScreenSelectProfession::CGumpScreenSelectProfession()
@@ -584,6 +586,10 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
     { //x button
         g_SelectProfessionScreen.CreateSmoothAction(CSelectProfessionScreen::ID_SMOOTH_SPS_QUIT);
     }
+    else if (serial == ID_SPS_ERROR_OK)
+    {
+        UpdateContentNew();
+    }
     else if (serial == ID_SPS_ARROW_PREV) //< button
     {
         if (g_Config.ClientVersion >= CV_308Z &&
@@ -662,6 +668,14 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
         {
             if (serial == ID_SPS_LABEL + index)
             {
+                if (child->NameClilocID == 1061177 || child->NameClilocID == 1061178)
+                {
+                    if (!g_Pal_Necro_Creation)
+                    {
+                        NoFeatureError();
+                        return;
+                    }
+                }
                 g_ProfessionManager.Selected = child;
                 g_SelectProfessionScreen.SetSkillSelection(0);
 
@@ -711,6 +725,15 @@ void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
             }
         }
     }
+}
+
+void CGumpScreenSelectProfession::NoFeatureError()
+{
+    Add(new CGUIResizepic(0, 0x0A28, 142, 134, 356, 212));
+    Add(new CGUIButton(ID_SPS_ERROR_OK, 0x0481, 0x0482, 0x0483, 306, 304));
+    CGUIText *obj = new CGUIText(0x0386, 189, 178);
+    obj->CreateTextureA(2, "The server don't support this Age of Shadow feature", 260, TS_CENTER);
+    Add(obj);
 }
 
 void CGumpScreenSelectProfession::GUMP_SLIDER_CLICK_EVENT_C

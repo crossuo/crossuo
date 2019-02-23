@@ -870,6 +870,8 @@ PACKET_HANDLER(CharacterList)
                         (g_Config.ProtocolClientVersion >= CV_308Z);
     g_PaperdollBooks = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u;
 
+    g_Pal_Necro_Creation = (bool)(g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS);
+
     g_CharacterListScreen.UpdateContent();
 }
 
