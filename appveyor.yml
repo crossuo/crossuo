@@ -45,3 +45,13 @@ only_commits:
     - appveyor.yml
     - src/
     - CMake/
+artifacts:
+  - path: \build\CrossUO-win64-Release-nightly.zip
+    name: CrossUO
+after_build:
+  # if we are testing a pull request, we don't want to upload the build to the host
+  #- IF DEFINED APPVEYOR_PULL_REQUEST_NUMBER (appveyor exit)
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (appveyor exit)
+  - if "%CONFIGURATION%"== "Debug" (appveyor exit)
+  - echo ** Compilation done. Packing the files
+  - 7z a CrossUO-win64-Release-nightly.zip "c:\projects\crossuo\build\src\Release\crossuo.exe" "c:\projects\crossuo\build\src\Release\glew32.dll" "c:\projects\crossuo\build\src\Release\SDL2.dll"
