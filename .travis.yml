@@ -23,6 +23,19 @@ matrix:
             - libsndio-dev
             - libxkbcommon-dev
       script: ./travis.sh
+      before_deploy:
+      # Set up git user name and tag this commit
+      - git tag Latest-nightly -f
+      deploy:
+        provider: releases
+        api_key: "$GH_TOKEN"
+        overwrite: true
+        file: "CrossUO-Unbuntu-nightly.zip"
+        skip_cleanup: true
+        on:
+          tags: false
+          all_branches: true
+          repo: Nirad/crossuo #where to send it
     - os: linux
       compiler: gcc
       name: gcc-make
@@ -62,3 +75,17 @@ matrix:
       cache: ccache
       script:
         - ./travis.sh
+      before_deploy:
+      # Set up git user name and tag this commit
+      - git tag Latest-nightly -f
+      deploy:
+        provider: releases
+        api_key: "$GH_TOKEN"
+        overwrite: true
+        file: "CrossUO-OSX-nightly.zip"
+        skip_cleanup: true
+        on:
+          tags: false
+          all_branches: true
+          repo: Nirad/crossuo #where to send it
+          
