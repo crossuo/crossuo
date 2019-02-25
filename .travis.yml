@@ -35,7 +35,7 @@ matrix:
         on:
           tags: false
           all_branches: true
-          repo: Nirad/crossuo #where to send it
+          repo: crossuo/crossuo #where to send it
     - os: linux
       compiler: gcc
       name: gcc-make
@@ -87,5 +87,5 @@ matrix:
         on:
           tags: false
           all_branches: true
-          repo: Nirad/crossuo #where to send it
+          repo: crossuo/crossuo #where to send it
           
