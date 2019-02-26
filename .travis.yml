@@ -82,6 +82,7 @@ matrix:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
+        tag_name: Latest-nightly
         file: "CrossUO-OSX-nightly.zip"
         skip_cleanup: true
         on:
