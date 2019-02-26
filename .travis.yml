@@ -86,6 +86,6 @@ matrix:
         skip_cleanup: true
         on:
           tags: false
-          all_branches: true
+          branch: master
           repo: crossuo/crossuo #where to send it
           
