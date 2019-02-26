@@ -85,7 +85,7 @@ matrix:
         file: "CrossUO-OSX-nightly.zip"
         skip_cleanup: true
         on:
-          tags: false
+          tags: true
           branch: master
           repo: crossuo/crossuo #where to send it
           
