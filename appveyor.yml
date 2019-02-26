@@ -57,6 +57,7 @@ after_build:
   - 7z a CrossUO-Win64-Release-nightly.zip "c:\projects\crossuo\build\src\Release\crossuo.exe" "c:\projects\crossuo\build\src\Release\glew32.dll" "c:\projects\crossuo\build\src\Release\SDL2.dll"
   - mv CrossUO-Win64-Release-nightly.zip ..
 deploy:
+  tag : Latest-nightly
   release: Latest-nightly
   #description: 'Release description'
   provider: GitHub
