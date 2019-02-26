@@ -61,7 +61,7 @@ deploy:
   #description: 'Release description'
   provider: GitHub
   auth_token:
-    secure: D0JznIF8BdkHyFylzYxSbl5gRllJK8hDRvIdP8LNvAqlCUkZG4itq1A0DTGE5UPo
+    secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
   artifact: CrossUO-Win64-Release-nightly.zip
   draft: false
   prerelease: false
