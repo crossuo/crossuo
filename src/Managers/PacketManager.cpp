@@ -674,7 +674,7 @@ void CPacketManager::OnPacket()
         time(&rawtime);
         localtime_s(&timeinfo, &rawtime);
         strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &timeinfo);
-        Info(
+        DEBUG(
             Network,
             "--- ^(%d) r(+%zd => %d) %s Server:: %s",
             ticks - g_LastPacketTime,
@@ -683,7 +683,7 @@ void CPacketManager::OnPacket()
             buffer,
             info.Name);
 #else
-        Info(
+        DEBUG(
             Network,
             "--- ^(%d) r(+%zd => %d) Server:: %s",
             ticks - g_LastPacketTime,
@@ -691,7 +691,7 @@ void CPacketManager::OnPacket()
             g_TotalRecvSize,
             info.Name);
 #endif
-        INFO_DUMP(Network, "RECV:", Start, (int)Size);
+        DEBUG_DUMP(Network, "RECV:", Start, (int)Size);
     }
 
     g_LastPacketTime = ticks;
@@ -750,14 +750,14 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
     CPacketInfo &info = m_Packets[*Start];
-    Info(
+    DEBUG(
         Network,
         "--- ^(%d) r(+%zd => %d) Plugin->Client:: %s",
         ticks - g_LastPacketTime,
         Size,
         g_TotalRecvSize,
         info.Name);
-    INFO_DUMP(Network, "RECV:", Start, (int)Size);
+    DEBUG_DUMP(Network, "RECV:", Start, (int)Size);
 
     g_LastPacketTime = ticks;
     if (info.Direction != DIR_RECV && info.Direction != DIR_BOTH)

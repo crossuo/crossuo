@@ -58,6 +58,10 @@ static bool InitCli(int argc, char *argv[])
     g_cli["proxy-port"].type(po::u32).description("Proxy port to use with 'proxy-host'");
     g_cli["proxy-user"].type(po::string).description("Proxy user");
     g_cli["proxy-password"].type(po::string).description("Proxy password");
+    g_cli["quiet"]
+        .abbreviation('q')
+        .description("Disable logging (almost) completely")
+        .callback([&] { g_LogEnabled = eLogSystem::LogSystemNone; });
 
     g_cli(argc, argv);
 

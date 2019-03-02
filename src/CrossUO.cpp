@@ -1778,7 +1778,7 @@ int CGame::Send(uint8_t *buf, int size)
         time(&rawtime);
         localtime_s(&timeinfo, &rawtime);
         strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", &timeinfo);
-        Info(
+        DEBUG(
             Network,
             "--- ^(%d) s(+%d => %d) %s Client:: %s",
             ticks - g_LastPacketTime,
@@ -1790,13 +1790,13 @@ int CGame::Send(uint8_t *buf, int size)
 
         if (*buf == 0x80 || *buf == 0x91)
         {
-            INFO_DUMP(Network, "SEND:", buf, 1);
+            DEBUG_DUMP(Network, "SEND:", buf, 1);
             SAFE_DEBUG_DUMP(Network, "SEND:", buf, size);
-            Info(Network, "**** ACCOUNT AND PASSWORD CENSORED ****");
+            DEBUG(Network, "**** ACCOUNT AND PASSWORD CENSORED ****");
         }
         else
         {
-            INFO_DUMP(Network, "SEND:", buf, size);
+            DEBUG_DUMP(Network, "SEND:", buf, size);
         }
     }
 
