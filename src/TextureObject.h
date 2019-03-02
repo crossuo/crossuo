@@ -15,19 +15,16 @@ struct UOPAnimationData
     std::fstream *fileStream;
 };
 
-class CTextureAnimationFrame : public CGLTexture
+struct CTextureAnimationFrame : public CGLTexture
 {
-public:
-    short CenterX = 0;
-    short CenterY = 0;
-
-    CTextureAnimationFrame();
-    virtual ~CTextureAnimationFrame();
+    int16_t CenterX = 0;
+    int16_t CenterY = 0;
+    CTextureAnimationFrame() = default;
+    virtual ~CTextureAnimationFrame() = default;
 };
 
-class CTextureAnimationDirection
+struct CTextureAnimationDirection
 {
-public:
     uint8_t FrameCount = 0;
     size_t BaseAddress = 0;
     uint32_t BaseSize = 0;
@@ -41,16 +38,12 @@ public:
     bool IsVerdata = false;
     CTextureAnimationFrame *m_Frames;
 
-    CTextureAnimationDirection();
-    virtual ~CTextureAnimationDirection();
+    CTextureAnimationDirection() = default;
+    virtual ~CTextureAnimationDirection() = default;
 };
 
-class CTextureAnimationGroup
+struct CTextureAnimationGroup
 {
-public:
-    CTextureAnimationGroup();
-    virtual ~CTextureAnimationGroup();
-
     CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
     UOPAnimationData m_UOPAnimData;
 };

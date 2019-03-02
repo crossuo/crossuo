@@ -3578,8 +3578,7 @@ void CGame::ReadUOPIndexFile(
         char hashString[200] = { 0 };
         sprintf_s(hashString, basePath, (int)i);
 
-        CUopBlockHeader *block = uopFile.GetBlock(CreateHash(hashString));
-
+        UopBlockHeader *block = uopFile.GetBlock(CreateHash(hashString));
         if (block != nullptr)
         {
             CIndexObject *obj = getIdxObj((int)i);
@@ -3837,11 +3836,11 @@ void CGame::LoadIndexFiles()
     {
         CUopMappedFile &file = g_FileManager.m_MultiCollection;
 
-        for (std::unordered_map<uint64_t, CUopBlockHeader>::iterator i = file.m_Map.begin();
+        for (std::unordered_map<uint64_t, UopBlockHeader>::iterator i = file.m_Map.begin();
              i != file.m_Map.end();
              ++i)
         {
-            CUopBlockHeader &block = i->second;
+            UopBlockHeader &block = i->second;
             vector<uint8_t> data = file.GetData(block);
 
             if (data.empty())

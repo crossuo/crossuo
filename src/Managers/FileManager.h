@@ -8,50 +8,18 @@
 #include "../Utility/AutoResetEvent.h"
 
 struct UOPAnimationData;
-class CTextureAnimationDirection;
+struct CTextureAnimationDirection;
 
-class CUopBlockHeader
+struct CUopMappedFile : public Wisp::CMappedFile
 {
-public:
-    uint64_t Offset = 0;
-    //uint32_t HeaderSize = 0;
-    uint32_t CompressedSize = 0;
-    uint32_t DecompressedSize = 0;
-    //uint64_t Hash = 0;
-    //uint32_t Unknown = 0;
-    //uint16_t Flags = 0;
+    unordered_map<uint64_t, UopBlockHeader> m_Map;
 
-    CUopBlockHeader() {}
-    CUopBlockHeader(
-        uint64_t offset,
-        int headerSize,
-        int compresseSize,
-        int decompressedSize,
-        uint64_t Hash,
-        int unknown,
-        uint16_t flags)
-        : Offset(offset)
-        , CompressedSize(compresseSize)
-        , DecompressedSize(decompressedSize)
-    {
-    }
-    ~CUopBlockHeader() {}
-};
+    CUopMappedFile() = default;
+    virtual ~CUopMappedFile() = default;
 
-class CUopMappedFile : public Wisp::CMappedFile
-{
-public:
-    unordered_map<uint64_t, CUopBlockHeader> m_Map;
-
-public:
-    CUopMappedFile();
-    virtual ~CUopMappedFile();
-
-    void Add(uint64_t hash, const CUopBlockHeader &item);
-
-    CUopBlockHeader *GetBlock(uint64_t hash);
-
-    vector<uint8_t> GetData(const CUopBlockHeader &block);
+    void Add(uint64_t hash, const UopBlockHeader &item);
+    UopBlockHeader *GetBlock(uint64_t hash);
+    vector<uint8_t> GetData(const UopBlockHeader &block);
 };
 
 class CFileManager : public Wisp::CDataReader

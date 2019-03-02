@@ -15,21 +15,12 @@
 
 CFileManager g_FileManager;
 
-CUopMappedFile::CUopMappedFile()
-
-{
-}
-
-CUopMappedFile::~CUopMappedFile()
-{
-}
-
-void CUopMappedFile::Add(uint64_t hash, const CUopBlockHeader &item)
+void CUopMappedFile::Add(uint64_t hash, const UopBlockHeader &item)
 {
     m_Map[hash] = item;
 }
 
-CUopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
+UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
 {
     auto found = m_Map.find(hash);
     if (found != m_Map.end())
@@ -40,7 +31,7 @@ CUopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
     return nullptr;
 }
 
-vector<uint8_t> CUopMappedFile::GetData(const CUopBlockHeader &block)
+vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader &block)
 {
     ResetPtr();
     Move((int)block.Offset);
@@ -793,7 +784,7 @@ bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
                 compressedSize = 0;
             }
 
-            CUopBlockHeader item;
+            UopBlockHeader item;
             item.Offset = offset + headerSize;
             item.CompressedSize = compressedSize;
             item.DecompressedSize = decompressedSize;

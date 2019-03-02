@@ -4,10 +4,6 @@
 #include "IndexObject.h"
 #include "Config.h"
 
-CIndexObject::CIndexObject()
-{
-}
-
 CIndexObject::~CIndexObject()
 {
     DEBUG_TRACE_FUNCTION;
@@ -16,76 +12,6 @@ CIndexObject::~CIndexObject()
         delete Texture;
         Texture = nullptr;
     }
-}
-
-CIndexObjectLand::CIndexObjectLand()
-    : CIndexObject()
-{
-}
-
-CIndexObjectLand::~CIndexObjectLand()
-{
-}
-
-CIndexObjectStatic::CIndexObjectStatic()
-    : CIndexObject()
-{
-}
-
-CIndexObjectStatic::~CIndexObjectStatic()
-{
-}
-
-CIndexSound::CIndexSound()
-    : CIndexObject()
-{
-}
-
-CIndexSound::~CIndexSound()
-{
-}
-
-CIndexMulti::CIndexMulti()
-    : CIndexObject()
-{
-}
-
-CIndexMulti::~CIndexMulti()
-{
-}
-
-CIndexLight::CIndexLight()
-    : CIndexObject()
-{
-}
-
-CIndexLight::~CIndexLight()
-{
-}
-
-CIndexGump::CIndexGump()
-    : CIndexObject()
-{
-}
-
-CIndexGump::~CIndexGump()
-{
-}
-
-CIndexAnimation::CIndexAnimation()
-{
-}
-
-CIndexAnimation::~CIndexAnimation()
-{
-}
-
-CIndexMusic::CIndexMusic()
-{
-}
-
-CIndexMusic::~CIndexMusic()
-{
 }
 
 void CIndexObject::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id)
