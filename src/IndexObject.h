@@ -6,11 +6,10 @@
 #include "TextureObject.h"
 #include "api/mulstruct.h"
 
-class CUopBlockHeader;
+struct UopBlockHeader;
 
-class CIndexObject
+struct CIndexObject
 {
-public:
     size_t Address = 0;
     int DataSize = 0;
     int Width = 0;
@@ -18,25 +17,24 @@ public:
     uint16_t ID = 0;
     uint16_t Color = 0;
     uint32_t LastAccessTime = 0;
-    CUopBlockHeader *UopBlock = nullptr;
-    CIndexObject();
+    UopBlockHeader *UopBlock = nullptr;
+    CGLTexture *Texture = nullptr;
+
+    CIndexObject() = default;
     virtual ~CIndexObject();
     virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id);
-    CGLTexture *Texture{ nullptr };
 };
 
-class CIndexObjectLand : public CIndexObject
+struct CIndexObjectLand : public CIndexObject
 {
-public:
     bool AllBlack = false;
 
-    CIndexObjectLand();
-    virtual ~CIndexObjectLand();
+    CIndexObjectLand() = default;
+    virtual ~CIndexObjectLand() = default;
 };
 
-class CIndexObjectStatic : public CIndexObject
+struct CIndexObjectStatic : public CIndexObject
 {
-public:
     uint16_t Index = 0;
     char Offset = 0;
     char AnimIndex = 0;
@@ -44,70 +42,62 @@ public:
     uint16_t LightColor = 0;
     bool IsFiled = false;
 
-    CIndexObjectStatic();
-    virtual ~CIndexObjectStatic();
+    CIndexObjectStatic() = default;
+    virtual ~CIndexObjectStatic() = default;
 };
 
-class CIndexSound : public CIndexObject
+struct CIndexSound : public CIndexObject
 {
-public:
     uint32_t Delay = 0;
-
-    CIndexSound();
-    virtual ~CIndexSound();
-
     uint8_t *m_WaveFile = nullptr;
     SoundHandle m_Stream = SOUND_NULL;
+
+    CIndexSound() = default;
+    virtual ~CIndexSound() = default;
 };
 
-class CIndexMulti : public CIndexObject
+struct CIndexMulti : public CIndexObject
 {
-public:
     uint32_t Count = 0;
 
-    CIndexMulti();
-    virtual ~CIndexMulti();
+    CIndexMulti() = default;
+    virtual ~CIndexMulti() = default;
     virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id) override;
 };
 
-class CIndexGump : public CIndexObject
+struct CIndexGump : public CIndexObject
 {
-public:
-    CIndexGump();
-    virtual ~CIndexGump();
+    CIndexGump() = default;
+    virtual ~CIndexGump() = default;
     virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id) override;
 };
 
-class CIndexLight : public CIndexObject
+struct CIndexLight : public CIndexObject
 {
-public:
-    CIndexLight();
-    virtual ~CIndexLight();
+    CIndexLight() = default;
+    virtual ~CIndexLight() = default;
     virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id) override;
 };
 
-class CIndexAnimation
+struct CIndexAnimation
 {
-public:
     uint16_t Graphic = 0;
     uint16_t Color = 0;
     ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
     uint32_t Flags = 0;
     char MountedHeightOffset = 0;
     bool IsUOP = false;
-
-    CIndexAnimation();
-    virtual ~CIndexAnimation();
-
     CTextureAnimationGroup m_Groups[ANIMATION_GROUPS_COUNT];
+
+    CIndexAnimation() = default;
+    virtual ~CIndexAnimation() = default;
 };
 
-class CIndexMusic
+struct CIndexMusic
 {
-public:
     string FilePath;
     bool Loop = false;
 
-    CIndexMusic();
-    virtual ~CIndexMusic();
+    CIndexMusic() = default;
+    virtual ~CIndexMusic() = default;
 };

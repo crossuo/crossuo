@@ -104,7 +104,7 @@ void CMapManager::CreateBlockTable(int map)
                 char mapFilePath[200] = { 0 };
                 sprintf_s(mapFilePath, "build/map%ilegacymul/%08i.dat", map, shifted);
 
-                CUopBlockHeader *uopBlock = uopFile.GetBlock(CGame::CreateHash(mapFilePath));
+                UopBlockHeader *uopBlock = uopFile.GetBlock(CGame::CreateHash(mapFilePath));
                 if (uopBlock != nullptr)
                 {
                     uopOffset = (size_t)uopBlock->Offset;

@@ -8,7 +8,7 @@
 #include "GameObjects/GameWorld.h"
 #include "api/plugininterface.h"
 
-class CUopMappedFile;
+struct CUopMappedFile;
 
 class CGame
 {

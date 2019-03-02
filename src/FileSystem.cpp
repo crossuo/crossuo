@@ -23,7 +23,7 @@ FILE *fs_open(const os_path &path_str, fs_mode mode)
     m += L"b";
 
     FILE *f;
-    _wfopen_s(&f, path_str.c_str(), m.c_str());
+    _wfopen_s(&f, CStringFromPath(path_str), m.c_str());
     return f;
 }
 
@@ -41,12 +41,14 @@ size_t fs_size(FILE *fp)
 
 bool fs_path_exists(const os_path &path_str)
 {
-    return PathFileExistsW(path_str.c_str()) != 0u;
+    auto r = PathFileExistsW(CStringFromPath(path_str)) != 0u;
+    Info(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    return r;
 }
 
 bool fs_path_create(const os_path &path_str)
 {
-    return CreateDirectoryW(path_str.c_str(), nullptr) != 0u;
+    return CreateDirectoryW(CStringFromPath(path_str), nullptr) != 0u;
 }
 
 os_path fs_path_current()
@@ -63,7 +65,7 @@ unsigned char *fs_map(const os_path &path, size_t *length)
     unsigned char *ptr = nullptr;
     HANDLE map = 0;
     auto fd = CreateFileW(
-        path.c_str(),
+        CStringFromPath(path),
         GENERIC_READ,
         FILE_SHARE_READ,
         nullptr,
@@ -169,7 +171,7 @@ void fs_case_insensitive_init(const string &path)
 {
     s_files.reserve(1024);
     s_lower.reserve(1024);
-    fs_list_recursive(path.c_str());
+    fs_list_recursive(CStringFromPath(path));
 }
 
 FILE *fs_open(const string &path_str, fs_mode mode)
@@ -178,7 +180,7 @@ FILE *fs_open(const string &path_str, fs_mode mode)
     m = (mode & FS_WRITE) != 0 ? m + "w" : m;
     m = (mode & FS_READ) != 0 ? m + "r" : m;
 
-    const char *fname = path_str.c_str();
+    const char *fname = CStringFromPath(path_str);
     const char *mstr = m.c_str();
     auto fp = fopen(fname, mstr);
     if (fp == nullptr)
@@ -212,7 +214,9 @@ bool fs_path_exists(const string &path_str)
 {
     assert(!path_str.empty());
     struct stat buffer;
-    return stat(path_str.c_str(), &buffer) == 0;
+    auto r = stat(CStringFromPath(path_str), &buffer) == 0;
+    Info(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    return r;
 }
 
 bool fs_path_create(const string &path_str)
@@ -224,7 +228,7 @@ bool fs_path_create(const string &path_str)
         return false;
     }
 
-    return mkdir(path_str.c_str(), 0777) == 0;
+    return mkdir(CStringFromPath(path_str), 0777) == 0;
 }
 
 string fs_path_current()
@@ -241,7 +245,7 @@ unsigned char *fs_map(const os_path &path, size_t *length)
 {
     unsigned char *ptr = nullptr;
 #if USE_MMAP
-    int fd = open(path.c_str(), O_RDONLY);
+    int fd = open(CStringFromPath(path), O_RDONLY);
     if (fd < 0)
     {
         return nullptr;
@@ -261,7 +265,7 @@ unsigned char *fs_map(const os_path &path, size_t *length)
 fail:
     close(fd);
 #else
-    FILE *fd = fopen(path.c_str(), "rb");
+    FILE *fd = fopen(CStringFromPath(path), "rb");
     if (!fd)
         return nullptr;
 

@@ -8,6 +8,54 @@
 
 #pragma pack(push, 1)
 
+struct UopFileHeader
+{
+    uint32_t Magic;
+    uint32_t Version;
+    uint32_t Signature;
+    uint64_t NextBlock;
+};
+static_assert(sizeof(UopFileHeader) == 20, "Invalid UOP File Header size");
+
+struct UopBlockHeader
+{
+    uint64_t Offset = 0;
+    uint32_t HeaderSize = 0;
+    uint32_t CompressedSize = 0;
+    uint32_t DecompressedSize = 0;
+    uint64_t Hash = 0;
+    uint32_t Unknown = 0; // FIXME: temp, index of the actual uop file
+    uint16_t Flags = 0;
+};
+static_assert(sizeof(UopBlockHeader) == 34, "Invalid UOP File Block Header size");
+
+struct UopAnimationHeader
+{
+    // TODO: further invastigate the format for uncertain and unknown fields
+    uint32_t Format = 0; // uncertain
+    uint32_t Version = 0; // uncertain
+    uint32_t DecompressedSize = 0;
+    uint32_t AnimationId = 0;
+    uint32_t Unk1 = 0;
+    uint32_t Unk2 = 0;
+    int16_t Unk3 = 0;
+    int16_t Unk4 = 0;
+    uint32_t HeaderSize = 0; // uncertain
+    uint32_t FrameCount = 0;
+    uint32_t Offset = 0;
+};
+
+struct UopAnimationFrame
+{
+    // TODO: further invastigate the format for uncertain and unknown fields
+    uint8_t *DataStart = nullptr;
+    uint16_t GroupId = 0;
+    uint16_t FrameId = 0;
+    uint32_t Unk1 = 0;
+    uint32_t Unk2 = 0;
+    uint32_t PixelDataOffset = 0;
+};
+
 struct VERDATA_HEADER
 {
     unsigned int FileID;
