@@ -103,7 +103,7 @@ void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, in
             if (line * 16 + row < size)
             {
                 const char ch = isprint(buf[line * 16 + row]) != 0 ? buf[line * 16 + row] : '.';
-                r = snprintf(cur, end - cur, "%c", ch);
+                r = snprintf(cur, end - cur, ch == '%' ? "%c%%" : "%c", ch);
                 assert(r >= 0);
                 assert(r < end - cur);
                 assert(end - cur >= 0);
