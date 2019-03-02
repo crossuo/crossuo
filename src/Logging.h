@@ -23,6 +23,7 @@ enum eLogSystem : LogSystem
 #include "Loggers.h"
 #undef LOG_SYSTEM
     LogSystemAll = ~0u,
+    LogSystemNone = 0,
 };
 
 extern eLogSystem g_LogEnabled;
@@ -40,7 +41,7 @@ extern eLogSystem g_LogEnabled;
 
 #define LOG_DUMP_(system, level, ...)                                                              \
     if ((g_LogEnabled & eLogSystem::LogSystem##system) &&                                          \
-        loguru::current_verbosity_cutoff() > level)                                                \
+        ((loguru::Verbosity_##level) <= loguru::current_verbosity_cutoff()))                       \
     LogHexBuffer(eLogSystem::LogSystem##system, int(level), __VA_ARGS__)
 
 #define Info(system, ...) LOG_(system, INFO, __VA_ARGS__)
@@ -55,7 +56,7 @@ extern eLogSystem g_LogEnabled;
 #define DEBUG(system, ...) LOG_(system, 1, __VA_ARGS__)
 #define TRACE_DUMP(system, ...) LOG_DUMP_(system, 9, __VA_ARGS__)
 #define DEBUG_DUMP(system, ...) LOG_DUMP_(system, 1, __VA_ARGS__)
-#define SAFE_DEBUG_DUMP(system, ...) DEBUG_DUMP(system, __VA_ARGS__)
+#define SAFE_DEBUG_DUMP(system, ...) LOG_DUMP_(system, 2, __VA_ARGS__)
 #else
 #define TRACE(...)
 #define DEBUG(...)

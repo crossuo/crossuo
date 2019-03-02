@@ -927,6 +927,8 @@ namespace loguru
 				name = "INFO";
 			} else if (verbosity == Verbosity_1) { // crossuo
 				name = "DEBUG";
+			} else if (verbosity == Verbosity_2) { // crossuo
+				name = "SAFE";
 			} else if (verbosity == Verbosity_9) { // crossuo
 				name = "TRACE";
 			}

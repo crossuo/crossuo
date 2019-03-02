@@ -487,7 +487,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
 
-            Info(
+            DEBUG(
                 Plugin,
                 "--- ^(%d) s(+%d => %d) Plugin->Server:: %s",
                 ticks - g_LastPacketTime,
@@ -500,13 +500,13 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
 
             if (*buf == 0x80 || *buf == 0x91)
             {
-                INFO_DUMP(Plugin, "SEND:", buf, 1);
+                DEBUG_DUMP(Plugin, "SEND:", buf, 1);
                 SAFE_DEBUG_DUMP(Plugin, "SEND:", buf, size);
-                Info(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
+                DEBUG(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
             }
             else
             {
-                INFO_DUMP(Plugin, "SEND:", buf, size);
+                DEBUG_DUMP(Plugin, "SEND:", buf, size);
             }
             g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
