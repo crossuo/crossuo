@@ -522,24 +522,15 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 animFile = 3;
                 realAnimID = anim[1];
 
-                if (realAnimID >= 200)
+                if (realAnimID < 630)
                 {
-                    if (realAnimID >= 400) //People
-                    {
-                        startAnimID = ((realAnimID - 400) * 175) + 35000;
-                        groupType = AGT_HUMAN;
-                    }
-                    else //Low
-                    {
-                        startAnimID = ((realAnimID - 200) * 110) + 22000;
-                        groupType = AGT_ANIMAL;
-                        mountedHeightOffset = +8;
-                    }
-                }
-                else //Hight
-                {
-                    startAnimID = (realAnimID * 65) + 9000;
+                    startAnimID = realAnimID * 110;
                     groupType = AGT_MONSTER;
+                }
+                else
+                {
+                    startAnimID = 69300 + ((realAnimID - 630) * 175);
+                    groupType = AGT_HUMAN;
                 }
             }
             else if (anim[2] != -1 && m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
