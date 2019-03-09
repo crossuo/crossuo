@@ -1486,7 +1486,7 @@ string CGame::FixServerName(string name)
     return name;
 }
 
-void CGame::LoadLocalConfig(int serial)
+void CGame::LoadLocalConfig(int serial, string characterName)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_ConfigLoaded)
@@ -1532,10 +1532,29 @@ void CGame::LoadLocalConfig(int serial)
 
     if (!g_MacroManager.Load(path + ToPath("/macros.cuo"), path + ToPath("/macros.txt")))
     {
-        if (!g_MacroManager.Load(
-                g_App.UOFilesPath("/macros.cuo"), g_App.UOFilesPath("/macros.txt")))
+        char classicClientDesktopSubpathBuf[MAX_PATH] = { 0 };
+        if (server != nullptr)
         {
+            sprintf_s(
+                classicClientDesktopSubpathBuf,
+                "desktop/%s/%s/%s",
+                g_MainScreen.m_Account->c_str(),
+                FixServerName(server->Name).c_str(),
+                characterName.c_str());
         }
+        else
+        {
+            sprintf_s(classicClientDesktopSubpathBuf, "desktop/%s/%s", g_MainScreen.m_Account->c_str(), characterName.c_str());
+        }
+
+		os_path classicClientDesktopSubpath = g_App.UOFilesPath(classicClientDesktopSubpathBuf);
+        if (!g_MacroManager.Load(
+                classicClientDesktopSubpath + ToPath("/macros.cuo"),
+                classicClientDesktopSubpath + ToPath("/macros.txt")))
+        {
+            g_MacroManager.Load(g_App.UOFilesPath("/macros.cuo"), g_App.UOFilesPath("/macros.txt"));
+        }
+
     }
 
     g_GumpManager.Load(path + ToPath("/gumps.cuo"));
@@ -1906,7 +1925,7 @@ void CGame::LoginComplete(bool reload)
         {
             CPacketClientViewRange(g_ConfigManager.UpdateRange).Send();
         }
-        LoadLocalConfig(g_PacketManager.ConfigSerial);
+        LoadLocalConfig(g_PacketManager.ConfigSerial, g_Player->GetName());
     }
 }
 

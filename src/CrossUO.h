@@ -92,7 +92,7 @@ public:
 
     void Process(bool rendering = false);
     void LoadStartupConfig(int serial);
-    void LoadLocalConfig(int serial);
+    void LoadLocalConfig(int serial, string characterName);
     void SaveLocalConfig(int serial);
 
     CIndexObjectLand m_LandDataIndex[MAX_LAND_DATA_INDEX_COUNT];
