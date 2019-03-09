@@ -52,7 +52,7 @@ Keycode CMacroManager::ConvertStringToKeyCode(const vector<string> &strings)
 
     if (str.length() == 1)
     {
-        key = *str.c_str();
+        key = *ToLowerA(str).c_str();
     }
     else if (str.length() != 0u)
     {
