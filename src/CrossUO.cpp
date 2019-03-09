@@ -1544,17 +1544,20 @@ void CGame::LoadLocalConfig(int serial, string characterName)
         }
         else
         {
-            sprintf_s(classicClientDesktopSubpathBuf, "desktop/%s/%s", g_MainScreen.m_Account->c_str(), characterName.c_str());
+            sprintf_s(
+                classicClientDesktopSubpathBuf,
+                "desktop/%s/%s",
+                g_MainScreen.m_Account->c_str(),
+                characterName.c_str());
         }
 
-		os_path classicClientDesktopSubpath = g_App.UOFilesPath(classicClientDesktopSubpathBuf);
+        os_path classicClientDesktopSubpath = g_App.UOFilesPath(classicClientDesktopSubpathBuf);
         if (!g_MacroManager.Load(
                 classicClientDesktopSubpath + ToPath("/macros.cuo"),
                 classicClientDesktopSubpath + ToPath("/macros.txt")))
         {
             g_MacroManager.Load(g_App.UOFilesPath("/macros.cuo"), g_App.UOFilesPath("/macros.txt"));
         }
-
     }
 
     g_GumpManager.Load(path + ToPath("/gumps.cuo"));
