@@ -52,13 +52,13 @@ private:
     void CreateAuraTexture();
     void CreateObjectHandlesBackground();
     void ClearUnusedTextures();
-    void ReadMulIndexFile(
+    void MulReadIndexFile(
         size_t indexMaxCount,
         const std::function<CIndexObject *(int index)> &getIdxObj,
         size_t address,
         BASE_IDX_BLOCK *ptr,
         const std::function<BASE_IDX_BLOCK *()> &getNewPtrValue);
-    void ReadUOPIndexFile(
+    void UopReadIndexFile(
         size_t indexMaxCount,
         const std::function<CIndexObject *(int index)> &getIdxObj,
         const char *uopFileName,

@@ -23,7 +23,7 @@ FILE *fs_open(const os_path &path_str, fs_mode mode)
     m += L"b";
 
     FILE *f;
-    _wfopen_s(&f, CStringFromPath(path_str), m.c_str());
+    _wfopen_s(&f, path_str.c_str(), m.c_str());
     return f;
 }
 
@@ -41,14 +41,14 @@ size_t fs_size(FILE *fp)
 
 bool fs_path_exists(const os_path &path_str)
 {
-    auto r = PathFileExistsW(CStringFromPath(path_str)) != 0u;
-    Info(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    bool r = PathFileExistsW(path_str.c_str()) != 0u;
+    DEBUG(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
     return r;
 }
 
 bool fs_path_create(const os_path &path_str)
 {
-    return CreateDirectoryW(CStringFromPath(path_str), nullptr) != 0u;
+    return CreateDirectoryW(path_str.c_str(), nullptr) != 0u;
 }
 
 os_path fs_path_current()
@@ -65,7 +65,7 @@ unsigned char *fs_map(const os_path &path, size_t *length)
     unsigned char *ptr = nullptr;
     HANDLE map = 0;
     auto fd = CreateFileW(
-        CStringFromPath(path),
+        path.c_str(),
         GENERIC_READ,
         FILE_SHARE_READ,
         nullptr,
@@ -215,7 +215,7 @@ bool fs_path_exists(const string &path_str)
     assert(!path_str.empty());
     struct stat buffer;
     auto r = stat(CStringFromPath(path_str), &buffer) == 0;
-    Info(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    DEBUG(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
     return r;
 }
 

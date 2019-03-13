@@ -349,13 +349,10 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
     UnloadMulti();
 
     CIndexMulti &index = g_Game.m_MultiDataIndex[MultiGraphic - 1];
-
     int count = (int)index.Count;
-
     if (index.UopBlock != nullptr)
     {
-        vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
-
+        vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(index.UopBlock);
         if (data.empty())
         {
             return;
@@ -363,23 +360,20 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 
         Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
-
         for (int i = 0; i < count; i++)
         {
-            uint16_t graphic = reader.ReadUInt16LE();
-            short x = reader.ReadInt16LE();
-            short y = reader.ReadInt16LE();
-            short z = reader.ReadInt16LE();
-            uint16_t flags = reader.ReadUInt16LE();
-            uint32_t clilocsCount = reader.ReadUInt32LE();
-
-            if (clilocsCount != 0u)
+            const uint16_t graphic = reader.ReadUInt16LE();
+            const int16_t x = reader.ReadInt16LE();
+            const int16_t y = reader.ReadInt16LE();
+            const int8_t z = (int8_t)reader.ReadInt16LE();
+            const uint16_t flags = reader.ReadUInt16LE();
+            const uint32_t clilocsCount = reader.ReadUInt32LE();
+            if (clilocsCount != 0)
             {
                 reader.Move(clilocsCount * 4);
             }
 
-            CMultiObject *mo =
-                new CMultiObject(graphic, x + offsetX, y + offsetY, (char)z + (char)offsetZ, 2);
+            auto mo = new CMultiObject(graphic, x + offsetX, y + offsetY, z + (char)offsetZ, 2);
             g_MapManager.AddRender(mo);
             AddMultiObject(mo);
         }

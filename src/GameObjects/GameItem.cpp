@@ -701,7 +701,6 @@ void CGameItem::LoadMulti(bool dropAlpha)
     int maxY = 0;
 
     uint8_t alpha = 0;
-
     if (!dropAlpha)
     {
         alpha = 0xFF;
@@ -709,8 +708,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
     if (index.UopBlock != nullptr)
     {
-        vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(*index.UopBlock);
-
+        vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(index.UopBlock);
         if (data.empty())
         {
             return;
@@ -718,16 +716,14 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
         Wisp::CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
-
         for (int i = 0; i < count; i++)
         {
-            uint16_t graphic = reader.ReadUInt16LE();
-            short x = reader.ReadInt16LE();
-            short y = reader.ReadInt16LE();
-            short z = reader.ReadInt16LE();
-            uint16_t flags = reader.ReadUInt16LE();
-            uint32_t clilocsCount = reader.ReadUInt32LE();
-
+            const uint16_t graphic = reader.ReadUInt16LE();
+            const int16_t x = reader.ReadInt16LE();
+            const int16_t y = reader.ReadInt16LE();
+            const int8_t z = (int8_t)reader.ReadInt16LE();
+            const uint16_t flags = reader.ReadUInt16LE();
+            const uint32_t clilocsCount = reader.ReadUInt32LE();
             if (clilocsCount != 0u)
             {
                 reader.Move(clilocsCount * 4);
@@ -735,10 +731,8 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
             if (flags == 0u)
             {
-                CMultiObject *mo = new CMultiObject(graphic, m_X + x, m_Y + y, m_Z + (char)z, 1);
-
+                auto mo = new CMultiObject(graphic, m_X + x, m_Y + y, m_Z + z, 1);
                 mo->m_DrawTextureColor[3] = alpha;
-
                 g_MapManager.AddRender(mo);
                 AddMultiObject(mo);
             }

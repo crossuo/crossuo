@@ -1060,28 +1060,21 @@ bool CAnimationManager::LoadDirectionGroup(CTextureAnimationDirection &direction
 
     if (direction.IsUOP)
     {
-        return TryReadUOPAnimDimins(direction);
+        return UopTryReadAnimDims(direction);
     }
     if (direction.Address == 0)
     {
         return false;
     }
 
+    auto ptr = (uint8_t *)direction.Address;
     if (!direction.IsVerdata)
     {
-        vector<char> animData(direction.Size);
-        g_FileManager.ReadAnimMulDataFromFileStream(animData, direction);
-        SetData(reinterpret_cast<uint8_t *>(&animData[0]), direction.Size);
-        ReadFramesPixelData(direction);
+        ptr = g_FileManager.MulReadAnimationData(direction);
     }
-    else
-    {
-        SetData((uint8_t *)direction.Address, direction.Size);
-        ReadFramesPixelData(direction);
-    }
-
+    SetData(ptr, direction.Size);
+    ReadFramesPixelData(direction);
     m_UsedAnimList.push_back(&direction);
-
     return true;
 }
 
@@ -2106,14 +2099,11 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
 {
     ANIMATION_DIMENSIONS result = {};
-
     if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         if (dir < MAX_MOBILE_DIRECTIONS)
         {
-            CTextureAnimationDirection &direction =
-                m_DataIndex[id].m_Groups[animGroup].m_Direction[dir];
-
+            auto &direction = m_DataIndex[id].m_Groups[animGroup].m_Direction[dir];
             int fc = direction.FrameCount;
             if (fc > 0)
             {
@@ -2132,104 +2122,53 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
                 if (direction.m_Frames != nullptr)
                 {
                     CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-
                     result.Width = frame.Width;
                     result.Height = frame.Height;
                     result.CenterX = frame.CenterX;
                     result.CenterY = frame.CenterY;
-
                     return result;
                 }
             }
         }
 
         CTextureAnimationDirection &direction = m_DataIndex[id].m_Groups[animGroup].m_Direction[0];
-
         uint8_t *ptr = (uint8_t *)direction.Address;
-
         if (ptr != nullptr)
         {
             if (!direction.IsVerdata)
             {
-                vector<char> animData(direction.Size);
-                g_FileManager.ReadAnimMulDataFromFileStream(animData, direction);
-                SetData(reinterpret_cast<uint8_t *>(&animData[0]), direction.Size);
-                ReadFrameDimensionData(result, frameIndex, isCorpse);
+                ptr = g_FileManager.MulReadAnimationData(direction);
             }
-            else
-            {
-                SetData(ptr, direction.Size);
-                ReadFrameDimensionData(result, frameIndex, isCorpse);
-            }
+            SetData(ptr, direction.Size);
+            ReadFrameDimensionData(result, frameIndex, isCorpse);
         }
-        else if (direction.IsUOP) //try reading uop anim frame
+        else if (direction.IsUOP) // try reading uop anim frame
         {
-            UOPAnimationData &animDataStruct =
-                m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
-
-            if (animDataStruct.path.length() == 0u)
+            std::vector<uint8_t> scratchBuffer;
+            if (!UopDecompressBlock(scratchBuffer, direction.FileIndex))
             {
                 return result;
             }
 
-            //reading compressed data from uop file stream
-            auto decompressedLength = animDataStruct.decompressedLength;
-            char *buf = CFileManager::ReadUOPDataFromFileStream(animDataStruct);
+            auto header = UopReadAnimationHeader();
+            // read only first frame to get image dimensions
+            UopAnimationFrame frame;
+            frame.DataStart = Ptr;
+            frame.GroupId = ReadInt16LE();
+            frame.FrameId = ReadInt16LE();
+            frame.Unk1 = ReadUInt32LE();
+            frame.Unk2 = ReadUInt32LE();
+            frame.PixelDataOffset = ReadUInt32LE();
 
-            //decompressing here
-            vector<uint8_t> decLayoutData(decompressedLength);
-            bool decompressionRes =
-                CFileManager::DecompressUOPFileData(animDataStruct, decLayoutData, buf);
-            if (!decompressionRes)
-            {
-                return result; //decompression failed
-            }
-
-            SetData(reinterpret_cast<uint8_t *>(&decLayoutData[0]), decompressedLength);
-            //format id?
-            ReadUInt32LE();
-            //version
-            ReadUInt32LE();
-            //decompressed data size
-            int dcsize = ReadUInt32LE();
-            //anim id
-            int animId = ReadUInt32LE();
-            //8 bytes unknown
-            ReadUInt32LE();
-            ReadUInt32LE();
-            //unknown.
-            ReadInt16LE();
-            //unknown
-            ReadInt16LE();
-            //header length
-            ReadUInt32LE();
-            //framecount
-            int totalFrameCount = ReadUInt32LE();
-            //data start + offset
-            Ptr = Start + ReadUInt32LE();
-
-            UOPFrameData data;
-            data.dataStart = Ptr;
-            //anim group
-            ReadInt16LE();
-            //frame id
-            data.frameId = ReadInt16LE();
-            //8 bytes unknown
-            ReadUInt32LE();
-            ReadUInt32LE();
-            //offset
-            data.pixelDataOffset = ReadUInt32LE();
-
-            short imageCenterX, imageCenterY, imageWidth, imageHeight;
+            int16_t centerX, centerY, width, height;
             uint16_t *palette = nullptr;
-            ReadUOPFrameData(imageCenterX, imageCenterY, imageWidth, imageHeight, palette, data);
-            result.CenterX = imageCenterX;
-            result.CenterY = imageCenterY;
-            result.Width = imageWidth;
-            result.Height = imageHeight;
+            UopReadFrame(centerX, centerY, width, height, palette, frame);
+            result.CenterX = centerX;
+            result.CenterY = centerY;
+            result.Width = width;
+            result.Height = height;
         }
     }
-
     return result;
 }
 
@@ -2286,31 +2225,35 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     return dims;
 }
 
-bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &direction)
+// FIXME
+bool CAnimationManager::UopDecompressBlock(std::vector<uint8_t> &scratchBuffer, int fileId)
 {
-    UOPAnimationData &animDataStruct = m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
-    if (animDataStruct.path.length() == 0u)
+    auto &block = m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
+    if (block.Hash == 0)
     {
-        //Info(Data, "CAnimationManager::TryReadUOPAnimDimins bad address");
         return false;
     }
 
-    //reading compressed data from uop file stream
-    auto decompressedLength = animDataStruct.decompressedLength;
-    char *buf = CFileManager::ReadUOPDataFromFileStream(animDataStruct);
-
-    //decompressing here
-    vector<uint8_t> decLayoutData(decompressedLength);
-    bool result = CFileManager::DecompressUOPFileData(animDataStruct, decLayoutData, buf);
-    if (!result)
+    scratchBuffer.reserve(block.DecompressedSize);
+    if (CFileManager::UopDecompressBlock(block, scratchBuffer.data(), fileId))
     {
-        return false; //decompression failed
+        SetData(scratchBuffer.data(), block.DecompressedSize);
+        return true;
     }
 
-    SetData(reinterpret_cast<uint8_t *>(&decLayoutData[0]), decompressedLength);
-    vector<UOPFrameData> pixelDataOffsets = ReadUOPFrameDataOffsets();
+    return false;
+}
 
-    direction.FrameCount = (uint8_t)pixelDataOffsets.size() / 5; // FIXME: truncate cast
+bool CAnimationManager::UopTryReadAnimDims(CTextureAnimationDirection &direction)
+{
+    std::vector<uint8_t> scratchBuffer;
+    if (!UopDecompressBlock(scratchBuffer, direction.FileIndex))
+    {
+        return false;
+    }
+
+    auto framesData = UopReadFrameData();
+    direction.FrameCount = checked_cast<uint8_t>(framesData.size() / 5);
     int dirFrameStartIdx = direction.FrameCount * Direction;
     if (direction.m_Frames == nullptr)
     {
@@ -2320,83 +2263,71 @@ bool CAnimationManager::TryReadUOPAnimDimins(CTextureAnimationDirection &directi
     for (int i = 0; i < direction.FrameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-
         if (frame.Texture != 0)
         {
             continue;
         }
 
-        UOPFrameData frameData = pixelDataOffsets[i + dirFrameStartIdx];
-        if (frameData.dataStart == nullptr)
+        UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
+        if (frameData.DataStart == nullptr)
         {
             continue;
         }
 
-        short imageCenterX, imageCenterY, imageWidth, imageHeight;
+        int16_t centerX, centerY, width, height;
         uint16_t *palette;
-        ReadUOPFrameData(imageCenterX, imageCenterY, imageWidth, imageHeight, palette, frameData);
-        frame.CenterX = imageCenterX;
-        frame.CenterY = imageCenterY;
-
-        if ((imageWidth == 0) || (imageHeight == 0))
+        UopReadFrame(centerX, centerY, width, height, palette, frameData);
+        frame.CenterX = centerX;
+        frame.CenterY = centerY;
+        if (width == 0 || height == 0)
         {
             continue;
         }
-        int textureSize = imageWidth * imageHeight;
-        vector<uint16_t> data(textureSize, 0);
 
-        if (data.size() != textureSize)
+        const int textureSize = width * height;
+        vector<uint16_t> pixels(textureSize, 0);
+        if (pixels.size() != textureSize)
         {
             Info(
                 Data,
-                "Allocation pixels memory for TryReadUOPAnimDimins failed (want size: %i)",
+                "Allocation pixels memory for TryReadUOPAnimDims failed (want size: %i)",
                 textureSize);
             continue;
         }
 
         uint32_t header = ReadUInt32LE();
-
         while (header != 0x7FFF7FFF && !IsEOF())
         {
-            uint16_t runLength = (header & 0x0FFF);
-
+            const uint16_t runLength = (header & 0x0FFF);
             int x = (header >> 22) & 0x03FF;
-
             if ((x & 0x0200) != 0)
             {
                 x |= 0xFFFFFE00;
             }
 
             int y = (header >> 12) & 0x03FF;
-
             if ((y & 0x0200) != 0)
             {
                 y |= 0xFFFFFE00;
             }
 
-            x += imageCenterX;
-            y += imageCenterY + imageHeight;
-
-            int block = (y * imageWidth) + x;
-
+            x += centerX;
+            y += centerY + height;
+            int block = (y * width) + x;
             for (int k = 0; k < runLength; k++)
             {
-                uint16_t val = palette[ReadUInt8()];
-
+                const uint8_t paletteIndex = ReadUInt8();
+                uint16_t val = palette[paletteIndex];
                 if (val != 0u)
                 {
                     val |= 0x8000;
                 }
-
-                data[block++] = val;
+                pixels[block++] = val;
             }
-
             header = ReadUInt32LE();
         }
-
-        g_GL_BindTexture16(frame, imageWidth, imageHeight, &data[0]);
+        g_GL_BindTexture16(frame, width, height, &pixels[0]);
     }
-
     m_UsedAnimList.push_back(&direction);
 
     return true;
@@ -2805,85 +2736,81 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
     return result;
 }
 
-vector<UOPFrameData> CAnimationManager::ReadUOPFrameDataOffsets()
+UopAnimationHeader CAnimationManager::UopReadAnimationHeader()
 {
-    //format id?
-    ReadUInt32LE();
-    //version
-    ReadUInt32LE();
-    //decompressed data size
-    int dcsize = ReadUInt32LE();
-    //anim id
-    int animId = ReadUInt32LE();
-    //8 bytes unknown
-    ReadUInt32LE();
-    ReadUInt32LE();
-    //unknown.
-    ReadInt16LE();
-    //unknown
-    ReadInt16LE();
-    //header length
-    ReadUInt32LE();
-    //framecount
-    int frameCount = ReadUInt32LE();
-    //data start + offset
-    uint8_t *dataStart = Start + ReadUInt32LE();
+    // FIXME
+    UopAnimationHeader hdr;
+    hdr.Format = ReadUInt32LE();
+    hdr.Version = ReadUInt32LE();
+    hdr.DecompressedSize = ReadUInt32LE();
+    hdr.AnimationId = ReadUInt32LE();
+    hdr.Unk1 = ReadUInt32LE();
+    hdr.Unk2 = ReadUInt32LE();
+    hdr.Unk3 = ReadInt16LE();
+    hdr.Unk4 = ReadInt16LE();
+    hdr.HeaderSize = ReadUInt32LE();
+    hdr.FrameCount = ReadUInt32LE();
+    hdr.Offset = ReadUInt32LE();
+    Ptr = Start + hdr.Offset;
+    return hdr;
+}
 
-    Ptr = dataStart;
-    vector<UOPFrameData> pixelDataOffsets;
+vector<UopAnimationFrame> CAnimationManager::UopReadFrameData()
+{
+    vector<UopAnimationFrame> data;
 
-    for (int i = 0; i < frameCount; i++)
+    auto hdr = UopReadAnimationHeader();
+    for (int i = 0; i < hdr.FrameCount; i++)
     {
-        UOPFrameData data;
-        data.dataStart = Ptr;
-        //anim group
-        ReadInt16LE();
-        //frame id
-        data.frameId = ReadInt16LE();
-        //8 bytes unknown
-        ReadUInt32LE();
-        ReadUInt32LE();
-        //offset
-        data.pixelDataOffset = ReadUInt32LE();
-        size_t vsize = pixelDataOffsets.size();
-        if (vsize + 1 != data.frameId)
+        // FIXME
+        UopAnimationFrame frame;
+        frame.DataStart = Ptr;
+        frame.GroupId = ReadInt16LE();
+        frame.FrameId = ReadInt16LE();
+        frame.Unk1 = ReadUInt32LE();
+        frame.Unk2 = ReadUInt32LE();
+        frame.PixelDataOffset = ReadUInt32LE();
+
+        size_t vsize = data.size();
+        if (vsize + 1 != frame.FrameId)
         {
-            while (vsize + 1 != data.frameId)
+            while (vsize + 1 != frame.FrameId)
             {
-                pixelDataOffsets.push_back({});
+                data.push_back({});
                 vsize++;
             }
         }
-        pixelDataOffsets.push_back(data);
+        data.push_back(frame);
     }
-    size_t vectorSize = pixelDataOffsets.size();
+    size_t vectorSize = data.size();
     if (vectorSize < 50)
     {
         while (vectorSize != 50)
         {
-            pixelDataOffsets.push_back({});
+            data.push_back({});
             vectorSize++;
         }
     }
-    return pixelDataOffsets;
+    return data;
 }
 
-void CAnimationManager::ReadUOPFrameData(
-    short &imageCenterX,
-    short &imageCenterY,
-    short &imageWidth,
-    short &imageHeight,
+// FIXME: put directly in UopAnimationFrame?
+void CAnimationManager::UopReadFrame(
+    int16_t &centerX,
+    int16_t &centerY,
+    int16_t &width,
+    int16_t &height,
     uint16_t *&palette,
-    UOPFrameData &frameData)
+    UopAnimationFrame &frame)
 {
-    Ptr = frameData.dataStart + frameData.pixelDataOffset;
+    Ptr = frame.DataStart + frame.PixelDataOffset;
+    // FIXME
     palette = reinterpret_cast<uint16_t *>(Ptr);
     Move(512); //Palette
-
-    imageCenterX = ReadInt16LE();
-    imageCenterY = ReadInt16LE();
-    imageWidth = ReadInt16LE();
-    imageHeight = ReadInt16LE();
+    centerX = ReadInt16LE();
+    centerY = ReadInt16LE();
+    width = ReadInt16LE();
+    height = ReadInt16LE();
 }
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)

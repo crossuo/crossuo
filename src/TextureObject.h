@@ -6,14 +6,7 @@
 #include "Constants.h"
 #include "Backend.h"
 
-struct UOPAnimationData
-{
-    os_path path;
-    unsigned int offset;
-    unsigned int compressedLength;
-    unsigned int decompressedLength;
-    std::fstream *fileStream;
-};
+struct CUopMappedFile;
 
 struct CTextureAnimationFrame : public CGLTexture
 {
@@ -45,5 +38,5 @@ struct CTextureAnimationDirection
 struct CTextureAnimationGroup
 {
     CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
-    UOPAnimationData m_UOPAnimData;
+    UopBlockHeader m_UOPAnimData;
 };
