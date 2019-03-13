@@ -39,26 +39,23 @@ CustomHousesManager::~CustomHousesManager()
 void CustomHousesManager::Clear()
 {
     DEBUG_TRACE_FUNCTION;
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
-         ++i)
+    for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
-        CCustomHouse *house = i->second;
+        CCustomHouse *house = it->second;
         delete house;
-        i->second = nullptr;
+        it->second = nullptr;
     }
 }
 
 CCustomHouse *CustomHousesManager::Get(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
-         ++i)
+    for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
-        CCustomHouse *house = i->second;
-
+        CCustomHouse *house = it->second;
         if (house != nullptr && house->Serial == serial)
         {
-            return i->second;
+            return it->second;
         }
     }
 
@@ -139,11 +136,9 @@ void CustomHousesManager::Save(const os_path &path)
 
     int count = 0;
 
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
-         ++i)
+    for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
-        CCustomHouse *house = i->second;
-
+        CCustomHouse *house = it->second;
         if (house != nullptr && (static_cast<unsigned int>(!house->m_Items.empty()) != 0u))
         {
             count++;
@@ -153,11 +148,9 @@ void CustomHousesManager::Save(const os_path &path)
     writer.WriteInt32LE(count);
     writer.WriteBuffer();
 
-    for (unordered_map<uint32_t, CCustomHouse *>::iterator i = m_Items.begin(); i != m_Items.end();
-         ++i)
+    for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
-        CCustomHouse *house = i->second;
-
+        CCustomHouse *house = it->second;
         if (house == nullptr || house->m_Items.empty())
         {
             continue;

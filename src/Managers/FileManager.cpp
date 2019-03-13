@@ -13,63 +13,79 @@
 #define MINIZ_IMPLEMENTATION
 #include <miniz.h>
 
+string g_dumpUopFile;
 CFileManager g_FileManager;
 
-void CUopMappedFile::Add(uint64_t hash, const UopBlockHeader &item)
+void CUopMappedFile::Add(uint64_t hash, const UopBlockHeader *item)
 {
     m_Map[hash] = item;
 }
 
-UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
+bool CUopMappedFile::HasAsset(uint64_t hash) const
 {
+    return m_Map.find(hash) != m_Map.end();
+}
+
+const UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
+{
+    DEBUG_TRACE_FUNCTION;
     auto found = m_Map.find(hash);
     if (found != m_Map.end())
     {
-        return &found->second;
+        return found->second;
     }
 
     return nullptr;
 }
 
-vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader &block)
+static bool DecompressBlock(const UopBlockHeader &block, uint8_t *dst, uint8_t *src)
 {
-    ResetPtr();
-    Move((int)block.Offset);
+    DEBUG_TRACE_FUNCTION;
+    uLongf cLen = block.CompressedSize;
+    uLongf dLen = block.DecompressedSize;
+    if (cLen == 0 || block.Flags == 0)
+    {
+        dst = src;
+        return true;
+    }
 
-    uLongf compressedSize = block.CompressedSize;
-    uLongf decompressedSize = block.DecompressedSize;
-    vector<uint8_t> result(decompressedSize, 0);
-    if ((compressedSize != 0u) && compressedSize != decompressedSize)
+    auto p = reinterpret_cast<unsigned char const *>(src);
+    int z_err = mz_uncompress(dst, &dLen, p, cLen);
+    if (z_err != Z_OK)
     {
-        int z_err = mz_uncompress(&result[0], &decompressedSize, Ptr, compressedSize);
-        if (z_err != Z_OK)
-        {
-            Error(Filesystem, "uncompress error: %i", z_err);
-            result.clear();
-        }
+        Error(Data, "decompression failed %d", z_err);
+        return false;
     }
-    else
-    {
-        memcpy(&result[0], &Ptr[0], decompressedSize);
-    }
-    return result;
+    return true;
 }
 
-CFileManager::CFileManager()
-
+vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 {
+    DEBUG_TRACE_FUNCTION;
+    assert(block);
+    uint8_t *src = Start + block->Offset + block->HeaderSize;
+    vector<uint8_t> dst(block->DecompressedSize, 0);
+    if (DecompressBlock(*block, dst.data(), src))
+    {
+        return dst;
+    }
+    dst.clear();
+    return dst;
 }
 
-CFileManager::~CFileManager()
+bool CFileManager::UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId)
 {
+    assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
+    uint8_t *src = g_FileManager.m_AnimationFrame[fileId].Start + block.Offset + block.HeaderSize;
+    return DecompressBlock(block, dst, src);
 }
 
 bool CFileManager::Load()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Config.ClientVersion >= CV_7000 && LoadUOPFile(m_MainMisc, "MainMisc.uop"))
+    if (g_Config.ClientVersion >= CV_7000 && UopLoadFile(m_MainMisc, "MainMisc.uop"))
     {
-        return LoadWithUOP();
+        return LoadWithUop();
     }
     if (!m_ArtIdx.Load(g_App.UOFilesPath("artidx.mul")))
     {
@@ -119,7 +135,7 @@ bool CFileManager::Load()
     {
         return false;
     }
-    if (!TryOpenFileStream(m_AnimMul[0], g_App.UOFilesPath("anim.mul")))
+    if (!MulLoadFile(m_AnimMul[0], g_App.UOFilesPath("anim.mul")))
     {
         return false;
     }
@@ -158,12 +174,12 @@ bool CFileManager::Load()
 
     m_SpeechMul.Load(g_App.UOFilesPath("speech.mul"));
     m_LangcodeIff.Load(g_App.UOFilesPath("Langcode.iff"));
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < countof(m_AnimMul); i++)
     {
         if (i > 1)
         {
             m_AnimIdx[i].Load(g_App.UOFilesPath("anim%i.idx", i));
-            TryOpenFileStream(m_AnimMul[i], g_App.UOFilesPath("anim%i.mul", i));
+            MulLoadFile(m_AnimMul[i], g_App.UOFilesPath("anim%i.mul", i));
         }
 
         m_MapMul[i].Load(g_App.UOFilesPath("map%i.mul", i));
@@ -180,7 +196,7 @@ bool CFileManager::Load()
         m_StaDif[i].Load(g_App.UOFilesPath("stadif%i.mul", i));
     }
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < countof(m_UnifontMul); i++)
     {
         auto s = i != 0 ? g_App.UOFilesPath("unifont%i.mul", i) : g_App.UOFilesPath("unifont.mul");
         if (m_UnifontMul[i].Load(s))
@@ -197,10 +213,11 @@ bool CFileManager::Load()
     return true;
 }
 
-bool CFileManager::LoadWithUOP()
+bool CFileManager::LoadWithUop()
 {
+    DEBUG_TRACE_FUNCTION;
     //Try to use map uop files first, if we can, we will use them.
-    if (!LoadUOPFile(m_ArtLegacyMUL, "artLegacyMUL.uop"))
+    if (!UopLoadFile(m_ArtLegacyMUL, "artLegacyMUL.uop"))
     {
         if (!m_ArtIdx.Load(g_App.UOFilesPath("artidx.mul")))
         {
@@ -212,7 +229,7 @@ bool CFileManager::LoadWithUOP()
         }
     }
 
-    if (!LoadUOPFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop"))
+    if (!UopLoadFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop"))
     {
         if (!m_GumpIdx.Load(g_App.UOFilesPath("gumpidx.mul")))
         {
@@ -230,7 +247,7 @@ bool CFileManager::LoadWithUOP()
         UseUOPGumps = true;
     }
 
-    if (!LoadUOPFile(m_SoundLegacyMUL, "soundLegacyMUL.uop"))
+    if (!UopLoadFile(m_SoundLegacyMUL, "soundLegacyMUL.uop"))
     {
         if (!m_SoundIdx.Load(g_App.UOFilesPath("soundidx.mul")))
         {
@@ -242,7 +259,7 @@ bool CFileManager::LoadWithUOP()
         }
     }
 
-    if (!LoadUOPFile(m_MultiCollection, "MultiCollection.uop"))
+    if (!UopLoadFile(m_MultiCollection, "MultiCollection.uop"))
     {
         if (!m_MultiIdx.Load(g_App.UOFilesPath("multi.idx")))
         {
@@ -254,8 +271,8 @@ bool CFileManager::LoadWithUOP()
         }
     }
 
-    LoadUOPFile(m_AnimationSequence, "AnimationSequence.uop");
-    LoadUOPFile(m_Tileart, "tileart.uop");
+    //UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
+    UopLoadFile(m_Tileart, "tileart.uop");
 
     /* Эти файлы не используются самой последней версией клиента 7.0.52.2
 	if (!m_tileart.Load(g_App.UOFilesPath("tileart.uop")))
@@ -284,7 +301,7 @@ bool CFileManager::LoadWithUOP()
     {
         return false;
     }
-    if (!TryOpenFileStream(m_AnimMul[0], g_App.UOFilesPath("anim.mul")))
+    if (!MulLoadFile(m_AnimMul[0], g_App.UOFilesPath("anim.mul")))
     {
         return false;
     }
@@ -319,17 +336,16 @@ bool CFileManager::LoadWithUOP()
 
     m_SpeechMul.Load(g_App.UOFilesPath("speech.mul"));
     m_LangcodeIff.Load(g_App.UOFilesPath("Langcode.iff"));
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < countof(m_AnimMul); i++)
     {
         if (i > 1)
         {
             m_AnimIdx[i].Load(g_App.UOFilesPath("anim%i.idx", i));
-            TryOpenFileStream(m_AnimMul[i], g_App.UOFilesPath("anim%i.mul", i));
+            MulLoadFile(m_AnimMul[i], g_App.UOFilesPath("anim%i.mul", i));
         }
 
         string mapName = string("map") + std::to_string(i);
-
-        if (!LoadUOPFile(m_MapUOP[i], (mapName + "LegacyMUL.uop").c_str()))
+        if (!UopLoadFile(m_MapUOP[i], (mapName + "LegacyMUL.uop").c_str()))
         {
             m_MapMul[i].Load(g_App.UOFilesPath((mapName + ".mul")));
         }
@@ -346,7 +362,7 @@ bool CFileManager::LoadWithUOP()
         m_StaDif[i].Load(g_App.UOFilesPath("stadif%i.mul", i));
     }
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < countof(m_UnifontMul); i++)
     {
         auto s = i != 0 ? g_App.UOFilesPath("unifont%i.mul", i) : g_App.UOFilesPath("unifont.mul");
         if (m_UnifontMul[i].Load(s))
@@ -365,7 +381,7 @@ bool CFileManager::LoadWithUOP()
 
 void CFileManager::Unload()
 {
-    //DEBUG_TRACE_FUNCTION;
+    DEBUG_TRACE_FUNCTION;
     m_ArtIdx.Unload();
     m_GumpIdx.Unload();
     m_SoundIdx.Unload();
@@ -401,10 +417,10 @@ void CFileManager::Unload()
 
     m_LangcodeIff.Unload();
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < countof(m_AnimMul); i++)
     {
         m_AnimIdx[i].Unload();
-        m_AnimMul[i].close();
+        m_AnimMul[i].Unload();
         m_MapUOP[i].Unload();
         m_MapXUOP[i].Unload();
         m_MapMul[i].Unload();
@@ -420,7 +436,7 @@ void CFileManager::Unload()
         m_StaDif[i].Unload();
     }
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < countof(m_UnifontMul); i++)
     {
         m_UnifontMul[i].Unload();
     }
@@ -428,8 +444,12 @@ void CFileManager::Unload()
     m_VerdataMul.Unload();
 }
 
+// TODO: remove this and instead it we can try share data memory with assistant
+// this will be useful for fixing all the issues with assistant too
+/*
 void CFileManager::SendFilesInfo()
 {
+    DEBUG_TRACE_FUNCTION;
     if (m_TiledataMul.Start != nullptr)
     {
         CPluginPacketFileInfo(
@@ -462,7 +482,7 @@ void CFileManager::SendFilesInfo()
             .SendToPlugin();
     }
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < countof(m_MapMul); i++)
     {
         if (m_MapMul[i].Start != nullptr)
         {
@@ -564,290 +584,291 @@ void CFileManager::SendFilesInfo()
         }
     }
 }
+*/
 
-void CFileManager::TryReadUOPAnimations()
+void CFileManager::UopReadAnimations()
 {
+    DEBUG_TRACE_FUNCTION;
+    TRACE(Data, "start uop read jobs");
     std::thread readThread(&CFileManager::ReadTask, this);
     readThread.detach();
 }
 
-void CFileManager::ReadTask()
+static int UopSetAnimationGroups(int start, int end)
 {
-    std::unordered_map<uint64_t, UOPAnimationData> hashes;
-    for (int i = 1; i < 5; i++)
-    {
-        char magic[4];
-        char version[4];
-        char signature[4];
-        char nextBlock[8];
+    DEBUG_TRACE_FUNCTION;
 
-        std::fstream *animFile = new std::fstream();
-        if (animFile == nullptr)
+    const static int count = countof(CFileManager::m_AnimationFrame);
+    auto getFileWithAsset = [](uint64_t hash) -> int {
+        for (int i = 0; i < count; ++i)
         {
-            continue;
+            if (g_FileManager.m_AnimationFrame[i].HasAsset(hash))
+                return i;
         }
+        return -1;
+    };
 
-        auto path{ g_App.UOFilesPath("AnimationFrame%i.uop", i) };
-        if (!FileExists(path))
-        {
-            continue;
-        }
-
-        animFile->open(path, std::ios::binary | std::ios::in);
-        animFile->read(magic, 4);
-        animFile->read(version, 4);
-        animFile->read(signature, 4);
-        animFile->read(nextBlock, 8);
-        animFile->seekg(*reinterpret_cast<uint64_t *>(nextBlock), std::ios::beg);
-
-        do
-        {
-            char fileCount[4];
-            char offset[8];
-            char headerlength[4];
-            char compressedlength[4];
-            char hash[8];
-            char decompressedlength[4];
-            char skip1[4];
-            char skip2[2];
-
-            animFile->read(fileCount, 4);
-            animFile->read(nextBlock, 8);
-            int count = *reinterpret_cast<unsigned int *>(fileCount);
-            for (int i = 0; i < count; i++)
-            {
-                animFile->read(offset, 8);
-                animFile->read(headerlength, 4);
-                animFile->read(compressedlength, 4);
-                animFile->read(decompressedlength, 4);
-                animFile->read(hash, 8);
-                animFile->read(skip1, 4);
-                animFile->read(skip2, 2);
-
-                auto hashVal = *reinterpret_cast<uint64_t *>(hash);
-                auto offsetVal = *reinterpret_cast<uint64_t *>(offset);
-                if (offsetVal == 0)
-                {
-                    continue;
-                }
-
-                UOPAnimationData dataStruct;
-                dataStruct.offset = static_cast<uint32_t>(
-                    offsetVal + *reinterpret_cast<unsigned int *>(headerlength));
-                dataStruct.compressedLength = *reinterpret_cast<unsigned int *>(compressedlength);
-                dataStruct.decompressedLength =
-                    *reinterpret_cast<unsigned int *>(decompressedlength);
-
-                dataStruct.fileStream = animFile;
-                dataStruct.path = path;
-                hashes[hashVal] = dataStruct;
-            }
-
-            animFile->seekg(*reinterpret_cast<uint64_t *>(nextBlock), std::ios::beg);
-        } while (*reinterpret_cast<uint64_t *>(nextBlock) != 0);
-    }
-
-    int maxGroup = 0;
-
-    for (int animId = 0; animId < MAX_ANIMATIONS_DATA_INDEX_COUNT; animId++)
+    TRACE(Data, "running job %d:%d", start, end);
+    int lastGroup = 0;
+    for (int animId = start; animId < end; ++animId)
     {
-        CIndexAnimation *indexAnim = &g_AnimationManager.m_DataIndex[animId];
-
-        for (int grpId = 0; grpId < ANIMATION_GROUPS_COUNT; grpId++)
+        auto &idx = g_AnimationManager.m_DataIndex[animId];
+        for (int grpId = 0; grpId < ANIMATION_GROUPS_COUNT; ++grpId)
         {
-            CTextureAnimationGroup *group = &(*indexAnim).m_Groups[grpId];
+            auto &group = idx.m_Groups[grpId];
             char hashString[100];
-            sprintf_s(hashString, "build/animationlegacyframe/%06i/%02i.bin", animId, grpId);
-            auto hash = CGame::CreateHash(hashString);
-            if (hashes.find(hash) != hashes.end())
-            {
-                if (grpId > maxGroup)
-                {
-                    maxGroup = (int)grpId;
-                }
+            snprintf(
+                hashString,
+                sizeof(hashString),
+                "build/animationlegacyframe/%06d/%02d.bin",
+                animId,
+                grpId);
+            const auto asset = CGame::CreateHash(hashString);
 
-                UOPAnimationData dataStruct = hashes.at(hash);
-                indexAnim->IsUOP = true;
-                group->m_UOPAnimData = dataStruct;
+            const auto fileIndex = getFileWithAsset(asset);
+            if (fileIndex != -1)
+            {
+                if (grpId > lastGroup)
+                {
+                    lastGroup = grpId;
+                }
+                idx.IsUOP = true;
+                //group.m_UOPAnimData = hashes.at(hash);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
-                    CTextureAnimationDirection *dir = &group->m_Direction[dirId];
-                    dir->IsUOP = true;
-                    dir->BaseAddress = 0;
-                    dir->Address = 0;
+                    auto &dir = group.m_Direction[dirId];
+                    dir.IsUOP = true;
+                    dir.BaseAddress = 0;
+                    dir.Address = 0;
+                    dir.FileIndex = fileIndex;
                 }
             }
         }
     }
 
+    return lastGroup;
+}
+
+void CFileManager::ReadTask()
+{
+    DEBUG_TRACE_FUNCTION;
+
+    const static int count = countof(m_AnimationFrame);
+    for (int i = 0; i < count; i++)
+    {
+        char name[64];
+        snprintf(name, sizeof(name), "AnimationFrame%d.uop", i + 1);
+
+        auto &file = m_AnimationFrame[i];
+        UopLoadFile(file, name);
+    }
+    UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
+
+    int range = MAX_ANIMATIONS_DATA_INDEX_COUNT / count;
+    int lastGroup[count];
+    vector<std::thread> jobs;
+    for (int i = 0; i < count; i++)
+    {
+        int start = range * i;
+        int end = range * (i + 1);
+        TRACE(Data, "scheduling job for %d with range from %d to %d", i + 1, start, end);
+        auto job = [&, start, end]() { lastGroup[i] = UopSetAnimationGroups(start, end); };
+        jobs.push_back(std::thread(job));
+    }
+    for (auto &job : jobs)
+    {
+        job.join();
+    }
+    ProcessAnimSequeceData();
+
+    const int maxGroup = *std::max_element(lastGroup, lastGroup + count);
     if (g_AnimationManager.AnimGroupCount < maxGroup)
     {
         g_AnimationManager.AnimGroupCount = maxGroup;
     }
-
+    m_AnimationSequence.Unload();
     m_AutoResetEvent.Set();
 }
 
-bool CFileManager::FileExists(const os_path &filename)
+void CFileManager::ProcessAnimSequeceData()
 {
     DEBUG_TRACE_FUNCTION;
-    auto r = fs_path_exists(filename);
-    Info(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(filename), r);
-    return r;
-}
-
-char *CFileManager::ReadUOPDataFromFileStream(UOPAnimationData &animData)
-{
-    animData.fileStream->clear();
-    animData.fileStream->seekg(animData.offset, std::ios::beg);
-    //reading into buffer on the heap
-    char *buf = new char[animData.compressedLength];
-    animData.fileStream->read(buf, animData.compressedLength);
-    return buf;
-}
-
-bool CFileManager::DecompressUOPFileData(
-    UOPAnimationData &animData, vector<uint8_t> &decLayoutData, char *buf)
-{
-    uLongf cLen = animData.compressedLength;
-    uLongf dLen = animData.decompressedLength;
-
-    int z_err =
-        mz_uncompress(&decLayoutData[0], &dLen, reinterpret_cast<unsigned char const *>(buf), cLen);
-    delete[] buf;
-    if (z_err != Z_OK)
+    TRACE(Data, "processing AnimationSequence data");
+    for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_Map)
     {
-        Error(Filesystem, "UOP anim decompression failed %d", z_err);
-        Error(Filesystem, "anim file: %s", CStringFromPath(animData.path));
-        Error(Filesystem, "anim offset: %d", animData.offset);
-        return false;
-    }
-    return true;
-}
-
-bool CFileManager::LoadUOPFile(CUopMappedFile &file, const char *fileName)
-{
-    Info(Filesystem, "loading UOP: %s", fileName);
-    if (!file.Load(g_App.UOFilesPath(fileName)))
-    {
-        return false;
-    }
-
-    uint32_t formatID = file.ReadUInt32LE();
-
-    if (formatID != 0x0050594D)
-    {
-        Warning(Filesystem, "invalid UOP file '%s' formatID %i", fileName, formatID);
-        return false;
-    }
-
-    uint32_t formatVersion = file.ReadUInt32LE();
-
-    if (formatVersion > 5)
-    {
-        Warning(Filesystem, "invalid UOP file '%s' version %i", fileName, formatVersion);
-    }
-
-    file.Move(4); //Signature?
-    uint64_t next = file.ReadUInt64LE();
-
-    file.Move(4); //Block capacity?
-    uint32_t filesCount = file.ReadUInt32LE();
-
-    file.ResetPtr();
-    file.Move((int)next);
-
-    do
-    {
-        int count = file.ReadInt32LE();
-        next = file.ReadInt64LE();
-
-        for (int i = 0; i < count; i++)
-        {
-            uint64_t offset = file.ReadInt64LE();
-
-            uint32_t headerSize = file.ReadInt32LE();
-            uint32_t compressedSize = file.ReadInt32LE();
-            uint32_t decompressedSize = file.ReadInt32LE();
-
-            uint64_t hash = file.ReadInt64LE();
-            uint32_t unknown = file.ReadInt32LE();
-            uint16_t flag = file.ReadInt16LE();
-
-            if ((offset == 0u) || (decompressedSize == 0u))
-            {
-                continue;
-            }
-
-            if (flag == 0u)
-            {
-                compressedSize = 0;
-            }
-
-            UopBlockHeader item;
-            item.Offset = offset + headerSize;
-            item.CompressedSize = compressedSize;
-            item.DecompressedSize = decompressedSize;
-
-            file.Add(hash, item);
-        }
-
-        file.ResetPtr();
-        file.Move((int)next);
-    } while (next != 0);
-
-    file.ResetPtr();
-
-    //if (string("MainMisc.uop") != fileName)
-    //if (string("AnimationSequence.uop") != fileName)
-    //if (string("tileart.uop") != fileName)
-    return true;
-
-    for (auto i = file.m_Map.begin(); i != file.m_Map.end(); ++i)
-    {
-        Info(Data, "item dump start: %016llX, %i", i->first, i->second.CompressedSize);
-        vector<uint8_t> data = file.GetData(i->second);
-        if (data.empty())
+        const auto hash = kvp.first;
+        const auto block = kvp.second;
+        auto data = m_AnimationSequence.GetData(block);
+        SetData(reinterpret_cast<uint8_t *>(&data[0]), data.size());
+        const uint32_t animId = ReadInt32LE();
+        Move(48); // there's nothing there
+        //amount of replaced indices, values seen in files so far: 29, 31, 32, 48, 68
+        const uint32_t replaces = ReadInt32LE();
+        // human and gargoyle are complicated, skip for now
+        if (replaces == 48 || replaces == 68)
         {
             continue;
         }
 
-        Wisp::CDataReader reader(&data[0], data.size());
-        INFO_DUMP(Data, "UOP:", reader.Start, (int)reader.Size);
-        Info(Data, "item dump end:");
+        auto indexAnim = &g_AnimationManager.m_DataIndex[animId];
+        for (int i = 0; i < replaces; ++i)
+        {
+            const auto oldIdx = ReadInt32LE();
+            const auto frameCount = ReadInt32LE();
+            auto group = indexAnim->m_Groups[oldIdx];
+            if (frameCount == 0)
+            {
+                auto newIdx = ReadInt32LE();
+                if (animId == 432 && oldIdx == 23)
+                {
+                    //fucking boura
+                    newIdx = 29;
+                }
+                auto newGroup = indexAnim->m_Groups[newIdx];
+                indexAnim->m_Groups[oldIdx] = newGroup;
+                Move(60);
+            }
+            else
+            {
+                Move(64);
+                /*
+                for( int k = i; k < 5; ++k)
+                {
+                    group.m_Direction[k].FrameCount = frameCount;
+                }
+                */
+            }
+        }
+        //There will be a moderate amount of data left at the end of the file
+        //Seems like this data is essential to make AnimationSequence work
+        // Aimed
     }
+    Info(Data, "AnimationSequence processed %d entries", m_AnimationSequence.m_Map.size());
+}
+
+static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
+{
+    struct tm *dt = localtime(&rawtime);
+    strftime(out, maxLen, "%c", dt);
+}
+
+bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
+{
+    DEBUG_TRACE_FUNCTION;
+    auto path{ g_App.UOFilesPath(uopFilename) };
+    if (!fs_path_exists(path))
+    {
+        return false;
+    }
+
+    if (!file.Load(path))
+    {
+        return false;
+    }
+
+    const char *filename = CStringFromPath(path);
+    DEBUG(Data, "loading UOP: %s", filename);
+    file.Header = (UopHeader *)file.Start;
+    if (file.Header->Magic != MYP_MAGIC)
+    {
+        Error(Data, "%d:unknown file format 0x%08x", filename, file.Header->Magic);
+        return false;
+    }
+
+    if (file.Header->Version > 5)
+    {
+        Warning(Data, "%s:unexpected version %d", filename, file.Header->Version);
+    }
+    TRACE(Data, "%s:signature is 0x%08x", filename, file.Header->Signature);
+    TRACE(Data, "%s:max_block_count is %d", filename, file.Header->MaxBlockCount);
+    TRACE(Data, "%s:first_section at %d", filename, file.Header->FirstSection);
+    TRACE(Data, "%s:file_count is %d", filename, file.Header->FileCount);
     file.ResetPtr();
+    uint64_t next = file.Header->FirstSection;
+    file.Move(next);
+    do
+    {
+        auto section = (UopBlockSection *)file.Ptr;
+        file.Move(sizeof(UopBlockSection));
+
+        for (int i = 0; i < section->FileCount; i++)
+        {
+            auto item = (UopBlockHeader *)file.Ptr;
+            if (item->Offset == 0 || item->DecompressedSize == 0)
+            {
+                continue;
+            }
+            //hashes[hash] = item;
+            file.Add(item->Hash, item);
+            file.Move(sizeof(UopBlockHeader));
+        }
+        next = section->NextSection;
+        file.ResetPtr();
+        file.Move(next);
+    } while (next != 0);
+    file.ResetPtr();
+
+    if (!SDL_strcasecmp(uopFilename, g_dumpUopFile.c_str()))
+    {
+        char date[128];
+        DEBUG(Data, "MypHeader for %s", uopFilename);
+        DEBUG(Data, "\tVersion......: %d", file.Header->Version);
+        DEBUG(Data, "\tSignature....: %08X", file.Header->Signature);
+        DEBUG(Data, "\tFirstSection.: %016x", file.Header->FirstSection);
+        DEBUG(Data, "\tMaxBlockCount: %d", file.Header->MaxBlockCount);
+        DEBUG(Data, "\tFileCount....: %d", file.Header->FileCount);
+        DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad1);
+        DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad2);
+        DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad3);
+        DEBUG(Data, "\tBlocks: ");
+        for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
+        {
+            const auto hash = kvp.first;
+            const auto block = kvp.second;
+            auto meta = (UopBlockMetadata *)(file.Start + block->Offset);
+
+            DEBUG(Data, "\t\tBlock Header %08X_%016llX:", block->Checksum, block->Hash);
+            DEBUG(Data, "\t\t\tOffset..........: %016llx", block->Hash);
+            DEBUG(Data, "\t\t\tHeaderSize......: %d", block->HeaderSize);
+            DEBUG(Data, "\t\t\tCompressedSize..: %d", block->CompressedSize);
+            DEBUG(Data, "\t\t\tDecompressedSize: %d", block->DecompressedSize);
+            DEBUG(Data, "\t\t\tHash............: %016llx", block->Hash);
+            DEBUG(Data, "\t\t\tChecksum........: %08X", block->Checksum);
+            DEBUG(Data, "\t\t\tFlags...........: %d", block->Flags);
+
+            DEBUG(Data, "\t\t\tmetadata:");
+            DEBUG(Data, "\t\t\t\tType.....: %d", meta->Type);
+            DEBUG(Data, "\t\t\t\tOffset...: %04x", meta->Offset);
+            DateFromTimestamp(meta->Timestamp / 100000000, date, sizeof(date));
+            DEBUG(Data, "\t\t\t\tTimestamp: %s (%lld)", date, meta->Timestamp);
+            /*
+            vector<uint8_t> data = file.GetData(block);
+            if (data.empty())
+            {
+                continue;
+            }
+            DEBUG_DUMP(Data, "CONTENTS:", data.data(), data.size());
+            */
+        }
+        file.ResetPtr();
+        exit(1);
+    }
     return true;
 }
 
-bool CFileManager::TryOpenFileStream(std::fstream &fileStream, const os_path &filePath)
+bool CFileManager::MulLoadFile(Wisp::CMappedFile &file, const os_path &fileName)
 {
-    Info(Filesystem, "trying to open file stream for %s", CStringFromPath(filePath));
-    if (!FileExists(filePath))
-    {
-        Info(Filesystem, "%s doesnt exist", CStringFromPath(filePath));
-        return false;
-    }
-    fileStream.open(filePath, std::ios::binary | std::ios::in);
-    Info(Filesystem, "opened file stream for %s", CStringFromPath(filePath));
-    return true;
+    DEBUG_TRACE_FUNCTION;
+    return file.Load(fileName);
 }
 
 bool CFileManager::IsMulFileOpen(int idx) const
 {
-    //we only have 5 anim mul files atm
-    if (idx > 5)
-    {
-        return false;
-    }
-    return m_AnimMul[idx].is_open();
+    return idx < countof(m_AnimMul) ? m_AnimMul[idx].Start != 0 : false;
 }
 
-void CFileManager::ReadAnimMulDataFromFileStream(
-    vector<char> &animData, CTextureAnimationDirection &direction)
+uint8_t *CFileManager::MulReadAnimationData(const CTextureAnimationDirection &direction) const
 {
-    std::fstream *fileStream = &m_AnimMul[direction.FileIndex];
-    fileStream->clear();
-    fileStream->seekg(direction.Address, std::ios::beg);
-    fileStream->read(static_cast<char *>(animData.data()), direction.Size);
+    auto &file = m_AnimMul[direction.FileIndex];
+    return file.Start + direction.Address;
 }

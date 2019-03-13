@@ -28,12 +28,6 @@ struct ANIMATION_DIMENSIONS
     int CenterX = 0;
     int CenterY = 0;
 };
-struct UOPFrameData
-{
-    uint8_t *dataStart = nullptr;
-    short frameId = 0;
-    uint32_t pixelDataOffset = 0;
-};
 
 class CEquipConvData
 {
@@ -54,7 +48,7 @@ public:
 typedef unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
 typedef unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
 
-class CAnimationManager : public Wisp::CDataReader
+class CAnimationManager : public Wisp::CDataReader // FIXME
 {
 public:
     uint16_t Color = 0;
@@ -123,16 +117,17 @@ private:
     uint16_t m_CharacterLayerGraphic[25];
     uint16_t m_CharacterLayerAnimID[25];
 
-    bool TryReadUOPAnimDimins(CTextureAnimationDirection &direction);
-    vector<UOPFrameData> ReadUOPFrameDataOffsets();
-
-    void ReadUOPFrameData(
-        short &imageCenterX,
-        short &imageCenterY,
-        short &imageWidth,
-        short &imageHeight,
+    bool UopDecompressBlock(std::vector<uint8_t> &data, int fileId);
+    bool UopTryReadAnimDims(CTextureAnimationDirection &direction);
+    UopAnimationHeader UopReadAnimationHeader();
+    vector<UopAnimationFrame> UopReadFrameData();
+    void UopReadFrame(
+        int16_t &centerX,
+        int16_t &centerY,
+        int16_t &width,
+        int16_t &height,
         uint16_t *&palette,
-        UOPFrameData &frameData);
+        UopAnimationFrame &frame);
 
     uint8_t GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t action, uint8_t mode);
     uint8_t GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode);

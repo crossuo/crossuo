@@ -393,7 +393,7 @@ bool CGame::Install()
     Info(Client, "loading files");
     if (g_Config.ClientVersion >= CV_7000)
     {
-        g_FileManager.TryReadUOPAnimations();
+        g_FileManager.UopReadAnimations();
     }
 
     if (!g_FileManager.Load())
@@ -593,7 +593,7 @@ bool CGame::Install()
     {
         Info(Client, "waiting for file manager to try & load AnimationFrame files");
         g_FileManager.m_AutoResetEvent.WaitOne();
-        Info(Client, "FileManager.TryReadUOPAnimations() done");
+        Info(Client, "FileManager.UopReadAnimations() done");
     }
 
     Info(Client, "initialization completed");
@@ -1452,6 +1452,7 @@ void CGame::LoadPlugins()
         CPluginPacketSpellsList().SendToPlugin();
         CPluginPacketMacrosList().SendToPlugin();
 
+        // Share memory with assistant
         /*g_FileManager.SendFilesInfo();
 
 		for (auto i = 0; i < 0x10000; i++)
@@ -3542,7 +3543,7 @@ void CGame::LoadTiledata(int landSize, int staticsSize)
     }
 }
 
-void CGame::ReadMulIndexFile(
+void CGame::MulReadIndexFile(
     size_t indexMaxCount,
     const std::function<CIndexObject *(int index)> &getIdxObj,
     size_t address,
@@ -3557,7 +3558,7 @@ void CGame::ReadMulIndexFile(
     }
 }
 
-void CGame::ReadUOPIndexFile(
+void CGame::UopReadIndexFile(
     size_t indexMaxCount,
     const std::function<CIndexObject *(int)> &getIdxObj,
     const char *uopFileName,
@@ -3578,11 +3579,11 @@ void CGame::ReadUOPIndexFile(
         char hashString[200] = { 0 };
         sprintf_s(hashString, basePath, (int)i);
 
-        UopBlockHeader *block = uopFile.GetBlock(CreateHash(hashString));
+        auto block = uopFile.GetBlock(CreateHash(hashString));
         if (block != nullptr)
         {
             CIndexObject *obj = getIdxObj((int)i);
-            obj->Address = (uintptr_t)uopFile.Start + (uint32_t)block->Offset;
+            obj->Address = uintptr_t(uopFile.Start + block->Offset + block->HeaderSize);
             obj->DataSize = block->DecompressedSize;
             obj->UopBlock = block;
             obj->ID = -1;
@@ -3593,7 +3594,7 @@ void CGame::ReadUOPIndexFile(
                 obj->DataSize -= 8;
 
                 uopFile.ResetPtr();
-                uopFile.Move((int)block->Offset);
+                uopFile.Move(block->Offset + block->HeaderSize);
 
                 obj->Width = uopFile.ReadUInt32LE();
                 obj->Height = uopFile.ReadUInt32LE();
@@ -3738,13 +3739,13 @@ void CGame::LoadIndexFiles()
 
     if (g_FileManager.m_ArtMul.Start != nullptr)
     {
-        ReadMulIndexFile(
+        MulReadIndexFile(
             MAX_LAND_DATA_INDEX_COUNT,
             [&](int i) { return &m_LandDataIndex[i]; },
             (size_t)g_FileManager.m_ArtMul.Start,
             LandArtPtr,
             [&LandArtPtr]() { return ++LandArtPtr; });
-        ReadMulIndexFile(
+        MulReadIndexFile(
             m_StaticData.size(),
             [&](int i) { return &m_StaticDataIndex[i]; },
             (size_t)g_FileManager.m_ArtMul.Start,
@@ -3753,14 +3754,14 @@ void CGame::LoadIndexFiles()
     }
     else
     {
-        ReadUOPIndexFile(
+        UopReadIndexFile(
             MAX_LAND_DATA_INDEX_COUNT,
             [&](int i) { return &m_LandDataIndex[i]; },
             "artLegacyMUL",
             8,
             ".tga",
             g_FileManager.m_ArtLegacyMUL);
-        ReadUOPIndexFile(
+        UopReadIndexFile(
             m_StaticData.size() + MAX_LAND_DATA_INDEX_COUNT,
             [&](int i) { return &m_StaticDataIndex[i - MAX_LAND_DATA_INDEX_COUNT]; },
             "artLegacyMUL",
@@ -3772,7 +3773,7 @@ void CGame::LoadIndexFiles()
 
     if (g_FileManager.m_SoundMul.Start != nullptr)
     {
-        ReadMulIndexFile(
+        MulReadIndexFile(
             MAX_SOUND_DATA_INDEX_COUNT,
             [&](int i) { return &m_SoundDataIndex[i]; },
             (size_t)g_FileManager.m_SoundMul.Start,
@@ -3781,7 +3782,7 @@ void CGame::LoadIndexFiles()
     }
     else
     {
-        ReadUOPIndexFile(
+        UopReadIndexFile(
             MAX_SOUND_DATA_INDEX_COUNT,
             [&](int i) { return &m_SoundDataIndex[i]; },
             "soundLegacyMUL",
@@ -3792,7 +3793,7 @@ void CGame::LoadIndexFiles()
 
     if (g_FileManager.m_GumpMul.Start != nullptr)
     {
-        ReadMulIndexFile(
+        MulReadIndexFile(
             maxGumpsCount,
             [&](int i) { return &m_GumpDataIndex[i]; },
             (size_t)g_FileManager.m_GumpMul.Start,
@@ -3801,7 +3802,7 @@ void CGame::LoadIndexFiles()
     }
     else
     {
-        ReadUOPIndexFile(
+        UopReadIndexFile(
             maxGumpsCount,
             [&](int i) { return &m_GumpDataIndex[i]; },
             "gumpartLegacyMUL",
@@ -3810,13 +3811,13 @@ void CGame::LoadIndexFiles()
             g_FileManager.m_GumpartLegacyMUL);
     }
 
-    ReadMulIndexFile(
+    MulReadIndexFile(
         g_FileManager.m_TextureIdx.Size / sizeof(TEXTURE_IDX_BLOCK),
         [&](int i) { return &m_TextureDataIndex[i]; },
         (size_t)g_FileManager.m_TextureMul.Start,
         TexturePtr,
         [&TexturePtr]() { return ++TexturePtr; });
-    ReadMulIndexFile(
+    MulReadIndexFile(
         MAX_LIGHTS_DATA_INDEX_COUNT,
         [&](int i) { return &m_LightDataIndex[i]; },
         (size_t)g_FileManager.m_LightMul.Start,
@@ -3825,7 +3826,7 @@ void CGame::LoadIndexFiles()
 
     if (g_FileManager.m_MultiMul.Start != nullptr)
     {
-        ReadMulIndexFile(
+        MulReadIndexFile(
             g_MultiIndexCount,
             [&](int i) { return &m_MultiDataIndex[i]; },
             (size_t)g_FileManager.m_MultiMul.Start,
@@ -3835,36 +3836,29 @@ void CGame::LoadIndexFiles()
     else
     {
         CUopMappedFile &file = g_FileManager.m_MultiCollection;
-
-        for (std::unordered_map<uint64_t, UopBlockHeader>::iterator i = file.m_Map.begin();
-             i != file.m_Map.end();
-             ++i)
+        for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
         {
-            UopBlockHeader &block = i->second;
+            const auto hash = kvp.first;
+            const auto block = kvp.second;
             vector<uint8_t> data = file.GetData(block);
-
             if (data.empty())
             {
                 continue;
             }
 
             Wisp::CDataReader reader(&data[0], data.size());
-
             uint32_t id = reader.ReadUInt32LE();
-
             if (id < MAX_MULTI_DATA_INDEX_COUNT)
             {
                 CIndexMulti &index = m_MultiDataIndex[id];
-
-                index.Address = (size_t)file.Start + (size_t)block.Offset;
-                index.DataSize = block.DecompressedSize;
-                index.UopBlock = &i->second;
+                index.Address = size_t(file.Start + block->Offset + block->HeaderSize);
+                index.DataSize = block->DecompressedSize;
+                index.UopBlock = block;
                 index.ID = -1;
                 index.Count = reader.ReadUInt32LE();
             }
         }
-
-        //ReadUOPIndexFile(g_MultiIndexCount, [&](int i){ return &m_MultiDataIndex[i]; }, "MultiCollection", 6, ".bin", g_FileManager.m_MultiCollection);
+        //UopReadIndexFile(g_MultiIndexCount, [&](int i){ return &m_MultiDataIndex[i]; }, "MultiCollection", 6, ".bin", g_FileManager.m_MultiCollection);
     }
 }
 

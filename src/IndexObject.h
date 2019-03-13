@@ -17,7 +17,7 @@ struct CIndexObject
     uint16_t ID = 0;
     uint16_t Color = 0;
     uint32_t LastAccessTime = 0;
-    UopBlockHeader *UopBlock = nullptr;
+    const UopBlockHeader *UopBlock = nullptr;
     CGLTexture *Texture = nullptr;
 
     CIndexObject() = default;

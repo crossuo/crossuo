@@ -5,11 +5,11 @@
 
 #include "../IndexObject.h"
 
-class UOFileReader
+// FIXME: C
+struct UOFileReader
 {
-public:
-    UOFileReader() {}
-    ~UOFileReader() {}
+    UOFileReader() = default;
+    ~UOFileReader() = default;
 
     vector<uint16_t> GetGumpPixels(CIndexObject &io);
     CGLTexture *ReadGump(CIndexObject &io);

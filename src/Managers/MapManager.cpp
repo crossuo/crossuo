@@ -55,9 +55,7 @@ void CMapManager::CreateBlockTable(int map)
     MAP_INDEX_LIST &list = m_BlockData[map];
     CSize &size = g_MapBlockSize[map];
 
-    int maxBlockCount = size.Width * size.Height;
-
-    //Return and error notification?
+    const int maxBlockCount = size.Width * size.Height;
     if (maxBlockCount < 1)
     {
         return;
@@ -102,16 +100,20 @@ void CMapManager::CreateBlockTable(int map)
             {
                 fileNumber = shifted;
                 char mapFilePath[200] = { 0 };
-                sprintf_s(mapFilePath, "build/map%ilegacymul/%08i.dat", map, shifted);
-
-                UopBlockHeader *uopBlock = uopFile.GetBlock(CGame::CreateHash(mapFilePath));
-                if (uopBlock != nullptr)
+                snprintf(
+                    mapFilePath,
+                    sizeof(mapFilePath),
+                    "build/map%dlegacymul/%08d.dat",
+                    map,
+                    shifted);
+                auto block = uopFile.GetBlock(CGame::CreateHash(mapFilePath));
+                if (block != nullptr)
                 {
-                    uopOffset = (size_t)uopBlock->Offset;
+                    uopOffset = size_t(block->Offset + block->HeaderSize);
                 }
                 else
                 {
-                    Warning(Data, "hash not found in uop map %i file", map);
+                    Warning(Data, "hash not found in uop map %d file", map);
                 }
             }
         }
@@ -153,8 +155,7 @@ void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
     MAP_INDEX_LIST &list = m_BlockData[0];
     CSize &size = g_MapBlockSize[0];
 
-    int maxBlockCount = size.Width * size.Height;
-
+    const int maxBlockCount = size.Width * size.Height;
     if (maxBlockCount < 1)
     {
         return;

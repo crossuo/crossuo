@@ -869,8 +869,7 @@ PACKET_HANDLER(CharacterList)
     g_TooltipsEnabled = ((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) &&
                         (g_Config.ProtocolClientVersion >= CV_308Z);
     g_PaperdollBooks = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u;
-
-    g_Pal_Necro_Creation = (bool)(g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS);
+    g_Pal_Necro_Creation = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u;
 
     g_CharacterListScreen.UpdateContent();
 }
@@ -2845,7 +2844,7 @@ PACKET_HANDLER(ExtendedCommand)
                     item->SetName(ToString(str));
                 }
 
-                const uint8_t font = g_ConfigManager.ChatFont; // 0x03
+                const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
                 g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
             }
 
@@ -2912,7 +2911,7 @@ PACKET_HANDLER(ExtendedCommand)
 
             if (str.length() != 0u)
             {
-                const uint8_t font = g_ConfigManager.ChatFont; // 0x03
+                const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
                 g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, 0x3B2, str);
             }
             CPacketMegaClilocRequestOld(serial).Send();
@@ -3465,7 +3464,7 @@ PACKET_HANDLER(UnicodeTalk)
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        const uint8_t font = g_ConfigManager.SpeechFont;
+        const uint8_t font = uint8_t(g_ConfigManager.SpeechFont);
         g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, textColor, str);
     }
     else
@@ -3500,7 +3499,7 @@ PACKET_HANDLER(UnicodeTalk)
             }
         }
 
-        const uint8_t font = g_ConfigManager.SpeechFont;
+        const uint8_t font = uint8_t(g_ConfigManager.SpeechFont);
         g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, textColor, str);
     }
 }
@@ -4140,7 +4139,7 @@ PACKET_HANDLER(DisplayClilocString)
     uint32_t cliloc = ReadUInt32BE();
     if (!g_FontManager.UnicodeFontExists(font))
     {
-        font = g_ConfigManager.ChatFont;
+        font = uint8_t(g_ConfigManager.ChatFont);
     }
 
     uint8_t flags = 0;

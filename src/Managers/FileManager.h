@@ -7,33 +7,31 @@
 #include "../Wisp/WispMappedFile.h"
 #include "../Utility/AutoResetEvent.h"
 
-struct UOPAnimationData;
 struct CTextureAnimationDirection;
+using UopBlockHeaderMap = std::unordered_map<uint64_t, const UopBlockHeader *>;
 
 struct CUopMappedFile : public Wisp::CMappedFile
 {
-    unordered_map<uint64_t, UopBlockHeader> m_Map;
+    UopHeader *Header = nullptr;
+    UopBlockHeaderMap m_Map;
+
+    bool HasAsset(uint64_t hash) const;
+    void Add(uint64_t hash, const UopBlockHeader *item);
+    const UopBlockHeader *GetBlock(uint64_t hash);
+    vector<uint8_t> GetData(const UopBlockHeader *block);
 
     CUopMappedFile() = default;
     virtual ~CUopMappedFile() = default;
-
-    void Add(uint64_t hash, const UopBlockHeader &item);
-    UopBlockHeader *GetBlock(uint64_t hash);
-    vector<uint8_t> GetData(const UopBlockHeader &block);
 };
 
-class CFileManager : public Wisp::CDataReader
+struct CFileManager : public Wisp::CDataReader
 {
-public:
     bool UseUOPGumps = false;
-    int UnicodeFontsCount = 0;
-
-    CFileManager();
-    virtual ~CFileManager();
+    int UnicodeFontsCount = 0; // never read
 
     AutoResetEvent m_AutoResetEvent;
 
-    //!Адреса файлов в памяти
+    // Idx
     Wisp::CMappedFile m_AnimIdx[6];
     Wisp::CMappedFile m_ArtIdx;
     Wisp::CMappedFile m_GumpIdx;
@@ -44,7 +42,8 @@ public:
     Wisp::CMappedFile m_StaticIdx[6];
     Wisp::CMappedFile m_TextureIdx;
 
-    std::fstream m_AnimMul[6];
+    // Mul
+    Wisp::CMappedFile m_AnimMul[6];
     Wisp::CMappedFile m_AnimdataMul;
     Wisp::CMappedFile m_ArtMul;
     Wisp::CMappedFile m_HuesMul;
@@ -66,7 +65,7 @@ public:
     Wisp::CMappedFile m_SpeechMul;
     Wisp::CMappedFile m_LangcodeIff;
 
-    //UOP
+    // UOP
     CUopMappedFile m_ArtLegacyMUL;
     CUopMappedFile m_GumpartLegacyMUL;
     CUopMappedFile m_SoundLegacyMUL;
@@ -75,9 +74,10 @@ public:
     CUopMappedFile m_MapUOP[6];
     CUopMappedFile m_MapXUOP[6];
     CUopMappedFile m_AnimationSequence;
+    CUopMappedFile m_AnimationFrame[4];
     CUopMappedFile m_MultiCollection;
 
-    //Map patches
+    // Map patches
     Wisp::CMappedFile m_MapDifl[6];
     Wisp::CMappedFile m_MapDif[6];
 
@@ -86,31 +86,21 @@ public:
     Wisp::CMappedFile m_StaDif[6];
 
     bool Load();
-    bool LoadWithUOP();
+    bool LoadWithUop();
     void Unload();
-    void TryReadUOPAnimations();
-
-    //Чтение сжатых данных с кадрами из УОП аним файла.
-    static char *ReadUOPDataFromFileStream(UOPAnimationData &animData);
-
-    void
-    ReadAnimMulDataFromFileStream(vector<char> &animData, CTextureAnimationDirection &direction);
-
-    //Разжатие данных с кадрами из УОП аним файла.
-    static bool
-    DecompressUOPFileData(UOPAnimationData &animData, vector<uint8_t> &decLayoutData, char *buf);
-
-    void SendFilesInfo();
-
+    void UopReadAnimations();
+    uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
     bool IsMulFileOpen(int idx) const;
+    static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId);
+
+    CFileManager() = default;
+    virtual ~CFileManager() = default;
 
 private:
     void ReadTask();
-    static bool FileExists(const os_path &filename);
-
-    static bool TryOpenFileStream(std::fstream &fileStream, const os_path &filePath);
-
-    bool LoadUOPFile(CUopMappedFile &file, const char *fileName);
+    bool UopLoadFile(CUopMappedFile &file, const char *fileName);
+    bool MulLoadFile(Wisp::CMappedFile &file, const os_path &fileName);
+    void ProcessAnimSequeceData();
 };
 
 extern CFileManager g_FileManager;

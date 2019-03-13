@@ -3,11 +3,6 @@
 
 namespace Wisp
 {
-CMappedFile::CMappedFile()
-
-{
-}
-
 CMappedFile::~CMappedFile()
 {
     Unload();

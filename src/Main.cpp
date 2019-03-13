@@ -26,6 +26,7 @@ po::parser g_cli;
 
 static bool InitCli(int argc, char *argv[])
 {
+    g_cli["dump-uop"].type(po::string).description("Dump information about a UOP file");
     g_cli["headless"].description("Headless mode, no window is created");
     g_cli["nocrypt"].description("Disable network cryptography");
     g_cli["help"].abbreviation('h').description("print this help screen").callback([&] {
@@ -87,6 +88,11 @@ int main(int argc, char **argv)
 
     g_App.Init();
     LoadGlobalConfig();
+
+    if (g_cli["dump-uop"].was_set())
+    {
+        g_dumpUopFile = g_cli["dump-uop"].get().string;
+    }
 
     const bool isHeadless = g_cli["headless"].was_set();
     if (!isHeadless)

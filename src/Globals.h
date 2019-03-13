@@ -28,6 +28,7 @@ extern bool g_ShiftPressed;
 extern bool g_MovingFromMouse;
 extern bool g_AutoMoving;
 extern bool g_AbyssPacket03First;
+extern string g_dumpUopFile;
 
 bool CanBeDraggedByOffset(const CPoint2Di &point);
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);

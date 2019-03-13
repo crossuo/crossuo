@@ -62,10 +62,11 @@ bool CSpeechManager::LoadSpeech()
     bool isUOP = false;
     if (g_FileManager.m_MainMisc.Start != nullptr)
     {
-        UopBlockHeader *block = g_FileManager.m_MainMisc.GetBlock(0x0891F809004D8081); // FIXME: find the string for this hash
+        auto block = g_FileManager.m_MainMisc.GetBlock(
+            0x0891F809004D8081); // FIXME: find the string for this hash
         if (block != nullptr)
         {
-            tempData = g_FileManager.m_MainMisc.GetData(*block);
+            tempData = g_FileManager.m_MainMisc.GetData(block);
             reader.SetData(&tempData[0], tempData.size());
             isUOP = true;
         }

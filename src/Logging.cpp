@@ -119,7 +119,7 @@ void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, in
 void LogInit(const char *filename)
 {
 }
-void LogHexBuffer(const char *title, uint8_t *buf, int size)
+void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
 }
 

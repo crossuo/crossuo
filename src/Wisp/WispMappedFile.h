@@ -7,10 +7,9 @@
 
 namespace Wisp
 {
-class CMappedFile : public Wisp::CDataReader
+struct CMappedFile : public Wisp::CDataReader
 {
-public:
-    CMappedFile();
+    CMappedFile() = default;
     virtual ~CMappedFile();
 
     bool Load(const os_path &path);
