@@ -64,27 +64,27 @@ public:
         WriteDataLE((uint8_t *)&val, sizeof(uint64_t), offset);
     }
 
-    void WriteInt8(char val, const intptr_t &offset = 0)
+    void WriteInt8(int8_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((uint8_t *)&val, sizeof(char), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(int8_t), offset);
     }
 
-    void WriteInt16BE(short val, const intptr_t &offset = 0)
+    void WriteInt16BE(int16_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((uint8_t *)&val, sizeof(short), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(int16_t), offset);
     }
-    void WriteInt16LE(short val, const intptr_t &offset = 0)
+    void WriteInt16LE(int16_t val, const intptr_t &offset = 0)
     {
-        WriteDataLE((uint8_t *)&val, sizeof(short), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(int16_t), offset);
     }
 
-    void WriteInt32BE(int val, const intptr_t &offset = 0)
+    void WriteInt32BE(int32_t val, const intptr_t &offset = 0)
     {
-        WriteDataBE((uint8_t *)&val, sizeof(int), offset);
+        WriteDataBE((uint8_t *)&val, sizeof(int32_t), offset);
     }
-    void WriteInt32LE(int val, const intptr_t &offset = 0)
+    void WriteInt32LE(int32_t val, const intptr_t &offset = 0)
     {
-        WriteDataLE((uint8_t *)&val, sizeof(int), offset);
+        WriteDataLE((uint8_t *)&val, sizeof(int32_t), offset);
     }
 
     void WriteInt64BE(int64_t val, const intptr_t &offset = 0)
@@ -183,36 +183,36 @@ public:
         return val;
     }
 
-    char ReadInt8(const intptr_t &offset = 0)
+    int8_t ReadInt8(const intptr_t &offset = 0)
     {
         char val = 0;
-        ReadDataBE((uint8_t *)&val, sizeof(char), offset);
+        ReadDataBE((uint8_t *)&val, sizeof(int8_t), offset);
         return val;
     }
 
-    short ReadInt16BE(const intptr_t &offset = 0)
+    int16_t ReadInt16BE(const intptr_t &offset = 0)
     {
-        short val = 0;
-        ReadDataBE((uint8_t *)&val, sizeof(short), offset);
+        int16_t val = 0;
+        ReadDataBE((uint8_t *)&val, sizeof(int16_t), offset);
         return val;
     }
-    short ReadInt16LE(const intptr_t &offset = 0)
+    int16_t ReadInt16LE(const intptr_t &offset = 0)
     {
-        short val = 0;
-        ReadDataLE((uint8_t *)&val, sizeof(short), offset);
+        int16_t val = 0;
+        ReadDataLE((uint8_t *)&val, sizeof(int16_t), offset);
         return val;
     }
 
-    int ReadInt32BE(const intptr_t &offset = 0)
+    int32_t ReadInt32BE(const intptr_t &offset = 0)
     {
-        int val = 0;
-        ReadDataBE((uint8_t *)&val, sizeof(int), offset);
+        int32_t val = 0;
+        ReadDataBE((uint8_t *)&val, sizeof(int32_t), offset);
         return val;
     }
-    int ReadInt32LE(const intptr_t &offset = 0)
+    int32_t ReadInt32LE(const intptr_t &offset = 0)
     {
-        int val = 0;
-        ReadDataLE((uint8_t *)&val, sizeof(int), offset);
+        int32_t val = 0;
+        ReadDataLE((uint8_t *)&val, sizeof(int32_t), offset);
         return val;
     }
 
@@ -268,6 +268,12 @@ public:
         return val;
     }
 
+    template <typename T, size_t SIZE>
+    void ReadBuffer(T (&buffer)[SIZE])
+    {
+        SDL_memcpy(buffer, Ptr, SIZE * sizeof(T));
+        Move(SIZE);
+    }
     string ReadString(size_t size = 0, const intptr_t &offset = 0);
     wstring ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
     wstring ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);

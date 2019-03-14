@@ -99,7 +99,7 @@ bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int s
         {
             bool canBeAdd = true;
             bool dropFlags = false;
-            STATIC_TILES *tileInfo = obj->StaticGroupObjectPtr()->GetStaticData();
+            MulStaticTile2 *tileInfo = obj->StaticGroupObjectPtr()->GetStaticData();
             if (obj->IsGameObject())
             {
                 auto go = (CGameObject *)obj;

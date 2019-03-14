@@ -4,11 +4,13 @@
 #pragma once
 
 #include <stdint.h>
-#include <string>
+
+// References:
+// https://uo.stratics.com/heptazane/fileformats.shtml
 
 #pragma pack(push, 1)
 
-#define MYP_MAGIC 0x0050594D
+#define MYP_MAGIC 0x0050594D // 'MYP\0' MypArchive / Mythic Package
 
 struct UopHeader
 {
@@ -82,47 +84,65 @@ static_assert(sizeof(UopAnimationHeader) == 40, "Invalid UOP Animation Frame siz
 
 struct VERDATA_HEADER
 {
-    unsigned int FileID;
-    unsigned int BlockID;
-    unsigned int Position;
-    unsigned int Size;
-    unsigned int GumpData;
+    uint32_t FileID;
+    uint32_t BlockID;
+    uint32_t Position;
+    uint32_t Size;
+    uint32_t GumpData;
 };
 static_assert(sizeof(VERDATA_HEADER) == 20, "Invalid VERDATA_HEADER size");
 
-struct BASE_IDX_BLOCK
+struct IdxImageData
 {
-    unsigned int Position;
-    unsigned int Size;
+    uint16_t Height;
+    uint16_t Width;
 };
-static_assert(sizeof(BASE_IDX_BLOCK) == 8, "Invalid BASE_IDX_BLOCK size");
+struct IdxSoundData
+{
+    uint16_t Index;
+    uint16_t Reserved;
+};
 
-/*
-struct MAP_CELLS_EX
+struct IndexBlock
 {
-    unsigned short TileID;
-    unsigned short Color;
-    char Z;
+    uint32_t Position;
+    uint32_t Size;
+    union {
+        IdxImageData GumpData;
+        IdxImageData LightData;
+        IdxSoundData SoundData;
+        uint32_t Unknown; // Map, Sta, Multi, Skills, Art, Anim, Texture
+    };
 };
-*/
+static_assert(sizeof(IndexBlock) == 12, "Invalid IndexBlock size");
+
+typedef IndexBlock GumpIdxBlock;
+typedef IndexBlock LightIdxBlock;
+typedef IndexBlock SoundIdxBlock;
+typedef IndexBlock TexIdxBlock;
+typedef IndexBlock AnimIdxBlock;
+typedef IndexBlock ArtIdxBlock;
+typedef IndexBlock SkillIdxBlock;
+typedef IndexBlock MultiIdxBlock;
+typedef IndexBlock StaIdxBlock;
 
 struct MAP_CELLS
 {
-    unsigned short TileID;
+    uint16_t TileID;
     char Z;
 };
 static_assert(sizeof(MAP_CELLS) == 3, "Invalid MAP_CELLS size");
 
 struct MAP_BLOCK
 {
-    unsigned int Header;
+    uint32_t Header;
     MAP_CELLS Cells[64];
 };
 static_assert(sizeof(MAP_BLOCK) == 196, "Invalid MAP_BLOCK size");
 
 struct RADAR_MAP_CELLS
 {
-    unsigned short Graphic;
+    uint16_t Graphic;
     char Z;
     char IsLand;
 };
@@ -134,213 +154,153 @@ struct RADAR_MAP_BLOCK
 };
 static_assert(sizeof(RADAR_MAP_BLOCK) == 256, "Invalid RADAR_MAP_BLOCK size");
 
-struct STAIDX_BLOCK : public BASE_IDX_BLOCK
-{
-    unsigned int Unknown;
-};
-static_assert(sizeof(STAIDX_BLOCK) == 12, "Invalid STAIDX_BLOCK size");
-
 struct STATICS_BLOCK
 {
-    unsigned short Color;
-    unsigned char X;
-    unsigned char Y;
+    uint16_t Color;
+    uint8_t X;
+    uint8_t Y;
     char Z;
-    unsigned short Hue;
+    uint16_t Hue;
 };
 static_assert(sizeof(STATICS_BLOCK) == 7, "Invalid STATICS_BLOCK size");
 
-struct LAND_TILES_OLD
+struct MulLandTile1
 {
-    unsigned int Flags;
-    unsigned short TexID;
+    uint32_t Flags;
+    uint16_t TexID;
     char Name[20];
 };
-static_assert(sizeof(LAND_TILES_OLD) == 26, "Invalid LAND_TILES_OLD size");
+static_assert(sizeof(MulLandTile1) == 26, "Invalid MulLandTile1 (<7.0.9) size");
 
-struct LAND_GROUP_OLD
+struct MulLandTileGroup1
 {
-    unsigned int Unknown;
-    LAND_TILES_OLD Tiles[32];
+    uint32_t Header;
+    MulLandTile1 Tiles[32];
 };
-static_assert(sizeof(LAND_GROUP_OLD) == (26 * 32) + 4, "Invalid LAND_GROUP_OLD size");
+static_assert(sizeof(MulLandTileGroup1) == 836, "Invalid MulLandTileGroup1 (<7.0.9) size");
 
-struct STATIC_TILES_OLD
+struct MulStaticTile1
 {
-    unsigned int Flags;
-    unsigned char Weight;
-    unsigned char Layer;
-    unsigned int Count;
-    unsigned short AnimID;
-    unsigned short Hue;
-    unsigned short LightIndex;
-    unsigned char Height;
+    uint32_t Flags;
+    uint8_t Weight;
+    uint8_t Layer;
+    uint32_t Count;
+    uint16_t AnimID;
+    uint16_t Hue;
+    uint16_t LightIndex;
+    uint8_t Height;
     char Name[20];
 };
-static_assert(sizeof(STATIC_TILES_OLD) == 37, "Invalid STATIC_TILES_OLD size");
+static_assert(sizeof(MulStaticTile1) == 37, "Invalid MulStaticTile1 (<7.0.9) size");
 
-struct STATIC_GROUP_OLD
+struct MulStaticTileGroup1
 {
-    unsigned int Unk;
-    STATIC_TILES_OLD Tiles[32];
+    uint32_t Header;
+    MulStaticTile1 Tiles[32];
 };
-static_assert(sizeof(STATIC_GROUP_OLD) == 37 * 32 + 4, "Invalid STATIC_GROUP_OLD size");
+static_assert(sizeof(MulStaticTileGroup1) == 1188, "Invalid MulStaticTileGroup1 (<7.0.9) size");
 
-struct LAND_TILES_NEW
+struct MulLandTile2
 {
     uint64_t Flags;
-    unsigned short TexID;
+    uint16_t TexID;
     char Name[20];
 };
-static_assert(sizeof(LAND_TILES_NEW) == 30, "Invalid RADAR_LAND_TILES_NEWMAP_CELLS size");
+static_assert(sizeof(MulLandTile2) == 30, "Invalid MulLandTile2 (>=7.0.9) size");
 
-struct LAND_GROUP_NEW
+struct MulLandTileGroup2
 {
-    unsigned int Unknown;
-    LAND_TILES_NEW Tiles[32];
+    uint32_t Header;
+    MulLandTile2 Tiles[32];
 };
-static_assert(sizeof(LAND_GROUP_NEW) == 964, "Invalid LAND_GROUP_NEW size");
+static_assert(sizeof(MulLandTileGroup2) == 964, "Invalid MulLandTileGroup2 (>=7.0.9) size");
 
-struct STATIC_TILES_NEW
+struct MulStaticTile2
 {
     uint64_t Flags;
-    unsigned char Weight;
-    unsigned char Layer;
-    unsigned int Count;
-    unsigned short AnimID;
-    unsigned short Hue;
-    unsigned short LightIndex;
-    unsigned char Height;
+    uint8_t Weight;
+    uint8_t Layer;
+    uint32_t Count;
+    uint16_t AnimID;
+    uint16_t Hue;
+    uint16_t LightIndex;
+    uint8_t Height;
     char Name[20];
 };
-static_assert(sizeof(STATIC_TILES_NEW) == 41, "Invalid STATIC_TILES_NEW size");
+static_assert(sizeof(MulStaticTile2) == 41, "Invalid MulStaticTile2 (>=7.0.9) size");
 
-struct STATIC_GROUP_NEW
+struct MulStaticTileGroup2
 {
-    unsigned int Unk;
-    STATIC_TILES_NEW Tiles[32];
+    uint32_t Header; // TODO: Check what this and other headers are (crc32?)
+    MulStaticTile2 Tiles[32];
 };
-static_assert(sizeof(STATIC_GROUP_NEW) == (32 * 41) + 4, "Invalid STATIC_GROUP_NEW size");
-
-struct LAND_TILES
-{
-    uint64_t Flags;
-    unsigned short TexID;
-    string Name; // FIXME
-};
-static_assert(sizeof(LAND_TILES) == 42, "Invalid LAND_TILES size");
-/*
-struct LAND_GROUP
-{
-    unsigned int Unknown;
-    LAND_TILES Tiles[32];
-};
-static_assert(sizeof(LAND_GROUP) == 0, "Invalid LAND_GROUP size");
-*/
-struct STATIC_TILES
-{
-    uint64_t Flags;
-    unsigned char Weight;
-    unsigned char Layer;
-    unsigned int Count;
-    unsigned short AnimID;
-    unsigned short Hue;
-    unsigned short LightIndex;
-    unsigned char Height;
-    string Name; // FIXME
-};
-static_assert(sizeof(STATIC_TILES) == 53, "Invalid STATIC_TILES size");
-/*
-struct STATIC_GROUP
-{
-    unsigned int Unk;
-    STATIC_TILES Tiles[32];
-};
-static_assert(sizeof(STATIC_GROUP) == 0, "Invalid STATIC_GROUP size");
-*/
-struct MULTI_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned int Unknown;
-};
-static_assert(sizeof(MULTI_IDX_BLOCK) == 12, "Invalid MULTI_IDX_BLOCK size");
+static_assert(sizeof(MulStaticTileGroup2) == 1316, "Invalid MulStaticTileGroup2 (>=7.0.9) size");
 
 struct MULTI_BLOCK
 {
-    unsigned short ID;
-    short X;
-    short Y;
-    short Z;
-    unsigned int Flags;
+    uint16_t ID;
+    int16_t X;
+    int16_t Y;
+    int16_t Z;
+    uint32_t Flags;
 };
 static_assert(sizeof(MULTI_BLOCK) == 12, "Invalid MULTI_BLOCK size");
 
 struct MULTI_BLOCK_NEW
 {
-    unsigned short ID;
-    short X;
-    short Y;
-    short Z;
-    unsigned int Flags;
-    int Unknown;
+    uint16_t ID;
+    int16_t X;
+    int16_t Y;
+    int16_t Z;
+    uint32_t Flags;
+    int32_t Unknown;
 };
 static_assert(sizeof(MULTI_BLOCK_NEW) == 16, "Invalid MULTI_BLOCK_NEW size");
 
 struct HUES_BLOCK
 {
-    unsigned short ColorTable[32];
-    unsigned short TableStart;
-    unsigned short TableEnd;
+    uint16_t ColorTable[32];
+    uint16_t TableStart;
+    uint16_t TableEnd;
     char Name[20];
 };
 static_assert(sizeof(RADAR_MAP_CELLS) == 4, "Invalid RADAR_MAP_CELLS size");
 
 struct HUES_GROUP
 {
-    unsigned int Header;
+    uint32_t Header;
     HUES_BLOCK Entries[8];
 };
 static_assert(sizeof(HUES_BLOCK) == 88, "Invalid HUES_BLOCK size");
 
 struct VERDATA_HUES_BLOCK
 {
-    unsigned short ColorTable[32];
-    unsigned short TableStart;
-    unsigned short TableEnd;
+    uint16_t ColorTable[32];
+    uint16_t TableStart;
+    uint16_t TableEnd;
     char Name[20];
-    unsigned short Unk[32];
+    uint16_t Unk[32];
 };
 static_assert(sizeof(VERDATA_HUES_BLOCK) == 152, "Invalid VERDATA_HUES_BLOCK size");
 
 struct VERDATA_HUES_GROUP
 {
-    unsigned int Header;
+    uint32_t Header;
     VERDATA_HUES_BLOCK Entries[8];
 };
 static_assert(sizeof(VERDATA_HUES_GROUP) == 1220, "Invalid VERDATA_HUES_GROUP size");
 
-struct GUMP_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned short Height;
-    unsigned short Width;
-};
-static_assert(sizeof(GUMP_IDX_BLOCK) == 12, "Invalid GUMP_IDX_BLOCK size");
-
 struct GUMP_BLOCK
 {
-    unsigned short Value;
-    unsigned short Run;
+    uint16_t Value;
+    uint16_t Run;
 };
 static_assert(sizeof(GUMP_BLOCK) == 4, "Invalid GUMP_BLOCK size");
 
-struct SKILLS_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned int Unknown;
-};
-static_assert(sizeof(SKILLS_IDX_BLOCK) == 12, "Invalid SKILLS_IDX_BLOCK size");
 /*
 struct SKILLS_BLOCK
 {
-    unsigned char Button;
+    uint8_t Button;
     char *SkillName;
 };
 static_assert(sizeof(SKILLS_BLOCK) == 0, "Invalid SKILLS_BLOCK size");
@@ -348,10 +308,10 @@ static_assert(sizeof(SKILLS_BLOCK) == 0, "Invalid SKILLS_BLOCK size");
 /*
 struct BODYCONV_DATA
 {
-    short Anim2;
-    short Anim3;
-    short Anim4;
-    short Anim5;
+    int16_t Anim2;
+    int16_t Anim3;
+    int16_t Anim4;
+    int16_t Anim5;
 
     void Reset()
     {
@@ -366,43 +326,18 @@ static_assert(sizeof(BODYCONV_DATA) == 0, "Invalid BODYCONV_DATA size");
 struct ANIM_DATA
 {
     char FrameData[64];
-    unsigned char Unknown;
-    unsigned char FrameCount;
-    unsigned char FrameInterval;
-    unsigned char FrameStart;
+    uint8_t Unknown;
+    uint8_t FrameCount;
+    uint8_t FrameInterval;
+    uint8_t FrameStart;
 };
 static_assert(sizeof(ANIM_DATA) == 68, "Invalid ANIM_DATA size");
-
-struct ART_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned int Unknown;
-};
-static_assert(sizeof(ART_IDX_BLOCK) == 12, "Invalid ART_IDX_BLOCK size");
-
-struct LIGHT_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned short Height;
-    unsigned short Width;
-};
-static_assert(sizeof(LIGHT_IDX_BLOCK) == 12, "Invalid LIGHT_IDX_BLOCK size");
-
-struct ANIM_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned int Unknown;
-};
-static_assert(sizeof(ANIM_IDX_BLOCK) == 12, "Invalid ANIM_IDX_BLOCK size");
-
-struct TEXTURE_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned int Unknown;
-};
-static_assert(sizeof(TEXTURE_IDX_BLOCK) == 12, "Invalid TEXTURE_IDX_BLOCK size");
 /*
 struct PALETTE_BLOCK
 {
-    unsigned char R;
-    unsigned char G;
-    unsigned char B;
+    uint8_t R;
+    uint8_t G;
+    uint8_t B;
 };
 static_assert(sizeof(PALETTE_BLOCK) == 0, "Invalid PALETTE_BLOCK size");
 */
@@ -410,67 +345,60 @@ static_assert(sizeof(PALETTE_BLOCK) == 0, "Invalid PALETTE_BLOCK size");
 
 struct FONT_HEADER
 {
-    unsigned char Width;
-    unsigned char Height;
-    unsigned char Unknown;
+    uint8_t Width;
+    uint8_t Height;
+    uint8_t Unknown;
 };
 static_assert(sizeof(FONT_HEADER) == 3, "Invalid FONT_HEADER size");
 
 struct FONT_CHARACTER
 {
-    unsigned char Width;
-    unsigned char Height;
-    unsigned char Unknown;
+    uint8_t Width;
+    uint8_t Height;
+    uint8_t Unknown;
 };
 static_assert(sizeof(FONT_CHARACTER) == 3, "Invalid FONT_CHARACTER size");
 
 struct FONT_CHARACTER_DATA
 {
-    unsigned char Width;
-    unsigned char Height;
+    uint8_t Width;
+    uint8_t Height;
     vector<uint16_t> Data;
 };
 //static_assert(sizeof(FONT_CHARACTER_DATA) == 0, "Invalid FONT_CHARACTER_DATA size");
 
 struct FONT_DATA
 {
-    unsigned char Header;
+    uint8_t Header;
     FONT_CHARACTER_DATA Chars[224];
 };
 //static_assert(sizeof(FONT_DATA) == 0, "Invalid FONT_DATA size");
 
 struct FONT_OBJECT
 {
-    unsigned char Width;
-    unsigned char Height;
+    uint8_t Width;
+    uint8_t Height;
     GLuint Texture;
-    unsigned char *Data;
+    uint8_t *Data;
 };
 static_assert(sizeof(FONT_OBJECT) == 14, "Invalid FONT_OBJECT size");
 
 struct UNICODE_FONT_DATA
 {
-    unsigned char OffsetX;
-    unsigned char OffsetY;
-    unsigned char Width;
-    unsigned char Height;
+    uint8_t OffsetX;
+    uint8_t OffsetY;
+    uint8_t Width;
+    uint8_t Height;
 };
 static_assert(sizeof(UNICODE_FONT_DATA) == 4, "Invalid UNICODE_FONT_DATA size");
-
-struct SOUND_IDX_BLOCK : public BASE_IDX_BLOCK // FIXME
-{
-    unsigned short Index;
-    unsigned short Reserved;
-};
-static_assert(sizeof(SOUND_IDX_BLOCK) == 12, "Invalid SOUND_IDX_BLOCK size");
 
 struct SOUND_BLOCK
 {
     char Name[16];
-    unsigned int Unknown1;
-    unsigned int Unknown2;
-    unsigned int Unknown3;
-    unsigned int Unknown4;
+    uint32_t Unknown1;
+    uint32_t Unknown2;
+    uint32_t Unknown3;
+    uint32_t Unknown4;
     //Data;
 };
 static_assert(sizeof(SOUND_BLOCK) == 32, "Invalid SOUND_BLOCK size");

@@ -113,8 +113,11 @@ enum CLIENT_VERSION
     CV_60142 = VERSION(6, 0, 14, 2), //
     // CF_SA, Changed the character creation screen. Added gargoyle race
     CV_60144 = VERSION(6, 0, 14, 4),
-    CV_7000 = VERSION(7, 0, 0, 0),   //
-    CV_7090 = VERSION(7, 0, 9, 0),   //
+    CV_7000 = VERSION(7, 0, 0, 0), //
+    // static data count = 0x8000 (1024 * 32), before (<CV_7000) was 0x4000 (512 * 32)
+    CV_7090 = VERSION(7, 0, 9, 0), //
+    // static data count = 0x10000 (2048 * 32)
+    // static tiles flags changed from 32bits to 64bits
     CV_70130 = VERSION(7, 0, 13, 0), //
     CV_70160 = VERSION(7, 0, 16, 0), //
     CV_70180 = VERSION(7, 0, 18, 0), //

@@ -3,7 +3,6 @@
 
 #include "FileManager.h"
 #include "AnimationManager.h"
-#include "ClilocManager.h"
 #include "../CrossUO.h"
 #include "../Application.h"
 #include "../FileSystem.h"
@@ -12,6 +11,9 @@
 
 #define MINIZ_IMPLEMENTATION
 #include <miniz.h>
+
+// FIXME: g_App / g_Config / g_AnimationManager / (g_ClilocManager)
+// Remove these dependencies, file manager should be standalone
 
 string g_dumpUopFile;
 CFileManager g_FileManager;
@@ -871,4 +873,80 @@ uint8_t *CFileManager::MulReadAnimationData(const CTextureAnimationDirection &di
 {
     auto &file = m_AnimMul[direction.FileIndex];
     return file.Start + direction.Address;
+}
+
+// tiledata.mul
+// MulLandTileGroup[512] // land tile groups
+// MulStaticTileGroup[...] // static tile groups to the end of the file
+void CFileManager::LoadTiledata(vector<MulLandTile2> &landData, vector<MulStaticTile2> &staticsData)
+{
+    DEBUG_TRACE_FUNCTION;
+
+    auto &file = m_TiledataMul;
+    Info(Data, "loading tiledata");
+    const int landSize = 512;
+    const auto landGroup =
+        g_Config.ClientVersion < CV_7090 ? sizeof(MulLandTileGroup1) : sizeof(MulLandTileGroup2);
+    const auto staticsGroup = g_Config.ClientVersion < CV_7090 ? sizeof(MulStaticTileGroup1) :
+                                                                 sizeof(MulStaticTileGroup2);
+    size_t staticsSize = (file.Size - (landSize * landGroup)) / staticsGroup;
+    if (staticsSize > 2048)
+    {
+        staticsSize = 2048;
+    }
+    Info(Data, "landCount=%d", landSize);
+    Info(Data, "staticsCount=%d", staticsSize);
+
+    if (file.Size != 0u)
+    {
+        const bool isOldVersion = (g_Config.ClientVersion < CV_7090);
+        file.ResetPtr();
+        landData.resize(landSize * 32);
+        staticsData.resize(staticsSize * 32);
+        for (int i = 0; i < landSize; i++)
+        {
+            file.ReadUInt32LE();
+            for (int j = 0; j < 32; j++)
+            {
+                auto &tile = landData[(i * 32) + j];
+                if (isOldVersion)
+                {
+                    tile.Flags = file.ReadUInt32LE();
+                }
+                else
+                {
+                    tile.Flags = file.ReadInt64LE();
+                }
+                tile.TexID = file.ReadUInt16LE();
+                file.ReadBuffer(tile.Name);
+                Warning(Data, "TILE: %s\n", tile.Name);
+            }
+        }
+
+        for (int i = 0; i < staticsSize; i++)
+        {
+            file.ReadUInt32LE();
+            for (int j = 0; j < 32; j++)
+            {
+                auto &tile = staticsData[(i * 32) + j];
+                if (isOldVersion)
+                {
+                    tile.Flags = file.ReadUInt32LE();
+                }
+                else
+                {
+                    tile.Flags = file.ReadInt64LE();
+                }
+                tile.Weight = file.ReadInt8();
+                tile.Layer = file.ReadInt8();
+                tile.Count = file.ReadInt32LE();
+                tile.AnimID = file.ReadInt16LE();
+                tile.Hue = file.ReadInt16LE();
+                tile.LightIndex = file.ReadInt16LE();
+                tile.Height = file.ReadInt8();
+                file.ReadBuffer(tile.Name);
+                Warning(Data, "TILE: %s\n", tile.Name);
+            }
+        }
+    }
 }

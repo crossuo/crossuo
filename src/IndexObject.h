@@ -20,9 +20,9 @@ struct CIndexObject
     const UopBlockHeader *UopBlock = nullptr;
     CGLTexture *Texture = nullptr;
 
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id);
     CIndexObject() = default;
     virtual ~CIndexObject();
-    virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id);
 };
 
 struct CIndexObjectLand : public CIndexObject
@@ -60,23 +60,26 @@ struct CIndexMulti : public CIndexObject
 {
     uint32_t Count = 0;
 
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id) override;
+
     CIndexMulti() = default;
     virtual ~CIndexMulti() = default;
-    virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id) override;
 };
 
 struct CIndexGump : public CIndexObject
 {
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id) override;
+
     CIndexGump() = default;
     virtual ~CIndexGump() = default;
-    virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id) override;
 };
 
 struct CIndexLight : public CIndexObject
 {
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id) override;
+
     CIndexLight() = default;
     virtual ~CIndexLight() = default;
-    virtual void ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id) override;
 };
 
 struct CIndexAnimation
@@ -88,16 +91,10 @@ struct CIndexAnimation
     char MountedHeightOffset = 0;
     bool IsUOP = false;
     CTextureAnimationGroup m_Groups[ANIMATION_GROUPS_COUNT];
-
-    CIndexAnimation() = default;
-    virtual ~CIndexAnimation() = default;
 };
 
 struct CIndexMusic
 {
     string FilePath;
     bool Loop = false;
-
-    CIndexMusic() = default;
-    virtual ~CIndexMusic() = default;
 };

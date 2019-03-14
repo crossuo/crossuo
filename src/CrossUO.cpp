@@ -414,27 +414,7 @@ bool CGame::Install()
     memcpy(&m_AnimData[0], &g_FileManager.m_AnimdataMul.Start[0], g_FileManager.m_AnimdataMul.Size);
 
     g_ColorManager.Init();
-
-    Info(Client, "loading tiledata");
-    int staticsCount = 512;
-    if (g_Config.ClientVersion >= CV_7090)
-    {
-        staticsCount = (int)(g_FileManager.m_TiledataMul.Size - (512 * sizeof(LAND_GROUP_NEW))) /
-                       sizeof(STATIC_GROUP_NEW);
-    }
-    else
-    {
-        staticsCount = (int)(g_FileManager.m_TiledataMul.Size - (512 * sizeof(LAND_GROUP_OLD))) /
-                       sizeof(STATIC_GROUP_OLD);
-    }
-
-    if (staticsCount > 2048)
-    {
-        staticsCount = 2048;
-    }
-
-    Info(Client, "staticsCount=%i", staticsCount);
-    LoadTiledata(512, staticsCount);
+    g_FileManager.LoadTiledata(m_LandData, m_StaticData);
     Info(Client, "loading indexes");
     LoadIndexFiles();
     InitStaticAnimList();
@@ -3475,80 +3455,13 @@ void CGame::GoToWebLink(const string &url)
     }
 }
 
-void CGame::LoadTiledata(int landSize, int staticsSize)
-{
-    DEBUG_TRACE_FUNCTION;
-    Wisp::CMappedFile &file = g_FileManager.m_TiledataMul;
-
-    if (file.Size != 0u)
-    {
-        bool isOldVersion = (g_Config.ClientVersion < CV_7090);
-        file.ResetPtr();
-
-        m_LandData.resize(landSize * 32);
-
-        m_StaticData.resize(staticsSize * 32);
-
-        for (int i = 0; i < landSize; i++)
-        {
-            file.ReadUInt32LE();
-
-            for (int j = 0; j < 32; j++)
-            {
-                LAND_TILES &tile = m_LandData[(i * 32) + j];
-
-                if (isOldVersion)
-                {
-                    tile.Flags = file.ReadUInt32LE();
-                }
-                else
-                {
-                    tile.Flags = file.ReadInt64LE();
-                }
-
-                tile.TexID = file.ReadUInt16LE();
-                tile.Name = file.ReadString(20);
-            }
-        }
-
-        for (int i = 0; i < staticsSize; i++)
-        {
-            file.ReadUInt32LE();
-
-            for (int j = 0; j < 32; j++)
-            {
-                STATIC_TILES &tile = m_StaticData[(i * 32) + j];
-
-                if (isOldVersion)
-                {
-                    tile.Flags = file.ReadUInt32LE();
-                }
-                else
-                {
-                    tile.Flags = file.ReadInt64LE();
-                }
-
-                tile.Weight = file.ReadInt8();
-                tile.Layer = file.ReadInt8();
-                tile.Count = file.ReadInt32LE();
-                tile.AnimID = file.ReadInt16LE();
-                tile.Hue = file.ReadInt16LE();
-                tile.LightIndex = file.ReadInt16LE();
-                tile.Height = file.ReadInt8();
-                tile.Name = file.ReadString(20);
-            }
-        }
-
-        file.Unload();
-    }
-}
-
+// FIXME: simplify, move to FileManager
 void CGame::MulReadIndexFile(
     size_t indexMaxCount,
     const std::function<CIndexObject *(int index)> &getIdxObj,
     size_t address,
-    BASE_IDX_BLOCK *ptr,
-    const std::function<BASE_IDX_BLOCK *()> &getNewPtrValue)
+    IndexBlock *ptr,
+    const std::function<IndexBlock *()> &getNewPtrValue)
 {
     for (int i = 0; i < (int)indexMaxCount; i++)
     {
@@ -3558,6 +3471,7 @@ void CGame::MulReadIndexFile(
     }
 }
 
+// FIXME: move to FileManager
 void CGame::UopReadIndexFile(
     size_t indexMaxCount,
     const std::function<CIndexObject *(int)> &getIdxObj,
@@ -3711,15 +3625,15 @@ uint64_t CGame::CreateHash(const char *s)
 
 void CGame::LoadIndexFiles()
 {
-    ART_IDX_BLOCK *LandArtPtr = (ART_IDX_BLOCK *)g_FileManager.m_ArtIdx.Start;
-    ART_IDX_BLOCK *StaticArtPtr =
-        (ART_IDX_BLOCK
-             *)((size_t)g_FileManager.m_ArtIdx.Start + (m_LandData.size() * sizeof(ART_IDX_BLOCK)));
-    GUMP_IDX_BLOCK *GumpArtPtr = (GUMP_IDX_BLOCK *)g_FileManager.m_GumpIdx.Start;
-    TEXTURE_IDX_BLOCK *TexturePtr = (TEXTURE_IDX_BLOCK *)g_FileManager.m_TextureIdx.Start;
-    MULTI_IDX_BLOCK *MultiPtr = (MULTI_IDX_BLOCK *)g_FileManager.m_MultiIdx.Start;
-    SOUND_IDX_BLOCK *SoundPtr = (SOUND_IDX_BLOCK *)g_FileManager.m_SoundIdx.Start;
-    LIGHT_IDX_BLOCK *LightPtr = (LIGHT_IDX_BLOCK *)g_FileManager.m_LightIdx.Start;
+    ArtIdxBlock *LandArtPtr = (ArtIdxBlock *)g_FileManager.m_ArtIdx.Start;
+    ArtIdxBlock *StaticArtPtr =
+        (ArtIdxBlock
+             *)((size_t)g_FileManager.m_ArtIdx.Start + (m_LandData.size() * sizeof(ArtIdxBlock)));
+    GumpIdxBlock *GumpArtPtr = (GumpIdxBlock *)g_FileManager.m_GumpIdx.Start;
+    TexIdxBlock *TexturePtr = (TexIdxBlock *)g_FileManager.m_TextureIdx.Start;
+    MultiIdxBlock *MultiPtr = (MultiIdxBlock *)g_FileManager.m_MultiIdx.Start;
+    SoundIdxBlock *SoundPtr = (SoundIdxBlock *)g_FileManager.m_SoundIdx.Start;
+    LightIdxBlock *LightPtr = (LightIdxBlock *)g_FileManager.m_LightIdx.Start;
 
     if (g_FileManager.m_MultiCollection.Start != nullptr)
     {
@@ -3727,7 +3641,7 @@ void CGame::LoadIndexFiles()
     }
     else
     {
-        g_MultiIndexCount = (int)(g_FileManager.m_MultiIdx.Size / sizeof(MULTI_IDX_BLOCK));
+        g_MultiIndexCount = (int)(g_FileManager.m_MultiIdx.Size / sizeof(MultiIdxBlock));
 
         if (g_MultiIndexCount > MAX_MULTI_DATA_INDEX_COUNT)
         {
@@ -3735,7 +3649,7 @@ void CGame::LoadIndexFiles()
         }
     }
 
-    int maxGumpsCount = (int)(g_FileManager.m_GumpIdx.Start == nullptr ? MAX_GUMP_DATA_INDEX_COUNT : (g_FileManager.m_GumpIdx.End - g_FileManager.m_GumpIdx.Start) / sizeof(GUMP_IDX_BLOCK));
+    int maxGumpsCount = (int)(g_FileManager.m_GumpIdx.Start == nullptr ? MAX_GUMP_DATA_INDEX_COUNT : (g_FileManager.m_GumpIdx.End - g_FileManager.m_GumpIdx.Start) / sizeof(GumpIdxBlock));
 
     if (g_FileManager.m_ArtMul.Start != nullptr)
     {
@@ -3812,7 +3726,7 @@ void CGame::LoadIndexFiles()
     }
 
     MulReadIndexFile(
-        g_FileManager.m_TextureIdx.Size / sizeof(TEXTURE_IDX_BLOCK),
+        g_FileManager.m_TextureIdx.Size / sizeof(TexIdxBlock),
         [&](int i) { return &m_TextureDataIndex[i]; },
         (size_t)g_FileManager.m_TextureMul.Start,
         TexturePtr,
@@ -4387,53 +4301,52 @@ void CGame::ProcessStaticAnimList()
     }
 }
 
+// FIXME: Move Patching to FileManager and work only with locally loaded data
 void CGame::PatchFiles()
 {
     DEBUG_TRACE_FUNCTION;
-    /*
-	-map0 = 0;
-	-staidx0 = 1;
-	-statics0 = 2;
-	+artidx = 3;
-	+art = 4;
-	-animidx = 5;
-	-anim = 6;
-	-soundidx = 7;
-	-sound = 8;
-	-texidx = 9;
-	-texmaps = 10;
-	+gumpidx = 11;
-	+gumpart = 12;
-	+multiidx = 13;
-	+multi = 14;
-	-skillsidx = 15;
-	-skills = 16;
-	+tiledata = 30;
-	-animdata = 31;
-	+hues = 32;
-	*/
 
-    Wisp::CMappedFile &file = g_FileManager.m_VerdataMul;
+    enum
+    {
+        PatchMap0 = 0x00,
+        PatchStaIdx0 = 0x01,
+        PatchStatics0 = 0x02,
+        PatchArtiIdx = 0x03,
+        PatchArt = 0x04,
+        PatchAnimIdx = 0x05,
+        PatchAnim = 0x06,
+        PatchSoundIdx = 0x07,
+        PatchSound = 0x08,
+        PatchTexIdx = 0x09,
+        PatchTexMaps = 0x0A,
+        PatchGumpIdx = 0x0B,
+        PatchGumpArt = 0x0C,
+        PatchMultiIdx = 0x0D,
+        PatchMulti = 0x0E,
+        PatchSkillsIdx = 0x0F,
+        PatchSkills = 0x10,
+        PatchTileData = 0x1E,
+        PatchAnimData = 0x1F,
+        PatchHues = 0x20,
+    };
 
+    auto &file = g_FileManager.m_VerdataMul;
     if (!g_Config.UseVerdata || (file.Size == 0u))
     {
         g_ColorManager.CreateHuesPalette();
         return;
     }
 
-    int dataCount = *(int32_t *)file.Start;
-
-    size_t vAddr = (size_t)file.Start;
-
+    const auto dataCount = *(int32_t *)file.Start;
+    const auto vAddr = (size_t)file.Start;
     for (int i = 0; i < dataCount; i++)
     {
         VERDATA_HEADER *vh = (VERDATA_HEADER *)(vAddr + 4 + (i * sizeof(VERDATA_HEADER)));
-
-        if (vh->FileID == 0) //Map0
+        if (vh->FileID == PatchMap0)
         {
             g_MapManager.SetPatchedMapBlock(vh->BlockID, vAddr + vh->Position);
         }
-        else if (vh->FileID == 4) //Art
+        else if (vh->FileID == PatchArt)
         {
             if (vh->BlockID >= MAX_LAND_DATA_INDEX_COUNT) //Run
             {
@@ -4447,23 +4360,22 @@ void CGame::PatchFiles()
                 m_LandDataIndex[vh->BlockID].DataSize = vh->Size;
             }
         }
-        else if (vh->FileID == 12) //Gumpart
+        else if (vh->FileID == PatchGumpArt)
         {
             m_GumpDataIndex[vh->BlockID].Address = vAddr + vh->Position;
             m_GumpDataIndex[vh->BlockID].DataSize = vh->Size;
             m_GumpDataIndex[vh->BlockID].Width = vh->GumpData >> 16;
             m_GumpDataIndex[vh->BlockID].Height = vh->GumpData & 0xFFFF;
         }
-        else if (vh->FileID == 14 && (int)vh->BlockID < g_MultiIndexCount) //Multi
+        else if (vh->FileID == PatchMulti && (int)vh->BlockID < g_MultiIndexCount)
         {
             m_MultiDataIndex[vh->BlockID].Address = vAddr + vh->Position;
             m_MultiDataIndex[vh->BlockID].DataSize = vh->Size;
-            m_MultiDataIndex[vh->BlockID].Count = uint16_t(vh->Size / sizeof(MULTI_IDX_BLOCK));
+            m_MultiDataIndex[vh->BlockID].Count = uint16_t(vh->Size / sizeof(MultiIdxBlock));
         }
-        else if (vh->FileID == 16 && (int)vh->BlockID < g_SkillsManager.Count) //Skills
+        else if (vh->FileID == PatchSkills && (int)vh->BlockID < g_SkillsManager.Count)
         {
             CSkill *skill = g_SkillsManager.Get(vh->BlockID);
-
             if (skill != nullptr)
             {
                 Wisp::CDataReader reader((uint8_t *)vAddr + vh->Position, vh->Size);
@@ -4471,26 +4383,21 @@ void CGame::PatchFiles()
                 skill->Name = reader.ReadString(vh->Size - 1);
             }
         }
-        else if (vh->FileID == 30) //Tiledata
+        else if (vh->FileID == PatchTileData)
         {
             file.ResetPtr();
             file.Move(vh->Position);
-
             if (vh->Size == 836)
             {
-                int offset = vh->BlockID * 32;
-
+                const int offset = vh->BlockID * 32;
                 if (offset + 32 > (int)m_LandData.size())
                 {
                     continue;
                 }
-
                 file.ReadUInt32LE();
-
                 for (int j = 0; j < 32; j++)
                 {
-                    LAND_TILES &tile = m_LandData[offset + j];
-
+                    MulLandTile2 &tile = m_LandData[offset + j];
                     if (g_Config.ClientVersion < CV_7090)
                     {
                         tile.Flags = file.ReadUInt32LE();
@@ -4499,26 +4406,21 @@ void CGame::PatchFiles()
                     {
                         tile.Flags = file.ReadInt64LE();
                     }
-
                     tile.TexID = file.ReadUInt16LE();
-                    tile.Name = file.ReadString(20);
+                    file.ReadBuffer(tile.Name);
                 }
             }
             else if (vh->Size == 1188)
             {
                 int offset = (vh->BlockID - 0x0200) * 32;
-
                 if (offset + 32 > (int)m_StaticData.size())
                 {
                     continue;
                 }
-
                 file.ReadUInt32LE();
-
                 for (int j = 0; j < 32; j++)
                 {
-                    STATIC_TILES &tile = m_StaticData[offset + j];
-
+                    MulStaticTile2 &tile = m_StaticData[offset + j];
                     if (g_Config.ClientVersion < CV_7090)
                     {
                         tile.Flags = file.ReadUInt32LE();
@@ -4527,7 +4429,6 @@ void CGame::PatchFiles()
                     {
                         tile.Flags = file.ReadInt64LE();
                     }
-
                     tile.Weight = file.ReadInt8();
                     tile.Layer = file.ReadInt8();
                     tile.Count = file.ReadInt32LE();
@@ -4535,11 +4436,11 @@ void CGame::PatchFiles()
                     tile.Hue = file.ReadInt16LE();
                     tile.LightIndex = file.ReadInt16LE();
                     tile.Height = file.ReadInt8();
-                    tile.Name = file.ReadString(20);
+                    file.ReadBuffer(tile.Name);
                 }
             }
         }
-        else if (vh->FileID == 32) //Hues
+        else if (vh->FileID == PatchHues)
         {
             if ((int)vh->BlockID < g_ColorManager.GetHuesCount())
             {
@@ -4547,13 +4448,12 @@ void CGame::PatchFiles()
                 g_ColorManager.SetHuesBlock(vh->BlockID, group);
             }
         }
-        else if (vh->FileID != 5 && vh->FileID != 6) //no Anim / Animidx
+        else if (vh->FileID != PatchAnimIdx && vh->FileID != PatchAnim)
         {
-            Info(
+            Warning(
                 Client, "Unused verdata block (fileID) = %i (BlockID+ %i", vh->FileID, vh->BlockID);
         }
     }
-
     g_ColorManager.CreateHuesPalette();
 }
 

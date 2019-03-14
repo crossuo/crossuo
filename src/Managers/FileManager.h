@@ -93,6 +93,8 @@ struct CFileManager : public Wisp::CDataReader
     bool IsMulFileOpen(int idx) const;
     static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId);
 
+    void LoadTiledata(vector<MulLandTile2> &landData, vector<MulStaticTile2> &staticsData);
+
     CFileManager() = default;
     virtual ~CFileManager() = default;
 

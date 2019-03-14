@@ -75,11 +75,9 @@ void CGameItem::OnGraphicChange(int direction)
         {
             return;
         }
-
         if (IsCorpse())
         {
             AnimIndex = 99;
-
             if ((direction & 0x80) != 0)
             {
                 UsedLayer = 1;
@@ -89,18 +87,14 @@ void CGameItem::OnGraphicChange(int direction)
             {
                 UsedLayer = 0;
             }
-
             Layer = direction;
-
             NoDrawTile = false;
         }
         else
         {
             m_TiledataPtr = &g_Game.m_StaticData[Graphic];
-            STATIC_TILES &tile = *m_TiledataPtr;
-
+            MulStaticTile2 &tile = *m_TiledataPtr;
             NoDrawTile = IsNoDrawTile(Graphic);
-
             if (IsWearable() || Graphic == 0x0A28)
             {
                 AnimID = tile.AnimID;
@@ -115,9 +109,7 @@ void CGameItem::OnGraphicChange(int direction)
                 AnimID = tile.AnimID;
                 UsedLayer = tile.Layer;
             }
-
             CalculateFieldColor();
-
             g_Game.ExecuteStaticArt(Graphic);
         }
     }

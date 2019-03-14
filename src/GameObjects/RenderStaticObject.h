@@ -22,7 +22,7 @@ public:
 
 protected:
     //Указатель на структуру данных тайлдаты
-    STATIC_TILES *m_TiledataPtr{ nullptr };
+    MulStaticTile2 *m_TiledataPtr{ nullptr };
 
 public:
     CRenderStaticObject(
@@ -57,7 +57,7 @@ public:
     //Проверка, может ли текст быть прозрачным
     bool TextCanBeTransparent(CRenderTextObject *text);
 
-    STATIC_TILES *GetStaticData() { return m_TiledataPtr; }
+    MulStaticTile2 *GetStaticData() { return m_TiledataPtr; }
 
     //Получить высоту объекта (по данным из тайлдаты)
     uint8_t GetStaticHeight() { return m_TiledataPtr->Height; }
