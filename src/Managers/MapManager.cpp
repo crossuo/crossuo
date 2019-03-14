@@ -118,16 +118,16 @@ void CMapManager::CreateBlockTable(int map)
             }
         }
 
-        size_t address = mapAddress + uopOffset + (blockNumber * sizeof(MAP_BLOCK));
+        const size_t address = mapAddress + uopOffset + (blockNumber * sizeof(MAP_BLOCK));
         if (address < endMapAddress)
         {
             realMapAddress = address;
         }
 
-        STAIDX_BLOCK *sidx = (STAIDX_BLOCK *)(staticIdxAddress + block * sizeof(STAIDX_BLOCK));
+        const auto *sidx = (StaIdxBlock *)(staticIdxAddress + block * sizeof(StaIdxBlock));
         if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
         {
-            size_t address = staticAddress + sidx->Position;
+            const size_t address = staticAddress + sidx->Position;
             if (address < endStaticAddress)
             {
                 realStaticAddress = address;
@@ -138,11 +138,9 @@ void CMapManager::CreateBlockTable(int map)
                 }
             }
         }
-
         index.OriginalMapAddress = realMapAddress;
         index.OriginalStaticAddress = realStaticAddress;
         index.OriginalStaticCount = realStaticCount;
-
         index.MapAddress = realMapAddress;
         index.StaticAddress = realStaticAddress;
         index.StaticCount = realStaticCount;
@@ -262,33 +260,26 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 
         if (staticsPatchesCount != 0)
         {
-            Wisp::CMappedFile &difl = g_FileManager.m_StaDifl[i];
-            Wisp::CMappedFile &difi = g_FileManager.m_StaDifi[i];
+            auto &difl = g_FileManager.m_StaDifl[i];
+            auto &difi = g_FileManager.m_StaDifi[i];
             size_t startAddress = (size_t)g_FileManager.m_StaDif[i].Start;
-
             staticsPatchesCount = std::min(staticsPatchesCount, (intptr_t)difl.Size / 4);
 
             difl.ResetPtr();
             difi.ResetPtr();
-
             for (int j = 0; j < staticsPatchesCount; j++)
             {
-                uint32_t blockIndex = difl.ReadUInt32LE();
-
-                STAIDX_BLOCK *sidx = (STAIDX_BLOCK *)difi.Ptr;
-
-                difi.Move(sizeof(STAIDX_BLOCK));
-
+                const uint32_t blockIndex = difl.ReadUInt32LE();
+                const auto *sidx = (StaIdxBlock *)difi.Ptr;
+                difi.Move(sizeof(StaIdxBlock));
                 if (blockIndex < maxBlockCount)
                 {
                     size_t realStaticAddress = 0;
                     int realStaticCount = 0;
-
                     if (sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
                     {
                         realStaticAddress = startAddress + sidx->Position;
                         realStaticCount = sidx->Size / sizeof(STATICS_BLOCK);
-
                         if (realStaticCount > 0)
                         {
                             if (realStaticCount > 1024)
@@ -297,7 +288,6 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
                             }
                         }
                     }
-
                     list[blockIndex].StaticAddress = realStaticAddress;
                     list[blockIndex].StaticCount = realStaticCount;
                 }

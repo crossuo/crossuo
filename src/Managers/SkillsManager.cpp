@@ -31,21 +31,18 @@ bool CSkillsManager::Load()
         return false;
     }
 
-    Wisp::CMappedFile &idx = g_FileManager.m_SkillsIdx;
-    Wisp::CMappedFile &mul = g_FileManager.m_SkillsMul;
-
+    auto &idx = g_FileManager.m_SkillsIdx;
+    auto &mul = g_FileManager.m_SkillsMul;
     while (!idx.IsEOF())
     {
-        SKILLS_IDX_BLOCK *idxBlock = (SKILLS_IDX_BLOCK *)idx.Ptr;
-        idx.Move(sizeof(SKILLS_IDX_BLOCK));
+        SkillIdxBlock *idxBlock = (SkillIdxBlock *)idx.Ptr;
+        idx.Move(sizeof(SkillIdxBlock));
 
         if ((idxBlock->Size != 0u) && idxBlock->Position != 0xFFFFFFFF &&
             idxBlock->Size != 0xFFFFFFFF)
         {
             mul.Ptr = mul.Start + idxBlock->Position;
-
-            bool haveButton = (mul.ReadUInt8() != 0);
-
+            const bool haveButton = (mul.ReadUInt8() != 0);
             Add(CSkill(haveButton, mul.ReadString(idxBlock->Size - 1)));
         }
     }

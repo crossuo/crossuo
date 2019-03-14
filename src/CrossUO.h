@@ -39,7 +39,6 @@ private:
     string m_GameServerIP = "";
 
     void LoadAutoLoginNames();
-    void LoadTiledata(int landSize, int staticsSize);
     void LoadIndexFiles();
     void UnloadIndexFiles();
     void InitStaticAnimList();
@@ -56,8 +55,8 @@ private:
         size_t indexMaxCount,
         const std::function<CIndexObject *(int index)> &getIdxObj,
         size_t address,
-        BASE_IDX_BLOCK *ptr,
-        const std::function<BASE_IDX_BLOCK *()> &getNewPtrValue);
+        IndexBlock *ptr,
+        const std::function<IndexBlock *()> &getNewPtrValue);
     void UopReadIndexFile(
         size_t indexMaxCount,
         const std::function<CIndexObject *(int index)> &getIdxObj,
@@ -79,8 +78,8 @@ public:
 
     static uint64_t CreateHash(const char *s);
 
-    vector<LAND_TILES> m_LandData;
-    vector<STATIC_TILES> m_StaticData;
+    vector<MulLandTile2> m_LandData;
+    vector<MulStaticTile2> m_StaticData;
 
     bool Install();
     void Uninstall();

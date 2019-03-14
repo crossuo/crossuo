@@ -149,18 +149,18 @@ void CAnimationManager::Load(uint32_t *verdata)
             if (i >= 400) //People
             {
                 groupType = AGT_HUMAN;
-                findID = (((i - 400) * 175) + 35000) * sizeof(ANIM_IDX_BLOCK);
+                findID = (((i - 400) * 175) + 35000) * sizeof(AnimIdxBlock);
             }
             else //Low
             {
                 groupType = AGT_ANIMAL;
-                findID = (((i - 200) * 65) + 22000) * sizeof(ANIM_IDX_BLOCK);
+                findID = (((i - 200) * 65) + 22000) * sizeof(AnimIdxBlock);
             }
         }
         else //Hight
         {
             groupType = AGT_MONSTER;
-            findID = (i * 110) * sizeof(ANIM_IDX_BLOCK);
+            findID = (i * 110) * sizeof(AnimIdxBlock);
         }
 
         if (findID >= m_SizeIdx[0])
@@ -204,15 +204,12 @@ void CAnimationManager::Load(uint32_t *verdata)
         for (int j = 0; j < count; j++)
         {
             CTextureAnimationGroup &group = index.m_Groups[j];
-            int offset = (int)j * MAX_MOBILE_DIRECTIONS;
-
+            const int offset = (int)j * MAX_MOBILE_DIRECTIONS;
             for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
             {
                 CTextureAnimationDirection &direction = group.m_Direction[d];
-
-                ANIM_IDX_BLOCK *aidx =
-                    (ANIM_IDX_BLOCK *)(address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
-
+                const auto *aidx =
+                    (AnimIdxBlock *)(address + ((offset + d) * sizeof(AnimIdxBlock)));
                 if ((size_t)aidx >= maxAddress)
                 {
                     break;
@@ -590,13 +587,11 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
             if (animFile != 1 && startAnimID != -1)
             {
-                startAnimID = startAnimID * sizeof(ANIM_IDX_BLOCK);
-
+                startAnimID = startAnimID * sizeof(AnimIdxBlock);
                 if ((uint32_t)startAnimID < m_SizeIdx[animFile])
                 {
                     CIndexAnimation &dataIndex = m_DataIndex[index];
                     dataIndex.MountedHeightOffset = mountedHeightOffset;
-
                     if (g_Config.ClientVersion < CV_500A || groupType == AGT_UNKNOWN)
                     {
                         if (realAnimID >= 200)
@@ -656,11 +651,8 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
                             CTextureAnimationDirection &direction = group.m_Direction[d];
-
-                            ANIM_IDX_BLOCK *aidx =
-                                (ANIM_IDX_BLOCK
-                                     *)(address + ((offset + d) * sizeof(ANIM_IDX_BLOCK)));
-
+                            const auto *aidx =
+                                (AnimIdxBlock *)(address + ((offset + d) * sizeof(AnimIdxBlock)));
                             if ((size_t)aidx >= maxAddress)
                             {
                                 break;

@@ -4,6 +4,7 @@
 #include "IndexObject.h"
 #include "Config.h"
 
+// FIXME: Texture should be managed elsewhere
 CIndexObject::~CIndexObject()
 {
     DEBUG_TRACE_FUNCTION;
@@ -14,11 +15,10 @@ CIndexObject::~CIndexObject()
     }
 }
 
-void CIndexObject::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id)
+void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
 {
     Address = ptr->Position;
     DataSize = ptr->Size;
-
     if (Address == 0xFFFFFFFF || (DataSize == 0) || DataSize == 0xFFFFFFFF)
     {
         Address = 0;
@@ -28,11 +28,10 @@ void CIndexObject::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint
     {
         Address = Address + address;
     }
-
     ID = id;
 };
 
-void CIndexMulti::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id)
+void CIndexMulti::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
     if (g_Config.ClientVersion >= CV_7090)
@@ -45,18 +44,16 @@ void CIndexMulti::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint1
     }
 };
 
-void CIndexLight::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id)
+void CIndexLight::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
-    LIGHT_IDX_BLOCK *realPtr = (LIGHT_IDX_BLOCK *)ptr;
-    Width = realPtr->Width;
-    Height = realPtr->Height;
+    Width = ptr->LightData.Width;
+    Height = ptr->LightData.Height;
 };
 
-void CIndexGump::ReadIndexFile(size_t address, BASE_IDX_BLOCK *ptr, const uint16_t id)
+void CIndexGump::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
 {
     CIndexObject::ReadIndexFile(address, ptr, id);
-    GUMP_IDX_BLOCK *realPtr = (GUMP_IDX_BLOCK *)ptr;
-    Width = realPtr->Width;
-    Height = realPtr->Height;
+    Width = ptr->LightData.Width;
+    Height = ptr->LightData.Height;
 };
