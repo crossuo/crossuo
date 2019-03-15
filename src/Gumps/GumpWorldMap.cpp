@@ -314,19 +314,17 @@ void CGumpWorldMap::LoadMap(int map)
 
         if (g_FileManager.m_MapUOP[map].Start == nullptr)
         {
-            crc32 = g_Game.GetFileHashCode(
-                g_FileManager.m_MapMul[map].Start, g_FileManager.m_MapMul[map].Size);
+            crc32 = Checksum32(g_FileManager.m_MapMul[map].Start, g_FileManager.m_MapMul[map].Size);
         }
         else
         {
-            crc32 = g_Game.GetFileHashCode(
-                g_FileManager.m_MapUOP[map].Start, g_FileManager.m_MapUOP[map].Size);
+            crc32 = Checksum32(g_FileManager.m_MapUOP[map].Start, g_FileManager.m_MapUOP[map].Size);
         }
 
-        crc32 ^= g_Game.GetFileHashCode(
-            g_FileManager.m_StaticIdx[map].Start, g_FileManager.m_StaticIdx[map].Size);
-        crc32 ^= g_Game.GetFileHashCode(
-            g_FileManager.m_StaticMul[map].Start, g_FileManager.m_StaticMul[map].Size);
+        crc32 ^=
+            Checksum32(g_FileManager.m_StaticIdx[map].Start, g_FileManager.m_StaticIdx[map].Size);
+        crc32 ^=
+            Checksum32(g_FileManager.m_StaticMul[map].Start, g_FileManager.m_StaticMul[map].Size);
 
         if (g_FileManager.m_MapMul[map].Start != nullptr)
         {
@@ -334,17 +332,17 @@ void CGumpWorldMap::LoadMap(int map)
             {
                 if (g_MapManager.m_MapPatchCount[i] != 0)
                 {
-                    crc32 ^= g_Game.GetFileHashCode(
+                    crc32 ^= Checksum32(
                         g_FileManager.m_MapDifl[i].Start, g_FileManager.m_MapDifl[i].Size);
-                    crc32 ^= g_Game.GetFileHashCode(
-                        g_FileManager.m_MapDif[i].Start, g_FileManager.m_MapDif[i].Size);
+                    crc32 ^=
+                        Checksum32(g_FileManager.m_MapDif[i].Start, g_FileManager.m_MapDif[i].Size);
                 }
 
                 if (g_MapManager.m_StaticPatchCount[i] != 0)
                 {
-                    crc32 ^= g_Game.GetFileHashCode(
+                    crc32 ^= Checksum32(
                         g_FileManager.m_StaDifl[i].Start, g_FileManager.m_StaDifl[i].Size);
-                    crc32 ^= g_Game.GetFileHashCode(
+                    crc32 ^= Checksum32(
                         g_FileManager.m_StaDifi[i].Start, g_FileManager.m_StaDifi[i].Size);
                 }
             }

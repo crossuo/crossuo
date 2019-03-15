@@ -219,40 +219,6 @@ CGame::~CGame()
 {
 }
 
-uint32_t Reflect(uint32_t source, int c)
-{
-    //DEBUG_TRACE_FUNCTION;
-    uint32_t value = 0;
-
-    for (int i = 1; i < c + 1; i++)
-    {
-        if ((source & 0x1) != 0u)
-        {
-            value |= (1 << (c - i));
-        }
-
-        source >>= 1;
-    }
-
-    return value;
-}
-
-uint32_t CGame::GetFileHashCode(uint8_t *ptr, size_t size)
-{
-    DEBUG_TRACE_FUNCTION;
-    uint32_t crc = 0xFFFFFFFF;
-
-    while (size > 0)
-    {
-        crc = (crc >> 8) ^ m_CRC_Table[(crc & 0xFF) ^ *ptr];
-
-        ptr++;
-        size--;
-    }
-
-    return (crc & 0xFFFFFFFF);
-}
-
 string CGame::DecodeArgumentString(const char *text, int length)
 {
     DEBUG_TRACE_FUNCTION;
@@ -351,18 +317,7 @@ bool CGame::Install()
 #endif
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
-
-    for (int i = 0; i < 256; i++)
-    {
-        m_CRC_Table[i] = Reflect((int)i, 8) << 24;
-        for (int j = 0; j < 8; j++)
-        {
-            m_CRC_Table[i] =
-                (m_CRC_Table[i] << 1) ^ ((m_CRC_Table[i] & (1 << 31)) != 0u ? 0x04C11DB7 : 0);
-        }
-        m_CRC_Table[i] = Reflect(m_CRC_Table[i], 32);
-    }
-
+    InitChecksum32();
     for (int i = 0; i < MAX_MAPS_COUNT; i++)
     {
         g_MapBlockSize[i].Width = g_MapSize[i].Width / 8;
@@ -407,16 +362,9 @@ bool CGame::Install()
     }
 
     g_SpeechManager.LoadSpeech();
-
     CGumpSpellbook::InitStaticData();
-
-    m_AnimData.resize(g_FileManager.m_AnimdataMul.Size);
-    memcpy(&m_AnimData[0], &g_FileManager.m_AnimdataMul.Start[0], g_FileManager.m_AnimdataMul.Size);
-
     g_ColorManager.Init();
-    g_FileManager.LoadTiledata(m_LandData, m_StaticData);
-    Info(Client, "loading indexes");
-    LoadIndexFiles();
+    g_FileManager.LoadData();
     InitStaticAnimList();
 
     Info(Client, "loading fonts");
@@ -438,6 +386,7 @@ bool CGame::Install()
     Info(Client, "creating map blocksTable");
     g_MapManager.CreateBlocksTable();
 
+    // FIXME
     Info(Client, "patching files");
     PatchFiles();
     Info(Client, "replacing indexes");
@@ -578,6 +527,40 @@ bool CGame::Install()
 
     Info(Client, "initialization completed");
     return true;
+}
+
+void CGame::UnloadIndexFiles()
+{
+    DEBUG_TRACE_FUNCTION;
+    std::deque<CIndexObject *> *lists[] = {
+        &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
+    };
+
+    for (int i = 0; i < countof(lists); i++)
+    {
+        auto &list = *lists[i];
+        for (auto it = list.begin(); it != list.end(); ++it)
+        {
+            CIndexObject *obj = *it;
+            if (obj->Texture != nullptr)
+            {
+                delete obj->Texture;
+                obj->Texture = nullptr;
+            }
+        }
+        list.clear();
+    }
+
+    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end(); ++it)
+    {
+        CIndexSound *obj = *it;
+        if (obj->m_Stream != SOUND_NULL)
+        {
+            g_SoundManager.UpdateSoundEffect(obj->m_Stream, -1);
+            obj->m_Stream = SOUND_NULL;
+        }
+    }
+    m_UsedSoundList.clear();
 }
 
 void CGame::Uninstall()
@@ -769,7 +752,7 @@ void CGame::CheckStaticTileFilterFiles()
 
         for (int i = 0; i < vegetationTilesCount; i++)
         {
-            int64_t flags = g_Game.GetStaticFlags(vegetationTiles[i]);
+            const int64_t flags = g_Game.GetStaticFlags(vegetationTiles[i]);
             if ((flags & 0x00000040) != 0)
             {
                 continue;
@@ -795,9 +778,8 @@ void CGame::CheckStaticTileFilterFiles()
 
         for (int i = 0; i < treeTilesCount; i++)
         {
-            uint16_t graphic = treeTiles[i];
+            const uint16_t graphic = treeTiles[i];
             uint8_t hatched = 1;
-
             switch (graphic)
             {
                 case 0x0C9E:
@@ -820,8 +802,7 @@ void CGame::CheckStaticTileFilterFiles()
                     break;
             }
 
-            int64_t flags = g_Game.GetStaticFlags(graphic);
-
+            const int64_t flags = g_Game.GetStaticFlags(graphic);
             if ((flags & 0x00000040) == 0)
             {
                 vegetationFile.Print("0x%04X\n", graphic);
@@ -837,12 +818,12 @@ void CGame::CheckStaticTileFilterFiles()
     Wisp::CTextFileParser caveParser(filePath, " \t", "#;//", "");
     while (!caveParser.IsEOF())
     {
-        vector<string> strings = caveParser.ReadTokens();
+        auto strings = caveParser.ReadTokens();
         if (!strings.empty())
         {
             uint16_t graphic = TextToGraphic(strings[0].c_str());
             m_StaticTilesFilterFlags[graphic] |= STFF_CAVE;
-            m_CaveTiles.push_back(graphic);
+            g_Data.m_CaveTiles.push_back(graphic);
         }
     }
 
@@ -850,7 +831,7 @@ void CGame::CheckStaticTileFilterFiles()
     Wisp::CTextFileParser stumpParser(filePath, " \t", "#;//", "");
     while (!stumpParser.IsEOF())
     {
-        vector<string> strings = stumpParser.ReadTokens();
+        auto strings = stumpParser.ReadTokens();
         if (strings.size() >= 2)
         {
             uint8_t flag = STFF_STUMP;
@@ -858,9 +839,9 @@ void CGame::CheckStaticTileFilterFiles()
             {
                 flag |= STFF_STUMP_HATCHED;
             }
-            uint16_t graphic = TextToGraphic(strings[0].c_str());
+            const uint16_t graphic = TextToGraphic(strings[0].c_str());
             m_StaticTilesFilterFlags[graphic] |= flag;
-            m_StumpTiles.push_back(graphic);
+            g_Data.m_StumpTiles.push_back(graphic);
         }
     }
 
@@ -868,7 +849,7 @@ void CGame::CheckStaticTileFilterFiles()
     Wisp::CTextFileParser vegetationParser(filePath, " \t", "#;//", "");
     while (!vegetationParser.IsEOF())
     {
-        vector<string> strings = vegetationParser.ReadTokens();
+        auto strings = vegetationParser.ReadTokens();
         if (!strings.empty())
         {
             m_StaticTilesFilterFlags[TextToGraphic(strings[0].c_str())] |= STFF_VEGETATION;
@@ -1657,27 +1638,24 @@ void CGame::ClearUnusedTextures()
     }
 
     g_MapManager.ClearUnusedBlocks();
-
     g_GumpManager.PrepareTextures();
 
     g_Ticks -= CLEAR_TEXTURES_DELAY;
-
-    void *lists[5] = {
+    void *lists[] = {
         &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
     };
 
-    int counts[5] = { MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
-                      MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
-                      MAX_GUMP_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
-                      MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
-                      100 };
+    int counts[] = { MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
+                     MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
+                     MAX_GUMP_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
+                     MAX_ART_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR,
+                     100 };
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < countof(lists); i++)
     {
         int count = 0;
         auto *list = (deque<CIndexObject *> *)lists[i];
         int &maxCount = counts[i];
-
         for (auto it = list->begin(); it != list->end();)
         {
             CIndexObject *obj = *it;
@@ -2800,18 +2778,18 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
         }
         case VKI_STATIC_ART_ADDRESS:
         {
-            if (value >= 0 && value < (int)m_StaticData.size())
+            if (value >= 0 && value < (int)g_Data.m_Static.size())
             {
-                value = (int)m_StaticDataIndex[value].Address;
+                value = (int)g_Index.m_Static[value].Address;
             }
 
             break;
         }
         case VKI_USED_LAYER:
         {
-            if (value >= 0 && value < (int)m_StaticData.size())
+            if (value >= 0 && value < (int)g_Data.m_Static.size())
             {
-                value = m_StaticData[value].Layer;
+                value = g_Data.m_Static[value].Layer;
             }
 
             break;
@@ -3158,7 +3136,7 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value >= 0 && value < MAX_GUMP_DATA_INDEX_COUNT)
             {
-                value = checked_cast<int>(m_GumpDataIndex[value].Address);
+                value = checked_cast<int>(g_Index.m_Gump[value].Address);
             }
 
             break;
@@ -3320,8 +3298,7 @@ string CGame::ValueString(const VALUE_KEY_STRING &key, string value)
 void CGame::ClearRemovedStaticsTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<CIndexObject *>::iterator it = m_UsedStaticList.begin();
-         it != m_UsedStaticList.end();)
+    for (auto it = m_UsedStaticList.begin(); it != m_UsedStaticList.end();)
     {
         CIndexObject *obj = *it;
 
@@ -3345,27 +3322,26 @@ void CGame::ClearRemovedStaticsTextures()
 void CGame::ClearTreesTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    for (uint16_t graphic : m_StumpTiles)
+    for (uint16_t graphic : g_Data.m_StumpTiles)
     {
-        m_StaticDataIndex[graphic].LastAccessTime = 0;
+        g_Index.m_Static[graphic].LastAccessTime = 0;
     }
-
     ClearRemovedStaticsTextures();
 }
 
 bool CGame::InTileFilter(uint16_t graphic)
 {
-    if (!m_IgnoreInFilterTiles.empty())
+    if (m_IgnoreInFilterTiles.empty())
     {
-        for (const std::pair<uint16_t, uint16_t> &i : m_IgnoreInFilterTiles)
+        return false;
+    }
+    for (const auto &i : m_IgnoreInFilterTiles)
+    {
+        if (i.first == graphic || ((i.second != 0u) && IN_RANGE(graphic, i.first, i.second)))
         {
-            if (i.first == graphic || ((i.second != 0u) && IN_RANGE(graphic, i.first, i.second)))
-            {
-                return true;
-            }
+            return true;
         }
     }
-
     return false;
 }
 
@@ -3399,11 +3375,10 @@ bool CGame::IsTreeTile(uint16_t graphic, int &index)
 void CGame::ClearCaveTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    for (uint16_t graphic : m_CaveTiles)
+    for (uint16_t graphic : g_Data.m_CaveTiles)
     {
-        m_StaticDataIndex[graphic].LastAccessTime = 0;
+        g_Index.m_Static[graphic].LastAccessTime = 0;
     }
-
     ClearRemovedStaticsTextures();
 }
 
@@ -3477,419 +3452,9 @@ void CGame::GoToWebLink(const string &url)
     }
 }
 
-// FIXME: simplify, move to FileManager
-void CGame::MulReadIndexFile(
-    size_t indexMaxCount,
-    const std::function<CIndexObject *(int index)> &getIdxObj,
-    size_t address,
-    IndexBlock *ptr,
-    const std::function<IndexBlock *()> &getNewPtrValue)
+static uint16_t CalculateLightColor(uint16_t id)
 {
-    for (int i = 0; i < (int)indexMaxCount; i++)
-    {
-        CIndexObject *obj = getIdxObj((int)i);
-        obj->ReadIndexFile(address, ptr, (uint16_t)i);
-        ptr = getNewPtrValue();
-    }
-}
-
-// FIXME: move to FileManager
-void CGame::UopReadIndexFile(
-    size_t indexMaxCount,
-    const std::function<CIndexObject *(int)> &getIdxObj,
-    const char *uopFileName,
-    int padding,
-    const char *extesion,
-    CUopMappedFile &uopFile,
-    int startIndex)
-{
-    string p = uopFileName;
-    std::transform(p.begin(), p.end(), p.begin(), ::tolower);
-
-    bool isGump = (string("gumpartlegacymul") == p);
-    char basePath[200] = { 0 };
-    sprintf_s(basePath, "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
-
-    for (int i = startIndex; i < (int)indexMaxCount; i++)
-    {
-        char hashString[200] = { 0 };
-        sprintf_s(hashString, basePath, (int)i);
-
-        auto block = uopFile.GetBlock(CreateHash(hashString));
-        if (block != nullptr)
-        {
-            CIndexObject *obj = getIdxObj((int)i);
-            obj->Address = uintptr_t(uopFile.Start + block->Offset + block->HeaderSize);
-            obj->DataSize = block->DecompressedSize;
-            obj->UopBlock = block;
-            obj->ID = -1;
-
-            if (isGump)
-            {
-                obj->Address += 8;
-                obj->DataSize -= 8;
-
-                uopFile.ResetPtr();
-                uopFile.Move(block->Offset + block->HeaderSize);
-
-                obj->Width = uopFile.ReadUInt32LE();
-                obj->Height = uopFile.ReadUInt32LE();
-            }
-        }
-    }
-}
-
-uint64_t CGame::CreateHash(const char *s)
-{
-    const auto l = (uint32_t)strlen(s);
-    uint32_t eax, ecx, edx, ebx, esi, edi;
-
-    eax = ecx = edx = ebx = esi = edi = 0;
-    ebx = edi = esi = l + 0xDEADBEEF;
-
-    uint32_t i = 0;
-    for (i = 0; i + 12 < l; i += 12)
-    {
-        edi = (uint32_t)((s[i + 7] << 24) | (s[i + 6] << 16) | (s[i + 5] << 8) | s[i + 4]) + edi;
-        esi = (uint32_t)((s[i + 11] << 24) | (s[i + 10] << 16) | (s[i + 9] << 8) | s[i + 8]) + esi;
-        edx = (uint32_t)((s[i + 3] << 24) | (s[i + 2] << 16) | (s[i + 1] << 8) | s[i]) - esi;
-
-        edx = (edx + ebx) ^ (esi >> 28) ^ (esi << 4);
-        esi += edi;
-        edi = (edi - edx) ^ (edx >> 26) ^ (edx << 6);
-        edx += esi;
-        esi = (esi - edi) ^ (edi >> 24) ^ (edi << 8);
-        edi += edx;
-        ebx = (edx - esi) ^ (esi >> 16) ^ (esi << 16);
-        esi += edi;
-        edi = (edi - ebx) ^ (ebx >> 13) ^ (ebx << 19);
-        ebx += esi;
-        esi = (esi - edi) ^ (edi >> 28) ^ (edi << 4);
-        edi += ebx;
-    }
-
-    if (l - i > 0)
-    {
-        switch (l - i)
-        {
-            case 12:
-                esi += static_cast<uint32_t>(s[i + 11]) << 24;
-                goto case_11;
-                break;
-            case 11:
-            case_11:
-                esi += static_cast<uint32_t>(s[i + 10]) << 16;
-                goto case_10;
-                break;
-            case 10:
-            case_10:
-                esi += static_cast<uint32_t>(s[i + 9]) << 8;
-                goto case_9;
-                break;
-            case 9:
-            case_9:
-                esi += s[i + 8];
-                goto case_8;
-                break;
-            case 8:
-            case_8:
-                edi += static_cast<uint32_t>(s[i + 7]) << 24;
-                goto case_7;
-                break;
-            case 7:
-            case_7:
-                edi += static_cast<uint32_t>(s[i + 6]) << 16;
-                goto case_6;
-                break;
-            case 6:
-            case_6:
-                edi += static_cast<uint32_t>(s[i + 5]) << 8;
-                goto case_5;
-                break;
-            case 5:
-            case_5:
-                edi += s[i + 4];
-                goto case_4;
-                break;
-            case 4:
-            case_4:
-                ebx += static_cast<uint32_t>(s[i + 3]) << 24;
-                goto case_3;
-                break;
-            case 3:
-            case_3:
-                ebx += static_cast<uint32_t>(s[i + 2]) << 16;
-                goto case_2;
-                break;
-            case 2:
-            case_2:
-                ebx += static_cast<uint32_t>(s[i + 1]) << 8;
-                goto case_1;
-            case 1:
-            case_1:
-                ebx += s[i];
-                break;
-        }
-
-        esi = (esi ^ edi) - ((edi >> 18) ^ (edi << 14));
-        ecx = (esi ^ ebx) - ((esi >> 21) ^ (esi << 11));
-        edi = (edi ^ ecx) - ((ecx >> 7) ^ (ecx << 25));
-        esi = (esi ^ edi) - ((edi >> 16) ^ (edi << 16));
-        edx = (esi ^ ecx) - ((esi >> 28) ^ (esi << 4));
-        edi = (edi ^ edx) - ((edx >> 18) ^ (edx << 14));
-        eax = (esi ^ edi) - ((edi >> 8) ^ (edi << 24));
-
-        return (static_cast<uint64_t>(edi) << 32) | eax;
-    }
-
-    return (static_cast<uint64_t>(esi) << 32) | eax;
-}
-
-void CGame::LoadIndexFiles()
-{
-    ArtIdxBlock *LandArtPtr = (ArtIdxBlock *)g_FileManager.m_ArtIdx.Start;
-    ArtIdxBlock *StaticArtPtr =
-        (ArtIdxBlock
-             *)((size_t)g_FileManager.m_ArtIdx.Start + (m_LandData.size() * sizeof(ArtIdxBlock)));
-    GumpIdxBlock *GumpArtPtr = (GumpIdxBlock *)g_FileManager.m_GumpIdx.Start;
-    TexIdxBlock *TexturePtr = (TexIdxBlock *)g_FileManager.m_TextureIdx.Start;
-    MultiIdxBlock *MultiPtr = (MultiIdxBlock *)g_FileManager.m_MultiIdx.Start;
-    SoundIdxBlock *SoundPtr = (SoundIdxBlock *)g_FileManager.m_SoundIdx.Start;
-    LightIdxBlock *LightPtr = (LightIdxBlock *)g_FileManager.m_LightIdx.Start;
-
-    if (g_FileManager.m_MultiCollection.Start != nullptr)
-    {
-        g_MultiIndexCount = MAX_MULTI_DATA_INDEX_COUNT;
-    }
-    else
-    {
-        g_MultiIndexCount = (int)(g_FileManager.m_MultiIdx.Size / sizeof(MultiIdxBlock));
-
-        if (g_MultiIndexCount > MAX_MULTI_DATA_INDEX_COUNT)
-        {
-            g_MultiIndexCount = MAX_MULTI_DATA_INDEX_COUNT;
-        }
-    }
-
-    int maxGumpsCount = (int)(g_FileManager.m_GumpIdx.Start == nullptr ? MAX_GUMP_DATA_INDEX_COUNT : (g_FileManager.m_GumpIdx.End - g_FileManager.m_GumpIdx.Start) / sizeof(GumpIdxBlock));
-
-    if (g_FileManager.m_ArtMul.Start != nullptr)
-    {
-        MulReadIndexFile(
-            MAX_LAND_DATA_INDEX_COUNT,
-            [&](int i) { return &m_LandDataIndex[i]; },
-            (size_t)g_FileManager.m_ArtMul.Start,
-            LandArtPtr,
-            [&LandArtPtr]() { return ++LandArtPtr; });
-        MulReadIndexFile(
-            m_StaticData.size(),
-            [&](int i) { return &m_StaticDataIndex[i]; },
-            (size_t)g_FileManager.m_ArtMul.Start,
-            StaticArtPtr,
-            [&StaticArtPtr]() { return ++StaticArtPtr; });
-    }
-    else
-    {
-        UopReadIndexFile(
-            MAX_LAND_DATA_INDEX_COUNT,
-            [&](int i) { return &m_LandDataIndex[i]; },
-            "artLegacyMUL",
-            8,
-            ".tga",
-            g_FileManager.m_ArtLegacyMUL);
-        UopReadIndexFile(
-            m_StaticData.size() + MAX_LAND_DATA_INDEX_COUNT,
-            [&](int i) { return &m_StaticDataIndex[i - MAX_LAND_DATA_INDEX_COUNT]; },
-            "artLegacyMUL",
-            8,
-            ".tga",
-            g_FileManager.m_ArtLegacyMUL,
-            MAX_LAND_DATA_INDEX_COUNT);
-    }
-
-    if (g_FileManager.m_SoundMul.Start != nullptr)
-    {
-        MulReadIndexFile(
-            MAX_SOUND_DATA_INDEX_COUNT,
-            [&](int i) { return &m_SoundDataIndex[i]; },
-            (size_t)g_FileManager.m_SoundMul.Start,
-            SoundPtr,
-            [&SoundPtr]() { return ++SoundPtr; });
-    }
-    else
-    {
-        UopReadIndexFile(
-            MAX_SOUND_DATA_INDEX_COUNT,
-            [&](int i) { return &m_SoundDataIndex[i]; },
-            "soundLegacyMUL",
-            8,
-            ".dat",
-            g_FileManager.m_SoundLegacyMUL);
-    }
-
-    if (g_FileManager.m_GumpMul.Start != nullptr)
-    {
-        MulReadIndexFile(
-            maxGumpsCount,
-            [&](int i) { return &m_GumpDataIndex[i]; },
-            (size_t)g_FileManager.m_GumpMul.Start,
-            GumpArtPtr,
-            [&GumpArtPtr]() { return ++GumpArtPtr; });
-    }
-    else
-    {
-        UopReadIndexFile(
-            maxGumpsCount,
-            [&](int i) { return &m_GumpDataIndex[i]; },
-            "gumpartLegacyMUL",
-            8,
-            ".tga",
-            g_FileManager.m_GumpartLegacyMUL);
-    }
-
-    MulReadIndexFile(
-        g_FileManager.m_TextureIdx.Size / sizeof(TexIdxBlock),
-        [&](int i) { return &m_TextureDataIndex[i]; },
-        (size_t)g_FileManager.m_TextureMul.Start,
-        TexturePtr,
-        [&TexturePtr]() { return ++TexturePtr; });
-    MulReadIndexFile(
-        MAX_LIGHTS_DATA_INDEX_COUNT,
-        [&](int i) { return &m_LightDataIndex[i]; },
-        (size_t)g_FileManager.m_LightMul.Start,
-        LightPtr,
-        [&LightPtr]() { return ++LightPtr; });
-
-    if (g_FileManager.m_MultiMul.Start != nullptr)
-    {
-        MulReadIndexFile(
-            g_MultiIndexCount,
-            [&](int i) { return &m_MultiDataIndex[i]; },
-            (size_t)g_FileManager.m_MultiMul.Start,
-            MultiPtr,
-            [&MultiPtr]() { return ++MultiPtr; });
-    }
-    else
-    {
-        CUopMappedFile &file = g_FileManager.m_MultiCollection;
-        for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
-        {
-            const auto hash = kvp.first;
-            const auto block = kvp.second;
-            vector<uint8_t> data = file.GetData(block);
-            if (data.empty())
-            {
-                continue;
-            }
-
-            Wisp::CDataReader reader(&data[0], data.size());
-            uint32_t id = reader.ReadUInt32LE();
-            if (id < MAX_MULTI_DATA_INDEX_COUNT)
-            {
-                CIndexMulti &index = m_MultiDataIndex[id];
-                index.Address = size_t(file.Start + block->Offset + block->HeaderSize);
-                index.DataSize = block->DecompressedSize;
-                index.UopBlock = block;
-                index.ID = -1;
-                index.Count = reader.ReadUInt32LE();
-            }
-        }
-        //UopReadIndexFile(g_MultiIndexCount, [&](int i){ return &m_MultiDataIndex[i]; }, "MultiCollection", 6, ".bin", g_FileManager.m_MultiCollection);
-    }
-}
-
-void CGame::UnloadIndexFiles()
-{
-    DEBUG_TRACE_FUNCTION;
-    deque<CIndexObject *> *lists[5] = {
-        &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
-    };
-
-    for (int i = 0; i < 5; i++)
-    {
-        auto &list = *lists[i];
-        for (auto it = list.begin(); it != list.end(); ++it)
-        {
-            CIndexObject *obj = *it;
-            if (obj->Texture != nullptr)
-            {
-                delete obj->Texture;
-                obj->Texture = nullptr;
-            }
-        }
-        list.clear();
-    }
-
-    for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end(); ++it)
-    {
-        CIndexSound *obj = *it;
-        if (obj->m_Stream != SOUND_NULL)
-        {
-            g_SoundManager.UpdateSoundEffect(obj->m_Stream, -1);
-            obj->m_Stream = SOUND_NULL;
-        }
-    }
-    m_UsedSoundList.clear();
-}
-
-void CGame::InitStaticAnimList()
-{
-    DEBUG_TRACE_FUNCTION;
-    if (static_cast<unsigned int>(!m_AnimData.empty()) != 0u)
-    {
-        uintptr_t lastElement = (uintptr_t)(&m_AnimData[0] + m_AnimData.size() - sizeof(ANIM_DATA));
-
-        for (int i = 0; i < (int)m_StaticData.size(); i++)
-        {
-            m_StaticDataIndex[i].Index = (uint16_t)i;
-
-            m_StaticDataIndex[i].LightColor = CalculateLightColor((uint16_t)i);
-
-            bool isField = false;
-
-            //fire field
-            if (IN_RANGE(i, 0x398C, 0x399F))
-            {
-                isField = true;
-                //paralyze field
-            }
-            else if (IN_RANGE(i, 0x3967, 0x397A))
-            {
-                isField = true;
-                //energy field
-            }
-            else if (IN_RANGE(i, 0x3946, 0x3964))
-            {
-                isField = true;
-                //poison field
-            }
-            else if (IN_RANGE(i, 0x3914, 0x3929))
-            {
-                isField = true;
-            }
-
-            m_StaticDataIndex[i].IsFiled = isField;
-
-            if (IsAnimated(m_StaticData[i].Flags))
-            {
-                uintptr_t addr = (uintptr_t)((i * 68) + 4 * ((i / 8) + 1));
-                uintptr_t offset = (uintptr_t)(&m_AnimData[0] + addr);
-
-                if (offset <= lastElement)
-                {
-                    m_StaticAnimList.push_back(&m_StaticDataIndex[i]);
-                }
-            }
-        }
-    }
-}
-
-uint16_t CGame::CalculateLightColor(uint16_t id)
-{
-    //DEBUG_TRACE_FUNCTION;
-
     uint16_t color = 0;
-
     if (id < 0x3E27)
     {
         //color = ???;
@@ -4256,71 +3821,113 @@ uint16_t CGame::CalculateLightColor(uint16_t id)
 				color = 0x001E;
 		}
 	}*/
-
     return color;
+}
+
+void CGame::InitStaticAnimList()
+{
+    DEBUG_TRACE_FUNCTION;
+    if (g_Data.m_Anim.empty())
+    {
+        return;
+    }
+    const uintptr_t lastElement =
+        (uintptr_t)(&g_Data.m_Anim[0] + g_Data.m_Anim.size() - sizeof(ANIM_DATA));
+    for (int i = 0; i < (int)g_Data.m_Static.size(); i++)
+    {
+        g_Index.m_Static[i].Index = (uint16_t)i;
+        g_Index.m_Static[i].LightColor = CalculateLightColor((uint16_t)i);
+
+        bool isField = false;
+        //fire field
+        if (IN_RANGE(i, 0x398C, 0x399F))
+        {
+            isField = true;
+            //paralyze field
+        }
+        else if (IN_RANGE(i, 0x3967, 0x397A))
+        {
+            isField = true;
+            //energy field
+        }
+        else if (IN_RANGE(i, 0x3946, 0x3964))
+        {
+            isField = true;
+            //poison field
+        }
+        else if (IN_RANGE(i, 0x3914, 0x3929))
+        {
+            isField = true;
+        }
+
+        g_Index.m_Static[i].IsFiled = isField;
+        if (IsAnimated(g_Data.m_Static[i].Flags))
+        {
+            const uintptr_t addr = (uintptr_t)((i * 68) + 4 * ((i / 8) + 1));
+            const uintptr_t offset = (uintptr_t)(&g_Data.m_Anim[0] + addr);
+            if (offset <= lastElement)
+            {
+                m_StaticAnimList.push_back(&g_Index.m_Static[i]);
+            }
+        }
+    }
 }
 
 void CGame::ProcessStaticAnimList()
 {
     DEBUG_TRACE_FUNCTION;
-    if ((static_cast<unsigned int>(!m_AnimData.empty()) != 0u) &&
-        g_ProcessStaticAnimationTimer < g_Ticks)
+    if (g_Data.m_Anim.empty() || g_ProcessStaticAnimationTimer >= g_Ticks)
     {
-        int delay =
-            (g_ConfigManager.StandartItemsAnimationDelay ? ORIGINAL_ITEMS_ANIMATION_DELAY :
-                                                           XUO_ITEMS_ANIMATION_DELAY);
-        bool noAnimateFields = g_ConfigManager.GetNoAnimateFields();
-        uint32_t nextTime = g_Ticks + 500;
+        return;
+    }
 
-        for (deque<CIndexObjectStatic *>::iterator i = m_StaticAnimList.begin();
-             i != m_StaticAnimList.end();
-             ++i)
+    int delay =
+        (g_ConfigManager.StandartItemsAnimationDelay ? ORIGINAL_ITEMS_ANIMATION_DELAY :
+                                                       XUO_ITEMS_ANIMATION_DELAY);
+    bool noAnimateFields = g_ConfigManager.GetNoAnimateFields();
+    uint32_t nextTime = g_Ticks + 500;
+
+    for (auto it = m_StaticAnimList.begin(); it != m_StaticAnimList.end(); ++it)
+    {
+        CIndexObjectStatic &obj = *(*it);
+        if (noAnimateFields && obj.IsFiled)
         {
-            CIndexObjectStatic &obj = *(*i);
-
-            if (noAnimateFields && obj.IsFiled)
-            {
-                obj.AnimIndex = 0;
-                continue;
-            }
-
-            if (obj.ChangeTime < g_Ticks)
-            {
-                uint32_t addr = (obj.Index * 68) + 4 * ((obj.Index / 8) + 1);
-                ANIM_DATA &pad = *(ANIM_DATA *)(&m_AnimData[0] + addr);
-
-                int offset = obj.AnimIndex;
-
-                if (pad.FrameInterval > 0)
-                {
-                    obj.ChangeTime = g_Ticks + (pad.FrameInterval * delay);
-                }
-                else
-                {
-                    obj.ChangeTime = g_Ticks + delay;
-                }
-
-                if (offset < pad.FrameCount)
-                {
-                    obj.Offset = pad.FrameData[offset++];
-                }
-
-                if (offset >= pad.FrameCount)
-                {
-                    offset = 0;
-                }
-
-                obj.AnimIndex = offset;
-            }
-
-            if (obj.ChangeTime < nextTime)
-            {
-                nextTime = obj.ChangeTime;
-            }
+            obj.AnimIndex = 0;
+            continue;
         }
 
-        g_ProcessStaticAnimationTimer = nextTime;
+        if (obj.ChangeTime < g_Ticks)
+        {
+            uint32_t addr = (obj.Index * 68) + 4 * ((obj.Index / 8) + 1);
+            ANIM_DATA &pad = *(ANIM_DATA *)(&g_Data.m_Anim[0] + addr);
+            int offset = obj.AnimIndex;
+            if (pad.FrameInterval > 0)
+            {
+                obj.ChangeTime = g_Ticks + (pad.FrameInterval * delay);
+            }
+            else
+            {
+                obj.ChangeTime = g_Ticks + delay;
+            }
+
+            if (offset < pad.FrameCount)
+            {
+                obj.Offset = pad.FrameData[offset++];
+            }
+
+            if (offset >= pad.FrameCount)
+            {
+                offset = 0;
+            }
+            obj.AnimIndex = offset;
+        }
+
+        if (obj.ChangeTime < nextTime)
+        {
+            nextTime = obj.ChangeTime;
+        }
     }
+    g_ProcessStaticAnimationTimer = nextTime;
 }
 
 // FIXME: Move Patching to FileManager and work only with locally loaded data
@@ -4373,27 +3980,27 @@ void CGame::PatchFiles()
             if (vh->BlockID >= MAX_LAND_DATA_INDEX_COUNT) //Run
             {
                 uint16_t ID = (uint16_t)vh->BlockID - MAX_LAND_DATA_INDEX_COUNT;
-                m_StaticDataIndex[ID].Address = vAddr + vh->Position;
-                m_StaticDataIndex[ID].DataSize = vh->Size;
+                g_Index.m_Static[ID].Address = vAddr + vh->Position;
+                g_Index.m_Static[ID].DataSize = vh->Size;
             }
             else //Raw
             {
-                m_LandDataIndex[vh->BlockID].Address = vAddr + vh->Position;
-                m_LandDataIndex[vh->BlockID].DataSize = vh->Size;
+                g_Index.m_Land[vh->BlockID].Address = vAddr + vh->Position;
+                g_Index.m_Land[vh->BlockID].DataSize = vh->Size;
             }
         }
         else if (vh->FileID == PatchGumpArt)
         {
-            m_GumpDataIndex[vh->BlockID].Address = vAddr + vh->Position;
-            m_GumpDataIndex[vh->BlockID].DataSize = vh->Size;
-            m_GumpDataIndex[vh->BlockID].Width = vh->GumpData >> 16;
-            m_GumpDataIndex[vh->BlockID].Height = vh->GumpData & 0xFFFF;
+            g_Index.m_Gump[vh->BlockID].Address = vAddr + vh->Position;
+            g_Index.m_Gump[vh->BlockID].DataSize = vh->Size;
+            g_Index.m_Gump[vh->BlockID].Width = vh->GumpData >> 16;
+            g_Index.m_Gump[vh->BlockID].Height = vh->GumpData & 0xFFFF;
         }
-        else if (vh->FileID == PatchMulti && (int)vh->BlockID < g_MultiIndexCount)
+        else if (vh->FileID == PatchMulti && (int)vh->BlockID < g_Index.m_MultiIndexCount)
         {
-            m_MultiDataIndex[vh->BlockID].Address = vAddr + vh->Position;
-            m_MultiDataIndex[vh->BlockID].DataSize = vh->Size;
-            m_MultiDataIndex[vh->BlockID].Count = uint16_t(vh->Size / sizeof(MultiIdxBlock));
+            g_Index.m_Multi[vh->BlockID].Address = vAddr + vh->Position;
+            g_Index.m_Multi[vh->BlockID].DataSize = vh->Size;
+            g_Index.m_Multi[vh->BlockID].Count = uint16_t(vh->Size / sizeof(MultiIdxBlock));
         }
         else if (vh->FileID == PatchSkills && (int)vh->BlockID < g_SkillsManager.Count)
         {
@@ -4412,14 +4019,14 @@ void CGame::PatchFiles()
             if (vh->Size == 836)
             {
                 const int offset = vh->BlockID * 32;
-                if (offset + 32 > (int)m_LandData.size())
+                if (offset + 32 > (int)g_Data.m_Land.size())
                 {
                     continue;
                 }
                 file.ReadUInt32LE();
                 for (int j = 0; j < 32; j++)
                 {
-                    MulLandTile2 &tile = m_LandData[offset + j];
+                    MulLandTile2 &tile = g_Data.m_Land[offset + j];
                     if (g_Config.ClientVersion < CV_7090)
                     {
                         tile.Flags = file.ReadUInt32LE();
@@ -4435,14 +4042,14 @@ void CGame::PatchFiles()
             else if (vh->Size == 1188)
             {
                 int offset = (vh->BlockID - 0x0200) * 32;
-                if (offset + 32 > (int)m_StaticData.size())
+                if (offset + 32 > (int)g_Data.m_Static.size())
                 {
                     continue;
                 }
                 file.ReadUInt32LE();
                 for (int j = 0; j < 32; j++)
                 {
-                    MulStaticTile2 &tile = m_StaticData[offset + j];
+                    MulStaticTile2 &tile = g_Data.m_Static[offset + j];
                     if (g_Config.ClientVersion < CV_7090)
                     {
                         tile.Flags = file.ReadUInt32LE();
@@ -4479,6 +4086,11 @@ void CGame::PatchFiles()
     g_ColorManager.CreateHuesPalette();
 }
 
+// TODO: check if we should move this to file manager too
+// the idea is that file manager should let everything read for the
+// application to use
+// FIXME: there is some issue here - looks like this does not work correctly
+// need further investigation
 void CGame::IndexReplaces()
 {
     DEBUG_TRACE_FUNCTION;
@@ -4488,11 +4100,9 @@ void CGame::IndexReplaces()
     }
 
     Wisp::CTextFileParser newDataParser({}, " \t,{}", "#;//", "");
-    Wisp::CTextFileParser artParser(
-        g_App.UOFilesPath("art.def"), " \t", "#;//", "{}"); // FIXME: case insensitive
+    Wisp::CTextFileParser artParser(g_App.UOFilesPath("art.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser textureParser(g_App.UOFilesPath("TexTerr.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser gumpParser(
-        g_App.UOFilesPath("gump.def"), " \t", "#;//", "{}"); // FIXME: case insensitive
+    Wisp::CTextFileParser gumpParser(g_App.UOFilesPath("gump.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser multiParser(g_App.UOFilesPath("Multi.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser soundParser(g_App.UOFilesPath("Sound.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser mp3Parser(g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
@@ -4500,38 +4110,32 @@ void CGame::IndexReplaces()
     Info(Client, "replacing arts");
     while (!artParser.IsEOF())
     {
-        vector<string> strings = artParser.ReadTokens();
-
+        auto strings = artParser.ReadTokens();
         if (strings.size() >= 3)
         {
             int index = atoi(strings[0].c_str());
-
-            if (index < 0 || index >= MAX_LAND_DATA_INDEX_COUNT + (int)m_StaticData.size())
+            if (index < 0 || index >= MAX_LAND_DATA_INDEX_COUNT + (int)g_Data.m_Static.size())
             {
                 continue;
             }
 
-            vector<string> newArt = newDataParser.GetTokens(strings[1].c_str());
-
+            auto newArt = newDataParser.GetTokens(strings[1].c_str());
             int size = (int)newArt.size();
-
             for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newArt[i].c_str());
-
                 if (checkIndex < 0 ||
-                    checkIndex >= MAX_LAND_DATA_INDEX_COUNT + (int)m_StaticData.size())
+                    checkIndex >= MAX_LAND_DATA_INDEX_COUNT + (int)g_Data.m_Static.size())
                 {
                     continue;
                 }
 
                 if (index < MAX_LAND_DATA_INDEX_COUNT && checkIndex < MAX_LAND_DATA_INDEX_COUNT &&
-                    m_LandDataIndex[checkIndex].Address != 0 && m_LandDataIndex[index].Address == 0)
+                    g_Index.m_Land[checkIndex].Address != 0 && g_Index.m_Land[index].Address == 0)
                 {
-                    m_LandDataIndex[index] = m_LandDataIndex[checkIndex];
-                    m_LandDataIndex[index].Texture = 0;
-                    m_LandDataIndex[index].Color = atoi(strings[2].c_str());
-
+                    g_Index.m_Land[index] = g_Index.m_Land[checkIndex];
+                    g_Index.m_Land[index].Texture = 0;
+                    g_Index.m_Land[index].Color = atoi(strings[2].c_str());
                     break;
                 }
                 if (index >= MAX_LAND_DATA_INDEX_COUNT && checkIndex >= MAX_LAND_DATA_INDEX_COUNT)
@@ -4539,14 +4143,12 @@ void CGame::IndexReplaces()
                     checkIndex -= MAX_LAND_DATA_INDEX_COUNT;
                     checkIndex &= 0x3FFF;
                     index -= MAX_LAND_DATA_INDEX_COUNT;
-
-                    if (m_StaticDataIndex[index].Address == 0 &&
-                        m_StaticDataIndex[checkIndex].Address != 0)
+                    if (g_Index.m_Static[index].Address == 0 &&
+                        g_Index.m_Static[checkIndex].Address != 0)
                     {
-                        m_StaticDataIndex[index] = m_StaticDataIndex[checkIndex];
-                        m_StaticDataIndex[index].Texture = 0;
-                        m_StaticDataIndex[index].Color = atoi(strings[2].c_str());
-
+                        g_Index.m_Static[index] = g_Index.m_Static[checkIndex];
+                        g_Index.m_Static[index].Texture = 0;
+                        g_Index.m_Static[index].Color = atoi(strings[2].c_str());
                         break;
                     }
                 }
@@ -4557,38 +4159,32 @@ void CGame::IndexReplaces()
     Info(Client, "replacing textures");
     while (!textureParser.IsEOF())
     {
-        vector<string> strings = textureParser.ReadTokens();
-
+        auto strings = textureParser.ReadTokens();
         if (strings.size() >= 3)
         {
             int index = atoi(strings[0].c_str());
-
             if (index < 0 || index >= MAX_LAND_TEXTURES_DATA_INDEX_COUNT ||
-                m_TextureDataIndex[index].Address != 0)
+                g_Index.m_Texture[index].Address != 0)
             {
                 continue;
             }
 
-            vector<string> newTexture = newDataParser.GetTokens(strings[1].c_str());
-
-            int size = (int)newTexture.size();
-
+            auto newTexture = newDataParser.GetTokens(strings[1].c_str());
+            const int size = (int)newTexture.size();
             for (int i = 0; i < size; i++)
             {
                 int checkIndex = atoi(newTexture[i].c_str());
-
                 if (checkIndex < 0)
                 {
                     continue;
                 }
 
                 if (index < TexturesDataCount && checkIndex < TexturesDataCount &&
-                    m_TextureDataIndex[checkIndex].Address != 0)
+                    g_Index.m_Texture[checkIndex].Address != 0)
                 {
-                    m_TextureDataIndex[index] = m_TextureDataIndex[checkIndex];
-                    m_TextureDataIndex[index].Texture = 0;
-                    m_TextureDataIndex[index].Color = atoi(strings[2].c_str());
-
+                    g_Index.m_Texture[index] = g_Index.m_Texture[checkIndex];
+                    g_Index.m_Texture[index].Texture = 0;
+                    g_Index.m_Texture[index].Color = atoi(strings[2].c_str());
                     break;
                 }
             }
@@ -4598,36 +4194,29 @@ void CGame::IndexReplaces()
     Info(Client, "replacing gumps");
     while (!gumpParser.IsEOF())
     {
-        vector<string> strings = gumpParser.ReadTokens();
-
+        auto strings = gumpParser.ReadTokens();
         if (strings.size() >= 3)
         {
             int index = atoi(strings[0].c_str());
-
             if (index < 0 || index >= MAX_GUMP_DATA_INDEX_COUNT ||
-                m_GumpDataIndex[index].Address != 0)
+                g_Index.m_Gump[index].Address != 0)
             {
                 continue;
             }
 
-            vector<string> newGump = newDataParser.GetTokens(strings[1].c_str());
-
-            int size = (int)newGump.size();
-
+            auto newGump = newDataParser.GetTokens(strings[1].c_str());
+            const int size = (int)newGump.size();
             for (int i = 0; i < size; i++)
             {
-                int checkIndex = atoi(newGump[i].c_str());
-
+                const int checkIndex = atoi(newGump[i].c_str());
                 if (checkIndex < 0 || checkIndex >= MAX_GUMP_DATA_INDEX_COUNT ||
-                    m_GumpDataIndex[checkIndex].Address == 0)
+                    g_Index.m_Gump[checkIndex].Address == 0)
                 {
                     continue;
                 }
-
-                m_GumpDataIndex[index] = m_GumpDataIndex[checkIndex];
-                m_GumpDataIndex[index].Texture = 0;
-                m_GumpDataIndex[index].Color = atoi(strings[2].c_str());
-
+                g_Index.m_Gump[index] = g_Index.m_Gump[checkIndex];
+                g_Index.m_Gump[index].Texture = 0;
+                g_Index.m_Gump[index].Color = atoi(strings[2].c_str());
                 break;
             }
         }
@@ -4636,33 +4225,27 @@ void CGame::IndexReplaces()
     Info(Client, "replacing multi");
     while (!multiParser.IsEOF())
     {
-        vector<string> strings = multiParser.ReadTokens();
-
+        auto strings = multiParser.ReadTokens();
         if (strings.size() >= 3)
         {
             int index = atoi(strings[0].c_str());
-
-            if (index < 0 || index >= g_MultiIndexCount || m_MultiDataIndex[index].Address != 0)
+            if (index < 0 || index >= g_Index.m_MultiIndexCount ||
+                g_Index.m_Multi[index].Address != 0)
             {
                 continue;
             }
 
-            vector<string> newMulti = newDataParser.GetTokens(strings[1].c_str());
-
-            int size = (int)newMulti.size();
-
+            auto newMulti = newDataParser.GetTokens(strings[1].c_str());
+            const int size = (int)newMulti.size();
             for (int i = 0; i < size; i++)
             {
-                int checkIndex = atoi(newMulti[i].c_str());
-
-                if (checkIndex < 0 || checkIndex >= g_MultiIndexCount ||
-                    m_MultiDataIndex[checkIndex].Address == 0)
+                const int checkIndex = atoi(newMulti[i].c_str());
+                if (checkIndex < 0 || checkIndex >= g_Index.m_MultiIndexCount ||
+                    g_Index.m_Multi[checkIndex].Address == 0)
                 {
                     continue;
                 }
-
-                m_MultiDataIndex[index] = m_MultiDataIndex[checkIndex];
-
+                g_Index.m_Multi[index] = g_Index.m_Multi[checkIndex];
                 break;
             }
         }
@@ -4671,33 +4254,27 @@ void CGame::IndexReplaces()
     Info(Client, "replacing sounds");
     while (!soundParser.IsEOF())
     {
-        vector<string> strings = soundParser.ReadTokens();
-
+        auto strings = soundParser.ReadTokens();
         if (strings.size() >= 2)
         {
             int index = atoi(strings[0].c_str());
-
             if (index < 0 || index >= MAX_SOUND_DATA_INDEX_COUNT ||
-                m_SoundDataIndex[index].Address != 0)
+                g_Index.m_Sound[index].Address != 0)
             {
                 continue;
             }
 
-            vector<string> newSound = newDataParser.GetTokens(strings[1].c_str());
-
-            int size = (int)newSound.size();
-
+            auto newSound = newDataParser.GetTokens(strings[1].c_str());
+            const int size = (int)newSound.size();
             for (int i = 0; i < size; i++)
             {
-                int checkIndex = atoi(newSound[i].c_str());
-
+                const int checkIndex = atoi(newSound[i].c_str());
                 if (checkIndex < -1 || checkIndex >= MAX_SOUND_DATA_INDEX_COUNT)
                 {
                     continue;
                 }
 
-                CIndexSound &in = m_SoundDataIndex[index];
-
+                CIndexSound &in = g_Index.m_Sound[index];
                 if (checkIndex == -1)
                 {
                     in.Address = 0;
@@ -4707,23 +4284,20 @@ void CGame::IndexReplaces()
                 }
                 else
                 {
-                    CIndexSound &out = m_SoundDataIndex[checkIndex];
-
+                    CIndexSound &out = g_Index.m_Sound[checkIndex];
                     if (out.Address == 0)
                     {
                         continue;
                     }
-
                     in.Address = out.Address;
                     in.DataSize = out.DataSize;
                     in.Delay = out.Delay;
                     in.LastAccessTime = out.LastAccessTime;
                 }
 
-                free(in.m_WaveFile);
+                free(in.m_WaveFile); // FIXME!!!
                 in.m_WaveFile = nullptr;
                 in.m_Stream = SOUND_NULL;
-
                 break;
             }
         }
@@ -4732,13 +4306,12 @@ void CGame::IndexReplaces()
     Info(Client, "loading music config");
     while (!mp3Parser.IsEOF())
     {
-        vector<string> strings = mp3Parser.ReadTokens();
-        size_t size = strings.size();
-
+        auto strings = mp3Parser.ReadTokens();
+        const size_t size = strings.size();
         if (size > 0)
         {
-            uint32_t index = std::atoi(strings[0].c_str());
-            CIndexMusic &mp3 = m_MP3Data[index];
+            const uint32_t index = std::atoi(strings[0].c_str());
+            CIndexMusic &mp3 = g_Index.m_MP3[index];
             string name = "music/digital/" + strings[1];
             string extension = ".mp3";
             if (name.find(extension) == string::npos)
@@ -4749,7 +4322,6 @@ void CGame::IndexReplaces()
             {
                 mp3.FilePath = ToString(g_App.UOFilesPath(name));
             }
-
             if (size > 2)
             {
                 mp3.Loop = true;
@@ -4764,26 +4336,20 @@ void CGame::CreateAuraTexture()
     vector<uint32_t> pixels;
     short width = 0;
     short height = 0;
-
     CGLTextureCircleOfTransparency::CreatePixels(30, width, height, pixels);
-
     for (int i = 0; i < (int)pixels.size(); i++)
     {
         uint32_t &pixel = pixels[i];
-
         if (pixel != 0u)
         {
             uint16_t value = pixel << 3;
-
             if (value > 0xFF)
             {
                 value = 0xFF;
             }
-
             pixel = (value << 24) | (value << 16) | (value << 8) | value;
         }
     }
-
     g_GL_BindTexture32(g_AuraTexture, width, height, &pixels[0]);
 }
 
@@ -4827,8 +4393,7 @@ void CGame::CreateObjectHandlesBackground()
             continue;
         }
 
-        CIndexObject &io = m_GumpDataIndex[gumpID[i]];
-
+        CIndexObject &io = g_Index.m_Gump[gumpID[i]];
         int drawWidth = io.Width;
         int drawHeight = io.Height;
         int drawX = 0;
@@ -4839,64 +4404,51 @@ void CGame::CreateObjectHandlesBackground()
             case 1:
             {
                 drawX = th[0]->Width;
-
                 drawWidth = g_ObjectHandlesWidth - th[0]->Width - th[2]->Width;
-
                 break;
             }
             case 2:
             {
                 drawX = g_ObjectHandlesWidth - drawWidth;
-
                 break;
             }
             case 3:
             {
                 drawY = th[0]->Height;
-
                 drawHeight = g_ObjectHandlesHeight - th[0]->Height - th[5]->Height;
-
                 break;
             }
             case 4:
             {
                 drawX = g_ObjectHandlesWidth - drawWidth;
                 drawY = th[2]->Height;
-
                 drawHeight = g_ObjectHandlesHeight - th[2]->Height - th[7]->Height;
-
                 break;
             }
             case 5:
             {
                 drawY = g_ObjectHandlesHeight - drawHeight;
-
                 break;
             }
             case 6:
             {
                 drawX = th[5]->Width;
                 drawY = g_ObjectHandlesHeight - drawHeight;
-
                 drawWidth = g_ObjectHandlesWidth - th[5]->Width - th[7]->Width;
-
                 break;
             }
             case 7:
             {
                 drawX = g_ObjectHandlesWidth - drawWidth;
                 drawY = g_ObjectHandlesHeight - drawHeight;
-
                 break;
             }
             case 8:
             {
                 drawX = th[0]->Width;
                 drawY = th[0]->Height;
-
                 drawWidth = g_ObjectHandlesWidth - th[0]->Width - th[2]->Width;
                 drawHeight = g_ObjectHandlesHeight - th[2]->Height - th[7]->Height;
-
                 break;
             }
             default:
@@ -4926,17 +4478,14 @@ void CGame::CreateObjectHandlesBackground()
         }
 
         vector<uint16_t> pixels = g_UOFileReader.GetGumpPixels(io);
-
         if (static_cast<unsigned int>(!pixels.empty()) != 0u)
         {
             int gumpWidth = io.Width;
             int gumpHeight = io.Height;
             int srcX = 0;
-
             for (int x = drawX; x < drawWidth; x++)
             {
                 int srcY = 0;
-
                 for (int y = drawY; y < drawHeight; y++)
                 {
                     uint16_t &pixel =
@@ -4946,10 +4495,8 @@ void CGame::CreateObjectHandlesBackground()
                     {
                         pixel = pixels[((srcY % gumpHeight) * gumpWidth) + (srcX % gumpWidth)];
                     }
-
                     srcY++;
                 }
-
                 srcX++;
             }
         }
@@ -5040,7 +4587,7 @@ void CGame::PlayMusic(int index, bool warmode)
 
     if (g_Config.ClientVersion >= CV_306E)
     {
-        CIndexMusic &mp3Info = m_MP3Data[index];
+        CIndexMusic &mp3Info = g_Index.m_MP3[index];
         g_SoundManager.PlayMP3(mp3Info.FilePath, index, mp3Info.Loop, warmode);
     }
     else
@@ -5063,7 +4610,7 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
         return;
     }
 
-    CIndexSound &is = m_SoundDataIndex[id];
+    CIndexSound &is = g_Index.m_Sound[id];
     if (is.Address == 0)
     {
         return;
@@ -5076,7 +4623,7 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
         {
             return;
         }
-        m_UsedSoundList.push_back(&m_SoundDataIndex[id]);
+        m_UsedSoundList.push_back(&g_Index.m_Sound[id]);
     }
     else
     {
@@ -5143,8 +4690,7 @@ CGLTexture *CGame::ExecuteGump(uint16_t id)
     {
         return nullptr;
     }
-
-    CIndexObject &io = m_GumpDataIndex[id];
+    CIndexObject &io = g_Index.m_Gump[id];
     if (io.Texture == 0)
     {
         if (io.Address == 0u)
@@ -5153,15 +4699,12 @@ CGLTexture *CGame::ExecuteGump(uint16_t id)
         }
 
         io.Texture = g_UOFileReader.ReadGump(io);
-
         if (io.Texture != 0)
         {
-            m_UsedGumpList.push_back(&m_GumpDataIndex[id]);
+            m_UsedGumpList.push_back(&g_Index.m_Gump[id]);
         }
     }
-
     io.LastAccessTime = g_Ticks;
-
     return io.Texture;
 }
 
@@ -5172,8 +4715,7 @@ CGLTexture *CGame::ExecuteLandArt(uint16_t id)
     {
         return nullptr;
     }
-    CIndexObject &io = m_LandDataIndex[id];
-
+    CIndexObject &io = g_Index.m_Land[id];
     if (io.Texture == 0)
     {
         if (io.Address == 0u)
@@ -5182,22 +4724,19 @@ CGLTexture *CGame::ExecuteLandArt(uint16_t id)
         }
 
         io.Texture = g_UOFileReader.ReadArt(id, io, false);
-
         if (io.Texture != 0)
         {
-            m_UsedLandList.push_back(&m_LandDataIndex[id]);
+            m_UsedLandList.push_back(&g_Index.m_Land[id]);
         }
     }
-
     io.LastAccessTime = g_Ticks;
-
     return io.Texture;
 }
 
 CGLTexture *CGame::ExecuteStaticArtAnimated(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-    return ExecuteStaticArt(id + m_StaticDataIndex[id].Offset);
+    return ExecuteStaticArt(id + g_Index.m_Static[id].Offset);
 }
 
 CGLTexture *CGame::ExecuteStaticArt(uint16_t id)
@@ -5207,8 +4746,8 @@ CGLTexture *CGame::ExecuteStaticArt(uint16_t id)
     {
         return nullptr;
     }
-    CIndexObject &io = m_StaticDataIndex[id];
 
+    CIndexObject &io = g_Index.m_Static[id];
     if (io.Texture == 0)
     {
         if (io.Address == 0u)
@@ -5217,33 +4756,27 @@ CGLTexture *CGame::ExecuteStaticArt(uint16_t id)
         }
 
         io.Texture = g_UOFileReader.ReadArt(id, io, true);
-
         if (io.Texture != 0)
         {
             io.Width = ((io.Texture->Width / 2) + 1);
             io.Height = io.Texture->Height - 20;
-
-            m_UsedStaticList.push_back(&m_StaticDataIndex[id]);
+            m_UsedStaticList.push_back(&g_Index.m_Static[id]);
         }
     }
-
     io.LastAccessTime = g_Ticks;
-
     return io.Texture;
 }
 
 CGLTexture *CGame::ExecuteTexture(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-    id = m_LandData[id].TexID;
-
+    id = g_Data.m_Land[id].TexID;
     if ((id == 0u) || id >= MAX_LAND_TEXTURES_DATA_INDEX_COUNT)
     {
         return nullptr;
     }
 
-    CIndexObject &io = m_TextureDataIndex[id];
-
+    CIndexObject &io = g_Index.m_Texture[id];
     if (io.Texture == 0)
     {
         if (io.Address == 0u)
@@ -5252,15 +4785,12 @@ CGLTexture *CGame::ExecuteTexture(uint16_t id)
         }
 
         io.Texture = g_UOFileReader.ReadTexture(io);
-
         if (io.Texture != 0)
         {
-            m_UsedTextureList.push_back(&m_TextureDataIndex[id]);
+            m_UsedTextureList.push_back(&g_Index.m_Texture[id]);
         }
     }
-
     io.LastAccessTime = g_Ticks;
-
     return io.Texture;
 }
 
@@ -5272,8 +4802,7 @@ CGLTexture *CGame::ExecuteLight(uint8_t &id)
         id = 0;
     }
 
-    CIndexObject &io = m_LightDataIndex[id];
-
+    CIndexObject &io = g_Index.m_Light[id];
     if (io.Texture == 0)
     {
         if (io.Address == 0u)
@@ -5282,15 +4811,12 @@ CGLTexture *CGame::ExecuteLight(uint8_t &id)
         }
 
         io.Texture = g_UOFileReader.ReadLight(io);
-
         if (io.Texture != 0)
         {
-            m_UsedLightList.push_back(&m_LightDataIndex[id]);
+            m_UsedLightList.push_back(&g_Index.m_Light[id]);
         }
     }
-
     io.LastAccessTime = g_Ticks;
-
     return io.Texture;
 }
 
@@ -5298,7 +4824,6 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = true;
-
     for (int i = 0; i < count; i++)
     {
         if (ExecuteGump(id + (uint16_t)i) == nullptr)
@@ -5306,7 +4831,6 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
             result = false;
         }
     }
-
     return result;
 }
 
@@ -5488,21 +5012,20 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
 
-        th->Draw(x - m_StaticDataIndex[id].Width, y - m_StaticDataIndex[id].Height);
+        th->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
     }
 }
 
 void CGame::DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
-    DrawStaticArt(id + m_StaticDataIndex[id].Offset, color, x, y, selection);
+    DrawStaticArt(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
 void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = ExecuteStaticArt(id);
-
     if (th != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
@@ -5519,7 +5042,6 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
         th->DrawRotated(x, y, angle);
     }
 }
@@ -5527,14 +5049,13 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
 void CGame::DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
-    DrawStaticArtRotated(id + m_StaticDataIndex[id].Offset, color, x, y, angle);
+    DrawStaticArtRotated(id + g_Index.m_Static[id].Offset, color, x, y, angle);
 }
 
 void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = ExecuteStaticArt(id);
-
     if (th != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
@@ -5552,15 +5073,13 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
             {
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
             }
-
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
-        th->DrawTransparent(x - m_StaticDataIndex[id].Width, y - m_StaticDataIndex[id].Height);
+        th->DrawTransparent(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
     }
 }
 
@@ -5568,7 +5087,7 @@ void CGame::DrawStaticArtAnimatedTransparent(
     uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
-    DrawStaticArtTransparent(id + m_StaticDataIndex[id].Offset, color, x, y, selection);
+    DrawStaticArtTransparent(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
 void CGame::DrawStaticArtInContainer(
@@ -5576,7 +5095,6 @@ void CGame::DrawStaticArtInContainer(
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = ExecuteStaticArt(id);
-
     if (th != nullptr)
     {
         if (onMouse)
@@ -5600,14 +5118,12 @@ void CGame::DrawStaticArtInContainer(
             {
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
             }
-
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
         th->Draw(x, y);
     }
 }
@@ -5616,7 +5132,6 @@ void CGame::DrawLight(LIGHT_DATA &light)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = ExecuteLight(light.ID);
-
     if (th != nullptr)
     {
         if (light.Color != 0u)
@@ -5628,7 +5143,6 @@ void CGame::DrawLight(LIGHT_DATA &light)
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
         th->Draw(
             light.DrawX - g_RenderBounds.GameWindowPosX - (th->Width / 2),
             light.DrawY - g_RenderBounds.GameWindowPosY - (th->Height / 2));
@@ -5647,21 +5161,18 @@ bool CGame::PolygonePixelsInXY(int x, int y, int width, int height)
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = m_GumpDataIndex[id].Texture;
-
+    CGLTexture *texture = g_Index.m_Gump[id].Texture;
     if (texture != nullptr)
     {
         return texture->Select(x, y);
     }
-
     return false;
 }
 
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = m_GumpDataIndex[id].Texture;
-
+    CGLTexture *texture = g_Index.m_Gump[id].Texture;
     if (texture == nullptr)
     {
         return false;
@@ -5669,7 +5180,6 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 
     x = g_MouseManager.Position.X - x;
     y = g_MouseManager.Position.Y - y;
-
     if (x < 0 || y < 0 || (width > 0 && x >= width) || (height > 0 && y >= height))
     {
         return false;
@@ -5677,7 +5187,6 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 
     int textureWidth = texture->Width;
     int textureHeight = texture->Height;
-
     if (width == 0)
     {
         width = textureWidth;
@@ -5711,7 +5220,6 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
     }
 
     int pos = (y * textureWidth) + x;
-
     if (pos < (int)texture->m_HitMap.size())
     {
         return (texture->m_HitMap[pos] != 0);
@@ -5732,11 +5240,9 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
     }
 
     CGLTexture *th[9] = { nullptr };
-
     for (int i = 0; i < 9; i++)
     {
-        CGLTexture *pth = m_GumpDataIndex[id + i].Texture;
-
+        CGLTexture *pth = g_Index.m_Gump[id + i].Texture;
         if (pth == nullptr)
         {
             return false;
@@ -5760,7 +5266,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
     int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
     int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;
     int offsetRight = std::max(th[2]->Width, th[7]->Width) - th[4]->Width;
-
     for (int i = 0; i < 9; i++)
     {
         switch (i)
@@ -5785,7 +5290,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 2:
@@ -5794,7 +5298,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 3:
@@ -5809,7 +5312,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 4:
@@ -5825,7 +5327,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 5:
@@ -5834,7 +5335,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 6:
@@ -5850,7 +5350,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 7:
@@ -5859,20 +5358,17 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             case 8:
             {
                 int DW = width - th[0]->Width - th[2]->Width;
-
                 if (DW < 1)
                 {
                     break;
                 }
 
                 int DH = height - th[2]->Height - th[7]->Height;
-
                 if (DH < 1)
                 {
                     break;
@@ -5882,60 +5378,52 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
                 {
                     return true;
                 }
-
                 break;
             }
             default:
                 break;
         }
     }
-
     return false;
 }
 
 bool CGame::StaticPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CIndexObject &io = m_StaticDataIndex[id];
+    CIndexObject &io = g_Index.m_Static[id];
     CGLTexture *texture = io.Texture;
-
     if (texture != nullptr)
     {
         return texture->Select(x - io.Width, y - io.Height);
     }
-
     return false;
 }
 
 bool CGame::StaticPixelsInXYAnimated(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    return StaticPixelsInXY(id + m_StaticDataIndex[id].Offset, x, y);
+    return StaticPixelsInXY(id + g_Index.m_Static[id].Offset, x, y);
 }
 
 bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = m_StaticDataIndex[id].Texture;
-
+    CGLTexture *texture = g_Index.m_Static[id].Texture;
     if (texture != nullptr)
     {
         return texture->Select(x, y);
     }
-
     return false;
 }
 
 bool CGame::LandPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = m_LandDataIndex[id].Texture;
-
+    CGLTexture *texture = g_Index.m_Land[id].Texture;
     if (texture != nullptr)
     {
         return texture->Select(x - 22, y - 22);
     }
-
     return false;
 }
 
@@ -5964,12 +5452,9 @@ void CGame::CreateTextMessageF(uint8_t font, uint16_t color, const char *format,
     DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, format);
-
     char buf[512] = { 0 };
-    vsprintf_s(buf, format, arg);
-
+    SDL_vsnprintf(buf, sizeof(buf), format, arg);
     CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, buf);
-
     va_end(arg);
 }
 
@@ -5978,12 +5463,9 @@ void CGame::CreateUnicodeTextMessageF(uint8_t font, uint16_t color, const char *
     DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, format);
-
     char buf[512] = { 0 };
-    vsprintf_s(buf, format, arg);
-
+    SDL_vsnprintf(buf, sizeof(buf), format, arg);
     CreateUnicodeTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, ToWString(buf));
-
     va_end(arg);
 }
 
@@ -6399,13 +5881,12 @@ void CGame::EquipItem(uint32_t container)
         if (IsWearable(g_ObjectInHand.TiledataPtr->Flags))
         {
             uint16_t graphic = g_ObjectInHand.Graphic;
-
             if (container == 0u)
             {
                 container = g_PlayerSerial;
             }
 
-            CPacketEquipRequest(g_ObjectInHand.Serial, m_StaticData[graphic].Layer, container)
+            CPacketEquipRequest(g_ObjectInHand.Serial, g_Data.m_Static[graphic].Layer, container)
                 .Send();
 
             g_ObjectInHand.Enabled = false;
@@ -6745,38 +6226,31 @@ void CGame::ConsolePromptCancel()
 uint64_t CGame::GetLandFlags(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-
-    if (id < m_LandData.size())
+    if (id < g_Data.m_Land.size())
     {
-        return m_LandData[id].Flags;
+        return g_Data.m_Land[id].Flags;
     }
-
     return 0;
 }
 
 uint64_t CGame::GetStaticFlags(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-
-    if (id < (int)m_StaticData.size())
+    if (id < (int)g_Data.m_Static.size())
     {
-        return m_StaticData[id].Flags;
+        return g_Data.m_Static[id].Flags;
     }
-
     return 0;
 }
 
 CSize CGame::GetStaticArtDimension(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-
     CGLTexture *th = ExecuteStaticArt(id);
-
     if (th != nullptr)
     {
         return CSize(th->Width, th->Height);
     }
-
     return CSize();
 }
 
@@ -6784,12 +6258,10 @@ CSize CGame::GetGumpDimension(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = ExecuteGump(id);
-
     if (th != nullptr)
     {
         return CSize(th->Width, th->Height);
     }
-
     return CSize();
 }
 
@@ -6798,9 +6270,7 @@ void CGame::OpenStatus(uint32_t serial)
     DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - 76;
     int y = g_MouseManager.Position.Y - 30;
-
     CPacketStatusRequest(serial).Send();
-
     g_GumpManager.AddGump(new CGumpStatusbar(serial, x, y, true));
 }
 
@@ -6809,9 +6279,7 @@ void CGame::DisplayStatusbarGump(int serial, int x, int y)
     DEBUG_TRACE_FUNCTION;
     CPacketStatusRequest packet(serial);
     UOMsg_Send(packet.Data().data(), packet.Data().size());
-
     CGump *gump = g_GumpManager.GetGump(serial, 0, GT_STATUSBAR);
-
     if (gump != nullptr)
     {
         if (gump->Minimized)

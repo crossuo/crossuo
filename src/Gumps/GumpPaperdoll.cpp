@@ -636,7 +636,7 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     uint32_t slotSerial = ID_GP_ITEMS + equipment->Layer;
 
-                    CIndexObjectStatic &sio = g_Game.m_StaticDataIndex[equipment->Graphic];
+                    CIndexObjectStatic &sio = g_Index.m_Static[equipment->Graphic];
                     CGLTexture *texture = sio.Texture;
 
                     if (texture == nullptr)

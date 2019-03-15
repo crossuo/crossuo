@@ -44,7 +44,7 @@ void CNewTargetSystem::Draw()
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.DisableNewTargetSystem && ColorGump != 0)
     {
-        CIndexObject &top = g_Game.m_GumpDataIndex[GumpTop];
+        CIndexObject &top = g_Index.m_Gump[GumpTop];
 
         int x = X - (top.Width / 2);
 

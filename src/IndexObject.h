@@ -98,3 +98,19 @@ struct CIndexMusic
     string FilePath;
     bool Loop = false;
 };
+
+struct Index
+{
+    CIndexObjectLand m_Land[MAX_LAND_DATA_INDEX_COUNT];
+    CIndexObjectStatic m_Static[MAX_STATIC_DATA_INDEX_COUNT];
+    CIndexGump m_Gump[MAX_GUMP_DATA_INDEX_COUNT];
+    CIndexObject m_Texture[MAX_LAND_TEXTURES_DATA_INDEX_COUNT];
+    CIndexSound m_Sound[MAX_SOUND_DATA_INDEX_COUNT];
+    CIndexMusic m_MP3[MAX_MUSIC_DATA_INDEX_COUNT];
+    CIndexMulti m_Multi[MAX_MULTI_DATA_INDEX_COUNT];
+    CIndexLight m_Light[MAX_LIGHTS_DATA_INDEX_COUNT];
+
+    int m_MultiIndexCount = 0;
+};
+
+extern Index g_Index;

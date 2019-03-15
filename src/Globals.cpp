@@ -57,8 +57,6 @@ CSize g_MapSize[MAX_MAPS_COUNT] = {
 };
 CSize g_MapBlockSize[MAX_MAPS_COUNT];
 
-int g_MultiIndexCount = 0;
-
 CGLFrameBuffer g_LightBuffer;
 
 bool g_GumpPressed = false;

@@ -29,33 +29,26 @@ bool CFontsManager::LoadFonts()
     DEBUG_TRACE_FUNCTION;
 
     Wisp::CMappedFile fontFile;
-
     if (!fontFile.Load(g_App.UOFilesPath("fonts.mul")))
     {
         return false;
     }
 
     FontCount = 0;
-
     while (!fontFile.IsEOF())
     {
         bool exit = false;
         fontFile.Move(1);
-
         for (int i = 0; i < 224; i++)
         {
             FONT_HEADER *fh = (FONT_HEADER *)fontFile.Ptr;
             fontFile.Move(sizeof(FONT_HEADER));
-
             int bcount = fh->Width * fh->Height * 2;
-
             if (fontFile.Ptr + bcount > fontFile.End) //Bad font file...
             {
                 exit = true;
-
                 break;
             }
-
             fontFile.Move(bcount);
         }
 
@@ -63,7 +56,6 @@ bool CFontsManager::LoadFonts()
         {
             break;
         }
-
         FontCount++;
     }
 
@@ -71,19 +63,15 @@ bool CFontsManager::LoadFonts()
     {
         Font = nullptr;
         FontCount = 0;
-
         return false;
     }
 
     Font = new FONT_DATA[FontCount];
-
     fontFile.ResetPtr();
-
     for (int i = 0; i < FontCount; i++)
     {
         FONT_DATA &fd = Font[i];
         fd.Header = fontFile.ReadUInt8();
-
         for (int j = 0; j < 224; j++)
         {
             FONT_CHARACTER_DATA &fcd = fd.Chars[j];
@@ -116,7 +104,6 @@ bool CFontsManager::LoadFonts()
             m_FontIndex[i] = m_FontIndex[' '];
         }
     }
-
     return true;
 }
 

@@ -104,7 +104,7 @@ void CGameObject::DrawObjectHandlesTexture()
             if (name.length() == 0u)
             {
                 name = g_ClilocManager.Cliloc(g_Language)
-                           ->GetW(1020000 + Graphic, true, g_Game.m_StaticData[Graphic].Name);
+                           ->GetW(1020000 + Graphic, true, g_Data.m_Static[Graphic].Name);
             }
             GenerateObjectHandlesTexture(name);
         }

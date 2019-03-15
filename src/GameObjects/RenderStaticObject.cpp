@@ -22,7 +22,7 @@ CRenderStaticObject::CRenderStaticObject(
     : CMapObject(renderType, serial, graphic, color, x, y, z)
 {
     DEBUG_TRACE_FUNCTION;
-    m_TiledataPtr = &g_Game.m_StaticData[graphic];
+    m_TiledataPtr = &g_Data.m_Static[graphic];
 
     if (m_TiledataPtr->Height > 5)
     {
