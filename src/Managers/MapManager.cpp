@@ -106,7 +106,7 @@ void CMapManager::CreateBlockTable(int map)
                     "build/map%dlegacymul/%08d.dat",
                     map,
                     shifted);
-                auto block = uopFile.GetBlock(CGame::CreateHash(mapFilePath));
+                auto block = uopFile.GetBlock(CreateAssetHash(mapFilePath));
                 if (block != nullptr)
                 {
                     uopOffset = size_t(block->Offset + block->HeaderSize);

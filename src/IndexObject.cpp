@@ -4,6 +4,8 @@
 #include "IndexObject.h"
 #include "Config.h"
 
+Index g_Index;
+
 // FIXME: Texture should be managed elsewhere
 CIndexObject::~CIndexObject()
 {

@@ -510,7 +510,7 @@ void CGumpCombatBook::UpdateContent()
         vector<uint16_t> list = GetItemsList((uint8_t)i);
 
         int size = (int)list.size();
-        size_t maxStaticCount = g_Game.m_StaticData.size();
+        size_t maxStaticCount = g_Data.m_Static.size();
 
         int textX = 62;
         int textY = 98;
@@ -531,7 +531,7 @@ void CGumpCombatBook::UpdateContent()
             }
 
             CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, textX, textY));
-            text->CreateTextureA(9, ToCamelCase(g_Game.m_StaticData[id].Name));
+            text->CreateTextureA(9, ToCamelCase(g_Data.m_Static[id].Name));
 
             textY += 16;
         }

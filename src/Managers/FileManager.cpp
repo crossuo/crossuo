@@ -17,6 +17,154 @@
 
 string g_dumpUopFile;
 CFileManager g_FileManager;
+Data g_Data;
+
+uint64_t CreateAssetHash(const char *s)
+{
+    const auto l = (uint32_t)strlen(s);
+    uint32_t eax, ecx, edx, ebx, esi, edi;
+
+    eax = ecx = edx = ebx = esi = edi = 0;
+    ebx = edi = esi = l + 0xDEADBEEF;
+
+    uint32_t i = 0;
+    for (i = 0; i + 12 < l; i += 12)
+    {
+        edi = (uint32_t)((s[i + 7] << 24) | (s[i + 6] << 16) | (s[i + 5] << 8) | s[i + 4]) + edi;
+        esi = (uint32_t)((s[i + 11] << 24) | (s[i + 10] << 16) | (s[i + 9] << 8) | s[i + 8]) + esi;
+        edx = (uint32_t)((s[i + 3] << 24) | (s[i + 2] << 16) | (s[i + 1] << 8) | s[i]) - esi;
+
+        edx = (edx + ebx) ^ (esi >> 28) ^ (esi << 4);
+        esi += edi;
+        edi = (edi - edx) ^ (edx >> 26) ^ (edx << 6);
+        edx += esi;
+        esi = (esi - edi) ^ (edi >> 24) ^ (edi << 8);
+        edi += edx;
+        ebx = (edx - esi) ^ (esi >> 16) ^ (esi << 16);
+        esi += edi;
+        edi = (edi - ebx) ^ (ebx >> 13) ^ (ebx << 19);
+        ebx += esi;
+        esi = (esi - edi) ^ (edi >> 28) ^ (edi << 4);
+        edi += ebx;
+    }
+
+    if (l - i > 0)
+    {
+        switch (l - i)
+        {
+            case 12:
+                esi += static_cast<uint32_t>(s[i + 11]) << 24;
+                goto case_11;
+                break;
+            case 11:
+            case_11:
+                esi += static_cast<uint32_t>(s[i + 10]) << 16;
+                goto case_10;
+                break;
+            case 10:
+            case_10:
+                esi += static_cast<uint32_t>(s[i + 9]) << 8;
+                goto case_9;
+                break;
+            case 9:
+            case_9:
+                esi += s[i + 8];
+                goto case_8;
+                break;
+            case 8:
+            case_8:
+                edi += static_cast<uint32_t>(s[i + 7]) << 24;
+                goto case_7;
+                break;
+            case 7:
+            case_7:
+                edi += static_cast<uint32_t>(s[i + 6]) << 16;
+                goto case_6;
+                break;
+            case 6:
+            case_6:
+                edi += static_cast<uint32_t>(s[i + 5]) << 8;
+                goto case_5;
+                break;
+            case 5:
+            case_5:
+                edi += s[i + 4];
+                goto case_4;
+                break;
+            case 4:
+            case_4:
+                ebx += static_cast<uint32_t>(s[i + 3]) << 24;
+                goto case_3;
+                break;
+            case 3:
+            case_3:
+                ebx += static_cast<uint32_t>(s[i + 2]) << 16;
+                goto case_2;
+                break;
+            case 2:
+            case_2:
+                ebx += static_cast<uint32_t>(s[i + 1]) << 8;
+                goto case_1;
+            case 1:
+            case_1:
+                ebx += s[i];
+                break;
+        }
+
+        esi = (esi ^ edi) - ((edi >> 18) ^ (edi << 14));
+        ecx = (esi ^ ebx) - ((esi >> 21) ^ (esi << 11));
+        edi = (edi ^ ecx) - ((ecx >> 7) ^ (ecx << 25));
+        esi = (esi ^ edi) - ((edi >> 16) ^ (edi << 16));
+        edx = (esi ^ ecx) - ((esi >> 28) ^ (esi << 4));
+        edi = (edi ^ edx) - ((edx >> 18) ^ (edx << 14));
+        eax = (esi ^ edi) - ((edi >> 8) ^ (edi << 24));
+
+        return (static_cast<uint64_t>(edi) << 32) | eax;
+    }
+
+    return (static_cast<uint64_t>(esi) << 32) | eax;
+}
+
+static uint32_t CRC32Table[256];
+static uint32_t reflect(uint32_t source, int c)
+{
+    uint32_t value = 0;
+    for (int i = 1; i < c + 1; i++)
+    {
+        if ((source & 0x1) != 0u)
+        {
+            value |= (1 << (c - i));
+        }
+        source >>= 1;
+    }
+    return value;
+}
+
+void InitChecksum32()
+{
+    for (int i = 0; i < 256; i++)
+    {
+        CRC32Table[i] = reflect((int)i, 8) << 24;
+        for (int j = 0; j < 8; j++)
+        {
+            CRC32Table[i] =
+                (CRC32Table[i] << 1) ^ ((CRC32Table[i] & (1 << 31)) != 0u ? 0x04C11DB7 : 0);
+        }
+        CRC32Table[i] = reflect(CRC32Table[i], 32);
+    }
+}
+
+uint32_t Checksum32(uint8_t *ptr, size_t size)
+{
+    uint32_t crc = 0xFFFFFFFF;
+    while (size > 0)
+    {
+        crc = (crc >> 8) ^ CRC32Table[(crc & 0xFF) ^ *ptr];
+        ptr++;
+        size--;
+    }
+    return (crc & 0xFFFFFFFF);
+}
 
 void CUopMappedFile::Add(uint64_t hash, const UopBlockHeader *item)
 {
@@ -75,6 +223,7 @@ vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
     return dst;
 }
 
+// static
 bool CFileManager::UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId)
 {
     assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
@@ -126,11 +275,11 @@ bool CFileManager::Load()
         return false;
     }
     if (!m_SkillsIdx.Load(g_App.UOFilesPath("Skills.idx")))
-    { // FIXME: need be case insensitive
+    {
         return false;
     }
     if (!m_MultiMap.Load(g_App.UOFilesPath("Multimap.rle")))
-    { // FIXME: need be case insensitive
+    {
         return false;
     }
     if (!m_TextureIdx.Load(g_App.UOFilesPath("texidx.mul")))
@@ -292,11 +441,11 @@ bool CFileManager::LoadWithUop()
         return false;
     }
     if (!m_SkillsIdx.Load(g_App.UOFilesPath("Skills.idx")))
-    { // FIXME: need be case insensitive
+    {
         return false;
     }
     if (!m_MultiMap.Load(g_App.UOFilesPath("Multimap.rle")))
-    { // FIXME: need be case insensitive
+    {
         return false;
     }
     if (!m_TextureIdx.Load(g_App.UOFilesPath("texidx.mul")))
@@ -625,7 +774,7 @@ static int UopSetAnimationGroups(int start, int end)
                 "build/animationlegacyframe/%06d/%02d.bin",
                 animId,
                 grpId);
-            const auto asset = CGame::CreateHash(hashString);
+            const auto asset = CreateAssetHash(hashString);
 
             const auto fileIndex = getFileWithAsset(asset);
             if (fileIndex != -1)
@@ -878,7 +1027,7 @@ uint8_t *CFileManager::MulReadAnimationData(const CTextureAnimationDirection &di
 // tiledata.mul
 // MulLandTileGroup[512] // land tile groups
 // MulStaticTileGroup[...] // static tile groups to the end of the file
-void CFileManager::LoadTiledata(vector<MulLandTile2> &landData, vector<MulStaticTile2> &staticsData)
+void CFileManager::LoadTiledata()
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -901,14 +1050,14 @@ void CFileManager::LoadTiledata(vector<MulLandTile2> &landData, vector<MulStatic
     {
         const bool isOldVersion = (g_Config.ClientVersion < CV_7090);
         file.ResetPtr();
-        landData.resize(landSize * 32);
-        staticsData.resize(staticsSize * 32);
+        g_Data.m_Land.resize(landSize * 32);
+        g_Data.m_Static.resize(staticsSize * 32);
         for (int i = 0; i < landSize; i++)
         {
             file.ReadUInt32LE();
             for (int j = 0; j < 32; j++)
             {
-                auto &tile = landData[(i * 32) + j];
+                auto &tile = g_Data.m_Land[(i * 32) + j];
                 if (isOldVersion)
                 {
                     tile.Flags = file.ReadUInt32LE();
@@ -919,7 +1068,6 @@ void CFileManager::LoadTiledata(vector<MulLandTile2> &landData, vector<MulStatic
                 }
                 tile.TexID = file.ReadUInt16LE();
                 file.ReadBuffer(tile.Name);
-                Warning(Data, "TILE: %s\n", tile.Name);
             }
         }
 
@@ -928,7 +1076,7 @@ void CFileManager::LoadTiledata(vector<MulLandTile2> &landData, vector<MulStatic
             file.ReadUInt32LE();
             for (int j = 0; j < 32; j++)
             {
-                auto &tile = staticsData[(i * 32) + j];
+                auto &tile = g_Data.m_Static[(i * 32) + j];
                 if (isOldVersion)
                 {
                     tile.Flags = file.ReadUInt32LE();
@@ -945,8 +1093,233 @@ void CFileManager::LoadTiledata(vector<MulLandTile2> &landData, vector<MulStatic
                 tile.LightIndex = file.ReadInt16LE();
                 tile.Height = file.ReadInt8();
                 file.ReadBuffer(tile.Name);
-                Warning(Data, "TILE: %s\n", tile.Name);
             }
         }
     }
+}
+
+void CFileManager::LoadIndexFiles()
+{
+    DEBUG_TRACE_FUNCTION;
+    Info(Client, "loading indexes");
+
+    auto *LandArtPtr = (ArtIdxBlock *)m_ArtIdx.Start;
+    auto *StaticArtPtr =
+        (ArtIdxBlock *)((size_t)m_ArtIdx.Start + (g_Data.m_Land.size() * sizeof(ArtIdxBlock)));
+    auto *GumpArtPtr = (GumpIdxBlock *)m_GumpIdx.Start;
+    auto *TexturePtr = (TexIdxBlock *)m_TextureIdx.Start;
+    auto *MultiPtr = (MultiIdxBlock *)m_MultiIdx.Start;
+    auto *SoundPtr = (SoundIdxBlock *)m_SoundIdx.Start;
+    auto *LightPtr = (LightIdxBlock *)m_LightIdx.Start;
+
+    if (m_MultiCollection.Start != nullptr)
+    {
+        g_Index.m_MultiIndexCount = MAX_MULTI_DATA_INDEX_COUNT;
+    }
+    else
+    {
+        g_Index.m_MultiIndexCount = (int)(m_MultiIdx.Size / sizeof(MultiIdxBlock));
+
+        if (g_Index.m_MultiIndexCount > MAX_MULTI_DATA_INDEX_COUNT)
+        {
+            g_Index.m_MultiIndexCount = MAX_MULTI_DATA_INDEX_COUNT;
+        }
+    }
+
+    int maxGumpsCount =
+        (int)(m_GumpIdx.Start == nullptr ? MAX_GUMP_DATA_INDEX_COUNT : (m_GumpIdx.End - m_GumpIdx.Start) / sizeof(GumpIdxBlock));
+    if (m_ArtMul.Start != nullptr)
+    {
+        MulReadIndexFile(
+            MAX_LAND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Land[i]; },
+            (size_t)m_ArtMul.Start,
+            LandArtPtr,
+            [&LandArtPtr]() { return ++LandArtPtr; });
+        MulReadIndexFile(
+            g_Data.m_Anim.size(),
+            [&](int i) { return &g_Index.m_Static[i]; },
+            (size_t)m_ArtMul.Start,
+            StaticArtPtr,
+            [&StaticArtPtr]() { return ++StaticArtPtr; });
+    }
+    else
+    {
+        UopReadIndexFile(
+            MAX_LAND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Land[i]; },
+            "artLegacyMUL",
+            8,
+            ".tga",
+            m_ArtLegacyMUL);
+        UopReadIndexFile(
+            g_Data.m_Anim.size() + MAX_LAND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Static[i - MAX_LAND_DATA_INDEX_COUNT]; },
+            "artLegacyMUL",
+            8,
+            ".tga",
+            m_ArtLegacyMUL,
+            MAX_LAND_DATA_INDEX_COUNT);
+    }
+
+    if (m_SoundMul.Start != nullptr)
+    {
+        MulReadIndexFile(
+            MAX_SOUND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Sound[i]; },
+            (size_t)m_SoundMul.Start,
+            SoundPtr,
+            [&SoundPtr]() { return ++SoundPtr; });
+    }
+    else
+    {
+        UopReadIndexFile(
+            MAX_SOUND_DATA_INDEX_COUNT,
+            [&](int i) { return &g_Index.m_Sound[i]; },
+            "soundLegacyMUL",
+            8,
+            ".dat",
+            m_SoundLegacyMUL);
+    }
+
+    if (m_GumpMul.Start != nullptr)
+    {
+        MulReadIndexFile(
+            maxGumpsCount,
+            [&](int i) { return &g_Index.m_Gump[i]; },
+            (size_t)m_GumpMul.Start,
+            GumpArtPtr,
+            [&GumpArtPtr]() { return ++GumpArtPtr; });
+    }
+    else
+    {
+        UopReadIndexFile(
+            maxGumpsCount,
+            [&](int i) { return &g_Index.m_Gump[i]; },
+            "gumpartLegacyMUL",
+            8,
+            ".tga",
+            m_GumpartLegacyMUL);
+    }
+
+    MulReadIndexFile(
+        m_TextureIdx.Size / sizeof(TexIdxBlock),
+        [&](int i) { return &g_Index.m_Texture[i]; },
+        (size_t)m_TextureMul.Start,
+        TexturePtr,
+        [&TexturePtr]() { return ++TexturePtr; });
+    MulReadIndexFile(
+        MAX_LIGHTS_DATA_INDEX_COUNT,
+        [&](int i) { return &g_Index.m_Light[i]; },
+        (size_t)m_LightMul.Start,
+        LightPtr,
+        [&LightPtr]() { return ++LightPtr; });
+
+    if (m_MultiMul.Start != nullptr)
+    {
+        MulReadIndexFile(
+            g_Index.m_MultiIndexCount,
+            [&](int i) { return &g_Index.m_Multi[i]; },
+            (size_t)m_MultiMul.Start,
+            MultiPtr,
+            [&MultiPtr]() { return ++MultiPtr; });
+    }
+    else
+    {
+        CUopMappedFile &file = m_MultiCollection;
+        for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
+        {
+            const auto hash = kvp.first;
+            const auto block = kvp.second;
+            vector<uint8_t> data = file.GetData(block);
+            if (data.empty())
+            {
+                continue;
+            }
+
+            Wisp::CDataReader reader(&data[0], data.size());
+            uint32_t id = reader.ReadUInt32LE();
+            if (id < MAX_MULTI_DATA_INDEX_COUNT)
+            {
+                CIndexMulti &index = g_Index.m_Multi[id];
+                index.Address = size_t(file.Start + block->Offset + block->HeaderSize);
+                index.DataSize = block->DecompressedSize;
+                index.UopBlock = block;
+                index.ID = -1;
+                index.Count = reader.ReadUInt32LE();
+            }
+        }
+        //UopReadIndexFile(g_Index.m_MultiIndexCount, [&](int i){ return &g_Index.m_Multi[i]; }, "MultiCollection", 6, ".bin", m_MultiCollection);
+    }
+}
+
+void CFileManager::MulReadIndexFile(
+    size_t indexMaxCount,
+    const std::function<CIndexObject *(int index)> &getIdxObj,
+    size_t address,
+    IndexBlock *ptr,
+    const std::function<IndexBlock *()> &getNewPtrValue)
+{
+    DEBUG_TRACE_FUNCTION;
+    for (int i = 0; i < (int)indexMaxCount; i++)
+    {
+        CIndexObject *obj = getIdxObj((int)i);
+        obj->ReadIndexFile(address, ptr, (uint16_t)i);
+        ptr = getNewPtrValue();
+    }
+}
+
+// FIXME: move to FileManager
+void CFileManager::UopReadIndexFile(
+    size_t indexMaxCount,
+    const std::function<CIndexObject *(int)> &getIdxObj,
+    const char *uopFileName,
+    int padding,
+    const char *extesion,
+    CUopMappedFile &uopFile,
+    int startIndex)
+{
+    DEBUG_TRACE_FUNCTION;
+    string p = uopFileName;
+    std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+
+    bool isGump = (string("gumpartlegacymul") == p);
+    char basePath[200] = { 0 };
+    SDL_snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
+
+    for (int i = startIndex; i < (int)indexMaxCount; i++)
+    {
+        char hashString[200] = { 0 };
+        SDL_snprintf(hashString, sizeof(hashString), basePath, (int)i);
+
+        auto block = uopFile.GetBlock(CreateAssetHash(hashString));
+        if (block != nullptr)
+        {
+            CIndexObject *obj = getIdxObj((int)i);
+            obj->Address = uintptr_t(uopFile.Start + block->Offset + block->HeaderSize);
+            obj->DataSize = block->DecompressedSize;
+            obj->UopBlock = block;
+            obj->ID = -1;
+
+            if (isGump)
+            {
+                obj->Address += 8;
+                obj->DataSize -= 8;
+
+                uopFile.ResetPtr();
+                uopFile.Move(block->Offset + block->HeaderSize);
+
+                obj->Width = uopFile.ReadUInt32LE();
+                obj->Height = uopFile.ReadUInt32LE();
+            }
+        }
+    }
+}
+
+void CFileManager::LoadData()
+{
+    g_Data.m_Anim.resize(m_AnimdataMul.Size);
+    memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+    LoadTiledata();
+    LoadIndexFiles();
 }

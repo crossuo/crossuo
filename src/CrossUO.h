@@ -17,54 +17,32 @@ public:
     string m_OverrideServerAddress;
     int m_OverrideServerPort = 0;
 
+    uint16_t m_WinterTile[MAX_LAND_DATA_INDEX_COUNT];
+    std::vector<std::pair<uint16_t, uint16_t>> m_IgnoreInFilterTiles;
+    std::deque<CIndexObjectStatic *> m_StaticAnimList;
+    std::deque<CIndexObject *> m_UsedLandList;
+    std::deque<CIndexObject *> m_UsedStaticList;
+    std::deque<CIndexObject *> m_UsedGumpList;
+    std::deque<CIndexObject *> m_UsedTextureList;
+    std::deque<CIndexObject *> m_UsedLightList;
+    std::deque<CIndexSound *> m_UsedSoundList;
+
 private:
-    uint32_t m_CRC_Table[256];
-
-    uint8_t m_StaticTilesFilterFlags[0x10000];
-
-    vector<uint16_t> m_StumpTiles;
-    vector<uint16_t> m_CaveTiles;
-
-    deque<CIndexObjectStatic *> m_StaticAnimList;
-
-    deque<CIndexObject *> m_UsedLandList;
-    deque<CIndexObject *> m_UsedStaticList;
-    deque<CIndexObject *> m_UsedGumpList;
-    deque<CIndexObject *> m_UsedTextureList;
-    deque<CIndexSound *> m_UsedSoundList;
-    deque<CIndexObject *> m_UsedLightList;
-
-    vector<uint8_t> m_AnimData;
-
+    uint8_t m_StaticTilesFilterFlags[MAX_STATIC_DATA_INDEX_COUNT];
     string m_GameServerIP = "";
 
     void LoadAutoLoginNames();
-    void LoadIndexFiles();
-    void UnloadIndexFiles();
-    void InitStaticAnimList();
-    uint16_t CalculateLightColor(uint16_t id);
     void ProcessStaticAnimList();
     void PatchFiles();
     void IndexReplaces();
+    void InitStaticAnimList();
     void LoadClientStartupConfig();
     void LoadShaders();
     void CreateAuraTexture();
     void CreateObjectHandlesBackground();
     void ClearUnusedTextures();
-    void MulReadIndexFile(
-        size_t indexMaxCount,
-        const std::function<CIndexObject *(int index)> &getIdxObj,
-        size_t address,
-        IndexBlock *ptr,
-        const std::function<IndexBlock *()> &getNewPtrValue);
-    void UopReadIndexFile(
-        size_t indexMaxCount,
-        const std::function<CIndexObject *(int index)> &getIdxObj,
-        const char *uopFileName,
-        int padding,
-        const char *extesion,
-        CUopMappedFile &uopFile,
-        int startIndex = 0);
+    void UnloadIndexFiles();
+
     uint16_t TextToGraphic(const char *text);
     void CheckStaticTileFilterFiles();
     string DecodeArgumentString(const char *text, int length);
@@ -75,11 +53,6 @@ private:
 public:
     CGame();
     ~CGame();
-
-    static uint64_t CreateHash(const char *s);
-
-    vector<MulLandTile2> m_LandData;
-    vector<MulStaticTile2> m_StaticData;
 
     bool Install();
     void Uninstall();
@@ -93,19 +66,6 @@ public:
     void LoadStartupConfig(int serial);
     void LoadLocalConfig(int serial, string characterName);
     void SaveLocalConfig(int serial);
-
-    CIndexObjectLand m_LandDataIndex[MAX_LAND_DATA_INDEX_COUNT];
-    CIndexObjectStatic m_StaticDataIndex[MAX_STATIC_DATA_INDEX_COUNT];
-    CIndexGump m_GumpDataIndex[MAX_GUMP_DATA_INDEX_COUNT];
-    CIndexObject m_TextureDataIndex[MAX_LAND_TEXTURES_DATA_INDEX_COUNT];
-    CIndexSound m_SoundDataIndex[MAX_SOUND_DATA_INDEX_COUNT];
-    CIndexMusic m_MP3Data[MAX_MUSIC_DATA_INDEX_COUNT];
-    CIndexMulti m_MultiDataIndex[MAX_MULTI_DATA_INDEX_COUNT];
-    CIndexLight m_LightDataIndex[MAX_LIGHTS_DATA_INDEX_COUNT];
-
-    uint16_t m_WinterTile[MAX_LAND_DATA_INDEX_COUNT];
-
-    vector<std::pair<uint16_t, uint16_t>> m_IgnoreInFilterTiles;
 
     bool InTileFilter(uint16_t graphic);
 
@@ -140,7 +100,7 @@ public:
     bool IsVegetation(uint16_t graphic);
     uint64_t GetLandFlags(uint16_t id);
     uint64_t GetStaticFlags(uint16_t id);
-    uint16_t GetLightColor(uint16_t id) { return m_StaticDataIndex[id].LightColor; }
+    uint16_t GetLightColor(uint16_t id) { return g_Index.m_Static[id].LightColor; }
     CSize GetStaticArtDimension(uint16_t id);
     CSize GetGumpDimension(uint16_t id);
     CGLTexture *ExecuteGump(uint16_t id);
@@ -213,7 +173,6 @@ public:
     void OpenDoor();
     void EmoteAction(const char *action);
     void AllNames();
-    uint32_t GetFileHashCode(uint8_t *ptr, size_t size);
     void LoadLogin(string &login, int &port);
     void GoToWebLink(const string &url);
     void RemoveRangedObjects();

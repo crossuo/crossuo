@@ -71,7 +71,7 @@ void CGameItem::OnGraphicChange(int direction)
     DEBUG_TRACE_FUNCTION;
     if (!MultiBody)
     {
-        if (Graphic >= g_Game.m_StaticData.size())
+        if (Graphic >= g_Data.m_Static.size())
         {
             return;
         }
@@ -92,7 +92,7 @@ void CGameItem::OnGraphicChange(int direction)
         }
         else
         {
-            m_TiledataPtr = &g_Game.m_StaticData[Graphic];
+            m_TiledataPtr = &g_Data.m_Static[Graphic];
             MulStaticTile2 &tile = *m_TiledataPtr;
             NoDrawTile = IsNoDrawTile(Graphic);
             if (IsWearable() || Graphic == 0x0A28)
@@ -682,7 +682,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
     WantUpdateMulti = false;
 
-    CIndexMulti &index = g_Game.m_MultiDataIndex[Graphic];
+    CIndexMulti &index = g_Index.m_Multi[Graphic];
 
     size_t address = index.Address;
     int count = index.Count;

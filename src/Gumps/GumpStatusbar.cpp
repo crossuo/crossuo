@@ -565,7 +565,7 @@ void CGumpStatusbar::UpdateContent()
                 gumpId = 0x0802;
             }
             Add(new CGUIGumppic(gumpId, 0, 0));
-            auto &io = g_Game.m_GumpDataIndex[gumpId];
+            auto &io = g_Index.m_Gump[gumpId];
             int xOffset = 0;
 
             if (io.DataSize == 169884 && io.Height == 171 && io.Width == 409)

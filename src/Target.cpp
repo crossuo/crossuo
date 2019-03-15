@@ -348,7 +348,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
     DEBUG_TRACE_FUNCTION;
     UnloadMulti();
 
-    CIndexMulti &index = g_Game.m_MultiDataIndex[MultiGraphic - 1];
+    CIndexMulti &index = g_Index.m_Multi[MultiGraphic - 1];
     int count = (int)index.Count;
     if (index.UopBlock != nullptr)
     {

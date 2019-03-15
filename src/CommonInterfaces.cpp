@@ -611,7 +611,7 @@ void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, XUO_RAW_ART_INFO &info)
 {
     if (index < MAX_LAND_DATA_INDEX_COUNT)
     {
-        CIndexObjectLand &landData = g_Game.m_LandDataIndex[index];
+        CIndexObjectLand &landData = g_Index.m_Land[index];
 
         if (landData.Address != 0)
         {
@@ -640,7 +640,7 @@ void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, XUO_RAW_ART_INFO &inf
 {
     if (index < MAX_STATIC_DATA_INDEX_COUNT)
     {
-        CIndexObjectStatic &staticData = g_Game.m_StaticDataIndex[index];
+        CIndexObjectStatic &staticData = g_Index.m_Static[index];
 
         if (staticData.Address != 0)
         {
@@ -669,7 +669,7 @@ void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, XUO_RAW_GUMP_INFO &info
 {
     if (index < MAX_GUMP_DATA_INDEX_COUNT)
     {
-        CIndexGump &gumpData = g_Game.m_GumpDataIndex[index];
+        CIndexGump &gumpData = g_Index.m_Gump[index];
 
         if (gumpData.Address != 0)
         {

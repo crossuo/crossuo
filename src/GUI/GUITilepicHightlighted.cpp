@@ -77,7 +77,7 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 bool CGUITilepicHightlighted::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.m_StaticDataIndex[Graphic].Texture;
+    CGLTexture *th = g_Index.m_Static[Graphic].Texture;
 
     if (th != nullptr)
     {

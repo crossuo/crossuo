@@ -109,7 +109,7 @@ void CGumpMinimap::GenerateMap()
     m_Texture.Clear();
 
     uint16_t gumpID = 0x1393 - (int)Minimized;
-    CIndexObject &io = g_Game.m_GumpDataIndex[gumpID];
+    CIndexObject &io = g_Index.m_Gump[gumpID];
 
     int gumpWidth = io.Width;
     int gumpHeight = io.Height;

@@ -2368,9 +2368,8 @@ void CGameScreen::OnLeftMouseButtonUp()
                         if (td == nullptr || td->Timer < g_Ticks)
                         {
                             uint16_t id = rwo->Graphic;
-                            wstring str =
-                                g_ClilocManager.Cliloc(g_Language)
-                                    ->GetW(1020000 + id, true, g_Game.m_StaticData[id].Name);
+                            wstring str = g_ClilocManager.Cliloc(g_Language)
+                                              ->GetW(1020000 + id, true, g_Data.m_Static[id].Name);
                             if (str.length() != 0u)
                             {
                                 // const uint8_t font = g_ConfigManager.ToolTipsTextFont; ?

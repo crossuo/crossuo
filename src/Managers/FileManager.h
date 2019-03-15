@@ -3,12 +3,24 @@
 
 #pragma once
 
+#include "../IndexObject.h"
 #include "../FileSystem.h"
 #include "../Wisp/WispMappedFile.h"
 #include "../Utility/AutoResetEvent.h"
 
 struct CTextureAnimationDirection;
 using UopBlockHeaderMap = std::unordered_map<uint64_t, const UopBlockHeader *>;
+
+struct Data
+{
+    std::vector<MulLandTile2> m_Land;
+    std::vector<MulStaticTile2> m_Static;
+    std::vector<uint16_t> m_StumpTiles;
+    std::vector<uint16_t> m_CaveTiles;
+    std::vector<uint8_t> m_Anim;
+};
+
+extern Data g_Data;
 
 struct CUopMappedFile : public Wisp::CMappedFile
 {
@@ -93,16 +105,38 @@ struct CFileManager : public Wisp::CDataReader
     bool IsMulFileOpen(int idx) const;
     static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId);
 
-    void LoadTiledata(vector<MulLandTile2> &landData, vector<MulStaticTile2> &staticsData);
+    void LoadData();
 
     CFileManager() = default;
     virtual ~CFileManager() = default;
 
 private:
+    void LoadTiledata();
+    void LoadIndexFiles();
+
     void ReadTask();
     bool UopLoadFile(CUopMappedFile &file, const char *fileName);
     bool MulLoadFile(Wisp::CMappedFile &file, const os_path &fileName);
     void ProcessAnimSequeceData();
+
+    void MulReadIndexFile(
+        size_t indexMaxCount,
+        const std::function<CIndexObject *(int index)> &getIdxObj,
+        size_t address,
+        IndexBlock *ptr,
+        const std::function<IndexBlock *()> &getNewPtrValue);
+    void UopReadIndexFile(
+        size_t indexMaxCount,
+        const std::function<CIndexObject *(int index)> &getIdxObj,
+        const char *uopFileName,
+        int padding,
+        const char *extesion,
+        CUopMappedFile &uopFile,
+        int startIndex = 0);
 };
+
+uint64_t CreateAssetHash(const char *s);
+void InitChecksum32();
+uint32_t Checksum32(uint8_t *ptr, size_t size);
 
 extern CFileManager g_FileManager;

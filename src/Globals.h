@@ -83,8 +83,6 @@ extern CGLTexture g_TextureGumpState[2];
 extern CSize g_MapSize[MAX_MAPS_COUNT];
 extern CSize g_MapBlockSize[MAX_MAPS_COUNT];
 
-extern int g_MultiIndexCount;
-
 extern class CGLFrameBuffer g_LightBuffer;
 
 extern bool g_GumpPressed;
