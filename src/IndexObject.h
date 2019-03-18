@@ -14,13 +14,12 @@ struct CIndexObject
     int DataSize = 0;
     int Width = 0;
     int Height = 0;
-    uint16_t ID = 0;
     uint16_t Color = 0;
     uint32_t LastAccessTime = 0;
     const UopBlockHeader *UopBlock = nullptr;
     CGLTexture *Texture = nullptr;
 
-    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id);
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr);
     CIndexObject() = default;
     virtual ~CIndexObject();
 };
@@ -60,7 +59,7 @@ struct CIndexMulti : public CIndexObject
 {
     uint32_t Count = 0;
 
-    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id) override;
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
 
     CIndexMulti() = default;
     virtual ~CIndexMulti() = default;
@@ -68,7 +67,7 @@ struct CIndexMulti : public CIndexObject
 
 struct CIndexGump : public CIndexObject
 {
-    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id) override;
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
 
     CIndexGump() = default;
     virtual ~CIndexGump() = default;
@@ -76,7 +75,7 @@ struct CIndexGump : public CIndexObject
 
 struct CIndexLight : public CIndexObject
 {
-    virtual void ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id) override;
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
 
     CIndexLight() = default;
     virtual ~CIndexLight() = default;

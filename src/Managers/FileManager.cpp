@@ -1245,7 +1245,7 @@ void CFileManager::LoadIndexFiles()
                 index.Address = size_t(file.Start + block->Offset + block->HeaderSize);
                 index.DataSize = block->DecompressedSize;
                 index.UopBlock = block;
-                index.ID = -1;
+                //index.ID = -1;
                 index.Count = reader.ReadUInt32LE();
             }
         }
@@ -1264,7 +1264,7 @@ void CFileManager::MulReadIndexFile(
     for (int i = 0; i < (int)indexMaxCount; i++)
     {
         CIndexObject *obj = getIdxObj((int)i);
-        obj->ReadIndexFile(address, ptr, (uint16_t)i);
+        obj->ReadIndexFile(address, ptr);
         ptr = getNewPtrValue();
     }
 }
@@ -1299,7 +1299,7 @@ void CFileManager::UopReadIndexFile(
             obj->Address = uintptr_t(uopFile.Start + block->Offset + block->HeaderSize);
             obj->DataSize = block->DecompressedSize;
             obj->UopBlock = block;
-            obj->ID = -1;
+            //obj->ID = -1;
 
             if (isGump)
             {
