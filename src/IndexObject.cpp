@@ -17,7 +17,7 @@ CIndexObject::~CIndexObject()
     }
 }
 
-void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
+void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr)
 {
     Address = ptr->Position;
     DataSize = ptr->Size;
@@ -30,12 +30,11 @@ void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t
     {
         Address = Address + address;
     }
-    ID = id;
 };
 
-void CIndexMulti::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
+void CIndexMulti::ReadIndexFile(size_t address, IndexBlock *block)
 {
-    CIndexObject::ReadIndexFile(address, ptr, id);
+    CIndexObject::ReadIndexFile(address, block);
     if (g_Config.ClientVersion >= CV_7090)
     {
         Count = (uint16_t)(DataSize / sizeof(MULTI_BLOCK_NEW));
@@ -46,16 +45,16 @@ void CIndexMulti::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t 
     }
 };
 
-void CIndexLight::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
+void CIndexLight::ReadIndexFile(size_t address, IndexBlock *block)
 {
-    CIndexObject::ReadIndexFile(address, ptr, id);
-    Width = ptr->LightData.Width;
-    Height = ptr->LightData.Height;
+    CIndexObject::ReadIndexFile(address, block);
+    Width = block->LightData.Width;
+    Height = block->LightData.Height;
 };
 
-void CIndexGump::ReadIndexFile(size_t address, IndexBlock *ptr, const uint16_t id)
+void CIndexGump::ReadIndexFile(size_t address, IndexBlock *block)
 {
-    CIndexObject::ReadIndexFile(address, ptr, id);
-    Width = ptr->LightData.Width;
-    Height = ptr->LightData.Height;
+    CIndexObject::ReadIndexFile(address, block);
+    Width = block->LightData.Width;
+    Height = block->LightData.Height;
 };
