@@ -1767,11 +1767,15 @@ void CGameScreen::Render()
     static uint32_t lastRender = 0;
     static int currentFPS = 0;
     static int FPScount = 0;
+    static int FPSMax = 0;
+    static int FPSMin = INT_MAX;
 
     if (lastRender < g_Ticks)
     {
-        DEBUG(Client, "FPS=%i", FPScount);
+        DEBUG(Client, "FPS=%i (Min=%d, Max=%d)", FPScount, FPSMin, FPSMax);
         FPScount = currentFPS;
+        FPSMax = currentFPS > FPSMax ? currentFPS : FPSMax;
+        FPSMin = currentFPS < FPSMin && currentFPS != 0 ? currentFPS : FPSMin;
         currentFPS = 1;
         lastRender = g_Ticks + 1000;
     }
@@ -1897,9 +1901,11 @@ void CGameScreen::Render()
 
         sprintf_s(
             dbf,
-            "FPS=%i (%ims) scale=%.1f\n%s",
+            "FPS=%i (%ims) (Min=%d, Max=%d) scale=%.1f\n%s",
             FPScount,
             g_FrameDelay[WINDOW_ACTIVE],
+            FPSMin,
+            FPSMax,
             g_GlobalScale,
             g_PingString.c_str());
 
@@ -1916,9 +1922,11 @@ void CGameScreen::Render()
 
         sprintf_s(
             dbf,
-            "FPS=%i (%ims) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
+            "FPS=%i (%ims) (Min=%d, Max=%d) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
             FPScount,
             g_FrameDelay[WINDOW_ACTIVE],
+            FPSMin,
+            FPSMax,
             g_PingString.c_str(),
             g_Player->Direction,
             g_RenderBounds.PlayerZ,
