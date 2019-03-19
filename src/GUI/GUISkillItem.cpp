@@ -31,7 +31,7 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
 
         uint16_t graphic = GetStatusButtonGraphic();
         m_ButtonStatus = new CGUIButton(statusSerial, graphic, graphic, graphic, 251, 0);
-        m_ButtonStatus->CheckPolygone = true;
+        m_ButtonStatus->BoundingBoxCheck = true;
 
         g_FontManager.GenerateA(9, m_NameText, skill->Name, 0x0288);
 

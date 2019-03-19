@@ -24,7 +24,7 @@ public:
     // Method of using the selection function
     // true - checks if the mouse cursor is within the polygon (for CGUIPolygonal and a component with a width and height, or takes the dimensions of the original Graphic state image)
     // false - standard pixel check function
-    bool CheckPolygone = false;
+    bool BoundingBoxCheck = false;
 
     // Turning off the processing of the component (the component is displayed)
     bool Enabled = true;

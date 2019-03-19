@@ -139,7 +139,7 @@ bool CGUIScrollBackground::Select()
         return false;
     }
 
-    if (CheckPolygone)
+    if (BoundingBoxCheck)
     {
         return true;
     }

@@ -690,7 +690,7 @@ void CGumpPaperdoll::UpdateContent()
 
                         texture = new CGLTexture();
                         g_GL_BindTexture16(
-                            *texture, wantImageWidth, wantImageHeight, &wantPixels[0]);
+                            *texture, wantImageWidth, wantImageHeight, &wantPixels[0], false);
 
                         if (wantImageWidth < 14)
                         {

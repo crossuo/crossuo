@@ -2318,7 +2318,7 @@ bool CAnimationManager::UopTryReadAnimDims(CTextureAnimationDirection &direction
             }
             header = ReadUInt32LE();
         }
-        g_GL_BindTexture16(frame, width, height, &pixels[0]);
+        g_GL_BindTexture16(frame, width, height, &pixels[0], false);
     }
     m_UsedAnimList.push_back(&direction);
 
@@ -3420,6 +3420,6 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
             header = ReadUInt32LE();
         }
 
-        g_GL_BindTexture16(frame, imageWidth, imageHeight, &data[0]);
+        g_GL_BindTexture16(frame, imageWidth, imageHeight, &data[0], false);
     }
 }

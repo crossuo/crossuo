@@ -254,7 +254,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         CGUIGumppic *icon =
             (CGUIGumppic *)Add(new CGUIGumppic(iconStartGraphic + (int)i, iconX, 40));
         icon->Serial = ID_GRAB_ICON + (int)i;
-        icon->CheckPolygone = true;
+        icon->BoundingBoxCheck = true;
         icon->MoveOnDrag = passive;
 
         Add(new CGUIGumppicTiled(0x0835, iconX, 88, 120, 0));

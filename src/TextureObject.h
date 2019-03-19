@@ -30,9 +30,6 @@ struct CTextureAnimationDirection
     bool IsUOP = false;
     bool IsVerdata = false;
     CTextureAnimationFrame *m_Frames;
-
-    CTextureAnimationDirection() = default;
-    virtual ~CTextureAnimationDirection() = default;
 };
 
 struct CTextureAnimationGroup

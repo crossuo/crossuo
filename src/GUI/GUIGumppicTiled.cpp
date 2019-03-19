@@ -74,20 +74,7 @@ bool CGUIGumppicTiled::Select()
             return false;
         }
 
-        if (x >= 0 && y >= 0 && x < th->Width && y < th->Height)
-        {
-            if (CheckPolygone)
-            {
-                return true;
-            }
-
-            int pos = (y * th->Width) + x;
-
-            if (pos < (int)th->m_HitMap.size())
-            {
-                return (th->m_HitMap[pos] != 0);
-            }
-        }
+        th->TestHit(x, y, !BoundingBoxCheck);
     }
 
     return false;

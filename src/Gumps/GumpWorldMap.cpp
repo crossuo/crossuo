@@ -502,10 +502,9 @@ void CGumpWorldMap::LoadMap(int map)
 
         if (buf.size() == wantSize)
         {
-            g_GL.IgnoreHitMap = true;
+            const bool skipHitMask = true;
             g_GL_BindTexture16(
-                g_MapTexture[map], g_MapSize[map].Width, g_MapSize[map].Height, &buf[0]);
-            g_GL.IgnoreHitMap = false;
+                g_MapTexture[map], g_MapSize[map].Width, g_MapSize[map].Height, &buf[0], skipHitMask);
         }
         else
         {

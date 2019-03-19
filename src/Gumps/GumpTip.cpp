@@ -38,11 +38,11 @@ CGumpTip::CGumpTip(uint32_t serial, short x, short y, const string &str, bool up
 
         m_ButtonPrevGump = (CGUIButton *)Add(
             new CGUIButton(ID_GT_PREV_GUMP, 0x09CC, 0x09CC, 0x09CC, 35, Height)); //Previous gump
-        m_ButtonPrevGump->CheckPolygone = true;
+        m_ButtonPrevGump->BoundingBoxCheck = true;
         //m_ButtonRemoveGump = (CGUIButton*)Add(new CGUIButton(ID_GT_REMOVE_GUMP, 0x0823, 0x0823, 0x0823, 18, Height + 34)); //+/- gump
         m_ButtonNextGump = (CGUIButton *)Add(
             new CGUIButton(ID_GT_NEXT_GUMP, 0x09CD, 0x09CD, 0x09CD, 251, Height)); //Next gump
-        m_ButtonNextGump->CheckPolygone = true;
+        m_ButtonNextGump->BoundingBoxCheck = true;
     }
 
     CGUIText *text = (CGUIText *)m_HTMLGump->Add(new CGUIText(0, 3, 3));
