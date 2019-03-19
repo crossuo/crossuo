@@ -10,8 +10,8 @@ typedef deque<CRect> SCISSOR_LIST;
 class CGLTexture;
 class CGLEngine;
 
-typedef void (CGLEngine::*BIND_TEXTURE_16_FUNCTION)(CGLTexture &, int, int, uint16_t *);
-typedef void (CGLEngine::*BIND_TEXTURE_32_FUNCTION)(CGLTexture &, int, int, uint32_t *);
+typedef void (CGLEngine::*BIND_TEXTURE_16_FUNCTION)(CGLTexture &, int, int, uint16_t *, bool skipHitMask);
+typedef void (CGLEngine::*BIND_TEXTURE_32_FUNCTION)(CGLTexture &, int, int, uint32_t *, bool skipHitMask);
 
 typedef void (CGLEngine::*DRAW_LAND_TEXTURE_FUNCTION)(
     const CGLTexture &, int, int, class CLandObject *);
@@ -66,8 +66,6 @@ public:
     bool CanUseBuffer = false;
     float SittingCharacterOffset = 8.0f;
     GLuint PositionBuffer = 0;
-    bool IgnoreHitMap = false;
-
     SDL_GLContext m_context;
 
 private:
@@ -132,8 +130,8 @@ public:
     //Функции OpenGL 1x
 
     //Загрузка текстур 16 и 32 бит
-    void GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels);
-    void GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels);
+    void GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels, bool skipHitMask);
+    void GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels, bool skipHitMask);
 
     //Нарисовать текстуру ландшафта
     void GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);
@@ -171,8 +169,8 @@ public:
     void GL2_CreateArrays(CGLTexture &texture, int width, int height);
 
     //Загрузка текстур 16 и 32 бит
-    void GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels);
-    void GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels);
+    void GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels, bool skipHitMask);
+    void GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels, bool skipHitMask);
 
     //Нарисовать текстуру ландшафта
     void GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);

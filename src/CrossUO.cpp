@@ -463,7 +463,7 @@ bool CGame::Install()
 
     for (int i = 0; i < 2; i++)
     {
-        g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
+        g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0], false);
     }
 
     memset(&m_WinterTile[0], 0, sizeof(m_WinterTile));
@@ -561,6 +561,12 @@ void CGame::UnloadIndexFiles()
         }
     }
     m_UsedSoundList.clear();
+
+    ValidateTextureIsDeleted(g_Index.m_Land);
+    ValidateTextureIsDeleted(g_Index.m_Static);
+    ValidateTextureIsDeleted(g_Index.m_Gump);
+    ValidateTextureIsDeleted(g_Index.m_Texture);
+    ValidateTextureIsDeleted(g_Index.m_Light);
 }
 
 void CGame::Uninstall()
@@ -4350,7 +4356,7 @@ void CGame::CreateAuraTexture()
             pixel = (value << 24) | (value << 16) | (value << 8) | value;
         }
     }
-    g_GL_BindTexture32(g_AuraTexture, width, height, &pixels[0]);
+    g_GL_BindTexture32(g_AuraTexture, width, height, &pixels[0], false);
 }
 
 void CGame::CreateObjectHandlesBackground()
@@ -5185,8 +5191,8 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
         return false;
     }
 
-    int textureWidth = texture->Width;
-    int textureHeight = texture->Height;
+    const int textureWidth = texture->Width;
+    const int textureHeight = texture->Height;
     if (width == 0)
     {
         width = textureWidth;
@@ -5219,13 +5225,7 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
         return false;
     }
 
-    int pos = (y * textureWidth) + x;
-    if (pos < (int)texture->m_HitMap.size())
-    {
-        return (texture->m_HitMap[pos] != 0);
-    }
-
-    return false;
+    return texture->TestHit(x, y, true);
 }
 
 bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height)

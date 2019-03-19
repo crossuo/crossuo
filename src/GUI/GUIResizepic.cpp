@@ -75,7 +75,7 @@ void CGUIResizepic::Draw(bool checktrans)
 bool CGUIResizepic::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    if (CheckPolygone)
+    if (BoundingBoxCheck)
     {
         return CGUIPolygonal::Select();
     }

@@ -6,17 +6,6 @@
 
 Index g_Index;
 
-// FIXME: Texture should be managed elsewhere
-CIndexObject::~CIndexObject()
-{
-    DEBUG_TRACE_FUNCTION;
-    if (Texture != nullptr)
-    {
-        delete Texture;
-        Texture = nullptr;
-    }
-}
-
 void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr)
 {
     Address = ptr->Position;

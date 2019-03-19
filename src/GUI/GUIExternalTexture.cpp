@@ -122,7 +122,7 @@ bool CGUIExternalTexture::Select()
     DEBUG_TRACE_FUNCTION;
     if (m_Texture != nullptr)
     {
-        return m_Texture->Select(m_X, m_Y, !CheckPolygone);
+        return m_Texture->Select(m_X, m_Y, !BoundingBoxCheck);
     }
 
     return false;

@@ -163,7 +163,7 @@ void CGLEngine::UpdateRect()
     g_GumpManager.RedrawAll();
 }
 
-void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
+void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels, bool skipHitMask)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -188,25 +188,13 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     texture.Width = width;
     texture.Height = height;
     texture.Texture = tex;
-    if (IgnoreHitMap)
+    if (!skipHitMask)
     {
-        return;
-    }
-
-    vector<uint8_t> &hitMap = texture.m_HitMap;
-    hitMap.resize(width * height);
-    int pos = 0;
-    for (int y = 0; y < height; y++)
-    {
-        for (int x = 0; x < width; x++)
-        {
-            hitMap[pos] = (uint8_t)(pixels[pos] != 0); // NOLINT
-            pos++;
-        }
+        texture.BuildHitMask(width, height, pixels);
     }
 }
 
-void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
+void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels, bool skipHitMask)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -224,23 +212,9 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     texture.Width = width;
     texture.Height = height;
     texture.Texture = tex;
-
-    if (IgnoreHitMap)
+    if (!skipHitMask)
     {
-        return;
-    }
-
-    vector<uint8_t> &hitMap = texture.m_HitMap;
-    hitMap.resize(width * height);
-    int pos = 0;
-
-    for (int y = 0; y < height; y++)
-    {
-        for (int x = 0; x < width; x++)
-        {
-            hitMap[pos] = (uint8_t)(pixels[pos] != 0); // NOLINT
-            pos++;
-        }
+        texture.BuildHitMask(width, height, pixels);
     }
 }
 
@@ -265,17 +239,17 @@ void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
     texture.MirroredVertexBuffer = vbo[1];
 }
 
-void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
+void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels, bool skipHitMask)
 {
     DEBUG_TRACE_FUNCTION;
-    GL1_BindTexture16(texture, width, height, pixels);
+    GL1_BindTexture16(texture, width, height, pixels, skipHitMask);
     GL2_CreateArrays(texture, width, height);
 }
 
-void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
+void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels, bool skipHitMask)
 {
     DEBUG_TRACE_FUNCTION;
-    GL1_BindTexture32(texture, width, height, pixels);
+    GL1_BindTexture32(texture, width, height, pixels, skipHitMask);
     GL2_CreateArrays(texture, width, height);
 }
 

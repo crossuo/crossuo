@@ -174,19 +174,19 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
             Add(new CGUIGumppic(0x0883, 97, 12)); //NEW MESSAGE
             m_ButtonPost = (CGUIButton *)Add(
                 new CGUIButton(ID_GBBI_POST, 0x0886, 0x0886, 0x0886, 37, Height - 22)); //Post
-            m_ButtonPost->CheckPolygone = true;
+            m_ButtonPost->BoundingBoxCheck = true;
 
             break;
         }
         case 2:
             m_ButtonRemove = (CGUIButton *)Add(
                 new CGUIButton(ID_GBBI_REMOVE, 0x0885, 0x0885, 0x0885, 235, Height - 22)); //Remove
-            m_ButtonRemove->CheckPolygone = true;
+            m_ButtonRemove->BoundingBoxCheck = true;
         case 1:
         {
             m_ButtonReply = (CGUIButton *)Add(
                 new CGUIButton(ID_GBBI_REPLY, 0x0884, 0x0884, 0x0884, 37, Height - 22)); //Reply
-            m_ButtonReply->CheckPolygone = true;
+            m_ButtonReply->BoundingBoxCheck = true;
 
             m_EntrySubject->ReadOnly = true;
             m_Entry->ReadOnly = true;

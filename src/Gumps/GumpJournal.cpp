@@ -48,7 +48,7 @@ CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
 
     m_TextLocker = (CGUIButton *)Add(
         new CGUIButton(ID_GJ_BUTTON_LOCK, 0x082C, 0x082C, 0x082C, 242, Height - 27));
-    m_TextLocker->CheckPolygone = true;
+    m_TextLocker->BoundingBoxCheck = true;
     m_TextLocker->Visible = false;
 
     m_CheckboxShowSystem = (CGUICheckbox *)Add(

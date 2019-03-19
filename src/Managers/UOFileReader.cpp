@@ -84,7 +84,7 @@ CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
     if (static_cast<unsigned int>(!pixels.empty()) != 0u)
     {
         th = new CGLTexture();
-        g_GL_BindTexture16(*th, io.Width, io.Height, &pixels[0]);
+        g_GL_BindTexture16(*th, io.Width, io.Height, &pixels[0], false);
     }
 
     return th;
@@ -426,7 +426,7 @@ CGLTexture *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
         }
 
         texture = new CGLTexture();
-        g_GL_BindTexture16(*texture, width, height, &pixels[0]);
+        g_GL_BindTexture16(*texture, width, height, &pixels[0], false);
 
         texture->ImageOffsetX = minX;
         texture->ImageOffsetY = minY;
@@ -486,10 +486,8 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
         }
     }
 
-    g_GL.IgnoreHitMap = true;
-    g_GL_BindTexture16(*th, w, h, &pixels[0]);
-    g_GL.IgnoreHitMap = false;
-
+    const bool skipHitMask = true;
+    g_GL_BindTexture16(*th, w, h, &pixels[0], skipHitMask);
     return th;
 }
 
@@ -515,9 +513,7 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
         }
     }
 
-    g_GL.IgnoreHitMap = true;
-    g_GL_BindTexture16(*th, io.Width, io.Height, &pixels[0]);
-    g_GL.IgnoreHitMap = false;
-
+    const bool skipHitMask = true;
+    g_GL_BindTexture16(*th, io.Width, io.Height, &pixels[0], skipHitMask);
     return th;
 }

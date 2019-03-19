@@ -104,10 +104,9 @@ bool CGUIButtonTileart::Select()
     }
 
     CGLTexture *th = g_Game.ExecuteStaticArt(TileGraphic);
-
     if (th != nullptr)
     {
-        return th->Select(m_X, m_Y, !CheckPolygone);
+        return th->Select(m_X, m_Y, !BoundingBoxCheck);
     }
 
     return false;

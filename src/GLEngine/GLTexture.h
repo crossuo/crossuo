@@ -21,12 +21,18 @@ public:
     virtual ~CGLTexture();
 
     GLuint Texture = 0;
-    vector<uint8_t> m_HitMap;
 
     virtual void Draw(int x, int y, bool checktrans = false);
     virtual void Draw(int x, int y, int width, int height, bool checktrans = false);
     virtual void DrawRotated(int x, int y, float angle);
     virtual void DrawTransparent(int x, int y, bool stencil = true);
-    virtual bool Select(int x, int y, bool pixelCheck = true);
     virtual void Clear();
+
+    // FIXME: these should be out of here
+    std::vector<bool> m_HitMap;
+    virtual bool Select(int x, int y, bool pixelCheck = true);
+    virtual bool TestHit(int x, int y, bool pixelCheck = true);
+
+    template <typename T>
+    void BuildHitMask(int w, int h, T *pixels);
 };

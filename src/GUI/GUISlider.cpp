@@ -471,7 +471,7 @@ bool CGUISlider::Select()
             buttonX += Offset;
         }
 
-        if (th->Select(buttonX, buttonY, !CheckPolygone))
+        if (th->Select(buttonX, buttonY, !BoundingBoxCheck))
         {
             return true;
         }

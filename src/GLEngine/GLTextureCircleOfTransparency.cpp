@@ -71,7 +71,7 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
         glDeleteTextures(1, &Texture);
         Texture = 0;
     }
-    g_GL_BindTexture32(*this, Width, Height, &pixels[0]);
+    g_GL_BindTexture32(*this, Width, Height, &pixels[0], false);
     return true;
 }
 

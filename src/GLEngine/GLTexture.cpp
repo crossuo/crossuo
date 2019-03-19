@@ -126,7 +126,11 @@ bool CGLTexture::Select(int x, int y, bool pixelCheck)
 {
     x = g_MouseManager.Position.X - x;
     y = g_MouseManager.Position.Y - y;
+    return TestHit(x, y, pixelCheck);
+}
 
+bool CGLTexture::TestHit(int x, int y, bool pixelCheck)
+{
     if (x >= 0 && y >= 0 && x < Width && y < Height)
     {
         if (!pixelCheck)
@@ -137,9 +141,27 @@ bool CGLTexture::Select(int x, int y, bool pixelCheck)
         int pos = (y * Width) + x;
         if (pos < (int)m_HitMap.size())
         {
-            return (m_HitMap[pos] != 0);
+            return m_HitMap[pos];
         }
     }
 
     return false;
 }
+
+template <typename T>
+void CGLTexture::BuildHitMask(int w, int h, T *pixels)
+{
+    m_HitMap.resize(w * h);
+    int pos = 0;
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            m_HitMap[pos] = (pixels[pos] != 0);
+            pos++;
+        }
+    }
+}
+
+template void CGLTexture::BuildHitMask<uint16_t>(int w, int h, uint16_t *pixels);
+template void CGLTexture::BuildHitMask<uint32_t>(int w, int h, uint32_t *pixels);

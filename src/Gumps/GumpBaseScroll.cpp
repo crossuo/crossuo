@@ -80,7 +80,7 @@ CGumpBaseScroll::CGumpBaseScroll(
         button->Graphic = 0x0824;
         button->GraphicSelected = 0x0824;
         button->GraphicPressed = 0x0824;
-        button->CheckPolygone = true;
+        button->BoundingBoxCheck = true;
     }
 
     button = m_HTMLGump->m_ButtonDown;
@@ -90,7 +90,7 @@ CGumpBaseScroll::CGumpBaseScroll(
         button->Graphic = 0x0825;
         button->GraphicSelected = 0x0825;
         button->GraphicPressed = 0x0825;
-        button->CheckPolygone = true;
+        button->BoundingBoxCheck = true;
     }
 
     CGUIHTMLSlider *slider = m_HTMLGump->m_Slider;

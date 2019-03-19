@@ -86,7 +86,7 @@ bool CGUITilepicHightlighted::Select()
 
         for (int i = 0; i < count; i++)
         {
-            if (th->Select(m_X + offset, m_Y + offset, !CheckPolygone))
+            if (th->Select(m_X + offset, m_Y + offset, !BoundingBoxCheck))
             {
                 return true;
             }

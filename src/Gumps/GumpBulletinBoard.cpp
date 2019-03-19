@@ -51,7 +51,7 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const 
         button->GraphicSelected = 0x0824;
         button->GraphicPressed = 0x0824;
         button->SelectOnly = true;
-        button->CheckPolygone = true;
+        button->BoundingBoxCheck = true;
         button->SetY(button->GetY() - 14);
     }
 
@@ -63,7 +63,7 @@ CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const 
         button->GraphicSelected = 0x0825;
         button->GraphicPressed = 0x0825;
         button->SelectOnly = true;
-        button->CheckPolygone = true;
+        button->BoundingBoxCheck = true;
         button->SetY(button->GetY() - 14);
     }
 
