@@ -44,10 +44,6 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, 
     UpdateHeight(Height);
 }
 
-CGUIScrollBackground::~CGUIScrollBackground()
-{
-}
-
 void CGUIScrollBackground::UpdateHeight(int height)
 {
     DEBUG_TRACE_FUNCTION;
@@ -81,10 +77,11 @@ void CGUIScrollBackground::Draw(bool checktrans)
     for (int i = 0; i < 4; i++)
     {
         auto spr = g_Game.ExecuteGump(Graphic + (int)i);
-        if (spr == nullptr && spr->Texture != nullptr)
+        if (spr == nullptr)
         {
             return;
         }
+        assert(spr->Texture != nullptr);
         th[i] = spr->Texture;
     }
 
