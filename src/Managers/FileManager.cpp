@@ -1137,7 +1137,7 @@ void CFileManager::LoadIndexFiles()
             LandArtPtr,
             [&LandArtPtr]() { return ++LandArtPtr; });
         MulReadIndexFile(
-            g_Data.m_Anim.size(),
+            g_Data.m_Static.size(),
             [&](int i) { return &g_Index.m_Static[i]; },
             (size_t)m_ArtMul.Start,
             StaticArtPtr,
@@ -1153,7 +1153,7 @@ void CFileManager::LoadIndexFiles()
             ".tga",
             m_ArtLegacyMUL);
         UopReadIndexFile(
-            g_Data.m_Anim.size() + MAX_LAND_DATA_INDEX_COUNT,
+            g_Data.m_Static.size() + MAX_LAND_DATA_INDEX_COUNT,
             [&](int i) { return &g_Index.m_Static[i - MAX_LAND_DATA_INDEX_COUNT]; },
             "artLegacyMUL",
             8,
