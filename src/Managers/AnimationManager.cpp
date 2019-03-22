@@ -1099,7 +1099,6 @@ bool CAnimationManager::TestPixels(
     }
 
     int fc = direction.FrameCount;
-
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
@@ -1114,15 +1113,12 @@ bool CAnimationManager::TestPixels(
 
     if (frameIndex < direction.FrameCount)
     {
-        CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-
-        y -= frame.Height + frame.CenterY;
-
+        auto &frame = direction.m_Frames[frameIndex];
+        y -= frame.Sprite.Height + frame.CenterY;
         x = g_MouseManager.Position.X - x;
-
         if (mirror)
         {
-            x += frame.Width - frame.CenterX;
+            x += frame.Sprite.Width - frame.CenterX;
         }
         else
         {
@@ -1131,14 +1127,11 @@ bool CAnimationManager::TestPixels(
 
         if (mirror)
         {
-            x = frame.Width - x;
+            x = frame.Sprite.Width - x;
         }
-
         x = g_MouseManager.Position.X - x;
-
-        return frame.Select(x, y);
+        return frame.Sprite.Select(x, y);
     }
-
     return false;
 }
 
@@ -1149,8 +1142,7 @@ void CAnimationManager::Draw(
     //if (obj == nullptr)
     //	return;
 
-    bool isShadow = (id >= 0x10000);
-
+    const bool isShadow = (id >= 0x10000);
     if (isShadow)
     {
         id -= 0x10000;
@@ -1175,8 +1167,7 @@ void CAnimationManager::Draw(
         return;
     }
 
-    int fc = direction.FrameCount;
-
+    const int fc = direction.FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
@@ -1192,32 +1183,27 @@ void CAnimationManager::Draw(
     if (frameIndex < direction.FrameCount)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-
-        if (frame.Texture == 0)
+        if (frame.Sprite.Texture == 0)
         {
             return;
         }
 
         if (mirror)
         {
-            x -= frame.Width - frame.CenterX;
+            x -= frame.Sprite.Width - frame.CenterX;
         }
         else
         {
             x -= frame.CenterX;
         }
 
-        y -= frame.Height + frame.CenterY;
-
+        y -= frame.Sprite.Height + frame.CenterY;
         if (isShadow)
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
-
             glEnable(GL_BLEND);
             glBlendFunc(GL_DST_COLOR, GL_ZERO);
-
-            g_GL_DrawShadow(frame, x, y, mirror);
-
+            g_GL_DrawShadow(*frame.Sprite.Texture, x, y, mirror);
             if (m_UseBlending)
             {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1230,17 +1216,14 @@ void CAnimationManager::Draw(
         else
         {
             bool spectralColor = false;
-
             if (!g_GrayedPixels)
             {
                 uint16_t color = Color;
                 bool partialHue = false;
-
                 if (color == 0u)
                 {
                     color = obj->Color;
                     partialHue = obj->IsPartialHue();
-
                     if ((color & 0x8000) != 0)
                     {
                         partialHue = true;
@@ -1253,12 +1236,10 @@ void CAnimationManager::Draw(
                         {
                             color = m_DataIndex[id].Color;
                         }
-
                         if ((color == 0u) && m_EquipConvItem != nullptr)
                         {
                             color = m_EquipConvItem->Color;
                         }
-
                         partialHue = false;
                     }
                 }
@@ -1267,7 +1248,6 @@ void CAnimationManager::Draw(
                 {
                     spectralColor = true;
                     glEnable(GL_BLEND);
-
                     if (color == SPECTRAL_COLOR_SPECIAL)
                     {
                         glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
@@ -1289,7 +1269,6 @@ void CAnimationManager::Draw(
                     {
                         glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                     }
-
                     g_ColorManager.SendColorsToShader(color);
                 }
                 else
@@ -1306,9 +1285,9 @@ void CAnimationManager::Draw(
             {
                 if (obj->IsHuman())
                 {
-                    short frameHeight = frame.Height;
+                    short frameHeight = frame.Sprite.Height;
                     m_CharacterFrameStartY = y;
-                    m_CharacterFrameHeight = frame.Height;
+                    m_CharacterFrameHeight = frame.Sprite.Height;
                     m_StartCharacterWaistY =
                         (int)(frameHeight * UPPER_BODY_RATIO) + m_CharacterFrameStartY;
                     m_StartCharacterKneesY =
@@ -1320,11 +1299,9 @@ void CAnimationManager::Draw(
                 float h3mod = UPPER_BODY_RATIO;
                 float h6mod = MID_BODY_RATIO;
                 float h9mod = LOWER_BODY_RATIO;
-
                 if (!obj->NPC)
                 {
-                    float itemsEndY = (float)(y + frame.Height);
-
+                    float itemsEndY = (float)(y + frame.Sprite.Height);
                     //Определяем соотношение верхней части текстуры, до перелома.
                     if (y >= m_StartCharacterWaistY)
                     {
@@ -1337,7 +1314,7 @@ void CAnimationManager::Draw(
                     else
                     {
                         float upperBodyDiff = (float)(m_StartCharacterWaistY - y);
-                        h3mod = upperBodyDiff / frame.Height;
+                        h3mod = upperBodyDiff / frame.Sprite.Height;
                         if (h3mod < 0)
                         {
                             h3mod = 0;
@@ -1369,7 +1346,7 @@ void CAnimationManager::Draw(
                             midBodyDiff = (float)(m_StartCharacterKneesY - m_StartCharacterWaistY);
                         }
 
-                        h6mod = h3mod + midBodyDiff / frame.Height;
+                        h6mod = h3mod + midBodyDiff / frame.Sprite.Height;
                         if (h6mod < 0)
                         {
                             h6mod = 0;
@@ -1388,19 +1365,18 @@ void CAnimationManager::Draw(
                     else
                     {
                         float lowerBodyDiff = itemsEndY - m_StartCharacterKneesY;
-                        h9mod = h6mod + lowerBodyDiff / frame.Height;
+                        h9mod = h6mod + lowerBodyDiff / frame.Sprite.Height;
                         if (h9mod < 0)
                         {
                             h9mod = 0;
                         }
                     }
                 }
-
-                g_GL_DrawSitting(frame, x, y, mirror, h3mod, h6mod, h9mod);
+                g_GL_DrawSitting(*frame.Sprite.Texture, x, y, mirror, h3mod, h6mod, h9mod);
             }
             else
             {
-                g_GL_DrawMirrored(frame, x, y, mirror);
+                g_GL_DrawMirrored(*frame.Sprite.Texture, x, y, mirror);
             }
 
             if (spectralColor)
@@ -1809,8 +1785,8 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             {
                 CTextureAnimationFrame &frame = direction.m_Frames[0];
 
-                int frameWidth = frame.Width;
-                int frameHeight = frame.Height;
+                int frameWidth = frame.Sprite.Width;
+                int frameHeight = frame.Sprite.Height;
 
                 if (frameWidth >= 80)
                 {
@@ -2087,6 +2063,7 @@ bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
     return result;
 }
 
+// FIXME: move to centralized data code
 ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
 {
@@ -2114,8 +2091,8 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
                 if (direction.m_Frames != nullptr)
                 {
                     CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-                    result.Width = frame.Width;
-                    result.Height = frame.Height;
+                    result.Width = frame.Sprite.Width;
+                    result.Height = frame.Sprite.Height;
                     result.CenterX = frame.CenterX;
                     result.CenterY = frame.CenterY;
                     return result;
@@ -2217,7 +2194,7 @@ ANIMATION_DIMENSIONS CAnimationManager::GetAnimationDimensions(
     return dims;
 }
 
-// FIXME
+// FIXME: move to centralized data code
 bool CAnimationManager::UopDecompressBlock(std::vector<uint8_t> &scratchBuffer, int fileId)
 {
     auto &block = m_DataIndex[AnimID].m_Groups[AnimGroup].m_UOPAnimData;
@@ -2255,7 +2232,7 @@ bool CAnimationManager::UopTryReadAnimDims(CTextureAnimationDirection &direction
     for (int i = 0; i < direction.FrameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-        if (frame.Texture != 0)
+        if (frame.Sprite.Texture != nullptr)
         {
             continue;
         }
@@ -2318,10 +2295,9 @@ bool CAnimationManager::UopTryReadAnimDims(CTextureAnimationDirection &direction
             }
             header = ReadUInt32LE();
         }
-        g_GL_BindTexture16(frame, width, height, &pixels[0], false);
+        frame.Sprite.LoadSprite16(width, height, pixels.data());
     }
     m_UsedAnimList.push_back(&direction);
-
     return true;
 }
 
@@ -2329,11 +2305,9 @@ void CAnimationManager::CalculateFrameInformation(
     FRAME_OUTPUT_INFO &info, CGameObject *obj, bool mirror, uint8_t animIndex)
 {
     DEBUG_TRACE_FUNCTION;
-    ANIMATION_DIMENSIONS dim = GetAnimationDimensions(obj, animIndex, Direction, AnimGroup);
-
+    auto dim = GetAnimationDimensions(obj, animIndex, Direction, AnimGroup);
     int y = -(dim.Height + dim.CenterY + 3);
     int x = -dim.CenterX;
-
     if (mirror)
     {
         x = -(dim.Width - dim.CenterX);
@@ -2728,9 +2702,9 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
     return result;
 }
 
+// FIXME: move to centralized data code
 UopAnimationHeader CAnimationManager::UopReadAnimationHeader()
 {
-    // FIXME
     UopAnimationHeader hdr;
     hdr.Format = ReadUInt32LE();
     hdr.Version = ReadUInt32LE();
@@ -2747,14 +2721,13 @@ UopAnimationHeader CAnimationManager::UopReadAnimationHeader()
     return hdr;
 }
 
+// FIXME: move to centralized data code
 vector<UopAnimationFrame> CAnimationManager::UopReadFrameData()
 {
     vector<UopAnimationFrame> data;
-
     auto hdr = UopReadAnimationHeader();
     for (int i = 0; i < hdr.FrameCount; i++)
     {
-        // FIXME
         UopAnimationFrame frame;
         frame.DataStart = Ptr;
         frame.GroupId = ReadInt16LE();
@@ -2787,6 +2760,7 @@ vector<UopAnimationFrame> CAnimationManager::UopReadFrameData()
 }
 
 // FIXME: put directly in UopAnimationFrame?
+// FIXME: move to centralized data code
 void CAnimationManager::UopReadFrame(
     int16_t &centerX,
     int16_t &centerY,
@@ -2796,7 +2770,7 @@ void CAnimationManager::UopReadFrame(
     UopAnimationFrame &frame)
 {
     Ptr = frame.DataStart + frame.PixelDataOffset;
-    // FIXME
+    // FIXME: data pallete
     palette = reinterpret_cast<uint16_t *>(Ptr);
     Move(512); //Palette
     centerX = ReadInt16LE();
@@ -3146,7 +3120,6 @@ CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t act
     {
         return 32;
     }
-
     return 0;
 }
 
@@ -3154,9 +3127,7 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
-
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
     if ((ia.Flags & 0x80000000) != 0u)
     {
         type = ia.Type;
@@ -3175,13 +3146,10 @@ CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t act
             {
                 return 0xFF;
             }
-
             return 33;
         }
-
         return 3;
     }
-
     return 11;
 }
 
@@ -3189,9 +3157,7 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
-
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
     if ((ia.Flags & 0x80000000) != 0u)
     {
         type = ia.Type;
@@ -3201,7 +3167,6 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
     {
         return 0xFF;
     }
-
     return 20;
 }
 
@@ -3209,9 +3174,7 @@ uint8_t
 CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
     CIndexAnimation &ia = m_DataIndex[obj->Graphic];
-
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
     if ((ia.Flags & 0x80000000) != 0u)
     {
         type = ia.Type;
@@ -3234,13 +3197,10 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
                 default:
                     break;
             }
-
             return 16;
         }
-
         return 5;
     }
-
     return 12;
 }
 
@@ -3280,18 +3240,16 @@ uint8_t CAnimationManager::GetObjectNewAnimation(
         default:
             break;
     }
-
     return 0;
 }
 
+// FIXME: move to centralized data code
 void CAnimationManager::ReadFrameDimensionData(
     ANIMATION_DIMENSIONS &result, uint8_t frameIndex, bool isCorpse)
 {
     Move(sizeof(uint16_t[256])); //Palette
     uint8_t *dataStart = Ptr;
-
     int frameCount = ReadUInt32LE();
-
     if (frameCount > 0 && frameIndex >= frameCount)
     {
         if (isCorpse)
@@ -3309,7 +3267,6 @@ void CAnimationManager::ReadFrameDimensionData(
         uint32_t *frameOffset = (uint32_t *)Ptr;
         //Move(frameOffset[frameIndex]);
         Ptr = dataStart + frameOffset[frameIndex];
-
         result.CenterX = ReadInt16LE();
         result.CenterY = ReadInt16LE();
         result.Width = ReadInt16LE();
@@ -3317,42 +3274,32 @@ void CAnimationManager::ReadFrameDimensionData(
     }
 }
 
+// FIXME: move to centralized data code
 void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &direction)
 {
     uint16_t *palette = (uint16_t *)Start;
     Move(sizeof(uint16_t[256])); //Palette
     uint8_t *dataStart = Ptr;
-
     uint32_t frameCount = ReadUInt32LE();
     direction.FrameCount = frameCount;
-
     uint32_t *frameOffset = (uint32_t *)Ptr;
-
     //uint16_t color = m_DataIndex[graphic].Color;
-
     direction.m_Frames = new CTextureAnimationFrame[frameCount];
-
     for (uint32_t i = 0; i < (int)frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-
-        if (frame.Texture != 0)
+        if (frame.Sprite.Texture != nullptr)
         {
             continue;
         }
 
         Ptr = dataStart + frameOffset[i];
-
         uint32_t imageCenterX = ReadInt16LE();
         frame.CenterX = imageCenterX;
-
         uint32_t imageCenterY = ReadInt16LE();
         frame.CenterY = imageCenterY;
-
         uint32_t imageWidth = ReadInt16LE();
-
         uint32_t imageHeight = ReadInt16LE();
-
         if ((imageWidth == 0u) || (imageHeight == 0u))
         {
             Warning(
@@ -3364,9 +3311,7 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
         }
 
         int wantSize = imageWidth * imageHeight;
-
         vector<uint16_t> data(wantSize, 0);
-
         if (data.size() != wantSize)
         {
             Warning(
@@ -3377,20 +3322,16 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
         }
 
         uint32_t header = ReadUInt32LE();
-
         while (header != 0x7FFF7FFF && !IsEOF())
         {
             uint16_t runLength = (header & 0x0FFF);
-
             int x = (header >> 22) & 0x03FF;
-
             if ((x & 0x0200) != 0)
             {
                 x |= 0xFFFFFE00;
             }
 
             int y = (header >> 12) & 0x03FF;
-
             if ((y & 0x0200) != 0)
             {
                 y |= 0xFFFFFE00;
@@ -3398,13 +3339,10 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
 
             x += imageCenterX;
             y += imageCenterY + imageHeight;
-
             int block = (y * imageWidth) + x;
-
             for (int k = 0; k < runLength; k++)
             {
                 uint16_t val = palette[ReadUInt8()];
-
                 if (val != 0u)
                 {
                     data[block] = 0x8000 | val;
@@ -3413,13 +3351,10 @@ void CAnimationManager::ReadFramesPixelData(CTextureAnimationDirection &directio
                 {
                     data[block] = 0;
                 }
-
                 block++;
             }
-
             header = ReadUInt32LE();
         }
-
-        g_GL_BindTexture16(frame, imageWidth, imageHeight, &data[0], false);
+        frame.Sprite.LoadSprite16(imageWidth, imageHeight, data.data());
     }
 }

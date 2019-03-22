@@ -82,9 +82,7 @@ set(gameobjects_src
 set(glengine_src
   GLEngine/GLEngine.cpp
   GLEngine/GLFrameBuffer.cpp
-  GLEngine/GLHTMLTextTexture.cpp
   GLEngine/GLShader.cpp
-  GLEngine/GLTextTexture.cpp
   GLEngine/GLTextureCircleOfTransparency.cpp
   GLEngine/GLTexture.cpp
   GLEngine/GLVector.cpp
@@ -314,6 +312,7 @@ set(crossuo_src
   SelectedObject.cpp
   ServerList.cpp
   SkillGroup.cpp
+  Sprite.cpp
   CrossPCH.cpp
   Target.cpp
   TargetGump.cpp

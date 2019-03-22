@@ -39,21 +39,18 @@ void CGUIBulletinBoardObject::PrepareTextures()
 void CGUIBulletinBoardObject::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteGump(0x1523);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(0x1523);
+    if (spr != nullptr && spr->Texture != nullptr)
     {
-        th->Draw(m_X, m_Y, checktrans);
+        spr->Texture->Draw(m_X, m_Y, checktrans);
     }
-
     m_Texture.Draw(m_X + 23, m_Y + 1);
 }
 
 bool CGUIBulletinBoardObject::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    int x = g_MouseManager.Position.X - m_X;
-    int y = g_MouseManager.Position.Y - m_Y;
-
+    const int x = g_MouseManager.Position.X - m_X;
+    const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= 0 && x < 230 && y < 18);
 }

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "RenderTextObject.h"
+#include "Sprite.h"
 
 class CRenderWorldObject;
 
@@ -19,7 +20,8 @@ public:
     wstring UnicodeText = {};
     uint8_t Alpha = 0xFF;
     CRenderWorldObject *Owner = nullptr;
-    CGLTextTexture m_Texture;
+    CGLTextTexture m_Texture; // FIXME
+    CSprite m_Sprite;
 
     CTextData();
     CTextData(CTextData *obj);

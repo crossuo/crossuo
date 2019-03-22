@@ -15,18 +15,16 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, 
     Width = 0;
     int width = 0;
 
-    CGLTexture *th[4] = { nullptr };
+    CSprite *spr[4] = { nullptr };
     bool isValid = true;
-
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
-
-        if (th[i] != nullptr)
+        spr[i] = g_Game.ExecuteGump(Graphic + (int)i);
+        if (spr[i] != nullptr)
         {
-            if (width < th[i]->Width)
+            if (width < spr[i]->Width)
             {
-                width = th[i]->Width;
+                width = spr[i]->Width;
             }
         }
         else
@@ -37,10 +35,10 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, 
 
     if (isValid)
     {
-        OffsetX = (width - th[1]->Width) / 2;
-        int offset = th[0]->Width - th[3]->Width;
+        OffsetX = (width - spr[1]->Width) / 2;
+        int offset = spr[0]->Width - spr[3]->Width;
         BottomOffsetX = (offset / 2) + (offset / 4);
-        Width = width; // m_OffsetX + th[3]->Width;
+        Width = width; // m_OffsetX + spr[3]->Width;
     }
 
     UpdateHeight(Height);
@@ -55,20 +53,18 @@ void CGUIScrollBackground::UpdateHeight(int height)
     DEBUG_TRACE_FUNCTION;
     Height = height;
 
-    CGLTexture *th[4] = { nullptr };
-
+    CSprite *spr[4] = { nullptr };
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
-
-        if (th[i] == nullptr)
+        spr[i] = g_Game.ExecuteGump(Graphic + (int)i);
+        if (spr[i] == nullptr)
         {
             return;
         }
     }
 
-    WorkSpace = CRect(
-        OffsetX + 10, th[0]->Height, th[1]->Width - 20, Height - (th[0]->Height + th[3]->Height));
+    const auto h = spr[0]->Height;
+    WorkSpace = CRect(OffsetX + 10, h, spr[1]->Width - 20, Height - (h + spr[3]->Height));
 }
 
 void CGUIScrollBackground::PrepareTextures()
@@ -84,12 +80,12 @@ void CGUIScrollBackground::Draw(bool checktrans)
 
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
-
-        if (th[i] == nullptr)
+        auto spr = g_Game.ExecuteGump(Graphic + (int)i);
+        if (spr == nullptr && spr->Texture != nullptr)
         {
             return;
         }
+        th[i] = spr->Texture;
     }
 
     th[0]->Draw(m_X, m_Y, checktrans); //Top scroll
@@ -145,53 +141,44 @@ bool CGUIScrollBackground::Select()
     }
 
     bool select = false;
-
-    CGLTexture *th[4] = { nullptr };
-
+    CSprite *spr[4] = { nullptr };
     for (int i = 0; i < 4; i++)
     {
-        th[i] = g_Game.ExecuteGump(Graphic + (int)i);
-
-        if (th[i] == nullptr)
+        spr[i] = g_Game.ExecuteGump(Graphic + (int)i);
+        if (spr[i] == nullptr)
         {
             return false;
         }
     }
 
     y = m_Y;
-
-    select = g_Game.GumpPixelsInXY(Graphic, m_X, y) ||
-             g_Game.GumpPixelsInXY(
-                 Graphic + 3, m_X + BottomOffsetX, y + Height - th[3]->Height); //Top/Bottom scrolls
+    select =
+        g_Game.GumpPixelsInXY(Graphic, m_X, y) ||
+        g_Game.GumpPixelsInXY(
+            Graphic + 3, m_X + BottomOffsetX, y + Height - spr[3]->Height); //Top/Bottom scrolls
 
     x = m_X + OffsetX;
-
-    int currentY = th[0]->Height;
-    int height = Height - th[3]->Height;
-
+    int currentY = spr[0]->Height;
+    int height = Height - spr[3]->Height;
     while (!select)
     {
         for (int i = 1; i < 3 && !select; i++)
         {
             int deltaHeight = height - currentY;
-
-            if (deltaHeight < th[i]->Height)
+            if (deltaHeight < spr[i]->Height)
             {
                 if (deltaHeight > 0)
                 {
                     select =
                         g_Game.GumpPixelsInXY(Graphic + (int)i, x, y + currentY, 0, deltaHeight);
                 }
-
                 return select;
             }
             {
                 select = g_Game.GumpPixelsInXY(Graphic + (int)i, x, y + currentY);
             }
-
-            currentY += th[i]->Height;
+            currentY += spr[i]->Height;
         }
     }
-
     return select;
 }

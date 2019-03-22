@@ -333,18 +333,18 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
 
                 bool doubleDraw = false;
                 uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
-                CGLTexture *th = g_Game.ExecuteStaticArt(graphic);
-                if (th != nullptr)
+                auto spr = g_Game.ExecuteStaticArt(graphic);
+                if (spr != nullptr)
                 {
-                    x -= (th->Width / 2);
-                    y -= (th->Height / 2);
-                    if (x + th->Width > 110)
+                    x -= (spr->Width / 2);
+                    y -= (spr->Height / 2);
+                    if (x + spr->Width > 110)
                     {
-                        x = 110 - th->Width;
+                        x = 110 - spr->Width;
                     }
-                    if (y + th->Height > 80)
+                    if (y + spr->Height > 80)
                     {
-                        y = 80 - th->Height;
+                        y = 80 - spr->Height;
                     }
                 }
 

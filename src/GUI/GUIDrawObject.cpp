@@ -20,21 +20,18 @@ CSize CGUIDrawObject::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
     CSize size;
-    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    if (spr != nullptr)
     {
-        size.Width = th->Width;
-        size.Height = th->Height;
+        size.Width = spr->Width;
+        size.Height = spr->Height;
     }
-
     return size;
 }
 
 void CGUIDrawObject::SetShaderMode()
 {
     DEBUG_TRACE_FUNCTION;
-
     if (Color != 0)
     {
         if (PartialHue)
@@ -45,7 +42,6 @@ void CGUIDrawObject::SetShaderMode()
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
         }
-
         g_ColorManager.SendColorsToShader(Color);
     }
     else
@@ -63,25 +59,21 @@ void CGUIDrawObject::PrepareTextures()
 void CGUIDrawObject::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
-
-        th->Draw(m_X, m_Y, checktrans);
+        spr->Texture->Draw(m_X, m_Y, checktrans);
     }
 }
 
 bool CGUIDrawObject::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
-        return th->Select(m_X, m_Y, !BoundingBoxCheck);
+        return spr->Select(m_X, m_Y, !BoundingBoxCheck);
     }
-
     return false;
 }

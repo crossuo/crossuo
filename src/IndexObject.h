@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include "TextureObject.h"
 #include "api/mulstruct.h"
 
+struct CSprite;
 struct UopBlockHeader;
 
 struct CIndexObject
 {
     const UopBlockHeader *UopBlock = nullptr;
-    CGLTexture *Texture = nullptr;
+    CSprite *Sprite = nullptr;
     size_t Address = 0;
     uint32_t DataSize = 0;
     int32_t Width = 0;
@@ -90,15 +90,14 @@ struct Index
     int m_MultiIndexCount = 0;
 };
 
-
 template <typename T, size_t SIZE>
-void ValidateTextureIsDeleted(T (&arr)[SIZE])
+void ValidateSpriteIsDeleted(T (&arr)[SIZE])
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < SIZE; ++i)
     {
         CIndexObject &obj = arr[i];
-        assert(obj.Texture == nullptr);
+        assert(obj.Sprite == nullptr);
     }
 }
 

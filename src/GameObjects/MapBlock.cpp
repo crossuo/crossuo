@@ -121,40 +121,34 @@ void CMapBlock::CreateLandTextureRect()
                 int tileY = obj->GetY();
                 char tileZ1 = obj->GetZ();
 
-                CGLTexture *th = g_Game.ExecuteTexture(obj->Graphic);
-                if (obj->IsStretched || th == nullptr ||
+                auto spr = g_Game.ExecuteTexture(obj->Graphic);
+                if (obj->IsStretched || spr == nullptr ||
                     !TestStretched(tileX, tileY, tileZ1, map, true))
                 {
                     obj->IsStretched = false;
-
                     obj->MinZ = tileZ1;
                 }
                 else
                 {
                     obj->IsStretched = true;
-
                     obj->UpdateZ(
                         GetLandZ(tileX, tileY + 1, map),
                         GetLandZ(tileX + 1, tileY + 1, map),
                         GetLandZ(tileX + 1, tileY, map));
 
                     CVector vec[3][3][4];
-
                     for (int i = -1; i < 2; i++)
                     {
                         int curX = tileX + (int)i;
                         int curI = (int)i + 1;
-
                         for (int j = -1; j < 2; j++)
                         {
                             int curY = tileY + (int)j;
                             int curJ = (int)j + 1;
-
                             char currentZ = GetLandZ(curX, curY, map);
                             char leftZ = GetLandZ(curX, curY + 1, map);
                             char rightZ = GetLandZ(curX + 1, curY, map);
                             char bottomZ = GetLandZ(curX + 1, curY + 1, map);
-
                             if (currentZ == leftZ && currentZ == rightZ && currentZ == bottomZ)
                             {
                                 for (int k = 0; k < 4; k++)
@@ -215,7 +209,6 @@ void CMapBlock::CreateLandTextureRect()
                         GLuint positionBuffer = obj->PositionBuffer;
                         GLuint vertexBuffer = obj->VertexBuffer;
                         GLuint normalBuffer = obj->NormalBuffer;
-
                         if ((positionBuffer == 0u) || (vertexBuffer == 0u) || (normalBuffer == 0u))
                         {
                             GLuint vbo[3] = { 0 };
@@ -267,7 +260,6 @@ void CMapBlock::CreateLandTextureRect()
                         }
                     }
                 }
-
                 AddRender(obj, (int)x, (int)y);
             }
         }

@@ -59,17 +59,14 @@ void CGUITilepicHightlighted::SetShaderMode()
 void CGUITilepicHightlighted::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    if (spr != nullptr && spr->Texture != nullptr)
     {
         SetShaderMode();
-
-        th->Draw(m_X, m_Y, checktrans);
-
+        spr->Texture->Draw(m_X, m_Y, checktrans);
         if (DoubleDraw)
         {
-            th->Draw(m_X + 5, m_Y + 5, checktrans);
+            spr->Texture->Draw(m_X + 5, m_Y + 5, checktrans);
         }
     }
 }
@@ -77,24 +74,20 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 bool CGUITilepicHightlighted::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Index.m_Static[Graphic].Texture;
-
-    if (th != nullptr)
+    auto spr = g_Index.m_Static[Graphic].Sprite;
+    if (spr != nullptr)
     {
         int count = 1 + static_cast<int>(DoubleDraw);
         int offset = 0;
-
         for (int i = 0; i < count; i++)
         {
-            if (th->Select(m_X + offset, m_Y + offset, !BoundingBoxCheck))
+            if (spr->Select(m_X + offset, m_Y + offset, !BoundingBoxCheck))
             {
                 return true;
             }
-
             offset = 5;
         }
     }
-
     return false;
 }
 

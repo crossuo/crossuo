@@ -60,20 +60,17 @@ void CGUISlider::UpdateText()
                 Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
-        CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteGump(Graphic);
+        if (spr != nullptr)
         {
             int textX = m_X;
             int textY = m_Y;
-
             switch (TextPosition)
             {
                 case STP_TOP:
                 case STP_TOP_CENTER:
                 {
                     textY -= Text.Height - DefaultTextOffset;
-
                     break;
                 }
                 case STP_BOTTOM:
@@ -85,9 +82,8 @@ void CGUISlider::UpdateText()
                     }
                     else
                     {
-                        textY += th->Height + DefaultTextOffset;
+                        textY += spr->Height + DefaultTextOffset;
                     }
-
                     break;
                 }
                 case STP_LEFT:
@@ -95,7 +91,6 @@ void CGUISlider::UpdateText()
                 case STP_LEFT_CENTER:
                 {
                     textX -= Text.Width - DefaultTextOffset;
-
                     break;
                 }
                 case STP_RIGHT:
@@ -104,13 +99,12 @@ void CGUISlider::UpdateText()
                 {
                     if (Vertical)
                     {
-                        textX += th->Width + DefaultTextOffset;
+                        textX += spr->Width + DefaultTextOffset;
                     }
                     else
                     {
                         textX += Length + DefaultTextOffset;
                     }
-
                     break;
                 }
                 default:
@@ -124,14 +118,11 @@ void CGUISlider::UpdateText()
                 {
                     int textWidth = Text.Width;
                     int sliderWidth = Length;
-
                     if (Vertical)
                     {
-                        sliderWidth = th->Width;
+                        sliderWidth = spr->Width;
                     }
-
                     int deltaX = abs(sliderWidth - textWidth) / 2;
-
                     if (sliderWidth > textWidth)
                     {
                         textX += deltaX;
@@ -140,7 +131,6 @@ void CGUISlider::UpdateText()
                     {
                         textX -= deltaX;
                     }
-
                     break;
                 }
                 case STP_LEFT_CENTER:
@@ -148,14 +138,11 @@ void CGUISlider::UpdateText()
                 {
                     int textHeight = Text.Height;
                     int sliderHeight = Length;
-
                     if (!Vertical)
                     {
-                        sliderHeight = th->Height;
+                        sliderHeight = spr->Height;
                     }
-
                     int deltaY = abs(sliderHeight - textHeight) / 2;
-
                     if (sliderHeight > textHeight)
                     {
                         textY += deltaY;
@@ -164,13 +151,11 @@ void CGUISlider::UpdateText()
                     {
                         textY -= deltaY;
                     }
-
                     break;
                 }
                 default:
                     break;
             }
-
             TextX = textX;
             TextY = textY;
         }
@@ -181,28 +166,24 @@ CSize CGUISlider::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
     CSize size;
-
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
         if (Vertical)
         {
-            size.Width = th->Width;
+            size.Width = spr->Width;
             size.Height = Length;
         }
         else
         {
             size.Width = Length;
-            size.Height = th->Height;
+            size.Height = spr->Height;
         }
-
         if (HaveText)
         {
             //Text.Draw(TextX, TextY, checktrans);
         }
     }
-
     return size;
 }
 
@@ -240,19 +221,14 @@ void CGUISlider::OnClick(int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     int length = Length;
-    int maxValue = MaxValue - MinValue;
-
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    const int maxValue = MaxValue - MinValue;
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
-        length -= (Vertical ? (th->Height / 2) : th->Width);
+        length -= (Vertical ? (spr->Height / 2) : spr->Width);
     }
-
-    float percents = ((Vertical ? y : x) / (float)length) * 100.0f;
-
+    const float percents = ((Vertical ? y : x) / (float)length) * 100.0f;
     Value = (int)((maxValue * percents) / 100.0f) + MinValue;
-
     CalculateOffset();
     UpdateText();
 }
@@ -272,12 +248,10 @@ void CGUISlider::CalculateOffset()
     int value = Value - MinValue;
     int maxValue = MaxValue - MinValue;
     int length = Length;
-
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
-        length -= (Vertical ? th->Height : th->Width);
+        length -= (Vertical ? spr->Height : spr->Width);
     }
 
     if (maxValue > 0)
@@ -290,7 +264,6 @@ void CGUISlider::CalculateOffset()
     }
 
     Offset = (int)((length * Percents) / 100.0f);
-
     if (Offset < 0)
     {
         Offset = 0;
@@ -316,7 +289,6 @@ void CGUISlider::SetTextParameters(
     TextWidth = textWidth;
     Align = align;
     TextFlags = textFlags;
-
     UpdateText();
 }
 
@@ -326,7 +298,6 @@ void CGUISlider::PrepareTextures()
     g_Game.ExecuteGump(Graphic);
     g_Game.ExecuteGump(GraphicSelected);
     g_Game.ExecuteGump(GraphicPressed);
-
     if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
@@ -344,7 +315,6 @@ uint16_t CGUISlider::GetDrawGraphic()
 {
     DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
-
     if (g_GumpPressedElement == this)
     {
         graphic = GraphicPressed;
@@ -353,7 +323,6 @@ uint16_t CGUISlider::GetDrawGraphic()
     {
         graphic = GraphicSelected;
     }
-
     return graphic;
 }
 
@@ -374,21 +343,19 @@ void CGUISlider::Draw(bool checktrans)
 	CalculateOffset();*/
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-
     if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
         {
             CGLTexture *th[3] = { nullptr };
-
             for (int i = 0; i < 3; i++)
             {
-                th[i] = g_Game.ExecuteGump(BackgroundGraphic + (int)i);
-
-                if (th[i] == nullptr)
+                auto spr = g_Game.ExecuteGump(BackgroundGraphic + (int)i);
+                if (spr == nullptr || spr->Texture == nullptr)
                 {
                     return;
                 }
+                th[i] = spr->Texture;
             }
 
             if (Vertical)
@@ -416,33 +383,31 @@ void CGUISlider::Draw(bool checktrans)
         }
         else
         {
-            CGLTexture *th = g_Game.ExecuteGump(BackgroundGraphic);
-
-            if (th != nullptr)
+            auto spr = g_Game.ExecuteGump(BackgroundGraphic);
+            if (spr != nullptr && spr->Texture != nullptr)
             {
                 if (Vertical)
                 {
-                    th->Draw(m_X, m_Y, 0, Length, checktrans);
+                    spr->Texture->Draw(m_X, m_Y, 0, Length, checktrans);
                 }
                 else
                 {
-                    th->Draw(m_X, m_Y, Length, 0, checktrans);
+                    spr->Texture->Draw(m_X, m_Y, Length, 0, checktrans);
                 }
             }
         }
     }
 
-    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    if (spr != nullptr && spr->Texture != nullptr)
     {
         if (Vertical)
         {
-            th->Draw(m_X, m_Y + Offset, checktrans);
+            spr->Texture->Draw(m_X, m_Y + Offset, checktrans);
         }
         else
         {
-            th->Draw(m_X + Offset, m_Y, checktrans);
+            spr->Texture->Draw(m_X + Offset, m_Y, checktrans);
         }
 
         if (HaveText)
@@ -455,13 +420,11 @@ void CGUISlider::Draw(bool checktrans)
 bool CGUISlider::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
         int buttonX = m_X;
         int buttonY = m_Y;
-
         if (Vertical)
         {
             buttonY += Offset;
@@ -470,30 +433,27 @@ bool CGUISlider::Select()
         {
             buttonX += Offset;
         }
-
-        if (th->Select(buttonX, buttonY, !BoundingBoxCheck))
+        if (spr->Select(buttonX, buttonY, !BoundingBoxCheck))
         {
             return true;
         }
 
         if (BackgroundGraphic != 0u)
         {
-            int x = g_MouseManager.Position.X - m_X;
-            int y = g_MouseManager.Position.Y - m_Y;
-
+            const int x = g_MouseManager.Position.X - m_X;
+            const int y = g_MouseManager.Position.Y - m_Y;
             if (x >= 0 && y >= 0)
             {
                 if (Vertical)
                 {
-                    return (x < th->Width && y < Length);
+                    return (x < spr->Width && y < Length);
                 }
                 {
-                    return (x < Length && y < th->Height);
+                    return (x < Length && y < spr->Height);
                 }
             }
         }
     }
-
     return false;
 }
 

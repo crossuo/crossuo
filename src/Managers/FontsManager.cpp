@@ -695,14 +695,12 @@ bool CFontsManager::GenerateA(
     if (((flags & UOFONT_FIXED) != 0) || ((flags & UOFONT_CROPPED) != 0))
     {
         th.Clear();
-
         if ((width == 0) || str.empty())
         {
             return false;
         }
 
         int realWidth = GetWidthA(font, str);
-
         if (realWidth > width)
         {
             string newstr = GetTextByWidthA(font, str, width, (flags & UOFONT_CROPPED) != 0);
@@ -891,14 +889,11 @@ bool CFontsManager::GenerateABase(
     DEBUG_TRACE_FUNCTION;
     vector<uint32_t> pixels = GeneratePixelsA(font, th, str.c_str(), color, width, align, flags);
     bool result = false;
-
-    if (static_cast<unsigned int>(!pixels.empty()) != 0u)
+    if (!pixels.empty())
     {
-        g_GL_BindTexture32(th, th.Width, th.Height, &pixels[0], false);
-
+        g_GL_BindTexture32(th, th.Width, th.Height, &pixels[0]);
         result = true;
     }
-
     return true;
 }
 
@@ -914,7 +909,6 @@ void CFontsManager::DrawA(
 {
     DEBUG_TRACE_FUNCTION;
     CGLTextTexture th;
-
     if (GenerateA(font, th, str, color, width, align, flags))
     {
         th.Draw(x, y);
@@ -925,7 +919,6 @@ CPoint2Di CFontsManager::GetCaretPosW(
     uint8_t font, const wstring &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-
     CPoint2Di p;
     if (pos < 1 || font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
     {
@@ -3150,14 +3143,11 @@ bool CFontsManager::GenerateWBase(
     vector<uint32_t> pixels =
         GeneratePixelsW(font, th, str.c_str(), color, cell, width, align, flags);
     bool result = false;
-
-    if (static_cast<unsigned int>(!pixels.empty()) != 0u)
+    if (!pixels.empty())
     {
-        g_GL_BindTexture32(th, th.Width, th.Height, &pixels[0], false);
-
+        g_GL_BindTexture32(th, th.Width, th.Height, &pixels[0]);
         result = true;
     }
-
     return result;
 }
 
@@ -3174,7 +3164,6 @@ void CFontsManager::DrawW(
 {
     DEBUG_TRACE_FUNCTION;
     CGLTextTexture th;
-
     if (GenerateW(font, th, str, color, cell, width, align, flags))
     {
         th.Draw(x, y);

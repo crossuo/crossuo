@@ -4292,7 +4292,6 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.DarkNights = g_OptionsConfig.DarkNights;
             g_ConfigManager.ColoredLighting = g_OptionsConfig.ColoredLighting;
             g_ConfigManager.LockResizingGameWindow = g_OptionsConfig.LockResizingGameWindow;
-
             break;
         }
         case 8: //Reputation System
@@ -4304,7 +4303,6 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.EnemyColor = g_OptionsConfig.EnemyColor;
             g_ConfigManager.MurdererColor = g_OptionsConfig.MurdererColor;
             g_ConfigManager.CriminalActionsQuery = g_OptionsConfig.CriminalActionsQuery;
-
             QFOR(gump, g_GumpManager.m_Items, CGump *)
             {
                 if (gump->GumpType == GT_STATUSBAR)
@@ -4312,7 +4310,6 @@ void CGumpOptions::ApplyPageChanges()
                     gump->WantUpdateContent = true;
                 }
             }
-
             break;
         }
         case 9: //Miscellaneous
@@ -4323,9 +4320,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.CircleTransRadius = g_OptionsConfig.CircleTransRadius;
             g_ConfigManager.SkillReport = g_OptionsConfig.SkillReport;
             g_ConfigManager.SpeechFont = g_OptionsConfig.SpeechFont;
-
             g_CircleOfTransparency.Create(g_ConfigManager.CircleTransRadius);
-
             break;
         }
         case 10: //Filter Options

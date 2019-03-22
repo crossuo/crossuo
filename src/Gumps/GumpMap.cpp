@@ -52,7 +52,7 @@ CGumpMap::CGumpMap(
     m_StopPlotting->Visible = (m_PlotState == 1);
     m_ClearCourse->Visible = (m_PlotState == 1);
 
-    m_Texture = (CGUIExternalTexture *)Add(new CGUIExternalTexture(new CGLTexture(), true, 24, 31));
+    m_Texture = (CGUIExternalTexture *)Add(new CGUIExternalTexture(new CSprite(), true, 24, 31));
 
     Add(new CGUIGumppic(0x139D, Width - 20, Height - 20)); //N
 

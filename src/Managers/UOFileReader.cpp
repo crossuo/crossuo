@@ -5,6 +5,7 @@
 #include "ColorManager.h"
 #include "../CrossUO.h"
 #include "../StumpsData.h"
+#include "../Sprite.h"
 
 UOFileReader g_UOFileReader;
 
@@ -74,49 +75,40 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
     return pixels;
 }
 
-CGLTexture *UOFileReader::ReadGump(CIndexObject &io)
+CSprite *UOFileReader::ReadGump(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = nullptr;
-
     vector<uint16_t> pixels = GetGumpPixels(io);
-
-    if (static_cast<unsigned int>(!pixels.empty()) != 0u)
+    if (pixels.empty())
     {
-        th = new CGLTexture();
-        g_GL_BindTexture16(*th, io.Width, io.Height, &pixels[0], false);
+        return nullptr;
     }
-
-    return th;
+    auto spr = new CSprite;
+    spr->LoadSprite16(io.Width, io.Height, pixels.data());
+    return spr;
 }
 
 vector<uint16_t>
 UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height)
 {
     DEBUG_TRACE_FUNCTION;
-
     uint32_t flag = *(uint32_t *)io.Address;
     uint16_t *P = (uint16_t *)io.Address;
     uint16_t color = io.Color;
-
     vector<uint16_t> pixels;
-
     if (!run) //raw tile
     {
         width = 44;
         height = 44;
         pixels.resize(44 * 44, 0);
-
         for (int i = 0; i < 22; i++)
         {
             int start = (22 - ((int)i + 1));
             int pos = (int)i * 44 + start;
             int end = start + ((int)i + 1) * 2;
-
             for (int j = start; j < end; j++)
             {
                 uint16_t val = *P++;
-
                 if ((color != 0u) && (val != 0u))
                 {
                     val = g_ColorManager.GetColor16(val, color);
@@ -126,7 +118,6 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 {
                     val = 0x8000 | val;
                 }
-
                 pixels[pos++] = val;
             }
         }
@@ -135,11 +126,9 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
         {
             int pos = ((int)i + 22) * 44 + (int)i;
             int end = (int)i + (22 - (int)i) * 2;
-
             for (int j = i; j < end; j++)
             {
                 uint16_t val = *P++;
-
                 if ((color != 0u) && (val != 0u))
                 {
                     val = g_ColorManager.GetColor16(val, color);
@@ -149,7 +138,6 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 {
                     val = 0x8000 | val;
                 }
-
                 pixels[pos++] = val;
             }
         }
@@ -157,11 +145,9 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
     else //run tile
     {
         int stumpIndex = 0;
-
         if (g_Game.IsTreeTile(id, stumpIndex))
         {
             uint16_t *ptr = nullptr;
-
             if (stumpIndex == g_StumpHatchedID)
             {
                 width = g_StumpHatchedWidth;
@@ -176,9 +162,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             }
 
             int blocksize = width * height;
-
             pixels.resize(blocksize);
-
             if (pixels.size() != blocksize)
             {
                 Warning(
@@ -197,7 +181,6 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
         else
         {
             uint16_t *ptr = (uint16_t *)(io.Address + 4);
-
             width = *ptr;
             if ((width == 0) || width >= 1024)
             {
@@ -206,9 +189,7 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             }
 
             ptr++;
-
             height = *ptr;
-
             if ((height == 0) || (height * 2) > 5120)
             {
                 Warning(Data, "UOFileReader::ReadArt bad height:%i", height);
@@ -216,19 +197,14 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             }
 
             ptr++;
-
             uint16_t *lineOffsets = ptr;
             uint8_t *dataStart = (uint8_t *)ptr + (height * 2);
-
             int X = 0;
             int Y = 0;
             uint16_t XOffs = 0;
             uint16_t Run = 0;
-
             int blocksize = width * height;
-
             pixels.resize(blocksize, 0);
-
             if (pixels.size() != blocksize)
             {
                 Warning(
@@ -240,7 +216,6 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             }
 
             ptr = (uint16_t *)(dataStart + (lineOffsets[0] * 2));
-
             while (Y < height)
             {
                 XOffs = *ptr;
@@ -257,24 +232,19 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 {
                     X += XOffs;
                     int pos = Y * width + X;
-
                     for (int j = 0; j < Run; j++)
                     {
                         uint16_t val = *ptr++;
-
                         if (val != 0u)
                         {
                             if (color != 0u)
                             {
                                 val = g_ColorManager.GetColor16(val, color);
                             }
-
                             val = 0x8000 | val;
                         }
-
                         pixels[pos++] = val;
                     }
-
                     X += Run;
                 }
                 else
@@ -306,26 +276,20 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
                 {
                     int startY = (y != 0 ? -1 : 0);
                     int endY = (y + 1 < height ? 2 : 1);
-
                     for (int x = 0; x < width; x++)
                     {
                         uint16_t &pixel = pixels[y * width + x];
-
                         if (pixel != 0u)
                         {
                             int startX = (x != 0 ? -1 : 0);
                             int endX = (x + 1 < width ? 2 : 1);
-
                             for (int i = startY; i < endY; i++)
                             {
                                 int currentY = (int)y + (int)i;
-
                                 for (int j = startX; j < endX; j++)
                                 {
                                     int currentX = (int)x + (int)j;
-
                                     uint16_t &currentPixel = pixels[currentY * width + currentX];
-
                                     if (currentPixel == 0u)
                                     {
                                         pixel = 0x8000;
@@ -338,116 +302,100 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
             }
         }
     }
-
     return pixels;
 }
 
-CGLTexture *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
+CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = nullptr;
-    short width = 0;
-    short height = 0;
-
+    int16_t width = 0;
+    int16_t height = 0;
     vector<uint16_t> pixels = GetArtPixels(id, io, run, width, height);
-
-    if (static_cast<unsigned int>(!pixels.empty()) != 0u)
+    if (pixels.empty())
     {
-        int minX = width;
-        int minY = height;
-        int maxX = 0;
-        int maxY = 0;
-
-        if (!run)
+        return nullptr;
+    }
+    int minX = width;
+    int minY = height;
+    int maxX = 0;
+    int maxY = 0;
+    if (!run)
+    {
+        maxX = 44;
+        maxY = 44;
+        bool allBlack = true;
+        int pos = 0;
+        for (int i = 0; i < 44; i++)
         {
-            maxX = 44;
-            maxY = 44;
-            bool allBlack = true;
-            int pos = 0;
-
-            for (int i = 0; i < 44; i++)
+            for (int j = 0; j < 44; j++)
             {
-                for (int j = 0; j < 44; j++)
+                if (pixels[pos++] != 0u)
                 {
-                    if (pixels[pos++] != 0u)
-                    {
-                        i = 44;
-                        allBlack = false;
-                        break;
-                    }
-                }
-            }
-
-            ((CIndexObjectLand *)&io)->AllBlack = allBlack;
-
-            if (allBlack)
-            {
-                for (int i = 0; i < 22; i++)
-                {
-                    int start = (22 - ((int)i + 1));
-                    int pos = (int)i * 44 + start;
-                    int end = start + ((int)i + 1) * 2;
-
-                    for (int j = start; j < end; j++)
-                    {
-                        pixels[pos++] = 0x8000;
-                    }
-                }
-
-                for (int i = 0; i < 22; i++)
-                {
-                    int pos = ((int)i + 22) * 44 + (int)i;
-                    int end = (int)i + (22 - (int)i) * 2;
-
-                    for (int j = i; j < end; j++)
-                    {
-                        pixels[pos++] = 0x8000;
-                    }
-                }
-            }
-        }
-        else
-        {
-            int pos = 0;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    if (pixels[pos++] != 0u)
-                    {
-                        minX = std::min(minX, int(x));
-                        maxX = std::max(maxX, int(x));
-                        minY = std::min(minY, int(y));
-                        maxY = std::max(maxY, int(y));
-                    }
+                    i = 44;
+                    allBlack = false;
+                    break;
                 }
             }
         }
 
-        texture = new CGLTexture();
-        g_GL_BindTexture16(*texture, width, height, &pixels[0], false);
+        ((CIndexObjectLand *)&io)->AllBlack = allBlack;
+        if (allBlack)
+        {
+            for (int i = 0; i < 22; i++)
+            {
+                const int start = (22 - ((int)i + 1));
+                int pos = (int)i * 44 + start;
+                const int end = start + ((int)i + 1) * 2;
+                for (int j = start; j < end; j++)
+                {
+                    pixels[pos++] = 0x8000;
+                }
+            }
 
-        texture->ImageOffsetX = minX;
-        texture->ImageOffsetY = minY;
-
-        texture->ImageWidth = maxX - minX;
-        texture->ImageHeight = maxY - minY;
+            for (int i = 0; i < 22; i++)
+            {
+                int pos = ((int)i + 22) * 44 + (int)i;
+                const int end = (int)i + (22 - (int)i) * 2;
+                for (int j = i; j < end; j++)
+                {
+                    pixels[pos++] = 0x8000;
+                }
+            }
+        }
+    }
+    else
+    {
+        int pos = 0;
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (pixels[pos++] != 0u)
+                {
+                    minX = std::min(minX, int(x));
+                    maxX = std::max(maxX, int(x));
+                    minY = std::min(minY, int(y));
+                    maxY = std::max(maxY, int(y));
+                }
+            }
+        }
     }
 
-    return texture;
+    auto spr = new CSprite();
+    spr->ImageOffsetX = minX;
+    spr->ImageOffsetY = minY;
+    spr->ImageWidth = maxX - minX;
+    spr->ImageHeight = maxY - minY;
+    spr->LoadSprite16(width, height, pixels.data());
+    return spr;
 }
 
-CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
+CSprite *UOFileReader::ReadTexture(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = new CGLTexture();
-    th->Texture = 0;
     uint16_t color = io.Color;
-
     uint16_t w = 64;
     uint16_t h = 64;
-
     if (io.DataSize == 0x2000)
     {
         w = 64;
@@ -461,50 +409,39 @@ CGLTexture *UOFileReader::ReadTexture(CIndexObject &io)
     else
     {
         Warning(Data, "UOFileReader::ReadTexture bad data size: %d", io.DataSize);
-        delete th;
         return nullptr;
     }
 
     vector<uint16_t> pixels(w * h);
-
     uint16_t *P = (uint16_t *)io.Address;
-
     for (int i = 0; i < h; i++)
     {
         int pos = (int)i * w;
-
         for (int j = 0; j < w; j++)
         {
             uint16_t val = *P++;
-
             if (color != 0u)
             {
                 val = g_ColorManager.GetColor16(val, color);
             }
-
             pixels[pos + j] = 0x8000 | val;
         }
     }
 
     const bool skipHitMask = true;
-    g_GL_BindTexture16(*th, w, h, &pixels[0], skipHitMask);
-    return th;
+    auto spr = new CSprite;
+    spr->LoadSprite16(w, h, pixels.data(), skipHitMask);
+    return spr;
 }
 
-CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
+CSprite *UOFileReader::ReadLight(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = new CGLTexture();
-    th->Texture = 0;
-
     vector<uint16_t> pixels(io.Width * io.Height);
-
     uint8_t *p = (uint8_t *)io.Address;
-
     for (int i = 0; i < io.Height; i++)
     {
         int pos = (int)i * io.Width;
-
         for (int j = 0; j < io.Width; j++)
         {
             uint16_t val = (*p << 10) | (*p << 5) | *p;
@@ -514,6 +451,7 @@ CGLTexture *UOFileReader::ReadLight(CIndexObject &io)
     }
 
     const bool skipHitMask = true;
-    g_GL_BindTexture16(*th, io.Width, io.Height, &pixels[0], skipHitMask);
-    return th;
+    auto spr = new CSprite;
+    spr->LoadSprite16(io.Width, io.Height, pixels.data(), skipHitMask);
+    return spr;
 }

@@ -256,7 +256,6 @@ void CTextRenderer::Select(CGump *gump)
     }
 
     int renderIndex = g_GameScreen.RenderIndex - 1;
-
     if (renderIndex < 1)
     {
         renderIndex = 99;
@@ -270,7 +269,6 @@ void CTextRenderer::Select(CGump *gump)
         }
 
         CTextData &text = *(CTextData *)item;
-
         if (text.Timer >= g_Ticks)
         {
             if (gump == nullptr &&
@@ -279,7 +277,11 @@ void CTextRenderer::Select(CGump *gump)
                 continue;
             }
 
-            if (text.m_Texture.Select(text.RealDrawX, text.RealDrawY))
+            // FIXME
+            text.m_Sprite.Width = text.m_Texture.Width;
+            text.m_Sprite.Height = text.m_Texture.Height;
+            text.m_Sprite.Texture = &text.m_Texture;
+            if (text.m_Sprite.Select(text.RealDrawX, text.RealDrawY))
             {
                 g_SelectedObject.Init(item, gump);
             }

@@ -9,11 +9,11 @@ class CGumpMap : public CGump
 {
     int m_PlotState = 0;
     uint32_t m_PinTimer = 0;
-    CBaseGUI *m_PinOnCursor{ nullptr };
-    CBaseGUI *m_FakeInsertionPin{ nullptr };
-    CGUIButton *m_PlotCourse{ nullptr };
-    CGUIButton *m_StopPlotting{ nullptr };
-    CGUIButton *m_ClearCourse{ nullptr };
+    CBaseGUI *m_PinOnCursor = nullptr;
+    CBaseGUI *m_FakeInsertionPin = nullptr;
+    CGUIButton *m_PlotCourse = nullptr;
+    CGUIButton *m_StopPlotting = nullptr;
+    CGUIButton *m_ClearCourse = nullptr;
     vector<CGUIText *> m_Labels;
 
     int LineUnderMouse(int &x1, int &y1, int x2, int y2);
@@ -25,8 +25,8 @@ public:
     int EndY = 0;
     int Width = 0;
     int Height = 0;
-    CGUIExternalTexture *m_Texture{ nullptr };
-    CGUIDataBox *m_DataBox{ nullptr };
+    CGUIExternalTexture *m_Texture = nullptr;
+    CGUIDataBox *m_DataBox = nullptr;
 
     CGumpMap(
         uint32_t serial,

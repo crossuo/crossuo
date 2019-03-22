@@ -13,9 +13,9 @@ protected:
     static const int m_LayerCount = 23;
     static int UsedLayers[m_LayerCount];
 
-    CTextRenderer m_TextRenderer{ CTextRenderer() };
-    CGUIDataBox *m_DataBox{ nullptr };
-    CGUIText *m_Description{ nullptr };
+    CTextRenderer m_TextRenderer;
+    CGUIDataBox *m_DataBox = nullptr;
+    CGUIText *m_Description = nullptr;
     bool m_WantTransparentContent = false;
 
     virtual void CalculateGumpState() override;
@@ -27,7 +27,7 @@ public:
     virtual ~CGumpPaperdoll();
 
     bool CanLift = false;
-    CGUIButton *m_ButtonWarmode{ nullptr };
+    CGUIButton *m_ButtonWarmode = nullptr;
     CTextContainer m_TextContainer{ CTextContainer(10) };
 
     CTextRenderer *GetTextRenderer() { return &m_TextRenderer; }

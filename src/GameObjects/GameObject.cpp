@@ -43,10 +43,11 @@ CGameObject::~CGameObject()
 
     m_Next = nullptr;
     m_Prev = nullptr;
-    if (m_TextureObjectHalndes.Texture != 0)
+    // FIXME: gfx
+    if (m_TextureObjectHandles.Texture != 0)
     {
-        glDeleteTextures(1, &m_TextureObjectHalndes.Texture);
-        m_TextureObjectHalndes.Texture = 0;
+        glDeleteTextures(1, &m_TextureObjectHandles.Texture);
+        m_TextureObjectHandles.Texture = 0;
     }
 
     Clear();
@@ -92,7 +93,7 @@ void CGameObject::SetName(const string &newName)
 void CGameObject::DrawObjectHandlesTexture()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextureObjectHalndes.Texture == 0)
+    if (m_TextureObjectHandles.Texture == 0)
     {
         if (NPC)
         {
@@ -134,14 +135,14 @@ void CGameObject::DrawObjectHandlesTexture()
     }
     else
     {
-        m_TextureObjectHalndes.Draw(x, y);
+        m_TextureObjectHandles.Draw(x, y);
     }
 }
 
 void CGameObject::SelectObjectHandlesTexture()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextureObjectHalndes.Texture != 0)
+    if (m_TextureObjectHandles.Texture != 0)
     {
         int x = DrawX - g_ObjectHandlesWidthOffset;
         int y = DrawY;
@@ -177,10 +178,11 @@ void CGameObject::SelectObjectHandlesTexture()
 void CGameObject::GenerateObjectHandlesTexture(wstring text)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_TextureObjectHalndes.Texture != 0)
+    // FIXME: gfx
+    if (m_TextureObjectHandles.Texture != 0)
     {
-        glDeleteTextures(1, &m_TextureObjectHalndes.Texture);
-        m_TextureObjectHalndes.Texture = 0;
+        glDeleteTextures(1, &m_TextureObjectHandles.Texture);
+        m_TextureObjectHandles.Texture = 0;
     }
 
     int width = g_ObjectHandlesWidth - 20;
@@ -270,7 +272,8 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
             }
         }
     }
-    g_GL_BindTexture16(m_TextureObjectHalndes, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels, false);
+    // FIXME: gfx
+    g_GL_BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
 }
 
 void CGameObject::AddText(CTextData *msg)

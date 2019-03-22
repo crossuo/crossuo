@@ -5,15 +5,11 @@
 
 #include "GUIPolygonal.h"
 
-class CGUIDataBox : public CGUIPolygonal
+struct CGUIDataBox : public CGUIPolygonal
 {
-public:
     CGUIDataBox();
-    virtual ~CGUIDataBox();
-
-    virtual void PrepareTextures();
-
-    virtual bool EntryPointerHere();
-
-    virtual bool Select() { return true; }
+    virtual ~CGUIDataBox() = default;
+    virtual void PrepareTextures() override;
+    virtual bool EntryPointerHere() override;
+    virtual bool Select() override { return true; }
 };

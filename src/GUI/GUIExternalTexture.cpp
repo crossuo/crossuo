@@ -4,14 +4,15 @@
 #include "GUIExternalTexture.h"
 #include "../Managers/ColorManager.h"
 #include "../Point.h"
+#include "../Sprite.h"
 
 CGUIExternalTexture::CGUIExternalTexture(
-    CGLTexture *texture, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)
+    CSprite *sprite, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)
     , DeleteTextureOnDestroy(deleteTextureOnDestroy)
     , DrawWidth(drawWidth)
     , DrawHeight(drawHeight)
-    , m_Texture(texture)
+    , m_Sprite(sprite)
 {
 }
 
@@ -20,7 +21,7 @@ CGUIExternalTexture::~CGUIExternalTexture()
     DEBUG_TRACE_FUNCTION;
     if (DeleteTextureOnDestroy)
     {
-        RELEASE_POINTER(m_Texture);
+        RELEASE_POINTER(m_Sprite);
     }
 }
 
@@ -28,8 +29,7 @@ CSize CGUIExternalTexture::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
     CSize size;
-
-    if (m_Texture != nullptr)
+    if (m_Sprite != nullptr)
     {
         if (DrawWidth != 0)
         {
@@ -37,7 +37,7 @@ CSize CGUIExternalTexture::GetSize()
         }
         else
         {
-            size.Width = m_Texture->Width;
+            size.Width = m_Sprite->Width;
         }
 
         if (DrawHeight != 0)
@@ -46,7 +46,7 @@ CSize CGUIExternalTexture::GetSize()
         }
         else
         {
-            size.Height = m_Texture->Height;
+            size.Height = m_Sprite->Height;
         }
     }
 
@@ -56,7 +56,6 @@ CSize CGUIExternalTexture::GetSize()
 void CGUIExternalTexture::SetShaderMode()
 {
     DEBUG_TRACE_FUNCTION;
-
     if (Color != 0)
     {
         if (PartialHue)
@@ -79,22 +78,20 @@ void CGUIExternalTexture::SetShaderMode()
 void CGUIExternalTexture::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Texture != nullptr)
+    if (m_Sprite != nullptr)
     {
         SetShaderMode();
-
         if ((DrawWidth != 0) || (DrawHeight != 0))
         {
             CGLTexture tex;
-            tex.Texture = m_Texture->Texture;
-
+            tex.Texture = m_Sprite->Texture->Texture;
             if (DrawWidth != 0)
             {
                 tex.Width = DrawWidth;
             }
             else
             {
-                tex.Width = m_Texture->Width;
+                tex.Width = m_Sprite->Width;
             }
 
             if (DrawHeight != 0)
@@ -103,16 +100,14 @@ void CGUIExternalTexture::Draw(bool checktrans)
             }
             else
             {
-                tex.Height = m_Texture->Height;
+                tex.Height = m_Sprite->Height;
             }
-
             g_GL.GL1_Draw(tex, m_X, m_Y);
-
             tex.Texture = 0;
         }
         else
         {
-            m_Texture->Draw(m_X, m_Y, checktrans);
+            m_Sprite->Texture->Draw(m_X, m_Y, checktrans);
         }
     }
 }
@@ -120,10 +115,9 @@ void CGUIExternalTexture::Draw(bool checktrans)
 bool CGUIExternalTexture::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    if (m_Texture != nullptr)
+    if (m_Sprite != nullptr)
     {
-        return m_Texture->Select(m_X, m_Y, !BoundingBoxCheck);
+        return m_Sprite->Select(m_X, m_Y, !BoundingBoxCheck);
     }
-
     return false;
 }

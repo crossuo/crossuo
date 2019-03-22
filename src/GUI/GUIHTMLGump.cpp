@@ -90,11 +90,10 @@ void CGUIHTMLGump::Initalize(bool menu)
 
         if (HaveScrollbar)
         {
-            CGLTexture *th = g_Game.ExecuteGump(0x00FE);
-
-            if (th != nullptr)
+            auto spr = g_Game.ExecuteGump(0x00FE);
+            if (spr != nullptr)
             {
-                offsetWidth -= th->Width;
+                offsetWidth -= spr->Width;
             }
         }
 
@@ -104,13 +103,11 @@ void CGUIHTMLGump::Initalize(bool menu)
         m_ButtonUp = new CGUIHTMLButton(this, Serial, 0x00FA, 0x00FA, 0x00FA, offsetWidth, 0);
         m_ButtonUp->Visible = HaveScrollbar;
 
-        CGLTexture *thDown = g_Game.ExecuteGump(0x00FC);
-
+        auto sprDown = g_Game.ExecuteGump(0x00FC);
         int sliderHeight = Height;
-
-        if (thDown != nullptr)
+        if (sprDown != nullptr)
         {
-            sliderHeight -= thDown->Height;
+            sliderHeight -= sprDown->Height;
         }
 
         m_ButtonDown =
@@ -118,13 +115,11 @@ void CGUIHTMLGump::Initalize(bool menu)
         m_ButtonDown->Color = 1;
         m_ButtonDown->Visible = HaveScrollbar;
 
-        CGLTexture *thUp = g_Game.ExecuteGump(0x00FA);
-
+        auto sprUp = g_Game.ExecuteGump(0x00FA);
         int sliderStartY = 0;
-
-        if (thUp != nullptr)
+        if (sprUp != nullptr)
         {
-            sliderStartY = thUp->Height;
+            sliderStartY = sprUp->Height;
             sliderHeight -= sliderStartY;
         }
 
@@ -160,34 +155,25 @@ void CGUIHTMLGump::UpdateHeight(int height)
 {
     DEBUG_TRACE_FUNCTION;
     Height = height;
-
     m_Background->Height = height;
-
-    CGLTexture *thDown = g_Game.ExecuteGump(m_ButtonDown->Graphic);
-
+    auto sprDown = g_Game.ExecuteGump(m_ButtonDown->Graphic);
     int sliderHeight = height;
-
-    if (thDown != nullptr)
+    if (sprDown != nullptr)
     {
-        sliderHeight -= thDown->Height;
+        sliderHeight -= sprDown->Height;
     }
-
     m_ButtonDown->SetY(sliderHeight);
 
-    CGLTexture *thUp = g_Game.ExecuteGump(m_ButtonUp->Graphic);
-
+    auto sprUp = g_Game.ExecuteGump(m_ButtonUp->Graphic);
     int sliderStartY = 0;
-
-    if (thUp != nullptr)
+    if (sprUp != nullptr)
     {
-        sliderStartY = thUp->Height;
+        sliderStartY = sprUp->Height;
         sliderHeight -= sliderStartY;
     }
 
     m_Slider->Length = sliderHeight;
-
     m_Scissor->Height = height;
-
     CalculateDataSize();
 }
 

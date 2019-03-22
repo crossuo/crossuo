@@ -59,9 +59,8 @@ void CGUICheckbox::UpdateTextPosition()
     int textX = m_X;
     int textY = m_Y;
 
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
         switch (TextPosition)
         {
@@ -69,14 +68,12 @@ void CGUICheckbox::UpdateTextPosition()
             case STP_TOP_CENTER:
             {
                 textY -= Text.Height - DefaultTextOffset;
-
                 break;
             }
             case STP_BOTTOM:
             case STP_BOTTOM_CENTER:
             {
-                textY += th->Height + DefaultTextOffset;
-
+                textY += spr->Height + DefaultTextOffset;
                 break;
             }
             case STP_LEFT:
@@ -84,15 +81,13 @@ void CGUICheckbox::UpdateTextPosition()
             case STP_LEFT_CENTER:
             {
                 textX -= Text.Width - DefaultTextOffset;
-
                 break;
             }
             case STP_RIGHT:
                 //textY -= 4;
             case STP_RIGHT_CENTER:
             {
-                textX += th->Width + DefaultTextOffset;
-
+                textX += spr->Width + DefaultTextOffset;
                 break;
             }
             default:
@@ -105,10 +100,8 @@ void CGUICheckbox::UpdateTextPosition()
             case STP_BOTTOM_CENTER:
             {
                 int textWidth = Text.Width;
-                int sliderWidth = th->Width;
-
+                int sliderWidth = spr->Width;
                 int deltaX = abs(sliderWidth - textWidth) / 2;
-
                 if (sliderWidth > textWidth)
                 {
                     textX += deltaX;
@@ -117,17 +110,14 @@ void CGUICheckbox::UpdateTextPosition()
                 {
                     textX -= deltaX;
                 }
-
                 break;
             }
             case STP_LEFT_CENTER:
             case STP_RIGHT_CENTER:
             {
                 int textHeight = Text.Height;
-                int sliderHeight = th->Height;
-
+                int sliderHeight = spr->Height;
                 int deltaY = abs(sliderHeight - textHeight) / 2;
-
                 if (sliderHeight > textHeight)
                 {
                     textY += deltaY;
@@ -136,14 +126,12 @@ void CGUICheckbox::UpdateTextPosition()
                 {
                     textY -= deltaY;
                 }
-
                 break;
             }
             default:
                 break;
         }
     }
-
     TextX = textX;
     TextY = textY;
 }
@@ -160,7 +148,6 @@ uint16_t CGUICheckbox::GetDrawGraphic()
 {
     DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
-
     if (!Enabled)
     {
         graphic = GraphicDisabled;
@@ -173,7 +160,6 @@ uint16_t CGUICheckbox::GetDrawGraphic()
     {
         graphic = GraphicSelected;
     }
-
     return graphic;
 }
 
@@ -181,7 +167,6 @@ void CGUICheckbox::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
     CGUIDrawObject::Draw(checktrans);
-
     Text.Draw(TextX, TextY, checktrans);
 }
 
@@ -189,15 +174,12 @@ bool CGUICheckbox::Select()
 {
     DEBUG_TRACE_FUNCTION;
     bool result = CGUIDrawObject::Select();
-
     if (!result && !Text.Empty())
     {
-        int x = g_MouseManager.Position.X - TextX;
-        int y = g_MouseManager.Position.Y - TextY;
-
+        const int x = g_MouseManager.Position.X - TextX;
+        const int y = g_MouseManager.Position.Y - TextY;
         result = (x >= 0 && y >= 0 && x < Text.Width && y < Text.Height);
     }
-
     return result;
 }
 

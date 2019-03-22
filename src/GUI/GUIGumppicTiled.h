@@ -5,15 +5,15 @@
 
 #include "GUIDrawObject.h"
 
-class CGUIGumppicTiled : public CGUIDrawObject
+struct CGUIGumppicTiled : public CGUIDrawObject
 {
     int Width = 0;
     int Height = 0;
 
-public:
+    virtual CSize GetSize() override { return CSize(Width, Height); }
+    virtual void Draw(bool checktrans = false) override;
+    virtual bool Select() override;
+
     CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height);
-    virtual ~CGUIGumppicTiled();
-    virtual CSize GetSize() { return CSize(Width, Height); }
-    virtual void Draw(bool checktrans = false);
-    virtual bool Select();
+    virtual ~CGUIGumppicTiled() = default;
 };

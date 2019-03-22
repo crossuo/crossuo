@@ -12,20 +12,14 @@ CGUIGumppicTiled::CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, in
 {
 }
 
-CGUIGumppicTiled::~CGUIGumppicTiled()
-{
-}
-
 void CGUIGumppicTiled::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr && spr->Texture != nullptr)
     {
         SetShaderMode();
-
-        th->Draw(m_X, m_Y, Width, Height, checktrans);
+        spr->Texture->Draw(m_X, m_Y, Width, Height, checktrans);
     }
 }
 
@@ -34,48 +28,42 @@ bool CGUIGumppicTiled::Select()
     DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
-
     if (x < 0 || y < 0 || (Width > 0 && x >= Width) || (Height > 0 && y >= Height))
     {
         return false;
     }
 
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
         int width = Width;
         int height = Height;
-
         if (width == 0)
         {
-            width = th->Width;
+            width = spr->Width;
         }
-
         if (height == 0)
         {
-            height = th->Height;
+            height = spr->Height;
         }
 
-        while (x > th->Width && width > th->Width)
+        while (x > spr->Width && width > spr->Width)
         {
-            x -= th->Width;
-            width -= th->Width;
+            x -= spr->Width;
+            width -= spr->Width;
         }
 
-        while (y > th->Height && height > th->Height)
+        while (y > spr->Height && height > spr->Height)
         {
-            y -= th->Height;
-            height -= th->Height;
+            y -= spr->Height;
+            height -= spr->Height;
         }
 
         if (x > width || y > height)
         {
             return false;
         }
-
-        th->TestHit(x, y, !BoundingBoxCheck);
+        return spr->TestHit(x, y, !BoundingBoxCheck);
     }
-
     return false;
 }
