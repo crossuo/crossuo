@@ -11,29 +11,25 @@ CGUIResizepic::CGUIResizepic(int serial, uint16_t graphic, int x, int y, int wid
     Graphic = graphic;
 }
 
-CGUIResizepic::~CGUIResizepic()
-{
-}
-
 void CGUIResizepic::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteResizepic(Graphic);
 }
 
+// FIXME: gfx
 void CGUIResizepic::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[9] = { nullptr };
-
     for (int i = 0; i < 9; i++)
     {
         auto spr = g_Game.ExecuteGump(Graphic + (int)i);
-        if (spr == nullptr && spr->Texture != nullptr)
+        if (spr == nullptr)
         {
             return;
         }
-
+        assert(spr->Texture != nullptr);
         auto pth = spr->Texture;
         if (i == 4)
         {
@@ -54,15 +50,10 @@ void CGUIResizepic::Draw(bool checktrans)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         g_GL_DrawResizepic(th, m_X, m_Y, Width, Height);
-
         glDisable(GL_BLEND);
-
         glEnable(GL_STENCIL_TEST);
-
         g_GL_DrawResizepic(th, m_X, m_Y, Width, Height);
-
         glDisable(GL_STENCIL_TEST);
     }
     else
@@ -78,6 +69,5 @@ bool CGUIResizepic::Select()
     {
         return CGUIPolygonal::Select();
     }
-
     return g_Game.ResizepicPixelsInXY(Graphic, m_X, m_Y, Width, Height);
 }
