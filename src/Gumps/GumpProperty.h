@@ -3,20 +3,21 @@
 
 #pragma once
 
+class CRenderObject;
+
 #include "Gump.h"
+#include "../Sprite.h"
 
 class CGumpProperty : public CGump
 {
     uint32_t Timer = 0;
-
-private:
-    CGLTextTexture m_Texture;
+    CGLTextTexture m_Texture_DONT;
+    CSprite m_Sprite;
 
 public:
+    virtual void PrepareContent() override;
+    virtual CRenderObject *Select() override { return nullptr; }
+
     CGumpProperty(const wstring &text);
-    virtual ~CGumpProperty();
-
-    virtual void PrepareContent();
-
-    virtual class CRenderObject *Select() { return nullptr; }
+    virtual ~CGumpProperty() = default;
 };

@@ -21,6 +21,32 @@ DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
 DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr = &CGLEngine::GL1_DrawStretched;
 DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
 
+void GLAPIENTRY MessageCallback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam)
+{
+    if (type == GL_DEBUG_TYPE_ERROR)
+    {
+        //Error(Renderer, "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n", type, severity, message );
+        //int *x = 0;
+        //*x = 1;
+    }
+    else
+    {
+        Warning(
+            Renderer,
+            "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n",
+            type,
+            severity,
+            message);
+    }
+}
+
 CGLEngine::CGLEngine()
 {
 }
@@ -104,6 +130,9 @@ bool CGLEngine::Install()
         g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Warning");
     }
 
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
     glShadeModel(GL_SMOOTH);              // Enables Smooth Color Shading
     glClearDepth(1.0);                    // Depth Buffer Setup
@@ -163,7 +192,7 @@ void CGLEngine::UpdateRect()
     g_GumpManager.RedrawAll();
 }
 
-void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels, bool skipHitMask)
+void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -188,13 +217,9 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     texture.Width = width;
     texture.Height = height;
     texture.Texture = tex;
-    if (!skipHitMask)
-    {
-        texture.BuildHitMask(width, height, pixels);
-    }
 }
 
-void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels, bool skipHitMask)
+void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
@@ -212,10 +237,6 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     texture.Width = width;
     texture.Height = height;
     texture.Texture = tex;
-    if (!skipHitMask)
-    {
-        texture.BuildHitMask(width, height, pixels);
-    }
 }
 
 void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
@@ -239,17 +260,17 @@ void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
     texture.MirroredVertexBuffer = vbo[1];
 }
 
-void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels, bool skipHitMask)
+void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
-    GL1_BindTexture16(texture, width, height, pixels, skipHitMask);
+    GL1_BindTexture16(texture, width, height, pixels);
     GL2_CreateArrays(texture, width, height);
 }
 
-void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels, bool skipHitMask)
+void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
-    GL1_BindTexture32(texture, width, height, pixels, skipHitMask);
+    GL1_BindTexture32(texture, width, height, pixels);
     GL2_CreateArrays(texture, width, height);
 }
 
@@ -420,6 +441,7 @@ void CGLEngine::ClearScissorList()
 inline void CGLEngine::BindTexture(GLuint texture)
 {
     DEBUG_TRACE_FUNCTION;
+    assert(texture != 0);
     if (OldTexture != texture)
     {
         OldTexture = texture;

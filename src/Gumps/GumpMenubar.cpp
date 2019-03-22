@@ -30,25 +30,23 @@ CGumpMenubar::CGumpMenubar(short x, short y)
 {
     DEBUG_TRACE_FUNCTION;
     Page = 2;
-
     Add(new CGUIPage(1));
     Add(new CGUIResizepic(0, 0x13BE, 0, 0, 30, 27));
     Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A1, 0x15A1, 0x15A1, 5, 3));
-
     Add(new CGUIPage(2));
-    CGLTexture *th1 = g_Game.ExecuteGump(0x098B);
-    CGLTexture *th2 = g_Game.ExecuteGump(0x098D);
+    auto spr1 = g_Game.ExecuteGump(0x098B);
+    auto spr2 = g_Game.ExecuteGump(0x098D);
 
     int smallWidth = 50;
-    if (th1 != nullptr)
+    if (spr1 != nullptr)
     {
-        smallWidth = th1->Width;
+        smallWidth = spr1->Width;
     }
 
     int largeWidth = 100;
-    if (th2 != nullptr)
+    if (spr2 != nullptr)
     {
-        largeWidth = th2->Width;
+        largeWidth = spr2->Width;
     }
 
     static const int textPosTable[8][5] = { { 0x098B, 30, 32, smallWidth, ID_GMB_MAP },
@@ -73,7 +71,6 @@ CGumpMenubar::CGumpMenubar(short x, short y)
 
     Add(new CGUIResizepic(0, 0x13BE, 0, 0, 718, 27));
     Add(new CGUIButton(ID_GMB_MINIMIZE, 0x15A4, 0x15A4, 0x15A4, 5, 3));
-
     for (int i = 0; i < 8; i++)
     {
         Add(new CGUIButton(
@@ -110,7 +107,6 @@ void CGumpMenubar::SetOpened(bool val)
 {
     DEBUG_TRACE_FUNCTION;
     m_Opened = val;
-
     if (val)
     {
         Page = 2;
@@ -119,7 +115,6 @@ void CGumpMenubar::SetOpened(bool val)
     {
         Page = 1;
     }
-
     WantRedraw = true;
 }
 
@@ -127,7 +122,6 @@ void CGumpMenubar::InitToolTip()
 {
     DEBUG_TRACE_FUNCTION;
     uint32_t id = g_SelectedObject.Serial;
-
     if (!Minimized)
     {
         switch (id)
@@ -195,52 +189,43 @@ void CGumpMenubar::GUMP_BUTTON_EVENT_C
         case ID_GMB_MINIMIZE:
         {
             m_Opened = !m_Opened;
-
             Page = 1 + (int)m_Opened;
             WantUpdateContent = true;
-
             break;
         }
         case ID_GMB_MAP:
         {
             g_Game.OpenMinimap();
-
             break;
         }
         case ID_GMB_PAPERDOLL:
         {
             g_Game.PaperdollReq(g_PlayerSerial);
-
             break;
         }
         case ID_GMB_INVENTORY:
         {
             g_Game.OpenBackpack();
-
             break;
         }
         case ID_GMB_JOURNAL:
         {
             g_Game.OpenJournal();
-
             break;
         }
         case ID_GMB_CHAT:
         {
             g_Game.OpenChat();
-
             break;
         }
         case ID_GMB_HELP:
         {
             CPacketHelpRequest().Send();
-
             break;
         }
         case ID_GMB_WORLD_MAP:
         {
             g_Game.OpenWorldMap();
-
             break;
         }
         case ID_GMB_INFO:
@@ -263,7 +248,6 @@ void CGumpMenubar::GUMP_TEXT_ENTRY_EVENT_C
             entry->Focused = (entry->Serial == serial);
         }
     }
-
     OnButton(serial);
 }
 
@@ -271,7 +255,6 @@ void CGumpMenubar::OnLeftMouseButtonUp()
 {
     DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
-
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXTENTRY)
@@ -280,6 +263,5 @@ void CGumpMenubar::OnLeftMouseButtonUp()
             entry->Focused = false;
         }
     }
-
     WantRedraw = true;
 }

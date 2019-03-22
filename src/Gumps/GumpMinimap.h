@@ -14,12 +14,10 @@ public:
 private:
     const int ID_GMM_LOCK_MOVING = 1;
 
-    uint8_t m_Count{ 0 };
-
-    CGLTexture m_Texture{ CGLTexture() };
-
-    CGUIGumppic *m_Body{ nullptr };
-    CGUIDataBox *m_DataBox{ nullptr };
+    uint8_t m_Count = 0;
+    CSprite m_Sprite;
+    CGUIGumppic *m_Body = nullptr;
+    CGUIDataBox *m_DataBox = nullptr;
 
     void GenerateMap();
 

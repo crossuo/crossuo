@@ -35,30 +35,26 @@ CGUIComboBox::CGUIComboBox(
     m_MinimizedArrowX = Width - 16;
     m_WorkWidth = Width - 6;
     m_WorkHeight = m_ShowItemsCount * 15;
-
     if (CompositeBackground)
     {
-        CGLTexture *th = g_Game.ExecuteGump(OpenGraphic);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteGump(OpenGraphic);
+        if (spr != nullptr)
         {
-            m_ArrowX = th->Width - 24;
-            m_OffsetY = th->Height;
+            m_ArrowX = spr->Width - 24;
+            m_OffsetY = spr->Height;
         }
 
-        th = g_Game.ExecuteGump(OpenGraphic + 1);
-
-        if (th != nullptr)
+        spr = g_Game.ExecuteGump(OpenGraphic + 1);
+        if (spr != nullptr)
         {
-            m_StepY = th->Height;
-            m_WorkWidth = th->Width - 12;
+            m_StepY = spr->Height;
+            m_WorkWidth = spr->Width - 12;
         }
 
-        th = g_Game.ExecuteGump(Graphic);
-
-        if (th != nullptr && (Width == 0))
+        spr = g_Game.ExecuteGump(Graphic);
+        if (spr != nullptr && (Width == 0))
         {
-            m_MinimizedArrowX = th->Width - 16;
+            m_MinimizedArrowX = spr->Width - 16;
         }
     }
 }
@@ -79,13 +75,11 @@ void CGUIComboBox::RecalculateWidth()
     if (!CompositeBackground)
     {
         OpenedWidth = 0;
-
         QFOR(item, m_Items, CBaseGUI *)
         {
             if (item->Type == GOT_TEXT)
             {
                 CGUIText *text = (CGUIText *)item;
-
                 if (OpenedWidth < text->m_Texture.Width)
                 {
                     OpenedWidth = text->m_Texture.Width;
@@ -94,12 +88,10 @@ void CGUIComboBox::RecalculateWidth()
         }
 
         OpenedWidth += 8;
-
         if (OpenedWidth < Width)
         {
             OpenedWidth = Width;
         }
-
         m_WorkWidth = OpenedWidth - 6;
     }
 }

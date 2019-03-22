@@ -5,15 +5,15 @@
 
 #include "Constants.h"
 #include "Backend.h"
+#include "Sprite.h"
 
 struct CUopMappedFile;
 
-struct CTextureAnimationFrame : public CGLTexture
+struct CTextureAnimationFrame
 {
+    CSprite Sprite;
     int16_t CenterX = 0;
     int16_t CenterY = 0;
-    CTextureAnimationFrame() = default;
-    virtual ~CTextureAnimationFrame() = default;
 };
 
 struct CTextureAnimationDirection

@@ -448,22 +448,48 @@ bool CGame::Install()
     uint16_t r = 0xFC00; // 0xFF0000FF;
     uint16_t g = 0x83E0; // 0xFF00FF00;
 
-    uint16_t pdwlt[2][140] = {
-        { b, b, b, g, g, g, g, g, g, g, b, b, b, g, g, g, g, g, g, g, b, b, b, b, g, g, b, b,
-          b, b, b, b, b, b, g, g, b, b, b, b, b, b, b, b, g, g, b, b, b, b, g, g, g, g, g, g,
-          g, g, g, b, g, g, g, g, g, g, g, g, g, b, g, g, b, b, b, b, b, g, g, b, g, g, b, g,
-          g, b, b, g, g, b, g, g, b, b, g, b, b, g, g, b, g, g, b, b, g, b, b, g, g, b, g, g,
-          g, b, b, b, g, g, g, b, b, g, g, g, g, g, g, g, b, b, b, b, g, g, g, g, g, b, b, b },
-        { b, r, r, r, r, r, r, r, b, b, b, r, r, r, r, r, r, r, b, b, b, b, r, r, b, r, r, b,
-          b, b, b, b, r, r, b, r, r, b, b, b, b, b, r, r, b, r, r, b, b, b, r, r, r, r, r, r,
-          r, r, r, b, r, r, r, r, r, r, r, r, r, b, r, r, b, b, b, b, b, r, r, b, r, r, b, r,
-          r, b, b, r, r, b, r, r, b, b, r, b, b, r, r, b, r, r, b, b, r, b, b, r, r, b, r, r,
-          r, b, b, b, r, r, r, b, b, r, r, r, r, r, r, r, b, b, b, b, r, r, r, r, r, b, b, b }
+    // clang-format off
+    // lock pixmap open/closed
+    uint16_t pdwlt[2][140] =
+    {
+        {
+            b, b, b, g, g, g, g, g, g, g,
+            b, b, b, g, g, g, g, g, g, g,
+            b, b, b, b, g, g, b, b, b, b,
+            b, b, b, b, g, g, b, b, b, b,
+            b, b, b, b, g, g, b, b, b, b,
+            g, g, g, g, g, g, g, g, g, b,
+            g, g, g, g, g, g, g, g, g, b,
+            g, g, b, b, b, b, b, g, g, b,
+            g, g, b, g, g, b, b, g, g, b,
+            g, g, b, b, g, b, b, g, g, b,
+            g, g, b, b, g, b, b, g, g, b,
+            g, g, g, b, b, b, g, g, g, b,
+            b, g, g, g, g, g, g, g, b, b,
+            b, b, g, g, g, g, g, b, b, b
+        },
+        {
+            b, r, r, r, r, r, r, r, b, b,
+            b, r, r, r, r, r, r, r, b, b,
+            b, b, r, r, b, r, r, b, b, b,
+            b, b, r, r, b, r, r, b, b, b,
+            b, b, r, r, b, r, r, b, b, b,
+            r, r, r, r, r, r, r, r, r, b,
+            r, r, r, r, r, r, r, r, r, b,
+            r, r, b, b, b, b, b, r, r, b,
+            r, r, b, r, r, b, b, r, r, b,
+            r, r, b, b, r, b, b, r, r, b,
+            r, r, b, b, r, b, b, r, r, b,
+            r, r, r, b, b, b, r, r, r, b,
+            b, r, r, r, r, r, r, r, b, b,
+            b, b, r, r, r, r, r, b, b, b
+        }
     };
+    // clang-format on
 
     for (int i = 0; i < 2; i++)
     {
-        g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0], false);
+        g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
     }
 
     memset(&m_WinterTile[0], 0, sizeof(m_WinterTile));
@@ -542,10 +568,12 @@ void CGame::UnloadIndexFiles()
         for (auto it = list.begin(); it != list.end(); ++it)
         {
             CIndexObject *obj = *it;
-            if (obj->Texture != nullptr)
+            // FIXME: destroy sprite
+            if (obj->Sprite != nullptr)
             {
-                delete obj->Texture;
-                obj->Texture = nullptr;
+                obj->Sprite->Clear();
+                delete obj->Sprite;
+                obj->Sprite = nullptr;
             }
         }
         list.clear();
@@ -562,11 +590,11 @@ void CGame::UnloadIndexFiles()
     }
     m_UsedSoundList.clear();
 
-    ValidateTextureIsDeleted(g_Index.m_Land);
-    ValidateTextureIsDeleted(g_Index.m_Static);
-    ValidateTextureIsDeleted(g_Index.m_Gump);
-    ValidateTextureIsDeleted(g_Index.m_Texture);
-    ValidateTextureIsDeleted(g_Index.m_Light);
+    ValidateSpriteIsDeleted(g_Index.m_Land);
+    ValidateSpriteIsDeleted(g_Index.m_Static);
+    ValidateSpriteIsDeleted(g_Index.m_Gump);
+    ValidateSpriteIsDeleted(g_Index.m_Texture);
+    ValidateSpriteIsDeleted(g_Index.m_Light);
 }
 
 void CGame::Uninstall()
@@ -1667,10 +1695,12 @@ void CGame::ClearUnusedTextures()
             CIndexObject *obj = *it;
             if (obj->LastAccessTime < g_Ticks)
             {
-                if (obj->Texture != nullptr)
+                // FIXME: destroy sprite
+                if (obj->Sprite != nullptr)
                 {
-                    delete obj->Texture;
-                    obj->Texture = nullptr;
+                    obj->Sprite->Clear();
+                    delete obj->Sprite;
+                    obj->Sprite = nullptr;
                 }
 
                 it = list->erase(it);
@@ -3307,15 +3337,15 @@ void CGame::ClearRemovedStaticsTextures()
     for (auto it = m_UsedStaticList.begin(); it != m_UsedStaticList.end();)
     {
         CIndexObject *obj = *it;
-
         if (obj->LastAccessTime == 0u)
         {
-            if (obj->Texture != nullptr)
+            // FIXME: destroy sprite
+            if (obj->Sprite != nullptr)
             {
-                delete obj->Texture;
-                obj->Texture = nullptr;
+                obj->Sprite->Clear();
+                delete obj->Sprite;
+                obj->Sprite = nullptr;
             }
-
             it = m_UsedStaticList.erase(it);
         }
         else
@@ -4140,7 +4170,8 @@ void CGame::IndexReplaces()
                     g_Index.m_Land[checkIndex].Address != 0 && g_Index.m_Land[index].Address == 0)
                 {
                     g_Index.m_Land[index] = g_Index.m_Land[checkIndex];
-                    g_Index.m_Land[index].Texture = 0;
+                    assert(g_Index.m_Land[index].Sprite == nullptr);
+                    g_Index.m_Land[index].Sprite = nullptr;
                     g_Index.m_Land[index].Color = atoi(strings[2].c_str());
                     break;
                 }
@@ -4153,7 +4184,8 @@ void CGame::IndexReplaces()
                         g_Index.m_Static[checkIndex].Address != 0)
                     {
                         g_Index.m_Static[index] = g_Index.m_Static[checkIndex];
-                        g_Index.m_Static[index].Texture = 0;
+                        assert(g_Index.m_Static[index].Sprite == nullptr);
+                        g_Index.m_Static[index].Sprite = nullptr;
                         g_Index.m_Static[index].Color = atoi(strings[2].c_str());
                         break;
                     }
@@ -4189,7 +4221,8 @@ void CGame::IndexReplaces()
                     g_Index.m_Texture[checkIndex].Address != 0)
                 {
                     g_Index.m_Texture[index] = g_Index.m_Texture[checkIndex];
-                    g_Index.m_Texture[index].Texture = 0;
+                    assert(g_Index.m_Texture[index].Sprite == nullptr);
+                    g_Index.m_Texture[index].Sprite = nullptr;
                     g_Index.m_Texture[index].Color = atoi(strings[2].c_str());
                     break;
                 }
@@ -4221,7 +4254,8 @@ void CGame::IndexReplaces()
                     continue;
                 }
                 g_Index.m_Gump[index] = g_Index.m_Gump[checkIndex];
-                g_Index.m_Gump[index].Texture = 0;
+                assert(g_Index.m_Gump[index].Sprite == nullptr);
+                g_Index.m_Gump[index].Sprite = nullptr;
                 g_Index.m_Gump[index].Color = atoi(strings[2].c_str());
                 break;
             }
@@ -4339,10 +4373,8 @@ void CGame::IndexReplaces()
 void CGame::CreateAuraTexture()
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pixels;
-    short width = 0;
-    short height = 0;
-    CGLTextureCircleOfTransparency::CreatePixels(30, width, height, pixels);
+    int16_t width = 0, height = 0;
+    auto pixels = CreateCircleSprite(30, width, height);
     for (int i = 0; i < (int)pixels.size(); i++)
     {
         uint32_t &pixel = pixels[i];
@@ -4356,22 +4388,21 @@ void CGame::CreateAuraTexture()
             pixel = (value << 24) | (value << 16) | (value << 8) | value;
         }
     }
-    g_GL_BindTexture32(g_AuraTexture, width, height, &pixels[0], false);
+    // FIXME: gfx
+    g_GL_BindTexture32(g_AuraTexture, width, height, pixels.data());
 }
 
 void CGame::CreateObjectHandlesBackground()
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th[9] = { nullptr };
+    CSprite *th[9] = { nullptr };
     uint16_t gumpID[9] = { 0 };
-
     for (int i = 0; i < 9; i++)
     {
-        CGLTexture *pth = ExecuteGump(0x24EA + (uint16_t)i);
-
+        auto pth = ExecuteGump(0x24EA + (uint16_t)i);
         if (pth == nullptr)
         {
-            Info(Client, "Error!!! Failed to create Object Handles background data!");
+            Error(Client, "failed to create Object Handles background data");
             return;
         }
 
@@ -4484,7 +4515,7 @@ void CGame::CreateObjectHandlesBackground()
         }
 
         vector<uint16_t> pixels = g_UOFileReader.GetGumpPixels(io);
-        if (static_cast<unsigned int>(!pixels.empty()) != 0u)
+        if (!pixels.empty())
         {
             int gumpWidth = io.Width;
             int gumpHeight = io.Height;
@@ -4689,32 +4720,32 @@ void CGame::ResumeSound() const
     g_SoundManager.ResumeSound();
 }
 
-CGLTexture *CGame::ExecuteGump(uint16_t id)
+CSprite *CGame::ExecuteGump(uint16_t id)
 {
-    //DEBUG_TRACE_FUNCTION;
+    DEBUG_TRACE_FUNCTION;
     if (id >= MAX_GUMP_DATA_INDEX_COUNT)
     {
         return nullptr;
     }
     CIndexObject &io = g_Index.m_Gump[id];
-    if (io.Texture == 0)
+    if (io.Sprite == nullptr)
     {
         if (io.Address == 0u)
         {
             return nullptr;
         }
 
-        io.Texture = g_UOFileReader.ReadGump(io);
-        if (io.Texture != 0)
+        io.Sprite = g_UOFileReader.ReadGump(io);
+        if (io.Sprite != nullptr)
         {
             m_UsedGumpList.push_back(&g_Index.m_Gump[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Texture;
+    return io.Sprite;
 }
 
-CGLTexture *CGame::ExecuteLandArt(uint16_t id)
+CSprite *CGame::ExecuteLandArt(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     if (id >= MAX_LAND_DATA_INDEX_COUNT)
@@ -4722,30 +4753,30 @@ CGLTexture *CGame::ExecuteLandArt(uint16_t id)
         return nullptr;
     }
     CIndexObject &io = g_Index.m_Land[id];
-    if (io.Texture == 0)
+    if (io.Sprite == nullptr)
     {
         if (io.Address == 0u)
         { //nodraw tiles banned
             return nullptr;
         }
 
-        io.Texture = g_UOFileReader.ReadArt(id, io, false);
-        if (io.Texture != 0)
+        io.Sprite = g_UOFileReader.ReadArt(id, io, false);
+        if (io.Sprite != nullptr)
         {
             m_UsedLandList.push_back(&g_Index.m_Land[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Texture;
+    return io.Sprite;
 }
 
-CGLTexture *CGame::ExecuteStaticArtAnimated(uint16_t id)
+CSprite *CGame::ExecuteStaticArtAnimated(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     return ExecuteStaticArt(id + g_Index.m_Static[id].Offset);
 }
 
-CGLTexture *CGame::ExecuteStaticArt(uint16_t id)
+CSprite *CGame::ExecuteStaticArt(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     if (id >= MAX_STATIC_DATA_INDEX_COUNT)
@@ -4754,26 +4785,26 @@ CGLTexture *CGame::ExecuteStaticArt(uint16_t id)
     }
 
     CIndexObject &io = g_Index.m_Static[id];
-    if (io.Texture == 0)
+    if (io.Sprite == nullptr)
     {
         if (io.Address == 0u)
         { //nodraw tiles banned
             return nullptr;
         }
 
-        io.Texture = g_UOFileReader.ReadArt(id, io, true);
-        if (io.Texture != 0)
+        io.Sprite = g_UOFileReader.ReadArt(id, io, true);
+        if (io.Sprite != nullptr)
         {
-            io.Width = ((io.Texture->Width / 2) + 1);
-            io.Height = io.Texture->Height - 20;
+            io.Width = ((io.Sprite->Width / 2) + 1);
+            io.Height = io.Sprite->Height - 20;
             m_UsedStaticList.push_back(&g_Index.m_Static[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Texture;
+    return io.Sprite;
 }
 
-CGLTexture *CGame::ExecuteTexture(uint16_t id)
+CSprite *CGame::ExecuteTexture(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
     id = g_Data.m_Land[id].TexID;
@@ -4783,24 +4814,24 @@ CGLTexture *CGame::ExecuteTexture(uint16_t id)
     }
 
     CIndexObject &io = g_Index.m_Texture[id];
-    if (io.Texture == 0)
+    if (io.Sprite == nullptr)
     {
         if (io.Address == 0u)
         {
             return nullptr;
         }
 
-        io.Texture = g_UOFileReader.ReadTexture(io);
-        if (io.Texture != 0)
+        io.Sprite = g_UOFileReader.ReadTexture(io);
+        if (io.Sprite != nullptr)
         {
             m_UsedTextureList.push_back(&g_Index.m_Texture[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Texture;
+    return io.Sprite;
 }
 
-CGLTexture *CGame::ExecuteLight(uint8_t &id)
+CSprite *CGame::ExecuteLight(uint8_t &id)
 {
     DEBUG_TRACE_FUNCTION;
     if (id >= MAX_LIGHTS_DATA_INDEX_COUNT)
@@ -4809,21 +4840,21 @@ CGLTexture *CGame::ExecuteLight(uint8_t &id)
     }
 
     CIndexObject &io = g_Index.m_Light[id];
-    if (io.Texture == 0)
+    if (io.Sprite == nullptr)
     {
         if (io.Address == 0u)
         {
             return nullptr;
         }
 
-        io.Texture = g_UOFileReader.ReadLight(io);
-        if (io.Texture != 0)
+        io.Sprite = g_UOFileReader.ReadLight(io);
+        if (io.Sprite != nullptr)
         {
             m_UsedLightList.push_back(&g_Index.m_Light[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Texture;
+    return io.Sprite;
 }
 
 bool CGame::ExecuteGumpPart(uint16_t id, int count)
@@ -4840,12 +4871,12 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
     return result;
 }
 
+// FIXME: gfx
 void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteGump(id);
-
-    if (th != nullptr)
+    auto spr = ExecuteGump(id);
+    if (spr != nullptr)
     {
         if (!g_GrayedPixels && (color != 0u))
         {
@@ -4865,17 +4896,17 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
 
-        th->Draw(x, y);
+        spr->Texture->Draw(x, y);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawGump(
     uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteGump(id);
-
-    if (th != nullptr)
+    auto spr = ExecuteGump(id);
+    if (spr != nullptr)
     {
         if (!g_GrayedPixels && (color != 0u))
         {
@@ -4894,25 +4925,25 @@ void CGame::DrawGump(
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
-        th->Draw(x, y, width, height);
+        spr->Texture->Draw(x, y, width, height);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[9] = { nullptr };
-
     for (int i = 0; i < 9; i++)
     {
-        CGLTexture *pth = ExecuteGump(id + (uint16_t)i);
-
-        if (pth == nullptr)
+        auto spr = ExecuteGump(id + (uint16_t)i);
+        if (spr == nullptr)
         {
             return;
         }
 
+        assert(spr->Texture != nullptr);
+        auto pth = spr->Texture;
         if (i == 4)
         {
             th[8] = pth;
@@ -4926,18 +4957,16 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height)
             th[i] = pth;
         }
     }
-
     g_GL_DrawResizepic(th, x, y, width, height);
 }
 
+// FIXME: gfx
 void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     uint16_t id = land->Graphic;
-
-    CGLTexture *th = ExecuteTexture(id);
-
-    if (th == nullptr)
+    auto spr = ExecuteTexture(id);
+    if (spr == nullptr)
     {
         DrawLandArt(id, color, x, y);
     }
@@ -4947,7 +4976,6 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         {
             color = g_OutOfRangeColor;
         }
-
         if (!g_GrayedPixels && (color != 0u))
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_LAND_COLORED);
@@ -4957,17 +4985,17 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_LAND);
         }
-
-        g_GL_DrawLandTexture(*th, x, y + (land->GetZ() * 4), land);
+        assert(spr->Texture != nullptr);
+        g_GL_DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteLandArt(id);
-
-    if (th != nullptr)
+    auto spr = ExecuteLandArt(id);
+    if (spr != nullptr)
     {
         if (g_OutOfRangeColor != 0u)
         {
@@ -4983,17 +5011,17 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
-        th->Draw(x - 22, y - 22);
+        assert(spr->Texture != nullptr);
+        spr->Texture->Draw(x - 22, y - 22);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteStaticArt(id);
-
-    if (th != nullptr && id > 1)
+    auto spr = ExecuteStaticArt(id);
+    if (spr != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
         {
@@ -5010,35 +5038,35 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
             {
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
             }
-
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-
-        th->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
+        assert(spr->Texture != nullptr);
+        spr->Texture->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
     DrawStaticArt(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteStaticArt(id);
-    if (th != nullptr && id > 1)
+    auto spr = ExecuteStaticArt(id);
+    if (spr != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
         {
             color = g_OutOfRangeColor;
         }
-
         if (!g_GrayedPixels && (color != 0u))
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
@@ -5048,27 +5076,29 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-        th->DrawRotated(x, y, angle);
+        assert(spr->Texture != nullptr);
+        spr->Texture->DrawRotated(x, y, angle);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
     DrawStaticArtRotated(id + g_Index.m_Static[id].Offset, color, x, y, angle);
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteStaticArt(id);
-    if (th != nullptr && id > 1)
+    auto spr = ExecuteStaticArt(id);
+    if (spr != nullptr && id > 1)
     {
         if (g_OutOfRangeColor != 0u)
         {
             color = g_OutOfRangeColor;
         }
-
         if (!g_GrayedPixels && (color != 0u))
         {
             if (!selection && IsPartialHue(GetStaticFlags(id)))
@@ -5085,10 +5115,13 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-        th->DrawTransparent(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
+        assert(spr->Texture != nullptr);
+        spr->Texture->DrawTransparent(
+            x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArtAnimatedTransparent(
     uint16_t id, uint16_t color, int x, int y, bool selection)
 {
@@ -5096,17 +5129,18 @@ void CGame::DrawStaticArtAnimatedTransparent(
     DrawStaticArtTransparent(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
+// FIXME: gfx
 void CGame::DrawStaticArtInContainer(
     uint16_t id, uint16_t color, int x, int y, bool selection, bool onMouse)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteStaticArt(id);
-    if (th != nullptr)
+    auto spr = ExecuteStaticArt(id);
+    if (spr != nullptr)
     {
         if (onMouse)
         {
-            x -= th->Width / 2;
-            y -= th->Height / 2;
+            x -= spr->Width / 2;
+            y -= spr->Height / 2;
         }
 
         if (!g_GrayedPixels && (color != 0u))
@@ -5130,15 +5164,17 @@ void CGame::DrawStaticArtInContainer(
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-        th->Draw(x, y);
+        assert(spr->Texture != nullptr);
+        spr->Texture->Draw(x, y);
     }
 }
 
+// FIXME: gfx
 void CGame::DrawLight(LIGHT_DATA &light)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteLight(light.ID);
-    if (th != nullptr)
+    auto spr = ExecuteLight(light.ID);
+    if (spr != nullptr)
     {
         if (light.Color != 0u)
         {
@@ -5149,28 +5185,29 @@ void CGame::DrawLight(LIGHT_DATA &light)
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
         }
-        th->Draw(
-            light.DrawX - g_RenderBounds.GameWindowPosX - (th->Width / 2),
-            light.DrawY - g_RenderBounds.GameWindowPosY - (th->Height / 2));
+        assert(spr->Texture != nullptr);
+        spr->Texture->Draw(
+            light.DrawX - g_RenderBounds.GameWindowPosX - (spr->Width / 2),
+            light.DrawY - g_RenderBounds.GameWindowPosY - (spr->Height / 2));
     }
 }
 
+// FIXME: bounding box, typo
 bool CGame::PolygonePixelsInXY(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
     x = g_MouseManager.Position.X - x;
     y = g_MouseManager.Position.Y - y;
-
     return !(x < 0 || y < 0 || x >= width || y >= height);
 }
 
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = g_Index.m_Gump[id].Texture;
-    if (texture != nullptr)
+    auto spr = g_Index.m_Gump[id].Sprite;
+    if (spr != nullptr)
     {
-        return texture->Select(x, y);
+        return spr->Select(x, y);
     }
     return false;
 }
@@ -5178,8 +5215,8 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = g_Index.m_Gump[id].Texture;
-    if (texture == nullptr)
+    auto spr = g_Index.m_Gump[id].Sprite;
+    if (spr == nullptr)
     {
         return false;
     }
@@ -5191,58 +5228,53 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
         return false;
     }
 
-    const int textureWidth = texture->Width;
-    const int textureHeight = texture->Height;
+    const int spriteWidth = spr->Width;
+    const int spriteHeight = spr->Height;
     if (width == 0)
     {
-        width = textureWidth;
+        width = spriteWidth;
     }
-
     if (height == 0)
     {
-        height = textureHeight;
+        height = spriteHeight;
     }
 
-    while (x > textureWidth && width > textureWidth)
+    while (x > spriteWidth && width > spriteWidth)
     {
-        x -= textureWidth;
-        width -= textureWidth;
+        x -= spriteWidth;
+        width -= spriteWidth;
     }
-
     if (x < 0 || x > width)
     {
         return false;
     }
 
-    while (y > textureHeight && height > textureHeight)
+    while (y > spriteHeight && height > spriteHeight)
     {
-        y -= textureHeight;
-        height -= textureHeight;
+        y -= spriteHeight;
+        height -= spriteHeight;
     }
-
     if (y < 0 || y > height)
     {
         return false;
     }
-
-    return texture->TestHit(x, y, true);
+    return spr->TestHit(x, y, true);
 }
 
 bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    int tempX = g_MouseManager.Position.X - x;
-    int tempY = g_MouseManager.Position.Y - y;
-
+    const int tempX = g_MouseManager.Position.X - x;
+    const int tempY = g_MouseManager.Position.Y - y;
     if (tempX < 0 || tempY < 0 || tempX >= width || tempY >= height)
     {
         return false;
     }
 
-    CGLTexture *th[9] = { nullptr };
+    CSprite *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
-        CGLTexture *pth = g_Index.m_Gump[id + i].Texture;
+        auto pth = g_Index.m_Gump[id + i].Sprite;
         if (pth == nullptr)
         {
             return false;
@@ -5391,10 +5423,10 @@ bool CGame::StaticPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     CIndexObject &io = g_Index.m_Static[id];
-    CGLTexture *texture = io.Texture;
-    if (texture != nullptr)
+    auto spr = io.Sprite;
+    if (spr != nullptr)
     {
-        return texture->Select(x - io.Width, y - io.Height);
+        return spr->Select(x - io.Width, y - io.Height);
     }
     return false;
 }
@@ -5408,10 +5440,10 @@ bool CGame::StaticPixelsInXYAnimated(uint16_t id, int x, int y)
 bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = g_Index.m_Static[id].Texture;
-    if (texture != nullptr)
+    auto spr = g_Index.m_Static[id].Sprite;
+    if (spr != nullptr)
     {
-        return texture->Select(x, y);
+        return spr->Select(x, y);
     }
     return false;
 }
@@ -5419,10 +5451,10 @@ bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 bool CGame::LandPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *texture = g_Index.m_Land[id].Texture;
-    if (texture != nullptr)
+    auto spr = g_Index.m_Land[id].Sprite;
+    if (spr != nullptr)
     {
-        return texture->Select(x - 22, y - 22);
+        return spr->Select(x - 22, y - 22);
     }
     return false;
 }
@@ -6246,10 +6278,10 @@ uint64_t CGame::GetStaticFlags(uint16_t id)
 CSize CGame::GetStaticArtDimension(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteStaticArt(id);
-    if (th != nullptr)
+    auto spr = ExecuteStaticArt(id);
+    if (spr != nullptr)
     {
-        return CSize(th->Width, th->Height);
+        return CSize(spr->Width, spr->Height);
     }
     return CSize();
 }
@@ -6257,10 +6289,10 @@ CSize CGame::GetStaticArtDimension(uint16_t id)
 CSize CGame::GetGumpDimension(uint16_t id)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = ExecuteGump(id);
-    if (th != nullptr)
+    auto spr = ExecuteGump(id);
+    if (spr != nullptr)
     {
-        return CSize(th->Width, th->Height);
+        return CSize(spr->Width, spr->Height);
     }
     return CSize();
 }

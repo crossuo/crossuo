@@ -881,27 +881,21 @@ void CGameScreen::AddTileToRenderList(
 
             if (foliageCanBeChecked)
             {
-                CGLTexture *texturePtr = g_Game.ExecuteStaticArt(obj->Graphic);
-
-                if (texturePtr != nullptr)
+                auto spr = g_Game.ExecuteStaticArt(obj->Graphic);
+                if (spr != nullptr)
                 {
-                    CGLTexture &texture = *texturePtr;
-
                     CImageBounds fib(
-                        drawX - texture.Width / 2 + texture.ImageOffsetX,
-                        drawY - texture.Height + texture.ImageOffsetY,
-                        texture.ImageWidth,
-                        texture.ImageHeight);
-
+                        drawX - spr->Width / 2 + spr->ImageOffsetX,
+                        drawY - spr->Height + spr->ImageOffsetY,
+                        spr->ImageWidth,
+                        spr->ImageHeight);
                     if (fib.InRect(g_PlayerRect))
                     {
                         index = g_FoliageIndex;
-
                         CheckFoliageUnion(obj->Graphic, obj->GetX(), obj->GetY(), z);
                     }
                 }
             }
-
             obj->StaticGroupObjectPtr()->FoliageTransparentIndex = index;
         }
 
@@ -1467,7 +1461,8 @@ void CGameScreen::DrawGameWindow(bool render)
     {
         const bool useCircleTrans =
             (g_ConfigManager.UseCircleTrans &&
-             g_CircleOfTransparency.Select(g_CircleOfTransparency.X, g_CircleOfTransparency.Y));
+             g_CircleOfTransparency.m_Sprite.Select(
+                 g_CircleOfTransparency.X, g_CircleOfTransparency.Y));
 
         for (int i = 0; i < m_RenderListCount; i++)
         {

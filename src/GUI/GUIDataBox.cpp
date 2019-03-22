@@ -8,15 +8,10 @@ CGUIDataBox::CGUIDataBox()
 {
 }
 
-CGUIDataBox::~CGUIDataBox()
-{
-}
-
 void CGUIDataBox::PrepareTextures()
 {
     DEBUG_TRACE_FUNCTION;
-    QFOR(item, m_Items, CBaseGUI *)
-    item->PrepareTextures();
+    QFOR(item, m_Items, CBaseGUI *) { item->PrepareTextures(); }
 }
 
 bool CGUIDataBox::EntryPointerHere()
@@ -29,6 +24,5 @@ bool CGUIDataBox::EntryPointerHere()
             return true;
         }
     }
-
     return false;
 }

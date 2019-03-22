@@ -209,25 +209,20 @@ bool CMouseManager::LoadCursorTextures()
 {
     DEBUG_TRACE_FUNCTION;
     bool result = true;
-
     for (int i = 0; i < 2; i++)
     {
         for (int j = 0; j < 16; j++)
         {
             uint16_t id = g_CursorData[i][j];
-
-            CGLTexture *pth = g_Game.ExecuteStaticArt(id);
-
+            auto spr = g_Game.ExecuteStaticArt(id);
             if (i == 0)
             {
-                if (pth != nullptr)
+                if (spr != nullptr)
                 {
                     float OffsX = 0.0f;
                     float OffsY = 0.0f;
-
-                    float DW = (float)pth->Width;
-                    float DH = (float)pth->Height;
-
+                    float DW = (float)spr->Width;
+                    float DH = (float)spr->Height;
                     if (id == 0x206A)
                     {
                         OffsX = -4.0f;
@@ -323,7 +318,6 @@ bool CMouseManager::LoadCursorTextures()
                         default:
                             break;
                     }
-
                     m_CursorOffset[0][j] = (int)OffsX; //X
                     m_CursorOffset[1][j] = (int)OffsY; //Y
                 }
@@ -335,7 +329,6 @@ bool CMouseManager::LoadCursorTextures()
             }
         }
     }
-
     return result;
 }
 
@@ -407,8 +400,7 @@ void CMouseManager::Draw(uint16_t id)
             {
                 ohGraphic -= GAME_FIGURE_GUMP_OFFSET;
 
-                CGLTexture *to = g_Game.ExecuteGump(ohGraphic);
-
+                auto to = g_Game.ExecuteGump(ohGraphic);
                 if (to != nullptr)
                 {
                     g_Game.DrawGump(
@@ -447,12 +439,10 @@ void CMouseManager::Draw(uint16_t id)
         }
     }
 
-    CGLTexture *th = g_Game.ExecuteStaticArt(id);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteStaticArt(id);
+    if (spr != nullptr && spr->Texture)
     {
         uint16_t color = 0;
-
         if (id < 0x206A)
         {
             id -= 0x2053;
@@ -469,22 +459,16 @@ void CMouseManager::Draw(uint16_t id)
 
         if (id < 16)
         {
-            g_ToolTip.Draw(th->Width, th->Height);
-
+            g_ToolTip.Draw(spr->Width, spr->Height);
             int x = Position.X + m_CursorOffset[0][id];
             int y = Position.Y + m_CursorOffset[1][id];
-
             if (color != 0u)
             {
                 g_ColorizerShader.Use();
-
                 g_ColorManager.SendColorsToShader(color);
-
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
             }
-
-            th->Draw(x, y);
-
+            spr->Texture->Draw(x, y);
             if (color != 0u)
             {
                 UnuseShader();
@@ -493,7 +477,6 @@ void CMouseManager::Draw(uint16_t id)
             if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType)
             {
                 uint32_t auraColor = 0;
-
                 if (g_Target.CursorType == 0)
                 {
                     auraColor = g_ColorManager.GetPolygoneColor(16, 0x03B2);
@@ -511,9 +494,7 @@ void CMouseManager::Draw(uint16_t id)
                 {
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
                     glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
-
                     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 
                     CGLTexture tex;

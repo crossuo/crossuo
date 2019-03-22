@@ -422,23 +422,18 @@ void CGumpPaperdoll::UpdateContent()
     //Clear();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
-
     if (obj == nullptr)
     {
         return;
     }
 
     m_DataBox->Clear();
-
     m_Description = (CGUIText *)m_DataBox->Add(new CGUIText(0x0386, 39, 262));
     m_Description->CreateTextureA(1, obj->Title, 185);
-
     m_DataBox->Add(new CGUIShader(&g_ColorizerShader, true));
-
     CGUIGumppic *bodyGumppic = nullptr;
 
     uint16_t color = obj->Color & 0x3FFF;
-
     if (obj->Graphic == 0x0191 || obj->Graphic == 0x0193)
     {
         bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x000D, 8, 19)); //Female gump
@@ -492,24 +487,17 @@ void CGumpPaperdoll::UpdateContent()
 
     //Draw equipment & backpack
     CGameItem *equipment = nullptr;
-
     EQUIP_CONV_BODY_MAP &equipConv = g_AnimationManager.GetEquipConv();
-
     EQUIP_CONV_BODY_MAP::iterator bodyIter = equipConv.find(obj->Graphic);
-
     g_ColorizerShader.Use();
-
     //if (obj->IsHuman())
     {
         bool useSlots = g_ConfigManager.GetPaperdollSlots();
-
         static const int maxPaperdollSlots = 6;
         CGameItem *slotObjects[maxPaperdollSlots] = { 0 };
-
         for (int i = 0; i < m_LayerCount; i++)
         {
             equipment = obj->FindLayer(UsedLayers[i]);
-
             if (equipment != nullptr)
             {
                 if (useSlots)
@@ -552,11 +540,9 @@ void CGumpPaperdoll::UpdateContent()
                 }
 
                 uint16_t id = equipment->AnimID;
-
                 if (bodyIter != equipConv.end())
                 {
                     EQUIP_CONV_DATA_MAP::iterator dataIter = bodyIter->second.find(id);
-
                     if (dataIter != bodyIter->second.end())
                     {
                         id = dataIter->second.Gump;
@@ -566,7 +552,6 @@ void CGumpPaperdoll::UpdateContent()
                 if (id != 0u)
                 {
                     int cOfs = gumpOffset;
-
                     if (obj->Gender == GENDER_FEMALE && g_Game.ExecuteGump(id + cOfs) == nullptr)
                     {
                         cOfs = MALE_GUMP_OFFSET;
@@ -584,15 +569,12 @@ void CGumpPaperdoll::UpdateContent()
                 (g_ObjectInHand.TiledataPtr->AnimID != 0u))
             {
                 equipment = obj->FindLayer(g_ObjectInHand.TiledataPtr->Layer);
-
                 if (equipment == nullptr)
                 {
                     uint16_t id = g_ObjectInHand.TiledataPtr->AnimID;
-
                     if (bodyIter != equipConv.end())
                     {
                         EQUIP_CONV_DATA_MAP::iterator dataIter = bodyIter->second.find(id);
-
                         if (dataIter != bodyIter->second.end())
                         {
                             id = dataIter->second.Gump;
@@ -600,18 +582,15 @@ void CGumpPaperdoll::UpdateContent()
                     }
 
                     int cOfs = gumpOffset;
-
                     if (obj->Gender == GENDER_FEMALE && (g_Game.ExecuteGump(id + cOfs) == nullptr))
                     {
                         cOfs = MALE_GUMP_OFFSET;
                     }
 
                     m_DataBox->Add(new CGUIAlphaBlending(true, 0.7f));
-
                     bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(id + cOfs, 8, 19));
                     bodyGumppic->Color = g_ObjectInHand.Color & 0x3FFF;
                     bodyGumppic->PartialHue = ((g_ObjectInHand.Color & 0x8000) != 0);
-
                     m_DataBox->Add(new CGUIAlphaBlending(false, 0.0f));
                 }
             }
@@ -620,9 +599,7 @@ void CGumpPaperdoll::UpdateContent()
         if (useSlots)
         {
             int yPtr = 75;
-
             bool scaleImages = g_ConfigManager.GetScaleImagesInPaperdollSlots();
-
             for (int i = 0; i < maxPaperdollSlots; i++)
             {
                 CGUIGumppicTiled *backgroundSlot = (CGUIGumppicTiled *)m_DataBox->Add(
@@ -631,31 +608,26 @@ void CGumpPaperdoll::UpdateContent()
                     (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x2344, 1, yPtr));
 
                 CGameItem *equipment = slotObjects[i];
-
                 if (equipment != nullptr)
                 {
                     uint32_t slotSerial = ID_GP_ITEMS + equipment->Layer;
-
                     CIndexObjectStatic &sio = g_Index.m_Static[equipment->Graphic];
-                    CGLTexture *texture = sio.Texture;
-
-                    if (texture == nullptr)
+                    auto spr = sio.Sprite;
+                    if (spr == nullptr)
                     {
-                        texture = g_Game.ExecuteStaticArt(equipment->Graphic);
+                        spr = g_Game.ExecuteStaticArt(equipment->Graphic);
                     }
 
-                    if (texture == nullptr)
+                    if (spr == nullptr)
                     {
                         yPtr += 21;
                         continue;
                     }
 
-                    int tileOffsetX = (13 - texture->ImageWidth) / 2;
-                    int tileOffsetY = (14 - texture->ImageHeight) / 2;
-
+                    int tileOffsetX = (13 - spr->ImageWidth) / 2;
+                    int tileOffsetY = (14 - spr->ImageHeight) / 2;
                     int tileX = 4;
                     int tileY = 3 + yPtr;
-
                     if (scaleImages && (tileOffsetX < 0 || tileOffsetY < 0))
                     {
                         short imageWidth = 0;
@@ -663,9 +635,8 @@ void CGumpPaperdoll::UpdateContent()
                         vector<uint16_t> pixels = g_UOFileReader.GetArtPixels(
                             equipment->Graphic, sio, true, imageWidth, imageHeight);
 
-                        int wantImageWidth = texture->ImageWidth;
-                        int wantImageHeight = texture->ImageHeight;
-
+                        int wantImageWidth = spr->ImageWidth;
+                        int wantImageHeight = spr->ImageHeight;
                         if (pixels.empty() || (wantImageWidth == 0) || (wantImageHeight == 0))
                         {
                             yPtr += 21;
@@ -673,25 +644,20 @@ void CGumpPaperdoll::UpdateContent()
                         }
 
                         vector<uint16_t> wantPixels(wantImageWidth * wantImageHeight, 0);
-
-                        int imageOffsetX = texture->ImageOffsetX;
-                        int imageOffsetY = texture->ImageOffsetY;
-
+                        int imageOffsetX = spr->ImageOffsetX;
+                        int imageOffsetY = spr->ImageOffsetY;
                         for (int y = 0; y < wantImageHeight; y++)
                         {
                             int srcPos = (y + imageOffsetY) * imageWidth + imageOffsetX;
                             int destPos = y * wantImageWidth;
-
                             for (int x = 0; x < wantImageWidth; x++)
                             {
                                 wantPixels[destPos + x] = pixels[srcPos + x];
                             }
                         }
 
-                        texture = new CGLTexture();
-                        g_GL_BindTexture16(
-                            *texture, wantImageWidth, wantImageHeight, &wantPixels[0], false);
-
+                        auto spr = new CSprite();
+                        spr->LoadSprite16(wantImageWidth, wantImageHeight, wantPixels.data());
                         if (wantImageWidth < 14)
                         {
                             tileX += 7 - (wantImageWidth / 2);
@@ -699,7 +665,6 @@ void CGumpPaperdoll::UpdateContent()
                         else
                         {
                             tileX -= 2;
-
                             if (wantImageWidth > 18)
                             {
                                 wantImageWidth = 18;
@@ -713,45 +678,40 @@ void CGumpPaperdoll::UpdateContent()
                         else
                         {
                             tileY -= 2;
-
                             if (wantImageHeight > 18)
                             {
                                 wantImageHeight = 18;
                             }
                         }
 
-                        CGUIExternalTexture *ext =
-                            (CGUIExternalTexture *)m_DataBox->Add(new CGUIExternalTexture(
-                                texture, true, tileX, tileY, wantImageWidth, wantImageHeight));
+                        auto ext = new CGUIExternalTexture(
+                            spr, true, tileX, tileY, wantImageWidth, wantImageHeight);
+                        m_DataBox->Add(obj);
                         ext->DrawOnly = true;
                         ext->Color = equipment->Color & 0x3FFF;
                     }
                     else
                     {
-                        tileX -= texture->ImageOffsetX - tileOffsetX;
-                        tileY -= texture->ImageOffsetY - tileOffsetY;
+                        tileX -= spr->ImageOffsetX - tileOffsetX;
+                        tileY -= spr->ImageOffsetY - tileOffsetY;
                         CGUITilepic *pic = new CGUITilepic(
                             equipment->Graphic, equipment->Color & 0x3FFF, tileX, tileY);
                         pic->PartialHue = equipment->IsPartialHue();
                         m_DataBox->Add(pic);
                         pic->Serial = slotSerial;
                     }
-
                     backgroundSlot->Serial = slotSerial;
                     scopeSlot->Serial = slotSerial;
                 }
-
                 yPtr += 21;
             }
         }
     }
 
     equipment = obj->FindLayer(OL_BACKPACK);
-
     if (equipment != nullptr && equipment->AnimID != 0)
     {
         uint16_t backpackGraphic = equipment->AnimID + 50000;
-
         if (obj->IsPlayer())
         {
             switch (g_ConfigManager.GetCharacterBackpackStyle())
@@ -776,7 +736,6 @@ void CGumpPaperdoll::UpdateContent()
         }
 
         int bpX = 8;
-
         if (g_PaperdollBooks)
         {
             bpX = 2;
@@ -788,7 +747,6 @@ void CGumpPaperdoll::UpdateContent()
         bodyGumppic->Serial = ID_GP_ITEMS + OL_BACKPACK;
         bodyGumppic->MoveOnDrag = true;
     }
-
     m_DataBox->Add(new CGUIShader(&g_ColorizerShader, false));
 }
 
@@ -798,7 +756,6 @@ void CGumpPaperdoll::UpdateDescription(const string &text)
     if (m_Description != nullptr)
     {
         m_Description->CreateTextureA(1, text, 185);
-
         WantRedraw = true;
     }
 }
@@ -807,7 +764,6 @@ void CGumpPaperdoll::Draw()
 {
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
-
     if (obj == nullptr)
     {
         return;
@@ -815,19 +771,13 @@ void CGumpPaperdoll::Draw()
 
     //if (g_LastObjectType == SOT_TEXT_OBJECT)
     //	g_GumpPressedElement = false;
-
     CGump::Draw();
-
     if (!Minimized)
     {
         glTranslatef(g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f);
-
         g_FontColorizerShader.Use();
-
         m_TextRenderer.Draw();
-
         UnuseShader();
-
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
     }
 }
@@ -836,25 +786,20 @@ CRenderObject *CGumpPaperdoll::Select()
 {
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
-
     if (obj == nullptr)
     {
         return nullptr;
     }
 
     CRenderObject *selected = CGump::Select();
-
     if (!Minimized)
     {
         CPoint2Di oldPos = g_MouseManager.Position;
         g_MouseManager.Position =
             CPoint2Di(oldPos.X - (int)g_GumpTranslate.X, oldPos.Y - (int)g_GumpTranslate.Y);
-
         m_TextRenderer.Select(this);
-
         g_MouseManager.Position = oldPos;
     }
-
     return selected;
 }
 

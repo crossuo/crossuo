@@ -28,13 +28,13 @@ void CGUIResizepic::Draw(bool checktrans)
 
     for (int i = 0; i < 9; i++)
     {
-        CGLTexture *pth = g_Game.ExecuteGump(Graphic + (int)i);
-
-        if (pth == nullptr)
+        auto spr = g_Game.ExecuteGump(Graphic + (int)i);
+        if (spr == nullptr && spr->Texture != nullptr)
         {
             return;
         }
 
+        auto pth = spr->Texture;
         if (i == 4)
         {
             th[8] = pth;
@@ -50,7 +50,6 @@ void CGUIResizepic::Draw(bool checktrans)
     }
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-
     if (checktrans)
     {
         glEnable(GL_BLEND);

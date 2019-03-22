@@ -365,31 +365,25 @@ void CGumpContainer::OnLeftMouseButtonUp()
 
     uint32_t dropContainer = Serial;
     uint32_t selectedSerial = g_SelectedObject.Serial;
-
     if (g_Target.IsTargeting() && !g_ObjectInHand.Enabled && (selectedSerial != 0u) &&
         selectedSerial != ID_GC_MINIMIZE && selectedSerial != ID_GC_LOCK_MOVING)
     {
         g_Target.SendTargetObject(selectedSerial);
         g_MouseManager.CancelDoubleClick = true;
-
         return;
     }
 
     bool canDrop =
         (GetTopObjDistance(g_Player, g_World->FindWorldObject(dropContainer)) <=
          DRAG_ITEMS_DISTANCE);
-
     if (canDrop && (selectedSerial != 0u) && selectedSerial != ID_GC_MINIMIZE &&
         selectedSerial != ID_GC_LOCK_MOVING)
     {
         canDrop = false;
-
         if (g_ObjectInHand.Enabled)
         {
             canDrop = true;
-
             CGameItem *target = g_World->FindWorldItem(selectedSerial);
-
             if (target != nullptr)
             {
                 if (target->IsContainer())
@@ -429,35 +423,31 @@ void CGumpContainer::OnLeftMouseButtonUp()
 
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
-
     if (canDrop && g_ObjectInHand.Enabled)
     {
         const CContainerOffsetRect &r = g_ContainerOffset[Graphic].Rect;
-
         bool doubleDraw = false;
         uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
-
-        CGLTexture *th = g_Game.ExecuteStaticArt(graphic);
-
+        auto spr = g_Game.ExecuteStaticArt(graphic);
         if (IsGameBoard)
         {
-            th = g_Game.ExecuteGump(graphic - GAME_FIGURE_GUMP_OFFSET);
+            spr = g_Game.ExecuteGump(graphic - GAME_FIGURE_GUMP_OFFSET);
             y += 20;
         }
 
-        if (th != nullptr)
+        if (spr != nullptr)
         {
-            x -= (th->Width / 2);
-            y -= (th->Height / 2);
+            x -= (spr->Width / 2);
+            y -= (spr->Height / 2);
 
-            if (x + th->Width > r.MaxX)
+            if (x + spr->Width > r.MaxX)
             {
-                x = r.MaxX - th->Width;
+                x = r.MaxX - spr->Width;
             }
 
-            if (y + th->Height > r.MaxY)
+            if (y + spr->Height > r.MaxY)
             {
-                y = r.MaxY - th->Height;
+                y = r.MaxY - spr->Height;
             }
         }
 
@@ -474,14 +464,12 @@ void CGumpContainer::OnLeftMouseButtonUp()
         if (dropContainer != Serial)
         {
             CGameItem *target = g_World->FindWorldItem(selectedSerial);
-
             if (target->IsContainer())
             {
                 x = -1;
                 y = -1;
             }
         }
-
         g_Game.DropItem(dropContainer, x, y, 0);
         g_MouseManager.CancelDoubleClick = true;
     }
@@ -490,7 +478,6 @@ void CGumpContainer::OnLeftMouseButtonUp()
         if (!g_ClickObject.Enabled)
         {
             CGameObject *clickTarget = g_World->FindWorldObject(selectedSerial);
-
             if (clickTarget != nullptr)
             {
                 g_ClickObject.Init(clickTarget);
@@ -506,22 +493,18 @@ bool CGumpContainer::OnLeftMouseButtonDoubleClick()
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
-
     if ((g_PressedObject.LeftSerial == 0u) && Minimized && ID == 0x003C)
     {
         Minimized = false;
         Page = 2;
         WantUpdateContent = true;
-
         result = true;
     }
     else if ((g_PressedObject.LeftSerial != 0u) && g_PressedObject.LeftSerial != ID_GC_MINIMIZE)
     {
         g_Game.DoubleClick(g_PressedObject.LeftSerial);
         FrameCreated = false;
-
         result = true;
     }
-
     return result;
 }

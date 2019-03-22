@@ -25,27 +25,22 @@ CGumpBaseScroll::CGumpBaseScroll(
     DEBUG_TRACE_FUNCTION;
     Page = 2;
     Add(new CGUIPage(2));
-
     int offsetY = 0;
-
     if (haveMinimizer)
     {
-        CGLTexture *th = g_Game.ExecuteGump(0x082D);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteGump(0x082D);
+        if (spr != nullptr)
         {
-            offsetY = th->Height - 3;
+            offsetY = spr->Height - 3;
         }
     }
 
     m_Minimizer =
         (CGUIButton *)Add(new CGUIButton(ID_GBS_BUTTON_MINIMIZE, 0x082D, 0x082D, 0x082D, 0, 0));
     m_Minimizer->Visible = haveMinimizer;
-
     m_Background =
         (CGUIScrollBackground *)Add(new CGUIScrollBackground(0, graphic, 0, offsetY, Height));
     CRect rect = m_Background->WorkSpace;
-
     if (type != GT_SKILLS)
     {
         m_Minimizer->SetX(137);
@@ -56,7 +51,6 @@ CGumpBaseScroll::CGumpBaseScroll(
     }
 
     int heightDecBonus = ScissorOffsetHeight;
-
     if (HaveBackgroundLines)
     {
         ScrollerOffsetY += 16;
@@ -74,7 +68,6 @@ CGumpBaseScroll::CGumpBaseScroll(
         true));
 
     CGUIHTMLButton *button = m_HTMLGump->m_ButtonUp;
-
     if (button != nullptr)
     {
         button->Graphic = 0x0824;
@@ -84,7 +77,6 @@ CGumpBaseScroll::CGumpBaseScroll(
     }
 
     button = m_HTMLGump->m_ButtonDown;
-
     if (button != nullptr)
     {
         button->Graphic = 0x0825;
@@ -94,7 +86,6 @@ CGumpBaseScroll::CGumpBaseScroll(
     }
 
     CGUIHTMLSlider *slider = m_HTMLGump->m_Slider;
-
     if (slider != nullptr)
     {
         slider->Graphic = 0x001F;
@@ -105,7 +96,6 @@ CGumpBaseScroll::CGumpBaseScroll(
 
     m_Resizer = (CGUIResizeButton *)Add(new CGUIResizeButton(
         ID_GBS_BUTTON_RESIZE, 0x082E, 0x082F, 0x082F, 0, offsetY + Height - 3));
-
     if (type != GT_SKILLS)
     {
         m_Resizer->SetX(137);
@@ -124,7 +114,6 @@ void CGumpBaseScroll::UpdateHeight()
 {
     DEBUG_TRACE_FUNCTION;
     Height = StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
-
     if (Height < m_MinHeight)
     {
         Height = m_MinHeight;
@@ -133,25 +122,20 @@ void CGumpBaseScroll::UpdateHeight()
     int maxHeight;
     GetDisplaySize(nullptr, &maxHeight);
     maxHeight -= 50;
-
     if (Height >= maxHeight)
     {
         Height = maxHeight;
     }
 
     int offsetY = 0;
-
-    CGLTexture *th = g_Game.ExecuteGump(0x082D);
-
-    if (th != nullptr && m_Minimizer->Visible)
+    auto spr = g_Game.ExecuteGump(0x082D);
+    if (spr != nullptr && m_Minimizer->Visible)
     {
-        offsetY = th->Height - 3;
+        offsetY = spr->Height - 3;
     }
 
     m_Background->UpdateHeight(Height);
-
     int heightDecBonus = ScissorOffsetHeight;
-
     if (HaveBackgroundLines)
     {
         heightDecBonus += 16;
@@ -159,7 +143,6 @@ void CGumpBaseScroll::UpdateHeight()
 
     m_HTMLGump->UpdateHeight(
         m_Background->WorkSpace.Size.Height - ScrollerOffsetY - heightDecBonus);
-
     m_Resizer->SetY(offsetY + Height - 3);
 }
 

@@ -103,12 +103,12 @@ public:
     uint16_t GetLightColor(uint16_t id) { return g_Index.m_Static[id].LightColor; }
     CSize GetStaticArtDimension(uint16_t id);
     CSize GetGumpDimension(uint16_t id);
-    CGLTexture *ExecuteGump(uint16_t id);
-    CGLTexture *ExecuteLandArt(uint16_t id);
-    CGLTexture *ExecuteStaticArt(uint16_t id);
-    CGLTexture *ExecuteStaticArtAnimated(uint16_t id);
-    CGLTexture *ExecuteTexture(uint16_t id);
-    CGLTexture *ExecuteLight(uint8_t &id);
+    CSprite *ExecuteGump(uint16_t id);
+    CSprite *ExecuteLandArt(uint16_t id);
+    CSprite *ExecuteStaticArt(uint16_t id);
+    CSprite *ExecuteStaticArtAnimated(uint16_t id);
+    CSprite *ExecuteTexture(uint16_t id);
+    CSprite *ExecuteLight(uint8_t &id);
     bool ExecuteGumpPart(uint16_t id, int count);
     bool ExecuteResizepic(uint16_t id) { return ExecuteGumpPart(id, 9); }
     bool ExecuteButton(uint16_t id) { return ExecuteGumpPart(id, 3); }

@@ -49,32 +49,23 @@ vector<CContainerOffset> g_ContainerOffset;
 void CContainerRect::Calculate(uint16_t gumpID)
 {
     DEBUG_TRACE_FUNCTION;
-    //!Указатель на текстуру
-    CGLTexture *tex = g_Game.ExecuteGump(gumpID);
-
-    //!Если текстура есть в памяти
-    if (tex != nullptr)
+    auto spr = g_Game.ExecuteGump(gumpID);
+    if (spr != nullptr)
     {
-        //!Если выключено смещение - открываем гамп в правом верхнем углу клиента
         if (!g_ConfigManager.OffsetInterfaceWindows)
         {
             X = DefaultX;
             Y = DefaultY;
         }
-        else //!Или вычисляем смещение и открываем в результируемых координатах
+        else
         {
             int passed = 0;
-
-            //!Цикл в 4 итерации и пока не будут валидные координаты
             for (int i = 0; i < 4 && (passed == 0); i++)
             {
-                //!Пора изменять смещение по оси Y и обнулять по оси X
-                if (X + tex->Width + CONTAINERS_RECT_STEP > g_GameWindow.GetSize().Width)
+                if (X + spr->Width + CONTAINERS_RECT_STEP > g_GameWindow.GetSize().Width)
                 {
                     X = CONTAINERS_RECT_DEFAULT_POS;
-
-                    //!Если смещение по оси Y достигло максимума - выставим стандартное значение
-                    if (Y + tex->Height + CONTAINERS_RECT_LINESTEP > g_GameWindow.GetSize().Height)
+                    if (Y + spr->Height + CONTAINERS_RECT_LINESTEP > g_GameWindow.GetSize().Height)
                     {
                         Y = CONTAINERS_RECT_DEFAULT_POS;
                     }
@@ -83,11 +74,9 @@ void CContainerRect::Calculate(uint16_t gumpID)
                         Y += CONTAINERS_RECT_LINESTEP;
                     }
                 }
-                //!Пора изменять смещение по оси X и обнулять по оси Y
-                else if (Y + tex->Height + CONTAINERS_RECT_STEP > g_GameWindow.GetSize().Height)
+                else if (Y + spr->Height + CONTAINERS_RECT_STEP > g_GameWindow.GetSize().Height)
                 {
-                    //!Если смещение по оси X достигло максимума - выставим стандартное значение
-                    if (X + tex->Width + CONTAINERS_RECT_LINESTEP > g_GameWindow.GetSize().Width)
+                    if (X + spr->Width + CONTAINERS_RECT_LINESTEP > g_GameWindow.GetSize().Width)
                     {
                         X = CONTAINERS_RECT_DEFAULT_POS;
                     }
@@ -95,20 +84,18 @@ void CContainerRect::Calculate(uint16_t gumpID)
                     {
                         X += CONTAINERS_RECT_LINESTEP;
                     }
-
                     Y = CONTAINERS_RECT_DEFAULT_POS;
                 }
                 else
-                { //!Все отлично, пропускаем дальше
+                {
                     passed = (int)i + 1;
                 }
             }
-
             if (passed == 0)
-            { //!Смещение не вычислено. Выставим значение по-умолчанию
+            {
                 MakeDefault();
             }
-            else if (passed == 1) //!Прошло с 1 раза, можно изменить смещение
+            else if (passed == 1)
             {
                 X += CONTAINERS_RECT_STEP;
                 Y += CONTAINERS_RECT_STEP;

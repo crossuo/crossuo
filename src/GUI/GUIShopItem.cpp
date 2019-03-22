@@ -42,17 +42,15 @@ void CGUIShopItem::UpdateOffsets()
 {
     if (Serial >= 0x40000000)
     {
-        CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteStaticArt(Graphic);
+        if (spr != nullptr)
         {
-            m_MaxOffset = th->Height;
+            m_MaxOffset = spr->Height;
         }
     }
     else
     {
         uint8_t group = 0;
-
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
             case AG_LOW:
@@ -74,13 +72,10 @@ void CGUIShopItem::UpdateOffsets()
                 break;
         }
 
-        ANIMATION_DIMENSIONS dims =
-            g_AnimationManager.GetAnimationDimensions(0, Graphic, 1, group, false);
-
+        auto dims = g_AnimationManager.GetAnimationDimensions(0, Graphic, 1, group, false);
         if (dims.Height != 0)
         {
             m_MaxOffset = dims.Height;
-
             if (m_MaxOffset > 35)
             {
                 m_MaxOffset = 35;
@@ -243,17 +238,16 @@ void CGUIShopItem::Draw(bool checktrans)
 
     if (Serial >= 0x40000000)
     {
-        th = g_Game.ExecuteStaticArt(Graphic);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteStaticArt(Graphic);
+        if (spr != nullptr && spr->Texture != nullptr)
         {
+            th = spr->Texture;
             th->Draw(2, m_ImageOffset, checktrans);
         }
     }
     else
     {
         uint8_t group = 0;
-
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
             case AG_LOW:
@@ -277,16 +271,13 @@ void CGUIShopItem::Draw(bool checktrans)
 
         CTextureAnimationDirection &direction =
             g_AnimationManager.m_DataIndex[Graphic].m_Groups[group].m_Direction[1];
-
         if (direction.FrameCount != 0)
         {
-            CGLTexture &originalTexture = direction.m_Frames[0];
-
-            if (originalTexture.Texture != 0u)
+            CSprite &originalTexture = direction.m_Frames[0].Sprite;
+            if (originalTexture.Texture != nullptr)
             {
                 CGLTexture tex;
-                tex.Texture = originalTexture.Texture;
-
+                tex.Texture = originalTexture.Texture->Texture;
                 if (originalTexture.Width > 35)
                 {
                     tex.Width = 35;
@@ -306,45 +297,37 @@ void CGUIShopItem::Draw(bool checktrans)
                 }
 
                 g_GL.GL1_Draw(tex, 2, m_ImageOffset);
-
                 tex.Texture = 0;
-
                 //originalTexture.Draw(2, m_ImageOffset, checktrans);
             }
         }
     }
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-
-    th = g_Game.ExecuteGump(0x0039);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(0x0039);
+    if (spr != nullptr && spr->Texture != nullptr)
     {
-        th->Draw(2, m_MaxOffset, checktrans);
+        spr->Texture->Draw(2, m_MaxOffset, checktrans);
     }
 
-    th = g_Game.ExecuteGump(0x003A);
-
-    if (th != nullptr)
+    spr = g_Game.ExecuteGump(0x003A);
+    if (spr != nullptr && spr->Texture != nullptr)
     {
-        th->Draw(32, m_MaxOffset, 140, 0, checktrans);
+        spr->Texture->Draw(32, m_MaxOffset, 140, 0, checktrans);
     }
 
-    th = g_Game.ExecuteGump(0x003B);
-
-    if (th != nullptr)
+    spr = g_Game.ExecuteGump(0x003B);
+    if (spr != nullptr && spr->Texture != nullptr)
     {
-        th->Draw(166, m_MaxOffset, checktrans);
+        spr->Texture->Draw(166, m_MaxOffset, checktrans);
     }
-
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 }
 
 bool CGUIShopItem::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    int x = g_MouseManager.Position.X - m_X;
-    int y = g_MouseManager.Position.Y - m_Y;
-
+    const int x = g_MouseManager.Position.X - m_X;
+    const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= -10 && x < 200 && y < m_MaxOffset);
 }

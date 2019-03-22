@@ -30,7 +30,7 @@ public:
     void SetFlags(uint8_t val);
 
 protected:
-    string m_Name = "";
+    string m_Name;
 
 public:
     string GetName() { return m_Name; };
@@ -38,15 +38,15 @@ public:
     bool NPC = false;
     bool Clicked = false;
     char AnimIndex = 0;
-    string JournalPrefix = "";
+    string JournalPrefix;
     uint32_t LastAnimationChangeTime = 0;
     bool SA_Poisoned = false;
     bool ClosedObjectHandle = false;
     bool pvpCaller = false;
 
 protected:
-    CGameEffect *m_Effects{ nullptr };
-    CGLTexture m_TextureObjectHalndes{ CGLTexture() };
+    CGameEffect *m_Effects = nullptr;
+    CGLTexture m_TextureObjectHandles; // FIXME: gfx
 
 public:
     CGameObject(int serial = 0);

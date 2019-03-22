@@ -5,21 +5,12 @@
 
 #include "GLHeaders.h"
 
-class CGLTexture
+struct CGLTexture
 {
-public:
-    short Width = 0;
-    short Height = 0;
-    short ImageOffsetX = 0;
-    short ImageOffsetY = 0;
-    short ImageWidth = 0;
-    short ImageHeight = 0;
+    uint16_t Width = 0;
+    uint16_t Height = 0;
     GLuint VertexBuffer = 0;
     GLuint MirroredVertexBuffer = 0;
-
-    CGLTexture();
-    virtual ~CGLTexture();
-
     GLuint Texture = 0;
 
     virtual void Draw(int x, int y, bool checktrans = false);
@@ -28,11 +19,48 @@ public:
     virtual void DrawTransparent(int x, int y, bool stencil = true);
     virtual void Clear();
 
-    // FIXME: these should be out of here
-    std::vector<bool> m_HitMap;
-    virtual bool Select(int x, int y, bool pixelCheck = true);
-    virtual bool TestHit(int x, int y, bool pixelCheck = true);
+    CGLTexture() = default;
+    virtual ~CGLTexture();
+};
 
-    template <typename T>
-    void BuildHitMask(int w, int h, T *pixels);
+struct WEB_LINK_RECT
+{
+    uint16_t LinkID;
+    int StartX;
+    int StartY;
+    int EndX;
+    int EndY;
+};
+
+// FIXME
+struct CGLTextTexture : public CGLTexture
+{
+    int LinesCount = 0;
+
+    bool Empty() { return (Texture == 0); }
+    virtual void Clear() override
+    {
+        CGLTexture::Clear();
+        LinesCount = 0;
+    }
+
+    virtual void ClearWebLink() {}
+    virtual void AddWebLink(WEB_LINK_RECT &wl) {}
+    virtual uint16_t WebLinkUnderMouse(int x, int y) { return 0; }
+
+    CGLTextTexture() = default;
+    virtual ~CGLTextTexture() = default;
+};
+
+struct CGLHTMLTextTexture : public CGLTextTexture
+{
+    std::deque<WEB_LINK_RECT> m_WebLinkRect;
+
+    uint16_t WebLinkUnderMouse(int x, int y);
+
+    virtual void ClearWebLink() override { m_WebLinkRect.clear(); }
+    virtual void AddWebLink(WEB_LINK_RECT &wl) override { m_WebLinkRect.push_back(wl); }
+
+    CGLHTMLTextTexture() = default;
+    virtual ~CGLHTMLTextTexture() { m_WebLinkRect.clear(); }
 };

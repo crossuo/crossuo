@@ -18,15 +18,12 @@ CSize CGUITilepic::GetSize()
 {
     DEBUG_TRACE_FUNCTION;
     CSize size;
-
-    CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    if (spr != nullptr)
     {
-        size.Width = th->Width;
-        size.Height = th->Height;
+        size.Width = spr->Width;
+        size.Height = spr->Height;
     }
-
     return size;
 }
 
@@ -39,27 +36,21 @@ void CGUITilepic::PrepareTextures()
 void CGUITilepic::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th = g_Game.ExecuteStaticArt(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteStaticArt(Graphic);
+    if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
-
-        th->Draw(m_X, m_Y, checktrans);
+        spr->Texture->Draw(m_X, m_Y, checktrans);
     }
 }
 
 bool CGUITilepic::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    //if (CGUIDrawObject::Select())
-    //	return true;
-    CGLTexture *th = g_Index.m_Static[Graphic].Texture;
-
-    if (th != nullptr)
+    auto spr = g_Index.m_Static[Graphic].Sprite;
+    if (spr != nullptr)
     {
-        return th->Select(m_X, m_Y, !BoundingBoxCheck);
+        return spr->Select(m_X, m_Y, !BoundingBoxCheck);
     }
-
     return false;
 }

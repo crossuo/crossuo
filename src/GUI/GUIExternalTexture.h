@@ -4,18 +4,17 @@
 #pragma once
 
 #include "BaseGUI.h"
+struct CSprite;
 
 class CGUIExternalTexture : public CBaseGUI
 {
-    //!Удалять ли текстуру при удалении объекта
     bool DeleteTextureOnDestroy = false;
-
     short DrawWidth = 0;
     short DrawHeight = 0;
 
 public:
     CGUIExternalTexture(
-        CGLTexture *texture,
+        CSprite *sprite,
         bool deleteTextureOnDestroy,
         int x,
         int y,
@@ -23,9 +22,7 @@ public:
         int drawHeight = 0);
     virtual ~CGUIExternalTexture();
 
-    //!Ссылка на текстуру
-    CGLTexture *m_Texture;
-
+    CSprite *m_Sprite = nullptr;
     virtual CSize GetSize();
 
     virtual void SetShaderMode();

@@ -29,6 +29,8 @@ CTextData::~CTextData()
 {
     DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
+    m_Sprite.Texture = nullptr;
+    m_Sprite.Clear();
     Owner = nullptr;
 }
 

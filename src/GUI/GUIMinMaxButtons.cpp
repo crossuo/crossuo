@@ -37,27 +37,23 @@ void CGUIMinMaxButtons::UpdateText()
                 Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
-        CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteGump(Graphic);
+        if (spr != nullptr)
         {
             int textX = m_X;
             int textY = m_Y;
-
             switch (TextPosition)
             {
                 case STP_TOP:
                 case STP_TOP_CENTER:
                 {
                     textY -= Text.Height - DefaultTextOffset;
-
                     break;
                 }
                 case STP_BOTTOM:
                 case STP_BOTTOM_CENTER:
                 {
                     textY += 18 + DefaultTextOffset;
-
                     break;
                 }
                 case STP_LEFT:
@@ -65,7 +61,6 @@ void CGUIMinMaxButtons::UpdateText()
                 case STP_LEFT_CENTER:
                 {
                     textX -= Text.Width - DefaultTextOffset;
-
                     break;
                 }
                 case STP_RIGHT:
@@ -73,7 +68,6 @@ void CGUIMinMaxButtons::UpdateText()
                 case STP_RIGHT_CENTER:
                 {
                     textX += 36 + DefaultTextOffset;
-
                     break;
                 }
                 default:
@@ -87,9 +81,7 @@ void CGUIMinMaxButtons::UpdateText()
                 {
                     int textWidth = Text.Width;
                     int sliderWidth = 36;
-
                     int deltaX = abs(sliderWidth - textWidth) / 2;
-
                     if (sliderWidth > textWidth)
                     {
                         textX += deltaX;
@@ -98,7 +90,6 @@ void CGUIMinMaxButtons::UpdateText()
                     {
                         textX -= deltaX;
                     }
-
                     break;
                 }
                 case STP_LEFT_CENTER:
@@ -106,9 +97,7 @@ void CGUIMinMaxButtons::UpdateText()
                 {
                     int textHeight = Text.Height;
                     int sliderHeight = 18;
-
                     int deltaY = abs(sliderHeight - textHeight) / 2;
-
                     if (sliderHeight > textHeight)
                     {
                         textY += deltaY;
@@ -117,13 +106,11 @@ void CGUIMinMaxButtons::UpdateText()
                     {
                         textY -= deltaY;
                     }
-
                     break;
                 }
                 default:
                     break;
             }
-
             TextX = textX;
             TextY = textY;
         }
@@ -220,14 +207,12 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-
     for (int i = 0; i < 2; i++)
     {
-        CGLTexture *th = g_Game.ExecuteGump(Graphic + (int)i);
-
-        if (th != nullptr)
+        auto spr = g_Game.ExecuteGump(Graphic + (int)i);
+        if (spr != nullptr && spr->Texture != nullptr)
         {
-            th->Draw(m_X + ((int)i * 18), m_Y, checktrans);
+            spr->Texture->Draw(m_X + ((int)i * 18), m_Y, checktrans);
         }
     }
 
@@ -240,8 +225,7 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 bool CGUIMinMaxButtons::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    int x = g_MouseManager.Position.X - m_X;
-    int y = g_MouseManager.Position.Y - m_Y;
-
+    const int x = g_MouseManager.Position.X - m_X;
+    const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= 0 && x < 36 && y < 18);
 }

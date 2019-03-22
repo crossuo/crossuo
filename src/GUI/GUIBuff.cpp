@@ -18,11 +18,10 @@ CGUIBuff::~CGUIBuff()
 void CGUIBuff::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-
-    CGLTexture *th = g_Game.ExecuteGump(GetDrawGraphic());
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(GetDrawGraphic());
+    if (spr != nullptr && spr->Texture)
     {
         glColor4ub(0xFF, 0xFF, 0xFF, Alpha);
-        th->Draw(m_X, m_Y, checktrans);
+        spr->Texture->Draw(m_X, m_Y, checktrans);
     }
 }

@@ -17,16 +17,12 @@ CGUIVirtueGump::~CGUIVirtueGump()
 bool CGUIVirtueGump::Select()
 {
     bool select = false;
-
-    CGLTexture *th = g_Game.ExecuteGump(Graphic);
-
-    if (th != nullptr)
+    auto spr = g_Game.ExecuteGump(Graphic);
+    if (spr != nullptr)
     {
-        int x = g_MouseManager.Position.X - m_X;
-        int y = g_MouseManager.Position.Y - m_Y;
-
-        select = (x >= 0 && y >= 0 && x < th->Width && y < th->Height);
+        const int x = g_MouseManager.Position.X - m_X;
+        const int y = g_MouseManager.Position.Y - m_Y;
+        select = (x >= 0 && y >= 0 && x < spr->Width && y < spr->Height);
     }
-
     return select;
 }
