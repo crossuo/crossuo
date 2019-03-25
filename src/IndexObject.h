@@ -18,12 +18,19 @@ struct CIndexObject
     int32_t Height = 0;
     uint32_t LastAccessTime = 0;
     uint16_t Color = 0;
-    void ReadIndexFile(size_t address, IndexBlock *ptr);
+
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr);
+
+    CIndexObject() = default;
+    virtual ~CIndexObject() = default;
 };
 
 struct CIndexObjectLand : public CIndexObject
 {
     bool AllBlack = false;
+
+    CIndexObjectLand() = default;
+    virtual ~CIndexObjectLand() = default;
 };
 
 struct CIndexObjectStatic : public CIndexObject
@@ -34,6 +41,9 @@ struct CIndexObjectStatic : public CIndexObject
     uint32_t ChangeTime = 0;
     uint16_t LightColor = 0;
     bool IsFiled = false;
+
+    CIndexObjectStatic() = default;
+    virtual ~CIndexObjectStatic() = default;
 };
 
 struct CIndexSound : public CIndexObject
@@ -41,22 +51,35 @@ struct CIndexSound : public CIndexObject
     uint32_t Delay = 0;
     uint8_t *m_WaveFile = nullptr;
     SoundHandle m_Stream = SOUND_NULL;
+
+    CIndexSound() = default;
+    virtual ~CIndexSound() = default;
 };
 
 struct CIndexMulti : public CIndexObject
 {
     uint32_t Count = 0;
-    void ReadIndexFile(size_t address, IndexBlock *ptr);
+
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
+
+    CIndexMulti() = default;
+    virtual ~CIndexMulti() = default;
 };
 
 struct CIndexGump : public CIndexObject
 {
-    void ReadIndexFile(size_t address, IndexBlock *ptr);
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
+
+    CIndexGump() = default;
+    virtual ~CIndexGump() = default;
 };
 
 struct CIndexLight : public CIndexObject
 {
-    void ReadIndexFile(size_t address, IndexBlock *ptr);
+    virtual void ReadIndexFile(size_t address, IndexBlock *ptr) override;
+
+    CIndexLight() = default;
+    virtual ~CIndexLight() = default;
 };
 
 struct CIndexAnimation
