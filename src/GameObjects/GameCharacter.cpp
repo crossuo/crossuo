@@ -104,7 +104,7 @@ void CGameCharacter::UpdateTextCoordinates()
         return;
     }
 
-    ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(this, 0);
+    const auto dims = g_AnimationManager.GetAnimationDimensions(this, 0);
     int offset = 0;
 
     int x = DrawX + OffsetX;

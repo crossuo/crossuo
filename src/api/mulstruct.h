@@ -82,6 +82,25 @@ struct UopAnimationFrame
 };
 static_assert(sizeof(UopAnimationHeader) == 40, "Invalid UOP Animation Frame size");
 
+// was ANIMATION_DIMENSIONS
+struct AnimationFrameInfo
+{
+    //  uint16_t Palette[512];
+    int16_t CenterX = 0;
+    int16_t CenterY = 0;
+    int16_t Width = 0;
+    int16_t Height = 0;
+};
+static_assert(sizeof(AnimationFrameInfo) == 8, "Invalid Animation Frame Info size");
+
+struct AnimationSelector
+{
+    uint8_t Group = 0;
+    uint8_t Direction = 0;
+    uint16_t Graphic = 0;
+};
+static_assert(sizeof(AnimationSelector) == 4, "Invalid Animation Selector size");
+
 struct VERDATA_HEADER
 {
     uint32_t FileID;
