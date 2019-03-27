@@ -379,8 +379,8 @@ void LoadGlobalConfig()
                 break;
                 case MSCC_CUSTOM_PATH:
                 {
+                    UOSetPath(strings[1].c_str());
                     g_App.m_UOPath = ToPath(strings[1]);
-                    UOSetPath(g_App.m_UOPath.c_str());
                     fs_case_insensitive_init(g_App.m_UOPath);
                 }
                 break;
