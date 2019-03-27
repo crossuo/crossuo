@@ -18,7 +18,7 @@ Data g_Data;
 
 static uint8_t s_AnimGroupCount = PAG_ANIMATION_COUNT;
 
-static const char *s_UOPath = nullptr;
+static char s_UOPath[MAX_PATH];
 static os_path UOFilePath(const char *str, ...)
 {
     DEBUG_TRACE_FUNCTION;
@@ -27,14 +27,14 @@ static os_path UOFilePath(const char *str, ...)
     char out[MAX_PATH] = { 0 };
     vsnprintf(out, sizeof(out) - 1, str, arg);
     va_end(arg);
-    os_path res = s_UOPath;
-    auto tmp = res + PATH_SEP + ToPath(out);
+    std::string res(&s_UOPath[0], strlen(s_UOPath));
+    auto tmp = ToPath(res) + PATH_SEP + ToPath(out);
     return fs_insensitive(tmp);
 }
 
 void UOSetPath(const char *path)
 {
-    s_UOPath = path;
+    strncpy(s_UOPath, path, sizeof(s_UOPath));
 }
 
 uint64_t CreateAssetHash(const char *s)
