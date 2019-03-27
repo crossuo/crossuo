@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #pragma once
 
@@ -10,6 +12,13 @@
 
 struct CTextureAnimationDirection;
 using UopBlockHeaderMap = std::unordered_map<uint64_t, const UopBlockHeader *>;
+
+// FIXME: remove dependency on DataReader and MappedFile
+// FIXME: IndexObject kinda should be here minus sprite stuff
+// FIXME: TextureObject kinda should be here minus sprite stuff
+// Sprite should be application side, filemanager should give back
+// recipe on how to acquire the sprite data, eg:
+// (address, size, compressed flag) + function to access compressed data
 
 struct Data
 {
@@ -22,7 +31,7 @@ struct Data
 
 extern Data g_Data;
 
-struct CUopMappedFile : public Wisp::CMappedFile // FIXME!
+struct CUopMappedFile : public Wisp::CMappedFile // FIXME: not needed
 {
     UopHeader *Header = nullptr;
     UopBlockHeaderMap m_Map;
@@ -36,7 +45,7 @@ struct CUopMappedFile : public Wisp::CMappedFile // FIXME!
     virtual ~CUopMappedFile() = default;
 };
 
-struct CFileManager : public Wisp::CDataReader
+struct CFileManager : public Wisp::CDataReader // FIXME: not needed
 {
     bool UseUOPGumps = false;
     int UnicodeFontsCount = 0; // never read
@@ -166,5 +175,6 @@ private:
 uint64_t CreateAssetHash(const char *s);
 void InitChecksum32();
 uint32_t Checksum32(uint8_t *ptr, size_t size);
+void UOSetPath(const char *path);
 
 extern CFileManager g_FileManager;
