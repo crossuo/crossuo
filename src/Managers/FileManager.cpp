@@ -12,12 +12,15 @@
 #define MINIZ_IMPLEMENTATION
 #include <miniz.h>
 
-// FIXME: g_App / g_Config / g_AnimationManager / (g_ClilocManager)
+// FIXME: g_App / g_Config / (g_ClilocManager)
 // Remove these dependencies, file manager should be standalone
+#define PALETTE_SIZE (sizeof(uint16_t) * 256)
 
 string g_dumpUopFile;
 CFileManager g_FileManager;
 Data g_Data;
+
+static uint8_t s_AnimGroupCount = PAG_ANIMATION_COUNT;
 
 uint64_t CreateAssetHash(const char *s)
 {
@@ -209,6 +212,13 @@ static bool DecompressBlock(const UopBlockHeader &block, uint8_t *dst, uint8_t *
     return true;
 }
 
+static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId)
+{
+    assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
+    uint8_t *src = g_FileManager.m_AnimationFrame[fileId].Start + block.Offset + block.HeaderSize;
+    return DecompressBlock(block, dst, src);
+}
+
 vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 {
     DEBUG_TRACE_FUNCTION;
@@ -221,14 +231,6 @@ vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
     }
     dst.clear();
     return dst;
-}
-
-// static
-bool CFileManager::UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId)
-{
-    assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
-    uint8_t *src = g_FileManager.m_AnimationFrame[fileId].Start + block.Offset + block.HeaderSize;
-    return DecompressBlock(block, dst, src);
 }
 
 bool CFileManager::Load()
@@ -763,7 +765,7 @@ static int UopSetAnimationGroups(int start, int end)
     int lastGroup = 0;
     for (int animId = start; animId < end; ++animId)
     {
-        auto &idx = g_AnimationManager.m_DataIndex[animId];
+        auto &idx = g_Index.m_Anim[animId];
         for (int grpId = 0; grpId < ANIMATION_GROUPS_COUNT; ++grpId)
         {
             auto &group = idx.m_Groups[grpId];
@@ -833,9 +835,9 @@ void CFileManager::ReadTask()
     ProcessAnimSequeceData();
 
     const int maxGroup = *std::max_element(lastGroup, lastGroup + count);
-    if (g_AnimationManager.AnimGroupCount < maxGroup)
+    if (s_AnimGroupCount < maxGroup)
     {
-        g_AnimationManager.AnimGroupCount = maxGroup;
+        s_AnimGroupCount = maxGroup;
     }
     m_AnimationSequence.Unload();
     m_AutoResetEvent.Set();
@@ -861,7 +863,7 @@ void CFileManager::ProcessAnimSequeceData()
             continue;
         }
 
-        auto indexAnim = &g_AnimationManager.m_DataIndex[animId];
+        auto indexAnim = &g_Index.m_Anim[animId];
         for (int i = 0; i < replaces; ++i)
         {
             const auto oldIdx = ReadInt32LE();
@@ -1269,7 +1271,6 @@ void CFileManager::MulReadIndexFile(
     }
 }
 
-// FIXME: move to FileManager
 void CFileManager::UopReadIndexFile(
     size_t indexMaxCount,
     const std::function<CIndexObject *(int)> &getIdxObj,
@@ -1322,4 +1323,290 @@ void CFileManager::LoadData()
     memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
     LoadTiledata();
     LoadIndexFiles();
+}
+
+UopAnimationHeader CFileManager::UopReadAnimationHeader()
+{
+    UopAnimationHeader hdr;
+    hdr.Format = ReadUInt32LE();
+    hdr.Version = ReadUInt32LE();
+    hdr.DecompressedSize = ReadUInt32LE();
+    hdr.AnimationId = ReadUInt32LE();
+    hdr.Unk1 = ReadUInt32LE();
+    hdr.Unk2 = ReadUInt32LE();
+    hdr.Unk3 = ReadInt16LE();
+    hdr.Unk4 = ReadInt16LE();
+    hdr.HeaderSize = ReadUInt32LE();
+    hdr.FrameCount = ReadUInt32LE();
+    hdr.Offset = ReadUInt32LE();
+    Ptr = Start + hdr.Offset;
+    return hdr;
+}
+
+UopAnimationFrame CFileManager::UopReadAnimationFrame()
+{
+    UopAnimationFrame frame;
+    frame.DataStart = Ptr;
+    frame.GroupId = ReadInt16LE();
+    frame.FrameId = ReadInt16LE();
+    frame.Unk1 = ReadUInt32LE();
+    frame.Unk2 = ReadUInt32LE();
+    frame.PixelDataOffset = ReadUInt32LE();
+    return frame;
+}
+
+std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
+{
+    auto header = UopReadAnimationHeader();
+    std::vector<UopAnimationFrame> data;
+    data.resize(header.FrameCount);
+    for (int i = 0; i < header.FrameCount; i++)
+    {
+        data.emplace(data.begin() + i, UopReadAnimationFrame());
+    }
+    return data;
+}
+
+void CFileManager::UopReadAnimationFrameInfo(
+    AnimationFrameInfo &result, CTextureAnimationDirection &direction, const UopBlockHeader &block)
+{
+    if (block.Hash == 0)
+    {
+        return;
+    }
+
+    std::vector<uint8_t> scratchBuffer;
+    scratchBuffer.reserve(block.DecompressedSize);
+    if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
+    {
+        return;
+    }
+
+    auto _header = UopReadAnimationHeader();
+    auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
+    Ptr = frame.DataStart + frame.PixelDataOffset + PALETTE_SIZE;
+    auto frameInfo = (AnimationFrameInfo *)Ptr;
+    result = *frameInfo;
+    Move(sizeof(AnimationFrameInfo));
+}
+
+bool CFileManager::UopReadAnimationFrames(
+    CTextureAnimationDirection &direction, const AnimationSelector &anim)
+{
+    auto &block = g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group].m_UOPAnimData;
+
+    std::vector<uint8_t> scratchBuffer;
+    if (block.Hash == 0)
+    {
+        return false;
+    }
+
+    scratchBuffer.reserve(block.DecompressedSize);
+    if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
+    {
+        return false;
+    }
+    SetData(scratchBuffer.data(), block.DecompressedSize);
+
+    auto framesData = UopReadAnimationFramesData();
+
+    direction.FrameCount = checked_cast<uint8_t>(framesData.size() / 5);
+    int dirFrameStartIdx = direction.FrameCount * anim.Direction;
+    if (direction.m_Frames == nullptr)
+    {
+        direction.m_Frames = new CTextureAnimationFrame[direction.FrameCount];
+    }
+
+    const int frameCount = direction.FrameCount;
+    for (int i = 0; i < frameCount; i++)
+    {
+        CTextureAnimationFrame &frame = direction.m_Frames[i];
+        if (frame.Sprite.Texture != nullptr)
+        {
+            continue;
+        }
+
+        UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
+        if (frameData.DataStart == nullptr)
+        {
+            continue;
+        }
+
+        Ptr = frameData.DataStart + frameData.PixelDataOffset;
+        auto palette = (uint16_t *)Ptr;
+        Move(PALETTE_SIZE);
+        LoadAnimationFrame(frame, palette);
+    }
+    return true;
+}
+
+void CFileManager::MulReadAnimationFrameInfo(
+    AnimationFrameInfo &result,
+    CTextureAnimationDirection &direction,
+    uint8_t frameIndex,
+    bool isCorpse)
+{
+    auto ptr = (uint8_t *)direction.Address;
+    if (!direction.IsVerdata)
+    {
+        ptr = MulReadAnimationData(direction);
+    }
+    SetData(ptr, direction.Size);
+
+    Move(PALETTE_SIZE);
+    uint8_t *dataStart = Ptr;
+    int frameCount = ReadUInt32LE();
+    if (frameCount > 0 && frameIndex >= frameCount)
+    {
+        if (isCorpse)
+        {
+            frameIndex = frameCount - 1;
+        }
+        else
+        {
+            frameIndex = 0;
+        }
+    }
+
+    if (frameIndex < frameCount)
+    {
+        uint32_t *frameOffset = (uint32_t *)Ptr;
+        //Move(frameOffset[frameIndex]);
+        Ptr = dataStart + frameOffset[frameIndex];
+        result.CenterX = ReadInt16LE();
+        result.CenterY = ReadInt16LE();
+        result.Width = ReadInt16LE();
+        result.Height = ReadInt16LE();
+    }
+}
+
+bool CFileManager::MulReadAnimationFrames(CTextureAnimationDirection &direction)
+{
+    auto ptr = (uint8_t *)direction.Address;
+    if (!direction.IsVerdata)
+    {
+        ptr = MulReadAnimationData(direction);
+    }
+    SetData(ptr, direction.Size);
+
+    uint16_t *palette = (uint16_t *)Start;
+    Move(PALETTE_SIZE);
+
+    uint8_t *dataStart = Ptr;
+    const uint32_t frameCount = ReadUInt32LE();
+    uint32_t *frameOffset = (uint32_t *)Ptr;
+    //uint16_t color = g_Index.m_Anim[graphic].Color;
+
+    direction.FrameCount = frameCount;
+    if (direction.m_Frames == nullptr)
+    {
+        direction.m_Frames = new CTextureAnimationFrame[frameCount];
+    }
+
+    for (uint32_t i = 0; i < frameCount; i++)
+    {
+        CTextureAnimationFrame &frame = direction.m_Frames[i];
+        if (frame.Sprite.Texture != nullptr)
+        {
+            continue;
+        }
+        Ptr = dataStart + frameOffset[i];
+        LoadAnimationFrame(frame, palette);
+    }
+
+    return true;
+}
+
+void CFileManager::LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *palette)
+{
+    auto frameInfo = (AnimationFrameInfo *)Ptr;
+    Move(sizeof(AnimationFrameInfo));
+
+    frame.CenterX = frameInfo->CenterX;
+    frame.CenterY = frameInfo->CenterY;
+    if (frameInfo->Width == 0 || frameInfo->Height == 0)
+    {
+        Error(Data, "image data invalid (%d,%d)", frameInfo->Width, frameInfo->Height);
+        return;
+    }
+
+    const auto imageWidth = frameInfo->Width;
+    const auto imageHeight = frameInfo->Height;
+    const auto imageCenterX = frameInfo->CenterX;
+    const auto imageCenterY = frameInfo->CenterY;
+    const int textureSize = imageWidth * imageHeight;
+    vector<uint16_t> pixels(textureSize, 0);
+    if (pixels.size() != textureSize)
+    {
+        Error(Data, "couldn't allocate pixel data (%d bytes)", textureSize);
+        return;
+    }
+
+    uint32_t header = ReadUInt32LE();
+    while (header != 0x7FFF7FFF && !IsEOF())
+    {
+        const uint16_t runLength = (header & 0x0FFF);
+        int x = (header >> 22) & 0x03FF;
+        if ((x & 0x0200) != 0)
+        {
+            x |= 0xFFFFFE00;
+        }
+
+        int y = (header >> 12) & 0x03FF;
+        if ((y & 0x0200) != 0)
+        {
+            y |= 0xFFFFFE00;
+        }
+
+        x += imageCenterX;
+        y += imageCenterY + imageHeight;
+        int block = (y * imageWidth) + x;
+        for (int k = 0; k < runLength; k++)
+        {
+            const uint8_t paletteIndex = ReadUInt8();
+            uint16_t val = palette[paletteIndex];
+            if (val != 0u)
+            {
+                val |= 0x8000;
+            }
+            pixels[block++] = val;
+        }
+        header = ReadUInt32LE();
+    }
+    frame.Sprite.LoadSprite16(imageWidth, imageHeight, pixels.data());
+}
+
+void CFileManager::LoadAnimationFrameInfo(
+    AnimationFrameInfo &result,
+    CTextureAnimationDirection &direction,
+    CTextureAnimationGroup &group,
+    uint8_t frameIndex,
+    bool isCorpse)
+{
+    if (direction.Address != 0)
+    {
+        assert(direction.Size != 0 && "please report this back");
+        MulReadAnimationFrameInfo(result, direction, frameIndex, isCorpse);
+    }
+    else if (direction.IsUOP)
+    {
+        UopReadAnimationFrameInfo(result, direction, group.m_UOPAnimData);
+    }
+}
+
+bool CFileManager::LoadAnimation(const AnimationSelector &anim)
+{
+    DEBUG_TRACE_FUNCTION;
+    CTextureAnimationGroup &group = g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group];
+    CTextureAnimationDirection &direction = group.m_Direction[anim.Direction];
+    if (direction.Address != 0)
+    {
+        assert(direction.Size != 0 && "please report this back");
+        return MulReadAnimationFrames(direction);
+    }
+    else if (direction.IsUOP)
+    {
+        return UopReadAnimationFrames(direction, anim);
+    }
+    return false;
 }

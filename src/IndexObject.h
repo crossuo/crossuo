@@ -109,6 +109,7 @@ struct Index
     CIndexMusic m_MP3[MAX_MUSIC_DATA_INDEX_COUNT];
     CIndexMulti m_Multi[MAX_MULTI_DATA_INDEX_COUNT];
     CIndexLight m_Light[MAX_LIGHTS_DATA_INDEX_COUNT];
+    CIndexAnimation m_Anim[MAX_ANIMATIONS_DATA_INDEX_COUNT];
 
     int m_MultiIndexCount = 0;
 };

@@ -158,40 +158,29 @@ void CGUIShopItem::PrepareTextures()
     }
     else
     {
-        uint8_t group = 0;
-
+        uint8_t animGroup = 0;
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
             case AG_LOW:
             {
-                group = LAG_STAND;
+                animGroup = LAG_STAND;
                 break;
             }
             case AG_HIGHT:
             {
-                group = HAG_STAND;
+                animGroup = HAG_STAND;
                 break;
             }
             case AG_PEOPLE:
             {
-                group = PAG_STAND;
+                animGroup = PAG_STAND;
                 break;
             }
             default:
                 break;
         }
-
-        CTextureAnimationDirection &direction =
-            g_AnimationManager.m_DataIndex[Graphic].m_Groups[group].m_Direction[1];
+        auto direction = g_AnimationManager.ExecuteAnimation(Graphic, animGroup, 1);
         direction.LastAccessTime = SDL_GetTicks() + 60000;
-        g_AnimationManager.AnimID = Graphic;
-        g_AnimationManager.AnimGroup = group;
-        g_AnimationManager.Direction = 1;
-
-        if (direction.FrameCount == 0)
-        {
-            g_AnimationManager.LoadDirectionGroup(direction);
-        }
     }
 
     g_Game.ExecuteGump(0x0039);
@@ -247,30 +236,30 @@ void CGUIShopItem::Draw(bool checktrans)
     }
     else
     {
-        uint8_t group = 0;
+        uint8_t animGroup = 0;
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
             case AG_LOW:
             {
-                group = LAG_STAND;
+                animGroup = LAG_STAND;
                 break;
             }
             case AG_HIGHT:
             {
-                group = HAG_STAND;
+                animGroup = HAG_STAND;
                 break;
             }
             case AG_PEOPLE:
             {
-                group = PAG_STAND;
+                animGroup = PAG_STAND;
                 break;
             }
             default:
                 break;
         }
 
-        CTextureAnimationDirection &direction =
-            g_AnimationManager.m_DataIndex[Graphic].m_Groups[group].m_Direction[1];
+        CTextureAnimationGroup &group = g_Index.m_Anim[Graphic].m_Groups[animGroup];
+        CTextureAnimationDirection &direction = group.m_Direction[1];
         if (direction.FrameCount != 0)
         {
             CSprite &originalTexture = direction.m_Frames[0].Sprite;

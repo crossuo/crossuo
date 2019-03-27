@@ -22,7 +22,7 @@ struct Data
 
 extern Data g_Data;
 
-struct CUopMappedFile : public Wisp::CMappedFile
+struct CUopMappedFile : public Wisp::CMappedFile // FIXME!
 {
     UopHeader *Header = nullptr;
     UopBlockHeaderMap m_Map;
@@ -101,11 +101,24 @@ struct CFileManager : public Wisp::CDataReader
     bool LoadWithUop();
     void Unload();
     void UopReadAnimations();
-    uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
     bool IsMulFileOpen(int idx) const;
-    static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId);
-
     void LoadData();
+
+    // moved from AnimationManager
+    UopAnimationHeader UopReadAnimationHeader();
+    UopAnimationFrame UopReadAnimationFrame();
+    std::vector<UopAnimationFrame> UopReadAnimationFramesData();
+
+    uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
+    bool LoadAnimation(const AnimationSelector &anim);
+    void LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *palette);
+    void LoadAnimationFrameInfo(
+        AnimationFrameInfo &result,
+        CTextureAnimationDirection &direction,
+        CTextureAnimationGroup &group,
+        uint8_t frameIndex,
+        bool isCorpse);
+    // --
 
     CFileManager() = default;
     virtual ~CFileManager() = default;
@@ -133,6 +146,21 @@ private:
         const char *extesion,
         CUopMappedFile &uopFile,
         int startIndex = 0);
+
+    // from AnimationManager
+    void UopReadAnimationFrameInfo(
+        AnimationFrameInfo &result,
+        CTextureAnimationDirection &direction,
+        const UopBlockHeader &block);
+    bool
+    UopReadAnimationFrames(CTextureAnimationDirection &direction, const AnimationSelector &anim);
+    void MulReadAnimationFrameInfo(
+        AnimationFrameInfo &result,
+        CTextureAnimationDirection &direction,
+        uint8_t frameIndex,
+        bool isCorpse);
+    bool MulReadAnimationFrames(CTextureAnimationDirection &direction);
+    // --
 };
 
 uint64_t CreateAssetHash(const char *s);

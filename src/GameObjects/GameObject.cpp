@@ -116,7 +116,7 @@ void CGameObject::DrawObjectHandlesTexture()
     if (NPC)
     {
         CGameCharacter *gc = (CGameCharacter *)this;
-        ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(this);
+        const auto dims = g_AnimationManager.GetAnimationDimensions(this);
         x += gc->OffsetX;
         y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 25);
     }
@@ -150,7 +150,7 @@ void CGameObject::SelectObjectHandlesTexture()
         if (NPC)
         {
             CGameCharacter *gc = (CGameCharacter *)this;
-            ANIMATION_DIMENSIONS dims = g_AnimationManager.GetAnimationDimensions(this);
+            AnimationFrameInfo dims = g_AnimationManager.GetAnimationDimensions(this);
             x += gc->OffsetX;
             y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 8);
         }

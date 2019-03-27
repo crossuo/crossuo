@@ -97,7 +97,6 @@ void CGameWorld::ProcessAnimation()
                                                             XUO_CHARACTERS_ANIMATION_DELAY);
     g_AnimCharactersDelayValue = (float)delay;
     deque<CGameObject *> toRemove;
-
     QFOR(obj, m_Items, CGameObject *)
     {
         if (obj->NPC)
@@ -105,13 +104,10 @@ void CGameWorld::ProcessAnimation()
             CGameCharacter *gc = obj->GameCharacterPtr();
             uint8_t dir = 0;
             gc->UpdateAnimationInfo(dir, true);
-
             ProcessSound(g_Ticks, gc);
-
             if (gc->LastAnimationChangeTime < g_Ticks && !gc->NoIterateAnimIndex())
             {
                 char frameIndex = gc->AnimIndex;
-
                 if (gc->AnimationFromServer && !gc->AnimationDirection)
                 {
                     frameIndex--;
@@ -124,7 +120,6 @@ void CGameWorld::ProcessAnimation()
                 uint16_t id = gc->GetMountAnimation();
                 int animGroup = gc->GetAnimationGroup(id);
                 gc->ProcessGargoyleAnims(animGroup);
-
                 CGameItem *mount = gc->FindLayer(OL_MOUNT);
                 if (mount != nullptr)
                 {
@@ -144,32 +139,18 @@ void CGameWorld::ProcessAnimation()
                 }
 
                 bool mirror = false;
-
                 g_AnimationManager.GetAnimDirection(dir, mirror);
-
                 int currentDelay = delay;
-
                 if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
-                    CTextureAnimationDirection &direction =
-                        g_AnimationManager.m_DataIndex[id].m_Groups[animGroup].m_Direction[dir];
-                    g_AnimationManager.AnimID = id;
-                    g_AnimationManager.AnimGroup = animGroup;
-                    g_AnimationManager.Direction = dir;
-                    if (direction.FrameCount == 0)
-                    {
-                        g_AnimationManager.LoadDirectionGroup(direction);
-                    }
-
+                    auto direction = g_AnimationManager.ExecuteAnimation(animGroup, dir, id);
                     if (direction.Address != 0 || direction.IsUOP)
                     {
                         direction.LastAccessTime = g_Ticks;
                         int fc = direction.FrameCount;
-
                         if (gc->AnimationFromServer)
                         {
                             currentDelay += currentDelay * (int)(gc->AnimationInterval + 1);
-
                             if (gc->AnimationFrameCount == 0u)
                             {
                                 gc->AnimationFrameCount = fc;
@@ -184,11 +165,9 @@ void CGameWorld::ProcessAnimation()
                                 if (frameIndex >= fc)
                                 {
                                     frameIndex = 0;
-
                                     if (gc->AnimationRepeat)
                                     {
                                         uint8_t repCount = gc->AnimationRepeatMode;
-
                                         if (repCount == 2)
                                         {
                                             repCount--;
@@ -221,7 +200,6 @@ void CGameWorld::ProcessAnimation()
                                     if (gc->AnimationRepeat)
                                     {
                                         uint8_t repCount = gc->AnimationRepeatMode;
-
                                         if (repCount == 2)
                                         {
                                             repCount--;
@@ -244,14 +222,12 @@ void CGameWorld::ProcessAnimation()
                             if (frameIndex >= fc)
                             {
                                 frameIndex = 0;
-
                                 if ((obj->Serial & 0x80000000) != 0u)
                                 {
                                     toRemove.push_back(obj);
                                 }
                             }
                         }
-
                         gc->AnimIndex = frameIndex;
                     }
                     else if ((obj->Serial & 0x80000000) != 0u)
@@ -263,7 +239,6 @@ void CGameWorld::ProcessAnimation()
                 {
                     toRemove.push_back(obj);
                 }
-
                 gc->LastAnimationChangeTime = g_Ticks + currentDelay;
             }
         }
@@ -271,49 +246,30 @@ void CGameWorld::ProcessAnimation()
         {
             CGameItem *gi = (CGameItem *)obj;
             uint8_t dir = gi->Layer;
-
             if (obj->LastAnimationChangeTime < g_Ticks)
             {
                 char frameIndex = obj->AnimIndex + 1;
-
                 uint16_t id = obj->GetMountAnimation();
-
                 bool mirror = false;
-
                 g_AnimationManager.GetAnimDirection(dir, mirror);
-
                 if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
                     int animGroup = g_AnimationManager.GetDieGroupIndex(id, gi->UsedLayer != 0u);
-
-                    CTextureAnimationDirection &direction =
-                        g_AnimationManager.m_DataIndex[id].m_Groups[animGroup].m_Direction[dir];
-                    g_AnimationManager.AnimID = id;
-                    g_AnimationManager.AnimGroup = animGroup;
-                    g_AnimationManager.Direction = dir;
-                    if (direction.FrameCount == 0)
-                    {
-                        g_AnimationManager.LoadDirectionGroup(direction);
-                    }
-
+                    auto direction = g_AnimationManager.ExecuteAnimation(animGroup, dir, id);
                     if (direction.Address != 0 || direction.IsUOP)
                     {
                         direction.LastAccessTime = g_Ticks;
-                        int fc = direction.FrameCount;
-
+                        const int fc = direction.FrameCount;
                         if (frameIndex >= fc)
                         {
                             frameIndex = fc - 1;
                         }
-
                         obj->AnimIndex = frameIndex;
                     }
                 }
-
                 obj->LastAnimationChangeTime = g_Ticks + delay;
             }
         }
-
         obj->UpdateEffects();
     }
 
@@ -322,10 +278,8 @@ void CGameWorld::ProcessAnimation()
         for (CGameObject *obj : toRemove)
         {
             g_CorpseManager.Remove(0, obj->Serial);
-
             RemoveObject(obj);
         }
-
         g_GameScreen.RenderListInitalized = false;
     }
 }
