@@ -35,5 +35,5 @@ struct CTextureAnimationDirection
 struct CTextureAnimationGroup
 {
     CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
-    UopBlockHeader m_UOPAnimData;
+    const UopBlockHeader *m_UOPAnimData;
 };

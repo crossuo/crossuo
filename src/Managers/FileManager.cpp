@@ -651,7 +651,6 @@ static int UopSetAnimationGroups(int start, int end)
                 animId,
                 grpId);
             const auto asset = CreateAssetHash(hashString);
-
             const auto fileIndex = getFileWithAsset(asset);
             if (fileIndex != -1)
             {
@@ -660,7 +659,7 @@ static int UopSetAnimationGroups(int start, int end)
                     lastGroup = grpId;
                 }
                 idx.IsUOP = true;
-                //group.m_UOPAnimData = hashes.at(hash);
+                group.m_UOPAnimData = g_FileManager.m_AnimationFrame[fileIndex].GetBlock(asset);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
                     auto &dir = group.m_Direction[dirId];
@@ -1267,8 +1266,7 @@ void CFileManager::UopReadAnimationFrameInfo(
 bool CFileManager::UopReadAnimationFrames(
     CTextureAnimationDirection &direction, const AnimationSelector &anim)
 {
-    auto &block = g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group].m_UOPAnimData;
-
+    auto &block = *g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group].m_UOPAnimData;
     std::vector<uint8_t> scratchBuffer;
     if (block.Hash == 0)
     {
@@ -1464,7 +1462,7 @@ void CFileManager::LoadAnimationFrameInfo(
     }
     else if (direction.IsUOP)
     {
-        UopReadAnimationFrameInfo(result, direction, group.m_UOPAnimData);
+        UopReadAnimationFrameInfo(result, direction, *group.m_UOPAnimData);
     }
 }
 
