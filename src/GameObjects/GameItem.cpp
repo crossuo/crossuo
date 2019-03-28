@@ -835,7 +835,6 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
     else
     {
         CMulti *multi = GetMultiAtXY(obj->GetX(), obj->GetY());
-
         if (multi != nullptr)
         {
             QFOR(multiobj, multi->m_Items, CMultiObject *)
@@ -875,12 +874,12 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
             obj->m_Next = nullptr;
             obj->m_Prev = nullptr;
 
-            QFOR(multi, m_Items, CMulti *)
+            QFOR(subMulti, m_Items, CMulti *)
             {
-                if (multi->m_Next == nullptr)
+                if (subMulti->m_Next == nullptr)
                 {
-                    multi->m_Next = newmulti;
-                    newmulti->m_Prev = multi;
+                    subMulti->m_Next = newmulti;
+                    newmulti->m_Prev = subMulti;
                     break;
                 }
             }

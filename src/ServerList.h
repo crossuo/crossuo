@@ -20,7 +20,7 @@ public:
         uint16_t index,
         const string &name,
         uint8_t fullPercent,
-        uint8_t timezone,
+        uint8_t timezoneType,
         int ip,
         bool selected);
     ~CServer();

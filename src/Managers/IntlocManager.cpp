@@ -112,13 +112,13 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
         return obj;
     }
 
-    QFOR(obj, m_Items, CIntloc *)
+    QFOR(obj2, m_Items, CIntloc *)
     {
-        if (obj->Language == "enu" && obj->FileIndex == fileIndex)
+        if (obj2->Language == "enu" && obj2->FileIndex == fileIndex)
         {
-            if (obj->Loaded)
+            if (obj2->Loaded)
             {
-                return obj;
+                return obj2;
             }
 
             break;

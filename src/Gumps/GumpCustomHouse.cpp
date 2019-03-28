@@ -2142,8 +2142,6 @@ void CGumpCustomHouse::OnTargetWorld(CRenderWorldObject *place)
 {
     if (place != nullptr && place->IsMultiObject()) // && place->GetZ() >= MinHouseZ)
     {
-        CMultiObject *multiObject = (CMultiObject *)place;
-
         int zOffset = 0;
 
         if (CurrentFloor == 1)

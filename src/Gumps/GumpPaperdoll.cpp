@@ -607,15 +607,15 @@ void CGumpPaperdoll::UpdateContent()
                 CGUIGumppic *scopeSlot =
                     (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x2344, 1, yPtr));
 
-                CGameItem *equipment = slotObjects[i];
-                if (equipment != nullptr)
+                CGameItem *slotEquipment = slotObjects[i];
+                if (slotEquipment != nullptr)
                 {
-                    uint32_t slotSerial = ID_GP_ITEMS + equipment->Layer;
-                    CIndexObjectStatic &sio = g_Index.m_Static[equipment->Graphic];
+                    uint32_t slotSerial = ID_GP_ITEMS + slotEquipment->Layer;
+                    CIndexObjectStatic &sio = g_Index.m_Static[slotEquipment->Graphic];
                     auto spr = sio.Sprite;
                     if (spr == nullptr)
                     {
-                        spr = g_Game.ExecuteStaticArt(equipment->Graphic);
+                        spr = g_Game.ExecuteStaticArt(slotEquipment->Graphic);
                     }
 
                     if (spr == nullptr)
@@ -633,7 +633,7 @@ void CGumpPaperdoll::UpdateContent()
                         short imageWidth = 0;
                         short imageHeight = 0;
                         vector<uint16_t> pixels = g_UOFileReader.GetArtPixels(
-                            equipment->Graphic, sio, true, imageWidth, imageHeight);
+                            slotEquipment->Graphic, sio, true, imageWidth, imageHeight);
 
                         int wantImageWidth = spr->ImageWidth;
                         int wantImageHeight = spr->ImageHeight;
@@ -688,15 +688,15 @@ void CGumpPaperdoll::UpdateContent()
                             spr, true, tileX, tileY, wantImageWidth, wantImageHeight);
                         m_DataBox->Add(ext);
                         ext->DrawOnly = true;
-                        ext->Color = equipment->Color & 0x3FFF;
+                        ext->Color = slotEquipment->Color & 0x3FFF;
                     }
                     else
                     {
                         tileX -= spr->ImageOffsetX - tileOffsetX;
                         tileY -= spr->ImageOffsetY - tileOffsetY;
                         CGUITilepic *pic = new CGUITilepic(
-                            equipment->Graphic, equipment->Color & 0x3FFF, tileX, tileY);
-                        pic->PartialHue = equipment->IsPartialHue();
+                            slotEquipment->Graphic, slotEquipment->Color & 0x3FFF, tileX, tileY);
+                        pic->PartialHue = slotEquipment->IsPartialHue();
                         m_DataBox->Add(pic);
                         pic->Serial = slotSerial;
                     }

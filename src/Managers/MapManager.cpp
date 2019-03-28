@@ -85,17 +85,17 @@ void CMapManager::CreateBlockTable(int map)
 
     int fileNumber = -1;
     size_t uopOffset = 0;
-    for (int block = 0; block < maxBlockCount; block++)
+    for (int blockIdx = 0; blockIdx < maxBlockCount; blockIdx++)
     {
-        CIndexMap &index = list[block];
+        CIndexMap &index = list[blockIdx];
         size_t realMapAddress = 0;
         size_t realStaticAddress = 0;
         int realStaticCount = 0;
-        int blockNumber = (int)block;
+        int blockNumber = (int)blockIdx;
         if (isUop)
         {
             blockNumber &= 4095;
-            int shifted = (int)block >> 12;
+            int shifted = (int)blockIdx >> 12;
             if (fileNumber != shifted)
             {
                 fileNumber = shifted;
@@ -124,13 +124,13 @@ void CMapManager::CreateBlockTable(int map)
             realMapAddress = address;
         }
 
-        const auto *sidx = (StaIdxBlock *)(staticIdxAddress + block * sizeof(StaIdxBlock));
+        const auto *sidx = (StaIdxBlock *)(staticIdxAddress + blockIdx * sizeof(StaIdxBlock));
         if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
         {
-            const size_t address = staticAddress + sidx->Position;
-            if (address < endStaticAddress)
+            const size_t address2 = staticAddress + sidx->Position;
+            if (address2 < endStaticAddress)
             {
-                realStaticAddress = address;
+                realStaticAddress = address2;
                 realStaticCount = sidx->Size / sizeof(STATICS_BLOCK);
                 if (realStaticCount > 1024)
                 {

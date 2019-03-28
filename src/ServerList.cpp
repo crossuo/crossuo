@@ -17,13 +17,13 @@ CServer::CServer(
     uint16_t index,
     const string &name,
     uint8_t fullPercent,
-    uint8_t timezone,
+    uint8_t timezoneType,
     int ip,
     bool selected)
     : Index(index)
     , Name(name)
     , FullPercent(fullPercent)
-    , Timezone(timezone)
+    , Timezone(timezoneType)
     , IP(ip)
     , Selected(selected)
 {
@@ -61,7 +61,7 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
         uint16_t id = reader.ReadUInt16BE();
         string name = reader.ReadString(32);
         uint8_t fullPercent = reader.ReadUInt8();
-        uint8_t timezone = reader.ReadUInt8();
+        uint8_t timezoneType = reader.ReadUInt8();
         uint32_t ip = reader.ReadUInt32LE(); //little-endian!!!
 
         const bool selected = (name == g_ServerList.LastServerName);
@@ -69,7 +69,7 @@ void CServerList::ParsePacket(Wisp::CDataReader &reader)
         {
             g_ServerList.LastServerIndex = (int)i;
         }
-        m_Servers.push_back(CServer(id, name, fullPercent, timezone, ip, selected));
+        m_Servers.push_back(CServer(id, name, fullPercent, timezoneType, ip, selected));
 
 #if USE_PING
         if (!g_DisablePing)

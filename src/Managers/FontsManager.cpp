@@ -213,7 +213,7 @@ CPoint2Di CFontsManager::GetCaretPosA(
             p.Y += info->MaxHeight;
         }
 
-        PMULTILINES_FONT_INFO ptr = info;
+        ptr = info;
 
         info = info->m_Next;
 

@@ -179,8 +179,7 @@ void CGumpScreenServer::UpdateContent()
 
     if (g_ServerList.ServersCount() > 0)
     {
-        CGUIText *text = (CGUIText *)Add(new CGUIText(0x0481, 243, 420));
-
+        text = (CGUIText *)Add(new CGUIText(0x0481, 243, 420));
         if (g_ServerList.LastServerIndex < (uint32_t)g_ServerList.ServersCount())
         {
             text->CreateTextureA(9, g_ServerList.GetServer(g_ServerList.LastServerIndex)->Name);
