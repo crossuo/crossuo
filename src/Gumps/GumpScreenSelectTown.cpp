@@ -126,15 +126,15 @@ void CGumpScreenSelectTown::UpdateContent()
         {
             CCityItemNew *newCity = (CCityItemNew *)city;
 
-            uint32_t map = newCity->MapIndex;
+            uint32_t mapIdx = newCity->MapIndex;
 
-            if (map > 5)
+            if (mapIdx > 5)
             {
-                map = 5;
+                mapIdx = 5;
             }
 
-            x = 62 + CalculatePercents(g_MapSize[map].Width - 2048, newCity->X, 383);
-            y = 54 + CalculatePercents(g_MapSize[map].Height, newCity->Y, 384);
+            x = 62 + CalculatePercents(g_MapSize[mapIdx].Width - 2048, newCity->X, 383);
+            y = 54 + CalculatePercents(g_MapSize[mapIdx].Height, newCity->Y, 384);
         }
         else if (i < (int)m_TownButtonText.size())
         {

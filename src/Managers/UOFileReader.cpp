@@ -324,16 +324,18 @@ CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
         maxX = 44;
         maxY = 44;
         bool allBlack = true;
-        int pos = 0;
-        for (int i = 0; i < 44; i++)
         {
-            for (int j = 0; j < 44; j++)
+            int pos = 0;
+            for (int i = 0; i < 44; i++)
             {
-                if (pixels[pos++] != 0u)
+                for (int j = 0; j < 44; j++)
                 {
-                    i = 44;
-                    allBlack = false;
-                    break;
+                    if (pixels[pos++] != 0u)
+                    {
+                        i = 44;
+                        allBlack = false;
+                        break;
+                    }
                 }
             }
         }

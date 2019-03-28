@@ -3464,8 +3464,8 @@ PACKET_HANDLER(UnicodeTalk)
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
         (ToLowerA(name) == "system" && obj == nullptr))
     {
-        const uint8_t font = uint8_t(g_ConfigManager.SpeechFont);
-        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, textColor, str);
+        const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
+        g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, speechFont, textColor, str);
     }
     else
     {
@@ -3499,8 +3499,8 @@ PACKET_HANDLER(UnicodeTalk)
             }
         }
 
-        const uint8_t font = uint8_t(g_ConfigManager.SpeechFont);
-        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, font, textColor, str);
+        const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
+        g_Game.CreateUnicodeTextMessage(TT_OBJECT, serial, speechFont, textColor, str);
     }
 }
 
@@ -4872,21 +4872,21 @@ PACKET_HANDLER(OpenGump)
 
     const uint32_t serial = ReadUInt32BE();
     const uint32_t id = ReadUInt32BE();
-    int x = ReadInt32BE();
-    int y = ReadInt32BE();
+    int locX = ReadInt32BE();
+    int locY = ReadInt32BE();
 
     auto found = m_GumpsCoordsCache.find(id);
     if (found != m_GumpsCoordsCache.end())
     {
-        x = found->second.X;
-        y = found->second.Y;
+        locX = found->second.X;
+        locY = found->second.Y;
     }
     else
     {
-        SetCachedGumpCoords(id, x, y);
+        SetCachedGumpCoords(id, locX, locY);
     }
 
-    CGumpGeneric *gump = new CGumpGeneric(serial, x, y, id);
+    CGumpGeneric *gump = new CGumpGeneric(serial, locX, locY, id);
 
     uint16_t commandsLength = ReadUInt16BE();
     string commands = ReadString(commandsLength);

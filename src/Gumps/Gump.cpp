@@ -390,16 +390,16 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
                     glTranslatef(x, y, 0.0f);
 
-                    CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
+                    CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
                     for (int j = 0; j < 5; j++)
                     {
-                        if (item->Visible && !item->SelectOnly)
+                        if (subItem->Visible && !subItem->SelectOnly)
                         {
-                            item->Draw(false);
+                            subItem->Draw(false);
                         }
 
-                        item = (CBaseGUI *)item->m_Next;
+                        subItem = (CBaseGUI *)subItem->m_Next;
                     }
 
                     GLfloat offsetX = (GLfloat)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
@@ -407,7 +407,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
                     glTranslatef(offsetX, offsetY, 0.0f);
 
-                    CGump::DrawItems(item, currentPage, draw2Page);
+                    CGump::DrawItems(subItem, currentPage, draw2Page);
                     g_GL.PopScissor();
 
                     glTranslatef(-(x + offsetX), -(y + offsetY), 0.0f);
@@ -517,22 +517,22 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                     g_MouseManager.Position =
                         CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
-                    CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
+                    CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
                     CRenderObject *selectedHTML = nullptr;
 
                     for (int j = 0; j < 4; j++)
                     {
-                        if (item->Select())
+                        if (subItem->Select())
                         {
-                            selectedHTML = item;
+                            selectedHTML = subItem;
                         }
 
-                        item = (CBaseGUI *)item->m_Next;
+                        subItem = (CBaseGUI *)subItem->m_Next;
                     }
 
                     //Scissor
-                    if (item->Select())
+                    if (subItem->Select())
                     {
                         int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
                         int offsetY = htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y;
@@ -542,7 +542,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
                             g_MouseManager.Position.Y - offsetY);
 
                         selected =
-                            CGump::SelectItems((CBaseGUI *)item->m_Next, currentPage, draw2Page);
+                            CGump::SelectItems((CBaseGUI *)subItem->m_Next, currentPage, draw2Page);
                     }
                     else
                     {
@@ -555,7 +555,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 
                         if (selected == nullptr)
                         {
-                            selected = item;
+                            selected = subItem;
                         }
                     }
 
@@ -876,13 +876,13 @@ void CGump::TestItemsLeftMouseDown(
                     g_MouseManager.Position =
                         CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
-                    CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
+                    CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
-                    TestItemsLeftMouseDown(gump, item, currentPage, draw2Page, 5);
+                    TestItemsLeftMouseDown(gump, subItem, currentPage, draw2Page, 5);
 
                     for (int j = 0; j < 5; j++)
                     {
-                        item = (CBaseGUI *)item->m_Next;
+                        subItem = (CBaseGUI *)subItem->m_Next;
                     }
 
                     int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
@@ -891,7 +891,7 @@ void CGump::TestItemsLeftMouseDown(
                     g_MouseManager.Position = CPoint2Di(
                         g_MouseManager.Position.X - offsetX, g_MouseManager.Position.Y - offsetY);
 
-                    TestItemsLeftMouseDown(gump, item, currentPage, draw2Page);
+                    TestItemsLeftMouseDown(gump, subItem, currentPage, draw2Page);
 
                     g_MouseManager.Position = oldPos;
 
@@ -1245,18 +1245,18 @@ void CGump::TestItemsScrolling(
                         g_MouseManager.Position =
                             CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
-                        CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
+                        CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
                         for (int j = 0; j < 5; j++)
                         {
-                            if (item->Type == GOT_SLIDER)
+                            if (subItem->Type == GOT_SLIDER)
                             {
-                                ((CGUISlider *)item)->OnScroll(up, delay);
+                                ((CGUISlider *)subItem)->OnScroll(up, delay);
 
-                                gump->OnSliderMove(item->Serial);
+                                gump->OnSliderMove(subItem->Serial);
                             }
 
-                            item = (CBaseGUI *)item->m_Next;
+                            subItem = (CBaseGUI *)subItem->m_Next;
                         }
 
                         int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
@@ -1266,7 +1266,7 @@ void CGump::TestItemsScrolling(
                             g_MouseManager.Position.X - offsetX,
                             g_MouseManager.Position.Y - offsetY);
 
-                        TestItemsScrolling(gump, (CBaseGUI *)item, up, currentPage, draw2Page);
+                        TestItemsScrolling(gump, (CBaseGUI *)subItem, up, currentPage, draw2Page);
 
                         g_MouseManager.Position = oldPos;
 
@@ -1361,13 +1361,13 @@ void CGump::TestItemsDragging(
                     g_MouseManager.Position =
                         CPoint2Di(oldPos.X - htmlGump->GetX(), oldPos.Y - htmlGump->GetY());
 
-                    CBaseGUI *item = (CBaseGUI *)htmlGump->m_Items;
+                    CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
-                    TestItemsDragging(gump, item, currentPage, draw2Page, 5);
+                    TestItemsDragging(gump, subItem, currentPage, draw2Page, 5);
 
                     for (int j = 0; j < 5; j++)
                     {
-                        item = (CBaseGUI *)item->m_Next;
+                        subItem = (CBaseGUI *)subItem->m_Next;
                     }
 
                     int offsetX = htmlGump->DataOffset.X - htmlGump->CurrentOffset.X;
@@ -1376,7 +1376,7 @@ void CGump::TestItemsDragging(
                     g_MouseManager.Position = CPoint2Di(
                         g_MouseManager.Position.X - offsetX, g_MouseManager.Position.Y - offsetY);
 
-                    TestItemsDragging(gump, item, currentPage, draw2Page);
+                    TestItemsDragging(gump, subItem, currentPage, draw2Page);
 
                     g_MouseManager.Position = oldPos;
 

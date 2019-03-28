@@ -598,15 +598,15 @@ namespace po {
 					return error_code::conversion_error;
 				for( ; first != last && *first == '0'; ++first );
 				unsigned exp{};
-				std::size_t decimals = 0;
+				std::size_t decimals2 = 0;
 				enum : std::size_t {
 					max = std::numeric_limits< T >::digits10,
 					max_decimals = log10< max >::value + 1
 				};
-				for( int d{}; first != last && decimals <= max_decimals && ( d = get_digit( *first ) ) >= 0; ++first, ++decimals )
+				for( int d{}; first != last && decimals2 <= max_decimals && ( d = get_digit( *first ) ) >= 0; ++first, ++decimals2 )
 					exp = 10 * exp + static_cast< unsigned >( d );
-				if( decimals >= max_decimals )
-					if( decimals > max_decimals || exp > max )
+				if( decimals2 >= max_decimals )
+					if( decimals2 > max_decimals || exp > max )
 						return error_code::out_of_range;
 				const T fac = pow( T{ 10 }, exp );
 				const T mant = result;

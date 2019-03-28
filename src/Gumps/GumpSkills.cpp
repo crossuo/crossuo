@@ -826,14 +826,14 @@ void CGumpSkills::OnKeyDown(const KeyEvent &ev)
 
                                 for (int i = 0; i < count; i++)
                                 {
-                                    uint8_t index = groupItem->GetItem(i);
-                                    if (index < g_SkillsManager.Count)
+                                    uint8_t itemIndex = groupItem->GetItem(i);
+                                    if (itemIndex < g_SkillsManager.Count)
                                     {
                                         first->Add(new CGUISkillItem(
-                                            ID_GS_SKILL + index,
-                                            ID_GS_SKILL_BUTTON + index,
-                                            ID_GS_SKILL_STATE + index,
-                                            index,
+                                            ID_GS_SKILL + itemIndex,
+                                            ID_GS_SKILL_BUTTON + itemIndex,
+                                            ID_GS_SKILL_STATE + itemIndex,
+                                            itemIndex,
                                             0,
                                             (int)i * 17));
                                     }

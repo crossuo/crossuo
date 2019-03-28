@@ -1807,7 +1807,7 @@ void CGumpManager::Save(const os_path &path)
 
         for (int i = 0; i < spellGroupsCount; i++)
         {
-            CGumpSpell *spell = (CGumpSpell *)spellGroups[i];
+            //CGumpSpell *spell = (CGumpSpell *)spellGroups[i];
             int spellsCount = 0;
 
             for (CGumpSpell *spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
