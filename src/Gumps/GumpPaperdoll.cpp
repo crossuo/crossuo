@@ -656,7 +656,7 @@ void CGumpPaperdoll::UpdateContent()
                             }
                         }
 
-                        auto spr = new CSprite();
+                        spr = new CSprite();
                         spr->LoadSprite16(wantImageWidth, wantImageHeight, wantPixels.data());
                         if (wantImageWidth < 14)
                         {
@@ -686,7 +686,7 @@ void CGumpPaperdoll::UpdateContent()
 
                         auto ext = new CGUIExternalTexture(
                             spr, true, tileX, tileY, wantImageWidth, wantImageHeight);
-                        m_DataBox->Add(obj);
+                        m_DataBox->Add(ext);
                         ext->DrawOnly = true;
                         ext->Color = equipment->Color & 0x3FFF;
                     }
