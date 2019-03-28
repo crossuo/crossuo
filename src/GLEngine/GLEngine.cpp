@@ -21,32 +21,6 @@ DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
 DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr = &CGLEngine::GL1_DrawStretched;
 DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
 
-void GLAPIENTRY MessageCallback(
-    GLenum source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar *message,
-    const void *userParam)
-{
-    if (type == GL_DEBUG_TYPE_ERROR)
-    {
-        //Error(Renderer, "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n", type, severity, message );
-        //int *x = 0;
-        //*x = 1;
-    }
-    else
-    {
-        Warning(
-            Renderer,
-            "GL CALLBACK: type = 0x%x, severity = 0x%x, message = %s\n",
-            type,
-            severity,
-            message);
-    }
-}
-
 CGLEngine::CGLEngine()
 {
 }
@@ -63,10 +37,163 @@ CGLEngine::~CGLEngine()
     Uninstall();
 }
 
+//#define OGL_DEBUGCONTEXT_ENABLED
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+#define OGL_DEBUGMSG_SEVERITY_COUNT (3)
+#define OGL_DEBUGMSG_TYPE_COUNT (8)
+#define OGL_DEBUGMSG_IDS_MAX (16)
+#define OGL_DEBUGMSG_INVALIDID (0xffffffff)
+
+struct
+{
+    bool assert = false;
+    bool log = false;
+} static s_openglDebugMsgSeverity[OGL_DEBUGMSG_SEVERITY_COUNT];
+
+struct
+{
+    bool assert = false;
+    bool log = false;
+} static s_openglDebugMsgType[OGL_DEBUGMSG_SEVERITY_COUNT];
+
+struct
+{
+    GLuint id = OGL_DEBUGMSG_INVALIDID;
+    bool assert = false;
+    bool log = false;
+} static s_openglDebugMsgs[OGL_DEBUGMSG_IDS_MAX];
+
+static void EnableOpenGLDebugMsgSeverity(GLenum severity, bool assert, bool log)
+{
+    auto &info = s_openglDebugMsgSeverity[severity % OGL_DEBUGMSG_SEVERITY_COUNT];
+    info.assert = assert;
+    info.log = log;
+}
+
+static void EnableOpenGLDebugMsgType(GLenum type, bool assert, bool log)
+{
+    auto &info = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+    info.assert = assert;
+    info.log = log;
+}
+
+static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
+{
+    for (auto &msg : s_openglDebugMsgs)
+    {
+        if (msg.id == OGL_DEBUGMSG_INVALIDID)
+        {
+            msg.id = id;
+            msg.assert = assert;
+            msg.log = log;
+            return;
+        }
+    }
+
+    Error(Renderer, "Can't change settings for OpenGL debug message, OGL_DEBUGMSG_IDS_MAX reached");
+    assert(false);
+}
+
+static void APIENTRY openglCallbackFunction(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam)
+{
+    (void)source;
+    (void)length;
+    (void)userParam;
+
+    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
+        auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
+        auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+
+        auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
+        shouldAssert &= infoType.assert;
+        shouldLog &= infoType.log;
+
+        if (!shouldAssert && !shouldLog)
+            return std::tie(shouldAssert, shouldLog);
+
+        for (auto &ctrl : s_openglDebugMsgs)
+        {
+            if (ctrl.id == OGL_DEBUGMSG_INVALIDID)
+            {
+                break;
+            }
+
+            if (ctrl.id == id)
+            {
+                shouldAssert &= ctrl.assert;
+                shouldLog &= ctrl.log;
+                break;
+            }
+        }
+
+        return std::tie(shouldAssert, shouldLog);
+    };
+
+    auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    if (shouldLog)
+    {
+        Info(Renderer, "OpenGL debug message (id %d): %s", id, message);
+    }
+    assert(!shouldAssert);
+}
+#endif // OGL_DEBUGCONTEXT_ENABLED
+
+static void SetupOGLDebugMessage()
+{
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    EnableOpenGLDebugMsgSeverity(GL_DEBUG_SEVERITY_HIGH, true, true);
+    EnableOpenGLDebugMsgSeverity(GL_DEBUG_SEVERITY_MEDIUM, false, true);
+    EnableOpenGLDebugMsgSeverity(GL_DEBUG_SEVERITY_LOW, false, true);
+
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_ERROR, true, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, true, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_OTHER, true, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, false, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_PORTABILITY, false, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_PERFORMANCE, false, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_MARKER, false, false);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_POP_GROUP, false, true);
+
+    // GL error "GL_INVALID_OPERATION in ...":
+    // 1) FIXME no shader set when glUniform1iARB is called for g_ShaderDrawMode
+    // 2) FIXME glGetShaderiv called afters glLinkProgramARB
+    EnableOpenGLMessage(1282, false, false);
+
+    // Usage warning: glClear() called with GL_STENCIL_BUFFER_BIT, but there is no stencil buffer. Operation will have no effect.
+    EnableOpenGLMessage(131076, false, false);
+
+    glDebugMessageCallback(openglCallbackFunction, nullptr);
+    glDebugMessageControl(
+        GL_DONT_CARE, // source
+        GL_DONT_CARE, // type
+        GL_DONT_CARE, // severity
+        0,
+        nullptr,
+        GL_TRUE);
+#endif
+}
+
 bool CGLEngine::Install()
 {
     DEBUG_TRACE_FUNCTION;
     OldTexture = -1;
+
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    auto debugContext = true;
+#else
+    auto debugContext = false;
+#endif
+    if (debugContext)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
 
     m_context = SDL_GL_CreateContext(g_GameWindow.m_window);
     SDL_GL_MakeCurrent(g_GameWindow.m_window, m_context);
@@ -83,6 +210,13 @@ bool CGLEngine::Install()
     if (glewInitResult != 0)
     {
         return false;
+    }
+
+    // debug messages callback needs ogl >= 4.30
+    // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
+    if (debugContext && GLEW_KHR_debug)
+    {
+        SetupOGLDebugMessage();
     }
 
     Info(Renderer, "Graphics Successfully Initialized");
@@ -129,9 +263,6 @@ bool CGLEngine::Install()
     {
         g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Warning");
     }
-
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
     glShadeModel(GL_SMOOTH);              // Enables Smooth Color Shading
