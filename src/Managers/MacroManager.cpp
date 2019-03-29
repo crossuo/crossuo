@@ -347,29 +347,23 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
     DEBUG_TRACE_FUNCTION;
     bool result = false;
     Clear();
-
     Wisp::CMappedFile file;
-
     if (file.Load(path) && (file.Size != 0u))
     {
-        uint8_t version = file.ReadUInt8();
-
-        short count = file.ReadInt16LE();
-
+        const uint8_t _version = file.ReadUInt8();
+        (void)_version;
+        const auto count = file.ReadInt16LE();
         for (int i = 0; i < count; i++)
         {
             Add(CMacro::Load(file));
         }
-
         result = true;
     }
     else
     {
         result = Convert(originalPath);
     }
-
     file.Unload();
-
     return result;
 }
 

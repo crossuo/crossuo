@@ -653,8 +653,6 @@ void CMapManager::Init(bool delayed)
 void CMapManager::LoadBlock(CMapBlock *block)
 {
     DEBUG_TRACE_FUNCTION;
-    int map = GetActualMap();
-
     CIndexMap *indexMap = GetIndex(GetActualMap(), block->X, block->Y);
 
     if (indexMap == nullptr || indexMap->MapAddress == 0)

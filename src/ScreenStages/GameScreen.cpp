@@ -185,9 +185,6 @@ void CGameScreen::UpdateMaxDrawZ()
     g_Player->OldY = g_Player->GetY();
     g_Player->OldZ = g_Player->GetZ();
 
-    int maxZ1 = g_MaxGroundZ;
-    int maxZ2 = m_MaxDrawZ;
-
     g_NoDrawRoof = g_ConfigManager.GetNoDrawRoofs();
     char maxGroundZ = 127;
     g_MaxGroundZ = 127;
@@ -993,9 +990,6 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
          (!character->m_Steps.empty() && ((character->m_Steps.back().Direction & 7) == 6 ||
                                           (character->m_Steps.back().Direction & 7) == 2)));
 
-    DRAW_FRAME_INFORMATION &dfInfo = obj->m_FrameInfo;
-    int offsetY = dfInfo.Height - dfInfo.OffsetY;
-
     vector<pair<int, int>> coordinates;
 
     coordinates.push_back(pair<int, int>(characterX + 1, characterY - 1));
@@ -1074,7 +1068,6 @@ void CGameScreen::CalculateGameWindowBounds()
     g_RenderBounds.PlayerZ = g_Player->GetZ();
 
     int oldDrawOffsetX = g_RenderBounds.WindowDrawOffsetX;
-    int oldDrawOffsetY = g_RenderBounds.WindowDrawOffsetY;
 
     g_RenderBounds.GameWindowPosX = g_ConfigManager.GameWindowX;
     g_RenderBounds.GameWindowPosY = g_ConfigManager.GameWindowY;
@@ -2113,10 +2106,8 @@ void CGameScreen::SelectObject()
 
                 //g_MouseManager.Position = CPoint2Di((int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale), (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale));
 
-                int mouseX =
-                    (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
-                int mouseY =
-                    (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
+                //int mouseX = (int)((oldMouse.X * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetX / g_GlobalScale);
+                // int mouseY = (int)((oldMouse.Y * g_GlobalScale) + g_RenderBounds.GameWindowScaledOffsetY / g_GlobalScale);
 
                 /*g_MouseManager.Position = CPoint2Di
                 (

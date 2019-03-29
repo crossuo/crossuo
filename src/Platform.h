@@ -18,12 +18,7 @@
 #pragma clang diagnostic ignored                                                                   \
     "-Woverloaded-virtual" // FIXME: CGameItem::GetLightID, CTextContainer::Add, CJournal::Add etc.
 #pragma clang diagnostic ignored "-Wsign-compare"
-#pragma clang diagnostic ignored "-Wunused-variable"
-#pragma clang diagnostic ignored "-Wformat"               // %li
-#pragma clang diagnostic ignored "-Wmultichar"            // FIXME: 'ENU'
-#pragma clang diagnostic ignored "-Wchar-subscripts"      // FIXME: [' ']
-#pragma clang diagnostic ignored "-Wunused-private-field" // FIXME: m_FakeInsertionPin
-#pragma clang diagnostic ignored "-Wcomment"
+#pragma clang diagnostic ignored "-Wformat" // %li
 #elif defined(__GNUC__)
 // GCC warnings
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

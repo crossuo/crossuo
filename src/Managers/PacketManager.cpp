@@ -1605,8 +1605,6 @@ PACKET_HANDLER(UpdateObject)
     uint8_t notoriety = ReadUInt8();
     bool oldDead = false;
 
-    bool isAlreadyExists = (g_World->FindWorldObject(serial) != nullptr);
-
     if (serial == g_PlayerSerial)
     {
         if (g_Player != nullptr)
@@ -2070,7 +2068,7 @@ PACKET_HANDLER(DeleteObject)
                 g_GumpManager.UpdateContent(cont, 0, GT_PAPERDOLL);
             }
 
-            CGump *gump = g_GumpManager.UpdateContent(cont, 0, GT_CONTAINER);
+            g_GumpManager.UpdateContent(cont, 0, GT_CONTAINER);
             if (obj->Graphic == 0x0EB0)
             {
                 g_GumpManager.CloseGump(serial, cont, GT_BULLETIN_BOARD_ITEM);
@@ -2990,7 +2988,8 @@ PACKET_HANDLER(ExtendedCommand)
                 {
                     if (serial == g_PlayerSerial)
                     {
-                        uint8_t updateGump = ReadUInt8();
+                        const uint8_t _updateGump = ReadUInt8();
+                        (void)_updateGump;
                         uint8_t state = ReadUInt8();
                         g_DrawStatLockers = true;
 
@@ -3045,8 +3044,10 @@ PACKET_HANDLER(ExtendedCommand)
 
             g_World->ClearContainer(spellbook);
 
-            uint16_t graphic = ReadUInt16BE();
-            SPELLBOOK_TYPE bookType = (SPELLBOOK_TYPE)ReadUInt16BE();
+            const uint16_t _graphic = ReadUInt16BE();
+            (void)_graphic;
+            const auto _bookType = (SPELLBOOK_TYPE)ReadUInt16BE();
+            (void)_bookType;
 
             for (int j = 0; j < 2; j++)
             {
@@ -3100,10 +3101,14 @@ PACKET_HANDLER(ExtendedCommand)
         {
             uint32_t serial = ReadUInt32BE();
             uint8_t type = ReadUInt8();
-            uint16_t graphic = ReadUInt16BE();
-            uint16_t x = ReadUInt16BE();
-            uint16_t y = ReadUInt16BE();
-            uint8_t z = ReadUInt8();
+            const uint16_t _graphic = ReadUInt16BE();
+            (void)_graphic;
+            const uint16_t _x = ReadUInt16BE();
+            (void)_x;
+            const uint16_t _y = ReadUInt16BE();
+            (void)_y;
+            const uint8_t _z = ReadUInt8();
+            (void)_z;
 
             switch (type)
             {
@@ -3295,11 +3300,16 @@ PACKET_HANDLER(Talk)
     {
         if (g_GameState == GS_GAME_CONNECT)
         {
-            uint32_t serial = ReadUInt32BE();
-            uint16_t graphic = ReadUInt16BE();
-            SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-            uint16_t textColor = ReadUInt16BE();
-            uint16_t font = ReadUInt16BE();
+            const uint32_t _serial = ReadUInt32BE();
+            (void)_serial;
+            const uint16_t _graphic = ReadUInt16BE();
+            (void)_graphic;
+            const auto _type = (SPEECH_TYPE)ReadUInt8();
+            (void)_type;
+            const uint16_t _textColor = ReadUInt16BE();
+            (void)_textColor;
+            const uint16_t _font = ReadUInt16BE();
+            (void)_font;
 
             string name(ReadString());
             if (Size > 44)
@@ -3397,12 +3407,18 @@ PACKET_HANDLER(UnicodeTalk)
     {
         if (g_GameState == GS_GAME_CONNECT)
         {
-            uint32_t serial = ReadUInt32BE();
-            uint16_t graphic = ReadUInt16BE();
-            SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
-            uint16_t textColor = ReadUInt16BE();
-            uint16_t font = ReadUInt16BE();
-            uint32_t language = ReadUInt32BE();
+            const uint32_t _serial = ReadUInt32BE();
+            (void)_serial;
+            const uint16_t _graphic = ReadUInt16BE();
+            (void)_graphic;
+            const auto _type = (SPEECH_TYPE)ReadUInt8();
+            (void)_type;
+            const uint16_t _textColor = ReadUInt16BE();
+            (void)_textColor;
+            const uint16_t _font = ReadUInt16BE();
+            (void)_font;
+            const uint32_t _language = ReadUInt32BE();
+            (void)_language;
 
             string name(ReadString());
 
@@ -3422,7 +3438,8 @@ PACKET_HANDLER(UnicodeTalk)
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
-    uint32_t language = ReadUInt32BE();
+    const uint32_t _language = ReadUInt32BE();
+    (void)_language;
     string name(ReadString());
 
     if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
@@ -3731,7 +3748,8 @@ PACKET_HANDLER(PlaySoundEffect)
     DEBUG_TRACE_FUNCTION;
     Move(1);
     uint16_t index = ReadUInt16BE();
-    uint16_t volume = ReadUInt16BE();
+    const uint16_t _volume = ReadUInt16BE();
+    (void)_volume;
     uint16_t xCoord = ReadUInt16BE(); // CHECK: unsigned for position?
     uint16_t yCoord = ReadUInt16BE();
     g_Game.PlaySoundEffectAtPosition(index, xCoord, yCoord);
@@ -3764,8 +3782,8 @@ PACKET_HANDLER(DragAnimation)
     graphic += ReadUInt8(); //graphic increment
 
     uint16_t color = ReadUInt16BE();
-    uint16_t count = ReadUInt16BE();
-
+    const uint16_t _count = ReadUInt16BE();
+    (void)_count;
     uint32_t sourceSerial = ReadUInt32BE();
     short sourceX = ReadInt16BE();
     short sourceY = ReadInt16BE();
@@ -4131,9 +4149,11 @@ PACKET_HANDLER(DisplayClilocString)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-    uint16_t graphic = ReadUInt16BE();
-    uint8_t type = ReadUInt8();
+    const uint32_t serial = ReadUInt32BE();
+    const uint16_t _graphic = ReadUInt16BE();
+    (void)_graphic;
+    const uint8_t _type = ReadUInt8();
+    (void)_type;
     uint16_t color = ReadUInt16BE();
     uint8_t font = (uint8_t)ReadUInt16BE();
     uint32_t cliloc = ReadUInt32BE();
@@ -4495,8 +4515,8 @@ PACKET_HANDLER(BuffDebuff)
     };
 
     const uint16_t buffIconStart = 0x03E9; //0x03EA ???
-
-    uint32_t serial = ReadUInt32BE();
+    const uint32_t _serial = ReadUInt32BE();
+    (void)_serial;
     uint16_t iconID = ReadUInt16BE() - buffIconStart;
     if (iconID < tableCount) //buff
     {
@@ -4713,8 +4733,7 @@ PACKET_HANDLER(OpenMenu)
                     posY = ((47 - posY) / 2);
                 }
 
-                CGUIMenuObject *menuObject = (CGUIMenuObject *)htmlGump->Add(
-                    new CGUIMenuObject((int)i + 1, graphic, color, posX, posY, name));
+                htmlGump->Add(new CGUIMenuObject((int)i + 1, graphic, color, posX, posY, name));
 
                 posX += size.Width;
             }
@@ -5101,7 +5120,8 @@ PACKET_HANDLER(OpenGump)
                 const int x = ToInt(list[1]);
                 const int y = ToInt(list[2]);
                 const int width = ToInt(list[3]);
-                const int height = ToInt(list[4]);
+                const int _height = ToInt(list[4]);
+                (void)_height;
                 int color = ToInt(list[5]);
                 const int index = ToInt(list[6]);
 
@@ -5714,7 +5734,8 @@ PACKET_HANDLER(BulletinBoardData)
             if (gump != nullptr)
             {
                 uint32_t serial = ReadUInt32BE();
-                uint32_t parentID = ReadUInt32BE();
+                const uint32_t _parentID = ReadUInt32BE();
+                (void)_parentID;
 
                 //poster
                 int len = ReadUInt8();
@@ -6138,7 +6159,8 @@ PACKET_HANDLER(OPLInfo)
 PACKET_HANDLER(CustomHouse)
 {
     DEBUG_TRACE_FUNCTION;
-    bool compressed = ReadUInt8() == 0x03;
+    const bool _compressed = ReadUInt8() == 0x03;
+    (void)_compressed;
     bool enableResponse = ReadUInt8() == 0x01;
     uint32_t serial = ReadUInt32BE();
     uint32_t revision = ReadUInt32BE();
@@ -6694,8 +6716,10 @@ PACKET_HANDLER(BoatMoving)
         return;
     }
 
-    uint8_t boatSpeed = ReadUInt8();
-    uint8_t movingDirection = ReadUInt8();
+    const uint8_t _boatSpeed = ReadUInt8();
+    (void)_boatSpeed;
+    const uint8_t _movingDirection = ReadUInt8();
+    (void)_movingDirection;
     uint8_t facingDirection = ReadUInt8();
     uint16_t boatX = ReadUInt16BE();
     uint16_t boatY = ReadUInt16BE();
