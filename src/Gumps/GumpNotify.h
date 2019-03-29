@@ -25,6 +25,6 @@ public:
     static const int ID_GN_STATE_LOGOUT = 1;
     static const int ID_GN_STATE_NOTIFICATION = 2;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

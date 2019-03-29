@@ -11,15 +11,15 @@ protected:
     bool m_ShowFullText = false;
     int m_SelectedType = 0;
 
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpConsoleType(bool minimized, bool showFullText);
     virtual ~CGumpConsoleType();
 
-    virtual bool CanBeDisplayed();
-    virtual void UpdateContent();
-    virtual void InitToolTip();
+    virtual bool CanBeDisplayed() override;
+    virtual void UpdateContent() override;
+    virtual void InitToolTip() override;
 
     bool ConsoleIsEmpty();
     void DeleteConsolePrefix();
@@ -27,9 +27,9 @@ public:
     bool GetShowFullText() { return m_ShowFullText; };
     void SetShowFullText(bool val);
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_CHECKBOX_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_CHECKBOX_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override;
 };
 
 extern CGumpConsoleType *g_GumpConsoleType;

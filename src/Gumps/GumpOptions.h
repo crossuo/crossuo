@@ -86,7 +86,7 @@ private:
     void RedrawMacroData();
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpOptions(short x, short y);
@@ -97,17 +97,17 @@ public:
     CGUITextEntry *m_MacroKey{ nullptr };
 
     void UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t color);
-    virtual void InitToolTip();
-    virtual void PrepareContent();
-    virtual void UpdateContent();
-    void Init();
+    virtual void InitToolTip() override;
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
+    virtual void Init();
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_CHECKBOX_EVENT_H;
-    GUMP_RADIO_EVENT_H;
-    GUMP_COMBOBOX_SELECTION_EVENT_H;
-    GUMP_SLIDER_CLICK_EVENT_H;
-    GUMP_SLIDER_MOVE_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_CHECKBOX_EVENT_H override;
+    GUMP_RADIO_EVENT_H override;
+    GUMP_COMBOBOX_SELECTION_EVENT_H override;
+    GUMP_SLIDER_CLICK_EVENT_H override;
+    GUMP_SLIDER_MOVE_EVENT_H override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

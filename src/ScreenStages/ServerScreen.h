@@ -23,9 +23,8 @@ public:
     static const uint8_t ID_SMOOTH_SS_SELECT_SERVER = 2;
     static const uint8_t ID_SMOOTH_SS_GO_SCREEN_MAIN = 3;
 
-    void Init();
-    void ProcessSmoothAction(uint8_t action = 0xFF);
-
+    virtual void Init() override;
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 

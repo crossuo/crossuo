@@ -31,17 +31,17 @@ public:
 
     static vector<uint16_t> GetItemsList(uint8_t index);
 
-    virtual void DelayedClick(CRenderObject *obj);
+    virtual void DelayedClick(CRenderObject *obj) override;
 
     void ChangePage(int newPage);
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

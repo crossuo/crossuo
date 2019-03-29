@@ -13,15 +13,11 @@
 
 #if defined(__clang__)
 // Enable these incrementally to cleanup bad code
-#pragma clang diagnostic ignored "-Wint-to-pointer-cast" // FIXME: CGLTextTexture
 #pragma clang diagnostic ignored                                                                   \
     "-Wtautological-constant-out-of-range-compare" // FIXME: always true expression
 #pragma clang diagnostic ignored                                                                   \
-    "-Winconsistent-missing-override" // FIXME: OnTextInput, OnKeyDown, OnLeftMouse... etc.
-#pragma clang diagnostic ignored                                                                   \
     "-Woverloaded-virtual" // FIXME: CGameItem::GetLightID, CTextContainer::Add, CJournal::Add etc.
 #pragma clang diagnostic ignored "-Wsign-compare"
-#pragma clang diagnostic ignored "-Wreorder" // FIXME: Initialization order in class fields
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wformat"               // %li
 #pragma clang diagnostic ignored "-Wmultichar"            // FIXME: 'ENU'

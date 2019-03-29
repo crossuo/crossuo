@@ -36,9 +36,9 @@ public:
     static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_CONNECT = 3;
     static const uint8_t ID_SMOOTH_CCS_GO_SCREEN_SELECT_TOWN = 4;
 
-    void Init();
-    void ProcessSmoothAction(uint8_t action = 0xFF);
-    virtual void OnLeftMouseButtonDown();
+    virtual void Init() override;
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
+    virtual void OnLeftMouseButtonDown() override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

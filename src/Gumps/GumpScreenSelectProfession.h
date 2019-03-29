@@ -22,12 +22,12 @@ public:
     CGumpScreenSelectProfession();
     virtual ~CGumpScreenSelectProfession();
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H { OnButton(serial); }
-    GUMP_SLIDER_CLICK_EVENT_H;
-    GUMP_SLIDER_MOVE_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override { OnButton(serial); }
+    GUMP_SLIDER_CLICK_EVENT_H override;
+    GUMP_SLIDER_MOVE_EVENT_H override;
 };

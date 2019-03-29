@@ -31,11 +31,11 @@ public:
 
     static const int ID_GPM_MAXIMIZE = 0xDEADBEEF;
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
     static void Parse(Wisp::CPacketReader &reader);
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 };
 
 extern CGumpPopupMenu *g_PopupMenu;

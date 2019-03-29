@@ -16,8 +16,8 @@ public:
     CGumpScreenSelectTown();
     virtual ~CGumpScreenSelectTown();
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override;
 };

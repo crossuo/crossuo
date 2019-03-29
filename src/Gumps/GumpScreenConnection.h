@@ -16,7 +16,7 @@ private:
 public:
     CGumpScreenConnection();
     virtual ~CGumpScreenConnection();
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 };

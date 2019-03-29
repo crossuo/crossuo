@@ -20,13 +20,13 @@ public:
     CGumpTargetSystem(uint32_t serial, short x, short y);
     virtual ~CGumpTargetSystem();
 
-    virtual bool CanBeDisplayed();
+    virtual bool CanBeDisplayed() override;
 
-    virtual void PrepareContent();
-    virtual void UpdateContent();
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    void OnLeftMouseDown();
-    bool OnLeftMouseButtonDoubleClick();
+    virtual void OnLeftMouseDown();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

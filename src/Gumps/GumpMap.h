@@ -46,7 +46,7 @@ public:
     virtual void GenerateFrame(bool stop) override;
     virtual CRenderObject *Select() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
     virtual void OnLeftMouseButtonDown() override;
     virtual void OnLeftMouseButtonUp() override;

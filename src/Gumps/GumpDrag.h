@@ -17,11 +17,11 @@ public:
     CGumpDrag(uint32_t serial, short x, short y);
     virtual ~CGumpDrag();
 
-    void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_SLIDER_CLICK_EVENT_H;
-    GUMP_SLIDER_MOVE_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_SLIDER_CLICK_EVENT_H override;
+    GUMP_SLIDER_MOVE_EVENT_H override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

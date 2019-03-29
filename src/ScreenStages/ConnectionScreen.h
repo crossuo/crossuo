@@ -63,10 +63,9 @@ public:
     static const uint8_t ID_SMOOTH_CS_GO_SCREEN_PROFESSION = 3;
     static const uint8_t ID_SMOOTH_CS_SEND_DELETE = 4;
 
-    void Init();
-    void ProcessSmoothAction(uint8_t action = 0xFF);
-
-    virtual void OnKeyDown(const KeyEvent &ev);
+    virtual void Init() override;
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
+    virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 
 extern CConnectionScreen g_ConnectionScreen;

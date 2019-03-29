@@ -15,11 +15,11 @@ public:
     CGameBlockedScreen();
     ~CGameBlockedScreen();
 
-    virtual void Init();
+    virtual void Init() override;
     virtual void Render() override;
     virtual void SelectObject() override;
-    virtual void OnLeftMouseButtonDown();
-    virtual void OnLeftMouseButtonUp();
+    virtual void OnLeftMouseButtonDown() override;
+    virtual void OnLeftMouseButtonUp() override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

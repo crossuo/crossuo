@@ -72,7 +72,7 @@ private:
     CGUIComboBox *m_ComboboxMap = nullptr;
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpWorldMap(short x, short y);
@@ -80,21 +80,21 @@ public:
 
     void UpdateSize();
 
-    virtual bool CanBeDisplayed() { return Called; }
+    virtual bool CanBeDisplayed() override { return Called; }
 
-    virtual void GenerateFrame(bool stop);
+    virtual void GenerateFrame(bool stop) override;
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_CHECKBOX_EVENT_H;
-    GUMP_COMBOBOX_SELECTION_EVENT_H;
-    GUMP_RESIZE_START_EVENT_H;
-    GUMP_RESIZE_EVENT_H;
-    GUMP_RESIZE_END_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_CHECKBOX_EVENT_H override;
+    GUMP_COMBOBOX_SELECTION_EVENT_H override;
+    GUMP_RESIZE_START_EVENT_H override;
+    GUMP_RESIZE_EVENT_H override;
+    GUMP_RESIZE_END_EVENT_H override;
 
-    virtual void OnLeftMouseButtonDown();
-    virtual void OnLeftMouseButtonUp();
-    virtual bool OnLeftMouseButtonDoubleClick();
-    virtual void OnMidMouseButtonScroll(bool up);
+    virtual void OnLeftMouseButtonDown() override;
+    virtual void OnLeftMouseButtonUp() override;
+    virtual bool OnLeftMouseButtonDoubleClick() override;
+    virtual void OnMidMouseButtonScroll(bool up) override;
 };

@@ -56,7 +56,7 @@ struct CGLHTMLTextTexture : public CGLTextTexture
 {
     std::deque<WEB_LINK_RECT> m_WebLinkRect;
 
-    uint16_t WebLinkUnderMouse(int x, int y);
+    virtual uint16_t WebLinkUnderMouse(int x, int y) override;
 
     virtual void ClearWebLink() override { m_WebLinkRect.clear(); }
     virtual void AddWebLink(WEB_LINK_RECT &wl) override { m_WebLinkRect.push_back(wl); }

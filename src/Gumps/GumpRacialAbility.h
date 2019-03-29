@@ -16,9 +16,9 @@ public:
 
     static void OnAbilityUse(uint16_t index);
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

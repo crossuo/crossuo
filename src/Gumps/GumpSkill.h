@@ -14,7 +14,7 @@ public:
     CGumpSkill(int serial, int x, int y);
     virtual ~CGumpSkill();
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual void OnLeftMouseButtonUp();
+    virtual void OnLeftMouseButtonUp() override;
 };

@@ -28,8 +28,8 @@ public:
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_RADIO_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H;
-    GUMP_COMBOBOX_SELECTION_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_RADIO_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override;
+    GUMP_COMBOBOX_SELECTION_EVENT_H override;
 };

@@ -35,15 +35,15 @@ public:
     CGUITextEntry *m_EntryTitle{ nullptr };
     CGUITextEntry *GetEntry(int page);
 
-    virtual void DelayedClick(CRenderObject *obj);
-    virtual void PrepareContent();
+    virtual void DelayedClick(CRenderObject *obj) override;
+    virtual void PrepareContent() override;
 
     void SetPageData(int page, const wstring &data);
     void ChangePage(int newPage, bool playSound = true);
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

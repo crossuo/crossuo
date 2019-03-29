@@ -35,17 +35,17 @@ public:
     CGumpRacialAbilitiesBook(int x, int y);
     virtual ~CGumpRacialAbilitiesBook();
 
-    virtual void DelayedClick(CRenderObject *obj);
+    virtual void DelayedClick(CRenderObject *obj) override;
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
     void ChangePage(int newPage);
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

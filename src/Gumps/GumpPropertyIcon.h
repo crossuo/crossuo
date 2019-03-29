@@ -24,10 +24,10 @@ public:
     wstring GetTextW() { return m_Text; };
     void SetTextW(const wstring &val);
 
-    virtual void PrepareContent();
-    virtual void UpdateContent();
-    GUMP_BUTTON_EVENT_H;
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
+    GUMP_BUTTON_EVENT_H override;
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 
     CGumpPropertyIcon(int x, int y);
     virtual ~CGumpPropertyIcon() = default;

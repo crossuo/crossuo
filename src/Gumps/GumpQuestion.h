@@ -21,7 +21,7 @@ public:
     static const int ID_GQ_STATE_QUIT = 1;
     static const int ID_GQ_STATE_ATTACK_REQUEST = 2;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 };
 
 #endif
