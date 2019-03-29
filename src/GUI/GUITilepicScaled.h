@@ -5,12 +5,8 @@
 
 #include "GUITilepic.h"
 
-class CGUITilepicScaled : public CGUITilepic
+struct CGUITilepicScaled : public CGUITilepic
 {
-    int Width = 0;
-    int Height = 0;
-
-public:
     CGUITilepicScaled(uint16_t graphic, uint16_t color, int x, int y, int width, int height);
     virtual ~CGUITilepicScaled();
 

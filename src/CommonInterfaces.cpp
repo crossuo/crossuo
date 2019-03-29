@@ -582,7 +582,7 @@ void CDECL FUNCBODY_GetFileInfo(unsigned int index, XUO_RAW_FILE_INFO &info)
                 if (item->Loaded && item->m_File.Start != nullptr && item->Language == "enu")
                 {
                     file = &item->m_File;
-                    extra = 'ENU';
+                    extra = ('E' << 24) + ('N' << 16) + ('U' << 8); //'ENU';
                     break;
                 }
             }

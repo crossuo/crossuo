@@ -16,7 +16,6 @@ private:
 
     const int ID_GB_NEXT_WINDOW_DIRECTION = 1;
     const int ID_GB_LOCK_MOVING = 2;
-    const int ID_GB_BUFF_ITEM = 10;
 
     void GetGumpStatus(
         CPoint2Di &ball,

@@ -89,8 +89,6 @@ void CGumpSelectColor::GUMP_BUTTON_EVENT_C
     DEBUG_TRACE_FUNCTION;
     if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != nullptr)
     {
-        uint16_t color = 0;
-
         QFOR(item, m_DataBox->m_Items, CBaseGUI *)
         {
             if (item->Serial == m_SelectedIndex)

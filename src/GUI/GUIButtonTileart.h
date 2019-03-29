@@ -7,16 +7,8 @@
 
 class CGUIButtonTileart : public CGUIButton
 {
-    //!ИД картинки статики
     uint16_t TileGraphic = 0;
-
-    //!Цвет картинки статики
-    uint16_t TileColor = 0;
-
-    //!Координата по оси X для отображения статики
     int TileX = 0;
-
-    //!Координата по оси Y для отображения статики
     int TileY = 0;
 
 public:

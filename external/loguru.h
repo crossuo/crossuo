@@ -473,7 +473,7 @@ namespace loguru
 		return Text(buff);
 #else
 		char* buff = nullptr;
-		int result = vasprintf(&buff, format, vlist);
+		/*int result =*/ vasprintf(&buff, format, vlist);
 		//CHECK_F(result >= 0, "Bad string format: '%s'", format); // crossuo - dump packets
 		return Text(buff);
 #endif

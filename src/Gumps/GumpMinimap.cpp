@@ -116,7 +116,6 @@ void CGumpMinimap::GenerateMap()
     int blockOffsetX = gumpWidth / 4;
     int blockOffsetY = gumpHeight / 4;
     int gumpCenterX = gumpWidth / 2;
-    int gumpCenterY = gumpHeight / 2;
 
     //0xFF080808 - pixel32
     //0x8421 - pixel16

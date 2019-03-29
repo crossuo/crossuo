@@ -1116,9 +1116,6 @@ void CGLEngine::GL2_Draw(const CGLTexture &texture, int x, int y)
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
-    int width = texture.Width;
-    int height = texture.Height;
-
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
     glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
@@ -1137,7 +1134,6 @@ void CGLEngine::GL2_DrawRotated(const CGLTexture &texture, int x, int y, float a
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
-    int width = texture.Width;
     int height = texture.Height;
 
     GLfloat translateY = (GLfloat)(y - height);
@@ -1162,9 +1158,6 @@ void CGLEngine::GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
 {
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
-
-    int width = texture.Width;
-    int height = texture.Height;
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 

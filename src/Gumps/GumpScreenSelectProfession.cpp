@@ -181,9 +181,6 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         Add(new CGUIButton(
             ID_SPS_LABEL_BACK_PROFESSION, obj->Gump, obj->Gump, obj->Gump + 1, 231, 53));
 
-        const float SphereListWidth = 95.0f;
-        float ValPer = 0.0f;
-
         CProfession *profession = (CProfession *)obj;
         int statVal[3] = { profession->Str, profession->Dex, profession->Int };
 

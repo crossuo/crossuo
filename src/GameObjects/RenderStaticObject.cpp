@@ -137,7 +137,7 @@ void CRenderStaticObject::FixTextCoordinates()
     int minX = g_RenderBounds.GameWindowPosX;
     int maxX = minX + g_RenderBounds.GameWindowWidth;
     int minY = g_RenderBounds.GameWindowPosY;
-    int maxY = minY + g_RenderBounds.GameWindowHeight;
+    //int maxY = minY + g_RenderBounds.GameWindowHeight;
 
     for (CTextData *item = (CTextData *)m_TextControl->m_Items; item != nullptr;
          item = (CTextData *)item->m_Next)
@@ -163,7 +163,7 @@ void CRenderStaticObject::FixTextCoordinates()
         }
 
         int startY = text.RealDrawY;
-        int endY = startY + text.m_Texture.Height;
+        //int endY = startY + text.m_Texture.Height;
 
         if (startY < minY && (offsetY == 0))
         {

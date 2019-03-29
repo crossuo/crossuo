@@ -578,7 +578,7 @@ void CGumpStatusbar::UpdateContent()
                 static const int ROW_PADDING = 2;
 
                 static const int LOCKER_COLUMN_X = 10;
-                static const int LOCKER_COLUMN_WIDTH = 10;
+                //static const int LOCKER_COLUMN_WIDTH = 10;
 
                 static const int COLUMN_1_X = 20;
                 static const int COLUMN_1_WIDTH = 80;

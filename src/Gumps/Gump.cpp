@@ -1568,7 +1568,6 @@ CRenderObject *CGump::Select()
 
     if (selected != nullptr)
     {
-        CBaseGUI *sel = (CBaseGUI *)selected;
         g_SelectedObject.Init(selected, this);
     }
 

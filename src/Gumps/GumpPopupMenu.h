@@ -19,10 +19,6 @@ public:
 
 class CGumpPopupMenu : public CGump
 {
-    int Width = 0;
-    int Height = 0;
-
-private:
     CGUIColoredPolygone *m_Polygone{ nullptr };
 
 public:
