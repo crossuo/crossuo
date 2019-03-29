@@ -691,14 +691,14 @@ void CFileManager::ReadTask()
     UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
 
     int range = MAX_ANIMATIONS_DATA_INDEX_COUNT / count;
-    int lastGroup[count];
+    static int lastGroup[count];
     vector<std::thread> jobs;
     for (int i = 0; i < count; i++)
     {
         int start = range * i;
         int end = range * (i + 1);
         TRACE(Data, "scheduling job for %d with range from %d to %d", i + 1, start, end);
-        auto job = [&, start, end]() { lastGroup[i] = UopSetAnimationGroups(start, end); };
+        auto job = [i, start, end]() { lastGroup[i] = UopSetAnimationGroups(start, end); };
         jobs.push_back(std::thread(job));
     }
     for (auto &job : jobs)
