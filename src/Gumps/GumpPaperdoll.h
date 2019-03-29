@@ -30,7 +30,7 @@ public:
     CGUIButton *m_ButtonWarmode = nullptr;
     CTextContainer m_TextContainer{ CTextContainer(10) };
 
-    CTextRenderer *GetTextRenderer() { return &m_TextRenderer; }
+    virtual CTextRenderer *GetTextRenderer() override { return &m_TextRenderer; }
     void UpdateDescription(const string &text);
     virtual void DelayedClick(CRenderObject *obj) override;
     virtual void PrepareContent() override;
@@ -39,7 +39,7 @@ public:
     virtual void Draw() override;
     virtual CRenderObject *Select() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
     virtual void OnLeftMouseButtonUp() override;
     virtual bool OnLeftMouseButtonDoubleClick() override;
 };

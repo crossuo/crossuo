@@ -12,7 +12,7 @@ public:
     bool TextChanged = false;
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpMenu(uint32_t serial, uint32_t id, short x, short y);
@@ -24,7 +24,7 @@ public:
 
     void SendMenuResponse(int index);
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

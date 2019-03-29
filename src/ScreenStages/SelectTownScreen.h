@@ -23,8 +23,8 @@ public:
 
     CCityItem *m_City{ nullptr };
 
-    void Init();
-    void ProcessSmoothAction(uint8_t action = 0xFF);
+    virtual void Init() override;
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
 };
 
 extern CSelectTownScreen g_SelectTownScreen;

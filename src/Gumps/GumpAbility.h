@@ -19,11 +19,11 @@ public:
 
     static void OnAbilityUse(int index);
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

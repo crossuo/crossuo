@@ -103,7 +103,7 @@ public:
     virtual void PrepareContent() {}
     virtual void UpdateContent() {}
     virtual class CTextRenderer *GetTextRenderer() { return nullptr; }
-    virtual void PrepareTextures();
+    virtual void PrepareTextures() override;
     virtual void GenerateFrame(bool stop);
     virtual bool CanBeDisplayed() { return true; }
 

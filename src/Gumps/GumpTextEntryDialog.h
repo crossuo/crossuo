@@ -38,10 +38,10 @@ public:
 
     void SendTextEntryDialogResponse(bool mode);
 
-    virtual void PrepareContent();
-    virtual void UpdateContent();
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

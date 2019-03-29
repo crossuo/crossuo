@@ -31,7 +31,7 @@ public:
     CGumpBuff(short x, short y);
     virtual ~CGumpBuff();
 
-    virtual bool CanBeDisplayed();
+    virtual bool CanBeDisplayed() override;
 
     void AddBuff(uint16_t id, uint16_t timer, const wstring &text);
 
@@ -39,11 +39,11 @@ public:
 
     void UpdateBuffIcons();
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 };

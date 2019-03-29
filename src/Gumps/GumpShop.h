@@ -26,8 +26,8 @@ public:
     virtual void PrepareContent() override;
     virtual bool CanBeDisplayed() override { return Visible; }
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_SCROLL_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_SCROLL_BUTTON_EVENT_H override;
 
     virtual void OnLeftMouseButtonUp() override;
     virtual bool OnLeftMouseButtonDoubleClick() override;

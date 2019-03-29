@@ -16,7 +16,7 @@ protected:
     CGUIHitBox *m_HitBox{ nullptr };
 
     void RecalculateHeight();
-    virtual void UpdateHeight();
+    virtual void UpdateHeight() override;
 
 public:
     CGumpBulletinBoardItem(
@@ -34,7 +34,7 @@ public:
     CGUITextEntry *m_EntrySubject{ nullptr };
     CGUITextEntry *m_Entry{ nullptr };
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

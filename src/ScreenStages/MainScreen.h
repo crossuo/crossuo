@@ -32,8 +32,8 @@ public:
 
     void SetAccounting(const string &account, const string &password);
     void Paste();
-    void ProcessSmoothAction(uint8_t action = 0xFF);
-    void Init();
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
+    virtual void Init() override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

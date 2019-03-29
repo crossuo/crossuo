@@ -19,5 +19,5 @@ public:
 
     void SendMenuResponse(int index);
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 };

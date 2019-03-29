@@ -30,20 +30,20 @@ private:
     CGUIDataBox *m_OpponentDataBox = nullptr;
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpSecureTrading(uint32_t serial, int x, int y, uint32_t id, uint32_t id2);
     virtual ~CGumpSecureTrading() = default;
 
     void SendTradingResponse(int code);
-    CTextRenderer *GetTextRenderer() { return &m_TextRenderer; }
+    CTextRenderer *GetTextRenderer() override { return &m_TextRenderer; }
 
-    virtual void PrepareContent();
-    virtual void UpdateContent();
-    virtual void Draw();
-    virtual CRenderObject *Select();
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
+    virtual void Draw() override;
+    virtual CRenderObject *Select() override;
 
-    GUMP_BUTTON_EVENT_H;
-    virtual void OnLeftMouseButtonUp();
+    GUMP_BUTTON_EVENT_H override;
+    virtual void OnLeftMouseButtonUp() override;
 };

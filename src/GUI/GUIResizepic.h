@@ -11,7 +11,7 @@ struct CGUIResizepic : public CGUIPolygonal
     virtual void PrepareTextures() override;
     virtual bool Select() override;
 
-    virtual void Draw(bool checktrans = false);
+    virtual void Draw(bool checktrans = false) override;
 
     CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height);
     virtual ~CGUIResizepic() = default;

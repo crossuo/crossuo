@@ -22,12 +22,12 @@ public:
 
     void SendGumpResponse(int index);
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_DIRECT_HTML_LINK_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_DIRECT_HTML_LINK_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

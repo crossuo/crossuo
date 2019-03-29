@@ -42,7 +42,7 @@ public:
         int scissorOffsetHeight = 0);
     virtual ~CGumpBaseScroll();
 
-    GUMP_RESIZE_START_EVENT_H;
-    GUMP_RESIZE_EVENT_H;
-    GUMP_RESIZE_END_EVENT_H;
+    GUMP_RESIZE_START_EVENT_H override;
+    GUMP_RESIZE_EVENT_H override;
+    GUMP_RESIZE_END_EVENT_H override;
 };

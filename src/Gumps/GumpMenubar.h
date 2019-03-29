@@ -19,8 +19,8 @@ public:
     virtual bool CanBeDisplayed() override { return false; }
     virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override;
 
     virtual void OnLeftMouseButtonUp() override;
 };

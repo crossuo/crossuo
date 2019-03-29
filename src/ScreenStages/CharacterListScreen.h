@@ -22,9 +22,8 @@ public:
     static const uint8_t ID_SMOOTH_CLS_GO_SCREEN_PROFESSION_SELECT = 4;
     static const uint8_t ID_SMOOTH_CLS_GO_SCREEN_DELETE = 5;
 
-    void Init();
-    void ProcessSmoothAction(uint8_t action = 0xFF);
-
+    virtual void Init() override;
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 

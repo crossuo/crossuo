@@ -122,27 +122,27 @@ public:
 
     void SetMaximized(bool maximized);
     void UpdateMaxDrawZ();
-    virtual void ProcessSmoothAction(uint8_t action = 0xFF);
+    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
     void CalculateGameWindowBounds();
     void CalculateRenderList();
-    virtual void Init();
-    virtual void InitToolTip();
+    virtual void Init() override;
+    virtual void InitToolTip() override;
     void
     AddLight(class CRenderWorldObject *rwo, class CRenderWorldObject *lightObject, int x, int y);
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
     virtual void Render() override;
     virtual void SelectObject() override;
-    virtual void OnLeftMouseButtonDown();
-    virtual void OnLeftMouseButtonUp();
-    virtual bool OnLeftMouseButtonDoubleClick();
-    virtual void OnRightMouseButtonDown();
-    virtual void OnRightMouseButtonUp();
-    virtual bool OnRightMouseButtonDoubleClick();
-    virtual void OnMidMouseButtonDown() {}
-    virtual void OnMidMouseButtonUp() {}
-    virtual bool OnMidMouseButtonDoubleClick() { return false; }
-    virtual void OnMidMouseButtonScroll(bool up);
-    virtual void OnDragging();
+    virtual void OnLeftMouseButtonDown() override;
+    virtual void OnLeftMouseButtonUp() override;
+    virtual bool OnLeftMouseButtonDoubleClick() override;
+    virtual void OnRightMouseButtonDown() override;
+    virtual void OnRightMouseButtonUp() override;
+    virtual bool OnRightMouseButtonDoubleClick() override;
+    virtual void OnMidMouseButtonDown() override {}
+    virtual void OnMidMouseButtonUp() override {}
+    virtual bool OnMidMouseButtonDoubleClick() override { return false; }
+    virtual void OnMidMouseButtonScroll(bool up) override;
+    virtual void OnDragging() override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
     virtual void OnKeyUp(const KeyEvent &ev) override;

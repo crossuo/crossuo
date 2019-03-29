@@ -15,10 +15,10 @@ public:
     CGumpDye(uint32_t serial, int16_t x, int16_t y, uint16_t graphic);
     virtual ~CGumpDye();
 
-    virtual void UpdateContent();
-    virtual void OnSelectColor(uint16_t color);
+    virtual void UpdateContent() override;
+    virtual void OnSelectColor(uint16_t color) override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_SLIDER_CLICK_EVENT_H;
-    GUMP_SLIDER_MOVE_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_SLIDER_CLICK_EVENT_H override;
+    GUMP_SLIDER_MOVE_EVENT_H override;
 };

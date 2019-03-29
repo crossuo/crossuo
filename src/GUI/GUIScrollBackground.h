@@ -18,7 +18,7 @@ struct CGUIScrollBackground : public CBaseGUI
     virtual void PrepareTextures() override;
     virtual bool Select() override;
 
-    virtual void Draw(bool checktrans = false);
+    virtual void Draw(bool checktrans = false) override;
 
     CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height);
     virtual ~CGUIScrollBackground() = default;

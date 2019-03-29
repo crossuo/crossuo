@@ -13,7 +13,7 @@ public:
 
     CGUIHTMLGump *m_HTMLGump{ nullptr };
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

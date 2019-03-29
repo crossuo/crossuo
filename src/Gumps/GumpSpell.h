@@ -18,7 +18,7 @@ private:
     void GetTooltipSpellInfo(int &tooltipOffset, int &spellIndexOffset);
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
     CGUIButton *m_SpellUnlocker{ nullptr };
 
@@ -40,11 +40,11 @@ public:
 
     bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

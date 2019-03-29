@@ -170,15 +170,15 @@ private:
     ValidatePlaceStructure(CGameItem *foundationItem, CMulti *multi, int minZ, int maxZ, int flags);
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpCustomHouse(int serial, int x, int y);
     virtual ~CGumpCustomHouse();
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    virtual void InitToolTip();
+    virtual void InitToolTip() override;
 
     void GenerateFloorPlace();
 
@@ -200,10 +200,10 @@ public:
 
     void OnTargetWorld(CRenderWorldObject *place);
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override;
 
-    virtual void OnLeftMouseButtonUp();
+    virtual void OnLeftMouseButtonUp() override;
 };
 
 extern CGumpCustomHouse *g_CustomHouseGump;

@@ -11,7 +11,7 @@ class CGumpStatusbar : public CGump
 protected:
     void SendRenameRequest();
 
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
     bool m_WantFullUpdateContent = false;
 
@@ -42,14 +42,14 @@ public:
 
     bool InGroup() { return (m_GroupNext != nullptr || m_GroupPrev != nullptr); }
 
-    virtual void InitToolTip();
-    virtual void PrepareContent();
-    virtual void UpdateContent();
+    virtual void InitToolTip() override;
+    virtual void PrepareContent() override;
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual void OnLeftMouseButtonDown();
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual void OnLeftMouseButtonDown() override;
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;

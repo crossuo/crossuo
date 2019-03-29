@@ -25,9 +25,9 @@ private:
     void SetGroupTextFromEntry();
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
-    virtual void UpdateHeight();
+    virtual void UpdateHeight() override;
 
 public:
     CGumpSkills(short x, short y, bool minimized, int height);
@@ -41,17 +41,17 @@ public:
     void UpdateSkillValue(int index);
     void UpdateSkillValues();
     void UpdateSkillsSum();
-    void Init();
+    virtual void Init();
 
-    virtual void InitToolTip();
-    virtual void PrepareContent();
+    virtual void InitToolTip() override;
+    virtual void PrepareContent() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_CHECKBOX_EVENT_H;
-    GUMP_TEXT_ENTRY_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_CHECKBOX_EVENT_H override;
+    GUMP_TEXT_ENTRY_EVENT_H override;
 
-    virtual void OnLeftMouseButtonUp();
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual void OnLeftMouseButtonUp() override;
+    virtual bool OnLeftMouseButtonDoubleClick() override;
     virtual void OnTextInput(const TextEvent &ev) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };

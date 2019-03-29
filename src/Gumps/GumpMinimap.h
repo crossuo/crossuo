@@ -32,17 +32,17 @@ private:
         int count);
 
 protected:
-    virtual void CalculateGumpState();
+    virtual void CalculateGumpState() override;
 
 public:
     CGumpMinimap(short x, short y, bool minimized);
     virtual ~CGumpMinimap();
 
-    virtual void PrepareContent();
+    virtual void PrepareContent() override;
 
-    virtual void UpdateContent();
+    virtual void UpdateContent() override;
 
-    GUMP_BUTTON_EVENT_H;
+    GUMP_BUTTON_EVENT_H override;
 
-    virtual bool OnLeftMouseButtonDoubleClick();
+    virtual bool OnLeftMouseButtonDoubleClick() override;
 };

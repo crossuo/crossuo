@@ -30,11 +30,11 @@ public:
 
     virtual void InitToolTip() override;
 
-    GUMP_BUTTON_EVENT_H;
-    GUMP_CHECKBOX_EVENT_H;
-    GUMP_SLIDER_CLICK_EVENT_H { m_TextLocker->Visible = true; }
-    GUMP_SLIDER_MOVE_EVENT_H { m_TextLocker->Visible = true; }
-    GUMP_SCROLL_BUTTON_EVENT_H { m_TextLocker->Visible = true; }
+    GUMP_BUTTON_EVENT_H override;
+    GUMP_CHECKBOX_EVENT_H override;
+    GUMP_SLIDER_CLICK_EVENT_H override { m_TextLocker->Visible = true; }
+    GUMP_SLIDER_MOVE_EVENT_H override { m_TextLocker->Visible = true; }
+    GUMP_SCROLL_BUTTON_EVENT_H override { m_TextLocker->Visible = true; }
 
     virtual bool OnLeftMouseButtonDoubleClick() override;
 };
