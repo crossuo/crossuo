@@ -267,8 +267,6 @@ void CGumpBuff::GetGumpStatus(
             continue;
         }
 
-        bool moved = false;
-
         CSize gumpDim = g_Game.GetGumpDimension(item->Graphic);
 
         if (useX)

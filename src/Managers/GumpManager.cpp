@@ -1415,7 +1415,8 @@ void CGumpManager::Load(const os_path &path)
                 uint8_t size = file.ReadUInt8();
                 next += size;
 
-                GUMP_TYPE gumpType = (GUMP_TYPE)file.ReadUInt8();
+                const auto _gumpType = (GUMP_TYPE)file.ReadUInt8();
+                (void)_gumpType;
                 uint16_t gumpX = file.ReadUInt16LE();
                 uint16_t gumpY = file.ReadUInt16LE();
                 file.Move(5); //Minimized state, x, y

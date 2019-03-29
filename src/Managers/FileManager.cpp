@@ -722,7 +722,7 @@ void CFileManager::ProcessAnimSequeceData()
     TRACE(Data, "processing AnimationSequence data");
     for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_Map)
     {
-        const auto hash = kvp.first;
+        //const auto hash = kvp.first;
         const auto block = kvp.second;
         auto data = m_AnimationSequence.GetData(block);
         SetData(reinterpret_cast<uint8_t *>(&data[0]), data.size());
@@ -741,7 +741,7 @@ void CFileManager::ProcessAnimSequeceData()
         {
             const auto oldIdx = ReadInt32LE();
             const auto frameCount = ReadInt32LE();
-            auto group = indexAnim->m_Groups[oldIdx];
+            //auto group = indexAnim->m_Groups[oldIdx];
             if (frameCount == 0)
             {
                 auto newIdx = ReadInt32LE();
@@ -849,7 +849,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
         DEBUG(Data, "\tBlocks: ");
         for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
         {
-            const auto hash = kvp.first;
+            //const auto hash = kvp.first;
             const auto block = kvp.second;
             auto meta = (UopBlockMetadata *)(file.Start + block->Offset);
 
@@ -1104,7 +1104,7 @@ void CFileManager::LoadIndexFiles()
         CUopMappedFile &file = m_MultiCollection;
         for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
         {
-            const auto hash = kvp.first;
+            //const auto hash = kvp.first;
             const auto block = kvp.second;
             vector<uint8_t> data = file.GetData(block);
             if (data.empty())
@@ -1255,7 +1255,8 @@ void CFileManager::UopReadAnimationFrameInfo(
         return;
     }
 
-    auto _header = UopReadAnimationHeader();
+    const auto _header = UopReadAnimationHeader();
+    (void)_header;
     auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
     Ptr = frame.DataStart + frame.PixelDataOffset + PALETTE_SIZE;
     auto frameInfo = (AnimationFrameInfo *)Ptr;

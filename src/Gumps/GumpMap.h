@@ -10,7 +10,6 @@ class CGumpMap : public CGump
     int m_PlotState = 0;
     uint32_t m_PinTimer = 0;
     CBaseGUI *m_PinOnCursor = nullptr;
-    CBaseGUI *m_FakeInsertionPin = nullptr;
     CGUIButton *m_PlotCourse = nullptr;
     CGUIButton *m_StopPlotting = nullptr;
     CGUIButton *m_ClearCourse = nullptr;

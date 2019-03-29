@@ -80,7 +80,8 @@ void CustomHousesManager::Load(const os_path &path)
 
     if (file.Load(path) && (file.Size != 0u))
     {
-        uint8_t version = file.ReadUInt8();
+        const uint8_t _version = file.ReadUInt8();
+        (void)_version;
 
         int count = file.ReadInt32LE();
 

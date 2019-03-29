@@ -53,8 +53,6 @@ void CGumpPartyManifest::UpdateContent()
     bool isMember = (g_Party.Leader != 0 && g_Party.Leader != g_PlayerSerial);
 
     int yPtr = 48;
-    uint16_t gumpID = 0;
-
     for (int i = 0; i < 10; i++)
     {
         Add(new CGUIButton(

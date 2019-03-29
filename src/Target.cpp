@@ -366,7 +366,8 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
             const int16_t x = reader.ReadInt16LE();
             const int16_t y = reader.ReadInt16LE();
             const int8_t z = (int8_t)reader.ReadInt16LE();
-            const uint16_t flags = reader.ReadUInt16LE();
+            const uint16_t _flags = reader.ReadUInt16LE();
+            (void)_flags;
             const uint32_t clilocsCount = reader.ReadUInt32LE();
             if (clilocsCount != 0)
             {

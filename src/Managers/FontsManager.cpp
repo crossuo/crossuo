@@ -101,7 +101,7 @@ bool CFontsManager::LoadFonts()
     {
         if (m_FontIndex[i] >= 0xE0)
         {
-            m_FontIndex[i] = m_FontIndex[' '];
+            m_FontIndex[i] = m_FontIndex[int(' ')];
         }
     }
     return true;
@@ -178,7 +178,6 @@ CPoint2Di CFontsManager::GetCaretPosA(
         return p;
     }
 
-    int height = 0;
     PMULTILINES_FONT_INFO ptr = info;
 
     //loop throgh lines to get width and height
@@ -1373,8 +1372,6 @@ HTMLCHAR_LIST CFontsManager::GetHTMLData(
             else if (stack.size() > 1)
             {
                 //stack.pop_back();
-
-                int index = -1;
 
                 for (int j = (int)stack.size() - 1; j >= 1; j--)
                 {

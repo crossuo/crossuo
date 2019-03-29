@@ -18,9 +18,6 @@ class CGumpScreenCreateCharacter : public CGump
         CCSID_FACIAL_HAIR_COLOR
     };
 
-    CGUIGumppic *m_Hair{ nullptr };
-    CGUIGumppic *m_FacialHair{ nullptr };
-
 public:
     CGumpScreenCreateCharacter();
     virtual ~CGumpScreenCreateCharacter();

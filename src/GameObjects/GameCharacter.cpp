@@ -158,8 +158,6 @@ int CGameCharacter::IsSitting()
 {
     DEBUG_TRACE_FUNCTION;
     int result = 0;
-    uint16_t testGraphic = Graphic;
-
     if (IsHuman() && FindLayer(OL_MOUNT) == nullptr &&
         !TestStepNoChangeDirection(GetAnimationGroup()))
     {

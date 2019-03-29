@@ -18,7 +18,6 @@ CGUIButtonTileart::CGUIButtonTileart(
     int tileY)
     : CGUIButton(serial, graphic, graphicSelected, graphicPressed, x, y)
     , TileGraphic(tileGraphic)
-    , TileColor(tileColor)
     , TileX(tileX)
     , TileY(tileY)
 {

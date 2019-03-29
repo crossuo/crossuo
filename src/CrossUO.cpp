@@ -1592,9 +1592,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         return;
     }
-    char buf[MAX_PATH] = { 0 };
     auto path = g_App.ExeFilePath("desktop");
-
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
