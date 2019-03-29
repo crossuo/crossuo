@@ -292,7 +292,8 @@ bool CSkillGroupManager::Load(const os_path &path)
 
     if (file.Load(path))
     {
-        uint8_t version = file.ReadUInt8();
+        const uint8_t _version = file.ReadUInt8();
+        (void)_version;
 
         short count = file.ReadUInt16LE();
 

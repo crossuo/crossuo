@@ -167,7 +167,8 @@ bool CSpeechManager::LoadLangCodes()
         CLangCode langCodeData;
         file.Move(4);
 
-        const uint32_t entryLen = file.ReadUInt32BE();
+        const uint32_t _entryLen = file.ReadUInt32BE();
+        (void)_entryLen;
         langCodeData.Abbreviature = file.ReadString();
         langCodeData.Code = file.ReadUInt32LE();
         langCodeData.Language = file.ReadString();

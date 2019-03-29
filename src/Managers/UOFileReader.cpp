@@ -92,7 +92,6 @@ vector<uint16_t>
 UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height)
 {
     DEBUG_TRACE_FUNCTION;
-    uint32_t flag = *(uint32_t *)io.Address;
     uint16_t *P = (uint16_t *)io.Address;
     uint16_t color = io.Color;
     vector<uint16_t> pixels;
