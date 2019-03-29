@@ -8,14 +8,11 @@ void UnuseShader();
 class CGLShader
 {
 protected:
-    //Шейдерная программа
-    GLhandleARB m_Shader{ 0 };
+    GLuint m_Shader{ 0 };
 
-    //Вершинный шейдер
-    GLhandleARB m_VertexShader{ 0 };
+    GLuint m_VertexShader{ 0 };
 
-    //Фрагментный (пиксельный) шейдер
-    GLhandleARB m_FragmentShader{ 0 };
+    GLuint m_FragmentShader{ 0 };
 
     //Указатель на текстуру для передачи ее шейдеру (можно не использовать, текстура передается автоматически при glBingTexture)
     GLuint m_TexturePointer{ 0 };

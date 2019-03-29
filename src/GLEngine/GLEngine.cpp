@@ -163,7 +163,6 @@ static void SetupOGLDebugMessage()
 
     // GL error "GL_INVALID_OPERATION in ...":
     // 1) FIXME no shader set when glUniform1iARB is called for g_ShaderDrawMode
-    // 2) FIXME glGetShaderiv called afters glLinkProgramARB
     EnableOpenGLMessage(1282, false, false);
 
     // Usage warning: glClear() called with GL_STENCIL_BUFFER_BIT, but there is no stencil buffer. Operation will have no effect.

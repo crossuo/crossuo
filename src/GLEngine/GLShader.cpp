@@ -22,92 +22,108 @@ CGLShader::CGLShader()
 bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
 {
     GLint val = GL_FALSE;
-
-    if (vertexShaderData != nullptr && fragmentShaderData != nullptr)
-    {
-        m_Shader = glCreateProgramObjectARB();
-
-        m_VertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-        glShaderSourceARB(m_VertexShader, 1, (const GLcharARB **)&vertexShaderData, nullptr);
-        glCompileShaderARB(m_VertexShader);
-
-        glGetShaderiv(m_VertexShader, GL_COMPILE_STATUS, &val);
-        if (val != GL_TRUE)
-        {
-            Info(Renderer, "CGLShader::Init vertex shader compilation error:");
-            auto error = glGetError();
-            if (error != 0)
-            {
-                Info(Renderer, "CGLShader::Init vertex shader error Code: %i", error);
-            }
-            return false;
-        }
-        Info(Renderer, "vertex shader compiled successfully");
-
-        glAttachObjectARB(m_Shader, m_VertexShader);
-
-        m_FragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-        glShaderSourceARB(m_FragmentShader, 1, (const GLcharARB **)&fragmentShaderData, nullptr);
-        glCompileShaderARB(m_FragmentShader);
-
-        glGetShaderiv(m_FragmentShader, GL_COMPILE_STATUS, &val);
-        if (val != GL_TRUE)
-        {
-            Info(Renderer, "CGLShader::Init fragment shader compilation error:");
-            auto error = glGetError();
-            if (error != 0)
-            {
-                Info(Renderer, "CGLShader::Init fragment shader error Code: %i", error);
-            }
-            return false;
-        }
-        Info(Renderer, "fragment shader compiled successfully");
-
-        glAttachObjectARB(m_Shader, m_FragmentShader);
-
-        glLinkProgramARB(m_Shader);
-        glValidateProgramARB(m_Shader);
-    }
-    else
+    if (vertexShaderData == nullptr && fragmentShaderData == nullptr)
     {
         return false;
     }
 
-    glGetShaderiv(m_Shader, GL_COMPILE_STATUS, &val);
-    if (val != GL_TRUE)
-    {
-        Info(Renderer, "CGLShader::Init shader program compilation error:");
-        auto error = glGetError();
-        if (error != 0)
+    auto validate_shader_compile = [](GLuint shader) {
+        auto val = GL_FALSE;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &val);
+        if (val != GL_TRUE)
         {
-            Info(Renderer, "CGLShader::Init shader program error Code: %i", error);
+            GLint logLength;
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+            auto compileLog = (GLchar *)malloc(logLength * sizeof(GLcharARB));
+            assert(compileLog);
+
+            glGetShaderInfoLog(shader, logLength, nullptr, compileLog);
+
+            Error(Renderer, "shader compilation error, compile log:\n%s", compileLog);
+
+            free(compileLog);
+            return false;
         }
+        return true;
+    };
+
+    auto validate_program = [](GLuint program, GLenum validation_type) {
+        assert(validation_type == GL_LINK_STATUS || validation_type == GL_VALIDATE_STATUS);
+        auto val = GL_FALSE;
+        glGetProgramiv(program, validation_type, &val);
+        if (val != GL_TRUE)
+        {
+            GLint logLength;
+            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+            auto programLog = (GLchar *)malloc(logLength * sizeof(GLchar));
+            assert(programLog);
+
+            glGetProgramInfoLog(program, logLength, nullptr, programLog);
+
+            Error(Renderer, "program log:\n%s", programLog);
+
+            free(programLog);
+            return false;
+        }
+        return true;
+    };
+
+    auto link_program = [&](GLuint program) {
+        glLinkProgram(program);
+        if (!validate_program(program, GL_LINK_STATUS))
+        {
+            Error(Renderer, "shader link failed");
+            return false;
+        }
+
+        glValidateProgram(program);
+        if (!validate_program(program, GL_VALIDATE_STATUS))
+        {
+            Error(Renderer, "shader validate failed");
+            return false;
+        }
+        return true;
+    };
+
+    auto create_shader =
+        [&](GLuint program, GLenum shaderType, const GLchar *source, GLuint *shader) {
+            *shader = glCreateShader(shaderType);
+            assert(*shader != 0);
+
+            glShaderSource(*shader, 1, &source, nullptr);
+            glCompileShader(*shader);
+
+            if (!validate_shader_compile(*shader))
+            {
+                return false;
+            }
+
+            glAttachShader(program, *shader);
+            return true;
+        };
+
+    m_Shader = glCreateProgram();
+    assert(m_Shader != 0);
+
+    if (!create_shader(m_Shader, GL_VERTEX_SHADER, vertexShaderData, &m_VertexShader))
+    {
         return false;
     }
-    Info(Renderer, "shader program compiled successfully");
 
-    GLint isLinked = 0;
-    glGetProgramiv(m_Shader, GL_LINK_STATUS, &isLinked);
-    if (isLinked == GL_FALSE)
+    if (!create_shader(m_Shader, GL_FRAGMENT_SHADER, fragmentShaderData, &m_FragmentShader))
     {
-        GLint maxLength = 0;
-        glGetProgramiv(m_Shader, GL_INFO_LOG_LENGTH, &maxLength);
+        return false;
+    }
 
-        // The maxLength includes the nullptr character
-        vector<GLchar> infoLog(maxLength);
-        glGetProgramInfoLog(m_Shader, maxLength, &maxLength, &infoLog[0]);
-
-        // The program is useless now. So delete it.
+    if (!link_program(m_Shader))
+    {
         glDeleteProgram(m_Shader);
-
-        Info(Renderer, "shader program failed to link");
-        Info(Renderer, "%s", infoLog.data());
-        wstring str(infoLog.begin(), infoLog.end());
-        Info(Renderer, "%ws", str.c_str());
+        m_Shader = 0;
         return false;
     }
+    Info(Renderer, "shaders linked successfully");
 
-    return val == GL_TRUE;
+    return true;
 }
 
 CGLShader::~CGLShader()
