@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         {
             const char *errMsg =
                 "Failed to create CrossUO client window. May be caused by a missing configuration file.";
-            Fatal(Client, errMsg);
+            Fatal(Client, "%s", errMsg);
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errMsg, nullptr);
             return -1;
         }

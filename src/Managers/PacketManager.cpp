@@ -1027,7 +1027,7 @@ PACKET_HANDLER(EnterWorld)
     g_Player->OffsetY = 0;
     g_Player->OffsetZ = 0;
 
-    Info(Network, "player 0x%08lX entered the world", serial);
+    Info(Network, "player 0x%08X entered the world", serial);
 
     g_MapManager.Init();
     g_MapManager.AddRender(g_Player);
@@ -5412,7 +5412,7 @@ PACKET_HANDLER(OpenCompressedGump)
 
     if (cLen < 1)
     {
-        Info(Network, "CLen=%d - server sent bad compressed gump data", cLen);
+        Info(Network, "CLen=%lu - server sent bad compressed gump data", cLen);
 
         return;
     }
@@ -5427,7 +5427,7 @@ PACKET_HANDLER(OpenCompressedGump)
     vector<uint8_t> decLayoutData(dLen);
     Info(
         Network,
-        "gump layout:\n\tSenderID=0x%08X\n\tGumpID=0x%08X\n\tCLen=%d\n\tDLen=%d\nDecompressing layout gump data...",
+        "gump layout:\n\tSenderID=0x%08X\n\tGumpID=0x%08X\n\tCLen=%lu\n\tDLen=%lu\nDecompressing layout gump data...",
         senderID,
         gumpID,
         cLen,
@@ -5466,7 +5466,7 @@ PACKET_HANDLER(OpenCompressedGump)
 
         Info(Network, "text gump data decompressed");
         Info(Network, "gump text lines:");
-        Info(Network, "\tlinesCount=%d, cTLen=%d, dTLen=%d", linesCount, cTLen, dTLen);
+        Info(Network, "\tlinesCount=%d, cTLen=%d, dTLen=%lu", linesCount, cTLen, dTLen);
     }
 
     int newsize = 21 + dLen + 2 + dTLen;

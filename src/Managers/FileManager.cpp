@@ -769,7 +769,7 @@ void CFileManager::ProcessAnimSequeceData()
         //Seems like this data is essential to make AnimationSequence work
         // Aimed
     }
-    Info(Data, "AnimationSequence processed %d entries", m_AnimationSequence.m_Map.size());
+    Info(Data, "AnimationSequence processed %ld entries", m_AnimationSequence.m_Map.size());
 }
 
 static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
@@ -797,7 +797,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     file.Header = (UopHeader *)file.Start;
     if (file.Header->Magic != MYP_MAGIC)
     {
-        Error(Data, "%d:unknown file format 0x%08x", filename, file.Header->Magic);
+        Error(Data, "%s:unknown file format 0x%08x", filename, file.Header->Magic);
         return false;
     }
 
@@ -807,7 +807,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     }
     TRACE(Data, "%s:signature is 0x%08x", filename, file.Header->Signature);
     TRACE(Data, "%s:max_block_count is %d", filename, file.Header->MaxBlockCount);
-    TRACE(Data, "%s:first_section at %d", filename, file.Header->FirstSection);
+    TRACE(Data, "%s:first_section at %ld", filename, file.Header->FirstSection);
     TRACE(Data, "%s:file_count is %d", filename, file.Header->FileCount);
     file.ResetPtr();
     uint64_t next = file.Header->FirstSection;
@@ -840,7 +840,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
         DEBUG(Data, "MypHeader for %s", uopFilename);
         DEBUG(Data, "\tVersion......: %d", file.Header->Version);
         DEBUG(Data, "\tSignature....: %08X", file.Header->Signature);
-        DEBUG(Data, "\tFirstSection.: %016x", file.Header->FirstSection);
+        DEBUG(Data, "\tFirstSection.: %016lx", file.Header->FirstSection);
         DEBUG(Data, "\tMaxBlockCount: %d", file.Header->MaxBlockCount);
         DEBUG(Data, "\tFileCount....: %d", file.Header->FileCount);
         DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad1);
@@ -853,12 +853,12 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
             const auto block = kvp.second;
             auto meta = (UopBlockMetadata *)(file.Start + block->Offset);
 
-            DEBUG(Data, "\t\tBlock Header %08X_%016llX:", block->Checksum, block->Hash);
-            DEBUG(Data, "\t\t\tOffset..........: %016llx", block->Hash);
+            DEBUG(Data, "\t\tBlock Header %08X_%016lX:", block->Checksum, block->Hash);
+            DEBUG(Data, "\t\t\tOffset..........: %016lx", block->Hash);
             DEBUG(Data, "\t\t\tHeaderSize......: %d", block->HeaderSize);
             DEBUG(Data, "\t\t\tCompressedSize..: %d", block->CompressedSize);
             DEBUG(Data, "\t\t\tDecompressedSize: %d", block->DecompressedSize);
-            DEBUG(Data, "\t\t\tHash............: %016llx", block->Hash);
+            DEBUG(Data, "\t\t\tHash............: %016lx", block->Hash);
             DEBUG(Data, "\t\t\tChecksum........: %08X", block->Checksum);
             DEBUG(Data, "\t\t\tFlags...........: %d", block->Flags);
 
@@ -866,7 +866,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
             DEBUG(Data, "\t\t\t\tType.....: %d", meta->Type);
             DEBUG(Data, "\t\t\t\tOffset...: %04x", meta->Offset);
             DateFromTimestamp(meta->Timestamp / 100000000, date, sizeof(date));
-            DEBUG(Data, "\t\t\t\tTimestamp: %s (%lld)", date, meta->Timestamp);
+            DEBUG(Data, "\t\t\t\tTimestamp: %s (%lu)", date, meta->Timestamp);
             /*
             vector<uint8_t> data = file.GetData(block);
             if (data.empty())
@@ -919,7 +919,7 @@ void CFileManager::LoadTiledata()
         staticsSize = 2048;
     }
     Info(Data, "landCount=%d", landSize);
-    Info(Data, "staticsCount=%d", staticsSize);
+    Info(Data, "staticsCount=%zu", staticsSize);
 
     if (file.Size != 0u)
     {

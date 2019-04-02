@@ -806,7 +806,7 @@ void CGameWorld::UpdateGameObject(
 {
     Info(
         Client,
-        "UpdateGameObject 0x%08lX:0x%04X 0x%04X (%i) %d:%d:%d %i",
+        "UpdateGameObject 0x%08X:0x%04X 0x%04X (%i) %d:%d:%d %i",
         serial,
         graphic,
         color,

@@ -100,7 +100,7 @@ void CGumpSecureTrading::UpdateContent()
         return;
     }
 
-    TRACE(Client, "Update GUMP Content, has items? %08x (ID1: %08x, ID2: %08x)", m_Items, ID, ID2);
+    TRACE(Client, "Update GUMP Content, has items? %016lx (ID1: %08x, ID2: %08x)", (intptr_t)m_Items, ID, ID2);
     if (m_Items == nullptr)
     {
         if (g_Config.ClientVersion >= VERSION(7, 0, 45, 65))
@@ -187,7 +187,7 @@ void CGumpSecureTrading::UpdateContent()
 
     // Draw sending item (if available)
     CGameObject *container = g_World->FindWorldObject(ID);
-    TRACE(Client, "Container1 %08x ID1: %08x", container, ID);
+    TRACE(Client, "Container1 %016lx ID1: %08x", (intptr_t)container, ID);
     if (container != nullptr && container->m_Items != nullptr)
     {
         QFOR(item, container->m_Items, CGameItem *)
@@ -218,7 +218,7 @@ void CGumpSecureTrading::UpdateContent()
 
     // Draw receiving item (if available)
     container = g_World->FindWorldObject(ID2);
-    TRACE(Client, "Container2 %08x ID2: %08x", container, ID2);
+    TRACE(Client, "Container2 %016lx ID2: %08x", (intptr_t)container, ID2);
     if (container != nullptr && container->m_Items != nullptr)
     {
         QFOR(item, container->m_Items, CGameItem *)

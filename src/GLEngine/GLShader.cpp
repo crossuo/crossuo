@@ -21,7 +21,6 @@ CGLShader::CGLShader()
 
 bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
 {
-    GLint val = GL_FALSE;
     if (vertexShaderData == nullptr && fragmentShaderData == nullptr)
     {
         return false;
