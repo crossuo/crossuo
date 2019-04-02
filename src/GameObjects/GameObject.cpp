@@ -20,6 +20,9 @@
 #include "../Managers/ColorManager.h"
 #include "../TextEngine/TextData.h"
 
+static int s_objectHandleOffsetY = 25;
+static int s_bodyHandleOffsetY = 15;
+
 CGameObject::CGameObject(int serial)
     : CRenderStaticObject(ROT_GAME_OBJECT, serial, 0, 0, 0, 0, 0)
     , LastAnimationChangeTime(SDL_GetTicks())
@@ -118,12 +121,12 @@ void CGameObject::DrawObjectHandlesTexture()
         CGameCharacter *gc = (CGameCharacter *)this;
         const auto dims = g_AnimationManager.GetAnimationDimensions(this);
         x += gc->OffsetX;
-        y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 25);
+        y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + s_objectHandleOffsetY);
     }
     else if (IsCorpse())
     {
         x += 20;
-        y -= (g_Game.GetStaticArtDimension(Graphic).Height + 15);
+        y -= g_Game.GetStaticArtDimension(Graphic).Height + s_bodyHandleOffsetY;
     }
     else
     {
@@ -152,7 +155,12 @@ void CGameObject::SelectObjectHandlesTexture()
             CGameCharacter *gc = (CGameCharacter *)this;
             AnimationFrameInfo dims = g_AnimationManager.GetAnimationDimensions(this);
             x += gc->OffsetX;
-            y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + 8);
+            y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + s_objectHandleOffsetY);
+        }
+        else if (IsCorpse())
+        {
+            x += 20;
+            y -= g_Game.GetStaticArtDimension(Graphic).Height + s_bodyHandleOffsetY;
         }
         else
         {
