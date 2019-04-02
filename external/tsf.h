@@ -45,6 +45,15 @@
 #ifndef TSF_INCLUDE_TSF_INL
 #define TSF_INCLUDE_TSF_INL
 
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #  define CPP_DEFAULT0 = 0
@@ -546,7 +555,7 @@ static void tsf_region_envtosecs(struct tsf_envelope* p, TSF_BOOL sustainIsGain)
 	// to keep the values in timecents so we can calculate it during startNote
 	if (!p->keynumToHold)  p->hold  = (p->hold  < -11950.0f ? 0.0f : tsf_timecents2Secsf(p->hold));
 	if (!p->keynumToDecay) p->decay = (p->decay < -11950.0f ? 0.0f : tsf_timecents2Secsf(p->decay));
-	
+
 	if (p->sustain < 0.0f) p->sustain = 0.0f;
 	else if (sustainIsGain) p->sustain = tsf_decibelsToGain(-p->sustain / 10.0f);
 	else p->sustain = 1.0f - (p->sustain / 1000.0f);
@@ -1365,7 +1374,7 @@ TSFDEF void tsf_render_short(tsf* f, short* buffer, int samples, int flag_mixing
 	tsf_render_float(f, f->outputSamples, samples, TSF_FALSE);
 
 	floatSamples = f->outputSamples;
-	if (flag_mixing) 
+	if (flag_mixing)
 		while (buffer != bufferEnd)
 		{
 			float v = *floatSamples++;

@@ -20,20 +20,24 @@ if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
 else()
   compile_definitions(_DEBUG DEBUG_ONLY)
   check_and_add_flag(HAVE_WALL -Wall)
+  check_and_add_flag(EXTRA -Wextra)
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
   endif()
 
-  #check_and_add_flag(EXTRA -Wextra)
+  # these are the only we want to really always disable
+  check_and_add_flag(TAUTOLOGICAL_COMPARE -Wno-tautological-constant-out-of-range-compare)
+  check_and_add_flag(SIGN_COMPARE -Wno-sign-compare)
+  check_and_add_flag(UNUSED_PARAMETER -Wno-unused-parameter)
+
   check_and_add_flag(MISSING_FIELD_INITIALIZERS -Wmissing-field-initializers)
   check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
-  #check_and_add_flag(FLOAT_EQUAL -Wfloat-equal)
+  check_and_add_flag(FLOAT_EQUAL -Wfloat-equal)
   #check_and_add_flag(CONVERSION -Wconversion)
   #check_and_add_flag(ZERO_AS_NULL_POINTER_CONSTANT -Wzero-as-null-pointer-constant)
 
   check_and_add_flag(TYPE_LIMITS -Wtype-limits)
-  check_and_add_flag(SIGN_COMPARE -Wsign-compare)
   check_and_add_flag(IGNORED_QUALIFIERS -Wignored-qualifiers)
   check_and_add_flag(UNINITIALIZED -Wuninitialized)
   check_and_add_flag(LOGICAL_OP -Wlogical-op)

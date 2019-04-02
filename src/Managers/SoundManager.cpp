@@ -225,7 +225,7 @@ float CSoundManager::GetVolumeValue(int distance, bool music)
         music ? g_ConfigManager.GetMusicVolume() : g_ConfigManager.GetSoundVolume();
 
     float volume = s_backend.getGlobalVolume();
-    if (volume == 0 || clientConfigVolume == 0)
+    if (volume <= 0.001f || clientConfigVolume == 0)
     {
         return 0;
     }
