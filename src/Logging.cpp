@@ -62,7 +62,7 @@ void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, in
 
     if (title && title[0] != '\0')
     {
-        VLOG_F(sys, level, title);
+        VLOG_F(sys, level, "%s", title);
     }
     int num_lines = size / 16;
     if (size % 16 != 0)
@@ -110,7 +110,7 @@ void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, in
                 cur += r;
             }
         }
-        VLOG_F(sys, level, out);
+        VLOG_F(sys, level, "%s", out);
     }
 }
 

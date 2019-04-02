@@ -263,7 +263,7 @@ void CWindow::ShowMessage(const string &text, const string &title)
 void CWindow::ShowMessage(const wstring &text, const wstring &title)
 {
     DEBUG_TRACE_FUNCTION;
-    SDL_Log("%s: %s\n", title.c_str(), text.c_str());
+    SDL_Log("%ls: %ls\n", title.c_str(), text.c_str());
 }
 
 bool CWindow::OnWindowProc(SDL_Event &ev)

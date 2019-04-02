@@ -367,22 +367,21 @@ void CGumpWorldMap::LoadMap(int map)
 
                 if (buf.size() != size)
                 {
-                    Error(Client, "world map allocation failed (size: %i)", size);
+                    Error(Client, "world map allocation failed (size: %ld)", size);
                     fs_close(mapFile);
                     return;
                 }
 
-                size_t readed = fread(&buf[0], sizeof(short), size, mapFile);
+                size_t read = fread(&buf[0], sizeof(short), size, mapFile);
                 fs_close(mapFile);
-
-                if (readed != size)
+                if (read != size)
                 {
-                    Error(Client, "reading world map file, need=%i, read=%zi\n", size, readed);
+                    Error(Client, "reading world map file, need=%ld, read=%zi\n", size, read);
                     fromFile = false;
                 }
                 else
                 {
-                    Info(Client, "world map readed from file");
+                    Info(Client, "world map read from file");
                 }
             }
             else
@@ -392,7 +391,6 @@ void CGumpWorldMap::LoadMap(int map)
         }
 
         int wantSize = g_MapSize[map].Width * g_MapSize[map].Height;
-
         if (!fromFile)
         {
             buf.resize(wantSize, 0);
