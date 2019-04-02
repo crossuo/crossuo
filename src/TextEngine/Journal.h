@@ -11,6 +11,7 @@ class CJournal : public CBaseQueue
 {
     int MaxSize = 0;
     int Size = 0;
+    using CBaseQueue::Add;
 
 public:
     CJournal(int maxSize);

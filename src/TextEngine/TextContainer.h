@@ -9,6 +9,8 @@ class CTextData;
 
 class CTextContainer : public CBaseQueue
 {
+    using CBaseQueue::Add;
+
 public:
     int MaxSize = 0;
     int Size = 0;

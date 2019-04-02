@@ -15,8 +15,6 @@
 // Enable these incrementally to cleanup bad code
 #pragma clang diagnostic ignored                                                                   \
     "-Wtautological-constant-out-of-range-compare" // FIXME: always true expression
-#pragma clang diagnostic ignored                                                                   \
-    "-Woverloaded-virtual" // FIXME: CGameItem::GetLightID, CTextContainer::Add, CJournal::Add etc.
 #pragma clang diagnostic ignored "-Wsign-compare"
 #elif defined(__GNUC__)
 // GCC warnings
