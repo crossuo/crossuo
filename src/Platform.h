@@ -9,29 +9,6 @@
 #include <SDL_keycode.h>
 #include <SDL_thread.h>
 
-// FIXME: Need cleanup everything inside this block
-
-#if defined(__clang__)
-// Enable these incrementally to cleanup bad code
-#pragma clang diagnostic ignored                                                                   \
-    "-Wtautological-constant-out-of-range-compare" // FIXME: always true expression
-#pragma clang diagnostic ignored "-Wsign-compare"
-#elif defined(__GNUC__)
-// GCC warnings
-#pragma GCC diagnostic ignored "-Wunknown-pragmas"
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wmissing-declarations"
-#pragma GCC diagnostic ignored "-Wpointer-arith"
-#pragma GCC diagnostic ignored "-Wtype-limits"
-#pragma GCC diagnostic ignored "-Wparentheses"
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-#pragma GCC diagnostic ignored "-Wpragmas"
-#pragma GCC diagnostic ignored "-Wstrict-overflow"
-#pragma GCC diagnostic ignored "-Wswitch"
-#pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
-#pragma GCC diagnostic ignored "-Wstrict-overflow"
-#endif
-
 #if !_WIN32
 typedef void *HDC;
 typedef void *HGLRC;

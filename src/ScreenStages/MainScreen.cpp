@@ -129,7 +129,7 @@ void CMainScreen::OnTextInput(const TextEvent &ev)
     DEBUG_TRACE_FUNCTION;
 
     const auto ch = EvChar(ev);
-    if (ch >= 0x0100 || !g_FontManager.IsPrintASCII((uint8_t)ch))
+    if (!IsPrintable(ch) || !g_FontManager.IsPrintASCII((uint8_t)ch))
     {
         return;
     }

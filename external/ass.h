@@ -3,9 +3,11 @@
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
+#pragma clang diagnostic ignored "-Wfloat-equal"
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma clang diagnostic ignored "-Wfloat-equal"
 #endif
 
 #ifdef ASS_IMPLEMENTATION

@@ -437,36 +437,33 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
     while (!equipConvParser.IsEOF())
     {
         vector<string> strings = equipConvParser.ReadTokens();
-
         if (strings.size() >= 5)
         {
-            uint16_t body = (uint16_t)atoi(strings[0].c_str());
-
+            auto body = (uint16_t)atoi(strings[0].c_str());
             if (body >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            uint16_t graphic = (uint16_t)atoi(strings[1].c_str());
-
+            auto graphic = (uint16_t)atoi(strings[1].c_str());
             if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            uint16_t newGraphic = (uint16_t)atoi(strings[2].c_str());
-
+            auto newGraphic = (uint16_t)atoi(strings[2].c_str());
             if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 newGraphic = graphic;
             }
 
-            uint16_t gump = (uint16_t)atoi(strings[3].c_str());
-
-            if (gump >= MAX_GUMP_DATA_INDEX_COUNT)
+            const auto gump_field = (uint32_t)atoi(strings[3].c_str());
+            if (gump_field >= MAX_GUMP_DATA_INDEX_COUNT)
             {
                 continue;
             }
+
+            auto gump = checked_cast<uint16_t>(gump_field);
             if (gump == 0)
             {
                 gump = graphic; // +50000;
@@ -476,10 +473,8 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 gump = newGraphic; // +50000;
             }
 
-            uint16_t color = (uint16_t)atoi(strings[4].c_str());
-
+            auto color = (uint16_t)atoi(strings[4].c_str());
             EQUIP_CONV_BODY_MAP::iterator bodyMapIter = m_EquipConv.find(body);
-
             if (bodyMapIter == m_EquipConv.end())
             {
                 m_EquipConv.insert(EQUIP_CONV_BODY_MAP::value_type(body, EQUIP_CONV_DATA_MAP()));
