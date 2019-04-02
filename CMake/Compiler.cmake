@@ -21,6 +21,10 @@ else()
   compile_definitions(_DEBUG DEBUG_ONLY)
   check_and_add_flag(HAVE_WALL -Wall)
   check_and_add_flag(EXTRA -Wextra)
+  if ($ENV{TRAVIS_COMPILER})
+    # if we are in travis-ci, thread warning as errors
+    check_and_add_flag(WARN_AS_ERROR -Werror)
+  endif()
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
