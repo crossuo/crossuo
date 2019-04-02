@@ -7,6 +7,7 @@ endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   compile_definitions(_DEBUG DEBUG_ONLY)
+  compile_definitions(_CRT_NONSTDC_NO_DEPRECATE)
   check_and_add_flag(EXCEPTIONS /EHsc)
 
   # Remove unreferenced inline functions/data to reduce link time and catch bugs
@@ -28,15 +29,18 @@ else()
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
+    check_and_add_flag(NO_TAUTOLOGICAL_COMPARE -Wno-tautological-constant-out-of-range-compare)
+    check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GCC")
+    check_and_add_flag(NO_MISSING_DECL -Wno-missing-declarations) # CommonInterfaces.cpp
+    check_and_add_flag(NO_SWITCH_DEFAULT -Wno-switch-default) # SDL_stdinc.h
+    check_and_add_flag(NO_TAUTOLOGICAL_COMPARE -Wno-type-limits) # tautological compare
   endif()
 
   # these are the only we want to really always disable
-  check_and_add_flag(TAUTOLOGICAL_COMPARE -Wno-tautological-constant-out-of-range-compare)
-  check_and_add_flag(SIGN_COMPARE -Wno-sign-compare)
-  check_and_add_flag(UNUSED_PARAMETER -Wno-unused-parameter)
-
+  check_and_add_flag(NO_SIGN_COMPARE -Wno-sign-compare)
+  check_and_add_flag(NO_UNUSED_PARAMETER -Wno-unused-parameter)
   check_and_add_flag(MISSING_FIELD_INITIALIZERS -Wmissing-field-initializers)
-  check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
   check_and_add_flag(FLOAT_EQUAL -Wfloat-equal)
   #check_and_add_flag(CONVERSION -Wconversion)
   #check_and_add_flag(ZERO_AS_NULL_POINTER_CONSTANT -Wzero-as-null-pointer-constant)

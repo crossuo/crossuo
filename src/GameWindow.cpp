@@ -486,6 +486,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
             g_TotalSendSize += size;
 
             CPacketInfo &type = g_PacketManager.GetInfo(*buf);
+            (void)type;
 
             DEBUG(
                 Plugin,

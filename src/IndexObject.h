@@ -121,6 +121,7 @@ void ValidateSpriteIsDeleted(T (&arr)[SIZE])
     for (int i = 0; i < SIZE; ++i)
     {
         CIndexObject &obj = arr[i];
+        (void)obj;
         assert(obj.Sprite == nullptr);
     }
 }

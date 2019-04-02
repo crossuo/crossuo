@@ -100,7 +100,12 @@ void CGumpSecureTrading::UpdateContent()
         return;
     }
 
-    TRACE(Client, "Update GUMP Content, has items? %016lx (ID1: %08x, ID2: %08x)", (intptr_t)m_Items, ID, ID2);
+    TRACE(
+        Client,
+        "Update GUMP Content, has items? %016lx (ID1: %08x, ID2: %08x)",
+        (intptr_t)m_Items,
+        ID,
+        ID2);
     if (m_Items == nullptr)
     {
         if (g_Config.ClientVersion >= VERSION(7, 0, 45, 65))

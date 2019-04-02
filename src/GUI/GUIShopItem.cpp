@@ -179,7 +179,7 @@ void CGUIShopItem::PrepareTextures()
             default:
                 break;
         }
-        auto direction = g_AnimationManager.ExecuteAnimation(Graphic, animGroup, 1);
+        auto direction = g_AnimationManager.ExecuteAnimation(animGroup, 1, Graphic);
         direction.LastAccessTime = SDL_GetTicks() + 60000;
     }
 
