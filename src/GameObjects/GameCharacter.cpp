@@ -825,7 +825,9 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
                 {
                     result = 78;
                 }
-                else if (result >= 200) // && result <= 259) // FIXME: CHECK client.exe - result is a byte, what it was meant to be values >=256 ???
+                else if (
+                    result >=
+                    200) // && result <= 259) // FIXME: CHECK client.exe - result is a byte, what it was meant to be values >=256 ???
                 {
                     result = 75;
                 }

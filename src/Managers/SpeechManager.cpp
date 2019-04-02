@@ -176,6 +176,7 @@ bool CSpeechManager::LoadLangCodes()
         if (((langCodeData.Language.length() + langCodeData.Country.length() + 2) % 2) != 0u)
         {
             int nullTerminator = file.ReadUInt8();
+            (void)nullTerminator;
             assert(
                 nullTerminator == 0 &&
                 "speechManager @ 138, invalid null terminator in langcodes.iff");
