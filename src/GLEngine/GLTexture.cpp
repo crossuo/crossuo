@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Renderer/RenderAPI.h"
+
 CGLTexture::~CGLTexture()
 {
     DEBUG_TRACE_FUNCTION;
@@ -45,20 +47,33 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
         height = Height;
     }
 
+    static const uint32_t s_renderCmdListSize = 64 * 1024;
+    static auto s_renderCmdList = Render_CmdList(malloc(s_renderCmdListSize), s_renderCmdListSize);
+    static auto s_renderState = Render_DefaultState();
+    Render_ResetCmdList(&s_renderCmdList);
+    RenderAdd_FlushState(&s_renderCmdList, &s_renderState);
+
+    auto textureCmd = RenderAdd_TextureCmd(
+        Texture, x, y, width, height, width / float(Width), height / float(Height));
+
     if (checktrans)
     {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        g_GL_DrawStretched(*this, x, y, width, height);
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        g_GL_DrawStretched(*this, x, y, width, height);
-        glDisable(GL_STENCIL_TEST);
+        RenderAdd_SetBlend(
+            &s_renderCmdList, &RenderAdd_Blend(true, BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_Texture(&s_renderCmdList, &textureCmd, 1);
+        RenderAdd_SetBlend(
+            &s_renderCmdList, &RenderAdd_Blend(false, BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+
+        RenderAdd_SetStencil(&s_renderCmdList, &RenderAdd_Stencil(true));
+        RenderAdd_Texture(&s_renderCmdList, &textureCmd, 1);
+        RenderAdd_SetStencil(&s_renderCmdList, &RenderAdd_Stencil(false));
     }
     else
     {
-        g_GL_DrawStretched(*this, x, y, width, height);
+        RenderAdd_Texture(&s_renderCmdList, &textureCmd, 1);
     }
+
+    RenderDraw_Execute(&s_renderCmdList, &s_renderState);
 }
 
 void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
