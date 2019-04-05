@@ -2,6 +2,7 @@
 // Copyright (C) September 2017 Hotride
 
 #include "CustomHousesManager.h"
+#include "../api/mappedfile.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "../GameObjects/GameItem.h"
 
@@ -76,7 +77,7 @@ void CustomHousesManager::Load(const os_path &path)
     DEBUG_TRACE_FUNCTION;
     Clear();
 
-    Wisp::CMappedFile file;
+    CMappedFile file;
 
     if (file.Load(path) && (file.Size != 0u))
     {

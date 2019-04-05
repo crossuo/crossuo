@@ -601,12 +601,12 @@ namespace po {
 				std::size_t decimals2 = 0;
 				enum : std::size_t {
 					max = std::numeric_limits< T >::digits10,
-					max_decimals = log10< max >::value + 1
+					max_decimals2 = log10< max >::value + 1
 				};
-				for( int d{}; first != last && decimals2 <= max_decimals && ( d = get_digit( *first ) ) >= 0; ++first, ++decimals2 )
+				for( int d{}; first != last && decimals2 <= max_decimals2 && ( d = get_digit( *first ) ) >= 0; ++first, ++decimals2 )
 					exp = 10 * exp + static_cast< unsigned >( d );
-				if( decimals2 >= max_decimals )
-					if( decimals2 > max_decimals || exp > max )
+				if( decimals2 >= max_decimals2 )
+					if( decimals2 > max_decimals2 || exp > max )
 						return error_code::out_of_range;
 				const T fac = pow( T{ 10 }, exp );
 				const T mant = result;

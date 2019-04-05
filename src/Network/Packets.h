@@ -3,7 +3,9 @@
 
 #pragma once
 
-class CPacket : public Wisp::CDataWriter
+#include "../api/mappedfile.h"
+
+class CPacket : public CDataWriter
 {
 public:
     CPacket(size_t size, bool autoResize = false);

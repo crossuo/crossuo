@@ -3,6 +3,7 @@
 
 #include "GumpCombatBook.h"
 #include "GumpAbility.h"
+#include "../api/uodata.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"

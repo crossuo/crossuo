@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
+#include "../api/mappedfile.h"
 
 class CIntloc : public CBaseQueueItem
 {
@@ -19,7 +20,7 @@ public:
     CIntloc(int fileIndex, const string &lang);
     virtual ~CIntloc();
 
-    Wisp::CMappedFile m_File;
+    CMappedFile m_File;
     wstring Get(int id, bool toCamelCase = false);
 };
 

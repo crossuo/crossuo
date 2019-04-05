@@ -7,7 +7,8 @@
 #include "GumpManager.h"
 #include "PacketManager.h"
 #include <SDL_clipboard.h>
-#include "../FileSystem.h"
+#include "../api/mappedfile.h"
+#include "../api/file.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Macro.h"
@@ -347,7 +348,7 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
     DEBUG_TRACE_FUNCTION;
     bool result = false;
     Clear();
-    Wisp::CMappedFile file;
+    CMappedFile file;
     if (file.Load(path) && (file.Size != 0u))
     {
         const uint8_t _version = file.ReadUInt8();

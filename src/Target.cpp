@@ -5,10 +5,10 @@
 #include "Config.h"
 #include "CrossUO.h"
 #include "Multi.h"
+#include "api/uodata.h"
 #include "api/mulstruct.h"
 #include "api/commoninterfaces.h"
 #include "Network/Packets.h"
-#include "Managers/FileManager.h"
 #include "Managers/MouseManager.h"
 #include "Managers/MapManager.h"
 #include "Managers/CustomHousesManager.h"
@@ -69,7 +69,7 @@ void CTarget::SetLastTargetObject(int serial)
     pack32(m_LastData + 7, serial);
 }
 
-void CTarget::SetData(Wisp::CDataReader &reader)
+void CTarget::SetData(CDataReader &reader)
 {
     DEBUG_TRACE_FUNCTION;
     //Копируем буффер
@@ -83,7 +83,7 @@ void CTarget::SetData(Wisp::CDataReader &reader)
     MultiGraphic = 0;
 }
 
-void CTarget::SetMultiData(Wisp::CDataReader &reader)
+void CTarget::SetMultiData(CDataReader &reader)
 {
     DEBUG_TRACE_FUNCTION;
     //Устанавливаем соответствующие значения
@@ -358,7 +358,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
             return;
         }
 
-        Wisp::CDataReader reader(&data[0], data.size());
+        CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
         for (int i = 0; i < count; i++)
         {

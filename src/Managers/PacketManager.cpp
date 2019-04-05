@@ -20,7 +20,7 @@
 #include "MapManager.h"
 #include "ConnectionManager.h"
 #include "PluginManager.h"
-#include "FileManager.h"
+#include "../api/uodata.h"
 #include "../MultiMap.h"
 #include "../Point.h"
 #include "../Sockets.h"
@@ -6227,7 +6227,7 @@ PACKET_HANDLER(CustomHouse)
             continue;
         }
 
-        Wisp::CDataReader tempReader(static_cast<uint8_t *>(&decompressedBytes[0]), dLen);
+        CDataReader tempReader(static_cast<uint8_t *>(&decompressedBytes[0]), dLen);
         Move(cLen);
 
         uint16_t id = 0;

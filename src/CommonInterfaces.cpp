@@ -3,16 +3,15 @@
 
 #include "api/commoninterfaces.h"
 #include "CrossUO.h"
-#include "IndexObject.h"
 #include "Target.h"
 #include <SDL_timer.h>
+#include "api/uodata.h"
 #include "Gumps/GumpSecureTrading.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/ColorManager.h"
 #include "Managers/GumpManager.h"
 #include "Managers/ClilocManager.h"
 #include "Managers/FontsManager.h"
-#include "Managers/FileManager.h"
 #include "Network/Packets.h"
 #include "Walker/PathFinder.h"
 #include "GameObjects/GamePlayer.h"
@@ -177,7 +176,7 @@ void CDECL FUNCBODY_SetValueString(VALUE_KEY_STRING key, const char *value)
 
 void CDECL FUNCBODY_SetTargetData(unsigned char *buf, int size)
 {
-    Wisp::CDataReader reader(buf, size);
+    CDataReader reader(buf, size);
     reader.Move(1);
 
     if (*buf == 0x6C)
@@ -435,7 +434,7 @@ bool CDECL FUNCBODY_GetAutowalking()
 
 void CDECL FUNCBODY_GetFileInfo(unsigned int index, XUO_RAW_FILE_INFO &info)
 {
-    Wisp::CMappedFile *file = nullptr;
+    CMappedFile *file = nullptr;
     unsigned int extra = 0;
 
     switch (index)

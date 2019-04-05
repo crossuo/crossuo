@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpMinimap.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"

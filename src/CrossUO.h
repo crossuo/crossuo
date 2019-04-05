@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include "FileSystem.h"
-#include "IndexObject.h"
 #include "GameObjects/GameWorld.h"
 #include "api/plugininterface.h"
 
+struct CIndexObjectStatic;
+struct CIndexObject;
+struct CIndexSound;
 struct CUopMappedFile;
 
 class CGame
@@ -100,7 +101,7 @@ public:
     bool IsVegetation(uint16_t graphic);
     uint64_t GetLandFlags(uint16_t id);
     uint64_t GetStaticFlags(uint16_t id);
-    uint16_t GetLightColor(uint16_t id) { return g_Index.m_Static[id].LightColor; }
+    uint16_t GetLightColor(uint16_t id);
     CSize GetStaticArtDimension(uint16_t id);
     CSize GetGumpDimension(uint16_t id);
     CSprite *ExecuteGump(uint16_t id);

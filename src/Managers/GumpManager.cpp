@@ -7,6 +7,7 @@
 #include "MacroManager.h"
 #include "OptionsMacroManager.h"
 #include "MouseManager.h"
+#include "../api/mappedfile.h"
 #include "../Point.h"
 #include "../CrossUO.h"
 #include "../Party.h"
@@ -1180,7 +1181,7 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
 void CGumpManager::Load(const os_path &path)
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CMappedFile file;
+    CMappedFile file;
 
     bool paperdollRequested = false;
     bool menubarFound = false;

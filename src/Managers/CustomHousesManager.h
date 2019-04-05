@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../api/mappedfile.h"
+
 class CGameItem;
 class CMultiObject;
 
@@ -44,7 +46,7 @@ public:
     void Paste(CGameItem *foundation);
 };
 
-class CustomHousesManager : public Wisp::CDataReader
+class CustomHousesManager : public CDataReader
 {
     unordered_map<uint32_t, CCustomHouse *> m_Items;
 

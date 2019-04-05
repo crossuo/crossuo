@@ -3,9 +3,9 @@
 
 #include "GameEffect.h"
 #include "GameEffectMoving.h"
+#include "api/uodata.h"
 #include "../CrossUO.h"
 #include "../Managers/EffectManager.h"
-#include "../Managers/FileManager.h"
 
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)

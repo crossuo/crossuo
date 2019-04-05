@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpPaperdoll.h"
+#include "../api/uodata.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"

@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUITilepic.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../Point.h"
 

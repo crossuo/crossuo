@@ -2,14 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpWorldMap.h"
-#include "../FileSystem.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../Application.h"
 #include "../PressedObject.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/MapManager.h"
 #include "../Managers/MouseManager.h"
-#include "../Managers/FileManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
 

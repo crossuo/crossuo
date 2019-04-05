@@ -3,6 +3,8 @@
 
 #pragma once
 
+struct CDataReader;
+
 class CServer
 {
 public:
@@ -43,7 +45,7 @@ public:
     CServer *GetSelectedServer();
     int ServersCount() { return (int)m_Servers.size(); }
     CServer *Select(int index);
-    void ParsePacket(Wisp::CDataReader &reader);
+    void ParsePacket(CDataReader &reader);
 };
 
 extern CServerList g_ServerList;

@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUITilepicHightlighted.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
 #include "../Managers/ColorManager.h"

@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "ColorManager.h"
-#include "FileManager.h"
+#include "../api/uodata.h"
 
 CColorManager g_ColorManager;
 

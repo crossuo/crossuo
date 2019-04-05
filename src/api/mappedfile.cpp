@@ -1,16 +1,13 @@
 // MIT License
+// Copyright (C) August 2016 Hotride
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #if 0
 #define DATASTREAM_DEBUG DEBUG_TRACE_FUNCTION
 #else
 #define DATASTREAM_DEBUG
 #endif
-
-namespace Wisp
-{
-CDataWriter::CDataWriter()
-{
-}
 
 CDataWriter::CDataWriter(size_t size, bool autoResize)
     : AutoResize(autoResize)
@@ -184,10 +181,6 @@ void CDataWriter::WriteWString(
     Ptr -= offset;
 }
 
-CDataReader::CDataReader()
-{
-}
-
 CDataReader::CDataReader(uint8_t *start, size_t size)
     : Start(start)
     , Size(size)
@@ -250,7 +243,6 @@ void CDataReader::ReadDataLE(uint8_t *data, size_t size, const intptr_t &offset)
 string CDataReader::ReadString(size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
-
     uint8_t *ptr = Ptr + offset;
     if (size == 0u)
     {
@@ -278,7 +270,6 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
 wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
-
     uint8_t *ptr = Ptr + offset;
     if (size == 0u)
     {
@@ -331,5 +322,3 @@ wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
 {
     return ReadWString(size, true, offset);
 }
-
-}; // namespace Wisp

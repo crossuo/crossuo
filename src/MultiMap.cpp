@@ -5,9 +5,7 @@
 #include "Logging.h"
 #include "Gumps/GumpMap.h"
 #include "Managers/ColorManager.h"
-#include "Managers/FileManager.h"
-#include "Wisp/WispMappedFile.h"
-#include "Wisp/WispDataStream.h"
+#include "api/uodata.h"
 
 CMultiMap g_MultiMap;
 

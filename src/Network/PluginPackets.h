@@ -3,7 +3,9 @@
 
 #pragma once
 
-class CPluginPacket : public Wisp::CDataWriter
+#include "../api/mappedfile.h"
+
+class CPluginPacket : public CDataWriter
 {
 public:
     CPluginPacket();

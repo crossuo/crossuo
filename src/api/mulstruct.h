@@ -397,7 +397,7 @@ struct FONT_OBJECT
 {
     uint8_t Width;
     uint8_t Height;
-    GLuint Texture;
+    uint32_t Texture; // GLuint
     uint8_t *Data;
 };
 static_assert(sizeof(FONT_OBJECT) == 14, "Invalid FONT_OBJECT size");

@@ -1,7 +1,15 @@
 // GPLv3 License
 // Copyright (c) 2018 Danny Angelo Carminati Grein
 
-#include "FileSystem.h"
+#include "file.h"
+
+#if LIBUO
+#define LOG_DEBUG(...) fprintf(stderr, __VA_ARGS__)
+#define LOG_ERROR(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define LOG_DEBUG(...) DEBUG(Filesystem, __VA_ARGS__)
+#define LOG_ERROR(...) Error(Filesystem, __VA_ARGS__)
+#endif
 
 #if defined(XUO_WINDOWS)
 
@@ -42,7 +50,7 @@ size_t fs_size(FILE *fp)
 bool fs_path_exists(const os_path &path_str)
 {
     bool r = PathFileExistsW(path_str.c_str()) != 0u;
-    DEBUG(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    LOG_DEBUG("%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
     return r;
 }
 
@@ -185,7 +193,7 @@ FILE *fs_open(const string &path_str, fs_mode mode)
     auto fp = fopen(fname, mstr);
     if (fp == nullptr)
     {
-        Error(Filesystem, "loading file: %s (%d)", strerror(errno), errno);
+        LOG_ERROR("loading file: %s (%d)", strerror(errno), errno);
         return nullptr;
     }
 
@@ -215,7 +223,7 @@ bool fs_path_exists(const string &path_str)
     assert(!path_str.empty());
     struct stat buffer;
     auto r = stat(CStringFromPath(path_str), &buffer) == 0;
-    DEBUG(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    LOG_DEBUG("%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
     return r;
 }
 

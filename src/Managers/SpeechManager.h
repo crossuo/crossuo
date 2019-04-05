@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "../IndexObject.h"
-
 class CLangCode
 {
 public:

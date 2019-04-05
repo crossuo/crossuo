@@ -5,6 +5,8 @@
 #include "BaseQueue.h"
 #include "api/enumlist.h"
 
+struct CMappedFile;
+
 class CMacroObject : public CBaseQueueItem
 {
 public:
@@ -54,7 +56,7 @@ public:
 
     CMacro *GetCopy();
 
-    static CMacro *Load(Wisp::CMappedFile &file);
+    static CMacro *Load(CMappedFile &file);
     static CMacro *CreateBlankMacro();
     static CMacroObject *CreateMacro(const MACRO_CODE &code);
     static void GetBoundByCode(const MACRO_CODE &code, int &count, int &offset);

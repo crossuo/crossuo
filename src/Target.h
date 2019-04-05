@@ -5,6 +5,7 @@
 
 class CMulti;
 class CMultiObject;
+struct CDataReader;
 
 class CTarget
 {
@@ -29,8 +30,8 @@ public:
     ~CTarget() {}
 
     void SetLastTargetObject(int serial);
-    void SetData(Wisp::CDataReader &reader);
-    void SetMultiData(Wisp::CDataReader &reader);
+    void SetData(CDataReader &reader);
+    void SetMultiData(CDataReader &reader);
     bool IsTargeting() const { return Targeting; }
     void Reset();
     void RequestFromCustomHouse();

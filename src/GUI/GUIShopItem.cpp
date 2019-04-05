@@ -3,6 +3,7 @@
 
 #include "GUIShopItem.h"
 #include <SDL_timer.h>
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../Managers/AnimationManager.h"
 #include "../Managers/MouseManager.h"

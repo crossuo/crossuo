@@ -4,6 +4,7 @@
 #include "ConnectionManager.h"
 #include "PacketManager.h"
 #include <SDL_stdinc.h>
+#include "../api/mappedfile.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ScreenStages/ConnectionScreen.h"
@@ -148,7 +149,7 @@ bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameS
                 uint8_t buf = 0xEF;
                 m_LoginSocket.Send(&buf, 1); //0xEF
                 SendIP(m_LoginSocket, m_Seed);
-                Wisp::CDataWriter stream;
+                CDataWriter stream;
 
                 uint32_t major = 0, minor = 0, rev = 0, prot = 0;
                 GetClientVersion(&major, &minor, &rev, &prot);

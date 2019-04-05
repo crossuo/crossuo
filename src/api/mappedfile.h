@@ -1,24 +1,20 @@
-﻿// MIT License
+// MIT License
+// Copyright (C) August 2016 Hotride
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
 
-#ifndef WISP_DW_H
-#define WISP_DW_H
+#pragma once
 
-namespace Wisp
+#include "file.h"
+
+struct CDataWriter
 {
-class CDataWriter
-{
-public:
     bool AutoResize = true;
     uint8_t *Ptr = 0;
 
-protected:
-    vector<uint8_t> m_Data;
-
-public:
-    CDataWriter();
+    CDataWriter() = default;
     CDataWriter(size_t size, bool autoResize = true);
-
-    virtual ~CDataWriter();
+    ~CDataWriter();
 
     vector<uint8_t> Data() const { return m_Data; }
     uint8_t *DataPtr() { return &m_Data[0]; }
@@ -26,7 +22,6 @@ public:
 
     void Resize(size_t newSize, bool resetPtr = false);
     void ResetPtr() { Ptr = &m_Data[0]; }
-
     void Move(const intptr_t &offset);
 
     void WriteDataBE(const uint8_t *data, size_t size, const intptr_t &offset = 0);
@@ -125,26 +120,25 @@ public:
         bool bigEndian = true,
         bool nullTerminated = true,
         const intptr_t &offset = 0);
+
+protected:
+    vector<uint8_t> m_Data;
 };
 
-class CDataReader
+struct CDataReader
 {
-public:
     uint8_t *Start = 0;
     size_t Size = 0;
     uint8_t *End = 0;
     uint8_t *Ptr = 0;
 
-    CDataReader();
+    CDataReader() = default;
     CDataReader(uint8_t *start, size_t size);
-
-    virtual ~CDataReader();
+    ~CDataReader();
 
     void SetData(uint8_t *start, size_t size, const intptr_t &offset = 0);
     void ResetPtr() { Ptr = Start; }
-
     bool IsEOF() { return Ptr >= End; }
-
     void Move(const intptr_t &offset) { Ptr += offset; }
 
     void ReadDataBE(uint8_t *data, size_t size, const intptr_t &offset = 0);
@@ -271,7 +265,7 @@ public:
     template <typename T, size_t SIZE>
     void ReadBuffer(T (&buffer)[SIZE])
     {
-        SDL_memcpy(buffer, Ptr, SIZE * sizeof(T));
+        memcpy(buffer, Ptr, SIZE * sizeof(T));
         Move(SIZE);
     }
     string ReadString(size_t size = 0, const intptr_t &offset = 0);
@@ -282,6 +276,43 @@ private:
     wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 
-}; // namespace Wisp
+struct CMappedFile : public CDataReader
+{
+    CMappedFile() = default;
+    ~CMappedFile() { Unload(); }
 
-#endif // WISP_DW_H
+    bool Load(const os_path &path)
+    {
+        Info(Filesystem, "mmaping %s", CStringFromPath(path));
+        bool result = false;
+
+        if (fs_path_exists(path))
+        {
+            Unload();
+            Start = fs_map(path, &Size);
+            result = Start != nullptr;
+            SetData(Start, Size);
+        }
+        else
+        {
+            Warning(Filesystem, "file not found %s", CStringFromPath(path));
+        }
+
+        if (!result)
+        {
+            auto errorCode = errno;
+            Error(Filesystem, "failed to memory map, error code: %i", errorCode);
+        }
+
+        return result;
+    }
+
+    void Unload()
+    {
+        if (Start != nullptr)
+        {
+            fs_unmap(Start, Size);
+        }
+        SetData(nullptr, 0);
+    }
+};

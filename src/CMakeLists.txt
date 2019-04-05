@@ -52,8 +52,6 @@ set(wisp_src
   Wisp/WispThread.cpp
   Wisp/WispWindow.cpp
   Wisp/WispBinaryFileWriter.cpp
-  Wisp/WispDataStream.cpp
-  Wisp/WispMappedFile.cpp
   Wisp/WispPacketMessage.cpp
   Wisp/WispTextFileParser.cpp
 )
@@ -209,7 +207,6 @@ set(managers_src
   Managers/CreateCharacterManager.cpp
   Managers/CustomHousesManager.cpp
   Managers/EffectManager.cpp
-  Managers/FileManager.cpp
   Managers/FontsManager.cpp
   Managers/GumpManager.cpp
   Managers/IntlocManager.cpp
@@ -259,11 +256,6 @@ set(textengine_src
   TextEngine/TextRenderer.cpp
 )
 
-set(utility_src
-  Utility/AutoResetEvent.cpp
-  Utility/PingThread.cpp
-)
-
 set(walker_src
   Walker/FastWalk.cpp
   Walker/PathFinder.cpp
@@ -294,7 +286,6 @@ set(crossuo_src
   DateTimeStamp.cpp
   Globals.cpp
   ImageBounds.cpp
-  IndexObject.cpp
   Macro.cpp
   Multi.cpp
   MultiMap.cpp
@@ -316,17 +307,22 @@ set(crossuo_src
   CrossPCH.cpp
   Target.cpp
   TargetGump.cpp
-  TextureObject.cpp
   ToolTip.cpp
   UseItemsList.cpp
   Weather.cpp
   WeatherEffect.cpp
+  Utility/PingThread.cpp
 
-  FileSystem.cpp
   Sockets.cpp
   Main.cpp
   Platform.cpp
   Config.cpp
+)
+
+set(libuo_src
+  api/uodata.cpp
+  api/mappedfile.cpp
+  api/file.cpp
 )
 
 if(XUO_WINDOWS)
@@ -337,6 +333,10 @@ if(XUO_WINDOWS)
     CrossUO.rc
   )
 endif()
+
+set(xuodump_src
+  ${libuo_src}
+)
 
 include_directories("${PROJECT_SOURCE_DIR}/src/GameObjects")
 include_directories("${PROJECT_SOURCE_DIR}/src/GLEngine")
@@ -378,6 +378,7 @@ if(XUO_BUILD_MODULES)
   xuo_library(utility "${utility_src}")
   xuo_library(walker "${walker_src}")
   xuo_library(crypt "${crypt_src}")
+  xuo_library(libuo "${libuo_src}")
 
   string(REPLACE ".cpp" ".h" crossuo_hdr "${crossuo_src}")
   string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
@@ -385,9 +386,9 @@ if(XUO_BUILD_MODULES)
   add_executable(CrossUO ${crossuo_src} ${crossuo_hdr})
   target_link_libraries(screenstages PRIVATE gumps)
   target_link_libraries(gumps PRIVATE managers)
-  target_link_libraries(CrossUO PUBLIC managers network gumps screenstages gameobjects glengine gui textengine utility walker crypt wisp)
+  target_link_libraries(CrossUO PUBLIC managers network gumps screenstages gameobjects glengine gui textengine utility walker crypt wisp libuo)
 else()
-  set(SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
+  set(SRCS ${crossuo_src} ${libuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
   string(REPLACE ".cpp" ".h" headers "${SRCS}")
   string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
 
@@ -414,6 +415,14 @@ else()
     target_link_libraries(client PUBLIC -ldl ${THREAD})
     add_dependencies(crossuo client)
     add_dependencies(crossuo_unity client)
+
+    # xuodump tool
+    string(REPLACE ".cpp" ".h" xuodump_hdr "${xuodump_src}")
+    add_executable(xuodump "tools/xuodump.cpp" ${xuodump_src} ${xuodump_hdr})
+    set_target_properties(xuodump PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "tools/tools.h")
+    target_link_libraries(xuodump PUBLIC ${THREAD} -ldl)
+    target_compile_definitions(xuodump PUBLIC LIBUO=1)
+    cotire(xuodump)
   else()
     add_executable(crossuo ${SRCS} ${headers})
   endif()

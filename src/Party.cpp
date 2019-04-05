@@ -3,6 +3,7 @@
 
 #include "Party.h"
 #include "CrossUO.h"
+#include "api/mappedfile.h"
 #include "Network/Packets.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/GumpManager.h"
@@ -51,7 +52,7 @@ void CParty::Clear()
     }
 }
 
-void CParty::ParsePacketData(Wisp::CDataReader &reader)
+void CParty::ParsePacketData(CDataReader &reader)
 {
     DEBUG_TRACE_FUNCTION;
     uint8_t code = reader.ReadUInt8();

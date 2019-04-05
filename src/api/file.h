@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdio.h>
+#include "config.h"
 
 #if defined(XUO_WINDOWS)
 #define os_path wstring

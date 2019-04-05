@@ -4,9 +4,9 @@
 #include "Config.h"
 
 #include "Globals.h"
-#include "FileSystem.h"
 #include "Application.h"
 #include "Logging.h"
+#include "api/file.h"
 #include "api/enumlist.h"
 #include "Crypt/CryptEntry.h"
 #include "Wisp/WispTextFileParser.h"
@@ -379,7 +379,6 @@ void LoadGlobalConfig()
                 break;
                 case MSCC_CUSTOM_PATH:
                 {
-                    UOSetPath(strings[1].c_str());
                     g_App.m_UOPath = ToPath(strings[1]);
                     fs_case_insensitive_init(g_App.m_UOPath);
                 }
@@ -494,6 +493,8 @@ void LoadGlobalConfig()
         GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
         g_Config.ClientFlag);
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
+
+    uo_data_init(ToString(g_App.m_UOPath).c_str(), g_Config.ClientVersion, g_Config.UseVerdata);
 }
 
 void SaveGlobalConfig()

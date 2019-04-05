@@ -5,6 +5,7 @@
 #include "ProfessionManager.h"
 #include "SkillsManager.h"
 #include "ClilocManager.h"
+#include "../api/mappedfile.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Application.h"
@@ -387,7 +388,7 @@ bool CProfessionManager::Load()
 void CProfessionManager::LoadProfessionDescription()
 {
     DEBUG_TRACE_FUNCTION;
-    Wisp::CMappedFile file;
+    CMappedFile file;
 
     if (file.Load(g_App.UOFilesPath("Professn.enu")))
     {
