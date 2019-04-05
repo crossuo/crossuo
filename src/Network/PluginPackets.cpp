@@ -14,7 +14,7 @@ CPluginPacket::CPluginPacket()
 }
 
 CPluginPacket::CPluginPacket(int size, bool autoResize)
-    : Wisp::CDataWriter(size, autoResize)
+    : CDataWriter(size, autoResize)
 {
 }
 

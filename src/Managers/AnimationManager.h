@@ -3,10 +3,9 @@
 
 #pragma once
 
-#include "../IndexObject.h"
-
 class CTargetGump;
 class CGameCharacter;
+struct CTextureAnimationDirection;
 
 static const int MAX_LAYER_DIRECTIONS = 8;
 static const float UPPER_BODY_RATIO = 0.35f;

@@ -3,11 +3,11 @@
 #ifndef WISP_BFW_H
 #define WISP_BFW_H
 
-#include "../FileSystem.h"
+#include "../api/mappedfile.h"
 
 namespace Wisp
 {
-class CBinaryFileWriter : public Wisp::CDataWriter
+class CBinaryFileWriter : public CDataWriter
 {
 private:
     FILE *m_File{ nullptr };

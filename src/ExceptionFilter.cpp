@@ -2,6 +2,7 @@
 
 #include <psapi.h>
 #include <tlhelp32.h>
+#include "api/mappedfile.h"
 
 string GetMemStorageText(int storage)
 {
@@ -217,7 +218,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
 
             DumpCurrentRegistersInformation(exceptionInfo->ContextRecord);
 
-            Wisp::CMappedFile file;
+            CMappedFile file;
 
             wchar_t fileName[MAX_PATH] = { 0 };
             GetModuleFileNameW(0, fileName, MAX_PATH);

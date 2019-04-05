@@ -2,7 +2,7 @@
 
 #include "WispThread.h"
 #include <SDL_timer.h>
-#include "../FileSystem.h"
+#include "../api/file.h"
 #include "../GameWindow.h"
 
 namespace Wisp

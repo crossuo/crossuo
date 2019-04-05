@@ -3,6 +3,7 @@
 
 #include "GameItem.h"
 #include "CustomHouseMultiObject.h"
+#include "api/uodata.h"
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"
@@ -14,7 +15,6 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/MapManager.h"
 #include "../Managers/CustomHousesManager.h"
-#include "../Managers/FileManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../Gumps/GumpMinimap.h"
 #include "../Gumps/GumpCustomHouse.h"
@@ -706,7 +706,7 @@ void CGameItem::LoadMulti(bool dropAlpha)
             return;
         }
 
-        Wisp::CDataReader reader(&data[0], data.size());
+        CDataReader reader(&data[0], data.size());
         reader.Move(8); //ID + Count
         for (int i = 0; i < count; i++)
         {

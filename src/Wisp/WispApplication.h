@@ -3,7 +3,7 @@
 #ifndef WISP_APP_H
 #define WISP_APP_H
 
-#include "../FileSystem.h"
+#include "../api/file.h"
 
 namespace Wisp
 {

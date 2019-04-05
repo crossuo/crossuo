@@ -5,6 +5,8 @@
 
 #include "PartyObject.h"
 
+struct CDataReader;
+
 class CParty
 {
 public:
@@ -16,7 +18,7 @@ public:
     CParty();
     ~CParty();
 
-    void ParsePacketData(Wisp::CDataReader &reader);
+    void ParsePacketData(CDataReader &reader);
     bool Contains(int serial);
     void Clear();
 };

@@ -3,6 +3,7 @@
 
 #include "GumpStatusbar.h"
 #include <SDL_rect.h>
+#include "../api/uodata.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Application.h"
@@ -18,7 +19,6 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Managers/MouseManager.h"
-#include "../Managers/FileManager.h"
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"

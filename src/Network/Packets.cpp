@@ -24,7 +24,7 @@
 #include "../Gumps/GumpSecureTrading.h"
 
 CPacket::CPacket(size_t size, bool autoResize)
-    : Wisp::CDataWriter(size, autoResize)
+    : CDataWriter(size, autoResize)
 {
 }
 

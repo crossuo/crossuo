@@ -5,6 +5,7 @@
 #include "GumpManager.h"
 #include "SkillsManager.h"
 #include "ConfigManager.h"
+#include "../api/mappedfile.h"
 #include "../CrossUO.h"
 #include "../SkillGroup.h"
 #include "../Gumps/GumpNotify.h"
@@ -288,7 +289,7 @@ bool CSkillGroupManager::Load(const os_path &path)
 
     Clear();
 
-    Wisp::CMappedFile file;
+    CMappedFile file;
 
     if (file.Load(path))
     {

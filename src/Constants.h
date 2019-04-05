@@ -3,8 +3,6 @@
 
 #pragma once
 
-const int MAX_MOBILE_DIRECTIONS = 5;
-
 const int CONTAINERS_RECT_DEFAULT_POS = 40;
 
 const int CONTAINERS_RECT_LINESTEP = 800;
@@ -38,8 +36,6 @@ const int TRANSLUCENT_ALPHA = 0xB2; //0.7
 const int FOLIAGE_ALPHA = 0x4C; //0.3
 
 const int ALPHA_STEP = 25;
-
-const int ANIMATION_GROUPS_COUNT = 100;
 
 const int CONTEXT_MENU_FONT = 1;
 
@@ -94,25 +90,6 @@ const int MAX_FAST_WALK_STACK_SIZE = 5;
 const int MAX_FILE_BUFFER_SIZE = 0x1000;
 
 const int SIZE_VARIABLE = 0;
-
-const int MAX_LAND_DATA_INDEX_COUNT = 0x4000;
-
-// >=CV_7090: count=0x10000, >=CV_7000: count=0x8000, <CV_7000: count=0x4000
-const int MAX_STATIC_DATA_INDEX_COUNT = 0x10000;
-
-const int MAX_LAND_TEXTURES_DATA_INDEX_COUNT = 0x4000;
-
-const int MAX_GUMP_DATA_INDEX_COUNT = 0x10000;
-
-const int MAX_SOUND_DATA_INDEX_COUNT = 0x0800;
-
-const int MAX_MULTI_DATA_INDEX_COUNT = 0x2200;
-
-const int MAX_MUSIC_DATA_INDEX_COUNT = 150;
-
-const int MAX_ANIMATIONS_DATA_INDEX_COUNT = 2048;
-
-const int MAX_LIGHTS_DATA_INDEX_COUNT = 100;
 
 const uint16_t SPECTRAL_COLOR_FLAG = 0x4000;
 

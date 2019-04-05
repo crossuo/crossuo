@@ -3,9 +3,11 @@
 #ifndef WISP_PR_H
 #define WISP_PR_H
 
+#include "api/mappedfile.h"
+
 namespace Wisp
 {
-class CPacketReader : public Wisp::CDataReader
+class CPacketReader : public CDataReader
 {
     int MaxPacketStackSize = 5;
 

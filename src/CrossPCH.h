@@ -69,6 +69,15 @@ typedef SoundInfo *SoundHandle;
 #define _CRT_NON_CONFORMING_SWPRINTFS
 #endif
 
+#ifdef _MSC_VER
+#ifndef strncasecmp
+#define strncasecmp _strnicmp
+#endif
+#ifndef strcasecmp
+#define strcasecmp _stricmp
+#endif
+#endif
+
 #include <time.h>
 #include <process.h>
 #include <Shlwapi.h>
@@ -106,6 +115,7 @@ typedef SoundInfo *SoundHandle;
 #include <unistd.h>
 #include <chrono>
 #include <thread>
+#include <limits.h> // INT_MAX
 
 #endif // XUO_WINDOWS
 
@@ -119,7 +129,6 @@ typedef SoundInfo *SoundHandle;
 #include "Platform.h"
 #include "api/mulstruct.h"
 #include "BaseQueue.h"
-#include "Utility/AutoResetEvent.h"
 
 #if USE_PING
 #include "Utility/PingThread.h"
@@ -131,9 +140,7 @@ typedef SoundInfo *SoundHandle;
 #include "ContainerStack.h"
 #include "UseItemsList.h"
 #include "ImageBounds.h"
-#include "TextureObject.h"
-#include "Managers/FileManager.h"
-#include "IndexObject.h"
+#include "api/uodata.h"
 #include "Macro.h"
 #include "Multi.h"
 #include "MultiMap.h"

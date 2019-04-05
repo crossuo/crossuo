@@ -1,6 +1,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Macro.h"
+#include "api/mappedfile.h"
 
 #define MODKEY_ALT 0x0100
 #define MODKEY_CTRL 0x0200
@@ -145,7 +146,7 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
     delete source;
 }
 
-CMacro *CMacro::Load(Wisp::CMappedFile &file)
+CMacro *CMacro::Load(CMappedFile &file)
 {
     DEBUG_TRACE_FUNCTION;
     uint8_t *next = file.Ptr;

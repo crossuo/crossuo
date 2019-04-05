@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
+#include "../api/mappedfile.h"
 
 class CMapBlock;
 class CRenderWorldObject;
@@ -48,7 +49,7 @@ public:
     CIndexMap *GetIndex(int map, int blockX, int blockY);
     void CreateBlockTable(int map);
     void CreateBlocksTable();
-    void ApplyPatches(Wisp::CDataReader &stream);
+    void ApplyPatches(CDataReader &stream);
     void UpdatePatched();
     void ClearBlockAccess();
     char CalculateNearZ(char defaultZ, int x, int y, int z);

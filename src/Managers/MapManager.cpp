@@ -3,7 +3,7 @@
 
 #include "MapManager.h"
 #include "GumpManager.h"
-#include "FileManager.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../Gumps/GumpMinimap.h"
 #include "../GameObjects/MapBlock.h"
@@ -197,7 +197,7 @@ void CMapManager::ResetPatchesInBlockTable()
     }
 }
 
-void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
+void CMapManager::ApplyPatches(CDataReader &stream)
 {
     DEBUG_TRACE_FUNCTION;
     ResetPatchesInBlockTable();
@@ -237,8 +237,8 @@ void CMapManager::ApplyPatches(Wisp::CDataReader &stream)
 
         if (mapPatchesCount != 0)
         {
-            Wisp::CMappedFile &difl = g_FileManager.m_MapDifl[i];
-            Wisp::CMappedFile &dif = g_FileManager.m_MapDif[i];
+            CMappedFile &difl = g_FileManager.m_MapDifl[i];
+            CMappedFile &dif = g_FileManager.m_MapDif[i];
 
             mapPatchesCount = std::min(mapPatchesCount, (intptr_t)difl.Size / 4);
 

@@ -4,6 +4,7 @@
 #include "CityManager.h"
 #include "ClilocManager.h"
 #include "../Application.h"
+#include "api/mappedfile.h"
 
 CCityManager g_CityManager;
 
@@ -25,7 +26,7 @@ void CCityManager::Init()
 {
     DEBUG_TRACE_FUNCTION;
 
-    Wisp::CMappedFile file;
+    CMappedFile file;
     if (file.Load(g_App.UOFilesPath("citytext.enu")))
     {
         uint8_t *end = file.Ptr + file.Size;

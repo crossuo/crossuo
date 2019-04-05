@@ -1,11 +1,9 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
-#include "FileManager.h"
-#include "../FileSystem.h"
-#include "../Config.h" // FIXME: g_Config
+#include "uodata.h"
+#include "mappedfile.h"
+#include "file.h"
 
 #define MINIZ_IMPLEMENTATION
 #include <miniz.h>
@@ -13,11 +11,36 @@
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)
 
 string g_dumpUopFile;
-CFileManager g_FileManager;
 Data g_Data;
+Index g_Index;
+CFileManager g_FileManager;
+
+static bool s_flag = false;
+static std::mutex s_protect;
+static std::condition_variable s_signal;
+
+void SetEvent()
+{
+    std::lock_guard<std::mutex> _(s_protect);
+    s_flag = true;
+    s_signal.notify_one();
+}
+
+bool WaitEvent()
+{
+    std::unique_lock<std::mutex> lk(s_protect);
+    // prevent spurious wakeups from doing harm
+    while (!s_flag)
+    {
+        s_signal.wait(lk);
+    }
+    s_flag = false; // waiting resets the flag
+    return true;
+}
 
 static uint8_t s_AnimGroupCount = PAG_ANIMATION_COUNT;
-
+static uint32_t s_ClientVersion = 0;
+static bool s_UseVerdata = false;
 static char s_UOPath[MAX_PATH];
 static os_path UOFilePath(const char *str, ...)
 {
@@ -32,9 +55,15 @@ static os_path UOFilePath(const char *str, ...)
     return fs_insensitive(tmp);
 }
 
-void UOSetPath(const char *path)
+void uo_data_init(const char *path, uint32_t client_version, bool use_verdata)
 {
-    strncpy(s_UOPath, path, sizeof(s_UOPath));
+    auto len = strlen(path);
+    auto max = sizeof(s_UOPath) - 1;
+    auto amount = len > max ? max : len;
+    strncpy(s_UOPath, path, amount);
+    s_UOPath[amount + 1] = 0;
+    s_ClientVersion = client_version;
+    s_UseVerdata = use_verdata;
 }
 
 uint64_t CreateAssetHash(const char *s)
@@ -184,6 +213,48 @@ uint32_t Checksum32(uint8_t *ptr, size_t size)
     return (crc & 0xFFFFFFFF);
 }
 
+void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr)
+{
+    Address = ptr->Position;
+    DataSize = ptr->Size;
+    if (Address == 0xFFFFFFFF || (DataSize == 0) || DataSize == 0xFFFFFFFF)
+    {
+        Address = 0;
+        DataSize = 0;
+    }
+    else
+    {
+        Address = Address + address;
+    }
+};
+
+void CIndexMulti::ReadIndexFile(size_t address, IndexBlock *block)
+{
+    CIndexObject::ReadIndexFile(address, block);
+    if (s_ClientVersion >= VERSION(7, 0, 9, 0))
+    {
+        Count = (uint16_t)(DataSize / sizeof(MULTI_BLOCK_NEW));
+    }
+    else
+    {
+        Count = (uint16_t)(DataSize / sizeof(MULTI_BLOCK));
+    }
+};
+
+void CIndexLight::ReadIndexFile(size_t address, IndexBlock *block)
+{
+    CIndexObject::ReadIndexFile(address, block);
+    Width = block->LightData.Width;
+    Height = block->LightData.Height;
+};
+
+void CIndexGump::ReadIndexFile(size_t address, IndexBlock *block)
+{
+    CIndexObject::ReadIndexFile(address, block);
+    Width = block->LightData.Width;
+    Height = block->LightData.Height;
+};
+
 void CUopMappedFile::Add(uint64_t hash, const UopBlockHeader *item)
 {
     m_Map[hash] = item;
@@ -251,7 +322,7 @@ vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 bool CFileManager::Load()
 {
     DEBUG_TRACE_FUNCTION;
-    if (g_Config.ClientVersion >= CV_7000 && UopLoadFile(m_MainMisc, "MainMisc.uop"))
+    if (s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop"))
     {
         return LoadWithUop();
     }
@@ -373,9 +444,9 @@ bool CFileManager::Load()
         }
     }
 
-    if (g_Config.UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
+    if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
     {
-        g_Config.UseVerdata = false;
+        s_UseVerdata = false;
     }
 
     return true;
@@ -540,9 +611,9 @@ bool CFileManager::LoadWithUop()
         }
     }
 
-    if (g_Config.UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
+    if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
     {
-        g_Config.UseVerdata = false;
+        s_UseVerdata = false;
     }
 
     return true;
@@ -640,7 +711,7 @@ static int UopSetAnimationGroups(int start, int end)
     for (int animId = start; animId < end; ++animId)
     {
         auto &idx = g_Index.m_Anim[animId];
-        for (int grpId = 0; grpId < ANIMATION_GROUPS_COUNT; ++grpId)
+        for (int grpId = 0; grpId < MAX_ANIMATION_GROUPS_COUNT; ++grpId)
         {
             auto &group = idx.m_Groups[grpId];
             char hashString[100];
@@ -673,6 +744,11 @@ static int UopSetAnimationGroups(int start, int end)
     }
 
     return lastGroup;
+}
+
+void CFileManager::WaitTasks() const
+{
+    WaitEvent();
 }
 
 void CFileManager::ReadTask()
@@ -713,7 +789,7 @@ void CFileManager::ReadTask()
         s_AnimGroupCount = maxGroup;
     }
     m_AnimationSequence.Unload();
-    m_AutoResetEvent.Set();
+    SetEvent();
 }
 
 void CFileManager::ProcessAnimSequeceData()
@@ -834,7 +910,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     } while (next != 0);
     file.ResetPtr();
 
-    if (!SDL_strcasecmp(uopFilename, g_dumpUopFile.c_str()))
+    if (!strcasecmp(uopFilename, g_dumpUopFile.c_str()))
     {
         char date[128];
         DEBUG(Data, "MypHeader for %s", uopFilename);
@@ -867,14 +943,6 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
             DEBUG(Data, "\t\t\t\tOffset...: %04x", meta->Offset);
             DateFromTimestamp(meta->Timestamp / 100000000, date, sizeof(date));
             DEBUG(Data, "\t\t\t\tTimestamp: %s (%lu)", date, meta->Timestamp);
-            /*
-            vector<uint8_t> data = file.GetData(block);
-            if (data.empty())
-            {
-                continue;
-            }
-            DEBUG_DUMP(Data, "CONTENTS:", data.data(), data.size());
-            */
         }
         file.ResetPtr();
         exit(1);
@@ -882,7 +950,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     return true;
 }
 
-bool CFileManager::MulLoadFile(Wisp::CMappedFile &file, const os_path &fileName)
+bool CFileManager::MulLoadFile(CMappedFile &file, const os_path &fileName)
 {
     DEBUG_TRACE_FUNCTION;
     return file.Load(fileName);
@@ -908,11 +976,11 @@ void CFileManager::LoadTiledata()
 
     auto &file = m_TiledataMul;
     Info(Data, "loading tiledata");
+    const bool isOldVersion = (s_ClientVersion < VERSION(7, 0, 9, 0));
     const int landSize = 512;
-    const auto landGroup =
-        g_Config.ClientVersion < CV_7090 ? sizeof(MulLandTileGroup1) : sizeof(MulLandTileGroup2);
-    const auto staticsGroup = g_Config.ClientVersion < CV_7090 ? sizeof(MulStaticTileGroup1) :
-                                                                 sizeof(MulStaticTileGroup2);
+    const auto landGroup = isOldVersion ? sizeof(MulLandTileGroup1) : sizeof(MulLandTileGroup2);
+    const auto staticsGroup =
+        isOldVersion ? sizeof(MulStaticTileGroup1) : sizeof(MulStaticTileGroup2);
     size_t staticsSize = (file.Size - (landSize * landGroup)) / staticsGroup;
     if (staticsSize > 2048)
     {
@@ -923,7 +991,6 @@ void CFileManager::LoadTiledata()
 
     if (file.Size != 0u)
     {
-        const bool isOldVersion = (g_Config.ClientVersion < CV_7090);
         file.ResetPtr();
         g_Data.m_Land.resize(landSize * 32);
         g_Data.m_Static.resize(staticsSize * 32);
@@ -976,7 +1043,7 @@ void CFileManager::LoadTiledata()
 void CFileManager::LoadIndexFiles()
 {
     DEBUG_TRACE_FUNCTION;
-    Info(Client, "loading indexes");
+    Info(Data, "loading indexes");
 
     auto *LandArtPtr = (ArtIdxBlock *)m_ArtIdx.Start;
     auto *StaticArtPtr =
@@ -994,7 +1061,6 @@ void CFileManager::LoadIndexFiles()
     else
     {
         g_Index.m_MultiIndexCount = (int)(m_MultiIdx.Size / sizeof(MultiIdxBlock));
-
         if (g_Index.m_MultiIndexCount > MAX_MULTI_DATA_INDEX_COUNT)
         {
             g_Index.m_MultiIndexCount = MAX_MULTI_DATA_INDEX_COUNT;
@@ -1112,7 +1178,7 @@ void CFileManager::LoadIndexFiles()
                 continue;
             }
 
-            Wisp::CDataReader reader(&data[0], data.size());
+            CDataReader reader(&data[0], data.size());
             uint32_t id = reader.ReadUInt32LE();
             if (id < MAX_MULTI_DATA_INDEX_COUNT)
             {
@@ -1159,12 +1225,12 @@ void CFileManager::UopReadIndexFile(
 
     bool isGump = (string("gumpartlegacymul") == p);
     char basePath[200] = { 0 };
-    SDL_snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
+    snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 
     for (int i = startIndex; i < (int)indexMaxCount; i++)
     {
         char hashString[200] = { 0 };
-        SDL_snprintf(hashString, sizeof(hashString), basePath, (int)i);
+        snprintf(hashString, sizeof(hashString), basePath, (int)i);
 
         auto block = uopFile.GetBlock(CreateAssetHash(hashString));
         if (block != nullptr)
@@ -1294,10 +1360,13 @@ bool CFileManager::UopReadAnimationFrames(
     for (int i = 0; i < frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-        if (frame.Sprite.Texture != nullptr)
+#if !LIBUO
+        if (frame.Sprite.Texture !=
+            nullptr) // FIXME: validate that required data is already loaded in another way
         {
             continue;
         }
+#endif
 
         UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
         if (frameData.DataStart == nullptr)
@@ -1379,10 +1448,13 @@ bool CFileManager::MulReadAnimationFrames(CTextureAnimationDirection &direction)
     for (uint32_t i = 0; i < frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-        if (frame.Sprite.Texture != nullptr)
+#if !LIBUO
+        if (frame.Sprite.Texture !=
+            nullptr) // FIXME: validate that required data is already loaded in another way
         {
             continue;
         }
+#endif
         Ptr = dataStart + frameOffset[i];
         LoadAnimationFrame(frame, palette);
     }
@@ -1446,7 +1518,10 @@ void CFileManager::LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *p
         }
         header = ReadUInt32LE();
     }
-    frame.Sprite.LoadSprite16(imageWidth, imageHeight, pixels.data());
+#if !LIBUO
+    frame.Sprite.LoadSprite16(
+        imageWidth, imageHeight, pixels.data()); // FIXME: this should not be here
+#endif
 }
 
 void CFileManager::LoadAnimationFrameInfo(

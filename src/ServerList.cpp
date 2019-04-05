@@ -6,6 +6,7 @@
 #include "ScreenStages/MainScreen.h"
 #include "ScreenStages/ServerScreen.h"
 #include "Utility/PingThread.h"
+#include "api/mappedfile.h"
 
 CServerList g_ServerList;
 
@@ -42,7 +43,7 @@ CServerList::~CServerList()
     m_Servers.clear();
 }
 
-void CServerList::ParsePacket(Wisp::CDataReader &reader)
+void CServerList::ParsePacket(CDataReader &reader)
 {
     m_Servers.clear();
     g_ServerList.LastServerIndex = 0;

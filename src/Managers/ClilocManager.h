@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
+#include "../api/mappedfile.h"
 
 typedef map<uint32_t, string> CLILOC_MAP;
 
@@ -31,7 +32,7 @@ public:
     CCliloc(const string &lang);
     virtual ~CCliloc();
 
-    Wisp::CMappedFile m_File;
+    CMappedFile m_File;
 
     string GetA(int id, bool toCamelCase = false, string result = {});  // FIXME
     wstring GetW(int id, bool toCamelCase = false, string result = {}); // FIXME

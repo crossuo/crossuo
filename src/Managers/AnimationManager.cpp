@@ -6,7 +6,7 @@
 #include "ConfigManager.h"
 #include "ColorManager.h"
 #include "CorpseManager.h"
-#include "FileManager.h"
+#include "api/uodata.h"
 #include "../Application.h"
 #include "../Target.h"
 #include "../Constants.h"
@@ -137,7 +137,7 @@ void CAnimationManager::UpdateAnimationAddressTable()
     {
         CIndexAnimation &index = g_Index.m_Anim[i];
 
-        for (int g = 0; g < ANIMATION_GROUPS_COUNT; g++)
+        for (int g = 0; g < MAX_ANIMATION_GROUPS_COUNT; g++)
         {
             CTextureAnimationGroup &group = index.m_Groups[g];
 
@@ -2059,7 +2059,7 @@ bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
-    if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < ANIMATION_GROUPS_COUNT)
+    if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT)
     {
         auto groupDir = g_Index.m_Anim[graphic].m_Groups[group].m_Direction[0];
         result = groupDir.Address != 0 || groupDir.IsUOP;

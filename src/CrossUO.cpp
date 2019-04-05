@@ -35,7 +35,9 @@
 #endif // USE_PING
 
 #include "Crypt/CryptEntry.h"
+#include "api/mappedfile.h"
 #include "api/commoninterfaces.h"
+#include "api/uodata.h"
 
 #include "Walker/Walker.h"
 #include "Walker/PathFinder.h"
@@ -58,7 +60,6 @@
 #include "Network/PluginPackets.h"
 #include "Network/Connection.h"
 
-#include "Managers/FileManager.h"
 #include "Managers/AnimationManager.h"
 #include "Managers/CityManager.h"
 #include "Managers/ClilocManager.h"
@@ -392,6 +393,8 @@ bool CGame::Install()
     Info(Client, "replacing indexes");
     IndexReplaces();
 
+    g_AnimationManager.GetAnimationDimensions(0, 734, 3, 7, false);
+
     CheckStaticTileFilterFiles();
 
     CSize statusbarDims = GetGumpDimension(0x0804);
@@ -547,12 +550,24 @@ bool CGame::Install()
     if (g_Config.ClientVersion >= CV_7000)
     {
         Info(Client, "waiting for file manager to try & load AnimationFrame files");
-        g_FileManager.m_AutoResetEvent.WaitOne();
+        g_FileManager.WaitTasks();
         Info(Client, "FileManager.UopReadAnimations() done");
     }
 
     Info(Client, "initialization completed");
     return true;
+}
+
+template <typename T, size_t SIZE>
+void ValidateSpriteIsDeleted(T (&arr)[SIZE])
+{
+    DEBUG_TRACE_FUNCTION;
+    for (int i = 0; i < SIZE; ++i)
+    {
+        CIndexObject &obj = arr[i];
+        (void)obj;
+        assert(obj.Sprite == nullptr);
+    }
 }
 
 void CGame::UnloadIndexFiles()
@@ -4041,7 +4056,7 @@ void CGame::PatchFiles()
             CSkill *skill = g_SkillsManager.Get(vh->BlockID);
             if (skill != nullptr)
             {
-                Wisp::CDataReader reader((uint8_t *)vAddr + vh->Position, vh->Size);
+                CDataReader reader((uint8_t *)vAddr + vh->Position, vh->Size);
                 skill->Button = (reader.ReadUInt8() != 0);
                 skill->Name = reader.ReadString(vh->Size - 1);
             }
@@ -4543,8 +4558,8 @@ void CGame::LoadShaders()
     DEBUG_TRACE_FUNCTION;
 
 #if UO_USE_SHADER_FILES == 1
-    Wisp::CMappedFile frag;
-    Wisp::CMappedFile vert;
+    CMappedFile frag;
+    CMappedFile vert;
 
     if (vert.Load(g_App.FilePath("shaders/Shader.vert")))
     {
@@ -6271,6 +6286,11 @@ uint64_t CGame::GetStaticFlags(uint16_t id)
         return g_Data.m_Static[id].Flags;
     }
     return 0;
+}
+
+uint16_t CGame::GetLightColor(uint16_t id)
+{
+    return g_Index.m_Static[id].LightColor;
 }
 
 CSize CGame::GetStaticArtDimension(uint16_t id)

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../IndexObject.h"
+struct CIndexObject;
 
 // FIXME: C
 struct UOFileReader

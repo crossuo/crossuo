@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "config.h"
+
 #if _WIN32
 #include <Windows.h>
 #define USER_MESSAGE_ID WM_USER
@@ -15,9 +17,6 @@
 #define WindowHandle void *
 #endif
 
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
 #define UOMSG_SET_SERVER_NAME USER_MESSAGE_ID + 660
 #define UOMSG_SET_PLAYER_NAME USER_MESSAGE_ID + 661
 #define UOMSG_UPDATE_PLAYER_XYZ USER_MESSAGE_ID + 662

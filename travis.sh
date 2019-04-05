@@ -19,14 +19,14 @@ fi
 
 if [[ "$TASK" == "clang" ]]; then
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && time ninja crossuo_unity -j8
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && time ninja crossuo_unity -j8 && time ninja xuodump_unity -j8
 	file ./src/crossuo
 	file ./src/crossuo.so
 	#./src/crossuo --headless
 	cd ..
-	
+
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && time ninja crossuo_unity -j8
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && time ninja crossuo_unity -j8 && time ninja xuodump_unity -j8
 	file ./src/crossuo
 	file ./src/crossuo.so
 	echo Make the zip file
@@ -44,7 +44,7 @@ if [[ "$TASK" == "gcc" ]]; then
 	#file ./src/crossuo.so
 	##./src/crossuo --headless
 	cd ..
-	
+
 	echo Building Release
 	mkdir release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release && time make -j8
 	#file ./src/crossuo
@@ -59,11 +59,11 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	brew outdated cmake || brew upgrade cmake
 
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja crossuo_unity -j8
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja crossuo_unity -j8 && ninja xuodump_unity -j8
 	cd ..
-	
+
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja crossuo_unity -j8
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja crossuo_unity -j8 && ninja xuodump_unity -j8
 	echo Make the zip file
 	cd src
 	zip CrossUO-OSX-nightly.zip crossuo.so crossuo

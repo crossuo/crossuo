@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "SpeechManager.h"
-#include "FileManager.h"
+#include "../api/uodata.h"
 #include "../Config.h"
 #include "../Misc.h"
 
@@ -57,7 +57,7 @@ bool CSpeechManager::LoadSpeech()
     }
     Info(Client, "selected language: %s", g_Language.c_str());
 
-    Wisp::CDataReader reader;
+    CDataReader reader;
     vector<uint8_t> tempData;
     bool isUOP = false;
     if (g_FileManager.m_MainMisc.Start != nullptr)
@@ -159,7 +159,7 @@ bool CSpeechManager::LoadLangCodes()
     DEBUG_TRACE_FUNCTION;
 
     m_LangCodes.push_back(CLangCode("enu", 101, "English", "United States"));
-    Wisp::CMappedFile &file = g_FileManager.m_LangcodeIff;
+    CMappedFile &file = g_FileManager.m_LangcodeIff;
 
     file.ReadString(36);
     while (!file.IsEOF())

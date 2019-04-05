@@ -3,7 +3,7 @@
 
 #include "FontsManager.h"
 #include "ColorManager.h"
-#include "FileManager.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../Application.h"
 
@@ -28,7 +28,7 @@ bool CFontsManager::LoadFonts()
 {
     DEBUG_TRACE_FUNCTION;
 
-    Wisp::CMappedFile fontFile;
+    CMappedFile fontFile;
     if (!fontFile.Load(g_App.UOFilesPath("fonts.mul")))
     {
         return false;

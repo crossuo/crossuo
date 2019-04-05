@@ -5,6 +5,7 @@
 
 #include "GameScreen.h"
 #include "GameBlockedScreen.h"
+#include "../api/uodata.h"
 #include "../Config.h"
 #include "../Macro.h"
 #include "../Target.h"
