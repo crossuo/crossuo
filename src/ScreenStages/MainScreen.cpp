@@ -36,6 +36,8 @@ CMainScreen::~CMainScreen()
 
 void CMainScreen::Init()
 {
+    CBaseScreen::Init();
+
     DEBUG_TRACE_FUNCTION;
     g_ConfigLoaded = false;
     g_GlobalScale = 1.0;

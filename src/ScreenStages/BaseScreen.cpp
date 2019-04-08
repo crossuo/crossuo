@@ -7,15 +7,66 @@
 #include "../Managers/ScreenEffectManager.h"
 
 CBaseScreen *g_CurrentScreen = nullptr;
+RenderCmdList *g_renderCmdList = nullptr;
+
+void CBaseScreen::InitRenderList()
+{
+    assert(!m_RenderCmdListData);
+    if (m_RenderCmdListData)
+    {
+        return;
+    }
+
+    static const uint32_t s_renderCmdListSize = 192 * 1024;
+    m_RenderCmdListData = malloc(s_renderCmdListSize);
+    assert(m_RenderCmdListData);
+
+// leave this on to execute ogl commands as they're added to the list,
+// instead of deferring their execution until RenderDraw_Execute is called
+#define NEWRENDERER_IMMEDIATEMODE
+#ifdef NEWRENDERER_IMMEDIATEMODE
+    const bool immediateMode = true;
+#else
+    const bool immediateMode = false;
+#endif
+    m_RenderCmdList = Render_CmdList(
+        m_RenderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
+
+    g_renderCmdList = &m_RenderCmdList;
+}
 
 CBaseScreen::CBaseScreen(CGump &gump)
     : m_Gump(gump)
+    , m_RenderCmdList()
+    , m_RenderCmdListData(nullptr)
 {
+}
+
+CBaseScreen::~CBaseScreen()
+{
+    if (m_RenderCmdListData)
+    {
+        free(m_RenderCmdListData);
+        m_RenderCmdListData = nullptr;
+    }
+
+    g_renderCmdList = nullptr;
+}
+
+void CBaseScreen::Init()
+{
+    if (!m_RenderCmdListData)
+    {
+        InitRenderList();
+    }
 }
 
 void CBaseScreen::Render()
 {
     DEBUG_TRACE_FUNCTION;
+
+    Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
+    RenderAdd_FlushState(&m_RenderCmdList);
 
     g_GL.BeginDraw();
     if (DrawSmoothMonitor() != 0)
@@ -28,6 +79,9 @@ void CBaseScreen::Render()
     InitToolTip();
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);
+
+    // turning this off while immediateMode is on
+    // RenderDraw_Execute(&m_RenderCmdList);
     g_GL.EndDraw();
 }
 

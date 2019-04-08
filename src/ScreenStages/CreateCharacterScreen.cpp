@@ -36,6 +36,8 @@ void CCreateCharacterScreen::SetColorSelection(int val)
 void CCreateCharacterScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
+
     g_CreateCharacterManager.Clear();
 
     Name = "";

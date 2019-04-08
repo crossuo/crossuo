@@ -22,15 +22,24 @@ CGameBlockedScreen::~CGameBlockedScreen()
 
 void CGameBlockedScreen::Init()
 {
+    CBaseScreen::Init();
+
     Code = 0;
 }
 
 void CGameBlockedScreen::Render()
 {
     DEBUG_TRACE_FUNCTION;
+
+    Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
+    RenderAdd_FlushState(&m_RenderCmdList);
+
     g_GumpManager.Draw(true);
     InitToolTip();
     g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
+
+    // turning this off while immediateMode is on
+    // RenderDraw_Execute(&m_RenderCmdList);
 }
 
 void CGameBlockedScreen::SelectObject()
