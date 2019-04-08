@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Renderer/RenderAPI.h"
+extern RenderCmdList *g_renderCmdList;
 
 CGLTexture::~CGLTexture()
 {
@@ -15,19 +16,21 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     if (Texture == 0)
         return;
 
+    auto textureCmd = RenderAdd_TextureCmd(Texture, x, y, Width, Height, 1.f, 1.f);
+
     if (checktrans)
     {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        g_GL_Draw(*this, x, y);
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        g_GL_Draw(*this, x, y);
-        glDisable(GL_STENCIL_TEST);
+        RenderAdd_SetBlend(g_renderCmdList, &RenderAdd_Blend(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
+        RenderAdd_DisableBlend(g_renderCmdList);
+
+        RenderAdd_SetStencil(g_renderCmdList, &RenderAdd_Stencil());
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
+        RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
     {
-        g_GL_Draw(*this, x, y);
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
     }
 }
 
@@ -47,33 +50,23 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
         height = Height;
     }
 
-    static const uint32_t s_renderCmdListSize = 64 * 1024;
-    static auto s_renderCmdList = Render_CmdList(malloc(s_renderCmdListSize), s_renderCmdListSize);
-    static auto s_renderState = Render_DefaultState();
-    Render_ResetCmdList(&s_renderCmdList);
-    RenderAdd_FlushState(&s_renderCmdList, &s_renderState);
-
     auto textureCmd = RenderAdd_TextureCmd(
         Texture, x, y, width, height, width / float(Width), height / float(Height));
 
     if (checktrans)
     {
-        RenderAdd_SetBlend(
-            &s_renderCmdList, &RenderAdd_Blend(true, BlendFunc::SrcAlpha_OneMinusSrcAlpha));
-        RenderAdd_Texture(&s_renderCmdList, &textureCmd, 1);
-        RenderAdd_SetBlend(
-            &s_renderCmdList, &RenderAdd_Blend(false, BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(g_renderCmdList, &RenderAdd_Blend(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
+        RenderAdd_DisableBlend(g_renderCmdList);
 
-        RenderAdd_SetStencil(&s_renderCmdList, &RenderAdd_Stencil(true));
-        RenderAdd_Texture(&s_renderCmdList, &textureCmd, 1);
-        RenderAdd_SetStencil(&s_renderCmdList, &RenderAdd_Stencil(false));
+        RenderAdd_SetStencil(g_renderCmdList, &RenderAdd_Stencil());
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
+        RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
     {
-        RenderAdd_Texture(&s_renderCmdList, &textureCmd, 1);
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
     }
-
-    RenderDraw_Execute(&s_renderCmdList, &s_renderState);
 }
 
 void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
@@ -101,17 +94,17 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
     DEBUG_TRACE_FUNCTION;
     if (Texture != 0)
     {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
-        g_GL_Draw(*this, x, y);
-        glDisable(GL_BLEND);
+        auto textureCmd = RenderAdd_TextureCmd(
+            Texture, x, y, Width, Height, 1.f, 1.f, { { 1.f, 1.f, 1.f, 0.25f } });
+        RenderAdd_SetBlend(g_renderCmdList, &RenderAdd_Blend(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
+        RenderAdd_DisableBlend(g_renderCmdList);
 
         if (stencil)
         {
-            glEnable(GL_STENCIL_TEST);
-            g_GL_Draw(*this, x, y);
-            glDisable(GL_STENCIL_TEST);
+            RenderAdd_SetStencil(g_renderCmdList, &RenderAdd_Stencil());
+            RenderAdd_Texture(g_renderCmdList, &textureCmd, 1);
+            RenderAdd_DisableStencil(g_renderCmdList);
         }
     }
 }

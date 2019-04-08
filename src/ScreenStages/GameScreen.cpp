@@ -46,6 +46,7 @@
 #include "../Walker/PathFinder.h"
 #include "../TextEngine/GameConsole.h"
 #include "../TextEngine/TextData.h"
+#include "../Renderer/RenderAPI.h"
 
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
@@ -70,6 +71,7 @@ CGameScreen::~CGameScreen()
 void CGameScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
 
     g_GameWindow.SetWindowResizable(true);
     if (m_Maximized)
@@ -1749,6 +1751,7 @@ void CGameScreen::PreRender()
 void CGameScreen::Render()
 {
     DEBUG_TRACE_FUNCTION;
+
     PreRender();
 
     static uint32_t lastRender = 0;
@@ -1770,6 +1773,9 @@ void CGameScreen::Render()
     {
         currentFPS++;
     }
+
+    Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
+    RenderAdd_FlushState(&m_RenderCmdList);
 
     g_GL.BeginDraw();
     if (DrawSmoothMonitor() != 0)
@@ -2056,6 +2062,9 @@ void CGameScreen::Render()
         InitToolTip();
         g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
     }
+
+    // turning this off while immediateMode is on
+    // RenderDraw_Execute(&m_RenderCmdList);
     g_GL.EndDraw();
 }
 

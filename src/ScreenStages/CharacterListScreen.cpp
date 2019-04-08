@@ -24,6 +24,7 @@ CCharacterListScreen::~CCharacterListScreen()
 void CCharacterListScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
 
     auto title = std::string("Ultima Online - ") + g_MainScreen.m_Account->c_str();
 

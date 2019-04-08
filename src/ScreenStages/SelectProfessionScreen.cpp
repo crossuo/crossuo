@@ -29,6 +29,8 @@ void CSelectProfessionScreen::SetSkillSelection(int val)
 void CSelectProfessionScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
+
     g_ProfessionManager.Selected = (CBaseProfession *)g_ProfessionManager.m_Items;
     m_SkillSelection = 0;
 

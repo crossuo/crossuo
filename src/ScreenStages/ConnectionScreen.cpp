@@ -21,6 +21,7 @@ CConnectionScreen::~CConnectionScreen()
 void CConnectionScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
     m_Text = "";
     m_ConnectionFailed = false;
     m_Connected = false;

@@ -1,8 +1,28 @@
 #pragma once
 
+#define TEXTUREHANDLE_INVALID (0xffffffff)
+
+typedef uint32_t textureHandle_t;
+
+// FIXME better vector support
+typedef struct
+{
+    float rgba[4];
+
+    float operator[](size_t i)
+    {
+        assert(i < countof(rgba));
+        return rgba[i];
+    };
+} float4;
+extern float4 g_ColorWhite;
+
 enum BlendFunc : uint8_t
 {
     SrcAlpha_OneMinusSrcAlpha = 0,
+
+    Count,
+    Invalid = 0xff,
 };
 
 enum RenderCommandType : uint8_t
@@ -12,10 +32,15 @@ enum RenderCommandType : uint8_t
     FlushState,
 
     BlendState,
-    StencilState
+    DisableBlendState,
+    StencilState,
+    DisableStencilState
 };
 
-typedef uint32_t textureHandle_t;
+enum RenderTextureType : uint8_t
+{
+    Texture2D = 0,
+};
 
 struct RenderCommandHeader
 {
@@ -35,8 +60,9 @@ struct TextureCmd : private RenderCommandHeader
     uint32_t y = 0;
     uint32_t width = 0;
     uint32_t height = 0;
-    float u = 0.f;
-    float v = 0.f;
+    float u = 1.f;
+    float v = 1.f;
+    float4 rgba = g_ColorWhite;
 
     TextureCmd(
         textureHandle_t texture,
@@ -45,7 +71,8 @@ struct TextureCmd : private RenderCommandHeader
         uint32_t width,
         uint32_t height,
         float u,
-        float v)
+        float v,
+        float4 rgba)
         : RenderCommandHeader(RenderCommandType::Texture)
         , texture(texture)
         , x(x)
@@ -54,30 +81,42 @@ struct TextureCmd : private RenderCommandHeader
         , height(height)
         , u(u)
         , v(v)
+        , rgba(rgba)
     {
     }
 };
 
 struct BlendStateCmd : private RenderCommandHeader
 {
-    bool enabled = false;
     BlendFunc func = BlendFunc{ 0 };
 
-    BlendStateCmd(bool enabled, BlendFunc func)
+    BlendStateCmd(BlendFunc func)
         : RenderCommandHeader(RenderCommandType::BlendState)
-        , enabled(enabled)
         , func(func)
+    {
+    }
+};
+
+struct DisableBlendStateCmd : private RenderCommandHeader
+{
+    DisableBlendStateCmd()
+        : RenderCommandHeader(RenderCommandType::DisableBlendState)
     {
     }
 };
 
 struct StencilStateCmd : private RenderCommandHeader
 {
-    bool enabled = false;
-
-    StencilStateCmd(bool enabled)
+    StencilStateCmd()
         : RenderCommandHeader(RenderCommandType::StencilState)
-        , enabled(enabled)
+    {
+    }
+};
+
+struct DisableStencilStateCmd : private RenderCommandHeader
+{
+    DisableStencilStateCmd()
+        : RenderCommandHeader(RenderCommandType::DisableStencilState)
     {
     }
 };
@@ -89,27 +128,6 @@ struct FlushStateCmd : private RenderCommandHeader
     {
     }
 };
-
-struct RenderCmdList
-{
-    char *data = nullptr;
-    uint32_t size = 0;
-    uint32_t remainingSize = 0;
-
-    RenderCmdList(void *data, uint32_t size)
-        : data((char *)data)
-        , size(size)
-        , remainingSize(size)
-    {
-    }
-};
-
-enum RenderTextureType : uint8_t
-{
-    Texture2D = 0,
-};
-
-#define TEXTUREHANDLE_INVALID (0xffffffff)
 
 struct RenderState
 {
@@ -130,9 +148,30 @@ struct RenderState
     } stencil = { false };
 };
 
-RenderCmdList Render_CmdList(void *buffer, uint32_t bufferSize);
+struct RenderCmdList
+{
+    RenderState state;
+    char *data = nullptr;
+    uint32_t size = 0;
+    uint32_t remainingSize = 0;
+    bool immediateMode = false;
+
+    RenderCmdList(void *data, uint32_t size, RenderState state, bool immediateMode)
+        : state(state)
+        , data((char *)data)
+        , size(size)
+        , remainingSize(size)
+        , immediateMode(immediateMode)
+    {
+    }
+
+    RenderCmdList() = default;
+};
+
+RenderCmdList
+Render_CmdList(void *buffer, uint32_t bufferSize, RenderState state, bool immediateMode = false);
 RenderState Render_DefaultState();
-void Render_ResetCmdList(RenderCmdList *cmdList);
+void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state);
 
 TextureCmd RenderAdd_TextureCmd(
     textureHandle_t texture,
@@ -140,14 +179,17 @@ TextureCmd RenderAdd_TextureCmd(
     uint32_t y,
     uint32_t width,
     uint32_t height,
-    float u,
-    float v);
-BlendStateCmd RenderAdd_Blend(bool enabled, BlendFunc func);
-StencilStateCmd RenderAdd_Stencil(bool enabled);
+    float u = 1.f,
+    float v = 1.f,
+    float4 rgba = g_ColorWhite);
+BlendStateCmd RenderAdd_Blend(BlendFunc func);
+StencilStateCmd RenderAdd_Stencil();
 
 bool RenderAdd_Texture(RenderCmdList *cmdList, TextureCmd *textures, uint32_t texture_count);
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
+bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state);
-bool RenderAdd_FlushState(RenderCmdList *cmdList, RenderState *state);
+bool RenderAdd_DisableStencil(RenderCmdList *cmdList);
+bool RenderAdd_FlushState(RenderCmdList *cmdList);
 
-bool RenderDraw_Execute(RenderCmdList *cmdList, RenderState *state);
+bool RenderDraw_Execute(RenderCmdList *cmdList);

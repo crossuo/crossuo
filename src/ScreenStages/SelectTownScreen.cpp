@@ -24,6 +24,8 @@ CSelectTownScreen::~CSelectTownScreen()
 void CSelectTownScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
+
     if (g_Config.ClientVersion >= CV_70130)
     {
         m_City = g_CityList.GetCity(0);

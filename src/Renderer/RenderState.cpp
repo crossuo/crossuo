@@ -28,7 +28,7 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
         }
     }
 
-    if (state->blend.func != func || forced)
+    if (func != BlendFunc::Invalid && state->blend.func != func || forced)
     {
         changed = true;
         state->blend.func = func;

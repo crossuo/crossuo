@@ -22,6 +22,7 @@ CServerScreen::~CServerScreen()
 void CServerScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
 
     g_GameWindow.SetTitle(std::string("Ultima Online - ") + g_MainScreen.m_Account->c_str());
     g_ScreenEffectManager.UseSunrise();
