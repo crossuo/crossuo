@@ -42,6 +42,33 @@ bool RenderDraw_Texture(TextureCmd *cmd, RenderState *state)
     return true;
 }
 
+bool RenderDraw_RotatedTexture(RotatedTextureCmd *cmd, RenderState *state)
+{
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, __FUNCTION__);
+    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    // TODO move this into a new command? into a cached state?
+    glColor4f(cmd->rgba[0], cmd->rgba[1], cmd->rgba[2], cmd->rgba[3]);
+    glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
+    glRotatef(cmd->angle, 0.0f, 0.0f, 1.0f);
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(0.0f, cmd->v);
+    glVertex2i(0, cmd->height);
+    glTexCoord2f(cmd->u, cmd->v);
+    glVertex2i(cmd->width, cmd->height);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2i(0, 0);
+    glTexCoord2f(cmd->u, 0.0f);
+    glVertex2i(cmd->width, 0);
+    glEnd();
+
+    glTranslatef(-(GLfloat)cmd->x, -(GLfloat)cmd->y, 0.0f);
+    glRotatef(cmd->angle, 0.0f, 0.0f, -1.0f);
+
+    glPopDebugGroup();
+    return true;
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -108,6 +135,24 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             cmd->rgba[3]);
     };
 
+    auto RenderDraw_RotatedTextureDebug = [](RotatedTextureCmd *cmd, RenderState *state) {
+        Info(
+            Renderer,
+            "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - rgba: [%f, %f, %f, %f]\n",
+            cmd->texture,
+            cmd->x,
+            cmd->y,
+            cmd->width,
+            cmd->height,
+            cmd->angle,
+            cmd->u,
+            cmd->v,
+            cmd->rgba[0],
+            cmd->rgba[1],
+            cmd->rgba[2],
+            cmd->rgba[3]);
+    };
+
     auto RenderDraw_FlushStateDebug = [](FlushStateCmd *, RenderState *state) {
         Info(Renderer, "FlushStateCmd\n");
     };
@@ -138,6 +183,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
         switch (cmdHeader.type)
         {
             MATCH_CASE_DRAW_DEBUG(Texture, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(RotatedTexture, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW_DEBUG(FlushState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(BlendState, cmd, &cmdList->state)
@@ -171,6 +217,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
         switch (cmdHeader.type)
         {
             MATCH_CASE_DRAW(Texture, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(RotatedTexture, ret, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(BlendState, ret, cmd, &cmdList->state)

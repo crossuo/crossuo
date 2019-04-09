@@ -12,6 +12,7 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
 bool RenderState_SetStencil(RenderState *state, bool enabled, bool forced = false);
 
 bool RenderDraw_Texture(TextureCmd *cmd, RenderState *state);
+bool RenderDraw_RotatedTexture(RotatedTextureCmd *cmd, RenderState *state);
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);

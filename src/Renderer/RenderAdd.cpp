@@ -15,6 +15,20 @@ TextureCmd RenderAdd_TextureCmd(
     return TextureCmd(texture, x, y, width, height, u, v, rgba);
 }
 
+RotatedTextureCmd RenderAdd_RotatedTextureCmd(
+    textureHandle_t texture,
+    uint32_t x,
+    uint32_t y,
+    uint32_t width,
+    uint32_t height,
+    float angle,
+    float u,
+    float v,
+    float4 rgba)
+{
+    return RotatedTextureCmd(texture, x, y, width, height, angle, u, v, rgba);
+}
+
 bool RenderAdd_Texture(RenderCmdList *cmdList, TextureCmd *textures, uint32_t texture_count)
 {
     auto ret = Render_AppendCmd(cmdList, textures, texture_count * sizeof(TextureCmd));
@@ -28,6 +42,25 @@ bool RenderAdd_Texture(RenderCmdList *cmdList, TextureCmd *textures, uint32_t te
     for (auto i = 0u; i < texture_count; i++)
     {
         ret &= RenderDraw_Texture(textures + i, &cmdList->state);
+    }
+
+    return ret;
+}
+
+bool RenderAdd_RotatedTexture(
+    RenderCmdList *cmdList, RotatedTextureCmd *textures, uint32_t texture_count)
+{
+    auto ret = Render_AppendCmd(cmdList, textures, texture_count * sizeof(RotatedTextureCmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    // FIXME RenderDraw_Texture(textures, texture_count, cmdList->state);
+    ret = true;
+    for (auto i = 0u; i < texture_count; i++)
+    {
+        ret &= RenderDraw_RotatedTexture(textures + i, &cmdList->state);
     }
 
     return ret;

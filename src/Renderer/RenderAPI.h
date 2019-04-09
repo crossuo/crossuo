@@ -28,6 +28,7 @@ enum BlendFunc : uint8_t
 enum RenderCommandType : uint8_t
 {
     Texture = 0,
+    RotatedTexture,
 
     FlushState,
 
@@ -53,8 +54,9 @@ struct RenderCommandHeader
     RenderCommandHeader() = default;
 };
 
-struct TextureCmd : private RenderCommandHeader
+struct TextureCmd
 {
+    RenderCommandHeader header;
     textureHandle_t texture;
     uint32_t x = 0;
     uint32_t y = 0;
@@ -63,6 +65,8 @@ struct TextureCmd : private RenderCommandHeader
     float u = 1.f;
     float v = 1.f;
     float4 rgba = g_ColorWhite;
+
+    TextureCmd() = default;
 
     TextureCmd(
         textureHandle_t texture,
@@ -73,7 +77,7 @@ struct TextureCmd : private RenderCommandHeader
         float u,
         float v,
         float4 rgba)
-        : RenderCommandHeader(RenderCommandType::Texture)
+        : header{ RenderCommandType::Texture }
         , texture(texture)
         , x(x)
         , y(y)
@@ -86,45 +90,71 @@ struct TextureCmd : private RenderCommandHeader
     }
 };
 
-struct BlendStateCmd : private RenderCommandHeader
+struct RotatedTextureCmd : public TextureCmd
 {
+    float angle;
+
+    RotatedTextureCmd(
+        textureHandle_t texture,
+        uint32_t x,
+        uint32_t y,
+        uint32_t width,
+        uint32_t height,
+        float angle,
+        float u = 1.f,
+        float v = 1.f,
+        float4 rgba = g_ColorWhite)
+        : TextureCmd(texture, x, y, width, height, u, v, rgba)
+        , angle(angle)
+    {
+        header.type = RenderCommandType::RotatedTexture;
+    }
+};
+
+struct BlendStateCmd
+{
+    RenderCommandHeader header;
     BlendFunc func = BlendFunc{ 0 };
 
     BlendStateCmd(BlendFunc func)
-        : RenderCommandHeader(RenderCommandType::BlendState)
+        : header{ RenderCommandType::BlendState }
         , func(func)
     {
     }
 };
 
-struct DisableBlendStateCmd : private RenderCommandHeader
+struct DisableBlendStateCmd
 {
+    RenderCommandHeader header;
     DisableBlendStateCmd()
-        : RenderCommandHeader(RenderCommandType::DisableBlendState)
+        : header{ RenderCommandType::DisableBlendState }
     {
     }
 };
 
-struct StencilStateCmd : private RenderCommandHeader
+struct StencilStateCmd
 {
+    RenderCommandHeader header;
     StencilStateCmd()
-        : RenderCommandHeader(RenderCommandType::StencilState)
+        : header{ RenderCommandType::StencilState }
     {
     }
 };
 
-struct DisableStencilStateCmd : private RenderCommandHeader
+struct DisableStencilStateCmd
 {
+    RenderCommandHeader header;
     DisableStencilStateCmd()
-        : RenderCommandHeader(RenderCommandType::DisableStencilState)
+        : header{ RenderCommandType::DisableStencilState }
     {
     }
 };
 
-struct FlushStateCmd : private RenderCommandHeader
+struct FlushStateCmd
 {
+    RenderCommandHeader header;
     FlushStateCmd()
-        : RenderCommandHeader(RenderCommandType::FlushState)
+        : header{ RenderCommandType::FlushState }
     {
     }
 };
@@ -182,10 +212,24 @@ TextureCmd RenderAdd_TextureCmd(
     float u = 1.f,
     float v = 1.f,
     float4 rgba = g_ColorWhite);
+
+RotatedTextureCmd RenderAdd_RotatedTextureCmd(
+    textureHandle_t texture,
+    uint32_t x,
+    uint32_t y,
+    uint32_t width,
+    uint32_t height,
+    float angle,
+    float u = 1.f,
+    float v = 1.f,
+    float4 rgba = g_ColorWhite);
+
 BlendStateCmd RenderAdd_Blend(BlendFunc func);
 StencilStateCmd RenderAdd_Stencil();
 
 bool RenderAdd_Texture(RenderCmdList *cmdList, TextureCmd *textures, uint32_t texture_count);
+bool RenderAdd_RotatedTexture(
+    RenderCmdList *cmdList, RotatedTextureCmd *textures, uint32_t texture_count);
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state);

@@ -83,10 +83,14 @@ void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
 void CGLTexture::DrawRotated(int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
-    if (Texture != 0)
+    if (Texture == 0)
     {
-        g_GL_DrawRotated(*this, x, y, angle);
+        return;
     }
+
+    auto textureCmd = RenderAdd_RotatedTextureCmd(Texture, x, y - Height, Width, Height, angle);
+
+    RenderAdd_RotatedTexture(g_renderCmdList, &textureCmd, 1);
 }
 
 void CGLTexture::DrawTransparent(int x, int y, bool stencil)
