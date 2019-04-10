@@ -365,7 +365,7 @@ bool CGame::Install()
     g_SpeechManager.LoadSpeech();
     CGumpSpellbook::InitStaticData();
     g_ColorManager.Init();
-    g_FileManager.LoadData();
+
     InitStaticAnimList();
 
     Info(Client, "loading fonts");

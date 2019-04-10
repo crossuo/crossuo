@@ -322,43 +322,81 @@ vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 bool CFileManager::Load()
 {
     DEBUG_TRACE_FUNCTION;
-    if (s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop"))
+
+    bool r = false;
+    const bool useUop =
+        s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop");
+
+    if (useUop)
     {
-        return LoadWithUop();
+        r = LoadWithUop();
     }
-    if (!m_ArtIdx.Load(UOFilePath("artidx.mul")))
+    else
     {
-        return false;
+        r = LoadWithMul();
     }
-    if (!m_ArtMul.Load(UOFilePath("art.mul")))
+
+    r &= LoadCommon();
+
+    for (int i = 0; i < countof(m_AnimMul); i++)
     {
-        return false;
+        if (i > 1)
+        {
+            m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
+            MulLoadFile(m_AnimMul[i], UOFilePath("anim%i.mul", i));
+        }
+
+        if (useUop)
+        {
+            char uopMapName[64];
+            snprintf(uopMapName, sizeof(uopMapName) - 1, "map%dLegacyMUL.uop", i);
+            if (!UopLoadFile(m_MapUOP[i], uopMapName))
+            {
+                m_MapMul[i].Load(UOFilePath("map%d.mul", i));
+            }
+        }
+
+        m_StaticIdx[i].Load(UOFilePath("staidx%i.mul", i));
+        m_StaticMul[i].Load(UOFilePath("statics%i.mul", i));
+        m_FacetMul[i].Load(UOFilePath("facet0%i.mul", i));
+
+        m_MapDifl[i].Load(UOFilePath("mapdifl%i.mul", i));
+        m_MapDif[i].Load(UOFilePath("mapdif%i.mul", i));
+
+        m_StaDifl[i].Load(UOFilePath("stadifl%i.mul", i));
+        m_StaDifi[i].Load(UOFilePath("stadifi%i.mul", i));
+        m_StaDif[i].Load(UOFilePath("stadif%i.mul", i));
     }
-    if (!m_GumpIdx.Load(UOFilePath("gumpidx.mul")))
+
+    for (int i = 0; i < countof(m_UnifontMul); i++)
     {
-        return false;
+        auto s = i != 0 ? UOFilePath("unifont%i.mul", i) : UOFilePath("unifont.mul");
+        if (m_UnifontMul[i].Load(s))
+        {
+            UnicodeFontsCount++;
+        }
     }
-    if (!m_GumpMul.Load(UOFilePath("gumpart.mul")))
+
+    if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
     {
-        return false;
+        s_UseVerdata = false;
     }
-    if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")))
-    {
-        return false;
-    }
-    if (!m_SoundMul.Load(UOFilePath("sound.mul")))
-    {
-        return false;
-    }
+
+    g_Data.m_Anim.resize(m_AnimdataMul.Size);
+    memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
+    LoadTiledata();
+    LoadIndexFiles();
+
+    return r;
+}
+
+bool CFileManager::LoadCommon()
+{
     if (!m_AnimIdx[0].Load(UOFilePath("anim.idx")))
     {
         return false;
     }
     if (!m_LightIdx.Load(UOFilePath("lightidx.mul")))
-    {
-        return false;
-    }
-    if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
     {
         return false;
     }
@@ -390,10 +428,6 @@ bool CFileManager::Load()
     {
         return false;
     }
-    if (!m_MultiMul.Load(UOFilePath("multi.mul")))
-    {
-        return false;
-    }
     if (!m_RadarcolMul.Load(UOFilePath("radarcol.mul")))
     {
         return false;
@@ -413,40 +447,19 @@ bool CFileManager::Load()
 
     m_SpeechMul.Load(UOFilePath("speech.mul"));
     m_LangcodeIff.Load(UOFilePath("Langcode.iff"));
-    for (int i = 0; i < countof(m_AnimMul); i++)
+
+    return true;
+}
+
+bool CFileManager::LoadWithMul()
+{
+    if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
     {
-        if (i > 1)
-        {
-            m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
-            MulLoadFile(m_AnimMul[i], UOFilePath("anim%i.mul", i));
-        }
-
-        m_MapMul[i].Load(UOFilePath("map%i.mul", i));
-
-        m_StaticIdx[i].Load(UOFilePath("staidx%i.mul", i));
-        m_StaticMul[i].Load(UOFilePath("statics%i.mul", i));
-        m_FacetMul[i].Load(UOFilePath("facet0%i.mul", i));
-
-        m_MapDifl[i].Load(UOFilePath("mapdifl%i.mul", i));
-        m_MapDif[i].Load(UOFilePath("mapdif%i.mul", i));
-
-        m_StaDifl[i].Load(UOFilePath("stadifl%i.mul", i));
-        m_StaDifi[i].Load(UOFilePath("stadifi%i.mul", i));
-        m_StaDif[i].Load(UOFilePath("stadif%i.mul", i));
+        return false;
     }
-
-    for (int i = 0; i < countof(m_UnifontMul); i++)
+    if (!m_MultiMul.Load(UOFilePath("multi.mul")))
     {
-        auto s = i != 0 ? UOFilePath("unifont%i.mul", i) : UOFilePath("unifont.mul");
-        if (m_UnifontMul[i].Load(s))
-        {
-            UnicodeFontsCount++;
-        }
-    }
-
-    if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
-    {
-        s_UseVerdata = false;
+        return false;
     }
 
     return true;
@@ -519,102 +532,6 @@ bool CFileManager::LoadWithUop()
 	if (!m_AnimationSequence.Load(UOFilePath("AnimationSequence.uop")))
 	return false;
 	*/
-
-    if (!m_AnimIdx[0].Load(UOFilePath("anim.idx")))
-    {
-        return false;
-    }
-    if (!m_LightIdx.Load(UOFilePath("lightidx.mul")))
-    {
-        return false;
-    }
-    if (!m_SkillsIdx.Load(UOFilePath("Skills.idx")))
-    {
-        return false;
-    }
-    if (!m_MultiMap.Load(UOFilePath("Multimap.rle")))
-    {
-        return false;
-    }
-    if (!m_TextureIdx.Load(UOFilePath("texidx.mul")))
-    {
-        return false;
-    }
-    if (!MulLoadFile(m_AnimMul[0], UOFilePath("anim.mul")))
-    {
-        return false;
-    }
-    if (!m_AnimdataMul.Load(UOFilePath("animdata.mul")))
-    {
-        return false;
-    }
-    if (!m_HuesMul.Load(UOFilePath("hues.mul")))
-    {
-        return false;
-    }
-    if (!m_LightMul.Load(UOFilePath("light.mul")))
-    {
-        return false;
-    }
-    if (!m_RadarcolMul.Load(UOFilePath("radarcol.mul")))
-    {
-        return false;
-    }
-    if (!m_SkillsMul.Load(UOFilePath("skills.mul")))
-    {
-        return false;
-    }
-    if (!m_TextureMul.Load(UOFilePath("texmaps.mul")))
-    {
-        return false;
-    }
-    if (!m_TiledataMul.Load(UOFilePath("tiledata.mul")))
-    {
-        return false;
-    }
-
-    m_SpeechMul.Load(UOFilePath("speech.mul"));
-    m_LangcodeIff.Load(UOFilePath("Langcode.iff"));
-    for (int i = 0; i < countof(m_AnimMul); i++)
-    {
-        if (i > 1)
-        {
-            m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
-            MulLoadFile(m_AnimMul[i], UOFilePath("anim%i.mul", i));
-        }
-
-        char uopMapName[64];
-        snprintf(uopMapName, sizeof(uopMapName) - 1, "map%dLegacyMUL.uop", i);
-        if (!UopLoadFile(m_MapUOP[i], uopMapName))
-        {
-            m_MapMul[i].Load(UOFilePath("map%d.mul", i));
-        }
-
-        m_StaticIdx[i].Load(UOFilePath("staidx%i.mul", i));
-        m_StaticMul[i].Load(UOFilePath("statics%i.mul", i));
-        m_FacetMul[i].Load(UOFilePath("facet0%i.mul", i));
-
-        m_MapDifl[i].Load(UOFilePath("mapdifl%i.mul", i));
-        m_MapDif[i].Load(UOFilePath("mapdif%i.mul", i));
-
-        m_StaDifl[i].Load(UOFilePath("stadifl%i.mul", i));
-        m_StaDifi[i].Load(UOFilePath("stadifi%i.mul", i));
-        m_StaDif[i].Load(UOFilePath("stadif%i.mul", i));
-    }
-
-    for (int i = 0; i < countof(m_UnifontMul); i++)
-    {
-        auto s = i != 0 ? UOFilePath("unifont%i.mul", i) : UOFilePath("unifont.mul");
-        if (m_UnifontMul[i].Load(s))
-        {
-            UnicodeFontsCount++;
-        }
-    }
-
-    if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
-    {
-        s_UseVerdata = false;
-    }
 
     return true;
 }
@@ -1254,14 +1171,6 @@ void CFileManager::UopReadIndexFile(
             }
         }
     }
-}
-
-void CFileManager::LoadData()
-{
-    g_Data.m_Anim.resize(m_AnimdataMul.Size);
-    memcpy(&g_Data.m_Anim[0], &m_AnimdataMul.Start[0], m_AnimdataMul.Size);
-    LoadTiledata();
-    LoadIndexFiles();
 }
 
 UopAnimationHeader CFileManager::UopReadAnimationHeader()
