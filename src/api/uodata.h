@@ -246,20 +246,11 @@ struct CFileManager : public CDataReader // FIXME: not needed
     CMappedFile m_StaDif[6];
 
     bool Load();
-    bool LoadWithUop();
     void Unload();
     void UopReadAnimations();
     bool IsMulFileOpen(int idx) const;
-    void LoadData();
 
-    // moved from AnimationManager
-    UopAnimationHeader UopReadAnimationHeader();
-    UopAnimationFrame UopReadAnimationFrame();
-    std::vector<UopAnimationFrame> UopReadAnimationFramesData();
-
-    uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
     bool LoadAnimation(const AnimationSelector &anim);
-    void LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *palette);
     void LoadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
@@ -274,6 +265,17 @@ struct CFileManager : public CDataReader // FIXME: not needed
     void WaitTasks() const;
 
 private:
+    // moved from AnimationManager
+    UopAnimationHeader UopReadAnimationHeader();
+    UopAnimationFrame UopReadAnimationFrame();
+    std::vector<UopAnimationFrame> UopReadAnimationFramesData();
+    uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
+    void LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *palette);
+
+    bool LoadWithUop();
+    bool LoadWithMul();
+    bool LoadCommon();
+
     void LoadTiledata();
     void LoadIndexFiles();
 
