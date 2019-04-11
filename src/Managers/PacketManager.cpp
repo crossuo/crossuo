@@ -3376,10 +3376,9 @@ PACKET_HANDLER(Talk)
         {
             //reset
             obj->JournalPrefix = "";
-            if (obj->GetName().length() == 0u)
+            if (obj->GetName().empty())
             {
-                obj->SetName(name);
-
+                obj->SetName(name.empty() ? str : name);
                 if (obj->NPC)
                 {
                     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
@@ -3390,7 +3389,7 @@ PACKET_HANDLER(Talk)
             {
                 obj->JournalPrefix = "You see: ";
             }
-            else if (obj->GetName().length() != 0u)
+            else if (!obj->GetName().empty())
             {
                 obj->JournalPrefix = obj->GetName() + ": ";
             }
@@ -3496,10 +3495,9 @@ PACKET_HANDLER(UnicodeTalk)
             //reset
             obj->JournalPrefix = "";
 
-            if (obj->GetName().length() == 0u)
+            if (obj->GetName().empty())
             {
-                obj->SetName(name);
-
+                obj->SetName(name.empty() ? ToString(str) : name);
                 if (obj->NPC)
                 {
                     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
@@ -3510,7 +3508,7 @@ PACKET_HANDLER(UnicodeTalk)
             {
                 obj->JournalPrefix = "You see: ";
             }
-            else if (obj->GetName().length() != 0u)
+            else if (!obj->GetName().empty())
             {
                 obj->JournalPrefix = obj->GetName() + ": ";
             }
