@@ -12,6 +12,9 @@
 #include "Wisp/WispTextFileParser.h"
 #include "Managers/PacketManager.h"
 
+#include <popts.h>
+extern po::parser g_cli;
+
 #define CROSSUO_CONFIG "crossuo.cfg"
 
 Config g_Config;
@@ -350,12 +353,22 @@ void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t 
     }
 }
 
+os_path GetConfigFile()
+{
+    if (!g_cli["config"].was_set())
+    {
+        return g_App.ExeFilePath(CROSSUO_CONFIG);
+    }
+
+    return ToPath(g_cli["config"].get().string);
+}
+
 void LoadGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
 
-    Info(Config, "loading global config from " CROSSUO_CONFIG);
-    const auto cfg = g_App.ExeFilePath(CROSSUO_CONFIG);
+    Info(Config, "loading global config from: %s", ToString(GetConfigFile()).c_str());
+    const auto cfg = GetConfigFile();
     Wisp::CTextFileParser file(cfg, "=,", "#;", "");
 
     while (!file.IsEOF())
@@ -500,8 +513,8 @@ void LoadGlobalConfig()
 void SaveGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
-    Info(Config, "saving global config to " CROSSUO_CONFIG);
-    FILE *cfg = fs_open(g_App.ExeFilePath(CROSSUO_CONFIG), FS_WRITE);
+    Info(Config, "saving global config to: %s", ToString(GetConfigFile()).c_str());
+    FILE *cfg = fs_open(GetConfigFile(), FS_WRITE);
     if (cfg == nullptr)
     {
         return;

@@ -64,6 +64,10 @@ static bool InitCli(int argc, char *argv[])
         .description("Disable logging (almost) completely")
         .callback([&] { g_LogEnabled = eLogSystem::LogSystemNone; });
 
+    g_cli["config"]
+        .abbreviation('c')
+        .type(po::string)
+        .description("Use a different configuration file");
     g_cli(argc, argv);
 
     return g_cli["help"].size() == 0;
