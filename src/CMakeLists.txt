@@ -41,6 +41,7 @@ set(glengine_src
 set(renderer_src
   Renderer/RenderAdd.cpp
   Renderer/RenderDraw.cpp
+  Renderer/RenderDebug.cpp
   Renderer/RenderState.cpp
   Renderer/RenderInternal.cpp
 )

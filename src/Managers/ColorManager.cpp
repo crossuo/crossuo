@@ -3,8 +3,10 @@
 
 #include "ColorManager.h"
 #include <xuocore/uodata.h>
+#include "Renderer/RenderAPI.h"
 
 CColorManager g_ColorManager;
+extern RenderCmdList *g_renderCmdList;
 
 CColorManager::CColorManager()
     : m_HuesCount(0)
@@ -96,7 +98,13 @@ void CColorManager::SendColorsToShader(uint16_t color)
     {
         if ((color & SPECTRAL_COLOR_FLAG) != 0)
         {
-            glUniform1fv(ShaderColorTable, 32 * 3, &m_HuesFloat[0].Palette[0]);
+            RenderAdd_SetShaderLargeUniform(
+                g_renderCmdList,
+                &RenderAdd_ShaderLargeUniformCmd(
+                    ShaderColorTable,
+                    &m_HuesFloat[0].Palette[0],
+                    32 * 3,
+                    ShaderUniformType::Float1V));
         }
         else
         {
@@ -110,7 +118,13 @@ void CColorManager::SendColorsToShader(uint16_t color)
                 }
             }
 
-            glUniform1fv(ShaderColorTable, 32 * 3, &m_HuesFloat[color - 1].Palette[0]);
+            RenderAdd_SetShaderLargeUniform(
+                g_renderCmdList,
+                &RenderAdd_ShaderLargeUniformCmd(
+                    ShaderColorTable,
+                    &m_HuesFloat[color - 1].Palette[0],
+                    32 * 3,
+                    ShaderUniformType::Float1V));
         }
     }
 }

@@ -5,6 +5,9 @@
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../Managers/ColorManager.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIDrawObject::CGUIDrawObject(
     GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)
@@ -36,17 +39,28 @@ void CGUIDrawObject::SetShaderMode()
     {
         if (PartialHue)
         {
-            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+            auto uniformValue = SDM_PARTIAL_HUE;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &RenderAdd_ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
         }
         else
         {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+            auto uniformValue = SDM_COLORED;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &RenderAdd_ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
         }
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+        auto uniformValue = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &RenderAdd_ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
     }
 }
 
