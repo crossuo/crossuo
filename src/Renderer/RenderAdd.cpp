@@ -3,7 +3,7 @@
 #include "Renderer/RenderInternal.h"
 
 TextureCmd RenderAdd_TextureCmd(
-    textureHandle_t texture,
+    texture_handle_t texture,
     uint32_t x,
     uint32_t y,
     uint32_t width,
@@ -16,7 +16,7 @@ TextureCmd RenderAdd_TextureCmd(
 }
 
 RotatedTextureCmd RenderAdd_RotatedTextureCmd(
-    textureHandle_t texture,
+    texture_handle_t texture,
     uint32_t x,
     uint32_t y,
     uint32_t width,
@@ -99,6 +99,17 @@ StencilStateCmd RenderAdd_Stencil()
     return StencilStateCmd();
 }
 
+ShaderUniformCmd RenderAdd_ShaderUniformCmd(uint32_t id, void *value, ShaderUniformType type)
+{
+    return ShaderUniformCmd(id, value, type);
+}
+
+ShaderLargeUniformCmd
+RenderAdd_ShaderLargeUniformCmd(uint32_t id, void *value, uint32_t count, ShaderUniformType type)
+{
+    return ShaderLargeUniformCmd(id, value, count, type);
+}
+
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state)
 {
     auto ret = Render_AppendCmd(cmdList, state, sizeof(StencilStateCmd));
@@ -120,6 +131,52 @@ bool RenderAdd_DisableStencil(RenderCmdList *cmdList)
     }
 
     return RenderDraw_DisableStencilState(&cmd, &cmdList->state);
+}
+
+bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, ShaderUniformCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(ShaderUniformCmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    return RenderDraw_ShaderUniform(cmd, &cmdList->state);
+}
+
+bool RenderAdd_SetShaderLargeUniform(RenderCmdList *cmdList, ShaderLargeUniformCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(ShaderLargeUniformCmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    return RenderDraw_ShaderLargeUniform(cmd, &cmdList->state);
+}
+
+bool RenderAdd_SetShaderPipeline(RenderCmdList *cmdList, ShaderPipeline *pipeline)
+{
+    ShaderPipelineCmd cmd{ pipeline };
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    return RenderDraw_ShaderPipeline(&cmd, &cmdList->state);
+}
+
+bool RenderAdd_DisableShaderPipeline(RenderCmdList *cmdList)
+{
+    DisableShaderPipelineCmd cmd{};
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    return RenderDraw_DisableShaderPipeline(&cmd, &cmdList->state);
 }
 
 bool RenderAdd_FlushState(RenderCmdList *cmdList)

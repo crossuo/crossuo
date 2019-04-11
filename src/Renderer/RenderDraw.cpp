@@ -3,7 +3,7 @@
 #include "Renderer/RenderInternal.h"
 
 #define MATCH_CASE_DRAW(type, ret, cmd, state)                                                     \
-    case RenderCommandType::##type:                                                                \
+    case RenderCommandType::Cmd_##type:                                                            \
     {                                                                                              \
         ret &= RenderDraw_##type((type##Cmd *)cmd, state);                                         \
         (char *)cmd += sizeof(type##Cmd);                                                          \
@@ -11,7 +11,7 @@
     }
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \
-    case RenderCommandType::##type:                                                                \
+    case RenderCommandType::Cmd_##type:                                                            \
     {                                                                                              \
         RenderDraw_##type##Debug((type##Cmd *)cmd, state);                                         \
         (char *)cmd += sizeof(type##Cmd);                                                          \
@@ -76,7 +76,7 @@ bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state)
 {
-    return RenderState_SetBlend(state, false, BlendFunc::Invalid);
+    return RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
 }
 
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state)
@@ -94,108 +94,24 @@ bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state
     return RenderState_SetStencil(state, false);
 }
 
-void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
+bool RenderDraw_ShaderUniform(ShaderUniformCmd *cmd, RenderState *state)
 {
-    Info(
-        Renderer,
-        "Dumping cmd list %p, data %p, capacity %dkB, free size %dkB, immediate? %s",
-        cmdList,
-        cmdList->data,
-        cmdList->size,
-        cmdList->remainingSize,
-        cmdList->immediateMode);
+    return RenderState_SetShaderUniform(state, cmd->id, cmd->value, cmd->type);
+}
 
-    static auto s_blendFuncToString = [](BlendFunc func) {
-        static const char *s_funcToText[] = { "SrcAlpha_OneMinusSrcAlpha" };
-        static_assert(countof(s_funcToText) == BlendFunc::Count);
+bool RenderDraw_ShaderLargeUniform(ShaderLargeUniformCmd *cmd, RenderState *state)
+{
+    return RenderState_SetShaderLargeUniform(state, cmd->id, cmd->value, cmd->count, cmd->type);
+}
 
-        if (func == BlendFunc::Invalid)
-        {
-            return "Invalid";
-        }
+bool RenderDraw_ShaderPipeline(ShaderPipelineCmd *cmd, RenderState *state)
+{
+    return RenderState_SetShaderPipeline(state, cmd->pipeline);
+}
 
-        assert(func < BlendFunc::Count);
-        return s_funcToText[func];
-    };
-
-    auto RenderDraw_TextureDebug = [](TextureCmd *cmd, RenderState *state) {
-        Info(
-            Renderer,
-            "TextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - rgba: [%f, %f, %f, %f]\n",
-            cmd->texture,
-            cmd->x,
-            cmd->y,
-            cmd->width,
-            cmd->height,
-            cmd->u,
-            cmd->v,
-            cmd->rgba[0],
-            cmd->rgba[1],
-            cmd->rgba[2],
-            cmd->rgba[3]);
-    };
-
-    auto RenderDraw_RotatedTextureDebug = [](RotatedTextureCmd *cmd, RenderState *state) {
-        Info(
-            Renderer,
-            "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - rgba: [%f, %f, %f, %f]\n",
-            cmd->texture,
-            cmd->x,
-            cmd->y,
-            cmd->width,
-            cmd->height,
-            cmd->angle,
-            cmd->u,
-            cmd->v,
-            cmd->rgba[0],
-            cmd->rgba[1],
-            cmd->rgba[2],
-            cmd->rgba[3]);
-    };
-
-    auto RenderDraw_FlushStateDebug = [](FlushStateCmd *, RenderState *state) {
-        Info(Renderer, "FlushStateCmd\n");
-    };
-
-    auto RenderDraw_BlendStateDebug = [](BlendStateCmd *cmd, RenderState *state) {
-        Info(Renderer, "BlendStateCmd: func: %s\n", s_blendFuncToString(cmd->func));
-    };
-
-    auto RenderDraw_DisableBlendStateDebug = [](DisableBlendStateCmd *cmd, RenderState *state) {
-        Info(Renderer, "DisableBlendStateCmd\n");
-    };
-
-    auto RenderDraw_StencilStateDebug = [](StencilStateCmd *cmd, RenderState *state) {
-        Info(Renderer, "StencilStateCmd\n");
-    };
-
-    auto RenderDraw_DisableStencilStateDebug = [](DisableStencilStateCmd *cmd, RenderState *state) {
-        Info(Renderer, "DisableStencilStateCmd\n");
-    };
-
-    char *cmd = cmdList->data;
-    uint32_t remainingCmdSize = cmdList->size - cmdList->remainingSize;
-    char *listEnd = cmd + remainingCmdSize;
-
-    while (cmd < listEnd)
-    {
-        RenderCommandHeader &cmdHeader = *(RenderCommandHeader *)cmd;
-        switch (cmdHeader.type)
-        {
-            MATCH_CASE_DRAW_DEBUG(Texture, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(RotatedTexture, cmd, &cmdList->state)
-
-            MATCH_CASE_DRAW_DEBUG(FlushState, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(BlendState, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(DisableStencilState, cmd, &cmdList->state)
-
-            default:
-                assert(false);
-                break;
-        }
-    }
+bool RenderDraw_DisableShaderPipeline(DisableShaderPipelineCmd *cmd, RenderState *state)
+{
+    return RenderState_DisableShaderPipeline(state);
 }
 
 bool RenderDraw_Execute(RenderCmdList *cmdList)
@@ -224,6 +140,11 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DisableBlendState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(StencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DisableStencilState, ret, cmd, &cmdList->state)
+
+            MATCH_CASE_DRAW(ShaderUniform, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(ShaderLargeUniform, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(ShaderPipeline, ret, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(DisableShaderPipeline, ret, cmd, &cmdList->state);
 
             default:
                 assert(false);
