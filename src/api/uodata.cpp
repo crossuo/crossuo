@@ -355,6 +355,10 @@ bool CFileManager::Load()
                 m_MapMul[i].Load(UOFilePath("map%d.mul", i));
             }
         }
+        else
+        {
+            m_MapMul[i].Load(UOFilePath("map%d.mul", i));
+        }
 
         m_StaticIdx[i].Load(UOFilePath("staidx%i.mul", i));
         m_StaticMul[i].Load(UOFilePath("statics%i.mul", i));
@@ -453,6 +457,30 @@ bool CFileManager::LoadCommon()
 
 bool CFileManager::LoadWithMul()
 {
+    if (!m_ArtIdx.Load(UOFilePath("artidx.mul")))
+    {
+        return false;
+    }
+    if (!m_ArtMul.Load(UOFilePath("art.mul")))
+    {
+        return false;
+    }
+    if (!m_GumpIdx.Load(UOFilePath("gumpidx.mul")))
+    {
+        return false;
+    }
+    if (!m_GumpMul.Load(UOFilePath("gumpart.mul")))
+    {
+        return false;
+    }
+    if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")))
+    {
+        return false;
+    }
+    if (!m_SoundMul.Load(UOFilePath("sound.mul")))
+    {
+        return false;
+    }
     if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
     {
         return false;
