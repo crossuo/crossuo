@@ -6,6 +6,7 @@
 #include "../GameWindow.h"
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/LandObject.h"
+#include "../Utility/PerfMarker.h"
 
 CGLEngine g_GL;
 
@@ -160,6 +161,8 @@ static void SetupOGLDebugMessage()
     EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_PERFORMANCE, false, true);
     EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_MARKER, false, false);
     EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_POP_GROUP, false, true);
+
+    EnableOpenGLMessage(OGL_USERPERFMARKERS_ID, false, false);
 
     // GL error "GL_INVALID_OPERATION in ...":
     // 1) FIXME no shader set when glUniform1iARB is called for g_ShaderDrawMode
