@@ -9,6 +9,26 @@
 #ifndef PROGRAMOPTIONS_HXX_INCLUDED
 #define PROGRAMOPTIONS_HXX_INCLUDED
 
+#if !defined(_MSC_VER)
+// Disable all warnings from gcc/clang:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wc++98-compat"
+#pragma GCC diagnostic ignored "-Wc++98-compat-pedantic"
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wunused-macros"
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
 #include <string>
 #include <cstring>
 #include <algorithm>
@@ -2281,5 +2301,9 @@ namespace po {
 		return stream;
 	}
 }
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
 
 #endif // !PROGRAMOPTIONS_HXX_INCLUDED

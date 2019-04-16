@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <vector> // FIXME
 
 // References:
 // https://uo.stratics.com/heptazane/fileformats.shtml
@@ -382,7 +383,7 @@ struct FONT_CHARACTER_DATA
 {
     uint8_t Width;
     uint8_t Height;
-    vector<uint16_t> Data;
+    std::vector<uint16_t> Data; // FIXME
 };
 //static_assert(sizeof(FONT_CHARACTER_DATA) == 0, "Invalid FONT_CHARACTER_DATA size");
 

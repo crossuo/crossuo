@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../api/mulstruct.h" // AnimationSelector
+
 class CTargetGump;
 class CGameCharacter;
 struct CTextureAnimationDirection;

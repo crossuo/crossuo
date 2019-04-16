@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     {
         log("loading speech from UOP");
         reader.Move(2);
-        wstring mainData = reader.ReadWStringLE(reader.Size - 2);
+        std::wstring mainData = reader.ReadWStringLE(reader.Size - 2);
         std::wcout << mainData << std::endl;
     }
 

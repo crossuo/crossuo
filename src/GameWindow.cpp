@@ -9,6 +9,7 @@
 #include "SelectedObject.h"
 #include "ScreenshotBuilder.h"
 #include "ClickObject.h"
+#include "Target.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/PluginManager.h"
 #include "Managers/ScreenEffectManager.h"

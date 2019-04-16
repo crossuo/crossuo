@@ -17,7 +17,7 @@ os_path fs_insensitive(const os_path &path)
 FILE *fs_open(const os_path &path_str, fs_mode mode)
 {
     // we do not support text mode, any decent modern text editor can deal with it
-    wstring m;
+    std::wstring m;
     m = mode & FS_WRITE ? m + L"w" : m;
     m = mode & FS_READ ? m + L"r" : m;
     m += L"b";
@@ -53,7 +53,7 @@ bool fs_path_create(const os_path &path_str)
 
 os_path fs_path_current()
 {
-    wstring path;
+    std::wstring path;
     path.reserve(MAX_PATH);
     GetCurrentDirectoryW(MAX_PATH, &path[0]);
     return path;
@@ -102,9 +102,8 @@ void fs_unmap(unsigned char *ptr, size_t length)
 
 #else
 
-#include "Misc.h"
-
 #include <stdio.h>
+#include <ctype.h>
 #include <string>
 #include <utime.h>
 #include <string.h>
@@ -115,14 +114,17 @@ void fs_unmap(unsigned char *ptr, size_t length)
 #include <codecvt>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/mman.h>
+#include <algorithm>
+#include <vector>
 
-static std::vector<string> s_files;
-static std::vector<string> s_lower;
+static std::vector<os_path> s_files;
+static std::vector<os_path> s_lower;
 
-string fs_insensitive(const string &path)
+os_path fs_insensitive(const os_path &path)
 {
-    string p = path;
+    os_path p = path;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
     auto it = std::find(s_lower.begin(), s_lower.end(), p);
     if (it != s_lower.end())
@@ -158,8 +160,8 @@ static void fs_list_recursive(const char *name)
         {
             snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
             int len = strlen(path);
-            s_files.emplace_back(string(path, len));
-            auto p = string(path, len);
+            s_files.emplace_back(os_path(path, len));
+            auto p = os_path(path, len);
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
             s_lower.emplace_back(p);
         }
@@ -167,16 +169,16 @@ static void fs_list_recursive(const char *name)
     closedir(dir);
 }
 
-void fs_case_insensitive_init(const string &path)
+void fs_case_insensitive_init(const os_path &path)
 {
     s_files.reserve(1024);
     s_lower.reserve(1024);
     fs_list_recursive(CStringFromPath(path));
 }
 
-FILE *fs_open(const string &path_str, fs_mode mode)
+FILE *fs_open(const os_path &path_str, fs_mode mode)
 {
-    string m;
+    std::string m;
     m = (mode & FS_WRITE) != 0 ? m + "w" : m;
     m = (mode & FS_READ) != 0 ? m + "r" : m;
 
@@ -210,7 +212,7 @@ size_t fs_size(FILE *fp)
     return size;
 }
 
-bool fs_path_exists(const string &path_str)
+bool fs_path_exists(const os_path &path_str)
 {
     assert(!path_str.empty());
     struct stat buffer;
@@ -219,7 +221,7 @@ bool fs_path_exists(const string &path_str)
     return r;
 }
 
-bool fs_path_create(const string &path_str)
+bool fs_path_create(const os_path &path_str)
 {
     assert(!path_str.empty());
 
@@ -231,10 +233,10 @@ bool fs_path_create(const string &path_str)
     return mkdir(CStringFromPath(path_str), 0777) == 0;
 }
 
-string fs_path_current()
+os_path fs_path_current()
 {
     char *currdir = getcwd(0, 0);
-    string path{ currdir };
+    os_path path{ currdir };
     free(currdir);
 
     return path;

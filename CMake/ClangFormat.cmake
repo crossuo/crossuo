@@ -17,7 +17,7 @@ find_program(CLANG_FORMAT
 if (NOT CLANG_FORMAT)
     if (WIN32)
         message(STATUS "Clang format not found! Downloading...")
-        set(CLANG_FORMAT "${PROJECT_BINARY_DIR}/downloads/clang-format${CLANG_FORMAT_POSTFIX}.exe")
+        set(CLANG_FORMAT "\"${PROJECT_BINARY_DIR}/downloads/clang-format${CLANG_FORMAT_POSTFIX}.exe\"")
         file(DOWNLOAD
             https://github.com/crossuo/dep-build-win/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
             "${CLANG_FORMAT}" SHOW_PROGRESS

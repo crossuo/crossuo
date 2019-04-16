@@ -5,7 +5,6 @@
 
 #if !defined(DISABLE_LOG)
 
-#define LOGURU_IMPLEMENTATION
 #include <loguru.h>
 
 eLogSystem g_LogEnabled = LogSystemAll;

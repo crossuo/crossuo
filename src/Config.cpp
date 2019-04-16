@@ -6,6 +6,7 @@
 #include "Globals.h"
 #include "Application.h"
 #include "Logging.h"
+#include "api/uodata.h"
 #include "api/file.h"
 #include "api/enumlist.h"
 #include "Crypt/CryptEntry.h"
@@ -353,7 +354,7 @@ void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t 
     }
 }
 
-os_path GetConfigFile()
+static os_path GetConfigFile()
 {
     if (!g_cli["config"].was_set())
     {

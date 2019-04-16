@@ -3,6 +3,7 @@
 
 #include "UOFileReader.h"
 #include "ColorManager.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"

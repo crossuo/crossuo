@@ -1,15 +1,20 @@
 // ASS - Audio Stupidly Simple
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#pragma clang diagnostic ignored "-Wfloat-equal"
-#pragma clang diagnostic ignored "-Wunused-value"
-#elif defined(__GNUC__)
+#if _MSC_VER
+#pragma warning(push, 0)
+#else
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wtype-limits"
+#pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wwritable-strings"
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
 #endif
 
 #ifdef ASS_IMPLEMENTATION
@@ -36455,8 +36460,8 @@ namespace SoLoud
 
 #endif // ASS_IMPLEMENTATION
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
+#if _MSC_VER
+#pragma warning(pop)
+#else
 #pragma GCC diagnostic pop
 #endif

@@ -64,6 +64,26 @@ else()
   check_and_add_flag(GGDB -ggdb DEBUG_ONLY)
 endif()
 
+# Compiler extensions
+
+if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+  # enable the latest C++ standard feature set,
+  # and also disable MSVC specific extensions
+  # to be even more standards compliant.
+  check_and_add_flag(CPPLATEST /std:c++latest)
+else()
+  # Enable C++17, but fall back to C++14 if it isn't available.
+  # CMAKE_CXX_STANDARD cannot be used here because we require C++14 or newer, not any standard.
+  check_and_add_flag(CXX17 -std=c++17)
+  if(NOT FLAG_CXX_CXX17)
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+  endif()
+  check_and_add_flag(THREADS -pthread)
+  set(THREAD "-pthread")
+endif()
+
 if(ENABLE_LTO)
   check_and_add_flag(LTO -flto)
   if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
@@ -74,12 +94,15 @@ endif()
 
 add_definitions(-DXUO_CMAKE)
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-  add_definitions(-DXUO_WINDOWS)
+  add_definitions(-DXUO_WINDOWS=1)
   set(XUO_WINDOWS 1)
+elseif(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
+  add_definitions(-DXUO_EMSC=1)
+  set(XUO_EMSC 1)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  add_definitions(-DXUO_LINUX)
+  add_definitions(-DXUO_LINUX=1)
   set(XUO_LINUX 1)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  add_definitions(-DXUO_OSX)
+  add_definitions(-DXUO_OSX=1)
   set(XUO_OSX 1)
 endif()

@@ -1,16 +1,24 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#include "uolib.h"
 #include "uodata.h"
 #include "mappedfile.h"
 #include "file.h"
+
+#include <stdarg.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <vector>
+#include <algorithm>
 
 #define MINIZ_IMPLEMENTATION
 #include <miniz.h>
 
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)
 
-string g_dumpUopFile;
+std::string g_dumpUopFile;
 Data g_Data;
 Index g_Index;
 CFileManager g_FileManager;
@@ -19,14 +27,14 @@ static bool s_flag = false;
 static std::mutex s_protect;
 static std::condition_variable s_signal;
 
-void SetEvent()
+static void SetEvent()
 {
     std::lock_guard<std::mutex> _(s_protect);
     s_flag = true;
     s_signal.notify_one();
 }
 
-bool WaitEvent()
+static bool WaitEvent()
 {
     std::unique_lock<std::mutex> lk(s_protect);
     // prevent spurious wakeups from doing harm
@@ -305,12 +313,12 @@ static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fi
     return DecompressBlock(block, dst, src);
 }
 
-vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
+std::vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 {
     DEBUG_TRACE_FUNCTION;
     assert(block);
     uint8_t *src = Start + block->Offset + block->HeaderSize;
-    vector<uint8_t> dst(block->DecompressedSize, 0);
+    std::vector<uint8_t> dst(block->DecompressedSize, 0);
     if (DecompressBlock(*block, dst.data(), src))
     {
         return dst;
@@ -713,7 +721,7 @@ void CFileManager::ReadTask()
 
     int range = MAX_ANIMATIONS_DATA_INDEX_COUNT / count;
     static int lastGroup[count];
-    vector<std::thread> jobs;
+    std::vector<std::thread> jobs;
     for (int i = 0; i < count; i++)
     {
         int start = range * i;
@@ -790,7 +798,7 @@ void CFileManager::ProcessAnimSequeceData()
         //Seems like this data is essential to make AnimationSequence work
         // Aimed
     }
-    Info(Data, "AnimationSequence processed %ld entries", m_AnimationSequence.m_Map.size());
+    Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.m_Map.size());
 }
 
 static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
@@ -828,7 +836,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     }
     TRACE(Data, "%s:signature is 0x%08x", filename, file.Header->Signature);
     TRACE(Data, "%s:max_block_count is %d", filename, file.Header->MaxBlockCount);
-    TRACE(Data, "%s:first_section at %ld", filename, file.Header->FirstSection);
+    TRACE(Data, "%s:first_section at %zd", filename, file.Header->FirstSection);
     TRACE(Data, "%s:file_count is %d", filename, file.Header->FileCount);
     file.ResetPtr();
     uint64_t next = file.Header->FirstSection;
@@ -1117,7 +1125,7 @@ void CFileManager::LoadIndexFiles()
         {
             //const auto hash = kvp.first;
             const auto block = kvp.second;
-            vector<uint8_t> data = file.GetData(block);
+            std::vector<uint8_t> data = file.GetData(block);
             if (data.empty())
             {
                 continue;
@@ -1165,10 +1173,10 @@ void CFileManager::UopReadIndexFile(
     int startIndex)
 {
     DEBUG_TRACE_FUNCTION;
-    string p = uopFileName;
+    std::string p = uopFileName;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
 
-    bool isGump = (string("gumpartlegacymul") == p);
+    bool isGump = (std::string("gumpartlegacymul") == p);
     char basePath[200] = { 0 };
     snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 
@@ -1417,7 +1425,7 @@ void CFileManager::LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *p
     const auto imageCenterX = frameInfo->CenterX;
     const auto imageCenterY = frameInfo->CenterY;
     const int textureSize = imageWidth * imageHeight;
-    vector<uint16_t> pixels(textureSize, 0);
+    std::vector<uint16_t> pixels(textureSize, 0);
     if (pixels.size() != textureSize)
     {
         Error(Data, "couldn't allocate pixel data (%d bytes)", textureSize);

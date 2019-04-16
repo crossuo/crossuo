@@ -287,7 +287,7 @@ void CAnimationManager::Load(uint32_t *verdata)
                 uint32_t offset = 0;
                 int count = 0;
 
-                DEBUG(Data, "vh->ID = 0x%02X vh->BlockID = 0x%08X", vh->FileID, graphic);
+                TRACE(Data, "vh->ID = 0x%02X vh->BlockID = 0x%08X", vh->FileID, graphic);
                 if (graphic < 35000)
                 {
                     if (graphic < 22000) //monsters

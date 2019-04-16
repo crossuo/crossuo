@@ -5,6 +5,11 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <stdint.h>
+#include <string.h>
+#include "uolib.h"
 #include "file.h"
 
 struct CDataWriter
@@ -16,7 +21,7 @@ struct CDataWriter
     CDataWriter(size_t size, bool autoResize = true);
     ~CDataWriter();
 
-    vector<uint8_t> Data() const { return m_Data; }
+    std::vector<uint8_t> Data() const { return m_Data; }
     uint8_t *DataPtr() { return &m_Data[0]; }
     size_t Size() { return m_Data.size(); }
 
@@ -110,19 +115,19 @@ struct CDataWriter
     }
 
     void WriteString(
-        const string &val,
+        const std::string &val,
         size_t length = 0,
         bool nullTerminated = true,
         const intptr_t &offset = 0);
     void WriteWString(
-        const wstring &val,
+        const std::wstring &val,
         size_t length = 0,
         bool bigEndian = true,
         bool nullTerminated = true,
         const intptr_t &offset = 0);
 
 protected:
-    vector<uint8_t> m_Data;
+    std::vector<uint8_t> m_Data;
 };
 
 struct CDataReader
@@ -268,12 +273,12 @@ struct CDataReader
         memcpy(buffer, Ptr, SIZE * sizeof(T));
         Move(SIZE);
     }
-    string ReadString(size_t size = 0, const intptr_t &offset = 0);
-    wstring ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
-    wstring ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);
+    std::string ReadString(size_t size = 0, const intptr_t &offset = 0);
+    std::wstring ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
+    std::wstring ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);
 
 private:
-    wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
+    std::wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 
 struct CMappedFile : public CDataReader

@@ -4,21 +4,9 @@
 #pragma once
 
 #include <stdio.h>
-#include "config.h"
-
-#if defined(XUO_WINDOWS)
-#define os_path wstring
-#define ToPath(x) ToWString(x)
-#define StringFromPath(x) ToString(x)
-#define CStringFromPath(x) ToString(x).c_str()
-#define PATH_SEP ToPath("/")
-#else
-#define os_path string
-#define ToPath(x) x
-#define StringFromPath(x) x
-#define CStringFromPath(x) x.c_str()
-#define PATH_SEP string("/")
-#endif
+#include <stdint.h>
+#include <string>
+#include "uolib.h"
 
 enum fs_mode
 {

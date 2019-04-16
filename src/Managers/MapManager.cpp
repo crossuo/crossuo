@@ -106,14 +106,15 @@ void CMapManager::CreateBlockTable(int map)
                     "build/map%dlegacymul/%08d.dat",
                     map,
                     shifted);
-                auto block = uopFile.GetBlock(CreateAssetHash(mapFilePath));
+                const auto hash = CreateAssetHash(mapFilePath);
+                auto block = uopFile.GetBlock(hash);
                 if (block != nullptr)
                 {
                     uopOffset = size_t(block->Offset + block->HeaderSize);
                 }
                 else
                 {
-                    Warning(Data, "hash not found in uop map %d file", map);
+                    Warning(Data, "couldn't find asset 0x%016zx (%s)", hash, mapFilePath);
                 }
             }
         }

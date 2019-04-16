@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "config.h"
+#include "uolib.h"
 
 #if _WIN32
 #include <Windows.h>

@@ -3,8 +3,15 @@
 
 #include "SoundManager.h"
 #include "ConfigManager.h"
+#include "../api/uodata.h"
 #include "../CrossUO.h"
 #include "../GameWindow.h"
+
+#ifndef ASS_IMPLEMENTATION
+#define ASS_IMPLEMENTATION
+#define WITH_SDL2_STATIC
+#include <ass.h>
+#endif // ASS_IMPLEMENTATION
 
 #if 0
 #define SOUND_DEBUG_TRACE DEBUG_TRACE_FUNCTION
@@ -12,29 +19,6 @@
 #define SOUND_DEBUG_TRACE
 #endif
 
-#define WITH_SDL2_STATIC
-
-#define TSF_IMPLEMENTATION
-#define TSF_NO_STDIO
-#include <tsf.h>
-#define TML_IMPLEMENTATION
-#define TML_NO_STDIO
-#include <tml.h>
-
-#define ASS_IMPLEMENTATION
-#if _MSC_VER
-#pragma warning(push, 0)
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwritable-strings"
-#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
-#endif
-#include <ass.h>
-#if _MSC_VER
-#pragma warning(pop)
-#else
-#pragma GCC diagnostic pop
-#endif
 using namespace SoLoud;
 static Soloud s_backend;
 

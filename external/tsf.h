@@ -51,7 +51,7 @@
 #pragma clang diagnostic ignored "-Wfloat-equal"
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 #endif
 
 #ifdef __cplusplus
