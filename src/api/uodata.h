@@ -10,10 +10,23 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <functional>
+#include <unordered_map>
+#include <vector>
+#include <string>
+#include "uolib.h"
+#include "enumlist.h"
 #include "mulstruct.h"
 #include "mappedfile.h"
 
-#if !LIBUO
+extern std::string g_dumpUopFile;
+
+#if LIBUO == 1
+typedef void *SoundInfo;
+typedef void *SoundHandle;
+#define SOUND_NULL nullptr
+#else
 struct CSprite;
 #endif
 
@@ -43,13 +56,13 @@ struct CTextureAnimationDirection
     uint32_t LastAccessTime = 0;
     bool IsUOP = false;
     bool IsVerdata = false;
-    CTextureAnimationFrame *m_Frames;
+    CTextureAnimationFrame *m_Frames = nullptr;
 };
 
 struct CTextureAnimationGroup
 {
     CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
-    const UopBlockHeader *m_UOPAnimData;
+    const UopBlockHeader *m_UOPAnimData = nullptr;
 };
 
 struct CIndexObject
@@ -141,7 +154,7 @@ struct CIndexAnimation
 
 struct CIndexMusic
 {
-    string FilePath;
+    std::string FilePath;
     bool Loop = false;
 };
 
@@ -180,7 +193,7 @@ struct CUopMappedFile : public CMappedFile // FIXME: not needed
     bool HasAsset(uint64_t hash) const;
     void Add(uint64_t hash, const UopBlockHeader *item);
     const UopBlockHeader *GetBlock(uint64_t hash);
-    vector<uint8_t> GetData(const UopBlockHeader *block);
+    std::vector<uint8_t> GetData(const UopBlockHeader *block);
 
     CUopMappedFile() = default;
     virtual ~CUopMappedFile() = default;

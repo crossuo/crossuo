@@ -3,6 +3,9 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#include "mappedfile.h"
+#include <string.h> // memcpy
+
 #if 0
 #define DATASTREAM_DEBUG DEBUG_TRACE_FUNCTION
 #else
@@ -98,7 +101,7 @@ void CDataWriter::WriteDataLE(const uint8_t *data, size_t size, const intptr_t &
 }
 
 void CDataWriter::WriteString(
-    const string &val, size_t length, bool nullTerminated, const intptr_t &offset)
+    const std::string &val, size_t length, bool nullTerminated, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     if (length == 0u)
@@ -124,7 +127,11 @@ void CDataWriter::WriteString(
 }
 
 void CDataWriter::WriteWString(
-    const wstring &val, size_t length, bool bigEndian, bool nullTerminated, const intptr_t &offset)
+    const std::wstring &val,
+    size_t length,
+    bool bigEndian,
+    bool nullTerminated,
+    const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     if (length == 0u)
@@ -240,7 +247,7 @@ void CDataReader::ReadDataLE(uint8_t *data, size_t size, const intptr_t &offset)
     }
 }
 
-string CDataReader::ReadString(size_t size, const intptr_t &offset)
+std::string CDataReader::ReadString(size_t size, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     uint8_t *ptr = Ptr + offset;
@@ -267,7 +274,7 @@ string CDataReader::ReadString(size_t size, const intptr_t &offset)
     return { buf };
 }
 
-wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &offset)
+std::wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     uint8_t *ptr = Ptr + offset;
@@ -313,12 +320,12 @@ wstring CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &of
     return { buf };
 }
 
-wstring CDataReader::ReadWStringLE(size_t size, const intptr_t &offset)
+std::wstring CDataReader::ReadWStringLE(size_t size, const intptr_t &offset)
 {
     return ReadWString(size, false, offset);
 }
 
-wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
+std::wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
 {
     return ReadWString(size, true, offset);
 }

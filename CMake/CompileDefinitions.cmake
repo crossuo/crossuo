@@ -32,3 +32,27 @@ function(compile_definitions)
   set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
     "$<${genexp_config_test}:${defs}>")
 endfunction()
+
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+  add_definitions(-DNOMINMAX)
+  add_definitions(-DUNICODE)
+  add_definitions(-D_UNICODE)
+  add_definitions(-DWIN32_LEAN_AND_MEAN)
+  add_definitions(-D_WIN32_WINNT=0x0602)
+  add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+else()
+  #thread sanitizer - issues to fix
+  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-memory-use-after-dtor -fsanitize-blacklist=blacklist.txt")
+  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-memory-use-after-dtor -fsanitize-blacklist=blacklist.txt")
+  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
+  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
+endif()
+
+# These aren't actually needed for C11/C++11
+# but some dependencies require them (LLVM, libav).
+add_definitions(-D__STDC_LIMIT_MACROS)
+add_definitions(-D__STDC_CONSTANT_MACROS)

@@ -11,6 +11,10 @@
 
 #include <math.h> // M_PI
 
+#if defined(XUO_WINDOWS)
+#include "../../Dependencies/include/glew.h"
+#include "../../Dependencies/include/wglew.h"
+#else
 #define NO_SDL_GLEXT
 #include <GL/glew.h>
 #if defined(__APPLE__)
@@ -18,6 +22,9 @@
 #else
 #include <GL/gl.h>
 #endif
+#include <unistd.h>
+#endif // XUO_WINDOWS
+
 #include <SDL.h>
 
 #include <stdio.h>
@@ -28,7 +35,8 @@
 #include <wchar.h>
 #include <algorithm>
 #include <stdint.h>
-
+#include <chrono>
+#include <thread>
 #include <string>
 #include <vector>
 #include <thread>
@@ -86,10 +94,6 @@ extern string g_dumpUopFile;
 struct SoundInfo;
 typedef SoundInfo *SoundHandle;
 #define SOUND_NULL nullptr
-
-#include <unistd.h>
-#include <chrono>
-#include <thread>
 
 #if USE_PCH
 

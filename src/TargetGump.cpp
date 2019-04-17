@@ -3,6 +3,7 @@
 
 #include "TargetGump.h"
 #include "CrossUO.h"
+#include "api/uodata.h"
 #include "Managers/ConfigManager.h"
 
 CTargetGump g_TargetGump;

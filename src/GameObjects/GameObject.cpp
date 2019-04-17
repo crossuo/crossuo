@@ -5,6 +5,7 @@
 #include "GameEffect.h"
 #include "GameCharacter.h"
 #include <SDL_timer.h>
+#include "../api/uodata.h"
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"

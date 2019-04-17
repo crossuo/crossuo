@@ -30,14 +30,15 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
     PUSH_EVENT(UOMSG_SEND, owned, size);
     uint32_t ticks = g_Ticks;
     g_TotalSendSize += checked_cast<int>(size);
-    CPacketInfo &type = g_PacketManager.GetInfo(*buf);
+    CPacketInfo &_type = g_PacketManager.GetInfo(*buf);
+    UNUSED(_type);
     DEBUG(
         Plugin,
         "--- ^(%d) s(+%zd => %d) Plugin->Server:: %s",
         ticks - g_LastPacketTime,
         size,
         g_TotalSendSize,
-        type.Name);
+        _type.Name);
 
     g_LastPacketTime = ticks;
     g_LastSendTime = ticks;

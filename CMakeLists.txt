@@ -7,8 +7,8 @@ project(crossuo)
 #
 # Custom Build Options
 #
-option(ENABLE_LTO "Enables Link Time Optimization" OFF)
-option(XUO_BUILD_MODULES "Enables Modular Project Structure" OFF)
+option(ENABLE_LTO "Enables Link Time Optimization" ON)
+option(ENABLE_COTIRE "Disables use of cotire build time reducer" ON)
 
 list(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake

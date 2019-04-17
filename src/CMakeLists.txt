@@ -1,49 +1,3 @@
-if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-  add_definitions(-DNOMINMAX)
-  add_definitions(-DUNICODE)
-  add_definitions(-D_UNICODE)
-  add_definitions(-DWIN32_LEAN_AND_MEAN)
-  add_definitions(-D_WIN32_WINNT=0x0602)
-  add_definitions(-D_SCL_SECURE_NO_WARNINGS)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-  add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
-else()
-  #thread sanitizer - issues to fix
-  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-memory-use-after-dtor -fsanitize-blacklist=blacklist.txt")
-  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=memory -fsanitize-memory-track-origins -fsanitize-memory-use-after-dtor -fsanitize-blacklist=blacklist.txt")
-  #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
-  #set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=undefined")
-endif()
-
-add_definitions(-DUSE_WISP=0)
-add_definitions(-DUSE_BASS=0)
-add_definitions(-DUSE_TIMERTHREAD=0)
-
-if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-  # enable the latest C++ standard feature set,
-  # and also disable MSVC specific extensions
-  # to be even more standards compliant.
-  check_and_add_flag(CPPLATEST /std:c++latest)
-else()
-  # Enable C++17, but fall back to C++14 if it isn't available.
-  # CMAKE_CXX_STANDARD cannot be used here because we require C++14 or newer, not any standard.
-  check_and_add_flag(CXX17 -std=c++17)
-  if(NOT FLAG_CXX_CXX17)
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-  endif()
-  check_and_add_flag(THREADS -pthread)
-  set(THREAD "-pthread")
-endif()
-
-# These aren't actually needed for C11/C++11
-# but some dependencies require them (LLVM, libav).
-add_definitions(-D__STDC_LIMIT_MACROS)
-add_definitions(-D__STDC_CONSTANT_MACROS)
-
 set(wisp_src
   Wisp/WispApplication.cpp
   Wisp/WispConnection.cpp
@@ -327,114 +281,94 @@ set(libuo_src
 
 if(XUO_WINDOWS)
   set(crossuo_src ${crossuo_src}
-    VMQuery.cpp                 # FIXME: windows only, rap, coredump
+    VMQuery.cpp                 # FIXME: windows only, wrap, coredump
     StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
     ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
     CrossUO.rc
   )
 endif()
 
-set(xuodump_src
-  ${libuo_src}
-)
+set(XUO_DIR ${PROJECT_SOURCE_DIR}/src/)
+include_directories(${XUO_DIR})
 
-include_directories("${PROJECT_SOURCE_DIR}/src/GameObjects")
-include_directories("${PROJECT_SOURCE_DIR}/src/GLEngine")
-include_directories("${PROJECT_SOURCE_DIR}/src/GUI")
-include_directories("${PROJECT_SOURCE_DIR}/src/Gumps")
-include_directories("${PROJECT_SOURCE_DIR}/src/Managers")
-include_directories("${PROJECT_SOURCE_DIR}/src/Network")
-include_directories("${PROJECT_SOURCE_DIR}/src/ScreenStages")
-include_directories("${PROJECT_SOURCE_DIR}/src/TextEngine")
-include_directories("${PROJECT_SOURCE_DIR}/src/Utility")
-include_directories("${PROJECT_SOURCE_DIR}/src/Walker")
-include_directories("${PROJECT_SOURCE_DIR}/src/Wisp")
-include_directories("${PROJECT_SOURCE_DIR}/src/")
+set(XUO_SRCS ${crossuo_src} ${libuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
+file(GLOB XUO_HDRS ${XUO_DIR}/*.h)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  #target_link_libraries(wisp PUBLIC dl rt)
-  add_definitions(-DNULL=nullptr)
-endif()
+set(XUO_FILES ${XUO_SRCS} ${XUO_HDRS})
 
-macro(xuo_library TARGET SRCS)
-  string(REPLACE ".cpp" ".h" headers "${SRCS}")
-  string(REPLACE "Crypt/twofish.h" "" headers "${headers}")
-  string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
-  add_library(${TARGET} ${SRCS} ${headers})
-  set_target_properties(${TARGET} PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "CrossPCH.h")
-  cotire(${TARGET})
-endmacro()
-
-if(XUO_BUILD_MODULES)
-  xuo_library(wisp "${wisp_src}")
-  xuo_library(gameobjects "${gameobjects_src}")
-  xuo_library(glengine "${glengine_src}")
-  xuo_library(gui "${gui_src}")
-  xuo_library(gumps "${gumps_src}")
-  xuo_library(managers "${managers_src}")
-  xuo_library(network "${network_src}")
-  xuo_library(screenstages "${screenstages_src}")
-  xuo_library(textengine "${textengine_src}")
-  xuo_library(utility "${utility_src}")
-  xuo_library(walker "${walker_src}")
-  xuo_library(crypt "${crypt_src}")
-  xuo_library(libuo "${libuo_src}")
-
-  string(REPLACE ".cpp" ".h" crossuo_hdr "${crossuo_src}")
-  string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
-
-  add_executable(CrossUO ${crossuo_src} ${crossuo_hdr})
-  target_link_libraries(screenstages PRIVATE gumps)
-  target_link_libraries(gumps PRIVATE managers)
-  target_link_libraries(CrossUO PUBLIC managers network gumps screenstages gameobjects glengine gui textengine utility walker crypt wisp libuo)
+if(${CMAKE_VERSION} VERSION_LESS "3.8.0")
+  source_group("${XUO_DIR}" FILES ${XUO_FILES})
 else()
-  set(SRCS ${crossuo_src} ${libuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
-  string(REPLACE ".cpp" ".h" headers "${SRCS}")
-  string(REPLACE "CommonInterfaces.h" "api/commoninterfaces.h" headers "${headers}")
-
-  if(${CMAKE_VERSION} VERSION_LESS "3.8.0")
-    source_group("${PROJECT_SOURCE_DIR}/src/" FILES ${SRCS} ${headers})
-  else()
-    source_group(TREE "${PROJECT_SOURCE_DIR}/src/" FILES ${SRCS} ${headers})
-  endif()
-
-  if(NOT XUO_WINDOWS)
-    add_library(crossuo SHARED ${SRCS} ${headers})
-    target_link_libraries(crossuo PUBLIC ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
-    set_target_properties(crossuo PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "CrossPCH.h")
-    cotire(crossuo)
-    if(XUO_OSX)
-      add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo.dylib" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-      add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/unity/libcrossuo.dylib" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-    else()
-      add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo.so" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-      add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/unity/libcrossuo.so" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-    endif()
-    add_executable(client CrossApp.cpp)
-    set_target_properties(client PROPERTIES OUTPUT_NAME crossuo)
-    target_link_libraries(client PUBLIC -ldl ${THREAD})
-    add_dependencies(crossuo client)
-    add_dependencies(crossuo_unity client)
-
-    # xuodump tool
-    string(REPLACE ".cpp" ".h" xuodump_hdr "${xuodump_src}")
-    add_executable(xuodump "tools/xuodump.cpp" ${xuodump_src} ${xuodump_hdr})
-    set_target_properties(xuodump PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "tools/tools.h")
-    target_link_libraries(xuodump PUBLIC ${THREAD} -ldl)
-    target_compile_definitions(xuodump PUBLIC LIBUO=1)
-    cotire(xuodump)
-  else()
-    add_executable(crossuo ${SRCS} ${headers})
-  endif()
+  source_group(TREE "${XUO_DIR}" FILES ${XUO_FILES})
 endif()
 
-target_link_libraries(crossuo PUBLIC ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
+# Build external dependendencies
+file(GLOB external_hdr ${PROJECT_SOURCE_DIR}/external/*.h)
+add_library(external STATIC ${PROJECT_SOURCE_DIR}/external/external.cpp ${external_hdr})
+set_property(TARGET external PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(XUO_WINDOWS OR XUO_EMSC)
+  add_executable(crossuo ${XUO_FILES})
+else()
+  # crossuo loader
+  add_executable(client CrossApp.cpp)
+  set_target_properties(client PROPERTIES OUTPUT_NAME crossuo)
+  target_link_libraries(client PUBLIC -ldl ${THREAD})
+  add_library(crossuo SHARED ${XUO_FILES})
+endif()
+
+target_link_libraries(crossuo PUBLIC ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD} external)
+add_dependencies(crossuo external)
+
+if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})
+  add_dependencies(crossuo clang-format)
+endif()
 
 if(XUO_WINDOWS)
+  set_target_properties(crossuo PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+  add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
+elseif(XUO_EMSC)
+else()
+  add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
+  add_dependencies(crossuo client)
+endif()
+
+if (ENABLE_COTIRE)
+  if(XUO_WINDOWS)
+    cotire(external)
+  endif()
   set_target_properties(crossuo PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "CrossPCH.h")
   cotire(crossuo)
-  set_target_properties(crossuo PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-  set_target_properties(crossuo_unity PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-  add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
-  add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo_unity>)
+
+  if(XUO_WINDOWS)
+    set_target_properties(crossuo_unity PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+    add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
+  elseif(XUO_EMSC)
+  else()
+    add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/unity/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
+  endif()
+endif()
+
+
+
+#
+# Reusing project files in another target do not work if not cotirised exactly the same
+# but we do not want this here so we can test there is no dependency leak inside api files
+# and somewhat, clang is capable of building correctly where gcc and msvc fail
+# See: https://github.com/sakra/cotire/blob/master/MANUAL.md#using-source-files-for-multiple-targets
+#
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  if(XUO_LINUX)
+    # xuodump tool
+    set(xuodump_src ${libuo_src})
+    string(REPLACE ".cpp" ".h" xuodump_hdr "${xuodump_src}")
+    add_executable(xuodump "tools/xuodump.cpp" ${xuodump_src} ${xuodump_hdr})
+    set_target_properties(xuodump PROPERTIES COMPILE_DEFINITIONS LIBUO=1)
+    target_link_libraries(xuodump PUBLIC -ldl ${THREAD})
+    if (ENABLE_COTIRE)
+      set_target_properties(xuodump PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER FALSE)
+      set_target_properties(xuodump PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "")
+      cotire(xuodump)
+    endif()
+  endif()
 endif()
