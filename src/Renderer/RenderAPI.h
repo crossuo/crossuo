@@ -29,6 +29,7 @@ extern float4 g_ColorWhite;
 enum BlendFunc : uint8_t
 {
     SrcAlpha_OneMinusSrcAlpha = 0,
+    One_OneMinusSrcAlpha,
 
     BlendFunc_Count,
     BlendFunc_Invalid = 0xff,
@@ -90,6 +91,7 @@ enum RenderCommandType : uint8_t
 {
     Cmd_DrawQuad = 0,
     Cmd_DrawRotatedQuad,
+    Cmd_DrawCharacterSitting,
     Cmd_ClearRT,
 
     Cmd_FlushState,
@@ -197,8 +199,8 @@ struct DrawQuadCmd
 
     DrawQuadCmd(
         texture_handle_t texture,
-        uint32_t x,
-        uint32_t y,
+        int32_t x,
+        int32_t y,
         uint32_t width,
         uint32_t height,
         float u = 1.f,
@@ -215,6 +217,43 @@ struct DrawQuadCmd
         , v(v)
         , rgba(rgba)
         , mirrored(mirrored)
+    {
+    }
+};
+
+struct DrawCharacterSittingCmd
+{
+    RenderCommandHeader header;
+    texture_handle_t texture;
+    int32_t x;
+    int32_t y;
+    uint32_t width;
+    uint32_t height;
+    float h3mod;
+    float h6mod;
+    float h9mod;
+    bool mirror;
+
+    DrawCharacterSittingCmd(
+        texture_handle_t texture,
+        int32_t x,
+        int32_t y,
+        uint32_t width,
+        uint32_t height,
+        bool mirror,
+        float h3mod,
+        float h6mod,
+        float h9mod)
+        : header{ RenderCommandType::Cmd_DrawCharacterSitting }
+        , texture(texture)
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+        , h3mod(h3mod)
+        , h6mod(h6mod)
+        , h9mod(h9mod)
+        , mirror(mirror)
     {
     }
 };
@@ -461,6 +500,7 @@ bool RenderAdd_SetTexture(RenderCmdList *cmdList, SetTextureCmd *cmd);
 bool RenderAdd_DrawQuad(RenderCmdList *cmdList, DrawQuadCmd *cmds, uint32_t cmd_count);
 bool RenderAdd_DrawRotatedQuad(
     RenderCmdList *cmdList, DrawRotatedQuadCmd *cmds, uint32_t cmd_count);
+bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, DrawCharacterSittingCmd *cmd);
 
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);

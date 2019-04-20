@@ -18,13 +18,13 @@ DRAW_TEXTURE_ROTATED_FUNCTION g_GL_DrawRotated_Ptr = &CGLEngine::GL1_DrawRotated
 DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr = &CGLEngine::GL1_DrawStretched;
 DRAW_TEXTURE_FUNCTION g_GL_Draw_Ptr = &CGLEngine::GL1_Draw;
 DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr = &CGLEngine::GL1_DrawMirrored;
+DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr = &CGLEngine::GL1_DrawSitting;
 #endif
 
 BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
 BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr = &CGLEngine::GL1_BindTexture32;
 
 DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
-DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr = &CGLEngine::GL1_DrawSitting;
 DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
 DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
 
@@ -257,13 +257,13 @@ bool CGLEngine::Install()
         g_GL_DrawStretched_Ptr = &CGLEngine::GL2_DrawStretched;
         g_GL_DrawMirrored_Ptr = &CGLEngine::GL2_DrawMirrored;
         g_GL_Draw_Ptr = &CGLEngine::GL2_Draw;
+        g_GL_DrawSitting_Ptr = &CGLEngine::GL2_DrawSitting;
 #endif
 
         g_GL_BindTexture16_Ptr = &CGLEngine::GL2_BindTexture16;
         g_GL_BindTexture32_Ptr = &CGLEngine::GL2_BindTexture32;
 
         g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
-        g_GL_DrawSitting_Ptr = &CGLEngine::GL2_DrawSitting;
         g_GL_DrawShadow_Ptr = &CGLEngine::GL2_DrawShadow;
         g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
     }
@@ -695,15 +695,11 @@ void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glTranslatef(-translateX, -translateY, 0.0f);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
-#else
-    RenderAdd_SetTexture(
-        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
-#endif
 
     int width = texture.Width;
     int height = texture.Height;
@@ -724,7 +720,6 @@ void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_DrawRotated(const CGLTexture &texture, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
@@ -793,18 +788,12 @@ void CGLEngine::GL1_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
-#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL1_DrawSitting(
     const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
 {
     DEBUG_TRACE_FUNCTION;
-#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
-#else
-    RenderAdd_SetTexture(
-        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
-#endif
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
@@ -915,6 +904,7 @@ void CGLEngine::GL1_DrawSitting(
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL1_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {
@@ -1226,18 +1216,12 @@ void CGLEngine::GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
-#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL2_DrawSitting(
     const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
 {
     DEBUG_TRACE_FUNCTION;
-#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
-#else
-    RenderAdd_SetTexture(
-        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
-#endif
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
@@ -1348,6 +1332,7 @@ void CGLEngine::GL2_DrawSitting(
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL2_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {

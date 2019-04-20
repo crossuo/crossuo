@@ -48,6 +48,18 @@ bool RenderAdd_DrawRotatedQuad(RenderCmdList *cmdList, DrawRotatedQuadCmd *cmds,
     return true;
 }
 
+bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, DrawCharacterSittingCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DrawCharacterSitting(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(BlendStateCmd));

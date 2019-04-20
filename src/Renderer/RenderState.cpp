@@ -27,6 +27,19 @@ bool RenderState_FlushState(RenderState *state)
 
 bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool forced)
 {
+    static GLenum s_blendSrcComponentToOGLEnum[] = {
+        GL_SRC_ALPHA, // SrcAlpha_OneMinusSrcAlpha
+        GL_ONE        // One_OneMinusSrcAlpha
+    };
+
+    static GLenum s_blendDstComponentToOGLEnum[] = {
+        GL_ONE_MINUS_SRC_ALPHA, // SrcAlpha_OneMinusSrcAlpha
+        GL_ONE_MINUS_SRC_ALPHA  // One_OneMinusSrcAlpha
+    };
+
+    static_assert(countof(s_blendSrcComponentToOGLEnum) == BlendFunc::BlendFunc_Count);
+    static_assert(countof(s_blendSrcComponentToOGLEnum) == countof(s_blendDstComponentToOGLEnum));
+
     bool changed = false;
     if (state->blend.enabled != enabled || forced)
     {
@@ -42,24 +55,12 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
         }
     }
 
-    if (func != BlendFunc::BlendFunc_Invalid && state->blend.func != func || forced)
+    if (enabled && state->blend.func != func || forced)
     {
+        assert(func != BlendFunc::BlendFunc_Invalid);
         changed = true;
         state->blend.func = func;
-        switch (func)
-        {
-            case BlendFunc::SrcAlpha_OneMinusSrcAlpha:
-            {
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                break;
-            }
-
-            default:
-            {
-                assert(false);
-                break;
-            }
-        }
+        glBlendFunc(s_blendSrcComponentToOGLEnum[func], s_blendDstComponentToOGLEnum[func]);
     }
 
     return changed;

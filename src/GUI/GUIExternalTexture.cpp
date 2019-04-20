@@ -5,6 +5,9 @@
 #include "../Managers/ColorManager.h"
 #include "../Point.h"
 #include "../Sprite.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIExternalTexture::CGUIExternalTexture(
     CSprite *sprite, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)
@@ -83,6 +86,7 @@ void CGUIExternalTexture::Draw(bool checktrans)
         SetShaderMode();
         if ((DrawWidth != 0) || (DrawHeight != 0))
         {
+#ifndef NEW_RENDERER_ENABLED
             CGLTexture tex;
             tex.Texture = m_Sprite->Texture->Texture;
             if (DrawWidth != 0)
@@ -104,6 +108,15 @@ void CGUIExternalTexture::Draw(bool checktrans)
             }
             g_GL.GL1_Draw(tex, m_X, m_Y);
             tex.Texture = 0;
+#else
+            auto cmd = DrawQuadCmd(
+                m_Sprite->Texture->Texture,
+                m_X,
+                m_Y,
+                DrawWidth ? DrawWidth : m_Sprite->Width,
+                DrawHeight ? DrawHeight : m_Sprite->Height);
+            RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
+#endif
         }
         else
         {

@@ -9,6 +9,9 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/FontsManager.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIShopItem::CGUIShopItem(
     int serial,
@@ -267,6 +270,7 @@ void CGUIShopItem::Draw(bool checktrans)
             auto originalTexture = *(CSprite *)direction.m_Frames[0].UserData;
             if (originalTexture.Texture != nullptr)
             {
+#ifndef NEW_RENDERER_ENABLED
                 CGLTexture tex;
                 tex.Texture = originalTexture.Texture->Texture;
                 if (originalTexture.Width > 35)
@@ -289,6 +293,16 @@ void CGUIShopItem::Draw(bool checktrans)
 
                 g_GL.GL1_Draw(tex, 2, m_ImageOffset);
                 tex.Texture = 0;
+#else
+                auto quadCmd = DrawQuadCmd(
+                    originalTexture.Texture->Texture,
+                    2,
+                    m_ImageOffset,
+                    originalTexture.Width > 35 ? 35 : originalTexture.Width,
+                    originalTexture.Height > 35 ? 35 : originalTexture.Height);
+
+                RenderAdd_DrawQuad(g_renderCmdList, &quadCmd, 1);
+#endif
                 //originalTexture.Draw(2, m_ImageOffset, checktrans);
             }
         }
