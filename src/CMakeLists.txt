@@ -273,6 +273,7 @@ set(crossuo_src
   Weather.cpp
   WeatherEffect.cpp
   Utility/PingThread.cpp
+  Utility/PerfMarker.cpp
 
   Sockets.cpp
   Main.cpp
