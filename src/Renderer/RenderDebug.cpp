@@ -72,11 +72,23 @@ void ShaderUniformValueAsString(
     }
 }
 
-void RenderDraw_TextureDebug(TextureCmd *cmd, RenderState *state)
+static const char *TextureTypeAsString(RenderTextureType type)
+{
+    static const char *s_textureTypeAsStr[] = {
+        "Texture2D" // Texture2D
+    };
+
+    static_assert(countof(s_textureTypeAsStr) == RenderTextureType::RenderTextureType_Count);
+
+    assert(type < RenderTextureType::RenderTextureType_Count);
+    return s_textureTypeAsStr[type];
+}
+
+void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *state)
 {
     Info(
         Renderer,
-        "TextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - rgba: [%f, %f, %f, %f]\n",
+        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - rgba: [%f, %f, %f, %f] - mirrored: %s\n",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -87,14 +99,15 @@ void RenderDraw_TextureDebug(TextureCmd *cmd, RenderState *state)
         cmd->rgba[0],
         cmd->rgba[1],
         cmd->rgba[2],
-        cmd->rgba[3]);
+        cmd->rgba[3],
+        cmd->mirrored ? "true" : "false");
 }
 
-void RenderDraw_RotatedTextureDebug(RotatedTextureCmd *cmd, RenderState *state)
+void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *state)
 {
     Info(
         Renderer,
-        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - rgba: [%f, %f, %f, %f]\n",
+        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - rgba: [%f, %f, %f, %f] - mirrored: %s\n",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -106,12 +119,19 @@ void RenderDraw_RotatedTextureDebug(RotatedTextureCmd *cmd, RenderState *state)
         cmd->rgba[0],
         cmd->rgba[1],
         cmd->rgba[2],
-        cmd->rgba[3]);
+        cmd->rgba[3],
+        cmd->mirrored ? "true" : "false");
 }
 
 void RenderDraw_FlushStateDebug(FlushStateCmd *, RenderState *state)
 {
     Info(Renderer, "FlushStateCmd\n");
+}
+
+void RenderDraw_SetTextureDebug(SetTextureCmd *cmd, RenderState *state)
+{
+    auto typeAsStr = TextureTypeAsString(cmd->type);
+    Info(Renderer, "SetTextureCmd: texture: %d - type: %s\n", cmd->texture, typeAsStr);
 }
 
 void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *state)
@@ -211,10 +231,11 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
         RenderCommandHeader &cmdHeader = *(RenderCommandHeader *)cmd;
         switch (cmdHeader.type)
         {
-            MATCH_CASE_DRAW_DEBUG(Texture, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(RotatedTexture, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawQuad, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawRotatedQuad, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW_DEBUG(FlushState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetTexture, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(BlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
@@ -224,6 +245,9 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(ShaderLargeUniform, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(ShaderPipeline, cmd, &cmdList->state);
             MATCH_CASE_DRAW_DEBUG(DisableShaderPipeline, cmd, &cmdList->state);
+
+                // TODO SetColorMask
+                // TODO ClearRT
 
             default:
                 assert(false);

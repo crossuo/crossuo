@@ -20,7 +20,9 @@
 #include "../GameWindow.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameCharacter.h"
+#include "Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
 CAnimationManager g_AnimationManager;
 
 void *LoadSpritePixels(int width, int height, uint16_t *pixels)
@@ -1400,18 +1402,41 @@ void CAnimationManager::Draw(
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             g_GL_DrawMirrored(*spr->Texture, x, y, mirror);
+#else
+            auto textureCmd = DrawQuadCmd(
+                spr->Texture->Texture,
+                x,
+                y,
+                spr->Texture->Width,
+                spr->Texture->Height,
+                1.f,
+                1.f,
+                g_ColorWhite,
+                true);
+            RenderAdd_DrawQuad(g_renderCmdList, &textureCmd, 1);
+#endif
         }
 
         if (spectralColor)
         {
             if (m_UseBlending)
             {
+#ifndef NEW_RENDERER_ENABLED
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#else
+                RenderAdd_SetBlend(
+                    g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+#endif
             }
             else
             {
+#ifndef NEW_RENDERER_ENABLED
                 glDisable(GL_BLEND);
+#else
+                RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             }
         }
     }
