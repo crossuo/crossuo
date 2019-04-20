@@ -6,7 +6,21 @@ bool RenderState_FlushState(RenderState *state)
 {
     RenderState_SetTexture(state, state->texture.type, state->texture.texture, true);
     RenderState_SetBlend(state, state->blend.enabled, state->blend.func, true);
-    RenderState_SetStencil(state, state->stencil.enabled, true);
+    RenderState_SetStencil(
+        state,
+        state->stencil.enabled,
+        state->stencil.func,
+        state->stencil.ref,
+        state->stencil.mask,
+        state->stencil.stencilFail,
+        state->stencil.depthFail,
+        state->stencil.bothFail,
+        true);
+    RenderState_SetColorMask(state, state->colorMask);
+    // RenderState_SetShaderPipeline(state, &state->pipeline, true);
+    // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
+    // should be clear
+    // TODO add a compile-time assert to ensure any newly added command is applied or properly ignored here
 
     return true;
 }
@@ -51,19 +65,83 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
     return changed;
 }
 
-bool RenderState_SetStencil(RenderState *state, bool enabled, bool forced)
+bool RenderState_SetStencil(
+    RenderState *state,
+    bool enabled,
+    StencilFunc func,
+    uint32_t ref,
+    uint32_t mask,
+    StencilOp stencilFail,
+    StencilOp depthFail,
+    StencilOp bothFail,
+    bool forced)
 {
-    if (state->stencil.enabled != enabled || forced)
+    static GLenum s_stencilFuncToOGLFunc[] = {
+        GL_NEVER,    // StencilFunc::NeverPass
+        GL_LESS,     // StencilFunc::Less
+        GL_LEQUAL,   // StencilFunc::LessOrEqual
+        GL_GREATER,  // StencilFunc::Greater
+        GL_GEQUAL,   // StencilFunc::GreaterOrEqual
+        GL_EQUAL,    // StencilFunc::Equal
+        GL_NOTEQUAL, // StencilFunc::Different
+        GL_ALWAYS    // StencilFunc::AlwaysPass
+    };
+
+    static GLenum s_stencilOpToOGLOp[] = {
+        GL_KEEP,      // StencilOp::Keep
+        GL_ZERO,      // StencilOp::Zero
+        GL_REPLACE,   // StencilOp::Replace
+        GL_INCR,      // StencilOp::IncrementClamp
+        GL_INCR_WRAP, // StencilOp::IncrementWrap
+        GL_DECR,      // StencilOp::DecrementClamp,
+        GL_DECR_WRAP, // StencilOp::DecrementWrap,
+        GL_INVERT     // StencilOp::Invert
+    };
+
+    static_assert(countof(s_stencilFuncToOGLFunc) == StencilFunc::StencilFunc_Count);
+    static_assert(countof(s_stencilOpToOGLOp) == StencilOp::StencilOp_Count);
+
+    if (forced || state->stencil.enabled != enabled ||
+        (enabled && (state->stencil.func != func || state->stencil.stencilFail != stencilFail ||
+                     state->stencil.depthFail != depthFail || state->stencil.bothFail != bothFail ||
+                     state->stencil.ref != ref || state->stencil.mask != mask)))
     {
         state->stencil.enabled = enabled;
+        state->stencil.func = func;
+        state->stencil.stencilFail = stencilFail;
+        state->stencil.depthFail = depthFail;
+        state->stencil.bothFail = bothFail;
+        state->stencil.ref = ref;
+        state->stencil.mask = mask;
         if (enabled)
         {
             glEnable(GL_STENCIL_TEST);
+            glStencilFunc(s_stencilFuncToOGLFunc[func], ref, mask);
+            glStencilOp(
+                s_stencilOpToOGLOp[stencilFail],
+                s_stencilOpToOGLOp[depthFail],
+                s_stencilOpToOGLOp[bothFail]);
         }
         else
         {
             glDisable(GL_STENCIL_TEST);
         }
+        return true;
+    }
+
+    return false;
+}
+
+bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
+{
+    if (forced || state->colorMask != mask)
+    {
+        state->colorMask = mask;
+        glColorMask(
+            mask & ColorMask::Red ? GL_TRUE : GL_FALSE,
+            mask & ColorMask::Green ? GL_TRUE : GL_FALSE,
+            mask & ColorMask::Blue ? GL_TRUE : GL_FALSE,
+            mask & ColorMask::Alpha ? GL_TRUE : GL_FALSE);
         return true;
     }
 
@@ -135,10 +213,10 @@ bool RenderState_SetShaderLargeUniform(
 {
     // FIXME leave this commented until shader usage is consistent throughout drawables
     // assert(state->pipeline.program != RENDER_SHADERPROGRAM_INVALID);
-    if (state->pipeline.program == RENDER_SHADERPROGRAM_INVALID)
-    {
-        return false;
-    }
+    // if (state->pipeline.program == RENDER_SHADERPROGRAM_INVALID)
+    // {
+    //     return false;
+    // }
 
     assert(id < state->pipeline.uniformCount);
     auto location = state->pipeline.uniforms[id].location;
@@ -179,7 +257,7 @@ bool RenderState_SetShaderPipeline(RenderState *state, ShaderPipeline *pipeline,
 
 bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
 {
-    if (state->pipeline.program != RENDER_SHADERPROGRAM_INVALID || forced)
+    // if (state->pipeline.program != RENDER_SHADERPROGRAM_INVALID || forced)
     {
         glUseProgram(0);
         state->pipeline = ShaderPipeline{};

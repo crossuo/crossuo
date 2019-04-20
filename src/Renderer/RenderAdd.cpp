@@ -2,73 +2,50 @@
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
 
-TextureCmd RenderAdd_TextureCmd(
-    texture_handle_t texture,
-    uint32_t x,
-    uint32_t y,
-    uint32_t width,
-    uint32_t height,
-    float u,
-    float v,
-    float4 rgba)
+bool RenderAdd_SetTexture(RenderCmdList *cmdList, SetTextureCmd *cmd)
 {
-    return TextureCmd(texture, x, y, width, height, u, v, rgba);
-}
-
-RotatedTextureCmd RenderAdd_RotatedTextureCmd(
-    texture_handle_t texture,
-    uint32_t x,
-    uint32_t y,
-    uint32_t width,
-    uint32_t height,
-    float angle,
-    float u,
-    float v,
-    float4 rgba)
-{
-    return RotatedTextureCmd(texture, x, y, width, height, angle, u, v, rgba);
-}
-
-bool RenderAdd_Texture(RenderCmdList *cmdList, TextureCmd *textures, uint32_t texture_count)
-{
-    auto ret = Render_AppendCmd(cmdList, textures, texture_count * sizeof(TextureCmd));
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
     if (!cmdList->immediateMode)
     {
         return ret;
     }
 
-    // FIXME RenderDraw_Texture(textures, texture_count, cmdList->state);
-    ret = true;
-    for (auto i = 0u; i < texture_count; i++)
-    {
-        ret &= RenderDraw_Texture(textures + i, &cmdList->state);
-    }
-
-    return ret;
+    RenderDraw_SetTexture(cmd, &cmdList->state);
+    return true;
 }
 
-bool RenderAdd_RotatedTexture(
-    RenderCmdList *cmdList, RotatedTextureCmd *textures, uint32_t texture_count)
+bool RenderAdd_DrawQuad(RenderCmdList *cmdList, DrawQuadCmd *cmds, uint32_t cmd_count)
 {
-    auto ret = Render_AppendCmd(cmdList, textures, texture_count * sizeof(RotatedTextureCmd));
+    auto ret = Render_AppendCmd(cmdList, cmds, cmd_count * sizeof(*cmds));
     if (!cmdList->immediateMode)
     {
         return ret;
     }
 
-    // FIXME RenderDraw_Texture(textures, texture_count, cmdList->state);
-    ret = true;
-    for (auto i = 0u; i < texture_count; i++)
+    // FIXME RenderDraw_DrawQuad(textures, texture_count, cmdList->state);
+    for (auto i = 0u; i < cmd_count; i++)
     {
-        ret &= RenderDraw_RotatedTexture(textures + i, &cmdList->state);
+        RenderDraw_DrawQuad(cmds + i, &cmdList->state);
     }
 
-    return ret;
+    return true;
 }
 
-BlendStateCmd RenderAdd_Blend(BlendFunc func)
+bool RenderAdd_DrawRotatedQuad(RenderCmdList *cmdList, DrawRotatedQuadCmd *cmds, uint32_t cmd_count)
 {
-    return BlendStateCmd(func);
+    auto ret = Render_AppendCmd(cmdList, cmds, cmd_count * sizeof(*cmds));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    // FIXME RenderDraw_DrawQuad(textures, texture_count, cmdList->state);
+    for (auto i = 0u; i < cmd_count; i++)
+    {
+        RenderDraw_DrawRotatedQuad(cmds + i, &cmdList->state);
+    }
+
+    return true;
 }
 
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
@@ -79,7 +56,8 @@ bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
         return ret;
     }
 
-    return RenderDraw_BlendState(cmd, &cmdList->state);
+    RenderDraw_BlendState(cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList)
@@ -91,23 +69,8 @@ bool RenderAdd_DisableBlend(RenderCmdList *cmdList)
         return ret;
     }
 
-    return RenderDraw_DisableBlendState(&cmd, &cmdList->state);
-}
-
-StencilStateCmd RenderAdd_Stencil()
-{
-    return StencilStateCmd();
-}
-
-ShaderUniformCmd RenderAdd_ShaderUniformCmd(uint32_t id, void *value, ShaderUniformType type)
-{
-    return ShaderUniformCmd(id, value, type);
-}
-
-ShaderLargeUniformCmd
-RenderAdd_ShaderLargeUniformCmd(uint32_t id, void *value, uint32_t count, ShaderUniformType type)
-{
-    return ShaderLargeUniformCmd(id, value, count, type);
+    RenderDraw_DisableBlendState(&cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state)
@@ -118,7 +81,8 @@ bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state)
         return ret;
     }
 
-    return RenderDraw_StencilState(state, &cmdList->state);
+    RenderDraw_StencilState(state, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_DisableStencil(RenderCmdList *cmdList)
@@ -130,7 +94,32 @@ bool RenderAdd_DisableStencil(RenderCmdList *cmdList)
         return ret;
     }
 
-    return RenderDraw_DisableStencilState(&cmd, &cmdList->state);
+    RenderDraw_DisableStencilState(&cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetColorMask(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_ClearRT(RenderCmdList *cmdList, ClearRTCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_ClearRT(cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, ShaderUniformCmd *cmd)
@@ -141,7 +130,8 @@ bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, ShaderUniformCmd *cmd)
         return ret;
     }
 
-    return RenderDraw_ShaderUniform(cmd, &cmdList->state);
+    RenderDraw_ShaderUniform(cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_SetShaderLargeUniform(RenderCmdList *cmdList, ShaderLargeUniformCmd *cmd)
@@ -152,7 +142,8 @@ bool RenderAdd_SetShaderLargeUniform(RenderCmdList *cmdList, ShaderLargeUniformC
         return ret;
     }
 
-    return RenderDraw_ShaderLargeUniform(cmd, &cmdList->state);
+    RenderDraw_ShaderLargeUniform(cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_SetShaderPipeline(RenderCmdList *cmdList, ShaderPipeline *pipeline)
@@ -164,7 +155,8 @@ bool RenderAdd_SetShaderPipeline(RenderCmdList *cmdList, ShaderPipeline *pipelin
         return ret;
     }
 
-    return RenderDraw_ShaderPipeline(&cmd, &cmdList->state);
+    RenderDraw_ShaderPipeline(&cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_DisableShaderPipeline(RenderCmdList *cmdList)
@@ -176,7 +168,8 @@ bool RenderAdd_DisableShaderPipeline(RenderCmdList *cmdList)
         return ret;
     }
 
-    return RenderDraw_DisableShaderPipeline(&cmd, &cmdList->state);
+    RenderDraw_DisableShaderPipeline(&cmd, &cmdList->state);
+    return true;
 }
 
 bool RenderAdd_FlushState(RenderCmdList *cmdList)
@@ -188,5 +181,6 @@ bool RenderAdd_FlushState(RenderCmdList *cmdList)
         return ret;
     }
 
-    return RenderDraw_FlushState(&cmd, &cmdList->state);
+    RenderDraw_FlushState(&cmd, &cmdList->state);
+    return true;
 }

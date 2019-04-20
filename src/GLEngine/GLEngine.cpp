@@ -7,19 +7,25 @@
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/LandObject.h"
 #include "../Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGLEngine g_GL;
+
+#ifndef NEW_RENDERER_ENABLED
+DRAW_TEXTURE_ROTATED_FUNCTION g_GL_DrawRotated_Ptr = &CGLEngine::GL1_DrawRotated;
+DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr = &CGLEngine::GL1_DrawStretched;
+DRAW_TEXTURE_FUNCTION g_GL_Draw_Ptr = &CGLEngine::GL1_Draw;
+DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr = &CGLEngine::GL1_DrawMirrored;
+#endif
 
 BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
 BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr = &CGLEngine::GL1_BindTexture32;
 
 DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
-DRAW_TEXTURE_FUNCTION g_GL_Draw_Ptr = &CGLEngine::GL1_Draw;
-DRAW_TEXTURE_ROTATED_FUNCTION g_GL_DrawRotated_Ptr = &CGLEngine::GL1_DrawRotated;
-DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr = &CGLEngine::GL1_DrawMirrored;
 DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr = &CGLEngine::GL1_DrawSitting;
 DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
-DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr = &CGLEngine::GL1_DrawStretched;
 DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
 
 CGLEngine::CGLEngine()
@@ -38,7 +44,7 @@ CGLEngine::~CGLEngine()
     Uninstall();
 }
 
-//#define OGL_DEBUGCONTEXT_ENABLED
+#define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
 #define OGL_DEBUGMSG_TYPE_COUNT (8)
@@ -246,16 +252,19 @@ bool CGLEngine::Install()
         glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(positionArray), &positionArray[0], GL_STATIC_DRAW);
 
+#ifndef NEW_RENDERER_ENABLED
+        g_GL_DrawRotated_Ptr = &CGLEngine::GL2_DrawRotated;
+        g_GL_DrawStretched_Ptr = &CGLEngine::GL2_DrawStretched;
+        g_GL_DrawMirrored_Ptr = &CGLEngine::GL2_DrawMirrored;
+        g_GL_Draw_Ptr = &CGLEngine::GL2_Draw;
+#endif
+
         g_GL_BindTexture16_Ptr = &CGLEngine::GL2_BindTexture16;
         g_GL_BindTexture32_Ptr = &CGLEngine::GL2_BindTexture32;
 
         g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
-        g_GL_Draw_Ptr = &CGLEngine::GL2_Draw;
-        g_GL_DrawRotated_Ptr = &CGLEngine::GL2_DrawRotated;
-        g_GL_DrawMirrored_Ptr = &CGLEngine::GL2_DrawMirrored;
         g_GL_DrawSitting_Ptr = &CGLEngine::GL2_DrawSitting;
         g_GL_DrawShadow_Ptr = &CGLEngine::GL2_DrawShadow;
-        g_GL_DrawStretched_Ptr = &CGLEngine::GL2_DrawStretched;
         g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
     }
 
@@ -571,6 +580,7 @@ void CGLEngine::ClearScissorList()
     glDisable(GL_SCISSOR_TEST);
 }
 
+#if NEW_RENDERER
 inline void CGLEngine::BindTexture(GLuint texture)
 {
     DEBUG_TRACE_FUNCTION;
@@ -581,6 +591,7 @@ inline void CGLEngine::BindTexture(GLuint texture)
         glBindTexture(GL_TEXTURE_2D, texture);
     }
 }
+#endif
 
 void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 {
@@ -648,7 +659,12 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     float translateX = x - 22.0f;
     float translateY = y - 22.0f;
@@ -682,7 +698,12 @@ void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
 void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     int width = texture.Width;
     int height = texture.Height;
@@ -703,6 +724,7 @@ void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_DrawRotated(const CGLTexture &texture, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
@@ -771,12 +793,18 @@ void CGLEngine::GL1_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL1_DrawSitting(
     const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
@@ -891,7 +919,12 @@ void CGLEngine::GL1_DrawSitting(
 void CGLEngine::GL1_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     float width = (float)texture.Width;
     float height = texture.Height / 2.0f;
@@ -932,6 +965,7 @@ void CGLEngine::GL1_DrawShadow(const CGLTexture &texture, int x, int y, bool mir
     glTranslatef((GLfloat)-x, -translateY, 0.0f);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_DrawStretched(
     const CGLTexture &texture, int x, int y, int drawWidth, int drawHeight)
 {
@@ -959,6 +993,7 @@ void CGLEngine::GL1_DrawStretched(
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
@@ -971,8 +1006,12 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
 
     for (int i = 0; i < 9; i++)
     {
+#ifndef NEW_RENDERER_ENABLED
         BindTexture(th[i]->Texture);
-
+#else
+        RenderAdd_SetTexture(
+            g_renderCmdList, &SetTextureCmd(th[i]->Texture, RenderTextureType::Texture2D));
+#endif
         int drawWidth = th[i]->Width;
         int drawHeight = th[i]->Height;
         float drawCountX = 1.0f;
@@ -1088,7 +1127,12 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
 void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     float translateX = x - 22.0f;
     float translateY = y - 22.0f;
@@ -1113,6 +1157,7 @@ void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glTranslatef(-translateX, -translateY, 0.0f);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL2_Draw(const CGLTexture &texture, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1181,12 +1226,18 @@ void CGLEngine::GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL2_DrawSitting(
     const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
@@ -1301,7 +1352,12 @@ void CGLEngine::GL2_DrawSitting(
 void CGLEngine::GL2_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
+#else
+    RenderAdd_SetTexture(
+        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
+#endif
 
     float width = (float)texture.Width;
     float height = texture.Height / 2.0f;
@@ -1347,6 +1403,7 @@ void CGLEngine::GL2_DrawShadow(const CGLTexture &texture, int x, int y, bool mir
     glTranslatef((GLfloat)-x, -translateY, 0.0f);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL2_DrawStretched(
     const CGLTexture &texture, int x, int y, int drawWidth, int drawHeight)
 {
@@ -1374,13 +1431,19 @@ void CGLEngine::GL2_DrawStretched(
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 9; i++)
     {
+#ifndef NEW_RENDERER_ENABLED
         BindTexture(th[i]->Texture);
+#else
+        RenderAdd_SetTexture(
+            g_renderCmdList, &SetTextureCmd(th[i]->Texture, RenderTextureType::Texture2D));
+#endif
 
         int drawWidth = th[i]->Width;
         int drawHeight = th[i]->Height;

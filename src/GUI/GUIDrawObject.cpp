@@ -39,28 +39,38 @@ void CGUIDrawObject::SetShaderMode()
     {
         if (PartialHue)
         {
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+#else
             auto uniformValue = SDM_PARTIAL_HUE;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &RenderAdd_ShaderUniformCmd(
-                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+#else
             auto uniformValue = SDM_COLORED;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &RenderAdd_ShaderUniformCmd(
-                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
         auto uniformValue = SDM_NO_COLOR;
         RenderAdd_SetShaderUniform(
             g_renderCmdList,
-            &RenderAdd_ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
     }
 }
 
