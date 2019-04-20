@@ -12,7 +12,7 @@
 
 static const char *BlendFuncAsString(BlendFunc func)
 {
-    static const char *s_funcToText[] = { "SrcAlpha_OneMinusSrcAlpha" };
+    static const char *s_funcToText[] = { "SrcAlpha_OneMinusSrcAlpha", "One_OneMinusSrcAlpha" };
     static_assert(countof(s_funcToText) == BlendFunc::BlendFunc_Count);
 
     if (func == BlendFunc::BlendFunc_Invalid)
@@ -248,6 +248,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
 
                 // TODO SetColorMask
                 // TODO ClearRT
+                // TODO DrawCharacterSitting
 
             default:
                 assert(false);

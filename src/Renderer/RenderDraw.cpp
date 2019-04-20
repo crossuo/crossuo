@@ -97,6 +97,128 @@ bool RenderDraw_DrawRotatedQuad(DrawRotatedQuadCmd *cmd, RenderState *state)
     return true;
 }
 
+bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *state)
+{
+    static const auto s_sittingCharacterOffset = 8.f;
+
+    ScopedPerfMarker(__FUNCTION__);
+
+    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+
+    auto x = (GLfloat)cmd->x;
+    auto y = (GLfloat)cmd->y;
+    float width = (float)cmd->width;
+    float height = (float)cmd->height;
+    float h03 = height * cmd->h3mod;
+    float h06 = height * cmd->h6mod;
+    float h09 = height * cmd->h9mod;
+    float widthOffset = (float)(width + s_sittingCharacterOffset);
+
+    glTranslatef(x, y, 0.0f);
+
+    glBegin(GL_TRIANGLE_STRIP);
+
+    if (cmd->mirror)
+    {
+        // TODO this won't end well... add a isAlmostZeroF(float val)
+        if (cmd->h3mod != 0.0f)
+        {
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex2f(width, 0);
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex2f(0, 0);
+            glTexCoord2f(0.0f, cmd->h3mod);
+            glVertex2f(width, h03);
+            glTexCoord2f(1.0f, cmd->h3mod);
+            glVertex2f(0, h03);
+        }
+
+        if (cmd->h6mod != 0.0f)
+        {
+            if (cmd->h3mod == 0.0f)
+            {
+                glTexCoord2f(0.0f, 0.0f);
+                glVertex2f(width, 0);
+                glTexCoord2f(1.0f, 0.0f);
+                glVertex2f(0, 0);
+            }
+
+            glTexCoord2f(0.0f, cmd->h6mod);
+            glVertex2f(widthOffset, h06);
+            glTexCoord2f(1.0f, cmd->h6mod);
+            glVertex2f(s_sittingCharacterOffset, h06);
+        }
+
+        if (cmd->h9mod != 0.0f)
+        {
+            if (cmd->h6mod == 0.0f)
+            {
+                glTexCoord2f(0.0f, 0.0f);
+                glVertex2f(widthOffset, 0);
+                glTexCoord2f(1.0f, 0.0f);
+                glVertex2f(s_sittingCharacterOffset, 0);
+            }
+
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex2f(widthOffset, h09);
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex2f(s_sittingCharacterOffset, h09);
+        }
+    }
+    else
+    {
+        if (cmd->h3mod != 0.0f)
+        {
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex2f(s_sittingCharacterOffset, 0);
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex2f(widthOffset, 0);
+            glTexCoord2f(0.0f, cmd->h3mod);
+            glVertex2f(s_sittingCharacterOffset, h03);
+            glTexCoord2f(1.0f, cmd->h3mod);
+            glVertex2f(widthOffset, h03);
+        }
+
+        if (cmd->h6mod != 0.0f)
+        {
+            if (cmd->h3mod == 0.0f)
+            {
+                glTexCoord2f(0.0f, 0.0f);
+                glVertex2f(s_sittingCharacterOffset, 0);
+                glTexCoord2f(1.0f, 0.0f);
+                glVertex2f(width + s_sittingCharacterOffset, 0);
+            }
+
+            glTexCoord2f(0.0f, cmd->h6mod);
+            glVertex2f(0, h06);
+            glTexCoord2f(1.0f, cmd->h6mod);
+            glVertex2f(width, h06);
+        }
+
+        if (cmd->h9mod != 0.0f)
+        {
+            if (cmd->h6mod == 0.0f)
+            {
+                glTexCoord2f(0.0f, 0.0f);
+                glVertex2f(0, 0);
+                glTexCoord2f(1.0f, 0.0f);
+                glVertex2f(width, 0);
+            }
+
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex2f(0, h09);
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex2f(width, h09);
+        }
+    }
+
+    glEnd();
+
+    glTranslatef(-x, -y, 0.0f);
+
+    return true;
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -193,6 +315,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
         {
             MATCH_CASE_DRAW(DrawQuad, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawRotatedQuad, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawCharacterSitting, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ClearRT, ret, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)

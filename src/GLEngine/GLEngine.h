@@ -34,9 +34,8 @@ extern DRAW_TEXTURE_FUNCTION g_GL_Draw_Ptr;
 extern DRAW_TEXTURE_ROTATED_FUNCTION g_GL_DrawRotated_Ptr;
 extern DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr;
 extern DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr;
-#endif
-
 extern DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr;
+#endif
 
 extern DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr;
 
@@ -47,13 +46,13 @@ extern DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr;
 #define g_GL_Draw (g_GL.*(g_GL_Draw_Ptr))
 #define g_GL_DrawMirrored (g_GL.*(g_GL_DrawMirrored_Ptr))
 #define g_GL_DrawStretched (g_GL.*(g_GL_DrawStretched_Ptr))
+#define g_GL_DrawSitting (g_GL.*(g_GL_DrawSitting_Ptr))
 #endif
 
 #define g_GL_BindTexture16 (g_GL.*(g_GL_BindTexture16_Ptr))
 #define g_GL_BindTexture32 (g_GL.*(g_GL_BindTexture32_Ptr))
 
 #define g_GL_DrawLandTexture (g_GL.*(g_GL_DrawLandTexture_Ptr))
-#define g_GL_DrawSitting (g_GL.*(g_GL_DrawSitting_Ptr))
 #define g_GL_DrawShadow (g_GL.*(g_GL_DrawShadow_Ptr))
 #define g_GL_DrawResizepic (g_GL.*(g_GL_DrawResizepic_Ptr))
 
@@ -66,7 +65,9 @@ public:
     bool Drawing = false;
     bool CanUseFrameBuffer = false;
     bool CanUseBuffer = false;
+#ifndef NEW_RENDERER_ENABLED
     float SittingCharacterOffset = 8.0f;
+#endif
     GLuint PositionBuffer = 0;
     SDL_GLContext m_context;
 
@@ -140,13 +141,12 @@ public:
     //Нарисовать текстуру ландшафта
     void GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);
 
+#ifndef NEW_RENDERER_ENABLED
     //Нарисовать текстуру
     void GL1_Draw(const CGLTexture &texture, int x, int y);
 
-#ifndef NEW_RENDERER_ENABLED
     //Нарисовать повернутую текстуру
     void GL1_DrawRotated(const CGLTexture &texture, int x, int y, float angle);
-#endif
 
     //Нарисовать текстуру с возможностью зеркального отражения
     void GL1_DrawMirrored(const CGLTexture &texture, int x, int y, bool mirror);
@@ -160,6 +160,7 @@ public:
         float h3mod,
         float h6mod,
         float h9mod);
+#endif
 
     //Нарисовать тень
     void GL1_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror);
@@ -183,13 +184,12 @@ public:
     //Нарисовать текстуру ландшафта
     void GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);
 
+#ifndef NEW_RENDERER_ENABLED
     //Нарисовать текстуру
     void GL2_Draw(const CGLTexture &texture, int x, int y);
 
-#ifndef NEW_RENDERER_ENABLED
     //Нарисовать повернутую текстуру
     void GL2_DrawRotated(const CGLTexture &texture, int x, int y, float angle);
-#endif
 
     //Нарисовать текстуру с возможностью зеркального отражения
     void GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool mirror);
@@ -203,6 +203,7 @@ public:
         float h3mod,
         float h6mod,
         float h9mod);
+#endif
 
     //Нарисовать тень
     void GL2_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror);

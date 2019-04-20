@@ -1398,7 +1398,21 @@ void CAnimationManager::Draw(
                     }
                 }
             }
+#ifndef NEW_RENDERER_ENABLED
             g_GL_DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
+#else
+            auto cmd = DrawCharacterSittingCmd(
+                spr->Texture->Texture,
+                x,
+                y,
+                spr->Texture->Width,
+                spr->Texture->Height,
+                mirror,
+                h3mod,
+                h6mod,
+                h9mod);
+            RenderAdd_DrawCharacterSitting(g_renderCmdList, &cmd);
+#endif
         }
         else
         {

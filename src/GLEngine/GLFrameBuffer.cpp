@@ -2,6 +2,9 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Backend.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGLFrameBuffer::CGLFrameBuffer()
 {
@@ -128,6 +131,11 @@ void CGLFrameBuffer::Draw(int x, int y)
     if (g_GL.CanUseFrameBuffer && m_Ready)
     {
         g_GL.OldTexture = 0;
+#ifndef NEW_RENDERER_ENABLED
         g_GL.GL1_Draw(Texture, x, y);
+#else
+        auto cmd = DrawQuadCmd(Texture.Texture, x, y, Texture.Width, Texture.Height);
+        RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
+#endif
     }
 }

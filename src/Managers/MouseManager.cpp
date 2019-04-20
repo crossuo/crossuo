@@ -15,6 +15,9 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "../Walker/PathFinder.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CMouseManager g_MouseManager;
 
@@ -492,11 +495,22 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (auraColor != 0u)
                 {
+#ifndef NEW_RENDERER_ENABLED
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-                    glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
                     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+                    RenderAdd_SetBlend(
+                        g_renderCmdList, &BlendStateCmd(BlendFunc::One_OneMinusSrcAlpha));
+                    auto uniformValue = SDM_NO_COLOR;
+                    RenderAdd_SetShaderUniform(
+                        g_renderCmdList,
+                        &ShaderUniformCmd(
+                            g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
+                    glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
 
+#ifndef NEW_RENDERER_ENABLED
                     CGLTexture tex;
                     tex.Texture = g_AuraTexture.Texture;
                     tex.Width = 35;
@@ -506,8 +520,17 @@ void CMouseManager::Draw(uint16_t id)
 
                     tex.Texture = 0;
 
+#else
+                    auto quadCmd = DrawQuadCmd(g_AuraTexture.Texture, x - 6, y - 2, 35, 35);
+                    RenderAdd_DrawQuad(g_renderCmdList, &quadCmd, 1);
+#endif
                     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+#ifndef NEW_RENDERER_ENABLED
                     glDisable(GL_BLEND);
+#else
+                    RenderAdd_DisableBlend(g_renderCmdList);
+#endif
                 }
             }
         }
