@@ -12,6 +12,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
+#include "Renderer/RenderAPI.h"
 
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };
 
@@ -502,8 +503,20 @@ void CGumpWorldMap::LoadMap(int map)
 
         if (buf.size() == wantSize)
         {
+#ifndef NEW_RENDERER_ENABLED
             g_GL_BindTexture16(
                 g_MapTexture[map], g_MapSize[map].Width, g_MapSize[map].Height, &buf[0]);
+#else
+            g_MapTexture[map].Width = g_MapSize[map].Width;
+            g_MapTexture[map].Height = g_MapSize[map].Height;
+            g_MapTexture[map].Texture = Render_CreateTexture2D(
+                g_MapSize[map].Width,
+                g_MapSize[map].Height,
+                RenderTextureGPUFormat::RGB5_A1,
+                &buf[0],
+                RenderTextureFormat::Unsigned_A1_BGR5);
+            assert(g_MapTexture[map].Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
         }
         else
         {

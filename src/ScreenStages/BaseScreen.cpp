@@ -29,7 +29,7 @@ void CBaseScreen::InitRenderList()
 #else
     const bool immediateMode = false;
 #endif
-    m_RenderCmdList = Render_CmdList(
+    m_RenderCmdList = RenderCmdList(
         m_RenderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
 
     g_renderCmdList = &m_RenderCmdList;

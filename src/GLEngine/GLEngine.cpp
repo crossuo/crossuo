@@ -21,8 +21,10 @@ DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr = &CGLEngine::GL1_DrawMirro
 DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr = &CGLEngine::GL1_DrawSitting;
 #endif
 
+#ifndef NEW_RENDERER_ENABLED
 BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
 BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr = &CGLEngine::GL1_BindTexture32;
+#endif
 
 DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
 DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
@@ -260,8 +262,10 @@ bool CGLEngine::Install()
         g_GL_DrawSitting_Ptr = &CGLEngine::GL2_DrawSitting;
 #endif
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL_BindTexture16_Ptr = &CGLEngine::GL2_BindTexture16;
         g_GL_BindTexture32_Ptr = &CGLEngine::GL2_BindTexture32;
+#endif
 
         g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
         g_GL_DrawShadow_Ptr = &CGLEngine::GL2_DrawShadow;
@@ -334,6 +338,7 @@ void CGLEngine::UpdateRect()
     g_GumpManager.RedrawAll();
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
@@ -380,6 +385,7 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     texture.Height = height;
     texture.Texture = tex;
 }
+#endif
 
 void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
 {
@@ -402,6 +408,7 @@ void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
     texture.MirroredVertexBuffer = vbo[1];
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
@@ -415,6 +422,7 @@ void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, ui
     GL1_BindTexture32(texture, width, height, pixels);
     GL2_CreateArrays(texture, width, height);
 }
+#endif
 
 void CGLEngine::BeginDraw()
 {

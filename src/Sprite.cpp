@@ -4,12 +4,25 @@
 #include "Backend.h"
 #include "Sprite.h"
 #include "Managers/MouseManager.h"
+#include "Renderer/RenderAPI.h"
 
 void CSprite::LoadSprite16(int width, int height, uint16_t *pixels, bool skipHitMask)
 {
     if (Texture == nullptr)
         Texture = new CGLTexture;
+#ifndef NEW_RENDERER_ENABLED
     g_GL_BindTexture16(*Texture, width, height, pixels);
+#else
+    Texture->Width = width;
+    Texture->Height = height;
+    Texture->Texture = Render_CreateTexture2D(
+        width,
+        height,
+        RenderTextureGPUFormat::RGB5_A1,
+        pixels,
+        RenderTextureFormat::Unsigned_A1_BGR5);
+    assert(Texture->Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
     Init(width, height, pixels, skipHitMask);
 }
 
@@ -17,7 +30,15 @@ void CSprite::LoadSprite32(int width, int height, uint32_t *pixels, bool skipHit
 {
     if (Texture == nullptr)
         Texture = new CGLTexture;
+#ifndef NEW_RENDERER_ENABLED
     g_GL_BindTexture32(*Texture, width, height, pixels);
+#else
+    Texture->Width = width;
+    Texture->Height = height;
+    Texture->Texture = Render_CreateTexture2D(
+        width, height, RenderTextureGPUFormat::RGBA4, pixels, RenderTextureFormat::Unsigned_RGBA8);
+    assert(Texture->Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
     Init(width, height, pixels, skipHitMask);
 }
 
