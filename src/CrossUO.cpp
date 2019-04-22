@@ -497,7 +497,19 @@ bool CGame::Install()
 
     for (int i = 0; i < 2; i++)
     {
+#ifndef NEW_RENDERER_ENABLED
         g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
+#else
+        g_TextureGumpState[i].Width = 10;
+        g_TextureGumpState[i].Height = 14;
+        g_TextureGumpState[i].Texture = Render_CreateTexture2D(
+            10,
+            14,
+            RenderTextureGPUFormat::RGB5_A1,
+            &pdwlt[i][0],
+            RenderTextureFormat::Unsigned_A1_BGR5);
+        assert(g_TextureGumpState[i].Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
     }
 
     memset(&m_WinterTile[0], 0, sizeof(m_WinterTile));
@@ -4391,8 +4403,19 @@ void CGame::CreateAuraTexture()
             pixel = (value << 24) | (value << 16) | (value << 8) | value;
         }
     }
-    // FIXME: gfx
+#ifndef NEW_RENDERER_ENABLED
     g_GL_BindTexture32(g_AuraTexture, width, height, pixels.data());
+#else
+    g_AuraTexture.Width = width;
+    g_AuraTexture.Height = height;
+    g_AuraTexture.Texture = Render_CreateTexture2D(
+        width,
+        height,
+        RenderTextureGPUFormat::RGBA4,
+        pixels.data(),
+        RenderTextureFormat::Unsigned_RGBA8);
+    assert(g_AuraTexture.Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
 }
 
 void CGame::CreateObjectHandlesBackground()

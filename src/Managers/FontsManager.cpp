@@ -8,6 +8,7 @@
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Application.h"
+#include "Renderer/RenderAPI.h"
 
 CFontsManager g_FontManager;
 

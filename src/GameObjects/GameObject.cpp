@@ -21,6 +21,7 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"
 #include "../TextEngine/TextData.h"
+#include "Renderer/RenderAPI.h"
 
 static int s_objectHandleOffsetY = 25;
 static int s_bodyHandleOffsetY = 15;
@@ -282,8 +283,19 @@ void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
             }
         }
     }
-    // FIXME: gfx
+#ifndef NEW_RENDERER_ENABLED
     g_GL_BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
+#else
+    m_TextureObjectHandles.Width = g_ObjectHandlesWidth;
+    m_TextureObjectHandles.Height = g_ObjectHandlesHeight;
+    m_TextureObjectHandles.Texture = Render_CreateTexture2D(
+        g_ObjectHandlesWidth,
+        g_ObjectHandlesHeight,
+        RenderTextureGPUFormat::RGB5_A1,
+        pixels,
+        RenderTextureFormat::Unsigned_A1_BGR5);
+    assert(m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
 }
 
 void CGameObject::AddText(CTextData *msg)

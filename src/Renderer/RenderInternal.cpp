@@ -193,6 +193,58 @@ uint32_t Render_GetUniformId(ShaderPipeline *pipeline, const char *uniform)
     return uniformId;
 }
 
+texture_handle_t Render_CreateTexture2D(
+    uint32_t width,
+    uint32_t height,
+    RenderTextureGPUFormat gpuFormat,
+    void *pixels,
+    RenderTextureFormat pixelsFormat)
+{
+    static GLenum s_gpuFormatToOGLFormat[] = {
+        GL_RGBA4,   // RGBA4
+        GL_RGB5_A1, // RGB5_A1
+    };
+
+    static GLenum s_pixelFormatToOGLFormat[] = {
+        GL_UNSIGNED_INT_8_8_8_8,       // Unsigned_RGBA8
+        GL_UNSIGNED_SHORT_1_5_5_5_REV, // Unsigned_A1_BGR5
+    };
+
+    texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        s_gpuFormatToOGLFormat[gpuFormat],
+        width,
+        height,
+        0,
+        GL_BGRA,
+        s_pixelFormatToOGLFormat[pixelsFormat],
+        pixels);
+
+    return tex;
+}
+
+bool Render_DestroyTexture(texture_handle_t texture)
+{
+    assert(texture != RENDER_TEXTUREHANDLE_INVALID);
+    if (texture != RENDER_TEXTUREHANDLE_INVALID)
+    {
+        glDeleteTextures(1, &texture);
+        return true;
+    }
+
+    return false;
+}
+
 bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize)
 {
     assert(cmdList);
@@ -208,15 +260,6 @@ bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize)
 
     Error(Renderer, __FUNCTION__ " render cmd list capacity reached. skipping render cmd %p", cmd);
     return false;
-}
-
-RenderCmdList
-Render_CmdList(void *buffer, uint32_t bufferSize, RenderState state, bool immediateMode)
-{
-    assert(buffer);
-    assert(bufferSize);
-
-    return RenderCmdList(buffer, bufferSize, state, immediateMode);
 }
 
 RenderState Render_DefaultState()

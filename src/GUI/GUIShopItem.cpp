@@ -198,6 +198,7 @@ void CGUIShopItem::SetShaderMode()
 
     if (Color != 0)
     {
+#ifndef NEW_RENDERER_ENABLED
         if (PartialHue)
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
@@ -206,12 +207,25 @@ void CGUIShopItem::SetShaderMode()
         {
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
         }
+#else
+        auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        auto uniformValue = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
     }
 }
 
