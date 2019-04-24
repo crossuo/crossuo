@@ -29,6 +29,7 @@ bool RenderAdd_DrawQuad(RenderCmdList *cmdList, DrawQuadCmd *cmds, uint32_t cmd_
 bool RenderAdd_DrawRotatedQuad(
     RenderCmdList *cmdList, DrawRotatedQuadCmd *cmds, uint32_t cmd_count);
 bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, DrawCharacterSittingCmd *cmd);
+bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, DrawLandTileCmd *cmd);
 
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);

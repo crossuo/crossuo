@@ -10,6 +10,12 @@ float float4::operator[](size_t i)
     return rgba[i];
 }
 
+float float3::operator[](size_t i)
+{
+    assert(i < countof(rgb));
+    return rgb[i];
+}
+
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)
 {
     static uint32_t s_uniformTypeToSize[] = {

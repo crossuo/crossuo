@@ -8,6 +8,7 @@ enum RenderCommandType : uint8_t
     Cmd_DrawQuad = 0,
     Cmd_DrawRotatedQuad,
     Cmd_DrawCharacterSitting,
+    Cmd_DrawLandTile,
     Cmd_ClearRT,
 
     Cmd_FlushState,
@@ -122,6 +123,40 @@ struct DrawCharacterSittingCmd
         , h6mod(h6mod)
         , h9mod(h9mod)
         , mirror(mirror)
+    {
+    }
+};
+
+struct DrawLandTileCmd
+{
+    RenderCommandHeader header;
+    texture_handle_t texture;
+    int32_t x;
+    int32_t y;
+    struct
+    {
+        int32_t x;
+        int32_t y;
+        uint32_t width;
+        uint32_t height;
+    } rect;
+    float3 normals[4];
+
+    DrawLandTileCmd(
+        texture_handle_t texture,
+        int32_t x,
+        int32_t y,
+        int32_t rect_x,
+        int32_t rect_y,
+        uint32_t rect_w,
+        uint32_t rect_h,
+        float3 normals[4])
+        : header{ RenderCommandType::Cmd_DrawLandTile }
+        , texture(texture)
+        , x(x)
+        , y(y)
+        , rect{ rect_x, rect_y, rect_w, rect_h }
+        , normals{ normals[0], normals[1], normals[2], normals[3] }
     {
     }
 };
