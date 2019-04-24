@@ -17,13 +17,24 @@ typedef uint32_t texture_handle_t;
 typedef uint32_t shaderprogram_handle_t;
 typedef uint32_t shader_handle_t;
 
-// FIXME better vector support
-typedef struct
+// TODO simd-friendly types
+// TODO accessors (x(), xxxx(), ...)
+struct float4
 {
     float rgba[4];
 
     float operator[](size_t i);
-} float4;
+};
+
+struct float3
+{
+    float rgb[3];
+
+    float operator[](size_t i);
+};
+
+// TODO simd-friendly types
+// Rect
 
 extern float4 g_ColorWhite;
 

@@ -60,6 +60,18 @@ bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, DrawCharacterSitting
     return true;
 }
 
+bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, DrawLandTileCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DrawLandTile(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(BlendStateCmd));

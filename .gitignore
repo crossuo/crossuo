@@ -1,4 +1,6 @@
 Dependencies/
+screenshots/
+crossuo.log
 *.user
 *.obj
 *.o

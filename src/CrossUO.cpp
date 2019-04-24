@@ -155,7 +155,10 @@
 #include "Gumps/GumpPropertyIcon.h"
 
 #include <external/popts.h>
+#include "Renderer/RenderAPI.h"
+
 extern po::parser g_cli;
+extern RenderCmdList *g_renderCmdList;
 
 #if defined(XUO_WINDOWS)
 #include "ExceptionFilter.h"
@@ -5005,15 +5008,58 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         }
         if (!g_GrayedPixels && (color != 0u))
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_LAND_COLORED);
+#else
+            auto uniformValue = SDM_LAND_COLORED;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_LAND);
+#else
+            auto uniformValue = SDM_LAND;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
         assert(spr->Texture != nullptr);
+#ifndef NEW_RENDERER_ENABLED
         g_GL_DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
+#else
+        float3 fNormals[] = {
+            { float(land->m_Normals[0].X),
+              float(land->m_Normals[0].Y),
+              float(land->m_Normals[0].Z) },
+            { float(land->m_Normals[1].X),
+              float(land->m_Normals[1].Y),
+              float(land->m_Normals[1].Z) },
+            { float(land->m_Normals[2].X),
+              float(land->m_Normals[2].Y),
+              float(land->m_Normals[2].Z) },
+            { float(land->m_Normals[3].X),
+              float(land->m_Normals[3].Y),
+              float(land->m_Normals[3].Z) },
+        };
+
+        RenderAdd_DrawLandTile(
+            g_renderCmdList,
+            &DrawLandTileCmd(
+                spr->Texture->Texture,
+                x,
+                y + (land->GetZ() * 4),
+                land->m_Rect.x,
+                land->m_Rect.y,
+                land->m_Rect.w,
+                land->m_Rect.h,
+                fNormals));
+#endif
     }
 }
 
@@ -5031,12 +5077,26 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 
         if (!g_GrayedPixels && (color != 0u))
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+#else
+            auto uniformValue = SDM_COLORED;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            auto uniformValue = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x - 22, y - 22);

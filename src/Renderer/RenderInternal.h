@@ -46,6 +46,7 @@ bool RenderDraw_SetTexture(SetTextureCmd *cmd, RenderState *state);
 bool RenderDraw_DrawQuad(DrawQuadCmd *cmd, RenderState *state);
 bool RenderDraw_DrawRotatedQuad(DrawRotatedQuadCmd *cmd, RenderState *state);
 bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *state);
+bool RenderDraw_DrawLandTile(DrawLandTileCmd *cmd, RenderState *state);
 
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);

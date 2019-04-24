@@ -219,6 +219,40 @@ bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *
     return true;
 }
 
+bool RenderDraw_DrawLandTile(DrawLandTileCmd *cmd, RenderState *state)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    float translateX = cmd->x - 22.0f;
+    float translateY = cmd->y - 22.0f;
+
+    const auto &rc = cmd->rect;
+
+    glTranslatef(translateX, translateY, 0.0f);
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glNormal3f(cmd->normals[0][0], cmd->normals[0][1], cmd->normals[0][2]);
+    glTexCoord2i(0, 0);
+    glVertex2i(22, -rc.x); //^
+
+    glNormal3f(cmd->normals[3][0], cmd->normals[3][1], cmd->normals[3][2]);
+    glTexCoord2i(0, 1);
+    glVertex2i(0, 22 - rc.y); //<
+
+    glNormal3f(cmd->normals[1][0], cmd->normals[1][1], cmd->normals[1][2]);
+    glTexCoord2i(1, 0);
+    glVertex2i(44, 22 - rc.height); //>
+
+    glNormal3f(cmd->normals[2][0], cmd->normals[2][1], cmd->normals[2][2]);
+    glTexCoord2i(1, 1);
+    glVertex2i(22, 44 - rc.width); //v
+    glEnd();
+
+    glTranslatef(-translateX, -translateY, 0.0f);
+    return true;
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -316,6 +350,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DrawQuad, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawRotatedQuad, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawCharacterSitting, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawLandTile, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ClearRT, ret, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)

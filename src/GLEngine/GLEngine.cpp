@@ -24,9 +24,9 @@ DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr = &CGLEngine::GL1_DrawSitting
 #ifndef NEW_RENDERER_ENABLED
 BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
 BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr = &CGLEngine::GL1_BindTexture32;
+DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
 #endif
 
-DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
 DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
 DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
 
@@ -265,9 +265,9 @@ bool CGLEngine::Install()
 #ifndef NEW_RENDERER_ENABLED
         g_GL_BindTexture16_Ptr = &CGLEngine::GL2_BindTexture16;
         g_GL_BindTexture32_Ptr = &CGLEngine::GL2_BindTexture32;
+        g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
 #endif
 
-        g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
         g_GL_DrawShadow_Ptr = &CGLEngine::GL2_DrawShadow;
         g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
     }
@@ -664,15 +664,11 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
     glEnable(GL_TEXTURE_2D);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;
-#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
-#else
-    RenderAdd_SetTexture(
-        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
-#endif
 
     float translateX = x - 22.0f;
     float translateY = y - 22.0f;
@@ -703,7 +699,6 @@ void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glTranslatef(-translateX, -translateY, 0.0f);
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1122,15 +1117,11 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
     }
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;
-#ifndef NEW_RENDERER_ENABLED
     BindTexture(texture.Texture);
-#else
-    RenderAdd_SetTexture(
-        g_renderCmdList, &SetTextureCmd(texture.Texture, RenderTextureType::Texture2D));
-#endif
 
     float translateX = x - 22.0f;
     float translateY = y - 22.0f;
@@ -1155,7 +1146,6 @@ void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glTranslatef(-translateX, -translateY, 0.0f);
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL2_Draw(const CGLTexture &texture, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
