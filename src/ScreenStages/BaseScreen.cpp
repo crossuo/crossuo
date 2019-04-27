@@ -17,7 +17,7 @@ void CBaseScreen::InitRenderList()
         return;
     }
 
-    static const uint32_t s_renderCmdListSize = 192 * 1024;
+    static const uint32_t s_renderCmdListSize = 256 * 1024;
     m_RenderCmdListData = malloc(s_renderCmdListSize);
     assert(m_RenderCmdListData);
 

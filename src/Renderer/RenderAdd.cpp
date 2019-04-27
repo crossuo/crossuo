@@ -72,6 +72,18 @@ bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, DrawLandTileCmd *cmd)
     return true;
 }
 
+bool RenderAdd_DrawShadow(RenderCmdList *cmdList, DrawShadowCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DrawShadow(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(BlendStateCmd));

@@ -253,6 +253,67 @@ bool RenderDraw_DrawLandTile(DrawLandTileCmd *cmd, RenderState *state)
     return true;
 }
 
+bool RenderDraw_DrawShadow(DrawShadowCmd *cmd, RenderState *state)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    RenderState_SetShaderUniform(
+        state, cmd->uniformId, &cmd->uniformValue, ShaderUniformType::Int1);
+    RenderState_SetBlend(state, true, BlendFunc::DstColor_Zero);
+
+    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+
+    auto width = (float)cmd->width;
+    auto height = cmd->height / 2.0f;
+
+    auto x = GLfloat(cmd->x);
+    auto translateY = GLfloat(cmd->y + height * 0.75);
+
+    glTranslatef(x, translateY, 0.0f);
+
+    glBegin(GL_TRIANGLE_STRIP);
+
+    float ratio = height / width;
+
+    if (cmd->mirror)
+    {
+        glTexCoord2f(0, 1);
+        glVertex2f(width, height);
+        glTexCoord2f(1, 1);
+        glVertex2f(0, height);
+        glTexCoord2f(0, 0);
+        glVertex2f(width * (ratio + 1.0f), 0);
+        glTexCoord2f(1, 0);
+        glVertex2f(width * ratio, 0);
+    }
+    else
+    {
+        glTexCoord2f(0, 1);
+        glVertex2f(0, height);
+        glTexCoord2f(1, 1);
+        glVertex2f(width, height);
+        glTexCoord2f(0, 0);
+        glVertex2f(width * ratio, 0);
+        glTexCoord2f(1, 0);
+        glVertex2f(width * (ratio + 1.0f), 0);
+    }
+
+    glEnd();
+
+    glTranslatef(-x, -translateY, 0.0f);
+
+    if (cmd->restoreBlendFunc)
+    {
+        RenderState_SetBlend(state, true, BlendFunc::SrcAlpha_OneMinusSrcAlpha);
+    }
+    else
+    {
+        RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+    }
+
+    return true;
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -351,6 +412,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DrawRotatedQuad, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawCharacterSitting, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawLandTile, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawShadow, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ClearRT, ret, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)

@@ -9,6 +9,7 @@ enum RenderCommandType : uint8_t
     Cmd_DrawRotatedQuad,
     Cmd_DrawCharacterSitting,
     Cmd_DrawLandTile,
+    Cmd_DrawShadow,
     Cmd_ClearRT,
 
     Cmd_FlushState,
@@ -157,6 +158,43 @@ struct DrawLandTileCmd
         , y(y)
         , rect{ rect_x, rect_y, rect_w, rect_h }
         , normals{ normals[0], normals[1], normals[2], normals[3] }
+    {
+    }
+};
+
+struct DrawShadowCmd
+{
+    RenderCommandHeader header;
+    texture_handle_t texture;
+    int32_t x;
+    int32_t y;
+    int32_t uniformValue;
+    uint32_t width;
+    uint32_t height;
+    uint32_t uniformId;
+    bool mirror;
+    bool restoreBlendFunc;
+
+    DrawShadowCmd(
+        texture_handle_t texture,
+        int32_t x,
+        int32_t y,
+        uint32_t width,
+        uint32_t height,
+        bool mirror,
+        uint32_t uniformId,
+        int32_t uniformValue,
+        bool restoreBlendFunc)
+        : header{ RenderCommandType::Cmd_DrawShadow }
+        , texture(texture)
+        , x(x)
+        , y(y)
+        , uniformValue(uniformValue)
+        , width(width)
+        , height(height)
+        , uniformId(uniformId)
+        , mirror(mirror)
+        , restoreBlendFunc(restoreBlendFunc)
     {
     }
 };
