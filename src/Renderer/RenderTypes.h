@@ -42,6 +42,9 @@ enum BlendFunc : uint8_t
 {
     SrcAlpha_OneMinusSrcAlpha = 0,
     One_OneMinusSrcAlpha,
+    DstColor_Zero,
+    Zero_OneMinusSrcAlpha,
+    Zero_SrcColor,
 
     BlendFunc_Count,
     BlendFunc_Invalid = 0xff,
@@ -162,17 +165,10 @@ struct ShaderPipeline
     uint32_t uniformCount = 0;
 };
 
-struct RenderStateShaderUniform
-{
-    uint32_t offset = 0xffffffff;
-    // ShaderUniformType type = ShaderUniformType::ShaderUniform_Invalid;
-};
-
 struct RenderStateUniformCache
 {
-    RenderStateShaderUniform uniforms[RENDERSTATE_MAX_SHADER_UNIFORM];
-    uint8_t data[RENDERSTATE_SHADER_UNIFORMDATA_SIZE];
-    uint32_t dataUsedSize;
+    uint8_t data[RENDERSTATE_MAX_SHADER_UNIFORM][RENDERSTATE_SHADER_UNIFORMDATA_SIZE];
+    bool dataSet[RENDERSTATE_MAX_SHADER_UNIFORM];
 };
 
 struct RenderState

@@ -29,12 +29,18 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
 {
     static GLenum s_blendSrcComponentToOGLEnum[] = {
         GL_SRC_ALPHA, // SrcAlpha_OneMinusSrcAlpha
-        GL_ONE        // One_OneMinusSrcAlpha
+        GL_ONE,       // One_OneMinusSrcAlpha
+        GL_DST_COLOR, // DstColor_Zero
+        GL_ZERO,      // Zero_OneMinusSrcAlpha
+        GL_ZERO       // Zero_SrcColor
     };
 
     static GLenum s_blendDstComponentToOGLEnum[] = {
         GL_ONE_MINUS_SRC_ALPHA, // SrcAlpha_OneMinusSrcAlpha
-        GL_ONE_MINUS_SRC_ALPHA  // One_OneMinusSrcAlpha
+        GL_ONE_MINUS_SRC_ALPHA, // One_OneMinusSrcAlpha
+        GL_ZERO,                // DstColor_Zero
+        GL_ONE_MINUS_SRC_ALPHA, // Zero_OneMinusSrcAlpha
+        GL_SRC_COLOR            // Zero_SrcColor
     };
 
     static_assert(countof(s_blendSrcComponentToOGLEnum) == BlendFunc::BlendFunc_Count);
@@ -162,11 +168,10 @@ bool RenderState_SetShaderUniform(
     assert(id < state->pipeline.uniformCount);
     auto location = state->pipeline.uniforms[id].location;
 
-    auto uniformCacheOffset = state->uniformCache.uniforms[id].offset;
     auto uniformSize = Render_ShaderUniformTypeToSize(type);
 
-    if (uniformCacheOffset == 0xffffffff ||
-        memcmp(&state->uniformCache.data[uniformCacheOffset], value, uniformSize) != 0)
+    if (!state->uniformCache.dataSet[id] ||
+        memcmp(state->uniformCache.data[id], value, uniformSize) != 0)
     {
         switch (type)
         {
@@ -184,20 +189,11 @@ bool RenderState_SetShaderUniform(
             }
         }
 
-        if (uniformSize + state->uniformCache.dataUsedSize > RENDERSTATE_SHADER_UNIFORMDATA_SIZE)
+        assert(uniformSize < RENDERSTATE_SHADER_UNIFORMDATA_SIZE);
+        if (uniformSize < RENDERSTATE_SHADER_UNIFORMDATA_SIZE)
         {
-            Warning(
-                Renderer,
-                "Not enough space to store shader uniform (%d bytes) in the uniform cache, increase RENDERSTATE_SHADER_UNIFORMDATA_SIZE (%d bytes)",
-                uniformSize,
-                RENDERSTATE_SHADER_UNIFORMDATA_SIZE);
-        }
-        else
-        {
-            // state->uniformCache.uniforms[id].type = type;
-            state->uniformCache.uniforms[id].offset = state->uniformCache.dataUsedSize;
-            memcpy(&state->uniformCache.data[state->uniformCache.dataUsedSize], value, uniformSize);
-            state->uniformCache.dataUsedSize += uniformSize;
+            memcpy(state->uniformCache.data[id], value, uniformSize);
+            state->uniformCache.dataSet[id] = true;
         }
     }
 

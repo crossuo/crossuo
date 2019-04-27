@@ -1224,8 +1224,10 @@ void CAnimationManager::Draw(
     }
 
     y -= spr->Height + frame.CenterY;
+    auto sdmNoColor = true;
     if (isShadow)
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
         glBlendFunc(GL_DST_COLOR, GL_ZERO);
@@ -1238,6 +1240,22 @@ void CAnimationManager::Draw(
         {
             glDisable(GL_BLEND);
         }
+#else
+        auto tex = frame.Sprite.Texture;
+        RenderAdd_DrawShadow(
+            g_renderCmdList,
+            &DrawShadowCmd(
+                tex->Texture,
+                x,
+                y,
+                tex->Width,
+                tex->Height,
+                mirror,
+                g_ShaderDrawMode,
+                SDM_SHADOW,
+                m_UseBlending));
+#endif
+        sdmNoColor = false;
     }
     else
     {
@@ -1273,6 +1291,7 @@ void CAnimationManager::Draw(
             if ((color & SPECTRAL_COLOR_FLAG) != 0)
             {
                 spectralColor = true;
+#ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
                 if (color == SPECTRAL_COLOR_SPECIAL)
                 {
@@ -1284,9 +1303,26 @@ void CAnimationManager::Draw(
                     glBlendFunc(GL_ZERO, GL_SRC_COLOR);
                     glUniform1iARB(g_ShaderDrawMode, SDM_SPECTRAL);
                 }
+#else
+                auto uniformValue = SDM_SPECTRAL;
+                auto blendFunc = BlendFunc::Zero_SrcColor;
+                if (color == SPECTRAL_COLOR_SPECIAL)
+                {
+                    blendFunc = BlendFunc::Zero_OneMinusSrcAlpha;
+                    uniformValue = SDM_SPECIAL_SPECTRAL;
+                }
+
+                RenderAdd_SetBlend(
+                    g_renderCmdList, &BlendStateCmd(BlendFunc::Zero_OneMinusSrcAlpha));
+                RenderAdd_SetShaderUniform(
+                    g_renderCmdList,
+                    &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
+                sdmNoColor = false;
             }
             else if (color != 0u)
             {
+#ifndef NEW_RENDERER_ENABLED
                 if (partialHue)
                 {
                     glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
@@ -1295,16 +1331,27 @@ void CAnimationManager::Draw(
                 {
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
+#else
+                auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+                RenderAdd_SetShaderUniform(
+                    g_renderCmdList,
+                    &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
                 g_ColorManager.SendColorsToShader(color);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+                sdmNoColor = false;
             }
         }
-        else
+
+        if (sdmNoColor)
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            auto uniformValue = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
 
         if (m_Transform)
@@ -1428,7 +1475,7 @@ void CAnimationManager::Draw(
                 1.f,
                 1.f,
                 g_ColorWhite,
-                true);
+                mirror);
             RenderAdd_DrawQuad(g_renderCmdList, &textureCmd, 1);
 #endif
         }
