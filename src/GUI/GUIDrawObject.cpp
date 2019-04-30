@@ -37,28 +37,14 @@ void CGUIDrawObject::SetShaderMode()
     DEBUG_TRACE_FUNCTION;
     if (Color != 0)
     {
-        if (PartialHue)
-        {
+        auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
 #ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-            auto uniformValue = SDM_PARTIAL_HUE;
-            RenderAdd_SetShaderUniform(
-                g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
 #endif
-        }
-        else
-        {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-#else
-            auto uniformValue = SDM_COLORED;
-            RenderAdd_SetShaderUniform(
-                g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
-#endif
-        }
         g_ColorManager.SendColorsToShader(Color);
     }
     else

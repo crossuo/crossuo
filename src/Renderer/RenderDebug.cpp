@@ -158,6 +158,28 @@ void RenderDraw_DisableStencilStateDebug(DisableStencilStateCmd *cmd, RenderStat
     Info(Renderer, "DisableStencilStateCmd\n");
 }
 
+void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *state)
+{
+    Info(
+        Renderer,
+        "SetColorMaskCmd: mask: %s|%s|%s|%s\n",
+        cmd->mask & ColorMask::Red ? "Red" : "",
+        cmd->mask & ColorMask::Green ? "Green" : "",
+        cmd->mask & ColorMask::Blue ? "Blue" : "",
+        cmd->mask & ColorMask::Alpha ? "Alpha" : "");
+}
+
+void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *state)
+{
+    Info(
+        Renderer,
+        "SetColorCmd: rgba: (%f, %f, %f, %f)\n",
+        cmd->color[0],
+        cmd->color[1],
+        cmd->color[2],
+        cmd->color[3]);
+}
+
 void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 {
     assert(
@@ -244,17 +266,19 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableStencilState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetColorMask, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetColor, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW_DEBUG(ShaderUniform, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(ShaderLargeUniform, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(ShaderPipeline, cmd, &cmdList->state);
             MATCH_CASE_DRAW_DEBUG(DisableShaderPipeline, cmd, &cmdList->state);
 
-                // TODO SetColorMask
                 // TODO ClearRT
                 // TODO DrawCharacterSitting
                 // TODO DrawLandTile
                 // TODO DrawShadow
+                // TODO DrawResize
 
             default:
                 assert(false);

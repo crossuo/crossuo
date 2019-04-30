@@ -203,7 +203,7 @@ void CGUIComboBox::Draw(bool checktrans)
         }
         else
         {
-            g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6);
+            g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6, false);
         }
 
         g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
@@ -279,7 +279,7 @@ void CGUIComboBox::Draw(bool checktrans)
         }
         else
         {
-            g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, 20);
+            g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, 20, false);
 
             if (selected != nullptr)
             {

@@ -20,6 +20,7 @@ enum RenderCommandType : uint8_t
     Cmd_StencilState,
     Cmd_DisableStencilState,
     Cmd_SetColorMask,
+    Cmd_SetColor,
 
     Cmd_ShaderUniform,
     Cmd_ShaderLargeUniform,
@@ -56,8 +57,8 @@ struct DrawQuadCmd
 {
     RenderCommandHeader header;
     texture_handle_t texture;
-    uint32_t x = 0;
-    uint32_t y = 0;
+    int32_t x = 0;
+    int32_t y = 0;
     uint32_t width = 0;
     uint32_t height = 0;
     float u = 1.f;
@@ -205,8 +206,8 @@ struct DrawRotatedQuadCmd : public DrawQuadCmd
 
     DrawRotatedQuadCmd(
         texture_handle_t texture,
-        uint32_t x,
-        uint32_t y,
+        int32_t x,
+        int32_t y,
         uint32_t width,
         uint32_t height,
         float angle,
@@ -286,6 +287,18 @@ struct SetColorMaskCmd
     SetColorMaskCmd(ColorMask mask = ColorMask::ColorMask_All)
         : header{ RenderCommandType::Cmd_SetColorMask }
         , mask(mask)
+    {
+    }
+};
+
+struct SetColorCmd
+{
+    RenderCommandHeader header;
+    float4 color;
+
+    SetColorCmd(float4 color)
+        : header{ RenderCommandType::Cmd_SetColor }
+        , color(color)
     {
     }
 };

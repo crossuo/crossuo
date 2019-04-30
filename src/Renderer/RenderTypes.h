@@ -24,6 +24,8 @@ struct float4
     float rgba[4];
 
     float operator[](size_t i);
+    bool operator==(float4 &other);
+    bool operator!=(float4 &other);
 };
 
 struct float3
@@ -31,6 +33,8 @@ struct float3
     float rgb[3];
 
     float operator[](size_t i);
+    bool operator==(float3 &other);
+    bool operator!=(float3 &other);
 };
 
 // TODO simd-friendly types
@@ -203,6 +207,7 @@ struct RenderState
                   0xffffffff };
 
     ColorMask colorMask = ColorMask::ColorMask_All;
+    float4 color = g_ColorWhite;
 };
 
 struct RenderCmdList

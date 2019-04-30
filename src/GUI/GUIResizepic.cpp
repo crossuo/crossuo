@@ -3,6 +3,9 @@
 
 #include "GUIResizepic.h"
 #include "../CrossUO.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIResizepic::CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height)
     : CGUIPolygonal(GOT_RESIZEPIC, x, y, width, height)
@@ -17,49 +20,19 @@ void CGUIResizepic::PrepareTextures()
     g_Game.ExecuteResizepic(Graphic);
 }
 
-// FIXME: gfx
 void CGUIResizepic::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTexture *th[9] = { nullptr };
-    for (int i = 0; i < 9; i++)
-    {
-        auto spr = g_Game.ExecuteGump(Graphic + (int)i);
-        if (spr == nullptr)
-        {
-            return;
-        }
-        assert(spr->Texture != nullptr);
-        auto pth = spr->Texture;
-        if (i == 4)
-        {
-            th[8] = pth;
-        }
-        else if (i > 4)
-        {
-            th[i - 1] = pth;
-        }
-        else
-        {
-            th[i] = pth;
-        }
-    }
 
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-    if (checktrans)
-    {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        g_GL_DrawResizepic(th, m_X, m_Y, Width, Height);
-        glDisable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        g_GL_DrawResizepic(th, m_X, m_Y, Width, Height);
-        glDisable(GL_STENCIL_TEST);
-    }
-    else
-    {
-        g_GL_DrawResizepic(th, m_X, m_Y, Width, Height);
-    }
+#else
+    auto uniformValue = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(
+        g_renderCmdList,
+        &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
+    g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, Height, checktrans);
 }
 
 bool CGUIResizepic::Select()

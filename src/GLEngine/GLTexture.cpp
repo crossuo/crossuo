@@ -35,7 +35,7 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     if (Texture == RENDER_TEXTUREHANDLE_INVALID)
         return;
 
-    auto cmd = DrawQuadCmd(Texture, x, y, Width, Height, 1.f, 1.f);
+    auto cmd = DrawQuadCmd(Texture, x, y, Width, Height);
     if (checktrans)
     {
         RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));

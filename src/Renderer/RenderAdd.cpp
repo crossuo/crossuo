@@ -146,6 +146,18 @@ bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd)
     return true;
 }
 
+bool RenderAdd_SetColor(RenderCmdList *cmdList, SetColorCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetColor(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, ClearRTCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));

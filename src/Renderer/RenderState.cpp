@@ -61,9 +61,8 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
         }
     }
 
-    if (enabled && state->blend.func != func || forced)
+    if (enabled && state->blend.func != func || (forced && func != BlendFunc::BlendFunc_Invalid))
     {
-        assert(func != BlendFunc::BlendFunc_Invalid);
         changed = true;
         state->blend.func = func;
         glBlendFunc(s_blendSrcComponentToOGLEnum[func], s_blendDstComponentToOGLEnum[func]);
@@ -149,6 +148,20 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
             mask & ColorMask::Green ? GL_TRUE : GL_FALSE,
             mask & ColorMask::Blue ? GL_TRUE : GL_FALSE,
             mask & ColorMask::Alpha ? GL_TRUE : GL_FALSE);
+        return true;
+    }
+
+    return false;
+}
+
+bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
+{
+    if (forced || state->color != color)
+    {
+        state->color = color;
+        memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
+
+        glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
         return true;
     }
 
