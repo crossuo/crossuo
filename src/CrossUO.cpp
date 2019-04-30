@@ -4910,20 +4910,27 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
     {
         if (!g_GrayedPixels && (color != 0u))
         {
-            if (partialHue)
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-            }
+            auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
 
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            auto uniformValue = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
 
         spr->Texture->Draw(x, y);
@@ -4940,33 +4947,39 @@ void CGame::DrawGump(
     {
         if (!g_GrayedPixels && (color != 0u))
         {
-            if (partialHue)
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-            }
+            auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
 
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            auto uniformValue = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         }
         spr->Texture->Draw(x, y, width, height);
     }
 }
 
-// FIXME: gfx
-void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height)
+static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
-        auto spr = ExecuteGump(id + (uint16_t)i);
+        auto spr = g_Game.ExecuteGump(id + (uint16_t)i);
         if (spr == nullptr)
         {
             return;
@@ -4987,10 +5000,156 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height)
             th[i] = pth;
         }
     }
+#ifndef NEW_RENDERER_ENABLED
     g_GL_DrawResizepic(th, x, y, width, height);
+#else
+    int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
+    int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
+    int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;
+    int offsetRight = std::max(th[2]->Width, th[7]->Width) - th[4]->Width;
+
+    for (int i = 0; i < 9; i++)
+    {
+        int drawWidth = th[i]->Width;
+        int drawHeight = th[i]->Height;
+        float drawCountX = 1.0f;
+        float drawCountY = 1.0f;
+        int drawX = x;
+        int drawY = y;
+
+        switch (i)
+        {
+            case 1:
+            {
+                drawX += th[0]->Width;
+
+                drawWidth = width - th[0]->Width - th[2]->Width;
+
+                drawCountX = drawWidth / (float)th[i]->Width;
+
+                break;
+            }
+            case 2:
+            {
+                drawX += width - drawWidth;
+                drawY += offsetTop;
+
+                break;
+            }
+            case 3:
+            {
+                drawY += th[0]->Height;
+                drawX += offsetLeft;
+
+                drawHeight = height - th[0]->Height - th[5]->Height;
+
+                drawCountY = drawHeight / (float)th[i]->Height;
+
+                break;
+            }
+            case 4:
+            {
+                drawX += width - drawWidth - offsetRight;
+                drawY += th[2]->Height;
+
+                drawHeight = height - th[2]->Height - th[7]->Height;
+
+                drawCountY = drawHeight / (float)th[i]->Height;
+
+                break;
+            }
+            case 5:
+            {
+                drawY += height - drawHeight;
+
+                break;
+            }
+            case 6:
+            {
+                drawX += th[5]->Width;
+                drawY += height - drawHeight - offsetBottom;
+
+                drawWidth = width - th[5]->Width - th[7]->Width;
+
+                drawCountX = drawWidth / (float)th[i]->Width;
+
+                break;
+            }
+            case 7:
+            {
+                drawX += width - drawWidth;
+                drawY += height - drawHeight;
+
+                break;
+            }
+            case 8:
+            {
+                drawX += th[0]->Width;
+                drawY += th[0]->Height;
+
+                drawWidth = width - th[0]->Width - th[2]->Width;
+
+                drawHeight = height - th[2]->Height - th[7]->Height;
+
+                drawCountX = drawWidth / (float)th[i]->Width;
+                drawCountY = drawHeight / (float)th[i]->Height;
+
+                break;
+            }
+            default:
+                break;
+        }
+
+        if (drawWidth < 1 || drawHeight < 1)
+        {
+            continue;
+        }
+
+        RenderAdd_DrawQuad(
+            g_renderCmdList,
+            &DrawQuadCmd(
+                th[i]->Texture, drawX, drawY, drawWidth, drawHeight, drawCountX, drawCountY),
+            1);
+    }
+#endif
 }
 
-// FIXME: gfx
+void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, bool checktrans)
+{
+#ifndef NEW_RENDERER_ENABLED
+    if (checktrans)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        DrawResizepicGump_Internal(id, x, y, height, height);
+        glDisable(GL_BLEND);
+        glEnable(GL_STENCIL_TEST);
+        DrawResizepicGump_Internal(id, x, y, width, height);
+        glDisable(GL_STENCIL_TEST);
+    }
+    else
+    {
+        DrawResizepicGump_Internal(id, x, y, width, height);
+    }
+#else
+    if (checktrans)
+    {
+        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        DrawResizepicGump_Internal(id, x, y, width, height);
+        RenderAdd_DisableBlend(g_renderCmdList);
+
+        // FIXME epatitucci what were the original values for func, op, ref & mask?
+        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd());
+        DrawResizepicGump_Internal(id, x, y, width, height);
+        RenderAdd_DisableStencil(g_renderCmdList);
+    }
+    else
+    {
+        DrawResizepicGump_Internal(id, x, y, width, height);
+    }
+#endif
+}
+
 void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;

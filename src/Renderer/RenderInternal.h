@@ -27,6 +27,7 @@ bool RenderState_SetStencil(
     StencilOp bothFail,
     bool forced = false);
 bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced = false);
+bool RenderState_SetColor(RenderState *state, float4 color, bool forced = false);
 bool RenderState_ClearRT(RenderState *state, ClearRT mask, bool forced = false);
 
 bool RenderState_SetShaderUniform(
@@ -55,6 +56,7 @@ bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
 bool RenderDraw_StencilState(StencilStateCmd *, RenderState *state);
 bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state);
 bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state);
+bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state);
 bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *state);
 
 bool RenderDraw_ShaderUniform(ShaderUniformCmd *, RenderState *state);

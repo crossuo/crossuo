@@ -23,9 +23,8 @@ BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
 BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr = &CGLEngine::GL1_BindTexture32;
 DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
 DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
-#endif
-
 DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
+#endif
 
 CGLEngine::CGLEngine()
 {
@@ -261,9 +260,8 @@ bool CGLEngine::Install()
         g_GL_BindTexture32_Ptr = &CGLEngine::GL2_BindTexture32;
         g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
         g_GL_DrawShadow_Ptr = &CGLEngine::GL2_DrawShadow;
-#endif
-
         g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
+#endif
     }
 
     Info(Renderer, "g_UseFrameBuffer = %i; CanUseBuffer = %i", CanUseFrameBuffer, CanUseBuffer);
@@ -582,7 +580,7 @@ void CGLEngine::ClearScissorList()
     glDisable(GL_SCISSOR_TEST);
 }
 
-#if NEW_RENDERER
+#ifndef NEW_RENDERER_ENABLED
 inline void CGLEngine::BindTexture(GLuint texture)
 {
     DEBUG_TRACE_FUNCTION;
@@ -973,7 +971,6 @@ void CGLEngine::GL1_DrawStretched(
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
-#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
@@ -986,12 +983,7 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
 
     for (int i = 0; i < 9; i++)
     {
-#ifndef NEW_RENDERER_ENABLED
         BindTexture(th[i]->Texture);
-#else
-        RenderAdd_SetTexture(
-            g_renderCmdList, &SetTextureCmd(th[i]->Texture, RenderTextureType::Texture2D));
-#endif
         int drawWidth = th[i]->Width;
         int drawHeight = th[i]->Height;
         float drawCountX = 1.0f;
@@ -1104,7 +1096,6 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
     }
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;
@@ -1154,6 +1145,7 @@ void CGLEngine::GL2_Draw(const CGLTexture &texture, int x, int y)
 void CGLEngine::GL2_DrawRotated(const CGLTexture &texture, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
+
     BindTexture(texture.Texture);
 
     int height = texture.Height;
@@ -1394,19 +1386,13 @@ void CGLEngine::GL2_DrawStretched(
 
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
-#endif // #ifndef NEW_RENDERER_ENABLED
 
 void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 9; i++)
     {
-#ifndef NEW_RENDERER_ENABLED
         BindTexture(th[i]->Texture);
-#else
-        RenderAdd_SetTexture(
-            g_renderCmdList, &SetTextureCmd(th[i]->Texture, RenderTextureType::Texture2D));
-#endif
 
         int drawWidth = th[i]->Width;
         int drawHeight = th[i]->Height;
@@ -1517,3 +1503,4 @@ void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
         glTranslatef((GLfloat)-drawX, (GLfloat)-drawY, 0.0f);
     }
 }
+#endif // #ifndef NEW_RENDERER_ENABLED

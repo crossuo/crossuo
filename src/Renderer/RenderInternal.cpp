@@ -10,10 +10,30 @@ float float4::operator[](size_t i)
     return rgba[i];
 }
 
+bool float4::operator==(float4 &other)
+{
+    return memcmp(rgba, other.rgba, sizeof(rgba));
+}
+
+bool float4::operator!=(float4 &other)
+{
+    return !(*this == other);
+}
+
 float float3::operator[](size_t i)
 {
     assert(i < countof(rgb));
     return rgb[i];
+}
+
+bool float3::operator==(float3 &other)
+{
+    return memcmp(rgb, other.rgb, sizeof(rgb));
+}
+
+bool float3::operator!=(float3 &other)
+{
+    return !(*this == other);
 }
 
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)

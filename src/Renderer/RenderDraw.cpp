@@ -20,8 +20,7 @@ bool RenderDraw_DrawQuad(DrawQuadCmd *cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
-    // TODO move this into a new command? into a cached state?
-    glColor4f(cmd->rgba[0], cmd->rgba[1], cmd->rgba[2], cmd->rgba[3]);
+    RenderState_SetColor(state, cmd->rgba);
     glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
     glBegin(GL_TRIANGLE_STRIP);
 
@@ -360,6 +359,11 @@ bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state)
     return RenderState_SetColorMask(state, cmd->mask);
 }
 
+bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state)
+{
+    return RenderState_SetColor(state, cmd->color);
+}
+
 bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *)
 {
     auto mask = cmd->clearMask & ClearRT::Color ? GL_COLOR_BUFFER_BIT : 0;
@@ -422,6 +426,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(StencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DisableStencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColorMask, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetColor, ret, cmd, &cmdList->state);
 
             MATCH_CASE_DRAW(ShaderUniform, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ShaderLargeUniform, ret, cmd, &cmdList->state)

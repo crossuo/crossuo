@@ -37,6 +37,7 @@ bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state);
 bool RenderAdd_DisableStencil(RenderCmdList *cmdList);
 bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd);
+bool RenderAdd_SetColor(RenderCmdList *cmdList, SetColorCmd *cmd);
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, ClearRTCmd *cmd);
 
 bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, ShaderUniformCmd *cmd);

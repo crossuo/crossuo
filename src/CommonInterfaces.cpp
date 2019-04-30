@@ -133,7 +133,7 @@ void CDECL FUNCBODY_DrawArtAnimated(int x, int y, unsigned short graphic, unsign
 
 void CDECL FUNCBODY_DrawResizepicGump(int x, int y, unsigned short graphic, int width, int height)
 {
-    g_Game.DrawResizepicGump(graphic, x, y, width, height);
+    g_Game.DrawResizepicGump(graphic, x, y, width, height, false);
 }
 
 void CDECL FUNCBODY_DrawGump(int x, int y, unsigned short graphic, unsigned short color)
