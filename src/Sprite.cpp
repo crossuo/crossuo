@@ -31,7 +31,7 @@ void CSprite::LoadSprite32(int width, int height, uint32_t *pixels, bool skipHit
     if (Texture == nullptr)
         Texture = new CGLTexture;
 #ifndef NEW_RENDERER_ENABLED
-    g_GL_BindTexture32(*Texture, width, height, pixels);
+    g_GL.BindTexture32(*Texture, width, height, pixels);
 #else
     Texture->Width = width;
     Texture->Height = height;

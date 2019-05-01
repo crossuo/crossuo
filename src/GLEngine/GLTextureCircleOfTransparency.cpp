@@ -80,7 +80,7 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     glColorMask(0u, 0u, 0u, 1u);
     glStencilFunc(GL_ALWAYS, 1, 1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    g_GL_Draw(*m_Sprite.Texture, X, Y);
+    g_GL.Draw(*m_Sprite.Texture, X, Y);
     glColorMask(1u, 1u, 1u, 1u);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glStencilFunc(GL_NOTEQUAL, 1, 1);
@@ -115,7 +115,7 @@ void CGLTextureCircleOfTransparency::Redraw()
         glColorMask(0u, 0u, 0u, 1u);
         glStencilFunc(GL_ALWAYS, 1, 1);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        g_GL_Draw(*m_Sprite.Texture, X, Y);
+        g_GL.Draw(*m_Sprite.Texture, X, Y);
         glColorMask(1u, 1u, 1u, 1u);
         glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
         glStencilFunc(GL_NOTEQUAL, 1, 1);

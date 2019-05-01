@@ -504,7 +504,7 @@ void CGumpWorldMap::LoadMap(int map)
         if (buf.size() == wantSize)
         {
 #ifndef NEW_RENDERER_ENABLED
-            g_GL_BindTexture16(
+            g_GL.BindTexture16(
                 g_MapTexture[map], g_MapSize[map].Width, g_MapSize[map].Height, &buf[0]);
 #else
             g_MapTexture[map].Width = g_MapSize[map].Width;

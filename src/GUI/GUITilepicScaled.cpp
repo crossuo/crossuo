@@ -25,7 +25,7 @@ void CGUITilepicScaled::Draw(bool checktrans)
     {
         SetShaderMode();
 #ifndef NEW_RENDERER_ENABLED
-        g_GL_Draw(*spr->Texture, m_X, m_Y);
+        g_GL.Draw(*spr->Texture, m_X, m_Y);
 #else
         auto textureCmd =
             DrawQuadCmd(spr->Texture->Texture, m_X, m_Y, spr->Texture->Width, spr->Texture->Height);
