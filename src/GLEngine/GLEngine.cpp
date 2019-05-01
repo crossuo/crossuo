@@ -535,6 +535,7 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
     glEnable(GL_TEXTURE_2D);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 {
     DEBUG_TRACE_FUNCTION;
@@ -566,7 +567,6 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
     glEnable(GL_TEXTURE_2D);
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
     DEBUG_TRACE_FUNCTION;

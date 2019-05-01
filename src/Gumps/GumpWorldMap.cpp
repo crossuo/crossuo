@@ -14,6 +14,7 @@
 #include "../GameObjects/GamePlayer.h"
 #include "Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };
 
 CGumpWorldMap::CGumpWorldMap(short x, short y)
@@ -546,14 +547,25 @@ void CGumpWorldMap::GenerateFrame(bool stop)
 
         m_Scissor->Draw(false);
 
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
 
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2);
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16);
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawCircle(
             m_MapData->OffsetX + playerX + 8.0f, m_MapData->OffsetY + playerY + 31.0f, 3.0f);
+#else
+        RenderAdd_DrawCircle(
+            g_renderCmdList,
+            &DrawCircleCmd(
+                m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f));
+#endif
 
         g_GL.PopScissor();
     }

@@ -278,6 +278,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
                 // TODO DrawCharacterSitting
                 // TODO DrawLandTile
                 // TODO DrawShadow
+                // TODO DrawCircle
                 // TODO DrawResize
 
             default:

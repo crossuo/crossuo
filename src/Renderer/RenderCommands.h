@@ -10,6 +10,7 @@ enum RenderCommandType : uint8_t
     Cmd_DrawCharacterSitting,
     Cmd_DrawLandTile,
     Cmd_DrawShadow,
+    Cmd_DrawCircle,
     Cmd_ClearRT,
 
     Cmd_FlushState,
@@ -196,6 +197,23 @@ struct DrawShadowCmd
         , uniformId(uniformId)
         , mirror(mirror)
         , restoreBlendFunc(restoreBlendFunc)
+    {
+    }
+};
+
+struct DrawCircleCmd
+{
+    RenderCommandHeader header;
+    int32_t x;
+    int32_t y;
+    float radius;
+    int gradientMode;
+    DrawCircleCmd(int32_t x, int32_t y, float radius, int gradientMode = 0)
+        : header{ RenderCommandType::Cmd_DrawCircle }
+        , x(x)
+        , y(y)
+        , radius(radius)
+        , gradientMode(gradientMode)
     {
     }
 };
