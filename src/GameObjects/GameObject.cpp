@@ -284,7 +284,7 @@ void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
         }
     }
 #ifndef NEW_RENDERER_ENABLED
-    g_GL_BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
+    g_GL.BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
 #else
     m_TextureObjectHandles.Width = g_ObjectHandlesWidth;
     m_TextureObjectHandles.Height = g_ObjectHandlesHeight;

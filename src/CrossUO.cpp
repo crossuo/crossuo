@@ -501,7 +501,7 @@ bool CGame::Install()
     for (int i = 0; i < 2; i++)
     {
 #ifndef NEW_RENDERER_ENABLED
-        g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
+        g_GL.BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
 #else
         g_TextureGumpState[i].Width = 10;
         g_TextureGumpState[i].Height = 14;
@@ -4407,7 +4407,7 @@ void CGame::CreateAuraTexture()
         }
     }
 #ifndef NEW_RENDERER_ENABLED
-    g_GL_BindTexture32(g_AuraTexture, width, height, pixels.data());
+    g_GL.BindTexture32(g_AuraTexture, width, height, pixels.data());
 #else
     g_AuraTexture.Width = width;
     g_AuraTexture.Height = height;
@@ -5001,7 +5001,7 @@ static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int
         }
     }
 #ifndef NEW_RENDERER_ENABLED
-    g_GL_DrawResizepic(th, x, y, width, height);
+    g_GL.DrawResizepic(th, x, y, width, height);
 #else
     int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
     int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
@@ -5190,7 +5190,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         }
         assert(spr->Texture != nullptr);
 #ifndef NEW_RENDERER_ENABLED
-        g_GL_DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
+        g_GL.DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
 #else
         float3 fNormals[] = {
             { float(land->m_Normals[0].X),

@@ -152,7 +152,7 @@ void CToolTip::Draw(int cursorWidth, int cursorHeight)
         g_GL.DrawPolygone(x, y, Texture.Width + 8, Texture.Height + 8);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
-        g_GL_Draw(Texture, x + 6, y + 4);
+        g_GL.Draw(Texture, x + 6, y + 4);
 #else
         RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
         RenderAdd_DisableBlend(g_renderCmdList);
