@@ -31,6 +31,7 @@ bool RenderAdd_DrawRotatedQuad(
 bool RenderAdd_DrawCharacterSitting(RenderCmdList *cmdList, DrawCharacterSittingCmd *cmd);
 bool RenderAdd_DrawLandTile(RenderCmdList *cmdList, DrawLandTileCmd *cmd);
 bool RenderAdd_DrawShadow(RenderCmdList *cmdList, DrawShadowCmd *cmd);
+bool RenderAdd_DrawCircle(RenderCmdList *cmdList, DrawCircleCmd *cmd);
 
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);

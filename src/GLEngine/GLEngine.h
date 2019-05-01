@@ -80,10 +80,8 @@ public:
     //Нарисовать прямоугольник
     void DrawPolygone(int x, int y, int width, int height);
 
-    //Нарисовать круг
-    void DrawCircle(float x, float y, float radius, int gradientMode = 0);
-
 #ifndef NEW_RENDERER_ENABLED
+    void DrawCircle(float x, float y, float radius, int gradientMode = 0);
     void BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels);
     void BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels);
     void DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land);

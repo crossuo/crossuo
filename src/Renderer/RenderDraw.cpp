@@ -313,6 +313,41 @@ bool RenderDraw_DrawShadow(DrawShadowCmd *cmd, RenderState *state)
     return true;
 }
 
+bool RenderDraw_DrawCircle(DrawCircleCmd *cmd, RenderState *state)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    glDisable(GL_TEXTURE_2D);
+
+    glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
+
+    glBegin(GL_TRIANGLE_FAN);
+
+    glVertex2i(0, 0);
+
+    if (cmd->gradientMode != 0)
+    {
+        RenderState_SetColor(state, { 0.f, 0.f, 0.f, 0.f });
+    }
+
+    float pi = (float)M_PI * 2.0f;
+
+    auto radius = cmd->radius;
+    for (int i = 0; i <= 360; i++)
+    {
+        float a = (i / 180.0f) * pi;
+        glVertex2f(cos(a) * radius, sin(a) * radius);
+    }
+
+    glEnd();
+
+    glTranslatef((GLfloat)-cmd->x, (GLfloat)-cmd->y, 0.0f);
+
+    glEnable(GL_TEXTURE_2D);
+
+    return true;
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -417,6 +452,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DrawCharacterSitting, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawLandTile, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawShadow, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawCircle, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ClearRT, ret, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)

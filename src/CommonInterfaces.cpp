@@ -18,7 +18,9 @@
 #include "Network/Packets.h"
 #include "Walker/PathFinder.h"
 #include "GameObjects/GamePlayer.h"
+#include "Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
 static IGameString g_GameString;
 
 IGameString::IGameString()
@@ -90,9 +92,21 @@ void CDECL FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, in
 
 void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radius, int gradientMode)
 {
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawCircle(x, y, radius, gradientMode);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetColor(
+        g_renderCmdList,
+        &SetColorCmd({ ToColorR(color) / 255.f,
+                       ToColorG(color) / 255.f,
+                       ToColorB(color) / 255.f,
+                       ToColorA(color) / 255.f }));
+    // FIXME epatitucci to avoid changing the plugin interface, use float for x and y
+    RenderAdd_DrawCircle(g_renderCmdList, &DrawCircleCmd(x, y, radius, gradientMode));
+    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
 }
 
 void CDECL FUNCBODY_DrawTextA(

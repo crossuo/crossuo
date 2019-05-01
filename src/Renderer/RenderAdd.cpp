@@ -84,6 +84,18 @@ bool RenderAdd_DrawShadow(RenderCmdList *cmdList, DrawShadowCmd *cmd)
     return true;
 }
 
+bool RenderAdd_DrawCircle(RenderCmdList *cmdList, DrawCircleCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DrawCircle(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(BlendStateCmd));
