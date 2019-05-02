@@ -48,6 +48,8 @@
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
+
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
 
@@ -1856,6 +1858,7 @@ void CGameScreen::Render()
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
         g_GL.DrawPolygone(
             g_RenderBounds.GameWindowPosX,
@@ -1863,6 +1866,16 @@ void CGameScreen::Render()
             g_RenderBounds.GameWindowWidth,
             g_RenderBounds.GameWindowHeight);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            &DrawUntexturedQuadCmd(
+                g_RenderBounds.GameWindowPosX,
+                g_RenderBounds.GameWindowPosY,
+                g_RenderBounds.GameWindowWidth,
+                g_RenderBounds.GameWindowHeight,
+                g_ColorBlack));
+#endif
 
         g_FontManager.DrawA(
             3,

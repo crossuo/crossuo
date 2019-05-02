@@ -8,6 +8,9 @@
 #include "../PressedObject.h"
 #include "../SelectedObject.h"
 #include "../Managers/MouseManager.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIComboBox::CGUIComboBox(
     int serial,
@@ -217,9 +220,16 @@ void CGUIComboBox::Draw(bool checktrans)
             {
                 if (g_SelectedObject.Object == item)
                 {
+#ifndef NEW_RENDERER_ENABLED
                     glColor4f(0.7f, 0.7f, 0.7f, 1.0f);
                     g_GL.DrawPolygone(currentX, currentY, m_WorkWidth, 14);
                     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+                    RenderAdd_DrawUntexturedQuad(
+                        g_renderCmdList,
+                        &DrawUntexturedQuadCmd(
+                            currentX, currentY, m_WorkWidth, 14, { 0.7f, 0.7f, 0.7f, 1.f }));
+#endif
                 }
 
                 CGUIText *text = (CGUIText *)item;

@@ -41,6 +41,8 @@ struct float3
 // Rect
 
 extern float4 g_ColorWhite;
+extern float4 g_ColorBlack;
+extern float4 g_ColorInvalid;
 
 enum BlendFunc : uint8_t
 {
@@ -93,6 +95,7 @@ enum ColorMask : uint8_t
 
     ColorMask_All = Red | Green | Blue | Alpha,
     ColorMask_ColorOnly = Red | Green | Blue,
+    ColorMask_None = 0,
     ColorMask_Invalid = 0xff,
 };
 

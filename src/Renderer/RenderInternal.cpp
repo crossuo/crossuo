@@ -3,6 +3,8 @@
 #include "Renderer/RenderInternal.h"
 
 float4 g_ColorWhite = { { 1.f, 1.f, 1.f, 1.f } };
+float4 g_ColorBlack = { { 0.f, 0.f, 0.f, 1.f } };
+float4 g_ColorInvalid = { { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX } };
 
 float float4::operator[](size_t i)
 {

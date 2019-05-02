@@ -8,6 +8,9 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/SkillsManager.h"
 #include "../Managers/FontsManager.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y)
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)
@@ -148,7 +151,11 @@ void CGUISkillItem::Draw(bool checktrans)
 
     if (g_PressedObject.LeftObject == this)
     {
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(20, 0, 250, 14);
+#else
+        RenderAdd_DrawUntexturedQuad(g_renderCmdList, &DrawUntexturedQuadCmd(20, 0, 250, 14));
+#endif
     }
 
     m_NameText.Draw(22, 0, checktrans);

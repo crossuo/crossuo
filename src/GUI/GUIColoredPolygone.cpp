@@ -4,6 +4,9 @@
 #include "GUIColoredPolygone.h"
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIColoredPolygone::CGUIColoredPolygone(
     int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)
@@ -37,6 +40,7 @@ void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 void CGUIColoredPolygone::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
     if (ColorA < 0xFF)
@@ -59,6 +63,23 @@ void CGUIColoredPolygone::Draw(bool checktrans)
     {
         g_GL.DrawPolygone(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2);
     }
+#else
+    RenderAdd_DrawUntexturedQuad(
+        g_renderCmdList,
+        &DrawUntexturedQuadCmd(
+            m_X,
+            m_Y,
+            Width,
+            Height,
+            { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f }));
+
+    if (Focused || (DrawDot && g_GumpSelectedElement == this))
+    {
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            &DrawUntexturedQuadCmd(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2));
+    }
+#endif
 }
 
 void CGUIColoredPolygone::OnMouseEnter()

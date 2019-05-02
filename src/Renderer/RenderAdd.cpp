@@ -96,6 +96,30 @@ bool RenderAdd_DrawCircle(RenderCmdList *cmdList, DrawCircleCmd *cmd)
     return true;
 }
 
+bool RenderAdd_DrawUntexturedQuad(RenderCmdList *cmdList, DrawUntexturedQuadCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DrawUntexturedQuad(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_DrawLine(RenderCmdList *cmdList, DrawLineCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DrawLine(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(BlendStateCmd));
