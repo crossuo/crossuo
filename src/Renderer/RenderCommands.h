@@ -11,6 +11,8 @@ enum RenderCommandType : uint8_t
     Cmd_DrawLandTile,
     Cmd_DrawShadow,
     Cmd_DrawCircle,
+    Cmd_DrawUntexturedQuad,
+    Cmd_DrawLine,
     Cmd_ClearRT,
 
     Cmd_FlushState,
@@ -214,6 +216,43 @@ struct DrawCircleCmd
         , y(y)
         , radius(radius)
         , gradientMode(gradientMode)
+    {
+    }
+};
+
+struct DrawUntexturedQuadCmd
+{
+    RenderCommandHeader header;
+    int32_t x;
+    int32_t y;
+    uint32_t width;
+    uint32_t height;
+    float4 color;
+    DrawUntexturedQuadCmd(
+        int32_t x, int32_t y, uint32_t width, uint32_t height, float4 color = g_ColorInvalid)
+        : header{ RenderCommandType::Cmd_DrawUntexturedQuad }
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+        , color(color)
+    {
+    }
+};
+
+struct DrawLineCmd
+{
+    RenderCommandHeader header;
+    int32_t x0;
+    int32_t y0;
+    int32_t x1;
+    int32_t y1;
+    DrawLineCmd(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
+        : header{ RenderCommandType::Cmd_DrawLine }
+        , x0(x0)
+        , y0(y0)
+        , x1(x1)
+        , y1(y1)
     {
     }
 };

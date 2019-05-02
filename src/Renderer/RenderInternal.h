@@ -50,6 +50,8 @@ bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *
 bool RenderDraw_DrawLandTile(DrawLandTileCmd *cmd, RenderState *state);
 bool RenderDraw_DrawShadow(DrawShadowCmd *cmd, RenderState *state);
 bool RenderDraw_DrawCircle(DrawCircleCmd *cmd, RenderState *state);
+bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *state);
+bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state);
 
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);

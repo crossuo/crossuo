@@ -5,7 +5,9 @@
 #include "Weather.h"
 #include "Managers/ConfigManager.h"
 #include "Misc.h"
+#include "Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
 CWeather g_Weather;
 
 float SinOscillate(float freq, int range, uint32_t current_tick)
@@ -277,7 +279,13 @@ void CWeather::Draw(int x, int y)
                 effect->X += (effect->SpeedX * speedOffset);
                 effect->Y += (effect->SpeedY * speedOffset);
 
+#ifndef NEW_RENDERER_ENABLED
                 g_GL.DrawPolygone(x + (int)effect->X, y + (int)effect->Y, 2, 2);
+#else
+                RenderAdd_DrawUntexturedQuad(
+                    g_renderCmdList,
+                    &DrawUntexturedQuadCmd(x + (int)effect->X, y + (int)effect->Y, 2, 2));
+#endif
 
                 break;
             }

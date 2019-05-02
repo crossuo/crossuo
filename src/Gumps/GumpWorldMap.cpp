@@ -553,14 +553,22 @@ void CGumpWorldMap::GenerateFrame(bool stop)
         RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
 #endif
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2);
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16);
-#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawCircle(
             m_MapData->OffsetX + playerX + 8.0f, m_MapData->OffsetY + playerY + 31.0f, 3.0f);
 #else
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            &DrawUntexturedQuadCmd(
+                m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2));
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            &DrawUntexturedQuadCmd(
+                m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16));
         RenderAdd_DrawCircle(
             g_renderCmdList,
             &DrawCircleCmd(

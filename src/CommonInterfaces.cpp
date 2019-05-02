@@ -85,9 +85,23 @@ void CDECL FUNCBODY_DrawLine(unsigned int color, int x, int y, int width, int he
 
 void CDECL FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, int height)
 {
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawPolygone(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_DrawUntexturedQuad(
+        g_renderCmdList,
+        &DrawUntexturedQuadCmd(
+            x,
+            y,
+            width,
+            height,
+            { ToColorR(color) / 255.f,
+              ToColorG(color) / 255.f,
+              ToColorB(color) / 255.f,
+              ToColorA(color) / 255.f }));
+#endif
 }
 
 void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radius, int gradientMode)
@@ -103,8 +117,8 @@ void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radiu
                        ToColorG(color) / 255.f,
                        ToColorB(color) / 255.f,
                        ToColorA(color) / 255.f }));
-    // FIXME epatitucci to avoid changing the plugin interface, use float for x and y
-    RenderAdd_DrawCircle(g_renderCmdList, &DrawCircleCmd(x, y, radius, gradientMode));
+    RenderAdd_DrawCircle(
+        g_renderCmdList, &DrawCircleCmd((int32_t)x, (int32_t)y, radius, gradientMode));
     RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
 #endif
 }

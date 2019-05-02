@@ -279,6 +279,8 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
                 // TODO DrawLandTile
                 // TODO DrawShadow
                 // TODO DrawCircle
+                // TODO DrawUntexturedQuad
+                // TODO DrawLine
                 // TODO DrawResize
 
             default:

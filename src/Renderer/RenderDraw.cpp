@@ -348,6 +348,67 @@ bool RenderDraw_DrawCircle(DrawCircleCmd *cmd, RenderState *state)
     return true;
 }
 
+bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *state)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    glDisable(GL_TEXTURE_2D);
+
+    glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
+
+    auto blend = cmd->color[3] < 1.f;
+    auto colored = memcmp(g_ColorInvalid.rgba, cmd->color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
+
+    if (colored)
+    {
+        glColor4f(cmd->color[0], cmd->color[1], cmd->color[2], cmd->color[3]);
+
+        if (blend)
+        {
+            RenderState_SetBlend(state, true, BlendFunc::SrcAlpha_OneMinusSrcAlpha);
+        }
+    }
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2i(0, cmd->height);
+    glVertex2i(cmd->width, cmd->height);
+    glVertex2i(0, 0);
+    glVertex2i(cmd->width, 0);
+    glEnd();
+
+    if (colored)
+    {
+        if (blend)
+        {
+            RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+        }
+
+        glColor4f(1.f, 1.f, 1.f, 1.f);
+    }
+
+    glTranslatef((GLfloat)-cmd->x, (GLfloat)-cmd->y, 0.0f);
+
+    glEnable(GL_TEXTURE_2D);
+
+    return true;
+}
+
+bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    glDisable(GL_TEXTURE_2D);
+
+    glBegin(GL_LINES);
+    glVertex2i(cmd->x0, cmd->y0);
+    glVertex2i(cmd->x1, cmd->y1);
+    glEnd();
+
+    glEnable(GL_TEXTURE_2D);
+
+    return true;
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -453,6 +514,8 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DrawLandTile, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawShadow, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DrawCircle, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawUntexturedQuad, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawLine, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ClearRT, ret, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)

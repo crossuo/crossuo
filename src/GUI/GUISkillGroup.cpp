@@ -9,6 +9,9 @@
 #include "../Point.h"
 #include "../SkillGroup.h"
 #include "../Managers/MouseManager.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUISkillGroup::CGUISkillGroup(
     int serial, int minimizeSerial, CSkillGroupObject *group, int x, int y)
@@ -132,11 +135,20 @@ void CGUISkillGroup::Draw(bool checktrans)
     if (m_Name->Focused && g_EntryPointer == &m_Name->m_Entry)
     {
         drawOrnament = false;
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(16, 0, 200, 14);
+#else
+        RenderAdd_DrawUntexturedQuad(g_renderCmdList, &DrawUntexturedQuadCmd(16, 0, 200, 14));
+#endif
     }
     else if (m_Name->Focused)
     {
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(16, 0, m_Name->m_Entry.m_Texture.Width, 14);
+#else
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList, &DrawUntexturedQuadCmd(16, 0, m_Name->m_Entry.m_Texture.Width, 14));
+#endif
     }
 
     m_Name->Draw(checktrans);
