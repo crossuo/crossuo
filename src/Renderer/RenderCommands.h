@@ -247,12 +247,15 @@ struct DrawLineCmd
     int32_t y0;
     int32_t x1;
     int32_t y1;
-    DrawLineCmd(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
+    float4 color;
+
+    DrawLineCmd(int32_t x0, int32_t y0, int32_t x1, int32_t y1, float4 color = g_ColorInvalid)
         : header{ RenderCommandType::Cmd_DrawLine }
         , x0(x0)
         , y0(y0)
         , x1(x1)
         , y1(y1)
+        , color(color)
     {
     }
 };

@@ -16,7 +16,8 @@ bool RenderState_FlushState(RenderState *state)
         state->stencil.depthFail,
         state->stencil.bothFail,
         true);
-    RenderState_SetColorMask(state, state->colorMask);
+    RenderState_SetColorMask(state, state->colorMask, true);
+    RenderState_SetColor(state, state->color, true);
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
     // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
     // should be clear

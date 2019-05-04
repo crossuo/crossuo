@@ -1335,7 +1335,12 @@ void CGameScreen::DrawGameWindow(bool render)
     const int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
     if (render)
     {
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(g_DrawColor, g_DrawColor, g_DrawColor, 1.0f);
+#else
+        RenderAdd_SetColor(
+            g_renderCmdList, &SetColorCmd({ g_DrawColor, g_DrawColor, g_DrawColor, 1.0f }));
+#endif
         if (g_ConfigManager.UseCircleTrans)
         {
             if (g_CircleOfTransparency.Create(g_ConfigManager.CircleTransRadius))
@@ -1480,7 +1485,11 @@ void CGameScreen::DrawGameWindow(bool render)
 void CGameScreen::DrawGameWindowLight()
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
 
     if (!UseLight)
     {
@@ -1632,14 +1641,27 @@ void CGameScreen::DrawGameWindowText(bool render)
                     {
                         if (text->Transparent)
                         {
+#ifndef NEW_RENDERER_ENABLED
                             glEnable(GL_BLEND);
                             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
                             glColor4ub(0xFF, 0xFF, 0xFF, (uint8_t)text->Color);
+#else
+                            RenderAdd_SetBlend(
+                                g_renderCmdList,
+                                &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                            RenderAdd_SetColor(
+                                g_renderCmdList,
+                                &SetColorCmd({ 1.f, 1.f, 1.f, (uint8_t)text->Color / 255.f }));
+#endif
 
                             text->m_TextSprite.Draw(text->RealDrawX, text->RealDrawY);
 
+#ifndef NEW_RENDERER_ENABLED
                             glDisable(GL_BLEND);
+#else
+                            RenderAdd_DisableBlend(g_renderCmdList);
+#endif
                         }
                         else
                         {
@@ -1649,7 +1671,11 @@ void CGameScreen::DrawGameWindowText(bool render)
                 }
             }
         }
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
     }
     else
     {

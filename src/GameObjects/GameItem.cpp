@@ -18,6 +18,9 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../Gumps/GumpMinimap.h"
 #include "../Gumps/GumpCustomHouse.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)
@@ -194,6 +197,7 @@ void CGameItem::Draw(int x, int y)
 
         if (useAlpha)
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glColor4ub(
@@ -201,6 +205,16 @@ void CGameItem::Draw(int x, int y)
                 m_DrawTextureColor[1],
                 m_DrawTextureColor[2],
                 m_DrawTextureColor[3]);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+            RenderAdd_SetColor(
+                g_renderCmdList,
+                &SetColorCmd({ m_DrawTextureColor[0] / 255.f,
+                               m_DrawTextureColor[1] / 255.f,
+                               m_DrawTextureColor[2] / 255.f,
+                               m_DrawTextureColor[3] / 255.f }));
+#endif
         }
 
         if (IsCorpse())
@@ -257,8 +271,13 @@ void CGameItem::Draw(int x, int y)
 
         if (useAlpha)
         {
+#ifndef NEW_RENDERER_ENABLED
             glColor4ub(0xFF, 0xFF, 0xFF, 0xFF);
             glDisable(GL_BLEND);
+#else
+            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+            RenderAdd_DisableBlend(g_renderCmdList);
+#endif
         }
 
         if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == Serial &&
