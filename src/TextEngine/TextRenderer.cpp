@@ -8,6 +8,9 @@
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameWorld.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CTextRenderer g_WorldTextRenderer;
 
@@ -226,14 +229,25 @@ void CTextRenderer::Draw()
                     alpha = 0x7F;
                 }
 
+#ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
+#else
+                RenderAdd_SetBlend(
+                    g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha / 255.f }));
+#endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
+#ifndef NEW_RENDERER_ENABLED
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
+#else
+                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             }
             else
             {
@@ -391,14 +405,25 @@ void CTextRenderer::WorldDraw()
                     alpha = 0x7F;
                 }
 
+#ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
+#else
+                RenderAdd_SetBlend(
+                    g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha / 255.f }));
+#endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
+#ifndef NEW_RENDERER_ENABLED
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
+#else
+                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             }
             else
             {

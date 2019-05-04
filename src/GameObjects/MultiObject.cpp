@@ -7,6 +7,9 @@
 #include "../SelectedObject.h"
 #include "../Managers/CustomHousesManager.h"
 #include "../Gumps/GumpCustomHouse.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CMultiObject::CMultiObject(uint16_t graphic, short x, short y, char z, int flags)
     : CRenderStaticObject(ROT_MULTI_OBJECT, 0, graphic, 0, x, y, z)
@@ -61,14 +64,25 @@ void CMultiObject::Draw(int x, int y)
 
         if ((State & CHMOF_TRANSPARENT) != 0)
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glColor4f(1.0f, 1.0f, 1.0f, 0.75f);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, 0.75f }));
+#endif
 
             g_Game.DrawStaticArt(Graphic, color, x, y);
 
+#ifndef NEW_RENDERER_ENABLED
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             glDisable(GL_BLEND);
+#else
+            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+            RenderAdd_DisableBlend(g_renderCmdList);
+#endif
 
 #if UO_DEBUG_INFO != 0
             g_RenderedObjectsCountInGameWindow++;

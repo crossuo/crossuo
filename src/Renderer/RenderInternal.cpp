@@ -4,7 +4,12 @@
 
 float4 g_ColorWhite = { { 1.f, 1.f, 1.f, 1.f } };
 float4 g_ColorBlack = { { 0.f, 0.f, 0.f, 1.f } };
-float4 g_ColorInvalid = { { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX } };
+float4 g_ColorBlue = { { 0.f, 0.f, 1.f, 1.f } };
+static int g_iColorInvalid = 0xffffffff;
+float4 g_ColorInvalid = { { *(float *)&g_iColorInvalid,
+                            *(float *)&g_iColorInvalid,
+                            *(float *)&g_iColorInvalid,
+                            *(float *)&g_iColorInvalid } };
 
 float float4::operator[](size_t i)
 {
@@ -14,7 +19,7 @@ float float4::operator[](size_t i)
 
 bool float4::operator==(float4 &other)
 {
-    return memcmp(rgba, other.rgba, sizeof(rgba));
+    return memcmp(rgba, other.rgba, sizeof(rgba)) == 0;
 }
 
 bool float4::operator!=(float4 &other)

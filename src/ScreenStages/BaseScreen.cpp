@@ -17,7 +17,7 @@ void CBaseScreen::InitRenderList()
         return;
     }
 
-    static const uint32_t s_renderCmdListSize = 256 * 1024;
+    static const uint32_t s_renderCmdListSize = 512 * 1024;
     m_RenderCmdListData = malloc(s_renderCmdListSize);
     assert(m_RenderCmdListData);
 
@@ -74,7 +74,11 @@ void CBaseScreen::Render()
         return;
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    // FlushState command above already sets color to white with alpha 100%
+#endif
     m_Gump.Draw();
     InitToolTip();
     DrawSmoothMonitorEffect();

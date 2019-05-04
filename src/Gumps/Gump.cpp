@@ -14,6 +14,9 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../ScreenStages/BaseScreen.h"
 #include "../ScreenStages/GameScreen.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
@@ -352,7 +355,11 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
     CGUIComboBox *combo = nullptr;
 
     bool transparent = ApplyTransparent(start, 0, currentPage, draw2Page);
+#ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
+#else
+    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha[transparent] }));
+#endif
 
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -419,7 +426,12 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     transparent = ApplyTransparent(
                         (CBaseGUI *)item->m_Next, page /*Page*/, currentPage, draw2Page);
 
+#ifndef NEW_RENDERER_ENABLED
                     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
+#else
+                    RenderAdd_SetColor(
+                        g_renderCmdList, &SetColorCmd({ 1.0f, 1.0f, 1.0f, alpha[transparent] }));
+#endif
 
                     break;
                 }
@@ -446,7 +458,11 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
         combo->Draw(false);
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
 }
 
 CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Page)
@@ -1466,6 +1482,7 @@ void CGump::Draw()
 
             if (g_DeveloperMode == DM_DEBUGGING)
             {
+#ifndef NEW_RENDERER_ENABLED
                 if (g_SelectedObject.Gump == this)
                 {
                     glColor4f(0.0f, 1.0f, 0.0f, 0.2f);
@@ -1497,6 +1514,49 @@ void CGump::Draw()
                     GumpRect.Position.Y + 1);
 
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+                static float4 s_colorThisGump = { 0.0f, 1.0f, 0.0f, 0.2f };
+                static float4 s_colorOtherGump = { 1.0f, 1.0f, 1.0f, 0.2f };
+                if (g_SelectedObject.Gump != this)
+                {
+                    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(s_colorOtherGump));
+                }
+                else
+                {
+                    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(s_colorThisGump));
+                }
+
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    &DrawLineCmd(
+                        GumpRect.Position.X + 1,
+                        GumpRect.Position.Y + 1,
+                        GumpRect.Position.X + GumpRect.Size.Width,
+                        GumpRect.Position.Y + 1));
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    &DrawLineCmd(
+                        GumpRect.Position.X + GumpRect.Size.Width,
+                        GumpRect.Position.Y + 1,
+                        GumpRect.Position.X + GumpRect.Size.Width,
+                        GumpRect.Position.Y + GumpRect.Size.Height));
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    &DrawLineCmd(
+                        GumpRect.Position.X + GumpRect.Size.Width,
+                        GumpRect.Position.Y + GumpRect.Size.Height,
+                        GumpRect.Position.X + 1,
+                        GumpRect.Position.Y + GumpRect.Size.Height));
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    &DrawLineCmd(
+                        GumpRect.Position.X + 1,
+                        GumpRect.Position.Y + GumpRect.Size.Height,
+                        GumpRect.Position.X + 1,
+                        GumpRect.Position.Y + 1));
+
+                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
             }
 
             glTranslatef((GLfloat)GumpRect.Position.X, (GLfloat)GumpRect.Position.Y, 0.0f);
@@ -1518,15 +1578,24 @@ void CGump::Draw()
 
     glTranslatef(posX, posY, 0.0f);
 
+#ifndef NEW_RENDERER_ENABLED
     glEnable(GL_BLEND);
     //glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+#endif
 
     m_FrameBuffer.Draw(0, 0);
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_BLEND);
+#else
+    RenderAdd_DisableBlend(g_renderCmdList);
+#endif
 
     DrawLocker();
 

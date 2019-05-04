@@ -58,8 +58,8 @@ bool RenderDraw_DrawRotatedQuad(DrawRotatedQuadCmd *cmd, RenderState *state)
     ScopedPerfMarker(__FUNCTION__);
 
     RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
-    // TODO move this into a new command? into a cached state?
-    glColor4f(cmd->rgba[0], cmd->rgba[1], cmd->rgba[2], cmd->rgba[3]);
+    RenderState_SetColor(state, cmd->rgba);
+
     glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
     glRotatef(cmd->angle, 0.0f, 0.0f, 1.0f);
 
@@ -356,12 +356,11 @@ bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *stat
 
     glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
 
-    auto blend = cmd->color[3] < 1.f;
     auto colored = memcmp(g_ColorInvalid.rgba, cmd->color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
-
+    auto blend = colored && cmd->color[3] < 1.f;
     if (colored)
     {
-        glColor4f(cmd->color[0], cmd->color[1], cmd->color[2], cmd->color[3]);
+        RenderState_SetColor(state, cmd->color);
 
         if (blend)
         {
@@ -383,7 +382,7 @@ bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *stat
             RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
         }
 
-        glColor4f(1.f, 1.f, 1.f, 1.f);
+        RenderState_SetColor(state, g_ColorWhite);
     }
 
     glTranslatef((GLfloat)-cmd->x, (GLfloat)-cmd->y, 0.0f);
@@ -399,10 +398,32 @@ bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state)
 
     glDisable(GL_TEXTURE_2D);
 
+    auto colored = memcmp(g_ColorInvalid.rgba, cmd->color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
+    auto blend = colored && cmd->color[3] < 1.f;
+    if (colored)
+    {
+        RenderState_SetColor(state, cmd->color);
+
+        if (blend)
+        {
+            RenderState_SetBlend(state, true, BlendFunc::SrcAlpha_OneMinusSrcAlpha);
+        }
+    }
+
     glBegin(GL_LINES);
     glVertex2i(cmd->x0, cmd->y0);
     glVertex2i(cmd->x1, cmd->y1);
     glEnd();
+
+    if (colored)
+    {
+        if (blend)
+        {
+            RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+        }
+
+        RenderState_SetColor(state, g_ColorWhite);
+    }
 
     glEnable(GL_TEXTURE_2D);
 

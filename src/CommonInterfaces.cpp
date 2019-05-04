@@ -78,9 +78,23 @@ void CDECL FUNCBODY_PopScissor()
 
 void CDECL FUNCBODY_DrawLine(unsigned int color, int x, int y, int width, int height)
 {
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawLine(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_DrawLine(
+        g_renderCmdList,
+        &DrawLineCmd(
+            x,
+            y,
+            width,
+            height,
+            { ToColorR(color) / 255.f,
+              ToColorG(color) / 255.f,
+              ToColorB(color) / 255.f,
+              ToColorA(color) / 255.f }));
+#endif
 }
 
 void CDECL FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, int height)

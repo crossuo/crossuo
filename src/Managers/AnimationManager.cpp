@@ -1648,18 +1648,38 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     if (g_DrawAura)
     {
+        uint32_t auraColor = g_ColorManager.GetPolygoneColor(
+            16, g_ConfigManager.GetColorByNotoriety(obj->Notoriety));
+#ifndef NEW_RENDERER_ENABLED
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        uint32_t auraColor = g_ColorManager.GetPolygoneColor(
-            16, g_ConfigManager.GetColorByNotoriety(obj->Notoriety));
         glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
 
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::One_OneMinusSrcAlpha));
+        RenderAdd_SetColor(
+            g_renderCmdList,
+            &SetColorCmd({ ToColorR(auraColor) / 255.f,
+                           ToColorG(auraColor) / 255.f,
+                           ToColorB(auraColor) / 255.f,
+                           ToColorA(auraColor) / 255.f }));
+
+        auto uniformValue = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+#endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
+#else
+        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_DisableBlend(g_renderCmdList);
+#endif
     }
 
     if (obj->Hidden())
@@ -1675,9 +1695,17 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                 {
                     m_UseBlending = true;
 
+#ifndef NEW_RENDERER_ENABLED
                     glColor4ub(0xFF, 0xFF, 0xFF, g_ConfigManager.HiddenAlpha);
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#else
+                    RenderAdd_SetColor(
+                        g_renderCmdList,
+                        &SetColorCmd({ 1.f, 1.f, 1.f, g_ConfigManager.HiddenAlpha / 255.f }));
+                    RenderAdd_SetBlend(
+                        g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+#endif
 
                     Color = 0x038C;
 
@@ -1737,10 +1765,20 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (!m_UseBlending && drawTextureColor[3] != 0xFF)
     {
         m_UseBlending = true;
+#ifndef NEW_RENDERER_ENABLED
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4ub(
             drawTextureColor[0], drawTextureColor[1], drawTextureColor[2], drawTextureColor[3]);
+#else
+        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetColor(
+            g_renderCmdList,
+            &SetColorCmd({ drawTextureColor[0] / 255.f,
+                           drawTextureColor[1] / 255.f,
+                           drawTextureColor[2] / 255.f,
+                           drawTextureColor[3] / 255.f }));
+#endif
     }
 
     bool isAttack = (serial == g_LastAttackObject);
@@ -1877,8 +1915,13 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (m_UseBlending)
     {
         m_UseBlending = false;
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
+#else
+        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_DisableBlend(g_renderCmdList);
+#endif
     }
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)

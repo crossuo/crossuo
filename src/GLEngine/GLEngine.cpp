@@ -501,7 +501,6 @@ inline void CGLEngine::BindTexture(GLuint texture)
         glBindTexture(GL_TEXTURE_2D, texture);
     }
 }
-#endif
 
 void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 {
@@ -535,7 +534,6 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
     glEnable(GL_TEXTURE_2D);
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 {
     DEBUG_TRACE_FUNCTION;

@@ -42,6 +42,7 @@ struct float3
 
 extern float4 g_ColorWhite;
 extern float4 g_ColorBlack;
+extern float4 g_ColorBlue;
 extern float4 g_ColorInvalid;
 
 enum BlendFunc : uint8_t
