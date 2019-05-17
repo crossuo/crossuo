@@ -1,6 +1,7 @@
 #include "Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
+#include "Utility/PerfMarker.h"
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \
     case RenderCommandType::Cmd_##type:                                                            \
@@ -9,6 +10,149 @@
         (char *)cmd += sizeof(type##Cmd);                                                          \
         break;                                                                                     \
     }
+
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+#define OGL_DEBUGMSG_SEVERITY_COUNT (3)
+#define OGL_DEBUGMSG_TYPE_COUNT (8)
+#define OGL_DEBUGMSG_IDS_MAX (16)
+#define OGL_DEBUGMSG_INVALIDID (0xffffffff)
+
+struct
+{
+    bool assert = false;
+    bool log = false;
+} static s_openglDebugMsgSeverity[OGL_DEBUGMSG_SEVERITY_COUNT];
+
+struct
+{
+    bool assert = false;
+    bool log = false;
+} static s_openglDebugMsgType[OGL_DEBUGMSG_SEVERITY_COUNT];
+
+struct
+{
+    GLuint id = OGL_DEBUGMSG_INVALIDID;
+    bool assert = false;
+    bool log = false;
+} static s_openglDebugMsgs[OGL_DEBUGMSG_IDS_MAX];
+
+static void EnableOpenGLDebugMsgSeverity(GLenum severity, bool assert, bool log)
+{
+    auto &info = s_openglDebugMsgSeverity[severity % OGL_DEBUGMSG_SEVERITY_COUNT];
+    info.assert = assert;
+    info.log = log;
+}
+
+static void EnableOpenGLDebugMsgType(GLenum type, bool assert, bool log)
+{
+    auto &info = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+    info.assert = assert;
+    info.log = log;
+}
+
+static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
+{
+    for (auto &msg : s_openglDebugMsgs)
+    {
+        if (msg.id == OGL_DEBUGMSG_INVALIDID)
+        {
+            msg.id = id;
+            msg.assert = assert;
+            msg.log = log;
+            return;
+        }
+    }
+
+    Error(Renderer, "Can't change settings for OpenGL debug message, OGL_DEBUGMSG_IDS_MAX reached");
+    assert(false);
+}
+
+static void APIENTRY OGLDebugMsgCallback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam)
+{
+    (void)source;
+    (void)length;
+    (void)userParam;
+
+    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
+        auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
+        auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+
+        auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
+        shouldAssert &= infoType.assert;
+        shouldLog &= infoType.log;
+
+        if (!shouldAssert && !shouldLog)
+            return std::tie(shouldAssert, shouldLog);
+
+        for (auto &ctrl : s_openglDebugMsgs)
+        {
+            if (ctrl.id == OGL_DEBUGMSG_INVALIDID)
+            {
+                break;
+            }
+
+            if (ctrl.id == id)
+            {
+                shouldAssert &= ctrl.assert;
+                shouldLog &= ctrl.log;
+                break;
+            }
+        }
+
+        return std::tie(shouldAssert, shouldLog);
+    };
+
+    auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    if (shouldLog)
+    {
+        Info(Renderer, "OpenGL debug message (id %d): %s", id, message);
+    }
+    assert(!shouldAssert);
+}
+#endif // OGL_DEBUGCONTEXT_ENABLED
+
+void SetupOGLDebugMessage()
+{
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    EnableOpenGLDebugMsgSeverity(GL_DEBUG_SEVERITY_HIGH, true, true);
+    EnableOpenGLDebugMsgSeverity(GL_DEBUG_SEVERITY_MEDIUM, false, true);
+    EnableOpenGLDebugMsgSeverity(GL_DEBUG_SEVERITY_LOW, false, true);
+
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_ERROR, true, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, true, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_OTHER, true, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, false, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_PORTABILITY, false, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_PERFORMANCE, false, true);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_MARKER, false, false);
+    EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_POP_GROUP, false, true);
+
+    EnableOpenGLMessage(OGL_USERPERFMARKERS_ID, false, false);
+
+    // GL error "GL_INVALID_OPERATION in ...":
+    // 1) FIXME no shader set when glUniform1iARB is called for g_ShaderDrawMode
+    EnableOpenGLMessage(1282, false, false);
+
+    // Usage warning: glClear() called with GL_STENCIL_BUFFER_BIT, but there is no stencil buffer. Operation will have no effect.
+    EnableOpenGLMessage(131076, false, false);
+
+    glDebugMessageCallback(OGLDebugMsgCallback, nullptr);
+    glDebugMessageControl(
+        GL_DONT_CARE, // source
+        GL_DONT_CARE, // type
+        GL_DONT_CARE, // severity
+        0,
+        nullptr,
+        GL_TRUE);
+#endif
+}
 
 static const char *BlendFuncAsString(BlendFunc func)
 {

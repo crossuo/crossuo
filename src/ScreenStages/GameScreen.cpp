@@ -1227,7 +1227,7 @@ void CGameScreen::CalculateGameWindowBounds()
 
     UseLight = (g_PersonalLightLevel < g_LightLevel);
 
-    if (UseLight && g_GL.CanUseFrameBuffer)
+    if (UseLight)
     {
         int testWidth = g_RenderBounds.GameWindowWidth;
         int testHeight = g_RenderBounds.GameWindowHeight;
@@ -1498,80 +1498,65 @@ void CGameScreen::DrawGameWindowLight()
 
     g_LightColorizerShader.Use();
 
-    if (g_GL.CanUseFrameBuffer)
+    if (/*g_LightBuffer.Ready() &&*/ g_LightBuffer.Use())
     {
-        if (/*g_LightBuffer.Ready() &&*/ g_LightBuffer.Use())
+        float newLightColor = ((32 - g_LightLevel + g_PersonalLightLevel) / 32.0f);
+
+        if (!g_ConfigManager.DarkNights)
         {
-            float newLightColor = ((32 - g_LightLevel + g_PersonalLightLevel) / 32.0f);
-
-            if (!g_ConfigManager.DarkNights)
-            {
-                newLightColor += 0.2f;
-            }
-
-            glClearColor(newLightColor, newLightColor, newLightColor, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ONE);
-
-            int offsetX = 0;
-            int offsetY = 0;
-
-            if (g_ConfigManager.GetUseScaling())
-            {
-                offsetX = g_RenderBounds.GameWindowPosX - g_RenderBounds.GameWindowScaledOffsetX;
-                offsetY = g_RenderBounds.GameWindowPosY - g_RenderBounds.GameWindowScaledOffsetY;
-            }
-
-            GLfloat translateOffsetX = (GLfloat)offsetX;
-            GLfloat translateOffsetY = (GLfloat)offsetY;
-
-            glTranslatef(translateOffsetX, translateOffsetY, 0.0f);
-
-            for (int i = 0; i < m_LightCount; i++)
-            {
-                g_Game.DrawLight(m_Light[i]);
-            }
-
-            glTranslatef(-translateOffsetX, -translateOffsetY, 0.0f);
-
-            UnuseShader();
-
-            g_LightBuffer.Release();
-
-            g_GL.RestorePort();
-
-            g_GL.ViewPortScaled(
-                g_RenderBounds.GameWindowPosX,
-                g_RenderBounds.GameWindowPosY,
-                g_RenderBounds.GameWindowWidth,
-                g_RenderBounds.GameWindowHeight);
-
-            glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-
-            if (g_ConfigManager.GetUseScaling())
-            {
-                g_LightBuffer.Draw(
-                    g_RenderBounds.GameWindowScaledOffsetX, g_RenderBounds.GameWindowScaledOffsetY);
-            }
-            else
-            {
-                g_LightBuffer.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
-            }
-
-            glDisable(GL_BLEND);
+            newLightColor += 0.2f;
         }
-    }
-    else
-    {
+
+        glClearColor(newLightColor, newLightColor, newLightColor, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
+
+        int offsetX = 0;
+        int offsetY = 0;
+
+        if (g_ConfigManager.GetUseScaling())
+        {
+            offsetX = g_RenderBounds.GameWindowPosX - g_RenderBounds.GameWindowScaledOffsetX;
+            offsetY = g_RenderBounds.GameWindowPosY - g_RenderBounds.GameWindowScaledOffsetY;
+        }
+
+        GLfloat translateOffsetX = (GLfloat)offsetX;
+        GLfloat translateOffsetY = (GLfloat)offsetY;
+
+        glTranslatef(translateOffsetX, translateOffsetY, 0.0f);
 
         for (int i = 0; i < m_LightCount; i++)
         {
             g_Game.DrawLight(m_Light[i]);
+        }
+
+        glTranslatef(-translateOffsetX, -translateOffsetY, 0.0f);
+
+        UnuseShader();
+
+        g_LightBuffer.Release();
+
+        g_GL.RestorePort();
+
+        g_GL.ViewPortScaled(
+            g_RenderBounds.GameWindowPosX,
+            g_RenderBounds.GameWindowPosY,
+            g_RenderBounds.GameWindowWidth,
+            g_RenderBounds.GameWindowHeight);
+
+        glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+
+        if (g_ConfigManager.GetUseScaling())
+        {
+            g_LightBuffer.Draw(
+                g_RenderBounds.GameWindowScaledOffsetX, g_RenderBounds.GameWindowScaledOffsetY);
+        }
+        else
+        {
+            g_LightBuffer.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
         }
 
         glDisable(GL_BLEND);
@@ -1844,16 +1829,6 @@ void CGameScreen::Render()
         g_RenderBounds.GameWindowHeight);
 
     g_DrawColor = 1.0f;
-
-    if (!g_GL.CanUseFrameBuffer && g_PersonalLightLevel < g_LightLevel)
-    {
-        g_DrawColor = (32 - g_LightLevel + g_PersonalLightLevel) / 32.0f;
-
-        if (!g_ConfigManager.DarkNights)
-        {
-            g_DrawColor += 0.2f;
-        }
-    }
 
     if (g_GrayedPixels)
     {

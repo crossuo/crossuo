@@ -15,7 +15,6 @@ public:
     HGLRC RC = 0;
     GLuint OldTexture = 0;
     bool Drawing = false;
-    bool CanUseFrameBuffer = false;
 #ifndef NEW_RENDERER_ENABLED
     float SittingCharacterOffset = 8.0f;
 #endif

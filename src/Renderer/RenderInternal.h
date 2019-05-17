@@ -7,7 +7,11 @@
 #error "Do not include this directly. Include RenderAPI.h"
 #endif
 
+#define OGL_DEBUGCONTEXT_ENABLED
+
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type);
+// FIXME naming
+void SetupOGLDebugMessage();
 
 bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize);
 
@@ -28,6 +32,7 @@ bool RenderState_SetStencil(
     bool forced = false);
 bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced = false);
 bool RenderState_SetColor(RenderState *state, float4 color, bool forced = false);
+bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced = false);
 bool RenderState_ClearRT(RenderState *state, ClearRT mask, bool forced = false);
 
 bool RenderState_SetShaderUniform(

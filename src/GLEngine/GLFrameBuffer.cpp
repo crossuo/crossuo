@@ -21,7 +21,7 @@ bool CGLFrameBuffer::Init(int width, int height)
 
     bool result = false;
 
-    if (g_GL.CanUseFrameBuffer && (width != 0) && (height != 0))
+    if ((width != 0) && (height != 0))
     {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glGenTextures(1, &Texture.Texture);
@@ -65,7 +65,7 @@ void CGLFrameBuffer::Free()
 {
     Texture.Clear();
 
-    if (g_GL.CanUseFrameBuffer && m_FrameBuffer != 0)
+    if (m_FrameBuffer != 0)
     {
         glDeleteFramebuffers(1, &m_FrameBuffer);
         m_FrameBuffer = 0;
@@ -76,34 +76,29 @@ void CGLFrameBuffer::Free()
 
 void CGLFrameBuffer::Release()
 {
-    if (g_GL.CanUseFrameBuffer)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_OldFrameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_OldFrameBuffer);
 
-        glBindTexture(GL_TEXTURE_2D, Texture.Texture);
-        glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, Texture.Texture);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-        g_GL.RestorePort();
-    }
+    g_GL.RestorePort();
 }
 
 bool CGLFrameBuffer::Ready(int width, int height)
 {
-    return (
-        g_GL.CanUseFrameBuffer && m_Ready && Texture.Width == width && Texture.Height == height);
+    return (m_Ready && Texture.Width == width && Texture.Height == height);
 }
 
 bool CGLFrameBuffer::ReadyMinSize(int width, int height)
 {
-    return (
-        g_GL.CanUseFrameBuffer && m_Ready && Texture.Width >= width && Texture.Height >= height);
+    return (m_Ready && Texture.Width >= width && Texture.Height >= height);
 }
 
 bool CGLFrameBuffer::Use()
 {
     bool result = false;
 
-    if (g_GL.CanUseFrameBuffer && m_Ready)
+    if (m_Ready)
     {
         glEnable(GL_TEXTURE_2D);
 
@@ -128,7 +123,7 @@ bool CGLFrameBuffer::Use()
 
 void CGLFrameBuffer::Draw(int x, int y)
 {
-    if (g_GL.CanUseFrameBuffer && m_Ready)
+    if (m_Ready)
     {
         g_GL.OldTexture = 0;
 #ifndef NEW_RENDERER_ENABLED
