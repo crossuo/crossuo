@@ -206,12 +206,13 @@ struct RenderState
         StencilOp bothFail;
         uint32_t ref;
         uint32_t mask;
-    } stencil = { false,           StencilFunc::NeverPass, StencilOp::Keep,
-                  StencilOp::Keep, StencilOp::Keep,        0,
-                  0xffffffff };
+    } stencil = {
+        false, StencilFunc::NeverPass, StencilOp::Keep, StencilOp::Keep, StencilOp::Keep, 0, 1
+    };
 
     ColorMask colorMask = ColorMask::ColorMask_All;
     float4 color = g_ColorWhite;
+    float4 clearColor = g_ColorBlack;
 };
 
 struct RenderCmdList
@@ -232,4 +233,13 @@ struct RenderCmdList
     }
 
     RenderCmdList() = default;
+};
+
+struct RenderViewParams
+{
+    struct
+    {
+        uint32_t width;
+        uint32_t height;
+    } viewport;
 };

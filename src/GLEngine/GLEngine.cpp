@@ -219,17 +219,20 @@ bool CGLEngine::Install()
     Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
     Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    CanUseFrameBuffer =
+    auto canUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
          glFramebufferTexture2D && glGenFramebuffers);
 
-    Info(Renderer, "g_UseFrameBuffer = %i", CanUseFrameBuffer);
+    Info(Renderer, "g_UseFrameBuffer = %i", canUseFrameBuffer);
 
-    if (!CanUseFrameBuffer)
+    if (!canUseFrameBuffer)
     {
-        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Warning");
-    }
+        SDL_GL_DeleteContext(m_context);
+        m_context = nullptr;
 
+        Error(Client, "Your graphics card does not support Frame Buffers");
+        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Error");
+    }
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
     glShadeModel(GL_SMOOTH);              // Enables Smooth Color Shading
     glClearDepth(1.0);                    // Depth Buffer Setup
@@ -264,7 +267,6 @@ bool CGLEngine::Install()
 
     const auto size = g_GameWindow.GetSize();
     ViewPort(0, 0, size.Width, size.Height);
-
     return true;
 }
 

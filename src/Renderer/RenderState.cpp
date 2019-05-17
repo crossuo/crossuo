@@ -18,6 +18,7 @@ bool RenderState_FlushState(RenderState *state)
         true);
     RenderState_SetColorMask(state, state->colorMask, true);
     RenderState_SetColor(state, state->color, true);
+    RenderState_SetClearColor(state, state->clearColor, true);
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
     // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
     // should be clear
@@ -163,6 +164,20 @@ bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
         memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
 
         glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
+        return true;
+    }
+
+    return false;
+}
+
+bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
+{
+    if (forced || state->clearColor != color)
+    {
+        state->clearColor = color;
+        memcpy(state->clearColor.rgba, color.rgba, sizeof(state->clearColor.rgba));
+
+        glClearColor(color[0], color[1], color[2], color[3]);
         return true;
     }
 

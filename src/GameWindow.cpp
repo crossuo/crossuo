@@ -61,19 +61,38 @@ void CGameWindow::SetRenderTimerDelay(int delay)
 bool CGameWindow::OnCreate()
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     if (!g_GL.Install())
+#else
+    if (!Render_Init(m_window))
+#endif
     {
-        Info(Client, "error initializing OpenGL");
+        Error(Client, "error initializing OpenGL");
         ShowMessage("Error initializing OpenGL", "Error");
         return false;
     }
+
+#ifdef NEW_RENDERER_ENABLED
+    RenderViewParams params;
+    params.viewport.width = GetSize().Width;
+    params.viewport.height = GetSize().Height;
+    Render_SetViewParams(&params);
+#endif
 
     if (!g_Game.Install())
     {
         return false;
     }
 
+#ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
+#else
+    int width, height;
+    SDL_GetWindowSize(m_window, &width, &height);
+    assert(width == GetSize().Width && height == GetSize().Height);
+
+    g_GumpManager.RedrawAll();
+#endif
     return true;
 }
 

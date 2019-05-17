@@ -1,6 +1,7 @@
 #include "Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
+#include "Utility/PerfMarker.h"
 
 float4 g_ColorWhite = { { 1.f, 1.f, 1.f, 1.f } };
 float4 g_ColorBlack = { { 0.f, 0.f, 0.f, 1.f } };
@@ -10,6 +11,11 @@ float4 g_ColorInvalid = { { *(float *)&g_iColorInvalid,
                             *(float *)&g_iColorInvalid,
                             *(float *)&g_iColorInvalid,
                             *(float *)&g_iColorInvalid } };
+
+struct
+{
+    SDL_GLContext context = nullptr;
+} g_render;
 
 float float4::operator[](size_t i)
 {
@@ -41,6 +47,116 @@ bool float3::operator==(float3 &other)
 bool float3::operator!=(float3 &other)
 {
     return !(*this == other);
+}
+
+bool Render_Init(SDL_Window *window)
+{
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    auto debugContext = true;
+#else
+    auto debugContext = false;
+#endif
+    if (debugContext)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
+
+    auto context = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, context);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    int glewInitResult = glewInit();
+    Info(
+        Renderer,
+        "glewInit() = %i fb=%i v(%s) (shader: %i)",
+        glewInitResult,
+        GL_ARB_framebuffer_object,
+        glGetString(GL_VERSION),
+        GL_ARB_shader_objects);
+    if (glewInitResult != 0)
+    {
+        SDL_GL_DeleteContext(context);
+        return false;
+    }
+
+    // debug messages callback needs ogl >= 4.30
+    // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
+    if (debugContext && GLEW_KHR_debug)
+    {
+        SetupOGLDebugMessage();
+    }
+
+    Info(Renderer, "Graphics Successfully Initialized");
+    Info(Renderer, "OpenGL Info:");
+    Info(Renderer, "    Version: %s", glGetString(GL_VERSION));
+    Info(Renderer, "     Vendor: %s", glGetString(GL_VENDOR));
+    Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
+    Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    auto canUseFrameBuffer =
+        (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
+         glFramebufferTexture2D && glGenFramebuffers);
+
+    if (!canUseFrameBuffer)
+    {
+        SDL_GL_DeleteContext(context);
+        Error(Client, "Your graphics card does not support Frame Buffers");
+        return false;
+    }
+    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
+    glShadeModel(GL_SMOOTH); // Enables Smooth Color Shading
+    glClearDepth(1.0);       // Depth Buffer Setup
+    glDisable(GL_DITHER);
+
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+
+    glEnable(GL_TEXTURE_2D);
+
+    SDL_GL_SetSwapInterval(0); // 1 vsync
+
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    glClearStencil(0);
+    // glStencilMask(1);
+
+    glEnable(GL_LIGHT0);
+
+    GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]);
+
+    GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]);
+
+    GLfloat lav = 0.8f;
+    GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]);
+
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+    g_render.context = context;
+    return true;
+}
+
+void Render_Shutdown()
+{
+    if (g_render.context != nullptr)
+    {
+        SDL_GL_DeleteContext(g_render.context);
+    }
+}
+
+bool Render_SetViewParams(RenderViewParams *params)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    glViewport(0, 0, params->viewport.width, params->viewport.height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, params->viewport.width, params->viewport.height, 0, -150.0, 150.0);
+    glMatrixMode(GL_MODELVIEW);
+    return true;
 }
 
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)

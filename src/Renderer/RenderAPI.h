@@ -8,6 +8,10 @@
 #include "RenderTypes.h"
 #include "RenderCommands.h"
 
+bool Render_Init(SDL_Window *window);
+void Render_Shutdown();
+bool Render_SetViewParams(RenderViewParams *params);
+
 RenderState Render_DefaultState();
 void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state);
 

@@ -668,7 +668,11 @@ void CGame::Uninstall()
     g_FileManager.Unload();
     g_LightBuffer.Free();
 
+#ifndef NEW_RENDERER_ENABLED
     g_GL.Uninstall();
+#else
+    Render_Shutdown();
+#endif
 }
 
 void CGame::InitScreen(GAME_STATE state)
