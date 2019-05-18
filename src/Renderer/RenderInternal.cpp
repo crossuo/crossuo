@@ -147,6 +147,10 @@ void Render_Shutdown()
     }
 }
 
+// TODO renderer test if resizing the window is still working as before
+// resize the real window
+// resize the game viewport
+// maximize vs restore
 bool Render_SetViewParams(RenderViewParams *params)
 {
     ScopedPerfMarker(__FUNCTION__);

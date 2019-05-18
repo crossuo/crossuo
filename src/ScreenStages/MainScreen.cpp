@@ -46,7 +46,11 @@ void CMainScreen::Init()
 
     Reset();
     g_GameWindow.SetTitle("Ultima Online");
+#ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
+#else
+    g_GumpManager.RedrawAll();
+#endif
 
     g_EntryPointer = m_MainGump.m_PasswordFake;
 

@@ -26,7 +26,13 @@ CGLEngine::~CGLEngine()
         PositionBuffer = 0;
     }
 
+#ifndef NEW_RENDERER_ENABLED
     Uninstall();
+#else
+    // FIXME most likely useless, Window::OnDestroy() calls g_Game.Uninstall() which will then call Render_Shutdown
+    // this happens when one of the SDL events (quit/close) is received.
+    Render_Shutdown();
+#endif
 }
 
 #define OGL_DEBUGCONTEXT_ENABLED
@@ -173,6 +179,7 @@ static void SetupOGLDebugMessage()
 #endif
 }
 
+#ifndef NEW_RENDERER_ENABLED
 bool CGLEngine::Install()
 {
     DEBUG_TRACE_FUNCTION;
@@ -291,7 +298,6 @@ void CGLEngine::UpdateRect()
     g_GumpManager.RedrawAll();
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
     DEBUG_TRACE_FUNCTION;
