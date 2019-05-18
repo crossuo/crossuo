@@ -1559,13 +1559,38 @@ bool CConfigManager::Load(const fs_path &path)
         if (zoomed)
         {
             g_GameScreen.SetMaximized(true);
+#ifdef NEW_RENDERER_ENABLED
+            int w, h;
+            SDL_GetWindowSize(g_GameWindow.m_window, &w, &h);
+
+            RenderViewParams viewParms;
+            viewParms.viewport.width = w;
+            viewParms.viewport.height = h;
+            Render_SetViewParams(&viewParms);
+#endif
         }
         else
         {
             g_GameWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
+#ifdef NEW_RENDERER_ENABLED
+            // FIXME gfx this is to confirm the new size always fits with what the previous code did
+            // which is, getting the real window size and using it
+            int w, h;
+            SDL_GetWindowSize(g_GameWindow.m_window, &w, &h);
+            assert(windowWidth == w && windowHeight == h);
+
+            RenderViewParams viewParms;
+            viewParms.viewport.width = windowWidth;
+            viewParms.viewport.height = windowHeight;
+            Render_SetViewParams(&viewParms);
+#endif
         }
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL.UpdateRect();
+#else
+        g_GumpManager.RedrawAll();
+#endif
     }
     else
     {

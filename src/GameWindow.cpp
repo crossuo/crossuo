@@ -73,6 +73,12 @@ bool CGameWindow::OnCreate()
     }
 
 #ifdef NEW_RENDERER_ENABLED
+    // FIXME gfx this is to confirm the new size always fits with what the previous code did
+    // which is, getting the real window size and using it
+    int width, height;
+    SDL_GetWindowSize(m_window, &width, &height);
+    assert(width == GetSize().Width && height == GetSize().Height);
+
     RenderViewParams params;
     params.viewport.width = GetSize().Width;
     params.viewport.height = GetSize().Height;
@@ -87,10 +93,6 @@ bool CGameWindow::OnCreate()
 #ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
 #else
-    int width, height;
-    SDL_GetWindowSize(m_window, &width, &height);
-    assert(width == GetSize().Width && height == GetSize().Height);
-
     g_GumpManager.RedrawAll();
 #endif
     return true;
@@ -107,7 +109,22 @@ void CGameWindow::OnDestroy()
 void CGameWindow::OnResize()
 {
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
+#else
+    // FIXME gfx this is to confirm the new size always fits with what the previous code did
+    // which is, getting the real window size and using it
+    int w, h;
+    SDL_GetWindowSize(m_window, &w, &h);
+    assert(GetSize().Width == w && GetSize().Height == h);
+
+    RenderViewParams params;
+    params.viewport.width = GetSize().Width;
+    params.viewport.height = GetSize().Height;
+    Render_SetViewParams(&params);
+
+    g_GumpManager.RedrawAll();
+#endif
 }
 
 void CGameWindow::EmulateOnLeftMouseButtonDown()

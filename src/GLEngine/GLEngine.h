@@ -28,14 +28,11 @@ public:
     CGLEngine();
     virtual ~CGLEngine();
 
-    //Инициализация OpenGL
+#ifndef NEW_RENDERER_ENABLED
     bool Install();
-
-    //Завершение работы с OpenGL
     void Uninstall();
-
-    //Обновление области вывода
     void UpdateRect();
+#endif
 
     //Очистить экран и начать рисование
     void BeginDraw();
