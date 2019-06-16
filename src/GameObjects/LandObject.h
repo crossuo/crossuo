@@ -16,7 +16,6 @@ public:
     // true - picture from texmaps, false - from art.mul
     bool IsStretched = false;
     uint16_t OriginalGraphic = 0;
-    GLuint PositionBuffer = 0;
     GLuint VertexBuffer = 0;
     GLuint NormalBuffer = 0;
 

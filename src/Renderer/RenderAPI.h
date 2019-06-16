@@ -11,6 +11,7 @@
 bool Render_Init(SDL_Window *window);
 void Render_Shutdown();
 bool Render_SetViewParams(RenderViewParams *params);
+void Render_SwapBuffers();
 
 RenderState Render_DefaultState();
 void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state);
@@ -28,7 +29,11 @@ texture_handle_t Render_CreateTexture2D(
     RenderTextureFormat pixelsFormat);
 bool Render_DestroyTexture(texture_handle_t texture);
 
+frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height);
+bool Render_DestroyFrameBuffer(frame_buffer_t fb);
+
 bool RenderAdd_SetTexture(RenderCmdList *cmdList, SetTextureCmd *cmd);
+bool RenderAdd_SetFrameBuffer(RenderCmdList *cmdList, SetFrameBufferCmd *cmd);
 bool RenderAdd_DrawQuad(RenderCmdList *cmdList, DrawQuadCmd *cmds, uint32_t cmd_count);
 bool RenderAdd_DrawRotatedQuad(
     RenderCmdList *cmdList, DrawRotatedQuadCmd *cmds, uint32_t cmd_count);
@@ -39,6 +44,8 @@ bool RenderAdd_DrawCircle(RenderCmdList *cmdList, DrawCircleCmd *cmd);
 bool RenderAdd_DrawUntexturedQuad(RenderCmdList *cmdList, DrawUntexturedQuadCmd *cmd);
 bool RenderAdd_DrawLine(RenderCmdList *cmdList, DrawLineCmd *cmd);
 
+bool RenderAdd_SetAlphaTest(RenderCmdList *cmdList, AlphaTestCmd *cmd);
+bool RenderAdd_DisableAlphaTest(RenderCmdList *cmdList);
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state);

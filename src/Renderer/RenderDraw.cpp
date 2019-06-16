@@ -430,6 +430,16 @@ bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state)
     return true;
 }
 
+bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state)
+{
+    return RenderState_SetAlphaTest(state, true, cmd->func, cmd->ref);
+}
+
+bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state)
+{
+    return RenderState_SetAlphaTest(state, false, AlphaTestFunc::AlphaTest_Invalid, 0.f);
+}
+
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetBlend(state, true, cmd->func);
@@ -483,9 +493,9 @@ bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state)
 
 bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *)
 {
-    auto mask = cmd->clearMask & ClearRT::Color ? GL_COLOR_BUFFER_BIT : 0;
-    mask = mask | cmd->clearMask & ClearRT::Depth ? GL_DEPTH_BUFFER_BIT : 0;
-    mask = mask | cmd->clearMask & ClearRT::Stencil ? GL_STENCIL_BUFFER_BIT : 0;
+    auto mask = (cmd->clearMask & ClearRT::Color) == ClearRT::Color ? GL_COLOR_BUFFER_BIT : 0;
+    mask |= (cmd->clearMask & ClearRT::Depth) == ClearRT::Depth ? GL_DEPTH_BUFFER_BIT : 0;
+    mask |= (cmd->clearMask & ClearRT::Stencil) == ClearRT::Stencil ? GL_STENCIL_BUFFER_BIT : 0;
     glClear(mask);
 
     return true;

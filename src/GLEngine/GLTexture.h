@@ -11,8 +11,8 @@ struct CGLTexture
 {
     uint16_t Width = 0;
     uint16_t Height = 0;
-    GLuint VertexBuffer = 0;
-    GLuint MirroredVertexBuffer = 0;
+    // GLuint VertexBuffer = 0;
+    // GLuint MirroredVertexBuffer = 0;
 #ifndef NEW_RENDERER_ENABLED
     GLuint Texture = 0;
 #else

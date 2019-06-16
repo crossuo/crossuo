@@ -120,6 +120,31 @@ bool RenderAdd_DrawLine(RenderCmdList *cmdList, DrawLineCmd *cmd)
     return true;
 }
 
+bool RenderAdd_SetAlphaTest(RenderCmdList *cmdList, AlphaTestCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(AlphaTestCmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_AlphaTest(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_DisableAlphaTest(RenderCmdList *cmdList)
+{
+    DisableAlphaTestCmd cmd;
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DisableAlphaTest(&cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(BlendStateCmd));

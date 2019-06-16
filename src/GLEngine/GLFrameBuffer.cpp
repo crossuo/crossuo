@@ -21,8 +21,9 @@ bool CGLFrameBuffer::Init(int width, int height)
 
     bool result = false;
 
-    if ((width != 0) && (height != 0))
+    if (width > 0 && height > 0)
     {
+#ifndef NEW_RENDERER_ENABLED
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glGenTextures(1, &Texture.Texture);
         glBindTexture(GL_TEXTURE_2D, Texture.Texture);
@@ -56,6 +57,11 @@ bool CGLFrameBuffer::Init(int width, int height)
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, currentFrameBuffer);
+#else
+        m_FrameBuffer = Render_CreateFrameBuffer(uint32_t(width), uint32_t(height));
+        result = m_FrameBuffer.texture != RENDER_TEXTUREHANDLE_INVALID &&
+                 m_FrameBuffer.handle != RENDER_FRAMEBUFFER_INVALID;
+#endif
     }
 
     return result;
@@ -63,6 +69,7 @@ bool CGLFrameBuffer::Init(int width, int height)
 
 void CGLFrameBuffer::Free()
 {
+#ifndef NEW_RENDERER_ENABLED
     Texture.Clear();
 
     if (m_FrameBuffer != 0)
@@ -70,18 +77,38 @@ void CGLFrameBuffer::Free()
         glDeleteFramebuffers(1, &m_FrameBuffer);
         m_FrameBuffer = 0;
     }
+#else
+    if (m_FrameBuffer.handle != RENDER_FRAMEBUFFER_INVALID)
+    {
+        Render_DestroyFrameBuffer(m_FrameBuffer);
+    }
 
-    m_OldFrameBuffer = 0;
+    m_FrameBuffer = {};
+#endif
+
+    m_OldFrameBuffer = {};
 }
 
 void CGLFrameBuffer::Release()
 {
+#ifndef NEW_RENDERER_ENABLED
     glBindFramebuffer(GL_FRAMEBUFFER, m_OldFrameBuffer);
 
     glBindTexture(GL_TEXTURE_2D, Texture.Texture);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     g_GL.RestorePort();
+#else
+    RenderAdd_SetFrameBuffer(g_renderCmdList, SetFrameBufferCmd{ m_OldFrameBuffer });
+    // TODO this isn't the place to keep track of the previous frame buffer
+    // TODO who should know when to call glGenerateMipmap?
+    // maybe this is a new specific command while this isn't replaced
+    auto viewParams = RenderViewParams{ .viewport = { g_GameWindow.GetSize().Width,
+                                                      g_GameWindow.GetSize().Height } };
+    Render_SetViewParams(&viewParams);
+    __debugbreak();
+    continuar daqui substituindo o resto do arquivo e verificar o outro continuar daqui
+#endif
 }
 
 bool CGLFrameBuffer::Ready(int width, int height)
@@ -100,6 +127,7 @@ bool CGLFrameBuffer::Use()
 
     if (m_Ready)
     {
+#ifndef NEW_RENDERER_ENABLED
         glEnable(GL_TEXTURE_2D);
 
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_OldFrameBuffer);
@@ -114,6 +142,8 @@ bool CGLFrameBuffer::Use()
         glOrtho(0.0, Texture.Width, 0.0, Texture.Height, -150.0, 150.0);
 
         glMatrixMode(GL_MODELVIEW);
+#else
+#endif
 
         result = true;
     }

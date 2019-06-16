@@ -19,7 +19,10 @@ bool RenderState_SetTexture(
     RenderState *state, RenderTextureType type, texture_handle_t texture, bool forced = false);
 
 bool RenderState_FlushState(RenderState *state);
+bool RenderState_SetAlphaTest(
+    RenderState *state, bool enabled, AlphaTestFunc func, float alphaRef, bool forced = false);
 bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool forced = false);
+bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced = false);
 bool RenderState_SetStencil(
     RenderState *state,
     bool enabled,
@@ -58,9 +61,11 @@ bool RenderDraw_DrawCircle(DrawCircleCmd *cmd, RenderState *state);
 bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *state);
 bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state);
 
+bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
+bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state);
+bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state);
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);
-bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
 bool RenderDraw_StencilState(StencilStateCmd *, RenderState *state);
 bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state);
 bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state);

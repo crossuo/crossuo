@@ -18,6 +18,9 @@ enum RenderCommandType : uint8_t
     Cmd_FlushState,
 
     Cmd_SetTexture,
+    Cmd_SetFrameBuffer,
+    Cmd_AlphaTest,
+    Cmd_DisableAlphaTest,
     Cmd_BlendState,
     Cmd_DisableBlendState,
     Cmd_StencilState,
@@ -55,6 +58,17 @@ struct SetTextureCmd
     {
     }
 };
+
+struct SetFrameBufferCmd
+{
+    RenderCommandHeader header;
+    frame_buffer_t frameBuffer;
+    SetFrameBufferCmd(frame_buffer_t frameBuffer)
+        : header{ RenderCommandType::Cmd_SetFrameBuffer }
+        , frameBuffer(frameBuffer)
+    {
+    }
+}
 
 struct DrawQuadCmd
 {
@@ -282,10 +296,34 @@ struct DrawRotatedQuadCmd : public DrawQuadCmd
     }
 };
 
+struct AlphaTestCmd
+{
+    RenderCommandHeader header;
+    AlphaTestFunc func = AlphaTestFunc::AlphaTest_Invalid;
+    float ref;
+
+    AlphaTestCmd(AlphaTestFunc func, float ref)
+        : header{ RenderCommandType::Cmd_AlphaTest }
+        , func(func)
+        , ref(ref)
+    {
+    }
+};
+
+struct DisableAlphaTestCmd
+{
+    RenderCommandHeader header;
+
+    DisableAlphaTestCmd()
+        : header{ RenderCommandType::Cmd_DisableAlphaTest }
+    {
+    }
+};
+
 struct BlendStateCmd
 {
     RenderCommandHeader header;
-    BlendFunc func = BlendFunc{ 0 };
+    BlendFunc func = BlendFunc::BlendFunc_Invalid;
 
     BlendStateCmd(BlendFunc func)
         : header{ RenderCommandType::Cmd_BlendState }
@@ -314,12 +352,12 @@ struct StencilStateCmd
     uint32_t mask;
 
     StencilStateCmd(
-        StencilFunc func = NeverPass,
+        StencilFunc func = StencilFunc::StencilFunc_NeverPass,
         uint32_t ref = 0,
         uint32_t mask = 0xffffffff,
-        StencilOp stencilFail = Keep,
-        StencilOp depthFail = Keep,
-        StencilOp bothFail = Keep)
+        StencilOp stencilFail = StencilOp::Keep,
+        StencilOp depthFail = StencilOp::Keep,
+        StencilOp bothFail = StencilOp::Keep)
         : header{ RenderCommandType::Cmd_StencilState }
         , func(func)
         , stencilFail(stencilFail)
