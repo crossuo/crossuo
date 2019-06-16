@@ -31,11 +31,6 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
 CLandObject::~CLandObject()
 {
     DEBUG_TRACE_FUNCTION;
-    if (PositionBuffer != 0)
-    {
-        glDeleteBuffers(1, &PositionBuffer);
-        PositionBuffer = 0;
-    }
 
     if (VertexBuffer != 0)
     {

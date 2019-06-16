@@ -6,6 +6,8 @@ bool RenderState_FlushState(RenderState *state)
 {
     RenderState_SetTexture(state, state->texture.type, state->texture.texture, true);
     RenderState_SetBlend(state, state->blend.enabled, state->blend.func, true);
+    RenderState_SetAlphaTest(
+        state, state->alphaTest.enabled, state->alphaTest.func, state->alphaTest.alphaRef, true);
     RenderState_SetStencil(
         state,
         state->stencil.enabled,
@@ -16,15 +18,65 @@ bool RenderState_FlushState(RenderState *state)
         state->stencil.depthFail,
         state->stencil.bothFail,
         true);
+    RenderState_SetDepth(state, state->depth.enabled, state->depth.func, true);
     RenderState_SetColorMask(state, state->colorMask, true);
     RenderState_SetColor(state, state->color, true);
     RenderState_SetClearColor(state, state->clearColor, true);
+
+    glLoadIdentity();
+
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
     // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
     // should be clear
     // TODO add a compile-time assert to ensure any newly added command is applied or properly ignored here
 
     return true;
+}
+
+bool RenderState_SetAlphaTest(
+    RenderState *state, bool enabled, AlphaTestFunc func, float ref, bool forced)
+{
+    static GLenum s_alphaTestfuncToOGLFunc[] = {
+        GL_NEVER,    // AlphaTest_NeverPass
+        GL_ALWAYS,   // AlphaTest_AlwaysPass
+        GL_EQUAL,    // AlphaTest_Equal
+        GL_NOTEQUAL, // AlphaTest_Different
+        GL_LESS,     // AlphaTest_Less
+        GL_LEQUAL,   // AlphaTest_LessOrEqual
+        GL_GREATER,  // AlphaTest_Greater
+        GL_GEQUAL,   // AlphaTest_GreaterOrEqual
+    };
+
+    static_assert(countof(s_alphaTestfuncToOGLFunc) == AlphaTestFunc::AlphaTest_Count);
+
+    bool changed = false;
+    if (state->alphaTest.enabled != enabled || forced)
+    {
+        changed = true;
+        state->alphaTest.enabled = enabled;
+        if (enabled)
+        {
+            glEnable(GL_ALPHA_TEST);
+        }
+        else
+        {
+            glDisable(GL_ALPHA_TEST);
+        }
+    }
+
+    auto differentFuncOrRef = [&]() -> bool {
+        return state->alphaTest.func != func || state->alphaTest.alphaRef != ref;
+    };
+
+    if (enabled && differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTest_Invalid))
+    {
+        changed = true;
+        state->alphaTest.func = func;
+        state->alphaTest.alphaRef = ref;
+        glAlphaFunc(s_alphaTestfuncToOGLFunc[func], ref);
+    }
+
+    return changed;
 }
 
 bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool forced)
@@ -73,6 +125,40 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
     return changed;
 }
 
+bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced)
+{
+    static GLenum s_depthFuncToOGLFunc[] = {
+        GL_NEVER,    // DepthFunc::DepthFunc_NeverPass,
+        GL_ALWAYS,   // DepthFunc::DepthFunc_AlwaysPass,
+        GL_EQUAL,    // DepthFunc::DepthFunc_Equal,
+        GL_NOTEQUAL, // DepthFunc::DepthFunc_Different,
+        GL_LESS,     // DepthFunc::DepthFunc_Less,
+        GL_LEQUAL,   // DepthFunc::DepthFunc_LessOrEqual,
+        GL_GREATER,  // DepthFunc::DepthFunc_Greater,
+        GL_GEQUAL,   // DepthFunc::DepthFunc_GreaterOrEqual
+    };
+
+    static_assert(countof(s_depthFuncToOGLFunc) == DepthFunc::DepthFunc_Count);
+
+    if (forced || state->depth.enabled != enabled || (enabled && state->depth.func != func))
+    {
+        state->depth.enabled = enabled;
+        state->depth.func = func;
+        if (enabled)
+        {
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(s_depthFuncToOGLFunc[func]);
+        }
+        else
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
+        return true;
+    }
+
+    return false;
+}
+
 bool RenderState_SetStencil(
     RenderState *state,
     bool enabled,
@@ -85,14 +171,14 @@ bool RenderState_SetStencil(
     bool forced)
 {
     static GLenum s_stencilFuncToOGLFunc[] = {
-        GL_NEVER,    // StencilFunc::NeverPass
-        GL_LESS,     // StencilFunc::Less
-        GL_LEQUAL,   // StencilFunc::LessOrEqual
-        GL_GREATER,  // StencilFunc::Greater
-        GL_GEQUAL,   // StencilFunc::GreaterOrEqual
-        GL_EQUAL,    // StencilFunc::Equal
-        GL_NOTEQUAL, // StencilFunc::Different
-        GL_ALWAYS    // StencilFunc::AlwaysPass
+        GL_NEVER,   // StencilFunc::StencilFunc_NeverPass
+        GL_ALWAYS,  // StencilFunc::StencilFunc_AlwaysPass
+        GL_LESS,    // StencilFunc::StencilFunc_Less
+        GL_LEQUAL,  // StencilFunc::StencilFunc_LessOrEqual
+        GL_GREATER, // StencilFunc::StencilFunc_Greater
+        GL_GEQUAL,  // StencilFunc::StencilFunc_GreaterOrEqual
+        GL_EQUAL,   // StencilFunc::StencilFunc_Equal
+        GL_NOTEQUAL // StencilFunc::StencilFunc_Different
     };
 
     static GLenum s_stencilOpToOGLOp[] = {

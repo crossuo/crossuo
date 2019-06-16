@@ -20,11 +20,6 @@ CGLEngine::CGLEngine()
 CGLEngine::~CGLEngine()
 {
     DEBUG_TRACE_FUNCTION;
-    if (PositionBuffer != 0)
-    {
-        glDeleteBuffers(1, &PositionBuffer);
-        PositionBuffer = 0;
-    }
 
 #ifndef NEW_RENDERER_ENABLED
     Uninstall();
@@ -35,7 +30,8 @@ CGLEngine::~CGLEngine()
 #endif
 }
 
-#define OGL_DEBUGCONTEXT_ENABLED
+#ifndef NEW_RENDERER_ENABLED
+//#define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
 #define OGL_DEBUGMSG_TYPE_COUNT (8)
@@ -179,7 +175,6 @@ static void SetupOGLDebugMessage()
 #endif
 }
 
-#ifndef NEW_RENDERER_ENABLED
 bool CGLEngine::Install()
 {
     DEBUG_TRACE_FUNCTION;
@@ -351,6 +346,7 @@ void CGLEngine::BeginDraw()
     DEBUG_TRACE_FUNCTION;
     Drawing = true;
 
+#ifndef NEW_RENDERER_ENABLED
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glLoadIdentity();
 
@@ -361,6 +357,7 @@ void CGLEngine::BeginDraw()
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.0f);
+#endif
 }
 
 void CGLEngine::EndDraw()
@@ -368,30 +365,10 @@ void CGLEngine::EndDraw()
     DEBUG_TRACE_FUNCTION;
     Drawing = false;
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_ALPHA_TEST);
     SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window);
-}
-
-void CGLEngine::BeginStencil()
-{
-    DEBUG_TRACE_FUNCTION;
-    glEnable(GL_STENCIL_TEST);
-
-    glColorMask(0u, 0u, 0u, 0u);
-
-    glStencilFunc(GL_ALWAYS, 1, 1);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-}
-
-void CGLEngine::EndStencil()
-{
-    DEBUG_TRACE_FUNCTION;
-    glColorMask(1u, 1u, 1u, 1u);
-
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc(GL_NOTEQUAL, 1, 1);
-
-    glDisable(GL_STENCIL_TEST);
+#endif
 }
 
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
@@ -416,6 +393,7 @@ void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
     glMatrixMode(GL_MODELVIEW);
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::ViewPort(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
@@ -436,6 +414,7 @@ void CGLEngine::RestorePort()
     glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0);
     glMatrixMode(GL_MODELVIEW);
 }
+#endif
 
 void CGLEngine::PushScissor(int x, int y, int width, int height)
 {

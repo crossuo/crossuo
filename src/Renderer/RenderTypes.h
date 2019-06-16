@@ -8,14 +8,22 @@
 #define RENDER_SHADERUNIFORMLOC_INVALID (0xffffffff)
 #define RENDER_SHADERPROGRAM_INVALID (0xffffffff)
 #define RENDER_SHADERHANDLE_INVALID (0xffffffff)
+#define RENDER_FRAMEBUFFER_INVALID (0xffffffff)
 
 #define RENDER_MAX_SHADERPIPELINE_UNIFORM (3)
 #define RENDERSTATE_MAX_SHADER_UNIFORM (3)
 #define RENDERSTATE_SHADER_UNIFORMDATA_SIZE (4 * 4 * sizeof(uint32_t))
 
 typedef uint32_t texture_handle_t;
+typedef uint32_t framebuffer_handle_t;
 typedef uint32_t shaderprogram_handle_t;
 typedef uint32_t shader_handle_t;
+
+struct frame_buffer_t
+{
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
+    framebuffer_handle_t handle = RENDER_FRAMEBUFFER_INVALID;
+};
 
 // TODO simd-friendly types
 // TODO accessors (x(), xxxx(), ...)
@@ -59,14 +67,14 @@ enum BlendFunc : uint8_t
 
 enum StencilFunc : uint8_t
 {
-    NeverPass = 0,
-    Less,
-    LessOrEqual,
-    Greater,
-    GreaterOrEqual,
-    Equal,
-    Different,
-    AlwaysPass,
+    StencilFunc_NeverPass = 0,
+    StencilFunc_AlwaysPass,
+    StencilFunc_Less,
+    StencilFunc_LessOrEqual,
+    StencilFunc_Greater,
+    StencilFunc_GreaterOrEqual,
+    StencilFunc_Equal,
+    StencilFunc_Different,
 
     StencilFunc_Count,
     StencilFunc_Invalid = 0xff,
@@ -85,6 +93,36 @@ enum StencilOp : uint8_t
 
     StencilOp_Count,
     StencilOp_Invalid = 0xff,
+};
+
+enum DepthFunc : uint8_t
+{
+    DepthFunc_NeverPass = 0,
+    DepthFunc_AlwaysPass,
+    DepthFunc_Equal,
+    DepthFunc_Different,
+    DepthFunc_Less,
+    DepthFunc_LessOrEqual,
+    DepthFunc_Greater,
+    DepthFunc_GreaterOrEqual,
+
+    DepthFunc_Count,
+    DepthFunc_Invalid = 0xff,
+};
+
+enum AlphaTestFunc : uint8_t
+{
+    AlphaTest_NeverPass = 0,
+    AlphaTest_AlwaysPass,
+    AlphaTest_Equal,
+    AlphaTest_Different,
+    AlphaTest_Less,
+    AlphaTest_LessOrEqual,
+    AlphaTest_Greater,
+    AlphaTest_GreaterOrEqual,
+
+    AlphaTest_Count,
+    AlphaTest_Invalid = 0xff,
 };
 
 enum ColorMask : uint8_t
@@ -196,6 +234,13 @@ struct RenderState
         BlendFunc func;
     } blend = { false, BlendFunc::SrcAlpha_OneMinusSrcAlpha };
 
+    struct
+    {
+        bool enabled;
+        AlphaTestFunc func;
+        float alphaRef;
+    } alphaTest = { true, AlphaTestFunc::AlphaTest_Greater, 0.f };
+
     // TODO support front- and back-face independent stencil testing
     struct
     {
@@ -206,9 +251,19 @@ struct RenderState
         StencilOp bothFail;
         uint32_t ref;
         uint32_t mask;
-    } stencil = {
-        false, StencilFunc::NeverPass, StencilOp::Keep, StencilOp::Keep, StencilOp::Keep, 0, 1
-    };
+    } stencil = { false,
+                  StencilFunc::StencilFunc_NeverPass,
+                  StencilOp::Keep,
+                  StencilOp::Keep,
+                  StencilOp::Keep,
+                  0,
+                  1 };
+
+    struct
+    {
+        bool enabled;
+        DepthFunc func;
+    } depth = { false, DepthFunc::DepthFunc_LessOrEqual };
 
     ColorMask colorMask = ColorMask::ColorMask_All;
     float4 color = g_ColorWhite;

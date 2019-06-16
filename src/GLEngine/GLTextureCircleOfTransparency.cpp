@@ -87,7 +87,12 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     glDisable(GL_STENCIL_TEST);
 #else
     auto stencilCmd = StencilStateCmd(
-        StencilFunc::NeverPass, 1, 1, StencilOp::Keep, StencilOp::Keep, StencilOp::Replace);
+        StencilFunc::StencilFunc_NeverPass,
+        1,
+        1,
+        StencilOp::Keep,
+        StencilOp::Keep,
+        StencilOp::Replace);
     RenderAdd_SetStencil(g_renderCmdList, &stencilCmd);
 
     RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::Alpha));
@@ -127,7 +132,12 @@ void CGLTextureCircleOfTransparency::Redraw()
     {
         RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::Alpha));
         auto stencilCmd = StencilStateCmd(
-            StencilFunc::NeverPass, 1, 1, StencilOp::Keep, StencilOp::Keep, StencilOp::Replace);
+            StencilFunc::StencilFunc_NeverPass,
+            1,
+            1,
+            StencilOp::Keep,
+            StencilOp::Keep,
+            StencilOp::Replace);
         RenderAdd_SetStencil(g_renderCmdList, &stencilCmd);
 
         RenderAdd_DrawQuad(

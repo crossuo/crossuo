@@ -43,7 +43,7 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
         RenderAdd_DisableBlend(g_renderCmdList);
 
         // FIXME what are the assumed values for func, op, ref, and mask?
-        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd(StencilFunc::Greater));
+        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd(StencilFunc::StencilFunc_Greater));
         RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
@@ -102,7 +102,7 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
         RenderAdd_DisableBlend(g_renderCmdList);
 
         // FIXME what were the original func, op, and stencil values?
-        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd(StencilFunc::Greater));
+        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd(StencilFunc::StencilFunc_Greater));
         RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
@@ -180,7 +180,7 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
     if (stencil)
     {
         // FIXME what were the original func, op, and stencil values?
-        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd(StencilFunc::Greater));
+        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd(StencilFunc::StencilFunc_Greater));
         RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
@@ -204,15 +204,15 @@ void CGLTexture::Clear()
     }
 #endif
 
-    if (VertexBuffer != 0)
-    {
-        glDeleteBuffers(1, &VertexBuffer);
-        VertexBuffer = 0;
-    }
+    // if (VertexBuffer != 0)
+    // {
+    //     glDeleteBuffers(1, &VertexBuffer);
+    //     VertexBuffer = 0;
+    // }
 
-    if (MirroredVertexBuffer != 0)
-    {
-        glDeleteBuffers(1, &MirroredVertexBuffer);
-        MirroredVertexBuffer = 0;
-    }
+    // if (MirroredVertexBuffer != 0)
+    // {
+    //     glDeleteBuffers(1, &MirroredVertexBuffer);
+    //     MirroredVertexBuffer = 0;
+    // }
 }

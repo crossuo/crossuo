@@ -18,7 +18,6 @@ public:
 #ifndef NEW_RENDERER_ENABLED
     float SittingCharacterOffset = 8.0f;
 #endif
-    GLuint PositionBuffer = 0;
     SDL_GLContext m_context;
 
 private:
@@ -40,20 +39,14 @@ public:
     //Завершить рисование и вывести все нарисованное на экран
     void EndDraw();
 
-    //Включить буфер трафарета
-    void BeginStencil();
-
-    //Выключить буфер трафарета
-    void EndStencil();
-
     //Указать область рисования
     void ViewPortScaled(int x, int y, int width, int height);
 
-    //Указать область рисования
+#ifndef NEW_RENDERER_ENABLED
     void ViewPort(int x, int y, int width, int height);
 
-    //Восстановить стандартную область рисования
     void RestorePort();
+#endif
 
     //Указать область рисования (ножницами, сохраняет мартицу)
     void PushScissor(int x, int y, int width, int height);

@@ -9,14 +9,23 @@ class CGLFrameBuffer
 {
 private:
     bool m_Ready = false;
+#ifndef NEW_RENDERER_ENABLED
     GLint m_OldFrameBuffer = 0;
     GLuint m_FrameBuffer = 0;
+#else
+    static frame_buffer_t m_OldFrameBuffer;
+    frame_buffer_t m_FrameBuffer = {};
+    uint32_t width = 0;
+    uint32_t height = 0;
+#endif
 
 public:
     CGLFrameBuffer();
     ~CGLFrameBuffer();
 
+#ifndef NEW_RENDERER_ENABLED
     CGLTexture Texture{ CGLTexture() };
+#endif
 
     bool Init(int width, int height);
     bool Init(const CSize &size) { return Init(size.Width, size.Height); }

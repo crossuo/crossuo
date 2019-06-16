@@ -15,6 +15,7 @@ float4 g_ColorInvalid = { { *(float *)&g_iColorInvalid,
 struct
 {
     SDL_GLContext context = nullptr;
+    SDL_Window *window = nullptr;
 } g_render;
 
 float float4::operator[](size_t i)
@@ -136,6 +137,7 @@ bool Render_Init(SDL_Window *window)
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
     g_render.context = context;
+    g_render.window = window;
     return true;
 }
 
@@ -161,6 +163,11 @@ bool Render_SetViewParams(RenderViewParams *params)
     glOrtho(0, params->viewport.width, params->viewport.height, 0, -150.0, 150.0);
     glMatrixMode(GL_MODELVIEW);
     return true;
+}
+
+void Render_SwapBuffers()
+{
+    SDL_GL_SwapWindow(g_render.window);
 }
 
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)
@@ -384,6 +391,58 @@ texture_handle_t Render_CreateTexture2D(
         pixels);
 
     return tex;
+}
+
+frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
+{
+    texture_handle_t texture;
+    frame_buffer_handle_t handle;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, &texture);
+    glTexImage2(
+        GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
+
+    GLint currFb = 0;
+    glGetIntegerv(GL_FRAMBUFFER_BINDING, &currFb);
+
+    glGenFramebuffers(1, &handle);
+    glBindFramebuffer(GL_FRAMEBUFFER, handle);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+    frame_buffer_t fb = {};
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+    {
+        fb.texture = texture;
+        fb.handle = handle;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, currFb);
+    return fb;
+    /*continuar daqui ollhar codigo em GLFrameBuffer::Init e continuar a trocar frame buffer inteiro
+        depois procurar quem q usa framebuffer e trocar depois procurar quem q usa
+            glengine.ViewportScaled e trocar*/
+}
+
+bool Render_DestroyFrameBuffer(frame_buffer_t fb)
+{
+    auto validTex = fb.texture != RENDER_TEXTUREHANDLE_INVALID;
+    auto validFb = fb.handle != RENDER_FRAMEBUFFER_INVALID;
+    assert(validFb);
+    assert(validTex);
+    if (validTex)
+    {
+        glDeleteTextures(1, &fb.texture);
+    }
+
+    if (validFb)
+    {
+        glDeleteFramebuffers(1, &fb.handle);
+    }
+
+    return validTex && validFb;
 }
 
 bool Render_DestroyTexture(texture_handle_t texture)

@@ -1787,10 +1787,18 @@ void CGameScreen::Render()
         currentFPS++;
     }
 
+#ifdef NEW_RENDERER_ENABLED
     Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
     RenderAdd_FlushState(&m_RenderCmdList);
+#endif
 
+    // TODO renderer BeginDraw exists only to set Drawing to true, as it's used by
+    // Gump-something; investigate it and remove/move it elsewhere so
+    // we can get rid of glEngine
     g_GL.BeginDraw();
+#ifdef NEW_RENDERER_ENABLED
+    RenderAdd_ClearRT(&m_RenderCmdList, &ClearRTCmd());
+#endif
     if (DrawSmoothMonitor() != 0)
     {
         return;
@@ -2077,9 +2085,16 @@ void CGameScreen::Render()
         g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
     }
 
-    // turning this off while immediateMode is on
-    // RenderDraw_Execute(&m_RenderCmdList);
+#ifdef NEW_RENDERER_ENABLED
+// turning this off while immediateMode is on
+// RenderDraw_Execute(&m_RenderCmdList);
+#endif
+
     g_GL.EndDraw();
+
+#ifdef NEW_RENDERER_ENABLED
+    Render_SwapBuffers();
+#endif
 }
 
 void CGameScreen::SelectObject()

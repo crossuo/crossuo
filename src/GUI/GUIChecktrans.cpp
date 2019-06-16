@@ -35,12 +35,22 @@ void CGUIChecktrans::Draw(bool checktrans)
     RenderAdd_SetStencil(
         g_renderCmdList,
         &StencilStateCmd(
-            StencilFunc::AlwaysPass, 1, 1, StencilOp::Keep, StencilOp::Keep, StencilOp::Replace));
+            StencilFunc::StencilFunc_AlwaysPass,
+            1,
+            1,
+            StencilOp::Keep,
+            StencilOp::Keep,
+            StencilOp::Replace));
     RenderAdd_DrawUntexturedQuad(g_renderCmdList, &DrawUntexturedQuadCmd(m_X, m_Y, Width, Height));
     RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_All));
     RenderAdd_SetStencil(
         g_renderCmdList,
         &StencilStateCmd(
-            StencilFunc::Different, 1, 1, StencilOp::Keep, StencilOp::Keep, StencilOp::Keep));
+            StencilFunc::StencilFunc_Different,
+            1,
+            1,
+            StencilOp::Keep,
+            StencilOp::Keep,
+            StencilOp::Keep));
 #endif
 }

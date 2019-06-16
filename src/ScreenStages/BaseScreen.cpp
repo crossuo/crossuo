@@ -65,10 +65,19 @@ void CBaseScreen::Render()
 {
     DEBUG_TRACE_FUNCTION;
 
+#ifdef NEW_RENDERER_ENABLED
     Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
     RenderAdd_FlushState(&m_RenderCmdList);
+#endif
 
+    // TODO renderer BeginDraw exists only to set Drawing to true, as it's used by
+    // Gump-something; investigate it and remove/move it elsewhere so
+    // we can get rid of glEngine
     g_GL.BeginDraw();
+#ifdef NEW_RENDERER_ENABLED
+    RenderAdd_ClearRT(&m_RenderCmdList, &ClearRTCmd());
+#endif
+
     if (DrawSmoothMonitor() != 0)
     {
         return;
@@ -84,9 +93,16 @@ void CBaseScreen::Render()
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);
 
+#ifdef NEW_RENDERER_ENABLED
     // turning this off while immediateMode is on
     // RenderDraw_Execute(&m_RenderCmdList);
+#endif
+
     g_GL.EndDraw();
+
+#ifdef NEW_RENDERER_ENABLED
+    Render_SwapBuffers();
+#endif
 }
 
 void CBaseScreen::SelectObject()
@@ -123,6 +139,10 @@ int CBaseScreen::DrawSmoothMonitor()
     {
         ProcessSmoothAction();
         g_GL.EndDraw();
+
+#ifdef NEW_RENDERER_ENABLED
+        Render_SwapBuffers();
+#endif
         return 1;
     }
     return 0;
