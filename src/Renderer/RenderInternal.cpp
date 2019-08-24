@@ -149,19 +149,31 @@ void Render_Shutdown()
     }
 }
 
-// TODO renderer test if resizing the window is still working as before
-// resize the real window
-// resize the game viewport
-// maximize vs restore
-bool Render_SetViewParams(RenderViewParams *params)
+bool HACKRender_SetViewParams(SetViewParamsCmd *cmd)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    glViewport(0, 0, params->viewport.width, params->viewport.height);
+    assert(cmd->left < cmd->right && cmd->bottom > cmd->top);
+
+    auto height = cmd->bottom - cmd->top;
+    glViewport(cmd->left, cmd->top, cmd->right - cmd->left, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, params->viewport.width, params->viewport.height, 0, -150.0, 150.0);
+
+    auto right = (cmd->left + cmd->right);
+    auto left = cmd->left - (right - cmd->right);
+    auto bottom = (cmd->top + height);
+    auto top = cmd->top - (bottom - cmd->bottom);
+    glOrtho(cmd->left, cmd->right, cmd->bottom, cmd->top, cmd->nearZ, cmd->farZ);
+
     glMatrixMode(GL_MODELVIEW);
+    return true;
+}
+
+bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb)
+{
+    assert(currFb);
+    *currFb = cmdList->state.framebuffer;
     return true;
 }
 
@@ -396,16 +408,16 @@ texture_handle_t Render_CreateTexture2D(
 frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
 {
     texture_handle_t texture;
-    frame_buffer_handle_t handle;
+    framebuffer_handle_t handle;
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, &texture);
-    glTexImage2(
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
 
     GLint currFb = 0;
-    glGetIntegerv(GL_FRAMBUFFER_BINDING, &currFb);
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currFb);
 
     glGenFramebuffers(1, &handle);
     glBindFramebuffer(GL_FRAMEBUFFER, handle);
@@ -421,9 +433,6 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
 
     glBindFramebuffer(GL_FRAMEBUFFER, currFb);
     return fb;
-    /*continuar daqui ollhar codigo em GLFrameBuffer::Init e continuar a trocar frame buffer inteiro
-        depois procurar quem q usa framebuffer e trocar depois procurar quem q usa
-            glengine.ViewportScaled e trocar*/
 }
 
 bool Render_DestroyFrameBuffer(frame_buffer_t fb)

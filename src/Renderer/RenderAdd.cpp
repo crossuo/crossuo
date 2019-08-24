@@ -14,6 +14,18 @@ bool RenderAdd_SetTexture(RenderCmdList *cmdList, SetTextureCmd *cmd)
     return true;
 }
 
+bool RenderAdd_SetFrameBuffer(RenderCmdList *cmdList, SetFrameBufferCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetFrameBuffer(cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_DrawQuad(RenderCmdList *cmdList, DrawQuadCmd *cmds, uint32_t cmd_count)
 {
     auto ret = Render_AppendCmd(cmdList, cmds, cmd_count * sizeof(*cmds));
@@ -291,5 +303,17 @@ bool RenderAdd_FlushState(RenderCmdList *cmdList)
     }
 
     RenderDraw_FlushState(&cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_SetViewParams(RenderCmdList *cmdList, SetViewParamsCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetViewParams(cmd, &cmdList->state);
     return true;
 }

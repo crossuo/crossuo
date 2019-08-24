@@ -16,6 +16,11 @@ bool RenderDraw_SetTexture(SetTextureCmd *cmd, RenderState *state)
     return RenderState_SetTexture(state, cmd->type, cmd->texture);
 }
 
+bool RenderDraw_SetFrameBuffer(SetFrameBufferCmd *cmd, RenderState *state)
+{
+    return RenderState_SetFrameBuffer(state, cmd->frameBuffer);
+}
+
 bool RenderDraw_DrawQuad(DrawQuadCmd *cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
@@ -453,6 +458,12 @@ bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state)
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state)
 {
     return RenderState_FlushState(state);
+}
+
+bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state)
+{
+    return RenderState_SetViewParams(
+        state, cmd->left, cmd->right, cmd->bottom, cmd->top, cmd->nearZ, cmd->farZ, cmd->scale);
 }
 
 bool RenderDraw_StencilState(StencilStateCmd *cmd, RenderState *state)

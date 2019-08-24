@@ -29,6 +29,8 @@
 #include "Utility/PingThread.h"
 #endif // USE_PING
 
+extern RenderCmdList *g_renderCmdList;
+
 CGameWindow g_GameWindow;
 
 CGameWindow::CGameWindow()
@@ -79,10 +81,8 @@ bool CGameWindow::OnCreate()
     SDL_GetWindowSize(m_window, &width, &height);
     assert(width == GetSize().Width && height == GetSize().Height);
 
-    RenderViewParams params;
-    params.viewport.width = GetSize().Width;
-    params.viewport.height = GetSize().Height;
-    Render_SetViewParams(&params);
+    HACKRender_SetViewParams(
+        &SetViewParamsCmd{ 0, GetSize().Width, GetSize().Height, 0, -150, 150 });
 #endif
 
     if (!g_Game.Install())
@@ -118,10 +118,8 @@ void CGameWindow::OnResize()
     SDL_GetWindowSize(m_window, &w, &h);
     assert(GetSize().Width == w && GetSize().Height == h);
 
-    RenderViewParams params;
-    params.viewport.width = GetSize().Width;
-    params.viewport.height = GetSize().Height;
-    Render_SetViewParams(&params);
+    RenderAdd_SetViewParams(
+        g_renderCmdList, &SetViewParamsCmd{ 0, GetSize().Width, GetSize().Height, 0, -150, 150 });
 
     g_GumpManager.RedrawAll();
 #endif

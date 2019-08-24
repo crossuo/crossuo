@@ -1,10 +1,13 @@
 #include "Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"
+#include "Utility/PerfMarker.h"
 
 bool RenderState_FlushState(RenderState *state)
 {
     RenderState_SetTexture(state, state->texture.type, state->texture.texture, true);
+    // FIXME epatitucci
+    // RenderState_SetFrameBuffer(state, state->framebuffer, true);
     RenderState_SetBlend(state, state->blend.enabled, state->blend.func, true);
     RenderState_SetAlphaTest(
         state, state->alphaTest.enabled, state->alphaTest.func, state->alphaTest.alphaRef, true);
@@ -388,6 +391,7 @@ bool RenderState_SetTexture(
         switch (type)
         {
             case RenderTextureType::Texture2D:
+            case RenderTextureType::Texture2D_Mipmapped:
             {
                 return GL_TEXTURE_2D;
             }
@@ -412,8 +416,80 @@ bool RenderState_SetTexture(
         else
         {
             glBindTexture(textureTypeToOGLType(type), texture);
+            if (type == RenderTextureType::Texture2D_Mipmapped)
+            {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
         }
 
+        return true;
+    }
+
+    return false;
+}
+
+bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forced)
+{
+    // TODO epatitucci FIXME
+    // if (forced || (memcmp(&state->framebuffer, &fb, sizeof(state->framebuffer) != 0)))
+    {
+        if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
+        {
+            glEnable(GL_TEXTURE_2D);
+            glBindFramebuffer(GL_FRAMEBUFFER, fb.handle);
+            glBindTexture(GL_TEXTURE_2D, fb.texture);
+        }
+        else
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+
+        state->framebuffer = fb;
+
+        return true;
+    }
+    return false;
+}
+
+bool RenderState_SetViewParams(
+    RenderState *state,
+    int left,
+    int right,
+    int bottom,
+    int top,
+    int nearZ,
+    int farZ,
+    float scale,
+    bool forced)
+{
+    // FIXME epatitucci
+    // if (forced || (state->viewport.left != left || state->viewport.right != right ||
+    //                state->viewport.bottom != bottom || state->viewport.top != top ||
+    //                state->viewport.nearZ != nearZ || state->viewport.farZ != farZ ||
+    //                state->viewport.scale != state->viewport.scale))
+    {
+        ScopedPerfMarker(__FUNCTION__);
+
+        state->viewport.left = left;
+        state->viewport.right = right;
+        state->viewport.bottom = bottom;
+        state->viewport.top = top;
+        state->viewport.nearZ = nearZ;
+        state->viewport.farZ = farZ;
+        state->viewport.scale = scale;
+
+        auto height = bottom - top;
+        glViewport(left, top, right - left, height);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        float scaledRight = (left + right) * scale;
+        float scaledLeft = left * scale - (scaledRight - right);
+        float scaledBottom = (top + height) * scale;
+        float scaledTop = top * scale - (scaledBottom - bottom);
+
+        glOrtho(scaledLeft, scaledRight, scaledBottom, scaledTop, float(nearZ), float(farZ));
+        glMatrixMode(GL_MODELVIEW);
         return true;
     }
 

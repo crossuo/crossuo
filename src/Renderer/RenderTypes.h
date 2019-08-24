@@ -151,6 +151,7 @@ enum ClearRT : uint8_t
 enum RenderTextureType : uint8_t
 {
     Texture2D = 0,
+    Texture2D_Mipmapped,
 
     RenderTextureType_Count
 };
@@ -225,6 +226,19 @@ struct RenderState
         RenderTextureType type;
     } texture = { RENDER_TEXTUREHANDLE_INVALID, RenderTextureType::Texture2D };
 
+    frame_buffer_t framebuffer = { RENDER_FRAMEBUFFER_INVALID, RENDER_TEXTUREHANDLE_INVALID };
+
+    struct
+    {
+        int left;
+        int right;
+        int bottom;
+        int top;
+        int nearZ;
+        int farZ;
+        float scale;
+    } viewport = { 0, 0, 0, 0, 0, 0, 1.f };
+
     ShaderPipeline pipeline;
     RenderStateUniformCache uniformCache;
 
@@ -288,13 +302,4 @@ struct RenderCmdList
     }
 
     RenderCmdList() = default;
-};
-
-struct RenderViewParams
-{
-    struct
-    {
-        uint32_t width;
-        uint32_t height;
-    } viewport;
 };

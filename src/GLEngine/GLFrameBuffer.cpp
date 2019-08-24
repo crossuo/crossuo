@@ -4,7 +4,10 @@
 #include "Backend.h"
 #include "Renderer/RenderAPI.h"
 
+#ifdef NEW_RENDERER_ENABLED
 extern RenderCmdList *g_renderCmdList;
+frame_buffer_t CGLFrameBuffer::m_OldFrameBuffer;
+#endif
 
 CGLFrameBuffer::CGLFrameBuffer()
 {
@@ -61,6 +64,12 @@ bool CGLFrameBuffer::Init(int width, int height)
         m_FrameBuffer = Render_CreateFrameBuffer(uint32_t(width), uint32_t(height));
         result = m_FrameBuffer.texture != RENDER_TEXTUREHANDLE_INVALID &&
                  m_FrameBuffer.handle != RENDER_FRAMEBUFFER_INVALID;
+        m_Ready = result;
+        if (result)
+        {
+            m_Width = uint32_t(width);
+            m_Height = uint32_t(height);
+        }
 #endif
     }
 
@@ -99,26 +108,38 @@ void CGLFrameBuffer::Release()
 
     g_GL.RestorePort();
 #else
-    RenderAdd_SetFrameBuffer(g_renderCmdList, SetFrameBufferCmd{ m_OldFrameBuffer });
     // TODO this isn't the place to keep track of the previous frame buffer
-    // TODO who should know when to call glGenerateMipmap?
-    // maybe this is a new specific command while this isn't replaced
-    auto viewParams = RenderViewParams{ .viewport = { g_GameWindow.GetSize().Width,
-                                                      g_GameWindow.GetSize().Height } };
-    Render_SetViewParams(&viewParams);
-    __debugbreak();
-    continuar daqui substituindo o resto do arquivo e verificar o outro continuar daqui
+    RenderAdd_SetFrameBuffer(g_renderCmdList, &SetFrameBufferCmd{ m_OldFrameBuffer });
+
+    RenderAdd_SetTexture(
+        g_renderCmdList,
+        &SetTextureCmd{ m_FrameBuffer.texture, RenderTextureType::Texture2D_Mipmapped });
+
+    auto viewParams =
+        SetViewParamsCmd{ 0,  g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0, -150,
+                          150 };
+    RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
 #endif
 }
 
 bool CGLFrameBuffer::Ready(int width, int height)
 {
+    assert(width >= 0 && height >= 0);
+#ifndef NEW_RENDERER_ENABLED
     return (m_Ready && Texture.Width == width && Texture.Height == height);
+#else
+    return (m_Ready && m_Width == uint32_t(width) && m_Height == uint32_t(height));
+#endif
 }
 
 bool CGLFrameBuffer::ReadyMinSize(int width, int height)
 {
+    assert(width >= 0 && height >= 0);
+#ifndef NEW_RENDERER_ENABLED
     return (m_Ready && Texture.Width >= width && Texture.Height >= height);
+#else
+    return (m_Ready && m_Width >= uint32_t(width) && m_Height >= uint32_t(height));
+#endif
 }
 
 bool CGLFrameBuffer::Use()
@@ -143,6 +164,10 @@ bool CGLFrameBuffer::Use()
 
         glMatrixMode(GL_MODELVIEW);
 #else
+        HACKRender_GetFrameBuffer(g_renderCmdList, &m_OldFrameBuffer);
+        RenderAdd_SetFrameBuffer(g_renderCmdList, &SetFrameBufferCmd{ m_FrameBuffer });
+        RenderAdd_SetViewParams(
+            g_renderCmdList, &SetViewParamsCmd{ 0, int(m_Width), int(m_Height), 0, -150, 150 });
 #endif
 
         result = true;
@@ -157,9 +182,9 @@ void CGLFrameBuffer::Draw(int x, int y)
     {
         g_GL.OldTexture = 0;
 #ifndef NEW_RENDERER_ENABLED
-        g_GL.GL1_Draw(Texture, x, y);
+        g_GL.Draw(Texture, x, y);
 #else
-        auto cmd = DrawQuadCmd(Texture.Texture, x, y, Texture.Width, Texture.Height);
+        auto cmd = DrawQuadCmd(m_FrameBuffer.texture, x, y, m_Width, m_Height, 1.f, -1.f);
         RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
 #endif
     }

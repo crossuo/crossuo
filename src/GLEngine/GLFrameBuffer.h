@@ -15,8 +15,8 @@ private:
 #else
     static frame_buffer_t m_OldFrameBuffer;
     frame_buffer_t m_FrameBuffer = {};
-    uint32_t width = 0;
-    uint32_t height = 0;
+    uint32_t m_Width = 0;
+    uint32_t m_Height = 0;
 #endif
 
 public:

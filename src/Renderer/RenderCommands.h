@@ -27,6 +27,7 @@ enum RenderCommandType : uint8_t
     Cmd_DisableStencilState,
     Cmd_SetColorMask,
     Cmd_SetColor,
+    Cmd_SetViewParams,
 
     Cmd_ShaderUniform,
     Cmd_ShaderLargeUniform,
@@ -63,19 +64,45 @@ struct SetFrameBufferCmd
 {
     RenderCommandHeader header;
     frame_buffer_t frameBuffer;
+
     SetFrameBufferCmd(frame_buffer_t frameBuffer)
         : header{ RenderCommandType::Cmd_SetFrameBuffer }
         , frameBuffer(frameBuffer)
     {
     }
-}
+};
+
+struct SetViewParamsCmd
+{
+    RenderCommandHeader header;
+    int left;
+    int right;
+    int bottom;
+    int top;
+    int nearZ;
+    int farZ;
+    float scale;
+
+    SetViewParamsCmd(
+        int left, int right, int bottom, int top, int nearZ, int farZ, float scale = 1.f)
+        : header{ RenderCommandType::Cmd_SetViewParams }
+        , left(left)
+        , right(right)
+        , bottom(bottom)
+        , top(top)
+        , nearZ(nearZ)
+        , farZ(farZ)
+        , scale(scale)
+    {
+    }
+};
 
 struct DrawQuadCmd
 {
     RenderCommandHeader header;
     texture_handle_t texture;
-    int32_t x = 0;
-    int32_t y = 0;
+    int x = 0;
+    int y = 0;
     uint32_t width = 0;
     uint32_t height = 0;
     float u = 1.f;
@@ -87,8 +114,8 @@ struct DrawQuadCmd
 
     DrawQuadCmd(
         texture_handle_t texture,
-        int32_t x,
-        int32_t y,
+        int x,
+        int y,
         uint32_t width,
         uint32_t height,
         float u = 1.f,
@@ -113,8 +140,8 @@ struct DrawCharacterSittingCmd
 {
     RenderCommandHeader header;
     texture_handle_t texture;
-    int32_t x;
-    int32_t y;
+    int x;
+    int y;
     uint32_t width;
     uint32_t height;
     float h3mod;
@@ -124,8 +151,8 @@ struct DrawCharacterSittingCmd
 
     DrawCharacterSittingCmd(
         texture_handle_t texture,
-        int32_t x,
-        int32_t y,
+        int x,
+        int y,
         uint32_t width,
         uint32_t height,
         bool mirror,
@@ -150,12 +177,12 @@ struct DrawLandTileCmd
 {
     RenderCommandHeader header;
     texture_handle_t texture;
-    int32_t x;
-    int32_t y;
+    int x;
+    int y;
     struct
     {
-        int32_t x;
-        int32_t y;
+        int x;
+        int y;
         uint32_t width;
         uint32_t height;
     } rect;
@@ -163,10 +190,10 @@ struct DrawLandTileCmd
 
     DrawLandTileCmd(
         texture_handle_t texture,
-        int32_t x,
-        int32_t y,
-        int32_t rect_x,
-        int32_t rect_y,
+        int x,
+        int y,
+        int rect_x,
+        int rect_y,
         uint32_t rect_w,
         uint32_t rect_h,
         float3 normals[4])
@@ -184,9 +211,9 @@ struct DrawShadowCmd
 {
     RenderCommandHeader header;
     texture_handle_t texture;
-    int32_t x;
-    int32_t y;
-    int32_t uniformValue;
+    int x;
+    int y;
+    int uniformValue;
     uint32_t width;
     uint32_t height;
     uint32_t uniformId;
@@ -195,13 +222,13 @@ struct DrawShadowCmd
 
     DrawShadowCmd(
         texture_handle_t texture,
-        int32_t x,
-        int32_t y,
+        int x,
+        int y,
         uint32_t width,
         uint32_t height,
         bool mirror,
         uint32_t uniformId,
-        int32_t uniformValue,
+        int uniformValue,
         bool restoreBlendFunc)
         : header{ RenderCommandType::Cmd_DrawShadow }
         , texture(texture)
@@ -220,11 +247,11 @@ struct DrawShadowCmd
 struct DrawCircleCmd
 {
     RenderCommandHeader header;
-    int32_t x;
-    int32_t y;
+    int x;
+    int y;
     float radius;
     int gradientMode;
-    DrawCircleCmd(int32_t x, int32_t y, float radius, int gradientMode = 0)
+    DrawCircleCmd(int x, int y, float radius, int gradientMode = 0)
         : header{ RenderCommandType::Cmd_DrawCircle }
         , x(x)
         , y(y)
@@ -237,13 +264,13 @@ struct DrawCircleCmd
 struct DrawUntexturedQuadCmd
 {
     RenderCommandHeader header;
-    int32_t x;
-    int32_t y;
+    int x;
+    int y;
     uint32_t width;
     uint32_t height;
     float4 color;
     DrawUntexturedQuadCmd(
-        int32_t x, int32_t y, uint32_t width, uint32_t height, float4 color = g_ColorInvalid)
+        int x, int y, uint32_t width, uint32_t height, float4 color = g_ColorInvalid)
         : header{ RenderCommandType::Cmd_DrawUntexturedQuad }
         , x(x)
         , y(y)
@@ -257,13 +284,13 @@ struct DrawUntexturedQuadCmd
 struct DrawLineCmd
 {
     RenderCommandHeader header;
-    int32_t x0;
-    int32_t y0;
-    int32_t x1;
-    int32_t y1;
+    int x0;
+    int y0;
+    int x1;
+    int y1;
     float4 color;
 
-    DrawLineCmd(int32_t x0, int32_t y0, int32_t x1, int32_t y1, float4 color = g_ColorInvalid)
+    DrawLineCmd(int x0, int y0, int x1, int y1, float4 color = g_ColorInvalid)
         : header{ RenderCommandType::Cmd_DrawLine }
         , x0(x0)
         , y0(y0)
@@ -280,8 +307,8 @@ struct DrawRotatedQuadCmd : public DrawQuadCmd
 
     DrawRotatedQuadCmd(
         texture_handle_t texture,
-        int32_t x,
-        int32_t y,
+        int x,
+        int y,
         uint32_t width,
         uint32_t height,
         float angle,
