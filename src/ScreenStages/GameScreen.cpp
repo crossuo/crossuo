@@ -1539,6 +1539,7 @@ void CGameScreen::DrawGameWindowLight()
 
         g_LightBuffer.Release();
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL.RestorePort();
 
         g_GL.ViewPortScaled(
@@ -1548,6 +1549,20 @@ void CGameScreen::DrawGameWindowLight()
             g_RenderBounds.GameWindowHeight);
 
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+#else
+        auto viewParams =
+            SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
+                              g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth,
+                              g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight,
+                              g_RenderBounds.GameWindowPosY,
+                              -150,
+                              150,
+                              float(g_GlobalScale) };
+
+        RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
+
+        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::Zero_SrcColor));
+#endif
 
         if (g_ConfigManager.GetUseScaling())
         {
@@ -1559,7 +1574,11 @@ void CGameScreen::DrawGameWindowLight()
             g_LightBuffer.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
         }
 
+#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_BLEND);
+#else
+        RenderAdd_DisableBlend(g_renderCmdList);
+#endif
     }
 
     UnuseShader();
@@ -1906,7 +1925,14 @@ void CGameScreen::Render()
         g_QuestArrow.Draw();
     }
 
+#ifndef NEW_RENDERER_ENABLED
     g_GL.RestorePort();
+#else
+    RenderAdd_SetViewParams(
+        g_renderCmdList,
+        &SetViewParamsCmd{
+            0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0, -150, 150 });
+#endif
     m_GameScreenGump.Draw();
 
 #if UO_DEBUG_INFO != 0

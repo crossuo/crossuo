@@ -17,6 +17,7 @@ bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize);
 
 bool RenderState_SetTexture(
     RenderState *state, RenderTextureType type, texture_handle_t texture, bool forced = false);
+bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forced = false);
 
 bool RenderState_FlushState(RenderState *state);
 bool RenderState_SetAlphaTest(
@@ -37,6 +38,16 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced = 
 bool RenderState_SetColor(RenderState *state, float4 color, bool forced = false);
 bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced = false);
 bool RenderState_ClearRT(RenderState *state, ClearRT mask, bool forced = false);
+bool RenderState_SetViewParams(
+    RenderState *state,
+    int left,
+    int right,
+    int bottom,
+    int top,
+    int near,
+    int far,
+    float scale,
+    bool forced = false);
 
 bool RenderState_SetShaderUniform(
     RenderState *state, uint32_t slot, void *value, ShaderUniformType type, bool forced = false);
@@ -52,6 +63,7 @@ bool RenderState_SetShaderPipeline(
 bool RenderState_DisableShaderPipeline(RenderState *state, bool forced = false);
 
 bool RenderDraw_SetTexture(SetTextureCmd *cmd, RenderState *state);
+bool RenderDraw_SetFrameBuffer(SetFrameBufferCmd *cmd, RenderState *state);
 bool RenderDraw_DrawQuad(DrawQuadCmd *cmd, RenderState *state);
 bool RenderDraw_DrawRotatedQuad(DrawRotatedQuadCmd *cmd, RenderState *state);
 bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *state);
@@ -62,6 +74,7 @@ bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *stat
 bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state);
 
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
+bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state);
 bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state);
 bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state);
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);

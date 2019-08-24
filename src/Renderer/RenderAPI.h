@@ -8,9 +8,12 @@
 #include "RenderTypes.h"
 #include "RenderCommands.h"
 
+// TODO fix it
+bool HACKRender_SetViewParams(SetViewParamsCmd *cmd);
+bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb);
+
 bool Render_Init(SDL_Window *window);
 void Render_Shutdown();
-bool Render_SetViewParams(RenderViewParams *params);
 void Render_SwapBuffers();
 
 RenderState Render_DefaultState();
@@ -59,5 +62,6 @@ bool RenderAdd_SetShaderLargeUniform(RenderCmdList *cmdList, ShaderLargeUniformC
 bool RenderAdd_SetShaderPipeline(RenderCmdList *cmdList, ShaderPipeline *pipeline);
 bool RenderAdd_DisableShaderPipeline(RenderCmdList *cmdList);
 bool RenderAdd_FlushState(RenderCmdList *cmdList);
+bool RenderAdd_SetViewParams(RenderCmdList *cmdList, SetViewParamsCmd *cmd);
 
 bool RenderDraw_Execute(RenderCmdList *cmdList);

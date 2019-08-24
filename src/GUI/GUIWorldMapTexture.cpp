@@ -26,7 +26,7 @@ void CGUIWorldMapTexture::Draw(bool checktrans)
         tex.Width = Width;
         tex.Height = Height;
 
-        g_GL.GL1_Draw(tex, m_X + OffsetX, m_Y + OffsetY);
+        g_GL.Draw(tex, m_X + OffsetX, m_Y + OffsetY);
 
         tex.Texture = 0;
 #else

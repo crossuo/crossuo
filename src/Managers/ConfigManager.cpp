@@ -23,6 +23,7 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
 #include "../ScreenStages/GameScreen.h"
+#include "../Renderer/RenderAPI.h"
 
 CConfigManager g_ConfigManager;
 CConfigManager g_OptionsConfig;
@@ -1560,29 +1561,30 @@ bool CConfigManager::Load(const fs_path &path)
         {
             g_GameScreen.SetMaximized(true);
 #ifdef NEW_RENDERER_ENABLED
+            // FIXME this should be deferred until there's something to draw
+            // and set once at the beginning of the renderer frame, where there's
+            // a command list
             int w, h;
             SDL_GetWindowSize(g_GameWindow.m_window, &w, &h);
 
-            RenderViewParams viewParms;
-            viewParms.viewport.width = w;
-            viewParms.viewport.height = h;
-            Render_SetViewParams(&viewParms);
+            HACKRender_SetViewParams(&SetViewParamsCmd{ 0, w, h, 0, -150, 150 });
 #endif
         }
         else
         {
             g_GameWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
 #ifdef NEW_RENDERER_ENABLED
-            // FIXME gfx this is to confirm the new size always fits with what the previous code did
+            // FIXME this is to confirm the new size always fits with what the previous code did
             // which is, getting the real window size and using it
             int w, h;
             SDL_GetWindowSize(g_GameWindow.m_window, &w, &h);
             assert(windowWidth == w && windowHeight == h);
 
-            RenderViewParams viewParms;
-            viewParms.viewport.width = windowWidth;
-            viewParms.viewport.height = windowHeight;
-            Render_SetViewParams(&viewParms);
+            // FIXME this should be deferred until there's something to draw
+            // and set once at the beginning of the renderer frame, where there's
+            // a command list
+            HACKRender_SetViewParams(
+                &SetViewParamsCmd{ 0, windowWidth, windowHeight, 0, -150, 150 });
 #endif
         }
 

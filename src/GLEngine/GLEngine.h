@@ -8,6 +8,7 @@
 typedef std::deque<CRect> SCISSOR_LIST;
 
 struct CGLTexture;
+class CLandObject;
 class CGLEngine
 {
 public:

@@ -13,41 +13,48 @@
 
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
-#define OGL_DEBUGMSG_TYPE_COUNT (8)
+#define OGL_DEBUGMSG_TYPE_COUNT (16)
 #define OGL_DEBUGMSG_IDS_MAX (16)
 #define OGL_DEBUGMSG_INVALIDID (0xffffffff)
 
+enum OpenGLDebugMsgState
+{
+    OGL_DBGMSG_UNSET = 0,
+    OGL_DBGMSG_ENABLED,
+    OGL_DBGMSG_DISABLED,
+};
+
 struct
 {
-    bool assert = false;
-    bool log = false;
+    OpenGLDebugMsgState assert = OGL_DBGMSG_UNSET;
+    OpenGLDebugMsgState log = OGL_DBGMSG_UNSET;
 } static s_openglDebugMsgSeverity[OGL_DEBUGMSG_SEVERITY_COUNT];
 
 struct
 {
-    bool assert = false;
-    bool log = false;
+    OpenGLDebugMsgState assert = OGL_DBGMSG_UNSET;
+    OpenGLDebugMsgState log = OGL_DBGMSG_UNSET;
 } static s_openglDebugMsgType[OGL_DEBUGMSG_SEVERITY_COUNT];
 
 struct
 {
     GLuint id = OGL_DEBUGMSG_INVALIDID;
-    bool assert = false;
-    bool log = false;
+    OpenGLDebugMsgState assert = OGL_DBGMSG_UNSET;
+    OpenGLDebugMsgState log = OGL_DBGMSG_UNSET;
 } static s_openglDebugMsgs[OGL_DEBUGMSG_IDS_MAX];
 
 static void EnableOpenGLDebugMsgSeverity(GLenum severity, bool assert, bool log)
 {
     auto &info = s_openglDebugMsgSeverity[severity % OGL_DEBUGMSG_SEVERITY_COUNT];
-    info.assert = assert;
-    info.log = log;
+    info.assert = assert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+    info.log = log ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
 }
 
 static void EnableOpenGLDebugMsgType(GLenum type, bool assert, bool log)
 {
     auto &info = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
-    info.assert = assert;
-    info.log = log;
+    info.assert = assert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+    info.log = log ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
 }
 
 static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
@@ -57,8 +64,8 @@ static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
         if (msg.id == OGL_DEBUGMSG_INVALIDID)
         {
             msg.id = id;
-            msg.assert = assert;
-            msg.log = log;
+            msg.assert = assert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+            msg.log = log ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
             return;
         }
     }
@@ -85,11 +92,10 @@ static void APIENTRY OGLDebugMsgCallback(
         auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
 
         auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
-        shouldAssert &= infoType.assert;
-        shouldLog &= infoType.log;
-
-        if (!shouldAssert && !shouldLog)
-            return std::tie(shouldAssert, shouldLog);
+        if (infoType.assert != OGL_DBGMSG_UNSET)
+            shouldAssert = infoType.assert;
+        if (infoType.log != OGL_DBGMSG_UNSET)
+            shouldLog = infoType.log;
 
         for (auto &ctrl : s_openglDebugMsgs)
         {
@@ -98,10 +104,10 @@ static void APIENTRY OGLDebugMsgCallback(
                 break;
             }
 
-            if (ctrl.id == id)
+            if (ctrl.id == id && ctrl.assert != OGL_DBGMSG_UNSET)
             {
-                shouldAssert &= ctrl.assert;
-                shouldLog &= ctrl.log;
+                shouldAssert = ctrl.assert;
+                shouldLog = ctrl.log;
                 break;
             }
         }
@@ -110,11 +116,12 @@ static void APIENTRY OGLDebugMsgCallback(
     };
 
     auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
-    if (shouldLog)
+    (void)shouldAssert;
+    if (shouldLog == OGL_DBGMSG_ENABLED)
     {
         Info(Renderer, "OpenGL debug message (id %d): %s", id, message);
     }
-    assert(!shouldAssert);
+    assert(shouldAssert == OGL_DBGMSG_DISABLED);
 }
 #endif // OGL_DEBUGCONTEXT_ENABLED
 
@@ -138,10 +145,13 @@ void SetupOGLDebugMessage()
 
     // GL error "GL_INVALID_OPERATION in ...":
     // 1) FIXME no shader set when glUniform1iARB is called for g_ShaderDrawMode
-    EnableOpenGLMessage(1282, false, false);
+    EnableOpenGLMessage(1282, false, true);
 
     // Usage warning: glClear() called with GL_STENCIL_BUFFER_BIT, but there is no stencil buffer. Operation will have no effect.
     EnableOpenGLMessage(131076, false, false);
+
+    // Texture state usage warning: The texture object (4294967295) bound to texture image unit 0 does not have a defined base level and cannot be used for texture mapping.
+    EnableOpenGLMessage(131204, false, true);
 
     glDebugMessageCallback(OGLDebugMsgCallback, nullptr);
     glDebugMessageControl(
@@ -223,7 +233,8 @@ void ShaderUniformValueAsString(
 static const char *TextureTypeAsString(RenderTextureType type)
 {
     static const char *s_textureTypeAsStr[] = {
-        "Texture2D" // Texture2D
+        "Texture2D",          // Texture2D
+        "Texture2D_Mipmapped" // Texture2D_Mipmapped
     };
 
     static_assert(countof(s_textureTypeAsStr) == RenderTextureType::RenderTextureType_Count);
