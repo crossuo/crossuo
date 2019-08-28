@@ -11,7 +11,7 @@ public:
     CGUIText(uint16_t color, int x, int y);
     virtual ~CGUIText();
 
-    CGLTextTexture m_Texture{ CGLTextTexture() };
+    CTextSprite m_Texture;
 
     virtual CSize GetSize() { return CSize(m_Texture.Width, m_Texture.Height); }
 

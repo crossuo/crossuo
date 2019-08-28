@@ -8,9 +8,8 @@
 
 class CRenderWorldObject;
 
-class CTextData : public CRenderTextObject
+struct CTextData : public CRenderTextObject
 {
-public:
     bool Unicode = false;
     TEXT_TYPE Type = TT_CLIENT;
     uint8_t Font = 0;
@@ -20,10 +19,9 @@ public:
     wstring UnicodeText = {};
     uint8_t Alpha = 0xFF;
     CRenderWorldObject *Owner = nullptr;
-    CGLTextTexture m_Texture; // FIXME
-    CSprite m_Sprite;
+    CTextSprite m_TextSprite;
 
-    CTextData();
+    CTextData() = default;
     CTextData(CTextData *obj);
     virtual ~CTextData();
 

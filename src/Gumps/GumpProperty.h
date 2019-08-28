@@ -11,8 +11,7 @@ class CRenderObject;
 class CGumpProperty : public CGump
 {
     uint32_t Timer = 0;
-    CGLTextTexture m_Texture_DONT;
-    CSprite m_Sprite;
+    CTextSprite m_Sprite;
 
 public:
     virtual void PrepareContent() override;

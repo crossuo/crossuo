@@ -230,14 +230,14 @@ void CTextRenderer::Draw()
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
 
-                text.m_Texture.Draw(text.RealDrawX, text.RealDrawY);
+                text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
             }
             else
             {
-                text.m_Texture.Draw(text.RealDrawX, text.RealDrawY);
+                text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
             }
         }
     }
@@ -277,11 +277,7 @@ void CTextRenderer::Select(CGump *gump)
                 continue;
             }
 
-            // FIXME
-            text.m_Sprite.Width = text.m_Texture.Width;
-            text.m_Sprite.Height = text.m_Texture.Height;
-            text.m_Sprite.Texture = &text.m_Texture;
-            if (text.m_Sprite.Select(text.RealDrawX, text.RealDrawY))
+            if (text.m_TextSprite.Select(text.RealDrawX, text.RealDrawY))
             {
                 g_SelectedObject.Init(item, gump);
             }
@@ -399,14 +395,14 @@ void CTextRenderer::WorldDraw()
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
 
-                text.m_Texture.Draw(text.RealDrawX, text.RealDrawY);
+                text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
             }
             else
             {
-                text.m_Texture.Draw(text.RealDrawX, text.RealDrawY);
+                text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
             }
         }
     }

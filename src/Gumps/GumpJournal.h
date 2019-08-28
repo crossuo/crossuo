@@ -25,8 +25,8 @@ public:
     CGumpJournal(short x, short y, bool minimized, int height);
     virtual ~CGumpJournal();
 
-    void AddText(class CTextData *obj);
-    void DeleteText(class CTextData *obj);
+    void AddText(CTextData *obj);
+    void DeleteText(CTextData *obj);
 
     virtual void InitToolTip() override;
 

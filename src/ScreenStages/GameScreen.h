@@ -70,7 +70,7 @@ struct OBJECT_HITS_INFO
     uint16_t Color;
     int Width;
     uint16_t HealthColor;
-    CGLTextTexture *HitsTexture;
+    CTextSprite *HitsTexture;
 };
 
 class CGameScreen : public CBaseScreen

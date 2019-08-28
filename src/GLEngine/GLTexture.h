@@ -13,6 +13,7 @@ struct CGLTexture
     GLuint MirroredVertexBuffer = 0;
     GLuint Texture = 0;
 
+    void Draw_Tooltip(int x, int y, int width, int height);
     virtual void Draw(int x, int y, bool checktrans = false);
     virtual void Draw(int x, int y, int width, int height, bool checktrans = false);
     virtual void DrawRotated(int x, int y, float angle);
@@ -21,46 +22,4 @@ struct CGLTexture
 
     CGLTexture() = default;
     virtual ~CGLTexture();
-};
-
-struct WEB_LINK_RECT
-{
-    uint16_t LinkID;
-    int StartX;
-    int StartY;
-    int EndX;
-    int EndY;
-};
-
-// FIXME
-struct CGLTextTexture : public CGLTexture
-{
-    int LinesCount = 0;
-
-    bool Empty() { return (Texture == 0); }
-    virtual void Clear() override
-    {
-        CGLTexture::Clear();
-        LinesCount = 0;
-    }
-
-    virtual void ClearWebLink() {}
-    virtual void AddWebLink(WEB_LINK_RECT &wl) {}
-    virtual uint16_t WebLinkUnderMouse(int x, int y) { return 0; }
-
-    CGLTextTexture() = default;
-    virtual ~CGLTextTexture() = default;
-};
-
-struct CGLHTMLTextTexture : public CGLTextTexture
-{
-    std::deque<WEB_LINK_RECT> m_WebLinkRect;
-
-    virtual uint16_t WebLinkUnderMouse(int x, int y) override;
-
-    virtual void ClearWebLink() override { m_WebLinkRect.clear(); }
-    virtual void AddWebLink(WEB_LINK_RECT &wl) override { m_WebLinkRect.push_back(wl); }
-
-    CGLHTMLTextTexture() = default;
-    virtual ~CGLHTMLTextTexture() { m_WebLinkRect.clear(); }
 };

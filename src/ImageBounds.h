@@ -4,7 +4,7 @@
 #pragma once
 
 class CRenderTextObject;
-class CTextData;
+struct CTextData;
 
 class CImageBounds
 {
@@ -24,7 +24,7 @@ class CTextImageBounds : public CImageBounds
 {
 public:
     CTextImageBounds(int x, int y, int width, int height, CRenderTextObject *text);
-    CTextImageBounds(class CTextData *text);
+    CTextImageBounds(CTextData *text);
     virtual ~CTextImageBounds();
 
     CRenderTextObject *Text{ nullptr };

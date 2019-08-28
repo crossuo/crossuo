@@ -3181,8 +3181,8 @@ PACKET_HANDLER(ExtendedCommand)
                 text->Type = TT_OBJECT;
                 text->Text = std::to_string(damage);
                 text->GenerateTexture(0);
-                text->SetX(text->m_Texture.Width / 2);
-                int height = text->m_Texture.Height;
+                text->SetX(text->m_TextSprite.Width / 2);
+                int height = text->m_TextSprite.Height;
 
                 CTextData *head = (CTextData *)character->m_DamageTextControl.Last();
 
@@ -4379,8 +4379,8 @@ PACKET_HANDLER(Damage)
         text->Type = TT_OBJECT;
         text->Text = std::to_string(damage);
         text->GenerateTexture(0);
-        text->SetX(text->m_Texture.Width / 2);
-        int height = text->m_Texture.Height;
+        text->SetX(text->m_TextSprite.Width / 2);
+        int height = text->m_TextSprite.Height;
 
         CTextData *head = (CTextData *)character->m_DamageTextControl.Last();
 
@@ -4869,7 +4869,7 @@ void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
         {
             htmlText->Text =
                 g_ClilocManager.ParseXmfHtmlArgumentsToCliloc(data.TextID, false, data.Args);
-            htmlText->CreateTexture(data.HaveBackground == 0);
+            htmlText->Create(data.HaveBackground == 0);
             htmlGump->CalculateDataSize();
         }
     }

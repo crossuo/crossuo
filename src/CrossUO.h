@@ -155,8 +155,8 @@ public:
         uint16_t color,
         const wstring &text,
         class CRenderWorldObject *clientObj = nullptr);
-    void AddSystemMessage(class CTextData *msg);
-    void AddJournalMessage(class CTextData *msg, const string &name);
+    void AddSystemMessage(CTextData *msg);
+    void AddJournalMessage(CTextData *msg, const string &name);
     void ChangeMap(uint8_t newmap);
     void PickupItem(class CGameItem *obj, int count = 0, bool isGameFigure = false);
     void DropItem(int container, uint16_t x, uint16_t y, char z);

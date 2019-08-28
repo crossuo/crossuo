@@ -5,17 +5,19 @@
 
 #include "GUIText.h"
 
-class CGUIGenericText : public CGUIText
+struct CGUIGenericText : public CGUIText
 {
-public:
-    //!Индекс текста
     uint32_t TextID = 0;
-
-    //!Максимальная ширина (для CroppedText)
     int MaxWidth = 0;
 
-    CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth = 0);
-    virtual ~CGUIGenericText();
+    void Create(const wstring &str);
 
-    void CreateTexture(const wstring &str);
+    CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth = 0)
+        : CGUIText(color, x, y)
+        , TextID(index)
+        , MaxWidth(maxWidth)
+    {
+    }
+
+    virtual ~CGUIGenericText() = default;
 };

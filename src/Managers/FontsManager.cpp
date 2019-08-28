@@ -683,7 +683,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
 
 bool CFontsManager::GenerateA(
     uint8_t font,
-    CGLTextTexture &th,
+    CTextSprite &th,
     const string &str,
     uint16_t color,
     int width,
@@ -712,7 +712,7 @@ bool CFontsManager::GenerateA(
 
 vector<uint32_t> CFontsManager::GeneratePixelsA(
     uint8_t font,
-    CGLTextTexture &th,
+    CTextSprite &th,
     const char *str,
     uint16_t color,
     int width,
@@ -878,7 +878,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsA(
 
 bool CFontsManager::GenerateABase(
     uint8_t font,
-    CGLTextTexture &th,
+    CTextSprite &th,
     const string &str,
     uint16_t color,
     int width,
@@ -890,10 +890,10 @@ bool CFontsManager::GenerateABase(
     bool result = false;
     if (!pixels.empty())
     {
-        g_GL_BindTexture32(th, th.Width, th.Height, &pixels[0]);
+        th.Init(th.Width, th.Height, &pixels[0], false);
         result = true;
     }
-    return true;
+    return result;
 }
 
 void CFontsManager::DrawA(
@@ -907,7 +907,7 @@ void CFontsManager::DrawA(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTextTexture th;
+    CTextSprite th;
     if (GenerateA(font, th, str, color, width, align, flags))
     {
         th.Draw(x, y);
@@ -2506,7 +2506,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
 
 bool CFontsManager::GenerateW(
     uint8_t font,
-    CGLTextTexture &th,
+    CTextSprite &th,
     const wstring &str,
     uint16_t color,
     uint8_t cell,
@@ -2538,7 +2538,7 @@ bool CFontsManager::GenerateW(
 
 vector<uint32_t> CFontsManager::GeneratePixelsW(
     uint8_t font,
-    CGLTextTexture &th,
+    CTextSprite &th,
     const wchar_t *str,
     uint16_t color,
     uint8_t cell,
@@ -3128,7 +3128,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsW(
 
 bool CFontsManager::GenerateWBase(
     uint8_t font,
-    CGLTextTexture &th,
+    CTextSprite &th,
     const wstring &str,
     uint16_t color,
     uint8_t cell,
@@ -3142,7 +3142,7 @@ bool CFontsManager::GenerateWBase(
     bool result = false;
     if (!pixels.empty())
     {
-        g_GL_BindTexture32(th, th.Width, th.Height, &pixels[0]);
+        th.Init(th.Width, th.Height, &pixels[0], false);
         result = true;
     }
     return result;
@@ -3160,7 +3160,7 @@ void CFontsManager::DrawW(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    CGLTextTexture th;
+    CTextSprite th;
     if (GenerateW(font, th, str, color, cell, width, align, flags))
     {
         th.Draw(x, y);

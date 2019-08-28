@@ -88,3 +88,31 @@ template void CSprite::BuildHitMask<uint16_t>(int w, int h, uint16_t *pixels);
 template void CSprite::BuildHitMask<uint32_t>(int w, int h, uint32_t *pixels);
 template void CSprite::Init<uint16_t>(int width, int height, uint16_t *pixels, bool skipHitMask);
 template void CSprite::Init<uint32_t>(int width, int height, uint32_t *pixels, bool skipHitMask);
+
+void CTextSprite::Init(int width, int height, uint32_t *pixels, bool skipHitMask)
+{
+    assert(Texture == nullptr && "texture should be null");
+    Texture = new CGLTexture;
+    g_GL_BindTexture32(*Texture, width, height, pixels);
+    CSprite::Init(width, height, pixels, skipHitMask);
+}
+
+uint16_t CHTMLText::WebLinkUnderMouse(int x, int y)
+{
+    DEBUG_TRACE_FUNCTION;
+    x = g_MouseManager.Position.X - x;
+    y = g_MouseManager.Position.Y - y;
+
+    for (auto it = m_WebLinkRect.begin(); it != m_WebLinkRect.end(); ++it)
+    {
+        if (y >= (*it).StartY && y < (*it).StartY + (*it).EndY)
+        {
+            if (x >= (*it).StartX && x < (*it).StartX + (*it).EndX)
+            {
+                return it->LinkID;
+            }
+        }
+    }
+
+    return 0;
+}

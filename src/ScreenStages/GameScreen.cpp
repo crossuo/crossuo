@@ -783,7 +783,7 @@ void CGameScreen::AddTileToRenderList(
                     {
                         CTextData *next = (CTextData *)text->m_Next;
 
-                        if (text->m_Texture.Empty())
+                        if (text->m_TextSprite.Empty())
                         {
                             text = next;
                             continue;
@@ -1585,7 +1585,7 @@ void CGameScreen::DrawGameWindowText(bool render)
                      it != m_HitsStack.end();
                      ++it)
                 {
-                    CGLTextTexture *texture = it->HitsTexture;
+                    CTextSprite *texture = it->HitsTexture;
                     texture->Draw(it->X, it->Y);
                 }
             }
@@ -1624,7 +1624,7 @@ void CGameScreen::DrawGameWindowText(bool render)
 
                 QFOR(text, textContainer.m_Items, CTextData *)
                 {
-                    if (!text->m_Texture.Empty())
+                    if (!text->m_TextSprite.Empty())
                     {
                         if (text->Transparent)
                         {
@@ -1633,13 +1633,13 @@ void CGameScreen::DrawGameWindowText(bool render)
 
                             glColor4ub(0xFF, 0xFF, 0xFF, (uint8_t)text->Color);
 
-                            text->m_Texture.Draw(text->RealDrawX, text->RealDrawY);
+                            text->m_TextSprite.Draw(text->RealDrawX, text->RealDrawY);
 
                             glDisable(GL_BLEND);
                         }
                         else
                         {
-                            text->m_Texture.Draw(text->RealDrawX, text->RealDrawY);
+                            text->m_TextSprite.Draw(text->RealDrawX, text->RealDrawY);
                         }
                     }
                 }

@@ -131,7 +131,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
         entry.SetTextW(str);
         entry.PrepareToDrawW(CONTEXT_MENU_FONT, info.Color);
 
-        CGLTextTexture &texture = entry.m_Texture;
+        CTextSprite &texture = entry.m_Texture;
 
         menu->Add(new CGUIHitBox(info.Index, 10, offsetY, texture.Width, texture.Height, true));
 
@@ -220,7 +220,7 @@ void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
             }
             else if (item->Type == GOT_TEXTENTRY)
             {
-                CGLTextTexture &texture = ((CGUITextEntry *)item)->m_Entry.m_Texture;
+                CTextSprite &texture = ((CGUITextEntry *)item)->m_Entry.m_Texture;
 
                 if (width < texture.Width)
                 {

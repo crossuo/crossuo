@@ -23,16 +23,15 @@ CToolTip::~CToolTip()
 void CToolTip::Reset()
 {
     DEBUG_TRACE_FUNCTION;
-    Texture.Clear();
+    m_TextSprite.Clear();
     m_Object = nullptr;
 }
 
-void CToolTip::CreateTextTexture(
-    CGLTextTexture &texture, const wstring &str, int &width, int minWidth)
+void CToolTip::Create(CTextSprite &textSprite, const wstring &str, int &width, int minWidth)
 {
     g_FontManager.SetUseHTML(true);
     g_FontManager.RecalculateWidthByInfo = true;
-    texture.Clear();
+    textSprite.Clear();
     auto font = (uint8_t)g_ConfigManager.ToolTipsTextFont;
     if (width == 0)
     {
@@ -56,7 +55,7 @@ void CToolTip::CreateTextTexture(
 
     g_FontManager.GenerateW(
         font,
-        texture,
+        textSprite,
         str,
         g_ConfigManager.ToolTipsTextColor,
         5,
@@ -92,7 +91,7 @@ void CToolTip::Set(const wstring &str, int maxWidth)
     Position.X = 0;
     Position.Y = 0;
 
-    CreateTextTexture(Texture, Data, MaxWidth, 0);
+    Create(m_TextSprite, Data, MaxWidth, 0);
 }
 
 void CToolTip::Set(int clilocID, const string &str, int maxWidth, bool toCamelCase)
@@ -110,23 +109,23 @@ void CToolTip::Draw(int cursorWidth, int cursorHeight)
         return;
     }
 
-    if (Texture.Empty())
+    if (m_TextSprite.Empty())
     {
-        CreateTextTexture(Texture, Data, MaxWidth, 0);
+        Create(m_TextSprite, Data, MaxWidth, 0);
     }
 
-    if (!Texture.Empty())
+    if (!m_TextSprite.Empty())
     {
         int x = Position.X;
         int y = Position.Y;
         if (x == 0)
         {
-            x = g_MouseManager.Position.X - (Texture.Width + 8);
+            x = g_MouseManager.Position.X - (m_TextSprite.Width + 8);
         }
 
         if (y == 0)
         {
-            y = g_MouseManager.Position.Y - (Texture.Height + 8);
+            y = g_MouseManager.Position.Y - (m_TextSprite.Height + 8);
         }
 
         if (y < 0)
@@ -141,13 +140,7 @@ void CToolTip::Draw(int cursorWidth, int cursorHeight)
             //x = g_MouseManager.Position.X + cursorWidth;
         }
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-        g_GL.DrawPolygone(x, y, Texture.Width + 8, Texture.Height + 8);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glDisable(GL_BLEND);
-        g_GL_Draw(Texture, x + 6, y + 4);
+        m_TextSprite.Draw_Tooltip(x, y, m_TextSprite.Width + 8, m_TextSprite.Height + 8);
     }
     Use = false;
 }
