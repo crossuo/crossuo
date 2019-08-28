@@ -7,7 +7,7 @@
 #include "../api/mulstruct.h"
 
 class CTextContainer;
-class CTextData;
+struct CTextData;
 class CRenderTextObject;
 
 class CRenderStaticObject : public CMapObject

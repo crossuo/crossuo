@@ -796,15 +796,15 @@ void CGump::TestItemsLeftMouseDown(
                     CGUIHTMLText *htmlText = (CGUIHTMLText *)item;
 
                     uint16_t link =
-                        htmlText->m_Texture.WebLinkUnderMouse(item->GetX(), item->GetY());
+                        htmlText->m_Sprite.WebLinkUnderMouse(item->GetX(), item->GetY());
 
                     if ((link != 0u) && link != 0xFFFF)
                     {
                         gump->OnDirectHTMLLink(link);
                         gump->WantRedraw = true;
 
-                        htmlText->m_Texture.ClearWebLink();
-                        htmlText->CreateTexture(htmlTextBackgroundCanBeColored);
+                        htmlText->m_Sprite.ClearWebLink();
+                        htmlText->Create(htmlTextBackgroundCanBeColored);
                     }
 
                     break;

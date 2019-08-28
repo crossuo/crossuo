@@ -12,14 +12,14 @@ public:
     int MaxWidth = 0;
     CPoint2Di Position = CPoint2Di();
     bool Use = false;
-    CGLTextTexture Texture;
+    CTextSprite m_TextSprite;
     class CRenderObject *m_Object{ nullptr };
 
     CToolTip();
     ~CToolTip();
 
     void Reset();
-    void CreateTextTexture(CGLTextTexture &texture, const wstring &str, int &width, int minWidth);
+    void Create(CTextSprite &texture, const wstring &str, int &width, int minWidth);
     void Set(const wstring &str, int maxWidth = 0);
     void Set(int clilocID, const string &str, int maxWidth = 0, bool toCamelCase = false);
     void Draw(int cursorWidth = 0, int cursorHeight = 0);

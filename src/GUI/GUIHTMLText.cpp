@@ -29,21 +29,21 @@ CGUIHTMLText::CGUIHTMLText(
 CGUIHTMLText::~CGUIHTMLText()
 {
     DEBUG_TRACE_FUNCTION;
-    m_Texture.Clear();
+    m_Sprite.Clear();
 }
 
-void CGUIHTMLText::CreateTexture(bool backgroundCanBeColored)
+void CGUIHTMLText::Create(bool backgroundCanBeColored)
 {
     DEBUG_TRACE_FUNCTION;
     g_FontManager.SetUseHTML(true, HTMLStartColor, backgroundCanBeColored);
-    g_FontManager.GenerateW(Font, m_Texture, Text, Color, 30, Width, Align, TextFlags);
+    g_FontManager.GenerateW(Font, m_Sprite, Text, Color, 30, Width, Align, TextFlags);
     g_FontManager.SetUseHTML(false);
 }
 
 void CGUIHTMLText::Draw(bool checktrans)
 {
     DEBUG_TRACE_FUNCTION;
-    m_Texture.Draw(m_X, m_Y, checktrans);
+    m_Sprite.Draw(m_X, m_Y, checktrans);
 }
 
 bool CGUIHTMLText::Select()
@@ -51,5 +51,5 @@ bool CGUIHTMLText::Select()
     DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
-    return (x >= 0 && y >= 0 && x < m_Texture.Width && y < m_Texture.Height);
+    return (x >= 0 && y >= 0 && x < m_Sprite.Width && y < m_Sprite.Height);
 }

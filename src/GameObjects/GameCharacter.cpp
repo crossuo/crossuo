@@ -118,9 +118,9 @@ void CGameCharacter::UpdateTextCoordinates()
 
     for (; text != nullptr; text = (CTextData *)text->m_Prev)
     {
-        offset += text->m_Texture.Height;
+        offset += text->m_TextSprite.Height;
 
-        text->RealDrawX = x - (text->m_Texture.Width / 2);
+        text->RealDrawX = x - (text->m_TextSprite.Width / 2);
         text->RealDrawY = y - offset;
     }
 }

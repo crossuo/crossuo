@@ -14,9 +14,7 @@ protected:
 private:
     const int ID_GPI_LOCK_MOVING = 1;
     const int ID_GPI_MINIMIZE = 2;
-
-    CGLTextTexture m_Texture_DONT;
-    CSprite m_Sprite;
+    CTextSprite m_Sprite;
 
 public:
     CRenderObject *Object = nullptr;

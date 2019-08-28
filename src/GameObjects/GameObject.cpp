@@ -195,7 +195,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
 
     int width = g_ObjectHandlesWidth - 20;
     uint8_t font = 1;
-    CGLTextTexture textTexture;
+    CTextSprite textTexture;
     uint16_t color = 0xFFFF;
     uint8_t cell = 30;
     TEXT_ALIGN_TYPE tat = TS_CENTER;

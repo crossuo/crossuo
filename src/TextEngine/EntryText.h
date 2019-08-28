@@ -29,8 +29,8 @@ public:
     CEntryText(int maxLength = 0, int width = 0, int maxWidth = 0, bool numberOnly = false);
     virtual ~CEntryText();
 
-    CGLTextTexture m_Texture;
-    CGLTextTexture m_CaretTexture;
+    CTextSprite m_Texture;
+    CTextSprite m_CaretTexture;
 
     void Clear();
     void Paste();

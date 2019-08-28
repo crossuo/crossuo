@@ -61,6 +61,17 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
     }
 }
 
+void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
+{
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
+    g_GL.DrawPolygone(x, y, width, height);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glDisable(GL_BLEND);
+    g_GL_Draw(*this, x + 6, y + 4);
+}
+
 void CGLTexture::DrawRotated(int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
@@ -110,27 +121,4 @@ void CGLTexture::Clear()
         glDeleteBuffers(1, &MirroredVertexBuffer);
         MirroredVertexBuffer = 0;
     }
-}
-
-// FIXME
-#include "../Managers/MouseManager.h"
-
-uint16_t CGLHTMLTextTexture::WebLinkUnderMouse(int x, int y)
-{
-    DEBUG_TRACE_FUNCTION;
-    x = g_MouseManager.Position.X - x;
-    y = g_MouseManager.Position.Y - y;
-
-    for (auto it = m_WebLinkRect.begin(); it != m_WebLinkRect.end(); ++it)
-    {
-        if (y >= (*it).StartY && y < (*it).StartY + (*it).EndY)
-        {
-            if (x >= (*it).StartX && x < (*it).StartX + (*it).EndX)
-            {
-                return it->LinkID;
-            }
-        }
-    }
-
-    return 0;
 }

@@ -129,7 +129,7 @@ private:
 
     bool GenerateABase(
         uint8_t font,
-        CGLTextTexture &th,
+        CTextSprite &th,
         const string &str,
         uint16_t color,
         int width,
@@ -138,7 +138,7 @@ private:
 
     bool GenerateWBase(
         uint8_t font,
-        CGLTextTexture &th,
+        CTextSprite &th,
         const wstring &str,
         uint16_t color,
         uint8_t cell,
@@ -199,7 +199,7 @@ public:
 
     vector<uint32_t> GeneratePixelsA(
         uint8_t font,
-        CGLTextTexture &th,
+        CTextSprite &th,
         const char *str,
         uint16_t color,
         int width,
@@ -208,7 +208,7 @@ public:
 
     bool GenerateA(
         uint8_t font,
-        CGLTextTexture &th,
+        CTextSprite &th,
         const string &str,
         uint16_t color = 0,
         int width = 0,
@@ -268,7 +268,7 @@ public:
 
     vector<uint32_t> GeneratePixelsW(
         uint8_t font,
-        CGLTextTexture &th,
+        CTextSprite &th,
         const wchar_t *str,
         uint16_t color,
         uint8_t cell,
@@ -278,7 +278,7 @@ public:
 
     bool GenerateW(
         uint8_t font,
-        CGLTextTexture &th,
+        CTextSprite &th,
         const wstring &str,
         uint16_t color = 0,
         uint8_t cell = 30,

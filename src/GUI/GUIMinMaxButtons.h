@@ -61,7 +61,7 @@ public:
 
 private:
     //!Текстура текста
-    CGLTextTexture Text{ CGLTextTexture() };
+    CTextSprite Text;
 
     //!Метод прокрутки (NoScroll/Max/Min)
     int m_ScrollMode{ 0 };

@@ -11,10 +11,7 @@ CGumpProperty::CGumpProperty(const wstring &text)
     Timer = g_Ticks + 5000;
 
     int width = 0;
-    g_ToolTip.CreateTextTexture(m_Texture_DONT, text, width, 0);
-    m_Sprite.Width = m_Texture_DONT.Width;
-    m_Sprite.Height = m_Texture_DONT.Height;
-    m_Sprite.Texture = &m_Texture_DONT; // FIXME!
+    g_ToolTip.Create(m_Sprite, text, width, 0);
 
     m_X = g_MouseManager.Position.X - (m_Sprite.Width + 8);
     if (m_X < 0)

@@ -91,7 +91,7 @@ void CGumpGeneric::AddText(
 
                 if (gt->TextID == index)
                 {
-                    gt->CreateTexture(text);
+                    gt->Create(text);
                 }
 
                 break;
@@ -114,7 +114,7 @@ void CGumpGeneric::AddText(
                 if (gt->TextID == index)
                 {
                     gt->Text = text;
-                    gt->CreateTexture(backbroundCanBeColored);
+                    gt->Create(backbroundCanBeColored);
                 }
 
                 break;

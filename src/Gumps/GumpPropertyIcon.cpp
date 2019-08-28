@@ -12,24 +12,15 @@ CGumpPropertyIcon::CGumpPropertyIcon(int x, int y)
 {
     m_Locker.Serial = ID_GPI_LOCK_MOVING;
     int width = 0;
-    g_ToolTip.CreateTextTexture(m_Texture_DONT, m_Text, width, 300);
-    m_Sprite.Width = m_Texture_DONT.Width;
-    m_Sprite.Height = m_Texture_DONT.Height;
-    m_Sprite.Texture = &m_Texture_DONT;
+    g_ToolTip.Create(m_Sprite, m_Text, width, 300);
 }
 
 void CGumpPropertyIcon::SetTextW(const wstring &val)
 {
     m_Text = val;
     int width = 0;
-    g_ToolTip.CreateTextTexture(
-        m_Texture_DONT,
-        val,
-        width,
-        (g_ConfigManager.GetItemPropertiesMode() == OPM_ALWAYS_UP ? 300 : 0));
-    m_Sprite.Width = m_Texture_DONT.Width;
-    m_Sprite.Height = m_Texture_DONT.Height;
-    m_Sprite.Texture = &m_Texture_DONT;
+    g_ToolTip.Create(
+        m_Sprite, val, width, (g_ConfigManager.GetItemPropertiesMode() == OPM_ALWAYS_UP ? 300 : 0));
     Object = nullptr;
     WantUpdateContent = true;
 }
@@ -58,24 +49,24 @@ void CGumpPropertyIcon::UpdateContent()
         else
         {
             Add(new CGUIColoredPolygone(
-                0, 0, 0, 0, m_Texture_DONT.Width + 12, m_Texture_DONT.Height + 8, 0xC07F7F7F));
+                0, 0, 0, 0, m_Sprite.Width + 12, m_Sprite.Height + 8, 0xC07F7F7F));
             Add(new CGUIColoredPolygone(
-                0, 0, 6, 20, m_Texture_DONT.Width, m_Texture_DONT.Height - 16, 0xC0000000));
+                0, 0, 6, 20, m_Sprite.Width, m_Sprite.Height - 16, 0xC0000000));
             Add(new CGUIExternalTexture(&m_Sprite, false, 6, 2));
         }
     }
     else if (mode == OPM_ALWAYS_UP)
     {
-        int height = m_Texture_DONT.Height;
+        int height = m_Sprite.Height;
         if (height < 150)
         {
             height = 150;
         }
 
-        Add(new CGUIColoredPolygone(0, 0, 0, 0, m_Texture_DONT.Width + 12, height + 8, 0xC07F7F7F));
-        Add(new CGUIColoredPolygone(0, 0, 6, 20, m_Texture_DONT.Width, height - 16, 0xC0000000));
+        Add(new CGUIColoredPolygone(0, 0, 0, 0, m_Sprite.Width + 12, height + 8, 0xC07F7F7F));
+        Add(new CGUIColoredPolygone(0, 0, 6, 20, m_Sprite.Width, height - 16, 0xC0000000));
         Add(new CGUIExternalTexture(&m_Sprite, false, 6, 2));
-        Add(new CGUIButton(ID_GPI_MINIMIZE, 0x0A96, 0x0A97, 0x0A97, m_Texture_DONT.Width - 10, 0));
+        Add(new CGUIButton(ID_GPI_MINIMIZE, 0x0A96, 0x0A97, 0x0A97, m_Sprite.Width - 10, 0));
     }
     else if (mode == OPM_FOLLOW_MOUSE)
     {

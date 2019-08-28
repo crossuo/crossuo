@@ -10,7 +10,7 @@ class CGUIBulletinBoardObject : public CBaseGUI
     wstring Text = {};
 
 private:
-    CGLTextTexture m_Texture;
+    CTextSprite m_Texture;
 
 public:
     CGUIBulletinBoardObject(int serial, int x, int y, const wstring &text);

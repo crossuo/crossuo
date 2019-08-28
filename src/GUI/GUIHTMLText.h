@@ -28,10 +28,10 @@ public:
         int htmlStartColor = 0xFFFFFFFF);
     virtual ~CGUIHTMLText();
 
-    CGLHTMLTextTexture m_Texture{ CGLHTMLTextTexture() };
+    CHTMLText m_Sprite;
 
-    virtual CSize GetSize() { return CSize(m_Texture.Width, m_Texture.Height); }
-    void CreateTexture(bool backgroundCanBeColored);
+    virtual CSize GetSize() { return CSize(m_Sprite.Width, m_Sprite.Height); }
+    void Create(bool backgroundCanBeColored);
 
     virtual void Draw(bool checktrans = false);
     virtual bool Select();

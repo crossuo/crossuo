@@ -60,7 +60,8 @@ CTextImageBounds::CTextImageBounds(int x, int y, int width, int height, CRenderT
 }
 
 CTextImageBounds::CTextImageBounds(CTextData *text)
-    : CImageBounds(text->RealDrawX, text->RealDrawY, text->m_Texture.Width, text->m_Texture.Height)
+    : CImageBounds(
+          text->RealDrawX, text->RealDrawY, text->m_TextSprite.Width, text->m_TextSprite.Height)
     , Text(text)
 {
 }

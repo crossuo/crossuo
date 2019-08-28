@@ -5,11 +5,6 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/FontsManager.h"
 
-CTextData::CTextData()
-{
-    DEBUG_TRACE_FUNCTION;
-}
-
 CTextData::CTextData(CTextData *obj)
     : Unicode(obj->Unicode)
     , Type(obj->Type)
@@ -17,7 +12,6 @@ CTextData::CTextData(CTextData *obj)
     , Timer(obj->Timer)
     , Alpha(obj->Alpha)
 {
-    DEBUG_TRACE_FUNCTION;
     RealDrawX = obj->RealDrawX;
     RealDrawY = obj->RealDrawY;
     Color = obj->Color;
@@ -27,10 +21,7 @@ CTextData::CTextData(CTextData *obj)
 
 CTextData::~CTextData()
 {
-    DEBUG_TRACE_FUNCTION;
-    m_Texture.Clear();
-    m_Sprite.Texture = nullptr;
-    m_Sprite.Clear();
+    m_TextSprite.Clear();
     Owner = nullptr;
 }
 
@@ -69,18 +60,18 @@ void CTextData::GenerateTexture(
         }
 
         g_FontManager.GenerateW(
-            (uint8_t)font, m_Texture, UnicodeText, Color, cell, maxWidth, align, flags);
+            (uint8_t)font, m_TextSprite, UnicodeText, Color, cell, maxWidth, align, flags);
     }
     else
     {
-        g_FontManager.GenerateA((uint8_t)Font, m_Texture, Text, Color, maxWidth, align, flags);
+        g_FontManager.GenerateA((uint8_t)Font, m_TextSprite, Text, Color, maxWidth, align, flags);
     }
 
-    if (!m_Texture.Empty())
+    if (!m_TextSprite.Empty())
     {
         if (g_ConfigManager.ScaleSpeechDelay)
         {
-            Timer += (((4000 * m_Texture.LinesCount) * g_ConfigManager.SpeechDelay) / 100);
+            Timer += (((4000 * m_TextSprite.LinesCount) * g_ConfigManager.SpeechDelay) / 100);
         }
         else
         {

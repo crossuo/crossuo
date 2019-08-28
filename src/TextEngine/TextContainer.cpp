@@ -55,7 +55,7 @@ void CTextContainer::DrawSystemChat(int x, int y, int height)
 
     while (td != nullptr && offset >= y)
     {
-        CGLTextTexture &tth = td->m_Texture;
+        auto &tth = td->m_TextSprite;
 
         offset -= tth.Height;
 

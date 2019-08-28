@@ -34,7 +34,7 @@ public:
     int DefaultTextOffset = 2;
 
 protected:
-    CGLTextTexture Text{ CGLTextTexture() };
+    CTextSprite Text;
 
     void UpdateTextPosition();
 

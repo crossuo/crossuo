@@ -97,9 +97,9 @@ void CRenderStaticObject::UpdateTextCoordinates()
                 continue;
             }
 
-            offset += text.m_Texture.Height;
+            offset += text.m_TextSprite.Height;
 
-            text.RealDrawX = text.GetX() - (text.m_Texture.Width / 2);
+            text.RealDrawX = text.GetX() - (text.m_TextSprite.Width / 2);
             text.RealDrawY = text.GetY() - offset;
         }
     }
@@ -117,9 +117,9 @@ void CRenderStaticObject::UpdateTextCoordinates()
                 continue;
             }
 
-            offset += text.m_Texture.Height;
+            offset += text.m_TextSprite.Height;
 
-            text.RealDrawX = DrawX - (text.m_Texture.Width / 2);
+            text.RealDrawX = DrawX - (text.m_TextSprite.Width / 2);
             text.RealDrawY = y - offset;
         }
     }
@@ -150,7 +150,7 @@ void CRenderStaticObject::FixTextCoordinates()
         }
 
         int startX = text.RealDrawX;
-        int endX = startX + text.m_Texture.Width;
+        int endX = startX + text.m_TextSprite.Width;
 
         if (startX < minX)
         {
@@ -163,7 +163,7 @@ void CRenderStaticObject::FixTextCoordinates()
         }
 
         int startY = text.RealDrawY;
-        //int endY = startY + text.m_Texture.Height;
+        //int endY = startY + text.m_TextSprite.Height;
 
         if (startY < minY && (offsetY == 0))
         {

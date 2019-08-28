@@ -5,7 +5,7 @@
 
 #include "RenderObject.h"
 
-class CTextData;
+struct CTextData;
 class CRenderTextObject;
 
 class CRenderWorldObject : public CRenderObject

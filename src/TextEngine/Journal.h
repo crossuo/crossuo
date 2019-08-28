@@ -5,7 +5,7 @@
 
 #include "../BaseQueue.h"
 
-class CTextData;
+struct CTextData;
 
 class CJournal : public CBaseQueue
 {

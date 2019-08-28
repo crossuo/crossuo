@@ -7,7 +7,7 @@
 #include "../Point.h"
 #include "../api/enumlist.h"
 
-class CTextData;
+struct CTextData;
 
 class CBaseGUI : public CRenderObject
 {

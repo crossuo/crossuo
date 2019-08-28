@@ -4,18 +4,7 @@
 #include "GUIGenericText.h"
 #include "../Config.h"
 
-CGUIGenericText::CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth)
-    : CGUIText(color, x, y)
-    , TextID(index)
-    , MaxWidth(maxWidth)
-{
-}
-
-CGUIGenericText::~CGUIGenericText()
-{
-}
-
-void CGUIGenericText::CreateTexture(const wstring &str)
+void CGUIGenericText::Create(const wstring &str)
 {
     DEBUG_TRACE_FUNCTION;
     uint16_t flags = UOFONT_BLACK_BORDER;

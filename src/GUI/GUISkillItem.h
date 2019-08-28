@@ -14,8 +14,8 @@ protected:
     uint8_t m_Status = 0;
 
 private:
-    CGLTextTexture m_NameText;
-    CGLTextTexture m_ValueText;
+    CTextSprite m_NameText;
+    CTextSprite m_ValueText;
     uint16_t GetStatusButtonGraphic();
 
 public:

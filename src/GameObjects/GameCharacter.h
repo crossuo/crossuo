@@ -48,7 +48,7 @@ public:
 
     CTextContainer m_DamageTextControl{ CTextContainer(10) };
     deque<CWalkData> m_Steps;
-    CGLTextTexture m_HitsTexture{ CGLTextTexture() };
+    CTextSprite m_HitsTexture;
 
     virtual void UpdateTextCoordinates();
     void UpdateHitsTexture(uint8_t hits);

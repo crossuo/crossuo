@@ -31,5 +31,61 @@ struct CSprite
     template <typename T>
     void BuildHitMask(int w, int h, T *pixels);
 
-    virtual ~CSprite() = default;
+    CSprite() = default;
+    virtual ~CSprite() { Clear(); };
+};
+
+struct WEB_LINK_RECT
+{
+    uint16_t LinkID;
+    int StartX;
+    int StartY;
+    int EndX;
+    int EndY;
+};
+
+struct CTextSprite : public CSprite
+{
+    int LinesCount = 0;
+    virtual bool Empty() { return LinesCount == 0; }
+
+    void Init(int width, int height, uint32_t *pixels, bool skipHitMask = false);
+
+    virtual void Clear() override
+    {
+        LinesCount = 0;
+        CSprite::Clear();
+    }
+
+    virtual void Draw(int x, int y, bool checktrans = false)
+    {
+        if (Texture)
+            Texture->Draw(x, y, checktrans);
+    }
+
+    void Draw_Tooltip(int x, int y, int width, int height)
+    {
+        if (Texture)
+            Texture->Draw_Tooltip(x, y, width, height);
+    }
+
+    virtual void ClearWebLink() {}
+    virtual void AddWebLink(WEB_LINK_RECT &wl) {}
+    virtual uint16_t WebLinkUnderMouse(int x, int y) { return 0; }
+
+    CTextSprite() = default;
+    virtual ~CTextSprite() { Clear(); };
+};
+
+struct CHTMLText : public CTextSprite
+{
+    std::deque<WEB_LINK_RECT> m_WebLinkRect;
+
+    virtual uint16_t WebLinkUnderMouse(int x, int y) override;
+
+    virtual void ClearWebLink() override { m_WebLinkRect.clear(); }
+    virtual void AddWebLink(WEB_LINK_RECT &wl) override { m_WebLinkRect.push_back(wl); }
+
+    CHTMLText() = default;
+    virtual ~CHTMLText() { m_WebLinkRect.clear(); }
 };
