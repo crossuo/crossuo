@@ -302,11 +302,6 @@ else()
   source_group(TREE "${XUO_DIR}" FILES ${XUO_FILES})
 endif()
 
-# Build external dependendencies
-file(GLOB external_hdr ${PROJECT_SOURCE_DIR}/external/*.h)
-add_library(external STATIC ${PROJECT_SOURCE_DIR}/external/external.cpp ${external_hdr})
-set_property(TARGET external PROPERTY POSITION_INDEPENDENT_CODE ON)
-
 if(XUO_WINDOWS OR XUO_EMSC)
   add_executable(crossuo ${XUO_FILES})
 else()

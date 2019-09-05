@@ -24,3 +24,6 @@
 #define LOGURU_IMPLEMENTATION
 #include <loguru.h>
 #endif // LOGURU_IMPLEMENTATION
+
+// tinyxml2
+#include "tinyxml2.cpp"

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} clang PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} clang++ PATHS ENV PATH NO_DEFAULT_PATH)
+include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 project(crossuo)
 
@@ -12,6 +13,17 @@ option(ENABLE_COTIRE "Disables use of cotire build time reducer" ON)
 
 list(APPEND CMAKE_MODULE_PATH
   ${CMAKE_SOURCE_DIR}/CMake
+)
+
+set(CURL_PROJECT curl-7.50.1)
+set(CURL_ARGS ${EXTERNALS_CMAKE_ARGS} -DBUILD_TESTING=Off -DBUILD_CURL_EXE=Off -DBUILD_SHARED_LIBS=Off -DENABLE_ARES=Off -DCURL_STATICLIB=On)
+ExternalProject_Add(${CURL_PROJECT}
+	GIT_REPOSITORY https://github.com/curl/curl.git
+	GIT_TAG 3e7769a
+     	PREFIX ${CMAKE_CURRENT_BINARY_DIR}/curl
+	CMAKE_ARGS 
+   		-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/curl
+	   	${CURL_ARGS}
 )
 
 # Enable folders for IDE
@@ -100,4 +112,13 @@ configure_file(
 )
 include_directories("${PROJECT_BINARY_DIR}/")
 
+# Build external dependendencies
+set(EXTERNAL_DIR ${PROJECT_SOURCE_DIR}/external)
+set(EXTERNAL_LIBS external pthread dl)
+file(GLOB external_hdr ${EXTERNAL_DIR}/*.h)
+add_library(external STATIC ${EXTERNAL_DIR}/external.cpp ${external_hdr})
+include_directories(${EXTERNAL_DIR})
+set_property(TARGET external PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 add_subdirectory(src)
+add_subdirectory(installer)
