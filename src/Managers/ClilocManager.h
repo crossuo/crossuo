@@ -4,7 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 typedef map<uint32_t, string> CLILOC_MAP;
 

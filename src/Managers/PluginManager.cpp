@@ -3,7 +3,8 @@
 
 #include "PluginManager.h"
 #include "../Platform.h"
-#include "../api/commoninterfaces.h"
+#include <common/utils.h>
+#include <xuocore/commoninterfaces.h>
 
 #include "PacketManager.h"
 #include "ConnectionManager.h"

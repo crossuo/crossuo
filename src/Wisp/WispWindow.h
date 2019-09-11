@@ -5,7 +5,7 @@
 
 #include <SDL_video.h>
 #include "../Platform.h"
-#include "../api/plugininterface.h"
+#include <xuocore/plugininterface.h>
 
 #define PUSH_EVENT(id, data1, data2)                                                               \
     Wisp::CWindow::PushEvent(id, (void *)(uintptr_t)(data1), (void *)(uintptr_t)(data2))

@@ -5,9 +5,9 @@
 #include "Config.h"
 #include "CrossUO.h"
 #include "Multi.h"
-#include "api/uodata.h"
-#include "api/mulstruct.h"
-#include "api/commoninterfaces.h"
+#include <xuocore/uodata.h>
+#include <xuocore/mulstruct.h>
+#include <xuocore/commoninterfaces.h>
 #include "Network/Packets.h"
 #include "Managers/MouseManager.h"
 #include "Managers/MapManager.h"

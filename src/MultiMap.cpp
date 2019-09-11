@@ -5,7 +5,7 @@
 #include "Logging.h"
 #include "Gumps/GumpMap.h"
 #include "Managers/ColorManager.h"
-#include "api/uodata.h"
+#include <xuocore/uodata.h>
 
 CMultiMap g_MultiMap;
 

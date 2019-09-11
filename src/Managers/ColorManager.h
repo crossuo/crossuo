@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../api/mulstruct.h"
+#include <xuocore/mulstruct.h>
 
 struct FLOAT_HUES
 {

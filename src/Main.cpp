@@ -2,14 +2,14 @@
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
 #include "Logging.h"
-#include "api/file.h"
+#include <xuocore/file.h>
 #include "Config.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
 #include "Application.h"
 #include <SDL.h>
 #include <time.h>
-#include <popts.h>
+#include <external/popts.h>
 #include "Managers/ConfigManager.h"
 
 #if !defined(XUO_WINDOWS)
@@ -19,7 +19,7 @@
 #define XUO_EXPORT
 #endif
 
-#include "api/plugininterface.h"
+#include <xuocore/plugininterface.h>
 
 extern po::parser g_cli;
 po::parser g_cli;

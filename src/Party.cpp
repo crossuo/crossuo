@@ -3,7 +3,7 @@
 
 #include "Party.h"
 #include "CrossUO.h"
-#include "api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 #include "Network/Packets.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/GumpManager.h"

@@ -1,7 +1,51 @@
 // GPLv3 License
 // Copyright (c) 2018 Danny Angelo Carminati Grein
 
-#include "file.h"
+#pragma once
+
+#include <stdio.h>
+#include <stdint.h>
+#include <string>
+
+#if !defined(FS_MAX_PATH)
+#define FS_MAX_PATH 256
+#endif
+
+#if defined(XUO_WINDOWS)
+#define os_path std::wstring
+#define ToPath(x) ToWString(x)
+#define StringFromPath(x) ToString(x)
+#define CStringFromPath(x) ToString(x).c_str()
+#define PATH_SEP ToPath("/")
+#else
+#define os_path std::string
+#define ToPath(x) x
+#define StringFromPath(x) x
+#define CStringFromPath(x) x.c_str()
+#define PATH_SEP std::string("/")
+#endif
+
+enum fs_mode
+{
+    FS_READ = 0x01,
+    FS_WRITE = 0x02,
+};
+
+void fs_case_insensitive_init(const os_path &path);
+os_path fs_insensitive(const os_path &path);
+
+FILE *fs_open(const os_path &path_str, fs_mode mode);
+void fs_close(FILE *fp);
+size_t fs_size(FILE *fp);
+
+bool fs_path_exists(const os_path &path_str);
+bool fs_path_create(const os_path &path_str);
+os_path fs_path_current();
+
+unsigned char *fs_map(const os_path &path, size_t *length);
+void fs_unmap(unsigned char *ptr, size_t length);
+
+#if defined(FS_IMPLEMENTATION)
 
 #if defined(XUO_WINDOWS)
 
@@ -42,7 +86,7 @@ size_t fs_size(FILE *fp)
 bool fs_path_exists(const os_path &path_str)
 {
     bool r = PathFileExistsW(path_str.c_str()) != 0u;
-    DEBUG(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    FS_LOG_DEBUG("%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
     return r;
 }
 
@@ -54,8 +98,8 @@ bool fs_path_create(const os_path &path_str)
 os_path fs_path_current()
 {
     std::wstring path;
-    path.reserve(MAX_PATH);
-    GetCurrentDirectoryW(MAX_PATH, &path[0]);
+    path.reserve(FS_MAX_PATH);
+    GetCurrentDirectoryW(FS_MAX_PATH, &path[0]);
     return path;
 }
 
@@ -100,7 +144,7 @@ void fs_unmap(unsigned char *ptr, size_t length)
     UnmapViewOfFile(ptr);
 }
 
-#else
+#else // XUO_WINDOWS
 
 #include <stdio.h>
 #include <ctype.h>
@@ -187,7 +231,7 @@ FILE *fs_open(const os_path &path_str, fs_mode mode)
     auto fp = fopen(fname, mstr);
     if (fp == nullptr)
     {
-        Error(Filesystem, "loading file: %s (%d)", strerror(errno), errno);
+        FS_LOG_ERROR("loading file: %s (%d)", strerror(errno), errno);
         return nullptr;
     }
 
@@ -217,7 +261,7 @@ bool fs_path_exists(const os_path &path_str)
     assert(!path_str.empty());
     struct stat buffer;
     auto r = stat(CStringFromPath(path_str), &buffer) == 0;
-    DEBUG(Filesystem, "%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
+    FS_LOG_DEBUG("%s: %s = %d", __FUNCTION__, CStringFromPath(path_str), r);
     return r;
 }
 
@@ -308,4 +352,6 @@ void fs_unmap(unsigned char *ptr, size_t length)
 #endif
 }
 
-#endif
+#endif // XUO_WINDOWS
+
+#endif // #if defined(FS_IMPLEMENTATION)

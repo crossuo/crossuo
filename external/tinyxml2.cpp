@@ -675,6 +675,16 @@ bool XMLUtil::ToUnsigned64(const char* str, uint64_t* value) {
 }
 
 
+bool XMLUtil::ToHex64(const char* str, uint64_t* value) {
+    unsigned long long v = 0;	// horrible syntax trick to make the compiler happy about %llu
+    if(TIXML_SSCANF(str, "%llx", &v) == 1) {
+        *value = (uint64_t)v;
+        return true;
+    }
+    return false;
+}
+
+
 char* XMLDocument::Identify( char* p, XMLNode** node )
 {
     TIXMLASSERT( node );
@@ -1445,6 +1455,15 @@ XMLError XMLAttribute::QueryUnsigned64Value(uint64_t* value) const
 }
 
 
+XMLError XMLAttribute::QueryHex64Value(uint64_t* value) const
+{
+	if (XMLUtil::ToHex64(Value(), value)) {
+		return XML_SUCCESS;
+	}
+	return XML_WRONG_ATTRIBUTE_TYPE;
+}
+
+
 XMLError XMLAttribute::QueryBoolValue( bool* value ) const
 {
     if ( XMLUtil::ToBool( Value(), value )) {
@@ -1600,6 +1619,14 @@ uint64_t XMLElement::Unsigned64Attribute(const char* name, uint64_t defaultValue
 	return i;
 }
 
+uint64_t XMLElement::Hex64Attribute(const char* name, uint64_t defaultValue) const
+{
+	uint64_t i = defaultValue;
+	QueryHex64Attribute(name, &i);
+	return i;
+}
+
+
 bool XMLElement::BoolAttribute(const char* name, bool defaultValue) const
 {
 	bool b = defaultValue;
@@ -1747,6 +1774,19 @@ XMLError XMLElement::QueryUnsigned64Text(uint64_t* ival) const
 }
 
 
+XMLError XMLElement::QueryHex64Text(uint64_t* ival) const
+{
+    if(FirstChild() && FirstChild()->ToText()) {
+        const char* t = FirstChild()->Value();
+        if(XMLUtil::ToHex64(t, ival)) {
+            return XML_SUCCESS;
+        }
+        return XML_CAN_NOT_CONVERT_TEXT;
+    }
+    return XML_NO_TEXT_NODE;
+}
+
+
 XMLError XMLElement::QueryBoolText( bool* bval ) const
 {
     if ( FirstChild() && FirstChild()->ToText() ) {
@@ -1810,6 +1850,13 @@ uint64_t XMLElement::Unsigned64Text(uint64_t defaultValue) const
 {
 	uint64_t i = defaultValue;
 	QueryUnsigned64Text(&i);
+	return i;
+}
+
+uint64_t XMLElement::Hex64Text(uint64_t defaultValue) const
+{
+	uint64_t i = defaultValue;
+	QueryHex64Text(&i);
 	return i;
 }
 

@@ -3,7 +3,7 @@
 
 #include "GamePlayer.h"
 #include "GameItem.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"

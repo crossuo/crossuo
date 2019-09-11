@@ -1,16 +1,22 @@
-#include "../api/uodata.h"
-
 #include <string>
 #include <stdio.h>
 #include <stdarg.h>
-#include <popts.h>
 #include <iostream>
 #include <vector>
+
+#include <external/popts.h>
+#include <xuocore/uodata.h>
 
 static po::parser s_cli;
 static bool s_log = false;
 
 #define log(...) uo_log("xuodump", __VA_ARGS__)
+void uo_log(const char *type, ...);
+
+#define FS_LOG_DEBUG(...) log(__VA_ARGS__)
+#define FS_LOG_ERROR(...) log(__VA_ARGS__)
+#define FS_IMPLEMENTATION
+#include <common/fs.h>
 
 void uo_log(const char *type, ...)
 {

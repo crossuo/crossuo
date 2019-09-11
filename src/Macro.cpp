@@ -1,7 +1,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Macro.h"
-#include "api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 #define MODKEY_ALT 0x0100
 #define MODKEY_CTRL 0x0200

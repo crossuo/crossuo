@@ -5,7 +5,7 @@
 #include "GumpManager.h"
 #include "SkillsManager.h"
 #include "ConfigManager.h"
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 #include "../CrossUO.h"
 #include "../SkillGroup.h"
 #include "../Gumps/GumpNotify.h"

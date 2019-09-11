@@ -273,12 +273,6 @@ set(crossuo_src
   Config.cpp
 )
 
-set(libuo_src
-  api/uodata.cpp
-  api/mappedfile.cpp
-  api/file.cpp
-)
-
 if(XUO_WINDOWS)
   set(crossuo_src ${crossuo_src}
     VMQuery.cpp                 # FIXME: windows only, wrap, coredump
@@ -291,7 +285,7 @@ endif()
 set(XUO_DIR ${PROJECT_SOURCE_DIR}/src/)
 include_directories(${XUO_DIR})
 
-set(XUO_SRCS ${crossuo_src} ${libuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
+set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
 file(GLOB XUO_HDRS ${XUO_DIR}/*.h)
 
 set(XUO_FILES ${XUO_SRCS} ${XUO_HDRS})
@@ -307,13 +301,15 @@ if(XUO_WINDOWS OR XUO_EMSC)
 else()
   # crossuo loader
   add_executable(client CrossApp.cpp)
+  add_dependencies(client ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
   set_target_properties(client PROPERTIES OUTPUT_NAME crossuo)
-  target_link_libraries(client PUBLIC -ldl ${THREAD})
+  target_link_libraries(client PUBLIC ${LOADER} ${THREAD} ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
   add_library(crossuo SHARED ${XUO_FILES})
 endif()
 
-target_link_libraries(crossuo PUBLIC ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD} external)
-add_dependencies(crossuo external)
+add_dependencies(crossuo ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
+target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
+target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE})
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})
   add_dependencies(crossuo clang-format)
@@ -344,26 +340,3 @@ if (ENABLE_COTIRE)
   endif()
 endif()
 
-
-
-#
-# Reusing project files in another target do not work if not cotirised exactly the same
-# but we do not want this here so we can test there is no dependency leak inside api files
-# and somewhat, clang is capable of building correctly where gcc and msvc fail
-# See: https://github.com/sakra/cotire/blob/master/MANUAL.md#using-source-files-for-multiple-targets
-#
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  if(XUO_LINUX)
-    # xuodump tool
-    set(xuodump_src ${libuo_src})
-    string(REPLACE ".cpp" ".h" xuodump_hdr "${xuodump_src}")
-    add_executable(xuodump "tools/xuodump.cpp" ${xuodump_src} ${xuodump_hdr})
-    set_target_properties(xuodump PROPERTIES COMPILE_DEFINITIONS LIBUO=1)
-    target_link_libraries(xuodump PUBLIC -ldl ${THREAD})
-    if (ENABLE_COTIRE)
-      set_target_properties(xuodump PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER FALSE)
-      set_target_properties(xuodump PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "")
-      cotire(xuodump)
-    endif()
-  endif()
-endif()

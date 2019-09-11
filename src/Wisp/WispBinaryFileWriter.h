@@ -3,7 +3,7 @@
 #ifndef WISP_BFW_H
 #define WISP_BFW_H
 
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 namespace Wisp
 {

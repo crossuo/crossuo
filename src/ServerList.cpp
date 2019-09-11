@@ -6,7 +6,7 @@
 #include "ScreenStages/MainScreen.h"
 #include "ScreenStages/ServerScreen.h"
 #include "Utility/PingThread.h"
-#include "api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 CServerList g_ServerList;
 

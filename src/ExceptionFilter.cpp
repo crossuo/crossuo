@@ -2,7 +2,7 @@
 
 #include <psapi.h>
 #include <tlhelp32.h>
-#include "api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 string GetMemStorageText(int storage)
 {
@@ -50,8 +50,8 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
             filePath = ToString(me.szExePath);
         else
         {
-            wchar_t filename[MAX_PATH + 1];
-            uint32_t d = GetMappedFileName(hProcess, vmq.pvRgnBaseAddress, filename, MAX_PATH);
+            wchar_t filename[FS_MAX_PATH + 1];
+            uint32_t d = GetMappedFileName(hProcess, vmq.pvRgnBaseAddress, filename, FS_MAX_PATH);
 
             if (d)
                 filePath = ToString(filename);
@@ -220,8 +220,8 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
 
             CMappedFile file;
 
-            wchar_t fileName[MAX_PATH] = { 0 };
-            GetModuleFileNameW(0, fileName, MAX_PATH);
+            wchar_t fileName[FS_MAX_PATH] = { 0 };
+            GetModuleFileNameW(0, fileName, FS_MAX_PATH);
             bool crashlog = false;
             if (file.Load(fileName))
             {

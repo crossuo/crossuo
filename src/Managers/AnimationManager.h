@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../api/mulstruct.h" // AnimationSelector
+#include <xuocore/mulstruct.h> // AnimationSelector
 
 class CTargetGump;
 class CGameCharacter;

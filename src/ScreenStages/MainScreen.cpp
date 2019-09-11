@@ -3,6 +3,7 @@
 
 #include "MainScreen.h"
 #include "BaseScreen.h"
+#include <common/utils.h>
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"

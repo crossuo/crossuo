@@ -2,8 +2,8 @@
 // Copyright (C) Obtober 2017 Hotride
 
 #include "SkillsManager.h"
-#include "../api/uodata.h"
-#include "../api/mulstruct.h"
+#include <xuocore/uodata.h>
+#include <xuocore/mulstruct.h>
 
 CSkillsManager g_SkillsManager;
 

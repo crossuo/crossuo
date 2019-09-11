@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUITilepicHightlighted.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
 #include "../Managers/ColorManager.h"
@@ -75,7 +75,7 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 bool CGUITilepicHightlighted::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    auto spr = g_Index.m_Static[Graphic].Sprite;
+    auto spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
     if (spr != nullptr)
     {
         int count = 1 + static_cast<int>(DoubleDraw);

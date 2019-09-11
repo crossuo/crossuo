@@ -13,13 +13,18 @@
 #include <vector>
 #include <algorithm>
 
+#include <common/utils.h>
+
+#define CHECKSUM_IMPLEMENTATION
+#include <common/checksum.h>
+
 #define MINIZ_IMPLEMENTATION
-#include <miniz.h>
+#include <external/miniz.h>
 
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)
 
 std::string g_dumpUopFile;
-Data g_Data;
+UOData g_Data;
 Index g_Index;
 CFileManager g_FileManager;
 
@@ -49,13 +54,12 @@ static bool WaitEvent()
 static uint8_t s_AnimGroupCount = PAG_ANIMATION_COUNT;
 static uint32_t s_ClientVersion = 0;
 static bool s_UseVerdata = false;
-static char s_UOPath[MAX_PATH];
+static char s_UOPath[FS_MAX_PATH];
 static os_path UOFilePath(const char *str, ...)
 {
-    DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, str);
-    char out[MAX_PATH] = { 0 };
+    char out[FS_MAX_PATH] = { 0 };
     vsnprintf(out, sizeof(out) - 1, str, arg);
     va_end(arg);
     std::string res(&s_UOPath[0], strlen(s_UOPath));
@@ -72,153 +76,6 @@ void uo_data_init(const char *path, uint32_t client_version, bool use_verdata)
     s_UOPath[amount + 1] = 0;
     s_ClientVersion = client_version;
     s_UseVerdata = use_verdata;
-}
-
-uint64_t CreateAssetHash(const char *s)
-{
-    const auto l = (uint32_t)strlen(s);
-    uint32_t eax, ecx, edx, ebx, esi, edi;
-
-    eax = ecx = edx = ebx = esi = edi = 0;
-    ebx = edi = esi = l + 0xDEADBEEF;
-
-    uint32_t i = 0;
-    for (i = 0; i + 12 < l; i += 12)
-    {
-        edi = (uint32_t)((s[i + 7] << 24) | (s[i + 6] << 16) | (s[i + 5] << 8) | s[i + 4]) + edi;
-        esi = (uint32_t)((s[i + 11] << 24) | (s[i + 10] << 16) | (s[i + 9] << 8) | s[i + 8]) + esi;
-        edx = (uint32_t)((s[i + 3] << 24) | (s[i + 2] << 16) | (s[i + 1] << 8) | s[i]) - esi;
-
-        edx = (edx + ebx) ^ (esi >> 28) ^ (esi << 4);
-        esi += edi;
-        edi = (edi - edx) ^ (edx >> 26) ^ (edx << 6);
-        edx += esi;
-        esi = (esi - edi) ^ (edi >> 24) ^ (edi << 8);
-        edi += edx;
-        ebx = (edx - esi) ^ (esi >> 16) ^ (esi << 16);
-        esi += edi;
-        edi = (edi - ebx) ^ (ebx >> 13) ^ (ebx << 19);
-        ebx += esi;
-        esi = (esi - edi) ^ (edi >> 28) ^ (edi << 4);
-        edi += ebx;
-    }
-
-    if (l - i > 0)
-    {
-        switch (l - i)
-        {
-            case 12:
-                esi += static_cast<uint32_t>(s[i + 11]) << 24;
-                goto case_11;
-                break;
-            case 11:
-            case_11:
-                esi += static_cast<uint32_t>(s[i + 10]) << 16;
-                goto case_10;
-                break;
-            case 10:
-            case_10:
-                esi += static_cast<uint32_t>(s[i + 9]) << 8;
-                goto case_9;
-                break;
-            case 9:
-            case_9:
-                esi += s[i + 8];
-                goto case_8;
-                break;
-            case 8:
-            case_8:
-                edi += static_cast<uint32_t>(s[i + 7]) << 24;
-                goto case_7;
-                break;
-            case 7:
-            case_7:
-                edi += static_cast<uint32_t>(s[i + 6]) << 16;
-                goto case_6;
-                break;
-            case 6:
-            case_6:
-                edi += static_cast<uint32_t>(s[i + 5]) << 8;
-                goto case_5;
-                break;
-            case 5:
-            case_5:
-                edi += s[i + 4];
-                goto case_4;
-                break;
-            case 4:
-            case_4:
-                ebx += static_cast<uint32_t>(s[i + 3]) << 24;
-                goto case_3;
-                break;
-            case 3:
-            case_3:
-                ebx += static_cast<uint32_t>(s[i + 2]) << 16;
-                goto case_2;
-                break;
-            case 2:
-            case_2:
-                ebx += static_cast<uint32_t>(s[i + 1]) << 8;
-                goto case_1;
-            case 1:
-            case_1:
-                ebx += s[i];
-                break;
-        }
-
-        esi = (esi ^ edi) - ((edi >> 18) ^ (edi << 14));
-        ecx = (esi ^ ebx) - ((esi >> 21) ^ (esi << 11));
-        edi = (edi ^ ecx) - ((ecx >> 7) ^ (ecx << 25));
-        esi = (esi ^ edi) - ((edi >> 16) ^ (edi << 16));
-        edx = (esi ^ ecx) - ((esi >> 28) ^ (esi << 4));
-        edi = (edi ^ edx) - ((edx >> 18) ^ (edx << 14));
-        eax = (esi ^ edi) - ((edi >> 8) ^ (edi << 24));
-
-        return (static_cast<uint64_t>(edi) << 32) | eax;
-    }
-
-    return (static_cast<uint64_t>(esi) << 32) | eax;
-}
-
-static uint32_t CRC32Table[256];
-static uint32_t reflect(uint32_t source, int c)
-{
-    uint32_t value = 0;
-    for (int i = 1; i < c + 1; i++)
-    {
-        if ((source & 0x1) != 0u)
-        {
-            value |= (1 << (c - i));
-        }
-        source >>= 1;
-    }
-    return value;
-}
-
-void InitChecksum32()
-{
-    for (int i = 0; i < 256; i++)
-    {
-        CRC32Table[i] = reflect((int)i, 8) << 24;
-        for (int j = 0; j < 8; j++)
-        {
-            CRC32Table[i] =
-                (CRC32Table[i] << 1) ^ ((CRC32Table[i] & (1 << 31)) != 0u ? 0x04C11DB7 : 0);
-        }
-        CRC32Table[i] = reflect(CRC32Table[i], 32);
-    }
-}
-
-uint32_t Checksum32(uint8_t *ptr, size_t size)
-{
-    uint32_t crc = 0xFFFFFFFF;
-    while (size > 0)
-    {
-        crc = (crc >> 8) ^ CRC32Table[(crc & 0xFF) ^ *ptr];
-        ptr++;
-        size--;
-    }
-    return (crc & 0xFFFFFFFF);
 }
 
 void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr)
@@ -275,7 +132,6 @@ bool CUopMappedFile::HasAsset(uint64_t hash) const
 
 const UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
 {
-    DEBUG_TRACE_FUNCTION;
     auto found = m_Map.find(hash);
     if (found != m_Map.end())
     {
@@ -287,7 +143,6 @@ const UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
 
 static bool DecompressBlock(const UopBlockHeader &block, uint8_t *dst, uint8_t *src)
 {
-    DEBUG_TRACE_FUNCTION;
     uLongf cLen = block.CompressedSize;
     uLongf dLen = block.DecompressedSize;
     if (cLen == 0 || block.Flags == 0)
@@ -315,7 +170,6 @@ static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fi
 
 std::vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 {
-    DEBUG_TRACE_FUNCTION;
     assert(block);
     uint8_t *src = Start + block->Offset + block->HeaderSize;
     std::vector<uint8_t> dst(block->DecompressedSize, 0);
@@ -329,8 +183,6 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
 
 bool CFileManager::Load()
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool r = false;
     const bool useUop =
         s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop");
@@ -503,7 +355,6 @@ bool CFileManager::LoadWithMul()
 
 bool CFileManager::LoadWithUop()
 {
-    DEBUG_TRACE_FUNCTION;
     //Try to use map uop files first, if we can, we will use them.
     if (!UopLoadFile(m_ArtLegacyMUL, "artLegacyMUL.uop"))
     {
@@ -574,7 +425,6 @@ bool CFileManager::LoadWithUop()
 
 void CFileManager::Unload()
 {
-    DEBUG_TRACE_FUNCTION;
     m_ArtIdx.Unload();
     m_GumpIdx.Unload();
     m_SoundIdx.Unload();
@@ -639,7 +489,6 @@ void CFileManager::Unload()
 
 void CFileManager::UopReadAnimations()
 {
-    DEBUG_TRACE_FUNCTION;
     TRACE(Data, "start uop read jobs");
     std::thread readThread(&CFileManager::ReadTask, this);
     readThread.detach();
@@ -647,8 +496,6 @@ void CFileManager::UopReadAnimations()
 
 static int UopSetAnimationGroups(int start, int end)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const static int count = countof(CFileManager::m_AnimationFrame);
     auto getFileWithAsset = [](uint64_t hash) -> int {
         for (int i = 0; i < count; ++i)
@@ -674,7 +521,7 @@ static int UopSetAnimationGroups(int start, int end)
                 "build/animationlegacyframe/%06d/%02d.bin",
                 animId,
                 grpId);
-            const auto asset = CreateAssetHash(hashString);
+            const auto asset = uo_jenkins_hash(hashString);
             const auto fileIndex = getFileWithAsset(asset);
             if (fileIndex != -1)
             {
@@ -706,8 +553,6 @@ void CFileManager::WaitTasks() const
 
 void CFileManager::ReadTask()
 {
-    DEBUG_TRACE_FUNCTION;
-
     const static int count = countof(m_AnimationFrame);
     for (int i = 0; i < count; i++)
     {
@@ -747,7 +592,6 @@ void CFileManager::ReadTask()
 
 void CFileManager::ProcessAnimSequeceData()
 {
-    DEBUG_TRACE_FUNCTION;
     TRACE(Data, "processing AnimationSequence data");
     for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_Map)
     {
@@ -809,7 +653,6 @@ static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
 
 bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
 {
-    DEBUG_TRACE_FUNCTION;
     auto path{ UOFilePath(uopFilename) };
     if (!fs_path_exists(path))
     {
@@ -905,7 +748,6 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
 
 bool CFileManager::MulLoadFile(CMappedFile &file, const os_path &fileName)
 {
-    DEBUG_TRACE_FUNCTION;
     return file.Load(fileName);
 }
 
@@ -925,8 +767,6 @@ uint8_t *CFileManager::MulReadAnimationData(const CTextureAnimationDirection &di
 // MulStaticTileGroup[...] // static tile groups to the end of the file
 void CFileManager::LoadTiledata()
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto &file = m_TiledataMul;
     Info(Data, "loading tiledata");
     const bool isOldVersion = (s_ClientVersion < VERSION(7, 0, 9, 0));
@@ -995,7 +835,6 @@ void CFileManager::LoadTiledata()
 
 void CFileManager::LoadIndexFiles()
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Data, "loading indexes");
 
     auto *LandArtPtr = (ArtIdxBlock *)m_ArtIdx.Start;
@@ -1154,7 +993,6 @@ void CFileManager::MulReadIndexFile(
     IndexBlock *ptr,
     const std::function<IndexBlock *()> &getNewPtrValue)
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < (int)indexMaxCount; i++)
     {
         CIndexObject *obj = getIdxObj((int)i);
@@ -1172,7 +1010,6 @@ void CFileManager::UopReadIndexFile(
     CUopMappedFile &uopFile,
     int startIndex)
 {
-    DEBUG_TRACE_FUNCTION;
     std::string p = uopFileName;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
 
@@ -1185,7 +1022,7 @@ void CFileManager::UopReadIndexFile(
         char hashString[200] = { 0 };
         snprintf(hashString, sizeof(hashString), basePath, (int)i);
 
-        auto block = uopFile.GetBlock(CreateAssetHash(hashString));
+        auto block = uopFile.GetBlock(uo_jenkins_hash(hashString));
         if (block != nullptr)
         {
             CIndexObject *obj = getIdxObj((int)i);
@@ -1276,7 +1113,9 @@ void CFileManager::UopReadAnimationFrameInfo(
 }
 
 bool CFileManager::UopReadAnimationFrames(
-    CTextureAnimationDirection &direction, const AnimationSelector &anim)
+    CTextureAnimationDirection &direction,
+    const AnimationSelector &anim,
+    LoadPixelData16Cb pLoadFunc)
 {
     auto &block = *g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group].m_UOPAnimData;
     std::vector<uint8_t> scratchBuffer;
@@ -1305,13 +1144,10 @@ bool CFileManager::UopReadAnimationFrames(
     for (int i = 0; i < frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-#if !LIBUO
-        if (frame.Sprite.Texture !=
-            nullptr) // FIXME: validate that required data is already loaded in another way
+        if (frame.UserData != nullptr)
         {
             continue;
         }
-#endif
 
         UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
         if (frameData.DataStart == nullptr)
@@ -1322,7 +1158,7 @@ bool CFileManager::UopReadAnimationFrames(
         Ptr = frameData.DataStart + frameData.PixelDataOffset;
         auto palette = (uint16_t *)Ptr;
         Move(PALETTE_SIZE);
-        LoadAnimationFrame(frame, palette);
+        LoadAnimationFrame(frame, palette, pLoadFunc);
     }
     return true;
 }
@@ -1367,7 +1203,8 @@ void CFileManager::MulReadAnimationFrameInfo(
     }
 }
 
-bool CFileManager::MulReadAnimationFrames(CTextureAnimationDirection &direction)
+bool CFileManager::MulReadAnimationFrames(
+    CTextureAnimationDirection &direction, LoadPixelData16Cb pLoadFunc)
 {
     auto ptr = (uint8_t *)direction.Address;
     if (!direction.IsVerdata)
@@ -1393,21 +1230,19 @@ bool CFileManager::MulReadAnimationFrames(CTextureAnimationDirection &direction)
     for (uint32_t i = 0; i < frameCount; i++)
     {
         CTextureAnimationFrame &frame = direction.m_Frames[i];
-#if !LIBUO
-        if (frame.Sprite.Texture !=
-            nullptr) // FIXME: validate that required data is already loaded in another way
+        if (frame.UserData != nullptr)
         {
             continue;
         }
-#endif
         Ptr = dataStart + frameOffset[i];
-        LoadAnimationFrame(frame, palette);
+        LoadAnimationFrame(frame, palette, pLoadFunc);
     }
 
     return true;
 }
 
-void CFileManager::LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *palette)
+void CFileManager::LoadAnimationFrame(
+    CTextureAnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc)
 {
     auto frameInfo = (AnimationFrameInfo *)Ptr;
     Move(sizeof(AnimationFrameInfo));
@@ -1463,10 +1298,10 @@ void CFileManager::LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *p
         }
         header = ReadUInt32LE();
     }
-#if !LIBUO
-    frame.Sprite.LoadSprite16(
-        imageWidth, imageHeight, pixels.data()); // FIXME: this should not be here
-#endif
+
+    assert(pLoadFunc);
+    assert(frame.UserData == nullptr);
+    frame.UserData = pLoadFunc(imageWidth, imageHeight, pixels.data());
 }
 
 void CFileManager::LoadAnimationFrameInfo(
@@ -1487,19 +1322,18 @@ void CFileManager::LoadAnimationFrameInfo(
     }
 }
 
-bool CFileManager::LoadAnimation(const AnimationSelector &anim)
+bool CFileManager::LoadAnimation(const AnimationSelector &anim, LoadPixelData16Cb pLoadFunc)
 {
-    DEBUG_TRACE_FUNCTION;
     CTextureAnimationGroup &group = g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group];
     CTextureAnimationDirection &direction = group.m_Direction[anim.Direction];
     if (direction.Address != 0)
     {
         assert(direction.Size != 0 && "please report this back");
-        return MulReadAnimationFrames(direction);
+        return MulReadAnimationFrames(direction, pLoadFunc);
     }
     else if (direction.IsUOP)
     {
-        return UopReadAnimationFrames(direction, anim);
+        return UopReadAnimationFrames(direction, anim, pLoadFunc);
     }
     return false;
 }

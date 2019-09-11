@@ -9,7 +9,6 @@
 #include <vector>
 #include <stdint.h>
 #include <string.h>
-#include "uolib.h"
 #include "file.h"
 
 struct CDataWriter
@@ -286,38 +285,6 @@ struct CMappedFile : public CDataReader
     CMappedFile() = default;
     ~CMappedFile() { Unload(); }
 
-    bool Load(const os_path &path)
-    {
-        Info(Filesystem, "mmaping %s", CStringFromPath(path));
-        bool result = false;
-
-        if (fs_path_exists(path))
-        {
-            Unload();
-            Start = fs_map(path, &Size);
-            result = Start != nullptr;
-            SetData(Start, Size);
-        }
-        else
-        {
-            Warning(Filesystem, "file not found %s", CStringFromPath(path));
-        }
-
-        if (!result)
-        {
-            auto errorCode = errno;
-            Error(Filesystem, "failed to memory map, error code: %i", errorCode);
-        }
-
-        return result;
-    }
-
-    void Unload()
-    {
-        if (Start != nullptr)
-        {
-            fs_unmap(Start, Size);
-        }
-        SetData(nullptr, 0);
-    }
+    bool Load(const os_path &path);
+    void Unload();
 };

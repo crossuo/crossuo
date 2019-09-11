@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
+#include <common/utils.h>
 #include "GameWindow.h"
 #include "CrossUO.h"
 #include "ServerList.h"

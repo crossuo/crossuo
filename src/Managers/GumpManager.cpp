@@ -7,7 +7,7 @@
 #include "MacroManager.h"
 #include "OptionsMacroManager.h"
 #include "MouseManager.h"
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 #include "../Point.h"
 #include "../CrossUO.h"
 #include "../Party.h"

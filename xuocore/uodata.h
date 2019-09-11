@@ -15,7 +15,6 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
-#include "uolib.h"
 #include "enumlist.h"
 #include "mulstruct.h"
 #include "mappedfile.h"
@@ -30,15 +29,15 @@ typedef void *SoundHandle;
 struct CSprite;
 #endif
 
+typedef void *(*LoadPixelData16Cb)(int width, int height, uint16_t *pixels);
+
 struct UopBlockHeader;
 struct CUopMappedFile;
 using UopBlockHeaderMap = std::unordered_map<uint64_t, const UopBlockHeader *>;
 
 struct CTextureAnimationFrame
 {
-#if !LIBUO
-    CSprite Sprite;
-#endif
+    void *UserData = nullptr;
     int16_t CenterX = 0;
     int16_t CenterY = 0;
 };
@@ -67,9 +66,7 @@ struct CTextureAnimationGroup
 
 struct CIndexObject
 {
-#if !LIBUO
-    CSprite *Sprite = nullptr;
-#endif
+    void *UserData = nullptr;
     const UopBlockHeader *UopBlock = nullptr;
     size_t Address = 0;
     uint32_t DataSize = 0;
@@ -109,7 +106,6 @@ struct CIndexSound : public CIndexObject
 {
     uint32_t Delay = 0;
     uint8_t *m_WaveFile = nullptr;
-    SoundHandle m_Stream = SOUND_NULL;
 
     CIndexSound() = default;
     virtual ~CIndexSound() = default;
@@ -173,7 +169,7 @@ struct Index
     int m_MultiIndexCount = 0;
 };
 
-struct Data
+struct UOData
 {
     std::vector<MulLandTile2> m_Land;
     std::vector<MulStaticTile2> m_Static;
@@ -183,7 +179,7 @@ struct Data
 };
 
 extern Index g_Index;
-extern Data g_Data;
+extern UOData g_Data;
 
 struct CUopMappedFile : public CMappedFile // FIXME: not needed
 {
@@ -263,7 +259,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     void UopReadAnimations();
     bool IsMulFileOpen(int idx) const;
 
-    bool LoadAnimation(const AnimationSelector &anim);
+    bool LoadAnimation(const AnimationSelector &anim, LoadPixelData16Cb pLoadFunc);
     void LoadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
@@ -283,7 +279,8 @@ private:
     UopAnimationFrame UopReadAnimationFrame();
     std::vector<UopAnimationFrame> UopReadAnimationFramesData();
     uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
-    void LoadAnimationFrame(CTextureAnimationFrame &frame, uint16_t *palette);
+    void LoadAnimationFrame(
+        CTextureAnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc);
 
     bool LoadWithUop();
     bool LoadWithMul();
@@ -317,20 +314,19 @@ private:
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
         const UopBlockHeader &block);
-    bool
-    UopReadAnimationFrames(CTextureAnimationDirection &direction, const AnimationSelector &anim);
+    bool UopReadAnimationFrames(
+        CTextureAnimationDirection &direction,
+        const AnimationSelector &anim,
+        LoadPixelData16Cb pLoadFunc);
     void MulReadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
         uint8_t frameIndex,
         bool isCorpse);
-    bool MulReadAnimationFrames(CTextureAnimationDirection &direction);
+    bool MulReadAnimationFrames(CTextureAnimationDirection &direction, LoadPixelData16Cb pLoadFunc);
     // --
 };
 
-uint64_t CreateAssetHash(const char *s);
-void InitChecksum32();
-uint32_t Checksum32(uint8_t *ptr, size_t size);
 void uo_data_init(const char *path, uint32_t client_version, bool use_verdata);
 
 extern CFileManager g_FileManager;

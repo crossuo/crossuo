@@ -4,7 +4,7 @@
 #pragma once
 
 #include "GameObjects/GameWorld.h"
-#include "api/plugininterface.h"
+#include <xuocore/plugininterface.h>
 
 struct CIndexObjectStatic;
 struct CIndexObject;

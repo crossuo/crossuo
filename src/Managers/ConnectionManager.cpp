@@ -4,7 +4,7 @@
 #include "ConnectionManager.h"
 #include "PacketManager.h"
 #include <SDL_stdinc.h>
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ScreenStages/ConnectionScreen.h"

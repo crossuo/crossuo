@@ -9,7 +9,7 @@
 
 #include "Point.h"
 #include "Constants.h"
-#include "api/enumlist.h"
+#include <xuocore/enumlist.h>
 #include "Backend.h" // CGLTexture, GLuint
 
 class CGump;
@@ -367,22 +367,6 @@ inline bool IsStairBack(int64_t flags)
 inline bool IsStairRight(int64_t flags)
 {
     return (flags & 0x80000000) != 0;
-}
-
-template <typename T, typename U>
-static inline T checked_cast(U value)
-{
-    auto result = static_cast<T>(value);
-    assert(static_cast<U>(result) == value && "Type conversion loses information");
-    return result;
-}
-
-template <typename T, typename U>
-static inline T checked_cast(U *value)
-{
-    auto result = checked_cast<T>((intptr_t)value);
-    assert(static_cast<intptr_t>(result) == (intptr_t)value && "Type conversion loses information");
-    return result;
 }
 
 template <typename T>

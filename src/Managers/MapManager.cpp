@@ -3,7 +3,8 @@
 
 #include "MapManager.h"
 #include "GumpManager.h"
-#include "../api/uodata.h"
+#include <common/checksum.h>
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Gumps/GumpMinimap.h"
 #include "../GameObjects/MapBlock.h"
@@ -106,7 +107,7 @@ void CMapManager::CreateBlockTable(int map)
                     "build/map%dlegacymul/%08d.dat",
                     map,
                     shifted);
-                const auto hash = CreateAssetHash(mapFilePath);
+                const auto hash = uo_jenkins_hash(mapFilePath);
                 auto block = uopFile.GetBlock(hash);
                 if (block != nullptr)
                 {
