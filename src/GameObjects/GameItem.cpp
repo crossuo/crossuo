@@ -3,7 +3,7 @@
 
 #include "GameItem.h"
 #include "CustomHouseMultiObject.h"
-#include "api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"

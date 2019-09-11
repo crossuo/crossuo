@@ -3,7 +3,7 @@
 
 #include "GumpStatusbar.h"
 #include <SDL_rect.h>
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Application.h"

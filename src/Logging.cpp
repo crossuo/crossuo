@@ -5,13 +5,17 @@
 
 #if !defined(DISABLE_LOG)
 
-#include <loguru.h>
+#include <external/loguru.h>
 
 eLogSystem g_LogEnabled = LogSystemAll;
 
 #define LOG_SYSTEM(id, name) LOG_DECLARE_SYSTEM(name)
 #include "Loggers.h"
 #undef LOG_SYSTEM
+
+void uo_log(const char *type, ...)
+{
+}
 
 namespace loguru
 {

@@ -3,7 +3,7 @@
 #ifndef WISP_APP_H
 #define WISP_APP_H
 
-#include "../api/file.h"
+#include <xuocore/file.h>
 
 namespace Wisp
 {

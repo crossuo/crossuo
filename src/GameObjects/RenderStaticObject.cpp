@@ -5,8 +5,8 @@
 #include "GamePlayer.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
-#include "../api/uodata.h"
-#include "../api/mulstruct.h"
+#include <xuocore/uodata.h>
+#include <xuocore/mulstruct.h>
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../TextEngine/TextContainer.h"

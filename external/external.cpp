@@ -11,18 +11,18 @@
 #define ASS_DEPS
 #define TSF_IMPLEMENTATION
 #define TSF_NO_STDIO
-#include <tsf.h>
+#include "tsf.h"
 #define TML_IMPLEMENTATION
 #define TML_NO_STDIO
-#include <tml.h>
+#include "tml.h"
 #endif // ASS_DEPS
 
-#include <loguru.h>
+#include "loguru.h"
 
 // loguru lib
 #ifndef LOGURU_IMPLEMENTATION
 #define LOGURU_IMPLEMENTATION
-#include <loguru.h>
+#include "loguru.h"
 #endif // LOGURU_IMPLEMENTATION
 
 // tinyxml2

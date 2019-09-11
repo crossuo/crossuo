@@ -4,7 +4,7 @@
 #include "GameWorld.h"
 #include "ObjectOnCursor.h"
 #include "GamePlayer.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Party.h"
 #include "../Target.h"

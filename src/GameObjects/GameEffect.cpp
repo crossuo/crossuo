@@ -3,7 +3,7 @@
 
 #include "GameEffect.h"
 #include "GameEffectMoving.h"
-#include "api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/EffectManager.h"
 

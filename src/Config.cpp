@@ -6,14 +6,14 @@
 #include "Globals.h"
 #include "Application.h"
 #include "Logging.h"
-#include "api/uodata.h"
-#include "api/file.h"
-#include "api/enumlist.h"
+#include <xuocore/uodata.h>
+#include <xuocore/file.h>
+#include <xuocore/enumlist.h>
 #include "Crypt/CryptEntry.h"
 #include "Wisp/WispTextFileParser.h"
 #include "Managers/PacketManager.h"
 
-#include <popts.h>
+#include <external/popts.h>
 extern po::parser g_cli;
 
 #define CROSSUO_CONFIG "crossuo.cfg"

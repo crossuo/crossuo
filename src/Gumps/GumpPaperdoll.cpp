@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpPaperdoll.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -613,7 +613,7 @@ void CGumpPaperdoll::UpdateContent()
                 {
                     uint32_t slotSerial = ID_GP_ITEMS + slotEquipment->Layer;
                     CIndexObjectStatic &sio = g_Index.m_Static[slotEquipment->Graphic];
-                    auto spr = sio.Sprite;
+                    auto spr = (CSprite *)sio.UserData;
                     if (spr == nullptr)
                     {
                         spr = g_Game.ExecuteStaticArt(slotEquipment->Graphic);

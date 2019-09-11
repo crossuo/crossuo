@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include <miniz.h>
+#include <external/miniz.h>
 
 #include "PacketManager.h"
 #include "GumpManager.h"
@@ -20,7 +20,7 @@
 #include "MapManager.h"
 #include "ConnectionManager.h"
 #include "PluginManager.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../MultiMap.h"
 #include "../Point.h"
 #include "../Sockets.h"

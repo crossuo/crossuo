@@ -1,9 +1,10 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/utils.h>
 #include "FontsManager.h"
 #include "ColorManager.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Application.h"
 

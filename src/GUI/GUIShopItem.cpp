@@ -3,7 +3,7 @@
 
 #include "GUIShopItem.h"
 #include <SDL_timer.h>
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/AnimationManager.h"
 #include "../Managers/MouseManager.h"
@@ -263,7 +263,8 @@ void CGUIShopItem::Draw(bool checktrans)
         CTextureAnimationDirection &direction = group.m_Direction[1];
         if (direction.FrameCount != 0)
         {
-            CSprite &originalTexture = direction.m_Frames[0].Sprite;
+            assert(direction.m_Frames[0].UserData);
+            auto originalTexture = *(CSprite *)direction.m_Frames[0].UserData;
             if (originalTexture.Texture != nullptr)
             {
                 CGLTexture tex;

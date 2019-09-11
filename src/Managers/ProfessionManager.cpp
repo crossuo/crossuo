@@ -5,7 +5,7 @@
 #include "ProfessionManager.h"
 #include "SkillsManager.h"
 #include "ClilocManager.h"
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Application.h"

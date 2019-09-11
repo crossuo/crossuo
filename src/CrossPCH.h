@@ -127,7 +127,7 @@ typedef SoundInfo *SoundHandle;
 #include "Backend.h"
 
 #include "Platform.h"
-#include "api/mulstruct.h"
+#include <xuocore/mulstruct.h>
 #include "BaseQueue.h"
 
 #if USE_PING
@@ -140,7 +140,7 @@ typedef SoundInfo *SoundHandle;
 #include "ContainerStack.h"
 #include "UseItemsList.h"
 #include "ImageBounds.h"
-#include "api/uodata.h"
+#include <xuocore/uodata.h>
 #include "Macro.h"
 #include "Multi.h"
 #include "MultiMap.h"

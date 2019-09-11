@@ -3,14 +3,18 @@
 
 #include "SoundManager.h"
 #include "ConfigManager.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
+#include <common/utils.h>
 #include "../CrossUO.h"
 #include "../GameWindow.h"
 
 #ifndef ASS_IMPLEMENTATION
 #define ASS_IMPLEMENTATION
 #define WITH_SDL2_STATIC
-#include <ass.h>
+namespace ass
+{
+#include <external/ass.h>
+};
 #endif // ASS_IMPLEMENTATION
 
 #if 0
@@ -19,13 +23,13 @@
 #define SOUND_DEBUG_TRACE
 #endif
 
-using namespace SoLoud;
+using namespace ass::SoLoud;
 static Soloud s_backend;
 
 //static SoundFont s_Sf2;
 //static Midi s_MusicMidi[2];
 static WavStream s_MusicStream[2];
-static AudioSource *s_MusicSource[] = { &s_MusicStream[0], &s_MusicStream[1] };
+//static AudioSource *s_MusicSource[] = { &s_MusicStream[0], &s_MusicStream[1] };
 static handle s_Music[] = { 0, 0 };
 
 #define GetErrorDescription() __FUNCTION__

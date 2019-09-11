@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 class CPluginPacket : public CDataWriter
 {

@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "ScreenshotBuilder.h"
-#include "api/file.h"
+#include <xuocore/file.h>
 #include "GameWindow.h"
 #include "Application.h"
 #include <time.h>
@@ -12,7 +12,7 @@
 #define STBIWDEF static inline
 #define STB_IMAGE_WRITE_STATIC
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include <external/stb_image_write.h>
 
 CScreenshotBuilder g_ScreenshotBuilder;
 

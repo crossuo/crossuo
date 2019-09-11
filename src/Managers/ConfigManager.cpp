@@ -5,7 +5,7 @@
 #include "GumpManager.h"
 #include "SoundManager.h"
 #include "ObjectPropertiesManager.h"
-#include "../api/file.h"
+#include <xuocore/file.h>
 #include "../Point.h"
 #include "../Config.h"
 #include "../CrossUO.h"

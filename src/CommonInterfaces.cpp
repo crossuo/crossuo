@@ -1,11 +1,11 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
-#include "api/commoninterfaces.h"
 #include "CrossUO.h"
 #include "Target.h"
 #include <SDL_timer.h>
-#include "api/uodata.h"
+#include <xuocore/uodata.h>
+#include <xuocore/commoninterfaces.h>
 #include "Gumps/GumpSecureTrading.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/ColorManager.h"

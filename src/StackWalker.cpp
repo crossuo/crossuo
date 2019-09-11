@@ -314,7 +314,7 @@ public:
 	CHAR     LoadedImageName[256];   // symbol file name
 	CHAR     LoadedPdbName[256];     // pdb file name
 	DWORD    CVSig;                  // Signature of the CV record in the debug directories
-	CHAR         CVData[MAX_PATH * 3];   // Contents of the CV record
+	CHAR     CVData[FS_MAX_PATH * 3]; // Contents of the CV record
 	DWORD    PdbSig;                 // Signature of PDB
 	GUID     PdbSig70;               // Signature of PDB (VC 7 and up)
 	DWORD    PdbAge;                 // DBI age of pdb
@@ -439,7 +439,7 @@ private:
         DWORD modBaseSize;    // Size in bytes of module starting at modBaseAddr
         HMODULE hModule;      // The hModule of this module in th32ProcessID's context
         char szModule[MAX_MODULE_NAME32 + 1];
-        char szExePath[MAX_PATH];
+        char szExePath[FS_MAX_PATH];
     } MODULEENTRY32;
     typedef MODULEENTRY32 *PMODULEENTRY32;
     typedef MODULEENTRY32 *LPMODULEENTRY32;
@@ -1309,13 +1309,13 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
         OnOutput(buffer);
     }
 #else
-    TCHAR path[MAX_PATH];
+    TCHAR path[FS_MAX_PATH];
     DWORD versz;
     UINT blocksz;
     VS_FIXEDFILEINFO *vinfo;
     WORD *block;
 
-    if (GetSystemDirectory(path, MAX_PATH) != 0)
+    if (GetSystemDirectory(path, FS_MAX_PATH) != 0)
     {
         wstring pathS(path);
         pathS += L"\\kernel32.dll";

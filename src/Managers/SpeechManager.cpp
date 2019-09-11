@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "SpeechManager.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../Misc.h"
 

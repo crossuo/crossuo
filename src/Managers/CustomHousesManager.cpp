@@ -2,7 +2,7 @@
 // Copyright (C) September 2017 Hotride
 
 #include "CustomHousesManager.h"
-#include "../api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 #include "../Gumps/GumpCustomHouse.h"
 #include "../GameObjects/GameItem.h"
 

@@ -1,9 +1,9 @@
 
 #include "CryptEntry.h"
 #include "../Misc.h"
-#include "../api/file.h"
-#include "../api/enumlist.h"
-#include "../api/plugininterface.h"
+#include <xuocore/file.h>
+#include <xuocore/enumlist.h>
+#include <xuocore/plugininterface.h>
 #include "../Config.h"
 #include "LoginCrypt.h"
 #include "GameCrypt.h"
