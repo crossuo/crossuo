@@ -122,7 +122,7 @@ bool file_read(const char *file, T &result)
     fseek(fp, 0, SEEK_SET);
     result.reserve(len + 1);
     result.resize(len + 1);
-    const size_t read = fread(result.data(), 1, len, fp);
+    const size_t read = fread((void *)result.data(), 1, len, fp);
     fclose(fp);
     if (read != len)
         return false;
@@ -135,7 +135,7 @@ bool file_write(const char *file, T &input)
     FILE *fp = fopen(file, "wb");
     if (!fp)
         return false;
-    const size_t wrote = fwrite(input.data(), 1, input.size(), fp);
+    const size_t wrote = fwrite((void *)input.data(), 1, input.size(), fp);
     fclose(fp);
     if (wrote != input.size())
         return false;
