@@ -3,7 +3,7 @@
 #pragma once
 
 #include "BaseQueue.h"
-#include "api/enumlist.h"
+#include <xuocore/enumlist.h>
 
 struct CMappedFile;
 

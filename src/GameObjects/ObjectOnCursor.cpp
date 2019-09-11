@@ -3,7 +3,7 @@
 
 #include "ObjectOnCursor.h"
 #include "GameObject.h"
-#include "../api/mulstruct.h"
+#include <xuocore/mulstruct.h>
 
 CObjectOnCursor g_ObjectInHand;
 

@@ -35,9 +35,11 @@
 #endif // USE_PING
 
 #include "Crypt/CryptEntry.h"
-#include "api/mappedfile.h"
-#include "api/commoninterfaces.h"
-#include "api/uodata.h"
+#include <common/checksum.h>
+#include <xuocore/mappedfile.h>
+#include <xuocore/commoninterfaces.h>
+#include <xuocore/uodata.h>
+#include <common/utils.h>
 
 #include "Walker/Walker.h"
 #include "Walker/PathFinder.h"
@@ -151,7 +153,7 @@
 #include "Gumps/GumpProperty.h"
 #include "Gumps/GumpPropertyIcon.h"
 
-#include <popts.h>
+#include <external/popts.h>
 extern po::parser g_cli;
 
 #if !defined(XUO_WINDOWS)
@@ -318,7 +320,7 @@ bool CGame::Install()
 #endif
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
-    InitChecksum32();
+    crc32_init();
     for (int i = 0; i < MAX_MAPS_COUNT; i++)
     {
         g_MapBlockSize[i].Width = g_MapSize[i].Width / 8;
@@ -566,7 +568,18 @@ void ValidateSpriteIsDeleted(T (&arr)[SIZE])
     {
         CIndexObject &obj = arr[i];
         (void)obj;
-        assert(obj.Sprite == nullptr);
+        assert(obj.UserData == nullptr);
+    }
+}
+
+void DestroySprite(CIndexObject *obj)
+{
+    auto spr = (CSprite *)obj->UserData;
+    if (spr != nullptr)
+    {
+        spr->Clear();
+        delete spr;
+        obj->UserData = nullptr;
     }
 }
 
@@ -582,14 +595,7 @@ void CGame::UnloadIndexFiles()
         auto &list = *lists[i];
         for (auto it = list.begin(); it != list.end(); ++it)
         {
-            CIndexObject *obj = *it;
-            // FIXME: destroy sprite
-            if (obj->Sprite != nullptr)
-            {
-                obj->Sprite->Clear();
-                delete obj->Sprite;
-                obj->Sprite = nullptr;
-            }
+            DestroySprite(*it);
         }
         list.clear();
     }
@@ -597,10 +603,10 @@ void CGame::UnloadIndexFiles()
     for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end(); ++it)
     {
         CIndexSound *obj = *it;
-        if (obj->m_Stream != SOUND_NULL)
+        if (obj->UserData != SOUND_NULL)
         {
-            g_SoundManager.UpdateSoundEffect(obj->m_Stream, -1);
-            obj->m_Stream = SOUND_NULL;
+            g_SoundManager.UpdateSoundEffect((SoundHandle)obj->UserData, -1);
+            obj->UserData = SOUND_NULL;
         }
     }
     m_UsedSoundList.clear();
@@ -1316,7 +1322,7 @@ void CGame::Process(bool rendering)
 void CGame::LoadStartupConfig(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    char buf[MAX_PATH] = { 0 };
+    char buf[FS_MAX_PATH] = { 0 };
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
     {
@@ -1507,7 +1513,7 @@ void CGame::LoadLocalConfig(int serial, string characterName)
 
     g_CheckContainerStackTimer = g_Ticks + 30000;
 
-    char buf[MAX_PATH] = { 0 };
+    char buf[FS_MAX_PATH] = { 0 };
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
     {
@@ -1543,7 +1549,7 @@ void CGame::LoadLocalConfig(int serial, string characterName)
 
     if (!g_MacroManager.Load(path + ToPath("/macros.cuo"), path + ToPath("/macros.txt")))
     {
-        char classicClientDesktopSubpathBuf[MAX_PATH] = { 0 };
+        char classicClientDesktopSubpathBuf[FS_MAX_PATH] = { 0 };
         if (server != nullptr)
         {
             sprintf_s(
@@ -1708,14 +1714,7 @@ void CGame::ClearUnusedTextures()
             CIndexObject *obj = *it;
             if (obj->LastAccessTime < g_Ticks)
             {
-                // FIXME: destroy sprite
-                if (obj->Sprite != nullptr)
-                {
-                    obj->Sprite->Clear();
-                    delete obj->Sprite;
-                    obj->Sprite = nullptr;
-                }
-
+                DestroySprite(obj);
                 it = list->erase(it);
                 if (++count >= maxCount)
                 {
@@ -1735,10 +1734,10 @@ void CGame::ClearUnusedTextures()
         CIndexSound *obj = *it;
         if (obj->LastAccessTime < g_Ticks)
         {
-            if (obj->m_Stream != SOUND_NULL)
+            if (obj->UserData != SOUND_NULL)
             {
-                g_SoundManager.UpdateSoundEffect(obj->m_Stream, -1);
-                obj->m_Stream = SOUND_NULL;
+                g_SoundManager.UpdateSoundEffect((SoundHandle)obj->UserData, -1);
+                obj->UserData = SOUND_NULL;
             }
 
             it = m_UsedSoundList.erase(it);
@@ -3352,13 +3351,7 @@ void CGame::ClearRemovedStaticsTextures()
         CIndexObject *obj = *it;
         if (obj->LastAccessTime == 0u)
         {
-            // FIXME: destroy sprite
-            if (obj->Sprite != nullptr)
-            {
-                obj->Sprite->Clear();
-                delete obj->Sprite;
-                obj->Sprite = nullptr;
-            }
+            DestroySprite(obj);
             it = m_UsedStaticList.erase(it);
         }
         else
@@ -4183,8 +4176,8 @@ void CGame::IndexReplaces()
                     g_Index.m_Land[checkIndex].Address != 0 && g_Index.m_Land[index].Address == 0)
                 {
                     g_Index.m_Land[index] = g_Index.m_Land[checkIndex];
-                    assert(g_Index.m_Land[index].Sprite == nullptr);
-                    g_Index.m_Land[index].Sprite = nullptr;
+                    assert(g_Index.m_Land[index].UserData == nullptr);
+                    g_Index.m_Land[index].UserData = nullptr;
                     g_Index.m_Land[index].Color = atoi(strings[2].c_str());
                     break;
                 }
@@ -4197,8 +4190,8 @@ void CGame::IndexReplaces()
                         g_Index.m_Static[checkIndex].Address != 0)
                     {
                         g_Index.m_Static[index] = g_Index.m_Static[checkIndex];
-                        assert(g_Index.m_Static[index].Sprite == nullptr);
-                        g_Index.m_Static[index].Sprite = nullptr;
+                        assert(g_Index.m_Static[index].UserData == nullptr);
+                        g_Index.m_Static[index].UserData = nullptr;
                         g_Index.m_Static[index].Color = atoi(strings[2].c_str());
                         break;
                     }
@@ -4234,8 +4227,8 @@ void CGame::IndexReplaces()
                     g_Index.m_Texture[checkIndex].Address != 0)
                 {
                     g_Index.m_Texture[index] = g_Index.m_Texture[checkIndex];
-                    assert(g_Index.m_Texture[index].Sprite == nullptr);
-                    g_Index.m_Texture[index].Sprite = nullptr;
+                    assert(g_Index.m_Texture[index].UserData == nullptr);
+                    g_Index.m_Texture[index].UserData = nullptr;
                     g_Index.m_Texture[index].Color = atoi(strings[2].c_str());
                     break;
                 }
@@ -4267,8 +4260,8 @@ void CGame::IndexReplaces()
                     continue;
                 }
                 g_Index.m_Gump[index] = g_Index.m_Gump[checkIndex];
-                assert(g_Index.m_Gump[index].Sprite == nullptr);
-                g_Index.m_Gump[index].Sprite = nullptr;
+                assert(g_Index.m_Gump[index].UserData == nullptr);
+                g_Index.m_Gump[index].UserData = nullptr;
                 g_Index.m_Gump[index].Color = atoi(strings[2].c_str());
                 break;
             }
@@ -4350,7 +4343,7 @@ void CGame::IndexReplaces()
 
                 free(in.m_WaveFile); // FIXME!!!
                 in.m_WaveFile = nullptr;
-                in.m_Stream = SOUND_NULL;
+                in.UserData = SOUND_NULL;
                 break;
             }
         }
@@ -4666,10 +4659,10 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
         return;
     }
 
-    if (is.m_Stream == SOUND_NULL)
+    if (is.UserData == SOUND_NULL)
     {
-        is.m_Stream = g_SoundManager.LoadSoundEffect(is);
-        if (is.m_Stream == SOUND_NULL)
+        is.UserData = g_SoundManager.LoadSoundEffect(is);
+        if (is.UserData == SOUND_NULL)
         {
             return;
         }
@@ -4681,8 +4674,8 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
         {
             return;
         }
-        g_SoundManager.FreeSound(is.m_Stream);
-        is.m_Stream = g_SoundManager.LoadSoundEffect(is);
+        g_SoundManager.FreeSound((SoundHandle)is.UserData);
+        is.UserData = g_SoundManager.LoadSoundEffect(is);
     }
 
     if (volume <= 0)
@@ -4692,7 +4685,7 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
 
     if (volume > 0)
     {
-        g_SoundManager.PlaySoundEffect(is.m_Stream, volume);
+        g_SoundManager.PlaySoundEffect((SoundHandle)is.UserData, volume);
         is.LastAccessTime = g_Ticks;
     }
 }
@@ -4703,16 +4696,16 @@ void CGame::AdjustSoundEffects(int ticks, float volume)
     for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end();)
     {
         CIndexSound *obj = *it;
-        if (obj->m_Stream == SOUND_NULL)
+        if (obj->UserData == SOUND_NULL)
         {
             ++it;
             continue;
         }
         if (static_cast<int>(obj->LastAccessTime + obj->Delay) < ticks)
         {
-            if (!g_SoundManager.UpdateSoundEffect(obj->m_Stream, volume))
+            if (!g_SoundManager.UpdateSoundEffect((SoundHandle)obj->UserData, volume))
             {
-                obj->m_Stream = SOUND_NULL;
+                obj->UserData = SOUND_NULL;
             }
             it = m_UsedSoundList.erase(it);
         }
@@ -4741,21 +4734,21 @@ CSprite *CGame::ExecuteGump(uint16_t id)
         return nullptr;
     }
     CIndexObject &io = g_Index.m_Gump[id];
-    if (io.Sprite == nullptr)
+    if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
         {
             return nullptr;
         }
 
-        io.Sprite = g_UOFileReader.ReadGump(io);
-        if (io.Sprite != nullptr)
+        io.UserData = g_UOFileReader.ReadGump(io);
+        if (io.UserData != nullptr)
         {
             m_UsedGumpList.push_back(&g_Index.m_Gump[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Sprite;
+    return (CSprite *)io.UserData;
 }
 
 CSprite *CGame::ExecuteLandArt(uint16_t id)
@@ -4766,21 +4759,21 @@ CSprite *CGame::ExecuteLandArt(uint16_t id)
         return nullptr;
     }
     CIndexObject &io = g_Index.m_Land[id];
-    if (io.Sprite == nullptr)
+    if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
         { //nodraw tiles banned
             return nullptr;
         }
 
-        io.Sprite = g_UOFileReader.ReadArt(id, io, false);
-        if (io.Sprite != nullptr)
+        io.UserData = g_UOFileReader.ReadArt(id, io, false);
+        if (io.UserData != nullptr)
         {
             m_UsedLandList.push_back(&g_Index.m_Land[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Sprite;
+    return (CSprite *)io.UserData;
 }
 
 CSprite *CGame::ExecuteStaticArtAnimated(uint16_t id)
@@ -4798,23 +4791,24 @@ CSprite *CGame::ExecuteStaticArt(uint16_t id)
     }
 
     CIndexObject &io = g_Index.m_Static[id];
-    if (io.Sprite == nullptr)
+    if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
         { //nodraw tiles banned
             return nullptr;
         }
 
-        io.Sprite = g_UOFileReader.ReadArt(id, io, true);
-        if (io.Sprite != nullptr)
+        io.UserData = g_UOFileReader.ReadArt(id, io, true);
+        if (io.UserData != nullptr)
         {
-            io.Width = ((io.Sprite->Width / 2) + 1);
-            io.Height = io.Sprite->Height - 20;
+            auto spr = (CSprite *)io.UserData;
+            io.Width = ((spr->Width / 2) + 1);
+            io.Height = spr->Height - 20;
             m_UsedStaticList.push_back(&g_Index.m_Static[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Sprite;
+    return (CSprite *)io.UserData;
 }
 
 CSprite *CGame::ExecuteTexture(uint16_t id)
@@ -4827,21 +4821,21 @@ CSprite *CGame::ExecuteTexture(uint16_t id)
     }
 
     CIndexObject &io = g_Index.m_Texture[id];
-    if (io.Sprite == nullptr)
+    if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
         {
             return nullptr;
         }
 
-        io.Sprite = g_UOFileReader.ReadTexture(io);
-        if (io.Sprite != nullptr)
+        io.UserData = g_UOFileReader.ReadTexture(io);
+        if (io.UserData != nullptr)
         {
             m_UsedTextureList.push_back(&g_Index.m_Texture[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Sprite;
+    return (CSprite *)io.UserData;
 }
 
 CSprite *CGame::ExecuteLight(uint8_t &id)
@@ -4853,21 +4847,21 @@ CSprite *CGame::ExecuteLight(uint8_t &id)
     }
 
     CIndexObject &io = g_Index.m_Light[id];
-    if (io.Sprite == nullptr)
+    if (io.UserData == nullptr)
     {
         if (io.Address == 0u)
         {
             return nullptr;
         }
 
-        io.Sprite = g_UOFileReader.ReadLight(io);
-        if (io.Sprite != nullptr)
+        io.UserData = g_UOFileReader.ReadLight(io);
+        if (io.UserData != nullptr)
         {
             m_UsedLightList.push_back(&g_Index.m_Light[id]);
         }
     }
     io.LastAccessTime = g_Ticks;
-    return io.Sprite;
+    return (CSprite *)io.UserData;
 }
 
 bool CGame::ExecuteGumpPart(uint16_t id, int count)
@@ -5217,7 +5211,7 @@ bool CGame::PolygonePixelsInXY(int x, int y, int width, int height)
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    auto spr = g_Index.m_Gump[id].Sprite;
+    auto spr = (CSprite *)g_Index.m_Gump[id].UserData;
     if (spr != nullptr)
     {
         return spr->Select(x, y);
@@ -5228,7 +5222,7 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    auto spr = g_Index.m_Gump[id].Sprite;
+    auto spr = (CSprite *)g_Index.m_Gump[id].UserData;
     if (spr == nullptr)
     {
         return false;
@@ -5287,7 +5281,7 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
     CSprite *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
-        auto pth = g_Index.m_Gump[id + i].Sprite;
+        auto pth = (CSprite *)g_Index.m_Gump[id + i].UserData;
         if (pth == nullptr)
         {
             return false;
@@ -5436,7 +5430,7 @@ bool CGame::StaticPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
     CIndexObject &io = g_Index.m_Static[id];
-    auto spr = io.Sprite;
+    auto spr = (CSprite *)io.UserData;
     if (spr != nullptr)
     {
         return spr->Select(x - io.Width, y - io.Height);
@@ -5453,7 +5447,7 @@ bool CGame::StaticPixelsInXYAnimated(uint16_t id, int x, int y)
 bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    auto spr = g_Index.m_Static[id].Sprite;
+    auto spr = (CSprite *)g_Index.m_Static[id].UserData;
     if (spr != nullptr)
     {
         return spr->Select(x, y);
@@ -5464,7 +5458,7 @@ bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 bool CGame::LandPixelsInXY(uint16_t id, int x, int y)
 {
     DEBUG_TRACE_FUNCTION;
-    auto spr = g_Index.m_Land[id].Sprite;
+    auto spr = (CSprite *)g_Index.m_Land[id].UserData;
     if (spr != nullptr)
     {
         return spr->Select(x - 22, y - 22);

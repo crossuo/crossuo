@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../api/mulstruct.h"
+#include <xuocore/mulstruct.h>
 
 typedef struct MULTILINES_FONT_DATA
 {

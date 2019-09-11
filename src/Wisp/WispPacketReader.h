@@ -3,7 +3,7 @@
 #ifndef WISP_PR_H
 #define WISP_PR_H
 
-#include "api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 namespace Wisp
 {

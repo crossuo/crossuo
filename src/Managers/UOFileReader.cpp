@@ -3,7 +3,7 @@
 
 #include "UOFileReader.h"
 #include "ColorManager.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
@@ -84,7 +84,7 @@ CSprite *UOFileReader::ReadGump(CIndexObject &io)
     {
         return nullptr;
     }
-    auto spr = new CSprite;
+    auto spr = new CSprite();
     spr->LoadSprite16(io.Width, io.Height, pixels.data());
     return spr;
 }
@@ -431,7 +431,7 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
     }
 
     const bool skipHitMask = true;
-    auto spr = new CSprite;
+    auto spr = new CSprite();
     spr->LoadSprite16(w, h, pixels.data(), skipHitMask);
     return spr;
 }
@@ -453,7 +453,7 @@ CSprite *UOFileReader::ReadLight(CIndexObject &io)
     }
 
     const bool skipHitMask = true;
-    auto spr = new CSprite;
+    auto spr = new CSprite();
     spr->LoadSprite16(io.Width, io.Height, pixels.data(), skipHitMask);
     return spr;
 }

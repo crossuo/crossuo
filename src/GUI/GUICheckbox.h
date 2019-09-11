@@ -4,7 +4,7 @@
 #pragma once
 
 #include "GUIDrawObject.h"
-#include "../api/enumlist.h"
+#include <xuocore/enumlist.h>
 
 class CGUICheckbox : public CGUIDrawObject
 {

@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "uolib.h"
-
 #if _WIN32
 #include <Windows.h>
 #define USER_MESSAGE_ID WM_USER
@@ -91,9 +89,11 @@ struct KeyEvent
 };
 #endif // USING_SDL_STRUCTS
 
+#define MAX_PLUGIN_PATH 256
+
 struct PLUGIN_INFO
 {
-    char FileName[MAX_PATH];
+    char FileName[MAX_PLUGIN_PATH];
     char FunctionName[100];
     uint64_t Flags;
 };

@@ -2,6 +2,7 @@
 // Copyright (C) September 2016 Hotride
 
 #include "GumpBook.h"
+#include <common/utils.h>
 #include "../CrossUO.h"
 #include "../PressedObject.h"
 #include "../ClickObject.h"

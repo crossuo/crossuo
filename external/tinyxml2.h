@@ -627,6 +627,7 @@ public:
     static bool ToDouble( const char* str, double* value );
 	static bool ToInt64(const char* str, int64_t* value);
     static bool ToUnsigned64(const char* str, uint64_t* value);
+    static bool ToHex64(const char* str, uint64_t* value);
 	// Changes what is serialized for a boolean value.
 	// Default to "true" and "false". Shouldn't be changed
 	// unless you have a special testing or compatibility need.
@@ -1170,6 +1171,12 @@ public:
         QueryUnsigned64Value(&i);
         return i;
     }
+    
+    uint64_t Hex64Value() const {
+        uint64_t i = 0;
+        QueryHex64Value(&i);
+        return i;
+    }
 
     /// Query as an unsigned integer. See IntValue()
     unsigned UnsignedValue() const			{
@@ -1207,6 +1214,8 @@ public:
 	XMLError QueryInt64Value(int64_t* value) const;
     /// See QueryIntValue
     XMLError QueryUnsigned64Value(uint64_t* value) const;
+    /// See QueryIntValue
+    XMLError QueryHex64Value(uint64_t* value) const;
 	/// See QueryIntValue
     XMLError QueryBoolValue( bool* value ) const;
     /// See QueryIntValue
@@ -1315,6 +1324,8 @@ public:
     /// See IntAttribute()
     uint64_t Unsigned64Attribute(const char* name, uint64_t defaultValue = 0) const;
 	/// See IntAttribute()
+    uint64_t Hex64Attribute(const char* name, uint64_t defaultValue = 0) const;
+	/// See IntAttribute()
 	bool BoolAttribute(const char* name, bool defaultValue = false) const;
     /// See IntAttribute()
 	double DoubleAttribute(const char* name, double defaultValue = 0) const;
@@ -1368,7 +1379,16 @@ public:
         }
         return a->QueryUnsigned64Value(value);
     }
-
+    
+    /// See QueryIntAttribute()
+    XMLError QueryHex64Attribute(const char* name, uint64_t* value) const {
+        const XMLAttribute* a = FindAttribute(name);
+        if(!a) {
+            return XML_NO_ATTRIBUTE;
+        }
+        return a->QueryHex64Value(value);
+    }
+    
 	/// See QueryIntAttribute()
     XMLError QueryBoolAttribute( const char* name, bool* value ) const				{
         const XMLAttribute* a = FindAttribute( name );
@@ -1621,6 +1641,8 @@ public:
 	/// See QueryIntText()
 	XMLError QueryUnsigned64Text(uint64_t* uval) const;
 	/// See QueryIntText()
+	XMLError QueryHex64Text(uint64_t* uval) const;
+	/// See QueryIntText()
     XMLError QueryBoolText( bool* bval ) const;
     /// See QueryIntText()
     XMLError QueryDoubleText( double* dval ) const;
@@ -1635,6 +1657,8 @@ public:
 	int64_t Int64Text(int64_t defaultValue = 0) const;
     /// See QueryIntText()
     uint64_t Unsigned64Text(uint64_t defaultValue = 0) const;
+	/// See QueryIntText()
+    uint64_t Hex64Text(uint64_t defaultValue = 0) const;
 	/// See QueryIntText()
 	bool BoolText(bool defaultValue = false) const;
 	/// See QueryIntText()

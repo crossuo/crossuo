@@ -7,8 +7,8 @@
 #include "GumpManager.h"
 #include "PacketManager.h"
 #include <SDL_clipboard.h>
-#include "../api/mappedfile.h"
-#include "../api/file.h"
+#include <xuocore/mappedfile.h>
+#include <xuocore/file.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Macro.h"

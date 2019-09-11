@@ -44,6 +44,10 @@ only_commits:
     - CMakeLists.txt
     - appveyor.yml
     - src/
+    - tools/
+    - common/
+    - external/
+    - xuocore/
     - CMake/
 artifacts:
   - path: CrossUO-Win64-Release-nightly.zip

@@ -1,6 +1,8 @@
 // GPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
+/*
+
 #pragma once
 
 #if defined(__GNUC__) && __GNUC__ <= 5 && !__clang__
@@ -97,8 +99,9 @@ typedef SoundInfo *SoundHandle;
 
 #if USE_PCH
 
-#include "api/mulstruct.h"
-#include "api/enumlist.h"
-#include "api/uodata.h"
+#include <xuocore/mulstruct.h>
+#include <xuocore/enumlist.h>
+#include <xuocore/uodata.h>
 
 #endif // USE_PCH
+*/

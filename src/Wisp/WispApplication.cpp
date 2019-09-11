@@ -2,7 +2,7 @@
 
 #include "WispThread.h"
 #include <SDL_timer.h>
-#include "../api/file.h"
+#include <xuocore/file.h>
 #include "../GameWindow.h"
 
 namespace Wisp
@@ -59,7 +59,7 @@ os_path CApplication::ExeFilePath(const char *str, ...) const
     va_list arg;
     va_start(arg, str);
 
-    char out[MAX_PATH] = { 0 };
+    char out[FS_MAX_PATH] = { 0 };
     vsprintf_s(out, str, arg);
     va_end(arg);
 
@@ -78,7 +78,7 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     va_list arg;
     va_start(arg, str);
 
-    char out[MAX_PATH] = { 0 };
+    char out[FS_MAX_PATH] = { 0 };
     vsprintf_s(out, str, arg);
     va_end(arg);
 

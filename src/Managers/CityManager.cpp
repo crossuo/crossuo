@@ -4,7 +4,7 @@
 #include "CityManager.h"
 #include "ClilocManager.h"
 #include "../Application.h"
-#include "api/mappedfile.h"
+#include <xuocore/mappedfile.h>
 
 CCityManager g_CityManager;
 

@@ -7,7 +7,7 @@
 
 #if !defined(DISABLE_LOG)
 
-#include <loguru.h>
+#include <external/loguru.h>
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

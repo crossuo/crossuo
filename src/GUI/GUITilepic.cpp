@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUITilepic.h"
-#include "../api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Point.h"
 
@@ -48,7 +48,7 @@ void CGUITilepic::Draw(bool checktrans)
 bool CGUITilepic::Select()
 {
     DEBUG_TRACE_FUNCTION;
-    auto spr = g_Index.m_Static[Graphic].Sprite;
+    auto spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
     if (spr != nullptr)
     {
         return spr->Select(m_X, m_Y, !BoundingBoxCheck);

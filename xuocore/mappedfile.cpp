@@ -3,6 +3,7 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#include "uolib.h"
 #include "mappedfile.h"
 #include <string.h> // memcpy
 
@@ -328,4 +329,38 @@ std::wstring CDataReader::ReadWStringLE(size_t size, const intptr_t &offset)
 std::wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
 {
     return ReadWString(size, true, offset);
+}
+
+bool CMappedFile::Load(const os_path &path)
+{
+    Info(Filesystem, "mmaping %s", CStringFromPath(path));
+    bool result = false;
+
+    if (fs_path_exists(path))
+    {
+        Unload();
+        Start = fs_map(path, &Size);
+        result = Start != nullptr;
+        SetData(Start, Size);
+    }
+    else
+    {
+        Warning(Filesystem, "file not found %s", CStringFromPath(path));
+    }
+
+    if (!result)
+    {
+        Error(Filesystem, "failed to mmap.");
+    }
+
+    return result;
+}
+
+void CMappedFile::Unload()
+{
+    if (Start != nullptr)
+    {
+        fs_unmap(Start, Size);
+    }
+    SetData(nullptr, 0);
 }

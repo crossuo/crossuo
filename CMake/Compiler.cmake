@@ -82,6 +82,7 @@ else()
   endif()
   check_and_add_flag(THREADS -pthread)
   set(THREAD "-pthread")
+  set(LOADER "-ldl")
 endif()
 
 if(ENABLE_LTO)

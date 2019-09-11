@@ -5,7 +5,7 @@
 
 #include "../RenderObject.h"
 #include "../Point.h"
-#include "../api/enumlist.h"
+#include <xuocore/enumlist.h>
 
 struct CTextData;
 

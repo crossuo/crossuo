@@ -2,7 +2,7 @@
 
 #include "LoginCrypt.h"
 #include "../Misc.h"
-#include "../api/file.h"
+#include <xuocore/file.h>
 #include "../Config.h"
 
 CLoginCrypt g_LoginCrypt;

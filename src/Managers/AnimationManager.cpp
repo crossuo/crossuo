@@ -1,12 +1,13 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/utils.h>
 #include "AnimationManager.h"
 #include "MouseManager.h"
 #include "ConfigManager.h"
 #include "ColorManager.h"
 #include "CorpseManager.h"
-#include "api/uodata.h"
+#include <xuocore/uodata.h>
 #include "../Application.h"
 #include "../Target.h"
 #include "../Constants.h"
@@ -20,6 +21,13 @@
 #include "../GameObjects/GameCharacter.h"
 
 CAnimationManager g_AnimationManager;
+
+void *LoadSpritePixels(int width, int height, uint16_t *pixels)
+{
+    auto spr = new CSprite();
+    spr->LoadSprite16(width, height, pixels);
+    return spr;
+}
 
 struct FRAME_OUTPUT_INFO
 {
@@ -1121,11 +1129,14 @@ bool CAnimationManager::TestPixels(
     }
 
     auto &frame = direction.m_Frames[frameIndex];
-    y -= frame.Sprite.Height + frame.CenterY;
+    auto spr = (CSprite *)frame.UserData;
+    assert(spr);
+
+    y -= spr->Height + frame.CenterY;
     x = g_MouseManager.Position.X - x;
     if (mirror)
     {
-        x += frame.Sprite.Width - frame.CenterX;
+        x += spr->Width - frame.CenterX;
     }
     else
     {
@@ -1134,10 +1145,10 @@ bool CAnimationManager::TestPixels(
 
     if (mirror)
     {
-        x = frame.Sprite.Width - x;
+        x = spr->Width - x;
     }
     x = g_MouseManager.Position.X - x;
-    return frame.Sprite.Select(x, y);
+    return spr->Select(x, y);
 }
 
 void CAnimationManager::Draw(
@@ -1187,27 +1198,28 @@ void CAnimationManager::Draw(
     }
 
     CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-    if (frame.Sprite.Texture == 0)
+    auto spr = (CSprite *)frame.UserData;
+    if (!spr) //spr->Texture == 0)
     {
         return;
     }
 
     if (mirror)
     {
-        x -= frame.Sprite.Width - frame.CenterX;
+        x -= spr->Width - frame.CenterX;
     }
     else
     {
         x -= frame.CenterX;
     }
 
-    y -= frame.Sprite.Height + frame.CenterY;
+    y -= spr->Height + frame.CenterY;
     if (isShadow)
     {
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
         glBlendFunc(GL_DST_COLOR, GL_ZERO);
-        g_GL_DrawShadow(*frame.Sprite.Texture, x, y, mirror);
+        g_GL_DrawShadow(*spr->Texture, x, y, mirror);
         if (m_UseBlending)
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1289,9 +1301,9 @@ void CAnimationManager::Draw(
         {
             if (obj->IsHuman())
             {
-                short frameHeight = frame.Sprite.Height;
+                short frameHeight = spr->Height;
                 m_CharacterFrameStartY = y;
-                m_CharacterFrameHeight = frame.Sprite.Height;
+                m_CharacterFrameHeight = spr->Height;
                 m_StartCharacterWaistY =
                     (int)(frameHeight * UPPER_BODY_RATIO) + m_CharacterFrameStartY;
                 m_StartCharacterKneesY =
@@ -1305,7 +1317,7 @@ void CAnimationManager::Draw(
             float h9mod = LOWER_BODY_RATIO;
             if (!obj->NPC)
             {
-                float itemsEndY = (float)(y + frame.Sprite.Height);
+                float itemsEndY = (float)(y + spr->Height);
                 //Определяем соотношение верхней части текстуры, до перелома.
                 if (y >= m_StartCharacterWaistY)
                 {
@@ -1318,7 +1330,7 @@ void CAnimationManager::Draw(
                 else
                 {
                     float upperBodyDiff = (float)(m_StartCharacterWaistY - y);
-                    h3mod = upperBodyDiff / frame.Sprite.Height;
+                    h3mod = upperBodyDiff / spr->Height;
                     if (h3mod < 0)
                     {
                         h3mod = 0;
@@ -1350,7 +1362,7 @@ void CAnimationManager::Draw(
                         midBodyDiff = (float)(m_StartCharacterKneesY - m_StartCharacterWaistY);
                     }
 
-                    h6mod = h3mod + midBodyDiff / frame.Sprite.Height;
+                    h6mod = h3mod + midBodyDiff / spr->Height;
                     if (h6mod < 0)
                     {
                         h6mod = 0;
@@ -1369,18 +1381,18 @@ void CAnimationManager::Draw(
                 else
                 {
                     float lowerBodyDiff = itemsEndY - m_StartCharacterKneesY;
-                    h9mod = h6mod + lowerBodyDiff / frame.Sprite.Height;
+                    h9mod = h6mod + lowerBodyDiff / spr->Height;
                     if (h9mod < 0)
                     {
                         h9mod = 0;
                     }
                 }
             }
-            g_GL_DrawSitting(*frame.Sprite.Texture, x, y, mirror, h3mod, h6mod, h9mod);
+            g_GL_DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
         }
         else
         {
-            g_GL_DrawMirrored(*frame.Sprite.Texture, x, y, mirror);
+            g_GL_DrawMirrored(*spr->Texture, x, y, mirror);
         }
 
         if (spectralColor)
@@ -1788,9 +1800,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             if (direction.Address != 0 && direction.m_Frames != nullptr)
             {
                 CTextureAnimationFrame &frame = direction.m_Frames[0];
+                auto spr = (CSprite *)frame.UserData;
+                assert(spr);
 
-                int frameWidth = frame.Sprite.Width;
-                int frameHeight = frame.Sprite.Height;
+                int frameWidth = spr->Width;
+                int frameHeight = spr->Height;
 
                 if (frameWidth >= 80)
                 {
@@ -2095,8 +2109,10 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
                 if (direction.m_Frames != nullptr)
                 {
                     CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-                    result.Width = frame.Sprite.Width;
-                    result.Height = frame.Sprite.Height;
+                    auto spr = (CSprite *)frame.UserData;
+                    assert(spr);
+                    result.Width = spr->Width;
+                    result.Height = spr->Height;
                     result.CenterX = frame.CenterX;
                     result.CenterY = frame.CenterY;
                     return result;
@@ -3005,7 +3021,7 @@ CAnimationManager::ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t g
     CTextureAnimationDirection &dir = grp.m_Direction[direction];
     if (dir.FrameCount == 0)
     {
-        if (g_FileManager.LoadAnimation(SelectAnim))
+        if (g_FileManager.LoadAnimation(SelectAnim, LoadSpritePixels))
         {
             m_UsedAnimList.push_back(&dir);
         }
