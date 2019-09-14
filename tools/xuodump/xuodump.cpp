@@ -13,25 +13,23 @@
 static po::parser s_cli;
 static bool s_log = false;
 
-#define log(...) uo_log("xuodump", __VA_ARGS__)
-void uo_log(const char *type, ...);
+#define log(...) uo_log(0, "xuodump", __VA_ARGS__)
+void uo_log(int type, const char *sys, const char *fmt, ...);
 
 #define FS_LOG_DEBUG(...) log(__VA_ARGS__)
 #define FS_LOG_ERROR(...) log(__VA_ARGS__)
 
-void uo_log(const char *type, ...)
+void uo_log(int type, const char *sys, const char *fmt ...)
 {
     if (!s_log)
         return;
 
-    fprintf(stdout, "[%s] ", type);
+    fprintf(stdout, "[%s] ", sys);
 
     va_list args;
-    va_start(args, type);
-    const char *fmt = va_arg(args, const char *);
+    va_start(args, fmt);
     vprintf(fmt, args);
     va_end(args);
-
     fprintf(stdout, "\n");
 }
 
