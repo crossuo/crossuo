@@ -19,7 +19,7 @@ void uo_log(int type, const char *sys, const char *fmt, ...);
 #define FS_LOG_DEBUG(...) log(__VA_ARGS__)
 #define FS_LOG_ERROR(...) log(__VA_ARGS__)
 
-void uo_log(int type, const char *sys, const char *fmt ...)
+void uo_log(int type, const char *sys, const char *fmt...)
 {
     if (!s_log)
         return;

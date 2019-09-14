@@ -1343,9 +1343,9 @@ void CGame::LoadStartupConfig(int serial)
         sprintf_s(buf, "desktop/%s/0x%08X", g_MainScreen.m_Account->c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(g_App.ExeFilePath(buf, "options.cfg")))
+    if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
     {
-        g_ConfigManager.Load(g_App.UOFilesPath(buf, "options.cfg"));
+        g_ConfigManager.Load(g_App.UOFilesPath("%s/%s", buf, "options.cfg"));
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
@@ -1532,9 +1532,9 @@ void CGame::LoadLocalConfig(int serial, std::string characterName)
         sprintf_s(buf, "desktop/%s/0x%08X", g_MainScreen.m_Account->c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(g_App.ExeFilePath(buf, "options.cfg")))
+    if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
     {
-        if (!g_ConfigManager.Load(g_App.UOFilesPath("options.cfg")))
+        if (!g_ConfigManager.Load(g_App.UOFilesPath("%s/%s", buf, "options.cfg")))
         {
             g_ConfigManager.Init();
             if (g_GameState >= GS_GAME)
@@ -1550,7 +1550,8 @@ void CGame::LoadLocalConfig(int serial, std::string characterName)
     }
 
     if (!g_MacroManager.Load(
-            g_App.ExeFilePath(buf, "macros.cuo"), g_App.ExeFilePath(buf, "macros.txt")))
+            g_App.ExeFilePath("%s/%s", buf, "macros.cuo"),
+            g_App.ExeFilePath("%s/%s", buf, "macros.txt")))
     {
         char buf2[FS_MAX_PATH] = { 0 };
         if (server != nullptr)
@@ -1569,14 +1570,15 @@ void CGame::LoadLocalConfig(int serial, std::string characterName)
         }
 
         if (!g_MacroManager.Load(
-                g_App.ExeFilePath(buf2, "macros.cuo"), g_App.ExeFilePath(buf2, "macros.txt")))
+                g_App.ExeFilePath("%s/%s", buf2, "macros.cuo"),
+                g_App.ExeFilePath("%s/%s", buf2, "macros.txt")))
         {
             g_MacroManager.Load(g_App.UOFilesPath("macros.cuo"), g_App.UOFilesPath("macros.txt"));
         }
     }
 
-    g_GumpManager.Load(g_App.ExeFilePath(buf, "gumps.cuo"));
-    g_CustomHousesManager.Load(g_App.ExeFilePath(buf, "customhouses.cuo"));
+    g_GumpManager.Load(g_App.ExeFilePath("%s/%s", buf, "gumps.cuo"));
+    g_CustomHousesManager.Load(g_App.ExeFilePath("%s/%s", buf, "customhouses.cuo"));
     if (g_ConfigManager.OffsetInterfaceWindows)
     {
         g_ContainerRect.MakeDefault();
