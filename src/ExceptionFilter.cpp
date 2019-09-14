@@ -13,7 +13,7 @@
 
 #include "Managers/PacketManager.h"
 
-string GetMemStorageText(int storage)
+std::string GetMemStorageText(int storage)
 {
     switch (storage)
     {

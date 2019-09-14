@@ -288,8 +288,8 @@ fs_path fs_insensitive(const fs_path &path)
 {
     auto p = path.real_path;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
-    auto it = std::find_if(s_lower.begin(), s_lower.end(), [&path](const auto &other) {
-        return path.real_path == other.real_path;
+    auto it = std::find_if(s_lower.begin(), s_lower.end(), [&p](const auto &lower) {
+        return p.compare(lower.real_path) == 0;
     });
     if (it != s_lower.end())
     {
