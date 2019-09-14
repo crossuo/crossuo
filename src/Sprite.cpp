@@ -1,6 +1,7 @@
 // GPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
+#include "Backend.h"
 #include "Sprite.h"
 #include "Managers/MouseManager.h"
 
@@ -97,9 +98,20 @@ void CTextSprite::Init(int width, int height, uint32_t *pixels, bool skipHitMask
     CSprite::Init(width, height, pixels, skipHitMask);
 }
 
+void CTextSprite::Draw(int x, int y, bool checktrans)
+{
+    if (Texture)
+        Texture->Draw(x, y, checktrans);
+}
+
+void CTextSprite::Draw_Tooltip(int x, int y, int width, int height)
+{
+    if (Texture)
+        Texture->Draw_Tooltip(x, y, width, height);
+}
+
 uint16_t CHTMLText::WebLinkUnderMouse(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     x = g_MouseManager.Position.X - x;
     y = g_MouseManager.Position.Y - y;
 

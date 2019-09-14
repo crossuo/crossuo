@@ -18,7 +18,6 @@ CRenderObject::CRenderObject(int serial, uint16_t graphic, uint16_t color, short
 
 CRenderObject::~CRenderObject()
 {
-    DEBUG_TRACE_FUNCTION;
     g_ClickObject.Clear(this);
     g_SelectedObject.Clear(this);
     g_LastSelectedObject.Clear(this);

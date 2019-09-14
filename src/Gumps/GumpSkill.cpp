@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GumpSkill.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"

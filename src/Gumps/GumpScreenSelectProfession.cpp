@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GumpScreenSelectProfession.h"
 #include "../Config.h"
 #include "../ToolTip.h"
@@ -184,7 +185,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         CProfession *profession = (CProfession *)obj;
         int statVal[3] = { profession->Str, profession->Dex, profession->Int };
 
-        const string statName[3] = { "Strength", "Dexterity", "Intelligence" };
+        const std::string statName[3] = { "Strength", "Dexterity", "Intelligence" };
 
         int yPtr = 136;
 
@@ -379,7 +380,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
     {
         CProfession *profession = (CProfession *)obj;
         int statVal[3] = { profession->Str, profession->Dex, profession->Int };
-        const string statName[3] = { "Strength", "Dexterity", "Intelligence" };
+        const std::string statName[3] = { "Strength", "Dexterity", "Intelligence" };
 
         int yPtr = 171;
 

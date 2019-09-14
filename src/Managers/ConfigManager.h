@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include <xuocore/enumlist.h>
+#include <common/fs.h>
+#include "Constants.h"
+#include "Globals.h"
+
 class CConfigManager
 {
 protected:
@@ -132,7 +137,7 @@ public:
 
     bool FilterPWOn = false;
     bool ObscenityFilter = false;
-    string FilterPassword = "";
+    std::string FilterPassword = "";
 
     bool ToggleBufficonWindow = false;
     int GameWindowX = 0;
@@ -237,10 +242,10 @@ public:
 
     void UpdateFeatures();
     uint16_t GetColorByNotoriety(uint8_t notoriety);
-    int GetConfigKeyCode(const string &key);
+    int GetConfigKeyCode(const std::string &key);
 
-    bool Load(const os_path &path);
-    void Save(const os_path &path);
+    bool Load(const fs_path &path);
+    void Save(const fs_path &path);
 };
 
 extern CConfigManager g_ConfigManager;

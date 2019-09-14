@@ -4,6 +4,7 @@
 #pragma once
 
 #include "RenderStaticObject.h"
+#include "GLEngine/GLTexture.h"
 
 class CGameEffect;
 
@@ -30,15 +31,15 @@ public:
     void SetFlags(uint8_t val);
 
 protected:
-    string m_Name;
+    std::string m_Name;
 
 public:
-    string GetName() { return m_Name; };
-    void SetName(const string &newName);
+    std::string GetName() { return m_Name; };
+    void SetName(const std::string &newName);
     bool NPC = false;
     bool Clicked = false;
     char AnimIndex = 0;
-    string JournalPrefix;
+    std::string JournalPrefix;
     uint32_t LastAnimationChangeTime = 0;
     bool SA_Poisoned = false;
     bool ClosedObjectHandle = false;
@@ -53,10 +54,10 @@ public:
     virtual ~CGameObject();
 
     DRAW_FRAME_INFORMATION m_FrameInfo;
-    vector<class CGameItem *> m_DrawLayeredObjects;
+    std::vector<class CGameItem *> m_DrawLayeredObjects;
 
     virtual void AddText(CTextData *msg);
-    void GenerateObjectHandlesTexture(wstring text);
+    void GenerateObjectHandlesTexture(std::wstring text);
     void DrawObjectHandlesTexture();
     void SelectObjectHandlesTexture();
     virtual uint16_t GetMountAnimation();

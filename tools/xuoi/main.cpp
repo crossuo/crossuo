@@ -7,9 +7,12 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <stdint.h>
+#include <inttypes.h>
 
 #define CHECKSUM_IMPLEMENTATION
 #include <common/checksum.h>
+#include <common/utils.h>
 
 #define MINIZ_IMPLEMENTATION
 #include <external/miniz.h>
@@ -17,6 +20,8 @@
 #define SCHED_IMPLEMENTATION
 #include <external/mmx_sched.h>
 #include <external/tinyxml2.h>
+
+#define CURL_STATICLIB
 #include <curl/curl.h>
 
 #define DO_CURL(x)                                                                                 \
@@ -40,7 +45,7 @@ const char *log_system_name(int)
 size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string *str)
 {
     assert(data && str && size && nmemb);
-    const int amount = size * nmemb;
+    const auto amount = size * nmemb;
     str->append(data, amount);
     return amount;
 }
@@ -48,7 +53,7 @@ size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string
 size_t recv_data_vector(const char *data, size_t size, size_t nmemb, std::vector<uint8_t> *vec)
 {
     assert(data && vec && size && nmemb);
-    const int amount = size * nmemb;
+    const auto amount = size * nmemb;
     vec->insert(vec->end(), data, data + amount);
     return amount;
 }
@@ -226,19 +231,19 @@ static mft_result mft_entry_load(tinyxml2::XMLElement *node, mft_entry &entry)
     entry.compression_type = node->UnsignedAttribute("ct", 0);
     entry.compressed_len = node->Hex64Attribute("cl", 0);
     entry.timestamp = node->Hex64Attribute("t", 0);
-    entry.hash = node->Hex64Attribute("rh", 0);
+    entry.hash = (uint32_t)node->Hex64Attribute("rh", 0);
 
-    entry.ph = node->Hex64Attribute("ph", 0);
-    entry.sh = node->Hex64Attribute("sh", 0);
+    entry.ph = (uint32_t)node->Hex64Attribute("ph", 0);
+    entry.sh = (uint32_t)node->Hex64Attribute("sh", 0);
     entry.ft = node->UnsignedAttribute("ft", 0);
-    entry.meta_len = node->Hex64Attribute("ml", 0);
-    entry.meta_crc = node->Hex64Attribute("mc", 0);
+    entry.meta_len = (uint32_t)node->Hex64Attribute("ml", 0);
+    entry.meta_crc = (uint32_t)node->Hex64Attribute("mc", 0);
 
     if (n)
     {
         fprintf(
             stdout,
-            "file> %64s (%10zu, %10zu) @ %10lu [0x%08x]",
+            "file> %64s (%10" PRIu64 ", %10" PRIu64 ") @ %10" PRIu64 " [0x%08x]",
             entry.name.c_str(),
             entry.uncompressed_len,
             entry.compressed_len,
@@ -249,7 +254,7 @@ static mft_result mft_entry_load(tinyxml2::XMLElement *node, mft_entry &entry)
     {
         fprintf(
             stdout,
-            "part> (%10zu, %10zu) @ %10lu [0x%08x] ",
+            "part> (%10" PRIu64 ", %10" PRIu64 ") @ %10" PRIu64 " [0x%08x] ",
             entry.uncompressed_len,
             entry.compressed_len,
             entry.timestamp,
@@ -364,7 +369,7 @@ static mft_result mft_product_load(
 {
     product.timestamp = node->Unsigned64Attribute("serial", 0);
     product.launchfile = node->Attribute("launchfile");
-    fprintf(stdout, "product timestamp: %lu\n", product.timestamp);
+    fprintf(stdout, "product timestamp: %" PRIu64 "\n", product.timestamp);
 
     product.manifest_repo = node->FirstChildElement("manifestrepos")
                                 ->FirstChildElement("repo")
@@ -485,7 +490,9 @@ mft_result mft_download(const std::string &repo, const mft_entry &entry, std::ve
 
             fprintf(stdout, "(decompressing) ");
             data.resize(ul);
-            int z_err = mz_uncompress(data.data(), &ul, cbuf.data(), cl);
+            auto ol = checked_cast<uLongf>(ul);
+            auto il = checked_cast<uLongf>(cl);
+            int z_err = mz_uncompress(data.data(), &ol, cbuf.data(), il);
             if (z_err != Z_OK || ul != entry.uncompressed_len)
             {
                 fprintf(stdout, "decompression error %d\n", z_err);

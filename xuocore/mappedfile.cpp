@@ -5,6 +5,7 @@
 
 #include "uolib.h"
 #include "mappedfile.h"
+#include <common/str.h>
 #include <string.h> // memcpy
 
 #if 0
@@ -331,9 +332,9 @@ std::wstring CDataReader::ReadWStringBE(size_t size, const intptr_t &offset)
     return ReadWString(size, true, offset);
 }
 
-bool CMappedFile::Load(const os_path &path)
+bool CMappedFile::Load(const fs_path &path)
 {
-    Info(Filesystem, "mmaping %s", CStringFromPath(path));
+    Info(Filesystem, "mmaping %s", fs_path_ascii(path));
     bool result = false;
 
     if (fs_path_exists(path))
@@ -345,7 +346,7 @@ bool CMappedFile::Load(const os_path &path)
     }
     else
     {
-        Warning(Filesystem, "file not found %s", CStringFromPath(path));
+        Warning(Filesystem, "file not found %s", fs_path_ascii(path));
     }
 
     if (!result)

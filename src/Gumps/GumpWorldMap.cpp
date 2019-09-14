@@ -33,11 +33,11 @@ CGumpWorldMap::CGumpWorldMap(short x, short y)
         new CGUIResizeButton(ID_GWM_RESIZE, 0x0837, 0x0838, 0x0838, Width - 8, Height + 13));
 
     //Map settings
-    static const string mapNames[7] = { "Current map", "Britannia", "Trammel", "Illshenar",
-                                        "Malas",       "Tokuno",    "TerMur" };
+    static const std::string mapNames[7] = { "Current map", "Britannia", "Trammel", "Illshenar",
+                                             "Malas",       "Tokuno",    "TerMur" };
 
     //Scale settings
-    static const string scaleNames[7] = { "4:1", "2:1", "1:1", "1:2", "1:4", "1:6", "1:10" };
+    static const std::string scaleNames[7] = { "4:1", "2:1", "1:1", "1:2", "1:4", "1:6", "1:10" };
 
     //Link with player checkbox settings
     Text = (CGUIText *)Add(new CGUIText(0x03B2, 0, 0));
@@ -388,7 +388,7 @@ void CGumpWorldMap::LoadMap(int map)
             }
             else
             {
-                Error(Client, "error opening world map file: %s", CStringFromPath(path));
+                Error(Client, "error opening world map file: %s", fs_path_ascii(path));
             }
         }
 

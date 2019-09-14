@@ -12,7 +12,7 @@ CBinaryFileWriter::~CBinaryFileWriter()
     Close();
 }
 
-bool CBinaryFileWriter::Open(const os_path &path)
+bool CBinaryFileWriter::Open(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;

@@ -3,6 +3,8 @@
 
 #pragma once
 
+class CGameObject;
+
 class CCorpse
 {
 public:
@@ -25,7 +27,7 @@ public:
 class CCorpseManager
 {
 private:
-    deque<CCorpse> m_List;
+    std::deque<CCorpse> m_List;
 
 public:
     CCorpseManager() {}

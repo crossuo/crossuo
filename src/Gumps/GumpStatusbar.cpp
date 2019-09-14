@@ -72,7 +72,7 @@ enum
     ID_GSB_COUNT,
 };
 
-static const wstring tooltip[] = {
+static const std::wstring tooltip[] = {
     L"(none)",                      //ID_GSB_NONE
     L"Minimize the statusbar gump", //ID_GSB_MINIMIZE
     L"",                            //ID_GSB_TEXT_FIELD
@@ -158,7 +158,7 @@ void CGumpStatusbar::InitToolTip()
 
     //if (Minimized && Serial == g_PlayerSerial)
     //    g_ToolTip.Set(L"Double click to maximize the statusbar gump");
-    const wstring &text = tooltip[id];
+    const auto &text = tooltip[id];
     if (!text.empty())
     {
         g_ToolTip.Set(text, 80);
@@ -1408,7 +1408,7 @@ void CGumpStatusbar::UpdateContent()
                     CGUIGumppic *bodyGump = (CGUIGumppic *)Add(new CGUIGumppic(0x0803, 0, 0));
                     bodyGump->SelectOnly = true;
 
-                    string memberName = member.GetName((int)i);
+                    auto memberName = member.GetName((int)i);
                     bool outofRange = false;
                     if (member.Character->RemovedFromRender())
                     {
@@ -1521,7 +1521,7 @@ void CGumpStatusbar::UpdateContent()
             uint16_t hitsColor = 0x0386;
             uint16_t textColor = 0x0386;
             CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
-            string objName = m_Name;
+            auto objName = m_Name;
             bool canChangeName = false;
 
             if (obj != nullptr)
@@ -1766,7 +1766,7 @@ void CGumpStatusbar::OnTextInput(const TextEvent &ev)
 
     if (Serial != g_PlayerSerial)
     {
-        string str = g_EntryPointer->c_str();
+        std::string str = g_EntryPointer->c_str();
         if (g_EntryPointer->Pos() > 0)
         {
             str.resize(g_EntryPointer->Pos());

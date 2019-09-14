@@ -22,7 +22,7 @@ void CCorpseManager::Add(const CCorpse &corpse)
 
 void CCorpseManager::Remove(int corpseSerial, int objectSerial)
 {
-    for (deque<CCorpse>::iterator i = m_List.begin(); i != m_List.end();)
+    for (auto i = m_List.begin(); i != m_List.end();)
     {
         if (i->CorpseSerial == corpseSerial || i->ObjectSerial == objectSerial)
         {

@@ -3,7 +3,7 @@
 
 #include <SDL_rect.h>
 #include "GumpCustomHouse.h"
-#include <xuocore/file.h>
+#include <common/fs.h>
 #include "../Point.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -22,9 +22,9 @@
 CGumpCustomHouse *g_CustomHouseGump = nullptr;
 
 template <class T, class A>
-void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const os_path &path)
+void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const fs_path &path)
 {
-    Info(Client, "parse CH file (CAT): %s", CStringFromPath(path));
+    Info(Client, "parse CH file (CAT): %s", fs_path_ascii(path));
     FILE *file = fs_open(path, FS_READ); //"r"
     if (file != nullptr)
     {
@@ -82,9 +82,9 @@ void ParseCustomHouseObjectFileWithCategory(vector<A> &list, const os_path &path
 }
 
 template <class T>
-void ParseCustomHouseObjectFile(vector<T> &list, const os_path &path)
+void ParseCustomHouseObjectFile(vector<T> &list, const fs_path &path)
 {
-    Info(Client, "parse CH file: %s", CStringFromPath(path));
+    Info(Client, "parse CH file: %s", fs_path_ascii(path));
     FILE *file = fs_open(path, FS_READ); //"r"
     if (file != nullptr)
     {
@@ -458,7 +458,7 @@ void CGumpCustomHouse::InitToolTip()
         }
         case ID_GCH_AREA_OBJECTS_INFO:
         {
-            wstring str = g_ClilocManager.ParseArgumentsToClilocString(
+            std::wstring str = g_ClilocManager.ParseArgumentsToClilocString(
                 1061039,
                 true,
                 std::to_wstring(MaxComponents) + L"\t" + std::to_wstring(MaxFixtures));

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "BaseGUI.h"
+#include "Sprite.h"
 
 class CGUIText : public CBaseGUI
 {
@@ -17,14 +18,14 @@ public:
 
     void CreateTextureA(
         uint8_t font,
-        const string &str,
+        const std::string &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
     void CreateTextureW(
         uint8_t font,
-        const wstring &str,
+        const std::wstring &str,
         uint8_t cell = 30,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,

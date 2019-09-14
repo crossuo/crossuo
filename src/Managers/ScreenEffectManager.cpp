@@ -16,7 +16,6 @@ CScreenEffectManager::~CScreenEffectManager()
 
 int CScreenEffectManager::Process()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Mode == SEM_SUNRISE)
     {
         Alpha -= Step;
@@ -86,7 +85,6 @@ int CScreenEffectManager::Process()
 
 void CScreenEffectManager::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Mode != SEM_NONE)
     {
         glColor4f(ColorR, ColorG, ColorB, Alpha);
@@ -111,7 +109,6 @@ void CScreenEffectManager::Draw()
 bool CScreenEffectManager::Use(
     const SCREEN_EFFECT_MODE &mode, const SCREEN_EFFECT_TYPE &type, bool ignoreEnabled)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Enabled || ignoreEnabled)
     {
         Mode = mode;
@@ -142,7 +139,6 @@ bool CScreenEffectManager::Use(
 
 bool CScreenEffectManager::UseSunrise()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = Use(SEM_SUNRISE);
     Step = 0.05f;
     return result;
@@ -150,7 +146,6 @@ bool CScreenEffectManager::UseSunrise()
 
 bool CScreenEffectManager::UseSunset()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = Use(SEM_SUNSET);
     Step = 0.05f;
     return result;

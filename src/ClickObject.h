@@ -3,6 +3,9 @@
 
 #pragma once
 
+class CRenderObject;
+class CGump;
+
 class CClickObject
 {
 public:

@@ -104,19 +104,19 @@ void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, uint16_t &
     }
 }
 
-string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
+std::string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 {
     DEBUG_TRACE_FUNCTION;
-    string result{};
+    std::string result{};
     passive = true;
 
-    static const string humanNames[] = {
+    static const std::string humanNames[] = {
         "Strong Back", "Tough", "Workhorse", "Jack of All Trades"
     };
-    static const string elfNames[] = { "Night Sight",         "Infused with Magic",
-                                       "Knowledge of Nature", "Difficult to Track",
-                                       "Perception",          "Wisdom" };
-    static const string gargoyleNames[] = {
+    static const std::string elfNames[] = { "Night Sight",         "Infused with Magic",
+                                            "Knowledge of Nature", "Difficult to Track",
+                                            "Perception",          "Wisdom" };
+    static const std::string gargoyleNames[] = {
         "Flying", "Berserk", "Master Artisan", "Deadly Aim", "Mystic Insight"
     };
 
@@ -240,7 +240,7 @@ void CGumpRacialAbilitiesBook::UpdateContent()
         page++;
 
         bool passive = true;
-        string spellName = GetAbilityName((int)i, passive);
+        auto spellName = GetAbilityName((int)i, passive);
 
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, iconTextX, 34));
         text->CreateTextureA(6, spellName, 100);

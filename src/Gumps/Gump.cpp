@@ -1762,6 +1762,6 @@ void CGump::OnDragging()
     g_CurrentCheckGump = nullptr;
 }
 
-void CGump::PasteClipboardData(wstring &data)
+void CGump::PasteClipboardData(std::wstring &data)
 {
 }

@@ -6,6 +6,7 @@
 #include "SkillsManager.h"
 #include "ClilocManager.h"
 #include <xuocore/mappedfile.h>
+#include <common/str.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Application.h"
@@ -14,7 +15,7 @@
 
 CProfessionManager g_ProfessionManager;
 
-const string CProfessionManager::m_Keys[m_KeyCount] = {
+const std::string CProfessionManager::m_Keys[m_KeyCount] = {
     "begin", "name", "truename", "desc", "toplevel", "gump", "type",     "children", "skill",
     "stat",  "str",  "int",      "dex",  "end",      "true", "category", "nameid",   "descid"
 };
@@ -28,10 +29,10 @@ CProfessionManager::~CProfessionManager()
 {
 }
 
-int CProfessionManager::GetKeyCode(const string &key)
+int CProfessionManager::GetKeyCode(const std::string &key)
 {
     DEBUG_TRACE_FUNCTION;
-    string str = ToLowerA(key);
+    auto str = ToLowerA(key);
     int result = 0;
 
     for (int i = 0; i < m_KeyCount && (result == 0); i++)
@@ -49,9 +50,9 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
     DEBUG_TRACE_FUNCTION;
     PROFESSION_TYPE type = PT_NO_PROF;
-    vector<string> childrens;
-    string name{};
-    string trueName{};
+    std::vector<std::string> childrens;
+    std::string name{};
+    std::string trueName{};
     uint32_t nameClilocID = 0;
     uint32_t descriptionClilocID = 0;
     int descriptionIndex = 0;
@@ -271,9 +272,9 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
     {
         CProfessionCategory *cat = (CProfessionCategory *)parent;
 
-        string check = string("|") + child->Name + "|";
+        auto check = std::string("|") + child->Name + "|";
 
-        if (cat->Childrens.find(check) != string::npos)
+        if (cat->Childrens.find(check) != std::string::npos)
         {
             cat->Add(child);
             result = true;
@@ -322,7 +323,7 @@ bool CProfessionManager::Load()
             auto strings = file.ReadTokens();
             if (!strings.empty())
             {
-                if (ToLowerA(strings[0]) == string("begin"))
+                if (ToLowerA(strings[0]) == std::string("begin"))
                 {
                     result = ParseFilePart(file);
 

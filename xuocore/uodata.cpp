@@ -4,7 +4,6 @@
 #include "uolib.h"
 #include "uodata.h"
 #include "mappedfile.h"
-#include "file.h"
 
 #include <stdarg.h>
 #include <thread>
@@ -14,6 +13,11 @@
 #include <algorithm>
 
 #include <common/utils.h>
+
+#define FS_LOG_DEBUG(...) DEBUG(Data, __VA_ARGS__)
+#define FS_LOG_ERROR(...) Error(Data, __VA_ARGS__)
+#define FS_IMPLEMENTATION
+#include <common/fs.h>
 
 #define CHECKSUM_IMPLEMENTATION
 #include <common/checksum.h>
@@ -55,16 +59,15 @@ static uint8_t s_AnimGroupCount = PAG_ANIMATION_COUNT;
 static uint32_t s_ClientVersion = 0;
 static bool s_UseVerdata = false;
 static char s_UOPath[FS_MAX_PATH];
-static os_path UOFilePath(const char *str, ...)
+static fs_path UOFilePath(const char *str, ...)
 {
     va_list arg;
     va_start(arg, str);
     char out[FS_MAX_PATH] = { 0 };
     vsnprintf(out, sizeof(out) - 1, str, arg);
     va_end(arg);
-    std::string res(&s_UOPath[0], strlen(s_UOPath));
-    auto tmp = ToPath(res) + PATH_SEP + ToPath(out);
-    return fs_insensitive(tmp);
+    fs_path p = fs_join_path(s_UOPath, out);
+    return fs_insensitive(p);
 }
 
 void uo_data_init(const char *path, uint32_t client_version, bool use_verdata)
@@ -244,6 +247,12 @@ bool CFileManager::Load()
     if (s_UseVerdata && !m_VerdataMul.Load(UOFilePath("verdata.mul")))
     {
         s_UseVerdata = false;
+    }
+
+    if (!m_AnimdataMul.Size)
+    {
+        Error(Data, "Could not load UO data");
+        return false;
     }
 
     g_Data.m_Anim.resize(m_AnimdataMul.Size);
@@ -610,7 +619,7 @@ void CFileManager::ProcessAnimSequeceData()
         }
 
         auto indexAnim = &g_Index.m_Anim[animId];
-        for (int i = 0; i < replaces; ++i)
+        for (uint32_t i = 0; i < replaces; ++i)
         {
             const auto oldIdx = ReadInt32LE();
             const auto frameCount = ReadInt32LE();
@@ -664,7 +673,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
         return false;
     }
 
-    const char *filename = CStringFromPath(path);
+    const char *filename = fs_path_ascii(path);
     DEBUG(Data, "loading UOP: %s", filename);
     file.Header = (UopHeader *)file.Start;
     if (file.Header->Magic != MYP_MAGIC)
@@ -689,7 +698,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
         auto section = (UopBlockSection *)file.Ptr;
         file.Move(sizeof(UopBlockSection));
 
-        for (int i = 0; i < section->FileCount; i++)
+        for (uint32_t i = 0; i < section->FileCount; i++)
         {
             auto item = (UopBlockHeader *)file.Ptr;
             if (item->Offset == 0 || item->DecompressedSize == 0)
@@ -706,7 +715,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     } while (next != 0);
     file.ResetPtr();
 
-    if (!strcasecmp(uopFilename, g_dumpUopFile.c_str()))
+    if (g_dumpUopFile.compare(uopFilename) == 0)
     {
         char date[128];
         DEBUG(Data, "MypHeader for %s", uopFilename);
@@ -746,7 +755,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     return true;
 }
 
-bool CFileManager::MulLoadFile(CMappedFile &file, const os_path &fileName)
+bool CFileManager::MulLoadFile(CMappedFile &file, const fs_path &fileName)
 {
     return file.Load(fileName);
 }
@@ -1081,7 +1090,7 @@ std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
     auto header = UopReadAnimationHeader();
     std::vector<UopAnimationFrame> data;
     data.resize(header.FrameCount);
-    for (int i = 0; i < header.FrameCount; i++)
+    for (uint32_t i = 0; i < header.FrameCount; i++)
     {
         data.emplace(data.begin() + i, UopReadAnimationFrame());
     }

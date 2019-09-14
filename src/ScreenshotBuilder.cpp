@@ -2,7 +2,6 @@
 // Copyright (C) August 2016 Hotride
 
 #include "ScreenshotBuilder.h"
-#include <xuocore/file.h>
 #include "GameWindow.h"
 #include "Application.h"
 #include <time.h>
@@ -64,14 +63,14 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     char buf[100]{};
     sprintf_s(
         buf,
-        "/%d%d%d_%d%d%d",
+        "%d%d%d_%d%d%d",
         now.tm_year + 1900,
         now.tm_mon,
         now.tm_mday,
         now.tm_hour,
         now.tm_min,
         now.tm_sec);
-    path += ToPath(buf);
+    std::string filename = buf;
 
     auto pixels = GetScenePixels(x, y, width, height);
     int result = 0;
@@ -81,26 +80,26 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     {
         case SF_PNG:
         {
-            path += ToPath(".png");
-            result = stbi_write_png(CStringFromPath(path), width, height, 4, data, width * 4);
+            path = fs_join_path(path, filename + ".png");
+            result = stbi_write_png(fs_path_ascii(path), width, height, 4, data, width * 4);
             break;
         }
         case SF_TGA:
         {
-            path += ToPath(".tga");
-            result = stbi_write_tga(CStringFromPath(path), width, height, 4, data);
+            path = fs_join_path(path, filename + ".tga");
+            result = stbi_write_tga(fs_path_ascii(path), width, height, 4, data);
             break;
         }
         case SF_JPG:
         {
-            path += ToPath(".jpg");
-            result = stbi_write_jpg(CStringFromPath(path), width, height, 4, data, 100);
+            path = fs_join_path(path, filename + ".jpg");
+            result = stbi_write_jpg(fs_path_ascii(path), width, height, 4, data, 100);
             break;
         }
         default:
         {
-            path += ToPath(".bmp");
-            result = stbi_write_bmp(CStringFromPath(path), width, height, 4, data);
+            path = fs_join_path(path, filename + ".bmp");
+            result = stbi_write_bmp(fs_path_ascii(path), width, height, 4, data);
             break;
         }
     }
@@ -112,6 +111,6 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
 
     if (g_GameState >= GS_GAME)
     {
-        g_Game.CreateTextMessageF(3, 0, "Screenshot saved to: %s", CStringFromPath(path));
+        g_Game.CreateTextMessageF(3, 0, "Screenshot saved to: %s", fs_path_ascii(path));
     }
 }

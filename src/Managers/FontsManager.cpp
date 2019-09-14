@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include <common/utils.h>
+#include <common/str.h>
 #include "FontsManager.h"
 #include "ColorManager.h"
 #include <xuocore/uodata.h>
@@ -155,7 +156,7 @@ int CFontsManager::GetFontOffsetY(uint8_t font, uint8_t index)
 }
 
 CPoint2Di CFontsManager::GetCaretPosA(
-    uint8_t font, const string &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font, const std::string &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     CPoint2Di p;
@@ -225,7 +226,13 @@ CPoint2Di CFontsManager::GetCaretPosA(
 }
 
 int CFontsManager::CalculateCaretPosA(
-    uint8_t font, const string &str, int x, int y, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font,
+    const std::string &str,
+    int x,
+    int y,
+    int width,
+    TEXT_ALIGN_TYPE align,
+    uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= FontCount || x < 0 || y < 0 || str.empty())
@@ -306,7 +313,7 @@ int CFontsManager::CalculateCaretPosA(
     return pos;
 }
 
-int CFontsManager::GetWidthA(uint8_t font, const string &str)
+int CFontsManager::GetWidthA(uint8_t font, const std::string &str)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= FontCount || str.empty())
@@ -326,7 +333,7 @@ int CFontsManager::GetWidthA(uint8_t font, const string &str)
 }
 
 int CFontsManager::GetWidthExA(
-    uint8_t font, const string &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font, const std::string &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= FontCount || str.empty())
@@ -357,7 +364,7 @@ int CFontsManager::GetWidthExA(
 }
 
 int CFontsManager::GetHeightA(
-    uint8_t font, const string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font, const std::string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= FontCount || str.empty())
@@ -404,12 +411,13 @@ int CFontsManager::GetHeightA(PMULTILINES_FONT_INFO info)
     return textHeight;
 }
 
-string CFontsManager::GetTextByWidthA(uint8_t font, const string &str, int width, bool isCropped)
+std::string
+CFontsManager::GetTextByWidthA(uint8_t font, const std::string &str, int width, bool isCropped)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= FontCount || str.empty())
     {
-        return string("");
+        return std::string("");
     }
 
     FONT_DATA &fd = Font[font];
@@ -420,7 +428,7 @@ string CFontsManager::GetTextByWidthA(uint8_t font, const string &str, int width
     }
 
     int textLength = 0;
-    string result = {};
+    std::string result = {};
     for (char c : str)
     {
         textLength += fd.Chars[m_FontIndex[(uint8_t)c]].Width;
@@ -685,7 +693,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
 bool CFontsManager::GenerateA(
     uint8_t font,
     CTextSprite &th,
-    const string &str,
+    const std::string &str,
     uint16_t color,
     int width,
     TEXT_ALIGN_TYPE align,
@@ -703,7 +711,7 @@ bool CFontsManager::GenerateA(
         int realWidth = GetWidthA(font, str);
         if (realWidth > width)
         {
-            string newstr = GetTextByWidthA(font, str, width, (flags & UOFONT_CROPPED) != 0);
+            auto newstr = GetTextByWidthA(font, str, width, (flags & UOFONT_CROPPED) != 0);
             return GenerateABase(font, th, newstr, color, width, align, flags);
         }
     }
@@ -880,7 +888,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsA(
 bool CFontsManager::GenerateABase(
     uint8_t font,
     CTextSprite &th,
-    const string &str,
+    const std::string &str,
     uint16_t color,
     int width,
     TEXT_ALIGN_TYPE align,
@@ -899,7 +907,7 @@ bool CFontsManager::GenerateABase(
 
 void CFontsManager::DrawA(
     uint8_t font,
-    const string &str,
+    const std::string &str,
     uint16_t color,
     int x,
     int y,
@@ -916,7 +924,12 @@ void CFontsManager::DrawA(
 }
 
 CPoint2Di CFontsManager::GetCaretPosW(
-    uint8_t font, const wstring &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font,
+    const std::wstring &str,
+    int pos,
+    int width,
+    TEXT_ALIGN_TYPE align,
+    uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     CPoint2Di p;
@@ -991,7 +1004,7 @@ CPoint2Di CFontsManager::GetCaretPosW(
 
 int CFontsManager::CalculateCaretPosW(
     uint8_t font,
-    const wstring &str,
+    const std::wstring &str,
     int x,
     int y,
     int width,
@@ -1086,7 +1099,7 @@ int CFontsManager::CalculateCaretPosW(
     return pos;
 }
 
-int CFontsManager::GetWidthW(uint8_t font, const wstring &str)
+int CFontsManager::GetWidthW(uint8_t font, const std::wstring &str)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
@@ -1120,7 +1133,7 @@ int CFontsManager::GetWidthW(uint8_t font, const wstring &str)
 }
 
 int CFontsManager::GetWidthExW(
-    uint8_t font, const wstring &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font, const std::wstring &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
@@ -1149,7 +1162,7 @@ int CFontsManager::GetWidthExW(
 }
 
 int CFontsManager::GetHeightW(
-    uint8_t font, const wstring &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font, const std::wstring &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
@@ -1210,12 +1223,13 @@ int CFontsManager::GetHeightW(PMULTILINES_FONT_INFO info)
     return textHeight;
 }
 
-wstring CFontsManager::GetTextByWidthW(uint8_t font, const wstring &str, int width, bool isCropped)
+std::wstring
+CFontsManager::GetTextByWidthW(uint8_t font, const std::wstring &str, int width, bool isCropped)
 {
     DEBUG_TRACE_FUNCTION;
     if (font >= 20 || (m_UnicodeFontAddress[font] == 0u) || str.empty())
     {
-        return wstring({});
+        return std::wstring({});
     }
 
     uint32_t *table = (uint32_t *)m_UnicodeFontAddress[font];
@@ -1231,7 +1245,7 @@ wstring CFontsManager::GetTextByWidthW(uint8_t font, const wstring &str, int wid
     }
 
     int textLength = 0;
-    wstring result = {};
+    std::wstring result = {};
 
     for (const wchar_t &c : str)
     {
@@ -1269,13 +1283,13 @@ wstring CFontsManager::GetTextByWidthW(uint8_t font, const wstring &str, int wid
     return result;
 }
 
-uint16_t CFontsManager::GetWebLinkID(const wstring &link, uint32_t &color)
+uint16_t CFontsManager::GetWebLinkID(const std::wstring &link, uint32_t &color)
 {
     DEBUG_TRACE_FUNCTION;
     return GetWebLinkID(ToString(link), color);
 }
 
-uint16_t CFontsManager::GetWebLinkID(const string &link, uint32_t &color)
+uint16_t CFontsManager::GetWebLinkID(const std::string &link, uint32_t &color)
 {
     DEBUG_TRACE_FUNCTION;
     uint16_t linkID = 0;
@@ -1697,7 +1711,7 @@ uint32_t CFontsManager::GetHTMLColorFromText(string &str1)
     return color;
 }
 
-void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const string &content)
+void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const std::string &content)
 {
     DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser parser({}, " =", "", "\"\"");
@@ -1712,8 +1726,8 @@ void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const string &c
             break;
         }
 
-        string str = ToLowerA(strings[i]);
-        string &value = strings[i + 1];
+        auto str = ToLowerA(strings[i]);
+        auto &value = strings[i + 1];
         TrimHTMLString(value);
 
         if (value.length() == 0u)
@@ -1859,7 +1873,7 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
     {
         int cmdLen = i - j;
         //LOG("cmdLen = %i\n", cmdLen);
-        wstring cmd(&str[j], cmdLen);
+        std::wstring cmd(&str[j], cmdLen);
         //cmd.resize(cmdLen);
         //memcpy(&cmd[0], &str[j], cmdLen * 2);
         //LOG(L"cmd[%s] = %s\n", (endTag ? L"end" : L"start"), cmd.c_str());
@@ -1972,7 +1986,7 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
                     {
                         cmdLen = i - j;
                         //LOG("contentCmdLen = %i\n", cmdLen);
-                        wstring content(&str[j], cmdLen);
+                        std::wstring content(&str[j], cmdLen);
                         //memcpy(&content[0], &str[j], cmdLen * 2);
                         //LOG(L"contentCmd = %s\n", content.c_str());
 
@@ -2508,7 +2522,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
 bool CFontsManager::GenerateW(
     uint8_t font,
     CTextSprite &th,
-    const wstring &str,
+    const std::wstring &str,
     uint16_t color,
     uint8_t cell,
     int width,
@@ -2529,7 +2543,7 @@ bool CFontsManager::GenerateW(
 
         if (realWidth > width)
         {
-            wstring newstr = GetTextByWidthW(font, str, width, (flags & UOFONT_CROPPED) != 0);
+            auto newstr = GetTextByWidthW(font, str, width, (flags & UOFONT_CROPPED) != 0);
             return GenerateWBase(font, th, newstr, color, cell, width, align, flags);
         }
     }
@@ -3130,7 +3144,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsW(
 bool CFontsManager::GenerateWBase(
     uint8_t font,
     CTextSprite &th,
-    const wstring &str,
+    const std::wstring &str,
     uint16_t color,
     uint8_t cell,
     int width,
@@ -3151,7 +3165,7 @@ bool CFontsManager::GenerateWBase(
 
 void CFontsManager::DrawW(
     uint8_t font,
-    const wstring &str,
+    const std::wstring &str,
     uint16_t color,
     int x,
     int y,

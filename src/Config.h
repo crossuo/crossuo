@@ -3,15 +3,17 @@
 
 #pragma once
 
+#include <xuocore/enumlist.h>
+
 struct Config
 {
-    string Login;
-    string Password;
-    string ClientVersionString = "7.0.33.1";
-    string ProtocolClientVersionString = "7.0.33.1";
-    string CustomPath;
-    string ServerAddress;
-    string LocaleOverride;
+    std::string Login;
+    std::string Password;
+    std::string ClientVersionString = "7.0.33.1";
+    std::string ProtocolClientVersionString = "7.0.33.1";
+    std::string CustomPath;
+    std::string ServerAddress;
+    std::string LocaleOverride;
     uint16_t ServerPort = 2593;
     uint16_t ClientFlag = 0;
     bool SavePassword = false;

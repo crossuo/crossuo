@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include <common/utils.h>
+#include <common/str.h>
 #include "AnimationManager.h"
 #include "MouseManager.h"
 #include "ConfigManager.h"
@@ -364,7 +365,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
     DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion >= CV_500A)
     {
-        static const string typeNames[5] = {
+        static const std::string typeNames[5] = {
             "monster", "sea_monster", "animal", "human", "equipment"
         };
 
@@ -383,7 +384,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     continue;
                 }
 
-                string testType = ToLowerA(strings[1]);
+                auto testType = ToLowerA(strings[1]);
 
                 for (int i = 0; i < 5; i++)
                 {

@@ -193,7 +193,7 @@ CGUITextEntry *CGumpBook::GetEntry(int page)
     return nullptr;
 }
 
-void CGumpBook::SetPageData(int page, const wstring &data)
+void CGumpBook::SetPageData(int page, const std::wstring &data)
 {
     DEBUG_TRACE_FUNCTION;
     CGUITextEntry *entry = GetEntry(page);
@@ -669,7 +669,7 @@ void CGumpBook::SetPagePos(int val, int page)
     g_EntryPointer->SetPos(val, this);
 }
 
-void CGumpBook::PasteClipboardData(wstring &data)
+void CGumpBook::PasteClipboardData(std::wstring &data)
 {
     for (int i = 0; i < (int)data.length(); i++)
     {

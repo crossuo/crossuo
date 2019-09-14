@@ -1,13 +1,14 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GUIBulletinBoardObject.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 
-CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const wstring &text)
+CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const std::wstring &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)
     , Text(text)
 {

@@ -9,7 +9,7 @@ class CServer
 {
 public:
     uint16_t Index = 0;
-    string Name = "";
+    std::string Name = "";
     uint8_t FullPercent = 0;
     uint8_t Timezone = 0;
     uint32_t IP = 0;
@@ -20,7 +20,7 @@ public:
     CServer();
     CServer(
         uint16_t index,
-        const string &name,
+        const std::string &name,
         uint8_t fullPercent,
         uint8_t timezoneType,
         int ip,
@@ -31,11 +31,11 @@ public:
 class CServerList
 {
 public:
-    string LastServerName = "";
+    std::string LastServerName = "";
     uint32_t LastServerIndex = 0;
 
 private:
-    vector<CServer> m_Servers;
+    std::vector<CServer> m_Servers;
 
 public:
     CServerList();

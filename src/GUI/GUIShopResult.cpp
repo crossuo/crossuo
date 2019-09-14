@@ -17,7 +17,7 @@ CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
-    string name = Name + "\n" + "at " + std::to_string(Price) + " g.p.";
+    auto name = Name + "\n" + "at " + std::to_string(Price) + " g.p.";
     g_FontManager.GenerateA(9, m_NameText, name, 0x021F, 100);
 
     int maxCount = shopItem->Count;

@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_rect.h>
-
+#include <common/str.h>
 #include "GameScreen.h"
 #include "GameBlockedScreen.h"
 #include <xuocore/uodata.h>
@@ -2009,25 +2009,25 @@ void CGameScreen::Render()
                 tz,
                 selRwo->PriorityZ);
 
-            const string flagNames[] = { "Background", "Weapon",     "Transparent", "Translucent",
-                                         "Wall",       "Damaging",   "Impassable",  "Wet",
-                                         "Unknown",    "Surface",    "Bridge",      "Stackable",
-                                         "Window",     "NoShoot",    "PrefixA",     "PrefixAn",
-                                         "Internal",   "Foliage",    "PartialHue",  "Unknown1",
-                                         "Map",        "Container",  "Wearable",    "LightSource",
-                                         "Animated",   "NoDiagonal", "Unknown2",    "Armor",
-                                         "Roof",       "Door",       "StairBack",   "StairRight" };
+            const std::string flagNames[] = {
+                "Background", "Weapon",     "Transparent", "Translucent", "Wall",     "Damaging",
+                "Impassable", "Wet",        "Unknown",     "Surface",     "Bridge",   "Stackable",
+                "Window",     "NoShoot",    "PrefixA",     "PrefixAn",    "Internal", "Foliage",
+                "PartialHue", "Unknown1",   "Map",         "Container",   "Wearable", "LightSource",
+                "Animated",   "NoDiagonal", "Unknown2",    "Armor",       "Roof",     "Door",
+                "StairBack",  "StairRight"
+            };
 
-            string flagsData{};
+            std::string flagsData{};
             for (int f = 0; f < 32; f++)
             {
                 if ((tiledataFlags & (1 << f)) != 0u)
                 {
-                    flagsData += string("\n") + flagNames[f];
+                    flagsData += std::string("\n") + flagNames[f];
                 }
             }
 
-            flagsData = string(dbf) + flagsData;
+            flagsData = std::string(dbf) + flagsData;
 
             g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
         }
@@ -2361,8 +2361,8 @@ void CGameScreen::OnLeftMouseButtonUp()
                         if (td == nullptr || td->Timer < g_Ticks)
                         {
                             uint16_t id = rwo->Graphic;
-                            wstring str = g_ClilocManager.Cliloc(g_Language)
-                                              ->GetW(1020000 + id, true, g_Data.m_Static[id].Name);
+                            auto str = g_ClilocManager.Cliloc(g_Language)
+                                           ->GetW(1020000 + id, true, g_Data.m_Static[id].Name);
                             if (str.length() != 0u)
                             {
                                 // const uint8_t font = g_ConfigManager.ToolTipsTextFont; ?

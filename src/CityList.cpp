@@ -17,7 +17,6 @@ CCityItem::~CCityItem()
 
 void CCityItem::InitCity()
 {
-    DEBUG_TRACE_FUNCTION;
     m_City = g_CityManager.GetCity(Name);
 }
 
@@ -36,14 +35,11 @@ CCityList::CCityList()
 
 CCityList::~CCityList()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 }
 
 CCityItem *CCityList::GetCity(int index)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (index < (int)m_CityList.size())
     {
         return m_CityList[index];
@@ -54,8 +50,6 @@ CCityItem *CCityList::GetCity(int index)
 
 void CCityList::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
-
     for (auto i = m_CityList.begin(); i != m_CityList.end(); ++i)
     {
         delete *i;

@@ -10,7 +10,6 @@ file(GLOB XUOCORE_HEADERS ${XUOCORE_DIR}/*.h)
 set(XUOCORE_SRCS
   uodata.cpp
   mappedfile.cpp
-  file.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${XUOCORE_SRCS} ${XUOCORE_HEADERS})

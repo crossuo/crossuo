@@ -10,7 +10,7 @@ class CGUIHTMLText : public CBaseGUI
 public:
     uint32_t TextID = 0;
     uint32_t HTMLStartColor = 0;
-    wstring Text = {};
+    std::wstring Text = {};
     uint8_t Font = 0;
     TEXT_ALIGN_TYPE Align = TS_LEFT;
     uint16_t TextFlags = 0;

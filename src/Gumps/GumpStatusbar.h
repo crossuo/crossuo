@@ -20,7 +20,7 @@ protected:
     CGUIGumppic *m_HitsBody{ nullptr };
     CGUITextEntry *m_Entry{ nullptr };
 
-    string m_Name;
+    std::string m_Name;
 
 public:
     CGumpStatusbar(uint32_t serial, short x, short y, bool minimized);

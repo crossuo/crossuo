@@ -7,14 +7,14 @@ class CSkill
 {
 public:
     bool Button = 0;
-    string Name = "";
+    std::string Name = "";
     float BaseValue = 0.0f;
     float Value = 0.0f;
     float Cap = 0.0f;
     uint8_t Status = 0;
 
     CSkill() {}
-    CSkill(bool haveButton, const string &name);
+    CSkill(bool haveButton, const std::string &name);
     ~CSkill() {}
 };
 
@@ -26,10 +26,10 @@ public:
     float SkillsTotal = 0.0f;
 
 private:
-    vector<CSkill> m_Skills;
-    vector<uint8_t> m_SortedTable;
+    std::vector<CSkill> m_Skills;
+    std::vector<uint8_t> m_SortedTable;
 
-    bool CompareName(const string &str1, const string &str2);
+    bool CompareName(const std::string &str1, const std::string &str2);
 
 public:
     CSkillsManager() {}

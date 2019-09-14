@@ -8,7 +8,6 @@ CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygon
     , TargetX(targetX)
     , TargetY(targetY)
 {
-    DEBUG_TRACE_FUNCTION;
     ColorR = ToColorR(polygoneColor);
     ColorG = ToColorG(polygoneColor);
     ColorB = ToColorB(polygoneColor);
@@ -26,7 +25,6 @@ CGUILine::~CGUILine()
 
 void CGUILine::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
     if (ColorA < 0xFF)

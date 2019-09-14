@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Vector.h"
+
 CVector::CVector(double x, double y, double z)
     : X(x)
     , Y(y)
@@ -60,7 +62,6 @@ void CVector::Merge(double x, double y, double z)
 
 void CVector::Normalize()
 {
-    DEBUG_TRACE_FUNCTION;
     if ((X == 0.0) && (Y == 0.0) && (Z == 0.0))
     {
         return;

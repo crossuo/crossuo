@@ -1,13 +1,14 @@
 ﻿// MIT License
 // Copyright (C) October 2017 Hotride
 
+#include <common/str.h>
 #include "IntlocManager.h"
 #include "ClilocManager.h"
 #include "../Application.h"
 
 CIntlocManager g_IntlocManager;
 
-CIntloc::CIntloc(int fileIndex, const string &lang)
+CIntloc::CIntloc(int fileIndex, const std::string &lang)
 {
     DEBUG_TRACE_FUNCTION;
     Loaded = false;
@@ -64,7 +65,7 @@ CIntloc::~CIntloc()
     m_Strings.clear();
 }
 
-wstring CIntloc::Get(int id, bool toCamelCase)
+std::wstring CIntloc::Get(int id, bool toCamelCase)
 {
     DEBUG_TRACE_FUNCTION;
     if (id < (int)m_Strings.size())
@@ -89,7 +90,7 @@ CIntlocManager::~CIntlocManager()
 {
 }
 
-CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
+CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
 {
     DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CIntloc *)
@@ -128,17 +129,17 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const string &lang)
     return nullptr;
 }
 
-wstring CIntlocManager::Intloc(const string &lang, uint32_t clilocID, bool isNewCliloc)
+std::wstring CIntlocManager::Intloc(const std::string &lang, uint32_t clilocID, bool isNewCliloc)
 {
     DEBUG_TRACE_FUNCTION;
 
-    string language = ToLowerA(lang);
+    auto language = ToLowerA(lang);
     if (language.length() == 0u)
     {
         language = "enu";
     }
 
-    wstring str = {};
+    std::wstring str = {};
 
     if (str.length() == 0u)
     {

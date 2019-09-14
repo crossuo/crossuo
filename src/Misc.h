@@ -2,27 +2,14 @@
 
 #pragma once
 
+#include <SDL_thread.h>
+#include <SDL_stdinc.h>
+#include <stdlib.h>
+
 extern SDL_threadID g_MainThread;
 const int PACKET_VARIABLE_SIZE = 0;
 
 int CalculatePercents(int max, int current, int maxValue);
-
-string EncodeUTF8(const wstring &str);
-wstring DecodeUTF8(const string &str);
-string ToCamelCaseA(string str);
-wstring ToCamelCaseW(wstring str);
-#if !defined(XUO_WINDOWS)
-const string &ToString(const string &str);
-#endif
-string ToString(const wstring &wstr);
-wstring ToWString(const string &str);
-string Trim(const string &str);
-int ToInt(const string &str);
-string ToLowerA(string str);
-string ToUpperA(string str);
-wstring ToLowerW(wstring str);
-wstring ToUpperW(wstring str);
-bool ToBool(const string &str);
 
 inline float deg2radf(float degr)
 {
@@ -69,7 +56,7 @@ inline void pack16(uint8_t *buf, uint16_t x)
 }
 
 #if USE_DEBUG_FUNCTION_NAMES == 1
-extern deque<string> g_DebugFuncStack;
+extern std::deque<string> g_DebugFuncStack;
 class CFuncDebug
 {
 public:

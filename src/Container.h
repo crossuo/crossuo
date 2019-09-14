@@ -62,5 +62,5 @@ public:
     }
 };
 
-extern vector<CContainerOffset> g_ContainerOffset;
+extern std::vector<CContainerOffset> g_ContainerOffset;
 extern CContainerRect g_ContainerRect;

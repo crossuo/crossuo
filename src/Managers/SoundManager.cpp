@@ -300,7 +300,7 @@ bool CSoundManager::IsPlayingNormalMusic()
     return s_backend.isValidVoiceHandle(s_Music[0]);
 }
 
-void CSoundManager::PlayMP3(const string &fileName, int index, bool loop, bool warmode)
+void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, bool warmode)
 {
     SOUND_DEBUG_TRACE;
     int cur = warmode ? 1 : 0;

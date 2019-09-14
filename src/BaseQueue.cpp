@@ -11,7 +11,6 @@ CBaseQueueItem::CBaseQueueItem()
 
 CBaseQueueItem::~CBaseQueueItem()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CBaseQueueItem *item = m_Next;
@@ -31,13 +30,11 @@ CBaseQueue::CBaseQueue()
 
 CBaseQueue::~CBaseQueue()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 }
 
 void CBaseQueue::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Items != nullptr)
     {
         CBaseQueueItem *item = m_Items;
@@ -54,7 +51,6 @@ void CBaseQueue::Clear()
 
 CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (item != nullptr)
     {
         if (m_Items == nullptr)
@@ -77,7 +73,6 @@ CBaseQueueItem *CBaseQueue::Add(CBaseQueueItem *item)
 
 void CBaseQueue::Delete(CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (item != nullptr)
     {
         Unlink(item);
@@ -89,13 +84,11 @@ void CBaseQueue::Delete(CBaseQueueItem *item)
 
 void CBaseQueue::Delete(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     Delete(Get(index));
 }
 
 int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     int index = 0;
     BQFOR (current, m_Items)
     {
@@ -110,7 +103,6 @@ int CBaseQueue::GetItemIndex(CBaseQueueItem *item)
 
 int CBaseQueue::GetItemsCount()
 {
-    DEBUG_TRACE_FUNCTION;
     int count = 0;
     BQFOR (current, m_Items)
     {
@@ -121,7 +113,6 @@ int CBaseQueue::GetItemsCount()
 
 CBaseQueueItem *CBaseQueue::Get(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseQueueItem *item = m_Items;
     for (; item != nullptr && (index != 0); item = item->m_Next, index--)
     {
@@ -132,7 +123,6 @@ CBaseQueueItem *CBaseQueue::Get(int index)
 
 void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (first == nullptr)
     {
         item->m_Next = m_Items;
@@ -158,7 +148,6 @@ void CBaseQueue::Insert(CBaseQueueItem *first, CBaseQueueItem *item)
 
 void CBaseQueue::Unlink(CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (item != nullptr)
     {
         if (item == m_Items)
@@ -182,7 +171,6 @@ void CBaseQueue::Unlink(CBaseQueueItem *item)
 
 void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (item != nullptr && item != m_Items)
     {
         Unlink(item);
@@ -199,7 +187,6 @@ void CBaseQueue::MoveToFront(CBaseQueueItem *item)
 
 void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (item != nullptr)
     {
         Unlink(item);
@@ -219,7 +206,6 @@ void CBaseQueue::MoveToBack(CBaseQueueItem *item)
 
 bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = (item != nullptr);
     if (result)
     {
@@ -279,7 +265,6 @@ bool CBaseQueue::Move(CBaseQueueItem *item, bool up)
 
 CBaseQueueItem *CBaseQueue::Last()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseQueueItem *last = m_Items;
     while (last != nullptr && last->m_Next != nullptr)
     {

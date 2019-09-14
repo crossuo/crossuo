@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GumpBulletinBoard.h"
 #include "GumpBulletinBoardItem.h"
 #include "../PressedObject.h"
@@ -19,7 +20,7 @@ enum
     ID_GBS_COUNT,
 };
 
-CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const string &name)
+CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const std::string &name)
     : CGump(GT_BULLETIN_BOARD, serial, x, y)
 {
     DEBUG_TRACE_FUNCTION;

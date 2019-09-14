@@ -4,7 +4,7 @@
 #pragma once
 
 #include "GameObjects/GameWorld.h"
-#include <xuocore/plugininterface.h>
+//#include <xuocore/plugininterface.h>
 
 struct CIndexObjectStatic;
 struct CIndexObject;
@@ -15,7 +15,7 @@ class CGame
 {
 public:
     int TexturesDataCount = 0;
-    string m_OverrideServerAddress;
+    std::string m_OverrideServerAddress;
     int m_OverrideServerPort = 0;
 
     uint16_t m_WinterTile[MAX_LAND_DATA_INDEX_COUNT];
@@ -30,7 +30,7 @@ public:
 
 private:
     uint8_t m_StaticTilesFilterFlags[MAX_STATIC_DATA_INDEX_COUNT];
-    string m_GameServerIP = "";
+    std::string m_GameServerIP = "";
 
     void LoadAutoLoginNames();
     void ProcessStaticAnimList();
@@ -46,8 +46,8 @@ private:
 
     uint16_t TextToGraphic(const char *text);
     void CheckStaticTileFilterFiles();
-    string DecodeArgumentString(const char *text, int length);
-    void LoadPlugin(const os_path &libpath, const string &function, int flags);
+    std::string DecodeArgumentString(const char *text, int length);
+    void LoadPlugin(const fs_path &libpath, const std::string &function, int flags);
     bool InstallPlugin(PluginEntry *initFunc, int flags);
     void LoadContainerOffsets();
 
@@ -65,17 +65,17 @@ public:
 
     void Process(bool rendering = false);
     void LoadStartupConfig(int serial);
-    void LoadLocalConfig(int serial, string characterName);
+    void LoadLocalConfig(int serial, std::string characterName);
     void SaveLocalConfig(int serial);
 
     bool InTileFilter(uint16_t graphic);
 
-    static string FixServerName(string name);
+    static std::string FixServerName(std::string name);
 
     void Connect();
     void Disconnect();
     int Send(uint8_t *buf, int size);
-    int Send(const vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], int(buf.size())); }
+    int Send(const std::vector<uint8_t> &buf) { return Send((uint8_t *)&buf[0], int(buf.size())); }
     void ServerSelection(int pos);
     void RelayServer(const char *ip, int port, uint8_t *gameSeed);
     void CharacterSelection(int pos);
@@ -91,7 +91,7 @@ public:
     uint16_t GetDesolationGraphic(uint16_t graphic);
 
     int ValueInt(const VALUE_KEY_INT &key, int value = -1);
-    string ValueString(const VALUE_KEY_STRING &key, string value = "");
+    std::string ValueString(const VALUE_KEY_STRING &key, std::string value = "");
 
     void ClearRemovedStaticsTextures();
     void ClearTreesTextures();
@@ -146,17 +146,17 @@ public:
         int serial,
         uint8_t font,
         uint16_t color,
-        const string &text,
+        const std::string &text,
         class CRenderWorldObject *clientObj = nullptr);
     void CreateUnicodeTextMessage(
         const TEXT_TYPE &type,
         int serial,
         uint8_t font,
         uint16_t color,
-        const wstring &text,
+        const std::wstring &text,
         class CRenderWorldObject *clientObj = nullptr);
     void AddSystemMessage(CTextData *msg);
-    void AddJournalMessage(CTextData *msg, const string &name);
+    void AddJournalMessage(CTextData *msg, const std::string &name);
     void ChangeMap(uint8_t newmap);
     void PickupItem(class CGameItem *obj, int count = 0, bool isGameFigure = false);
     void DropItem(int container, uint16_t x, uint16_t y, char z);
@@ -175,7 +175,7 @@ public:
     void EmoteAction(const char *action);
     void AllNames();
     void LoadLogin(string &login, int &port);
-    void GoToWebLink(const string &url);
+    void GoToWebLink(const std::string &url);
     void RemoveRangedObjects();
     void ClearWorld();
     void LogOut();

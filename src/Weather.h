@@ -21,7 +21,7 @@ public:
     CWeather();
     ~CWeather() { m_Effects.clear(); }
 
-    deque<CWeatherEffect> m_Effects;
+    std::deque<CWeatherEffect> m_Effects;
 
     void Reset();
     void Generate();

@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GameConsole.h"
 #include "../CrossUO.h"
 #include "../Party.h"
@@ -32,7 +33,7 @@ void CGameConsole::Send()
     m_Type = GCTT_NORMAL;
 }
 
-void CGameConsole::Send(wstring text, uint16_t defaultColor)
+void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
 {
     DEBUG_TRACE_FUNCTION;
     size_t len = text.length();
@@ -93,7 +94,7 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        string str = "Note to self: " + ToString(text.c_str() + offset);
+                        std::string str = "Note to self: " + ToString(text.c_str() + offset);
                         g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
                     }
                     return;
@@ -173,16 +174,16 @@ void CGameConsole::Send(wstring text, uint16_t defaultColor)
     }
 }
 
-wstring CGameConsole::IsSystemCommand(
+std::wstring CGameConsole::IsSystemCommand(
     const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type)
 {
     DEBUG_TRACE_FUNCTION;
     type = GCTT_NORMAL;
-    wstring result = {};
+    std::wstring result = {};
 
     if (*text == g_ConsolePrefix[GCTT_PARTY][0]) //Party
     {
-        string lStr = ToString(text);
+        auto lStr = ToString(text);
         const char *cText = lStr.c_str();
 
         char *ptr = (char *)cText + 1;
@@ -316,7 +317,7 @@ void CGameConsole::DrawW(
 {
     DEBUG_TRACE_FUNCTION;
     int posOffset = 0;
-    wstring wtext = Data();
+    std::wstring wtext = Data();
     if (wtext.empty())
     {
         m_Type = GCTT_NORMAL;
@@ -332,7 +333,7 @@ void CGameConsole::DrawW(
     if (len >= 2)
     {
         int member = 0;
-        wstring sysStr = IsSystemCommand(text, len, member, m_Type);
+        auto sysStr = IsSystemCommand(text, len, member, m_Type);
         if (sysStr.length() != 0u)
         {
             posOffset = g_FontManager.GetWidthW(font, sysStr);
@@ -421,7 +422,7 @@ void CGameConsole::ClearStack()
     m_ConsoleSelectedIndex = 0;
     m_PositionChanged = false;
 }
-wstring CGameConsole::GetLastConsoleText()
+std::wstring CGameConsole::GetLastConsoleText()
 {
     return m_ConsoleStack[m_ConsoleStackCount - 1];
 }

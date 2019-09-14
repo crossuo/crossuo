@@ -21,17 +21,17 @@ public:
 
     class CPacketMessage *m_MessageParser;
 
-    virtual bool Connect(const string &address, uint16_t port);
+    virtual bool Connect(const std::string &address, uint16_t port);
     void Disconnect();
 
     bool ReadyRead();
 
-    virtual vector<uint8_t> Decompression(vector<uint8_t> data) { return data; }
+    virtual std::vector<uint8_t> Decompression(std::vector<uint8_t> data) { return data; }
 
     bool Read(int maxSize = 0x1000);
 
     int Send(uint8_t *data, int size);
-    int Send(const vector<uint8_t> &data);
+    int Send(const std::vector<uint8_t> &data);
 };
 }; // namespace Wisp
 

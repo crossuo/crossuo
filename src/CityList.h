@@ -9,8 +9,8 @@ class CCityItem
 {
 public:
     uint8_t LocationIndex = 0;
-    string Name = "";
-    string Area = "";
+    std::string Name = "";
+    std::string Area = "";
     bool Selected = false;
 
     CCityItem();
@@ -40,7 +40,7 @@ public:
 class CCityList
 {
 private:
-    vector<CCityItem *> m_CityList;
+    std::vector<CCityItem *> m_CityList;
 
 public:
     CCityList();

@@ -1,20 +1,19 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Backend.h"
+
 CGLFrameBuffer::CGLFrameBuffer()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 CGLFrameBuffer::~CGLFrameBuffer()
 {
-    DEBUG_TRACE_FUNCTION;
     Free();
 }
 
 bool CGLFrameBuffer::Init(int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     Free();
 
     bool result = false;
@@ -61,7 +60,6 @@ bool CGLFrameBuffer::Init(int width, int height)
 
 void CGLFrameBuffer::Free()
 {
-    DEBUG_TRACE_FUNCTION;
     Texture.Clear();
 
     if (g_GL.CanUseFrameBuffer && m_FrameBuffer != 0)
@@ -75,7 +73,6 @@ void CGLFrameBuffer::Free()
 
 void CGLFrameBuffer::Release()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GL.CanUseFrameBuffer)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_OldFrameBuffer);
@@ -89,21 +86,18 @@ void CGLFrameBuffer::Release()
 
 bool CGLFrameBuffer::Ready(int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     return (
         g_GL.CanUseFrameBuffer && m_Ready && Texture.Width == width && Texture.Height == height);
 }
 
 bool CGLFrameBuffer::ReadyMinSize(int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     return (
         g_GL.CanUseFrameBuffer && m_Ready && Texture.Width >= width && Texture.Height >= height);
 }
 
 bool CGLFrameBuffer::Use()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_GL.CanUseFrameBuffer && m_Ready)
@@ -131,7 +125,6 @@ bool CGLFrameBuffer::Use()
 
 void CGLFrameBuffer::Draw(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GL.CanUseFrameBuffer && m_Ready)
     {
         g_GL.OldTexture = 0;

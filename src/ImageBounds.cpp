@@ -20,7 +20,6 @@ CImageBounds::~CImageBounds()
 
 bool CImageBounds::InRect(const CImageBounds &ib)
 {
-    DEBUG_TRACE_FUNCTION;
     bool inRect = false;
 
     if (X < ib.X)

@@ -73,7 +73,7 @@ void CGumpGeneric::InitToolTip()
 }
 
 void CGumpGeneric::AddText(
-    int index, const wstring &text, CBaseGUI *start, bool backbroundCanBeColored)
+    int index, const std::wstring &text, CBaseGUI *start, bool backbroundCanBeColored)
 {
     DEBUG_TRACE_FUNCTION;
     if (start == nullptr)

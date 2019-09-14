@@ -3,11 +3,14 @@
 
 #pragma once
 
+#include "Point.h"
+#include "Sprite.h"
+
 class CToolTip
 {
 public:
     uint32_t Timer = 0;
-    wstring Data = {};
+    std::wstring Data = {};
     uint32_t ClilocID = 0;
     int MaxWidth = 0;
     CPoint2Di Position = CPoint2Di();
@@ -19,9 +22,9 @@ public:
     ~CToolTip();
 
     void Reset();
-    void Create(CTextSprite &texture, const wstring &str, int &width, int minWidth);
-    void Set(const wstring &str, int maxWidth = 0);
-    void Set(int clilocID, const string &str, int maxWidth = 0, bool toCamelCase = false);
+    void Create(CTextSprite &texture, const std::wstring &str, int &width, int minWidth);
+    void Set(const std::wstring &str, int maxWidth = 0);
+    void Set(int clilocID, const std::string &str, int maxWidth = 0, bool toCamelCase = false);
     void Draw(int cursorWidth = 0, int cursorHeight = 0);
 };
 

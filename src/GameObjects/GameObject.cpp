@@ -6,6 +6,7 @@
 #include "GameCharacter.h"
 #include <SDL_timer.h>
 #include <xuocore/uodata.h>
+#include <common/str.h>
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"
@@ -74,14 +75,14 @@ void CGameObject::SetFlags(uint8_t val)
     }
 }
 
-void CGameObject::SetName(const string &newName)
+void CGameObject::SetName(const std::string &newName)
 {
     DEBUG_TRACE_FUNCTION;
     if (IsPlayer() && m_Name != newName)
     {
         if (g_GameState >= GS_GAME)
         {
-            string title = "Ultima Online - " + newName;
+            std::string title = "Ultima Online - " + newName;
             CServer *server = g_ServerList.GetSelectedServer();
             if (server != nullptr)
             {
@@ -105,7 +106,7 @@ void CGameObject::DrawObjectHandlesTexture()
         }
         else
         {
-            wstring name = ToWString(m_Name);
+            auto name = ToWString(m_Name);
             if (name.length() == 0u)
             {
                 name = g_ClilocManager.Cliloc(g_Language)

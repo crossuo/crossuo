@@ -308,7 +308,7 @@ void CMapManager::UpdatePatched()
         return;
     }
 
-    deque<CRenderWorldObject *> objectsList;
+    std::deque<CRenderWorldObject *> objectsList;
 
     if (m_Blocks != nullptr)
     {

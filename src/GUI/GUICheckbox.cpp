@@ -25,7 +25,7 @@ CGUICheckbox::~CGUICheckbox()
 
 void CGUICheckbox::SetTextParameters(
     uint8_t font,
-    const wstring &text,
+    const std::wstring &text,
     uint16_t color,
     SLIDER_TEXT_POSITION textPosition,
     int textWidth,
@@ -40,7 +40,7 @@ void CGUICheckbox::SetTextParameters(
 
 void CGUICheckbox::SetTextParameters(
     uint8_t font,
-    const string &text,
+    const std::string &text,
     uint16_t color,
     SLIDER_TEXT_POSITION textPosition,
     int textWidth,

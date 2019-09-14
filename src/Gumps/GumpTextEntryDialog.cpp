@@ -16,8 +16,8 @@ CGumpTextEntryDialog::CGumpTextEntryDialog(
     short y,
     uint8_t variant,
     int maxLength,
-    string text,
-    string description)
+    std::string text,
+    std::string description)
     : CGump(GT_TEXT_ENTRY_DIALOG, serial, x, y)
     , Variant(variant)
     , Text(std::move(text))

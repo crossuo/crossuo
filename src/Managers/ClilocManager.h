@@ -6,12 +6,12 @@
 #include "../BaseQueue.h"
 #include <xuocore/mappedfile.h>
 
-typedef map<uint32_t, string> CLILOC_MAP;
+typedef std::map<uint32_t, std::string> CLILOC_MAP;
 
 class CCliloc : public CBaseQueueItem
 {
 public:
-    string Language = "";
+    std::string Language = "";
     bool Loaded = false;
 
 private:
@@ -24,18 +24,18 @@ private:
     // Support (id >= 3000000)
     CLILOC_MAP m_ClilocSupport;
 
-    string Load(uint32_t &id);
-    wstring CamelCaseTest(bool toCamelCase, const string &result);
-    wstring GetX(int id, bool toCamelCase, string &result);
+    std::string Load(uint32_t &id);
+    std::wstring CamelCaseTest(bool toCamelCase, const std::string &result);
+    std::wstring GetX(int id, bool toCamelCase, std::string &result);
 
 public:
-    CCliloc(const string &lang);
+    CCliloc(const std::string &lang);
     virtual ~CCliloc();
 
     CMappedFile m_File;
 
-    string GetA(int id, bool toCamelCase = false, string result = {});  // FIXME
-    wstring GetW(int id, bool toCamelCase = false, string result = {}); // FIXME
+    std::string GetA(int id, bool toCamelCase = false, std::string result = {});  // FIXME
+    std::wstring GetW(int id, bool toCamelCase = false, std::string result = {}); // FIXME
 };
 
 class CClilocManager : public CBaseQueue
@@ -43,15 +43,15 @@ class CClilocManager : public CBaseQueue
 private:
     CCliloc *m_LastCliloc{ nullptr };
     CCliloc *m_ENUCliloc{ nullptr };
-    wstring ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args);
+    std::wstring ParseArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args);
 
 public:
     CClilocManager();
     virtual ~CClilocManager();
 
-    CCliloc *Cliloc(const string &lang);
-    wstring ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstring args);
-    wstring ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args);
+    CCliloc *Cliloc(const std::string &lang);
+    std::wstring ParseArgumentsToClilocString(int cliloc, bool toCamelCase, std::wstring args);
+    std::wstring ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args);
 };
 
 extern CClilocManager g_ClilocManager;

@@ -3,6 +3,9 @@
 
 #pragma once
 
+class CGump;
+class CRenderObject;
+
 class CSelectedObject
 {
 public:

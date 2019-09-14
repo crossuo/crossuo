@@ -4,6 +4,7 @@
 #include "GameEffectDrag.h"
 #include "../Managers/EffectManager.h"
 #include "../GameObjects/GameEffectMoving.h"
+#include "Globals.h"
 
 CGameEffectDrag::CGameEffectDrag()
 {
@@ -15,7 +16,6 @@ CGameEffectDrag::~CGameEffectDrag()
 
 void CGameEffectDrag::Update(CGameObject *parent)
 {
-    DEBUG_TRACE_FUNCTION;
     if (LastMoveTime > g_Ticks)
     {
         return;

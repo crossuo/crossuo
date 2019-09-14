@@ -2,7 +2,6 @@
 
 #include "WispThread.h"
 #include <SDL_timer.h>
-#include <xuocore/file.h>
 #include "../GameWindow.h"
 
 namespace Wisp
@@ -53,7 +52,7 @@ int CApplication::Run()
     return EXIT_SUCCESS;
 }
 
-os_path CApplication::ExeFilePath(const char *str, ...) const
+fs_path CApplication::ExeFilePath(const char *str, ...) const
 {
     DEBUG_TRACE_FUNCTION;
     va_list arg;
@@ -63,16 +62,16 @@ os_path CApplication::ExeFilePath(const char *str, ...) const
     vsprintf_s(out, str, arg);
     va_end(arg);
 
-    os_path res = m_ExePath.c_str();
-    return res + PATH_SEP + ToPath(out);
+    fs_path res = fs_join_path(m_ExePath, out);
+    return fs_insensitive(res);
 }
 
-os_path CApplication::UOFilesPath(const string &str, ...) const
+fs_path CApplication::UOFilesPath(const std::string &str, ...) const
 {
     return UOFilesPath(str.c_str());
 }
 
-os_path CApplication::UOFilesPath(const char *str, ...) const
+fs_path CApplication::UOFilesPath(const char *str, ...) const
 {
     DEBUG_TRACE_FUNCTION;
     va_list arg;
@@ -82,9 +81,8 @@ os_path CApplication::UOFilesPath(const char *str, ...) const
     vsprintf_s(out, str, arg);
     va_end(arg);
 
-    os_path res = m_UOPath.c_str();
-    auto tmp = res + PATH_SEP + ToPath(out);
-    return fs_insensitive(tmp);
+    fs_path res = fs_join_path(m_UOPath, out);
+    return fs_insensitive(res);
 }
 
 }; // namespace Wisp

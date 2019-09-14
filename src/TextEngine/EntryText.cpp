@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_clipboard.h>
-
+#include <common/str.h>
 #include "EntryText.h"
 #include "../TextEngine/GameConsole.h"
 #include "../Managers/ConfigManager.h"
@@ -202,7 +202,7 @@ bool CEntryText::Insert(wchar_t ch, CGump *gump)
     {
         if (NumberOnly)
         {
-            wstring wstr = Text;
+            auto wstr = Text;
             wstr.insert(wstr.begin() + m_Position, ch);
             if (std::stoi(wstr) >= MaxLength)
             {
@@ -281,7 +281,7 @@ void CEntryText::Paste()
     auto chBuffer = SDL_GetClipboardText();
     if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
     {
-        wstring str = g_EntryPointer->Data() + ToWString(chBuffer);
+        auto str = g_EntryPointer->Data() + ToWString(chBuffer);
         g_EntryPointer->SetTextW(str);
     }
 }
@@ -330,15 +330,15 @@ void CEntryText::SetPos(int val, CGump *gump)
     }
 }
 
-void CEntryText::SetTextA(const string &text)
+void CEntryText::SetTextA(const std::string &text)
 {
     DEBUG_TRACE_FUNCTION;
-    wstring wtext = ToWString(text);
+    auto wtext = ToWString(text);
     SetTextW(wtext);
     m_CText = text;
 }
 
-void CEntryText::SetTextW(const wstring &text)
+void CEntryText::SetTextW(const std::wstring &text)
 {
     DEBUG_TRACE_FUNCTION;
     Clear();
@@ -354,7 +354,7 @@ void CEntryText::SetTextW(const wstring &text)
     {
         if (NumberOnly)
         {
-            string str = ToString(Text);
+            auto str = ToString(Text);
             while (true)
             {
                 size_t len = str.length();
@@ -382,7 +382,7 @@ void CEntryText::SetTextW(const wstring &text)
     }
 }
 
-string CEntryText::CheckMaxWidthA(uint8_t font, string str)
+std::string CEntryText::CheckMaxWidthA(uint8_t font, std::string str)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -401,7 +401,7 @@ string CEntryText::CheckMaxWidthA(uint8_t font, string str)
     return str;
 }
 
-wstring CEntryText::CheckMaxWidthW(uint8_t font, wstring str)
+std::wstring CEntryText::CheckMaxWidthW(uint8_t font, std::wstring str)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -461,7 +461,7 @@ void CEntryText::FixMaxWidthW(uint8_t font)
 
 void CEntryText::CreateTextureA(
     uint8_t font,
-    const string &str,
+    const std::string &str,
     uint16_t color,
     int width,
     TEXT_ALIGN_TYPE align,
@@ -517,7 +517,7 @@ void CEntryText::CreateTextureA(
 
 void CEntryText::CreateTextureW(
     uint8_t font,
-    const wstring &str,
+    const std::wstring &str,
     uint16_t color,
     int width,
     TEXT_ALIGN_TYPE align,
@@ -634,7 +634,7 @@ void CEntryText::DrawMaskA(
     DEBUG_TRACE_FUNCTION;
 
     const auto len = (int)Length();
-    string str{};
+    std::string str{};
     for (int i = 0; i < len; i++)
     {
         str += "*";
@@ -664,7 +664,7 @@ void CEntryText::DrawMaskW(
     DEBUG_TRACE_FUNCTION;
 
     const auto len = (int)Length();
-    wstring str = {};
+    std::wstring str = {};
     for (int i = 0; i < len; i++)
     {
         str += L"*";
@@ -691,12 +691,12 @@ void CEntryText::RemoveSequence(int startPos, int length)
     Text.erase(startPos, length);
 }
 
-string CEntryText::GetTextA() const
+std::string CEntryText::GetTextA() const
 {
     return m_CText;
 }
 
-wstring CEntryText::GetTextW() const
+std::wstring CEntryText::GetTextW() const
 {
     return Text;
 }

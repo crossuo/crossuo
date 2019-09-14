@@ -282,7 +282,7 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
     return true;
 }
 
-bool CSkillGroupManager::Load(const os_path &path)
+bool CSkillGroupManager::Load(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
@@ -307,7 +307,7 @@ bool CSkillGroupManager::Load(const os_path &path)
             CSkillGroupObject *group = new CSkillGroupObject();
 
             short length = file.ReadUInt16LE();
-            string str = file.ReadString(length);
+            auto str = file.ReadString(length);
             group->Name = str;
 
             short skills = file.ReadUInt16LE();
@@ -341,7 +341,7 @@ bool CSkillGroupManager::Load(const os_path &path)
     return result;
 }
 
-void CSkillGroupManager::Save(const os_path &path)
+void CSkillGroupManager::Save(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
@@ -364,7 +364,7 @@ void CSkillGroupManager::Save(const os_path &path)
 
     for (int i = 0; i < Count; i++)
     {
-        string str = group->Name;
+        auto str = group->Name;
         size_t len = str.length() + 1;
 
         short size = (short)len + 2 + 2 + 2 + group->Count;

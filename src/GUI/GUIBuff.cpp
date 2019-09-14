@@ -4,7 +4,7 @@
 #include "GUIBuff.h"
 #include "../CrossUO.h"
 
-CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const wstring &text)
+CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const std::wstring &text)
     : CGUIDrawObject(GOT_BUFF, 0, graphic, 0, 0, 0)
     , Timer(timer)
     , Text(text)

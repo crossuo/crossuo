@@ -5,7 +5,8 @@
 #include "GumpManager.h"
 #include "SoundManager.h"
 #include "ObjectPropertiesManager.h"
-#include <xuocore/file.h>
+#include <common/fs.h>
+#include <common/str.h>
 #include "../Point.h"
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -306,7 +307,7 @@ static const ConfigEntry s_Keys[] = {
 
 static_assert(countof(s_Keys) == CMKC_COUNT + 1, "Missing key string for configuration option");
 
-static uint32_t GetConfigKey(const string &key)
+static uint32_t GetConfigKey(const std::string &key)
 {
     auto str = ToLowerA(key);
     for (int i = 0; s_Keys[i].key_name; i++)
@@ -1057,7 +1058,7 @@ uint16_t CConfigManager::GetColorByNotoriety(uint8_t notoriety)
     return color;
 }
 
-bool CConfigManager::Load(const os_path &path)
+bool CConfigManager::Load(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     if (!fs_path_exists(path))
@@ -1574,7 +1575,7 @@ bool CConfigManager::Load(const os_path &path)
     return true;
 }
 
-void CConfigManager::Save(const os_path &path)
+void CConfigManager::Save(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
 

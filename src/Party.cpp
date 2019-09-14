@@ -3,6 +3,7 @@
 
 #include "Party.h"
 #include "CrossUO.h"
+#include <common/str.h>
 #include <xuocore/mappedfile.h>
 #include "Network/Packets.h"
 #include "Managers/ConfigManager.h"
@@ -141,13 +142,13 @@ void CParty::ParsePacketData(CDataReader &reader)
         case 4: //Party message
         {
             uint32_t serial = reader.ReadUInt32BE();
-            wstring name = reader.ReadWStringBE();
+            auto name = reader.ReadWStringBE();
 
             for (int i = 0; i < 10; i++)
             {
                 if (Member[i].Serial == serial)
                 {
-                    string str = "[" + Member[i].GetName((int)i) + "]: " + ToString(name);
+                    std::string str = "[" + Member[i].GetName((int)i) + "]: " + ToString(name);
                     g_Game.CreateTextMessage(
                         TT_SYSTEM, serial, 3, g_ConfigManager.PartyMessageColor, str);
 

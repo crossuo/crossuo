@@ -7,13 +7,13 @@
 
 class CGUIBulletinBoardObject : public CBaseGUI
 {
-    wstring Text = {};
+    std::wstring Text = {};
 
 private:
     CTextSprite m_Texture;
 
 public:
-    CGUIBulletinBoardObject(int serial, int x, int y, const wstring &text);
+    CGUIBulletinBoardObject(int serial, int x, int y, const std::wstring &text);
     virtual ~CGUIBulletinBoardObject();
 
     virtual void PrepareTextures();

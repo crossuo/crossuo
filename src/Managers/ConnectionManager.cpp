@@ -39,7 +39,7 @@ void CConnectionManager::SetUseProxy(bool val)
     m_GameSocket.UseProxy = val;
 }
 
-void CConnectionManager::SetProxyAddress(const string &val)
+void CConnectionManager::SetProxyAddress(const std::string &val)
 {
     DEBUG_TRACE_FUNCTION;
     m_ProxyAddress = val;
@@ -63,7 +63,7 @@ void CConnectionManager::SetProxySocks5(bool val)
     m_GameSocket.ProxySocks5 = val;
 }
 
-void CConnectionManager::SetProxyAccount(const string &val)
+void CConnectionManager::SetProxyAccount(const std::string &val)
 {
     DEBUG_TRACE_FUNCTION;
     m_ProxyAccount = val;
@@ -71,7 +71,7 @@ void CConnectionManager::SetProxyAccount(const string &val)
     m_GameSocket.ProxyAccount = val;
 }
 
-void CConnectionManager::SetProxyPassword(const string &val)
+void CConnectionManager::SetProxyPassword(const std::string &val)
 {
     DEBUG_TRACE_FUNCTION;
     m_ProxyPassword = val;
@@ -122,7 +122,7 @@ void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
     socket.Send(ip, 4);
 }
 
-bool CConnectionManager::Connect(const string &address, int port, uint8_t *gameSeed)
+bool CConnectionManager::Connect(const std::string &address, int port, uint8_t *gameSeed)
 {
     DEBUG_TRACE_FUNCTION;
     Info(Network, "Connecting %s:%d", address.c_str(), port);

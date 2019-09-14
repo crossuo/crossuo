@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "Wisp.h"
+
 extern uint16_t g_CursorData[2][16];
 
 class CMouseManager : public Wisp::CMouse

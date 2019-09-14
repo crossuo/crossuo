@@ -72,7 +72,7 @@ void CustomHousesManager::Add(CCustomHouse *house)
     }
 }
 
-void CustomHousesManager::Load(const os_path &path)
+void CustomHousesManager::Load(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     Clear();
@@ -126,7 +126,7 @@ void CustomHousesManager::Load(const os_path &path)
     }
 }
 
-void CustomHousesManager::Save(const os_path &path)
+void CustomHousesManager::Save(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;

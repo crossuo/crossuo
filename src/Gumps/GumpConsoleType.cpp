@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GumpConsoleType.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
@@ -83,7 +84,7 @@ bool CGumpConsoleType::ConsoleIsEmpty()
 void CGumpConsoleType::DeleteConsolePrefix()
 {
     DEBUG_TRACE_FUNCTION;
-    static const wstring space = L" ";
+    static const std::wstring space = L" ";
 
     switch (m_SelectedType)
     {
@@ -94,7 +95,7 @@ void CGumpConsoleType::DeleteConsolePrefix()
         case GCTT_BROADCAST:
         case GCTT_PARTY:
         {
-            wstring str(g_GameConsole.Data());
+            std::wstring str(g_GameConsole.Data());
 
             if (str.find(g_ConsolePrefix[m_SelectedType]) == 0)
             {
@@ -121,7 +122,7 @@ void CGumpConsoleType::SetConsolePrefix()
         case GCTT_BROADCAST:
         case GCTT_PARTY:
         {
-            wstring str(g_GameConsole.Data());
+            std::wstring str(g_GameConsole.Data());
             str = g_ConsolePrefix[m_SelectedType] + str;
             g_GameConsole.SetTextW(str);
 
@@ -229,7 +230,7 @@ void CGumpConsoleType::UpdateContent()
             }
             else
             {
-                string str = " ";
+                std::string str = " ";
                 str += ToString(g_ConsolePrefix[i]);
 
                 if (str.length() < 3)

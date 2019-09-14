@@ -90,7 +90,7 @@ public:
     CCustomHouseObjectWallCategory() {}
     virtual ~CCustomHouseObjectWallCategory() {}
 
-    vector<CCustomHouseObjectWall> m_Items;
+    std::vector<CCustomHouseObjectWall> m_Items;
 };
 
 class CCustomHouseObjectFloor : public CCustomHouseObject
@@ -254,7 +254,7 @@ public:
     CCustomHouseObjectMiscCategory() {}
     virtual ~CCustomHouseObjectMiscCategory() {}
 
-    vector<CCustomHouseObjectMisc> m_Items;
+    std::vector<CCustomHouseObjectMisc> m_Items;
 };
 
 class CCustomHouseObjectStair : public CCustomHouseObject
@@ -435,7 +435,7 @@ public:
     virtual ~CCustomHouseObjectRoofCategory() {}
 
     //!Roof objects list
-    vector<CCustomHouseObjectRoof> m_Items;
+    std::vector<CCustomHouseObjectRoof> m_Items;
 };
 
 class CCustomHouseObjectPlaceInfo

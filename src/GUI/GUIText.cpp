@@ -17,7 +17,7 @@ CGUIText::~CGUIText()
 }
 
 void CGUIText::CreateTextureA(
-    uint8_t font, const string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
+    uint8_t font, const std::string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
     g_FontManager.GenerateA(font, m_Texture, str, Color, width, align, flags);
@@ -25,7 +25,7 @@ void CGUIText::CreateTextureA(
 
 void CGUIText::CreateTextureW(
     uint8_t font,
-    const wstring &str,
+    const std::wstring &str,
     uint8_t cell,
     int width,
     TEXT_ALIGN_TYPE align,

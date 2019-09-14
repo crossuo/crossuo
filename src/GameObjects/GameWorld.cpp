@@ -96,7 +96,7 @@ void CGameWorld::ProcessAnimation()
         (g_ConfigManager.StandartCharactersAnimationDelay ? ORIGINAL_CHARACTERS_ANIMATION_DELAY :
                                                             XUO_CHARACTERS_ANIMATION_DELAY);
     g_AnimCharactersDelayValue = (float)delay;
-    deque<CGameObject *> toRemove;
+    std::deque<CGameObject *> toRemove;
     QFOR(obj, m_Items, CGameObject *)
     {
         if (obj->NPC)

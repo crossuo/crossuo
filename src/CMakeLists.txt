@@ -37,7 +37,6 @@ set(glengine_src
   GLEngine/GLShader.cpp
   GLEngine/GLTextureCircleOfTransparency.cpp
   GLEngine/GLTexture.cpp
-  GLEngine/GLVector.cpp
 )
 
 set(gui_src
@@ -228,6 +227,7 @@ set(crypt_src
 set(crossuo_src
   Logging.cpp
   Point.cpp
+  Vector.cpp
   Misc.cpp
 
   BaseQueue.cpp
@@ -325,9 +325,7 @@ else()
 endif()
 
 if (ENABLE_COTIRE)
-  if(XUO_WINDOWS)
-    cotire(external)
-  endif()
+  set_property(SOURCE Misc.cpp PROPERTY COTIRE_EXCLUDED 1)
   set_target_properties(crossuo PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "CrossPCH.h")
   cotire(crossuo)
 

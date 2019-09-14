@@ -3,15 +3,15 @@
 #ifndef WISP_APP_H
 #define WISP_APP_H
 
-#include <xuocore/file.h>
+#include <common/fs.h>
 
 namespace Wisp
 {
 class CApplication
 {
 public:
-    os_path m_ExePath;
-    os_path m_UOPath;
+    fs_path m_ExePath;
+    fs_path m_UOPath;
 
 protected:
     virtual void OnMainLoop() {}
@@ -21,9 +21,9 @@ public:
     virtual ~CApplication();
     virtual void Init();
     int Run();
-    os_path ExeFilePath(const char *str, ...) const;
-    os_path UOFilesPath(const char *str, ...) const;
-    os_path UOFilesPath(const string &str, ...) const;
+    fs_path ExeFilePath(const char *str, ...) const;
+    fs_path UOFilesPath(const char *str, ...) const;
+    fs_path UOFilesPath(const std::string &str, ...) const;
 };
 
 }; // namespace Wisp

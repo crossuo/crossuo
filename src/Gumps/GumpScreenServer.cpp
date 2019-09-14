@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GumpScreenServer.h"
 #include "../Config.h"
 #include "../ToolTip.h"
@@ -229,7 +230,7 @@ void CGumpScreenServer::InitToolTip()
 
     if (id >= ID_SS_SERVER_LIST)
     {
-        string cstr(
+        std::string cstr(
             "Connect to '" + g_ServerList.GetServer(id - ID_SS_SERVER_LIST)->Name + "' server");
 
         g_ToolTip.Set(ToWString(cstr), 100);

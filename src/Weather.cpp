@@ -1,8 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "Globals.h"
 #include "Weather.h"
 #include "Managers/ConfigManager.h"
+#include "Misc.h"
 
 CWeather g_Weather;
 
@@ -19,7 +21,6 @@ CWeather::CWeather()
 
 void CWeather::Reset()
 {
-    DEBUG_TRACE_FUNCTION;
     Type = 0;
     Count = 0;
     CurrentCount = 0;
@@ -35,7 +36,6 @@ void CWeather::Reset()
 
 void CWeather::Generate()
 {
-    DEBUG_TRACE_FUNCTION;
     LastTick = g_Ticks;
 
     if (Type == 0xFF || Type == 0xFE)
@@ -68,7 +68,6 @@ void CWeather::Generate()
 
 void CWeather::Draw(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     bool removeEffects = false;
 
     if (Timer < g_Ticks)
@@ -149,7 +148,7 @@ void CWeather::Draw(int x, int y)
             break;
     }
 
-    for (deque<CWeatherEffect>::iterator effect = m_Effects.begin(); effect != m_Effects.end();)
+    for (auto effect = m_Effects.begin(); effect != m_Effects.end();)
     {
         if ((effect->X < x || effect->X > (x + g_ConfigManager.GameWindowWidth)) ||
             (effect->Y < y || effect->Y > (y + g_ConfigManager.GameWindowHeight)))

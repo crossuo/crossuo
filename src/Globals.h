@@ -12,8 +12,6 @@
 #include <xuocore/enumlist.h>
 #include "Backend.h" // CGLTexture, GLuint
 
-class CGump;
-
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 enum
@@ -28,11 +26,11 @@ extern bool g_ShiftPressed;
 extern bool g_MovingFromMouse;
 extern bool g_AutoMoving;
 extern bool g_AbyssPacket03First;
-extern string g_dumpUopFile;
+extern std::string g_dumpUopFile;
 
 bool CanBeDraggedByOffset(const CPoint2Di &point);
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);
-string ToCamelCase(string text);
+std::string ToCamelCase(std::string text);
 
 class CGameObject;
 int GetDistance(CGameObject *current, CGameObject *target);
@@ -74,7 +72,7 @@ extern uint32_t g_Ticks;
 extern GLuint ShaderColorTable;
 extern GLuint g_ShaderDrawMode;
 
-extern string g_Language;
+extern std::string g_Language;
 
 extern GAME_STATE g_GameState;
 
@@ -209,7 +207,7 @@ extern uint32_t g_ProcessStaticAnimationTimer;
 extern uint32_t g_ProcessRemoveRangedTimer;
 extern int g_MaxViewRange;
 extern uint32_t g_GameFeaturesFlags;
-inline bool Int32TryParse(const string &str, int &result)
+inline bool Int32TryParse(const std::string &str, int &result)
 {
     char *end = nullptr;
     auto v = strtol(str.c_str(), &end, 10);
@@ -398,8 +396,8 @@ extern struct PING_INFO_DATA g_GameServerPingInfo;
 extern uint32_t g_PingTimer;
 #endif // USE_PING
 
-extern uint32_t g_Ping;     // From packet 0x73
-extern string g_PingString; // Debug Info
+extern uint32_t g_Ping;          // From packet 0x73
+extern std::string g_PingString; // Debug Info
 
 #define USE_DEBUG_TRACE_FUNCTION 0
 

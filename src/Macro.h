@@ -4,6 +4,7 @@
 
 #include "BaseQueue.h"
 #include <xuocore/enumlist.h>
+#include "Wisp.h"
 
 struct CMappedFile;
 
@@ -23,9 +24,10 @@ public:
 class CMacroObjectString : public CMacroObject
 {
 public:
-    string m_String;
+    std::string m_String;
 
-    CMacroObjectString(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str);
+    CMacroObjectString(
+        const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const std::string &str);
     virtual ~CMacroObjectString();
 
     virtual bool HaveString() { return true; }
