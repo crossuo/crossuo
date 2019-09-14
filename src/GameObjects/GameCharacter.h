@@ -35,7 +35,7 @@ public:
     int OffsetY = 0;
     int OffsetZ = 0;
     uint32_t LastStepTime = 0;
-    string Title;
+    std::string Title;
     uint8_t HitsPercent = 0;
 
 protected:
@@ -47,7 +47,7 @@ public:
     virtual ~CGameCharacter();
 
     CTextContainer m_DamageTextControl{ CTextContainer(10) };
-    deque<CWalkData> m_Steps;
+    std::deque<CWalkData> m_Steps;
     CTextSprite m_HitsTexture;
 
     virtual void UpdateTextCoordinates();

@@ -30,7 +30,7 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
     uint32_t ticks = g_Ticks;
     g_TotalSendSize += checked_cast<int>(size);
     CPacketInfo &_type = g_PacketManager.GetInfo(*buf);
-    UNUSED(_type);
+    (void)_type;
     DEBUG(
         Plugin,
         "--- ^(%d) s(+%zd => %d) Plugin->Server:: %s",

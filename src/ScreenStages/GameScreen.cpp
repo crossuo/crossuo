@@ -991,16 +991,16 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
          (!character->m_Steps.empty() && ((character->m_Steps.back().Direction & 7) == 6 ||
                                           (character->m_Steps.back().Direction & 7) == 2)));
 
-    vector<pair<int, int>> coordinates;
+    std::vector<std::pair<int, int>> coordinates;
 
-    coordinates.push_back(pair<int, int>(characterX + 1, characterY - 1));
-    coordinates.push_back(pair<int, int>(characterX + 1, characterY - 2));
-    coordinates.push_back(pair<int, int>(characterX + 2, characterY - 2));
-    coordinates.push_back(pair<int, int>(characterX - 1, characterY + 2));
-    coordinates.push_back(pair<int, int>(characterX, characterY + 1));
-    coordinates.push_back(pair<int, int>(characterX + 1, characterY));
-    coordinates.push_back(pair<int, int>(characterX + 2, characterY - 1));
-    coordinates.push_back(pair<int, int>(characterX + 1, characterY + 1));
+    coordinates.push_back(std::pair<int, int>(characterX + 1, characterY - 1));
+    coordinates.push_back(std::pair<int, int>(characterX + 1, characterY - 2));
+    coordinates.push_back(std::pair<int, int>(characterX + 2, characterY - 2));
+    coordinates.push_back(std::pair<int, int>(characterX - 1, characterY + 2));
+    coordinates.push_back(std::pair<int, int>(characterX, characterY + 1));
+    coordinates.push_back(std::pair<int, int>(characterX + 1, characterY));
+    coordinates.push_back(std::pair<int, int>(characterX + 2, characterY - 1));
+    coordinates.push_back(std::pair<int, int>(characterX + 1, characterY + 1));
 
     const auto size = (int)coordinates.size();
 
@@ -1581,7 +1581,7 @@ void CGameScreen::DrawGameWindowText(bool render)
         {
             if (g_ConfigManager.GetDrawStatusState() == DCSS_ABOVE)
             {
-                for (vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
+                for (std::vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
                      it != m_HitsStack.end();
                      ++it)
                 {
@@ -1594,7 +1594,7 @@ void CGameScreen::DrawGameWindowText(bool render)
                 g_ColorizerShader.Use();
                 for (int i = 0; i < 2; i++)
                 {
-                    for (vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
+                    for (std::vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
                          it != m_HitsStack.end();
                          ++it)
                     {

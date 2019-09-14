@@ -353,7 +353,7 @@ void CGumpWorldMap::LoadMap(int map)
         auto path = g_App.ExeFilePath("data/worldmap%08X.cuo", crc32);
         bool fromFile = false;
 
-        vector<uint16_t> buf;
+        std::vector<uint16_t> buf;
 
         if (fs_path_exists(path))
         {

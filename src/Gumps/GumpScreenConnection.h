@@ -11,7 +11,7 @@ private:
     static const int ID_CS_OK = 1;
     static const int ID_CS_CANCEL = 2;
 
-    void CreateText(int x, int y, string str, uint8_t font);
+    void CreateText(int x, int y, std::string str, uint8_t font);
 
 public:
     CGumpScreenConnection();

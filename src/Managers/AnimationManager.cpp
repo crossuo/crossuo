@@ -373,7 +373,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
         while (!mobtypesParser.IsEOF())
         {
-            vector<string> strings = mobtypesParser.ReadTokens();
+            std::vector<std::string> strings = mobtypesParser.ReadTokens();
 
             if (strings.size() >= 3)
             {
@@ -416,7 +416,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
     {
         while (!animParser[i].IsEOF())
         {
-            vector<string> strings = animParser[i].ReadTokens();
+            std::vector<std::string> strings = animParser[i].ReadTokens();
 
             if (strings.size() < 2)
             {
@@ -445,7 +445,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!equipConvParser.IsEOF())
     {
-        vector<string> strings = equipConvParser.ReadTokens();
+        std::vector<std::string> strings = equipConvParser.ReadTokens();
         if (strings.size() >= 5)
         {
             auto body = (uint16_t)atoi(strings[0].c_str());
@@ -503,7 +503,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!bodyconvParser.IsEOF())
     {
-        vector<string> strings = bodyconvParser.ReadTokens();
+        std::vector<std::string> strings = bodyconvParser.ReadTokens();
 
         if (strings.size() >= 2)
         {
@@ -720,13 +720,13 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!bodyParser.IsEOF())
     {
-        vector<string> strings = bodyParser.ReadTokens();
+        std::vector<std::string> strings = bodyParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
             uint16_t index = atoi(strings[0].c_str());
 
-            vector<string> newBody = newBodyParser.GetTokens(strings[1].c_str());
+            std::vector<std::string> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
@@ -824,13 +824,13 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!corpseParser.IsEOF())
     {
-        vector<string> strings = corpseParser.ReadTokens();
+        std::vector<std::string> strings = corpseParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
             uint16_t index = atoi(strings[0].c_str());
 
-            vector<string> newBody = newBodyParser.GetTokens(strings[1].c_str());
+            std::vector<std::string> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
@@ -2188,7 +2188,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
     DRAW_FRAME_INFORMATION dfInfo = {};
 
-    vector<CGameItem *> &list = gameObject->m_DrawLayeredObjects;
+    std::vector<CGameItem *> &list = gameObject->m_DrawLayeredObjects;
 
     if (checkLayers)
     {
@@ -2332,7 +2332,7 @@ bool CAnimationManager::DrawEquippedLayers(
     DEBUG_TRACE_FUNCTION;
     bool result = false;
 
-    vector<CGameItem *> &list = obj->m_DrawLayeredObjects;
+    std::vector<CGameItem *> &list = obj->m_DrawLayeredObjects;
 
     uint16_t bodyGraphic = obj->Graphic;
 
@@ -2345,7 +2345,7 @@ bool CAnimationManager::DrawEquippedLayers(
 
     if (selection)
     {
-        for (vector<CGameItem *>::iterator i = list.begin(); i != list.end() && !result; ++i)
+        for (auto i = list.begin(); i != list.end() && !result; ++i)
         {
             uint16_t id = (*i)->AnimID;
 
@@ -2364,7 +2364,7 @@ bool CAnimationManager::DrawEquippedLayers(
     }
     else
     {
-        for (vector<CGameItem *>::iterator i = list.begin(); i != list.end(); ++i)
+        for (auto i = list.begin(); i != list.end(); ++i)
         {
             CGameItem *item = *i;
 
@@ -2549,7 +2549,7 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)
 {
-    auto getReplaceGroup = [](const vector<std::pair<uint16_t, uint8_t>> &list,
+    auto getReplaceGroup = [](const std::vector<std::pair<uint16_t, uint8_t>> &list,
                               uint16_t index,
                               uint16_t walkIndex) -> uint16_t {
         for (const std::pair<uint16_t, uint8_t> &item : list)

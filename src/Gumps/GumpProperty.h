@@ -17,6 +17,6 @@ public:
     virtual void PrepareContent() override;
     virtual CRenderObject *Select() override { return nullptr; }
 
-    CGumpProperty(const wstring &text);
+    CGumpProperty(const std::wstring &text);
     virtual ~CGumpProperty() = default;
 };

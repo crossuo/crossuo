@@ -13,7 +13,7 @@ class CGumpMap : public CGump
     CGUIButton *m_PlotCourse = nullptr;
     CGUIButton *m_StopPlotting = nullptr;
     CGUIButton *m_ClearCourse = nullptr;
-    vector<CGUIText *> m_Labels;
+    std::vector<CGUIText *> m_Labels;
 
     int LineUnderMouse(int &x1, int &y1, int x2, int y2);
 

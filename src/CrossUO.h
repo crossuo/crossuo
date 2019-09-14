@@ -174,7 +174,7 @@ public:
     void OpenDoor();
     void EmoteAction(const char *action);
     void AllNames();
-    void LoadLogin(string &login, int &port);
+    void LoadLogin(std::string &login, int &port);
     void GoToWebLink(const std::string &url);
     void RemoveRangedObjects();
     void ClearWorld();

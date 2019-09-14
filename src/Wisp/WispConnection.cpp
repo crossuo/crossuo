@@ -101,7 +101,7 @@ bool CConnection::Read(int maxSize)
     }
     else if (Connected && m_Socket != nullptr)
     {
-        vector<uint8_t> data(maxSize);
+        std::vector<uint8_t> data(maxSize);
         const int size = tcp_recv(m_Socket, &data[0], maxSize);
 
         if (size > 0)
@@ -135,7 +135,7 @@ int CConnection::Send(uint8_t *data, int size)
     return sent;
 }
 
-int CConnection::Send(const vector<uint8_t> &data)
+int CConnection::Send(const std::vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
     if (data.empty())

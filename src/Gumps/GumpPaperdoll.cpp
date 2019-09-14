@@ -633,7 +633,7 @@ void CGumpPaperdoll::UpdateContent()
                     {
                         short imageWidth = 0;
                         short imageHeight = 0;
-                        vector<uint16_t> pixels = g_UOFileReader.GetArtPixels(
+                        std::vector<uint16_t> pixels = g_UOFileReader.GetArtPixels(
                             slotEquipment->Graphic, sio, true, imageWidth, imageHeight);
 
                         int wantImageWidth = spr->ImageWidth;
@@ -644,7 +644,7 @@ void CGumpPaperdoll::UpdateContent()
                             continue;
                         }
 
-                        vector<uint16_t> wantPixels(wantImageWidth * wantImageHeight, 0);
+                        std::vector<uint16_t> wantPixels(wantImageWidth * wantImageHeight, 0);
                         int imageOffsetX = spr->ImageOffsetX;
                         int imageOffsetY = spr->ImageOffsetY;
                         for (int y = 0; y < wantImageHeight; y++)

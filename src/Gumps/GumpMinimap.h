@@ -22,7 +22,7 @@ private:
     void GenerateMap();
 
     void CreatePixels(
-        vector<uint16_t> &data,
+        std::vector<uint16_t> &data,
         int color,
         int x,
         int y,

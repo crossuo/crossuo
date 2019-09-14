@@ -37,7 +37,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
     uint32_t serial = reader.ReadUInt32BE();
     uint8_t count = reader.ReadUInt8();
 
-    vector<CPopupMenuItemInfo> items;
+    std::vector<CPopupMenuItemInfo> items;
 
     for (int i = 0; i < count; i++)
     {

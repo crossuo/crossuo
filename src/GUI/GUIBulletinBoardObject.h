@@ -7,7 +7,7 @@
 
 class CGUIBulletinBoardObject : public CBaseGUI
 {
-    std::wstring Text = {};
+    std::wstring Text;
 
 private:
     CTextSprite m_Texture;

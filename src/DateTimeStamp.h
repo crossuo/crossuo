@@ -3,4 +3,4 @@
 
 #pragma once
 
-string GetBuildDateTimeStamp();
+std::string GetBuildDateTimeStamp();

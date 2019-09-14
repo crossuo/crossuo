@@ -408,7 +408,7 @@ bool CPacketManager::AutoLoginNameExists(const std::string &name)
         return false;
     }
 
-    auto search = string("|") + name + "|";
+    auto search = std::string("|") + name + "|";
     return (AutoLoginNames.find(search) != std::string::npos);
 }
 
@@ -598,7 +598,7 @@ void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
     }
 }
 
-int CPacketManager::GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize)
+int CPacketManager::GetPacketSize(const std::vector<uint8_t> &packet, int &offsetToSize)
 {
     DEBUG_TRACE_FUNCTION;
     if (static_cast<unsigned int>(!packet.empty()) != 0u)
@@ -718,7 +718,7 @@ void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 {
     DEBUG_TRACE_FUNCTION;
 
-    vector<uint8_t> packet(size);
+    std::vector<uint8_t> packet(size);
     memcpy(&packet[0], &buf[0], size);
 
     LOCK(m_Mutex);
@@ -733,7 +733,7 @@ void CPacketManager::ProcessPluginPackets()
     LOCK(m_Mutex);
     while (!m_PluginData.empty())
     {
-        vector<uint8_t> &packet = m_PluginData.back();
+        std::vector<uint8_t> &packet = m_PluginData.back();
 
         PluginReceiveHandler(&packet[0], (int)packet.size());
         packet.clear();
@@ -2831,7 +2831,7 @@ PACKET_HANDLER(ExtendedCommand)
             }
 
             item->JournalPrefix = "";
-            std::wstring str = {};
+            std::wstring str;
             int clilocNum = ReadInt32BE();
             if (clilocNum != 0)
             {
@@ -3347,7 +3347,7 @@ PACKET_HANDLER(Talk)
         return;
     }
 
-    std::string str{};
+    std::string str;
     if (Size > 44)
     {
         Ptr = Start + 44;
@@ -3453,7 +3453,7 @@ PACKET_HANDLER(UnicodeTalk)
         return;
     }
 
-    std::wstring str = {};
+    std::wstring str;
     if (Size > 48)
     {
         Ptr = Start + 48;
@@ -4166,7 +4166,7 @@ PACKET_HANDLER(DisplayClilocString)
     }
 
     auto name = ReadString(30);
-    std::wstring affix{};
+    std::wstring affix;
     if (*Start == 0xCC)
     {
         affix = DecodeUTF8(ReadString());
@@ -4238,7 +4238,7 @@ PACKET_HANDLER(MegaCliloc)
         }
 
         const int len = ReadInt16BE();
-        std::wstring argument = {};
+        std::wstring argument;
         if (len > 0)
         {
             argument = ReadWStringLE(len / 2);
@@ -4280,8 +4280,8 @@ PACKET_HANDLER(MegaCliloc)
     }
 
     bool first = true;
-    std::wstring name = {};
-    std::wstring data = {};
+    std::wstring name;
+    std::wstring data;
     if (!list.empty())
     {
         for (const std::wstring &str : list)
@@ -4535,8 +4535,8 @@ PACKET_HANDLER(BuffDebuff)
                 Move(4);
 
                 auto title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true);
-                std::wstring description = {};
-                std::wstring wtf = {};
+                std::wstring description;
+                std::wstring wtf;
 
                 if (descriptionCliloc != 0u)
                 {
@@ -4799,7 +4799,7 @@ PACKET_HANDLER(OpenMenu)
     }
 }
 
-void CPacketManager::AddHTMLGumps(CGump *gump, vector<HTMLGumpDataInfo> &list)
+void CPacketManager::AddHTMLGumps(CGump *gump, std::vector<HTMLGumpDataInfo> &list)
 {
     DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < (int)list.size(); i++)
@@ -4884,7 +4884,7 @@ PACKET_HANDLER(OpenGump)
         return;
     }
 
-    vector<HTMLGumpDataInfo> htmlGumlList;
+    std::vector<HTMLGumpDataInfo> htmlGumlList;
 
     const uint32_t serial = ReadUInt32BE();
     const uint32_t id = ReadUInt32BE();
@@ -5421,7 +5421,7 @@ PACKET_HANDLER(OpenCompressedGump)
     }
 
     // Layout data.....
-    vector<uint8_t> decLayoutData(dLen);
+    std::vector<uint8_t> decLayoutData(dLen);
     Info(
         Network,
         "gump layout:\n\tSenderID=0x%08X\n\tGumpID=0x%08X\n\tCLen=%lu\n\tDLen=%lu\nDecompressing layout gump data...",
@@ -5444,7 +5444,7 @@ PACKET_HANDLER(OpenCompressedGump)
     uint32_t linesCount = ReadUInt32BE(); //Text lines count
     uint32_t cTLen = 0;
     uLongf dTLen = 0;
-    vector<uint8_t> gumpDecText;
+    std::vector<uint8_t> gumpDecText;
 
     if (linesCount > 0)
     {
@@ -5468,7 +5468,7 @@ PACKET_HANDLER(OpenCompressedGump)
 
     int newsize = 21 + dLen + 2 + dTLen;
 
-    vector<uint8_t> newbufData(newsize);
+    std::vector<uint8_t> newbufData(newsize);
     uint8_t *newbuf = &newbufData[0];
     newbuf[0] = 0xb0;
     pack16(newbuf + 1, newsize);
@@ -5794,7 +5794,7 @@ PACKET_HANDLER(BulletinBoardData)
                 }
 
                 uint8_t lines = ReadUInt8();
-                std::wstring data = {};
+                std::wstring data;
 
                 for (int i = 0; i < lines; i++)
                 {
@@ -5903,7 +5903,7 @@ PACKET_HANDLER(BookData)
 
             uint16_t lineCount = ReadUInt16BE();
 
-            std::wstring str = {};
+            std::wstring str;
 
             for (int j = 0; j < lineCount; j++)
             {
@@ -6213,7 +6213,7 @@ PACKET_HANDLER(CustomHouse)
             continue;
         }
 
-        vector<uint8_t> decompressedBytes(dLen);
+        std::vector<uint8_t> decompressedBytes(dLen);
         int z_err = mz_uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
         if (z_err != Z_OK)
         {

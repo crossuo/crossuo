@@ -365,6 +365,7 @@ bool CGame::Install()
                 "Error loading a memmapped file. Please check the log for more info.\nUsing UO search path: ") +
             fs_path_str(g_App.m_UOPath);
         g_GameWindow.ShowMessage(errMsg, "FileManager::Load");
+        Error(Client, "%s", errMsg.c_str());
         return false;
     }
 
@@ -1021,7 +1022,7 @@ void CGame::LoadContainerOffsets()
 
         while (!parser.IsEOF())
         {
-            vector<string> strings = parser.ReadTokens();
+            std::vector<std::string> strings = parser.ReadTokens();
 
             if (strings.size() >= 7)
             {
@@ -1439,9 +1440,9 @@ void CGame::LoadPlugins()
 
     // FIXME: Load any additional plugin here
 
-    vector<string> libName;
-    vector<string> functions;
-    vector<uint32_t> flags;
+    std::vector<std::string> libName;
+    std::vector<std::string> functions;
+    std::vector<uint32_t> flags;
 
     size_t pluginsInfoCount = Crypt::GetPluginsCount();
     if (pluginsInfoCount == 0u)
@@ -3434,7 +3435,7 @@ bool CGame::IsVegetation(uint16_t graphic)
     return (m_StaticTilesFilterFlags[graphic] & STFF_VEGETATION) != 0;
 }
 
-void CGame::LoadLogin(string &login, int &port)
+void CGame::LoadLogin(std::string &login, int &port)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -4516,7 +4517,7 @@ void CGame::CreateObjectHandlesBackground()
             drawHeight = g_ObjectHandlesHeight - drawY;
         }
 
-        vector<uint16_t> pixels = g_UOFileReader.GetGumpPixels(io);
+        std::vector<uint16_t> pixels = g_UOFileReader.GetGumpPixels(io);
         if (!pixels.empty())
         {
             int gumpWidth = io.Width;

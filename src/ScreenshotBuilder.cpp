@@ -15,10 +15,10 @@
 
 CScreenshotBuilder g_ScreenshotBuilder;
 
-static vector<uint32_t> GetScenePixels(int x, int y, int width, int height)
+static std::vector<uint32_t> GetScenePixels(int x, int y, int width, int height)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pixels(width * height);
+    std::vector<uint32_t> pixels(width * height);
 
     glReadPixels(
         x,

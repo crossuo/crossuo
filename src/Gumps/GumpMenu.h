@@ -8,7 +8,7 @@
 class CGumpMenu : public CGump
 {
 public:
-    string Text = "";
+    std::string Text;
     bool TextChanged = false;
 
 protected:

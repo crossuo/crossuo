@@ -66,7 +66,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     bool exit = false;
     while (!file.IsEOF() && !exit)
     {
-        vector<string> strings = file.ReadTokens();
+        std::vector<std::string> strings = file.ReadTokens();
 
         if (strings.empty())
         {
@@ -396,7 +396,7 @@ void CProfessionManager::LoadProfessionDescription()
         char *ptr = (char *)file.Start;
         char *end = (char *)((uintptr_t)file.Start + file.Size);
 
-        vector<string> list;
+        std::vector<std::string> list;
 
         while (ptr < end)
         {

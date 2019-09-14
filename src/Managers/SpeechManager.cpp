@@ -59,7 +59,7 @@ bool CSpeechManager::LoadSpeech()
     Info(Client, "selected language: %s", g_Language.c_str());
 
     CDataReader reader;
-    vector<uint8_t> tempData;
+    std::vector<uint8_t> tempData;
     bool isUOP = false;
     if (g_FileManager.m_MainMisc.Start != nullptr)
     {

@@ -41,10 +41,10 @@ CGumpCombatBook::~CGumpCombatBook()
 {
 }
 
-vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
+std::vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint16_t> list;
+    std::vector<uint16_t> list;
 
     switch (index)
     {
@@ -508,7 +508,7 @@ void CGumpCombatBook::UpdateContent()
 
         Add(new CGUIGumppicTiled(0x0835, 62, 88, 128, 0));
 
-        vector<uint16_t> list = GetItemsList((uint8_t)i);
+        std::vector<uint16_t> list = GetItemsList((uint8_t)i);
 
         int size = (int)list.size();
         size_t maxStaticCount = g_Data.m_Static.size();

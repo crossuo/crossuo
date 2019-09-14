@@ -185,7 +185,7 @@ void CGameObject::SelectObjectHandlesTexture()
     }
 }
 
-void CGameObject::GenerateObjectHandlesTexture(wstring text)
+void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
 {
     DEBUG_TRACE_FUNCTION;
     // FIXME: gfx
@@ -208,7 +208,7 @@ void CGameObject::GenerateObjectHandlesTexture(wstring text)
         text = g_FontManager.GetTextByWidthW(font, text, width - 6, true);
     }
 
-    vector<uint32_t> textData = g_FontManager.GeneratePixelsW(
+    std::vector<uint32_t> textData = g_FontManager.GeneratePixelsW(
         font, textTexture, text.c_str(), color, cell, width, tat, flags);
 
     if (textData.empty())

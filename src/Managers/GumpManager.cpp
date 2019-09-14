@@ -1581,8 +1581,8 @@ void CGumpManager::Save(const fs_path &path)
 
     short count = 0;
 
-    vector<CGump *> containerList;
-    vector<CGump *> spellInGroupList;
+    std::vector<CGump *> containerList;
+    std::vector<CGump *> spellInGroupList;
 
     QFOR(gump, m_Items, CGump *)
     {
@@ -1735,7 +1735,7 @@ void CGumpManager::Save(const fs_path &path)
         }
     }
 
-    vector<uint32_t> playerContainers;
+    std::vector<uint32_t> playerContainers;
     playerContainers.push_back(g_PlayerSerial);
 
     while (!playerContainers.empty() && !containerList.empty())
@@ -1743,7 +1743,7 @@ void CGumpManager::Save(const fs_path &path)
         uint32_t containerSerial = playerContainers.front();
         playerContainers.erase(playerContainers.begin());
 
-        for (vector<CGump *>::iterator it = containerList.begin(); it != containerList.end();)
+        for (std::vector<CGump *>::iterator it = containerList.begin(); it != containerList.end();)
         {
             CGump *gump = *it;
 
@@ -1783,7 +1783,7 @@ void CGumpManager::Save(const fs_path &path)
 
     if (static_cast<unsigned int>(!spellInGroupList.empty()) != 0u)
     {
-        vector<CGump *> spellGroups;
+        std::vector<CGump *> spellGroups;
 
         while (static_cast<unsigned int>(!spellInGroupList.empty()) != 0u)
         {
@@ -1794,7 +1794,7 @@ void CGumpManager::Save(const fs_path &path)
 
             for (spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
             {
-                for (vector<CGump *>::iterator it = spellInGroupList.begin();
+                for (std::vector<CGump *>::iterator it = spellInGroupList.begin();
                      it != spellInGroupList.end();
                      ++it)
                 {

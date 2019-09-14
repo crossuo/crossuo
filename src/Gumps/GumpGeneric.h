@@ -16,7 +16,7 @@ public:
 
     void AddText(
         int index,
-        const wstring &text,
+        const std::wstring &text,
         CBaseGUI *start = nullptr,
         bool backbroundCanBeColored = false);
 

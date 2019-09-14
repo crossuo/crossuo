@@ -23,7 +23,7 @@ void CServerScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
 
-    g_GameWindow.SetTitle(string("Ultima Online - ") + g_MainScreen.m_Account->c_str());
+    g_GameWindow.SetTitle(std::string("Ultima Online - ") + g_MainScreen.m_Account->c_str());
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
 

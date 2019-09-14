@@ -25,7 +25,7 @@ CPathFinder::~CPathFinder()
 {
 }
 
-bool CPathFinder::CreateItemsList(vector<CPathObject> &list, int x, int y, int stepState)
+bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState)
 {
     DEBUG_TRACE_FUNCTION;
     int blockX = x / 8;
@@ -233,7 +233,7 @@ int CPathFinder::CalculateMinMaxZ(
     newX += offsetX[direction];
     newY += offsetY[direction];
 
-    vector<CPathObject> list;
+    std::vector<CPathObject> list;
 
     if (!CreateItemsList(list, newX, newY, stepState) || list.empty())
     {
@@ -321,7 +321,7 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 
     CalculateMinMaxZ(minZ, maxZ, x, y, z, direction, stepState);
 
-    vector<CPathObject> list;
+    std::vector<CPathObject> list;
 
     if (g_CustomHouseGump != nullptr)
     {

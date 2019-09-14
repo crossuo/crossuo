@@ -108,7 +108,7 @@ void CGumpMinimap::GenerateMap()
     CIndexObject &io = g_Index.m_Gump[gumpID];
     int gumpWidth = io.Width;
     int gumpHeight = io.Height;
-    vector<uint16_t> data = g_UOFileReader.GetGumpPixels(io);
+    std::vector<uint16_t> data = g_UOFileReader.GetGumpPixels(io);
     if (data.empty())
     {
         return;
@@ -203,7 +203,7 @@ void CGumpMinimap::GenerateMap()
 }
 
 void CGumpMinimap::CreatePixels(
-    vector<uint16_t> &data,
+    std::vector<uint16_t> &data,
     int color,
     int x,
     int y,
