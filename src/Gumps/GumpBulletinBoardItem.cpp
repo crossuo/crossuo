@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "GumpBulletinBoardItem.h"
 #include "../Config.h"
 #include "../Managers/GumpManager.h"
@@ -26,10 +27,10 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     int y,
     uint8_t variant,
     int id,
-    const wstring &poster,
-    const wstring &subject,
-    const wstring &dataTime,
-    const wstring &data)
+    const std::wstring &poster,
+    const std::wstring &subject,
+    const std::wstring &dataTime,
+    const std::wstring &data)
     : CGumpBaseScroll(GT_BULLETIN_BOARD_ITEM, serial, 0x0820, 250, x, y, false, 70)
     , m_Variant(variant)
 {
@@ -255,7 +256,7 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
         }
         else if (serial == ID_GBBI_REPLY)
         {
-            wstring subj(L"RE: ");
+            std::wstring subj(L"RE: ");
             subj += m_EntrySubject->m_Entry.Data();
 
             CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(

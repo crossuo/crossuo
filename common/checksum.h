@@ -1,7 +1,21 @@
-#pragma once
-
-#include <stdint.h>
-#include <stddef.h>
+/*
+The MIT License (MIT)
+Copyright (c) 2017 Danny Angelo Carminati Grein
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #if CHECKSUM_IMPLEMENTATION_PRIVATE
 #define CHECKSUM_PRIVATE static
@@ -9,11 +23,10 @@
 #define CHECKSUM_PRIVATE
 #endif
 
-CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s);
-CHECKSUM_PRIVATE void crc32_init();
-CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size);
-
 #if defined(CHECKSUM_IMPLEMENTATION) || defined(CHECKSUM_IMPLEMENTATION_PRIVATE)
+#include <stdint.h>
+#include <stddef.h>
+
 CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s)
 {
     uint32_t l = 0;
@@ -164,3 +177,15 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
 }
 
 #endif // CHECKSUM_IMPLEMENTATION
+
+#ifndef CHECKSUM_HEADER
+#define CHECKSUM_HEADER
+
+#include <stdint.h>
+#include <stddef.h>
+
+CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s);
+CHECKSUM_PRIVATE void crc32_init();
+CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size);
+
+#endif // CHECKSUM_HEADER

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Platform.h"
+#include "Wisp.h"
 
 enum
 {

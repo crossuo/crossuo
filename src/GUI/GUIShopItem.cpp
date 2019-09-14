@@ -16,7 +16,7 @@ CGUIShopItem::CGUIShopItem(
     uint16_t color,
     int count,
     int price,
-    const string &name,
+    const std::string &name,
     int x,
     int y)
     : CBaseGUI(GOT_SHOPITEM, serial, graphic, color, x, y)
@@ -132,7 +132,7 @@ void CGUIShopItem::CreateNameText()
         textColor = 0x0021;
     }
 
-    string str = Name + " at " + std::to_string(Price) + "gp";
+    auto str = Name + " at " + std::to_string(Price) + "gp";
     g_FontManager.GenerateA(9, m_NameText, str, textColor, 90);
 }
 

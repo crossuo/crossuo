@@ -10,7 +10,7 @@ class CGUIShopItem : public CBaseGUI
 public:
     uint32_t Count = 0;
     uint32_t Price = 0;
-    string Name = "";
+    std::string Name = "";
     bool Selected = false;
     bool NameFromCliloc = false;
 
@@ -28,7 +28,7 @@ public:
         uint16_t color,
         int count,
         int price,
-        const string &name,
+        const std::string &name,
         int x,
         int y);
     virtual ~CGUIShopItem();

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <xuocore/enumlist.h>
 #include "RenderTextObject.h"
 #include "Sprite.h"
 
@@ -15,8 +16,8 @@ struct CTextData : public CRenderTextObject
     uint8_t Font = 0;
     uint32_t Timer = 0;
     uint32_t MoveTimer = 0;
-    string Text = "";
-    wstring UnicodeText = {};
+    std::string Text = "";
+    std::wstring UnicodeText = {};
     uint8_t Alpha = 0xFF;
     CRenderWorldObject *Owner = nullptr;
     CTextSprite m_TextSprite;

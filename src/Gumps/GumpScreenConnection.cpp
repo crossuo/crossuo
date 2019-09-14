@@ -18,7 +18,7 @@ CGumpScreenConnection::~CGumpScreenConnection()
 {
 }
 
-void CGumpScreenConnection::CreateText(int x, int y, string str, uint8_t font)
+void CGumpScreenConnection::CreateText(int x, int y, std::string str, uint8_t font)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_ConnectionScreen.GetTextA().length() != 0u)
@@ -52,7 +52,7 @@ void CGumpScreenConnection::UpdateContent()
     {
         if (g_ConnectionScreen.GetConnectionFailed())
         {
-            const string text[6] = {
+            const std::string text[6] = {
                 g_ClilocManager.Cliloc(g_Language)
                     ->GetA(3000018, false, "That character password is invalid."),
                 g_ClilocManager.Cliloc(g_Language)
@@ -96,7 +96,7 @@ void CGumpScreenConnection::UpdateContent()
     {
         if (g_ConnectionScreen.GetConnectionFailed())
         {
-            const string text[3] = {
+            const std::string text[3] = {
                 g_ClilocManager.Cliloc(g_Language)
                     ->GetA(
                         3000033,
@@ -128,7 +128,7 @@ void CGumpScreenConnection::UpdateContent()
     }
     else if (g_ConnectionScreen.GetType() == CST_GAME_LOGIN)
     {
-        const string text[10] = {
+        const std::string text[10] = {
             g_ClilocManager.Cliloc(g_Language)->GetA(3000007, false, "Incorrect password."),
             g_ClilocManager.Cliloc(g_Language)
                 ->GetA(
@@ -194,7 +194,7 @@ void CGumpScreenConnection::UpdateContent()
     {
         if (g_ConnectionScreen.GetConnectionFailed())
         {
-            const string text[9] = {
+            const std::string text[9] = {
                 g_ClilocManager.Cliloc(g_Language)
                     ->GetA(3000007, false, "Incorrect name/password."),
                 g_ClilocManager.Cliloc(g_Language)
@@ -224,7 +224,7 @@ void CGumpScreenConnection::UpdateContent()
         }
         else
         {
-            const string text[2] = {
+            const std::string text[2] = {
                 g_ClilocManager.Cliloc(g_Language)->GetA(3000002, false, "Connecting..."),
                 g_ClilocManager.Cliloc(g_Language)->GetA(3000003, false, "Verifying Account...")
             };

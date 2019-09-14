@@ -5,7 +5,7 @@
 
 #include "GameItem.h"
 
-typedef map<uint32_t, CGameObject *> WORLD_MAP;
+typedef std::map<uint32_t, CGameObject *> WORLD_MAP;
 
 class CGameWorld
 {

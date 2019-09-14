@@ -9,7 +9,24 @@
 #include <SDL_keycode.h>
 #include <SDL_thread.h>
 
-#if !_WIN32
+#if _WIN32
+
+#define HAVE_M_PI // SDL conflicting with winsdk10
+
+#if !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#if !defined(_CRT_NON_CONFORMING_SWPRINTFS)
+#define _CRT_NON_CONFORMING_SWPRINTFS
+#endif
+
+#pragma comment(lib, "Winmm.lib")
+#pragma comment(lib, "Shlwapi.lib")
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "Glu32.lib")
+
+#else
 typedef void *HDC;
 typedef void *HGLRC;
 
@@ -113,5 +130,5 @@ typedef SDL_mutex *ProtectedSection;
 namespace Platform
 {
 void SetLanguageFromSystemLocale();
-void OpenBrowser(const string &url);
+void OpenBrowser(const std::string &url);
 } // namespace Platform

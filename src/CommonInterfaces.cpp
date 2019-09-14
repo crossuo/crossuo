@@ -1,11 +1,14 @@
 ﻿// MIT License
 // Copyright (C) September 2016 Hotride
 
-#include "CrossUO.h"
-#include "Target.h"
+#include "Backend.h"
+
 #include <SDL_timer.h>
 #include <xuocore/uodata.h>
 #include <xuocore/commoninterfaces.h>
+
+#include "CrossUO.h"
+#include "Target.h"
 #include "Gumps/GumpSecureTrading.h"
 #include "Managers/ConfigManager.h"
 #include "Managers/ColorManager.h"
@@ -31,7 +34,7 @@ IGameString::~IGameString()
     RELEASE_POINTER(m_DataW);
 }
 
-IGameString &IGameString::operator()(const string &str)
+IGameString &IGameString::operator()(const std::string &str)
 {
     RELEASE_POINTER(m_DataA);
 
@@ -46,7 +49,7 @@ IGameString &IGameString::operator()(const string &str)
     return *this;
 }
 
-IGameString &IGameString::operator()(const wstring &str)
+IGameString &IGameString::operator()(const std::wstring &str)
 {
     RELEASE_POINTER(m_DataW);
 

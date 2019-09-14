@@ -3,6 +3,7 @@
 #ifndef WISP_BFW_H
 #define WISP_BFW_H
 
+#include <common/fs.h>
 #include <xuocore/mappedfile.h>
 
 namespace Wisp
@@ -17,7 +18,7 @@ public:
 
     virtual ~CBinaryFileWriter();
 
-    bool Open(const os_path &path);
+    bool Open(const fs_path &path);
 
     void Close();
 

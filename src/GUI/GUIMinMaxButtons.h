@@ -4,6 +4,7 @@
 #pragma once
 
 #include "BaseGUI.h"
+#include "Sprite.h"
 
 class CGUIMinMaxButtons : public CBaseGUI
 {

@@ -6,14 +6,14 @@ function(download_package package_name)
         file(DOWNLOAD
             https://github.com/crossuo/dep-build-win/raw/master/${package_name}.zip
             "${CMAKE_BINARY_DIR}/downloads/${package_name}.zip" SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/downloads/${package_name}.zip"
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf "${CMAKE_BINARY_DIR}/downloads/${package_name}.zip"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     endif()
     message(STATUS "Using bundled binaries at ${PROJECT_SOURCE_DIR}/${package_name}")
 endfunction()
 
 if (WIN32)
-    if (NOT EXISTS ${PROJECT_SOURCE_DIR}/Dependencies/x64/bin/SDL2.dll)
+    if (NOT EXISTS ${PROJECT_SOURCE_DIR}/Dependencies/x64/lib/libcurl.lib)
         download_package("Dependencies")
     endif()
 endif()

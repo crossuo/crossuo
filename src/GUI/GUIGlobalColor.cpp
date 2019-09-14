@@ -19,7 +19,6 @@ CGUIGlobalColor::~CGUIGlobalColor()
 
 void CGUIGlobalColor::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {
         glColor4f(R, G, B, A);

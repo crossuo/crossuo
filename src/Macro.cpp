@@ -2,6 +2,7 @@
 
 #include "Macro.h"
 #include <xuocore/mappedfile.h>
+#include "Wisp.h"
 
 #define MODKEY_ALT 0x0100
 #define MODKEY_CTRL 0x0200
@@ -13,7 +14,6 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
     : Code(code)
     , SubCode(subCode)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (code)
     {
         //With sub menu
@@ -65,7 +65,7 @@ CMacroObject::~CMacroObject()
 }
 
 CMacroObjectString::CMacroObjectString(
-    const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const string &str)
+    const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const std::string &str)
     : CMacroObject(code, subCode)
     , m_String(str)
 {
@@ -89,7 +89,6 @@ CMacro::~CMacro()
 
 CMacro *CMacro::CreateBlankMacro()
 {
-    DEBUG_TRACE_FUNCTION;
     auto obj = new CMacro(0, false, false, false);
     obj->Add(new CMacroObject(MC_NONE, MSC_NONE));
     return obj;
@@ -97,7 +96,6 @@ CMacro *CMacro::CreateBlankMacro()
 
 CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
 {
-    DEBUG_TRACE_FUNCTION;
     CMacroObject *obj = nullptr;
     switch (code)
     {
@@ -125,7 +123,6 @@ CMacroObject *CMacro::CreateMacro(const MACRO_CODE &code)
 
 void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     obj->m_Prev = source->m_Prev;
     obj->m_Next = source->m_Next;
     if (source->m_Prev == nullptr)
@@ -148,7 +145,6 @@ void CMacro::ChangeObject(CMacroObject *source, CMacroObject *obj)
 
 CMacro *CMacro::Load(CMappedFile &file)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t *next = file.Ptr;
     short size = file.ReadInt16LE();
     next += size;
@@ -193,7 +189,7 @@ CMacro *CMacro::Load(CMappedFile &file)
             case 2: //with string
             {
                 short len = file.ReadUInt16LE();
-                string str = file.ReadString(len);
+                auto str = file.ReadString(len);
                 obj = new CMacroObjectString(code, subCode, str);
                 break;
             }
@@ -211,7 +207,6 @@ CMacro *CMacro::Load(CMappedFile &file)
 
 void CMacro::Save(Wisp::CBinaryFileWriter &writer)
 {
-    DEBUG_TRACE_FUNCTION;
     short size = 12;
     short count = 0;
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
@@ -220,7 +215,7 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
         count++;
         if (obj->HaveString()) //with string
         {
-            string str = ((CMacroObjectString *)obj)->m_String;
+            auto str = ((CMacroObjectString *)obj)->m_String;
             size += (short)str.length() + 3;
         }
     }
@@ -257,7 +252,7 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
         writer.WriteUInt16LE(obj->SubCode);
         if (type == 2) //with string
         {
-            string str = ((CMacroObjectString *)obj)->m_String;
+            auto str = ((CMacroObjectString *)obj)->m_String;
             int len = (int)str.length();
             writer.WriteInt16LE(len + 1);
             writer.WriteString(str);
@@ -270,7 +265,6 @@ void CMacro::Save(Wisp::CBinaryFileWriter &writer)
 
 CMacro *CMacro::GetCopy()
 {
-    DEBUG_TRACE_FUNCTION;
     CMacro *macro = new CMacro(Key, Alt, Ctrl, Shift);
     MACRO_CODE oldCode = MC_NONE;
     for (auto obj = (CMacroObject *)m_Items; obj != nullptr; obj = (CMacroObject *)obj->m_Next)
@@ -296,7 +290,6 @@ CMacro *CMacro::GetCopy()
 
 void CMacro::GetBoundByCode(const MACRO_CODE &code, int &count, int &offset)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (code)
     {
         case MC_WALK:

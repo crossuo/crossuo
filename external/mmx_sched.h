@@ -281,9 +281,16 @@ SCHED_API void scheduler_stop(struct scheduler*, int doWait);
  * ===============================================================*/
 #ifdef SCHED_IMPLEMENTATION
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(disable:4244)
+#endif
+
 /* windows requires Windows.h even if you use mingw */
 #if defined(_WIN32) || (defined(__MINGW32__) || defined(__MINGW64__))
+    #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
+    #endif
     #include <Windows.h>
 #endif
 
@@ -1120,6 +1127,10 @@ scheduler_stop(struct scheduler *s, int doWait)
     s->args = 0;
 }
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif
+
 #endif /* SCHED_IMPLEMENTATION */
 
 
@@ -1147,3 +1158,4 @@ int main(int argc, const char **argv)
     free(memory);
 }
 #endif
+

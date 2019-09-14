@@ -43,7 +43,6 @@ CGUIHTMLSlider::~CGUIHTMLSlider()
 
 void CGUIHTMLSlider::CalculateOffset()
 {
-    DEBUG_TRACE_FUNCTION;
     CGUISlider::CalculateOffset();
 
     if (m_HTMLGump != nullptr)

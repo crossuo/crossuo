@@ -2,7 +2,6 @@
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
 #include "Logging.h"
-#include <xuocore/file.h>
 #include "Config.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
@@ -19,7 +18,7 @@
 #define XUO_EXPORT
 #endif
 
-#include <xuocore/plugininterface.h>
+//#include <xuocore/plugininterface.h>
 
 extern po::parser g_cli;
 po::parser g_cli;
@@ -109,8 +108,8 @@ int main(int argc, char **argv)
         {
             const char *errMsg =
                 "Failed to create CrossUO client window. May be caused by a missing configuration file.";
-            Fatal(Client, "%s", errMsg);
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errMsg, nullptr);
+            Fatal(Client, "%s", errMsg);
             return -1;
         }
     }

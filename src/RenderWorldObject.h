@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <xuocore/enumlist.h>
 #include "RenderObject.h"
 
 struct CTextData;

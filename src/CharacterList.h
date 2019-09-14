@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <string.h>
+
 class CCharacterList
 {
 public:
@@ -11,19 +13,19 @@ public:
     bool Have6Slot = false;
     bool Have7Slot = false;
 
-    string LastCharacterName;
+    std::string LastCharacterName;
 
 private:
-    string m_Name[7];
+    std::string m_Name[7];
 
 public:
     CCharacterList();
     virtual ~CCharacterList() {}
 
     void Clear();
-    void SetName(intptr_t pos, const string &name);
-    string GetName(intptr_t pos) const;
-    string GetSelectedName() const;
+    void SetName(intptr_t pos, const std::string &name);
+    std::string GetName(intptr_t pos) const;
+    std::string GetSelectedName() const;
 };
 
 extern CCharacterList g_CharacterList;

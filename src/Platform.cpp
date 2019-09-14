@@ -4,6 +4,10 @@
 #include "Platform.h"
 #include "Globals.h"
 
+#if _WIN32
+#include <Shellapi.h>
+#endif
+
 namespace Platform
 {
 #if _WIN32
@@ -69,7 +73,7 @@ void SetLanguageFromSystemLocale()
     Info(Client, "Locale: %s", g_Language.c_str());
 }
 
-void OpenBrowser(const string &url)
+void OpenBrowser(const std::string &url)
 {
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
@@ -129,7 +133,7 @@ void SetLanguageFromSystemLocale()
     Info(Client, "locale: %s", g_Language.c_str());
 }
 
-void OpenBrowser(const string &url)
+void OpenBrowser(const std::string &url)
 {
 #if __APPLE__
 #define OPEN_CMD "open "
@@ -137,7 +141,7 @@ void OpenBrowser(const string &url)
 #define OPEN_CMD "xdg-open "
 #endif
 
-    auto cmd = string(OPEN_CMD) + url;
+    auto cmd = std::string(OPEN_CMD) + url;
     system(cmd.c_str()); // crossuo adds http in the url, we're a bit safer.
 }
 #endif

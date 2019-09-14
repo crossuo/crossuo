@@ -3,6 +3,15 @@
 #include <psapi.h>
 #include <tlhelp32.h>
 #include <xuocore/mappedfile.h>
+#include <common/str.h>
+
+#include "CrossUO.h"
+#include "ExceptionFilter.h"
+#include "StackWalker.h"
+#include "GameStackWalker.h"
+#include "VMQuery.h"
+
+#include "Managers/PacketManager.h"
 
 string GetMemStorageText(int storage)
 {
@@ -41,7 +50,7 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
     if (vmq.dwRgnStorage == MEM_FREE)
         return;
 
-    string filePath = "";
+    std::string filePath = "";
 
     if (vmq.pvRgnBaseAddress != nullptr)
     {
@@ -76,7 +85,7 @@ void DumpLibraryInformation()
 {
 #if USE_DEBUG_FUNCTION_NAMES == 1
     Info(Client, "trace functions:");
-    for (const string &str : g_DebugFuncStack)
+    for (const std::string &str : g_DebugFuncStack)
         Info(Client, "%s", str.c_str());
 
     static bool libraryInfoPrinted = false;
@@ -223,7 +232,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
             wchar_t fileName[FS_MAX_PATH] = { 0 };
             GetModuleFileNameW(0, fileName, FS_MAX_PATH);
             bool crashlog = false;
-            if (file.Load(fileName))
+            if (file.Load(fs_path_from(std::wstring{ fileName })))
             {
                 vector<uint8_t> pattern;
 #if defined(_WIN64)
@@ -249,8 +258,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
                 else
                 {
                     Info(Client, "\nPackets in stack:");
-                    for (deque<vector<uint8_t>>::iterator i =
-                             g_PacketManager.m_PacketsStack.begin();
+                    for (auto i = g_PacketManager.m_PacketsStack.begin();
                          i != g_PacketManager.m_PacketsStack.end();
                          ++i)
                     {
@@ -261,7 +269,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
             }
             /*
             g_CrashLogger.Close();
-            os_path crashlogPath = L"\"" + g_CrashLogger.FileName + L"\"";
+            fs_path crashlogPath = L"\"" + g_CrashLogger.FileName + L"\"";
             STARTUPINFOW si;
             PROCESS_INFORMATION pi;
             ZeroMemory(&si, sizeof(si));
@@ -283,7 +291,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
 
             if (1) //!reportSent)
             {
-                string msg = "CrossUO client performed an unrecoverable operation.";
+                std::string msg = "CrossUO client performed an unrecoverable operation.";
                 if (crashlog)
                     msg += "\nCrashlog has been created in crashlogs folder.";
                 msg += "\nTerminating...";

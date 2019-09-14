@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <common/fs.h>
+
 class CSkillGroupObject;
 
 class CSkillGroupManager
@@ -28,8 +30,8 @@ public:
     void Clear();
     void Add(CSkillGroupObject *group);
     bool Remove(CSkillGroupObject *group);
-    bool Load(const os_path &path);
-    void Save(const os_path &path);
+    bool Load(const fs_path &path);
+    void Save(const fs_path &path);
 };
 
 extern CSkillGroupManager g_SkillGroupManager;

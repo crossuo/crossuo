@@ -16,7 +16,7 @@ CServer::CServer()
 
 CServer::CServer(
     uint16_t index,
-    const string &name,
+    const std::string &name,
     uint8_t fullPercent,
     uint8_t timezoneType,
     int ip,
@@ -60,7 +60,7 @@ void CServerList::ParsePacket(CDataReader &reader)
     for (uint16_t i = 0; i < numServers; i++)
     {
         uint16_t id = reader.ReadUInt16BE();
-        string name = reader.ReadString(32);
+        auto name = reader.ReadString(32);
         uint8_t fullPercent = reader.ReadUInt8();
         uint8_t timezoneType = reader.ReadUInt8();
         uint32_t ip = reader.ReadUInt32LE(); //little-endian!!!

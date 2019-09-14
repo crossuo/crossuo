@@ -89,7 +89,7 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
     }
 }
 
-void CMainScreen::SetAccounting(const string &account, const string &password)
+void CMainScreen::SetAccounting(const std::string &account, const std::string &password)
 {
     DEBUG_TRACE_FUNCTION;
     m_Account->SetTextA(account);

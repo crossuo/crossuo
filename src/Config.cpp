@@ -7,7 +7,8 @@
 #include "Application.h"
 #include "Logging.h"
 #include <xuocore/uodata.h>
-#include <xuocore/file.h>
+#include <common/fs.h>
+#include <common/str.h>
 #include <xuocore/enumlist.h>
 #include "Crypt/CryptEntry.h"
 #include "Wisp/WispTextFileParser.h"
@@ -73,7 +74,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_COUNT, nullptr },
 };
 
-static uint32_t GetConfigKey(const string &key)
+static uint32_t GetConfigKey(const std::string &key)
 {
     auto str = ToLowerA(key);
     for (int i = 0; s_Keys[i].key_name; i++)
@@ -120,7 +121,7 @@ static uint32_t ParseVersion(const char *versionStr)
     return VERSION(a, b, c, d);
 }
 
-static CLIENT_FLAG GetClientTypeFromString(const string &str)
+static CLIENT_FLAG GetClientTypeFromString(const std::string &str)
 {
     auto client = ToLowerA(str);
     if (client == "t2a")
@@ -354,21 +355,21 @@ void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t 
     }
 }
 
-static os_path GetConfigFile()
+static fs_path GetConfigFile()
 {
     if (!g_cli["config"].was_set())
     {
         return g_App.ExeFilePath(CROSSUO_CONFIG);
     }
 
-    return ToPath(g_cli["config"].get().string);
+    return fs_path_from(g_cli["config"].get().string);
 }
 
 void LoadGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
 
-    Info(Config, "loading global config from: %s", ToString(GetConfigFile()).c_str());
+    Info(Config, "loading global config from: %s", fs_path_ascii(GetConfigFile()));
     const auto cfg = GetConfigFile();
     Wisp::CTextFileParser file(cfg, "=,", "#;", "");
 
@@ -393,7 +394,7 @@ void LoadGlobalConfig()
                 break;
                 case MSCC_CUSTOM_PATH:
                 {
-                    g_App.m_UOPath = ToPath(strings[1]);
+                    g_App.m_UOPath = fs_path_from(strings[1]);
                     fs_case_insensitive_init(g_App.m_UOPath);
                 }
                 break;
@@ -404,7 +405,7 @@ void LoadGlobalConfig()
                 }
                 case MSCC_ACTPWD:
                 {
-                    string password = file.RawLine;
+                    auto password = file.RawLine;
                     size_t pos = password.find_first_of('=');
                     g_Config.Password = password.substr(pos + 1, password.length() - (pos + 1));
                     break;
@@ -508,13 +509,13 @@ void LoadGlobalConfig()
         g_Config.ClientFlag);
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
 
-    uo_data_init(ToString(g_App.m_UOPath).c_str(), g_Config.ClientVersion, g_Config.UseVerdata);
+    uo_data_init(fs_path_ascii(g_App.m_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);
 }
 
 void SaveGlobalConfig()
 {
     DEBUG_TRACE_FUNCTION;
-    Info(Config, "saving global config to: %s", ToString(GetConfigFile()).c_str());
+    Info(Config, "saving global config to: %s", fs_path_ascii(GetConfigFile()));
     FILE *cfg = fs_open(GetConfigFile(), FS_WRITE);
     if (cfg == nullptr)
     {
@@ -552,9 +553,9 @@ void SaveGlobalConfig()
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
-    if (g_App.m_UOPath != g_App.m_ExePath)
+    if (!fs_path_equal(g_App.m_UOPath, g_App.m_ExePath))
     {
-        fprintf(cfg, "CustomPath=%s\n", CStringFromPath(g_App.m_UOPath));
+        fprintf(cfg, "CustomPath=%s\n", fs_path_ascii(g_App.m_UOPath));
     }
 
     if (!g_Config.ServerAddress.empty())

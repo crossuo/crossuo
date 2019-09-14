@@ -1,7 +1,7 @@
 
 #include "CryptEntry.h"
 #include "../Misc.h"
-#include <xuocore/file.h>
+#include <common/fs.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/plugininterface.h>
 #include "../Config.h"

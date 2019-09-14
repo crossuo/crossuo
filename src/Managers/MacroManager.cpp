@@ -8,7 +8,9 @@
 #include "PacketManager.h"
 #include <SDL_clipboard.h>
 #include <xuocore/mappedfile.h>
-#include <xuocore/file.h>
+#include <common/fs.h>
+#include <common/str.h>
+#include <common/utils.h>
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Macro.h"
@@ -39,10 +41,10 @@ CMacroManager::~CMacroManager()
 {
 }
 
-Keycode CMacroManager::ConvertStringToKeyCode(const vector<string> &strings)
+Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &strings)
 {
     DEBUG_TRACE_FUNCTION;
-    string str = strings[0];
+    auto str = strings[0];
 
     for (int i = 1; i < (int)strings.size() - 3; i++)
     {
@@ -212,7 +214,7 @@ Keycode CMacroManager::ConvertStringToKeyCode(const vector<string> &strings)
     return key;
 }
 
-bool CMacroManager::Convert(const os_path &path)
+bool CMacroManager::Convert(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser file(path, "", "", "");
@@ -248,10 +250,10 @@ bool CMacroManager::Convert(const os_path &path)
             atoi(strings[size - MACRO_POSITION_CTRL].c_str()) != 0,
             atoi(strings[size - MACRO_POSITION_SHIFT].c_str()) != 0);
 
-        string TestLine{};
+        std::string TestLine{};
         while (!file.IsEOF())
         {
-            vector<string> datas = file.ReadTokens();
+            std::vector<std::string> datas = file.ReadTokens();
             TestLine.append(file.RawLine);
             if ((*file.RawLine.c_str() != '\n') && (*file.RawLine.c_str() != '\r') &&
                 (!file.RawLine.empty()) && (*file.RawLine.c_str() != '#'))
@@ -272,11 +274,11 @@ bool CMacroManager::Convert(const os_path &path)
             }
             if (*data[0].c_str() == '+')
             {
-                string raw = data[0].c_str() + 1;
+                std::string raw = data[0].c_str() + 1;
                 data[0] = raw;
             }
 
-            string upData = ToUpperA(data[0]);
+            auto upData = ToUpperA(data[0]);
             MACRO_CODE code = MC_NONE;
 
             for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
@@ -296,7 +298,7 @@ bool CMacroManager::Convert(const os_path &path)
                 {
                     if (data.size() > 1)
                     {
-                        string args = data[1];
+                        std::string args = data[1];
                         for (int i = 2; i < (int)data.size(); i++)
                         {
                             args += " " + data[i];
@@ -343,7 +345,7 @@ bool CMacroManager::Convert(const os_path &path)
     return fs_path_exists(path);
 }
 
-bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
+bool CMacroManager::Load(const fs_path &path, const fs_path &originalPath)
 {
     DEBUG_TRACE_FUNCTION;
     bool result = false;
@@ -368,7 +370,7 @@ bool CMacroManager::Load(const os_path &path, const os_path &originalPath)
     return result;
 }
 
-void CMacroManager::Save(const os_path &path)
+void CMacroManager::Save(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
@@ -886,7 +888,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 auto chBuffer = SDL_GetClipboardText();
                 if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
                 {
-                    wstring str = g_EntryPointer->Data() + ToWString(chBuffer);
+                    auto str = g_EntryPointer->Data() + ToWString(chBuffer);
                     g_EntryPointer->SetTextW(str);
                 }
             }
@@ -1131,7 +1133,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         case MC_DELAY:
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
-            string str = mos->m_String;
+            auto str = mos->m_String;
             if (str.length() != 0u)
             {
                 m_NextTimer = g_Ticks + std::atoi(str.c_str());
@@ -1310,7 +1312,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
         case MC_MODIFY_UPDATE_RANGE:
         {
             CMacroObjectString *mos = (CMacroObjectString *)macro;
-            string str = mos->m_String;
+            auto str = mos->m_String;
             if (str.length() != 0u)
             {
                 g_ConfigManager.UpdateRange = std::atoi(str.c_str());
@@ -1404,7 +1406,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 };
 
                 g_Game.CreateUnicodeTextMessageF(
-                    g_ConfigManager.ChatFont,
+                    checked_cast<uint8_t>(g_ConfigManager.ChatFont),
                     0x038A,
                     "There are no %s on the screen to select.",
                     resultNames[scanType]);

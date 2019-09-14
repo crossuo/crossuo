@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/fs.h>
 #include <xuocore/mappedfile.h>
 
 class CGameItem;
@@ -41,14 +42,14 @@ public:
     }
     ~CCustomHouse() {}
 
-    vector<CBuildObject> m_Items;
+    std::vector<CBuildObject> m_Items;
 
     void Paste(CGameItem *foundation);
 };
 
 class CustomHousesManager : public CDataReader
 {
-    unordered_map<uint32_t, CCustomHouse *> m_Items;
+    std::unordered_map<uint32_t, CCustomHouse *> m_Items;
 
 public:
     CustomHousesManager() {}
@@ -60,8 +61,8 @@ public:
 
     void Add(CCustomHouse *house);
 
-    void Load(const os_path &path);
-    void Save(const os_path &path);
+    void Load(const fs_path &path);
+    void Save(const fs_path &path);
 };
 
 extern CustomHousesManager g_CustomHousesManager;

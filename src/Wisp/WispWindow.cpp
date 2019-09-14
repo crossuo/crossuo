@@ -254,13 +254,13 @@ void CWindow::Destroy()
     }
 }
 
-void CWindow::ShowMessage(const string &text, const string &title)
+void CWindow::ShowMessage(const std::string &text, const std::string &title)
 {
     DEBUG_TRACE_FUNCTION;
     SDL_Log("%s: %s\n", title.c_str(), text.c_str());
 }
 
-void CWindow::ShowMessage(const wstring &text, const wstring &title)
+void CWindow::ShowMessage(const std::wstring &text, const std::wstring &title)
 {
     DEBUG_TRACE_FUNCTION;
     SDL_Log("%ls: %ls\n", title.c_str(), text.c_str());
@@ -543,7 +543,7 @@ bool CWindow::IsActive() const
     return (SDL_GetWindowFlags(m_window) & SDL_WINDOW_INPUT_FOCUS) != 0;
 }
 
-void CWindow::SetTitle(const string &text) const
+void CWindow::SetTitle(const std::string &text) const
 {
     SDL_SetWindowTitle(m_window, text.c_str());
 }

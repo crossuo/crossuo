@@ -23,8 +23,8 @@ public:
     IGameString();
     ~IGameString();
 
-    IGameString &operator()(const string &str);
-    IGameString &operator()(const wstring &str);
+    IGameString &operator()(const std::string &str);
+    IGameString &operator()(const std::wstring &str);
 
     bool m_Unicode = false;
     char *m_DataA{ nullptr };

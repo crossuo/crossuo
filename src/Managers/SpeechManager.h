@@ -8,12 +8,16 @@ class CLangCode
 public:
     int Code = 0;
     uint32_t Unknown = 0;
-    string Abbreviature;
-    string Language;
-    string Country;
+    std::string Abbreviature;
+    std::string Language;
+    std::string Country;
 
     CLangCode() {}
-    CLangCode(const string &abbreviature, int code, const string &language, const string &country)
+    CLangCode(
+        const std::string &abbreviature,
+        int code,
+        const std::string &language,
+        const std::string &country)
         : Code(code)
         , Unknown(0)
         , Abbreviature(abbreviature)
@@ -28,13 +32,13 @@ class CSpeechItem
 {
 public:
     uint16_t Code = 0;
-    wstring Data;
+    std::wstring Data;
 
     bool CheckStart = false;
     bool CheckEnd = false;
 
     CSpeechItem() {}
-    CSpeechItem(uint16_t code, const wstring &data);
+    CSpeechItem(uint16_t code, const std::wstring &data);
     virtual ~CSpeechItem() {}
 };
 
@@ -43,8 +47,8 @@ class CSpeechManager
     CLangCode *CurrentLanguage = nullptr;
 
 private:
-    vector<CSpeechItem> m_SpeechEntries;
-    vector<CLangCode> m_LangCodes;
+    std::vector<CSpeechItem> m_SpeechEntries;
+    std::vector<CLangCode> m_LangCodes;
     bool m_Loaded = false;
 
 public:
@@ -53,7 +57,7 @@ public:
 
     bool LoadSpeech();
     bool LoadLangCodes();
-    void GetKeywords(const wchar_t *text, vector<uint32_t> &codes);
+    void GetKeywords(const wchar_t *text, std::vector<uint32_t> &codes);
 };
 
 extern CSpeechManager g_SpeechManager;

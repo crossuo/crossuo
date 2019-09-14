@@ -3,7 +3,9 @@
 
 #pragma once
 
+class CRenderObject;
 class CSelectedObject;
+class CGump;
 
 class CPressedObject
 {

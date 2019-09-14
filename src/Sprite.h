@@ -57,17 +57,8 @@ struct CTextSprite : public CSprite
         CSprite::Clear();
     }
 
-    virtual void Draw(int x, int y, bool checktrans = false)
-    {
-        if (Texture)
-            Texture->Draw(x, y, checktrans);
-    }
-
-    void Draw_Tooltip(int x, int y, int width, int height)
-    {
-        if (Texture)
-            Texture->Draw_Tooltip(x, y, width, height);
-    }
+    virtual void Draw(int x, int y, bool checktrans = false);
+    void Draw_Tooltip(int x, int y, int width, int height);
 
     virtual void ClearWebLink() {}
     virtual void AddWebLink(WEB_LINK_RECT &wl) {}

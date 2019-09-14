@@ -9,10 +9,10 @@
 namespace Wisp
 {
 CTextFileParser::CTextFileParser(
-    const os_path &path, const char *delimiters, const char *comentaries, const char *quotes)
+    const fs_path &path, const char *delimiters, const char *comentaries, const char *quotes)
 {
     TEXTPARSER_TRACE_FUNCTION;
-    if (!path.empty())
+    if (!fs_path_empty(path))
     {
         m_File.Load(path);
     }
@@ -149,10 +149,10 @@ bool CTextFileParser::IsSecondQuote()
     return result;
 }
 
-string CTextFileParser::ObtainData()
+std::string CTextFileParser::ObtainData()
 {
     TEXTPARSER_TRACE_FUNCTION;
-    string result{};
+    std::string result{};
     while (m_Ptr < m_End && (*m_Ptr != 0u) && *m_Ptr != '\n')
     {
         if (IsDelimiter())
@@ -175,11 +175,11 @@ string CTextFileParser::ObtainData()
     return result;
 }
 
-string CTextFileParser::ObtainQuotedData()
+std::string CTextFileParser::ObtainQuotedData()
 {
     TEXTPARSER_TRACE_FUNCTION;
     bool exit = false;
-    string result{};
+    std::string result{};
     for (int i = 0; i < m_QuotesSize; i += 2)
     {
         if (*m_Ptr == m_Quotes[i])
@@ -262,7 +262,7 @@ vector<string> CTextFileParser::ReadTokens(bool trim)
                 break;
             }
 
-            string buf = ObtainQuotedData();
+            auto buf = ObtainQuotedData();
             if (buf.length() != 0u)
             {
                 result.push_back(buf);
@@ -297,7 +297,7 @@ vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
         {
             break;
         }
-        string buf = ObtainQuotedData();
+        auto buf = ObtainQuotedData();
         if (buf.length() != 0u)
         {
             result.push_back(buf);
@@ -308,7 +308,7 @@ vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
     return result;
 }
 
-CTextFileWriter::CTextFileWriter(const os_path &path)
+CTextFileWriter::CTextFileWriter(const fs_path &path)
 {
     m_File = fs_open(path, FS_WRITE);
 }
@@ -327,7 +327,7 @@ void CTextFileWriter::Close()
     }
 }
 
-void CTextFileWriter::WriteString(const string &key, const string &value)
+void CTextFileWriter::WriteString(const std::string &key, const std::string &value)
 {
     if (m_File != nullptr)
     {
@@ -335,7 +335,7 @@ void CTextFileWriter::WriteString(const string &key, const string &value)
     }
 }
 
-void CTextFileWriter::WriteInt(const string &key, int value)
+void CTextFileWriter::WriteInt(const std::string &key, int value)
 {
     if (m_File != nullptr)
     {
@@ -343,7 +343,7 @@ void CTextFileWriter::WriteInt(const string &key, int value)
     }
 }
 
-void CTextFileWriter::WriteBool(const string &key, bool value)
+void CTextFileWriter::WriteBool(const std::string &key, bool value)
 {
     if (m_File != nullptr)
     {

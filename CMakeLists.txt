@@ -64,6 +64,8 @@ if(XUO_WINDOWS)
   set(SDL2_INCLUDE_DIRS "${DEP_INCLUDE_DIR}/SDL2")
   set(SDL2_LIBRARIES "${DEP_LIB_DIR}sdl2.lib" "${DEP_LIB_DIR}sdl2main.lib")
 
+  set(CURL_LIBRARIES "${DEP_LIB_DIR}libcurl.lib")
+
   # temporary hijacking to use other libs
   set(SDL2_LIBRARIES ${SDL2_LIBRARIES} "${DEP_LIB_DIR}psapi.lib")
 else()

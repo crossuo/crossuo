@@ -3,12 +3,13 @@
 
 #include "SpeechManager.h"
 #include <xuocore/uodata.h>
+#include <common/str.h>
 #include "../Config.h"
 #include "../Misc.h"
 
 CSpeechManager g_SpeechManager;
 
-CSpeechItem::CSpeechItem(uint16_t code, const wstring &data)
+CSpeechItem::CSpeechItem(uint16_t code, const std::wstring &data)
     : Code(code)
     , Data(data)
 {
@@ -81,9 +82,9 @@ bool CSpeechManager::LoadSpeech()
     {
         Info(Client, "loading speech from UOP");
         reader.Move(2);
-        wstring mainData = reader.ReadWStringLE(reader.Size - 2);
-        vector<wstring> list;
-        wstring temp;
+        auto mainData = reader.ReadWStringLE(reader.Size - 2);
+        std::vector<std::wstring> list;
+        std::wstring temp;
         for (const wchar_t &c : mainData)
         {
             if (c == 0x000D || c == 0x000A)
@@ -106,7 +107,7 @@ bool CSpeechManager::LoadSpeech()
             temp = {};
         }
 
-        for (const wstring &line : list)
+        for (const std::wstring &line : list)
         {
             uint16_t code = 0xFFFF;
             temp = {};
@@ -144,7 +145,7 @@ bool CSpeechManager::LoadSpeech()
                 continue;
             }
 
-            wstring str = DecodeUTF8(reader.ReadString(len));
+            auto str = DecodeUTF8(reader.ReadString(len));
             m_SpeechEntries.push_back(CSpeechItem(code, str));
         }
     }
@@ -192,7 +193,7 @@ bool CSpeechManager::LoadLangCodes()
     return true;
 }
 
-void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
+void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &codes)
 {
     DEBUG_TRACE_FUNCTION;
     if (!m_Loaded || g_Config.ProtocolClientVersion < CV_305D)
@@ -201,11 +202,11 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
     }
 
     const auto size = (int)m_SpeechEntries.size();
-    wstring input = ToLowerW(text);
+    auto input = ToLowerW(text);
     for (int i = 0; i < size; i++)
     {
         CSpeechItem entry = m_SpeechEntries[i];
-        wstring data = entry.Data;
+        auto data = entry.Data;
 
         if (data.length() > input.length() || data.length() == 0)
         {
@@ -214,9 +215,9 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
 
         if (!entry.CheckStart)
         {
-            wstring start = input.substr(0, data.length());
+            auto start = input.substr(0, data.length());
             size_t hits = start.find(data);
-            if (hits == wstring::npos)
+            if (hits == std::wstring::npos)
             {
                 continue;
             }
@@ -224,16 +225,16 @@ void CSpeechManager::GetKeywords(const wchar_t *text, vector<uint32_t> &codes)
 
         if (!entry.CheckEnd)
         {
-            wstring end = input.substr(input.length() - data.length());
+            auto end = input.substr(input.length() - data.length());
             size_t hits = end.find(data);
-            if (hits == wstring::npos)
+            if (hits == std::wstring::npos)
             {
                 continue;
             }
         }
 
         size_t hits = input.find(data);
-        if (hits != wstring::npos)
+        if (hits != std::wstring::npos)
         {
             codes.push_back(entry.Code);
         }

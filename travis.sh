@@ -20,10 +20,10 @@ fi
 
 if [[ "$TASK" == "clang" ]]; then
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja crossuo_unity -j8 && ninja xuodump_unity -j8 && ninja xuoi -j8 || exit 1
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja xuodump -j8 && ninja xuoi -j8 && ninja crossuo -j8 && ninja crossuo_unity -j8 || exit 1
 	cd ..
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja crossuo_unity -j8 && ninja xuodump_unity -j8 && ninja xuoi -j8 || exit 1
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja xuodump -j8 && ninja xuoi -j8 && ninja crossuo -j8 && ninja crossuo_unity -j8 || exit 1
 	echo Make the zip file
 	cd src
 	zip CrossUO-Unbuntu-nightly.zip crossuo.so crossuo

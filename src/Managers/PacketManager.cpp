@@ -20,6 +20,7 @@
 #include "MapManager.h"
 #include "ConnectionManager.h"
 #include "PluginManager.h"
+#include <common/str.h>
 #include <xuocore/uodata.h>
 #include "../MultiMap.h"
 #include "../Point.h"
@@ -398,7 +399,7 @@ CPacketManager::~CPacketManager()
     RELEASE_MUTEX(m_Mutex);
 }
 
-bool CPacketManager::AutoLoginNameExists(const string &name)
+bool CPacketManager::AutoLoginNameExists(const std::string &name)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -407,8 +408,8 @@ bool CPacketManager::AutoLoginNameExists(const string &name)
         return false;
     }
 
-    string search = string("|") + name + "|";
-    return (AutoLoginNames.find(search) != string::npos);
+    auto search = string("|") + name + "|";
+    return (AutoLoginNames.find(search) != std::string::npos);
 }
 
 #define CVPRINT(s) TRACE(Network, s)
@@ -905,7 +906,7 @@ PACKET_HANDLER(ResendCharacterList)
         int selectedPos = -1;
         for (int i = 0; i < numSlots; i++)
         {
-            string name = ReadString(30);
+            auto name = ReadString(30);
             Move(30);
             if (name.length() != 0u)
             {
@@ -1292,7 +1293,7 @@ PACKET_HANDLER(CharacterStatus)
         return;
     }
 
-    string name = ReadString(30);
+    auto name = ReadString(30);
     obj->SetName(name);
 
     obj->Hits = ReadUInt16BE();
@@ -1981,7 +1982,7 @@ PACKET_HANDLER(DenyMoveItem)
 
     if (code < 5)
     {
-        const string errorMessages[] = {
+        const std::string errorMessages[] = {
             "You can not pick that up.",
             "That is too far away.",
             "That is out of sight.",
@@ -2246,7 +2247,7 @@ PACKET_HANDLER(OpenPaperdoll)
 
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
 
-    string text = ReadString(60);
+    auto text = ReadString(60);
 
     uint8_t flags = ReadUInt8();
 
@@ -2561,9 +2562,7 @@ PACKET_HANDLER(OpenContainer)
     {
         if (static_cast<unsigned int>(!g_ContainerStack.empty()) != 0u)
         {
-            for (deque<CContainerStackItem>::iterator cont = g_ContainerStack.begin();
-                 cont != g_ContainerStack.end();
-                 ++cont)
+            for (auto cont = g_ContainerStack.begin(); cont != g_ContainerStack.end(); ++cont)
             {
                 if (cont->Serial == serial)
                 {
@@ -2832,7 +2831,7 @@ PACKET_HANDLER(ExtendedCommand)
             }
 
             item->JournalPrefix = "";
-            wstring str = {};
+            std::wstring str = {};
             int clilocNum = ReadInt32BE();
             if (clilocNum != 0)
             {
@@ -2877,7 +2876,7 @@ PACKET_HANDLER(ExtendedCommand)
                     next = ReadInt32BE();
                 }
                 short charges = ReadInt16BE();
-                wstring attrsString = g_ClilocManager.Cliloc(g_Language)->GetW(next, true);
+                auto attrsString = g_ClilocManager.Cliloc(g_Language)->GetW(next, true);
                 if (charges == -1)
                 {
                     if (count > 0)
@@ -3311,7 +3310,7 @@ PACKET_HANDLER(Talk)
             const uint16_t _font = ReadUInt16BE();
             (void)_font;
 
-            string name(ReadString());
+            auto name = ReadString();
             if (Size > 44)
             {
                 Ptr = Start + 44;
@@ -3328,7 +3327,7 @@ PACKET_HANDLER(Talk)
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
-    string name(ReadString());
+    auto name = ReadString();
 
     if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
         textColor == 0xFFFF && ToLowerA(name) == "system")
@@ -3348,7 +3347,7 @@ PACKET_HANDLER(Talk)
         return;
     }
 
-    string str{};
+    std::string str{};
     if (Size > 44)
     {
         Ptr = Start + 44;
@@ -3419,7 +3418,7 @@ PACKET_HANDLER(UnicodeTalk)
             const uint32_t _language = ReadUInt32BE();
             (void)_language;
 
-            string name(ReadString());
+            auto name = ReadString();
 
             if (Size > 48)
             {
@@ -3439,7 +3438,7 @@ PACKET_HANDLER(UnicodeTalk)
     uint16_t font = ReadUInt16BE();
     const uint32_t _language = ReadUInt32BE();
     (void)_language;
-    string name(ReadString());
+    auto name = ReadString();
 
     if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
         textColor == 0xFFFF && ToLowerA(name) == "system")
@@ -3454,7 +3453,7 @@ PACKET_HANDLER(UnicodeTalk)
         return;
     }
 
-    wstring str = {};
+    std::wstring str = {};
     if (Size > 48)
     {
         Ptr = Start + 48;
@@ -4166,14 +4165,14 @@ PACKET_HANDLER(DisplayClilocString)
         flags = ReadUInt8();
     }
 
-    string name = ReadString(30);
-    wstring affix{};
+    auto name = ReadString(30);
+    std::wstring affix{};
     if (*Start == 0xCC)
     {
         affix = DecodeUTF8(ReadString());
     }
 
-    wstring wc = ReadWStringLE();
+    auto wc = ReadWStringLE();
     auto message = g_ClilocManager.ParseArgumentsToClilocString(cliloc, false, wc);
     message += affix;
 
@@ -4229,7 +4228,7 @@ PACKET_HANDLER(MegaCliloc)
     uint32_t clilocRevision = ReadUInt32BE();
 
     uint8_t *end = Start + Size;
-    vector<wstring> list;
+    std::vector<std::wstring> list;
     while (Ptr < end)
     {
         uint32_t cliloc = ReadUInt32BE();
@@ -4239,18 +4238,18 @@ PACKET_HANDLER(MegaCliloc)
         }
 
         const int len = ReadInt16BE();
-        wstring argument = {};
+        std::wstring argument = {};
         if (len > 0)
         {
             argument = ReadWStringLE(len / 2);
         }
 
-        wstring str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
+        auto str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
         DEBUG(Network, "Cliloc: argstr=%s", ToString(str).c_str());
         DEBUG(Network, "Cliloc: 0x%08X len=%i arg=%s", cliloc, len, ToString(argument).c_str());
 
         bool canAdd = true;
-        for (const wstring &tempStr : list)
+        for (const std::wstring &tempStr : list)
         {
             if (tempStr == str)
             {
@@ -4281,11 +4280,11 @@ PACKET_HANDLER(MegaCliloc)
     }
 
     bool first = true;
-    wstring name = {};
-    wstring data = {};
+    std::wstring name = {};
+    std::wstring data = {};
     if (!list.empty())
     {
-        for (const wstring &str : list)
+        for (const std::wstring &str : list)
         {
             if (first)
             {
@@ -4535,13 +4534,13 @@ PACKET_HANDLER(BuffDebuff)
                 uint32_t wtfCliloc = ReadUInt32BE();
                 Move(4);
 
-                wstring title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true);
-                wstring description = {};
-                wstring wtf = {};
+                auto title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true);
+                std::wstring description = {};
+                std::wstring wtf = {};
 
                 if (descriptionCliloc != 0u)
                 {
-                    wstring arguments = ReadWStringLE();
+                    auto arguments = ReadWStringLE();
                     description = L'\n' + g_ClilocManager.ParseArgumentsToClilocString(
                                               descriptionCliloc, true, arguments);
 
@@ -4556,7 +4555,7 @@ PACKET_HANDLER(BuffDebuff)
                     wtf = L'\n' + g_ClilocManager.Cliloc(g_Language)->GetW(wtfCliloc, true);
                 }
 
-                wstring text = L"<left>" + title + description + wtf + L"</left>";
+                auto text = L"<left>" + title + description + wtf + L"</left>";
                 gump->AddBuff(table[iconID], timer, text);
             }
             else
@@ -4655,14 +4654,14 @@ PACKET_HANDLER(TextEntryDialog)
     uint8_t buttonID = ReadUInt8();
 
     short textLen = ReadInt16BE();
-    string text = ReadString(textLen);
+    auto text = ReadString(textLen);
 
     bool haveCancel = ReadUInt8() == 0u;
     uint8_t variant = ReadUInt8();
     int maxLength = ReadUInt32BE();
 
     short descLen = ReadInt16BE();
-    string desc = ReadString(descLen);
+    auto desc = ReadString(descLen);
 
     CGumpTextEntryDialog *gump =
         new CGumpTextEntryDialog(serial, 143, 172, variant, maxLength, text, desc);
@@ -4685,7 +4684,7 @@ PACKET_HANDLER(OpenMenu)
     uint32_t id = ReadUInt16BE();
 
     uint8_t nameLen = ReadUInt8();
-    string name = ReadString(nameLen);
+    auto name = ReadString(nameLen);
 
     uint8_t count = ReadUInt8();
 
@@ -4906,7 +4905,7 @@ PACKET_HANDLER(OpenGump)
     CGumpGeneric *gump = new CGumpGeneric(serial, locX, locY, id);
 
     uint16_t commandsLength = ReadUInt16BE();
-    string commands = ReadString(commandsLength);
+    auto commands = ReadString(commandsLength);
 
     Wisp::CTextFileParser parser({}, " ", "", "{}");
     Wisp::CTextFileParser cmdParser({}, " ", "", "");
@@ -4920,7 +4919,7 @@ PACKET_HANDLER(OpenGump)
     int CurrentPage = 0;
     CEntryText *ChangeEntry;
 
-    for (const string &str : commandList)
+    for (const std::string &str : commandList)
     {
         auto list = cmdParser.GetTokens(str.c_str(), false);
         const int listSize = (int)list.size();
@@ -4929,7 +4928,7 @@ PACKET_HANDLER(OpenGump)
             continue;
         }
 
-        string cmd = ToLowerA(list[0]);
+        auto cmd = ToLowerA(list[0]);
         CBaseGUI *go = nullptr;
         if (cmd == "nodispose")
         {
@@ -5635,7 +5634,7 @@ PACKET_HANDLER(TipWindow)
         uint32_t serial = ReadUInt32BE();
         short len = ReadInt16BE();
 
-        string str = ReadString(len);
+        auto str = ReadString(len);
 
         int x = 20;
         int y = 20;
@@ -5661,9 +5660,9 @@ PACKET_HANDLER(CharacterProfile)
     }
 
     uint32_t serial = ReadUInt32BE();
-    wstring topText = ToWString(ReadString());
-    wstring bottomText = ReadWStringBE();
-    wstring dataText = ReadWStringBE();
+    auto topText = ToWString(ReadString());
+    auto bottomText = ReadWStringBE();
+    auto dataText = ReadWStringBE();
     CGumpProfile *gump = new CGumpProfile(serial, 170, 90, topText, bottomText, dataText);
     g_GumpManager.AddGump(gump);
 }
@@ -5711,7 +5710,7 @@ PACKET_HANDLER(BulletinBoardData)
                 item->Opened = true;
             }
 
-            string str((char *)Ptr);
+            std::string str((char *)Ptr);
 
             int x = (g_GameWindow.GetSize().Width / 2) - 245;
             int y = (g_GameWindow.GetSize().Height / 2) - 205;
@@ -5737,7 +5736,7 @@ PACKET_HANDLER(BulletinBoardData)
 
                 //poster
                 int len = ReadUInt8();
-                wstring text = (len > 0 ? DecodeUTF8(ReadString(len)) : L"") + L" - ";
+                auto text = (len > 0 ? DecodeUTF8(ReadString(len)) : L"") + L" - ";
 
                 //subject
                 len = ReadUInt8();
@@ -5773,15 +5772,15 @@ PACKET_HANDLER(BulletinBoardData)
 
                 //poster
                 int len = ReadUInt8();
-                wstring poster = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                auto poster = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
 
                 //subject
                 len = ReadUInt8();
-                wstring subject = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                auto subject = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
 
                 //data time
                 len = ReadUInt8();
-                wstring dataTime = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                auto dataTime = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
 
                 //unused, in old clients: user's graphic, color
                 Move(4);
@@ -5795,7 +5794,7 @@ PACKET_HANDLER(BulletinBoardData)
                 }
 
                 uint8_t lines = ReadUInt8();
-                wstring data = {};
+                std::wstring data = {};
 
                 for (int i = 0; i < lines; i++)
                 {
@@ -5904,7 +5903,7 @@ PACKET_HANDLER(BookData)
 
             uint16_t lineCount = ReadUInt16BE();
 
-            wstring str = {};
+            std::wstring str = {};
 
             for (int j = 0; j < lineCount; j++)
             {
@@ -5913,7 +5912,7 @@ PACKET_HANDLER(BookData)
                     str += L'\n';
                 }
 
-                wstring temp = DecodeUTF8(ReadString());
+                auto temp = DecodeUTF8(ReadString());
 
                 while ((temp.length() != 0u) && (temp.back() == L'\n' || temp.back() == L'\r'))
                 {
@@ -6016,7 +6015,7 @@ PACKET_HANDLER(BuyList)
             item->Price = ReadUInt32BE();
 
             uint8_t nameLen = ReadUInt8();
-            string name = ReadString(nameLen);
+            auto name = ReadString(nameLen);
 
             //try int.parse and read cliloc.
             int clilocNum = 0;
@@ -6091,7 +6090,7 @@ PACKET_HANDLER(SellList)
         uint16_t count = ReadUInt16BE();
         uint16_t price = ReadUInt16BE();
         int nameLen = ReadInt16BE();
-        string name = ReadString(nameLen);
+        auto name = ReadString(nameLen);
 
         int clilocNum = 0;
         bool nameFromCliloc = false;
@@ -6527,14 +6526,14 @@ PACKET_HANDLER(CrossMessages)
         case OCT_UNICODE_SPEECH_REQUEST:
         {
             uint16_t color = ReadUInt16BE();
-            wstring text = ReadWStringBE();
+            auto text = ReadWStringBE();
             CGameConsole::Send(text, color);
             break;
         }
         case OCT_RENAME_MOUNT_REQUEST:
         {
             uint32_t serial = ReadUInt32BE();
-            string text = ReadString();
+            auto text = ReadString();
             CPacketRenameRequest(serial, text).Send();
             break;
         }
@@ -6553,12 +6552,12 @@ PACKET_HANDLER(CrossMessages)
             g_MacroManager.SendNotificationToPlugin = true;
             for (int m = 0; m < count; m++)
             {
-                string name = ReadString();
-                string param = ReadString();
+                auto name = ReadString();
+                auto param = ReadString();
                 MACRO_CODE macroCode = MC_NONE;
                 for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 {
-                    string macroName = CMacro::m_MacroActionName[i];
+                    std::string macroName = CMacro::m_MacroActionName[i];
                     if (strcmp(name.c_str(), macroName.c_str()) == 0)
                     {
                         macroCode = (MACRO_CODE)i;

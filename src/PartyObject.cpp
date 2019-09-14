@@ -27,5 +27,5 @@ string CPartyObject::GetName(int index)
     char buf[10] = { 0 };
     sprintf_s(buf, "[%i]", index);
 
-    return string(buf);
+    return std::string(buf);
 }

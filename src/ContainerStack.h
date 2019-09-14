@@ -25,6 +25,6 @@ public:
     ~CContainerStackItem() {}
 };
 
-extern deque<CContainerStackItem> g_ContainerStack;
+extern std::deque<CContainerStackItem> g_ContainerStack;
 
 extern uint32_t g_CheckContainerStackTimer;

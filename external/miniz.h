@@ -112,9 +112,10 @@
 */
 #pragma once
 
-
-
-
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(disable:4334)
+#endif
 
 /* Defines to completely disable specific portions of miniz.c:
    If all macros here are defined the only functionality remaining will be CRC-32, adler-32, tinfl, and tdefl. */
@@ -8964,3 +8965,7 @@ mz_bool mz_zip_end(mz_zip_archive *pZip)
 #endif /*#ifndef MINIZ_NO_ARCHIVE_APIS*/
 
 #endif // MINIZ_IMPLEMENTATION
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif

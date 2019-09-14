@@ -14,9 +14,8 @@ CSocket::~CSocket()
 {
 }
 
-bool CSocket::Connect(const string &address, uint16_t port)
+bool CSocket::Connect(const std::string &address, uint16_t port)
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Network, "Connecting...%s:%i", address.c_str(), port);
 
     if (UseProxy)
@@ -90,7 +89,7 @@ bool CSocket::Connect(const string &address, uint16_t port)
                 {
                     Info(Network, "Proxy wants Username/Password");
                     int totalSize = 3 + (int)ProxyAccount.length() + (int)ProxyPassword.length();
-                    vector<char> buffer(totalSize, 0);
+                    std::vector<char> buffer(totalSize, 0);
                     sprintf(&buffer[0], "  %s %s", ProxyAccount.c_str(), ProxyPassword.c_str());
                     buffer[0] = 1;
                     buffer[1] = (char)ProxyAccount.length();
@@ -230,7 +229,7 @@ bool CSocket::Connect(const string &address, uint16_t port)
     return true;
 }
 
-vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
+std::vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
 {
     DEBUG_TRACE_FUNCTION;
     if (GameSocket)

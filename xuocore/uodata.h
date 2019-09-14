@@ -291,7 +291,7 @@ private:
 
     void ReadTask();
     bool UopLoadFile(CUopMappedFile &file, const char *fileName);
-    bool MulLoadFile(CMappedFile &file, const os_path &fileName);
+    bool MulLoadFile(CMappedFile &file, const fs_path &fileName);
     void ProcessAnimSequeceData();
 
     void MulReadIndexFile(

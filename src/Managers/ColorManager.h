@@ -13,10 +13,10 @@ struct FLOAT_HUES
 class CColorManager
 {
 private:
-    vector<HUES_GROUP> m_HuesRange;
-    vector<FLOAT_HUES> m_HuesFloat;
+    std::vector<HUES_GROUP> m_HuesRange;
+    std::vector<FLOAT_HUES> m_HuesFloat;
     int m_HuesCount{ 0 };
-    vector<uint16_t> m_Radarcol;
+    std::vector<uint16_t> m_Radarcol;
 
 public:
     CColorManager();

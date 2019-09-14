@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 
+#include <common/str.h>
+#include <common/fs.h>
+
 #include <external/popts.h>
 #include <xuocore/uodata.h>
 
@@ -15,8 +18,6 @@ void uo_log(const char *type, ...);
 
 #define FS_LOG_DEBUG(...) log(__VA_ARGS__)
 #define FS_LOG_ERROR(...) log(__VA_ARGS__)
-#define FS_IMPLEMENTATION
-#include <common/fs.h>
 
 void uo_log(const char *type, ...)
 {
@@ -71,7 +72,8 @@ int main(int argc, char **argv)
     log("client path: %s", uopath.c_str());
     log("client version: %s", version.c_str());
 
-    fs_case_insensitive_init(uopath);
+    const auto path = fs_path_from(uopath);
+    fs_case_insensitive_init(path);
     uo_data_init(uopath.c_str(), VERSION(7, 0, 15, 0), false);
 
     log("loading data...");

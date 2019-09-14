@@ -190,7 +190,7 @@ void CGumpShop::PrepareContent()
     DEBUG_TRACE_FUNCTION;
     if (NoProcess && g_Player != nullptr)
     {
-        string name = g_Player->GetName();
+        auto name = g_Player->GetName();
         int len = (int)name.length();
 
         if (m_ContinueCounter > len)

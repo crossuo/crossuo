@@ -1,6 +1,7 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <common/str.h>
 #include "Profession.h"
 #include "Managers/FontsManager.h"
 
@@ -12,10 +13,8 @@ CBaseProfession::~CBaseProfession()
 {
 }
 
-bool CBaseProfession::AddDescription(int desc, const string &name, const char *val)
+bool CBaseProfession::AddDescription(int desc, const std::string &name, const char *val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool result = (DescriptionIndex == desc);
     if (result)
     {
@@ -57,7 +56,7 @@ CProfessionCategory::~CProfessionCategory()
 {
 }
 
-void CProfessionCategory::AddChildren(const string &child)
+void CProfessionCategory::AddChildren(const std::string &child)
 {
     Childrens += child + "|";
 }

@@ -10,12 +10,12 @@
 #include "ConnectionManager.h"
 #include "../Config.h"
 #include "../GameWindow.h"
+#include "../Globals.h"
 
 CPluginManager g_PluginManager;
 
 bool CDECL PluginRecvFunction(uint8_t *buf, size_t size)
 {
-    DEBUG_TRACE_FUNCTION;
     auto owned = (uint8_t *)malloc(size);
     memcpy(owned, buf, size);
     PUSH_EVENT(UOMSG_RECV, owned, size);
@@ -24,8 +24,6 @@ bool CDECL PluginRecvFunction(uint8_t *buf, size_t size)
 
 bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto owned = (uint8_t *)malloc(size);
     memcpy(owned, buf, size);
     PUSH_EVENT(UOMSG_SEND, owned, size);

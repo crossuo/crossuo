@@ -3,8 +3,13 @@
 
 #pragma once
 
+#include <common/fs.h>
+#include <xuocore/enumlist.h>
 #include "../Platform.h"
 #include "../BaseQueue.h"
+#include "../Wisp.h"
+
+class CGump;
 
 class CGumpManager : public CBaseQueue
 {
@@ -44,8 +49,8 @@ public:
     bool OnRightMouseButtonDoubleClick(bool blocked) { return false; }
     void OnMidMouseButtonScroll(bool up, bool blocked);
     void OnDragging(bool blocked);
-    void Load(const os_path &path);
-    void Save(const os_path &path);
+    void Load(const fs_path &path);
+    void Save(const fs_path &path);
     virtual bool OnTextInput(const TextEvent &ev, bool blocked);
     virtual bool OnKeyDown(const KeyEvent &ev, bool blocked);
 };

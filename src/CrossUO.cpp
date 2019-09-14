@@ -4,6 +4,7 @@
 #include "CrossUO.h"
 
 #include <SDL.h>
+#include <common/str.h>
 
 #include "GitRevision.h"
 #include "Config.h"
@@ -156,7 +157,9 @@
 #include <external/popts.h>
 extern po::parser g_cli;
 
-#if !defined(XUO_WINDOWS)
+#if defined(XUO_WINDOWS)
+#include "ExceptionFilter.h"
+#else
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
 
@@ -184,7 +187,7 @@ struct CFileWriter
         m_File = nullptr;
     }
 
-    void Init(const os_path &filePath)
+    void Init(const fs_path &filePath)
     {
         if (m_File != nullptr)
         {
@@ -209,7 +212,7 @@ struct CFileWriter
     }
 
     FILE *m_File = nullptr;
-    os_path FileName;
+    fs_path FileName;
 };
 
 CGame g_Game;
@@ -222,10 +225,10 @@ CGame::~CGame()
 {
 }
 
-string CGame::DecodeArgumentString(const char *text, int length)
+std::string CGame::DecodeArgumentString(const char *text, int length)
 {
     DEBUG_TRACE_FUNCTION;
-    string result{};
+    std::string result{};
 
     for (int i = 0; i < length; i += 2)
     {
@@ -301,11 +304,12 @@ void CGame::ProcessCommandLine()
         auto name = g_cli["character"].get().string;
         if (g_PacketManager.AutoLoginNames.length() != 0u)
         {
-            g_PacketManager.AutoLoginNames = string("|") + name + g_PacketManager.AutoLoginNames;
+            g_PacketManager.AutoLoginNames =
+                std::string("|") + name + g_PacketManager.AutoLoginNames;
         }
         else
         {
-            g_PacketManager.AutoLoginNames = string("|") + name;
+            g_PacketManager.AutoLoginNames = std::string("|") + name;
         }
     }
 }
@@ -357,9 +361,9 @@ bool CGame::Install()
     if (!g_FileManager.Load())
     {
         auto errMsg =
-            string(
+            std::string(
                 "Error loading a memmapped file. Please check the log for more info.\nUsing UO search path: ") +
-            StringFromPath(g_App.m_UOPath);
+            fs_path_str(g_App.m_UOPath);
         g_GameWindow.ShowMessage(errMsg, "FileManager::Load");
         return false;
     }
@@ -760,10 +764,10 @@ void CGame::CheckStaticTileFilterFiles()
     DEBUG_TRACE_FUNCTION;
     memset(&m_StaticTilesFilterFlags[0], 0, sizeof(m_StaticTilesFilterFlags));
 
-    auto path{ g_App.ExeFilePath("data") };
+    auto path = g_App.ExeFilePath("data");
     fs_path_create(path);
 
-    auto filePath{ path + PATH_SEP + ToPath("cave.txt") };
+    auto filePath = fs_join_path(path, "cave.txt");
     if (!fs_path_exists(filePath))
     {
         CFileWriter file;
@@ -778,7 +782,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = path + PATH_SEP + ToPath("vegetation.txt");
+    filePath = fs_join_path(path, "vegetation.txt");
     CFileWriter vegetationFile;
     if (!fs_path_exists(filePath))
     {
@@ -816,7 +820,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = path + PATH_SEP + ToPath("stumps.txt");
+    filePath = fs_join_path(path, "stumps.txt");
     if (!fs_path_exists(filePath))
     {
         CFileWriter file;
@@ -869,7 +873,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = path + PATH_SEP + ToPath("cave.txt");
+    filePath = fs_join_path(path, "cave.txt");
     Wisp::CTextFileParser caveParser(filePath, " \t", "#;//", "");
     while (!caveParser.IsEOF())
     {
@@ -882,7 +886,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = path + PATH_SEP + ToPath("stumps.txt");
+    filePath = fs_join_path(path, "stumps.txt");
     Wisp::CTextFileParser stumpParser(filePath, " \t", "#;//", "");
     while (!stumpParser.IsEOF())
     {
@@ -900,7 +904,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = path + PATH_SEP + ToPath("vegetation.txt");
+    filePath = fs_join_path(path, "vegetation.txt");
     Wisp::CTextFileParser vegetationParser(filePath, " \t", "#;//", "");
     while (!vegetationParser.IsEOF())
     {
@@ -914,11 +918,11 @@ void CGame::CheckStaticTileFilterFiles()
 
 void CGame::LoadContainerOffsets()
 {
-    auto path{ g_App.ExeFilePath("data") };
+    auto path = g_App.ExeFilePath("data");
     fs_path_create(path);
 
-    auto filePath{ path + PATH_SEP + ToPath("containers.txt") };
-    Info(Client, "containers: %s", CStringFromPath(filePath));
+    auto filePath = fs_join_path(path, "containers.txt");
+    Info(Client, "containers: %s", fs_path_ascii(filePath));
     if (!fs_path_exists(filePath))
     {
         //												Gump   OpenSnd  CloseSnd					minX minY maxX maxY
@@ -1062,11 +1066,11 @@ void CGame::LoadAutoLoginNames()
     DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser file(g_App.UOFilesPath("autologinnames.cfg"), "", "#;", "");
 
-    string names = g_PacketManager.AutoLoginNames + "|";
+    auto names = g_PacketManager.AutoLoginNames + "|";
 
     while (!file.IsEOF())
     {
-        vector<string> strings = file.ReadTokens(false);
+        auto strings = file.ReadTokens(false);
 
         if (static_cast<unsigned int>(!strings.empty()) != 0u)
         {
@@ -1338,11 +1342,9 @@ void CGame::LoadStartupConfig(int serial)
         sprintf_s(buf, "desktop/%s/0x%08X", g_MainScreen.m_Account->c_str(), serial);
     }
 
-    auto crossuoFilesPath{ g_App.ExeFilePath(buf) };
-    if (!g_ConfigManager.Load(crossuoFilesPath + ToPath("/options.cfg")))
+    if (!g_ConfigManager.Load(g_App.ExeFilePath(buf, "options.cfg")))
     {
-        auto uoFilesPath{ g_App.UOFilesPath(buf) };
-        g_ConfigManager.Load(uoFilesPath + ToPath("/options.cfg"));
+        g_ConfigManager.Load(g_App.UOFilesPath(buf, "options.cfg"));
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
@@ -1357,11 +1359,11 @@ void CGame::LoadStartupConfig(int serial)
     }
 }
 
-void CGame::LoadPlugin(const os_path &libpath, const string &function, int flags)
+void CGame::LoadPlugin(const fs_path &libpath, const std::string &function, int flags)
 {
     DEBUG_TRACE_FUNCTION;
-    Info(Client, "Loading plugin: %s", CStringFromPath(libpath));
-    auto dll = SDL_LoadObject(CStringFromPath(libpath));
+    Info(Client, "Loading plugin: %s", fs_path_ascii(libpath));
+    auto dll = SDL_LoadObject(fs_path_ascii(libpath));
     if (dll != nullptr)
     {
         auto initFunc = (PluginEntry *)SDL_LoadFunction(dll, function.c_str());
@@ -1492,18 +1494,18 @@ void CGame::LoadPlugins()
     g_GameWindow.Raise();
 }
 
-string CGame::FixServerName(string name)
+std::string CGame::FixServerName(std::string name)
 {
     DEBUG_TRACE_FUNCTION;
     size_t i = 0;
-    while ((i = name.find(':')) != string::npos)
+    while ((i = name.find(':')) != std::string::npos)
     {
         name.erase(i, 1);
     }
     return name;
 }
 
-void CGame::LoadLocalConfig(int serial, string characterName)
+void CGame::LoadLocalConfig(int serial, std::string characterName)
 {
     DEBUG_TRACE_FUNCTION;
     if (g_ConfigLoaded)
@@ -1529,8 +1531,7 @@ void CGame::LoadLocalConfig(int serial, string characterName)
         sprintf_s(buf, "desktop/%s/0x%08X", g_MainScreen.m_Account->c_str(), serial);
     }
 
-    auto path = g_App.ExeFilePath(buf);
-    if (!g_ConfigManager.Load(path + ToPath("/options.cfg")))
+    if (!g_ConfigManager.Load(g_App.ExeFilePath(buf, "options.cfg")))
     {
         if (!g_ConfigManager.Load(g_App.UOFilesPath("options.cfg")))
         {
@@ -1542,18 +1543,19 @@ void CGame::LoadLocalConfig(int serial, string characterName)
         }
     }
 
-    if (!g_SkillGroupManager.Load(path + ToPath("/skills.cuo")))
+    if (!g_SkillGroupManager.Load(g_App.ExeFilePath("skills.cuo")))
     {
         g_SkillGroupManager.Load(g_App.UOFilesPath("skills.cuo"));
     }
 
-    if (!g_MacroManager.Load(path + ToPath("/macros.cuo"), path + ToPath("/macros.txt")))
+    if (!g_MacroManager.Load(
+            g_App.ExeFilePath(buf, "macros.cuo"), g_App.ExeFilePath(buf, "macros.txt")))
     {
-        char classicClientDesktopSubpathBuf[FS_MAX_PATH] = { 0 };
+        char buf2[FS_MAX_PATH] = { 0 };
         if (server != nullptr)
         {
             sprintf_s(
-                classicClientDesktopSubpathBuf,
+                buf2,
                 "desktop/%s/%s/%s",
                 g_MainScreen.m_Account->c_str(),
                 FixServerName(server->Name).c_str(),
@@ -1562,23 +1564,18 @@ void CGame::LoadLocalConfig(int serial, string characterName)
         else
         {
             sprintf_s(
-                classicClientDesktopSubpathBuf,
-                "desktop/%s/%s",
-                g_MainScreen.m_Account->c_str(),
-                characterName.c_str());
+                buf2, "desktop/%s/%s", g_MainScreen.m_Account->c_str(), characterName.c_str());
         }
 
-        os_path classicClientDesktopSubpath = g_App.UOFilesPath(classicClientDesktopSubpathBuf);
         if (!g_MacroManager.Load(
-                classicClientDesktopSubpath + ToPath("/macros.cuo"),
-                classicClientDesktopSubpath + ToPath("/macros.txt")))
+                g_App.ExeFilePath(buf2, "macros.cuo"), g_App.ExeFilePath(buf2, "macros.txt")))
         {
-            g_MacroManager.Load(g_App.UOFilesPath("/macros.cuo"), g_App.UOFilesPath("/macros.txt"));
+            g_MacroManager.Load(g_App.UOFilesPath("macros.cuo"), g_App.UOFilesPath("macros.txt"));
         }
     }
 
-    g_GumpManager.Load(path + ToPath("/gumps.cuo"));
-    g_CustomHousesManager.Load(path + ToPath("/customhouses.cuo"));
+    g_GumpManager.Load(g_App.ExeFilePath(buf, "gumps.cuo"));
+    g_CustomHousesManager.Load(g_App.ExeFilePath(buf, "customhouses.cuo"));
     if (g_ConfigManager.OffsetInterfaceWindows)
     {
         g_ContainerRect.MakeDefault();
@@ -1616,46 +1613,46 @@ void CGame::SaveLocalConfig(int serial)
     auto path = g_App.ExeFilePath("desktop");
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
 
-    path += PATH_SEP + ToPath(g_MainScreen.m_Account->c_str());
-
+    path = fs_join_path(path, g_MainScreen.m_Account->c_str());
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
     {
-        path += PATH_SEP + ToPath(FixServerName(server->Name));
+        path = fs_join_path(path, FixServerName(server->Name));
     }
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
-    char serbuf[20] = { 0 };
-    sprintf_s(serbuf, "/0x%08X", g_PlayerSerial);
-    path += ToPath(serbuf);
+    char serbuf[64] = { 0 };
+    sprintf_s(serbuf, "0x%08X", g_PlayerSerial);
+    fs_path root = path;
+    path = fs_join_path(path, serbuf);
     if (!fs_path_exists(path))
     {
-        Info(Client, "%s Does not exist, creating.", CStringFromPath(path));
+        Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
         fs_path_create(path);
     }
     else
     {
-        Info(Client, "SaveLocalConfig using path: %s", CStringFromPath(path));
+        Info(Client, "SaveLocalConfig using path: %s", fs_path_ascii(path));
     }
 
     Info(Client, "managers:saving");
-    g_ConfigManager.Save(path + ToPath("/options.cfg"));
-    g_SkillGroupManager.Save(path + ToPath("/skills.cuo"));
-    g_MacroManager.Save(path + ToPath("/macros.cuo"));
-    g_GumpManager.Save(path + ToPath("/gumps.cuo"));
-    g_CustomHousesManager.Save(path + ToPath("/customhouses.cuo"));
+    g_ConfigManager.Save(fs_join_path(path, "options.cfg"));
+    g_SkillGroupManager.Save(fs_join_path(path, "skills.cuo"));
+    g_MacroManager.Save(fs_join_path(path, "macros.cuo"));
+    g_GumpManager.Save(fs_join_path(path, "gumps.cuo"));
+    g_CustomHousesManager.Save(fs_join_path(path, "customhouses.cuo"));
 
     Info(Client, "managers:saving in to root");
     g_ConfigManager.Save(g_App.UOFilesPath("options.cfg"));
@@ -1665,8 +1662,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         Info(Client, "player exists");
         Info(Client, "name len: %zd", g_Player->GetName().length());
-        path += ToPath("_") + ToPath(g_Player->GetName()) + ToPath(".cuo");
-
+        path = fs_join_path(root, std::string(serbuf) + "_" + g_Player->GetName() + ".cuo");
         if (!fs_path_exists(path))
         {
             Info(Client, "file saving");
@@ -1707,7 +1703,7 @@ void CGame::ClearUnusedTextures()
     for (int i = 0; i < countof(lists); i++)
     {
         int count = 0;
-        auto *list = (deque<CIndexObject *> *)lists[i];
+        auto *list = (std::deque<CIndexObject *> *)lists[i];
         int &maxCount = counts[i];
         for (auto it = list->begin(); it != list->end();)
         {
@@ -1765,7 +1761,7 @@ void CGame::Connect()
     g_ConnectionManager.Disconnect();
     g_ConnectionManager.Init(); //Configure
 
-    string login{};
+    std::string login{};
     int port;
     LoadLogin(login, port);
     if (g_ConnectionManager.Connect(login, port, g_GameSeed))
@@ -1860,9 +1856,9 @@ void CGame::ServerSelection(int pos)
     CServer *server = g_ServerList.Select(pos);
     if (server != nullptr)
     {
-        string name = g_ServerList.GetSelectedServer()->Name;
+        auto name = g_ServerList.GetSelectedServer()->Name;
         g_ServerList.LastServerName = name;
-        static string sn = FixServerName(name);
+        static auto sn = FixServerName(name);
         const char *data = sn.c_str();
         PLUGIN_EVENT(UOMSG_SET_SERVER_NAME, data);
         CPacketSelectServer((uint8_t)server->Index).Send();
@@ -1913,7 +1909,7 @@ void CGame::LoginComplete(bool reload)
 
     if (load && g_Player != nullptr)
     {
-        string title = "Ultima Online - " + g_Player->GetName();
+        std::string title = "Ultima Online - " + g_Player->GetName();
         CServer *server = g_ServerList.GetSelectedServer();
         if (server != nullptr)
         {
@@ -3221,7 +3217,7 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
     return value;
 }
 
-string CGame::ValueString(const VALUE_KEY_STRING &key, string value)
+std::string CGame::ValueString(const VALUE_KEY_STRING &key, std::string value)
 {
     DEBUG_TRACE_FUNCTION;
     switch (key)
@@ -3462,7 +3458,7 @@ void CGame::LoadLogin(string &login, int &port)
         auto strings = file.ReadTokens();
         if (strings.size() >= 3)
         {
-            string lo = ToLowerA(strings[0]);
+            auto lo = ToLowerA(strings[0]);
             if (lo == "loginserver")
             {
                 login = strings[1];
@@ -3472,18 +3468,18 @@ void CGame::LoadLogin(string &login, int &port)
     }
 }
 
-void CGame::GoToWebLink(const string &url)
+void CGame::GoToWebLink(const std::string &url)
 {
     DEBUG_TRACE_FUNCTION;
     if (url.length() != 0u)
     {
         std::size_t found = url.find("http://");
-        if (found == string::npos)
+        if (found == std::string::npos)
         {
             found = url.find("https://");
         }
-        const string header = "http://";
-        if (found != string::npos)
+        const std::string header = "http://";
+        if (found != std::string::npos)
         {
             Platform::OpenBrowser(url.c_str());
         }
@@ -4358,15 +4354,15 @@ void CGame::IndexReplaces()
         {
             const uint32_t index = std::atoi(strings[0].c_str());
             CIndexMusic &mp3 = g_Index.m_MP3[index];
-            string name = "music/digital/" + strings[1];
-            string extension = ".mp3";
-            if (name.find(extension) == string::npos)
+            std::string name = "music/digital/" + strings[1];
+            std::string extension = ".mp3";
+            if (name.find(extension) == std::string::npos)
             {
                 name += extension;
             }
             if (size > 1)
             {
-                mp3.FilePath = ToString(g_App.UOFilesPath(name));
+                mp3.FilePath = fs_path_str(g_App.UOFilesPath(name));
             }
             if (size > 2)
             {
@@ -5513,7 +5509,7 @@ void CGame::CreateTextMessage(
     int serial,
     uint8_t font,
     uint16_t color,
-    const string &text,
+    const std::string &text,
     CRenderWorldObject *clientObj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -5656,7 +5652,7 @@ void CGame::CreateUnicodeTextMessage(
     int serial,
     uint8_t font,
     uint16_t color,
-    const wstring &text,
+    const std::wstring &text,
     CRenderWorldObject *clientObj)
 {
     DEBUG_TRACE_FUNCTION;
@@ -5786,7 +5782,7 @@ void CGame::AddSystemMessage(CTextData *msg)
     AddJournalMessage(msg, "");
 }
 
-void CGame::AddJournalMessage(CTextData *msg, const string &name)
+void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
 {
     DEBUG_TRACE_FUNCTION;
     CTextData *jmsg = new CTextData(msg);
@@ -6449,7 +6445,7 @@ void CGame::DisconnectGump()
 {
     DEBUG_TRACE_FUNCTION;
     CServer *server = g_ServerList.GetSelectedServer();
-    string str = "Disconnected from " + (server != nullptr ? server->Name : "server name...");
+    std::string str = "Disconnected from " + (server != nullptr ? server->Name : "server name...");
     g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x21, str);
 
     int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 100;

@@ -25,7 +25,7 @@ void CCharacterListScreen::Init()
 {
     DEBUG_TRACE_FUNCTION;
 
-    string title = string("Ultima Online - ") + g_MainScreen.m_Account->c_str();
+    auto title = string("Ultima Online - ") + g_MainScreen.m_Account->c_str();
 
     CServer *server = g_ServerList.GetSelectedServer();
 

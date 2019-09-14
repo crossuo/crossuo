@@ -5,10 +5,11 @@
 #include "ClilocManager.h"
 #include "../Application.h"
 #include <xuocore/mappedfile.h>
+#include <common/str.h>
 
 CCityManager g_CityManager;
 
-CCity::CCity(const string &name, const wstring &description)
+CCity::CCity(const std::string &name, const std::wstring &description)
     : Name(name)
     , Description(description)
 {
@@ -38,7 +39,7 @@ void CCityManager::Init()
 
                 uint8_t *startBlock = file.Ptr + 4;
                 uint8_t *ptrBlock = startBlock;
-                string name{};
+                std::string name{};
                 while (ptrBlock < end)
                 {
                     if (*ptrBlock == '<')
@@ -51,10 +52,10 @@ void CCityManager::Init()
                     ptrBlock++;
                 }
 
-                string text{};
+                std::string text{};
                 while (file.Ptr < end)
                 {
-                    string str = file.ReadString();
+                    auto str = file.ReadString();
                     if (text.length() != 0u)
                     {
                         text += "\n\n";
@@ -77,9 +78,9 @@ void CCityManager::Init()
     }
     else
     {
-        static const string cityNames[9] = { "Yew",      "Minoc",      "Britain",
-                                             "Moonglow", "Trinsic",    "Magincia",
-                                             "Jhelom",   "Skara Brae", "Vesper" };
+        static const std::string cityNames[9] = { "Yew",      "Minoc",      "Britain",
+                                                  "Moonglow", "Trinsic",    "Magincia",
+                                                  "Jhelom",   "Skara Brae", "Vesper" };
 
         CCliloc *cliloc = g_ClilocManager.Cliloc(g_Language);
         if (cliloc != nullptr)
@@ -97,7 +98,7 @@ CCityManager::~CCityManager()
     Clear();
 }
 
-CCity CCityManager::GetCity(const string &name)
+CCity CCityManager::GetCity(const std::string &name)
 {
     DEBUG_TRACE_FUNCTION;
 

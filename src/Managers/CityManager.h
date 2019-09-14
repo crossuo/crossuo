@@ -3,13 +3,16 @@
 
 #pragma once
 
+#include <string.h>
+#include <queue>
+
 class CCity
 {
 public:
-    string Name = {};
-    wstring Description = {};
+    std::string Name = {};
+    std::wstring Description = {};
 
-    CCity(const string &name, const wstring &description);
+    CCity(const std::string &name, const std::wstring &description);
     CCity() = default;
     virtual ~CCity();
 };
@@ -17,14 +20,14 @@ public:
 class CCityManager
 {
 public:
-    deque<CCity> m_CityList;
+    std::deque<CCity> m_CityList;
 
     CCityManager();
     virtual ~CCityManager();
 
     void Init();
     void Clear();
-    CCity GetCity(const string &name);
+    CCity GetCity(const std::string &name);
 };
 
 extern CCityManager g_CityManager;

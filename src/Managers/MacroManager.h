@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/fs.h>
 #include "../BaseQueue.h"
 
 class CMacroObject;
@@ -19,16 +20,16 @@ private:
     static uint8_t m_SkillIndexTable[24];
 
     void ProcessSubMenu();
-    Keycode ConvertStringToKeyCode(const vector<string> &strings);
+    Keycode ConvertStringToKeyCode(const std::vector<std::string> &strings);
 
 public:
     CMacroManager();
     virtual ~CMacroManager();
 
     class CMacro *FindMacro(Keycode key, bool alt, bool ctrl, bool shift);
-    bool Convert(const os_path &path);
-    bool Load(const os_path &path, const os_path &originalPath);
-    void Save(const os_path &path);
+    bool Convert(const fs_path &path);
+    bool Load(const fs_path &path, const fs_path &originalPath);
+    void Save(const fs_path &path);
     void LoadFromOptions();
     void ChangePointer(CMacroObject *macro);
     void Execute();

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "Sprite.h"
 struct CIndexObject;
 
 // FIXME: C
@@ -11,9 +12,9 @@ struct UOFileReader
     UOFileReader() = default;
     ~UOFileReader() = default;
 
-    vector<uint16_t> GetGumpPixels(CIndexObject &io);
+    std::vector<uint16_t> GetGumpPixels(CIndexObject &io);
     CSprite *ReadGump(CIndexObject &io);
-    vector<uint16_t>
+    std::vector<uint16_t>
     GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height);
     CSprite *ReadArt(uint16_t id, CIndexObject &io, bool run);
     CSprite *ReadTexture(CIndexObject &io);

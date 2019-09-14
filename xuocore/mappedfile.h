@@ -9,7 +9,7 @@
 #include <vector>
 #include <stdint.h>
 #include <string.h>
-#include "file.h"
+#include <common/fs.h>
 
 struct CDataWriter
 {
@@ -285,6 +285,6 @@ struct CMappedFile : public CDataReader
     CMappedFile() = default;
     ~CMappedFile() { Unload(); }
 
-    bool Load(const os_path &path);
+    bool Load(const fs_path &path);
     void Unload();
 };

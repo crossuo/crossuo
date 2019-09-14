@@ -8,16 +8,16 @@ class CObjectProperty
 public:
     uint32_t Serial = 0;
     uint32_t Revision = 0;
-    wstring Name = {};
-    wstring Data = {};
+    std::wstring Name = {};
+    std::wstring Data = {};
 
     CObjectProperty() {}
-    CObjectProperty(int serial, int revision, const wstring &name, const wstring &data);
+    CObjectProperty(int serial, int revision, const std::wstring &name, const std::wstring &data);
     bool Empty();
-    wstring CreateTextData(bool extended);
+    std::wstring CreateTextData(bool extended);
 };
 
-typedef map<uint32_t, CObjectProperty> OBJECT_PROPERTIES_MAP;
+typedef std::map<uint32_t, CObjectProperty> OBJECT_PROPERTIES_MAP;
 
 class CObjectPropertiesManager
 {

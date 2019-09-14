@@ -6,6 +6,7 @@
 #include "../BaseQueue.h"
 
 class CMapObject;
+class CLandObject;
 class CRenderWorldObject;
 
 class CMapBlock : public CBaseQueueItem

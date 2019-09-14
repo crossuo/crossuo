@@ -40,6 +40,10 @@
 #ifndef XXH3_H
 #define XXH3_H
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(disable:4244)
+#endif
 
 /* ===   Dependencies   === */
 
@@ -814,5 +818,9 @@ XXH_PUBLIC_API XXH128_hash_t XXH128(const void* data, size_t len, XXH64_hash_t s
 {
     return XXH3_128bits_withSeed(data, len, seed);
 }
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif
 
 #endif  /* XXH3_H */

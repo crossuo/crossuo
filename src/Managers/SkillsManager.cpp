@@ -7,7 +7,7 @@
 
 CSkillsManager g_SkillsManager;
 
-CSkill::CSkill(bool haveButton, const string &name)
+CSkill::CSkill(bool haveButton, const std::string &name)
     : Button(haveButton)
 {
     if (name.length() != 0u)
@@ -81,7 +81,7 @@ CSkill *CSkillsManager::Get(uint32_t index)
     return nullptr;
 }
 
-bool CSkillsManager::CompareName(const string &str1, const string &str2)
+bool CSkillsManager::CompareName(const std::string &str1, const std::string &str2)
 {
     //Вычисляем минимальную длину строки для сравнения
     const auto len = (int)std::min(str1.length(), str2.length());
@@ -111,7 +111,7 @@ bool CSkillsManager::CompareName(const string &str1, const string &str2)
 void CSkillsManager::Sort()
 {
     m_SortedTable.resize(Count, 0xFF);
-    vector<uint8_t> bufTable(Count, 0xFF);
+    std::vector<uint8_t> bufTable(Count, 0xFF);
 
     //Установим первый элемент нулем и количество обработанных навыков - 1
     int parsed = 1;

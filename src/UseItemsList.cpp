@@ -10,7 +10,7 @@ CUseItemActions g_UseItemActions;
 void CUseItemActions::Add(int serial)
 {
     DEBUG_TRACE_FUNCTION;
-    for (deque<uint32_t>::iterator i = m_List.begin(); i != m_List.end(); ++i)
+    for (auto i = m_List.begin(); i != m_List.end(); ++i)
     {
         if (*i == serial)
         {

@@ -27,7 +27,7 @@ void CToolTip::Reset()
     m_Object = nullptr;
 }
 
-void CToolTip::Create(CTextSprite &textSprite, const wstring &str, int &width, int minWidth)
+void CToolTip::Create(CTextSprite &textSprite, const std::wstring &str, int &width, int minWidth)
 {
     g_FontManager.SetUseHTML(true);
     g_FontManager.RecalculateWidthByInfo = true;
@@ -67,7 +67,7 @@ void CToolTip::Create(CTextSprite &textSprite, const wstring &str, int &width, i
     g_FontManager.SetUseHTML(false);
 }
 
-void CToolTip::Set(const wstring &str, int maxWidth)
+void CToolTip::Set(const std::wstring &str, int maxWidth)
 {
     DEBUG_TRACE_FUNCTION;
     if (str.length() == 0u)
@@ -94,7 +94,7 @@ void CToolTip::Set(const wstring &str, int maxWidth)
     Create(m_TextSprite, Data, MaxWidth, 0);
 }
 
-void CToolTip::Set(int clilocID, const string &str, int maxWidth, bool toCamelCase)
+void CToolTip::Set(int clilocID, const std::string &str, int maxWidth, bool toCamelCase)
 {
     DEBUG_TRACE_FUNCTION;
     Set(g_ClilocManager.Cliloc(g_Language)->GetW(clilocID, toCamelCase, str), maxWidth);

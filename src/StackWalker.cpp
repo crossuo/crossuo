@@ -27,8 +27,10 @@
 #include <windows.h>
 #include <tchar.h>
 #include <stdio.h>
-#pragma comment(lib, "version.lib") // for "VerQueryValue"
+#include <common/fs.h>
 
+#pragma comment(lib, "version.lib") // for "VerQueryValue"
+#include "StackWalker.h"
 // If VC7 and later, then use the shipped 'dbghelp.h'-file
 #if _MSC_VER >= 1300
 #include <dbghelp.h>
@@ -1317,7 +1319,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
 
     if (GetSystemDirectory(path, FS_MAX_PATH) != 0)
     {
-        wstring pathS(path);
+        std::wstring pathS(path);
         pathS += L"\\kernel32.dll";
         versz = GetFileVersionInfoSize(pathS.c_str(), nullptr);
         if (versz != 0)

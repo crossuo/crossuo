@@ -2,10 +2,11 @@
 // Copyright (C) August 2016 Hotride
 #include "ClilocManager.h"
 #include "../Application.h"
+#include <common/str.h>
 
 CClilocManager g_ClilocManager;
 
-CCliloc::CCliloc(const string &lang)
+CCliloc::CCliloc(const std::string &lang)
 
 {
     DEBUG_TRACE_FUNCTION;
@@ -14,7 +15,7 @@ CCliloc::CCliloc(const string &lang)
     Language = lang;
     if (Language.length() != 0u)
     {
-        auto file = string("Cliloc.") + lang;
+        auto file = std::string("Cliloc.") + lang;
         auto path = g_App.UOFilesPath(file);
         if (m_File.Load(path))
         {
@@ -33,11 +34,11 @@ CCliloc::~CCliloc()
     m_ClilocSupport.clear();
 }
 
-string CCliloc::Load(uint32_t &id)
+std::string CCliloc::Load(uint32_t &id)
 {
     DEBUG_TRACE_FUNCTION;
 
-    string result;
+    std::string result;
     if (Loaded)
     {
         m_File.ResetPtr();
@@ -77,7 +78,7 @@ string CCliloc::Load(uint32_t &id)
     return result;
 }
 
-wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
+std::wstring CCliloc::CamelCaseTest(bool toCamelCase, const std::string &result)
 {
     if (toCamelCase)
     {
@@ -87,7 +88,7 @@ wstring CCliloc::CamelCaseTest(bool toCamelCase, const string &result)
     return DecodeUTF8(result);
 }
 
-wstring CCliloc::GetX(int id, bool toCamelCase, string &result)
+std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -143,13 +144,13 @@ wstring CCliloc::GetX(int id, bool toCamelCase, string &result)
     return CamelCaseTest(toCamelCase, result);
 }
 
-string CCliloc::GetA(int id, bool toCamelCase, string result)
+std::string CCliloc::GetA(int id, bool toCamelCase, std::string result)
 {
     DEBUG_TRACE_FUNCTION;
     return ToString(GetX(id, toCamelCase, result));
 }
 
-wstring CCliloc::GetW(int id, bool toCamelCase, string result)
+std::wstring CCliloc::GetW(int id, bool toCamelCase, std::string result)
 {
     DEBUG_TRACE_FUNCTION;
     return GetX(id, toCamelCase, result);
@@ -166,7 +167,7 @@ CClilocManager::~CClilocManager()
     m_LastCliloc = nullptr;
 }
 
-CCliloc *CClilocManager::Cliloc(const string &lang)
+CCliloc *CClilocManager::Cliloc(const std::string &lang)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -220,7 +221,8 @@ CCliloc *CClilocManager::Cliloc(const string &lang)
     return obj;
 }
 
-wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstring args)
+std::wstring
+CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, std::wstring args)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -232,7 +234,8 @@ wstring CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCas
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
 }
 
-wstring CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args)
+std::wstring
+CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args)
 {
     DEBUG_TRACE_FUNCTION;
 
@@ -244,16 +247,16 @@ wstring CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCa
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
 }
 
-wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstring args)
+std::wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args)
 {
     DEBUG_TRACE_FUNCTION;
 
-    wstring message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
-    vector<wstring> arguments;
+    auto message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
+    std::vector<std::wstring> arguments;
     while (true)
     {
         size_t pos = args.find(L'\t');
-        if (pos != string::npos)
+        if (pos != std::string::npos)
         {
             arguments.push_back(args.substr(0, pos));
             args = args.substr(pos + 1);
@@ -268,13 +271,13 @@ wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wst
     for (int i = 0; i < (int)arguments.size(); i++)
     {
         size_t pos1 = message.find(L'~');
-        if (pos1 == string::npos)
+        if (pos1 == std::string::npos)
         {
             break;
         }
 
         size_t pos2 = message.find(L'~', pos1 + 1);
-        if (pos2 == string::npos)
+        if (pos2 == std::string::npos)
         {
             break;
         }

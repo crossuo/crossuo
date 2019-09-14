@@ -1178,7 +1178,7 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
     return result;
 }
 
-void CGumpManager::Load(const os_path &path)
+void CGumpManager::Load(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     CMappedFile file;
@@ -1569,7 +1569,7 @@ void CGumpManager::SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CG
     writer.WriteInt8(static_cast<char>(gump->LockMoving));
 };
 
-void CGumpManager::Save(const os_path &path)
+void CGumpManager::Save(const fs_path &path)
 {
     DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;

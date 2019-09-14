@@ -13,7 +13,8 @@
 
 CObjectPropertiesManager g_ObjectPropertiesManager;
 
-CObjectProperty::CObjectProperty(int serial, int revision, const wstring &name, const wstring &data)
+CObjectProperty::CObjectProperty(
+    int serial, int revision, const std::wstring &name, const std::wstring &data)
     : Serial(serial)
     , Revision(revision)
     , Name(name)
@@ -26,11 +27,11 @@ bool CObjectProperty::Empty()
     return ((Name.length() == 0u) && (Data.length() == 0u));
 }
 
-wstring CObjectProperty::CreateTextData(bool extended)
+std::wstring CObjectProperty::CreateTextData(bool extended)
 {
     CGameObject *obj = g_World->FindWorldObject(Serial);
     bool coloredStartFont = false;
-    wstring result = {};
+    std::wstring result = {};
 
     if (Name.length() != 0u)
     {

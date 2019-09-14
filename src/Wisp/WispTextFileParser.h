@@ -3,12 +3,14 @@
 #ifndef WISP_TFP_H
 #define WISP_TFP_H
 
+#include <common/fs.h>
+
 namespace Wisp
 {
 class CTextFileParser
 {
 public:
-    string RawLine = "";
+    std::string RawLine = "";
 
 private:
     CMappedFile m_File;
@@ -29,14 +31,14 @@ private:
     bool IsComment();
     bool IsQuote();
     bool IsSecondQuote();
-    string ObtainData();
-    string ObtainQuotedData();
+    std::string ObtainData();
+    std::string ObtainQuotedData();
     void StartupInitalize(const char *delimiters, const char *comentaries, const char *quotes);
     void SaveRawLine();
 
 public:
     CTextFileParser(
-        const os_path &path,
+        const fs_path &path,
         const char *delimiters = "",
         const char *comentaries = "",
         const char *quotes = "");
@@ -45,8 +47,8 @@ public:
     void Restart();
     bool IsEOF();
 
-    vector<string> ReadTokens(bool trim = true);
-    vector<string> GetTokens(const char *str, bool trim = true);
+    std::vector<std::string> ReadTokens(bool trim = true);
+    std::vector<std::string> GetTokens(const char *str, bool trim = true);
 };
 
 class CTextFileWriter
@@ -55,14 +57,14 @@ private:
     FILE *m_File{ nullptr };
 
 public:
-    CTextFileWriter(const os_path &path);
+    CTextFileWriter(const fs_path &path);
     ~CTextFileWriter();
 
     bool Opened() { return (m_File != nullptr); };
     void Close();
-    void WriteString(const string &key, const string &value);
-    void WriteInt(const string &key, int value);
-    void WriteBool(const string &key, bool value);
+    void WriteString(const std::string &key, const std::string &value);
+    void WriteInt(const std::string &key, int value);
+    void WriteBool(const std::string &key, bool value);
 };
 
 }; // namespace Wisp

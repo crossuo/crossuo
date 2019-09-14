@@ -25,7 +25,7 @@ public:
     virtual ~CIndexMap();
 };
 
-typedef vector<CIndexMap> MAP_INDEX_LIST;
+typedef std::vector<CIndexMap> MAP_INDEX_LIST;
 
 class CMapManager : public CBaseQueue
 {

@@ -8,7 +8,7 @@ class CSkillGroupObject
 public:
     int Count = 0;
     bool Maximized = false;
-    string Name = "No Name";
+    std::string Name = "No Name";
 
 private:
     uint8_t m_Items[60];

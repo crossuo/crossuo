@@ -4,9 +4,8 @@
 #include "GUIGenericText.h"
 #include "../Config.h"
 
-void CGUIGenericText::Create(const wstring &str)
+void CGUIGenericText::Create(const std::wstring &str)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t flags = UOFONT_BLACK_BORDER;
 
     if (MaxWidth != 0)

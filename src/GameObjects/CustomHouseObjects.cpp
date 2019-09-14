@@ -5,7 +5,6 @@
 
 bool CCustomHouseObjectWall::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -96,7 +95,6 @@ int CCustomHouseObjectWall::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectFloor::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -157,7 +155,6 @@ int CCustomHouseObjectFloor::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectDoor::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d",
@@ -202,7 +199,6 @@ int CCustomHouseObjectDoor::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectMisc::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d %d %d",
@@ -249,7 +245,6 @@ int CCustomHouseObjectMisc::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectStair::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -300,7 +295,6 @@ int CCustomHouseObjectStair::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectTeleport::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -361,7 +355,6 @@ int CCustomHouseObjectTeleport::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectRoof::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = sscanf(
                       text,
                       "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -424,7 +417,6 @@ int CCustomHouseObjectRoof::Contains(uint16_t graphic) const
 
 bool CCustomHouseObjectPlaceInfo::Parse(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     char buf[50] = { 0 };
 
     bool result = sscanf(

@@ -17,7 +17,7 @@ public:
 
     void Read(class CConnection *connection);
 
-    virtual int GetPacketSize(const vector<uint8_t> &packet, int &offsetToSize) { return 0; }
+    virtual int GetPacketSize(const std::vector<uint8_t> &packet, int &offsetToSize) { return 0; }
 
 protected:
     virtual void OnPacket() {}
@@ -25,7 +25,7 @@ protected:
     virtual void OnReadFailed() {}
 
 public:
-    deque<vector<uint8_t>> m_PacketsStack;
+    std::deque<std::vector<uint8_t>> m_PacketsStack;
 };
 
 }; // namespace Wisp

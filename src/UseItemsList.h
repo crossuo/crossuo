@@ -8,7 +8,7 @@ class CUseItemActions
     uint32_t Timer = 0;
 
 private:
-    deque<uint32_t> m_List;
+    std::deque<uint32_t> m_List;
 
 public:
     CUseItemActions() {}

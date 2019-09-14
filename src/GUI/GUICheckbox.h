@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include "GUIDrawObject.h"
 #include <xuocore/enumlist.h>
+#include "GUIDrawObject.h"
+#include "Sprite.h"
 
 class CGUICheckbox : public CGUIDrawObject
 {
@@ -51,7 +52,7 @@ public:
     //!Установить текст
     void SetTextParameters(
         uint8_t font,
-        const wstring &text,
+        const std::wstring &text,
         uint16_t color,
         SLIDER_TEXT_POSITION textPosition = STP_RIGHT,
         int textWidth = 0,

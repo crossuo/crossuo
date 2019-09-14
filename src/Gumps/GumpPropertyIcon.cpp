@@ -15,7 +15,7 @@ CGumpPropertyIcon::CGumpPropertyIcon(int x, int y)
     g_ToolTip.Create(m_Sprite, m_Text, width, 300);
 }
 
-void CGumpPropertyIcon::SetTextW(const wstring &val)
+void CGumpPropertyIcon::SetTextW(const std::wstring &val)
 {
     m_Text = val;
     int width = 0;

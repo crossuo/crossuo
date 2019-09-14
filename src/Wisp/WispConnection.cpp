@@ -29,7 +29,7 @@ CConnection::~CConnection()
     }
 }
 
-bool CConnection::Connect(const string &address, uint16_t port)
+bool CConnection::Connect(const std::string &address, uint16_t port)
 {
     DEBUG_TRACE_FUNCTION;
     if (Connected)

@@ -4,13 +4,14 @@
 #pragma once
 
 #include "BaseQueue.h"
+#include <xuocore/enumlist.h>
 
 class CBaseProfession : public CBaseQueueItem
 {
 public:
-    string Name = "";
-    string TrueName = "";
-    wstring Description = {};
+    std::string Name = "";
+    std::string TrueName = "";
+    std::wstring Description = {};
     uint32_t NameClilocID = 0;
     uint32_t DescriptionClilocID = 0;
     PROFESSION_TYPE Type = PT_NO_PROF;
@@ -21,18 +22,18 @@ public:
     CBaseProfession();
     virtual ~CBaseProfession();
 
-    bool AddDescription(int desc, const string &name, const char *val);
+    bool AddDescription(int desc, const std::string &name, const char *val);
 };
 
 class CProfessionCategory : public CBaseProfession
 {
 public:
-    string Childrens = "|";
+    std::string Childrens = "|";
 
     CProfessionCategory();
     virtual ~CProfessionCategory();
 
-    void AddChildren(const string &child);
+    void AddChildren(const std::string &child);
 };
 
 class CProfession : public CBaseProfession

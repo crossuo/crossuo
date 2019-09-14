@@ -6,6 +6,7 @@
 #include <SDL_rect.h>
 
 #include "MapObject.h"
+#include "Vector.h"
 
 class CLandObject : public CMapObject
 {

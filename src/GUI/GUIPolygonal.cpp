@@ -15,7 +15,6 @@ CGUIPolygonal::CGUIPolygonal(
 
 bool CGUIPolygonal::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     const int x = g_MouseManager.Position.X - m_X;
     const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= 0 && x < Width && y < Height);
