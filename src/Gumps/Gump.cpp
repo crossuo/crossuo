@@ -456,7 +456,7 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
-    vector<bool> scissorList;
+    std::vector<bool> scissorList;
     bool currentScissorState = true;
     CGUIComboBox *combo = nullptr;
 

@@ -11,7 +11,7 @@ class CRenderWorldObject;
 class CTextRenderer : public CRenderTextObject
 {
 private:
-    deque<CTextImageBounds> m_TextRect;
+    std::deque<CTextImageBounds> m_TextRect;
     bool ProcessTextRemoveBlending(CTextData &text);
 
 public:

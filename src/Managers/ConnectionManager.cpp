@@ -310,7 +310,7 @@ int CConnectionManager::Send(uint8_t *buf, int size)
             return 0;
         }
 
-        vector<uint8_t> cbuf(size);
+        std::vector<uint8_t> cbuf(size);
         Crypt::Encrypt(true, &buf[0], &cbuf[0], size);
         return m_LoginSocket.Send(cbuf);
     }
@@ -320,14 +320,14 @@ int CConnectionManager::Send(uint8_t *buf, int size)
         return 0;
     }
 
-    vector<uint8_t> cbuf(size);
+    std::vector<uint8_t> cbuf(size);
     Crypt::Encrypt(false, &buf[0], &cbuf[0], size);
     return m_GameSocket.Send(cbuf);
 
     return 0;
 }
 
-int CConnectionManager::Send(const vector<uint8_t> &data)
+int CConnectionManager::Send(const std::vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
     return Send((uint8_t *)&data[0], (int)data.size());

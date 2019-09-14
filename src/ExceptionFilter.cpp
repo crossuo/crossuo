@@ -177,9 +177,9 @@ void DumpCurrentRegistersInformation(CONTEXT *CR)
 #endif
 }
 
-std::vector<uint32_t> FindPattern(uint8_t *ptr, int size, const vector<uint8_t> &pattern)
+std::vector<uint32_t> FindPattern(uint8_t *ptr, int size, const std::vector<uint8_t> &pattern)
 {
-    vector<uint32_t> result;
+    std::vector<uint32_t> result;
     int patternSize = (int)pattern.size();
     int count = size - patternSize - 1;
     for (int i = 0; i < count; i++)
@@ -234,7 +234,7 @@ LONG __stdcall GameUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *exceptio
             bool crashlog = false;
             if (file.Load(fs_path_from(std::wstring{ fileName })))
             {
-                vector<uint8_t> pattern;
+                std::vector<uint8_t> pattern;
 #if defined(_WIN64)
                 uint8_t *eipBytes = (uint8_t *)exceptionInfo->ContextRecord->Rip;
 #else

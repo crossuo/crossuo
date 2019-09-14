@@ -84,7 +84,7 @@ public:
 private:
     CGameObject *m_ObjectHandlesList[MAX_OBJECT_HANDLES];
     LIGHT_DATA m_Light[MAX_LIGHT_SOURCES];
-    vector<RENDER_OBJECT_DATA> m_RenderList;
+    std::vector<RENDER_OBJECT_DATA> m_RenderList;
 
     int m_ObjectHandlesCount = 0;
     int m_RenderListCount = 0;
@@ -112,7 +112,7 @@ private:
 
     class CGumpScreenGame m_GameScreenGump;
 
-    vector<OBJECT_HITS_INFO> m_HitsStack;
+    std::vector<OBJECT_HITS_INFO> m_HitsStack;
 
 public:
     CGameScreen();

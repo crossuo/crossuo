@@ -153,7 +153,7 @@ extern uint32_t g_DeathScreenTimer;
 
 extern float g_AnimCharactersDelayValue;
 
-typedef vector<pair<uint32_t, uint32_t>> UINTS_PAIR_LIST;
+typedef std::vector<std::pair<uint32_t, uint32_t>> UINTS_PAIR_LIST;
 
 extern CPoint2Di g_RemoveRangeXY;
 

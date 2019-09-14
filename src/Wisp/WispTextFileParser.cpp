@@ -152,7 +152,7 @@ bool CTextFileParser::IsSecondQuote()
 std::string CTextFileParser::ObtainData()
 {
     TEXTPARSER_TRACE_FUNCTION;
-    std::string result{};
+    std::string result;
     while (m_Ptr < m_End && (*m_Ptr != 0u) && *m_Ptr != '\n')
     {
         if (IsDelimiter())
@@ -179,7 +179,7 @@ std::string CTextFileParser::ObtainQuotedData()
 {
     TEXTPARSER_TRACE_FUNCTION;
     bool exit = false;
-    std::string result{};
+    std::string result;
     for (int i = 0; i < m_QuotesSize; i += 2)
     {
         if (*m_Ptr == m_Quotes[i])
@@ -243,11 +243,11 @@ void CTextFileParser::SaveRawLine()
     }
 }
 
-vector<string> CTextFileParser::ReadTokens(bool trim)
+std::vector<std::string> CTextFileParser::ReadTokens(bool trim)
 {
     TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
-    vector<string> result;
+    std::vector<std::string> result;
 
     if (!IsEOF())
     {
@@ -278,11 +278,11 @@ vector<string> CTextFileParser::ReadTokens(bool trim)
     return result;
 }
 
-vector<string> CTextFileParser::GetTokens(const char *str, bool trim)
+std::vector<std::string> CTextFileParser::GetTokens(const char *str, bool trim)
 {
     TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
-    vector<string> result;
+    std::vector<std::string> result;
 
     uint8_t *oldEnd = m_End;
     m_Ptr = (uint8_t *)str;
@@ -331,7 +331,7 @@ void CTextFileWriter::WriteString(const std::string &key, const std::string &val
 {
     if (m_File != nullptr)
     {
-        fputs(string(key + "=" + value + "\n").c_str(), m_File);
+        fputs(std::string(key + "=" + value + "\n").c_str(), m_File);
     }
 }
 
@@ -339,7 +339,7 @@ void CTextFileWriter::WriteInt(const std::string &key, int value)
 {
     if (m_File != nullptr)
     {
-        fputs(string(key + "=" + std::to_string(value) + "\n").c_str(), m_File);
+        fputs(std::string(key + "=" + std::to_string(value) + "\n").c_str(), m_File);
     }
 }
 
@@ -347,7 +347,7 @@ void CTextFileWriter::WriteBool(const std::string &key, bool value)
 {
     if (m_File != nullptr)
     {
-        fputs(string(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
+        fputs(std::string(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
     }
 }
 

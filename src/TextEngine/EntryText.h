@@ -22,8 +22,8 @@ public:
 
 protected:
     int m_Position = 0;
-    string m_CText;
-    wstring Text;
+    std::string m_CText;
+    std::wstring Text;
 
 public:
     CEntryText(int maxLength = 0, int width = 0, int maxWidth = 0, bool numberOnly = false);
@@ -48,10 +48,10 @@ public:
     void SetPos(int val, CGump *gump = nullptr);
     const wchar_t *Data() const { return Text.c_str(); }
     const char *c_str();
-    void SetTextA(const string &text);
-    void SetTextW(const wstring &text);
-    string GetTextA() const;
-    wstring GetTextW() const;
+    void SetTextA(const std::string &text);
+    void SetTextW(const std::wstring &text);
+    std::string GetTextA() const;
+    std::wstring GetTextW() const;
 
     void OnClick(
         CGump *gump,
@@ -65,14 +65,14 @@ public:
     void OnKey(CGump *gump, Keycode key);
     int Pos() const { return m_Position; }
     size_t Length() const { return Text.length(); }
-    string CheckMaxWidthA(uint8_t font, string str);
-    wstring CheckMaxWidthW(uint8_t font, wstring str);
+    std::string CheckMaxWidthA(uint8_t font, std::string str);
+    std::wstring CheckMaxWidthW(uint8_t font, std::wstring str);
     void FixMaxWidthA(uint8_t font);
     void FixMaxWidthW(uint8_t font);
 
     void CreateTextureA(
         uint8_t font,
-        const string &str,
+        const std::string &str,
         uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,
@@ -80,7 +80,7 @@ public:
 
     void CreateTextureW(
         uint8_t font,
-        const wstring &str,
+        const std::wstring &str,
         uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,

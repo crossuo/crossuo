@@ -9,7 +9,7 @@ CPartyObject::CPartyObject()
 {
 }
 
-string CPartyObject::GetName(int index)
+std::string CPartyObject::GetName(int index)
 {
     DEBUG_TRACE_FUNCTION;
     if (Serial != 0u)

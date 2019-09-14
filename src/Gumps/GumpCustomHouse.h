@@ -90,14 +90,14 @@ public:
     CPoint2Di EndPos = CPoint2Di();
 
 private:
-    vector<CCustomHouseObjectWallCategory> m_Walls;
-    vector<CCustomHouseObjectFloor> m_Floors;
-    vector<CCustomHouseObjectDoor> m_Doors;
-    vector<CCustomHouseObjectMiscCategory> m_Miscs;
-    vector<CCustomHouseObjectStair> m_Stairs;
-    vector<CCustomHouseObjectTeleport> m_Teleports;
-    vector<CCustomHouseObjectRoofCategory> m_Roofs;
-    vector<CCustomHouseObjectPlaceInfo> m_ObjectsInfo;
+    std::vector<CCustomHouseObjectWallCategory> m_Walls;
+    std::vector<CCustomHouseObjectFloor> m_Floors;
+    std::vector<CCustomHouseObjectDoor> m_Doors;
+    std::vector<CCustomHouseObjectMiscCategory> m_Miscs;
+    std::vector<CCustomHouseObjectStair> m_Stairs;
+    std::vector<CCustomHouseObjectTeleport> m_Teleports;
+    std::vector<CCustomHouseObjectRoofCategory> m_Roofs;
+    std::vector<CCustomHouseObjectPlaceInfo> m_ObjectsInfo;
 
     int m_FloorVisionState[4];
 
@@ -164,7 +164,7 @@ private:
 
     void UpdateMaxPage();
 
-    pair<int, int> ExistsInList(CUSTOM_HOUSE_GUMP_STATE &state, uint16_t graphic);
+    std::pair<int, int> ExistsInList(CUSTOM_HOUSE_GUMP_STATE &state, uint16_t graphic);
 
     bool
     ValidatePlaceStructure(CGameItem *foundationItem, CMulti *multi, int minZ, int maxZ, int flags);
@@ -185,7 +185,7 @@ public:
     void SeekGraphic(uint16_t graphic);
 
     bool CanBuildHere(
-        vector<CBuildObject> &list, CRenderWorldObject *place, CUSTOM_HOUSE_BUILD_TYPE &type);
+        std::vector<CBuildObject> &list, CRenderWorldObject *place, CUSTOM_HOUSE_BUILD_TYPE &type);
 
     bool ValidateItemPlace(const SDL_Rect &rect, uint16_t graphic, int x, int y);
 
@@ -194,7 +194,7 @@ public:
         CMultiObject *item,
         int minZ,
         int maxZ,
-        vector<CPoint2Di> &validatedFloors);
+        std::vector<CPoint2Di> &validatedFloors);
 
     bool CanEraseHere(CRenderWorldObject *place, CUSTOM_HOUSE_BUILD_TYPE &type);
 

@@ -719,7 +719,7 @@ bool CFontsManager::GenerateA(
     return GenerateABase(font, th, str, color, width, align, flags);
 }
 
-vector<uint32_t> CFontsManager::GeneratePixelsA(
+std::vector<uint32_t> CFontsManager::GeneratePixelsA(
     uint8_t font,
     CTextSprite &th,
     const char *str,
@@ -729,7 +729,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsA(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pData;
+    std::vector<uint32_t> pData;
 
     th.Clear();
 
@@ -895,7 +895,8 @@ bool CFontsManager::GenerateABase(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pixels = GeneratePixelsA(font, th, str.c_str(), color, width, align, flags);
+    std::vector<uint32_t> pixels =
+        GeneratePixelsA(font, th, str.c_str(), color, width, align, flags);
     bool result = false;
     if (!pixels.empty())
     {
@@ -1339,7 +1340,7 @@ HTMLCHAR_LIST CFontsManager::GetHTMLData(
 
     HTML_DATA_INFO info = { HTT_NONE, align, flags, font, m_HTMLColor, 0 };
 
-    vector<HTML_DATA_INFO> stack;
+    std::vector<HTML_DATA_INFO> stack;
     stack.push_back(info);
 
     HTML_DATA_INFO currentInfo = info;
@@ -1607,7 +1608,7 @@ HTML_DATA_INFO CFontsManager::GetCurrentHTMLInfo(const HTMLINFO_LIST &list)
     return info;
 }
 
-void CFontsManager::TrimHTMLString(string &str)
+void CFontsManager::TrimHTMLString(std::string &str)
 {
     DEBUG_TRACE_FUNCTION;
     if (str.length() >= 2 && str[0] == '"' && str[str.length() - 1] == '"')
@@ -1617,7 +1618,7 @@ void CFontsManager::TrimHTMLString(string &str)
     }
 }
 
-uint32_t CFontsManager::GetHTMLColorFromText(string &str1)
+uint32_t CFontsManager::GetHTMLColorFromText(std::string &str1)
 {
     DEBUG_TRACE_FUNCTION;
     uint32_t color = 0;
@@ -1716,7 +1717,7 @@ void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const std::stri
     DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser parser({}, " =", "", "\"\"");
 
-    vector<string> strings = parser.GetTokens(content.c_str());
+    std::vector<std::string> strings = parser.GetTokens(content.c_str());
     int size = (int)strings.size();
 
     for (int i = 0; i < size; i += 2)
@@ -2551,7 +2552,7 @@ bool CFontsManager::GenerateW(
     return GenerateWBase(font, th, str, color, cell, width, align, flags);
 }
 
-vector<uint32_t> CFontsManager::GeneratePixelsW(
+std::vector<uint32_t> CFontsManager::GeneratePixelsW(
     uint8_t font,
     CTextSprite &th,
     const wchar_t *str,
@@ -2562,7 +2563,7 @@ vector<uint32_t> CFontsManager::GeneratePixelsW(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pData;
+    std::vector<uint32_t> pData;
 
     if (font >= 20 || (m_UnicodeFontAddress[font] == 0u))
     {
@@ -3152,7 +3153,7 @@ bool CFontsManager::GenerateWBase(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint32_t> pixels =
+    std::vector<uint32_t> pixels =
         GeneratePixelsW(font, th, str.c_str(), color, cell, width, align, flags);
     bool result = false;
     if (!pixels.empty())

@@ -30,7 +30,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
     }
 
     int mapSize = gump->Width * gump->Height;
-    vector<uint8_t> byteMap(mapSize, 0);
+    std::vector<uint8_t> byteMap(mapSize, 0);
     int startX = gump->StartX / 2;
     int endX = gump->EndX / 2;
     int widthDivizor = endX - startX;
@@ -95,7 +95,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
     {
         uint16_t *huesData =
             (uint16_t *)((uint8_t *)g_ColorManager.GetHuesRangePointer() + 30800); // color = 0x015C
-        vector<uint16_t> colorTable(maxPixelValue);
+        std::vector<uint16_t> colorTable(maxPixelValue);
         int colorOffset = 31 * maxPixelValue;
         for (int i = 0; i < maxPixelValue; i++)
         {
@@ -103,7 +103,7 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
             colorTable[i] = 0x8000 | huesData[colorOffset / maxPixelValue];
         }
 
-        vector<uint16_t> worldMap(mapSize);
+        std::vector<uint16_t> worldMap(mapSize);
         for (int i = 0; i < mapSize; i++)
         {
             uint8_t &pic = byteMap[i];
@@ -141,7 +141,7 @@ bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int fa
     int endY = gump->EndY;
     int width = endX - startX;
     int height = endY - startY;
-    vector<uint16_t> map(width * height);
+    std::vector<uint16_t> map(width * height);
     for (int y = 0; y < mapHeight; y++)
     {
         int x = 0;

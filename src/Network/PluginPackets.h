@@ -42,7 +42,7 @@ class CPluginPacketFileInfoLocalized : public CPluginPacket
 {
 public:
     CPluginPacketFileInfoLocalized(
-        int index, uint64_t address, uint64_t size, const string &language);
+        int index, uint64_t address, uint64_t size, const std::string &language);
 };
 
 class CPluginPacketStaticArtGraphicDataInfo : public CPluginPacket

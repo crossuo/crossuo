@@ -72,7 +72,7 @@ public:
     CGump(GUMP_TYPE type, uint32_t serial, int x, int y);
     virtual ~CGump();
 
-    virtual void PasteClipboardData(wstring &data);
+    virtual void PasteClipboardData(std::wstring &data);
     static void ProcessListing();
 
     static bool

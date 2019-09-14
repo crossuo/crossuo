@@ -34,7 +34,7 @@ public:
 class CPacketCreateCharacter : public CPacket
 {
 public:
-    CPacketCreateCharacter(const string &name);
+    CPacketCreateCharacter(const std::string &name);
 };
 
 class CPacketDeleteCharacter : public CPacket
@@ -46,7 +46,7 @@ public:
 class CPacketSelectCharacter : public CPacket
 {
 public:
-    CPacketSelectCharacter(int index, const string &name);
+    CPacketSelectCharacter(int index, const std::string &name);
 };
 
 class CPacketPickupRequest : public CPacket
@@ -125,7 +125,7 @@ public:
 class CPacketClientVersion : public CPacket
 {
 public:
-    CPacketClientVersion(const string &version);
+    CPacketClientVersion(const std::string &version);
 };
 
 class CPacketASCIISpeechRequest : public CPacket
@@ -223,7 +223,7 @@ public:
 class CPacketRenameRequest : public CPacket
 {
 public:
-    CPacketRenameRequest(uint32_t serial, const string &newName);
+    CPacketRenameRequest(uint32_t serial, const std::string &newName);
 };
 
 class CPacketTipRequest : public CPacket
@@ -241,7 +241,8 @@ public:
 class CPacketUnicodePromptResponse : public CPacket
 {
 public:
-    CPacketUnicodePromptResponse(const wchar_t *text, size_t len, const string &lang, bool cancel);
+    CPacketUnicodePromptResponse(
+        const wchar_t *text, size_t len, const std::string &lang, bool cancel);
 };
 
 class CPacketDyeDataResponse : public CPacket
@@ -344,7 +345,7 @@ public:
 class CPacketAssistVersion : public CPacket
 {
 public:
-    CPacketAssistVersion(uint32_t version, const string &clientVersion);
+    CPacketAssistVersion(uint32_t version, const std::string &clientVersion);
 };
 
 class CPacketRazorAnswer : public CPacket
@@ -356,7 +357,7 @@ public:
 class CPacketLanguage : public CPacket
 {
 public:
-    CPacketLanguage(const string &lang);
+    CPacketLanguage(const std::string &lang);
 };
 
 class CPacketClientType : public CPacket
@@ -380,7 +381,7 @@ public:
 class CPacketOpenChat : public CPacket
 {
 public:
-    CPacketOpenChat(const wstring &name);
+    CPacketOpenChat(const std::wstring &name);
 };
 
 class CPacketMapMessage : public CPacket
@@ -429,7 +430,7 @@ public:
 class CPacketMegaClilocRequest : public CPacket
 {
 public:
-    CPacketMegaClilocRequest(vector<uint32_t> &list);
+    CPacketMegaClilocRequest(std::vector<uint32_t> &list);
 };
 
 class CPacketChangeStatLockStateRequest : public CPacket

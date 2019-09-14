@@ -582,7 +582,7 @@ CGumpSpellbook::GetSpellName(int offset, std::string &abbreviature, std::string 
     return "";
 }
 
-string CGumpSpellbook::GetSpellRequries(int offset, int &y)
+std::string CGumpSpellbook::GetSpellRequries(int offset, int &y)
 {
     DEBUG_TRACE_FUNCTION;
     char buf[100] = { 0 };
@@ -1123,7 +1123,7 @@ void CGumpSpellbook::ChangePage(int newPage)
     g_Game.PlaySoundEffect(0x0055);
 }
 
-string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
+std::string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
     { "Clumsy", "U J" },
     { "Create Food", "I M Y" },
     { "Feeblemind", "R W" },
@@ -1190,7 +1190,7 @@ string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
     { "Water Elemental", "K V X A" }
 };
 
-string CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
+std::string CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
     "Bloodmoss\nNightshade",
     "Garlic\nGinseng\nMandrake root",
     "Ginseng\nNightshade",

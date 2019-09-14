@@ -8,7 +8,7 @@
 class CGumpBulletinBoard : public CGump
 {
 public:
-    CGumpBulletinBoard(uint32_t serial, short x, short y, const string &name);
+    CGumpBulletinBoard(uint32_t serial, short x, short y, const std::string &name);
     virtual ~CGumpBulletinBoard();
 
     CGUIHTMLGump *m_HTMLGump{ nullptr };

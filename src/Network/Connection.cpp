@@ -229,7 +229,7 @@ bool CSocket::Connect(const std::string &address, uint16_t port)
     return true;
 }
 
-std::vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
+std::vector<uint8_t> CSocket::Decompression(std::vector<uint8_t> data)
 {
     DEBUG_TRACE_FUNCTION;
     if (GameSocket)
@@ -237,7 +237,7 @@ std::vector<uint8_t> CSocket::Decompression(vector<uint8_t> data)
         auto inSize = (intptr_t)data.size();
         Crypt::Decrypt(&data[0], &data[0], (int)inSize);
 
-        vector<uint8_t> decBuf(inSize * 4 + 2);
+        std::vector<uint8_t> decBuf(inSize * 4 + 2);
         int outSize = 65536;
         m_Decompressor((char *)&decBuf[0], (char *)&data[0], outSize, inSize);
         if (inSize != data.size())

@@ -10,7 +10,7 @@
 
 UOFileReader g_UOFileReader;
 
-vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
+std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
     size_t dataStart = io.Address;
@@ -18,7 +18,7 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 
     int blocksize = io.Width * io.Height;
 
-    vector<uint16_t> pixels;
+    std::vector<uint16_t> pixels;
 
     if (blocksize == 0)
     {
@@ -79,7 +79,7 @@ vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 CSprite *UOFileReader::ReadGump(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint16_t> pixels = GetGumpPixels(io);
+    std::vector<uint16_t> pixels = GetGumpPixels(io);
     if (pixels.empty())
     {
         return nullptr;
@@ -89,13 +89,13 @@ CSprite *UOFileReader::ReadGump(CIndexObject &io)
     return spr;
 }
 
-vector<uint16_t>
+std::vector<uint16_t>
 UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height)
 {
     DEBUG_TRACE_FUNCTION;
     uint16_t *P = (uint16_t *)io.Address;
     uint16_t color = io.Color;
-    vector<uint16_t> pixels;
+    std::vector<uint16_t> pixels;
     if (!run) //raw tile
     {
         width = 44;
@@ -310,7 +310,7 @@ CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
     DEBUG_TRACE_FUNCTION;
     int16_t width = 0;
     int16_t height = 0;
-    vector<uint16_t> pixels = GetArtPixels(id, io, run, width, height);
+    std::vector<uint16_t> pixels = GetArtPixels(id, io, run, width, height);
     if (pixels.empty())
     {
         return nullptr;
@@ -414,7 +414,7 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
         return nullptr;
     }
 
-    vector<uint16_t> pixels(w * h);
+    std::vector<uint16_t> pixels(w * h);
     uint16_t *P = (uint16_t *)io.Address;
     for (int i = 0; i < h; i++)
     {
@@ -439,7 +439,7 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
 CSprite *UOFileReader::ReadLight(CIndexObject &io)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint16_t> pixels(io.Width * io.Height);
+    std::vector<uint16_t> pixels(io.Width * io.Height);
     uint8_t *p = (uint8_t *)io.Address;
     for (int i = 0; i < io.Height; i++)
     {

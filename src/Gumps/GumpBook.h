@@ -29,7 +29,7 @@ public:
         uint32_t serial, int16_t x, int16_t y, uint16_t pageCount, bool writable, bool unicode);
     virtual ~CGumpBook();
 
-    virtual void PasteClipboardData(wstring &data) override;
+    virtual void PasteClipboardData(std::wstring &data) override;
 
     CGUITextEntry *m_EntryAuthor{ nullptr };
     CGUITextEntry *m_EntryTitle{ nullptr };
@@ -38,7 +38,7 @@ public:
     virtual void DelayedClick(CRenderObject *obj) override;
     virtual void PrepareContent() override;
 
-    void SetPageData(int page, const wstring &data);
+    void SetPageData(int page, const std::wstring &data);
     void ChangePage(int newPage, bool playSound = true);
 
     GUMP_BUTTON_EVENT_H override;

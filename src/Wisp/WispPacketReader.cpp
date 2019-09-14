@@ -27,7 +27,7 @@ void CPacketReader::Read(class CConnection *connection)
         while (true)
         {
             int offset = 0;
-            vector<uint8_t> packet = parser->Read(this, offset);
+            std::vector<uint8_t> packet = parser->Read(this, offset);
 
             if (packet.empty())
             {

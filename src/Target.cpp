@@ -352,7 +352,7 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
     int count = (int)index.Count;
     if (index.UopBlock != nullptr)
     {
-        vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(index.UopBlock);
+        std::vector<uint8_t> data = g_FileManager.m_MultiCollection.GetData(index.UopBlock);
         if (data.empty())
         {
             return;

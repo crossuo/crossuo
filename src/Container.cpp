@@ -7,7 +7,7 @@
 #include "Managers/ConfigManager.h"
 
 CContainerRect g_ContainerRect;
-vector<CContainerOffset> g_ContainerOffset;
+std::vector<CContainerOffset> g_ContainerOffset;
 
 /*CONTAINER_OFFSET g_ContainerOffset[CONTAINERS_COUNT] =
 {

@@ -15,7 +15,7 @@ CPacketMessage::CPacketMessage(uint8_t *data, int dataSize, bool bigEndian)
     memcpy(&m_Data[0], &data[0], dataSize);
 }
 
-CPacketMessage::CPacketMessage(const vector<uint8_t> &data, bool bigEndian)
+CPacketMessage::CPacketMessage(const std::vector<uint8_t> &data, bool bigEndian)
     : BigEndian(bigEndian)
     , m_Data(data)
 {
@@ -31,22 +31,22 @@ CPacketMessage::~CPacketMessage()
 void CPacketMessage::Append(uint8_t *data, int dataSize)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint8_t> buf(dataSize);
+    std::vector<uint8_t> buf(dataSize);
     memcpy(&buf[0], &data[0], dataSize);
 
     m_Data.insert(m_Data.end(), buf.begin(), buf.end());
 }
 
-void CPacketMessage::Append(const vector<uint8_t> &data)
+void CPacketMessage::Append(const std::vector<uint8_t> &data)
 {
     DEBUG_TRACE_FUNCTION;
     m_Data.insert(m_Data.end(), data.begin(), data.end());
 }
 
-vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
+std::vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
 {
     DEBUG_TRACE_FUNCTION;
-    vector<uint8_t> result;
+    std::vector<uint8_t> result;
 
     if (m_Data.empty())
     {

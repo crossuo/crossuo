@@ -5,7 +5,7 @@
 
 #include "../Point.h"
 
-typedef deque<CRect> SCISSOR_LIST;
+typedef std::deque<CRect> SCISSOR_LIST;
 
 struct CGLTexture;
 class CGLEngine;

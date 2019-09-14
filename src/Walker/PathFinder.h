@@ -38,7 +38,7 @@ protected:
     int CalculateMinMaxZ(
         int &minZ, int &maxZ, int newX, int newY, int currentZ, int newDirection, int stepState);
 
-    bool CreateItemsList(vector<CPathObject> &list, int x, int y, int stepState);
+    bool CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState);
 
     CPoint2Di m_StartPoint{ CPoint2Di() };
     CPoint2Di m_EndPoint{ CPoint2Di() };

@@ -60,7 +60,7 @@ public:
         uint16_t textFlags = 0);
     void SetTextParameters(
         uint8_t font,
-        const string &text,
+        const std::string &text,
         uint16_t color,
         SLIDER_TEXT_POSITION textPosition = STP_RIGHT,
         int textWidth = 0,

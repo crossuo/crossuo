@@ -226,7 +226,7 @@ bool CMacroManager::Convert(const fs_path &path)
 
     while (!file.IsEOF())
     {
-        vector<string> strings = file.ReadTokens();
+        std::vector<std::string> strings = file.ReadTokens();
         strings = unicodeParser.GetTokens(file.RawLine.c_str(), false);
         size_t size = strings.size();
 
@@ -260,7 +260,7 @@ bool CMacroManager::Convert(const fs_path &path)
             {
                 continue;
             }
-            vector<string> data = unicodeParser.GetTokens(TestLine.c_str(), false);
+            std::vector<std::string> data = unicodeParser.GetTokens(TestLine.c_str(), false);
             TestLine = "";
             if (data.empty())
             {

@@ -33,33 +33,18 @@
 #include <functional>
 #include <cassert>
 
-using std::deque;
-using std::map;
-using std::pair;
-using std::string;
-using std::unordered_map;
-using std::vector;
-using std::wstring;
-
-#define UNUSED(x) (void)x
-#define ToColorR(x) ((x)&0xff)
-#define ToColorG(x) ((x >> 8) & 0xff)
-#define ToColorB(x) ((x >> 16) & 0xff)
-#define ToColorA(x) ((x >> 24) & 0xff)
-
-struct SoundInfo;
-typedef SoundInfo *SoundHandle;
-#define SOUND_NULL nullptr
-
-#if defined(XUO_WINDOWS)
-
-#else // XUO_WINDOWS
+#if !defined(XUO_WINDOWS)
 
 #include <unistd.h>
 #include <chrono>
 #include <thread>
 #include <limits.h> // INT_MAX
 
-#endif // XUO_WINDOWS
+#endif // !XUO_WINDOWS
+
+#define ToColorR(x) ((x)&0xff)
+#define ToColorG(x) ((x >> 8) & 0xff)
+#define ToColorB(x) ((x >> 16) & 0xff)
+#define ToColorA(x) ((x >> 24) & 0xff)
 
 #include "Globals.h"

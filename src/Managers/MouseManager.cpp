@@ -341,7 +341,7 @@ void CMouseManager::Draw(uint16_t id)
         {
             uint16_t color = 0;
 
-            vector<CBuildObject> list;
+            std::vector<CBuildObject> list;
             CUSTOM_HOUSE_BUILD_TYPE type;
 
             if (!g_CustomHouseGump->CanBuildHere(

@@ -30,8 +30,8 @@ public:
     ~CEquipConvData() {}
 };
 
-typedef unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
-typedef unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
+typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
+typedef std::unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
 
 class CAnimationManager
 {
@@ -66,7 +66,7 @@ private:
 
     static const int USED_LAYER_COUNT = 23;
     static const int m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT];
-    vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
+    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
     std::deque<CTextureAnimationDirection *> m_UsedAnimList;
 
     bool TestPixels(
