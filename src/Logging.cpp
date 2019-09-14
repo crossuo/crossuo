@@ -5,6 +5,7 @@
 
 #if !defined(DISABLE_LOG)
 
+#include <cstdarg>
 #include <external/loguru.h>
 
 eLogSystem g_LogEnabled = LogSystemAll;
@@ -13,8 +14,31 @@ eLogSystem g_LogEnabled = LogSystemAll;
 #include "Loggers.h"
 #undef LOG_SYSTEM
 
-void uo_log(const char *type, ...)
+void uo_log(int type, const char *sys, const char *fmt, ...)
 {
+    char msg[512] = {};
+    va_list vargs;
+    va_start(vargs, fmt);
+    vsnprintf(msg, 512, fmt, vargs);
+    va_end(vargs);
+    switch (type)
+    {
+        case 1:
+            TRACE(XUOCore, "%s: %s", sys, msg);
+            break;
+        case 2:
+            DEBUG(XUOCore, "%s: %s", sys, msg);
+            break;
+        case 3:
+            Info(XUOCore, "%s: %s", sys, msg);
+            break;
+        case 4:
+            Warning(XUOCore, "%s: %s", sys, msg);
+            break;
+        case 5:
+            Error(XUOCore, "%s: %s", sys, msg);
+            break;
+    }
 }
 
 namespace loguru
@@ -125,5 +149,7 @@ void LogInit(const char *filename)
 void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
 }
-
+void uo_log(int type, const char *sys, const char *fmt, ...)
+{
+}
 #endif
