@@ -400,8 +400,6 @@ bool CGame::Install()
     Info(Client, "replacing indexes");
     IndexReplaces();
 
-    g_AnimationManager.GetAnimationDimensions(0, 734, 3, 7, false);
-
     CheckStaticTileFilterFiles();
 
     CSize statusbarDims = GetGumpDimension(0x0804);

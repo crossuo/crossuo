@@ -2111,7 +2111,12 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
                 {
                     CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
                     auto spr = (CSprite *)frame.UserData;
-                    assert(spr);
+                    //assert(spr);
+                    if (!spr)
+                    {
+                        // FIXME: before we had CSprite in the struct, we need cleanup how to construct these objects
+                        spr = new CSprite();
+                    }
                     result.Width = spr->Width;
                     result.Height = spr->Height;
                     result.CenterX = frame.CenterX;

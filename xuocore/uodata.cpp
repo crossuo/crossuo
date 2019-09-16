@@ -1111,7 +1111,8 @@ void CFileManager::UopReadAnimationFrameInfo(
     {
         return;
     }
-
+    // FIXME: CFileManager SHOULD not be a DataReader! In fact, no class need to be. Clean up!
+    SetData(scratchBuffer.data(), block.DecompressedSize);
     const auto _header = UopReadAnimationHeader();
     (void)_header;
     auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
