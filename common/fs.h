@@ -103,6 +103,8 @@ fs_path fs_join_path(H head, T... tail)
     return r;
 }
 
+#endif // FS_HEADER
+
 #if (defined(FS_IMPLEMENTATION_PRIVATE) || defined(FS_IMPLEMENTATION)) && !defined(FS_IMPLEMENTED)
 #define FS_IMPLEMENTED
 
@@ -491,7 +493,7 @@ FS_PRIVATE fs_path fs_directory(const fs_path &path)
         return path;
 
     const char *name = fs_path_ascii(path);
-    char *last = strrchr(name, '/');
+    const char *last = strrchr(name, '/');
     if (last != nullptr)
     {
         std::string dir(name, last - name);
@@ -527,7 +529,7 @@ FS_PRIVATE bool fs_path_create(const fs_path &path)
     }
 
     std::string copy = path.real_path.c_str();
-    const char *segment = copy.data();
+    char *segment = (char *)copy.data();
     const char *start = segment;
     do
     {
@@ -630,5 +632,3 @@ FS_PRIVATE bool fs_path_is_file(const fs_path &path)
 }
 
 #endif // FS_IMPLEMENTATION
-
-#endif // FS_HEADER

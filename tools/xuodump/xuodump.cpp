@@ -3,21 +3,19 @@
 #include <stdarg.h>
 #include <iostream>
 #include <vector>
-
-#include <common/str.h>
-#include <common/fs.h>
-
 #include <external/popts.h>
+
+void uo_log(int type, const char *sys, const char *fmt, ...);
+#define log(...) uo_log(0, "xuodump", __VA_ARGS__)
+#define FS_LOG_DEBUG(...) log(__VA_ARGS__)
+#define FS_LOG_ERROR(...) log(__VA_ARGS__)
+#include <common/fs.h>
+#include <common/str.h>
+
 #include <xuocore/uodata.h>
 
 static po::parser s_cli;
 static bool s_log = false;
-
-#define log(...) uo_log(0, "xuodump", __VA_ARGS__)
-void uo_log(int type, const char *sys, const char *fmt, ...);
-
-#define FS_LOG_DEBUG(...) log(__VA_ARGS__)
-#define FS_LOG_ERROR(...) log(__VA_ARGS__)
 
 void uo_log(int type, const char *sys, const char *fmt...)
 {
