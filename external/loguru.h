@@ -83,8 +83,16 @@ Website: www.ilikebigbits.com
 
 #define LOGURU_RTTI 0
 
+#define DISABLE_LOGURU 	\
+	const char *log_system_name(int) \
+	{ 										\
+			return "disabled";\
+	} 										\
+
+
 #if defined(LOGURU_IMPLEMENTATION)
 
+extern const char *log_system_name(int);
 
 #if !defined(_MSC_VER)
 // Disable all warnings from gcc/clang:
@@ -1266,7 +1274,6 @@ namespace loguru
 		// crossuo
 		//char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
 		//get_thread_name(thread_name, LOGURU_THREADNAME_WIDTH + 1, true);
-		extern const char *log_system_name(int);
 		const char *thread_name = log_system_name(sys);
 
 		if (s_strip_file_path) {

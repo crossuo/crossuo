@@ -63,7 +63,8 @@ bool ToBool(const std::string &str);
 
 #endif // STR_HEADER
 
-#ifdef STR_IMPLEMENTATION
+#if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
+#define STR_IMPLEMENTATED
 
 std::string EncodeUTF8(const std::wstring &wstr)
 {

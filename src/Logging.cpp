@@ -41,8 +41,6 @@ void uo_log(int type, const char *sys, const char *fmt, ...)
     }
 }
 
-namespace loguru
-{
 const char *log_system_name(int sys)
 {
     switch (sys)
@@ -57,7 +55,6 @@ const char *log_system_name(int sys)
     }
     return "Unknown";
 }
-}; // namespace loguru
 
 void LogInit(int argc, char *argv[], const char *filename)
 {
