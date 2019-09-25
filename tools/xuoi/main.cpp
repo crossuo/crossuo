@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <stdint.h>
 #include <inttypes.h>
+#include <external/popts.h>
 
 #define XUOI_THREADED 1
 #if XUOI_THREADED
@@ -79,8 +80,7 @@ static const char *to_lowercase(const char *str)
     return str;
 }
 
-// FIXME: move http funcs into a common lib
-size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string *str)
+static size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string *str)
 {
     assert(data && str && size && nmemb);
     const auto amount = size * nmemb;
@@ -88,8 +88,7 @@ size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string
     return amount;
 }
 
-// FIXME: avoid std, use raw buffer instead
-size_t recv_data_vector(const char *data, size_t size, size_t nmemb, std::vector<char> *vec)
+static size_t recv_data_vector(const char *data, size_t size, size_t nmemb, std::vector<char> *vec)
 {
     assert(data && vec && size && nmemb);
     const auto amount = size * nmemb;
@@ -103,7 +102,7 @@ struct http_recv_buf
     size_t offset;
     const uint8_t *data;
 };
-size_t recv_data(const char *data, size_t size, size_t nmemb, http_recv_buf *buf)
+static size_t recv_data(const char *data, size_t size, size_t nmemb, http_recv_buf *buf)
 {
     assert(data && buf && size && nmemb);
     const auto amount = size * nmemb;
@@ -111,14 +110,6 @@ size_t recv_data(const char *data, size_t size, size_t nmemb, http_recv_buf *buf
     memcpy((void *)&buf->data[buf->offset], data, amount);
     buf->offset += amount;
     return amount;
-}
-
-size_t debug_data(const char *data, size_t size, size_t nmemb, void *)
-{
-    assert(data && data && size && nmemb);
-    LOG_DEBUG("%zu %zu\n", size, nmemb);
-    LOG_DEBUG("%s\n", data);
-    return size * nmemb;
 }
 
 static CURL *g_curl_handle = nullptr;
@@ -163,7 +154,7 @@ void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
     *size = tmp.offset;
 }
 
-void http_get_binary(const char *url, std::vector<char> &data)
+void http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
     LOG_TRACE("url %s\n", url);
     CURL *curl = curl_easy_duphandle(g_curl_handle);
@@ -288,6 +279,7 @@ struct mft_entry
     const char *sig = nullptr; // sha256 base64 string
     const char *remote_path = nullptr;
     const char *pack_name = nullptr; // for packs in packages
+    bool need_update = true;
 };
 
 struct mft_package
@@ -318,6 +310,10 @@ struct mft_config
 {
     uint32_t thread_count = 1;
     uint32_t download_buffer_size = XUOI_MAX_DOWNLOAD_SIZE;
+    bool mirror_mode = false;
+    bool listing_only = false;
+    bool dump_extracted = true;
+    fs_path output_path;
 };
 
 struct mft_product
@@ -334,14 +330,13 @@ struct mft_product
     std::vector<mft_stage> stages;
     std::vector<mft_package> packages;
     std::vector<mft_manifest *> manifests;
+    std::unordered_map<std::string, mft_entry> base_version;
 
+    uint64_t last_version = 0;
     mft_config config;
     uint8_t **download_buffers = nullptr;
     uint8_t **download_cbuffers = nullptr;
 };
-
-static const char *s_outdir = nullptr;
-static fs_path s_outpath;
 
 mft_result mft_download(
     mft_product &prod,
@@ -357,7 +352,7 @@ mft_result mft_download(
     const bool in_pack = entry.type != mft_entry_manifest;
 
     // create paths
-    fs_path path = fs_join_path(s_outpath, "cache");
+    fs_path path = fs_join_path(prod.config.output_path, "cache");
     path = fs_join_path(path, entry.remote_path);
     if (entry.pack_name)
         path = fs_join_path(path, entry.pack_name);
@@ -445,16 +440,12 @@ mft_result mft_download(
             break;
     }
 
-    const bool save_temp = true;
-    if (save_temp)
+    if (prod.config.dump_extracted)
     {
         auto local_name = entry.name ? entry.name : remote_name;
-        path = fs_join_path(s_outpath, "dump", local_name);
+        path = fs_join_path(prod.config.output_path, "dump", local_name);
         dir = fs_directory(path);
-        if (!fs_path_exists(dir))
-        {
-            fs_path_create(dir);
-        }
+        fs_path_create(dir);
         auto opath = fs_path_ascii(path);
         if (!file_write(opath, buffer, *buffer_size))
         {
@@ -733,6 +724,177 @@ mft_result mft_consume_manifests(mft_product &prod)
     return mft_ok;
 }
 
+void mft_listing_save(mft_product &prod)
+{
+    auto path = fs_join_path(prod.config.output_path, "cache", "xuoi.csv");
+    fs_path_create(fs_directory(path));
+    FILE *fp = fopen(fs_path_ascii(path), "wb");
+    if (!fp)
+        return;
+
+    do
+    {
+        fprintf(
+            fp,
+            "%s,0,0,%lu,0,0,0,%s,%s\n",
+            prod.launchfile,
+            prod.timestamp,
+            prod.file_repo,
+            prod.manifest_repo);
+        for (const auto &e : prod.files)
+        {
+            char tmp[512] = {};
+            const auto len = strlen(e.name);
+            assert(len < sizeof(tmp));
+            memcpy(tmp, e.name, len);
+            to_lowercase(tmp);
+            uint32_t ph = 0, sh = 0;
+            hashlittle2(tmp, len, &ph, &sh);
+            fprintf(
+                fp,
+                "%s,%08x,%08x,%lu,%08x,%zu,%zu\n",
+                e.name,
+                ph,
+                sh,
+                e.timestamp,
+                e.hash,
+                e.uncompressed_len,
+                e.compressed_len);
+        }
+        for (const auto &e : prod.parts)
+        {
+            fprintf(
+                fp,
+                "%s/%08x%08x,%08x,%08x,%lu,%08x,%zu,%zu\n",
+                e.pack_name,
+                e.ph,
+                e.sh,
+                e.ph,
+                e.sh,
+                e.timestamp,
+                e.hash,
+                e.uncompressed_len,
+                e.compressed_len);
+        }
+    } while (0);
+    fclose(fp);
+}
+
+void mft_listing_load_latest_version(mft_product &prod)
+{
+    if (!prod.last_version)
+        return;
+
+    auto path = fs_join_path(
+        prod.config.output_path,
+        std::to_string(prod.last_version),
+        prod.launchfile,
+        "cache",
+        "xuoi.csv");
+    FILE *fp = fopen(fs_path_ascii(path), "rb");
+    if (!fp)
+        return;
+
+    char tmp[512], endline;
+    fscanf(fp, "%s\n", tmp); // skip first line
+    int count = 0;
+    while (!feof(fp))
+    {
+        int t;
+        mft_entry e;
+        fscanf(
+            fp,
+            "%512[^,],%08x,%08x,%lu,%08x,%zu,%zu%c%n",
+            tmp,
+            &e.ph,
+            &e.sh,
+            &e.timestamp,
+            &e.hash,
+            &e.uncompressed_len,
+            &e.compressed_len,
+            &endline,
+            &t);
+        count++;
+
+        std::string n = tmp;
+        if (!e.timestamp && !e.hash && !e.uncompressed_len && !e.ph)
+            break;
+
+        prod.base_version[n] = e;
+        //fprintf(stdout, "%s,%08x,%08x,%lu,%08x,%zu,%zu\n", n.c_str(), e.ph, e.sh, e.timestamp, e.hash, e.uncompressed_len, e.compressed_len);
+    };
+
+    fclose(fp);
+    assert(prod.base_version.size() == count);
+    LOG_INFO(
+        "Loaded previous version %s(%lu), with %d entries.\n",
+        prod.launchfile,
+        prod.last_version,
+        count);
+}
+
+int mft_diff(mft_product &prod)
+{
+    int differences = 0;
+    for (auto &e : prod.files)
+    {
+        auto it = prod.base_version.find(e.name);
+        if (it == prod.base_version.end())
+            continue;
+
+        auto o = it->second;
+        auto diff = o.timestamp != e.timestamp || o.hash != e.hash ||
+                    o.uncompressed_len != e.uncompressed_len ||
+                    o.compressed_len != e.compressed_len;
+        e.need_update = diff;
+        if (!diff)
+            continue;
+
+        differences++;
+        fprintf(
+            stdout,
+            "file: %s,%lu,%08x,%zu,%zu\n",
+            e.name,
+            e.timestamp,
+            e.hash,
+            e.uncompressed_len,
+            e.compressed_len);
+    }
+
+    char name[32] = {};
+    for (auto &e : prod.parts)
+    {
+        std::string part = e.pack_name;
+        snprintf(name, 32, "%08x%08x", e.ph, e.sh);
+        part += "/";
+        part += name;
+
+        auto it = prod.base_version.find(part);
+        if (it == prod.base_version.end())
+            continue;
+
+        auto o = it->second;
+        auto diff = o.timestamp != e.timestamp || o.hash != e.hash ||
+                    o.uncompressed_len != e.uncompressed_len ||
+                    o.compressed_len != e.compressed_len;
+        e.need_update = diff;
+        if (!diff)
+            continue;
+
+        differences++;
+        fprintf(
+            stdout,
+            "part: %s,%lu,%08x,%zu,%zu\n",
+            e.name,
+            e.timestamp,
+            e.hash,
+            e.uncompressed_len,
+            e.compressed_len);
+    }
+
+    return differences;
+}
+
 static void mft_entry_remote_name(mft_entry &entry, char name[32])
 {
     if (entry.type == mft_entry_part)
@@ -757,6 +919,8 @@ static void mft_entry_remote_name(mft_entry &entry, char name[32])
 static void mft_download_entry(mft_product &prod, mft_entry &entry, int thread_id)
 {
     assert(thread_id < prod.config.thread_count);
+    if (!entry.need_update)
+        return;
 
     char name[32] = {};
     mft_entry_remote_name(entry, name);
@@ -870,18 +1034,31 @@ void mft_init(mft_product &prod, mft_config &cfg)
     }
 }
 
-mft_result mft_product_install(const char *product_url)
+mft_result mft_product_install(mft_config &cfg, const char *product_url)
 {
-    std::vector<uint8_t> data;
     LOG_INFO("Product address: %s\n", product_url);
-    //http_get_binary(product_url, data);
-    file_read("uo-legacyrelease-175.prod", data);
 
-    mft_config cfg;
-    cfg.thread_count = XUOI_THREAD_COUNT;
+    std::vector<uint8_t> data;
+    http_get_binary(product_url, data);
+    //file_read("uo-legacyrelease-177.prod", data);
 
     mft_product prod;
     mft_init(prod, cfg);
+
+    auto latest_file = fs_join_path(prod.config.output_path, "latest.txt");
+    if (prod.config.mirror_mode)
+    {
+        prod.config.dump_extracted = false;
+        if (FILE *fp = fopen(fs_path_ascii(latest_file), "rb"))
+        {
+            fscanf(fp, "%lu", &prod.last_version);
+            fclose(fp);
+        }
+        else
+        {
+            LOG_WARN("No previous version found, a full mirror download will be done.\n");
+        }
+    }
 
     mft_result res = mft_load(prod, data.data(), data.size());
     do
@@ -889,25 +1066,58 @@ mft_result mft_product_install(const char *product_url)
         if (res != mft_ok)
             break;
 
+        if (prod.config.mirror_mode)
+        {
+            if (prod.last_version == prod.timestamp)
+            {
+                LOG_INFO("mirror is up-to-date, version %lu.\n", prod.timestamp);
+                break;
+            }
+            mft_listing_load_latest_version(prod);
+            prod.config.output_path = fs_join_path(
+                prod.config.output_path, std::to_string(prod.timestamp), prod.launchfile);
+        }
+
         res = mft_consume_manifests(prod);
         if (res != mft_ok)
             break;
 
-        size_t ulen = 0, clen = 0;
+        mft_listing_save(prod);
+        if (prod.config.listing_only)
+            break;
+
+        if (prod.config.mirror_mode && prod.last_version)
+        {
+            int diff = mft_diff(prod);
+            if (!diff)
+            {
+                LOG_INFO("no differences found. up-to-date.\n");
+                break;
+            }
+            LOG_INFO("found %d differences, updating.\n", diff);
+        }
+
+        size_t ulen = 0, clen = 0, count = 0;
         for (const auto &e : prod.files)
         {
+            if (!e.need_update)
+                continue;
+            ++count;
             ulen += e.uncompressed_len;
             clen += e.compressed_len;
         }
         s_total += clen;
         LOG_INFO(
             "total files to process: %zu (compressed: %zu, uncompressed: %zu)\n",
-            prod.files.size(),
+            count,
             clen,
             ulen);
 
         for (const auto &e : prod.parts)
         {
+            if (!e.need_update)
+                continue;
+            ++count;
             ulen += e.uncompressed_len;
             clen += e.compressed_len;
         }
@@ -915,47 +1125,83 @@ mft_result mft_product_install(const char *product_url)
         LOG_INFO(
             "total packs parts to process: %zu (%zu parts, compressed: %zu, uncompressed: %zu)\n",
             prod.packs.size(),
-            prod.parts.size(),
+            count,
             clen,
             ulen);
 
         mft_download_batch(prod, prod.files);
         mft_download_batch(prod, prod.parts);
     } while (0);
+
+    if (prod.config.mirror_mode)
+    {
+        if (FILE *fp = fopen(fs_path_ascii(latest_file), "wb"))
+        {
+            fprintf(fp, "%lu", prod.timestamp);
+            fclose(fp);
+        }
+    }
+
     mft_cleanup(prod);
 
     return res;
 }
 
+static void print_banner()
+{
+    fprintf(stdout, "xuoi - crossuo installer 0.0.1\n");
+    fprintf(stdout, "Copyright (c) 2019 Danny Angelo Carminati Grein\n");
+    fprintf(
+        stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n");
+    fprintf(stdout, "\n");
+}
+
+static po::parser s_cli;
+static bool init_cli(int argc, char *argv[])
+{
+    s_cli["help"].abbreviation('h').description("print this help screen");
+    s_cli["listing"]
+        .abbreviation('l')
+        .type(po::string)
+        .description("only dump install file listing");
+    s_cli["path"].abbreviation('p').type(po::string).description("install path");
+    s_cli["mirror"]
+        .abbreviation('m')
+        .type(po::string)
+        .description(
+            "mirror path - only mirror server files, checking for updates against previous version");
+    s_cli(argc, argv);
+
+    return s_cli["help"].size() == 0;
+}
+
 int main(int argc, char **argv)
 {
-    if (argc < 2)
+    if (!init_cli(argc, argv) || !s_cli["path"].was_set())
     {
-        fprintf(stdout, "xuoi - crossuo installer 0,0.1\n");
-        fprintf(stdout, "Copyright (c) 2019 Danny Angelo Carminati Grein\n");
-        fprintf(
-            stdout,
-            "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n");
-        fprintf(stdout, "\n");
-        fprintf(stdout, "Usage: %s <install path>\n", argv[0]);
-        fprintf(stdout, "   ex: %s uo_install\n", argv[0]);
+        print_banner();
+        s_cli.print_help(std::cout);
         return 0;
     }
 
-    s_outdir = argv[1];
-    assert(s_outdir);
-
-    s_outpath = fs_path_from(s_outdir);
-    if (!fs_path_create(s_outpath))
+    const char *outdir = s_cli["path"].get().string.c_str();
+    auto outpath = fs_path_from(outdir);
+    if (!fs_path_create(outpath))
     {
-        LOG_ERROR("couldn't create output directory: %s\n", s_outdir);
+        LOG_ERROR("couldn't create output directory: %s\n", outdir);
         return -int(mft_could_not_open_path);
     }
+
+    mft_config cfg;
+    cfg.thread_count = XUOI_THREAD_COUNT;
+    cfg.mirror_mode = s_cli["mirror"].was_set();
+    cfg.listing_only = s_cli["listing"].was_set();
+    cfg.output_path = outpath;
 
     crc32_init();
     http_init();
     int exit_code = 0;
-    if (auto res = mft_product_install(DATA_MANIFEST_FILE))
+    if (auto res = mft_product_install(cfg, DATA_MANIFEST_FILE))
     {
         LOG_ERROR("insllation failed with error: %d\n", res);
         exit_code = -int(res);
