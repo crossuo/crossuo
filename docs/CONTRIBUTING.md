@@ -16,6 +16,8 @@ Any code you submit will become part of the repository and be distributed under 
 
 **You also agree by submitting your code that you grant all transferrable rights to the code to the project maintainers, including for example re-licensing the code, modifying the code, distributing in source or binary forms. Specifically this includes a requirement that you assign copyright to the project maintainers.**
 
+For more details look at our detailed [CLA](CLA.md).
+
 ## Contributing information
 
 1. [Compiling](CONTRIBUTING/Compiling.md)
