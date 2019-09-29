@@ -242,8 +242,12 @@ bool file_write(const char *file, const uint8_t *input, size_t input_size)
 // we'll need to support crossuo manifest files with a similar api so we can
 // have a unified installer for both and maybe some special case for some freeshard
 
-#define DATA_SERVER_ADDRESS "http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo/manifest/"
-#define DATA_MANIFEST_FILE DATA_SERVER_ADDRESS "uo-legacyrelease.prod"
+#define DATA_PRODUCT_SERVER_ADDRESS                                                                \
+    "http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/uo/manifest/"
+#define DATA_PRODUCT_FILE "uo-legacyrelease.prod"
+#define DATA_PATCHER_SERVER_ADDRESS                                                                \
+    "http://patch.uo.eamythic.com/uopatch-sa/legacyrelease/patcher/manifest/"
+#define DATA_PATCHER_FILE "patcher.prod"
 
 enum mft_result : uint32_t
 {
@@ -259,6 +263,13 @@ enum mft_entry_type : uint32_t
     mft_entry_part,
     mft_entry_file,
     mft_entry_manifest,
+};
+
+enum mft_entry_state : uint8_t
+{
+    state_none,
+    state_need_update,
+    state_download_failed,
 };
 
 struct mft_entry
@@ -279,7 +290,7 @@ struct mft_entry
     const char *sig = nullptr; // sha256 base64 string
     const char *remote_path = nullptr;
     const char *pack_name = nullptr; // for packs in packages
-    bool need_update = true;
+    mft_entry_state state = state_need_update;
 };
 
 struct mft_package
@@ -313,6 +324,7 @@ struct mft_config
     bool mirror_mode = false;
     bool listing_only = false;
     bool dump_extracted = true;
+    bool latest_checked = false; // HACK for multi product mirroring
     fs_path output_path;
 };
 
@@ -736,13 +748,16 @@ void mft_listing_save(mft_product &prod)
     {
         fprintf(
             fp,
-            "%s,0,0,%lu,0,0,0,%s,%s\n",
+            "%s,0,0,%lu,0,0,0,0,0,%s,%s\n",
             prod.launchfile,
             prod.timestamp,
             prod.file_repo,
             prod.manifest_repo);
         for (const auto &e : prod.files)
         {
+            if (e.state == state_download_failed)
+                continue;
+
             char tmp[512] = {};
             const auto len = strlen(e.name);
             assert(len < sizeof(tmp));
@@ -752,7 +767,7 @@ void mft_listing_save(mft_product &prod)
             hashlittle2(tmp, len, &ph, &sh);
             fprintf(
                 fp,
-                "%s,%08x,%08x,%lu,%08x,%zu,%zu\n",
+                "%s,%08x,%08x,%lu,%08x,%zu,%zu,0,0\n",
                 e.name,
                 ph,
                 sh,
@@ -763,9 +778,12 @@ void mft_listing_save(mft_product &prod)
         }
         for (const auto &e : prod.parts)
         {
+            if (e.state == state_download_failed)
+                continue;
+
             fprintf(
                 fp,
-                "%s/%08x%08x,%08x,%08x,%lu,%08x,%zu,%zu\n",
+                "%s/%08x%08x,%08x,%08x,%lu,%08x,%zu,%zu,%08x,%u\n",
                 e.pack_name,
                 e.ph,
                 e.sh,
@@ -774,7 +792,9 @@ void mft_listing_save(mft_product &prod)
                 e.timestamp,
                 e.hash,
                 e.uncompressed_len,
-                e.compressed_len);
+                e.compressed_len,
+                e.meta_crc,
+                e.meta_len);
         }
     } while (0);
     fclose(fp);
@@ -804,7 +824,7 @@ void mft_listing_load_latest_version(mft_product &prod)
         mft_entry e;
         fscanf(
             fp,
-            "%512[^,],%08x,%08x,%lu,%08x,%zu,%zu%c%n",
+            "%512[^,],%08x,%08x,%lu,%08x,%zu,%zu,%08x,%u%c%n",
             tmp,
             &e.ph,
             &e.sh,
@@ -812,14 +832,16 @@ void mft_listing_load_latest_version(mft_product &prod)
             &e.hash,
             &e.uncompressed_len,
             &e.compressed_len,
+            &e.meta_crc,
+            &e.meta_len,
             &endline,
             &t);
-        count++;
 
         std::string n = tmp;
         if (!e.timestamp && !e.hash && !e.uncompressed_len && !e.ph)
             break;
 
+        count++;
         prod.base_version[n] = e;
         //fprintf(stdout, "%s,%08x,%08x,%lu,%08x,%zu,%zu\n", n.c_str(), e.ph, e.sh, e.timestamp, e.hash, e.uncompressed_len, e.compressed_len);
     };
@@ -835,6 +857,14 @@ void mft_listing_load_latest_version(mft_product &prod)
 
 int mft_diff(mft_product &prod)
 {
+    auto path = fs_join_path(
+        prod.config.output_path,
+        std::to_string(prod.last_version),
+        prod.launchfile,
+        "cache",
+        "diff.csv");
+    FILE *fp = fopen(fs_path_ascii(path), "rb");
+
     int differences = 0;
     for (auto &e : prod.files)
     {
@@ -846,19 +876,22 @@ int mft_diff(mft_product &prod)
         auto diff = o.timestamp != e.timestamp || o.hash != e.hash ||
                     o.uncompressed_len != e.uncompressed_len ||
                     o.compressed_len != e.compressed_len;
-        e.need_update = diff;
+        e.state = diff ? state_need_update : state_none;
         if (!diff)
             continue;
 
         differences++;
-        fprintf(
-            stdout,
-            "file: %s,%lu,%08x,%zu,%zu\n",
-            e.name,
-            e.timestamp,
-            e.hash,
-            e.uncompressed_len,
-            e.compressed_len);
+        if (fp)
+        {
+            fprintf(
+                fp,
+                "%s,%lu,%08x,%zu,%zu,0,0\n",
+                e.name,
+                e.timestamp,
+                e.hash,
+                e.uncompressed_len,
+                e.compressed_len);
+        }
     }
 
     char name[32] = {};
@@ -876,21 +909,30 @@ int mft_diff(mft_product &prod)
         auto o = it->second;
         auto diff = o.timestamp != e.timestamp || o.hash != e.hash ||
                     o.uncompressed_len != e.uncompressed_len ||
-                    o.compressed_len != e.compressed_len;
-        e.need_update = diff;
+                    o.compressed_len != e.compressed_len || o.meta_crc != e.meta_crc ||
+                    o.meta_len != e.meta_len;
+        e.state = diff ? state_need_update : state_none;
         if (!diff)
             continue;
 
         differences++;
-        fprintf(
-            stdout,
-            "part: %s,%lu,%08x,%zu,%zu\n",
-            e.name,
-            e.timestamp,
-            e.hash,
-            e.uncompressed_len,
-            e.compressed_len);
+        if (fp)
+        {
+            fprintf(
+                stdout,
+                "%s,%lu,%08x,%zu,%zu,%08x,%u\n",
+                e.name,
+                e.timestamp,
+                e.hash,
+                e.uncompressed_len,
+                e.compressed_len,
+                e.meta_crc,
+                e.meta_len);
+        }
     }
+
+    if (fp)
+        fclose(fp);
 
     return differences;
 }
@@ -919,7 +961,7 @@ static void mft_entry_remote_name(mft_entry &entry, char name[32])
 static void mft_download_entry(mft_product &prod, mft_entry &entry, int thread_id)
 {
     assert(thread_id < prod.config.thread_count);
-    if (!entry.need_update)
+    if (entry.state != state_need_update)
         return;
 
     char name[32] = {};
@@ -938,7 +980,8 @@ static void mft_download_entry(mft_product &prod, mft_entry &entry, int thread_i
     auto cdata = prod.download_cbuffers[thread_id];
     size_t size = prod.config.download_buffer_size;
     size_t bytes = 0;
-    mft_download(prod, prod.file_repo, name, entry, data, cdata, &size, &bytes);
+    auto res = mft_download(prod, prod.file_repo, name, entry, data, cdata, &size, &bytes);
+    entry.state = res == mft_ok ? state_none : state_download_failed;
 
     if (entry.type == mft_entry_part)
     {
@@ -977,19 +1020,24 @@ void mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries)
 {
 #if XUOI_THREADED
     const uint32_t threads = XUOI_THREAD_COUNT;
-    const auto batch_size = entries.size() / threads;
+    const auto total = entries.size();
+    const auto batch_size = total / threads;
+    const auto remainder = total % threads;
     LOG_TRACE(
         "total threads: %d, total entries: %d, batch size: %d\n",
         threads,
-        entries.size(),
-        batch_size);
+        total,
+        batch_size + remainder);
 
     std::vector<std::thread> jobs;
     for (uint32_t tid = 0; tid < threads; ++tid)
     {
         const auto start = batch_size * tid;
         auto end = batch_size * (tid + 1);
-        end = end < entries.size() ? end : entries.size() - 1;
+        if (tid + 1 == threads)
+            end += remainder;
+        if (end == start)
+            continue;
 
         LOG_TRACE(
             "scheduling job for thread %d with batch range from %d to %d\n", tid + 1, start, end);
@@ -1000,6 +1048,8 @@ void mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries)
             }
         };
         jobs.push_back(std::thread(job));
+        if (end > total)
+            break;
     }
     for (auto &job : jobs)
     {
@@ -1034,13 +1084,14 @@ void mft_init(mft_product &prod, mft_config &cfg)
     }
 }
 
-mft_result mft_product_install(mft_config &cfg, const char *product_url)
+mft_result mft_product_install(mft_config &cfg, const char *product_url, const char *product_file)
 {
-    LOG_INFO("Product address: %s\n", product_url);
+    LOG_INFO("Product address: %s%s\n", product_url, product_file);
 
     std::vector<uint8_t> data;
-    http_get_binary(product_url, data);
-    //file_read("uo-legacyrelease-177.prod", data);
+    char tmp[1024] = {};
+    snprintf(tmp, sizeof(tmp), "%s%s", product_url, product_file);
+    http_get_binary(tmp, data);
 
     mft_product prod;
     mft_init(prod, cfg);
@@ -1068,25 +1119,39 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url)
 
         if (prod.config.mirror_mode)
         {
-            if (prod.last_version == prod.timestamp)
+            if (!prod.config.latest_checked && prod.last_version == prod.timestamp)
             {
                 LOG_INFO("mirror is up-to-date, version %lu.\n", prod.timestamp);
                 break;
             }
+
+            // set config as latest version already checked, so next loop for next porduct we skip it
+            cfg.latest_checked = true;
             mft_listing_load_latest_version(prod);
             prod.config.output_path = fs_join_path(
                 prod.config.output_path, std::to_string(prod.timestamp), prod.launchfile);
         }
 
+        fs_path prod_file = fs_join_path(prod.config.output_path, "cache");
+        if (!fs_path_create(prod_file))
+            LOG_ERROR("couldn't create output directory: %s\n", fs_path_ascii(prod_file));
+
+        prod_file = fs_join_path(prod_file, product_file);
+        file_write(fs_path_ascii(prod_file), data);
+        data.clear();
+        snprintf(tmp, sizeof(tmp), "%s%s.sig", product_url, product_file);
+        http_get_binary(tmp, data);
+        snprintf(tmp, sizeof(tmp), "%s.sig", fs_path_ascii(prod_file));
+        file_write(tmp, data);
+
         res = mft_consume_manifests(prod);
         if (res != mft_ok)
             break;
 
-        mft_listing_save(prod);
         if (prod.config.listing_only)
             break;
 
-        if (prod.config.mirror_mode && prod.last_version)
+        if (prod.config.mirror_mode && !prod.config.latest_checked && prod.last_version)
         {
             int diff = mft_diff(prod);
             if (!diff)
@@ -1100,7 +1165,7 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url)
         size_t ulen = 0, clen = 0, count = 0;
         for (const auto &e : prod.files)
         {
-            if (!e.need_update)
+            if (e.state != state_need_update)
                 continue;
             ++count;
             ulen += e.uncompressed_len;
@@ -1115,7 +1180,7 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url)
 
         for (const auto &e : prod.parts)
         {
-            if (!e.need_update)
+            if (e.state != state_need_update)
                 continue;
             ++count;
             ulen += e.uncompressed_len;
@@ -1133,6 +1198,7 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url)
         mft_download_batch(prod, prod.parts);
     } while (0);
 
+    mft_listing_save(prod);
     if (prod.config.mirror_mode)
     {
         if (FILE *fp = fopen(fs_path_ascii(latest_file), "wb"))
@@ -1164,7 +1230,11 @@ static bool init_cli(int argc, char *argv[])
         .abbreviation('l')
         .type(po::string)
         .description("only dump install file listing");
-    s_cli["path"].abbreviation('p').type(po::string).description("install path");
+    s_cli["path"].abbreviation('o').type(po::string).description("install path");
+    s_cli["product"]
+        .abbreviation('p')
+        .type(po::string)
+        .description("product manifest (patcher.prod, uo-legacyrelease.prod)");
     s_cli["mirror"]
         .abbreviation('m')
         .type(po::string)
@@ -1201,10 +1271,35 @@ int main(int argc, char **argv)
     crc32_init();
     http_init();
     int exit_code = 0;
-    if (auto res = mft_product_install(cfg, DATA_MANIFEST_FILE))
+
+    const char *product_urls[] = { DATA_PATCHER_SERVER_ADDRESS, DATA_PRODUCT_SERVER_ADDRESS };
+    const char *product_list[] = { DATA_PATCHER_FILE, DATA_PRODUCT_FILE };
+    const int product_max = 2;
+    const bool specific_product = s_cli["product"].was_set();
+    int product_idx = 0;
+    int product_count = product_max;
+    if (specific_product)
     {
-        LOG_ERROR("insllation failed with error: %d\n", res);
-        exit_code = -int(res);
+        std::string product_name = s_cli["product"].get().string;
+        for (int i = 0; i < product_max; ++i)
+        {
+            if (product_name.compare(product_list[i]) == 0)
+            {
+                product_idx = i;
+                product_count = 1;
+                break;
+            }
+        }
+    }
+
+    int count = 0;
+    for (int i = product_idx; i < product_max && count < product_count; ++i, ++count)
+    {
+        if (auto res = mft_product_install(cfg, product_urls[i], product_list[i]))
+        {
+            LOG_ERROR("installation failed with error: %d\n", res);
+            exit_code = -int(res);
+        }
     }
     http_shutdown();
     return exit_code;
