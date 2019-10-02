@@ -1131,6 +1131,12 @@ bool CAnimationManager::TestPixels(
 
     auto &frame = direction.m_Frames[frameIndex];
     auto spr = (CSprite *)frame.UserData;
+
+    if (!spr)
+    {
+        return false;
+    }
+
     assert(spr);
 
     y -= spr->Height + frame.CenterY;
