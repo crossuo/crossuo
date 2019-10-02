@@ -21,7 +21,7 @@
 #define XUOI_THREAD_COUNT (std::thread::hardware_concurrency() - 1)
 #else
 #define XUOI_ATOMIC(x) x
-#define XUOI_ATOMIC_ADD(x, i) (x += i)
+#define XUOI_ATOMIC_ADD(x, i) (x + i)
 #define XUOI_THREAD_COUNT (1)
 #endif
 
@@ -49,19 +49,11 @@ const char *log_system_name(int)
 #define LOOKUP3_IMPLEMENTATION
 #include <external/lookup3.h>
 
-#define CURL_STATICLIB
-#include <curl/curl.h>
+#include "http.h"
+#include "xuo_updater.h"
 
 #define XUOI_MAX_DOWNLOAD_SIZE (1024 * 1024 * 1024)
 #define XUOI_AGENT_NAME "EAMythic Patch Client"
-
-#define DO_CURL(x)                                                                                 \
-    do                                                                                             \
-    {                                                                                              \
-        CURLcode r = curl_easy_##x;                                                                \
-        if (r != CURLE_OK)                                                                         \
-            LOG_ERROR(__FILE__ ":%d:ERROR:%d: %s\n", __LINE__, r, curl_easy_strerror(r));          \
-    } while (0)
 
 static size_t s_total = 0;
 static XUOI_ATOMIC(size_t) s_received{ 0 };
@@ -78,164 +70,6 @@ static const char *to_lowercase(const char *str)
         s++;
     }
     return str;
-}
-
-static size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string *str)
-{
-    assert(data && str && size && nmemb);
-    const auto amount = size * nmemb;
-    str->append(data, amount);
-    return amount;
-}
-
-static size_t recv_data_vector(const char *data, size_t size, size_t nmemb, std::vector<char> *vec)
-{
-    assert(data && vec && size && nmemb);
-    const auto amount = size * nmemb;
-    vec->insert(vec->end(), data, data + amount);
-    return amount;
-}
-
-struct http_recv_buf
-{
-    size_t max_len;
-    size_t offset;
-    const uint8_t *data;
-};
-static size_t recv_data(const char *data, size_t size, size_t nmemb, http_recv_buf *buf)
-{
-    assert(data && buf && size && nmemb);
-    const auto amount = size * nmemb;
-    assert(buf->offset + amount < buf->max_len);
-    memcpy((void *)&buf->data[buf->offset], data, amount);
-    buf->offset += amount;
-    return amount;
-}
-
-static CURL *g_curl_handle = nullptr;
-void http_init()
-{
-    if (g_curl_handle)
-        return;
-    curl_global_init(CURL_GLOBAL_ALL);
-    curl_version_info_data *info = curl_version_info(CURLVERSION_NOW);
-    LOG_INFO(
-        "libcurl %s (%s, %s, %s, libz/%s, tinyxml2/%d.%d.%d)\n",
-        info->version,
-        info->host,
-        info->ssl_version,
-        info->libssh_version,
-        info->libz_version,
-        TINYXML2_MAJOR_VERSION,
-        TINYXML2_MINOR_VERSION,
-        TINYXML2_PATCH_VERSION);
-    g_curl_handle = curl_easy_init();
-}
-
-void http_shutdown()
-{
-    curl_easy_cleanup(g_curl_handle);
-    g_curl_handle = nullptr;
-    curl_global_cleanup();
-}
-
-void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
-{
-    assert(buf && size);
-    http_recv_buf tmp = { *size, 0, buf };
-    LOG_TRACE("url %s\n", url);
-    CURL *curl = curl_easy_duphandle(g_curl_handle);
-    DO_CURL(setopt(curl, CURLOPT_USERAGENT, XUOI_AGENT_NAME));
-    DO_CURL(setopt(curl, CURLOPT_URL, url));
-    DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &tmp));
-    DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data));
-    DO_CURL(perform(curl));
-    curl_easy_cleanup(curl);
-    *size = tmp.offset;
-}
-
-void http_get_binary(const char *url, std::vector<uint8_t> &data)
-{
-    LOG_TRACE("url %s\n", url);
-    CURL *curl = curl_easy_duphandle(g_curl_handle);
-    DO_CURL(setopt(curl, CURLOPT_USERAGENT, XUOI_AGENT_NAME));
-    DO_CURL(setopt(curl, CURLOPT_URL, url));
-    DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
-    DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_vector));
-    DO_CURL(perform(curl));
-    curl_easy_cleanup(curl);
-}
-
-void http_get_string(const char *url, std::string &data)
-{
-    LOG_TRACE("url %s\n", url);
-    CURL *curl = curl_easy_duphandle(g_curl_handle);
-    DO_CURL(setopt(curl, CURLOPT_USERAGENT, XUOI_AGENT_NAME));
-    DO_CURL(setopt(curl, CURLOPT_URL, url));
-    DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
-    DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_string));
-    DO_CURL(perform(curl));
-    curl_easy_cleanup(curl);
-}
-
-template <typename T>
-bool file_read(const char *file, T &result)
-{
-    FILE *fp = fopen(file, "rb");
-    if (!fp)
-        return false;
-    fseek(fp, 0, SEEK_END);
-    const size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    result.reserve(len);
-    result.resize(len);
-    const size_t read = fread((void *)result.data(), 1, len, fp);
-    fclose(fp);
-    if (read != len)
-        return false;
-    return true;
-}
-
-template <typename T>
-bool file_write(const char *file, T &input)
-{
-    FILE *fp = fopen(file, "wb");
-    if (!fp)
-        return false;
-    const size_t wrote = fwrite((void *)input.data(), 1, input.size(), fp);
-    fclose(fp);
-    if (wrote != input.size())
-        return false;
-    return true;
-}
-
-bool file_read(const char *file, const uint8_t *result, size_t *size)
-{
-    assert(size);
-    FILE *fp = fopen(file, "rb");
-    if (!fp)
-        return false;
-    fseek(fp, 0, SEEK_END);
-    const size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    const size_t read = fread((void *)result, 1, len, fp);
-    fclose(fp);
-    if (read != len)
-        return false;
-    *size = read;
-    return true;
-}
-
-bool file_write(const char *file, const uint8_t *input, size_t input_size)
-{
-    FILE *fp = fopen(file, "wb");
-    if (!fp)
-        return false;
-    const size_t wrote = fwrite((void *)input, 1, input_size, fp);
-    fclose(fp);
-    if (wrote != input_size)
-        return false;
-    return true;
 }
 
 // actual xuoi implementation
@@ -374,7 +208,7 @@ mft_result mft_download(
     fs_path dir = fs_directory(path);
     if (!fs_path_create(dir))
     {
-        LOG_ERROR("failed to create directiory: %s\n", fs_path_ascii(dir));
+        LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(dir));
         return mft_could_not_open_path;
     }
     auto lpath = fs_path_ascii(path);
@@ -408,10 +242,10 @@ mft_result mft_download(
     {
         case 0:
         {
-            if (!file_read(lpath, buffer, buffer_size))
+            if (!fs_file_read(lpath, buffer, buffer_size))
             {
                 http_get_binary(upath, buffer, buffer_size);
-                file_write(lpath, buffer, *buffer_size); // save to local cache
+                fs_file_write(lpath, buffer, *buffer_size); // save to local cache
             }
             bytes = *buffer_size;
         }
@@ -420,10 +254,10 @@ mft_result mft_download(
         {
             auto cl = entry.compressed_len;
             assert(cl < *buffer_size);
-            if (!file_read(lpath, cbuffer, buffer_size))
+            if (!fs_file_read(lpath, cbuffer, buffer_size))
             {
                 http_get_binary(upath, cbuffer, buffer_size);
-                file_write(lpath, cbuffer, *buffer_size); // save to local cache
+                fs_file_write(lpath, cbuffer, *buffer_size); // save to local cache
             }
             cl = *buffer_size;
             bytes = cl;
@@ -459,7 +293,7 @@ mft_result mft_download(
         dir = fs_directory(path);
         fs_path_create(dir);
         auto opath = fs_path_ascii(path);
-        if (!file_write(opath, buffer, *buffer_size))
+        if (!fs_file_write(opath, buffer, *buffer_size))
         {
             LOG_ERROR("error dumping decompressed data\n");
             return mft_write_error;
@@ -1082,6 +916,8 @@ void mft_init(mft_product &prod, mft_config &cfg)
         prod.download_buffers[i] = (uint8_t *)malloc(sizeof(uint8_t) * cfg.download_buffer_size);
         prod.download_cbuffers[i] = (uint8_t *)malloc(sizeof(uint8_t) * cfg.download_buffer_size);
     }
+
+    http_set_user_agent(XUOI_AGENT_NAME);
 }
 
 mft_result mft_product_install(mft_config &cfg, const char *product_url, const char *product_file)
@@ -1137,12 +973,12 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
             LOG_ERROR("couldn't create output directory: %s\n", fs_path_ascii(prod_file));
 
         prod_file = fs_join_path(prod_file, product_file);
-        file_write(fs_path_ascii(prod_file), data);
+        fs_file_write(fs_path_ascii(prod_file), data);
         data.clear();
         snprintf(tmp, sizeof(tmp), "%s%s.sig", product_url, product_file);
         http_get_binary(tmp, data);
         snprintf(tmp, sizeof(tmp), "%s.sig", fs_path_ascii(prod_file));
-        file_write(tmp, data);
+        fs_file_write(tmp, data);
 
         res = mft_consume_manifests(prod);
         if (res != mft_ok)
@@ -1196,17 +1032,17 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
 
         mft_download_batch(prod, prod.files);
         mft_download_batch(prod, prod.parts);
-    } while (0);
 
-    mft_listing_save(prod);
-    if (prod.config.mirror_mode)
-    {
-        if (FILE *fp = fopen(fs_path_ascii(latest_file), "wb"))
+        mft_listing_save(prod);
+        if (prod.config.mirror_mode)
         {
-            fprintf(fp, "%lu", prod.timestamp);
-            fclose(fp);
+            if (FILE *fp = fopen(fs_path_ascii(latest_file), "wb"))
+            {
+                fprintf(fp, "%lu", prod.timestamp);
+                fclose(fp);
+            }
         }
-    }
+    } while (0);
 
     mft_cleanup(prod);
 
@@ -1240,6 +1076,7 @@ static bool init_cli(int argc, char *argv[])
         .type(po::string)
         .description(
             "mirror path - only mirror server files, checking for updates against previous version");
+    s_cli["xuo"].abbreviation('x').description("install/update CrossUO client");
     s_cli(argc, argv);
 
     return s_cli["help"].size() == 0;
@@ -1271,6 +1108,14 @@ int main(int argc, char **argv)
     crc32_init();
     http_init();
     int exit_code = 0;
+    const char *name = xuo_platform_name();
+    LOG_INFO("Platform: %s\n", name);
+
+    if (s_cli["xuo"].was_set())
+    {
+        xuo_update_apply(outpath);
+        return 0;
+    }
 
     const char *product_urls[] = { DATA_PATCHER_SERVER_ADDRESS, DATA_PRODUCT_SERVER_ADDRESS };
     const char *product_list[] = { DATA_PATCHER_FILE, DATA_PRODUCT_FILE };

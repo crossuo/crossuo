@@ -36,6 +36,7 @@ enum fs_mode
 {
     FS_READ = 0x01,
     FS_WRITE = 0x02,
+    FS_EXEC = 0x04, // chmod only
 };
 
 enum fs_type
@@ -75,6 +76,11 @@ bool fs_path_empty(const fs_path &path);
 FILE *fs_open(const fs_path &path, fs_mode mode);
 void fs_close(FILE *fp);
 size_t fs_size(FILE *fp);
+bool fs_copy(const fs_path &from, const fs_path &to);
+void fs_del(const fs_path &target);
+bool fs_chmod(const fs_path &target, fs_mode mode);
+
+fs_path fs_appdata_path();
 
 fs_path fs_directory(const fs_path &path);
 fs_type fs_path_type(const fs_path &path);
@@ -329,24 +335,56 @@ FS_PRIVATE void fs_unmap(unsigned char *ptr, size_t length)
     UnmapViewOfFile(ptr);
 }
 
+FS_PRIVATE bool fs_copy(const fs_path &from, const fs_path &to)
+{
+    const auto &f = fs_path_wstr(from);
+    const auto &t = fs_path_wstr(to);
+    return CopyFile(f.c_str(), t.c_str(), FALSE) ? true : false;
+}
+
+FS_PRIVATE bool fs_chmod(const fs_path &target, fs_mode mode)
+{
+    // TODO: implement
+    return true;
+}
+
+FS_PRIVATE void fs_del(const fs_path &target)
+{
+    const auto &t = fs_path_wstr(target);
+    DeleteFile(t.c_str());
+}
+
+FS_PRIVATE fs_path fs_appdata_path()
+{
+    wchar_t path[FS_MAX_PATH] = {};
+    auto r = SHGetFolderPath(nullptr, CSIDL_COMMON_APPDATA, nullptr, 0, path);
+    return fs_path_from(path);
+}
+
 #else // defined(_MSC_VER)
 
 #include <stdio.h>
 #include <ctype.h>
-#include <string>
 #include <utime.h>
 #include <string.h>
+#include <assert.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <assert.h>
-#include <locale>
-#include <codecvt>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <codecvt>
+#include <string>
+#include <locale>
 #include <algorithm>
 #include <vector>
+#if defined(__linux__)
+#include <pwd.h>
+#include <sys/sendfile.h> // sendfile
+#elif defined(__APPLE__)
+#include <copyfile.h> // copyfile
+#endif
 
 FS_PRIVATE fs_path fs_path_from(const std::string &s)
 {
@@ -619,6 +657,81 @@ FS_PRIVATE void fs_unmap(unsigned char *ptr, size_t length)
 #endif
 }
 
+FS_PRIVATE bool fs_copy(const fs_path &from, const fs_path &to)
+{
+#if defined(__linux__)
+    int input, output;
+    struct stat src_stat;
+    if ((input = open(fs_path_ascii(from), O_RDONLY)) == -1)
+    {
+        return false;
+    }
+    fstat(input, &src_stat);
+    if ((output = open(fs_path_ascii(to), O_WRONLY | O_CREAT, O_NOFOLLOW | src_stat.st_mode)) == -1)
+    {
+        close(input);
+        return false;
+    }
+    int result = sendfile(output, input, nullptr, src_stat.st_size);
+    close(input);
+    close(output);
+    return result > -1;
+#elif defined(__APPLE__)
+    return copyfile(
+               fs_path_ascii(from),
+               fs_path_ascii(to),
+               nullptr,
+               COPYFILE_ALL | COPYFILE_NOFOLLOW_DST) == 0;
+#endif
+}
+
+FS_PRIVATE void fs_del(const fs_path &target)
+{
+    unlink(fs_path_ascii(target));
+}
+
+FS_PRIVATE bool fs_chmod(const fs_path &target, fs_mode mode)
+{
+    auto m = S_IROTH | S_IRGRP; // +r others and group
+    m |= mode & FS_EXEC ? S_IXUSR : 0;
+    m |= mode & FS_WRITE ? S_IWUSR : 0;
+    m |= mode & FS_READ ? S_IRUSR : 0;
+    return chmod(fs_path_ascii(target), m) == 0;
+}
+
+FS_PRIVATE fs_path fs_appdata_path()
+{
+    static const char *datadir;
+    static fs_path path;
+    if (datadir)
+        return path;
+
+#if defined(__linux__)
+    // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html#introduction
+    bool is_home = false;
+    do
+    {
+        if ((datadir = getenv("XDG_DATA_HOME")) != nullptr)
+            break;
+        is_home = true;
+        if ((datadir = getenv("HOME")) != nullptr)
+            break;
+        struct passwd *pw = getpwuid(getuid());
+        datadir = pw->pw_dir;
+    } while (0);
+
+    path = fs_path_from(datadir);
+    if (is_home)
+        fs_append(path, fs_path_from(".local/share"));
+#elif defined(__APPLE__)
+    datadir = getenv("HOME"); // FIXME: can this be null on osx?
+    path = fs_path_from(datadir);
+    fs_append(path, fs_path_from("/Library/Application Support"));
+#endif
+
+    return path;
+}
+
 #endif // #if defined(_MSC_VER)
 
 FS_PRIVATE bool fs_path_is_dir(const fs_path &path)
@@ -629,6 +742,66 @@ FS_PRIVATE bool fs_path_is_dir(const fs_path &path)
 FS_PRIVATE bool fs_path_is_file(const fs_path &path)
 {
     return fs_path_type(path) == FS_FILE;
+}
+
+template <typename T>
+bool fs_file_read(const char *file, T &result)
+{
+    FILE *fp = fopen(file, "rb");
+    if (!fp)
+        return false;
+    fseek(fp, 0, SEEK_END);
+    const size_t len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    result.reserve(len);
+    result.resize(len);
+    const size_t read = fread((void *)result.data(), 1, len, fp);
+    fclose(fp);
+    if (read != len)
+        return false;
+    return true;
+}
+
+template <typename T>
+bool fs_file_write(const char *file, T &input)
+{
+    FILE *fp = fopen(file, "wb");
+    if (!fp)
+        return false;
+    const size_t wrote = fwrite((void *)input.data(), 1, input.size(), fp);
+    fclose(fp);
+    if (wrote != input.size())
+        return false;
+    return true;
+}
+
+FS_PRIVATE bool fs_file_read(const char *file, const uint8_t *result, size_t *size)
+{
+    assert(size);
+    FILE *fp = fopen(file, "rb");
+    if (!fp)
+        return false;
+    fseek(fp, 0, SEEK_END);
+    const size_t len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    const size_t read = fread((void *)result, 1, len, fp);
+    fclose(fp);
+    if (read != len)
+        return false;
+    *size = read;
+    return true;
+}
+
+FS_PRIVATE bool fs_file_write(const char *file, const uint8_t *input, size_t input_size)
+{
+    FILE *fp = fopen(file, "wb");
+    if (!fp)
+        return false;
+    const size_t wrote = fwrite((void *)input, 1, input_size, fp);
+    fclose(fp);
+    if (wrote != input_size)
+        return false;
+    return true;
 }
 
 #endif // FS_IMPLEMENTATION
