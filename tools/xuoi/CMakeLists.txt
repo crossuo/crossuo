@@ -4,14 +4,7 @@ project(${PROJECT_NAME})
 if(NOT XUO_WINDOWS)
     set(CURL_PROJECT curl-7.50.1)
     set(CURL_ARGS ${EXTERNALS_CMAKE_ARGS} -DBUILD_TESTING=Off -DBUILD_CURL_EXE=Off -DBUILD_SHARED_LIBS=Off -DENABLE_ARES=Off -DCURL_STATICLIB=On)
-    ExternalProject_Add(${CURL_PROJECT}
-      GIT_REPOSITORY https://github.com/curl/curl.git
-      GIT_TAG 3e7769a
-        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/curl
-      CMAKE_ARGS 
-        -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/curl
-        ${CURL_ARGS}
-    )
+
     set(CURL_LIBRARIES curl)
 endif()
 
@@ -27,7 +20,6 @@ set(XUOI_SRCS
 )
 
 add_executable(${PROJECT_NAME} ${XUOI_SRCS})
-add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT} ${CURL_PROJECT})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES} ${EXTERNAL_PROJECT} ${LOADER} ${THREAD})
 target_include_directories(${PROJECT_NAME} PUBLIC ${EXTERNAL_INCLUDE} ${CURL_INCLUDE})
