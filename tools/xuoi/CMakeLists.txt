@@ -23,6 +23,8 @@ set(XUOI_INCLUDE "${XUOI_DIR}" CACHE INTERNAL "")
 set(XUOI_LIBS "${PROJECT_NAME} ${THREAD} ${LOADER}" CACHE INTERNAL "")
 
 set(XUOI_SRCS
+  http.cpp
+  xuo_updater.cpp
   main.cpp
 )
 
