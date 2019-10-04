@@ -156,7 +156,8 @@ FS_PRIVATE fs_path const &fs_path_from(fs_path const &p)
 #if defined(_MSC_VER)
 
 #include <Windows.h>
-#include <Shlwapi.h>
+#include <shlwapi.h>
+#include <shlobj.h>
 #include <assert.h>
 #include <algorithm>
 #pragma comment(lib, "Shlwapi.lib")

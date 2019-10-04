@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include "http.h"
 
 #include <vector>

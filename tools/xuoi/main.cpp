@@ -1,7 +1,6 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
-//#include <gperftools/profiler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -582,7 +581,7 @@ void mft_listing_save(mft_product &prod)
     {
         fprintf(
             fp,
-            "%s,0,0,%lu,0,0,0,0,0,%s,%s\n",
+            "%s,0,0,%" PRIu64 ",0,0,0,0,0,%s,%s\n",
             prod.launchfile,
             prod.timestamp,
             prod.file_repo,
@@ -601,7 +600,7 @@ void mft_listing_save(mft_product &prod)
             hashlittle2(tmp, len, &ph, &sh);
             fprintf(
                 fp,
-                "%s,%08x,%08x,%lu,%08x,%zu,%zu,0,0\n",
+                "%s,%08x,%08x,%" PRIu64 ",%08x,%zu,%zu,0,0\n",
                 e.name,
                 ph,
                 sh,
@@ -617,7 +616,7 @@ void mft_listing_save(mft_product &prod)
 
             fprintf(
                 fp,
-                "%s/%08x%08x,%08x,%08x,%lu,%08x,%zu,%zu,%08x,%u\n",
+                "%s/%08x%08x,%08x,%08x,%" PRIu64 ",%08x,%zu,%zu,%08x,%u\n",
                 e.pack_name,
                 e.ph,
                 e.sh,
@@ -658,7 +657,7 @@ void mft_listing_load_latest_version(mft_product &prod)
         mft_entry e;
         fscanf(
             fp,
-            "%512[^,],%08x,%08x,%lu,%08x,%zu,%zu,%08x,%u%c%n",
+            "%512[^,],%08x,%08x,%" PRIu64 ",%08x,%zu,%zu,%08x,%u%c%n",
             tmp,
             &e.ph,
             &e.sh,
@@ -677,7 +676,7 @@ void mft_listing_load_latest_version(mft_product &prod)
 
         count++;
         prod.base_version[n] = e;
-        //fprintf(stdout, "%s,%08x,%08x,%lu,%08x,%zu,%zu\n", n.c_str(), e.ph, e.sh, e.timestamp, e.hash, e.uncompressed_len, e.compressed_len);
+        //fprintf(stdout, "%s,%08x,%08x,%" PRIu64 ",%08x,%zu,%zu\n", n.c_str(), e.ph, e.sh, e.timestamp, e.hash, e.uncompressed_len, e.compressed_len);
     };
 
     fclose(fp);
@@ -719,7 +718,7 @@ int mft_diff(mft_product &prod)
         {
             fprintf(
                 fp,
-                "%s,%lu,%08x,%zu,%zu,0,0\n",
+                "%s,%" PRIu64 ",%08x,%zu,%zu,0,0\n",
                 e.name,
                 e.timestamp,
                 e.hash,
@@ -754,7 +753,7 @@ int mft_diff(mft_product &prod)
         {
             fprintf(
                 stdout,
-                "%s,%lu,%08x,%zu,%zu,%08x,%u\n",
+                "%s,%" PRIu64 ",%08x,%zu,%zu,%08x,%u\n",
                 e.name,
                 e.timestamp,
                 e.hash,
@@ -938,7 +937,7 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
         prod.config.dump_extracted = false;
         if (FILE *fp = fopen(fs_path_ascii(latest_file), "rb"))
         {
-            fscanf(fp, "%lu", &prod.last_version);
+            fscanf(fp, "%" PRIu64 "", &prod.last_version);
             fclose(fp);
         }
         else
@@ -1038,7 +1037,7 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
         {
             if (FILE *fp = fopen(fs_path_ascii(latest_file), "wb"))
             {
-                fprintf(fp, "%lu", prod.timestamp);
+                fprintf(fp, "%" PRIu64 "", prod.timestamp);
                 fclose(fp);
             }
         }
@@ -1113,8 +1112,8 @@ int main(int argc, char **argv)
 
     if (s_cli["xuo"].was_set())
     {
-        xuo_update_apply(outpath);
-        return 0;
+        auto ctx = xuo_init(outdir, false);
+        return xuo_update_apply(ctx);
     }
 
     const char *product_urls[] = { DATA_PATCHER_SERVER_ADDRESS, DATA_PRODUCT_SERVER_ADDRESS };
