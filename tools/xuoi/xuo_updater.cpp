@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (C) 2019 Danny Angelo Carminati Grein
+
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,6 +17,7 @@
 //#define LOG_TRACE(...) // comment to enable tracing
 #include <common/fs.h>
 #include <common/log.h>
+#include <common/str.h> // strcasecmp
 
 #include "http.h"
 
@@ -71,11 +75,17 @@ struct xuo_release
     std::vector<xuo_file> files;
 };
 
+struct xuo_config
+{
+    fs_path cache_path;
+    fs_path output_path;
+    bool initialized = false;
+};
+
 struct xuo_context
 {
     const char *platform;
-    fs_path cache_path;
-    fs_path output_path;
+    xuo_config config;
 
     std::vector<xuo_release> releases;
     std::vector<uint8_t> changelog;
@@ -159,7 +169,7 @@ static uint64_t xuo_get_hash(const fs_path &filename)
     return hash;
 }
 
-void xuo_changelog_load(xuo_context &ctx)
+static void xuo_changelog_load(xuo_context &ctx)
 {
     const char *changelog_addr = XUOL_UPDATER_HOST "release/changelog.html";
     static std::vector<uint8_t> changelog_file;
@@ -231,7 +241,7 @@ static xuo_result xuo_manifest_load(xuo_context &ctx, const char *platform, xuo_
 
 static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &file)
 {
-    fs_path ipath = fs_join_path(ctx.cache_path, file.zipFilename);
+    fs_path ipath = fs_join_path(ctx.config.cache_path, file.zipFilename);
     fs_path idir = fs_directory(ipath);
     if (!fs_path_create(idir))
     {
@@ -239,7 +249,7 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
         return xuo_could_not_open_path;
     }
 
-    fs_path opath = fs_join_path(ctx.output_path, file.name);
+    fs_path opath = fs_join_path(ctx.config.output_path, file.name);
     fs_path odir = fs_directory(opath);
     if (!fs_path_create(odir))
     {
@@ -291,15 +301,13 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
 static bool xuo_install_release(xuo_context &ctx, xuo_release &release)
 {
     XUOL_ATOMIC(uint32_t) errors{ 0 };
-    const uint32_t threads = XUOL_THREAD_COUNT;
 
 #if XUOL_THREADED
+    const uint32_t threads = XUOL_THREAD_COUNT;
     std::vector<std::thread> jobs;
-#endif
-
     for (uint32_t tid = 0; tid < threads; ++tid)
     {
-        auto job = [tid, &errors, &ctx, &release]() {
+        auto job = [tid, threads, &errors, &ctx, &release]() {
             for (auto i = tid; i < release.files.size(); i += threads)
             {
                 if (xuo_update_file(ctx, release, release.files[i]) != xuo_ok)
@@ -308,28 +316,28 @@ static bool xuo_install_release(xuo_context &ctx, xuo_release &release)
                 }
             }
         };
-#if XUOL_THREADED
-        jobs.push_back(std::thread(job));
-#else
-        job();
-#endif
-    }
 
-#if XUOL_THREADED
+        jobs.push_back(std::thread(job));
+    }
     for (auto &job : jobs)
     {
         job.join();
     }
+#else
+    for (auto i = 0; i < release.files.size(); ++i)
+    {
+        if (xuo_update_file(ctx, release, release.files[i]) != xuo_ok)
+        {
+            errors = XUOL_ATOMIC_ADD(errors, 1);
+        }
+    }
 #endif
 
-    return errors == 0 ? xuo_ok : xuo_install_failed;
+    return errors == 0;
 }
 
-void xuo_update_generate()
-{
-}
-
-xuo_release *xuo_release_get(xuo_context &ctx, const char *name, const char *version = nullptr)
+/*
+static xuo_release *xuo_release_get(xuo_context &ctx, const char *name, const char *version = nullptr)
 {
     auto it = std::find_if(
         ctx.releases.begin(), ctx.releases.end(), [name, version](xuo_release &e) -> bool {
@@ -346,32 +354,98 @@ xuo_release *xuo_release_get(xuo_context &ctx, const char *name, const char *ver
         return nullptr;
     return &(*it);
 }
+*/
 
-bool xuo_update_apply(const fs_path &path)
+static bool
+xuo_release_check(const fs_path &path, const xuo_release &rel, std::vector<xuo_file> &files)
 {
-    xuo_context ctx;
+    for (const auto &f : rel.files)
+    {
+        auto fname = fs_join_path(path, f.name);
+        bool want = false;
+        if (!fs_path_exists(fname))
+            want = true;
+        else if (xuo_get_hash(fname) != f.hash)
+            want = true;
+        if (want)
+            files.push_back(f);
+    }
+    return !files.empty();
+}
+
+static bool xuo_update_check(xuo_context &ctx, xuo_release &updates, bool quick)
+{
+    bool found = false;
+    for (const auto &r : ctx.releases)
+    {
+        if (!r.latest)
+            continue;
+        found |= xuo_release_check(ctx.config.output_path, r, updates.files);
+        if (found && quick)
+            return true;
+    }
+    return found;
+}
+
+const char *xuo_changelog(xuo_context *ctx)
+{
+    if (!ctx || ctx->config.initialized)
+        return nullptr;
+    return (char *)ctx->changelog.data();
+}
+
+bool xuo_update_check(xuo_context *ctx)
+{
+    if (!ctx || ctx->config.initialized)
+        return false;
+    xuo_release updates;
+    return xuo_update_check(*ctx, updates, true);
+}
+
+bool xuo_update_apply(xuo_context *ctx)
+{
+    if (!ctx || ctx->config.initialized)
+        return false;
+    xuo_release updates;
+    if (xuo_update_check(*ctx, updates, false))
+        return xuo_install_release(*ctx, updates);
+    return false;
+}
+
+xuo_context *xuo_init(const char *path, bool beta)
+{
+    static xuo_context ctx;
+    if (ctx.config.initialized)
+        return nullptr;
+
     http_set_user_agent(XUOL_AGENT_NAME);
     xuo_changelog_load(ctx);
     if (xuo_manifest_load(ctx, xuo_platform_name(), xuo_channel::stable))
-        return false;
+        return nullptr;
 
-    ctx.cache_path = fs_join_path(fs_appdata_path(), "xuolauncher_", "cache");
-    ctx.output_path = path;
+    ctx.config.cache_path = fs_join_path(fs_appdata_path(), "xuolauncher", "cache");
+    ctx.config.output_path = fs_path_from(path);
 
-    fs_path dir = fs_directory(ctx.cache_path);
+    fs_path dir = fs_directory(ctx.config.cache_path);
     if (!fs_path_create(dir))
     {
         LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(dir));
-        return false;
+        return nullptr;
     }
 
-    dir = fs_directory(ctx.output_path);
+    dir = fs_directory(ctx.config.output_path);
     if (!fs_path_create(dir))
     {
         LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(dir));
-        return false;
+        return nullptr;
     }
 
-    auto rel = xuo_release_get(ctx, "CrossUO", "1.0.0");
-    return rel ? xuo_install_release(ctx, *rel) : false;
+    ctx.config.initialized = true;
+    return &ctx;
+}
+
+void xuo_shutdown(xuo_context *ctx)
+{
+    assert(ctx);
+    ctx->config.initialized = false;
 }
