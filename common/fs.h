@@ -109,6 +109,40 @@ fs_path fs_join_path(H head, T... tail)
     return r;
 }
 
+template <typename T>
+bool fs_file_read(const char *file, T &result)
+{
+    FILE *fp = fopen(file, "rb");
+    if (!fp)
+        return false;
+    fseek(fp, 0, SEEK_END);
+    const size_t len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    result.reserve(len);
+    result.resize(len);
+    const size_t read = fread((void *)result.data(), 1, len, fp);
+    fclose(fp);
+    if (read != len)
+        return false;
+    return true;
+}
+
+template <typename T>
+bool fs_file_write(const char *file, T &input)
+{
+    FILE *fp = fopen(file, "wb");
+    if (!fp)
+        return false;
+    const size_t wrote = fwrite((void *)input.data(), 1, input.size(), fp);
+    fclose(fp);
+    if (wrote != input.size())
+        return false;
+    return true;
+}
+
+bool fs_file_read(const char *file, const uint8_t *result, size_t *size);
+bool fs_file_write(const char *file, const uint8_t *input, size_t input_size);
+
 #endif // FS_HEADER
 
 #if (defined(FS_IMPLEMENTATION_PRIVATE) || defined(FS_IMPLEMENTATION)) && !defined(FS_IMPLEMENTED)
@@ -743,37 +777,6 @@ FS_PRIVATE bool fs_path_is_dir(const fs_path &path)
 FS_PRIVATE bool fs_path_is_file(const fs_path &path)
 {
     return fs_path_type(path) == FS_FILE;
-}
-
-template <typename T>
-bool fs_file_read(const char *file, T &result)
-{
-    FILE *fp = fopen(file, "rb");
-    if (!fp)
-        return false;
-    fseek(fp, 0, SEEK_END);
-    const size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    result.reserve(len);
-    result.resize(len);
-    const size_t read = fread((void *)result.data(), 1, len, fp);
-    fclose(fp);
-    if (read != len)
-        return false;
-    return true;
-}
-
-template <typename T>
-bool fs_file_write(const char *file, T &input)
-{
-    FILE *fp = fopen(file, "wb");
-    if (!fp)
-        return false;
-    const size_t wrote = fwrite((void *)input.data(), 1, input.size(), fp);
-    fclose(fp);
-    if (wrote != input.size())
-        return false;
-    return true;
 }
 
 FS_PRIVATE bool fs_file_read(const char *file, const uint8_t *result, size_t *size)

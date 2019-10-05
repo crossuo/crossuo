@@ -101,6 +101,7 @@ configure_file(
 include_directories("${PROJECT_BINARY_DIR}/")
 
 add_subdirectory(external)
+add_subdirectory(external/gfx)
 add_subdirectory(common)
 add_subdirectory(xuocore)
 add_subdirectory(tools)

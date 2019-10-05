@@ -9,16 +9,7 @@
 #include <inttypes.h>
 #include <algorithm>
 
-#include <external/xxhash.h>
-#include <external/tinyxml2.h>
-#include <external/miniz.h>
-
-//#define LOG_DEBUG(...) // comment to enable debug logging
-//#define LOG_TRACE(...) // comment to enable tracing
-#include <common/fs.h>
-#include <common/log.h>
-#include <common/str.h> // strcasecmp
-
+#include "common.h"
 #include "http.h"
 
 #define XUOL_VERSION "1.1"
