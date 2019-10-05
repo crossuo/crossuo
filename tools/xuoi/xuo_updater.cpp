@@ -93,7 +93,7 @@ struct xuo_context
     tinyxml2::XMLDocument doc;
 };
 
-#if 1 //defined(XUO_LINUX)
+#if defined(XUO_LINUX)
 static const char *s_distroName = nullptr;
 
 const char *xuo_platform_name()
@@ -139,7 +139,7 @@ const char *xuo_platform_name()
 
     return s_distroName;
 }
-#elif defined(XUO_MACOS)
+#elif defined(XUO_OSX)
 const char *xuo_platform_name()
 {
     return "osx";
