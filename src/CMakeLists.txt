@@ -308,7 +308,7 @@ else()
 endif()
 
 add_dependencies(crossuo ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
-target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
+target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} GLEW::glew ${THREAD})
 target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE})
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})
