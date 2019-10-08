@@ -1131,6 +1131,13 @@ bool CAnimationManager::TestPixels(
 
     auto &frame = direction.m_Frames[frameIndex];
     auto spr = (CSprite *)frame.UserData;
+
+    if (!spr)
+    {
+        // FIXME: before we had CSprite in the struct, we need cleanup how to construct these objects
+        spr = new CSprite();
+    }
+
     assert(spr);
 
     y -= spr->Height + frame.CenterY;
