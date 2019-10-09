@@ -73,6 +73,7 @@ inline KeyEvent AsKeyEvent(const TextEvent &ev)
 #define KEY_CONTROL (SDLK_LCTRL | SDLK_RCTRL)
 #define KEY_CAPITAL SDLK_CAPSLOCK
 
+#define KEY_CLEAR SDLK_CLEAR
 #define KEY_RETURN SDLK_RETURN
 #define KEY_RETURN2 SDLK_KP_ENTER
 #define KEY_ESCAPE SDLK_ESCAPE

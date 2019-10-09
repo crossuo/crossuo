@@ -2642,6 +2642,7 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
 
     switch (key)
     {
+        case KEY_CLEAR:
         case KEY_RETURN:
         case KEY_RETURN2:
         {
