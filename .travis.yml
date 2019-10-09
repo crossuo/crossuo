@@ -71,8 +71,24 @@ matrix:
       script: ./travis.sh
     - os: osx
       sudo: false
+      addons:
+        homebrew:
+          packages:
+            - ccache
+            - sdl2
+            - ninja
+            - glew
+          update: true
+      install:
+        - export PATH="/usr/local/opt/ccache/libexec:$PATH"
       osx_image: xcode10
-      cache: ccache
+      before_cache:
+        - brew cleanup
+      cache: 
+        ccache: true
+        directories:
+          - brew install ccache sdl2 ninja glew
+          - $HOME/Library/Caches/Homebrew
       script:
         - ./travis.sh
       before_deploy:

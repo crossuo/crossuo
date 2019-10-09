@@ -30,7 +30,6 @@ set(gameobjects_src
   GameObjects/ObjectOnCursor.cpp
 )
 
-# WGLEW_ARB_render_texture
 set(glengine_src
   GLEngine/GLEngine.cpp
   GLEngine/GLFrameBuffer.cpp
@@ -308,7 +307,7 @@ else()
 endif()
 
 add_dependencies(crossuo ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
-target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
+target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${THREAD})
 target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE})
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})

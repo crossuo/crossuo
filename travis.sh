@@ -20,10 +20,10 @@ fi
 
 if [[ "$TASK" == "clang" ]]; then
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja xuodump -j8 && ninja xuoi -j8 && ninja crossuo -j8 && ninja crossuo_unity -j8 || exit 1
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && ninja xuodump -j8 && ninja xuoi -j8 && ninja crossuo -j8 && ninja crossuo_unity -j8 || exit 1
 	cd ..
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja xuodump -j8 && ninja xuoi -j8 && ninja crossuo -j8 && ninja crossuo_unity -j8 || exit 1
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && ninja xuodump -j8 && ninja xuoi -j8 && ninja crossuo -j8 && ninja crossuo_unity -j8 || exit 1
 	echo Make the zip file
 	cd src
 	zip CrossUO-Unbuntu-nightly.zip crossuo.so crossuo
@@ -32,21 +32,21 @@ fi
 
 if [[ "$TASK" == "gcc" ]]; then
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Debug && make -j8 || exit 1
+	mkdir debug && cd debug && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && make -j8 || exit 1
 	#cd ..
 	#echo Building Release
-	#mkdir release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release && make -j8 || exit 1
+	#mkdir release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && make -j8 || exit 1
 fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-	brew update
-	brew install sdl2 ninja glew
-	brew outdated cmake || brew upgrade cmake
+	#brew update
+	#brew install sdl2 ninja glew
+	#brew outdated cmake || brew upgrade cmake
 	#echo Building Debug
-	#mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && ninja crossuo_unity -j8 || exit 1
+	#mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && ninja crossuo_unity -j8 || exit 1
 	#cd ..
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && ninja crossuo_unity -j8 || exit 1
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && ninja crossuo_unity -j8 || exit 1
 	echo Make the zip file
 	cd src
 	zip CrossUO-OSX-nightly.zip crossuo.so crossuo
