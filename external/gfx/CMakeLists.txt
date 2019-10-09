@@ -16,6 +16,8 @@ set(EXTERNALGFX_SRC
   imgui/imgui_draw.cpp
   imgui/imgui_mainwindow.cpp
   imgui/imgui_richtext.cpp
+  imgui/imgui_impl_sdl.cpp
+  imgui/imgui_impl_opengl2.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EXTERNAL_GFX_H
+#define EXTERNAL_GFX_H
 
 #if defined(XUO_WINDOWS)
 #include "../../Dependencies/include/glew.h"
@@ -13,6 +14,8 @@
 #endif
 #endif // XUO_WINDOWS
 
+#include <SDL.h>
+
 #define SOKOL_IMGUI_NO_SOKOL_APP
 //#define SOKOL_GLCORE33
 //#define SOKOL_GLES2
@@ -21,3 +24,5 @@
 //#define SOKOL_METAL
 //#define SOKOL_DUMMY_BACKEND
 //SOKOL_TRACE_HOOKS // sokol_gfx_imgui debugging helper
+
+#endif // #ifndef EXTERNAL_GFX_H

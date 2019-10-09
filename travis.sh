@@ -41,7 +41,7 @@ fi
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	#brew update
 	#brew install sdl2 ninja glew
-	#brew outdated cmake || brew upgrade cmake
+	brew outdated cmake || brew upgrade cmake
 	#echo Building Debug
 	#mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && ninja crossuo_unity -j8 || exit 1
 	#cd ..

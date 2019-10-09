@@ -5938,7 +5938,8 @@ void CGame::ChangeWarmode(uint8_t status)
 
     if (status != 0xFF)
     {
-        if (g_Player->Warmode == (bool)status)
+        const bool s = status != 0;
+        if (g_Player->Warmode == s)
         {
             return;
         }

@@ -211,6 +211,12 @@
 extern "C" {
 #endif
 
+struct ImDrawData;
+bool ImGui_ImplSokol_Init();
+void ImGui_ImplSokol_Shutdown();
+void ImGui_ImplSokol_NewFrame();
+void ImGui_ImplSokol_RenderDrawData(ImDrawData* draw_data);
+
 typedef struct simgui_desc_t {
     int max_vertices;
     sg_pixel_format color_format;
@@ -906,6 +912,8 @@ SOKOL_API_IMPL void simgui_new_frame(int width, int height, double delta_time) {
     #endif
 }
 
+static void simgui_render_internal(ImDrawData* draw_data, ImGuiIO* io);
+
 SOKOL_API_IMPL void simgui_render(void) {
     #if defined(__cplusplus)
         ImGui::Render();
@@ -922,7 +930,10 @@ SOKOL_API_IMPL void simgui_render(void) {
     if (draw_data->CmdListsCount == 0) {
         return;
     }
+	simgui_render_internal(draw_data, io);
+}
 
+static void simgui_render_internal(ImDrawData* draw_data, ImGuiIO* io) {
     /* render the ImGui command list */
     sg_push_debug_group("sokol-imgui");
 
@@ -1082,6 +1093,55 @@ SOKOL_API_IMPL bool simgui_handle_event(const sapp_event* ev) {
             break;
     }
     return io->WantCaptureKeyboard;
+}
+#endif
+
+#if defined(SOKOL_IMGUI_NO_SOKOL_APP)
+static void ImGui_ImplSokol_RenderWindow(ImGuiViewport *viewport, void *) {
+    /* if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) */
+#if defined(__cplusplus)
+	ImGuiIO* io = &ImGui::GetIO();
+#else
+	ImGuiIO* io = igGetIO();
+#endif
+	simgui_render_internal(viewport->DrawData, io);
+}
+
+void ImGui_ImplSokol_RenderDrawData(ImDrawData* draw_data) {
+#if defined(__cplusplus)
+	ImGuiIO* io = &ImGui::GetIO();
+#else
+	ImGuiIO* io = igGetIO();
+#endif
+	simgui_render_internal(draw_data, io);
+}
+
+static void ImGui_ImplSokol_InitPlatformInterface() {
+    ImGuiPlatformIO &platform_io = ImGui::GetPlatformIO();
+    platform_io.Renderer_RenderWindow = ImGui_ImplSokol_RenderWindow;
+}
+
+static void ImGui_ImplSokol_ShutdownPlatformInterface() {
+    ImGui::DestroyPlatformWindows();
+}
+
+bool ImGui_ImplSokol_Init() {
+    // Setup back-end capabilities flags
+    ImGuiIO &io = ImGui::GetIO();
+    io.BackendRendererName = "imgui_impl_sokol";
+    io.BackendFlags |=
+        ImGuiBackendFlags_RendererHasViewports; // We can create multi-viewports on the Renderer side (optional)
+
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        ImGui_ImplSokol_InitPlatformInterface();
+    return true;
+}
+
+void ImGui_ImplSokol_Shutdown() {
+    ImGui_ImplSokol_ShutdownPlatformInterface();
+}
+
+void ImGui_ImplSokol_NewFrame() {
 }
 #endif
 
