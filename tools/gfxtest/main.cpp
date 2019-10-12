@@ -6,8 +6,6 @@
 #include <external/gfx/sokol_gfx.h>
 #include <external/gfx/imgui/imgui.h>
 
-#include "common.h"
-
 void XUODefaultStyle()
 {
     ImVec4 *colors = ImGui::GetStyle().Colors;

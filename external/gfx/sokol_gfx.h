@@ -2249,7 +2249,7 @@ SOKOL_API_DECL void sg_discard_context(sg_context ctx_id);
     #define GL_LUMINANCE 0x1909
     #endif
 
-    #ifdef SOKOL_GLES2
+    #if defined(SOKOL_GLES2) && !defined(__glew_h__)
     #   ifdef GL_ANGLE_instanced_arrays
     #       define SOKOL_INSTANCING_ENABLED
     #       define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedANGLE(mode, first, count, instancecount)

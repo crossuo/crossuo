@@ -42,10 +42,9 @@
 //  2018-01-18: Inputs: Added mapping for ImGuiKey_Insert.
 //  2017-08-25: Inputs: MousePos set to -FLT_MAX,-FLT_MAX when mouse is unavailable/missing (instead of -1,-1).
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
-#define USE_SOKOL 1
+
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
-#include "../sokol_gfx.h"
 
 // SDL
 // (the multi-viewports feature requires SDL features supported from SDL 2.0.4+. SDL 2.0.5+ is highly recommended)
@@ -256,7 +255,7 @@ void ImGui_ImplSDL2_Shutdown()
     memset(g_MouseCursors, 0, sizeof(g_MouseCursors));
 }
 
-// This code is incredibly messy because some of the functions we need for full viewport support are not available in SDL < 2.0.4. 
+// This code is incredibly messy because some of the functions we need for full viewport support are not available in SDL < 2.0.4.
 static void ImGui_ImplSDL2_UpdateMousePosAndButtons()
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -278,7 +277,7 @@ static void ImGui_ImplSDL2_UpdateMousePosAndButtons()
     {
         io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
     }
-    
+
     // [2]
     // Set Dear ImGui mouse pos from OS mouse pos + get buttons. (this is the common behavior)
     int mouse_x_local, mouse_y_local;
@@ -423,25 +422,10 @@ struct ImGuiViewportDataSDL2
     Uint32          WindowID;
     bool            WindowOwned;
     SDL_GLContext   GLContext;
-    sg_context      sokolContext;
 
     ImGuiViewportDataSDL2() { Window = NULL; WindowID = 0; WindowOwned = false; GLContext = NULL; }
     ~ImGuiViewportDataSDL2() { IM_ASSERT(Window == NULL && GLContext == NULL); }
 };
-
-static void* ImGui_ImplSDL2_BindMainWindow()
-{
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGuiViewportDataSDL2* data = (ImGuiViewportDataSDL2*)viewport->PlatformUserData;
-    int wW, wH, wX, wY;
-    SDL_GetWindowSize(data->Window, &wW, &wH);
-    SDL_GetWindowPosition(data->Window, &wX, &wY);
-    viewport->Pos = ImVec2(float(wX), float(wY));
-    viewport->Size = ImVec2(float(wW), float(wH));
-    viewport->DpiScale = 1.0f;
-    viewport->PlatformHandle = (void*)data->Window;
-    return viewport->PlatformHandle;
-}
 
 static void ImGui_ImplSDL2_CreateWindow(ImGuiViewport* viewport)
 {
@@ -460,9 +444,7 @@ static void ImGui_ImplSDL2_CreateWindow(ImGuiViewport* viewport)
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         SDL_GL_MakeCurrent(main_viewport_data->Window, main_viewport_data->GLContext);
     }
-#if USE_SOKOL
-    sg_activate_context(main_viewport_data->sokolContext);
-#endif
+
     Uint32 sdl_flags = 0;
     sdl_flags |= use_opengl ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
     sdl_flags |= SDL_GetWindowFlags(g_Window) & SDL_WINDOW_ALLOW_HIGHDPI;
@@ -473,7 +455,7 @@ static void ImGui_ImplSDL2_CreateWindow(ImGuiViewport* viewport)
     sdl_flags |= (viewport->Flags & ImGuiViewportFlags_TopMost) ? SDL_WINDOW_ALWAYS_ON_TOP : 0;
 #endif
     data->Window = SDL_CreateWindow("No Title Yet", (int)viewport->Pos.x, (int)viewport->Pos.y, (int)viewport->Size.x, (int)viewport->Size.y, sdl_flags);
-    data->WindowOwned = true; 
+    data->WindowOwned = true;
     if (use_opengl)
     {
         data->GLContext = SDL_GL_CreateContext(data->Window);
@@ -481,10 +463,7 @@ static void ImGui_ImplSDL2_CreateWindow(ImGuiViewport* viewport)
     }
     if (use_opengl && backup_context)
         SDL_GL_MakeCurrent(data->Window, backup_context);
-#if USE_SOKOL
-    data->sokolContext = sg_setup_context();
-    sg_activate_context(data->sokolContext);
-#endif
+
     viewport->PlatformHandle = (void*)data->Window;
 #if defined(_WIN32)
     SDL_SysWMinfo info;
@@ -498,9 +477,6 @@ static void ImGui_ImplSDL2_DestroyWindow(ImGuiViewport* viewport)
 {
     if (ImGuiViewportDataSDL2* data = (ImGuiViewportDataSDL2*)viewport->PlatformUserData)
     {
-#if USE_SOKOL
-        sg_discard_context(data->sokolContext);
-#endif
         if (data->GLContext && data->WindowOwned)
             SDL_GL_DeleteContext(data->GLContext);
         if (data->Window && data->WindowOwned)
@@ -604,9 +580,6 @@ static void ImGui_ImplSDL2_RenderWindow(ImGuiViewport* viewport, void*)
     ImGuiViewportDataSDL2* data = (ImGuiViewportDataSDL2*)viewport->PlatformUserData;
     if (data->GLContext)
         SDL_GL_MakeCurrent(data->Window, data->GLContext);
-#if USE_SOKOL
-    sg_activate_context(data->sokolContext);
-#endif
 }
 
 static void ImGui_ImplSDL2_SwapBuffers(ImGuiViewport* viewport, void*)
@@ -615,18 +588,7 @@ static void ImGui_ImplSDL2_SwapBuffers(ImGuiViewport* viewport, void*)
     if (data->GLContext)
     {
         SDL_GL_MakeCurrent(data->Window, data->GLContext);
-#if USE_SOKOL
-        sg_activate_context(data->sokolContext);
-        sg_commit();
-#endif
         SDL_GL_SwapWindow(data->Window);
-    }
-    else
-    {
-#if USE_SOKOL
-        sg_activate_context(data->sokolContext);
-        sg_commit();
-#endif
     }
 }
 
@@ -639,7 +601,7 @@ static int ImGui_ImplSDL2_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_inst
     ImGuiViewportDataSDL2* data = (ImGuiViewportDataSDL2*)viewport->PlatformUserData;
     (void)vk_allocator;
     SDL_bool ret = SDL_Vulkan_CreateSurface(data->Window, (VkInstance)vk_instance, (VkSurfaceKHR*)out_vk_surface);
-    return ret ? 0 : 1; // ret ? VK_SUCCESS : VK_NOT_READY 
+    return ret ? 0 : 1; // ret ? VK_SUCCESS : VK_NOT_READY
 }
 #endif // SDL_HAS_VULKAN
 
@@ -675,7 +637,6 @@ static void ImGui_ImplSDL2_InitPlatformInterface(SDL_Window* window, void* sdl_g
 {
     // Register platform interface (will be coupled with a renderer interface)
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    platform_io.Platform_BindMainWindow = ImGui_ImplSDL2_BindMainWindow;
     platform_io.Platform_CreateWindow = ImGui_ImplSDL2_CreateWindow;
     platform_io.Platform_DestroyWindow = ImGui_ImplSDL2_DestroyWindow;
     platform_io.Platform_ShowWindow = ImGui_ImplSDL2_ShowWindow;
@@ -710,9 +671,6 @@ static void ImGui_ImplSDL2_InitPlatformInterface(SDL_Window* window, void* sdl_g
     data->WindowID = SDL_GetWindowID(window);
     data->WindowOwned = false;
     data->GLContext = sdl_gl_context;
-#if USE_SOKOL
-    data->sokolContext = sg_setup_context();
-#endif
     main_viewport->PlatformUserData = data;
     main_viewport->PlatformHandle = data->Window;
 }
