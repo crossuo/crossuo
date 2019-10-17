@@ -7,16 +7,16 @@
 
 void CSprite::LoadSprite16(int width, int height, uint16_t *pixels, bool skipHitMask)
 {
-    assert(Texture == nullptr && "texture should be null");
-    Texture = new CGLTexture;
+    if (Texture == nullptr)
+        Texture = new CGLTexture;
     g_GL_BindTexture16(*Texture, width, height, pixels);
     Init(width, height, pixels, skipHitMask);
 }
 
 void CSprite::LoadSprite32(int width, int height, uint32_t *pixels, bool skipHitMask)
 {
-    assert(Texture == nullptr && "texture should be null");
-    Texture = new CGLTexture;
+    if (Texture == nullptr)
+        Texture = new CGLTexture;
     g_GL_BindTexture32(*Texture, width, height, pixels);
     Init(width, height, pixels, skipHitMask);
 }
@@ -92,8 +92,8 @@ template void CSprite::Init<uint32_t>(int width, int height, uint32_t *pixels, b
 
 void CTextSprite::Init(int width, int height, uint32_t *pixels, bool skipHitMask)
 {
-    assert(Texture == nullptr && "texture should be null");
-    Texture = new CGLTexture;
+    if (Texture == nullptr)
+        Texture = new CGLTexture;
     g_GL_BindTexture32(*Texture, width, height, pixels);
     CSprite::Init(width, height, pixels, skipHitMask);
 }
