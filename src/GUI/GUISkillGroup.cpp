@@ -10,6 +10,7 @@
 #include "../SkillGroup.h"
 #include "../Managers/MouseManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -125,6 +126,7 @@ CSize CGUISkillGroup::GetSize()
 
 void CGUISkillGroup::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 

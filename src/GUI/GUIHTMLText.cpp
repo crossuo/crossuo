@@ -4,6 +4,7 @@
 #include "GUIHTMLText.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
+#include "Utility/PerfMarker.h"
 
 CGUIHTMLText::CGUIHTMLText(
     int index,
@@ -42,6 +43,7 @@ void CGUIHTMLText::Create(bool backgroundCanBeColored)
 
 void CGUIHTMLText::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     m_Sprite.Draw(m_X, m_Y, checktrans);
 }

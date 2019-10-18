@@ -6,6 +6,7 @@
 #include "../Point.h"
 #include "../Managers/ColorManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -68,6 +69,7 @@ void CGUIDrawObject::PrepareTextures()
 
 void CGUIDrawObject::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr && spr->Texture)

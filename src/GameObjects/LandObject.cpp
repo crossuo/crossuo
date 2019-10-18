@@ -5,6 +5,7 @@
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
+#include "Utility/PerfMarker.h"
 
 CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CMapObject(ROT_LAND_OBJECT, serial, 0, color, x, y, z)
@@ -125,6 +126,7 @@ void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
 
 void CLandObject::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (m_Z <= g_MaxGroundZ)
     {

@@ -7,6 +7,7 @@
 #include "../CrossUO.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
+#include "Utility/PerfMarker.h"
 
 CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const std::wstring &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)
@@ -39,6 +40,7 @@ void CGUIBulletinBoardObject::PrepareTextures()
 
 void CGUIBulletinBoardObject::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(0x1523);
     if (spr != nullptr && spr->Texture != nullptr)

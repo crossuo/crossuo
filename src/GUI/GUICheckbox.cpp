@@ -7,6 +7,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
+#include "Utility/PerfMarker.h"
 
 CGUICheckbox::CGUICheckbox(
     int serial, uint16_t graphic, uint16_t graphicChecked, uint16_t graphicDisabled, int x, int y)
@@ -165,6 +166,7 @@ uint16_t CGUICheckbox::GetDrawGraphic()
 
 void CGUICheckbox::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGUIDrawObject::Draw(checktrans);
     Text.Draw(TextX, TextY, checktrans);

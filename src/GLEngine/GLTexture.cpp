@@ -2,6 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
+
 extern RenderCmdList *g_renderCmdList;
 
 CGLTexture::~CGLTexture()
@@ -12,6 +14,7 @@ CGLTexture::~CGLTexture()
 
 void CGLTexture::Draw(int x, int y, bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture == 0)
@@ -56,6 +59,7 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
 
 void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture == 0)

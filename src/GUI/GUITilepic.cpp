@@ -5,6 +5,7 @@
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Point.h"
+#include "Utility/PerfMarker.h"
 
 CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y)
     : CGUIDrawObject(GOT_TILEPIC, 0, graphic, color, x, y)
@@ -36,6 +37,7 @@ void CGUITilepic::PrepareTextures()
 
 void CGUITilepic::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture)

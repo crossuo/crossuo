@@ -1564,27 +1564,22 @@ bool CConfigManager::Load(const fs_path &path)
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
-            int w, h;
-            SDL_GetWindowSize(g_GameWindow.m_window, &w, &h);
+            int windowWidth, windowHeight;
+            SDL_GetWindowSize(g_GameWindow.m_window, &windowWidth, &windowHeight);
 
-            HACKRender_SetViewParams(&SetViewParamsCmd{ 0, w, h, 0, -150, 150 });
+            HACKRender_SetViewParams(&SetViewParamsCmd{
+                0, 0, windowWidth, windowHeight, windowWidth, windowHeight, -150, 150 });
 #endif
         }
         else
         {
             g_GameWindow.SetPositionSize(windowX, windowY, windowWidth, windowHeight);
 #ifdef NEW_RENDERER_ENABLED
-            // FIXME this is to confirm the new size always fits with what the previous code did
-            // which is, getting the real window size and using it
-            int w, h;
-            SDL_GetWindowSize(g_GameWindow.m_window, &w, &h);
-            assert(windowWidth == w && windowHeight == h);
-
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
-            HACKRender_SetViewParams(
-                &SetViewParamsCmd{ 0, windowWidth, windowHeight, 0, -150, 150 });
+            HACKRender_SetViewParams(&SetViewParamsCmd{
+                0, 0, windowWidth, windowHeight, windowWidth, windowHeight, -150, 150 });
 #endif
         }
 

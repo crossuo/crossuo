@@ -4,6 +4,7 @@
 #include "GUIWorldMapTexture.h"
 #include "../Managers/MouseManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -18,6 +19,7 @@ CGUIWorldMapTexture::~CGUIWorldMapTexture()
 
 void CGUIWorldMapTexture::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     if (g_MapTexture[Index].Texture != 0)
     {
 #ifndef NEW_RENDERER_ENABLED

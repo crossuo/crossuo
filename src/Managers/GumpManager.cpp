@@ -45,6 +45,7 @@
 #include "../Gumps/GumpMenu.h"
 #include "../Gumps/GumpGeneric.h"
 #include "../Network/Packets.h"
+#include "Utility/PerfMarker.h"
 
 CGumpManager g_GumpManager;
 
@@ -542,6 +543,7 @@ void CGumpManager::PrepareTextures()
 
 void CGumpManager::Draw(bool blocked)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
     CGump *menuBarGump = nullptr;

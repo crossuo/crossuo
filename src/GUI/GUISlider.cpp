@@ -8,6 +8,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
+#include "Utility/PerfMarker.h"
 
 CGUISlider::CGUISlider(
     int serial,
@@ -328,6 +329,7 @@ uint16_t CGUISlider::GetDrawGraphic()
 
 void CGUISlider::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     /*Value++;
 	if (Value > MaxValue)

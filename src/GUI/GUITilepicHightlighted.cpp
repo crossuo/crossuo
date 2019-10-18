@@ -7,6 +7,7 @@
 #include "../SelectedObject.h"
 #include "../Managers/ColorManager.h"
 #include "../Gumps/Gump.h"
+#include "Utility/PerfMarker.h"
 
 CGUITilepicHightlighted::CGUITilepicHightlighted(
     int serial,
@@ -59,6 +60,7 @@ void CGUITilepicHightlighted::SetShaderMode()
 
 void CGUITilepicHightlighted::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)

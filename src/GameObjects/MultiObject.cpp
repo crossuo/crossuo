@@ -8,6 +8,7 @@
 #include "../Managers/CustomHousesManager.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -46,6 +47,7 @@ void CMultiObject::UpdateGraphicBySeason()
 
 void CMultiObject::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 
     uint16_t color = Color;

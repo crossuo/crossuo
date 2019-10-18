@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUIBlending.h"
+#include "Utility/PerfMarker.h"
 
 CGUIBlending::CGUIBlending(bool enabled, GLenum sFactor, GLenum dFactor)
     : CBaseGUI(GOT_BLENDING, 0, 0, 0, 0, 0)
@@ -17,6 +18,7 @@ CGUIBlending::~CGUIBlending()
 
 void CGUIBlending::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {

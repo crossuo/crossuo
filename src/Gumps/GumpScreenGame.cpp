@@ -15,6 +15,7 @@
 #include "../Managers/MouseManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../Network/Packets.h"
+#include "Utility/PerfMarker.h"
 
 CGumpScreenGame::CGumpScreenGame()
     : CGump(GT_NONE, 0, 0, 0)
@@ -127,6 +128,7 @@ void CGumpScreenGame::InitToolTip()
 
 void CGumpScreenGame::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     //Рамка игрового окна
     g_Game.DrawGump(

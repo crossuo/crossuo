@@ -31,7 +31,7 @@ CGLEngine::~CGLEngine()
 }
 
 #ifndef NEW_RENDERER_ENABLED
-//#define OGL_DEBUGCONTEXT_ENABLED
+#define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
 #define OGL_DEBUGMSG_TYPE_COUNT (8)
@@ -101,36 +101,38 @@ static void APIENTRY openglCallbackFunction(
     (void)length;
     (void)userParam;
 
-    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
-        auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
-        auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+    // auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
+    //     auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
+    //     auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
 
-        auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
-        shouldAssert &= infoType.assert;
-        shouldLog &= infoType.log;
+    //     auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
+    //     shouldAssert &= infoType.assert;
+    //     shouldLog &= infoType.log;
 
-        if (!shouldAssert && !shouldLog)
-            return std::tie(shouldAssert, shouldLog);
+    //     if (!shouldAssert && !shouldLog)
+    //         return std::tie(shouldAssert, shouldLog);
 
-        for (auto &ctrl : s_openglDebugMsgs)
-        {
-            if (ctrl.id == OGL_DEBUGMSG_INVALIDID)
-            {
-                break;
-            }
+    //     for (auto &ctrl : s_openglDebugMsgs)
+    //     {
+    //         if (ctrl.id == OGL_DEBUGMSG_INVALIDID)
+    //         {
+    //             break;
+    //         }
 
-            if (ctrl.id == id)
-            {
-                shouldAssert &= ctrl.assert;
-                shouldLog &= ctrl.log;
-                break;
-            }
-        }
+    //         if (ctrl.id == id)
+    //         {
+    //             shouldAssert &= ctrl.assert;
+    //             shouldLog &= ctrl.log;
+    //             break;
+    //         }
+    //     }
 
-        return std::tie(shouldAssert, shouldLog);
-    };
+    //     return std::tie(shouldAssert, shouldLog);
+    // };
 
-    auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    // auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    auto shouldLog = true;
+    auto shouldAssert = false;
     if (shouldLog)
     {
         Info(Renderer, "OpenGL debug message (id %d): %s", id, message);
@@ -283,6 +285,8 @@ void CGLEngine::Uninstall()
 
 void CGLEngine::UpdateRect()
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     int width, height;
     //SDL_GL_GetDrawableSize(g_GameWindow.m_window, &width, &height);
     SDL_GetWindowSize(g_GameWindow.m_window, &width, &height);
@@ -295,6 +299,8 @@ void CGLEngine::UpdateRect()
 
 void CGLEngine::BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -322,6 +328,8 @@ void CGLEngine::BindTexture16(CGLTexture &texture, int width, int height, uint16
 
 void CGLEngine::BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -343,6 +351,7 @@ void CGLEngine::BindTexture32(CGLTexture &texture, int width, int height, uint32
 
 void CGLEngine::BeginDraw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     Drawing = true;
 
@@ -362,6 +371,8 @@ void CGLEngine::BeginDraw()
 
 void CGLEngine::EndDraw()
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     Drawing = false;
 
@@ -371,8 +382,10 @@ void CGLEngine::EndDraw()
 #endif
 }
 
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -393,9 +406,10 @@ void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
     glMatrixMode(GL_MODELVIEW);
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::ViewPort(int x, int y, int width, int height)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     const auto size = g_GameWindow.GetSize();
     glViewport(x, size.Height - y - height, width, height);
@@ -407,6 +421,8 @@ void CGLEngine::ViewPort(int x, int y, int width, int height)
 
 void CGLEngine::RestorePort()
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
     glMatrixMode(GL_PROJECTION);
@@ -442,16 +458,29 @@ void CGLEngine::PushScissor(const CPoint2Di &position, const CSize &size)
 
 void CGLEngine::PushScissor(const CRect &rect)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     m_ScissorList.push_back(rect);
 
+#ifndef NEW_RENDERER_ENABLED
     glEnable(GL_SCISSOR_TEST);
 
     glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
+#else
+    RenderAdd_SetScissor(
+        g_renderCmdList,
+        &SetScissorCmd{ rect.Position.X,
+                        rect.Position.Y,
+                        uint32_t(rect.Size.Width),
+                        uint32_t(rect.Size.Height) });
+#endif
 }
 
 void CGLEngine::PopScissor()
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     if (!m_ScissorList.empty())
     {
@@ -460,26 +489,47 @@ void CGLEngine::PopScissor()
 
     if (m_ScissorList.empty())
     {
+#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_SCISSOR_TEST);
+#else
+        RenderAdd_DisableScissor(g_renderCmdList);
+#endif
     }
     else
     {
         CRect &rect = m_ScissorList.back();
+#ifndef NEW_RENDERER_ENABLED
         glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
+#else
+        RenderAdd_SetScissor(
+            g_renderCmdList,
+            &SetScissorCmd{ rect.Position.X,
+                            rect.Position.Y,
+                            uint32_t(rect.Size.Width),
+                            uint32_t(rect.Size.Height) });
+#endif
     }
 }
 
 void CGLEngine::ClearScissorList()
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     m_ScissorList.clear();
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_SCISSOR_TEST);
+#else
+    RenderAdd_DisableScissor(g_renderCmdList);
+#endif
 }
 
 #ifndef NEW_RENDERER_ENABLED
 inline void CGLEngine::BindTexture(GLuint texture)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     assert(texture != 0);
     if (OldTexture != texture)
@@ -491,6 +541,8 @@ inline void CGLEngine::BindTexture(GLuint texture)
 
 void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     glDisable(GL_TEXTURE_2D);
 
@@ -504,6 +556,8 @@ void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 
 void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     glDisable(GL_TEXTURE_2D);
 
@@ -523,6 +577,8 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 
 void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     glDisable(GL_TEXTURE_2D);
 
@@ -554,6 +610,8 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 
 void CGLEngine::DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
@@ -588,6 +646,7 @@ void CGLEngine::DrawLandTexture(const CGLTexture &texture, int x, int y, CLandOb
 
 void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
@@ -612,6 +671,8 @@ void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
 
 void CGLEngine::DrawRotated(const CGLTexture &texture, int x, int y, float angle)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
@@ -641,6 +702,8 @@ void CGLEngine::DrawRotated(const CGLTexture &texture, int x, int y, float angle
 
 void CGLEngine::DrawMirrored(const CGLTexture &texture, int x, int y, bool mirror)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
@@ -682,6 +745,8 @@ void CGLEngine::DrawMirrored(const CGLTexture &texture, int x, int y, bool mirro
 void CGLEngine::DrawSitting(
     const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
@@ -797,6 +862,8 @@ void CGLEngine::DrawSitting(
 
 void CGLEngine::DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
@@ -842,6 +909,8 @@ void CGLEngine::DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 void CGLEngine::DrawStretched(
     const CGLTexture &texture, int x, int y, int drawWidth, int drawHeight)
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 

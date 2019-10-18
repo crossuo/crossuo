@@ -3,6 +3,7 @@
 
 #include "GUIChecktrans.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -17,6 +18,7 @@ CGUIChecktrans::~CGUIChecktrans()
 
 void CGUIChecktrans::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glColorMask(0u, 0u, 0u, 0u);

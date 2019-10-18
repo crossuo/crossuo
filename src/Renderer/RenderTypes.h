@@ -237,7 +237,17 @@ struct RenderState
         int nearZ;
         int farZ;
         float scale;
-    } viewport = { 0, 0, 0, 0, 0, 0, 1.f };
+        bool proj_flipped_y;
+    } viewport = { 0, 0, 0, 0, 0, 0, 1.f, false };
+
+    struct
+    {
+        int x;
+        int y;
+        int width;
+        int height;
+        bool enabled;
+    } scissor = { 0, 0, 0, 0, false };
 
     ShaderPipeline pipeline;
     RenderStateUniformCache uniformCache;

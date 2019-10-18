@@ -4,6 +4,7 @@
 #include "GUIScrollBackground.h"
 #include "../CrossUO.h"
 #include "../Managers/MouseManager.h"
+#include "Utility/PerfMarker.h"
 
 CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height)
     : CBaseGUI(GOT_SCROLLBACKGROUND, serial, graphic, 0, x, y)
@@ -71,6 +72,7 @@ void CGUIScrollBackground::PrepareTextures()
 
 void CGUIScrollBackground::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th[4] = { nullptr };
 

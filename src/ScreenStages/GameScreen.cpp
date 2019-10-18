@@ -47,6 +47,7 @@
 #include "../TextEngine/GameConsole.h"
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -1550,14 +1551,16 @@ void CGameScreen::DrawGameWindowLight()
 
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 #else
-        auto viewParams =
-            SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
-                              g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth,
-                              g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight,
-                              g_RenderBounds.GameWindowPosY,
-                              -150,
-                              150,
-                              float(g_GlobalScale) };
+        const auto windowSize = g_GameWindow.GetSize();
+        auto viewParams = SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
+                                            g_RenderBounds.GameWindowPosY,
+                                            g_RenderBounds.GameWindowWidth,
+                                            g_RenderBounds.GameWindowHeight,
+                                            windowSize.Width,
+                                            windowSize.Height,
+                                            -150,
+                                            150,
+                                            float(g_GlobalScale) };
 
         RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
 
@@ -1849,11 +1852,25 @@ void CGameScreen::Render()
 
     m_LightCount = 0;
 
+#ifndef NEW_RENDERER_ENABLED
     g_GL.ViewPortScaled(
         g_RenderBounds.GameWindowPosX,
         g_RenderBounds.GameWindowPosY,
         g_RenderBounds.GameWindowWidth,
         g_RenderBounds.GameWindowHeight);
+#else
+    const auto windowSize = g_GameWindow.GetSize();
+    auto viewParams = SetViewParamsCmd{ g_RenderBounds.GameWindowPosX,
+                                        g_RenderBounds.GameWindowPosY,
+                                        g_RenderBounds.GameWindowWidth,
+                                        g_RenderBounds.GameWindowHeight,
+                                        windowSize.Width,
+                                        windowSize.Height,
+                                        -150,
+                                        150,
+                                        float(g_GlobalScale) };
+    RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
+#endif
 
     g_DrawColor = 1.0f;
 
@@ -1928,10 +1945,10 @@ void CGameScreen::Render()
 #ifndef NEW_RENDERER_ENABLED
     g_GL.RestorePort();
 #else
-    RenderAdd_SetViewParams(
-        g_renderCmdList,
-        &SetViewParamsCmd{
-            0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0, -150, 150 });
+    auto viewParamsCmd = SetViewParamsCmd{
+        0, 0, windowSize.Width, windowSize.Height, windowSize.Width, windowSize.Height, -150, 150
+    };
+    RenderAdd_SetViewParams(g_renderCmdList, &viewParamsCmd);
 #endif
     m_GameScreenGump.Draw();
 

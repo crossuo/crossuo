@@ -40,13 +40,24 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced = f
 bool RenderState_ClearRT(RenderState *state, ClearRT mask, bool forced = false);
 bool RenderState_SetViewParams(
     RenderState *state,
-    int left,
-    int right,
-    int bottom,
-    int top,
-    int near,
-    int far,
-    float scale,
+    int scene_x,
+    int scene_y,
+    int scene_width,
+    int scene_height,
+    int window_width,
+    int window_height,
+    int camera_nearZ,
+    int camera_farZ,
+    float scene_scale,
+    bool proj_flipped_y,
+    bool forced = false);
+bool RenderState_SetScissor(
+    RenderState *state,
+    bool enabled,
+    int x,
+    int y,
+    uint32_t width,
+    uint32_t height,
     bool forced = false);
 
 bool RenderState_SetShaderUniform(
@@ -75,6 +86,8 @@ bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state);
 
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
 bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state);
+bool RenderDraw_SetScissor(SetScissorCmd *cmd, RenderState *state);
+bool RenderDraw_DisableScissor(DisableScissorCmd *cmd, RenderState *state);
 bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state);
 bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state);
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);

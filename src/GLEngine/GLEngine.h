@@ -34,16 +34,13 @@ public:
     void UpdateRect();
 #endif
 
-    //Очистить экран и начать рисование
     void BeginDraw();
 
-    //Завершить рисование и вывести все нарисованное на экран
     void EndDraw();
 
-    //Указать область рисования
+#ifndef NEW_RENDERER_ENABLED
     void ViewPortScaled(int x, int y, int width, int height);
 
-#ifndef NEW_RENDERER_ENABLED
     void ViewPort(int x, int y, int width, int height);
 
     void RestorePort();

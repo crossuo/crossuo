@@ -6,6 +6,7 @@
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/EffectManager.h"
+#include "Utility/PerfMarker.h"
 
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)
@@ -18,6 +19,7 @@ CGameEffect::~CGameEffect()
 
 void CGameEffect::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #if UO_DEBUG_INFO != 0
     g_RenderedObjectsCountInGameWindow++;

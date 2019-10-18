@@ -19,6 +19,7 @@
 #include "../Gumps/GumpMinimap.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -165,6 +166,7 @@ void CGameItem::CalculateFieldColor()
 
 void CGameItem::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (Container == 0xFFFFFFFF)
     {

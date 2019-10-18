@@ -18,6 +18,7 @@
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
+#include "Utility/PerfMarker.h"
 
 const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
@@ -308,6 +309,7 @@ void CGumpContainer::UpdateContent()
 
 void CGumpContainer::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGump::Draw();
 

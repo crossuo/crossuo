@@ -3,6 +3,7 @@
 
 #include "GUIScissor.h"
 #include "../Gumps/Gump.h"
+#include "Utility/PerfMarker.h"
 
 CGUIScissor::CGUIScissor(bool enabled, int baseX, int baseY, int x, int y, int width, int height)
     : CGUIPolygonal(GOT_SCISSOR, x, y, width, height)
@@ -18,6 +19,7 @@ CGUIScissor::~CGUIScissor()
 
 void CGUIScissor::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {

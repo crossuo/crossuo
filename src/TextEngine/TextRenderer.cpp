@@ -9,6 +9,7 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameWorld.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -182,6 +183,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 
 void CTextRenderer::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CalculatePositions(true);
 

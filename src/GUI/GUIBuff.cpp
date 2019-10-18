@@ -4,6 +4,7 @@
 #include "GUIBuff.h"
 #include "../CrossUO.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -20,6 +21,7 @@ CGUIBuff::~CGUIBuff()
 
 void CGUIBuff::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr && spr->Texture)

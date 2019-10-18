@@ -75,14 +75,8 @@ bool CGameWindow::OnCreate()
     }
 
 #ifdef NEW_RENDERER_ENABLED
-    // FIXME gfx this is to confirm the new size always fits with what the previous code did
-    // which is, getting the real window size and using it
-    int width, height;
-    SDL_GetWindowSize(m_window, &width, &height);
-    assert(width == GetSize().Width && height == GetSize().Height);
-
-    HACKRender_SetViewParams(
-        &SetViewParamsCmd{ 0, GetSize().Width, GetSize().Height, 0, -150, 150 });
+    HACKRender_SetViewParams(&SetViewParamsCmd{
+        0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 #endif
 
     if (!g_Game.Install())
@@ -112,14 +106,10 @@ void CGameWindow::OnResize()
 #ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
 #else
-    // FIXME gfx this is to confirm the new size always fits with what the previous code did
-    // which is, getting the real window size and using it
-    int w, h;
-    SDL_GetWindowSize(m_window, &w, &h);
-    assert(GetSize().Width == w && GetSize().Height == h);
-
     RenderAdd_SetViewParams(
-        g_renderCmdList, &SetViewParamsCmd{ 0, GetSize().Width, GetSize().Height, 0, -150, 150 });
+        g_renderCmdList,
+        &SetViewParamsCmd{
+            0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 
     g_GumpManager.RedrawAll();
 #endif

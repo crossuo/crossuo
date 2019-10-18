@@ -4,6 +4,7 @@
 #include "GUIButtonTileart.h"
 #include "../CrossUO.h"
 #include "../Point.h"
+#include "Utility/PerfMarker.h"
 
 CGUIButtonTileart::CGUIButtonTileart(
     int serial,
@@ -77,6 +78,7 @@ void CGUIButtonTileart::PrepareTextures()
 
 void CGUIButtonTileart::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGUIDrawObject::Draw(checktrans);
     auto spr = g_Game.ExecuteStaticArt(TileGraphic);

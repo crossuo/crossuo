@@ -10,6 +10,7 @@
 #include "../Managers/ColorManager.h"
 #include "../Managers/FontsManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -231,6 +232,7 @@ void CGUIShopItem::SetShaderMode()
 
 void CGUIShopItem::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = nullptr;
 

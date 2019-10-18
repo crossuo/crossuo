@@ -8,6 +8,7 @@
 #include "ScreenStages/MainScreen.h"
 #include "ScreenStages/GameScreen.h"
 #include "GameObjects/GamePlayer.h"
+#include "Utility/PerfMarker.h"
 
 CQuestArrow g_QuestArrow;
 
@@ -21,6 +22,7 @@ CQuestArrow::~CQuestArrow()
 
 void CQuestArrow::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (Enabled)
     {

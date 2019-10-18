@@ -5,6 +5,7 @@
 #include "../CrossUO.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
+#include "Utility/PerfMarker.h"
 
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)
@@ -205,6 +206,7 @@ void CGUIMinMaxButtons::PrepareTextures()
 
 void CGUIMinMaxButtons::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
     for (int i = 0; i < 2; i++)

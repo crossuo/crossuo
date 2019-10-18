@@ -12,6 +12,7 @@
 #include "../TextEngine/TextContainer.h"
 #include "../TextEngine/TextData.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -217,6 +218,7 @@ bool CRenderStaticObject::IsNoDrawTile(uint16_t graphic)
 
 void CRenderStaticObject::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #if UO_DEBUG_INFO != 0
     g_RenderedObjectsCountInGameWindow++;
