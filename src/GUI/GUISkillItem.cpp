@@ -9,6 +9,7 @@
 #include "../Managers/SkillsManager.h"
 #include "../Managers/FontsManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -141,6 +142,7 @@ CBaseGUI *CGUISkillItem::SelectedItem()
 
 void CGUISkillItem::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 

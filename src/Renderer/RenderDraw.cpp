@@ -463,9 +463,28 @@ bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state)
 bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state)
 {
     return RenderState_SetViewParams(
-        state, cmd->left, cmd->right, cmd->bottom, cmd->top, cmd->nearZ, cmd->farZ, cmd->scale);
+        state,
+        cmd->scene_x,
+        cmd->scene_y,
+        cmd->scene_width,
+        cmd->scene_height,
+        cmd->window_width,
+        cmd->window_height,
+        cmd->camera_nearZ,
+        cmd->camera_farZ,
+        cmd->scene_scale,
+        cmd->proj_flipped_y);
 }
 
+bool RenderDraw_SetScissor(SetScissorCmd *cmd, RenderState *state)
+{
+    return RenderState_SetScissor(state, true, cmd->x, cmd->y, cmd->width, cmd->height);
+}
+
+bool RenderDraw_DisableScissor(DisableScissorCmd *cmd, RenderState *state)
+{
+    return RenderState_SetScissor(state, false, 0, 0, 0, 0);
+}
 bool RenderDraw_StencilState(StencilStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetStencil(
@@ -568,6 +587,9 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DisableStencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColorMask, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColor, ret, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetViewParams, ret, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetScissor, ret, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(DisableScissor, ret, cmd, &cmdList->state);
 
             MATCH_CASE_DRAW(ShaderUniform, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ShaderLargeUniform, ret, cmd, &cmdList->state)

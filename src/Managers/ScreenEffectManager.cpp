@@ -4,6 +4,7 @@
 #include "ScreenEffectManager.h"
 #include "../GameWindow.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -88,6 +89,7 @@ int CScreenEffectManager::Process()
 
 void CScreenEffectManager::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     if (Mode != SEM_NONE)
     {
 #ifndef NEW_RENDERER_ENABLED

@@ -14,6 +14,7 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
+#include "Utility/PerfMarker.h"
 
 static const int ID_GST_CHECKBOX = 1;
 
@@ -255,6 +256,7 @@ void CGumpSecureTrading::UpdateContent()
 
 void CGumpSecureTrading::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
     if (selobj == nullptr)

@@ -21,6 +21,7 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
 #include "../TextEngine/TextData.h"
+#include "Utility/PerfMarker.h"
 
 enum
 {
@@ -763,6 +764,7 @@ void CGumpPaperdoll::UpdateDescription(const std::string &text)
 
 void CGumpPaperdoll::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
     if (obj == nullptr)

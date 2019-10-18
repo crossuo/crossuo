@@ -15,6 +15,7 @@
 #include "../ScreenStages/BaseScreen.h"
 #include "../ScreenStages/GameScreen.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -350,6 +351,7 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
 
 void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     float alpha[2] = { 1.0f, 0.7f };
     CGUIComboBox *combo = nullptr;
@@ -1450,6 +1452,7 @@ void CGump::GenerateFrame(bool stop)
 
 void CGump::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CalculateGumpState();
 

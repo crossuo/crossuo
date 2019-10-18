@@ -18,6 +18,7 @@
 #include "../Walker/PathFinder.h"
 #include "../TextEngine/TextData.h"
 #include "../GameObjects/GamePlayer.h"
+#include "Utility/PerfMarker.h"
 
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)
@@ -307,6 +308,7 @@ int CGameCharacter::IsSitting()
 
 void CGameCharacter::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (TimeToRandomFidget < g_Ticks)
     {

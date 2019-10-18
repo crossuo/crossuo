@@ -16,6 +16,7 @@
 #include "../Gumps/GumpCustomHouse.h"
 #include "../Walker/PathFinder.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -337,6 +338,7 @@ bool CMouseManager::LoadCursorTextures()
 
 void CMouseManager::Draw(uint16_t id)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (g_GameState >= GS_GAME)
     {

@@ -9,6 +9,7 @@
 #include "../SelectedObject.h"
 #include "../Managers/MouseManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -157,6 +158,7 @@ CBaseGUI *CGUIComboBox::SkipToStart()
 
 void CGUIComboBox::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (Text != nullptr)
     {

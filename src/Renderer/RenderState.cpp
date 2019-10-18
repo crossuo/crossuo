@@ -5,6 +5,7 @@
 
 bool RenderState_FlushState(RenderState *state)
 {
+    ScopedPerfMarker(__FUNCTION__);
     RenderState_SetTexture(state, state->texture.type, state->texture.texture, true);
     // FIXME epatitucci
     // RenderState_SetFrameBuffer(state, state->framebuffer, true);
@@ -25,6 +26,13 @@ bool RenderState_FlushState(RenderState *state)
     RenderState_SetColorMask(state, state->colorMask, true);
     RenderState_SetColor(state, state->color, true);
     RenderState_SetClearColor(state, state->clearColor, true);
+    RenderState_SetScissor(
+        state,
+        state->scissor.enabled,
+        state->scissor.x,
+        state->scissor.y,
+        state->scissor.width,
+        state->scissor.height);
 
     glLoadIdentity();
 
@@ -453,13 +461,16 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
 
 bool RenderState_SetViewParams(
     RenderState *state,
-    int left,
-    int right,
-    int bottom,
-    int top,
-    int nearZ,
-    int farZ,
-    float scale,
+    int scene_x,
+    int scene_y,
+    int scene_width,
+    int scene_height,
+    int window_width,
+    int window_height,
+    int camera_nearZ,
+    int camera_farZ,
+    float scene_scale,
+    bool proj_flipped_y,
     bool forced)
 {
     // FIXME epatitucci
@@ -470,28 +481,86 @@ bool RenderState_SetViewParams(
     {
         ScopedPerfMarker(__FUNCTION__);
 
-        state->viewport.left = left;
+        int right = scene_x + scene_width;
+        // game viewport isn't scaled, if the OS window is smaller than GameWindowPosY + GameWindowHeight, bottom will
+        // be negative by this difference
+        int needed_height = scene_y + scene_height;
+        int bottom = window_height - needed_height;
+
+        state->viewport.left = scene_x;
         state->viewport.right = right;
         state->viewport.bottom = bottom;
-        state->viewport.top = top;
-        state->viewport.nearZ = nearZ;
-        state->viewport.farZ = farZ;
-        state->viewport.scale = scale;
+        state->viewport.top = scene_y;
+        state->viewport.nearZ = camera_nearZ;
+        state->viewport.farZ = camera_farZ;
+        state->viewport.scale = scene_scale;
+        state->viewport.proj_flipped_y = proj_flipped_y;
 
-        auto height = bottom - top;
-        glViewport(left, top, right - left, height);
+        glViewport(scene_x, bottom, scene_width, scene_height);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
-        float scaledRight = (left + right) * scale;
-        float scaledLeft = left * scale - (scaledRight - right);
-        float scaledBottom = (top + height) * scale;
-        float scaledTop = top * scale - (scaledBottom - bottom);
+        float scaledRight = right * scene_scale;
+        float scaledLeft = scene_x * scene_scale - (scaledRight - right);
+        float scaledBottom = (scene_y + scene_height) * scene_scale;
+        float scaledTop = scene_y * scene_scale - (scaledBottom - (scene_y + scene_height));
 
-        glOrtho(scaledLeft, scaledRight, scaledBottom, scaledTop, float(nearZ), float(farZ));
+        if (!proj_flipped_y)
+        {
+            glOrtho(
+                scaledLeft,
+                scaledRight,
+                scaledBottom,
+                scaledTop,
+                float(camera_nearZ),
+                float(camera_farZ));
+        }
+        else
+        {
+            glOrtho(
+                scaledLeft,
+                scaledRight,
+                scaledTop,
+                scaledBottom,
+                float(camera_nearZ),
+                float(camera_farZ));
+        }
         glMatrixMode(GL_MODELVIEW);
         return true;
     }
 
     return false;
+}
+
+bool RenderState_SetScissor(
+    RenderState *state, bool enabled, int x, int y, uint32_t width, uint32_t height, bool forced)
+{
+    bool changed = false;
+    if (forced || (state->scissor.enabled != enabled))
+    {
+        changed = true;
+        state->scissor.enabled = enabled;
+
+        if (enabled)
+        {
+            glEnable(GL_SCISSOR_TEST);
+        }
+        else
+        {
+            glDisable(GL_SCISSOR_TEST);
+        }
+    }
+
+    if (forced || (state->scissor.x != x || state->scissor.y != y ||
+                   state->scissor.width != width || state->scissor.height != height))
+    {
+        changed = true;
+        state->scissor.x = x;
+        state->scissor.y = y;
+        state->scissor.width = width;
+        state->scissor.height = height;
+
+        glScissor(x, y, width, height);
+    }
+    return changed;
 }

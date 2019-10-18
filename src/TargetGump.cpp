@@ -5,6 +5,7 @@
 #include "CrossUO.h"
 #include <xuocore/uodata.h>
 #include "Managers/ConfigManager.h"
+#include "Utility/PerfMarker.h"
 
 CTargetGump g_TargetGump;
 CTargetGump g_AttackTargetGump;
@@ -20,6 +21,7 @@ CTargetGump::~CTargetGump()
 
 void CTargetGump::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (Color != 0)
     {
@@ -42,6 +44,7 @@ CNewTargetSystem::~CNewTargetSystem()
 
 void CNewTargetSystem::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.DisableNewTargetSystem && ColorGump != 0)
     {

@@ -3,6 +3,7 @@
 
 #include "GUIGlobalColor.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -22,6 +23,7 @@ CGUIGlobalColor::~CGUIGlobalColor()
 
 void CGUIGlobalColor::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     if (Enabled)
     {
 #ifndef NEW_RENDERER_ENABLED

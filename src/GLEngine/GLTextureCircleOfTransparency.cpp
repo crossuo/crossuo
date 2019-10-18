@@ -3,6 +3,7 @@
 
 #include "../Managers/ConfigManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -66,6 +67,7 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
 
 void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (m_Sprite.Texture == nullptr)
     {
@@ -87,7 +89,7 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     glDisable(GL_STENCIL_TEST);
 #else
     auto stencilCmd = StencilStateCmd(
-        StencilFunc::StencilFunc_NeverPass,
+        StencilFunc::StencilFunc_AlwaysPass,
         1,
         1,
         StencilOp::Keep,
@@ -111,6 +113,7 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 
 void CGLTextureCircleOfTransparency::Redraw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glClear(GL_STENCIL_BUFFER_BIT);
@@ -132,7 +135,7 @@ void CGLTextureCircleOfTransparency::Redraw()
     {
         RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::Alpha));
         auto stencilCmd = StencilStateCmd(
-            StencilFunc::StencilFunc_NeverPass,
+            StencilFunc::StencilFunc_AlwaysPass,
             1,
             1,
             StencilOp::Keep,

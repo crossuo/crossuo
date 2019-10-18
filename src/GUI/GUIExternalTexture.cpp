@@ -6,6 +6,7 @@
 #include "../Point.h"
 #include "../Sprite.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -80,6 +81,7 @@ void CGUIExternalTexture::SetShaderMode()
 
 void CGUIExternalTexture::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (m_Sprite != nullptr)
     {

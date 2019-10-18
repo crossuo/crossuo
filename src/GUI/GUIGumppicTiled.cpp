@@ -4,6 +4,7 @@
 #include "GUIGumppicTiled.h"
 #include "../CrossUO.h"
 #include "../Managers/MouseManager.h"
+#include "Utility/PerfMarker.h"
 
 CGUIGumppicTiled::CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, int height)
     : CGUIDrawObject(GOT_GUMPPICTILED, 0, graphic, 0, x, y)
@@ -14,6 +15,7 @@ CGUIGumppicTiled::CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, in
 
 void CGUIGumppicTiled::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)

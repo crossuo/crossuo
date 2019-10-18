@@ -21,6 +21,7 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameCharacter.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 CAnimationManager g_AnimationManager;
@@ -1164,6 +1165,7 @@ bool CAnimationManager::TestPixels(
 void CAnimationManager::Draw(
     CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (obj == nullptr)
     {

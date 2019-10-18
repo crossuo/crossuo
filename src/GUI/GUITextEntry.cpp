@@ -7,6 +7,7 @@
 #include "../Gumps/Gump.h"
 #include "../Managers/MouseManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -153,6 +154,7 @@ void CGUITextEntry::PrepareTextures()
 
 void CGUITextEntry::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     int y = m_Y;
     uint16_t color = Color;

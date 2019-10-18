@@ -28,6 +28,8 @@ enum RenderCommandType : uint8_t
     Cmd_SetColorMask,
     Cmd_SetColor,
     Cmd_SetViewParams,
+    Cmd_SetScissor,
+    Cmd_DisableScissor,
 
     Cmd_ShaderUniform,
     Cmd_ShaderLargeUniform,
@@ -75,24 +77,67 @@ struct SetFrameBufferCmd
 struct SetViewParamsCmd
 {
     RenderCommandHeader header;
-    int left;
-    int right;
-    int bottom;
-    int top;
-    int nearZ;
-    int farZ;
-    float scale;
+    int scene_x;
+    int scene_y;
+    int scene_width;
+    int scene_height;
+    int window_width;
+    int window_height;
+    int camera_nearZ;
+    int camera_farZ;
+    float scene_scale;
+    bool proj_flipped_y;
 
     SetViewParamsCmd(
-        int left, int right, int bottom, int top, int nearZ, int farZ, float scale = 1.f)
+        int scene_x,
+        int scene_y,
+        int scene_width,
+        int scene_height,
+        int window_width,
+        int window_height,
+        int camera_nearZ,
+        int camera_farZ,
+        float scene_scale = 1.f,
+        bool proj_flipped_y = false)
         : header{ RenderCommandType::Cmd_SetViewParams }
-        , left(left)
-        , right(right)
-        , bottom(bottom)
-        , top(top)
-        , nearZ(nearZ)
-        , farZ(farZ)
-        , scale(scale)
+        , scene_x(scene_x)
+        , scene_y(scene_y)
+        , scene_width(scene_width)
+        , scene_height(scene_height)
+        , window_width(window_width)
+        , window_height(window_height)
+        , camera_nearZ(camera_nearZ)
+        , camera_farZ(camera_farZ)
+        , scene_scale(scene_scale)
+        , proj_flipped_y(proj_flipped_y)
+    {
+    }
+};
+
+struct SetScissorCmd
+{
+    RenderCommandHeader header;
+    int x;
+    int y;
+    uint32_t width;
+    uint32_t height;
+
+    SetScissorCmd(int x, int y, uint32_t width, uint32_t height)
+        : header{ RenderCommandType::Cmd_SetScissor }
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+    {
+    }
+};
+
+struct DisableScissorCmd
+{
+    RenderCommandHeader header;
+
+    DisableScissorCmd()
+        : header{ RenderCommandType::Cmd_DisableScissor }
     {
     }
 };

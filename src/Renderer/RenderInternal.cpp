@@ -153,18 +153,22 @@ bool HACKRender_SetViewParams(SetViewParamsCmd *cmd)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    assert(cmd->left < cmd->right && cmd->bottom > cmd->top);
+    // game viewport isn't scaled, if the OS window is smaller than scene_y + scene_height, bottom will
+    // be negative by this difference
+    int needed_height = cmd->scene_y + cmd->scene_height;
+    int bottom = cmd->window_height - needed_height;
 
-    auto height = cmd->bottom - cmd->top;
-    glViewport(cmd->left, cmd->top, cmd->right - cmd->left, height);
+    glViewport(cmd->scene_x, bottom, cmd->scene_width, cmd->scene_height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    auto right = (cmd->left + cmd->right);
-    auto left = cmd->left - (right - cmd->right);
-    auto bottom = (cmd->top + height);
-    auto top = cmd->top - (bottom - cmd->bottom);
-    glOrtho(cmd->left, cmd->right, cmd->bottom, cmd->top, cmd->nearZ, cmd->farZ);
+    glOrtho(
+        cmd->scene_x,
+        cmd->scene_x + cmd->scene_width,
+        cmd->scene_y + cmd->scene_height,
+        cmd->scene_y,
+        cmd->camera_nearZ,
+        cmd->camera_farZ);
 
     glMatrixMode(GL_MODELVIEW);
     return true;

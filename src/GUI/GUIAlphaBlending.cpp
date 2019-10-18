@@ -3,6 +3,7 @@
 
 #include "GUIAlphaBlending.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -18,6 +19,7 @@ CGUIAlphaBlending::~CGUIAlphaBlending()
 
 void CGUIAlphaBlending::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     CGUIBlending::Draw(checktrans);
 

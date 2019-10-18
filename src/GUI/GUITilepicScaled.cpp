@@ -4,6 +4,7 @@
 #include "GUITilepicScaled.h"
 #include "../CrossUO.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -19,6 +20,7 @@ CGUITilepicScaled::~CGUITilepicScaled()
 
 void CGUITilepicScaled::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)

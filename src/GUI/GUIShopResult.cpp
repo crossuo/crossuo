@@ -8,6 +8,7 @@
 #include "../Point.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/FontsManager.h"
+#include "Utility/PerfMarker.h"
 
 CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     : CBaseGUI(GOT_SHOPRESULT, shopItem->Serial, shopItem->Graphic, shopItem->Color, x, y)
@@ -63,6 +64,7 @@ void CGUIShopResult::PrepareTextures()
 
 void CGUIShopResult::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 

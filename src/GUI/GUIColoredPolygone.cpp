@@ -5,6 +5,7 @@
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -39,6 +40,7 @@ void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 
 void CGUIColoredPolygone::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);

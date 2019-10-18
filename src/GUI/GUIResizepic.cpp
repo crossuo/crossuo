@@ -4,6 +4,7 @@
 #include "GUIResizepic.h"
 #include "../CrossUO.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -22,6 +23,7 @@ void CGUIResizepic::PrepareTextures()
 
 void CGUIResizepic::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 
 #ifndef NEW_RENDERER_ENABLED

@@ -63,5 +63,7 @@ bool RenderAdd_SetShaderPipeline(RenderCmdList *cmdList, ShaderPipeline *pipelin
 bool RenderAdd_DisableShaderPipeline(RenderCmdList *cmdList);
 bool RenderAdd_FlushState(RenderCmdList *cmdList);
 bool RenderAdd_SetViewParams(RenderCmdList *cmdList, SetViewParamsCmd *cmd);
+bool RenderAdd_SetScissor(RenderCmdList *cmdList, SetScissorCmd *cmd);
+bool RenderAdd_DisableScissor(RenderCmdList *cmdList);
 
 bool RenderDraw_Execute(RenderCmdList *cmdList);

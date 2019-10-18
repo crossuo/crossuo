@@ -317,3 +317,28 @@ bool RenderAdd_SetViewParams(RenderCmdList *cmdList, SetViewParamsCmd *cmd)
     RenderDraw_SetViewParams(cmd, &cmdList->state);
     return true;
 }
+
+bool RenderAdd_SetScissor(RenderCmdList *cmdList, SetScissorCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetScissor(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_DisableScissor(RenderCmdList *cmdList)
+{
+    DisableScissorCmd cmd;
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DisableScissor(&cmd, &cmdList->state);
+    return true;
+}

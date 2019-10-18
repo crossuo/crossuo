@@ -6,6 +6,7 @@
 #include "Managers/ConfigManager.h"
 #include "Misc.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 CWeather g_Weather;
@@ -70,6 +71,7 @@ void CWeather::Generate()
 
 void CWeather::Draw(int x, int y)
 {
+    ScopedPerfMarker(__FUNCTION__);
     bool removeEffects = false;
 
     if (Timer < g_Ticks)

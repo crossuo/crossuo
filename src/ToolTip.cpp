@@ -8,6 +8,7 @@
 #include "Managers/MouseManager.h"
 #include "Managers/ClilocManager.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -106,6 +107,7 @@ void CToolTip::Set(int clilocID, const std::string &str, int maxWidth, bool toCa
 
 void CToolTip::Draw(int cursorWidth, int cursorHeight)
 {
+    ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
     if (!Use /*|| !g_ConfigManager.UseToolTips*/)
     {

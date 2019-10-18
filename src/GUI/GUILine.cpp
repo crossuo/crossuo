@@ -3,6 +3,7 @@
 
 #include "GUILine.h"
 #include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -28,6 +29,7 @@ CGUILine::~CGUILine()
 
 void CGUILine::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
 #ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
