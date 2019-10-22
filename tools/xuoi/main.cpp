@@ -1090,7 +1090,9 @@ int main(int argc, char **argv)
     if (s_cli["xuo"].was_set())
     {
         auto ctx = xuo_init(outdir, false);
-        return xuo_update_apply(ctx);
+        auto r = xuo_update_apply(ctx);
+        xuo_shutdown(ctx);
+        return r;
     }
 
     const char *product_urls[] = { DATA_PATCHER_SERVER_ADDRESS, DATA_PRODUCT_SERVER_ADDRESS };

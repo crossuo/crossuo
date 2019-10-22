@@ -1,5 +1,6 @@
 // GPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
+#include "xuo_updater.h"
 
 #include <vector>
 #include <stdint.h>

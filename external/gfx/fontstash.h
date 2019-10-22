@@ -893,8 +893,8 @@ static FILE* fons__fopen(const char* filename, const char* mode)
 {
 #ifdef _WIN32
 	int len = 0;
-	int fileLen = strlen(filename);
-	int modeLen = strlen(mode);
+	int fileLen = (int)strlen(filename);
+	int modeLen = (int)strlen(mode);
 	wchar_t wpath[MAX_PATH];
 	wchar_t wmode[MAX_PATH];
 	FILE* f;
@@ -932,7 +932,7 @@ int fonsAddFont(FONScontext* stash, const char* name, const char* path)
 	fseek(fp,0,SEEK_SET);
 	data = (unsigned char*)malloc(dataSize);
 	if (data == NULL) goto error;
-	readed = fread(data, 1, dataSize, fp);
+	readed = (int)fread(data, 1, dataSize, fp);
 	fclose(fp);
 	fp = 0;
 	if (readed != dataSize) goto error;

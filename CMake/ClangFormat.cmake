@@ -37,24 +37,27 @@ if (CLANG_FORMAT)
     set(CCOMMENT "Running clang format against all the .h and .cpp files in src/")
     if (WIN32)
         add_custom_target(clang-format
-            COMMAND powershell.exe -Command "Get-ChildItem ${SRCS}/tools/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}"
-            COMMAND powershell.exe -Command "Get-ChildItem ${SRCS}/common/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}"
-            COMMAND powershell.exe -Command "Get-ChildItem ${SRCS}/xuocore/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}"
-            COMMAND powershell.exe -Command "Get-ChildItem ${SRCS}/src/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}"
+			WORKING_DIRECTORY ${SRCS}
+            COMMAND powershell.exe -Command \"Get-ChildItem tools/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}\"
+            COMMAND powershell.exe -Command \"Get-ChildItem common/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}\"
+            COMMAND powershell.exe -Command \"Get-ChildItem xuocore/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}\"
+            COMMAND powershell.exe -Command \"Get-ChildItem src/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} --style=file -i $_.fullname}\"
             COMMENT ${CCOMMENT})
     elseif(MINGW)
         add_custom_target(clang-format
-            COMMAND find `cygpath -u ${SRCS}/tools/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
-            COMMAND find `cygpath -u ${SRCS}/common/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
-            COMMAND find `cygpath -u ${SRCS}/xuocore/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
-            COMMAND find `cygpath -u ${SRCS}/src/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
+			WORKING_DIRECTORY ${SRCS}
+            COMMAND find `cygpath -u tools/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
+            COMMAND find `cygpath -u common/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
+            COMMAND find `cygpath -u xuocore/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
+            COMMAND find `cygpath -u src/` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` --style=file -i
             COMMENT ${CCOMMENT})
     else()
         add_custom_target(clang-format
-            COMMAND "${CLANG_FORMAT}" --style=file -i ${SRCS}/tools/**/**.{h,cpp}
-            COMMAND "${CLANG_FORMAT}" --style=file -i ${SRCS}/common/*.{h,cpp}
-            COMMAND "${CLANG_FORMAT}" --style=file -i ${SRCS}/xuocore/*.{h,cpp}
-            COMMAND "${CLANG_FORMAT}" --style=file -i ${SRCS}/src/**/**.{h,cpp}
+			WORKING_DIRECTORY ${SRCS}
+            COMMAND "${CLANG_FORMAT}" --style=file -i tools/**/**.{h,cpp}
+            COMMAND "${CLANG_FORMAT}" --style=file -i common/*.{h,cpp}
+            COMMAND "${CLANG_FORMAT}" --style=file -i xuocore/*.{h,cpp}
+            COMMAND "${CLANG_FORMAT}" --style=file -i src/**/**.{h,cpp}
             COMMENT ${CCOMMENT})
     endif()
     unset(SRCS)

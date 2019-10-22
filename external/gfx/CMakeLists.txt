@@ -8,14 +8,18 @@ set(EXTERNALGFX_INCLUDE "${CMAKE_SOURCE_DIR}" CACHE INTERNAL "")
 file(GLOB EXTERNALGFX_HEADERS ${EXTERNALGFX_DIR}/*.h ${EXTERNALGFX_DIR}/imgui/*.h)
 
 set(EXTERNALGFX_SRC
-  gfxpp.cpp
-  gfx.c
-  imgui/imgui.cpp
-  imgui/imgui_widgets.cpp
-  imgui/imgui_demo.cpp
-  imgui/imgui_draw.cpp
-  imgui/imgui_mainwindow.cpp
-  imgui/imgui_richtext.cpp
+    gfxpp.cpp
+    gfx.c
+    imgui/imgui.cpp
+    imgui/imgui_demo.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_impl_sdl.cpp
+    imgui/imgui_impl_opengl2.cpp
+    imgui/imgui_impl_opengl3.cpp
+    imgui/imgui_impl_dx11.cpp
+    imgui/imgui_stdlib.cpp
+    imgui/imgui_widgets.cpp
+    ui.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})
