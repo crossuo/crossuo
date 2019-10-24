@@ -67,7 +67,6 @@
 
 #endif // USE_GL
 
-
 #include <SDL.h>
 
 #ifdef __cplusplus
@@ -78,11 +77,13 @@ typedef struct win_context_
 {
     const char *title;
     SDL_Window *window;
+    void *sg_default_desc;
+    void *sg_default_shader_desc;
     void *context;
     int width;
     int height;
     int vsync;
-	int debug;
+    int debug;
 } win_context;
 
 int win_init(win_context *ctx);

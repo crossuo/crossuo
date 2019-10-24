@@ -22,6 +22,20 @@
 #include "GL/gl3w.h"
 #endif
 
+static sg_desc sg_default_desc;
+static sg_shader_stage_desc sg_default_vs;
+static sg_shader_stage_desc sg_default_fs;
+static sg_shader_desc sg_default_shader_desc;
+
+#if defined(USE_DX11)
+#include <SDL_syswm.h>
+#include <d3d11.h>
+ID3D11Device *g_pd3dDevice = nullptr;
+ID3D11DeviceContext *g_pd3dDeviceContext = nullptr;
+IDXGISwapChain *g_pSwapChain = nullptr;
+ID3D11RenderTargetView *g_mainRenderTargetView = nullptr;
+#endif
+
 int win_init(win_context *ctx)
 {
     assert(ctx != 0);
@@ -36,10 +50,10 @@ int win_init(win_context *ctx)
     }
 
 #if defined(USE_GL)
-	if (ctx->debug)
-	{
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-	}
+    if (ctx->debug)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GFX_GL_MAJOR);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GFX_GL_MINOR);
@@ -83,6 +97,66 @@ int win_init(win_context *ctx)
         fprintf(stdout, "OpenGL %d.%d v(%s)\n", major, minor, glGetString(GL_VERSION));
     }
 #endif
+
+#if defined(USE_DX11)
+    // see https://github.com/floooh/sokol-samples/blob/master/d3d11/d3d11entry.c
+    desc.d3d11_device = 0;         // ID3D11Device*
+    desc.d3d11_device_context = 0; // ID3D11DeviceContext*
+    desc.d3d11_render_target_view_cb =
+        0; // ID3D11RenderTargetView* render_target_view (ID3D11Texture2D* render_target)
+    desc.d3d11_depth_stencil_view_cb =
+        0; // ID3D11DepthStencilView* depth_stencil_view (ID3D11Texture2D* depth_stencil_buffer)
+#endif
+    memset(&sg_default_desc, 0, sizeof(sg_default_desc));
+    memset(&sg_default_vs, 0, sizeof(sg_default_vs));
+    memset(&sg_default_fs, 0, sizeof(sg_default_fs));
+    memset(&sg_default_shader_desc, 0, sizeof(sg_default_shader_desc));
+    sg_setup(&sg_default_desc);
+
+#if defined(USE_GL2)
+    sg_default_shader_desc.attrs[0].name = "position";
+    sg_default_shader_desc.attrs[1].name = "color0";
+#endif
+#if defined(USE_GL)
+    sg_default_vs.source = "#version 330\n"
+                "layout(location=0) in vec4 position;\n"
+                "layout(location=1) in vec4 color0;\n"
+                "out vec4 color;\n"
+                "void main() {\n"
+                "  gl_Position = position;\n"
+                "  color = color0;\n"
+                "}\n";
+    sg_default_fs.source = "#version 330\n"
+                "in vec4 color;\n"
+                "out vec4 frag_color;\n"
+                "void main() {\n"
+                "  frag_color = color;\n"
+                "}\n";
+#elif defined(USE_DX11)
+    sg_default_shader_desc.attrs[0].sem_name = "POS";
+    sg_default_shader_desc.attrs[1].sem_name = "COLOR";
+    sg_default_vs.source = "struct vs_in {\n"
+                "  float4 pos: POS;\n"
+                "  float4 color: COLOR;\n"
+                "};\n"
+                "struct vs_out {\n"
+                "  float4 color: COLOR0;\n"
+                "  float4 pos: SV_Position;\n"
+                "};\n"
+                "vs_out main(vs_in inp) {\n"
+                "  vs_out outp;\n"
+                "  outp.pos = inp.pos;\n"
+                "  outp.color = inp.color;\n"
+                "  return outp;\n"
+                "}\n";
+    sg_default_fs.source = "float4 main(float4 color: COLOR0): SV_Target0 {\n"
+                "  return color;\n"
+                "}\n";
+#endif
+    sg_default_shader_desc.vs = sg_default_vs;
+    sg_default_shader_desc.fs = sg_default_fs;
+    ctx->sg_default_desc = &sg_default_desc;
+    ctx->sg_default_shader_desc = &sg_default_shader_desc;
 
     return 0;
 }

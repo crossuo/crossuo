@@ -7,7 +7,8 @@
 struct ui_context
 {
     win_context *win = nullptr;
-    bool show_demo_window = true;
+    bool show_stats_window = false;
+    bool show_demo_window = false;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
 };

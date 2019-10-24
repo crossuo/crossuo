@@ -64,23 +64,11 @@ void XUODefaultStyle()
 int main(int argc, char **argv)
 {
     win_context win;
-    win.title = "X:UO Launcher";
+    win.title = "Sokol+ImGui";
     win.width = 800;
     win.height = 600;
     win.vsync = 0;
     win_init(&win);
-
-    sg_desc desc = {};
-#if defined(USE_DX11)
-    // see https://github.com/floooh/sokol-samples/blob/master/d3d11/d3d11entry.c
-    desc.d3d11_device = 0;         // ID3D11Device*
-    desc.d3d11_device_context = 0; // ID3D11DeviceContext*
-    desc.d3d11_render_target_view_cb =
-        0; // ID3D11RenderTargetView* render_target_view (ID3D11Texture2D* render_target)
-    desc.d3d11_depth_stencil_view_cb =
-        0; // ID3D11DepthStencilView* depth_stencil_view (ID3D11Texture2D* depth_stencil_buffer)
-#endif
-    sg_setup(&desc);
 
     /* clang-format off */
     const float vertices[] = {
@@ -95,53 +83,7 @@ int main(int argc, char **argv)
     bd.size = sizeof(vertices);
     bd.content = vertices;
     sg_buffer vbuf = sg_make_buffer(&bd);
-
-    sg_shader_stage_desc vs = {};
-    sg_shader_stage_desc fs = {};
-    sg_shader_desc sd = {};
-#if defined(USE_GL2)
-    sd.attrs[0].name = "position";
-    sd.attrs[1].name = "color0";
-#endif
-#if defined(USE_GL)
-    vs.source = "#version 330\n"
-                "layout(location=0) in vec4 position;\n"
-                "layout(location=1) in vec4 color0;\n"
-                "out vec4 color;\n"
-                "void main() {\n"
-                "  gl_Position = position;\n"
-                "  color = color0;\n"
-                "}\n";
-    fs.source = "#version 330\n"
-                "in vec4 color;\n"
-                "out vec4 frag_color;\n"
-                "void main() {\n"
-                "  frag_color = color;\n"
-                "}\n";
-#elif defined(USE_DX11)
-    sd.attrs[0].sem_name = "POS";
-    sd.attrs[1].sem_name = "COLOR";
-    vs.source = "struct vs_in {\n"
-                "  float4 pos: POS;\n"
-                "  float4 color: COLOR;\n"
-                "};\n"
-                "struct vs_out {\n"
-                "  float4 color: COLOR0;\n"
-                "  float4 pos: SV_Position;\n"
-                "};\n"
-                "vs_out main(vs_in inp) {\n"
-                "  vs_out outp;\n"
-                "  outp.pos = inp.pos;\n"
-                "  outp.color = inp.color;\n"
-                "  return outp;\n"
-                "}\n";
-    fs.source = "float4 main(float4 color: COLOR0): SV_Target0 {\n"
-                "  return color;\n"
-                "}\n";
-#endif
-    sd.vs = vs;
-    sd.fs = fs;
-    sg_shader shd = sg_make_shader(&sd);
+    sg_shader shd = sg_make_shader((const sg_shader_desc *)win.sg_default_shader_desc);
 
     sg_layout_desc layout = {};
     layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;
@@ -156,6 +98,8 @@ int main(int argc, char **argv)
     binds.vertex_buffers[0] = vbuf;
 
     auto ui = ui_init(win);
+    ui.show_stats_window = true;
+    ui.show_demo_window = true;
     XUODefaultStyle();
 
     // Main loop

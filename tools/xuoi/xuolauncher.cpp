@@ -72,92 +72,8 @@ int main(int argc, char **argv)
     win.vsync = 0;
     win_init(&win);
 
-    sg_desc desc = {};
-#if defined(USE_DX11)
-    // see https://github.com/floooh/sokol-samples/blob/master/d3d11/d3d11entry.c
-    desc.d3d11_device = 0;         // ID3D11Device*
-    desc.d3d11_device_context = 0; // ID3D11DeviceContext*
-    desc.d3d11_render_target_view_cb =
-        0; // ID3D11RenderTargetView* render_target_view (ID3D11Texture2D* render_target)
-    desc.d3d11_depth_stencil_view_cb =
-        0; // ID3D11DepthStencilView* depth_stencil_view (ID3D11Texture2D* depth_stencil_buffer)
-#endif
-    sg_setup(&desc);
-
-    /* clang-format off */
-    const float vertices[] = {
-        // positions            // colors
-         0.0f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
-         0.5f, -0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f
-    };
-    /* clang-format on */
-
-    sg_buffer_desc bd = {};
-    bd.size = sizeof(vertices);
-    bd.content = vertices;
-    sg_buffer vbuf = sg_make_buffer(&bd);
-
-    sg_shader_stage_desc vs = {};
-    sg_shader_stage_desc fs = {};
-    sg_shader_desc sd = {};
-#if defined(USE_GL2)
-    sd.attrs[0].name = "position";
-    sd.attrs[1].name = "color0";
-#endif
-#if defined(USE_GL)
-    vs.source = "#version 330\n"
-                "layout(location=0) in vec4 position;\n"
-                "layout(location=1) in vec4 color0;\n"
-                "out vec4 color;\n"
-                "void main() {\n"
-                "  gl_Position = position;\n"
-                "  color = color0;\n"
-                "}\n";
-    fs.source = "#version 330\n"
-                "in vec4 color;\n"
-                "out vec4 frag_color;\n"
-                "void main() {\n"
-                "  frag_color = color;\n"
-                "}\n";
-#elif defined(USE_DX11)
-    sd.attrs[0].sem_name = "POS";
-    sd.attrs[1].sem_name = "COLOR";
-    vs.source = "struct vs_in {\n"
-                "  float4 pos: POS;\n"
-                "  float4 color: COLOR;\n"
-                "};\n"
-                "struct vs_out {\n"
-                "  float4 color: COLOR0;\n"
-                "  float4 pos: SV_Position;\n"
-                "};\n"
-                "vs_out main(vs_in inp) {\n"
-                "  vs_out outp;\n"
-                "  outp.pos = inp.pos;\n"
-                "  outp.color = inp.color;\n"
-                "  return outp;\n"
-                "}\n";
-    fs.source = "float4 main(float4 color: COLOR0): SV_Target0 {\n"
-                "  return color;\n"
-                "}\n";
-#endif
-    sd.vs = vs;
-    sd.fs = fs;
-    sg_shader shd = sg_make_shader(&sd);
-
-    sg_layout_desc layout = {};
-    layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;
-    layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT4;
-
-    sg_pipeline_desc spd = {};
-    spd.shader = shd;
-    spd.layout = layout;
-    sg_pipeline pip = sg_make_pipeline(&spd);
-
-    sg_bindings binds = {};
-    binds.vertex_buffers[0] = vbuf;
-
     auto ui = ui_init(win);
+
     XUODefaultStyle();
 
     // Main loop
@@ -174,30 +90,15 @@ int main(int argc, char **argv)
                 event.window.windowID == SDL_GetWindowID(win.window))
                 done = true;
         }
+
+        glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         ui_update(ui);
-
-        sg_color_attachment_action clear_action;
-        clear_action.action = SG_ACTION_CLEAR;
-        clear_action.val[0] = ui.clear_color.x;
-        clear_action.val[1] = ui.clear_color.y;
-        clear_action.val[2] = ui.clear_color.z;
-        clear_action.val[3] = ui.clear_color.w;
-
-        sg_pass_action pass_action = {};
-        pass_action.colors[0] = clear_action;
-
-        sg_begin_default_pass(&pass_action, win.width, win.height);
-        sg_apply_pipeline(pip);
-        sg_apply_bindings(&binds);
-        sg_draw(0, 3, 1);
-        sg_end_pass();
-        sg_commit();
-
         ui_draw(ui);
         win_flip(&win);
     }
     ui_shutdown(ui);
-    sg_shutdown();
     win_shutdown(&win);
     return 0;
 }
