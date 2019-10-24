@@ -9,13 +9,7 @@
 #elif defined(USE_GL2)
 #include "imgui/imgui_impl_opengl2.h"
 #elif defined(USE_DX11)
-#include <SDL_syswm.h>
-#include <d3d11.h>
 #include "imgui/imgui_impl_dx11.h"
-ID3D11Device *g_pd3dDevice = nullptr;
-ID3D11DeviceContext *g_pd3dDeviceContext = nullptr;
-IDXGISwapChain *g_pSwapChain = nullptr;
-ID3D11RenderTargetView *g_mainRenderTargetView = nullptr;
 #elif defined(USE_METAL)
 #include "imgui/imgui_impl_metal.h"
 #else
@@ -226,7 +220,9 @@ void ui_update(ui_context &ctx)
 
     if (ctx.show_demo_window)
         ImGui::ShowDemoWindow();
+        
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    if (ctx.show_stats_window)
     {
         static float f = 0.0f;
         static int counter = 0;
