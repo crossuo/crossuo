@@ -27,3 +27,7 @@
 
 // tinyxml2
 #include "tinyxml2.cpp"
+
+// inih - https://github.com/benhoyt/inih/tree/0a87bf16693e35ed172ce8738404d9acd9545a5a/
+#define INIH_IMPLEMENTATION
+#include "inih.h"
