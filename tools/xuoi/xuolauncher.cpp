@@ -1,12 +1,55 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 #include <stdio.h>
+#include <vector>
+#include <sstream>
+#if _WIN32
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
 #include <external/gfx/gfx.h>
 #include <external/gfx/ui.h>
 #include <external/gfx/sokol_gfx.h>
 #include <external/gfx/imgui/imgui.h>
 
 #include "common.h"
+#include "shards.h"
+
+std::vector<std::string> split(const std::string &s, char delim)
+{
+    std::vector<std::string> r;
+    std::istringstream f(s);
+    std::string p;
+    while (std::getline(f, p, delim))
+        r.push_back(p);
+    return r;
+}
+
+bool valid_url(const std::string &url)
+{
+    return url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0;
+}
+
+#if defined(_MSC_VER)
+void open_url(const std::string &url)
+{
+    assert(valid_url(url) && "invalid url format");
+    ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+}
+#else
+void open_url(const std::string &url)
+{
+#if __APPLE__
+#define OPEN_CMD "open "
+#else
+#define OPEN_CMD "xdg-open "
+#endif
+    assert(valid_url(url) && "invalid url format");
+    auto cmd = std::string(OPEN_CMD) + url;
+    system(cmd.c_str());
+}
+#endif
 
 void XUODefaultStyle()
 {
@@ -73,8 +116,10 @@ int main(int argc, char **argv)
     win_init(&win);
 
     auto ui = ui_init(win);
-
+    //ui.show_demo_window = true;
     XUODefaultStyle();
+
+    load_shards();
 
     // Main loop
     bool done = false;
@@ -94,7 +139,36 @@ int main(int argc, char **argv)
         glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        int x, y;
+        SDL_GetWindowPosition(win.window, &x, &y);
+        ImVec2 pos = { float(x), float(y) };
+        ImVec2 size = { float(win.width), float(win.height) };
         ui_update(ui);
+        ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(size, ImGuiCond_Always);
+        ImGui::Begin(
+            "X:UO Launcher",
+            nullptr,
+            ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        {
+            if (ImGui::BeginMenuBar())
+            {
+                if (ImGui::BeginMenu("Menu"))
+                {
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("About"))
+                {
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenuBar();
+            }
+
+            ui_shards(ui, size);
+        }
+        ImGui::End();
         ui_draw(ui);
         win_flip(&win);
     }
