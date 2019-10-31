@@ -1,7 +1,9 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #pragma once
 
-struct ui_context;
-struct ImVec2;
+struct ui_model;
 
 void load_shards();
-void ui_shards(ui_context &ui, const ImVec2 &size);
+void ui_shards(ui_model &m);

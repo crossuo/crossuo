@@ -1,5 +1,6 @@
 // GPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
+
 #include "xuo_updater.h"
 
 #include <vector>
@@ -16,7 +17,7 @@
 #define XUOL_VERSION "1.1"
 #define XUOL_AGENT_NAME "X:UO Launcher v" XUOL_VERSION
 #define XUOL_UPDATER_HOST "http://update.crossuo.com/"
-//#define UPDATER_HOST "http://192.168.2.14:8089/"
+//#define XUOL_UPDATER_HOST "http://192.168.2.14:8089/"
 
 #define XUOL_THREADED 0
 #if XUOL_THREADED

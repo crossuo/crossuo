@@ -1,5 +1,6 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include <stdio.h>
 #include <vector>
 #include <sstream>
@@ -15,6 +16,7 @@
 
 #include "common.h"
 #include "shards.h"
+#include "ui_model.h"
 
 std::vector<std::string> split(const std::string &s, char delim)
 {
@@ -106,17 +108,76 @@ void XUODefaultStyle()
     /* clang-format on */
 }
 
+#if defined(XUO_RELEASE)
+#define XUOL_UPDATER_HOST "http://update.crossuo.com/"
+#else
+#define XUOL_UPDATER_HOST "http://update.crossuo.com/"
+//#define XUOL_UPDATER_HOST "http://192.168.2.14:8089/"
+#endif
+
+void view_changelog()
+{
+    open_url(XUOL_UPDATER_HOST "release/changelog.html");
+}
+
+void ui_accounts(ui_model &m)
+{
+    const auto line_size = ImGui::GetFontSize();
+    const auto items = m.area.y / (line_size + 5);
+
+    const char *accounts[] = { "Apple",  "Banana",    "Cherry",     "Kiwi",      "Mango",
+                               "Orange", "Pineapple", "Strawberry", "Watermelon" };
+    const int last_item = 0;
+    static int cur_acct = last_item;
+
+    ImGui::Text("Accounts");
+    ImGui::SetNextItemWidth(100);
+    ImGui::ListBox("##acct", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
+}
+
+void ui_updates(ui_model &m)
+{
+    ImGui::Text("No updates found at the moment");
+    if (ImGui::Button("View Changelog"))
+        view_changelog();
+}
+
+void ui_backups(ui_model &m)
+{
+    const auto bg = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+    const auto line_size = ImGui::GetFontSize();
+    const auto items = m.area.y / (line_size + 5);
+    const char *accounts[] = { "Apple",  "Banana",    "Cherry",     "Kiwi",      "Mango",
+                               "Orange", "Pineapple", "Strawberry", "Watermelon" };
+    const int last_item = 0;
+    static int cur_acct = last_item;
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
+    ImGui::PushID(0);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, bg);
+    {
+        ImGui::BeginChild("pkg", { m.area.x / 2, m.area.y }, false, window_flags);
+        ImGui::Text("Packages / Versions");
+        ImGui::ListBox("##pkg", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
+        ImGui::EndChild();
+    }
+    ImGui::PopStyleColor();
+    ImGui::PopID();
+}
+
+static ui_model model;
+
 int main(int argc, char **argv)
 {
     win_context win;
     win.title = "X:UO Launcher";
-    win.width = 800;
-    win.height = 600;
+    win.width = 680;
+    win.height = 440;
     win.vsync = 0;
     win_init(&win);
 
     auto ui = ui_init(win);
-    //ui.show_demo_window = true;
+    ui.userdata = &model;
     XUODefaultStyle();
 
     load_shards();
@@ -151,22 +212,46 @@ int main(int argc, char **argv)
             nullptr,
             ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
-                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
         {
             if (ImGui::BeginMenuBar())
             {
-                if (ImGui::BeginMenu("Menu"))
+                if (ImGui::BeginMenu("View"))
                 {
+                    bool selected = model.view == ui_view::accounts;
+                    if (ImGui::MenuItem("Accounts", nullptr, &selected))
+                        model.view = ui_view::accounts;
+                    selected = model.view == ui_view::backups;
+                    if (ImGui::MenuItem("Backups", nullptr, &selected))
+                        model.view = ui_view::backups;
+                    selected = model.view == ui_view::shards;
+                    if (ImGui::MenuItem("Shards", nullptr, &selected))
+                        model.view = ui_view::shards;
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("About"))
                 {
+                    if (ImGui::MenuItem("Changelog", nullptr))
+                        view_changelog();
+                    if (ImGui::MenuItem("Demo", nullptr, &ui.show_demo_window))
+                        ;
+                    ImGui::Separator();
+                    if (ImGui::MenuItem("About", nullptr))
+                        ;
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
             }
 
-            ui_shards(ui, size);
+            model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35);
+            if (model.view == ui_view::accounts)
+                ui_accounts(model);
+            if (model.view == ui_view::updates)
+                ui_updates(model);
+            else if (model.view == ui_view::backups)
+                ui_backups(model);
+            else if (model.view == ui_view::shards)
+                ui_shards(model);
         }
         ImGui::End();
         ui_draw(ui);
