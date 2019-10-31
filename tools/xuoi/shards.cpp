@@ -1,10 +1,13 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include "shards.h"
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <external/gfx/ui.h>
 #include <external/inih.h>
 #include "common.h"
+#include "ui_model.h"
 
 extern std::vector<std::string> split(const std::string &s, char delim);
 extern bool valid_url(const std::string &url);
@@ -34,6 +37,9 @@ bool convert(std::string &out, const char *raw)
 
 bool convert(url_other &out, const char *raw)
 {
+    if (!raw || !raw[0])
+        return false;
+
     auto v = split(raw, '+');
     if (v.size() != 2)
     {
@@ -47,7 +53,7 @@ bool convert(url_other &out, const char *raw)
         return false;
     }
 
-    out.name = v[0];
+    out.name = "Goto: " + v[0];
     out.url = v[1];
     return true;
 }
@@ -125,7 +131,7 @@ const ImVec4 bg_base = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
 const ImVec4 white = ImColor(1.0f, 1.0f, 1.0f, 1.0f);
 const ImVec4 yellow = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
 
-void ui_shards(ui_context &ui, const ImVec2 &size)
+void ui_shards(ui_model &m)
 {
     const auto line_size = ImGui::GetFontSize();
     const auto entry_size = line_size * 5;
@@ -134,8 +140,7 @@ void ui_shards(ui_context &ui, const ImVec2 &size)
     ImVec4 fg = white;
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::BeginChild(
-        "Child1", ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35), false, window_flags);
+    ImGui::BeginChild("shards", m.area, false, window_flags);
     for (int i = 0; i < s_shards.entries.size(); i++)
     {
         const auto &it = s_shards.entries[i];
