@@ -6,6 +6,7 @@
 
 #include "gfx.h"
 #include "imgui/imgui.h"
+#include "imgui/IconsForkAwesome.h"
 
 struct ui_context
 {

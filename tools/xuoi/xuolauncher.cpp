@@ -130,15 +130,16 @@ void ui_accounts(ui_model &m)
     const int last_item = 0;
     static int cur_acct = last_item;
 
-    ImGui::Text("Accounts");
+    ImGui::Text(ICON_FK_USER " Accounts");
     ImGui::SetNextItemWidth(100);
     ImGui::ListBox("##acct", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
 }
 
 void ui_updates(ui_model &m)
 {
-    ImGui::Text("No updates found at the moment");
-    if (ImGui::Button("View Changelog"))
+    // see: https://forkaweso.me/Fork-Awesome/icons/
+    ImGui::Text(ICON_FK_CHECK_SQUARE " No updates found at the moment");
+    if (ImGui::Button(ICON_FK_FILE_TEXT_O " View Changelog"))
         view_changelog();
 }
 
@@ -157,7 +158,7 @@ void ui_backups(ui_model &m)
     ImGui::PushStyleColor(ImGuiCol_ChildBg, bg);
     {
         ImGui::BeginChild("pkg", { m.area.x / 2, m.area.y }, false, window_flags);
-        ImGui::Text("Packages / Versions");
+        ImGui::Text(ICON_FK_FILE_ARCHIVE_O " Packages / Versions");
         ImGui::ListBox("##pkg", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
         ImGui::EndChild();
     }
@@ -219,24 +220,24 @@ int main(int argc, char **argv)
                 if (ImGui::BeginMenu("View"))
                 {
                     bool selected = model.view == ui_view::accounts;
-                    if (ImGui::MenuItem("Accounts", nullptr, &selected))
+                    if (ImGui::MenuItem(ICON_FK_USER " Accounts", nullptr, &selected))
                         model.view = ui_view::accounts;
                     selected = model.view == ui_view::backups;
-                    if (ImGui::MenuItem("Backups", nullptr, &selected))
+                    if (ImGui::MenuItem(ICON_FK_FILE_ARCHIVE_O " Backups", nullptr, &selected))
                         model.view = ui_view::backups;
                     selected = model.view == ui_view::shards;
-                    if (ImGui::MenuItem("Shards", nullptr, &selected))
+                    if (ImGui::MenuItem(ICON_FK_GLOBE_W " Shards", nullptr, &selected))
                         model.view = ui_view::shards;
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("About"))
                 {
-                    if (ImGui::MenuItem("Changelog", nullptr))
+                    if (ImGui::MenuItem(ICON_FK_FILE_TEXT_O " Changelog", nullptr))
                         view_changelog();
                     if (ImGui::MenuItem("Demo", nullptr, &ui.show_demo_window))
                         ;
                     ImGui::Separator();
-                    if (ImGui::MenuItem("About", nullptr))
+                    if (ImGui::MenuItem(ICON_FK_QUESTION_CIRCLE " About", nullptr))
                         ;
                     ImGui::EndMenu();
                 }
