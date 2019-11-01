@@ -105,6 +105,7 @@ void XUODefaultStyle()
     colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+    colors[ImGuiCol_SelectedEntryBg]        = ImVec4(0.47f, 0.47f, 0.47f, 0.39f);
     /* clang-format on */
 }
 
@@ -131,7 +132,7 @@ void ui_accounts(ui_model &m)
     static int cur_acct = last_item;
 
     ImGui::Text(ICON_FK_USER " Accounts");
-    ImGui::SetNextItemWidth(100);
+    ImGui::SetNextItemWidth(m.area.x / 3);
     ImGui::ListBox("##acct", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
 }
 
@@ -145,25 +146,14 @@ void ui_updates(ui_model &m)
 
 void ui_backups(ui_model &m)
 {
-    const auto bg = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
     const auto line_size = ImGui::GetFontSize();
     const auto items = m.area.y / (line_size + 5);
     const char *accounts[] = { "Apple",  "Banana",    "Cherry",     "Kiwi",      "Mango",
                                "Orange", "Pineapple", "Strawberry", "Watermelon" };
     const int last_item = 0;
-    static int cur_acct = last_item;
-
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::PushID(0);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, bg);
-    {
-        ImGui::BeginChild("pkg", { m.area.x / 2, m.area.y }, false, window_flags);
-        ImGui::Text(ICON_FK_FILE_ARCHIVE_O " Packages / Versions");
-        ImGui::ListBox("##pkg", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
-        ImGui::EndChild();
-    }
-    ImGui::PopStyleColor();
-    ImGui::PopID();
+    static int cur_item = last_item;
+    ImGui::Text(ICON_FK_FILE_ARCHIVE_O " Packages / Versions");
+    ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
 }
 
 static ui_model model;
@@ -179,6 +169,7 @@ int main(int argc, char **argv)
 
     auto ui = ui_init(win);
     ui.userdata = &model;
+    ui.show_stats_window = true;
     XUODefaultStyle();
 
     load_shards();

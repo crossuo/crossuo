@@ -186,13 +186,16 @@ void ui_shards(ui_model &m)
             ImGui::Text("%s", it.shard_name.c_str());
             ImGui::PopStyleColor();
             if (has_url)
+            {
+                ImGui::SameLine();
                 ImGui::Text("%s", it.shard_url.c_str());
+            }
             if (i == s_selected && has_desc)
                 ImGui::TextWrapped("%s", it.shard_description.c_str());
             if (has_lang)
                 ImGui::Text("Language: %s", it.shard_language.name.c_str());
             if (has_tags)
-                ImGui::Text("Tags: %s", it.raw_shard_tags.c_str());
+                ImGui::Text("Tags: %s", it.raw_shard_tags.c_str()); // FIXME: pretty print
             ImGui::EndGroup();
             //if (ImGui::IsItemHovered())
             //    ImGui::SetTooltip("Shard %04d hovered", i);

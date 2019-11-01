@@ -5705,7 +5705,9 @@ void ImGui::ListBoxFooter()
 
 bool ImGui::ListBox(const char* label, int* current_item, const char* const items[], int items_count, int height_items)
 {
+    ImGui::PushStyleColor(ImGuiCol_Header, GetColorU32(ImGuiCol_SelectedEntryBg)); // PATCH: crossuo
     const bool value_changed = ListBox(label, current_item, Items_ArrayGetter, (void*)items, items_count, height_items);
+    ImGui::PopStyleColor();
     return value_changed;
 }
 
