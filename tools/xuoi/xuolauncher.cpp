@@ -13,8 +13,10 @@
 #include <external/gfx/ui.h>
 #include <external/gfx/sokol_gfx.h>
 #include <external/gfx/imgui/imgui.h>
+#include <external/inih.h>
 
 #include "common.h"
+#include "accounts.h"
 #include "shards.h"
 #include "ui_model.h"
 
@@ -121,21 +123,6 @@ void view_changelog()
     open_url(XUOL_UPDATER_HOST "release/changelog.html");
 }
 
-void ui_accounts(ui_model &m)
-{
-    const auto line_size = ImGui::GetFontSize();
-    const auto items = m.area.y / (line_size + 5);
-
-    const char *accounts[] = { "Apple",  "Banana",    "Cherry",     "Kiwi",      "Mango",
-                               "Orange", "Pineapple", "Strawberry", "Watermelon" };
-    const int last_item = 0;
-    static int cur_acct = last_item;
-
-    ImGui::Text(ICON_FK_USER " Accounts");
-    ImGui::SetNextItemWidth(m.area.x / 3);
-    ImGui::ListBox("##acct", &cur_acct, accounts, IM_ARRAYSIZE(accounts), items);
-}
-
 void ui_updates(ui_model &m)
 {
     // see: https://forkaweso.me/Fork-Awesome/icons/
@@ -156,6 +143,45 @@ void ui_backups(ui_model &m)
     ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
 }
 
+namespace launcher
+{
+#include "cfg_converters.h"
+
+}; // namespace launcher
+
+#define CFG_SECTION_FILTER_NAME "global"
+#define CFG_NAME launcher
+#define CFG_FILE xuolauncher
+#define CFG_DEFINITION "cfg_launcher.h"
+#include "cfg_loader.h"
+
+static launcher::data s_config;
+
+launcher::entry &config()
+{
+    return s_config.entries[0];
+}
+
+void load_config()
+{
+    s_config = launcher::cfg();
+    if (s_config.entries.size())
+        launcher::dump(&s_config.entries[0]);
+    else
+        s_config.entries.push_back({});
+}
+
+void write_config(void *)
+{
+}
+
+void save_config()
+{
+    FILE *fp = nullptr;
+    write_config(fp);
+    write_accounts(fp);
+}
+
 static ui_model model;
 
 int main(int argc, char **argv)
@@ -172,7 +198,12 @@ int main(int argc, char **argv)
     ui.show_stats_window = true;
     XUODefaultStyle();
 
+    load_config();
+    load_accounts();
     load_shards();
+
+    if (!config().global_check_updates)
+        model.view = ui_view::accounts;
 
     // Main loop
     bool done = false;
@@ -244,11 +275,14 @@ int main(int argc, char **argv)
                 ui_backups(model);
             else if (model.view == ui_view::shards)
                 ui_shards(model);
+            else if (model.view == ui_view::shard_picker)
+                ui_shards(model, true);
         }
         ImGui::End();
         ui_draw(ui);
         win_flip(&win);
     }
+    save_config();
     ui_shutdown(ui);
     win_shutdown(&win);
     return 0;

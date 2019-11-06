@@ -11,6 +11,7 @@ enum class ui_view : uint32_t
     updates,
     backups,
     shards,
+    shard_picker,
 
     count,
 };
@@ -20,3 +21,6 @@ struct ui_model
     ImVec2 area;
     ui_view view = ui_view::updates;
 };
+
+void ui_push(ui_model &m, ui_view v);
+void ui_pop(ui_model &m);

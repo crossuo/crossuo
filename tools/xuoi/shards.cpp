@@ -4,6 +4,7 @@
 #include "shards.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <algorithm>
 #include <external/inih.h>
 #include "common.h"
@@ -15,6 +16,8 @@ extern void open_url(const std::string &url);
 
 namespace shard
 {
+#include "cfg_converters.h"
+
 struct url_other
 {
     std::string name;
@@ -28,12 +31,6 @@ struct tag_data
     bool is_pvp;
     bool is_rp;
 };
-
-bool convert(std::string &out, const char *raw)
-{
-    out = raw;
-    return true;
-}
 
 bool convert(url_other &out, const char *raw)
 {
@@ -100,6 +97,7 @@ bool convert(lang_type &out, const char *raw)
 // model
 
 static shard::data s_shards;
+static std::unordered_map<std::string, int> s_shard_by_loginserver;
 
 void load_shards()
 {
@@ -114,16 +112,81 @@ void load_shards()
     });
 
     LOG_DEBUG("\n\nentries found: %zu\n", s_shards.entries.size());
+    int i = 0;
     for (auto &e : s_shards.entries)
     {
+        s_shard_by_loginserver[e.shard_loginserver] = i++;
         shard::dump(&e);
         LOG_DEBUG("\n\n");
     }
 }
 
+int shard_index_by_loginserver(const char *login_server)
+{
+    auto it = s_shard_by_loginserver.find(login_server);
+    if (it != s_shard_by_loginserver.end())
+        return (*it).second;
+    return 0;
+}
+
+shard_data shard_by_id(int id)
+{
+    assert(id < s_shards.entries.size());
+    const auto &s = s_shards.entries[id];
+    return { s.shard_loginserver.c_str(),
+             s.shard_clienttype.c_str(),
+             s.shard_clientversion.c_str() };
+}
+
 // view
 
+static bool ComboBox(
+    const char *id,
+    const char *label,
+    float w,
+    int *current_item,
+    bool (*items_getter)(void *data, int idx, const char **out_text),
+    void *data,
+    int items_count,
+    int popup_max_height_in_items = -1)
+{
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(w);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
+    const bool changed =
+        ImGui::Combo(id, current_item, items_getter, data, items_count, popup_max_height_in_items);
+    ImGui::PopStyleColor();
+    ImGui::PopItemWidth();
+    return changed;
+}
+
+static bool shard_getter(void *data, int idx, const char **out_text)
+{
+    auto *items = (std::vector<shard::entry> *)data;
+    assert(items);
+    assert(idx < items->size());
+    if (out_text)
+        *out_text = items->at(idx).shard_name.c_str();
+    return true;
+}
+
+bool ui_shards_combo(
+    const char *id, const char *label, float w, int *current_item, int popup_max_height_in_items)
+{
+    return ComboBox(
+        id,
+        label,
+        w,
+        current_item,
+        shard_getter,
+        &s_shards.entries,
+        s_shards.entries.size(),
+        popup_max_height_in_items);
+}
+
 static int s_selected = 0;
+static int s_picked = -1;
 const ImVec4 bg_selected = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
 const ImVec4 bg_highlighted = ImVec4(0.45f, 0.35f, 0.35f, 1.00f);
 const ImVec4 bg_alt = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
@@ -131,7 +194,14 @@ const ImVec4 bg_base = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
 const ImVec4 white = ImColor(1.0f, 1.0f, 1.0f, 1.0f);
 const ImVec4 yellow = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
 
-void ui_shards(ui_model &m)
+int shard_picked()
+{
+    int r = s_picked;
+    s_picked = -1;
+    return r;
+}
+
+void ui_shards(ui_model &m, bool picker)
 {
     const auto line_size = ImGui::GetFontSize();
     const auto entry_size = line_size * 5;
@@ -220,5 +290,21 @@ void ui_shards(ui_model &m)
         ImGui::PopStyleColor();
         ImGui::PopID();
     }
+
+    if (picker)
+    {
+        ImGui::NewLine();
+        ImGui::SameLine(m.area.x - 160.0f);
+        if (ImGui::Button("Pick Selected"))
+        {
+            LOG_TRACE("pick shard: %d\n", s_selected);
+            s_picked = s_selected;
+            ui_pop(m);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+            ui_pop(m);
+    }
+
     ImGui::EndChild();
 }

@@ -7,8 +7,15 @@
 #define CFG_STRINGIFY(X) CFG_STRINGIFY2(X)
 #define CFG_STRINGIFY2(X) #X
 
-#define SECTION_FILTER_NAME CFG_STRINGIFY(CFG_NAME)
-#define CFG_FILENAME        CFG_STRINGIFY(CFG_NAME) ".cfg"
+#ifndef CFG_FILE
+#define CFG_FILE CFG_NAME
+#endif // CFG_FILE
+
+#ifndef CFG_SECTION_FILTER_NAME
+#define CFG_SECTION_FILTER_NAME CFG_STRINGIFY(CFG_NAME)
+#endif // CFG_SECTION_FILTER_NAME
+
+#define CFG_FILENAME            CFG_STRINGIFY(CFG_FILE) ".cfg"
 
 namespace CFG_NAME {
 
@@ -58,8 +65,11 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     auto &obj = *(data *)user;
     obj.lineno = lineno;
 
-#if defined(SECTION_FILTER_NAME)
-    if (!name && !value && !strcasecmp(SECTION_FILTER_NAME, section))
+#if defined(CFG_SECTION_FILTER_NAME)
+    if (strcasecmp(CFG_SECTION_FILTER_NAME, section) != 0)
+        return 1; // ignore unknown section
+
+    if (!name && !value)
     {
         type_save_current(obj);
         LOG_TRACE("new section found\n");
@@ -119,8 +129,9 @@ data cfg()
 };
 
 #undef TYPE_NAME
-#undef SECTION_FILTER_NAME
+#undef CFG_FILE
 #undef CFG_DEFINITION
 #undef CFG_FILENAME
 #undef CFG_STRINGIFY2
 #undef CFG_STRINGIFY
+#undef CFG_SECTION_FILTER_NAME

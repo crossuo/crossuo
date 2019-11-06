@@ -1,0 +1,348 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
+#include "accounts.h"
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <algorithm>
+#include <external/inih.h>
+#include "common.h"
+#include "ui_model.h"
+#include "shards.h"
+
+namespace account
+{
+#include "cfg_converters.h"
+
+}; // namespace account
+
+#define CFG_NAME account
+#define CFG_FILE xuolauncher
+#define CFG_DEFINITION "cfg_launcher.h"
+#include "cfg_loader.h"
+
+// model
+
+const char *client_types[] = {
+    "Automatic",
+    "The Second Age (T2A)",
+    "Renaissance (RE)",
+    "Third Dawn (TD)",
+    "Lord Blackthorn's Revenge (LBR)",
+    "Age Of Shadows (AOS)",
+    "Samurai Empire (SE)",
+    "Stygian Abyss (SA)",
+};
+
+const char *client_types_cfg[] = {
+    "", "t2a", "re", "td", "lbr", "aos", "se", "sa",
+};
+
+static account::data s_accounts;
+static std::unordered_map<std::string, int> s_account_by_name;
+
+void load_accounts()
+{
+    s_accounts = account::cfg();
+    auto it = s_accounts.entries.emplace(s_accounts.entries.begin());
+    (*it).account_profile = "<new>";
+    int i = 0;
+    for (auto &e : s_accounts.entries)
+    {
+        s_account_by_name[e.account_profile] = i++;
+        account::dump(&e);
+        LOG_DEBUG("\n\n");
+    }
+}
+
+void write_accounts(void *)
+{
+}
+
+int account_index_by_profilename(const char *name)
+{
+    auto it = s_account_by_name.find(name);
+    if (it != s_account_by_name.end())
+        return (*it).second;
+    return 0;
+}
+
+int account_client_type_index_by_cfg(const char *shortname)
+{
+    for (int i = 0; i < IM_ARRAYSIZE(client_types_cfg); ++i)
+    {
+        if (!strcasecmp(client_types_cfg[i], shortname))
+            return i;
+    }
+    return 0;
+}
+
+int account_client_type_index_by_name(const char *name)
+{
+    for (int i = 0; i < IM_ARRAYSIZE(client_types); ++i)
+    {
+        if (!strcasecmp(client_types[i], name))
+            return i;
+    }
+    return 0;
+}
+
+// view
+
+static bool account_getter(void *data, int idx, const char **out_text)
+{
+    auto *items = (std::vector<account::entry> *)data;
+    assert(items);
+    assert(idx < items->size());
+    if (out_text)
+        *out_text = items->at(idx).account_profile.c_str();
+    return true;
+}
+
+static void HoverToolTip(const char *desc)
+{
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+static void HelpMarker(const char *desc)
+{
+    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImGui::GetColorU32(ImGuiCol_Text));
+    ImGui::TextDisabled("" ICON_FK_QUESTION_CIRCLE);
+    ImGui::PopStyleColor();
+    HoverToolTip(desc);
+}
+
+static void InputText(
+    const char *id,
+    const char *label,
+    float w,
+    char *buf,
+    size_t buf_size,
+    ImGuiInputTextFlags flags = 0,
+    ImGuiInputTextCallback callback = nullptr,
+    void *user_data = nullptr)
+{
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(w);
+    ImGui::InputText(id, buf, buf_size, flags, callback, user_data);
+    ImGui::PopItemWidth();
+}
+
+static bool ComboBox(
+    const char *id,
+    const char *label,
+    float w,
+    int *current_item,
+    const char *const items[],
+    int items_count,
+    int height_in_items = -1)
+{
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(w);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
+    const bool changed = ImGui::Combo(id, current_item, items, items_count, height_in_items);
+    ImGui::PopStyleColor();
+    ImGui::PopItemWidth();
+    return changed;
+}
+
+void ui_accounts(ui_model &m)
+{
+    const auto profile_max_w = 120.f;
+    const auto line_size = ImGui::GetFontSize();
+    static auto label_size = ImGui::CalcTextSize("Profile Name: ", nullptr, true);
+    static auto label_size2 = ImGui::CalcTextSize(" Use Character: ", nullptr, true);
+    const auto items = m.area.y / (line_size + 5);
+
+    const int NEW_ACCOUNT = 0;
+    const int last_item = NEW_ACCOUNT;
+    static int acct_id = last_item;
+
+    static char profileName[64] = {};
+    static char loginServer[128] = {};
+    static char login[64] = {};
+    static char password[64] = {};
+    static char path[FS_MAX_PATH] = {};
+    static char characterName[64] = {};
+    static char clientVersion[32] = {};
+    //static char protocolVersion[32] = {};
+    static char commandLine[FS_MAX_PATH] = {};
+    static int current_type = 0;
+    static int current_shard = 0;
+    static bool update_view = true;
+    const auto picked = shard_picked();
+    if (picked != -1)
+        update_view = true;
+
+    auto update_shard = [](int id) {
+        auto shard = shard_by_id(id);
+        memccpy(loginServer, shard.loginserver, 0, sizeof(loginServer));
+        memccpy(clientVersion, shard.clientversion, 0, sizeof(clientVersion));
+        current_type = account_client_type_index_by_cfg(shard.clienttype);
+    };
+
+    ImGuiWindowFlags window_flags = 0;
+    auto left_w = fmin(floor(m.area.x * (1.0f / 3.0f)), profile_max_w);
+    ImGui::BeginChild("left", { left_w, m.area.y }, false, window_flags);
+    {
+        ImGui::Text(ICON_FK_USER " Accounts");
+        ImGui::SetNextItemWidth(left_w);
+        ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
+        if (ImGui::ListBox(
+                "##acct",
+                &acct_id,
+                account_getter,
+                &s_accounts.entries,
+                s_accounts.entries.size(),
+                items))
+        {
+            update_view = true;
+        }
+        ImGui::PopStyleColor();
+    }
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    auto &acct = s_accounts.entries[acct_id];
+    if (update_view)
+    {
+        if (acct_id == NEW_ACCOUNT)
+        {
+            memset(profileName, 0, sizeof(profileName));
+            memset(loginServer, 0, sizeof(loginServer));
+            memset(login, 0, sizeof(login));
+            memset(password, 0, sizeof(password));
+            memset(path, 0, sizeof(path));
+            memset(characterName, 0, sizeof(characterName));
+            memset(clientVersion, 0, sizeof(clientVersion));
+            memset(commandLine, 0, sizeof(commandLine));
+            current_type = 0;
+            current_shard = 0;
+        }
+        else
+        {
+            memccpy(profileName, acct.account_profile.c_str(), 0, sizeof(profileName));
+            memccpy(loginServer, acct.account_loginserver.c_str(), 0, sizeof(loginServer));
+            memccpy(login, acct.account_login.c_str(), 0, sizeof(login));
+            memccpy(password, acct.account_password.c_str(), 0, sizeof(password));
+            memccpy(path, acct.account_data_path.c_str(), 0, sizeof(path));
+            memccpy(characterName, acct.account_fast_login.c_str(), 0, sizeof(characterName));
+            memccpy(clientVersion, acct.account_clientversion.c_str(), 0, sizeof(clientVersion));
+            memccpy(commandLine, acct.account_extra_cli.c_str(), 0, sizeof(commandLine));
+            current_type = account_client_type_index_by_cfg(acct.account_clienttype.c_str());
+            current_shard = shard_index_by_loginserver(acct.account_loginserver.c_str());
+        }
+
+        if (picked != -1)
+        {
+            LOG_TRACE("picked shard: %d\n", picked);
+            current_shard = picked;
+            update_shard(picked);
+        }
+
+        update_view = false;
+    }
+
+    const auto right_w = m.area.x - left_w;
+    auto w = right_w;
+    ImGui::BeginChild("right", { w, m.area.y }, false);
+    const auto spacing_w = 10;
+    w = w - spacing_w - label_size.x;
+    {
+        ImGui::NewLine();
+        InputText("##1", "Profile Name:", w, profileName, sizeof(profileName));
+        InputText("##2", "       Login:", w / 3, login, sizeof(login));
+        ImGui::SameLine();
+        const auto w2 = w - ImGui::GetCursorPosX() + 21;
+        InputText(
+            "##3", " Password:", w2, password, sizeof(password), ImGuiInputTextFlags_Password);
+        InputText("##6", "   Character:", w - 22, characterName, sizeof(characterName));
+        ImGui::SameLine();
+        HelpMarker("If used, will make crossuo fast join the game with this character");
+        if (ui_shards_combo("##b", "       Shard:", w - 27, &current_shard))
+        {
+            update_shard(current_shard);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("" ICON_FK_GLOBE_W))
+            ui_push(m, ui_view::shard_picker);
+        HoverToolTip("Shard picker");
+
+        if (ImGui::TreeNode("Advanced"))
+        {
+            w = w - label_size2.x + label_size.x;
+            ImGui::Unindent(ImGui::GetTreeNodeToLabelSpacing());
+
+            InputText("##4", "  Login Server:", w - 27, loginServer, sizeof(loginServer));
+            ImGui::SameLine();
+            if (ImGui::Button("" ICON_FK_GLOBE_W))
+                ui_push(m, ui_view::shard_picker);
+            HoverToolTip("Shard picker");
+            InputText(
+                "##7", "Client Version:", w / 3 - spacing_w, clientVersion, sizeof(clientVersion));
+            ImGui::SameLine();
+            HelpMarker("Client version to emulate");
+            ImGui::SameLine();
+            //const auto w3 = w - ImGui::GetCursorPosX() + 14;
+            //InputText("##8", " Protocol:", w3, protocolVersion, sizeof(protocolVersion));
+            //ImGui::SameLine(); HelpMarker("Network protocol version to emulate (if empty, this will use be the same as client version)");
+            //InputText("##9", "  Type:", w3, clientType, sizeof(clientType));
+            const auto w3 = right_w - ImGui::GetCursorPosX() - 66;
+            ComboBox("##9", "  Type:", w3, &current_type, client_types, IM_ARRAYSIZE(client_types));
+            InputText("##5", "  UO Data Path:", w - 50, path, sizeof(path));
+            ImGui::SameLine();
+            if (ImGui::Button("" ICON_FK_FOLDER))
+                ;
+            ImGui::SameLine();
+            HelpMarker("The place where Ultima Online client is installed");
+            InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
+
+            ImGui::Indent(ImGui::GetTreeNodeToLabelSpacing());
+            ImGui::TreePop();
+        }
+        ImGui::NewLine();
+        ImGui::SameLine(right_w - 45.0f);
+        if (ImGui::Button("Save"))
+        {
+            if (acct_id == NEW_ACCOUNT)
+            {
+                account::entry entry;
+                entry.account_profile = std::string(profileName);
+                entry.account_loginserver = std::string(loginServer);
+                entry.account_login = std::string(login);
+                entry.account_password = std::string(password);
+                entry.account_data_path = std::string(path);
+                entry.account_fast_login = std::string(characterName);
+                entry.account_clientversion = std::string(clientVersion);
+                entry.account_extra_cli = std::string(commandLine);
+                entry.account_clienttype = std::string(client_types_cfg[current_type]);
+                acct_id = s_accounts.entries.size();
+                s_accounts.entries.emplace_back(entry);
+            }
+            else
+            {
+                // dont overwrite the object, we may not want touch other fields
+                acct.account_profile = std::string(profileName);
+                acct.account_loginserver = std::string(loginServer);
+                acct.account_login = std::string(login);
+                acct.account_password = std::string(password);
+                acct.account_data_path = std::string(path);
+                acct.account_fast_login = std::string(characterName);
+                acct.account_clientversion = std::string(clientVersion);
+                acct.account_extra_cli = std::string(commandLine);
+                acct.account_clienttype = std::string(client_types_cfg[current_type]);
+            }
+        }
+    }
+    ImGui::EndChild();
+}
