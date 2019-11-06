@@ -30,7 +30,9 @@ set(XUOL_SRCS
   http.cpp
   xuo_updater.cpp
   xuolauncher.cpp
+  accounts.cpp
   shards.cpp
+  ui_model.cpp
 )
 
 set(XUOL_PROJECT xuolauncher)

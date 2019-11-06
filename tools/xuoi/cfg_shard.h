@@ -1,7 +1,7 @@
 /* clang-format off */
 #ifndef CFG_FIELD
 #error "x-macros, please define a CFG_FIELD macro on how to interpret the values"
-#define CFG_FIELD(section, name, default, type, convert)
+#define CFG_FIELD(section, name, default, type)
 #endif
 
 CFG_FIELD(shard, submitter, "github+crossuo", std::string)
@@ -78,6 +78,10 @@ CFG_FIELD(shard, loginserver, {}, std::string)
 CFG_FIELD(shard, clientversion, {}, std::string)
 // required
 // same as in crossuo.cfg, specify the client version to emulate with crossuo
+
+CFG_FIELD(account, protocolversion, {}, std::string)
+// required
+// same as in crossuo.cfg, specify the network protocol version to force
 
 CFG_FIELD(shard, clienttype, {}, std::string)
 // optional
