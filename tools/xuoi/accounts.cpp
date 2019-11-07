@@ -6,16 +6,12 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <sstream>
 #include <external/inih.h>
+#include <external/tinyfiledialogs.h>
 #include "common.h"
 #include "ui_model.h"
 #include "shards.h"
-
-namespace account
-{
-#include "cfg_converters.h"
-
-}; // namespace account
 
 #define CFG_NAME account
 #define CFG_FILE xuolauncher
@@ -56,8 +52,17 @@ void load_accounts()
     }
 }
 
-void write_accounts(void *)
+void write_accounts(void *_fp)
 {
+    if (s_accounts.entries.size() < 2) // <new> account is first
+        return;
+
+    auto fp = (FILE *)_fp;
+    for (int i = 1; i < s_accounts.entries.size(); ++i)
+    {
+        const auto &e = s_accounts.entries[i];
+        account::write(fp, e, "Account");
+    }
 }
 
 int account_index_by_profilename(const char *name)
@@ -90,6 +95,26 @@ int account_client_type_index_by_name(const char *name)
 
 // view
 
+void HoverToolTip(const char *desc);
+void HelpMarker(const char *desc);
+void InputText(
+    const char *id,
+    const char *label,
+    float w,
+    char *buf,
+    size_t buf_size,
+    ImGuiInputTextFlags flags = 0,
+    ImGuiInputTextCallback callback = nullptr,
+    void *user_data = nullptr);
+bool ComboBox(
+    const char *id,
+    const char *label,
+    float w,
+    int *current_item,
+    const char *const items[],
+    int items_count,
+    int height_in_items = -1);
+
 static bool account_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<account::entry> *)data;
@@ -100,69 +125,13 @@ static bool account_getter(void *data, int idx, const char **out_text)
     return true;
 }
 
-static void HoverToolTip(const char *desc)
-{
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
-
-static void HelpMarker(const char *desc)
-{
-    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImGui::GetColorU32(ImGuiCol_Text));
-    ImGui::TextDisabled("" ICON_FK_QUESTION_CIRCLE);
-    ImGui::PopStyleColor();
-    HoverToolTip(desc);
-}
-
-static void InputText(
-    const char *id,
-    const char *label,
-    float w,
-    char *buf,
-    size_t buf_size,
-    ImGuiInputTextFlags flags = 0,
-    ImGuiInputTextCallback callback = nullptr,
-    void *user_data = nullptr)
-{
-    ImGui::Text("%s", label);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(w);
-    ImGui::InputText(id, buf, buf_size, flags, callback, user_data);
-    ImGui::PopItemWidth();
-}
-
-static bool ComboBox(
-    const char *id,
-    const char *label,
-    float w,
-    int *current_item,
-    const char *const items[],
-    int items_count,
-    int height_in_items = -1)
-{
-    ImGui::Text("%s", label);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(w);
-    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-    const bool changed = ImGui::Combo(id, current_item, items, items_count, height_in_items);
-    ImGui::PopStyleColor();
-    ImGui::PopItemWidth();
-    return changed;
-}
-
 void ui_accounts(ui_model &m)
 {
     const auto profile_max_w = 120.f;
-    const auto line_size = ImGui::GetFontSize();
+    const auto line_size = ImGui::GetTextLineHeightWithSpacing();
     static auto label_size = ImGui::CalcTextSize("Profile Name: ", nullptr, true);
     static auto label_size2 = ImGui::CalcTextSize(" Use Character: ", nullptr, true);
-    const auto items = m.area.y / (line_size + 5);
+    const auto items = m.area.y / (line_size + 2);
 
     const int NEW_ACCOUNT = 0;
     const int last_item = NEW_ACCOUNT;
@@ -192,7 +161,7 @@ void ui_accounts(ui_model &m)
     };
 
     ImGuiWindowFlags window_flags = 0;
-    auto left_w = fmin(floor(m.area.x * (1.0f / 3.0f)), profile_max_w);
+    float left_w = fmin(floor(m.area.x * (1.0f / 3.0f)), profile_max_w);
     ImGui::BeginChild("left", { left_w, m.area.y }, false, window_flags);
     {
         ImGui::Text(ICON_FK_USER " Accounts");
@@ -253,7 +222,7 @@ void ui_accounts(ui_model &m)
         update_view = false;
     }
 
-    const auto right_w = m.area.x - left_w;
+    const float right_w = m.area.x - left_w;
     auto w = right_w;
     ImGui::BeginChild("right", { w, m.area.y }, false);
     const auto spacing_w = 10;
@@ -302,7 +271,13 @@ void ui_accounts(ui_model &m)
             InputText("##5", "  UO Data Path:", w - 50, path, sizeof(path));
             ImGui::SameLine();
             if (ImGui::Button("" ICON_FK_FOLDER))
-                ;
+            {
+                const auto data_path = tinyfd_selectFolderDialog("UO Data Path", path);
+                if (data_path)
+                {
+                    memcpy(path, data_path, sizeof(path));
+                }
+            }
             ImGui::SameLine();
             HelpMarker("The place where Ultima Online client is installed");
             InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
@@ -316,18 +291,21 @@ void ui_accounts(ui_model &m)
         {
             if (acct_id == NEW_ACCOUNT)
             {
-                account::entry entry;
-                entry.account_profile = std::string(profileName);
-                entry.account_loginserver = std::string(loginServer);
-                entry.account_login = std::string(login);
-                entry.account_password = std::string(password);
-                entry.account_data_path = std::string(path);
-                entry.account_fast_login = std::string(characterName);
-                entry.account_clientversion = std::string(clientVersion);
-                entry.account_extra_cli = std::string(commandLine);
-                entry.account_clienttype = std::string(client_types_cfg[current_type]);
-                acct_id = s_accounts.entries.size();
-                s_accounts.entries.emplace_back(entry);
+                if (profileName[0])
+                {
+                    account::entry entry;
+                    entry.account_profile = std::string(profileName);
+                    entry.account_loginserver = std::string(loginServer);
+                    entry.account_login = std::string(login);
+                    entry.account_password = std::string(password);
+                    entry.account_data_path = std::string(path);
+                    entry.account_fast_login = std::string(characterName);
+                    entry.account_clientversion = std::string(clientVersion);
+                    entry.account_extra_cli = std::string(commandLine);
+                    entry.account_clienttype = std::string(client_types_cfg[current_type]);
+                    acct_id = int(s_accounts.entries.size());
+                    s_accounts.entries.emplace_back(entry);
+                }
             }
             else
             {
@@ -342,6 +320,9 @@ void ui_accounts(ui_model &m)
                 acct.account_extra_cli = std::string(commandLine);
                 acct.account_clienttype = std::string(client_types_cfg[current_type]);
             }
+
+            void save_config();
+            save_config(); // force xuolauncher to save all configurations
         }
     }
     ImGui::EndChild();

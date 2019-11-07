@@ -20,16 +20,6 @@
 #include "shards.h"
 #include "ui_model.h"
 
-std::vector<std::string> split(const std::string &s, char delim)
-{
-    std::vector<std::string> r;
-    std::istringstream f(s);
-    std::string p;
-    while (std::getline(f, p, delim))
-        r.push_back(p);
-    return r;
-}
-
 bool valid_url(const std::string &url)
 {
     return url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0;
@@ -118,6 +108,83 @@ void XUODefaultStyle()
 //#define XUOL_UPDATER_HOST "http://192.168.2.14:8089/"
 #endif
 
+void HoverToolTip(const char *desc)
+{
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetTextLineHeightWithSpacing() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+void HelpMarker(const char *desc)
+{
+    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImGui::GetColorU32(ImGuiCol_Text));
+    ImGui::TextDisabled("" ICON_FK_QUESTION_CIRCLE);
+    ImGui::PopStyleColor();
+    HoverToolTip(desc);
+}
+
+void InputText(
+    const char *id,
+    const char *label,
+    float w,
+    char *buf,
+    size_t buf_size,
+    ImGuiInputTextFlags flags = 0,
+    ImGuiInputTextCallback callback = nullptr,
+    void *user_data = nullptr)
+{
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(w);
+    ImGui::InputText(id, buf, buf_size, flags, callback, user_data);
+    ImGui::PopItemWidth();
+}
+
+bool ComboBox(
+    const char *id,
+    const char *label,
+    float w,
+    int *current_item,
+    const char *const items[],
+    int items_count,
+    int height_in_items = -1)
+{
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(w);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
+    const bool changed = ImGui::Combo(id, current_item, items, items_count, height_in_items);
+    ImGui::PopStyleColor();
+    ImGui::PopItemWidth();
+    return changed;
+}
+
+bool ComboBox(
+    const char *id,
+    const char *label,
+    float w,
+    int *current_item,
+    bool (*items_getter)(void *data, int idx, const char **out_text),
+    void *data,
+    int items_count,
+    int height_in_items = -1)
+{
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PushItemWidth(w);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
+    const bool changed =
+        ImGui::Combo(id, current_item, items_getter, data, items_count, height_in_items);
+    ImGui::PopStyleColor();
+    ImGui::PopItemWidth();
+    return changed;
+}
+
 void view_changelog()
 {
     open_url(XUOL_UPDATER_HOST "release/changelog.html");
@@ -133,21 +200,22 @@ void ui_updates(ui_model &m)
 
 void ui_backups(ui_model &m)
 {
-    const auto line_size = ImGui::GetFontSize();
-    const auto items = m.area.y / (line_size + 5);
+    const auto line_size = ImGui::GetTextLineHeightWithSpacing();
+    const auto items = int(m.area.y / (line_size + 2));
     const char *accounts[] = { "Apple",  "Banana",    "Cherry",     "Kiwi",      "Mango",
                                "Orange", "Pineapple", "Strawberry", "Watermelon" };
     const int last_item = 0;
     static int cur_item = last_item;
+
+    ImGuiWindowFlags window_flags = 0;
+    auto area = ImGui::GetWindowContentRegionMax();
+    ImGui::BeginChild("##left", area, false, window_flags);
     ImGui::Text(ICON_FK_FILE_ARCHIVE_O " Packages / Versions");
+    ImGui::PushItemWidth(m.area.x);
     ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
+    ImGui::PopItemWidth();
+    ImGui::EndChild();
 }
-
-namespace launcher
-{
-#include "cfg_converters.h"
-
-}; // namespace launcher
 
 #define CFG_SECTION_FILTER_NAME "global"
 #define CFG_NAME launcher
@@ -171,15 +239,24 @@ void load_config()
         s_config.entries.push_back({});
 }
 
-void write_config(void *)
+void write_config(void *_fp)
 {
+    auto fp = (FILE *)_fp;
+    const auto cur = config();
+    launcher::write(fp, cur, "Global");
 }
 
 void save_config()
 {
-    FILE *fp = nullptr;
+    FILE *fp = fopen("xuolauncher2.cfg", "wt");
+    if (!fp)
+    {
+        LOG_ERROR("failed to write configuration");
+        return;
+    }
     write_config(fp);
     write_accounts(fp);
+    fclose(fp);
 }
 
 static ui_model model;
@@ -188,8 +265,10 @@ int main(int argc, char **argv)
 {
     win_context win;
     win.title = "X:UO Launcher";
-    win.width = 680;
-    win.height = 440;
+    //win.width = 680;
+    //win.height = 440;
+    win.width = 550;
+    win.height = 284;
     win.vsync = 0;
     win_init(&win);
 
@@ -227,6 +306,7 @@ int main(int argc, char **argv)
         SDL_GetWindowPosition(win.window, &x, &y);
         ImVec2 pos = { float(x), float(y) };
         ImVec2 size = { float(win.width), float(win.height) };
+        //LOG_INFO("%d, %d\n", win.width, win.height);
         ui_update(ui);
         ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
         ImGui::SetNextWindowSize(size, ImGuiCond_Always);
@@ -266,7 +346,7 @@ int main(int argc, char **argv)
                 ImGui::EndMenuBar();
             }
 
-            model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35);
+            model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35); // FIXME
             if (model.view == ui_view::accounts)
                 ui_accounts(model);
             if (model.view == ui_view::updates)
