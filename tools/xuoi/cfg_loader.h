@@ -19,18 +19,19 @@
 
 namespace CFG_NAME {
 
+#ifndef CFG_CONVERTERS
+#include "cfg_converters.h"
+#endif
+
 struct entry
 {
-    #define CFG_FIELD(s, n, default, t) t s##_##n; std::string raw_##s##_##n;
+    #define CFG_FIELD(s, n, default, t) t s##_##n = {}; std::string raw_##s##_##n = default; bool set_##s##_##n = false;
     #include CFG_DEFINITION
 };
 
 entry default_entry()
 {
-    entry v = {
-        #define CFG_FIELD(s, n, default, t) {}, std::string(default),
-        #include CFG_DEFINITION
-    };
+    entry v;
 
     #define CFG_FIELD(s, n, default, t) convert(v.s##_##n, v.raw_##s##_##n.c_str());
     #include CFG_DEFINITION
@@ -57,6 +58,25 @@ void type_save_current(data &data)
     data.entries.emplace_back(data.current);
     data.current = default_entry();
     data.dirty = false;
+}
+
+void write(FILE *fp, const entry &e, const char *section)
+{
+    assert(fp && "invalid fp");
+    if (section)
+        fprintf(fp, "[%s]\n", section);
+    const auto d = default_entry();
+    #define CFG_FIELD(s, n, default, t) \
+    {\
+        if (strcasecmp(CFG_SECTION_FILTER_NAME, section) == 0)\
+        {\
+            auto v = as_str(e.s##_##n);\
+            if (d.raw_##s##_##n != v || e.set_##s##_##n) \
+                fprintf(fp, "%s = %s\n", CFG_STRINGIFY2(n), v.c_str());\
+        }\
+    }
+    #include CFG_DEFINITION
+    fprintf(fp, "\n");
 }
 
 int type_loader(void* user, const char* section, const char* name, const char* value, int lineno)
@@ -91,6 +111,7 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     else if (strcasecmp(section, #s) == 0 && strcasecmp(name, #n) == 0) {\
         convert(entry.s##_##n, value); \
         entry.raw_##s##_##n = value; \
+        entry.set_##s##_##n = true; \
         found = true; \
     }
 #include CFG_DEFINITION

@@ -4,13 +4,13 @@
 #include "shards.h"
 #include <string>
 #include <vector>
+#include <sstream>
 #include <unordered_map>
 #include <algorithm>
 #include <external/inih.h>
 #include "common.h"
 #include "ui_model.h"
 
-extern std::vector<std::string> split(const std::string &s, char delim);
 extern bool valid_url(const std::string &url);
 extern void open_url(const std::string &url);
 
@@ -21,16 +21,14 @@ namespace shard
 struct url_other
 {
     std::string name;
+    std::string type;
     std::string url;
 };
 
-struct tag_data
+std::string as_str(const url_other &in)
 {
-    std::vector<std::string> tags;
-    bool is_highlighted;
-    bool is_pvp;
-    bool is_rp;
-};
+    return in.type + "+" + in.url;
+}
 
 bool convert(url_other &out, const char *raw)
 {
@@ -50,15 +48,23 @@ bool convert(url_other &out, const char *raw)
         return false;
     }
 
+    out.type = v[0];
     out.name = "Goto: " + v[0];
     out.url = v[1];
     return true;
 }
 
-bool convert(std::vector<std::string> &out, const char *raw, char delim = '+')
+struct tag_data
 {
-    out = split(raw, delim);
-    return true;
+    std::vector<std::string> tags;
+    bool is_highlighted;
+    bool is_pvp;
+    bool is_rp;
+};
+
+std::string as_str(const tag_data &in)
+{
+    return join(in.tags, ',');
 }
 
 bool convert(tag_data &out, const char *raw)
@@ -78,6 +84,14 @@ struct lang_type
 {
     std::string name;
 };
+
+std::string as_str(const lang_type &in)
+{
+    auto &n = in.name;
+    if (n == "French")
+        return "FRA";
+    return "ENU";
+}
 
 bool convert(lang_type &out, const char *raw)
 {
@@ -121,6 +135,19 @@ void load_shards()
     }
 }
 
+void write_shards(void *_fp)
+{
+    if (s_shards.entries.size() < 2) // <custom> shard is first
+        return;
+
+    auto fp = (FILE *)_fp;
+    for (int i = 1; i < s_shards.entries.size(); ++i)
+    {
+        const auto &e = s_shards.entries[i];
+        shard::write(fp, e, "Shard");
+    }
+}
+
 int shard_index_by_loginserver(const char *login_server)
 {
     auto it = s_shard_by_loginserver.find(login_server);
@@ -139,8 +166,8 @@ shard_data shard_by_id(int id)
 }
 
 // view
-
-static bool ComboBox(
+void HoverToolTip(const char *desc);
+bool ComboBox(
     const char *id,
     const char *label,
     float w,
@@ -148,18 +175,7 @@ static bool ComboBox(
     bool (*items_getter)(void *data, int idx, const char **out_text),
     void *data,
     int items_count,
-    int popup_max_height_in_items = -1)
-{
-    ImGui::Text("%s", label);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(w);
-    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-    const bool changed =
-        ImGui::Combo(id, current_item, items_getter, data, items_count, popup_max_height_in_items);
-    ImGui::PopStyleColor();
-    ImGui::PopItemWidth();
-    return changed;
-}
+    int height_in_items = -1);
 
 static bool shard_getter(void *data, int idx, const char **out_text)
 {
@@ -203,33 +219,65 @@ int shard_picked()
 
 void ui_shards(ui_model &m, bool picker)
 {
-    const auto line_size = ImGui::GetFontSize();
-    const auto entry_size = line_size * 5;
+    const auto line_size = ImGui::GetTextLineHeightWithSpacing();
+    const auto entry_size = line_size * 4;
     auto item_size = entry_size;
     ImVec4 bg = bg_base;
     ImVec4 fg = white;
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::BeginChild("shards", m.area, false, window_flags);
+    static bool select_pvp = false;
+    static bool select_pvm = false;
+    static bool select_rp = false;
+    static bool select_aac = false;
+    if (ImGui::TreeNode("Filters"))
+    {
+        ImGui::Checkbox("PvP  ", &select_pvp);
+        HoverToolTip("Player vs. Player enabled shard (PKs/Factions)");
+        ImGui::SameLine();
+        ImGui::Checkbox("PvM  ", &select_pvm);
+        HoverToolTip("Player vs. Player is not permitted");
+        ImGui::SameLine();
+        ImGui::Checkbox("RP  ", &select_rp);
+        HoverToolTip("Roleplay Based");
+        ImGui::SameLine();
+        ImGui::Checkbox("Auto Account  ", &select_aac);
+        HoverToolTip("Auto account creation, just log-in and play");
+        ImGui::TreePop();
+    }
+    const int filler = picker ? -13 : +10;
+    const float y = m.area.y - ImGui::GetCursorPosY() + line_size + filler;
+    ImGui::BeginChild("shards", { m.area.x, y }, false, window_flags);
     for (int i = 0; i < s_shards.entries.size(); i++)
     {
         const auto &it = s_shards.entries[i];
-
+        const bool has_tags = !it.shard_tags.tags.empty();
+        if (has_tags)
+        {
+            const auto &tags = it.shard_tags;
+            if (select_pvp && !tags.is_pvp)
+                continue;
+            if (select_pvm && tags.is_pvp)
+                continue;
+            if (select_rp && !tags.is_rp)
+                continue;
+        }
         // context menu entries
+        const bool has_reg = !it.shard_urlregister.empty();
+        if (select_aac && !it.shard_urlregister.empty())
+            continue;
         const bool has_url = !it.shard_url.empty() && valid_url(it.shard_url);
-        const bool has_reg = !it.shard_urlregister.empty() && valid_url(it.shard_urlregister);
         const bool has_forum = !it.shard_urlforum.empty() && valid_url(it.shard_urlforum);
         const bool has_other = !it.shard_urlother.url.empty();
         const bool has_context = has_url || has_reg || has_forum || has_other;
         // others
         const bool has_desc = !it.shard_description.empty();
         const bool has_lang = !it.shard_language.name.empty();
-        const bool has_tags = !it.shard_tags.tags.empty();
 
         if (i == s_selected)
         {
             bg = bg_selected;
-            item_size = entry_size * 2 + line_size;
+            item_size = entry_size * 2;
         }
         else
         {
@@ -278,19 +326,24 @@ void ui_shards(ui_model &m, bool picker)
             {
                 if (has_url && ImGui::MenuItem("Open Website", nullptr, false))
                     open_url(it.shard_url);
-                if (has_reg && ImGui::MenuItem("Create Account", nullptr, false))
+                if (has_reg && valid_url(it.shard_urlregister) &&
+                    ImGui::MenuItem("Create Account", nullptr, false))
                     open_url(it.shard_urlregister);
                 if (has_forum && ImGui::MenuItem("Open Forum", nullptr, false))
                     open_url(it.shard_urlforum);
                 if (has_other && ImGui::MenuItem(it.shard_urlother.name.c_str(), nullptr, false))
                     open_url(it.shard_urlother.url);
+                // by knowing all our data paths and data version, we can match supported shards
+                // and enable a quick join feature where no account profile setup is required
+                //if (!has_reg && ImGui::MenuItem("Quick Join", nullptr, false))
+                //    ;
                 ImGui::EndPopup();
             }
         }
         ImGui::PopStyleColor();
         ImGui::PopID();
     }
-
+    ImGui::EndChild();
     if (picker)
     {
         ImGui::NewLine();
@@ -305,6 +358,4 @@ void ui_shards(ui_model &m, bool picker)
         if (ImGui::Button("Cancel"))
             ui_pop(m);
     }
-
-    ImGui::EndChild();
 }
