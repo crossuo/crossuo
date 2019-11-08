@@ -38,13 +38,13 @@ bool convert(url_other &out, const char *raw)
     auto v = split(raw, '+');
     if (v.size() != 2)
     {
-        LOG_ERROR("parsing urlother field: %s\n", raw);
+        LOG_ERROR("parsing urlother field: %s", raw);
         return false;
     }
 
     if (!valid_url(v[1]))
     {
-        LOG_ERROR("invalid url in urlother field: %s\n", v[1].c_str());
+        LOG_ERROR("invalid url in urlother field: %s", v[1].c_str());
         return false;
     }
 
@@ -112,10 +112,15 @@ bool convert(lang_type &out, const char *raw)
 
 static shard::data s_shards;
 static std::unordered_map<std::string, int> s_shard_by_loginserver;
+const fs_path &xuol_data_path();
 
 void load_shards()
 {
-    s_shards = shard::cfg();
+    const auto fname = fs_join_path(xuol_data_path(), "shards.cfg");
+    auto fp = fs_open(fname, FS_READ);
+    s_shards = shard::cfg(fp);
+    if (fp)
+        fs_close(fp);
     // sort by tags 'highlight', then name alphabetically
     std::sort(s_shards.entries.begin(), s_shards.entries.end(), [](const auto &a, const auto &b) {
         const auto ah = a.shard_tags.is_highlighted;
@@ -125,13 +130,13 @@ void load_shards()
         return a.shard_name < b.shard_name;
     });
 
-    LOG_DEBUG("\n\nentries found: %zu\n", s_shards.entries.size());
+    LOG_DEBUG("\nentries found: %zu", s_shards.entries.size());
     int i = 0;
     for (auto &e : s_shards.entries)
     {
         s_shard_by_loginserver[e.shard_loginserver] = i++;
         shard::dump(&e);
-        LOG_DEBUG("\n\n");
+        LOG_DEBUG("\n");
     }
 }
 
@@ -350,7 +355,7 @@ void ui_shards(ui_model &m, bool picker)
         ImGui::SameLine(m.area.x - 160.0f);
         if (ImGui::Button("Pick Selected"))
         {
-            LOG_TRACE("pick shard: %d\n", s_selected);
+            LOG_TRACE("pick shard: %d", s_selected);
             s_picked = s_selected;
             ui_pop(m);
         }

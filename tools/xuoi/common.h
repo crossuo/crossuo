@@ -8,10 +8,9 @@
 #include <external/tinyxml2.h>
 #include <external/miniz.h>
 
-//#define LOG_DEBUG(...) // comment to enable debug logging
-//#define LOG_TRACE(...) // comment to enable tracing
-#include <common/fs.h>
+#define LOG_NEWLINE
 #include <common/log.h>
+#include <common/fs.h>
 #include <common/str.h> // strcasecmp
 #include <common/utils.h>
 #include <common/checksum.h>

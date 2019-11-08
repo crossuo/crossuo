@@ -1089,7 +1089,7 @@ int main(int argc, char **argv)
 
     if (s_cli["xuo"].was_set())
     {
-        auto ctx = xuo_init(outdir, false);
+        auto ctx = xuo_init(outdir);
         auto r = xuo_update_apply(ctx);
         xuo_shutdown(ctx);
         return r;

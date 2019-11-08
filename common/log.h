@@ -105,7 +105,7 @@ void log_impl(int type, const char *name, const char *fmt...)
     fprintf(out, "%s:%s: ", name, tag);
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    vfprintf(out, fmt, args);
     va_end(args);
 #ifdef LOG_NEWLINE
     fprintf(out, "\n");

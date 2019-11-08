@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <vector>
 #include <sstream>
+#include <thread>
 #if _WIN32
 #include <windows.h>
 #include <shellapi.h>
@@ -19,6 +20,18 @@
 #include "accounts.h"
 #include "shards.h"
 #include "ui_model.h"
+#include "http.h"
+
+#include "xuo_updater.h"
+
+static xuo_context *s_ctx = nullptr;
+static bool s_update_check = false;
+static bool s_update_request = false;
+static bool s_update_started = false;
+static bool s_has_update = false;
+static bool s_updated = false;
+
+const fs_path &xuol_data_path();
 
 bool valid_url(const std::string &url)
 {
@@ -193,9 +206,31 @@ void view_changelog()
 void ui_updates(ui_model &m)
 {
     // see: https://forkaweso.me/Fork-Awesome/icons/
-    ImGui::Text(ICON_FK_CHECK_SQUARE " No updates found at the moment");
+    if (!s_ctx)
+        ImGui::Text(ICON_FK_REFRESH " Checking for updates");
+    else if (s_updated)
+        ImGui::Text(ICON_FK_CHECK_SQUARE " Update finished");
+    else if (!s_has_update)
+        ImGui::Text(ICON_FK_CHECK_SQUARE " No updates found at the moment");
+    else if (s_update_started)
+        ImGui::Text(ICON_FK_SPINNER " Update in progress");
+    else if (s_has_update)
+        ImGui::Text(ICON_FK_CHECK " An update is available");
+
+    ImGui::NewLine();
     if (ImGui::Button(ICON_FK_FILE_TEXT_O " View Changelog"))
         view_changelog();
+    ImGui::SameLine();
+    if (s_has_update)
+    {
+        if (ImGui::Button(ICON_FK_CLOUD_DOWNLOAD " Apply"))
+            s_update_request = true;
+    }
+    else
+    {
+        if (ImGui::Button(ICON_FK_REFRESH " Force Check"))
+            s_update_check = true;
+    }
 }
 
 void ui_backups(ui_model &m)
@@ -219,7 +254,6 @@ void ui_backups(ui_model &m)
 
 #define CFG_SECTION_FILTER_NAME "global"
 #define CFG_NAME launcher
-#define CFG_FILE xuolauncher
 #define CFG_DEFINITION "cfg_launcher.h"
 #include "cfg_loader.h"
 
@@ -232,11 +266,15 @@ launcher::entry &config()
 
 void load_config()
 {
-    s_config = launcher::cfg();
+    const auto fname = fs_join_path(xuol_data_path(), "xuolauncher.cfg");
+    auto fp = fs_open(fname, FS_READ);
+    s_config = launcher::cfg(fp);
+    if (fp)
+        fs_close(fp);
     if (s_config.entries.size())
         launcher::dump(&s_config.entries[0]);
     else
-        s_config.entries.push_back({});
+        s_config.entries.push_back(launcher::default_entry());
 }
 
 void write_config(void *_fp)
@@ -248,7 +286,8 @@ void write_config(void *_fp)
 
 void save_config()
 {
-    FILE *fp = fopen("xuolauncher2.cfg", "wt");
+    const auto fname = fs_join_path(xuol_data_path(), "xuolauncher.cfg");
+    auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {
         LOG_ERROR("failed to write configuration");
@@ -261,10 +300,31 @@ void save_config()
 
 static ui_model model;
 
+const fs_path &xuol_data_path()
+{
+    static bool initialized = false;
+    static fs_path dir;
+    if (initialized)
+        return dir;
+
+    dir = fs_join_path(fs_appdata_path(), "xuolauncher");
+    if (!fs_path_create(dir))
+    {
+        LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
+        return dir;
+    }
+
+    initialized = true;
+    return dir;
+}
+
 int main(int argc, char **argv)
 {
+    crc32_init();
+    http_init();
+
     win_context win;
-    win.title = "X:UO Launcher";
+    win.title = XUOL_AGENT_NAME;
     //win.width = 680;
     //win.height = 440;
     win.width = 550;
@@ -281,8 +341,35 @@ int main(int argc, char **argv)
     load_accounts();
     load_shards();
 
-    if (!config().global_check_updates)
-        model.view = ui_view::accounts;
+    auto updater_init = []() {
+        s_updated = false;
+        if (s_update_check && s_ctx)
+        {
+            s_update_check = false;
+            xuo_shutdown(s_ctx);
+        }
+
+        const auto install_path = fs_path_ascii(xuol_data_path());
+        s_ctx = xuo_init(install_path, config().global_beta_channel);
+        if (s_ctx)
+        {
+            if (config().global_check_updates || config().global_auto_update)
+                s_has_update = xuo_update_check(s_ctx);
+            if (s_has_update && config().global_auto_update)
+                s_update_request = true;
+        }
+        else
+        {
+            LOG_ERROR("could not initialize updater");
+        }
+        model.view = s_has_update ? ui_view::updates : ui_view::accounts;
+    };
+    auto update_run = []() {
+        s_updated = xuo_update_apply(s_ctx);
+        s_update_started = false;
+        s_has_update = false;
+    };
+    auto update_worker = std::thread(updater_init);
 
     // Main loop
     bool done = false;
@@ -306,12 +393,12 @@ int main(int argc, char **argv)
         SDL_GetWindowPosition(win.window, &x, &y);
         ImVec2 pos = { float(x), float(y) };
         ImVec2 size = { float(win.width), float(win.height) };
-        //LOG_INFO("%d, %d\n", win.width, win.height);
+        //LOG_INFO("%d, %d", win.width, win.height);
         ui_update(ui);
         ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
         ImGui::SetNextWindowSize(size, ImGuiCond_Always);
         ImGui::Begin(
-            "X:UO Launcher",
+            XUOL_AGENT_NAME,
             nullptr,
             ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings |
                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
@@ -324,12 +411,28 @@ int main(int argc, char **argv)
                     bool selected = model.view == ui_view::accounts;
                     if (ImGui::MenuItem(ICON_FK_USER " Accounts", nullptr, &selected))
                         model.view = ui_view::accounts;
+                    selected = model.view == ui_view::updates;
+                    if (ImGui::MenuItem(ICON_FK_CLOUD_DOWNLOAD " Updates", nullptr, &selected))
+                        model.view = ui_view::updates;
                     selected = model.view == ui_view::backups;
                     if (ImGui::MenuItem(ICON_FK_FILE_ARCHIVE_O " Backups", nullptr, &selected))
                         model.view = ui_view::backups;
                     selected = model.view == ui_view::shards;
                     if (ImGui::MenuItem(ICON_FK_GLOBE_W " Shards", nullptr, &selected))
                         model.view = ui_view::shards;
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Options"))
+                {
+                    auto &cfg = config();
+                    if (ImGui::MenuItem("Check updates", nullptr, &cfg.global_check_updates))
+                        ;
+                    if (ImGui::MenuItem("Auto update", nullptr, &cfg.global_auto_update))
+                        ;
+                    if (ImGui::MenuItem("Use beta channel", nullptr, &cfg.global_beta_channel))
+                        ;
+                    if (ImGui::MenuItem("Close after launch", nullptr, &cfg.global_auto_close))
+                        ;
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("About"))
@@ -344,6 +447,21 @@ int main(int argc, char **argv)
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
+            }
+
+            if (s_update_request)
+            {
+                s_update_request = false;
+                s_update_started = true;
+                if (update_worker.joinable())
+                    update_worker.join();
+                update_worker = std::thread(update_run);
+            }
+            else if (s_update_check)
+            {
+                if (update_worker.joinable())
+                    update_worker.join();
+                update_worker = std::thread(updater_init);
             }
 
             model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35); // FIXME
@@ -362,8 +480,16 @@ int main(int argc, char **argv)
         ui_draw(ui);
         win_flip(&win);
     }
+
+    if (update_worker.joinable())
+        update_worker.join();
+
+    if (s_ctx)
+        xuo_shutdown(s_ctx);
     save_config();
     ui_shutdown(ui);
     win_shutdown(&win);
+
+    http_shutdown();
     return 0;
 }
