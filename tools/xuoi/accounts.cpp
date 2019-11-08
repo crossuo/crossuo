@@ -14,7 +14,6 @@
 #include "shards.h"
 
 #define CFG_NAME account
-#define CFG_FILE xuolauncher
 #define CFG_DEFINITION "cfg_launcher.h"
 #include "cfg_loader.h"
 
@@ -37,10 +36,15 @@ const char *client_types_cfg[] = {
 
 static account::data s_accounts;
 static std::unordered_map<std::string, int> s_account_by_name;
+const fs_path &xuol_data_path();
 
 void load_accounts()
 {
-    s_accounts = account::cfg();
+    const auto fname = fs_join_path(xuol_data_path(), "xuolauncher.cfg");
+    auto fp = fs_open(fname, FS_READ);
+    s_accounts = account::cfg(fp);
+    if (fp)
+        fs_close(fp);
     auto it = s_accounts.entries.emplace(s_accounts.entries.begin());
     (*it).account_profile = "<new>";
     int i = 0;
@@ -48,7 +52,7 @@ void load_accounts()
     {
         s_account_by_name[e.account_profile] = i++;
         account::dump(&e);
-        LOG_DEBUG("\n\n");
+        LOG_DEBUG("\n");
     }
 }
 
@@ -214,7 +218,7 @@ void ui_accounts(ui_model &m)
 
         if (picked != -1)
         {
-            LOG_TRACE("picked shard: %d\n", picked);
+            LOG_TRACE("picked shard: %d", picked);
             current_shard = picked;
             update_shard(picked);
         }

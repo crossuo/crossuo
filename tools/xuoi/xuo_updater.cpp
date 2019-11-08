@@ -14,11 +14,6 @@
 #include "common.h"
 #include "http.h"
 
-#define XUOL_VERSION "1.1"
-#define XUOL_AGENT_NAME "X:UO Launcher v" XUOL_VERSION
-#define XUOL_UPDATER_HOST "http://update.crossuo.com/"
-//#define XUOL_UPDATER_HOST "http://192.168.2.14:8089/"
-
 #define XUOL_THREADED 0
 #if XUOL_THREADED
 #include <atomic>
@@ -72,6 +67,7 @@ struct xuo_config
 {
     fs_path cache_path;
     fs_path output_path;
+    xuo_channel channel = xuo_channel::stable;
     bool initialized = false;
 };
 
@@ -156,6 +152,13 @@ static uint64_t xuo_get_hash(const fs_path &filename)
 {
     size_t len = 0;
     auto ptr = fs_map(filename, &len);
+    if (!len || !ptr)
+    {
+        if (ptr)
+            fs_unmap(ptr, len);
+        LOG_ERROR("failed to read file: %s", fs_path_ascii(filename));
+        return 0;
+    }
     auto hash = XXH64(static_cast<void *>(ptr), len, 0x2593);
     fs_unmap(ptr, len);
 
@@ -177,7 +180,7 @@ static xuo_result xuo_release_load(xuo_context &ctx, tinyxml2::XMLElement *node)
     rel.name = node->Attribute("name");
     rel.version = node->Attribute("version");
     rel.latest = node->BoolAttribute("latest", false);
-    LOG_TRACE("# release: %s version: %s (latest: %d)\n", rel.name, rel.version, rel.latest);
+    LOG_TRACE("# release: %s version: %s (latest: %d)", rel.name, rel.version, rel.latest);
     auto fnode = node->FirstChildElement("file");
     while (fnode)
     {
@@ -188,7 +191,7 @@ static xuo_result xuo_release_load(xuo_context &ctx, tinyxml2::XMLElement *node)
         file.zipFilename = fnode->Attribute("data");
         file.zipHash = fnode->Hex64Attribute("datahash", 0);
         LOG_TRACE(
-            "  file: %s hash: %" PRIx64 " at %s (%" PRIx64 ")\n",
+            "  file: %s hash: %" PRIx64 " at %s (%" PRIx64 ")",
             file.name,
             file.hash,
             file.zipFilename,
@@ -238,7 +241,7 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     fs_path idir = fs_directory(ipath);
     if (!fs_path_create(idir))
     {
-        LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(idir));
+        LOG_ERROR("failed to create directory: %s", fs_path_ascii(idir));
         return xuo_could_not_open_path;
     }
 
@@ -246,7 +249,7 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     fs_path odir = fs_directory(opath);
     if (!fs_path_create(odir))
     {
-        LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(odir));
+        LOG_ERROR("failed to create directory: %s", fs_path_ascii(odir));
         return xuo_could_not_open_path;
     }
 
@@ -262,7 +265,11 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
 
     auto icrc = xuo_get_hash(ipath);
     if (icrc != file.zipHash)
+    {
+        if (fs_path_is_file(ipath))
+            fs_del(ipath);
         return xuo_checksum_failed;
+    }
 
     mz_zip_archive zip;
     memset(&zip, 0, sizeof(zip));
@@ -382,14 +389,14 @@ static bool xuo_update_check(xuo_context &ctx, xuo_release &updates, bool quick)
 
 const char *xuo_changelog(xuo_context *ctx)
 {
-    if (!ctx || ctx->config.initialized)
+    if (!ctx || !ctx->config.initialized)
         return nullptr;
     return (char *)ctx->changelog.data();
 }
 
 bool xuo_update_check(xuo_context *ctx)
 {
-    if (!ctx || ctx->config.initialized)
+    if (!ctx || !ctx->config.initialized)
         return false;
     xuo_release updates;
     return xuo_update_check(*ctx, updates, true);
@@ -397,7 +404,7 @@ bool xuo_update_check(xuo_context *ctx)
 
 bool xuo_update_apply(xuo_context *ctx)
 {
-    if (!ctx || ctx->config.initialized)
+    if (!ctx || !ctx->config.initialized)
         return false;
     xuo_release updates;
     if (xuo_update_check(*ctx, updates, false))
@@ -411,25 +418,29 @@ xuo_context *xuo_init(const char *path, bool beta)
     if (ctx.config.initialized)
         return nullptr;
 
+    ctx.config.channel = beta ? xuo_channel::beta : xuo_channel::stable;
     http_set_user_agent(XUOL_AGENT_NAME);
     xuo_changelog_load(ctx);
-    if (xuo_manifest_load(ctx, xuo_platform_name(), xuo_channel::stable))
+    if (auto r = xuo_manifest_load(ctx, xuo_platform_name(), ctx.config.channel))
+    {
+        LOG_ERROR("could not load update manifest: invalid format");
         return nullptr;
+    }
 
     ctx.config.cache_path = fs_join_path(fs_appdata_path(), "xuolauncher", "cache");
     ctx.config.output_path = fs_path_from(path);
 
-    fs_path dir = fs_directory(ctx.config.cache_path);
+    fs_path dir = ctx.config.cache_path;
     if (!fs_path_create(dir))
     {
-        LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(dir));
+        LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
         return nullptr;
     }
 
-    dir = fs_directory(ctx.config.output_path);
+    dir = ctx.config.output_path;
     if (!fs_path_create(dir))
     {
-        LOG_ERROR("failed to create directory: %s\n", fs_path_ascii(dir));
+        LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
         return nullptr;
     }
 
@@ -441,4 +452,8 @@ void xuo_shutdown(xuo_context *ctx)
 {
     assert(ctx);
     ctx->config.initialized = false;
+    ctx->releases = {};
+    ctx->changelog = {};
+    ctx->manifest = {};
+    ctx->doc.Clear();
 }

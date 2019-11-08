@@ -10,6 +10,8 @@ CFG_FIELD(global, auto_close, "yes", bool)
 
 CFG_FIELD(global, check_updates, "yes", bool)
 
+CFG_FIELD(global, auto_update, "yes", bool)
+
 CFG_FIELD(global, beta_channel, "no", bool)
 
 CFG_FIELD(account, profile, {}, std::string)

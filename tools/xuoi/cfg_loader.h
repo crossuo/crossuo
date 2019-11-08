@@ -7,15 +7,9 @@
 #define CFG_STRINGIFY(X) CFG_STRINGIFY2(X)
 #define CFG_STRINGIFY2(X) #X
 
-#ifndef CFG_FILE
-#define CFG_FILE CFG_NAME
-#endif // CFG_FILE
-
 #ifndef CFG_SECTION_FILTER_NAME
 #define CFG_SECTION_FILTER_NAME CFG_STRINGIFY(CFG_NAME)
 #endif // CFG_SECTION_FILTER_NAME
-
-#define CFG_FILENAME            CFG_STRINGIFY(CFG_FILE) ".cfg"
 
 namespace CFG_NAME {
 
@@ -54,7 +48,7 @@ void type_save_current(data &data)
     if (!data.dirty)
         return;
 
-    LOG_TRACE("saving entry\n");
+    LOG_TRACE("saving entry");
     data.entries.emplace_back(data.current);
     data.current = default_entry();
     data.dirty = false;
@@ -72,7 +66,10 @@ void write(FILE *fp, const entry &e, const char *section)
         {\
             auto v = as_str(e.s##_##n);\
             if (d.raw_##s##_##n != v || e.set_##s##_##n) \
+            {\
+                LOG_TRACE("saving %s: %s == %s", CFG_STRINGIFY2(n), v.c_str(), d.raw_##s##_##n.c_str());\
                 fprintf(fp, "%s = %s\n", CFG_STRINGIFY2(n), v.c_str());\
+            }\
         }\
     }
     #include CFG_DEFINITION
@@ -92,13 +89,13 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     if (!name && !value)
     {
         type_save_current(obj);
-        LOG_TRACE("new section found\n");
+        LOG_TRACE("new section found");
         return 1;
     }
 #endif
 
     auto &entry = obj.current;
-    LOG_TRACE("%d: %s.%s = %s\n", lineno, section, name, value);
+    LOG_TRACE("%d: %s.%s = %s", lineno, section, name, value);
     if (!name || strlen(name) == 0)
     {
         obj.errors.push_back(std::to_string(lineno) + ": invalid entry");
@@ -128,19 +125,18 @@ int type_loader(void* user, const char* section, const char* name, const char* v
 
 void dump(entry *entry)
 {
-    #define CFG_FIELD(s, n, default, t) LOG_DEBUG("%s_%s = %s\n", #s, #n, entry->raw_##s##_##n.c_str());
+    #define CFG_FIELD(s, n, default, t) LOG_DEBUG("%s_%s = %s", #s, #n, entry->raw_##s##_##n.c_str());
     #include CFG_DEFINITION
 }
 
-data cfg()
+data cfg(FILE *fp)
 {
-    const char *filename = CFG_FILENAME;
     data obj;
-    if (ini_parse(filename, type_loader, &obj))
+    if (fp && ini_parse_file(fp, type_loader, &obj))
     {
         for (auto &e : obj.errors)
-            LOG_ERROR("%s:%s\n", filename, e.c_str());
-        LOG_ERROR("failed to parse '%s'\n", filename);
+            LOG_ERROR(CFG_SECTION_FILTER_NAME "%s", e.c_str());
+        LOG_ERROR("failed to parse %s", CFG_SECTION_FILTER_NAME);
         return {};
     }
     type_save_current(obj);
@@ -150,9 +146,7 @@ data cfg()
 };
 
 #undef TYPE_NAME
-#undef CFG_FILE
 #undef CFG_DEFINITION
-#undef CFG_FILENAME
 #undef CFG_STRINGIFY2
 #undef CFG_STRINGIFY
 #undef CFG_SECTION_FILTER_NAME
