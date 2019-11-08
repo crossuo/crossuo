@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include "ui_model.h"
 #include <stack>
 

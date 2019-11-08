@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #define CFG_CONVERTERS
 
 static std::string join(const std::vector<std::string> &in, char delim)
