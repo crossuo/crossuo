@@ -19,6 +19,7 @@ set(EXTERNALGFX_SRC
     imgui/imgui_impl_dx11.cpp
     imgui/imgui_stdlib.cpp
     imgui/imgui_widgets.cpp
+    imgui/imgui_spinner.cpp
     ui.cpp
 )
 

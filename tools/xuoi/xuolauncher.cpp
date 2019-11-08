@@ -213,7 +213,12 @@ void ui_updates(ui_model &m)
     else if (!s_has_update)
         ImGui::Text(ICON_FK_CHECK_SQUARE " No updates found at the moment");
     else if (s_update_started)
-        ImGui::Text(ICON_FK_SPINNER " Update in progress");
+    {
+        const ImU32 col = ImGui::GetColorU32(ImGuiCol_PlotLinesHovered);
+        ImGui::Spinner("##spinner", 7, 3, col);
+        ImGui::SameLine();
+        ImGui::Text(" Update in progress");
+    }
     else if (s_has_update)
         ImGui::Text(ICON_FK_CHECK " An update is available");
 
