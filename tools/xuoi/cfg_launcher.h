@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 /* clang-format off */
 #ifndef CFG_FIELD
 #error "x-macros, please define a CFG_FIELD macro on how to interpret the values"

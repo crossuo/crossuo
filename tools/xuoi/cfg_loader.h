@@ -1,3 +1,6 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 /* clang-format off */
 #ifndef CFG_NAME
 #error "CFG_NAME not defined"
