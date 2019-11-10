@@ -53,8 +53,10 @@ bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
 bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state);
 bool RenderAdd_DisableStencil(RenderCmdList *cmdList);
+bool RenderAdd_EnableStencil(RenderCmdList *cmdList);
 bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd);
 bool RenderAdd_SetColor(RenderCmdList *cmdList, SetColorCmd *cmd);
+bool RenderAdd_SetClearColor(RenderCmdList *cmdList, SetClearColorCmd *cmd);
 bool RenderAdd_ClearRT(RenderCmdList *cmdList, ClearRTCmd *cmd);
 
 bool RenderAdd_SetShaderUniform(RenderCmdList *cmdList, ShaderUniformCmd *cmd);
@@ -63,6 +65,7 @@ bool RenderAdd_SetShaderPipeline(RenderCmdList *cmdList, ShaderPipeline *pipelin
 bool RenderAdd_DisableShaderPipeline(RenderCmdList *cmdList);
 bool RenderAdd_FlushState(RenderCmdList *cmdList);
 bool RenderAdd_SetViewParams(RenderCmdList *cmdList, SetViewParamsCmd *cmd);
+bool RenderAdd_SetModelViewTranslation(RenderCmdList *cmdList, SetModelViewTranslationCmd *cmd);
 bool RenderAdd_SetScissor(RenderCmdList *cmdList, SetScissorCmd *cmd);
 bool RenderAdd_DisableScissor(RenderCmdList *cmdList);
 

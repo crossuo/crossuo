@@ -19,6 +19,9 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
@@ -315,7 +318,13 @@ void CGumpContainer::Draw()
 
     if (!Minimized)
     {
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            &SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
+#endif
 
         g_FontColorizerShader.Use();
 
@@ -323,7 +332,13 @@ void CGumpContainer::Draw()
 
         UnuseShader();
 
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            &SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
+#endif
     }
 }
 

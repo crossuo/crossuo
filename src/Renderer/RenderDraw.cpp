@@ -476,6 +476,11 @@ bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state)
         cmd->proj_flipped_y);
 }
 
+bool RenderDraw_SetModelViewTranslation(SetModelViewTranslationCmd *cmd, RenderState *state)
+{
+    return RenderState_SetModelViewTranslation(state, cmd->pos);
+}
+
 bool RenderDraw_SetScissor(SetScissorCmd *cmd, RenderState *state)
 {
     return RenderState_SetScissor(state, true, cmd->x, cmd->y, cmd->width, cmd->height);
@@ -485,6 +490,7 @@ bool RenderDraw_DisableScissor(DisableScissorCmd *cmd, RenderState *state)
 {
     return RenderState_SetScissor(state, false, 0, 0, 0, 0);
 }
+
 bool RenderDraw_StencilState(StencilStateCmd *cmd, RenderState *state)
 {
     return RenderState_SetStencil(
@@ -500,15 +506,12 @@ bool RenderDraw_StencilState(StencilStateCmd *cmd, RenderState *state)
 
 bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state)
 {
-    return RenderState_SetStencil(
-        state,
-        false,
-        StencilFunc::StencilFunc_Invalid,
-        0,
-        0,
-        StencilOp::StencilOp_Invalid,
-        StencilOp::StencilOp_Invalid,
-        StencilOp::StencilOp_Invalid);
+    return RenderState_SetStencilEnabled(state, false);
+}
+
+bool RenderDraw_EnableStencilState(EnableStencilStateCmd *, RenderState *state)
+{
+    return RenderState_SetStencilEnabled(state, true);
 }
 
 bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state)
@@ -519,6 +522,11 @@ bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state)
 bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state)
 {
     return RenderState_SetColor(state, cmd->color);
+}
+
+bool RenderDraw_SetClearColor(SetClearColorCmd *cmd, RenderState *state)
+{
+    return RenderState_SetClearColor(state, cmd->color);
 }
 
 bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *)
@@ -585,6 +593,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DisableBlendState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(StencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DisableStencilState, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(EnableStencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColorMask, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColor, ret, cmd, &cmdList->state);
             MATCH_CASE_DRAW(SetViewParams, ret, cmd, &cmdList->state);

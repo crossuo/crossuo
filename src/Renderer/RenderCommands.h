@@ -25,9 +25,12 @@ enum RenderCommandType : uint8_t
     Cmd_DisableBlendState,
     Cmd_StencilState,
     Cmd_DisableStencilState,
+    Cmd_EnableStencilState,
     Cmd_SetColorMask,
     Cmd_SetColor,
+    Cmd_SetClearColor,
     Cmd_SetViewParams,
+    Cmd_SetModelViewTranslation,
     Cmd_SetScissor,
     Cmd_DisableScissor,
 
@@ -110,6 +113,18 @@ struct SetViewParamsCmd
         , camera_farZ(camera_farZ)
         , scene_scale(scene_scale)
         , proj_flipped_y(proj_flipped_y)
+    {
+    }
+};
+
+struct SetModelViewTranslationCmd
+{
+    RenderCommandHeader header;
+    float3 pos;
+
+    SetModelViewTranslationCmd(float3 pos)
+        : header{ RenderCommandType::Cmd_SetModelViewTranslation }
+        , pos(pos)
     {
     }
 };
@@ -450,6 +465,15 @@ struct DisableStencilStateCmd
     }
 };
 
+struct EnableStencilStateCmd
+{
+    RenderCommandHeader header;
+    EnableStencilStateCmd()
+        : header{ RenderCommandType::Cmd_EnableStencilState }
+    {
+    }
+};
+
 struct SetColorMaskCmd
 {
     RenderCommandHeader header;
@@ -468,6 +492,18 @@ struct SetColorCmd
 
     SetColorCmd(float4 color)
         : header{ RenderCommandType::Cmd_SetColor }
+        , color(color)
+    {
+    }
+};
+
+struct SetClearColorCmd
+{
+    RenderCommandHeader header;
+    float4 color;
+
+    SetClearColorCmd(float4 color)
+        : header{ RenderCommandType::Cmd_SetClearColor }
         , color(color)
     {
     }

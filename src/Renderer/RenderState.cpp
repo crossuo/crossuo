@@ -170,6 +170,25 @@ bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool
     return false;
 }
 
+bool RenderState_SetStencilEnabled(RenderState *state, bool enabled, bool forced)
+{
+    if (forced || state->stencil.enabled != enabled)
+    {
+        if (enabled)
+        {
+            glEnable(GL_STENCIL_TEST);
+        }
+        else
+        {
+            glDisable(GL_STENCIL_TEST);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 bool RenderState_SetStencil(
     RenderState *state,
     bool enabled,
@@ -530,6 +549,16 @@ bool RenderState_SetViewParams(
     }
 
     return false;
+}
+
+bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced)
+{
+    UNUSED(state);
+    UNUSED(forced);
+
+    glTranslatef(pos[0], pos[1], pos[2]);
+
+    return true;
 }
 
 bool RenderState_SetScissor(

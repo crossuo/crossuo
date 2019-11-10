@@ -34,6 +34,7 @@ bool RenderState_SetStencil(
     StencilOp depthFail,
     StencilOp bothFail,
     bool forced = false);
+bool RenderState_SetStencilEnabled(RenderState *state, bool enabled, bool forced = false);
 bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced = false);
 bool RenderState_SetColor(RenderState *state, float4 color, bool forced = false);
 bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced = false);
@@ -51,6 +52,7 @@ bool RenderState_SetViewParams(
     float scene_scale,
     bool proj_flipped_y,
     bool forced = false);
+bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced = false);
 bool RenderState_SetScissor(
     RenderState *state,
     bool enabled,
@@ -86,6 +88,7 @@ bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state);
 
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
 bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state);
+bool RenderDraw_SetModelViewTranslation(SetModelViewTranslationCmd *cmd, RenderState *state);
 bool RenderDraw_SetScissor(SetScissorCmd *cmd, RenderState *state);
 bool RenderDraw_DisableScissor(DisableScissorCmd *cmd, RenderState *state);
 bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state);
@@ -94,8 +97,10 @@ bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);
 bool RenderDraw_StencilState(StencilStateCmd *, RenderState *state);
 bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state);
+bool RenderDraw_EnableStencilState(EnableStencilStateCmd *, RenderState *state);
 bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state);
 bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state);
+bool RenderDraw_SetClearColor(SetClearColorCmd *cmd, RenderState *state);
 bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *state);
 
 bool RenderDraw_ShaderUniform(ShaderUniformCmd *, RenderState *state);
