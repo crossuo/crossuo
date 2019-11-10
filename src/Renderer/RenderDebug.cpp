@@ -313,6 +313,11 @@ void RenderDraw_DisableStencilStateDebug(DisableStencilStateCmd *cmd, RenderStat
     Info(Renderer, "DisableStencilStateCmd\n");
 }
 
+void RenderDraw_EnableStencilStateDebug(EnableStencilStateCmd *cmd, RenderState *state)
+{
+    Info(Renderer, "EnableStencilStateCmd\n");
+}
+
 void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *state)
 {
     Info(
@@ -421,6 +426,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableStencilState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(EnableStencilState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColorMask, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColor, cmd, &cmdList->state)
 

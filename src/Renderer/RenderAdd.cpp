@@ -207,6 +207,19 @@ bool RenderAdd_DisableStencil(RenderCmdList *cmdList)
     return true;
 }
 
+bool RenderAdd_EnableStencil(RenderCmdList *cmdList)
+{
+    EnableStencilStateCmd cmd;
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_EnableStencilState(&cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
@@ -228,6 +241,18 @@ bool RenderAdd_SetColor(RenderCmdList *cmdList, SetColorCmd *cmd)
     }
 
     RenderDraw_SetColor(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_SetClearColor(RenderCmdList *cmdList, SetClearColorCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetClearColor(cmd, &cmdList->state);
     return true;
 }
 
@@ -315,6 +340,18 @@ bool RenderAdd_SetViewParams(RenderCmdList *cmdList, SetViewParamsCmd *cmd)
     }
 
     RenderDraw_SetViewParams(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_SetModelViewTranslation(RenderCmdList *cmdList, SetModelViewTranslationCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetModelViewTranslation(cmd, &cmdList->state);
     return true;
 }
 

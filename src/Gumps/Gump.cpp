@@ -316,8 +316,13 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
     DEBUG_TRACE_FUNCTION;
     bool transparent = false;
 
+#ifndef NEW_RENDERER_ENABLED
     glClear(GL_STENCIL_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
+#else
+    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::Stencil });
+    RenderAdd_EnableStencil(g_renderCmdList);
+#endif
 
     bool canDraw =
         ((page == -1) || ((page >= currentPage && page <= currentPage + draw2Page) ||
@@ -344,7 +349,11 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
         }
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_STENCIL_TEST);
+#else
+    RenderAdd_DisableStencil(g_renderCmdList);
+#endif
 
     return transparent;
 }
@@ -397,7 +406,12 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     GLfloat x = (GLfloat)htmlGump->GetX();
                     GLfloat y = (GLfloat)htmlGump->GetY();
 
+#ifndef NEW_RENDERER_ENABLED
                     glTranslatef(x, y, 0.0f);
+#else
+                    RenderAdd_SetModelViewTranslation(
+                        g_renderCmdList, &SetModelViewTranslationCmd{ { x, y, 0.f } });
+#endif
 
                     CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
@@ -414,12 +428,23 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     GLfloat offsetX = (GLfloat)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
                     GLfloat offsetY = (GLfloat)(htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y);
 
+#ifndef NEW_RENDERER_ENABLED
                     glTranslatef(offsetX, offsetY, 0.0f);
+#else
+                    RenderAdd_SetModelViewTranslation(
+                        g_renderCmdList, &SetModelViewTranslationCmd{ { offsetX, offsetY, 0.0f } });
+#endif
 
                     CGump::DrawItems(subItem, currentPage, draw2Page);
                     g_GL.PopScissor();
 
+#ifndef NEW_RENDERER_ENABLED
                     glTranslatef(-(x + offsetX), -(y + offsetY), 0.0f);
+#else
+                    RenderAdd_SetModelViewTranslation(
+                        g_renderCmdList,
+                        &SetModelViewTranslationCmd{ { -(x + offsetX), -(y + offsetY), 0.0f } });
+#endif
 
                     break;
                 }
@@ -1475,11 +1500,20 @@ void CGump::Draw()
 
         if (m_FrameBuffer.Use())
         {
+#ifndef NEW_RENDERER_ENABLED
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
             glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
+#else
+            RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
+            RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::Color });
+            RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ g_ColorBlack });
+            RenderAdd_SetModelViewTranslation(
+                g_renderCmdList,
+                &SetModelViewTranslationCmd{
+                    { -(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f } });
+#endif
 
             GenerateFrame(true);
 
@@ -1562,7 +1596,14 @@ void CGump::Draw()
 #endif
             }
 
+#ifndef NEW_RENDERER_ENABLED
             glTranslatef((GLfloat)GumpRect.Position.X, (GLfloat)GumpRect.Position.Y, 0.0f);
+#else
+            RenderAdd_SetModelViewTranslation(
+                g_renderCmdList,
+                &SetModelViewTranslationCmd{
+                    { (float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f } });
+#endif
 
             m_FrameBuffer.Release();
         }
@@ -1579,15 +1620,18 @@ void CGump::Draw()
     posX += (GLfloat)GumpRect.Position.X;
     posY += (GLfloat)GumpRect.Position.Y;
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef(posX, posY, 0.0f);
 
-#ifndef NEW_RENDERER_ENABLED
     glEnable(GL_BLEND);
     //glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { posX, posY, 0.0f } });
+
     RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
     RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
 #endif
@@ -1602,7 +1646,12 @@ void CGump::Draw()
 
     DrawLocker();
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef(-posX, -posY, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { -posX, -posY, 0.0f } });
+#endif
 }
 
 CRenderObject *CGump::Select()

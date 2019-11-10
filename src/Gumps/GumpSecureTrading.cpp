@@ -15,6 +15,9 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
 #include "Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 static const int ID_GST_CHECKBOX = 1;
 
@@ -269,11 +272,23 @@ void CGumpSecureTrading::Draw()
         WantRedraw = true;
     }
     CGump::Draw();
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef(g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList,
+        &SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
+#endif
     g_FontColorizerShader.Use();
     m_TextRenderer.Draw();
     UnuseShader();
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList,
+        &SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
+#endif
 }
 
 CRenderObject *CGumpSecureTrading::Select()
