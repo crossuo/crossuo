@@ -237,7 +237,10 @@ void CRenderStaticObject::Draw(int x, int y)
             m_DrawTextureColor[2],
             m_DrawTextureColor[3]);
 #else
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
         RenderAdd_SetColor(
             g_renderCmdList,
             &SetColorCmd({ m_DrawTextureColor[0] / 255.f,

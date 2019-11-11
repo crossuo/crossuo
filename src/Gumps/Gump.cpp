@@ -320,7 +320,7 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
     glClear(GL_STENCIL_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
 #else
-    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::Stencil });
+    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::ClearRT_Stencil });
     RenderAdd_EnableStencil(g_renderCmdList);
 #endif
 
@@ -1507,7 +1507,7 @@ void CGump::Draw()
             glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
 #else
             RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
-            RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::Color });
+            RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::ClearRT_Color });
             RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ g_ColorBlack });
             RenderAdd_SetModelViewTranslation(
                 g_renderCmdList,
@@ -1632,7 +1632,10 @@ void CGump::Draw()
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, &SetModelViewTranslationCmd{ { posX, posY, 0.0f } });
 
-    RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+    RenderAdd_SetBlend(
+        g_renderCmdList,
+        &BlendStateCmd(
+            BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
     RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
 #endif
 

@@ -1307,18 +1307,21 @@ void CAnimationManager::Draw(
                 }
 #else
                 auto uniformValue = SDM_SPECTRAL;
-                auto blendFunc = BlendFunc::Zero_SrcColor;
+                auto blendSrc = BlendFactor::BlendFactor_Zero;
+                auto blendDst = BlendFactor::BlendFactor_SrcColor;
                 if (color == SPECTRAL_COLOR_SPECIAL)
                 {
-                    blendFunc = BlendFunc::Zero_OneMinusSrcAlpha;
+                    blendDst = BlendFactor::BlendFactor_OneMinusSrcColor;
                     uniformValue = SDM_SPECIAL_SPECTRAL;
                 }
 
-                RenderAdd_SetBlend(
-                    g_renderCmdList, &BlendStateCmd(BlendFunc::Zero_OneMinusSrcAlpha));
+                RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(blendSrc, blendDst));
                 RenderAdd_SetShaderUniform(
                     g_renderCmdList,
-                    &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                    &ShaderUniformCmd(
+                        g_ShaderDrawMode,
+                        &uniformValue,
+                        ShaderUniformType::ShaderUniformType_Int1));
 #endif
                 sdmNoColor = false;
             }
@@ -1337,7 +1340,10 @@ void CAnimationManager::Draw(
                 auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
                 RenderAdd_SetShaderUniform(
                     g_renderCmdList,
-                    &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                    &ShaderUniformCmd(
+                        g_ShaderDrawMode,
+                        &uniformValue,
+                        ShaderUniformType::ShaderUniformType_Int1));
 #endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
@@ -1352,7 +1358,8 @@ void CAnimationManager::Draw(
             auto uniformValue = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         }
 
@@ -1490,7 +1497,10 @@ void CAnimationManager::Draw(
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #else
                 RenderAdd_SetBlend(
-                    g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                    g_renderCmdList,
+                    &BlendStateCmd(
+                        BlendFactor::BlendFactor_SrcAlpha,
+                        BlendFactor::BlendFactor_OneMinusSrcAlpha));
 #endif
             }
             else
@@ -1660,7 +1670,10 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::One_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_OneMinusSrcAlpha));
         RenderAdd_SetColor(
             g_renderCmdList,
             &SetColorCmd({ ToColorR(auraColor) / 255.f,
@@ -1671,7 +1684,8 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         auto uniformValue = SDM_NO_COLOR;
         RenderAdd_SetShaderUniform(
             g_renderCmdList,
-            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
@@ -1706,7 +1720,10 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                         g_renderCmdList,
                         &SetColorCmd({ 1.f, 1.f, 1.f, g_ConfigManager.HiddenAlpha / 255.f }));
                     RenderAdd_SetBlend(
-                        g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                        g_renderCmdList,
+                        &BlendStateCmd(
+                            BlendFactor::BlendFactor_SrcAlpha,
+                            BlendFactor::BlendFactor_OneMinusSrcAlpha));
 #endif
 
                     Color = 0x038C;
@@ -1773,7 +1790,10 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         glColor4ub(
             drawTextureColor[0], drawTextureColor[1], drawTextureColor[2], drawTextureColor[3]);
 #else
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
         RenderAdd_SetColor(
             g_renderCmdList,
             &SetColorCmd({ drawTextureColor[0] / 255.f,

@@ -92,12 +92,12 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
         StencilFunc::StencilFunc_AlwaysPass,
         1,
         1,
-        StencilOp::Keep,
-        StencilOp::Keep,
-        StencilOp::Replace);
+        StencilOp::StencilOp_Keep,
+        StencilOp::StencilOp_Keep,
+        StencilOp::StencilOp_Replace);
     RenderAdd_SetStencil(g_renderCmdList, &stencilCmd);
 
-    RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::Alpha));
+    RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_Alpha));
     RenderAdd_DrawQuad(
         g_renderCmdList,
         &DrawQuadCmd(
@@ -130,17 +130,17 @@ void CGLTextureCircleOfTransparency::Redraw()
         glDisable(GL_STENCIL_TEST);
     }
 #else
-    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd(ClearRT::Stencil));
+    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd(ClearRT::ClearRT_Stencil));
     if (g_ConfigManager.UseCircleTrans && m_Sprite.Texture != nullptr)
     {
-        RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::Alpha));
+        RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_Alpha));
         auto stencilCmd = StencilStateCmd(
             StencilFunc::StencilFunc_AlwaysPass,
             1,
             1,
-            StencilOp::Keep,
-            StencilOp::Keep,
-            StencilOp::Replace);
+            StencilOp::StencilOp_Keep,
+            StencilOp::StencilOp_Keep,
+            StencilOp::StencilOp_Replace);
         RenderAdd_SetStencil(g_renderCmdList, &stencilCmd);
 
         RenderAdd_DrawQuad(

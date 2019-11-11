@@ -55,9 +55,9 @@ struct SetTextureCmd
 {
     RenderCommandHeader header;
     texture_handle_t texture;
-    RenderTextureType type;
+    TextureType type;
 
-    SetTextureCmd(texture_handle_t texture, RenderTextureType type)
+    SetTextureCmd(texture_handle_t texture, TextureType type)
         : header{ RenderCommandType::Cmd_SetTexture }
         , texture(texture)
         , type(type)
@@ -386,7 +386,7 @@ struct DrawRotatedQuadCmd : public DrawQuadCmd
 struct AlphaTestCmd
 {
     RenderCommandHeader header;
-    AlphaTestFunc func = AlphaTestFunc::AlphaTest_Invalid;
+    AlphaTestFunc func = AlphaTestFunc::AlphaTestFunc_Invalid;
     float ref;
 
     AlphaTestCmd(AlphaTestFunc func, float ref)
@@ -410,11 +410,16 @@ struct DisableAlphaTestCmd
 struct BlendStateCmd
 {
     RenderCommandHeader header;
-    BlendFunc func = BlendFunc::BlendFunc_Invalid;
+    BlendFactor src = BlendFactor::BlendFactor_Invalid;
+    BlendFactor dst = BlendFactor::BlendFactor_Invalid;
+    BlendEquation equation = BlendEquation::BlendEquation_Invalid;
 
-    BlendStateCmd(BlendFunc func)
+    BlendStateCmd(
+        BlendFactor src, BlendFactor dst, BlendEquation equation = BlendEquation::BlendEquation_Add)
         : header{ RenderCommandType::Cmd_BlendState }
-        , func(func)
+        , src(src)
+        , dst(dst)
+        , equation(equation)
     {
     }
 };
@@ -442,9 +447,9 @@ struct StencilStateCmd
         StencilFunc func = StencilFunc::StencilFunc_NeverPass,
         uint32_t ref = 0,
         uint32_t mask = 0xffffffff,
-        StencilOp stencilFail = StencilOp::Keep,
-        StencilOp depthFail = StencilOp::Keep,
-        StencilOp bothFail = StencilOp::Keep)
+        StencilOp stencilFail = StencilOp::StencilOp_Keep,
+        StencilOp depthFail = StencilOp::StencilOp_Keep,
+        StencilOp bothFail = StencilOp::StencilOp_Keep)
         : header{ RenderCommandType::Cmd_StencilState }
         , func(func)
         , stencilFail(stencilFail)

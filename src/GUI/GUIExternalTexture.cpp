@@ -62,20 +62,29 @@ void CGUIExternalTexture::SetShaderMode()
     DEBUG_TRACE_FUNCTION;
     if (Color != 0)
     {
-        if (PartialHue)
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-        }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-        }
+        auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        auto uniformValue = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
     }
 }
 

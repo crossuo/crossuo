@@ -44,7 +44,8 @@ void CGUIDrawObject::SetShaderMode()
 #else
         RenderAdd_SetShaderUniform(
             g_renderCmdList,
-            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         g_ColorManager.SendColorsToShader(Color);
     }
@@ -56,7 +57,8 @@ void CGUIDrawObject::SetShaderMode()
         auto uniformValue = SDM_NO_COLOR;
         RenderAdd_SetShaderUniform(
             g_renderCmdList,
-            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
     }
 }

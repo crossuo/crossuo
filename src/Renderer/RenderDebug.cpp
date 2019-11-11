@@ -164,31 +164,52 @@ void SetupOGLDebugMessage()
 #endif
 }
 
-static const char *BlendFuncAsString(BlendFunc func)
+static const char *BlendFactorAsString(BlendFactor factor)
 {
-    static const char *s_funcToText[] = { "SrcAlpha_OneMinusSrcAlpha",
-                                          "One_OneMinusSrcAlpha",
-                                          "DstColor_Zero",
-                                          "Zero_OneMinusSrcAlpha",
-                                          "Zero_SrcColor" };
-    static_assert(countof(s_funcToText) == BlendFunc::BlendFunc_Count);
+    static const char *s_factorToText[] = {
+        "BlendFactor_Zero",
+        "BlendFactor_One",
+        "BlendFactor_OneMinusSrcAlpha",
+        "BlendFactor_OneMinusSrcColor",
+        "BlendFactor_SrcColor",
+        "BlendFactor_SrcAlpha",
+        "BlendFactor_DstColor",
+    };
 
-    if (func == BlendFunc::BlendFunc_Invalid)
+    static_assert(countof(s_factorToText) == BlendFactor::BlendFactor_Count);
+
+    if (factor == BlendFactor::BlendFactor_Invalid)
     {
         return "Invalid";
     }
 
-    assert(func < BlendFunc::BlendFunc_Count);
-    return s_funcToText[func];
+    assert(factor < BlendFactor::BlendFactor_Count);
+    return s_factorToText[factor];
+}
+
+static const char *BlendEquationAsString(BlendEquation equation)
+{
+    static const char *s_equationToText[] = { "BlendEquation_Add",
+                                              "BlendEquation_ReverseSubtract" };
+
+    static_assert(countof(s_equationToText) == BlendEquation::BlendEquation_Count);
+
+    if (equation == BlendEquation::BlendEquation_Invalid)
+    {
+        return "Invalid";
+    }
+
+    assert(equation < BlendEquation::BlendEquation_Count);
+    return s_equationToText[equation];
 }
 
 const char *ShaderUniformTypeAsString(ShaderUniformType type)
 {
     static const char *s_uniformTypeAsStr[] = {
-        "Int1",    // ShaderUniformType::Int1
-        "Float1V", // ShaderUniformType::Float1V
+        "Int1",    // ShaderUniformType::ShaderUniformType_Int1
+        "Float1V", // ShaderUniformType::ShaderUniformType_Float1V
     };
-    static_assert(countof(s_uniformTypeAsStr) == ShaderUniformType::ShaderUniform_Count);
+    static_assert(countof(s_uniformTypeAsStr) == ShaderUniformType::ShaderUniformType_Count);
 
     return s_uniformTypeAsStr[type];
 }
@@ -196,12 +217,12 @@ const char *ShaderUniformTypeAsString(ShaderUniformType type)
 void ShaderUniformValueAsString(
     ShaderUniformType type, void *value, uint32_t count, char *str, size_t str_capacity)
 {
-    if (type >= ShaderUniformType::ShaderUniform_FixedFirst &&
-        type <= ShaderUniformType::ShaderUniform_FixedLast)
+    if (type >= ShaderUniformType::ShaderUniformType_FixedFirst &&
+        type <= ShaderUniformType::ShaderUniformType_FixedLast)
     {
         switch (type)
         {
-            case ShaderUniformType::Int1:
+            case ShaderUniformType::ShaderUniformType_Int1:
                 snprintf(str, str_capacity, "%d", *(GLint *)value);
                 break;
 
@@ -213,11 +234,11 @@ void ShaderUniformValueAsString(
     else
     {
         assert(
-            type >= ShaderUniformType::ShaderUniform_VariableFirst &&
-            type <= ShaderUniformType::ShaderUniform_VariableLast);
+            type >= ShaderUniformType::ShaderUniformType_VariableFirst &&
+            type <= ShaderUniformType::ShaderUniformType_VariableLast);
         switch (type)
         {
-            case ShaderUniformType::Float1V:
+            case ShaderUniformType::ShaderUniformType_Float1V:
             {
                 snprintf(str, str_capacity, "%f, ...", *(GLfloat *)value);
                 break;
@@ -230,16 +251,16 @@ void ShaderUniformValueAsString(
     }
 }
 
-static const char *TextureTypeAsString(RenderTextureType type)
+static const char *TextureTypeAsString(TextureType type)
 {
     static const char *s_textureTypeAsStr[] = {
         "Texture2D",          // Texture2D
         "Texture2D_Mipmapped" // Texture2D_Mipmapped
     };
 
-    static_assert(countof(s_textureTypeAsStr) == RenderTextureType::RenderTextureType_Count);
+    static_assert(countof(s_textureTypeAsStr) == TextureType::TextureType_Count);
 
-    assert(type < RenderTextureType::RenderTextureType_Count);
+    assert(type < TextureType::TextureType_Count);
     return s_textureTypeAsStr[type];
 }
 
@@ -295,7 +316,12 @@ void RenderDraw_SetTextureDebug(SetTextureCmd *cmd, RenderState *state)
 
 void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *state)
 {
-    Info(Renderer, "BlendStateCmd: func: %s\n", BlendFuncAsString(cmd->func));
+    Info(
+        Renderer,
+        "BlendStateCmd: src: %s + dst: %s - equation: %s\n",
+        BlendFactorAsString(cmd->src),
+        BlendFactorAsString(cmd->dst),
+        BlendEquationAsString(cmd->equation));
 }
 
 void RenderDraw_DisableBlendStateDebug(DisableBlendStateCmd *cmd, RenderState *state)
@@ -323,10 +349,10 @@ void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *state)
     Info(
         Renderer,
         "SetColorMaskCmd: mask: %s|%s|%s|%s\n",
-        cmd->mask & ColorMask::Red ? "Red" : "",
-        cmd->mask & ColorMask::Green ? "Green" : "",
-        cmd->mask & ColorMask::Blue ? "Blue" : "",
-        cmd->mask & ColorMask::Alpha ? "Alpha" : "");
+        cmd->mask & ColorMask::ColorMask_Red ? "Red" : "",
+        cmd->mask & ColorMask::ColorMask_Green ? "Green" : "",
+        cmd->mask & ColorMask::ColorMask_Blue ? "Blue" : "",
+        cmd->mask & ColorMask::ColorMask_Alpha ? "Alpha" : "");
 }
 
 void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *state)
@@ -343,8 +369,8 @@ void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *state)
 void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 {
     assert(
-        cmd->type >= ShaderUniformType::ShaderUniform_FixedFirst &&
-        cmd->type <= ShaderUniformType::ShaderUniform_FixedLast);
+        cmd->type >= ShaderUniformType::ShaderUniformType_FixedFirst &&
+        cmd->type <= ShaderUniformType::ShaderUniformType_FixedLast);
 
     auto typeAsStr = ShaderUniformTypeAsString(cmd->type);
     char valueAsStr[64] = "<invalid>";
@@ -365,8 +391,8 @@ void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState *state)
 {
     assert(
-        cmd->type >= ShaderUniformType::ShaderUniform_VariableFirst &&
-        cmd->type <= ShaderUniformType::ShaderUniform_VariableLast);
+        cmd->type >= ShaderUniformType::ShaderUniformType_VariableFirst &&
+        cmd->type <= ShaderUniformType::ShaderUniformType_VariableLast);
 
     auto typeAsStr = ShaderUniformTypeAsString(cmd->type);
     char valueAsStr[64] = "<invalid>";

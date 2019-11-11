@@ -3,6 +3,8 @@
 
 #pragma once
 
+#ifndef NEW_RENDERER_ENABLED
+
 #include "BaseGUI.h"
 #include "../Backend.h"
 
@@ -20,3 +22,5 @@ public:
 
     virtual void Draw(bool checktrans = false);
 };
+
+#endif // #ifndef NEW_RENDERER_ENABLED

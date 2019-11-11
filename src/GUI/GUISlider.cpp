@@ -9,6 +9,9 @@
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
 #include "Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUISlider::CGUISlider(
     int serial,
@@ -344,7 +347,15 @@ void CGUISlider::Draw(bool checktrans)
 	UpdateText();
 	CalculateOffset();*/
 
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    auto uniformValue = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(
+        g_renderCmdList,
+        &ShaderUniformCmd(
+            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
     if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)

@@ -24,7 +24,7 @@ bool RenderDraw_SetFrameBuffer(SetFrameBufferCmd *cmd, RenderState *state)
 bool RenderDraw_DrawQuad(DrawQuadCmd *cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd->texture);
     RenderState_SetColor(state, cmd->rgba);
     glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
     glBegin(GL_TRIANGLE_STRIP);
@@ -62,7 +62,7 @@ bool RenderDraw_DrawRotatedQuad(DrawRotatedQuadCmd *cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd->texture);
     RenderState_SetColor(state, cmd->rgba);
 
     glTranslatef((GLfloat)cmd->x, (GLfloat)cmd->y, 0.0f);
@@ -107,7 +107,7 @@ bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *
 
     ScopedPerfMarker(__FUNCTION__);
 
-    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd->texture);
 
     auto x = (GLfloat)cmd->x;
     auto y = (GLfloat)cmd->y;
@@ -227,7 +227,7 @@ bool RenderDraw_DrawLandTile(DrawLandTileCmd *cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd->texture);
     float translateX = cmd->x - 22.0f;
     float translateY = cmd->y - 22.0f;
 
@@ -262,10 +262,15 @@ bool RenderDraw_DrawShadow(DrawShadowCmd *cmd, RenderState *state)
     ScopedPerfMarker(__FUNCTION__);
 
     RenderState_SetShaderUniform(
-        state, cmd->uniformId, &cmd->uniformValue, ShaderUniformType::Int1);
-    RenderState_SetBlend(state, true, BlendFunc::DstColor_Zero);
+        state, cmd->uniformId, &cmd->uniformValue, ShaderUniformType::ShaderUniformType_Int1);
+    RenderState_SetBlend(
+        state,
+        true,
+        BlendFactor::BlendFactor_DstColor,
+        BlendFactor::BlendFactor_Zero,
+        BlendEquation::BlendEquation_Add);
 
-    RenderState_SetTexture(state, RenderTextureType::Texture2D, cmd->texture);
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd->texture);
 
     auto width = (float)cmd->width;
     auto height = cmd->height / 2.0f;
@@ -308,11 +313,21 @@ bool RenderDraw_DrawShadow(DrawShadowCmd *cmd, RenderState *state)
 
     if (cmd->restoreBlendFunc)
     {
-        RenderState_SetBlend(state, true, BlendFunc::SrcAlpha_OneMinusSrcAlpha);
+        RenderState_SetBlend(
+            state,
+            true,
+            BlendFactor::BlendFactor_SrcAlpha,
+            BlendFactor::BlendFactor_OneMinusSrcAlpha,
+            BlendEquation::BlendEquation_Add);
     }
     else
     {
-        RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+        RenderState_SetBlend(
+            state,
+            false,
+            BlendFactor::BlendFactor_Invalid,
+            BlendFactor::BlendFactor_Invalid,
+            BlendEquation::BlendEquation_Invalid);
     }
 
     return true;
@@ -369,7 +384,12 @@ bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *stat
 
         if (blend)
         {
-            RenderState_SetBlend(state, true, BlendFunc::SrcAlpha_OneMinusSrcAlpha);
+            RenderState_SetBlend(
+                state,
+                true,
+                BlendFactor::BlendFactor_SrcAlpha,
+                BlendFactor::BlendFactor_OneMinusSrcAlpha,
+                BlendEquation::BlendEquation_Invalid);
         }
     }
 
@@ -384,7 +404,12 @@ bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *stat
     {
         if (blend)
         {
-            RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+            RenderState_SetBlend(
+                state,
+                false,
+                BlendFactor::BlendFactor_Invalid,
+                BlendFactor::BlendFactor_Invalid,
+                BlendEquation::BlendEquation_Invalid);
         }
 
         RenderState_SetColor(state, g_ColorWhite);
@@ -411,7 +436,12 @@ bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state)
 
         if (blend)
         {
-            RenderState_SetBlend(state, true, BlendFunc::SrcAlpha_OneMinusSrcAlpha);
+            RenderState_SetBlend(
+                state,
+                true,
+                BlendFactor::BlendFactor_SrcAlpha,
+                BlendFactor::BlendFactor_OneMinusSrcAlpha,
+                BlendEquation::BlendEquation_Add);
         }
     }
 
@@ -424,7 +454,12 @@ bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state)
     {
         if (blend)
         {
-            RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+            RenderState_SetBlend(
+                state,
+                false,
+                BlendFactor::BlendFactor_Invalid,
+                BlendFactor::BlendFactor_Invalid,
+                BlendEquation::BlendEquation_Invalid);
         }
 
         RenderState_SetColor(state, g_ColorWhite);
@@ -442,17 +477,22 @@ bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state)
 
 bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state)
 {
-    return RenderState_SetAlphaTest(state, false, AlphaTestFunc::AlphaTest_Invalid, 0.f);
+    return RenderState_SetAlphaTest(state, false, AlphaTestFunc::AlphaTestFunc_Invalid, 0.f);
 }
 
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state)
 {
-    return RenderState_SetBlend(state, true, cmd->func);
+    return RenderState_SetBlend(state, true, cmd->src, cmd->dst, cmd->equation);
 }
 
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state)
 {
-    return RenderState_SetBlend(state, false, BlendFunc::BlendFunc_Invalid);
+    return RenderState_SetBlend(
+        state,
+        false,
+        BlendFactor::BlendFactor_Invalid,
+        BlendFactor::BlendFactor_Invalid,
+        BlendEquation::BlendEquation_Invalid);
 }
 
 bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state)
@@ -531,9 +571,15 @@ bool RenderDraw_SetClearColor(SetClearColorCmd *cmd, RenderState *state)
 
 bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *)
 {
-    auto mask = (cmd->clearMask & ClearRT::Color) == ClearRT::Color ? GL_COLOR_BUFFER_BIT : 0;
-    mask |= (cmd->clearMask & ClearRT::Depth) == ClearRT::Depth ? GL_DEPTH_BUFFER_BIT : 0;
-    mask |= (cmd->clearMask & ClearRT::Stencil) == ClearRT::Stencil ? GL_STENCIL_BUFFER_BIT : 0;
+    auto mask = (cmd->clearMask & ClearRT::ClearRT_Color) == ClearRT::ClearRT_Color ?
+                    GL_COLOR_BUFFER_BIT :
+                    0;
+    mask |= (cmd->clearMask & ClearRT::ClearRT_Depth) == ClearRT::ClearRT_Depth ?
+                GL_DEPTH_BUFFER_BIT :
+                0;
+    mask |= (cmd->clearMask & ClearRT::ClearRT_Stencil) == ClearRT::ClearRT_Stencil ?
+                GL_STENCIL_BUFFER_BIT :
+                0;
     glClear(mask);
 
     return true;

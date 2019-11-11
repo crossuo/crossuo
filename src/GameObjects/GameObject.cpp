@@ -291,9 +291,9 @@ void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
     m_TextureObjectHandles.Texture = Render_CreateTexture2D(
         g_ObjectHandlesWidth,
         g_ObjectHandlesHeight,
-        RenderTextureGPUFormat::RGB5_A1,
+        TextureGPUFormat::TextureGPUFormat_RGB5_A1,
         pixels,
-        RenderTextureFormat::Unsigned_A1_BGR5);
+        TextureFormat::TextureFormat_Unsigned_A1_BGR5);
     assert(m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID);
 #endif
 }

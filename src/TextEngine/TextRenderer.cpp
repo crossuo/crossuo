@@ -237,7 +237,10 @@ void CTextRenderer::Draw()
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
 #else
                 RenderAdd_SetBlend(
-                    g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                    g_renderCmdList,
+                    &BlendStateCmd(
+                        BlendFactor::BlendFactor_SrcAlpha,
+                        BlendFactor::BlendFactor_OneMinusSrcAlpha));
                 RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha / 255.f }));
 #endif
 
@@ -413,7 +416,10 @@ void CTextRenderer::WorldDraw()
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
 #else
                 RenderAdd_SetBlend(
-                    g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                    g_renderCmdList,
+                    &BlendStateCmd(
+                        BlendFactor::BlendFactor_SrcAlpha,
+                        BlendFactor::BlendFactor_OneMinusSrcAlpha));
                 RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha / 255.f }));
 #endif
 
