@@ -27,9 +27,9 @@ uint32_t Render_GetUniformId(ShaderPipeline *pipeline, const char *uniform);
 texture_handle_t Render_CreateTexture2D(
     uint32_t width,
     uint32_t height,
-    RenderTextureGPUFormat gpuFormat,
+    TextureGPUFormat gpuFormat,
     void *pixels,
-    RenderTextureFormat pixelsFormat);
+    TextureFormat pixelsFormat);
 bool Render_DestroyTexture(texture_handle_t texture);
 
 frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height);

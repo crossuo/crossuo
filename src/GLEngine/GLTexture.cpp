@@ -41,7 +41,10 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     auto cmd = DrawQuadCmd(Texture, x, y, Width, Height);
     if (checktrans)
     {
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
         RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
         RenderAdd_DisableBlend(g_renderCmdList);
 
@@ -101,7 +104,10 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 
     if (checktrans)
     {
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
         RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
         RenderAdd_DisableBlend(g_renderCmdList);
 
@@ -177,7 +183,10 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
     }
 
     auto cmd = DrawQuadCmd(Texture, x, y, Width, Height, 1.f, 1.f, { { 1.f, 1.f, 1.f, 0.25f } });
-    RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+    RenderAdd_SetBlend(
+        g_renderCmdList,
+        &BlendStateCmd(
+            BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
     RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
     RenderAdd_DisableBlend(g_renderCmdList);
 

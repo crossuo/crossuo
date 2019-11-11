@@ -516,12 +516,17 @@ void CMouseManager::Draw(uint16_t id)
                     glDisable(GL_BLEND);
 #else
                     RenderAdd_SetBlend(
-                        g_renderCmdList, &BlendStateCmd(BlendFunc::One_OneMinusSrcAlpha));
+                        g_renderCmdList,
+                        &BlendStateCmd(
+                            BlendFactor::BlendFactor_One,
+                            BlendFactor::BlendFactor_OneMinusSrcAlpha));
                     auto uniformValue = SDM_NO_COLOR;
                     RenderAdd_SetShaderUniform(
                         g_renderCmdList,
                         &ShaderUniformCmd(
-                            g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                            g_ShaderDrawMode,
+                            &uniformValue,
+                            ShaderUniformType::ShaderUniformType_Int1));
                     RenderAdd_SetColor(
                         g_renderCmdList,
                         &SetColorCmd({ ToColorR(auraColor) / 255.f,

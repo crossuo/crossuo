@@ -119,7 +119,7 @@ void CGLFrameBuffer::Release()
 
     RenderAdd_SetTexture(
         g_renderCmdList,
-        &SetTextureCmd{ m_FrameBuffer.texture, RenderTextureType::Texture2D_Mipmapped });
+        &SetTextureCmd{ m_FrameBuffer.texture, TextureType::TextureType_Texture2D_Mipmapped });
 
     auto window_width = g_GameWindow.GetSize().Width;
     auto window_height = g_GameWindow.GetSize().Height;

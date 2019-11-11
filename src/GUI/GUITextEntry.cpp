@@ -235,7 +235,10 @@ void CGUITextEntry::Draw(bool checktrans)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #else
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
 #endif
 
         if (Unicode)
@@ -253,7 +256,7 @@ void CGUITextEntry::Draw(bool checktrans)
         glEnable(GL_STENCIL_TEST);
 #else
         RenderAdd_DisableBlend(g_renderCmdList);
-        // FIXME what were the original values for stencil func, op, ref and mask?
+        // FIXME renderer - what were the original values for stencil func, op, ref and mask?
         RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd());
 #endif
 

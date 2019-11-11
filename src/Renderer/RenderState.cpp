@@ -9,7 +9,13 @@ bool RenderState_FlushState(RenderState *state)
     RenderState_SetTexture(state, state->texture.type, state->texture.texture, true);
     // FIXME epatitucci
     // RenderState_SetFrameBuffer(state, state->framebuffer, true);
-    RenderState_SetBlend(state, state->blend.enabled, state->blend.func, true);
+    RenderState_SetBlend(
+        state,
+        state->blend.enabled,
+        state->blend.src,
+        state->blend.dst,
+        state->blend.equation,
+        true);
     RenderState_SetAlphaTest(
         state, state->alphaTest.enabled, state->alphaTest.func, state->alphaTest.alphaRef, true);
     RenderState_SetStencil(
@@ -58,7 +64,7 @@ bool RenderState_SetAlphaTest(
         GL_GEQUAL,   // AlphaTest_GreaterOrEqual
     };
 
-    static_assert(countof(s_alphaTestfuncToOGLFunc) == AlphaTestFunc::AlphaTest_Count);
+    static_assert(countof(s_alphaTestfuncToOGLFunc) == AlphaTestFunc::AlphaTestFunc_Count);
 
     bool changed = false;
     if (state->alphaTest.enabled != enabled || forced)
@@ -79,7 +85,7 @@ bool RenderState_SetAlphaTest(
         return state->alphaTest.func != func || state->alphaTest.alphaRef != ref;
     };
 
-    if (enabled && differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTest_Invalid))
+    if (enabled && differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTestFunc_Invalid))
     {
         changed = true;
         state->alphaTest.func = func;
@@ -90,26 +96,31 @@ bool RenderState_SetAlphaTest(
     return changed;
 }
 
-bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool forced)
+bool RenderState_SetBlend(
+    RenderState *state,
+    bool enabled,
+    BlendFactor src,
+    BlendFactor dst,
+    BlendEquation equation,
+    bool forced)
 {
-    static GLenum s_blendSrcComponentToOGLEnum[] = {
-        GL_SRC_ALPHA, // SrcAlpha_OneMinusSrcAlpha
-        GL_ONE,       // One_OneMinusSrcAlpha
-        GL_DST_COLOR, // DstColor_Zero
-        GL_ZERO,      // Zero_OneMinusSrcAlpha
-        GL_ZERO       // Zero_SrcColor
+    static GLenum s_blendFactorToOGLEnum[] = {
+        GL_ZERO,                // Zero
+        GL_ONE,                 // One
+        GL_ONE_MINUS_SRC_ALPHA, // OneMinusSrcAlpha
+        GL_ONE_MINUS_SRC_COLOR, // OneMinusSrcColor
+        GL_SRC_COLOR,           // SrcColor
+        GL_SRC_ALPHA,           // SrcAlpha
+        GL_DST_COLOR,           // DstColor
     };
 
-    static GLenum s_blendDstComponentToOGLEnum[] = {
-        GL_ONE_MINUS_SRC_ALPHA, // SrcAlpha_OneMinusSrcAlpha
-        GL_ONE_MINUS_SRC_ALPHA, // One_OneMinusSrcAlpha
-        GL_ZERO,                // DstColor_Zero
-        GL_ONE_MINUS_SRC_ALPHA, // Zero_OneMinusSrcAlpha
-        GL_SRC_COLOR            // Zero_SrcColor
+    static GLenum s_blendEquationToOGLEnum[] = {
+        GL_FUNC_ADD,              // Add
+        GL_FUNC_REVERSE_SUBTRACT, // ReverseSubtract
     };
 
-    static_assert(countof(s_blendSrcComponentToOGLEnum) == BlendFunc::BlendFunc_Count);
-    static_assert(countof(s_blendSrcComponentToOGLEnum) == countof(s_blendDstComponentToOGLEnum));
+    static_assert(countof(s_blendFactorToOGLEnum) == BlendFactor::BlendFactor_Count);
+    static_assert(countof(s_blendEquationToOGLEnum) == BlendEquation::BlendEquation_Count);
 
     bool changed = false;
     if (state->blend.enabled != enabled || forced)
@@ -126,11 +137,22 @@ bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool
         }
     }
 
-    if (enabled && state->blend.func != func || (forced && func != BlendFunc::BlendFunc_Invalid))
+    if (enabled && (state->blend.src != src || state->blend.dst != dst) ||
+        (forced && (state->blend.src != BlendFactor::BlendFactor_Invalid &&
+                    state->blend.dst != BlendFactor::BlendFactor_Invalid)))
     {
         changed = true;
-        state->blend.func = func;
-        glBlendFunc(s_blendSrcComponentToOGLEnum[func], s_blendDstComponentToOGLEnum[func]);
+        state->blend.src = src;
+        state->blend.dst = dst;
+        glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]);
+    }
+
+    if (enabled && state->blend.equation != equation ||
+        (forced && equation != BlendEquation::BlendEquation_Invalid))
+    {
+        changed = true;
+        state->blend.equation = equation;
+        glBlendEquation(s_blendEquationToOGLEnum[equation]);
     }
 
     return changed;
@@ -212,14 +234,14 @@ bool RenderState_SetStencil(
     };
 
     static GLenum s_stencilOpToOGLOp[] = {
-        GL_KEEP,      // StencilOp::Keep
-        GL_ZERO,      // StencilOp::Zero
-        GL_REPLACE,   // StencilOp::Replace
-        GL_INCR,      // StencilOp::IncrementClamp
-        GL_INCR_WRAP, // StencilOp::IncrementWrap
-        GL_DECR,      // StencilOp::DecrementClamp,
-        GL_DECR_WRAP, // StencilOp::DecrementWrap,
-        GL_INVERT     // StencilOp::Invert
+        GL_KEEP,      // StencilOp::StencilOp_Keep
+        GL_ZERO,      // StencilOp::StencilOp_Zero
+        GL_REPLACE,   // StencilOp::StencilOp_Replace
+        GL_INCR,      // StencilOp::StencilOp_IncrementClamp
+        GL_INCR_WRAP, // StencilOp::StencilOp_IncrementWrap
+        GL_DECR,      // StencilOp::StencilOp_DecrementClamp,
+        GL_DECR_WRAP, // StencilOp::StencilOp_DecrementWrap,
+        GL_INVERT     // StencilOp::StencilOp_Invert
     };
 
     static_assert(countof(s_stencilFuncToOGLFunc) == StencilFunc::StencilFunc_Count);
@@ -262,10 +284,10 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
     {
         state->colorMask = mask;
         glColorMask(
-            mask & ColorMask::Red ? GL_TRUE : GL_FALSE,
-            mask & ColorMask::Green ? GL_TRUE : GL_FALSE,
-            mask & ColorMask::Blue ? GL_TRUE : GL_FALSE,
-            mask & ColorMask::Alpha ? GL_TRUE : GL_FALSE);
+            mask & ColorMask::ColorMask_Red ? GL_TRUE : GL_FALSE,
+            mask & ColorMask::ColorMask_Green ? GL_TRUE : GL_FALSE,
+            mask & ColorMask::ColorMask_Blue ? GL_TRUE : GL_FALSE,
+            mask & ColorMask::ColorMask_Alpha ? GL_TRUE : GL_FALSE);
         return true;
     }
 
@@ -320,7 +342,7 @@ bool RenderState_SetShaderUniform(
     {
         switch (type)
         {
-            case ShaderUniformType::Int1:
+            case ShaderUniformType::ShaderUniformType_Int1:
             {
                 auto typedValue = *(GLint *)value;
                 glUniform1i(location, typedValue);
@@ -365,7 +387,7 @@ bool RenderState_SetShaderLargeUniform(
 
     switch (type)
     {
-        case ShaderUniformType::Float1V:
+        case ShaderUniformType::ShaderUniformType_Float1V:
         {
             auto typedValue = (GLfloat *)value;
             glUniform1fv(location, count, typedValue);
@@ -412,13 +434,13 @@ bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
 }
 
 bool RenderState_SetTexture(
-    RenderState *state, RenderTextureType type, texture_handle_t texture, bool forced)
+    RenderState *state, TextureType type, texture_handle_t texture, bool forced)
 {
-    auto textureTypeToOGLType = [](RenderTextureType type) {
+    auto textureTypeToOGLType = [](TextureType type) {
         switch (type)
         {
-            case RenderTextureType::Texture2D:
-            case RenderTextureType::Texture2D_Mipmapped:
+            case TextureType::TextureType_Texture2D:
+            case TextureType::TextureType_Texture2D_Mipmapped:
             {
                 return GL_TEXTURE_2D;
             }
@@ -443,7 +465,7 @@ bool RenderState_SetTexture(
         else
         {
             glBindTexture(textureTypeToOGLType(type), texture);
-            if (type == RenderTextureType::Texture2D_Mipmapped)
+            if (type == TextureType::TextureType_Texture2D_Mipmapped)
             {
                 glGenerateMipmap(GL_TEXTURE_2D);
             }

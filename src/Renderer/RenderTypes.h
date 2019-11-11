@@ -53,16 +53,27 @@ extern float4 g_ColorBlack;
 extern float4 g_ColorBlue;
 extern float4 g_ColorInvalid;
 
-enum BlendFunc : uint8_t
+enum BlendFactor : uint8_t
 {
-    SrcAlpha_OneMinusSrcAlpha = 0,
-    One_OneMinusSrcAlpha,
-    DstColor_Zero,
-    Zero_OneMinusSrcAlpha,
-    Zero_SrcColor,
+    BlendFactor_Zero = 0,
+    BlendFactor_One,
+    BlendFactor_OneMinusSrcAlpha,
+    BlendFactor_OneMinusSrcColor,
+    BlendFactor_SrcColor,
+    BlendFactor_SrcAlpha,
+    BlendFactor_DstColor,
 
-    BlendFunc_Count,
-    BlendFunc_Invalid = 0xff,
+    BlendFactor_Count,
+    BlendFactor_Invalid = 0xff,
+};
+
+enum BlendEquation : uint8_t
+{
+    BlendEquation_Add = 0,
+    BlendEquation_ReverseSubtract,
+
+    BlendEquation_Count,
+    BlendEquation_Invalid = 0xff,
 };
 
 enum StencilFunc : uint8_t
@@ -82,14 +93,14 @@ enum StencilFunc : uint8_t
 
 enum StencilOp : uint8_t
 {
-    Keep = 0,
-    Zero,
-    Replace,
-    IncrementClamp,
-    IncrementWrap,
-    DecrementClamp,
-    DecrementWrap,
-    Invert,
+    StencilOp_Keep = 0,
+    StencilOp_Zero,
+    StencilOp_Replace,
+    StencilOp_IncrementClamp,
+    StencilOp_IncrementWrap,
+    StencilOp_DecrementClamp,
+    StencilOp_DecrementWrap,
+    StencilOp_Invert,
 
     StencilOp_Count,
     StencilOp_Invalid = 0xff,
@@ -112,88 +123,89 @@ enum DepthFunc : uint8_t
 
 enum AlphaTestFunc : uint8_t
 {
-    AlphaTest_NeverPass = 0,
-    AlphaTest_AlwaysPass,
-    AlphaTest_Equal,
-    AlphaTest_Different,
-    AlphaTest_Less,
-    AlphaTest_LessOrEqual,
-    AlphaTest_Greater,
-    AlphaTest_GreaterOrEqual,
+    AlphaTestFunc_NeverPass = 0,
+    AlphaTestFunc_AlwaysPass,
+    AlphaTestFunc_Equal,
+    AlphaTestFunc_Different,
+    AlphaTestFunc_Less,
+    AlphaTestFunc_LessOrEqual,
+    AlphaTestFunc_Greater,
+    AlphaTestFunc_GreaterOrEqual,
 
-    AlphaTest_Count,
-    AlphaTest_Invalid = 0xff,
+    AlphaTestFunc_Count,
+    AlphaTestFunc_Invalid = 0xff,
 };
 
 enum ColorMask : uint8_t
 {
-    Red = (1 << 0),
-    Green = (1 << 1),
-    Blue = (1 << 2),
-    Alpha = (1 << 3),
+    ColorMask_Red = (1 << 0),
+    ColorMask_Green = (1 << 1),
+    ColorMask_Blue = (1 << 2),
+    ColorMask_Alpha = (1 << 3),
 
-    ColorMask_All = Red | Green | Blue | Alpha,
-    ColorMask_ColorOnly = Red | Green | Blue,
+    ColorMask_All = ColorMask_Red | ColorMask_Green | ColorMask_Blue | ColorMask_Alpha,
+    ColorMask_ColorOnly = ColorMask_Red | ColorMask_Green | ColorMask_Blue,
     ColorMask_None = 0,
     ColorMask_Invalid = 0xff,
 };
 
 enum ClearRT : uint8_t
 {
-    Color = (1 << 0),
-    Depth = (1 << 1),
-    Stencil = (1 << 2),
+    ClearRT_Color = (1 << 0),
+    ClearRT_Depth = (1 << 1),
+    ClearRT_Stencil = (1 << 2),
 
-    ClearRT_All = Color | Depth | Stencil,
+    ClearRT_All = ClearRT_Color | ClearRT_Depth | ClearRT_Stencil,
     ClearRT_Invalid = 0xff,
 };
 
-enum RenderTextureType : uint8_t
+enum TextureType : uint8_t
 {
-    Texture2D = 0,
-    Texture2D_Mipmapped,
+    TextureType_Texture2D = 0,
+    TextureType_Texture2D_Mipmapped,
 
-    RenderTextureType_Count
+    TextureType_Count
 };
 
-enum RenderTextureGPUFormat : uint8_t
+enum TextureGPUFormat : uint8_t
 {
-    RGBA4 = 0,
-    RGB5_A1,
+    TextureGPUFormat_RGBA4 = 0,
+    TextureGPUFormat_RGB5_A1,
 
-    RenderTextureGPUFormat_Count,
+    TextureGPUFormat_Count,
 };
 
-enum RenderTextureFormat : uint8_t
+enum TextureFormat : uint8_t
 {
-    Unsigned_RGBA8 = 0,
-    Unsigned_A1_BGR5,
+    TextureFormat_Unsigned_RGBA8 = 0,
+    TextureFormat_Unsigned_A1_BGR5,
 
-    RenderTextureFormat_Count,
+    TextureFormat_Count,
 };
 
 enum ShaderUniformType : uint8_t
 {
-    Int1 = 0,
+    ShaderUniformType_Int1 = 0,
 
     // Large uniforms start (variable size)
-    Float1V,
+    ShaderUniformType_Float1V,
 
-    ShaderUniform_Count,
-    ShaderUniform_Invalid = 0xff,
+    ShaderUniformType_Count,
+    ShaderUniformType_Invalid = 0xff,
 
-    ShaderUniform_VariableFirst = Float1V,
-    ShaderUniform_VariableLast = ShaderUniform_Count - 1,
-    ShaderUniform_VariableCount = ShaderUniform_VariableLast - ShaderUniform_VariableFirst + 1,
-    ShaderUniform_FixedFirst = Int1,
-    ShaderUniform_FixedLast = ShaderUniform_VariableFirst - 1,
-    ShaderUniform_FixedCount = ShaderUniform_FixedLast - ShaderUniform_FixedFirst + 1,
+    ShaderUniformType_VariableFirst = ShaderUniformType_Float1V,
+    ShaderUniformType_VariableLast = ShaderUniformType_Count - 1,
+    ShaderUniformType_VariableCount =
+        ShaderUniformType_VariableLast - ShaderUniformType_VariableFirst + 1,
+    ShaderUniformType_FixedFirst = ShaderUniformType_Int1,
+    ShaderUniformType_FixedLast = ShaderUniformType_VariableFirst - 1,
+    ShaderUniformType_FixedCount = ShaderUniformType_FixedLast - ShaderUniformType_FixedFirst + 1,
 };
 
 enum ShaderStage : uint8_t
 {
-    VertexShader = 0,
-    FragmentShader,
+    ShaderStage_VertexShader = 0,
+    ShaderStage_FragmentShader,
 
     ShaderStage_Count,
     ShaderStage_Invalid = 0xff
@@ -223,8 +235,8 @@ struct RenderState
     struct
     {
         texture_handle_t texture;
-        RenderTextureType type;
-    } texture = { RENDER_TEXTUREHANDLE_INVALID, RenderTextureType::Texture2D };
+        TextureType type;
+    } texture = { RENDER_TEXTUREHANDLE_INVALID, TextureType::TextureType_Texture2D };
 
     frame_buffer_t framebuffer = { RENDER_FRAMEBUFFER_INVALID, RENDER_TEXTUREHANDLE_INVALID };
 
@@ -255,15 +267,20 @@ struct RenderState
     struct
     {
         bool enabled;
-        BlendFunc func;
-    } blend = { false, BlendFunc::SrcAlpha_OneMinusSrcAlpha };
+        BlendFactor src;
+        BlendFactor dst;
+        BlendEquation equation;
+    } blend = { false,
+                BlendFactor::BlendFactor_SrcAlpha,
+                BlendFactor::BlendFactor_OneMinusSrcAlpha,
+                BlendEquation::BlendEquation_Add };
 
     struct
     {
         bool enabled;
         AlphaTestFunc func;
         float alphaRef;
-    } alphaTest = { true, AlphaTestFunc::AlphaTest_Greater, 0.f };
+    } alphaTest = { true, AlphaTestFunc::AlphaTestFunc_Greater, 0.f };
 
     // TODO support front- and back-face independent stencil testing
     struct
@@ -277,9 +294,9 @@ struct RenderState
         uint32_t mask;
     } stencil = { false,
                   StencilFunc::StencilFunc_NeverPass,
-                  StencilOp::Keep,
-                  StencilOp::Keep,
-                  StencilOp::Keep,
+                  StencilOp::StencilOp_Keep,
+                  StencilOp::StencilOp_Keep,
+                  StencilOp::StencilOp_Keep,
                   0,
                   1 };
 

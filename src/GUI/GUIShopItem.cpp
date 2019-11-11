@@ -9,8 +9,8 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/FontsManager.h"
-#include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -199,20 +199,14 @@ void CGUIShopItem::SetShaderMode()
 
     if (Color != 0)
     {
-#ifndef NEW_RENDERER_ENABLED
-        if (PartialHue)
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-        }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-        }
-#else
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
         RenderAdd_SetShaderUniform(
             g_renderCmdList,
-            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
 
         g_ColorManager.SendColorsToShader(Color);
@@ -225,7 +219,8 @@ void CGUIShopItem::SetShaderMode()
         auto uniformValue = SDM_NO_COLOR;
         RenderAdd_SetShaderUniform(
             g_renderCmdList,
-            &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+            &ShaderUniformCmd(
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
     }
 }
@@ -236,9 +231,20 @@ void CGUIShopItem::Draw(bool checktrans)
     DEBUG_TRACE_FUNCTION;
     CGLTexture *th = nullptr;
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.f } });
+
+    auto uniformValue = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(
+        g_renderCmdList,
+        &ShaderUniformCmd(
+            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
 
     m_NameText.Draw(52, m_TextOffset);
     m_CountText.Draw(196 - m_CountText.Width, (m_MaxOffset / 2) - (m_CountText.Height / 2));
@@ -324,7 +330,15 @@ void CGUIShopItem::Draw(bool checktrans)
         }
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    uniformValue = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(
+        g_renderCmdList,
+        &ShaderUniformCmd(
+            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
     auto spr = g_Game.ExecuteGump(0x0039);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -342,7 +356,12 @@ void CGUIShopItem::Draw(bool checktrans)
     {
         spr->Texture->Draw(166, m_MaxOffset, checktrans);
     }
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUIShopItem::Select()

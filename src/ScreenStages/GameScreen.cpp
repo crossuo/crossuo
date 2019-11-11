@@ -1564,7 +1564,9 @@ void CGameScreen::DrawGameWindowLight()
 
         RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
 
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::Zero_SrcColor));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor));
 #endif
 
         if (g_ConfigManager.GetUseScaling())
@@ -1656,7 +1658,9 @@ void CGameScreen::DrawGameWindowText(bool render)
 #else
                             RenderAdd_SetBlend(
                                 g_renderCmdList,
-                                &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                                &BlendStateCmd(
+                                    BlendFactor::BlendFactor_SrcAlpha,
+                                    BlendFactor::BlendFactor_OneMinusSrcAlpha));
                             RenderAdd_SetColor(
                                 g_renderCmdList,
                                 &SetColorCmd({ 1.f, 1.f, 1.f, (uint8_t)text->Color / 255.f }));

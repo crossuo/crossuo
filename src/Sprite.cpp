@@ -18,9 +18,9 @@ void CSprite::LoadSprite16(int width, int height, uint16_t *pixels, bool skipHit
     Texture->Texture = Render_CreateTexture2D(
         width,
         height,
-        RenderTextureGPUFormat::RGB5_A1,
+        TextureGPUFormat::TextureGPUFormat_RGB5_A1,
         pixels,
-        RenderTextureFormat::Unsigned_A1_BGR5);
+        TextureFormat::TextureFormat_Unsigned_A1_BGR5);
     assert(Texture->Texture != RENDER_TEXTUREHANDLE_INVALID);
 #endif
     Init(width, height, pixels, skipHitMask);
@@ -36,7 +36,11 @@ void CSprite::LoadSprite32(int width, int height, uint32_t *pixels, bool skipHit
     Texture->Width = width;
     Texture->Height = height;
     Texture->Texture = Render_CreateTexture2D(
-        width, height, RenderTextureGPUFormat::RGBA4, pixels, RenderTextureFormat::Unsigned_RGBA8);
+        width,
+        height,
+        TextureGPUFormat::TextureGPUFormat_RGBA4,
+        pixels,
+        TextureFormat::TextureFormat_Unsigned_RGBA8);
     assert(Texture->Texture != RENDER_TEXTUREHANDLE_INVALID);
 #endif
     Init(width, height, pixels, skipHitMask);

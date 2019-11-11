@@ -513,9 +513,9 @@ void CGumpWorldMap::LoadMap(int map)
             g_MapTexture[map].Texture = Render_CreateTexture2D(
                 g_MapSize[map].Width,
                 g_MapSize[map].Height,
-                RenderTextureGPUFormat::RGB5_A1,
+                TextureGPUFormat::TextureGPUFormat_RGB5_A1,
                 &buf[0],
-                RenderTextureFormat::Unsigned_A1_BGR5);
+                TextureFormat::TextureFormat_Unsigned_A1_BGR5);
             assert(g_MapTexture[map].Texture != RENDER_TEXTUREHANDLE_INVALID);
 #endif
         }

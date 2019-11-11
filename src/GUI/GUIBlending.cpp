@@ -1,6 +1,8 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#ifndef NEW_RENDERER_ENABLED
+
 #include "GUIBlending.h"
 #include "Utility/PerfMarker.h"
 
@@ -30,3 +32,5 @@ void CGUIBlending::Draw(bool checktrans)
         glDisable(GL_BLEND);
     }
 }
+
+#endif // #ifndef NEW_RENDERER_ENABLED

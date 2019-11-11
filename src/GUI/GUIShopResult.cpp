@@ -9,6 +9,9 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/FontsManager.h"
 #include "Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     : CBaseGUI(GOT_SHOPRESULT, shopItem->Serial, shopItem->Graphic, shopItem->Color, x, y)
@@ -66,14 +69,30 @@ void CGUIShopResult::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+
+    auto uniformValue = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(
+        g_renderCmdList,
+        &ShaderUniformCmd(
+            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
 
     m_NameText.Draw(34, 0, checktrans);
     m_MinMaxButtons->Draw(checktrans);
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUIShopResult::Select()

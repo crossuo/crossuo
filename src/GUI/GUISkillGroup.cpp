@@ -128,7 +128,12 @@ void CGUISkillGroup::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+#endif
 
     m_Minimizer->Draw(checktrans);
 
@@ -168,15 +173,30 @@ void CGUISkillGroup::Draw(bool checktrans)
 
     if (!GetMinimized() && m_Items != nullptr)
     {
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(0.0f, 19.0f, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList, &SetModelViewTranslationCmd{ { 0.0f, 19.0f, 0.0f } });
+#endif
 
         QFOR(item, m_Items, CBaseGUI *)
         item->Draw(checktrans);
 
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(0.0f, -19.0f, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList, &SetModelViewTranslationCmd{ { 0.0f, -19.0f, 0.0f } });
+#endif
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUISkillGroup::Select()

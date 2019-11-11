@@ -72,7 +72,9 @@ void CMultiObject::Draw(int x, int y)
             glColor4f(1.0f, 1.0f, 1.0f, 0.75f);
 #else
             RenderAdd_SetBlend(
-                g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+                g_renderCmdList,
+                &BlendStateCmd(
+                    BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
             RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, 0.75f }));
 #endif
 

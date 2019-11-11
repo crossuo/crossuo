@@ -189,11 +189,11 @@ void Render_SwapBuffers()
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)
 {
     static uint32_t s_uniformTypeToSize[] = {
-        uint32_t(sizeof(uint32_t)), // ShaderUniformType::Int1
-        0xffffffff,                 // ShaderUniformType::Float1V
+        uint32_t(sizeof(uint32_t)), // ShaderUniformType::ShaderUniformType_Int1
+        0xffffffff,                 // ShaderUniformType::ShaderUniformType_Float1V
     };
 
-    static_assert(countof(s_uniformTypeToSize) == ShaderUniformType::ShaderUniform_Count);
+    static_assert(countof(s_uniformTypeToSize) == ShaderUniformType::ShaderUniformType_Count);
 
     return s_uniformTypeToSize[type];
 }
@@ -297,7 +297,7 @@ bool Render_CreateShaderPipeline(
             pip.program,
             GL_VERTEX_SHADER,
             vertexShaderSource,
-            &pip.shaders[ShaderStage::VertexShader]))
+            &pip.shaders[ShaderStage::ShaderStage_VertexShader]))
     {
         return false;
     }
@@ -306,7 +306,7 @@ bool Render_CreateShaderPipeline(
             pip.program,
             GL_FRAGMENT_SHADER,
             fragmentShaderSource,
-            &pip.shaders[ShaderStage::FragmentShader]))
+            &pip.shaders[ShaderStage::ShaderStage_FragmentShader]))
     {
         return false;
     }
@@ -372,9 +372,9 @@ uint32_t Render_GetUniformId(ShaderPipeline *pipeline, const char *uniform)
 texture_handle_t Render_CreateTexture2D(
     uint32_t width,
     uint32_t height,
-    RenderTextureGPUFormat gpuFormat,
+    TextureGPUFormat gpuFormat,
     void *pixels,
-    RenderTextureFormat pixelsFormat)
+    TextureFormat pixelsFormat)
 {
     static GLenum s_gpuFormatToOGLFormat[] = {
         GL_RGBA4,   // RGBA4

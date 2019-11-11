@@ -16,13 +16,19 @@ void SetupOGLDebugMessage();
 bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize);
 
 bool RenderState_SetTexture(
-    RenderState *state, RenderTextureType type, texture_handle_t texture, bool forced = false);
+    RenderState *state, TextureType type, texture_handle_t texture, bool forced = false);
 bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forced = false);
 
 bool RenderState_FlushState(RenderState *state);
 bool RenderState_SetAlphaTest(
     RenderState *state, bool enabled, AlphaTestFunc func, float alphaRef, bool forced = false);
-bool RenderState_SetBlend(RenderState *state, bool enabled, BlendFunc func, bool forced = false);
+bool RenderState_SetBlend(
+    RenderState *state,
+    bool enabled,
+    BlendFactor src,
+    BlendFactor dst,
+    BlendEquation equation,
+    bool forced = false);
 bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced = false);
 bool RenderState_SetStencil(
     RenderState *state,

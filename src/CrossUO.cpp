@@ -508,9 +508,9 @@ bool CGame::Install()
         g_TextureGumpState[i].Texture = Render_CreateTexture2D(
             10,
             14,
-            RenderTextureGPUFormat::RGB5_A1,
+            TextureGPUFormat::TextureGPUFormat_RGB5_A1,
             &pdwlt[i][0],
-            RenderTextureFormat::Unsigned_A1_BGR5);
+            TextureFormat::TextureFormat_Unsigned_A1_BGR5);
         assert(g_TextureGumpState[i].Texture != RENDER_TEXTUREHANDLE_INVALID);
 #endif
     }
@@ -4418,9 +4418,9 @@ void CGame::CreateAuraTexture()
     g_AuraTexture.Texture = Render_CreateTexture2D(
         width,
         height,
-        RenderTextureGPUFormat::RGBA4,
+        TextureGPUFormat::TextureGPUFormat_RGBA4,
         pixels.data(),
-        RenderTextureFormat::Unsigned_RGBA8);
+        TextureFormat::TextureFormat_Unsigned_RGBA8);
     assert(g_AuraTexture.Texture != RENDER_TEXTUREHANDLE_INVALID);
 #endif
 }
@@ -4920,7 +4920,8 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 #else
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
 
             g_ColorManager.SendColorsToShader(color);
@@ -4933,7 +4934,8 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
             auto uniformValue = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         }
 
@@ -4957,7 +4959,8 @@ void CGame::DrawGump(
 #else
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
 
             g_ColorManager.SendColorsToShader(color);
@@ -4970,7 +4973,8 @@ void CGame::DrawGump(
             auto uniformValue = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         }
         spr->Texture->Draw(x, y, width, height);
@@ -5138,7 +5142,10 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, 
 #else
     if (checktrans)
     {
-        RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(BlendFunc::SrcAlpha_OneMinusSrcAlpha));
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd(
+                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
         DrawResizepicGump_Internal(id, x, y, width, height);
         RenderAdd_DisableBlend(g_renderCmdList);
 
@@ -5177,7 +5184,8 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             auto uniformValue = SDM_LAND_COLORED;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
             g_ColorManager.SendColorsToShader(color);
         }
@@ -5189,7 +5197,8 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             auto uniformValue = SDM_LAND;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         }
         assert(spr->Texture != nullptr);
@@ -5246,7 +5255,8 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
             auto uniformValue = SDM_COLORED;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
             g_ColorManager.SendColorsToShader(color);
         }
@@ -5258,7 +5268,8 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
             auto uniformValue = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(
                 g_renderCmdList,
-                &ShaderUniformCmd(g_ShaderDrawMode, &uniformValue, ShaderUniformType::Int1));
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
 #endif
         }
         assert(spr->Texture != nullptr);

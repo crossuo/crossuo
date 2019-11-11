@@ -6,6 +6,9 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "Utility/PerfMarker.h"
+#include "Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)
@@ -208,7 +211,15 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    auto uniformValue = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(
+        g_renderCmdList,
+        &ShaderUniformCmd(
+            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
     for (int i = 0; i < 2; i++)
     {
         auto spr = g_Game.ExecuteGump(Graphic + (int)i);
