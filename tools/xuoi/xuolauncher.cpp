@@ -24,10 +24,20 @@
 
 #include "xuo_updater.h"
 
+struct releases
+{
+    const char *name;
+    const char *version;
+    std::string display;
+};
+static std::vector<releases> s_releases;
+static std::vector<releases> s_releases_updated;
+
 static xuo_context *s_ctx = nullptr;
 static bool s_update_check = false;
 static bool s_update_request = false;
 static bool s_update_started = false;
+static int s_update_backup_index = -1;
 static bool s_has_update = false;
 static bool s_updated = false;
 
@@ -238,23 +248,51 @@ void ui_updates(ui_model &m)
     }
 }
 
+static bool backup_getter(void *data, int idx, const char **out_text)
+{
+    auto *items = (std::vector<releases> *)data;
+    assert(items);
+    assert(idx < items->size());
+    if (out_text)
+        *out_text = items->at(idx).display.c_str();
+    return true;
+}
+
 void ui_backups(ui_model &m)
 {
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
-    const auto items = int(m.area.y / (line_size + 2));
-    const char *accounts[] = { "Apple",  "Banana",    "Cherry",     "Kiwi",      "Mango",
-                               "Orange", "Pineapple", "Strawberry", "Watermelon" };
+    const auto items = (m.area.y / (line_size + 2) - 2);
     const int last_item = 0;
     static int cur_item = last_item;
 
     ImGuiWindowFlags window_flags = 0;
-    auto area = ImGui::GetWindowContentRegionMax();
-    ImGui::BeginChild("##left", area, false, window_flags);
     ImGui::Text(ICON_FK_FILE_ARCHIVE_O " Packages / Versions");
+    auto area = ImGui::GetWindowContentRegionMax();
+    const float y = m.area.y - ImGui::GetCursorPosY();
+    ImGui::BeginChild("##left", { area.x - 7, y }, false, window_flags);
     ImGui::PushItemWidth(m.area.x);
-    ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
+    //    ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
+    ImGui::ListBox("##bkp", &cur_item, backup_getter, &s_releases, s_releases.size(), items);
+    ImGui::PopStyleColor();
     ImGui::PopItemWidth();
     ImGui::EndChild();
+    const bool in_progress = s_update_started || s_update_request;
+    if (in_progress)
+    {
+        const ImU32 col = ImGui::GetColorU32(ImGuiCol_PlotLinesHovered);
+        ImGui::Spinner("##spinner", 7, 3, col);
+    }
+    else
+    {
+        ImGui::NewLine();
+    }
+    ImGui::SameLine(m.area.x - 55.0f);
+    if (ImGui::Button(ICON_FK_CLOUD_DOWNLOAD " Apply") && !in_progress && !s_releases.empty())
+    {
+        s_update_backup_index = cur_item;
+        s_update_request = true;
+    }
 }
 
 #define CFG_SECTION_FILTER_NAME "global"
@@ -348,29 +386,49 @@ int main(int argc, char **argv)
 
     auto updater_init = []() {
         s_updated = false;
-        if (s_update_check && s_ctx)
-        {
-            s_update_check = false;
-            xuo_shutdown(s_ctx);
-        }
-
+        s_update_backup_index = -1;
+        xuo_shutdown(s_ctx);
         const auto install_path = fs_path_ascii(xuol_data_path());
         s_ctx = xuo_init(install_path, config().global_beta_channel);
         if (s_ctx)
         {
             if (config().global_check_updates || config().global_auto_update)
+            {
                 s_has_update = xuo_update_check(s_ctx);
+                xuo_release_cb func = [](const char *name, const char *version, bool latest) {
+                    if (latest)
+                        return;
+                    if (!strcasecmp(name, "all"))
+                        return;
+                    s_releases_updated.push_back(
+                        { name, version, std::string(name) + " " + version });
+                };
+                xuo_releases_iterate(s_ctx, func);
+                s_releases.swap(s_releases_updated);
+                s_releases_updated.clear();
+            }
             if (s_has_update && config().global_auto_update)
                 s_update_request = true;
         }
         else
         {
-            LOG_ERROR("could not initialize updater");
+            LOG_ERROR("could not initialize updater, ignoring updates");
         }
         model.view = s_has_update ? ui_view::updates : ui_view::accounts;
     };
     auto update_run = []() {
         s_updated = xuo_update_apply(s_ctx);
+        s_update_started = false;
+        s_has_update = false;
+    };
+    auto update_backup = []() {
+        assert(
+            s_update_backup_index >= 0 && s_update_backup_index < s_releases.size() &&
+            "invalid backup index");
+        auto &e = s_releases[s_update_backup_index];
+        LOG_INFO("downloading package %s %s", e.name, e.version);
+        s_update_backup_index = -1;
+        s_updated = xuo_release_get(s_ctx, e.name, e.version);
         s_update_started = false;
         s_has_update = false;
     };
@@ -435,7 +493,10 @@ int main(int argc, char **argv)
                     if (ImGui::MenuItem("Auto update", nullptr, &cfg.global_auto_update))
                         ;
                     if (ImGui::MenuItem("Use beta channel", nullptr, &cfg.global_beta_channel))
-                        ;
+                    {
+                        s_releases.clear();
+                        s_update_check = true;
+                    }
                     if (ImGui::MenuItem("Close after launch", nullptr, &cfg.global_auto_close))
                         ;
                     ImGui::EndMenu();
@@ -460,13 +521,21 @@ int main(int argc, char **argv)
                 s_update_started = true;
                 if (update_worker.joinable())
                     update_worker.join();
-                update_worker = std::thread(update_run);
+                if (s_update_backup_index != -1)
+                {
+                    update_worker = std::thread(update_backup);
+                }
+                else
+                {
+                    update_worker = std::thread(update_run);
+                }
             }
             else if (s_update_check)
             {
                 if (update_worker.joinable())
                     update_worker.join();
                 update_worker = std::thread(updater_init);
+                s_update_check = false;
             }
 
             model.area = ImVec2(ImGui::GetWindowContentRegionWidth(), size.y - 35); // FIXME
