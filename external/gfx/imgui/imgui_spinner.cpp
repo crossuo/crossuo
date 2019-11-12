@@ -67,16 +67,16 @@ namespace ImGui {
         // Render
         window->DrawList->PathClear();
         
-        int num_segments = 30;
-        int start = int(abs(float(ImSin(float(g.Time*1.8f))*(num_segments-5))));
+        auto num_segments = 30.f;
+        auto start = fabs(float(ImSin(float(g.Time*1.8f))*(num_segments-5)));
         
-        const float a_min = IM_PI*2.0f * ((float)start) / (float)num_segments;
-        const float a_max = IM_PI*2.0f * ((float)num_segments-3) / (float)num_segments;
+        const float a_min = IM_PI*2.0f * start / num_segments;
+        const float a_max = IM_PI*2.0f * (num_segments-3) / num_segments;
 
         const ImVec2 centre = ImVec2(pos.x+radius, pos.y+radius+style.FramePadding.y);
         
         for (int i = 0; i < num_segments; i++) {
-            const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+            const float a = a_min + ((float)i / num_segments) * (a_max - a_min);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a+float(g.Time*8)) * radius,
                                                 centre.y + ImSin(a+float(g.Time*8)) * radius));
         }
