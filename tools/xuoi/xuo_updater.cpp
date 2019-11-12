@@ -219,7 +219,10 @@ static xuo_result xuo_manifest_load(xuo_context &ctx, const char *platform, xuo_
     char addr[512];
     snprintf(
         addr, sizeof(addr), manifest_addr, platform, channel == xuo_channel::beta ? "-beta" : "");
-    http_get_binary(addr, ctx.manifest);
+    LOG_INFO("downloading manifest %s", addr);
+    std::vector<uint8_t> data;
+    http_get_binary(addr, data);
+    ctx.manifest.swap(data);
     ctx.platform = platform;
     ctx.doc.Parse((char *)ctx.manifest.data(), ctx.manifest.size());
     auto root = ctx.doc.FirstChildElement("manifest");
@@ -336,11 +339,13 @@ static bool xuo_install_release(xuo_context &ctx, xuo_release &release)
     return errors == 0;
 }
 
-/*
-static xuo_release *xuo_release_get(xuo_context &ctx, const char *name, const char *version = nullptr)
+bool xuo_release_get(xuo_context *ctx, const char *name, const char *version)
 {
+    if (!ctx || !ctx->config.initialized)
+        return false;
+
     auto it = std::find_if(
-        ctx.releases.begin(), ctx.releases.end(), [name, version](xuo_release &e) -> bool {
+        ctx->releases.begin(), ctx->releases.end(), [name, version](xuo_release &e) -> bool {
             if (strcasecmp(e.name, name) == 0)
             {
                 if (version == nullptr && e.latest)
@@ -350,11 +355,12 @@ static xuo_release *xuo_release_get(xuo_context &ctx, const char *name, const ch
             }
             return false;
         });
-    if (it == ctx.releases.end())
-        return nullptr;
-    return &(*it);
+    if (it == ctx->releases.end())
+        return false;
+
+    xuo_release &rel = (*it);
+    return xuo_install_release(*ctx, rel);
 }
-*/
 
 static bool
 xuo_release_check(const fs_path &path, const xuo_release &rel, std::vector<xuo_file> &files)
@@ -385,6 +391,17 @@ static bool xuo_update_check(xuo_context &ctx, xuo_release &updates, bool quick)
             return true;
     }
     return found;
+}
+
+void xuo_releases_iterate(xuo_context *ctx, xuo_release_cb pFunc)
+{
+    if (!ctx || !ctx->config.initialized)
+        return;
+    assert(pFunc && "missing iterator callback");
+    for (const auto &r : ctx->releases)
+    {
+        pFunc(r.name, r.version, r.latest);
+    }
 }
 
 const char *xuo_changelog(xuo_context *ctx)
@@ -450,10 +467,11 @@ xuo_context *xuo_init(const char *path, bool beta)
 
 void xuo_shutdown(xuo_context *ctx)
 {
-    assert(ctx);
+    if (!ctx)
+        return;
     ctx->config.initialized = false;
-    ctx->releases = {};
-    ctx->changelog = {};
-    ctx->manifest = {};
+    ctx->releases.clear();
+    ctx->changelog.clear();
+    ctx->manifest.clear();
     ctx->doc.Clear();
 }
