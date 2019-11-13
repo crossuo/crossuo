@@ -5,7 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <thread>
-#if _WIN32
+#if defined(XUO_WINDOWS)
 #include <windows.h>
 #include <shellapi.h>
 #endif
@@ -15,6 +15,7 @@
 #include <external/gfx/sokol_gfx.h>
 #include <external/gfx/imgui/imgui.h>
 #include <external/inih.h>
+#include <external/process.h>
 
 #include "common.h"
 #include "accounts.h"
@@ -37,18 +38,19 @@ static xuo_context *s_ctx = nullptr;
 static bool s_update_check = false;
 static bool s_update_request = false;
 static bool s_update_started = false;
+static bool s_launcher_restart = false;
 static int s_update_backup_index = -1;
 static bool s_has_update = false;
 static bool s_updated = false;
-
-const fs_path &xuol_data_path();
+static fs_path s_launcher_binary;
+static uint64_t s_launcher_timestamp = 0;
 
 bool valid_url(const std::string &url)
 {
     return url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0;
 }
 
-#if defined(_MSC_VER)
+#if defined(XUO_WINDOWS)
 void open_url(const std::string &url)
 {
     assert(valid_url(url) && "invalid url format");
@@ -57,7 +59,7 @@ void open_url(const std::string &url)
 #else
 void open_url(const std::string &url)
 {
-#if __APPLE__
+#if defined(XUO_OSX)
 #define OPEN_CMD "open "
 #else
 #define OPEN_CMD "xdg-open "
@@ -273,7 +275,7 @@ void ui_backups(ui_model &m)
     ImGui::PushItemWidth(m.area.x);
     //    ImGui::ListBox("##pkg", &cur_item, accounts, IM_ARRAYSIZE(accounts), items);
     ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-    ImGui::ListBox("##bkp", &cur_item, backup_getter, &s_releases, s_releases.size(), items);
+    ImGui::ListBox("##bkp", &cur_item, backup_getter, &s_releases, int(s_releases.size()), items);
     ImGui::PopStyleColor();
     ImGui::PopItemWidth();
     ImGui::EndChild();
@@ -295,8 +297,33 @@ void ui_backups(ui_model &m)
     }
 }
 
-#define CFG_SECTION_FILTER_NAME "global"
+bool ui_modal(const char *title, const char *msg)
+{
+    bool yes = false;
+    ImGui::OpenPopup(title);
+    if (ImGui::BeginPopupModal(title))
+    {
+        ImGui::Text("%s", msg);
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::Button("Yes", ImVec2(80, 0)))
+        {
+            s_launcher_restart = false;
+            ImGui::CloseCurrentPopup();
+            yes = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No", ImVec2(80, 0)))
+        {
+            s_launcher_restart = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    return yes;
+}
+
 #define CFG_NAME launcher
+#define CFG_SECTION_FILTER_NAME "global"
 #define CFG_DEFINITION "cfg_launcher.h"
 #include "cfg_loader.h"
 
@@ -309,7 +336,8 @@ launcher::entry &config()
 
 void load_config()
 {
-    const auto fname = fs_join_path(xuol_data_path(), "xuolauncher.cfg");
+    const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
+    LOG_INFO("loading settings from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     s_config = launcher::cfg(fp);
     if (fp)
@@ -329,7 +357,7 @@ void write_config(void *_fp)
 
 void save_config()
 {
-    const auto fname = fs_join_path(xuol_data_path(), "xuolauncher.cfg");
+    const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
     auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {
@@ -361,10 +389,54 @@ const fs_path &xuol_data_path()
     return dir;
 }
 
+static bool run_self_update_instance(int argc, char **argv)
+{
+    if (!argv[0])
+        return true;
+
+    const char *bin = argv[0];
+    auto len = strlen(bin);
+    if (!len)
+        return true;
+
+    s_launcher_binary = fs_path_from(bin);
+    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
+#if defined(XUO_WINDOWS)
+    if (bin[len - 1] != '_')
+    {
+        std::string filename{ bin };
+        filename += '_';
+        auto file = fs_path_from(filename);
+        fs_del(file);
+        fs_copy(fs_path_from(bin), file);
+
+        bin = filename.c_str();
+        const char *args[] = { bin, 0 };
+        LOG_INFO("running %s", bin);
+        process_s process;
+        const auto options = process_option_inherit_environment | process_option_child_detached;
+        if (process_create(args, options, &process) != 0)
+        {
+            LOG_ERROR("could not relaunch %s for self-updates", bin);
+        }
+        return false;
+    }
+#endif // #if defined(XUO_WINDOWS)
+    return true;
+}
+
 int main(int argc, char **argv)
 {
+    if (!run_self_update_instance(argc, argv))
+    {
+        LOG_INFO("terminating %s", argv[0]);
+        return 0;
+    }
+
+    LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
     crc32_init();
     http_init();
+    xuol_data_path();
 
     win_context win;
     win.title = XUOL_AGENT_NAME;
@@ -377,7 +449,9 @@ int main(int argc, char **argv)
 
     auto ui = ui_init(win);
     ui.userdata = &model;
+#if defined(XUO_DEBUG)
     ui.show_stats_window = true;
+#endif
     XUODefaultStyle();
 
     load_config();
@@ -388,7 +462,8 @@ int main(int argc, char **argv)
         s_updated = false;
         s_update_backup_index = -1;
         xuo_shutdown(s_ctx);
-        const auto install_path = fs_path_ascii(xuol_data_path());
+        const auto p = fs_path_current();
+        const auto install_path = fs_path_ascii(p);
         s_ctx = xuo_init(install_path, config().global_beta_channel);
         if (s_ctx)
         {
@@ -409,6 +484,8 @@ int main(int argc, char **argv)
             }
             if (s_has_update && config().global_auto_update)
                 s_update_request = true;
+            const auto timestamp = fs_timestamp_write(s_launcher_binary);
+            s_launcher_restart = s_launcher_timestamp != timestamp;
         }
         else
         {
@@ -418,8 +495,11 @@ int main(int argc, char **argv)
     };
     auto update_run = []() {
         s_updated = xuo_update_apply(s_ctx);
+        const auto timestamp = fs_timestamp_write(s_launcher_binary);
+        s_launcher_restart = s_launcher_timestamp != timestamp;
         s_update_started = false;
         s_has_update = false;
+        model.view = ui_view::accounts;
     };
     auto update_backup = []() {
         assert(
@@ -429,8 +509,11 @@ int main(int argc, char **argv)
         LOG_INFO("downloading package %s %s", e.name, e.version);
         s_update_backup_index = -1;
         s_updated = xuo_release_get(s_ctx, e.name, e.version);
+        const auto timestamp = fs_timestamp_write(s_launcher_binary);
+        s_launcher_restart = s_launcher_timestamp != timestamp;
         s_update_started = false;
         s_has_update = false;
+        model.view = ui_view::accounts;
     };
     auto update_worker = std::thread(updater_init);
 
@@ -505,8 +588,10 @@ int main(int argc, char **argv)
                 {
                     if (ImGui::MenuItem(ICON_FK_FILE_TEXT_O " Changelog", nullptr))
                         view_changelog();
+#if defined(XUO_DEBUG)
                     if (ImGui::MenuItem("Demo", nullptr, &ui.show_demo_window))
                         ;
+#endif
                     ImGui::Separator();
                     if (ImGui::MenuItem(ICON_FK_QUESTION_CIRCLE " About", nullptr))
                         ;
@@ -549,6 +634,9 @@ int main(int argc, char **argv)
                 ui_shards(model);
             else if (model.view == ui_view::shard_picker)
                 ui_shards(model, true);
+
+            if (s_launcher_restart)
+                done = ui_modal("Update", "A restart is required, do you want to close?");
         }
         ImGui::End();
         ui_draw(ui);

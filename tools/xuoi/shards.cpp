@@ -112,11 +112,11 @@ bool convert(lang_type &out, const char *raw)
 
 static shard::data s_shards;
 static std::unordered_map<std::string, int> s_shard_by_loginserver;
-const fs_path &xuol_data_path();
 
 void load_shards()
 {
-    const auto fname = fs_join_path(xuol_data_path(), "shards.cfg");
+    const auto fname = fs_join_path(fs_path_current(), "shards.cfg");
+    LOG_INFO("loading shards from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     s_shards = shard::cfg(fp);
     if (fp)
