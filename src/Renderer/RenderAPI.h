@@ -49,11 +49,14 @@ bool RenderAdd_DrawLine(RenderCmdList *cmdList, DrawLineCmd *cmd);
 
 bool RenderAdd_SetAlphaTest(RenderCmdList *cmdList, AlphaTestCmd *cmd);
 bool RenderAdd_DisableAlphaTest(RenderCmdList *cmdList);
-bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *state);
+bool RenderAdd_SetBlend(RenderCmdList *cmdList, BlendStateCmd *cmd);
 bool RenderAdd_DisableBlend(RenderCmdList *cmdList);
-bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *state);
+bool RenderAdd_SetStencil(RenderCmdList *cmdList, StencilStateCmd *cmd);
 bool RenderAdd_DisableStencil(RenderCmdList *cmdList);
 bool RenderAdd_EnableStencil(RenderCmdList *cmdList);
+bool RenderAdd_SetDepth(RenderCmdList *cmdList, DepthStateCmd *cmd);
+bool RenderAdd_DisableDepth(RenderCmdList *cmdList);
+bool RenderAdd_EnableDepth(RenderCmdList *cmdList);
 bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd);
 bool RenderAdd_SetColor(RenderCmdList *cmdList, SetColorCmd *cmd);
 bool RenderAdd_SetClearColor(RenderCmdList *cmdList, SetClearColorCmd *cmd);

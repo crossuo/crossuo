@@ -1450,7 +1450,11 @@ void CGameScreen::DrawGameWindow(bool render)
             }
         }
 
+#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_DEPTH_TEST);
+#else
+        RenderAdd_DisableDepth(g_renderCmdList);
+#endif
         UnuseShader();
         for (int i = 0; i < m_ObjectHandlesCount; i++)
         {
@@ -1508,12 +1512,24 @@ void CGameScreen::DrawGameWindowLight()
             newLightColor += 0.2f;
         }
 
+#ifndef NEW_RENDERER_ENABLED
         glClearColor(newLightColor, newLightColor, newLightColor, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
+#else
+        RenderAdd_SetClearColor(
+            g_renderCmdList,
+            &SetClearColorCmd{ { newLightColor, newLightColor, newLightColor, 1.f } });
+        RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::ClearRT_Color });
+        RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ g_ColorBlack });
+
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            &BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
+#endif
 
         int offsetX = 0;
         int offsetY = 0;
@@ -1527,14 +1543,26 @@ void CGameScreen::DrawGameWindowLight()
         GLfloat translateOffsetX = (GLfloat)offsetX;
         GLfloat translateOffsetY = (GLfloat)offsetY;
 
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(translateOffsetX, translateOffsetY, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            &SetModelViewTranslationCmd{ { translateOffsetX, translateOffsetY, 0.f } });
+#endif
 
         for (int i = 0; i < m_LightCount; i++)
         {
             g_Game.DrawLight(m_Light[i]);
         }
 
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(-translateOffsetX, -translateOffsetY, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            &SetModelViewTranslationCmd{ { -translateOffsetX, -translateOffsetY, 0.f } });
+#endif
 
         UnuseShader();
 

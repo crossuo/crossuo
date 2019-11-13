@@ -26,6 +26,9 @@ enum RenderCommandType : uint8_t
     Cmd_StencilState,
     Cmd_DisableStencilState,
     Cmd_EnableStencilState,
+    Cmd_DepthState,
+    Cmd_DisableDepthState,
+    Cmd_EnableDepthState,
     Cmd_SetColorMask,
     Cmd_SetColor,
     Cmd_SetClearColor,
@@ -475,6 +478,36 @@ struct EnableStencilStateCmd
     RenderCommandHeader header;
     EnableStencilStateCmd()
         : header{ RenderCommandType::Cmd_EnableStencilState }
+    {
+    }
+};
+
+struct DepthStateCmd
+{
+    RenderCommandHeader header;
+    DepthFunc func;
+
+    DepthStateCmd(DepthFunc func)
+        : header{ RenderCommandType::Cmd_DepthState }
+        , func(func)
+    {
+    }
+};
+
+struct DisableDepthStateCmd
+{
+    RenderCommandHeader header;
+    DisableDepthStateCmd()
+        : header{ RenderCommandType::Cmd_DisableDepthState }
+    {
+    }
+};
+
+struct EnableDepthStateCmd
+{
+    RenderCommandHeader header;
+    EnableDepthStateCmd()
+        : header{ RenderCommandType::Cmd_EnableDepthState }
     {
     }
 };

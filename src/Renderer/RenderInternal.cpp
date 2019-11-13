@@ -382,8 +382,9 @@ texture_handle_t Render_CreateTexture2D(
     };
 
     static GLenum s_pixelFormatToOGLFormat[] = {
-        GL_UNSIGNED_INT_8_8_8_8,       // Unsigned_RGBA8
-        GL_UNSIGNED_SHORT_1_5_5_5_REV, // Unsigned_A1_BGR5
+        GL_UNSIGNED_INT_8_8_8_8,       // TextureFormat_Unsigned_RGBA8
+        GL_UNSIGNED_INT_8_8_8_8_REV,   // TextureFormat_Unsigned_ABGR8
+        GL_UNSIGNED_SHORT_1_5_5_5_REV, // TextureFormat_Unsigned_A1_BGR5
     };
 
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;

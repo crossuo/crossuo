@@ -554,6 +554,21 @@ bool RenderDraw_EnableStencilState(EnableStencilStateCmd *, RenderState *state)
     return RenderState_SetStencilEnabled(state, true);
 }
 
+bool RenderDraw_DepthState(DepthStateCmd *cmd, RenderState *state)
+{
+    return RenderState_SetDepth(state, true, cmd->func);
+}
+
+bool RenderDraw_DisableDepthState(DisableDepthStateCmd *, RenderState *state)
+{
+    return RenderState_SetDepthEnabled(state, false);
+}
+
+bool RenderDraw_EnableDepthState(EnableDepthStateCmd *, RenderState *state)
+{
+    return RenderState_SetDepthEnabled(state, true);
+}
+
 bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state)
 {
     return RenderState_SetColorMask(state, cmd->mask);
@@ -640,6 +655,9 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(StencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DisableStencilState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(EnableStencilState, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DepthState, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DisableDepthState, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(EnableDepthState, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColorMask, ret, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColor, ret, cmd, &cmdList->state);
             MATCH_CASE_DRAW(SetViewParams, ret, cmd, &cmdList->state);

@@ -192,6 +192,24 @@ bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool
     return false;
 }
 
+bool RenderState_SetDepthEnabled(RenderState *state, bool enabled, bool forced)
+{
+    if (forced || state->depth.enabled != enabled)
+    {
+        if (enabled)
+        {
+            glEnable(GL_DEPTH_TEST);
+        }
+        else
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
+        return true;
+    }
+
+    return false;
+}
+
 bool RenderState_SetStencilEnabled(RenderState *state, bool enabled, bool forced)
 {
     if (forced || state->stencil.enabled != enabled)

@@ -200,27 +200,31 @@ void CTextRenderer::Draw()
         {
             uint16_t textColor = text.Color;
 
+            auto uniformValue = SDM_NO_COLOR;
             if (textColor != 0u)
             {
                 g_ColorManager.SendColorsToShader(textColor);
 
+                uniformValue = SDM_COLORED;
                 if (text.Unicode)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_TEXT_COLORED_NO_BLACK);
+                    uniformValue = SDM_TEXT_COLORED_NO_BLACK;
                 }
                 else if (text.Font != 5 && text.Font != 8)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-                }
-                else
-                {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                    uniformValue = SDM_PARTIAL_HUE;
                 }
             }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-            }
+
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+
+#else
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
 
             if (text.Transparent)
             {
@@ -379,27 +383,29 @@ void CTextRenderer::WorldDraw()
                 textColor = 0x0035;
             }
 
+            auto uniformValue = SDM_NO_COLOR;
             if (textColor != 0u)
             {
                 g_ColorManager.SendColorsToShader(textColor);
 
+                uniformValue = SDM_COLORED;
                 if (text.Unicode)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_TEXT_COLORED_NO_BLACK);
+                    uniformValue = SDM_TEXT_COLORED_NO_BLACK;
                 }
                 else if (text.Font != 5 && text.Font != 8)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-                }
-                else
-                {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                    uniformValue = SDM_PARTIAL_HUE;
                 }
             }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-            }
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+            RenderAdd_SetShaderUniform(
+                g_renderCmdList,
+                &ShaderUniformCmd(
+                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+#endif
 
             if (text.Transparent)
             {

@@ -5289,22 +5289,24 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
             color = g_OutOfRangeColor;
         }
 
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
+            uniformValue = SDM_COLORED;
             if (!selection && IsPartialHue(GetStaticFlags(id)))
             {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                uniformValue = SDM_PARTIAL_HUE;
             }
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd{
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1 });
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
     }
@@ -5328,28 +5330,32 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
         {
             color = g_OutOfRangeColor;
         }
+
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+            uniformValue = SDM_COLORED;
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd{
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1 });
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawRotated(x, y, angle);
     }
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     DEBUG_TRACE_FUNCTION;
     DrawStaticArtRotated(id + g_Index.m_Static[id].Offset, color, x, y, angle);
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DEBUG_TRACE_FUNCTION;
@@ -5360,22 +5366,24 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
         {
             color = g_OutOfRangeColor;
         }
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
+            uniformValue = SDM_COLORED;
             if (!selection && IsPartialHue(GetStaticFlags(id)))
             {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                uniformValue = SDM_PARTIAL_HUE;
             }
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd{
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1 });
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawTransparent(
             x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
@@ -5404,48 +5412,53 @@ void CGame::DrawStaticArtInContainer(
             y -= spr->Height / 2;
         }
 
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
+            uniformValue = SDM_COLORED;
             if (color >= 0x4000)
             {
                 color = 0x1;
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
             }
             else if (!selection && IsPartialHue(GetStaticFlags(id)))
             {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                uniformValue = SDM_PARTIAL_HUE;
             }
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd{
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1 });
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x, y);
     }
 }
 
-// FIXME: gfx
 void CGame::DrawLight(LIGHT_DATA &light)
 {
     DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteLight(light.ID);
     if (spr != nullptr)
     {
+        auto uniformValue = SDM_NO_COLOR;
         if (light.Color != 0u)
         {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+            uniformValue = SDM_COLORED;
             g_ColorManager.SendColorsToShader(light.Color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        RenderAdd_SetShaderUniform(
+            g_renderCmdList,
+            &ShaderUniformCmd{
+                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1 });
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(
             light.DrawX - g_RenderBounds.GameWindowPosX - (spr->Width / 2),
