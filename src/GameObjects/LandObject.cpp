@@ -29,23 +29,6 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
 #endif
 }
 
-CLandObject::~CLandObject()
-{
-    DEBUG_TRACE_FUNCTION;
-
-    if (VertexBuffer != 0)
-    {
-        glDeleteBuffers(1, &VertexBuffer);
-        VertexBuffer = 0;
-    }
-
-    if (NormalBuffer != 0)
-    {
-        glDeleteBuffers(1, &NormalBuffer);
-        NormalBuffer = 0;
-    }
-}
-
 void CLandObject::UpdateGraphicBySeason()
 {
     DEBUG_TRACE_FUNCTION;

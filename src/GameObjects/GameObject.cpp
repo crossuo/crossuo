@@ -49,12 +49,19 @@ CGameObject::~CGameObject()
 
     m_Next = nullptr;
     m_Prev = nullptr;
-    // FIXME: gfx
+#ifndef NEW_RENDERER_ENABLED
     if (m_TextureObjectHandles.Texture != 0)
     {
         glDeleteTextures(1, &m_TextureObjectHandles.Texture);
         m_TextureObjectHandles.Texture = 0;
     }
+#else
+    if (m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID)
+    {
+        Render_DestroyTexture(m_TextureObjectHandles.Texture);
+        m_TextureObjectHandles.Texture = RENDER_TEXTUREHANDLE_INVALID;
+    }
+#endif
 
     Clear();
 
@@ -189,12 +196,19 @@ void CGameObject::SelectObjectHandlesTexture()
 void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
 {
     DEBUG_TRACE_FUNCTION;
-    // FIXME: gfx
+#ifndef NEW_RENDERER_ENABLED
     if (m_TextureObjectHandles.Texture != 0)
     {
         glDeleteTextures(1, &m_TextureObjectHandles.Texture);
         m_TextureObjectHandles.Texture = 0;
     }
+#else
+    if (m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID)
+    {
+        Render_DestroyTexture(m_TextureObjectHandles.Texture);
+        m_TextureObjectHandles.Texture = RENDER_TEXTUREHANDLE_INVALID;
+    }
+#endif
 
     int width = g_ObjectHandlesWidth - 20;
     uint8_t font = 1;
