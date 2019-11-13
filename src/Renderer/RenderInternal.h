@@ -30,6 +30,7 @@ bool RenderState_SetBlend(
     BlendEquation equation,
     bool forced = false);
 bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced = false);
+bool RenderState_SetDepthEnabled(RenderState *state, bool enabled, bool forced = false);
 bool RenderState_SetStencil(
     RenderState *state,
     bool enabled,
@@ -101,9 +102,12 @@ bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state);
 bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state);
 bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);
-bool RenderDraw_StencilState(StencilStateCmd *, RenderState *state);
+bool RenderDraw_StencilState(StencilStateCmd *cmd, RenderState *state);
 bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state);
 bool RenderDraw_EnableStencilState(EnableStencilStateCmd *, RenderState *state);
+bool RenderDraw_DepthState(DepthStateCmd *depth, RenderState *state);
+bool RenderDraw_DisableDepthState(DisableDepthStateCmd *, RenderState *state);
+bool RenderDraw_EnableDepthState(EnableDepthStateCmd *, RenderState *state);
 bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state);
 bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state);
 bool RenderDraw_SetClearColor(SetClearColorCmd *cmd, RenderState *state);

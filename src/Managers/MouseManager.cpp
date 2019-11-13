@@ -471,7 +471,17 @@ void CMouseManager::Draw(uint16_t id)
             {
                 g_ColorizerShader.Use();
                 g_ColorManager.SendColorsToShader(color);
+#ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+#else
+                auto uniformValue = SDM_COLORED;
+                RenderAdd_SetShaderUniform(
+                    g_renderCmdList,
+                    &ShaderUniformCmd(
+                        g_ShaderDrawMode,
+                        &uniformValue,
+                        ShaderUniformType::ShaderUniformType_Int1));
+#endif
             }
             spr->Texture->Draw(x, y);
             if (color != 0u)

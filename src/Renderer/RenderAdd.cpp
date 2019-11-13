@@ -220,6 +220,44 @@ bool RenderAdd_EnableStencil(RenderCmdList *cmdList)
     return true;
 }
 
+bool RenderAdd_SetDepth(RenderCmdList *cmdList, DepthStateCmd *state)
+{
+    auto ret = Render_AppendCmd(cmdList, state, sizeof(DepthStateCmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DepthState(state, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_DisableDepth(RenderCmdList *cmdList)
+{
+    DisableDepthStateCmd cmd;
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_DisableDepthState(&cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_EnableDepth(RenderCmdList *cmdList)
+{
+    EnableDepthStateCmd cmd;
+    auto ret = Render_AppendCmd(cmdList, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_EnableDepthState(&cmd, &cmdList->state);
+    return true;
+}
+
 bool RenderAdd_SetColorMask(RenderCmdList *cmdList, SetColorMaskCmd *cmd)
 {
     auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
