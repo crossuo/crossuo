@@ -216,16 +216,4 @@ void CGLTexture::Clear()
         Texture = RENDER_TEXTUREHANDLE_INVALID;
     }
 #endif
-
-    // if (VertexBuffer != 0)
-    // {
-    //     glDeleteBuffers(1, &VertexBuffer);
-    //     VertexBuffer = 0;
-    // }
-
-    // if (MirroredVertexBuffer != 0)
-    // {
-    //     glDeleteBuffers(1, &MirroredVertexBuffer);
-    //     MirroredVertexBuffer = 0;
-    // }
 }
