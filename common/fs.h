@@ -76,6 +76,7 @@ bool fs_path_empty(const fs_path &path);
 FILE *fs_open(const fs_path &path, fs_mode mode);
 void fs_close(FILE *fp);
 size_t fs_size(FILE *fp);
+uint64_t fs_timestamp_write(const fs_path &path);
 bool fs_copy(const fs_path &from, const fs_path &to);
 void fs_del(const fs_path &target);
 bool fs_chmod(const fs_path &target, fs_mode mode);
@@ -281,6 +282,21 @@ FS_PRIVATE size_t fs_size(FILE *fp)
     return GetFileSize(fp, nullptr);
 }
 
+FS_PRIVATE uint64_t fs_timestamp_write(const fs_path &path)
+{
+    const auto &p = fs_path_wstr(path);
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (!GetFileAttributesEx(p.c_str(), GetFileExInfoStandard, &fad))
+        return -1;
+    if (fad.nFileSizeHigh == 0 && fad.nFileSizeLow == 0)
+        return -1;
+    LARGE_INTEGER time;
+    time.HighPart = fad.ftLastWriteTime.dwHighDateTime;
+    time.LowPart = fad.ftLastWriteTime.dwLowDateTime;
+    //return static_cast<time_t>(time.QuadPart / 10000000 - 11644473600LL);
+    return (time.QuadPart / 10000000 - 11644473600LL);
+}
+
 FS_PRIVATE fs_path fs_directory(const fs_path &path)
 {
     if (fs_path_exists(path) && fs_path_is_dir(path))
@@ -419,6 +435,7 @@ FS_PRIVATE fs_path fs_appdata_path()
 #include <sys/sendfile.h> // sendfile
 #elif defined(__APPLE__)
 #include <copyfile.h> // copyfile
+#include <libproc.h>  // proc_pidpath
 #endif
 
 FS_PRIVATE fs_path fs_path_from(const std::string &s)
@@ -558,6 +575,20 @@ FS_PRIVATE size_t fs_size(FILE *fp)
     fseek(fp, pos, SEEK_SET);
 
     return size;
+}
+
+FS_PRIVATE uint64_t fs_timestamp_write(const fs_path &path)
+{
+    struct stat stats;
+    if (stat(fs_path_ascii(path), &stats) == -1)
+        return -1;
+    if (stats.st_size == 0)
+        return -1;
+#if defined(__APPLE__)
+    return static_cast<uint64_t>(stats.st_mtime);
+#else
+    return static_cast<uint64_t>(stats.st_mtim.tv_sec);
+#endif
 }
 
 FS_PRIVATE fs_path fs_directory(const fs_path &path)

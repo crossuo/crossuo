@@ -36,11 +36,11 @@ const char *client_types_cfg[] = {
 
 static account::data s_accounts;
 static std::unordered_map<std::string, int> s_account_by_name;
-const fs_path &xuol_data_path();
 
 void load_accounts()
 {
-    const auto fname = fs_join_path(xuol_data_path(), "xuolauncher.cfg");
+    const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
+    LOG_INFO("loading accounts from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     s_accounts = account::cfg(fp);
     if (fp)
@@ -176,7 +176,7 @@ void ui_accounts(ui_model &m)
                 &acct_id,
                 account_getter,
                 &s_accounts.entries,
-                s_accounts.entries.size(),
+                int(s_accounts.entries.size()),
                 items))
         {
             update_view = true;

@@ -63,9 +63,10 @@ void write(FILE *fp, const entry &e, const char *section)
     if (section)
         fprintf(fp, "[%s]\n", section);
     const auto d = default_entry();
+    static const char *expected = CFG_SECTION_FILTER_NAME;
     #define CFG_FIELD(s, n, default, t) \
     {\
-        if (strcasecmp(CFG_SECTION_FILTER_NAME, section) == 0)\
+        if (!expected || strcasecmp(expected, section) == 0)\
         {\
             auto v = as_str(e.s##_##n);\
             if (d.raw_##s##_##n != v || e.set_##s##_##n) \
@@ -85,7 +86,6 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     auto &obj = *(data *)user;
     obj.lineno = lineno;
 
-#if defined(CFG_SECTION_FILTER_NAME)
     if (strcasecmp(CFG_SECTION_FILTER_NAME, section) != 0)
         return 1; // ignore unknown section
 
@@ -95,7 +95,6 @@ int type_loader(void* user, const char* section, const char* name, const char* v
         LOG_TRACE("new section found");
         return 1;
     }
-#endif
 
     auto &entry = obj.current;
     LOG_TRACE("%d: %s.%s = %s", lineno, section, name, value);
@@ -138,9 +137,8 @@ data cfg(FILE *fp)
     if (fp && ini_parse_file(fp, type_loader, &obj))
     {
         for (auto &e : obj.errors)
-            LOG_ERROR(CFG_SECTION_FILTER_NAME "%s", e.c_str());
-        LOG_ERROR("failed to parse %s", CFG_SECTION_FILTER_NAME);
-        return {};
+            LOG_ERROR(CFG_SECTION_FILTER_NAME ":%s", e.c_str());
+        LOG_ERROR("errors found parsing %s", CFG_SECTION_FILTER_NAME);
     }
     type_save_current(obj);
     return obj;
