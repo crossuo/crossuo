@@ -66,13 +66,13 @@ void write(FILE *fp, const entry &e, const char *section)
     static const char *expected = CFG_SECTION_FILTER_NAME;
     #define CFG_FIELD(s, n, default, t) \
     {\
-        if (!expected || strcasecmp(expected, section) == 0)\
+        if (!section || !expected || strcasecmp(expected, section) == 0)\
         {\
             auto v = as_str(e.s##_##n);\
             if (d.raw_##s##_##n != v || e.set_##s##_##n) \
             {\
                 LOG_TRACE("saving %s: %s == %s", CFG_STRINGIFY2(n), v.c_str(), d.raw_##s##_##n.c_str());\
-                fprintf(fp, "%s = %s\n", CFG_STRINGIFY2(n), v.c_str());\
+                fprintf(fp, "%s=%s\n", CFG_STRINGIFY2(n), v.c_str());\
             }\
         }\
     }
@@ -151,3 +151,5 @@ data cfg(FILE *fp)
 #undef CFG_STRINGIFY2
 #undef CFG_STRINGIFY
 #undef CFG_SECTION_FILTER_NAME
+#undef CFG_NAME
+#undef CFG_CONVERTERS

@@ -161,7 +161,10 @@ enum process_option_e {
   process_option_inherit_environment = 0x2,
   
   // The child process will be detached from parent and may live longer.
-  process_option_child_detached = 0x4
+  process_option_child_detached = 0x4,
+  
+  // workaround loguru?
+  process_option_dont_touch_descriptors = 0x8
 };
 
 /// @brief Create a process.
@@ -380,18 +383,22 @@ int process_create(const char *const commandLine[], int options,
   pid_t child;
   int result;
 
-  if (0 != pipe(stdinfd)) {
-    return -1;
-  }
-
-  if (0 != pipe(stdoutfd)) {
-    return -1;
-  }
-
-  if (process_option_combined_stdout_stderr !=
-      (options & process_option_combined_stdout_stderr)) {
-    if (0 != pipe(stderrfd)) {
+  int repipe = !(process_option_dont_touch_descriptors ==
+                 (options & process_option_dont_touch_descriptors));
+  if (repipe) {
+    if (0 != pipe(stdinfd)) {
       return -1;
+    }
+
+    if (0 != pipe(stdoutfd)) {
+      return -1;
+    }
+
+    if (process_option_combined_stdout_stderr !=
+        (options & process_option_combined_stdout_stderr)) {
+      if (0 != pipe(stderrfd)) {
+        return -1;
+      }
     }
   }
 
@@ -410,26 +417,27 @@ int process_create(const char *const commandLine[], int options,
       sigaction(SIGPIPE, &noaction, 0);
       setsid();
     }
-    // Close the stdin write end
-    close(stdinfd[1]);
-    // Map the read end to stdin
-    dup2(stdinfd[0], STDIN_FILENO);
+    if (repipe) {
+      // Close the stdin write end
+      close(stdinfd[1]);
+      // Map the read end to stdin
+      dup2(stdinfd[0], STDIN_FILENO);
 
-    // Close the stdout read end
-    close(stdoutfd[0]);
-    // Map the write end to stdout
-    dup2(stdoutfd[1], STDOUT_FILENO);
-
-    if (process_option_combined_stdout_stderr ==
-        (options & process_option_combined_stdout_stderr)) {
-      dup2(STDOUT_FILENO, STDERR_FILENO);
-    } else {
-      // Close the stderr read end
-      close(stderrfd[0]);
+      // Close the stdout read end
+      close(stdoutfd[0]);
       // Map the write end to stdout
-      dup2(stderrfd[1], STDERR_FILENO);
-    }
+      dup2(stdoutfd[1], STDOUT_FILENO);
 
+      if (process_option_combined_stdout_stderr ==
+          (options & process_option_combined_stdout_stderr)) {
+        dup2(STDOUT_FILENO, STDERR_FILENO);
+      } else {
+        // Close the stderr read end
+        close(stderrfd[0]);
+        // Map the write end to stdout
+        dup2(stderrfd[1], STDERR_FILENO);
+      }
+    }
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-qual"
@@ -454,26 +462,27 @@ int process_create(const char *const commandLine[], int options,
 #pragma clang diagnostic pop
 #endif
   } else {
-    // Close the stdin read end
-    close(stdinfd[0]);
-    // Store the stdin write end
-    out_process->stdin_file = fdopen(stdinfd[1], "wb");
+    if (repipe) {
+      // Close the stdin read end
+      close(stdinfd[0]);
+      // Store the stdin write end
+      out_process->stdin_file = fdopen(stdinfd[1], "wb");
 
-    // Close the stdout write end
-    close(stdoutfd[1]);
-    // Store the stdout read end
-    out_process->stdout_file = fdopen(stdoutfd[0], "rb");
+      // Close the stdout write end
+      close(stdoutfd[1]);
+      // Store the stdout read end
+      out_process->stdout_file = fdopen(stdoutfd[0], "rb");
 
-    if (process_option_combined_stdout_stderr ==
-        (options & process_option_combined_stdout_stderr)) {
-      out_process->stderr_file = out_process->stdout_file;
-    } else {
-      // Close the stderr write end
-      close(stderrfd[1]);
-      // Store the stderr read end
-      out_process->stderr_file = fdopen(stderrfd[0], "rb");
+      if (process_option_combined_stdout_stderr ==
+          (options & process_option_combined_stdout_stderr)) {
+        out_process->stderr_file = out_process->stdout_file;
+      } else {
+        // Close the stderr write end
+        close(stderrfd[1]);
+        // Store the stderr read end
+        out_process->stderr_file = fdopen(stderrfd[0], "rb");
+      }
     }
-
     // Store the child's pid
     out_process->child = child;
 
