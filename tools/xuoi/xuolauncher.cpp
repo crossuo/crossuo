@@ -39,6 +39,7 @@ static bool s_update_check = false;
 static bool s_update_request = false;
 static bool s_update_started = false;
 static bool s_launcher_restart = false;
+static bool s_launcher_quit = false;
 static int s_update_backup_index = -1;
 static bool s_has_update = false;
 static bool s_updated = false;
@@ -369,6 +370,12 @@ void save_config()
     fclose(fp);
 }
 
+void xuol_launch_quit()
+{
+    if (config().global_auto_close)
+        s_launcher_quit = true;
+}
+
 static ui_model model;
 
 const fs_path &xuol_data_path()
@@ -518,18 +525,17 @@ int main(int argc, char **argv)
     auto update_worker = std::thread(updater_init);
 
     // Main loop
-    bool done = false;
-    while (!done)
+    while (!s_launcher_quit)
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
             ui_process_event(ui, &event);
             if (event.type == SDL_QUIT)
-                done = true;
+                s_launcher_quit = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
                 event.window.windowID == SDL_GetWindowID(win.window))
-                done = true;
+                s_launcher_quit = true;
         }
 
         glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
@@ -636,7 +642,8 @@ int main(int argc, char **argv)
                 ui_shards(model, true);
 
             if (s_launcher_restart)
-                done = ui_modal("Update", "A restart is required, do you want to close?");
+                s_launcher_quit =
+                    ui_modal("Update", "A restart is required, do you want to close?");
         }
         ImGui::End();
         ui_draw(ui);

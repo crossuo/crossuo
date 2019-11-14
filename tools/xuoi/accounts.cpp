@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <sstream>
 #include <external/inih.h>
+#include <external/process.h>
 #include <external/tinyfiledialogs.h>
 #include "common.h"
 #include "ui_model.h"
@@ -15,6 +16,10 @@
 
 #define CFG_NAME account
 #define CFG_DEFINITION "cfg_launcher.h"
+#include "cfg_loader.h"
+
+#define CFG_NAME crossuo
+#define CFG_DEFINITION "cfg_crossuo.h"
 #include "cfg_loader.h"
 
 // model
@@ -97,6 +102,63 @@ int account_client_type_index_by_name(const char *name)
     return 0;
 }
 
+static fs_path account_create_config(const account::entry &account, bool save = false)
+{
+    std::string name = account.account_profile + ".cfg";
+    std::replace(name.begin(), name.end(), '/', '_');
+    std::replace(name.begin(), name.end(), '\\', '_');
+
+    const auto path = save ? fs_path_current() : fs_join_path(fs_appdata_path(), "xuolauncher");
+    const auto fname = fs_join_path(path, name);
+    auto fp = fs_open(fname, FS_WRITE);
+    if (!fp)
+    {
+        LOG_ERROR("failed to write launch configuration");
+        return {};
+    }
+    LOG_DEBUG("writing launch configuration in: %s", fs_path_ascii(fname));
+    auto entry = crossuo::default_entry();
+    entry.crossuo_acctid = account.account_login;
+    entry.crossuo_acctpassword = account.account_password;
+    entry.crossuo_rememberacctpw = !account.account_password.empty();
+    entry.crossuo_autologin = account.account_auto_login;
+    entry.crossuo_clienttype = account.account_clienttype;
+    entry.crossuo_clientversion = account.account_clientversion;
+    entry.crossuo_crypt = account.account_crypto;
+    entry.crossuo_custompath = account.account_data_path;
+    entry.crossuo_loginserver = account.account_loginserver;
+
+    crossuo::write(fp, entry, nullptr);
+    fclose(fp);
+    return fname;
+}
+
+static void account_launch(int account_index)
+{
+    assert(account_index > 0 && account_index < s_accounts.entries.size());
+    const auto &entry = s_accounts.entries[account_index];
+    auto cfg = account_create_config(entry);
+    if (!fs_path_some(cfg))
+    {
+        LOG_ERROR("error trying to launch selected profile");
+        return;
+    }
+
+    const char *args[] = { "./crossuo", "--config", fs_path_ascii(cfg), 0 };
+    LOG_INFO("running %s", args[0]);
+
+    process_s process;
+    const auto options = process_option_inherit_environment | process_option_child_detached |
+                         process_option_dont_touch_descriptors;
+    if (process_create(args, options, &process) != 0)
+    {
+        LOG_ERROR("could not launch client %s", args[0]);
+    }
+
+    void xuol_launch_quit();
+    xuol_launch_quit();
+}
+
 // view
 
 void HoverToolTip(const char *desc);
@@ -135,7 +197,7 @@ void ui_accounts(ui_model &m)
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
     static auto label_size = ImGui::CalcTextSize("Profile Name: ", nullptr, true);
     static auto label_size2 = ImGui::CalcTextSize(" Use Character: ", nullptr, true);
-    const auto items = m.area.y / (line_size + 2);
+    const auto items = m.area.y / (line_size + 2) - 2;
 
     const int NEW_ACCOUNT = 0;
     const int last_item = NEW_ACCOUNT;
@@ -181,7 +243,37 @@ void ui_accounts(ui_model &m)
         {
             update_view = true;
         }
+        if (acct_id != NEW_ACCOUNT && ImGui::BeginPopupContextItem("##acct"))
+        {
+            if (ImGui::Selectable("Copy"))
+            {
+                auto entry = s_accounts.entries[acct_id];
+                s_accounts.entries.emplace_back(entry);
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::Selectable("Delete"))
+            {
+                s_accounts.entries.erase(s_accounts.entries.begin() + acct_id);
+                acct_id--;
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::Selectable("Export"))
+            {
+                account_create_config(s_accounts.entries[acct_id], true);
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::Selectable("Launch"))
+            {
+                account_launch(acct_id);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
         ImGui::PopStyleColor();
+    }
+    if (ImGui::Button("Launch") && acct_id != NEW_ACCOUNT)
+    {
+        account_launch(acct_id);
     }
     ImGui::EndChild();
     ImGui::SameLine();

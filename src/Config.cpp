@@ -379,6 +379,10 @@ void LoadGlobalConfig()
         if (strings.size() >= 2)
         {
             const auto key = config::GetConfigKey(strings[0]);
+            if (key != MSCC_NONE && key != MSCC_ACTPWD)
+            {
+                Info(Config, "\t%s=%s", config::s_Keys[key - 1].key_name, strings[1].c_str());
+            }
             switch (key)
             {
                 case MSCC_CLIENT_VERSION:

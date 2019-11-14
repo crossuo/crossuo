@@ -87,6 +87,7 @@ fs_path fs_directory(const fs_path &path);
 fs_type fs_path_type(const fs_path &path);
 bool fs_path_is_dir(const fs_path &path);
 bool fs_path_is_file(const fs_path &path);
+bool fs_path_some(const fs_path &path);
 bool fs_path_exists(const fs_path &path);
 bool fs_path_create(const fs_path &path);
 fs_path fs_path_current();
@@ -808,6 +809,11 @@ FS_PRIVATE bool fs_path_is_dir(const fs_path &path)
 FS_PRIVATE bool fs_path_is_file(const fs_path &path)
 {
     return fs_path_type(path) == FS_FILE;
+}
+
+FS_PRIVATE bool fs_path_some(const fs_path &path)
+{
+    return !fs_path_equal(path, {});
 }
 
 FS_PRIVATE bool fs_file_read(const char *file, const uint8_t *result, size_t *size)
