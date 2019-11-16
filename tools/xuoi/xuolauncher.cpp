@@ -21,6 +21,7 @@
 #include "accounts.h"
 #include "shards.h"
 #include "ui_model.h"
+#include "ui_shards.h"
 #include "http.h"
 
 #include "xuo_updater.h"
@@ -45,31 +46,6 @@ static bool s_has_update = false;
 static bool s_updated = false;
 static fs_path s_launcher_binary;
 static uint64_t s_launcher_timestamp = 0;
-
-bool valid_url(const std::string &url)
-{
-    return url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0;
-}
-
-#if defined(XUO_WINDOWS)
-void open_url(const std::string &url)
-{
-    assert(valid_url(url) && "invalid url format");
-    ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-}
-#else
-void open_url(const std::string &url)
-{
-#if defined(XUO_OSX)
-#define OPEN_CMD "open "
-#else
-#define OPEN_CMD "xdg-open "
-#endif
-    assert(valid_url(url) && "invalid url format");
-    auto cmd = std::string(OPEN_CMD) + url;
-    system(cmd.c_str());
-}
-#endif
 
 void XUODefaultStyle()
 {
@@ -340,7 +316,7 @@ void load_config()
     const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
     LOG_INFO("loading settings from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
-    s_config = launcher::cfg(fp);
+    launcher::cfg(fp, s_config);
     if (fp)
         fs_close(fp);
     if (s_config.entries.size())

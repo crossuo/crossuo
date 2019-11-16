@@ -39,13 +39,14 @@ if [[ "$TASK" == "gcc" ]]; then
 fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-	#brew update
-	#brew install sdl2 ninja glew
-	brew outdated cmake || brew upgrade cmake
-	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && ninja gfxtest -j8 || exit 1
-	echo Make the zip file
-	cd src
-	zip CrossUO-OSX-nightly.zip crossuo.so crossuo
-	mv CrossUO-OSX-nightly.zip ../../
-fi;
+	##brew update
+	##brew install sdl2 ninja glew
+	#brew outdated cmake || brew upgrade cmake
+	#echo Building Release
+	#mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && ninja gfxtest -j8 || exit 1
+	#echo Make the zip file
+	#cd src
+	#zip CrossUO-OSX-nightly.zip crossuo.so crossuo
+	#mv CrossUO-OSX-nightly.zip ../../
+	echo "skip until glew is removed"
+fi
