@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdio.h>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #ifndef FS_MAX_PATH
 #ifdef MAX_PATH
@@ -60,6 +61,7 @@ struct fs_path
 
 void fs_case_insensitive_init(const fs_path &path);
 fs_path fs_insensitive(const fs_path &path);
+void fs_path_list(const fs_path &path, std::vector<fs_path> &out);
 
 fs_path fs_path_from(const std::string &s);
 fs_path fs_path_from(const std::wstring &w);
@@ -245,6 +247,42 @@ FS_PRIVATE void fs_append(fs_path &target, const fs_path &other)
 {
     target.real_path += L"\\" + other.real_path;
     target.temp_path += "\\" + other.temp_path;
+}
+
+static void fs_path_list_internal_r(const std::wstring &path, std::vector<fs_path> &out)
+{
+    auto glob = path + L"\\*";
+    WIN32_FIND_DATAW file;
+    HANDLE hFile = FindFirstFileW(glob.c_str(), &file);
+    std::vector<std::wstring> dirs;
+    auto fspath = fs_path_from(path);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            std::wstring f = file.cFileName;
+            if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                if (f == L"." || f == L"..")
+                    continue;
+                dirs.emplace_back(path + L"\\" + f);
+            }
+            else
+            {
+                out.emplace_back(fs_join_path(fspath, f));
+            }
+        } while (FindNextFileW(hFile, &file));
+        FindClose(hFile);
+        for (const auto &it : dirs)
+        {
+            fs_path_list_internal_r(it, out);
+        }
+    }
+}
+
+FS_PRIVATE void fs_path_list(const fs_path &path, std::vector<fs_path> &out)
+{
+    fs_path_list_internal_r(fs_path_wstr(path), out);
 }
 
 FS_PRIVATE void fs_case_insensitive_init(const fs_path &path)
@@ -502,6 +540,43 @@ FS_PRIVATE fs_path fs_insensitive(const fs_path &path)
     return path;
 }
 
+static void fs_path_list_internal_r(const char *name, std::vector<fs_path> &out)
+{
+    DIR *dir;
+    struct dirent *entry;
+    if (!(dir = opendir(name)))
+    {
+        return;
+    }
+
+    char it[FS_MAX_PATH]{};
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        if (entry->d_type == DT_DIR)
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            {
+                continue;
+            }
+            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+            fs_path_list_internal_r(it, out);
+        }
+        else
+        {
+            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+            std::string p = it;
+            out.emplace_back(fs_path_from(p));
+        }
+    }
+    closedir(dir);
+}
+
+FS_PRIVATE void fs_path_list(const fs_path &path, std::vector<fs_path> &out)
+{
+    fs_path_list_internal_r(fs_path_ascii(path), out);
+}
+
+/*
 static void fs_list_recursive(const char *name)
 {
     DIR *dir;
@@ -534,12 +609,20 @@ static void fs_list_recursive(const char *name)
     }
     closedir(dir);
 }
+*/
 
 FS_PRIVATE void fs_case_insensitive_init(const fs_path &path)
 {
     s_files.reserve(1024);
     s_lower.reserve(1024);
-    fs_list_recursive(fs_path_ascii(path));
+    //fs_list_recursive(fs_path_ascii(path));
+    fs_path_list(path, s_files);
+    for (const auto &it : s_files)
+    {
+        auto p = fs_path_str(it);
+        std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+        s_lower.emplace_back(fs_path_from(p));
+    }
 }
 
 FS_PRIVATE FILE *fs_open(const fs_path &path, fs_mode mode)

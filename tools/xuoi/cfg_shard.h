@@ -7,13 +7,6 @@
 #define CFG_FIELD(section, name, default, type)
 #endif
 
-CFG_FIELD(shard, submitter, "github+crossuo", std::string)
-// default: github+crossuo
-// submitter name / contact
-// format:
-//   github+<username> expands to https://github.com/<username>
-//   otherwise a string for name with optional <email@address>
-
 CFG_FIELD(shard, name, {}, std::string)
 // required
 // shard name
@@ -25,12 +18,8 @@ CFG_FIELD(shard, servertype, {}, std::string)
 // server type should contain a well formated server software name and version
 // this is useful for crossuo dev team and bug fixing, so MUST be filled.
 
-CFG_FIELD(shard, language, "ENU", lang_type)
-// optional, default: ENU (English)
-// format:
-//   <uo lang code>
-//     ENU,FRA,...
-// same as in crossuo.cfg, used for filtering
+CFG_FIELD(shard, language, "English", lang_type)
+// optional, default: English<,French...>
 
 CFG_FIELD(shard, description, {}, std::string)
 // optional
@@ -38,7 +27,7 @@ CFG_FIELD(shard, description, {}, std::string)
 //   <short textual description in server official language>
 
 CFG_FIELD(shard, url, {}, std::string)
-// required
+// optional
 // website url
 
 CFG_FIELD(shard, urlforum, {}, std::string)
@@ -57,13 +46,15 @@ CFG_FIELD(shard, urlregister, {}, std::string)
 // url where to register IF the shard is not auto account creation
 // if empty, it IS considered auto account creation
 
-CFG_FIELD(shard, installer, {}, std::string)
+CFG_FIELD(shard, installer, "uo+latest", tag_install) // (not fully implemented)
 // optional
 // install command/url/type
 // format:
+//   website+<url>
 //   download+<type>+<url>
 //     this will download the thing in the url and if <type> is 'zip' it will
 //     unpack upon download. if <type> is 'exe' it will execute directly.
+//     or 'web' for cloud based storage services like google drive et al.
 //   uo+<latest|url>
 //     this uses the same official uo patching system, latest will use the
 //     official and latest uo.com data, if <url> is used, then this will try
@@ -83,14 +74,15 @@ CFG_FIELD(shard, clientversion, {}, std::string)
 // same as in crossuo.cfg, specify the client version to emulate with crossuo
 
 CFG_FIELD(account, protocolversion, {}, std::string)
-// required
+// optional
 // same as in crossuo.cfg, specify the network protocol version to force
 
 CFG_FIELD(shard, clienttype, {}, std::string)
 // optional
+// one of: t2a,re,td,lbr,aos,se,sa,ml,ej
 // same as crossuo.cfg, if empty will autodetect based on the client version
 
-CFG_FIELD(shard, crypto, "no", std::string)
+CFG_FIELD(shard, crypto, "no", bool)
 // otpional, default: no
 // format:
 //   <no|yes>

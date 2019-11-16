@@ -31,8 +31,8 @@ set(XUOL_SRCS
   xuo_updater.cpp
   xuolauncher.cpp
   accounts.cpp
-  shards.cpp
   ui_model.cpp
+  ui_shards.cpp
 )
 
 set(XUOL_PROJECT xuolauncher)
@@ -42,3 +42,20 @@ add_dependencies(${XUOL_PROJECT} ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${CU
 
 target_link_libraries(${XUOL_PROJECT} PUBLIC ${CURL_LIBRARIES} ${EXTERNAL_PROJECT} ${SDL2_LIBRARIES} ${EXTERNALGFX_PROJECT} ${GL_LIBRARIES} ${LOADER} ${THREAD})
 target_include_directories(${XUOL_PROJECT} PUBLIC ${EXTERNAL_INCLUDE} ${EXTERNALGFX_INCLUDE} ${CURL_INCLUDE})
+
+#
+# shardchk
+#
+set(XUOL_SRCS
+  common.cpp
+  shards.cpp
+)
+
+set(SHARD_PROJECT shardchk)
+
+add_executable(${SHARD_PROJECT} ${XUOL_SRCS})
+target_compile_definitions(${SHARD_PROJECT} PRIVATE -DVALIDATOR)
+add_dependencies(${SHARD_PROJECT} ${EXTERNAL_PROJECT})
+
+target_link_libraries(${SHARD_PROJECT} PUBLIC ${EXTERNAL_PROJECT} ${LOADER} ${THREAD})
+target_include_directories(${SHARD_PROJECT} PUBLIC ${EXTERNAL_INCLUDE})

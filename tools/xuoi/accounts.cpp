@@ -13,6 +13,7 @@
 #include "common.h"
 #include "ui_model.h"
 #include "shards.h"
+#include "ui_shards.h"
 
 #define CFG_NAME account
 #define CFG_DEFINITION "cfg_launcher.h"
@@ -33,10 +34,12 @@ const char *client_types[] = {
     "Age Of Shadows (AOS)",
     "Samurai Empire (SE)",
     "Stygian Abyss (SA)",
+    "Mondain's Legacy (ML)",
+    "Endless Journey (EJ)",
 };
 
 const char *client_types_cfg[] = {
-    "", "t2a", "re", "td", "lbr", "aos", "se", "sa",
+    "", "t2a", "re", "td", "lbr", "aos", "se", "sa", "ml", "ej",
 };
 
 static account::data s_accounts;
@@ -47,7 +50,7 @@ void load_accounts()
     const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
     LOG_INFO("loading accounts from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
-    s_accounts = account::cfg(fp);
+    account::cfg(fp, s_accounts);
     if (fp)
         fs_close(fp);
     auto it = s_accounts.entries.emplace(s_accounts.entries.begin());
@@ -57,7 +60,6 @@ void load_accounts()
     {
         s_account_by_name[e.account_profile] = i++;
         account::dump(&e);
-        LOG_DEBUG("\n");
     }
 }
 

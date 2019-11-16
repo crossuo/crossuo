@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <external/inih.h>
 #include "common.h"
-#include "ui_model.h"
 
 extern bool valid_url(const std::string &url);
 extern void open_url(const std::string &url);
@@ -33,24 +32,127 @@ std::string as_str(const url_other &in)
 bool convert(url_other &out, const char *raw)
 {
     if (!raw || !raw[0])
-        return false;
+        return true;
 
     auto v = split(raw, '+');
     if (v.size() != 2)
     {
-        LOG_ERROR("parsing urlother field: %s", raw);
+        LOG_ERROR("parsing urlother field: '%s'", raw);
         return false;
     }
 
     if (!valid_url(v[1]))
     {
-        LOG_ERROR("invalid url in urlother field: %s", v[1].c_str());
+        LOG_ERROR("invalid url in urlother field: '%s'", v[1].c_str());
         return false;
     }
 
     out.type = v[0];
     out.name = "Goto: " + v[0];
     out.url = v[1];
+    return true;
+}
+
+enum class tag_install_type : uint8_t
+{
+    website,
+    download_zip,
+    download_exe,
+    download_web,
+    uo_latest,
+    uo_patch_server,
+    xuo_patch_server,
+};
+
+struct tag_install
+{
+    std::string url;
+    tag_install_type type;
+};
+
+std::string as_str(const tag_install &in)
+{
+    std::string r = "uo+latest";
+    switch (in.type)
+    {
+        case tag_install_type::website:
+            r = "website+" + in.url;
+            break;
+        case tag_install_type::download_zip:
+            r = "download+zip+" + in.url;
+            break;
+        case tag_install_type::download_web:
+            r = "download+web+" + in.url;
+            break;
+        case tag_install_type::download_exe:
+            r = "download+exe+" + in.url;
+            break;
+        case tag_install_type::uo_patch_server:
+            r = "uo+" + in.url;
+            break;
+        case tag_install_type::xuo_patch_server:
+            r = "xuo+" + in.url;
+            break;
+        case tag_install_type::uo_latest:
+            break;
+    }
+    return r;
+}
+
+bool convert(tag_install &out, const char *raw)
+{
+    if (!raw || !raw[0])
+        return true;
+
+    auto v = split(raw, '+');
+    const auto size = int(v.size());
+    if (size < 2 || size > 3)
+    {
+        LOG_ERROR("parsing installer field (%d): '%s'", size, raw);
+        return false;
+    }
+
+    auto type = v[0];
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    auto sub = v[1];
+    std::transform(sub.begin(), sub.end(), sub.begin(), ::tolower);
+    auto url = v[size - 1];
+    bool latest = sub == "latest";
+    if (!latest && !valid_url(url))
+    {
+        LOG_ERROR("invalid url in installer field: '%s'", url.c_str());
+        return false;
+    }
+
+    if (type == "website")
+        out.type = tag_install_type::website;
+    if (type == "download")
+    {
+        if (sub == "exe")
+            out.type = tag_install_type::download_exe;
+        else if (sub == "zip")
+            out.type = tag_install_type::download_zip;
+        else if (sub == "web")
+            out.type = tag_install_type::download_web;
+        else
+        {
+            LOG_ERROR("invalid download type in installer field: '%s'", sub.c_str());
+            return false;
+        }
+    }
+    if (type == "uo")
+    {
+        if (latest)
+        {
+            out.type = tag_install_type::uo_latest;
+            url = "";
+        }
+        else
+            out.type = tag_install_type::uo_patch_server;
+    }
+    if (type == "xuo")
+        out.type = tag_install_type::xuo_patch_server;
+    out.url = url;
     return true;
 }
 
@@ -64,7 +166,11 @@ struct tag_data
 
 std::string as_str(const tag_data &in)
 {
-    return join(in.tags, ',');
+    // FIXME: default value is being lost somewhere in the way to the save
+    auto d = in;
+    if (d.tags.empty())
+        d.tags.push_back("pvp");
+    return join(d.tags, ',');
 }
 
 bool convert(tag_data &out, const char *raw)
@@ -73,7 +179,6 @@ bool convert(tag_data &out, const char *raw)
     auto has_tag = [](auto &v, const char *tag) {
         return (std::find(v.begin(), v.end(), tag) != v.end());
     };
-
     out.is_highlighted = has_tag(out.tags, "highlighted");
     out.is_pvp = has_tag(out.tags, "pvp");
     out.is_rp = has_tag(out.tags, "rp");
@@ -82,23 +187,17 @@ bool convert(tag_data &out, const char *raw)
 
 struct lang_type
 {
-    std::string name;
+    std::vector<std::string> langs;
 };
 
 std::string as_str(const lang_type &in)
 {
-    auto &n = in.name;
-    if (n == "French")
-        return "FRA";
-    return "ENU";
+    return join(in.langs, ',');
 }
 
 bool convert(lang_type &out, const char *raw)
 {
-    if (!strcasecmp(raw, "ENU"))
-        out.name = "English";
-    else if (!strcasecmp(raw, "FRA"))
-        out.name = "French";
+    convert(out.langs, raw, ',');
     return true;
 }
 
@@ -113,14 +212,35 @@ bool convert(lang_type &out, const char *raw)
 static shard::data s_shards;
 static std::unordered_map<std::string, int> s_shard_by_loginserver;
 
-void load_shards()
+bool shard_getter(void *data, int idx, const char **out_text)
 {
-    const auto fname = fs_join_path(fs_path_current(), "shards.cfg");
+    auto *items = (std::vector<shard::entry> *)data;
+    assert(items);
+    assert(idx < items->size());
+    if (out_text)
+        *out_text = items->at(idx).shard_name.c_str();
+    return true;
+}
+
+static void load_shard_file(const fs_path &fname, shard::data &data)
+{
     LOG_INFO("loading shards from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
-    s_shards = shard::cfg(fp);
-    if (fp)
-        fs_close(fp);
+    if (!fp)
+        return;
+    shard::cfg(fp, data);
+    fs_close(fp);
+}
+
+void load_shards()
+{
+    s_shards = shard::data();
+    auto custom = shard::default_entry();
+    custom.shard_name = "<custom shard>";
+    s_shards.entries.emplace_back(custom);
+    const auto fname = fs_join_path(fs_path_current(), "shards.cfg");
+    load_shard_file(fname, s_shards);
+
     // sort by tags 'highlight', then name alphabetically
     std::sort(s_shards.entries.begin(), s_shards.entries.end(), [](const auto &a, const auto &b) {
         const auto ah = a.shard_tags.is_highlighted;
@@ -130,13 +250,11 @@ void load_shards()
         return a.shard_name < b.shard_name;
     });
 
-    LOG_DEBUG("\nentries found: %zu", s_shards.entries.size());
     int i = 0;
     for (auto &e : s_shards.entries)
     {
         s_shard_by_loginserver[e.shard_loginserver] = i++;
         shard::dump(&e);
-        LOG_DEBUG("\n");
     }
 }
 
@@ -170,197 +288,104 @@ shard_data shard_by_id(int id)
              s.shard_clientversion.c_str() };
 }
 
-// view
-void HoverToolTip(const char *desc);
-bool ComboBox(
-    const char *id,
-    const char *label,
-    float w,
-    int *current_item,
-    bool (*items_getter)(void *data, int idx, const char **out_text),
-    void *data,
-    int items_count,
-    int height_in_items = -1);
+#if defined(VALIDATOR)
 
-static bool shard_getter(void *data, int idx, const char **out_text)
+#include <external/popts.h>
+
+static void print_banner()
 {
-    auto *items = (std::vector<shard::entry> *)data;
-    assert(items);
-    assert(idx < items->size());
-    if (out_text)
-        *out_text = items->at(idx).shard_name.c_str();
-    return true;
+    fprintf(stdout, "shardchk - crossuo launcher shard validator 0.0.1\n");
+    fprintf(stdout, "Copyright (c) 2019 Danny Angelo Carminati Grein\n");
+    fprintf(
+        stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n");
+    fprintf(stdout, "\n");
 }
 
-bool ui_shards_combo(
-    const char *id, const char *label, float w, int *current_item, int popup_max_height_in_items)
+static po::parser s_cli;
+static bool init_cli(int argc, char *argv[])
 {
-    return ComboBox(
-        id,
-        label,
-        w,
-        current_item,
-        shard_getter,
-        &s_shards.entries,
-        s_shards.entries.size(),
-        popup_max_height_in_items);
+    s_cli["help"].abbreviation('h').description("print this help screen");
+    s_cli["path"].abbreviation('p').type(po::string).description("path");
+    s_cli(argc, argv);
+    return s_cli["help"].size() == 0;
 }
 
-static int s_selected = 0;
-static int s_picked = -1;
-const ImVec4 bg_selected = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
-const ImVec4 bg_highlighted = ImVec4(0.45f, 0.35f, 0.35f, 1.00f);
-const ImVec4 bg_alt = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
-const ImVec4 bg_base = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
-const ImVec4 white = ImColor(1.0f, 1.0f, 1.0f, 1.0f);
-const ImVec4 yellow = ImColor(1.0f, 1.0f, 0.0f, 1.0f);
-
-int shard_picked()
+int main(int argc, char **argv)
 {
-    int r = s_picked;
-    s_picked = -1;
-    return r;
-}
-
-void ui_shards(ui_model &m, bool picker)
-{
-    const auto line_size = ImGui::GetTextLineHeightWithSpacing();
-    const auto entry_size = line_size * 4;
-    auto item_size = entry_size;
-    ImVec4 bg = bg_base;
-    ImVec4 fg = white;
-
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
-    static bool select_pvp = false;
-    static bool select_pvm = false;
-    static bool select_rp = false;
-    static bool select_aac = false;
-    if (ImGui::TreeNode("Filters"))
+    if (!init_cli(argc, argv) || !s_cli["path"].was_set())
     {
-        ImGui::Checkbox("PvP  ", &select_pvp);
-        HoverToolTip("Player vs. Player enabled shard (PKs/Factions)");
-        ImGui::SameLine();
-        ImGui::Checkbox("PvM  ", &select_pvm);
-        HoverToolTip("Player vs. Player is not permitted");
-        ImGui::SameLine();
-        ImGui::Checkbox("RP  ", &select_rp);
-        HoverToolTip("Roleplay Based");
-        ImGui::SameLine();
-        ImGui::Checkbox("Auto Account  ", &select_aac);
-        HoverToolTip("Auto account creation, just log-in and play");
-        ImGui::TreePop();
+        print_banner();
+        s_cli.print_help(std::cout);
+        return 0;
     }
-    const int filler = picker ? -13 : +10;
-    const float y = m.area.y - ImGui::GetCursorPosY() + line_size + filler;
-    ImGui::BeginChild("shards", { m.area.x, y }, false, window_flags);
-    for (int i = 0; i < s_shards.entries.size(); i++)
+
+    std::vector<shard::entry> entries;
+    entries.emplace_back(shard::default_entry());
+
+    std::vector<fs_path> configs;
+    fs_path_list(fs_path_from(s_cli["path"].get().string), configs);
+    bool error = false;
+    for (const auto &cfg : configs)
     {
-        const auto &it = s_shards.entries[i];
-        const bool has_tags = !it.shard_tags.tags.empty();
-        if (has_tags)
-        {
-            const auto &tags = it.shard_tags;
-            if (select_pvp && !tags.is_pvp)
-                continue;
-            if (select_pvm && tags.is_pvp)
-                continue;
-            if (select_rp && !tags.is_rp)
-                continue;
-        }
-        // context menu entries
-        const bool has_reg = !it.shard_urlregister.empty();
-        if (select_aac && !it.shard_urlregister.empty())
-            continue;
-        const bool has_url = !it.shard_url.empty() && valid_url(it.shard_url);
-        const bool has_forum = !it.shard_urlforum.empty() && valid_url(it.shard_urlforum);
-        const bool has_other = !it.shard_urlother.url.empty();
-        const bool has_context = has_url || has_reg || has_forum || has_other;
-        // others
-        const bool has_desc = !it.shard_description.empty();
-        const bool has_lang = !it.shard_language.name.empty();
+        shard::data shard;
+        shard.ignore_empty_on_save = true;
 
-        if (i == s_selected)
+        LOG_INFO("validating '%s'", fs_path_ascii(cfg));
+        load_shard_file(cfg, shard);
+        error |= shard.error;
+        if (shard.entries.size() != 1)
         {
-            bg = bg_selected;
-            item_size = entry_size * 2;
+            LOG_ERROR("invalid file, contains multiple entries.");
+            error = true;
         }
-        else
-        {
-            bg = i % 2 ? bg_alt : bg_base;
-            item_size = entry_size;
-        }
+        for (const auto &e : shard.errors)
+            LOG_ERROR("%s", e.c_str());
 
-        if (it.shard_tags.is_highlighted)
+        auto entry = shard.entries[0];
+        if (entry.shard_name.empty())
         {
-            bg = bg_highlighted;
-            fg = yellow;
+            LOG_ERROR("missing required field 'name'");
+            error = true;
         }
-        else
+        if (entry.shard_servertype.empty())
         {
-            fg = white;
+            LOG_ERROR("missing required field 'servertype'");
+            error = true;
+        }
+        /*if (entry.shard_url.empty())
+        {
+            LOG_ERROR("missing required field 'url'");
+            error = true;
+        }*/
+        if (entry.shard_loginserver.empty())
+        {
+            LOG_ERROR("missing required field 'loginserver'");
+            error = true;
+        }
+        if (entry.shard_clientversion.empty())
+        {
+            LOG_ERROR("missing required field 'clientversion'");
+            error = true;
         }
 
-        ImGui::PushID(i);
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, bg);
-        {
-            ImGui::BeginChild("shard_item", ImVec2(0.0f, item_size), true);
-            ImGui::BeginGroup();
-            ImGui::PushStyleColor(ImGuiCol_Text, fg);
-            ImGui::Text("%s", it.shard_name.c_str());
-            ImGui::PopStyleColor();
-            if (has_url)
-            {
-                ImGui::SameLine();
-                ImGui::Text("%s", it.shard_url.c_str());
-            }
-            if (i == s_selected && has_desc)
-                ImGui::TextWrapped("%s", it.shard_description.c_str());
-            if (has_lang)
-                ImGui::Text("Language: %s", it.shard_language.name.c_str());
-            if (has_tags)
-                ImGui::Text("Tags: %s", it.raw_shard_tags.c_str()); // FIXME: pretty print
-            ImGui::EndGroup();
-            //if (ImGui::IsItemHovered())
-            //    ImGui::SetTooltip("Shard %04d hovered", i);
-            ImGui::EndChild();
-
-            if (ImGui::IsItemClicked())
-                s_selected = i;
-
-            if (has_context && ImGui::BeginPopupContextItem("item context menu"))
-            {
-                if (has_url && ImGui::MenuItem("Open Website", nullptr, false))
-                    open_url(it.shard_url);
-                if (has_reg && valid_url(it.shard_urlregister) &&
-                    ImGui::MenuItem("Create Account", nullptr, false))
-                    open_url(it.shard_urlregister);
-                if (has_forum && ImGui::MenuItem("Open Forum", nullptr, false))
-                    open_url(it.shard_urlforum);
-                if (has_other && ImGui::MenuItem(it.shard_urlother.name.c_str(), nullptr, false))
-                    open_url(it.shard_urlother.url);
-                // by knowing all our data paths and data version, we can match supported shards
-                // and enable a quick join feature where no account profile setup is required
-                //if (!has_reg && ImGui::MenuItem("Quick Join", nullptr, false))
-                //    ;
-                ImGui::EndPopup();
-            }
-        }
-        ImGui::PopStyleColor();
-        ImGui::PopID();
+        if (!error)
+            entries.insert(entries.end(), shard.entries.begin(), shard.entries.end());
     }
-    ImGui::EndChild();
-    if (picker)
+
+    if (!error)
     {
-        ImGui::NewLine();
-        ImGui::SameLine(m.area.x - 160.0f);
-        if (ImGui::Button("Pick Selected"))
-        {
-            LOG_TRACE("pick shard: %d", s_selected);
-            s_picked = s_selected;
-            ui_pop(m);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel"))
-            ui_pop(m);
+        s_shards.entries = entries;
+        std::sort(
+            s_shards.entries.begin(), s_shards.entries.end(), [](const auto &a, const auto &b) {
+                return a.shard_name < b.shard_name;
+            });
+
+        auto fp = fopen("shards.cfg", "wb");
+        write_shards(fp);
+        fclose(fp);
     }
+
+    return error ? EXIT_FAILURE : EXIT_SUCCESS;
 }
+
+#endif // defined(VALIDATOR)

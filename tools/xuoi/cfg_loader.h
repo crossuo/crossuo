@@ -1,5 +1,7 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
+#define CFG_DEBUG(...) // LOG_DEBUG(__VA_ARGS__)
+#define CFG_TRACE(...) // LOG_TRACE(__VA_ARGS__)
 
 /* clang-format off */
 #ifndef CFG_NAME
@@ -44,6 +46,8 @@ struct data
     int lineno = 0;
     bool dirty = false;
     bool strict = true;
+    bool ignore_empty_on_save = false;
+    bool error = false;
 };
 
 void type_save_current(data &data)
@@ -51,7 +55,7 @@ void type_save_current(data &data)
     if (!data.dirty)
         return;
 
-    LOG_TRACE("saving entry");
+    CFG_TRACE("saving entry");
     data.entries.emplace_back(data.current);
     data.current = default_entry();
     data.dirty = false;
@@ -71,7 +75,7 @@ void write(FILE *fp, const entry &e, const char *section)
             auto v = as_str(e.s##_##n);\
             if (d.raw_##s##_##n != v || e.set_##s##_##n) \
             {\
-                LOG_TRACE("saving %s: %s == %s", CFG_STRINGIFY2(n), v.c_str(), d.raw_##s##_##n.c_str());\
+                CFG_TRACE("saving %s: '%s' == '%s' (%d)", CFG_STRINGIFY2(n), v.c_str(), d.raw_##s##_##n.c_str(), e.set_##s##_##n);\
                 fprintf(fp, "%s=%s\n", CFG_STRINGIFY2(n), v.c_str());\
             }\
         }\
@@ -92,15 +96,16 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     if (!name && !value)
     {
         type_save_current(obj);
-        LOG_TRACE("new section found");
+        CFG_TRACE("new section found");
         return 1;
     }
 
     auto &entry = obj.current;
-    LOG_TRACE("%d: %s.%s = %s", lineno, section, name, value);
+    CFG_TRACE("%d: %s.%s = %s", lineno, section, name, value);
     if (!name || strlen(name) == 0)
     {
         obj.errors.push_back(std::to_string(lineno) + ": invalid entry");
+        obj.error = true;
         return 0;
     }
 
@@ -108,9 +113,9 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     if (0) ;
 #define CFG_FIELD(s, n, default, t) \
     else if (strcasecmp(section, #s) == 0 && strcasecmp(name, #n) == 0) {\
-        convert(entry.s##_##n, value); \
+        obj.error |= !convert(entry.s##_##n, value); \
         entry.raw_##s##_##n = value; \
-        entry.set_##s##_##n = true; \
+        entry.set_##s##_##n = !(obj.ignore_empty_on_save && (!value || !value[0])); \
         found = true; \
     }
 #include CFG_DEFINITION
@@ -118,6 +123,7 @@ int type_loader(void* user, const char* section, const char* name, const char* v
     if (obj.strict && !found)
     {
         obj.errors.push_back(std::to_string(lineno) + ": unknown entry '" + name + "'");
+        obj.error = true;
         return 0;
     }
 
@@ -127,13 +133,12 @@ int type_loader(void* user, const char* section, const char* name, const char* v
 
 void dump(entry *entry)
 {
-    #define CFG_FIELD(s, n, default, t) LOG_DEBUG("%s_%s = %s", #s, #n, entry->raw_##s##_##n.c_str());
+    #define CFG_FIELD(s, n, default, t) CFG_DEBUG("%s_%s = %s", #s, #n, entry->raw_##s##_##n.c_str());
     #include CFG_DEFINITION
 }
 
-data cfg(FILE *fp)
+void cfg(FILE *fp, data &obj)
 {
-    data obj;
     if (fp && ini_parse_file(fp, type_loader, &obj))
     {
         for (auto &e : obj.errors)
@@ -141,7 +146,6 @@ data cfg(FILE *fp)
         LOG_ERROR("errors found parsing %s", CFG_SECTION_FILTER_NAME);
     }
     type_save_current(obj);
-    return obj;
 }
 
 };
@@ -153,3 +157,5 @@ data cfg(FILE *fp)
 #undef CFG_SECTION_FILTER_NAME
 #undef CFG_NAME
 #undef CFG_CONVERTERS
+#undef CFG_DEBUG
+#undef CFG_TRACE
