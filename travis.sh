@@ -27,7 +27,6 @@ if [[ "$TASK" == "clang" ]]; then
 	cd ..
 	echo Building nightly package
 	mkdir crossuo-ubuntu-nightly
-	cd crossuo-ubuntu-nightly
 	cp release/src/crossuo.so crossuo-ubuntu-nightly/
 	cp release/src/crossuo crossuo-ubuntu-nightly/
 	cp release/tools/xuoi/xuolauncher crossuo-ubuntu-nightly/
@@ -51,7 +50,6 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	#cd ..
 	#echo Building nightly package
 	#mkdir crossuo-osx-nightly
-	#cd crossuo-osx-nightly
 	#cp release/src/crossuo.so crossuo-osx-nightly/
 	#cp release/src/crossuo crossuo-osx-nightly/
 	#cp release/tools/xuoi/xuolauncher crossuo-osx-nightly/
