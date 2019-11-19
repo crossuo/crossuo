@@ -39,7 +39,7 @@ if [[ "$TASK" == "gcc" ]]; then
 	mkdir debug && cd debug && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && cmake --build . || exit 1
 	#cd ..
 	#echo Building Release
-	#mkdir release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && cmake --build .|| exit 1
+	#mkdir release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && cmake --build . || exit 1
 fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
