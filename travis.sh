@@ -20,10 +20,10 @@ fi
 
 if [[ "$TASK" == "clang" ]]; then
 	echo Building Debug
-	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && cmake --build .  -j8|| exit 1
+	mkdir debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off && cmake --build . || exit 1
 	cd ..
 	echo Building Release
-	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && cmake --build . -j8 || exit 1
+	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && cmake --build . || exit 1
 	cd ..
 	echo Building nightly package
 	mkdir crossuo-ubuntu-nightly
