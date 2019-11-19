@@ -24,18 +24,17 @@ matrix:
             - libxkbcommon-dev
       script: ./travis.sh
       before_deploy:
-      # Set up git user name and tag this commit
-      - git tag Latest-nightly -f
+      - git tag nightly -f
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        file: "CrossUO-Unbuntu-nightly.zip"
+        file: "crossuo-ubuntu-nightly.tgz"
         skip_cleanup: true
         on:
           tags: false
           all_branches: true
-          repo: crossuo/crossuo #where to send it
+          repo: crossuo/crossuo
     - os: linux
       compiler: gcc
       name: gcc-make
@@ -92,16 +91,15 @@ matrix:
       script:
         - ./travis.sh
       before_deploy:
-      # Set up git user name and tag this commit
-      - git tag Latest-nightly -f
+      - git tag nightly -f
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        tag_name: Latest-nightly
-        file: "CrossUO-OSX-nightly.zip"
+        tag_name: nightly
+        file: "crossuo-osx-nightly.zip"
         skip_cleanup: true
         on:
           tags: true
           branch: master
-          repo: crossuo/crossuo #where to send it
+          repo: crossuo/crossuo

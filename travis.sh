@@ -24,10 +24,14 @@ if [[ "$TASK" == "clang" ]]; then
 	cd ..
 	echo Building Release
 	mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && cmake --build . || exit 1
-	echo Make the zip file
-	cd src
-	zip CrossUO-Unbuntu-nightly.zip crossuo.so crossuo
-	mv CrossUO-Unbuntu-nightly.zip ../../
+	cd ..
+	echo Building nightly package
+	mkdir crossuo-ubuntu-nightly
+	cd crossuo-ubuntu-nightly
+	cp build/src/crossuo.so crossuo-ubuntu-nightly/
+	cp build/src/crossuo crossuo-ubuntu-nightly/
+	cp build/tools/xuoi/xuolauncher crossuo-ubuntu-nightly/
+	tar -czvf crossuo-ubuntu-nightly.tgz crossuo-ubuntu-nightly/
 fi
 
 if [[ "$TASK" == "gcc" ]]; then
@@ -44,9 +48,13 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	#brew outdated cmake || brew upgrade cmake
 	#echo Building Release
 	#mkdir release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off && ninja gfxtest -j8 || exit 1
-	#echo Make the zip file
-	#cd src
-	#zip CrossUO-OSX-nightly.zip crossuo.so crossuo
-	#mv CrossUO-OSX-nightly.zip ../../
-	echo "skip until glew is removed"
+	#cd ..
+	#echo Building nightly package
+	#mkdir crossuo-osx-nightly
+	#cd crossuo-osx-nightly
+	#cp build/src/crossuo.so crossuo-osx-nightly/
+	#cp build/src/crossuo crossuo-osx-nightly/
+	#cp build/tools/xuoi/xuolauncher crossuo-osx-nightly/
+	#zip crossuo-osx-nightly.zip crossuo-osx-nightly/*
+	echo "build skipped until glew is removed"
 fi

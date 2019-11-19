@@ -344,6 +344,18 @@ void ui_accounts(ui_model &m)
         if (ImGui::Button("" ICON_FK_GLOBE_W))
             ui_push(m, ui_view::shard_picker);
         HoverToolTip("Shard picker");
+        InputText("##5", "UO Data Path:", w - 50, path, sizeof(path));
+        ImGui::SameLine();
+        if (ImGui::Button("" ICON_FK_FOLDER))
+        {
+            const auto data_path = tinyfd_selectFolderDialog("UO Data Path", path);
+            if (data_path)
+            {
+                memcpy(path, data_path, sizeof(path));
+            }
+        }
+        ImGui::SameLine();
+        HelpMarker("The place where Ultima Online client is installed");
 
         if (ImGui::TreeNode("Advanced"))
         {
@@ -366,18 +378,6 @@ void ui_accounts(ui_model &m)
             //InputText("##9", "  Type:", w3, clientType, sizeof(clientType));
             const auto w3 = right_w - ImGui::GetCursorPosX() - 66;
             ComboBox("##9", "  Type:", w3, &current_type, client_types, IM_ARRAYSIZE(client_types));
-            InputText("##5", "  UO Data Path:", w - 50, path, sizeof(path));
-            ImGui::SameLine();
-            if (ImGui::Button("" ICON_FK_FOLDER))
-            {
-                const auto data_path = tinyfd_selectFolderDialog("UO Data Path", path);
-                if (data_path)
-                {
-                    memcpy(path, data_path, sizeof(path));
-                }
-            }
-            ImGui::SameLine();
-            HelpMarker("The place where Ultima Online client is installed");
             InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
 
             ImGui::Indent(ImGui::GetTreeNodeToLabelSpacing());

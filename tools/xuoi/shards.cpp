@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <external/inih.h>
+#include "http.h"
 #include "common.h"
 
 extern bool valid_url(const std::string &url);
@@ -239,6 +240,11 @@ void load_shards()
     custom.shard_name = "<custom shard>";
     s_shards.entries.emplace_back(custom);
     const auto fname = fs_join_path(fs_path_current(), "shards.cfg");
+#if !defined(VALIDATOR)
+    http_get_file(
+        "https://github.com/crossuo/shards/releases/download/latest/shards.cfg",
+        fs_path_ascii(fname));
+#endif
     load_shard_file(fname, s_shards);
 
     // sort by tags 'highlight', then name alphabetically

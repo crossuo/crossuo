@@ -103,6 +103,7 @@ void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
     assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &tmp));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data));
@@ -120,6 +121,7 @@ void http_get_binary(const char *url, std::vector<uint8_t> &data)
     assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_vector));
@@ -136,6 +138,7 @@ void http_get_string(const char *url, std::string &data)
     assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_string));
@@ -156,6 +159,7 @@ bool http_get_file(const char *url, const char *filename)
     assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, fp));
     DO_CURL(perform(curl));
