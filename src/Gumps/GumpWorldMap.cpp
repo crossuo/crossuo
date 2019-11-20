@@ -12,7 +12,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };

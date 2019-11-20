@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
-
+#include "../CrossPCH.h" // REMOVE
 struct CC_HAIR_STYLE
 {
     uint16_t GumpID;

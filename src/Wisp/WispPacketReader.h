@@ -3,6 +3,7 @@
 #ifndef WISP_PR_H
 #define WISP_PR_H
 
+#include "../CrossPCH.h" // REMOVE
 #include <xuocore/mappedfile.h>
 
 namespace Wisp

@@ -11,8 +11,8 @@
 #include "../ScreenStages/GameScreen.h"
 #include "../TextEngine/TextContainer.h"
 #include "../TextEngine/TextData.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

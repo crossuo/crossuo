@@ -7,7 +7,10 @@ matrix:
       sudo: required
       env: TASK=clang
       dist: xenial
-      cache: ccache
+      cache:
+        ccache: true
+        directories:
+          - vcpkg/
       addons:
         apt:
           sources:
@@ -22,9 +25,10 @@ matrix:
             - libglew-dev
             - libsndio-dev
             - libxkbcommon-dev
-      script: ./travis.sh
+      script: 
+        - ./travis.sh
       before_deploy:
-      - git tag nightly -f
+        - git tag nightly -f
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
@@ -41,7 +45,10 @@ matrix:
       sudo: required
       env: TASK=gcc
       dist: xenial
-      cache: ccache
+      cache:
+        ccache: true
+        directories:
+          - vcpkg/
       addons:
         apt:
           sources:
@@ -55,6 +62,8 @@ matrix:
             - libglew-dev
             - libsndio-dev
             - libxkbcommon-dev
+            - g++-7
+            - gcc-7
       script: ./travis.sh
     - os: linux
       name: format-check
@@ -67,31 +76,33 @@ matrix:
             - llvm-toolchain-trusty-7
           packages:
             - clang-format-7
-      script: ./travis.sh
+      script: 
+        - ./travis.sh
     - os: osx
       sudo: false
       addons:
         homebrew:
           packages:
             - ccache
-            - sdl2
             - ninja
-            - glew
-          update: true
+      #      - sdl2
+      #      - glew
+      #      - gcc@6
+      #    update: true
       install:
         - export PATH="/usr/local/opt/ccache/libexec:$PATH"
       osx_image: xcode10
-      before_cache:
-        - brew cleanup
+      #before_cache:
+      #  - brew cleanup
       cache: 
         ccache: true
         directories:
-          - brew install ccache sdl2 ninja glew
-          - $HOME/Library/Caches/Homebrew
+          - vcpkg/
+      #    - $HOME/Library/Caches/Homebrew
       script:
         - ./travis.sh
       before_deploy:
-      - git tag nightly -f
+        - git tag nightly -f
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"

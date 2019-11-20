@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "CrossPCH.h" // REMOVE
+#include "GLEngine/GLTexture.h"
+
 #define IS_MOBILE(serial) ((serial & 0x40000000) == 0)
 #define IS_ITEM(serial) ((serial & 0x40000000) != 0)
 #define IS_PLAYER(serial) (serial == g_PlayerSerial)

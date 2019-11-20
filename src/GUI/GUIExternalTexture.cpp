@@ -5,8 +5,8 @@
 #include "../Managers/ColorManager.h"
 #include "../Point.h"
 #include "../Sprite.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

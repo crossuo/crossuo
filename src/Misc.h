@@ -2,9 +2,12 @@
 
 #pragma once
 
+#include "Platform.h"
 #include <SDL_thread.h>
 #include <SDL_stdinc.h>
 #include <stdlib.h>
+
+#define XUO_M_PI 3.14159265358979323846264338327950288
 
 extern SDL_threadID g_MainThread;
 const int PACKET_VARIABLE_SIZE = 0;
@@ -13,12 +16,12 @@ int CalculatePercents(int max, int current, int maxValue);
 
 inline float deg2radf(float degr)
 {
-    return degr * (float)(M_PI / 180.0f);
+    return degr * (float)(XUO_M_PI / 180.0f);
 }
 
 inline float rad2degf(float radians)
 {
-    return (float)(radians * 180.0f / M_PI);
+    return (float)(radians * 180.0f / XUO_M_PI);
 }
 
 inline int RandomInt(int n)

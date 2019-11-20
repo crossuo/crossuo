@@ -283,9 +283,9 @@ set(crossuo_src
 
 if(XUO_WINDOWS)
   set(crossuo_src ${crossuo_src}
-    VMQuery.cpp                 # FIXME: windows only, wrap, coredump
-    StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
-    ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
+    #VMQuery.cpp                 # FIXME: windows only, wrap, coredump
+    #StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
+    #ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
     CrossUO.rc
   )
 endif()
@@ -325,24 +325,8 @@ endif()
 
 if(XUO_WINDOWS)
   set_target_properties(crossuo PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-  add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
 elseif(XUO_EMSC)
 else()
   add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
   add_dependencies(crossuo client)
 endif()
-
-if (ENABLE_COTIRE)
-  set_property(SOURCE Misc.cpp PROPERTY COTIRE_EXCLUDED 1)
-  set_target_properties(crossuo PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "CrossPCH.h")
-  cotire(crossuo)
-
-  if(XUO_WINDOWS)
-    set_target_properties(crossuo_unity PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-    add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
-  elseif(XUO_EMSC)
-  else()
-    add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/unity/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-  endif()
-endif()
-

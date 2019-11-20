@@ -2,6 +2,8 @@
 #ifndef UOHuffmanH
 #define UOHuffmanH
 
+#include <stdint.h>
+
 class CDecompressingCopier
 {
 private:

@@ -4,7 +4,7 @@
 #include "GUIHTMLText.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
-#include "Utility/PerfMarker.h"
+#include "../Utility/PerfMarker.h"
 
 CGUIHTMLText::CGUIHTMLText(
     int index,

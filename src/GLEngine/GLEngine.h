@@ -2,7 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
-
+#include "../Platform.h"
+#include "../CrossPCH.h" // REMOVE
 #include "../Point.h"
 
 typedef std::deque<CRect> SCISSOR_LIST;

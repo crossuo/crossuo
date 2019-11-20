@@ -14,8 +14,8 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
-#include "Utility/PerfMarker.h"
-#include "Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 

@@ -2,6 +2,10 @@
 #ifndef WISP_CON_H
 #define WISP_CON_H
 
+#include <vector>
+#include <stdint.h>
+#include <string>
+
 #include "../Sockets.h"
 namespace Wisp
 {

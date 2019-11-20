@@ -1,5 +1,5 @@
 ﻿
-
+#include "WispMouse.h"
 #include <SDL_mouse.h>
 namespace Wisp
 {

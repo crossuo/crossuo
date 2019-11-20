@@ -15,8 +15,8 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "../Walker/PathFinder.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

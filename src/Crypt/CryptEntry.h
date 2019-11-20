@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+#include <stddef.h>
+
 namespace Crypt
 {
 void Init(bool is_login, uint8_t seed[4]);

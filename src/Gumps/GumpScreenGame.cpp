@@ -15,7 +15,7 @@
 #include "../Managers/MouseManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../Network/Packets.h"
-#include "Utility/PerfMarker.h"
+#include "../Utility/PerfMarker.h"
 
 CGumpScreenGame::CGumpScreenGame()
     : CGump(GT_NONE, 0, 0, 0)

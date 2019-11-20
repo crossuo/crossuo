@@ -323,7 +323,7 @@ bool CGame::Install()
 
     Info(Client, "CGame::Install()");
 #if defined(XUO_WINDOWS)
-    SetUnhandledExceptionFilter(GameUnhandledExceptionFilter);
+    //SetUnhandledExceptionFilter(GameUnhandledExceptionFilter);
 #endif
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
@@ -4658,7 +4658,7 @@ void CGame::PlayMusic(int index, bool warmode)
     if (g_Config.ClientVersion >= CV_306E)
     {
         CIndexMusic &mp3Info = g_Index.m_MP3[index];
-        g_SoundManager.PlayMP3(mp3Info.FilePath, index, mp3Info.Loop, warmode);
+        g_SoundManager.PlayMP3(mp3Info.FilePath.c_str(), index, mp3Info.Loop, warmode);
     }
     else
     {
@@ -6063,7 +6063,7 @@ void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
 void CGame::ChangeMap(uint8_t newmap)
 {
     DEBUG_TRACE_FUNCTION;
-    if (newmap < 0 || newmap > 5)
+    if (newmap > 5)
     {
         newmap = 0;
     }

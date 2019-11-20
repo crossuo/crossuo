@@ -1,4 +1,5 @@
 
+#include <SDL.h> // plugininterface.h
 #include "CryptEntry.h"
 #include "../Misc.h"
 #include <common/fs.h>

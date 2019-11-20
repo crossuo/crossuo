@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "CrossPCH.h" // REMOVE
 class CMulti;
 class CMultiObject;
 struct CDataReader;

@@ -3,6 +3,7 @@
 #ifndef WISP_THREAD_H
 #define WISP_THREAD_H
 
+#include "../CrossPCH.h" // REMOVE
 #include "../Platform.h"
 #include <SDL_thread.h>
 

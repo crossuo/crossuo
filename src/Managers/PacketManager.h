@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../CrossPCH.h" // REMOVE
+
 class CPacketManager;
 typedef void (CPacketManager::*PACKET_FUNCTION)();
 

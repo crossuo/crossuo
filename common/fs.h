@@ -343,7 +343,7 @@ FS_PRIVATE fs_path fs_directory(const fs_path &path)
 
     auto copy = path.real_path;
     std::transform(
-        copy.begin(), copy.end(), copy.begin(), [](auto c) { return c == L'/' ? '\\' : c; });
+        copy.begin(), copy.end(), copy.begin(), [](wchar_t c) { return c == L'/' ? '\\' : c; });
     auto name = copy.c_str();
     auto *last = wcsrchr(name, L'\\');
     if (last != nullptr)
@@ -529,7 +529,7 @@ FS_PRIVATE fs_path fs_insensitive(const fs_path &path)
 {
     auto p = path.real_path;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
-    auto it = std::find_if(s_lower.begin(), s_lower.end(), [&p](const auto &lower) {
+    auto it = std::find_if(s_lower.begin(), s_lower.end(), [&p](const fs_path &lower) {
         return p.compare(lower.real_path) == 0;
     });
     if (it != s_lower.end())

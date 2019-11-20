@@ -3,7 +3,7 @@
 
 #include "GUIHTMLButton.h"
 #include "GUIHTMLGump.h"
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 

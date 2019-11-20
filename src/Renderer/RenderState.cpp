@@ -1,7 +1,10 @@
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
-#include "Renderer/RenderInternal.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderInternal.h"
+#include "../Utility/PerfMarker.h"
+#include "../GLEngine/GLHeaders.h"
+#include <assert.h>
+#define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 bool RenderState_FlushState(RenderState *state)
 {

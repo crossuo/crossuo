@@ -1,6 +1,7 @@
 ﻿#ifndef WISP_MOUSE_H
 #define WISP_MOUSE_H
 
+#include "../CrossPCH.h" // REMOVE
 #include <SDL_events.h>
 
 namespace Wisp

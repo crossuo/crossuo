@@ -7,6 +7,7 @@
 
 #if !defined(DISABLE_LOG)
 
+#include "CrossPCH.h" // REMOVE
 #include <external/loguru.h>
 
 #define STRINGIFY(x) #x

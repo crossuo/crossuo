@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "Renderer/RenderAPI.h"
+#include "GLHeaders.h"
+#include "../Renderer/RenderAPI.h"
 
 void UnuseShader();
 

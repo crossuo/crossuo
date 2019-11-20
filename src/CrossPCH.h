@@ -48,3 +48,5 @@
 #define ToColorA(x) ((x >> 24) & 0xff)
 
 #include "Globals.h"
+#include "Platform.h"
+#include "Point.h"

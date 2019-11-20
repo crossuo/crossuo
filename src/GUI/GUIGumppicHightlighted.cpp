@@ -5,7 +5,7 @@
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
 #include "../Managers/ColorManager.h"
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 

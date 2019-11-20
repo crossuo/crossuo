@@ -14,8 +14,8 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../ScreenStages/BaseScreen.h"
 #include "../ScreenStages/GameScreen.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

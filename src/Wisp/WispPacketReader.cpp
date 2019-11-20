@@ -1,5 +1,7 @@
 ﻿// MIT License
 
+#include "WispPacketReader.h"
+
 namespace Wisp
 {
 CPacketReader::CPacketReader()
