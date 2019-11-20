@@ -918,6 +918,9 @@ void CFontsManager::DrawA(
     uint16_t flags)
 {
     DEBUG_TRACE_FUNCTION;
+    // TODO renderer - text resources (texture data) are created and destroyed in this scope, preventing us
+    // from using a delayed render list. Text and other form of dynamic mesh/data should live beyond the caller scope
+    // living through the CPU frame where the cmd is issued all the way to the when the GPU is done executing it.
     CTextSprite th;
     if (GenerateA(font, th, str, color, width, align, flags))
     {

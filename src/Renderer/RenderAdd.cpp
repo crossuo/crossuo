@@ -417,3 +417,15 @@ bool RenderAdd_DisableScissor(RenderCmdList *cmdList)
     RenderDraw_DisableScissor(&cmd, &cmdList->state);
     return true;
 }
+
+bool RenderAdd_GetFrameBufferPixels(RenderCmdList *cmdList, GetFrameBufferPixelsCmd *cmd)
+{
+    auto ret = Render_AppendCmd(cmdList, cmd, sizeof(*cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_GetFrameBufferPixels(cmd, &cmdList->state);
+    return true;
+}

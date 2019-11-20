@@ -72,4 +72,6 @@ bool RenderAdd_SetModelViewTranslation(RenderCmdList *cmdList, SetModelViewTrans
 bool RenderAdd_SetScissor(RenderCmdList *cmdList, SetScissorCmd *cmd);
 bool RenderAdd_DisableScissor(RenderCmdList *cmdList);
 
+bool RenderAdd_GetFrameBufferPixels(RenderCmdList *cmdList, GetFrameBufferPixelsCmd *cmd);
+
 bool RenderDraw_Execute(RenderCmdList *cmdList);

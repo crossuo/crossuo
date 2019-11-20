@@ -2160,15 +2160,13 @@ void CGameScreen::Render()
         g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
     }
 
-#ifdef NEW_RENDERER_ENABLED
-// turning this off while immediateMode is on
-// RenderDraw_Execute(&m_RenderCmdList);
-#endif
+    RenderDraw_Execute(&m_RenderCmdList);
 
     g_GL.EndDraw();
 
 #ifdef NEW_RENDERER_ENABLED
     Render_SwapBuffers();
+    g_ScreenshotBuilder.GPUDataReady();
 #endif
 }
 

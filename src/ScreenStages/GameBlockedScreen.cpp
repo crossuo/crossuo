@@ -38,8 +38,7 @@ void CGameBlockedScreen::Render()
     InitToolTip();
     g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
 
-    // turning this off while immediateMode is on
-    // RenderDraw_Execute(&m_RenderCmdList);
+    RenderDraw_Execute(&m_RenderCmdList);
 }
 
 void CGameBlockedScreen::SelectObject()

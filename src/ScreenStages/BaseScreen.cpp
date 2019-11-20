@@ -21,14 +21,10 @@ void CBaseScreen::InitRenderList()
     m_RenderCmdListData = malloc(s_renderCmdListSize);
     assert(m_RenderCmdListData);
 
-// leave this on to execute ogl commands as they're added to the list,
-// instead of deferring their execution until RenderDraw_Execute is called
-#define NEWRENDERER_IMMEDIATEMODE
-#ifdef NEWRENDERER_IMMEDIATEMODE
+    // comment this out to enable delayed render cmds (commands are pushed to the GPU when RenderDraw_Execute is called)
+    // don't comment this out until text resources lifetime isn't fixed (see CFontsManager::DrawA)
     const bool immediateMode = true;
-#else
-    const bool immediateMode = false;
-#endif
+    // const bool immediateMode = false;
     m_RenderCmdList = RenderCmdList(
         m_RenderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
 
@@ -93,15 +89,13 @@ void CBaseScreen::Render()
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);
 
-#ifdef NEW_RENDERER_ENABLED
-    // turning this off while immediateMode is on
-    // RenderDraw_Execute(&m_RenderCmdList);
-#endif
+    RenderDraw_Execute(&m_RenderCmdList);
 
     g_GL.EndDraw();
 
 #ifdef NEW_RENDERER_ENABLED
     Render_SwapBuffers();
+    g_ScreenshotBuilder.GPUDataReady();
 #endif
 }
 
@@ -142,6 +136,7 @@ int CBaseScreen::DrawSmoothMonitor()
 
 #ifdef NEW_RENDERER_ENABLED
         Render_SwapBuffers();
+        g_ScreenshotBuilder.GPUDataReady();
 #endif
         return 1;
     }

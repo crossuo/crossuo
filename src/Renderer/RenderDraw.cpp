@@ -3,10 +3,10 @@
 #include "Renderer/RenderInternal.h"
 #include "Utility/PerfMarker.h"
 
-#define MATCH_CASE_DRAW(type, ret, cmd, state)                                                     \
+#define MATCH_CASE_DRAW(type, cmd, state)                                                          \
     case RenderCommandType::Cmd_##type:                                                            \
     {                                                                                              \
-        ret &= RenderDraw_##type((type##Cmd *)cmd, state);                                         \
+        RenderDraw_##type((type##Cmd *)cmd, state);                                                \
         (char *)cmd += sizeof(type##Cmd);                                                          \
         break;                                                                                     \
     }
@@ -620,9 +620,42 @@ bool RenderDraw_DisableShaderPipeline(DisableShaderPipelineCmd *cmd, RenderState
     return RenderState_DisableShaderPipeline(state);
 }
 
+bool RenderDraw_GetFrameBufferPixels(GetFrameBufferPixelsCmd *cmd, RenderState *state)
+{
+    auto constexpr bppForFormat = [](GLenum format) {
+        switch (format)
+        {
+            case GL_UNSIGNED_INT_8_8_8_8_REV:
+                return 4;
+            default:
+                break;
+        }
+        return 0;
+    };
+
+    auto constexpr format = GL_UNSIGNED_INT_8_8_8_8_REV;
+    auto constexpr bpp = bppForFormat(format);
+    static_assert(bpp != 0, "Unknown format");
+
+    auto neededSize = (cmd->width * cmd->height) * bpp;
+    assert(cmd->dataSize >= neededSize);
+    if (cmd->dataSize < neededSize)
+    {
+        return false;
+    }
+
+    // game viewport isn't scaled, if the OS window is smaller than GameWindowPosY + GameWindowHeight, bottom will
+    // be negative by this difference
+    int needed_height = cmd->y + cmd->height;
+    int bottom = cmd->window_height - needed_height;
+
+    glReadPixels(cmd->x, bottom, cmd->width, cmd->height, GL_RGBA, format, cmd->data);
+
+    return true;
+}
+
 bool RenderDraw_Execute(RenderCmdList *cmdList)
 {
-    assert(!cmdList->immediateMode);
     if (cmdList->immediateMode)
     {
         return false;
@@ -632,42 +665,46 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
     uint32_t remainingCmdSize = cmdList->size - cmdList->remainingSize;
     char *listEnd = cmd + remainingCmdSize;
 
-    bool ret = true;
-    while (cmd < listEnd && ret)
+    while (cmd < listEnd)
     {
         RenderCommandHeader &cmdHeader = *(RenderCommandHeader *)cmd;
         switch (cmdHeader.type)
         {
-            MATCH_CASE_DRAW(DrawQuad, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawRotatedQuad, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawCharacterSitting, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawLandTile, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawShadow, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawCircle, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawUntexturedQuad, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DrawLine, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(ClearRT, ret, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawQuad, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawRotatedQuad, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawCharacterSitting, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawLandTile, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawShadow, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawCircle, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawUntexturedQuad, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DrawLine, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(ClearRT, cmd, &cmdList->state)
 
-            MATCH_CASE_DRAW(FlushState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(SetTexture, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(BlendState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DisableBlendState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(StencilState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DisableStencilState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(EnableStencilState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DepthState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(DisableDepthState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(EnableDepthState, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(SetColorMask, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(SetColor, ret, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(SetViewParams, ret, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(SetScissor, ret, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(DisableScissor, ret, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(FlushState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetTexture, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetFrameBuffer, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(BlendState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DisableBlendState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(StencilState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DisableStencilState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(EnableStencilState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DepthState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DisableDepthState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(EnableDepthState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetColorMask, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetColor, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetClearColor, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetViewParams, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetModelViewTranslation, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetScissor, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(DisableScissor, cmd, &cmdList->state);
 
-            MATCH_CASE_DRAW(ShaderUniform, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(ShaderLargeUniform, ret, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(ShaderPipeline, ret, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(DisableShaderPipeline, ret, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(ShaderUniform, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(ShaderLargeUniform, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(ShaderPipeline, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(DisableShaderPipeline, cmd, &cmdList->state);
+
+            MATCH_CASE_DRAW(GetFrameBufferPixels, cmd, &cmdList->state);
 
             default:
                 assert(false);
