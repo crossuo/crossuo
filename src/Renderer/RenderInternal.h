@@ -117,3 +117,5 @@ bool RenderDraw_ShaderUniform(ShaderUniformCmd *, RenderState *state);
 bool RenderDraw_ShaderLargeUniform(ShaderLargeUniformCmd *, RenderState *state);
 bool RenderDraw_ShaderPipeline(ShaderPipelineCmd *cmd, RenderState *state);
 bool RenderDraw_DisableShaderPipeline(DisableShaderPipelineCmd *cmd, RenderState *state);
+
+bool RenderDraw_GetFrameBufferPixels(GetFrameBufferPixelsCmd *cmd, RenderState *state);

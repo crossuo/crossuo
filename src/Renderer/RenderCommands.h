@@ -36,6 +36,7 @@ enum RenderCommandType : uint8_t
     Cmd_SetModelViewTranslation,
     Cmd_SetScissor,
     Cmd_DisableScissor,
+    Cmd_GetFrameBufferPixels,
 
     Cmd_ShaderUniform,
     Cmd_ShaderLargeUniform,
@@ -613,6 +614,40 @@ struct DisableShaderPipelineCmd
 
     DisableShaderPipelineCmd()
         : header{ RenderCommandType::Cmd_DisableShaderPipeline }
+    {
+    }
+};
+
+struct GetFrameBufferPixelsCmd
+{
+    RenderCommandHeader header;
+    int x;
+    int y;
+    uint32_t width;
+    uint32_t height;
+    uint32_t window_width;
+    uint32_t window_height;
+    void *data;
+    size_t dataSize;
+
+    GetFrameBufferPixelsCmd(
+        int x,
+        int y,
+        uint32_t width,
+        uint32_t height,
+        uint32_t window_width,
+        uint32_t window_height,
+        void *data,
+        size_t dataSize)
+        : header{ RenderCommandType::Cmd_GetFrameBufferPixels }
+        , x(x)
+        , y(y)
+        , width(width)
+        , height(height)
+        , window_width(window_width)
+        , window_height(window_height)
+        , data(data)
+        , dataSize(dataSize)
     {
     }
 };
