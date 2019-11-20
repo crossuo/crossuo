@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define RENDER_TEXTUREHANDLE_INVALID (0xffffffff)
 #define RENDER_SHADERUNIFORMID_INVALID (0xffffffff)
 #define RENDER_SHADERUNIFORMLOC_INVALID (0xffffffff)

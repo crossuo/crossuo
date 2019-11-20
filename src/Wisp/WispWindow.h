@@ -3,6 +3,8 @@
 #ifndef WISP_WIN_H
 #define WISP_WIN_H
 
+#include <SDL.h>         // plugininterface.h
+#include "../CrossPCH.h" // REMOVE
 #include <SDL_video.h>
 #include "../Platform.h"
 #include <xuocore/plugininterface.h>

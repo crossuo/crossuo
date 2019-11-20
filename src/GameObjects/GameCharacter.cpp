@@ -18,7 +18,7 @@
 #include "../Walker/PathFinder.h"
 #include "../TextEngine/TextData.h"
 #include "../GameObjects/GamePlayer.h"
-#include "Utility/PerfMarker.h"
+#include "../Utility/PerfMarker.h"
 
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)

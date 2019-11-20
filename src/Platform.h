@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <wctype.h> // REMOVE
+#include <assert.h> // REMOVE
 #include <string>
 #include <stdio.h>
 #include <SDL_events.h>
@@ -11,7 +13,9 @@
 
 #if _WIN32
 
+#ifndef HAVE_M_PI
 #define HAVE_M_PI // SDL conflicting with winsdk10
+#endif
 
 #if !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS

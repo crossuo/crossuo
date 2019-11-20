@@ -1,7 +1,10 @@
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
-#include "Renderer/RenderInternal.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderInternal.h"
+#include "../Utility/PerfMarker.h"
+#include "../GLEngine/GLHeaders.h"
+#include <assert.h>
+#define XUO_M_PI 3.14159265358979323846264338327950288
 
 #define MATCH_CASE_DRAW(type, cmd, state)                                                          \
     case RenderCommandType::Cmd_##type:                                                            \
@@ -350,7 +353,7 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
         RenderState_SetColor(state, { 0.f, 0.f, 0.f, 0.f });
     }
 
-    float pi = (float)M_PI * 2.0f;
+    float pi = (float)XUO_M_PI * 2.0f;
 
     auto radius = cmd.radius;
     for (int i = 0; i <= 360; i++)

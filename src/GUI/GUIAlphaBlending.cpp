@@ -2,8 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUIAlphaBlending.h"
-#include "Utility/PerfMarker.h"
-#include "Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 

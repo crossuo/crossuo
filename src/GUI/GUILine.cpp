@@ -2,8 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUILine.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

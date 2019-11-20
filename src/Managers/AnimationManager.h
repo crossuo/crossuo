@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../CrossPCH.h"       // REMOVE
 #include <xuocore/mulstruct.h> // AnimationSelector
 
 class CTargetGump;

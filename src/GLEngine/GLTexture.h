@@ -5,7 +5,7 @@
 
 #include "GLHeaders.h"
 // FIXME only RenderTypes.h should be needed here, RenderAPI is included due to temp NEW_RENDERER_ENABLED
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 struct CGLTexture
 {

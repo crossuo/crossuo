@@ -7,7 +7,7 @@
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/LandObject.h"
 #include "../Utility/PerfMarker.h"
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -593,7 +593,7 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
         glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    float pi = (float)M_PI * 2.0f;
+    float pi = (float)XUO_M_PI * 2.0f;
 
     for (int i = 0; i <= 360; i++)
     {

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../CrossPCH.h" // REMOVE
+
 #include <common/fs.h>
 #include <xuocore/mappedfile.h>
 

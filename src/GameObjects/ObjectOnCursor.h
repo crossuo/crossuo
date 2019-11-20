@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "../CrossPCH.h" // REMOVE
+
 struct MulStaticTile2;
 
 struct CObjectOnCursor

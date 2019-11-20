@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <SDL.h>
 // #define NEW_RENDERER_ENABLED
 
 #include "RenderTypes.h"

@@ -8,9 +8,11 @@
 #include "../PressedObject.h"
 #include "../Managers/MouseManager.h"
 #include "../Network/Packets.h"
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
+
+#define XUO_M_PI 3.14159265358979323846264338327950288
 
 enum
 {
@@ -97,7 +99,7 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
         testOfsX = 1.0f;
     }
 
-    float pi = (float)M_PI;
+    float pi = (float)XUO_M_PI;
 
     float a = -(atan(tempY / testOfsX) * 180.0f / pi);
 

@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (C) September 2017 Hotride
 
+#include "DateTimeStamp.h"
+
 #if defined(XUO_WINDOWS)
 
 std::string GetBuildDateTimeStamp()

@@ -3,6 +3,8 @@
 #ifndef WISP_PCKT_H
 #define WISP_PCKT_H
 
+#include "../CrossPCH.h" // REMOVE
+
 namespace Wisp
 {
 class CPacketMessage

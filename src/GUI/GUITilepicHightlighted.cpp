@@ -7,8 +7,8 @@
 #include "../SelectedObject.h"
 #include "../Managers/ColorManager.h"
 #include "../Gumps/Gump.h"
-#include "Utility/PerfMarker.h"
-#include "Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 

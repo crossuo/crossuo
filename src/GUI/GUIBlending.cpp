@@ -4,7 +4,7 @@
 #ifndef NEW_RENDERER_ENABLED
 
 #include "GUIBlending.h"
-#include "Utility/PerfMarker.h"
+#include "../Utility/PerfMarker.h"
 
 CGUIBlending::CGUIBlending(bool enabled, GLenum sFactor, GLenum dFactor)
     : CBaseGUI(GOT_BLENDING, 0, 0, 0, 0, 0)

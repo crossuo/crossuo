@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../CrossPCH.h" // REMOVE
 #include <xuocore/mappedfile.h>
 
 class CPacket : public CDataWriter

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include "md5.h"
 
 #define CRYPT_AUTO_VALUE 0x80

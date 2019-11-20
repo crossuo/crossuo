@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 enum RenderCommandType : uint8_t
 {
     Cmd_DrawQuad = 0,

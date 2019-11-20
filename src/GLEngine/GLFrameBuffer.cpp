@@ -3,8 +3,8 @@
 
 #include "Backend.h"
 #include "GameWindow.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 #ifdef NEW_RENDERER_ENABLED
 extern RenderCmdList *g_renderCmdList;

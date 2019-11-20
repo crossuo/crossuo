@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
-
+#include "../CrossPCH.h" // REMOVE
 #include <xuocore/mulstruct.h>
 
 struct FLOAT_HUES

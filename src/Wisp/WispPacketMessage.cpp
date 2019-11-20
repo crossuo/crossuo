@@ -1,5 +1,7 @@
 ﻿// MIT License
 
+#include "WispPacketMessage.h"
+
 namespace Wisp
 {
 CPacketMessage::CPacketMessage(bool bigEndian)

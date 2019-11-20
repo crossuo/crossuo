@@ -1,5 +1,7 @@
 // MIT License
 
+#include "WispBinaryFileWriter.h"
+
 namespace Wisp
 {
 CBinaryFileWriter::CBinaryFileWriter()
@@ -14,7 +16,6 @@ CBinaryFileWriter::~CBinaryFileWriter()
 
 bool CBinaryFileWriter::Open(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     //if (fs_path_exists(path))
@@ -28,7 +29,6 @@ bool CBinaryFileWriter::Open(const fs_path &path)
 
 void CBinaryFileWriter::Close()
 {
-    DEBUG_TRACE_FUNCTION;
     WriteBuffer();
 
     if (m_File != nullptr)
@@ -40,7 +40,6 @@ void CBinaryFileWriter::Close()
 
 void CBinaryFileWriter::WriteBuffer()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_File != nullptr && !m_Data.empty())
     {
         fwrite(&m_Data[0], m_Data.size(), 1, m_File);

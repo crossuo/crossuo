@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 enum
 {
     MAX_MOBILE_DIRECTIONS = 5,

@@ -8,7 +8,6 @@
 #include <string.h>
 #include <assert.h>
 
-#define CURL_STATICLIB
 #include <curl/curl.h>
 #include <external/tinyxml2.h> // not really needed here, just for the version info
 

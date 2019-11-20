@@ -5,7 +5,7 @@
 #include "GameCharacter.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
-#include "Utility/PerfMarker.h"
+#include "../Utility/PerfMarker.h"
 
 CStaticObject::CStaticObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CRenderStaticObject(ROT_STATIC_OBJECT, serial, graphic, color, x, y, z)

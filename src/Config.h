@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "CrossPCH.h" // REMOVE
 #include <xuocore/enumlist.h>
 
 struct Config

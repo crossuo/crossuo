@@ -1,7 +1,11 @@
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
-#include "Renderer/RenderInternal.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderInternal.h"
+#include "../Utility/PerfMarker.h"
+#include "../GLEngine/GLHeaders.h"
+#include "../Logging.h"
+#include <assert.h>
+#define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
 float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };

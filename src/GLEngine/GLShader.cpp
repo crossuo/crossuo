@@ -1,7 +1,11 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "Renderer/RenderAPI.h"
+#include "GLShader.h"
+#include "GLHeaders.h"
+#include <assert.h>
+#include "../Logging.h"
+
 extern RenderCmdList *g_renderCmdList;
 
 CDeathShader g_DeathShader;

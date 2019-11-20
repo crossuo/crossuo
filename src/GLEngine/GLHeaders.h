@@ -2,8 +2,8 @@
 
 #if defined(XUO_WINDOWS)
 
-#include "../../Dependencies/include/glew.h"
-#include "../../Dependencies/include/wglew.h"
+#include <GL/glew.h>
+#include <GL/wglew.h>
 
 #else
 

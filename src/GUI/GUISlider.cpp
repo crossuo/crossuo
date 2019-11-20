@@ -8,8 +8,8 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
-#include "Utility/PerfMarker.h"
-#include "Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
 
 extern RenderCmdList *g_renderCmdList;
 

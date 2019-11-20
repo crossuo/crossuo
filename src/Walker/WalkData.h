@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "../CrossPCH.h" // REMOVE
+
 class CWalkData
 {
 public:

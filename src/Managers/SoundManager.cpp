@@ -7,6 +7,7 @@
 #include <common/utils.h>
 #include "../CrossUO.h"
 #include "../GameWindow.h"
+#include <unordered_map>
 
 #ifndef ASS_IMPLEMENTATION
 #define ASS_IMPLEMENTATION
@@ -300,7 +301,7 @@ bool CSoundManager::IsPlayingNormalMusic()
     return s_backend.isValidVoiceHandle(s_Music[0]);
 }
 
-void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, bool warmode)
+void CSoundManager::PlayMP3(const char *fileName, int index, bool loop, bool warmode)
 {
     SOUND_DEBUG_TRACE;
     int cur = warmode ? 1 : 0;
@@ -310,7 +311,7 @@ void CSoundManager::PlayMP3(const std::string &fileName, int index, bool loop, b
         s_backend.stop(s_Music[cur]);
     }
 
-    s_MusicStream[cur].load(fileName.c_str());
+    s_MusicStream[cur].load(fileName);
     s_MusicStream[cur].setLooping(loop);
     s_Music[cur] = s_backend.play(s_MusicStream[cur], 0, 0);
     s_backend.fadeVolume(s_Music[cur], VOLUME_FACTOR, 2);

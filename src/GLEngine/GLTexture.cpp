@@ -1,8 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "GLHeaders.h"
+#include "GLEngine.h"
+#include "GLTexture.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

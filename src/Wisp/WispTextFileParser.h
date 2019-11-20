@@ -3,6 +3,7 @@
 #ifndef WISP_TFP_H
 #define WISP_TFP_H
 
+#include "../CrossPCH.h" // REMOVE
 #include <common/fs.h>
 
 namespace Wisp

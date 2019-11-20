@@ -42,8 +42,8 @@
 #if defined(USE_GLEW)
 
 #if defined(_MSC_VER)
-#include "../../Dependencies/include/glew.h"
-#include "../../Dependencies/include/wglew.h"
+#include <glew.h>
+#include <wglew.h>
 #else
 #define NO_SDL_GLEXT
 #include <GL/glew.h>

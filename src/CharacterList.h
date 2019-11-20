@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "CrossPCH.h" // REMOVE
 #include <string.h>
 
 class CCharacterList

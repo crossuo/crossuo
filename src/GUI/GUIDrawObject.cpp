@@ -5,8 +5,8 @@
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../Managers/ColorManager.h"
-#include "Renderer/RenderAPI.h"
-#include "Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
 extern RenderCmdList *g_renderCmdList;
 

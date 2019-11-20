@@ -3,7 +3,7 @@
 
 #include "ColorManager.h"
 #include <xuocore/uodata.h>
-#include "Renderer/RenderAPI.h"
+#include "../Renderer/RenderAPI.h"
 
 CColorManager g_ColorManager;
 extern RenderCmdList *g_renderCmdList;

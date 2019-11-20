@@ -1,5 +1,6 @@
 ﻿// MIT License
 
+#include "WispThread.h"
 #include <thread>
 #include <SDL_timer.h>
 #include <SDL_thread.h>
