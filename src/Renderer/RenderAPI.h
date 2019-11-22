@@ -3,7 +3,7 @@
 
 #pragma once
 
-#define NEW_RENDERER_ENABLED
+// #define NEW_RENDERER_ENABLED
 
 #include "RenderTypes.h"
 #include "RenderCommands.h"
