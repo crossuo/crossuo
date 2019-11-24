@@ -148,7 +148,7 @@ void CGUISkillItem::Draw(bool checktrans)
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
 #endif
 
     if (m_ButtonUse != nullptr)
@@ -161,7 +161,7 @@ void CGUISkillItem::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(20, 0, 250, 14);
 #else
-        RenderAdd_DrawUntexturedQuad(g_renderCmdList, &DrawUntexturedQuadCmd(20, 0, 250, 14));
+        RenderAdd_DrawUntexturedQuad(g_renderCmdList, DrawUntexturedQuadCmd{ 20, 0, 250, 14 });
 #endif
     }
 
@@ -175,7 +175,7 @@ void CGUISkillItem::Draw(bool checktrans)
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
 #endif
 }
 

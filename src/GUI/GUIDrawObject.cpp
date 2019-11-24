@@ -42,10 +42,9 @@ void CGUIDrawObject::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
         g_ColorManager.SendColorsToShader(Color);
     }
@@ -54,11 +53,9 @@ void CGUIDrawObject::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-        auto uniformValue = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
     }
 }

@@ -41,14 +41,14 @@ void CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
     auto window_height = uint32_t(windowSize.Height);
     RenderAdd_GetFrameBufferPixels(
         g_renderCmdList,
-        &GetFrameBufferPixelsCmd{ x,
-                                  y,
-                                  uint32_t(width),
-                                  uint32_t(height),
-                                  window_width,
-                                  window_height,
-                                  &m_Pixels[0],
-                                  m_Pixels.size() * sizeof(decltype(m_Pixels)::value_type) });
+        GetFrameBufferPixelsCmd{ x,
+                                 y,
+                                 uint32_t(width),
+                                 uint32_t(height),
+                                 window_width,
+                                 window_height,
+                                 &m_Pixels[0],
+                                 m_Pixels.size() * sizeof(decltype(m_Pixels)::value_type) });
 #endif
 }
 

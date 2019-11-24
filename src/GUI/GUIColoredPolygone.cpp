@@ -68,18 +68,18 @@ void CGUIColoredPolygone::Draw(bool checktrans)
 #else
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList,
-        &DrawUntexturedQuadCmd(
+        DrawUntexturedQuadCmd{
             m_X,
             m_Y,
-            Width,
-            Height,
-            { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f }));
+            uint32_t(Width),
+            uint32_t(Height),
+            { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f } });
 
     if (Focused || (DrawDot && g_GumpSelectedElement == this))
     {
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
-            &DrawUntexturedQuadCmd(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2));
+            DrawUntexturedQuadCmd{ m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2 });
     }
 #endif
 }

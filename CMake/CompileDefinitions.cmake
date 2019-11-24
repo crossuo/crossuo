@@ -42,6 +42,41 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
   add_definitions(-D_SCL_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+  add_definitions(-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+  add_definitions(/Wall)
+  add_definitions(/wd4710) # function not inlined
+  add_definitions(/wd4820) # padding added after data member
+  add_definitions(/wd4668) # macro is not defined as a preprocessor macro
+  add_definitions(/wd5039) # ptr passed to extern C function, UB if exception is thrown
+  add_definitions(/wd4626) # assignment op implicitly deleted
+  add_definitions(/wd4623) # default ctor implicitly deleted
+  add_definitions(/wd5027) # move op implicitly deleted
+  add_definitions(/wd5026) # move ctor implicitly deleted
+  add_definitions(/wd4625) # copy ctor implicitly deleted
+  add_definitions(/wd4365) # signed/unsigned mismatch (TEMPORARY disabled)
+  add_definitions(/wd4388) # signed/unsigned mismatch (TEMPORARY disabled)
+  add_definitions(/wd4245) # signed/unsigned mismatch (TEMPORARY disabled)
+  add_definitions(/wd4389) # signed/unsigned mismatch (TEMPORARY disabled)
+  add_definitions(/wd4242) # narrowing conversion (TEMPORARY disabled)
+  add_definitions(/wd4244) # narrowing conversion (TEMPORARY disabled)
+  add_definitions(/wd4267) # narrowing conversion (TEMPORARY disabled)
+  add_definitions(/wd4100) # unused var (TEMPORARY disabled)
+  add_definitions(/wd4061) # unhandled case in switch (TEMPORARY disabled)
+  add_definitions(/wd4127) # consider using 'if constexpr' (TEMP disabled)
+  add_definitions(/wd4191) # unsafe conversion (TEMP disabled)
+  add_definitions(/wd4571) # catch semantics changed
+  add_definitions(/wd4201) # nameless struct/union
+  add_definitions(/wd4265) # no virtual dtor in class with virtual funcs
+  add_definitions(/wd4464) # relative include path contains '..'
+  add_definitions(/wd4774) # format string expected is not a string literal
+  add_definitions(/wd4095) # ???
+  add_definitions(/wd4548) # expression before comma has no effect
+  add_definitions(/wd4371) # layout of class may have changed from a prev compiler
+  add_definitions(/wd4125) # decimal digit terminates octal escape seq
+  add_definitions(/wd4505) # unreferenced local function has been removed (TODO disable this on debug only)
+  add_definitions(/wd4711) # function selected for automatic inline
+  add_definitions(/wd4514) # unreferenced inline func has been removed
+  add_definitions(/we4238) # equivalent to gcc/clang -fpermissive
 else()
   #thread sanitizer - issues to fix
   #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")

@@ -42,11 +42,13 @@ enum RenderCommandType : uint8_t
     Cmd_ShaderLargeUniform,
     Cmd_ShaderPipeline,
     Cmd_DisableShaderPipeline,
+
+    RenderCommandType_Invalid = 0xff,
 };
 
 struct RenderCommandHeader
 {
-    RenderCommandType type = RenderCommandType{ 0 };
+    RenderCommandType type = RenderCommandType_Invalid;
     RenderCommandHeader(RenderCommandType type)
         : type(type)
     {
@@ -57,114 +59,56 @@ struct RenderCommandHeader
 
 struct SetTextureCmd
 {
-    RenderCommandHeader header;
-    texture_handle_t texture;
-    TextureType type;
-
-    SetTextureCmd(texture_handle_t texture, TextureType type)
-        : header{ RenderCommandType::Cmd_SetTexture }
-        , texture(texture)
-        , type(type)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetTexture;
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
+    TextureType type = TextureType::TextureType_Invalid;
 };
 
 struct SetFrameBufferCmd
 {
-    RenderCommandHeader header;
-    frame_buffer_t frameBuffer;
-
-    SetFrameBufferCmd(frame_buffer_t frameBuffer)
-        : header{ RenderCommandType::Cmd_SetFrameBuffer }
-        , frameBuffer(frameBuffer)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetFrameBuffer;
+    frame_buffer_t frameBuffer{};
 };
 
 struct SetViewParamsCmd
 {
-    RenderCommandHeader header;
-    int scene_x;
-    int scene_y;
-    int scene_width;
-    int scene_height;
-    int window_width;
-    int window_height;
-    int camera_nearZ;
-    int camera_farZ;
-    float scene_scale;
-    bool proj_flipped_y;
-
-    SetViewParamsCmd(
-        int scene_x,
-        int scene_y,
-        int scene_width,
-        int scene_height,
-        int window_width,
-        int window_height,
-        int camera_nearZ,
-        int camera_farZ,
-        float scene_scale = 1.f,
-        bool proj_flipped_y = false)
-        : header{ RenderCommandType::Cmd_SetViewParams }
-        , scene_x(scene_x)
-        , scene_y(scene_y)
-        , scene_width(scene_width)
-        , scene_height(scene_height)
-        , window_width(window_width)
-        , window_height(window_height)
-        , camera_nearZ(camera_nearZ)
-        , camera_farZ(camera_farZ)
-        , scene_scale(scene_scale)
-        , proj_flipped_y(proj_flipped_y)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetViewParams;
+    int scene_x = 0.f;
+    int scene_y = 0.f;
+    int scene_width = 0.f;
+    int scene_height = 0.f;
+    int window_width = 0.f;
+    int window_height = 0.f;
+    int camera_nearZ = 0.f;
+    int camera_farZ = 0.f;
+    float scene_scale = 1.f;
+    bool proj_flipped_y = false;
 };
 
 struct SetModelViewTranslationCmd
 {
-    RenderCommandHeader header;
-    float3 pos;
-
-    SetModelViewTranslationCmd(float3 pos)
-        : header{ RenderCommandType::Cmd_SetModelViewTranslation }
-        , pos(pos)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetModelViewTranslation;
+    float3 pos{ 0.f, 0.f, 0.f };
 };
 
 struct SetScissorCmd
 {
-    RenderCommandHeader header;
-    int x;
-    int y;
-    uint32_t width;
-    uint32_t height;
-
-    SetScissorCmd(int x, int y, uint32_t width, uint32_t height)
-        : header{ RenderCommandType::Cmd_SetScissor }
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetScissor;
+    int x = 0.f;
+    int y = 0.f;
+    uint32_t width = 0;
+    uint32_t height = 0;
 };
 
 struct DisableScissorCmd
 {
-    RenderCommandHeader header;
-
-    DisableScissorCmd()
-        : header{ RenderCommandType::Cmd_DisableScissor }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableScissor;
 };
 
 struct DrawQuadCmd
 {
-    RenderCommandHeader header;
-    texture_handle_t texture;
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawQuad;
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
     int x = 0;
     int y = 0;
     uint32_t width = 0;
@@ -173,481 +117,236 @@ struct DrawQuadCmd
     float v = 1.f;
     float4 rgba = g_ColorWhite;
     bool mirrored = false;
-
-    DrawQuadCmd() = default;
-
-    DrawQuadCmd(
-        texture_handle_t texture,
-        int x,
-        int y,
-        uint32_t width,
-        uint32_t height,
-        float u = 1.f,
-        float v = 1.f,
-        float4 rgba = g_ColorWhite,
-        bool mirrored = false)
-        : header{ RenderCommandType::Cmd_DrawQuad }
-        , texture(texture)
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-        , u(u)
-        , v(v)
-        , rgba(rgba)
-        , mirrored(mirrored)
-    {
-    }
 };
 
 struct DrawCharacterSittingCmd
 {
-    RenderCommandHeader header;
-    texture_handle_t texture;
-    int x;
-    int y;
-    uint32_t width;
-    uint32_t height;
-    float h3mod;
-    float h6mod;
-    float h9mod;
-    bool mirror;
-
-    DrawCharacterSittingCmd(
-        texture_handle_t texture,
-        int x,
-        int y,
-        uint32_t width,
-        uint32_t height,
-        bool mirror,
-        float h3mod,
-        float h6mod,
-        float h9mod)
-        : header{ RenderCommandType::Cmd_DrawCharacterSitting }
-        , texture(texture)
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-        , h3mod(h3mod)
-        , h6mod(h6mod)
-        , h9mod(h9mod)
-        , mirror(mirror)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawCharacterSitting;
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
+    int x = 0;
+    int y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    float h3mod = 0.f;
+    float h6mod = 0.f;
+    float h9mod = 0.f;
+    bool mirror = false;
 };
 
 struct DrawLandTileCmd
 {
-    RenderCommandHeader header;
-    texture_handle_t texture;
-    int x;
-    int y;
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawLandTile;
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
+    int x = 0;
+    int y = 0;
     struct
     {
-        int x;
-        int y;
-        uint32_t width;
-        uint32_t height;
+        int x = 0;
+        int y = 0;
+        uint32_t width = 0;
+        uint32_t height = 0;
     } rect;
     float3 normals[4];
-
-    DrawLandTileCmd(
-        texture_handle_t texture,
-        int x,
-        int y,
-        int rect_x,
-        int rect_y,
-        uint32_t rect_w,
-        uint32_t rect_h,
-        float3 normals[4])
-        : header{ RenderCommandType::Cmd_DrawLandTile }
-        , texture(texture)
-        , x(x)
-        , y(y)
-        , rect{ rect_x, rect_y, rect_w, rect_h }
-        , normals{ normals[0], normals[1], normals[2], normals[3] }
-    {
-    }
 };
 
 struct DrawShadowCmd
 {
-    RenderCommandHeader header;
-    texture_handle_t texture;
-    int x;
-    int y;
-    int uniformValue;
-    uint32_t width;
-    uint32_t height;
-    uint32_t uniformId;
-    bool mirror;
-    bool restoreBlendFunc;
-
-    DrawShadowCmd(
-        texture_handle_t texture,
-        int x,
-        int y,
-        uint32_t width,
-        uint32_t height,
-        bool mirror,
-        uint32_t uniformId,
-        int uniformValue,
-        bool restoreBlendFunc)
-        : header{ RenderCommandType::Cmd_DrawShadow }
-        , texture(texture)
-        , x(x)
-        , y(y)
-        , uniformValue(uniformValue)
-        , width(width)
-        , height(height)
-        , uniformId(uniformId)
-        , mirror(mirror)
-        , restoreBlendFunc(restoreBlendFunc)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawShadow;
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
+    int x = 0;
+    int y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint32_t uniformId = 0;
+    int uniformValue = 0;
+    bool mirror = false;
+    bool restoreBlendFunc = false;
 };
 
 struct DrawCircleCmd
 {
-    RenderCommandHeader header;
-    int x;
-    int y;
-    float radius;
-    int gradientMode;
-    DrawCircleCmd(int x, int y, float radius, int gradientMode = 0)
-        : header{ RenderCommandType::Cmd_DrawCircle }
-        , x(x)
-        , y(y)
-        , radius(radius)
-        , gradientMode(gradientMode)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawCircle;
+    int x = 0;
+    int y = 0;
+    float radius = 0.f;
+    int gradientMode = 0;
 };
 
 struct DrawUntexturedQuadCmd
 {
-    RenderCommandHeader header;
-    int x;
-    int y;
-    uint32_t width;
-    uint32_t height;
-    float4 color;
-    DrawUntexturedQuadCmd(
-        int x, int y, uint32_t width, uint32_t height, float4 color = g_ColorInvalid)
-        : header{ RenderCommandType::Cmd_DrawUntexturedQuad }
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-        , color(color)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawUntexturedQuad;
+    int x = 0;
+    int y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    float4 color = g_ColorInvalid;
 };
 
 struct DrawLineCmd
 {
-    RenderCommandHeader header;
-    int x0;
-    int y0;
-    int x1;
-    int y1;
-    float4 color;
-
-    DrawLineCmd(int x0, int y0, int x1, int y1, float4 color = g_ColorInvalid)
-        : header{ RenderCommandType::Cmd_DrawLine }
-        , x0(x0)
-        , y0(y0)
-        , x1(x1)
-        , y1(y1)
-        , color(color)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawLine;
+    int x0 = 0;
+    int y0 = 0;
+    int x1 = 0;
+    int y1 = 0;
+    float4 color = g_ColorInvalid;
 };
 
-struct DrawRotatedQuadCmd : public DrawQuadCmd
+struct DrawRotatedQuadCmd
 {
-    float angle;
-
-    DrawRotatedQuadCmd(
-        texture_handle_t texture,
-        int x,
-        int y,
-        uint32_t width,
-        uint32_t height,
-        float angle,
-        float u = 1.f,
-        float v = 1.f,
-        float4 rgba = g_ColorWhite,
-        bool mirrored = false)
-        : DrawQuadCmd(texture, x, y, width, height, u, v, rgba, mirrored)
-        , angle(angle)
-    {
-        header.type = RenderCommandType::Cmd_DrawRotatedQuad;
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DrawRotatedQuad;
+    texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
+    int x = 0;
+    int y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    float angle = 0.f;
+    float u = 1.f;
+    float v = 1.f;
+    float4 rgba = g_ColorWhite;
+    bool mirrored = false;
 };
 
 struct AlphaTestCmd
 {
-    RenderCommandHeader header;
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_AlphaTest;
     AlphaTestFunc func = AlphaTestFunc::AlphaTestFunc_Invalid;
-    float ref;
-
-    AlphaTestCmd(AlphaTestFunc func, float ref)
-        : header{ RenderCommandType::Cmd_AlphaTest }
-        , func(func)
-        , ref(ref)
-    {
-    }
+    float ref = 0.f;
 };
 
 struct DisableAlphaTestCmd
 {
-    RenderCommandHeader header;
-
-    DisableAlphaTestCmd()
-        : header{ RenderCommandType::Cmd_DisableAlphaTest }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableAlphaTest;
 };
 
 struct BlendStateCmd
 {
-    RenderCommandHeader header;
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_BlendState;
     BlendFactor src = BlendFactor::BlendFactor_Invalid;
     BlendFactor dst = BlendFactor::BlendFactor_Invalid;
-    BlendEquation equation = BlendEquation::BlendEquation_Invalid;
-
-    BlendStateCmd(
-        BlendFactor src, BlendFactor dst, BlendEquation equation = BlendEquation::BlendEquation_Add)
-        : header{ RenderCommandType::Cmd_BlendState }
-        , src(src)
-        , dst(dst)
-        , equation(equation)
-    {
-    }
+    BlendEquation equation = BlendEquation::BlendEquation_Add;
 };
 
 struct DisableBlendStateCmd
 {
-    RenderCommandHeader header;
-    DisableBlendStateCmd()
-        : header{ RenderCommandType::Cmd_DisableBlendState }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableBlendState;
 };
 
 struct StencilStateCmd
 {
-    RenderCommandHeader header;
-    StencilFunc func;
-    StencilOp stencilFail;
-    StencilOp depthFail;
-    StencilOp bothFail;
-    uint32_t ref;
-    uint32_t mask;
-
-    StencilStateCmd(
-        StencilFunc func = StencilFunc::StencilFunc_NeverPass,
-        uint32_t ref = 0,
-        uint32_t mask = 0xffffffff,
-        StencilOp stencilFail = StencilOp::StencilOp_Keep,
-        StencilOp depthFail = StencilOp::StencilOp_Keep,
-        StencilOp bothFail = StencilOp::StencilOp_Keep)
-        : header{ RenderCommandType::Cmd_StencilState }
-        , func(func)
-        , stencilFail(stencilFail)
-        , depthFail(depthFail)
-        , bothFail(bothFail)
-        , ref(ref)
-        , mask(mask)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_StencilState;
+    StencilFunc func = StencilFunc::StencilFunc_NeverPass;
+    StencilOp stencilFail = StencilOp::StencilOp_Keep;
+    StencilOp depthFail = StencilOp::StencilOp_Keep;
+    StencilOp bothFail = StencilOp::StencilOp_Keep;
+    uint32_t ref = 0;
+    uint32_t mask = 0xffffffff;
 };
 
 struct DisableStencilStateCmd
 {
-    RenderCommandHeader header;
-    DisableStencilStateCmd()
-        : header{ RenderCommandType::Cmd_DisableStencilState }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableStencilState;
 };
 
 struct EnableStencilStateCmd
 {
-    RenderCommandHeader header;
-    EnableStencilStateCmd()
-        : header{ RenderCommandType::Cmd_EnableStencilState }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_EnableStencilState;
 };
 
 struct DepthStateCmd
 {
-    RenderCommandHeader header;
-    DepthFunc func;
-
-    DepthStateCmd(DepthFunc func)
-        : header{ RenderCommandType::Cmd_DepthState }
-        , func(func)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DepthState;
+    DepthFunc func = DepthFunc::DepthFunc_Invalid;
 };
 
 struct DisableDepthStateCmd
 {
-    RenderCommandHeader header;
-    DisableDepthStateCmd()
-        : header{ RenderCommandType::Cmd_DisableDepthState }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableDepthState;
 };
 
 struct EnableDepthStateCmd
 {
-    RenderCommandHeader header;
-    EnableDepthStateCmd()
-        : header{ RenderCommandType::Cmd_EnableDepthState }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_EnableDepthState;
 };
 
 struct SetColorMaskCmd
 {
-    RenderCommandHeader header;
-    ColorMask mask;
-    SetColorMaskCmd(ColorMask mask = ColorMask::ColorMask_All)
-        : header{ RenderCommandType::Cmd_SetColorMask }
-        , mask(mask)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetColorMask;
+    ColorMask mask = ColorMask::ColorMask_All;
 };
 
 struct SetColorCmd
 {
-    RenderCommandHeader header;
-    float4 color;
-
-    SetColorCmd(float4 color)
-        : header{ RenderCommandType::Cmd_SetColor }
-        , color(color)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetColor;
+    float4 color = g_ColorInvalid;
 };
 
 struct SetClearColorCmd
 {
-    RenderCommandHeader header;
-    float4 color;
-
-    SetClearColorCmd(float4 color)
-        : header{ RenderCommandType::Cmd_SetClearColor }
-        , color(color)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetClearColor;
+    float4 color = g_ColorInvalid;
 };
 
 struct ClearRTCmd
 {
-    RenderCommandHeader header;
-    ClearRT clearMask;
-    ClearRTCmd(ClearRT clearMask = ClearRT::ClearRT_All)
-        : header{ RenderCommandType::Cmd_ClearRT }
-        , clearMask(clearMask)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_ClearRT;
+    ClearRT clearMask = ClearRT::ClearRT_All;
 };
 
 struct FlushStateCmd
 {
-    RenderCommandHeader header;
-    FlushStateCmd()
-        : header{ RenderCommandType::Cmd_FlushState }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_FlushState;
 };
 
 struct ShaderUniformCmd
 {
-    RenderCommandHeader header;
-    uint32_t id;
-    uint8_t value[RENDERSTATE_SHADER_UNIFORMDATA_SIZE];
-    ShaderUniformType type;
-
-    ShaderUniformCmd(uint32_t id, void *value, ShaderUniformType type);
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_ShaderUniform;
+    uint32_t id = RENDER_SHADERUNIFORMID_INVALID;
+    ShaderUniformType type = ShaderUniformType::ShaderUniformType_Invalid;
+    union {
+        uint8_t data
+            [RENDERSTATE_SHADER_UNIFORMDATA_SIZE]{}; // TODO add uniform storage for anything larger than this
+        int asInt1;
+        int asInt2[2];
+        int asInt3[3];
+        int asInt4[4];
+        float asFloat1;
+        float asFloat2[2];
+        float asFloat3[3];
+        float asFloat4[4];
+    } value{};
 };
 
 struct ShaderLargeUniformCmd
 {
-    RenderCommandHeader header;
-    void *value;
-    uint32_t id;
-    uint32_t count;
-    ShaderUniformType type;
-
-    ShaderLargeUniformCmd(uint32_t id, void *value, uint32_t count, ShaderUniformType type)
-        : header{ RenderCommandType::Cmd_ShaderLargeUniform }
-        , value(value)
-        , id(id)
-        , count(count)
-        , type(type)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_ShaderLargeUniform;
+    void *value =
+        nullptr; // TODO add uniform storage during uniform init/setup and use that for larger uniforms
+    uint32_t count = 0;
+    uint32_t id = RENDER_SHADERUNIFORMID_INVALID;
+    ShaderUniformType type = ShaderUniformType::ShaderUniformType_Invalid;
 };
 
 struct ShaderPipelineCmd
 {
-    RenderCommandHeader header;
-    ShaderPipeline *pipeline;
-
-    ShaderPipelineCmd(ShaderPipeline *pipeline)
-        : header{ RenderCommandType::Cmd_ShaderPipeline }
-        , pipeline(pipeline)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_ShaderPipeline;
+    ShaderPipeline *pipeline = nullptr;
 };
 
 struct DisableShaderPipelineCmd
 {
-    RenderCommandHeader header;
-
-    DisableShaderPipelineCmd()
-        : header{ RenderCommandType::Cmd_DisableShaderPipeline }
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableShaderPipeline;
 };
 
 struct GetFrameBufferPixelsCmd
 {
-    RenderCommandHeader header;
-    int x;
-    int y;
-    uint32_t width;
-    uint32_t height;
-    uint32_t window_width;
-    uint32_t window_height;
-    void *data;
-    size_t dataSize;
-
-    GetFrameBufferPixelsCmd(
-        int x,
-        int y,
-        uint32_t width,
-        uint32_t height,
-        uint32_t window_width,
-        uint32_t window_height,
-        void *data,
-        size_t dataSize)
-        : header{ RenderCommandType::Cmd_GetFrameBufferPixels }
-        , x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-        , window_width(window_width)
-        , window_height(window_height)
-        , data(data)
-        , dataSize(dataSize)
-    {
-    }
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_GetFrameBufferPixels;
+    int x = 0;
+    int y = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint32_t window_width = 0;
+    uint32_t window_height = 0;
+    void *data = nullptr; // TODO add resource storage to the renderer, this would be a handle then
+    size_t dataSize = 0;
 };

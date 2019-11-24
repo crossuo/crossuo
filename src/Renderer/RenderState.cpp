@@ -64,7 +64,9 @@ bool RenderState_SetAlphaTest(
         GL_GEQUAL,   // AlphaTest_GreaterOrEqual
     };
 
-    static_assert(countof(s_alphaTestfuncToOGLFunc) == AlphaTestFunc::AlphaTestFunc_Count);
+    static_assert(
+        countof(s_alphaTestfuncToOGLFunc) == AlphaTestFunc::AlphaTestFunc_Count,
+        "missing alpha test funcs");
 
     bool changed = false;
     if (state->alphaTest.enabled != enabled || forced)
@@ -119,8 +121,12 @@ bool RenderState_SetBlend(
         GL_FUNC_REVERSE_SUBTRACT, // ReverseSubtract
     };
 
-    static_assert(countof(s_blendFactorToOGLEnum) == BlendFactor::BlendFactor_Count);
-    static_assert(countof(s_blendEquationToOGLEnum) == BlendEquation::BlendEquation_Count);
+    static_assert(
+        countof(s_blendFactorToOGLEnum) == BlendFactor::BlendFactor_Count,
+        "missing blend factor mapping");
+    static_assert(
+        countof(s_blendEquationToOGLEnum) == BlendEquation::BlendEquation_Count,
+        "missing blend equation mapping");
 
     bool changed = false;
     if (state->blend.enabled != enabled || forced)
@@ -147,9 +153,9 @@ bool RenderState_SetBlend(
         glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]);
     }
 
-    if (enabled && state->blend.equation != equation ||
-        (forced && equation != BlendEquation::BlendEquation_Invalid))
+    if (enabled && (forced || (state->blend.equation != equation)))
     {
+        assert(state->blend.equation != BlendEquation::BlendEquation_Invalid);
         changed = true;
         state->blend.equation = equation;
         glBlendEquation(s_blendEquationToOGLEnum[equation]);
@@ -171,7 +177,8 @@ bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool
         GL_GEQUAL,   // DepthFunc::DepthFunc_GreaterOrEqual
     };
 
-    static_assert(countof(s_depthFuncToOGLFunc) == DepthFunc::DepthFunc_Count);
+    static_assert(
+        countof(s_depthFuncToOGLFunc) == DepthFunc::DepthFunc_Count, "missing depth func");
 
     if (forced || state->depth.enabled != enabled || (enabled && state->depth.func != func))
     {
@@ -262,8 +269,9 @@ bool RenderState_SetStencil(
         GL_INVERT     // StencilOp::StencilOp_Invert
     };
 
-    static_assert(countof(s_stencilFuncToOGLFunc) == StencilFunc::StencilFunc_Count);
-    static_assert(countof(s_stencilOpToOGLOp) == StencilOp::StencilOp_Count);
+    static_assert(
+        countof(s_stencilFuncToOGLFunc) == StencilFunc::StencilFunc_Count, "missing stencil func");
+    static_assert(countof(s_stencilOpToOGLOp) == StencilOp::StencilOp_Count, "missing stencil op");
 
     if (forced || state->stencil.enabled != enabled ||
         (enabled && (state->stencil.func != func || state->stencil.stencilFail != stencilFail ||
@@ -341,7 +349,7 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
 }
 
 bool RenderState_SetShaderUniform(
-    RenderState *state, uint32_t id, void *value, ShaderUniformType type, bool forced)
+    RenderState *state, uint32_t id, const void *value, ShaderUniformType type, bool forced)
 {
     // FIXME leave this commented until shader usage is consistent throughout drawables
     // assert(state->pipeline.program != RENDER_SHADERPROGRAM_INVALID);
@@ -355,8 +363,8 @@ bool RenderState_SetShaderUniform(
 
     auto uniformSize = Render_ShaderUniformTypeToSize(type);
 
-    if (!state->uniformCache.dataSet[id] ||
-        memcmp(state->uniformCache.data[id], value, uniformSize) != 0)
+    if (forced || (!state->uniformCache.dataSet[id] ||
+                   memcmp(state->uniformCache.data[id], value, uniformSize) != 0))
     {
         switch (type)
         {
@@ -367,6 +375,8 @@ bool RenderState_SetShaderUniform(
                 break;
             }
 
+            // Large uniform types
+            case ShaderUniformType::ShaderUniformType_Float1V:
             default:
             {
                 assert(false);
@@ -380,9 +390,11 @@ bool RenderState_SetShaderUniform(
             memcpy(state->uniformCache.data[id], value, uniformSize);
             state->uniformCache.dataSet[id] = true;
         }
+
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 bool RenderState_SetShaderLargeUniform(
@@ -448,7 +460,7 @@ bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
         return true;
     }
 
-    return false;
+    // return false;
 }
 
 bool RenderState_SetTexture(
@@ -515,7 +527,7 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
 
         return true;
     }
-    return false;
+    // return false;
 }
 
 bool RenderState_SetViewParams(
@@ -588,14 +600,11 @@ bool RenderState_SetViewParams(
         return true;
     }
 
-    return false;
+    // return false;
 }
 
 bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced)
 {
-    UNUSED(state);
-    UNUSED(forced);
-
     glTranslatef(pos[0], pos[1], pos[2]);
 
     return true;

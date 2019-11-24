@@ -85,15 +85,14 @@ void CDECL FUNCBODY_DrawLine(unsigned int color, int x, int y, int width, int he
 #else
     RenderAdd_DrawLine(
         g_renderCmdList,
-        &DrawLineCmd(
-            x,
-            y,
-            width,
-            height,
-            { ToColorR(color) / 255.f,
-              ToColorG(color) / 255.f,
-              ToColorB(color) / 255.f,
-              ToColorA(color) / 255.f }));
+        DrawLineCmd{ x,
+                     y,
+                     width,
+                     height,
+                     { ToColorR(color) / 255.f,
+                       ToColorG(color) / 255.f,
+                       ToColorB(color) / 255.f,
+                       ToColorA(color) / 255.f } });
 #endif
 }
 
@@ -104,17 +103,17 @@ void CDECL FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, in
     g_GL.DrawPolygone(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
+    assert(width >= 0 && height >= 0);
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList,
-        &DrawUntexturedQuadCmd(
-            x,
-            y,
-            width,
-            height,
-            { ToColorR(color) / 255.f,
-              ToColorG(color) / 255.f,
-              ToColorB(color) / 255.f,
-              ToColorA(color) / 255.f }));
+        DrawUntexturedQuadCmd{ x,
+                               y,
+                               uint32_t(width),
+                               uint32_t(height),
+                               { ToColorR(color) / 255.f,
+                                 ToColorG(color) / 255.f,
+                                 ToColorB(color) / 255.f,
+                                 ToColorA(color) / 255.f } });
 #endif
 }
 
@@ -127,12 +126,12 @@ void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radiu
 #else
     RenderAdd_SetColor(
         g_renderCmdList,
-        &SetColorCmd({ ToColorR(color) / 255.f,
+        SetColorCmd{ { ToColorR(color) / 255.f,
                        ToColorG(color) / 255.f,
                        ToColorB(color) / 255.f,
-                       ToColorA(color) / 255.f }));
-    RenderAdd_DrawCircle(g_renderCmdList, &DrawCircleCmd((int)x, (int)y, radius, gradientMode));
-    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                       ToColorA(color) / 255.f } });
+    RenderAdd_DrawCircle(g_renderCmdList, DrawCircleCmd{ (int)x, (int)y, radius, gradientMode });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 }
 

@@ -140,7 +140,7 @@ void CWeather::Draw(int x, int y)
 #ifndef NEW_RENDERER_ENABLED
             glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
 #else
-            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorBlue));
+            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorBlue });
 #endif
             break;
         }
@@ -150,7 +150,7 @@ void CWeather::Draw(int x, int y)
 #ifndef NEW_RENDERER_ENABLED
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
             break;
         }
@@ -282,7 +282,7 @@ void CWeather::Draw(int x, int y)
 #else
                 RenderAdd_DrawLine(
                     g_renderCmdList,
-                    &DrawLineCmd(x + oldX, y + oldY, x + (int)effect->X, y + (int)effect->Y));
+                    DrawLineCmd{ x + oldX, y + oldY, x + (int)effect->X, y + (int)effect->Y });
 #endif
 
                 break;
@@ -298,7 +298,7 @@ void CWeather::Draw(int x, int y)
 #else
                 RenderAdd_DrawUntexturedQuad(
                     g_renderCmdList,
-                    &DrawUntexturedQuadCmd(x + (int)effect->X, y + (int)effect->Y, 2, 2));
+                    DrawUntexturedQuadCmd{ x + (int)effect->X, y + (int)effect->Y, 2, 2 });
 #endif
 
                 break;
@@ -313,7 +313,7 @@ void CWeather::Draw(int x, int y)
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
     LastTick = g_Ticks;
 }

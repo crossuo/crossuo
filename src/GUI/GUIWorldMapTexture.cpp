@@ -32,9 +32,12 @@ void CGUIWorldMapTexture::Draw(bool checktrans)
 
         tex.Texture = 0;
 #else
-        auto cmd =
-            DrawQuadCmd(g_MapTexture[Index].Texture, m_X + OffsetX, m_Y + OffsetY, Width, Height);
-        RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
+        auto cmd = DrawQuadCmd{ g_MapTexture[Index].Texture,
+                                m_X + OffsetX,
+                                m_Y + OffsetY,
+                                uint32_t(Width),
+                                uint32_t(Height) };
+        RenderAdd_DrawQuad(g_renderCmdList, cmd);
 #endif
 
         //g_MapTexture[m_Index].Draw(m_X + m_OffsetX, m_Y + m_OffsetY, Width, Height, checktrans);

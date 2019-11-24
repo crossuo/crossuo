@@ -5,6 +5,7 @@
 #include <common/str.h>
 #include "GameScreen.h"
 #include "GameBlockedScreen.h"
+#include "ScreenshotBuilder.h"
 #include <xuocore/uodata.h>
 #include "../Config.h"
 #include "../Macro.h"
@@ -1340,7 +1341,7 @@ void CGameScreen::DrawGameWindow(bool render)
         glColor4f(g_DrawColor, g_DrawColor, g_DrawColor, 1.0f);
 #else
         RenderAdd_SetColor(
-            g_renderCmdList, &SetColorCmd({ g_DrawColor, g_DrawColor, g_DrawColor, 1.0f }));
+            g_renderCmdList, SetColorCmd{ { g_DrawColor, g_DrawColor, g_DrawColor, 1.0f } });
 #endif
         if (g_ConfigManager.UseCircleTrans)
         {
@@ -1493,7 +1494,7 @@ void CGameScreen::DrawGameWindowLight()
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 
     if (!UseLight)
@@ -1522,13 +1523,13 @@ void CGameScreen::DrawGameWindowLight()
 #else
         RenderAdd_SetClearColor(
             g_renderCmdList,
-            &SetClearColorCmd{ { newLightColor, newLightColor, newLightColor, 1.f } });
-        RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::ClearRT_Color });
-        RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ g_ColorBlack });
+            SetClearColorCmd{ { newLightColor, newLightColor, newLightColor, 1.f } });
+        RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Color });
+        RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ g_ColorBlack });
 
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
+            BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
 #endif
 
         int offsetX = 0;
@@ -1548,7 +1549,7 @@ void CGameScreen::DrawGameWindowLight()
 #else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList,
-            &SetModelViewTranslationCmd{ { translateOffsetX, translateOffsetY, 0.f } });
+            SetModelViewTranslationCmd{ { translateOffsetX, translateOffsetY, 0.f } });
 #endif
 
         for (int i = 0; i < m_LightCount; i++)
@@ -1561,7 +1562,7 @@ void CGameScreen::DrawGameWindowLight()
 #else
         RenderAdd_SetModelViewTranslation(
             g_renderCmdList,
-            &SetModelViewTranslationCmd{ { -translateOffsetX, -translateOffsetY, 0.f } });
+            SetModelViewTranslationCmd{ { -translateOffsetX, -translateOffsetY, 0.f } });
 #endif
 
         UnuseShader();
@@ -1590,11 +1591,11 @@ void CGameScreen::DrawGameWindowLight()
                                             150,
                                             float(g_GlobalScale) };
 
-        RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
+        RenderAdd_SetViewParams(g_renderCmdList, viewParams);
 
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd(BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor));
+            BlendStateCmd{ BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor });
 #endif
 
         if (g_ConfigManager.GetUseScaling())
@@ -1686,12 +1687,11 @@ void CGameScreen::DrawGameWindowText(bool render)
 #else
                             RenderAdd_SetBlend(
                                 g_renderCmdList,
-                                &BlendStateCmd(
-                                    BlendFactor::BlendFactor_SrcAlpha,
-                                    BlendFactor::BlendFactor_OneMinusSrcAlpha));
+                                BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                               BlendFactor::BlendFactor_OneMinusSrcAlpha });
                             RenderAdd_SetColor(
                                 g_renderCmdList,
-                                &SetColorCmd({ 1.f, 1.f, 1.f, (uint8_t)text->Color / 255.f }));
+                                SetColorCmd{ { 1.f, 1.f, 1.f, (uint8_t)text->Color / 255.f } });
 #endif
 
                             text->m_TextSprite.Draw(text->RealDrawX, text->RealDrawY);
@@ -1713,7 +1713,7 @@ void CGameScreen::DrawGameWindowText(bool render)
 #ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
     }
     else
@@ -1851,7 +1851,7 @@ void CGameScreen::Render()
     // we can get rid of glEngine
     g_GL.BeginDraw();
 #ifdef NEW_RENDERER_ENABLED
-    RenderAdd_ClearRT(&m_RenderCmdList, &ClearRTCmd());
+    RenderAdd_ClearRT(&m_RenderCmdList, ClearRTCmd{});
 #endif
     if (DrawSmoothMonitor() != 0)
     {
@@ -1901,7 +1901,7 @@ void CGameScreen::Render()
                                         -150,
                                         150,
                                         float(g_GlobalScale) };
-    RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
+    RenderAdd_SetViewParams(g_renderCmdList, viewParams);
 #endif
 
     g_DrawColor = 1.0f;
@@ -1946,12 +1946,11 @@ void CGameScreen::Render()
 #else
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
-            &DrawUntexturedQuadCmd(
-                g_RenderBounds.GameWindowPosX,
-                g_RenderBounds.GameWindowPosY,
-                g_RenderBounds.GameWindowWidth,
-                g_RenderBounds.GameWindowHeight,
-                g_ColorBlack));
+            DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
+                                   g_RenderBounds.GameWindowPosY,
+                                   uint32_t(g_RenderBounds.GameWindowWidth),
+                                   uint32_t(g_RenderBounds.GameWindowHeight),
+                                   g_ColorBlack });
 #endif
 
         g_FontManager.DrawA(
@@ -1980,7 +1979,7 @@ void CGameScreen::Render()
     auto viewParamsCmd = SetViewParamsCmd{
         0, 0, windowSize.Width, windowSize.Height, windowSize.Width, windowSize.Height, -150, 150
     };
-    RenderAdd_SetViewParams(g_renderCmdList, &viewParamsCmd);
+    RenderAdd_SetViewParams(g_renderCmdList, viewParamsCmd);
 #endif
     m_GameScreenGump.Draw();
 

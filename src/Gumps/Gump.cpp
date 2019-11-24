@@ -320,7 +320,7 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
     glClear(GL_STENCIL_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
 #else
-    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::ClearRT_Stencil });
+    RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Stencil });
     RenderAdd_EnableStencil(g_renderCmdList);
 #endif
 
@@ -369,7 +369,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
 #else
-    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha[transparent] }));
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha[transparent] } });
 #endif
 
     int page = 0;
@@ -410,7 +410,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     glTranslatef(x, y, 0.0f);
 #else
                     RenderAdd_SetModelViewTranslation(
-                        g_renderCmdList, &SetModelViewTranslationCmd{ { x, y, 0.f } });
+                        g_renderCmdList, SetModelViewTranslationCmd{ { x, y, 0.f } });
 #endif
 
                     CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
@@ -432,7 +432,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     glTranslatef(offsetX, offsetY, 0.0f);
 #else
                     RenderAdd_SetModelViewTranslation(
-                        g_renderCmdList, &SetModelViewTranslationCmd{ { offsetX, offsetY, 0.0f } });
+                        g_renderCmdList, SetModelViewTranslationCmd{ { offsetX, offsetY, 0.0f } });
 #endif
 
                     CGump::DrawItems(subItem, currentPage, draw2Page);
@@ -443,7 +443,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 #else
                     RenderAdd_SetModelViewTranslation(
                         g_renderCmdList,
-                        &SetModelViewTranslationCmd{ { -(x + offsetX), -(y + offsetY), 0.0f } });
+                        SetModelViewTranslationCmd{ { -(x + offsetX), -(y + offsetY), 0.0f } });
 #endif
 
                     break;
@@ -457,7 +457,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
 #else
                     RenderAdd_SetColor(
-                        g_renderCmdList, &SetColorCmd({ 1.0f, 1.0f, 1.0f, alpha[transparent] }));
+                        g_renderCmdList, SetColorCmd{ { 1.0f, 1.0f, 1.0f, alpha[transparent] } });
 #endif
 
                     break;
@@ -488,7 +488,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 }
 
@@ -1506,12 +1506,12 @@ void CGump::Draw()
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
 #else
-            RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
-            RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd{ ClearRT::ClearRT_Color });
-            RenderAdd_SetClearColor(g_renderCmdList, &SetClearColorCmd{ g_ColorBlack });
+            RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
+            RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Color });
+            RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ g_ColorBlack });
             RenderAdd_SetModelViewTranslation(
                 g_renderCmdList,
-                &SetModelViewTranslationCmd{
+                SetModelViewTranslationCmd{
                     { -(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f } });
 #endif
 
@@ -1556,43 +1556,39 @@ void CGump::Draw()
                 static float4 s_colorOtherGump = { 1.0f, 1.0f, 1.0f, 0.2f };
                 if (g_SelectedObject.Gump != this)
                 {
-                    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(s_colorOtherGump));
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ s_colorOtherGump });
                 }
                 else
                 {
-                    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(s_colorThisGump));
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ s_colorThisGump });
                 }
 
                 RenderAdd_DrawLine(
                     g_renderCmdList,
-                    &DrawLineCmd(
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + 1,
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + 1));
+                    DrawLineCmd{ GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + 1,
+                                 GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + 1 });
                 RenderAdd_DrawLine(
                     g_renderCmdList,
-                    &DrawLineCmd(
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + 1,
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + GumpRect.Size.Height));
+                    DrawLineCmd{ GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + 1,
+                                 GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + GumpRect.Size.Height });
                 RenderAdd_DrawLine(
                     g_renderCmdList,
-                    &DrawLineCmd(
-                        GumpRect.Position.X + GumpRect.Size.Width,
-                        GumpRect.Position.Y + GumpRect.Size.Height,
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + GumpRect.Size.Height));
+                    DrawLineCmd{ GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + GumpRect.Size.Height,
+                                 GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + GumpRect.Size.Height });
                 RenderAdd_DrawLine(
                     g_renderCmdList,
-                    &DrawLineCmd(
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + GumpRect.Size.Height,
-                        GumpRect.Position.X + 1,
-                        GumpRect.Position.Y + 1));
+                    DrawLineCmd{ GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + GumpRect.Size.Height,
+                                 GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + 1 });
 
-                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
             }
 
@@ -1601,7 +1597,7 @@ void CGump::Draw()
 #else
             RenderAdd_SetModelViewTranslation(
                 g_renderCmdList,
-                &SetModelViewTranslationCmd{
+                SetModelViewTranslationCmd{
                     { (float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f } });
 #endif
 
@@ -1630,13 +1626,13 @@ void CGump::Draw()
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { posX, posY, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { posX, posY, 0.0f } });
 
     RenderAdd_SetBlend(
         g_renderCmdList,
-        &BlendStateCmd(
-            BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
-    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                       BlendFactor::BlendFactor_OneMinusSrcAlpha });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 
     m_FrameBuffer.Draw(0, 0);
@@ -1653,7 +1649,7 @@ void CGump::Draw()
     glTranslatef(-posX, -posY, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { -posX, -posY, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { -posX, -posY, 0.0f } });
 #endif
 }
 

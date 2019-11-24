@@ -169,10 +169,10 @@ void CGUITextEntry::Draw(bool checktrans)
 #else
             RenderAdd_SetColor(
                 g_renderCmdList,
-                &SetColorCmd({ GlobalColorFocusedR / 255.f,
+                SetColorCmd{ { GlobalColorFocusedR / 255.f,
                                GlobalColorFocusedG / 255.f,
                                GlobalColorFocusedB / 255.f,
-                               GlobalColorFocusedA / 255.f }));
+                               GlobalColorFocusedA / 255.f } });
 #endif
         }
         else
@@ -199,10 +199,10 @@ void CGUITextEntry::Draw(bool checktrans)
 #else
             RenderAdd_SetColor(
                 g_renderCmdList,
-                &SetColorCmd({ GlobalColorSelectedR / 255.f,
+                SetColorCmd{ { GlobalColorSelectedR / 255.f,
                                GlobalColorSelectedG / 255.f,
                                GlobalColorSelectedB / 255.f,
-                               GlobalColorSelectedA / 255.f }));
+                               GlobalColorSelectedA / 255.f } });
 #endif
         }
         else
@@ -217,10 +217,10 @@ void CGUITextEntry::Draw(bool checktrans)
 #else
         RenderAdd_SetColor(
             g_renderCmdList,
-            &SetColorCmd({ GlobalColorR / 255.f,
+            SetColorCmd{ { GlobalColorR / 255.f,
                            GlobalColorG / 255.f,
                            GlobalColorB / 255.f,
-                           GlobalColorA / 255.f }));
+                           GlobalColorA / 255.f } });
 #endif
     }
 
@@ -237,8 +237,8 @@ void CGUITextEntry::Draw(bool checktrans)
 #else
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd(
-                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
 #endif
 
         if (Unicode)
@@ -257,7 +257,7 @@ void CGUITextEntry::Draw(bool checktrans)
 #else
         RenderAdd_DisableBlend(g_renderCmdList);
         // FIXME renderer - what were the original values for stencil func, op, ref and mask?
-        RenderAdd_SetStencil(g_renderCmdList, &StencilStateCmd());
+        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{});
 #endif
 
         if (Unicode)
@@ -292,7 +292,7 @@ void CGUITextEntry::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, 1.f }));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, 1.f } });
 #endif
     }
 }

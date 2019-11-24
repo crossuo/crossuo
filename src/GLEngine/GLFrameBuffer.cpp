@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Backend.h"
+#include "GameWindow.h"
 #include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
 
@@ -115,18 +116,18 @@ void CGLFrameBuffer::Release()
     g_GL.RestorePort();
 #else
     // TODO this isn't the place to keep track of the previous frame buffer
-    RenderAdd_SetFrameBuffer(g_renderCmdList, &SetFrameBufferCmd{ m_OldFrameBuffer });
+    RenderAdd_SetFrameBuffer(g_renderCmdList, SetFrameBufferCmd{ m_OldFrameBuffer });
 
     RenderAdd_SetTexture(
         g_renderCmdList,
-        &SetTextureCmd{ m_FrameBuffer.texture, TextureType::TextureType_Texture2D_Mipmapped });
+        SetTextureCmd{ m_FrameBuffer.texture, TextureType::TextureType_Texture2D_Mipmapped });
 
     auto window_width = g_GameWindow.GetSize().Width;
     auto window_height = g_GameWindow.GetSize().Height;
     auto viewParams = SetViewParamsCmd{
         0, 0, window_width, window_height, window_width, window_height, -150, 150
     };
-    RenderAdd_SetViewParams(g_renderCmdList, &viewParams);
+    RenderAdd_SetViewParams(g_renderCmdList, viewParams);
 #endif
 }
 
@@ -174,20 +175,20 @@ bool CGLFrameBuffer::Use()
         glMatrixMode(GL_MODELVIEW);
 #else
         HACKRender_GetFrameBuffer(g_renderCmdList, &m_OldFrameBuffer);
-        RenderAdd_SetFrameBuffer(g_renderCmdList, &SetFrameBufferCmd{ m_FrameBuffer });
+        RenderAdd_SetFrameBuffer(g_renderCmdList, SetFrameBufferCmd{ m_FrameBuffer });
         static constexpr bool flipped_y = true;
         RenderAdd_SetViewParams(
             g_renderCmdList,
-            &SetViewParamsCmd{ 0,
-                               0,
-                               int(m_Width),
-                               int(m_Height),
-                               int(m_Width),
-                               int(m_Height),
-                               -150,
-                               150,
-                               1.f,
-                               flipped_y });
+            SetViewParamsCmd{ 0,
+                              0,
+                              int(m_Width),
+                              int(m_Height),
+                              int(m_Width),
+                              int(m_Height),
+                              -150,
+                              150,
+                              1.f,
+                              flipped_y });
 #endif
 
         result = true;
@@ -205,8 +206,8 @@ void CGLFrameBuffer::Draw(int x, int y)
 #ifndef NEW_RENDERER_ENABLED
         g_GL.Draw(Texture, x, y);
 #else
-        auto cmd = DrawQuadCmd(m_FrameBuffer.texture, x, y, m_Width, m_Height);
-        RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
+        auto cmd = DrawQuadCmd{ m_FrameBuffer.texture, x, y, m_Width, m_Height };
+        RenderAdd_DrawQuad(g_renderCmdList, cmd);
 #endif
     }
 }

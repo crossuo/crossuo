@@ -146,24 +146,6 @@ void CToolTip::Draw(int cursorWidth, int cursorHeight)
         }
 
         m_TextSprite.Draw_Tooltip(x, y, m_TextSprite.Width + 8, m_TextSprite.Height + 8);
-        // TODO renderer Draw_Tooltip
-        /*#ifndef NEW_RENDERER_ENABLED
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-        g_GL.DrawPolygone(x, y, Texture.Width + 8, Texture.Height + 8);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glDisable(GL_BLEND);
-        g_GL.Draw(Texture, x + 6, y + 4);
-#else
-        RenderAdd_DrawUntexturedQuad(
-            g_renderCmdList,
-            &DrawUntexturedQuadCmd(
-                x, y, Texture.Width + 8, Texture.Height + 8, { 0.f, 0.f, 0.f, 0.5f }));
-
-        auto textureCmd = DrawQuadCmd(Texture.Texture, x + 6, y + 4, Texture.Width, Texture.Height);
-        RenderAdd_DrawQuad(g_renderCmdList, &textureCmd, 1);
-#endif*/
     }
     Use = false;
 }

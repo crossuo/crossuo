@@ -277,7 +277,7 @@ void CGumpSecureTrading::Draw()
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList,
-        &SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
+        SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
 #endif
     g_FontColorizerShader.Use();
     m_TextRenderer.Draw();
@@ -287,7 +287,7 @@ void CGumpSecureTrading::Draw()
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList,
-        &SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
+        SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
 #endif
 }
 

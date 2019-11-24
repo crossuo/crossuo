@@ -29,9 +29,12 @@ void CGUITilepicScaled::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
         g_GL.Draw(*spr->Texture, m_X, m_Y);
 #else
-        auto textureCmd =
-            DrawQuadCmd(spr->Texture->Texture, m_X, m_Y, spr->Texture->Width, spr->Texture->Height);
-        RenderAdd_DrawQuad(g_renderCmdList, &textureCmd, 1);
+        auto textureCmd = DrawQuadCmd{ spr->Texture->Texture,
+                                       m_X,
+                                       m_Y,
+                                       uint32_t(spr->Texture->Width),
+                                       uint32_t(spr->Texture->Height) };
+        RenderAdd_DrawQuad(g_renderCmdList, textureCmd);
 #endif
     }
 }

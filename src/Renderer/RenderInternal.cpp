@@ -3,14 +3,14 @@
 #include "Renderer/RenderInternal.h"
 #include "Utility/PerfMarker.h"
 
-float4 g_ColorWhite = { { 1.f, 1.f, 1.f, 1.f } };
-float4 g_ColorBlack = { { 0.f, 0.f, 0.f, 1.f } };
-float4 g_ColorBlue = { { 0.f, 0.f, 1.f, 1.f } };
+float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
+float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };
+float4 g_ColorBlue = { 0.f, 0.f, 1.f, 1.f };
 static int g_iColorInvalid = 0xffffffff;
-float4 g_ColorInvalid = { { *(float *)&g_iColorInvalid,
-                            *(float *)&g_iColorInvalid,
-                            *(float *)&g_iColorInvalid,
-                            *(float *)&g_iColorInvalid } };
+float4 g_ColorInvalid = { *(float *)&g_iColorInvalid,
+                          *(float *)&g_iColorInvalid,
+                          *(float *)&g_iColorInvalid,
+                          *(float *)&g_iColorInvalid };
 
 struct
 {
@@ -18,7 +18,7 @@ struct
     SDL_Window *window = nullptr;
 } g_render;
 
-float float4::operator[](size_t i)
+float float4::operator[](size_t i) const
 {
     assert(i < countof(rgba));
     return rgba[i];
@@ -34,7 +34,7 @@ bool float4::operator!=(float4 &other)
     return !(*this == other);
 }
 
-float float3::operator[](size_t i)
+float float3::operator[](size_t i) const
 {
     assert(i < countof(rgb));
     return rgb[i];
@@ -42,7 +42,7 @@ float float3::operator[](size_t i)
 
 bool float3::operator==(float3 &other)
 {
-    return memcmp(rgb, other.rgb, sizeof(rgb));
+    return memcmp(rgb, other.rgb, sizeof(rgb)) == 0;
 }
 
 bool float3::operator!=(float3 &other)
@@ -149,26 +149,26 @@ void Render_Shutdown()
     }
 }
 
-bool HACKRender_SetViewParams(SetViewParamsCmd *cmd)
+bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
 {
     ScopedPerfMarker(__FUNCTION__);
 
     // game viewport isn't scaled, if the OS window is smaller than scene_y + scene_height, bottom will
     // be negative by this difference
-    int needed_height = cmd->scene_y + cmd->scene_height;
-    int bottom = cmd->window_height - needed_height;
+    int needed_height = cmd.scene_y + cmd.scene_height;
+    int bottom = cmd.window_height - needed_height;
 
-    glViewport(cmd->scene_x, bottom, cmd->scene_width, cmd->scene_height);
+    glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
     glOrtho(
-        cmd->scene_x,
-        cmd->scene_x + cmd->scene_width,
-        cmd->scene_y + cmd->scene_height,
-        cmd->scene_y,
-        cmd->camera_nearZ,
-        cmd->camera_farZ);
+        cmd.scene_x,
+        cmd.scene_x + cmd.scene_width,
+        cmd.scene_y + cmd.scene_height,
+        cmd.scene_y,
+        cmd.camera_nearZ,
+        cmd.camera_farZ);
 
     glMatrixMode(GL_MODELVIEW);
     return true;
@@ -193,17 +193,13 @@ uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type)
         0xffffffff,                 // ShaderUniformType::ShaderUniformType_Float1V
     };
 
-    static_assert(countof(s_uniformTypeToSize) == ShaderUniformType::ShaderUniformType_Count);
+    assert(type < ShaderUniformType_VariableFirst);
+
+    static_assert(
+        countof(s_uniformTypeToSize) == ShaderUniformType::ShaderUniformType_Count,
+        "missing uniform types");
 
     return s_uniformTypeToSize[type];
-}
-
-ShaderUniformCmd::ShaderUniformCmd(uint32_t id, void *value, ShaderUniformType type)
-    : header{ RenderCommandType::Cmd_ShaderUniform }
-    , id(id)
-    , type(type)
-{
-    memcpy(this->value, value, Render_ShaderUniformTypeToSize(type));
 }
 
 bool Render_CreateShaderPipeline(
@@ -471,7 +467,7 @@ bool Render_DestroyTexture(texture_handle_t texture)
     return false;
 }
 
-bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize)
+bool Render_AppendCmd(RenderCmdList *cmdList, const void *cmd, uint32_t cmdSize)
 {
     assert(cmdList);
     assert(cmd);
@@ -484,7 +480,28 @@ bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize)
         return true;
     }
 
-    Error(Renderer, __FUNCTION__ " render cmd list capacity reached. skipping render cmd %p", cmd);
+    Error(
+        Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
+    return false;
+}
+
+bool Render_AppendCmdType(
+    RenderCmdList *cmdList, RenderCommandType type, const void *cmd, uint32_t cmdSize)
+{
+    static_assert(sizeof(type) == sizeof(uint8_t), "command type id is assumed to be byte sized");
+    if (cmdList->remainingSize >= sizeof(type) + cmdSize)
+    {
+        auto ptr = cmdList->data + cmdList->size - cmdList->remainingSize;
+        *ptr = (uint8_t)type;
+        ptr++;
+
+        memcpy(ptr, cmd, cmdSize);
+        cmdList->remainingSize -= sizeof(type) + cmdSize;
+        return true;
+    }
+
+    Error(
+        Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
     return false;
 }
 

@@ -66,10 +66,9 @@ void CGUIExternalTexture::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
 
         g_ColorManager.SendColorsToShader(Color);
@@ -79,11 +78,10 @@ void CGUIExternalTexture::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-        auto uniformValue = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
     }
 }
@@ -120,13 +118,13 @@ void CGUIExternalTexture::Draw(bool checktrans)
             g_GL.Draw(tex, m_X, m_Y);
             tex.Texture = 0;
 #else
-            auto cmd = DrawQuadCmd(
-                m_Sprite->Texture->Texture,
-                m_X,
-                m_Y,
-                DrawWidth ? DrawWidth : m_Sprite->Width,
-                DrawHeight ? DrawHeight : m_Sprite->Height);
-            RenderAdd_DrawQuad(g_renderCmdList, &cmd, 1);
+            auto cmd =
+                DrawQuadCmd{ m_Sprite->Texture->Texture,
+                             m_X,
+                             m_Y,
+                             DrawWidth ? uint32_t(DrawWidth) : uint32_t(m_Sprite->Width),
+                             DrawHeight ? uint32_t(DrawHeight) : uint32_t(m_Sprite->Height) };
+            RenderAdd_DrawQuad(g_renderCmdList, cmd);
 #endif
         }
         else

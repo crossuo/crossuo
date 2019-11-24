@@ -132,7 +132,7 @@ void CGUISkillGroup::Draw(bool checktrans)
     glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
 #endif
 
     m_Minimizer->Draw(checktrans);
@@ -145,7 +145,7 @@ void CGUISkillGroup::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(16, 0, 200, 14);
 #else
-        RenderAdd_DrawUntexturedQuad(g_renderCmdList, &DrawUntexturedQuadCmd(16, 0, 200, 14));
+        RenderAdd_DrawUntexturedQuad(g_renderCmdList, DrawUntexturedQuadCmd{ 16, 0, 200, 14 });
 #endif
     }
     else if (m_Name->Focused)
@@ -154,7 +154,8 @@ void CGUISkillGroup::Draw(bool checktrans)
         g_GL.DrawPolygone(16, 0, m_Name->m_Entry.m_Texture.Width, 14);
 #else
         RenderAdd_DrawUntexturedQuad(
-            g_renderCmdList, &DrawUntexturedQuadCmd(16, 0, m_Name->m_Entry.m_Texture.Width, 14));
+            g_renderCmdList,
+            DrawUntexturedQuadCmd{ 16, 0, uint32_t(m_Name->m_Entry.m_Texture.Width), 14 });
 #endif
     }
 
@@ -177,7 +178,7 @@ void CGUISkillGroup::Draw(bool checktrans)
         glTranslatef(0.0f, 19.0f, 0.0f);
 #else
         RenderAdd_SetModelViewTranslation(
-            g_renderCmdList, &SetModelViewTranslationCmd{ { 0.0f, 19.0f, 0.0f } });
+            g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, 19.0f, 0.0f } });
 #endif
 
         QFOR(item, m_Items, CBaseGUI *)
@@ -187,7 +188,7 @@ void CGUISkillGroup::Draw(bool checktrans)
         glTranslatef(0.0f, -19.0f, 0.0f);
 #else
         RenderAdd_SetModelViewTranslation(
-            g_renderCmdList, &SetModelViewTranslationCmd{ { 0.0f, -19.0f, 0.0f } });
+            g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, -19.0f, 0.0f } });
 #endif
     }
 
@@ -195,7 +196,7 @@ void CGUISkillGroup::Draw(bool checktrans)
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
 #endif
 }
 

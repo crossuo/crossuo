@@ -210,14 +210,14 @@ void CGameItem::Draw(int x, int y)
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd(
-                    BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
+                BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                               BlendFactor::BlendFactor_OneMinusSrcAlpha });
             RenderAdd_SetColor(
                 g_renderCmdList,
-                &SetColorCmd({ m_DrawTextureColor[0] / 255.f,
+                SetColorCmd{ { m_DrawTextureColor[0] / 255.f,
                                m_DrawTextureColor[1] / 255.f,
                                m_DrawTextureColor[2] / 255.f,
-                               m_DrawTextureColor[3] / 255.f }));
+                               m_DrawTextureColor[3] / 255.f } });
 #endif
         }
 
@@ -279,7 +279,7 @@ void CGameItem::Draw(int x, int y)
             glColor4ub(0xFF, 0xFF, 0xFF, 0xFF);
             glDisable(GL_BLEND);
 #else
-            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
             RenderAdd_DisableBlend(g_renderCmdList);
 #endif
         }
