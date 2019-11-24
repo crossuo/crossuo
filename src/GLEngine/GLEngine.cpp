@@ -31,7 +31,7 @@ CGLEngine::~CGLEngine()
 }
 
 #ifndef NEW_RENDERER_ENABLED
-#define OGL_DEBUGCONTEXT_ENABLED
+// #define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
 #define OGL_DEBUGMSG_TYPE_COUNT (8)
@@ -88,7 +88,7 @@ static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
     assert(false);
 }
 
-static void APIENTRY openglCallbackFunction(
+static void openglCallbackFunction(
     GLenum source,
     GLenum type,
     GLuint id,
@@ -470,10 +470,10 @@ void CGLEngine::PushScissor(const CRect &rect)
 #else
     RenderAdd_SetScissor(
         g_renderCmdList,
-        &SetScissorCmd{ rect.Position.X,
-                        rect.Position.Y,
-                        uint32_t(rect.Size.Width),
-                        uint32_t(rect.Size.Height) });
+        SetScissorCmd{ rect.Position.X,
+                       rect.Position.Y,
+                       uint32_t(rect.Size.Width),
+                       uint32_t(rect.Size.Height) });
 #endif
 }
 
@@ -503,10 +503,10 @@ void CGLEngine::PopScissor()
 #else
         RenderAdd_SetScissor(
             g_renderCmdList,
-            &SetScissorCmd{ rect.Position.X,
-                            rect.Position.Y,
-                            uint32_t(rect.Size.Width),
-                            uint32_t(rect.Size.Height) });
+            SetScissorCmd{ rect.Position.X,
+                           rect.Position.Y,
+                           uint32_t(rect.Size.Width),
+                           uint32_t(rect.Size.Height) });
 #endif
     }
 }

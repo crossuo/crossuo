@@ -29,7 +29,7 @@ void CGUIBuff::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
         glColor4ub(0xFF, 0xFF, 0xFF, Alpha);
 #else
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, Alpha / 255.f }));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, Alpha / 255.f } });
 #endif
         spr->Texture->Draw(m_X, m_Y, checktrans);
     }

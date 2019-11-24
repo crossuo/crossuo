@@ -474,13 +474,9 @@ void CMouseManager::Draw(uint16_t id)
 #ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
-                auto uniformValue = SDM_COLORED;
-                RenderAdd_SetShaderUniform(
-                    g_renderCmdList,
-                    &ShaderUniformCmd(
-                        g_ShaderDrawMode,
-                        &uniformValue,
-                        ShaderUniformType::ShaderUniformType_Int1));
+                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+                cmd.value.asInt1 = SDM_COLORED;
+                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
             }
             spr->Texture->Draw(x, y);
@@ -527,27 +523,23 @@ void CMouseManager::Draw(uint16_t id)
 #else
                     RenderAdd_SetBlend(
                         g_renderCmdList,
-                        &BlendStateCmd(
-                            BlendFactor::BlendFactor_One,
-                            BlendFactor::BlendFactor_OneMinusSrcAlpha));
-                    auto uniformValue = SDM_NO_COLOR;
-                    RenderAdd_SetShaderUniform(
-                        g_renderCmdList,
-                        &ShaderUniformCmd(
-                            g_ShaderDrawMode,
-                            &uniformValue,
-                            ShaderUniformType::ShaderUniformType_Int1));
+                        BlendStateCmd{ BlendFactor::BlendFactor_One,
+                                       BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                    ShaderUniformCmd uniformCmd{ g_ShaderDrawMode,
+                                                 ShaderUniformType::ShaderUniformType_Int1 };
+                    uniformCmd.value.asInt1 = SDM_NO_COLOR;
+                    RenderAdd_SetShaderUniform(g_renderCmdList, uniformCmd);
                     RenderAdd_SetColor(
                         g_renderCmdList,
-                        &SetColorCmd({ ToColorR(auraColor) / 255.f,
+                        SetColorCmd{ { ToColorR(auraColor) / 255.f,
                                        ToColorG(auraColor) / 255.f,
                                        ToColorB(auraColor) / 255.f,
-                                       1.f }));
+                                       1.f } });
 
-                    auto quadCmd = DrawQuadCmd(g_AuraTexture.Texture, x - 6, y - 2, 35, 35);
-                    RenderAdd_DrawQuad(g_renderCmdList, &quadCmd, 1);
+                    auto quadCmd = DrawQuadCmd{ g_AuraTexture.Texture, x - 6, y - 2, 35, 35 };
+                    RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
 
-                    RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                     RenderAdd_DisableBlend(g_renderCmdList);
 #endif
                 }

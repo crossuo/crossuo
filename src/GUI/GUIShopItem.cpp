@@ -203,10 +203,9 @@ void CGUIShopItem::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
 
         g_ColorManager.SendColorsToShader(Color);
@@ -216,11 +215,9 @@ void CGUIShopItem::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-        auto uniformValue = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
     }
 }
@@ -237,13 +234,11 @@ void CGUIShopItem::Draw(bool checktrans)
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.f } });
 
-    auto uniformValue = SDM_NO_COLOR;
-    RenderAdd_SetShaderUniform(
-        g_renderCmdList,
-        &ShaderUniformCmd(
-            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
 
     m_NameText.Draw(52, m_TextOffset);
@@ -316,14 +311,15 @@ void CGUIShopItem::Draw(bool checktrans)
                 g_GL.Draw(tex, 2, m_ImageOffset);
                 tex.Texture = 0;
 #else
-                auto quadCmd = DrawQuadCmd(
-                    originalTexture.Texture->Texture,
-                    2,
-                    m_ImageOffset,
-                    originalTexture.Width > 35 ? 35 : originalTexture.Width,
-                    originalTexture.Height > 35 ? 35 : originalTexture.Height);
+                auto quadCmd =
+                    DrawQuadCmd{ originalTexture.Texture->Texture,
+                                 2,
+                                 m_ImageOffset,
+                                 originalTexture.Width > 35 ? 35 : uint32_t(originalTexture.Width),
+                                 originalTexture.Height > 35 ? 35 :
+                                                               uint32_t(originalTexture.Height) };
 
-                RenderAdd_DrawQuad(g_renderCmdList, &quadCmd, 1);
+                RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
 #endif
                 //originalTexture.Draw(2, m_ImageOffset, checktrans);
             }
@@ -333,11 +329,8 @@ void CGUIShopItem::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-    uniformValue = SDM_NO_COLOR;
-    RenderAdd_SetShaderUniform(
-        g_renderCmdList,
-        &ShaderUniformCmd(
-            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
     auto spr = g_Game.ExecuteGump(0x0039);
     if (spr != nullptr && spr->Texture != nullptr)
@@ -360,7 +353,7 @@ void CGUIShopItem::Draw(bool checktrans)
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
 #endif
 }
 

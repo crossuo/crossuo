@@ -73,9 +73,9 @@ void CMultiObject::Draw(int x, int y)
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd(
-                    BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
-            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, 0.75f }));
+                BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                               BlendFactor::BlendFactor_OneMinusSrcAlpha });
+            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, 0.75f } });
 #endif
 
             g_Game.DrawStaticArt(Graphic, color, x, y);
@@ -84,7 +84,7 @@ void CMultiObject::Draw(int x, int y)
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             glDisable(GL_BLEND);
 #else
-            RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
             RenderAdd_DisableBlend(g_renderCmdList);
 #endif
 
@@ -108,8 +108,8 @@ void CMultiObject::Draw(int x, int y)
 #else
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd{ BlendFactor::BlendFactor_SrcColor,
-                            BlendFactor::BlendFactor_OneMinusSrcColor });
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcColor,
+                           BlendFactor::BlendFactor_OneMinusSrcColor });
 #endif
 
         g_Game.DrawStaticArt(Graphic, color, x, y);

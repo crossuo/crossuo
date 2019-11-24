@@ -229,8 +229,11 @@ void CGUIComboBox::Draw(bool checktrans)
 #else
                     RenderAdd_DrawUntexturedQuad(
                         g_renderCmdList,
-                        &DrawUntexturedQuadCmd(
-                            currentX, currentY, m_WorkWidth, 14, { 0.7f, 0.7f, 0.7f, 1.f }));
+                        DrawUntexturedQuadCmd{ currentX,
+                                               currentY,
+                                               uint32_t(m_WorkWidth),
+                                               14,
+                                               { 0.7f, 0.7f, 0.7f, 1.f } });
 #endif
                 }
 

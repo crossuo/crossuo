@@ -1564,11 +1564,17 @@ bool CConfigManager::Load(const fs_path &path)
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
-            int windowWidth, windowHeight;
-            SDL_GetWindowSize(g_GameWindow.m_window, &windowWidth, &windowHeight);
+            int sdlWindowWidth, sdlWindowHeight;
+            SDL_GetWindowSize(g_GameWindow.m_window, &sdlWindowWidth, &sdlWindowHeight);
 
-            HACKRender_SetViewParams(&SetViewParamsCmd{
-                0, 0, windowWidth, windowHeight, windowWidth, windowHeight, -150, 150 });
+            HACKRender_SetViewParams(SetViewParamsCmd{ 0,
+                                                       0,
+                                                       sdlWindowWidth,
+                                                       sdlWindowHeight,
+                                                       sdlWindowWidth,
+                                                       sdlWindowHeight,
+                                                       -150,
+                                                       150 });
 #endif
         }
         else
@@ -1578,7 +1584,7 @@ bool CConfigManager::Load(const fs_path &path)
             // FIXME this should be deferred until there's something to draw
             // and set once at the beginning of the renderer frame, where there's
             // a command list
-            HACKRender_SetViewParams(&SetViewParamsCmd{
+            HACKRender_SetViewParams(SetViewParamsCmd{
                 0, 0, windowWidth, windowHeight, windowWidth, windowHeight, -150, 150 });
 #endif
         }

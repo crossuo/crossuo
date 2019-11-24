@@ -550,7 +550,7 @@ void CGumpWorldMap::GenerateFrame(bool stop)
 #ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 
 #ifndef NEW_RENDERER_ENABLED
@@ -563,16 +563,16 @@ void CGumpWorldMap::GenerateFrame(bool stop)
 #else
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
-            &DrawUntexturedQuadCmd(
-                m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2));
+            DrawUntexturedQuadCmd{
+                m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2 });
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
-            &DrawUntexturedQuadCmd(
-                m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16));
+            DrawUntexturedQuadCmd{
+                m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16 });
         RenderAdd_DrawCircle(
             g_renderCmdList,
-            &DrawCircleCmd(
-                m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f));
+            DrawCircleCmd{
+                m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f });
 #endif
 
         g_GL.PopScissor();

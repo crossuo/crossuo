@@ -282,12 +282,11 @@ void CGumpMap::GenerateFrame(bool stop)
                 const auto useGray = next == m_PinOnCursor || item == m_PinOnCursor;
                 RenderAdd_DrawLine(
                     g_renderCmdList,
-                    &DrawLineCmd(
-                        drawX + 2,
-                        drawY + 8,
-                        nextDrawX,
-                        nextDrawY,
-                        useGray ? s_colorGray87 : g_ColorWhite));
+                    DrawLineCmd{ drawX + 2,
+                                 drawY + 8,
+                                 nextDrawX,
+                                 nextDrawY,
+                                 useGray ? s_colorGray87 : g_ColorWhite });
 #endif
 
                 if (m_PinOnCursor == nullptr && g_SelectedObject.Serial >= ID_GM_PIN_LIST_INSERT &&

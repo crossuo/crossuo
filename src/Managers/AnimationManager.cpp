@@ -1233,7 +1233,7 @@ void CAnimationManager::Draw(
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
         glBlendFunc(GL_DST_COLOR, GL_ZERO);
-        g_GL_DrawShadow(*spr->Texture, x, y, mirror);
+        g_GL.DrawShadow(*spr->Texture, x, y, mirror);
         if (m_UseBlending)
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1243,19 +1243,18 @@ void CAnimationManager::Draw(
             glDisable(GL_BLEND);
         }
 #else
-        auto tex = frame.Sprite.Texture;
+        auto tex = spr->Texture;
         RenderAdd_DrawShadow(
             g_renderCmdList,
-            &DrawShadowCmd(
-                tex->Texture,
-                x,
-                y,
-                tex->Width,
-                tex->Height,
-                mirror,
-                g_ShaderDrawMode,
-                SDM_SHADOW,
-                m_UseBlending));
+            DrawShadowCmd{ tex->Texture,
+                           x,
+                           y,
+                           tex->Width,
+                           tex->Height,
+                           g_ShaderDrawMode,
+                           SDM_SHADOW,
+                           mirror,
+                           m_UseBlending });
 #endif
         sdmNoColor = false;
     }
@@ -1315,13 +1314,10 @@ void CAnimationManager::Draw(
                     uniformValue = SDM_SPECIAL_SPECTRAL;
                 }
 
-                RenderAdd_SetBlend(g_renderCmdList, &BlendStateCmd(blendSrc, blendDst));
-                RenderAdd_SetShaderUniform(
-                    g_renderCmdList,
-                    &ShaderUniformCmd(
-                        g_ShaderDrawMode,
-                        &uniformValue,
-                        ShaderUniformType::ShaderUniformType_Int1));
+                RenderAdd_SetBlend(g_renderCmdList, BlendStateCmd{ blendSrc, blendDst });
+                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+                cmd.value.asInt1 = uniformValue;
+                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
                 sdmNoColor = false;
             }
@@ -1337,13 +1333,9 @@ void CAnimationManager::Draw(
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
 #else
-                auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-                RenderAdd_SetShaderUniform(
-                    g_renderCmdList,
-                    &ShaderUniformCmd(
-                        g_ShaderDrawMode,
-                        &uniformValue,
-                        ShaderUniformType::ShaderUniformType_Int1));
+                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+                cmd.value.asInt1 = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
@@ -1355,11 +1347,9 @@ void CAnimationManager::Draw(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-            auto uniformValue = SDM_NO_COLOR;
-            RenderAdd_SetShaderUniform(
-                g_renderCmdList,
-                &ShaderUniformCmd(
-                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
         }
 
@@ -1455,37 +1445,35 @@ void CAnimationManager::Draw(
                 }
             }
 #ifndef NEW_RENDERER_ENABLED
-            g_GL_DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
+            g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
 #else
-            auto cmd = DrawCharacterSittingCmd(
-                spr->Texture->Texture,
-                x,
-                y,
-                spr->Texture->Width,
-                spr->Texture->Height,
-                mirror,
-                h3mod,
-                h6mod,
-                h9mod);
-            RenderAdd_DrawCharacterSitting(g_renderCmdList, &cmd);
+            auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
+                                                x,
+                                                y,
+                                                spr->Texture->Width,
+                                                spr->Texture->Height,
+                                                h3mod,
+                                                h6mod,
+                                                h9mod,
+                                                mirror };
+            RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
 #endif
         }
         else
         {
 #ifndef NEW_RENDERER_ENABLED
-            g_GL_DrawMirrored(*spr->Texture, x, y, mirror);
+            g_GL.DrawMirrored(*spr->Texture, x, y, mirror);
 #else
-            auto textureCmd = DrawQuadCmd(
-                spr->Texture->Texture,
-                x,
-                y,
-                spr->Texture->Width,
-                spr->Texture->Height,
-                1.f,
-                1.f,
-                g_ColorWhite,
-                mirror);
-            RenderAdd_DrawQuad(g_renderCmdList, &textureCmd, 1);
+            auto textureCmd = DrawQuadCmd{ spr->Texture->Texture,
+                                           x,
+                                           y,
+                                           spr->Texture->Width,
+                                           spr->Texture->Height,
+                                           1.f,
+                                           1.f,
+                                           g_ColorWhite,
+                                           mirror };
+            RenderAdd_DrawQuad(g_renderCmdList, textureCmd);
 #endif
         }
 
@@ -1498,9 +1486,8 @@ void CAnimationManager::Draw(
 #else
                 RenderAdd_SetBlend(
                     g_renderCmdList,
-                    &BlendStateCmd(
-                        BlendFactor::BlendFactor_SrcAlpha,
-                        BlendFactor::BlendFactor_OneMinusSrcAlpha));
+                    BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                   BlendFactor::BlendFactor_OneMinusSrcAlpha });
 #endif
             }
             else
@@ -1672,20 +1659,18 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 #else
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd(
-                BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_OneMinusSrcAlpha));
+            BlendStateCmd{ BlendFactor::BlendFactor_One,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
         RenderAdd_SetColor(
             g_renderCmdList,
-            &SetColorCmd({ ToColorR(auraColor) / 255.f,
+            SetColorCmd{ { ToColorR(auraColor) / 255.f,
                            ToColorG(auraColor) / 255.f,
                            ToColorB(auraColor) / 255.f,
-                           ToColorA(auraColor) / 255.f }));
+                           ToColorA(auraColor) / 255.f } });
 
-        auto uniformValue = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(
-            g_renderCmdList,
-            &ShaderUniformCmd(
-                g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
@@ -1693,7 +1678,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
 #else
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
 #endif
     }
@@ -1718,12 +1703,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 #else
                     RenderAdd_SetColor(
                         g_renderCmdList,
-                        &SetColorCmd({ 1.f, 1.f, 1.f, g_ConfigManager.HiddenAlpha / 255.f }));
+                        SetColorCmd{ { 1.f, 1.f, 1.f, g_ConfigManager.HiddenAlpha / 255.f } });
                     RenderAdd_SetBlend(
                         g_renderCmdList,
-                        &BlendStateCmd(
-                            BlendFactor::BlendFactor_SrcAlpha,
-                            BlendFactor::BlendFactor_OneMinusSrcAlpha));
+                        BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                       BlendFactor::BlendFactor_OneMinusSrcAlpha });
 #endif
 
                     Color = 0x038C;
@@ -1792,14 +1776,14 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 #else
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd(
-                BlendFactor::BlendFactor_SrcAlpha, BlendFactor::BlendFactor_OneMinusSrcAlpha));
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
         RenderAdd_SetColor(
             g_renderCmdList,
-            &SetColorCmd({ drawTextureColor[0] / 255.f,
+            SetColorCmd{ { drawTextureColor[0] / 255.f,
                            drawTextureColor[1] / 255.f,
                            drawTextureColor[2] / 255.f,
-                           drawTextureColor[3] / 255.f }));
+                           drawTextureColor[3] / 255.f } });
 #endif
     }
 
@@ -1941,7 +1925,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
 #else
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
 #endif
     }
@@ -2812,8 +2796,6 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
 
             switch (action)
             {
-                default:
-                    return 31;
                 case 1:
                     return 18;
                 case 2:
@@ -2830,9 +2812,9 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                     return 9;
                 case 5:
                     return 10;
+                default:
+                    return 31;
             }
-
-            return 0;
         }
 
         if ((mode % 2) != 0)

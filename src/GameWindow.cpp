@@ -75,7 +75,7 @@ bool CGameWindow::OnCreate()
     }
 
 #ifdef NEW_RENDERER_ENABLED
-    HACKRender_SetViewParams(&SetViewParamsCmd{
+    HACKRender_SetViewParams(SetViewParamsCmd{
         0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 #endif
 
@@ -108,7 +108,7 @@ void CGameWindow::OnResize()
 #else
     RenderAdd_SetViewParams(
         g_renderCmdList,
-        &SetViewParamsCmd{
+        SetViewParamsCmd{
             0, 0, m_Size.Width, m_Size.Height, m_Size.Width, m_Size.Height, -150, 150 });
 
     g_GumpManager.RedrawAll();

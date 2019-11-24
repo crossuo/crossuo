@@ -7,13 +7,15 @@
 #error "Do not include this directly. Include RenderAPI.h"
 #endif
 
-#define OGL_DEBUGCONTEXT_ENABLED
+// #define OGL_DEBUGCONTEXT_ENABLED
 
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type);
 // FIXME naming
 void SetupOGLDebugMessage();
 
-bool Render_AppendCmd(RenderCmdList *cmdList, void *cmd, uint32_t cmdSize);
+bool Render_AppendCmd(RenderCmdList *cmdList, const void *cmd, uint32_t cmdSize);
+bool Render_AppendCmdType(
+    RenderCmdList *cmdList, RenderCommandType type, const void *cmd, uint32_t cmdSize);
 
 bool RenderState_SetTexture(
     RenderState *state, TextureType type, texture_handle_t texture, bool forced = false);
@@ -70,7 +72,11 @@ bool RenderState_SetScissor(
     bool forced = false);
 
 bool RenderState_SetShaderUniform(
-    RenderState *state, uint32_t slot, void *value, ShaderUniformType type, bool forced = false);
+    RenderState *state,
+    uint32_t slot,
+    const void *value,
+    ShaderUniformType type,
+    bool forced = false);
 bool RenderState_SetShaderLargeUniform(
     RenderState *state,
     uint32_t slot,
@@ -82,40 +88,40 @@ bool RenderState_SetShaderPipeline(
     RenderState *state, ShaderPipeline *pipeline, bool forced = false);
 bool RenderState_DisableShaderPipeline(RenderState *state, bool forced = false);
 
-bool RenderDraw_SetTexture(SetTextureCmd *cmd, RenderState *state);
-bool RenderDraw_SetFrameBuffer(SetFrameBufferCmd *cmd, RenderState *state);
-bool RenderDraw_DrawQuad(DrawQuadCmd *cmd, RenderState *state);
-bool RenderDraw_DrawRotatedQuad(DrawRotatedQuadCmd *cmd, RenderState *state);
-bool RenderDraw_DrawCharacterSitting(DrawCharacterSittingCmd *cmd, RenderState *state);
-bool RenderDraw_DrawLandTile(DrawLandTileCmd *cmd, RenderState *state);
-bool RenderDraw_DrawShadow(DrawShadowCmd *cmd, RenderState *state);
-bool RenderDraw_DrawCircle(DrawCircleCmd *cmd, RenderState *state);
-bool RenderDraw_DrawUntexturedQuad(DrawUntexturedQuadCmd *cmd, RenderState *state);
-bool RenderDraw_DrawLine(DrawLineCmd *cmd, RenderState *state);
+bool RenderDraw_SetTexture(const SetTextureCmd &cmd, RenderState *state);
+bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state);
+bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state);
+bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *state);
+bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderState *state);
+bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state);
+bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state);
+bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state);
+bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState *state);
+bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state);
 
-bool RenderDraw_FlushState(FlushStateCmd *cmd, RenderState *state);
-bool RenderDraw_SetViewParams(SetViewParamsCmd *cmd, RenderState *state);
-bool RenderDraw_SetModelViewTranslation(SetModelViewTranslationCmd *cmd, RenderState *state);
-bool RenderDraw_SetScissor(SetScissorCmd *cmd, RenderState *state);
-bool RenderDraw_DisableScissor(DisableScissorCmd *cmd, RenderState *state);
-bool RenderDraw_AlphaTest(AlphaTestCmd *cmd, RenderState *state);
-bool RenderDraw_DisableAlphaTest(DisableAlphaTestCmd *, RenderState *state);
-bool RenderDraw_BlendState(BlendStateCmd *cmd, RenderState *state);
-bool RenderDraw_DisableBlendState(DisableBlendStateCmd *, RenderState *state);
-bool RenderDraw_StencilState(StencilStateCmd *cmd, RenderState *state);
-bool RenderDraw_DisableStencilState(DisableStencilStateCmd *, RenderState *state);
-bool RenderDraw_EnableStencilState(EnableStencilStateCmd *, RenderState *state);
-bool RenderDraw_DepthState(DepthStateCmd *depth, RenderState *state);
-bool RenderDraw_DisableDepthState(DisableDepthStateCmd *, RenderState *state);
-bool RenderDraw_EnableDepthState(EnableDepthStateCmd *, RenderState *state);
-bool RenderDraw_SetColorMask(SetColorMaskCmd *cmd, RenderState *state);
-bool RenderDraw_SetColor(SetColorCmd *cmd, RenderState *state);
-bool RenderDraw_SetClearColor(SetClearColorCmd *cmd, RenderState *state);
-bool RenderDraw_ClearRT(ClearRTCmd *cmd, RenderState *state);
+bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *state);
+bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *state);
+bool RenderDraw_SetModelViewTranslation(const SetModelViewTranslationCmd &cmd, RenderState *state);
+bool RenderDraw_SetScissor(const SetScissorCmd &cmd, RenderState *state);
+bool RenderDraw_DisableScissor(const DisableScissorCmd &cmd, RenderState *state);
+bool RenderDraw_AlphaTest(const AlphaTestCmd &cmd, RenderState *state);
+bool RenderDraw_DisableAlphaTest(const DisableAlphaTestCmd &cmd, RenderState *state);
+bool RenderDraw_BlendState(const BlendStateCmd &cmd, RenderState *state);
+bool RenderDraw_DisableBlendState(const DisableBlendStateCmd &cmd, RenderState *state);
+bool RenderDraw_StencilState(const StencilStateCmd &cmd, RenderState *state);
+bool RenderDraw_DisableStencilState(const DisableStencilStateCmd &cmd, RenderState *state);
+bool RenderDraw_EnableStencilState(const EnableStencilStateCmd &cmd, RenderState *state);
+bool RenderDraw_DepthState(const DepthStateCmd &cmd, RenderState *state);
+bool RenderDraw_DisableDepthState(const DisableDepthStateCmd &cmd, RenderState *state);
+bool RenderDraw_EnableDepthState(const EnableDepthStateCmd &cmd, RenderState *state);
+bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *state);
+bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state);
+bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state);
+bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *state);
 
-bool RenderDraw_ShaderUniform(ShaderUniformCmd *, RenderState *state);
-bool RenderDraw_ShaderLargeUniform(ShaderLargeUniformCmd *, RenderState *state);
-bool RenderDraw_ShaderPipeline(ShaderPipelineCmd *cmd, RenderState *state);
-bool RenderDraw_DisableShaderPipeline(DisableShaderPipelineCmd *cmd, RenderState *state);
+bool RenderDraw_ShaderUniform(const ShaderUniformCmd &cmd, RenderState *state);
+bool RenderDraw_ShaderLargeUniform(const ShaderLargeUniformCmd &cmd, RenderState *state);
+bool RenderDraw_ShaderPipeline(const ShaderPipelineCmd &cmd, RenderState *state);
+bool RenderDraw_DisableShaderPipeline(const DisableShaderPipelineCmd &cmd, RenderState *state);
 
-bool RenderDraw_GetFrameBufferPixels(GetFrameBufferPixelsCmd *cmd, RenderState *state);
+bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderState *state);

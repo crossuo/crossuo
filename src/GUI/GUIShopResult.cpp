@@ -75,13 +75,11 @@ void CGUIShopResult::Draw(bool checktrans)
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
 
-    auto uniformValue = SDM_NO_COLOR;
-    RenderAdd_SetShaderUniform(
-        g_renderCmdList,
-        &ShaderUniformCmd(
-            g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
 
     m_NameText.Draw(34, 0, checktrans);
@@ -91,7 +89,7 @@ void CGUIShopResult::Draw(bool checktrans)
     glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
-        g_renderCmdList, &SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
 #endif
 }
 

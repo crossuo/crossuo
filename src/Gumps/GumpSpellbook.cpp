@@ -47,8 +47,10 @@ CGumpSpellbook::~CGumpSpellbook()
 
 void CGumpSpellbook::InitStaticData()
 {
+    // TODO ???
     return;
 
+#if 0
     s_SpellCircleName[0] = g_ClilocManager.Cliloc(g_Language)->GetA(1028384, false, "First Circle");
     s_SpellCircleName[1] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028385, false, "Second Circle");
@@ -134,6 +136,7 @@ void CGumpSpellbook::InitStaticData()
         g_ClilocManager.Cliloc(g_Language)->GetA(1028382, false, "Fire Elemental");
     m_SpellName1[63][0] =
         g_ClilocManager.Cliloc(g_Language)->GetA(1028383, false, "Water Elemental");
+#endif // 0
 }
 
 void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)

@@ -44,13 +44,13 @@ void CGUIAlphaBlending::Draw(bool checktrans)
     {
         RenderAdd_SetBlend(
             g_renderCmdList,
-            &BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
-                            BlendFactor::BlendFactor_OneMinusSrcAlpha });
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, Alpha }));
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, Alpha } });
     }
     else
     {
-        RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
     }
 #endif

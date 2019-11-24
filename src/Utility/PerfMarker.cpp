@@ -6,26 +6,21 @@
 // 'label' lifetime is assumed to be valid until the current cmd list is executed
 static void PushGPUMarker(const char *label)
 {
-#ifndef PERFMARKERS_ENABLED
-    UNUSED(label);
-#else
+#ifdef PERFMARKERS_ENABLED
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, label);
 #endif
 }
 
 static void PopGPUMarker()
 {
-#ifndef PERFMARKERS_ENABLED
-#else
+#ifdef PERFMARKERS_ENABLED
     glPopDebugGroup();
 #endif
 }
 
 void PushPerfMarker(const char *label)
 {
-#ifndef PERFMARKERS_ENABLED
-    UNUSED(label);
-#else
+#ifdef PERFMARKERS_ENABLED
     PushGPUMarker(label);
 #endif
 }

@@ -103,11 +103,10 @@ void CColorManager::SendColorsToShader(uint16_t color)
 #else
             RenderAdd_SetShaderLargeUniform(
                 g_renderCmdList,
-                &ShaderLargeUniformCmd(
-                    ShaderColorTable,
-                    &m_HuesFloat[0].Palette[0],
-                    32 * 3,
-                    ShaderUniformType::ShaderUniformType_Float1V));
+                ShaderLargeUniformCmd{ &m_HuesFloat[0].Palette[0],
+                                       32 * 3,
+                                       ShaderColorTable,
+                                       ShaderUniformType::ShaderUniformType_Float1V });
 #endif
         }
         else
@@ -127,11 +126,10 @@ void CColorManager::SendColorsToShader(uint16_t color)
 #else
             RenderAdd_SetShaderLargeUniform(
                 g_renderCmdList,
-                &ShaderLargeUniformCmd(
-                    ShaderColorTable,
-                    &m_HuesFloat[color - 1].Palette[0],
-                    32 * 3,
-                    ShaderUniformType::ShaderUniformType_Float1V));
+                ShaderLargeUniformCmd{ &m_HuesFloat[color - 1].Palette[0],
+                                       32 * 3,
+                                       ShaderColorTable,
+                                       ShaderUniformType::ShaderUniformType_Float1V });
 #endif
         }
     }

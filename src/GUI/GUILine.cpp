@@ -51,11 +51,10 @@ void CGUILine::Draw(bool checktrans)
 #else
     RenderAdd_DrawLine(
         g_renderCmdList,
-        &DrawLineCmd(
-            m_X,
-            m_Y,
-            TargetX,
-            TargetY,
-            { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f }));
+        DrawLineCmd{ m_X,
+                     m_Y,
+                     TargetX,
+                     TargetY,
+                     { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f } });
 #endif
 }

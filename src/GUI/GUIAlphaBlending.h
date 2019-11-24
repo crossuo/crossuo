@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "BaseGUI.h"
 #include "GUIBlending.h"
 
 #ifndef NEW_RENDERER_ENABLED

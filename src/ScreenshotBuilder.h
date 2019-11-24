@@ -21,7 +21,7 @@ private:
     bool m_WaitingForGPUData;
     uint32_t m_Width;
     uint32_t m_Height;
-    vector<uint32_t> m_Pixels;
+    std::vector<uint32_t> m_Pixels;
 };
 
 extern CScreenshotBuilder g_ScreenshotBuilder;

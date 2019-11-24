@@ -12,7 +12,8 @@
 
 #define RENDER_MAX_SHADERPIPELINE_UNIFORM (3)
 #define RENDERSTATE_MAX_SHADER_UNIFORM (3)
-#define RENDERSTATE_SHADER_UNIFORMDATA_SIZE (4 * 4 * sizeof(uint32_t))
+#define RENDERSTATE_SHADER_UNIFORMDATA_SIZE                                                        \
+    (4 * sizeof(uint32_t)) // max size for possible values of glUniform{1|2|3|4}{f|i|ui}
 
 typedef uint32_t texture_handle_t;
 typedef uint32_t framebuffer_handle_t;
@@ -29,18 +30,26 @@ struct frame_buffer_t
 // TODO accessors (x(), xxxx(), ...)
 struct float4
 {
+    float4(float r, float g, float b, float a)
+        : rgba{ r, g, b, a }
+    {
+    }
     float rgba[4];
 
-    float operator[](size_t i);
+    float operator[](size_t i) const;
     bool operator==(float4 &other);
     bool operator!=(float4 &other);
 };
 
 struct float3
 {
-    float rgb[3];
+    float3(float r, float g, float b)
+        : rgb{ r, g, b }
+    {
+    }
+    float rgb[3] = { 0.f, 0.f, 0.f };
 
-    float operator[](size_t i);
+    float operator[](size_t i) const;
     bool operator==(float3 &other);
     bool operator!=(float3 &other);
 };
@@ -164,7 +173,8 @@ enum TextureType : uint8_t
     TextureType_Texture2D = 0,
     TextureType_Texture2D_Mipmapped,
 
-    TextureType_Count
+    TextureType_Count,
+    TextureType_Invalid = 0xff
 };
 
 enum TextureGPUFormat : uint8_t
@@ -239,7 +249,7 @@ struct RenderState
         TextureType type;
     } texture = { RENDER_TEXTUREHANDLE_INVALID, TextureType::TextureType_Texture2D };
 
-    frame_buffer_t framebuffer = { RENDER_FRAMEBUFFER_INVALID, RENDER_TEXTUREHANDLE_INVALID };
+    frame_buffer_t framebuffer{};
 
     struct
     {
@@ -257,8 +267,8 @@ struct RenderState
     {
         int x;
         int y;
-        int width;
-        int height;
+        uint32_t width;
+        uint32_t height;
         bool enabled;
     } scissor = { 0, 0, 0, 0, false };
 

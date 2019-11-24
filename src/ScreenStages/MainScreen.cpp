@@ -12,6 +12,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "../Managers/AnimationManager.h"
+#include "../Managers/GumpManager.h"
 #include "../GUI/GUITextEntry.h"
 #include "../TextEngine/EntryText.h"
 

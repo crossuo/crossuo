@@ -16,9 +16,8 @@ extern RenderCmdList *g_renderCmdList;
 CTextRenderer g_WorldTextRenderer;
 
 CTextRenderer::CTextRenderer()
-    : m_TextItems(this)
-    , m_DrawPointer(nullptr)
 {
+    m_TextItems = this; // FIXME wtf?
 }
 
 CTextRenderer::~CTextRenderer()
@@ -220,10 +219,9 @@ void CTextRenderer::Draw()
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 
 #else
-            RenderAdd_SetShaderUniform(
-                g_renderCmdList,
-                &ShaderUniformCmd(
-                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = uniformValue;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
 
             if (text.Transparent)
@@ -242,10 +240,10 @@ void CTextRenderer::Draw()
 #else
                 RenderAdd_SetBlend(
                     g_renderCmdList,
-                    &BlendStateCmd(
-                        BlendFactor::BlendFactor_SrcAlpha,
-                        BlendFactor::BlendFactor_OneMinusSrcAlpha));
-                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha / 255.f }));
+                    BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                   BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                RenderAdd_SetColor(
+                    g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha / 255.f } });
 #endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
@@ -254,7 +252,7 @@ void CTextRenderer::Draw()
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
 #else
-                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                 RenderAdd_DisableBlend(g_renderCmdList);
 #endif
             }
@@ -401,10 +399,9 @@ void CTextRenderer::WorldDraw()
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-            RenderAdd_SetShaderUniform(
-                g_renderCmdList,
-                &ShaderUniformCmd(
-                    g_ShaderDrawMode, &uniformValue, ShaderUniformType::ShaderUniformType_Int1));
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = uniformValue;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
 
             if (text.Transparent)
@@ -423,10 +420,10 @@ void CTextRenderer::WorldDraw()
 #else
                 RenderAdd_SetBlend(
                     g_renderCmdList,
-                    &BlendStateCmd(
-                        BlendFactor::BlendFactor_SrcAlpha,
-                        BlendFactor::BlendFactor_OneMinusSrcAlpha));
-                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd({ 1.f, 1.f, 1.f, alpha / 255.f }));
+                    BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                   BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                RenderAdd_SetColor(
+                    g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha / 255.f } });
 #endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
@@ -435,7 +432,7 @@ void CTextRenderer::WorldDraw()
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
 #else
-                RenderAdd_SetColor(g_renderCmdList, &SetColorCmd(g_ColorWhite));
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                 RenderAdd_DisableBlend(g_renderCmdList);
 #endif
             }

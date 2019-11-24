@@ -113,12 +113,11 @@ void CScreenEffectManager::Draw()
 #else
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
-            &DrawUntexturedQuadCmd(
-                0,
-                0,
-                g_GameWindow.GetSize().Width,
-                g_GameWindow.GetSize().Height,
-                { ColorR, ColorG, ColorB, Alpha }));
+            DrawUntexturedQuadCmd{ 0,
+                                   0,
+                                   uint32_t(g_GameWindow.GetSize().Width),
+                                   uint32_t(g_GameWindow.GetSize().Height),
+                                   { ColorR, ColorG, ColorB, Alpha } });
 #endif
     }
 }

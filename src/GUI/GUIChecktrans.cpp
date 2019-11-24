@@ -33,26 +33,25 @@ void CGUIChecktrans::Draw(bool checktrans)
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glStencilFunc(GL_NOTEQUAL, 1, 1);
 #else
-    RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_None));
+    RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_None });
     RenderAdd_SetStencil(
         g_renderCmdList,
-        &StencilStateCmd(
-            StencilFunc::StencilFunc_AlwaysPass,
-            1,
-            1,
-            StencilOp::StencilOp_Keep,
-            StencilOp::StencilOp_Keep,
-            StencilOp::StencilOp_Replace));
-    RenderAdd_DrawUntexturedQuad(g_renderCmdList, &DrawUntexturedQuadCmd(m_X, m_Y, Width, Height));
-    RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_All));
+        StencilStateCmd{ StencilFunc::StencilFunc_AlwaysPass,
+                         StencilOp::StencilOp_Keep,
+                         StencilOp::StencilOp_Keep,
+                         StencilOp::StencilOp_Replace,
+                         1,
+                         1 });
+    RenderAdd_DrawUntexturedQuad(
+        g_renderCmdList, DrawUntexturedQuadCmd{ m_X, m_Y, uint32_t(Width), uint32_t(Height) });
+    RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_All });
     RenderAdd_SetStencil(
         g_renderCmdList,
-        &StencilStateCmd(
-            StencilFunc::StencilFunc_Different,
-            1,
-            1,
-            StencilOp::StencilOp_Keep,
-            StencilOp::StencilOp_Keep,
-            StencilOp::StencilOp_Keep));
+        StencilStateCmd{ StencilFunc::StencilFunc_Different,
+                         StencilOp::StencilOp_Keep,
+                         StencilOp::StencilOp_Keep,
+                         StencilOp::StencilOp_Keep,
+                         1,
+                         1 });
 #endif
 }

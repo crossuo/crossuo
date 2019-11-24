@@ -7,7 +7,7 @@
     case RenderCommandType::Cmd_##type:                                                            \
     {                                                                                              \
         RenderDraw_##type##Debug((type##Cmd *)cmd, state);                                         \
-        (char *)cmd += sizeof(type##Cmd);                                                          \
+        cmd += sizeof(type##Cmd);                                                                  \
         break;                                                                                     \
     }
 
@@ -176,7 +176,8 @@ static const char *BlendFactorAsString(BlendFactor factor)
         "BlendFactor_DstColor",
     };
 
-    static_assert(countof(s_factorToText) == BlendFactor::BlendFactor_Count);
+    static_assert(
+        countof(s_factorToText) == BlendFactor::BlendFactor_Count, "missing blend factors");
 
     if (factor == BlendFactor::BlendFactor_Invalid)
     {
@@ -192,7 +193,8 @@ static const char *BlendEquationAsString(BlendEquation equation)
     static const char *s_equationToText[] = { "BlendEquation_Add",
                                               "BlendEquation_ReverseSubtract" };
 
-    static_assert(countof(s_equationToText) == BlendEquation::BlendEquation_Count);
+    static_assert(
+        countof(s_equationToText) == BlendEquation::BlendEquation_Count, "missing blend equations");
 
     if (equation == BlendEquation::BlendEquation_Invalid)
     {
@@ -209,13 +211,14 @@ const char *ShaderUniformTypeAsString(ShaderUniformType type)
         "Int1",    // ShaderUniformType::ShaderUniformType_Int1
         "Float1V", // ShaderUniformType::ShaderUniformType_Float1V
     };
-    static_assert(countof(s_uniformTypeAsStr) == ShaderUniformType::ShaderUniformType_Count);
+    static_assert(
+        countof(s_uniformTypeAsStr) == ShaderUniformType::ShaderUniformType_Count,
+        "missing shader uniform types");
 
     return s_uniformTypeAsStr[type];
 }
 
-void ShaderUniformValueAsString(
-    ShaderUniformType type, void *value, uint32_t count, char *str, size_t str_capacity)
+void ShaderUniformValueAsString(ShaderUniformType type, void *value, char *str, size_t str_capacity)
 {
     if (type >= ShaderUniformType::ShaderUniformType_FixedFirst &&
         type <= ShaderUniformType::ShaderUniformType_FixedLast)
@@ -226,6 +229,10 @@ void ShaderUniformValueAsString(
                 snprintf(str, str_capacity, "%d", *(GLint *)value);
                 break;
 
+            case ShaderUniformType::ShaderUniformType_Invalid:
+            case ShaderUniformType::ShaderUniformType_Count:
+            // Large uniforms
+            case ShaderUniformType::ShaderUniformType_Float1V:
             default:
                 assert(false);
                 break;
@@ -244,6 +251,10 @@ void ShaderUniformValueAsString(
                 break;
             }
 
+            case ShaderUniformType::ShaderUniformType_Invalid:
+            case ShaderUniformType::ShaderUniformType_Count:
+            // Small uniform
+            case ShaderUniformType::ShaderUniformType_Int1:
             default:
                 assert(false);
                 break;
@@ -258,13 +269,14 @@ static const char *TextureTypeAsString(TextureType type)
         "Texture2D_Mipmapped" // Texture2D_Mipmapped
     };
 
-    static_assert(countof(s_textureTypeAsStr) == TextureType::TextureType_Count);
+    static_assert(
+        countof(s_textureTypeAsStr) == TextureType::TextureType_Count, "missing texture types");
 
     assert(type < TextureType::TextureType_Count);
     return s_textureTypeAsStr[type];
 }
 
-void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *state)
+void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
@@ -283,7 +295,7 @@ void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *state)
         cmd->mirrored ? "true" : "false");
 }
 
-void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *state)
+void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
@@ -303,18 +315,19 @@ void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *state
         cmd->mirrored ? "true" : "false");
 }
 
-void RenderDraw_FlushStateDebug(FlushStateCmd *, RenderState *state)
+void RenderDraw_FlushStateDebug(FlushStateCmd *, RenderState *)
 {
     Info(Renderer, "FlushStateCmd\n");
+    assert(false); // TODO
 }
 
-void RenderDraw_SetTextureDebug(SetTextureCmd *cmd, RenderState *state)
+void RenderDraw_SetTextureDebug(SetTextureCmd *cmd, RenderState *)
 {
     auto typeAsStr = TextureTypeAsString(cmd->type);
     Info(Renderer, "SetTextureCmd: texture: %d - type: %s\n", cmd->texture, typeAsStr);
 }
 
-void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *state)
+void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
@@ -324,27 +337,31 @@ void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *state)
         BlendEquationAsString(cmd->equation));
 }
 
-void RenderDraw_DisableBlendStateDebug(DisableBlendStateCmd *cmd, RenderState *state)
+void RenderDraw_DisableBlendStateDebug(DisableBlendStateCmd *, RenderState *)
 {
     Info(Renderer, "DisableBlendStateCmd\n");
+    assert(false); // TODO
 }
 
-void RenderDraw_StencilStateDebug(StencilStateCmd *cmd, RenderState *state)
+void RenderDraw_StencilStateDebug(StencilStateCmd *, RenderState *)
 {
     Info(Renderer, "StencilStateCmd\n");
+    assert(false); // TODO
 }
 
-void RenderDraw_DisableStencilStateDebug(DisableStencilStateCmd *cmd, RenderState *state)
+void RenderDraw_DisableStencilStateDebug(DisableStencilStateCmd *, RenderState *)
 {
     Info(Renderer, "DisableStencilStateCmd\n");
+    assert(false); // TODO
 }
 
-void RenderDraw_EnableStencilStateDebug(EnableStencilStateCmd *cmd, RenderState *state)
+void RenderDraw_EnableStencilStateDebug(EnableStencilStateCmd *, RenderState *)
 {
     Info(Renderer, "EnableStencilStateCmd\n");
+    assert(false); // TODO
 }
 
-void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *state)
+void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
@@ -355,7 +372,7 @@ void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *state)
         cmd->mask & ColorMask::ColorMask_Alpha ? "Alpha" : "");
 }
 
-void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *state)
+void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
@@ -374,7 +391,7 @@ void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 
     auto typeAsStr = ShaderUniformTypeAsString(cmd->type);
     char valueAsStr[64] = "<invalid>";
-    ShaderUniformValueAsString(cmd->type, &cmd->value[0], 1, valueAsStr, countof(valueAsStr));
+    ShaderUniformValueAsString(cmd->type, &cmd->value.data[0], valueAsStr, countof(valueAsStr));
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);
@@ -396,7 +413,8 @@ void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState 
 
     auto typeAsStr = ShaderUniformTypeAsString(cmd->type);
     char valueAsStr[64] = "<invalid>";
-    ShaderUniformValueAsString(cmd->type, cmd->value, cmd->count, valueAsStr, countof(valueAsStr));
+    assert(cmd->count == 1); // TODO
+    ShaderUniformValueAsString(cmd->type, cmd->value, valueAsStr, countof(valueAsStr));
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);
@@ -411,16 +429,14 @@ void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState 
         typeAsStr);
 }
 
-void RenderDraw_ShaderPipelineDebug(ShaderPipelineCmd *cmd, RenderState *state)
+void RenderDraw_ShaderPipelineDebug(ShaderPipelineCmd *, RenderState *)
 {
-    // TODO implement RenderDraw_ShaderPipelineDebug
-    assert(false);
+    assert(false); // TODO
 }
 
-void RenderDraw_DisableShaderPipelineDebug(DisableShaderPipelineCmd *cmd, RenderState *state)
+void RenderDraw_DisableShaderPipelineDebug(DisableShaderPipelineCmd *, RenderState *)
 {
-    // TODO implement RenderDraw_DisableShaderPipelineDebug
-    assert(false);
+    assert(false); // TODO
 }
 
 void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
@@ -432,7 +448,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
         cmdList->data,
         cmdList->size,
         cmdList->remainingSize,
-        cmdList->immediateMode);
+        cmdList->immediateMode ? "yes" : "no");
 
     char *cmd = cmdList->data;
     uint32_t remainingCmdSize = cmdList->size - cmdList->remainingSize;
@@ -461,15 +477,27 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(ShaderPipeline, cmd, &cmdList->state);
             MATCH_CASE_DRAW_DEBUG(DisableShaderPipeline, cmd, &cmdList->state);
 
-                // TODO ClearRT
-                // TODO DrawCharacterSitting
-                // TODO DrawLandTile
-                // TODO DrawShadow
-                // TODO DrawCircle
-                // TODO DrawUntexturedQuad
-                // TODO DrawLine
-                // TODO DrawResize
-
+            case Cmd_DrawCharacterSitting:
+            case Cmd_DrawLandTile:
+            case Cmd_DrawShadow:
+            case Cmd_DrawCircle:
+            case Cmd_DrawUntexturedQuad:
+            case Cmd_DrawLine:
+            case Cmd_ClearRT:
+            case Cmd_SetFrameBuffer:
+            case Cmd_AlphaTest:
+            case Cmd_DisableAlphaTest:
+            case Cmd_DepthState:
+            case Cmd_DisableDepthState:
+            case Cmd_EnableDepthState:
+            case Cmd_SetClearColor:
+            case Cmd_SetViewParams:
+            case Cmd_SetModelViewTranslation:
+            case Cmd_SetScissor:
+            case Cmd_DisableScissor:
+            case Cmd_GetFrameBufferPixels:
+            case RenderCommandType_Invalid:
+                // TODO
             default:
                 assert(false);
                 break;

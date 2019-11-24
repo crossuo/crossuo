@@ -5,6 +5,7 @@
 #include "../SelectedObject.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/ScreenEffectManager.h"
+#include "ScreenshotBuilder.h"
 
 CBaseScreen *g_CurrentScreen = nullptr;
 RenderCmdList *g_renderCmdList = nullptr;
@@ -71,7 +72,7 @@ void CBaseScreen::Render()
     // we can get rid of glEngine
     g_GL.BeginDraw();
 #ifdef NEW_RENDERER_ENABLED
-    RenderAdd_ClearRT(&m_RenderCmdList, &ClearRTCmd());
+    RenderAdd_ClearRT(&m_RenderCmdList, ClearRTCmd{});
 #endif
 
     if (DrawSmoothMonitor() != 0)

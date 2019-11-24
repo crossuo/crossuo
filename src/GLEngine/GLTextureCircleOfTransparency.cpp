@@ -88,22 +88,20 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     glStencilFunc(GL_NOTEQUAL, 1, 1);
     glDisable(GL_STENCIL_TEST);
 #else
-    auto stencilCmd = StencilStateCmd(
-        StencilFunc::StencilFunc_AlwaysPass,
-        1,
-        1,
-        StencilOp::StencilOp_Keep,
-        StencilOp::StencilOp_Keep,
-        StencilOp::StencilOp_Replace);
-    RenderAdd_SetStencil(g_renderCmdList, &stencilCmd);
+    auto stencilCmd = StencilStateCmd{ StencilFunc::StencilFunc_AlwaysPass,
+                                       StencilOp::StencilOp_Keep,
+                                       StencilOp::StencilOp_Keep,
+                                       StencilOp::StencilOp_Replace,
+                                       1,
+                                       1 };
+    RenderAdd_SetStencil(g_renderCmdList, stencilCmd);
 
-    RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_Alpha));
+    RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_Alpha });
     RenderAdd_DrawQuad(
         g_renderCmdList,
-        &DrawQuadCmd(
-            m_Sprite.Texture->Texture, X, Y, m_Sprite.Texture->Width, m_Sprite.Texture->Height),
-        1);
-    RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_All));
+        DrawQuadCmd{
+            m_Sprite.Texture->Texture, X, Y, m_Sprite.Texture->Width, m_Sprite.Texture->Height });
+    RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_All });
 
     // TODO skipping some redundant state changes due to stencil being disabled
     // test this is still working as intended
@@ -130,26 +128,27 @@ void CGLTextureCircleOfTransparency::Redraw()
         glDisable(GL_STENCIL_TEST);
     }
 #else
-    RenderAdd_ClearRT(g_renderCmdList, &ClearRTCmd(ClearRT::ClearRT_Stencil));
+    RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Stencil });
     if (g_ConfigManager.UseCircleTrans && m_Sprite.Texture != nullptr)
     {
-        RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_Alpha));
-        auto stencilCmd = StencilStateCmd(
-            StencilFunc::StencilFunc_AlwaysPass,
-            1,
-            1,
-            StencilOp::StencilOp_Keep,
-            StencilOp::StencilOp_Keep,
-            StencilOp::StencilOp_Replace);
-        RenderAdd_SetStencil(g_renderCmdList, &stencilCmd);
+        RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_Alpha });
+        auto stencilCmd = StencilStateCmd{ StencilFunc::StencilFunc_AlwaysPass,
+                                           StencilOp::StencilOp_Keep,
+                                           StencilOp::StencilOp_Keep,
+                                           StencilOp::StencilOp_Replace,
+                                           1,
+                                           1 };
+        RenderAdd_SetStencil(g_renderCmdList, stencilCmd);
 
         RenderAdd_DrawQuad(
             g_renderCmdList,
-            &DrawQuadCmd(
-                m_Sprite.Texture->Texture, X, Y, m_Sprite.Texture->Width, m_Sprite.Texture->Height),
-            1);
+            DrawQuadCmd{ m_Sprite.Texture->Texture,
+                         X,
+                         Y,
+                         m_Sprite.Texture->Width,
+                         m_Sprite.Texture->Height });
 
-        RenderAdd_SetColorMask(g_renderCmdList, &SetColorMaskCmd(ColorMask::ColorMask_All));
+        RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_All });
 
         // TODO skipping some redundant state changes due to stencil being disabled
         // test this is still working as intended

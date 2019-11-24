@@ -156,7 +156,7 @@ void CGameEffect::ApplyRenderMode()
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd{ BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor });
+                BlendStateCmd{ BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor });
 #endif
             break;
         }
@@ -169,7 +169,7 @@ void CGameEffect::ApplyRenderMode()
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
+                BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
 #endif
             break;
         }
@@ -181,8 +181,8 @@ void CGameEffect::ApplyRenderMode()
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd{ BlendFactor::BlendFactor_DstColor,
-                                BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                BlendStateCmd{ BlendFactor::BlendFactor_DstColor,
+                               BlendFactor::BlendFactor_OneMinusSrcAlpha });
 #endif
             break;
         }
@@ -194,8 +194,8 @@ void CGameEffect::ApplyRenderMode()
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd{ BlendFactor::BlendFactor_DstColor,
-                                BlendFactor::BlendFactor_SrcColor });
+                BlendStateCmd{ BlendFactor::BlendFactor_DstColor,
+                               BlendFactor::BlendFactor_SrcColor });
 #endif
             break;
         }
@@ -208,9 +208,9 @@ void CGameEffect::ApplyRenderMode()
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd{ BlendFactor::BlendFactor_SrcColor,
-                                BlendFactor::BlendFactor_OneMinusSrcColor,
-                                BlendEquation::BlendEquation_ReverseSubtract });
+                BlendStateCmd{ BlendFactor::BlendFactor_SrcColor,
+                               BlendFactor::BlendFactor_OneMinusSrcColor,
+                               BlendEquation::BlendEquation_ReverseSubtract });
 #endif
             break;
         }
@@ -245,9 +245,9 @@ void CGameEffect::RemoveRenderMode()
 #else
             RenderAdd_SetBlend(
                 g_renderCmdList,
-                &BlendStateCmd{ BlendFactor::BlendFactor_Invalid,
-                                BlendFactor::BlendFactor_Invalid,
-                                BlendEquation::BlendEquation_Add });
+                BlendStateCmd{ BlendFactor::BlendFactor_Invalid,
+                               BlendFactor::BlendFactor_Invalid,
+                               BlendEquation::BlendEquation_Add });
 #endif
             break;
         }
