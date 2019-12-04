@@ -8,19 +8,19 @@
 class CGUIGlobalColor : public CBaseGUI
 {
     //!R компонента цвета
-    GLfloat R = 0.0f;
+    float R = 0.0f;
 
     //!G компонента цвета
-    GLfloat G = 0.0f;
+    float G = 0.0f;
 
     //!B компонента цвета
-    GLfloat B = 0.0f;
+    float B = 0.0f;
 
     //!A компонента цвета
-    GLfloat A = 0.0f;
+    float A = 0.0f;
 
 public:
-    CGUIGlobalColor(bool enabled, GLfloat r, GLfloat g, GLfloat b, GLfloat a);
+    CGUIGlobalColor(bool enabled, float r, float g, float b, float a);
     virtual ~CGUIGlobalColor();
 
     virtual void Draw(bool checktrans = false);

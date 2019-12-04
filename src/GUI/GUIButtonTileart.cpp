@@ -3,6 +3,7 @@
 
 #include "GUIButtonTileart.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Point.h"
 #include "../Utility/PerfMarker.h"
 

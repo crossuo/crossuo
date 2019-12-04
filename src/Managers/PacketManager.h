@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../CrossPCH.h" // REMOVE
+#include "../Wisp.h"     // REMOVE
 
 class CPacketManager;
 typedef void (CPacketManager::*PACKET_FUNCTION)();

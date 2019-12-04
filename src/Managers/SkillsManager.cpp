@@ -2,6 +2,7 @@
 // Copyright (C) Obtober 2017 Hotride
 
 #include "SkillsManager.h"
+#include "../Logging.h"
 #include <xuocore/uodata.h>
 #include <xuocore/mulstruct.h>
 

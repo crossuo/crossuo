@@ -4,7 +4,9 @@
 #pragma once
 
 #include "../Point.h"
-#include "../Backend.h"
+#include "../Sprite.h"
+#include "../Platform.h" // REMOVE Keycode
+#include <xuocore/enumlist.h>
 
 class CGump;
 

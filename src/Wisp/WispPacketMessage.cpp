@@ -1,6 +1,8 @@
 ﻿// MIT License
 
+#include "WispPacketReader.h"
 #include "WispPacketMessage.h"
+#include "../Misc.h"
 
 namespace Wisp
 {
@@ -12,7 +14,6 @@ CPacketMessage::CPacketMessage(bool bigEndian)
 CPacketMessage::CPacketMessage(uint8_t *data, int dataSize, bool bigEndian)
     : BigEndian(bigEndian)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Data.resize(dataSize);
     memcpy(&m_Data[0], &data[0], dataSize);
 }
@@ -21,18 +22,15 @@ CPacketMessage::CPacketMessage(const std::vector<uint8_t> &data, bool bigEndian)
     : BigEndian(bigEndian)
     , m_Data(data)
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 CPacketMessage::~CPacketMessage()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Data.clear();
 }
 
 void CPacketMessage::Append(uint8_t *data, int dataSize)
 {
-    DEBUG_TRACE_FUNCTION;
     std::vector<uint8_t> buf(dataSize);
     memcpy(&buf[0], &data[0], dataSize);
 
@@ -41,13 +39,11 @@ void CPacketMessage::Append(uint8_t *data, int dataSize)
 
 void CPacketMessage::Append(const std::vector<uint8_t> &data)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Data.insert(m_Data.end(), data.begin(), data.end());
 }
 
-std::vector<uint8_t> CPacketMessage::Read(class CPacketReader *reader, int &dataOffset)
+std::vector<uint8_t> CPacketMessage::Read(CPacketReader *reader, int &dataOffset)
 {
-    DEBUG_TRACE_FUNCTION;
     std::vector<uint8_t> result;
 
     if (m_Data.empty())

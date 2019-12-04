@@ -6,7 +6,7 @@
 #include "GUIBlending.h"
 #include "../Utility/PerfMarker.h"
 
-CGUIBlending::CGUIBlending(bool enabled, GLenum sFactor, GLenum dFactor)
+CGUIBlending::CGUIBlending(bool enabled, uint32_t sFactor, uint32_t dFactor)
     : CBaseGUI(GOT_BLENDING, 0, 0, 0, 0, 0)
     , SFactor(sFactor)
     , DFactor(dFactor)

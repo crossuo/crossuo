@@ -7,6 +7,7 @@
 #include "Misc.h"
 #include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
+#include "GLEngine/GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 CWeather g_Weather;

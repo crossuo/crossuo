@@ -3,6 +3,7 @@
 
 #include "GUIBuff.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 

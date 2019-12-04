@@ -3,6 +3,7 @@
 
 #include "GUIVirtueGump.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Managers/MouseManager.h"
 
 CGUIVirtueGump::CGUIVirtueGump(uint16_t graphic, int x, int y)

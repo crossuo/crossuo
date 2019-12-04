@@ -3,6 +3,7 @@
 
 #include "Platform.h"
 #include "Globals.h"
+#include "Logging.h"
 
 #if _WIN32
 #include <Shellapi.h>

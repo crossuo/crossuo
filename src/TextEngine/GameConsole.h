@@ -4,6 +4,7 @@
 #pragma once
 
 #include "EntryText.h"
+const int MAX_CONSOLE_STACK_SIZE = 100;
 
 class CGameConsole : public CEntryText
 {

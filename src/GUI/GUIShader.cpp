@@ -3,6 +3,7 @@
 
 #include "GUIShader.h"
 #include "../Utility/PerfMarker.h"
+#include "../GLEngine/GLShader.h" // REMOVE
 
 CGUIShader::CGUIShader(CGLShader *shader, bool enabled)
     : CBaseGUI(GOT_SHADER, 0, 0, 0, 0, 0)

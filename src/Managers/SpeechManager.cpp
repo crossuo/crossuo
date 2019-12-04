@@ -6,6 +6,7 @@
 #include <common/str.h>
 #include "../Config.h"
 #include "../Misc.h"
+#include "../Logging.h"
 
 CSpeechManager g_SpeechManager;
 

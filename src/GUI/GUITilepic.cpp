@@ -4,6 +4,7 @@
 #include "GUITilepic.h"
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Point.h"
 #include "../Utility/PerfMarker.h"
 

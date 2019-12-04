@@ -30,6 +30,7 @@
 #include "CharacterList.h"
 #include "DateTimeStamp.h"
 #include "Application.h"
+#include "RenderWorldObject.h"
 
 #if USE_PING
 #include "Utility/PingThread.h"

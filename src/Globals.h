@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include "CrossPCH.h" // REMOVE
-#include "GLEngine/GLTexture.h"
+#include "GLEngine/GLTexture.h"     // REMOVE
+#include "GLEngine/GLFrameBuffer.h" // REMOVE
+#include "CrossPCH.h"               // REMOVE
 
 #define IS_MOBILE(serial) ((serial & 0x40000000) == 0)
 #define IS_ITEM(serial) ((serial & 0x40000000) != 0)
@@ -13,7 +14,6 @@
 #include "Point.h"
 #include "Constants.h"
 #include <xuocore/enumlist.h>
-#include "Backend.h" // CGLTexture, GLuint
 
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
@@ -52,11 +52,12 @@ extern int g_GameObjectsCount;
 extern int g_MultiObjectsCount;
 extern int g_RenderedObjectsCountInGameWindow;
 
-extern GLdouble g_GlobalScale;
+extern float g_GlobalScale;
 
-extern CGLTexture g_MapTexture[MAX_MAPS_COUNT];
-
-extern CGLTexture g_AuraTexture;
+extern CGLTexture g_MapTexture[MAX_MAPS_COUNT]; // FIXME
+extern CGLTexture g_AuraTexture;                // FIXME
+extern CGLTexture g_TextureGumpState[2];        // FIXME
+extern class CGLFrameBuffer g_LightBuffer;      // FIXME
 
 extern bool g_LogoutAfterClick;
 
@@ -72,19 +73,15 @@ extern uint32_t g_TotalRecvSize;
 
 extern uint32_t g_Ticks;
 
-extern GLuint ShaderColorTable;
-extern GLuint g_ShaderDrawMode;
+extern uint32_t ShaderColorTable;
+extern uint32_t g_ShaderDrawMode;
 
 extern std::string g_Language;
 
 extern GAME_STATE g_GameState;
 
-extern CGLTexture g_TextureGumpState[2];
-
 extern CSize g_MapSize[MAX_MAPS_COUNT];
 extern CSize g_MapBlockSize[MAX_MAPS_COUNT];
-
-extern class CGLFrameBuffer g_LightBuffer;
 
 extern bool g_GumpPressed;
 extern class CRenderObject *g_GumpSelectedElement;

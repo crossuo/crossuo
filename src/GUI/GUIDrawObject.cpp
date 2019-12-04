@@ -3,6 +3,7 @@
 
 #include "GUIDrawObject.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Point.h"
 #include "../Managers/ColorManager.h"
 #include "../Renderer/RenderAPI.h"

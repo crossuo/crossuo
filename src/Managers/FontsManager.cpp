@@ -9,6 +9,7 @@
 #include "../CrossUO.h"
 #include "../Application.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Wisp.h" // REMOVE
 
 CFontsManager g_FontManager;
 

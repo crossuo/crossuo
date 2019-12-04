@@ -22,6 +22,7 @@
 #include "../Managers/ColorManager.h"
 #include "../TextEngine/TextData.h"
 #include "../Renderer/RenderAPI.h"
+#include "../GLEngine/GLEngine.h" // REMOVE
 
 static int s_objectHandleOffsetY = 25;
 static int s_bodyHandleOffsetY = 15;

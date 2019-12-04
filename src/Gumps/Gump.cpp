@@ -403,8 +403,8 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 {
                     CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
-                    GLfloat x = (GLfloat)htmlGump->GetX();
-                    GLfloat y = (GLfloat)htmlGump->GetY();
+                    float x = (float)htmlGump->GetX();
+                    float y = (float)htmlGump->GetY();
 
 #ifndef NEW_RENDERER_ENABLED
                     glTranslatef(x, y, 0.0f);
@@ -425,8 +425,8 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                         subItem = (CBaseGUI *)subItem->m_Next;
                     }
 
-                    GLfloat offsetX = (GLfloat)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
-                    GLfloat offsetY = (GLfloat)(htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y);
+                    float offsetX = (float)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
+                    float offsetY = (float)(htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y);
 
 #ifndef NEW_RENDERER_ENABLED
                     glTranslatef(offsetX, offsetY, 0.0f);
@@ -1504,7 +1504,7 @@ void CGump::Draw()
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
+            glTranslatef(-(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f);
 #else
             RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
             RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Color });
@@ -1593,7 +1593,7 @@ void CGump::Draw()
             }
 
 #ifndef NEW_RENDERER_ENABLED
-            glTranslatef((GLfloat)GumpRect.Position.X, (GLfloat)GumpRect.Position.Y, 0.0f);
+            glTranslatef((float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f);
 #else
             RenderAdd_SetModelViewTranslation(
                 g_renderCmdList,
@@ -1610,11 +1610,11 @@ void CGump::Draw()
         goto loc_create_frame;
     }
 
-    GLfloat posX = g_GumpTranslate.X;
-    GLfloat posY = g_GumpTranslate.Y;
+    float posX = g_GumpTranslate.X;
+    float posY = g_GumpTranslate.Y;
 
-    posX += (GLfloat)GumpRect.Position.X;
-    posY += (GLfloat)GumpRect.Position.Y;
+    posX += (float)GumpRect.Position.X;
+    posY += (float)GumpRect.Position.Y;
 
 #ifndef NEW_RENDERER_ENABLED
     glTranslatef(posX, posY, 0.0f);
