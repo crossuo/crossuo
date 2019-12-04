@@ -1,9 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "GLTextureCircleOfTransparency.h"
 #include "../Managers/ConfigManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 

@@ -2,6 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Walker.h"
+#include <xuocore/plugininterface.h> // FIXME: UOI_PLAYER_XYZ_DATA, UOMSG_UPDATE_RMEOVE_POS
+#include "../Wisp/WispWindow.h"      // FIXME: PLUGIN_EVENT
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
 

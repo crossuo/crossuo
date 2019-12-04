@@ -15,7 +15,7 @@ class CGLEngine
 public:
     HDC DC = 0;
     HGLRC RC = 0;
-    GLuint OldTexture = 0;
+    texture_handle_t OldTexture = 0;
     bool Drawing = false;
 #ifndef NEW_RENDERER_ENABLED
     float SittingCharacterOffset = 8.0f;

@@ -4,7 +4,9 @@
 #include "Container.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
+#include "Sprite.h"
 #include "Managers/ConfigManager.h"
+#include <vector>
 
 CContainerRect g_ContainerRect;
 std::vector<CContainerOffset> g_ContainerOffset;

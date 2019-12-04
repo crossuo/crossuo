@@ -4,6 +4,7 @@
 #pragma once
 
 #include "BaseGUI.h"
+class CGLShader; // REMOVE
 
 class CGUIShader : public CBaseGUI
 {

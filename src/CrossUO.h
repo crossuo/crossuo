@@ -4,12 +4,15 @@
 #pragma once
 
 #include "GameObjects/GameWorld.h"
-//#include <xuocore/plugininterface.h>
+#include <xuocore/plugininterface.h> // PluginEntry typedef
+
+struct fs_path;
 
 struct CIndexObjectStatic;
 struct CIndexObject;
 struct CIndexSound;
 struct CUopMappedFile;
+struct CSprite;
 
 class CGame
 {

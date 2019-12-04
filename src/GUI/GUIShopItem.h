@@ -4,6 +4,7 @@
 #pragma once
 
 #include "BaseGUI.h"
+#include "../Sprite.h"
 
 class CGUIShopItem : public CBaseGUI
 {

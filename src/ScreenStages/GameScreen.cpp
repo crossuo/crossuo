@@ -1110,13 +1110,13 @@ void CGameScreen::CalculateGameWindowBounds()
 
     if (g_ConfigManager.GetUseScaling())
     {
-        GLdouble left = (GLdouble)g_RenderBounds.GameWindowPosX;
-        GLdouble right = (GLdouble)(g_RenderBounds.GameWindowWidth + left);
-        GLdouble top = (GLdouble)g_RenderBounds.GameWindowPosY;
-        GLdouble bottom = (GLdouble)(g_RenderBounds.GameWindowHeight + top);
+        const auto left = (float)g_RenderBounds.GameWindowPosX;
+        const auto right = (float)(g_RenderBounds.GameWindowWidth + left);
+        const auto top = (float)g_RenderBounds.GameWindowPosY;
+        const auto bottom = (float)(g_RenderBounds.GameWindowHeight + top);
 
-        GLdouble newRight = right * g_GlobalScale;
-        GLdouble newBottom = bottom * g_GlobalScale;
+        const auto newRight = right * g_GlobalScale;
+        const auto newBottom = bottom * g_GlobalScale;
 
         g_RenderBounds.GameWindowScaledOffsetX = (int)((left * g_GlobalScale) - (newRight - right));
         g_RenderBounds.GameWindowScaledOffsetY =
@@ -1205,10 +1205,10 @@ void CGameScreen::CalculateGameWindowBounds()
 
     int drawOffset = (int)(g_GlobalScale * 40.0);
 
-    GLdouble maxX = g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth + drawOffset;
-    GLdouble maxY = g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight + drawOffset;
-    GLdouble newMaxX = maxX * g_GlobalScale;
-    GLdouble newMaxY = maxY * g_GlobalScale;
+    const auto maxX = g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth + drawOffset;
+    const auto maxY = g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight + drawOffset;
+    const auto newMaxX = maxX * g_GlobalScale;
+    const auto newMaxY = maxY * g_GlobalScale;
 
     g_RenderBounds.MinPixelsX =
         (int)(((g_RenderBounds.GameWindowPosX - drawOffset) * g_GlobalScale) - (newMaxX - maxX));
@@ -1541,8 +1541,8 @@ void CGameScreen::DrawGameWindowLight()
             offsetY = g_RenderBounds.GameWindowPosY - g_RenderBounds.GameWindowScaledOffsetY;
         }
 
-        GLfloat translateOffsetX = (GLfloat)offsetX;
-        GLfloat translateOffsetY = (GLfloat)offsetY;
+        float translateOffsetX = (float)offsetX;
+        float translateOffsetY = (float)offsetY;
 
 #ifndef NEW_RENDERER_ENABLED
         glTranslatef(translateOffsetX, translateOffsetY, 0.0f);
@@ -2173,7 +2173,7 @@ void CGameScreen::SelectObject()
 {
     DEBUG_TRACE_FUNCTION;
 
-    GLdouble oldScale = g_GlobalScale;
+    const auto oldScale = g_GlobalScale;
     g_GlobalScale = 1.0;
     g_SelectedObject.Clear();
     g_StatusbarUnderMouse = 0;
@@ -2229,13 +2229,13 @@ void CGameScreen::SelectObject()
                     mouseY
                 );*/
 
-                /*GLdouble left = (GLdouble)g_RenderBounds.GameWindowPosX;
-                GLdouble right = (GLdouble)(g_RenderBounds.GameWindowWidth + left);
-                GLdouble top = (GLdouble)g_RenderBounds.GameWindowPosY;
-                GLdouble bottom = (GLdouble)(g_RenderBounds.GameWindowHeight + top);
+                /*const auto left = (float)g_RenderBounds.GameWindowPosX;
+                const auto right = (float)(g_RenderBounds.GameWindowWidth + left);
+                const auto top = (float)g_RenderBounds.GameWindowPosY;
+                const auto bottom = (float)(g_RenderBounds.GameWindowHeight + top);
 
-                GLdouble newRight = right * g_GlobalScale;
-                GLdouble newBottom = bottom * g_GlobalScale;
+                const auto newRight = right * g_GlobalScale;
+                const auto newBottom = bottom * g_GlobalScale;
 
                 g_RenderBounds.GameWindowScaledOffsetX = (int)((left * g_GlobalScale) - (newRight - right));
                 g_RenderBounds.GameWindowScaledOffsetY = (int)((top * g_GlobalScale) - (newBottom - bottom));

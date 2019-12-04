@@ -11,6 +11,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
+#include "../GLEngine/GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -229,7 +230,7 @@ void CGUIShopItem::Draw(bool checktrans)
     CGLTexture *th = nullptr;
 
 #ifndef NEW_RENDERER_ENABLED
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
@@ -350,7 +351,7 @@ void CGUIShopItem::Draw(bool checktrans)
         spr->Texture->Draw(166, m_MaxOffset, checktrans);
     }
 #ifndef NEW_RENDERER_ENABLED
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });

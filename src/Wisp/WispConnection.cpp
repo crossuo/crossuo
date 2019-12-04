@@ -2,6 +2,7 @@
 
 #include "WispConnection.h"
 #include "WispPacketMessage.h"
+#include "../Logging.h"
 
 namespace Wisp
 {

@@ -5,6 +5,8 @@
 
 #include "../BaseQueue.h"
 
+struct PLUGIN_INTERFACE;
+
 class CPlugin : public CBaseQueueItem
 {
 private:

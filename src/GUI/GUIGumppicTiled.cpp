@@ -3,6 +3,7 @@
 
 #include "GUIGumppicTiled.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
 

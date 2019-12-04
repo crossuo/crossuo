@@ -129,7 +129,7 @@ void CGUISkillGroup::Draw(bool checktrans)
     ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
@@ -193,7 +193,7 @@ void CGUISkillGroup::Draw(bool checktrans)
     }
 
 #ifndef NEW_RENDERER_ENABLED
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });

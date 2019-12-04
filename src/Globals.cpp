@@ -28,7 +28,7 @@ int g_GameObjectsCount = 0;
 int g_MultiObjectsCount = 0;
 int g_RenderedObjectsCountInGameWindow = 0;
 
-GLdouble g_GlobalScale = 1.0;
+float g_GlobalScale = 1.0;
 
 CGLTexture g_MapTexture[MAX_MAPS_COUNT];
 CGLTexture g_AuraTexture;
@@ -42,8 +42,8 @@ uint32_t g_TotalSendSize = 0;
 uint32_t g_TotalRecvSize = 0;
 uint32_t g_Ticks = 0;
 
-GLuint ShaderColorTable = 0;
-GLuint g_ShaderDrawMode = 0;
+uint32_t ShaderColorTable = 0;
+uint32_t g_ShaderDrawMode = 0;
 
 std::string g_Language = "ENU";
 

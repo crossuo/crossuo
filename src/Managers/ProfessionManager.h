@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
+#include "../Wisp.h" // REMOVE
 
 class CBaseProfession;
 

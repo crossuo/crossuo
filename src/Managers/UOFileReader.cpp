@@ -7,6 +7,7 @@
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
+#include "../Logging.h"
 
 UOFileReader g_UOFileReader;
 

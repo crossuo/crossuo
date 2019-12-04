@@ -145,7 +145,7 @@ void CGUISkillItem::Draw(bool checktrans)
     ScopedPerfMarker(__FUNCTION__);
     DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
@@ -172,7 +172,7 @@ void CGUISkillItem::Draw(bool checktrans)
     m_ValueText.Draw(250 - m_ValueText.Width, 0);
 
 #ifndef NEW_RENDERER_ENABLED
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "GLTexture.h"
+#include "../Point.h"
 
 class CGLFrameBuffer
 {

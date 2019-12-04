@@ -4,38 +4,27 @@ pull_requests:
 skip_tags: true
 clone_folder: c:\projects\crossuo
 image:
-#- Visual Studio 2013 # Need remove constexpr to struct enum so it will compile with 2013 again
 - Visual Studio 2015
 - Visual Studio 2017
-#- Visual Studio 2019 Preview
-#configuration:
-#- Release
-#- Debug
+- Visual Studio 2019 Preview
 platform:
 - x64
-environment:
-  matrix:
-  - arch: Win64
-matrix:
-  fast_finish: true
 install:
 - cd %APPVEYOR_BUILD_FOLDER%
 init:
-- set arch=
-- if "%arch%"=="Win64" ( set arch2= x64)
-- if "%arch%"=="Win64" ( set arch= Win64)
-- echo %arch%
 - echo %APPVEYOR_BUILD_WORKER_IMAGE%
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015%arch%" )
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set generator="Visual Studio 16 2019 -A %arch2%" )
+- set extra=
+- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017 Win64" )
+- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015 Win64" )
+- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set generator="Visual Studio 16 2019" )
+- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set extra=-A x64 )
 - echo %generator%
-before_build:
+build_script:
 - cmd: |-
     cmake --version
     mkdir build
     cd build
-    cmake .. -G %generator% -DAUTO_VCPKG_ROOT=C:/Tools/vcpkg/
+    cmake .. -G %generator% %extra% -DAUTO_VCPKG_ROOT=C:/Tools/vcpkg/
     cmake --build . --config Release
 cache:
 - C:\Tools\vcpkg
