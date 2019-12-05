@@ -20,7 +20,6 @@ CScreenshotBuilder g_ScreenshotBuilder;
 
 void CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Pixels.resize(width * height);
     m_Width = width;
     m_Height = height;
@@ -65,7 +64,6 @@ CScreenshotBuilder::~CScreenshotBuilder()
 
 void CScreenshotBuilder::SaveScreen()
 {
-    DEBUG_TRACE_FUNCTION;
     SaveScreen(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
 }
 
@@ -137,7 +135,6 @@ void CScreenshotBuilder::WritePixelsToDisk()
 
 void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     assert(width > 0 && height > 0);
 
     if (m_WaitingForGPUData)

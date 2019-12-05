@@ -16,7 +16,6 @@ namespace Platform
 // FIXME: Add support to all Langcode.iff codes.
 void SetLanguageFromSystemLocale()
 {
-    DEBUG_TRACE_FUNCTION;
     //char buf[4];
     //if (GetProfileStringA("intl", "sLanguage", "default", buf, sizeof(buf)) == 0)
     // https://docs.microsoft.com/en-us/windows/desktop/Intl/language-identifier-constants-and-strings
@@ -85,8 +84,6 @@ void OpenBrowser(const std::string &url)
 
 void SetLanguageFromSystemLocale()
 {
-    DEBUG_TRACE_FUNCTION;
-
     char *lang;
     lang = getenv("LANG");
     if (lang == nullptr)

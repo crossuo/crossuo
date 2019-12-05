@@ -3,6 +3,7 @@
 
 #include "ObjectOnCursor.h"
 #include "GameObject.h"
+#include "Globals.h" // IsStackable
 #include <xuocore/mulstruct.h>
 
 CObjectOnCursor g_ObjectInHand;
@@ -26,7 +27,6 @@ void CObjectOnCursor::Clear()
 
 uint16_t CObjectOnCursor::GetDrawGraphic(bool &doubleDraw)
 {
-    DEBUG_TRACE_FUNCTION;
     int index = CGameObject::IsGold(Graphic);
     uint16_t result = Graphic;
     const uint16_t graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },

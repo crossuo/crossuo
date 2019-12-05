@@ -21,13 +21,11 @@ CGUIMinMaxButtons::CGUIMinMaxButtons(
 
 CGUIMinMaxButtons::~CGUIMinMaxButtons()
 {
-    DEBUG_TRACE_FUNCTION;
     Text.Clear();
 }
 
 void CGUIMinMaxButtons::UpdateText()
 {
-    DEBUG_TRACE_FUNCTION;
     if (HaveText)
     {
         if (Unicode)
@@ -123,7 +121,6 @@ void CGUIMinMaxButtons::UpdateText()
 
 void CGUIMinMaxButtons::Scroll(int delay)
 {
-    DEBUG_TRACE_FUNCTION;
     if (LastScrollTime < g_Ticks && (m_ScrollMode != 0))
     {
         if (m_ScrollMode == 1)
@@ -153,7 +150,6 @@ void CGUIMinMaxButtons::Scroll(int delay)
 
 void CGUIMinMaxButtons::OnClick()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -187,7 +183,6 @@ void CGUIMinMaxButtons::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     uint16_t textFlags)
 {
-    DEBUG_TRACE_FUNCTION;
     HaveText = haveText;
     TextPosition = textPosition;
     Font = font;
@@ -202,7 +197,6 @@ void CGUIMinMaxButtons::SetTextParameters(
 
 void CGUIMinMaxButtons::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(Graphic);
     g_Game.ExecuteGump(Graphic + 1);
 }
@@ -210,7 +204,7 @@ void CGUIMinMaxButtons::PrepareTextures()
 void CGUIMinMaxButtons::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
 #ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
@@ -235,7 +229,6 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 
 bool CGUIMinMaxButtons::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     const int x = g_MouseManager.Position.X - m_X;
     const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= 0 && x < 36 && y < 18);

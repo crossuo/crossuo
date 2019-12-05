@@ -13,7 +13,6 @@ CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)
     , Text(text)
 {
-    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
     if (g_Config.ClientVersion >= CV_305D)
@@ -28,20 +27,18 @@ CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const
 
 CGUIBulletinBoardObject::~CGUIBulletinBoardObject()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
 }
 
 void CGUIBulletinBoardObject::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(0x1523);
 }
 
 void CGUIBulletinBoardObject::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     auto spr = g_Game.ExecuteGump(0x1523);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -52,7 +49,6 @@ void CGUIBulletinBoardObject::Draw(bool checktrans)
 
 bool CGUIBulletinBoardObject::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     const int x = g_MouseManager.Position.X - m_X;
     const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= 0 && x < 230 && y < 18);

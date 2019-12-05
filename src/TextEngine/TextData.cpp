@@ -27,7 +27,6 @@ CTextData::~CTextData()
 
 bool CTextData::CanBeDrawedInJournalGump()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     switch (Type)
@@ -51,7 +50,6 @@ bool CTextData::CanBeDrawedInJournalGump()
 void CTextData::GenerateTexture(
     int maxWidth, uint16_t flags, TEXT_ALIGN_TYPE align, uint8_t cell, int font)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Unicode)
     {
         if (font == -1)

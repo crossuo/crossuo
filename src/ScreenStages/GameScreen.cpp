@@ -1,7 +1,12 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#define UO_RENDER_LIST_SORT 1
+#define UO_CHECKERBOARD_SEQUENCE_RENDER_LIST 1
+
+#include <algorithm>
 #include <SDL_rect.h>
+#include <climits> // INT_MAX
 #include <common/str.h>
 #include "GameScreen.h"
 #include "GameBlockedScreen.h"
@@ -58,7 +63,6 @@ RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
 CGameScreen::CGameScreen()
     : CBaseScreen(m_GameScreenGump)
 {
-    DEBUG_TRACE_FUNCTION;
     m_RenderList.resize(1000);
 
     memset(&g_RenderBounds, 0, sizeof(g_RenderBounds));
@@ -69,12 +73,10 @@ CGameScreen::CGameScreen()
 
 CGameScreen::~CGameScreen()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 void CGameScreen::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseScreen::Init();
 
     g_GameWindow.SetWindowResizable(true);
@@ -94,7 +96,6 @@ void CGameScreen::SetMaximized(bool maximized)
 
 void CGameScreen::ProcessSmoothAction(uint8_t action)
 {
-    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
     {
         action = SmoothScreenAction;
@@ -108,8 +109,6 @@ void CGameScreen::ProcessSmoothAction(uint8_t action)
 
 void CGameScreen::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
-
     CRenderObject *obj = g_SelectedObject.Object;
     CGump *gump = g_SelectedObject.Gump;
 
@@ -178,7 +177,6 @@ void CGameScreen::InitToolTip()
 
 void CGameScreen::UpdateMaxDrawZ()
 {
-    DEBUG_TRACE_FUNCTION;
     int playerX = g_Player->GetX();
     int playerY = g_Player->GetY();
     int playerZ = g_Player->GetZ();
@@ -312,7 +310,6 @@ void CGameScreen::UpdateMaxDrawZ()
 
 void CGameScreen::ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y, int z)
 {
-    DEBUG_TRACE_FUNCTION;
     int bx = x / 8;
     int by = y / 8;
 
@@ -343,8 +340,6 @@ void CGameScreen::ApplyTransparentFoliageToUnion(uint16_t graphic, int x, int y,
 
 void CGameScreen::CheckFoliageUnion(uint16_t graphic, int x, int y, int z)
 {
-    DEBUG_TRACE_FUNCTION;
-
     for (int i = 0; i < TREE_COUNT; i++)
     {
         const TREE_UNIONS &info = TREE_INFO[i];
@@ -370,7 +365,6 @@ void CGameScreen::CheckFoliageUnion(uint16_t graphic, int x, int y, int z)
 
 void CGameScreen::CalculateRenderList()
 {
-    DEBUG_TRACE_FUNCTION;
     m_RenderListCount = 0;
 
     if (g_Player == nullptr)
@@ -617,7 +611,6 @@ void CGameScreen::CalculateRenderList()
 void CGameScreen::AddTileToRenderList(
     CRenderWorldObject *obj, int worldX, int worldY, bool useObjectHandles, int maxZ)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t grayColor = 0;
 
     if (g_ConfigManager.GrayOutOfRangeObjects)
@@ -983,7 +976,6 @@ void CGameScreen::AddTileToRenderList(
 
 void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useObjectHandles)
 {
-    DEBUG_TRACE_FUNCTION;
     int characterX = obj->GetX();
     int characterY = obj->GetY();
 
@@ -1062,7 +1054,6 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
 
 void CGameScreen::CalculateGameWindowBounds()
 {
-    DEBUG_TRACE_FUNCTION;
     g_GrayedPixels = g_Player->Dead();
 
     if (g_GrayedPixels && g_Season != ST_DESOLATION)
@@ -1249,8 +1240,6 @@ void CGameScreen::CalculateGameWindowBounds()
 
 void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObject, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (m_LightCount < MAX_LIGHT_SOURCES)
     {
         bool canBeAdded = true;
@@ -1333,7 +1322,6 @@ void CGameScreen::AddLight(CRenderWorldObject *rwo, CRenderWorldObject *lightObj
 
 void CGameScreen::DrawGameWindow(bool render)
 {
-    DEBUG_TRACE_FUNCTION;
     const int playerZPlus5 = g_RenderBounds.PlayerZ + 5;
     if (render)
     {
@@ -1490,7 +1478,6 @@ void CGameScreen::DrawGameWindow(bool render)
 
 void CGameScreen::DrawGameWindowLight()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
@@ -1620,7 +1607,6 @@ void CGameScreen::DrawGameWindowLight()
 
 void CGameScreen::DrawGameWindowText(bool render)
 {
-    DEBUG_TRACE_FUNCTION;
     if (render)
     {
         g_FontColorizerShader.Use();
@@ -1724,7 +1710,6 @@ void CGameScreen::DrawGameWindowText(bool render)
 
 void CGameScreen::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     g_WorldTextRenderer.CalculateWorldPositions(false);
 
     m_GameScreenGump.PrepareContent();
@@ -1817,8 +1802,6 @@ void CGameScreen::PreRender()
 
 void CGameScreen::Render()
 {
-    DEBUG_TRACE_FUNCTION;
-
     PreRender();
 
     static uint32_t lastRender = 0;
@@ -1983,7 +1966,6 @@ void CGameScreen::Render()
 #endif
     m_GameScreenGump.Draw();
 
-#if UO_DEBUG_INFO != 0
     if (g_DeveloperMode == DM_SHOW_FPS_ONLY)
     {
         char dbf[100] = { 0 };
@@ -2134,7 +2116,6 @@ void CGameScreen::Render()
             g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
         }
     }
-#endif //UO_DEBUG_INFO!=0
 
     g_GumpManager.Draw(false);
     g_GameConsole.DrawW(
@@ -2171,8 +2152,6 @@ void CGameScreen::Render()
 
 void CGameScreen::SelectObject()
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto oldScale = g_GlobalScale;
     g_GlobalScale = 1.0;
     g_SelectedObject.Clear();
@@ -2268,8 +2247,6 @@ void CGameScreen::SelectObject()
 
 void CGameScreen::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
-
     CGumpSkills *skillGump = (CGumpSkills *)g_GumpManager.GetGump(0, 0, GT_SKILLS);
     if (skillGump != nullptr)
     {
@@ -2295,8 +2272,6 @@ void CGameScreen::OnLeftMouseButtonDown()
 
 void CGameScreen::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_PressedObject.LeftGump == &m_GameScreenGump)
     {
         m_GameScreenGump.OnLeftMouseButtonUp();
@@ -2515,7 +2490,6 @@ void CGameScreen::OnLeftMouseButtonUp()
 
 bool CGameScreen::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     uint32_t charUnderMouse = 0;
     if ((g_SelectedObject.Gump != nullptr) && g_GumpManager.OnLeftMouseButtonDoubleClick(false))
@@ -2589,7 +2563,6 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
 
 void CGameScreen::OnRightMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.RightGump != nullptr)
     {
         g_GumpManager.OnRightMouseButtonDown(false);
@@ -2603,7 +2576,6 @@ void CGameScreen::OnRightMouseButtonDown()
 
 void CGameScreen::OnRightMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.RightGump != nullptr)
     {
         g_GumpManager.OnRightMouseButtonUp(false);
@@ -2633,7 +2605,6 @@ void CGameScreen::OnRightMouseButtonUp()
 
 bool CGameScreen::OnRightMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConfigManager.EnablePathfind && g_SelectedObject.Object != nullptr &&
         g_SelectedObject.Object->IsWorldObject() && !g_PathFinder.AutoWalking)
     {
@@ -2653,7 +2624,6 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
 
 void CGameScreen::OnMidMouseButtonScroll(bool up)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_GumpManager.OnMidMouseButtonScroll(up, false);
@@ -2673,27 +2643,26 @@ void CGameScreen::OnMidMouseButtonScroll(bool up)
 
         if (up)
         {
-            g_GlobalScale += 0.1;
+            g_GlobalScale += 0.1f;
         }
         else
         {
-            g_GlobalScale -= 0.1;
+            g_GlobalScale -= 0.1f;
         }
 
-        if (g_GlobalScale < 0.7)
+        if (g_GlobalScale < 0.7f)
         {
-            g_GlobalScale = 0.7;
+            g_GlobalScale = 0.7f;
         }
-        else if (g_GlobalScale > 2.3)
+        else if (g_GlobalScale > 2.3f)
         {
-            g_GlobalScale = 2.3;
+            g_GlobalScale = 2.3f;
         }
     }
 }
 
 void CGameScreen::OnDragging()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != nullptr)
     {
         g_GumpManager.OnDragging(false);
@@ -2702,8 +2671,6 @@ void CGameScreen::OnDragging()
 
 void CGameScreen::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_EntryPointer == nullptr)
     {
         return; //Ignore no print keys
@@ -2732,8 +2699,6 @@ void CGameScreen::OnTextInput(const TextEvent &ev)
 
 void CGameScreen::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (key == KEY_TAB && ev.repeat)
     {
@@ -2934,8 +2899,6 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
 
 void CGameScreen::OnKeyUp(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (key == KEY_TAB && g_GameState == GS_GAME)
     {

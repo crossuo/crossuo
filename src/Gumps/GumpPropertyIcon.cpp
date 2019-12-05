@@ -80,7 +80,6 @@ void CGumpPropertyIcon::UpdateContent()
 
 void CGumpPropertyIcon::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPI_LOCK_MOVING)
     {
         LockMoving = !LockMoving;
@@ -93,7 +92,6 @@ void CGumpPropertyIcon::GUMP_BUTTON_EVENT_C
 
 bool CGumpPropertyIcon::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t mode = g_ConfigManager.GetItemPropertiesMode() + 1;
     if (mode > OPM_SINGLE_CLICK)
     {

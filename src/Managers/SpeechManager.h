@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <vector>
+#include <stdint.h>
+#include <common/str.h>
 
 class CLangCode
 {

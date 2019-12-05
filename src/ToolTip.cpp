@@ -20,13 +20,11 @@ CToolTip::CToolTip()
 
 CToolTip::~CToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     Reset();
 }
 
 void CToolTip::Reset()
 {
-    DEBUG_TRACE_FUNCTION;
     m_TextSprite.Clear();
     m_Object = nullptr;
 }
@@ -73,7 +71,6 @@ void CToolTip::Create(CTextSprite &textSprite, const std::wstring &str, int &wid
 
 void CToolTip::Set(const std::wstring &str, int maxWidth)
 {
-    DEBUG_TRACE_FUNCTION;
     if (str.length() == 0u)
     {
         return;
@@ -100,7 +97,6 @@ void CToolTip::Set(const std::wstring &str, int maxWidth)
 
 void CToolTip::Set(int clilocID, const std::string &str, int maxWidth, bool toCamelCase)
 {
-    DEBUG_TRACE_FUNCTION;
     Set(g_ClilocManager.Cliloc(g_Language)->GetW(clilocID, toCamelCase, str), maxWidth);
     ClilocID = clilocID;
 }
@@ -108,7 +104,7 @@ void CToolTip::Set(int clilocID, const std::string &str, int maxWidth, bool toCa
 void CToolTip::Draw(int cursorWidth, int cursorHeight)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (!Use /*|| !g_ConfigManager.UseToolTips*/)
     {
         return;

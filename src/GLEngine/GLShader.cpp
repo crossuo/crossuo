@@ -5,6 +5,7 @@
 #include "GLHeaders.h"
 #include <assert.h>
 #include "../Logging.h"
+#include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, ShaderColorTable
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -15,7 +16,6 @@ CColorizerShader g_LightColorizerShader;
 
 void UnuseShader()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glUseProgramObjectARB(0);
 #else
@@ -27,7 +27,6 @@ void UnuseShader()
 
 CGLShader::CGLShader()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
@@ -146,7 +145,6 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
 
 CGLShader::~CGLShader()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (m_Shader != 0)
     {
@@ -174,7 +172,6 @@ CGLShader::~CGLShader()
 
 bool CGLShader::Use()
 {
-    DEBUG_TRACE_FUNCTION;
     // TODO useless?
     UnuseShader();
 
@@ -199,7 +196,6 @@ bool CGLShader::Use()
 
 void CGLShader::Pause()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glUseProgramObjectARB(0);
 #else
@@ -209,7 +205,6 @@ void CGLShader::Pause()
 
 void CGLShader::Resume()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glUseProgramObjectARB(m_Shader);
 #else
@@ -223,7 +218,6 @@ void CGLShader::Resume()
 CDeathShader::CDeathShader()
     : CGLShader()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
@@ -255,7 +249,6 @@ bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShader
 CColorizerShader::CColorizerShader()
     : CGLShader()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
@@ -290,7 +283,6 @@ bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentSh
 
 bool CColorizerShader::Use()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = CGLShader::Use();
 
     if (result)

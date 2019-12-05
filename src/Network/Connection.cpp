@@ -231,7 +231,6 @@ bool CSocket::Connect(const std::string &address, uint16_t port)
 
 std::vector<uint8_t> CSocket::Decompression(std::vector<uint8_t> data)
 {
-    DEBUG_TRACE_FUNCTION;
     if (GameSocket)
     {
         auto inSize = (intptr_t)data.size();

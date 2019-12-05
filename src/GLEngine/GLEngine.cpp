@@ -1,7 +1,10 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <algorithm>
 #include "GLEngine.h"
+#include "GLTexture.h"
+#include "../Globals.h" // g_GlobalScale
 #include "../Point.h"
 #include "../GameWindow.h"
 #include "../Managers/GumpManager.h"
@@ -19,8 +22,6 @@ CGLEngine::CGLEngine()
 
 CGLEngine::~CGLEngine()
 {
-    DEBUG_TRACE_FUNCTION;
-
 #ifndef NEW_RENDERER_ENABLED
     Uninstall();
 #else
@@ -179,7 +180,6 @@ static void SetupOGLDebugMessage()
 
 bool CGLEngine::Install()
 {
-    DEBUG_TRACE_FUNCTION;
     OldTexture = -1;
 
 #ifdef OGL_DEBUGCONTEXT_ENABLED
@@ -276,7 +276,6 @@ bool CGLEngine::Install()
 
 void CGLEngine::Uninstall()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_context != nullptr)
     {
         SDL_GL_DeleteContext(m_context);
@@ -301,7 +300,6 @@ void CGLEngine::BindTexture16(CGLTexture &texture, int width, int height, uint16
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex);
@@ -330,7 +328,6 @@ void CGLEngine::BindTexture32(CGLTexture &texture, int width, int height, uint32
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     GLuint tex = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex);
@@ -352,7 +349,7 @@ void CGLEngine::BindTexture32(CGLTexture &texture, int width, int height, uint32
 void CGLEngine::BeginDraw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     Drawing = true;
 
 #ifndef NEW_RENDERER_ENABLED
@@ -373,7 +370,6 @@ void CGLEngine::EndDraw()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     Drawing = false;
 
 #ifndef NEW_RENDERER_ENABLED
@@ -386,7 +382,7 @@ void CGLEngine::EndDraw()
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -410,7 +406,6 @@ void CGLEngine::ViewPort(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     const auto size = g_GameWindow.GetSize();
     glViewport(x, size.Height - y - height, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -423,7 +418,6 @@ void CGLEngine::RestorePort()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -434,25 +428,21 @@ void CGLEngine::RestorePort()
 
 void CGLEngine::PushScissor(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(x, y, width, height));
 }
 
 void CGLEngine::PushScissor(const CPoint2Di &position, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(position, width, height));
 }
 
 void CGLEngine::PushScissor(int x, int y, const CSize &size)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(x, y, size));
 }
 
 void CGLEngine::PushScissor(const CPoint2Di &position, const CSize &size)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(position, size));
 }
 
@@ -460,7 +450,6 @@ void CGLEngine::PushScissor(const CRect &rect)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     m_ScissorList.push_back(rect);
 
 #ifndef NEW_RENDERER_ENABLED
@@ -481,7 +470,6 @@ void CGLEngine::PopScissor()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     if (!m_ScissorList.empty())
     {
         m_ScissorList.pop_back();
@@ -515,7 +503,6 @@ void CGLEngine::ClearScissorList()
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     m_ScissorList.clear();
 
 #ifndef NEW_RENDERER_ENABLED
@@ -530,7 +517,6 @@ inline void CGLEngine::BindTexture(GLuint texture)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     assert(texture != 0);
     if (OldTexture != texture)
     {
@@ -543,7 +529,6 @@ void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     glDisable(GL_TEXTURE_2D);
 
     glBegin(GL_LINES);
@@ -558,7 +543,6 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     glDisable(GL_TEXTURE_2D);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
@@ -579,7 +563,6 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     glDisable(GL_TEXTURE_2D);
 
     glTranslatef(x, y, 0.0f);
@@ -612,7 +595,6 @@ void CGLEngine::DrawLandTexture(const CGLTexture &texture, int x, int y, CLandOb
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
     float translateX = x - 22.0f;
@@ -647,7 +629,7 @@ void CGLEngine::DrawLandTexture(const CGLTexture &texture, int x, int y, CLandOb
 void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -673,7 +655,6 @@ void CGLEngine::DrawRotated(const CGLTexture &texture, int x, int y, float angle
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -704,7 +685,6 @@ void CGLEngine::DrawMirrored(const CGLTexture &texture, int x, int y, bool mirro
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -747,7 +727,6 @@ void CGLEngine::DrawSitting(
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
@@ -864,7 +843,6 @@ void CGLEngine::DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
     float width = (float)texture.Width;
@@ -911,7 +889,6 @@ void CGLEngine::DrawStretched(
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    DEBUG_TRACE_FUNCTION;
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -938,8 +915,6 @@ void CGLEngine::DrawStretched(
 
 void CGLEngine::DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
-
     int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
     int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
     int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include "BaseQueue.h"
 
 class CRenderObject : public CBaseQueueItem

@@ -6,7 +6,6 @@
 #include "../Sprite.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -23,7 +22,7 @@ CGUITilepicScaled::~CGUITilepicScaled()
 void CGUITilepicScaled::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {

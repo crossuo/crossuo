@@ -18,13 +18,10 @@ CEntryText::CEntryText(int maxLength, int width, int maxWidth, bool numberOnly)
     , MaxWidth(maxWidth)
     , NumberOnly(numberOnly)
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 CEntryText::~CEntryText()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_EntryPointer == this)
     {
         if (g_ConfigManager.GetConsoleNeedEnter())
@@ -49,8 +46,6 @@ CEntryText::~CEntryText()
 
 const char *CEntryText::c_str()
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_CText = ToString(Text);
     return m_CText.c_str();
 }
@@ -58,8 +53,6 @@ const char *CEntryText::c_str()
 void CEntryText::OnClick(
     CGump *gump, uint8_t font, bool unicode, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_EntryPointer != this)
     {
         CGump *gumpEntry = g_GumpManager.GetTextEntryOwner();
@@ -97,8 +90,6 @@ void CEntryText::OnClick(
 
 void CEntryText::OnKey(CGump *gump, Keycode key)
 {
-    DEBUG_TRACE_FUNCTION;
-
     switch (key)
     {
         case KEY_HOME:
@@ -138,8 +129,6 @@ void CEntryText::OnKey(CGump *gump, Keycode key)
 
 int CEntryText::GetLinesCountA(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (width == 0)
     {
         width = Width;
@@ -162,8 +151,6 @@ int CEntryText::GetLinesCountA(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t fla
 
 int CEntryText::GetLinesCountW(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (width == 0)
     {
         width = Width;
@@ -186,8 +173,6 @@ int CEntryText::GetLinesCountW(uint8_t font, TEXT_ALIGN_TYPE align, uint16_t fla
 
 bool CEntryText::Insert(wchar_t ch, CGump *gump)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (m_Position < 0)
     {
         m_Position = 0;
@@ -228,8 +213,6 @@ bool CEntryText::Insert(wchar_t ch, CGump *gump)
 
 void CEntryText::Remove(bool left, CGump *gump)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (left)
     {
         if (m_Position < 1)
@@ -264,8 +247,6 @@ void CEntryText::Remove(bool left, CGump *gump)
 
 void CEntryText::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
-
     Text = {};
     m_CText = "";
     m_Position = 0;
@@ -277,7 +258,6 @@ void CEntryText::Clear()
 
 void CEntryText::Paste()
 {
-    DEBUG_TRACE_FUNCTION;
     auto chBuffer = SDL_GetClipboardText();
     if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
     {
@@ -288,8 +268,6 @@ void CEntryText::Paste()
 
 void CEntryText::AddPos(int val, CGump *gump)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Position += val;
     if (m_Position < 0)
     {
@@ -310,8 +288,6 @@ void CEntryText::AddPos(int val, CGump *gump)
 
 void CEntryText::SetPos(int val, CGump *gump)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Position = val;
     if (m_Position < 0)
     {
@@ -332,7 +308,6 @@ void CEntryText::SetPos(int val, CGump *gump)
 
 void CEntryText::SetTextA(const std::string &text)
 {
-    DEBUG_TRACE_FUNCTION;
     auto wtext = ToWString(text);
     SetTextW(wtext);
     m_CText = text;
@@ -340,7 +315,6 @@ void CEntryText::SetTextA(const std::string &text)
 
 void CEntryText::SetTextW(const std::wstring &text)
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Text = text;
@@ -384,8 +358,6 @@ void CEntryText::SetTextW(const std::wstring &text)
 
 std::string CEntryText::CheckMaxWidthA(uint8_t font, std::string str)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (MaxWidth > 0)
     {
         int width = g_FontManager.GetWidthA(font, str);
@@ -403,8 +375,6 @@ std::string CEntryText::CheckMaxWidthA(uint8_t font, std::string str)
 
 std::wstring CEntryText::CheckMaxWidthW(uint8_t font, std::wstring str)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (MaxWidth > 0)
     {
         int width = g_FontManager.GetWidthW(font, str);
@@ -422,8 +392,6 @@ std::wstring CEntryText::CheckMaxWidthW(uint8_t font, std::wstring str)
 
 void CEntryText::FixMaxWidthA(uint8_t font)
 {
-    DEBUG_TRACE_FUNCTION;
-
     c_str();
     if (MaxWidth <= 0)
     {
@@ -442,8 +410,6 @@ void CEntryText::FixMaxWidthA(uint8_t font)
 
 void CEntryText::FixMaxWidthW(uint8_t font)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (MaxWidth <= 0)
     {
         return;
@@ -467,8 +433,6 @@ void CEntryText::CreateTextureA(
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (str.length() == 0u)
     {
         Clear();
@@ -523,8 +487,6 @@ void CEntryText::CreateTextureW(
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (str.length() == 0u)
     {
         Clear();
@@ -568,8 +530,6 @@ void CEntryText::CreateTextureW(
 
 void CEntryText::PrepareToDrawA(uint8_t font, uint16_t color, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Changed || Color != color)
     {
         FixMaxWidthA(font);
@@ -585,8 +545,6 @@ void CEntryText::PrepareToDrawA(uint8_t font, uint16_t color, TEXT_ALIGN_TYPE al
 
 void CEntryText::PrepareToDrawW(uint8_t font, uint16_t color, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Changed || Color != color)
     {
         FixMaxWidthW(font);
@@ -603,8 +561,6 @@ void CEntryText::PrepareToDrawW(uint8_t font, uint16_t color, TEXT_ALIGN_TYPE al
 void CEntryText::DrawA(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     PrepareToDrawA(font, color, align, flags);
     m_Texture.Draw(x + DrawOffset, y);
     if (this == g_EntryPointer)
@@ -618,8 +574,6 @@ void CEntryText::DrawA(
 void CEntryText::DrawW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     PrepareToDrawW(font, color, align, flags);
     m_Texture.Draw(x + DrawOffset, y);
     if (this == g_EntryPointer)
@@ -631,8 +585,6 @@ void CEntryText::DrawW(
 void CEntryText::DrawMaskA(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto len = (int)Length();
     std::string str{};
     for (int i = 0; i < len; i++)
@@ -661,8 +613,6 @@ void CEntryText::DrawMaskA(
 void CEntryText::DrawMaskW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto len = (int)Length();
     std::wstring str = {};
     for (int i = 0; i < len; i++)

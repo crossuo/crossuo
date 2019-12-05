@@ -158,7 +158,6 @@ CCreateCharacterManager::~CCreateCharacterManager()
 
 void CCreateCharacterManager::SetFemale(bool female)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Female = female;
 
     if (HairStyle >= GetCurrentHairCount())
@@ -174,7 +173,6 @@ void CCreateCharacterManager::SetFemale(bool female)
 
 void CCreateCharacterManager::SetRace(RACE_TYPE newRace)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Race = newRace;
     SetFemale(m_Female);
 
@@ -186,7 +184,6 @@ void CCreateCharacterManager::SetRace(RACE_TYPE newRace)
 
 void CCreateCharacterManager::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 1; i < HUMAN_MALE_HAIR_COUNT; i++)
     {
         g_Game.ExecuteGump(m_HumanMaleHairStyleTable[i].GumpID);
@@ -215,7 +212,6 @@ void CCreateCharacterManager::Init()
 
 void CCreateCharacterManager::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Female = false;
     HairStyle = 1;
     BeardStyle = 0;
@@ -230,7 +226,6 @@ void CCreateCharacterManager::Clear()
 
 int CCreateCharacterManager::GetCurrentHairCount()
 {
-    DEBUG_TRACE_FUNCTION;
     static const int count[3][2] = { { HUMAN_MALE_HAIR_COUNT, HUMAN_FEMALE_HAIR_COUNT },
                                      { ELF_MALE_HAIR_COUNT, ELF_FEMALE_HAIR_COUNT },
                                      { GARGOYLE_MALE_HAIR_COUNT, GARGOYLE_FEMALE_HAIR_COUNT } };
@@ -240,7 +235,6 @@ int CCreateCharacterManager::GetCurrentHairCount()
 
 int CCreateCharacterManager::GetCurrentFacialHairCount()
 {
-    DEBUG_TRACE_FUNCTION;
     static const int count[3] = { HUMAN_MALE_FACIAL_HAIR_COUNT,
                                   0,
                                   GARGOYLE_MALE_FACIAL_HAIR_COUNT };
@@ -250,7 +244,6 @@ int CCreateCharacterManager::GetCurrentFacialHairCount()
 
 uint16_t CCreateCharacterManager::GetBodyGump()
 {
-    DEBUG_TRACE_FUNCTION;
     static const uint16_t gump[3][2] = { { 0x0761, 0x0760 },
                                          { 0x0766, 0x0765 },
                                          { 0x076B, 0x076A } };
@@ -260,7 +253,6 @@ uint16_t CCreateCharacterManager::GetBodyGump()
 
 uint16_t CCreateCharacterManager::GetShirtGump()
 {
-    DEBUG_TRACE_FUNCTION;
     static const uint16_t gump[3][2] = { { 0x0739, 0x0714 },
                                          { 0x0739, 0x0714 },
                                          { 0x0778, 0x07A7 } };
@@ -270,7 +262,6 @@ uint16_t CCreateCharacterManager::GetShirtGump()
 
 uint16_t CCreateCharacterManager::GetPantsGump()
 {
-    DEBUG_TRACE_FUNCTION;
     static const uint16_t gump[3][2] = { { 0x0738, 0x0764 }, { 0x0738, 0x0764 }, { 0, 0 } };
 
     return gump[m_Race - 1][m_Female];
@@ -278,7 +269,6 @@ uint16_t CCreateCharacterManager::GetPantsGump()
 
 uint16_t CCreateCharacterManager::GetBootsGump()
 {
-    DEBUG_TRACE_FUNCTION;
     static const uint16_t gump[3][2] = { { 0x0762, 0x0763 }, { 0x0762, 0x0763 }, { 0, 0 } };
 
     return gump[m_Race - 1][m_Female];
@@ -286,7 +276,6 @@ uint16_t CCreateCharacterManager::GetBootsGump()
 
 const uint16_t *CCreateCharacterManager::GetSkinTonePtr()
 {
-    DEBUG_TRACE_FUNCTION;
     static const uint16_t *ptr[3] = { (uint16_t *)&m_HumanSkinTone[0],
                                       (uint16_t *)&m_ElfSkinTone[0],
                                       (uint16_t *)&m_GargoyleSkinTone[0] };
@@ -296,7 +285,6 @@ const uint16_t *CCreateCharacterManager::GetSkinTonePtr()
 
 const uint16_t *CCreateCharacterManager::GetHairColorPtr()
 {
-    DEBUG_TRACE_FUNCTION;
     static const uint16_t *ptr[3] = { (uint16_t *)&m_HumanHairColor[0],
                                       (uint16_t *)&m_ElfHairColor[0],
                                       (uint16_t *)&m_GargoyleHairColor[0] };
@@ -306,7 +294,6 @@ const uint16_t *CCreateCharacterManager::GetHairColorPtr()
 
 CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Race == RT_HUMAN)
     {
         if (m_Female)
@@ -364,7 +351,6 @@ CC_HAIR_STYLE CCreateCharacterManager::GetHair(uint8_t pos) const
 
 CC_HAIR_STYLE CCreateCharacterManager::GetBeard(uint8_t pos) const
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Race == RT_HUMAN)
     {
         if (pos < HUMAN_MALE_FACIAL_HAIR_COUNT)

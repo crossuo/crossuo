@@ -4,6 +4,7 @@
 #include "GUIHTMLButton.h"
 #include "GUIHTMLGump.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Globals.h" // g_ShaderDrawMode
 
 extern RenderCmdList *g_renderCmdList;
 

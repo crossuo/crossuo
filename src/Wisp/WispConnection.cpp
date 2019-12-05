@@ -12,15 +12,12 @@ CConnection::CConnection()
 
 void CConnection::Init()
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Socket = tcp_open();
     m_MessageParser = new CPacketMessage();
 }
 
 CConnection::~CConnection()
 {
-    DEBUG_TRACE_FUNCTION;
     Disconnect();
 
     if (m_MessageParser != nullptr)
@@ -32,7 +29,6 @@ CConnection::~CConnection()
 
 bool CConnection::Connect(const std::string &address, uint16_t port)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Connected)
     {
         return false;
@@ -62,7 +58,6 @@ bool CConnection::Connect(const std::string &address, uint16_t port)
 
 void CConnection::Disconnect()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Connected && m_Socket != nullptr)
     {
         tcp_close(m_Socket);
@@ -76,7 +71,6 @@ void CConnection::Disconnect()
 
 bool CConnection::ReadyRead()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
     {
         return false;
@@ -94,7 +88,6 @@ bool CConnection::ReadyRead()
 
 bool CConnection::Read(int maxSize)
 {
-    DEBUG_TRACE_FUNCTION;
     if (DataReady == -1)
     {
         Error(Network, "CConnection::Read, m_DataReady=%i", DataReady);
@@ -125,7 +118,6 @@ bool CConnection::Read(int maxSize)
 
 int CConnection::Send(uint8_t *data, int size)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Connected || m_Socket == nullptr)
     {
         return 0;
@@ -138,7 +130,6 @@ int CConnection::Send(uint8_t *data, int size)
 
 int CConnection::Send(const std::vector<uint8_t> &data)
 {
-    DEBUG_TRACE_FUNCTION;
     if (data.empty())
     {
         return 0;

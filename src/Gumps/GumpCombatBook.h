@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Gump.h"
+#include "../Globals.h" // MAX_ABILITIES_COUNT
 
 class CGumpCombatBook : public CGump
 {

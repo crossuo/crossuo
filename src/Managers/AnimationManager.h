@@ -3,8 +3,12 @@
 
 #pragma once
 
-#include "../CrossPCH.h"       // REMOVE
+#include <stdint.h>
+#include <unordered_map>
+#include <deque>
+#include <vector>
 #include <xuocore/mulstruct.h> // AnimationSelector
+#include "../Globals.h"        // ANIMATION_GROUPS
 
 class CTargetGump;
 class CGameCharacter;

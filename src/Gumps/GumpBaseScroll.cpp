@@ -22,7 +22,6 @@ CGumpBaseScroll::CGumpBaseScroll(
     , ScissorOffsetHeight(scissorOffsetHeight)
     , HaveBackgroundLines(haveBackgroundLines)
 {
-    DEBUG_TRACE_FUNCTION;
     Page = 2;
     Add(new CGUIPage(2));
     int offsetY = 0;
@@ -112,7 +111,6 @@ CGumpBaseScroll::~CGumpBaseScroll()
 
 void CGumpBaseScroll::UpdateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     Height = StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
     if (Height < m_MinHeight)
     {
@@ -148,13 +146,11 @@ void CGumpBaseScroll::UpdateHeight()
 
 void CGumpBaseScroll::GUMP_RESIZE_START_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     StartResizeHeight = Height;
 }
 
 void CGumpBaseScroll::GUMP_RESIZE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (StartResizeHeight != 0)
     {
         UpdateHeight();
@@ -164,7 +160,6 @@ void CGumpBaseScroll::GUMP_RESIZE_EVENT_C
 
 void CGumpBaseScroll::GUMP_RESIZE_END_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (StartResizeHeight != 0)
     {
         StartResizeHeight = 0;

@@ -35,7 +35,6 @@ void CCreateCharacterScreen::SetColorSelection(int val)
 
 void CCreateCharacterScreen::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseScreen::Init();
 
     g_CreateCharacterManager.Clear();
@@ -53,7 +52,6 @@ void CCreateCharacterScreen::Init()
 
 void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
 {
-    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
     {
         action = SmoothScreenAction;
@@ -82,7 +80,6 @@ void CCreateCharacterScreen::ProcessSmoothAction(uint8_t action)
 
 void CCreateCharacterScreen::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseScreen::OnLeftMouseButtonDown();
 
     if (g_SelectedObject.Serial == 0)
@@ -97,8 +94,6 @@ void CCreateCharacterScreen::OnLeftMouseButtonDown()
 
 void CCreateCharacterScreen::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     if (!IsPrintable(ch) || !g_FontManager.IsPrintASCII((uint8_t)ch))
     {
@@ -120,8 +115,6 @@ void CCreateCharacterScreen::OnTextInput(const TextEvent &ev)
 
 void CCreateCharacterScreen::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (g_EntryPointer != nullptr)
     {

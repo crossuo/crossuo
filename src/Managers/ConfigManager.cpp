@@ -7,6 +7,7 @@
 #include "ObjectPropertiesManager.h"
 #include <common/fs.h>
 #include <common/str.h>
+#include <common/utils.h> // countof
 #include "../Point.h"
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -329,7 +330,6 @@ CConfigManager::CConfigManager()
 
 void CConfigManager::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     DefaultPage1();
     DefaultPage2();
     DefaultPage3();
@@ -364,7 +364,6 @@ void CConfigManager::Init()
 
 void CConfigManager::DefaultPage1()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Sound = true;
     m_Music = true;
     FootstepsSound = true;
@@ -376,7 +375,6 @@ void CConfigManager::DefaultPage1()
 
 void CConfigManager::DefaultPage2()
 {
-    DEBUG_TRACE_FUNCTION;
     m_ClientFPS = DEFAULT_FPS;
     m_ReduceFPSUnactiveWindow = true;
     StandartCharactersAnimationDelay = false;
@@ -425,7 +423,6 @@ void CConfigManager::DefaultPage2()
 
 void CConfigManager::DefaultPage3()
 {
-    DEBUG_TRACE_FUNCTION;
     UseToolTips = true;
     ToolTipsTextColor = 0xFFFF;
     ToolTipsTextFont = 1;
@@ -434,7 +431,6 @@ void CConfigManager::DefaultPage3()
 
 void CConfigManager::DefaultPage4()
 {
-    DEBUG_TRACE_FUNCTION;
     ChatColorInputText = 0xFFFF;
     ChatColorMenuOption = 0xFFFF;
     ChatColorPlayerInMemberList = 0xFFFF;
@@ -457,7 +453,6 @@ void CConfigManager::DefaultPage4()
 
 void CConfigManager::DefaultPage6()
 {
-    DEBUG_TRACE_FUNCTION;
     EnablePathfind = true;
     HoldTabForCombat = true;
     OffsetInterfaceWindows = true;
@@ -477,7 +472,6 @@ void CConfigManager::DefaultPage6()
 
 void CConfigManager::DefaultPage7()
 {
-    DEBUG_TRACE_FUNCTION;
     GameWindowWidth = 800;
     GameWindowHeight = 600;
     SpeechDelay = 500;
@@ -496,7 +490,6 @@ void CConfigManager::DefaultPage7()
 
 void CConfigManager::DefaultPage8()
 {
-    DEBUG_TRACE_FUNCTION;
     InnocentColor = 0x005A;
     FriendlyColor = 0x0044;
     SomeoneColor = 0x03B2;
@@ -508,7 +501,6 @@ void CConfigManager::DefaultPage8()
 
 void CConfigManager::DefaultPage9()
 {
-    DEBUG_TRACE_FUNCTION;
     ShowIncomingNames = true;
     UseCircleTrans = false;
     StatReport = true;
@@ -532,8 +524,6 @@ void CConfigManager::UpdateFeatures()
 
 void CConfigManager::SetSound(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Sound = val;
     if (this == &g_ConfigManager && !val)
     {
@@ -543,8 +533,6 @@ void CConfigManager::SetSound(bool val)
 
 void CConfigManager::SetMusic(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Music = val;
     if (this == &g_ConfigManager && !val)
     {
@@ -554,7 +542,6 @@ void CConfigManager::SetMusic(bool val)
 
 void CConfigManager::SetSoundVolume(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && m_SoundVolume != val)
     {
         g_Game.AdjustSoundEffects(g_Ticks + 100000, val);
@@ -565,8 +552,6 @@ void CConfigManager::SetSoundVolume(uint8_t val)
 
 void CConfigManager::SetMusicVolume(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (this == &g_ConfigManager && m_MusicVolume != val)
     {
         m_MusicVolume = val;
@@ -580,8 +565,6 @@ void CConfigManager::SetMusicVolume(uint8_t val)
 
 void CConfigManager::SetClientFPS(int val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_ClientFPS = val;
     if (this == &g_ConfigManager)
     {
@@ -613,8 +596,6 @@ void CConfigManager::SetClientFPS(int val)
 
 void CConfigManager::SetUseScaling(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_UseScaling = val;
     if (!val && this == &g_ConfigManager)
     {
@@ -624,8 +605,6 @@ void CConfigManager::SetUseScaling(bool val)
 
 void CConfigManager::SetDrawStatusState(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint8_t state = val;
     if ((g_GameFeaturesFlags & OFF_DRAW_CHARACTERS_STATUS_IN_WORLD) == 0u)
     {
@@ -651,8 +630,6 @@ void CConfigManager::SetDrawStatusState(uint8_t val)
 
 void CConfigManager::SetDrawStumps(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool state = val;
     if ((g_GameFeaturesFlags & OFF_CHANGE_TREES_TO_STUMPS) == 0u)
     {
@@ -669,8 +646,6 @@ void CConfigManager::SetDrawStumps(bool val)
 
 void CConfigManager::SetMarkingCaves(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool state = val;
     if ((g_GameFeaturesFlags & OFF_MARKING_CAVES) == 0u)
     {
@@ -687,8 +662,6 @@ void CConfigManager::SetMarkingCaves(bool val)
 
 void CConfigManager::SetNoVegetation(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool state = val;
     if ((g_GameFeaturesFlags & OFF_NO_VEGETATION) == 0u)
     {
@@ -700,8 +673,6 @@ void CConfigManager::SetNoVegetation(bool val)
 
 void CConfigManager::SetNoAnimateFields(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool state = val;
     if ((g_GameFeaturesFlags & OFF_NO_FIELDS_ANIMATION) == 0u)
     {
@@ -713,8 +684,6 @@ void CConfigManager::SetNoAnimateFields(bool val)
 
 void CConfigManager::SetApplyStateColorOnCharacters(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool state = val;
     if ((g_GameFeaturesFlags & OFF_COLORED_CHARACTERS_STATE) == 0u)
     {
@@ -726,8 +695,6 @@ void CConfigManager::SetApplyStateColorOnCharacters(bool val)
 
 void CConfigManager::SetDrawAuraState(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint8_t state = val;
     if ((g_GameFeaturesFlags & OFF_DRAW_AURA) == 0u)
     {
@@ -739,8 +706,6 @@ void CConfigManager::SetDrawAuraState(uint8_t val)
 
 void CConfigManager::SetReduceFPSUnactiveWindow(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (this == &g_ConfigManager)
     {
         if (val)
@@ -759,8 +724,6 @@ void CConfigManager::SetReduceFPSUnactiveWindow(bool val)
 
 void CConfigManager::SetConsoleNeedEnter(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (this == &g_ConfigManager && val && g_EntryPointer == &g_GameConsole)
     {
         g_EntryPointer = nullptr;
@@ -771,7 +734,6 @@ void CConfigManager::SetConsoleNeedEnter(bool val)
 
 void CConfigManager::SetSpellIconAlpha(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
     if (this == &g_ConfigManager && val != m_SpellIconAlpha)
     {
         float alpha = val / 255.0f;
@@ -796,8 +758,6 @@ void CConfigManager::SetSpellIconAlpha(uint8_t val)
 
 void CConfigManager::SetOldStyleStatusbar(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_OldStyleStatusbar = val;
     if (this == &g_ConfigManager)
     {
@@ -812,8 +772,6 @@ void CConfigManager::SetOldStyleStatusbar(bool val)
 
 void CConfigManager::SetOriginalPartyStatusbar(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_OriginalPartyStatusbar = val;
     if (this == &g_ConfigManager)
     {
@@ -834,8 +792,6 @@ void CConfigManager::SetOriginalPartyStatusbar(bool val)
 
 void CConfigManager::SetChangeFieldsGraphic(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_ChangeFieldsGraphic = val;
     if ((g_GameFeaturesFlags & OFF_TILED_FIELDS) == 0u)
     {
@@ -856,8 +812,6 @@ void CConfigManager::SetChangeFieldsGraphic(bool val)
 
 void CConfigManager::SetPaperdollSlots(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_PaperdollSlots = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
@@ -874,8 +828,6 @@ void CConfigManager::SetPaperdollSlots(bool val)
 
 void CConfigManager::SetScaleImagesInPaperdollSlots(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_ScaleImagesInPaperdollSlots = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
@@ -892,8 +844,6 @@ void CConfigManager::SetScaleImagesInPaperdollSlots(bool val)
 
 void CConfigManager::SetUseGlobalMapLayer(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_UseGlobalMapLayer = val;
     if (this == &g_ConfigManager && val)
     {
@@ -909,8 +859,6 @@ void CConfigManager::SetUseGlobalMapLayer(bool val)
 
 void CConfigManager::SetNoDrawRoofs(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_NoDrawRoofs = val;
     if ((g_GameFeaturesFlags & OFF_TILED_FIELDS) == 0u)
     {
@@ -927,8 +875,6 @@ void CConfigManager::SetNoDrawRoofs(bool val)
 #if USE_PING
 void CConfigManager::SetPingTimer(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_PingTimer = std::max(std::min(val, uint8_t(120)), uint8_t(10));
     g_PingTimer = 0;
 }
@@ -936,8 +882,6 @@ void CConfigManager::SetPingTimer(uint8_t val)
 
 void CConfigManager::SetItemPropertiesMode(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_ItemPropertiesMode = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
@@ -955,8 +899,6 @@ void CConfigManager::SetItemPropertiesMode(uint8_t val)
 
 void CConfigManager::SetItemPropertiesIcon(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_ItemPropertiesIcon = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
@@ -994,8 +936,6 @@ void CConfigManager::SetItemPropertiesIcon(bool val)
 
 void CConfigManager::SetCharacterBackpackStyle(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_CharacterBackpackStyle = val;
     if (this == &g_ConfigManager && g_World != nullptr)
     {
@@ -1012,8 +952,6 @@ void CConfigManager::SetCharacterBackpackStyle(uint8_t val)
 
 uint16_t CConfigManager::GetColorByNotoriety(uint8_t notoriety)
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint16_t color = 0;
     switch ((NOTORIETY_TYPE)notoriety)
     {
@@ -1061,7 +999,6 @@ uint16_t CConfigManager::GetColorByNotoriety(uint8_t notoriety)
 
 bool CConfigManager::Load(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!fs_path_exists(path))
     {
         return false;
@@ -1605,8 +1542,6 @@ bool CConfigManager::Load(const fs_path &path)
 
 void CConfigManager::Save(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
-
     Wisp::CTextFileWriter writer(path);
     if (writer.Opened())
     {

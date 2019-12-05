@@ -27,7 +27,6 @@ CPathFinder::~CPathFinder()
 
 bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, int stepState)
 {
-    DEBUG_TRACE_FUNCTION;
     int blockX = x / 8;
     int blockY = y / 8;
 
@@ -220,7 +219,6 @@ bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, 
 int CPathFinder::CalculateMinMaxZ(
     int &minZ, int &maxZ, int newX, int newY, int currentZ, int newDirection, int stepState)
 {
-    DEBUG_TRACE_FUNCTION;
     const int offsetX[10] = { 0, 1, 1, 1, 0, -1, -1, -1, 0, 1 };
     const int offsetY[10] = { -1, -1, 0, 1, 1, 1, 0, -1, -1, -1 };
 
@@ -292,7 +290,6 @@ int CPathFinder::CalculateMinMaxZ(
 
 bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 {
-    DEBUG_TRACE_FUNCTION;
     int stepState = PSS_NORMAL;
 
     if (g_Player->Dead() || g_Player->Graphic == 0x03DB)
@@ -453,7 +450,6 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 
 void CPathFinder::GetNewXY(uint8_t direction, int &x, int &y)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (direction & 7)
     {
         case 0:
@@ -505,7 +501,6 @@ void CPathFinder::GetNewXY(uint8_t direction, int &x, int &y)
 
 bool CPathFinder::CanWalk(uint8_t &direction, int &x, int &y, char &z)
 {
-    DEBUG_TRACE_FUNCTION;
     int newX = x;
     int newY = y;
     char newZ = z;
@@ -563,7 +558,6 @@ bool CPathFinder::CanWalk(uint8_t &direction, int &x, int &y, char &z)
 
 int CPathFinder::GetWalkSpeed(bool run, bool onMount)
 {
-    DEBUG_TRACE_FUNCTION;
     bool mounted =
         (onMount ||
          (g_SpeedMode == CST_FAST_UNMOUNT || g_SpeedMode == CST_FAST_UNMOUNT_AND_CANT_RUN) ||
@@ -574,7 +568,6 @@ int CPathFinder::GetWalkSpeed(bool run, bool onMount)
 
 bool CPathFinder::Walk(bool run, uint8_t direction)
 {
-    DEBUG_TRACE_FUNCTION;
     if (BlockMoving || g_Walker.WalkingFailed || g_Walker.LastStepRequestTime > g_Ticks ||
         g_Walker.StepsCount >= MAX_STEPS_COUNT || g_Player == nullptr ||
         /*!g_Player->Frozen() ||*/ (g_DeathScreenTimer != 0u) || g_GameState != GS_GAME)
@@ -768,13 +761,11 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
 
 int CPathFinder::GetGoalDistCost(const CPoint2Di &p, int cost)
 {
-    DEBUG_TRACE_FUNCTION;
     return (abs(m_EndPoint.X - p.X) + abs(m_EndPoint.Y - p.Y)) * cost;
 }
 
 bool CPathFinder::DoesNotExistOnOpenList(int x, int y, int z)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
@@ -793,7 +784,6 @@ bool CPathFinder::DoesNotExistOnOpenList(int x, int y, int z)
 
 bool CPathFinder::DoesNotExistOnClosedList(int x, int y, int z)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
@@ -813,7 +803,6 @@ bool CPathFinder::DoesNotExistOnClosedList(int x, int y, int z)
 int CPathFinder::AddNodeToList(
     int list, int direction, int x, int y, int z, CPathNode *parentNode, int cost)
 {
-    DEBUG_TRACE_FUNCTION;
     if (list == 0)
     {
         if (!DoesNotExistOnClosedList(x, y, z))
@@ -917,7 +906,6 @@ int CPathFinder::AddNodeToList(
 
 bool CPathFinder::OpenNodes(CPathNode *node)
 {
-    DEBUG_TRACE_FUNCTION;
     bool found = false;
 
     for (int i = 0; i < 8; i++)
@@ -968,7 +956,6 @@ bool CPathFinder::OpenNodes(CPathNode *node)
 
 int CPathFinder::FindCheapestNode()
 {
-    DEBUG_TRACE_FUNCTION;
     int cheapestCost = 9999999;
     int cheapestNode = -1;
 
@@ -996,7 +983,6 @@ int CPathFinder::FindCheapestNode()
 
 bool CPathFinder::FindPath(int maxNodes)
 {
-    DEBUG_TRACE_FUNCTION;
     int curNode = 0;
 
     m_ClosedList[0].Used = true;
@@ -1059,7 +1045,6 @@ bool CPathFinder::FindPath(int maxNodes)
 
 bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < PATHFINDER_MAX_NODES; i++)
     {
         m_OpenList[i].Reset();
@@ -1100,7 +1085,6 @@ bool CPathFinder::WalkTo(int x, int y, int z, int distance)
 
 void CPathFinder::ProcessAutowalk()
 {
-    DEBUG_TRACE_FUNCTION;
     if (AutoWalking && g_Player != nullptr && (g_DeathScreenTimer == 0u) &&
         g_Walker.StepsCount < MAX_STEPS_COUNT && g_Walker.LastStepRequestTime <= g_Ticks)
     {
@@ -1134,7 +1118,6 @@ void CPathFinder::ProcessAutowalk()
 
 void CPathFinder::StopAutoWalk()
 {
-    DEBUG_TRACE_FUNCTION;
     AutoWalking = false;
     m_PathSize = 0;
 }

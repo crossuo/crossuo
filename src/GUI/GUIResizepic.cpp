@@ -17,14 +17,12 @@ CGUIResizepic::CGUIResizepic(int serial, uint16_t graphic, int x, int y, int wid
 
 void CGUIResizepic::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteResizepic(Graphic);
 }
 
 void CGUIResizepic::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
 
 #ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
@@ -38,7 +36,6 @@ void CGUIResizepic::Draw(bool checktrans)
 
 bool CGUIResizepic::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     if (BoundingBoxCheck)
     {
         return CGUIPolygonal::Select();

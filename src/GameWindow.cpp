@@ -56,13 +56,11 @@ CGameWindow::~CGameWindow()
 
 void CGameWindow::SetRenderTimerDelay(int delay)
 {
-    DEBUG_TRACE_FUNCTION;
     m_iRenderDelay = delay;
 }
 
 bool CGameWindow::OnCreate()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (!g_GL.Install())
 #else
@@ -94,7 +92,6 @@ bool CGameWindow::OnCreate()
 
 void CGameWindow::OnDestroy()
 {
-    DEBUG_TRACE_FUNCTION;
     g_SoundManager.Free();
     PLUGIN_EVENT(UOMSG_WIN_CLOSE, nullptr);
     g_Game.Uninstall();
@@ -102,7 +99,6 @@ void CGameWindow::OnDestroy()
 
 void CGameWindow::OnResize()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
 #else
@@ -117,7 +113,6 @@ void CGameWindow::OnResize()
 
 void CGameWindow::EmulateOnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->SelectObject();
@@ -137,7 +132,6 @@ int CGameWindow::GetRenderDelay()
 
 void CGameWindow::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_GeneratedMouseDown = false;
@@ -155,7 +149,6 @@ void CGameWindow::OnLeftMouseButtonDown()
 
 void CGameWindow::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         if (g_Target.MultiGraphic == 0)
@@ -186,7 +179,6 @@ void CGameWindow::OnLeftMouseButtonUp()
 
 bool CGameWindow::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
@@ -209,7 +201,6 @@ bool CGameWindow::OnLeftMouseButtonDoubleClick()
 
 void CGameWindow::OnRightMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         if (g_Target.MultiGraphic == 0)
@@ -234,7 +225,6 @@ void CGameWindow::OnRightMouseButtonDown()
 
 void CGameWindow::OnRightMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         if (g_Target.MultiGraphic == 0)
@@ -255,7 +245,6 @@ void CGameWindow::OnRightMouseButtonUp()
 
 bool CGameWindow::OnRightMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
@@ -276,7 +265,6 @@ bool CGameWindow::OnRightMouseButtonDoubleClick()
 
 void CGameWindow::OnMidMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(UOMSG_INPUT_MBUTTONDOWN, 0x11110000))
     {
         return;
@@ -290,7 +278,6 @@ void CGameWindow::OnMidMouseButtonDown()
 
 void CGameWindow::OnMidMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(UOMSG_INPUT_MBUTTONDOWN, 0))
     {
         return;
@@ -304,7 +291,6 @@ void CGameWindow::OnMidMouseButtonUp()
 
 bool CGameWindow::OnMidMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         return g_CurrentScreen->OnMidMouseButtonDoubleClick();
@@ -315,7 +301,6 @@ bool CGameWindow::OnMidMouseButtonDoubleClick()
 
 void CGameWindow::OnMidMouseButtonScroll(bool up)
 {
-    DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(UOMSG_INPUT_MOUSEWHEEL, up ? 0 : 0x11110000))
     {
         return;
@@ -330,7 +315,6 @@ void CGameWindow::OnMidMouseButtonScroll(bool up)
 
 void CGameWindow::OnXMouseButton(bool up)
 {
-    DEBUG_TRACE_FUNCTION;
     if (PLUGIN_EVENT(UOMSG_INPUT_XBUTTONDOWN, up ? 0 : 0x11110000))
     {
         return;
@@ -339,7 +323,6 @@ void CGameWindow::OnXMouseButton(bool up)
 
 void CGameWindow::OnDragging()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnDragging();
@@ -348,7 +331,6 @@ void CGameWindow::OnDragging()
 
 void CGameWindow::OnActivate()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ResumeSound();
     SetRenderTimerDelay(g_FrameDelay[WINDOW_ACTIVE]);
     if (!g_PluginManager.Empty())
@@ -359,7 +341,6 @@ void CGameWindow::OnActivate()
 
 void CGameWindow::OnDeactivate()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.BackgroundSound)
     {
         g_Game.PauseSound();
@@ -378,8 +359,6 @@ void CGameWindow::OnDeactivate()
 
 void CGameWindow::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     if (PLUGIN_EVENT(UOMSG_INPUT_CHAR, &ev))
     {
@@ -395,8 +374,6 @@ void CGameWindow::OnTextInput(const TextEvent &ev)
 
 void CGameWindow::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (PLUGIN_EVENT(UOMSG_INPUT_KEYDOWN, &ev))
     {
         return;
@@ -424,8 +401,6 @@ void CGameWindow::OnKeyDown(const KeyEvent &ev)
 
 void CGameWindow::OnKeyUp(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     // FIXME: Send struct events to plugins
     if (PLUGIN_EVENT(UOMSG_INPUT_KEYUP, &ev))
     {
@@ -446,8 +421,6 @@ void CGameWindow::OnKeyUp(const KeyEvent &ev)
 
 bool CGameWindow::OnRepaint(const PaintEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (!g_PluginManager.Empty())
     {
         return PLUGIN_EVENT(UOMSG_WIN_PAINT, &ev) != 0u;
@@ -457,7 +430,6 @@ bool CGameWindow::OnRepaint(const PaintEvent &ev)
 
 void CGameWindow::OnShow(bool show)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_PluginManager.Empty())
     {
         PLUGIN_EVENT(UOMSG_WIN_SHOW, show);
@@ -466,7 +438,6 @@ void CGameWindow::OnShow(bool show)
 
 void CGameWindow::OnSetText(const char *str)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_PluginManager.Empty())
     {
         // CHECK: str was second parameter, why?
@@ -477,7 +448,6 @@ void CGameWindow::OnSetText(const char *str)
 
 void CGameWindow::OnTimer(uint32_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id == FASTLOGIN_TIMER_ID)
     {
         RemoveTimer(FASTLOGIN_TIMER_ID);
@@ -485,10 +455,26 @@ void CGameWindow::OnTimer(uint32_t id)
     }
 }
 
+struct AutoFree
+{
+    AutoFree(void *p)
+        : _p(p)
+    {
+    }
+    ~AutoFree()
+    {
+        if (_p)
+        {
+            free(_p);
+        }
+    }
+
+private:
+    void *_p = nullptr;
+};
+
 bool CGameWindow::OnUserMessages(const UserEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     switch (ev.code)
     {
         case UOMSG_RECV:

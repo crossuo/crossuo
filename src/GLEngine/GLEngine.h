@@ -2,11 +2,13 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+
+#include <deque>
 #include "../Platform.h"
-#include "../CrossPCH.h" // REMOVE
 #include "../Point.h"
 
 typedef std::deque<CRect> SCISSOR_LIST;
+typedef uint32_t texture_handle_t;
 
 struct CGLTexture;
 class CLandObject;
@@ -59,7 +61,7 @@ public:
     void ClearScissorList();
 
 #ifndef NEW_RENDERER_ENABLED
-    inline void BindTexture(GLuint texture);
+    inline void BindTexture(texture_handle_t texture);
     void DrawLine(int x, int y, int targetX, int targetY);
     void DrawPolygone(int x, int y, int width, int height);
     void DrawCircle(float x, float y, float radius, int gradientMode = 0);

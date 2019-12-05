@@ -12,13 +12,11 @@ CRenderTextObject::CRenderTextObject()
 
 CRenderTextObject::~CRenderTextObject()
 {
-    DEBUG_TRACE_FUNCTION;
     UnlinkDraw();
 }
 
 void CRenderTextObject::UnlinkDraw()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_NextDraw != nullptr)
     {
         m_NextDraw->m_PrevDraw = m_PrevDraw;
@@ -35,7 +33,6 @@ void CRenderTextObject::UnlinkDraw()
 
 void CRenderTextObject::ToTop()
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderTextObject *obj = this;
 
     while (obj != nullptr)

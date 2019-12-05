@@ -220,7 +220,6 @@ CGumpOptions::~CGumpOptions()
 
 void CGumpOptions::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed)
@@ -250,7 +249,6 @@ void CGumpOptions::CalculateGumpState()
 
 void CGumpOptions::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_WantRedrawMacroData)
     {
         RedrawMacroData();
@@ -260,7 +258,6 @@ void CGumpOptions::PrepareContent()
 
 void CGumpOptions::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     //Body
@@ -324,7 +321,6 @@ void CGumpOptions::UpdateContent()
 
 void CGumpOptions::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     g_OptionsMacroManager.LoadFromMacro();
     g_OptionsDeveloperMode = g_DeveloperMode;
 
@@ -336,7 +332,6 @@ void CGumpOptions::Init()
 
 void CGumpOptions::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t id = g_SelectedObject.Serial;
 
     switch (id)
@@ -1042,7 +1037,6 @@ void CGumpOptions::InitToolTip()
 
 void CGumpOptions::DrawPage1()
 {
-    DEBUG_TRACE_FUNCTION;
     //Sound and Music
     Add(new CGUIPage(1));
 
@@ -1124,8 +1118,6 @@ void CGumpOptions::DrawPage1()
 
 void CGumpOptions::DrawPage2()
 {
-    DEBUG_TRACE_FUNCTION;
-
     //CrossUO's configuration
     Add(new CGUIPage(2));
 
@@ -1530,7 +1522,6 @@ void CGumpOptions::DrawPage2()
 
 void CGumpOptions::DrawPage3()
 {
-    DEBUG_TRACE_FUNCTION;
     //Language
     Add(new CGUIPage(3));
 
@@ -1595,7 +1586,6 @@ void CGumpOptions::DrawPage3()
 
 void CGumpOptions::DrawPage4()
 {
-    DEBUG_TRACE_FUNCTION;
     //Chat
     Add(new CGUIPage(4));
 
@@ -1917,7 +1907,6 @@ void CGumpOptions::DrawPage4()
 
 void CGumpOptions::RedrawMacroData()
 {
-    DEBUG_TRACE_FUNCTION;
     m_WantRedrawMacroData = false;
     WantUpdateContent = true;
     m_MacroDataBox->Clear();
@@ -2043,7 +2032,6 @@ void CGumpOptions::RedrawMacroData()
 
 void CGumpOptions::DrawPage5()
 {
-    DEBUG_TRACE_FUNCTION;
     Add(new CGUIPage(5));
 
     Add(new CGUIGumppic(0x00EC, 0, 309));
@@ -2107,8 +2095,6 @@ void CGumpOptions::DrawPage5()
 
 void CGumpOptions::DrawPage6()
 {
-    DEBUG_TRACE_FUNCTION;
-
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
     screenX -= 20;
@@ -2290,8 +2276,6 @@ void CGumpOptions::DrawPage6()
 
 void CGumpOptions::DrawPage7()
 {
-    DEBUG_TRACE_FUNCTION;
-
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
     screenX -= 20;
@@ -2503,8 +2487,6 @@ void CGumpOptions::DrawPage7()
 
 void CGumpOptions::DrawPage8()
 {
-    DEBUG_TRACE_FUNCTION;
-
     //Reputation System
     Add(new CGUIPage(8));
     Add(new CGUIGumppic(0x00E5, 576, 177));
@@ -2639,8 +2621,6 @@ void CGumpOptions::DrawPage8()
 
 void CGumpOptions::DrawPage9()
 {
-    DEBUG_TRACE_FUNCTION;
-
     //Miscellaneous
     Add(new CGUIPage(9));
     Add(new CGUIGumppic(0x00E7, 576, 243));
@@ -2713,7 +2693,6 @@ void CGumpOptions::DrawPage9()
 
 void CGumpOptions::DrawPage10()
 {
-    DEBUG_TRACE_FUNCTION;
     //Filter Options
     Add(new CGUIPage(10));
     Add(new CGUIGumppic(0x00EA, 576, 309));
@@ -2721,7 +2700,6 @@ void CGumpOptions::DrawPage10()
 
 void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (state)
     {
         case SCGS_OPT_TOOLTIP_TEXT:
@@ -2927,7 +2905,6 @@ void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t co
 
 void CGumpOptions::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GO_PAGE_6)
     {
         m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
@@ -3184,7 +3161,6 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
 
 void CGumpOptions::GUMP_CHECKBOX_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     switch (Page)
     {
         case 1: //Sound and Music
@@ -3519,7 +3495,6 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
 
 void CGumpOptions::GUMP_RADIO_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (!state)
     {
         return;
@@ -3688,13 +3663,11 @@ void CGumpOptions::GUMP_RADIO_EVENT_C
 
 void CGumpOptions::GUMP_SLIDER_CLICK_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
 
 void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     switch (Page)
     {
         case 1: //Sound and Music
@@ -3793,7 +3766,6 @@ void CGumpOptions::GUMP_SLIDER_MOVE_EVENT_C
 
 void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     bool isAction = false;
     int index = serial - ID_GO_P5_MACRO_SELECTION;
     if (serial >= ID_GO_P5_ACTION_SELECTION)
@@ -3881,8 +3853,6 @@ void CGumpOptions::GUMP_COMBOBOX_SELECTION_EVENT_C
 
 void CGumpOptions::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     if (g_EntryPointer == &m_GameWindowWidth->m_Entry ||
         g_EntryPointer == &m_GameWindowHeight->m_Entry ||
@@ -3978,8 +3948,6 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
 
 void CGumpOptions::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (g_EntryPointer == &m_MacroKey->m_Entry)
     {
@@ -4057,7 +4025,6 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
 
 void CGumpOptions::ApplyPageChanges()
 {
-    DEBUG_TRACE_FUNCTION;
     switch (Page)
     {
         case 1: //Sound and Music

@@ -25,13 +25,11 @@ CMainScreen::CMainScreen()
     , m_SavePassword(nullptr)
     , m_AutoLogin(nullptr)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Password = new CEntryText(32, 0, 300);
 }
 
 CMainScreen::~CMainScreen()
 {
-    DEBUG_TRACE_FUNCTION;
     delete m_Password;
 }
 
@@ -39,7 +37,6 @@ void CMainScreen::Init()
 {
     CBaseScreen::Init();
 
-    DEBUG_TRACE_FUNCTION;
     g_ConfigLoaded = false;
     g_GlobalScale = 1.0;
 
@@ -80,7 +77,6 @@ void CMainScreen::Reset() const
 
 void CMainScreen::ProcessSmoothAction(uint8_t action)
 {
-    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
     {
         action = SmoothScreenAction;
@@ -98,7 +94,6 @@ void CMainScreen::ProcessSmoothAction(uint8_t action)
 
 void CMainScreen::SetAccounting(const std::string &account, const std::string &password)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Account->SetTextA(account);
     m_Password->SetTextA(password);
 
@@ -113,7 +108,6 @@ void CMainScreen::SetAccounting(const std::string &account, const std::string &p
 
 void CMainScreen::Paste()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == m_MainGump.m_PasswordFake)
     {
         m_Password->Paste();
@@ -134,8 +128,6 @@ void CMainScreen::Paste()
 
 void CMainScreen::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     if (!IsPrintable(ch) || !g_FontManager.IsPrintASCII((uint8_t)ch))
     {
@@ -166,8 +158,6 @@ void CMainScreen::OnTextInput(const TextEvent &ev)
 
 void CMainScreen::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_EntryPointer == nullptr)
     {
         g_EntryPointer = m_MainGump.m_PasswordFake;

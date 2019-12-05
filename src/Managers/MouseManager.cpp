@@ -62,7 +62,6 @@ int CMouseManager::Sgn(int val)
 
 int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_facing)
 {
-    DEBUG_TRACE_FUNCTION;
     int shiftX = to_x - x1;
     int shiftY = to_y - y1;
 
@@ -137,7 +136,6 @@ int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_fac
 
 uint16_t CMouseManager::GetGameCursor()
 {
-    DEBUG_TRACE_FUNCTION;
     int war = (int)(g_Player != nullptr && g_Player->Warmode);
     uint16_t result = g_CursorData[war][9]; //Main Gump mouse cursor
 
@@ -167,7 +165,6 @@ uint16_t CMouseManager::GetGameCursor()
 
 void CMouseManager::ProcessWalking()
 {
-    DEBUG_TRACE_FUNCTION;
     bool mouseInWindow = true;
 
     if (Position.X < g_ConfigManager.GameWindowX || Position.Y < g_ConfigManager.GameWindowY ||
@@ -211,7 +208,6 @@ void CMouseManager::ProcessWalking()
 
 bool CMouseManager::LoadCursorTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
     for (int i = 0; i < 2; i++)
     {
@@ -339,7 +335,7 @@ bool CMouseManager::LoadCursorTextures()
 void CMouseManager::Draw(uint16_t id)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (g_GameState >= GS_GAME)
     {
         if (g_CustomHouseGump != nullptr && (g_CustomHouseGump->SelectedGraphic != 0u))

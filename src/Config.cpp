@@ -93,8 +93,6 @@ static config::Modified s_Mark;
 
 static uint32_t ParseVersion(const char *versionStr)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (!versionStr || !versionStr[0])
     {
         return CV_LATEST;
@@ -283,8 +281,6 @@ static void SetClientCrypt(uint32_t version)
 
 static void ClientVersionFixup(bool overrideProtocolVersion)
 {
-    DEBUG_TRACE_FUNCTION;
-
     g_Config.ClientVersion = ParseVersion(g_Config.ClientVersionString.c_str());
     g_Config.ProtocolClientVersion = g_Config.ClientVersion;
     if (overrideProtocolVersion)
@@ -367,8 +363,6 @@ static fs_path GetConfigFile()
 
 void LoadGlobalConfig()
 {
-    DEBUG_TRACE_FUNCTION;
-
     Info(Config, "loading global config from: %s", fs_path_ascii(GetConfigFile()));
     const auto cfg = GetConfigFile();
     Wisp::CTextFileParser file(cfg, "=,", "#;", "");
@@ -518,7 +512,6 @@ void LoadGlobalConfig()
 
 void SaveGlobalConfig()
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Config, "saving global config to: %s", fs_path_ascii(GetConfigFile()));
     FILE *cfg = fs_open(GetConfigFile(), FS_WRITE);
     if (cfg == nullptr)

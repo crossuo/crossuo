@@ -36,7 +36,6 @@ CGumpScreenMain::~CGumpScreenMain()
 
 void CGumpScreenMain::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     static uint32_t lastArrowTick = 0;
     static bool arrowLighted = false;
 
@@ -61,7 +60,6 @@ void CGumpScreenMain::PrepareContent()
 
 void CGumpScreenMain::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Items != nullptr)
     {
         return;
@@ -128,7 +126,6 @@ void CGumpScreenMain::UpdateContent()
 
 void CGumpScreenMain::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
     {
         return;
@@ -175,7 +172,6 @@ void CGumpScreenMain::InitToolTip()
 
 void CGumpScreenMain::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_MS_QUIT)
     { //x button
         g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_QUIT);
@@ -188,7 +184,6 @@ void CGumpScreenMain::GUMP_BUTTON_EVENT_C
 
 void CGumpScreenMain::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_MS_PASSWORD)
     {
         g_MainScreen.m_Password->SetPos(m_PasswordFake->Pos());

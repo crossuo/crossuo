@@ -4,7 +4,7 @@
 #include "GUILine.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLEngine.h" // REMOVE
+#include "../Globals.h" // ToColor*
 
 extern RenderCmdList *g_renderCmdList;
 

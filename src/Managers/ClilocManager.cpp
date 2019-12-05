@@ -1,16 +1,16 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+
+#include <algorithm>
+#include <common/str.h>
 #include "ClilocManager.h"
 #include "../Application.h"
-#include <common/str.h>
+#include "../Globals.h" // g_Language
 
 CClilocManager g_ClilocManager;
 
 CCliloc::CCliloc(const std::string &lang)
-
 {
-    DEBUG_TRACE_FUNCTION;
-
     Loaded = false;
     Language = lang;
     if (Language.length() != 0u)
@@ -26,8 +26,6 @@ CCliloc::CCliloc(const std::string &lang)
 
 CCliloc::~CCliloc()
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_File.Unload();
     m_ClilocSystem.clear();
     m_ClilocRegular.clear();
@@ -36,8 +34,6 @@ CCliloc::~CCliloc()
 
 std::string CCliloc::Load(uint32_t &id)
 {
-    DEBUG_TRACE_FUNCTION;
-
     std::string result;
     if (Loaded)
     {
@@ -90,8 +86,6 @@ std::wstring CCliloc::CamelCaseTest(bool toCamelCase, const std::string &result)
 
 std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (id >= 3000000)
     {
         CLILOC_MAP::iterator i = m_ClilocSupport.find(id);
@@ -137,7 +131,7 @@ std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
     if (result.length() == 0u)
     {
         char str[50]{};
-        sprintf_s(str, "Unknown Cliloc #%i", id);
+        sprintf(str, "Unknown Cliloc #%i", id);
         result = str;
     }
 
@@ -146,18 +140,15 @@ std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
 
 std::string CCliloc::GetA(int id, bool toCamelCase, std::string result)
 {
-    DEBUG_TRACE_FUNCTION;
     return ToString(GetX(id, toCamelCase, result));
 }
 
 std::wstring CCliloc::GetW(int id, bool toCamelCase, std::string result)
 {
-    DEBUG_TRACE_FUNCTION;
     return GetX(id, toCamelCase, result);
 }
 
 CClilocManager::CClilocManager()
-
 {
 }
 
@@ -169,8 +160,6 @@ CClilocManager::~CClilocManager()
 
 CCliloc *CClilocManager::Cliloc(const std::string &lang)
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto language = ToLowerA(lang);
     if (language.length() == 0u)
     {
@@ -224,8 +213,6 @@ CCliloc *CClilocManager::Cliloc(const std::string &lang)
 std::wstring
 CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, std::wstring args)
 {
-    DEBUG_TRACE_FUNCTION;
-
     while ((args.length() != 0u) && args[0] == L'\t')
     {
         args.erase(args.begin());
@@ -237,11 +224,9 @@ CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, std::
 std::wstring
 CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args)
 {
-    DEBUG_TRACE_FUNCTION;
-
     while ((args.length() != 0u) && args[0] == L'@')
     {
-        args.erase(remove(args.begin(), args.end(), L'@'), args.end());
+        args.erase(std::remove(args.begin(), args.end(), L'@'), args.end());
     }
 
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
@@ -249,8 +234,6 @@ CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, std:
 
 std::wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args)
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
     std::vector<std::wstring> arguments;
     while (true)

@@ -4,6 +4,7 @@
 #include "ColorManager.h"
 #include <xuocore/uodata.h>
 #include "../Renderer/RenderAPI.h"
+#include "../Globals.h" // ToColor*, ShaderColorTable, SPECTRAL_COLOR_FLAG
 
 CColorManager g_ColorManager;
 extern RenderCmdList *g_renderCmdList;
@@ -19,7 +20,6 @@ CColorManager::~CColorManager()
 
 void CColorManager::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     intptr_t addr = (intptr_t)g_FileManager.m_HuesMul.Start;
     size_t size = g_FileManager.m_HuesMul.Size;
 
@@ -49,7 +49,6 @@ void CColorManager::Init()
 
 void CColorManager::SetHuesBlock(int index, VERDATA_HUES_GROUP *group)
 {
-    DEBUG_TRACE_FUNCTION;
     if (index < 0 || index >= m_HuesCount)
     {
         return;
@@ -67,7 +66,6 @@ void CColorManager::SetHuesBlock(int index, VERDATA_HUES_GROUP *group)
 
 void CColorManager::CreateHuesPalette()
 {
-    DEBUG_TRACE_FUNCTION;
     m_HuesFloat.resize(m_HuesCount);
     int entryCount = m_HuesCount / 8;
 
@@ -93,7 +91,6 @@ void CColorManager::CreateHuesPalette()
 
 void CColorManager::SendColorsToShader(uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     if (color != 0)
     {
         if ((color & SPECTRAL_COLOR_FLAG) != 0)
@@ -164,7 +161,6 @@ uint16_t CColorManager::ConvertToGray(uint16_t c)
 
 uint16_t CColorManager::GetColor16(uint16_t c, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -179,7 +175,6 @@ uint16_t CColorManager::GetColor16(uint16_t c, uint16_t color)
 
 uint16_t CColorManager::GetRadarColorData(int c)
 {
-    DEBUG_TRACE_FUNCTION;
     if (c < (int)m_Radarcol.size())
     {
         return m_Radarcol[c];
@@ -190,7 +185,6 @@ uint16_t CColorManager::GetRadarColorData(int c)
 
 uint32_t CColorManager::GetPolygoneColor(uint16_t c, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -205,7 +199,6 @@ uint32_t CColorManager::GetPolygoneColor(uint16_t c, uint16_t color)
 
 uint32_t CColorManager::GetUnicodeFontColor(uint16_t &c, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -220,7 +213,6 @@ uint32_t CColorManager::GetUnicodeFontColor(uint16_t &c, uint16_t color)
 
 uint32_t CColorManager::GetColor(uint16_t &c, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;
@@ -235,7 +227,6 @@ uint32_t CColorManager::GetColor(uint16_t &c, uint16_t color)
 
 uint32_t CColorManager::GetPartialHueColor(uint16_t &c, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     if (color != 0 && color < m_HuesCount)
     {
         color -= 1;

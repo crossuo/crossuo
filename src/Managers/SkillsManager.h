@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <stdint.h>
+#include <vector>
+#include <common/str.h>
 
 class CSkill
 {

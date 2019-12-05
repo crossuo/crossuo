@@ -6,6 +6,7 @@
 #include "../Gumps/Gump.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "../Globals.h" // g_GumpSelectedElement, ToColor*
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -13,7 +14,6 @@ CGUIColoredPolygone::CGUIColoredPolygone(
     int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)
     : CGUIPolygonal(GOT_COLOREDPOLYGONE, x, y, width, height)
 {
-    DEBUG_TRACE_FUNCTION;
     Serial = serial;
     UpdateColor(color, polygoneColor);
 }
@@ -24,7 +24,6 @@ CGUIColoredPolygone::~CGUIColoredPolygone()
 
 void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 {
-    DEBUG_TRACE_FUNCTION;
     Color = color;
 
     ColorR = ToColorR(polygoneColor);
@@ -41,7 +40,6 @@ void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 void CGUIColoredPolygone::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
@@ -86,7 +84,6 @@ void CGUIColoredPolygone::Draw(bool checktrans)
 
 void CGUIColoredPolygone::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (DrawDot && g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -95,7 +92,6 @@ void CGUIColoredPolygone::OnMouseEnter()
 
 void CGUIColoredPolygone::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (DrawDot && g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

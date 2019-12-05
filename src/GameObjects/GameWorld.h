@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <map>
 #include "GameItem.h"
 
 typedef std::map<uint32_t, CGameObject *> WORLD_MAP;

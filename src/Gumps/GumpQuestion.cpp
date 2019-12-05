@@ -9,7 +9,6 @@ CGumpQuestion::CGumpQuestion(uint32_t serial, short x, short y, uint8_t variant)
     : CGump(GT_QUESTION, serial, x, y)
     , Variant(variant)
 {
-    DEBUG_TRACE_FUNCTION;
     Blocked = true;
     g_GrayMenuCount++;
 
@@ -36,7 +35,6 @@ CGumpQuestion::~CGumpQuestion()
 
 void CGumpQuestion::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GQ_BUTTON_CANCEL)
     { //Button cancel
         RemoveMark = true;

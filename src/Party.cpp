@@ -25,8 +25,6 @@ CParty::~CParty()
 
 bool CParty::Contains(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool result = false;
     if (Leader != 0)
     {
@@ -45,7 +43,6 @@ bool CParty::Contains(int serial)
 
 void CParty::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 10; i++)
     {
         Member[i].Serial = 0;
@@ -55,7 +52,6 @@ void CParty::Clear()
 
 void CParty::ParsePacketData(CDataReader &reader)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t code = reader.ReadUInt8();
 
     switch (code)

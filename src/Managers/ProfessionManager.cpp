@@ -31,7 +31,6 @@ CProfessionManager::~CProfessionManager()
 
 int CProfessionManager::GetKeyCode(const std::string &key)
 {
-    DEBUG_TRACE_FUNCTION;
     auto str = ToLowerA(key);
     int result = 0;
 
@@ -48,7 +47,6 @@ int CProfessionManager::GetKeyCode(const std::string &key)
 
 bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
-    DEBUG_TRACE_FUNCTION;
     PROFESSION_TYPE type = PT_NO_PROF;
     std::vector<std::string> childrens;
     std::string name{};
@@ -265,7 +263,6 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 
 bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *child)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (parent->Type == PT_CATEGORY)
@@ -302,7 +299,6 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
 
 bool CProfessionManager::Load()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     CProfessionCategory *head = new CProfessionCategory();
@@ -388,7 +384,6 @@ bool CProfessionManager::Load()
 
 void CProfessionManager::LoadProfessionDescription()
 {
-    DEBUG_TRACE_FUNCTION;
     CMappedFile file;
 
     if (file.Load(g_App.UOFilesPath("Professn.enu")))
@@ -448,7 +443,6 @@ void CProfessionManager::LoadProfessionDescription()
 
 CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfession *check)
 {
-    DEBUG_TRACE_FUNCTION;
     if (check == nullptr)
     {
         check = (CBaseProfession *)m_Items;

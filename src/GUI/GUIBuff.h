@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/str.h>
 #include "GUIDrawObject.h"
 
 class CGUIBuff : public CGUIDrawObject

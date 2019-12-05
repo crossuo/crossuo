@@ -9,7 +9,6 @@
 CGumpGrayMenu::CGumpGrayMenu(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_GRAY_MENU, serial, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     Blocked = true;
 
@@ -30,7 +29,6 @@ CGumpGrayMenu::~CGumpGrayMenu()
 
 void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GGM_CANCEL)
     {
         SendMenuResponse(0);
@@ -58,7 +56,6 @@ void CGumpGrayMenu::GUMP_BUTTON_EVENT_C
 
 void CGumpGrayMenu::SendMenuResponse(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     //Ответ на меню
     CPacketGrayMenuResponse(this, index).Send();
 

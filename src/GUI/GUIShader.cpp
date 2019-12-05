@@ -19,7 +19,7 @@ CGUIShader::~CGUIShader()
 void CGUIShader::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (Enabled && m_Shader != nullptr)
     {
         m_Shader->Use();

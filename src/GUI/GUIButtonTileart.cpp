@@ -32,7 +32,6 @@ CGUIButtonTileart::~CGUIButtonTileart()
 
 CSize CGUIButtonTileart::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CSize gumpSize = CGUIDrawObject::GetSize();
     CSize tileSize;
 
@@ -72,7 +71,6 @@ CSize CGUIButtonTileart::GetSize()
 
 void CGUIButtonTileart::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     CGUIButton::PrepareTextures();
     g_Game.ExecuteStaticArt(TileGraphic);
 }
@@ -80,7 +78,7 @@ void CGUIButtonTileart::PrepareTextures()
 void CGUIButtonTileart::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     CGUIDrawObject::Draw(checktrans);
     auto spr = g_Game.ExecuteStaticArt(TileGraphic);
     if (spr != nullptr && spr->Texture)
@@ -92,7 +90,6 @@ void CGUIButtonTileart::Draw(bool checktrans)
 
 bool CGUIButtonTileart::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     if (CGUIDrawObject::Select())
     {
         return true;

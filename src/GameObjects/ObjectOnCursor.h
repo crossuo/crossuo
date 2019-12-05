@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <stdint.h>
 
 struct MulStaticTile2;
 

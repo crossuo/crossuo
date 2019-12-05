@@ -17,7 +17,7 @@ CGUIGumppicTiled::CGUIGumppicTiled(uint16_t graphic, int x, int y, int width, in
 void CGUIGumppicTiled::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     auto spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -28,7 +28,6 @@ void CGUIGumppicTiled::Draw(bool checktrans)
 
 bool CGUIGumppicTiled::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
     if (x < 0 || y < 0 || (Width > 0 && x >= Width) || (Height > 0 && y >= Height))

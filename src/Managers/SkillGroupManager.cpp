@@ -23,7 +23,6 @@ CSkillGroupManager::~CSkillGroupManager()
 
 void CSkillGroupManager::MakeDefault()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     MakeDefaultMiscellaneous();
@@ -46,7 +45,6 @@ void CSkillGroupManager::MakeDefault()
 
 void CSkillGroupManager::MakeDefaultMiscellaneous()
 {
-    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Miscellaneous";
     group->Add(4);
@@ -62,7 +60,6 @@ void CSkillGroupManager::MakeDefaultMiscellaneous()
 
 void CSkillGroupManager::MakeDefaultCombat()
 {
-    DEBUG_TRACE_FUNCTION;
     int cnt = g_SkillsManager.Count;
 
     CSkillGroupObject *group = new CSkillGroupObject();
@@ -104,7 +101,6 @@ void CSkillGroupManager::MakeDefaultCombat()
 
 void CSkillGroupManager::MakeDefaultTradeSkills()
 {
-    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Trade Skills";
     group->Add(0);
@@ -123,7 +119,6 @@ void CSkillGroupManager::MakeDefaultTradeSkills()
 
 void CSkillGroupManager::MakeDefaultMagic()
 {
-    DEBUG_TRACE_FUNCTION;
     int cnt = g_SkillsManager.Count;
 
     CSkillGroupObject *group = new CSkillGroupObject();
@@ -155,7 +150,6 @@ void CSkillGroupManager::MakeDefaultMagic()
 
 void CSkillGroupManager::MakeDefaultWilderness()
 {
-    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Wilderness";
     group->Add(2);
@@ -170,7 +164,6 @@ void CSkillGroupManager::MakeDefaultWilderness()
 
 void CSkillGroupManager::MakeDefaultThieving()
 {
-    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Thieving";
     group->Add(14);
@@ -187,7 +180,6 @@ void CSkillGroupManager::MakeDefaultThieving()
 
 void CSkillGroupManager::MakeDefaultBard()
 {
-    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *group = new CSkillGroupObject();
     group->Name = "Bard";
     group->Add(15);
@@ -200,7 +192,6 @@ void CSkillGroupManager::MakeDefaultBard()
 
 void CSkillGroupManager::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     CSkillGroupObject *item = m_Groups;
 
     while (item != nullptr)
@@ -218,7 +209,6 @@ void CSkillGroupManager::Clear()
 
 void CSkillGroupManager::Add(CSkillGroupObject *group)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Groups == nullptr)
     {
         m_Groups = group;
@@ -245,7 +235,6 @@ void CSkillGroupManager::Add(CSkillGroupObject *group)
 
 bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 {
-    DEBUG_TRACE_FUNCTION;
     if (group->m_Prev == nullptr) //Miscellaneous
     {
         int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 100;
@@ -284,7 +273,6 @@ bool CSkillGroupManager::Remove(CSkillGroupObject *group)
 
 bool CSkillGroupManager::Load(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     Clear();
@@ -343,7 +331,6 @@ bool CSkillGroupManager::Load(const fs_path &path)
 
 void CSkillGroupManager::Save(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
 
     writer.Open(path);

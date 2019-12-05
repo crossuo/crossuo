@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <stdint.h>
-#include <string>
+#include <common/str.h>
 
 #include "../Sockets.h"
 namespace Wisp

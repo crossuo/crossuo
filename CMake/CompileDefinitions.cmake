@@ -77,6 +77,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
   add_definitions(/wd4711) # function selected for automatic inline
   add_definitions(/wd4514) # unreferenced inline func has been removed
   add_definitions(/we4238) # equivalent to gcc/clang -fpermissive
+  add_definitions(/wd5045) # Compiler will insert Spectre mitigation for memory load
 else()
   #thread sanitizer - issues to fix
   #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")

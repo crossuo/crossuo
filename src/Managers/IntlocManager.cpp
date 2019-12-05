@@ -10,7 +10,6 @@ CIntlocManager g_IntlocManager;
 
 CIntloc::CIntloc(int fileIndex, const std::string &lang)
 {
-    DEBUG_TRACE_FUNCTION;
     Loaded = false;
     Language = lang;
     FileIndex = fileIndex;
@@ -59,7 +58,6 @@ CIntloc::CIntloc(int fileIndex, const std::string &lang)
 
 CIntloc::~CIntloc()
 {
-    DEBUG_TRACE_FUNCTION;
     m_File.Unload();
 
     m_Strings.clear();
@@ -67,7 +65,6 @@ CIntloc::~CIntloc()
 
 std::wstring CIntloc::Get(int id, bool toCamelCase)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id < (int)m_Strings.size())
     {
         if (toCamelCase)
@@ -92,7 +89,6 @@ CIntlocManager::~CIntlocManager()
 
 CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CIntloc *)
     {
         if (obj->Language == lang && obj->FileIndex == fileIndex)
@@ -131,8 +127,6 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
 
 std::wstring CIntlocManager::Intloc(const std::string &lang, uint32_t clilocID, bool isNewCliloc)
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto language = ToLowerA(lang);
     if (language.length() == 0u)
     {

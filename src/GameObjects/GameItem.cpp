@@ -4,6 +4,7 @@
 #include "GameItem.h"
 #include "CustomHouseMultiObject.h"
 #include <xuocore/uodata.h>
+#include <algorithm>
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"
@@ -31,7 +32,6 @@ CGameItem::CGameItem(int serial)
 
 CGameItem::~CGameItem()
 {
-    DEBUG_TRACE_FUNCTION;
     ClearMultiItems();
 
     if (Opened)
@@ -59,7 +59,6 @@ CGameItem::~CGameItem()
 
 void CGameItem::ClearMultiItems()
 {
-    DEBUG_TRACE_FUNCTION;
     if (MultiBody && m_Items != nullptr)
     {
         CMulti *multi = (CMulti *)m_Items;
@@ -72,7 +71,6 @@ void CGameItem::ClearMultiItems()
 
 void CGameItem::OnGraphicChange(int direction)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!MultiBody)
     {
         if (Graphic >= g_Data.m_Static.size())
@@ -129,7 +127,6 @@ void CGameItem::OnGraphicChange(int direction)
 
 void CGameItem::CalculateFieldColor()
 {
-    DEBUG_TRACE_FUNCTION;
     FieldColor = 0;
 
     if (!g_ConfigManager.GetChangeFieldsGraphic())
@@ -167,7 +164,7 @@ void CGameItem::CalculateFieldColor()
 void CGameItem::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (Container == 0xFFFFFFFF)
     {
         if (MultiBody)
@@ -191,9 +188,7 @@ void CGameItem::Draw(int x, int y)
             return;
         }
 
-#if UO_DEBUG_INFO != 0
         g_RenderedObjectsCountInGameWindow++;
-#endif
 
         bool useAlpha = (m_DrawTextureColor[3] != 0xFF);
 
@@ -319,7 +314,6 @@ void CGameItem::Draw(int x, int y)
 
 void CGameItem::Select(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Container == 0xFFFFFFFF)
     {
         if (MultiBody)
@@ -374,7 +368,6 @@ void CGameItem::Select(int x, int y)
 
 uint16_t CGameItem::GetMountAnimation()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
 
     if (Layer == OL_MOUNT)
@@ -695,7 +688,6 @@ CMultiObject *CGameItem::AddMulti(
 
 void CGameItem::LoadMulti(bool dropAlpha)
 {
-    DEBUG_TRACE_FUNCTION;
     ClearMultiItems();
 
     if (Graphic >= MAX_MULTI_DATA_INDEX_COUNT)
@@ -846,7 +838,6 @@ void CGameItem::LoadMulti(bool dropAlpha)
 
 void CGameItem::AddMultiObject(CMultiObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Items == nullptr)
     {
         m_Items = new CMulti(obj->GetX(), obj->GetY());
@@ -912,7 +903,6 @@ void CGameItem::AddMultiObject(CMultiObject *obj)
 
 CMulti *CGameItem::GetMultiAtXY(short x, short y)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(multi, m_Items, CMulti *)
     {
         if (multi->X == x && multi->Y == y)
@@ -926,7 +916,6 @@ CMulti *CGameItem::GetMultiAtXY(short x, short y)
 
 CGameItem *CGameItem::FindItem(uint16_t graphic, uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     CGameItem *item = nullptr;
 
     if (color == 0xFFFF) //Поиск по минимальному цвету

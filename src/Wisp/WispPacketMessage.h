@@ -3,7 +3,8 @@
 #ifndef WISP_PCKT_H
 #define WISP_PCKT_H
 
-#include "../CrossPCH.h" // REMOVE
+#include <vector>
+#include <stdint.h>
 
 namespace Wisp
 {

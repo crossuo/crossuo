@@ -18,7 +18,6 @@ CGameEffectMoving::~CGameEffectMoving()
 
 void CGameEffectMoving::Update(CGameObject *parent)
 {
-    DEBUG_TRACE_FUNCTION;
     if (LastMoveTime > g_Ticks)
     {
         return;

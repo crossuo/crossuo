@@ -34,8 +34,6 @@ CGUITilepicHightlighted::~CGUITilepicHightlighted()
 
 void CGUITilepicHightlighted::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_SelectedObject.Object == this)
     {
 #ifndef NEW_RENDERER_ENABLED
@@ -76,7 +74,7 @@ void CGUITilepicHightlighted::SetShaderMode()
 void CGUITilepicHightlighted::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -91,7 +89,6 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 
 bool CGUITilepicHightlighted::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
     if (spr != nullptr)
     {
@@ -111,7 +108,6 @@ bool CGUITilepicHightlighted::Select()
 
 void CGUITilepicHightlighted::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -120,7 +116,6 @@ void CGUITilepicHightlighted::OnMouseEnter()
 
 void CGUITilepicHightlighted::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

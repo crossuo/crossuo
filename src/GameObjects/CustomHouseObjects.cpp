@@ -2,6 +2,7 @@
 // Copyright (C) September 2017 Hotride
 
 #include "CustomHouseObjects.h"
+#include <stdio.h> // sscanf
 
 bool CCustomHouseObjectWall::Parse(const char *text)
 {

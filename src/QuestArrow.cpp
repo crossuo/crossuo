@@ -23,7 +23,7 @@ CQuestArrow::~CQuestArrow()
 void CQuestArrow::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (Enabled)
     {
         int dir = g_MouseManager.GetFacing(g_Player->GetX(), g_Player->GetY(), X, Y, 0);

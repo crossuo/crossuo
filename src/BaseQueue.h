@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "CrossPCH.h" // REMOVE
-
 #define QFOR(var, start, type) for (type var = (type)start; var != nullptr; var = (type)var->m_Next)
 #define BQFOR(var, start) QFOR(var, start, CBaseQueueItem *)
 

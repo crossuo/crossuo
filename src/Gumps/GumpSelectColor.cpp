@@ -18,7 +18,6 @@ CGumpSelectColor::~CGumpSelectColor()
 
 void CGumpSelectColor::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Items == nullptr)
     {
         Add(new CGUIGumppic(0x0906, 0, 0));
@@ -86,7 +85,6 @@ void CGumpSelectColor::UpdateContent()
 
 void CGumpSelectColor::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GSC_BUTTON_OKAY && m_DataBox != nullptr)
     {
         QFOR(item, m_DataBox->m_Items, CBaseGUI *)
@@ -111,13 +109,11 @@ void CGumpSelectColor::GUMP_BUTTON_EVENT_C
 
 void CGumpSelectColor::GUMP_SLIDER_CLICK_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
 
 void CGumpSelectColor::GUMP_SLIDER_MOVE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Slider != nullptr && m_ColorRef != m_Slider->Value)
     {
         m_ColorRef = m_Slider->Value;
@@ -127,7 +123,6 @@ void CGumpSelectColor::GUMP_SLIDER_MOVE_EVENT_C
 
 void CGumpSelectColor::OnSelectColor(uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpOptions *gump = (CGumpOptions *)g_GumpManager.UpdateGump(0, 0, GT_OPTIONS);
 
     if (gump != nullptr)

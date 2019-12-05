@@ -11,7 +11,6 @@ CPartyObject::CPartyObject()
 
 std::string CPartyObject::GetName(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Serial != 0u)
     {
         if (Character == nullptr)
@@ -25,7 +24,7 @@ std::string CPartyObject::GetName(int index)
     }
 
     char buf[10] = { 0 };
-    sprintf_s(buf, "[%i]", index);
+    sprintf(buf, "[%i]", index);
 
     return std::string(buf);
 }

@@ -6,6 +6,11 @@
 #include <SDL.h>
 // #define NEW_RENDERER_ENABLED
 
+#if !defined(NEW_RENDERER_ENABLED)
+#include "../GLEngine/GLHeaders.h"
+#endif
+#include "../GLEngine/GLEngine.h" // REMOVE
+
 #include "RenderTypes.h"
 #include "RenderCommands.h"
 

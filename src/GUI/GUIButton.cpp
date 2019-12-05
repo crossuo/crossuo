@@ -20,7 +20,6 @@ CGUIButton::~CGUIButton()
 
 void CGUIButton::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(Graphic);
     g_Game.ExecuteGump(GraphicSelected);
     g_Game.ExecuteGump(GraphicPressed);
@@ -28,7 +27,6 @@ void CGUIButton::PrepareTextures()
 
 uint16_t CGUIButton::GetDrawGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
 
     if (g_GumpPressedElement == this)
@@ -45,7 +43,6 @@ uint16_t CGUIButton::GetDrawGraphic()
 
 void CGUIButton::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -54,7 +51,6 @@ void CGUIButton::OnMouseEnter()
 
 void CGUIButton::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

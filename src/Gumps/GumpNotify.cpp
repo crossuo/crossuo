@@ -16,8 +16,6 @@ CGumpNotify::CGumpNotify(
     , Height(height)
     , Text(std::move(text))
 {
-    DEBUG_TRACE_FUNCTION;
-
     Blocked = true;
     g_GrayMenuCount++;
 
@@ -35,8 +33,6 @@ CGumpNotify::~CGumpNotify()
 
 void CGumpNotify::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (serial == ID_GN_BUTTON_OK)
     {
         Process();
@@ -45,8 +41,6 @@ void CGumpNotify::GUMP_BUTTON_EVENT_C
 
 void CGumpNotify::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (key != KEY_RETURN && key != KEY_RETURN2)
     {
@@ -67,8 +61,6 @@ void CGumpNotify::OnKeyDown(const KeyEvent &ev)
 
 void CGumpNotify::Process()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Variant == ID_GN_STATE_LOGOUT)
     {
         g_GameScreen.CreateSmoothAction(CGameScreen::ID_SMOOTH_GS_LOGOUT);

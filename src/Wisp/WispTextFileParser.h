@@ -3,7 +3,8 @@
 #ifndef WISP_TFP_H
 #define WISP_TFP_H
 
-#include "../CrossPCH.h" // REMOVE
+#include <stdint.h>
+#include <common/str.h>
 #include <common/fs.h>
 #include <xuocore/mappedfile.h>
 

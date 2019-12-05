@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "CrossPCH.h" // REMOVE
+#include <stdint.h>
+#include <vector>
 
 class CContainerOffsetRect
 {

@@ -5,7 +5,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLEngine.h" // REMOVE
+#include "../Globals.h" // g_MapTexture
 
 extern RenderCmdList *g_renderCmdList;
 

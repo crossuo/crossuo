@@ -12,7 +12,6 @@ CMultiMap g_MultiMap;
 // FIXME: move to centralized data code
 void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 {
-    DEBUG_TRACE_FUNCTION;
     auto &file = g_FileManager.m_MultiMap;
     if (file.Size == 0u)
     {
@@ -117,7 +116,6 @@ void CMultiMap::LoadMap(CGumpMap *gump, CGUIExternalTexture *mapObject)
 // FIXME: move to centralized data code
 bool CMultiMap::LoadFacet(CGumpMap *gump, CGUIExternalTexture *mapObject, int facet)
 {
-    DEBUG_TRACE_FUNCTION;
     if (facet < 0 || facet > 5)
     {
         Warning(Data, "Invalid facet index: %i", facet);

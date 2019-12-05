@@ -24,7 +24,6 @@ CGUIMenuObject::~CGUIMenuObject()
 
 bool CGUIMenuObject::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -35,7 +34,6 @@ bool CGUIMenuObject::Select()
 
 void CGUIMenuObject::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr && g_SelectedObject.Gump->GumpType == GT_MENU)
     {
         CGumpMenu *menu = (CGumpMenu *)g_SelectedObject.Gump;
@@ -50,7 +48,6 @@ void CGUIMenuObject::OnMouseEnter()
 
 void CGUIMenuObject::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr && g_LastSelectedObject.Gump->GumpType == GT_MENU)
     {
         CGumpMenu *menu = (CGumpMenu *)g_LastSelectedObject.Gump;

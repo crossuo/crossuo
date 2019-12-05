@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/str.h>
 #include "GUITilepic.h"
 
 class CGUIMenuObject : public CGUITilepic

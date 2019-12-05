@@ -3,7 +3,10 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <stdint.h>
+#include <vector>
+#include <map>
+#include <common/str.h>
 #include <xuocore/mulstruct.h>
 #include <xuocore/enumlist.h>
 

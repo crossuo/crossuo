@@ -5,6 +5,7 @@
 
 #include "../BaseQueue.h"
 #include <xuocore/mappedfile.h>
+#include "../Globals.h" // MAX_MAPS_COUNT
 
 class CMapBlock;
 class CRenderWorldObject;

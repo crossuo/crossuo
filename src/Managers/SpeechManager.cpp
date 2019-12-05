@@ -4,9 +4,11 @@
 #include "SpeechManager.h"
 #include <xuocore/uodata.h>
 #include <common/str.h>
+#include <vector>
 #include "../Config.h"
 #include "../Misc.h"
 #include "../Logging.h"
+#include "../Globals.h" // g_Language
 
 CSpeechManager g_SpeechManager;
 
@@ -33,14 +35,12 @@ CSpeechManager::CSpeechManager()
 
 CSpeechManager::~CSpeechManager()
 {
-    DEBUG_TRACE_FUNCTION;
     m_SpeechEntries.clear();
     m_LangCodes.clear();
 }
 
 bool CSpeechManager::LoadSpeech()
 {
-    DEBUG_TRACE_FUNCTION;
     LoadLangCodes();
 
     for (int i = 0; i < (int)m_LangCodes.size(); i++)
@@ -158,8 +158,6 @@ bool CSpeechManager::LoadSpeech()
 
 bool CSpeechManager::LoadLangCodes()
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_LangCodes.push_back(CLangCode("enu", 101, "English", "United States"));
     CMappedFile &file = g_FileManager.m_LangcodeIff;
 
@@ -196,7 +194,6 @@ bool CSpeechManager::LoadLangCodes()
 
 void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &codes)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!m_Loaded || g_Config.ProtocolClientVersion < CV_305D)
     {
         return; // But in fact from the client version 2.0.7

@@ -34,7 +34,6 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     : CGumpBaseScroll(GT_BULLETIN_BOARD_ITEM, serial, 0x0820, 250, x, y, false, 70)
     , m_Variant(variant)
 {
-    DEBUG_TRACE_FUNCTION;
     ID = id;
     m_MinHeight = 200;
 
@@ -205,7 +204,6 @@ CGumpBulletinBoardItem::~CGumpBulletinBoardItem()
 
 void CGumpBulletinBoardItem::UpdateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     if (m_ButtonPost != nullptr)
@@ -226,7 +224,6 @@ void CGumpBulletinBoardItem::UpdateHeight()
 
 void CGumpBulletinBoardItem::RecalculateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == &m_Entry->m_Entry)
     {
         m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.c_str(), 0x0386, 220, TS_LEFT, 0);
@@ -243,7 +240,6 @@ void CGumpBulletinBoardItem::RecalculateHeight()
 
 void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_EntrySubject != nullptr)
     {
         if (serial == ID_GBBI_POST)
@@ -275,8 +271,6 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
 
 void CGumpBulletinBoardItem::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     g_EntryPointer->Insert(EvChar(ev));
     RecalculateHeight();
     WantRedraw = true;
@@ -284,7 +278,6 @@ void CGumpBulletinBoardItem::OnTextInput(const TextEvent &ev)
 
 void CGumpBulletinBoardItem::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
     auto key = EvKey(ev);
     if ((key == KEY_RETURN || key == KEY_RETURN2) && m_Entry != nullptr &&
         g_EntryPointer == &m_Entry->m_Entry)

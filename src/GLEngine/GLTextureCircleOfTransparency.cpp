@@ -5,7 +5,6 @@
 #include "../Managers/ConfigManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
-#include "GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -13,7 +12,6 @@ CGLTextureCircleOfTransparency g_CircleOfTransparency;
 
 std::vector<uint32_t> CreateCircleSprite(int radius, int16_t &width, int16_t &height)
 {
-    DEBUG_TRACE_FUNCTION;
     int fixRadius = radius + 1;
     int mulRadius = fixRadius * 2;
     std::vector<uint32_t> pixels;
@@ -37,13 +35,11 @@ std::vector<uint32_t> CreateCircleSprite(int radius, int16_t &width, int16_t &he
 
 CGLTextureCircleOfTransparency::~CGLTextureCircleOfTransparency()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Sprite.Clear();
 }
 
 bool CGLTextureCircleOfTransparency::Create(int radius)
 {
-    DEBUG_TRACE_FUNCTION;
     if (radius <= 0)
     {
         return false;
@@ -70,7 +66,7 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
 void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (m_Sprite.Texture == nullptr)
     {
         return;
@@ -114,7 +110,7 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 void CGLTextureCircleOfTransparency::Redraw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
 #ifndef NEW_RENDERER_ENABLED
     glClear(GL_STENCIL_BUFFER_BIT);
     if (g_ConfigManager.UseCircleTrans && m_Sprite.Texture != nullptr)

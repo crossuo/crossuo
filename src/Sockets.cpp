@@ -4,7 +4,7 @@
 #include "Sockets.h"
 #include "Logging.h"
 #include <cassert>
-#include <string.h>
+#include <common/str.h>
 
 #if 1
 #define SOCKET_DUMP(...)
@@ -283,6 +283,7 @@ void icmp_close(icmp_handle handle)
 #else
 
 #include <ifaddrs.h>
+#include <unistd.h>
 
 template <class T>
 inline static int socket_fd(T socket)

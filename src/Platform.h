@@ -5,7 +5,7 @@
 
 #include <wctype.h> // REMOVE
 #include <assert.h> // REMOVE
-#include <string>
+#include <common/str.h>
 #include <stdio.h>
 #include <SDL_events.h>
 #include <SDL_keycode.h>

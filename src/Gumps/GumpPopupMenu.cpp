@@ -8,13 +8,13 @@
 #include "../Managers/GumpManager.h"
 #include "../Managers/IntlocManager.h"
 #include "../Network/Packets.h"
+#include "../Globals.h" // g_Language, CONTEXT_MENU_FONT
 
 CGumpPopupMenu *g_PopupMenu = nullptr;
 
 CGumpPopupMenu::CGumpPopupMenu(uint32_t serial, short x, short y)
     : CGump(GT_POPUP_MENU, serial, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     g_PopupMenu = this;
     Page = 1;
@@ -26,7 +26,6 @@ CGumpPopupMenu::CGumpPopupMenu(uint32_t serial, short x, short y)
 
 CGumpPopupMenu::~CGumpPopupMenu()
 {
-    DEBUG_TRACE_FUNCTION;
     g_PopupMenu = nullptr;
 }
 
@@ -177,7 +176,6 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 
 void CGumpPopupMenu::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump == this && g_SelectedObject.Object != nullptr &&
         ((CBaseGUI *)g_SelectedObject.Object)->Type == GOT_HITBOX)
     {
@@ -204,7 +202,6 @@ void CGumpPopupMenu::PrepareContent()
 
 void CGumpPopupMenu::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPM_MAXIMIZE)
     {
         Page = 2;

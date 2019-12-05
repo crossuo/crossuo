@@ -3,9 +3,9 @@
 #ifndef WISP_THREAD_H
 #define WISP_THREAD_H
 
-#include "../CrossPCH.h" // REMOVE
-#include "../Platform.h"
 #include <SDL_thread.h>
+#include <stdint.h>
+#include "../Platform.h"
 
 namespace Wisp
 {
