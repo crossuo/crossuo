@@ -6,6 +6,8 @@
 #include "../Application.h"
 #include <xuocore/mappedfile.h>
 #include <common/str.h>
+#include <common/utils.h> // countof
+#include "../Globals.h"   // g_Language
 
 CCityManager g_CityManager;
 
@@ -25,8 +27,6 @@ CCityManager::CCityManager()
 
 void CCityManager::Init()
 {
-    DEBUG_TRACE_FUNCTION;
-
     CMappedFile file;
     if (file.Load(g_App.UOFilesPath("citytext.enu")))
     {
@@ -100,8 +100,6 @@ CCityManager::~CCityManager()
 
 CCity CCityManager::GetCity(const std::string &name)
 {
-    DEBUG_TRACE_FUNCTION;
-
     for (auto &city : m_CityList)
     {
         if (city.Name == name)
@@ -114,6 +112,5 @@ CCity CCityManager::GetCity(const std::string &name)
 
 void CCityManager::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     m_CityList.clear();
 }

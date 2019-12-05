@@ -35,8 +35,6 @@ CGump::CGump(GUMP_TYPE type, uint32_t serial, int x, int y)
 
 CGump::~CGump()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Blocked)
     {
         g_GrayMenuCount--;
@@ -150,7 +148,6 @@ void CGump::FixCoordinates()
 
 bool CGump::CanBeMoved()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     if (NoMove)
@@ -167,7 +164,6 @@ bool CGump::CanBeMoved()
 
 void CGump::DrawLocker()
 {
-    DEBUG_TRACE_FUNCTION;
     if ((m_Locker.Serial != 0u) && g_ShowGumpLocker)
     {
         g_TextureGumpState[LockMoving].Draw(m_Locker.GetX(), m_Locker.GetY());
@@ -176,7 +172,6 @@ void CGump::DrawLocker()
 
 bool CGump::SelectLocker()
 {
-    DEBUG_TRACE_FUNCTION;
     return (
         (m_Locker.Serial != 0u) && g_ShowGumpLocker &&
         g_Game.PolygonePixelsInXY(m_Locker.GetX(), m_Locker.GetY(), 10, 14));
@@ -184,7 +179,6 @@ bool CGump::SelectLocker()
 
 bool CGump::TestLockerClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result =
         ((m_Locker.Serial != 0u) && g_ShowGumpLocker && g_PressedObject.LeftObject == &m_Locker);
 
@@ -198,7 +192,6 @@ bool CGump::TestLockerClick()
 
 void CGump::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     g_GumpPressed =
         (!g_ObjectInHand.Enabled &&
          g_PressedObject.LeftGump == this /*&& g_SelectedObject.Gump() == this*/);
@@ -244,7 +237,6 @@ void CGump::CalculateGumpState()
 
 void CGump::ProcessListing()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != nullptr && !g_PressedObject.LeftGump->NoProcess &&
         g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI())
     {
@@ -313,7 +305,6 @@ void CGump::ProcessListing()
 
 bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     bool transparent = false;
 
 #ifndef NEW_RENDERER_ENABLED
@@ -361,7 +352,7 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
 void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     float alpha[2] = { 1.0f, 0.7f };
     CGUIComboBox *combo = nullptr;
 
@@ -494,7 +485,6 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
 CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = nullptr;
 
     int page = 0;
@@ -672,7 +662,6 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 void CGump::TestItemsLeftMouseDown(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -949,7 +938,6 @@ void CGump::TestItemsLeftMouseDown(
 
 void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -1212,7 +1200,6 @@ void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, 
 void CGump::TestItemsScrolling(
     CGump *gump, CBaseGUI *start, bool up, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     const int delay = SCROLL_LISTING_DELAY / 7;
 
     int group = 0;
@@ -1328,7 +1315,6 @@ void CGump::TestItemsScrolling(
 void CGump::TestItemsDragging(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw =
@@ -1435,14 +1421,12 @@ void CGump::TestItemsDragging(
 
 void CGump::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
 
 bool CGump::EntryPointerHere()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
@@ -1456,7 +1440,6 @@ bool CGump::EntryPointerHere()
 
 void CGump::GenerateFrame(bool stop)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_GL.Drawing)
     {
         FrameCreated = false;
@@ -1478,7 +1461,7 @@ void CGump::GenerateFrame(bool stop)
 void CGump::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     CalculateGumpState();
 
     if (WantUpdateContent)
@@ -1655,7 +1638,6 @@ void CGump::Draw()
 
 CRenderObject *CGump::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CalculateGumpState();
 
@@ -1699,8 +1681,6 @@ CRenderObject *CGump::Select()
 
 void CGump::RecalculateSize()
 {
-    DEBUG_TRACE_FUNCTION;
-
     CPoint2Di minPosition(999, 999);
     CPoint2Di maxPosition;
     CPoint2Di offset;
@@ -1722,8 +1702,6 @@ void CGump::GetItemsSize(
     int currentPage,
     int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
-
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
 
@@ -1836,7 +1814,6 @@ void CGump::GetItemsSize(
 
 void CGump::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
@@ -1849,7 +1826,6 @@ void CGump::OnLeftMouseButtonDown()
 
 void CGump::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     TestItemsLeftMouseUp(this, (CBaseGUI *)m_Items, Page, Draw2Page);
     TestLockerClick();
@@ -1858,7 +1834,6 @@ void CGump::OnLeftMouseButtonUp()
 
 void CGump::OnMidMouseButtonScroll(bool up)
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
@@ -1871,7 +1846,6 @@ void CGump::OnMidMouseButtonScroll(bool up)
 
 void CGump::OnDragging()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);

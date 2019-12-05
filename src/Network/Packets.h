@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include "../Globals.h" // SPEECH_TYPE, SPEELBOOK_TYPE, MAP_MESSAGE, ...
 #include <xuocore/mappedfile.h>
 
 class CPacket : public CDataWriter

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/str.h>
 #include "GUIText.h"
 
 struct CGUIGenericText : public CGUIText

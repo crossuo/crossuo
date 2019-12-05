@@ -22,7 +22,7 @@ CTargetGump::~CTargetGump()
 void CTargetGump::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (Color != 0)
     {
         g_Game.DrawGump(0x1068, Color, X, Y);
@@ -45,7 +45,7 @@ CNewTargetSystem::~CNewTargetSystem()
 void CNewTargetSystem::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (!g_ConfigManager.DisableNewTargetSystem && ColorGump != 0)
     {
         CIndexObject &top = g_Index.m_Gump[GumpTop];

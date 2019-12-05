@@ -10,7 +10,6 @@ CustomHousesManager g_CustomHousesManager;
 
 void CCustomHouse::Paste(CGameItem *foundation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (foundation == nullptr)
     {
         return;
@@ -33,13 +32,11 @@ void CCustomHouse::Paste(CGameItem *foundation)
 
 CustomHousesManager::~CustomHousesManager()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 }
 
 void CustomHousesManager::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
         CCustomHouse *house = it->second;
@@ -50,7 +47,6 @@ void CustomHousesManager::Clear()
 
 CCustomHouse *CustomHousesManager::Get(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     for (auto it = m_Items.begin(); it != m_Items.end(); ++it)
     {
         CCustomHouse *house = it->second;
@@ -65,7 +61,6 @@ CCustomHouse *CustomHousesManager::Get(int serial)
 
 void CustomHousesManager::Add(CCustomHouse *house)
 {
-    DEBUG_TRACE_FUNCTION;
     if (house != nullptr)
     {
         m_Items[house->Serial] = house;
@@ -74,7 +69,6 @@ void CustomHousesManager::Add(CCustomHouse *house)
 
 void CustomHousesManager::Load(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CMappedFile file;
@@ -128,7 +122,6 @@ void CustomHousesManager::Load(const fs_path &path)
 
 void CustomHousesManager::Save(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
 
     writer.Open(path);

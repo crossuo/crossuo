@@ -43,7 +43,6 @@ void CGumpTargetSystem::PrepareContent()
 
 void CGumpTargetSystem::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConfigManager.DisableNewTargetSystem || (g_NewTargetSystem.Serial == 0u))
     {
         return;
@@ -147,7 +146,6 @@ void CGumpTargetSystem::UpdateContent()
 
 void CGumpTargetSystem::OnLeftMouseDown()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
     {
         return;
@@ -166,7 +164,6 @@ void CGumpTargetSystem::OnLeftMouseDown()
 
 void CGumpTargetSystem::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
     {
         return;
@@ -181,7 +178,6 @@ void CGumpTargetSystem::GUMP_BUTTON_EVENT_C
 
 bool CGumpTargetSystem::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
     {
         return false;

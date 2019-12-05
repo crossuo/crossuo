@@ -12,7 +12,6 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
     , MinZ(z)
     , AverageZ(z)
 {
-    DEBUG_TRACE_FUNCTION;
     OriginalGraphic = graphic;
     UpdateGraphicBySeason();
 
@@ -24,21 +23,17 @@ CLandObject::CLandObject(int serial, uint16_t graphic, uint16_t color, short x, 
     memset(&m_Rect, 0, sizeof(m_Rect));
     memset(&m_Normals[0], 0, sizeof(m_Normals));
 
-#if UO_DEBUG_INFO != 0
     g_LandObjectsCount++;
-#endif
 }
 
 void CLandObject::UpdateGraphicBySeason()
 {
-    DEBUG_TRACE_FUNCTION;
     Graphic = g_Game.GetLandSeasonGraphic(OriginalGraphic);
     NoDrawTile = (Graphic == 2);
 }
 
 int CLandObject::GetDirectionZ(int direction)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (direction)
     {
         case 1:
@@ -56,7 +51,6 @@ int CLandObject::GetDirectionZ(int direction)
 
 int CLandObject::CalculateCurrentAverageZ(int direction)
 {
-    DEBUG_TRACE_FUNCTION;
     int result = GetDirectionZ(((uint8_t)(direction >> 1) + 1) & 3);
 
     if ((direction & 1) != 0)
@@ -69,7 +63,6 @@ int CLandObject::CalculateCurrentAverageZ(int direction)
 
 void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
 {
-    DEBUG_TRACE_FUNCTION;
     if (IsStretched)
     {
         Serial = ((m_Z + zTop + zRight + zBottom) / 4);
@@ -110,7 +103,7 @@ void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
 void CLandObject::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (m_Z <= g_MaxGroundZ)
     {
         uint16_t objColor = 0;
@@ -120,9 +113,7 @@ void CLandObject::Draw(int x, int y)
             objColor = SELECT_LAND_COLOR;
         }
 
-#if UO_DEBUG_INFO != 0
         g_RenderedObjectsCountInGameWindow++;
-#endif
 
         if (!IsStretched)
         {
@@ -137,7 +128,6 @@ void CLandObject::Draw(int x, int y)
 
 void CLandObject::Select(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Z <= g_MaxGroundZ)
     {
         if (!IsStretched)

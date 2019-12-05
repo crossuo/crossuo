@@ -2,7 +2,6 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GLHeaders.h"
-#include "GLEngine.h"
 #include "GLTexture.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
@@ -11,14 +10,12 @@ extern RenderCmdList *g_renderCmdList;
 
 CGLTexture::~CGLTexture()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 }
 
 void CGLTexture::Draw(int x, int y, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture == 0)
         return;
@@ -66,7 +63,6 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
 void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture == 0)
 #else
@@ -153,7 +149,6 @@ void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
 
 void CGLTexture::DrawRotated(int x, int y, float angle)
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture == 0)
     {
@@ -174,7 +169,6 @@ void CGLTexture::DrawRotated(int x, int y, float angle)
 
 void CGLTexture::DrawTransparent(int x, int y, bool stencil)
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture == 0)
     {
@@ -219,7 +213,6 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
 
 void CGLTexture::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     if (Texture != 0)
     {

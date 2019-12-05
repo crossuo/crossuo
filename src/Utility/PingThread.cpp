@@ -16,7 +16,6 @@ CPingThread::CPingThread(int serverID, const std::string &serverIP, int requests
     , ServerIP(serverIP)
     , RequestsCount(requestsCount)
 {
-    DEBUG_TRACE_FUNCTION;
     //assert(s_pingCnt == 0 && "Multiple ping threads running at the same time");
     s_pingCnt++;
     LOG("CPingThread => %s\n", serverIP.c_str());
@@ -24,7 +23,6 @@ CPingThread::CPingThread(int serverID, const std::string &serverIP, int requests
 
 CPingThread::~CPingThread()
 {
-    DEBUG_TRACE_FUNCTION;
     //assert(s_pingCnt == 1 && "Multiple ping threads running at the same time");
     s_pingCnt--;
 }
@@ -50,8 +48,6 @@ int CPingThread::CalculatePing()
 
 void CPingThread::OnExecute(uint32_t nowTime)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (ServerIP.empty() || RequestsCount < 1)
     {
         return;

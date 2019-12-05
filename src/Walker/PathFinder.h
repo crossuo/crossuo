@@ -5,6 +5,8 @@
 
 const int PATHFINDER_MAX_NODES = 10000;
 
+#include <vector>
+#include "../Point.h"
 #include "PathNode.h"
 
 enum PATH_STEP_STATE

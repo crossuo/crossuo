@@ -4,6 +4,7 @@
 #include "../Utility/PerfMarker.h"
 #include "../GLEngine/GLHeaders.h"
 #include <assert.h>
+#include <common/utils.h> // countof
 #include "../Logging.h"
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \

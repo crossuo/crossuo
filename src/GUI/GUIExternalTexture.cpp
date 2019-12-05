@@ -4,10 +4,10 @@
 #include "GUIExternalTexture.h"
 #include "../Managers/ColorManager.h"
 #include "../Point.h"
+#include "../Globals.h"
 #include "../Sprite.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -23,16 +23,18 @@ CGUIExternalTexture::CGUIExternalTexture(
 
 CGUIExternalTexture::~CGUIExternalTexture()
 {
-    DEBUG_TRACE_FUNCTION;
     if (DeleteTextureOnDestroy)
     {
-        RELEASE_POINTER(m_Sprite);
+        if (m_Sprite)
+        {
+            delete m_Sprite;
+        }
+        m_Sprite = nullptr;
     }
 }
 
 CSize CGUIExternalTexture::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CSize size;
     if (m_Sprite != nullptr)
     {
@@ -60,7 +62,6 @@ CSize CGUIExternalTexture::GetSize()
 
 void CGUIExternalTexture::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Color != 0)
     {
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
@@ -90,7 +91,6 @@ void CGUIExternalTexture::SetShaderMode()
 void CGUIExternalTexture::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
     if (m_Sprite != nullptr)
     {
         SetShaderMode();
@@ -137,7 +137,6 @@ void CGUIExternalTexture::Draw(bool checktrans)
 
 bool CGUIExternalTexture::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Sprite != nullptr)
     {
         return m_Sprite->Select(m_X, m_Y, !BoundingBoxCheck);

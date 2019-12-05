@@ -17,7 +17,6 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)
     , Index(index)
 {
-    DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
     if (skill != nullptr)
@@ -45,17 +44,19 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
 
 CGUISkillItem::~CGUISkillItem()
 {
-    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
     m_ValueText.Clear();
 
-    RELEASE_POINTER(m_ButtonUse);
-    RELEASE_POINTER(m_ButtonStatus);
+    if (m_ButtonUse)
+        delete m_ButtonUse;
+    m_ButtonUse = nullptr;
+    if (m_ButtonStatus)
+        delete m_ButtonStatus;
+    m_ButtonStatus = nullptr;
 }
 
 void CGUISkillItem::SetStatus(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Status = val;
 
     uint16_t graphic = GetStatusButtonGraphic();
@@ -67,7 +68,6 @@ void CGUISkillItem::SetStatus(uint8_t val)
 
 uint16_t CGUISkillItem::GetStatusButtonGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = 0x0984; //Up
 
     if (m_Status == 1)
@@ -84,7 +84,6 @@ uint16_t CGUISkillItem::GetStatusButtonGraphic()
 
 void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 {
-    DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
     if (skill != nullptr)
@@ -109,7 +108,6 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 
 void CGUISkillItem::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_ButtonUse != nullptr)
     {
         m_ButtonUse->PrepareTextures();
@@ -120,7 +118,6 @@ void CGUISkillItem::PrepareTextures()
 
 CBaseGUI *CGUISkillItem::SelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = this;
 
     if (g_Game.PolygonePixelsInXY(
@@ -143,7 +140,7 @@ CBaseGUI *CGUISkillItem::SelectedItem()
 void CGUISkillItem::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
 #ifndef NEW_RENDERER_ENABLED
     glTranslatef((float)m_X, (float)m_Y, 0.0f);
 #else
@@ -181,7 +178,6 @@ void CGUISkillItem::Draw(bool checktrans)
 
 bool CGUISkillItem::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

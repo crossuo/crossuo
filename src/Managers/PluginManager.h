@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
+#include "../Globals.h" // PLUGIN_*
 
 struct PLUGIN_INTERFACE;
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/str.h>
 #include <xuocore/enumlist.h>
 #include "GUIDrawObject.h"
 #include "Sprite.h"

@@ -17,7 +17,6 @@ COptionsMacroManager::~COptionsMacroManager()
 
 void COptionsMacroManager::LoadFromMacro()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     QFOR(obj, g_MacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }

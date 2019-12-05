@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
-#include <string.h>
+#include <stdint.h>
+#include <common/str.h>
 #include <queue>
 
 class CCity

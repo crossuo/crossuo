@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) September 2016 Hotride
 
+#include <algorithm>
 #include "GumpSpellbook.h"
 #include "GumpSpell.h"
 #include "../Config.h"
@@ -141,7 +142,6 @@ void CGumpSpellbook::InitStaticData()
 
 void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
 {
-    DEBUG_TRACE_FUNCTION;
     SPELLBOOK_TYPE bookType = BookType;
 
     switch (parentGraphic)
@@ -196,7 +196,6 @@ void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
 
 void CGumpSpellbook::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         g_ToolTip.Set(L"Double click to maximize book gump");
@@ -231,7 +230,6 @@ void CGumpSpellbook::InitToolTip()
 
 void CGumpSpellbook::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     int maxSpellsCount = 0;
     int spellsOnPage = 0;
     int dictionaryPagesCount = 0;
@@ -389,7 +387,6 @@ void CGumpSpellbook::PrepareContent()
 
 void CGumpSpellbook::GetTooltipBookInfo(int &dictionaryPagesCount, int &tooltipOffset)
 {
-    DEBUG_TRACE_FUNCTION;
     int maxSpellsCount = 0;
 
     switch (BookType)
@@ -464,7 +461,6 @@ void CGumpSpellbook::GetSummaryBookInfo(
     uint16_t &minimizedGraphic,
     uint16_t &iconStartGraphic)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (BookType)
     {
         case ST_MAGE:
@@ -554,7 +550,6 @@ void CGumpSpellbook::GetSummaryBookInfo(
 std::string
 CGumpSpellbook::GetSpellName(int offset, std::string &abbreviature, std::string &reagents)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (BookType)
     {
         case ST_MAGE:
@@ -587,7 +582,6 @@ CGumpSpellbook::GetSpellName(int offset, std::string &abbreviature, std::string 
 
 std::string CGumpSpellbook::GetSpellRequries(int offset, int &y)
 {
-    DEBUG_TRACE_FUNCTION;
     char buf[100] = { 0 };
     y = 162;
 
@@ -654,7 +648,6 @@ std::string CGumpSpellbook::GetSpellRequries(int offset, int &y)
 
 void CGumpSpellbook::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Body = nullptr;
     m_PrevPage = nullptr;
     m_NextPage = nullptr;
@@ -900,7 +893,6 @@ void CGumpSpellbook::UpdateContent()
 
 void CGumpSpellbook::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     int newPage = -1;
 
     if (serial == ID_GSB_BUTTON_PREV)
@@ -1026,7 +1018,6 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
 
 void CGumpSpellbook::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial >= ID_GSB_SPELL_ICON_LEFT)
     {
         OnButton(serial);
@@ -1035,7 +1026,6 @@ void CGumpSpellbook::GUMP_TEXT_ENTRY_EVENT_C
 
 bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Minimized)
@@ -1107,7 +1097,6 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
 
 void CGumpSpellbook::DelayedClick(CRenderObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj != nullptr)
     {
         ChangePage(g_ClickObject.Page);
@@ -1117,7 +1106,6 @@ void CGumpSpellbook::DelayedClick(CRenderObject *obj)
 
 void CGumpSpellbook::ChangePage(int newPage)
 {
-    DEBUG_TRACE_FUNCTION;
     Page = newPage;
 
     m_PrevPage->Visible = (Page != 0);

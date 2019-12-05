@@ -10,7 +10,6 @@
 #include "../Managers/MouseManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -32,7 +31,6 @@ CGUIComboBox::CGUIComboBox(
     , OpenedWidth(width)
     , ShowMaximizedCenter(showMaximizedCenter)
 {
-    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = false;
     m_ArrowX = 0;
     m_OffsetY = 0;
@@ -66,7 +64,6 @@ CGUIComboBox::CGUIComboBox(
 
 CGUIComboBox::~CGUIComboBox()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Text != nullptr)
     {
         delete Text;
@@ -76,7 +73,6 @@ CGUIComboBox::~CGUIComboBox()
 
 void CGUIComboBox::RecalculateWidth()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!CompositeBackground)
     {
         OpenedWidth = 0;
@@ -103,21 +99,17 @@ void CGUIComboBox::RecalculateWidth()
 
 void CGUIComboBox::SetShowItemsCount(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_WorkHeight = val * 15;
     m_ShowItemsCount = val;
 }
 
 CSize CGUIComboBox::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
-
     return CSize(m_WorkWidth, m_WorkHeight);
 }
 
 void CGUIComboBox::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     if (CompositeBackground)
     {
         g_Game.ExecuteGump(Graphic);
@@ -135,7 +127,6 @@ void CGUIComboBox::PrepareTextures()
 
 CBaseGUI *CGUIComboBox::SkipToStart()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *start = (CBaseGUI *)m_Items;
 
     int index = 0;
@@ -160,7 +151,7 @@ CBaseGUI *CGUIComboBox::SkipToStart()
 void CGUIComboBox::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (Text != nullptr)
     {
         Text->m_Texture.Draw(m_X + Text->GetX(), m_Y + Text->GetY() + TextOffsetY, checktrans);
@@ -311,7 +302,6 @@ void CGUIComboBox::Draw(bool checktrans)
 
 bool CGUIComboBox::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     ListingDirection = 0;
     bool select = false;
 
@@ -369,7 +359,6 @@ bool CGUIComboBox::Select()
 
 CBaseGUI *CGUIComboBox::SelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *select = this;
 
     if (g_PressedObject.LeftObject == this) //maximized
@@ -418,7 +407,6 @@ CBaseGUI *CGUIComboBox::SelectedItem()
 
 int CGUIComboBox::IsSelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     int select = -1;
 
     if (g_PressedObject.LeftObject == this) //maximized

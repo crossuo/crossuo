@@ -27,7 +27,6 @@ CGUIAlphaBlending::~CGUIAlphaBlending()
 void CGUIAlphaBlending::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
 #ifndef NEW_RENDERER_ENABLED
     CGUIBlending::Draw(checktrans);
 

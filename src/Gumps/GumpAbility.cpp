@@ -6,11 +6,11 @@
 #include "../Managers/ClilocManager.h"
 #include "../Managers/GumpManager.h"
 #include "../Network/Packets.h"
+#include "../Globals.h" // g_Ability
 
 CGumpAbility::CGumpAbility(int serial, int x, int y)
     : CGump(GT_ABILITY, serial, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     int index = (Serial != 0 ? 1 : 0);
     uint8_t &ability = g_Ability[index];
 
@@ -30,7 +30,6 @@ CGumpAbility::~CGumpAbility()
 
 void CGumpAbility::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     int index = (Serial != 0 ? 1 : 0);
 
     g_ToolTip.Set(
@@ -40,7 +39,6 @@ void CGumpAbility::InitToolTip()
 
 void CGumpAbility::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Colorizer != nullptr && m_Body != nullptr)
     {
         int index = (Serial != 0 ? 1 : 0);
@@ -54,7 +52,6 @@ void CGumpAbility::UpdateContent()
 
 void CGumpAbility::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_LOCK_MOVING)
     {
         LockMoving = !LockMoving;
@@ -63,7 +60,6 @@ void CGumpAbility::GUMP_BUTTON_EVENT_C
 
 void CGumpAbility::OnAbilityUse(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t &ability = g_Ability[index];
 
     if ((ability & 0x80) == 0)
@@ -88,8 +84,6 @@ void CGumpAbility::OnAbilityUse(int index)
 
 bool CGumpAbility::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     OnAbilityUse(Serial != 0 ? 1 : 0);
-
     return true;
 }

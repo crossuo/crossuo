@@ -34,7 +34,6 @@ enum
 CGumpSkills::CGumpSkills(short x, short y, bool minimized, int height)
     : CGumpBaseScroll(GT_SKILLS, 0, 0x1F40, height, x, y, true, 0, true, 15)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GS_LOCK_MOVING;
 
     if (minimized)
@@ -128,7 +127,6 @@ CGumpSkills::~CGumpSkills()
 
 void CGumpSkills::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -191,7 +189,6 @@ void CGumpSkills::InitToolTip()
 
 void CGumpSkills::UpdateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     m_BottomLine->SetY(Height - 48); //Bottom line
@@ -202,7 +199,6 @@ void CGumpSkills::UpdateHeight()
 
 void CGumpSkills::UpdateGroupPositions()
 {
-    DEBUG_TRACE_FUNCTION;
     int index = 0;
     int currentY = 0;
 
@@ -230,7 +226,6 @@ void CGumpSkills::UpdateGroupPositions()
 
 CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     int currentIndex = 0;
 
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
@@ -251,7 +246,6 @@ CGUISkillGroup *CGumpSkills::GetSkillGroup(int index)
 
 CGUISkillItem *CGumpSkills::GetSkill(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (group->Type == GOT_SKILLGROUP)
@@ -271,7 +265,6 @@ CGUISkillItem *CGumpSkills::GetSkill(int index)
 
 void CGumpSkills::UpdateSkillValue(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (group->Type == GOT_SKILLGROUP)
@@ -298,7 +291,6 @@ void CGumpSkills::UpdateSkillValue(int index)
 
 void CGumpSkills::UpdateSkillValues()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(group, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (group->Type == GOT_SKILLGROUP)
@@ -316,7 +308,6 @@ void CGumpSkills::UpdateSkillValues()
 
 void CGumpSkills::UpdateSkillsSum()
 {
-    DEBUG_TRACE_FUNCTION;
     char str[20] = { 0 };
     sprintf_s(str, "%.1f", g_SkillsManager.SkillsTotal);
     m_SkillSum->CreateTextureA(3, str);
@@ -324,7 +315,6 @@ void CGumpSkills::UpdateSkillsSum()
 
 void CGumpSkills::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     //Свернем все доступные группы
     QFOR(group, g_SkillGroupManager.m_Groups, CSkillGroupObject *)
     group->Maximized = false;
@@ -332,7 +322,6 @@ void CGumpSkills::Init()
 
 void CGumpSkills::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_PressedObject.LeftGump == this && g_PressedObject.LeftSerial >= ID_GS_SKILL &&
@@ -355,7 +344,6 @@ void CGumpSkills::CalculateGumpState()
 
 void CGumpSkills::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = g_PressedObject.LeftSerial;
 
     if (g_PressedObject.LeftGump == this && serial >= ID_GS_SKILL && serial < ID_GS_SKILL_STATE)
@@ -471,7 +459,6 @@ void CGumpSkills::PrepareContent()
 
 CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
 {
-    DEBUG_TRACE_FUNCTION;
     index = 0;
 
     //Получить группу под курсором
@@ -519,7 +506,6 @@ CSkillGroupObject *CGumpSkills::GetGroupUnderCursor(int &index)
 
 void CGumpSkills::UpdateGroupText()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_SKILLGROUP)
@@ -552,7 +538,6 @@ void CGumpSkills::UpdateGroupText()
 
 void CGumpSkills::SetGroupTextFromEntry()
 {
-    DEBUG_TRACE_FUNCTION;
     int index = 0;
     CSkillGroupObject *groupItem = g_SkillGroupManager.m_Groups;
 
@@ -591,7 +576,6 @@ void CGumpSkills::SetGroupTextFromEntry()
 
 void CGumpSkills::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (g_PressedObject.LeftGump == this && g_PressedObject.LeftSerial >= ID_GS_SKILL &&
@@ -611,7 +595,6 @@ void CGumpSkills::OnLeftMouseButtonUp()
 
 void CGumpSkills::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE) //Сворачиваем гамп
     {
         Minimized = true;
@@ -719,7 +702,6 @@ void CGumpSkills::GUMP_BUTTON_EVENT_C
 
 void CGumpSkills::GUMP_CHECKBOX_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_SHOW_REAL) //Показать реальное значение
     {
         m_ShowReal = state;
@@ -738,7 +720,6 @@ void CGumpSkills::GUMP_CHECKBOX_EVENT_C
 
 void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     CGUISkillGroup *group = GetSkillGroup(serial - ID_GS_GROUP);
 
     if (group != nullptr)
@@ -759,7 +740,6 @@ void CGumpSkills::GUMP_TEXT_ENTRY_EVENT_C
 
 bool CGumpSkills::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized) //При даблклике по мини-гампу - раскрываем его
     {
         Minimized = false;
@@ -774,8 +754,6 @@ bool CGumpSkills::OnLeftMouseButtonDoubleClick()
 
 void CGumpSkills::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     g_EntryPointer->Insert(ch);
     int val = g_FontManager.GetWidthA(6, g_EntryPointer->c_str());
@@ -791,8 +769,6 @@ void CGumpSkills::OnTextInput(const TextEvent &ev)
 
 void CGumpSkills::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (!EntryPointerHere())
     {

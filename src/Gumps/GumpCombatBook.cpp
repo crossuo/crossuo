@@ -18,7 +18,6 @@
 CGumpCombatBook::CGumpCombatBook(int x, int y)
     : CGump(GT_COMBAT_BOOK, 0, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     Draw2Page = 1;
 
     if (g_Config.ClientVersion < CV_7000)
@@ -43,7 +42,6 @@ CGumpCombatBook::~CGumpCombatBook()
 
 std::vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
 {
-    DEBUG_TRACE_FUNCTION;
     std::vector<uint16_t> list;
 
     switch (index)
@@ -356,7 +354,6 @@ std::vector<uint16_t> CGumpCombatBook::GetItemsList(uint8_t index)
 
 void CGumpCombatBook::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         g_ToolTip.Set(L"Double click to maximize book gump");
@@ -393,7 +390,6 @@ void CGumpCombatBook::InitToolTip()
 
 void CGumpCombatBook::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump == this && Page < DictionaryPagesCount &&
         (g_PressedObject.LeftSerial == ID_GCB_ICON_FIRST ||
          g_PressedObject.LeftSerial == ID_GCB_ICON_SECOND))
@@ -415,7 +411,6 @@ void CGumpCombatBook::PrepareContent()
 
 void CGumpCombatBook::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     m_PrevPage = nullptr;
     m_NextPage = nullptr;
 
@@ -550,7 +545,6 @@ void CGumpCombatBook::UpdateContent()
 
 void CGumpCombatBook::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     int newPage = -1;
 
     if (serial == ID_GCB_BUTTON_PREV)
@@ -609,7 +603,6 @@ void CGumpCombatBook::GUMP_BUTTON_EVENT_C
 
 bool CGumpCombatBook::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Minimized)
@@ -667,7 +660,6 @@ bool CGumpCombatBook::OnLeftMouseButtonDoubleClick()
 
 void CGumpCombatBook::DelayedClick(CRenderObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj != nullptr)
     {
         ChangePage(g_ClickObject.Page);
@@ -677,7 +669,6 @@ void CGumpCombatBook::DelayedClick(CRenderObject *obj)
 
 void CGumpCombatBook::ChangePage(int newPage)
 {
-    DEBUG_TRACE_FUNCTION;
     Page = newPage;
 
     m_PrevPage->Visible = (Page != 0);

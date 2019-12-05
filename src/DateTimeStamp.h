@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include <string>
+#include <common/str.h>
 
 std::string GetBuildDateTimeStamp();

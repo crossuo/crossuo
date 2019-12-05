@@ -23,8 +23,6 @@ CGumpGeneric::~CGumpGeneric()
 
 void CGumpGeneric::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsGUI())
     {
         CBaseGUI *obj = (CBaseGUI *)g_SelectedObject.Object;
@@ -75,7 +73,6 @@ void CGumpGeneric::InitToolTip()
 void CGumpGeneric::AddText(
     int index, const std::wstring &text, CBaseGUI *start, bool backbroundCanBeColored)
 {
-    DEBUG_TRACE_FUNCTION;
     if (start == nullptr)
     {
         start = (CBaseGUI *)m_Items;
@@ -139,7 +136,6 @@ void CGumpGeneric::AddText(
 
 void CGumpGeneric::SendGumpResponse(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     //Ответ на гамп
     CPacketGumpResponse(this, index).Send();
 
@@ -149,19 +145,16 @@ void CGumpGeneric::SendGumpResponse(int index)
 
 void CGumpGeneric::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     SendGumpResponse(serial);
 }
 
 void CGumpGeneric::GUMP_DIRECT_HTML_LINK_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     g_FontManager.GoToWebLink(link);
 }
 
 bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GeneratedMouseDown)
     {
         return false;
@@ -184,8 +177,6 @@ bool CGumpGeneric::OnLeftMouseButtonDoubleClick()
 
 void CGumpGeneric::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     g_EntryPointer->Insert(ch);
     WantRedraw = true;
@@ -193,8 +184,6 @@ void CGumpGeneric::OnTextInput(const TextEvent &ev)
 
 void CGumpGeneric::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto key = EvKey(ev);
     if (key == KEY_RETURN || key == KEY_RETURN2)
     {

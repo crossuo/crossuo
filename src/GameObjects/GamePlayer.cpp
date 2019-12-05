@@ -13,13 +13,11 @@ CPlayer *g_Player = nullptr;
 CPlayer::CPlayer(int serial)
     : CGameCharacter(serial)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketSkillsRequest(Serial).Send();
 }
 
 CPlayer::~CPlayer()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 void CPlayer::CloseBank()
@@ -37,7 +35,6 @@ void CPlayer::CloseBank()
 
 CGameItem *CPlayer::FindBandage()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameItem *item = FindLayer(OL_BACKPACK);
 
     if (item != nullptr)
@@ -50,7 +47,6 @@ CGameItem *CPlayer::FindBandage()
 
 void CPlayer::UpdateAbilities()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t equippedGraphic = 0;
 
     CGameItem *layerObject = FindLayer(OL_1_HAND);

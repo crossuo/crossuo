@@ -30,7 +30,6 @@ CGumpSecureTrading::CGumpSecureTrading(uint32_t serial, int x, int y, uint32_t i
 
 void CGumpSecureTrading::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed && g_PressedObject.LeftObject != nullptr &&
@@ -49,7 +48,6 @@ void CGumpSecureTrading::CalculateGumpState()
 
 void CGumpSecureTrading::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_MyCheck != nullptr)
     {
         if (StateMine)
@@ -96,7 +94,6 @@ void CGumpSecureTrading::PrepareContent()
 
 void CGumpSecureTrading::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
     if (selobj == nullptr)
     {
@@ -260,7 +257,7 @@ void CGumpSecureTrading::UpdateContent()
 void CGumpSecureTrading::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     CGameObject *selobj = g_World->FindWorldObject(Serial);
     if (selobj == nullptr)
     {
@@ -293,7 +290,6 @@ void CGumpSecureTrading::Draw()
 
 CRenderObject *CGumpSecureTrading::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameObject *selobj = g_World->FindWorldObject(Serial);
     if (selobj == nullptr)
     {
@@ -313,7 +309,6 @@ CRenderObject *CGumpSecureTrading::Select()
 
 void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     // Update checkbox status
     if (serial == ID_GST_CHECKBOX)
     {
@@ -340,7 +335,6 @@ void CGumpSecureTrading::GUMP_BUTTON_EVENT_C
 
 void CGumpSecureTrading::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
     if (g_ObjectInHand.Enabled)
     {
@@ -397,7 +391,6 @@ void CGumpSecureTrading::OnLeftMouseButtonUp()
 
 void CGumpSecureTrading::SendTradingResponse(int code)
 {
-    DEBUG_TRACE_FUNCTION;
     // Reply the trade window
     CPacketTradeResponse(this, code).Send();
     if (code == SECURE_TRADE_CLOSE)

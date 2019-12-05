@@ -4,6 +4,7 @@
 #include "GumpProperty.h"
 #include "../ToolTip.h"
 #include "../Managers/MouseManager.h"
+#include "../Globals.h" // g_Ticks
 
 CGumpProperty::CGumpProperty(const std::wstring &text)
     : CGump(GT_PROPERTY, 0, 0, 0)

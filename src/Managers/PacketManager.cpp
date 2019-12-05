@@ -401,8 +401,6 @@ CPacketManager::~CPacketManager()
 
 bool CPacketManager::AutoLoginNameExists(const std::string &name)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (AutoLoginNames.length() == 0u)
     {
         return false;
@@ -416,8 +414,6 @@ bool CPacketManager::AutoLoginNameExists(const std::string &name)
 
 void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (newClientVersion >= CV_500A)
     {
         CVPRINT("Set new length for packet 0x0B (>= 5.0.0a)");
@@ -600,7 +596,6 @@ void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 
 int CPacketManager::GetPacketSize(const std::vector<uint8_t> &packet, int &offsetToSize)
 {
-    DEBUG_TRACE_FUNCTION;
     if (static_cast<unsigned int>(!packet.empty()) != 0u)
     {
         return m_Packets[packet[0]].Size;
@@ -611,7 +606,6 @@ int CPacketManager::GetPacketSize(const std::vector<uint8_t> &packet, int &offse
 
 void CPacketManager::SendMegaClilocRequests()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled && !m_MegaClilocRequests.empty())
     {
         if (g_Config.ProtocolClientVersion >= CV_500A)
@@ -634,7 +628,6 @@ void CPacketManager::SendMegaClilocRequests()
 
 void CPacketManager::AddMegaClilocRequest(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     for (int item : m_MegaClilocRequests)
     {
         if (item == serial)
@@ -648,8 +641,6 @@ void CPacketManager::AddMegaClilocRequest(int serial)
 
 void CPacketManager::OnReadFailed()
 {
-    DEBUG_TRACE_FUNCTION;
-
     Info(Network, "OnReadFailed. disconnecting.");
     g_Game.DisconnectGump();
     //g_Game. Disconnect();
@@ -660,8 +651,6 @@ void CPacketManager::OnReadFailed()
 
 void CPacketManager::OnPacket()
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
     CPacketInfo &info = m_Packets[*Start];
@@ -716,8 +705,6 @@ void CPacketManager::OnPacket()
 
 void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 {
-    DEBUG_TRACE_FUNCTION;
-
     std::vector<uint8_t> packet(size);
     memcpy(&packet[0], &buf[0], size);
 
@@ -728,8 +715,6 @@ void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 
 void CPacketManager::ProcessPluginPackets()
 {
-    DEBUG_TRACE_FUNCTION;
-
     LOCK(m_Mutex);
     while (!m_PluginData.empty())
     {
@@ -745,7 +730,6 @@ void CPacketManager::ProcessPluginPackets()
 
 void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
 {
-    DEBUG_TRACE_FUNCTION;
     SetData(buf, size);
 
     uint32_t ticks = g_Ticks;
@@ -780,7 +764,6 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
 
 PACKET_HANDLER(LoginError)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GameState == GS_MAIN_CONNECT || g_GameState == GS_SERVER_CONNECT ||
         g_GameState == GS_GAME_CONNECT)
     {
@@ -792,13 +775,11 @@ PACKET_HANDLER(LoginError)
 
 PACKET_HANDLER(ServerList)
 {
-    DEBUG_TRACE_FUNCTION;
     g_ServerList.ParsePacket(*this);
 }
 
 PACKET_HANDLER(RelayServer)
 {
-    DEBUG_TRACE_FUNCTION;
     memset(&g_SelectedCharName[0], 0, sizeof(g_SelectedCharName));
     in_addr addr;
     uint32_t *paddr = (uint32_t *)Ptr;
@@ -818,8 +799,6 @@ PACKET_HANDLER(RelayServer)
 
 PACKET_HANDLER(CharacterList)
 {
-    DEBUG_TRACE_FUNCTION;
-
     HandleResendCharacterList();
     uint8_t locCount = ReadUInt8();
     g_CityList.Clear();
@@ -877,7 +856,6 @@ PACKET_HANDLER(CharacterList)
 
 PACKET_HANDLER(ResendCharacterList)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.InitScreen(GS_CHARACTER);
 
     int numSlots = ReadInt8();
@@ -964,14 +942,12 @@ PACKET_HANDLER(ResendCharacterList)
 
 PACKET_HANDLER(LoginComplete)
 {
-    DEBUG_TRACE_FUNCTION;
     g_PacketLoginComplete = true;
     g_Game.LoginComplete(false);
 }
 
 PACKET_HANDLER(SetTime)
 {
-    DEBUG_TRACE_FUNCTION;
     g_ServerTimeHour = ReadUInt8();
     g_ServerTimeMinute = ReadUInt8();
     g_ServerTimeSecond = ReadUInt8();
@@ -979,7 +955,6 @@ PACKET_HANDLER(SetTime)
 
 PACKET_HANDLER(EnterWorld)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
     ConfigSerial = serial;
     bool loadConfig = false;
@@ -1074,7 +1049,6 @@ PACKET_HANDLER(EnterWorld)
 
 PACKET_HANDLER(UpdateHitpoints)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1096,7 +1070,6 @@ PACKET_HANDLER(UpdateHitpoints)
 
 PACKET_HANDLER(UpdateMana)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1117,7 +1090,6 @@ PACKET_HANDLER(UpdateMana)
 
 PACKET_HANDLER(UpdateStamina)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1138,7 +1110,6 @@ PACKET_HANDLER(UpdateStamina)
 
 PACKET_HANDLER(MobileAttributes)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1168,7 +1139,6 @@ PACKET_HANDLER(MobileAttributes)
 
 PACKET_HANDLER(NewHealthbarUpdate)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1241,7 +1211,6 @@ PACKET_HANDLER(NewHealthbarUpdate)
 
 PACKET_HANDLER(UpdatePlayer)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1280,7 +1249,6 @@ PACKET_HANDLER(UpdatePlayer)
 
 PACKET_HANDLER(CharacterStatus)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1430,7 +1398,6 @@ PACKET_HANDLER(CharacterStatus)
 
 PACKET_HANDLER(UpdateItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1542,7 +1509,6 @@ PACKET_HANDLER(UpdateItem)
 
 PACKET_HANDLER(UpdateItemSA)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1589,7 +1555,6 @@ PACKET_HANDLER(UpdateItemSA)
 
 PACKET_HANDLER(UpdateObject)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1707,7 +1672,6 @@ PACKET_HANDLER(UpdateObject)
 
 PACKET_HANDLER(EquipItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1765,7 +1729,6 @@ PACKET_HANDLER(EquipItem)
 
 PACKET_HANDLER(UpdateContainedItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1815,7 +1778,6 @@ PACKET_HANDLER(UpdateContainedItem)
 
 PACKET_HANDLER(UpdateContainedItems)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1898,7 +1860,6 @@ PACKET_HANDLER(UpdateContainedItems)
 
 PACKET_HANDLER(DenyMoveItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1996,7 +1957,6 @@ PACKET_HANDLER(DenyMoveItem)
 
 PACKET_HANDLER(EndDraggingItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2012,7 +1972,6 @@ PACKET_HANDLER(EndDraggingItem)
 
 PACKET_HANDLER(DropItemAccepted)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2024,7 +1983,6 @@ PACKET_HANDLER(DropItemAccepted)
 
 PACKET_HANDLER(DeleteObject)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2128,7 +2086,6 @@ PACKET_HANDLER(DeleteObject)
 
 PACKET_HANDLER(UpdateCharacter)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2195,7 +2152,6 @@ PACKET_HANDLER(UpdateCharacter)
 
 PACKET_HANDLER(Warmode)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2228,7 +2184,6 @@ PACKET_HANDLER(Warmode)
 
 PACKET_HANDLER(PauseControl)
 {
-    DEBUG_TRACE_FUNCTION;
     /*g_ClientPaused = ReadUInt8();
 
 	if (!g_ClientPaused)
@@ -2237,7 +2192,6 @@ PACKET_HANDLER(PauseControl)
 
 PACKET_HANDLER(OpenPaperdoll)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2270,20 +2224,17 @@ PACKET_HANDLER(OpenPaperdoll)
 
 PACKET_HANDLER(ClientVersion)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketClientVersion(g_Config.ClientVersionString)
         .Send(); // Send client data version instead protocol version
 }
 
 PACKET_HANDLER(Ping)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Ping = 0;
 }
 
 PACKET_HANDLER(SetWeather)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Weather.Reset();
 
     uint8_t type = ReadUInt8();
@@ -2352,7 +2303,6 @@ PACKET_HANDLER(SetWeather)
 
 PACKET_HANDLER(PersonalLightLevel)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
 
     if (serial == g_PlayerSerial)
@@ -2370,7 +2320,6 @@ PACKET_HANDLER(PersonalLightLevel)
 
 PACKET_HANDLER(LightLevel)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t level = ReadUInt8();
 
     if (level > 0x1F)
@@ -2383,7 +2332,6 @@ PACKET_HANDLER(LightLevel)
 
 PACKET_HANDLER(EnableLockedFeatures)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ProtocolClientVersion >= CV_60142)
     {
         g_LockedClientFeatures = ReadUInt32BE();
@@ -2400,7 +2348,6 @@ PACKET_HANDLER(EnableLockedFeatures)
 
 PACKET_HANDLER(OpenContainer)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2619,7 +2566,6 @@ PACKET_HANDLER(OpenContainer)
 
 PACKET_HANDLER(UpdateSkills)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2755,7 +2701,6 @@ PACKET_HANDLER(UpdateSkills)
 
 PACKET_HANDLER(ExtendedCommand)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t cmd = ReadUInt16BE();
 
     switch (cmd)
@@ -3226,7 +3171,6 @@ PACKET_HANDLER(ExtendedCommand)
 
 PACKET_HANDLER(DenyWalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player == nullptr)
     {
         return;
@@ -3249,7 +3193,6 @@ PACKET_HANDLER(DenyWalk)
 
 PACKET_HANDLER(ConfirmWalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player == nullptr)
     {
         return;
@@ -3275,13 +3218,11 @@ PACKET_HANDLER(ConfirmWalk)
 
 PACKET_HANDLER(OpenUrl)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.GoToWebLink(ReadString());
 }
 
 PACKET_HANDLER(Target)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Target.SetData(*this);
 
     if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
@@ -3294,7 +3235,6 @@ PACKET_HANDLER(Target)
 
 PACKET_HANDLER(Talk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         if (g_GameState == GS_GAME_CONNECT)
@@ -3400,7 +3340,6 @@ PACKET_HANDLER(Talk)
 
 PACKET_HANDLER(UnicodeTalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         if (g_GameState == GS_GAME_CONNECT)
@@ -3520,7 +3459,6 @@ PACKET_HANDLER(UnicodeTalk)
 
 PACKET_HANDLER(ClientTalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_AbyssPacket03First)
     {
         bool parse = true;
@@ -3561,7 +3499,6 @@ PACKET_HANDLER(ClientTalk)
 
 PACKET_HANDLER(MultiPlacement)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3575,7 +3512,6 @@ PACKET_HANDLER(MultiPlacement)
 
 PACKET_HANDLER(GraphicEffect)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3716,7 +3652,6 @@ PACKET_HANDLER(GraphicEffect)
 
 PACKET_HANDLER(DeathScreen)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t action = ReadUInt8();
 
     if (action != 1)
@@ -3742,7 +3677,6 @@ PACKET_HANDLER(DeathScreen)
 
 PACKET_HANDLER(PlaySoundEffect)
 {
-    DEBUG_TRACE_FUNCTION;
     Move(1);
     uint16_t index = ReadUInt16BE();
     const uint16_t _volume = ReadUInt16BE();
@@ -3754,7 +3688,6 @@ PACKET_HANDLER(PlaySoundEffect)
 
 PACKET_HANDLER(PlayMusic)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t index = ReadUInt16BE();
 
     Info(Network, "play music 0x%04X", index);
@@ -3769,7 +3702,6 @@ PACKET_HANDLER(PlayMusic)
 
 PACKET_HANDLER(DragAnimation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3878,7 +3810,6 @@ PACKET_HANDLER(DragAnimation)
 
 PACKET_HANDLER(CorpseEquipment)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3907,7 +3838,6 @@ PACKET_HANDLER(CorpseEquipment)
 
 PACKET_HANDLER(ASCIIPrompt)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3919,7 +3849,6 @@ PACKET_HANDLER(ASCIIPrompt)
 
 PACKET_HANDLER(UnicodePrompt)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3931,7 +3860,6 @@ PACKET_HANDLER(UnicodePrompt)
 
 PACKET_HANDLER(CharacterAnimation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3962,7 +3890,6 @@ PACKET_HANDLER(CharacterAnimation)
 
 PACKET_HANDLER(NewCharacterAnimation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3995,7 +3922,6 @@ PACKET_HANDLER(NewCharacterAnimation)
 
 PACKET_HANDLER(DisplayQuestArrow)
 {
-    DEBUG_TRACE_FUNCTION;
     g_QuestArrow.Timer = g_Ticks + 1000;
     g_QuestArrow.Enabled = (ReadUInt8() != 0);
     g_QuestArrow.X = ReadUInt16BE();
@@ -4004,13 +3930,11 @@ PACKET_HANDLER(DisplayQuestArrow)
 
 PACKET_HANDLER(ClientViewRange)
 {
-    DEBUG_TRACE_FUNCTION;
     g_ConfigManager.UpdateRange = ReadUInt8();
 }
 
 PACKET_HANDLER(KrriosClientSpecial)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t type = ReadUInt8();
     if (type == 0xFE)
     {
@@ -4020,7 +3944,6 @@ PACKET_HANDLER(KrriosClientSpecial)
 
 PACKET_HANDLER(AssistVersion)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t version = ReadUInt32BE();
     // CHECK: if this is correct for the use case where ClientVersion != ProtocolClientVersion
     CPacketAssistVersion(version, g_Config.ProtocolClientVersionString).Send();
@@ -4028,7 +3951,6 @@ PACKET_HANDLER(AssistVersion)
 
 PACKET_HANDLER(CharacterListNotification)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
     g_ConnectionScreen.SetConnectionFailed(true);
@@ -4037,7 +3959,6 @@ PACKET_HANDLER(CharacterListNotification)
 
 PACKET_HANDLER(ErrorCode)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t code = ReadUInt8();
 
     g_Game.InitScreen(GS_DELETE);
@@ -4052,7 +3973,6 @@ PACKET_HANDLER(ErrorCode)
 
 PACKET_HANDLER(AttackCharacter)
 {
-    DEBUG_TRACE_FUNCTION;
     g_LastAttackObject = ReadUInt32BE();
 
     if (g_LastAttackObject != 0 && g_World != nullptr)
@@ -4068,7 +3988,6 @@ PACKET_HANDLER(AttackCharacter)
 
 PACKET_HANDLER(Season)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4099,7 +4018,6 @@ PACKET_HANDLER(Season)
 
 PACKET_HANDLER(DisplayDeath)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4132,15 +4050,12 @@ PACKET_HANDLER(DisplayDeath)
 
 PACKET_HANDLER(OpenChat)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t newbuf[4] = { 0xf0, 0x00, 0x04, 0xff };
     g_Game.Send(newbuf, 4);
 }
 
 PACKET_HANDLER(DisplayClilocString)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_World == nullptr)
     {
         return;
@@ -4211,7 +4126,6 @@ PACKET_HANDLER(DisplayClilocString)
 
 PACKET_HANDLER(MegaCliloc)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4357,7 +4271,6 @@ PACKET_HANDLER(MegaCliloc)
 
 PACKET_HANDLER(Damage)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4405,7 +4318,6 @@ PACKET_HANDLER(Damage)
 
 PACKET_HANDLER(BuffDebuff)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4568,7 +4480,6 @@ PACKET_HANDLER(BuffDebuff)
 
 PACKET_HANDLER(SecureTrading)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4643,7 +4554,6 @@ PACKET_HANDLER(SecureTrading)
 
 PACKET_HANDLER(TextEntryDialog)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4674,7 +4584,6 @@ PACKET_HANDLER(TextEntryDialog)
 
 PACKET_HANDLER(OpenMenu)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4801,7 +4710,6 @@ PACKET_HANDLER(OpenMenu)
 
 void CPacketManager::AddHTMLGumps(CGump *gump, std::vector<HTMLGumpDataInfo> &list)
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < (int)list.size(); i++)
     {
         HTMLGumpDataInfo &data = list[i];
@@ -4878,7 +4786,6 @@ void CPacketManager::AddHTMLGumps(CGump *gump, std::vector<HTMLGumpDataInfo> &li
 
 PACKET_HANDLER(OpenGump)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5394,7 +5301,6 @@ PACKET_HANDLER(OpenGump)
 
 PACKET_HANDLER(OpenCompressedGump)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5500,7 +5406,6 @@ PACKET_HANDLER(OpenCompressedGump)
 
 PACKET_HANDLER(DyeData)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
     Move(2);
     uint16_t graphic = ReadUInt16BE();
@@ -5516,7 +5421,6 @@ PACKET_HANDLER(DyeData)
 
 PACKET_HANDLER(DisplayMap)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5568,7 +5472,6 @@ PACKET_HANDLER(DisplayMap)
 
 PACKET_HANDLER(MapData)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5626,7 +5529,6 @@ PACKET_HANDLER(MapData)
 
 PACKET_HANDLER(TipWindow)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t flag = ReadUInt8();
 
     if (flag != 1) //1 - ignore
@@ -5653,7 +5555,6 @@ PACKET_HANDLER(TipWindow)
 
 PACKET_HANDLER(CharacterProfile)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5669,7 +5570,6 @@ PACKET_HANDLER(CharacterProfile)
 
 PACKET_HANDLER(BulletinBoardData)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5825,7 +5725,6 @@ PACKET_HANDLER(BulletinBoardData)
 
 PACKET_HANDLER(OpenBook) // 0x93
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5846,7 +5745,6 @@ PACKET_HANDLER(OpenBook) // 0x93
 
 PACKET_HANDLER(OpenBookNew) // 0xD4
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5878,7 +5776,6 @@ PACKET_HANDLER(OpenBookNew) // 0xD4
 
 PACKET_HANDLER(BookData)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5929,7 +5826,6 @@ PACKET_HANDLER(BookData)
 
 PACKET_HANDLER(BuyList)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6051,7 +5947,6 @@ PACKET_HANDLER(BuyList)
 
 PACKET_HANDLER(SellList)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6122,7 +6017,6 @@ PACKET_HANDLER(SellList)
 
 PACKET_HANDLER(BuyReply)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
     uint8_t flag = ReadUInt8();
 
@@ -6134,13 +6028,11 @@ PACKET_HANDLER(BuyReply)
 
 PACKET_HANDLER(Logout)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.LogOut();
 }
 
 PACKET_HANDLER(OPLInfo)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled)
     {
         uint32_t serial = ReadUInt32BE();
@@ -6155,7 +6047,6 @@ PACKET_HANDLER(OPLInfo)
 
 PACKET_HANDLER(CustomHouse)
 {
-    DEBUG_TRACE_FUNCTION;
     const bool _compressed = ReadUInt8() == 0x03;
     (void)_compressed;
     bool enableResponse = ReadUInt8() == 0x01;
@@ -6339,7 +6230,6 @@ PACKET_HANDLER(CustomHouse)
 
 PACKET_HANDLER(CrossMessages)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t command = ReadUInt16BE();
     uint8_t type = command >> 12;
     command &= 0x0FFF;
@@ -6637,7 +6527,6 @@ PACKET_HANDLER(CrossMessages)
 
 PACKET_HANDLER(PacketsList)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6661,7 +6550,6 @@ PACKET_HANDLER(PacketsList)
 
 PACKET_HANDLER(MovePlayer)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6673,7 +6561,6 @@ PACKET_HANDLER(MovePlayer)
 
 PACKET_HANDLER(Pathfinding)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6701,8 +6588,6 @@ void CPacketManager::SetCachedGumpCoords(uint32_t id, int x, int y)
 
 PACKET_HANDLER(BoatMoving)
 {
-    DEBUG_TRACE_FUNCTION;
-
     // FIXME: disable BoatMoving for the 0.1.9.6 patch
     //return;
     uint32_t boatSerial = ReadUInt32BE();

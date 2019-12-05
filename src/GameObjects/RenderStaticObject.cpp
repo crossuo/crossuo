@@ -26,7 +26,6 @@ CRenderStaticObject::CRenderStaticObject(
     char z)
     : CMapObject(renderType, serial, graphic, color, x, y, z)
 {
-    DEBUG_TRACE_FUNCTION;
     m_TiledataPtr = &g_Data.m_Static[graphic];
 
     if (m_TiledataPtr->Height > 5)
@@ -78,7 +77,6 @@ CRenderStaticObject::CRenderStaticObject(
 
 CRenderStaticObject::~CRenderStaticObject()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_TextControl != nullptr)
     {
         delete m_TextControl;
@@ -219,10 +217,8 @@ bool CRenderStaticObject::IsNoDrawTile(uint16_t graphic)
 void CRenderStaticObject::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
-#if UO_DEBUG_INFO != 0
+
     g_RenderedObjectsCountInGameWindow++;
-#endif
 
     bool useAlpha = (m_DrawTextureColor[3] != 0xFF);
 
@@ -278,7 +274,6 @@ void CRenderStaticObject::Draw(int x, int y)
 
 void CRenderStaticObject::Select(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_DrawTextureColor[3] != 0xFF)
     {
         if (!IsTranslucent() || m_DrawTextureColor[3] != TRANSLUCENT_ALPHA)
@@ -295,7 +290,6 @@ void CRenderStaticObject::Select(int x, int y)
 
 void CRenderStaticObject::AddText(CTextData *msg)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_TextControl != nullptr)
     {
         msg->Owner = this;
@@ -308,7 +302,6 @@ void CRenderStaticObject::AddText(CTextData *msg)
 
 bool CRenderStaticObject::TextCanBeTransparent(CRenderTextObject *text)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     QFOR(item, m_TextControl->m_Items, CTextData *)
@@ -325,7 +318,6 @@ bool CRenderStaticObject::TextCanBeTransparent(CRenderTextObject *text)
 
 bool CRenderStaticObject::TranparentTest(int playerZPlus5)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     if (m_Z <= playerZPlus5 - m_TiledataPtr->Height)

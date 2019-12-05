@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include "../Globals.h" // SCREEN_EFFECT_*, SET_TO_WHITE_THEN_BLACK, g_Ticks, SET_TO_BLACK, SEM_*
 
 class CScreenEffectManager
 {

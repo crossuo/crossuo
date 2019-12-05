@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <stdint.h>
+#include <common/str.h>
+#include <map>
 
 class CObjectProperty
 {

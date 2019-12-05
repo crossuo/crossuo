@@ -32,13 +32,19 @@ IGameString::IGameString()
 
 IGameString::~IGameString()
 {
-    RELEASE_POINTER(m_DataA);
-    RELEASE_POINTER(m_DataW);
+    if (m_DataA)
+        delete m_DataA;
+    m_DataA = nullptr;
+    if (m_DataW)
+        delete m_DataW;
+    m_DataW = nullptr;
 }
 
 IGameString &IGameString::operator()(const std::string &str)
 {
-    RELEASE_POINTER(m_DataA);
+    if (m_DataA)
+        delete m_DataA;
+    m_DataA = nullptr;
 
     m_Unicode = false;
     if (str.length() != 0u)
@@ -53,7 +59,9 @@ IGameString &IGameString::operator()(const std::string &str)
 
 IGameString &IGameString::operator()(const std::wstring &str)
 {
-    RELEASE_POINTER(m_DataW);
+    if (m_DataW)
+        delete m_DataW;
+    m_DataW = nullptr;
 
     m_Unicode = true;
     if (str.length() != 0u)

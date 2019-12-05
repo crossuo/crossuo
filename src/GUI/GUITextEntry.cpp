@@ -8,6 +8,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "../Globals.h" // g_GumpSelectedElement, ToColor*
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -37,25 +38,21 @@ CGUITextEntry::CGUITextEntry(
 
 CGUITextEntry::~CGUITextEntry()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Entry.Clear();
 }
 
 bool CGUITextEntry::EntryPointerHere()
 {
-    DEBUG_TRACE_FUNCTION;
     return (g_EntryPointer == &m_Entry);
 }
 
 CSize CGUITextEntry::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     return CSize(m_Entry.m_Texture.Width, m_Entry.m_Texture.Height);
 }
 
 void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focused)
 {
-    DEBUG_TRACE_FUNCTION;
     UseGlobalColor = use;
 
     if (use)
@@ -94,13 +91,11 @@ void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focuse
 
 void CGUITextEntry::OnClick(CGump *gump, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Entry.OnClick(gump, Font, Unicode, x, y, Align, TextFlags);
 }
 
 void CGUITextEntry::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -109,7 +104,6 @@ void CGUITextEntry::OnMouseEnter()
 
 void CGUITextEntry::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;
@@ -118,7 +112,6 @@ void CGUITextEntry::OnMouseExit()
 
 void CGUITextEntry::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t color = Color;
 
     if (!UseGlobalColor)
@@ -155,7 +148,7 @@ void CGUITextEntry::PrepareTextures()
 void CGUITextEntry::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     int y = m_Y;
     uint16_t color = Color;
 
@@ -299,7 +292,6 @@ void CGUITextEntry::Draw(bool checktrans)
 
 bool CGUITextEntry::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

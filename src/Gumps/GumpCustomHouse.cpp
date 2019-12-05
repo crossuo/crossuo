@@ -125,8 +125,6 @@ void ParseCustomHouseObjectFile(std::vector<T> &list, const fs_path &path)
 CGumpCustomHouse::CGumpCustomHouse(int serial, int x, int y)
     : CGump(GT_CUSTOM_HOUSE, serial, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_FloorVisionState[0] = m_FloorVisionState[1] = m_FloorVisionState[2] = m_FloorVisionState[3] =
         CHGVS_NORMAL;
 
@@ -242,7 +240,6 @@ CGumpCustomHouse::~CGumpCustomHouse()
 
 void CGumpCustomHouse::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if ((g_GumpTranslate.X != 0.0f) || (g_GumpTranslate.Y != 0.0f))
@@ -253,8 +250,6 @@ void CGumpCustomHouse::CalculateGumpState()
 
 void CGumpCustomHouse::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint32_t id = g_SelectedObject.Serial;
 
     if (id >= ID_GCH_ITEM_IN_LIST)
@@ -1180,8 +1175,6 @@ std::pair<int, int> CGumpCustomHouse::ExistsInList(CUSTOM_HOUSE_GUMP_STATE &stat
 
 void CGumpCustomHouse::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_DataBox->Clear();
     m_DataBoxGUI->Clear();
 
@@ -1391,7 +1384,6 @@ void CGumpCustomHouse::UpdateContent()
 
 void CGumpCustomHouse::UpdateMaxPage()
 {
-    DEBUG_TRACE_FUNCTION;
     MaxPage = 1;
 
     switch (State)
@@ -2838,7 +2830,6 @@ void CGumpCustomHouse::GenerateFloorPlace()
 
 void CGumpCustomHouse::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_DataBox->m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXTENTRY)
@@ -2853,7 +2844,6 @@ void CGumpCustomHouse::GUMP_TEXT_ENTRY_EVENT_C
 
 void CGumpCustomHouse::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     QFOR(item, m_DataBox->m_Items, CBaseGUI *)
@@ -2869,8 +2859,6 @@ void CGumpCustomHouse::OnLeftMouseButtonUp()
 
 void CGumpCustomHouse::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (serial >= ID_GCH_ITEM_IN_LIST)
     {
         int index = serial - ID_GCH_ITEM_IN_LIST;

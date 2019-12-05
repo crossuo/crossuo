@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <common/str.h>
+#include <deque>
 #include "GameObjects/GameWorld.h"
 #include <xuocore/plugininterface.h> // PluginEntry typedef
 

@@ -41,7 +41,6 @@ CGumpMap::CGumpMap(
     , Width(width)
     , Height(height)
 {
-    DEBUG_TRACE_FUNCTION;
     Graphic = graphic;
 
     Add(new CGUIResizepic(0, 0x1432, 0, 0, Width + 44, Height + 61)); //Map Gump
@@ -77,7 +76,6 @@ CGumpMap::~CGumpMap()
 
 void CGumpMap::SetPlotState(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_PlotState = val;
     m_PlotCourse->Visible = (val == 0);
     m_StopPlotting->Visible = (val == 1);
@@ -88,7 +86,6 @@ void CGumpMap::SetPlotState(int val)
 
 int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
 {
-    DEBUG_TRACE_FUNCTION;
     int tempX = x2 - x1;
     int tempY = y2 - y1;
 
@@ -169,7 +166,6 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
 
 void CGumpMap::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_DataBox != nullptr)
     {
         int serial = 1;
@@ -215,8 +211,6 @@ void CGumpMap::PrepareContent()
 
 void CGumpMap::GenerateFrame(bool stop)
 {
-    DEBUG_TRACE_FUNCTION;
-
     //m_Labels
 
     if (m_DataBox != nullptr)
@@ -322,7 +316,6 @@ void CGumpMap::GenerateFrame(bool stop)
 
 CRenderObject *CGumpMap::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = CGump::Select();
 
     if (m_DataBox != nullptr)
@@ -368,7 +361,6 @@ CRenderObject *CGumpMap::Select()
 
 void CGumpMap::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GM_PLOT_COURSE || serial == ID_GM_STOP_PLOTTING) //Plot Course /Stop Plotting
     {
         CPacketMapMessage(Serial, MM_EDIT, m_PlotState).Send();
@@ -388,7 +380,6 @@ void CGumpMap::GUMP_BUTTON_EVENT_C
 
 void CGumpMap::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonDown();
 
     m_PinTimer = g_Ticks + 300;
@@ -396,7 +387,6 @@ void CGumpMap::OnLeftMouseButtonDown()
 
 void CGumpMap::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (m_DataBox != nullptr && g_PressedObject.LeftObject != nullptr)

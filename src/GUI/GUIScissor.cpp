@@ -20,7 +20,7 @@ CGUIScissor::~CGUIScissor()
 void CGUIScissor::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (Enabled)
     {
         int x = m_X;

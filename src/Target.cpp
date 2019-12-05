@@ -27,7 +27,6 @@ CTarget::CTarget()
 
 void CTarget::Reset()
 {
-    DEBUG_TRACE_FUNCTION;
     //Чистимся
     memset(m_Data, 0, sizeof(m_Data));
     memset(m_LastData, 0, sizeof(m_LastData));
@@ -71,7 +70,6 @@ void CTarget::SetLastTargetObject(int serial)
 
 void CTarget::SetData(CDataReader &reader)
 {
-    DEBUG_TRACE_FUNCTION;
     //Копируем буффер
     memcpy(&m_Data[0], reader.Start, reader.Size);
 
@@ -85,7 +83,6 @@ void CTarget::SetData(CDataReader &reader)
 
 void CTarget::SetMultiData(CDataReader &reader)
 {
-    DEBUG_TRACE_FUNCTION;
     //Устанавливаем соответствующие значения
     Type = 1;
     CursorType = 0;
@@ -107,7 +104,6 @@ void CTarget::SetMultiData(CDataReader &reader)
 
 void CTarget::SendTargetObject(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -151,7 +147,6 @@ void CTarget::SendTargetObject(int serial)
 
 void CTarget::SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -177,7 +172,6 @@ void CTarget::SendTargetTile(uint16_t tileID, short x, short y, char z)
 
 void CTarget::SendCancelTarget()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -202,7 +196,6 @@ void CTarget::SendCancelTarget()
 
 void CTarget::Plugin_SendTargetObject(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -247,7 +240,6 @@ void CTarget::Plugin_SendTargetObject(int serial)
 
 void CTarget::Plugin_SendTargetTile(uint16_t tileID, short x, short y, char z)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -273,7 +265,6 @@ void CTarget::Plugin_SendTargetTile(uint16_t tileID, short x, short y, char z)
 
 void CTarget::Plugin_SendCancelTarget()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -289,7 +280,6 @@ void CTarget::Plugin_SendCancelTarget()
 
 void CTarget::SendLastTarget()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Targeting)
     {
         return; //Если в клиенте нет таргета - выход
@@ -307,8 +297,6 @@ void CTarget::SendLastTarget()
 
 void CTarget::SendTarget()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Type != 2)
     {
         g_Game.Send(m_Data, sizeof(m_Data));
@@ -323,8 +311,6 @@ void CTarget::SendTarget()
 
 void CTarget::Plugin_SendTarget()
 {
-    DEBUG_TRACE_FUNCTION;
-
     UOMsg_Send(m_Data, sizeof(m_Data));
     memset(m_Data, 0, sizeof(m_Data));
     Targeting = false;
@@ -335,7 +321,6 @@ void CTarget::Plugin_SendTarget()
 
 void CTarget::UnloadMulti()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Multi != nullptr)
     {
         delete m_Multi;
@@ -345,7 +330,6 @@ void CTarget::UnloadMulti()
 
 void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 {
-    DEBUG_TRACE_FUNCTION;
     UnloadMulti();
 
     CIndexMulti &index = g_Index.m_Multi[MultiGraphic - 1];
@@ -402,7 +386,6 @@ void CTarget::LoadMulti(int offsetX, int offsetY, char offsetZ)
 
 void CTarget::AddMultiObject(CMultiObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Multi == nullptr)
     {
         m_Multi = new CMulti(obj->GetX(), obj->GetY());
@@ -474,7 +457,6 @@ void CTarget::AddMultiObject(CMultiObject *obj)
 
 CMulti *CTarget::GetMultiAtXY(short x, short y)
 {
-    DEBUG_TRACE_FUNCTION;
     CMulti *multi = m_Multi;
 
     while (multi != nullptr)

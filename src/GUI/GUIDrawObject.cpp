@@ -23,7 +23,6 @@ CGUIDrawObject::~CGUIDrawObject()
 
 CSize CGUIDrawObject::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CSize size;
     auto spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr)
@@ -36,7 +35,6 @@ CSize CGUIDrawObject::GetSize()
 
 void CGUIDrawObject::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Color != 0)
     {
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
@@ -63,14 +61,13 @@ void CGUIDrawObject::SetShaderMode()
 
 void CGUIDrawObject::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(Graphic);
 }
 
 void CGUIDrawObject::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     auto spr = g_Game.ExecuteGump(GetDrawGraphic());
     if (spr != nullptr && spr->Texture)
     {
@@ -81,7 +78,6 @@ void CGUIDrawObject::Draw(bool checktrans)
 
 bool CGUIDrawObject::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {

@@ -50,7 +50,6 @@ std::vector<CContainerOffset> g_ContainerOffset;
 
 void CContainerRect::Calculate(uint16_t gumpID)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(gumpID);
     if (spr != nullptr)
     {

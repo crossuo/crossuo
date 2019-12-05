@@ -44,7 +44,6 @@ struct FRAME_OUTPUT_INFO
 void CalculateFrameInformation(
     FRAME_OUTPUT_INFO &info, CGameObject *obj, bool mirror, uint8_t animIndex)
 {
-    DEBUG_TRACE_FUNCTION;
     const auto dir = g_AnimationManager.SelectAnim.Direction;
     const auto grp = g_AnimationManager.SelectAnim.Group;
     const auto dim = g_AnimationManager.GetAnimationDimensions(obj, animIndex, dir, grp);
@@ -129,7 +128,6 @@ const int CAnimationManager::m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT
 
 CAnimationManager::CAnimationManager()
 {
-    DEBUG_TRACE_FUNCTION;
     memset(m_AddressIdx, 0, sizeof(m_AddressIdx));
     memset(m_SizeIdx, 0, sizeof(m_SizeIdx));
 
@@ -139,7 +137,6 @@ CAnimationManager::CAnimationManager()
 
 CAnimationManager::~CAnimationManager()
 {
-    DEBUG_TRACE_FUNCTION;
     ClearUnusedTextures(g_Ticks + 100000);
 }
 
@@ -188,7 +185,6 @@ void CAnimationManager::UpdateAnimationAddressTable()
 
 void CAnimationManager::Load(uint32_t *verdata)
 {
-    DEBUG_TRACE_FUNCTION;
     size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
 
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
@@ -365,7 +361,6 @@ void CAnimationManager::Load(uint32_t *verdata)
 
 void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion >= CV_500A)
     {
         static const std::string typeNames[5] = {
@@ -928,8 +923,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", id);
@@ -955,7 +948,6 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
 {
-    DEBUG_TRACE_FUNCTION;
     DEBUG(Data, "gr: 0x%04X, %i", id, g_Index.m_Anim[id].Type);
     switch (g_Index.m_Anim[id].Type)
     {
@@ -976,7 +968,6 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
 
 void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (dir)
     {
         case 2:
@@ -1022,7 +1013,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
 
 void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (dir)
     {
         case 0:
@@ -1060,7 +1050,6 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
 
 void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
 {
-    DEBUG_TRACE_FUNCTION;
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
     for (auto it = m_UsedAnimList.begin(); it != m_UsedAnimList.end();)
@@ -1095,7 +1084,6 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
 bool CAnimationManager::TestPixels(
     CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj == nullptr)
     {
         return false;
@@ -1166,7 +1154,7 @@ void CAnimationManager::Draw(
     CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (obj == nullptr)
     {
         return;
@@ -1504,7 +1492,6 @@ void CAnimationManager::Draw(
 
 void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y)
 {
-    DEBUG_TRACE_FUNCTION;
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
 
     auto dir = SelectAnim.Direction;
@@ -1633,7 +1620,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
     m_EquipConvItem = nullptr;
-    DEBUG_TRACE_FUNCTION;
+
     m_Transform = false;
 
     int drawX = x + obj->OffsetX;
@@ -2102,7 +2089,6 @@ void CAnimationManager::PrepareTargetAttackGump(
 
 bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     y -= 3;
     m_Sitting = obj->IsSitting();
     SelectAnim.Direction = 0;
@@ -2160,8 +2146,6 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return;
@@ -2192,8 +2176,6 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 
 bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return false;
@@ -2214,7 +2196,6 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT)
     {
@@ -2276,8 +2257,6 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     CGameObject *obj, uint8_t frameIndex, uint8_t defaultDirection, uint8_t defaultGroup)
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint8_t dir = defaultDirection & 0x7F;
     uint8_t animGroup = defaultGroup;
     uint16_t id = obj->GetMountAnimation();
@@ -2329,7 +2308,6 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
 DRAW_FRAME_INFORMATION
 CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLayers)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Sitting = 0;
     SelectAnim.Direction = 0;
 
@@ -2476,7 +2454,6 @@ bool CAnimationManager::DrawEquippedLayers(
     uint8_t animIndex,
     int lightOffset)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     std::vector<CGameItem *> &list = obj->m_DrawLayeredObjects;
@@ -2543,7 +2520,6 @@ bool CAnimationManager::DrawEquippedLayers(
 
 bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     switch (layer)

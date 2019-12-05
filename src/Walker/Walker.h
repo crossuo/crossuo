@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "../CrossPCH.h" // REMOVE
+#include <stdint.h>
+#include "../Globals.h" // MAX_STEPS_COUNT
 
 class CStepInfo
 {

@@ -11,7 +11,6 @@
 #include "../Managers/FontsManager.h"
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
-#include "../GLEngine/GLEngine.h" // REMOVE
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -29,7 +28,6 @@ CGUIShopItem::CGUIShopItem(
     , Price(price)
     , Name(name)
 {
-    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
     CreateCountText(0);
@@ -39,7 +37,6 @@ CGUIShopItem::CGUIShopItem(
 
 CGUIShopItem::~CGUIShopItem()
 {
-    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
     m_CountText.Clear();
 }
@@ -102,7 +99,6 @@ void CGUIShopItem::UpdateOffsets()
 
 void CGUIShopItem::OnClick()
 {
-    DEBUG_TRACE_FUNCTION;
     Selected = false;
 
     for (CBaseGUI *item = this; item != nullptr; item = (CBaseGUI *)item->m_Next)
@@ -129,7 +125,6 @@ void CGUIShopItem::OnClick()
 
 void CGUIShopItem::CreateNameText()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t textColor = 0x021F;
 
     if (Selected)
@@ -143,7 +138,6 @@ void CGUIShopItem::CreateNameText()
 
 void CGUIShopItem::CreateCountText(int lostCount)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t textColor = 0x021F;
 
     if (Selected)
@@ -156,8 +150,6 @@ void CGUIShopItem::CreateCountText(int lostCount)
 
 void CGUIShopItem::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Serial >= 0x40000000)
     {
         g_Game.ExecuteStaticArt(Graphic);
@@ -196,8 +188,6 @@ void CGUIShopItem::PrepareTextures()
 
 void CGUIShopItem::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Color != 0)
     {
         auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
@@ -226,7 +216,7 @@ void CGUIShopItem::SetShaderMode()
 void CGUIShopItem::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     CGLTexture *th = nullptr;
 
 #ifndef NEW_RENDERER_ENABLED
@@ -360,7 +350,6 @@ void CGUIShopItem::Draw(bool checktrans)
 
 bool CGUIShopItem::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     const int x = g_MouseManager.Position.X - m_X;
     const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= -10 && x < 200 && y < m_MaxOffset);

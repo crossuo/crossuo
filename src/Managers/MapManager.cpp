@@ -1,6 +1,7 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <algorithm>
 #include "MapManager.h"
 #include "GumpManager.h"
 #include <common/checksum.h>
@@ -29,7 +30,6 @@ CMapManager::CMapManager()
 
 CMapManager::~CMapManager()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Blocks != nullptr)
     {
         ClearUsedBlocks();
@@ -43,7 +43,6 @@ CMapManager::~CMapManager()
 
 void CMapManager::CreateBlocksTable()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int map = 0; map < MAX_MAPS_COUNT; map++)
     {
         CreateBlockTable((int)map);
@@ -52,7 +51,6 @@ void CMapManager::CreateBlocksTable()
 
 void CMapManager::CreateBlockTable(int map)
 {
-    DEBUG_TRACE_FUNCTION;
     MAP_INDEX_LIST &list = m_BlockData[map];
     CSize &size = g_MapBlockSize[map];
 
@@ -151,7 +149,6 @@ void CMapManager::CreateBlockTable(int map)
 
 void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
 {
-    DEBUG_TRACE_FUNCTION;
     MAP_INDEX_LIST &list = m_BlockData[0];
     CSize &size = g_MapBlockSize[0];
 
@@ -167,7 +164,6 @@ void CMapManager::SetPatchedMapBlock(size_t block, size_t address)
 
 void CMapManager::ResetPatchesInBlockTable()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int map = 0; map < MAX_MAPS_COUNT; map++)
     {
         MAP_INDEX_LIST &list = m_BlockData[map];
@@ -201,7 +197,6 @@ void CMapManager::ResetPatchesInBlockTable()
 
 void CMapManager::ApplyPatches(CDataReader &stream)
 {
-    DEBUG_TRACE_FUNCTION;
     ResetPatchesInBlockTable();
 
     PatchesCount = stream.ReadUInt32BE();
@@ -302,7 +297,6 @@ void CMapManager::ApplyPatches(CDataReader &stream)
 
 void CMapManager::UpdatePatched()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player == nullptr)
     {
         return;
@@ -349,7 +343,6 @@ void CMapManager::UpdatePatched()
 
 CIndexMap *CMapManager::GetIndex(int map, int blockX, int blockY)
 {
-    DEBUG_TRACE_FUNCTION;
     if (map >= MAX_MAPS_COUNT)
     {
         return nullptr;
@@ -436,7 +429,6 @@ char CMapManager::CalculateNearZ(char defaultZ, int x, int y, int z)
 
 void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 {
-    DEBUG_TRACE_FUNCTION;
     CIndexMap *indexMap = GetIndex(GetActualMap(), blockX, blockY);
 
     if (indexMap == nullptr || indexMap->MapAddress == 0)
@@ -489,7 +481,6 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
 
 void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
 {
-    DEBUG_TRACE_FUNCTION;
     int blockX = x / 8;
     int blockY = y / 8;
     uint32_t index = (blockX * g_MapBlockSize[g_CurrentMap].Height) + blockY;
@@ -526,7 +517,6 @@ void CMapManager::GetMapZ(int x, int y, int &groundZ, int &staticZ)
 
 void CMapManager::ClearUnusedBlocks()
 {
-    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
     uint32_t ticks = g_Ticks - CLEAR_TEXTURES_DELAY;
     int count = 0;
@@ -554,7 +544,6 @@ void CMapManager::ClearUnusedBlocks()
 
 void CMapManager::ClearUsedBlocks()
 {
-    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
 
     while (block != nullptr)
@@ -572,7 +561,6 @@ void CMapManager::ClearUsedBlocks()
 
 void CMapManager::Init(bool delayed)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player == nullptr)
     {
         return;
@@ -654,7 +642,6 @@ void CMapManager::Init(bool delayed)
 
 void CMapManager::LoadBlock(CMapBlock *block)
 {
-    DEBUG_TRACE_FUNCTION;
     CIndexMap *indexMap = GetIndex(GetActualMap(), block->X, block->Y);
 
     if (indexMap == nullptr || indexMap->MapAddress == 0)
@@ -716,7 +703,6 @@ void CMapManager::LoadBlock(CMapBlock *block)
 
 int CMapManager::GetActualMap()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentMap == 1 && (((g_FileManager.m_MapUOP[1].Start == nullptr) &&
                                (g_FileManager.m_MapMul[1].Start == nullptr)) ||
                               (g_FileManager.m_StaticIdx[1].Start == nullptr) ||
@@ -730,7 +716,6 @@ int CMapManager::GetActualMap()
 
 void CMapManager::AddRender(CRenderWorldObject *item)
 {
-    DEBUG_TRACE_FUNCTION;
     int itemX = item->GetX();
     int itemY = item->GetY();
 
@@ -760,7 +745,6 @@ void CMapManager::AddRender(CRenderWorldObject *item)
 
 CMapBlock *CMapManager::GetBlock(uint32_t index)
 {
-    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = nullptr;
 
     if (index < MaxBlockIndex)
@@ -778,7 +762,6 @@ CMapBlock *CMapManager::GetBlock(uint32_t index)
 
 CMapBlock *CMapManager::AddBlock(uint32_t index)
 {
-    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)Add(new CMapBlock(index));
 
     m_Blocks[index] = block;
@@ -788,7 +771,6 @@ CMapBlock *CMapManager::AddBlock(uint32_t index)
 
 void CMapManager::DeleteBlock(uint32_t index)
 {
-    DEBUG_TRACE_FUNCTION;
     CMapBlock *block = (CMapBlock *)m_Items;
 
     while (block != nullptr)

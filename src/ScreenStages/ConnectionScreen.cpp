@@ -20,7 +20,6 @@ CConnectionScreen::~CConnectionScreen()
 
 void CConnectionScreen::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseScreen::Init();
     m_Text = "";
     m_ConnectionFailed = false;
@@ -74,7 +73,6 @@ void CConnectionScreen::SetTextA(const std::string &val)
 
 void CConnectionScreen::ProcessSmoothAction(uint8_t action)
 {
-    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
     {
         action = SmoothScreenAction;
@@ -100,8 +98,6 @@ void CConnectionScreen::ProcessSmoothAction(uint8_t action)
 
 void CConnectionScreen::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     switch (key)
     {

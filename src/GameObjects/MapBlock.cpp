@@ -14,7 +14,6 @@ CMapBlock::CMapBlock(int index)
     : Index(index)
     , LastAccessTime(SDL_GetTicks())
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -26,7 +25,6 @@ CMapBlock::CMapBlock(int index)
 
 CMapBlock::~CMapBlock()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -56,7 +54,6 @@ CMapBlock::~CMapBlock()
 
 bool CMapBlock::HasNoExternalData()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int x = 0; x < 8; x++)
     {
         for (int y = 0; y < 8; y++)
@@ -77,7 +74,6 @@ bool CMapBlock::HasNoExternalData()
 
 uint16_t CMapBlock::GetRadarColor(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
 
     while (obj != nullptr && obj->m_NextXY != nullptr)
@@ -108,7 +104,6 @@ uint16_t CMapBlock::GetRadarColor(int x, int y)
 
 void CMapBlock::CreateLandTextureRect()
 {
-    DEBUG_TRACE_FUNCTION;
     int map = g_MapManager.GetActualMap();
     for (int x = 0; x < 8; x++)
     {
@@ -212,7 +207,6 @@ void CMapBlock::CreateLandTextureRect()
 
 bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     for (int i = -1; i < 2 && !result; i++)
     {
@@ -236,8 +230,6 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 
 char CMapBlock::GetLandZ(int x, int y, int map)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (x < 0 || y < 0)
     {
         return -125;
@@ -257,7 +249,6 @@ char CMapBlock::GetLandZ(int x, int y, int map)
 
 CLandObject *CMapBlock::GetLand(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CMapObject *obj = Block[x][y];
     while (obj != nullptr)
     {
@@ -274,7 +265,6 @@ CLandObject *CMapBlock::GetLand(int x, int y)
 
 void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     item->RemoveRender();
 
     int priorityZ = item->GetZ();
@@ -391,7 +381,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 
 CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
     while (obj != nullptr && obj->m_PrevXY != nullptr)
     {
@@ -402,7 +391,6 @@ CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 
 CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Block[x][y] != nullptr)
     {
         CMapObject *item = Block[x][y];

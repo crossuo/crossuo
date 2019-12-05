@@ -29,7 +29,6 @@ CGameCharacter::CGameCharacter(int serial)
 {
     NPC = true;
     NoDrawTile = false;
-    DEBUG_TRACE_FUNCTION;
 
     bool wantStatusRequest =
         (g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR) != nullptr) ||
@@ -53,7 +52,6 @@ CGameCharacter::CGameCharacter(int serial)
 
 CGameCharacter::~CGameCharacter()
 {
-    DEBUG_TRACE_FUNCTION;
     //!Чистим память
     m_Steps.clear();
 
@@ -128,7 +126,6 @@ void CGameCharacter::UpdateTextCoordinates()
 
 void CGameCharacter::UpdateHitsTexture(uint8_t hits)
 {
-    DEBUG_TRACE_FUNCTION;
     if (HitsPercent != hits || m_HitsTexture.Empty())
     {
         HitsPercent = hits;
@@ -157,7 +154,6 @@ void CGameCharacter::UpdateHitsTexture(uint8_t hits)
 
 int CGameCharacter::IsSitting()
 {
-    DEBUG_TRACE_FUNCTION;
     int result = 0;
     if (IsHuman() && FindLayer(OL_MOUNT) == nullptr &&
         !TestStepNoChangeDirection(GetAnimationGroup()))
@@ -309,15 +305,13 @@ int CGameCharacter::IsSitting()
 void CGameCharacter::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     if (TimeToRandomFidget < g_Ticks)
     {
         SetRandomFidgetAnimation();
     }
 
-#if UO_DEBUG_INFO != 0
     g_RenderedObjectsCountInGameWindow++;
-#endif
 
     uint32_t lastSBsel = g_StatusbarUnderMouse;
 
@@ -335,7 +329,6 @@ void CGameCharacter::Draw(int x, int y)
 
 void CGameCharacter::Select(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_AnimationManager.CharacterPixelsInXY(this, x, y))
     {
         g_SelectedObject.Init(this);
@@ -344,7 +337,6 @@ void CGameCharacter::Select(int x, int y)
 
 void CGameCharacter::OnGraphicChange(int direction)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (Graphic)
     {
         case 0x0190:
@@ -410,7 +402,6 @@ void CGameCharacter::SetAnimation(
     bool repeat,
     bool frameDirection)
 {
-    DEBUG_TRACE_FUNCTION;
     AnimationGroup = id;
     AnimIndex = 0;
     AnimationInterval = interval;
@@ -426,7 +417,6 @@ void CGameCharacter::SetAnimation(
 
 void CGameCharacter::ResetAnimationGroup(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
     AnimationFrameCount = 0;
     AnimationInterval = 0;
     AnimationRepeat = false;
@@ -439,7 +429,6 @@ void CGameCharacter::ResetAnimationGroup(uint8_t val)
 
 void CGameCharacter::SetRandomFidgetAnimation()
 {
-    DEBUG_TRACE_FUNCTION;
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
 
     if (FindLayer(OL_MOUNT) == nullptr)
@@ -464,7 +453,6 @@ void CGameCharacter::SetRandomFidgetAnimation()
 
 void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation)
 {
-    DEBUG_TRACE_FUNCTION;
     const uint8_t animAssociateTable[PAG_ANIMATION_COUNT][3] = {
         { LAG_WALK, HAG_WALK, PAG_WALK_UNARMED },
         { LAG_WALK, HAG_WALK, PAG_WALK_ARMED },
@@ -512,7 +500,6 @@ void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animatio
 void CGameCharacter::CorrectAnimationGroup(
     uint16_t graphic, ANIMATION_GROUPS group, uint8_t &animation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (group == AG_LOW)
     {
         switch (animation)
@@ -575,7 +562,6 @@ void CGameCharacter::CorrectAnimationGroup(
 
 bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     switch (group)
@@ -607,7 +593,6 @@ bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
 
 uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = checkGraphic;
 
     if (graphic == 0u)
@@ -855,7 +840,6 @@ void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
 
 uint16_t CGameCharacter::GetMountAnimation()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
 
     switch (graphic)
@@ -876,7 +860,6 @@ uint16_t CGameCharacter::GetMountAnimation()
 
 void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
 {
-    DEBUG_TRACE_FUNCTION;
     dir = Direction & 7;
 
     if (!m_Steps.empty())
@@ -1042,7 +1025,6 @@ void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
 
 CGameItem *CGameCharacter::FindSecureTradeBox()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CGameItem *)
     {
         if (obj->Graphic == 0x1E5E && (obj->Layer == 0u))

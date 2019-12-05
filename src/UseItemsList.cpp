@@ -9,7 +9,6 @@ CUseItemActions g_UseItemActions;
 
 void CUseItemActions::Add(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     for (auto i = m_List.begin(); i != m_List.end(); ++i)
     {
         if (*i == serial)
@@ -23,7 +22,6 @@ void CUseItemActions::Add(int serial)
 
 void CUseItemActions::Process()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Timer <= g_Ticks)
     {
         Timer = g_Ticks + 1000;

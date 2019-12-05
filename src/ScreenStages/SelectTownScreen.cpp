@@ -23,7 +23,6 @@ CSelectTownScreen::~CSelectTownScreen()
 
 void CSelectTownScreen::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseScreen::Init();
 
     if (g_Config.ClientVersion >= CV_70130)
@@ -49,7 +48,6 @@ void CSelectTownScreen::Init()
 
 void CSelectTownScreen::ProcessSmoothAction(uint8_t action)
 {
-    DEBUG_TRACE_FUNCTION;
     if (action == 0xFF)
     {
         action = SmoothScreenAction;

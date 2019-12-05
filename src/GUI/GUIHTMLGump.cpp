@@ -25,7 +25,6 @@ CGUIHTMLGump::CGUIHTMLGump(
     , HaveScrollbar(haveScrollbar)
 
 {
-    DEBUG_TRACE_FUNCTION;
     Serial = serial;
     Graphic = graphic;
 
@@ -38,14 +37,12 @@ CGUIHTMLGump::~CGUIHTMLGump()
 
 void CGUIHTMLGump::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
 
 void CGUIHTMLGump::Initalize(bool menu)
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     if (menu)
@@ -153,7 +150,6 @@ void CGUIHTMLGump::Initalize(bool menu)
 
 void CGUIHTMLGump::UpdateHeight(int height)
 {
-    DEBUG_TRACE_FUNCTION;
     Height = height;
     m_Background->Height = height;
     auto sprDown = g_Game.ExecuteGump(m_ButtonDown->Graphic);
@@ -179,14 +175,12 @@ void CGUIHTMLGump::UpdateHeight(int height)
 
 void CGUIHTMLGump::ResetDataOffset()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Slider->Value = 0;
     CurrentOffset.Reset();
 }
 
 void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, int &endX, int &endY)
 {
-    DEBUG_TRACE_FUNCTION;
     for (; item != nullptr; item = (CBaseGUI *)item->m_Next)
     {
         if (item->Type == GOT_HITBOX || !item->Visible)
@@ -228,7 +222,6 @@ void CGUIHTMLGump::CalculateDataSize(CBaseGUI *item, int &startX, int &startY, i
 
 void CGUIHTMLGump::CalculateDataSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *item = (CBaseGUI *)m_Items;
 
     for (int i = 0; i < 5; i++)
@@ -279,7 +272,6 @@ void CGUIHTMLGump::CalculateDataSize()
 
 bool CGUIHTMLGump::EntryPointerHere()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
@@ -293,7 +285,6 @@ bool CGUIHTMLGump::EntryPointerHere()
 
 bool CGUIHTMLGump::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
 
@@ -315,7 +306,6 @@ bool CGUIHTMLGump::Select()
 
 void CGUIHTMLGump::Scroll(bool up, int delay)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Slider != nullptr)
     {
         m_Slider->OnScroll(up, delay);

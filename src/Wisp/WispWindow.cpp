@@ -1,8 +1,10 @@
 // MIT License
 
+#include <algorithm>
 #include "WispWindow.h"
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include <common/utils.h> // countof
 #include "../Icon.h"
 #include "../Point.h"
 #include "../GameWindow.h"
@@ -15,7 +17,6 @@ WindowHandle CWindow::Handle = 0;
 
 CWindow::CWindow()
 {
-    DEBUG_TRACE_FUNCTION;
     g_WispWindow = this;
 }
 
@@ -74,7 +75,6 @@ void CWindow::GetPositionSize(int *x, int *y, int *width, int *height)
 
 void CWindow::SetMinSize(const CSize &newMinSize)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Size.Width < newMinSize.Width || m_Size.Height < newMinSize.Height)
     {
         int width = m_Size.Width;
@@ -103,8 +103,6 @@ void CWindow::SetMinSize(const CSize &newMinSize)
 
 void CWindow::SetMaxSize(const CSize &newMaxSize)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (m_Size.Width > newMaxSize.Width || m_Size.Height > newMaxSize.Height)
     {
         int width = m_Size.Width;
@@ -134,7 +132,6 @@ void CWindow::SetMaxSize(const CSize &newMaxSize)
 bool CWindow::Create(
     const char *className, const char *title, bool showCursor, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
     {
         return false;
@@ -251,7 +248,6 @@ bool CWindow::Create(
 
 void CWindow::Destroy()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_window != nullptr)
     {
         PushEvent(SDL_QUIT, nullptr, nullptr);
@@ -260,13 +256,11 @@ void CWindow::Destroy()
 
 void CWindow::ShowMessage(const std::string &text, const std::string &title)
 {
-    DEBUG_TRACE_FUNCTION;
     SDL_Log("%s: %s\n", title.c_str(), text.c_str());
 }
 
 void CWindow::ShowMessage(const std::wstring &text, const std::wstring &title)
 {
-    DEBUG_TRACE_FUNCTION;
     SDL_Log("%ls: %ls\n", title.c_str(), text.c_str());
 }
 

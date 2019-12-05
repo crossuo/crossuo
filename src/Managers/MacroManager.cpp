@@ -43,7 +43,6 @@ CMacroManager::~CMacroManager()
 
 Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &strings)
 {
-    DEBUG_TRACE_FUNCTION;
     auto str = strings[0];
 
     for (int i = 1; i < (int)strings.size() - 3; i++)
@@ -216,7 +215,6 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &st
 
 bool CMacroManager::Convert(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser file(path, "", "", "");
     Wisp::CTextFileParser unicodeParser({}, " ", "", "");
 
@@ -347,7 +345,6 @@ bool CMacroManager::Convert(const fs_path &path)
 
 bool CMacroManager::Load(const fs_path &path, const fs_path &originalPath)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     Clear();
     CMappedFile file;
@@ -372,7 +369,6 @@ bool CMacroManager::Load(const fs_path &path, const fs_path &originalPath)
 
 void CMacroManager::Save(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
     writer.Open(path);
 
@@ -394,7 +390,6 @@ void CMacroManager::Save(const fs_path &path)
 
 CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 {
-    DEBUG_TRACE_FUNCTION;
     CMacro *obj = (CMacro *)m_Items;
 
     while (obj != nullptr)
@@ -412,7 +407,6 @@ CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 
 void CMacroManager::LoadFromOptions()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
     ChangePointer(nullptr);
     QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }
@@ -431,7 +425,6 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
 
 void CMacroManager::Execute()
 {
-    DEBUG_TRACE_FUNCTION;
     while (g_MacroPointer != nullptr)
     {
         switch (Process())
@@ -458,7 +451,6 @@ void CMacroManager::Execute()
 
 void CMacroManager::ProcessSubMenu()
 {
-    DEBUG_TRACE_FUNCTION;
     switch (g_MacroPointer->Code)
     {
         case MC_OPEN:
@@ -796,7 +788,6 @@ MACRO_RETURN_CODE CMacroManager::Process()
 
 MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 {
-    DEBUG_TRACE_FUNCTION;
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
     static int itemInHand[2] = { 0, 0 };
 

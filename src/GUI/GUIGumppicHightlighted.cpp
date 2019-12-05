@@ -6,6 +6,7 @@
 #include "../Gumps/Gump.h"
 #include "../Managers/ColorManager.h"
 #include "../Renderer/RenderAPI.h"
+#include "../Globals.h" // g_ShaderDrawMode
 
 extern RenderCmdList *g_renderCmdList;
 
@@ -22,8 +23,6 @@ CGUIGumppicHightlighted::~CGUIGumppicHightlighted()
 
 void CGUIGumppicHightlighted::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_SelectedObject.Object == this)
     {
 #ifndef NEW_RENDERER_ENABLED
@@ -63,7 +62,6 @@ void CGUIGumppicHightlighted::SetShaderMode()
 
 void CGUIGumppicHightlighted::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -72,7 +70,6 @@ void CGUIGumppicHightlighted::OnMouseEnter()
 
 void CGUIGumppicHightlighted::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

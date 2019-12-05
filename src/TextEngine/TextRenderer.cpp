@@ -22,13 +22,11 @@ CTextRenderer::CTextRenderer()
 
 CTextRenderer::~CTextRenderer()
 {
-    DEBUG_TRACE_FUNCTION;
     m_TextItems = nullptr;
 }
 
 CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj != nullptr)
     {
         CRenderTextObject *item = m_TextItems;
@@ -58,7 +56,6 @@ CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 
 void CTextRenderer::ToTop(CRenderTextObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     obj->UnlinkDraw();
 
     CRenderTextObject *next = m_TextItems->m_NextDraw;
@@ -75,7 +72,6 @@ void CTextRenderer::ToTop(CRenderTextObject *obj)
 
 bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     CTextImageBounds rect(text);
 
@@ -134,7 +130,6 @@ bool CTextRenderer::ProcessTextRemoveBlending(CTextData &text)
 
 bool CTextRenderer::CalculatePositions(bool noCalculate)
 {
-    DEBUG_TRACE_FUNCTION;
     bool changed = false;
 
     if (!noCalculate)
@@ -183,7 +178,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 void CTextRenderer::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    DEBUG_TRACE_FUNCTION;
+
     CalculatePositions(true);
 
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
@@ -266,7 +261,6 @@ void CTextRenderer::Draw()
 
 void CTextRenderer::Select(CGump *gump)
 {
-    DEBUG_TRACE_FUNCTION;
     if (gump != nullptr)
     {
         CalculatePositions(true);
@@ -308,7 +302,6 @@ void CTextRenderer::Select(CGump *gump)
 
 bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 {
-    DEBUG_TRACE_FUNCTION;
     bool changed = false;
 
     if (!noCalculate)
@@ -345,7 +338,6 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 
 void CTextRenderer::WorldDraw()
 {
-    DEBUG_TRACE_FUNCTION;
     CalculateWorldPositions(true);
 
     int renderIndex = g_GameScreen.RenderIndex - 1;
