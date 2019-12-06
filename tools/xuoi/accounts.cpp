@@ -23,6 +23,12 @@
 #define CFG_DEFINITION "cfg_crossuo.h"
 #include "cfg_loader.h"
 
+#if defined(XUO_WINDOWS)
+#define XUO_EXE "crossuo.exe"
+#else
+#define XUO_EXE "./crossuo"
+#endif
+
 // model
 
 const char *client_types[] = {
@@ -146,7 +152,7 @@ static void account_launch(int account_index)
         return;
     }
 
-    const char *args[] = { "./crossuo", "--config", fs_path_ascii(cfg), 0 };
+    const char *args[] = { XUO_EXE, "--config", fs_path_ascii(cfg), 0 };
     LOG_INFO("running %s", args[0]);
 
     process_s process;
