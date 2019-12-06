@@ -447,7 +447,7 @@ FS_PRIVATE void fs_del(const fs_path &target)
 FS_PRIVATE fs_path fs_appdata_path()
 {
     wchar_t path[FS_MAX_PATH] = {};
-    auto r = SHGetFolderPath(nullptr, CSIDL_COMMON_APPDATA, nullptr, 0, path);
+    SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, 0, path);
     return fs_path_from(path);
 }
 
