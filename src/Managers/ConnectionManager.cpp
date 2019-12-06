@@ -179,8 +179,6 @@ bool CConnectionManager::Connect(const std::string &address, int port, uint8_t *
 
     m_LoginSocket.Disconnect();
     return result;
-
-    return false;
 }
 
 void CConnectionManager::Disconnect()

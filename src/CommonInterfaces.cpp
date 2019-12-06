@@ -440,7 +440,8 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
         return true;
     }
 
-    bool result = PUSH_EVENT(
+    // FIXME: is this still used? the result is always 0 anyway
+    bool result = (bool)PUSH_EVENT(
         UOMSG_PATHFINDING,
         ((x << 16) & 0xFFFF0000) | (y & 0xFFFF),
         ((x << 16) & 0xFFFF0000) | (distance & 0xFFFF));

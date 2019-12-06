@@ -583,7 +583,7 @@ void CWindow::CreateTimer(uint32_t id, int delay)
 
 void CWindow::RemoveTimer(uint32_t id)
 {
-    assert(id >= 0 && id < countof(timer_table));
+    assert(id < countof(timer_table));
     if (timer_table[id - 1] != 0)
     {
         SDL_RemoveTimer(timer_table[id - 1]);
