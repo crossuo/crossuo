@@ -313,7 +313,7 @@ launcher::entry &config()
 
 void load_config()
 {
-    const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
+    const auto fname = fs_path_join(fs_path_current(), "xuolauncher.cfg");
     LOG_INFO("loading settings from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     launcher::cfg(fp, s_config);
@@ -334,7 +334,7 @@ void write_config(void *_fp)
 
 void save_config()
 {
-    const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
+    const auto fname = fs_path_join(fs_path_current(), "xuolauncher.cfg");
     auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {
@@ -361,7 +361,7 @@ const fs_path &xuol_data_path()
     if (initialized)
         return dir;
 
-    dir = fs_join_path(fs_appdata_path(), "xuolauncher");
+    dir = fs_path_join(fs_appdata_path(), "xuolauncher");
     if (!fs_path_create(dir))
     {
         LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
