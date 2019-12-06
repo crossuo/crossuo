@@ -768,7 +768,7 @@ static void mft_entry_remote_name(mft_entry &entry, char name[32])
     snprintf(name, 32, "%08x%08x", entry.ph, entry.sh);
 }
 
-static void mft_download_entry(mft_product &prod, mft_entry &entry, int thread_id)
+static void mft_download_entry(mft_product &prod, mft_entry &entry, uint32_t thread_id)
 {
     assert(thread_id < prod.config.thread_count);
     if (entry.state != state_need_update)

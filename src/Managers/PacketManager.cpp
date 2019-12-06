@@ -4824,7 +4824,7 @@ PACKET_HANDLER(OpenGump)
     bool EntryChanged = false;
     int FirstPage = 0;
     int CurrentPage = 0;
-    CEntryText *ChangeEntry;
+    CEntryText *ChangeEntry = nullptr;
 
     for (const std::string &str : commandList)
     {

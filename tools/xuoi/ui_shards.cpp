@@ -186,7 +186,8 @@ void ui_shards(ui_model &m, bool picker)
                         case shard::tag_install_type::xuo_patch_server:
                         {
                             if (ImGui::MenuItem("Install Now (not implemented)", nullptr, false))
-                                ;
+                            {
+                            }
                         }
                         break;
                         case shard::tag_install_type::uo_patch_server:

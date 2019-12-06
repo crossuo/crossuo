@@ -556,16 +556,19 @@ int main(int argc, char **argv)
                 {
                     auto &cfg = config();
                     if (ImGui::MenuItem("Check updates", nullptr, &cfg.global_check_updates))
-                        ;
+                    {
+                    }
                     if (ImGui::MenuItem("Auto update", nullptr, &cfg.global_auto_update))
-                        ;
+                    {
+                    }
                     if (ImGui::MenuItem("Use beta channel", nullptr, &cfg.global_beta_channel))
                     {
                         s_releases.clear();
                         s_update_check = true;
                     }
                     if (ImGui::MenuItem("Close after launch", nullptr, &cfg.global_auto_close))
-                        ;
+                    {
+                    }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("About"))
@@ -574,11 +577,13 @@ int main(int argc, char **argv)
                         view_changelog();
 #if defined(XUO_DEBUG)
                     if (ImGui::MenuItem("Demo", nullptr, &ui.show_demo_window))
-                        ;
+                    {
+                    }
 #endif
                     ImGui::Separator();
                     if (ImGui::MenuItem(ICON_FK_QUESTION_CIRCLE " About", nullptr))
-                        ;
+                    {
+                    }
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();

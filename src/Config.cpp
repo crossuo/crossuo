@@ -173,7 +173,7 @@ static const char *GetClientTypeString(uint16_t clientFlag)
         case CF_SA:
             return "sa";
         default:
-            return "";
+            break;
     }
     return "";
 }
@@ -197,7 +197,7 @@ static const char *GetClientTypeName(CLIENT_FLAG clientFlag)
         case CF_SA:
             return "Stygian Abyss";
         default:
-            return "";
+            break;
     }
     return "";
 }

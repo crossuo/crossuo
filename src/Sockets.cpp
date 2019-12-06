@@ -157,7 +157,7 @@ bool tcp_connect(tcp_socket socket, const char *address, uint16_t port)
     caddr.sin_port = htons(port);
     if (connect(h, (struct sockaddr *)&caddr, sizeof(caddr)) == -1)
     {
-        auto e = WSAGetLastError();
+        //auto e = WSAGetLastError();
         return false;
     }
 
