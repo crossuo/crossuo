@@ -275,40 +275,40 @@ void CGUIShopItem::Draw(bool checktrans)
         if (direction.FrameCount != 0)
         {
             assert(direction.m_Frames[0].UserData);
-            auto originalTexture = *(CSprite *)direction.m_Frames[0].UserData;
-            if (originalTexture.Texture != nullptr)
+            const auto *originalTexture = (CSprite *)direction.m_Frames[0].UserData;
+            if (originalTexture && originalTexture->Texture != nullptr)
             {
 #ifndef NEW_RENDERER_ENABLED
                 CGLTexture tex;
-                tex.Texture = originalTexture.Texture->Texture;
-                if (originalTexture.Width > 35)
+                tex.Texture = originalTexture->Texture->Texture;
+                if (originalTexture->Width > 35)
                 {
                     tex.Width = 35;
                 }
                 else
                 {
-                    tex.Width = originalTexture.Width;
+                    tex.Width = originalTexture->Width;
                 }
 
-                if (originalTexture.Height > 35)
+                if (originalTexture->Height > 35)
                 {
                     tex.Height = 35;
                 }
                 else
                 {
-                    tex.Height = originalTexture.Height;
+                    tex.Height = originalTexture->Height;
                 }
 
                 g_GL.Draw(tex, 2, m_ImageOffset);
                 tex.Texture = 0;
 #else
-                auto quadCmd =
-                    DrawQuadCmd{ originalTexture.Texture->Texture,
-                                 2,
-                                 m_ImageOffset,
-                                 originalTexture.Width > 35 ? 35 : uint32_t(originalTexture.Width),
-                                 originalTexture.Height > 35 ? 35 :
-                                                               uint32_t(originalTexture.Height) };
+                auto quadCmd = DrawQuadCmd{
+                    originalTexture->Texture->Texture,
+                    2,
+                    m_ImageOffset,
+                    originalTexture->Width > 35 ? 35 : uint32_t(originalTexture->Width),
+                    originalTexture->Height > 35 ? 35 : uint32_t(originalTexture->Height)
+                };
 
                 RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
 #endif
