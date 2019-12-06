@@ -410,11 +410,13 @@ static bool run_self_update_instance(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+#if !defined(XUO_DEBUG)
     if (!run_self_update_instance(argc, argv))
     {
         LOG_INFO("terminating %s", argv[0]);
         return 0;
     }
+#endif
 
     LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
     crc32_init();
