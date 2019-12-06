@@ -100,16 +100,16 @@ void fs_unmap(unsigned char *ptr, size_t length);
 void fs_append(fs_path &target, const fs_path &other);
 
 template <typename T>
-fs_path fs_join_path(T t)
+fs_path fs_path_join(T t)
 {
     return fs_path_from(t);
 }
 
 template <typename H, typename... T>
-fs_path fs_join_path(H head, T... tail)
+fs_path fs_path_join(H head, T... tail)
 {
     auto r = fs_path_from(head);
-    fs_append(r, fs_join_path(tail...));
+    fs_append(r, fs_path_join(tail...));
     return r;
 }
 
@@ -269,7 +269,7 @@ static void fs_path_list_internal_r(const std::wstring &path, std::vector<fs_pat
             }
             else
             {
-                out.emplace_back(fs_join_path(fspath, f));
+                out.emplace_back(fs_path_join(fspath, f));
             }
         } while (FindNextFileW(hFile, &file));
         FindClose(hFile);

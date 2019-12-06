@@ -98,25 +98,25 @@ void CScreenshotBuilder::WritePixelsToDisk()
     {
         case SF_PNG:
         {
-            path = fs_join_path(path, filename + ".png");
+            path = fs_path_join(path, filename + ".png");
             result = stbi_write_png(fs_path_ascii(path), m_Width, m_Height, 4, data, m_Width * 4);
             break;
         }
         case SF_TGA:
         {
-            path = fs_join_path(path, filename + ".tga");
+            path = fs_path_join(path, filename + ".tga");
             result = stbi_write_tga(fs_path_ascii(path), m_Width, m_Height, 4, data);
             break;
         }
         case SF_JPG:
         {
-            path = fs_join_path(path, filename + ".jpg");
+            path = fs_path_join(path, filename + ".jpg");
             result = stbi_write_jpg(fs_path_ascii(path), m_Width, m_Height, 4, data, 100);
             break;
         }
         default:
         {
-            path = fs_join_path(path, filename + ".bmp");
+            path = fs_path_join(path, filename + ".bmp");
             result = stbi_write_bmp(fs_path_ascii(path), m_Width, m_Height, 4, data);
             break;
         }

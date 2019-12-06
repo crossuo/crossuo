@@ -240,7 +240,7 @@ static xuo_result xuo_manifest_load(xuo_context &ctx, const char *platform, xuo_
 
 static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &file)
 {
-    fs_path ipath = fs_join_path(ctx.config.cache_path, file.zipFilename);
+    fs_path ipath = fs_path_join(ctx.config.cache_path, file.zipFilename);
     fs_path idir = fs_directory(ipath);
     if (!fs_path_create(idir))
     {
@@ -248,7 +248,7 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
         return xuo_could_not_open_path;
     }
 
-    fs_path opath = fs_join_path(ctx.config.output_path, file.name);
+    fs_path opath = fs_path_join(ctx.config.output_path, file.name);
     fs_path odir = fs_directory(opath);
     if (!fs_path_create(odir))
     {
@@ -367,7 +367,7 @@ xuo_release_check(const fs_path &path, const xuo_release &rel, std::vector<xuo_f
 {
     for (const auto &f : rel.files)
     {
-        auto fname = fs_join_path(path, f.name);
+        auto fname = fs_path_join(path, f.name);
         bool want = false;
         if (!fs_path_exists(fname))
             want = true;
@@ -444,7 +444,7 @@ xuo_context *xuo_init(const char *path, bool beta)
         return nullptr;
     }
 
-    ctx.config.cache_path = fs_join_path(fs_appdata_path(), "xuolauncher", "cache");
+    ctx.config.cache_path = fs_path_join(fs_appdata_path(), "xuolauncher", "cache");
     ctx.config.output_path = fs_path_from(path);
 
     fs_path dir = ctx.config.cache_path;

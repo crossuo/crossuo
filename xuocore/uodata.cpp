@@ -66,7 +66,7 @@ static fs_path UOFilePath(const char *str, ...)
     char out[FS_MAX_PATH] = { 0 };
     vsnprintf(out, sizeof(out) - 1, str, arg);
     va_end(arg);
-    fs_path p = fs_join_path(s_UOPath, out);
+    fs_path p = fs_path_join(s_UOPath, out);
     return fs_insensitive(p);
 }
 

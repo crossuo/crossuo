@@ -62,7 +62,7 @@ fs_path CApplication::ExeFilePath(const char *str, ...) const
     vsprintf_s(out, str, arg);
     va_end(arg);
 
-    fs_path res = fs_join_path(m_ExePath, out);
+    fs_path res = fs_path_join(m_ExePath, out);
     return fs_insensitive(res);
 }
 
@@ -80,7 +80,7 @@ fs_path CApplication::UOFilesPath(const char *str, ...) const
     vsprintf_s(out, str, arg);
     va_end(arg);
 
-    fs_path res = fs_join_path(m_UOPath, out);
+    fs_path res = fs_path_join(m_UOPath, out);
     return fs_insensitive(res);
 }
 

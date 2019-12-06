@@ -53,7 +53,7 @@ static std::unordered_map<std::string, int> s_account_by_name;
 
 void load_accounts()
 {
-    const auto fname = fs_join_path(fs_path_current(), "xuolauncher.cfg");
+    const auto fname = fs_path_join(fs_path_current(), "xuolauncher.cfg");
     LOG_INFO("loading accounts from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     account::cfg(fp, s_accounts);
@@ -116,8 +116,8 @@ static fs_path account_create_config(const account::entry &account, bool save = 
     std::replace(name.begin(), name.end(), '/', '_');
     std::replace(name.begin(), name.end(), '\\', '_');
 
-    const auto path = save ? fs_path_current() : fs_join_path(fs_appdata_path(), "xuolauncher");
-    const auto fname = fs_join_path(path, name);
+    const auto path = save ? fs_path_current() : fs_path_join(fs_appdata_path(), "xuolauncher");
+    const auto fname = fs_path_join(path, name);
     auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {

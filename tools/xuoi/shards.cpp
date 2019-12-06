@@ -239,7 +239,7 @@ void load_shards()
     auto custom = shard::default_entry();
     custom.shard_name = "<custom shard>";
     s_shards.entries.emplace_back(custom);
-    const auto fname = fs_join_path(fs_path_current(), "shards.cfg");
+    const auto fname = fs_path_join(fs_path_current(), "shards.cfg");
 #if !defined(VALIDATOR)
     http_get_file(
         "https://github.com/crossuo/shards/releases/download/latest/shards.cfg",

@@ -777,7 +777,7 @@ void CGame::CheckStaticTileFilterFiles()
     auto path = g_App.ExeFilePath("data");
     fs_path_create(path);
 
-    auto filePath = fs_join_path(path, "cave.txt");
+    auto filePath = fs_path_join(path, "cave.txt");
     if (!fs_path_exists(filePath))
     {
         CFileWriter file;
@@ -792,7 +792,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "vegetation.txt");
+    filePath = fs_path_join(path, "vegetation.txt");
     CFileWriter vegetationFile;
     if (!fs_path_exists(filePath))
     {
@@ -830,7 +830,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "stumps.txt");
+    filePath = fs_path_join(path, "stumps.txt");
     if (!fs_path_exists(filePath))
     {
         CFileWriter file;
@@ -883,7 +883,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "cave.txt");
+    filePath = fs_path_join(path, "cave.txt");
     Wisp::CTextFileParser caveParser(filePath, " \t", "#;//", "");
     while (!caveParser.IsEOF())
     {
@@ -896,7 +896,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "stumps.txt");
+    filePath = fs_path_join(path, "stumps.txt");
     Wisp::CTextFileParser stumpParser(filePath, " \t", "#;//", "");
     while (!stumpParser.IsEOF())
     {
@@ -914,7 +914,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "vegetation.txt");
+    filePath = fs_path_join(path, "vegetation.txt");
     Wisp::CTextFileParser vegetationParser(filePath, " \t", "#;//", "");
     while (!vegetationParser.IsEOF())
     {
@@ -931,7 +931,7 @@ void CGame::LoadContainerOffsets()
     auto path = g_App.ExeFilePath("data");
     fs_path_create(path);
 
-    auto filePath = fs_join_path(path, "containers.txt");
+    auto filePath = fs_path_join(path, "containers.txt");
     Info(Client, "containers: %s", fs_path_ascii(filePath));
     if (!fs_path_exists(filePath))
     {
@@ -1620,7 +1620,7 @@ void CGame::SaveLocalConfig(int serial)
         fs_path_create(path);
     }
 
-    path = fs_join_path(path, g_MainScreen.m_Account->c_str());
+    path = fs_path_join(path, g_MainScreen.m_Account->c_str());
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -1629,7 +1629,7 @@ void CGame::SaveLocalConfig(int serial)
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
     {
-        path = fs_join_path(path, FixServerName(server->Name));
+        path = fs_path_join(path, FixServerName(server->Name));
     }
     if (!fs_path_exists(path))
     {
@@ -1639,7 +1639,7 @@ void CGame::SaveLocalConfig(int serial)
     char serbuf[64] = { 0 };
     sprintf_s(serbuf, "0x%08X", g_PlayerSerial);
     fs_path root = path;
-    path = fs_join_path(path, serbuf);
+    path = fs_path_join(path, serbuf);
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -1651,11 +1651,11 @@ void CGame::SaveLocalConfig(int serial)
     }
 
     Info(Client, "managers:saving");
-    g_ConfigManager.Save(fs_join_path(path, "options.cfg"));
-    g_SkillGroupManager.Save(fs_join_path(path, "skills.cuo"));
-    g_MacroManager.Save(fs_join_path(path, "macros.cuo"));
-    g_GumpManager.Save(fs_join_path(path, "gumps.cuo"));
-    g_CustomHousesManager.Save(fs_join_path(path, "customhouses.cuo"));
+    g_ConfigManager.Save(fs_path_join(path, "options.cfg"));
+    g_SkillGroupManager.Save(fs_path_join(path, "skills.cuo"));
+    g_MacroManager.Save(fs_path_join(path, "macros.cuo"));
+    g_GumpManager.Save(fs_path_join(path, "gumps.cuo"));
+    g_CustomHousesManager.Save(fs_path_join(path, "customhouses.cuo"));
 
     Info(Client, "managers:saving in to root");
     g_ConfigManager.Save(g_App.UOFilesPath("options.cfg"));
@@ -1665,7 +1665,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         Info(Client, "player exists");
         Info(Client, "name len: %zd", g_Player->GetName().length());
-        path = fs_join_path(root, std::string(serbuf) + "_" + g_Player->GetName() + ".cuo");
+        path = fs_path_join(root, std::string(serbuf) + "_" + g_Player->GetName() + ".cuo");
         if (!fs_path_exists(path))
         {
             Info(Client, "file saving");
