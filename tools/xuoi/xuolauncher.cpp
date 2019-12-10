@@ -372,6 +372,7 @@ const fs_path &xuol_data_path()
     return dir;
 }
 
+#if !defined(XUO_DEBUG)
 static bool run_self_update_instance(int argc, char **argv)
 {
     if (!argv[0])
@@ -407,6 +408,7 @@ static bool run_self_update_instance(int argc, char **argv)
 #endif // #if defined(XUO_WINDOWS)
     return true;
 }
+#endif // #if !defined(XUO_DEBUG)
 
 int main(int argc, char **argv)
 {

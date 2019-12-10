@@ -40,33 +40,34 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #endif
 
-// FIXME: rename these
+// TODO: encapsulate std::wstring into a wstr_t type and std::string into a str_t type
+// so we can migrate for something lightweight in performance and memory
 
-std::string EncodeUTF8(const std::wstring &str);
-std::wstring DecodeUTF8(const std::string &str);
-std::string ToCamelCaseA(std::string str);
-std::wstring ToCamelCaseW(std::wstring str);
+std::string wstr_to_utf8(const std::wstring &str); // DEPRECATE, in memory everything should be UTF8
+std::wstring wstr_from_utf8(const std::string &str); // DEPRECATE
+std::string str_camel_case(std::string str);
+std::wstring wstr_camel_case(std::wstring str);
 
-std::string ToString(const std::wstring &wstr);
-std::wstring ToWString(const std::string &str);
+std::string str_from(const std::wstring &wstr);
+std::wstring wstr_from(const std::string &str);
 #if !defined(_MSC_VER)
-const std::string &ToString(const std::string &str);
+const std::string &str_from(const std::string &str);
 #endif
 
-std::string Trim(const std::string &str);
-int ToInt(const std::string &str);
-std::string ToLowerA(std::string str);
-std::string ToUpperA(std::string str);
-std::wstring ToLowerW(std::wstring str);
-std::wstring ToUpperW(std::wstring str);
-bool ToBool(const std::string &str);
+std::string str_trim(const std::string &str);
+int str_to_int(const std::string &str);
+std::string str_lower(std::string str);
+std::string str_upper(std::string str);
+std::wstring wstr_lower(std::wstring str);
+std::wstring wstr_upper(std::wstring str);
+bool str_to_bool(const std::string &str);
 
 #endif // STR_HEADER
 
 #if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
 #define STR_IMPLEMENTATED
 
-std::string EncodeUTF8(const std::wstring &wstr)
+std::string wstr_to_utf8(const std::wstring &wstr)
 {
 #if defined(_MSC_VER)
     int size =
@@ -96,7 +97,7 @@ std::string EncodeUTF8(const std::wstring &wstr)
     return result;
 }
 
-std::wstring DecodeUTF8(const std::string &str)
+std::wstring wstr_from_utf8(const std::string &str)
 {
 #if defined(_MSC_VER)
     int size = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
@@ -115,9 +116,9 @@ std::wstring DecodeUTF8(const std::string &str)
     const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
     if (size == -1)
     {
-        Warning(Client, "DecodeUTF8 Failed: %s", str.c_str());
-        INFO_DUMP(Client, "DecodeUTF8 Failed:", (uint8_t *)str.data(), str.size());
-        return ToWString(str);
+        Warning(Client, "wstr_from_utf8 Failed: %s", str.c_str());
+        INFO_DUMP(Client, "wstr_from_utf8 Failed:", (uint8_t *)str.data(), str.size());
+        return wstr_from(str);
     }
 
     if (size > 0)
@@ -126,10 +127,11 @@ std::wstring DecodeUTF8(const std::string &str)
         mbsrtowcs(&result[0], &p, size, &state);
     }
 #endif
+
     return result;
 }
 
-std::string ToCamelCaseA(std::string str)
+std::string str_camel_case(std::string str)
 {
     int offset = 'a' - 'A';
     bool lastSpace = true;
@@ -154,7 +156,7 @@ std::string ToCamelCaseA(std::string str)
     return str;
 }
 
-std::wstring ToCamelCaseW(std::wstring str)
+std::wstring wstr_camel_case(std::wstring str)
 {
     int offset = L'a' - L'A';
     bool lastSpace = true;
@@ -180,13 +182,13 @@ std::wstring ToCamelCaseW(std::wstring str)
 }
 
 #if !defined(_MSC_VER)
-const std::string &ToString(const std::string &str)
+const std::string &str_from(const std::string &str)
 {
     return str;
 }
 #endif
 
-std::string ToString(const std::wstring &wstr)
+std::string str_from(const std::wstring &wstr)
 {
 #if 0
     std::string str = "";
@@ -207,7 +209,7 @@ std::string ToString(const std::wstring &wstr)
 #endif
 }
 
-std::wstring ToWString(const std::string &str)
+std::wstring wstr_from(const std::string &str)
 {
 #if 0
     int size = (int)str.length();
@@ -226,7 +228,7 @@ std::wstring ToWString(const std::string &str)
 #endif
 }
 
-std::string Trim(const std::string &str)
+std::string str_trim(const std::string &str)
 {
     auto it = str.begin();
     for (; it != str.end() && (isspace(*it) != 0); ++it)
@@ -243,12 +245,7 @@ std::string Trim(const std::string &str)
     return std::string(it, rit.base());
 }
 
-int ToInt(const std::string &str)
-{
-    return atoi(str.c_str());
-}
-
-std::string ToLowerA(std::string s)
+std::string str_lower(std::string s)
 {
 #if defined(_MSC_VER)
     if (s.length())
@@ -261,7 +258,7 @@ std::string ToLowerA(std::string s)
 #endif
 }
 
-std::wstring ToLowerW(std::wstring s)
+std::wstring wstr_lower(std::wstring s)
 {
 #if defined(_MSC_VER)
     if (s.length())
@@ -274,7 +271,7 @@ std::wstring ToLowerW(std::wstring s)
 #endif
 }
 
-std::string ToUpperA(std::string s)
+std::string str_upper(std::string s)
 {
 #if defined(_MSC_VER)
     if (s.length())
@@ -287,7 +284,7 @@ std::string ToUpperA(std::string s)
 #endif
 }
 
-std::wstring ToUpperW(std::wstring s)
+std::wstring wstr_upper(std::wstring s)
 {
 #if defined(_MSC_VER)
     if (s.length())
@@ -300,9 +297,9 @@ std::wstring ToUpperW(std::wstring s)
 #endif
 }
 
-bool ToBool(const std::string &str)
+bool str_to_bool(const std::string &str)
 {
-    std::string data = ToLowerA(str);
+    std::string data = str_lower(str);
     const int countOfTrue = 3;
     const std::string m_TrueValues[countOfTrue] = { "on", "yes", "true" };
     bool result = false;
@@ -312,4 +309,10 @@ bool ToBool(const std::string &str)
     }
     return result;
 }
+
+int str_to_int(const std::string &str)
+{
+    return atoi(str.c_str());
+}
+
 #endif // STR_IMPLEMENTATION

@@ -89,7 +89,7 @@ void CGumpBulletinBoard::GUMP_BUTTON_EVENT_C
     if (serial == ID_GBB_POST_MESSAGE)
     {
         CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(
-            0, 0, 0, 0, Serial, ToWString(g_Player->GetName()), {}, L"Date/Time", {});
+            0, 0, 0, 0, Serial, wstr_from(g_Player->GetName()), {}, L"Date/Time", {});
 
         g_GumpManager.AddGump(gump);
     }

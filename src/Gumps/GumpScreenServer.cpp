@@ -231,7 +231,7 @@ void CGumpScreenServer::InitToolTip()
         std::string cstr(
             "Connect to '" + g_ServerList.GetServer(id - ID_SS_SERVER_LIST)->Name + "' server");
 
-        g_ToolTip.Set(ToWString(cstr), 100);
+        g_ToolTip.Set(wstr_from(cstr), 100);
     }
 }
 

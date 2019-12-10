@@ -56,14 +56,14 @@ void DumpRegionInfo(const HANDLE &snapshot, HANDLE hProcess, VMQUERY &vmq)
     {
         MODULEENTRY32 me = { sizeof(me) };
         if (ModuleFind(snapshot, vmq.pvRgnBaseAddress, &me))
-            filePath = ToString(me.szExePath);
+            filePath = str_from(me.szExePath);
         else
         {
             wchar_t filename[FS_MAX_PATH + 1];
             uint32_t d = GetMappedFileName(hProcess, vmq.pvRgnBaseAddress, filename, FS_MAX_PATH);
 
             if (d)
-                filePath = ToString(filename);
+                filePath = str_from(filename);
         }
     }
 

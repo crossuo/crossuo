@@ -363,7 +363,7 @@ void CSoundManager::PlayMidi(int index, bool warmode)
     if (!tsfLoaded)
     {
         tsfLoaded = true;
-        auto path = ToString(g_App.ExeFilePath("uo_4mb_2.sf2"));
+        auto path = str_from(g_App.ExeFilePath("uo_4mb_2.sf2"));
         s_Sf2.load(path.c_str());
     }
 

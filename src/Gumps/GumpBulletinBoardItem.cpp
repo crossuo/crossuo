@@ -68,7 +68,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     }
     else
     {
-        text2->CreateTextureA(9, ToString(poster));
+        text2->CreateTextureA(9, str_from(poster));
     }
 
     text = (CGUIText *)Add(new CGUIText(0, 30, 56));
@@ -91,7 +91,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     }
     else
     {
-        text2->CreateTextureA(9, ToString(dataTime));
+        text2->CreateTextureA(9, str_from(dataTime));
     }
 
     text = (CGUIText *)Add(new CGUIText(0, 30, 72));
@@ -256,7 +256,7 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
             subj += m_EntrySubject->m_Entry.Data();
 
             CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(
-                0, 0, 0, 0, ID, ToWString(g_Player->GetName()), subj, L"Date/Time", {});
+                0, 0, 0, 0, ID, wstr_from(g_Player->GetName()), subj, L"Date/Time", {});
 
             g_GumpManager.AddGump(gump);
         }

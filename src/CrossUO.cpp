@@ -3434,7 +3434,7 @@ void CGame::LoadLogin(std::string &login, int &port)
         auto strings = file.ReadTokens();
         if (strings.size() >= 3)
         {
-            auto lo = ToLowerA(strings[0]);
+            auto lo = str_lower(strings[0]);
             if (lo == "loginserver")
             {
                 login = strings[1];
@@ -5662,7 +5662,7 @@ void CGame::CreateUnicodeTextMessageF(uint8_t font, uint16_t color, const char *
     va_start(arg, format);
     char buf[512] = { 0 };
     SDL_vsnprintf(buf, sizeof(buf), format, arg);
-    CreateUnicodeTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, ToWString(buf));
+    CreateUnicodeTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, wstr_from(buf));
     va_end(arg);
 }
 
@@ -5955,7 +5955,7 @@ void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
         //if (msg->Type == TT_SYSTEM)
         //	jmsg->Color = 0;
 
-        jmsg->UnicodeText = ToWString(name) + jmsg->UnicodeText;
+        jmsg->UnicodeText = wstr_from(name) + jmsg->UnicodeText;
         jmsg->Font = 0;
     }
 

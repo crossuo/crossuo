@@ -24,7 +24,7 @@ CGumpSkill::CGumpSkill(int serial, int x, int y)
 
         if (skill != nullptr)
         {
-            text->CreateTextureW(1, ToWString(skill->Name), 30, 120, TS_CENTER);
+            text->CreateTextureW(1, wstr_from(skill->Name), 30, 120, TS_CENTER);
         }
 
         resizepic->Height = 20 + text->m_Texture.Height;

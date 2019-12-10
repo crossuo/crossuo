@@ -78,10 +78,10 @@ std::wstring CCliloc::CamelCaseTest(bool toCamelCase, const std::string &result)
 {
     if (toCamelCase)
     {
-        return ToCamelCaseW(DecodeUTF8(result));
+        return wstr_camel_case(wstr_from_utf8(result));
     }
 
-    return DecodeUTF8(result);
+    return wstr_from_utf8(result);
 }
 
 std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
@@ -140,7 +140,7 @@ std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
 
 std::string CCliloc::GetA(int id, bool toCamelCase, std::string result)
 {
-    return ToString(GetX(id, toCamelCase, result));
+    return str_from(GetX(id, toCamelCase, result));
 }
 
 std::wstring CCliloc::GetW(int id, bool toCamelCase, std::string result)
@@ -160,7 +160,7 @@ CClilocManager::~CClilocManager()
 
 CCliloc *CClilocManager::Cliloc(const std::string &lang)
 {
-    auto language = ToLowerA(lang);
+    auto language = str_lower(lang);
     if (language.length() == 0u)
     {
         language = "enu";
@@ -276,7 +276,7 @@ std::wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase
 
     if (toCamelCase)
     {
-        return ToCamelCaseW(message);
+        return wstr_camel_case(message);
     }
 
     return message;

@@ -31,7 +31,7 @@ CProfessionManager::~CProfessionManager()
 
 int CProfessionManager::GetKeyCode(const std::string &key)
 {
-    auto str = ToLowerA(key);
+    auto str = str_lower(key);
     int result = 0;
 
     for (int i = 0; i < m_KeyCount && (result == 0); i++)
@@ -177,7 +177,8 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             case PM_CODE_NAME_CLILOC_ID:
             {
                 nameClilocID = atoi(strings[1].c_str());
-                name = ToUpperA(g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name));
+                name =
+                    str_upper(g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name));
                 break;
             }
             case PM_CODE_DESCRIPTION_CLILOC_ID:
@@ -319,7 +320,7 @@ bool CProfessionManager::Load()
             auto strings = file.ReadTokens();
             if (!strings.empty())
             {
-                if (ToLowerA(strings[0]) == std::string("begin"))
+                if (str_lower(strings[0]) == std::string("begin"))
                 {
                     result = ParseFilePart(file);
 

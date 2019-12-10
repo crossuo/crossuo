@@ -167,7 +167,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
                 ID_SPS_LABEL + index, child->Gump, child->Gump, child->Gump + 1, 509, 109 + offsY));
 
             CGUIText *text = (CGUIText *)Add(new CGUIText(0, 350, 135 + offsY));
-            text->CreateTextureW(2, ToWString(child->Name), 30, 185, TS_LEFT, UOFONT_SOLID);
+            text->CreateTextureW(2, wstr_from(child->Name), 30, 185, TS_LEFT, UOFONT_SOLID);
 
             offsY += 79;
 

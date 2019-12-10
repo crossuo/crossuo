@@ -101,11 +101,11 @@ void CGameObject::DrawObjectHandlesTexture()
     {
         if (NPC)
         {
-            GenerateObjectHandlesTexture(ToWString(m_Name));
+            GenerateObjectHandlesTexture(wstr_from(m_Name));
         }
         else
         {
-            auto name = ToWString(m_Name);
+            auto name = wstr_from(m_Name);
             if (name.length() == 0u)
             {
                 name = g_ClilocManager.Cliloc(g_Language)

@@ -1264,7 +1264,7 @@ CFontsManager::GetTextByWidthW(uint8_t font, const std::wstring &str, int width,
 
 uint16_t CFontsManager::GetWebLinkID(const std::wstring &link, uint32_t &color)
 {
-    return GetWebLinkID(ToString(link), color);
+    return GetWebLinkID(str_from(link), color);
 }
 
 uint16_t CFontsManager::GetWebLinkID(const std::string &link, uint32_t &color)
@@ -1697,7 +1697,7 @@ void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const std::stri
             break;
         }
 
-        auto str = ToLowerA(strings[i]);
+        auto str = str_lower(strings[i]);
         auto &value = strings[i + 1];
         TrimHTMLString(value);
 
@@ -1786,7 +1786,7 @@ void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const std::stri
             {
                 if (str == "align")
                 {
-                    str = ToLowerA(value);
+                    str = str_lower(value);
 
                     if (str == "left")
                     {
@@ -1847,7 +1847,7 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
         //cmd.resize(cmdLen);
         //memcpy(&cmd[0], &str[j], cmdLen * 2);
         //LOG(L"cmd[%s] = %s\n", (endTag ? L"end" : L"start"), cmd.c_str());
-        cmd = ToLowerW(cmd);
+        cmd = wstr_lower(cmd);
 
         j = i;
 
@@ -1962,7 +1962,7 @@ CFontsManager::ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, H
 
                         if (static_cast<unsigned int>(!content.empty()) != 0u)
                         {
-                            GetHTMLInfoFromContent(info, ToString(content));
+                            GetHTMLInfoFromContent(info, str_from(content));
                         }
 
                         break;

@@ -311,7 +311,7 @@ static_assert(countof(s_Keys) == CMKC_COUNT + 1, "Missing key string for configu
 
 static uint32_t GetConfigKey(const std::string &key)
 {
-    auto str = ToLowerA(key);
+    auto str = str_lower(key);
     for (int i = 0; s_Keys[i].key_name; i++)
     {
         if (str == s_Keys[i].key_name)
@@ -1033,25 +1033,25 @@ bool CConfigManager::Load(const fs_path &path)
             {
                 //Page 1
                 case CMKC_SOUND:
-                    SetSound(ToBool(strings[1]));
+                    SetSound(str_to_bool(strings[1]));
                     break;
                 case CMKC_SOUND_VOLUME:
                     m_SoundVolume = atoi(strings[1].c_str());
                     break;
                 case CMKC_MUSIC:
-                    SetMusic(ToBool(strings[1]));
+                    SetMusic(str_to_bool(strings[1]));
                     break;
                 case CMKC_MUSIC_VOLUME:
                     m_MusicVolume = atoi(strings[1].c_str());
                     break;
                 case CMKC_FOOTSTEPS_SOUND:
-                    FootstepsSound = ToBool(strings[1]);
+                    FootstepsSound = str_to_bool(strings[1]);
                     break;
                 case CMKC_COMBAT_MUSIC:
-                    CombatMusic = ToBool(strings[1]);
+                    CombatMusic = str_to_bool(strings[1]);
                     break;
                 case CMKC_BACKGROUND_SOUND:
-                    BackgroundSound = ToBool(strings[1]);
+                    BackgroundSound = str_to_bool(strings[1]);
                     break;
 
                 //Page 2
@@ -1059,31 +1059,31 @@ bool CConfigManager::Load(const fs_path &path)
                     SetClientFPS(atoi(strings[1].c_str()));
                     break;
                 case CMKC_USE_SCALING:
-                    m_UseScaling = ToBool(strings[1]);
+                    m_UseScaling = str_to_bool(strings[1]);
                     break;
                 case CMKC_REMOVE_TEXT_WITH_BLENDING:
-                    RemoveTextWithBlending = ToBool(strings[1]);
+                    RemoveTextWithBlending = str_to_bool(strings[1]);
                     break;
                 case CMKC_DRAW_STATUS_STATE:
                     m_DrawStatusState = atoi(strings[1].c_str());
                     break;
                 case CMKC_DRAW_STUMPS:
-                    SetDrawStumps(ToBool(strings[1]));
+                    SetDrawStumps(str_to_bool(strings[1]));
                     break;
                 case CMKC_MARKING_CAVES:
-                    SetMarkingCaves(ToBool(strings[1]));
+                    SetMarkingCaves(str_to_bool(strings[1]));
                     break;
                 case CMKC_NO_ANIMATE_FIELDS:
-                    SetNoAnimateFields(ToBool(strings[1]));
+                    SetNoAnimateFields(str_to_bool(strings[1]));
                     break;
                 case CMKC_AUTO_OPEN_DOOR:
-                    AutoOpenDoors = ToBool(strings[1]);
+                    AutoOpenDoors = str_to_bool(strings[1]);
                     break;
                 case CMKC_ALWAYS_DISPLAY_HUMANOIDS_NAME:
-                    AlwaysDisplayHumanoidsName = ToBool(strings[1]);
+                    AlwaysDisplayHumanoidsName = str_to_bool(strings[1]);
                     break;
                 case CMKC_NO_VEGETATION:
-                    SetNoVegetation(ToBool(strings[1]));
+                    SetNoVegetation(str_to_bool(strings[1]));
                     break;
                 case CMKC_HIDDEN_CHARACTERS_RENDER_MODE:
                     HiddenCharactersRenderMode = atoi(strings[1].c_str());
@@ -1092,7 +1092,7 @@ bool CConfigManager::Load(const fs_path &path)
                     HiddenAlpha = atoi(strings[1].c_str());
                     break;
                 case CMKC_USE_HIDDEN_MODE_ONLY_FOR_SELF:
-                    UseHiddenModeOnlyForSelf = ToBool(strings[1]);
+                    UseHiddenModeOnlyForSelf = str_to_bool(strings[1]);
                     break;
                 case CMKC_TRANSPARENT_SPELL_ICONS:
                     TransparentSpellIcons = atoi(strings[1].c_str());
@@ -1101,19 +1101,19 @@ bool CConfigManager::Load(const fs_path &path)
                     m_SpellIconAlpha = atoi(strings[1].c_str());
                     break;
                 case CMKC_OLD_STYLE_STATUSBAR:
-                    m_OldStyleStatusbar = ToBool(strings[1]);
+                    m_OldStyleStatusbar = str_to_bool(strings[1]);
                     break;
                 case CMKC_ORIGINAL_PARTY_STATUSBAR:
-                    m_OriginalPartyStatusbar = ToBool(strings[1]);
+                    m_OriginalPartyStatusbar = str_to_bool(strings[1]);
                     break;
                 case CMKC_APPLY_STATE_COLOR_ON_CHARACTERS:
-                    SetApplyStateColorOnCharacters(ToBool(strings[1]));
+                    SetApplyStateColorOnCharacters(str_to_bool(strings[1]));
                     break;
                 case CMKC_CHANGE_FIELDS_GRAPHIC:
-                    SetChangeFieldsGraphic(ToBool(strings[1]));
+                    SetChangeFieldsGraphic(str_to_bool(strings[1]));
                     break;
                 case CMKC_PAPERDOLL_SLOTS:
-                    SetPaperdollSlots(ToBool(strings[1]));
+                    SetPaperdollSlots(str_to_bool(strings[1]));
                     break;
                 case CMKC_DRAW_STATUS_CONDITION_STATE:
                     DrawStatusConditionState = atoi(strings[1].c_str());
@@ -1122,62 +1122,62 @@ bool CConfigManager::Load(const fs_path &path)
                     DrawStatusConditionValue = atoi(strings[1].c_str());
                     break;
                 case CMKC_REMOVE_STATUSBARS_WITHOUT_OBJECTS:
-                    RemoveStatusbarsWithoutObjects = ToBool(strings[1]);
+                    RemoveStatusbarsWithoutObjects = str_to_bool(strings[1]);
                     break;
                 case CMKC_SHOW_DEFAULT_CONSOLE_ENTRY_MODE:
-                    ShowDefaultConsoleEntryMode = ToBool(strings[1]);
+                    ShowDefaultConsoleEntryMode = str_to_bool(strings[1]);
                     break;
                 case CMKC_DRAW_AURA_STATE:
                     SetDrawAuraState(atoi(strings[1].c_str()));
                     break;
                 case CMKC_DRAW_AURA_WITH_CTRL_PRESSED:
-                    DrawAuraWithCtrlPressed = ToBool(strings[1]);
+                    DrawAuraWithCtrlPressed = str_to_bool(strings[1]);
                     break;
                 case CMKC_SCREENSHOT_FORMAT:
                     ScreenshotFormat = atoi(strings[1].c_str());
                     break;
                 case CMKC_SCALE_IMAGES_IN_PAPERDOLL_SLOTS:
-                    SetScaleImagesInPaperdollSlots(ToBool(strings[1]));
+                    SetScaleImagesInPaperdollSlots(str_to_bool(strings[1]));
                     break;
                 case CMKC_REMOVE_OR_CREATE_OBJECTS_WITH_BLENDING:
-                    RemoveOrCreateObjectsWithBlending = ToBool(strings[1]);
+                    RemoveOrCreateObjectsWithBlending = str_to_bool(strings[1]);
                     break;
                 case CMKC_DRAW_HELMETS_ON_SHROUD:
-                    DrawHelmetsOnShroud = ToBool(strings[1]);
+                    DrawHelmetsOnShroud = str_to_bool(strings[1]);
                     break;
                 case CMKC_USE_GLOBAL_MAP_LAYER:
-                    SetUseGlobalMapLayer(ToBool(strings[1]));
+                    SetUseGlobalMapLayer(str_to_bool(strings[1]));
                     break;
                 case CMKC_NO_DRAW_ROOFS:
-                    SetNoDrawRoofs(ToBool(strings[1]));
+                    SetNoDrawRoofs(str_to_bool(strings[1]));
                     break;
                 case CMKC_HIGHLIGHT_TARGET_BY_TYPE:
-                    HighlightTargetByType = ToBool(strings[1]);
+                    HighlightTargetByType = str_to_bool(strings[1]);
                     break;
                 case CMKC_AUTO_DISPLAY_WORLD_MAP:
-                    AutoDisplayWorldMap = ToBool(strings[1]);
+                    AutoDisplayWorldMap = str_to_bool(strings[1]);
                     break;
                 case CMKC_DISABLE_MACRO_IN_CHAT:
-                    DisableMacroInChat = ToBool(strings[1]);
+                    DisableMacroInChat = str_to_bool(strings[1]);
                     break;
 #if USE_PING
                 case CMKC_CHECK_PING:
-                    CheckPing = ToBool(strings[1]);
+                    CheckPing = str_to_bool(strings[1]);
                     break;
                 case CMKC_PING_TIMER:
                     SetPingTimer(atoi(strings[1].c_str()));
                     break;
 #endif // USE_PING
                 case CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC:
-                    CancelNewTargetSystemOnShiftEsc = ToBool(strings[1]);
+                    CancelNewTargetSystemOnShiftEsc = str_to_bool(strings[1]);
                     break;
                 case CMKC_DRAW_STATUS_FOR_HUMANOIDS:
-                    DrawStatusForHumanoids = ToBool(strings[1]);
+                    DrawStatusForHumanoids = str_to_bool(strings[1]);
                     break;
 
                 //Page 3
                 case CMKC_USE_TOOLTIPS:
-                    UseToolTips = ToBool(strings[1]);
+                    UseToolTips = str_to_bool(strings[1]);
                     break;
                 case CMKC_TOOLTIPS_TEXT_COLOR:
                     ToolTipsTextColor = atoi(strings[1].c_str());
@@ -1244,49 +1244,49 @@ bool CConfigManager::Load(const fs_path &path)
 
                 //Page 6
                 case CMKC_ENABLE_PATHFIND:
-                    EnablePathfind = ToBool(strings[1]);
+                    EnablePathfind = str_to_bool(strings[1]);
                     break;
                 case CMKC_HOLD_TAB_FOR_COMBAT:
-                    HoldTabForCombat = ToBool(strings[1]);
+                    HoldTabForCombat = str_to_bool(strings[1]);
                     break;
                 case CMKC_OFFSET_INTERFACE_WINDOWS:
-                    OffsetInterfaceWindows = ToBool(strings[1]);
+                    OffsetInterfaceWindows = str_to_bool(strings[1]);
                     break;
                 case CMKC_AUTO_ARRANGE:
-                    AutoArrange = ToBool(strings[1]);
+                    AutoArrange = str_to_bool(strings[1]);
                     break;
                 case CMKC_ALWAYS_RUN:
-                    AlwaysRun = ToBool(strings[1]);
+                    AlwaysRun = str_to_bool(strings[1]);
                     break;
                 case CMKC_DISABLE_MENUBAR:
-                    DisableMenubar = ToBool(strings[1]);
+                    DisableMenubar = str_to_bool(strings[1]);
                     break;
                 case CMKC_GRAY_OUT_OF_RANGE_OBJECTS:
-                    GrayOutOfRangeObjects = ToBool(strings[1]);
+                    GrayOutOfRangeObjects = str_to_bool(strings[1]);
                     break;
                 case CMKC_DISABLE_NEW_TARGET_SYSTEM:
-                    DisableNewTargetSystem = ToBool(strings[1]);
+                    DisableNewTargetSystem = str_to_bool(strings[1]);
                     break;
                 case CMKC_ITEMP_ROPERTIES_MODE:
                     m_ItemPropertiesMode = atoi(strings[1].c_str());
                     break;
                 case CMKC_ITEMP_ROPERTIES_ICON:
-                    m_ItemPropertiesIcon = ToBool(strings[1]);
+                    m_ItemPropertiesIcon = str_to_bool(strings[1]);
                     break;
                 case CMKC_OBJECT_HANDLES:
-                    ObjectHandles = ToBool(strings[1]);
+                    ObjectHandles = str_to_bool(strings[1]);
                     break;
                 case CMKC_OBJECT_HANDLES_NO_BODIES:
-                    ObjectHandlesNoBodies = ToBool(strings[1]);
+                    ObjectHandlesNoBodies = str_to_bool(strings[1]);
                     break;
                 case CMKC_REDUCE_FPS_UNACTIVE_WINDOW:
-                    SetReduceFPSUnactiveWindow(ToBool(strings[1]));
+                    SetReduceFPSUnactiveWindow(str_to_bool(strings[1]));
                     break;
                 case CMKC_HOLD_SHIFT_FOR_CONTEXT_MENUS:
-                    HoldShiftForContextMenus = ToBool(strings[1]);
+                    HoldShiftForContextMenus = str_to_bool(strings[1]);
                     break;
                 case CMKC_HOLD_SHIFT_FOR_ENABLE_PATHFIND:
-                    HoldShiftForEnablePathfind = ToBool(strings[1]);
+                    HoldShiftForEnablePathfind = str_to_bool(strings[1]);
                     break;
                 case CMKC_CONTAINER_DEFAULT_X:
                     g_ContainerRect.DefaultX = atoi(strings[1].c_str());
@@ -1306,7 +1306,7 @@ bool CConfigManager::Load(const fs_path &path)
                     SpeechDelay = atoi(strings[1].c_str());
                     break;
                 case CMKC_SCALE_SPEECH_DELAY:
-                    ScaleSpeechDelay = ToBool(strings[1]);
+                    ScaleSpeechDelay = str_to_bool(strings[1]);
                     break;
                 case CMKC_SPEECH_COLOR:
                     SpeechColor = atoi(strings[1].c_str());
@@ -1324,28 +1324,28 @@ bool CConfigManager::Load(const fs_path &path)
                     AllianceMessageColor = atoi(strings[1].c_str());
                     break;
                 case CMKC_IGNORE_GUILD_MESSAGE:
-                    IgnoreGuildMessage = ToBool(strings[1]);
+                    IgnoreGuildMessage = str_to_bool(strings[1]);
                     break;
                 case CMKC_IGNORE_ALLIANCE_MESSAGE:
-                    IgnoreAllianceMessage = ToBool(strings[1]);
+                    IgnoreAllianceMessage = str_to_bool(strings[1]);
                     break;
                 case CMKC_DARK_NIGHTS:
-                    DarkNights = ToBool(strings[1]);
+                    DarkNights = str_to_bool(strings[1]);
                     break;
                 case CMKC_COLORED_LIGHTING:
-                    ColoredLighting = ToBool(strings[1]);
+                    ColoredLighting = str_to_bool(strings[1]);
                     break;
                 case CMKC_STANDART_CHARACTERS_ANIMATION_DELAY:
-                    StandartCharactersAnimationDelay = ToBool(strings[1]);
+                    StandartCharactersAnimationDelay = str_to_bool(strings[1]);
                     break;
                 case CMKC_STANDART_ITEMS_ANIMATION_DELAY:
-                    StandartItemsAnimationDelay = ToBool(strings[1]);
+                    StandartItemsAnimationDelay = str_to_bool(strings[1]);
                     break;
                 case CMKC_LOCK_RESIZING_GAME_WINDOW:
-                    LockResizingGameWindow = ToBool(strings[1]);
+                    LockResizingGameWindow = str_to_bool(strings[1]);
                     break;
                 case CMKC_LOCK_GUMPS_MOVING:
-                    LockGumpsMoving = ToBool(strings[1]);
+                    LockGumpsMoving = str_to_bool(strings[1]);
                     break;
 
                 //Page 8
@@ -1368,21 +1368,21 @@ bool CConfigManager::Load(const fs_path &path)
                     MurdererColor = atoi(strings[1].c_str());
                     break;
                 case CMKC_CRIMINAL_ACTIONS_QUERY:
-                    CriminalActionsQuery = ToBool(strings[1]);
+                    CriminalActionsQuery = str_to_bool(strings[1]);
                     break;
 
                 //Page 9
                 case CMKC_SHOW_INCOMING_NAMES:
-                    ShowIncomingNames = ToBool(strings[1]);
+                    ShowIncomingNames = str_to_bool(strings[1]);
                     break;
                 case CMKC_USE_CIRCLE_TRANS:
-                    UseCircleTrans = ToBool(strings[1]);
+                    UseCircleTrans = str_to_bool(strings[1]);
                     break;
                 case CMKC_STAT_REPORT:
-                    StatReport = ToBool(strings[1]);
+                    StatReport = str_to_bool(strings[1]);
                     break;
                 case CMKC_CONSOLE_NEED_ENTER:
-                    SetConsoleNeedEnter(ToBool(strings[1]));
+                    SetConsoleNeedEnter(str_to_bool(strings[1]));
                     break;
                 case CMKC_CIRCLE_TRANS_RADIUS:
                     CircleTransRadius = atoi(strings[1].c_str());
@@ -1403,7 +1403,7 @@ bool CConfigManager::Load(const fs_path &path)
                     GameWindowY = atoi(strings[1].c_str());
                     break;
                 case CMKC_ZOOMED:
-                    zoomed = ToBool(strings[1]);
+                    zoomed = str_to_bool(strings[1]);
                     break;
                 case CMKC_REAL_X:
                     windowX = atoi(strings[1].c_str());
@@ -1418,7 +1418,7 @@ bool CConfigManager::Load(const fs_path &path)
                     windowHeight = atoi(strings[1].c_str());
                     break;
                 case CMKC_TOGGLE_BUFFICON_WINDOW:
-                    ToggleBufficonWindow = ToBool(strings[1]);
+                    ToggleBufficonWindow = str_to_bool(strings[1]);
                     break;
                 case CMKC_DEVELOPER_MODE:
                     g_DeveloperMode = (DEVELOPER_MODE)atoi(strings[1].c_str());

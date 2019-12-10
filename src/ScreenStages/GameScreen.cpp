@@ -2459,7 +2459,7 @@ void CGameScreen::OnLeftMouseButtonUp()
                                 else
                                 {
                                     g_Game.CreateTextMessage(
-                                        TT_CLIENT, 0, 3, 0x03B2, ToString(str), rwo);
+                                        TT_CLIENT, 0, 3, 0x03B2, str_from(str), rwo);
                                 }
                             }
                         }

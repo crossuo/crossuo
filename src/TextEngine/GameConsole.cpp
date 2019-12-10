@@ -91,7 +91,7 @@ void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        std::string str = "Note to self: " + ToString(text.c_str() + offset);
+                        std::string str = "Note to self: " + str_from(text.c_str() + offset);
                         g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
                     }
                     return;
@@ -179,7 +179,7 @@ std::wstring CGameConsole::IsSystemCommand(
 
     if (*text == g_ConsolePrefix[GCTT_PARTY][0]) //Party
     {
-        auto lStr = ToString(text);
+        auto lStr = str_from(text);
         const char *cText = lStr.c_str();
 
         char *ptr = (char *)cText + 1;
@@ -208,7 +208,7 @@ std::wstring CGameConsole::IsSystemCommand(
                     sprintf_s(pmBuf, "Tell []:");
                 }
 
-                result = ToWString(pmBuf);
+                result = wstr_from(pmBuf);
 
                 type = GCTT_PARTY;
                 member = i - 1;

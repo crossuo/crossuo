@@ -54,11 +54,11 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &st
 
     if (str.length() == 1)
     {
-        key = *ToLowerA(str).c_str();
+        key = *str_lower(str).c_str();
     }
     else if (str.length() != 0u)
     {
-        str = ToUpperA(str);
+        str = str_upper(str);
 
         if (str == "ESC")
         {
@@ -276,12 +276,12 @@ bool CMacroManager::Convert(const fs_path &path)
                 data[0] = raw;
             }
 
-            auto upData = ToUpperA(data[0]);
+            auto upData = str_upper(data[0]);
             MACRO_CODE code = MC_NONE;
 
             for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
             {
-                if (upData == ToUpperA(CMacro::m_MacroActionName[i]))
+                if (upData == str_upper(CMacro::m_MacroActionName[i]))
                 {
                     code = (MACRO_CODE)i;
                     TRACE(Client, "action found (%i): %s", i, CMacro::m_MacroActionName[i]);
@@ -316,11 +316,11 @@ bool CMacroManager::Convert(const fs_path &path)
                         upData += " " + data[i];
                     }
 
-                    upData = ToUpperA(upData);
+                    upData = str_upper(upData);
 
                     for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
                     {
-                        if (upData == ToUpperA(CMacro::m_MacroAction[i]))
+                        if (upData == str_upper(CMacro::m_MacroAction[i]))
                         {
                             obj->SubCode = (MACRO_SUB_CODE)i;
                             TRACE(
@@ -828,7 +828,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 if (g_Config.ClientVersion >= CV_500A)
                 {
                     CPacketUnicodeSpeechRequest(
-                        ToWString(mos->m_String).c_str(),
+                        wstr_from(mos->m_String).c_str(),
                         st,
                         3,
                         g_ConfigManager.SpeechColor,
@@ -879,7 +879,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 auto chBuffer = SDL_GetClipboardText();
                 if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
                 {
-                    auto str = g_EntryPointer->Data() + ToWString(chBuffer);
+                    auto str = g_EntryPointer->Data() + wstr_from(chBuffer);
                     g_EntryPointer->SetTextW(str);
                 }
             }
