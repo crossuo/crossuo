@@ -30,7 +30,7 @@ CIntloc::CIntloc(int fileIndex, const std::string &lang)
 
                     while (m_File.Ptr < end && !m_File.IsEOF())
                     {
-                        m_Strings.push_back(DecodeUTF8(m_File.ReadString()));
+                        m_Strings.push_back(wstr_from_utf8(m_File.ReadString()));
                     }
                 }
                 else if (code == 'FORM')
@@ -69,7 +69,7 @@ std::wstring CIntloc::Get(int id, bool toCamelCase)
     {
         if (toCamelCase)
         {
-            return ToCamelCaseW(m_Strings[id]);
+            return wstr_camel_case(m_Strings[id]);
         }
 
         return m_Strings[id];
@@ -127,7 +127,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
 
 std::wstring CIntlocManager::Intloc(const std::string &lang, uint32_t clilocID, bool isNewCliloc)
 {
-    auto language = ToLowerA(lang);
+    auto language = str_lower(lang);
     if (language.length() == 0u)
     {
         language = "enu";

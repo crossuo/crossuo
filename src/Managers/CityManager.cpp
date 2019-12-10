@@ -67,7 +67,7 @@ void CCityManager::Init()
                         break;
                     }
                 }
-                m_CityList.push_back(CCity(name, ToWString(text)));
+                m_CityList.push_back(CCity(name, wstr_from(text)));
             }
             else
             {

@@ -222,7 +222,7 @@ void CGumpConsoleType::UpdateContent()
             else
             {
                 std::string str = " ";
-                str += ToString(g_ConsolePrefix[i]);
+                str += str_from(g_ConsolePrefix[i]);
 
                 if (str.length() < 3)
                 {

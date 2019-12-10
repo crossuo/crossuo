@@ -146,7 +146,7 @@ bool CSpeechManager::LoadSpeech()
                 continue;
             }
 
-            auto str = DecodeUTF8(reader.ReadString(len));
+            auto str = wstr_from_utf8(reader.ReadString(len));
             m_SpeechEntries.push_back(CSpeechItem(code, str));
         }
     }
@@ -200,7 +200,7 @@ void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &cod
     }
 
     const auto size = (int)m_SpeechEntries.size();
-    auto input = ToLowerW(text);
+    auto input = wstr_lower(text);
     for (int i = 0; i < size; i++)
     {
         CSpeechItem entry = m_SpeechEntries[i];

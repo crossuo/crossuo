@@ -76,7 +76,7 @@ static const ConfigEntry s_Keys[] = {
 
 static uint32_t GetConfigKey(const std::string &key)
 {
-    auto str = ToLowerA(key);
+    auto str = str_lower(key);
     for (int i = 0; s_Keys[i].key_name; i++)
     {
         if (str == s_Keys[i].key_name)
@@ -121,7 +121,7 @@ static uint32_t ParseVersion(const char *versionStr)
 
 static CLIENT_FLAG GetClientTypeFromString(const std::string &str)
 {
-    auto client = ToLowerA(str);
+    auto client = str_lower(str);
     if (client == "t2a")
     {
         return CF_T2A;
@@ -410,39 +410,39 @@ void LoadGlobalConfig()
                 }
                 case MSCC_REMEMBERPWD:
                 {
-                    g_Config.SavePassword = ToBool(strings[1]);
+                    g_Config.SavePassword = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_AUTOLOGIN:
                 {
-                    g_Config.AutoLogin = ToBool(strings[1]);
+                    g_Config.AutoLogin = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_THE_ABYSS:
                 {
-                    g_Config.TheAbyss = ToBool(strings[1]);
+                    g_Config.TheAbyss = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_ASMUT:
                 {
-                    g_Config.Asmut = ToBool(strings[1]);
+                    g_Config.Asmut = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_LOGIN_SERVER:
                 {
                     g_Config.ServerAddress = strings[1];
-                    g_Config.ServerPort = ToInt(strings[2]);
+                    g_Config.ServerPort = str_to_int(strings[2]);
                     break;
                 }
                 case MSCC_USE_CRYPT:
                 {
-                    g_Config.UseCrypt = ToBool(strings[1]);
+                    g_Config.UseCrypt = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_USE_VERDATA:
                 {
                     s_Mark.UseVerdata = true;
-                    g_Config.UseVerdata = ToBool(strings[1]);
+                    g_Config.UseVerdata = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_CLIENT_TYPE:
@@ -457,7 +457,7 @@ void LoadGlobalConfig()
                 }
                 case MSCC_LOCALE_OVERRIDE:
                 {
-                    g_Config.LocaleOverride = ToUpperA(strings[1]);
+                    g_Config.LocaleOverride = str_upper(strings[1]);
                 }
                 break;
                 default:

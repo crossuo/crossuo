@@ -46,7 +46,7 @@ CEntryText::~CEntryText()
 
 const char *CEntryText::c_str()
 {
-    m_CText = ToString(Text);
+    m_CText = str_from(Text);
     return m_CText.c_str();
 }
 
@@ -261,7 +261,7 @@ void CEntryText::Paste()
     auto chBuffer = SDL_GetClipboardText();
     if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
     {
-        auto str = g_EntryPointer->Data() + ToWString(chBuffer);
+        auto str = g_EntryPointer->Data() + wstr_from(chBuffer);
         g_EntryPointer->SetTextW(str);
     }
 }
@@ -308,7 +308,7 @@ void CEntryText::SetPos(int val, CGump *gump)
 
 void CEntryText::SetTextA(const std::string &text)
 {
-    auto wtext = ToWString(text);
+    auto wtext = wstr_from(text);
     SetTextW(wtext);
     m_CText = text;
 }
@@ -328,7 +328,7 @@ void CEntryText::SetTextW(const std::wstring &text)
     {
         if (NumberOnly)
         {
-            auto str = ToString(Text);
+            auto str = str_from(Text);
             while (true)
             {
                 size_t len = str.length();

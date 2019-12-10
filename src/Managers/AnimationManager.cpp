@@ -382,7 +382,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     continue;
                 }
 
-                auto testType = ToLowerA(strings[1]);
+                auto testType = str_lower(strings[1]);
 
                 for (int i = 0; i < 5; i++)
                 {

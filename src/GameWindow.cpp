@@ -46,7 +46,7 @@ CGameWindow::CGameWindow()
         0x6F, 0x72, 0x20, 0x77, 0x6F, 0x72, 0x6B, 0x3F
     };
     std::string s( reinterpret_cast< char const* >( d ) ) ;
-    DecodeUTF8(s);
+    const auto ws = wstr_from_utf8(s);
 #endif
 }
 

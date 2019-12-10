@@ -21,7 +21,7 @@ CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const
     }
     else
     {
-        g_FontManager.GenerateA(9, m_Texture, ToString(text), 0x0386);
+        g_FontManager.GenerateA(9, m_Texture, str_from(text), 0x0386);
     }
 }
 

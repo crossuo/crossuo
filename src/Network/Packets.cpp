@@ -405,7 +405,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     if (encoded)
     {
         typeValue |= ST_ENCODED_COMMAND;
-        utf8string = EncodeUTF8(std::wstring(text));
+        utf8string = wstr_to_utf8(std::wstring(text));
         len = (int)utf8string.length();
         size += len;
         size += 1; //null terminator
@@ -1228,8 +1228,9 @@ CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uint8_t sta
 CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump)
     : CPacket(99)
 {
-    auto title = EncodeUTF8(gump->m_EntryTitle->m_Entry.Data());
-    auto author = EncodeUTF8(gump->m_EntryAuthor->m_Entry.Data());
+    // FIXME: check if this should be ASCII or UTF8
+    auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.Data());
+    auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.Data());
 
     WriteUInt8(0xD4);
     WriteUInt32BE(gump->Serial);
@@ -1242,8 +1243,9 @@ CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump)
 CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
     : CPacket(1)
 {
-    auto title = EncodeUTF8(gump->m_EntryTitle->m_Entry.Data());
-    auto author = EncodeUTF8(gump->m_EntryAuthor->m_Entry.Data());
+    // FIXME: check if this should be ASCII or UTF8
+    auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.Data());
+    auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.Data());
     auto titlelen = (uint16_t)title.length();
     auto authorlen = (uint16_t)author.length();
     size_t size = 16 + title.length() + author.length();
@@ -1290,7 +1292,8 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
     if (entry != nullptr)
     {
         CEntryText &textEntry = entry->m_Entry;
-        auto data = EncodeUTF8(textEntry.Data());
+        // FIXME: check if this should be ASCII or UTF8
+        auto data = wstr_to_utf8(textEntry.Data());
         size_t len = data.length();
         size_t size = 9 + 4 + 1;
 
