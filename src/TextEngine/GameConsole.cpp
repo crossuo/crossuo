@@ -19,7 +19,6 @@ CGameConsole::CGameConsole()
 
 CGameConsole::~CGameConsole()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_EntryPointer == this)
     {
         g_EntryPointer = nullptr;
@@ -28,14 +27,12 @@ CGameConsole::~CGameConsole()
 
 void CGameConsole::Send()
 {
-    DEBUG_TRACE_FUNCTION;
     Send(Text);
     m_Type = GCTT_NORMAL;
 }
 
 void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
 {
-    DEBUG_TRACE_FUNCTION;
     size_t len = text.length();
     if (len != 0u)
     {
@@ -94,7 +91,7 @@ void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        std::string str = "Note to self: " + ToString(text.c_str() + offset);
+                        std::string str = "Note to self: " + str_from(text.c_str() + offset);
                         g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
                     }
                     return;
@@ -177,13 +174,12 @@ void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
 std::wstring CGameConsole::IsSystemCommand(
     const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type)
 {
-    DEBUG_TRACE_FUNCTION;
     type = GCTT_NORMAL;
     std::wstring result = {};
 
     if (*text == g_ConsolePrefix[GCTT_PARTY][0]) //Party
     {
-        auto lStr = ToString(text);
+        auto lStr = str_from(text);
         const char *cText = lStr.c_str();
 
         char *ptr = (char *)cText + 1;
@@ -212,7 +208,7 @@ std::wstring CGameConsole::IsSystemCommand(
                     sprintf_s(pmBuf, "Tell []:");
                 }
 
-                result = ToWString(pmBuf);
+                result = wstr_from(pmBuf);
 
                 type = GCTT_PARTY;
                 member = i - 1;
@@ -315,7 +311,6 @@ bool CGameConsole::InChat() const
 void CGameConsole::DrawW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
     int posOffset = 0;
     std::wstring wtext = Data();
     if (wtext.empty())
@@ -367,8 +362,6 @@ void CGameConsole::DrawW(
 
 void CGameConsole::SaveConsoleMessage()
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_ConsoleStack[m_ConsoleStackCount % MAX_CONSOLE_STACK_SIZE] = Text;
     m_ConsoleStackCount++;
     if (m_ConsoleStackCount > 1100)
@@ -381,7 +374,6 @@ void CGameConsole::SaveConsoleMessage()
 
 void CGameConsole::ChangeConsoleMessage(bool next)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_ConsoleStackCount != 0)
     {
         if (m_PositionChanged)
@@ -416,7 +408,6 @@ void CGameConsole::ChangeConsoleMessage(bool next)
 
 void CGameConsole::ClearStack()
 {
-    DEBUG_TRACE_FUNCTION;
     m_ConsoleStack[0] = {};
     m_ConsoleStackCount = 0;
     m_ConsoleSelectedIndex = 0;

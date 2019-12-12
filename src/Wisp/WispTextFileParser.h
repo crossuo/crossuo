@@ -3,7 +3,10 @@
 #ifndef WISP_TFP_H
 #define WISP_TFP_H
 
+#include <stdint.h>
+#include <common/str.h>
 #include <common/fs.h>
+#include <xuocore/mappedfile.h>
 
 namespace Wisp
 {

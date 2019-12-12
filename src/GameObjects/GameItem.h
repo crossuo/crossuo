@@ -4,6 +4,7 @@
 #pragma once
 
 #include "GameObject.h"
+#include "Globals.h"
 
 class CMulti;
 class CMultiObject;

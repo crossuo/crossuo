@@ -4,6 +4,8 @@
 #pragma once
 
 #include "GameObject.h"
+#include "Globals.h"
+#include "../Sprite.h"
 #include "../Walker/WalkData.h"
 #include "../TextEngine/TextContainer.h"
 

@@ -1,9 +1,12 @@
 ﻿// MIT License
 
+#include "WispPacketMessage.h"
+#include "WispPacketReader.h"
+#include "WispConnection.h"
+
 namespace Wisp
 {
 CPacketReader::CPacketReader()
-
 {
 }
 
@@ -11,9 +14,8 @@ CPacketReader::~CPacketReader()
 {
 }
 
-void CPacketReader::Read(class CConnection *connection)
+void CPacketReader::Read(CConnection *connection)
 {
-    DEBUG_TRACE_FUNCTION;
     if (connection->ReadyRead())
     {
         if (!connection->Read())

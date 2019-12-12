@@ -4,6 +4,9 @@
 #define WISP_PR_H
 
 #include <xuocore/mappedfile.h>
+#include <vector>
+#include <deque>
+#include <stdint.h>
 
 namespace Wisp
 {

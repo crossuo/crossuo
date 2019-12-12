@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <vector>
+#include <common/str.h>
+
 class CSkill
 {
 public:

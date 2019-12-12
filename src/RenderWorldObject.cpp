@@ -17,7 +17,6 @@ CRenderWorldObject::CRenderWorldObject(
     , m_Z(z)
     , RenderType(renderType)
 {
-    DEBUG_TRACE_FUNCTION;
     m_DrawTextureColor[0] = 0xFF;
     m_DrawTextureColor[1] = 0xFF;
     m_DrawTextureColor[2] = 0xFF;
@@ -28,13 +27,11 @@ CRenderWorldObject::CRenderWorldObject(
 
 CRenderWorldObject::~CRenderWorldObject()
 {
-    DEBUG_TRACE_FUNCTION;
     RemoveRender();
 }
 
 bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.RemoveOrCreateObjectsWithBlending)
     {
         m_DrawTextureColor[3] = (uint8_t)maxAlpha;
@@ -75,7 +72,6 @@ bool CRenderWorldObject::ProcessAlpha(int maxAlpha)
 
 void CRenderWorldObject::RemoveRender()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_PrevXY != nullptr)
     {
         m_PrevXY->m_NextXY = m_NextXY;
@@ -97,8 +93,6 @@ bool CRenderWorldObject::RemovedFromRender()
 
 CLandObject *CRenderWorldObject::GetLand()
 {
-    DEBUG_TRACE_FUNCTION;
-
     for (CRenderWorldObject *land = this; land != nullptr; land = land->m_NextXY)
     {
         if (land->IsLandObject())

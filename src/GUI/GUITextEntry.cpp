@@ -6,6 +6,11 @@
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
 #include "../Managers/MouseManager.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Globals.h" // g_GumpSelectedElement, ToColor*
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUITextEntry::CGUITextEntry(
     int serial,
@@ -33,25 +38,21 @@ CGUITextEntry::CGUITextEntry(
 
 CGUITextEntry::~CGUITextEntry()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Entry.Clear();
 }
 
 bool CGUITextEntry::EntryPointerHere()
 {
-    DEBUG_TRACE_FUNCTION;
     return (g_EntryPointer == &m_Entry);
 }
 
 CSize CGUITextEntry::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     return CSize(m_Entry.m_Texture.Width, m_Entry.m_Texture.Height);
 }
 
 void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focused)
 {
-    DEBUG_TRACE_FUNCTION;
     UseGlobalColor = use;
 
     if (use)
@@ -90,13 +91,11 @@ void CGUITextEntry::SetGlobalColor(bool use, int color, int selected, int focuse
 
 void CGUITextEntry::OnClick(CGump *gump, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Entry.OnClick(gump, Font, Unicode, x, y, Align, TextFlags);
 }
 
 void CGUITextEntry::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -105,7 +104,6 @@ void CGUITextEntry::OnMouseEnter()
 
 void CGUITextEntry::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;
@@ -114,7 +112,6 @@ void CGUITextEntry::OnMouseExit()
 
 void CGUITextEntry::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t color = Color;
 
     if (!UseGlobalColor)
@@ -150,7 +147,8 @@ void CGUITextEntry::PrepareTextures()
 
 void CGUITextEntry::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     int y = m_Y;
     uint16_t color = Color;
 
@@ -158,8 +156,17 @@ void CGUITextEntry::Draw(bool checktrans)
     {
         if (UseGlobalColor)
         {
+#ifndef NEW_RENDERER_ENABLED
             glColor4ub(
                 GlobalColorFocusedR, GlobalColorFocusedG, GlobalColorFocusedB, GlobalColorFocusedA);
+#else
+            RenderAdd_SetColor(
+                g_renderCmdList,
+                SetColorCmd{ { GlobalColorFocusedR / 255.f,
+                               GlobalColorFocusedG / 255.f,
+                               GlobalColorFocusedB / 255.f,
+                               GlobalColorFocusedA / 255.f } });
+#endif
         }
         else
         {
@@ -176,11 +183,20 @@ void CGUITextEntry::Draw(bool checktrans)
     {
         if (UseGlobalColor)
         {
+#ifndef NEW_RENDERER_ENABLED
             glColor4ub(
                 GlobalColorSelectedR,
                 GlobalColorSelectedG,
                 GlobalColorSelectedB,
                 GlobalColorSelectedA);
+#else
+            RenderAdd_SetColor(
+                g_renderCmdList,
+                SetColorCmd{ { GlobalColorSelectedR / 255.f,
+                               GlobalColorSelectedG / 255.f,
+                               GlobalColorSelectedB / 255.f,
+                               GlobalColorSelectedA / 255.f } });
+#endif
         }
         else
         {
@@ -189,7 +205,16 @@ void CGUITextEntry::Draw(bool checktrans)
     }
     else if (UseGlobalColor)
     {
+#ifndef NEW_RENDERER_ENABLED
         glColor4ub(GlobalColorR, GlobalColorG, GlobalColorB, GlobalColorA);
+#else
+        RenderAdd_SetColor(
+            g_renderCmdList,
+            SetColorCmd{ { GlobalColorR / 255.f,
+                           GlobalColorG / 255.f,
+                           GlobalColorB / 255.f,
+                           GlobalColorA / 255.f } });
+#endif
     }
 
     if ((color != 0u) && Unicode)
@@ -199,8 +224,15 @@ void CGUITextEntry::Draw(bool checktrans)
 
     if (checktrans)
     {
+#ifndef NEW_RENDERER_ENABLED
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#else
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
+#endif
 
         if (Unicode)
         {
@@ -211,9 +243,15 @@ void CGUITextEntry::Draw(bool checktrans)
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
         }
 
+#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_BLEND);
 
         glEnable(GL_STENCIL_TEST);
+#else
+        RenderAdd_DisableBlend(g_renderCmdList);
+        // FIXME renderer - what were the original values for stencil func, op, ref and mask?
+        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{});
+#endif
 
         if (Unicode)
         {
@@ -224,7 +262,11 @@ void CGUITextEntry::Draw(bool checktrans)
             m_Entry.DrawA(Font, color, m_X, y, Align, TextFlags);
         }
 
+#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_STENCIL_TEST);
+#else
+        RenderAdd_DisableStencil(g_renderCmdList);
+#endif
     }
     else
     {
@@ -240,13 +282,16 @@ void CGUITextEntry::Draw(bool checktrans)
 
     if (UseGlobalColor)
     {
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, 1.f } });
+#endif
     }
 }
 
 bool CGUITextEntry::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

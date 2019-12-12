@@ -2,6 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUIShader.h"
+#include "../Utility/PerfMarker.h"
+#include "../GLEngine/GLShader.h" // REMOVE
 
 CGUIShader::CGUIShader(CGLShader *shader, bool enabled)
     : CBaseGUI(GOT_SHADER, 0, 0, 0, 0, 0)
@@ -16,7 +18,8 @@ CGUIShader::~CGUIShader()
 
 void CGUIShader::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (Enabled && m_Shader != nullptr)
     {
         m_Shader->Use();

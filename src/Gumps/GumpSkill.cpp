@@ -11,7 +11,6 @@
 CGumpSkill::CGumpSkill(int serial, int x, int y)
     : CGump(GT_SKILL, serial, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GS_LOCK_MOVING;
 
     CGUIResizepic *resizepic = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x24EA, 0, 0, 140, 20));
@@ -25,7 +24,7 @@ CGumpSkill::CGumpSkill(int serial, int x, int y)
 
         if (skill != nullptr)
         {
-            text->CreateTextureW(1, ToWString(skill->Name), 30, 120, TS_CENTER);
+            text->CreateTextureW(1, wstr_from(skill->Name), 30, 120, TS_CENTER);
         }
 
         resizepic->Height = 20 + text->m_Texture.Height;
@@ -38,7 +37,6 @@ CGumpSkill::~CGumpSkill()
 
 void CGumpSkill::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GS_LOCK_MOVING)
     {
         LockMoving = !LockMoving;
@@ -47,7 +45,6 @@ void CGumpSkill::GUMP_BUTTON_EVENT_C
 
 void CGumpSkill::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (g_SelectedObject.Serial != ID_GS_LOCK_MOVING && Serial < (uint32_t)g_SkillsManager.Count)

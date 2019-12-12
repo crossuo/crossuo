@@ -5,6 +5,7 @@
 #include "CrossUO.h"
 #include <xuocore/uodata.h>
 #include "Managers/ConfigManager.h"
+#include "Utility/PerfMarker.h"
 
 CTargetGump g_TargetGump;
 CTargetGump g_AttackTargetGump;
@@ -20,7 +21,8 @@ CTargetGump::~CTargetGump()
 
 void CTargetGump::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (Color != 0)
     {
         g_Game.DrawGump(0x1068, Color, X, Y);
@@ -42,7 +44,8 @@ CNewTargetSystem::~CNewTargetSystem()
 
 void CNewTargetSystem::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (!g_ConfigManager.DisableNewTargetSystem && ColorGump != 0)
     {
         CIndexObject &top = g_Index.m_Gump[GumpTop];

@@ -31,8 +31,7 @@ CProfessionManager::~CProfessionManager()
 
 int CProfessionManager::GetKeyCode(const std::string &key)
 {
-    DEBUG_TRACE_FUNCTION;
-    auto str = ToLowerA(key);
+    auto str = str_lower(key);
     int result = 0;
 
     for (int i = 0; i < m_KeyCount && (result == 0); i++)
@@ -48,7 +47,6 @@ int CProfessionManager::GetKeyCode(const std::string &key)
 
 bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
-    DEBUG_TRACE_FUNCTION;
     PROFESSION_TYPE type = PT_NO_PROF;
     std::vector<std::string> childrens;
     std::string name{};
@@ -179,7 +177,8 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             case PM_CODE_NAME_CLILOC_ID:
             {
                 nameClilocID = atoi(strings[1].c_str());
-                name = ToUpperA(g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name));
+                name =
+                    str_upper(g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name));
                 break;
             }
             case PM_CODE_DESCRIPTION_CLILOC_ID:
@@ -265,7 +264,6 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 
 bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *child)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (parent->Type == PT_CATEGORY)
@@ -302,7 +300,6 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
 
 bool CProfessionManager::Load()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     CProfessionCategory *head = new CProfessionCategory();
@@ -323,7 +320,7 @@ bool CProfessionManager::Load()
             auto strings = file.ReadTokens();
             if (!strings.empty())
             {
-                if (ToLowerA(strings[0]) == std::string("begin"))
+                if (str_lower(strings[0]) == std::string("begin"))
                 {
                     result = ParseFilePart(file);
 
@@ -388,7 +385,6 @@ bool CProfessionManager::Load()
 
 void CProfessionManager::LoadProfessionDescription()
 {
-    DEBUG_TRACE_FUNCTION;
     CMappedFile file;
 
     if (file.Load(g_App.UOFilesPath("Professn.enu")))
@@ -448,7 +444,6 @@ void CProfessionManager::LoadProfessionDescription()
 
 CBaseProfession *CProfessionManager::GetParent(CBaseProfession *obj, CBaseProfession *check)
 {
-    DEBUG_TRACE_FUNCTION;
     if (check == nullptr)
     {
         check = (CBaseProfession *)m_Items;

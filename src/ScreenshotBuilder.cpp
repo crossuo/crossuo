@@ -7,19 +7,24 @@
 #include <time.h>
 #include "CrossUO.h"
 #include "Managers/ConfigManager.h"
+#include "Renderer/RenderAPI.h"
 
 #define STBIWDEF static inline
 #define STB_IMAGE_WRITE_STATIC
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <external/stb_image_write.h>
 
+extern RenderCmdList *g_renderCmdList;
+
 CScreenshotBuilder g_ScreenshotBuilder;
 
-static std::vector<uint32_t> GetScenePixels(int x, int y, int width, int height)
+void CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
-    std::vector<uint32_t> pixels(width * height);
+    m_Pixels.resize(width * height);
+    m_Width = width;
+    m_Height = height;
 
+#ifndef NEW_RENDERER_ENABLED
     glReadPixels(
         x,
         g_GameWindow.GetSize().Height - y - height,
@@ -27,17 +32,29 @@ static std::vector<uint32_t> GetScenePixels(int x, int y, int width, int height)
         height,
         GL_RGBA,
         GL_UNSIGNED_INT_8_8_8_8_REV,
-        &pixels[0]);
-
-    for (uint32_t &i : pixels)
-    {
-        i |= 0xFF000000;
-    }
-
-    return pixels;
+        &m_Pixels[0]);
+#else
+    m_WaitingForGPUData = true;
+    const auto windowSize = g_GameWindow.GetSize();
+    auto window_width = uint32_t(windowSize.Width);
+    auto window_height = uint32_t(windowSize.Height);
+    RenderAdd_GetFrameBufferPixels(
+        g_renderCmdList,
+        GetFrameBufferPixelsCmd{ x,
+                                 y,
+                                 uint32_t(width),
+                                 uint32_t(height),
+                                 window_width,
+                                 window_height,
+                                 &m_Pixels[0],
+                                 m_Pixels.size() * sizeof(decltype(m_Pixels)::value_type) });
+#endif
 }
 
 CScreenshotBuilder::CScreenshotBuilder()
+    : m_WaitingForGPUData(false)
+    , m_Width(0)
+    , m_Height(0)
 {
 }
 
@@ -47,14 +64,11 @@ CScreenshotBuilder::~CScreenshotBuilder()
 
 void CScreenshotBuilder::SaveScreen()
 {
-    DEBUG_TRACE_FUNCTION;
     SaveScreen(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
 }
 
-void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
+void CScreenshotBuilder::WritePixelsToDisk()
 {
-    DEBUG_TRACE_FUNCTION;
-
     auto path = g_App.ExeFilePath("screenshots");
     fs_path_create(path);
 
@@ -72,34 +86,38 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
         now.tm_sec);
     std::string filename = buf;
 
-    auto pixels = GetScenePixels(x, y, width, height);
     int result = 0;
-    auto data = (void *)&pixels[0];
+    auto data = (void *)&m_Pixels[0];
+    for (uint32_t &i : m_Pixels)
+    {
+        i |= 0xFF000000;
+    }
+
     stbi_flip_vertically_on_write(true);
     switch (g_ConfigManager.ScreenshotFormat)
     {
         case SF_PNG:
         {
-            path = fs_join_path(path, filename + ".png");
-            result = stbi_write_png(fs_path_ascii(path), width, height, 4, data, width * 4);
+            path = fs_path_join(path, filename + ".png");
+            result = stbi_write_png(fs_path_ascii(path), m_Width, m_Height, 4, data, m_Width * 4);
             break;
         }
         case SF_TGA:
         {
-            path = fs_join_path(path, filename + ".tga");
-            result = stbi_write_tga(fs_path_ascii(path), width, height, 4, data);
+            path = fs_path_join(path, filename + ".tga");
+            result = stbi_write_tga(fs_path_ascii(path), m_Width, m_Height, 4, data);
             break;
         }
         case SF_JPG:
         {
-            path = fs_join_path(path, filename + ".jpg");
-            result = stbi_write_jpg(fs_path_ascii(path), width, height, 4, data, 100);
+            path = fs_path_join(path, filename + ".jpg");
+            result = stbi_write_jpg(fs_path_ascii(path), m_Width, m_Height, 4, data, 100);
             break;
         }
         default:
         {
-            path = fs_join_path(path, filename + ".bmp");
-            result = stbi_write_bmp(fs_path_ascii(path), width, height, 4, data);
+            path = fs_path_join(path, filename + ".bmp");
+            result = stbi_write_bmp(fs_path_ascii(path), m_Width, m_Height, 4, data);
             break;
         }
     }
@@ -113,4 +131,32 @@ void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
     {
         g_Game.CreateTextMessageF(3, 0, "Screenshot saved to: %s", fs_path_ascii(path));
     }
+}
+
+void CScreenshotBuilder::SaveScreen(int x, int y, int width, int height)
+{
+    assert(width > 0 && height > 0);
+
+    if (m_WaitingForGPUData)
+    {
+        g_Game.CreateTextMessageF(3, 0, "A screenshot command is already in progress.");
+        return;
+    }
+
+    GetScenePixels(x, y, width, height);
+
+#ifndef NEW_RENDERER_ENABLED
+    WritePixelsToDisk();
+#endif
+}
+
+void CScreenshotBuilder::GPUDataReady()
+{
+#ifdef NEW_RENDERER_ENABLED
+    if (m_WaitingForGPUData)
+    {
+        WritePixelsToDisk();
+    }
+#endif
+    m_WaitingForGPUData = false;
 }

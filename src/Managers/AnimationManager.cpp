@@ -20,7 +20,10 @@
 #include "../GameWindow.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameCharacter.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
 
+extern RenderCmdList *g_renderCmdList;
 CAnimationManager g_AnimationManager;
 
 void *LoadSpritePixels(int width, int height, uint16_t *pixels)
@@ -41,7 +44,6 @@ struct FRAME_OUTPUT_INFO
 void CalculateFrameInformation(
     FRAME_OUTPUT_INFO &info, CGameObject *obj, bool mirror, uint8_t animIndex)
 {
-    DEBUG_TRACE_FUNCTION;
     const auto dir = g_AnimationManager.SelectAnim.Direction;
     const auto grp = g_AnimationManager.SelectAnim.Group;
     const auto dim = g_AnimationManager.GetAnimationDimensions(obj, animIndex, dir, grp);
@@ -126,7 +128,6 @@ const int CAnimationManager::m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT
 
 CAnimationManager::CAnimationManager()
 {
-    DEBUG_TRACE_FUNCTION;
     memset(m_AddressIdx, 0, sizeof(m_AddressIdx));
     memset(m_SizeIdx, 0, sizeof(m_SizeIdx));
 
@@ -136,7 +137,6 @@ CAnimationManager::CAnimationManager()
 
 CAnimationManager::~CAnimationManager()
 {
-    DEBUG_TRACE_FUNCTION;
     ClearUnusedTextures(g_Ticks + 100000);
 }
 
@@ -185,7 +185,6 @@ void CAnimationManager::UpdateAnimationAddressTable()
 
 void CAnimationManager::Load(uint32_t *verdata)
 {
-    DEBUG_TRACE_FUNCTION;
     size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
 
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
@@ -362,7 +361,6 @@ void CAnimationManager::Load(uint32_t *verdata)
 
 void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion >= CV_500A)
     {
         static const std::string typeNames[5] = {
@@ -384,7 +382,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     continue;
                 }
 
-                auto testType = ToLowerA(strings[1]);
+                auto testType = str_lower(strings[1]);
 
                 for (int i = 0; i < 5; i++)
                 {
@@ -925,8 +923,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", id);
@@ -952,7 +948,6 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
 
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
 {
-    DEBUG_TRACE_FUNCTION;
     DEBUG(Data, "gr: 0x%04X, %i", id, g_Index.m_Anim[id].Type);
     switch (g_Index.m_Anim[id].Type)
     {
@@ -973,7 +968,6 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
 
 void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (dir)
     {
         case 2:
@@ -1019,7 +1013,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
 
 void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (dir)
     {
         case 0:
@@ -1057,7 +1050,6 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
 
 void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
 {
-    DEBUG_TRACE_FUNCTION;
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
     for (auto it = m_UsedAnimList.begin(); it != m_UsedAnimList.end();)
@@ -1092,7 +1084,6 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
 bool CAnimationManager::TestPixels(
     CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj == nullptr)
     {
         return false;
@@ -1162,7 +1153,8 @@ bool CAnimationManager::TestPixels(
 void CAnimationManager::Draw(
     CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (obj == nullptr)
     {
         return;
@@ -1222,12 +1214,14 @@ void CAnimationManager::Draw(
     }
 
     y -= spr->Height + frame.CenterY;
+    auto sdmNoColor = true;
     if (isShadow)
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
         glBlendFunc(GL_DST_COLOR, GL_ZERO);
-        g_GL_DrawShadow(*spr->Texture, x, y, mirror);
+        g_GL.DrawShadow(*spr->Texture, x, y, mirror);
         if (m_UseBlending)
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1236,6 +1230,21 @@ void CAnimationManager::Draw(
         {
             glDisable(GL_BLEND);
         }
+#else
+        auto tex = spr->Texture;
+        RenderAdd_DrawShadow(
+            g_renderCmdList,
+            DrawShadowCmd{ tex->Texture,
+                           x,
+                           y,
+                           tex->Width,
+                           tex->Height,
+                           g_ShaderDrawMode,
+                           SDM_SHADOW,
+                           mirror,
+                           m_UseBlending });
+#endif
+        sdmNoColor = false;
     }
     else
     {
@@ -1271,6 +1280,7 @@ void CAnimationManager::Draw(
             if ((color & SPECTRAL_COLOR_FLAG) != 0)
             {
                 spectralColor = true;
+#ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
                 if (color == SPECTRAL_COLOR_SPECIAL)
                 {
@@ -1282,9 +1292,26 @@ void CAnimationManager::Draw(
                     glBlendFunc(GL_ZERO, GL_SRC_COLOR);
                     glUniform1iARB(g_ShaderDrawMode, SDM_SPECTRAL);
                 }
+#else
+                auto uniformValue = SDM_SPECTRAL;
+                auto blendSrc = BlendFactor::BlendFactor_Zero;
+                auto blendDst = BlendFactor::BlendFactor_SrcColor;
+                if (color == SPECTRAL_COLOR_SPECIAL)
+                {
+                    blendDst = BlendFactor::BlendFactor_OneMinusSrcColor;
+                    uniformValue = SDM_SPECIAL_SPECTRAL;
+                }
+
+                RenderAdd_SetBlend(g_renderCmdList, BlendStateCmd{ blendSrc, blendDst });
+                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+                cmd.value.asInt1 = uniformValue;
+                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
+                sdmNoColor = false;
             }
             else if (color != 0u)
             {
+#ifndef NEW_RENDERER_ENABLED
                 if (partialHue)
                 {
                     glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
@@ -1293,16 +1320,25 @@ void CAnimationManager::Draw(
                 {
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
+#else
+                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+                cmd.value.asInt1 = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
                 g_ColorManager.SendColorsToShader(color);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+                sdmNoColor = false;
             }
         }
-        else
+
+        if (sdmNoColor)
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         }
 
         if (m_Transform)
@@ -1396,22 +1432,59 @@ void CAnimationManager::Draw(
                     }
                 }
             }
-            g_GL_DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
+#ifndef NEW_RENDERER_ENABLED
+            g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
+#else
+            auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
+                                                x,
+                                                y,
+                                                spr->Texture->Width,
+                                                spr->Texture->Height,
+                                                h3mod,
+                                                h6mod,
+                                                h9mod,
+                                                mirror };
+            RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
+#endif
         }
         else
         {
-            g_GL_DrawMirrored(*spr->Texture, x, y, mirror);
+#ifndef NEW_RENDERER_ENABLED
+            g_GL.DrawMirrored(*spr->Texture, x, y, mirror);
+#else
+            auto textureCmd = DrawQuadCmd{ spr->Texture->Texture,
+                                           x,
+                                           y,
+                                           spr->Texture->Width,
+                                           spr->Texture->Height,
+                                           1.f,
+                                           1.f,
+                                           g_ColorWhite,
+                                           mirror };
+            RenderAdd_DrawQuad(g_renderCmdList, textureCmd);
+#endif
         }
 
         if (spectralColor)
         {
             if (m_UseBlending)
             {
+#ifndef NEW_RENDERER_ENABLED
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#else
+                RenderAdd_SetBlend(
+                    g_renderCmdList,
+                    BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                   BlendFactor::BlendFactor_OneMinusSrcAlpha });
+#endif
             }
             else
             {
+#ifndef NEW_RENDERER_ENABLED
                 glDisable(GL_BLEND);
+#else
+                RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             }
         }
     }
@@ -1419,7 +1492,6 @@ void CAnimationManager::Draw(
 
 void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y)
 {
-    DEBUG_TRACE_FUNCTION;
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
 
     auto dir = SelectAnim.Direction;
@@ -1548,7 +1620,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
     m_EquipConvItem = nullptr;
-    DEBUG_TRACE_FUNCTION;
+
     m_Transform = false;
 
     int drawX = x + obj->OffsetX;
@@ -1562,18 +1634,40 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     if (g_DrawAura)
     {
+        uint32_t auraColor = g_ColorManager.GetPolygoneColor(
+            16, g_ConfigManager.GetColorByNotoriety(obj->Notoriety));
+#ifndef NEW_RENDERER_ENABLED
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        uint32_t auraColor = g_ColorManager.GetPolygoneColor(
-            16, g_ConfigManager.GetColorByNotoriety(obj->Notoriety));
         glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
 
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            BlendStateCmd{ BlendFactor::BlendFactor_One,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
+        RenderAdd_SetColor(
+            g_renderCmdList,
+            SetColorCmd{ { ToColorR(auraColor) / 255.f,
+                           ToColorG(auraColor) / 255.f,
+                           ToColorB(auraColor) / 255.f,
+                           ToColorA(auraColor) / 255.f } });
+
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
+#else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+        RenderAdd_DisableBlend(g_renderCmdList);
+#endif
     }
 
     if (obj->Hidden())
@@ -1589,9 +1683,19 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                 {
                     m_UseBlending = true;
 
+#ifndef NEW_RENDERER_ENABLED
                     glColor4ub(0xFF, 0xFF, 0xFF, g_ConfigManager.HiddenAlpha);
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#else
+                    RenderAdd_SetColor(
+                        g_renderCmdList,
+                        SetColorCmd{ { 1.f, 1.f, 1.f, g_ConfigManager.HiddenAlpha / 255.f } });
+                    RenderAdd_SetBlend(
+                        g_renderCmdList,
+                        BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                       BlendFactor::BlendFactor_OneMinusSrcAlpha });
+#endif
 
                     Color = 0x038C;
 
@@ -1651,10 +1755,23 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (!m_UseBlending && drawTextureColor[3] != 0xFF)
     {
         m_UseBlending = true;
+#ifndef NEW_RENDERER_ENABLED
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4ub(
             drawTextureColor[0], drawTextureColor[1], drawTextureColor[2], drawTextureColor[3]);
+#else
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
+        RenderAdd_SetColor(
+            g_renderCmdList,
+            SetColorCmd{ { drawTextureColor[0] / 255.f,
+                           drawTextureColor[1] / 255.f,
+                           drawTextureColor[2] / 255.f,
+                           drawTextureColor[3] / 255.f } });
+#endif
     }
 
     bool isAttack = (serial == g_LastAttackObject);
@@ -1791,8 +1908,13 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (m_UseBlending)
     {
         m_UseBlending = false;
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
+#else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+        RenderAdd_DisableBlend(g_renderCmdList);
+#endif
     }
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)
@@ -1967,7 +2089,6 @@ void CAnimationManager::PrepareTargetAttackGump(
 
 bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     y -= 3;
     m_Sitting = obj->IsSitting();
     SelectAnim.Direction = 0;
@@ -2025,8 +2146,6 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return;
@@ -2057,8 +2176,6 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 
 bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return false;
@@ -2079,7 +2196,6 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT)
     {
@@ -2141,8 +2257,6 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     CGameObject *obj, uint8_t frameIndex, uint8_t defaultDirection, uint8_t defaultGroup)
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint8_t dir = defaultDirection & 0x7F;
     uint8_t animGroup = defaultGroup;
     uint16_t id = obj->GetMountAnimation();
@@ -2194,7 +2308,6 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
 DRAW_FRAME_INFORMATION
 CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLayers)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Sitting = 0;
     SelectAnim.Direction = 0;
 
@@ -2341,7 +2454,6 @@ bool CAnimationManager::DrawEquippedLayers(
     uint8_t animIndex,
     int lightOffset)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     std::vector<CGameItem *> &list = obj->m_DrawLayeredObjects;
@@ -2408,7 +2520,6 @@ bool CAnimationManager::DrawEquippedLayers(
 
 bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     switch (layer)
@@ -2661,8 +2772,6 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
 
             switch (action)
             {
-                default:
-                    return 31;
                 case 1:
                     return 18;
                 case 2:
@@ -2679,9 +2788,9 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                     return 9;
                 case 5:
                     return 10;
+                default:
+                    return 31;
             }
-
-            return 0;
         }
 
         if ((mode % 2) != 0)

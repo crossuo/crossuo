@@ -7171,6 +7171,7 @@ const char* ImGui::GetStyleColorName(ImGuiCol idx)
     case ImGuiCol_NavWindowingHighlight: return "NavWindowingHighlight";
     case ImGuiCol_NavWindowingDimBg: return "NavWindowingDimBg";
     case ImGuiCol_ModalWindowDimBg: return "ModalWindowDimBg";
+    case ImGuiCol_SelectedEntryBg: return "SelectedEntryBg"; // PATCH: crossuo
     }
     IM_ASSERT(0);
     return "Unknown";

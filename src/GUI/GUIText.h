@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/str.h>
 #include "BaseGUI.h"
 #include "Sprite.h"
 

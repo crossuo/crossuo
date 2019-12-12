@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 struct PATH_POINT
 {
     int X;

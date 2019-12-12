@@ -19,14 +19,12 @@ CJournal::~CJournal()
 
 void CJournal::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseQueue::Clear();
     Size = 0;
 }
 
 void CJournal::Add(CTextData *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseQueue::Add(obj);
 
     CGumpJournal *gump = (CGumpJournal *)g_GumpManager.UpdateGump(0, 0, GT_JOURNAL);

@@ -3,6 +3,9 @@
 #ifndef WISP_PCKT_H
 #define WISP_PCKT_H
 
+#include <vector>
+#include <stdint.h>
+
 namespace Wisp
 {
 class CPacketMessage

@@ -3,11 +3,15 @@
 
 #pragma once
 
+#include "GLHeaders.h"
+#include "../Renderer/RenderAPI.h"
+
 void UnuseShader();
 
 class CGLShader
 {
 protected:
+#ifndef NEW_RENDERER_ENABLED
     GLuint m_Shader{ 0 };
 
     GLuint m_VertexShader{ 0 };
@@ -16,21 +20,22 @@ protected:
 
     //Указатель на текстуру для передачи ее шейдеру (можно не использовать, текстура передается автоматически при glBingTexture)
     GLuint m_TexturePointer{ 0 };
+#else
+    ShaderPipeline m_ShaderPipeline{};
+
+    uint32_t m_TexturePointer{ 0 };
+#endif
 
 public:
     CGLShader();
     virtual ~CGLShader();
 
-    //Инициализировать шейдер
     virtual bool Init(const char *vertexShaderData, const char *fragmentShaderData);
 
-    //Использовать шейдер
     virtual bool Use();
 
-    //Остановить использование шейдера
     virtual void Pause();
 
-    //Восстановить работу шейдера
     virtual void Resume();
 };
 
@@ -39,26 +44,28 @@ class CDeathShader : public CGLShader
 public:
     CDeathShader();
 
-    //Инициализировать шейдер
     virtual bool Init(const char *vertexShaderData, const char *fragmentShaderData);
 };
 
 class CColorizerShader : public CGLShader
 {
 protected:
+#ifndef NEW_RENDERER_ENABLED
     //Указатель на палитру цветов для передачи ее шейдеру
     GLuint m_ColorTablePointer{ 0 };
 
     //Указатель на метод вывода шейдером
     GLuint m_DrawModePointer{ 0 };
+#else
+    uint32_t m_ColorTablePointer{ 0 };
+    uint32_t m_DrawModePointer{ 0 };
+#endif
 
 public:
     CColorizerShader();
 
-    //Инициализировать шейдер
     virtual bool Init(const char *vertexShaderData, const char *fragmentShaderData);
 
-    //Использовать шейдер
     virtual bool Use();
 };
 

@@ -26,7 +26,6 @@ CGumpRacialAbilitiesBook::~CGumpRacialAbilitiesBook()
 
 void CGumpRacialAbilitiesBook::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         g_ToolTip.Set(L"Double click to maximize book gump");
@@ -45,7 +44,6 @@ void CGumpRacialAbilitiesBook::InitToolTip()
 
 void CGumpRacialAbilitiesBook::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     int abilityOnPage = 0;
     uint16_t iconStartGraphic = 0;
 
@@ -72,7 +70,6 @@ void CGumpRacialAbilitiesBook::PrepareContent()
 
 void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, uint16_t &iconStartGraphic)
 {
-    DEBUG_TRACE_FUNCTION;
     DictionaryPagesCount = 2;
     abilityOnPage = 3;
 
@@ -106,7 +103,6 @@ void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, uint16_t &
 
 std::string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 {
-    DEBUG_TRACE_FUNCTION;
     std::string result{};
     passive = true;
 
@@ -154,7 +150,6 @@ std::string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 
 void CGumpRacialAbilitiesBook::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     m_PrevPage = nullptr;
     m_NextPage = nullptr;
 
@@ -272,7 +267,6 @@ void CGumpRacialAbilitiesBook::UpdateContent()
 
 void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     int newPage = -1;
 
     if (serial == ID_GRAB_BUTTON_PREV)
@@ -331,7 +325,6 @@ void CGumpRacialAbilitiesBook::GUMP_BUTTON_EVENT_C
 
 bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Minimized)
@@ -379,7 +372,6 @@ bool CGumpRacialAbilitiesBook::OnLeftMouseButtonDoubleClick()
 
 void CGumpRacialAbilitiesBook::DelayedClick(CRenderObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj != nullptr)
     {
         ChangePage(g_ClickObject.Page);
@@ -389,7 +381,6 @@ void CGumpRacialAbilitiesBook::DelayedClick(CRenderObject *obj)
 
 void CGumpRacialAbilitiesBook::ChangePage(int newPage)
 {
-    DEBUG_TRACE_FUNCTION;
     Page = newPage;
 
     m_PrevPage->Visible = (Page != 0);

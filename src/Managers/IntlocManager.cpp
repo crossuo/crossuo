@@ -10,7 +10,6 @@ CIntlocManager g_IntlocManager;
 
 CIntloc::CIntloc(int fileIndex, const std::string &lang)
 {
-    DEBUG_TRACE_FUNCTION;
     Loaded = false;
     Language = lang;
     FileIndex = fileIndex;
@@ -31,7 +30,7 @@ CIntloc::CIntloc(int fileIndex, const std::string &lang)
 
                     while (m_File.Ptr < end && !m_File.IsEOF())
                     {
-                        m_Strings.push_back(DecodeUTF8(m_File.ReadString()));
+                        m_Strings.push_back(wstr_from_utf8(m_File.ReadString()));
                     }
                 }
                 else if (code == 'FORM')
@@ -59,7 +58,6 @@ CIntloc::CIntloc(int fileIndex, const std::string &lang)
 
 CIntloc::~CIntloc()
 {
-    DEBUG_TRACE_FUNCTION;
     m_File.Unload();
 
     m_Strings.clear();
@@ -67,12 +65,11 @@ CIntloc::~CIntloc()
 
 std::wstring CIntloc::Get(int id, bool toCamelCase)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id < (int)m_Strings.size())
     {
         if (toCamelCase)
         {
-            return ToCamelCaseW(m_Strings[id]);
+            return wstr_camel_case(m_Strings[id]);
         }
 
         return m_Strings[id];
@@ -92,7 +89,6 @@ CIntlocManager::~CIntlocManager()
 
 CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CIntloc *)
     {
         if (obj->Language == lang && obj->FileIndex == fileIndex)
@@ -131,9 +127,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
 
 std::wstring CIntlocManager::Intloc(const std::string &lang, uint32_t clilocID, bool isNewCliloc)
 {
-    DEBUG_TRACE_FUNCTION;
-
-    auto language = ToLowerA(lang);
+    auto language = str_lower(lang);
     if (language.length() == 0u)
     {
         language = "enu";

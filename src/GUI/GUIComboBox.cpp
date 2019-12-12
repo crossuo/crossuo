@@ -8,6 +8,10 @@
 #include "../PressedObject.h"
 #include "../SelectedObject.h"
 #include "../Managers/MouseManager.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIComboBox::CGUIComboBox(
     int serial,
@@ -27,7 +31,6 @@ CGUIComboBox::CGUIComboBox(
     , OpenedWidth(width)
     , ShowMaximizedCenter(showMaximizedCenter)
 {
-    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = false;
     m_ArrowX = 0;
     m_OffsetY = 0;
@@ -61,7 +64,6 @@ CGUIComboBox::CGUIComboBox(
 
 CGUIComboBox::~CGUIComboBox()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Text != nullptr)
     {
         delete Text;
@@ -71,7 +73,6 @@ CGUIComboBox::~CGUIComboBox()
 
 void CGUIComboBox::RecalculateWidth()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!CompositeBackground)
     {
         OpenedWidth = 0;
@@ -98,21 +99,17 @@ void CGUIComboBox::RecalculateWidth()
 
 void CGUIComboBox::SetShowItemsCount(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_WorkHeight = val * 15;
     m_ShowItemsCount = val;
 }
 
 CSize CGUIComboBox::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
-
     return CSize(m_WorkWidth, m_WorkHeight);
 }
 
 void CGUIComboBox::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     if (CompositeBackground)
     {
         g_Game.ExecuteGump(Graphic);
@@ -130,7 +127,6 @@ void CGUIComboBox::PrepareTextures()
 
 CBaseGUI *CGUIComboBox::SkipToStart()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *start = (CBaseGUI *)m_Items;
 
     int index = 0;
@@ -154,7 +150,8 @@ CBaseGUI *CGUIComboBox::SkipToStart()
 
 void CGUIComboBox::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (Text != nullptr)
     {
         Text->m_Texture.Draw(m_X + Text->GetX(), m_Y + Text->GetY() + TextOffsetY, checktrans);
@@ -203,7 +200,7 @@ void CGUIComboBox::Draw(bool checktrans)
         }
         else
         {
-            g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6);
+            g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6, false);
         }
 
         g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
@@ -217,9 +214,19 @@ void CGUIComboBox::Draw(bool checktrans)
             {
                 if (g_SelectedObject.Object == item)
                 {
+#ifndef NEW_RENDERER_ENABLED
                     glColor4f(0.7f, 0.7f, 0.7f, 1.0f);
                     g_GL.DrawPolygone(currentX, currentY, m_WorkWidth, 14);
                     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+                    RenderAdd_DrawUntexturedQuad(
+                        g_renderCmdList,
+                        DrawUntexturedQuadCmd{ currentX,
+                                               currentY,
+                                               uint32_t(m_WorkWidth),
+                                               14,
+                                               { 0.7f, 0.7f, 0.7f, 1.f } });
+#endif
                 }
 
                 CGUIText *text = (CGUIText *)item;
@@ -279,7 +286,7 @@ void CGUIComboBox::Draw(bool checktrans)
         }
         else
         {
-            g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, 20);
+            g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, 20, false);
 
             if (selected != nullptr)
             {
@@ -295,7 +302,6 @@ void CGUIComboBox::Draw(bool checktrans)
 
 bool CGUIComboBox::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     ListingDirection = 0;
     bool select = false;
 
@@ -353,7 +359,6 @@ bool CGUIComboBox::Select()
 
 CBaseGUI *CGUIComboBox::SelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *select = this;
 
     if (g_PressedObject.LeftObject == this) //maximized
@@ -402,7 +407,6 @@ CBaseGUI *CGUIComboBox::SelectedItem()
 
 int CGUIComboBox::IsSelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     int select = -1;
 
     if (g_PressedObject.LeftObject == this) //maximized

@@ -3,6 +3,10 @@
 
 #include "ScreenEffectManager.h"
 #include "../GameWindow.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CScreenEffectManager g_ScreenEffectManager;
 
@@ -85,8 +89,10 @@ int CScreenEffectManager::Process()
 
 void CScreenEffectManager::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     if (Mode != SEM_NONE)
     {
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(ColorR, ColorG, ColorB, Alpha);
 
         if (Type == SET_TO_WHITE_THEN_BLACK && Alpha >= 1.0f)
@@ -104,6 +110,15 @@ void CScreenEffectManager::Draw()
         }
 
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            DrawUntexturedQuadCmd{ 0,
+                                   0,
+                                   uint32_t(g_GameWindow.GetSize().Width),
+                                   uint32_t(g_GameWindow.GetSize().Height),
+                                   { ColorR, ColorG, ColorB, Alpha } });
+#endif
     }
 }
 bool CScreenEffectManager::Use(

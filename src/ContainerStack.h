@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <deque>
+
 class CContainerStackItem
 {
 public:

@@ -15,6 +15,10 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Gumps/GumpCustomHouse.h"
 #include "../Walker/PathFinder.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CMouseManager g_MouseManager;
 
@@ -58,7 +62,6 @@ int CMouseManager::Sgn(int val)
 
 int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_facing)
 {
-    DEBUG_TRACE_FUNCTION;
     int shiftX = to_x - x1;
     int shiftY = to_y - y1;
 
@@ -133,7 +136,6 @@ int CMouseManager::GetFacing(int x1, int y1, int to_x, int to_y, int current_fac
 
 uint16_t CMouseManager::GetGameCursor()
 {
-    DEBUG_TRACE_FUNCTION;
     int war = (int)(g_Player != nullptr && g_Player->Warmode);
     uint16_t result = g_CursorData[war][9]; //Main Gump mouse cursor
 
@@ -163,7 +165,6 @@ uint16_t CMouseManager::GetGameCursor()
 
 void CMouseManager::ProcessWalking()
 {
-    DEBUG_TRACE_FUNCTION;
     bool mouseInWindow = true;
 
     if (Position.X < g_ConfigManager.GameWindowX || Position.Y < g_ConfigManager.GameWindowY ||
@@ -207,7 +208,6 @@ void CMouseManager::ProcessWalking()
 
 bool CMouseManager::LoadCursorTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
     for (int i = 0; i < 2; i++)
     {
@@ -334,7 +334,8 @@ bool CMouseManager::LoadCursorTextures()
 
 void CMouseManager::Draw(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (g_GameState >= GS_GAME)
     {
         if (g_CustomHouseGump != nullptr && (g_CustomHouseGump->SelectedGraphic != 0u))
@@ -466,7 +467,13 @@ void CMouseManager::Draw(uint16_t id)
             {
                 g_ColorizerShader.Use();
                 g_ColorManager.SendColorsToShader(color);
+#ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+#else
+                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+                cmd.value.asInt1 = SDM_COLORED;
+                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
             }
             spr->Texture->Draw(x, y);
             if (color != 0u)
@@ -492,22 +499,45 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (auraColor != 0u)
                 {
+#ifndef NEW_RENDERER_ENABLED
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-                    glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
                     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+                    glColor4ub(ToColorR(auraColor), ToColorG(auraColor), ToColorB(auraColor), 0xFF);
 
                     CGLTexture tex;
                     tex.Texture = g_AuraTexture.Texture;
                     tex.Width = 35;
                     tex.Height = 35;
 
-                    g_GL.GL1_Draw(tex, x - 6, y - 2);
+                    g_GL.Draw(tex, x - 6, y - 2);
 
                     tex.Texture = 0;
 
                     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                     glDisable(GL_BLEND);
+#else
+                    RenderAdd_SetBlend(
+                        g_renderCmdList,
+                        BlendStateCmd{ BlendFactor::BlendFactor_One,
+                                       BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                    ShaderUniformCmd uniformCmd{ g_ShaderDrawMode,
+                                                 ShaderUniformType::ShaderUniformType_Int1 };
+                    uniformCmd.value.asInt1 = SDM_NO_COLOR;
+                    RenderAdd_SetShaderUniform(g_renderCmdList, uniformCmd);
+                    RenderAdd_SetColor(
+                        g_renderCmdList,
+                        SetColorCmd{ { ToColorR(auraColor) / 255.f,
+                                       ToColorG(auraColor) / 255.f,
+                                       ToColorB(auraColor) / 255.f,
+                                       1.f } });
+
+                    auto quadCmd = DrawQuadCmd{ g_AuraTexture.Texture, x - 6, y - 2, 35, 35 };
+                    RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
+
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+                    RenderAdd_DisableBlend(g_renderCmdList);
+#endif
                 }
             }
         }

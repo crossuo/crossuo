@@ -12,13 +12,14 @@
 #include "../Managers/MouseManager.h"
 #include "../Network/Packets.h"
 #include "../GameObjects/GamePlayer.h"
+#include "../Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };
 
 CGumpWorldMap::CGumpWorldMap(short x, short y)
     : CGump(GT_WORLD_MAP, 0, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     Page = 2;
 
     Add(new CGUIPage(1));
@@ -99,7 +100,6 @@ CGumpWorldMap::~CGumpWorldMap()
 
 int CGumpWorldMap::GetCurrentMap()
 {
-    DEBUG_TRACE_FUNCTION;
     int map = m_Map;
 
     if (map == 0)
@@ -116,7 +116,6 @@ int CGumpWorldMap::GetCurrentMap()
 
 void CGumpWorldMap::SetLinkWithPlayer(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_LinkWithPlayer = val;
     m_Checkbox->Checked = val;
     m_MapData->MoveOnDrag = (m_LinkWithPlayer || g_CurrentMap == GetCurrentMap());
@@ -125,7 +124,6 @@ void CGumpWorldMap::SetLinkWithPlayer(bool val)
 
 void CGumpWorldMap::SetScale(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Scale = val;
     m_ComboboxScale->SelectedIndex = val;
     WantRedraw = true;
@@ -133,7 +131,6 @@ void CGumpWorldMap::SetScale(int val)
 
 void CGumpWorldMap::SetMap(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Map = val;
     m_ComboboxMap->SelectedIndex = val;
     WantRedraw = true;
@@ -141,7 +138,6 @@ void CGumpWorldMap::SetMap(int val)
 
 void CGumpWorldMap::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed)
@@ -171,7 +167,6 @@ void CGumpWorldMap::CalculateGumpState()
 
 void CGumpWorldMap::GetCurrentCenter(int &x, int &y, int &mouseX, int &mouseY)
 {
-    DEBUG_TRACE_FUNCTION;
     x = -OffsetX + mouseX;
     y = -OffsetY + mouseY;
 
@@ -198,7 +193,6 @@ void CGumpWorldMap::GetCurrentCenter(int &x, int &y, int &mouseX, int &mouseY)
 
 void CGumpWorldMap::ScaleOffsets(int newScale, int mouseX, int mouseY)
 {
-    DEBUG_TRACE_FUNCTION;
     int offsetX = 0;
     int offsetY = 0;
 
@@ -231,7 +225,6 @@ void CGumpWorldMap::ScaleOffsets(int newScale, int mouseX, int mouseY)
 
 void CGumpWorldMap::GetScaledDimensions(int &width, int &height, int &playerX, int &playerY)
 {
-    DEBUG_TRACE_FUNCTION;
     int map = GetCurrentMap();
 
     width = g_MapSize[map].Width;
@@ -266,7 +259,6 @@ void CGumpWorldMap::GetScaledDimensions(int &width, int &height, int &playerX, i
 
 void CGumpWorldMap::FixOffsets(int &offsetX, int &offsetY, int &width, int &height)
 {
-    DEBUG_TRACE_FUNCTION;
     int mapWidth = 0;
     int mapHeight = 0;
     int playerX = 0;
@@ -297,8 +289,6 @@ void CGumpWorldMap::FixOffsets(int &offsetX, int &offsetY, int &width, int &heig
 
 void CGumpWorldMap::LoadMap(int map)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (!Called ||
         (g_FileManager.m_MapUOP[map].Start == nullptr &&
          g_FileManager.m_MapMul[map].Start == nullptr) ||
@@ -502,8 +492,20 @@ void CGumpWorldMap::LoadMap(int map)
 
         if (buf.size() == wantSize)
         {
-            g_GL_BindTexture16(
+#ifndef NEW_RENDERER_ENABLED
+            g_GL.BindTexture16(
                 g_MapTexture[map], g_MapSize[map].Width, g_MapSize[map].Height, &buf[0]);
+#else
+            g_MapTexture[map].Width = g_MapSize[map].Width;
+            g_MapTexture[map].Height = g_MapSize[map].Height;
+            g_MapTexture[map].Texture = Render_CreateTexture2D(
+                g_MapSize[map].Width,
+                g_MapSize[map].Height,
+                TextureGPUFormat::TextureGPUFormat_RGB5_A1,
+                &buf[0],
+                TextureFormat::TextureFormat_Unsigned_A1_BGR5);
+            assert(g_MapTexture[map].Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
         }
         else
         {
@@ -518,7 +520,6 @@ void CGumpWorldMap::LoadMap(int map)
 
 void CGumpWorldMap::GenerateFrame(bool stop)
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::GenerateFrame(false);
 
     //Player drawing
@@ -533,14 +534,33 @@ void CGumpWorldMap::GenerateFrame(bool stop)
 
         m_Scissor->Draw(false);
 
+#ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+#endif
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2);
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16);
         g_GL.DrawCircle(
             m_MapData->OffsetX + playerX + 8.0f, m_MapData->OffsetY + playerY + 31.0f, 3.0f);
+#else
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            DrawUntexturedQuadCmd{
+                m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2 });
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            DrawUntexturedQuadCmd{
+                m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16 });
+        RenderAdd_DrawCircle(
+            g_renderCmdList,
+            DrawCircleCmd{
+                m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f });
+#endif
 
         g_GL.PopScissor();
     }
@@ -548,7 +568,6 @@ void CGumpWorldMap::GenerateFrame(bool stop)
 
 void CGumpWorldMap::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     CurrentOffsetX = OffsetX;
     CurrentOffsetY = OffsetY;
 
@@ -632,7 +651,6 @@ void CGumpWorldMap::PrepareContent()
 
 void CGumpWorldMap::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonDown();
 
     if (g_PressedObject.LeftObject == m_MapData)
@@ -647,7 +665,6 @@ void CGumpWorldMap::OnLeftMouseButtonDown()
 
 void CGumpWorldMap::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (g_PressedObject.LeftObject == m_MapData)
@@ -666,7 +683,6 @@ void CGumpWorldMap::OnLeftMouseButtonUp()
 
 void CGumpWorldMap::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GWM_MINIMIZE)
     {
         Minimized = true;
@@ -677,7 +693,6 @@ void CGumpWorldMap::GUMP_BUTTON_EVENT_C
 
 void CGumpWorldMap::GUMP_CHECKBOX_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GWM_LINK_WITH_PLAYER)
     {
         m_LinkWithPlayer = state;
@@ -687,7 +702,6 @@ void CGumpWorldMap::GUMP_CHECKBOX_EVENT_C
 
 void CGumpWorldMap::GUMP_COMBOBOX_SELECTION_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial >= ID_GWM_SCALE_LIST)
     {
         int index = serial - ID_GWM_SCALE_LIST;
@@ -747,7 +761,6 @@ void CGumpWorldMap::GUMP_COMBOBOX_SELECTION_EVENT_C
 
 bool CGumpWorldMap::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (Page == 1)
@@ -764,8 +777,6 @@ bool CGumpWorldMap::OnLeftMouseButtonDoubleClick()
 
 void CGumpWorldMap::OnMidMouseButtonScroll(bool up)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (!Minimized && !g_MouseManager.LeftButtonPressed && !g_MouseManager.RightButtonPressed &&
         g_Game.PolygonePixelsInXY(m_X + 8, m_Y + 31, Width - 16, Height - 16))
     {
@@ -804,8 +815,6 @@ void CGumpWorldMap::OnMidMouseButtonScroll(bool up)
 
 void CGumpWorldMap::UpdateSize()
 {
-    DEBUG_TRACE_FUNCTION;
-
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
     screenX -= 50;
@@ -846,14 +855,12 @@ void CGumpWorldMap::UpdateSize()
 
 void CGumpWorldMap::GUMP_RESIZE_START_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     m_StartResizeWidth = Width;
     m_StartResizeHeight = Height;
 }
 
 void CGumpWorldMap::GUMP_RESIZE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if ((m_StartResizeWidth != 0) && (m_StartResizeHeight != 0))
     {
         CPoint2Di offset = g_MouseManager.LeftDroppedOffset();

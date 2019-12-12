@@ -103,7 +103,6 @@ void CServerList::ParsePacket(CDataReader &reader)
 
 CServer *CServerList::GetServer(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     if (index < (int)m_Servers.size())
     {
         return &m_Servers[index];
@@ -114,8 +113,6 @@ CServer *CServerList::GetServer(int index)
 
 CServer *CServerList::GetSelectedServer()
 {
-    DEBUG_TRACE_FUNCTION;
-
     for (CServer &server : m_Servers)
     {
         if (server.Selected)
@@ -129,7 +126,6 @@ CServer *CServerList::GetSelectedServer()
 
 CServer *CServerList::Select(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     CServer *server = nullptr;
 
     for (int i = int(m_Servers.size()) - 1; i >= 0; i--)

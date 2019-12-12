@@ -5,6 +5,8 @@
 
 #include <common/fs.h>
 #include "../BaseQueue.h"
+#include "../Platform.h" // Keycode
+#include "../Globals.h"  // MACRO_RETURN_CODE
 
 class CMacroObject;
 

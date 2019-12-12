@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <string.h>
+#include <common/str.h>
 
 class CCharacterList
 {

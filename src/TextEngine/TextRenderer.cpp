@@ -8,24 +8,25 @@
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameWorld.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CTextRenderer g_WorldTextRenderer;
 
 CTextRenderer::CTextRenderer()
-    : m_TextItems(this)
-    , m_DrawPointer(nullptr)
 {
+    m_TextItems = this; // FIXME wtf?
 }
 
 CTextRenderer::~CTextRenderer()
 {
-    DEBUG_TRACE_FUNCTION;
     m_TextItems = nullptr;
 }
 
 CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj != nullptr)
     {
         CRenderTextObject *item = m_TextItems;
@@ -55,7 +56,6 @@ CRenderTextObject *CTextRenderer::AddText(CRenderTextObject *obj)
 
 void CTextRenderer::ToTop(CRenderTextObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     obj->UnlinkDraw();
 
     CRenderTextObject *next = m_TextItems->m_NextDraw;
@@ -72,7 +72,6 @@ void CTextRenderer::ToTop(CRenderTextObject *obj)
 
 bool CTextRenderer::InRect(CTextData *text, CRenderWorldObject *rwo)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     CTextImageBounds rect(text);
 
@@ -131,7 +130,6 @@ bool CTextRenderer::ProcessTextRemoveBlending(CTextData &text)
 
 bool CTextRenderer::CalculatePositions(bool noCalculate)
 {
-    DEBUG_TRACE_FUNCTION;
     bool changed = false;
 
     if (!noCalculate)
@@ -179,7 +177,8 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 
 void CTextRenderer::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CalculatePositions(true);
 
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)
@@ -195,27 +194,30 @@ void CTextRenderer::Draw()
         {
             uint16_t textColor = text.Color;
 
+            auto uniformValue = SDM_NO_COLOR;
             if (textColor != 0u)
             {
                 g_ColorManager.SendColorsToShader(textColor);
 
+                uniformValue = SDM_COLORED;
                 if (text.Unicode)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_TEXT_COLORED_NO_BLACK);
+                    uniformValue = SDM_TEXT_COLORED_NO_BLACK;
                 }
                 else if (text.Font != 5 && text.Font != 8)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-                }
-                else
-                {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                    uniformValue = SDM_PARTIAL_HUE;
                 }
             }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-            }
+
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = uniformValue;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
             if (text.Transparent)
             {
@@ -226,14 +228,28 @@ void CTextRenderer::Draw()
                     alpha = 0x7F;
                 }
 
+#ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
+#else
+                RenderAdd_SetBlend(
+                    g_renderCmdList,
+                    BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                   BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                RenderAdd_SetColor(
+                    g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha / 255.f } });
+#endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
+#ifndef NEW_RENDERER_ENABLED
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
+#else
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+                RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             }
             else
             {
@@ -245,7 +261,6 @@ void CTextRenderer::Draw()
 
 void CTextRenderer::Select(CGump *gump)
 {
-    DEBUG_TRACE_FUNCTION;
     if (gump != nullptr)
     {
         CalculatePositions(true);
@@ -287,7 +302,6 @@ void CTextRenderer::Select(CGump *gump)
 
 bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 {
-    DEBUG_TRACE_FUNCTION;
     bool changed = false;
 
     if (!noCalculate)
@@ -324,7 +338,6 @@ bool CTextRenderer::CalculateWorldPositions(bool noCalculate)
 
 void CTextRenderer::WorldDraw()
 {
-    DEBUG_TRACE_FUNCTION;
     CalculateWorldPositions(true);
 
     int renderIndex = g_GameScreen.RenderIndex - 1;
@@ -360,27 +373,28 @@ void CTextRenderer::WorldDraw()
                 textColor = 0x0035;
             }
 
+            auto uniformValue = SDM_NO_COLOR;
             if (textColor != 0u)
             {
                 g_ColorManager.SendColorsToShader(textColor);
 
+                uniformValue = SDM_COLORED;
                 if (text.Unicode)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_TEXT_COLORED_NO_BLACK);
+                    uniformValue = SDM_TEXT_COLORED_NO_BLACK;
                 }
                 else if (text.Font != 5 && text.Font != 8)
                 {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-                }
-                else
-                {
-                    glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                    uniformValue = SDM_PARTIAL_HUE;
                 }
             }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-            }
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = uniformValue;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
             if (text.Transparent)
             {
@@ -391,14 +405,28 @@ void CTextRenderer::WorldDraw()
                     alpha = 0x7F;
                 }
 
+#ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glColor4ub(0xFF, 0xFF, 0xFF, alpha);
+#else
+                RenderAdd_SetBlend(
+                    g_renderCmdList,
+                    BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                                   BlendFactor::BlendFactor_OneMinusSrcAlpha });
+                RenderAdd_SetColor(
+                    g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha / 255.f } });
+#endif
 
                 text.m_TextSprite.Draw(text.RealDrawX, text.RealDrawY);
 
+#ifndef NEW_RENDERER_ENABLED
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
+#else
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+                RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             }
             else
             {

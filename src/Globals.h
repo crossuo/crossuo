@@ -3,16 +3,22 @@
 
 #pragma once
 
+#include <stdint.h>
+#include "GLEngine/GLTexture.h"     // REMOVE
+#include "GLEngine/GLFrameBuffer.h" // REMOVE
+#include <common/str.h>             // REMOVE
+#include "Point.h"
+#include "Constants.h"
+#include <xuocore/enumlist.h>
+
 #define IS_MOBILE(serial) ((serial & 0x40000000) == 0)
 #define IS_ITEM(serial) ((serial & 0x40000000) != 0)
 #define IS_PLAYER(serial) (serial == g_PlayerSerial)
 
-#include "Point.h"
-#include "Constants.h"
-#include <xuocore/enumlist.h>
-#include "Backend.h" // CGLTexture, GLuint
-
-#define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
+#define ToColorR(x) ((x)&0xff)
+#define ToColorG(x) ((x >> 8) & 0xff)
+#define ToColorB(x) ((x >> 16) & 0xff)
+#define ToColorA(x) ((x >> 24) & 0xff)
 
 enum
 {
@@ -49,11 +55,12 @@ extern int g_GameObjectsCount;
 extern int g_MultiObjectsCount;
 extern int g_RenderedObjectsCountInGameWindow;
 
-extern GLdouble g_GlobalScale;
+extern float g_GlobalScale;
 
-extern CGLTexture g_MapTexture[MAX_MAPS_COUNT];
-
-extern CGLTexture g_AuraTexture;
+extern CGLTexture g_MapTexture[MAX_MAPS_COUNT]; // FIXME
+extern CGLTexture g_AuraTexture;                // FIXME
+extern CGLTexture g_TextureGumpState[2];        // FIXME
+extern class CGLFrameBuffer g_LightBuffer;      // FIXME
 
 extern bool g_LogoutAfterClick;
 
@@ -69,19 +76,15 @@ extern uint32_t g_TotalRecvSize;
 
 extern uint32_t g_Ticks;
 
-extern GLuint ShaderColorTable;
-extern GLuint g_ShaderDrawMode;
+extern uint32_t ShaderColorTable;
+extern uint32_t g_ShaderDrawMode;
 
 extern std::string g_Language;
 
 extern GAME_STATE g_GameState;
 
-extern CGLTexture g_TextureGumpState[2];
-
 extern CSize g_MapSize[MAX_MAPS_COUNT];
 extern CSize g_MapBlockSize[MAX_MAPS_COUNT];
-
-extern class CGLFrameBuffer g_LightBuffer;
 
 extern bool g_GumpPressed;
 extern class CRenderObject *g_GumpSelectedElement;
@@ -152,8 +155,6 @@ extern CHARACTER_SPEED_TYPE g_SpeedMode;
 extern uint32_t g_DeathScreenTimer;
 
 extern float g_AnimCharactersDelayValue;
-
-typedef std::vector<std::pair<uint32_t, uint32_t>> UINTS_PAIR_LIST;
 
 extern CPoint2Di g_RemoveRangeXY;
 
@@ -367,30 +368,6 @@ inline bool IsStairRight(int64_t flags)
     return (flags & 0x80000000) != 0;
 }
 
-template <typename T>
-static inline std::unique_ptr<T> unique_cast(void *value)
-{
-    return std::unique_ptr<T>((T *)value);
-}
-
-struct AutoFree
-{
-    AutoFree(void *p)
-        : _p(p)
-    {
-    }
-    ~AutoFree()
-    {
-        if (_p)
-        {
-            free(_p);
-        }
-    }
-
-private:
-    void *_p = nullptr;
-};
-
 #if USE_PING
 extern struct PING_INFO_DATA g_GameServerPingInfo;
 extern uint32_t g_PingTimer;
@@ -399,34 +376,10 @@ extern uint32_t g_PingTimer;
 extern uint32_t g_Ping;          // From packet 0x73
 extern std::string g_PingString; // Debug Info
 
-#define USE_DEBUG_TRACE_FUNCTION 0
-
-#if USE_DEBUG_TRACE_FUNCTION != 0
-#define DEBUG_TRACE_FUNCTION                                                                       \
-    do                                                                                             \
-    {                                                                                              \
-        fprintf(stdout, "CALL: %s:%d: %s\n", __FILE__, __LINE__, __FUNCTION__);                    \
-    } while (0)
-#else
-#define DEBUG_TRACE_FUNCTION
-#endif
-
-#define RELEASE_POINTER(ptr)                                                                       \
-    if (ptr != nullptr)                                                                            \
-    {                                                                                              \
-        delete ptr;                                                                                \
-        ptr = nullptr;                                                                             \
-    }
-
 #define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
 #define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))
 
-#define UO_RENDER_LIST_SORT 1
-#define UO_CHECKERBOARD_SEQUENCE_RENDER_LIST 1
-
 #define UO_USE_SHADER_FILES 0
-
-#define UO_DEBUG_INFO 1
 
 #define UOFONT_SOLID 0x01
 #define UOFONT_ITALIC 0x02

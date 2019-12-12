@@ -17,10 +17,10 @@ set(XUOI_SRCS
 )
 
 add_executable(${PROJECT_NAME} ${XUOI_SRCS})
-add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT} ${CURL_PROJECT})
+add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES} ${EXTERNAL_PROJECT} ${LOADER} ${THREAD})
-target_include_directories(${PROJECT_NAME} PUBLIC ${EXTERNAL_INCLUDE} ${CURL_INCLUDE})
+target_include_directories(${PROJECT_NAME} PUBLIC ${EXTERNAL_INCLUDE})
 
 #
 # Launcher
@@ -30,13 +30,35 @@ set(XUOL_SRCS
   http.cpp
   xuo_updater.cpp
   xuolauncher.cpp
-  shards.cpp
+  accounts.cpp
+  ui_model.cpp
+  ui_shards.cpp
 )
 
 set(XUOL_PROJECT xuolauncher)
 
 add_executable(${XUOL_PROJECT} ${XUOL_SRCS})
-add_dependencies(${XUOL_PROJECT} ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${CURL_PROJECT})
+add_dependencies(${XUOL_PROJECT} ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT})
 
 target_link_libraries(${XUOL_PROJECT} PUBLIC ${CURL_LIBRARIES} ${EXTERNAL_PROJECT} ${SDL2_LIBRARIES} ${EXTERNALGFX_PROJECT} ${GL_LIBRARIES} ${LOADER} ${THREAD})
-target_include_directories(${XUOL_PROJECT} PUBLIC ${EXTERNAL_INCLUDE} ${EXTERNALGFX_INCLUDE} ${CURL_INCLUDE})
+target_include_directories(${XUOL_PROJECT} PUBLIC ${EXTERNAL_INCLUDE} ${EXTERNALGFX_INCLUDE})
+if(XUO_WINDOWS)
+  set_target_properties(${XUOL_PROJECT} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
+endif()
+
+#
+# shardchk
+#
+set(XUOL_SRCS
+  common.cpp
+  shards.cpp
+)
+
+set(SHARD_PROJECT shardchk)
+
+add_executable(${SHARD_PROJECT} ${XUOL_SRCS})
+target_compile_definitions(${SHARD_PROJECT} PRIVATE -DVALIDATOR)
+add_dependencies(${SHARD_PROJECT} ${EXTERNAL_PROJECT})
+
+target_link_libraries(${SHARD_PROJECT} PUBLIC ${EXTERNAL_PROJECT} ${LOADER} ${THREAD})
+target_include_directories(${SHARD_PROJECT} PUBLIC ${EXTERNAL_INCLUDE})

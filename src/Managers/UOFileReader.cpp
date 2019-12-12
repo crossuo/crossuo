@@ -1,18 +1,19 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <algorithm>
 #include "UOFileReader.h"
 #include "ColorManager.h"
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
+#include "../Logging.h"
 
 UOFileReader g_UOFileReader;
 
 std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 {
-    DEBUG_TRACE_FUNCTION;
     size_t dataStart = io.Address;
     uint32_t *lookupList = (uint32_t *)dataStart;
 
@@ -78,7 +79,6 @@ std::vector<uint16_t> UOFileReader::GetGumpPixels(CIndexObject &io)
 
 CSprite *UOFileReader::ReadGump(CIndexObject &io)
 {
-    DEBUG_TRACE_FUNCTION;
     std::vector<uint16_t> pixels = GetGumpPixels(io);
     if (pixels.empty())
     {
@@ -92,7 +92,6 @@ CSprite *UOFileReader::ReadGump(CIndexObject &io)
 std::vector<uint16_t>
 UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width, short &height)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t *P = (uint16_t *)io.Address;
     uint16_t color = io.Color;
     std::vector<uint16_t> pixels;
@@ -307,7 +306,6 @@ UOFileReader::GetArtPixels(uint16_t id, CIndexObject &io, bool run, short &width
 
 CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
 {
-    DEBUG_TRACE_FUNCTION;
     int16_t width = 0;
     int16_t height = 0;
     std::vector<uint16_t> pixels = GetArtPixels(id, io, run, width, height);
@@ -394,7 +392,6 @@ CSprite *UOFileReader::ReadArt(uint16_t id, CIndexObject &io, bool run)
 
 CSprite *UOFileReader::ReadTexture(CIndexObject &io)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t color = io.Color;
     uint16_t w = 64;
     uint16_t h = 64;
@@ -438,7 +435,6 @@ CSprite *UOFileReader::ReadTexture(CIndexObject &io)
 
 CSprite *UOFileReader::ReadLight(CIndexObject &io)
 {
-    DEBUG_TRACE_FUNCTION;
     std::vector<uint16_t> pixels(io.Width * io.Height);
     uint8_t *p = (uint8_t *)io.Address;
     for (int i = 0; i < io.Height; i++)

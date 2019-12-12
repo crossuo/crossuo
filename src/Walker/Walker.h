@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stdint.h>
+#include "../Globals.h" // MAX_STEPS_COUNT
+
 class CStepInfo
 {
 public:

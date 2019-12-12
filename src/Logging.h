@@ -7,6 +7,7 @@
 
 #if !defined(DISABLE_LOG)
 
+#include <stdint.h>
 #include <external/loguru.h>
 
 #define STRINGIFY(x) #x

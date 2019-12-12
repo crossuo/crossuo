@@ -3,13 +3,19 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <common/str.h>
+#include <deque>
 #include "GameObjects/GameWorld.h"
-//#include <xuocore/plugininterface.h>
+#include <xuocore/plugininterface.h> // PluginEntry typedef
+
+struct fs_path;
 
 struct CIndexObjectStatic;
 struct CIndexObject;
 struct CIndexSound;
 struct CUopMappedFile;
+struct CSprite;
 
 class CGame
 {
@@ -116,7 +122,7 @@ public:
     void DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue = false);
     void DrawGump(
         uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue = false);
-    void DrawResizepicGump(uint16_t id, int x, int y, int width, int height);
+    void DrawResizepicGump(uint16_t id, int x, int y, int width, int height, bool checktrans);
     void DrawLandTexture(class CLandObject *land, uint16_t color, int x, int y);
     void DrawLandArt(uint16_t id, uint16_t color, int x, int y);
     void DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection = false);

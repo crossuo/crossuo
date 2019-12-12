@@ -6,6 +6,7 @@
 #include "../Network/Connection.h"
 #include "../Managers/ClilocManager.h"
 #include "../ScreenStages/ConnectionScreen.h"
+#include "../Globals.h" // g_Language
 
 CGumpScreenConnection::CGumpScreenConnection()
     : CGump(GT_NONE, 0, 0, 0)
@@ -20,7 +21,6 @@ CGumpScreenConnection::~CGumpScreenConnection()
 
 void CGumpScreenConnection::CreateText(int x, int y, std::string str, uint8_t font)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConnectionScreen.GetTextA().length() != 0u)
     {
         str = g_ConnectionScreen.GetTextA();
@@ -33,7 +33,6 @@ void CGumpScreenConnection::CreateText(int x, int y, std::string str, uint8_t fo
 
 void CGumpScreenConnection::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
@@ -238,7 +237,6 @@ void CGumpScreenConnection::UpdateContent()
 
 void CGumpScreenConnection::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_CS_OK) //v button
     {
         if (g_ConnectionScreen.GetType() == CST_CHARACTER_LIST)

@@ -3,6 +3,7 @@
 
 #include "GUIGenericText.h"
 #include "../Config.h"
+#include "../Globals.h" // UOFONT_*
 
 void CGUIGenericText::Create(const std::wstring &str)
 {

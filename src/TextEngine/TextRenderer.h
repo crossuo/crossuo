@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <common/str.h>
+#include <deque>
 #include "RenderTextObject.h"
 #include "../ImageBounds.h"
 

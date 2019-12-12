@@ -2,6 +2,9 @@
 // Copyright (C) August 2016 Hotride
 
 #pragma once
+#include <stdint.h>
+#include <common/str.h>
+#include "../Globals.h" // RACE_TYPE
 
 struct CC_HAIR_STYLE
 {

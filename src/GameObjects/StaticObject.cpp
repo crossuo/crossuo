@@ -5,11 +5,11 @@
 #include "GameCharacter.h"
 #include "../CrossUO.h"
 #include "../SelectedObject.h"
+#include "../Utility/PerfMarker.h"
 
 CStaticObject::CStaticObject(int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
     : CRenderStaticObject(ROT_STATIC_OBJECT, serial, graphic, color, x, y, z)
 {
-    DEBUG_TRACE_FUNCTION;
     OriginalGraphic = graphic;
     UpdateGraphicBySeason();
 
@@ -18,14 +18,11 @@ CStaticObject::CStaticObject(int serial, uint16_t graphic, uint16_t color, short
 
     m_TextControl->MaxSize = 1;
 
-#if UO_DEBUG_INFO != 0
     g_StaticsObjectsCount++;
-#endif //UO_DEBUG_INFO!=0
 }
 
 void CStaticObject::UpdateGraphicBySeason()
 {
-    DEBUG_TRACE_FUNCTION;
     //uint16_t graphic = Graphic;
 
     Graphic = g_Game.GetSeasonGraphic(OriginalGraphic);
@@ -40,7 +37,8 @@ void CStaticObject::UpdateGraphicBySeason()
 
 void CStaticObject::Draw(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     RenderGraphic = Graphic;
 
     if (g_DeveloperMode == DM_DEBUGGING && g_SelectedObject.Object == this)
@@ -57,7 +55,6 @@ void CStaticObject::Draw(int x, int y)
 
 void CStaticObject::Select(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     RenderGraphic = Graphic;
 
     CRenderStaticObject::Select(x, y);

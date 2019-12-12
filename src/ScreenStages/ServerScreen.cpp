@@ -21,7 +21,7 @@ CServerScreen::~CServerScreen()
 
 void CServerScreen::Init()
 {
-    DEBUG_TRACE_FUNCTION;
+    CBaseScreen::Init();
 
     g_GameWindow.SetTitle(std::string("Ultima Online - ") + g_MainScreen.m_Account->c_str());
     g_ScreenEffectManager.UseSunrise();
@@ -33,8 +33,6 @@ void CServerScreen::Init()
 
 void CServerScreen::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Gump.OnKeyDown(ev);
 
     const auto key = EvKey(ev);
@@ -47,8 +45,6 @@ void CServerScreen::OnKeyDown(const KeyEvent &ev)
 
 void CServerScreen::ProcessSmoothAction(uint8_t action)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (action == 0xFF)
     {
         action = SmoothScreenAction;

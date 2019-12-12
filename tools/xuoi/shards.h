@@ -1,7 +1,16 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #pragma once
 
-struct ui_context;
-struct ImVec2;
+struct shard_data
+{
+    const char *loginserver;
+    const char *clienttype;
+    const char *clientversion;
+};
 
+bool shard_getter(void *data, int idx, const char **out_text);
 void load_shards();
-void ui_shards(ui_context &ui, const ImVec2 &size);
+int shard_index_by_loginserver(const char *login_server);
+shard_data shard_by_id(int id);

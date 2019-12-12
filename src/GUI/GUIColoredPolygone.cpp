@@ -4,12 +4,16 @@
 #include "GUIColoredPolygone.h"
 #include "../SelectedObject.h"
 #include "../Gumps/Gump.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Globals.h" // g_GumpSelectedElement, ToColor*
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIColoredPolygone::CGUIColoredPolygone(
     int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)
     : CGUIPolygonal(GOT_COLOREDPOLYGONE, x, y, width, height)
 {
-    DEBUG_TRACE_FUNCTION;
     Serial = serial;
     UpdateColor(color, polygoneColor);
 }
@@ -20,7 +24,6 @@ CGUIColoredPolygone::~CGUIColoredPolygone()
 
 void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 {
-    DEBUG_TRACE_FUNCTION;
     Color = color;
 
     ColorR = ToColorR(polygoneColor);
@@ -36,7 +39,8 @@ void CGUIColoredPolygone::UpdateColor(uint16_t color, int polygoneColor)
 
 void CGUIColoredPolygone::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
     if (ColorA < 0xFF)
@@ -59,11 +63,27 @@ void CGUIColoredPolygone::Draw(bool checktrans)
     {
         g_GL.DrawPolygone(m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2);
     }
+#else
+    RenderAdd_DrawUntexturedQuad(
+        g_renderCmdList,
+        DrawUntexturedQuadCmd{
+            m_X,
+            m_Y,
+            uint32_t(Width),
+            uint32_t(Height),
+            { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f } });
+
+    if (Focused || (DrawDot && g_GumpSelectedElement == this))
+    {
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            DrawUntexturedQuadCmd{ m_X + (Width / 2) - 1, m_Y + (Height / 2) - 1, 2, 2 });
+    }
+#endif
 }
 
 void CGUIColoredPolygone::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (DrawDot && g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -72,7 +92,6 @@ void CGUIColoredPolygone::OnMouseEnter()
 
 void CGUIColoredPolygone::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (DrawDot && g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

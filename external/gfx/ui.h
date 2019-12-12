@@ -1,12 +1,17 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #ifndef _UI_H_
 #define _UI_H_
 
 #include "gfx.h"
 #include "imgui/imgui.h"
+#include "imgui/IconsForkAwesome.h"
 
 struct ui_context
 {
     win_context *win = nullptr;
+    void *userdata = nullptr;
     bool show_stats_window = false;
     bool show_demo_window = false;
     bool show_another_window = false;

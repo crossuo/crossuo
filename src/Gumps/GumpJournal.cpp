@@ -6,6 +6,7 @@
 #include "../SelectedObject.h"
 #include "../TextEngine/TextData.h"
 #include "../TextEngine/Journal.h"
+#include "../Globals.h" // g_JournalShowObjects, g_JournalShowSystem, UOFONT_*
 
 enum
 {
@@ -23,7 +24,6 @@ enum
 CGumpJournal::CGumpJournal(short x, short y, bool minimized, int height)
     : CGumpBaseScroll(GT_JOURNAL, 0, 0x0820, height, x, y, true, 0, true)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GJ_LOCK_MOVING;
 
     if (minimized)
@@ -78,7 +78,6 @@ CGumpJournal::~CGumpJournal()
 
 void CGumpJournal::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -132,7 +131,6 @@ void CGumpJournal::InitToolTip()
 
 void CGumpJournal::UpdateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     m_BottomLine->SetY(Height - 26); //Bottom line
@@ -155,7 +153,6 @@ void CGumpJournal::UpdateHeight()
 
 int CGumpJournal::RecalculateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     int height = 0;
 
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
@@ -193,7 +190,6 @@ int CGumpJournal::RecalculateHeight()
 
 void CGumpJournal::AddText(CTextData *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     CGUIText *text = (CGUIText *)m_HTMLGump->Add(new CGUIText(obj->Color, 4, RecalculateHeight()));
     text->MoveOnDrag = true;
     text->Serial = 0;
@@ -227,7 +223,6 @@ void CGumpJournal::AddText(CTextData *obj)
 
 void CGumpJournal::DeleteText(CTextData *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_HTMLGump->m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXT && item->TextData == obj)
@@ -243,7 +238,6 @@ void CGumpJournal::DeleteText(CTextData *obj)
 
 void CGumpJournal::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE)
     {
         Minimized = true;
@@ -263,7 +257,6 @@ void CGumpJournal::GUMP_BUTTON_EVENT_C
 
 void CGumpJournal::GUMP_CHECKBOX_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GJ_SHOW_SYSTEM)
     {
         g_JournalShowSystem = !g_JournalShowSystem;
@@ -304,7 +297,6 @@ void CGumpJournal::GUMP_CHECKBOX_EVENT_C
 
 bool CGumpJournal::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;

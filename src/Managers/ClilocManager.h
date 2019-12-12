@@ -3,8 +3,10 @@
 
 #pragma once
 
-#include "../BaseQueue.h"
+#include <common/str.h>
 #include <xuocore/mappedfile.h>
+#include <map>
+#include "../BaseQueue.h"
 
 typedef std::map<uint32_t, std::string> CLILOC_MAP;
 

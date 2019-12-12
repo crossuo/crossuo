@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <common/str.h>
 #include "Point.h"
 #include "Sprite.h"
 

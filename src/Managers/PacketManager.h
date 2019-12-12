@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <common/str.h>
+#include <unordered_map>
+#include "../Wisp.h" // REMOVE
+
 class CPacketManager;
 typedef void (CPacketManager::*PACKET_FUNCTION)();
 
@@ -17,9 +22,9 @@ typedef void (CPacketManager::*PACKET_FUNCTION)();
 
 enum PACKET_DIRECTION
 {
-    DIR_SEND = 0, //!От клиента серверу
-    DIR_RECV,     //!От сервера клиенту
-    DIR_BOTH      //!В обе стороны
+    DIR_SEND = 0,
+    DIR_RECV,
+    DIR_BOTH
 };
 
 class CPacketInfo

@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <vector>
+#include <stdint.h>
+#include <common/str.h>
+
 struct CDataReader;
 
 class CServer

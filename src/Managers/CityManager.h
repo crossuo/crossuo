@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <string.h>
+#include <stdint.h>
+#include <common/str.h>
 #include <queue>
 
 class CCity

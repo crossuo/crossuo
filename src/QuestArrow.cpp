@@ -8,6 +8,7 @@
 #include "ScreenStages/MainScreen.h"
 #include "ScreenStages/GameScreen.h"
 #include "GameObjects/GamePlayer.h"
+#include "Utility/PerfMarker.h"
 
 CQuestArrow g_QuestArrow;
 
@@ -21,7 +22,8 @@ CQuestArrow::~CQuestArrow()
 
 void CQuestArrow::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (Enabled)
     {
         int dir = g_MouseManager.GetFacing(g_Player->GetX(), g_Player->GetY(), X, Y, 0);

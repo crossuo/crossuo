@@ -8,13 +8,16 @@
 #include "../Point.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/FontsManager.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     : CBaseGUI(GOT_SHOPRESULT, shopItem->Serial, shopItem->Graphic, shopItem->Color, x, y)
     , Price(shopItem->Price)
     , Name(shopItem->Name)
 {
-    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
     auto name = Name + "\n" + "at " + std::to_string(Price) + " g.p.";
@@ -35,14 +38,14 @@ CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
 
 CGUIShopResult::~CGUIShopResult()
 {
-    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
-    RELEASE_POINTER(m_MinMaxButtons);
+    if (m_MinMaxButtons)
+        delete m_MinMaxButtons;
+    m_MinMaxButtons = nullptr;
 }
 
 CBaseGUI *CGUIShopResult::SelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *result = this;
     CSize size = m_MinMaxButtons->GetSize();
 
@@ -57,26 +60,39 @@ CBaseGUI *CGUIShopResult::SelectedItem()
 
 void CGUIShopResult::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     m_MinMaxButtons->PrepareTextures();
 }
 
 void CGUIShopResult::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+    ScopedPerfMarker(__FUNCTION__);
+
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
     m_NameText.Draw(34, 0, checktrans);
     m_MinMaxButtons->Draw(checktrans);
 
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUIShopResult::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

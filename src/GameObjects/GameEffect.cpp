@@ -6,6 +6,10 @@
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../Managers/EffectManager.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGameEffect::CGameEffect()
     : CRenderWorldObject(ROT_EFFECT, 0, 0, 0, 0, 0, 0)
@@ -18,10 +22,9 @@ CGameEffect::~CGameEffect()
 
 void CGameEffect::Draw(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
-#if UO_DEBUG_INFO != 0
+    ScopedPerfMarker(__FUNCTION__);
+
     g_RenderedObjectsCountInGameWindow++;
-#endif
 
     uint16_t objGraphic = GetCurrentGraphic();
 
@@ -59,7 +62,6 @@ void CGameEffect::Draw(int x, int y)
 
 void CGameEffect::Update(CGameObject *parent)
 {
-    DEBUG_TRACE_FUNCTION;
     if (EffectType != EF_MOVING)
     {
         if (Duration < g_Ticks)
@@ -109,7 +111,6 @@ void CGameEffect::Update(CGameObject *parent)
 
 uint16_t CGameEffect::CalculateCurrentGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     uintptr_t addressAnimData = (uintptr_t)g_FileManager.m_AnimdataMul.Start;
 
     if (addressAnimData != 0u)
@@ -134,45 +135,77 @@ uint16_t CGameEffect::CalculateCurrentGraphic()
 
 uint16_t CGameEffect::GetCurrentGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     return Graphic + Increment;
 }
 
 void CGameEffect::ApplyRenderMode()
 {
-    DEBUG_TRACE_FUNCTION;
     switch (RenderMode)
     {
         case 1: //ok
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList,
+                BlendStateCmd{ BlendFactor::BlendFactor_Zero, BlendFactor::BlendFactor_SrcColor });
+#endif
             break;
         }
         case 2: //ok
         case 3: //ok
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList,
+                BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });
+#endif
             break;
         }
         case 4: //?
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList,
+                BlendStateCmd{ BlendFactor::BlendFactor_DstColor,
+                               BlendFactor::BlendFactor_OneMinusSrcAlpha });
+#endif
             break;
         }
         case 5: //?
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList,
+                BlendStateCmd{ BlendFactor::BlendFactor_DstColor,
+                               BlendFactor::BlendFactor_SrcColor });
+#endif
             break;
         }
         case 6: //ok
         {
+#ifndef NEW_RENDERER_ENABLED
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
             glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList,
+                BlendStateCmd{ BlendFactor::BlendFactor_SrcColor,
+                               BlendFactor::BlendFactor_OneMinusSrcColor,
+                               BlendEquation::BlendEquation_ReverseSubtract });
+#endif
             break;
         }
         default:
@@ -182,30 +215,33 @@ void CGameEffect::ApplyRenderMode()
 
 void CGameEffect::RemoveRenderMode()
 {
-    DEBUG_TRACE_FUNCTION;
     switch (RenderMode)
     {
         case 1: //ok
         case 2: //ok
         case 3: //ok
-        {
-            glDisable(GL_BLEND);
-            break;
-        }
         case 4:
-        {
-            glDisable(GL_BLEND);
-            break;
-        }
         case 5:
         {
+#ifndef NEW_RENDERER_ENABLED
             glDisable(GL_BLEND);
+#else
+            RenderAdd_DisableBlend(g_renderCmdList);
+#endif
             break;
         }
         case 6: //ok
         {
+#ifndef NEW_RENDERER_ENABLED
             glDisable(GL_BLEND);
             glBlendEquation(GL_FUNC_ADD);
+#else
+            RenderAdd_SetBlend(
+                g_renderCmdList,
+                BlendStateCmd{ BlendFactor::BlendFactor_Invalid,
+                               BlendFactor::BlendFactor_Invalid,
+                               BlendEquation::BlendEquation_Add });
+#endif
             break;
         }
         default:

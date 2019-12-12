@@ -8,12 +8,15 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/SkillsManager.h"
 #include "../Managers/FontsManager.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y)
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)
     , Index(index)
 {
-    DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
     if (skill != nullptr)
@@ -41,17 +44,19 @@ CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int in
 
 CGUISkillItem::~CGUISkillItem()
 {
-    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
     m_ValueText.Clear();
 
-    RELEASE_POINTER(m_ButtonUse);
-    RELEASE_POINTER(m_ButtonStatus);
+    if (m_ButtonUse)
+        delete m_ButtonUse;
+    m_ButtonUse = nullptr;
+    if (m_ButtonStatus)
+        delete m_ButtonStatus;
+    m_ButtonStatus = nullptr;
 }
 
 void CGUISkillItem::SetStatus(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Status = val;
 
     uint16_t graphic = GetStatusButtonGraphic();
@@ -63,7 +68,6 @@ void CGUISkillItem::SetStatus(uint8_t val)
 
 uint16_t CGUISkillItem::GetStatusButtonGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = 0x0984; //Up
 
     if (m_Status == 1)
@@ -80,7 +84,6 @@ uint16_t CGUISkillItem::GetStatusButtonGraphic()
 
 void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 {
-    DEBUG_TRACE_FUNCTION;
     CSkill *skill = g_SkillsManager.Get(Index);
 
     if (skill != nullptr)
@@ -105,7 +108,6 @@ void CGUISkillItem::CreateValueText(bool showReal, bool showCap)
 
 void CGUISkillItem::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_ButtonUse != nullptr)
     {
         m_ButtonUse->PrepareTextures();
@@ -116,7 +118,6 @@ void CGUISkillItem::PrepareTextures()
 
 CBaseGUI *CGUISkillItem::SelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = this;
 
     if (g_Game.PolygonePixelsInXY(
@@ -138,8 +139,14 @@ CBaseGUI *CGUISkillItem::SelectedItem()
 
 void CGUISkillItem::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+    ScopedPerfMarker(__FUNCTION__);
+
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+#endif
 
     if (m_ButtonUse != nullptr)
     {
@@ -148,7 +155,11 @@ void CGUISkillItem::Draw(bool checktrans)
 
     if (g_PressedObject.LeftObject == this)
     {
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(20, 0, 250, 14);
+#else
+        RenderAdd_DrawUntexturedQuad(g_renderCmdList, DrawUntexturedQuadCmd{ 20, 0, 250, 14 });
+#endif
     }
 
     m_NameText.Draw(22, 0, checktrans);
@@ -157,12 +168,16 @@ void CGUISkillItem::Draw(bool checktrans)
 
     m_ValueText.Draw(250 - m_ValueText.Width, 0);
 
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUISkillItem::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

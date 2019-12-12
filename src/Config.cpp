@@ -76,7 +76,7 @@ static const ConfigEntry s_Keys[] = {
 
 static uint32_t GetConfigKey(const std::string &key)
 {
-    auto str = ToLowerA(key);
+    auto str = str_lower(key);
     for (int i = 0; s_Keys[i].key_name; i++)
     {
         if (str == s_Keys[i].key_name)
@@ -93,8 +93,6 @@ static config::Modified s_Mark;
 
 static uint32_t ParseVersion(const char *versionStr)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (!versionStr || !versionStr[0])
     {
         return CV_LATEST;
@@ -123,7 +121,7 @@ static uint32_t ParseVersion(const char *versionStr)
 
 static CLIENT_FLAG GetClientTypeFromString(const std::string &str)
 {
-    auto client = ToLowerA(str);
+    auto client = str_lower(str);
     if (client == "t2a")
     {
         return CF_T2A;
@@ -175,7 +173,7 @@ static const char *GetClientTypeString(uint16_t clientFlag)
         case CF_SA:
             return "sa";
         default:
-            return "";
+            break;
     }
     return "";
 }
@@ -199,7 +197,7 @@ static const char *GetClientTypeName(CLIENT_FLAG clientFlag)
         case CF_SA:
             return "Stygian Abyss";
         default:
-            return "";
+            break;
     }
     return "";
 }
@@ -283,8 +281,6 @@ static void SetClientCrypt(uint32_t version)
 
 static void ClientVersionFixup(bool overrideProtocolVersion)
 {
-    DEBUG_TRACE_FUNCTION;
-
     g_Config.ClientVersion = ParseVersion(g_Config.ClientVersionString.c_str());
     g_Config.ProtocolClientVersion = g_Config.ClientVersion;
     if (overrideProtocolVersion)
@@ -367,8 +363,6 @@ static fs_path GetConfigFile()
 
 void LoadGlobalConfig()
 {
-    DEBUG_TRACE_FUNCTION;
-
     Info(Config, "loading global config from: %s", fs_path_ascii(GetConfigFile()));
     const auto cfg = GetConfigFile();
     Wisp::CTextFileParser file(cfg, "=,", "#;", "");
@@ -379,6 +373,10 @@ void LoadGlobalConfig()
         if (strings.size() >= 2)
         {
             const auto key = config::GetConfigKey(strings[0]);
+            if (key != MSCC_NONE && key != MSCC_ACTPWD)
+            {
+                Info(Config, "\t%s=%s", config::s_Keys[key - 1].key_name, strings[1].c_str());
+            }
             switch (key)
             {
                 case MSCC_CLIENT_VERSION:
@@ -412,39 +410,39 @@ void LoadGlobalConfig()
                 }
                 case MSCC_REMEMBERPWD:
                 {
-                    g_Config.SavePassword = ToBool(strings[1]);
+                    g_Config.SavePassword = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_AUTOLOGIN:
                 {
-                    g_Config.AutoLogin = ToBool(strings[1]);
+                    g_Config.AutoLogin = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_THE_ABYSS:
                 {
-                    g_Config.TheAbyss = ToBool(strings[1]);
+                    g_Config.TheAbyss = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_ASMUT:
                 {
-                    g_Config.Asmut = ToBool(strings[1]);
+                    g_Config.Asmut = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_LOGIN_SERVER:
                 {
                     g_Config.ServerAddress = strings[1];
-                    g_Config.ServerPort = ToInt(strings[2]);
+                    g_Config.ServerPort = str_to_int(strings[2]);
                     break;
                 }
                 case MSCC_USE_CRYPT:
                 {
-                    g_Config.UseCrypt = ToBool(strings[1]);
+                    g_Config.UseCrypt = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_USE_VERDATA:
                 {
                     s_Mark.UseVerdata = true;
-                    g_Config.UseVerdata = ToBool(strings[1]);
+                    g_Config.UseVerdata = str_to_bool(strings[1]);
                     break;
                 }
                 case MSCC_CLIENT_TYPE:
@@ -459,7 +457,7 @@ void LoadGlobalConfig()
                 }
                 case MSCC_LOCALE_OVERRIDE:
                 {
-                    g_Config.LocaleOverride = ToUpperA(strings[1]);
+                    g_Config.LocaleOverride = str_upper(strings[1]);
                 }
                 break;
                 default:
@@ -514,7 +512,6 @@ void LoadGlobalConfig()
 
 void SaveGlobalConfig()
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Config, "saving global config to: %s", fs_path_ascii(GetConfigFile()));
     FILE *cfg = fs_open(GetConfigFile(), FS_WRITE);
     if (cfg == nullptr)

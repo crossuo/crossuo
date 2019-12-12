@@ -18,7 +18,9 @@
 #include "Network/Packets.h"
 #include "Walker/PathFinder.h"
 #include "GameObjects/GamePlayer.h"
+#include "Renderer/RenderAPI.h"
 
+extern RenderCmdList *g_renderCmdList;
 static IGameString g_GameString;
 
 IGameString::IGameString()
@@ -30,13 +32,19 @@ IGameString::IGameString()
 
 IGameString::~IGameString()
 {
-    RELEASE_POINTER(m_DataA);
-    RELEASE_POINTER(m_DataW);
+    if (m_DataA)
+        delete m_DataA;
+    m_DataA = nullptr;
+    if (m_DataW)
+        delete m_DataW;
+    m_DataW = nullptr;
 }
 
 IGameString &IGameString::operator()(const std::string &str)
 {
-    RELEASE_POINTER(m_DataA);
+    if (m_DataA)
+        delete m_DataA;
+    m_DataA = nullptr;
 
     m_Unicode = false;
     if (str.length() != 0u)
@@ -51,7 +59,9 @@ IGameString &IGameString::operator()(const std::string &str)
 
 IGameString &IGameString::operator()(const std::wstring &str)
 {
-    RELEASE_POINTER(m_DataW);
+    if (m_DataW)
+        delete m_DataW;
+    m_DataW = nullptr;
 
     m_Unicode = true;
     if (str.length() != 0u)
@@ -76,23 +86,61 @@ void CDECL FUNCBODY_PopScissor()
 
 void CDECL FUNCBODY_DrawLine(unsigned int color, int x, int y, int width, int height)
 {
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawLine(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_DrawLine(
+        g_renderCmdList,
+        DrawLineCmd{ x,
+                     y,
+                     width,
+                     height,
+                     { ToColorR(color) / 255.f,
+                       ToColorG(color) / 255.f,
+                       ToColorB(color) / 255.f,
+                       ToColorA(color) / 255.f } });
+#endif
 }
 
 void CDECL FUNCBODY_DrawPolygone(unsigned int color, int x, int y, int width, int height)
 {
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawPolygone(x, y, width, height);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    assert(width >= 0 && height >= 0);
+    RenderAdd_DrawUntexturedQuad(
+        g_renderCmdList,
+        DrawUntexturedQuadCmd{ x,
+                               y,
+                               uint32_t(width),
+                               uint32_t(height),
+                               { ToColorR(color) / 255.f,
+                                 ToColorG(color) / 255.f,
+                                 ToColorB(color) / 255.f,
+                                 ToColorA(color) / 255.f } });
+#endif
 }
 
 void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radius, int gradientMode)
 {
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ToColorR(color), ToColorG(color), ToColorB(color), ToColorA(color));
     g_GL.DrawCircle(x, y, radius, gradientMode);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetColor(
+        g_renderCmdList,
+        SetColorCmd{ { ToColorR(color) / 255.f,
+                       ToColorG(color) / 255.f,
+                       ToColorB(color) / 255.f,
+                       ToColorA(color) / 255.f } });
+    RenderAdd_DrawCircle(g_renderCmdList, DrawCircleCmd{ (int)x, (int)y, radius, gradientMode });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+#endif
 }
 
 void CDECL FUNCBODY_DrawTextA(
@@ -133,7 +181,7 @@ void CDECL FUNCBODY_DrawArtAnimated(int x, int y, unsigned short graphic, unsign
 
 void CDECL FUNCBODY_DrawResizepicGump(int x, int y, unsigned short graphic, int width, int height)
 {
-    g_Game.DrawResizepicGump(graphic, x, y, width, height);
+    g_Game.DrawResizepicGump(graphic, x, y, width, height, false);
 }
 
 void CDECL FUNCBODY_DrawGump(int x, int y, unsigned short graphic, unsigned short color)
@@ -392,7 +440,8 @@ bool CDECL FUNCBODY_GetWalkTo(int x, int y, int z, int distance)
         return true;
     }
 
-    bool result = PUSH_EVENT(
+    // FIXME: is this still used? the result is always 0 anyway
+    bool result = (bool)PUSH_EVENT(
         UOMSG_PATHFINDING,
         ((x << 16) & 0xFFFF0000) | (y & 0xFFFF),
         ((x << 16) & 0xFFFF0000) | (distance & 0xFFFF));

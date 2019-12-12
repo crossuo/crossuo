@@ -401,8 +401,6 @@ CPacketManager::~CPacketManager()
 
 bool CPacketManager::AutoLoginNameExists(const std::string &name)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (AutoLoginNames.length() == 0u)
     {
         return false;
@@ -416,8 +414,6 @@ bool CPacketManager::AutoLoginNameExists(const std::string &name)
 
 void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (newClientVersion >= CV_500A)
     {
         CVPRINT("Set new length for packet 0x0B (>= 5.0.0a)");
@@ -600,7 +596,6 @@ void CPacketManager::ConfigureClientVersion(uint32_t newClientVersion)
 
 int CPacketManager::GetPacketSize(const std::vector<uint8_t> &packet, int &offsetToSize)
 {
-    DEBUG_TRACE_FUNCTION;
     if (static_cast<unsigned int>(!packet.empty()) != 0u)
     {
         return m_Packets[packet[0]].Size;
@@ -611,7 +606,6 @@ int CPacketManager::GetPacketSize(const std::vector<uint8_t> &packet, int &offse
 
 void CPacketManager::SendMegaClilocRequests()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled && !m_MegaClilocRequests.empty())
     {
         if (g_Config.ProtocolClientVersion >= CV_500A)
@@ -634,7 +628,6 @@ void CPacketManager::SendMegaClilocRequests()
 
 void CPacketManager::AddMegaClilocRequest(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     for (int item : m_MegaClilocRequests)
     {
         if (item == serial)
@@ -648,8 +641,6 @@ void CPacketManager::AddMegaClilocRequest(int serial)
 
 void CPacketManager::OnReadFailed()
 {
-    DEBUG_TRACE_FUNCTION;
-
     Info(Network, "OnReadFailed. disconnecting.");
     g_Game.DisconnectGump();
     //g_Game. Disconnect();
@@ -660,8 +651,6 @@ void CPacketManager::OnReadFailed()
 
 void CPacketManager::OnPacket()
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint32_t ticks = g_Ticks;
     g_TotalRecvSize += (uint32_t)Size;
     CPacketInfo &info = m_Packets[*Start];
@@ -716,8 +705,6 @@ void CPacketManager::OnPacket()
 
 void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 {
-    DEBUG_TRACE_FUNCTION;
-
     std::vector<uint8_t> packet(size);
     memcpy(&packet[0], &buf[0], size);
 
@@ -728,8 +715,6 @@ void CPacketManager::SavePluginReceivePacket(uint8_t *buf, int size)
 
 void CPacketManager::ProcessPluginPackets()
 {
-    DEBUG_TRACE_FUNCTION;
-
     LOCK(m_Mutex);
     while (!m_PluginData.empty())
     {
@@ -745,7 +730,6 @@ void CPacketManager::ProcessPluginPackets()
 
 void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
 {
-    DEBUG_TRACE_FUNCTION;
     SetData(buf, size);
 
     uint32_t ticks = g_Ticks;
@@ -780,7 +764,6 @@ void CPacketManager::PluginReceiveHandler(uint8_t *buf, int size)
 
 PACKET_HANDLER(LoginError)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GameState == GS_MAIN_CONNECT || g_GameState == GS_SERVER_CONNECT ||
         g_GameState == GS_GAME_CONNECT)
     {
@@ -792,13 +775,11 @@ PACKET_HANDLER(LoginError)
 
 PACKET_HANDLER(ServerList)
 {
-    DEBUG_TRACE_FUNCTION;
     g_ServerList.ParsePacket(*this);
 }
 
 PACKET_HANDLER(RelayServer)
 {
-    DEBUG_TRACE_FUNCTION;
     memset(&g_SelectedCharName[0], 0, sizeof(g_SelectedCharName));
     in_addr addr;
     uint32_t *paddr = (uint32_t *)Ptr;
@@ -818,8 +799,6 @@ PACKET_HANDLER(RelayServer)
 
 PACKET_HANDLER(CharacterList)
 {
-    DEBUG_TRACE_FUNCTION;
-
     HandleResendCharacterList();
     uint8_t locCount = ReadUInt8();
     g_CityList.Clear();
@@ -877,7 +856,6 @@ PACKET_HANDLER(CharacterList)
 
 PACKET_HANDLER(ResendCharacterList)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.InitScreen(GS_CHARACTER);
 
     int numSlots = ReadInt8();
@@ -964,14 +942,12 @@ PACKET_HANDLER(ResendCharacterList)
 
 PACKET_HANDLER(LoginComplete)
 {
-    DEBUG_TRACE_FUNCTION;
     g_PacketLoginComplete = true;
     g_Game.LoginComplete(false);
 }
 
 PACKET_HANDLER(SetTime)
 {
-    DEBUG_TRACE_FUNCTION;
     g_ServerTimeHour = ReadUInt8();
     g_ServerTimeMinute = ReadUInt8();
     g_ServerTimeSecond = ReadUInt8();
@@ -979,7 +955,6 @@ PACKET_HANDLER(SetTime)
 
 PACKET_HANDLER(EnterWorld)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
     ConfigSerial = serial;
     bool loadConfig = false;
@@ -1074,7 +1049,6 @@ PACKET_HANDLER(EnterWorld)
 
 PACKET_HANDLER(UpdateHitpoints)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1096,7 +1070,6 @@ PACKET_HANDLER(UpdateHitpoints)
 
 PACKET_HANDLER(UpdateMana)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1117,7 +1090,6 @@ PACKET_HANDLER(UpdateMana)
 
 PACKET_HANDLER(UpdateStamina)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1138,7 +1110,6 @@ PACKET_HANDLER(UpdateStamina)
 
 PACKET_HANDLER(MobileAttributes)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1168,7 +1139,6 @@ PACKET_HANDLER(MobileAttributes)
 
 PACKET_HANDLER(NewHealthbarUpdate)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1241,7 +1211,6 @@ PACKET_HANDLER(NewHealthbarUpdate)
 
 PACKET_HANDLER(UpdatePlayer)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1280,7 +1249,6 @@ PACKET_HANDLER(UpdatePlayer)
 
 PACKET_HANDLER(CharacterStatus)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1430,7 +1398,6 @@ PACKET_HANDLER(CharacterStatus)
 
 PACKET_HANDLER(UpdateItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1542,7 +1509,6 @@ PACKET_HANDLER(UpdateItem)
 
 PACKET_HANDLER(UpdateItemSA)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1589,7 +1555,6 @@ PACKET_HANDLER(UpdateItemSA)
 
 PACKET_HANDLER(UpdateObject)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1707,7 +1672,6 @@ PACKET_HANDLER(UpdateObject)
 
 PACKET_HANDLER(EquipItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1765,7 +1729,6 @@ PACKET_HANDLER(EquipItem)
 
 PACKET_HANDLER(UpdateContainedItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1815,7 +1778,6 @@ PACKET_HANDLER(UpdateContainedItem)
 
 PACKET_HANDLER(UpdateContainedItems)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1898,7 +1860,6 @@ PACKET_HANDLER(UpdateContainedItems)
 
 PACKET_HANDLER(DenyMoveItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -1996,7 +1957,6 @@ PACKET_HANDLER(DenyMoveItem)
 
 PACKET_HANDLER(EndDraggingItem)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2012,7 +1972,6 @@ PACKET_HANDLER(EndDraggingItem)
 
 PACKET_HANDLER(DropItemAccepted)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2024,7 +1983,6 @@ PACKET_HANDLER(DropItemAccepted)
 
 PACKET_HANDLER(DeleteObject)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2128,7 +2086,6 @@ PACKET_HANDLER(DeleteObject)
 
 PACKET_HANDLER(UpdateCharacter)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2195,7 +2152,6 @@ PACKET_HANDLER(UpdateCharacter)
 
 PACKET_HANDLER(Warmode)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2228,7 +2184,6 @@ PACKET_HANDLER(Warmode)
 
 PACKET_HANDLER(PauseControl)
 {
-    DEBUG_TRACE_FUNCTION;
     /*g_ClientPaused = ReadUInt8();
 
 	if (!g_ClientPaused)
@@ -2237,7 +2192,6 @@ PACKET_HANDLER(PauseControl)
 
 PACKET_HANDLER(OpenPaperdoll)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2270,20 +2224,17 @@ PACKET_HANDLER(OpenPaperdoll)
 
 PACKET_HANDLER(ClientVersion)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketClientVersion(g_Config.ClientVersionString)
         .Send(); // Send client data version instead protocol version
 }
 
 PACKET_HANDLER(Ping)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Ping = 0;
 }
 
 PACKET_HANDLER(SetWeather)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Weather.Reset();
 
     uint8_t type = ReadUInt8();
@@ -2352,7 +2303,6 @@ PACKET_HANDLER(SetWeather)
 
 PACKET_HANDLER(PersonalLightLevel)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
 
     if (serial == g_PlayerSerial)
@@ -2370,7 +2320,6 @@ PACKET_HANDLER(PersonalLightLevel)
 
 PACKET_HANDLER(LightLevel)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t level = ReadUInt8();
 
     if (level > 0x1F)
@@ -2383,7 +2332,6 @@ PACKET_HANDLER(LightLevel)
 
 PACKET_HANDLER(EnableLockedFeatures)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ProtocolClientVersion >= CV_60142)
     {
         g_LockedClientFeatures = ReadUInt32BE();
@@ -2400,7 +2348,6 @@ PACKET_HANDLER(EnableLockedFeatures)
 
 PACKET_HANDLER(OpenContainer)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2619,7 +2566,6 @@ PACKET_HANDLER(OpenContainer)
 
 PACKET_HANDLER(UpdateSkills)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -2755,7 +2701,6 @@ PACKET_HANDLER(UpdateSkills)
 
 PACKET_HANDLER(ExtendedCommand)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t cmd = ReadUInt16BE();
 
     switch (cmd)
@@ -2838,7 +2783,7 @@ PACKET_HANDLER(ExtendedCommand)
                 str = g_ClilocManager.Cliloc(g_Language)->GetW(clilocNum, true);
                 if (str.length() > 0)
                 {
-                    item->SetName(ToString(str));
+                    item->SetName(str_from(str));
                 }
 
                 const uint8_t font = uint8_t(g_ConfigManager.ChatFont); // 0x03
@@ -2853,7 +2798,7 @@ PACKET_HANDLER(ExtendedCommand)
                 crafterNameLen = ReadUInt16BE();
                 if (crafterNameLen != 0u)
                 {
-                    str = L"Crafted by " + DecodeUTF8(ReadString(crafterNameLen));
+                    str = L"Crafted by " + wstr_from_utf8(ReadString(crafterNameLen));
                 }
             }
 
@@ -3226,7 +3171,6 @@ PACKET_HANDLER(ExtendedCommand)
 
 PACKET_HANDLER(DenyWalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player == nullptr)
     {
         return;
@@ -3249,7 +3193,6 @@ PACKET_HANDLER(DenyWalk)
 
 PACKET_HANDLER(ConfirmWalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player == nullptr)
     {
         return;
@@ -3275,13 +3218,11 @@ PACKET_HANDLER(ConfirmWalk)
 
 PACKET_HANDLER(OpenUrl)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.GoToWebLink(ReadString());
 }
 
 PACKET_HANDLER(Target)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Target.SetData(*this);
 
     if (g_PartyHelperTimer > g_Ticks && (g_PartyHelperTarget != 0u))
@@ -3294,7 +3235,6 @@ PACKET_HANDLER(Target)
 
 PACKET_HANDLER(Talk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         if (g_GameState == GS_GAME_CONNECT)
@@ -3330,7 +3270,7 @@ PACKET_HANDLER(Talk)
     auto name = ReadString();
 
     if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
-        textColor == 0xFFFF && ToLowerA(name) == "system")
+        textColor == 0xFFFF && str_lower(name) == "system")
     {
         uint8_t sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
                                   0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
@@ -3359,7 +3299,7 @@ PACKET_HANDLER(Talk)
     CGameObject *obj = g_World->FindWorldObject(serial);
 
     if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
-        (ToLowerA(name) == "system" && obj == nullptr))
+        (str_lower(name) == "system" && obj == nullptr))
     {
         g_Game.CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, textColor, str);
     }
@@ -3400,7 +3340,6 @@ PACKET_HANDLER(Talk)
 
 PACKET_HANDLER(UnicodeTalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         if (g_GameState == GS_GAME_CONNECT)
@@ -3424,7 +3363,7 @@ PACKET_HANDLER(UnicodeTalk)
             {
                 Ptr = Start + 48;
                 g_ConnectionScreen.SetConnectionFailed(true);
-                g_ConnectionScreen.SetTextA(ToString(ReadWStringBE((Size - 48) / 2)));
+                g_ConnectionScreen.SetTextA(str_from(ReadWStringBE((Size - 48) / 2)));
             }
         }
 
@@ -3441,7 +3380,7 @@ PACKET_HANDLER(UnicodeTalk)
     auto name = ReadString();
 
     if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
-        textColor == 0xFFFF && ToLowerA(name) == "system")
+        textColor == 0xFFFF && str_lower(name) == "system")
     {
         uint8_t sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
                                   0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
@@ -3460,24 +3399,24 @@ PACKET_HANDLER(UnicodeTalk)
         str = ReadWStringBE((Size - 48) / 2);
     }
 
-    Info(Network, "%s: %s", name.c_str(), ToString(str).c_str());
+    Info(Network, "%s: %s", name.c_str(), str_from(str).c_str());
 
     CGameObject *obj = g_World->FindWorldObject(serial);
     if (type == ST_GUILD_CHAT)
     {
         type = ST_BROADCAST;
         textColor = g_ConfigManager.GuildMessageColor;
-        str = L"[Guild][" + ToWString(name) + L"]: " + str;
+        str = L"[Guild][" + wstr_from(name) + L"]: " + str;
     }
     else if (type == ST_ALLIANCE_CHAT)
     {
         type = ST_BROADCAST;
         textColor = g_ConfigManager.AllianceMessageColor;
-        str = L"[Alliance][" + ToWString(name) + L"]: " + str;
+        str = L"[Alliance][" + wstr_from(name) + L"]: " + str;
     }
 
     if (type == ST_BROADCAST /*|| type == ST_SYSTEM*/ || serial == 0xFFFFFFFF || (serial == 0u) ||
-        (ToLowerA(name) == "system" && obj == nullptr))
+        (str_lower(name) == "system" && obj == nullptr))
     {
         const uint8_t speechFont = uint8_t(g_ConfigManager.SpeechFont);
         g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, speechFont, textColor, str);
@@ -3496,7 +3435,7 @@ PACKET_HANDLER(UnicodeTalk)
 
             if (obj->GetName().empty())
             {
-                obj->SetName(name.empty() ? ToString(str) : name);
+                obj->SetName(name.empty() ? str_from(str) : name);
                 if (obj->NPC)
                 {
                     g_GumpManager.UpdateContent(serial, 0, GT_STATUSBAR);
@@ -3520,7 +3459,6 @@ PACKET_HANDLER(UnicodeTalk)
 
 PACKET_HANDLER(ClientTalk)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_AbyssPacket03First)
     {
         bool parse = true;
@@ -3561,7 +3499,6 @@ PACKET_HANDLER(ClientTalk)
 
 PACKET_HANDLER(MultiPlacement)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3575,7 +3512,6 @@ PACKET_HANDLER(MultiPlacement)
 
 PACKET_HANDLER(GraphicEffect)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3716,7 +3652,6 @@ PACKET_HANDLER(GraphicEffect)
 
 PACKET_HANDLER(DeathScreen)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t action = ReadUInt8();
 
     if (action != 1)
@@ -3742,7 +3677,6 @@ PACKET_HANDLER(DeathScreen)
 
 PACKET_HANDLER(PlaySoundEffect)
 {
-    DEBUG_TRACE_FUNCTION;
     Move(1);
     uint16_t index = ReadUInt16BE();
     const uint16_t _volume = ReadUInt16BE();
@@ -3754,7 +3688,6 @@ PACKET_HANDLER(PlaySoundEffect)
 
 PACKET_HANDLER(PlayMusic)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t index = ReadUInt16BE();
 
     Info(Network, "play music 0x%04X", index);
@@ -3769,7 +3702,6 @@ PACKET_HANDLER(PlayMusic)
 
 PACKET_HANDLER(DragAnimation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3878,7 +3810,6 @@ PACKET_HANDLER(DragAnimation)
 
 PACKET_HANDLER(CorpseEquipment)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3907,7 +3838,6 @@ PACKET_HANDLER(CorpseEquipment)
 
 PACKET_HANDLER(ASCIIPrompt)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3919,7 +3849,6 @@ PACKET_HANDLER(ASCIIPrompt)
 
 PACKET_HANDLER(UnicodePrompt)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3931,7 +3860,6 @@ PACKET_HANDLER(UnicodePrompt)
 
 PACKET_HANDLER(CharacterAnimation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3962,7 +3890,6 @@ PACKET_HANDLER(CharacterAnimation)
 
 PACKET_HANDLER(NewCharacterAnimation)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -3995,7 +3922,6 @@ PACKET_HANDLER(NewCharacterAnimation)
 
 PACKET_HANDLER(DisplayQuestArrow)
 {
-    DEBUG_TRACE_FUNCTION;
     g_QuestArrow.Timer = g_Ticks + 1000;
     g_QuestArrow.Enabled = (ReadUInt8() != 0);
     g_QuestArrow.X = ReadUInt16BE();
@@ -4004,13 +3930,11 @@ PACKET_HANDLER(DisplayQuestArrow)
 
 PACKET_HANDLER(ClientViewRange)
 {
-    DEBUG_TRACE_FUNCTION;
     g_ConfigManager.UpdateRange = ReadUInt8();
 }
 
 PACKET_HANDLER(KrriosClientSpecial)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t type = ReadUInt8();
     if (type == 0xFE)
     {
@@ -4020,7 +3944,6 @@ PACKET_HANDLER(KrriosClientSpecial)
 
 PACKET_HANDLER(AssistVersion)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t version = ReadUInt32BE();
     // CHECK: if this is correct for the use case where ClientVersion != ProtocolClientVersion
     CPacketAssistVersion(version, g_Config.ProtocolClientVersionString).Send();
@@ -4028,7 +3951,6 @@ PACKET_HANDLER(AssistVersion)
 
 PACKET_HANDLER(CharacterListNotification)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.InitScreen(GS_DELETE);
     g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
     g_ConnectionScreen.SetConnectionFailed(true);
@@ -4037,7 +3959,6 @@ PACKET_HANDLER(CharacterListNotification)
 
 PACKET_HANDLER(ErrorCode)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t code = ReadUInt8();
 
     g_Game.InitScreen(GS_DELETE);
@@ -4052,7 +3973,6 @@ PACKET_HANDLER(ErrorCode)
 
 PACKET_HANDLER(AttackCharacter)
 {
-    DEBUG_TRACE_FUNCTION;
     g_LastAttackObject = ReadUInt32BE();
 
     if (g_LastAttackObject != 0 && g_World != nullptr)
@@ -4068,7 +3988,6 @@ PACKET_HANDLER(AttackCharacter)
 
 PACKET_HANDLER(Season)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4099,7 +4018,6 @@ PACKET_HANDLER(Season)
 
 PACKET_HANDLER(DisplayDeath)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4132,15 +4050,12 @@ PACKET_HANDLER(DisplayDeath)
 
 PACKET_HANDLER(OpenChat)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t newbuf[4] = { 0xf0, 0x00, 0x04, 0xff };
     g_Game.Send(newbuf, 4);
 }
 
 PACKET_HANDLER(DisplayClilocString)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_World == nullptr)
     {
         return;
@@ -4169,7 +4084,7 @@ PACKET_HANDLER(DisplayClilocString)
     std::wstring affix;
     if (*Start == 0xCC)
     {
-        affix = DecodeUTF8(ReadString());
+        affix = wstr_from_utf8(ReadString());
     }
 
     auto wc = ReadWStringLE();
@@ -4178,7 +4093,7 @@ PACKET_HANDLER(DisplayClilocString)
 
     CGameObject *obj = g_World->FindWorldObject(serial);
     if (/*type == ST_BROADCAST || type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
-        (ToLowerA(name) == "system" && obj == nullptr))
+        (str_lower(name) == "system" && obj == nullptr))
     {
         g_Game.CreateUnicodeTextMessage(TT_SYSTEM, serial, font, color, message);
     }
@@ -4211,7 +4126,6 @@ PACKET_HANDLER(DisplayClilocString)
 
 PACKET_HANDLER(MegaCliloc)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4245,8 +4159,8 @@ PACKET_HANDLER(MegaCliloc)
         }
 
         auto str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
-        DEBUG(Network, "Cliloc: argstr=%s", ToString(str).c_str());
-        DEBUG(Network, "Cliloc: 0x%08X len=%i arg=%s", cliloc, len, ToString(argument).c_str());
+        DEBUG(Network, "Cliloc: argstr=%s", str_from(str).c_str());
+        DEBUG(Network, "Cliloc: 0x%08X len=%i arg=%s", cliloc, len, str_from(argument).c_str());
 
         bool canAdd = true;
         for (const std::wstring &tempStr : list)
@@ -4291,7 +4205,7 @@ PACKET_HANDLER(MegaCliloc)
                 name = str;
                 if (obj != nullptr && !obj->NPC)
                 {
-                    obj->SetName(ToString(str));
+                    obj->SetName(str_from(str));
                     obj->GenerateObjectHandlesTexture(str);
                 }
 
@@ -4329,7 +4243,7 @@ PACKET_HANDLER(MegaCliloc)
                     CGUIShopItem *si = (CGUIShopItem *)shopItem;
                     int oldHeight = si->GetSize().Height;
 
-                    si->Name = ToString(name);
+                    si->Name = str_from(name);
                     si->CreateNameText();
                     si->UpdateOffsets();
 
@@ -4357,7 +4271,6 @@ PACKET_HANDLER(MegaCliloc)
 
 PACKET_HANDLER(Damage)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4405,7 +4318,6 @@ PACKET_HANDLER(Damage)
 
 PACKET_HANDLER(BuffDebuff)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4568,7 +4480,6 @@ PACKET_HANDLER(BuffDebuff)
 
 PACKET_HANDLER(SecureTrading)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4643,7 +4554,6 @@ PACKET_HANDLER(SecureTrading)
 
 PACKET_HANDLER(TextEntryDialog)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4674,7 +4584,6 @@ PACKET_HANDLER(TextEntryDialog)
 
 PACKET_HANDLER(OpenMenu)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4801,7 +4710,6 @@ PACKET_HANDLER(OpenMenu)
 
 void CPacketManager::AddHTMLGumps(CGump *gump, std::vector<HTMLGumpDataInfo> &list)
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < (int)list.size(); i++)
     {
         HTMLGumpDataInfo &data = list[i];
@@ -4878,7 +4786,6 @@ void CPacketManager::AddHTMLGumps(CGump *gump, std::vector<HTMLGumpDataInfo> &li
 
 PACKET_HANDLER(OpenGump)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -4917,7 +4824,7 @@ PACKET_HANDLER(OpenGump)
     bool EntryChanged = false;
     int FirstPage = 0;
     int CurrentPage = 0;
-    CEntryText *ChangeEntry;
+    CEntryText *ChangeEntry = nullptr;
 
     for (const std::string &str : commandList)
     {
@@ -4928,7 +4835,7 @@ PACKET_HANDLER(OpenGump)
             continue;
         }
 
-        auto cmd = ToLowerA(list[0]);
+        auto cmd = str_lower(list[0]);
         CBaseGUI *go = nullptr;
         if (cmd == "nodispose")
         {
@@ -4946,7 +4853,7 @@ PACKET_HANDLER(OpenGump)
             if (listSize >= 2)
             {
                 AddHTMLGumps(gump, htmlGumlList);
-                const int page = ToInt(list[1]);
+                const int page = str_to_int(list[1]);
                 go = new CGUIPage(page);
                 if (FirstPage == 0)
                 {
@@ -4959,7 +4866,7 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 2)
             {
-                const int group = ToInt(list[1]);
+                const int group = str_to_int(list[1]);
                 go = new CGUIGroup(group);
             }
         }
@@ -4971,11 +4878,11 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 6)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int graphic = ToInt(list[3]);
-                const int width = ToInt(list[4]);
-                const int height = ToInt(list[5]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int graphic = str_to_int(list[3]);
+                const int width = str_to_int(list[4]);
+                const int height = str_to_int(list[5]);
                 go = new CGUIResizepic(0, graphic, x, y, width, height);
                 go->DrawOnly = true;
             }
@@ -4984,10 +4891,10 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int width = ToInt(list[3]);
-                const int height = ToInt(list[4]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int width = str_to_int(list[3]);
+                const int height = str_to_int(list[4]);
                 go = new CGUIChecktrans(x, y, width, height);
             }
         }
@@ -4995,24 +4902,24 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int up = ToInt(list[3]);
-                const int down = ToInt(list[4]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int up = str_to_int(list[3]);
+                const int down = str_to_int(list[4]);
                 int action = 0;
                 int toPage = 0;
                 int index = 0;
                 if (listSize >= 6)
                 {
-                    action = ToInt(list[5]);
+                    action = str_to_int(list[5]);
                 }
                 if (listSize >= 7)
                 {
-                    toPage = ToInt(list[6]);
+                    toPage = str_to_int(list[6]);
                 }
                 if (listSize >= 8)
                 {
-                    index = ToInt(list[7]);
+                    index = str_to_int(list[7]);
                 }
                 if (action != 0)
                 {
@@ -5027,17 +4934,17 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 12)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int up = ToInt(list[3]);
-                const int down = ToInt(list[4]);
-                const int action = ToInt(list[5]);
-                int toPage = ToInt(list[6]);
-                const int index = ToInt(list[7]);
-                const int tileGraphic = ToInt(list[8]);
-                const int tileColor = ToInt(list[9]);
-                const int tileX = ToInt(list[10]);
-                const int tileY = ToInt(list[11]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int up = str_to_int(list[3]);
+                const int down = str_to_int(list[4]);
+                const int action = str_to_int(list[5]);
+                int toPage = str_to_int(list[6]);
+                const int index = str_to_int(list[7]);
+                const int tileGraphic = str_to_int(list[8]);
+                const int tileColor = str_to_int(list[9]);
+                const int tileX = str_to_int(list[10]);
+                const int tileY = str_to_int(list[11]);
                 if (action != 0)
                 {
                     toPage = -1;
@@ -5052,19 +4959,19 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int up = ToInt(list[3]);
-                const int down = ToInt(list[4]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int up = str_to_int(list[3]);
+                const int down = str_to_int(list[4]);
                 int state = 0;
                 int index = 0;
                 if (listSize >= 6)
                 {
-                    state = ToInt(list[5]);
+                    state = str_to_int(list[5]);
                 }
                 if (listSize >= 7)
                 {
-                    index = ToInt(list[6]);
+                    index = str_to_int(list[6]);
                 }
                 go = new CGUICheckbox(index, up, down, up, x, y);
                 ((CGUICheckbox *)go)->Checked = (state != 0);
@@ -5074,19 +4981,19 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int up = ToInt(list[3]);
-                const int down = ToInt(list[4]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int up = str_to_int(list[3]);
+                const int down = str_to_int(list[4]);
                 int state = 0;
                 int index = 0;
                 if (listSize >= 6)
                 {
-                    state = ToInt(list[5]);
+                    state = str_to_int(list[5]);
                 }
                 if (listSize >= 7)
                 {
-                    index = ToInt(list[6]);
+                    index = str_to_int(list[6]);
                 }
                 go = new CGUIRadio(index, up, down, up, x, y);
                 ((CGUIRadio *)go)->Checked = (state != 0);
@@ -5096,10 +5003,10 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 5)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                int color = ToInt(list[3]);
-                const int index = ToInt(list[4]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                int color = str_to_int(list[3]);
+                const int index = str_to_int(list[4]);
 
                 if (color != 0)
                 {
@@ -5114,13 +5021,13 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 7)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int width = ToInt(list[3]);
-                const int _height = ToInt(list[4]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int width = str_to_int(list[3]);
+                const int _height = str_to_int(list[4]);
                 (void)_height;
-                int color = ToInt(list[5]);
-                const int index = ToInt(list[6]);
+                int color = str_to_int(list[5]);
+                const int index = str_to_int(list[6]);
 
                 if (color != 0)
                 {
@@ -5135,13 +5042,13 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 8)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int width = ToInt(list[3]);
-                const int height = ToInt(list[4]);
-                const int color = ToInt(list[5]);
-                const int index = ToInt(list[6]);
-                const int textIndex = ToInt(list[7]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int width = str_to_int(list[3]);
+                const int height = str_to_int(list[4]);
+                const int color = str_to_int(list[5]);
+                const int index = str_to_int(list[6]);
+                const int textIndex = str_to_int(list[7]);
 
                 //if (color)
                 //	color++;
@@ -5165,14 +5072,14 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 9)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int width = ToInt(list[3]);
-                const int height = ToInt(list[4]);
-                const int color = ToInt(list[5]);
-                const int index = ToInt(list[6]);
-                const int textIndex = ToInt(list[7]);
-                const int length = ToInt(list[8]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int width = str_to_int(list[3]);
+                const int height = str_to_int(list[4]);
+                const int color = str_to_int(list[5]);
+                const int index = str_to_int(list[6]);
+                const int textIndex = str_to_int(list[7]);
+                const int length = str_to_int(list[8]);
 
                 //if (color)
                 //	color++;
@@ -5196,8 +5103,8 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 4)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
                 int color = 0;
                 int graphic = 0;
                 if (cmd == "tilepic")
@@ -5205,21 +5112,21 @@ PACKET_HANDLER(OpenGump)
                     auto graphicList = tilepicGraphicParser.GetTokens(list[3].c_str());
                     if (!graphicList.empty())
                     {
-                        graphic = ToInt(graphicList[0]);
+                        graphic = str_to_int(graphicList[0]);
                         if (graphicList.size() >= 2)
                         {
-                            color = ToInt(graphicList[1]);
+                            color = str_to_int(graphicList[1]);
                         }
                     }
                 }
                 else
                 {
-                    graphic = ToInt(list[3]);
+                    graphic = str_to_int(list[3]);
                 }
 
                 if (listSize >= 5)
                 {
-                    color = ToInt(list[4]);
+                    color = str_to_int(list[4]);
                 }
                 if (color != 0)
                 {
@@ -5233,9 +5140,9 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 4)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int graphic = ToInt(list[3]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int graphic = str_to_int(list[3]);
                 int color = 0;
                 if (listSize >= 5 && g_Config.ClientVersion >= CV_305D)
                 {
@@ -5243,11 +5150,11 @@ PACKET_HANDLER(OpenGump)
                     auto hueList = gumppicParser.GetTokens(list[4].c_str());
                     if (hueList.size() > 1)
                     {
-                        color = ToInt(hueList[1]);
+                        color = str_to_int(hueList[1]);
                     }
                     else
                     {
-                        color = ToInt(hueList[0]);
+                        color = str_to_int(hueList[0]);
                     }
 
                     if (listSize >= 6)
@@ -5255,8 +5162,8 @@ PACKET_HANDLER(OpenGump)
                         auto classList = gumppicParser.GetTokens(list[5].c_str());
                         if (hueList.size() > 1)
                         {
-                            if (ToLowerA(classList[0]) == "class" &&
-                                ToLowerA(Trim(classList[1])) == "virtuegumpitem")
+                            if (str_lower(classList[0]) == "class" &&
+                                str_lower(str_trim(classList[1])) == "virtuegumpitem")
                             {
                                 go = new CGUIVirtueGump(graphic, x, y);
                             }
@@ -5280,11 +5187,11 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 6)
             {
-                const int x = ToInt(list[1]);
-                const int y = ToInt(list[2]);
-                const int width = ToInt(list[3]);
-                const int height = ToInt(list[4]);
-                const int graphic = ToInt(list[5]);
+                const int x = str_to_int(list[1]);
+                const int y = str_to_int(list[2]);
+                const int width = str_to_int(list[3]);
+                const int height = str_to_int(list[4]);
+                const int graphic = str_to_int(list[5]);
                 if (width > 0 && height > 0)
                 {
                     go = new CGUIGumppicTiled(graphic, x, y, width, height);
@@ -5298,17 +5205,17 @@ PACKET_HANDLER(OpenGump)
             {
                 HTMLGumpDataInfo htmlInfo = {};
                 htmlInfo.IsXMF = (cmd != "htmlgump");
-                GumpCoords *gumpCoords = new GumpCoords{ ToInt(list[1]), ToInt(list[2]) };
+                GumpCoords *gumpCoords = new GumpCoords{ str_to_int(list[1]), str_to_int(list[2]) };
                 htmlInfo.sGumpCoords = gumpCoords;
-                htmlInfo.Width = ToInt(list[3]);
-                htmlInfo.Height = ToInt(list[4]);
-                htmlInfo.TextID = ToInt(list[5]);
-                htmlInfo.HaveBackground = ToInt(list[6]);
-                htmlInfo.HaveScrollbar = ToInt(list[7]);
+                htmlInfo.Width = str_to_int(list[3]);
+                htmlInfo.Height = str_to_int(list[4]);
+                htmlInfo.TextID = str_to_int(list[5]);
+                htmlInfo.HaveBackground = str_to_int(list[6]);
+                htmlInfo.HaveScrollbar = str_to_int(list[7]);
                 htmlInfo.Color = 0;
                 if (cmd == "xmfhtmlgumpcolor" && listSize >= 9)
                 {
-                    htmlInfo.Color = ToInt(list[8]);
+                    htmlInfo.Color = str_to_int(list[8]);
                     if (htmlInfo.Color == 0x7FFF)
                     {
                         htmlInfo.Color = 0x00FFFFFF;
@@ -5323,19 +5230,19 @@ PACKET_HANDLER(OpenGump)
             {
                 HTMLGumpDataInfo htmlInfo = {};
                 htmlInfo.IsXMF = true;
-                GumpCoords *gumpCoords = new GumpCoords{ ToInt(list[1]), ToInt(list[2]) };
+                GumpCoords *gumpCoords = new GumpCoords{ str_to_int(list[1]), str_to_int(list[2]) };
                 htmlInfo.sGumpCoords = gumpCoords;
-                htmlInfo.Width = ToInt(list[3]);
-                htmlInfo.Height = ToInt(list[4]);
-                htmlInfo.HaveBackground = ToInt(list[5]);
-                htmlInfo.HaveScrollbar = ToInt(list[6]);
-                htmlInfo.Color = ToInt(list[7]);
+                htmlInfo.Width = str_to_int(list[3]);
+                htmlInfo.Height = str_to_int(list[4]);
+                htmlInfo.HaveBackground = str_to_int(list[5]);
+                htmlInfo.HaveScrollbar = str_to_int(list[6]);
+                htmlInfo.Color = str_to_int(list[7]);
                 if (htmlInfo.Color == 0x7FFF)
                 {
                     htmlInfo.Color = 0x00FFFFFF;
                 }
-                htmlInfo.TextID = ToInt(list[8]);
-                htmlInfo.Args = ToWString(list[9]);
+                htmlInfo.TextID = str_to_int(list[8]);
+                htmlInfo.Args = wstr_from(list[9]);
                 if (listSize >= 10)
                 {
                 }
@@ -5346,14 +5253,14 @@ PACKET_HANDLER(OpenGump)
         {
             if (listSize >= 2 && lastGumpObject != nullptr)
             {
-                lastGumpObject->ClilocID = ToInt(list[1]);
+                lastGumpObject->ClilocID = str_to_int(list[1]);
             }
         }
         else if (cmd == "mastergump")
         {
             if (listSize >= 2)
             {
-                gump->MasterGump = ToInt(list[1]);
+                gump->MasterGump = str_to_int(list[1]);
             }
         }
         if (go != nullptr)
@@ -5394,7 +5301,6 @@ PACKET_HANDLER(OpenGump)
 
 PACKET_HANDLER(OpenCompressedGump)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5500,7 +5406,6 @@ PACKET_HANDLER(OpenCompressedGump)
 
 PACKET_HANDLER(DyeData)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
     Move(2);
     uint16_t graphic = ReadUInt16BE();
@@ -5516,7 +5421,6 @@ PACKET_HANDLER(DyeData)
 
 PACKET_HANDLER(DisplayMap)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5568,7 +5472,6 @@ PACKET_HANDLER(DisplayMap)
 
 PACKET_HANDLER(MapData)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5626,7 +5529,6 @@ PACKET_HANDLER(MapData)
 
 PACKET_HANDLER(TipWindow)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t flag = ReadUInt8();
 
     if (flag != 1) //1 - ignore
@@ -5653,14 +5555,13 @@ PACKET_HANDLER(TipWindow)
 
 PACKET_HANDLER(CharacterProfile)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
     }
 
     uint32_t serial = ReadUInt32BE();
-    auto topText = ToWString(ReadString());
+    auto topText = wstr_from(ReadString());
     auto bottomText = ReadWStringBE();
     auto dataText = ReadWStringBE();
     CGumpProfile *gump = new CGumpProfile(serial, 170, 90, topText, bottomText, dataText);
@@ -5669,7 +5570,6 @@ PACKET_HANDLER(CharacterProfile)
 
 PACKET_HANDLER(BulletinBoardData)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5736,15 +5636,15 @@ PACKET_HANDLER(BulletinBoardData)
 
                 //poster
                 int len = ReadUInt8();
-                auto text = (len > 0 ? DecodeUTF8(ReadString(len)) : L"") + L" - ";
+                auto text = (len > 0 ? wstr_from_utf8(ReadString(len)) : L"") + L" - ";
 
                 //subject
                 len = ReadUInt8();
-                text += (len > 0 ? DecodeUTF8(ReadString(len)) : L"") + L" - ";
+                text += (len > 0 ? wstr_from_utf8(ReadString(len)) : L"") + L" - ";
 
                 //data time
                 len = ReadUInt8();
-                text += (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                text += (len > 0 ? wstr_from_utf8(ReadString(len)) : L"");
 
                 int posY = (gump->m_HTMLGump->GetItemsCount() - 5) * 18;
 
@@ -5772,15 +5672,15 @@ PACKET_HANDLER(BulletinBoardData)
 
                 //poster
                 int len = ReadUInt8();
-                auto poster = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                auto poster = (len > 0 ? wstr_from_utf8(ReadString(len)) : L"");
 
                 //subject
                 len = ReadUInt8();
-                auto subject = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                auto subject = (len > 0 ? wstr_from_utf8(ReadString(len)) : L"");
 
                 //data time
                 len = ReadUInt8();
-                auto dataTime = (len > 0 ? DecodeUTF8(ReadString(len)) : L"");
+                auto dataTime = (len > 0 ? wstr_from_utf8(ReadString(len)) : L"");
 
                 //unused, in old clients: user's graphic, color
                 Move(4);
@@ -5807,11 +5707,11 @@ PACKET_HANDLER(BulletinBoardData)
 
                     if (linelen > 0)
                     {
-                        data += DecodeUTF8(ReadString(linelen));
+                        data += wstr_from_utf8(ReadString(linelen));
                     }
                 }
 
-                uint8_t variant = 1 + (int)(poster == ToWString(g_Player->GetName()));
+                uint8_t variant = 1 + (int)(poster == wstr_from(g_Player->GetName()));
                 g_GumpManager.AddGump(new CGumpBulletinBoardItem(
                     serial, 0, 0, variant, boardSerial, poster, subject, dataTime, data));
             }
@@ -5825,7 +5725,6 @@ PACKET_HANDLER(BulletinBoardData)
 
 PACKET_HANDLER(OpenBook) // 0x93
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5846,7 +5745,6 @@ PACKET_HANDLER(OpenBook) // 0x93
 
 PACKET_HANDLER(OpenBookNew) // 0xD4
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5878,7 +5776,6 @@ PACKET_HANDLER(OpenBookNew) // 0xD4
 
 PACKET_HANDLER(BookData)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -5912,7 +5809,7 @@ PACKET_HANDLER(BookData)
                     str += L'\n';
                 }
 
-                auto temp = DecodeUTF8(ReadString());
+                auto temp = wstr_from_utf8(ReadString());
 
                 while ((temp.length() != 0u) && (temp.back() == L'\n' || temp.back() == L'\r'))
                 {
@@ -5929,7 +5826,6 @@ PACKET_HANDLER(BookData)
 
 PACKET_HANDLER(BuyList)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6051,7 +5947,6 @@ PACKET_HANDLER(BuyList)
 
 PACKET_HANDLER(SellList)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6122,7 +6017,6 @@ PACKET_HANDLER(SellList)
 
 PACKET_HANDLER(BuyReply)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t serial = ReadUInt32BE();
     uint8_t flag = ReadUInt8();
 
@@ -6134,13 +6028,11 @@ PACKET_HANDLER(BuyReply)
 
 PACKET_HANDLER(Logout)
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.LogOut();
 }
 
 PACKET_HANDLER(OPLInfo)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_TooltipsEnabled)
     {
         uint32_t serial = ReadUInt32BE();
@@ -6155,7 +6047,6 @@ PACKET_HANDLER(OPLInfo)
 
 PACKET_HANDLER(CustomHouse)
 {
-    DEBUG_TRACE_FUNCTION;
     const bool _compressed = ReadUInt8() == 0x03;
     (void)_compressed;
     bool enableResponse = ReadUInt8() == 0x01;
@@ -6339,7 +6230,6 @@ PACKET_HANDLER(CustomHouse)
 
 PACKET_HANDLER(CrossMessages)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t command = ReadUInt16BE();
     uint8_t type = command >> 12;
     command &= 0x0FFF;
@@ -6637,7 +6527,6 @@ PACKET_HANDLER(CrossMessages)
 
 PACKET_HANDLER(PacketsList)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6661,7 +6550,6 @@ PACKET_HANDLER(PacketsList)
 
 PACKET_HANDLER(MovePlayer)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6673,7 +6561,6 @@ PACKET_HANDLER(MovePlayer)
 
 PACKET_HANDLER(Pathfinding)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World == nullptr)
     {
         return;
@@ -6701,8 +6588,6 @@ void CPacketManager::SetCachedGumpCoords(uint32_t id, int x, int y)
 
 PACKET_HANDLER(BoatMoving)
 {
-    DEBUG_TRACE_FUNCTION;
-
     // FIXME: disable BoatMoving for the 0.1.9.6 patch
     //return;
     uint32_t boatSerial = ReadUInt32BE();

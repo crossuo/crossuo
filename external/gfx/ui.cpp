@@ -1,8 +1,12 @@
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include "ui.h"
 
 #include "gfx.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
+#include "imgui/IconsForkAwesomeData.h"
 
 #if defined(USE_GL3)
 #include "imgui/imgui_impl_opengl3.h"
@@ -157,6 +161,14 @@ ui_context ui_init(win_context &win)
 
     ui_context ctx;
     ctx.win = &win;
+    const auto fontSize = 13.0f;
+    static const ImWchar icons_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
+    ImFontConfig config;
+    config.MergeMode = true;
+    io.Fonts->AddFontDefault();
+    io.Fonts->AddFontFromMemoryCompressedTTF(iconsforkawesome_compressed_data, iconsforkawesome_compressed_size, fontSize, &config, icons_ranges);
+    //io.Fonts->AddFontFromFileTTF("forkawesome-webfont.ttf", 18.0f, &config, icons_ranges);
+    io.Fonts->Build();
     return ctx;
 }
 

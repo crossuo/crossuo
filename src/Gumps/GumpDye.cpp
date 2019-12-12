@@ -18,7 +18,6 @@ CGumpDye::~CGumpDye()
 
 uint16_t CGumpDye::GetCurrentColor()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t startColor = m_ColorRef + 2;
     uint16_t color = 0;
 
@@ -41,7 +40,6 @@ uint16_t CGumpDye::GetCurrentColor()
 
 void CGumpDye::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::UpdateContent();
 
     if (m_Tube == nullptr)
@@ -61,14 +59,12 @@ void CGumpDye::UpdateContent()
 
 void CGumpDye::OnSelectColor(uint16_t color)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketDyeDataResponse(Serial, Graphic, color + 1).Send();
     RemoveMark = true;
 }
 
 void CGumpDye::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::OnButton(serial);
 
     if (serial >= ID_GSC_COLORS && m_Tube != nullptr)
@@ -79,13 +75,11 @@ void CGumpDye::GUMP_BUTTON_EVENT_C
 
 void CGumpDye::GUMP_SLIDER_CLICK_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
 
 void CGumpDye::GUMP_SLIDER_MOVE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpSelectColor::OnSliderMove(serial);
 
     if (m_Tube != nullptr)

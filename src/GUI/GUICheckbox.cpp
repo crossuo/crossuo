@@ -7,6 +7,7 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
+#include "../Utility/PerfMarker.h"
 
 CGUICheckbox::CGUICheckbox(
     int serial, uint16_t graphic, uint16_t graphicChecked, uint16_t graphicDisabled, int x, int y)
@@ -19,7 +20,6 @@ CGUICheckbox::CGUICheckbox(
 
 CGUICheckbox::~CGUICheckbox()
 {
-    DEBUG_TRACE_FUNCTION;
     Text.Clear();
 }
 
@@ -32,7 +32,6 @@ void CGUICheckbox::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     uint16_t textFlags)
 {
-    DEBUG_TRACE_FUNCTION;
     TextPosition = textPosition;
     g_FontManager.GenerateW(font, Text, text, color, 30, textWidth, align, textFlags);
     UpdateTextPosition();
@@ -47,7 +46,6 @@ void CGUICheckbox::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     uint16_t textFlags)
 {
-    DEBUG_TRACE_FUNCTION;
     TextPosition = textPosition;
     g_FontManager.GenerateA(font, Text, text, color, textWidth, align, textFlags);
     UpdateTextPosition();
@@ -55,7 +53,6 @@ void CGUICheckbox::SetTextParameters(
 
 void CGUICheckbox::UpdateTextPosition()
 {
-    DEBUG_TRACE_FUNCTION;
     int textX = m_X;
     int textY = m_Y;
 
@@ -138,7 +135,6 @@ void CGUICheckbox::UpdateTextPosition()
 
 void CGUICheckbox::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(Graphic);
     g_Game.ExecuteGump(GraphicChecked);
     g_Game.ExecuteGump(GraphicDisabled);
@@ -146,7 +142,6 @@ void CGUICheckbox::PrepareTextures()
 
 uint16_t CGUICheckbox::GetDrawGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
     if (!Enabled)
     {
@@ -165,14 +160,14 @@ uint16_t CGUICheckbox::GetDrawGraphic()
 
 void CGUICheckbox::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGUIDrawObject::Draw(checktrans);
     Text.Draw(TextX, TextY, checktrans);
 }
 
 bool CGUICheckbox::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = CGUIDrawObject::Select();
     if (!result && !Text.Empty())
     {
@@ -185,7 +180,6 @@ bool CGUICheckbox::Select()
 
 void CGUICheckbox::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Graphic != GraphicSelected && g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -194,7 +188,6 @@ void CGUICheckbox::OnMouseEnter()
 
 void CGUICheckbox::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Graphic != GraphicSelected && g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

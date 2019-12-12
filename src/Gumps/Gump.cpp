@@ -14,6 +14,10 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../ScreenStages/BaseScreen.h"
 #include "../ScreenStages/GameScreen.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
@@ -31,8 +35,6 @@ CGump::CGump(GUMP_TYPE type, uint32_t serial, int x, int y)
 
 CGump::~CGump()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Blocked)
     {
         g_GrayMenuCount--;
@@ -146,7 +148,6 @@ void CGump::FixCoordinates()
 
 bool CGump::CanBeMoved()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
 
     if (NoMove)
@@ -163,7 +164,6 @@ bool CGump::CanBeMoved()
 
 void CGump::DrawLocker()
 {
-    DEBUG_TRACE_FUNCTION;
     if ((m_Locker.Serial != 0u) && g_ShowGumpLocker)
     {
         g_TextureGumpState[LockMoving].Draw(m_Locker.GetX(), m_Locker.GetY());
@@ -172,7 +172,6 @@ void CGump::DrawLocker()
 
 bool CGump::SelectLocker()
 {
-    DEBUG_TRACE_FUNCTION;
     return (
         (m_Locker.Serial != 0u) && g_ShowGumpLocker &&
         g_Game.PolygonePixelsInXY(m_Locker.GetX(), m_Locker.GetY(), 10, 14));
@@ -180,7 +179,6 @@ bool CGump::SelectLocker()
 
 bool CGump::TestLockerClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result =
         ((m_Locker.Serial != 0u) && g_ShowGumpLocker && g_PressedObject.LeftObject == &m_Locker);
 
@@ -194,7 +192,6 @@ bool CGump::TestLockerClick()
 
 void CGump::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     g_GumpPressed =
         (!g_ObjectInHand.Enabled &&
          g_PressedObject.LeftGump == this /*&& g_SelectedObject.Gump() == this*/);
@@ -240,7 +237,6 @@ void CGump::CalculateGumpState()
 
 void CGump::ProcessListing()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_PressedObject.LeftGump != nullptr && !g_PressedObject.LeftGump->NoProcess &&
         g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI())
     {
@@ -309,11 +305,15 @@ void CGump::ProcessListing()
 
 bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     bool transparent = false;
 
+#ifndef NEW_RENDERER_ENABLED
     glClear(GL_STENCIL_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
+#else
+    RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Stencil });
+    RenderAdd_EnableStencil(g_renderCmdList);
+#endif
 
     bool canDraw =
         ((page == -1) || ((page >= currentPage && page <= currentPage + draw2Page) ||
@@ -340,19 +340,28 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
         }
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_STENCIL_TEST);
+#else
+    RenderAdd_DisableStencil(g_renderCmdList);
+#endif
 
     return transparent;
 }
 
 void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     float alpha[2] = { 1.0f, 0.7f };
     CGUIComboBox *combo = nullptr;
 
     bool transparent = ApplyTransparent(start, 0, currentPage, draw2Page);
+#ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
+#else
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha[transparent] } });
+#endif
 
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -385,10 +394,15 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 {
                     CGUIHTMLGump *htmlGump = (CGUIHTMLGump *)item;
 
-                    GLfloat x = (GLfloat)htmlGump->GetX();
-                    GLfloat y = (GLfloat)htmlGump->GetY();
+                    float x = (float)htmlGump->GetX();
+                    float y = (float)htmlGump->GetY();
 
+#ifndef NEW_RENDERER_ENABLED
                     glTranslatef(x, y, 0.0f);
+#else
+                    RenderAdd_SetModelViewTranslation(
+                        g_renderCmdList, SetModelViewTranslationCmd{ { x, y, 0.f } });
+#endif
 
                     CBaseGUI *subItem = (CBaseGUI *)htmlGump->m_Items;
 
@@ -402,15 +416,26 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                         subItem = (CBaseGUI *)subItem->m_Next;
                     }
 
-                    GLfloat offsetX = (GLfloat)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
-                    GLfloat offsetY = (GLfloat)(htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y);
+                    float offsetX = (float)(htmlGump->DataOffset.X - htmlGump->CurrentOffset.X);
+                    float offsetY = (float)(htmlGump->DataOffset.Y - htmlGump->CurrentOffset.Y);
 
+#ifndef NEW_RENDERER_ENABLED
                     glTranslatef(offsetX, offsetY, 0.0f);
+#else
+                    RenderAdd_SetModelViewTranslation(
+                        g_renderCmdList, SetModelViewTranslationCmd{ { offsetX, offsetY, 0.0f } });
+#endif
 
                     CGump::DrawItems(subItem, currentPage, draw2Page);
                     g_GL.PopScissor();
 
+#ifndef NEW_RENDERER_ENABLED
                     glTranslatef(-(x + offsetX), -(y + offsetY), 0.0f);
+#else
+                    RenderAdd_SetModelViewTranslation(
+                        g_renderCmdList,
+                        SetModelViewTranslationCmd{ { -(x + offsetX), -(y + offsetY), 0.0f } });
+#endif
 
                     break;
                 }
@@ -419,7 +444,12 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                     transparent = ApplyTransparent(
                         (CBaseGUI *)item->m_Next, page /*Page*/, currentPage, draw2Page);
 
+#ifndef NEW_RENDERER_ENABLED
                     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
+#else
+                    RenderAdd_SetColor(
+                        g_renderCmdList, SetColorCmd{ { 1.0f, 1.0f, 1.0f, alpha[transparent] } });
+#endif
 
                     break;
                 }
@@ -446,12 +476,15 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
         combo->Draw(false);
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+#endif
 }
 
 CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = nullptr;
 
     int page = 0;
@@ -629,7 +662,6 @@ CRenderObject *CGump::SelectItems(CBaseGUI *start, int currentPage, int draw2Pag
 void CGump::TestItemsLeftMouseDown(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -906,7 +938,6 @@ void CGump::TestItemsLeftMouseDown(
 
 void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -1169,7 +1200,6 @@ void CGump::TestItemsLeftMouseUp(CGump *gump, CBaseGUI *start, int currentPage, 
 void CGump::TestItemsScrolling(
     CGump *gump, CBaseGUI *start, bool up, int currentPage, int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
     const int delay = SCROLL_LISTING_DELAY / 7;
 
     int group = 0;
@@ -1285,7 +1315,6 @@ void CGump::TestItemsScrolling(
 void CGump::TestItemsDragging(
     CGump *gump, CBaseGUI *start, int currentPage, int draw2Page, int count)
 {
-    DEBUG_TRACE_FUNCTION;
     int group = 0;
     int page = 0;
     bool canDraw =
@@ -1392,14 +1421,12 @@ void CGump::TestItemsDragging(
 
 void CGump::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     item->PrepareTextures();
 }
 
 bool CGump::EntryPointerHere()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Visible && item->EntryPointerHere())
@@ -1413,7 +1440,6 @@ bool CGump::EntryPointerHere()
 
 void CGump::GenerateFrame(bool stop)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_GL.Drawing)
     {
         FrameCreated = false;
@@ -1434,7 +1460,8 @@ void CGump::GenerateFrame(bool stop)
 
 void CGump::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CalculateGumpState();
 
     if (WantUpdateContent)
@@ -1456,16 +1483,26 @@ void CGump::Draw()
 
         if (m_FrameBuffer.Use())
         {
+#ifndef NEW_RENDERER_ENABLED
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-            glTranslatef(-(GLfloat)GumpRect.Position.X, -(GLfloat)GumpRect.Position.Y, 0.0f);
+            glTranslatef(-(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f);
+#else
+            RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ { 0.f, 0.f, 0.f, 0.f } });
+            RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Color });
+            RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ g_ColorBlack });
+            RenderAdd_SetModelViewTranslation(
+                g_renderCmdList,
+                SetModelViewTranslationCmd{
+                    { -(float)GumpRect.Position.X, -(float)GumpRect.Position.Y, 0.0f } });
+#endif
 
             GenerateFrame(true);
 
             if (g_DeveloperMode == DM_DEBUGGING)
             {
+#ifndef NEW_RENDERER_ENABLED
                 if (g_SelectedObject.Gump == this)
                 {
                     glColor4f(0.0f, 1.0f, 0.0f, 0.2f);
@@ -1497,9 +1534,55 @@ void CGump::Draw()
                     GumpRect.Position.Y + 1);
 
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+                static float4 s_colorThisGump = { 0.0f, 1.0f, 0.0f, 0.2f };
+                static float4 s_colorOtherGump = { 1.0f, 1.0f, 1.0f, 0.2f };
+                if (g_SelectedObject.Gump != this)
+                {
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ s_colorOtherGump });
+                }
+                else
+                {
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ s_colorThisGump });
+                }
+
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    DrawLineCmd{ GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + 1,
+                                 GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + 1 });
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    DrawLineCmd{ GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + 1,
+                                 GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + GumpRect.Size.Height });
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    DrawLineCmd{ GumpRect.Position.X + GumpRect.Size.Width,
+                                 GumpRect.Position.Y + GumpRect.Size.Height,
+                                 GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + GumpRect.Size.Height });
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    DrawLineCmd{ GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + GumpRect.Size.Height,
+                                 GumpRect.Position.X + 1,
+                                 GumpRect.Position.Y + 1 });
+
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+#endif
             }
 
-            glTranslatef((GLfloat)GumpRect.Position.X, (GLfloat)GumpRect.Position.Y, 0.0f);
+#ifndef NEW_RENDERER_ENABLED
+            glTranslatef((float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f);
+#else
+            RenderAdd_SetModelViewTranslation(
+                g_renderCmdList,
+                SetModelViewTranslationCmd{
+                    { (float)GumpRect.Position.X, (float)GumpRect.Position.Y, 0.0f } });
+#endif
 
             m_FrameBuffer.Release();
         }
@@ -1510,12 +1593,13 @@ void CGump::Draw()
         goto loc_create_frame;
     }
 
-    GLfloat posX = g_GumpTranslate.X;
-    GLfloat posY = g_GumpTranslate.Y;
+    float posX = g_GumpTranslate.X;
+    float posY = g_GumpTranslate.Y;
 
-    posX += (GLfloat)GumpRect.Position.X;
-    posY += (GLfloat)GumpRect.Position.Y;
+    posX += (float)GumpRect.Position.X;
+    posY += (float)GumpRect.Position.Y;
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef(posX, posY, 0.0f);
 
     glEnable(GL_BLEND);
@@ -1523,19 +1607,37 @@ void CGump::Draw()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { posX, posY, 0.0f } });
+
+    RenderAdd_SetBlend(
+        g_renderCmdList,
+        BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                       BlendFactor::BlendFactor_OneMinusSrcAlpha });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+#endif
 
     m_FrameBuffer.Draw(0, 0);
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_BLEND);
+#else
+    RenderAdd_DisableBlend(g_renderCmdList);
+#endif
 
     DrawLocker();
 
+#ifndef NEW_RENDERER_ENABLED
     glTranslatef(-posX, -posY, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { -posX, -posY, 0.0f } });
+#endif
 }
 
 CRenderObject *CGump::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CalculateGumpState();
 
@@ -1579,8 +1681,6 @@ CRenderObject *CGump::Select()
 
 void CGump::RecalculateSize()
 {
-    DEBUG_TRACE_FUNCTION;
-
     CPoint2Di minPosition(999, 999);
     CPoint2Di maxPosition;
     CPoint2Di offset;
@@ -1602,8 +1702,6 @@ void CGump::GetItemsSize(
     int currentPage,
     int draw2Page)
 {
-    DEBUG_TRACE_FUNCTION;
-
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
 
@@ -1716,7 +1814,6 @@ void CGump::GetItemsSize(
 
 void CGump::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
@@ -1729,7 +1826,6 @@ void CGump::OnLeftMouseButtonDown()
 
 void CGump::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     TestItemsLeftMouseUp(this, (CBaseGUI *)m_Items, Page, Draw2Page);
     TestLockerClick();
@@ -1738,7 +1834,6 @@ void CGump::OnLeftMouseButtonUp()
 
 void CGump::OnMidMouseButtonScroll(bool up)
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);
@@ -1751,7 +1846,6 @@ void CGump::OnMidMouseButtonScroll(bool up)
 
 void CGump::OnDragging()
 {
-    DEBUG_TRACE_FUNCTION;
     g_CurrentCheckGump = this;
     CPoint2Di oldPos = g_MouseManager.Position;
     g_MouseManager.Position = CPoint2Di(oldPos.X - m_X, oldPos.Y - m_Y);

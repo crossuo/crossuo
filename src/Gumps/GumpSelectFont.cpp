@@ -19,7 +19,6 @@ CGumpSelectFont::~CGumpSelectFont()
 
 void CGumpSelectFont::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CGUIResizepic *background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x0A28, 0, 0, 200, 70));
@@ -68,7 +67,6 @@ void CGumpSelectFont::UpdateContent()
 
 void CGumpSelectFont::GUMP_RADIO_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (!state)
     {
         return;

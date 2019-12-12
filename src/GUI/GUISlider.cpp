@@ -8,6 +8,10 @@
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Gumps/Gump.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUISlider::CGUISlider(
     int serial,
@@ -34,19 +38,16 @@ CGUISlider::CGUISlider(
     , MaxValue(maxValue)
     , Value(value)
 {
-    DEBUG_TRACE_FUNCTION;
     CalculateOffset();
 }
 
 CGUISlider::~CGUISlider()
 {
-    DEBUG_TRACE_FUNCTION;
     Text.Clear();
 }
 
 void CGUISlider::UpdateText()
 {
-    DEBUG_TRACE_FUNCTION;
     if (HaveText)
     {
         if (Unicode)
@@ -164,7 +165,6 @@ void CGUISlider::UpdateText()
 
 CSize CGUISlider::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CSize size;
     auto spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
@@ -189,7 +189,6 @@ CSize CGUISlider::GetSize()
 
 void CGUISlider::OnScroll(bool up, int delay)
 {
-    DEBUG_TRACE_FUNCTION;
     if (LastScrollTime < g_Ticks)
     {
         if (up)
@@ -219,7 +218,6 @@ void CGUISlider::OnScroll(bool up, int delay)
 
 void CGUISlider::OnClick(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     int length = Length;
     const int maxValue = MaxValue - MinValue;
     auto spr = g_Game.ExecuteGump(Graphic);
@@ -235,7 +233,6 @@ void CGUISlider::OnClick(int x, int y)
 
 void CGUISlider::CalculateOffset()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Value < MinValue)
     {
         Value = MinValue;
@@ -280,7 +277,6 @@ void CGUISlider::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     uint16_t textFlags)
 {
-    DEBUG_TRACE_FUNCTION;
     HaveText = haveText;
     TextPosition = textPosition;
     Font = font;
@@ -294,7 +290,6 @@ void CGUISlider::SetTextParameters(
 
 void CGUISlider::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(Graphic);
     g_Game.ExecuteGump(GraphicSelected);
     g_Game.ExecuteGump(GraphicPressed);
@@ -313,7 +308,6 @@ void CGUISlider::PrepareTextures()
 
 uint16_t CGUISlider::GetDrawGraphic()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = Graphic;
     if (g_GumpPressedElement == this)
     {
@@ -328,7 +322,8 @@ uint16_t CGUISlider::GetDrawGraphic()
 
 void CGUISlider::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     /*Value++;
 	if (Value > MaxValue)
 	{
@@ -342,7 +337,13 @@ void CGUISlider::Draw(bool checktrans)
 	UpdateText();
 	CalculateOffset();*/
 
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
     if (BackgroundGraphic != 0u)
     {
         if (CompositeBackground)
@@ -419,7 +420,6 @@ void CGUISlider::Draw(bool checktrans)
 
 bool CGUISlider::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(Graphic);
     if (spr != nullptr)
     {
@@ -459,7 +459,6 @@ bool CGUISlider::Select()
 
 void CGUISlider::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -468,7 +467,6 @@ void CGUISlider::OnMouseEnter()
 
 void CGUISlider::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

@@ -40,7 +40,6 @@ enum
 CGumpScreenSelectProfession::CGumpScreenSelectProfession()
     : CGump(GT_NONE, 0, 0, 0)
 {
-    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     NoClose = true;
 
@@ -59,7 +58,6 @@ CGumpScreenSelectProfession::~CGumpScreenSelectProfession()
 
 void CGumpScreenSelectProfession::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     if (g_ProfessionManager.Selected == nullptr)
@@ -80,7 +78,6 @@ void CGumpScreenSelectProfession::UpdateContent()
 
 void CGumpScreenSelectProfession::UpdateContentOld()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseProfession *obj = g_ProfessionManager.Selected;
 
     if (obj == nullptr)
@@ -170,7 +167,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
                 ID_SPS_LABEL + index, child->Gump, child->Gump, child->Gump + 1, 509, 109 + offsY));
 
             CGUIText *text = (CGUIText *)Add(new CGUIText(0, 350, 135 + offsY));
-            text->CreateTextureW(2, ToWString(child->Name), 30, 185, TS_LEFT, UOFONT_SOLID);
+            text->CreateTextureW(2, wstr_from(child->Name), 30, 185, TS_LEFT, UOFONT_SOLID);
 
             offsY += 79;
 
@@ -308,7 +305,6 @@ void CGumpScreenSelectProfession::UpdateContentOld()
 
 void CGumpScreenSelectProfession::UpdateContentNew()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseProfession *obj = g_ProfessionManager.Selected;
 
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
@@ -516,7 +512,6 @@ void CGumpScreenSelectProfession::UpdateContentNew()
 
 void CGumpScreenSelectProfession::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips)
     {
         return;
@@ -576,7 +571,6 @@ void CGumpScreenSelectProfession::InitToolTip()
 
 void CGumpScreenSelectProfession::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseProfession *obj = g_ProfessionManager.Selected;
     CProfession *profession = (CProfession *)obj;
 
@@ -736,13 +730,11 @@ void CGumpScreenSelectProfession::NoFeatureError()
 
 void CGumpScreenSelectProfession::GUMP_SLIDER_CLICK_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
 
 void CGumpScreenSelectProfession::GUMP_SLIDER_MOVE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     int skillsCount = 3;
 
     if (g_Config.ClientVersion >= CV_70160)
@@ -779,7 +771,6 @@ void CGumpScreenSelectProfession::GUMP_SLIDER_MOVE_EVENT_C
 
 void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
 {
-    DEBUG_TRACE_FUNCTION;
     CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
     int stats[3] = { m_StatsSliders[0]->Value, m_StatsSliders[1]->Value, m_StatsSliders[2]->Value };
 
@@ -862,7 +853,6 @@ void CGumpScreenSelectProfession::ShuffleStats(int id, int maxSum, int maxVal)
 
 void CGumpScreenSelectProfession::ShuffleSkills(int id)
 {
-    DEBUG_TRACE_FUNCTION;
     CProfession *profession = (CProfession *)g_ProfessionManager.Selected;
     int skills[4] = {
         m_SkillsSliders[0]->Value, m_SkillsSliders[1]->Value, m_SkillsSliders[2]->Value, 0

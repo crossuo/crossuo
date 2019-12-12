@@ -7,6 +7,10 @@
 #include "../SelectedObject.h"
 #include "../Managers/ColorManager.h"
 #include "../Gumps/Gump.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUITilepicHightlighted::CGUITilepicHightlighted(
     int serial,
@@ -30,36 +34,47 @@ CGUITilepicHightlighted::~CGUITilepicHightlighted()
 
 void CGUITilepicHightlighted::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (g_SelectedObject.Object == this)
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_COLORED;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
         g_ColorManager.SendColorsToShader(SelectedColor);
     }
     else if (Color != 0)
     {
-        if (PartialHue)
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-        }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-        }
+        auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
     }
 }
 
 void CGUITilepicHightlighted::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -74,7 +89,6 @@ void CGUITilepicHightlighted::Draw(bool checktrans)
 
 bool CGUITilepicHightlighted::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = (CSprite *)g_Index.m_Static[Graphic].UserData;
     if (spr != nullptr)
     {
@@ -94,7 +108,6 @@ bool CGUITilepicHightlighted::Select()
 
 void CGUITilepicHightlighted::OnMouseEnter()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Gump != nullptr)
     {
         g_SelectedObject.Gump->WantRedraw = true;
@@ -103,7 +116,6 @@ void CGUITilepicHightlighted::OnMouseEnter()
 
 void CGUITilepicHightlighted::OnMouseExit()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_LastSelectedObject.Gump != nullptr)
     {
         g_LastSelectedObject.Gump->WantRedraw = true;

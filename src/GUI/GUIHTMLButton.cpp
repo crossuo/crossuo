@@ -3,6 +3,10 @@
 
 #include "GUIHTMLButton.h"
 #include "GUIHTMLGump.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Globals.h" // g_ShaderDrawMode
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIHTMLButton::CGUIHTMLButton(
     CGUIHTMLGump *htmlGump,
@@ -23,7 +27,13 @@ CGUIHTMLButton::~CGUIHTMLButton()
 
 void CGUIHTMLButton::SetShaderMode()
 {
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 }
 
 void CGUIHTMLButton::Scroll(bool up, int delay)

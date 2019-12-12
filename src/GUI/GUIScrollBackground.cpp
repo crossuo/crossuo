@@ -3,13 +3,14 @@
 
 #include "GUIScrollBackground.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Managers/MouseManager.h"
+#include "../Utility/PerfMarker.h"
 
 CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, int y, int height)
     : CBaseGUI(GOT_SCROLLBACKGROUND, serial, graphic, 0, x, y)
     , Height(height)
 {
-    DEBUG_TRACE_FUNCTION;
     OffsetX = 0;
     BottomOffsetX = 0;
     Width = 0;
@@ -46,7 +47,6 @@ CGUIScrollBackground::CGUIScrollBackground(int serial, uint16_t graphic, int x, 
 
 void CGUIScrollBackground::UpdateHeight(int height)
 {
-    DEBUG_TRACE_FUNCTION;
     Height = height;
 
     CSprite *spr[4] = { nullptr };
@@ -65,13 +65,13 @@ void CGUIScrollBackground::UpdateHeight(int height)
 
 void CGUIScrollBackground::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGumpPart(Graphic, 4);
 }
 
 void CGUIScrollBackground::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGLTexture *th[4] = { nullptr };
 
     for (int i = 0; i < 4; i++)
@@ -123,7 +123,6 @@ void CGUIScrollBackground::Draw(bool checktrans)
 
 bool CGUIScrollBackground::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

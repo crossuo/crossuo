@@ -32,7 +32,6 @@ CGumpConsoleType::CGumpConsoleType(bool minimized, bool showFullText)
     : CGump(GT_CONSOLE_TYPE, 0, 0, 0)
     , m_ShowFullText(showFullText)
 {
-    DEBUG_TRACE_FUNCTION;
     Minimized = minimized;
     NoMove = true;
     g_GumpConsoleType = this;
@@ -40,26 +39,22 @@ CGumpConsoleType::CGumpConsoleType(bool minimized, bool showFullText)
 
 CGumpConsoleType::~CGumpConsoleType()
 {
-    DEBUG_TRACE_FUNCTION;
     g_GumpConsoleType = nullptr;
 }
 
 bool CGumpConsoleType::CanBeDisplayed()
 {
-    DEBUG_TRACE_FUNCTION;
     return g_ConfigManager.ShowDefaultConsoleEntryMode;
 }
 
 void CGumpConsoleType::SetShowFullText(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_ShowFullText = val;
     WantUpdateContent = true;
 }
 
 bool CGumpConsoleType::ConsoleIsEmpty()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = (g_GameConsole.Length() == 0);
 
     switch (m_SelectedType)
@@ -83,7 +78,6 @@ bool CGumpConsoleType::ConsoleIsEmpty()
 
 void CGumpConsoleType::DeleteConsolePrefix()
 {
-    DEBUG_TRACE_FUNCTION;
     static const std::wstring space = L" ";
 
     switch (m_SelectedType)
@@ -112,7 +106,6 @@ void CGumpConsoleType::DeleteConsolePrefix()
 
 void CGumpConsoleType::SetConsolePrefix()
 {
-    DEBUG_TRACE_FUNCTION;
     switch (m_SelectedType)
     {
         case GCTT_YELL:
@@ -135,7 +128,6 @@ void CGumpConsoleType::SetConsolePrefix()
 
 void CGumpConsoleType::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t selected = g_SelectedObject.Serial;
 
     switch (selected)
@@ -192,7 +184,6 @@ void CGumpConsoleType::InitToolTip()
 
 void CGumpConsoleType::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CGUIText *obj = (CGUIText *)Add(new CGUIText(0, 14, 0));
@@ -231,7 +222,7 @@ void CGumpConsoleType::UpdateContent()
             else
             {
                 std::string str = " ";
-                str += ToString(g_ConsolePrefix[i]);
+                str += str_from(g_ConsolePrefix[i]);
 
                 if (str.length() < 3)
                 {
@@ -273,7 +264,6 @@ void CGumpConsoleType::UpdateContent()
 
 void CGumpConsoleType::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     g_GumpMovingOffset.X = 0;
@@ -286,7 +276,6 @@ void CGumpConsoleType::CalculateGumpState()
 
 void CGumpConsoleType::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GCT_MINIMIZE)
     {
         Minimized = !Minimized;
@@ -301,7 +290,6 @@ void CGumpConsoleType::GUMP_BUTTON_EVENT_C
 
 void CGumpConsoleType::GUMP_CHECKBOX_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GCT_SHOW_FULL_TEXT && m_ShowFullText != state)
     {
         m_ShowFullText = state;
@@ -311,7 +299,6 @@ void CGumpConsoleType::GUMP_CHECKBOX_EVENT_C
 
 void CGumpConsoleType::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     DeleteConsolePrefix();
 
     m_SelectedType = serial - 1;

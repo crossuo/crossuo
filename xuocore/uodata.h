@@ -150,7 +150,7 @@ struct CIndexAnimation
 
 struct CIndexMusic
 {
-    std::string FilePath;
+    std::string FilePath; // FIXME
     bool Loop = false;
 };
 

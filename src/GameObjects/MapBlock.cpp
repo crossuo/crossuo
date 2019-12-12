@@ -14,7 +14,6 @@ CMapBlock::CMapBlock(int index)
     : Index(index)
     , LastAccessTime(SDL_GetTicks())
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -26,7 +25,6 @@ CMapBlock::CMapBlock(int index)
 
 CMapBlock::~CMapBlock()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -56,7 +54,6 @@ CMapBlock::~CMapBlock()
 
 bool CMapBlock::HasNoExternalData()
 {
-    DEBUG_TRACE_FUNCTION;
     for (int x = 0; x < 8; x++)
     {
         for (int y = 0; y < 8; y++)
@@ -77,7 +74,6 @@ bool CMapBlock::HasNoExternalData()
 
 uint16_t CMapBlock::GetRadarColor(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
 
     while (obj != nullptr && obj->m_NextXY != nullptr)
@@ -108,7 +104,6 @@ uint16_t CMapBlock::GetRadarColor(int x, int y)
 
 void CMapBlock::CreateLandTextureRect()
 {
-    DEBUG_TRACE_FUNCTION;
     int map = g_MapManager.GetActualMap();
     for (int x = 0; x < 8; x++)
     {
@@ -203,62 +198,6 @@ void CMapBlock::CreateLandTextureRect()
                     obj->m_Normals[3].Add(vec[i][j][3]);
                     obj->m_Normals[3].Add(vec[i][j + 1][0]);
                     obj->m_Normals[3].Normalize();
-
-                    if (g_GL.CanUseBuffer)
-                    {
-                        GLuint positionBuffer = obj->PositionBuffer;
-                        GLuint vertexBuffer = obj->VertexBuffer;
-                        GLuint normalBuffer = obj->NormalBuffer;
-                        if ((positionBuffer == 0u) || (vertexBuffer == 0u) || (normalBuffer == 0u))
-                        {
-                            GLuint vbo[3] = { 0 };
-                            glGenBuffers(3, &vbo[0]);
-
-                            positionBuffer = vbo[0];
-                            vertexBuffer = vbo[1];
-                            normalBuffer = vbo[2];
-
-                            obj->PositionBuffer = positionBuffer;
-                            obj->VertexBuffer = vertexBuffer;
-                            obj->NormalBuffer = normalBuffer;
-
-                            const auto &rc = obj->m_Rect;
-                            CVector *normals = obj->m_Normals;
-
-                            int positionArray[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
-
-                            glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-                            glBufferData(
-                                GL_ARRAY_BUFFER,
-                                sizeof(positionArray),
-                                &positionArray[0],
-                                GL_STATIC_DRAW);
-
-                            int vertexArray[] = { 22, -rc.x,     0,  22 - rc.y,
-                                                  44, 22 - rc.h, 22, 44 - rc.w };
-
-                            glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-                            glBufferData(
-                                GL_ARRAY_BUFFER,
-                                sizeof(vertexArray),
-                                &vertexArray[0],
-                                GL_STATIC_DRAW);
-
-                            float normalArray[] = { (float)normals[0].X, (float)normals[0].Y,
-                                                    (float)normals[0].Z, (float)normals[3].X,
-                                                    (float)normals[3].Y, (float)normals[3].Z,
-                                                    (float)normals[1].X, (float)normals[1].Y,
-                                                    (float)normals[1].Z, (float)normals[2].X,
-                                                    (float)normals[2].Y, (float)normals[2].Z };
-
-                            glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-                            glBufferData(
-                                GL_ARRAY_BUFFER,
-                                sizeof(normalArray),
-                                &normalArray[0],
-                                GL_STATIC_DRAW);
-                        }
-                    }
                 }
                 AddRender(obj, (int)x, (int)y);
             }
@@ -268,7 +207,6 @@ void CMapBlock::CreateLandTextureRect()
 
 bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     for (int i = -1; i < 2 && !result; i++)
     {
@@ -292,8 +230,6 @@ bool CMapBlock::TestStretched(int x, int y, char z, int map, bool recurse)
 
 char CMapBlock::GetLandZ(int x, int y, int map)
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (x < 0 || y < 0)
     {
         return -125;
@@ -313,7 +249,6 @@ char CMapBlock::GetLandZ(int x, int y, int map)
 
 CLandObject *CMapBlock::GetLand(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CMapObject *obj = Block[x][y];
     while (obj != nullptr)
     {
@@ -330,7 +265,6 @@ CLandObject *CMapBlock::GetLand(int x, int y)
 
 void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     item->RemoveRender();
 
     int priorityZ = item->GetZ();
@@ -447,7 +381,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 
 CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderWorldObject *obj = Block[x][y];
     while (obj != nullptr && obj->m_PrevXY != nullptr)
     {
@@ -458,7 +391,6 @@ CRenderWorldObject *CMapBlock::GetRender(int x, int y)
 
 CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Block[x][y] != nullptr)
     {
         CMapObject *item = Block[x][y];

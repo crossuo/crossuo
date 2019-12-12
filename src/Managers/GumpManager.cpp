@@ -45,12 +45,12 @@
 #include "../Gumps/GumpMenu.h"
 #include "../Gumps/GumpGeneric.h"
 #include "../Network/Packets.h"
+#include "../Utility/PerfMarker.h"
 
 CGumpManager g_GumpManager;
 
 int CGumpManager::GetNonpartyStatusbarsCount()
 {
-    DEBUG_TRACE_FUNCTION;
     int count = 0;
 
     QFOR(gump, m_Items, CGump *)
@@ -68,7 +68,6 @@ int CGumpManager::GetNonpartyStatusbarsCount()
 // FIXME: This API taking ownership of obj and deleting "sometimes" is not safe
 void CGumpManager::AddGump(CGump *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Items == nullptr)
     {
         m_Items = obj;
@@ -246,7 +245,6 @@ void CGumpManager::AddGump(CGump *obj)
 
 CGump *CGumpManager::GetTextEntryOwner()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (gump->EntryPointerHere())
@@ -260,7 +258,6 @@ CGump *CGumpManager::GetTextEntryOwner()
 
 CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (gumpID == (uintptr_t)gump)
@@ -274,7 +271,6 @@ CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 
 CGump *CGumpManager::UpdateContent(uint32_t serial, int id, const GUMP_TYPE &type)
 {
-    DEBUG_TRACE_FUNCTION;
     CGump *gump = GetGump(serial, id, type);
 
     if (gump != nullptr)
@@ -286,7 +282,6 @@ CGump *CGumpManager::UpdateContent(uint32_t serial, int id, const GUMP_TYPE &typ
 
 CGump *CGumpManager::UpdateGump(uint32_t serial, int id, const GUMP_TYPE &type)
 {
-    DEBUG_TRACE_FUNCTION;
     CGump *gump = GetGump(serial, id, type);
 
     if (gump != nullptr)
@@ -298,7 +293,6 @@ CGump *CGumpManager::UpdateGump(uint32_t serial, int id, const GUMP_TYPE &type)
 
 CGump *CGumpManager::GetGump(uint32_t serial, int id, const GUMP_TYPE &type)
 {
-    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
     while (gump != nullptr)
     {
@@ -338,7 +332,6 @@ CGump *CGumpManager::GetGump(uint32_t serial, int id, const GUMP_TYPE &type)
 
 void CGumpManager::CloseGump(uint32_t serial, uint32_t id, GUMP_TYPE type)
 {
-    DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != nullptr;)
     {
         CGump *next = (CGump *)gump->m_Next;
@@ -390,7 +383,6 @@ void CGumpManager::CloseGump(uint32_t serial, uint32_t id, GUMP_TYPE type)
 
 void CGumpManager::RemoveGump(CGump *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     Unlink(obj);
 
     if (g_World != nullptr)
@@ -422,7 +414,6 @@ void CGumpManager::RemoveGump(CGump *obj)
 
 void CGumpManager::OnDelete()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
 
     while (gump != nullptr)
@@ -440,7 +431,6 @@ void CGumpManager::OnDelete()
 
 void CGumpManager::RemoveRangedGumps()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World != nullptr)
     {
         CGump *gump = (CGump *)m_Items;
@@ -493,7 +483,6 @@ void CGumpManager::RemoveRangedGumps()
 
 void CGumpManager::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != nullptr;)
     {
         CGump *next = (CGump *)gump->m_Next;
@@ -514,7 +503,6 @@ void CGumpManager::PrepareContent()
 
 void CGumpManager::RemoveMarked()
 {
-    DEBUG_TRACE_FUNCTION;
     for (CGump *gump = (CGump *)m_Items; gump != nullptr;)
     {
         CGump *next = (CGump *)gump->m_Next;
@@ -530,7 +518,6 @@ void CGumpManager::RemoveMarked()
 
 void CGumpManager::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         g_CurrentCheckGump = gump;
@@ -542,7 +529,8 @@ void CGumpManager::PrepareTextures()
 
 void CGumpManager::Draw(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGump *gump = (CGump *)m_Items;
     CGump *menuBarGump = nullptr;
 
@@ -579,7 +567,6 @@ void CGumpManager::Draw(bool blocked)
 
 void CGumpManager::Select(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     CGump *gump = (CGump *)m_Items;
     CGump *menuBarGump = nullptr;
 
@@ -616,7 +603,6 @@ void CGumpManager::Select(bool blocked)
 
 void CGumpManager::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump *gump = g_SelectedObject.Gump;
 
     if (gump != nullptr)
@@ -634,14 +620,12 @@ void CGumpManager::InitToolTip()
 
 void CGumpManager::RedrawAll()
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     gump->WantRedraw = true;
 }
 
 void CGumpManager::OnLeftMouseButtonDown(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
     {
         return;
@@ -675,7 +659,6 @@ void CGumpManager::OnLeftMouseButtonDown(bool blocked)
 
 bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
     {
         return false;
@@ -838,7 +821,6 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
 
 bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
 
     if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
@@ -867,7 +849,6 @@ bool CGumpManager::OnLeftMouseButtonDoubleClick(bool blocked)
 
 void CGumpManager::OnRightMouseButtonDown(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
     {
         return;
@@ -901,7 +882,6 @@ void CGumpManager::OnRightMouseButtonDown(bool blocked)
 
 void CGumpManager::OnRightMouseButtonUp(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsText())
     {
         return;
@@ -1073,7 +1053,6 @@ void CGumpManager::OnRightMouseButtonUp(bool blocked)
 
 void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (g_SelectedObject.Gump == gump && !gump->NoProcess)
@@ -1087,7 +1066,6 @@ void CGumpManager::OnMidMouseButtonScroll(bool up, bool blocked)
 
 void CGumpManager::OnDragging(bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(gump, m_Items, CGump *)
     {
         if (g_PressedObject.LeftGump == gump && !gump->NoProcess)
@@ -1101,8 +1079,6 @@ void CGumpManager::OnDragging(bool blocked)
 
 bool CGumpManager::OnTextInput(const TextEvent &ev, bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
-
     CGump *gump = GetTextEntryOwner();
     bool result = false;
     if (gump != nullptr && !gump->NoProcess)
@@ -1128,8 +1104,6 @@ bool CGumpManager::OnTextInput(const TextEvent &ev, bool blocked)
 
 bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool result = false;
     const auto key = EvKey(ev);
     if (g_EntryPointer != nullptr && g_EntryPointer != &g_GameConsole)
@@ -1180,7 +1154,6 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
 
 void CGumpManager::Load(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     CMappedFile file;
 
     bool paperdollRequested = false;
@@ -1549,7 +1522,6 @@ void CGumpManager::Load(const fs_path &path)
 
 void CGumpManager::SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CGump *gump, int size)
 {
-    DEBUG_TRACE_FUNCTION;
     writer.WriteInt8(size);
     writer.WriteInt8(gump->GumpType);
     writer.WriteUInt16LE(gump->GetX());
@@ -1571,7 +1543,6 @@ void CGumpManager::SaveDefaultGumpProperties(Wisp::CBinaryFileWriter &writer, CG
 
 void CGumpManager::Save(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
 
     writer.Open(path);

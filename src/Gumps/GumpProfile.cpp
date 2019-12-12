@@ -15,7 +15,6 @@ CGumpProfile::CGumpProfile(
     const std::wstring &dataText)
     : CGumpBaseScroll(GT_PROFILE, serial, 0x0820, 250, x, y, true)
 {
-    DEBUG_TRACE_FUNCTION;
     Changed = false;
     Add(new CGUIPage(1));
     Add(new CGUIGumppic(0x09D4, 0, 0));
@@ -65,7 +64,6 @@ CGumpProfile::CGumpProfile(
 
 CGumpProfile::~CGumpProfile()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Changed && m_Entry != nullptr)
     {
         CPacketProfileUpdate(Serial, m_Entry->m_Entry.Data(), m_Entry->m_Entry.Length()).Send();
@@ -74,7 +72,6 @@ CGumpProfile::~CGumpProfile()
 
 void CGumpProfile::RecalculateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     int offsetY = m_Entry->GetY();
     m_Entry->m_Entry.CreateTextureW(0, m_Entry->m_Entry.Data(), 0, 210, TS_LEFT, 0);
 
@@ -99,7 +96,6 @@ void CGumpProfile::RecalculateHeight()
 
 void CGumpProfile::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE)
     {
         Minimized = true;
@@ -128,7 +124,6 @@ void CGumpProfile::GUMP_BUTTON_EVENT_C
 
 bool CGumpProfile::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;
@@ -143,8 +138,6 @@ bool CGumpProfile::OnLeftMouseButtonDoubleClick()
 
 void CGumpProfile::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     g_EntryPointer->Insert(ch);
     RecalculateHeight();
@@ -153,8 +146,6 @@ void CGumpProfile::OnTextInput(const TextEvent &ev)
 
 void CGumpProfile::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto key = EvKey(ev);
     if (key == KEY_RETURN || key == KEY_RETURN2)
     {

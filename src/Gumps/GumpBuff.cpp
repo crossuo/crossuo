@@ -12,7 +12,6 @@
 CGumpBuff::CGumpBuff(short x, short y)
     : CGump(GT_BUFF, 0, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     Graphic = 0x7580;
     m_Locker.Serial = ID_GB_LOCK_MOVING;
 
@@ -29,13 +28,11 @@ CGumpBuff::~CGumpBuff()
 
 bool CGumpBuff::CanBeDisplayed()
 {
-    DEBUG_TRACE_FUNCTION;
     return g_ConfigManager.ToggleBufficonWindow;
 }
 
 void CGumpBuff::UpdateBuffIcons()
 {
-    DEBUG_TRACE_FUNCTION;
     for (CBaseGUI *item = (CBaseGUI *)m_Items; item != nullptr;)
     {
         CBaseGUI *next = (CBaseGUI *)item->m_Next;
@@ -92,7 +89,6 @@ void CGumpBuff::UpdateBuffIcons()
 
 void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const std::wstring &text)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t ticks = 0xFFFFFFFF;
     if (timer != 0u)
     {
@@ -124,7 +120,6 @@ void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const std::wstring &text)
 
 void CGumpBuff::DeleteBuff(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_BUFF && item->Graphic == id)
@@ -139,7 +134,6 @@ void CGumpBuff::DeleteBuff(uint16_t id)
 
 void CGumpBuff::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_SelectedObject.Serial == ID_GB_NEXT_WINDOW_DIRECTION)
     {
         g_ToolTip.Set(L"Change buff window gump");
@@ -203,7 +197,6 @@ void CGumpBuff::GetGumpStatus(
     CPoint2Di &startGump,
     CSize &endGump)
 {
-    DEBUG_TRACE_FUNCTION;
     startGump.X = 0;
     startGump.Y = 0;
 
@@ -339,7 +332,6 @@ void CGumpBuff::GetGumpStatus(
 
 void CGumpBuff::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Graphic < 0x757F || Graphic > 0x7582)
     {
         Graphic = 0x7580;
@@ -349,7 +341,6 @@ void CGumpBuff::PrepareContent()
 
 void CGumpBuff::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     bool decX = false;
     bool decY = false;
     bool useX = true;
@@ -430,7 +421,6 @@ void CGumpBuff::UpdateContent()
 
 void CGumpBuff::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GB_NEXT_WINDOW_DIRECTION)
     {
         switch (Graphic)

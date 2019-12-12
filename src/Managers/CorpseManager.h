@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <deque>
 class CGameObject;
 
 class CCorpse

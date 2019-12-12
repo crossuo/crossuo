@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 struct MulStaticTile2;
 
 struct CObjectOnCursor

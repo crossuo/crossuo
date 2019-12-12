@@ -2,6 +2,8 @@
 #define WISP_MOUSE_H
 
 #include <SDL_events.h>
+#include <stdint.h>
+#include "../Point.h"
 
 namespace Wisp
 {

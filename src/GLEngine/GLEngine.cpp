@@ -1,25 +1,20 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <algorithm>
 #include "GLEngine.h"
+#include "GLTexture.h"
+#include "../Globals.h" // g_GlobalScale
 #include "../Point.h"
 #include "../GameWindow.h"
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/LandObject.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGLEngine g_GL;
-
-BIND_TEXTURE_16_FUNCTION g_GL_BindTexture16_Ptr = &CGLEngine::GL1_BindTexture16;
-BIND_TEXTURE_32_FUNCTION g_GL_BindTexture32_Ptr = &CGLEngine::GL1_BindTexture32;
-
-DRAW_LAND_TEXTURE_FUNCTION g_GL_DrawLandTexture_Ptr = &CGLEngine::GL1_DrawLandTexture;
-DRAW_TEXTURE_FUNCTION g_GL_Draw_Ptr = &CGLEngine::GL1_Draw;
-DRAW_TEXTURE_ROTATED_FUNCTION g_GL_DrawRotated_Ptr = &CGLEngine::GL1_DrawRotated;
-DRAW_TEXTURE_MIRRORED_FUNCTION g_GL_DrawMirrored_Ptr = &CGLEngine::GL1_DrawMirrored;
-DRAW_TEXTURE_SITTING_FUNCTION g_GL_DrawSitting_Ptr = &CGLEngine::GL1_DrawSitting;
-DRAW_TEXTURE_SHADOW_FUNCTION g_GL_DrawShadow_Ptr = &CGLEngine::GL1_DrawShadow;
-DRAW_TEXTURE_STRETCHED_FUNCTION g_GL_DrawStretched_Ptr = &CGLEngine::GL1_DrawStretched;
-DRAW_TEXTURE_RESIZEPIC_FUNCTION g_GL_DrawResizepic_Ptr = &CGLEngine::GL1_DrawResizepic;
 
 CGLEngine::CGLEngine()
 {
@@ -27,17 +22,17 @@ CGLEngine::CGLEngine()
 
 CGLEngine::~CGLEngine()
 {
-    DEBUG_TRACE_FUNCTION;
-    if (PositionBuffer != 0)
-    {
-        glDeleteBuffers(1, &PositionBuffer);
-        PositionBuffer = 0;
-    }
-
+#ifndef NEW_RENDERER_ENABLED
     Uninstall();
+#else
+    // FIXME most likely useless, Window::OnDestroy() calls g_Game.Uninstall() which will then call Render_Shutdown
+    // this happens when one of the SDL events (quit/close) is received.
+    Render_Shutdown();
+#endif
 }
 
-//#define OGL_DEBUGCONTEXT_ENABLED
+#ifndef NEW_RENDERER_ENABLED
+// #define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
 #define OGL_DEBUGMSG_TYPE_COUNT (8)
@@ -94,7 +89,7 @@ static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
     assert(false);
 }
 
-static void APIENTRY openglCallbackFunction(
+static void openglCallbackFunction(
     GLenum source,
     GLenum type,
     GLuint id,
@@ -107,36 +102,38 @@ static void APIENTRY openglCallbackFunction(
     (void)length;
     (void)userParam;
 
-    auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
-        auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
-        auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
+    // auto getMsgInfo = [](GLenum sev, GLenum type, GLuint id) {
+    //     auto &infoSeverity = s_openglDebugMsgSeverity[sev % OGL_DEBUGMSG_SEVERITY_COUNT];
+    //     auto &infoType = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
 
-        auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
-        shouldAssert &= infoType.assert;
-        shouldLog &= infoType.log;
+    //     auto [shouldAssert, shouldLog] = std::tie(infoSeverity.assert, infoSeverity.log);
+    //     shouldAssert &= infoType.assert;
+    //     shouldLog &= infoType.log;
 
-        if (!shouldAssert && !shouldLog)
-            return std::tie(shouldAssert, shouldLog);
+    //     if (!shouldAssert && !shouldLog)
+    //         return std::tie(shouldAssert, shouldLog);
 
-        for (auto &ctrl : s_openglDebugMsgs)
-        {
-            if (ctrl.id == OGL_DEBUGMSG_INVALIDID)
-            {
-                break;
-            }
+    //     for (auto &ctrl : s_openglDebugMsgs)
+    //     {
+    //         if (ctrl.id == OGL_DEBUGMSG_INVALIDID)
+    //         {
+    //             break;
+    //         }
 
-            if (ctrl.id == id)
-            {
-                shouldAssert &= ctrl.assert;
-                shouldLog &= ctrl.log;
-                break;
-            }
-        }
+    //         if (ctrl.id == id)
+    //         {
+    //             shouldAssert &= ctrl.assert;
+    //             shouldLog &= ctrl.log;
+    //             break;
+    //         }
+    //     }
 
-        return std::tie(shouldAssert, shouldLog);
-    };
+    //     return std::tie(shouldAssert, shouldLog);
+    // };
 
-    auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    // auto [shouldAssert, shouldLog] = getMsgInfo(severity, type, id);
+    auto shouldLog = true;
+    auto shouldAssert = false;
     if (shouldLog)
     {
         Info(Renderer, "OpenGL debug message (id %d): %s", id, message);
@@ -161,6 +158,8 @@ static void SetupOGLDebugMessage()
     EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_MARKER, false, false);
     EnableOpenGLDebugMsgType(GL_DEBUG_TYPE_POP_GROUP, false, true);
 
+    EnableOpenGLMessage(OGL_USERPERFMARKERS_ID, false, false);
+
     // GL error "GL_INVALID_OPERATION in ...":
     // 1) FIXME no shader set when glUniform1iARB is called for g_ShaderDrawMode
     EnableOpenGLMessage(1282, false, false);
@@ -181,7 +180,6 @@ static void SetupOGLDebugMessage()
 
 bool CGLEngine::Install()
 {
-    DEBUG_TRACE_FUNCTION;
     OldTexture = -1;
 
 #ifdef OGL_DEBUGCONTEXT_ENABLED
@@ -225,44 +223,20 @@ bool CGLEngine::Install()
     Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
     Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    CanUseFrameBuffer =
+    auto canUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
          glFramebufferTexture2D && glGenFramebuffers);
 
-    CanUseBuffer =
-        (GL_VERSION_1_5 && glBindBuffer && glBufferData && glDeleteBuffers && glGenBuffers);
+    Info(Renderer, "g_UseFrameBuffer = %i", canUseFrameBuffer);
 
-    CanUseBuffer = false;
-
-    if (CanUseBuffer)
+    if (!canUseFrameBuffer)
     {
-        glGenBuffers(3, &PositionBuffer);
+        SDL_GL_DeleteContext(m_context);
+        m_context = nullptr;
 
-        int positionArray[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
-
-        glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(positionArray), &positionArray[0], GL_STATIC_DRAW);
-
-        g_GL_BindTexture16_Ptr = &CGLEngine::GL2_BindTexture16;
-        g_GL_BindTexture32_Ptr = &CGLEngine::GL2_BindTexture32;
-
-        g_GL_DrawLandTexture_Ptr = &CGLEngine::GL2_DrawLandTexture;
-        g_GL_Draw_Ptr = &CGLEngine::GL2_Draw;
-        g_GL_DrawRotated_Ptr = &CGLEngine::GL2_DrawRotated;
-        g_GL_DrawMirrored_Ptr = &CGLEngine::GL2_DrawMirrored;
-        g_GL_DrawSitting_Ptr = &CGLEngine::GL2_DrawSitting;
-        g_GL_DrawShadow_Ptr = &CGLEngine::GL2_DrawShadow;
-        g_GL_DrawStretched_Ptr = &CGLEngine::GL2_DrawStretched;
-        g_GL_DrawResizepic_Ptr = &CGLEngine::GL2_DrawResizepic;
+        Error(Client, "Your graphics card does not support Frame Buffers");
+        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Error");
     }
-
-    Info(Renderer, "g_UseFrameBuffer = %i; CanUseBuffer = %i", CanUseFrameBuffer, CanUseBuffer);
-
-    if (!CanUseFrameBuffer)
-    {
-        g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Warning");
-    }
-
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
     glShadeModel(GL_SMOOTH);              // Enables Smooth Color Shading
     glClearDepth(1.0);                    // Depth Buffer Setup
@@ -297,13 +271,11 @@ bool CGLEngine::Install()
 
     const auto size = g_GameWindow.GetSize();
     ViewPort(0, 0, size.Width, size.Height);
-
     return true;
 }
 
 void CGLEngine::Uninstall()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_context != nullptr)
     {
         SDL_GL_DeleteContext(m_context);
@@ -312,6 +284,8 @@ void CGLEngine::Uninstall()
 
 void CGLEngine::UpdateRect()
 {
+    ScopedPerfMarker(__FUNCTION__);
+
     int width, height;
     //SDL_GL_GetDrawableSize(g_GameWindow.m_window, &width, &height);
     SDL_GetWindowSize(g_GameWindow.m_window, &width, &height);
@@ -322,9 +296,10 @@ void CGLEngine::UpdateRect()
     g_GumpManager.RedrawAll();
 }
 
-void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
+void CGLEngine::BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     GLuint tex = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex);
@@ -349,9 +324,10 @@ void CGLEngine::GL1_BindTexture16(CGLTexture &texture, int width, int height, ui
     texture.Texture = tex;
 }
 
-void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
+void CGLEngine::BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     GLuint tex = 0;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glGenTextures(1, &tex);
@@ -368,47 +344,15 @@ void CGLEngine::GL1_BindTexture32(CGLTexture &texture, int width, int height, ui
     texture.Height = height;
     texture.Texture = tex;
 }
-
-void CGLEngine::GL2_CreateArrays(CGLTexture &texture, int width, int height)
-{
-    DEBUG_TRACE_FUNCTION;
-    GLuint vbo[2] = { 0 };
-    glGenBuffers(2, &vbo[0]);
-
-    int vertexArray[] = { 0, height, width, height, 0, 0, width, 0 };
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexArray), &vertexArray[0], GL_STATIC_DRAW);
-
-    int mirroredVertexArray[] = { width, height, 0, height, width, 0, 0, 0 };
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    glBufferData(
-        GL_ARRAY_BUFFER, sizeof(mirroredVertexArray), &mirroredVertexArray[0], GL_STATIC_DRAW);
-
-    texture.VertexBuffer = vbo[0];
-    texture.MirroredVertexBuffer = vbo[1];
-}
-
-void CGLEngine::GL2_BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
-{
-    DEBUG_TRACE_FUNCTION;
-    GL1_BindTexture16(texture, width, height, pixels);
-    GL2_CreateArrays(texture, width, height);
-}
-
-void CGLEngine::GL2_BindTexture32(CGLTexture &texture, int width, int height, uint32_t *pixels)
-{
-    DEBUG_TRACE_FUNCTION;
-    GL1_BindTexture32(texture, width, height, pixels);
-    GL2_CreateArrays(texture, width, height);
-}
+#endif
 
 void CGLEngine::BeginDraw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     Drawing = true;
 
+#ifndef NEW_RENDERER_ENABLED
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glLoadIdentity();
 
@@ -419,54 +363,26 @@ void CGLEngine::BeginDraw()
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.0f);
-
-    if (CanUseBuffer)
-    {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    }
+#endif
 }
 
 void CGLEngine::EndDraw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     Drawing = false;
 
-    if (CanUseBuffer)
-    {
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    }
-
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_ALPHA_TEST);
     SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window);
+#endif
 }
 
-void CGLEngine::BeginStencil()
-{
-    DEBUG_TRACE_FUNCTION;
-    glEnable(GL_STENCIL_TEST);
-
-    glColorMask(0u, 0u, 0u, 0u);
-
-    glStencilFunc(GL_ALWAYS, 1, 1);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-}
-
-void CGLEngine::EndStencil()
-{
-    DEBUG_TRACE_FUNCTION;
-    glColorMask(1u, 1u, 1u, 1u);
-
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc(GL_NOTEQUAL, 1, 1);
-
-    glDisable(GL_STENCIL_TEST);
-}
-
+#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -488,7 +404,8 @@ void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 
 void CGLEngine::ViewPort(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     const auto size = g_GameWindow.GetSize();
     glViewport(x, size.Height - y - height, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -499,51 +416,60 @@ void CGLEngine::ViewPort(int x, int y, int width, int height)
 
 void CGLEngine::RestorePort()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0);
     glMatrixMode(GL_MODELVIEW);
 }
+#endif
 
 void CGLEngine::PushScissor(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(x, y, width, height));
 }
 
 void CGLEngine::PushScissor(const CPoint2Di &position, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(position, width, height));
 }
 
 void CGLEngine::PushScissor(int x, int y, const CSize &size)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(x, y, size));
 }
 
 void CGLEngine::PushScissor(const CPoint2Di &position, const CSize &size)
 {
-    DEBUG_TRACE_FUNCTION;
     PushScissor(CRect(position, size));
 }
 
 void CGLEngine::PushScissor(const CRect &rect)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     m_ScissorList.push_back(rect);
 
+#ifndef NEW_RENDERER_ENABLED
     glEnable(GL_SCISSOR_TEST);
 
     glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
+#else
+    RenderAdd_SetScissor(
+        g_renderCmdList,
+        SetScissorCmd{ rect.Position.X,
+                       rect.Position.Y,
+                       uint32_t(rect.Size.Width),
+                       uint32_t(rect.Size.Height) });
+#endif
 }
 
 void CGLEngine::PopScissor()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (!m_ScissorList.empty())
     {
         m_ScissorList.pop_back();
@@ -551,26 +477,46 @@ void CGLEngine::PopScissor()
 
     if (m_ScissorList.empty())
     {
+#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_SCISSOR_TEST);
+#else
+        RenderAdd_DisableScissor(g_renderCmdList);
+#endif
     }
     else
     {
         CRect &rect = m_ScissorList.back();
+#ifndef NEW_RENDERER_ENABLED
         glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
+#else
+        RenderAdd_SetScissor(
+            g_renderCmdList,
+            SetScissorCmd{ rect.Position.X,
+                           rect.Position.Y,
+                           uint32_t(rect.Size.Width),
+                           uint32_t(rect.Size.Height) });
+#endif
     }
 }
 
 void CGLEngine::ClearScissorList()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     m_ScissorList.clear();
 
+#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_SCISSOR_TEST);
+#else
+    RenderAdd_DisableScissor(g_renderCmdList);
+#endif
 }
 
+#ifndef NEW_RENDERER_ENABLED
 inline void CGLEngine::BindTexture(GLuint texture)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     assert(texture != 0);
     if (OldTexture != texture)
     {
@@ -581,7 +527,8 @@ inline void CGLEngine::BindTexture(GLuint texture)
 
 void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     glDisable(GL_TEXTURE_2D);
 
     glBegin(GL_LINES);
@@ -594,7 +541,8 @@ void CGLEngine::DrawLine(int x, int y, int targetX, int targetY)
 
 void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     glDisable(GL_TEXTURE_2D);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
@@ -613,7 +561,8 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 
 void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     glDisable(GL_TEXTURE_2D);
 
     glTranslatef(x, y, 0.0f);
@@ -627,7 +576,7 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
         glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    float pi = (float)M_PI * 2.0f;
+    float pi = (float)XUO_M_PI * 2.0f;
 
     for (int i = 0; i <= 360; i++)
     {
@@ -642,9 +591,10 @@ void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
     glEnable(GL_TEXTURE_2D);
 }
 
-void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
+void CGLEngine::DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     float translateX = x - 22.0f;
@@ -676,9 +626,10 @@ void CGLEngine::GL1_DrawLandTexture(const CGLTexture &texture, int x, int y, CLa
     glTranslatef(-translateX, -translateY, 0.0f);
 }
 
-void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
+void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -700,9 +651,10 @@ void CGLEngine::GL1_Draw(const CGLTexture &texture, int x, int y)
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
-void CGLEngine::GL1_DrawRotated(const CGLTexture &texture, int x, int y, float angle)
+void CGLEngine::DrawRotated(const CGLTexture &texture, int x, int y, float angle)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -729,9 +681,10 @@ void CGLEngine::GL1_DrawRotated(const CGLTexture &texture, int x, int y, float a
     glTranslatef((GLfloat)-x, -translateY, 0.0f);
 }
 
-void CGLEngine::GL1_DrawMirrored(const CGLTexture &texture, int x, int y, bool mirror)
+void CGLEngine::DrawMirrored(const CGLTexture &texture, int x, int y, bool mirror)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -769,10 +722,11 @@ void CGLEngine::GL1_DrawMirrored(const CGLTexture &texture, int x, int y, bool m
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
-void CGLEngine::GL1_DrawSitting(
+void CGLEngine::DrawSitting(
     const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
@@ -885,9 +839,10 @@ void CGLEngine::GL1_DrawSitting(
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
-void CGLEngine::GL1_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
+void CGLEngine::DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     float width = (float)texture.Width;
@@ -929,10 +884,11 @@ void CGLEngine::GL1_DrawShadow(const CGLTexture &texture, int x, int y, bool mir
     glTranslatef((GLfloat)-x, -translateY, 0.0f);
 }
 
-void CGLEngine::GL1_DrawStretched(
+void CGLEngine::DrawStretched(
     const CGLTexture &texture, int x, int y, int drawWidth, int drawHeight)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     BindTexture(texture.Texture);
 
     int width = texture.Width;
@@ -957,10 +913,8 @@ void CGLEngine::GL1_DrawStretched(
     glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 }
 
-void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
+void CGLEngine::DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
-
     int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
     int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
     int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;
@@ -969,7 +923,6 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
     for (int i = 0; i < 9; i++)
     {
         BindTexture(th[i]->Texture);
-
         int drawWidth = th[i]->Width;
         int drawHeight = th[i]->Height;
         float drawCountX = 1.0f;
@@ -1081,410 +1034,4 @@ void CGLEngine::GL1_DrawResizepic(CGLTexture **th, int x, int y, int width, int 
         glTranslatef((GLfloat)-drawX, (GLfloat)-drawY, 0.0f);
     }
 }
-
-void CGLEngine::GL2_DrawLandTexture(const CGLTexture &texture, int x, int y, CLandObject *land)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    float translateX = x - 22.0f;
-    float translateY = y - 22.0f;
-
-    glTranslatef(translateX, translateY, 0.0f);
-
-    glBindBuffer(GL_ARRAY_BUFFER, land->VertexBuffer);
-    glVertexPointer(2, GL_INT, 0, (void *)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, land->PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (void *)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, land->NormalBuffer);
-    glNormalPointer(GL_FLOAT, 0, (void *)0);
-
-    glEnableClientState(GL_NORMAL_ARRAY);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glDisableClientState(GL_NORMAL_ARRAY);
-
-    glTranslatef(-translateX, -translateY, 0.0f);
-}
-
-void CGLEngine::GL2_Draw(const CGLTexture &texture, int x, int y)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
-
-    glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
-    glVertexPointer(2, GL_INT, 0, (void *)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (void *)0);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
-}
-
-void CGLEngine::GL2_DrawRotated(const CGLTexture &texture, int x, int y, float angle)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    int height = texture.Height;
-
-    GLfloat translateY = (GLfloat)(y - height);
-
-    glTranslatef((GLfloat)x, translateY, 0.0f);
-
-    glRotatef(angle, 0.0f, 0.0f, 1.0f);
-
-    glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
-    glVertexPointer(2, GL_INT, 0, (void *)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (void *)0);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glRotatef(angle, 0.0f, 0.0f, -1.0f);
-    glTranslatef((GLfloat)-x, -translateY, 0.0f);
-}
-
-void CGLEngine::GL2_DrawMirrored(const CGLTexture &texture, int x, int y, bool mirror)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
-
-    if (mirror)
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, texture.MirroredVertexBuffer);
-    }
-    else
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, texture.VertexBuffer);
-    }
-
-    glVertexPointer(2, GL_INT, 0, (void *)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (void *)0);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
-}
-
-void CGLEngine::GL2_DrawSitting(
-    const CGLTexture &texture, int x, int y, bool mirror, float h3mod, float h6mod, float h9mod)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
-
-    float width = (float)texture.Width;
-    float height = (float)texture.Height;
-
-    float h03 = height * h3mod;
-    float h06 = height * h6mod;
-    float h09 = height * h9mod;
-
-    float widthOffset = (float)(width + SittingCharacterOffset);
-    glBegin(GL_TRIANGLE_STRIP);
-
-    if (mirror)
-    {
-        if (h3mod != 0.0f)
-        {
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(width, 0);
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex2f(0, 0);
-            glTexCoord2f(0.0f, h3mod);
-            glVertex2f(width, h03);
-            glTexCoord2f(1.0f, h3mod);
-            glVertex2f(0, h03);
-        }
-
-        if (h6mod != 0.0f)
-        {
-            if (h3mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(width, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(0, 0);
-            }
-
-            glTexCoord2f(0.0f, h6mod);
-            glVertex2f(widthOffset, h06);
-            glTexCoord2f(1.0f, h6mod);
-            glVertex2f(SittingCharacterOffset, h06);
-        }
-
-        if (h9mod != 0.0f)
-        {
-            if (h6mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(widthOffset, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(SittingCharacterOffset, 0);
-            }
-
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(widthOffset, h09);
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex2f(SittingCharacterOffset, h09);
-        }
-    }
-    else
-    {
-        if (h3mod != 0.0f)
-        {
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(SittingCharacterOffset, 0);
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex2f(widthOffset, 0);
-            glTexCoord2f(0.0f, h3mod);
-            glVertex2f(SittingCharacterOffset, h03);
-            glTexCoord2f(1.0f, h3mod);
-            glVertex2f(widthOffset, h03);
-        }
-
-        if (h6mod != 0.0f)
-        {
-            if (h3mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(SittingCharacterOffset, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(width + SittingCharacterOffset, 0);
-            }
-
-            glTexCoord2f(0.0f, h6mod);
-            glVertex2f(0, h06);
-            glTexCoord2f(1.0f, h6mod);
-            glVertex2f(width, h06);
-        }
-
-        if (h9mod != 0.0f)
-        {
-            if (h6mod == 0.0f)
-            {
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(0, 0);
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(width, 0);
-            }
-
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(0, h09);
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex2f(width, h09);
-        }
-    }
-
-    glEnd();
-
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
-}
-
-void CGLEngine::GL2_DrawShadow(const CGLTexture &texture, int x, int y, bool mirror)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    float width = (float)texture.Width;
-    float height = texture.Height / 2.0f;
-
-    GLfloat translateY = (GLfloat)(y + height * 0.75);
-
-    glTranslatef((GLfloat)x, translateY, 0.0f);
-
-    float ratio = height / width;
-    float verticles[8];
-
-    if (mirror)
-    {
-        verticles[0] = width;
-        verticles[1] = height;
-        verticles[2] = 0.0f;
-        verticles[3] = height;
-        verticles[4] = width * (ratio + 1.0f);
-        verticles[5] = 0.0f;
-        verticles[6] = width * ratio;
-        verticles[7] = 0.0f;
-    }
-    else
-    {
-        verticles[0] = 0.0f;
-        verticles[1] = height;
-        verticles[2] = width;
-        verticles[3] = height;
-        verticles[4] = width * ratio;
-        verticles[5] = 0.0f;
-        verticles[6] = width * (ratio + 1.0f);
-        verticles[7] = 0.0f;
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glVertexPointer(2, GL_FLOAT, 0, &verticles[0]);
-
-    glBindBuffer(GL_ARRAY_BUFFER, PositionBuffer);
-    glTexCoordPointer(2, GL_INT, 0, (void *)0);
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glTranslatef((GLfloat)-x, -translateY, 0.0f);
-}
-
-void CGLEngine::GL2_DrawStretched(
-    const CGLTexture &texture, int x, int y, int drawWidth, int drawHeight)
-{
-    DEBUG_TRACE_FUNCTION;
-    BindTexture(texture.Texture);
-
-    int width = texture.Width;
-    int height = texture.Height;
-
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
-
-    float drawCountX = drawWidth / (float)width;
-    float drawCountY = drawHeight / (float)height;
-
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0.0f, drawCountY);
-    glVertex2i(0, drawHeight);
-    glTexCoord2f(drawCountX, drawCountY);
-    glVertex2i(drawWidth, drawHeight);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2i(0, 0);
-    glTexCoord2f(drawCountX, 0.0f);
-    glVertex2i(drawWidth, 0);
-    glEnd();
-
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
-}
-
-void CGLEngine::GL2_DrawResizepic(CGLTexture **th, int x, int y, int width, int height)
-{
-    DEBUG_TRACE_FUNCTION;
-    for (int i = 0; i < 9; i++)
-    {
-        BindTexture(th[i]->Texture);
-
-        int drawWidth = th[i]->Width;
-        int drawHeight = th[i]->Height;
-        float drawCountX = 1.0f;
-        float drawCountY = 1.0f;
-        int drawX = x;
-        int drawY = y;
-
-        switch (i)
-        {
-            case 1:
-            {
-                drawX += th[0]->Width;
-
-                drawWidth = width - th[0]->Width - th[2]->Width;
-
-                drawCountX = drawWidth / (float)th[i]->Width;
-
-                break;
-            }
-            case 2:
-            {
-                drawX += width - drawWidth;
-
-                break;
-            }
-            case 3:
-            {
-                drawY += th[0]->Height;
-
-                drawHeight = height - th[0]->Height - th[5]->Height;
-
-                drawCountY = drawHeight / (float)th[i]->Height;
-
-                break;
-            }
-            case 4:
-            {
-                drawX += width - drawWidth;
-                drawY += th[2]->Height;
-
-                drawHeight = height - th[2]->Height - th[7]->Height;
-
-                drawCountY = drawHeight / (float)th[i]->Height;
-
-                break;
-            }
-            case 5:
-            {
-                drawY += height - drawHeight;
-
-                break;
-            }
-            case 6:
-            {
-                drawX += th[5]->Width;
-                drawY += height - drawHeight;
-
-                drawWidth = width - th[5]->Width - th[7]->Width;
-
-                drawCountX = drawWidth / (float)th[i]->Width;
-
-                break;
-            }
-            case 7:
-            {
-                drawX += width - drawWidth;
-                drawY += height - drawHeight;
-
-                break;
-            }
-            case 8:
-            {
-                drawX += th[0]->Width;
-                drawY += th[0]->Height;
-
-                drawWidth = width - th[0]->Width - th[2]->Width;
-
-                drawHeight = height - th[2]->Height - th[7]->Height;
-
-                drawCountX = drawWidth / (float)th[i]->Width;
-                drawCountY = drawHeight / (float)th[i]->Height;
-
-                break;
-            }
-            default:
-                break;
-        }
-
-        if (drawWidth < 1 || drawHeight < 1)
-        {
-            continue;
-        }
-
-        glTranslatef((GLfloat)drawX, (GLfloat)drawY, 0.0f);
-
-        glBegin(GL_TRIANGLE_STRIP);
-        glTexCoord2f(0.0f, drawCountY);
-        glVertex2i(0, drawHeight);
-        glTexCoord2f(drawCountX, drawCountY);
-        glVertex2i(drawWidth, drawHeight);
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex2i(0, 0);
-        glTexCoord2f(drawCountX, 0.0f);
-        glVertex2i(drawWidth, 0);
-        glEnd();
-
-        glTranslatef((GLfloat)-drawX, (GLfloat)-drawY, 0.0f);
-    }
-}
+#endif

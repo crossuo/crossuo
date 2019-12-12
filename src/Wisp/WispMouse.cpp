@@ -1,5 +1,5 @@
 ﻿
-
+#include "WispMouse.h"
 #include <SDL_mouse.h>
 namespace Wisp
 {
@@ -21,7 +21,6 @@ CMouse::~CMouse()
 
 void CMouse::Update()
 {
-    DEBUG_TRACE_FUNCTION;
     SDL_GetMouseState(&Position.X, &Position.Y);
     Dragging = (LeftButtonPressed || RightButtonPressed || MidButtonPressed);
     RealPosition = Position;
@@ -29,7 +28,6 @@ void CMouse::Update()
 
 void CMouse::Release() const
 {
-    DEBUG_TRACE_FUNCTION;
     if (!(LeftButtonPressed || RightButtonPressed || MidButtonPressed))
     {
         SDL_CaptureMouse(SDL_FALSE);
@@ -38,13 +36,11 @@ void CMouse::Release() const
 
 void CMouse::Capture() const
 {
-    DEBUG_TRACE_FUNCTION;
     SDL_CaptureMouse(SDL_TRUE);
 }
 
 CPoint2Di CMouse::LeftDroppedOffset()
 {
-    DEBUG_TRACE_FUNCTION;
     CPoint2Di position;
 
     if (LeftButtonPressed)
@@ -58,7 +54,6 @@ CPoint2Di CMouse::LeftDroppedOffset()
 
 CPoint2Di CMouse::RightDroppedOffset()
 {
-    DEBUG_TRACE_FUNCTION;
     CPoint2Di position;
 
     if (RightButtonPressed)
@@ -72,7 +67,6 @@ CPoint2Di CMouse::RightDroppedOffset()
 
 CPoint2Di CMouse::MidDroppedOffset()
 {
-    DEBUG_TRACE_FUNCTION;
     CPoint2Di position;
 
     if (MidButtonPressed)

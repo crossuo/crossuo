@@ -1,9 +1,12 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
-#include "GUIBlending.h"
+#ifndef NEW_RENDERER_ENABLED
 
-CGUIBlending::CGUIBlending(bool enabled, GLenum sFactor, GLenum dFactor)
+#include "GUIBlending.h"
+#include "../Utility/PerfMarker.h"
+
+CGUIBlending::CGUIBlending(bool enabled, uint32_t sFactor, uint32_t dFactor)
     : CBaseGUI(GOT_BLENDING, 0, 0, 0, 0, 0)
     , SFactor(sFactor)
     , DFactor(dFactor)
@@ -17,7 +20,7 @@ CGUIBlending::~CGUIBlending()
 
 void CGUIBlending::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
     if (Enabled)
     {
         glEnable(GL_BLEND);
@@ -28,3 +31,5 @@ void CGUIBlending::Draw(bool checktrans)
         glDisable(GL_BLEND);
     }
 }
+
+#endif // #ifndef NEW_RENDERER_ENABLED

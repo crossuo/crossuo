@@ -3,9 +3,14 @@
 
 #pragma once
 
+#include "BaseGUI.h"
 #include "GUIBlending.h"
 
+#ifndef NEW_RENDERER_ENABLED
 class CGUIAlphaBlending : public CGUIBlending
+#else
+class CGUIAlphaBlending : public CBaseGUI
+#endif
 {
 public:
     //!Значение для установки альфа-канала

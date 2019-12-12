@@ -43,7 +43,6 @@ CMacroManager::~CMacroManager()
 
 Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &strings)
 {
-    DEBUG_TRACE_FUNCTION;
     auto str = strings[0];
 
     for (int i = 1; i < (int)strings.size() - 3; i++)
@@ -55,11 +54,11 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &st
 
     if (str.length() == 1)
     {
-        key = *ToLowerA(str).c_str();
+        key = *str_lower(str).c_str();
     }
     else if (str.length() != 0u)
     {
-        str = ToUpperA(str);
+        str = str_upper(str);
 
         if (str == "ESC")
         {
@@ -216,7 +215,6 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &st
 
 bool CMacroManager::Convert(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser file(path, "", "", "");
     Wisp::CTextFileParser unicodeParser({}, " ", "", "");
 
@@ -278,12 +276,12 @@ bool CMacroManager::Convert(const fs_path &path)
                 data[0] = raw;
             }
 
-            auto upData = ToUpperA(data[0]);
+            auto upData = str_upper(data[0]);
             MACRO_CODE code = MC_NONE;
 
             for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
             {
-                if (upData == ToUpperA(CMacro::m_MacroActionName[i]))
+                if (upData == str_upper(CMacro::m_MacroActionName[i]))
                 {
                     code = (MACRO_CODE)i;
                     TRACE(Client, "action found (%i): %s", i, CMacro::m_MacroActionName[i]);
@@ -318,11 +316,11 @@ bool CMacroManager::Convert(const fs_path &path)
                         upData += " " + data[i];
                     }
 
-                    upData = ToUpperA(upData);
+                    upData = str_upper(upData);
 
                     for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
                     {
-                        if (upData == ToUpperA(CMacro::m_MacroAction[i]))
+                        if (upData == str_upper(CMacro::m_MacroAction[i]))
                         {
                             obj->SubCode = (MACRO_SUB_CODE)i;
                             TRACE(
@@ -347,7 +345,6 @@ bool CMacroManager::Convert(const fs_path &path)
 
 bool CMacroManager::Load(const fs_path &path, const fs_path &originalPath)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     Clear();
     CMappedFile file;
@@ -372,7 +369,6 @@ bool CMacroManager::Load(const fs_path &path, const fs_path &originalPath)
 
 void CMacroManager::Save(const fs_path &path)
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CBinaryFileWriter writer;
     writer.Open(path);
 
@@ -394,7 +390,6 @@ void CMacroManager::Save(const fs_path &path)
 
 CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 {
-    DEBUG_TRACE_FUNCTION;
     CMacro *obj = (CMacro *)m_Items;
 
     while (obj != nullptr)
@@ -412,7 +407,6 @@ CMacro *CMacroManager::FindMacro(Keycode key, bool alt, bool ctrl, bool shift)
 
 void CMacroManager::LoadFromOptions()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
     ChangePointer(nullptr);
     QFOR(obj, g_OptionsMacroManager.m_Items, CMacro *) { Add(obj->GetCopy()); }
@@ -431,7 +425,6 @@ void CMacroManager::ChangePointer(CMacroObject *macro)
 
 void CMacroManager::Execute()
 {
-    DEBUG_TRACE_FUNCTION;
     while (g_MacroPointer != nullptr)
     {
         switch (Process())
@@ -458,7 +451,6 @@ void CMacroManager::Execute()
 
 void CMacroManager::ProcessSubMenu()
 {
-    DEBUG_TRACE_FUNCTION;
     switch (g_MacroPointer->Code)
     {
         case MC_OPEN:
@@ -796,7 +788,6 @@ MACRO_RETURN_CODE CMacroManager::Process()
 
 MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
 {
-    DEBUG_TRACE_FUNCTION;
     MACRO_RETURN_CODE result = MRC_PARSE_NEXT;
     static int itemInHand[2] = { 0, 0 };
 
@@ -837,7 +828,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 if (g_Config.ClientVersion >= CV_500A)
                 {
                     CPacketUnicodeSpeechRequest(
-                        ToWString(mos->m_String).c_str(),
+                        wstr_from(mos->m_String).c_str(),
                         st,
                         3,
                         g_ConfigManager.SpeechColor,
@@ -888,7 +879,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 auto chBuffer = SDL_GetClipboardText();
                 if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
                 {
-                    auto str = g_EntryPointer->Data() + ToWString(chBuffer);
+                    auto str = g_EntryPointer->Data() + wstr_from(chBuffer);
                     g_EntryPointer->SetTextW(str);
                 }
             }

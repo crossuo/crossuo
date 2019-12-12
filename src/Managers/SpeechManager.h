@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <vector>
+#include <stdint.h>
+#include <common/str.h>
+
 class CLangCode
 {
 public:

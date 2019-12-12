@@ -1,6 +1,8 @@
 // MIT License
 
 #include "GameCrypt.h"
+#include <string.h>
+#include <assert.h>
 
 CBlowfishCrypt g_BlowfishCrypt;
 CTwofishCrypt g_TwofishCrypt;

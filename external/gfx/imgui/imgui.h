@@ -1143,6 +1143,7 @@ enum ImGuiCol_
     ImGuiCol_NavWindowingHighlight, // Highlight window when using CTRL+TAB
     ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
     ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
+    ImGuiCol_SelectedEntryBg, // PATCH: crossuo
     ImGuiCol_COUNT
 
     // Obsolete names (will be removed)
@@ -2446,6 +2447,6 @@ struct ImGuiViewport
 #endif
 
 // Include imgui_user.h at the end of imgui.h (convenient for user to only explicitly include vanilla imgui.h)
-#ifdef IMGUI_INCLUDE_IMGUI_USER_H
+//#ifdef IMGUI_INCLUDE_IMGUI_USER_H
 #include "imgui_user.h"
-#endif
+//#endif

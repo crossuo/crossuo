@@ -1,7 +1,9 @@
 // MIT License
 // Copyright (C) Obtober 2017 Hotride
 
+#include <algorithm>
 #include "SkillsManager.h"
+#include "../Logging.h"
 #include <xuocore/uodata.h>
 #include <xuocore/mulstruct.h>
 
@@ -24,7 +26,6 @@ CSkill::CSkill(bool haveButton, const std::string &name)
 
 bool CSkillsManager::Load()
 {
-    DEBUG_TRACE_FUNCTION;
     if ((g_FileManager.m_SkillsIdx.Size == 0u) || (g_FileManager.m_SkillsMul.Size == 0u) ||
         (Count != 0u))
     {

@@ -59,7 +59,6 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
 CPlugin::CPlugin(uint32_t flags)
     : m_Flags(flags)
 {
-    DEBUG_TRACE_FUNCTION;
     m_PPS = new PLUGIN_INTERFACE();
     memset(m_PPS, 0, sizeof(PLUGIN_INTERFACE));
     m_PPS->Handle = g_GameWindow.Handle;
@@ -69,7 +68,6 @@ CPlugin::CPlugin(uint32_t flags)
 
 CPlugin::~CPlugin()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_PPS != nullptr)
     {
         delete m_PPS;
@@ -83,8 +81,6 @@ CPluginManager::CPluginManager()
 
 uint32_t CPluginManager::OnEvent(uint32_t msg, const void *data)
 {
-    DEBUG_TRACE_FUNCTION;
-
     uint32_t result = 0;
     QFOR(plugin, m_Items, CPlugin *)
     {
@@ -98,8 +94,6 @@ uint32_t CPluginManager::OnEvent(uint32_t msg, const void *data)
 
 bool CPluginManager::PacketRecv(uint8_t *buf, size_t size)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool result = true;
     QFOR(plugin, m_Items, CPlugin *)
     {
@@ -117,8 +111,6 @@ bool CPluginManager::PacketRecv(uint8_t *buf, size_t size)
 
 bool CPluginManager::PacketSend(uint8_t *buf, size_t size)
 {
-    DEBUG_TRACE_FUNCTION;
-
     bool result = true;
     QFOR(plugin, m_Items, CPlugin *)
     {
@@ -136,8 +128,6 @@ bool CPluginManager::PacketSend(uint8_t *buf, size_t size)
 
 void CPluginManager::Disconnect()
 {
-    DEBUG_TRACE_FUNCTION;
-
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->m_PPS->OnDisconnect != nullptr)
@@ -149,8 +139,6 @@ void CPluginManager::Disconnect()
 
 void CPluginManager::WorldDraw()
 {
-    DEBUG_TRACE_FUNCTION;
-
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldRender() && plugin->m_PPS->OnWorldDraw != nullptr)
@@ -162,8 +150,6 @@ void CPluginManager::WorldDraw()
 
 void CPluginManager::SceneDraw()
 {
-    DEBUG_TRACE_FUNCTION;
-
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterSceneRender() && plugin->m_PPS->OnSceneDraw != nullptr)
@@ -175,8 +161,6 @@ void CPluginManager::SceneDraw()
 
 void CPluginManager::WorldMapDraw()
 {
-    DEBUG_TRACE_FUNCTION;
-
     QFOR(plugin, m_Items, CPlugin *)
     {
         if (plugin->CanEnterWorldMapRender() && plugin->m_PPS->OnWorldMapDraw != nullptr)

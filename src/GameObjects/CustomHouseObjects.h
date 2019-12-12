@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <vector>
+#include <string.h> // memset
+
 class CCustomHouseObject
 {
 public:

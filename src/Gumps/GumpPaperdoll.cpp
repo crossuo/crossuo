@@ -21,6 +21,10 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Network/Packets.h"
 #include "../TextEngine/TextData.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 enum
 {
@@ -54,7 +58,6 @@ int CGumpPaperdoll::UsedLayers[m_LayerCount] = {
 CGumpPaperdoll::CGumpPaperdoll(uint32_t serial, short x, short y, bool minimized)
     : CGump(GT_PAPERDOLL, serial, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     m_Locker.Serial = ID_GP_LOCK_MOVING;
 
     if (minimized)
@@ -170,7 +173,6 @@ CGumpPaperdoll::~CGumpPaperdoll()
 
 void CGumpPaperdoll::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed && g_PressedObject.LeftObject != nullptr &&
@@ -193,7 +195,6 @@ void CGumpPaperdoll::CalculateGumpState()
 
 void CGumpPaperdoll::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t id = g_SelectedObject.Serial;
 
     if (!Minimized)
@@ -303,7 +304,6 @@ void CGumpPaperdoll::InitToolTip()
 
 void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj != nullptr)
     {
         CTextData *td = new CTextData();
@@ -345,7 +345,6 @@ void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
 
 void CGumpPaperdoll::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
 
     if (obj == nullptr)
@@ -419,7 +418,6 @@ void CGumpPaperdoll::PrepareContent()
 
 void CGumpPaperdoll::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     //Clear();
 
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
@@ -753,7 +751,6 @@ void CGumpPaperdoll::UpdateContent()
 
 void CGumpPaperdoll::UpdateDescription(const std::string &text)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Description != nullptr)
     {
         m_Description->CreateTextureA(1, text, 185);
@@ -763,7 +760,8 @@ void CGumpPaperdoll::UpdateDescription(const std::string &text)
 
 void CGumpPaperdoll::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
     if (obj == nullptr)
     {
@@ -775,17 +773,28 @@ void CGumpPaperdoll::Draw()
     CGump::Draw();
     if (!Minimized)
     {
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
+#endif
         g_FontColorizerShader.Use();
         m_TextRenderer.Draw();
         UnuseShader();
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
+#endif
     }
 }
 
 CRenderObject *CGumpPaperdoll::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameCharacter *obj = g_World->FindWorldCharacter(Serial);
     if (obj == nullptr)
     {
@@ -806,7 +815,6 @@ CRenderObject *CGumpPaperdoll::Select()
 
 void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     switch (serial)
     {
         case ID_GP_BUTTON_HELP: //Paperdoll button Help
@@ -898,7 +906,6 @@ void CGumpPaperdoll::GUMP_BUTTON_EVENT_C
 
 void CGumpPaperdoll::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     uint32_t serial = g_SelectedObject.Serial;
@@ -1005,7 +1012,6 @@ void CGumpPaperdoll::OnLeftMouseButtonUp()
 
 bool CGumpPaperdoll::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;

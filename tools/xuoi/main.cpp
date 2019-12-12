@@ -174,13 +174,13 @@ mft_result mft_download(
     const bool in_pack = entry.type != mft_entry_manifest;
 
     // create paths
-    fs_path path = fs_join_path(prod.config.output_path, "cache");
-    path = fs_join_path(path, entry.remote_path);
+    fs_path path = fs_path_join(prod.config.output_path, "cache");
+    path = fs_path_join(path, entry.remote_path);
     if (entry.pack_name)
-        path = fs_join_path(path, entry.pack_name);
+        path = fs_path_join(path, entry.pack_name);
     else if (in_pack)
-        path = fs_join_path(path, "unpacked");
-    path = fs_join_path(path, remote_name);
+        path = fs_path_join(path, "unpacked");
+    path = fs_path_join(path, remote_name);
     fs_path dir = fs_directory(path);
     if (!fs_path_create(dir))
     {
@@ -265,7 +265,7 @@ mft_result mft_download(
     if (prod.config.dump_extracted)
     {
         auto local_name = entry.name ? entry.name : remote_name;
-        path = fs_join_path(prod.config.output_path, "dump", local_name);
+        path = fs_path_join(prod.config.output_path, "dump", local_name);
         dir = fs_directory(path);
         fs_path_create(dir);
         auto opath = fs_path_ascii(path);
@@ -548,7 +548,7 @@ mft_result mft_consume_manifests(mft_product &prod)
 
 void mft_listing_save(mft_product &prod)
 {
-    auto path = fs_join_path(prod.config.output_path, "cache", "xuoi.csv");
+    auto path = fs_path_join(prod.config.output_path, "cache", "xuoi.csv");
     fs_path_create(fs_directory(path));
     FILE *fp = fopen(fs_path_ascii(path), "wb");
     if (!fp)
@@ -615,7 +615,7 @@ void mft_listing_load_latest_version(mft_product &prod)
     if (!prod.last_version)
         return;
 
-    auto path = fs_join_path(
+    auto path = fs_path_join(
         prod.config.output_path,
         std::to_string(prod.last_version),
         prod.launchfile,
@@ -667,7 +667,7 @@ void mft_listing_load_latest_version(mft_product &prod)
 
 int mft_diff(mft_product &prod)
 {
-    auto path = fs_join_path(
+    auto path = fs_path_join(
         prod.config.output_path,
         std::to_string(prod.last_version),
         prod.launchfile,
@@ -768,7 +768,7 @@ static void mft_entry_remote_name(mft_entry &entry, char name[32])
     snprintf(name, 32, "%08x%08x", entry.ph, entry.sh);
 }
 
-static void mft_download_entry(mft_product &prod, mft_entry &entry, int thread_id)
+static void mft_download_entry(mft_product &prod, mft_entry &entry, uint32_t thread_id)
 {
     assert(thread_id < prod.config.thread_count);
     if (entry.state != state_need_update)
@@ -908,7 +908,7 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
     mft_product prod;
     mft_init(prod, cfg);
 
-    auto latest_file = fs_join_path(prod.config.output_path, "latest.txt");
+    auto latest_file = fs_path_join(prod.config.output_path, "latest.txt");
     if (prod.config.mirror_mode)
     {
         prod.config.dump_extracted = false;
@@ -940,15 +940,15 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
             // set config as latest version already checked, so next loop for next porduct we skip it
             cfg.latest_checked = true;
             mft_listing_load_latest_version(prod);
-            prod.config.output_path = fs_join_path(
+            prod.config.output_path = fs_path_join(
                 prod.config.output_path, std::to_string(prod.timestamp), prod.launchfile);
         }
 
-        fs_path prod_file = fs_join_path(prod.config.output_path, "cache");
+        fs_path prod_file = fs_path_join(prod.config.output_path, "cache");
         if (!fs_path_create(prod_file))
             LOG_ERROR("couldn't create output directory: %s\n", fs_path_ascii(prod_file));
 
-        prod_file = fs_join_path(prod_file, product_file);
+        prod_file = fs_path_join(prod_file, product_file);
         fs_file_write(fs_path_ascii(prod_file), data);
         data.clear();
         snprintf(tmp, sizeof(tmp), "%s%s.sig", product_url, product_file);
@@ -1089,7 +1089,7 @@ int main(int argc, char **argv)
 
     if (s_cli["xuo"].was_set())
     {
-        auto ctx = xuo_init(outdir, false);
+        auto ctx = xuo_init(outdir);
         auto r = xuo_update_apply(ctx);
         xuo_shutdown(ctx);
         return r;

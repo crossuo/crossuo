@@ -3,9 +3,12 @@
 #ifndef WISP_WIN_H
 #define WISP_WIN_H
 
+#include <SDL.h> // plugininterface.h
 #include <SDL_video.h>
-#include "../Platform.h"
 #include <xuocore/plugininterface.h>
+#include <stdint.h>
+#include "../Platform.h"
+#include "../Point.h"
 
 #define PUSH_EVENT(id, data1, data2)                                                               \
     Wisp::CWindow::PushEvent(id, (void *)(uintptr_t)(data1), (void *)(uintptr_t)(data2))

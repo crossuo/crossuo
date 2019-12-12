@@ -4,6 +4,7 @@
 #include "GUIText.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
+#include "../Utility/PerfMarker.h"
 
 CGUIText::CGUIText(uint16_t color, int x, int y)
     : CBaseGUI(GOT_TEXT, 0, 0, color, x, y)
@@ -12,14 +13,12 @@ CGUIText::CGUIText(uint16_t color, int x, int y)
 
 CGUIText::~CGUIText()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Texture.Clear();
 }
 
 void CGUIText::CreateTextureA(
     uint8_t font, const std::string &str, int width, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
     g_FontManager.GenerateA(font, m_Texture, str, Color, width, align, flags);
 }
 
@@ -31,19 +30,18 @@ void CGUIText::CreateTextureW(
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
 {
-    DEBUG_TRACE_FUNCTION;
     g_FontManager.GenerateW(font, m_Texture, str, Color, cell, width, align, flags);
 }
 
 void CGUIText::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     m_Texture.Draw(m_X, m_Y, checktrans);
 }
 
 bool CGUIText::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

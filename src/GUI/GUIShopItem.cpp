@@ -9,6 +9,10 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Managers/FontsManager.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIShopItem::CGUIShopItem(
     int serial,
@@ -24,7 +28,6 @@ CGUIShopItem::CGUIShopItem(
     , Price(price)
     , Name(name)
 {
-    DEBUG_TRACE_FUNCTION;
     MoveOnDrag = true;
 
     CreateCountText(0);
@@ -34,7 +37,6 @@ CGUIShopItem::CGUIShopItem(
 
 CGUIShopItem::~CGUIShopItem()
 {
-    DEBUG_TRACE_FUNCTION;
     m_NameText.Clear();
     m_CountText.Clear();
 }
@@ -97,7 +99,6 @@ void CGUIShopItem::UpdateOffsets()
 
 void CGUIShopItem::OnClick()
 {
-    DEBUG_TRACE_FUNCTION;
     Selected = false;
 
     for (CBaseGUI *item = this; item != nullptr; item = (CBaseGUI *)item->m_Next)
@@ -124,7 +125,6 @@ void CGUIShopItem::OnClick()
 
 void CGUIShopItem::CreateNameText()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t textColor = 0x021F;
 
     if (Selected)
@@ -138,7 +138,6 @@ void CGUIShopItem::CreateNameText()
 
 void CGUIShopItem::CreateCountText(int lostCount)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t textColor = 0x021F;
 
     if (Selected)
@@ -151,8 +150,6 @@ void CGUIShopItem::CreateCountText(int lostCount)
 
 void CGUIShopItem::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Serial >= 0x40000000)
     {
         g_Game.ExecuteStaticArt(Graphic);
@@ -191,35 +188,49 @@ void CGUIShopItem::PrepareTextures()
 
 void CGUIShopItem::SetShaderMode()
 {
-    DEBUG_TRACE_FUNCTION;
-
     if (Color != 0)
     {
-        if (PartialHue)
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-        }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-        }
+        auto uniformValue = PartialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
         g_ColorManager.SendColorsToShader(Color);
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
     }
 }
 
 void CGUIShopItem::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGLTexture *th = nullptr;
 
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
 
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.f } });
+
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
     m_NameText.Draw(52, m_TextOffset);
     m_CountText.Draw(196 - m_CountText.Width, (m_MaxOffset / 2) - (m_CountText.Height / 2));
@@ -264,37 +275,54 @@ void CGUIShopItem::Draw(bool checktrans)
         if (direction.FrameCount != 0)
         {
             assert(direction.m_Frames[0].UserData);
-            auto originalTexture = *(CSprite *)direction.m_Frames[0].UserData;
-            if (originalTexture.Texture != nullptr)
+            const auto *originalTexture = (CSprite *)direction.m_Frames[0].UserData;
+            if (originalTexture && originalTexture->Texture != nullptr)
             {
+#ifndef NEW_RENDERER_ENABLED
                 CGLTexture tex;
-                tex.Texture = originalTexture.Texture->Texture;
-                if (originalTexture.Width > 35)
+                tex.Texture = originalTexture->Texture->Texture;
+                if (originalTexture->Width > 35)
                 {
                     tex.Width = 35;
                 }
                 else
                 {
-                    tex.Width = originalTexture.Width;
+                    tex.Width = originalTexture->Width;
                 }
 
-                if (originalTexture.Height > 35)
+                if (originalTexture->Height > 35)
                 {
                     tex.Height = 35;
                 }
                 else
                 {
-                    tex.Height = originalTexture.Height;
+                    tex.Height = originalTexture->Height;
                 }
 
-                g_GL.GL1_Draw(tex, 2, m_ImageOffset);
+                g_GL.Draw(tex, 2, m_ImageOffset);
                 tex.Texture = 0;
+#else
+                auto quadCmd = DrawQuadCmd{
+                    originalTexture->Texture->Texture,
+                    2,
+                    m_ImageOffset,
+                    originalTexture->Width > 35 ? 35 : uint32_t(originalTexture->Width),
+                    originalTexture->Height > 35 ? 35 : uint32_t(originalTexture->Height)
+                };
+
+                RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
+#endif
                 //originalTexture.Draw(2, m_ImageOffset, checktrans);
             }
         }
     }
 
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
     auto spr = g_Game.ExecuteGump(0x0039);
     if (spr != nullptr && spr->Texture != nullptr)
     {
@@ -312,12 +340,16 @@ void CGUIShopItem::Draw(bool checktrans)
     {
         spr->Texture->Draw(166, m_MaxOffset, checktrans);
     }
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUIShopItem::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     const int x = g_MouseManager.Position.X - m_X;
     const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= -10 && x < 200 && y < m_MaxOffset);

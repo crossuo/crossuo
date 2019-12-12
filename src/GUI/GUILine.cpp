@@ -2,6 +2,11 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GUILine.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+#include "../Globals.h" // ToColor*
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUILine::CGUILine(int startX, int startY, int targetX, int targetY, int polygoneColor)
     : CBaseGUI(GOT_LINE, 0, 0, 0, startX, startY)
@@ -25,6 +30,8 @@ CGUILine::~CGUILine()
 
 void CGUILine::Draw(bool checktrans)
 {
+    ScopedPerfMarker(__FUNCTION__);
+#ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 
     if (ColorA < 0xFF)
@@ -42,4 +49,13 @@ void CGUILine::Draw(bool checktrans)
     }
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_DrawLine(
+        g_renderCmdList,
+        DrawLineCmd{ m_X,
+                     m_Y,
+                     TargetX,
+                     TargetY,
+                     { ColorR / 255.f, ColorG / 255.f, ColorB / 255.f, ColorA / 255.f } });
+#endif
 }

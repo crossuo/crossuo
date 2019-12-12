@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "MapObject.h"
+#include "../Globals.h" // g_LandObjectsCount, g_StaticsObjectsCount
 
 CMapObject::CMapObject(
     RENDER_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, short x, short y, char z)
@@ -11,7 +12,6 @@ CMapObject::CMapObject(
 
 CMapObject::~CMapObject()
 {
-#if UO_DEBUG_INFO != 0
     if (RenderType == ROT_LAND_OBJECT)
     {
         g_LandObjectsCount--;
@@ -20,5 +20,4 @@ CMapObject::~CMapObject()
     {
         g_StaticsObjectsCount--;
     }
-#endif //UO_DEBUG_INFO!=0
 }

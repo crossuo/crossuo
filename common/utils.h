@@ -38,11 +38,20 @@ static inline T checked_cast(U *value)
     assert(static_cast<intptr_t>(result) == (intptr_t)value && "Type conversion loses information");
     return result;
 }
-#endif
+#endif // checked_cast
+
+#ifndef unique_cast
+#include <memory>
+template <typename T>
+static inline std::unique_ptr<T> unique_cast(void *value)
+{
+    return std::unique_ptr<T>((T *)value);
+}
+#endif // unique_cast
 
 #ifndef countof
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
-#endif
+#endif // countof
 
 #ifndef MACRO_STRINGIFY
 #define MACRO_STRINGIFY(x) #x

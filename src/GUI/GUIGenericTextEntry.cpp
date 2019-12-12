@@ -3,6 +3,7 @@
 
 #include "GUIGenericTextEntry.h"
 #include "../Config.h"
+#include "../Globals.h" // UOFONT_*
 
 CGUIGenericTextEntry::CGUIGenericTextEntry(
     int serial, int index, uint16_t color, int x, int y, int maxWidth, int maxLength)

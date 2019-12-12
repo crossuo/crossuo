@@ -31,7 +31,6 @@ CGumpDrag::~CGumpDrag()
 
 void CGumpDrag::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIGumppic(0x085C, 0, 0));
@@ -68,7 +67,6 @@ void CGumpDrag::UpdateContent()
 
 void CGumpDrag::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GD_OKAY)
     { //Button Okay
         OnOkayPressed();
@@ -77,13 +75,11 @@ void CGumpDrag::GUMP_BUTTON_EVENT_C
 
 void CGumpDrag::GUMP_SLIDER_CLICK_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     OnSliderMove(serial);
 }
 
 void CGumpDrag::GUMP_SLIDER_MOVE_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_StartText)
     {
         m_StartText = false;
@@ -97,7 +93,6 @@ void CGumpDrag::GUMP_SLIDER_MOVE_EVENT_C
 
 void CGumpDrag::OnOkayPressed()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ObjectInHand.Enabled)
     {
         RemoveMark = true;
@@ -116,8 +111,6 @@ void CGumpDrag::OnOkayPressed()
 
 void CGumpDrag::OnTextInput(const TextEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     const auto ch = EvChar(ev);
     if (ch >= '0' && ch <= '9')
     {
@@ -144,8 +137,6 @@ void CGumpDrag::OnTextInput(const TextEvent &ev)
 
 void CGumpDrag::OnKeyDown(const KeyEvent &ev)
 {
-    DEBUG_TRACE_FUNCTION;
-
     CGameItem *item = g_World->FindWorldItem(Serial);
     if (item == nullptr)
     {

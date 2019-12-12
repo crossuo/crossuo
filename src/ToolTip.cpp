@@ -7,6 +7,10 @@
 #include "Managers/ConfigManager.h"
 #include "Managers/MouseManager.h"
 #include "Managers/ClilocManager.h"
+#include "Renderer/RenderAPI.h"
+#include "Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CToolTip g_ToolTip;
 
@@ -16,13 +20,11 @@ CToolTip::CToolTip()
 
 CToolTip::~CToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     Reset();
 }
 
 void CToolTip::Reset()
 {
-    DEBUG_TRACE_FUNCTION;
     m_TextSprite.Clear();
     m_Object = nullptr;
 }
@@ -69,7 +71,6 @@ void CToolTip::Create(CTextSprite &textSprite, const std::wstring &str, int &wid
 
 void CToolTip::Set(const std::wstring &str, int maxWidth)
 {
-    DEBUG_TRACE_FUNCTION;
     if (str.length() == 0u)
     {
         return;
@@ -96,14 +97,14 @@ void CToolTip::Set(const std::wstring &str, int maxWidth)
 
 void CToolTip::Set(int clilocID, const std::string &str, int maxWidth, bool toCamelCase)
 {
-    DEBUG_TRACE_FUNCTION;
     Set(g_ClilocManager.Cliloc(g_Language)->GetW(clilocID, toCamelCase, str), maxWidth);
     ClilocID = clilocID;
 }
 
 void CToolTip::Draw(int cursorWidth, int cursorHeight)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     if (!Use /*|| !g_ConfigManager.UseToolTips*/)
     {
         return;

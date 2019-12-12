@@ -5,6 +5,9 @@
 
 #if !defined(DISABLE_LOG)
 
+#include <ctype.h>
+#include <assert.h>
+#include <stdio.h>
 #include <cstdarg>
 #include <external/loguru.h>
 

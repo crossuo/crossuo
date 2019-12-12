@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
+#include "../Globals.h" // MAX_MAPS_COUNT, EFFECT_TYPE
 
 class CGameEffect;
 

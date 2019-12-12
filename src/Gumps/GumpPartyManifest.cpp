@@ -35,7 +35,6 @@ CGumpPartyManifest::~CGumpPartyManifest()
 
 void CGumpPartyManifest::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     Add(new CGUIResizepic(0, 0x0A28, 0, 0, 450, 480));
@@ -119,7 +118,6 @@ void CGumpPartyManifest::UpdateContent()
 
 void CGumpPartyManifest::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GPM_BUTTON_OKAY)
     {
         if (g_Party.Leader != 0 && g_Party.CanLoot != m_CanLoot)

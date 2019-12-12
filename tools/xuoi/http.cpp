@@ -8,7 +8,6 @@
 #include <string.h>
 #include <assert.h>
 
-#define CURL_STATICLIB
 #include <curl/curl.h>
 #include <external/tinyxml2.h> // not really needed here, just for the version info
 
@@ -86,6 +85,7 @@ void http_set_user_agent(const char *name)
 
 void http_shutdown()
 {
+    assert(s_curl_handle && "http_init wasn't called");
     curl_easy_cleanup(s_curl_handle);
     s_curl_handle = nullptr;
     curl_global_cleanup();
@@ -93,12 +93,16 @@ void http_shutdown()
 
 void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
 {
+    assert(s_curl_handle && "http_init wasn't called");
+    assert(url && "invalid url");
     assert(buf && size);
     http_recv_buf tmp = { *size, 0, buf };
     LOG_TRACE("url %s\n", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
+    assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &tmp));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data));
@@ -109,10 +113,14 @@ void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
 
 void http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
+    assert(s_curl_handle && "http_init wasn't called");
+    assert(url && "invalid url");
     LOG_TRACE("url %s\n", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
+    assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_vector));
@@ -122,10 +130,14 @@ void http_get_binary(const char *url, std::vector<uint8_t> &data)
 
 void http_get_string(const char *url, std::string &data)
 {
+    assert(s_curl_handle && "http_init wasn't called");
+    assert(url && "invalid url");
     LOG_TRACE("url %s\n", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
+    assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_string));
@@ -135,14 +147,18 @@ void http_get_string(const char *url, std::string &data)
 
 bool http_get_file(const char *url, const char *filename)
 {
+    assert(s_curl_handle && "http_init wasn't called");
+    assert(url && "invalid url");
+    assert(filename && "invalid filename");
     FILE *fp = fopen(filename, "wb");
     if (!fp)
         return false;
-
     LOG_TRACE("url %s\n", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
+    assert(curl);
     if (s_agentName)
         DO_CURL(setopt(curl, CURLOPT_USERAGENT, s_agentName));
+    DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, fp));
     DO_CURL(perform(curl));

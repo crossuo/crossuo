@@ -24,13 +24,11 @@ CGameWorld *g_World = nullptr;
 
 CGameWorld::CGameWorld(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     CreatePlayer(serial);
 }
 
 CGameWorld::~CGameWorld()
 {
-    DEBUG_TRACE_FUNCTION;
     RemovePlayer();
 
     CGameObject *obj = m_Items;
@@ -54,7 +52,6 @@ void CGameWorld::ResetObjectHandlesState()
 
 void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConfigManager.FootstepsSound && gc->IsHuman() && !gc->Hidden())
     {
         if (!gc->m_Steps.empty() && (int)gc->LastStepSoundTime < ticks)
@@ -91,7 +88,6 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
 
 void CGameWorld::ProcessAnimation()
 {
-    DEBUG_TRACE_FUNCTION;
     int delay =
         (g_ConfigManager.StandartCharactersAnimationDelay ? ORIGINAL_CHARACTERS_ANIMATION_DELAY :
                                                             XUO_CHARACTERS_ANIMATION_DELAY);
@@ -286,7 +282,6 @@ void CGameWorld::ProcessAnimation()
 
 void CGameWorld::CreatePlayer(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     RemovePlayer();
 
     g_PlayerSerial = serial;
@@ -308,7 +303,6 @@ void CGameWorld::CreatePlayer(uint32_t serial)
 
 void CGameWorld::RemovePlayer()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player != nullptr)
     {
         RemoveFromContainer(g_Player);
@@ -322,7 +316,6 @@ void CGameWorld::RemovePlayer()
 
 void CGameWorld::SetPlayer(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial != g_Player->Serial)
     {
         CreatePlayer(serial);
@@ -331,7 +324,6 @@ void CGameWorld::SetPlayer(uint32_t serial)
 
 CGameItem *CGameWorld::GetWorldItem(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     auto it = m_Map.find(serial);
     if (it == m_Map.end() || (*it).second == nullptr)
     {
@@ -354,7 +346,6 @@ CGameItem *CGameWorld::GetWorldItem(uint32_t serial)
 
 CGameCharacter *CGameWorld::GetWorldCharacter(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     auto it = m_Map.find(serial);
     if (it == m_Map.end() || (*it).second == nullptr)
     {
@@ -377,7 +368,6 @@ CGameCharacter *CGameWorld::GetWorldCharacter(uint32_t serial)
 
 CGameObject *CGameWorld::FindWorldObject(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     CGameObject *result = nullptr;
     auto it = m_Map.find(serial);
     if (it != m_Map.end())
@@ -389,7 +379,6 @@ CGameObject *CGameWorld::FindWorldObject(uint32_t serial)
 
 CGameItem *CGameWorld::FindWorldItem(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     CGameItem *result = nullptr;
     auto it = m_Map.find(serial);
     if (it != m_Map.end() && !((*it).second)->NPC)
@@ -401,7 +390,6 @@ CGameItem *CGameWorld::FindWorldItem(uint32_t serial)
 
 CGameCharacter *CGameWorld::FindWorldCharacter(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     CGameCharacter *result = nullptr;
     auto it = m_Map.find(serial);
     if (it != m_Map.end() && ((*it).second)->NPC)
@@ -413,8 +401,6 @@ CGameCharacter *CGameWorld::FindWorldCharacter(uint32_t serial)
 
 void CGameWorld::ReplaceObject(CGameObject *obj, uint32_t newSerial)
 {
-    DEBUG_TRACE_FUNCTION;
-
     m_Map[obj->Serial] = nullptr;
     m_Map.erase(obj->Serial);
 
@@ -427,7 +413,6 @@ void CGameWorld::ReplaceObject(CGameObject *obj, uint32_t newSerial)
 
 void CGameWorld::RemoveObject(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     RemoveFromContainer(obj);
 
     uint32_t serial = obj->Serial;
@@ -438,7 +423,6 @@ void CGameWorld::RemoveObject(CGameObject *obj)
 
 void CGameWorld::RemoveFromContainer(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t containerSerial = obj->Container;
 
     if (containerSerial != 0xFFFFFFFF)
@@ -506,7 +490,6 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
 
 void CGameWorld::ClearContainer(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!obj->Empty())
     {
         obj->Clear();
@@ -545,7 +528,6 @@ void CGameWorld::PutEquipment(CGameItem *obj, CGameObject *container, int layer)
 
 void CGameWorld::MoveToTop(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj == nullptr)
     {
         return;
@@ -663,7 +645,6 @@ void CGameWorld::MoveToTop(CGameObject *obj)
 CGameObject *CGameWorld::SearchWorldObject(
     int serialStart, int scanDistance, SCAN_TYPE_OBJECT scanType, SCAN_MODE_OBJECT scanMode)
 {
-    DEBUG_TRACE_FUNCTION;
     CGameObject *result = nullptr;
 
     CGameObject *start = FindWorldObject(serialStart);
@@ -1235,7 +1216,6 @@ void CGameWorld::UpdateContainedItem(
 
 void CGameWorld::Dump(uint8_t tCount, uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Client, "world dump:");
 
     CGameObject *obj = m_Items;

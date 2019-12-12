@@ -9,12 +9,15 @@
 #include "../Point.h"
 #include "../SkillGroup.h"
 #include "../Managers/MouseManager.h"
+#include "../Renderer/RenderAPI.h"
+#include "../Utility/PerfMarker.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUISkillGroup::CGUISkillGroup(
     int serial, int minimizeSerial, CSkillGroupObject *group, int x, int y)
     : CBaseGUI(GOT_SKILLGROUP, serial, 0, 0, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     const bool isMinimized = !group->Maximized;
     const uint16_t graphic = (isMinimized ? 0x0827 : 0x0826);
     m_Minimizer = new CGUIButton(minimizeSerial, graphic, graphic, graphic, 0, 0);
@@ -26,16 +29,18 @@ CGUISkillGroup::CGUISkillGroup(
 
 CGUISkillGroup::~CGUISkillGroup()
 {
-    DEBUG_TRACE_FUNCTION;
-    RELEASE_POINTER(m_Minimizer);
-    RELEASE_POINTER(m_Name);
+    if (m_Minimizer)
+        delete m_Minimizer;
+    m_Minimizer = nullptr;
+    if (m_Name)
+        delete m_Name;
+    m_Name = nullptr;
 }
 
 void CGUISkillGroup::SetMinimized(bool val)
 {
     assert(m_Minimizer);
 
-    DEBUG_TRACE_FUNCTION;
     m_Minimized = val;
     const uint16_t graphic = (val ? 0x0827 : 0x0826);
     m_Minimizer->Graphic = graphic;
@@ -45,7 +50,6 @@ void CGUISkillGroup::SetMinimized(bool val)
 
 void CGUISkillGroup::UpdateDataPositions()
 {
-    DEBUG_TRACE_FUNCTION;
     int y = 0;
 
     QFOR(item, m_Items, CBaseGUI *)
@@ -57,7 +61,6 @@ void CGUISkillGroup::UpdateDataPositions()
 
 void CGUISkillGroup::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Minimizer->PrepareTextures();
     g_Game.ExecuteGump(0x0835);
     m_Name->PrepareTextures();
@@ -68,13 +71,11 @@ void CGUISkillGroup::PrepareTextures()
 
 bool CGUISkillGroup::EntryPointerHere()
 {
-    DEBUG_TRACE_FUNCTION;
     return (g_EntryPointer == &m_Name->m_Entry);
 }
 
 CBaseGUI *CGUISkillGroup::SelectedItem()
 {
-    DEBUG_TRACE_FUNCTION;
     CBaseGUI *selected = m_Name;
 
     if (g_Game.PolygonePixelsInXY(m_X + m_Minimizer->GetX(), m_Y + m_Minimizer->GetY(), 14, 14))
@@ -109,7 +110,6 @@ CBaseGUI *CGUISkillGroup::SelectedItem()
 
 CSize CGUISkillGroup::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CSize size(220, 19);
 
     if (!GetMinimized() && m_Items != nullptr)
@@ -122,8 +122,14 @@ CSize CGUISkillGroup::GetSize()
 
 void CGUISkillGroup::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
-    glTranslatef((GLfloat)m_X, (GLfloat)m_Y, 0.0f);
+    ScopedPerfMarker(__FUNCTION__);
+
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)m_X, (float)m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
+#endif
 
     m_Minimizer->Draw(checktrans);
 
@@ -132,11 +138,21 @@ void CGUISkillGroup::Draw(bool checktrans)
     if (m_Name->Focused && g_EntryPointer == &m_Name->m_Entry)
     {
         drawOrnament = false;
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(16, 0, 200, 14);
+#else
+        RenderAdd_DrawUntexturedQuad(g_renderCmdList, DrawUntexturedQuadCmd{ 16, 0, 200, 14 });
+#endif
     }
     else if (m_Name->Focused)
     {
+#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(16, 0, m_Name->m_Entry.m_Texture.Width, 14);
+#else
+        RenderAdd_DrawUntexturedQuad(
+            g_renderCmdList,
+            DrawUntexturedQuadCmd{ 16, 0, uint32_t(m_Name->m_Entry.m_Texture.Width), 14 });
+#endif
     }
 
     m_Name->Draw(checktrans);
@@ -154,20 +170,34 @@ void CGUISkillGroup::Draw(bool checktrans)
 
     if (!GetMinimized() && m_Items != nullptr)
     {
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(0.0f, 19.0f, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, 19.0f, 0.0f } });
+#endif
 
         QFOR(item, m_Items, CBaseGUI *)
         item->Draw(checktrans);
 
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(0.0f, -19.0f, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList, SetModelViewTranslationCmd{ { 0.0f, -19.0f, 0.0f } });
+#endif
     }
 
-    glTranslatef((GLfloat)-m_X, (GLfloat)-m_Y, 0.0f);
+#ifndef NEW_RENDERER_ENABLED
+    glTranslatef((float)-m_X, (float)-m_Y, 0.0f);
+#else
+    RenderAdd_SetModelViewTranslation(
+        g_renderCmdList, SetModelViewTranslationCmd{ { (float)-m_X, (float)-m_Y, 0.0f } });
+#endif
 }
 
 bool CGUISkillGroup::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 

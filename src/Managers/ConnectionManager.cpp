@@ -19,7 +19,6 @@ CConnectionManager::CConnectionManager()
 
 CConnectionManager::~CConnectionManager()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_LoginSocket.Connected)
     {
         m_LoginSocket.Disconnect();
@@ -33,7 +32,6 @@ CConnectionManager::~CConnectionManager()
 
 void CConnectionManager::SetUseProxy(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_UseProxy = val;
     m_LoginSocket.UseProxy = val;
     m_GameSocket.UseProxy = val;
@@ -41,7 +39,6 @@ void CConnectionManager::SetUseProxy(bool val)
 
 void CConnectionManager::SetProxyAddress(const std::string &val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_ProxyAddress = val;
     m_LoginSocket.ProxyAddress = val;
     m_GameSocket.ProxyAddress = val;
@@ -49,7 +46,6 @@ void CConnectionManager::SetProxyAddress(const std::string &val)
 
 void CConnectionManager::SetProxyPort(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_ProxyPort = val;
     m_LoginSocket.ProxyPort = val;
     m_GameSocket.ProxyPort = val;
@@ -57,7 +53,6 @@ void CConnectionManager::SetProxyPort(int val)
 
 void CConnectionManager::SetProxySocks5(bool val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_ProxySocks5 = val;
     m_LoginSocket.ProxySocks5 = val;
     m_GameSocket.ProxySocks5 = val;
@@ -65,7 +60,6 @@ void CConnectionManager::SetProxySocks5(bool val)
 
 void CConnectionManager::SetProxyAccount(const std::string &val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_ProxyAccount = val;
     m_LoginSocket.ProxyAccount = val;
     m_GameSocket.ProxyAccount = val;
@@ -73,7 +67,6 @@ void CConnectionManager::SetProxyAccount(const std::string &val)
 
 void CConnectionManager::SetProxyPassword(const std::string &val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_ProxyPassword = val;
     m_LoginSocket.ProxyPassword = val;
     m_GameSocket.ProxyPassword = val;
@@ -81,7 +74,6 @@ void CConnectionManager::SetProxyPassword(const std::string &val)
 
 void CConnectionManager::Init()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_LoginSocket.Connected)
     {
         return;
@@ -102,7 +94,6 @@ void CConnectionManager::Init()
 
 void CConnectionManager::Init(uint8_t *gameSeed)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_GameSocket.Connected)
     {
         return;
@@ -114,7 +105,6 @@ void CConnectionManager::Init(uint8_t *gameSeed)
 
 void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
 {
-    DEBUG_TRACE_FUNCTION;
     PluginEvent ev;
     ev.data1 = ip;
     ev.data2 = (void *)4;
@@ -124,7 +114,6 @@ void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
 
 bool CConnectionManager::Connect(const std::string &address, int port, uint8_t *gameSeed)
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Network, "Connecting %s:%d", address.c_str(), port);
     if (m_IsLoginSocket)
     {
@@ -190,13 +179,10 @@ bool CConnectionManager::Connect(const std::string &address, int port, uint8_t *
 
     m_LoginSocket.Disconnect();
     return result;
-
-    return false;
 }
 
 void CConnectionManager::Disconnect()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_LoginSocket.Connected)
     {
         m_LoginSocket.Disconnect();
@@ -210,7 +196,6 @@ void CConnectionManager::Disconnect()
 
 void CConnectionManager::Recv()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_IsLoginSocket)
     {
         if (!m_LoginSocket.Connected)
@@ -264,7 +249,6 @@ void CConnectionManager::Recv()
 
 int CConnectionManager::Send(uint8_t *buf, int size)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.TheAbyss)
     {
         switch (buf[0])
@@ -329,6 +313,5 @@ int CConnectionManager::Send(uint8_t *buf, int size)
 
 int CConnectionManager::Send(const std::vector<uint8_t> &data)
 {
-    DEBUG_TRACE_FUNCTION;
     return Send((uint8_t *)&data[0], (int)data.size());
 }

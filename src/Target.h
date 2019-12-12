@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 class CMulti;
 class CMultiObject;
 struct CDataReader;

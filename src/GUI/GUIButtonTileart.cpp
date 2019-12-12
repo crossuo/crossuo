@@ -3,7 +3,9 @@
 
 #include "GUIButtonTileart.h"
 #include "../CrossUO.h"
+#include "../Sprite.h"
 #include "../Point.h"
+#include "../Utility/PerfMarker.h"
 
 CGUIButtonTileart::CGUIButtonTileart(
     int serial,
@@ -30,7 +32,6 @@ CGUIButtonTileart::~CGUIButtonTileart()
 
 CSize CGUIButtonTileart::GetSize()
 {
-    DEBUG_TRACE_FUNCTION;
     CSize gumpSize = CGUIDrawObject::GetSize();
     CSize tileSize;
 
@@ -70,14 +71,14 @@ CSize CGUIButtonTileart::GetSize()
 
 void CGUIButtonTileart::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     CGUIButton::PrepareTextures();
     g_Game.ExecuteStaticArt(TileGraphic);
 }
 
 void CGUIButtonTileart::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGUIDrawObject::Draw(checktrans);
     auto spr = g_Game.ExecuteStaticArt(TileGraphic);
     if (spr != nullptr && spr->Texture)
@@ -89,7 +90,6 @@ void CGUIButtonTileart::Draw(bool checktrans)
 
 bool CGUIButtonTileart::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     if (CGUIDrawObject::Select())
     {
         return true;

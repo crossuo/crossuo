@@ -19,7 +19,6 @@ CGumpTip::CGumpTip(uint32_t serial, short x, short y, const std::string &str, bo
     : CGumpBaseScroll(GT_TIP, serial, 0x0820, 250, x, y, true)
     , Updates(updates)
 {
-    DEBUG_TRACE_FUNCTION;
     Add(new CGUIPage(1));
     Add(new CGUIGumppic((Updates ? 0x09D3 : 0x09CB), 0, 0));
 
@@ -56,7 +55,6 @@ CGumpTip::~CGumpTip()
 
 void CGumpTip::UpdateHeight()
 {
-    DEBUG_TRACE_FUNCTION;
     CGumpBaseScroll::UpdateHeight();
 
     if (!Updates)
@@ -69,7 +67,6 @@ void CGumpTip::UpdateHeight()
 
 void CGumpTip::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GBS_BUTTON_MINIMIZE)
     {
         Minimized = true;
@@ -88,7 +85,6 @@ void CGumpTip::GUMP_BUTTON_EVENT_C
 
 bool CGumpTip::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     if (Minimized)
     {
         Minimized = false;
@@ -103,7 +99,6 @@ bool CGumpTip::OnLeftMouseButtonDoubleClick()
 
 void CGumpTip::SendTipRequest(uint8_t flag)
 {
-    DEBUG_TRACE_FUNCTION;
     //Отправляем запрос диалога Tip/Updates
     CPacketTipRequest((uint16_t)Serial, flag).Send();
 

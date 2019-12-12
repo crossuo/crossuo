@@ -30,6 +30,7 @@
 #include "CharacterList.h"
 #include "DateTimeStamp.h"
 #include "Application.h"
+#include "RenderWorldObject.h"
 
 #if USE_PING
 #include "Utility/PingThread.h"
@@ -155,7 +156,10 @@
 #include "Gumps/GumpPropertyIcon.h"
 
 #include <external/popts.h>
+#include "Renderer/RenderAPI.h"
+
 extern po::parser g_cli;
+extern RenderCmdList *g_renderCmdList;
 
 #if defined(XUO_WINDOWS)
 #include "ExceptionFilter.h"
@@ -227,7 +231,6 @@ CGame::~CGame()
 
 std::string CGame::DecodeArgumentString(const char *text, int length)
 {
-    DEBUG_TRACE_FUNCTION;
     std::string result{};
 
     for (int i = 0; i < length; i += 2)
@@ -316,11 +319,9 @@ void CGame::ProcessCommandLine()
 
 bool CGame::Install()
 {
-    DEBUG_TRACE_FUNCTION;
-
     Info(Client, "CGame::Install()");
 #if defined(XUO_WINDOWS)
-    SetUnhandledExceptionFilter(GameUnhandledExceptionFilter);
+    //SetUnhandledExceptionFilter(GameUnhandledExceptionFilter);
 #endif
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
@@ -497,7 +498,19 @@ bool CGame::Install()
 
     for (int i = 0; i < 2; i++)
     {
-        g_GL_BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
+#ifndef NEW_RENDERER_ENABLED
+        g_GL.BindTexture16(g_TextureGumpState[i], 10, 14, &pdwlt[i][0]);
+#else
+        g_TextureGumpState[i].Width = 10;
+        g_TextureGumpState[i].Height = 14;
+        g_TextureGumpState[i].Texture = Render_CreateTexture2D(
+            10,
+            14,
+            TextureGPUFormat::TextureGPUFormat_RGB5_A1,
+            &pdwlt[i][0],
+            TextureFormat::TextureFormat_Unsigned_A1_BGR5);
+        assert(g_TextureGumpState[i].Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
     }
 
     memset(&m_WinterTile[0], 0, sizeof(m_WinterTile));
@@ -566,7 +579,6 @@ bool CGame::Install()
 template <typename T, size_t SIZE>
 void ValidateSpriteIsDeleted(T (&arr)[SIZE])
 {
-    DEBUG_TRACE_FUNCTION;
     for (int i = 0; i < SIZE; ++i)
     {
         CIndexObject &obj = arr[i];
@@ -588,7 +600,6 @@ void DestroySprite(CIndexObject *obj)
 
 void CGame::UnloadIndexFiles()
 {
-    DEBUG_TRACE_FUNCTION;
     std::deque<CIndexObject *> *lists[] = {
         &m_UsedLandList, &m_UsedStaticList, &m_UsedGumpList, &m_UsedTextureList, &m_UsedLightList
     };
@@ -623,7 +634,6 @@ void CGame::UnloadIndexFiles()
 
 void CGame::Uninstall()
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Client, "CGame::Uninstall()");
     SaveLocalConfig(g_PacketManager.ConfigSerial);
     g_MainScreen.Save();
@@ -653,12 +663,15 @@ void CGame::Uninstall()
     g_FileManager.Unload();
     g_LightBuffer.Free();
 
+#ifndef NEW_RENDERER_ENABLED
     g_GL.Uninstall();
+#else
+    Render_Shutdown();
+#endif
 }
 
 void CGame::InitScreen(GAME_STATE state)
 {
-    DEBUG_TRACE_FUNCTION;
     g_GameState = state;
     g_SelectedObject.Clear();
     g_LastSelectedObject.Clear();
@@ -738,7 +751,6 @@ void CGame::InitScreen(GAME_STATE state)
 
 uint16_t CGame::TextToGraphic(const char *text)
 {
-    DEBUG_TRACE_FUNCTION;
     if (strlen(text) > 2 && text[0] == '0' && (text[1] == 'x' || text[1] == 'X'))
     {
         long l = strtol(text + 2, nullptr, 16);
@@ -760,13 +772,12 @@ uint16_t CGame::TextToGraphic(const char *text)
 
 void CGame::CheckStaticTileFilterFiles()
 {
-    DEBUG_TRACE_FUNCTION;
     memset(&m_StaticTilesFilterFlags[0], 0, sizeof(m_StaticTilesFilterFlags));
 
     auto path = g_App.ExeFilePath("data");
     fs_path_create(path);
 
-    auto filePath = fs_join_path(path, "cave.txt");
+    auto filePath = fs_path_join(path, "cave.txt");
     if (!fs_path_exists(filePath))
     {
         CFileWriter file;
@@ -781,7 +792,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "vegetation.txt");
+    filePath = fs_path_join(path, "vegetation.txt");
     CFileWriter vegetationFile;
     if (!fs_path_exists(filePath))
     {
@@ -819,7 +830,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "stumps.txt");
+    filePath = fs_path_join(path, "stumps.txt");
     if (!fs_path_exists(filePath))
     {
         CFileWriter file;
@@ -872,7 +883,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "cave.txt");
+    filePath = fs_path_join(path, "cave.txt");
     Wisp::CTextFileParser caveParser(filePath, " \t", "#;//", "");
     while (!caveParser.IsEOF())
     {
@@ -885,7 +896,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "stumps.txt");
+    filePath = fs_path_join(path, "stumps.txt");
     Wisp::CTextFileParser stumpParser(filePath, " \t", "#;//", "");
     while (!stumpParser.IsEOF())
     {
@@ -903,7 +914,7 @@ void CGame::CheckStaticTileFilterFiles()
         }
     }
 
-    filePath = fs_join_path(path, "vegetation.txt");
+    filePath = fs_path_join(path, "vegetation.txt");
     Wisp::CTextFileParser vegetationParser(filePath, " \t", "#;//", "");
     while (!vegetationParser.IsEOF())
     {
@@ -920,7 +931,7 @@ void CGame::LoadContainerOffsets()
     auto path = g_App.ExeFilePath("data");
     fs_path_create(path);
 
-    auto filePath = fs_join_path(path, "containers.txt");
+    auto filePath = fs_path_join(path, "containers.txt");
     Info(Client, "containers: %s", fs_path_ascii(filePath));
     if (!fs_path_exists(filePath))
     {
@@ -1062,7 +1073,6 @@ void CGame::LoadContainerOffsets()
 
 void CGame::LoadAutoLoginNames()
 {
-    DEBUG_TRACE_FUNCTION;
     Wisp::CTextFileParser file(g_App.UOFilesPath("autologinnames.cfg"), "", "#;", "");
 
     auto names = g_PacketManager.AutoLoginNames + "|";
@@ -1082,7 +1092,6 @@ void CGame::LoadAutoLoginNames()
 
 void CGame::ProcessDelayedClicks()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ClickObject.Enabled && g_ClickObject.Timer < g_Ticks)
     {
         uint32_t serial = 0;
@@ -1122,7 +1131,6 @@ void CGame::ProcessDelayedClicks()
 
 void CGame::Process(bool rendering)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_CurrentScreen == nullptr)
     {
         return;
@@ -1324,7 +1332,6 @@ void CGame::Process(bool rendering)
 
 void CGame::LoadStartupConfig(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     char buf[FS_MAX_PATH] = { 0 };
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
@@ -1360,7 +1367,6 @@ void CGame::LoadStartupConfig(int serial)
 
 void CGame::LoadPlugin(const fs_path &libpath, const std::string &function, int flags)
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Client, "Loading plugin: %s", fs_path_ascii(libpath));
     auto dll = SDL_LoadObject(fs_path_ascii(libpath));
     if (dll != nullptr)
@@ -1415,7 +1421,6 @@ bool CGame::InstallPlugin(PluginEntry *initFunc, int flags)
 
 void CGame::LoadPlugins()
 {
-    DEBUG_TRACE_FUNCTION;
     g_PluginClientInterface.Version = 2;
     g_PluginClientInterface.Size = sizeof(g_PluginClientInterface);
     g_PluginClientInterface.GL = &g_Interface_GL;
@@ -1495,7 +1500,6 @@ void CGame::LoadPlugins()
 
 std::string CGame::FixServerName(std::string name)
 {
-    DEBUG_TRACE_FUNCTION;
     size_t i = 0;
     while ((i = name.find(':')) != std::string::npos)
     {
@@ -1506,7 +1510,6 @@ std::string CGame::FixServerName(std::string name)
 
 void CGame::LoadLocalConfig(int serial, std::string characterName)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConfigLoaded)
     {
         return;
@@ -1606,7 +1609,6 @@ void CGame::LoadLocalConfig(int serial, std::string characterName)
 
 void CGame::SaveLocalConfig(int serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigLoaded)
     {
         return;
@@ -1618,7 +1620,7 @@ void CGame::SaveLocalConfig(int serial)
         fs_path_create(path);
     }
 
-    path = fs_join_path(path, g_MainScreen.m_Account->c_str());
+    path = fs_path_join(path, g_MainScreen.m_Account->c_str());
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -1627,7 +1629,7 @@ void CGame::SaveLocalConfig(int serial)
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
     {
-        path = fs_join_path(path, FixServerName(server->Name));
+        path = fs_path_join(path, FixServerName(server->Name));
     }
     if (!fs_path_exists(path))
     {
@@ -1637,7 +1639,7 @@ void CGame::SaveLocalConfig(int serial)
     char serbuf[64] = { 0 };
     sprintf_s(serbuf, "0x%08X", g_PlayerSerial);
     fs_path root = path;
-    path = fs_join_path(path, serbuf);
+    path = fs_path_join(path, serbuf);
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -1649,11 +1651,11 @@ void CGame::SaveLocalConfig(int serial)
     }
 
     Info(Client, "managers:saving");
-    g_ConfigManager.Save(fs_join_path(path, "options.cfg"));
-    g_SkillGroupManager.Save(fs_join_path(path, "skills.cuo"));
-    g_MacroManager.Save(fs_join_path(path, "macros.cuo"));
-    g_GumpManager.Save(fs_join_path(path, "gumps.cuo"));
-    g_CustomHousesManager.Save(fs_join_path(path, "customhouses.cuo"));
+    g_ConfigManager.Save(fs_path_join(path, "options.cfg"));
+    g_SkillGroupManager.Save(fs_path_join(path, "skills.cuo"));
+    g_MacroManager.Save(fs_path_join(path, "macros.cuo"));
+    g_GumpManager.Save(fs_path_join(path, "gumps.cuo"));
+    g_CustomHousesManager.Save(fs_path_join(path, "customhouses.cuo"));
 
     Info(Client, "managers:saving in to root");
     g_ConfigManager.Save(g_App.UOFilesPath("options.cfg"));
@@ -1663,7 +1665,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         Info(Client, "player exists");
         Info(Client, "name len: %zd", g_Player->GetName().length());
-        path = fs_join_path(root, std::string(serbuf) + "_" + g_Player->GetName() + ".cuo");
+        path = fs_path_join(root, std::string(serbuf) + "_" + g_Player->GetName() + ".cuo");
         if (!fs_path_exists(path))
         {
             Info(Client, "file saving");
@@ -1681,7 +1683,6 @@ void CGame::SaveLocalConfig(int serial)
 
 void CGame::ClearUnusedTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_GameState < GS_GAME)
     {
         return;
@@ -1755,7 +1756,6 @@ void CGame::ClearUnusedTextures()
 
 void CGame::Connect()
 {
-    DEBUG_TRACE_FUNCTION;
     InitScreen(GS_MAIN_CONNECT);
     Process(true);
 
@@ -1779,7 +1779,6 @@ void CGame::Connect()
 
 void CGame::Disconnect()
 {
-    DEBUG_TRACE_FUNCTION;
     g_AbyssPacket03First = true;
     g_PluginManager.Disconnect();
 
@@ -1790,7 +1789,6 @@ void CGame::Disconnect()
 
 int CGame::Send(uint8_t *buf, int size)
 {
-    DEBUG_TRACE_FUNCTION;
     uint32_t ticks = g_Ticks;
     g_TotalSendSize += size;
     CPacketInfo &type = g_PacketManager.GetInfo(*buf);
@@ -1851,7 +1849,6 @@ int CGame::Send(uint8_t *buf, int size)
 
 void CGame::ServerSelection(int pos)
 {
-    DEBUG_TRACE_FUNCTION;
     InitScreen(GS_SERVER_CONNECT);
     Process(true);
     CServer *server = g_ServerList.Select(pos);
@@ -1868,7 +1865,6 @@ void CGame::ServerSelection(int pos)
 
 void CGame::RelayServer(const char *ip, int port, uint8_t *gameSeed)
 {
-    DEBUG_TRACE_FUNCTION;
     memcpy(&g_GameSeed[0], &gameSeed[0], 4);
     g_ConnectionManager.Init(gameSeed);
     m_GameServerIP = ip;
@@ -1889,7 +1885,6 @@ void CGame::RelayServer(const char *ip, int port, uint8_t *gameSeed)
 
 void CGame::CharacterSelection(int pos)
 {
-    DEBUG_TRACE_FUNCTION;
     InitScreen(GS_GAME_CONNECT);
     g_ConnectionScreen.SetType(CST_GAME);
     g_CharacterList.LastCharacterName = g_CharacterList.GetName(pos);
@@ -1899,7 +1894,6 @@ void CGame::CharacterSelection(int pos)
 
 void CGame::LoginComplete(bool reload)
 {
-    DEBUG_TRACE_FUNCTION;
     bool load = reload;
     if (!load && !g_ConnectionScreen.GetCompleted())
     {
@@ -1938,8 +1932,6 @@ void CGame::LoginComplete(bool reload)
 
 void CGame::ChangeSeason(const SEASON_TYPE &season, int music)
 {
-    DEBUG_TRACE_FUNCTION;
-
     g_Season = season;
     QFOR(item, g_MapManager.m_Items, CMapBlock *)
     {
@@ -1970,7 +1962,6 @@ void CGame::ChangeSeason(const SEASON_TYPE &season, int music)
 
 uint16_t CGame::GetLandSeasonGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Season == ST_WINTER)
     {
         uint16_t buf = m_WinterTile[graphic];
@@ -1986,7 +1977,6 @@ uint16_t CGame::GetLandSeasonGraphic(uint16_t graphic)
 
 uint16_t CGame::GetSeasonGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (g_Season)
     {
         case ST_SPRING:
@@ -2008,7 +1998,6 @@ uint16_t CGame::GetSeasonGraphic(uint16_t graphic)
 
 uint16_t CGame::GetSpringGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (graphic)
     {
         case 0x0CA7:
@@ -2065,13 +2054,11 @@ uint16_t CGame::GetSpringGraphic(uint16_t graphic)
 
 uint16_t CGame::GetSummerGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     return graphic;
 }
 
 uint16_t CGame::GetFallGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (graphic)
     {
         case 0x0CD1:
@@ -2154,13 +2141,11 @@ uint16_t CGame::GetFallGraphic(uint16_t graphic)
 
 uint16_t CGame::GetWinterGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     return graphic;
 }
 
 uint16_t CGame::GetDesolationGraphic(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (graphic)
     {
         case 0x1B7E:
@@ -2278,7 +2263,6 @@ uint16_t CGame::GetDesolationGraphic(uint16_t graphic)
 
 int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (key)
     {
         case VKI_SOUND:
@@ -3220,7 +3204,6 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
 
 std::string CGame::ValueString(const VALUE_KEY_STRING &key, std::string value)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (key)
     {
         case VKS_SKILL_NAME:
@@ -3342,7 +3325,6 @@ std::string CGame::ValueString(const VALUE_KEY_STRING &key, std::string value)
 
 void CGame::ClearRemovedStaticsTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     for (auto it = m_UsedStaticList.begin(); it != m_UsedStaticList.end();)
     {
         CIndexObject *obj = *it;
@@ -3360,7 +3342,6 @@ void CGame::ClearRemovedStaticsTextures()
 
 void CGame::ClearTreesTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     for (uint16_t graphic : g_Data.m_StumpTiles)
     {
         g_Index.m_Static[graphic].LastAccessTime = 0;
@@ -3386,7 +3367,6 @@ bool CGame::InTileFilter(uint16_t graphic)
 
 bool CGame::IsTreeTile(uint16_t graphic, int &index)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.GetDrawStumps() || InTileFilter(graphic))
     {
         return false;
@@ -3413,7 +3393,6 @@ bool CGame::IsTreeTile(uint16_t graphic, int &index)
 
 void CGame::ClearCaveTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     for (uint16_t graphic : g_Data.m_CaveTiles)
     {
         g_Index.m_Static[graphic].LastAccessTime = 0;
@@ -3423,7 +3402,6 @@ void CGame::ClearCaveTextures()
 
 bool CGame::IsCaveTile(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     return (
         g_ConfigManager.GetMarkingCaves() &&
         ((m_StaticTilesFilterFlags[graphic] & STFF_CAVE) != 0));
@@ -3431,14 +3409,11 @@ bool CGame::IsCaveTile(uint16_t graphic)
 
 bool CGame::IsVegetation(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     return (m_StaticTilesFilterFlags[graphic] & STFF_VEGETATION) != 0;
 }
 
 void CGame::LoadLogin(std::string &login, int &port)
 {
-    DEBUG_TRACE_FUNCTION;
-
     login = m_OverrideServerAddress;
     port = m_OverrideServerPort;
     if (m_OverrideServerPort != 0)
@@ -3459,7 +3434,7 @@ void CGame::LoadLogin(std::string &login, int &port)
         auto strings = file.ReadTokens();
         if (strings.size() >= 3)
         {
-            auto lo = ToLowerA(strings[0]);
+            auto lo = str_lower(strings[0]);
             if (lo == "loginserver")
             {
                 login = strings[1];
@@ -3471,7 +3446,6 @@ void CGame::LoadLogin(std::string &login, int &port)
 
 void CGame::GoToWebLink(const std::string &url)
 {
-    DEBUG_TRACE_FUNCTION;
     if (url.length() != 0u)
     {
         std::size_t found = url.find("http://");
@@ -3865,7 +3839,6 @@ static uint16_t CalculateLightColor(uint16_t id)
 
 void CGame::InitStaticAnimList()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Data.m_Anim.empty())
     {
         return;
@@ -3914,7 +3887,6 @@ void CGame::InitStaticAnimList()
 
 void CGame::ProcessStaticAnimList()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Data.m_Anim.empty() || g_ProcessStaticAnimationTimer >= g_Ticks)
     {
         return;
@@ -3972,8 +3944,6 @@ void CGame::ProcessStaticAnimList()
 // FIXME: Move Patching to FileManager and work only with locally loaded data
 void CGame::PatchFiles()
 {
-    DEBUG_TRACE_FUNCTION;
-
     enum
     {
         PatchMap0 = 0x00,
@@ -4132,7 +4102,6 @@ void CGame::PatchFiles()
 // need further investigation
 void CGame::IndexReplaces()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion < CV_305D)
     { //CV_204C
         return;
@@ -4375,7 +4344,6 @@ void CGame::IndexReplaces()
 
 void CGame::CreateAuraTexture()
 {
-    DEBUG_TRACE_FUNCTION;
     int16_t width = 0, height = 0;
     auto pixels = CreateCircleSprite(30, width, height);
     for (int i = 0; i < (int)pixels.size(); i++)
@@ -4391,13 +4359,23 @@ void CGame::CreateAuraTexture()
             pixel = (value << 24) | (value << 16) | (value << 8) | value;
         }
     }
-    // FIXME: gfx
-    g_GL_BindTexture32(g_AuraTexture, width, height, pixels.data());
+#ifndef NEW_RENDERER_ENABLED
+    g_GL.BindTexture32(g_AuraTexture, width, height, pixels.data());
+#else
+    g_AuraTexture.Width = width;
+    g_AuraTexture.Height = height;
+    g_AuraTexture.Texture = Render_CreateTexture2D(
+        width,
+        height,
+        TextureGPUFormat::TextureGPUFormat_RGBA4,
+        pixels.data(),
+        TextureFormat::TextureFormat_Unsigned_RGBA8);
+    assert(g_AuraTexture.Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
 }
 
 void CGame::CreateObjectHandlesBackground()
 {
-    DEBUG_TRACE_FUNCTION;
     CSprite *th[9] = { nullptr };
     uint16_t gumpID[9] = { 0 };
     for (int i = 0; i < 9; i++)
@@ -4545,8 +4523,6 @@ void CGame::CreateObjectHandlesBackground()
 
 void CGame::LoadShaders()
 {
-    DEBUG_TRACE_FUNCTION;
-
 #if UO_USE_SHADER_FILES == 1
     CMappedFile frag;
     CMappedFile vert;
@@ -4588,7 +4564,6 @@ void CGame::LoadShaders()
 
 void CGame::LoadClientStartupConfig()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.Load(g_App.ExeFilePath("options.cfg")))
     {
         g_ConfigManager.Load(g_App.UOFilesPath("options.cfg"));
@@ -4614,7 +4589,6 @@ void CGame::LoadClientStartupConfig()
 
 void CGame::PlayMusic(int index, bool warmode)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.GetMusic() || index >= MAX_MUSIC_DATA_INDEX_COUNT)
     {
         return;
@@ -4628,7 +4602,7 @@ void CGame::PlayMusic(int index, bool warmode)
     if (g_Config.ClientVersion >= CV_306E)
     {
         CIndexMusic &mp3Info = g_Index.m_MP3[index];
-        g_SoundManager.PlayMP3(mp3Info.FilePath, index, mp3Info.Loop, warmode);
+        g_SoundManager.PlayMP3(mp3Info.FilePath.c_str(), index, mp3Info.Loop, warmode);
     }
     else
     {
@@ -4644,7 +4618,6 @@ void CGame::PlaySoundEffectAtPosition(uint16_t id, int x, int y)
 
 void CGame::PlaySoundEffect(uint16_t id, float volume)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id >= 0x0800 || !g_ConfigManager.GetSound())
     {
         return;
@@ -4689,7 +4662,6 @@ void CGame::PlaySoundEffect(uint16_t id, float volume)
 
 void CGame::AdjustSoundEffects(int ticks, float volume)
 {
-    DEBUG_TRACE_FUNCTION;
     for (auto it = m_UsedSoundList.begin(); it != m_UsedSoundList.end();)
     {
         CIndexSound *obj = *it;
@@ -4725,7 +4697,6 @@ void CGame::ResumeSound() const
 
 CSprite *CGame::ExecuteGump(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id >= MAX_GUMP_DATA_INDEX_COUNT)
     {
         return nullptr;
@@ -4750,7 +4721,6 @@ CSprite *CGame::ExecuteGump(uint16_t id)
 
 CSprite *CGame::ExecuteLandArt(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id >= MAX_LAND_DATA_INDEX_COUNT)
     {
         return nullptr;
@@ -4775,13 +4745,11 @@ CSprite *CGame::ExecuteLandArt(uint16_t id)
 
 CSprite *CGame::ExecuteStaticArtAnimated(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     return ExecuteStaticArt(id + g_Index.m_Static[id].Offset);
 }
 
 CSprite *CGame::ExecuteStaticArt(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id >= MAX_STATIC_DATA_INDEX_COUNT)
     {
         return nullptr;
@@ -4810,7 +4778,6 @@ CSprite *CGame::ExecuteStaticArt(uint16_t id)
 
 CSprite *CGame::ExecuteTexture(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     id = g_Data.m_Land[id].TexID;
     if ((id == 0u) || id >= MAX_LAND_TEXTURES_DATA_INDEX_COUNT)
     {
@@ -4837,7 +4804,6 @@ CSprite *CGame::ExecuteTexture(uint16_t id)
 
 CSprite *CGame::ExecuteLight(uint8_t &id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id >= MAX_LIGHTS_DATA_INDEX_COUNT)
     {
         id = 0;
@@ -4863,7 +4829,6 @@ CSprite *CGame::ExecuteLight(uint8_t &id)
 
 bool CGame::ExecuteGumpPart(uint16_t id, int count)
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = true;
     for (int i = 0; i < count; i++)
     {
@@ -4878,26 +4843,31 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
 // FIXME: gfx
 void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteGump(id);
     if (spr != nullptr)
     {
         if (!g_GrayedPixels && (color != 0u))
         {
-            if (partialHue)
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-            }
+            auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = uniformValue;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         }
 
         spr->Texture->Draw(x, y);
@@ -4908,39 +4878,42 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 void CGame::DrawGump(
     uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteGump(id);
     if (spr != nullptr)
     {
         if (!g_GrayedPixels && (color != 0u))
         {
-            if (partialHue)
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
-            }
+            auto uniformValue = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
+#ifndef NEW_RENDERER_ENABLED
+            glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = uniformValue;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
 
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         }
         spr->Texture->Draw(x, y, width, height);
     }
 }
 
-// FIXME: gfx
-void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height)
+static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     CGLTexture *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
-        auto spr = ExecuteGump(id + (uint16_t)i);
+        auto spr = g_Game.ExecuteGump(id + (uint16_t)i);
         if (spr == nullptr)
         {
             return;
@@ -4961,13 +4934,165 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height)
             th[i] = pth;
         }
     }
-    g_GL_DrawResizepic(th, x, y, width, height);
+#ifndef NEW_RENDERER_ENABLED
+    g_GL.DrawResizepic(th, x, y, width, height);
+#else
+    int offsetTop = std::max(th[0]->Height, th[2]->Height) - th[1]->Height;
+    int offsetBottom = std::max(th[5]->Height, th[7]->Height) - th[6]->Height;
+    int offsetLeft = std::max(th[0]->Width, th[5]->Width) - th[3]->Width;
+    int offsetRight = std::max(th[2]->Width, th[7]->Width) - th[4]->Width;
+
+    for (int i = 0; i < 9; i++)
+    {
+        int drawWidth = th[i]->Width;
+        int drawHeight = th[i]->Height;
+        float drawCountX = 1.0f;
+        float drawCountY = 1.0f;
+        int drawX = x;
+        int drawY = y;
+
+        switch (i)
+        {
+            case 1:
+            {
+                drawX += th[0]->Width;
+
+                drawWidth = width - th[0]->Width - th[2]->Width;
+
+                drawCountX = drawWidth / (float)th[i]->Width;
+
+                break;
+            }
+            case 2:
+            {
+                drawX += width - drawWidth;
+                drawY += offsetTop;
+
+                break;
+            }
+            case 3:
+            {
+                drawY += th[0]->Height;
+                drawX += offsetLeft;
+
+                drawHeight = height - th[0]->Height - th[5]->Height;
+
+                drawCountY = drawHeight / (float)th[i]->Height;
+
+                break;
+            }
+            case 4:
+            {
+                drawX += width - drawWidth - offsetRight;
+                drawY += th[2]->Height;
+
+                drawHeight = height - th[2]->Height - th[7]->Height;
+
+                drawCountY = drawHeight / (float)th[i]->Height;
+
+                break;
+            }
+            case 5:
+            {
+                drawY += height - drawHeight;
+
+                break;
+            }
+            case 6:
+            {
+                drawX += th[5]->Width;
+                drawY += height - drawHeight - offsetBottom;
+
+                drawWidth = width - th[5]->Width - th[7]->Width;
+
+                drawCountX = drawWidth / (float)th[i]->Width;
+
+                break;
+            }
+            case 7:
+            {
+                drawX += width - drawWidth;
+                drawY += height - drawHeight;
+
+                break;
+            }
+            case 8:
+            {
+                drawX += th[0]->Width;
+                drawY += th[0]->Height;
+
+                drawWidth = width - th[0]->Width - th[2]->Width;
+
+                drawHeight = height - th[2]->Height - th[7]->Height;
+
+                drawCountX = drawWidth / (float)th[i]->Width;
+                drawCountY = drawHeight / (float)th[i]->Height;
+
+                break;
+            }
+            default:
+                break;
+        }
+
+        if (drawWidth < 1 || drawHeight < 1)
+        {
+            continue;
+        }
+
+        RenderAdd_DrawQuad(
+            g_renderCmdList,
+            DrawQuadCmd{ th[i]->Texture,
+                         drawX,
+                         drawY,
+                         uint32_t(drawWidth),
+                         uint32_t(drawHeight),
+                         drawCountX,
+                         drawCountY });
+    }
+#endif
 }
 
-// FIXME: gfx
+void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, bool checktrans)
+{
+#ifndef NEW_RENDERER_ENABLED
+    if (checktrans)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        DrawResizepicGump_Internal(id, x, y, height, height);
+        glDisable(GL_BLEND);
+        glEnable(GL_STENCIL_TEST);
+        DrawResizepicGump_Internal(id, x, y, width, height);
+        glDisable(GL_STENCIL_TEST);
+    }
+    else
+    {
+        DrawResizepicGump_Internal(id, x, y, width, height);
+    }
+#else
+    if (checktrans)
+    {
+        RenderAdd_SetBlend(
+            g_renderCmdList,
+            BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
+                           BlendFactor::BlendFactor_OneMinusSrcAlpha });
+        DrawResizepicGump_Internal(id, x, y, width, height);
+        RenderAdd_DisableBlend(g_renderCmdList);
+
+        // FIXME epatitucci what were the original values for func, op, ref & mask?
+        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{});
+        DrawResizepicGump_Internal(id, x, y, width, height);
+        RenderAdd_DisableStencil(g_renderCmdList);
+    }
+    else
+    {
+        DrawResizepicGump_Internal(id, x, y, width, height);
+    }
+#endif
+}
+
 void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t id = land->Graphic;
     auto spr = ExecuteTexture(id);
     if (spr == nullptr)
@@ -4982,22 +5107,57 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         }
         if (!g_GrayedPixels && (color != 0u))
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_LAND_COLORED);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_LAND_COLORED;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_LAND);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_LAND;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         }
         assert(spr->Texture != nullptr);
-        g_GL_DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
+#ifndef NEW_RENDERER_ENABLED
+        g_GL.DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
+#else
+        DrawLandTileCmd cmd{
+            spr->Texture->Texture,
+            x,
+            y + (land->GetZ() * 4),
+            { land->m_Rect.x, land->m_Rect.y, uint32_t(land->m_Rect.w), uint32_t(land->m_Rect.h) },
+            {
+                { float(land->m_Normals[0].X),
+                  float(land->m_Normals[0].Y),
+                  float(land->m_Normals[0].Z) },
+                { float(land->m_Normals[1].X),
+                  float(land->m_Normals[1].Y),
+                  float(land->m_Normals[1].Z) },
+                { float(land->m_Normals[2].X),
+                  float(land->m_Normals[2].Y),
+                  float(land->m_Normals[2].Z) },
+                { float(land->m_Normals[3].X),
+                  float(land->m_Normals[3].Y),
+                  float(land->m_Normals[3].Z) },
+            }
+        };
+        RenderAdd_DrawLandTile(g_renderCmdList, cmd);
+#endif
     }
 }
 
 // FIXME: gfx
 void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteLandArt(id);
     if (spr != nullptr)
     {
@@ -5008,12 +5168,24 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 
         if (!g_GrayedPixels && (color != 0u))
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_COLORED;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
             g_ColorManager.SendColorsToShader(color);
         }
         else
         {
+#ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+            cmd.value.asInt1 = SDM_NO_COLOR;
+            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         }
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x - 22, y - 22);
@@ -5023,7 +5195,6 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 // FIXME: gfx
 void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
@@ -5032,22 +5203,23 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
             color = g_OutOfRangeColor;
         }
 
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
+            uniformValue = SDM_COLORED;
             if (!selection && IsPartialHue(GetStaticFlags(id)))
             {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                uniformValue = SDM_PARTIAL_HUE;
             }
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
     }
@@ -5056,14 +5228,12 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
 // FIXME: gfx
 void CGame::DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    DEBUG_TRACE_FUNCTION;
     DrawStaticArt(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
 // FIXME: gfx
 void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
@@ -5071,31 +5241,32 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
         {
             color = g_OutOfRangeColor;
         }
+
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+            uniformValue = SDM_COLORED;
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawRotated(x, y, angle);
     }
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
-    DEBUG_TRACE_FUNCTION;
     DrawStaticArtRotated(id + g_Index.m_Static[id].Offset, color, x, y, angle);
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
@@ -5103,22 +5274,23 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
         {
             color = g_OutOfRangeColor;
         }
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
+            uniformValue = SDM_COLORED;
             if (!selection && IsPartialHue(GetStaticFlags(id)))
             {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                uniformValue = SDM_PARTIAL_HUE;
             }
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawTransparent(
             x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
@@ -5129,7 +5301,6 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
 void CGame::DrawStaticArtAnimatedTransparent(
     uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    DEBUG_TRACE_FUNCTION;
     DrawStaticArtTransparent(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
@@ -5137,7 +5308,6 @@ void CGame::DrawStaticArtAnimatedTransparent(
 void CGame::DrawStaticArtInContainer(
     uint16_t id, uint16_t color, int x, int y, bool selection, bool onMouse)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr)
     {
@@ -5147,48 +5317,50 @@ void CGame::DrawStaticArtInContainer(
             y -= spr->Height / 2;
         }
 
+        auto uniformValue = SDM_NO_COLOR;
         if (!g_GrayedPixels && (color != 0u))
         {
+            uniformValue = SDM_COLORED;
             if (color >= 0x4000)
             {
                 color = 0x1;
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
             }
             else if (!selection && IsPartialHue(GetStaticFlags(id)))
             {
-                glUniform1iARB(g_ShaderDrawMode, SDM_PARTIAL_HUE);
-            }
-            else
-            {
-                glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+                uniformValue = SDM_PARTIAL_HUE;
             }
             g_ColorManager.SendColorsToShader(color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x, y);
     }
 }
 
-// FIXME: gfx
 void CGame::DrawLight(LIGHT_DATA &light)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteLight(light.ID);
     if (spr != nullptr)
     {
+        auto uniformValue = SDM_NO_COLOR;
         if (light.Color != 0u)
         {
-            glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
+            uniformValue = SDM_COLORED;
             g_ColorManager.SendColorsToShader(light.Color);
         }
-        else
-        {
-            glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-        }
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, uniformValue);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = uniformValue;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(
             light.DrawX - g_RenderBounds.GameWindowPosX - (spr->Width / 2),
@@ -5199,7 +5371,6 @@ void CGame::DrawLight(LIGHT_DATA &light)
 // FIXME: bounding box, typo
 bool CGame::PolygonePixelsInXY(int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     x = g_MouseManager.Position.X - x;
     y = g_MouseManager.Position.Y - y;
     return !(x < 0 || y < 0 || x >= width || y >= height);
@@ -5207,7 +5378,6 @@ bool CGame::PolygonePixelsInXY(int x, int y, int width, int height)
 
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = (CSprite *)g_Index.m_Gump[id].UserData;
     if (spr != nullptr)
     {
@@ -5218,7 +5388,6 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y)
 
 bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = (CSprite *)g_Index.m_Gump[id].UserData;
     if (spr == nullptr)
     {
@@ -5267,7 +5436,6 @@ bool CGame::GumpPixelsInXY(uint16_t id, int x, int y, int width, int height)
 
 bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height)
 {
-    DEBUG_TRACE_FUNCTION;
     const int tempX = g_MouseManager.Position.X - x;
     const int tempY = g_MouseManager.Position.Y - y;
     if (tempX < 0 || tempY < 0 || tempX >= width || tempY >= height)
@@ -5425,7 +5593,6 @@ bool CGame::ResizepicPixelsInXY(uint16_t id, int x, int y, int width, int height
 
 bool CGame::StaticPixelsInXY(uint16_t id, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CIndexObject &io = g_Index.m_Static[id];
     auto spr = (CSprite *)io.UserData;
     if (spr != nullptr)
@@ -5437,13 +5604,11 @@ bool CGame::StaticPixelsInXY(uint16_t id, int x, int y)
 
 bool CGame::StaticPixelsInXYAnimated(uint16_t id, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     return StaticPixelsInXY(id + g_Index.m_Static[id].Offset, x, y);
 }
 
 bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = (CSprite *)g_Index.m_Static[id].UserData;
     if (spr != nullptr)
     {
@@ -5454,7 +5619,6 @@ bool CGame::StaticPixelsInXYInContainer(uint16_t id, int x, int y)
 
 bool CGame::LandPixelsInXY(uint16_t id, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = (CSprite *)g_Index.m_Land[id].UserData;
     if (spr != nullptr)
     {
@@ -5465,7 +5629,6 @@ bool CGame::LandPixelsInXY(uint16_t id, int x, int y)
 
 bool CGame::LandTexturePixelsInXY(int x, int y, const SDL_Rect &r)
 {
-    DEBUG_TRACE_FUNCTION;
     y -= 22;
     int testX = g_MouseManager.Position.X - x;
     int testY = g_MouseManager.Position.Y;
@@ -5485,7 +5648,6 @@ bool CGame::LandTexturePixelsInXY(int x, int y, const SDL_Rect &r)
 
 void CGame::CreateTextMessageF(uint8_t font, uint16_t color, const char *format, ...)
 {
-    DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, format);
     char buf[512] = { 0 };
@@ -5496,12 +5658,11 @@ void CGame::CreateTextMessageF(uint8_t font, uint16_t color, const char *format,
 
 void CGame::CreateUnicodeTextMessageF(uint8_t font, uint16_t color, const char *format, ...)
 {
-    DEBUG_TRACE_FUNCTION;
     va_list arg;
     va_start(arg, format);
     char buf[512] = { 0 };
     SDL_vsnprintf(buf, sizeof(buf), format, arg);
-    CreateUnicodeTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, ToWString(buf));
+    CreateUnicodeTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, wstr_from(buf));
     va_end(arg);
 }
 
@@ -5513,7 +5674,6 @@ void CGame::CreateTextMessage(
     const std::string &text,
     CRenderWorldObject *clientObj)
 {
-    DEBUG_TRACE_FUNCTION;
     CTextData *td = new CTextData();
     td->Unicode = false;
     td->Font = font;
@@ -5656,7 +5816,6 @@ void CGame::CreateUnicodeTextMessage(
     const std::wstring &text,
     CRenderWorldObject *clientObj)
 {
-    DEBUG_TRACE_FUNCTION;
     CTextData *td = new CTextData();
     td->Unicode = true;
     td->Font = font;
@@ -5778,14 +5937,12 @@ void CGame::CreateUnicodeTextMessage(
 
 void CGame::AddSystemMessage(CTextData *msg)
 {
-    DEBUG_TRACE_FUNCTION;
     g_SystemChat.Add(msg);
     AddJournalMessage(msg, "");
 }
 
 void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
 {
-    DEBUG_TRACE_FUNCTION;
     CTextData *jmsg = new CTextData(msg);
 
     if (!jmsg->Unicode)
@@ -5798,7 +5955,7 @@ void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
         //if (msg->Type == TT_SYSTEM)
         //	jmsg->Color = 0;
 
-        jmsg->UnicodeText = ToWString(name) + jmsg->UnicodeText;
+        jmsg->UnicodeText = wstr_from(name) + jmsg->UnicodeText;
         jmsg->Font = 0;
     }
 
@@ -5812,8 +5969,7 @@ void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
 
 void CGame::ChangeMap(uint8_t newmap)
 {
-    DEBUG_TRACE_FUNCTION;
-    if (newmap < 0 || newmap > 5)
+    if (newmap > 5)
     {
         newmap = 0;
     }
@@ -5859,7 +6015,6 @@ void CGame::ChangeMap(uint8_t newmap)
 
 void CGame::PickupItem(CGameItem *obj, int count, bool isGameFigure)
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ObjectInHand.Enabled)
     {
         g_ObjectInHand.Clear();
@@ -5892,7 +6047,6 @@ void CGame::PickupItem(CGameItem *obj, int count, bool isGameFigure)
 
 void CGame::DropItem(int container, uint16_t x, uint16_t y, char z)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ObjectInHand.Enabled && g_ObjectInHand.Serial != container)
     {
         if (g_Config.ProtocolClientVersion >= CV_6017)
@@ -5911,7 +6065,6 @@ void CGame::DropItem(int container, uint16_t x, uint16_t y, char z)
 
 void CGame::EquipItem(uint32_t container)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ObjectInHand.Enabled)
     {
         if (IsWearable(g_ObjectInHand.TiledataPtr->Flags))
@@ -5933,7 +6086,6 @@ void CGame::EquipItem(uint32_t container)
 
 void CGame::ChangeWarmode(uint8_t status)
 {
-    DEBUG_TRACE_FUNCTION;
     uint8_t newstatus = (uint8_t)(!g_Player->Warmode);
 
     if (status != 0xFF)
@@ -5961,7 +6113,6 @@ void CGame::ChangeWarmode(uint8_t status)
 
 void CGame::Click(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketClickRequest(serial).Send();
 
     CGameObject *obj = g_World->FindWorldObject(serial);
@@ -5973,7 +6124,6 @@ void CGame::Click(uint32_t serial)
 
 void CGame::DoubleClick(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial >= 0x40000000)
     {
         g_LastUseObject = serial;
@@ -5984,7 +6134,6 @@ void CGame::DoubleClick(uint32_t serial)
 
 void CGame::PaperdollReq(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     //g_LastUseObject = serial;
 
     CPacketDoubleClickRequest(serial | 0x80000000).Send();
@@ -5992,7 +6141,6 @@ void CGame::PaperdollReq(uint32_t serial)
 
 void CGame::Attack(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConfigManager.CriminalActionsQuery && g_World != nullptr)
     {
         CGameCharacter *target = g_World->FindWorldCharacter(serial);
@@ -6021,7 +6169,6 @@ void CGame::Attack(uint32_t serial)
 
 void CGame::AttackReq(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     g_LastAttackObject = serial;
 
     //CPacketStatusRequest(serial).Send();
@@ -6031,13 +6178,11 @@ void CGame::AttackReq(uint32_t serial)
 
 void CGame::SendASCIIText(const char *str, SPEECH_TYPE type)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketASCIISpeechRequest(str, type, 3, g_ConfigManager.SpeechColor).Send();
 }
 
 void CGame::CastSpell(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     if (index >= 0)
     {
         g_LastSpellIndex = index;
@@ -6048,7 +6193,6 @@ void CGame::CastSpell(int index)
 
 void CGame::CastSpellFromBook(int index, uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (index >= 0)
     {
         g_LastSpellIndex = index;
@@ -6059,7 +6203,6 @@ void CGame::CastSpellFromBook(int index, uint32_t serial)
 
 void CGame::UseSkill(int index)
 {
-    DEBUG_TRACE_FUNCTION;
     if (index >= 0)
     {
         g_LastSkillIndex = index;
@@ -6070,19 +6213,16 @@ void CGame::UseSkill(int index)
 
 void CGame::OpenDoor()
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketOpenDoor().Send();
 }
 
 void CGame::EmoteAction(const char *action)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketEmoteAction(action).Send();
 }
 
 void CGame::AllNames()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameObject *obj = g_World->m_Items;
 
     while (obj != nullptr)
@@ -6098,7 +6238,6 @@ void CGame::AllNames()
 
 void CGame::RemoveRangedObjects()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_World != nullptr)
     {
         int objectsRange = g_ConfigManager.UpdateRange;
@@ -6166,7 +6305,9 @@ void CGame::ClearWorld()
     g_SkillsManager.SkillsTotal = 0.0f;
     g_SkillsManager.SkillsRequested = false;
 
-    RELEASE_POINTER(g_World)
+    if (g_World)
+        delete g_World;
+    g_World = nullptr;
     Info(Client, "\tworld removed");
 
     g_PopupMenu = nullptr;
@@ -6209,7 +6350,6 @@ void CGame::ClearWorld()
 
 void CGame::LogOut()
 {
-    DEBUG_TRACE_FUNCTION;
     Info(Client, "CGame::LogOut->Start");
     SaveLocalConfig(g_PacketManager.ConfigSerial);
 
@@ -6229,7 +6369,6 @@ void CGame::LogOut()
 
 void CGame::ConsolePromptSend()
 {
-    DEBUG_TRACE_FUNCTION;
     size_t len = g_GameConsole.Length();
     bool cancel = (len < 1);
 
@@ -6247,7 +6386,6 @@ void CGame::ConsolePromptSend()
 
 void CGame::ConsolePromptCancel()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_ConsolePrompt == PT_ASCII)
     {
         CPacketASCIIPromptResponse("", 0, true).Send();
@@ -6262,7 +6400,6 @@ void CGame::ConsolePromptCancel()
 
 uint64_t CGame::GetLandFlags(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id < g_Data.m_Land.size())
     {
         return g_Data.m_Land[id].Flags;
@@ -6272,7 +6409,6 @@ uint64_t CGame::GetLandFlags(uint16_t id)
 
 uint64_t CGame::GetStaticFlags(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     if (id < (int)g_Data.m_Static.size())
     {
         return g_Data.m_Static[id].Flags;
@@ -6287,7 +6423,6 @@ uint16_t CGame::GetLightColor(uint16_t id)
 
 CSize CGame::GetStaticArtDimension(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr)
     {
@@ -6298,7 +6433,6 @@ CSize CGame::GetStaticArtDimension(uint16_t id)
 
 CSize CGame::GetGumpDimension(uint16_t id)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = ExecuteGump(id);
     if (spr != nullptr)
     {
@@ -6309,7 +6443,6 @@ CSize CGame::GetGumpDimension(uint16_t id)
 
 void CGame::OpenStatus(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - 76;
     int y = g_MouseManager.Position.Y - 30;
     CPacketStatusRequest(serial).Send();
@@ -6318,7 +6451,6 @@ void CGame::OpenStatus(uint32_t serial)
 
 void CGame::DisplayStatusbarGump(int serial, int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketStatusRequest packet(serial);
     UOMsg_Send(packet.Data().data(), packet.Data().size());
     CGump *gump = g_GumpManager.GetGump(serial, 0, GT_STATUSBAR);
@@ -6343,13 +6475,11 @@ void CGame::DisplayStatusbarGump(int serial, int x, int y)
 
 void CGame::OpenMinimap()
 {
-    DEBUG_TRACE_FUNCTION;
     g_GumpManager.AddGump(new CGumpMinimap(0, 0, true));
 }
 
 void CGame::OpenWorldMap()
 {
-    DEBUG_TRACE_FUNCTION;
     CPluginPacketOpenMap().SendToPlugin();
 
     /*int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 200;
@@ -6363,21 +6493,17 @@ void CGame::OpenWorldMap()
 
 void CGame::OpenJournal()
 {
-    DEBUG_TRACE_FUNCTION;
     g_GumpManager.AddGump(new CGumpJournal(0, 0, false, 250));
 }
 
 void CGame::OpenSkills()
 {
-    DEBUG_TRACE_FUNCTION;
-
     g_SkillsManager.SkillsRequested = true;
     CPacketSkillsRequest(g_PlayerSerial).Send();
 }
 
 void CGame::OpenBackpack()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player != nullptr)
     {
         CGameItem *pack = g_Player->FindLayer(OL_BACKPACK);
@@ -6391,7 +6517,6 @@ void CGame::OpenBackpack()
 
 void CGame::OpenLogOut()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 40;
     int y = g_ConfigManager.GameWindowY + (g_ConfigManager.GameWindowHeight / 2) - 20;
 
@@ -6403,13 +6528,11 @@ void CGame::OpenLogOut()
 
 void CGame::OpenChat()
 {
-    DEBUG_TRACE_FUNCTION;
     CPacketOpenChat({}).Send();
 }
 
 void CGame::OpenConfiguration()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = (g_GameWindow.GetSize().Width / 2) - 320;
     int y = (g_GameWindow.GetSize().Height / 2) - 240;
 
@@ -6420,12 +6543,10 @@ void CGame::OpenConfiguration()
 
 void CGame::OpenMail()
 {
-    DEBUG_TRACE_FUNCTION;
 }
 
 void CGame::OpenPartyManifest()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = (g_GameWindow.GetSize().Width / 2) - 272;
     int y = (g_GameWindow.GetSize().Height / 2) - 240;
 
@@ -6434,7 +6555,6 @@ void CGame::OpenPartyManifest()
 
 void CGame::OpenProfile(uint32_t serial)
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == 0u)
     {
         serial = g_PlayerSerial;
@@ -6445,7 +6565,6 @@ void CGame::OpenProfile(uint32_t serial)
 
 void CGame::DisconnectGump()
 {
-    DEBUG_TRACE_FUNCTION;
     CServer *server = g_ServerList.GetSelectedServer();
     std::string str = "Disconnected from " + (server != nullptr ? server->Name : "server name...");
     g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x21, str);
@@ -6464,7 +6583,6 @@ void CGame::DisconnectGump()
 
 void CGame::OpenCombatBookGump()
 {
-    DEBUG_TRACE_FUNCTION;
     int gameWindowCenterX = (g_ConfigManager.GameWindowX - 4) + g_ConfigManager.GameWindowWidth / 2;
     int gameWindowCenterY =
         (g_ConfigManager.GameWindowY - 4) + g_ConfigManager.GameWindowHeight / 2;
@@ -6487,7 +6605,6 @@ void CGame::OpenCombatBookGump()
 
 void CGame::OpenRacialAbilitiesBookGump()
 {
-    DEBUG_TRACE_FUNCTION;
     int gameWindowCenterX = (g_ConfigManager.GameWindowX - 4) + g_ConfigManager.GameWindowWidth / 2;
     int gameWindowCenterY =
         (g_ConfigManager.GameWindowY - 4) + g_ConfigManager.GameWindowHeight / 2;

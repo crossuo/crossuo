@@ -18,6 +18,10 @@
 #include "../GameObjects/GameWorld.h"
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
@@ -26,7 +30,6 @@ CGumpContainer::CGumpContainer(uint32_t serial, uint32_t id, short x, short y)
     : CGump(GT_CONTAINER, serial, x, y)
     , IsGameBoard(id == 0x091A || id == 0x092E)
 {
-    DEBUG_TRACE_FUNCTION;
     Page = 1;
     m_Locker.Serial = ID_GC_LOCK_MOVING;
     ID = id;
@@ -68,7 +71,6 @@ CGumpContainer::~CGumpContainer()
 
 void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
 {
-    DEBUG_TRACE_FUNCTION;
     if (Graphic < g_ContainerOffset.size())
     {
         const CContainerOffsetRect &rect = g_ContainerOffset[Graphic].Rect;
@@ -97,7 +99,6 @@ void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
 
 void CGumpContainer::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::CalculateGumpState();
 
     if (g_GumpPressed && g_PressedObject.LeftObject != nullptr &&
@@ -120,14 +121,12 @@ void CGumpContainer::CalculateGumpState()
 
 void CGumpContainer::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::PrepareTextures();
     g_Game.ExecuteGumpPart(0x0045, 2); //Corpse eyes
 }
 
 void CGumpContainer::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Minimized)
     {
         if (g_SelectedObject.Serial == ID_GC_MINIMIZE)
@@ -147,7 +146,6 @@ void CGumpContainer::InitToolTip()
 
 void CGumpContainer::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_Player->Dead() &&
         GetTopObjDistance(g_Player, g_World->FindWorldObject(Serial)) <= DRAG_ITEMS_DISTANCE &&
         g_PressedObject.LeftGump == this && !g_ObjectInHand.Enabled &&
@@ -223,7 +221,6 @@ void CGumpContainer::PrepareContent()
 
 void CGumpContainer::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameItem *container = g_World->FindWorldItem(Serial);
 
     if (container == nullptr)
@@ -308,12 +305,19 @@ void CGumpContainer::UpdateContent()
 
 void CGumpContainer::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     CGump::Draw();
 
     if (!Minimized)
     {
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
+#endif
 
         g_FontColorizerShader.Use();
 
@@ -321,13 +325,18 @@ void CGumpContainer::Draw()
 
         UnuseShader();
 
+#ifndef NEW_RENDERER_ENABLED
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
+#else
+        RenderAdd_SetModelViewTranslation(
+            g_renderCmdList,
+            SetModelViewTranslationCmd{ { -g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f } });
+#endif
     }
 }
 
 CRenderObject *CGumpContainer::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = CGump::Select();
 
     if (!Minimized)
@@ -346,7 +355,6 @@ CRenderObject *CGumpContainer::Select()
 
 void CGumpContainer::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Minimized && serial == ID_GC_MINIMIZE && ID == 0x003C)
     {
         Minimized = true;
@@ -360,7 +368,6 @@ void CGumpContainer::GUMP_BUTTON_EVENT_C
 
 void CGumpContainer::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     uint32_t dropContainer = Serial;
@@ -491,7 +498,6 @@ void CGumpContainer::OnLeftMouseButtonUp()
 
 bool CGumpContainer::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     bool result = false;
     if ((g_PressedObject.LeftSerial == 0u) && Minimized && ID == 0x003C)
     {

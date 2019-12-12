@@ -1,11 +1,11 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <cstdlib>
 #include "WalkData.h"
 
 void CWalkData::GetOffset(float &x, float &y, float &steps)
 {
-    DEBUG_TRACE_FUNCTION;
     float step_NESW_D = 44.0f / steps; //NW NE SW SE
     float step_NESW = 22.0f / steps;   //N E S W
 

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <common/str.h>
 #include "RenderStaticObject.h"
 #include "GLEngine/GLTexture.h"
 

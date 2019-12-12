@@ -15,11 +15,11 @@
 #include "../Managers/MouseManager.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../Network/Packets.h"
+#include "../Utility/PerfMarker.h"
 
 CGumpScreenGame::CGumpScreenGame()
     : CGump(GT_NONE, 0, 0, 0)
 {
-    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     NoClose = true;
 
@@ -33,8 +33,6 @@ CGumpScreenGame::~CGumpScreenGame()
 
 void CGumpScreenGame::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
-
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
     screenX -= 20;
@@ -113,7 +111,6 @@ void CGumpScreenGame::UpdateContent()
 
 void CGumpScreenGame::InitToolTip()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!g_ConfigManager.UseToolTips || g_SelectedObject.Object == nullptr)
     {
         return;
@@ -127,7 +124,8 @@ void CGumpScreenGame::InitToolTip()
 
 void CGumpScreenGame::Draw()
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
     //Рамка игрового окна
     g_Game.DrawGump(
         0x0A8D,
@@ -178,7 +176,6 @@ void CGumpScreenGame::Draw()
 
 CRenderObject *CGumpScreenGame::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = nullptr;
 
     if (!g_ConfigManager.LockResizingGameWindow)
@@ -238,7 +235,6 @@ CRenderObject *CGumpScreenGame::Select()
 
 void CGumpScreenGame::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     //CGump::OnLeftMouseButtonDown();
 
     if (g_GumpConsoleType != nullptr)
@@ -249,8 +245,6 @@ void CGumpScreenGame::OnLeftMouseButtonDown()
 
 void CGumpScreenGame::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
-
     int screenX, screenY;
     GetDisplaySize(&screenX, &screenY);
     screenX -= 20;

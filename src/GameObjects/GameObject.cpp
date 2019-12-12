@@ -21,6 +21,7 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ColorManager.h"
 #include "../TextEngine/TextData.h"
+#include "../Renderer/RenderAPI.h"
 
 static int s_objectHandleOffsetY = 25;
 static int s_bodyHandleOffsetY = 15;
@@ -29,17 +30,13 @@ CGameObject::CGameObject(int serial)
     : CRenderStaticObject(ROT_GAME_OBJECT, serial, 0, 0, 0, 0, 0)
     , LastAnimationChangeTime(SDL_GetTicks())
 {
-    DEBUG_TRACE_FUNCTION;
     memset(&m_FrameInfo, 0, sizeof(DRAW_FRAME_INFORMATION));
 
-#if UO_DEBUG_INFO != 0
     g_GameObjectsCount++;
-#endif //UO_DEBUG_INFO!=0
 }
 
 CGameObject::~CGameObject()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Effects != nullptr)
     {
         delete m_Effects;
@@ -48,23 +45,27 @@ CGameObject::~CGameObject()
 
     m_Next = nullptr;
     m_Prev = nullptr;
-    // FIXME: gfx
+#ifndef NEW_RENDERER_ENABLED
     if (m_TextureObjectHandles.Texture != 0)
     {
         glDeleteTextures(1, &m_TextureObjectHandles.Texture);
         m_TextureObjectHandles.Texture = 0;
     }
+#else
+    if (m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID)
+    {
+        Render_DestroyTexture(m_TextureObjectHandles.Texture);
+        m_TextureObjectHandles.Texture = RENDER_TEXTUREHANDLE_INVALID;
+    }
+#endif
 
     Clear();
 
-#if UO_DEBUG_INFO != 0
     g_GameObjectsCount--;
-#endif //UO_DEBUG_INFO!=0
 }
 
 void CGameObject::SetFlags(uint8_t val)
 {
-    DEBUG_TRACE_FUNCTION;
     bool poisoned = Poisoned();
     bool yellowHits = YellowHits();
     m_Flags = val;
@@ -77,7 +78,6 @@ void CGameObject::SetFlags(uint8_t val)
 
 void CGameObject::SetName(const std::string &newName)
 {
-    DEBUG_TRACE_FUNCTION;
     if (IsPlayer() && m_Name != newName)
     {
         if (g_GameState >= GS_GAME)
@@ -97,16 +97,15 @@ void CGameObject::SetName(const std::string &newName)
 
 void CGameObject::DrawObjectHandlesTexture()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_TextureObjectHandles.Texture == 0)
     {
         if (NPC)
         {
-            GenerateObjectHandlesTexture(ToWString(m_Name));
+            GenerateObjectHandlesTexture(wstr_from(m_Name));
         }
         else
         {
-            auto name = ToWString(m_Name);
+            auto name = wstr_from(m_Name);
             if (name.length() == 0u)
             {
                 name = g_ClilocManager.Cliloc(g_Language)
@@ -146,7 +145,6 @@ void CGameObject::DrawObjectHandlesTexture()
 
 void CGameObject::SelectObjectHandlesTexture()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_TextureObjectHandles.Texture != 0)
     {
         int x = DrawX - g_ObjectHandlesWidthOffset;
@@ -187,13 +185,19 @@ void CGameObject::SelectObjectHandlesTexture()
 
 void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
 {
-    DEBUG_TRACE_FUNCTION;
-    // FIXME: gfx
+#ifndef NEW_RENDERER_ENABLED
     if (m_TextureObjectHandles.Texture != 0)
     {
         glDeleteTextures(1, &m_TextureObjectHandles.Texture);
         m_TextureObjectHandles.Texture = 0;
     }
+#else
+    if (m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID)
+    {
+        Render_DestroyTexture(m_TextureObjectHandles.Texture);
+        m_TextureObjectHandles.Texture = RENDER_TEXTUREHANDLE_INVALID;
+    }
+#endif
 
     int width = g_ObjectHandlesWidth - 20;
     uint8_t font = 1;
@@ -282,14 +286,23 @@ void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
             }
         }
     }
-    // FIXME: gfx
-    g_GL_BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
+#ifndef NEW_RENDERER_ENABLED
+    g_GL.BindTexture16(m_TextureObjectHandles, g_ObjectHandlesWidth, g_ObjectHandlesHeight, pixels);
+#else
+    m_TextureObjectHandles.Width = g_ObjectHandlesWidth;
+    m_TextureObjectHandles.Height = g_ObjectHandlesHeight;
+    m_TextureObjectHandles.Texture = Render_CreateTexture2D(
+        g_ObjectHandlesWidth,
+        g_ObjectHandlesHeight,
+        TextureGPUFormat::TextureGPUFormat_RGB5_A1,
+        pixels,
+        TextureFormat::TextureFormat_Unsigned_A1_BGR5);
+    assert(m_TextureObjectHandles.Texture != RENDER_TEXTUREHANDLE_INVALID);
+#endif
 }
 
 void CGameObject::AddText(CTextData *msg)
 {
-    DEBUG_TRACE_FUNCTION;
-
     msg->Owner = this;
     m_TextControl->Add(msg);
 
@@ -316,13 +329,11 @@ void CGameObject::AddText(CTextData *msg)
 
 uint16_t CGameObject::GetMountAnimation()
 {
-    DEBUG_TRACE_FUNCTION;
     return Graphic; // + UO->GetStaticPointer(Graphic)->Increment;
 }
 
 void CGameObject::Clear()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Empty())
     {
         CGameObject *obj = (CGameObject *)m_Items;
@@ -338,7 +349,6 @@ void CGameObject::Clear()
 
 void CGameObject::ClearUnequipped()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Empty())
     {
         CGameObject *newFirstItem = nullptr;
@@ -365,7 +375,6 @@ void CGameObject::ClearUnequipped()
 
 void CGameObject::ClearNotOpenedItems()
 {
-    DEBUG_TRACE_FUNCTION;
     if (!Empty())
     {
         CGameObject *obj = (CGameObject *)m_Items;
@@ -384,7 +393,6 @@ void CGameObject::ClearNotOpenedItems()
 
 bool CGameObject::Poisoned()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion >= CV_7000)
     {
         return SA_Poisoned;
@@ -394,7 +402,6 @@ bool CGameObject::Poisoned()
 
 bool CGameObject::Flying()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion >= CV_7000)
     {
         return (m_Flags & 0x04) != 0;
@@ -404,7 +411,6 @@ bool CGameObject::Flying()
 
 int CGameObject::IsGold(uint16_t graphic)
 {
-    DEBUG_TRACE_FUNCTION;
     switch (graphic)
     {
         case 0x0EED:
@@ -421,7 +427,6 @@ int CGameObject::IsGold(uint16_t graphic)
 
 uint16_t CGameObject::GetDrawGraphic(bool &doubleDraw)
 {
-    DEBUG_TRACE_FUNCTION;
     int index = IsGold(Graphic);
     uint16_t result = Graphic;
     const uint16_t graphicAssociateTable[3][3] = { { 0x0EED, 0x0EEE, 0x0EEF },
@@ -442,7 +447,6 @@ uint16_t CGameObject::GetDrawGraphic(bool &doubleDraw)
 
 void CGameObject::DrawEffects(int x, int y)
 {
-    DEBUG_TRACE_FUNCTION;
     if (NPC)
     {
         CGameCharacter *gc = GameCharacterPtr();
@@ -469,7 +473,6 @@ void CGameObject::DrawEffects(int x, int y)
 
 void CGameObject::UpdateEffects()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameEffect *effect = m_Effects;
     while (effect != nullptr)
     {
@@ -481,7 +484,6 @@ void CGameObject::UpdateEffects()
 
 void CGameObject::AddEffect(CGameEffect *effect)
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_Effects == nullptr)
     {
         m_Effects = effect;
@@ -499,7 +501,6 @@ void CGameObject::AddEffect(CGameEffect *effect)
 
 void CGameObject::RemoveEffect(CGameEffect *effect)
 {
-    DEBUG_TRACE_FUNCTION;
     if (effect->m_Prev == nullptr)
     {
         m_Effects = (CGameEffect *)effect->m_Next;
@@ -524,7 +525,6 @@ void CGameObject::RemoveEffect(CGameEffect *effect)
 
 void CGameObject::AddObject(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     g_World->RemoveFromContainer(obj);
 
     if (m_Next == nullptr)
@@ -551,7 +551,6 @@ void CGameObject::AddObject(CGameObject *obj)
 
 void CGameObject::AddItem(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj->Container != 0xFFFFFFFF)
     {
         return;
@@ -576,7 +575,6 @@ void CGameObject::AddItem(CGameObject *obj)
 
 void CGameObject::Reject(CGameObject *obj)
 {
-    DEBUG_TRACE_FUNCTION;
     if (obj->Container != Serial)
     {
         return;
@@ -624,7 +622,6 @@ void CGameObject::Reject(CGameObject *obj)
 
 CGameObject *CGameObject::GetTopObject()
 {
-    DEBUG_TRACE_FUNCTION;
     CGameObject *obj = this;
     while (obj->Container != 0xFFFFFFFF)
     {
@@ -635,7 +632,6 @@ CGameObject *CGameObject::GetTopObject()
 
 CGameItem *CGameObject::FindLayer(int layer)
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(obj, m_Items, CGameItem *)
     {
         if (obj->Layer == layer)
@@ -648,7 +644,6 @@ CGameItem *CGameObject::FindLayer(int layer)
 
 bool CGameObject::Caller()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Config.ClientVersion >= CV_7000)
     {
         return pvpCaller;

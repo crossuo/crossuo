@@ -6,6 +6,7 @@
 #include "../Platform.h"
 #include "BaseScreen.h"
 #include "../Gumps/GumpScreenGame.h"
+#include "../Globals.h" // MAX_OBJECT_HANDLES, NAX_LIGHT_SOURCES
 
 class CGameObject;
 

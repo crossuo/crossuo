@@ -26,11 +26,11 @@ bool CBaseProfession::AddDescription(int desc, const std::string &name, const ch
         g_FontManager.SetUseHTML(true);
         if (desc == -2)
         {
-            Description = ToWString(val);
+            Description = wstr_from(val);
         }
         else
         {
-            Description = ToWString(name + "\n" + val);
+            Description = wstr_from(name + "\n" + val);
         }
 
         g_FontManager.SetUseHTML(false);

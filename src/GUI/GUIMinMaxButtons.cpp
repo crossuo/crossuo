@@ -5,6 +5,10 @@
 #include "../CrossUO.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/MouseManager.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
 
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)
@@ -17,13 +21,11 @@ CGUIMinMaxButtons::CGUIMinMaxButtons(
 
 CGUIMinMaxButtons::~CGUIMinMaxButtons()
 {
-    DEBUG_TRACE_FUNCTION;
     Text.Clear();
 }
 
 void CGUIMinMaxButtons::UpdateText()
 {
-    DEBUG_TRACE_FUNCTION;
     if (HaveText)
     {
         if (Unicode)
@@ -119,7 +121,6 @@ void CGUIMinMaxButtons::UpdateText()
 
 void CGUIMinMaxButtons::Scroll(int delay)
 {
-    DEBUG_TRACE_FUNCTION;
     if (LastScrollTime < g_Ticks && (m_ScrollMode != 0))
     {
         if (m_ScrollMode == 1)
@@ -149,7 +150,6 @@ void CGUIMinMaxButtons::Scroll(int delay)
 
 void CGUIMinMaxButtons::OnClick()
 {
-    DEBUG_TRACE_FUNCTION;
     int x = g_MouseManager.Position.X - m_X;
     int y = g_MouseManager.Position.Y - m_Y;
 
@@ -183,7 +183,6 @@ void CGUIMinMaxButtons::SetTextParameters(
     TEXT_ALIGN_TYPE align,
     uint16_t textFlags)
 {
-    DEBUG_TRACE_FUNCTION;
     HaveText = haveText;
     TextPosition = textPosition;
     Font = font;
@@ -198,15 +197,21 @@ void CGUIMinMaxButtons::SetTextParameters(
 
 void CGUIMinMaxButtons::PrepareTextures()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.ExecuteGump(Graphic);
     g_Game.ExecuteGump(Graphic + 1);
 }
 
 void CGUIMinMaxButtons::Draw(bool checktrans)
 {
-    DEBUG_TRACE_FUNCTION;
+    ScopedPerfMarker(__FUNCTION__);
+
+#ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+    ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+    cmd.value.asInt1 = SDM_NO_COLOR;
+    RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
     for (int i = 0; i < 2; i++)
     {
         auto spr = g_Game.ExecuteGump(Graphic + (int)i);
@@ -224,7 +229,6 @@ void CGUIMinMaxButtons::Draw(bool checktrans)
 
 bool CGUIMinMaxButtons::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     const int x = g_MouseManager.Position.X - m_X;
     const int y = g_MouseManager.Position.Y - m_Y;
     return (x >= 0 && y >= 0 && x < 36 && y < 18);

@@ -15,7 +15,6 @@
 CGumpMinimap::CGumpMinimap(short x, short y, bool minimized)
     : CGump(GT_MINIMAP, 0, x, y)
 {
-    DEBUG_TRACE_FUNCTION;
     Minimized = minimized;
     m_Locker.Serial = ID_GMM_LOCK_MOVING;
     GenerateMap();
@@ -23,13 +22,11 @@ CGumpMinimap::CGumpMinimap(short x, short y, bool minimized)
 
 CGumpMinimap::~CGumpMinimap()
 {
-    DEBUG_TRACE_FUNCTION;
     m_Sprite.Clear();
 }
 
 void CGumpMinimap::CalculateGumpState()
 {
-    DEBUG_TRACE_FUNCTION;
     bool minimized = Minimized;
     Minimized = false;
     CGump::CalculateGumpState();
@@ -38,7 +35,6 @@ void CGumpMinimap::CalculateGumpState()
 
 void CGumpMinimap::GenerateMap()
 {
-    DEBUG_TRACE_FUNCTION;
     /*const CPoint2Di foliageOffsetTable[17 * 3] =
     {
         CPoint2Di(0, 0),
@@ -240,7 +236,6 @@ void CGumpMinimap::CreatePixels(
 
 void CGumpMinimap::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (g_Player->GetX() != LastX || g_Player->GetY() != LastY || m_Sprite.Texture == 0)
     {
         GenerateMap();
@@ -264,7 +259,6 @@ void CGumpMinimap::PrepareContent()
 
 void CGumpMinimap::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     uint16_t graphic = 0x1393 - (int)Minimized;
     auto spr = g_Game.ExecuteGump(graphic);
     if (spr == nullptr)
@@ -322,7 +316,6 @@ void CGumpMinimap::UpdateContent()
 
 void CGumpMinimap::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GMM_LOCK_MOVING)
     {
         LockMoving = !LockMoving;
@@ -331,7 +324,6 @@ void CGumpMinimap::GUMP_BUTTON_EVENT_C
 
 bool CGumpMinimap::OnLeftMouseButtonDoubleClick()
 {
-    DEBUG_TRACE_FUNCTION;
     g_Game.OpenMinimap();
     return true;
 }

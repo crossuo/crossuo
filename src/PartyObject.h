@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <common/str.h>
+
+class CGameCharacter;
+
 class CPartyObject
 {
 public:
@@ -10,6 +15,6 @@ public:
 
     CPartyObject();
     ~CPartyObject() {}
-    class CGameCharacter *Character{ nullptr };
+    CGameCharacter *Character{ nullptr };
     std::string GetName(int index);
 };

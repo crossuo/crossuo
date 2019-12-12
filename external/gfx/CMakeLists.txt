@@ -19,10 +19,12 @@ set(EXTERNALGFX_SRC
     imgui/imgui_impl_dx11.cpp
     imgui/imgui_stdlib.cpp
     imgui/imgui_widgets.cpp
+    imgui/imgui_spinner.cpp
     ui.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Remove warning from 3rd party compilation
 if(MSVC)

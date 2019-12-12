@@ -7,6 +7,7 @@
 #include "../Managers/ClilocManager.h"
 #include "../Managers/FontsManager.h"
 #include "../ScreenStages/SelectTownScreen.h"
+#include "../Globals.h" // g_Language, g_MapSize, UOFONT_*
 
 enum
 {
@@ -23,7 +24,6 @@ enum
 CGumpScreenSelectTown::CGumpScreenSelectTown()
     : CGump(GT_NONE, 0, 0, 0)
 {
-    DEBUG_TRACE_FUNCTION;
     NoMove = true;
     NoClose = true;
 
@@ -45,7 +45,6 @@ CGumpScreenSelectTown::~CGumpScreenSelectTown()
 
 void CGumpScreenSelectTown::UpdateContent()
 {
-    DEBUG_TRACE_FUNCTION;
     Clear();
 
     CCityItem *city = g_SelectTownScreen.m_City;
@@ -162,7 +161,6 @@ void CGumpScreenSelectTown::UpdateContent()
 
 void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_STS_QUIT)
     { //x button
         g_SelectTownScreen.CreateSmoothAction(CSelectTownScreen::ID_SMOOTH_STS_QUIT);
@@ -180,7 +178,6 @@ void CGumpScreenSelectTown::GUMP_BUTTON_EVENT_C
 
 void CGumpScreenSelectTown::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXTENTRY)

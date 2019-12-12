@@ -38,6 +38,14 @@ set(glengine_src
   GLEngine/GLTexture.cpp
 )
 
+set(renderer_src
+  Renderer/RenderAdd.cpp
+  Renderer/RenderDraw.cpp
+  Renderer/RenderDebug.cpp
+  Renderer/RenderState.cpp
+  Renderer/RenderInternal.cpp
+)
+
 set(gui_src
   GUI/BaseGUI.cpp
   GUI/GUIAlphaBlending.cpp
@@ -257,7 +265,6 @@ set(crossuo_src
   ServerList.cpp
   SkillGroup.cpp
   Sprite.cpp
-  CrossPCH.cpp
   Target.cpp
   TargetGump.cpp
   ToolTip.cpp
@@ -265,6 +272,7 @@ set(crossuo_src
   Weather.cpp
   WeatherEffect.cpp
   Utility/PingThread.cpp
+  Utility/PerfMarker.cpp
 
   Sockets.cpp
   Main.cpp
@@ -274,9 +282,9 @@ set(crossuo_src
 
 if(XUO_WINDOWS)
   set(crossuo_src ${crossuo_src}
-    VMQuery.cpp                 # FIXME: windows only, wrap, coredump
-    StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
-    ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
+    #VMQuery.cpp                 # FIXME: windows only, wrap, coredump
+    #StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
+    #ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
     CrossUO.rc
   )
 endif()
@@ -284,8 +292,8 @@ endif()
 set(XUO_DIR ${PROJECT_SOURCE_DIR}/src/)
 include_directories(${XUO_DIR})
 
-set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
-file(GLOB XUO_HDRS ${XUO_DIR}/*.h)
+set(XUO_SRCS ${crossuo_src} ${gameobjects_src} ${glengine_src} ${renderer_src} ${gui_src} ${gumps_src} ${managers_src} ${network_src} ${screenstages_src} ${textengine_src} ${utility_src} ${walker_src} ${crypt_src} ${wisp_src})
+file(GLOB XUO_HDRS ${XUO_DIR}/**/*.h)
 
 set(XUO_FILES ${XUO_SRCS} ${XUO_HDRS})
 
@@ -316,24 +324,8 @@ endif()
 
 if(XUO_WINDOWS)
   set_target_properties(crossuo PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-  add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
 elseif(XUO_EMSC)
 else()
   add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
   add_dependencies(crossuo client)
 endif()
-
-if (ENABLE_COTIRE)
-  set_property(SOURCE Misc.cpp PROPERTY COTIRE_EXCLUDED 1)
-  set_target_properties(crossuo PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "CrossPCH.h")
-  cotire(crossuo)
-
-  if(XUO_WINDOWS)
-    set_target_properties(crossuo_unity PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-    add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/Dependencies/${XUO_ARCH}/bin" $<TARGET_FILE_DIR:crossuo>)
-  elseif(XUO_EMSC)
-  else()
-    add_custom_command(TARGET crossuo_unity POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/unity/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
-  endif()
-endif()
-

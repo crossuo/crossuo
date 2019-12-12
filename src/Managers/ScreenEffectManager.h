@@ -3,17 +3,19 @@
 
 #pragma once
 
+#include "../Globals.h" // SCREEN_EFFECT_*, SET_TO_WHITE_THEN_BLACK, g_Ticks, SET_TO_BLACK, SEM_*
+
 class CScreenEffectManager
 {
 public:
     SCREEN_EFFECT_MODE Mode = SEM_NONE;
     SCREEN_EFFECT_TYPE Type = SET_TO_BLACK;
     bool Enabled = false;
-    GLfloat ColorR = 0.0f;
-    GLfloat ColorG = 0.0f;
-    GLfloat ColorB = 0.0f;
-    GLfloat Alpha = 1.0f;
-    GLfloat Step = 0.03f;
+    float ColorR = 0.0f;
+    float ColorG = 0.0f;
+    float ColorB = 0.0f;
+    float Alpha = 1.0f;
+    float Step = 0.03f;
 
     CScreenEffectManager();
     virtual ~CScreenEffectManager();

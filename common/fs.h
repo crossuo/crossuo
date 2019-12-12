@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdio.h>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #ifndef FS_MAX_PATH
 #ifdef MAX_PATH
@@ -60,6 +61,7 @@ struct fs_path
 
 void fs_case_insensitive_init(const fs_path &path);
 fs_path fs_insensitive(const fs_path &path);
+void fs_path_list(const fs_path &path, std::vector<fs_path> &out);
 
 fs_path fs_path_from(const std::string &s);
 fs_path fs_path_from(const std::wstring &w);
@@ -76,6 +78,7 @@ bool fs_path_empty(const fs_path &path);
 FILE *fs_open(const fs_path &path, fs_mode mode);
 void fs_close(FILE *fp);
 size_t fs_size(FILE *fp);
+uint64_t fs_timestamp_write(const fs_path &path);
 bool fs_copy(const fs_path &from, const fs_path &to);
 void fs_del(const fs_path &target);
 bool fs_chmod(const fs_path &target, fs_mode mode);
@@ -86,6 +89,7 @@ fs_path fs_directory(const fs_path &path);
 fs_type fs_path_type(const fs_path &path);
 bool fs_path_is_dir(const fs_path &path);
 bool fs_path_is_file(const fs_path &path);
+bool fs_path_some(const fs_path &path);
 bool fs_path_exists(const fs_path &path);
 bool fs_path_create(const fs_path &path);
 fs_path fs_path_current();
@@ -96,16 +100,16 @@ void fs_unmap(unsigned char *ptr, size_t length);
 void fs_append(fs_path &target, const fs_path &other);
 
 template <typename T>
-fs_path fs_join_path(T t)
+fs_path fs_path_join(T t)
 {
     return fs_path_from(t);
 }
 
 template <typename H, typename... T>
-fs_path fs_join_path(H head, T... tail)
+fs_path fs_path_join(H head, T... tail)
 {
     auto r = fs_path_from(head);
-    fs_append(r, fs_join_path(tail...));
+    fs_append(r, fs_path_join(tail...));
     return r;
 }
 
@@ -245,6 +249,42 @@ FS_PRIVATE void fs_append(fs_path &target, const fs_path &other)
     target.temp_path += "\\" + other.temp_path;
 }
 
+static void fs_path_list_internal_r(const std::wstring &path, std::vector<fs_path> &out)
+{
+    auto glob = path + L"\\*";
+    WIN32_FIND_DATAW file;
+    HANDLE hFile = FindFirstFileW(glob.c_str(), &file);
+    std::vector<std::wstring> dirs;
+    auto fspath = fs_path_from(path);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            std::wstring f = file.cFileName;
+            if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                if (f == L"." || f == L"..")
+                    continue;
+                dirs.emplace_back(path + L"\\" + f);
+            }
+            else
+            {
+                out.emplace_back(fs_path_join(fspath, f));
+            }
+        } while (FindNextFileW(hFile, &file));
+        FindClose(hFile);
+        for (const auto &it : dirs)
+        {
+            fs_path_list_internal_r(it, out);
+        }
+    }
+}
+
+FS_PRIVATE void fs_path_list(const fs_path &path, std::vector<fs_path> &out)
+{
+    fs_path_list_internal_r(fs_path_wstr(path), out);
+}
+
 FS_PRIVATE void fs_case_insensitive_init(const fs_path &path)
 {
 }
@@ -281,6 +321,21 @@ FS_PRIVATE size_t fs_size(FILE *fp)
     return GetFileSize(fp, nullptr);
 }
 
+FS_PRIVATE uint64_t fs_timestamp_write(const fs_path &path)
+{
+    const auto &p = fs_path_wstr(path);
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (!GetFileAttributesEx(p.c_str(), GetFileExInfoStandard, &fad))
+        return -1;
+    if (fad.nFileSizeHigh == 0 && fad.nFileSizeLow == 0)
+        return -1;
+    LARGE_INTEGER time;
+    time.HighPart = fad.ftLastWriteTime.dwHighDateTime;
+    time.LowPart = fad.ftLastWriteTime.dwLowDateTime;
+    //return static_cast<time_t>(time.QuadPart / 10000000 - 11644473600LL);
+    return (time.QuadPart / 10000000 - 11644473600LL);
+}
+
 FS_PRIVATE fs_path fs_directory(const fs_path &path)
 {
     if (fs_path_exists(path) && fs_path_is_dir(path))
@@ -288,7 +343,7 @@ FS_PRIVATE fs_path fs_directory(const fs_path &path)
 
     auto copy = path.real_path;
     std::transform(
-        copy.begin(), copy.end(), copy.begin(), [](auto c) { return c == L'/' ? '\\' : c; });
+        copy.begin(), copy.end(), copy.begin(), [](wchar_t c) { return c == L'/' ? '\\' : c; });
     auto name = copy.c_str();
     auto *last = wcsrchr(name, L'\\');
     if (last != nullptr)
@@ -392,7 +447,7 @@ FS_PRIVATE void fs_del(const fs_path &target)
 FS_PRIVATE fs_path fs_appdata_path()
 {
     wchar_t path[FS_MAX_PATH] = {};
-    auto r = SHGetFolderPath(nullptr, CSIDL_COMMON_APPDATA, nullptr, 0, path);
+    SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, 0, path);
     return fs_path_from(path);
 }
 
@@ -419,6 +474,7 @@ FS_PRIVATE fs_path fs_appdata_path()
 #include <sys/sendfile.h> // sendfile
 #elif defined(__APPLE__)
 #include <copyfile.h> // copyfile
+#include <libproc.h>  // proc_pidpath
 #endif
 
 FS_PRIVATE fs_path fs_path_from(const std::string &s)
@@ -473,7 +529,7 @@ FS_PRIVATE fs_path fs_insensitive(const fs_path &path)
 {
     auto p = path.real_path;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
-    auto it = std::find_if(s_lower.begin(), s_lower.end(), [&p](const auto &lower) {
+    auto it = std::find_if(s_lower.begin(), s_lower.end(), [&p](const fs_path &lower) {
         return p.compare(lower.real_path) == 0;
     });
     if (it != s_lower.end())
@@ -484,6 +540,43 @@ FS_PRIVATE fs_path fs_insensitive(const fs_path &path)
     return path;
 }
 
+static void fs_path_list_internal_r(const char *name, std::vector<fs_path> &out)
+{
+    DIR *dir;
+    struct dirent *entry;
+    if (!(dir = opendir(name)))
+    {
+        return;
+    }
+
+    char it[FS_MAX_PATH]{};
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        if (entry->d_type == DT_DIR)
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            {
+                continue;
+            }
+            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+            fs_path_list_internal_r(it, out);
+        }
+        else
+        {
+            snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
+            std::string p = it;
+            out.emplace_back(fs_path_from(p));
+        }
+    }
+    closedir(dir);
+}
+
+FS_PRIVATE void fs_path_list(const fs_path &path, std::vector<fs_path> &out)
+{
+    fs_path_list_internal_r(fs_path_ascii(path), out);
+}
+
+/*
 static void fs_list_recursive(const char *name)
 {
     DIR *dir;
@@ -516,12 +609,20 @@ static void fs_list_recursive(const char *name)
     }
     closedir(dir);
 }
+*/
 
 FS_PRIVATE void fs_case_insensitive_init(const fs_path &path)
 {
     s_files.reserve(1024);
     s_lower.reserve(1024);
-    fs_list_recursive(fs_path_ascii(path));
+    //fs_list_recursive(fs_path_ascii(path));
+    fs_path_list(path, s_files);
+    for (const auto &it : s_files)
+    {
+        auto p = fs_path_str(it);
+        std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+        s_lower.emplace_back(fs_path_from(p));
+    }
 }
 
 FS_PRIVATE FILE *fs_open(const fs_path &path, fs_mode mode)
@@ -558,6 +659,20 @@ FS_PRIVATE size_t fs_size(FILE *fp)
     fseek(fp, pos, SEEK_SET);
 
     return size;
+}
+
+FS_PRIVATE uint64_t fs_timestamp_write(const fs_path &path)
+{
+    struct stat stats;
+    if (stat(fs_path_ascii(path), &stats) == -1)
+        return -1;
+    if (stats.st_size == 0)
+        return -1;
+#if defined(__APPLE__)
+    return static_cast<uint64_t>(stats.st_mtime);
+#else
+    return static_cast<uint64_t>(stats.st_mtim.tv_sec);
+#endif
 }
 
 FS_PRIVATE fs_path fs_directory(const fs_path &path)
@@ -777,6 +892,11 @@ FS_PRIVATE bool fs_path_is_dir(const fs_path &path)
 FS_PRIVATE bool fs_path_is_file(const fs_path &path)
 {
     return fs_path_type(path) == FS_FILE;
+}
+
+FS_PRIVATE bool fs_path_some(const fs_path &path)
+{
+    return !fs_path_equal(path, {});
 }
 
 FS_PRIVATE bool fs_file_read(const char *file, const uint8_t *result, size_t *size)

@@ -4,7 +4,9 @@
 #include "Container.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
+#include "Sprite.h"
 #include "Managers/ConfigManager.h"
+#include <vector>
 
 CContainerRect g_ContainerRect;
 std::vector<CContainerOffset> g_ContainerOffset;
@@ -48,7 +50,6 @@ std::vector<CContainerOffset> g_ContainerOffset;
 
 void CContainerRect::Calculate(uint16_t gumpID)
 {
-    DEBUG_TRACE_FUNCTION;
     auto spr = g_Game.ExecuteGump(gumpID);
     if (spr != nullptr)
     {

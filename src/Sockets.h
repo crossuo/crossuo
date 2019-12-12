@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 extern bool g_DisablePing;
 
 #if defined(XUO_WINDOWS)

@@ -1,6 +1,24 @@
-# Compiler Detection and Build Specifics
+
+function(add_cxx_option flag)
+  if(ARGV1 STREQUAL "RELEASE_ONLY")
+    set(should_add "$<CONFIG:Release>")
+  else()
+    set(should_add 1)
+  endif()
+  set(is_cxx "$<COMPILE_LANGUAGE:CXX>")
+  add_compile_options("$<$<AND:${is_cxx},${should_add}>:${flag}>")
+endfunction()
+
+function(add_release_option flag)
+  add_compile_options("$<$<CONFIG:Release>:${flag}>")
+endfunction()
+
+function(add_debug_option flag)
+  add_compile_options("$<$<NOT:$<CONFIG:Release>>:${flag}>")
+endfunction()
+
 if(CMAKE_GENERATOR MATCHES "Ninja")
-  check_and_add_flag(DIAGNOSTICS_COLOR -fdiagnostics-color)
+  add_compile_options(-fdiagnostics-color)
 elseif(CMAKE_GENERATOR MATCHES "Visual Studio")
   add_compile_options("/MP")
 endif()
@@ -8,92 +26,86 @@ endif()
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   compile_definitions(_DEBUG DEBUG_ONLY)
   compile_definitions(_CRT_NONSTDC_NO_DEPRECATE)
-  check_and_add_flag(EXCEPTIONS /EHsc)
+  add_cxx_option(/EHsc)
 
   # Remove unreferenced inline functions/data to reduce link time and catch bugs
   add_compile_options(/Zc:inline)
   # Assume `new` (w/o std::nothrow) throws to reduce binary size
-  add_compile_options(/Zc:throwingNew)
+  add_cxx_option(/Zc:throwingNew)
   # Enforce strict volatile semantics as per ISO C++
-  add_compile_options(/volatile:iso)
+  add_cxx_option(/volatile:iso)
 
   string(APPEND CMAKE_EXE_LINKER_FLAGS " /NXCOMPAT")
 else()
   compile_definitions(_DEBUG DEBUG_ONLY)
-  check_and_add_flag(HAVE_WALL -Wall)
-  check_and_add_flag(EXTRA -Wextra)
+  add_compile_options(-Wall)
+  add_compile_options(-Wextra)
   if ($ENV{TRAVIS_COMPILER})
     # if we are in travis-ci, thread warning as errors
-    check_and_add_flag(WARN_AS_ERROR -Werror)
+    add_compile_options(-Werror)
   endif()
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    check_and_add_flag(NO_STRICT_ALIASING -fno-strict-aliasing)
-    check_and_add_flag(NO_TAUTOLOGICAL_COMPARE -Wno-tautological-constant-out-of-range-compare)
-    check_and_add_flag(SWITCH_DEFAULT -Wswitch-default)
+    add_compile_options(-fno-strict-aliasing)
+    add_compile_options(-Wno-tautological-constant-out-of-range-compare)
+    add_compile_options(-Wswitch-default)
+    add_compile_options(-Wmissing-variable-declarations)
+    add_compile_options(-Wmissing-declarations)
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GCC")
-    check_and_add_flag(NO_MISSING_DECL -Wno-missing-declarations) # CommonInterfaces.cpp
-    check_and_add_flag(NO_SWITCH_DEFAULT -Wno-switch-default) # SDL_stdinc.h
-    check_and_add_flag(NO_TAUTOLOGICAL_COMPARE -Wno-type-limits) # tautological compare
+    add_compile_options(-Wno-missing-declarations) # CommonInterfaces.cpp
+    add_compile_options(-Wno-switch-default) # SDL_stdinc.h
+    add_compile_options(-Wno-type-limits) # tautological compare
+    add_compile_options(-Wlogical-op)
   endif()
 
   # these are the only we want to really always disable
-  check_and_add_flag(NO_SIGN_COMPARE -Wno-sign-compare)
-  check_and_add_flag(NO_UNUSED_PARAMETER -Wno-unused-parameter)
-  check_and_add_flag(MISSING_FIELD_INITIALIZERS -Wmissing-field-initializers)
-  check_and_add_flag(FLOAT_EQUAL -Wfloat-equal)
-  #check_and_add_flag(CONVERSION -Wconversion)
-  #check_and_add_flag(ZERO_AS_NULL_POINTER_CONSTANT -Wzero-as-null-pointer-constant)
+  add_compile_options(-Wno-sign-compare)
+  add_compile_options(-Wno-unused-parameter)
+  add_compile_options(-Wmissing-field-initializers)
+  add_compile_options(-Wfloat-equal)
+  #add_compile_options(-Wconversion)
+  #add_compile_options(-Wzero-as-null-pointer-constant)
 
-  check_and_add_flag(TYPE_LIMITS -Wtype-limits)
-  check_and_add_flag(IGNORED_QUALIFIERS -Wignored-qualifiers)
-  check_and_add_flag(UNINITIALIZED -Wuninitialized)
-  check_and_add_flag(LOGICAL_OP -Wlogical-op)
-  check_and_add_flag(SHADOW -Wshadow)
-  check_and_add_flag(INIT_SELF -Winit-self)
-  check_and_add_flag(MISSING_DECLARATIONS -Wmissing-declarations)
-  check_and_add_flag(MISSING_VARIABLE_DECLARATIONS -Wmissing-variable-declarations)
+  add_compile_options(-Wtype-limits)
+  add_compile_options(-Wignored-qualifiers)
+  add_compile_options(-Wuninitialized)
+  add_compile_options(-Wshadow)
+  add_compile_options(-Winit-self)
 
-  check_and_add_flag(VISIBILITY_INLINES_HIDDEN -fvisibility-inlines-hidden)
-  check_and_add_flag(VISIBILITY_HIDDEN -fvisibility=hidden)
-  check_and_add_flag(PERMISSIVE -fpermissive) # FIXME GCC
-  check_and_add_flag(NORTTI -fno-rtti)
-  check_and_add_flag(NO_EXCEPTIONS -fno-exceptions)
-  check_and_add_flag(FOMIT_FRAME_POINTER -fomit-frame-pointer RELEASE_ONLY)
-
-  check_and_add_flag(GGDB -ggdb DEBUG_ONLY)
+  add_compile_options(-fvisibility-inlines-hidden)
+  add_compile_options(-fvisibility=hidden)
+  add_compile_options(-fpermissive) # FIXME GCC
+  add_cxx_option(-fno-rtti)
+  add_cxx_option(-fno-exceptions)
+  add_cxx_option(-fomit-frame-pointer RELEASE_ONLY)
+  add_debug_option(-g)
 endif()
 
 # Compiler extensions
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
   # enable the latest C++ standard feature set,
   # and also disable MSVC specific extensions
   # to be even more standards compliant.
-  check_and_add_flag(CPPLATEST /std:c++latest)
+  add_cxx_option(/std:c++latest)
 else()
-  # Enable C++17, but fall back to C++14 if it isn't available.
-  # CMAKE_CXX_STANDARD cannot be used here because we require C++14 or newer, not any standard.
-  #check_and_add_flag(CXX17 -std=c++17)
-  if(NOT FLAG_CXX_CXX17)
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-  endif()
-  check_and_add_flag(THREADS -pthread)
+  #add_compile_options(-pthread)
   set(THREAD "-pthread")
   set(LOADER "-ldl")
 endif()
 
 if(ENABLE_LTO)
-  check_and_add_flag(LTO -flto)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-    set(CMAKE_AR gcc-ar)
-    set(CMAKE_RANLIB gcc-ranlib)
-  endif()
+  #add_compile_options(-flto)
+  #if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+  #  set(CMAKE_AR gcc-ar)
+  #  set(CMAKE_RANLIB gcc-ranlib)
+  #endif()
 endif()
 
-add_definitions(-DXUO_CMAKE)
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
   add_definitions(-DXUO_WINDOWS=1)
   set(XUO_WINDOWS 1)

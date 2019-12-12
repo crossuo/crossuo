@@ -8,6 +8,11 @@
 #include "../PressedObject.h"
 #include "../Managers/MouseManager.h"
 #include "../Network/Packets.h"
+#include "../Renderer/RenderAPI.h"
+
+extern RenderCmdList *g_renderCmdList;
+
+#define XUO_M_PI 3.14159265358979323846264338327950288
 
 enum
 {
@@ -36,7 +41,6 @@ CGumpMap::CGumpMap(
     , Width(width)
     , Height(height)
 {
-    DEBUG_TRACE_FUNCTION;
     Graphic = graphic;
 
     Add(new CGUIResizepic(0, 0x1432, 0, 0, Width + 44, Height + 61)); //Map Gump
@@ -72,7 +76,6 @@ CGumpMap::~CGumpMap()
 
 void CGumpMap::SetPlotState(int val)
 {
-    DEBUG_TRACE_FUNCTION;
     m_PlotState = val;
     m_PlotCourse->Visible = (val == 0);
     m_StopPlotting->Visible = (val == 1);
@@ -83,7 +86,6 @@ void CGumpMap::SetPlotState(int val)
 
 int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
 {
-    DEBUG_TRACE_FUNCTION;
     int tempX = x2 - x1;
     int tempY = y2 - y1;
 
@@ -94,7 +96,7 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
         testOfsX = 1.0f;
     }
 
-    float pi = (float)M_PI;
+    float pi = (float)XUO_M_PI;
 
     float a = -(atan(tempY / testOfsX) * 180.0f / pi);
 
@@ -164,7 +166,6 @@ int CGumpMap::LineUnderMouse(int &x1, int &y1, int x2, int y2)
 
 void CGumpMap::PrepareContent()
 {
-    DEBUG_TRACE_FUNCTION;
     if (m_DataBox != nullptr)
     {
         int serial = 1;
@@ -210,8 +211,6 @@ void CGumpMap::PrepareContent()
 
 void CGumpMap::GenerateFrame(bool stop)
 {
-    DEBUG_TRACE_FUNCTION;
-
     //m_Labels
 
     if (m_DataBox != nullptr)
@@ -261,6 +260,7 @@ void CGumpMap::GenerateFrame(bool stop)
                 int nextDrawX = next->GetX() + 20;
                 int nextDrawY = next->GetY() + 30;
 
+#ifndef NEW_RENDERER_ENABLED
                 if (next == m_PinOnCursor || item == m_PinOnCursor)
                 {
                     glColor4f(0.87f, 0.87f, 0.87f, 1.0f);
@@ -273,6 +273,17 @@ void CGumpMap::GenerateFrame(bool stop)
                 g_GL.DrawLine(drawX + 2, drawY + 8, nextDrawX, nextDrawY);
 
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+                static float4 s_colorGray87 = { .87f, .87f, .87f, 1.f };
+                const auto useGray = next == m_PinOnCursor || item == m_PinOnCursor;
+                RenderAdd_DrawLine(
+                    g_renderCmdList,
+                    DrawLineCmd{ drawX + 2,
+                                 drawY + 8,
+                                 nextDrawX,
+                                 nextDrawY,
+                                 useGray ? s_colorGray87 : g_ColorWhite });
+#endif
 
                 if (m_PinOnCursor == nullptr && g_SelectedObject.Serial >= ID_GM_PIN_LIST_INSERT &&
                     (g_SelectedObject.Serial - ID_GM_PIN_LIST_INSERT) == idx)
@@ -305,7 +316,6 @@ void CGumpMap::GenerateFrame(bool stop)
 
 CRenderObject *CGumpMap::Select()
 {
-    DEBUG_TRACE_FUNCTION;
     CRenderObject *selected = CGump::Select();
 
     if (m_DataBox != nullptr)
@@ -351,7 +361,6 @@ CRenderObject *CGumpMap::Select()
 
 void CGumpMap::GUMP_BUTTON_EVENT_C
 {
-    DEBUG_TRACE_FUNCTION;
     if (serial == ID_GM_PLOT_COURSE || serial == ID_GM_STOP_PLOTTING) //Plot Course /Stop Plotting
     {
         CPacketMapMessage(Serial, MM_EDIT, m_PlotState).Send();
@@ -371,7 +380,6 @@ void CGumpMap::GUMP_BUTTON_EVENT_C
 
 void CGumpMap::OnLeftMouseButtonDown()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonDown();
 
     m_PinTimer = g_Ticks + 300;
@@ -379,7 +387,6 @@ void CGumpMap::OnLeftMouseButtonDown()
 
 void CGumpMap::OnLeftMouseButtonUp()
 {
-    DEBUG_TRACE_FUNCTION;
     CGump::OnLeftMouseButtonUp();
 
     if (m_DataBox != nullptr && g_PressedObject.LeftObject != nullptr)

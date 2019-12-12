@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Vector.h"
+#include <math.h>
 
 CVector::CVector(double x, double y, double z)
     : X(x)
