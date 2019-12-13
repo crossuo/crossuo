@@ -88,7 +88,7 @@ void CGumpScreenMain::UpdateContent()
     {
         Add(new CGUIGumppic(0x014e, 0, 0));
     }
-    
+
     if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_7090)
     {
         Add(new CGUIGumppic(0x2329, 0, 0));
@@ -99,7 +99,7 @@ void CGumpScreenMain::UpdateContent()
         Add(new CGUIGumppic(0x15A0, 0, 4));
         Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
     }
-    
+
     if (g_Config.ClientVersion < CV_500A)
     {
         Add(new CGUIGumppic(0x058A, 286, 45));
@@ -108,46 +108,48 @@ void CGumpScreenMain::UpdateContent()
     Add(new CGUIButton(ID_MS_QUIT, 0x1589, 0x158A, 0x158B, 555, 4));
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 253, 305));
-    
+
     if (g_Config.ClientVersion < CV_7090) // TODO : Find good version
     {
         text->CreateTextureA(2, "Log in to Ultima Online"); // cliloc 3000038
-         
+
         text = (CGUIText *)Add(new CGUIText(0x0386, 183, 345));
         text->CreateTextureA(2, "Account Name"); // cliloc 3000039
-         
+
         text = (CGUIText *)Add(new CGUIText(0x0386, 183, 385));
         text->CreateTextureA(2, "Password"); // cliloc 3000040
-         
+
         Add(new CGUIResizepic(ID_MS_ACCOUNT, 0x0BB8, 328, 343, 210, 30));
         Add(new CGUIResizepic(ID_MS_PASSWORD, 0x0BB8, 328, 383, 210, 30));
         CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
-        ID_MS_ACCOUNT, 0x034F, 0x03E3, 0x0021, 335, 343, 190, false, 5, TS_LEFT, 0, 32));
+            ID_MS_ACCOUNT, 0x034F, 0x03E3, 0x0021, 335, 343, 190, false, 5, TS_LEFT, 0, 32));
         entry->CheckOnSerial = true;
         g_MainScreen.m_Account = &entry->m_Entry;
-        
+
         entry = (CGUITextEntry *)Add(new CGUITextEntry(
-        ID_MS_PASSWORD, 0x034F, 0x03E3, 0x0021, 335, 385, 190, false, 5, TS_LEFT, 0, 32));
+            ID_MS_PASSWORD, 0x034F, 0x03E3, 0x0021, 335, 385, 190, false, 5, TS_LEFT, 0, 32));
         entry->CheckOnSerial = true;
         m_PasswordFake = &entry->m_Entry;
-        
-         m_Arrow = (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x15A4, 0x15A5, 0x15A6, 610, 445));
+
+        m_Arrow =
+            (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x15A4, 0x15A5, 0x15A6, 610, 445));
     }
     else
     {
         Add(new CGUIResizepic(ID_MS_ACCOUNT, 0x0BB8, 220, 280, 210, 30));
         Add(new CGUIResizepic(ID_MS_PASSWORD, 0x0BB8, 220, 335, 210, 30));
         CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
-        ID_MS_ACCOUNT, 0x034F, 0x03E3, 0x0021, 228, 283, 190, false, 5, TS_LEFT, 0, 32));
+            ID_MS_ACCOUNT, 0x034F, 0x03E3, 0x0021, 228, 283, 190, false, 5, TS_LEFT, 0, 32));
         entry->CheckOnSerial = true;
         g_MainScreen.m_Account = &entry->m_Entry;
-        
+
         entry = (CGUITextEntry *)Add(new CGUITextEntry(
-        ID_MS_PASSWORD, 0x034F, 0x03E3, 0x0021, 228, 338, 190, false, 5, TS_LEFT, 0, 32));
+            ID_MS_PASSWORD, 0x034F, 0x03E3, 0x0021, 228, 338, 190, false, 5, TS_LEFT, 0, 32));
         entry->CheckOnSerial = true;
         m_PasswordFake = &entry->m_Entry;
-        
-        m_Arrow = (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x5CD, 0x5CB, 0x5CC, 280, 365));
+
+        m_Arrow =
+            (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x5CD, 0x5CB, 0x5CC, 280, 365));
     }
     g_MainScreen.m_SavePassword =
         (CGUICheckbox *)Add(new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));
