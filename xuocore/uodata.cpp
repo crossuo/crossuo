@@ -187,6 +187,24 @@ static bool UopDecompressBlock(const UopFileEntry &block, uint8_t *dst, int file
     return DecompressBlock(block, dst, src);
 }
 
+std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
+{
+    assert(block);
+    uint8_t *src = Start + block->Offset;
+    std::vector<uint8_t> dst;
+    dst.assign(src, src + block->MetadataSize);
+    return dst;
+}
+
+std::vector<uint8_t> CUopMappedFile::GetRaw(const UopFileEntry *block)
+{
+    assert(block);
+    uint8_t *src = Start + block->Offset + block->MetadataSize;
+    std::vector<uint8_t> dst;
+    dst.assign(src, src + block->CompressedSize);
+    return dst;
+}
+
 std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 {
     assert(block);

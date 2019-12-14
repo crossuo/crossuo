@@ -144,6 +144,12 @@ bool fs_file_write(const char *file, T &input)
     return true;
 }
 
+template <typename T>
+bool fs_file_write(const fs_path &file, T &input)
+{
+    return fs_file_write(fs_path_ascii(file), input);
+}
+
 bool fs_file_read(const char *file, const uint8_t *result, size_t *size);
 bool fs_file_write(const char *file, const uint8_t *input, size_t input_size);
 
