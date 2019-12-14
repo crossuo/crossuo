@@ -98,22 +98,21 @@ void CMapManager::CreateBlockTable(int map)
             if (fileNumber != shifted)
             {
                 fileNumber = shifted;
-                char mapFilePath[200] = { 0 };
+                char mapFilePath[200];
                 snprintf(
                     mapFilePath,
                     sizeof(mapFilePath),
                     "build/map%dlegacymul/%08d.dat",
                     map,
                     shifted);
-                const auto hash = uo_jenkins_hash(mapFilePath);
-                auto block = uopFile.GetBlock(hash);
-                if (block != nullptr)
+                auto file = uopFile.GetAsset(mapFilePath);
+                if (file != nullptr)
                 {
-                    uopOffset = size_t(block->Offset + block->HeaderSize);
+                    uopOffset = size_t(file->Offset + file->MetadataSize);
                 }
                 else
                 {
-                    Warning(Data, "couldn't find asset 0x%016zx (%s)", hash, mapFilePath);
+                    Warning(Data, "couldn't find asset %s", mapFilePath);
                 }
             }
         }

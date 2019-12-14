@@ -64,7 +64,7 @@ bool CSpeechManager::LoadSpeech()
     bool isUOP = false;
     if (g_FileManager.m_MainMisc.Start != nullptr)
     {
-        auto block = g_FileManager.m_MainMisc.GetBlock(
+        auto block = g_FileManager.m_MainMisc.GetAsset(
             0x0891F809004D8081); // FIXME: find the string for this hash
         if (block != nullptr)
         {
