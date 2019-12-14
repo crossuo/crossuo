@@ -6484,6 +6484,7 @@ void CGame::OpenWorldMap()
     if (pluginsInfoCount > 0u)
     {
         CPluginPacketOpenMap().SendToPlugin(); //TODO: query if plugin supports world map
+        return;
     }
 
     int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 200;
