@@ -2804,6 +2804,10 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
         }
         case KEY_LEFT:
         {
+            if (g_GameConsole.Length() > 0)
+            {
+                return;
+            }
             //Walk SW (5)
             if (!g_PathFinder.AutoWalking)
             {
@@ -2822,6 +2826,10 @@ void CGameScreen::OnKeyDown(const KeyEvent &ev)
         }
         case KEY_RIGHT:
         {
+            if (g_GameConsole.Length() > 0)
+            {
+                return;
+            }
             //Walk NE (1)
             if (!g_PathFinder.AutoWalking)
             {

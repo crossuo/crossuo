@@ -7,6 +7,8 @@
 #include <common/str.h>
 #include <map>
 
+class CRenderObject;
+
 class CObjectProperty
 {
 public:
@@ -21,22 +23,22 @@ public:
     std::wstring CreateTextData(bool extended);
 };
 
-typedef std::map<uint32_t, CObjectProperty> OBJECT_PROPERTIES_MAP;
+using ObjectPropertyMap = std::map<uint32_t, CObjectProperty>;
 
 class CObjectPropertiesManager
 {
     uint32_t Timer = 0;
 
 private:
-    OBJECT_PROPERTIES_MAP m_Map;
-    class CRenderObject *m_Object{ nullptr };
+    ObjectPropertyMap m_Map;
+    CRenderObject *m_Object = nullptr;
 
 public:
     CObjectPropertiesManager() {}
     virtual ~CObjectPropertiesManager();
 
     void Reset();
-    bool RevisionCheck(int serial, int revision);
+    bool RevisionCheck(int serial, int revision) const;
     void OnItemClicked(int serial);
     void Display(int serial);
     void Add(int serial, const CObjectProperty &objectProperty);

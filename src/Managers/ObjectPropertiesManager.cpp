@@ -114,15 +114,13 @@ void CObjectPropertiesManager::Reset()
     g_ToolTip.Reset();
 }
 
-bool CObjectPropertiesManager::RevisionCheck(int serial, int revision)
+bool CObjectPropertiesManager::RevisionCheck(int serial, int revision) const
 {
-    OBJECT_PROPERTIES_MAP::iterator it = m_Map.find(serial);
-
+    const auto it = m_Map.find(serial);
     if (it == m_Map.end())
     {
         return false;
     }
-
     return (it->second.Revision == revision);
 }
 
@@ -134,8 +132,7 @@ void CObjectPropertiesManager::OnItemClicked(int serial)
         return;
     }
 
-    OBJECT_PROPERTIES_MAP::iterator it = m_Map.find(serial);
-
+    auto it = m_Map.find(serial);
     if (it == m_Map.end() || it->second.Empty())
     {
         return;
@@ -147,8 +144,7 @@ void CObjectPropertiesManager::OnItemClicked(int serial)
 
 void CObjectPropertiesManager::Display(int serial)
 {
-    OBJECT_PROPERTIES_MAP::iterator it = m_Map.find(serial);
-
+    auto it = m_Map.find(serial);
     if (it == m_Map.end() || it->second.Empty())
     {
         if (m_Object != nullptr)

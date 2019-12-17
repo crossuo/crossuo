@@ -31,9 +31,10 @@ struct CSprite;
 
 typedef void *(*LoadPixelData16Cb)(int width, int height, uint16_t *pixels);
 
-struct UopBlockHeader;
+struct UopFileEntry;
 struct CUopMappedFile;
-using UopBlockHeaderMap = std::unordered_map<uint64_t, const UopBlockHeader *>;
+using UopSectionHeaderMap = std::unordered_map<uint64_t, const UopFileEntry *>;
+using HashToName = std::unordered_map<uint64_t, std::string>;
 
 struct CTextureAnimationFrame
 {
@@ -61,13 +62,13 @@ struct CTextureAnimationDirection
 struct CTextureAnimationGroup
 {
     CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
-    const UopBlockHeader *m_UOPAnimData = nullptr;
+    const UopFileEntry *m_UOPAnimData = nullptr;
 };
 
 struct CIndexObject
 {
     void *UserData = nullptr;
-    const UopBlockHeader *UopBlock = nullptr;
+    const UopFileEntry *UopBlock = nullptr;
     size_t Address = 0;
     uint32_t DataSize = 0;
     int32_t Width = 0;
@@ -184,12 +185,20 @@ extern UOData g_Data;
 struct CUopMappedFile : public CMappedFile // FIXME: not needed
 {
     UopHeader *Header = nullptr;
-    UopBlockHeaderMap m_Map;
+    std::vector<uint64_t> m_NameHashes;
+    std::vector<uint64_t> m_FileOffsets;
+    mutable HashToName m_FileName;
+    UopSectionHeaderMap m_MapByName;
+    UopSectionHeaderMap m_MapByOffset;
 
     bool HasAsset(uint64_t hash) const;
-    void Add(uint64_t hash, const UopBlockHeader *item);
-    const UopBlockHeader *GetBlock(uint64_t hash);
-    std::vector<uint8_t> GetData(const UopBlockHeader *block);
+    void AddAsset(const UopFileEntry *item);
+    const UopFileEntry *GetAsset(const char *filename) const;
+    const UopFileEntry *GetAsset(uint64_t hash) const;
+    std::vector<uint8_t> GetData(const UopFileEntry *block);
+    std::vector<uint8_t> GetMeta(const UopFileEntry *block);
+    std::vector<uint8_t> GetRaw(const UopFileEntry *block);
+    size_t FileCount() const;
 
     CUopMappedFile() = default;
     virtual ~CUopMappedFile() = default;
@@ -273,6 +282,9 @@ struct CFileManager : public CDataReader // FIXME: not needed
 
     void WaitTasks() const;
 
+    bool UopLoadFile(CUopMappedFile &file, const char *fileName, bool dumpFile = false);
+    bool MulLoadFile(CMappedFile &file, const fs_path &fileName);
+
 private:
     // moved from AnimationManager
     UopAnimationHeader UopReadAnimationHeader();
@@ -290,8 +302,6 @@ private:
     void LoadIndexFiles();
 
     void ReadTask();
-    bool UopLoadFile(CUopMappedFile &file, const char *fileName);
-    bool MulLoadFile(CMappedFile &file, const fs_path &fileName);
     void ProcessAnimSequeceData();
 
     void MulReadIndexFile(
@@ -313,7 +323,7 @@ private:
     void UopReadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
-        const UopBlockHeader &block);
+        const UopFileEntry &block);
     bool UopReadAnimationFrames(
         CTextureAnimationDirection &direction,
         const AnimationSelector &anim,

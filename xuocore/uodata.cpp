@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <vector>
 #include <algorithm>
+#include <inttypes.h>
 
 #include <common/utils.h>
 
@@ -123,20 +124,23 @@ void CIndexGump::ReadIndexFile(size_t address, IndexBlock *block)
     Height = block->LightData.Height;
 };
 
-void CUopMappedFile::Add(uint64_t hash, const UopBlockHeader *item)
+void CUopMappedFile::AddAsset(const UopFileEntry *item)
 {
-    m_Map[hash] = item;
+    m_NameHashes.push_back(item->Hash);
+    m_FileOffsets.push_back(item->Offset);
+    m_MapByName[item->Hash] = item;
+    m_MapByOffset[item->Offset] = item;
 }
 
 bool CUopMappedFile::HasAsset(uint64_t hash) const
 {
-    return m_Map.find(hash) != m_Map.end();
+    return m_MapByName.find(hash) != m_MapByName.end();
 }
 
-const UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
+const UopFileEntry *CUopMappedFile::GetAsset(uint64_t hash) const
 {
-    auto found = m_Map.find(hash);
-    if (found != m_Map.end())
+    auto found = m_MapByName.find(hash);
+    if (found != m_MapByName.end())
     {
         return found->second;
     }
@@ -144,7 +148,19 @@ const UopBlockHeader *CUopMappedFile::GetBlock(uint64_t hash)
     return nullptr;
 }
 
-static bool DecompressBlock(const UopBlockHeader &block, uint8_t *dst, uint8_t *src)
+const UopFileEntry *CUopMappedFile::GetAsset(const char *filename) const
+{
+    uint64_t nameHash = uo_jenkins_hash(filename);
+    m_FileName[nameHash] = filename;
+    return GetAsset(nameHash);
+}
+
+size_t CUopMappedFile::FileCount() const
+{
+    return m_MapByName.size();
+}
+
+static bool DecompressBlock(const UopFileEntry &block, uint8_t *dst, uint8_t *src)
 {
     uLongf cLen = block.CompressedSize;
     uLongf dLen = block.DecompressedSize;
@@ -164,17 +180,35 @@ static bool DecompressBlock(const UopBlockHeader &block, uint8_t *dst, uint8_t *
     return true;
 }
 
-static bool UopDecompressBlock(const UopBlockHeader &block, uint8_t *dst, int fileId)
+static bool UopDecompressBlock(const UopFileEntry &block, uint8_t *dst, int fileId)
 {
     assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
-    uint8_t *src = g_FileManager.m_AnimationFrame[fileId].Start + block.Offset + block.HeaderSize;
+    uint8_t *src = g_FileManager.m_AnimationFrame[fileId].Start + block.Offset + block.MetadataSize;
     return DecompressBlock(block, dst, src);
 }
 
-std::vector<uint8_t> CUopMappedFile::GetData(const UopBlockHeader *block)
+std::vector<uint8_t> CUopMappedFile::GetMeta(const UopFileEntry *block)
 {
     assert(block);
-    uint8_t *src = Start + block->Offset + block->HeaderSize;
+    uint8_t *src = Start + block->Offset;
+    std::vector<uint8_t> dst;
+    dst.assign(src, src + block->MetadataSize);
+    return dst;
+}
+
+std::vector<uint8_t> CUopMappedFile::GetRaw(const UopFileEntry *block)
+{
+    assert(block);
+    uint8_t *src = Start + block->Offset + block->MetadataSize;
+    std::vector<uint8_t> dst;
+    dst.assign(src, src + block->CompressedSize);
+    return dst;
+}
+
+std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
+{
+    assert(block);
+    uint8_t *src = Start + block->Offset + block->MetadataSize;
     std::vector<uint8_t> dst(block->DecompressedSize, 0);
     if (DecompressBlock(*block, dst.data(), src))
     {
@@ -506,7 +540,7 @@ void CFileManager::UopReadAnimations()
 static int UopSetAnimationGroups(int start, int end)
 {
     const static int count = countof(CFileManager::m_AnimationFrame);
-    auto getFileWithAsset = [](uint64_t hash) -> int {
+    auto getAssetOwner = [](uint64_t hash) -> int {
         for (int i = 0; i < count; ++i)
         {
             if (g_FileManager.m_AnimationFrame[i].HasAsset(hash))
@@ -523,15 +557,15 @@ static int UopSetAnimationGroups(int start, int end)
         for (int grpId = 0; grpId < MAX_ANIMATION_GROUPS_COUNT; ++grpId)
         {
             auto &group = idx.m_Groups[grpId];
-            char hashString[100];
+            char filename[200];
             snprintf(
-                hashString,
-                sizeof(hashString),
+                filename,
+                sizeof(filename),
                 "build/animationlegacyframe/%06d/%02d.bin",
                 animId,
                 grpId);
-            const auto asset = uo_jenkins_hash(hashString);
-            const auto fileIndex = getFileWithAsset(asset);
+            const auto asset = uo_jenkins_hash(filename);
+            const auto fileIndex = getAssetOwner(asset);
             if (fileIndex != -1)
             {
                 if (grpId > lastGroup)
@@ -539,7 +573,7 @@ static int UopSetAnimationGroups(int start, int end)
                     lastGroup = grpId;
                 }
                 idx.IsUOP = true;
-                group.m_UOPAnimData = g_FileManager.m_AnimationFrame[fileIndex].GetBlock(asset);
+                group.m_UOPAnimData = g_FileManager.m_AnimationFrame[fileIndex].GetAsset(filename);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
                     auto &dir = group.m_Direction[dirId];
@@ -602,7 +636,7 @@ void CFileManager::ReadTask()
 void CFileManager::ProcessAnimSequeceData()
 {
     TRACE(Data, "processing AnimationSequence data");
-    for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_Map)
+    for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_MapByName)
     {
         //const auto hash = kvp.first;
         const auto block = kvp.second;
@@ -629,7 +663,7 @@ void CFileManager::ProcessAnimSequeceData()
                 auto newIdx = ReadInt32LE();
                 if (animId == 432 && oldIdx == 23)
                 {
-                    //fucking boura
+                    // a boura
                     newIdx = 29;
                 }
                 auto newGroup = indexAnim->m_Groups[newIdx];
@@ -651,16 +685,16 @@ void CFileManager::ProcessAnimSequeceData()
         //Seems like this data is essential to make AnimationSequence work
         // Aimed
     }
-    Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.m_Map.size());
+    Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.FileCount());
 }
-
+/*
 static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
 {
     struct tm *dt = localtime(&rawtime);
     strftime(out, maxLen, "%c", dt);
 }
-
-bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
+*/
+bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bool dumpInfo)
 {
     auto path{ UOFilePath(uopFilename) };
     if (!fs_path_exists(path))
@@ -687,27 +721,27 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
         Warning(Data, "%s:unexpected version %d", filename, file.Header->Version);
     }
     TRACE(Data, "%s:signature is 0x%08x", filename, file.Header->Signature);
-    TRACE(Data, "%s:max_block_count is %d", filename, file.Header->MaxBlockCount);
-    TRACE(Data, "%s:first_section at %zd", filename, file.Header->FirstSection);
     TRACE(Data, "%s:file_count is %d", filename, file.Header->FileCount);
+
+    dumpInfo = dumpInfo || (g_dumpUopFile.compare(uopFilename) == 0);
+
     file.ResetPtr();
-    uint64_t next = file.Header->FirstSection;
+    uint64_t next = file.Header->SectionOffset;
     file.Move(next);
     do
     {
-        auto section = (UopBlockSection *)file.Ptr;
-        file.Move(sizeof(UopBlockSection));
+        auto section = (UopSection *)file.Ptr;
+        file.Move(sizeof(UopSection));
 
         for (uint32_t i = 0; i < section->FileCount; i++)
         {
-            auto item = (UopBlockHeader *)file.Ptr;
-            if (item->Offset == 0 || item->DecompressedSize == 0)
+            auto entry = (UopFileEntry *)file.Ptr;
+            file.Move(sizeof(UopFileEntry));
+            if (entry->Offset == 0)
             {
                 continue;
             }
-            //hashes[hash] = item;
-            file.Add(item->Hash, item);
-            file.Move(sizeof(UopBlockHeader));
+            file.AddAsset(entry);
         }
         next = section->NextSection;
         file.ResetPtr();
@@ -715,42 +749,80 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename)
     } while (next != 0);
     file.ResetPtr();
 
-    if (g_dumpUopFile.compare(uopFilename) == 0)
+    if (dumpInfo)
     {
-        char date[128];
+        std::sort(file.m_NameHashes.begin(), file.m_NameHashes.end());
+        std::sort(file.m_FileOffsets.begin(), file.m_FileOffsets.end());
+
         DEBUG(Data, "MypHeader for %s", uopFilename);
         DEBUG(Data, "\tVersion......: %d", file.Header->Version);
         DEBUG(Data, "\tSignature....: %08X", file.Header->Signature);
-        DEBUG(Data, "\tFirstSection.: %016lx", file.Header->FirstSection);
-        DEBUG(Data, "\tMaxBlockCount: %d", file.Header->MaxBlockCount);
-        DEBUG(Data, "\tFileCount....: %d", file.Header->FileCount);
-        DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad1);
-        DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad2);
-        DEBUG(Data, "\tPad1.........: %08x", file.Header->Pad3);
+        DEBUG(Data, "\tSectionOffset: %016lx", file.Header->SectionOffset);
+        DEBUG(Data, "\tFileCapacity.: %d", file.Header->FileCapacity);
+        DEBUG(Data, "\tFileCount....: %d (Real: %d)", file.Header->FileCount, file.FileCount());
+        DEBUG(Data, "\tSectionCount.: %08x", file.Header->SectionCount);
+        DEBUG(Data, "\tUnk1.........: %08x", file.Header->Unk1);
+        DEBUG(Data, "\tUnk2.........: %08x", file.Header->Unk2);
         DEBUG(Data, "\tBlocks: ");
-        for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
+        //for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
+        for (const auto it : file.m_NameHashes)
+        //for (const auto it : file.m_FileOffsets)
         {
             //const auto hash = kvp.first;
-            const auto block = kvp.second;
-            auto meta = (UopBlockMetadata *)(file.Start + block->Offset);
+            //const auto block = kvp.second;
+            //const auto block = file.m_Map[it];
+            const auto block = file.m_MapByName[it];
 
+            auto meta = (UopFileMetadata *)(file.Start + block->Offset);
             DEBUG(Data, "\t\tBlock Header %08X_%016lX:", block->Checksum, block->Hash);
-            DEBUG(Data, "\t\t\tOffset..........: %016lx", block->Hash);
-            DEBUG(Data, "\t\t\tHeaderSize......: %d", block->HeaderSize);
+            DEBUG(Data, "\t\t\tOffset..........: %016lx", block->Offset);
+            DEBUG(Data, "\t\t\tMetadataSize....: %d", block->MetadataSize);
             DEBUG(Data, "\t\t\tCompressedSize..: %d", block->CompressedSize);
             DEBUG(Data, "\t\t\tDecompressedSize: %d", block->DecompressedSize);
             DEBUG(Data, "\t\t\tHash............: %016lx", block->Hash);
             DEBUG(Data, "\t\t\tChecksum........: %08X", block->Checksum);
             DEBUG(Data, "\t\t\tFlags...........: %d", block->Flags);
 
-            DEBUG(Data, "\t\t\tmetadata:");
-            DEBUG(Data, "\t\t\t\tType.....: %d", meta->Type);
-            DEBUG(Data, "\t\t\t\tOffset...: %04x", meta->Offset);
-            DateFromTimestamp(meta->Timestamp / 100000000, date, sizeof(date));
-            DEBUG(Data, "\t\t\t\tTimestamp: %s (%lu)", date, meta->Timestamp);
+            //char date[128];
+            //DateFromTimestamp(meta->Unk / 100000000, date, sizeof(date));
+            DEBUG(Data, "\t\t\tMetadata........: ");
+            DEBUG(Data, "\t\t\t\tType....: %d", meta->Type);
+            DEBUG(Data, "\t\t\t\tSize....: %d", meta->Size);
+            switch (meta->Type)
+            {
+                case 3:
+                {
+                    auto meta3 = (UopFileMetadata3 *)(file.Start + block->Offset + meta->Size);
+                    assert(sizeof(UopFileMetadata3) + meta->Size == block->MetadataSize);
+                    DEBUG(Data, "\t\t\t\tUnk: %d (0x%08x)", meta3->Unk, meta3->Unk);
+                }
+                break;
+
+                case 4:
+                {
+                    auto meta4 = (UopFileMetadata4 *)(file.Start + block->Offset + meta->Size);
+                    assert(sizeof(UopFileMetadata4) + meta->Size == block->MetadataSize);
+                    DEBUG(Data, "\t\t\t\tSigType.: %d (0x%04x)", meta4->SigType, meta4->SigType);
+                    DEBUG(Data, "\t\t\t\tSigSize.: %d (0x%04x)", meta4->SigSize, meta4->SigSize);
+                    //auto data = (uint8_t *)(file.Start + block->Offset + sizeof(UopFileMetadata));
+                    //DEBUG_DUMP("\t\t\t\tData....: ", data, block->MetadataSize);
+                }
+                break;
+
+                case 5:
+                {
+                }
+                break;
+
+                default:
+                {
+                    DEBUG(Data, "Unknown Meta Type: %d", meta->Type);
+                    assert(false && "unknown metadata type");
+                }
+                break;
+            };
         }
         file.ResetPtr();
-        exit(1);
     }
     return true;
 }
@@ -969,7 +1041,7 @@ void CFileManager::LoadIndexFiles()
     else
     {
         CUopMappedFile &file = m_MultiCollection;
-        for (const auto /*&[hash, block]*/ &kvp : file.m_Map)
+        for (const auto /*&[hash, block]*/ &kvp : file.m_MapByName)
         {
             //const auto hash = kvp.first;
             const auto block = kvp.second;
@@ -984,7 +1056,7 @@ void CFileManager::LoadIndexFiles()
             if (id < MAX_MULTI_DATA_INDEX_COUNT)
             {
                 CIndexMulti &index = g_Index.m_Multi[id];
-                index.Address = size_t(file.Start + block->Offset + block->HeaderSize);
+                index.Address = size_t(file.Start + block->Offset + block->MetadataSize);
                 index.DataSize = block->DecompressedSize;
                 index.UopBlock = block;
                 //index.ID = -1;
@@ -1023,19 +1095,19 @@ void CFileManager::UopReadIndexFile(
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
 
     bool isGump = (std::string("gumpartlegacymul") == p);
-    char basePath[200] = { 0 };
+    char basePath[100];
     snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 
     for (int i = startIndex; i < (int)indexMaxCount; i++)
     {
-        char hashString[200] = { 0 };
-        snprintf(hashString, sizeof(hashString), basePath, (int)i);
+        char filename[200];
+        snprintf(filename, sizeof(filename), basePath, (int)i);
 
-        auto block = uopFile.GetBlock(uo_jenkins_hash(hashString));
+        auto block = uopFile.GetAsset(filename);
         if (block != nullptr)
         {
             CIndexObject *obj = getIdxObj((int)i);
-            obj->Address = uintptr_t(uopFile.Start + block->Offset + block->HeaderSize);
+            obj->Address = uintptr_t(uopFile.Start + block->Offset + block->MetadataSize);
             obj->DataSize = block->DecompressedSize;
             obj->UopBlock = block;
             //obj->ID = -1;
@@ -1046,7 +1118,7 @@ void CFileManager::UopReadIndexFile(
                 obj->DataSize -= 8;
 
                 uopFile.ResetPtr();
-                uopFile.Move(block->Offset + block->HeaderSize);
+                uopFile.Move(block->Offset + block->MetadataSize);
 
                 obj->Width = uopFile.ReadUInt32LE();
                 obj->Height = uopFile.ReadUInt32LE();
@@ -1098,7 +1170,7 @@ std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
 }
 
 void CFileManager::UopReadAnimationFrameInfo(
-    AnimationFrameInfo &result, CTextureAnimationDirection &direction, const UopBlockHeader &block)
+    AnimationFrameInfo &result, CTextureAnimationDirection &direction, const UopFileEntry &block)
 {
     if (block.Hash == 0)
     {
