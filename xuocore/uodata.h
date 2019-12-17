@@ -196,6 +196,8 @@ struct CUopMappedFile : public CMappedFile // FIXME: not needed
     const UopFileEntry *GetAsset(const char *filename) const;
     const UopFileEntry *GetAsset(uint64_t hash) const;
     std::vector<uint8_t> GetData(const UopFileEntry *block);
+    std::vector<uint8_t> GetMeta(const UopFileEntry *block);
+    std::vector<uint8_t> GetRaw(const UopFileEntry *block);
     size_t FileCount() const;
 
     CUopMappedFile() = default;

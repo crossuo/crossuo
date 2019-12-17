@@ -94,8 +94,9 @@ static bool init_cli(int argc, char *argv[])
         std::cout << s_cli << '\n';
     });
 
-    s_cli["info"].abbreviation('i').type(po::string).description("file info");
-    s_cli["dump"].abbreviation('d').type(po::string).description("dump file to csv");
+    s_cli["file"].abbreviation('f').type(po::string).description("input file");
+    s_cli["info"].abbreviation('i').description("output info");
+    s_cli["unpack"].abbreviation('u').description("unpack (file)");
     s_cli["client_path"].abbreviation('p').type(po::string).description("uo data path");
     s_cli["client_version"]
         .abbreviation('c')
@@ -119,24 +120,57 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    auto dump_file = cli("dump");
     auto uopath = cli("client_path");
-    auto version = cli("client_version", "7.0.15.0");
-    g_dumpUopFile = cli("info");
-    auto fullname = fs_path_join(uopath, g_dumpUopFile);
-
-    log("client path: %s", uopath.c_str());
-    log("client version: %s", version.c_str());
+    auto unpack = s_cli["unpack"].was_set();
+    auto info = s_cli["info"].was_set();
+    auto filename = cli("file");
 
     const auto path = fs_path_from(uopath);
     fs_case_insensitive_init(path);
+
+    // TOOD: remove
+    auto version = cli("client_version", "7.0.15.0");
     uo_data_init(uopath.c_str(), VERSION(7, 0, 15, 0), false);
 
+    log("client path: %s", uopath.c_str());
+    log("client version: %s", version.c_str());
     log("loading data...");
-    //g_FileManager.Load();
-    CUopMappedFile file;
-    g_FileManager.UopLoadFile(file, g_dumpUopFile.c_str(), true);
-    log("data loaded.");
+    g_dumpUopFile = filename;
+    if (filename.empty())
+    {
+        g_FileManager.Load();
+        log("data loaded.");
+    }
+    else
+    {
+        CUopMappedFile file;
+        g_FileManager.UopLoadFile(file, filename.c_str(), info);
+        log("data loaded.");
+
+        if (unpack)
+        {
+            auto p = fs_path_from(filename);
+            fs_path_create(p);
+
+            for (auto &entry : file.m_MapByName)
+            {
+                auto asset = file.GetAsset(entry.first);
+                auto data = file.GetRaw(asset);
+                auto meta = file.GetMeta(asset);
+
+                char fname[100];
+                snprintf(fname, sizeof(fname), "%016lx", asset->Hash);
+                char mname[100];
+                snprintf(mname, sizeof(mname), "%016lx.meta", asset->Hash);
+
+                auto f = fs_path_join(p, fname);
+                fs_file_write(f, data);
+                f = fs_path_join(p, mname);
+                fs_file_write(f, meta);
+            }
+        }
+    }
+
     /*
     CDataReader reader;
     std::vector<uint8_t> tempData;
@@ -144,7 +178,6 @@ int main(int argc, char **argv)
 
     if ( g_FileManager.m_GumpartLegacyMUL.Start != nullptr)
     {
-        
     }
 
     if (g_FileManager.m_MainMisc.Start != nullptr)
