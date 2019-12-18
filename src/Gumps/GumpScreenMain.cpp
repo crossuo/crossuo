@@ -19,6 +19,11 @@ enum
     ID_MS_PASSWORD,
     ID_MS_SAVEPASSWORD,
     ID_MS_AUTOLOGIN,
+    ID_MS_UOACCOUNT,
+    ID_MS_UOCOM,
+    ID_MS_HELP,
+    ID_MS_MOVIE,
+    ID_MS_CREDITS,
 
     ID_MS_COUNT,
 };
@@ -42,7 +47,7 @@ void CGumpScreenMain::PrepareContent()
     if (lastArrowTick < g_Ticks && m_Arrow != nullptr)
     {
         arrowLighted = !arrowLighted;
-        if (g_Config.ClientVersion < CV_7090)
+        if (g_Config.ClientVersion < CV_70756)
         {
             if (arrowLighted)
             {
@@ -82,7 +87,7 @@ void CGumpScreenMain::UpdateContent()
 
     Add(new CGUIGumppic(0x157C, 0, 0));
 
-    if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_7090)
+    if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_70756)
     {
         Add(new CGUIGumppic(0x2329, 0, 0));
     }
@@ -94,7 +99,7 @@ void CGumpScreenMain::UpdateContent()
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 253, 305));
 
-    if (g_Config.ClientVersion < CV_7090) // TODO : Find good version
+    if (g_Config.ClientVersion < CV_70756)
     {
         Add(new CGUIGumppic(0x15A0, 0, 4));
         Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
@@ -144,18 +149,18 @@ void CGumpScreenMain::UpdateContent()
         Add(new CGUIGumppic(0x014e, 0, 0));
 
         //Accout button
-        Add(new CGUIButton(20, 0x5C4, 0x5C2, 0x5C3, 10, 25));
+        Add(new CGUIButton(ID_MS_UOACCOUNT, 0x5C4, 0x5C2, 0x5C3, 10, 25));
         //UO.com button
-        Add(new CGUIButton(21, 0x5C7, 0x5C5, 0x5C6, 10, 135));
+        Add(new CGUIButton(ID_MS_UOCOM, 0x5C7, 0x5C5, 0x5C6, 10, 135));
         //Quit Button
         Add(new CGUIButton(ID_MS_QUIT, 0x5CA, 0x5C8, 0x5C9, 20, 240));
 
         //Help Button
-        Add(new CGUIButton(23, 0x5D3, 0x5D1, 0x5D2, 530, 35));
+        Add(new CGUIButton(ID_MS_HELP, 0x5D3, 0x5D1, 0x5D2, 530, 35));
         //Movie button
-        Add(new CGUIButton(24, 0x5D6, 0x5D4, 0x5D5, 530, 80));
+        Add(new CGUIButton(ID_MS_MOVIE, 0x5D6, 0x5D4, 0x5D5, 530, 80));
         //Credit button
-        Add(new CGUIButton(25, 0x5D0, 0x5CE, 0x5CF, 530, 125));
+        Add(new CGUIButton(ID_MS_CREDITS, 0x5D0, 0x5CE, 0x5CF, 530, 125));
 
         //TEEN RATING
         Add(new CGUIGumppic(0x2335, 30, 380));
@@ -237,13 +242,43 @@ void CGumpScreenMain::InitToolTip()
 
 void CGumpScreenMain::GUMP_BUTTON_EVENT_C
 {
-    if (serial == ID_MS_QUIT)
-    { //x button
-        g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_QUIT);
-    }
-    else if (serial == ID_MS_ARROW_NEXT)
-    { //> button
-        g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_CONNECT);
+    switch (serial)
+    {
+        case ID_MS_QUIT:
+        {
+            g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_QUIT);
+            break;
+        }
+        case ID_MS_ARROW_NEXT:
+        {
+            g_MainScreen.CreateSmoothAction(CMainScreen::ID_SMOOTH_MS_CONNECT);
+            break;
+        }
+        case ID_MS_UOACCOUNT:
+        {
+            Platform::OpenBrowser("https://accounts.eamythic.com/");
+            break;
+        }
+        case ID_MS_UOCOM:
+        {
+            Platform::OpenBrowser("https://uo.com");
+            break;
+        }
+        case ID_MS_HELP:
+        {
+            Platform::OpenBrowser("https://crossuo.com/");
+            break;
+        }
+        case ID_MS_MOVIE:
+        {
+            Platform::OpenBrowser("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            break;
+        }
+        case ID_MS_CREDITS:
+        {
+            Platform::OpenBrowser("https://github.com/crossuo/crossuo/graphs/contributors");
+            break;
+        }
     }
 }
 

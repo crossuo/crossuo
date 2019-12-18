@@ -141,6 +141,7 @@ enum CLIENT_VERSION
     CV_70180 = VERSION(7, 0, 18, 0), //
     CV_70240 = VERSION(7, 0, 24, 0), // *.mul -> *.uop
     CV_70331 = VERSION(7, 0, 33, 1), //
+    CV_70756 = VERSION(7, 0, 75, 6), // login screen Endless Journey
     CV_LATEST = CV_70331,
 };
 
