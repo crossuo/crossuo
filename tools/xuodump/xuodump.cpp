@@ -1,4 +1,6 @@
-#include <string>
+// GPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <iostream>
@@ -152,7 +154,7 @@ int main(int argc, char **argv)
             auto p = fs_path_from(filename);
             fs_path_create(p);
 
-            for (auto &entry : file.m_MapByName)
+            for (auto &entry : file.m_MapByHash)
             {
                 auto asset = file.GetAsset(entry.first);
                 auto data = file.GetRaw(asset);

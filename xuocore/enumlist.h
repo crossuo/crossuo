@@ -1,5 +1,6 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// GPLv3 License
 // Copyright (c) 2019 CrossUO Team
 
 #pragma once
@@ -18,7 +19,7 @@ enum
     MAX_SOUND_DATA_INDEX_COUNT = 0x0800,
     MAX_MULTI_DATA_INDEX_COUNT = 0x2200,
     MAX_MUSIC_DATA_INDEX_COUNT = 150,
-    MAX_ANIMATIONS_DATA_INDEX_COUNT = 2048,
+    MAX_ANIMATIONS_DATA_INDEX_COUNT = 0x0800,
     MAX_LIGHTS_DATA_INDEX_COUNT = 100,
 };
 

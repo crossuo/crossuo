@@ -17,9 +17,9 @@ set(XUOI_SRCS
 )
 
 add_executable(${PROJECT_NAME} ${XUOI_SRCS})
-add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT})
+add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES} ${EXTERNAL_PROJECT} ${LOADER} ${THREAD})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES} ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${LOADER} ${THREAD})
 target_include_directories(${PROJECT_NAME} PUBLIC ${EXTERNAL_INCLUDE})
 
 #

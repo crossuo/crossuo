@@ -2,7 +2,6 @@
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #include "accounts.h"
-#include <string>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>

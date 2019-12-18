@@ -2,7 +2,6 @@
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #include "shards.h"
-#include <string>
 #include <vector>
 #include <sstream>
 #include <unordered_map>

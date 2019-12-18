@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string.h>
 #include <locale>
 #include <codecvt>
+#include <assert.h>
 
 #if defined(_MSC_VER)
 #include <Windows.h>
@@ -56,6 +57,7 @@ const std::string &str_from(const std::string &str);
 
 std::string str_trim(const std::string &str);
 int str_to_int(const std::string &str);
+const char *str_lower(const char *str);
 std::string str_lower(std::string str);
 std::string str_upper(std::string str);
 std::wstring wstr_lower(std::wstring str);
@@ -66,6 +68,18 @@ bool str_to_bool(const std::string &str);
 
 #if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
 #define STR_IMPLEMENTATED
+
+const char *str_lower(const char *str)
+{
+    char *s = const_cast<char *>(str);
+    assert(s);
+    while (*s)
+    {
+        *s = tolower(*s);
+        s++;
+    }
+    return str;
+}
 
 std::string wstr_to_utf8(const std::wstring &wstr)
 {
