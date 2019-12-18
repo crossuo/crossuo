@@ -47,7 +47,7 @@ void CGumpScreenMain::PrepareContent()
     if (lastArrowTick < g_Ticks && m_Arrow != nullptr)
     {
         arrowLighted = !arrowLighted;
-        if (g_Config.ClientVersion < CV_70756)
+        if (g_Config.ClientVersion < CV_70611)
         {
             if (arrowLighted)
             {
@@ -87,7 +87,7 @@ void CGumpScreenMain::UpdateContent()
 
     Add(new CGUIGumppic(0x157C, 0, 0));
 
-    if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_70756)
+    if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_70611)
     {
         Add(new CGUIGumppic(0x2329, 0, 0));
     }
@@ -99,7 +99,7 @@ void CGumpScreenMain::UpdateContent()
 
     CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 253, 305));
 
-    if (g_Config.ClientVersion < CV_70756)
+    if (g_Config.ClientVersion < CV_70611)
     {
         Add(new CGUIGumppic(0x15A0, 0, 4));
         Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
