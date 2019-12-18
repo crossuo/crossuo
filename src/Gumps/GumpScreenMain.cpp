@@ -78,26 +78,13 @@ void CGumpScreenMain::UpdateContent()
         return;
     }
 
-    //Clear();
-
     Add(new CGUIGumppicTiled(0x0E14, 0, 0, 640, 480));
 
     Add(new CGUIGumppic(0x157C, 0, 0));
 
-    if (g_Config.ClientVersion >= CV_7090) // TODO : Find good version
-    {
-        Add(new CGUIGumppic(0x014e, 0, 0));
-    }
-
     if (g_Config.ClientVersion >= CV_500A && g_Config.ClientVersion < CV_7090)
     {
         Add(new CGUIGumppic(0x2329, 0, 0));
-    }
-
-    if (g_Config.ClientVersion < CV_7090)
-    {
-        Add(new CGUIGumppic(0x15A0, 0, 4));
-        Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
     }
 
     if (g_Config.ClientVersion < CV_500A)
@@ -105,12 +92,16 @@ void CGumpScreenMain::UpdateContent()
         Add(new CGUIGumppic(0x058A, 286, 45));
     }
 
-    Add(new CGUIButton(ID_MS_QUIT, 0x1589, 0x158A, 0x158B, 555, 4));
-
     CGUIText *text = (CGUIText *)Add(new CGUIText(0x0386, 253, 305));
 
     if (g_Config.ClientVersion < CV_7090) // TODO : Find good version
     {
+        Add(new CGUIGumppic(0x15A0, 0, 4));
+        Add(new CGUIResizepic(0, 0x13BE, 128, 288, 451, 157));
+
+        //quit button
+        Add(new CGUIButton(ID_MS_QUIT, 0x1589, 0x158A, 0x158B, 555, 4));
+
         text->CreateTextureA(2, "Log in to Ultima Online"); // cliloc 3000038
 
         text = (CGUIText *)Add(new CGUIText(0x0386, 183, 345));
@@ -133,9 +124,42 @@ void CGumpScreenMain::UpdateContent()
 
         m_Arrow =
             (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x15A4, 0x15A5, 0x15A6, 610, 445));
+        g_MainScreen.m_SavePassword = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));
+        g_MainScreen.m_SavePassword->SetTextParameters(
+            9, "Save Password", 0x0386, STP_RIGHT_CENTER);
+
+        g_MainScreen.m_AutoLogin = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 183, 417));
+        g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x0386, STP_RIGHT_CENTER);
+
+        text = (CGUIText *)Add(new CGUIText(0x034E, 286, 455));
+        text->CreateTextureA(9, std::string("UO Version " + g_Config.ClientVersionString + "."));
+
+        text = (CGUIText *)Add(new CGUIText(0x034E, 286, 467));
+        text->CreateTextureA(9, std::string("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
     }
     else
     {
+        Add(new CGUIGumppic(0x014e, 0, 0));
+
+        //Accout button
+        Add(new CGUIButton(20, 0x5C4, 0x5C2, 0x5C3, 10, 25));
+        //UO.com button
+        Add(new CGUIButton(21, 0x5C7, 0x5C5, 0x5C6, 10, 135));
+        //Quit Button
+        Add(new CGUIButton(ID_MS_QUIT, 0x5CA, 0x5C8, 0x5C9, 20, 240));
+
+        //Help Button
+        Add(new CGUIButton(23, 0x5D3, 0x5D1, 0x5D2, 530, 35));
+        //Movie button
+        Add(new CGUIButton(24, 0x5D6, 0x5D4, 0x5D5, 530, 80));
+        //Credit button
+        Add(new CGUIButton(25, 0x5D0, 0x5CE, 0x5CF, 530, 125));
+
+        //TEEN RATING
+        Add(new CGUIGumppic(0x2335, 30, 380));
+
         Add(new CGUIResizepic(ID_MS_ACCOUNT, 0x0BB8, 220, 280, 210, 30));
         Add(new CGUIResizepic(ID_MS_PASSWORD, 0x0BB8, 220, 335, 210, 30));
         CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
@@ -150,20 +174,19 @@ void CGumpScreenMain::UpdateContent()
 
         m_Arrow =
             (CGUIButton *)Add(new CGUIButton(ID_MS_ARROW_NEXT, 0x5CD, 0x5CB, 0x5CC, 280, 365));
+        g_MainScreen.m_SavePassword = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));
+        g_MainScreen.m_SavePassword->SetTextParameters(9, "Save Password", 0x802, STP_RIGHT_CENTER);
+
+        g_MainScreen.m_AutoLogin = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 183, 417));
+        g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x802, STP_RIGHT_CENTER);
+
+        text = (CGUIText *)Add(new CGUIText(0x802, 235, 440));
+        text->CreateTextureA(9, std::string("UO Version " + g_Config.ClientVersionString + "."));
+        text = (CGUIText *)Add(new CGUIText(0x7F2, 200, 460));
+        text->CreateTextureA(9, std::string("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
     }
-    g_MainScreen.m_SavePassword =
-        (CGUICheckbox *)Add(new CGUICheckbox(ID_MS_SAVEPASSWORD, 0x00D2, 0x00D3, 0x00D2, 328, 417));
-    g_MainScreen.m_SavePassword->SetTextParameters(9, "Save Password", 0x0386, STP_RIGHT_CENTER);
-
-    g_MainScreen.m_AutoLogin =
-        (CGUICheckbox *)Add(new CGUICheckbox(ID_MS_AUTOLOGIN, 0x00D2, 0x00D3, 0x00D2, 183, 417));
-    g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x0386, STP_RIGHT_CENTER);
-
-    text = (CGUIText *)Add(new CGUIText(0x034E, 286, 455));
-    text->CreateTextureA(9, std::string("UO Version " + g_Config.ClientVersionString + "."));
-
-    text = (CGUIText *)Add(new CGUIText(0x034E, 286, 467));
-    text->CreateTextureA(9, std::string("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
 }
 
 void CGumpScreenMain::InitToolTip()
