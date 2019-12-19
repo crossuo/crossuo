@@ -8,6 +8,7 @@ set(XUOCORE_INCLUDE "${XUOCORE_DIR}" CACHE INTERNAL "")
 file(GLOB XUOCORE_HEADERS ${XUOCORE_DIR}/*.h)
 
 set(XUOCORE_SRCS
+  uop.cpp
   uodata.cpp
   mappedfile.cpp
 )

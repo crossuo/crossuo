@@ -1,6 +1,7 @@
 // GPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LIBUO_LOG
 #include "uolib.h"
 #include "uodata.h"
 #include "mappedfile.h"
@@ -128,19 +129,19 @@ void CUopMappedFile::AddAsset(const UopFileEntry *item)
 {
     m_NameHashes.push_back(item->Hash);
     m_FileOffsets.push_back(item->Offset);
-    m_MapByName[item->Hash] = item;
+    m_MapByHash[item->Hash] = item;
     m_MapByOffset[item->Offset] = item;
 }
 
 bool CUopMappedFile::HasAsset(uint64_t hash) const
 {
-    return m_MapByName.find(hash) != m_MapByName.end();
+    return m_MapByHash.find(hash) != m_MapByHash.end();
 }
 
 const UopFileEntry *CUopMappedFile::GetAsset(uint64_t hash) const
 {
-    auto found = m_MapByName.find(hash);
-    if (found != m_MapByName.end())
+    auto found = m_MapByHash.find(hash);
+    if (found != m_MapByHash.end())
     {
         return found->second;
     }
@@ -150,14 +151,13 @@ const UopFileEntry *CUopMappedFile::GetAsset(uint64_t hash) const
 
 const UopFileEntry *CUopMappedFile::GetAsset(const char *filename) const
 {
-    uint64_t nameHash = uo_jenkins_hash(filename);
-    m_FileName[nameHash] = filename;
+    const uint64_t nameHash = uo_jenkins_hash(filename);
     return GetAsset(nameHash);
 }
 
 size_t CUopMappedFile::FileCount() const
 {
-    return m_MapByName.size();
+    return m_MapByHash.size();
 }
 
 static bool DecompressBlock(const UopFileEntry &block, uint8_t *dst, uint8_t *src)
@@ -636,7 +636,7 @@ void CFileManager::ReadTask()
 void CFileManager::ProcessAnimSequeceData()
 {
     TRACE(Data, "processing AnimationSequence data");
-    for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_MapByName)
+    for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_MapByHash)
     {
         //const auto hash = kvp.first;
         const auto block = kvp.second;
@@ -771,7 +771,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
             //const auto hash = kvp.first;
             //const auto block = kvp.second;
             //const auto block = file.m_Map[it];
-            const auto block = file.m_MapByName[it];
+            const auto block = file.m_MapByHash[it];
 
             auto meta = (UopFileMetadata *)(file.Start + block->Offset);
             DEBUG(Data, "\t\tBlock Header %08X_%016lX:", block->Checksum, block->Hash);
@@ -1041,7 +1041,7 @@ void CFileManager::LoadIndexFiles()
     else
     {
         CUopMappedFile &file = m_MultiCollection;
-        for (const auto /*&[hash, block]*/ &kvp : file.m_MapByName)
+        for (const auto /*&[hash, block]*/ &kvp : file.m_MapByHash)
         {
             //const auto hash = kvp.first;
             const auto block = kvp.second;

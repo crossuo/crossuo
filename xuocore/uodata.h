@@ -14,7 +14,6 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
-#include <string>
 #include "enumlist.h"
 #include "mulstruct.h"
 #include "mappedfile.h"
@@ -34,7 +33,6 @@ typedef void *(*LoadPixelData16Cb)(int width, int height, uint16_t *pixels);
 struct UopFileEntry;
 struct CUopMappedFile;
 using UopSectionHeaderMap = std::unordered_map<uint64_t, const UopFileEntry *>;
-using HashToName = std::unordered_map<uint64_t, std::string>;
 
 struct CTextureAnimationFrame
 {
@@ -187,8 +185,7 @@ struct CUopMappedFile : public CMappedFile // FIXME: not needed
     UopHeader *Header = nullptr;
     std::vector<uint64_t> m_NameHashes;
     std::vector<uint64_t> m_FileOffsets;
-    mutable HashToName m_FileName;
-    UopSectionHeaderMap m_MapByName;
+    UopSectionHeaderMap m_MapByHash;
     UopSectionHeaderMap m_MapByOffset;
 
     bool HasAsset(uint64_t hash) const;
