@@ -2840,7 +2840,7 @@ PACKET_HANDLER(ExtendedCommand)
                     str += L"\n[";
                     str += attrsString;
                     str += L" : ";
-                    str += std::to_wstring(charges);
+                    str += wstr_from(charges);
                     str += L"]";
                     count += 20;
                 }

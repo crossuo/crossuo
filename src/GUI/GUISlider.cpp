@@ -53,7 +53,7 @@ void CGUISlider::UpdateText()
         if (Unicode)
         {
             g_FontManager.GenerateW(
-                Font, Text, std::to_wstring(Value), TextColor, 30, TextWidth, Align, TextFlags);
+                Font, Text, wstr_from(Value), TextColor, 30, TextWidth, Align, TextFlags);
         }
         else
         {

@@ -454,9 +454,7 @@ void CGumpCustomHouse::InitToolTip()
         case ID_GCH_AREA_OBJECTS_INFO:
         {
             wstr_t str = g_ClilocManager.ParseArgumentsToClilocString(
-                1061039,
-                true,
-                std::to_wstring(MaxComponents) + L"\t" + std::to_wstring(MaxFixtures));
+                1061039, true, wstr_from(MaxComponents) + L"\t" + wstr_from(MaxFixtures));
             g_ToolTip.Set(str);
             break;
         }

@@ -129,11 +129,7 @@ void CDataWriter::WriteString(
 }
 
 void CDataWriter::WriteWString(
-    const wstr_t &val,
-    size_t length,
-    bool bigEndian,
-    bool nullTerminated,
-    const intptr_t &offset)
+    const wstr_t &val, size_t length, bool bigEndian, bool nullTerminated, const intptr_t &offset)
 {
     DATASTREAM_DEBUG;
     if (length == 0u)

@@ -71,10 +71,9 @@ void CGumpScreenGame::UpdateContent()
 
             if (opt != nullptr)
             {
-                opt->m_GameWindowWidth->m_Entry.SetTextW(
-                    std::to_wstring(g_RenderBounds.GameWindowWidth));
+                opt->m_GameWindowWidth->m_Entry.SetTextW(wstr_from(g_RenderBounds.GameWindowWidth));
                 opt->m_GameWindowHeight->m_Entry.SetTextW(
-                    std::to_wstring(g_RenderBounds.GameWindowHeight));
+                    wstr_from(g_RenderBounds.GameWindowHeight));
             }
         }
         else //scope

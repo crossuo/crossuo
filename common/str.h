@@ -25,6 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <codecvt>
 #include <assert.h>
 
+#include <string>
 using astr_t = std::string;
 using wstr_t = std::wstring;
 
@@ -47,20 +48,21 @@ using wstr_t = std::wstring;
 // TODO: encapsulate wstr_t into a wstr_t type and astr_t into a str_t type
 // so we can migrate for something lightweight in performance and memory
 
-astr_t wstr_to_utf8(const wstr_t &aWstr); // DEPRECATE, in memory everything should be UTF8
+astr_t wstr_to_utf8(const wstr_t &aWstr);  // DEPRECATE, in memory everything should be UTF8
 wstr_t wstr_from_utf8(const astr_t &aStr); // DEPRECATE
 astr_t str_camel_case(astr_t aStr);
 wstr_t wstr_camel_case(wstr_t aWstr);
 
 astr_t str_from(const wstr_t &aWstr);
+astr_t str_from(int val);
 wstr_t wstr_from(const astr_t &aStr);
+wstr_t wstr_from(int val);
 #if !defined(_MSC_VER)
 const astr_t &str_from(const astr_t &aStr);
 #endif
 
 astr_t str_trim(const astr_t &aStr);
 int str_to_int(const astr_t &aStr);
-astr_t str_from(int val);
 const char *str_lower(const char *aCStr);
 astr_t str_lower(astr_t aStr);
 astr_t str_upper(astr_t aStr);
@@ -88,8 +90,8 @@ const char *str_lower(const char *aCStr)
 astr_t wstr_to_utf8(const wstr_t &aWstr)
 {
 #if defined(_MSC_VER)
-    int size =
-        ::WideCharToMultiByte(CP_UTF8, 0, &aWstr[0], (int)aWstr.size(), nullptr, 0, nullptr, nullptr);
+    int size = ::WideCharToMultiByte(
+        CP_UTF8, 0, &aWstr[0], (int)aWstr.size(), nullptr, 0, nullptr, nullptr);
     astr_t result = "";
 
     if (size > 0)
@@ -118,7 +120,7 @@ astr_t wstr_to_utf8(const wstr_t &aWstr)
 wstr_t wstr_from_utf8(const astr_t &aStr)
 {
 #if defined(_MSC_VER)
-    int size = ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)str.size(), nullptr, 0);
+    int size = ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)aStr.size(), nullptr, 0);
     wstr_t result = {};
     if (size > 0)
     {
@@ -284,7 +286,8 @@ wstr_t wstr_lower(wstr_t aWstr)
 
     return aWstr;
 #else
-    std::transform(aWstr.begin(), aWstr.end(), aWstr.begin(), [](auto c) { return std::towlower(c); });
+    std::transform(
+        aWstr.begin(), aWstr.end(), aWstr.begin(), [](auto c) { return std::towlower(c); });
     return aWstr;
 #endif
 }
@@ -310,7 +313,8 @@ wstr_t wstr_upper(wstr_t aWstr)
 
     return aWstr;
 #else
-    std::transform(aWstr.begin(), aWstr.end(), aWstr.begin(), [](auto c) { return std::towupper(c); });
+    std::transform(
+        aWstr.begin(), aWstr.end(), aWstr.begin(), [](auto c) { return std::towupper(c); });
     return aWstr;
 #endif
 }
@@ -336,6 +340,11 @@ int str_to_int(const astr_t &aStr)
 astr_t str_from(int val)
 {
     return std::to_string(val);
+}
+
+wstr_t wstr_from(int val)
+{
+    return std::to_wstring(val);
 }
 
 #endif // STR_IMPLEMENTATION

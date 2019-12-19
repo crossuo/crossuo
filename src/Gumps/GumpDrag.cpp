@@ -60,7 +60,7 @@ void CGumpDrag::UpdateContent()
     m_Entry->CheckOnSerial = true;
     g_EntryPointer = &m_Entry->m_Entry;
     g_EntryPointer->NumberOnly = true;
-    g_EntryPointer->SetTextW(std::to_wstring(count));
+    g_EntryPointer->SetTextW(wstr_from(count));
 
     Add(new CGUIButton(ID_GD_OKAY, 0x081A, 0x081C, 0x081B, 102, 37));
 }
@@ -87,7 +87,7 @@ void CGumpDrag::GUMP_SLIDER_MOVE_EVENT_C
 
     if (m_Entry != nullptr)
     {
-        m_Entry->m_Entry.SetTextW(std::to_wstring(m_Slider->Value));
+        m_Entry->m_Entry.SetTextW(wstr_from(m_Slider->Value));
     }
 }
 
