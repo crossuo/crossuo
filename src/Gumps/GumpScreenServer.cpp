@@ -148,7 +148,7 @@ void CGumpScreenServer::UpdateContent()
         }
         else
         {
-            entry->m_Entry.SetTextA(str_from_int(server->Ping) + "ms");
+            entry->m_Entry.SetTextA(str_from(server->Ping) + "ms");
         }
 #else
         entry->m_Entry.SetTextA("-");
@@ -166,7 +166,7 @@ void CGumpScreenServer::UpdateContent()
         }
         else
         {
-            entry->m_Entry.SetTextA(str_from_int(server->PacketsLoss) + "%");
+            entry->m_Entry.SetTextA(str_from(server->PacketsLoss) + "%");
         }
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;

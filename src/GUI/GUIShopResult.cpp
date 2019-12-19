@@ -20,7 +20,7 @@ CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
 {
     MoveOnDrag = true;
 
-    auto name = Name + "\n" + "at " + str_from_int(Price) + " g.p.";
+    auto name = Name + "\n" + "at " + str_from(Price) + " g.p.";
     g_FontManager.GenerateA(9, m_NameText, name, 0x021F, 100);
 
     int maxCount = shopItem->Count;

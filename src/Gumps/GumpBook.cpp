@@ -112,7 +112,7 @@ CGumpBook::CGumpBook(
             entry->MoveOnDrag = true;
 
             text = (CGUIText *)Add(new CGUIText(0x0386, 112, 202));
-            text->CreateTextureA(9, str_from_int(i));
+            text->CreateTextureA(9, str_from(i));
         }
 
         i++;
@@ -143,7 +143,7 @@ CGumpBook::CGumpBook(
             entry->MoveOnDrag = true;
 
             text = (CGUIText *)Add(new CGUIText(0x0386, 299, 202));
-            text->CreateTextureA(9, str_from_int(i));
+            text->CreateTextureA(9, str_from(i));
         }
     }
 }

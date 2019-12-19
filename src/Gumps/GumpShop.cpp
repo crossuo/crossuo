@@ -63,7 +63,7 @@ CGumpShop::CGumpShop(uint32_t serial, bool isBuyGump, short x, short y)
         m_TotalPriceText = (CGUIText *)Add(new CGUIText(0x0386, 240, 385));
         m_TotalPriceText->CreateTextureA(9, "0");
         m_TotalGoldText = (CGUIText *)Add(new CGUIText(0x0386, 358, 385));
-        m_TotalGoldText->CreateTextureA(9, str_from_int(g_Player->Gold));
+        m_TotalGoldText->CreateTextureA(9, str_from(g_Player->Gold));
     }
     else
     {
@@ -178,7 +178,7 @@ void CGumpShop::UpdateTotalPrice()
             }
         }
 
-        m_TotalPriceText->CreateTextureA(9, str_from_int(totalPrice));
+        m_TotalPriceText->CreateTextureA(9, str_from(totalPrice));
     }
 }
 

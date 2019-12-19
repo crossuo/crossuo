@@ -3123,7 +3123,7 @@ PACKET_HANDLER(ExtendedCommand)
                 text->Serial = serial;
                 text->Color = (serial == g_PlayerSerial ? 0x0034 : 0x0021);
                 text->Type = TT_OBJECT;
-                text->Text = str_from_int(damage);
+                text->Text = str_from(damage);
                 text->GenerateTexture(0);
                 text->SetX(text->m_TextSprite.Width / 2);
                 int height = text->m_TextSprite.Height;
@@ -4289,7 +4289,7 @@ PACKET_HANDLER(Damage)
         text->Serial = serial;
         text->Color = (serial == g_PlayerSerial ? 0x0034 : 0x0021);
         text->Type = TT_OBJECT;
-        text->Text = str_from_int(damage);
+        text->Text = str_from(damage);
         text->GenerateTexture(0);
         text->SetX(text->m_TextSprite.Width / 2);
         int height = text->m_TextSprite.Height;

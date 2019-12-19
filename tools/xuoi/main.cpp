@@ -762,7 +762,7 @@ int mft_diff(mft_product &prod)
 {
     auto path = fs_path_join(
         prod.config.product_path,
-        // str_from_int(prod.last_version),
+        // str_from(prod.last_version),
         // prod.launchfile,
         "cache",
         "diff.csv");
@@ -1044,9 +1044,9 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
 
             // set config as latest version already checked, so next loop for next product we skip it
             cfg.latest_checked = true;
-            mft_listing_load_version(prod, str_from_int(prod.last_version), prod.base_version);
-            prod.config.product_path = fs_path_join(
-                prod.config.output_path, str_from_int(prod.timestamp), prod.launchfile);
+            mft_listing_load_version(prod, str_from(prod.last_version), prod.base_version);
+            prod.config.product_path =
+                fs_path_join(prod.config.output_path, str_from(prod.timestamp), prod.launchfile);
         }
 
         fs_path prod_file = fs_path_join(prod.config.product_path, "cache");

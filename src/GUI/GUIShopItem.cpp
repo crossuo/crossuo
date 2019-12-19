@@ -132,7 +132,7 @@ void CGUIShopItem::CreateNameText()
         textColor = 0x0021;
     }
 
-    auto str = Name + " at " + str_from_int(Price) + "gp";
+    auto str = Name + " at " + str_from(Price) + "gp";
     g_FontManager.GenerateA(9, m_NameText, str, textColor, 90);
 }
 
@@ -145,7 +145,7 @@ void CGUIShopItem::CreateCountText(int lostCount)
         textColor = 0x0021;
     }
 
-    g_FontManager.GenerateA(9, m_CountText, str_from_int(Count - lostCount), textColor);
+    g_FontManager.GenerateA(9, m_CountText, str_from(Count - lostCount), textColor);
 }
 
 void CGUIShopItem::PrepareTextures()

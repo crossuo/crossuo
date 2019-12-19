@@ -60,7 +60,7 @@ const astr_t &str_from(const astr_t &aStr);
 
 astr_t str_trim(const astr_t &aStr);
 int str_to_int(const astr_t &aStr);
-astr_t str_from_int(int val);
+astr_t str_from(int val);
 const char *str_lower(const char *aCStr);
 astr_t str_lower(astr_t aStr);
 astr_t str_upper(astr_t aStr);
@@ -333,7 +333,7 @@ int str_to_int(const astr_t &aStr)
     return atoi(aStr.c_str());
 }
 
-astr_t str_from_int(int val)
+astr_t str_from(int val)
 {
     return std::to_string(val);
 }

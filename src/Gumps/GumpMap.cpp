@@ -237,7 +237,7 @@ void CGumpMap::GenerateFrame(bool stop)
                 }
 
                 idx++;
-                text->CreateTextureA(0, str_from_int(idx));
+                text->CreateTextureA(0, str_from(idx));
             }
         }
     }

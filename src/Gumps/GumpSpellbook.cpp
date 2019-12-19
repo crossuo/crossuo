@@ -738,7 +738,7 @@ void CGumpSpellbook::UpdateContent()
         if ((page == 0) && BookType == ST_PALADIN)
         {
             m_TithingPointsText = (CGUIText *)Add(new CGUIText(0x0288, 62, 162));
-            astr_t textData = "Tithing points\nAvailable: " + str_from_int(g_Player->TithingPoints);
+            astr_t textData = "Tithing points\nAvailable: " + str_from(g_Player->TithingPoints);
             m_TithingPointsText->CreateTextureA(6, textData);
         }
 

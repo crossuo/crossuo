@@ -341,7 +341,7 @@ void CTextFileWriter::WriteInt(const astr_t &key, int value)
 {
     if (m_File != nullptr)
     {
-        fputs(astr_t(key + "=" + str_from_int(value) + "\n").c_str(), m_File);
+        fputs(astr_t(key + "=" + str_from(value) + "\n").c_str(), m_File);
     }
 }
 
