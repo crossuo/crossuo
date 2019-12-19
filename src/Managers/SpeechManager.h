@@ -12,16 +12,12 @@ class CLangCode
 public:
     int Code = 0;
     uint32_t Unknown = 0;
-    std::string Abbreviature;
-    std::string Language;
-    std::string Country;
+    astr_t Abbreviature;
+    astr_t Language;
+    astr_t Country;
 
     CLangCode() {}
-    CLangCode(
-        const std::string &abbreviature,
-        int code,
-        const std::string &language,
-        const std::string &country)
+    CLangCode(const astr_t &abbreviature, int code, const astr_t &language, const astr_t &country)
         : Code(code)
         , Unknown(0)
         , Abbreviature(abbreviature)
@@ -36,13 +32,13 @@ class CSpeechItem
 {
 public:
     uint16_t Code = 0;
-    std::wstring Data;
+    wstr_t Data;
 
     bool CheckStart = false;
     bool CheckEnd = false;
 
     CSpeechItem() {}
-    CSpeechItem(uint16_t code, const std::wstring &data);
+    CSpeechItem(uint16_t code, const wstr_t &data);
     virtual ~CSpeechItem() {}
 };
 

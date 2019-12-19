@@ -21,7 +21,7 @@ private:
     const int ID_GCB_ICON_SECOND = 6;
     const int ID_GCB_ICON = 100;
 
-    static const std::string m_AbilityName[MAX_ABILITIES_COUNT];
+    static const astr_t m_AbilityName[MAX_ABILITIES_COUNT];
 
     CGUIButton *m_PrevPage{ nullptr };
     CGUIButton *m_NextPage{ nullptr };

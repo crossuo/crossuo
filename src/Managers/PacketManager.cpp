@@ -399,15 +399,15 @@ CPacketManager::~CPacketManager()
     RELEASE_MUTEX(m_Mutex);
 }
 
-bool CPacketManager::AutoLoginNameExists(const std::string &name)
+bool CPacketManager::AutoLoginNameExists(const astr_t &name)
 {
     if (AutoLoginNames.length() == 0u)
     {
         return false;
     }
 
-    auto search = std::string("|") + name + "|";
-    return (AutoLoginNames.find(search) != std::string::npos);
+    auto search = astr_t("|") + name + "|";
+    return (AutoLoginNames.find(search) != astr_t::npos);
 }
 
 #define CVPRINT(s) TRACE(Network, s)
@@ -1943,7 +1943,7 @@ PACKET_HANDLER(DenyMoveItem)
 
     if (code < 5)
     {
-        const std::string errorMessages[] = {
+        const astr_t errorMessages[] = {
             "You can not pick that up.",
             "That is too far away.",
             "That is out of sight.",
@@ -2776,7 +2776,7 @@ PACKET_HANDLER(ExtendedCommand)
             }
 
             item->JournalPrefix = "";
-            std::wstring str;
+            wstr_t str;
             int clilocNum = ReadInt32BE();
             if (clilocNum != 0)
             {
@@ -3123,7 +3123,7 @@ PACKET_HANDLER(ExtendedCommand)
                 text->Serial = serial;
                 text->Color = (serial == g_PlayerSerial ? 0x0034 : 0x0021);
                 text->Type = TT_OBJECT;
-                text->Text = std::to_string(damage);
+                text->Text = str_from_int(damage);
                 text->GenerateTexture(0);
                 text->SetX(text->m_TextSprite.Width / 2);
                 int height = text->m_TextSprite.Height;
@@ -3287,7 +3287,7 @@ PACKET_HANDLER(Talk)
         return;
     }
 
-    std::string str;
+    astr_t str;
     if (Size > 44)
     {
         Ptr = Start + 44;
@@ -3392,7 +3392,7 @@ PACKET_HANDLER(UnicodeTalk)
         return;
     }
 
-    std::wstring str;
+    wstr_t str;
     if (Size > 48)
     {
         Ptr = Start + 48;
@@ -4081,7 +4081,7 @@ PACKET_HANDLER(DisplayClilocString)
     }
 
     auto name = ReadString(30);
-    std::wstring affix;
+    wstr_t affix;
     if (*Start == 0xCC)
     {
         affix = wstr_from_utf8(ReadString());
@@ -4142,7 +4142,7 @@ PACKET_HANDLER(MegaCliloc)
     uint32_t clilocRevision = ReadUInt32BE();
 
     uint8_t *end = Start + Size;
-    std::vector<std::wstring> list;
+    std::vector<wstr_t> list;
     while (Ptr < end)
     {
         uint32_t cliloc = ReadUInt32BE();
@@ -4152,7 +4152,7 @@ PACKET_HANDLER(MegaCliloc)
         }
 
         const int len = ReadInt16BE();
-        std::wstring argument;
+        wstr_t argument;
         if (len > 0)
         {
             argument = ReadWStringLE(len / 2);
@@ -4163,7 +4163,7 @@ PACKET_HANDLER(MegaCliloc)
         DEBUG(Network, "Cliloc: 0x%08X len=%i arg=%s", cliloc, len, str_from(argument).c_str());
 
         bool canAdd = true;
-        for (const std::wstring &tempStr : list)
+        for (const wstr_t &tempStr : list)
         {
             if (tempStr == str)
             {
@@ -4194,11 +4194,11 @@ PACKET_HANDLER(MegaCliloc)
     }
 
     bool first = true;
-    std::wstring name;
-    std::wstring data;
+    wstr_t name;
+    wstr_t data;
     if (!list.empty())
     {
-        for (const std::wstring &str : list)
+        for (const wstr_t &str : list)
         {
             if (first)
             {
@@ -4289,7 +4289,7 @@ PACKET_HANDLER(Damage)
         text->Serial = serial;
         text->Color = (serial == g_PlayerSerial ? 0x0034 : 0x0021);
         text->Type = TT_OBJECT;
-        text->Text = std::to_string(damage);
+        text->Text = str_from_int(damage);
         text->GenerateTexture(0);
         text->SetX(text->m_TextSprite.Width / 2);
         int height = text->m_TextSprite.Height;
@@ -4447,8 +4447,8 @@ PACKET_HANDLER(BuffDebuff)
                 Move(4);
 
                 auto title = g_ClilocManager.Cliloc(g_Language)->GetW(titleCliloc, true);
-                std::wstring description;
-                std::wstring wtf;
+                wstr_t description;
+                wstr_t wtf;
 
                 if (descriptionCliloc != 0u)
                 {
@@ -4826,7 +4826,7 @@ PACKET_HANDLER(OpenGump)
     int CurrentPage = 0;
     CEntryText *ChangeEntry = nullptr;
 
-    for (const std::string &str : commandList)
+    for (const astr_t &str : commandList)
     {
         auto list = cmdParser.GetTokens(str.c_str(), false);
         const int listSize = (int)list.size();
@@ -5610,7 +5610,7 @@ PACKET_HANDLER(BulletinBoardData)
                 item->Opened = true;
             }
 
-            std::string str((char *)Ptr);
+            astr_t str((char *)Ptr);
 
             int x = (g_GameWindow.GetSize().Width / 2) - 245;
             int y = (g_GameWindow.GetSize().Height / 2) - 205;
@@ -5694,7 +5694,7 @@ PACKET_HANDLER(BulletinBoardData)
                 }
 
                 uint8_t lines = ReadUInt8();
-                std::wstring data;
+                wstr_t data;
 
                 for (int i = 0; i < lines; i++)
                 {
@@ -5800,7 +5800,7 @@ PACKET_HANDLER(BookData)
 
             uint16_t lineCount = ReadUInt16BE();
 
-            std::wstring str;
+            wstr_t str;
 
             for (int j = 0; j < lineCount; j++)
             {
@@ -6447,7 +6447,7 @@ PACKET_HANDLER(CrossMessages)
                 MACRO_CODE macroCode = MC_NONE;
                 for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 {
-                    std::string macroName = CMacro::m_MacroActionName[i];
+                    astr_t macroName = CMacro::m_MacroActionName[i];
                     if (strcmp(name.c_str(), macroName.c_str()) == 0)
                     {
                         macroCode = (MACRO_CODE)i;

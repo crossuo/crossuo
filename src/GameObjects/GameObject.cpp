@@ -76,13 +76,13 @@ void CGameObject::SetFlags(uint8_t val)
     }
 }
 
-void CGameObject::SetName(const std::string &newName)
+void CGameObject::SetName(const astr_t &newName)
 {
     if (IsPlayer() && m_Name != newName)
     {
         if (g_GameState >= GS_GAME)
         {
-            std::string title = "Ultima Online - " + newName;
+            astr_t title = "Ultima Online - " + newName;
             CServer *server = g_ServerList.GetSelectedServer();
             if (server != nullptr)
             {
@@ -183,7 +183,7 @@ void CGameObject::SelectObjectHandlesTexture()
     }
 }
 
-void CGameObject::GenerateObjectHandlesTexture(std::wstring text)
+void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
 {
 #ifndef NEW_RENDERER_ENABLED
     if (m_TextureObjectHandles.Texture != 0)

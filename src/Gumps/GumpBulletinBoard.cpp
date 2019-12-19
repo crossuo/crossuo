@@ -20,7 +20,7 @@ enum
     ID_GBS_COUNT,
 };
 
-CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const std::string &name)
+CGumpBulletinBoard::CGumpBulletinBoard(uint32_t serial, short x, short y, const astr_t &name)
     : CGump(GT_BULLETIN_BOARD, serial, x, y)
 {
     Add(new CGUIGumppic(0x087A, 0, 0));

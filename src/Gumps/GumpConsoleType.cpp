@@ -78,7 +78,7 @@ bool CGumpConsoleType::ConsoleIsEmpty()
 
 void CGumpConsoleType::DeleteConsolePrefix()
 {
-    static const std::wstring space = L" ";
+    static const wstr_t space = L" ";
 
     switch (m_SelectedType)
     {
@@ -89,7 +89,7 @@ void CGumpConsoleType::DeleteConsolePrefix()
         case GCTT_BROADCAST:
         case GCTT_PARTY:
         {
-            std::wstring str(g_GameConsole.Data());
+            wstr_t str(g_GameConsole.Data());
 
             if (str.find(g_ConsolePrefix[m_SelectedType]) == 0)
             {
@@ -115,7 +115,7 @@ void CGumpConsoleType::SetConsolePrefix()
         case GCTT_BROADCAST:
         case GCTT_PARTY:
         {
-            std::wstring str(g_GameConsole.Data());
+            wstr_t str(g_GameConsole.Data());
             str = g_ConsolePrefix[m_SelectedType] + str;
             g_GameConsole.SetTextW(str);
 
@@ -221,7 +221,7 @@ void CGumpConsoleType::UpdateContent()
             }
             else
             {
-                std::string str = " ";
+                astr_t str = " ";
                 str += str_from(g_ConsolePrefix[i]);
 
                 if (str.length() < 3)

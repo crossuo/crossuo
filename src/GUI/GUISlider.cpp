@@ -58,7 +58,7 @@ void CGUISlider::UpdateText()
         else
         {
             g_FontManager.GenerateA(
-                Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
+                Font, Text, str_from_int(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
         auto spr = g_Game.ExecuteGump(Graphic);

@@ -11,7 +11,7 @@ class CToolTip
 {
 public:
     uint32_t Timer = 0;
-    std::wstring Data = {};
+    wstr_t Data = {};
     uint32_t ClilocID = 0;
     int MaxWidth = 0;
     CPoint2Di Position = CPoint2Di();
@@ -23,9 +23,9 @@ public:
     ~CToolTip();
 
     void Reset();
-    void Create(CTextSprite &texture, const std::wstring &str, int &width, int minWidth);
-    void Set(const std::wstring &str, int maxWidth = 0);
-    void Set(int clilocID, const std::string &str, int maxWidth = 0, bool toCamelCase = false);
+    void Create(CTextSprite &texture, const wstr_t &str, int &width, int minWidth);
+    void Set(const wstr_t &str, int maxWidth = 0);
+    void Set(int clilocID, const astr_t &str, int maxWidth = 0, bool toCamelCase = false);
     void Draw(int cursorWidth = 0, int cursorHeight = 0);
 };
 

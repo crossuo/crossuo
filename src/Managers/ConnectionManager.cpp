@@ -37,7 +37,7 @@ void CConnectionManager::SetUseProxy(bool val)
     m_GameSocket.UseProxy = val;
 }
 
-void CConnectionManager::SetProxyAddress(const std::string &val)
+void CConnectionManager::SetProxyAddress(const astr_t &val)
 {
     m_ProxyAddress = val;
     m_LoginSocket.ProxyAddress = val;
@@ -58,14 +58,14 @@ void CConnectionManager::SetProxySocks5(bool val)
     m_GameSocket.ProxySocks5 = val;
 }
 
-void CConnectionManager::SetProxyAccount(const std::string &val)
+void CConnectionManager::SetProxyAccount(const astr_t &val)
 {
     m_ProxyAccount = val;
     m_LoginSocket.ProxyAccount = val;
     m_GameSocket.ProxyAccount = val;
 }
 
-void CConnectionManager::SetProxyPassword(const std::string &val)
+void CConnectionManager::SetProxyPassword(const astr_t &val)
 {
     m_ProxyPassword = val;
     m_LoginSocket.ProxyPassword = val;
@@ -112,7 +112,7 @@ void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
     socket.Send(ip, 4);
 }
 
-bool CConnectionManager::Connect(const std::string &address, int port, uint8_t *gameSeed)
+bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameSeed)
 {
     Info(Network, "Connecting %s:%d", address.c_str(), port);
     if (m_IsLoginSocket)

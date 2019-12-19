@@ -11,7 +11,7 @@
 
 static std::atomic<int32_t> s_pingCnt;
 
-CPingThread::CPingThread(int serverID, const std::string &serverIP, int requestsCount)
+CPingThread::CPingThread(int serverID, const astr_t &serverIP, int requestsCount)
     : ServerID(serverID)
     , ServerIP(serverIP)
     , RequestsCount(requestsCount)

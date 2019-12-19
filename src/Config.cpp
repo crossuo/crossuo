@@ -74,7 +74,7 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_COUNT, nullptr },
 };
 
-static uint32_t GetConfigKey(const std::string &key)
+static uint32_t GetConfigKey(const astr_t &key)
 {
     auto str = str_lower(key);
     for (int i = 0; s_Keys[i].key_name; i++)
@@ -119,7 +119,7 @@ static uint32_t ParseVersion(const char *versionStr)
     return VERSION(a, b, c, d);
 }
 
-static CLIENT_FLAG GetClientTypeFromString(const std::string &str)
+static CLIENT_FLAG GetClientTypeFromString(const astr_t &str)
 {
     auto client = str_lower(str);
     if (client == "t2a")

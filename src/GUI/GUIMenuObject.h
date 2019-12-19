@@ -8,11 +8,10 @@
 
 class CGUIMenuObject : public CGUITilepic
 {
-    std::string Text = "";
+    astr_t Text = "";
 
 public:
-    CGUIMenuObject(
-        int serial, uint16_t graphic, uint16_t color, int x, int y, const std::string &text);
+    CGUIMenuObject(int serial, uint16_t graphic, uint16_t color, int x, int y, const astr_t &text);
     virtual ~CGUIMenuObject();
 
     virtual bool Select();

@@ -9,13 +9,13 @@
 
 CClilocManager g_ClilocManager;
 
-CCliloc::CCliloc(const std::string &lang)
+CCliloc::CCliloc(const astr_t &lang)
 {
     Loaded = false;
     Language = lang;
     if (Language.length() != 0u)
     {
-        auto file = std::string("Cliloc.") + lang;
+        auto file = astr_t("Cliloc.") + lang;
         auto path = g_App.UOFilesPath(file);
         if (m_File.Load(path))
         {
@@ -32,9 +32,9 @@ CCliloc::~CCliloc()
     m_ClilocSupport.clear();
 }
 
-std::string CCliloc::Load(uint32_t &id)
+astr_t CCliloc::Load(uint32_t &id)
 {
-    std::string result;
+    astr_t result;
     if (Loaded)
     {
         m_File.ResetPtr();
@@ -74,7 +74,7 @@ std::string CCliloc::Load(uint32_t &id)
     return result;
 }
 
-std::wstring CCliloc::CamelCaseTest(bool toCamelCase, const std::string &result)
+wstr_t CCliloc::CamelCaseTest(bool toCamelCase, const astr_t &result)
 {
     if (toCamelCase)
     {
@@ -84,7 +84,7 @@ std::wstring CCliloc::CamelCaseTest(bool toCamelCase, const std::string &result)
     return wstr_from_utf8(result);
 }
 
-std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
+wstr_t CCliloc::GetX(int id, bool toCamelCase, astr_t &result)
 {
     if (id >= 3000000)
     {
@@ -138,12 +138,12 @@ std::wstring CCliloc::GetX(int id, bool toCamelCase, std::string &result)
     return CamelCaseTest(toCamelCase, result);
 }
 
-std::string CCliloc::GetA(int id, bool toCamelCase, std::string result)
+astr_t CCliloc::GetA(int id, bool toCamelCase, astr_t result)
 {
     return str_from(GetX(id, toCamelCase, result));
 }
 
-std::wstring CCliloc::GetW(int id, bool toCamelCase, std::string result)
+wstr_t CCliloc::GetW(int id, bool toCamelCase, astr_t result)
 {
     return GetX(id, toCamelCase, result);
 }
@@ -158,7 +158,7 @@ CClilocManager::~CClilocManager()
     m_LastCliloc = nullptr;
 }
 
-CCliloc *CClilocManager::Cliloc(const std::string &lang)
+CCliloc *CClilocManager::Cliloc(const astr_t &lang)
 {
     auto language = str_lower(lang);
     if (language.length() == 0u)
@@ -210,8 +210,7 @@ CCliloc *CClilocManager::Cliloc(const std::string &lang)
     return obj;
 }
 
-std::wstring
-CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, std::wstring args)
+wstr_t CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstr_t args)
 {
     while ((args.length() != 0u) && args[0] == L'\t')
     {
@@ -221,8 +220,7 @@ CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, std::
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
 }
 
-std::wstring
-CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args)
+wstr_t CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstr_t args)
 {
     while ((args.length() != 0u) && args[0] == L'@')
     {
@@ -232,14 +230,14 @@ CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, std:
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
 }
 
-std::wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, std::wstring args)
+wstr_t CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstr_t args)
 {
     auto message = Cliloc(g_Language)->GetW(cliloc, toCamelCase);
-    std::vector<std::wstring> arguments;
+    std::vector<wstr_t> arguments;
     while (true)
     {
         size_t pos = args.find(L'\t');
-        if (pos != std::string::npos)
+        if (pos != astr_t::npos)
         {
             arguments.push_back(args.substr(0, pos));
             args = args.substr(pos + 1);
@@ -254,13 +252,13 @@ std::wstring CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase
     for (int i = 0; i < (int)arguments.size(); i++)
     {
         size_t pos1 = message.find(L'~');
-        if (pos1 == std::string::npos)
+        if (pos1 == astr_t::npos)
         {
             break;
         }
 
         size_t pos2 = message.find(L'~', pos1 + 1);
-        if (pos2 == std::string::npos)
+        if (pos2 == astr_t::npos)
         {
             break;
         }

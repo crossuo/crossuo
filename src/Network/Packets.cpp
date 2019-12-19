@@ -80,7 +80,7 @@ CPacketSecondLogin::CPacketSecondLogin()
     WriteString(g_MainScreen.m_Password->c_str(), passLen, false);
 }
 
-CPacketCreateCharacter::CPacketCreateCharacter(const std::string &name)
+CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
     : CPacket(104)
 {
     int skillsCount = 3;
@@ -227,7 +227,7 @@ CPacketDeleteCharacter::CPacketDeleteCharacter(int charIndex)
     WriteDataBE(g_ConnectionManager.GetClientIP(), 4);
 }
 
-CPacketSelectCharacter::CPacketSelectCharacter(int index, const std::string &name)
+CPacketSelectCharacter::CPacketSelectCharacter(int index, const astr_t &name)
     : CPacket(73)
 {
     int copyLen = (int)name.length();
@@ -362,7 +362,7 @@ CPacketAttackRequest::CPacketAttackRequest(uint32_t serial)
     WriteUInt32BE(serial);
 }
 
-CPacketClientVersion::CPacketClientVersion(const std::string &version)
+CPacketClientVersion::CPacketClientVersion(const astr_t &version)
     : CPacket(4 + version.length())
 {
     WriteUInt8(0xBD);
@@ -400,12 +400,12 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
 
     //encoded
     bool encoded = !codes.empty();
-    std::string utf8string;
+    astr_t utf8string;
     std::vector<uint8_t> codeBytes;
     if (encoded)
     {
         typeValue |= ST_ENCODED_COMMAND;
-        utf8string = wstr_to_utf8(std::wstring(text));
+        utf8string = wstr_to_utf8(wstr_t(text));
         len = (int)utf8string.length();
         size += len;
         size += 1; //null terminator
@@ -730,7 +730,7 @@ CPacketTextEntryDialogResponse::CPacketTextEntryDialogResponse(
     WriteString(entry->c_str(), len);
 }
 
-CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, const std::string &newName)
+CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, const astr_t &newName)
     : CPacket(35)
 {
     WriteUInt8(0x75);
@@ -760,7 +760,7 @@ CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(const char *text, size_t 
 }
 
 CPacketUnicodePromptResponse::CPacketUnicodePromptResponse(
-    const wchar_t *text, size_t len, const std::string &lang, bool cancel)
+    const wchar_t *text, size_t len, const astr_t &lang, bool cancel)
     : CPacket(1)
 {
     size_t size = 19 + (len * 2);
@@ -1024,7 +1024,7 @@ CPacketBulletinBoardRemoveMessage::CPacketBulletinBoardRemoveMessage(
     WriteUInt32BE(msgSerial);
 }
 
-CPacketAssistVersion::CPacketAssistVersion(uint32_t version, const std::string &clientVersion)
+CPacketAssistVersion::CPacketAssistVersion(uint32_t version, const astr_t &clientVersion)
     : CPacket(1)
 {
     size_t size = 7 + clientVersion.length() + 1;
@@ -1044,7 +1044,7 @@ CPacketRazorAnswer::CPacketRazorAnswer()
     WriteUInt8(0xFF);
 }
 
-CPacketLanguage::CPacketLanguage(const std::string &lang)
+CPacketLanguage::CPacketLanguage(const astr_t &lang)
     : CPacket(1)
 {
     size_t size = 5 + lang.length() + 1;
@@ -1093,7 +1093,7 @@ CPacketPopupMenuSelection::CPacketPopupMenuSelection(uint32_t serial, uint16_t m
     WriteUInt16BE(menuID);
 }
 
-CPacketOpenChat::CPacketOpenChat(const std::wstring &name)
+CPacketOpenChat::CPacketOpenChat(const wstr_t &name)
     : CPacket(64)
 {
     WriteUInt8(0xB5);

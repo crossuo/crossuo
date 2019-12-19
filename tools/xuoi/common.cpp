@@ -24,7 +24,7 @@ const char *log_system_name(int)
 #define LOOKUP3_IMPLEMENTATION
 #include <external/lookup3.h>
 
-bool valid_url(const std::string &url)
+bool valid_url(const astr_t &url)
 {
     return url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0;
 }
@@ -33,13 +33,13 @@ bool valid_url(const std::string &url)
 #include <windows.h>
 #include <shellapi.h>
 
-void open_url(const std::string &url)
+void open_url(const astr_t &url)
 {
     assert(valid_url(url) && "invalid url format");
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 #else
-void open_url(const std::string &url)
+void open_url(const astr_t &url)
 {
 #if defined(XUO_OSX)
 #define OPEN_CMD "open "
@@ -47,7 +47,7 @@ void open_url(const std::string &url)
 #define OPEN_CMD "xdg-open "
 #endif
     assert(valid_url(url) && "invalid url format");
-    auto cmd = std::string(OPEN_CMD) + url;
+    auto cmd = astr_t(OPEN_CMD) + url;
     system(cmd.c_str());
 }
 #endif

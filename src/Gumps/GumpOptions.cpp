@@ -2907,13 +2907,13 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
 {
     if (serial == ID_GO_PAGE_6)
     {
-        m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
-        m_ContainerOffsetY->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultY));
+        m_ContainerOffsetX->m_Entry.SetTextA(str_from_int(g_ContainerRect.DefaultX));
+        m_ContainerOffsetY->m_Entry.SetTextA(str_from_int(g_ContainerRect.DefaultY));
     }
     else if (serial == ID_GO_PAGE_7)
     {
-        m_GameWindowWidth->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowWidth));
-        m_GameWindowHeight->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowHeight));
+        m_GameWindowWidth->m_Entry.SetTextA(str_from_int(g_OptionsConfig.GameWindowWidth));
+        m_GameWindowHeight->m_Entry.SetTextA(str_from_int(g_OptionsConfig.GameWindowHeight));
     }
     else if (serial == ID_GO_CANCEL) //Cancel
     {
@@ -2952,8 +2952,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage6();
 
-                m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
-                m_ContainerOffsetY->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultY));
+                m_ContainerOffsetX->m_Entry.SetTextA(str_from_int(g_ContainerRect.DefaultX));
+                m_ContainerOffsetY->m_Entry.SetTextA(str_from_int(g_ContainerRect.DefaultY));
 
                 break;
             }
@@ -2961,10 +2961,9 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage7();
 
-                m_GameWindowWidth->m_Entry.SetTextA(
-                    std::to_string(g_OptionsConfig.GameWindowWidth));
+                m_GameWindowWidth->m_Entry.SetTextA(str_from_int(g_OptionsConfig.GameWindowWidth));
                 m_GameWindowHeight->m_Entry.SetTextA(
-                    std::to_string(g_OptionsConfig.GameWindowHeight));
+                    str_from_int(g_OptionsConfig.GameWindowHeight));
 
                 break;
             }

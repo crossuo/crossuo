@@ -23,7 +23,7 @@ public:
     int Run();
     fs_path ExeFilePath(const char *str, ...) const;
     fs_path UOFilesPath(const char *str, ...) const;
-    fs_path UOFilesPath(const std::string &str, ...) const;
+    fs_path UOFilesPath(const astr_t &str, ...) const;
 };
 
 }; // namespace Wisp

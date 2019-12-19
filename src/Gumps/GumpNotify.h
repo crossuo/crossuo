@@ -11,7 +11,7 @@ class CGumpNotify : public CGump
     uint8_t Variant = 0;
     short Width = 0;
     short Height = 0;
-    std::string Text;
+    astr_t Text;
 
 private:
     static const int ID_GN_BUTTON_OK = 1;
@@ -19,7 +19,7 @@ private:
     void Process();
 
 public:
-    CGumpNotify(short x, short y, uint8_t variant, short width, short height, std::string text);
+    CGumpNotify(short x, short y, uint8_t variant, short width, short height, astr_t text);
     virtual ~CGumpNotify();
 
     static const int ID_GN_STATE_LOGOUT = 1;

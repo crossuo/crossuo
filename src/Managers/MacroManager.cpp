@@ -41,7 +41,7 @@ CMacroManager::~CMacroManager()
 {
 }
 
-Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<std::string> &strings)
+Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<astr_t> &strings)
 {
     auto str = strings[0];
 
@@ -224,7 +224,7 @@ bool CMacroManager::Convert(const fs_path &path)
 
     while (!file.IsEOF())
     {
-        std::vector<std::string> strings = file.ReadTokens();
+        std::vector<astr_t> strings = file.ReadTokens();
         strings = unicodeParser.GetTokens(file.RawLine.c_str(), false);
         size_t size = strings.size();
 
@@ -248,17 +248,17 @@ bool CMacroManager::Convert(const fs_path &path)
             atoi(strings[size - MACRO_POSITION_CTRL].c_str()) != 0,
             atoi(strings[size - MACRO_POSITION_SHIFT].c_str()) != 0);
 
-        std::string TestLine{};
+        astr_t TestLine{};
         while (!file.IsEOF())
         {
-            std::vector<std::string> datas = file.ReadTokens();
+            std::vector<astr_t> datas = file.ReadTokens();
             TestLine.append(file.RawLine);
             if ((*file.RawLine.c_str() != '\n') && (*file.RawLine.c_str() != '\r') &&
                 (!file.RawLine.empty()) && (*file.RawLine.c_str() != '#'))
             {
                 continue;
             }
-            std::vector<std::string> data = unicodeParser.GetTokens(TestLine.c_str(), false);
+            std::vector<astr_t> data = unicodeParser.GetTokens(TestLine.c_str(), false);
             TestLine = "";
             if (data.empty())
             {
@@ -272,7 +272,7 @@ bool CMacroManager::Convert(const fs_path &path)
             }
             if (*data[0].c_str() == '+')
             {
-                std::string raw = data[0].c_str() + 1;
+                astr_t raw = data[0].c_str() + 1;
                 data[0] = raw;
             }
 
@@ -296,7 +296,7 @@ bool CMacroManager::Convert(const fs_path &path)
                 {
                     if (data.size() > 1)
                     {
-                        std::string args = data[1];
+                        astr_t args = data[1];
                         for (int i = 2; i < (int)data.size(); i++)
                         {
                             args += " " + data[i];

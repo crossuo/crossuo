@@ -112,7 +112,7 @@ CGumpBook::CGumpBook(
             entry->MoveOnDrag = true;
 
             text = (CGUIText *)Add(new CGUIText(0x0386, 112, 202));
-            text->CreateTextureA(9, std::to_string(i));
+            text->CreateTextureA(9, str_from_int(i));
         }
 
         i++;
@@ -143,7 +143,7 @@ CGumpBook::CGumpBook(
             entry->MoveOnDrag = true;
 
             text = (CGUIText *)Add(new CGUIText(0x0386, 299, 202));
-            text->CreateTextureA(9, std::to_string(i));
+            text->CreateTextureA(9, str_from_int(i));
         }
     }
 }
@@ -192,7 +192,7 @@ CGUITextEntry *CGumpBook::GetEntry(int page)
     return nullptr;
 }
 
-void CGumpBook::SetPageData(int page, const std::wstring &data)
+void CGumpBook::SetPageData(int page, const wstr_t &data)
 {
     CGUITextEntry *entry = GetEntry(page);
     m_PageDataReceived[page] = true;
@@ -660,7 +660,7 @@ void CGumpBook::SetPagePos(int val, int page)
     g_EntryPointer->SetPos(val, this);
 }
 
-void CGumpBook::PasteClipboardData(std::wstring &data)
+void CGumpBook::PasteClipboardData(wstr_t &data)
 {
     for (int i = 0; i < (int)data.length(); i++)
     {

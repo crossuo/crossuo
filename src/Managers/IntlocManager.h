@@ -9,31 +9,31 @@
 class CIntloc : public CBaseQueueItem
 {
 public:
-    std::string Language = "";
+    astr_t Language = "";
     int FileIndex = -1;
     bool Loaded = false;
 
 private:
-    std::vector<std::wstring> m_Strings;
+    std::vector<wstr_t> m_Strings;
 
 public:
-    CIntloc(int fileIndex, const std::string &lang);
+    CIntloc(int fileIndex, const astr_t &lang);
     virtual ~CIntloc();
 
     CMappedFile m_File;
-    std::wstring Get(int id, bool toCamelCase = false);
+    wstr_t Get(int id, bool toCamelCase = false);
 };
 
 class CIntlocManager : public CBaseQueue
 {
 private:
-    CIntloc *Intloc(int fileIndex, const std::string &lang);
+    CIntloc *Intloc(int fileIndex, const astr_t &lang);
 
 public:
     CIntlocManager();
     virtual ~CIntlocManager();
 
-    std::wstring Intloc(const std::string &lang, uint32_t clilocID, bool isNewCliloc);
+    wstr_t Intloc(const astr_t &lang, uint32_t clilocID, bool isNewCliloc);
 };
 
 extern CIntlocManager g_IntlocManager;

@@ -30,7 +30,7 @@ public:
     CMainScreen();
     virtual ~CMainScreen();
 
-    void SetAccounting(const std::string &account, const std::string &password);
+    void SetAccounting(const astr_t &account, const astr_t &password);
     void Paste();
     virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
     virtual void Init() override;

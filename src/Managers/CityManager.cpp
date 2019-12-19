@@ -11,7 +11,7 @@
 
 CCityManager g_CityManager;
 
-CCity::CCity(const std::string &name, const std::wstring &description)
+CCity::CCity(const astr_t &name, const wstr_t &description)
     : Name(name)
     , Description(description)
 {
@@ -39,7 +39,7 @@ void CCityManager::Init()
 
                 uint8_t *startBlock = file.Ptr + 4;
                 uint8_t *ptrBlock = startBlock;
-                std::string name{};
+                astr_t name{};
                 while (ptrBlock < end)
                 {
                     if (*ptrBlock == '<')
@@ -52,7 +52,7 @@ void CCityManager::Init()
                     ptrBlock++;
                 }
 
-                std::string text{};
+                astr_t text{};
                 while (file.Ptr < end)
                 {
                     auto str = file.ReadString();
@@ -78,9 +78,9 @@ void CCityManager::Init()
     }
     else
     {
-        static const std::string cityNames[9] = { "Yew",      "Minoc",      "Britain",
-                                                  "Moonglow", "Trinsic",    "Magincia",
-                                                  "Jhelom",   "Skara Brae", "Vesper" };
+        static const astr_t cityNames[9] = { "Yew",      "Minoc",      "Britain",
+                                             "Moonglow", "Trinsic",    "Magincia",
+                                             "Jhelom",   "Skara Brae", "Vesper" };
 
         CCliloc *cliloc = g_ClilocManager.Cliloc(g_Language);
         if (cliloc != nullptr)
@@ -98,7 +98,7 @@ CCityManager::~CCityManager()
     Clear();
 }
 
-CCity CCityManager::GetCity(const std::string &name)
+CCity CCityManager::GetCity(const astr_t &name)
 {
     for (auto &city : m_CityList)
     {

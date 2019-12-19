@@ -87,7 +87,7 @@ void CGumpBuff::UpdateBuffIcons()
     }
 }
 
-void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const std::wstring &text)
+void CGumpBuff::AddBuff(uint16_t id, uint16_t timer, const wstr_t &text)
 {
     uint32_t ticks = 0xFFFFFFFF;
     if (timer != 0u)

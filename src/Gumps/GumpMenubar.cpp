@@ -57,7 +57,7 @@ CGumpMenubar::CGumpMenubar(short x, short y)
                                             { 0x098D, 543, 546, largeWidth, ID_GMB_WORLD_MAP },
                                             { 0x098B, 651, 654, smallWidth, ID_GMB_INFO } };
 
-    static const std::wstring text[8] = {
+    static const wstr_t text[8] = {
         g_ClilocManager.Cliloc(g_Language)->GetW(3000430, false, "Map"),
         g_ClilocManager.Cliloc(g_Language)->GetW(3002133, false, "Paperdoll"),
         g_ClilocManager.Cliloc(g_Language)->GetW(3000431, false, "Inventory"),

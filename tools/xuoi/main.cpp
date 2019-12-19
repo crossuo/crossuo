@@ -146,7 +146,7 @@ struct mft_product
     std::vector<mft_stage> stages;
     std::vector<mft_package> packages;
     std::vector<mft_manifest *> manifests;
-    std::unordered_map<std::string, mft_entry> base_version;
+    std::unordered_map<astr_t, mft_entry> base_version;
 
     uint64_t last_version = 0;
     mft_config config;
@@ -605,7 +605,7 @@ void mft_listing_save(mft_product &prod)
 }
 
 template <typename T>
-void mft_listing_load_version(mft_product &prod, const std::string &version, T &data)
+void mft_listing_load_version(mft_product &prod, const astr_t &version, T &data)
 {
     if (version.empty())
         return;
@@ -638,7 +638,7 @@ void mft_listing_load_version(mft_product &prod, const std::string &version, T &
             &endline,
             &t);
 
-        std::string n = tmp;
+        astr_t n = tmp;
         if (!e.timestamp && !e.hash && !e.uncompressed_len && !e.ph)
             break;
 
@@ -762,7 +762,7 @@ int mft_diff(mft_product &prod)
 {
     auto path = fs_path_join(
         prod.config.product_path,
-        // std::to_string(prod.last_version),
+        // str_from_int(prod.last_version),
         // prod.launchfile,
         "cache",
         "diff.csv");
@@ -809,7 +809,7 @@ int mft_diff(mft_product &prod)
     char name[32] = {};
     for (auto &e : prod.parts)
     {
-        std::string part = e.pack_name;
+        astr_t part = e.pack_name;
         snprintf(name, 32, "%08x%08x", e.ph, e.sh);
         part += "/";
         part += name;
@@ -1044,9 +1044,9 @@ mft_result mft_product_install(mft_config &cfg, const char *product_url, const c
 
             // set config as latest version already checked, so next loop for next product we skip it
             cfg.latest_checked = true;
-            mft_listing_load_version(prod, std::to_string(prod.last_version), prod.base_version);
+            mft_listing_load_version(prod, str_from_int(prod.last_version), prod.base_version);
             prod.config.product_path = fs_path_join(
-                prod.config.output_path, std::to_string(prod.timestamp), prod.launchfile);
+                prod.config.output_path, str_from_int(prod.timestamp), prod.launchfile);
         }
 
         fs_path prod_file = fs_path_join(prod.config.product_path, "cache");
@@ -1198,16 +1198,16 @@ int main(int argc, char **argv)
     {
         uop_populate_asset_names();
 
-        std::string diff = s_cli["diff"].get().string;
+        astr_t diff = s_cli["diff"].get().string;
         const auto pos = strchr(diff.data(), ',') - diff.data();
-        auto ver1 = std::string(diff.data(), pos);
-        auto ver2 = std::string(diff.data() + pos + 1, diff.length() - pos - 1);
+        auto ver1 = astr_t(diff.data(), pos);
+        auto ver2 = astr_t(diff.data() + pos + 1, diff.length() - pos - 1);
         LOG_INFO("Diffing %s <> %s", ver1.c_str(), ver2.c_str());
 
         mft_product mft;
         mft_init(mft, cfg);
         mft.launchfile = "client.exe"; // arg...
-        std::map<std::string, mft_entry> data1, data2;
+        std::map<astr_t, mft_entry> data1, data2;
         mft_listing_load_version(mft, ver1, data1);
         mft_listing_load_version(mft, ver2, data2);
         mft_diff(mft, data1, data2);
@@ -1233,7 +1233,7 @@ int main(int argc, char **argv)
     int product_count = product_max;
     if (specific_product)
     {
-        std::string product_name = s_cli["product"].get().string;
+        astr_t product_name = s_cli["product"].get().string;
         for (int i = 0; i < product_max; ++i)
         {
             if (product_name.compare(product_list[i]) == 0)

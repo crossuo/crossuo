@@ -110,7 +110,7 @@ static bool init_cli(int argc, char *argv[])
     return s_cli["help"].size() == 0;
 }
 
-static std::string cli(const char *arg, const char *val = "")
+static astr_t cli(const char *arg, const char *val = "")
 {
     return s_cli[arg].was_set() ? s_cli[arg].get().string : val;
 }
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
     {
         log("loading speech from UOP");
         reader.Move(2);
-        std::wstring mainData = reader.ReadWStringLE(reader.Size - 2);
+        wstr_t mainData = reader.ReadWStringLE(reader.Size - 2);
         std::wcout << mainData << std::endl;
     }
 */

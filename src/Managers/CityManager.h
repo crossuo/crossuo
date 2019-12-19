@@ -10,10 +10,10 @@
 class CCity
 {
 public:
-    std::string Name = {};
-    std::wstring Description = {};
+    astr_t Name = {};
+    wstr_t Description = {};
 
-    CCity(const std::string &name, const std::wstring &description);
+    CCity(const astr_t &name, const wstr_t &description);
     CCity() = default;
     virtual ~CCity();
 };
@@ -28,7 +28,7 @@ public:
 
     void Init();
     void Clear();
-    CCity GetCity(const std::string &name);
+    CCity GetCity(const astr_t &name);
 };
 
 extern CCityManager g_CityManager;

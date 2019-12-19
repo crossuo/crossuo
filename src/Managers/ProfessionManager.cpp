@@ -15,7 +15,7 @@
 
 CProfessionManager g_ProfessionManager;
 
-const std::string CProfessionManager::m_Keys[m_KeyCount] = {
+const astr_t CProfessionManager::m_Keys[m_KeyCount] = {
     "begin", "name", "truename", "desc", "toplevel", "gump", "type",     "children", "skill",
     "stat",  "str",  "int",      "dex",  "end",      "true", "category", "nameid",   "descid"
 };
@@ -29,7 +29,7 @@ CProfessionManager::~CProfessionManager()
 {
 }
 
-int CProfessionManager::GetKeyCode(const std::string &key)
+int CProfessionManager::GetKeyCode(const astr_t &key)
 {
     auto str = str_lower(key);
     int result = 0;
@@ -48,9 +48,9 @@ int CProfessionManager::GetKeyCode(const std::string &key)
 bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
 {
     PROFESSION_TYPE type = PT_NO_PROF;
-    std::vector<std::string> childrens;
-    std::string name{};
-    std::string trueName{};
+    std::vector<astr_t> childrens;
+    astr_t name{};
+    astr_t trueName{};
     uint32_t nameClilocID = 0;
     uint32_t descriptionClilocID = 0;
     int descriptionIndex = 0;
@@ -64,7 +64,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
     bool exit = false;
     while (!file.IsEOF() && !exit)
     {
-        std::vector<std::string> strings = file.ReadTokens();
+        std::vector<astr_t> strings = file.ReadTokens();
 
         if (strings.empty())
         {
@@ -270,9 +270,9 @@ bool CProfessionManager::AddChild(CBaseProfession *parent, CBaseProfession *chil
     {
         CProfessionCategory *cat = (CProfessionCategory *)parent;
 
-        auto check = std::string("|") + child->Name + "|";
+        auto check = astr_t("|") + child->Name + "|";
 
-        if (cat->Childrens.find(check) != std::string::npos)
+        if (cat->Childrens.find(check) != astr_t::npos)
         {
             cat->Add(child);
             result = true;
@@ -320,7 +320,7 @@ bool CProfessionManager::Load()
             auto strings = file.ReadTokens();
             if (!strings.empty())
             {
-                if (str_lower(strings[0]) == std::string("begin"))
+                if (str_lower(strings[0]) == astr_t("begin"))
                 {
                     result = ParseFilePart(file);
 
@@ -392,7 +392,7 @@ void CProfessionManager::LoadProfessionDescription()
         char *ptr = (char *)file.Start;
         char *end = (char *)((uintptr_t)file.Start + file.Size);
 
-        std::vector<std::string> list;
+        std::vector<astr_t> list;
 
         while (ptr < end)
         {

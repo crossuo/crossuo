@@ -24,7 +24,7 @@ namespace CFG_NAME {
 
 struct entry
 {
-    #define CFG_FIELD(s, n, default, t) t s##_##n = {}; std::string raw_##s##_##n = default; bool set_##s##_##n = false;
+    #define CFG_FIELD(s, n, default, t) t s##_##n = {}; astr_t raw_##s##_##n = default; bool set_##s##_##n = false;
     #include CFG_DEFINITION
 };
 
@@ -40,7 +40,7 @@ entry default_entry()
 
 struct data
 {
-    std::vector<std::string> errors;
+    std::vector<astr_t> errors;
     std::vector<entry> entries;
     entry current = default_entry();
     int lineno = 0;

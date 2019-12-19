@@ -16,7 +16,7 @@ CServer::CServer()
 
 CServer::CServer(
     uint16_t index,
-    const std::string &name,
+    const astr_t &name,
     uint8_t fullPercent,
     uint8_t timezoneType,
     int ip,

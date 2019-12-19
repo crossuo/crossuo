@@ -27,7 +27,7 @@ CConnection::~CConnection()
     }
 }
 
-bool CConnection::Connect(const std::string &address, uint16_t port)
+bool CConnection::Connect(const astr_t &address, uint16_t port)
 {
     if (Connected)
     {

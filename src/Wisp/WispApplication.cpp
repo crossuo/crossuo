@@ -66,7 +66,7 @@ fs_path CApplication::ExeFilePath(const char *str, ...) const
     return fs_insensitive(res);
 }
 
-fs_path CApplication::UOFilesPath(const std::string &str, ...) const
+fs_path CApplication::UOFilesPath(const astr_t &str, ...) const
 {
     return UOFilesPath(str.c_str());
 }

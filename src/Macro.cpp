@@ -65,7 +65,7 @@ CMacroObject::~CMacroObject()
 }
 
 CMacroObjectString::CMacroObjectString(
-    const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const std::string &str)
+    const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const astr_t &str)
     : CMacroObject(code, subCode)
     , m_String(str)
 {

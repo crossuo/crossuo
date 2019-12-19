@@ -282,9 +282,6 @@ set(crossuo_src
 
 if(XUO_WINDOWS)
   set(crossuo_src ${crossuo_src}
-    #VMQuery.cpp                 # FIXME: windows only, wrap, coredump
-    #StackWalker.cpp             # FIXME: windows only, wrap, use backtrace
-    #ExceptionFilter.cpp         # FIXME: exception handler, wrap, use signals
     CrossUO.rc
   )
 endif()

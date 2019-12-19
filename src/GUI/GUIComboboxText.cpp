@@ -8,7 +8,7 @@
 CGUIComboboxText::CGUIComboboxText(
     uint16_t color,
     uint8_t font,
-    const std::string &str,
+    const astr_t &str,
     int width,
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
@@ -21,7 +21,7 @@ CGUIComboboxText::CGUIComboboxText(
 CGUIComboboxText::CGUIComboboxText(
     uint16_t color,
     uint8_t font,
-    const std::wstring &str,
+    const wstr_t &str,
     int width,
     TEXT_ALIGN_TYPE align,
     uint16_t flags)

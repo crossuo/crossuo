@@ -25,10 +25,10 @@ public:
         int y,
         uint8_t variant,
         int id,
-        const std::wstring &poster,
-        const std::wstring &subject,
-        const std::wstring &dataTime,
-        const std::wstring &data);
+        const wstr_t &poster,
+        const wstr_t &subject,
+        const wstr_t &dataTime,
+        const wstr_t &data);
     virtual ~CGumpBulletinBoardItem();
 
     CGUITextEntry *m_EntrySubject{ nullptr };

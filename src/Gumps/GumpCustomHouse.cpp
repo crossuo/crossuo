@@ -453,7 +453,7 @@ void CGumpCustomHouse::InitToolTip()
         }
         case ID_GCH_AREA_OBJECTS_INFO:
         {
-            std::wstring str = g_ClilocManager.ParseArgumentsToClilocString(
+            wstr_t str = g_ClilocManager.ParseArgumentsToClilocString(
                 1061039,
                 true,
                 std::to_wstring(MaxComponents) + L"\t" + std::to_wstring(MaxFixtures));
@@ -919,7 +919,7 @@ void CGumpCustomHouse::DrawRoofSection()
         gumppic->MoveOnDrag = true;
 
         CGUIText *text = (CGUIText *)m_DataBoxGUI->Add(new CGUIText(0x04E9, 405, 15));
-        text->CreateTextureA(3, std::to_string(RoofZ));
+        text->CreateTextureA(3, str_from_int(RoofZ));
         text->Serial = ID_GCH_AREA_ROOF_Z_INFO;
         text->MoveOnDrag = true;
     }
@@ -1373,13 +1373,13 @@ void CGumpCustomHouse::UpdateContent()
     }
 
     m_TextComponents->Color = (Components >= MaxComponents ? 0x0026 : 0x0481);
-    m_TextComponents->CreateTextureA(9, std::to_string(Components));
+    m_TextComponents->CreateTextureA(9, str_from_int(Components));
     m_TextComponents->SetX(82 - m_TextComponents->m_Texture.Width);
 
     m_TextFixtures->Color = (Fixtures >= MaxFixtures ? 0x0026 : 0x0481);
-    m_TextFixtures->CreateTextureA(9, std::to_string(Fixtures));
+    m_TextFixtures->CreateTextureA(9, str_from_int(Fixtures));
 
-    m_TextCost->CreateTextureA(9, std::to_string((Components + Fixtures) * 500));
+    m_TextCost->CreateTextureA(9, str_from_int((Components + Fixtures) * 500));
 }
 
 void CGumpCustomHouse::UpdateMaxPage()

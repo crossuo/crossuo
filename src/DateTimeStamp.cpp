@@ -5,17 +5,17 @@
 
 #if defined(XUO_WINDOWS)
 
-std::string GetBuildDateTimeStamp()
+astr_t GetBuildDateTimeStamp()
 {
-    return std::string(__DATE__);
+    return astr_t(__DATE__);
 }
 
 #else
 
 #include "GitRevision.h"
-std::string GetBuildDateTimeStamp()
+astr_t GetBuildDateTimeStamp()
 {
-    return std::string(__DATE__ " " __TIME__ " (" GIT_REV_STR ")");
+    return astr_t(__DATE__ " " __TIME__ " (" GIT_REV_STR ")");
 }
 
 #endif

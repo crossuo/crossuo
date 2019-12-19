@@ -148,7 +148,7 @@ void CGumpScreenServer::UpdateContent()
         }
         else
         {
-            entry->m_Entry.SetTextA(std::to_string(server->Ping) + "ms");
+            entry->m_Entry.SetTextA(str_from_int(server->Ping) + "ms");
         }
 #else
         entry->m_Entry.SetTextA("-");
@@ -166,7 +166,7 @@ void CGumpScreenServer::UpdateContent()
         }
         else
         {
-            entry->m_Entry.SetTextA(std::to_string(server->PacketsLoss) + "%");
+            entry->m_Entry.SetTextA(str_from_int(server->PacketsLoss) + "%");
         }
         entry->ReadOnly = true;
         entry->CheckOnSerial = true;
@@ -228,7 +228,7 @@ void CGumpScreenServer::InitToolTip()
 
     if (id >= ID_SS_SERVER_LIST)
     {
-        std::string cstr(
+        astr_t cstr(
             "Connect to '" + g_ServerList.GetServer(id - ID_SS_SERVER_LIST)->Name + "' server");
 
         g_ToolTip.Set(wstr_from(cstr), 100);

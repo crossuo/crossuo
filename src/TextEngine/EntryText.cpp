@@ -187,9 +187,9 @@ bool CEntryText::Insert(wchar_t ch, CGump *gump)
     {
         if (NumberOnly)
         {
-            auto wstr = Text;
-            wstr.insert(wstr.begin() + m_Position, ch);
-            if (std::stoi(wstr) >= MaxLength)
+            auto str = Text;
+            str.insert(str.begin() + m_Position, ch);
+            if (std::stoi(str) >= MaxLength)
             {
                 return false;
             }
@@ -306,14 +306,14 @@ void CEntryText::SetPos(int val, CGump *gump)
     }
 }
 
-void CEntryText::SetTextA(const std::string &text)
+void CEntryText::SetTextA(const astr_t &text)
 {
     auto wtext = wstr_from(text);
     SetTextW(wtext);
     m_CText = text;
 }
 
-void CEntryText::SetTextW(const std::wstring &text)
+void CEntryText::SetTextW(const wstr_t &text)
 {
     Clear();
 
@@ -356,7 +356,7 @@ void CEntryText::SetTextW(const std::wstring &text)
     }
 }
 
-std::string CEntryText::CheckMaxWidthA(uint8_t font, std::string str)
+astr_t CEntryText::CheckMaxWidthA(uint8_t font, astr_t str)
 {
     if (MaxWidth > 0)
     {
@@ -373,7 +373,7 @@ std::string CEntryText::CheckMaxWidthA(uint8_t font, std::string str)
     return str;
 }
 
-std::wstring CEntryText::CheckMaxWidthW(uint8_t font, std::wstring str)
+wstr_t CEntryText::CheckMaxWidthW(uint8_t font, wstr_t str)
 {
     if (MaxWidth > 0)
     {
@@ -427,7 +427,7 @@ void CEntryText::FixMaxWidthW(uint8_t font)
 
 void CEntryText::CreateTextureA(
     uint8_t font,
-    const std::string &str,
+    const astr_t &str,
     uint16_t color,
     int width,
     TEXT_ALIGN_TYPE align,
@@ -481,7 +481,7 @@ void CEntryText::CreateTextureA(
 
 void CEntryText::CreateTextureW(
     uint8_t font,
-    const std::wstring &str,
+    const wstr_t &str,
     uint16_t color,
     int width,
     TEXT_ALIGN_TYPE align,
@@ -586,7 +586,7 @@ void CEntryText::DrawMaskA(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     const auto len = (int)Length();
-    std::string str{};
+    astr_t str{};
     for (int i = 0; i < len; i++)
     {
         str += "*";
@@ -614,7 +614,7 @@ void CEntryText::DrawMaskW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     const auto len = (int)Length();
-    std::wstring str = {};
+    wstr_t str = {};
     for (int i = 0; i < len; i++)
     {
         str += L"*";
@@ -641,12 +641,12 @@ void CEntryText::RemoveSequence(int startPos, int length)
     Text.erase(startPos, length);
 }
 
-std::string CEntryText::GetTextA() const
+astr_t CEntryText::GetTextA() const
 {
     return m_CText;
 }
 
-std::wstring CEntryText::GetTextW() const
+wstr_t CEntryText::GetTextW() const
 {
     return Text;
 }

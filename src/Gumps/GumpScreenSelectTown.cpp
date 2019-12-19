@@ -54,7 +54,7 @@ void CGumpScreenSelectTown::UpdateContent()
         return;
     }
 
-    std::wstring description = city->m_City.Description;
+    wstr_t description = city->m_City.Description;
     int map = 0;
 
     if (city->IsNewCity())
@@ -73,8 +73,8 @@ void CGumpScreenSelectTown::UpdateContent()
         Add(new CGUIGumppic(0x15D9 + map, 62, 54));
         Add(new CGUIGumppic(0x15DF, 57, 49));
 
-        static const std::wstring townNames[6] = { L"Felucca", L"Trammel", L"Ilshenar",
-                                                   L"Malas",   L"Tokuno",  L"Ter Mur" };
+        static const wstr_t townNames[6] = { L"Felucca", L"Trammel", L"Ilshenar",
+                                             L"Malas",   L"Tokuno",  L"Ter Mur" };
 
         CGUIText *mapName = (CGUIText *)Add(new CGUIText(0x0481, 240, 440));
         mapName->CreateTextureW(0, townNames[map], 24, 0, TS_LEFT, UOFONT_BLACK_BORDER);

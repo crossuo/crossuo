@@ -17,38 +17,38 @@ CFG_FIELD(global, auto_update, "yes", bool)
 
 CFG_FIELD(global, beta_channel, "no", bool)
 
-CFG_FIELD(account, profile, {}, std::string)
+CFG_FIELD(account, profile, {}, astr_t)
 
-CFG_FIELD(account, login, {}, std::string)
+CFG_FIELD(account, login, {}, astr_t)
 
-CFG_FIELD(account, password, {}, std::string)
+CFG_FIELD(account, password, {}, astr_t)
 
 CFG_FIELD(account, auto_login, "no", bool)
 
 CFG_FIELD(account, save_password, "no", bool)
 
-CFG_FIELD(account, data_path, {}, std::string)
+CFG_FIELD(account, data_path, {}, astr_t)
 
-CFG_FIELD(account, fast_login, {}, std::string) // character name
+CFG_FIELD(account, fast_login, {}, astr_t) // character name
 
-CFG_FIELD(account, extra_cli, {}, std::string)
+CFG_FIELD(account, extra_cli, {}, astr_t)
 
 // --- BEGIN fields from cfg_shard.h
-CFG_FIELD(account, loginserver, {}, std::string)
+CFG_FIELD(account, loginserver, {}, astr_t)
 // required
 // same as crossuop.cfg, classic loginserver for login.cfg
 // format:
 //   <ip>,<port>
 
-CFG_FIELD(account, clientversion, {}, std::string)
+CFG_FIELD(account, clientversion, {}, astr_t)
 // required
 // same as in crossuo.cfg, specify the client version to emulate with crossuo
 
-CFG_FIELD(account, protocolversion, {}, std::string)
+CFG_FIELD(account, protocolversion, {}, astr_t)
 // required
 // same as in crossuo.cfg, specify the network protocol version to force
 
-CFG_FIELD(account, clienttype, {}, std::string)
+CFG_FIELD(account, clienttype, {}, astr_t)
 // optional
 // same as crossuo.cfg, if empty will autodetect based on the client version
 

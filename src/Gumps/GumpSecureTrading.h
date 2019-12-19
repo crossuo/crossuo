@@ -16,7 +16,7 @@ public:
     uint32_t Platinum = 0;
     bool StateMine = false;
     bool StateOpponent = false;
-    std::string Text;
+    astr_t Text;
 
 private:
     uint8_t mdbx = 45;

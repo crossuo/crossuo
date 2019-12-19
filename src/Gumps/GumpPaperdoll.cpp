@@ -316,7 +316,7 @@ void CGumpPaperdoll::DelayedClick(CRenderObject *obj)
         td->SetX(g_MouseManager.Position.X - m_X);
         td->SetY(g_MouseManager.Position.Y - m_Y);
 
-        std::string text = "Party Manifest";
+        astr_t text = "Party Manifest";
 
         if (obj->Serial == ID_GP_PROFILE_SCROLL)
         {
@@ -749,7 +749,7 @@ void CGumpPaperdoll::UpdateContent()
     m_DataBox->Add(new CGUIShader(&g_ColorizerShader, false));
 }
 
-void CGumpPaperdoll::UpdateDescription(const std::string &text)
+void CGumpPaperdoll::UpdateDescription(const astr_t &text)
 {
     if (m_Description != nullptr)
     {

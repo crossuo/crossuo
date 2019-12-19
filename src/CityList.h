@@ -9,8 +9,8 @@ class CCityItem
 {
 public:
     uint8_t LocationIndex = 0;
-    std::string Name = "";
-    std::string Area = "";
+    astr_t Name = "";
+    astr_t Area = "";
     bool Selected = false;
 
     CCityItem();

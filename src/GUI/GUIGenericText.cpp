@@ -5,7 +5,7 @@
 #include "../Config.h"
 #include "../Globals.h" // UOFONT_*
 
-void CGUIGenericText::Create(const std::wstring &str)
+void CGUIGenericText::Create(const wstr_t &str)
 {
     uint16_t flags = UOFONT_BLACK_BORDER;
 

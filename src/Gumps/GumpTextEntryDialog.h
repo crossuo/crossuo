@@ -18,8 +18,8 @@ private:
     static constexpr int ID_GTED_BUTTON_CANCEL = 2;
     static constexpr int ID_GTED_TEXT_FIELD = 3;
 
-    std::string Text;
-    std::string m_Description;
+    astr_t Text;
+    astr_t m_Description;
     int m_MaxLength = 0;
 
     CGUIGumppic *m_TextField = nullptr;
@@ -32,8 +32,8 @@ public:
         short y,
         uint8_t variant,
         int maxLength,
-        std::string text,
-        std::string description);
+        astr_t text,
+        astr_t description);
     virtual ~CGumpTextEntryDialog();
 
     void SendTextEntryDialogResponse(bool mode);

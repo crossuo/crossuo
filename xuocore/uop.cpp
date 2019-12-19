@@ -10,12 +10,12 @@
 
 struct UopAssetName
 {
-    std::string name;
+    astr_t name;
     uint32_t id = 0;
 };
 
 using HashToNameId = std::unordered_map<uint64_t, UopAssetName>;
-using PackageHashTable = std::unordered_map<std::string, HashToNameId>;
+using PackageHashTable = std::unordered_map<astr_t, HashToNameId>;
 
 static PackageHashTable s_package_hashes;
 
@@ -75,9 +75,9 @@ void uop_populate_asset_names()
     }
 }
 
-const std::string &uop_asset_name(const char *package, uint64_t hash, uint32_t *out_id)
+const astr_t &uop_asset_name(const char *package, uint64_t hash, uint32_t *out_id)
 {
-    static std::string not_found;
+    static astr_t not_found;
     if (!package)
     {
         return not_found;

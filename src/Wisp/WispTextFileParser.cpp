@@ -151,10 +151,10 @@ bool CTextFileParser::IsSecondQuote()
     return result;
 }
 
-std::string CTextFileParser::ObtainData()
+astr_t CTextFileParser::ObtainData()
 {
     TEXTPARSER_TRACE_FUNCTION;
-    std::string result;
+    astr_t result;
     while (m_Ptr < m_End && (*m_Ptr != 0u) && *m_Ptr != '\n')
     {
         if (IsDelimiter())
@@ -177,11 +177,11 @@ std::string CTextFileParser::ObtainData()
     return result;
 }
 
-std::string CTextFileParser::ObtainQuotedData()
+astr_t CTextFileParser::ObtainQuotedData()
 {
     TEXTPARSER_TRACE_FUNCTION;
     bool exit = false;
-    std::string result;
+    astr_t result;
     for (int i = 0; i < m_QuotesSize; i += 2)
     {
         if (*m_Ptr == m_Quotes[i])
@@ -245,11 +245,11 @@ void CTextFileParser::SaveRawLine()
     }
 }
 
-std::vector<std::string> CTextFileParser::ReadTokens(bool trim)
+std::vector<astr_t> CTextFileParser::ReadTokens(bool trim)
 {
     TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
-    std::vector<std::string> result;
+    std::vector<astr_t> result;
 
     if (!IsEOF())
     {
@@ -280,11 +280,11 @@ std::vector<std::string> CTextFileParser::ReadTokens(bool trim)
     return result;
 }
 
-std::vector<std::string> CTextFileParser::GetTokens(const char *str, bool trim)
+std::vector<astr_t> CTextFileParser::GetTokens(const char *str, bool trim)
 {
     TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
-    std::vector<std::string> result;
+    std::vector<astr_t> result;
 
     uint8_t *oldEnd = m_End;
     m_Ptr = (uint8_t *)str;
@@ -329,27 +329,27 @@ void CTextFileWriter::Close()
     }
 }
 
-void CTextFileWriter::WriteString(const std::string &key, const std::string &value)
+void CTextFileWriter::WriteString(const astr_t &key, const astr_t &value)
 {
     if (m_File != nullptr)
     {
-        fputs(std::string(key + "=" + value + "\n").c_str(), m_File);
+        fputs(astr_t(key + "=" + value + "\n").c_str(), m_File);
     }
 }
 
-void CTextFileWriter::WriteInt(const std::string &key, int value)
+void CTextFileWriter::WriteInt(const astr_t &key, int value)
 {
     if (m_File != nullptr)
     {
-        fputs(std::string(key + "=" + std::to_string(value) + "\n").c_str(), m_File);
+        fputs(astr_t(key + "=" + str_from_int(value) + "\n").c_str(), m_File);
     }
 }
 
-void CTextFileWriter::WriteBool(const std::string &key, bool value)
+void CTextFileWriter::WriteBool(const astr_t &key, bool value)
 {
     if (m_File != nullptr)
     {
-        fputs(std::string(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
+        fputs(astr_t(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
     }
 }
 

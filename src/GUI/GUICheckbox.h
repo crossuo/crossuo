@@ -53,7 +53,7 @@ public:
     //!Установить текст
     void SetTextParameters(
         uint8_t font,
-        const std::wstring &text,
+        const wstr_t &text,
         uint16_t color,
         SLIDER_TEXT_POSITION textPosition = STP_RIGHT,
         int textWidth = 0,
@@ -61,7 +61,7 @@ public:
         uint16_t textFlags = 0);
     void SetTextParameters(
         uint8_t font,
-        const std::string &text,
+        const astr_t &text,
         uint16_t color,
         SLIDER_TEXT_POSITION textPosition = STP_RIGHT,
         int textWidth = 0,

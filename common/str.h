@@ -25,6 +25,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <codecvt>
 #include <assert.h>
 
+using astr_t = std::string;
+using wstr_t = std::wstring;
+
 #if defined(_MSC_VER)
 #include <Windows.h>
 
@@ -41,64 +44,65 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #endif
 
-// TODO: encapsulate std::wstring into a wstr_t type and std::string into a str_t type
+// TODO: encapsulate wstr_t into a wstr_t type and astr_t into a str_t type
 // so we can migrate for something lightweight in performance and memory
 
-std::string wstr_to_utf8(const std::wstring &str); // DEPRECATE, in memory everything should be UTF8
-std::wstring wstr_from_utf8(const std::string &str); // DEPRECATE
-std::string str_camel_case(std::string str);
-std::wstring wstr_camel_case(std::wstring str);
+astr_t wstr_to_utf8(const wstr_t &aWstr); // DEPRECATE, in memory everything should be UTF8
+wstr_t wstr_from_utf8(const astr_t &aStr); // DEPRECATE
+astr_t str_camel_case(astr_t aStr);
+wstr_t wstr_camel_case(wstr_t aWstr);
 
-std::string str_from(const std::wstring &wstr);
-std::wstring wstr_from(const std::string &str);
+astr_t str_from(const wstr_t &aWstr);
+wstr_t wstr_from(const astr_t &aStr);
 #if !defined(_MSC_VER)
-const std::string &str_from(const std::string &str);
+const astr_t &str_from(const astr_t &aStr);
 #endif
 
-std::string str_trim(const std::string &str);
-int str_to_int(const std::string &str);
-const char *str_lower(const char *str);
-std::string str_lower(std::string str);
-std::string str_upper(std::string str);
-std::wstring wstr_lower(std::wstring str);
-std::wstring wstr_upper(std::wstring str);
-bool str_to_bool(const std::string &str);
+astr_t str_trim(const astr_t &aStr);
+int str_to_int(const astr_t &aStr);
+astr_t str_from_int(int val);
+const char *str_lower(const char *aCStr);
+astr_t str_lower(astr_t aStr);
+astr_t str_upper(astr_t aStr);
+wstr_t wstr_lower(wstr_t aWstr);
+wstr_t wstr_upper(wstr_t aWstr);
+bool str_to_bool(const astr_t &aStr);
 
 #endif // STR_HEADER
 
 #if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
 #define STR_IMPLEMENTATED
 
-const char *str_lower(const char *str)
+const char *str_lower(const char *aCStr)
 {
-    char *s = const_cast<char *>(str);
+    char *s = const_cast<char *>(aCStr);
     assert(s);
     while (*s)
     {
         *s = tolower(*s);
         s++;
     }
-    return str;
+    return aCStr;
 }
 
-std::string wstr_to_utf8(const std::wstring &wstr)
+astr_t wstr_to_utf8(const wstr_t &aWstr)
 {
 #if defined(_MSC_VER)
     int size =
-        ::WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), nullptr, 0, nullptr, nullptr);
-    std::string result = "";
+        ::WideCharToMultiByte(CP_UTF8, 0, &aWstr[0], (int)aWstr.size(), nullptr, 0, nullptr, nullptr);
+    astr_t result = "";
 
     if (size > 0)
     {
         result.resize(size + 1);
         ::WideCharToMultiByte(
-            CP_UTF8, 0, &wstr[0], (int)wstr.size(), &result[0], size, nullptr, nullptr);
+            CP_UTF8, 0, &aWstr[0], (int)aWstr.size(), &result[0], size, nullptr, nullptr);
         result.resize(size); // result[size] = 0;
     }
 #else
     mbstate_t state{};
-    std::string result{};
-    auto p = wstr.data();
+    astr_t result{};
+    auto p = aWstr.data();
     const auto size = wcsrtombs(nullptr, &p, 0, &state);
     if (size > 0)
     {
@@ -111,28 +115,28 @@ std::string wstr_to_utf8(const std::wstring &wstr)
     return result;
 }
 
-std::wstring wstr_from_utf8(const std::string &str)
+wstr_t wstr_from_utf8(const astr_t &aStr)
 {
 #if defined(_MSC_VER)
-    int size = ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0);
-    std::wstring result = {};
+    int size = ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)str.size(), nullptr, 0);
+    wstr_t result = {};
     if (size > 0)
     {
         result.resize(size + 1);
-        ::MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &result[0], size);
+        ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)aStr.size(), &result[0], size);
         result.resize(size); // result[size] = 0;
     }
 #else
     mbstate_t state{};
-    std::wstring result{};
-    auto p = str.data();
+    wstr_t result{};
+    auto p = aStr.data();
 
     const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
     if (size == -1)
     {
-        Warning(Client, "wstr_from_utf8 Failed: %s", str.c_str());
-        INFO_DUMP(Client, "wstr_from_utf8 Failed:", (uint8_t *)str.data(), str.size());
-        return wstr_from(str);
+        Warning(Client, "wstr_from_utf8 Failed: %s", aStr.c_str());
+        INFO_DUMP(Client, "wstr_from_utf8 Failed:", (uint8_t *)aStr.data(), aStr.size());
+        return wstr_from(aStr);
     }
 
     if (size > 0)
@@ -145,12 +149,12 @@ std::wstring wstr_from_utf8(const std::string &str)
     return result;
 }
 
-std::string str_camel_case(std::string str)
+astr_t str_camel_case(astr_t aStr)
 {
     int offset = 'a' - 'A';
     bool lastSpace = true;
 
-    for (char &c : str)
+    for (char &c : aStr)
     {
         if (c == ' ')
         {
@@ -167,15 +171,15 @@ std::string str_camel_case(std::string str)
         }
     }
 
-    return str;
+    return aStr;
 }
 
-std::wstring wstr_camel_case(std::wstring str)
+wstr_t wstr_camel_case(wstr_t aWstr)
 {
     int offset = L'a' - L'A';
     bool lastSpace = true;
 
-    for (wchar_t &c : str)
+    for (wchar_t &c : aWstr)
     {
         if (c == L' ')
         {
@@ -192,130 +196,130 @@ std::wstring wstr_camel_case(std::wstring str)
         }
     }
 
-    return str;
+    return aWstr;
 }
 
 #if !defined(_MSC_VER)
-const std::string &str_from(const std::string &str)
+const astr_t &str_from(const astr_t &str)
 {
     return str;
 }
 #endif
 
-std::string str_from(const std::wstring &wstr)
+astr_t str_from(const wstr_t &aWstr)
 {
 #if 0
-    std::string str = "";
-    int size = (int)wstr.length();
+    astr_t aStr = "";
+    int size = (int)aWstr.length();
     int newSize =
-        ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, nullptr, 0, nullptr, nullptr);
+        ::WideCharToMultiByte(GetACP(), 0, aWstr.c_str(), size, nullptr, 0, nullptr, nullptr);
 
     if (newSize > 0)
     {
-        str.resize(newSize + 1);
-        ::WideCharToMultiByte(GetACP(), 0, wstr.c_str(), size, &str[0], newSize, nullptr, nullptr);
-        str.resize(newSize); // str[newSize] = 0;
+        aStr.resize(newSize + 1);
+        ::WideCharToMultiByte(GetACP(), 0, aWstr.c_str(), size, &aStr[0], newSize, nullptr, nullptr);
+        aStr.resize(newSize); // str[newSize] = 0;
     }
     return str;
 #else
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.to_bytes(wstr);
+    return converter.to_bytes(aWstr);
 #endif
 }
 
-std::wstring wstr_from(const std::string &str)
+wstr_t wstr_from(const astr_t &aStr)
 {
 #if 0
-    int size = (int)str.length();
-    std::wstring wstr = {};
+    int size = (int)aStr.length();
+    wstr_t aWstr = {};
 
     if (size > 0)
     {
-        wstr.resize(size + 1);
-        MultiByteToWideChar(GetACP(), 0, str.c_str(), size, &wstr[0], size);
-        wstr.resize(size); // wstr[size] = 0;
+        aWstr.resize(size + 1);
+        MultiByteToWideChar(GetACP(), 0, aStr.c_str(), size, &aWstr[0], size);
+        aWstr.resize(size); // aWstr[size] = 0;
     }
-    return wstr;
+    return aWstr;
 #else
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(str);
+    return converter.from_bytes(aStr);
 #endif
 }
 
-std::string str_trim(const std::string &str)
+astr_t str_trim(const astr_t &aStr)
 {
-    auto it = str.begin();
-    for (; it != str.end() && (isspace(*it) != 0); ++it)
+    auto it = aStr.begin();
+    for (; it != aStr.end() && (isspace(*it) != 0); ++it)
     {
         ;
     }
 
-    auto rit = str.rbegin();
+    auto rit = aStr.rbegin();
     for (; rit.base() != it && (isspace(*rit) != 0); ++rit)
     {
         ;
     }
 
-    return std::string(it, rit.base());
+    return astr_t(it, rit.base());
 }
 
-std::string str_lower(std::string s)
+astr_t str_lower(astr_t aStr)
 {
 #if defined(_MSC_VER)
-    if (s.length())
-        _strlwr(&s[0]);
+    if (aStr.length())
+        _strlwr(&aStr[0]);
 
-    return s;
+    return aStr;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::tolower(c); });
-    return s;
+    std::transform(aStr.begin(), aStr.end(), aStr.begin(), [](auto c) { return std::tolower(c); });
+    return aStr;
 #endif
 }
 
-std::wstring wstr_lower(std::wstring s)
+wstr_t wstr_lower(wstr_t aWstr)
 {
 #if defined(_MSC_VER)
-    if (s.length())
-        _wcslwr(&s[0]);
+    if (aWstr.length())
+        _wcslwr(&aWstr[0]);
 
-    return s;
+    return aWstr;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::towlower(c); });
-    return s;
+    std::transform(aWstr.begin(), aWstr.end(), aWstr.begin(), [](auto c) { return std::towlower(c); });
+    return aWstr;
 #endif
 }
 
-std::string str_upper(std::string s)
+astr_t str_upper(astr_t aStr)
 {
 #if defined(_MSC_VER)
-    if (s.length())
-        _strupr(&s[0]);
+    if (aStr.length())
+        _strupr(&aStr[0]);
 
-    return s;
+    return aStr;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::toupper(c); });
-    return s;
+    std::transform(aStr.begin(), aStr.end(), aStr.begin(), [](auto c) { return std::toupper(c); });
+    return aStr;
 #endif
 }
 
-std::wstring wstr_upper(std::wstring s)
+wstr_t wstr_upper(wstr_t aWstr)
 {
 #if defined(_MSC_VER)
-    if (s.length())
-        _wcsupr(&s[0]);
+    if (aWstr.length())
+        _wcsupr(&aWstr[0]);
 
-    return s;
+    return aWstr;
 #else
-    std::transform(s.begin(), s.end(), s.begin(), [](auto c) { return std::towupper(c); });
-    return s;
+    std::transform(aWstr.begin(), aWstr.end(), aWstr.begin(), [](auto c) { return std::towupper(c); });
+    return aWstr;
 #endif
 }
 
-bool str_to_bool(const std::string &str)
+bool str_to_bool(const astr_t &aStr)
 {
-    std::string data = str_lower(str);
+    astr_t data = str_lower(aStr);
     const int countOfTrue = 3;
-    const std::string m_TrueValues[countOfTrue] = { "on", "yes", "true" };
+    const astr_t m_TrueValues[countOfTrue] = { "on", "yes", "true" };
     bool result = false;
     for (int i = 0; i < countOfTrue && !result; i++)
     {
@@ -324,9 +328,14 @@ bool str_to_bool(const std::string &str)
     return result;
 }
 
-int str_to_int(const std::string &str)
+int str_to_int(const astr_t &aStr)
 {
-    return atoi(str.c_str());
+    return atoi(aStr.c_str());
+}
+
+astr_t str_from_int(int val)
+{
+    return std::to_string(val);
 }
 
 #endif // STR_IMPLEMENTATION

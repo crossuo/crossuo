@@ -13,7 +13,7 @@ namespace Wisp
 class CTextFileParser
 {
 public:
-    std::string RawLine = "";
+    astr_t RawLine = "";
 
 private:
     CMappedFile m_File;
@@ -34,8 +34,8 @@ private:
     bool IsComment();
     bool IsQuote();
     bool IsSecondQuote();
-    std::string ObtainData();
-    std::string ObtainQuotedData();
+    astr_t ObtainData();
+    astr_t ObtainQuotedData();
     void StartupInitalize(const char *delimiters, const char *comentaries, const char *quotes);
     void SaveRawLine();
 
@@ -50,8 +50,8 @@ public:
     void Restart();
     bool IsEOF();
 
-    std::vector<std::string> ReadTokens(bool trim = true);
-    std::vector<std::string> GetTokens(const char *str, bool trim = true);
+    std::vector<astr_t> ReadTokens(bool trim = true);
+    std::vector<astr_t> GetTokens(const char *str, bool trim = true);
 };
 
 class CTextFileWriter
@@ -65,9 +65,9 @@ public:
 
     bool Opened() { return (m_File != nullptr); };
     void Close();
-    void WriteString(const std::string &key, const std::string &value);
-    void WriteInt(const std::string &key, int value);
-    void WriteBool(const std::string &key, bool value);
+    void WriteString(const astr_t &key, const astr_t &value);
+    void WriteInt(const astr_t &key, int value);
+    void WriteBool(const astr_t &key, bool value);
 };
 
 }; // namespace Wisp

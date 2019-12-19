@@ -11,7 +11,7 @@ struct CGUIGenericText : public CGUIText
     uint32_t TextID = 0;
     int MaxWidth = 0;
 
-    void Create(const std::wstring &str);
+    void Create(const wstr_t &str);
 
     CGUIGenericText(int index, uint16_t color, int x, int y, int maxWidth = 0)
         : CGUIText(color, x, y)

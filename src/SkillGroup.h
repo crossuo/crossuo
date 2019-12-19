@@ -11,7 +11,7 @@ class CSkillGroupObject
 public:
     int Count = 0;
     bool Maximized = false;
-    std::string Name = "No Name";
+    astr_t Name = "No Name";
 
 private:
     uint8_t m_Items[60];

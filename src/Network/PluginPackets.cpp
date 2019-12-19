@@ -138,7 +138,7 @@ CPluginPacketFileInfo::CPluginPacketFileInfo(int index, uint64_t address, uint64
 }
 
 CPluginPacketFileInfoLocalized::CPluginPacketFileInfoLocalized(
-    int index, uint64_t address, uint64_t size, const std::string &language)
+    int index, uint64_t address, uint64_t size, const astr_t &language)
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_FILE_INFO_LOCALIZED);

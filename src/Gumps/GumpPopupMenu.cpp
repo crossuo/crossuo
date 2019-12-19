@@ -94,7 +94,7 @@ void CGumpPopupMenu::Parse(Wisp::CPacketReader &reader)
 
     for (const CPopupMenuItemInfo &info : items)
     {
-        std::wstring str = g_IntlocManager.Intloc(g_Language, info.Cliloc, isNewClilocs);
+        wstr_t str = g_IntlocManager.Intloc(g_Language, info.Cliloc, isNewClilocs);
 
         CGUITextEntry *item = new CGUITextEntry(
             info.Index,

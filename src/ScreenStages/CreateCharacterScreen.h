@@ -22,7 +22,7 @@ protected:
 public:
     int GetColorSelection() { return m_ColorSelection; };
     void SetColorSelection(int val);
-    std::string Name;
+    astr_t Name;
 
 private:
     CGumpScreenCreateCharacter m_CreateCharacterGump;

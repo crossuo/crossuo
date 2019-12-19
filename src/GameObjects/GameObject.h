@@ -33,15 +33,15 @@ public:
     void SetFlags(uint8_t val);
 
 protected:
-    std::string m_Name;
+    astr_t m_Name;
 
 public:
-    std::string GetName() { return m_Name; };
-    void SetName(const std::string &newName);
+    astr_t GetName() { return m_Name; };
+    void SetName(const astr_t &newName);
     bool NPC = false;
     bool Clicked = false;
     char AnimIndex = 0;
-    std::string JournalPrefix;
+    astr_t JournalPrefix;
     uint32_t LastAnimationChangeTime = 0;
     bool SA_Poisoned = false;
     bool ClosedObjectHandle = false;
@@ -59,7 +59,7 @@ public:
     std::vector<class CGameItem *> m_DrawLayeredObjects;
 
     virtual void AddText(CTextData *msg);
-    void GenerateObjectHandlesTexture(std::wstring text);
+    void GenerateObjectHandlesTexture(wstr_t text);
     void DrawObjectHandlesTexture();
     void SelectObjectHandlesTexture();
     virtual uint16_t GetMountAnimation();

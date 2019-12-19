@@ -9,7 +9,7 @@
 class CGumpPropertyIcon : public CGump
 {
 protected:
-    std::wstring m_Text = L"No Data";
+    wstr_t m_Text = L"No Data";
 
 private:
     const int ID_GPI_LOCK_MOVING = 1;
@@ -19,8 +19,8 @@ private:
 public:
     CRenderObject *Object = nullptr;
 
-    std::wstring GetTextW() { return m_Text; };
-    void SetTextW(const std::wstring &val);
+    wstr_t GetTextW() { return m_Text; };
+    void SetTextW(const wstr_t &val);
 
     virtual void PrepareContent() override;
     virtual void UpdateContent() override;

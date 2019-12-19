@@ -14,13 +14,13 @@ class CObjectProperty
 public:
     uint32_t Serial = 0;
     uint32_t Revision = 0;
-    std::wstring Name = {};
-    std::wstring Data = {};
+    wstr_t Name = {};
+    wstr_t Data = {};
 
     CObjectProperty() {}
-    CObjectProperty(int serial, int revision, const std::wstring &name, const std::wstring &data);
+    CObjectProperty(int serial, int revision, const wstr_t &name, const wstr_t &data);
     bool Empty();
-    std::wstring CreateTextData(bool extended);
+    wstr_t CreateTextData(bool extended);
 };
 
 using ObjectPropertyMap = std::map<uint32_t, CObjectProperty>;

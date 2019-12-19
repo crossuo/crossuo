@@ -309,7 +309,7 @@ static const ConfigEntry s_Keys[] = {
 
 static_assert(countof(s_Keys) == CMKC_COUNT + 1, "Missing key string for configuration option");
 
-static uint32_t GetConfigKey(const std::string &key)
+static uint32_t GetConfigKey(const astr_t &key)
 {
     auto str = str_lower(key);
     for (int i = 0; s_Keys[i].key_name; i++)

@@ -101,18 +101,18 @@ void CGumpRacialAbilitiesBook::GetSummaryBookInfo(int &abilityOnPage, uint16_t &
     }
 }
 
-std::string CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
+astr_t CGumpRacialAbilitiesBook::GetAbilityName(int offset, bool &passive)
 {
-    std::string result{};
+    astr_t result{};
     passive = true;
 
-    static const std::string humanNames[] = {
+    static const astr_t humanNames[] = {
         "Strong Back", "Tough", "Workhorse", "Jack of All Trades"
     };
-    static const std::string elfNames[] = { "Night Sight",         "Infused with Magic",
-                                            "Knowledge of Nature", "Difficult to Track",
-                                            "Perception",          "Wisdom" };
-    static const std::string gargoyleNames[] = {
+    static const astr_t elfNames[] = { "Night Sight",         "Infused with Magic",
+                                       "Knowledge of Nature", "Difficult to Track",
+                                       "Perception",          "Wisdom" };
+    static const astr_t gargoyleNames[] = {
         "Flying", "Berserk", "Master Artisan", "Deadly Aim", "Mystic Insight"
     };
 

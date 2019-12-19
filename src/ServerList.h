@@ -13,7 +13,7 @@ class CServer
 {
 public:
     uint16_t Index = 0;
-    std::string Name = "";
+    astr_t Name = "";
     uint8_t FullPercent = 0;
     uint8_t Timezone = 0;
     uint32_t IP = 0;
@@ -24,7 +24,7 @@ public:
     CServer();
     CServer(
         uint16_t index,
-        const std::string &name,
+        const astr_t &name,
         uint8_t fullPercent,
         uint8_t timezoneType,
         int ip,
@@ -35,7 +35,7 @@ public:
 class CServerList
 {
 public:
-    std::string LastServerName = "";
+    astr_t LastServerName = "";
     uint32_t LastServerIndex = 0;
 
 private:
