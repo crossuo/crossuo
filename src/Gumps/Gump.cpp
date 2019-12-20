@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "Gump.h"
@@ -307,14 +307,6 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
 {
     bool transparent = false;
 
-#ifndef NEW_RENDERER_ENABLED
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glEnable(GL_STENCIL_TEST);
-#else
-    RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Stencil });
-    RenderAdd_EnableStencil(g_renderCmdList);
-#endif
-
     bool canDraw =
         ((page == -1) || ((page >= currentPage && page <= currentPage + draw2Page) ||
                           ((page == 0) && (draw2Page == 0))));
@@ -340,12 +332,6 @@ bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const in
         }
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    glDisable(GL_STENCIL_TEST);
-#else
-    RenderAdd_DisableStencil(g_renderCmdList);
-#endif
-
     return transparent;
 }
 
@@ -354,15 +340,8 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
     ScopedPerfMarker(__FUNCTION__);
 
     float alpha[2] = { 1.0f, 0.7f };
+    bool transparent = false;
     CGUIComboBox *combo = nullptr;
-
-    bool transparent = ApplyTransparent(start, 0, currentPage, draw2Page);
-#ifndef NEW_RENDERER_ENABLED
-    glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
-#else
-    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, alpha[transparent] } });
-#endif
-
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
 
@@ -441,16 +420,11 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 }
                 case GOT_CHECKTRANS:
                 {
-                    transparent = ApplyTransparent(
-                        (CBaseGUI *)item->m_Next, page /*Page*/, currentPage, draw2Page);
-
-#ifndef NEW_RENDERER_ENABLED
+                    ApplyTransparent((CBaseGUI *)item, page, currentPage, draw2Page);
                     glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
-#else
-                    RenderAdd_SetColor(
-                        g_renderCmdList, SetColorCmd{ { 1.0f, 1.0f, 1.0f, alpha[transparent] } });
-#endif
-
+                    transparent =
+                        ApplyTransparent((CBaseGUI *)item->m_Next, page, currentPage, draw2Page);
+                    glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
                     break;
                 }
                 case GOT_COMBOBOX:
