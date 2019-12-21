@@ -303,38 +303,6 @@ void CGump::ProcessListing()
     }
 }
 
-bool CGump::ApplyTransparent(CBaseGUI *item, int page, int currentPage, const int draw2Page)
-{
-    bool transparent = false;
-
-    bool canDraw =
-        ((page == -1) || ((page >= currentPage && page <= currentPage + draw2Page) ||
-                          ((page == 0) && (draw2Page == 0))));
-
-    for (; item != nullptr; item = (CBaseGUI *)item->m_Next)
-    {
-        if (item->Type == GOT_PAGE)
-        {
-            page = ((CGUIPage *)item)->Index;
-
-            //if (page >= 2 && page > currentPage + draw2Page)
-            //	break;
-
-            canDraw =
-                ((page == -1) || ((page >= currentPage && page <= currentPage + draw2Page) ||
-                                  ((page == 0) && (draw2Page == 0))));
-        }
-        else if (canDraw && item->Visible && item->Type == GOT_CHECKTRANS)
-        {
-            item->Draw(transparent);
-
-            transparent = true;
-        }
-    }
-
-    return transparent;
-}
-
 void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     ScopedPerfMarker(__FUNCTION__);
@@ -418,7 +386,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 }
                 case GOT_CHECKTRANS:
                 {
-                    ApplyTransparent((CBaseGUI *)item, page, currentPage, draw2Page);
+                    item->Draw();
                     break;
                 }
                 case GOT_COMBOBOX:
@@ -432,7 +400,6 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 default:
                 {
                     item->Draw();
-
                     break;
                 }
             }
