@@ -9,7 +9,7 @@ CPartyObject::CPartyObject()
 {
 }
 
-std::string CPartyObject::GetName(int index)
+astr_t CPartyObject::GetName(int index)
 {
     if (Serial != 0u)
     {
@@ -26,5 +26,5 @@ std::string CPartyObject::GetName(int index)
     char buf[10] = { 0 };
     sprintf(buf, "[%i]", index);
 
-    return std::string(buf);
+    return astr_t(buf);
 }

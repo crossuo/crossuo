@@ -73,7 +73,7 @@ void SetLanguageFromSystemLocale()
     Info(Client, "Locale: %s", g_Language.c_str());
 }
 
-void OpenBrowser(const std::string &url)
+void OpenBrowser(const astr_t &url)
 {
     ShellExecuteA(0, "Open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
@@ -131,7 +131,7 @@ void SetLanguageFromSystemLocale()
     Info(Client, "locale: %s", g_Language.c_str());
 }
 
-void OpenBrowser(const std::string &url)
+void OpenBrowser(const astr_t &url)
 {
 #if __APPLE__
 #define OPEN_CMD "open "
@@ -139,7 +139,7 @@ void OpenBrowser(const std::string &url)
 #define OPEN_CMD "xdg-open "
 #endif
 
-    auto cmd = std::string(OPEN_CMD) + url;
+    auto cmd = astr_t(OPEN_CMD) + url;
     system(cmd.c_str()); // crossuo adds http in the url, we're a bit safer.
 }
 #endif

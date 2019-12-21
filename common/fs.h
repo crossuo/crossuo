@@ -22,8 +22,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdio.h>
 #include <stdint.h>
-#include <string>
 #include <vector>
+#include "str.h"
 
 #ifndef FS_MAX_PATH
 #ifdef MAX_PATH
@@ -49,13 +49,13 @@ enum fs_type
 #if defined(_MSC_VER)
 struct fs_path
 {
-    std::wstring real_path;
-    mutable std::string temp_path;
+    wstr_t real_path;
+    mutable astr_t temp_path;
 };
 #else
 struct fs_path
 {
-    std::string real_path;
+    astr_t real_path;
 };
 #endif // defined(_MSC_VER)
 
@@ -63,16 +63,16 @@ void fs_case_insensitive_init(const fs_path &path);
 fs_path fs_insensitive(const fs_path &path);
 void fs_path_list(const fs_path &path, std::vector<fs_path> &out);
 
-fs_path fs_path_from(const std::string &s);
-fs_path fs_path_from(const std::wstring &w);
+fs_path fs_path_from(const astr_t &s);
+fs_path fs_path_from(const wstr_t &w);
 fs_path fs_path_from(const char *w);
 fs_path const &fs_path_from(fs_path const &p);
 
 bool fs_path_equal(const fs_path &a, const fs_path &b);
 
 const char *fs_path_ascii(const fs_path &path);
-const std::wstring fs_path_wstr(const fs_path &path);
-const std::string fs_path_str(const fs_path &path);
+const wstr_t fs_path_wstr(const fs_path &path);
+const astr_t fs_path_str(const fs_path &path);
 bool fs_path_empty(const fs_path &path);
 
 FILE *fs_open(const fs_path &path, fs_mode mode);
@@ -182,14 +182,14 @@ bool fs_file_write(const char *file, const uint8_t *input, size_t input_size);
 #include <locale>
 #include <codecvt>
 
-static std::string fs_wstr_to_str(const std::wstring &wstr)
+static astr_t fs_wstr_to_str(const wstr_t &aWstr)
 {
-    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr.c_str());
+    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(aWstr.c_str());
 }
 
-static std::wstring fs_str_to_wstr(const std::string &str)
+static wstr_t fs_str_to_wstr(const astr_t &aStr)
 {
-    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str.c_str());
+    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(aStr.c_str());
 }
 
 FS_PRIVATE fs_path const &fs_path_from(fs_path const &p)
@@ -209,12 +209,12 @@ FS_PRIVATE fs_path const &fs_path_from(fs_path const &p)
 struct fs_path;
 enum fs_mode;
 
-FS_PRIVATE fs_path fs_path_from(const std::string &s)
+FS_PRIVATE fs_path fs_path_from(const astr_t &s)
 {
     return { fs_str_to_wstr(s), s };
 }
 
-FS_PRIVATE fs_path fs_path_from(const std::wstring &w)
+FS_PRIVATE fs_path fs_path_from(const wstr_t &w)
 {
     return { w, fs_wstr_to_str(w) };
 }
@@ -229,12 +229,12 @@ FS_PRIVATE const char *fs_path_ascii(const fs_path &path)
     return path.temp_path.c_str();
 }
 
-FS_PRIVATE const std::wstring fs_path_wstr(const fs_path &path)
+FS_PRIVATE const wstr_t fs_path_wstr(const fs_path &path)
 {
     return path.real_path;
 }
 
-FS_PRIVATE const std::string fs_path_str(const fs_path &path)
+FS_PRIVATE const astr_t fs_path_str(const fs_path &path)
 {
     return path.temp_path;
 }
@@ -255,18 +255,18 @@ FS_PRIVATE void fs_append(fs_path &target, const fs_path &other)
     target.temp_path += "\\" + other.temp_path;
 }
 
-static void fs_path_list_internal_r(const std::wstring &path, std::vector<fs_path> &out)
+static void fs_path_list_internal_r(const wstr_t &path, std::vector<fs_path> &out)
 {
     auto glob = path + L"\\*";
     WIN32_FIND_DATAW file;
     HANDLE hFile = FindFirstFileW(glob.c_str(), &file);
-    std::vector<std::wstring> dirs;
+    std::vector<wstr_t> dirs;
     auto fspath = fs_path_from(path);
     if (hFile != INVALID_HANDLE_VALUE)
     {
         do
         {
-            std::wstring f = file.cFileName;
+            wstr_t f = file.cFileName;
             if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
                 if (f == L"." || f == L"..")
@@ -303,7 +303,7 @@ FS_PRIVATE fs_path fs_insensitive(const fs_path &path)
 FS_PRIVATE FILE *fs_open(const fs_path &path, fs_mode mode)
 {
     // we do not support text mode, any decent modern text editor can deal with it
-    std::wstring m;
+    wstr_t m;
     m = mode & FS_WRITE ? m + L"w" : m;
     m = mode & FS_READ ? m + L"r" : m;
     m += L"b";
@@ -354,7 +354,7 @@ FS_PRIVATE fs_path fs_directory(const fs_path &path)
     auto *last = wcsrchr(name, L'\\');
     if (last != nullptr)
     {
-        return fs_path_from(std::wstring(name, last - name));
+        return fs_path_from(wstr_t(name, last - name));
     }
 
     return fs_path_from(name);
@@ -471,7 +471,7 @@ FS_PRIVATE fs_path fs_appdata_path()
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <codecvt>
-#include <string>
+#include "str.h"
 #include <locale>
 #include <algorithm>
 #include <vector>
@@ -483,12 +483,12 @@ FS_PRIVATE fs_path fs_appdata_path()
 #include <libproc.h>  // proc_pidpath
 #endif
 
-FS_PRIVATE fs_path fs_path_from(const std::string &s)
+FS_PRIVATE fs_path fs_path_from(const astr_t &s)
 {
     return fs_path{ s };
 }
 
-FS_PRIVATE fs_path fs_path_from(const std::wstring &w)
+FS_PRIVATE fs_path fs_path_from(const wstr_t &w)
 {
     return { fs_wstr_to_str(w) };
 }
@@ -503,12 +503,12 @@ FS_PRIVATE const char *fs_path_ascii(const fs_path &path)
     return path.real_path.c_str();
 }
 
-FS_PRIVATE const std::wstring fs_path_wstr(const fs_path &path)
+FS_PRIVATE const wstr_t fs_path_wstr(const fs_path &path)
 {
     return fs_str_to_wstr(path.real_path);
 }
 
-FS_PRIVATE const std::string fs_path_str(const fs_path &path)
+FS_PRIVATE const astr_t fs_path_str(const fs_path &path)
 {
     return path.real_path;
 }
@@ -570,7 +570,7 @@ static void fs_path_list_internal_r(const char *name, std::vector<fs_path> &out)
         else
         {
             snprintf(it, sizeof(it), "%s/%s", name, entry->d_name);
-            std::string p = it;
+            astr_t p = it;
             out.emplace_back(fs_path_from(p));
         }
     }
@@ -607,7 +607,7 @@ static void fs_list_recursive(const char *name)
         else
         {
             snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
-            std::string p = path;
+            astr_t p = path;
             s_files.emplace_back(fs_path_from(p));
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
             s_lower.emplace_back(fs_path_from(p));
@@ -633,7 +633,7 @@ FS_PRIVATE void fs_case_insensitive_init(const fs_path &path)
 
 FS_PRIVATE FILE *fs_open(const fs_path &path, fs_mode mode)
 {
-    std::string m;
+    astr_t m;
     m = (mode & FS_WRITE) != 0 ? m + "w" : m;
     m = (mode & FS_READ) != 0 ? m + "r" : m;
 
@@ -690,7 +690,7 @@ FS_PRIVATE fs_path fs_directory(const fs_path &path)
     const char *last = strrchr(name, '/');
     if (last != nullptr)
     {
-        std::string dir(name, last - name);
+        astr_t dir(name, last - name);
         return { dir };
     }
 
@@ -722,7 +722,7 @@ FS_PRIVATE bool fs_path_create(const fs_path &path)
         return true;
     }
 
-    std::string copy = path.real_path.c_str();
+    astr_t copy = path.real_path.c_str();
     char *segment = (char *)copy.data();
     const char *start = segment;
     do

@@ -10,8 +10,8 @@
 #include "http.h"
 #include "common.h"
 
-extern bool valid_url(const std::string &url);
-extern void open_url(const std::string &url);
+extern bool valid_url(const astr_t &url);
+extern void open_url(const astr_t &url);
 
 namespace shard
 {
@@ -19,12 +19,12 @@ namespace shard
 
 struct url_other
 {
-    std::string name;
-    std::string type;
-    std::string url;
+    astr_t name;
+    astr_t type;
+    astr_t url;
 };
 
-std::string as_str(const url_other &in)
+astr_t as_str(const url_other &in)
 {
     return in.type + "+" + in.url;
 }
@@ -66,13 +66,13 @@ enum class tag_install_type : uint8_t
 
 struct tag_install
 {
-    std::string url;
+    astr_t url;
     tag_install_type type;
 };
 
-std::string as_str(const tag_install &in)
+astr_t as_str(const tag_install &in)
 {
-    std::string r = "uo+latest";
+    astr_t r = "uo+latest";
     switch (in.type)
     {
         case tag_install_type::website:
@@ -158,13 +158,13 @@ bool convert(tag_install &out, const char *raw)
 
 struct tag_data
 {
-    std::vector<std::string> tags;
+    std::vector<astr_t> tags;
     bool is_highlighted;
     bool is_pvp;
     bool is_rp;
 };
 
-std::string as_str(const tag_data &in)
+astr_t as_str(const tag_data &in)
 {
     // FIXME: default value is being lost somewhere in the way to the save
     auto d = in;
@@ -187,10 +187,10 @@ bool convert(tag_data &out, const char *raw)
 
 struct lang_type
 {
-    std::vector<std::string> langs;
+    std::vector<astr_t> langs;
 };
 
-std::string as_str(const lang_type &in)
+astr_t as_str(const lang_type &in)
 {
     return join(in.langs, ',');
 }
@@ -210,7 +210,7 @@ bool convert(lang_type &out, const char *raw)
 // model
 
 static shard::data s_shards;
-static std::unordered_map<std::string, int> s_shard_by_loginserver;
+static std::unordered_map<astr_t, int> s_shard_by_loginserver;
 
 bool shard_getter(void *data, int idx, const char **out_text)
 {

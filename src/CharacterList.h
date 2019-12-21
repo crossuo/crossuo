@@ -13,19 +13,19 @@ public:
     bool Have6Slot = false;
     bool Have7Slot = false;
 
-    std::string LastCharacterName;
+    astr_t LastCharacterName;
 
 private:
-    std::string m_Name[7];
+    astr_t m_Name[7];
 
 public:
     CCharacterList();
     virtual ~CCharacterList() {}
 
     void Clear();
-    void SetName(intptr_t pos, const std::string &name);
-    std::string GetName(intptr_t pos) const;
-    std::string GetSelectedName() const;
+    void SetName(intptr_t pos, const astr_t &name);
+    astr_t GetName(intptr_t pos) const;
+    astr_t GetSelectedName() const;
 };
 
 extern CCharacterList g_CharacterList;

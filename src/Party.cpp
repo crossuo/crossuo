@@ -144,7 +144,7 @@ void CParty::ParsePacketData(CDataReader &reader)
             {
                 if (Member[i].Serial == serial)
                 {
-                    std::string str = "[" + Member[i].GetName((int)i) + "]: " + str_from(name);
+                    astr_t str = "[" + Member[i].GetName((int)i) + "]: " + str_from(name);
                     g_Game.CreateTextMessage(
                         TT_SYSTEM, serial, 3, g_ConfigManager.PartyMessageColor, str);
 

@@ -2150,7 +2150,7 @@ void CGumpOptions::DrawPage6()
     m_ContainerOffsetX->CheckOnSerial = true;
     m_ContainerOffsetX->m_Entry.MaxLength = screenX;
     m_ContainerOffsetX->m_Entry.NumberOnly = true;
-    m_ContainerOffsetX->m_Entry.SetTextW(std::to_wstring(g_ContainerRect.DefaultX));
+    m_ContainerOffsetX->m_Entry.SetTextW(wstr_from(g_ContainerRect.DefaultX));
 
     text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 312, 76));
     text->CreateTextureW(0, L"y:");
@@ -2166,7 +2166,7 @@ void CGumpOptions::DrawPage6()
     m_ContainerOffsetY->CheckOnSerial = true;
     m_ContainerOffsetY->m_Entry.MaxLength = screenY;
     m_ContainerOffsetY->m_Entry.NumberOnly = true;
-    m_ContainerOffsetY->m_Entry.SetTextW(std::to_wstring(g_ContainerRect.DefaultY));
+    m_ContainerOffsetY->m_Entry.SetTextW(wstr_from(g_ContainerRect.DefaultY));
 
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P6_AUTO_ARRANGE_MINIMIZED_WINDOWS, 0x00D2, 0x00D3, 0x00D2, 0, 96));
@@ -2309,7 +2309,7 @@ void CGumpOptions::DrawPage7()
     m_GameWindowWidth->CheckOnSerial = true;
     m_GameWindowWidth->m_Entry.MaxLength = screenX;
     m_GameWindowWidth->m_Entry.NumberOnly = true;
-    m_GameWindowWidth->m_Entry.SetTextW(std::to_wstring(g_OptionsConfig.GameWindowWidth));
+    m_GameWindowWidth->m_Entry.SetTextW(wstr_from(g_OptionsConfig.GameWindowWidth));
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 126, 112));
     text->CreateTextureW(0, L"x");
@@ -2325,7 +2325,7 @@ void CGumpOptions::DrawPage7()
     m_GameWindowHeight->CheckOnSerial = true;
     m_GameWindowHeight->m_Entry.MaxLength = screenY;
     m_GameWindowHeight->m_Entry.NumberOnly = true;
-    m_GameWindowHeight->m_Entry.SetTextW(std::to_wstring(g_OptionsConfig.GameWindowHeight));
+    m_GameWindowHeight->m_Entry.SetTextW(wstr_from(g_OptionsConfig.GameWindowHeight));
 
     CGUICheckbox *checkbox = (CGUICheckbox *)Add(
         new CGUICheckbox(ID_GO_P7_LOCK_GAME_WINDOW_RESIZING, 0x00D2, 0x00D3, 0x00D2, 230, 114));
@@ -2907,13 +2907,13 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
 {
     if (serial == ID_GO_PAGE_6)
     {
-        m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
-        m_ContainerOffsetY->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultY));
+        m_ContainerOffsetX->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultX));
+        m_ContainerOffsetY->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultY));
     }
     else if (serial == ID_GO_PAGE_7)
     {
-        m_GameWindowWidth->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowWidth));
-        m_GameWindowHeight->m_Entry.SetTextA(std::to_string(g_OptionsConfig.GameWindowHeight));
+        m_GameWindowWidth->m_Entry.SetTextA(str_from(g_OptionsConfig.GameWindowWidth));
+        m_GameWindowHeight->m_Entry.SetTextA(str_from(g_OptionsConfig.GameWindowHeight));
     }
     else if (serial == ID_GO_CANCEL) //Cancel
     {
@@ -2952,8 +2952,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage6();
 
-                m_ContainerOffsetX->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultX));
-                m_ContainerOffsetY->m_Entry.SetTextA(std::to_string(g_ContainerRect.DefaultY));
+                m_ContainerOffsetX->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultX));
+                m_ContainerOffsetY->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultY));
 
                 break;
             }
@@ -2961,10 +2961,8 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             {
                 g_OptionsConfig.DefaultPage7();
 
-                m_GameWindowWidth->m_Entry.SetTextA(
-                    std::to_string(g_OptionsConfig.GameWindowWidth));
-                m_GameWindowHeight->m_Entry.SetTextA(
-                    std::to_string(g_OptionsConfig.GameWindowHeight));
+                m_GameWindowWidth->m_Entry.SetTextA(str_from(g_OptionsConfig.GameWindowWidth));
+                m_GameWindowHeight->m_Entry.SetTextA(str_from(g_OptionsConfig.GameWindowHeight));
 
                 break;
             }

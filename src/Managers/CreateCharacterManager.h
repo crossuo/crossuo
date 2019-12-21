@@ -10,7 +10,7 @@ struct CC_HAIR_STYLE
 {
     uint16_t GumpID;
     uint16_t GraphicID;
-    std::string Name;
+    astr_t Name;
 };
 
 class CCreateCharacterManager

@@ -363,7 +363,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 {
     if (g_Config.ClientVersion >= CV_500A)
     {
-        static const std::string typeNames[5] = {
+        static const astr_t typeNames[5] = {
             "monster", "sea_monster", "animal", "human", "equipment"
         };
 
@@ -371,7 +371,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
         while (!mobtypesParser.IsEOF())
         {
-            std::vector<std::string> strings = mobtypesParser.ReadTokens();
+            std::vector<astr_t> strings = mobtypesParser.ReadTokens();
 
             if (strings.size() >= 3)
             {
@@ -414,7 +414,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
     {
         while (!animParser[i].IsEOF())
         {
-            std::vector<std::string> strings = animParser[i].ReadTokens();
+            std::vector<astr_t> strings = animParser[i].ReadTokens();
 
             if (strings.size() < 2)
             {
@@ -443,7 +443,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!equipConvParser.IsEOF())
     {
-        std::vector<std::string> strings = equipConvParser.ReadTokens();
+        std::vector<astr_t> strings = equipConvParser.ReadTokens();
         if (strings.size() >= 5)
         {
             auto body = (uint16_t)atoi(strings[0].c_str());
@@ -501,7 +501,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!bodyconvParser.IsEOF())
     {
-        std::vector<std::string> strings = bodyconvParser.ReadTokens();
+        std::vector<astr_t> strings = bodyconvParser.ReadTokens();
 
         if (strings.size() >= 2)
         {
@@ -718,13 +718,13 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!bodyParser.IsEOF())
     {
-        std::vector<std::string> strings = bodyParser.ReadTokens();
+        std::vector<astr_t> strings = bodyParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
             uint16_t index = atoi(strings[0].c_str());
 
-            std::vector<std::string> newBody = newBodyParser.GetTokens(strings[1].c_str());
+            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
@@ -822,13 +822,13 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!corpseParser.IsEOF())
     {
-        std::vector<std::string> strings = corpseParser.ReadTokens();
+        std::vector<astr_t> strings = corpseParser.ReadTokens();
 
         if (strings.size() >= 3)
         {
             uint16_t index = atoi(strings[0].c_str());
 
-            std::vector<std::string> newBody = newBodyParser.GetTokens(strings[1].c_str());
+            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {

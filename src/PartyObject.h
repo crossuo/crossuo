@@ -16,5 +16,5 @@ public:
     CPartyObject();
     ~CPartyObject() {}
     CGameCharacter *Character{ nullptr };
-    std::string GetName(int index);
+    astr_t GetName(int index);
 };

@@ -57,25 +57,3 @@ inline void pack16(uint8_t *buf, uint16_t x)
     buf[0] = x >> 8;
     buf[1] = x & 0xff;
 }
-
-#if USE_DEBUG_FUNCTION_NAMES == 1
-extern std::deque<string> g_DebugFuncStack;
-class CFuncDebug
-{
-public:
-    CFuncDebug::CFuncDebug(const char *str)
-    {
-        if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
-        {
-            g_DebugFuncStack.push_back(str);
-        }
-    }
-    CFuncDebug::~CFuncDebug()
-    {
-        if (g_MainThread == Wisp::CThread::GetCurrentThreadId())
-        {
-            g_DebugFuncStack.pop_back();
-        }
-    }
-};
-#endif

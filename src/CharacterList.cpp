@@ -22,7 +22,7 @@ void CCharacterList::Clear()
     Have7Slot = false;
 }
 
-void CCharacterList::SetName(intptr_t pos, const std::string &name)
+void CCharacterList::SetName(intptr_t pos, const astr_t &name)
 {
     if (pos >= 0 && pos < Count)
     {
@@ -30,7 +30,7 @@ void CCharacterList::SetName(intptr_t pos, const std::string &name)
     }
 }
 
-std::string CCharacterList::GetName(intptr_t pos) const
+astr_t CCharacterList::GetName(intptr_t pos) const
 {
     if (pos >= 0 && pos < Count)
     {
@@ -40,7 +40,7 @@ std::string CCharacterList::GetName(intptr_t pos) const
     return "";
 }
 
-std::string CCharacterList::GetSelectedName() const
+astr_t CCharacterList::GetSelectedName() const
 {
     if (Selected >= 0 && Selected < Count)
     {

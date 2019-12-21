@@ -161,9 +161,7 @@
 extern po::parser g_cli;
 extern RenderCmdList *g_renderCmdList;
 
-#if defined(XUO_WINDOWS)
-#include "ExceptionFilter.h"
-#else
+#if !defined(XUO_WINDOWS)
 REVERSE_PLUGIN_INTERFACE g_oaReverse;
 #endif
 
@@ -229,9 +227,9 @@ CGame::~CGame()
 {
 }
 
-std::string CGame::DecodeArgumentString(const char *text, int length)
+astr_t CGame::DecodeArgumentString(const char *text, int length)
 {
-    std::string result{};
+    astr_t result{};
 
     for (int i = 0; i < length; i += 2)
     {
@@ -307,12 +305,11 @@ void CGame::ProcessCommandLine()
         auto name = g_cli["character"].get().string;
         if (g_PacketManager.AutoLoginNames.length() != 0u)
         {
-            g_PacketManager.AutoLoginNames =
-                std::string("|") + name + g_PacketManager.AutoLoginNames;
+            g_PacketManager.AutoLoginNames = astr_t("|") + name + g_PacketManager.AutoLoginNames;
         }
         else
         {
-            g_PacketManager.AutoLoginNames = std::string("|") + name;
+            g_PacketManager.AutoLoginNames = astr_t("|") + name;
         }
     }
 }
@@ -320,9 +317,6 @@ void CGame::ProcessCommandLine()
 bool CGame::Install()
 {
     Info(Client, "CGame::Install()");
-#if defined(XUO_WINDOWS)
-    //SetUnhandledExceptionFilter(GameUnhandledExceptionFilter);
-#endif
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", RC_PRODUCE_VERSION_STR, buildStamp.c_str());
     crc32_init();
@@ -362,7 +356,7 @@ bool CGame::Install()
     if (!g_FileManager.Load())
     {
         auto errMsg =
-            std::string(
+            astr_t(
                 "Error loading a memmapped file. Please check the log for more info.\nUsing UO search path: ") +
             fs_path_str(g_App.m_UOPath);
         g_GameWindow.ShowMessage(errMsg, "FileManager::Load");
@@ -1031,7 +1025,7 @@ void CGame::LoadContainerOffsets()
 
         while (!parser.IsEOF())
         {
-            std::vector<std::string> strings = parser.ReadTokens();
+            std::vector<astr_t> strings = parser.ReadTokens();
 
             if (strings.size() >= 7)
             {
@@ -1365,7 +1359,7 @@ void CGame::LoadStartupConfig(int serial)
     }
 }
 
-void CGame::LoadPlugin(const fs_path &libpath, const std::string &function, int flags)
+void CGame::LoadPlugin(const fs_path &libpath, const astr_t &function, int flags)
 {
     Info(Client, "Loading plugin: %s", fs_path_ascii(libpath));
     auto dll = SDL_LoadObject(fs_path_ascii(libpath));
@@ -1443,8 +1437,8 @@ void CGame::LoadPlugins()
 
     // FIXME: Load any additional plugin here
 
-    std::vector<std::string> libName;
-    std::vector<std::string> functions;
+    std::vector<astr_t> libName;
+    std::vector<astr_t> functions;
     std::vector<uint32_t> flags;
 
     size_t pluginsInfoCount = Crypt::GetPluginsCount();
@@ -1498,17 +1492,17 @@ void CGame::LoadPlugins()
     g_GameWindow.Raise();
 }
 
-std::string CGame::FixServerName(std::string name)
+astr_t CGame::FixServerName(astr_t name)
 {
     size_t i = 0;
-    while ((i = name.find(':')) != std::string::npos)
+    while ((i = name.find(':')) != astr_t::npos)
     {
         name.erase(i, 1);
     }
     return name;
 }
 
-void CGame::LoadLocalConfig(int serial, std::string characterName)
+void CGame::LoadLocalConfig(int serial, astr_t characterName)
 {
     if (g_ConfigLoaded)
     {
@@ -1665,7 +1659,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         Info(Client, "player exists");
         Info(Client, "name len: %zd", g_Player->GetName().length());
-        path = fs_path_join(root, std::string(serbuf) + "_" + g_Player->GetName() + ".cuo");
+        path = fs_path_join(root, astr_t(serbuf) + "_" + g_Player->GetName() + ".cuo");
         if (!fs_path_exists(path))
         {
             Info(Client, "file saving");
@@ -1762,7 +1756,7 @@ void CGame::Connect()
     g_ConnectionManager.Disconnect();
     g_ConnectionManager.Init(); //Configure
 
-    std::string login{};
+    astr_t login{};
     int port;
     LoadLogin(login, port);
     if (g_ConnectionManager.Connect(login, port, g_GameSeed))
@@ -1904,7 +1898,7 @@ void CGame::LoginComplete(bool reload)
 
     if (load && g_Player != nullptr)
     {
-        std::string title = "Ultima Online - " + g_Player->GetName();
+        astr_t title = "Ultima Online - " + g_Player->GetName();
         CServer *server = g_ServerList.GetSelectedServer();
         if (server != nullptr)
         {
@@ -3202,7 +3196,7 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
     return value;
 }
 
-std::string CGame::ValueString(const VALUE_KEY_STRING &key, std::string value)
+astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
 {
     switch (key)
     {
@@ -3412,7 +3406,7 @@ bool CGame::IsVegetation(uint16_t graphic)
     return (m_StaticTilesFilterFlags[graphic] & STFF_VEGETATION) != 0;
 }
 
-void CGame::LoadLogin(std::string &login, int &port)
+void CGame::LoadLogin(astr_t &login, int &port)
 {
     login = m_OverrideServerAddress;
     port = m_OverrideServerPort;
@@ -3444,17 +3438,17 @@ void CGame::LoadLogin(std::string &login, int &port)
     }
 }
 
-void CGame::GoToWebLink(const std::string &url)
+void CGame::GoToWebLink(const astr_t &url)
 {
     if (url.length() != 0u)
     {
         std::size_t found = url.find("http://");
-        if (found == std::string::npos)
+        if (found == astr_t::npos)
         {
             found = url.find("https://");
         }
-        const std::string header = "http://";
-        if (found != std::string::npos)
+        const astr_t header = "http://";
+        if (found != astr_t::npos)
         {
             Platform::OpenBrowser(url.c_str());
         }
@@ -4324,9 +4318,9 @@ void CGame::IndexReplaces()
         {
             const uint32_t index = std::atoi(strings[0].c_str());
             CIndexMusic &mp3 = g_Index.m_MP3[index];
-            std::string name = "music/digital/" + strings[1];
-            std::string extension = ".mp3";
-            if (name.find(extension) == std::string::npos)
+            astr_t name = "music/digital/" + strings[1];
+            astr_t extension = ".mp3";
+            if (name.find(extension) == astr_t::npos)
             {
                 name += extension;
             }
@@ -5671,7 +5665,7 @@ void CGame::CreateTextMessage(
     int serial,
     uint8_t font,
     uint16_t color,
-    const std::string &text,
+    const astr_t &text,
     CRenderWorldObject *clientObj)
 {
     CTextData *td = new CTextData();
@@ -5813,7 +5807,7 @@ void CGame::CreateUnicodeTextMessage(
     int serial,
     uint8_t font,
     uint16_t color,
-    const std::wstring &text,
+    const wstr_t &text,
     CRenderWorldObject *clientObj)
 {
     CTextData *td = new CTextData();
@@ -5941,7 +5935,7 @@ void CGame::AddSystemMessage(CTextData *msg)
     AddJournalMessage(msg, "");
 }
 
-void CGame::AddJournalMessage(CTextData *msg, const std::string &name)
+void CGame::AddJournalMessage(CTextData *msg, const astr_t &name)
 {
     CTextData *jmsg = new CTextData(msg);
 
@@ -6571,7 +6565,7 @@ void CGame::OpenProfile(uint32_t serial)
 void CGame::DisconnectGump()
 {
     CServer *server = g_ServerList.GetSelectedServer();
-    std::string str = "Disconnected from " + (server != nullptr ? server->Name : "server name...");
+    astr_t str = "Disconnected from " + (server != nullptr ? server->Name : "server name...");
     g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0x21, str);
 
     int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 100;

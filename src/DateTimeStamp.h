@@ -5,4 +5,4 @@
 
 #include <common/str.h>
 
-std::string GetBuildDateTimeStamp();
+astr_t GetBuildDateTimeStamp();

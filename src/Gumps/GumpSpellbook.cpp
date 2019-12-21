@@ -31,9 +31,9 @@ enum
     ID_GSB_SPELL_ICON_RIGHT = 1000,
 };
 
-static std::string s_SpellCircleName[] = { "First Circle",   "Second Circle", "Third Circle",
-                                           "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
-                                           "Seventh Circle", "Eighth Circle" };
+static astr_t s_SpellCircleName[] = { "First Circle",   "Second Circle", "Third Circle",
+                                      "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
+                                      "Seventh Circle", "Eighth Circle" };
 
 CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)
@@ -547,8 +547,7 @@ void CGumpSpellbook::GetSummaryBookInfo(
     }
 }
 
-std::string
-CGumpSpellbook::GetSpellName(int offset, std::string &abbreviature, std::string &reagents)
+astr_t CGumpSpellbook::GetSpellName(int offset, astr_t &abbreviature, astr_t &reagents)
 {
     switch (BookType)
     {
@@ -580,7 +579,7 @@ CGumpSpellbook::GetSpellName(int offset, std::string &abbreviature, std::string 
     return "";
 }
 
-std::string CGumpSpellbook::GetSpellRequries(int offset, int &y)
+astr_t CGumpSpellbook::GetSpellRequries(int offset, int &y)
 {
     char buf[100] = { 0 };
     y = 162;
@@ -739,8 +738,7 @@ void CGumpSpellbook::UpdateContent()
         if ((page == 0) && BookType == ST_PALADIN)
         {
             m_TithingPointsText = (CGUIText *)Add(new CGUIText(0x0288, 62, 162));
-            std::string textData =
-                "Tithing points\nAvailable: " + std::to_string(g_Player->TithingPoints);
+            astr_t textData = "Tithing points\nAvailable: " + str_from(g_Player->TithingPoints);
             m_TithingPointsText->CreateTextureA(6, textData);
         }
 
@@ -775,8 +773,8 @@ void CGumpSpellbook::UpdateContent()
 
                 CGUITextEntry *entry = (CGUITextEntry *)Add(new CGUITextEntry(
                     spellSerial + offs, 0x0288, 0, 0, dataX, 52 + y, 0, false, 9));
-                std::string abbreviature;
-                std::string reagents;
+                astr_t abbreviature;
+                astr_t reagents;
                 entry->m_Entry.SetTextA(GetSpellName(offs, abbreviature, reagents));
                 entry->CheckOnSerial = true;
                 entry->ReadOnly = true;
@@ -817,8 +815,8 @@ void CGumpSpellbook::UpdateContent()
         Add(new CGUIPage(page));
         page++;
 
-        std::string spellAbbreviature{};
-        std::string reagents{};
+        astr_t spellAbbreviature{};
+        astr_t reagents{};
         auto spellName = GetSpellName((int)i, spellAbbreviature, reagents);
 
         CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, topTextX, topTextY));
@@ -1114,7 +1112,7 @@ void CGumpSpellbook::ChangePage(int newPage)
     g_Game.PlaySoundEffect(0x0055);
 }
 
-std::string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
+astr_t CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
     { "Clumsy", "U J" },
     { "Create Food", "I M Y" },
     { "Feeblemind", "R W" },
@@ -1181,7 +1179,7 @@ std::string CGumpSpellbook::m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2] = {
     { "Water Elemental", "K V X A" }
 };
 
-std::string CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
+astr_t CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
     "Bloodmoss\nNightshade",
     "Garlic\nGinseng\nMandrake root",
     "Ginseng\nNightshade",
@@ -1248,7 +1246,7 @@ std::string CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
     "Bloodmoss\nMandrake root\nSpiders silk"
 };
 
-const std::string CGumpSpellbook::m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2]{
+const astr_t CGumpSpellbook::m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2]{
     { "Animate Dead", "Uus Corp" },
     { "Blood Oath", "In Jux Mani Xen" },
     { "Corpse Skin", "In Aglo Corp Ylem" },
@@ -1268,7 +1266,7 @@ const std::string CGumpSpellbook::m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2]{
     { "Exorcism", "Ort Corp Grav" }
 };
 
-const std::string CGumpSpellbook::m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT] = {
+const astr_t CGumpSpellbook::m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT] = {
     "Daemon Blood\nGrave Dust",
     "Daemon Blood",
     "Batwing\nGrave Dust",
@@ -1288,7 +1286,7 @@ const std::string CGumpSpellbook::m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT] = {
     "Nox Crystal\nGrave Dust"
 };
 
-const std::string CGumpSpellbook::m_SpellName3[SPELLBOOK_3_SPELLS_COUNT][2]{
+const astr_t CGumpSpellbook::m_SpellName3[SPELLBOOK_3_SPELLS_COUNT][2]{
     { "Cleanse by Fire", "Expor Flamus" },     { "Close Wounds", "Obsu Vulni" },
     { "Consecrate Weapon", "Consecrus Arma" }, { "Dispel Evil", "Dispiro Malas" },
     { "Divine Fury", "Divinum Furis" },        { "Enemy of One", "Forul Solum" },
@@ -1296,17 +1294,17 @@ const std::string CGumpSpellbook::m_SpellName3[SPELLBOOK_3_SPELLS_COUNT][2]{
     { "Remove Curse", "Extermo Vomica" },      { "Sacred Journey", "Sanctum Viatas" }
 };
 
-const std::string CGumpSpellbook::m_SpellName4[SPELLBOOK_4_SPELLS_COUNT]{
+const astr_t CGumpSpellbook::m_SpellName4[SPELLBOOK_4_SPELLS_COUNT]{
     "Honorable Execution", "Confidence",       "Evasion",
     "Counter Attack",      "Lightning Strike", "Momentum Strike"
 };
 
-const std::string CGumpSpellbook::m_SpellName5[SPELLBOOK_5_SPELLS_COUNT]{
+const astr_t CGumpSpellbook::m_SpellName5[SPELLBOOK_5_SPELLS_COUNT]{
     "Focus Attack",    "Death Strike", "Animal Form", "Ki Attack",
     "Surprise Attack", "Backstab",     "Shadowjump",  "Mirror Image"
 };
 
-const std::string CGumpSpellbook::m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2]{
+const astr_t CGumpSpellbook::m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2]{
     { "Arcane Circle", "Myrshalee" },     { "Gift of Renewal", "Olorisstra" },
     { "Immolating Weapon", "Thalshara" }, { "Attunement", "Haeldril" },
     { "Thunderstorm", "Erelonia" },       { "Nature's Fury", "Rauvvrae" },
@@ -1317,7 +1315,7 @@ const std::string CGumpSpellbook::m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2]{
     { "Gift of Life", "Illorae" },        { "Arcane Empowerment", "Aslavdra" }
 };
 
-const std::string CGumpSpellbook::m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][2]{
+const astr_t CGumpSpellbook::m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][2]{
     { "Nether Bolt", "In Corp Ylem" },
     { "Healing Stone", "Kal In Mani" },
     { "Purge Magic", "An Ort Sanct" },

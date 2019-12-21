@@ -11,14 +11,14 @@ class CSkill
 {
 public:
     bool Button = 0;
-    std::string Name = "";
+    astr_t Name = "";
     float BaseValue = 0.0f;
     float Value = 0.0f;
     float Cap = 0.0f;
     uint8_t Status = 0;
 
     CSkill() {}
-    CSkill(bool haveButton, const std::string &name);
+    CSkill(bool haveButton, const astr_t &name);
     ~CSkill() {}
 };
 
@@ -33,7 +33,7 @@ private:
     std::vector<CSkill> m_Skills;
     std::vector<uint8_t> m_SortedTable;
 
-    bool CompareName(const std::string &str1, const std::string &str2);
+    bool CompareName(const astr_t &str1, const astr_t &str2);
 
 public:
     CSkillsManager() {}

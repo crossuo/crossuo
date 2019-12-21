@@ -48,7 +48,7 @@ const char *client_types_cfg[] = {
 };
 
 static account::data s_accounts;
-static std::unordered_map<std::string, int> s_account_by_name;
+static std::unordered_map<astr_t, int> s_account_by_name;
 
 void load_accounts()
 {
@@ -111,7 +111,7 @@ int account_client_type_index_by_name(const char *name)
 
 static fs_path account_create_config(const account::entry &account, bool save = false)
 {
-    std::string name = account.account_profile + ".cfg";
+    astr_t name = account.account_profile + ".cfg";
     std::replace(name.begin(), name.end(), '/', '_');
     std::replace(name.begin(), name.end(), '\\', '_');
 
@@ -397,15 +397,15 @@ void ui_accounts(ui_model &m)
                 if (profileName[0])
                 {
                     account::entry entry;
-                    entry.account_profile = std::string(profileName);
-                    entry.account_loginserver = std::string(loginServer);
-                    entry.account_login = std::string(login);
-                    entry.account_password = std::string(password);
-                    entry.account_data_path = std::string(path);
-                    entry.account_fast_login = std::string(characterName);
-                    entry.account_clientversion = std::string(clientVersion);
-                    entry.account_extra_cli = std::string(commandLine);
-                    entry.account_clienttype = std::string(client_types_cfg[current_type]);
+                    entry.account_profile = astr_t(profileName);
+                    entry.account_loginserver = astr_t(loginServer);
+                    entry.account_login = astr_t(login);
+                    entry.account_password = astr_t(password);
+                    entry.account_data_path = astr_t(path);
+                    entry.account_fast_login = astr_t(characterName);
+                    entry.account_clientversion = astr_t(clientVersion);
+                    entry.account_extra_cli = astr_t(commandLine);
+                    entry.account_clienttype = astr_t(client_types_cfg[current_type]);
                     acct_id = int(s_accounts.entries.size());
                     s_accounts.entries.emplace_back(entry);
                 }
@@ -413,15 +413,15 @@ void ui_accounts(ui_model &m)
             else
             {
                 // dont overwrite the object, we may not want touch other fields
-                acct.account_profile = std::string(profileName);
-                acct.account_loginserver = std::string(loginServer);
-                acct.account_login = std::string(login);
-                acct.account_password = std::string(password);
-                acct.account_data_path = std::string(path);
-                acct.account_fast_login = std::string(characterName);
-                acct.account_clientversion = std::string(clientVersion);
-                acct.account_extra_cli = std::string(commandLine);
-                acct.account_clienttype = std::string(client_types_cfg[current_type]);
+                acct.account_profile = astr_t(profileName);
+                acct.account_loginserver = astr_t(loginServer);
+                acct.account_login = astr_t(login);
+                acct.account_password = astr_t(password);
+                acct.account_data_path = astr_t(path);
+                acct.account_fast_login = astr_t(characterName);
+                acct.account_clientversion = astr_t(clientVersion);
+                acct.account_extra_cli = astr_t(commandLine);
+                acct.account_clienttype = astr_t(client_types_cfg[current_type]);
             }
 
             void save_config();

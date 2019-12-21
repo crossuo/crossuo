@@ -9,13 +9,13 @@
 
 struct Config
 {
-    std::string Login;
-    std::string Password;
-    std::string ClientVersionString = "7.0.33.1";
-    std::string ProtocolClientVersionString = "7.0.33.1";
-    std::string CustomPath;
-    std::string ServerAddress;
-    std::string LocaleOverride;
+    astr_t Login;
+    astr_t Password;
+    astr_t ClientVersionString = "7.0.33.1";
+    astr_t ProtocolClientVersionString = "7.0.33.1";
+    astr_t CustomPath;
+    astr_t ServerAddress;
+    astr_t LocaleOverride;
     uint16_t ServerPort = 2593;
     uint16_t ClientFlag = 0;
     bool SavePassword = false;

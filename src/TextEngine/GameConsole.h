@@ -10,7 +10,7 @@ class CGameConsole : public CEntryText
 {
 private:
     GAME_CONSOLE_TEXT_TYPE m_Type = GCTT_NORMAL;
-    std::wstring m_ConsoleStack[MAX_CONSOLE_STACK_SIZE];
+    wstr_t m_ConsoleStack[MAX_CONSOLE_STACK_SIZE];
     int m_ConsoleStackCount = 0;
     int m_ConsoleSelectedIndex = 0;
     bool m_PositionChanged = false;
@@ -19,8 +19,8 @@ public:
     CGameConsole();
     virtual ~CGameConsole();
 
-    static void Send(std::wstring text, uint16_t defaultColor = 0);
-    static std::wstring
+    static void Send(wstr_t text, uint16_t defaultColor = 0);
+    static wstr_t
     IsSystemCommand(const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type);
 
     void DrawW(
@@ -36,10 +36,10 @@ public:
     void SaveConsoleMessage();
     void ChangeConsoleMessage(bool next);
     void ClearStack();
-    std::wstring GetLastConsoleText();
+    wstr_t GetLastConsoleText();
 };
 
-static const std::wstring g_ConsolePrefix[] = {
+static const wstr_t g_ConsolePrefix[] = {
     L"",    //Normal
     L"! ",  //Yell
     L"; ",  //Whisper

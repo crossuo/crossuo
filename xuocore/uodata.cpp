@@ -29,7 +29,7 @@
 
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)
 
-std::string g_dumpUopFile;
+astr_t g_dumpUopFile;
 UOData g_Data;
 Index g_Index;
 CFileManager g_FileManager;
@@ -1091,10 +1091,10 @@ void CFileManager::UopReadIndexFile(
     CUopMappedFile &uopFile,
     int startIndex)
 {
-    std::string p = uopFileName;
+    astr_t p = uopFileName;
     std::transform(p.begin(), p.end(), p.begin(), ::tolower);
 
-    bool isGump = (std::string("gumpartlegacymul") == p);
+    bool isGump = (astr_t("gumpartlegacymul") == p);
     char basePath[100];
     snprintf(basePath, sizeof(basePath), "build/%s/%%0%ii%s", p.c_str(), padding, extesion);
 

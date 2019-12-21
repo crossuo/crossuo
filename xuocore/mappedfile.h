@@ -113,12 +113,12 @@ struct CDataWriter
     }
 
     void WriteString(
-        const std::string &val,
+        const astr_t &val,
         size_t length = 0,
         bool nullTerminated = true,
         const intptr_t &offset = 0);
     void WriteWString(
-        const std::wstring &val,
+        const wstr_t &val,
         size_t length = 0,
         bool bigEndian = true,
         bool nullTerminated = true,
@@ -271,12 +271,12 @@ struct CDataReader
         memcpy(buffer, Ptr, SIZE * sizeof(T));
         Move(SIZE);
     }
-    std::string ReadString(size_t size = 0, const intptr_t &offset = 0);
-    std::wstring ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
-    std::wstring ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);
+    astr_t ReadString(size_t size = 0, const intptr_t &offset = 0);
+    wstr_t ReadWStringBE(size_t size = 0, const intptr_t &offset = 0);
+    wstr_t ReadWStringLE(size_t size = 0, const intptr_t &offset = 0);
 
 private:
-    std::wstring ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
+    wstr_t ReadWString(size_t size = 0, bool bigEndian = true, const intptr_t &offset = 0);
 };
 
 struct CMappedFile : public CDataReader

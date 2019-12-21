@@ -15,11 +15,11 @@ public:
     void SetUseProxy(bool val);
 
 protected:
-    std::string m_ProxyAddress = "";
+    astr_t m_ProxyAddress = "";
 
 public:
-    std::string GetProxyAddress() { return m_ProxyAddress; };
-    void SetProxyAddress(const std::string &val);
+    astr_t GetProxyAddress() { return m_ProxyAddress; };
+    void SetProxyAddress(const astr_t &val);
 
 protected:
     int m_ProxyPort = 0;
@@ -36,18 +36,18 @@ public:
     void SetProxySocks5(bool val);
 
 protected:
-    std::string m_ProxyAccount = "";
+    astr_t m_ProxyAccount = "";
 
 public:
-    std::string GetProxyAccount() { return m_ProxyAccount; };
-    void SetProxyAccount(const std::string &val);
+    astr_t GetProxyAccount() { return m_ProxyAccount; };
+    void SetProxyAccount(const astr_t &val);
 
 protected:
-    std::string m_ProxyPassword = "";
+    astr_t m_ProxyPassword = "";
 
 public:
-    std::string GetProxyPassword() { return m_ProxyPassword; };
-    void SetProxyPassword(const std::string &val);
+    astr_t GetProxyPassword() { return m_ProxyPassword; };
+    void SetProxyPassword(const astr_t &val);
 
 private:
     CSocket m_LoginSocket{ CSocket(false) };
@@ -65,7 +65,7 @@ public:
     void Init();
     void Init(uint8_t *gameSeed);
     bool Connected() { return (m_LoginSocket.Connected || m_GameSocket.Connected); }
-    bool Connect(const std::string &address, int port, uint8_t *gameSeed);
+    bool Connect(const astr_t &address, int port, uint8_t *gameSeed);
     void Disconnect();
     void Recv();
     int Send(uint8_t *buf, int size);

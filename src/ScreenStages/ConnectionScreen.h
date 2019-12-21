@@ -45,11 +45,11 @@ public:
     void SetType(CONNECTION_SCREEN_TYPE val);
 
 protected:
-    std::string m_Text;
+    astr_t m_Text;
 
 public:
-    std::string GetTextA() { return m_Text; };
-    void SetTextA(const std::string &val);
+    astr_t GetTextA() { return m_Text; };
+    void SetTextA(const astr_t &val);
 
 private:
     CGumpScreenConnection m_ConnectionGump;

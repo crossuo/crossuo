@@ -8,7 +8,7 @@
 
 CIntlocManager g_IntlocManager;
 
-CIntloc::CIntloc(int fileIndex, const std::string &lang)
+CIntloc::CIntloc(int fileIndex, const astr_t &lang)
 {
     Loaded = false;
     Language = lang;
@@ -63,7 +63,7 @@ CIntloc::~CIntloc()
     m_Strings.clear();
 }
 
-std::wstring CIntloc::Get(int id, bool toCamelCase)
+wstr_t CIntloc::Get(int id, bool toCamelCase)
 {
     if (id < (int)m_Strings.size())
     {
@@ -87,7 +87,7 @@ CIntlocManager::~CIntlocManager()
 {
 }
 
-CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
+CIntloc *CIntlocManager::Intloc(int fileIndex, const astr_t &lang)
 {
     QFOR(obj, m_Items, CIntloc *)
     {
@@ -125,7 +125,7 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const std::string &lang)
     return nullptr;
 }
 
-std::wstring CIntlocManager::Intloc(const std::string &lang, uint32_t clilocID, bool isNewCliloc)
+wstr_t CIntlocManager::Intloc(const astr_t &lang, uint32_t clilocID, bool isNewCliloc)
 {
     auto language = str_lower(lang);
     if (language.length() == 0u)
@@ -133,7 +133,7 @@ std::wstring CIntlocManager::Intloc(const std::string &lang, uint32_t clilocID, 
         language = "enu";
     }
 
-    std::wstring str = {};
+    wstr_t str = {};
 
     if (str.length() == 0u)
     {

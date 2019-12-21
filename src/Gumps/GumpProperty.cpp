@@ -6,7 +6,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Globals.h" // g_Ticks
 
-CGumpProperty::CGumpProperty(const std::wstring &text)
+CGumpProperty::CGumpProperty(const wstr_t &text)
     : CGump(GT_PROPERTY, 0, 0, 0)
 {
     Timer = g_Ticks + 5000;

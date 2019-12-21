@@ -35,7 +35,7 @@ public:
 class CPacketCreateCharacter : public CPacket
 {
 public:
-    CPacketCreateCharacter(const std::string &name);
+    CPacketCreateCharacter(const astr_t &name);
 };
 
 class CPacketDeleteCharacter : public CPacket
@@ -47,7 +47,7 @@ public:
 class CPacketSelectCharacter : public CPacket
 {
 public:
-    CPacketSelectCharacter(int index, const std::string &name);
+    CPacketSelectCharacter(int index, const astr_t &name);
 };
 
 class CPacketPickupRequest : public CPacket
@@ -126,7 +126,7 @@ public:
 class CPacketClientVersion : public CPacket
 {
 public:
-    CPacketClientVersion(const std::string &version);
+    CPacketClientVersion(const astr_t &version);
 };
 
 class CPacketASCIISpeechRequest : public CPacket
@@ -224,7 +224,7 @@ public:
 class CPacketRenameRequest : public CPacket
 {
 public:
-    CPacketRenameRequest(uint32_t serial, const std::string &newName);
+    CPacketRenameRequest(uint32_t serial, const astr_t &newName);
 };
 
 class CPacketTipRequest : public CPacket
@@ -242,8 +242,7 @@ public:
 class CPacketUnicodePromptResponse : public CPacket
 {
 public:
-    CPacketUnicodePromptResponse(
-        const wchar_t *text, size_t len, const std::string &lang, bool cancel);
+    CPacketUnicodePromptResponse(const wchar_t *text, size_t len, const astr_t &lang, bool cancel);
 };
 
 class CPacketDyeDataResponse : public CPacket
@@ -346,7 +345,7 @@ public:
 class CPacketAssistVersion : public CPacket
 {
 public:
-    CPacketAssistVersion(uint32_t version, const std::string &clientVersion);
+    CPacketAssistVersion(uint32_t version, const astr_t &clientVersion);
 };
 
 class CPacketRazorAnswer : public CPacket
@@ -358,7 +357,7 @@ public:
 class CPacketLanguage : public CPacket
 {
 public:
-    CPacketLanguage(const std::string &lang);
+    CPacketLanguage(const astr_t &lang);
 };
 
 class CPacketClientType : public CPacket
@@ -382,7 +381,7 @@ public:
 class CPacketOpenChat : public CPacket
 {
 public:
-    CPacketOpenChat(const std::wstring &name);
+    CPacketOpenChat(const wstr_t &name);
 };
 
 class CPacketMapMessage : public CPacket

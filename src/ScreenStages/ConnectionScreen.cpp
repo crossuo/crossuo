@@ -65,7 +65,7 @@ void CConnectionScreen::SetType(CONNECTION_SCREEN_TYPE val)
     m_Gump.WantUpdateContent = true;
 }
 
-void CConnectionScreen::SetTextA(const std::string &val)
+void CConnectionScreen::SetTextA(const astr_t &val)
 {
     m_Text = val;
     m_Gump.WantUpdateContent = true;

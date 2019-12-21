@@ -22,7 +22,7 @@ private:
     static uint8_t m_SkillIndexTable[24];
 
     void ProcessSubMenu();
-    Keycode ConvertStringToKeyCode(const std::vector<std::string> &strings);
+    Keycode ConvertStringToKeyCode(const std::vector<astr_t> &strings);
 
 public:
     CMacroManager();

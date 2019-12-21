@@ -23,9 +23,9 @@ public:
         uint32_t serial,
         short x,
         short y,
-        const std::wstring &topText,
-        const std::wstring &bottomText,
-        const std::wstring &dataText);
+        const wstr_t &topText,
+        const wstr_t &bottomText,
+        const wstr_t &dataText);
     virtual ~CGumpProfile();
 
     GUMP_BUTTON_EVENT_H override;

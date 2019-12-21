@@ -25,7 +25,7 @@ void CCharacterListScreen::Init()
 {
     CBaseScreen::Init();
 
-    auto title = std::string("Ultima Online - ") + g_MainScreen.m_Account->c_str();
+    auto title = astr_t("Ultima Online - ") + g_MainScreen.m_Account->c_str();
 
     CServer *server = g_ServerList.GetSelectedServer();
 

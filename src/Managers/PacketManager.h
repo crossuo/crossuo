@@ -49,7 +49,7 @@ struct HTMLGumpDataInfo
     int Width;
     int Height;
     int TextID;
-    std::wstring Args;
+    wstr_t Args;
     int HaveBackground;
     int HaveScrollbar;
     int Color;
@@ -62,7 +62,7 @@ class CPacketManager : public Wisp::CPacketReader
 {
 public:
     void ConfigureClientVersion(uint32_t newClientVersion);
-    std::string AutoLoginNames = "";
+    astr_t AutoLoginNames = "";
     uint32_t ConfigSerial = 0;
 
 private:
@@ -73,7 +73,7 @@ private:
     std::vector<uint32_t> m_MegaClilocRequests;
     std::deque<std::vector<uint8_t>> m_PluginData;
 
-    bool AutoLoginNameExists(const std::string &name);
+    bool AutoLoginNameExists(const astr_t &name);
     void AddHTMLGumps(class CGump *gump, std::vector<HTMLGumpDataInfo> &list);
 
 protected:

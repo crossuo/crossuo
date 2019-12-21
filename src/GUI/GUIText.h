@@ -19,14 +19,14 @@ public:
 
     void CreateTextureA(
         uint8_t font,
-        const std::string &str,
+        const astr_t &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
     void CreateTextureW(
         uint8_t font,
-        const std::wstring &str,
+        const wstr_t &str,
         uint8_t cell = 30,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,

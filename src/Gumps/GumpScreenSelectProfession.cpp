@@ -182,7 +182,7 @@ void CGumpScreenSelectProfession::UpdateContentOld()
         CProfession *profession = (CProfession *)obj;
         int statVal[3] = { profession->Str, profession->Dex, profession->Int };
 
-        const std::string statName[3] = { "Strength", "Dexterity", "Intelligence" };
+        const astr_t statName[3] = { "Strength", "Dexterity", "Intelligence" };
 
         int yPtr = 136;
 
@@ -376,7 +376,7 @@ void CGumpScreenSelectProfession::UpdateContentNew()
     {
         CProfession *profession = (CProfession *)obj;
         int statVal[3] = { profession->Str, profession->Dex, profession->Int };
-        const std::string statName[3] = { "Strength", "Dexterity", "Intelligence" };
+        const astr_t statName[3] = { "Strength", "Dexterity", "Intelligence" };
 
         int yPtr = 171;
 

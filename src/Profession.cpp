@@ -13,7 +13,7 @@ CBaseProfession::~CBaseProfession()
 {
 }
 
-bool CBaseProfession::AddDescription(int desc, const std::string &name, const char *val)
+bool CBaseProfession::AddDescription(int desc, const astr_t &name, const char *val)
 {
     bool result = (DescriptionIndex == desc);
     if (result)
@@ -56,7 +56,7 @@ CProfessionCategory::~CProfessionCategory()
 {
 }
 
-void CProfessionCategory::AddChildren(const std::string &child)
+void CProfessionCategory::AddChildren(const astr_t &child)
 {
     Childrens += child + "|";
 }

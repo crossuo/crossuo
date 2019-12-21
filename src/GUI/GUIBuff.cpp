@@ -9,7 +9,7 @@
 
 extern RenderCmdList *g_renderCmdList;
 
-CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const std::wstring &text)
+CGUIBuff::CGUIBuff(uint16_t graphic, int timer, const wstr_t &text)
     : CGUIDrawObject(GOT_BUFF, 0, graphic, 0, 0, 0)
     , Timer(timer)
     , Text(text)

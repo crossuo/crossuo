@@ -24,10 +24,9 @@ public:
 class CMacroObjectString : public CMacroObject
 {
 public:
-    std::string m_String;
+    astr_t m_String;
 
-    CMacroObjectString(
-        const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const std::string &str);
+    CMacroObjectString(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const astr_t &str);
     virtual ~CMacroObjectString();
 
     virtual bool HaveString() { return true; }

@@ -12,14 +12,14 @@ public:
     CGUIComboboxText(
         uint16_t color,
         uint8_t font,
-        const std::string &str,
+        const astr_t &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
     CGUIComboboxText(
         uint16_t color,
         uint8_t font,
-        const std::wstring &str,
+        const wstr_t &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);

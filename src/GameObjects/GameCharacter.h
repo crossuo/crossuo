@@ -37,7 +37,7 @@ public:
     int OffsetY = 0;
     int OffsetZ = 0;
     uint32_t LastStepTime = 0;
-    std::string Title;
+    astr_t Title;
     uint8_t HitsPercent = 0;
 
 protected:

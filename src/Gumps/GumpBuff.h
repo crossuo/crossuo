@@ -32,7 +32,7 @@ public:
 
     virtual bool CanBeDisplayed() override;
 
-    void AddBuff(uint16_t id, uint16_t timer, const std::wstring &text);
+    void AddBuff(uint16_t id, uint16_t timer, const wstr_t &text);
 
     void DeleteBuff(uint16_t id);
 

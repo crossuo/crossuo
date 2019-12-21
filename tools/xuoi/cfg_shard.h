@@ -7,11 +7,11 @@
 #define CFG_FIELD(section, name, default, type)
 #endif
 
-CFG_FIELD(shard, name, {}, std::string)
+CFG_FIELD(shard, name, {}, astr_t)
 // required
 // shard name
 
-CFG_FIELD(shard, servertype, {}, std::string)
+CFG_FIELD(shard, servertype, {}, astr_t)
 // required
 // format:
 //   <RunUO|ServUO|POL|Sphere> <version number|commit hash>
@@ -21,16 +21,16 @@ CFG_FIELD(shard, servertype, {}, std::string)
 CFG_FIELD(shard, language, "English", lang_type)
 // optional, default: English<,French...>
 
-CFG_FIELD(shard, description, {}, std::string)
+CFG_FIELD(shard, description, {}, astr_t)
 // optional
 // format:
 //   <short textual description in server official language>
 
-CFG_FIELD(shard, url, {}, std::string)
+CFG_FIELD(shard, url, {}, astr_t)
 // optional
 // website url
 
-CFG_FIELD(shard, urlforum, {}, std::string)
+CFG_FIELD(shard, urlforum, {}, astr_t)
 // optional
 // website forum url
 
@@ -41,7 +41,7 @@ CFG_FIELD(shard, urlother, {}, url_other)
 //   <textual description>+<url>
 //   Discord+https://discord.gg/INVITE
 
-CFG_FIELD(shard, urlregister, {}, std::string)
+CFG_FIELD(shard, urlregister, {}, astr_t)
 // optional
 // url where to register IF the shard is not auto account creation
 // if empty, it IS considered auto account creation
@@ -63,21 +63,21 @@ CFG_FIELD(shard, installer, "uo+latest", tag_install) // (not fully implemented)
 //   xuo+<url>
 //     this uses the X:UO update server and manifest format
 
-CFG_FIELD(shard, loginserver, {}, std::string)
+CFG_FIELD(shard, loginserver, {}, astr_t)
 // required
 // same as crossuop.cfg, classic loginserver for login.cfg
 // format:
 //   <ip>,<port>
 
-CFG_FIELD(shard, clientversion, {}, std::string)
+CFG_FIELD(shard, clientversion, {}, astr_t)
 // required
 // same as in crossuo.cfg, specify the client version to emulate with crossuo
 
-CFG_FIELD(account, protocolversion, {}, std::string)
+CFG_FIELD(account, protocolversion, {}, astr_t)
 // optional
 // same as in crossuo.cfg, specify the network protocol version to force
 
-CFG_FIELD(shard, clienttype, {}, std::string)
+CFG_FIELD(shard, clienttype, {}, astr_t)
 // optional
 // one of: t2a,re,td,lbr,aos,se,sa,ml,ej
 // same as crossuo.cfg, if empty will autodetect based on the client version

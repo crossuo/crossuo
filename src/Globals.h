@@ -32,11 +32,11 @@ extern bool g_ShiftPressed;
 extern bool g_MovingFromMouse;
 extern bool g_AutoMoving;
 extern bool g_AbyssPacket03First;
-extern std::string g_dumpUopFile;
+extern astr_t g_dumpUopFile;
 
 bool CanBeDraggedByOffset(const CPoint2Di &point);
 void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y);
-std::string ToCamelCase(std::string text);
+astr_t ToCamelCase(astr_t text);
 
 class CGameObject;
 int GetDistance(CGameObject *current, CGameObject *target);
@@ -79,7 +79,7 @@ extern uint32_t g_Ticks;
 extern uint32_t ShaderColorTable;
 extern uint32_t g_ShaderDrawMode;
 
-extern std::string g_Language;
+extern astr_t g_Language;
 
 extern GAME_STATE g_GameState;
 
@@ -208,7 +208,7 @@ extern uint32_t g_ProcessStaticAnimationTimer;
 extern uint32_t g_ProcessRemoveRangedTimer;
 extern int g_MaxViewRange;
 extern uint32_t g_GameFeaturesFlags;
-inline bool Int32TryParse(const std::string &str, int &result)
+inline bool Int32TryParse(const astr_t &str, int &result)
 {
     char *end = nullptr;
     auto v = strtol(str.c_str(), &end, 10);
@@ -373,8 +373,8 @@ extern struct PING_INFO_DATA g_GameServerPingInfo;
 extern uint32_t g_PingTimer;
 #endif // USE_PING
 
-extern uint32_t g_Ping;          // From packet 0x73
-extern std::string g_PingString; // Debug Info
+extern uint32_t g_Ping;     // From packet 0x73
+extern astr_t g_PingString; // Debug Info
 
 #define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
 #define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))

@@ -12,8 +12,8 @@ PING_INFO_DATA g_GameServerPingInfo = {};
 uint32_t g_PingTimer = 0;
 #endif // USE_PING
 
-uint32_t g_Ping = 0;      // From packet 0x73
-std::string g_PingString; // Debug Info
+uint32_t g_Ping = 0; // From packet 0x73
+astr_t g_PingString; // Debug Info
 
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
@@ -45,7 +45,7 @@ uint32_t g_Ticks = 0;
 uint32_t ShaderColorTable = 0;
 uint32_t g_ShaderDrawMode = 0;
 
-std::string g_Language = "ENU";
+astr_t g_Language = "ENU";
 
 GAME_STATE g_GameState = GS_MAIN;
 
@@ -237,7 +237,7 @@ void TileOffsetOnMonitorToXY(int &ofsX, int &ofsY, int &x, int &y)
     }
 }
 
-std::string ToCamelCase(std::string text)
+astr_t ToCamelCase(astr_t text)
 {
     bool lastSpace = true;
 

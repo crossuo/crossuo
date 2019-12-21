@@ -18,7 +18,7 @@
 #include "mulstruct.h"
 #include "mappedfile.h"
 
-extern std::string g_dumpUopFile;
+extern astr_t g_dumpUopFile;
 
 #if LIBUO == 1
 typedef void *SoundInfo;
@@ -149,7 +149,7 @@ struct CIndexAnimation
 
 struct CIndexMusic
 {
-    std::string FilePath; // FIXME
+    astr_t FilePath; // FIXME
     bool Loop = false;
 };
 

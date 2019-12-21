@@ -31,7 +31,7 @@ public:
     CTextContainer m_TextContainer{ CTextContainer(10) };
 
     virtual CTextRenderer *GetTextRenderer() override { return &m_TextRenderer; }
-    void UpdateDescription(const std::string &text);
+    void UpdateDescription(const astr_t &text);
     virtual void DelayedClick(CRenderObject *obj) override;
     virtual void PrepareContent() override;
     virtual void UpdateContent() override;

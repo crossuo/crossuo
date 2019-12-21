@@ -677,7 +677,7 @@ void CGumpCombatBook::ChangePage(int newPage)
     g_Game.PlaySoundEffect(0x0055);
 }
 
-const std::string CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
+const astr_t CGumpCombatBook::m_AbilityName[MAX_ABILITIES_COUNT]{
     "Armor Ignore",       "Bleed Attack",    "Concussion Blow",
     "Crushing Blow",      "Disarm",          "Dismount",
     "Double Strike",      "Infecting",       "Mortal Strike",

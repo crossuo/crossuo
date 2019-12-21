@@ -84,7 +84,7 @@ void CScreenshotBuilder::WritePixelsToDisk()
         now.tm_hour,
         now.tm_min,
         now.tm_sec);
-    std::string filename = buf;
+    astr_t filename = buf;
 
     int result = 0;
     auto data = (void *)&m_Pixels[0];

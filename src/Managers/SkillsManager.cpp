@@ -9,7 +9,7 @@
 
 CSkillsManager g_SkillsManager;
 
-CSkill::CSkill(bool haveButton, const std::string &name)
+CSkill::CSkill(bool haveButton, const astr_t &name)
     : Button(haveButton)
 {
     if (name.length() != 0u)
@@ -82,7 +82,7 @@ CSkill *CSkillsManager::Get(uint32_t index)
     return nullptr;
 }
 
-bool CSkillsManager::CompareName(const std::string &str1, const std::string &str2)
+bool CSkillsManager::CompareName(const astr_t &str1, const astr_t &str2)
 {
     //Вычисляем минимальную длину строки для сравнения
     const auto len = (int)std::min(str1.length(), str2.length());

@@ -71,7 +71,7 @@ void CGumpGeneric::InitToolTip()
 }
 
 void CGumpGeneric::AddText(
-    int index, const std::wstring &text, CBaseGUI *start, bool backbroundCanBeColored)
+    int index, const wstr_t &text, CBaseGUI *start, bool backbroundCanBeColored)
 {
     if (start == nullptr)
     {

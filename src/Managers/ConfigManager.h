@@ -137,7 +137,7 @@ public:
 
     bool FilterPWOn = false;
     bool ObscenityFilter = false;
-    std::string FilterPassword = "";
+    astr_t FilterPassword = "";
 
     bool ToggleBufficonWindow = false;
     int GameWindowX = 0;
@@ -242,7 +242,7 @@ public:
 
     void UpdateFeatures();
     uint16_t GetColorByNotoriety(uint8_t notoriety);
-    int GetConfigKeyCode(const std::string &key);
+    int GetConfigKeyCode(const astr_t &key);
 
     bool Load(const fs_path &path);
     void Save(const fs_path &path);

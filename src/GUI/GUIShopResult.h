@@ -11,7 +11,7 @@ class CGUIShopResult : public CBaseGUI
 {
 public:
     uint32_t Price = 0;
-    std::string Name = "";
+    astr_t Name = "";
 
 private:
     CTextSprite m_NameText;

@@ -14,7 +14,7 @@ CSocket::~CSocket()
 {
 }
 
-bool CSocket::Connect(const std::string &address, uint16_t port)
+bool CSocket::Connect(const astr_t &address, uint16_t port)
 {
     Info(Network, "Connecting...%s:%i", address.c_str(), port);
 

@@ -15,7 +15,7 @@ enum
     ID_GT_COUNT,
 };
 
-CGumpTip::CGumpTip(uint32_t serial, short x, short y, const std::string &str, bool updates)
+CGumpTip::CGumpTip(uint32_t serial, short x, short y, const astr_t &str, bool updates)
     : CGumpBaseScroll(GT_TIP, serial, 0x0820, 250, x, y, true)
     , Updates(updates)
 {

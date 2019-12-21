@@ -12,7 +12,7 @@ class CProfessionManager : public CBaseQueue
 {
 private:
     static const int m_KeyCount = 18;
-    static const std::string m_Keys[m_KeyCount];
+    static const astr_t m_Keys[m_KeyCount];
 
     enum
     {
@@ -36,7 +36,7 @@ private:
         PM_CODE_DESCRIPTION_CLILOC_ID
     };
 
-    int GetKeyCode(const std::string &key);
+    int GetKeyCode(const astr_t &key);
     bool ParseFilePart(Wisp::CTextFileParser &file);
     bool AddChild(CBaseProfession *parent, CBaseProfession *child);
     void LoadProfessionDescription();

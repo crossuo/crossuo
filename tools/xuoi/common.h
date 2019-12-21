@@ -15,5 +15,5 @@
 #include <common/utils.h>
 #include <common/checksum.h>
 
-bool valid_url(const std::string &url);
-void open_url(const std::string &url);
+bool valid_url(const astr_t &url);
+void open_url(const astr_t &url);

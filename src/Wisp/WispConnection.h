@@ -25,7 +25,7 @@ public:
 
     class CPacketMessage *m_MessageParser;
 
-    virtual bool Connect(const std::string &address, uint16_t port);
+    virtual bool Connect(const astr_t &address, uint16_t port);
     void Disconnect();
 
     bool ReadyRead();

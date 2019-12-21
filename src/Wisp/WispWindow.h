@@ -50,12 +50,12 @@ public:
     static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
     static uint32_t PluginEvent(uint32_t id, const void *data = nullptr);
 
-    void ShowMessage(const std::string &text, const std::string &title);
-    void ShowMessage(const std::wstring &text, const std::wstring &title);
+    void ShowMessage(const astr_t &text, const astr_t &title);
+    void ShowMessage(const wstr_t &text, const wstr_t &title);
     void SetMinSize(int width, int height);
     void SetMaxSize(int width, int height);
     bool IsActive() const;
-    void SetTitle(const std::string &text) const;
+    void SetTitle(const astr_t &text) const;
     void ShowWindow(bool show) const;
     bool IsMinimizedWindow() const;
     bool IsMaximizedWindow() const;

@@ -30,7 +30,7 @@ struct releases
 {
     const char *name;
     const char *version;
-    std::string display;
+    astr_t display;
 };
 static std::vector<releases> s_releases;
 static std::vector<releases> s_releases_updated;
@@ -388,7 +388,7 @@ static bool run_self_update_instance(int argc, char **argv)
 #if defined(XUO_WINDOWS)
     if (bin[len - 1] != '_')
     {
-        std::string filename{ bin };
+        astr_t filename{ bin };
         filename += '_';
         auto file = fs_path_from(filename);
         fs_del(file);
@@ -462,8 +462,7 @@ int main(int argc, char **argv)
                         return;
                     if (!strcasecmp(name, "all"))
                         return;
-                    s_releases_updated.push_back(
-                        { name, version, std::string(name) + " " + version });
+                    s_releases_updated.push_back({ name, version, astr_t(name) + " " + version });
                 };
                 xuo_releases_iterate(s_ctx, func);
                 s_releases.swap(s_releases_updated);

@@ -2093,25 +2093,25 @@ void CGameScreen::Render()
                 tz,
                 selRwo->PriorityZ);
 
-            const std::string flagNames[] = {
-                "Background", "Weapon",     "Transparent", "Translucent", "Wall",     "Damaging",
-                "Impassable", "Wet",        "Unknown",     "Surface",     "Bridge",   "Stackable",
-                "Window",     "NoShoot",    "PrefixA",     "PrefixAn",    "Internal", "Foliage",
-                "PartialHue", "Unknown1",   "Map",         "Container",   "Wearable", "LightSource",
-                "Animated",   "NoDiagonal", "Unknown2",    "Armor",       "Roof",     "Door",
-                "StairBack",  "StairRight"
-            };
+            const astr_t flagNames[] = { "Background", "Weapon",     "Transparent", "Translucent",
+                                         "Wall",       "Damaging",   "Impassable",  "Wet",
+                                         "Unknown",    "Surface",    "Bridge",      "Stackable",
+                                         "Window",     "NoShoot",    "PrefixA",     "PrefixAn",
+                                         "Internal",   "Foliage",    "PartialHue",  "Unknown1",
+                                         "Map",        "Container",  "Wearable",    "LightSource",
+                                         "Animated",   "NoDiagonal", "Unknown2",    "Armor",
+                                         "Roof",       "Door",       "StairBack",   "StairRight" };
 
-            std::string flagsData{};
+            astr_t flagsData{};
             for (int f = 0; f < 32; f++)
             {
                 if ((tiledataFlags & (1 << f)) != 0u)
                 {
-                    flagsData += std::string("\n") + flagNames[f];
+                    flagsData += astr_t("\n") + flagNames[f];
                 }
             }
 
-            flagsData = std::string(dbf) + flagsData;
+            flagsData = astr_t(dbf) + flagsData;
 
             g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
         }

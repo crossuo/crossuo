@@ -8,8 +8,7 @@
 #include "../Managers/ConfigManager.h"
 #include "../ScreenStages/GameScreen.h"
 
-CGumpNotify::CGumpNotify(
-    short x, short y, uint8_t variant, short width, short height, std::string text)
+CGumpNotify::CGumpNotify(short x, short y, uint8_t variant, short width, short height, astr_t text)
     : CGump(GT_NOTIFY, 0, x, y)
     , Variant(variant)
     , Width(width)

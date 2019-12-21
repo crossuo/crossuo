@@ -17,8 +17,8 @@ struct CTextData : public CRenderTextObject
     uint8_t Font = 0;
     uint32_t Timer = 0;
     uint32_t MoveTimer = 0;
-    std::string Text = "";
-    std::wstring UnicodeText = {};
+    astr_t Text = "";
+    wstr_t UnicodeText = {};
     uint8_t Alpha = 0xFF;
     CRenderWorldObject *Owner = nullptr;
     CTextSprite m_TextSprite;

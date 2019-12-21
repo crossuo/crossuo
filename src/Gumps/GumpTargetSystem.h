@@ -7,7 +7,7 @@
 
 class CGumpTargetSystem : public CGump
 {
-    std::string OldName;
+    astr_t OldName;
 
 private:
     const int ID_GSB_LOCK_MOVING = 2;

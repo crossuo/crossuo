@@ -9,7 +9,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Utility/PerfMarker.h"
 
-CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const std::wstring &text)
+CGUIBulletinBoardObject::CGUIBulletinBoardObject(int serial, int x, int y, const wstr_t &text)
     : CBaseGUI(GOT_BB_OBJECT, serial, 0, 0, x, y)
     , Text(text)
 {

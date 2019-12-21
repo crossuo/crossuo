@@ -51,7 +51,7 @@ typedef struct MULTILINES_FONT_INFO
 struct WEB_LINK
 {
     bool Visited;
-    std::string WebLink;
+    astr_t WebLink;
 };
 
 struct HTML_char
@@ -107,8 +107,8 @@ private:
     int m_RightMargin = 0;
     int m_BottomMargin = 0;
 
-    uint16_t GetWebLinkID(const std::string &link, uint32_t &color);
-    uint16_t GetWebLinkID(const std::wstring &link, uint32_t &color);
+    uint16_t GetWebLinkID(const astr_t &link, uint32_t &color);
+    uint16_t GetWebLinkID(const wstr_t &link, uint32_t &color);
 
     HTMLCHAR_LIST
     GetHTMLData(uint8_t font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, uint16_t flags);
@@ -116,9 +116,9 @@ private:
     HTML_DATA_INFO GetHTMLInfoFromTag(const HTML_TAG_TYPE &tag);
     HTML_DATA_INFO GetCurrentHTMLInfo(const HTMLINFO_LIST &list);
 
-    void GetHTMLInfoFromContent(HTML_DATA_INFO &info, const std::string &content);
-    void TrimHTMLString(std::string &str);
-    uint32_t GetHTMLColorFromText(std::string &str);
+    void GetHTMLInfoFromContent(HTML_DATA_INFO &info, const astr_t &content);
+    void TrimHTMLString(astr_t &str);
+    uint32_t GetHTMLColorFromText(astr_t &str);
 
     HTML_TAG_TYPE
     ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, HTML_DATA_INFO &info);
@@ -138,7 +138,7 @@ private:
     bool GenerateABase(
         uint8_t font,
         CTextSprite &th,
-        const std::string &str,
+        const astr_t &str,
         uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,
@@ -147,7 +147,7 @@ private:
     bool GenerateWBase(
         uint8_t font,
         CTextSprite &th,
-        const std::wstring &str,
+        const wstr_t &str,
         uint16_t color,
         uint8_t cell,
         int width,
@@ -174,37 +174,32 @@ public:
     inline bool IsPrintASCII(uint8_t index) { return (m_FontIndex[index] != 0xFF); }
     int GetFontOffsetY(uint8_t font, uint8_t index);
     CPoint2Di GetCaretPosA(
-        uint8_t font,
-        const std::string &str,
-        int pos,
-        int width,
-        TEXT_ALIGN_TYPE align,
-        uint16_t flags);
+        uint8_t font, const astr_t &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int CalculateCaretPosA(
         uint8_t font,
-        const std::string &str,
+        const astr_t &str,
         int x,
         int y,
         int width,
         TEXT_ALIGN_TYPE align,
         uint16_t flags);
 
-    int GetWidthA(uint8_t font, const std::string &str);
+    int GetWidthA(uint8_t font, const astr_t &str);
 
     int GetWidthExA(
-        uint8_t font, const std::string &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags);
+        uint8_t font, const astr_t &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int GetHeightA(
         uint8_t font,
-        const std::string &str,
+        const astr_t &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
     int GetHeightA(PMULTILINES_FONT_INFO info);
 
-    std::string GetTextByWidthA(uint8_t font, const std::string &str, int width, bool isCropped);
+    astr_t GetTextByWidthA(uint8_t font, const astr_t &str, int width, bool isCropped);
 
     PMULTILINES_FONT_INFO
     GetInfoA(
@@ -222,7 +217,7 @@ public:
     bool GenerateA(
         uint8_t font,
         CTextSprite &th,
-        const std::string &str,
+        const astr_t &str,
         uint16_t color = 0,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
@@ -230,7 +225,7 @@ public:
 
     void DrawA(
         uint8_t font,
-        const std::string &str,
+        const astr_t &str,
         uint16_t color,
         int x,
         int y,
@@ -239,37 +234,32 @@ public:
         uint16_t flags = 0);
 
     CPoint2Di GetCaretPosW(
-        uint8_t font,
-        const std::wstring &str,
-        int pos,
-        int width,
-        TEXT_ALIGN_TYPE align,
-        uint16_t flags);
+        uint8_t font, const wstr_t &str, int pos, int width, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int CalculateCaretPosW(
         uint8_t font,
-        const std::wstring &str,
+        const wstr_t &str,
         int x,
         int y,
         int width,
         TEXT_ALIGN_TYPE align,
         uint16_t flags);
 
-    int GetWidthW(uint8_t font, const std::wstring &str);
+    int GetWidthW(uint8_t font, const wstr_t &str);
 
     int GetWidthExW(
-        uint8_t font, const std::wstring &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags);
+        uint8_t font, const wstr_t &str, int maxWidth, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     int GetHeightW(
         uint8_t font,
-        const std::wstring &str,
+        const wstr_t &str,
         int width = 0,
         TEXT_ALIGN_TYPE align = TS_LEFT,
         uint16_t flags = 0);
 
     int GetHeightW(PMULTILINES_FONT_INFO info);
 
-    std::wstring GetTextByWidthW(uint8_t font, const std::wstring &str, int width, bool isCropped);
+    wstr_t GetTextByWidthW(uint8_t font, const wstr_t &str, int width, bool isCropped);
 
     PMULTILINES_FONT_INFO GetInfoW(
         uint8_t font,
@@ -292,7 +282,7 @@ public:
     bool GenerateW(
         uint8_t font,
         CTextSprite &th,
-        const std::wstring &str,
+        const wstr_t &str,
         uint16_t color = 0,
         uint8_t cell = 30,
         int width = 0,
@@ -301,7 +291,7 @@ public:
 
     void DrawW(
         uint8_t font,
-        const std::wstring &str,
+        const wstr_t &str,
         uint16_t color,
         int x,
         int y,

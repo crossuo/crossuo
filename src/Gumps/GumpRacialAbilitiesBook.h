@@ -29,7 +29,7 @@ private:
 
     void GetSummaryBookInfo(int &abilityOnPage, uint16_t &iconStartGraphic);
 
-    std::string GetAbilityName(int offset, bool &passive);
+    astr_t GetAbilityName(int offset, bool &passive);
 
 public:
     CGumpRacialAbilitiesBook(int x, int y);

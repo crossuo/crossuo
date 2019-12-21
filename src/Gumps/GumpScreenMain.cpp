@@ -139,10 +139,10 @@ void CGumpScreenMain::UpdateContent()
         g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x0386, STP_RIGHT_CENTER);
 
         text = (CGUIText *)Add(new CGUIText(0x034E, 286, 455));
-        text->CreateTextureA(9, std::string("UO Version " + g_Config.ClientVersionString + "."));
+        text->CreateTextureA(9, astr_t("UO Version " + g_Config.ClientVersionString + "."));
 
         text = (CGUIText *)Add(new CGUIText(0x034E, 286, 467));
-        text->CreateTextureA(9, std::string("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
+        text->CreateTextureA(9, astr_t("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
     }
     else
     {
@@ -188,9 +188,9 @@ void CGumpScreenMain::UpdateContent()
         g_MainScreen.m_AutoLogin->SetTextParameters(9, "Auto Login", 0x802, STP_RIGHT_CENTER);
 
         text = (CGUIText *)Add(new CGUIText(0x802, 235, 440));
-        text->CreateTextureA(9, std::string("UO Version " + g_Config.ClientVersionString + "."));
+        text->CreateTextureA(9, astr_t("UO Version " + g_Config.ClientVersionString + "."));
         text = (CGUIText *)Add(new CGUIText(0x7F2, 200, 460));
-        text->CreateTextureA(9, std::string("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
+        text->CreateTextureA(9, astr_t("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
     }
 }
 

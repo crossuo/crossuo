@@ -31,7 +31,7 @@ void CGameConsole::Send()
     m_Type = GCTT_NORMAL;
 }
 
-void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
+void CGameConsole::Send(wstr_t text, uint16_t defaultColor)
 {
     size_t len = text.length();
     if (len != 0u)
@@ -91,7 +91,7 @@ void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
                     }
                     else
                     {
-                        std::string str = "Note to self: " + str_from(text.c_str() + offset);
+                        astr_t str = "Note to self: " + str_from(text.c_str() + offset);
                         g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
                     }
                     return;
@@ -171,11 +171,11 @@ void CGameConsole::Send(std::wstring text, uint16_t defaultColor)
     }
 }
 
-std::wstring CGameConsole::IsSystemCommand(
+wstr_t CGameConsole::IsSystemCommand(
     const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type)
 {
     type = GCTT_NORMAL;
-    std::wstring result = {};
+    wstr_t result = {};
 
     if (*text == g_ConsolePrefix[GCTT_PARTY][0]) //Party
     {
@@ -312,7 +312,7 @@ void CGameConsole::DrawW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     int posOffset = 0;
-    std::wstring wtext = Data();
+    wstr_t wtext = Data();
     if (wtext.empty())
     {
         m_Type = GCTT_NORMAL;
@@ -413,7 +413,7 @@ void CGameConsole::ClearStack()
     m_ConsoleSelectedIndex = 0;
     m_PositionChanged = false;
 }
-std::wstring CGameConsole::GetLastConsoleText()
+wstr_t CGameConsole::GetLastConsoleText()
 {
     return m_ConsoleStack[m_ConsoleStackCount - 1];
 }

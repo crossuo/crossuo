@@ -27,10 +27,10 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
     int y,
     uint8_t variant,
     int id,
-    const std::wstring &poster,
-    const std::wstring &subject,
-    const std::wstring &dataTime,
-    const std::wstring &data)
+    const wstr_t &poster,
+    const wstr_t &subject,
+    const wstr_t &dataTime,
+    const wstr_t &data)
     : CGumpBaseScroll(GT_BULLETIN_BOARD_ITEM, serial, 0x0820, 250, x, y, false, 70)
     , m_Variant(variant)
 {
@@ -252,7 +252,7 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
         }
         else if (serial == ID_GBBI_REPLY)
         {
-            std::wstring subj(L"RE: ");
+            wstr_t subj(L"RE: ");
             subj += m_EntrySubject->m_Entry.Data();
 
             CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(

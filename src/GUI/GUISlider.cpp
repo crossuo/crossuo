@@ -53,12 +53,12 @@ void CGUISlider::UpdateText()
         if (Unicode)
         {
             g_FontManager.GenerateW(
-                Font, Text, std::to_wstring(Value), TextColor, 30, TextWidth, Align, TextFlags);
+                Font, Text, wstr_from(Value), TextColor, 30, TextWidth, Align, TextFlags);
         }
         else
         {
             g_FontManager.GenerateA(
-                Font, Text, std::to_string(Value), TextColor, TextWidth, Align, TextFlags);
+                Font, Text, str_from(Value), TextColor, TextWidth, Align, TextFlags);
         }
 
         auto spr = g_Game.ExecuteGump(Graphic);

@@ -12,7 +12,7 @@
 
 CSpeechManager g_SpeechManager;
 
-CSpeechItem::CSpeechItem(uint16_t code, const std::wstring &data)
+CSpeechItem::CSpeechItem(uint16_t code, const wstr_t &data)
     : Code(code)
     , Data(data)
 {
@@ -84,8 +84,8 @@ bool CSpeechManager::LoadSpeech()
         Info(Client, "loading speech from UOP");
         reader.Move(2);
         auto mainData = reader.ReadWStringLE(reader.Size - 2);
-        std::vector<std::wstring> list;
-        std::wstring temp;
+        std::vector<wstr_t> list;
+        wstr_t temp;
         for (const wchar_t &c : mainData)
         {
             if (c == 0x000D || c == 0x000A)
@@ -108,7 +108,7 @@ bool CSpeechManager::LoadSpeech()
             temp = {};
         }
 
-        for (const std::wstring &line : list)
+        for (const wstr_t &line : list)
         {
             uint16_t code = 0xFFFF;
             temp = {};
@@ -215,7 +215,7 @@ void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &cod
         {
             auto start = input.substr(0, data.length());
             size_t hits = start.find(data);
-            if (hits == std::wstring::npos)
+            if (hits == wstr_t::npos)
             {
                 continue;
             }
@@ -225,14 +225,14 @@ void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &cod
         {
             auto end = input.substr(input.length() - data.length());
             size_t hits = end.find(data);
-            if (hits == std::wstring::npos)
+            if (hits == wstr_t::npos)
             {
                 continue;
             }
         }
 
         size_t hits = input.find(data);
-        if (hits != std::wstring::npos)
+        if (hits != wstr_t::npos)
         {
             codes.push_back(entry.Code);
         }
