@@ -339,8 +339,6 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    float alpha[2] = { 1.0f, 0.3f };
-    bool transparent = false;
     CGUIComboBox *combo = nullptr;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -421,14 +419,6 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 case GOT_CHECKTRANS:
                 {
                     ApplyTransparent((CBaseGUI *)item, page, currentPage, draw2Page);
-                    transparent =
-                        ApplyTransparent((CBaseGUI *)item->m_Next, page, currentPage, draw2Page);
-#ifndef NEW_RENDERER_ENABLED
-                    glColor4f(1.0f, 1.0f, 1.0f, alpha[transparent]);
-#else
-                    RenderAdd_SetColor(
-                        g_renderCmdList, SetColorCmd{ { 1.0f, 1.0f, 1.0f, alpha[transparent] } });
-#endif
                     break;
                 }
                 case GOT_COMBOBOX:
@@ -441,7 +431,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
                 }
                 default:
                 {
-                    item->Draw(transparent);
+                    item->Draw();
 
                     break;
                 }
@@ -451,7 +441,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
     if (combo != nullptr)
     {
-        combo->Draw(false);
+        combo->Draw();
     }
 
 #ifndef NEW_RENDERER_ENABLED
