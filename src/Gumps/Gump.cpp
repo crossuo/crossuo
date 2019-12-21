@@ -339,7 +339,7 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    float alpha[2] = { 1.0f, 0.7f };
+    float alpha[2] = { 1.0f, 0.3f };
     bool transparent = false;
     CGUIComboBox *combo = nullptr;
     int page = 0;

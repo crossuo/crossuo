@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
+// GPL
+// Copyright (C) December 2019 Nirad Jean-Martin Miljours
 
 #include "GUIChecktrans.h"
 #include "../Renderer/RenderAPI.h"
@@ -23,7 +23,7 @@ void CGUIChecktrans::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.0f, 0.0f, 0.0f, 0.7f);
+    glColor4f(0.3f, 0.3f, 0.3f, 0.3f);
     g_GL.DrawPolygone(m_X, m_Y, Width, Height);
     glDisable(GL_BLEND);
 #else
@@ -31,7 +31,7 @@ void CGUIChecktrans::Draw(bool checktrans)
         g_renderCmdList,
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
-    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 0.f, 0.f, 0.f, 0.7f } });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 0.3f, 0.3f, 0.3f, 0.3f } });
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList, DrawUntexturedQuadCmd{ m_X, m_Y, uint32_t(Width), uint32_t(Height) });
     RenderAdd_DisableBlend(g_renderCmdList);
