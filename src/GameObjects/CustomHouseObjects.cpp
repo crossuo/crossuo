@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) September 2017 Hotride
 
 #include "CustomHouseObjects.h"
@@ -369,6 +369,7 @@ bool CCustomHouseObjectRoof::Parse(const char *text)
                       &NSCrosspiece,
                       &EWCrosspiece,
                       &NDent,
+                      &EDent,
                       &SDent,
                       &WDent,
                       &NTPiece,
