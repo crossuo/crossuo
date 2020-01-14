@@ -154,6 +154,7 @@ set(gumps_src
   Gumps/GumpTextEntryDialog.cpp
   Gumps/GumpTip.cpp
   Gumps/GumpWorldMap.cpp
+  Gumps/GumpToolbar.cpp
 )
 
 set(managers_src
