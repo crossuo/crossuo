@@ -26,6 +26,7 @@ void CGUIChecktrans::Draw(bool checktrans)
     glColor4f(0.3f, 0.3f, 0.3f, 0.3f);
     g_GL.DrawPolygone(m_X, m_Y, Width, Height);
     glDisable(GL_BLEND);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
     RenderAdd_SetBlend(
         g_renderCmdList,
@@ -35,5 +36,6 @@ void CGUIChecktrans::Draw(bool checktrans)
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList, DrawUntexturedQuadCmd{ m_X, m_Y, uint32_t(Width), uint32_t(Height) });
     RenderAdd_DisableBlend(g_renderCmdList);
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.0f, 1.0f, 1.0f, 1.0f } });
 #endif
 }

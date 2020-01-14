@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -74,9 +74,6 @@ public:
 
     virtual void PasteClipboardData(wstr_t &data);
     static void ProcessListing();
-
-    static bool
-    ApplyTransparent(CBaseGUI *item, int page, int currentPage, const int draw2Page = 0);
 
     static void DrawItems(CBaseGUI *start, int currentPage, int draw2Page = 0);
     static class CRenderObject *SelectItems(CBaseGUI *start, int currentPage, int draw2Page = 0);
