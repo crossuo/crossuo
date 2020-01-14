@@ -48,6 +48,7 @@
 #include "../Gumps/GumpSkills.h"
 #include "../Gumps/GumpContainer.h"
 #include "../Gumps/GumpPopupMenu.h"
+#include "../Gumps/GumpToolbar.h"
 #include "../Network/Packets.h"
 #include "../Walker/PathFinder.h"
 #include "../TextEngine/GameConsole.h"
@@ -87,6 +88,7 @@ void CGameScreen::Init()
 
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
+    g_GumpManager.Add(new CGumpToolbar(300, 600));
 }
 
 void CGameScreen::SetMaximized(bool maximized)
