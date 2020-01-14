@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) September 2017 Hotride
 
 #pragma once
@@ -406,6 +406,7 @@ public:
     int NSCrosspiece = 0;
     int EWCrosspiece = 0;
     int NDent = 0;
+    int EDent = 0;
     int SDent = 0;
     int WDent = 0;
     int NTPiece = 0;
