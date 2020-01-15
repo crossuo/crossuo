@@ -358,7 +358,7 @@ bool CCustomHouseObjectRoof::Parse(const char *text)
 {
     bool result = sscanf(
                       text,
-                      "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
+                      "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
                       &Category,
                       &Style,
                       &TID,
