@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) September 2016 Hotride
 
 #include "PluginManager.h"
@@ -27,32 +27,33 @@ bool CDECL PluginSendFunction(uint8_t *buf, size_t size)
     auto owned = (uint8_t *)malloc(size);
     memcpy(owned, buf, size);
     PUSH_EVENT(UOMSG_SEND, owned, size);
-    uint32_t ticks = g_Ticks;
-    g_TotalSendSize += checked_cast<int>(size);
-    CPacketInfo &_type = g_PacketManager.GetInfo(*buf);
-    (void)_type;
-    DEBUG(
-        Plugin,
-        "--- ^(%d) s(+%zd => %d) Plugin->Server:: %s",
-        ticks - g_LastPacketTime,
-        size,
-        g_TotalSendSize,
-        _type.Name);
-
-    g_LastPacketTime = ticks;
-    g_LastSendTime = ticks;
-    if (*buf == 0x80 || *buf == 0x91)
-    {
-        DEBUG_DUMP(Plugin, "SEND:", buf, 1);
-        SAFE_DEBUG_DUMP(Plugin, "SEND:", buf, int(size));
-        DEBUG(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
-    }
-    else
-    {
-        DEBUG_DUMP(Plugin, "SEND:", buf, int(size));
-    }
-
-    g_ConnectionManager.Send(buf, checked_cast<int>(size));
+    // TODO: cleanup duplicated code & event system
+    /*uint32_t ticks = g_Ticks;
+     g_TotalSendSize += checked_cast<int>(size);
+     CPacketInfo &_type = g_PacketManager.GetInfo(*buf);
+     (void)_type;
+     DEBUG(
+     Plugin,
+     "--- ^(%d) s(+%zd => %d) Plugin->Server:: %s",
+     ticks - g_LastPacketTime,
+     size,
+     g_TotalSendSize,
+     _type.Name);
+     
+     g_LastPacketTime = ticks;
+     g_LastSendTime = ticks;
+     if (*buf == 0x80 || *buf == 0x91)
+     {
+     DEBUG_DUMP(Plugin, "SEND:", buf, 1);
+     SAFE_DEBUG_DUMP(Plugin, "SEND:", buf, int(size));
+     DEBUG(Plugin, "**** ACCOUNT AND PASSWORD CENSORED ****");
+     }
+     else
+     {
+     DEBUG_DUMP(Plugin, "SEND:", buf, int(size));
+     }
+     
+     g_ConnectionManager.Send(buf, checked_cast<int>(size));*/
     return true;
 }
 
