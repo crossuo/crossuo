@@ -521,7 +521,7 @@ bool CGameWindow::OnUserMessages(const UserEvent &ev)
             {
                 DEBUG_DUMP(Plugin, "SEND:", buf, size);
             }
-            g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
+            //g_ConnectionManager.Send((uint8_t *)ev.data1, checked_cast<int>(ev.data2));
             return true;
         }
         break;
