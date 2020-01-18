@@ -50,6 +50,7 @@ using wstr_t = std::wstring;
 
 astr_t wstr_to_utf8(const wstr_t &aWstr);  // DEPRECATE, in memory everything should be UTF8
 wstr_t wstr_from_utf8(const astr_t &aStr); // DEPRECATE
+wstr_t wstr_from_utf8_input(const astr_t &aStr);
 astr_t str_camel_case(astr_t aStr);
 wstr_t wstr_camel_case(wstr_t aWstr);
 
@@ -118,6 +119,40 @@ astr_t wstr_to_utf8(const wstr_t &aWstr)
 }
 
 wstr_t wstr_from_utf8(const astr_t &aStr)
+{
+#if defined(_MSC_VER)
+    int size = ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)aStr.size(), nullptr, 0);
+    wstr_t result = {};
+    if (size > 0)
+    {
+        result.resize(size + 1);
+        ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)aStr.size(), &result[0], size);
+        result.resize(size); // result[size] = 0;
+    }
+#else
+    mbstate_t state{};
+    wstr_t result{};
+    auto p = aStr.data();
+
+    const size_t size = mbsrtowcs(nullptr, &p, 0, &state);
+    if (size == -1)
+    {
+        Warning(Client, "wstr_from_utf8 Failed: %s", aStr.c_str());
+        INFO_DUMP(Client, "wstr_from_utf8 Failed:", (uint8_t *)aStr.data(), aStr.size());
+        return wstr_from(aStr);
+    }
+
+    if (size > 0)
+    {
+        result.resize(size);
+        mbsrtowcs(&result[0], &p, size, &state);
+    }
+#endif
+
+    return result;
+}
+
+wstr_t wstr_from_utf8_input(const astr_t &aStr)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> convert;
     const std::wstring result = convert.from_bytes(aStr);

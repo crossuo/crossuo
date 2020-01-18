@@ -365,7 +365,7 @@ void CGameWindow::OnTextInput(const TextEvent &ev)
         return;
     }
 
-    if ((IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&
+    if (/*(IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&*/
         g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnTextInput(ev);
