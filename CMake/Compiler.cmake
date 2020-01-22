@@ -72,13 +72,15 @@ else()
   add_compile_options(-Wshadow)
   add_compile_options(-Winit-self)
 
-  add_compile_options(-fvisibility-inlines-hidden)
-  add_compile_options(-fvisibility=hidden)
-  add_compile_options(-fpermissive) # FIXME GCC
+  #add_cxx_option(-fvisibility-inlines-hidden)
+  #add_cxx_option(-fvisibility=hidden)
+  #add_cxx_option(-fpermissive) # FIXME GCC
   add_cxx_option(-fno-rtti)
   add_cxx_option(-fno-exceptions)
   add_cxx_option(-fomit-frame-pointer RELEASE_ONLY)
   add_debug_option(-g)
+
+  add_compile_options(-Wno-unknown-pragmas)
 endif()
 
 # Compiler extensions

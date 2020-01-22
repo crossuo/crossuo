@@ -6,7 +6,7 @@
 #include "CrossUO.h"
 #include "GameWindow.h"
 #include "Application.h"
-#include <SDL.h>
+#include "SDL_wrapper.h"
 #include <time.h>
 #include <external/popts.h>
 #include "Managers/ConfigManager.h"

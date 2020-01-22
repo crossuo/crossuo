@@ -36,6 +36,7 @@ set(glengine_src
   GLEngine/GLShader.cpp
   GLEngine/GLTextureCircleOfTransparency.cpp
   GLEngine/GLTexture.cpp
+  GLEngine/glew.c
 )
 
 set(renderer_src
@@ -312,18 +313,19 @@ else()
   add_library(crossuo SHARED ${XUO_FILES})
 endif()
 
-add_dependencies(crossuo ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
-target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${THREAD})
-target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE})
+add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} SDL2-static cmcurl)
+target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
+target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/GLEngine/GL/*.h)
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})
   add_dependencies(crossuo clang-format)
 endif()
 
 if(XUO_WINDOWS)
-  set_target_properties(crossuo PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 elseif(XUO_EMSC)
 else()
   add_custom_command(TARGET crossuo POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/libcrossuo${CMAKE_SHARED_LIBRARY_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/crossuo.so")
   add_dependencies(crossuo client)
 endif()
+
+xuo_disable_console(crossuo)

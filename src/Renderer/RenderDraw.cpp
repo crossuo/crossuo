@@ -1,3 +1,4 @@
+#include <cmath> // cos, sin
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"

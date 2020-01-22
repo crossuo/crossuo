@@ -1,6 +1,7 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <cmath> // hypotf
 #include "MouseManager.h"
 #include "ColorManager.h"
 #include "MapManager.h"

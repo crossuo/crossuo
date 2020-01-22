@@ -10,9 +10,8 @@ project(crossuo)
 #
 option(ENABLE_LTO "Enables Link Time Optimization (default: On)" ON)
 option(ENABLE_FORMAT "Enables clang-format (default: On)" ON)
-option(ENABLE_VCPKG "Enable use project-specific vcpkg for managing dependencies (default: On, Windows: always)" ON)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
 # Enable folders for IDE
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -25,29 +24,16 @@ include(CompileDefinitions)
 include(Compiler)
 include(CCache)
 include(Revision)
-
-if (XUO_EMSC)
-  set(ENABLE_VCPKG Off)
-endif()
+include(Dependencies)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING
       "Build type (Release/Debug/RelWithDebInfo/MinSizeRel)" FORCE)
 endif()
 
-if (ENABLE_VCPKG)
-  set(AUTO_VCPKG_GIT_TAG "2019.10")
-  include(AutoVcpkg)
-  vcpkg_install(OpenGL glew SDL2 curl)
-  message(STATUS "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
-  include(${CMAKE_TOOLCHAIN_FILE})
-endif()
-
-if (XUO_WINDOWS)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-endif()
-
+#
+# Build Dependencies
+#
 if (NOT APPLE)
   # Set the preferred opengl library to GLVND if there is GLVND and Legacy.
   # Only if there is no GLVND Legacy will be used.
@@ -57,19 +43,18 @@ if (NOT APPLE)
 endif()
 
 find_package(OpenGL REQUIRED)
-find_package(GLEW)
-set(GL_LIBRARIES OpenGL::GL GLEW::GLEW)
+set(XUO_LOCAL_HEADERS 1)
+xuo_dependency(cmcurl cmcurl CURL)
+xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
+if(WIN32)
+  # fuck msvc
+  add_link_options(/ignore:4217 /ignore:4286 /ignore:4049)
+endif()
 
-find_package(CURL CONFIG REQUIRED)
-set(CURL_LIBRARIES CURL::libcurl)
-
-find_package(SDL2 CONFIG REQUIRED)
-get_target_property(SDL2_INCLUDE_DIR SDL2::SDL2-static INTERFACE_INCLUDE_DIRECTORIES)
-if (NOT SDL2_INCLUDE_DIR)
-  set(SDL2_INCLUDE_DIR "${PACKAGE_PREFIX_DIR}/include/SDL2")
-endif ()
-set(SDL2_LIBRARIES SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
-include_directories("${PACKAGE_PREFIX_DIR}/include/") # catch all include path for dependencies
+if (XUO_WINDOWS)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+endif()
 
 # DEBUG internal cmake state
 #get_cmake_property(_variableNames VARIABLES)

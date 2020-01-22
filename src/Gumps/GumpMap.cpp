@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <cmath> // atan, sin, cos
 #include <SDL_rect.h>
 #include "GumpMap.h"
 #include "../CrossUO.h"

@@ -2,8 +2,7 @@
 
 #include <algorithm>
 #include "WispWindow.h"
-#include <SDL.h>
-#include <SDL_syswm.h>
+#include "../SDL_wrapper.h"
 #include <common/utils.h> // countof
 #include "../Icon.h"
 #include "../Point.h"

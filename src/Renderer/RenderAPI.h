@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <SDL.h>
+#include "../SDL_wrapper.h"
 // #define NEW_RENDERER_ENABLED
 
 #if !defined(NEW_RENDERER_ENABLED)

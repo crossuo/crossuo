@@ -3,8 +3,8 @@
 
 #include "CrossUO.h"
 
-#include <SDL.h>
 #include <common/str.h>
+#include "SDL_wrapper.h"
 
 #include "GitRevision.h"
 #include "Config.h"

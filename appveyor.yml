@@ -24,10 +24,8 @@ build_script:
     cmake --version
     mkdir build
     cd build
-    cmake .. -G %generator% %extra% -DAUTO_VCPKG_ROOT=C:/Tools/vcpkg/
+    cmake .. -G %generator% %extra%
     cmake --build . --config Release
-cache:
-- C:\Tools\vcpkg
 only_commits:
   files:
     - CMakeLists.txt

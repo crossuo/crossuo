@@ -12,6 +12,8 @@
 #ifndef ASS_IMPLEMENTATION
 #define ASS_IMPLEMENTATION
 #define WITH_SDL2_STATIC
+
+#include <cmath>
 namespace ass
 {
 #include <external/ass.h>

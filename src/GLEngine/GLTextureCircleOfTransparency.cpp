@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <cmath> // sqrt
 #include "GLTextureCircleOfTransparency.h"
 #include "../Managers/ConfigManager.h"
 #include "../Renderer/RenderAPI.h"

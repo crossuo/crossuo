@@ -49,6 +49,7 @@ extern "C" {
 
 #if !defined(_MSC_VER)
 #include <stdlib.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -414,7 +415,7 @@ int process_create(const char *const commandLine[], int options,
       struct sigaction noaction;
       memset(&noaction, 0, sizeof(noaction));
       noaction.sa_handler = SIG_IGN;
-      sigaction(SIGPIPE, &noaction, 0);
+      ::sigaction(SIGPIPE, &noaction, nullptr);
       setsid();
     }
     if (repipe) {
@@ -455,7 +456,7 @@ int process_create(const char *const commandLine[], int options,
       struct sigaction noaction;
       memset(&noaction, 0, sizeof(noaction));
       noaction.sa_handler = SIG_IGN;
-      sigaction(SIGPIPE, &noaction, 0);
+      ::sigaction(SIGPIPE, &noaction, nullptr);
     }
     exit(result);
 #ifdef __clang__

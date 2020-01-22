@@ -41,13 +41,6 @@
 
 #if defined(USE_GLEW)
 
-#if defined(_MSC_VER)
-#include <glew.h>
-#include <wglew.h>
-#else
-#define NO_SDL_GLEXT
-#include <GL/glew.h>
-#endif // _MSC_VER
 
 #elif defined(USE_GL3W) // USE_GLEW
 
@@ -67,7 +60,11 @@
 
 #endif // USE_GL
 
+#if defined(XUO_LOCAL_HEADERS)
+#include "SDL.h"
+#else
 #include <SDL.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

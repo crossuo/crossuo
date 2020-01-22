@@ -9,8 +9,6 @@ matrix:
       dist: xenial
       cache:
         ccache: true
-        directories:
-          - vcpkg/
       addons:
         apt:
           sources:
@@ -47,8 +45,6 @@ matrix:
       dist: xenial
       cache:
         ccache: true
-        directories:
-          - vcpkg/
       addons:
         apt:
           sources:
@@ -97,7 +93,6 @@ matrix:
       cache: 
         ccache: true
         directories:
-          - vcpkg/
       #    - $HOME/Library/Caches/Homebrew
       script:
         - ./travis.sh

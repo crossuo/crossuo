@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) September 2016 Hotride
 
+#include <cmath> // ceilf
 #include <algorithm>
 #include "GumpSpellbook.h"
 #include "GumpSpell.h"
