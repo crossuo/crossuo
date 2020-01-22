@@ -3,10 +3,6 @@
 #include <SDL_mouse.h>
 namespace Wisp
 {
-#if defined(_MSC_VER)
-#pragma warning(disable : 4800)
-#endif
-
 CMouse *g_WispMouse = nullptr;
 
 CMouse::CMouse()

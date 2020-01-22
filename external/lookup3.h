@@ -1,3 +1,7 @@
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma gcc diagnostic push
+#pragma gcc diagnostic ignored "-Wimplicit-fallthrough="
+#endif /* __GNUC__ */
 // Originally from http://burtleburtle.net/bob/c/lookup3.c with some few edits
 /*
 -------------------------------------------------------------------------------
@@ -1037,3 +1041,6 @@ int main()
 #endif // LOOKUP3_IMPLEMENTATION
 
 #endif // LOOKUP3_H
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma gcc diagnostic pop
+#endif /* __GNUC__ */
