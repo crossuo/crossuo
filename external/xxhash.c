@@ -1,3 +1,8 @@
+#ifdef __GNUC__
+#pragma gcc diagnostic push
+#pragma gcc diagnostic ignored "-Wimplicit-fallthrough="
+#endif /* __GNUC__ */
+
 /*
 *  xxHash - Fast Hash algorithm
 *  Copyright (C) 2012-2016, Yann Collet
@@ -61,6 +66,7 @@
 #    define XXH_FORCE_MEMORY_ACCESS 1
 #  endif
 #endif
+
 
 /*!XXH_ACCEPT_NULL_INPUT_POINTER :
  * If input pointer is NULL, xxHash default behavior is to dereference it, triggering a segfault.
@@ -1020,5 +1026,8 @@ XXH_PUBLIC_API XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canonical_t* src
 
 #include "xxh3.h"
 
-
 #endif  /* XXH_NO_LONG_LONG */
+
+#ifdef __GNUC__
+#pragma gcc diagnostic pop
+#endif /* __GNUC__ */

@@ -3354,7 +3354,7 @@ static char const * getVersion( char const * const aExecutable ) /*version must 
 }
 
 
-static int * const getMajorMinorPatch( char const * const aExecutable )
+static int * getMajorMinorPatch( char const * const aExecutable )
 {
 	static int lArray [3] ;
 	char * lTmp ;
