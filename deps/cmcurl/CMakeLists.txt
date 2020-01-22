@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.8)
 # Set curl options as needed for CMake build
 set(BUILD_CURL_EXE OFF CACHE INTERNAL "No curl exe")
 set(BUILD_DASHBOARD_REPORTS OFF CACHE INTERNAL "No curl dashboard reports")
@@ -200,13 +201,6 @@ endif()
 
 if(ENABLE_CURLDEBUG)
   set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS CURLDEBUG)
-endif()
-
-if(0) # This code not needed for building within CMake.
-# For debug libs and exes, add "-d" postfix
-if(NOT DEFINED CMAKE_DEBUG_POSTFIX)
-  set(CMAKE_DEBUG_POSTFIX "-d")
-endif()
 endif()
 
 # initialize CURL_LIBS
@@ -1293,12 +1287,19 @@ endif()
 
 #-----------------------------------------------------------------------------
 # CMake-specific curl code.
-add_executable(curltest curltest.c)
-target_link_libraries(curltest cmcurl)
-
-if(BUILD_TESTING AND CMAKE_CURL_TEST_URL)
-  add_test(curl curltest ${CMAKE_CURL_TEST_URL})
+if (MSVC)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
 endif()
+add_definitions(-DCURL_STATICLIB)
+#add_executable(curltest curltest.c)
+#target_link_libraries(curltest cmcurl)
+
+#if(BUILD_TESTING AND CMAKE_CURL_TEST_URL)
+#  add_test(curl curltest ${CMAKE_CURL_TEST_URL})
+#endif()
 
 install(FILES COPYING DESTINATION ${CMAKE_DOC_DIR}/cmcurl)
 #-----------------------------------------------------------------------------

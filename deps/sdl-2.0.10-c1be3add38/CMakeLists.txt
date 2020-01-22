@@ -26,6 +26,7 @@ endif()
 # !!! FIXME:  remove it and this comment entirely once the problem is
 # !!! FIXME:  properly resolved.
 #cmake_policy(SET CMP0042 OLD)
+cmake_policy(SET CMP0053 NEW)
 
 include(CheckFunctionExists)
 include(CheckLibraryExists)
@@ -40,9 +41,9 @@ include(CheckStructHasMember)
 include(CMakeDependentOption)
 include(FindPkgConfig)
 include(GNUInstallDirs)
-set(CMAKE_MODULE_PATH "${SDL2_SOURCE_DIR}/cmake")
-include(${SDL2_SOURCE_DIR}/cmake/macros.cmake)
-include(${SDL2_SOURCE_DIR}/cmake/sdlchecks.cmake)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/macros.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdlchecks.cmake)
 
 # General settings
 # Edit include/SDL_version.h and change the version, then:
@@ -62,11 +63,14 @@ set(SDL_VERSION "${SDL_MAJOR_VERSION}.${SDL_MINOR_VERSION}.${SDL_MICRO_VERSION}"
 set(DYLIB_CURRENT_VERSION 10.0.0)
 set(DYLIB_COMPATIBILITY_VERSION 1.0.0)
 
-# Set defaults preventing destination file conflicts
-set(SDL_CMAKE_DEBUG_POSTFIX "d"
-    CACHE STRING "Name suffix for debug builds")
+set(BUILD_SHARED_LIBS OFF)
+set(SDL_SHARED_ENABLED_BY_DEFAULT OFF)
 
-mark_as_advanced(CMAKE_IMPORT_LIBRARY_SUFFIX SDL_CMAKE_DEBUG_POSTFIX)
+# Set defaults preventing destination file conflicts
+# XUO_WINDOWS: removed debug prefix
+#set(SDL_CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Name suffix for debug builds")
+
+#mark_as_advanced(CMAKE_IMPORT_LIBRARY_SUFFIX SDL_CMAKE_DEBUG_POSTFIX)
 
 # Calculate a libtool-like version number
 math(EXPR LT_CURRENT "${SDL_MICRO_VERSION} - ${SDL_INTERFACE_AGE}")
@@ -89,13 +93,15 @@ else()
   set(ARCH_64 FALSE)
   set(PROCESSOR_ARCH "x86")
 endif()
-set(LIBNAME SDL2)
+set(LIBNAME XSDL2)
 if(NOT LIBTYPE)
   set(LIBTYPE SHARED)
 endif()
 
 # Get the platform
 if(WIN32)
+  add_link_options(/ignore:4217 /ignore:4286)
+  add_definitions(/D_CRT_SUPPRESS_RESTRICT /wd4141 /wd4047 /wd4013 /wd4312 /wd4255 /wd4152 /wd4996 /wd4204 /wd4310 /wd4701 /wd4113 /wd4706 /wd4142 /wd4005 /wd4200 /wd5032 /wd4057 /wd4459)
   if(NOT WINDOWS)
     set(WINDOWS TRUE)
   endif()
@@ -236,7 +242,7 @@ endif()
 
 # Those are used for pkg-config and friends, so that the SDL2.pc, sdl2-config,
 # etc. are created correctly.
-set(SDL_LIBS "-lSDL2")
+set(SDL_LIBS "-lXSDL2")
 set(SDL_CFLAGS "")
 
 # When building shared lib for Windows with MinGW,
@@ -389,7 +395,7 @@ set_option(HIDAPI              "Use HIDAPI for low level joystick drivers" ${OPT
 set(SDL_SHARED ${SDL_SHARED_ENABLED_BY_DEFAULT} CACHE BOOL "Build a shared version of the library")
 set(SDL_STATIC ${SDL_STATIC_ENABLED_BY_DEFAULT} CACHE BOOL "Build a static version of the library")
 
-dep_option(SDL_STATIC_PIC      "Static version of the library should be built with Position Independent Code" OFF "SDL_STATIC" OFF)
+dep_option(SDL_STATIC_PIC      "Static version of the library should be built with Position Independent Code" ON "SDL_STATIC" ON)
 set_option(SDL_TEST            "Build the test directory" OFF)
 
 # General source files
@@ -1462,7 +1468,7 @@ elseif(WINDOWS)
     list(APPEND EXTRA_LIBS mingw32)
     list(APPEND EXTRA_LDFLAGS "-mwindows")
     set(SDL_CFLAGS "${SDL_CFLAGS} -Dmain=SDL_main")
-    list(APPEND SDL_LIBS "-lmingw32" "-lSDL2main" "-mwindows")
+    list(APPEND SDL_LIBS "-lmingw32" "-lXSDL2main" "-mwindows")
   endif()
 
 elseif(APPLE)
@@ -1770,8 +1776,8 @@ if(NOT WINDOWS OR CYGWIN)
   listtostr(SDL_LIBS _SDL_LIBS)
   set(SDL_LIBS ${_SDL_LIBS})
 
-  # MESSAGE(STATUS "SDL_LIBS: ${SDL_LIBS}")
-  # MESSAGE(STATUS "SDL_STATIC_LIBS: ${SDL_STATIC_LIBS}")
+  MESSAGE(STATUS "SDL_LIBS: ${SDL_LIBS}")
+  MESSAGE(STATUS "SDL_STATIC_LIBS: ${SDL_STATIC_LIBS}")
 
   configure_file("${SDL2_SOURCE_DIR}/sdl2.pc.in"
     "${SDL2_BINARY_DIR}/sdl2.pc" @ONLY)
@@ -1831,16 +1837,17 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 
 # Always build SDLmain
 if(NOT WINDOWS_STORE)
-add_library(SDL2main STATIC ${SDLMAIN_SOURCES})
-target_include_directories(SDL2main PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:include/SDL2>)
-set(_INSTALL_LIBS "SDL2main")
+add_library(XSDL2main STATIC ${SDLMAIN_SOURCES})
+target_include_directories(XSDL2main PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:include/SDL2>)
+set(_INSTALL_LIBS "XSDL2main")
 if (NOT ANDROID)
-  set_target_properties(SDL2main PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
+  #set_target_properties(XSDL2main PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
 endif()
 endif()
 
 if(SDL_SHARED)
   add_library(SDL2 SHARED ${SOURCE_FILES} ${VERSION_SOURCES})
+  set_target_properties(SDL2 PROPERTIES OUTPUT_NAME "XSDL2")
   if(APPLE)
     set_target_properties(SDL2 PROPERTIES
       MACOSX_RPATH 1
@@ -1866,7 +1873,7 @@ if(SDL_SHARED)
   target_link_libraries(SDL2 ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
   target_include_directories(SDL2 PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:include/SDL2>)
   if (NOT ANDROID)
-    set_target_properties(SDL2 PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
+    #set_target_properties(SDL2 PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
   endif()
 endif()
 
@@ -1888,7 +1895,7 @@ if(SDL_STATIC)
   set (BUILD_SHARED_LIBS FALSE)
   add_library(SDL2-static STATIC ${SOURCE_FILES})
   if (NOT SDL_SHARED OR NOT WIN32)
-    set_target_properties(SDL2-static PROPERTIES OUTPUT_NAME "SDL2")
+    set_target_properties(SDL2-static PROPERTIES OUTPUT_NAME "XSDL2")
     # Note: Apparently, OUTPUT_NAME must really be unique; even when
     # CMAKE_IMPORT_LIBRARY_SUFFIX or the like are given. Otherwise
     # the static build may race with the import lib and one will get
@@ -1906,7 +1913,7 @@ if(SDL_STATIC)
   target_link_libraries(SDL2-static ${EXTRA_LIBS} ${EXTRA_LDFLAGS})
   target_include_directories(SDL2-static PUBLIC "$<BUILD_INTERFACE:${SDL2_SOURCE_DIR}/include>" $<INSTALL_INTERFACE:include/SDL2>)
   if (NOT ANDROID)
-    set_target_properties(SDL2-static PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
+    #set_target_properties(SDL2-static PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
   endif()
 endif()
 
@@ -1938,6 +1945,21 @@ write_basic_package_version_file("${CMAKE_BINARY_DIR}/SDL2ConfigVersion.cmake"
   COMPATIBILITY AnyNewerVersion
 )
 
+#
+# XUO Custom
+#
+set(import_contents [===[
+set(SDL2_CFLAGS        @SDL2_CFLAGS@        CACHE INTERNAL "deps" FORCE)
+set(SDL2_EXTRA_CFLAGS  @SDL2_EXTRA_CFLAGS@  CACHE INTERNAL "deps" FORCE)
+set(SDL2_EXTRA_LDFLAGS @SDL2_EXTRA_LDFLAGS@ CACHE INTERNAL "deps" FORCE)
+set(SDL2_EXTRA_LIBS    @SDL2_EXTRA_LIBS@    CACHE INTERNAL "deps" FORCE)
+    ]===])
+string(REPLACE "@SDL2_CFLAGS@"        "${CMAKE_C_FLAGS}"  import_contents "${import_contents}")
+string(REPLACE "@SDL2_EXTRA_CFLAGS@"  "${EXTRA_CFLAGS}"   import_contents "${import_contents}")
+string(REPLACE "@SDL2_EXTRA_LDFLAGS@" "${EXTRA_LDFLAGS}"  import_contents "${import_contents}")
+string(REPLACE "@SDL2_EXTRA_LIBS@"    "${EXTRA_LIBS}"     import_contents "${import_contents}")
+file(WRITE "${CMAKE_BINARY_DIR}/SDL2.cmake" "${import_contents}")
+
 install(EXPORT SDL2Targets
   FILE SDL2Targets.cmake
   NAMESPACE SDL2::
@@ -1960,12 +1982,12 @@ endforeach()
 list(APPEND INCLUDE_FILES ${BIN_INCLUDE_FILES})
 install(FILES ${INCLUDE_FILES} DESTINATION include/SDL2)
 
-string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
-if (UPPER_BUILD_TYPE MATCHES DEBUG)
-  set(SOPOSTFIX "${SDL_CMAKE_DEBUG_POSTFIX}")
-else()
-  set(SOPOSTFIX "")
-endif()
+#string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
+#if (UPPER_BUILD_TYPE MATCHES DEBUG)
+#  set(SOPOSTFIX "${SDL_CMAKE_DEBUG_POSTFIX}")
+#else()
+#  set(SOPOSTFIX "")
+#endif()
 
 if(NOT (WINDOWS OR CYGWIN))
   if(SDL_SHARED)
@@ -1974,9 +1996,9 @@ if(NOT (WINDOWS OR CYGWIN))
     if(NOT ANDROID)
         install(CODE "
           execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-            \"lib${SONAME}${SOPOSTFIX}${SOEXT}\" \"libSDL2${SOPOSTFIX}${SOEXT}\"
+            \"lib${SONAME}${SOPOSTFIX}${SOEXT}\" \"libXSDL2${SOPOSTFIX}${SOEXT}\"
             WORKING_DIRECTORY \"${SDL2_BINARY_DIR}\")")
-        install(FILES ${SDL2_BINARY_DIR}/libSDL2${SOPOSTFIX}${SOEXT} DESTINATION "lib${LIB_SUFFIX}")
+        install(FILES ${SDL2_BINARY_DIR}/libXSDL2${SOPOSTFIX}${SOEXT} DESTINATION "lib${LIB_SUFFIX}")
     endif()
   endif()
   if(FREEBSD)
@@ -1993,7 +2015,7 @@ endif()
 
 ##### Uninstall target #####
 
-if(NOT TARGET uninstall)
+if(0) #NOT TARGET uninstall)
   configure_file(
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
       "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"

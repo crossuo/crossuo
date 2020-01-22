@@ -59,7 +59,7 @@
 #    define DECLSPEC    __declspec(dllimport)
 #   endif
 #  elif defined(_DLL)
-#   define DECLSPEC __declspec(dllexport)
+#   define DECLSPEC //__declspec(dllexport)
 #  else
 #   define DECLSPEC
 #  endif
