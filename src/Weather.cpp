@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <cmath> // atan2f, powf, sinf, cosf, deg2radf
 #include "Globals.h"
 #include "Weather.h"
 #include "Managers/ConfigManager.h"

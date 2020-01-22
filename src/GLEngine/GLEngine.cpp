@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <cmath> // cos, sin
 #include <algorithm>
 #include "GLEngine.h"
 #include "GLTexture.h"

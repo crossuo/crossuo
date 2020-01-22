@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <sstream>
+#include <cmath>
 #include <external/inih.h>
 #include <external/process.h>
 #include <external/tinyfiledialogs.h>

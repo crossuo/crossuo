@@ -17,6 +17,7 @@
 #pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
 #endif
 
+#include "SDL.h"
 #ifdef ASS_IMPLEMENTATION
 
 #ifndef dr_mp3_h
@@ -25827,11 +25828,6 @@ namespace SoLoud
 
 #else
 
-#if defined(_MSC_VER)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #include <math.h>
 
 
@@ -25948,12 +25944,6 @@ freely, subject to the following restrictions:
 #if defined(WITH_SDL2)
 
 #include <stdlib.h>
-#if defined(_MSC_VER)
-#define WINDOWS_VERSION
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #include <math.h>
 
 
@@ -26127,11 +26117,6 @@ namespace SoLoud
 
 #else
 
-#if defined(_MSC_VER)
-#include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #include <math.h>
 
 namespace SoLoud

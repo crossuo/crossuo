@@ -24,10 +24,10 @@ fi
 
 if [[ "$TASK" == "clang" ]]; then
 	echo Building Debug
-	mkdir -p debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off -DAUTO_VCPKG_ROOT=$TRAVIS_BUILD_DIR/vcpkg && cmake --build . || exit 1
+	mkdir -p debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && cmake --build . || exit 1
 	cd ..
 	echo Building Release
-	mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off -DAUTO_VCPKG_ROOT=$TRAVIS_BUILD_DIR/vcpkg && cmake --build . || exit 1
+	mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && cmake --build . || exit 1
 	cd ..
 	echo Building nightly package
 	mkdir -p crossuo-ubuntu-nightly
@@ -44,25 +44,25 @@ if [[ "$TASK" == "gcc" ]]; then
 	export CXX=/usr/bin/g++-7
 	gcc -v && g++ -v && cmake --version
 	echo Building Debug
-	mkdir -p debug && cd debug && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_FORMAT=Off -DAUTO_VCPKG_ROOT=$TRAVIS_BUILD_DIR/vcpkg && cmake --build . || exit 1
+	mkdir -p debug && cd debug && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Debug && cmake --build . || exit 1
 	#cd ..
 	#echo Building Release
-	#mkdir -p release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off -DAUTO_VCPKG_ROOT=$TRAVIS_BUILD_DIR/vcpkg && cmake --build . || exit 1
+	#mkdir -p release && cd release && cmake -G "Unix Makefiles" .. -DCMAKE_BUILD_TYPE=Release && cmake --build . || exit 1
 fi
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-	##brew update
-	##brew install sdl2 ninja glew
-	#brew outdated cmake || brew upgrade cmake
-	#gcc -v && g++ -v && cmake --version
-	#echo Building Release
-	#mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DENABLE_FORMAT=Off -DAUTO_VCPKG_ROOT=$TRAVIS_BUILD_DIR/vcpkg && ninja gfxtest -j8 || exit 1
-	#cd ..
-	#echo Building nightly package
-	#mkdir -p crossuo-osx-nightly
-	#cp release/src/crossuo.so crossuo-osx-nightly/
-	#cp release/src/crossuo crossuo-osx-nightly/
-	#cp release/tools/xuoi/xuolauncher crossuo-osx-nightly/
-	#zip crossuo-osx-nightly.zip crossuo-osx-nightly/*
+	brew update
+	brew install ninja # sdl2 glew
+	brew outdated cmake || brew upgrade cmake
+	gcc -v && g++ -v && cmake --version
+	echo Building Release
+	mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && cmake --build . || exit 1
+	cd ..
+	echo Building nightly package
+	mkdir -p crossuo-osx-nightly
+	cp release/src/crossuo.so crossuo-osx-nightly/
+	cp release/src/crossuo crossuo-osx-nightly/
+	cp release/tools/xuoi/xuolauncher crossuo-osx-nightly/
+	zip crossuo-osx-nightly.zip crossuo-osx-nightly/*
 	echo "build skipped until glew is removed"
 fi

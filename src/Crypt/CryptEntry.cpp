@@ -1,5 +1,5 @@
 
-#include <SDL.h> // plugininterface.h
+#include "../SDL_wrapper.h" // plugininterface.h
 #include "CryptEntry.h"
 #include "../Misc.h"
 #include <common/fs.h>

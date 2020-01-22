@@ -3,8 +3,7 @@
 #ifndef WISP_WIN_H
 #define WISP_WIN_H
 
-#include <SDL.h> // plugininterface.h
-#include <SDL_video.h>
+#include "../SDL_wrapper.h"
 #include <xuocore/plugininterface.h>
 #include <stdint.h>
 #include "../Platform.h"

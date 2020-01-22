@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) September 2017 Hotride
 
+#include <cmath> // ceil
 #include <SDL_rect.h>
 #include "GumpCustomHouse.h"
 #include <common/fs.h>
