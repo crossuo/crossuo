@@ -109,6 +109,13 @@ char *alloca();
 # endif
 #endif
 
+// hack to compile with vs2019
+#if defined(_ACRTIMP)
+#define XUO_FIX _ACRTIMP
+#else
+#define XUO_FIX DECLSPEC
+#endif
+
 /**
  *  The number of elements in an array.
  */
@@ -358,10 +365,10 @@ extern "C" {
 #define SDL_stack_free(data)            SDL_free(data)
 #endif
 
-extern DECLSPEC void *SDLCALL SDL_malloc(size_t size);
-extern DECLSPEC void *SDLCALL SDL_calloc(size_t nmemb, size_t size);
-extern DECLSPEC void *SDLCALL SDL_realloc(void *mem, size_t size);
-extern DECLSPEC void SDLCALL SDL_free(void *mem);
+extern XUO_FIX void *SDLCALL SDL_malloc(size_t size);
+extern XUO_FIX void *SDLCALL SDL_calloc(size_t nmemb, size_t size);
+extern XUO_FIX void *SDLCALL SDL_realloc(void *mem, size_t size);
+extern XUO_FIX void SDLCALL SDL_free(void *mem);
 
 typedef void *(SDLCALL *SDL_malloc_func)(size_t size);
 typedef void *(SDLCALL *SDL_calloc_func)(size_t nmemb, size_t size);
@@ -478,7 +485,7 @@ extern DECLSPEC char *SDLCALL SDL_ulltoa(Uint64 value, char *str, int radix);
 
 extern DECLSPEC int SDLCALL SDL_atoi(const char *str);
 extern DECLSPEC double SDLCALL SDL_atof(const char *str);
-extern DECLSPEC long SDLCALL SDL_strtol(const char *str, char **endp, int base);
+extern DECLSPEC XUO_FIX long SDLCALL SDL_strtol(const char *str, char **endp, int base);
 extern DECLSPEC unsigned long SDLCALL SDL_strtoul(const char *str, char **endp, int base);
 extern DECLSPEC Sint64 SDLCALL SDL_strtoll(const char *str, char **endp, int base);
 extern DECLSPEC Uint64 SDLCALL SDL_strtoull(const char *str, char **endp, int base);
