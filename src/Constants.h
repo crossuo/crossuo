@@ -201,16 +201,16 @@ struct SITTING_INFO_DATA
 
     // Anim/Character direction
     // 7, 0
-    char Direction1; //0
+    int8_t Direction1; //0
     // 1, 2
-    char Direction2; //2
+    int8_t Direction2; //2
     // 3, 4
-    char Direction3; //4
+    int8_t Direction3; //4
     // 5, 6
-    char Direction4; //6
+    int8_t Direction4; //6
 
-    char OffsetY;
-    char MirrorOffsetY;
+    int8_t OffsetY;
+    int8_t MirrorOffsetY;
     bool DrawBack;
 };
 
