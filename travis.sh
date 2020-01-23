@@ -64,5 +64,4 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 	cp release/src/crossuo crossuo-osx-nightly/
 	cp release/tools/xuoi/xuolauncher crossuo-osx-nightly/
 	zip crossuo-osx-nightly.zip crossuo-osx-nightly/*
-	echo "build skipped until glew is removed"
 fi

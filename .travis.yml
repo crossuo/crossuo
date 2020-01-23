@@ -35,7 +35,7 @@ matrix:
         skip_cleanup: true
         on:
           tags: false
-          all_branches: true
+          branch: master
           repo: crossuo/crossuo
     - os: linux
       compiler: gcc
@@ -106,6 +106,6 @@ matrix:
         file: "crossuo-osx-nightly.zip"
         skip_cleanup: true
         on:
-          tags: true
+          tags: false
           branch: master
           repo: crossuo/crossuo
