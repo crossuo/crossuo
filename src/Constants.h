@@ -201,16 +201,16 @@ struct SITTING_INFO_DATA
 
     // Anim/Character direction
     // 7, 0
-    char Direction1; //0
+    uint8_t Direction1; //0
     // 1, 2
-    char Direction2; //2
+    uint8_t Direction2; //2
     // 3, 4
-    char Direction3; //4
+    uint8_t Direction3; //4
     // 5, 6
-    char Direction4; //6
+    uint8_t Direction4; //6
 
-    char OffsetY;
-    char MirrorOffsetY;
+    int8_t OffsetY;
+    int8_t MirrorOffsetY;
     bool DrawBack;
 };
 
@@ -220,8 +220,8 @@ const int SITTING_ITEMS_COUNT = 98;
 #define SITTING_E 2, 2, 2, 2
 #define SITTING_S 4, 4, 4, 4
 #define SITTING_W 6, 6, 6, 6
-#define SITTING_N_S 0, -1, 4, -1
-#define SITTING_E_W -1, 2, -1, 6
+#define SITTING_N_S 0, 0xff, 4, 0xff
+#define SITTING_E_W 0xff, 2, 0xff, 6
 #define SITTING_ALL 0, 2, 4, 6
 #define SITTING_UNKNOWN 0, 2, 4, 6
 

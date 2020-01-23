@@ -410,6 +410,7 @@ struct FONT_DATA
 };
 //static_assert(sizeof(FONT_DATA) == 0, "Invalid FONT_DATA size");
 
+/*
 struct FONT_OBJECT
 {
     uint8_t Width;
@@ -427,6 +428,7 @@ struct UNICODE_FONT_DATA
     uint8_t Height;
 };
 static_assert(sizeof(UNICODE_FONT_DATA) == 4, "Invalid UNICODE_FONT_DATA size");
+*/
 
 struct SOUND_BLOCK
 {
