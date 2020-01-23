@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
+set(CMAKE_USE_OPENSSL On) # XUO
+
 # Set curl options as needed for CMake build
 set(BUILD_CURL_EXE OFF CACHE INTERNAL "No curl exe")
 set(BUILD_DASHBOARD_REPORTS OFF CACHE INTERNAL "No curl dashboard reports")
 set(BUILD_RELEASE_DEBUG_DIRS OFF CACHE INTERNAL "No curl release/debug dirs")
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build shared libraries")
 set(CMAKE_USE_GSSAPI OFF CACHE INTERNAL "Disable curl gssapi")
-set(CMAKE_USE_LIBSSH2 OFF CACHE INTERNAL "Disable curl libssh2")
+set(CMAKE_USE_LIBSSH2 ON CACHE INTERNAL "Disable curl libssh2")
 set(CMAKE_USE_OPENLDAP OFF CACHE INTERNAL "No curl OpenLDAP")
 set(CURL_DISABLE_COOKIES OFF CACHE INTERNAL "Do not disable curl cookie support")
 set(CURL_DISABLE_CRYPTO_AUTH OFF CACHE INTERNAL "Do not disable curl crypto auth")
@@ -608,7 +610,7 @@ endif()
 # Check for symbol dlopen (same as HAVE_LIBDL)
 check_library_exists("${CURL_LIBS}" dlopen "" HAVE_DLOPEN)
 
-if(0) # This code not needed for building within CMake.
+if(1) # but XUO need it # This code not needed for building within CMake.
 option(CURL_ZLIB "Set to ON to enable building curl with zlib support." ON)
 set(HAVE_LIBZ OFF)
 set(HAVE_ZLIB_H OFF)
