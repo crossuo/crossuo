@@ -59,3 +59,22 @@ $ cd build/src && ./crossuo
   > You'll need a `crossuo.cfg` in the working directory. Please use X:UO Launcher to configure the client.
 
 Then you should have an `crossuo` inside `build/crossuo`
+
+### Raspberry PI
+
+#### Dependencies
+
+```
+sudo apt-get install cmake libgles2-mesa-dev
+```
+#### Building
+
+```
+$ git clone https://github.com/crossuo/crossuo
+$ cmake -B build -S crossuo
+$ cmake --build build --config Release
+$ cd build/src && ./crossuo
+```
+  > You'll need a `crossuo.cfg` in the working directory
+  
+Then you should have an `crossuo` inside `build/src`
