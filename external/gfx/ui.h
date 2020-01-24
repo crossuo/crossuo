@@ -1,4 +1,4 @@
-// GPLv3 License
+// AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #ifndef _UI_H_

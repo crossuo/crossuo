@@ -1,4 +1,4 @@
-// GPLv3 License
+// AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 #define CFG_DEBUG(...) // LOG_DEBUG(__VA_ARGS__)
 #define CFG_TRACE(...) // LOG_TRACE(__VA_ARGS__)

@@ -1,6 +1,6 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
-// GPLv3 License
+// AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #pragma once

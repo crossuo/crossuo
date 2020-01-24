@@ -3,15 +3,26 @@
 [![Travis Build Status](https://travis-ci.org/crossuo/crossuo.svg?branch=master)](https://travis-ci.org/crossuo/crossuo)
 [![Build status](https://ci.appveyor.com/api/projects/status/t7rtpwwv6m0fguc4?svg=true)](https://ci.appveyor.com/project/fungos/crossuo)
 
-* Supported Platforms: Windows 7, Windows 10, Linux and MacOSX.
+CrossUO is a cross-platform Ultima Online client in active development.
 
-* Graphics: OpenGL.
+Current supported platforms:
 
-### Downloading CrossUO
+- Windows 7+
+- Linux
+- MacOSX
 
-* Download [X:UO Launcher](https://github.com/crossuo/xuolauncher/releases) to set everything up and play right away!
+In development:
 
---------------
+- RaspberryPi (working, but low fps)
+- Web Browser via Webassembly (in progress)
+
+**Currently CrossUO renderer is based on an old OpenGL 1 implementation that is being (slowly) fully reworked. This will enable yet more platforms and huge boost on graphical performance.**
+
+
+### Downloading
+
+To download, go to our [website](https://crossuo.com/#download) for the current stable release, or else get the nightly master build [here](https://github.com/crossuo/crossuo/releases).
+
 
 ## Contributing
 
