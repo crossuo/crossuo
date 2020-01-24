@@ -471,7 +471,7 @@ int main(int argc, char **argv)
             if (s_has_update && config().global_auto_update)
                 s_update_request = true;
             const auto timestamp = fs_timestamp_write(s_launcher_binary);
-            s_launcher_restart = s_launcher_timestamp != timestamp;
+            s_launcher_restart = s_launcher_timestamp && s_launcher_timestamp != timestamp;
         }
         else
         {
@@ -482,7 +482,7 @@ int main(int argc, char **argv)
     auto update_run = []() {
         s_updated = xuo_update_apply(s_ctx);
         const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart = s_launcher_timestamp != timestamp;
+        s_launcher_restart = s_launcher_timestamp && s_launcher_timestamp != timestamp;
         s_update_started = false;
         s_has_update = false;
         model.view = ui_view::accounts;
