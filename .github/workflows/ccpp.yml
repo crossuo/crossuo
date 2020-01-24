@@ -8,6 +8,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: configure
-      run: cmake -B build -S crossuo
+      run: cmake -B build -S .
     - name: build
       run: cmake --build build
