@@ -1,33 +1,20 @@
 # Compiling
 
-This project requires CMake 3.12 to build. It currently supports Visual Studio 2015/2017/2019, GCC 7.0 and Clang 7.
+This project requires CMake 3.12 to build. It currently supports Visual Studio 2015/2017/2019, GCC 7+ and Clang 7+.
 
-### Windows
+### Dependencies
 
-#### Dependencies
+Some platforms may require extra dependencies, we try to avoid them to simplify the building process, but in some cases this can be difficult, here are the instructions on how to get these dependencies for the platforms that require them.
 
-The required dependencies for windows should be automatically downloaded by CMake.
+#### Raspberry PI
 
-#### Building
-
-```bat
-cmake -B build -S crossuo
-cmake --open build
+```
+sudo apt-get install cmake libgles2-mesa-dev
 ```
 
-Or, you can use CMake-GUI to configure and generate the solution. For a step-by-step visual guide similar to our setup, please refer to [this](https://github.com/yuzu-emu/yuzu/wiki/Building-for-Windows) guide.
+### Building
 
-### Linux
-
-#### Dependencies
-
-* [CMake](https://cmake.org/)
-* [SDL2](https://www.libsdl.org/download-2.0.php)
-* [GLEW](http://glew.sourceforge.net/)
-* [Ninja](https://ninja-build.org/) [optional, recommended]
-* gcc or clang
-
-#### Building
+#### Linux, OSX or RaspberryPi
 
 ```bash
 $ git clone https://github.com/crossuo/crossuo
@@ -36,45 +23,20 @@ $ cmake --build build
 $ cd build/src && ./crossuo
 ```
 
-  > You'll need a `crossuo.cfg` in the working directory. Please use X:UO Launcher to configure the client.
+#### Windows
 
-### MacOSX
-
-#### Dependencies
-
-* [CMake](https://cmake.org/) (`brew install cmake`)
-* [SDL2](https://www.libsdl.org/download-2.0.php) (`brew install sdl2`)
-* [GLEW](http://glew.sourceforge.net/) (`brew install glew`)
-* [Ninja](https://ninja-build.org/) (`brew install ninja`) [otpional]
-* A recent version of Xcode and the Xcode command line tools
-
-#### Building
-
+```bat
+cmake -B build -S crossuo
+cmake --open build
 ```
-$ git clone https://github.com/crossuo/crossuo
-$ cmake -B build -S crossuo
-$ cmake --build build --config Release
-$ cd build/src && ./crossuo
-```
-  > You'll need a `crossuo.cfg` in the working directory. Please use X:UO Launcher to configure the client.
 
-Then you should have an `crossuo` inside `build/crossuo`
+Or, you can use CMake-GUI to configure and generate the solution. For a step-by-step visual guide similar to our setup, please refer to [this](https://github.com/yuzu-emu/yuzu/wiki/Building-for-Windows) guide.
 
-### Raspberry PI
 
-#### Dependencies
+### Running
 
-```
-sudo apt-get install cmake libgles2-mesa-dev
-```
-#### Building
+After building, you should have a few executables somewhre in the `build` directory. You'll need at least the `crossuo` and `xuolauncher`, copy them somewhere and you're ready to go.
 
-```
-$ git clone https://github.com/crossuo/crossuo
-$ cmake -B build -S crossuo
-$ cmake --build build --config Release
-$ cd build/src && ./crossuo
-```
-  > You'll need a `crossuo.cfg` in the working directory
-  
-Then you should have an `crossuo` inside `build/src`
+ > You'll need all the original Ultima Online data files, which you can download from their official website or from your preferred free shard.
+ 
+ > You'll also need a `crossuo.cfg` in the working directory to point to the data files and some other settings. This can be achieved by using X:UO Launcher to correctly configure and launch the client.
