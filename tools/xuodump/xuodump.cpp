@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <iostream>
 #include <vector>
+#include <inttypes.h>
 #include <external/popts.h>
 
 void uo_log(int type, const char *sys, const char *fmt, ...);
@@ -161,9 +162,9 @@ int main(int argc, char **argv)
                 auto meta = file.GetMeta(asset);
 
                 char fname[100];
-                snprintf(fname, sizeof(fname), "%016lx", asset->Hash);
+                snprintf(fname, sizeof(fname), "%016" PRIx64, asset->Hash);
                 char mname[100];
-                snprintf(mname, sizeof(mname), "%016lx.meta", asset->Hash);
+                snprintf(mname, sizeof(mname), "%016" PRIx64 ".meta", asset->Hash);
 
                 auto f = fs_path_join(p, fname);
                 fs_file_write(f, data);

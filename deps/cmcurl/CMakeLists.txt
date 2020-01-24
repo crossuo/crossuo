@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.8)
-set(CMAKE_USE_OPENSSL On) # XUO
 
 # Set curl options as needed for CMake build
 set(BUILD_CURL_EXE OFF CACHE INTERNAL "No curl exe")
@@ -7,7 +6,7 @@ set(BUILD_DASHBOARD_REPORTS OFF CACHE INTERNAL "No curl dashboard reports")
 set(BUILD_RELEASE_DEBUG_DIRS OFF CACHE INTERNAL "No curl release/debug dirs")
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build shared libraries")
 set(CMAKE_USE_GSSAPI OFF CACHE INTERNAL "Disable curl gssapi")
-set(CMAKE_USE_LIBSSH2 ON CACHE INTERNAL "Disable curl libssh2")
+set(CMAKE_USE_LIBSSH2 OFF CACHE INTERNAL "Disable curl libssh2")
 set(CMAKE_USE_OPENLDAP OFF CACHE INTERNAL "No curl OpenLDAP")
 set(CURL_DISABLE_COOKIES OFF CACHE INTERNAL "Do not disable curl cookie support")
 set(CURL_DISABLE_CRYPTO_AUTH OFF CACHE INTERNAL "Do not disable curl crypto auth")
@@ -39,8 +38,7 @@ set(ENABLE_UNIX_SOCKETS OFF CACHE INTERNAL "No curl Unix domain sockets support"
 set(HTTP_ONLY OFF CACHE INTERNAL "Curl is not http-only")
 set(PICKY_COMPILER OFF CACHE INTERNAL "Enable picky compiler options")
 set(USE_WIN32_LDAP OFF CACHE INTERNAL "No curl Windows LDAP")
-if(CMAKE_USE_OPENSSL)
-elseif(WIN32)
+if(WIN32)
   set(CMAKE_USE_WINSSL ON CACHE INTERNAL "enable Windows native SSL/TLS")
   set(CURL_WINDOWS_SSPI ON CACHE INTERNAL "Use windows libraries to allow NTLM authentication without openssl")
 elseif(APPLE)
@@ -61,6 +59,8 @@ elseif(APPLE)
     set(CMAKE_USE_SECTRANSP OFF CACHE INTERNAL "enable Apple OS native SSL/TLS")
   endif()
   unset(CMAKE_USE_DARWINSSL CACHE)
+else()
+  set(CMAKE_USE_OPENSSL On)
 endif()
 set(CMAKE_USE_MBEDTLS OFF CACHE INTERNAL "Enable mbedTLS for SSL/TLS")
 

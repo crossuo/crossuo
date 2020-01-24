@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 const int CONTAINERS_RECT_DEFAULT_POS = 40;
 
 const int CONTAINERS_RECT_LINESTEP = 800;
@@ -216,12 +218,14 @@ struct SITTING_INFO_DATA
 
 const int SITTING_ITEMS_COUNT = 98;
 
+const uint8_t INVALID_DIRECTION = 0xff;
+
 #define SITTING_N 0, 0, 0, 0
 #define SITTING_E 2, 2, 2, 2
 #define SITTING_S 4, 4, 4, 4
 #define SITTING_W 6, 6, 6, 6
-#define SITTING_N_S 0, 0xff, 4, 0xff
-#define SITTING_E_W 0xff, 2, 0xff, 6
+#define SITTING_N_S 0, INVALID_DIRECTION, 4, INVALID_DIRECTION
+#define SITTING_E_W INVALID_DIRECTION, 2, INVALID_DIRECTION, 6
 #define SITTING_ALL 0, 2, 4, 6
 #define SITTING_UNKNOWN 0, 2, 4, 6
 

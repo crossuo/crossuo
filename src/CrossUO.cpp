@@ -4691,7 +4691,7 @@ void CGame::ResumeSound() const
 
 CSprite *CGame::ExecuteGump(uint16_t id)
 {
-    if (id >= MAX_GUMP_DATA_INDEX_COUNT)
+    if (int(id) >= MAX_GUMP_DATA_INDEX_COUNT)
     {
         return nullptr;
     }
@@ -4744,7 +4744,7 @@ CSprite *CGame::ExecuteStaticArtAnimated(uint16_t id)
 
 CSprite *CGame::ExecuteStaticArt(uint16_t id)
 {
-    if (id >= MAX_STATIC_DATA_INDEX_COUNT)
+    if (int(id) >= MAX_STATIC_DATA_INDEX_COUNT)
     {
         return nullptr;
     }

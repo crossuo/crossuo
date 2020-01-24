@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-enum
+enum : int32_t
 {
     MAX_MOBILE_DIRECTIONS = 5,
     MAX_ANIMATION_GROUPS_COUNT = 100,

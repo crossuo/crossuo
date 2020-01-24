@@ -689,7 +689,7 @@ void CDECL FUNCBODY_GetLandArtInfo(unsigned short index, XUO_RAW_ART_INFO &info)
 
 void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, XUO_RAW_ART_INFO &info)
 {
-    if (index < MAX_STATIC_DATA_INDEX_COUNT)
+    if (int(index) < MAX_STATIC_DATA_INDEX_COUNT)
     {
         CIndexObjectStatic &staticData = g_Index.m_Static[index];
 
@@ -718,7 +718,7 @@ void CDECL FUNCBODY_GetStaticArtInfo(unsigned short index, XUO_RAW_ART_INFO &inf
 
 void CDECL FUNCBODY_GetGumpArtInfo(unsigned short index, XUO_RAW_GUMP_INFO &info)
 {
-    if (index < MAX_GUMP_DATA_INDEX_COUNT)
+    if (int(index) < MAX_GUMP_DATA_INDEX_COUNT)
     {
         CIndexGump &gumpData = g_Index.m_Gump[index];
 
