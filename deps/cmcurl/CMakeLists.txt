@@ -389,7 +389,7 @@ endif()
 # TODO support GNUTLS, NSS, POLARSSL, CYASSL
 
 if(APPLE)
-  option(CMAKE_USE_SECTRANSP "enable Apple OS native SSL/TLS" OFF)
+  option(CMAKE_USE_SECTRANSP "enable Apple OS native SSL/TLS" ON)
 endif()
 if(WIN32)
   option(CMAKE_USE_WINSSL "enable Windows native SSL/TLS" OFF)
@@ -442,6 +442,7 @@ if(CMAKE_USE_SECTRANSP)
   set(SSL_ENABLED ON)
   set(USE_SECTRANSP ON)
   list(APPEND CURL_LIBS "${COREFOUNDATION_FRAMEWORK}" "${SECURITY_FRAMEWORK}")
+  set(CMAKE_USE_OPENSSL Off)
 endif()
 
 if(CMAKE_USE_OPENSSL)
