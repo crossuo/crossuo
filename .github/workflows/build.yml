@@ -1,0 +1,69 @@
+name: build
+
+on: [push]
+
+jobs:
+  Windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2019]
+        gen: [Visual Studio 16 2019]
+        arch: [Win32, x64]
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: configure
+      run: cmake -G "${{ matrix.gen }}" -A ${{ matrix.arch }} -B build -S .
+    - name: build
+      run: cmake --build build
+  Linux:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04]
+        cc: [gcc, clang]
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Prepare
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build xorg-dev libglu1-mesa-dev libalut-dev gcc-multilib g++-multilib mesa-common-dev libasound-dev
+        gcc --version
+        clang --version
+    - name: configure gcc
+      if: matrix.cc == 'gcc'
+      run: mkdir build && cd build && CC=gcc CXX=g++ cmake -G Ninja ..
+    - name: configure clang
+      if: matrix.cc == 'clang'
+      run: mkdir build && cd build && CC=clang CXX=clang++ cmake -G Ninja ..
+    - name: build
+      run: cd build && cmake --build . -j 8
+  MacOSX:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: configure
+      run: cmake -B build -S .
+    - name: build
+      run: cmake --build build
+  Emscripten:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Install Dependencies
+      run: |
+        wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
+        tar -xvf master.tar.gz
+        emsdk-master/emsdk update
+        emsdk-master/emsdk install latest-fastcomp
+        emsdk-master/emsdk activate latest-fastcomp
+    - name: not-ready
+      run: echo "need to setup"

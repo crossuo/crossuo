@@ -47,14 +47,10 @@ else()
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_compile_options(-fno-strict-aliasing)
-    add_compile_options(-Wno-tautological-constant-out-of-range-compare)
     add_compile_options(-Wswitch-default)
     add_compile_options(-Wmissing-variable-declarations)
-    add_compile_options(-Wmissing-declarations)
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GCC")
-    add_compile_options(-Wno-missing-declarations) # CommonInterfaces.cpp
     add_compile_options(-Wno-switch-default) # SDL_stdinc.h
-    add_compile_options(-Wno-type-limits) # tautological compare
     add_compile_options(-Wlogical-op)
   endif()
 

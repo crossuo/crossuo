@@ -1500,7 +1500,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
         case 7:
         case 0:
         {
-            if (data.Direction1 == -1)
+            if (data.Direction1 == INVALID_DIRECTION)
             {
                 if (dir == 7)
                 {
@@ -1521,7 +1521,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
         case 1:
         case 2:
         {
-            if (data.Direction2 == -1)
+            if (data.Direction2 == INVALID_DIRECTION)
             {
                 if (dir == 1)
                 {
@@ -1542,7 +1542,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
         case 3:
         case 4:
         {
-            if (data.Direction3 == -1)
+            if (data.Direction3 == INVALID_DIRECTION)
             {
                 if (dir == 3)
                 {
@@ -1563,7 +1563,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
         case 5:
         case 6:
         {
-            if (data.Direction4 == -1)
+            if (data.Direction4 == INVALID_DIRECTION)
             {
                 if (dir == 5)
                 {

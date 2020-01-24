@@ -359,14 +359,14 @@ void CGameWindow::OnDeactivate()
 
 void CGameWindow::OnTextInput(const TextEvent &ev)
 {
-    const auto ch = EvChar(ev);
     if (PLUGIN_EVENT(UOMSG_INPUT_CHAR, &ev))
     {
         return;
     }
 
-    if (/*(IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&*/
-        g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
+    //const auto ch = EvChar(ev);
+    //if (IsPrintable(ch) || (g_GameState >= GS_GAME && (ch == 0x11 || ch == 0x17))) &&
+    if (g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
         g_CurrentScreen->OnTextInput(ev);
     }

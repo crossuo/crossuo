@@ -512,7 +512,7 @@ bool CPathFinder::CanWalk(uint8_t &direction, int &x, int &y, char &z)
 
     if (((char)direction % 2) != 0) //diagonal
     {
-        const uint8_t dirOffset[2] = { 1, 0xff };
+        const uint8_t dirOffset[2] = { 1, INVALID_DIRECTION };
 
         if (passed) //test angleowner tiles
         {

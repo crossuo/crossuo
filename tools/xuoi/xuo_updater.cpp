@@ -438,7 +438,7 @@ xuo_context *xuo_init(const char *path, bool beta)
     ctx.config.channel = beta ? xuo_channel::beta : xuo_channel::stable;
     http_set_user_agent(XUOL_AGENT_NAME);
     xuo_changelog_load(ctx);
-    if (auto r = xuo_manifest_load(ctx, xuo_platform_name(), ctx.config.channel))
+    if (xuo_manifest_load(ctx, xuo_platform_name(), ctx.config.channel) != xuo_ok)
     {
         LOG_ERROR("could not load update manifest: invalid format");
         return nullptr;
