@@ -1,3 +1,6 @@
+**/target/**
+tools/xuodeploy/release
+tools/xuodeploy/update
 Dependencies/
 screenshots/
 crossuo.log
