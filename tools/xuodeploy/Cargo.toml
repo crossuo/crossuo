@@ -1,0 +1,18 @@
+[package]
+name = "xuodeploy"
+version = "0.1.0"
+authors = ["Danny Angelo Carminati Grein <fungos@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+twox-hash = "1.5.0"
+walkdir = "2.3.1"
+zip = "0.5.4"
+structopt = "0.3.8"
+serde_derive = "1.0.104"
+serde = { version = "1.0", features = ["derive"] }
+quick-xml = { version = "0.17", features = [ "serialize" ] }
+warp = "0.2.1"
+tokio = { version = "0.2", features = ["macros"] }
