@@ -82,7 +82,7 @@ CFG_FIELD(shard, clienttype, {}, astr_t)
 // one of: t2a,re,td,lbr,aos,se,sa,ml,ej
 // same as crossuo.cfg, if empty will autodetect based on the client version
 
-CFG_FIELD(shard, crypto, "no", bool)
+CFG_FIELD(shard, crypt, "no", bool)
 // otpional, default: no
 // format:
 //   <no|yes>

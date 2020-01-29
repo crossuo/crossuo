@@ -431,7 +431,10 @@ void LoadGlobalConfig()
                 case MSCC_LOGIN_SERVER:
                 {
                     g_Config.ServerAddress = strings[1];
-                    g_Config.ServerPort = str_to_int(strings[2]);
+                    if (strings.size() > 2)
+                    {
+                        g_Config.ServerPort = str_to_int(strings[2]);
+                    }
                     break;
                 }
                 case MSCC_USE_CRYPT:

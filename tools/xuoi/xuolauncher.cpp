@@ -106,8 +106,8 @@ void XUODefaultStyle()
 #if defined(XUO_RELEASE)
 #define XUOL_UPDATER_HOST "http://update.crossuo.com/"
 #else
-#define XUOL_UPDATER_HOST "http://update.crossuo.com/"
-//#define XUOL_UPDATER_HOST "http://192.168.2.14:8089/"
+//#define XUOL_UPDATER_HOST "http://update.crossuo.com/"
+#define XUOL_UPDATER_HOST "http://localhost:12593/"
 #endif
 
 void HoverToolTip(const char *desc)
