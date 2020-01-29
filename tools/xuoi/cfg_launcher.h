@@ -52,7 +52,7 @@ CFG_FIELD(account, clienttype, {}, astr_t)
 // optional
 // same as crossuo.cfg, if empty will autodetect based on the client version
 
-CFG_FIELD(account, crypto, "no", bool)
+CFG_FIELD(account, crypt, "no", bool)
 // otpional, default: no
 // format:
 //   <no|yes>
