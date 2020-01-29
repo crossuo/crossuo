@@ -83,50 +83,9 @@ struct xuo_context
 };
 
 #if defined(XUO_LINUX)
-static const char *s_distroName = nullptr;
-
 const char *xuo_platform_name()
 {
-    if (s_distroName != nullptr)
-        return s_distroName;
-
-    static char distroName[128] = {};
-    char buf[512] = {};
-    const char *distro = nullptr;
-    s_distroName = "ubuntu";
-    if (FILE *fp = fopen("/etc/lsb-release", "rt"))
-    {
-        while (!feof(fp))
-        {
-            if (!fgets(buf, sizeof(buf), fp))
-                break;
-            char *sep = strchr(buf, '=');
-            if (!sep)
-                continue;
-
-            *sep++ = '\0';
-            if (strcmp(buf, "DISTRIB_ID") != 0)
-                continue;
-
-            distro = sep;
-            for (int i = 0; distro[i] != 0 && distro[i] != '\n' && distro[i] != '\r'; ++i)
-            {
-                distroName[i] = tolower(distro[i]);
-            }
-            s_distroName = distroName;
-            break;
-        }
-        fclose(fp);
-    }
-
-    if (strcmp(s_distroName, "manjarolinux") != 0 && strcmp(s_distroName, "ubuntu") != 0)
-    {
-        LOG_WARN(
-            "The %s distribution is unsupported, you may find issues trying to use this binary",
-            distro);
-    }
-
-    return s_distroName;
+    return "linux";
 }
 #elif defined(XUO_OSX)
 const char *xuo_platform_name()

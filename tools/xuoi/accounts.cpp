@@ -27,6 +27,7 @@
 #define XUO_EXE "crossuo.exe"
 #else
 #define XUO_EXE "./crossuo"
+#define XUOA_EXE "./xuoassist"
 #endif
 
 // model
@@ -152,7 +153,15 @@ static void account_launch(int account_index)
         return;
     }
 
-    const char *args[] = { XUO_EXE, "--config", fs_path_ascii(cfg), 0 };
+    auto bin = XUO_EXE;
+#if !defined(XUO_WINDOWS)
+    if (fs_path_is_file(fs_path_from(XUOA_EXE)))
+    {
+        bin = XUOA_EXE;
+    }
+#endif // !defined(XUO_WINDOWS)
+
+    const char *args[] = { bin, "--config", fs_path_ascii(cfg), 0 };
     LOG_INFO("running %s", args[0]);
 
     process_s process;
