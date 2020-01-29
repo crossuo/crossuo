@@ -13,7 +13,8 @@ set(XUOI_SRCS
   common.cpp
   http.cpp
   xuo_updater.cpp
-  main.cpp
+  mft.cpp
+  xuoi.cpp
 )
 
 add_executable(${PROJECT_NAME} ${XUOI_SRCS})

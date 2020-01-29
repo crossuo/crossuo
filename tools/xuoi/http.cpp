@@ -66,11 +66,10 @@ void http_init()
     curl_global_init(CURL_GLOBAL_ALL);
     curl_version_info_data *info = curl_version_info(CURLVERSION_NOW);
     LOG_INFO(
-        "libcurl %s (%s, %s, %s, libz/%s, tinyxml2/%d.%d.%d)",
+        "libcurl %s (%s, %s, libz/%s, tinyxml2/%d.%d.%d)",
         info->version,
         info->host,
         info->ssl_version,
-        info->libssh_version,
         info->libz_version,
         TINYXML2_MAJOR_VERSION,
         TINYXML2_MINOR_VERSION,
