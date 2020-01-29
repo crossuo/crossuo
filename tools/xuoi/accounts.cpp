@@ -133,7 +133,7 @@ static fs_path account_create_config(const account::entry &account, bool save = 
     entry.crossuo_autologin = account.account_auto_login;
     entry.crossuo_clienttype = account.account_clienttype;
     entry.crossuo_clientversion = account.account_clientversion;
-    entry.crossuo_crypt = account.account_crypto;
+    entry.crossuo_crypt = account.account_crypt;
     entry.crossuo_custompath = account.account_data_path;
     entry.crossuo_loginserver = account.account_loginserver;
 
