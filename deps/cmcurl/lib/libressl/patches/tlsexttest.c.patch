@@ -1,0 +1,111 @@
+--- tests/tlsexttest.c.orig	Thu Apr 11 06:27:40 2019
++++ tests/tlsexttest.c	Tue May  7 02:07:40 2019
+@@ -1654,7 +1654,9 @@
+ };
+ 
+ static unsigned char tlsext_sni_server[] = {
++	0x00
+ };
++const size_t sizeof_tlsext_sni_server = 0;
+ 
+ static int
+ test_tlsext_sni_client(void)
+@@ -1817,9 +1819,9 @@
+ 	if (!CBB_finish(&cbb, &data, &dlen))
+ 		errx(1, "failed to finish CBB");
+ 
+-	if (dlen != sizeof(tlsext_sni_server)) {
++	if (dlen != sizeof_tlsext_sni_server) {
+ 		FAIL("got server SNI with length %zu, "
+-		    "want length %zu\n", dlen, sizeof(tlsext_sni_server));
++		    "want length %zu\n", dlen, sizeof_tlsext_sni_server);
+ 		goto err;
+ 	}
+ 
+@@ -1828,14 +1830,14 @@
+ 		fprintf(stderr, "received:\n");
+ 		hexdump(data, dlen);
+ 		fprintf(stderr, "test data:\n");
+-		hexdump(tlsext_sni_server, sizeof(tlsext_sni_server));
++		hexdump(tlsext_sni_server, sizeof_tlsext_sni_server);
+ 		goto err;
+ 	}
+ 
+ 	free(ssl->session->tlsext_hostname);
+ 	ssl->session->tlsext_hostname = NULL;
+ 
+-	CBS_init(&cbs, tlsext_sni_server, sizeof(tlsext_sni_server));
++	CBS_init(&cbs, tlsext_sni_server, sizeof_tlsext_sni_server);
+ 	if (!tlsext_sni_client_parse(ssl, &cbs, &alert)) {
+ 		FAIL("failed to parse server SNI\n");
+ 		goto err;
+@@ -2719,7 +2721,10 @@
+ 	0x02, 0x01, 0x02, 0x03,
+ };
+ 
+-unsigned char tlsext_clienthello_disabled[] = {};
++unsigned char tlsext_clienthello_disabled[] = {
++	0x00
++};
++const size_t sizeof_tlsext_clienthello_disabled = 0;
+ 
+ static int
+ test_tlsext_clienthello_build(void)
+@@ -2784,18 +2789,18 @@
+ 	if (!CBB_finish(&cbb, &data, &dlen))
+ 		errx(1, "failed to finish CBB");
+ 
+-	if (dlen != sizeof(tlsext_clienthello_disabled)) {
++	if (dlen != sizeof_tlsext_clienthello_disabled) {
+ 		FAIL("got clienthello extensions with length %zu, "
+ 		    "want length %zu\n", dlen,
+-		    sizeof(tlsext_clienthello_disabled));
++		    sizeof_tlsext_clienthello_disabled);
+ 		compare_data(data, dlen, tlsext_clienthello_disabled,
+-		    sizeof(tlsext_clienthello_disabled));
++		    sizeof_tlsext_clienthello_disabled);
+ 		goto err;
+ 	}
+ 	if (memcmp(data, tlsext_clienthello_disabled, dlen) != 0) {
+ 		FAIL("clienthello extensions differs:\n");
+ 		compare_data(data, dlen, tlsext_clienthello_disabled,
+-		    sizeof(tlsext_clienthello_disabled));
++		    sizeof_tlsext_clienthello_disabled);
+ 		goto err;
+ 	}
+ 
+@@ -2810,7 +2815,10 @@
+ 	return (failure);
+ }
+ 
+-unsigned char tlsext_serverhello_default[] = {};
++unsigned char tlsext_serverhello_default[] = {
++	0x00
++};
++const size_t sizeof_tlsext_serverhello_default = 0;
+ 
+ unsigned char tlsext_serverhello_enabled[] = {
+ 	0x00, 0x13, 0xff, 0x01, 0x00, 0x01, 0x00, 0x00,
+@@ -2850,18 +2858,18 @@
+ 	if (!CBB_finish(&cbb, &data, &dlen))
+ 		errx(1, "failed to finish CBB");
+ 
+-	if (dlen != sizeof(tlsext_serverhello_default)) {
++	if (dlen != sizeof_tlsext_serverhello_default) {
+ 		FAIL("got serverhello extensions with length %zu, "
+ 		    "want length %zu\n", dlen,
+-		    sizeof(tlsext_serverhello_default));
++		    sizeof_tlsext_serverhello_default);
+ 		compare_data(data, dlen, tlsext_serverhello_default,
+-		    sizeof(tlsext_serverhello_default));
++		    sizeof_tlsext_serverhello_default);
+ 		goto err;
+ 	}
+ 	if (memcmp(data, tlsext_serverhello_default, dlen) != 0) {
+ 		FAIL("serverhello extensions differs:\n");
+ 		compare_data(data, dlen, tlsext_serverhello_default,
+-		    sizeof(tlsext_serverhello_default));
++		    sizeof_tlsext_serverhello_default);
+ 		goto err;
+ 	}
+ 
