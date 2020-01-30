@@ -60,7 +60,7 @@ elseif(APPLE)
   endif()
   unset(CMAKE_USE_DARWINSSL CACHE)
 else()
-  set(CMAKE_USE_OPENSSL On)
+  set(CMAKE_USE_LIBRESSL On)
 endif()
 set(CMAKE_USE_MBEDTLS OFF CACHE INTERNAL "Enable mbedTLS for SSL/TLS")
 
@@ -406,7 +406,7 @@ endif()
 count_true(enabled_ssl_options_count
   CMAKE_USE_WINSSL
   CMAKE_USE_SECTRANSP
-  CMAKE_USE_OPENSSL
+  CMAKE_USE_LIBRESSL
   CMAKE_USE_MBEDTLS
 )
 if(enabled_ssl_options_count GREATER "1")
@@ -442,24 +442,25 @@ if(CMAKE_USE_SECTRANSP)
   set(SSL_ENABLED ON)
   set(USE_SECTRANSP ON)
   list(APPEND CURL_LIBS "${COREFOUNDATION_FRAMEWORK}" "${SECURITY_FRAMEWORK}")
-  set(CMAKE_USE_OPENSSL Off)
+  set(CMAKE_USE_LIBRESSL Off)
 endif()
 
-if(CMAKE_USE_OPENSSL)
-  find_package(OpenSSL)
-  if(NOT OpenSSL_FOUND)
-    message(FATAL_ERROR
-      "Could not find OpenSSL. Install an OpenSSL development package or "
-      "configure CMake with -DCMAKE_USE_OPENSSL=OFF to build without OpenSSL.")
-  endif()
+if(CMAKE_USE_LIBRESSL)
+  #find_package(OpenSSL)
+  #if(NOT OpenSSL_FOUND)
+  #  message(FATAL_ERROR
+  #    "Could not find OpenSSL. Install an OpenSSL development package or "
+  #    "configure CMake with -DCMAKE_USE_OPENSSL=OFF to build without OpenSSL.")
+  #endif()
   set(SSL_ENABLED ON)
+  set(USE_LIBRESSL ON)
   set(USE_OPENSSL ON)
   set(HAVE_LIBCRYPTO ON)
   set(HAVE_LIBSSL ON)
-  list(APPEND CURL_LIBS ${OPENSSL_LIBRARIES})
-  include_directories(${OPENSSL_INCLUDE_DIR})
+  list(APPEND CURL_LIBS ${LIBRESSL_LIBRARIES})
+  include_directories(${LIBRESSL_INCLUDE_DIR})
 
-  set(CMAKE_REQUIRED_INCLUDES ${OPENSSL_INCLUDE_DIR})
+  set(CMAKE_REQUIRED_INCLUDES ${LIBRESSL_INCLUDE_DIR})
   check_include_file("openssl/crypto.h" HAVE_OPENSSL_CRYPTO_H)
   check_include_file("openssl/err.h"    HAVE_OPENSSL_ERR_H)
   check_include_file("openssl/pem.h"    HAVE_OPENSSL_PEM_H)
@@ -522,7 +523,7 @@ if(NOT CURL_DISABLE_LDAP)
     check_include_file_concat("winber.h"  HAVE_WINBER_H)
   else()
     # Check for LDAP
-    set(CMAKE_REQUIRED_LIBRARIES ${OPENSSL_LIBRARIES})
+    set(CMAKE_REQUIRED_LIBRARIES ${LIBRESSL_LIBRARIES})
     check_library_exists_concat(${CMAKE_LDAP_LIB} ldap_init HAVE_LIBLDAP)
     check_library_exists_concat(${CMAKE_LBER_LIB} ber_init HAVE_LIBLBER)
 
@@ -828,9 +829,9 @@ elseif(CURL_CA_PATH_AUTODETECT OR CURL_CA_BUNDLE_AUTODETECT)
   endif()
 endif()
 
-if(CURL_CA_PATH_SET AND NOT USE_OPENSSL AND NOT USE_MBEDTLS)
+if(CURL_CA_PATH_SET AND NOT USE_LIBRESSL AND NOT USE_MBEDTLS)
   message(FATAL_ERROR
-          "CA path only supported by OpenSSL, GnuTLS or mbed TLS. "
+          "CA path only supported by LibreSSL, GnuTLS or mbed TLS. "
           "Set CURL_CA_PATH=none or enable one of those TLS backends.")
 endif()
 endif()
@@ -841,7 +842,7 @@ if(NOT UNIX)
   check_include_file_concat("winsock.h"      HAVE_WINSOCK_H)
   check_include_file_concat("ws2tcpip.h"     HAVE_WS2TCPIP_H)
   check_include_file_concat("winsock2.h"     HAVE_WINSOCK2_H)
-  if(NOT CURL_WINDOWS_SSPI AND USE_OPENSSL)
+  if(NOT CURL_WINDOWS_SSPI AND USE_LIBRESSL)
     set(CURL_LIBS ${CURL_LIBS} "crypt32")
   endif()
 else()
@@ -1342,7 +1343,7 @@ _add_if("Kerberos"      NOT CURL_DISABLE_CRYPTO_AUTH AND
                         (HAVE_GSSAPI OR USE_WINDOWS_SSPI))
 # NTLM support requires crypto function adaptions from various SSL libs
 # TODO alternative SSL libs tests for SSP1, GNUTLS, NSS
-if(NOT CURL_DISABLE_CRYPTO_AUTH AND (USE_OPENSSL OR USE_WINDOWS_SSPI OR USE_SECTRANSP OR USE_MBEDTLS))
+if(NOT CURL_DISABLE_CRYPTO_AUTH AND (USE_LIBRESSL OR USE_WINDOWS_SSPI OR USE_SECTRANSP OR USE_MBEDTLS))
   _add_if("NTLM"        1)
   # TODO missing option (autoconf: --enable-ntlm-wb)
   _add_if("NTLM_WB"     NOT CURL_DISABLE_HTTP AND NTLM_WB_ENABLED)
@@ -1390,7 +1391,7 @@ message(STATUS "Enabled protocols: ${SUPPORT_PROTOCOLS}")
 # Clear list and collect SSL backends
 set(_items)
 _add_if("WinSSL"           SSL_ENABLED AND USE_WINDOWS_SSPI)
-_add_if("OpenSSL"          SSL_ENABLED AND USE_OPENSSL)
+_add_if("LibreSSL"          SSL_ENABLED AND USE_LIBRESSL)
 _add_if("Secure Transport" SSL_ENABLED AND USE_SECTRANSP)
 _add_if("mbedTLS"          SSL_ENABLED AND USE_MBEDTLS)
 if(_items)

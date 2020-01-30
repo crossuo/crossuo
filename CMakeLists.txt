@@ -46,12 +46,9 @@ find_package(OpenGL REQUIRED)
 set(XUO_LOCAL_HEADERS 1)
 xuo_dependency(cmcurl cmcurl CURL)
 xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
-if(WIN32)
-  # fuck msvc
-  add_link_options(/ignore:4217 /ignore:4286 /ignore:4049)
-endif()
 
 if (XUO_WINDOWS)
+  add_link_options(/ignore:4217 /ignore:4286 /ignore:4049)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 endif()

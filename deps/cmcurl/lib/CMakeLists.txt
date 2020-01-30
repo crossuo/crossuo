@@ -91,11 +91,22 @@ if(CMAKE_USE_OPENSSL AND OPENSSL_FOUND AND WIN32)
   endif()
 endif()
 
+if (XUO_LINUX)
+  include_directories(${LIBRESSL_INCLUDE_DIR})
+  add_subdirectory(libressl)
+  add_library(
+    ${LIB_NAME}
+    ${HHEADERS} ${CSOURCES}
+    ${CMAKE_CURL_SSL_DLLS}
+    )
+  add_dependencies(${LIB_NAME} ssl crypto tls)
+else()
 add_library(
   ${LIB_NAME}
   ${HHEADERS} ${CSOURCES}
   ${CMAKE_CURL_SSL_DLLS}
   )
+endif()
 
 if(NOT BUILD_SHARED_LIBS)
     set_target_properties(${LIB_NAME} PROPERTIES INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
