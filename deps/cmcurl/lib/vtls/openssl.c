@@ -56,6 +56,9 @@
 #ifndef OPENSSL_NO_DSA
 #include <openssl/dsa.h>
 #endif
+#include <openssl/opensslfeatures.h>
+#include <openssl/opensslv.h>
+#include <openssl/dh.h>
 #include <openssl/dh.h>
 #include <openssl/err.h>
 #include <openssl/md5.h>
