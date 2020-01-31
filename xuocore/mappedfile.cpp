@@ -3,7 +3,6 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
-#include "uolib.h"
 #include "mappedfile.h"
 #include <common/str.h>
 #include <string.h> // memcpy

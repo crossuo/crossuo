@@ -17,14 +17,6 @@
 #include "tml.h"
 #endif // ASS_DEPS
 
-#include "loguru.h"
-
-// loguru lib
-#ifndef LOGURU_IMPLEMENTATION
-#define LOGURU_IMPLEMENTATION
-#include "loguru.h"
-#endif // LOGURU_IMPLEMENTATION
-
 // tinyxml2
 #include "tinyxml2.cpp"
 

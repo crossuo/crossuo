@@ -332,12 +332,12 @@ struct RenderCmdList
     uint32_t remainingSize = 0;
     bool immediateMode = false;
 
-    RenderCmdList(void *data, uint32_t size, RenderState state, bool immediateMode)
-        : state(state)
-        , data((char *)data)
-        , size(size)
-        , remainingSize(size)
-        , immediateMode(immediateMode)
+    RenderCmdList(void *data_, uint32_t size_, RenderState state_, bool immediateMode_)
+        : state(state_)
+        , data((char *)data_)
+        , size(size_)
+        , remainingSize(size_)
+        , immediateMode(immediateMode_)
     {
     }
 

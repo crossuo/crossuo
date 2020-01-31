@@ -77,6 +77,7 @@ typedef struct win_context_
     void *sg_default_desc;
     void *sg_default_shader_desc;
     void *context;
+    const char *inifile;
     int width;
     int height;
     int vsync;

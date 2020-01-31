@@ -1,8 +1,8 @@
 
 
+#include <common/logging/logging.h>
 #include "WispConnection.h"
 #include "WispPacketMessage.h"
-#include "../Logging.h"
 
 namespace Wisp
 {

@@ -1,8 +1,6 @@
 // AGPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
-#include "xuo_updater.h"
-
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
@@ -10,7 +8,11 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <algorithm>
+#include <external/tinyxml2.h>
+#include <external/xxhash.h>
+#include <external/miniz.h>
 
+#include "xuo_updater.h"
 #include "common.h"
 #include "http.h"
 

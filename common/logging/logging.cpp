@@ -1,7 +1,7 @@
-// GPLv3
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
-#include "Logging.h"
+#include "logging.h"
 
 #if !defined(DISABLE_LOG)
 
@@ -9,40 +9,20 @@
 #include <assert.h>
 #include <stdio.h>
 #include <cstdarg>
+
+// loguru lib
 #include <external/loguru.h>
+#ifndef LOGURU_IMPLEMENTATION
+#define LOGURU_IMPLEMENTATION
+#include <external/loguru.h>
+#endif // LOGURU_IMPLEMENTATION
 
 eLogSystem g_LogEnabled = LogSystemAll;
+fatalErrorCb g_fatalErrorCb = nullptr;
 
 #define LOG_SYSTEM(id, name) LOG_DECLARE_SYSTEM(name)
-#include "Loggers.h"
+#include "loggers.h"
 #undef LOG_SYSTEM
-
-void uo_log(int type, const char *sys, const char *fmt, ...)
-{
-    char msg[512] = {};
-    va_list vargs;
-    va_start(vargs, fmt);
-    vsnprintf(msg, 512, fmt, vargs);
-    va_end(vargs);
-    switch (type)
-    {
-        case 1:
-            TRACE(XUOCore, "%s: %s", sys, msg);
-            break;
-        case 2:
-            DEBUG(XUOCore, "%s: %s", sys, msg);
-            break;
-        case 3:
-            Info(XUOCore, "%s: %s", sys, msg);
-            break;
-        case 4:
-            Warning(XUOCore, "%s: %s", sys, msg);
-            break;
-        case 5:
-            Error(XUOCore, "%s: %s", sys, msg);
-            break;
-    }
-}
 
 const char *log_system_name(int sys)
 {
@@ -51,7 +31,7 @@ const char *log_system_name(int sys)
 #define LOG_SYSTEM(id, name)                                                                       \
     case eLogSystem::LogSystem##name:                                                              \
         return TOSTRING(name);
-#include "Loggers.h"
+#include "loggers.h"
 #undef LOG_SYSTEM
         default:
             break;
@@ -68,7 +48,7 @@ void LogInit(int argc, char *argv[], const char *filename)
     loguru::g_preamble_time = false;
 
 #define LOG_SYSTEM(id, name) LOG_DEFINE_SYSTEM(name)
-#include "Loggers.h"
+#include "loggers.h"
 #undef LOG_SYSTEM
 }
 
@@ -81,7 +61,7 @@ void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, in
     case eLogSystem::LogSystem##name:                                                              \
         logger = g_log##name;                                                                      \
         break;
-#include "Loggers.h"
+#include "loggers.h"
 #undef LOG_SYSTEM
         default:
             break;
@@ -149,7 +129,5 @@ void LogInit(const char *filename)
 void LogHexBuffer(eLogSystem sys, int level, const char *title, uint8_t *buf, int size)
 {
 }
-void uo_log(int type, const char *sys, const char *fmt, ...)
-{
-}
+
 #endif

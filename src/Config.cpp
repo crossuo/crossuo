@@ -5,8 +5,8 @@
 
 #include "Globals.h"
 #include "Application.h"
-#include "Logging.h"
 #include <xuocore/uodata.h>
+#include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>
 #include <xuocore/enumlist.h>
@@ -361,12 +361,21 @@ static fs_path GetConfigFile()
     return fs_path_from(g_cli["config"].get().string);
 }
 
-void LoadGlobalConfig()
+bool LoadGlobalConfig()
 {
-    Info(Config, "loading global config from: %s", fs_path_ascii(GetConfigFile()));
     const auto cfg = GetConfigFile();
-    Wisp::CTextFileParser file(cfg, "=,", "#;", "");
+    Info(Config, "loading global config from: %s", fs_path_ascii(cfg));
+    if (!fs_path_exists(cfg))
+    {
+        Fatal(
+            Config,
+            "Could not load config file, try using X:UO Launcher.",
+            "failed to load: %s",
+            fs_path_ascii(cfg));
+        return false;
+    }
 
+    Wisp::CTextFileParser file(cfg, "=,", "#;", "");
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens(false); // Trim remove spaces from paths
@@ -509,8 +518,20 @@ void LoadGlobalConfig()
         GetClientTypeName((CLIENT_FLAG)g_Config.ClientFlag),
         g_Config.ClientFlag);
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
+    const auto uopath = fs_path_ascii(g_App.m_UOPath);
+    Info(Client, "\tUltima Online Path: %s", uopath);
 
-    uo_data_init(fs_path_ascii(g_App.m_UOPath), g_Config.ClientVersion, g_Config.UseVerdata);
+    if ((uopath && !uopath[0]) || !fs_path_exists(g_App.m_UOPath))
+    {
+        Fatal(
+            Config,
+            "Couldn't find Ultima Online(tm) data files.",
+            "could not find data path: %s",
+            uopath);
+        return false;
+    }
+    uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
+    return true;
 }
 
 void SaveGlobalConfig()

@@ -2,9 +2,9 @@
 // Copyright (C) August 2016 Hotride
 
 #include "MultiMap.h"
-#include "Logging.h"
 #include "Gumps/GumpMap.h"
 #include "Managers/ColorManager.h"
+#include <common/logging/logging.h>
 #include <xuocore/uodata.h>
 
 CMultiMap g_MultiMap;

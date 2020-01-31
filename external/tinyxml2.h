@@ -21,6 +21,10 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+#if defined(Error)
+#error "move tinyxml2.h before logging.h".  // Macros :S
+#endif
+
 #ifndef TINYXML2_INCLUDED
 #define TINYXML2_INCLUDED
 

@@ -1,6 +1,6 @@
-#ifdef __GNUC__
-#pragma gcc diagnostic push
-#pragma gcc diagnostic ignored "-Wimplicit-fallthrough="
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif /* __GNUC__ */
 
 /*
@@ -1028,6 +1028,6 @@ XXH_PUBLIC_API XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canonical_t* src
 
 #endif  /* XXH_NO_LONG_LONG */
 
-#ifdef __GNUC__
-#pragma gcc diagnostic pop
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
 #endif /* __GNUC__ */

@@ -83,7 +83,7 @@ Website: www.ilikebigbits.com
 
 #define LOGURU_RTTI 0
 
-#define DISABLE_LOGURU 	\
+#define DISABLE_LOGURU \
 	const char *log_system_name(int) \
 	{ 										\
 			return "disabled";\

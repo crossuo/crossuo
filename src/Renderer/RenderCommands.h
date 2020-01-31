@@ -51,8 +51,8 @@ enum RenderCommandType : uint8_t
 struct RenderCommandHeader
 {
     RenderCommandType type = RenderCommandType_Invalid;
-    RenderCommandHeader(RenderCommandType type)
-        : type(type)
+    RenderCommandHeader(RenderCommandType type_)
+        : type(type_)
     {
     }
 

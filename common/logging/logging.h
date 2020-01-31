@@ -1,11 +1,13 @@
-// GPLv3
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #pragma once
 
 #undef ERROR
 
 #if !defined(DISABLE_LOG)
+
+#define LOG_HEADER
 
 #include <stdint.h>
 #include <external/loguru.h>
@@ -21,7 +23,7 @@ using LogSystem = uint32_t;
 enum eLogSystem : LogSystem
 {
 #define LOG_SYSTEM(id, name) LogSystem##name = 1 << id,
-#include "Loggers.h"
+#include "loggers.h"
 #undef LOG_SYSTEM
     LogSystemAll = ~0u,
     LogSystemNone = 0,
@@ -30,7 +32,7 @@ enum eLogSystem : LogSystem
 extern eLogSystem g_LogEnabled;
 
 #define LOG_SYSTEM(id, name) LOG_DECLARE_EXTERN(name)
-#include "Loggers.h"
+#include "loggers.h"
 #undef LOG_SYSTEM
 
 #define LOG_(system, level, ...)                                                                   \
@@ -48,7 +50,18 @@ extern eLogSystem g_LogEnabled;
 #define Info(system, ...) LOG_(system, INFO, __VA_ARGS__)
 #define Warning(system, ...) LOG_(system, WARNING, __VA_ARGS__)
 #define Error(system, ...) LOG_(system, ERROR, __VA_ARGS__)
-#define Fatal(system, ...) LOG_(system, FATAL, __VA_ARGS__)
+
+typedef void (*fatalErrorCb)(const char *msg);
+extern fatalErrorCb g_fatalErrorCb;
+#define Fatal(system, friendly_msg, ...)                                                           \
+    do                                                                                             \
+    {                                                                                              \
+        if (g_fatalErrorCb)                                                                        \
+        {                                                                                          \
+            g_fatalErrorCb(friendly_msg);                                                          \
+        }                                                                                          \
+        LOG_(system, FATAL, __VA_ARGS__);                                                          \
+    } while (0);
 
 #define INFO_DUMP(system, ...) LOG_DUMP_(system, 0, __VA_ARGS__)
 

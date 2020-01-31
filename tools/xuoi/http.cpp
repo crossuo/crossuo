@@ -10,11 +10,10 @@
 #include <curl/curl.h>
 #include <external/tinyxml2.h> // not really needed here, just for the version info
 
-#define LOG_NEWLINE
-#define LOG_DEBUG(...) // comment to enable debug logging
-#define LOG_TRACE(...) // comment to enable tracing
+#include <common/logging/logging.h>
 #include <common/fs.h>
-#include <common/log.h>
+
+#include "common.h"
 
 static const char *s_agentName = nullptr;
 
