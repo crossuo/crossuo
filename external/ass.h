@@ -15,6 +15,9 @@
 #pragma GCC diagnostic ignored "-Wwritable-strings"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif /* __GNUC__ */
 #endif
 
 #include "SDL.h"

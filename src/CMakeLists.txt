@@ -234,7 +234,6 @@ set(crypt_src
 )
 
 set(crossuo_src
-  Logging.cpp
   Point.cpp
   Vector.cpp
   Misc.cpp
@@ -307,14 +306,14 @@ if(XUO_WINDOWS OR XUO_EMSC)
 else()
   # crossuo loader
   add_executable(client CrossApp.cpp)
-  add_dependencies(client ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
+  add_dependencies(client ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT})
   set_target_properties(client PROPERTIES OUTPUT_NAME crossuo)
-  target_link_libraries(client PUBLIC ${LOADER} ${THREAD} ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT})
+  target_link_libraries(client PUBLIC ${LOADER} ${THREAD} ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT})
   add_library(crossuo SHARED ${XUO_FILES})
 endif()
 
-add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} SDL2-static cmcurl)
-target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
+add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} SDL2-static cmcurl)
+target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLEW_LIBRARIES} ${THREAD})
 target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/GLEngine/GL/*.h)
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})

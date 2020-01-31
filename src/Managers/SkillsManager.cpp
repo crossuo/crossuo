@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include "SkillsManager.h"
-#include "../Logging.h"
+#include <common/logging/logging.h>
 #include <xuocore/uodata.h>
 #include <xuocore/mulstruct.h>
 

@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
+#include "logging/logging.h"
 #include "str.h"
 
 #ifndef FS_MAX_PATH
@@ -168,7 +169,7 @@ bool fs_file_write(const char *file, const uint8_t *input, size_t input_size);
 #ifdef LOG_HEADER
 
 #ifndef FS_LOG_ERROR
-#define FS_LOG_ERROR LOG_ERROR
+#define FS_LOG_ERROR(...) Error(Data, __VA_ARGS__)
 #endif
 
 #else // LOG_HEADER

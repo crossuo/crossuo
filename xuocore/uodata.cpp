@@ -1,8 +1,6 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
-#define LIBUO_LOG
-#include "uolib.h"
 #include "uodata.h"
 #include "mappedfile.h"
 
@@ -285,7 +283,8 @@ bool CFileManager::Load()
 
     if (!m_AnimdataMul.Size)
     {
-        Error(Data, "Could not load UO data");
+        Fatal(
+            Data, "Failed to load Ultima Online(tm) data files.", "could not load 'animdata.mul'");
         return false;
     }
 

@@ -416,15 +416,14 @@ int main(int argc, char **argv)
     LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
     crc32_init();
     http_init();
-    xuol_data_path();
+    static const auto ini = fs_path_join(xuol_data_path(), "xuolauncher.ini");
 
     win_context win;
     win.title = XUOL_AGENT_NAME;
-    //win.width = 680;
-    //win.height = 440;
     win.width = 550;
     win.height = 284;
     win.vsync = 0;
+    win.inifile = fs_path_ascii(ini);
     win_init(&win);
 
     auto ui = ui_init(win);

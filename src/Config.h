@@ -36,7 +36,7 @@ struct Config
 };
 
 void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t *proto = nullptr);
-void LoadGlobalConfig();
+bool LoadGlobalConfig();
 void SaveGlobalConfig();
 
 extern Config g_Config;

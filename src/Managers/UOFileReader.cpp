@@ -4,11 +4,11 @@
 #include <algorithm>
 #include "UOFileReader.h"
 #include "ColorManager.h"
+#include <common/logging/logging.h>
 #include <xuocore/uodata.h>
 #include "../CrossUO.h"
 #include "../StumpsData.h"
 #include "../Sprite.h"
-#include "../Logging.h"
 
 UOFileReader g_UOFileReader;
 

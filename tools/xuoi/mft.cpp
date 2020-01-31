@@ -5,12 +5,18 @@
 #include <inttypes.h>
 #include <atomic>
 #include <thread>
+#include <external/lookup3.h>
+#include <external/miniz.h>
 
-#include "common.h"
-#include "http.h"
 #include "mft.h"
+#include "http.h"
 
-#include <xuocore/uolib.h>
+#include <common/utils.h>
+#include <common/logging/logging.h>
+#define LOG_TRACE(...) TRACE(Launcher, __VA_ARGS__)
+#define LOG_WARN(...) Warning(Launcher, __VA_ARGS__)
+#define LOG_ERROR(...) Error(Launcher, __VA_ARGS__)
+
 #define STR_IMPLEMENTATION
 #include <common/str.h>
 
@@ -475,7 +481,7 @@ size_t mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries)
     size_t bytes = 0;
     if (threads > 1)
     {
-        const auto total = entries.size();
+        const auto total = uint32_t(entries.size());
         const auto batch_size = total / threads;
         const auto remainder = total % threads;
         LOG_TRACE(

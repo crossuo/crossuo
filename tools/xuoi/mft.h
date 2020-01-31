@@ -6,9 +6,9 @@
 #include <stdint.h>
 #include <unordered_map>
 #include <vector>
+#include <external/tinyxml2.h>
 #include <common/str.h>
 #include <common/fs.h>
-#include <external/tinyxml2.h>
 
 #define MFT_MAX_DOWNLOAD_SIZE (1024 * 1024 * 1024)
 

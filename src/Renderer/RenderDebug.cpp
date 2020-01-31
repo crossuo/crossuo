@@ -5,7 +5,7 @@
 #include "../GLEngine/GLHeaders.h"
 #include <assert.h>
 #include <common/utils.h> // countof
-#include "../Logging.h"
+#include <common/logging/logging.h>
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \
     case RenderCommandType::Cmd_##type:                                                            \

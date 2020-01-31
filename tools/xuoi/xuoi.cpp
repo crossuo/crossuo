@@ -8,12 +8,14 @@
 #include <vector>
 #include <map>
 #include <external/popts.h>
-
+#include <external/lookup3.h>
+#include <external/miniz.h>
+#include <common/checksum.h>
 #include "mft.h"
-#include "common.h"
 #include "http.h"
 #include "xuo_updater.h"
 #include "xuocore/uop.h"
+#include "common.h"
 
 #define XUOI_MAX_DOWNLOAD_SIZE (1024 * 1024 * 1024)
 

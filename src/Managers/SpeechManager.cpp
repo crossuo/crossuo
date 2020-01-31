@@ -3,11 +3,11 @@
 
 #include "SpeechManager.h"
 #include <xuocore/uodata.h>
+#include <common/logging/logging.h>
 #include <common/str.h>
 #include <vector>
 #include "../Config.h"
 #include "../Misc.h"
-#include "../Logging.h"
 #include "../Globals.h" // g_Language
 
 CSpeechManager g_SpeechManager;

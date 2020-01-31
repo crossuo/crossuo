@@ -1,7 +1,6 @@
 // AGPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
-#include "Logging.h"
 #include "Config.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
@@ -9,6 +8,7 @@
 #include "SDL_wrapper.h"
 #include <time.h>
 #include <external/popts.h>
+#include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
 
 #if !defined(XUO_WINDOWS)
@@ -72,12 +72,18 @@ static bool InitCli(int argc, char *argv[])
     return g_cli["help"].size() == 0;
 }
 
+void fatal_error_dialog(const char *message)
+{
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message, nullptr);
+}
+
 #if !defined(XUO_WINDOWS)
 XUO_EXPORT int plugin_main(int argc, char **argv)
 #else
 int main(int argc, char **argv)
 #endif
 {
+    g_fatalErrorCb = &fatal_error_dialog;
     if (!InitCli(argc, argv))
     {
         return 0;
@@ -87,13 +93,20 @@ int main(int argc, char **argv)
 
     if (SDL_Init(SDL_INIT_TIMER) < 0)
     {
-        Fatal(Client, "unable to initialize SDL %s", SDL_GetError());
+        Fatal(
+            Client,
+            "Window initialization failure.",
+            "unable to initialize SDL %s",
+            SDL_GetError());
         return EXIT_FAILURE;
     }
     Info(Client, "SDL initialized");
 
     g_App.Init();
-    LoadGlobalConfig();
+    if (!LoadGlobalConfig())
+    {
+        return EXIT_FAILURE;
+    }
 
     if (g_cli["dump-uop"].was_set())
     {
@@ -107,8 +120,7 @@ int main(int argc, char **argv)
         {
             const char *errMsg =
                 "Failed to create CrossUO client window. May be caused by a missing configuration file.";
-            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errMsg, nullptr);
-            Fatal(Client, "%s", errMsg);
+            Fatal(Client, errMsg, "error initializing game window");
             return -1;
         }
     }

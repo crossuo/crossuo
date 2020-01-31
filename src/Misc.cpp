@@ -2,7 +2,7 @@
 
 #include "Misc.h"
 
-#include "Logging.h"
+#include <common/logging/logging.h>
 #define STR_IMPLEMENTATION
 #include <common/str.h>
 

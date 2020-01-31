@@ -3,7 +3,7 @@
 #include "../Renderer/RenderInternal.h"
 #include "../Utility/PerfMarker.h"
 #include "../GLEngine/GLHeaders.h"
-#include "../Logging.h"
+#include <common/logging/logging.h>
 #include <assert.h>
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
