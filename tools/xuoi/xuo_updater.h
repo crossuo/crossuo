@@ -8,8 +8,11 @@ struct xuo_release;
 
 #define XUOL_VERSION "1.2"
 #define XUOL_AGENT_NAME "X:UO Launcher v" XUOL_VERSION
+#if defined(XUO_RELEASE)
 #define XUOL_UPDATER_HOST "http://update.crossuo.com/"
-//#define XUOL_UPDATER_HOST "http://192.168.2.14:8089/"
+#else
+#define XUOL_UPDATER_HOST "http://localhost:12593/"
+#endif
 
 typedef void (*xuo_release_cb)(const char *release, const char *version, bool latest);
 
