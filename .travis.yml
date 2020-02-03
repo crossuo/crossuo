@@ -37,6 +37,12 @@ matrix:
           tags: false
           branch: master
           repo: crossuo/crossuo
+      install:
+        - |
+          CMAKE_URL="https://cmake.org/files/v3.13/cmake-3.13.5-Linux-x86_64.tar.gz"
+          mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+          export PATH=${PWD}/cmake/bin:${PATH}
+        - cmake --version
     - os: linux
       compiler: gcc
       name: gcc-make
@@ -61,6 +67,12 @@ matrix:
             - g++-7
             - gcc-7
       script: ./travis.sh
+      install:
+        - |
+          CMAKE_URL="https://cmake.org/files/v3.13/cmake-3.13.5-Linux-x86_64.tar.gz"
+          mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+          export PATH=${PWD}/cmake/bin:${PATH}
+        - cmake --version
     - os: linux
       name: format-check
       sudo: required
