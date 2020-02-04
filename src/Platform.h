@@ -61,7 +61,7 @@ typedef SDL_UserEvent UserEvent;
 #define Keycode SDL_Keycode
 #define TextChar char *
 #define EvKey(x) ((Keycode)x.keysym.sym)
-#define EvChar(x) (wstr_from_utf8_input(x.text)[0])
+#define EvChar(x) (wstr_from_utf8(x.text)[0])
 #define IsPrintable(x) iswprint(x)
 
 inline KeyEvent AsKeyEvent(const TextEvent &ev)
