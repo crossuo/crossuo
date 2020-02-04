@@ -165,7 +165,7 @@ void CGumpMenubar::InitToolTip()
             }
             case ID_GMB_INFO:
             {
-                g_ToolTip.Set(L"This option is not work now");
+                g_ToolTip.Set(L"(Not implemented)");
                 break;
             }
             default:

@@ -390,12 +390,12 @@ void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *)
 void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 {
     assert(
-        cmd->type >= ShaderUniformType::ShaderUniformType_FixedFirst &&
-        cmd->type <= ShaderUniformType::ShaderUniformType_FixedLast);
+        cmd->uniform_type >= ShaderUniformType::ShaderUniformType_FixedFirst &&
+        cmd->uniform_type <= ShaderUniformType::ShaderUniformType_FixedLast);
 
-    auto typeAsStr = ShaderUniformTypeAsString(cmd->type);
+    auto typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
     char valueAsStr[64] = "<invalid>";
-    ShaderUniformValueAsString(cmd->type, &cmd->value.data[0], valueAsStr, countof(valueAsStr));
+    ShaderUniformValueAsString(cmd->uniform_type, &cmd->value.data[0], valueAsStr, countof(valueAsStr));
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);
@@ -412,13 +412,13 @@ void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState *state)
 {
     assert(
-        cmd->type >= ShaderUniformType::ShaderUniformType_VariableFirst &&
-        cmd->type <= ShaderUniformType::ShaderUniformType_VariableLast);
+        cmd->uniform_type >= ShaderUniformType::ShaderUniformType_VariableFirst &&
+        cmd->uniform_type <= ShaderUniformType::ShaderUniformType_VariableLast);
 
-    auto typeAsStr = ShaderUniformTypeAsString(cmd->type);
+    auto typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
     char valueAsStr[64] = "<invalid>";
     assert(cmd->count == 1); // TODO
-    ShaderUniformValueAsString(cmd->type, cmd->value, valueAsStr, countof(valueAsStr));
+    ShaderUniformValueAsString(cmd->uniform_type, cmd->value, valueAsStr, countof(valueAsStr));
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);

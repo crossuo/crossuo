@@ -599,12 +599,12 @@ bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *)
 
 bool RenderDraw_ShaderUniform(const ShaderUniformCmd &cmd, RenderState *state)
 {
-    return RenderState_SetShaderUniform(state, cmd.id, cmd.value.data, cmd.type);
+    return RenderState_SetShaderUniform(state, cmd.id, cmd.value.data, cmd.uniform_type);
 }
 
 bool RenderDraw_ShaderLargeUniform(const ShaderLargeUniformCmd &cmd, RenderState *state)
 {
-    return RenderState_SetShaderLargeUniform(state, cmd.id, cmd.value, cmd.count, cmd.type);
+    return RenderState_SetShaderLargeUniform(state, cmd.id, cmd.value, cmd.count, cmd.uniform_type);
 }
 
 bool RenderDraw_ShaderPipeline(const ShaderPipelineCmd &cmd, RenderState *state)
