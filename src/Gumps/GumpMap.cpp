@@ -11,8 +11,6 @@
 #include "../Network/Packets.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 #define XUO_M_PI 3.14159265358979323846264338327950288
 
 enum

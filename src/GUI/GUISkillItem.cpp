@@ -11,8 +11,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUISkillItem::CGUISkillItem(int serial, int useSerial, int statusSerial, int index, int x, int y)
     : CBaseGUI(GOT_SKILLITEM, serial, 0, 0, x, y)
     , Index(index)

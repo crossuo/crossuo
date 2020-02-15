@@ -5,8 +5,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIGlobalColor::CGUIGlobalColor(bool enabled, float r, float g, float b, float a)
     : CBaseGUI(GOT_GLOBAL_COLOR, 0, 0, 0, 0, 0)
     , R(r)

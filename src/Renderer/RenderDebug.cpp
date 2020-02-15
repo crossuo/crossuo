@@ -395,7 +395,8 @@ void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 
     auto typeAsStr = ShaderUniformTypeAsString(cmd->uniform_type);
     char valueAsStr[64] = "<invalid>";
-    ShaderUniformValueAsString(cmd->uniform_type, &cmd->value.data[0], valueAsStr, countof(valueAsStr));
+    ShaderUniformValueAsString(
+        cmd->uniform_type, &cmd->value.data[0], valueAsStr, countof(valueAsStr));
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);

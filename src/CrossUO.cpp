@@ -159,7 +159,6 @@
 #include "Renderer/RenderAPI.h"
 
 extern po::parser g_cli;
-extern RenderCmdList *g_renderCmdList;
 
 #if !defined(XUO_WINDOWS)
 REVERSE_PLUGIN_INTERFACE g_oaReverse;

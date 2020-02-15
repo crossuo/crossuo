@@ -21,8 +21,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 const uint32_t CGumpContainer::ID_GC_LOCK_MOVING = 0xFFFFFFFE;
 const uint32_t CGumpContainer::ID_GC_MINIMIZE = 0xFFFFFFFF;
 

@@ -5,6 +5,7 @@
 #include "../Utility/PerfMarker.h"
 #include "../GLEngine/GLHeaders.h"
 #include <assert.h>
+#include <string.h> // memcmp, memcpy
 #define XUO_M_PI 3.14159265358979323846264338327950288
 
 #define MATCH_CASE_DRAW(type, cmd, state)                                                          \
@@ -14,6 +15,36 @@
         cmd += sizeof(type##Cmd);                                                                  \
         break;                                                                                     \
     }
+
+#include <queue>
+static std::deque<SetScissorCmd> s_ScissorList;
+
+void Render_PushScissor(int x, int y, uint32_t w, uint32_t h)
+{
+    ScopedPerfMarker(__FUNCTION__);
+    auto cmd = SetScissorCmd{ x, y, w, h };
+    s_ScissorList.push_back(cmd);
+    RenderAdd_SetScissor(g_renderCmdList, cmd);
+}
+
+void Render_PopScissor()
+{
+    ScopedPerfMarker(__FUNCTION__);
+    if (!s_ScissorList.empty())
+    {
+        s_ScissorList.pop_back();
+    }
+
+    if (s_ScissorList.empty())
+    {
+        RenderAdd_DisableScissor(g_renderCmdList);
+    }
+    else
+    {
+        SetScissorCmd &cmd = s_ScissorList.back();
+        RenderAdd_SetScissor(g_renderCmdList, cmd);
+    }
+}
 
 bool RenderDraw_SetTexture(const SetTextureCmd &cmd, RenderState *state)
 {

@@ -29,8 +29,6 @@
 #include "Utility/PingThread.h"
 #endif // USE_PING
 
-extern RenderCmdList *g_renderCmdList;
-
 CGameWindow g_GameWindow;
 
 CGameWindow::CGameWindow()

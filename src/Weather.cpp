@@ -9,7 +9,6 @@
 #include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
 CWeather g_Weather;
 
 float SinOscillate(float freq, int range, uint32_t current_tick)

@@ -14,8 +14,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CRenderStaticObject::CRenderStaticObject(
     RENDER_OBJECT_TYPE renderType,
     int serial,

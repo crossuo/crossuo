@@ -11,8 +11,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIShopResult::CGUIShopResult(CGUIShopItem *shopItem, int x, int y)
     : CBaseGUI(GOT_SHOPRESULT, shopItem->Serial, shopItem->Graphic, shopItem->Color, x, y)
     , Price(shopItem->Price)

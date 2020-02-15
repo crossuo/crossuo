@@ -4,20 +4,12 @@
 #pragma once
 
 #include "BaseGUI.h"
-#include "GUIBlending.h"
 
-#ifndef NEW_RENDERER_ENABLED
-class CGUIAlphaBlending : public CGUIBlending
-#else
-class CGUIAlphaBlending : public CBaseGUI
-#endif
+struct CGUIAlphaBlending : public CBaseGUI
 {
-public:
-    //!Значение для установки альфа-канала
+    bool Enabled = false;
     float Alpha = 0.0f;
-
     CGUIAlphaBlending(bool enabled, float alpha);
-    virtual ~CGUIAlphaBlending();
-
+    virtual ~CGUIAlphaBlending(){};
     virtual void Draw(bool checktrans = false);
 };

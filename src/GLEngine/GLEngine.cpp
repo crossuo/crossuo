@@ -1,6 +1,9 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include "../Renderer/RenderAPI.h"
+#ifndef NEW_RENDERER_ENABLED
+
 #include <cmath> // cos, sin
 #include <algorithm>
 #include "GLEngine.h"
@@ -11,9 +14,6 @@
 #include "../Managers/GumpManager.h"
 #include "../GameObjects/LandObject.h"
 #include "../Utility/PerfMarker.h"
-#include "../Renderer/RenderAPI.h"
-
-extern RenderCmdList *g_renderCmdList;
 
 CGLEngine g_GL;
 
@@ -23,16 +23,9 @@ CGLEngine::CGLEngine()
 
 CGLEngine::~CGLEngine()
 {
-#ifndef NEW_RENDERER_ENABLED
     Uninstall();
-#else
-    // FIXME most likely useless, Window::OnDestroy() calls g_Game.Uninstall() which will then call Render_Shutdown
-    // this happens when one of the SDL events (quit/close) is received.
-    Render_Shutdown();
-#endif
 }
 
-#ifndef NEW_RENDERER_ENABLED
 // #define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
@@ -345,15 +338,11 @@ void CGLEngine::BindTexture32(CGLTexture &texture, int width, int height, uint32
     texture.Height = height;
     texture.Texture = tex;
 }
-#endif
 
 void CGLEngine::BeginDraw()
 {
     ScopedPerfMarker(__FUNCTION__);
-
     Drawing = true;
-
-#ifndef NEW_RENDERER_ENABLED
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glLoadIdentity();
 
@@ -364,22 +353,16 @@ void CGLEngine::BeginDraw()
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.0f);
-#endif
 }
 
 void CGLEngine::EndDraw()
 {
     ScopedPerfMarker(__FUNCTION__);
-
     Drawing = false;
-
-#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_ALPHA_TEST);
     SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window);
-#endif
 }
 
-#ifndef NEW_RENDERER_ENABLED
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
@@ -425,7 +408,6 @@ void CGLEngine::RestorePort()
     glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0);
     glMatrixMode(GL_MODELVIEW);
 }
-#endif
 
 void CGLEngine::PushScissor(int x, int y, int width, int height)
 {
@@ -450,21 +432,9 @@ void CGLEngine::PushScissor(const CPoint2Di &position, const CSize &size)
 void CGLEngine::PushScissor(const CRect &rect)
 {
     ScopedPerfMarker(__FUNCTION__);
-
     m_ScissorList.push_back(rect);
-
-#ifndef NEW_RENDERER_ENABLED
     glEnable(GL_SCISSOR_TEST);
-
     glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
-#else
-    RenderAdd_SetScissor(
-        g_renderCmdList,
-        SetScissorCmd{ rect.Position.X,
-                       rect.Position.Y,
-                       uint32_t(rect.Size.Width),
-                       uint32_t(rect.Size.Height) });
-#endif
 }
 
 void CGLEngine::PopScissor()
@@ -478,46 +448,25 @@ void CGLEngine::PopScissor()
 
     if (m_ScissorList.empty())
     {
-#ifndef NEW_RENDERER_ENABLED
         glDisable(GL_SCISSOR_TEST);
-#else
-        RenderAdd_DisableScissor(g_renderCmdList);
-#endif
     }
     else
     {
         CRect &rect = m_ScissorList.back();
-#ifndef NEW_RENDERER_ENABLED
         glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
-#else
-        RenderAdd_SetScissor(
-            g_renderCmdList,
-            SetScissorCmd{ rect.Position.X,
-                           rect.Position.Y,
-                           uint32_t(rect.Size.Width),
-                           uint32_t(rect.Size.Height) });
-#endif
     }
 }
 
 void CGLEngine::ClearScissorList()
 {
     ScopedPerfMarker(__FUNCTION__);
-
     m_ScissorList.clear();
-
-#ifndef NEW_RENDERER_ENABLED
     glDisable(GL_SCISSOR_TEST);
-#else
-    RenderAdd_DisableScissor(g_renderCmdList);
-#endif
 }
 
-#ifndef NEW_RENDERER_ENABLED
 inline void CGLEngine::BindTexture(GLuint texture)
 {
     ScopedPerfMarker(__FUNCTION__);
-
     assert(texture != 0);
     if (OldTexture != texture)
     {
@@ -1035,4 +984,5 @@ void CGLEngine::DrawResizepic(CGLTexture **th, int x, int y, int width, int heig
         glTranslatef((GLfloat)-drawX, (GLfloat)-drawY, 0.0f);
     }
 }
-#endif
+
+#endif // NEW_RENDERER_ENABLED

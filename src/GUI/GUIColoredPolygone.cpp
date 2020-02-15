@@ -8,8 +8,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // g_GumpSelectedElement, ToColor*
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIColoredPolygone::CGUIColoredPolygone(
     int serial, uint16_t color, int x, int y, int width, int height, int polygoneColor)
     : CGUIPolygonal(GOT_COLOREDPOLYGONE, x, y, width, height)

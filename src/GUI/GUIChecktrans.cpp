@@ -5,8 +5,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIChecktrans::CGUIChecktrans(int x, int y, int width, int height)
     : CGUIPolygonal(GOT_CHECKTRANS, x, y, width, height)
 {

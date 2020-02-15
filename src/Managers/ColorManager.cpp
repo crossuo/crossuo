@@ -7,7 +7,6 @@
 #include "../Globals.h" // ToColor*, ShaderColorTable, SPECTRAL_COLOR_FLAG
 
 CColorManager g_ColorManager;
-extern RenderCmdList *g_renderCmdList;
 
 CColorManager::CColorManager()
     : m_HuesCount(0)

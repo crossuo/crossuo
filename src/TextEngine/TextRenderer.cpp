@@ -11,8 +11,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CTextRenderer g_WorldTextRenderer;
 
 CTextRenderer::CTextRenderer()

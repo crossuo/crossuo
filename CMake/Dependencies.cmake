@@ -5,7 +5,7 @@ macro(xuo_disable_console TARGET)
 endmacro()
 
 macro(xuo_dependency DEP_NAME DEP_PATH DEP_PREFIX)
-  message(STATUS "Building dependency: ${DEP_NAME}")
+  message(STATUS "Configuring dependency: ${DEP_NAME}")
 
   if("${DEP_PREFIX}" MATCHES "CURL")
     if (XUO_WINDOWS)

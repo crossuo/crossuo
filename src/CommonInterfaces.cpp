@@ -20,7 +20,6 @@
 #include "GameObjects/GamePlayer.h"
 #include "Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
 static IGameString g_GameString;
 
 IGameString::IGameString()
@@ -76,12 +75,20 @@ IGameString &IGameString::operator()(const std::wstring &str)
 
 void CDECL FUNCBODY_PushScissor(int x, int y, int width, int height)
 {
+#ifndef NEW_RENDERER_ENABLED
     g_GL.PushScissor(x, y, width, height);
+#else
+    Render_PushScissor(x, y, width, height);
+#endif
 }
 
 void CDECL FUNCBODY_PopScissor()
 {
+#ifndef NEW_RENDERER_ENABLED
     g_GL.PopScissor();
+#else
+    Render_PopScissor();
+#endif
 }
 
 void CDECL FUNCBODY_DrawLine(unsigned int color, int x, int y, int width, int height)

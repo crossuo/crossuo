@@ -17,8 +17,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 static const int ID_GST_CHECKBOX = 1;
 
 CGumpSecureTrading::CGumpSecureTrading(uint32_t serial, int x, int y, uint32_t id, uint32_t id2)

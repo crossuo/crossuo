@@ -8,8 +8,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Globals.h" // g_ShaderDrawMode
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIGumppicHightlighted::CGUIGumppicHightlighted(
     int serial, uint16_t graphic, uint16_t color, uint16_t selectedColor, int x, int y)
     : CGUIDrawObject(GOT_GUMPPICHIGHTLIGHTED, serial, graphic, color, x, y)

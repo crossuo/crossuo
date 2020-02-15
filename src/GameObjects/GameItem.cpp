@@ -22,8 +22,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGameItem::CGameItem(int serial)
     : CGameObject(serial)
 {

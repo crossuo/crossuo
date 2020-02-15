@@ -29,14 +29,14 @@ void CGameBlockedScreen::Init()
 
 void CGameBlockedScreen::Render()
 {
-    Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
-    RenderAdd_FlushState(&m_RenderCmdList);
+    Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
+    RenderAdd_FlushState(g_renderCmdList);
 
     g_GumpManager.Draw(true);
     InitToolTip();
     g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
 
-    RenderDraw_Execute(&m_RenderCmdList);
+    RenderDraw_Execute(g_renderCmdList);
 }
 
 void CGameBlockedScreen::SelectObject()

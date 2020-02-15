@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <common/logging/logging.h>
 
 #define RENDER_TEXTUREHANDLE_INVALID (0xffffffff)
 #define RENDER_SHADERUNIFORMID_INVALID (0xffffffff)

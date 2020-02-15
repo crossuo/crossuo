@@ -19,8 +19,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CMouseManager g_MouseManager;
 
 uint16_t g_CursorData[2][16] = { { 0x206A,

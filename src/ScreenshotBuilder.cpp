@@ -14,8 +14,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <external/stb_image_write.h>
 
-extern RenderCmdList *g_renderCmdList;
-
 CScreenshotBuilder g_ScreenshotBuilder;
 
 void CScreenshotBuilder::GetScenePixels(int x, int y, int width, int height)

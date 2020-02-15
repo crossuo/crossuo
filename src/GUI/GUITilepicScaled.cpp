@@ -7,8 +7,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUITilepicScaled::CGUITilepicScaled(
     uint16_t graphic, uint16_t color, int x, int y, int width, int height)
     : CGUITilepic(graphic, color, x, y)
