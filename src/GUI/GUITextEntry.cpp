@@ -10,8 +10,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // g_GumpSelectedElement, ToColor*
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUITextEntry::CGUITextEntry(
     int serial,
     uint16_t color,

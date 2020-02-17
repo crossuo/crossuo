@@ -7,8 +7,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGLTextureCircleOfTransparency g_CircleOfTransparency;
 
 std::vector<uint32_t> CreateCircleSprite(int radius, int16_t &width, int16_t &height)

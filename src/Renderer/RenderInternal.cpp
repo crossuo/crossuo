@@ -2,9 +2,9 @@
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLHeaders.h"
 #include <common/logging/logging.h>
 #include <assert.h>
+#include <string.h> // memcmp, memcpy
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };

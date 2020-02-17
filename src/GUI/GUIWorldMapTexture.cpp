@@ -7,8 +7,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Globals.h" // g_MapTexture
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIWorldMapTexture::CGUIWorldMapTexture(int x, int y)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)
 {

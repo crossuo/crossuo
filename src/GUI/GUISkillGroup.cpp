@@ -12,8 +12,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUISkillGroup::CGUISkillGroup(
     int serial, int minimizeSerial, CSkillGroupObject *group, int x, int y)
     : CBaseGUI(GOT_SKILLGROUP, serial, 0, 0, x, y)

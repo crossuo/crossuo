@@ -10,8 +10,6 @@
 #include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CToolTip g_ToolTip;
 
 CToolTip::CToolTip()

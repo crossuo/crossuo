@@ -6,8 +6,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGLTexture::~CGLTexture()
 {
     Clear();

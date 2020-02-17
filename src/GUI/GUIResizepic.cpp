@@ -6,8 +6,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIResizepic::CGUIResizepic(int serial, uint16_t graphic, int x, int y, int width, int height)
     : CGUIPolygonal(GOT_RESIZEPIC, x, y, width, height)
 {

@@ -9,8 +9,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIDrawObject::CGUIDrawObject(
     GUMP_OBJECT_TYPE type, int serial, uint16_t graphic, uint16_t color, int x, int y)
     : CBaseGUI(type, serial, graphic, color, x, y)

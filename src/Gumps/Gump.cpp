@@ -17,8 +17,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGump *g_ResizedGump = nullptr;
 CGump *g_CurrentCheckGump = nullptr;
 
@@ -366,17 +364,14 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
 #ifndef NEW_RENDERER_ENABLED
                     glTranslatef(offsetX, offsetY, 0.0f);
+                    CGump::DrawItems(subItem, currentPage, draw2Page);
+                    g_GL.PopScissor();
+                    glTranslatef(-(x + offsetX), -(y + offsetY), 0.0f);
 #else
                     RenderAdd_SetModelViewTranslation(
                         g_renderCmdList, SetModelViewTranslationCmd{ { offsetX, offsetY, 0.0f } });
-#endif
-
                     CGump::DrawItems(subItem, currentPage, draw2Page);
-                    g_GL.PopScissor();
-
-#ifndef NEW_RENDERER_ENABLED
-                    glTranslatef(-(x + offsetX), -(y + offsetY), 0.0f);
-#else
+                    Render_PopScissor();
                     RenderAdd_SetModelViewTranslation(
                         g_renderCmdList,
                         SetModelViewTranslationCmd{ { -(x + offsetX), -(y + offsetY), 0.0f } });
@@ -1375,20 +1370,17 @@ bool CGump::EntryPointerHere()
 
 void CGump::GenerateFrame(bool stop)
 {
+#ifndef NEW_RENDERER_ENABLED
     if (!g_GL.Drawing)
     {
         FrameCreated = false;
         WantRedraw = true;
-
         return;
     }
-
+#endif
     CalculateGumpState();
-
     PrepareTextures();
-
     DrawItems((CBaseGUI *)m_Items, Page, Draw2Page);
-
     WantRedraw = true;
     FrameCreated = true;
 }
@@ -1396,9 +1388,7 @@ void CGump::GenerateFrame(bool stop)
 void CGump::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-
     CalculateGumpState();
-
     if (WantUpdateContent)
     {
         UpdateContent();

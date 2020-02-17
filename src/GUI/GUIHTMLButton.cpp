@@ -6,8 +6,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Globals.h" // g_ShaderDrawMode
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIHTMLButton::CGUIHTMLButton(
     CGUIHTMLGump *htmlGump,
     int serial,

@@ -11,8 +11,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIComboBox::CGUIComboBox(
     int serial,
     uint16_t graphic,
@@ -203,7 +201,11 @@ void CGUIComboBox::Draw(bool checktrans)
             g_Game.DrawResizepicGump(OpenGraphic, m_X, m_Y, OpenedWidth, m_WorkHeight + 6, false);
         }
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL.PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
+#else
+        Render_PushScissor(currentX, currentY, m_WorkWidth, m_WorkHeight);
+#endif
 
         CBaseGUI *start = SkipToStart();
         int count = 0;
@@ -243,7 +245,11 @@ void CGUIComboBox::Draw(bool checktrans)
             }
         }
 
+#ifndef NEW_RENDERER_ENABLED
         g_GL.PopScissor();
+#else
+        Render_PopScissor();
+#endif
     }
     else
     {
@@ -277,9 +283,15 @@ void CGUIComboBox::Draw(bool checktrans)
 
             if (selected != nullptr)
             {
+#ifndef NEW_RENDERER_ENABLED
                 g_GL.PushScissor(m_X + 6, m_Y, m_MinimizedArrowX, 20);
                 selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
                 g_GL.PopScissor();
+#else
+                Render_PushScissor(m_X + 6, m_Y, m_MinimizedArrowX, 20);
+                selected->m_Texture.Draw(m_X + 6, m_Y + 6 + TextOffsetY);
+                Render_PopScissor();
+#endif
             }
 
             g_Game.DrawGump(0x0985, 0, m_X + m_MinimizedArrowX, m_Y + 6);
@@ -290,9 +302,15 @@ void CGUIComboBox::Draw(bool checktrans)
 
             if (selected != nullptr)
             {
+#ifndef NEW_RENDERER_ENABLED
                 g_GL.PushScissor(m_X + 3, m_Y, Width - 6, 20);
                 selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
                 g_GL.PopScissor();
+#else
+                Render_PushScissor(m_X + 3, m_Y, Width - 6, 20);
+                selected->m_Texture.Draw(m_X + 3, m_Y + 4 + TextOffsetY);
+                Render_PopScissor();
+#endif
             }
 
             g_Game.DrawGump(0x00FC, 0, m_X + m_MinimizedArrowX, m_Y - 1);

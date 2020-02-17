@@ -304,7 +304,7 @@ struct ShaderUniformCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_ShaderUniform;
     uint32_t id = RENDER_SHADERUNIFORMID_INVALID;
-    ShaderUniformType type = ShaderUniformType::ShaderUniformType_Invalid;
+    ShaderUniformType uniform_type = ShaderUniformType::ShaderUniformType_Invalid;
     union {
         uint8_t data
             [RENDERSTATE_SHADER_UNIFORMDATA_SIZE]{}; // TODO add uniform storage for anything larger than this
@@ -326,7 +326,7 @@ struct ShaderLargeUniformCmd
         nullptr; // TODO add uniform storage during uniform init/setup and use that for larger uniforms
     uint32_t count = 0;
     uint32_t id = RENDER_SHADERUNIFORMID_INVALID;
-    ShaderUniformType type = ShaderUniformType::ShaderUniformType_Invalid;
+    ShaderUniformType uniform_type = ShaderUniformType::ShaderUniformType_Invalid;
 };
 
 struct ShaderPipelineCmd

@@ -9,8 +9,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIExternalTexture::CGUIExternalTexture(
     CSprite *sprite, bool deleteTextureOnDestroy, int x, int y, int drawWidth, int drawHeight)
     : CBaseGUI(GOT_EXTERNALTEXTURE, 0, 0, 0, x, y)

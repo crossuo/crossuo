@@ -14,7 +14,6 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
 const int m_Scales[7] = { 1, 1, 1, 2, 4, 6, 10 };
 
 CGumpWorldMap::CGumpWorldMap(short x, short y)
@@ -536,18 +535,15 @@ void CGumpWorldMap::GenerateFrame(bool stop)
 
 #ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
-        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
-#endif
-
-#ifndef NEW_RENDERER_ENABLED
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 0, m_MapData->OffsetY + playerY + 30, 16, 2);
         g_GL.DrawPolygone(
             m_MapData->OffsetX + playerX + 7, m_MapData->OffsetY + playerY + 23, 2, 16);
         g_GL.DrawCircle(
             m_MapData->OffsetX + playerX + 8.0f, m_MapData->OffsetY + playerY + 31.0f, 3.0f);
+        g_GL.PopScissor();
 #else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
             DrawUntexturedQuadCmd{
@@ -560,9 +556,8 @@ void CGumpWorldMap::GenerateFrame(bool stop)
             g_renderCmdList,
             DrawCircleCmd{
                 m_MapData->OffsetX + playerX + 8, m_MapData->OffsetY + playerY + 31, 3.f });
+        Render_PopScissor();
 #endif
-
-        g_GL.PopScissor();
     }
 }
 

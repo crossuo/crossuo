@@ -6,7 +6,6 @@
 #include "BaseGUI.h"
 #include "GUIPolygonal.h"
 #include "GUIDrawObject.h"
-#include "GUIBlending.h"
 #include "GUIAlphaBlending.h"
 #include "GUIBuff.h"
 #include "GUIBulletinBoardObject.h"

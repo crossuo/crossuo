@@ -12,8 +12,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIShopItem::CGUIShopItem(
     int serial,
     uint16_t graphic,

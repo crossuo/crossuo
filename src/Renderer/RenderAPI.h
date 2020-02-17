@@ -4,15 +4,18 @@
 #pragma once
 
 #include "../SDL_wrapper.h"
-// #define NEW_RENDERER_ENABLED
+// BUG to fix before enable, check GUIAlphaBlending.cpp
+// Test issue by opening a NPC menu
+//#define NEW_RENDERER_ENABLED
 
-#if !defined(NEW_RENDERER_ENABLED)
 #include "../GLEngine/GLHeaders.h"
+#if !defined(NEW_RENDERER_ENABLED)
+#include "../GLEngine/GLEngine.h"
 #endif
-#include "../GLEngine/GLEngine.h" // REMOVE
 
 #include "RenderTypes.h"
 #include "RenderCommands.h"
+extern RenderCmdList *g_renderCmdList;
 
 // TODO fix it
 bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd);
@@ -40,6 +43,9 @@ bool Render_DestroyTexture(texture_handle_t texture);
 
 frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height);
 bool Render_DestroyFrameBuffer(frame_buffer_t fb);
+
+void Render_PushScissor(int x, int y, uint32_t w, uint32_t h);
+void Render_PopScissor();
 
 bool RenderAdd_SetTexture(RenderCmdList *cmdList, const SetTextureCmd &cmd);
 bool RenderAdd_SetFrameBuffer(RenderCmdList *cmdList, const SetFrameBufferCmd &cmd);

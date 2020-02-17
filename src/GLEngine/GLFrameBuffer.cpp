@@ -7,7 +7,6 @@
 #include "../Utility/PerfMarker.h"
 
 #ifdef NEW_RENDERER_ENABLED
-extern RenderCmdList *g_renderCmdList;
 frame_buffer_t CGLFrameBuffer::m_OldFrameBuffer;
 #endif
 
@@ -202,8 +201,8 @@ void CGLFrameBuffer::Draw(int x, int y)
     ScopedPerfMarker(__FUNCTION__);
     if (m_Ready)
     {
-        g_GL.OldTexture = 0;
 #ifndef NEW_RENDERER_ENABLED
+        g_GL.OldTexture = 0;
         g_GL.Draw(Texture, x, y);
 #else
         auto cmd = DrawQuadCmd{ m_FrameBuffer.texture, x, y, m_Width, m_Height };

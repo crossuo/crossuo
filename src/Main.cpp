@@ -58,6 +58,7 @@ static bool InitCli(int argc, char *argv[])
     g_cli["proxy-port"].type(po::u32).description("Proxy port to use with 'proxy-host'");
     g_cli["proxy-user"].type(po::string).description("Proxy user");
     g_cli["proxy-password"].type(po::string).description("Proxy password");
+    g_cli["indirect-rendering"].description("uses indirect rendering pipeline");
     g_cli["quiet"]
         .abbreviation('q')
         .description("Disable logging (almost) completely")
@@ -70,6 +71,38 @@ static bool InitCli(int argc, char *argv[])
     g_cli(argc, argv);
 
     return g_cli["help"].size() == 0;
+}
+
+RenderCmdList *g_renderCmdList = nullptr;
+static void *s_renderCmdListData = nullptr;
+
+void gfx_render_list_init()
+{
+    if (s_renderCmdListData)
+    {
+        return;
+    }
+
+    static const uint32_t s_renderCmdListSize = 512 * 1024;
+    s_renderCmdListData = malloc(s_renderCmdListSize);
+    assert(s_renderCmdListData);
+
+    // use indirect-rendering to enable delayed render cmds (commands are pushed to the GPU when RenderDraw_Execute is called)
+    // don't use this until text resources lifetime isn't fixed (see CFontsManager::DrawA)
+    const bool immediateMode = !g_cli["indirect-rendering"].was_set();
+    static RenderCmdList s_renderCmdList(
+        s_renderCmdListData, s_renderCmdListSize, Render_DefaultState(), immediateMode);
+    g_renderCmdList = &s_renderCmdList;
+}
+
+void gfx_render_list_destroy()
+{
+    if (s_renderCmdListData)
+    {
+        free(s_renderCmdListData);
+        s_renderCmdListData = nullptr;
+    }
+    g_renderCmdList = nullptr;
 }
 
 void fatal_error_dialog(const char *message)
@@ -116,6 +149,7 @@ int main(int argc, char **argv)
     const bool isHeadless = g_cli["headless"].was_set();
     if (!isHeadless)
     {
+        gfx_render_list_init();
         if (!g_GameWindow.Create("CrossUO Client", "Ultima Online", false, 640, 480))
         {
             const char *errMsg =
@@ -136,6 +170,7 @@ int main(int argc, char **argv)
     g_Game.LoadPlugins();
     auto ret = g_App.Run();
     SDL_Quit();
+    gfx_render_list_destroy();
     return ret;
 }
 

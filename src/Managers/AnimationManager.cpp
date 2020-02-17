@@ -23,7 +23,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
 CAnimationManager g_AnimationManager;
 
 void *LoadSpritePixels(int width, int height, uint16_t *pixels)
@@ -1885,7 +1884,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                     int xOffset = mirror ? -20 : 0;
                     int yOffset = -70;
 
+#ifndef NEW_RENDERER_ENABLED
                     g_GL.PushScissor(
+#else
+                    Render_PushScissor(
+#endif
                         drawX + xOffset,
                         g_GameWindow.GetSize().Height - drawY + yOffset - 40,
                         20,
@@ -1897,8 +1900,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                         ro->RealDrawX,
                         ro->RealDrawY,
                         !selected);
+#ifndef NEW_RENDERER_ENABLED
                     g_GL.PopScissor();
-
+#else
+                    Render_PopScissor();
+#endif
                     break;
                 }
             }

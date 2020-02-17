@@ -56,8 +56,6 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
 
@@ -1827,16 +1825,14 @@ void CGameScreen::Render()
     }
 
 #ifdef NEW_RENDERER_ENABLED
-    Render_ResetCmdList(&m_RenderCmdList, Render_DefaultState());
-    RenderAdd_FlushState(&m_RenderCmdList);
-#endif
-
+    Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
+    RenderAdd_FlushState(g_renderCmdList);
+    RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{});
+#else
     // TODO renderer BeginDraw exists only to set Drawing to true, as it's used by
     // Gump-something; investigate it and remove/move it elsewhere so
     // we can get rid of glEngine
     g_GL.BeginDraw();
-#ifdef NEW_RENDERER_ENABLED
-    RenderAdd_ClearRT(&m_RenderCmdList, ClearRTCmd{});
 #endif
     if (DrawSmoothMonitor() != 0)
     {
@@ -2142,13 +2138,13 @@ void CGameScreen::Render()
         g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
     }
 
-    RenderDraw_Execute(&m_RenderCmdList);
-
-    g_GL.EndDraw();
+    RenderDraw_Execute(g_renderCmdList);
 
 #ifdef NEW_RENDERER_ENABLED
     Render_SwapBuffers();
     g_ScreenshotBuilder.GPUDataReady();
+#else
+    g_GL.EndDraw();
 #endif
 }
 

@@ -8,8 +8,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUIMinMaxButtons::CGUIMinMaxButtons(
     int serial, uint16_t graphic, int x, int y, int minValue, int maxValue, int value)
     : CBaseGUI(GOT_MINMAXBUTTONS, serial, graphic, 0, x, y)

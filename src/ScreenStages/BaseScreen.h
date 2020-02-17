@@ -16,8 +16,6 @@ public:
 
 protected:
     CGump &m_Gump;
-    RenderCmdList m_RenderCmdList;
-    void *m_RenderCmdListData;
 
 public:
     CBaseScreen(CGump &gump);
@@ -27,7 +25,6 @@ public:
     virtual void UpdateContent() { m_Gump.UpdateContent(); }
     virtual void Init();
     virtual void InitToolTip() { m_Gump.InitToolTip(); }
-    virtual void InitRenderList();
     virtual void Render();
     virtual void SelectObject();
     virtual void CreateSmoothAction(uint8_t action);

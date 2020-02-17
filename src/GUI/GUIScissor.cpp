@@ -31,11 +31,18 @@ void CGUIScissor::Draw(bool checktrans)
             x -= GumpParent->GumpRect.Position.X;
             y -= GumpParent->GumpRect.Position.Y;
         }
-
+#ifndef NEW_RENDERER_ENABLED
         g_GL.PushScissor(BaseX + x, BaseY + y, Width, Height);
+#else
+        Render_PushScissor(BaseX + x, BaseY + y, Width, Height);
+#endif
     }
     else
     {
+#ifndef NEW_RENDERER_ENABLED
         g_GL.PopScissor();
+#else
+        Render_PopScissor();
+#endif
     }
 }

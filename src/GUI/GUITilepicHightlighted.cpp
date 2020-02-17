@@ -10,8 +10,6 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-extern RenderCmdList *g_renderCmdList;
-
 CGUITilepicHightlighted::CGUITilepicHightlighted(
     int serial,
     uint16_t graphic,

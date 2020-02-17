@@ -7,8 +7,6 @@
 #include <common/logging/logging.h>
 #include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, ShaderColorTable
 
-extern RenderCmdList *g_renderCmdList;
-
 CDeathShader g_DeathShader;
 CColorizerShader g_ColorizerShader;
 CColorizerShader g_FontColorizerShader;
