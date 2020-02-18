@@ -480,7 +480,7 @@ void CMouseManager::Draw(uint16_t id)
                 UnuseShader();
             }
 
-            if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType)
+            if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType && g_GameState == GS_GAME)
             {
                 uint32_t auraColor = 0;
                 if (g_Target.CursorType == 0)
