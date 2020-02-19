@@ -8,11 +8,12 @@
 #include "../Target.h"
 #include "../PressedObject.h"
 #include "../CrossUO.h"
+#include "../Utility/PerfMarker.h"
+#include "../Renderer/RenderAPI.h"
 
 enum
 {
     ID_GMB_NONE,
-
     ID_GTB_TARGET,
 };
 
@@ -32,43 +33,6 @@ CGumpToolbar::CGumpToolbar(short x, short y)
     Items[9] = 0x0F0B;  //Heal potion
     Items[10] = 0x0F0C; //Refrech potion
     Items[11] = 0x0F09; //Mana potion
-
-    //CGameObject *obj = g_World->FindWorldItem(g_LastTargetObject);
-    DrawContent();
-}
-
-CGumpToolbar::~CGumpToolbar()
-{
-}
-
-void CGumpToolbar::DrawContent()
-{
-    //Body
-    Add(new CGUIResizepic(0, 0xA3C, 0, 0, Width, Height));
-    Add(new CGUIChecktrans(5, 5, 505, 65));
-
-    //Content
-    int x_p = 7; //X axsis
-    for (int i = 0; i < 12; i++)
-    {
-        Add(new CGUITilepic(Items[i], 0xffff, x_p, 15));
-        CGUIText *txt = (CGUIText *)Add(new CGUIText(0x44, x_p + 15, 40));
-        int count = CountItemBackPack(Items[i]);
-        if (count <= 20 && count > 10)
-        {
-            txt->Color = 0x99; //yellow
-        }
-        else if (count <= 10)
-        {
-            txt->Color = 0x26; //red
-        }
-        else
-        {
-            txt->Color = 0x44;
-        }
-        txt->CreateTextureW(1, std::to_wstring(count));
-        x_p += 42;
-    }
 }
 
 void CGumpToolbar::PrepareContent()
@@ -94,12 +58,33 @@ void CGumpToolbar::PrepareContent()
 
 void CGumpToolbar::UpdateContent()
 {
-    DrawContent();
-}
-
-void CGumpToolbar::GenerateFrame(bool stop)
-{
-    CGump::GenerateFrame(stop);
+    //Body
+    Add(new CGUIResizepic(0, 0xA3C, 0, 0, Width, Height));
+    Add(new CGUIChecktrans(5, 5, 505, 65));
+    //Content
+    int x_p = 7; //X axsis
+    for (int i = 0; i < 12; i++)
+    {
+        Add(new CGUIShader(&g_ColorizerShader, true));
+        Add(new CGUITilepic(Items[i], 0, x_p, 15));
+        Add(new CGUIShader(&g_ColorizerShader, false));
+        CGUIText *txt = (CGUIText *)Add(new CGUIText(0x44, x_p + 15, 40));
+        int count = CountItemBackPack(Items[i]);
+        if (count <= 20 && count > 10)
+        {
+            txt->Color = 0x99; //yellow
+        }
+        else if (count <= 10)
+        {
+            txt->Color = 0x26; //red
+        }
+        else
+        {
+            txt->Color = 0x44;
+        }
+        txt->CreateTextureW(1, std::to_wstring(count));
+        x_p += 42;
+    }
 }
 
 bool CGumpToolbar::OnLeftMouseButtonDoubleClick()

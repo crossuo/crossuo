@@ -10,11 +10,10 @@ private:
     uint32_t Items[12];
     uint8_t m_Count = 0;
     uint16_t m_Clear = 0;
-    void DrawContent();
 
 public:
     CGumpToolbar(short x, short y);
-    virtual ~CGumpToolbar();
+    virtual ~CGumpToolbar() = default;
 
     int Width = 515;
     int Height = 75;
@@ -23,6 +22,5 @@ public:
 
     virtual void PrepareContent() override;
     virtual void UpdateContent() override;
-    virtual void GenerateFrame(bool stop) override;
     virtual bool OnLeftMouseButtonDoubleClick() override;
 };
