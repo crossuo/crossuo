@@ -245,7 +245,6 @@ void CTextRenderer::Draw()
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
 #else
-                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                 RenderAdd_DisableBlend(g_renderCmdList);
 #endif
             }
@@ -422,7 +421,7 @@ void CTextRenderer::WorldDraw()
                 glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
                 glDisable(GL_BLEND);
 #else
-                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+                //RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                 RenderAdd_DisableBlend(g_renderCmdList);
 #endif
             }

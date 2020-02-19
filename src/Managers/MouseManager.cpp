@@ -465,7 +465,6 @@ void CMouseManager::Draw(uint16_t id)
             if (color != 0u)
             {
                 g_ColorizerShader.Use();
-                g_ColorManager.SendColorsToShader(color);
 #ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
@@ -473,6 +472,7 @@ void CMouseManager::Draw(uint16_t id)
                 cmd.value.asInt1 = SDM_COLORED;
                 RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
 #endif
+                g_ColorManager.SendColorsToShader(color);
             }
             spr->Texture->Draw(x, y);
             if (color != 0u)
@@ -480,7 +480,8 @@ void CMouseManager::Draw(uint16_t id)
                 UnuseShader();
             }
 
-            if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType && g_GameState == GS_GAME)
+            if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType &&
+                g_GameState == GS_GAME)
             {
                 uint32_t auraColor = 0;
                 if (g_Target.CursorType == 0)
@@ -533,8 +534,6 @@ void CMouseManager::Draw(uint16_t id)
 
                     auto quadCmd = DrawQuadCmd{ g_AuraTexture.Texture, x - 6, y - 2, 35, 35 };
                     RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
-
-                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                     RenderAdd_DisableBlend(g_renderCmdList);
 #endif
                 }

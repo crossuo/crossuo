@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
+#define equalsf(a, b) (std::abs(a - b) <= 0.0000001f)
 
 bool RenderState_FlushState(RenderState *state)
 {
@@ -73,7 +74,7 @@ bool RenderState_SetAlphaTest(
         "missing alpha test funcs");
 
     bool changed = false;
-    if (state->alphaTest.enabled != enabled || forced)
+    if (forced || state->alphaTest.enabled != enabled)
     {
         changed = true;
         state->alphaTest.enabled = enabled;
@@ -87,11 +88,11 @@ bool RenderState_SetAlphaTest(
         }
     }
 
-    auto differentFuncOrRef = [&]() -> bool {
-        return state->alphaTest.func != func || state->alphaTest.alphaRef != ref;
-    };
-
-    if (enabled && differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTestFunc_Invalid))
+    const bool is_forced_valid = forced && func != AlphaTestFunc::AlphaTestFunc_Invalid;
+    const bool is_changed =
+        state->alphaTest.func != func || !equalsf(state->alphaTest.alphaRef, ref);
+    const bool is_enabled_changed = enabled && is_changed;
+    if (is_forced_valid || is_enabled_changed)
     {
         changed = true;
         state->alphaTest.func = func;
@@ -135,7 +136,6 @@ bool RenderState_SetBlend(
     bool changed = false;
     if (state->blend.enabled != enabled || forced)
     {
-        changed = true;
         state->blend.enabled = enabled;
         if (enabled)
         {
@@ -145,21 +145,29 @@ bool RenderState_SetBlend(
         {
             glDisable(GL_BLEND);
         }
+        changed = true;
     }
 
-    if (enabled && (state->blend.src != src || state->blend.dst != dst) ||
-        (forced && (state->blend.src != BlendFactor::BlendFactor_Invalid &&
-                    state->blend.dst != BlendFactor::BlendFactor_Invalid)))
+    changed |= (state->blend.src != src || state->blend.dst != dst);
+    const bool is_valid_factor =
+        src != BlendFactor::BlendFactor_Invalid && dst != BlendFactor::BlendFactor_Invalid;
+    if (forced || (enabled && is_valid_factor && changed))
     {
+        // assert(src >= 0 && src < sizeof(s_blendFactorToOGLEnum));
+        //assert(dst >= 0 && dst < sizeof(s_blendFactorToOGLEnum));
         changed = true;
         state->blend.src = src;
         state->blend.dst = dst;
         glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]);
     }
 
-    if (enabled && (forced || (state->blend.equation != equation)))
+    const bool is_valid_eq = state->blend.equation != BlendEquation_Invalid;
+    const bool changed_eq = forced || (state->blend.equation != equation);
+    const bool need_update = is_valid_eq || changed_eq;
+    if (forced || (enabled && need_update))
     {
-        assert(state->blend.equation != BlendEquation::BlendEquation_Invalid);
+        //assert(equation != BlendEquation::BlendEquation_Invalid);
+        // assert(equation >= 0 && equation < sizeof(s_blendEquationToOGLEnum));
         changed = true;
         state->blend.equation = equation;
         glBlendEquation(s_blendEquationToOGLEnum[equation]);
@@ -326,11 +334,10 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
 
 bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
 {
-    if (forced || state->color != color)
+    //const bool changed = state->color != color;
+    //if (forced || changed)
     {
         state->color = color;
-        memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
-
         glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
         return true;
     }
@@ -343,8 +350,6 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
     if (forced || state->clearColor != color)
     {
         state->clearColor = color;
-        memcpy(state->clearColor.rgba, color.rgba, sizeof(state->clearColor.rgba));
-
         glClearColor(color[0], color[1], color[2], color[3]);
         return true;
     }

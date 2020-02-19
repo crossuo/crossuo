@@ -35,12 +35,9 @@ void CGUIAlphaBlending::Draw(bool checktrans)
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                            BlendFactor::BlendFactor_OneMinusSrcAlpha });
         RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ { 1.f, 1.f, 1.f, Alpha } });
-        // FIXME: bug ^^^ : glColor4f(1.0f, 1.0f, 1.0f, Alpha);
     }
     else
     {
-        // FIXME: bug vvvv : glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
     }
 #endif

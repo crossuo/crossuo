@@ -149,8 +149,6 @@ void CWeather::Draw(int x, int y)
         {
 #ifndef NEW_RENDERER_ENABLED
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
-            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
             break;
         }
@@ -312,8 +310,6 @@ void CWeather::Draw(int x, int y)
 
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
-    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
     LastTick = g_Ticks;
 }
