@@ -95,13 +95,13 @@ void CColorManager::SendColorsToShader(uint16_t color)
         if ((color & SPECTRAL_COLOR_FLAG) != 0)
         {
 #ifndef NEW_RENDERER_ENABLED
-            glUniform1fv(ShaderColorTable, 32 * 3, &m_HuesFloat[0].Palette[0]);
+            glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[0].Palette[0]);
 #else
             RenderAdd_SetShaderLargeUniform(
                 g_renderCmdList,
                 ShaderLargeUniformCmd{ &m_HuesFloat[0].Palette[0],
                                        32 * 3,
-                                       ShaderColorTable,
+                                       g_ShaderColorTableInUse,
                                        ShaderUniformType::ShaderUniformType_Float1V });
 #endif
         }
@@ -118,13 +118,13 @@ void CColorManager::SendColorsToShader(uint16_t color)
             }
 
 #ifndef NEW_RENDERER_ENABLED
-            glUniform1fv(ShaderColorTable, 32 * 3, &m_HuesFloat[color - 1].Palette[0]);
+            glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[color - 1].Palette[0]);
 #else
             RenderAdd_SetShaderLargeUniform(
                 g_renderCmdList,
                 ShaderLargeUniformCmd{ &m_HuesFloat[color - 1].Palette[0],
                                        32 * 3,
-                                       ShaderColorTable,
+                                       g_ShaderColorTableInUse,
                                        ShaderUniformType::ShaderUniformType_Float1V });
 #endif
         }

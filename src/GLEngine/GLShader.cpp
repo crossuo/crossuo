@@ -5,7 +5,7 @@
 #include "GLHeaders.h"
 #include <assert.h>
 #include <common/logging/logging.h>
-#include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, ShaderColorTable
+#include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, g_ShaderColorTableInUse
 
 CDeathShader g_DeathShader;
 CColorizerShader g_ColorizerShader;
@@ -19,7 +19,7 @@ void UnuseShader()
 #else
     RenderAdd_DisableShaderPipeline(g_renderCmdList);
 #endif
-    ShaderColorTable = 0;
+    g_ShaderColorTableInUse = 0;
     g_ShaderDrawMode = 0;
 }
 
@@ -285,7 +285,7 @@ bool CColorizerShader::Use()
 
     if (result)
     {
-        ShaderColorTable = m_ColorTablePointer;
+        g_ShaderColorTableInUse = m_ColorTablePointer;
         g_ShaderDrawMode = m_DrawModePointer;
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);

@@ -4690,6 +4690,7 @@ void CGame::ResumeSound() const
 
 CSprite *CGame::ExecuteGump(uint16_t id)
 {
+    g_DebugContext.lastGumpId = id;
     if (int(id) >= MAX_GUMP_DATA_INDEX_COUNT)
     {
         return nullptr;
@@ -4714,6 +4715,7 @@ CSprite *CGame::ExecuteGump(uint16_t id)
 
 CSprite *CGame::ExecuteLandArt(uint16_t id)
 {
+    g_DebugContext.lastLandArtId = id;
     if (id >= MAX_LAND_DATA_INDEX_COUNT)
     {
         return nullptr;
@@ -4738,11 +4740,13 @@ CSprite *CGame::ExecuteLandArt(uint16_t id)
 
 CSprite *CGame::ExecuteStaticArtAnimated(uint16_t id)
 {
+    g_DebugContext.lastAnimId = id;
     return ExecuteStaticArt(id + g_Index.m_Static[id].Offset);
 }
 
 CSprite *CGame::ExecuteStaticArt(uint16_t id)
 {
+    g_DebugContext.lastStaticId = id;
     if (int(id) >= MAX_STATIC_DATA_INDEX_COUNT)
     {
         return nullptr;
@@ -4771,6 +4775,7 @@ CSprite *CGame::ExecuteStaticArt(uint16_t id)
 
 CSprite *CGame::ExecuteTexture(uint16_t id)
 {
+    g_DebugContext.lastTextureId = id;
     id = g_Data.m_Land[id].TexID;
     if ((id == 0u) || id >= MAX_LAND_TEXTURES_DATA_INDEX_COUNT)
     {
@@ -4795,8 +4800,9 @@ CSprite *CGame::ExecuteTexture(uint16_t id)
     return (CSprite *)io.UserData;
 }
 
-CSprite *CGame::ExecuteLight(uint8_t &id)
+CSprite *CGame::ExecuteLight(uint8_t id)
 {
+    g_DebugContext.lastLightId = id;
     if (id >= MAX_LIGHTS_DATA_INDEX_COUNT)
     {
         id = 0;
@@ -4822,6 +4828,7 @@ CSprite *CGame::ExecuteLight(uint8_t &id)
 
 bool CGame::ExecuteGumpPart(uint16_t id, int count)
 {
+    g_DebugContext.lastGumpPartId = id;
     bool result = true;
     for (int i = 0; i < count; i++)
     {

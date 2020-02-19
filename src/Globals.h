@@ -20,6 +20,18 @@
 #define ToColorB(x) ((x >> 16) & 0xff)
 #define ToColorA(x) ((x >> 24) & 0xff)
 
+struct DebugContext
+{
+    uint16_t lastGumpId = 0;
+    uint16_t lastGumpPartId = 0;
+    uint16_t lastLandArtId = 0;
+    uint16_t lastAnimId = 0;
+    uint16_t lastStaticId = 0;
+    uint16_t lastTextureId = 0;
+    uint8_t lastLightId = 0;
+};
+extern DebugContext g_DebugContext;
+
 enum
 {
     WINDOW_INACTIVE = 0,
@@ -76,7 +88,7 @@ extern uint32_t g_TotalRecvSize;
 
 extern uint32_t g_Ticks;
 
-extern uint32_t ShaderColorTable;
+extern uint32_t g_ShaderColorTableInUse;
 extern uint32_t g_ShaderDrawMode;
 
 extern astr_t g_Language;
