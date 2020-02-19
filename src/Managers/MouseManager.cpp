@@ -352,7 +352,7 @@ void CMouseManager::Draw(uint16_t id)
 
             if (color != 0)
             {
-                g_ColorizerShader.Use();
+                g_ColorizerShader.Enable();
             }
 
             if (static_cast<unsigned int>(!list.empty()) != 0u)
@@ -378,7 +378,7 @@ void CMouseManager::Draw(uint16_t id)
 
             if (color != 0)
             {
-                UnuseShader();
+                g_ColorizerShader.Disable();
             }
         }
         else if (g_ObjectInHand.Enabled)
@@ -393,7 +393,7 @@ void CMouseManager::Draw(uint16_t id)
 
             if (ohColor != 0)
             {
-                g_ColorizerShader.Use();
+                g_ColorizerShader.Enable();
             }
 
             if (g_ObjectInHand.IsGameFigure)
@@ -434,7 +434,7 @@ void CMouseManager::Draw(uint16_t id)
 
             if (ohColor != 0)
             {
-                UnuseShader();
+                g_ColorizerShader.Disable();
             }
         }
     }
@@ -464,7 +464,7 @@ void CMouseManager::Draw(uint16_t id)
             int y = Position.Y + m_CursorOffset[1][id];
             if (color != 0u)
             {
-                g_ColorizerShader.Use();
+                g_ColorizerShader.Enable();
 #ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
@@ -477,7 +477,7 @@ void CMouseManager::Draw(uint16_t id)
             spr->Texture->Draw(x, y);
             if (color != 0u)
             {
-                UnuseShader();
+                g_ColorizerShader.Disable();
             }
 
             if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType &&

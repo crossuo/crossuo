@@ -4,7 +4,7 @@
 #include "ColorManager.h"
 #include <xuocore/uodata.h>
 #include "../Renderer/RenderAPI.h"
-#include "../Globals.h" // ToColor*, ShaderColorTable, SPECTRAL_COLOR_FLAG
+#include "../Globals.h" // ToColor*, g_ShaderColorTableInUse, SPECTRAL_COLOR_FLAG
 
 CColorManager g_ColorManager;
 
@@ -90,44 +90,45 @@ void CColorManager::CreateHuesPalette()
 
 void CColorManager::SendColorsToShader(uint16_t color)
 {
-    if (color != 0)
+    if (!color)
+        return;
+
+    //assert(g_ShaderColorTableInUse);
+    if ((color & SPECTRAL_COLOR_FLAG) != 0)
     {
-        if ((color & SPECTRAL_COLOR_FLAG) != 0)
-        {
 #ifndef NEW_RENDERER_ENABLED
-            glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[0].Palette[0]);
+        glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[0].Palette[0]);
 #else
-            RenderAdd_SetShaderLargeUniform(
-                g_renderCmdList,
-                ShaderLargeUniformCmd{ &m_HuesFloat[0].Palette[0],
-                                       32 * 3,
-                                       g_ShaderColorTableInUse,
-                                       ShaderUniformType::ShaderUniformType_Float1V });
+        RenderAdd_SetShaderLargeUniform(
+            g_renderCmdList,
+            ShaderLargeUniformCmd{ &m_HuesFloat[0].Palette[0],
+                                   32 * 3,
+                                   g_ShaderColorTableInUse,
+                                   ShaderUniformType::ShaderUniformType_Float1V });
 #endif
-        }
-        else
+    }
+    else
+    {
+        if (color >= m_HuesCount)
         {
-            if (color >= m_HuesCount)
+            color %= m_HuesCount;
+
+            if (color == 0u)
             {
-                color %= m_HuesCount;
-
-                if (color == 0u)
-                {
-                    color = 1;
-                }
+                color = 1;
             }
+        }
 
 #ifndef NEW_RENDERER_ENABLED
-            glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[color - 1].Palette[0]);
+        glUniform1fv(g_ShaderColorTableInUse, 32 * 3, &m_HuesFloat[color - 1].Palette[0]);
 #else
-            RenderAdd_SetShaderLargeUniform(
-                g_renderCmdList,
-                ShaderLargeUniformCmd{ &m_HuesFloat[color - 1].Palette[0],
-                                       32 * 3,
-                                       g_ShaderColorTableInUse,
-                                       ShaderUniformType::ShaderUniformType_Float1V });
+        RenderAdd_SetShaderLargeUniform(
+            g_renderCmdList,
+            ShaderLargeUniformCmd{ &m_HuesFloat[color - 1].Palette[0],
+                                   32 * 3,
+                                   g_ShaderColorTableInUse,
+                                   ShaderUniformType::ShaderUniformType_Float1V });
 #endif
-        }
     }
 }
 

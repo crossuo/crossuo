@@ -1444,7 +1444,7 @@ void CGameScreen::DrawGameWindow(bool render)
 #else
         RenderAdd_DisableDepth(g_renderCmdList);
 #endif
-        UnuseShader();
+        //UnuseShader();
         for (int i = 0; i < m_ObjectHandlesCount; i++)
         {
             m_ObjectHandlesList[i]->DrawObjectHandlesTexture();
@@ -1489,7 +1489,7 @@ void CGameScreen::DrawGameWindowLight()
         return;
     }
 
-    g_LightColorizerShader.Use();
+    g_LightColorizerShader.Enable();
 
     if (/*g_LightBuffer.Ready() &&*/ g_LightBuffer.Use())
     {
@@ -1552,8 +1552,7 @@ void CGameScreen::DrawGameWindowLight()
             SetModelViewTranslationCmd{ { -translateOffsetX, -translateOffsetY, 0.f } });
 #endif
 
-        UnuseShader();
-
+        g_LightColorizerShader.Disable();
         g_LightBuffer.Release();
 
 #ifndef NEW_RENDERER_ENABLED
@@ -1602,16 +1601,16 @@ void CGameScreen::DrawGameWindowLight()
 #endif
     }
 
-    UnuseShader();
+    g_LightColorizerShader.Disable();
 }
 
 void CGameScreen::DrawGameWindowText(bool render)
 {
     if (render)
     {
-        g_FontColorizerShader.Use();
+        g_FontColorizerShader.Enable();
         g_WorldTextRenderer.WorldDraw();
-        UnuseShader();
+        g_FontColorizerShader.Disable();
 
         if ((g_ConfigManager.GetDrawStatusState() != 0u) &&
             (static_cast<unsigned int>(!m_HitsStack.empty()) != 0u))
@@ -1628,7 +1627,7 @@ void CGameScreen::DrawGameWindowText(bool render)
             }
             else
             {
-                g_ColorizerShader.Use();
+                g_ColorizerShader.Enable();
                 for (int i = 0; i < 2; i++)
                 {
                     for (std::vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
@@ -1645,7 +1644,7 @@ void CGameScreen::DrawGameWindowText(bool render)
                         }
                     }
                 }
-                UnuseShader();
+                g_ColorizerShader.Disable();
             }
         }
 
@@ -1889,25 +1888,25 @@ void CGameScreen::Render()
 
     if (g_GrayedPixels)
     {
-        g_DeathShader.Use();
+        g_DeathShader.Enable();
     }
     else
     {
-        g_ColorizerShader.Use();
+        g_ColorizerShader.Enable();
     }
 
     DrawGameWindow(true);
-    UnuseShader();
+    //UnuseShader();
     if (deathScreenTimer == 0u)
     {
         if (!g_GrayedPixels)
         {
             DrawGameWindowLight();
-            g_ColorizerShader.Use();
+            g_ColorizerShader.Enable();
             g_NewTargetSystem.Draw();
             g_TargetGump.Draw();
             g_AttackTargetGump.Draw();
-            UnuseShader();
+            g_ColorizerShader.Disable();
             g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
         }
 
@@ -1944,7 +1943,8 @@ void CGameScreen::Render()
 
     g_OutOfRangeColor = 0;
     g_GrayedPixels = false;
-    UnuseShader();
+    //UnuseShader();
+
     if (deathScreenTimer == 0u)
     {
         g_SystemChat.DrawSystemChat(

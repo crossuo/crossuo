@@ -63,11 +63,9 @@ void CQuestArrow::Draw()
                 Timer = g_Ticks + 1000;
             }
 
-            g_ColorizerShader.Use();
-
+            g_ColorizerShader.Enable();
             g_Game.DrawGump(gumpID, 0x0021, x, y);
-
-            UnuseShader();
+            g_ColorizerShader.Disable();
         }
         else
         {

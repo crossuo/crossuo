@@ -4,16 +4,12 @@
 #pragma once
 
 #include "BaseGUI.h"
-class CGLShader; // REMOVE
+struct CGLShader; // REMOVE
 
-class CGUIShader : public CBaseGUI
+struct CGUIShader : public CBaseGUI
 {
-private:
-    CGLShader *m_Shader{ nullptr };
-
-public:
+    CGLShader *m_Shader = nullptr;
     CGUIShader(CGLShader *shader, bool enabled);
-    virtual ~CGUIShader();
-
+    virtual ~CGUIShader() = default;
     virtual void Draw(bool checktrans = false);
 };

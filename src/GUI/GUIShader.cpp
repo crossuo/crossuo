@@ -12,20 +12,15 @@ CGUIShader::CGUIShader(CGLShader *shader, bool enabled)
     Enabled = enabled;
 }
 
-CGUIShader::~CGUIShader()
-{
-}
-
 void CGUIShader::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-
     if (Enabled && m_Shader != nullptr)
     {
-        m_Shader->Use();
+        m_Shader->Enable();
     }
     else
     {
-        UnuseShader();
+        m_Shader->Disable();
     }
 }
