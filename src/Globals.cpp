@@ -15,6 +15,8 @@ uint32_t g_PingTimer = 0;
 uint32_t g_Ping = 0; // From packet 0x73
 astr_t g_PingString; // Debug Info
 
+DebugContext g_DebugContext;
+
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
 bool g_ShiftPressed = false;
@@ -42,7 +44,7 @@ uint32_t g_TotalSendSize = 0;
 uint32_t g_TotalRecvSize = 0;
 uint32_t g_Ticks = 0;
 
-uint32_t ShaderColorTable = 0;
+uint32_t g_ShaderColorTableInUse = 0;
 uint32_t g_ShaderDrawMode = 0;
 
 astr_t g_Language = "ENU";

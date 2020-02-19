@@ -115,7 +115,7 @@ public:
     CSprite *ExecuteStaticArt(uint16_t id);
     CSprite *ExecuteStaticArtAnimated(uint16_t id);
     CSprite *ExecuteTexture(uint16_t id);
-    CSprite *ExecuteLight(uint8_t &id);
+    CSprite *ExecuteLight(uint8_t id);
     bool ExecuteGumpPart(uint16_t id, int count);
     bool ExecuteResizepic(uint16_t id) { return ExecuteGumpPart(id, 9); }
     bool ExecuteButton(uint16_t id) { return ExecuteGumpPart(id, 3); }
