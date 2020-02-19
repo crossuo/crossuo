@@ -543,7 +543,6 @@ void CGumpWorldMap::GenerateFrame(bool stop)
             m_MapData->OffsetX + playerX + 8.0f, m_MapData->OffsetY + playerY + 31.0f, 3.0f);
         g_GL.PopScissor();
 #else
-        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DrawUntexturedQuad(
             g_renderCmdList,
             DrawUntexturedQuadCmd{

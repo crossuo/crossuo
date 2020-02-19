@@ -272,7 +272,6 @@ void CGameItem::Draw(int x, int y)
             glColor4ub(0xFF, 0xFF, 0xFF, 0xFF);
             glDisable(GL_BLEND);
 #else
-            RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
             RenderAdd_DisableBlend(g_renderCmdList);
 #endif
         }

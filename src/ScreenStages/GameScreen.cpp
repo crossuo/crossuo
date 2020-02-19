@@ -86,7 +86,7 @@ void CGameScreen::Init()
 
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
-    g_GumpManager.Add(new CGumpToolbar(300, 600));
+    g_GumpManager.Add(new CGumpToolbar(300, 600)); // FIXME: this is not the place
 }
 
 void CGameScreen::SetMaximized(bool maximized)
@@ -1699,7 +1699,7 @@ void CGameScreen::DrawGameWindowText(bool render)
 #ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
+        //RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite }); // TODO: DOUBLE CHECK
 #endif
     }
     else
