@@ -486,7 +486,7 @@ void CGumpPaperdoll::UpdateContent()
     CGameItem *equipment = nullptr;
     EQUIP_CONV_BODY_MAP &equipConv = g_AnimationManager.GetEquipConv();
     EQUIP_CONV_BODY_MAP::iterator bodyIter = equipConv.find(obj->Graphic);
-    g_ColorizerShader.Use();
+    g_ColorizerShader.Enable();
     //if (obj->IsHuman())
     {
         bool useSlots = g_ConfigManager.GetPaperdollSlots();
@@ -778,9 +778,9 @@ void CGumpPaperdoll::Draw()
             g_renderCmdList,
             SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
 #endif
-        g_FontColorizerShader.Use();
+        g_FontColorizerShader.Enable();
         m_TextRenderer.Draw();
-        UnuseShader();
+        g_FontColorizerShader.Disable();
 #ifndef NEW_RENDERER_ENABLED
         glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
 #else

@@ -274,9 +274,9 @@ void CGumpSecureTrading::Draw()
         g_renderCmdList,
         SetModelViewTranslationCmd{ { g_GumpTranslate.X, g_GumpTranslate.Y, 0.0f } });
 #endif
-    g_FontColorizerShader.Use();
+    g_FontColorizerShader.Enable();
     m_TextRenderer.Draw();
-    UnuseShader();
+    g_FontColorizerShader.Disable();
 #ifndef NEW_RENDERER_ENABLED
     glTranslatef(-g_GumpTranslate.X, -g_GumpTranslate.Y, 0.0f);
 #else

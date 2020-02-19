@@ -7,33 +7,18 @@
 #include <common/logging/logging.h>
 #include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, g_ShaderColorTableInUse
 
-CDeathShader g_DeathShader;
-CColorizerShader g_ColorizerShader;
-CColorizerShader g_FontColorizerShader;
-CColorizerShader g_LightColorizerShader;
+CGLShader g_DeathShader;
+CGLShader g_ColorizerShader;
+CGLShader g_FontColorizerShader;
+CGLShader g_LightColorizerShader;
 
-void UnuseShader()
-{
-#ifndef NEW_RENDERER_ENABLED
-    glUseProgramObjectARB(0);
-#else
-    RenderAdd_DisableShaderPipeline(g_renderCmdList);
-#endif
-    g_ShaderColorTableInUse = 0;
-    g_ShaderDrawMode = 0;
-}
-
-CGLShader::CGLShader()
-{
-}
-
-bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
+bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderData, int type)
 {
     if (vertexShaderData == nullptr && fragmentShaderData == nullptr)
     {
         return false;
     }
-
+    m_Type = type;
 #ifndef NEW_RENDERER_ENABLED
     auto validate_shader_compile = [](GLuint shader) {
         auto val = GL_FALSE;
@@ -44,11 +29,8 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
             auto compileLog = (GLchar *)malloc(logLength * sizeof(GLcharARB));
             assert(compileLog);
-
             glGetShaderInfoLog(shader, logLength, nullptr, compileLog);
-
             Error(Renderer, "shader compilation error, compile log:\n%s", compileLog);
-
             free(compileLog);
             return false;
         }
@@ -65,11 +47,8 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
             auto programLog = (GLchar *)malloc(logLength * sizeof(GLchar));
             assert(programLog);
-
             glGetProgramInfoLog(program, logLength, nullptr, programLog);
-
             Error(Renderer, "program log:\n%s", programLog);
-
             free(programLog);
             return false;
         }
@@ -97,15 +76,12 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         [&](GLuint program, GLenum shaderType, const GLchar *source, GLuint *shader) {
             *shader = glCreateShader(shaderType);
             assert(*shader != 0);
-
             glShaderSource(*shader, 1, &source, nullptr);
             glCompileShader(*shader);
-
             if (!validate_shader_compile(*shader))
             {
                 return false;
             }
-
             glAttachShader(program, *shader);
             return true;
         };
@@ -129,16 +105,46 @@ bool CGLShader::Init(const char *vertexShaderData, const char *fragmentShaderDat
         m_Shader = 0;
         return false;
     }
-#else
 
+    if (type == 0 /* death */)
+    {
+        m_TexturePointer = glGetUniformLocationARB(m_Shader, "usedTexture");
+        return (m_Shader != 0);
+    }
+
+    if (type == 1 /* colorize */)
+    {
+        m_TexturePointer = glGetUniformLocationARB(m_Shader, "usedTexture");
+        m_ColorTablePointer = glGetUniformLocationARB(m_Shader, "colors");
+        m_DrawModePointer = glGetUniformLocationARB(m_Shader, "drawMode");
+        return (m_Shader != 0);
+    }
+    Error(Renderer, "failed to create shader, unknown type %d", type);
+    return false;
+#else
     if (!Render_CreateShaderPipeline(vertexShaderData, fragmentShaderData, &m_ShaderPipeline))
     {
+        Error(Renderer, "failed to create shader");
         return false;
     }
 
-    Info(Renderer, "Shaders created successfully");
+    if (type == 0 /* death */)
+    {
+        m_TexturePointer = Render_GetUniformId(&m_ShaderPipeline, "usedTexture");
+        return true;
+    }
+
+    if (type == 1 /* colorize */)
+    {
+        m_TexturePointer = Render_GetUniformId(&m_ShaderPipeline, "usedTexture");
+        m_ColorTablePointer = Render_GetUniformId(&m_ShaderPipeline, "colors");
+        m_DrawModePointer = Render_GetUniformId(&m_ShaderPipeline, "drawMode");
+        return true;
+    }
+    Error(Renderer, "failed to create shader, unknown type %d", type);
+    assert(false);
+    return false;
 #endif
-    return true;
 }
 
 CGLShader::~CGLShader()
@@ -164,18 +170,15 @@ CGLShader::~CGLShader()
 #else
     Render_DestroyShaderPipeline(&m_ShaderPipeline);
 #endif
-
     m_TexturePointer = 0;
 }
 
-bool CGLShader::Use()
+void CGLShader::Enable()
 {
-    // TODO useless?
-    UnuseShader();
-
     bool result = false;
-
 #ifndef NEW_RENDERER_ENABLED
+    // TODO useless?
+    // UnuseShader();
     if (m_Shader != 0)
     {
         glUseProgram(m_Shader);
@@ -189,7 +192,30 @@ bool CGLShader::Use()
     }
 #endif
 
-    return result;
+    if (result && m_Type == 1)
+    {
+        //assert(m_ColorTablePointer);
+        g_ShaderColorTableInUse = m_ColorTablePointer;
+        g_ShaderDrawMode = m_DrawModePointer;
+#ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
+#else
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = SDM_NO_COLOR;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#endif
+    }
+}
+
+void CGLShader::Disable()
+{
+#ifndef NEW_RENDERER_ENABLED
+    glUseProgramObjectARB(0);
+#else
+    RenderAdd_DisableShaderPipeline(g_renderCmdList);
+#endif
+    g_ShaderColorTableInUse = 0;
+    g_ShaderDrawMode = 0;
 }
 
 void CGLShader::Pause()
@@ -211,91 +237,4 @@ void CGLShader::Resume()
         RenderAdd_SetShaderPipeline(g_renderCmdList, &m_ShaderPipeline);
     }
 #endif
-}
-
-CDeathShader::CDeathShader()
-    : CGLShader()
-{
-}
-
-bool CDeathShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
-{
-#ifndef NEW_RENDERER_ENABLED
-    if (CGLShader::Init(vertexShaderData, fragmentShaderData))
-    {
-        m_TexturePointer = glGetUniformLocationARB(m_Shader, "usedTexture");
-    }
-    else
-    {
-        Info(Renderer, "Failed to create DeathShader");
-    }
-
-    return (m_Shader != 0);
-#else
-    if (CGLShader::Init(vertexShaderData, fragmentShaderData))
-    {
-        m_TexturePointer = Render_GetUniformId(&m_ShaderPipeline, "usedTexture");
-        return true;
-    }
-
-    Error(Renderer, "Failed to create DeathShader");
-    assert(false);
-    return false;
-#endif
-}
-
-CColorizerShader::CColorizerShader()
-    : CGLShader()
-{
-}
-
-bool CColorizerShader::Init(const char *vertexShaderData, const char *fragmentShaderData)
-{
-#ifndef NEW_RENDERER_ENABLED
-    if (CGLShader::Init(vertexShaderData, fragmentShaderData))
-    {
-        m_TexturePointer = glGetUniformLocationARB(m_Shader, "usedTexture");
-        m_ColorTablePointer = glGetUniformLocationARB(m_Shader, "colors");
-        m_DrawModePointer = glGetUniformLocationARB(m_Shader, "drawMode");
-    }
-    else
-    {
-        Info(Renderer, "Failed to create ColorizerShader");
-    }
-
-    return (m_Shader != 0);
-#else
-    if (CGLShader::Init(vertexShaderData, fragmentShaderData))
-    {
-        m_TexturePointer = Render_GetUniformId(&m_ShaderPipeline, "usedTexture");
-        m_ColorTablePointer = Render_GetUniformId(&m_ShaderPipeline, "colors");
-        m_DrawModePointer = Render_GetUniformId(&m_ShaderPipeline, "drawMode");
-        return true;
-    }
-
-    Error(Renderer, "Failed to create ColorizerShader");
-    assert(false);
-    return false;
-#endif
-}
-
-bool CColorizerShader::Use()
-{
-    bool result = CGLShader::Use();
-
-    if (result)
-    {
-        g_ShaderColorTableInUse = m_ColorTablePointer;
-        g_ShaderDrawMode = m_DrawModePointer;
-#ifndef NEW_RENDERER_ENABLED
-        glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
-#else
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-
-#endif
-    }
-
-    return result;
 }
