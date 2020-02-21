@@ -20,6 +20,9 @@
 
 //#include <xuocore/plugininterface.h>
 
+extern bool g_var_DisableRenderGame;
+bool g_var_DisableRenderGame = false;
+
 extern po::parser g_cli;
 po::parser g_cli;
 
@@ -64,11 +67,16 @@ static bool InitCli(int argc, char *argv[])
         .description("Disable logging (almost) completely")
         .callback([&] { g_LogEnabled = eLogSystem::LogSystemNone; });
 
+    // vars
+    g_cli["DisableRenderGame"].description("disable game canvas rendering");
+
     g_cli["config"]
         .abbreviation('c')
         .type(po::string)
         .description("Use a different configuration file");
     g_cli(argc, argv);
+
+    g_var_DisableRenderGame = g_cli["DisableRenderGame"].was_set();
 
     return g_cli["help"].size() == 0;
 }
