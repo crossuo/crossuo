@@ -56,6 +56,8 @@
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
 
+extern bool g_var_DisableRenderGame;
+
 CGameScreen g_GameScreen;
 RENDER_VARIABLES_FOR_GAME_WINDOW g_RenderBounds;
 
@@ -86,7 +88,7 @@ void CGameScreen::Init()
 
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
-    g_GumpManager.Add(new CGumpToolbar(300, 600)); // FIXME: this is not the place
+    //g_GumpManager.Add(new CGumpToolbar(300, 600)); // FIXME: this is not the place
 }
 
 void CGameScreen::SetMaximized(bool maximized)
@@ -1886,61 +1888,63 @@ void CGameScreen::Render()
 
     g_DrawColor = 1.0f;
 
-    if (g_GrayedPixels)
+    if (!g_var_DisableRenderGame)
     {
-        g_DeathShader.Enable();
-    }
-    else
-    {
-        g_ColorizerShader.Enable();
-    }
-
-    DrawGameWindow(true);
-    //UnuseShader();
-    if (deathScreenTimer == 0u)
-    {
-        if (!g_GrayedPixels)
+        if (g_GrayedPixels)
         {
-            DrawGameWindowLight();
+            g_DeathShader.Enable();
+        }
+        else
+        {
             g_ColorizerShader.Enable();
-            g_NewTargetSystem.Draw();
-            g_TargetGump.Draw();
-            g_AttackTargetGump.Draw();
-            g_ColorizerShader.Disable();
-            g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
         }
 
-        DrawGameWindowText(true);
-        DrawSmoothMonitorEffect();
-    }
-    else
-    {
-#ifndef NEW_RENDERER_ENABLED
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-        g_GL.DrawPolygone(
-            g_RenderBounds.GameWindowPosX,
-            g_RenderBounds.GameWindowPosY,
-            g_RenderBounds.GameWindowWidth,
-            g_RenderBounds.GameWindowHeight);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
-        RenderAdd_DrawUntexturedQuad(
-            g_renderCmdList,
-            DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
-                                   g_RenderBounds.GameWindowPosY,
-                                   uint32_t(g_RenderBounds.GameWindowWidth),
-                                   uint32_t(g_RenderBounds.GameWindowHeight),
-                                   g_ColorBlack });
-#endif
+        DrawGameWindow(true);
+        //UnuseShader();
+        if (deathScreenTimer == 0u)
+        {
+            if (!g_GrayedPixels)
+            {
+                DrawGameWindowLight();
+                g_ColorizerShader.Enable();
+                g_NewTargetSystem.Draw();
+                g_TargetGump.Draw();
+                g_AttackTargetGump.Draw();
+                g_ColorizerShader.Disable();
+                g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
+            }
 
-        g_FontManager.DrawA(
-            3,
-            "You are dead.",
-            0,
-            g_RenderBounds.GameWindowPosX + (g_RenderBounds.GameWindowWidth / 2) - 50,
-            g_RenderBounds.GameWindowPosY + (g_RenderBounds.GameWindowHeight / 2) - 20);
-    }
+            DrawGameWindowText(true);
+            DrawSmoothMonitorEffect();
+        }
+        else
+        {
+    #ifndef NEW_RENDERER_ENABLED
+            glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+            g_GL.DrawPolygone(
+                g_RenderBounds.GameWindowPosX,
+                g_RenderBounds.GameWindowPosY,
+                g_RenderBounds.GameWindowWidth,
+                g_RenderBounds.GameWindowHeight);
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    #else
+            RenderAdd_DrawUntexturedQuad(
+                g_renderCmdList,
+                DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
+                                    g_RenderBounds.GameWindowPosY,
+                                    uint32_t(g_RenderBounds.GameWindowWidth),
+                                    uint32_t(g_RenderBounds.GameWindowHeight),
+                                    g_ColorBlack });
+    #endif
 
+            g_FontManager.DrawA(
+                3,
+                "You are dead.",
+                0,
+                g_RenderBounds.GameWindowPosX + (g_RenderBounds.GameWindowWidth / 2) - 50,
+                g_RenderBounds.GameWindowPosY + (g_RenderBounds.GameWindowHeight / 2) - 20);
+        }
+    }
     g_OutOfRangeColor = 0;
     g_GrayedPixels = false;
     //UnuseShader();
