@@ -480,8 +480,7 @@ void CMouseManager::Draw(uint16_t id)
                 g_ColorizerShader.Disable();
             }
 
-            if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType &&
-                g_GameState == GS_GAME)
+            if (g_Target.Targeting && g_ConfigManager.HighlightTargetByType && g_GameState == GS_GAME)
             {
                 uint32_t auraColor = 0;
                 if (g_Target.CursorType == 0)
@@ -534,6 +533,8 @@ void CMouseManager::Draw(uint16_t id)
 
                     auto quadCmd = DrawQuadCmd{ g_AuraTexture.Texture, x - 6, y - 2, 35, 35 };
                     RenderAdd_DrawQuad(g_renderCmdList, quadCmd);
+
+                    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
                     RenderAdd_DisableBlend(g_renderCmdList);
 #endif
                 }

@@ -408,6 +408,8 @@ void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 }
 
@@ -1493,6 +1495,8 @@ void CGump::Draw()
                                  GumpRect.Position.Y + GumpRect.Size.Height,
                                  GumpRect.Position.X + 1,
                                  GumpRect.Position.Y + 1 });
+
+                RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
             }
 
@@ -1536,6 +1540,7 @@ void CGump::Draw()
         g_renderCmdList,
         BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 
     m_FrameBuffer.Draw(0, 0);

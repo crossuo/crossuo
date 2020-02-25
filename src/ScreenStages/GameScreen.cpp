@@ -1700,7 +1700,7 @@ void CGameScreen::DrawGameWindowText(bool render)
 #ifndef NEW_RENDERER_ENABLED
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
-        //RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite }); // TODO: DOUBLE CHECK
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
     }
     else
