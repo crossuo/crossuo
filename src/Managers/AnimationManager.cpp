@@ -1664,6 +1664,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
 #else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
 #endif
     }
@@ -1917,6 +1918,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glDisable(GL_BLEND);
 #else
+        RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
         RenderAdd_DisableBlend(g_renderCmdList);
 #endif
     }

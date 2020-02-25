@@ -248,68 +248,77 @@ struct RenderState
 {
     struct
     {
-        texture_handle_t texture = RENDER_TEXTUREHANDLE_INVALID;
-        TextureType type = TextureType::TextureType_Texture2D;
-    } texture = {};
+        texture_handle_t texture;
+        TextureType type;
+    } texture = { RENDER_TEXTUREHANDLE_INVALID, TextureType::TextureType_Texture2D };
 
-    frame_buffer_t framebuffer = {};
-
-    struct
-    {
-        int left = 0;
-        int right = 0;
-        int bottom = 0;
-        int top = 0;
-        int nearZ = 0;
-        int farZ = 0;
-        float scale = 1.0f;
-        bool proj_flipped_y = false;
-    } viewport = {};
+    frame_buffer_t framebuffer{};
 
     struct
     {
-        int x = 0;
-        int y = 0;
-        uint32_t width = 0;
-        uint32_t height = 0;
-        bool enabled = false;
-    } scissor = {};
-
-    ShaderPipeline pipeline = {};
-    RenderStateUniformCache uniformCache = {};
-
-    struct
-    {
-        bool enabled = false;
-        BlendFactor src = BlendFactor::BlendFactor_SrcAlpha;
-        BlendFactor dst = BlendFactor::BlendFactor_OneMinusSrcAlpha;
-        BlendEquation equation = BlendEquation::BlendEquation_Add;
-    } blend = {};
+        int left;
+        int right;
+        int bottom;
+        int top;
+        int nearZ;
+        int farZ;
+        float scale;
+        bool proj_flipped_y;
+    } viewport = { 0, 0, 0, 0, 0, 0, 1.f, false };
 
     struct
     {
-        bool enabled = true;
-        AlphaTestFunc func = AlphaTestFunc::AlphaTestFunc_Greater;
-        float alphaRef = 0.0f;
-    } alphaTest = {};
+        int x;
+        int y;
+        uint32_t width;
+        uint32_t height;
+        bool enabled;
+    } scissor = { 0, 0, 0, 0, false };
+
+    ShaderPipeline pipeline;
+    RenderStateUniformCache uniformCache;
+
+    struct
+    {
+        bool enabled;
+        BlendFactor src;
+        BlendFactor dst;
+        BlendEquation equation;
+    } blend = { false,
+                BlendFactor::BlendFactor_SrcAlpha,
+                BlendFactor::BlendFactor_OneMinusSrcAlpha,
+                BlendEquation::BlendEquation_Add };
+
+    struct
+    {
+        bool enabled;
+        AlphaTestFunc func;
+        float alphaRef;
+    } alphaTest = { true, AlphaTestFunc::AlphaTestFunc_Greater, 0.f };
 
     // TODO support front- and back-face independent stencil testing
     struct
     {
-        bool enabled = false;
-        StencilFunc func = StencilFunc::StencilFunc_NeverPass;
-        StencilOp stencilFail = StencilOp::StencilOp_Keep;
-        StencilOp depthFail = StencilOp::StencilOp_Keep;
-        StencilOp bothFail = StencilOp::StencilOp_Keep;
-        uint32_t ref = 0;
-        uint32_t mask = 1;
-    } stencil = {};
+        bool enabled;
+        StencilFunc func;
+        StencilOp stencilFail;
+        StencilOp depthFail;
+        StencilOp bothFail;
+        uint32_t ref;
+        uint32_t mask;
+    } stencil = { false,
+                  StencilFunc::StencilFunc_NeverPass,
+                  StencilOp::StencilOp_Keep,
+                  StencilOp::StencilOp_Keep,
+                  StencilOp::StencilOp_Keep,
+                  0,
+                  1 };
 
     struct
     {
-        bool enabled = false;
-        DepthFunc func = DepthFunc::DepthFunc_LessOrEqual;
-    } depth = {};
+        bool enabled;
+        DepthFunc func;
+    } depth = { false, DepthFunc::DepthFunc_LessOrEqual };
 
     ColorMask colorMask = ColorMask::ColorMask_All;
     float4 color = g_ColorWhite;
@@ -318,7 +327,7 @@ struct RenderState
 
 struct RenderCmdList
 {
-    RenderState state = {};
+    RenderState state;
     char *data = nullptr;
     uint32_t size = 0;
     uint32_t remainingSize = 0;

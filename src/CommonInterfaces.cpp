@@ -146,6 +146,7 @@ void CDECL FUNCBODY_DrawCircle(unsigned int color, float x, float y, float radiu
                        ToColorB(color) / 255.f,
                        ToColorA(color) / 255.f } });
     RenderAdd_DrawCircle(g_renderCmdList, DrawCircleCmd{ (int)x, (int)y, radius, gradientMode });
+    RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
 }
 
