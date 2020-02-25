@@ -28,12 +28,12 @@ float float4::operator[](size_t i) const
     return rgba[i];
 }
 
-bool float4::operator==(float4 &other)
+bool float4::operator==(const float4 &other) const
 {
     return memcmp(rgba, other.rgba, sizeof(rgba)) == 0;
 }
 
-bool float4::operator!=(float4 &other)
+bool float4::operator!=(const float4 &other) const
 {
     return !(*this == other);
 }
@@ -44,12 +44,12 @@ float float3::operator[](size_t i) const
     return rgb[i];
 }
 
-bool float3::operator==(float3 &other)
+bool float3::operator==(const float3 &other) const
 {
     return memcmp(rgb, other.rgb, sizeof(rgb)) == 0;
 }
 
-bool float3::operator!=(float3 &other)
+bool float3::operator!=(const float3 &other) const
 {
     return !(*this == other);
 }
@@ -394,8 +394,8 @@ texture_handle_t Render_CreateTexture2D(
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -420,7 +420,8 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
-
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     GLint currFb = 0;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currFb);
 

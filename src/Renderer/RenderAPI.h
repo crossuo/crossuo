@@ -6,7 +6,7 @@
 #include "../SDL_wrapper.h"
 // BUG to fix before enable, check GUIAlphaBlending.cpp
 // Test issue by opening a NPC menu
-//#define NEW_RENDERER_ENABLED
+#define NEW_RENDERER_ENABLED
 
 #include "../GLEngine/GLHeaders.h"
 #if !defined(NEW_RENDERER_ENABLED)

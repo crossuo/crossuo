@@ -117,7 +117,7 @@ struct DrawQuadCmd
     uint32_t height = 0;
     float u = 1.f;
     float v = 1.f;
-    float4 rgba = g_ColorWhite;
+    float4 rgba = g_ColorInvalid;
     bool mirrored = false;
 };
 
