@@ -60,7 +60,10 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-    RenderState_SetColor(state, cmd.rgba);
+    if (cmd.rgba != g_ColorInvalid)
+    {
+        RenderState_SetColor(state, cmd.rgba);
+    }
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glBegin(GL_TRIANGLE_STRIP);
 
@@ -98,8 +101,10 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     ScopedPerfMarker(__FUNCTION__);
 
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-    RenderState_SetColor(state, cmd.rgba);
-
+    if (cmd.rgba != g_ColorInvalid)
+    {
+        RenderState_SetColor(state, cmd.rgba);
+    }
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glRotatef(cmd.angle, 0.0f, 0.0f, 1.0f);
 

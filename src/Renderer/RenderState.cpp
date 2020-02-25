@@ -526,9 +526,7 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
-
         state->framebuffer = fb;
-
         return true;
     }
     // return false;

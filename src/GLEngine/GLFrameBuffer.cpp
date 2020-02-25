@@ -205,7 +205,8 @@ void CGLFrameBuffer::Draw(int x, int y)
         g_GL.OldTexture = 0;
         g_GL.Draw(Texture, x, y);
 #else
-        auto cmd = DrawQuadCmd{ m_FrameBuffer.texture, x, y, m_Width, m_Height };
+        auto cmd =
+            DrawQuadCmd{ m_FrameBuffer.texture, x, y, m_Width, m_Height, 1.f, 1.f, g_ColorInvalid };
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
 #endif
     }

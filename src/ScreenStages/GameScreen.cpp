@@ -1919,7 +1919,7 @@ void CGameScreen::Render()
         }
         else
         {
-    #ifndef NEW_RENDERER_ENABLED
+#ifndef NEW_RENDERER_ENABLED
             glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
             g_GL.DrawPolygone(
                 g_RenderBounds.GameWindowPosX,
@@ -1927,15 +1927,15 @@ void CGameScreen::Render()
                 g_RenderBounds.GameWindowWidth,
                 g_RenderBounds.GameWindowHeight);
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    #else
+#else
             RenderAdd_DrawUntexturedQuad(
                 g_renderCmdList,
                 DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
-                                    g_RenderBounds.GameWindowPosY,
-                                    uint32_t(g_RenderBounds.GameWindowWidth),
-                                    uint32_t(g_RenderBounds.GameWindowHeight),
-                                    g_ColorBlack });
-    #endif
+                                       g_RenderBounds.GameWindowPosY,
+                                       uint32_t(g_RenderBounds.GameWindowWidth),
+                                       uint32_t(g_RenderBounds.GameWindowHeight),
+                                       g_ColorBlack });
+#endif
 
             g_FontManager.DrawA(
                 3,

@@ -284,7 +284,7 @@ void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
-        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - rgba: [%f, %f, %f, %f] - mirrored: %s\n",
+        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s\n",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -292,10 +292,6 @@ void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
         cmd->height,
         cmd->u,
         cmd->v,
-        cmd->rgba[0],
-        cmd->rgba[1],
-        cmd->rgba[2],
-        cmd->rgba[3],
         cmd->mirrored ? "true" : "false");
 }
 
@@ -303,7 +299,7 @@ void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
 {
     Info(
         Renderer,
-        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - rgba: [%f, %f, %f, %f] - mirrored: %s\n",
+        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - mirrored: %s\n",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -312,10 +308,6 @@ void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
         cmd->angle,
         cmd->u,
         cmd->v,
-        cmd->rgba[0],
-        cmd->rgba[1],
-        cmd->rgba[2],
-        cmd->rgba[3],
         cmd->mirrored ? "true" : "false");
 }
 

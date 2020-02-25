@@ -40,8 +40,8 @@ struct float4
     float rgba[4];
 
     float operator[](size_t i) const;
-    bool operator==(float4 &other);
-    bool operator!=(float4 &other);
+    bool operator==(const float4 &other) const;
+    bool operator!=(const float4 &other) const;
 };
 
 struct float3
@@ -53,8 +53,8 @@ struct float3
     float rgb[3] = { 0.f, 0.f, 0.f };
 
     float operator[](size_t i) const;
-    bool operator==(float3 &other);
-    bool operator!=(float3 &other);
+    bool operator==(const float3 &other) const;
+    bool operator!=(const float3 &other) const;
 };
 
 // TODO simd-friendly types
