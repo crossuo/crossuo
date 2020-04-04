@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GLShader.h"
-#include "GLHeaders.h"
 #include <assert.h>
 #include <common/logging/logging.h>
+#include <external/gfx/gfx.h>
 #include "../Globals.h" // g_ShaderDrawMode / SDM_NO_COLOR, g_ShaderColorTableInUse
 
 CGLShader g_DeathShader;

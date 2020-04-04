@@ -3923,32 +3923,10 @@ void CGame::CreateObjectHandlesBackground()
 
 void CGame::LoadShaders()
 {
-#if UO_USE_SHADER_FILES == 1
-    CMappedFile frag;
-    CMappedFile vert;
-
-    if (vert.Load(g_App.FilePath("shaders/Shader.vert")))
-    {
-        frag.Load(g_App.FilePath("shaders/DeathShader.frag"));
-        g_DeathShader.Init((char *)vert.Start, (char *)frag.Start, 0);
-        frag.Unload();
-        frag.Load(g_App.FilePath("shaders/ColorizerShader.frag"));
-        g_ColorizerShader.Init(1, (char *)vert.Start, (char *)frag.Start, 1);
-        frag.Unload();
-        frag.Load(g_App.FilePath("shaders/FontColorizerShader.frag"));
-        g_FontColorizerShader.Init(1, (char *)vert.Start, (char *)frag.Start, 1);
-        frag.Unload();
-        frag.Load(g_App.FilePath("shaders/LightColorizerShader.frag"));
-        g_LightColorizerShader.Init((char *)vert.Start, (char *)frag.Start, 1);
-        frag.Unload();
-        vert.Unload();
-    }
-#else
     g_DeathShader.Init(g_Vert_ShaderData, g_Frag_DeathShaderData, 0);
     g_ColorizerShader.Init(g_Vert_ShaderData, g_Frag_ColorizerShaderData, 1);
     g_FontColorizerShader.Init(g_Vert_ShaderData, g_Frag_FontShaderData, 1);
     g_LightColorizerShader.Init(g_Vert_ShaderData, g_Frag_LightShaderData, 1);
-#endif
 }
 
 void CGame::LoadClientStartupConfig()

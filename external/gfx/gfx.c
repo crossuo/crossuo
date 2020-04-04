@@ -36,6 +36,32 @@ IDXGISwapChain *g_pSwapChain = nullptr;
 ID3D11RenderTargetView *g_mainRenderTargetView = nullptr;
 #endif
 
+void win_gfx_context_attrbutes(int enableDebug)
+{
+#if defined(USE_GL) || defined(USE_GLES)
+    if (enableDebug)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
+#if defined(USE_GLES)
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GFX_GL_MAJOR);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GFX_GL_MINOR);
+#if defined(__APPLE__)
+    SDL_GL_SetAttribute(
+        SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+#endif
+}
+
 int win_init(win_context *ctx)
 {
     assert(ctx != 0);
@@ -49,24 +75,9 @@ int win_init(win_context *ctx)
         return -1;
     }
 
-#if defined(USE_GL)
-    if (ctx->debug)
-    {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    }
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GFX_GL_MAJOR);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GFX_GL_MINOR);
-#if __APPLE__
-    SDL_GL_SetAttribute(
-        SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-#else // #if __APPLE__
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-#endif // #if __APPLE__
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-#endif // #if defined(USE_GL)
+    win_gfx_context_attrbutes(ctx->debug);
+
+
     const SDL_WindowFlags window_flags =
         (SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_Window *window = SDL_CreateWindow(
@@ -102,7 +113,7 @@ int win_init(win_context *ctx)
         SDL_FreeSurface(icon);
     }
 
-#if defined(USE_GL)
+#if defined(USE_GL) || defined(USE_GLES)
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     ctx->window = window;
@@ -114,19 +125,25 @@ int win_init(win_context *ctx)
         fprintf(stderr, "could not initialize opengl\n");
         return -2;
     }
-#else
+#elif defined(USE_GL3W)
     if (gl3wInit() != 0)
     {
         fprintf(stderr, "could not initialize opengl\n");
         return -2;
     }
 #endif
+#if GFX_GL_MAJOR >= 3
     {
         int major, minor;
         glGetIntegerv(GL_MAJOR_VERSION, &major);
         glGetIntegerv(GL_MINOR_VERSION, &minor);
         fprintf(stdout, "OpenGL %d.%d v(%s)\n", major, minor, glGetString(GL_VERSION));
     }
+#else
+    {
+        fprintf(stdout, "OpenGL v(%s)\n", glGetString(GL_VERSION));
+    }
+#endif
 #endif
 
 #if defined(USE_DX11)
@@ -144,12 +161,23 @@ int win_init(win_context *ctx)
     memset(&sg_default_shader_desc, 0, sizeof(sg_default_shader_desc));
     sg_setup(&sg_default_desc);
 
-#if defined(USE_GL2)
+#if defined(USE_GL2) || defined(USE_GLES2)
     sg_default_shader_desc.attrs[0].name = "position";
     sg_default_shader_desc.attrs[1].name = "color0";
-#endif
-#if defined(USE_GL)
-    sg_default_vs.source = "#version 330\n"
+    sg_default_vs.source = "attribute vec4 position;\n"
+            "attribute vec4 color0;\n"
+            "varying vec4 color;\n"
+            "void main() {\n"
+            "  gl_Position = position;\n"
+            "  color = color0;\n"
+            "}\n";
+    sg_default_fs.source = "precision mediump float;\n"
+            "varying vec4 color;\n"
+            "void main() {\n"
+            "  gl_FragColor = color;\n"
+            "}\n";
+#elif defined(USE_GL3)
+    sg_default_vs.source = "#version " GL_SHADER_VERSION "\n"
                 "layout(location=0) in vec4 position;\n"
                 "layout(location=1) in vec4 color0;\n"
                 "out vec4 color;\n"
@@ -157,7 +185,7 @@ int win_init(win_context *ctx)
                 "  gl_Position = position;\n"
                 "  color = color0;\n"
                 "}\n";
-    sg_default_fs.source = "#version 330\n"
+    sg_default_fs.source = "#version " GL_SHADER_VERSION "\n"
                 "in vec4 color;\n"
                 "out vec4 frag_color;\n"
                 "void main() {\n"
@@ -195,7 +223,7 @@ int win_init(win_context *ctx)
 void win_shutdown(win_context *ctx)
 {
     assert(ctx != 0);
-#if defined(USE_GL)
+#if defined(USE_GL) || defined(USE_GLES)
     SDL_GL_DeleteContext(ctx->context);
 #elif defined(USE_DX11)
 	// ui_shutdown
@@ -209,7 +237,7 @@ void win_shutdown(win_context *ctx)
 void win_flip(win_context *ctx)
 {
     assert(ctx != 0);
-#if defined(USE_GL)
+#if defined(USE_GL) || defined(USE_GLES)
     SDL_GL_SwapWindow(ctx->window);
 #elif defined(USE_DX11)
     // ui

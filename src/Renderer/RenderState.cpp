@@ -1,14 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#include "../GLEngine/GLHeaders.h"
+#include "../Renderer/RenderAPI.h"
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "../Utility/PerfMarker.h"
+#include <external/gfx/gfx.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
+
+#if defined(USE_GLES)
+extern int _inPos;
+extern int _inColor;
+extern int _inUV;
+extern int _uProjectionView;
+extern int _uModel;
+extern int _uTex;
+extern int _pProg;
+#endif
 
 bool RenderState_FlushState(RenderState *state)
 {
@@ -47,7 +61,14 @@ bool RenderState_FlushState(RenderState *state)
         state->scissor.width,
         state->scissor.height);
 
+#if defined(USE_GL)
     glLoadIdentity();
+#else
+    // TODO: gles - model identity
+    glm::mat4 identity(1.0f);
+    GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
+#endif
 
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
     // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
@@ -80,6 +101,7 @@ bool RenderState_SetAlphaTest(
     {
         changed = true;
         state->alphaTest.enabled = enabled;
+#if defined(USE_GL)
         if (enabled)
         {
             glEnable(GL_ALPHA_TEST);
@@ -88,6 +110,7 @@ bool RenderState_SetAlphaTest(
         {
             glDisable(GL_ALPHA_TEST);
         }
+#endif
     }
 
 #if !defined(_MSC_VER)
@@ -107,7 +130,9 @@ bool RenderState_SetAlphaTest(
         changed = true;
         state->alphaTest.func = func;
         state->alphaTest.alphaRef = ref;
+#if defined(USE_GL)
         glAlphaFunc(s_alphaTestfuncToOGLFunc[func], ref);
+#endif
     }
 
     return changed;
@@ -341,8 +366,12 @@ bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
     {
         state->color = color;
         memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
-
+#if defined(USE_GL)
         glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
+#else
+        glVertexAttribPointer(_inPos, 4, GL_FLOAT, GL_FALSE, 0, state->color.rgba);
+        glEnableVertexAttribArray(_inPos);
+#endif
         return true;
     }
 
@@ -355,7 +384,6 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
     {
         state->clearColor = color;
         memcpy(state->clearColor.rgba, color.rgba, sizeof(state->clearColor.rgba));
-
         glClearColor(color[0], color[1], color[2], color[3]);
         return true;
     }
@@ -529,7 +557,9 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
     {
         if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
         {
+#if defined(USE_GL)
             glEnable(GL_TEXTURE_2D);
+#endif
             glBindFramebuffer(GL_FRAMEBUFFER, fb.handle);
             glBindTexture(GL_TEXTURE_2D, fb.texture);
         }
@@ -565,11 +595,11 @@ bool RenderState_SetViewParams(
     {
         ScopedPerfMarker(__FUNCTION__);
 
-        int right = scene_x + scene_width;
+        const int right = scene_x + scene_width;
         // game viewport isn't scaled, if the OS window is smaller than GameWindowPosY + GameWindowHeight, bottom will
         // be negative by this difference
-        int needed_height = scene_y + scene_height;
-        int bottom = window_height - needed_height;
+        const int needed_height = scene_y + scene_height;
+        const int bottom = window_height - needed_height;
 
         state->viewport.left = scene_x;
         state->viewport.right = right;
@@ -580,46 +610,50 @@ bool RenderState_SetViewParams(
         state->viewport.scale = scene_scale;
         state->viewport.proj_flipped_y = proj_flipped_y;
 
+        const float scaledRight = right * scene_scale;
+        const float scaledLeft = scene_x * scene_scale - (scaledRight - right);
+        const float scaledBottom = (scene_y + scene_height) * scene_scale;
+        const float scaledTop = scene_y * scene_scale - (scaledBottom - (scene_y + scene_height));
+
         glViewport(scene_x, bottom, scene_width, scene_height);
+#if defined(USE_GL)
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-
-        float scaledRight = right * scene_scale;
-        float scaledLeft = scene_x * scene_scale - (scaledRight - right);
-        float scaledBottom = (scene_y + scene_height) * scene_scale;
-        float scaledTop = scene_y * scene_scale - (scaledBottom - (scene_y + scene_height));
-
-        if (!proj_flipped_y)
-        {
-            glOrtho(
-                scaledLeft,
-                scaledRight,
-                scaledBottom,
-                scaledTop,
-                float(camera_nearZ),
-                float(camera_farZ));
-        }
-        else
-        {
-            glOrtho(
-                scaledLeft,
-                scaledRight,
-                scaledTop,
-                scaledBottom,
-                float(camera_nearZ),
-                float(camera_farZ));
-        }
+        glOrtho(
+            scaledLeft,
+            scaledRight,
+            proj_flipped_y ? scaledTop : scaledBottom,
+            proj_flipped_y ? scaledBottom : scaledTop,
+            float(camera_nearZ),
+            float(camera_farZ));
         glMatrixMode(GL_MODELVIEW);
+#else
+        // TODO: gles - projection ortho view parms
+        const auto projection = glm::ortho(
+            scaledLeft,
+            scaledRight,
+            proj_flipped_y ? scaledTop : scaledBottom,
+            proj_flipped_y ? scaledBottom : scaledTop,
+            float(camera_nearZ),
+            float(camera_farZ));
+        GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+#endif
         return true;
     }
-
     // return false;
 }
 
 bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced)
 {
+#if defined(USE_GL)
     glTranslatef(pos[0], pos[1], pos[2]);
-
+#else
+    // TODO: gles - model translation
+    glm::mat4 translation(1.0f);
+    translation = glm::translate(translation, glm::vec3(pos[0], pos[1], pos[2]));
+    GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(translation)));
+#endif
     return true;
 }
 

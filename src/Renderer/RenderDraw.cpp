@@ -6,7 +6,10 @@
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLHeaders.h"
+#include <external/gfx/gfx.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
 #define XUO_M_PI 3.14159265358979323846264338327950288
@@ -18,6 +21,16 @@
         cmd += sizeof(type##Cmd);                                                                  \
         break;                                                                                     \
     }
+
+#if defined(USE_GLES)
+extern int _inPos;
+extern int _inColor;
+extern int _inUV;
+extern int _uProjectionView;
+extern int _uModel;
+extern int _uTex;
+extern int _pProg;
+#endif
 
 #include <queue>
 static std::deque<SetScissorCmd> s_ScissorList;
@@ -67,9 +80,9 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     {
         RenderState_SetColor(state, cmd.rgba);
     }
+#if defined(USE_GL)
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glBegin(GL_TRIANGLE_STRIP);
-
     if (!cmd.mirrored)
     {
         glTexCoord2f(0.0f, cmd.v);
@@ -92,10 +105,40 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
         glTexCoord2f(cmd.u, 0.0f);
         glVertex2i(0, 0);
     }
-
     glEnd();
     glTranslatef(-(GLfloat)cmd.x, -(GLfloat)cmd.y, 0.0f);
-
+#else
+    // TODO: gles - quad
+    const float uv[] = {
+         0.0f, cmd.v,
+        cmd.u, cmd.v,
+         0.0f, 0.0f,
+        cmd.u, 0.0f,
+    };
+    const float v[] = {
+        0.0f, float(cmd.height),
+        float(cmd.width), float(cmd.height),
+        0.0f, 0.0f,
+        float(cmd.width), 0.0f,
+    };
+    const float v_mirrored[] = {
+        float(cmd.width), float(cmd.height),
+        0.0f, float(cmd.height),
+        float(cmd.width), 0.0f,
+        0.0f, 0.0f,
+    };
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+    GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, 0, uv));
+    GL_CHECK(glEnableVertexAttribArray(_inUV));
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, 0, cmd.mirrored ? v_mirrored : v));
+    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    GL_CHECK(glUniform1i(_uTex, 0));
+    GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    GL_CHECK(glUseProgram(0));
+#endif
     return true;
 }
 
@@ -108,11 +151,10 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     {
         RenderState_SetColor(state, cmd.rgba);
     }
+#if defined(USE_GL)
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glRotatef(cmd.angle, 0.0f, 0.0f, 1.0f);
-
     glBegin(GL_TRIANGLE_STRIP);
-
     if (!cmd.mirrored)
     {
         glTexCoord2f(0.0f, cmd.v);
@@ -135,12 +177,42 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
         glTexCoord2f(cmd.u, 0.0f);
         glVertex2i(0, 0);
     }
-
     glEnd();
-
     glTranslatef(-(GLfloat)cmd.x, -(GLfloat)cmd.y, 0.0f);
     glRotatef(cmd.angle, 0.0f, 0.0f, -1.0f);
-
+#else
+    // TODO: gles - rotated quad
+    const float uv[] = {
+         0.0f, cmd.v,
+        cmd.u, cmd.v,
+         0.0f, 0.0f,
+        cmd.u, 0.0f,
+    };
+    const float v[] = {
+        0.0f, float(cmd.height),
+        float(cmd.width), float(cmd.height),
+        0.0f, 0.0f,
+        float(cmd.width), 0.0f,
+    };
+    const float v_mirrored[] = {
+        float(cmd.width), float(cmd.height),
+        0.0f, float(cmd.height),
+        float(cmd.width), 0.0f,
+        0.0f, 0.0f,
+    };
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+    model = glm::rotate(model, cmd.angle, glm::vec3(0.0f, 0.0f, 1.0f));
+    GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, 0, uv));
+    GL_CHECK(glEnableVertexAttribArray(_inUV));
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, 0, cmd.mirrored ? v_mirrored : v));
+    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    GL_CHECK(glUniform1i(_uTex, 0));
+    GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    GL_CHECK(glUseProgram(0));
+#endif
     return true;
 }
 
@@ -152,19 +224,18 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
 
-    auto x = (GLfloat)cmd.x;
-    auto y = (GLfloat)cmd.y;
-    float width = (float)cmd.width;
-    float height = (float)cmd.height;
-    float h03 = height * cmd.h3mod;
-    float h06 = height * cmd.h6mod;
-    float h09 = height * cmd.h9mod;
-    float widthOffset = (float)(width + s_sittingCharacterOffset);
+    const auto x = (GLfloat)cmd.x;
+    const auto y = (GLfloat)cmd.y;
+    const float width = (float)cmd.width;
+    const float height = (float)cmd.height;
+    const float h03 = height * cmd.h3mod;
+    const float h06 = height * cmd.h6mod;
+    const float h09 = height * cmd.h9mod;
+    const float widthOffset = (float)(width + s_sittingCharacterOffset);
 
+#if defined(USE_GL)
     glTranslatef(x, y, 0.0f);
-
     glBegin(GL_TRIANGLE_STRIP);
-
     if (cmd.mirror)
     {
         // TODO this won't end well... add a isAlmostZeroF(float val)
@@ -258,10 +329,11 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
             glVertex2f(width, h09);
         }
     }
-
     glEnd();
-
     glTranslatef(-x, -y, 0.0f);
+#else
+    // TODO: gles
+#endif
 
     return true;
 }
@@ -271,11 +343,11 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     ScopedPerfMarker(__FUNCTION__);
 
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-    float translateX = cmd.x - 22.0f;
-    float translateY = cmd.y - 22.0f;
-
+    const float translateX = cmd.x - 22.0f;
+    const float translateY = cmd.y - 22.0f;
     const auto &rc = cmd.rect;
 
+#if defined(USE_GL)
     glTranslatef(translateX, translateY, 0.0f);
 
     glBegin(GL_TRIANGLE_STRIP);
@@ -297,6 +369,10 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     glEnd();
 
     glTranslatef(-translateX, -translateY, 0.0f);
+#else
+    // TODO: gles
+#endif
+
     return true;
 }
 
@@ -315,18 +391,15 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
 
-    auto width = (float)cmd.width;
-    auto height = cmd.height / 2.0f;
+    const auto width = (float)cmd.width;
+    const auto height = cmd.height / 2.0f;
+    const auto x = GLfloat(cmd.x);
+    const auto translateY = GLfloat(cmd.y + height * 0.75);
+    const float ratio = height / width;
 
-    auto x = GLfloat(cmd.x);
-    auto translateY = GLfloat(cmd.y + height * 0.75);
-
+#if defined(USE_GL)
     glTranslatef(x, translateY, 0.0f);
-
     glBegin(GL_TRIANGLE_STRIP);
-
-    float ratio = height / width;
-
     if (cmd.mirror)
     {
         glTexCoord2f(0, 1);
@@ -349,10 +422,11 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
         glTexCoord2f(1, 0);
         glVertex2f(width * (ratio + 1.0f), 0);
     }
-
     glEnd();
-
     glTranslatef(-x, -translateY, 0.0f);
+#else
+    // TODO: gles
+#endif
 
     if (cmd.restoreBlendFunc)
     {
@@ -380,33 +454,29 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
+    const float pi = (float)XUO_M_PI * 2.0f;
+    const auto radius = cmd.radius;
+
+#if defined(USE_GL)
     glDisable(GL_TEXTURE_2D);
-
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
-
     glBegin(GL_TRIANGLE_FAN);
-
     glVertex2i(0, 0);
-
     if (cmd.gradientMode != 0)
     {
         RenderState_SetColor(state, { 0.f, 0.f, 0.f, 0.f });
     }
-
-    float pi = (float)XUO_M_PI * 2.0f;
-
-    auto radius = cmd.radius;
     for (int i = 0; i <= 360; i++)
     {
         float a = (i / 180.0f) * pi;
         glVertex2f(cos(a) * radius, sin(a) * radius);
     }
-
     glEnd();
-
     glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
-
     glEnable(GL_TEXTURE_2D);
+#else
+    // TODO: gles
+#endif
 
     return true;
 }
@@ -415,12 +485,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    glDisable(GL_TEXTURE_2D);
-
-    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
-
-    auto colored = memcmp(g_ColorInvalid.rgba, cmd.color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
-    auto blend = colored && cmd.color[3] < 1.f;
+    const auto colored = memcmp(g_ColorInvalid.rgba, cmd.color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
+    const auto blend = colored && cmd.color[3] < 1.f;
     if (colored)
     {
         RenderState_SetColor(state, cmd.color);
@@ -436,12 +502,20 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
         }
     }
 
+#if defined(USE_GL)
+    glDisable(GL_TEXTURE_2D);
+    glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glBegin(GL_TRIANGLE_STRIP);
     glVertex2i(0, cmd.height);
     glVertex2i(cmd.width, cmd.height);
     glVertex2i(0, 0);
     glVertex2i(cmd.width, 0);
     glEnd();
+    glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
+    glEnable(GL_TEXTURE_2D);
+#else
+    // TODO: gles
+#endif
 
     if (colored)
     {
@@ -454,14 +528,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
                 BlendFactor::BlendFactor_Invalid,
                 BlendEquation::BlendEquation_Invalid);
         }
-
         RenderState_SetColor(state, g_ColorWhite);
     }
-
-    glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f);
-
-    glEnable(GL_TEXTURE_2D);
-
     return true;
 }
 
@@ -469,8 +537,6 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    glDisable(GL_TEXTURE_2D);
-
     auto colored = memcmp(g_ColorInvalid.rgba, cmd.color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
     auto blend = colored && cmd.color[3] < 1.f;
     if (colored)
@@ -488,10 +554,16 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
         }
     }
 
+#if defined(USE_GL)
+    glDisable(GL_TEXTURE_2D);
     glBegin(GL_LINES);
     glVertex2i(cmd.x0, cmd.y0);
     glVertex2i(cmd.x1, cmd.y1);
     glEnd();
+    glEnable(GL_TEXTURE_2D);
+#else
+    // TODO: gles
+#endif
 
     if (colored)
     {
@@ -507,8 +579,6 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 
         RenderState_SetColor(state, g_ColorWhite);
     }
-
-    glEnable(GL_TEXTURE_2D);
 
     return true;
 }
@@ -658,7 +728,11 @@ bool RenderDraw_DisableShaderPipeline(const DisableShaderPipelineCmd &cmd, Rende
 
 bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderState *state)
 {
+#if defined(USE_GL)
     const auto format = GL_UNSIGNED_INT_8_8_8_8_REV;
+#else
+    const auto format = GL_UNSIGNED_BYTE;
+#endif
     const auto bpp = 4;
     auto neededSize = (cmd.width * cmd.height) * bpp;
     assert(cmd.dataSize >= neededSize);

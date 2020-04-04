@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "GLHeaders.h"
+#include <external/gfx/gfx.h>
 #include "../Renderer/RenderAPI.h"
 
 struct CGLShader

@@ -17,14 +17,18 @@ set(EXTERNALGFX_SRC
     imgui/imgui_demo.cpp
     imgui/imgui_draw.cpp
     imgui/imgui_impl_sdl.cpp
+    imgui/imgui_impl_dx11.cpp
     imgui/imgui_impl_opengl2.cpp
     imgui/imgui_impl_opengl3.cpp
-    imgui/imgui_impl_dx11.cpp
     imgui/imgui_stdlib.cpp
     imgui/imgui_widgets.cpp
     imgui/imgui_spinner.cpp
     ui.cpp
 )
+
+if (USE_GL2)
+    list(APPEND EXTERNALGFX_SRC GL/glew.c)
+endif()
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})

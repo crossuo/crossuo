@@ -191,7 +191,6 @@ enum TextureGPUFormat : uint8_t
 enum TextureFormat : uint8_t
 {
     TextureFormat_Unsigned_RGBA8 = 0,
-    TextureFormat_Unsigned_ABGR8,
     TextureFormat_Unsigned_A1_BGR5,
 
     TextureFormat_Count,

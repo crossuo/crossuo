@@ -393,8 +393,6 @@ extern astr_t g_PingString; // Debug Info
 #define IN_RANGE(name, id1, id2) ((name) >= (id1) && (name) <= (id2))
 #define OUT_RANGE(name, id1, id2) ((name) < (id1) || (name) > (id2))
 
-#define UO_USE_SHADER_FILES 0
-
 #define UOFONT_SOLID 0x01
 #define UOFONT_ITALIC 0x02
 #define UOFONT_INDENTION 0x04    // Indent text (except 1 line)

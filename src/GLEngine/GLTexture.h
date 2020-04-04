@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "GLHeaders.h"
+#include <external/gfx/gfx.h>
 // FIXME only RenderTypes.h should be needed here, RenderAPI is included due to temp NEW_RENDERER_ENABLED
 #include "../Renderer/RenderAPI.h"
 

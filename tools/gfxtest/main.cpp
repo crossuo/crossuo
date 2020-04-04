@@ -68,7 +68,10 @@ int main(int argc, char **argv)
     win.width = 800;
     win.height = 600;
     win.vsync = 0;
-    win_init(&win);
+    if (win_init(&win) < 0)
+    {
+        return -1;
+    }
 
     /* clang-format off */
     const float vertices[] = {

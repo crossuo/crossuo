@@ -8,7 +8,29 @@
 #include <common/logging/logging.h>
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
+#include <stdlib.h> // malloc
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
+
+#if defined(USE_GLES)
+#include "../ShaderData.h"
+extern int _inPos;
+extern int _inColor;
+extern int _inUV;
+extern int _uProjectionView;
+extern int _uModel;
+extern int _uTex;
+extern int _pProg;
+int _inPos = 0;
+int _inColor = 0;
+int _inUV = 0;
+int _uProjectionView = 0;
+int _uModel = 0;
+int _uTex = 0;
+int _pProg = 0;
+#endif
 
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
 float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };
@@ -59,20 +81,11 @@ bool float3::operator!=(const float3 &other) const
 
 bool Render_Init(SDL_Window *window)
 {
-#ifdef OGL_DEBUGCONTEXT_ENABLED
-    auto debugContext = true;
-#else
-    auto debugContext = false;
-#endif
-    if (debugContext)
-    {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    }
-
     auto context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+#if defined(USE_GLEW)
     int glewInitResult = glewInit();
     Info(
         Renderer,
@@ -86,24 +99,32 @@ bool Render_Init(SDL_Window *window)
         SDL_GL_DeleteContext(context);
         return false;
     }
-
-    // debug messages callback needs ogl >= 4.30
-    // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
-    if (debugContext && GLEW_KHR_debug)
-    {
-        SetupOGLDebugMessage();
-    }
+#endif
 
     Info(Renderer, "Graphics Successfully Initialized");
-    Info(Renderer, "OpenGL Info:");
+    Info(Renderer, "Renderer:");
     Info(Renderer, "    Version: %s", glGetString(GL_VERSION));
     Info(Renderer, "     Vendor: %s", glGetString(GL_VENDOR));
     Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
     Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    auto canUseFrameBuffer =
+#if defined(USE_GL)
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    // debug messages callback needs ogl >= 4.30
+    // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
+    if (GLEW_KHR_debug)
+    {
+        SetupOGLDebugMessage();
+    }
+#endif
+
+    const auto canUseFrameBuffer =
         (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
          glFramebufferTexture2D && glGenFramebuffers);
+#else
+    SetupOGLDebugMessage();
+    const auto canUseFrameBuffer = true;
+#endif
 
     if (!canUseFrameBuffer)
     {
@@ -111,38 +132,118 @@ bool Render_Init(SDL_Window *window)
         Error(Client, "Your graphics card does not support Frame Buffers");
         return false;
     }
-    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-    glShadeModel(GL_SMOOTH); // Enables Smooth Color Shading
-    glClearDepth(1.0);       // Depth Buffer Setup
-    glDisable(GL_DITHER);
-
-    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-
-    glEnable(GL_TEXTURE_2D);
 
     SDL_GL_SetSwapInterval(0); // 1 vsync
-
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-    glClearStencil(0);
+    GL_CHECK(glClearStencil(0));
     // glStencilMask(1);
+    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
+#if defined(USE_GLES)
+    GL_CHECK(glClearDepthf(1.0));      // Depth Buffer Setup
+    // TODO: gles - init shaders
+    // https://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences
+    char msg[512];
+    const auto vs = glCreateShader(GL_VERTEX_SHADER);
+    GL_CHECK(glShaderSource(vs, 1, &g_vShader, nullptr));
+    GL_CHECK(glCompileShader(vs));
+    GLint status = GL_TRUE;
+    GL_CHECK(glGetShaderiv(vs, GL_COMPILE_STATUS, &status));
+    if (status == GL_FALSE)
+    {
+        glGetShaderInfoLog(vs, sizeof(msg), nullptr, msg);
+        Error(Renderer, "vs compilation: %s", msg);
+    }
 
-    glEnable(GL_LIGHT0);
+    const auto ps = glCreateShader(GL_FRAGMENT_SHADER);
+    GL_CHECK(glShaderSource(ps, 1, &g_pShader, nullptr));
+    GL_CHECK(glCompileShader(ps));
+    status = GL_TRUE;
+    GL_CHECK(glGetShaderiv(ps, GL_COMPILE_STATUS, &status));
+    if (status == GL_FALSE)
+    {
+        glGetShaderInfoLog(ps, sizeof(msg), nullptr, msg);
+        Error(Renderer, "ps compilation: %s", msg);
+    }
 
-    GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]);
+    _pProg = glCreateProgram();
+    GL_CHECK(glAttachShader(_pProg, vs));
+    GL_CHECK(glAttachShader(_pProg, ps));
+    GL_CHECK(glLinkProgram(_pProg));
+    status = GL_TRUE;
+    GL_CHECK(glGetProgramiv(_pProg, GL_LINK_STATUS, &status));
+    if (status == GL_FALSE)
+    {
+        glGetProgramInfoLog(ps, sizeof(msg), nullptr, msg);
+        Error(Renderer, "program link: %s", msg);
+    }
 
-    GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]);
+    _inPos = glGetAttribLocation(_pProg, "inPos");
+    GL_CHECK_ATTRIB(_inPos);
+    _inUV = glGetAttribLocation(_pProg, "inUV");
+    GL_CHECK_ATTRIB(_inUV);
+    _inColor = glGetAttribLocation(_pProg, "inColor");
+    GL_CHECK_ATTRIB(_inColor);
+    _uProjectionView = glGetUniformLocation(_pProg, "uProjectionView");
+    GL_CHECK_ATTRIB(_uProjectionView);
+    _uModel = glGetUniformLocation(_pProg, "uModel");
+    GL_CHECK_ATTRIB(_uModel);
+    _uTex = glGetUniformLocation(_pProg, "uTex");
+    GL_CHECK_ATTRIB(_uTex);
+    GL_CHECK(glUseProgram(_pProg));
 
-    GLfloat lav = 0.8f;
-    GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]);
-
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-
+    float v[] = { -1, -1, -1, 1, 1, 1, 1, -1 };
+    float u[] = { 0, 0, 0, 1, 1, 1, 1, 0 };
+    float c[] = { 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 };
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, false, 0, v));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, false, 0, u));
+    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_FLOAT, false, 0, c));
+    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    GL_CHECK(glEnableVertexAttribArray(_inUV));
+    GL_CHECK(glEnableVertexAttribArray(_inColor));
+/*
+    GLuint fboId = 0;
+    GLuint renderBufferWidth = 400;
+    GLuint renderBufferHeight = 400;
+    glGenFramebuffers(1, &fboId);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+    GLuint renderBuffer;
+    glGenRenderbuffers(1, &renderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, renderBufferWidth, renderBufferHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderBuffer);
+    glViewport(0,0,renderBufferWidth,renderBufferHeight);
+    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+*/
+    GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
+    GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
+    GL_CHECK(glUseProgram(0));
+    GLuint tex;
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
+    GL_CHECK(glGenTextures(1, &tex));
+/*
+    int size = 4 * renderBufferHeight * renderBufferWidth;
+    unsigned char *data2 = new unsigned char[size];
+    glReadPixels(0, 0, renderBufferWidth, renderBufferHeight, GL_RGBA, GL_UNSIGNED_BYTE, data2);
+*/
+#else
+    GL_CHECK(glEnable(GL_TEXTURE_2D));
+    GL_CHECK(glShadeModel(GL_SMOOTH)); // Enables Smooth Color Shading
+    GL_CHECK(glClearDepth(1.0));       // Depth Buffer Setup
+    GL_CHECK(glDisable(GL_DITHER));
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
+    GL_CHECK(glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST));
+    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL));
+    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
+    GL_CHECK(glEnable(GL_LIGHT0));
+    const GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
+    GL_CHECK(glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]));
+    const GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    GL_CHECK(glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]));
+    const GLfloat lav = 0.8f;
+    const GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
+    GL_CHECK(glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]));
+    GL_CHECK(glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE));
+#endif
     g_render.context = context;
     g_render.window = window;
     return true;
@@ -165,10 +266,10 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     int needed_height = cmd.scene_y + cmd.scene_height;
     int bottom = cmd.window_height - needed_height;
 
-    glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height);
+    GL_CHECK(glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height));
+#if defined(USE_GL)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-
     glOrtho(
         cmd.scene_x,
         cmd.scene_x + cmd.scene_width,
@@ -176,8 +277,19 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
         cmd.scene_y,
         cmd.camera_nearZ,
         cmd.camera_farZ);
-
     glMatrixMode(GL_MODELVIEW);
+#else
+    // TODO: gles - ortho viewparms hack
+    const auto projection = glm::ortho(
+        float(cmd.scene_x),
+        float(cmd.scene_x + cmd.scene_width),
+        float(cmd.scene_y + cmd.scene_height),
+        float(cmd.scene_y),
+        float(cmd.camera_nearZ),
+        float(cmd.camera_farZ));
+    GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+#endif
     return true;
 }
 
@@ -218,18 +330,15 @@ bool Render_CreateShaderPipeline(
 
     auto validate_shader_compile = [](GLuint shader) {
         auto val = GL_FALSE;
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &val);
+        GL_CHECK(glGetShaderiv(shader, GL_COMPILE_STATUS, &val));
         if (val != GL_TRUE)
         {
             GLint logLength;
-            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-            auto compileLog = (GLchar *)malloc(logLength * sizeof(GLcharARB));
+            GL_CHECK(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength));
+            auto compileLog = (GLchar *)malloc(logLength * sizeof(GLchar));
             assert(compileLog);
-
             glGetShaderInfoLog(shader, logLength, nullptr, compileLog);
-
             Error(Renderer, "shader compilation error, compile log:\n%s", compileLog);
-
             free(compileLog);
             return false;
         }
@@ -239,18 +348,15 @@ bool Render_CreateShaderPipeline(
     auto validate_program = [](GLuint program, GLenum validation_type) {
         assert(validation_type == GL_LINK_STATUS || validation_type == GL_VALIDATE_STATUS);
         auto val = GL_FALSE;
-        glGetProgramiv(program, validation_type, &val);
+        GL_CHECK(glGetProgramiv(program, validation_type, &val));
         if (val != GL_TRUE)
         {
             GLint logLength;
-            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+            GL_CHECK(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength));
             auto programLog = (GLchar *)malloc(logLength * sizeof(GLchar));
             assert(programLog);
-
             glGetProgramInfoLog(program, logLength, nullptr, programLog);
-
             Error(Renderer, "program log:\n%s", programLog);
-
             free(programLog);
             return false;
         }
@@ -258,14 +364,14 @@ bool Render_CreateShaderPipeline(
     };
 
     auto link_program = [&](GLuint program) {
-        glLinkProgram(program);
+        GL_CHECK(glLinkProgram(program));
         if (!validate_program(program, GL_LINK_STATUS))
         {
             Error(Renderer, "shader link failed");
             return false;
         }
 
-        glValidateProgram(program);
+        GL_CHECK(glValidateProgram(program));
         if (!validate_program(program, GL_VALIDATE_STATUS))
         {
             Error(Renderer, "shader validate failed");
@@ -279,15 +385,15 @@ bool Render_CreateShaderPipeline(
             *shader = glCreateShader(shaderType);
             assert(*shader != 0);
 
-            glShaderSource(*shader, 1, &source, nullptr);
-            glCompileShader(*shader);
+            GL_CHECK(glShaderSource(*shader, 1, &source, nullptr));
+            GL_CHECK(glCompileShader(*shader));
 
             if (!validate_shader_compile(*shader))
             {
                 return false;
             }
 
-            glAttachShader(program, *shader);
+            GL_CHECK(glAttachShader(program, *shader));
             return true;
         };
 
@@ -316,7 +422,7 @@ bool Render_CreateShaderPipeline(
 
     if (!link_program(pip.program))
     {
-        glDeleteProgram(pip.program);
+        GL_CHECK(glDeleteProgram(pip.program));
         pip.program = 0;
         return false;
     }
@@ -333,11 +439,11 @@ bool Render_DestroyShaderPipeline(ShaderPipeline *pipeline)
         {
             if (handle != RENDER_SHADERHANDLE_INVALID)
             {
-                glDeleteShader(handle);
+                GL_CHECK(glDeleteShader(handle));
             }
         }
 
-        glDeleteProgram(pipeline->program);
+        GL_CHECK(glDeleteProgram(pipeline->program));
     }
 
     *pipeline = ShaderPipeline{};
@@ -384,31 +490,43 @@ texture_handle_t Render_CreateTexture2D(
         GL_RGB5_A1, // RGB5_A1
     };
 
+#if defined(USE_GL)
     static GLenum s_pixelFormatToOGLFormat[] = {
         GL_UNSIGNED_INT_8_8_8_8,       // TextureFormat_Unsigned_RGBA8
-        GL_UNSIGNED_INT_8_8_8_8_REV,   // TextureFormat_Unsigned_ABGR8
         GL_UNSIGNED_SHORT_1_5_5_5_REV, // TextureFormat_Unsigned_A1_BGR5
     };
+    const auto imgFormat = GL_BGRA;
+#else
+    static GLenum s_pixelFormatToOGLFormat[] = {
+        GL_UNSIGNED_BYTE,          // TextureFormat_Unsigned_RGBA8
+        GL_UNSIGNED_SHORT_5_5_5_1, // TextureFormat_Unsigned_A1_BGR5
+    };
+    const auto imgFormat = GL_RGBA; //GL_BGRA_EXT;
+#endif
 
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
+    GL_CHECK(glGenTextures(1, &tex));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
+#if defined(USE_GL)
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(
+#else
+    // TODO: gles - not needed
+#endif
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CHECK(glTexImage2D(
         GL_TEXTURE_2D,
         0,
         s_gpuFormatToOGLFormat[gpuFormat],
         width,
         height,
         0,
-        GL_BGRA,
+        imgFormat,
         s_pixelFormatToOGLFormat[pixelsFormat],
-        pixels);
+        pixels));
 
     return tex;
 }
@@ -418,20 +536,26 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     texture_handle_t texture;
     framebuffer_handle_t handle;
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
+    GL_CHECK(glGenTextures(1, &texture));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
+#if defined(USE_GL)
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+#else
+    GL_CHECK(glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, nullptr));
+#endif
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GLint currFb = 0;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currFb);
+    GL_CHECK(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currFb));
 
-    glGenFramebuffers(1, &handle);
-    glBindFramebuffer(GL_FRAMEBUFFER, handle);
+    GL_CHECK(glGenFramebuffers(1, &handle));
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0));
 
     frame_buffer_t fb = {};
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
@@ -440,7 +564,7 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
         fb.handle = handle;
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, currFb);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, currFb));
     return fb;
 }
 
@@ -452,12 +576,12 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb)
     assert(validTex);
     if (validTex)
     {
-        glDeleteTextures(1, &fb.texture);
+        GL_CHECK(glDeleteTextures(1, &fb.texture));
     }
 
     if (validFb)
     {
-        glDeleteFramebuffers(1, &fb.handle);
+        GL_CHECK(glDeleteFramebuffers(1, &fb.handle));
     }
 
     return validTex && validFb;
@@ -468,7 +592,7 @@ bool Render_DestroyTexture(texture_handle_t texture)
     assert(texture != RENDER_TEXTUREHANDLE_INVALID);
     if (texture != RENDER_TEXTUREHANDLE_INVALID)
     {
-        glDeleteTextures(1, &texture);
+        GL_CHECK(glDeleteTextures(1, &texture));
         return true;
     }
 

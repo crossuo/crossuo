@@ -5,7 +5,7 @@
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
 #include "../Utility/PerfMarker.h"
-#include "../GLEngine/GLHeaders.h"
+#include <external/gfx/gfx.h>
 #include <assert.h>
 #include <common/utils.h> // countof
 #include <common/logging/logging.h>
@@ -233,7 +233,7 @@ void ShaderUniformValueAsString(ShaderUniformType type, void *value, char *str, 
         switch (type)
         {
             case ShaderUniformType::ShaderUniformType_Int1:
-                snprintf(str, str_capacity, "%d", *(GLint *)value);
+                snprintf(str, str_capacity, "%d", *(int *)value);
                 break;
 
             case ShaderUniformType::ShaderUniformType_Invalid:
@@ -254,7 +254,7 @@ void ShaderUniformValueAsString(ShaderUniformType type, void *value, char *str, 
         {
             case ShaderUniformType::ShaderUniformType_Float1V:
             {
-                snprintf(str, str_capacity, "%f, ...", *(GLfloat *)value);
+                snprintf(str, str_capacity, "%f, ...", *(float *)value);
                 break;
             }
 

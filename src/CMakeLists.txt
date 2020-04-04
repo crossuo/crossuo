@@ -40,10 +40,6 @@ set(glengine_src
   GLEngine/GLTexture.cpp
 )
 
-if (NOT XUO_EMSC)
-  set(glengine_src ${glengine_src} GLEngine/glew.c)
-endif()
-
 set(renderer_src
   Renderer/RenderAdd.cpp
   Renderer/RenderDraw.cpp
@@ -311,9 +307,9 @@ else()
   add_library(crossuo SHARED ${XUO_FILES})
 endif()
 
-add_dependencies(crossuo ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${3RDPARTY_STATIC})
-target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${THREAD})
-target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/GLEngine/GL/*.h)
+add_dependencies(crossuo ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${3RDPARTY_STATIC})
+target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${EXTERNALGFX_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${GLM_LIBRARIES} ${THREAD})
+target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${EXTERNALGFX_INCLUDE} ${GLM_INCLUDE_DIR})
 
 if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
   add_dependencies(crossuo clang-format-7)
