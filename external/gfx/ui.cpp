@@ -8,7 +8,7 @@
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/IconsForkAwesomeData.h"
 
-#if defined(USE_GL3)
+#if defined(USE_GL3) || defined(USE_GLES)
 #include "imgui/imgui_impl_opengl3.h"
 #elif defined(USE_GL2)
 #include "imgui/imgui_impl_opengl2.h"
@@ -49,19 +49,12 @@ ui_context ui_init(win_context &win)
 
     // Setup Platform/Renderer bindings
 
-#if defined(USE_GL)
+#if defined(USE_GL) || defined(USE_GLES)
     ImGui_ImplSDL2_InitForOpenGL(win.window, win.context);
 #endif
 
-#if defined(USE_GL3)
-#if defined(__APPLE__)
-    // GL 3.2 Core + GLSL 150
-    const char *glsl_version = "#version 150";
-#else
-    // GL 3.0 + GLSL 130
-    const char *glsl_version = "#version 130";
-#endif
-    ImGui_ImplOpenGL3_Init(glsl_version);
+#if defined(USE_GL3) || defined(USE_GLES)
+    ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
 #elif defined(USE_GL2)
     ImGui_ImplOpenGL2_Init();
 #elif defined(USE_DX11)
@@ -143,6 +136,8 @@ ui_context ui_init(win_context &win)
 	win.context = g_pd3dDeviceContext;
 #elif defined(USE_METAL)
     // ImGui_ImplMetal_Init()
+#else
+    #error "Unknown backend for imgui"
 #endif
 
     // Load Fonts
@@ -182,7 +177,7 @@ void ui_draw(ui_context &ui)
 {
 	(void)ui;
     ImGui::Render();
-#if defined(USE_GL3)
+#if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #elif defined(USE_GL2)
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
@@ -192,6 +187,8 @@ void ui_draw(ui_context &ui)
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #elif defined(USE_METAL)
     //ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), ...);
+#else
+    #error "Unknown backend for imgui"
 #endif
 
     // Update and Render additional Platform Windows
@@ -200,13 +197,13 @@ void ui_draw(ui_context &ui)
     ImGuiIO &io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
-#if defined(USE_GL)
+#if defined(USE_GL) || defined(USE_GLES)
         SDL_Window *backup_current_window = SDL_GL_GetCurrentWindow();
         SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
 #endif
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
-#if defined(USE_GL)
+#if defined(USE_GL) || defined(USE_GLES)
         SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
 #endif
     }
@@ -218,7 +215,7 @@ void ui_draw(ui_context &ui)
 
 void ui_update(ui_context &ctx)
 {
-#if defined(USE_GL3)
+#if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_NewFrame();
 #elif defined(USE_GL2)
     ImGui_ImplOpenGL2_NewFrame();
@@ -226,6 +223,8 @@ void ui_update(ui_context &ctx)
     ImGui_ImplDX11_NewFrame();
 #elif defined(USE_METAL)
     //ImGui_ImplMetal_NewFrame(...);
+#else
+    #error "Unknown backend for imgui"
 #endif
 
     ImGui_ImplSDL2_NewFrame(ctx.win->window);
@@ -285,7 +284,7 @@ void ui_update(ui_context &ctx)
 
 void ui_shutdown(ui_context &)
 {
-#if defined(USE_GL3)
+#if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_Shutdown();
 #elif defined(USE_GL2)
     ImGui_ImplOpenGL2_Shutdown();
@@ -313,6 +312,8 @@ void ui_shutdown(ui_context &)
 	}
 #elif defined(USE_METAL)
     //ImGui_ImplMetal_Shutdown(...);
+#else
+    #error "Unknown backend for imgui"
 #endif
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();

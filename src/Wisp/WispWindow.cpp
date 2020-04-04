@@ -150,9 +150,12 @@ bool CWindow::Create(const char *title, bool showCursor, int width, int height)
         return false;
     }
 
-    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    // SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    const auto debugContext = true;
+#else
+    const auto debugContext = false;
+#endif
+    win_gfx_context_attrbutes(debugContext);
 
     m_Size.Width = width;
     m_Size.Height = height;

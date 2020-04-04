@@ -6,7 +6,7 @@
 #include "../SDL_wrapper.h"
 //#define NEW_RENDERER_ENABLED
 
-#include "../GLEngine/GLHeaders.h"
+#include <external/gfx/gfx.h>
 #if !defined(NEW_RENDERER_ENABLED)
 #include "../GLEngine/GLEngine.h"
 #endif
