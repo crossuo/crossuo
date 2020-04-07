@@ -59,11 +59,11 @@ ui_context ui_init(win_context &win)
     ImGui_ImplOpenGL2_Init();
 #elif defined(USE_DX11)
     // create device d3d
-	SDL_SysWMinfo info;
-	HWND hWnd = 0;
-	SDL_VERSION(&info.version);
-	if (SDL_GetWindowWMInfo(win.window, &info))
-		hWnd = info.info.win.window;
+    SDL_SysWMinfo info;
+    HWND hWnd = 0;
+    SDL_VERSION(&info.version);
+    if (SDL_GetWindowWMInfo(win.window, &info))
+        hWnd = info.info.win.window;
 
     DXGI_SWAP_CHAIN_DESC sd;
     ZeroMemory(&sd, sizeof(sd));
@@ -133,11 +133,11 @@ ui_context ui_init(win_context &win)
 
     ImGui_ImplSDL2_InitForD3D(win.window);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
-	win.context = g_pd3dDeviceContext;
+    win.context = g_pd3dDeviceContext;
 #elif defined(USE_METAL)
     // ImGui_ImplMetal_Init()
 #else
-    #error "Unknown backend for imgui"
+#error "Unknown backend for imgui"
 #endif
 
     // Load Fonts
@@ -162,7 +162,12 @@ ui_context ui_init(win_context &win)
     ImFontConfig config;
     config.MergeMode = true;
     io.Fonts->AddFontDefault();
-    io.Fonts->AddFontFromMemoryCompressedTTF(iconsforkawesome_compressed_data, iconsforkawesome_compressed_size, fontSize, &config, icons_ranges);
+    io.Fonts->AddFontFromMemoryCompressedTTF(
+        iconsforkawesome_compressed_data,
+        iconsforkawesome_compressed_size,
+        fontSize,
+        &config,
+        icons_ranges);
     //io.Fonts->AddFontFromFileTTF("forkawesome-webfont.ttf", 18.0f, &config, icons_ranges);
     io.Fonts->Build();
     return ctx;
@@ -175,7 +180,7 @@ void ui_process_event(ui_context &, const SDL_Event *event)
 
 void ui_draw(ui_context &ui)
 {
-	(void)ui;
+    (void)ui;
     ImGui::Render();
 #if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -188,7 +193,7 @@ void ui_draw(ui_context &ui)
 #elif defined(USE_METAL)
     //ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), ...);
 #else
-    #error "Unknown backend for imgui"
+#error "Unknown backend for imgui"
 #endif
 
     // Update and Render additional Platform Windows
@@ -209,7 +214,7 @@ void ui_draw(ui_context &ui)
     }
 
 #if defined(USE_DX11)
-	g_pSwapChain->Present(ui.win->vsync, 0);
+    g_pSwapChain->Present(ui.win->vsync, 0);
 #endif
 }
 
@@ -224,7 +229,7 @@ void ui_update(ui_context &ctx)
 #elif defined(USE_METAL)
     //ImGui_ImplMetal_NewFrame(...);
 #else
-    #error "Unknown backend for imgui"
+#error "Unknown backend for imgui"
 #endif
 
     ImGui_ImplSDL2_NewFrame(ctx.win->window);
@@ -232,7 +237,7 @@ void ui_update(ui_context &ctx)
 
     if (ctx.show_demo_window)
         ImGui::ShowDemoWindow();
-        
+
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     if (ctx.show_stats_window)
     {
@@ -290,30 +295,30 @@ void ui_shutdown(ui_context &)
     ImGui_ImplOpenGL2_Shutdown();
 #elif defined(USE_DX11)
     ImGui_ImplDX11_Shutdown();
-	if (g_mainRenderTargetView)
-	{
-		g_mainRenderTargetView->Release();
-		g_mainRenderTargetView = nullptr;
-	}
-	if (g_pSwapChain)
-	{
-		g_pSwapChain->Release();
-		g_pSwapChain = nullptr;
-	}
-	if (g_pd3dDeviceContext)
-	{
-		g_pd3dDeviceContext->Release();
-		g_pd3dDeviceContext = nullptr;
-	}
-	if (g_pd3dDevice)
-	{
-		g_pd3dDevice->Release();
-		g_pd3dDevice = nullptr;
-	}
+    if (g_mainRenderTargetView)
+    {
+        g_mainRenderTargetView->Release();
+        g_mainRenderTargetView = nullptr;
+    }
+    if (g_pSwapChain)
+    {
+        g_pSwapChain->Release();
+        g_pSwapChain = nullptr;
+    }
+    if (g_pd3dDeviceContext)
+    {
+        g_pd3dDeviceContext->Release();
+        g_pd3dDeviceContext = nullptr;
+    }
+    if (g_pd3dDevice)
+    {
+        g_pd3dDevice->Release();
+        g_pd3dDevice = nullptr;
+    }
 #elif defined(USE_METAL)
     //ImGui_ImplMetal_Shutdown(...);
 #else
-    #error "Unknown backend for imgui"
+#error "Unknown backend for imgui"
 #endif
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
