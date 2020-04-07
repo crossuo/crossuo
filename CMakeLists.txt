@@ -24,6 +24,9 @@ message(STATUS "Version: ${XUO_VERSION} (${XUO_VERSION_NUM})")
 #
 option(ENABLE_LTO "Enables Link Time Optimization (default: On)" ON)
 option(ENABLE_FORMAT "Enables clang-format (default: On)" ON)
+option(RENDER_GLES2 "Force OpenGL ES2 (default Off)" OFF)
+option(RENDER_GL3 "Force OpenGL 3.x (default Off)" OFF)
+option(RENDER_GL1 "Force OpenGL 1.1 (automatic)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
@@ -40,18 +43,23 @@ include(CCache)
 include(Revision)
 include(Dependencies)
 
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING
       "Build type (Release/Debug/RelWithDebInfo/MinSizeRel)" FORCE)
+endif()
+
+if (NOT RENDER_GLES2 AND NOT RENDER_GL1 AND NOT RENDER_GL3)
+  message(STATUS "No render selected, defaulting to OpenGL 1")
+  set(RENDER_GL1 On)
 endif()
 
 #
 # Build Dependencies
 #
-find_package(GLESv2)
-if(NOT GLESv2_FOUND)
-  compile_definitions(USE_GL2)
-  set(USE_GL2 1)
+if (RENDER_GLES2)
+  find_package(GLESv2 REQUIRED)
+endif()
+if (RENDER_GL1 OR RENDER_GL3)
   if (NOT APPLE)
     # Set the preferred opengl library to GLVND if there is GLVND and Legacy.
     # Only if there is no GLVND Legacy will be used.
@@ -60,8 +68,21 @@ if(NOT GLESv2_FOUND)
     set(OpenGL_GL_PREFERENCE GLVND)
   endif()
   find_package(OpenGL REQUIRED)
-else()
-  compile_definitions(USE_GLES2)
+endif()
+
+if (OPENGL_FOUND)
+  if (RENDER_GL1) # GL1/GL2 is the same for us
+    compile_definitions(USE_GL2=1)
+    set(USE_GL2 1)
+  else()
+    compile_definitions(USE_GL3=1)
+    compile_definitions(NEW_RENDERER_ENABLED=1)
+    set(USE_GL3 1)
+  endif()
+  set(GL_LIBRARIES ${OPENGL_LIBRARIES})
+elseif (GLESv2_FOUND)
+  compile_definitions(USE_GLES2=1)
+  compile_definitions(NEW_RENDERER_ENABLED=1)
   set(USE_GLES2 1)
   set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR})
 endif()

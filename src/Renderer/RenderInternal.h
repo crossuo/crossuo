@@ -7,8 +7,6 @@
 #error "Do not include this directly. Include RenderAPI.h"
 #endif
 
-// #define OGL_DEBUGCONTEXT_ENABLED
-
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type);
 // FIXME naming
 void SetupOGLDebugMessage();

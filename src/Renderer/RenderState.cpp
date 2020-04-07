@@ -14,7 +14,7 @@
 #include <string.h> // memcmp, memcpy
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
-#if defined(USE_GLES)
+#if defined(USE_GLES) || defined(USE_GL3)
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;
@@ -61,7 +61,7 @@ bool RenderState_FlushState(RenderState *state)
         state->scissor.width,
         state->scissor.height);
 
-#if defined(USE_GL)
+#if defined(USE_GL2)
     glLoadIdentity();
 #else
     // TODO: gles - model identity
@@ -101,7 +101,7 @@ bool RenderState_SetAlphaTest(
     {
         changed = true;
         state->alphaTest.enabled = enabled;
-#if defined(USE_GL)
+#if defined(USE_GL2)
         if (enabled)
         {
             glEnable(GL_ALPHA_TEST);
@@ -130,7 +130,7 @@ bool RenderState_SetAlphaTest(
         changed = true;
         state->alphaTest.func = func;
         state->alphaTest.alphaRef = ref;
-#if defined(USE_GL)
+#if defined(USE_GL2)
         glAlphaFunc(s_alphaTestfuncToOGLFunc[func], ref);
 #endif
     }
@@ -366,7 +366,7 @@ bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
     {
         state->color = color;
         memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
-#if defined(USE_GL)
+#if defined(USE_GL2)
         glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
 #else
         glVertexAttribPointer(_inPos, 4, GL_FLOAT, GL_FALSE, 0, state->color.rgba);
@@ -557,7 +557,7 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
     {
         if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
         {
-#if defined(USE_GL)
+#if defined(USE_GL2)
             glEnable(GL_TEXTURE_2D);
 #endif
             glBindFramebuffer(GL_FRAMEBUFFER, fb.handle);
@@ -616,7 +616,7 @@ bool RenderState_SetViewParams(
         const float scaledTop = scene_y * scene_scale - (scaledBottom - (scene_y + scene_height));
 
         glViewport(scene_x, bottom, scene_width, scene_height);
-#if defined(USE_GL)
+#if defined(USE_GL2)
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(
@@ -645,7 +645,7 @@ bool RenderState_SetViewParams(
 
 bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced)
 {
-#if defined(USE_GL)
+#if defined(USE_GL2)
     glTranslatef(pos[0], pos[1], pos[2]);
 #else
     // TODO: gles - model translation

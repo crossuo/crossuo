@@ -150,13 +150,6 @@ bool CWindow::Create(const char *title, bool showCursor, int width, int height)
         return false;
     }
 
-#ifdef OGL_DEBUGCONTEXT_ENABLED
-    const auto debugContext = true;
-#else
-    const auto debugContext = false;
-#endif
-    win_gfx_context_attrbutes(debugContext);
-
     m_Size.Width = width;
     m_Size.Height = height;
     m_window =

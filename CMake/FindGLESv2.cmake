@@ -10,8 +10,7 @@
 #  EGL_LIBRARIES    - Link these to use EGL
 
 find_package(PkgConfig)
-include(FindPackageHandleStandardArgs)
-
+set(_GLESv2_REQUIRED_VARS GLESv2_LIBRARY_DIR GLESv2_INCLUDE_DIR)
 set(CMAKE_FIND_LIBRARY_CUSTOM_LIB_SUFFIX "")
 
 find_library(GLESv2_LIBRARY_DIR
@@ -41,12 +40,18 @@ endif()
 if(NOT ${GLESv2_INCLUDE_DIR}_NOT_FOUND)
     # append result to what pkgconfig's results
     set(GLESv2_INCLUDE_DIRS ${GLESv2_INCLUDE_DIRS} ${GLESv2_INCLUDE_DIR})
+    message(STATUS "Found gl2.h at ${GLESv2_INCLUDE_DIRS}")
 else()
     message(WARNING "no gl2.h found in /usr/include/GLES2")
 endif()
 
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(GLESv2 REQUIRED_VARS ${_GLESv2_REQUIRED_VARS}
+	                          HANDLE_COMPONENTS)
+unset(_GLESv2_REQUIRED_VARS)
+
 if(NOT GLESv2_FOUND)
-    message(FATAL_ERROR "GLESv2_FOUND NOT found")
+    message(STATUS "GLESv2_FOUND NOT found")
 else()
     message(STATUS "GLES found")
     message(STATUS "-l: ${GLESv2_LIBRARIES}")

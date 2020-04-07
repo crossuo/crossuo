@@ -14,8 +14,24 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
-#if defined(USE_GLES)
+#if defined(USE_GLES) || defined(USE_GL3)
+// clang-format off
+static const uint32_t _missingTexture[] = {
+    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
+    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
+    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
+    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
+    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
+    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
+    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
+    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
+};
+// clang-format on
 #include "../ShaderData.h"
+extern uint32_t _vao;
+extern uint32_t _vbo;
+extern uint32_t _vio;
+extern uint32_t _defaultTex;
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;
@@ -23,6 +39,10 @@ extern int _uProjectionView;
 extern int _uModel;
 extern int _uTex;
 extern int _pProg;
+uint32_t _vao = 0;
+uint32_t _vbo = 0;
+uint32_t _vio = 0;
+uint32_t _defaultTex = 0;
 int _inPos = 0;
 int _inColor = 0;
 int _inUV = 0;
@@ -81,22 +101,29 @@ bool float3::operator!=(const float3 &other) const
 
 bool Render_Init(SDL_Window *window)
 {
+    win_gfx_context_attrbutes(true);
     auto context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 #if defined(USE_GLEW)
     int glewInitResult = glewInit();
-    Info(
-        Renderer,
-        "glewInit() = %i fb=%i v(%s) (shader: %i)",
-        glewInitResult,
-        GL_ARB_framebuffer_object,
-        glGetString(GL_VERSION),
-        GL_ARB_shader_objects);
     if (glewInitResult != 0)
     {
         SDL_GL_DeleteContext(context);
+        Error(Renderer, "glewInit: %s", glewGetErrorString(glewInitResult));
+        return false;
+    }
+    Info(
+        Renderer,
+        "glew(%s), fb=%i v(%s) (shader: %i)",
+        glewGetString(GLEW_VERSION),
+        GL_ARB_framebuffer_object,
+        glGetString(GL_VERSION),
+        GL_ARB_shader_objects);
+#elif defined(USE_GL3W)
+    if (gl3wInit() != 0)
+    {
+        Error(Renderer, "could not initialize opengl\n");
         return false;
     }
 #endif
@@ -112,7 +139,11 @@ bool Render_Init(SDL_Window *window)
 #ifdef OGL_DEBUGCONTEXT_ENABLED
     // debug messages callback needs ogl >= 4.30
     // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
+#if defined(USE_GLEW)
     if (GLEW_KHR_debug)
+#else
+    if (GL_KHR_debug)
+#endif
     {
         SetupOGLDebugMessage();
     }
@@ -137,8 +168,26 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glClearStencil(0));
     // glStencilMask(1);
     // glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-#if defined(USE_GLES)
-    GL_CHECK(glClearDepthf(1.0));      // Depth Buffer Setup
+#if defined(USE_GL2)
+    GL_CHECK(glEnable(GL_TEXTURE_2D));
+    GL_CHECK(glShadeModel(GL_SMOOTH)); // Enables Smooth Color Shading
+    GL_CHECK(glClearDepth(1.0));       // Depth Buffer Setup
+    GL_CHECK(glDisable(GL_DITHER));
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
+    GL_CHECK(glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST));
+    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL));
+    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
+    GL_CHECK(glEnable(GL_LIGHT0));
+    const GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
+    GL_CHECK(glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]));
+    const GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    GL_CHECK(glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]));
+    const GLfloat lav = 0.8f;
+    const GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
+    GL_CHECK(glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]));
+    GL_CHECK(glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE));
+#else
+    GL_CHECK(glClearDepthf(1.0)); // Depth Buffer Setup
     // TODO: gles - init shaders
     // https://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences
     char msg[512];
@@ -190,59 +239,42 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK_ATTRIB(_uTex);
     GL_CHECK(glUseProgram(_pProg));
 
-    float v[] = { -1, -1, -1, 1, 1, 1, 1, -1 };
-    float u[] = { 0, 0, 0, 1, 1, 1, 1, 0 };
-    float c[] = { 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 };
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, false, 0, v));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, false, 0, u));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_FLOAT, false, 0, c));
+    // clang-format off
+    const GenericVertex data[] = {
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
+        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
+        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+    };
+    const unsigned int idx[] = { 0, 1, 2, 3 };
+#if !defined(USE_GLES2)
+    GL_CHECK(glGenVertexArrays(1, &_vao));
+    GL_CHECK(glBindVertexArray(_vao));
+#endif // #if !defined(USE_GLES2)
+    GL_CHECK(glGenBuffers(1, &_vbo));
+    GL_CHECK(glGenBuffers(1, &_vio));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vio));
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vio));
+
     GL_CHECK(glEnableVertexAttribArray(_inPos));
     GL_CHECK(glEnableVertexAttribArray(_inUV));
     GL_CHECK(glEnableVertexAttribArray(_inColor));
-/*
-    GLuint fboId = 0;
-    GLuint renderBufferWidth = 400;
-    GLuint renderBufferHeight = 400;
-    glGenFramebuffers(1, &fboId);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-    GLuint renderBuffer;
-    glGenRenderbuffers(1, &renderBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, renderBufferWidth, renderBufferHeight);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderBuffer);
-    glViewport(0,0,renderBufferWidth,renderBufferHeight);
-    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-*/
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
+    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
+
+    GL_CHECK(glGenTextures(1, &_defaultTex));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, _defaultTex));
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, _missingTexture));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
-    GL_CHECK(glUseProgram(0));
-    GLuint tex;
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
-    GL_CHECK(glGenTextures(1, &tex));
-/*
-    int size = 4 * renderBufferHeight * renderBufferWidth;
-    unsigned char *data2 = new unsigned char[size];
-    glReadPixels(0, 0, renderBufferWidth, renderBufferHeight, GL_RGBA, GL_UNSIGNED_BYTE, data2);
-*/
-#else
-    GL_CHECK(glEnable(GL_TEXTURE_2D));
-    GL_CHECK(glShadeModel(GL_SMOOTH)); // Enables Smooth Color Shading
-    GL_CHECK(glClearDepth(1.0));       // Depth Buffer Setup
-    GL_CHECK(glDisable(GL_DITHER));
-    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
-    GL_CHECK(glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST));
-    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL));
-    GL_CHECK(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
-    GL_CHECK(glEnable(GL_LIGHT0));
-    const GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
-    GL_CHECK(glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]));
-    const GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    GL_CHECK(glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]));
-    const GLfloat lav = 0.8f;
-    const GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
-    GL_CHECK(glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]));
-    GL_CHECK(glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE));
+    // clang-format on
 #endif
     g_render.context = context;
     g_render.window = window;
@@ -267,7 +299,7 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     int bottom = cmd.window_height - needed_height;
 
     GL_CHECK(glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height));
-#if defined(USE_GL)
+#if defined(USE_GL2)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(
@@ -510,7 +542,7 @@ texture_handle_t Render_CreateTexture2D(
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
     GL_CHECK(glGenTextures(1, &tex));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
-#if defined(USE_GL)
+#if defined(USE_GL2)
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 #else
     // TODO: gles - not needed
@@ -555,7 +587,8 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     GL_CHECK(glGenFramebuffers(1, &handle));
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, handle));
 
-    GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0));
+    GL_CHECK(
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0));
 
     frame_buffer_t fb = {};
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)

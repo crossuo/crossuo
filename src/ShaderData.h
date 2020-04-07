@@ -3,23 +3,19 @@
 
 #pragma once
 
-#define SHADER_HEADER \
-    "#version 100\n" \
-    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
-    "precision highp float;\n" \
-    "#else\n" \
-    "precision mediump float;\n" \
-    "#endif\n"
+#include <external/gfx/gfx.h>
+
+// clang-format off
 
 static const char *g_vShader =
-    SHADER_HEADER
-    "attribute vec2 inPos;\n"
-    "attribute vec2 inUV;\n"
-    "attribute vec4 inColor;\n"
+    GL_SHADER_HEADER
+    GL_SHADER_ATTRIBUTE(0) "vec2 inPos;\n"
+    GL_SHADER_ATTRIBUTE(1) "vec2 inUV;\n"
+    GL_SHADER_ATTRIBUTE(2) "vec4 inColor;\n"
     "uniform mat4 uProjectionView;\n"
     "uniform mat4 uModel;\n"
-    "varying vec2 vUV;\n"
-    "varying vec4 vColor;\n"
+    GL_SHADER_OUT "vec2 vUV;\n"
+    GL_SHADER_OUT "vec4 vColor;\n"
     "void main()\n"
     "{\n"
     "    vUV = inUV;\n"
@@ -28,21 +24,37 @@ static const char *g_vShader =
     "}";
 
 static const char *g_pShader =
-    SHADER_HEADER
-    "varying vec2 vUV;\n"
-    "varying vec4 vColor;\n"
+    GL_SHADER_HEADER
+    GL_SHADER_IN "vec2 vUV;\n"
+    GL_SHADER_IN "vec4 vColor;\n"
     "uniform sampler2D uTex;\n"
     "void main()\n"
     "{\n"
-    "    vec2 x = vec2(1.0, 1.0) + vUV;\n"
-    "    vec4 c = texture2D(uTex, vUV);\n"
-    "    vec4 c2 = vColor;\n"
-    "    c2.a = c.a;\n"
-    "    gl_FragColor = c2;\n"
+    "    vec4 c = vColor * texture2D(uTex, vUV);\n"
+    //"    c.a = 1.0f;\n"
+    "    gl_FragColor = c;\n"
     "}";
 
 
-#if defined(USE_GLES)
+#if defined(USE_GLES) || defined(USE_GL3)
+
+/*
+drawMode:
+
+enum SHADER_DRAW_MODE
+{
+    SDM_NO_COLOR = 0,
+    SDM_COLORED = 1,
+    SDM_PARTIAL_HUE = 2,
+    SDM_TEXT_COLORED_NO_BLACK = 3,
+    SDM_TEXT_COLORED = 4,
+    SDM_LAND = 6,
+    SDM_LAND_COLORED = 7,
+    SDM_SPECTRAL = 10,
+    SDM_SPECIAL_SPECTRAL = 11,
+    SDM_SHADOW = 12
+};
+*/
 
 static const char *g_Vert_ShaderData = g_vShader;
 static const char *g_Frag_DeathShaderData = g_pShader;
@@ -53,12 +65,12 @@ static const char *g_Frag_ColorizerShaderData = g_pShader;
 #endif
 
 
-#if defined(USE_GL)
+#if defined(USE_GL2)
 
 static const char *g_Vert_ShaderData =
-    SHADER_HEADER
-    "varying vec3 l;\n"
-    "varying vec3 n;\n"
+    GL_SHADER_HEADER
+    GL_SHADER_OUT "vec3 l;\n"
+    GL_SHADER_OUT "vec3 n;\n"
     "uniform int drawMode;\n"
     "void main(void)\n"
     "{\n"
@@ -73,9 +85,9 @@ static const char *g_Vert_ShaderData =
     "}";
 
 static const char *g_Frag_DeathShaderData =
-    SHADER_HEADER
-    "varying vec3 l;\n"
-    "varying vec3 n;\n"
+    GL_SHADER_HEADER
+    GL_SHADER_IN "vec3 l;\n"
+    GL_SHADER_IN "vec3 n;\n"
     "uniform sampler2D usedTexture;\n"
     "uniform int drawMode;\n"
     "void main(void)\n"
@@ -97,7 +109,7 @@ static const char *g_Frag_DeathShaderData =
     "}";
 
 static const char *g_Frag_LightShaderData =
-    SHADER_HEADER
+    GL_SHADER_HEADER
     "uniform sampler2D usedTexture;\n"
     "uniform int drawMode;\n"
     "uniform float colors[96];\n"
@@ -114,7 +126,7 @@ static const char *g_Frag_LightShaderData =
     "}";
 
 static const char *g_Frag_FontShaderData =
-    SHADER_HEADER
+    GL_SHADER_HEADER
     "uniform sampler2D usedTexture;\n"
     "uniform int drawMode;\n"
     "uniform float colors[96];\n"
@@ -140,9 +152,9 @@ static const char *g_Frag_FontShaderData =
     "}";
 
 static const char *g_Frag_ColorizerShaderData =
-    SHADER_HEADER
-    "varying vec3 l;\n"
-    "varying vec3 n;\n"
+    GL_SHADER_HEADER
+    GL_SHADER_IN "vec3 l;\n"
+    GL_SHADER_IN "vec3 n;\n"
     "uniform sampler2D usedTexture;\n"
     "uniform int drawMode;\n"
     "uniform float colors[96];\n"
@@ -193,3 +205,5 @@ static const char *g_Frag_ColorizerShaderData =
     "		gl_FragColor = textureColor * gl_Color;\n"
     "}";
 #endif
+
+// clang-format on

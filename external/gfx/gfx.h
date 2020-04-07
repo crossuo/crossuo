@@ -10,24 +10,32 @@
     #define SOKOL_GLCORE33
     #define SOKOL_GLES3
     #define GFX_GL_MAJOR 3
+    #define GFX_GL_MINOR 2
     #if defined(__APPLE__)
         #define GL_SHADER_VERSION "150"
-        #define GFX_GL_MINOR 2
     #else // #if defined(__APPLE__)
         #define GL_SHADER_VERSION "330"
-        #define GFX_GL_MINOR 0
+    #define GL_SHADER_ATTRIBUTE(x) "layout (location = " #x " ) in "
+    #define GL_SHADER_IN "in "
+    #define GL_SHADER_OUT "out "
     #endif // #else // #if defined(__APPLE__)
 #elif defined(USE_GL2) // #if defined(USE_GL3)
     #define USE_GL
     #define USE_GLEW
     #define SOKOL_GLES2
-    #define GL_SHADER_VERSION "220"
+    #define GL_SHADER_VERSION "120"
+    #define GL_SHADER_ATTRIBUTE(x) "in "
+    #define GL_SHADER_IN "varying "
+    #define GL_SHADER_OUT "varying "
     #define GFX_GL_MAJOR 2
     #define GFX_GL_MINOR 2
 #elif defined(USE_GLES2) // #if defined(USE_GL2)
     #define USE_GLES
     #define SOKOL_GLES2
     #define GL_SHADER_VERSION "100"
+    #define GL_SHADER_ATTRIBUTE(x) "in "
+    #define GL_SHADER_IN "varying "
+    #define GL_SHADER_OUT "varying "
     #define GFX_GL_MAJOR 2
     #define GFX_GL_MINOR 1
     #define IMGUI_IMPL_OPENGL_ES2
@@ -56,13 +64,13 @@
 #endif // #elif defined(USE_GL3W) // #if defined(USE_GLEW)
 
 #if defined(USE_GL)
-    /*#if defined(__APPLE__)
+    #if defined(__APPLE__)
         #define GL_SILENCE_DEPRECATION
         #include <OpenGL/gl.h>
     #elif defined(__linux__) // #if defined(__APPLE__)
         #include <GL/gl.h>
-    #endif // #elif defined(__linux__) // #if defined(__APPLE__)*/
-    #include <SDL_opengl.h>
+    #endif // #elif defined(__linux__) // #if defined(__APPLE__)
+    //#include <SDL_opengl.h>
 #elif defined(USE_GLES) // #if defined(USE_GL)
     #if (USE_GLES2)
         //#define GL_GLEXT_PROTOTYPES
@@ -90,7 +98,28 @@
             exit(-69); \
         } \
     } while(0)
+
+#define GL_SHADER_HEADER \
+    "#version " GL_SHADER_VERSION "\n" \
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" \
+    "precision highp float;\n" \
+    "#else\n" \
+    "precision mediump float;\n" \
+    "#endif\n"
 #endif
+
+#if (__cplusplus >= 201100)
+#define OFFSETOF(_TYPE,_MEMBER)  offsetof(_TYPE, _MEMBER)
+#else
+#define OFFSETOF(_TYPE,_MEMBER)  ((size_t)&(((_TYPE*)0)->_MEMBER))
+#endif
+
+struct GenericVertex
+{
+    float pos[2];
+    float uv[2];
+    unsigned int col;
+};
 
 #if defined(XUO_LOCAL_HEADERS)
     #include "SDL.h"

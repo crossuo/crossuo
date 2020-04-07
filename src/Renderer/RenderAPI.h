@@ -4,7 +4,10 @@
 #pragma once
 
 #include "../SDL_wrapper.h"
-//#define NEW_RENDERER_ENABLED
+
+#if defined(USE_GL3)
+#define OGL_DEBUGCONTEXT_ENABLED
+#endif // #if defined(USE_GL)
 
 #include <external/gfx/gfx.h>
 #if !defined(NEW_RENDERER_ENABLED)

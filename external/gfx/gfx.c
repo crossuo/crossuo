@@ -39,22 +39,27 @@ ID3D11RenderTargetView *g_mainRenderTargetView = nullptr;
 void win_gfx_context_attrbutes(int enableDebug)
 {
 #if defined(USE_GL) || defined(USE_GLES)
-    if (enableDebug)
-    {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    }
 #if defined(USE_GLES)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #endif
+#if !defined(USE_GL2)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GFX_GL_MAJOR);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GFX_GL_MINOR);
+#endif // !defined(USE_GL2)
 #if defined(__APPLE__)
     SDL_GL_SetAttribute(
         SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
 #else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    if (enableDebug)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
+    else
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    }
 #endif
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -75,13 +80,16 @@ int win_init(win_context *ctx)
         return -1;
     }
 
-    win_gfx_context_attrbutes(ctx->debug);
-
-
     const SDL_WindowFlags window_flags =
         (SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_Window *window = SDL_CreateWindow(
-        ctx->title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, ctx->width, ctx->height, window_flags);
+        ctx->title,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        ctx->width,
+        ctx->height,
+        window_flags);
+    win_gfx_context_attrbutes(ctx->debug);
 
     if (ctx->icon)
     {
@@ -120,9 +128,10 @@ int win_init(win_context *ctx)
     ctx->context = gl_context;
     SDL_GL_SetSwapInterval(ctx->vsync);
 #if defined(USE_GLEW)
-    if (glewInit() != GLEW_OK)
+    const int res = glewInit();
+    if (res != GLEW_OK)
     {
-        fprintf(stderr, "could not initialize opengl\n");
+        fprintf(stderr, "could not initialize opengl: %s\n", glewGetErrorString(res));
         return -2;
     }
 #elif defined(USE_GL3W)
@@ -161,6 +170,7 @@ int win_init(win_context *ctx)
     memset(&sg_default_shader_desc, 0, sizeof(sg_default_shader_desc));
     sg_setup(&sg_default_desc);
 
+    // clang-format off
 #if defined(USE_GL2) || defined(USE_GLES2)
     sg_default_shader_desc.attrs[0].name = "position";
     sg_default_shader_desc.attrs[1].name = "color0";
@@ -212,6 +222,7 @@ int win_init(win_context *ctx)
                 "  return color;\n"
                 "}\n";
 #endif
+    // clang-format on
     sg_default_shader_desc.vs = sg_default_vs;
     sg_default_shader_desc.fs = sg_default_fs;
     ctx->sg_default_desc = &sg_default_desc;
@@ -226,7 +237,7 @@ void win_shutdown(win_context *ctx)
 #if defined(USE_GL) || defined(USE_GLES)
     SDL_GL_DeleteContext(ctx->context);
 #elif defined(USE_DX11)
-	// ui_shutdown
+    // ui_shutdown
 #endif
     SDL_DestroyWindow(ctx->window);
     SDL_Quit();

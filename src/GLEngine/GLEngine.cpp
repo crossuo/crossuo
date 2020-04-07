@@ -26,7 +26,6 @@ CGLEngine::~CGLEngine()
     Uninstall();
 }
 
-// #define OGL_DEBUGCONTEXT_ENABLED
 #ifdef OGL_DEBUGCONTEXT_ENABLED
 #define OGL_DEBUGMSG_SEVERITY_COUNT (3)
 #define OGL_DEBUGMSG_TYPE_COUNT (8)
@@ -181,27 +180,23 @@ bool CGLEngine::Install()
 #else
     auto debugContext = false;
 #endif
-    if (debugContext)
-    {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    }
-
+    win_gfx_context_attrbutes(debugContext);
     m_context = SDL_GL_CreateContext(g_GameWindow.m_window);
     SDL_GL_MakeCurrent(g_GameWindow.m_window, m_context);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     int glewInitResult = glewInit();
+    if (glewInitResult != 0)
+    {
+        Error(Renderer, "glewInit: %s", glewGetErrorString(glewInitResult));
+        return false;
+    }
     Info(
         Renderer,
-        "glewInit() = %i fb=%i v(%s) (shader: %i)",
-        glewInitResult,
+        "glew(%s), fb=%i v(%s) (shader: %i)",
+        glewGetString(GLEW_VERSION),
         GL_ARB_framebuffer_object,
         glGetString(GL_VERSION),
         GL_ARB_shader_objects);
-    if (glewInitResult != 0)
-    {
-        return false;
-    }
 
     // debug messages callback needs ogl >= 4.30
     // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
