@@ -771,7 +771,7 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
     return true;
 }
 
-bool RenderDraw_DrawTest()
+void RenderDraw_DrawTest()
 {
     // clang-format off
 #if defined(USE_GL3) || defined(USE_GLES2)
