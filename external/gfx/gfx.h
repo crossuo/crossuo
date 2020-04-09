@@ -144,8 +144,6 @@ typedef struct win_context_
     const char *title;
     SDL_Window *window;
     const win_icon_data *icon;
-    void *sg_default_desc;
-    void *sg_default_shader_desc;
     void *context;
     const char *inifile;
     int width;
