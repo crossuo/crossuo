@@ -333,6 +333,7 @@ int main(int argc, char **argv)
     static const auto ini = fs_path_join(xuol_data_path(), "xuolauncher.ini");
 
     win_context win;
+    memset(&win, 0, sizeof(win_context));
     win.title = XUOL_AGENT_NAME;
     win.width = 550;
     win.height = 284;
