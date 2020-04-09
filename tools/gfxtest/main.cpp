@@ -61,6 +61,82 @@ void XUODefaultStyle()
     /* clang-format on */
 }
 
+#if !defined(USE_GL2)
+static sg_desc sg_default_desc;
+static sg_shader_stage_desc sg_default_vs;
+static sg_shader_stage_desc sg_default_fs;
+static sg_shader_desc sg_default_shader_desc;
+#endif // #if !defined(USE_GL2)
+
+void sokol_init()
+{
+#if !defined(USE_GL2)
+    memset(&sg_default_desc, 0, sizeof(sg_default_desc));
+    memset(&sg_default_vs, 0, sizeof(sg_default_vs));
+    memset(&sg_default_fs, 0, sizeof(sg_default_fs));
+    memset(&sg_default_shader_desc, 0, sizeof(sg_default_shader_desc));
+
+    // Old OpenGL is not supported by sokol
+    sg_setup(&sg_default_desc);
+
+    // clang-format off
+#if defined(USE_GLES2)
+    sg_default_shader_desc.attrs[0].name = "position";
+    sg_default_shader_desc.attrs[1].name = "color0";
+    sg_default_vs.source = "attribute vec4 position;\n"
+            "attribute vec4 color0;\n"
+            "varying vec4 color;\n"
+            "void main() {\n"
+            "  gl_Position = position;\n"
+            "  color = color0;\n"
+            "}\n";
+    sg_default_fs.source = "precision mediump float;\n"
+            "varying vec4 color;\n"
+            "void main() {\n"
+            "  gl_FragColor = color;\n"
+            "}\n";
+#elif defined(USE_GL3)
+    sg_default_vs.source = "#version " GL_SHADER_VERSION "\n"
+                "layout(location=0) in vec4 position;\n"
+                "layout(location=1) in vec4 color0;\n"
+                "out vec4 color;\n"
+                "void main() {\n"
+                "  gl_Position = position;\n"
+                "  color = color0;\n"
+                "}\n";
+    sg_default_fs.source = "#version " GL_SHADER_VERSION "\n"
+                "in vec4 color;\n"
+                "out vec4 frag_color;\n"
+                "void main() {\n"
+                "  frag_color = color;\n"
+                "}\n";
+#elif defined(USE_DX11)
+    sg_default_shader_desc.attrs[0].sem_name = "POS";
+    sg_default_shader_desc.attrs[1].sem_name = "COLOR";
+    sg_default_vs.source = "struct vs_in {\n"
+                "  float4 pos: POS;\n"
+                "  float4 color: COLOR;\n"
+                "};\n"
+                "struct vs_out {\n"
+                "  float4 color: COLOR0;\n"
+                "  float4 pos: SV_Position;\n"
+                "};\n"
+                "vs_out main(vs_in inp) {\n"
+                "  vs_out outp;\n"
+                "  outp.pos = inp.pos;\n"
+                "  outp.color = inp.color;\n"
+                "  return outp;\n"
+                "}\n";
+    sg_default_fs.source = "float4 main(float4 color: COLOR0): SV_Target0 {\n"
+                "  return color;\n"
+                "}\n";
+#endif
+    // clang-format on
+    sg_default_shader_desc.vs = sg_default_vs;
+    sg_default_shader_desc.fs = sg_default_fs;
+#endif // #if !defined(USE_GL2)
+}
+
 int main(int argc, char **argv)
 {
     win_context win;
@@ -73,6 +149,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
+#if !defined(USE_GL2)
     /* clang-format off */
     const float vertices[] = {
         // positions            // colors
@@ -85,6 +162,7 @@ int main(int argc, char **argv)
     sg_buffer_desc bd = {};
     bd.size = sizeof(vertices);
     bd.content = vertices;
+    sokol_init();
     sg_buffer vbuf = sg_make_buffer(&bd);
     sg_shader shd = sg_make_shader((const sg_shader_desc *)win.sg_default_shader_desc);
 
@@ -99,6 +177,7 @@ int main(int argc, char **argv)
 
     sg_bindings binds = {};
     binds.vertex_buffers[0] = vbuf;
+#endif // #if !defined(USE_GL2)
 
     auto ui = ui_init(win);
     ui.show_stats_window = true;
@@ -121,6 +200,7 @@ int main(int argc, char **argv)
         }
         ui_update(ui);
 
+#if !defined(USE_GL2)
         sg_color_attachment_action clear_action;
         clear_action.action = SG_ACTION_CLEAR;
         clear_action.val[0] = ui.clear_color.x;
@@ -137,12 +217,15 @@ int main(int argc, char **argv)
         sg_draw(0, 3, 1);
         sg_end_pass();
         sg_commit();
+#endif // #if !defined(USE_GL2)
 
         ui_draw(ui);
         win_flip(&win);
     }
     ui_shutdown(ui);
+#if !defined(USE_GL2)
     sg_shutdown();
+#endif // #if !defined(USE_GL2)
     win_shutdown(&win);
     return 0;
 }
