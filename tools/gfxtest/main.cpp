@@ -140,6 +140,7 @@ void sokol_init()
 int main(int argc, char **argv)
 {
     win_context win;
+    memset(&win, 0, sizeof(win_context));
     win.title = "Sokol+ImGui";
     win.width = 800;
     win.height = 600;
