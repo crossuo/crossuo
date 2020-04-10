@@ -218,6 +218,9 @@ int main(int argc, char **argv)
         sg_draw(0, 3, 1);
         sg_end_pass();
         sg_commit();
+#else
+        glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
 #endif // #if !defined(USE_GL2)
 
         ui_draw(ui);
