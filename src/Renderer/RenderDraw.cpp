@@ -140,15 +140,40 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     // TODO: gles - quad
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+
+    const GenericVertex data[] = {
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
+        { { -1.0f, 1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
+        { { 1.0f, 1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+        { { 1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+    };
+    const unsigned int idx[] = { 0, 1, 2, 3 };
+#if !defined(USE_GLES2)
+    uint32_t vao;
+    GL_CHECK(glGenVertexArrays(1, &vao));
+    GL_CHECK(glBindVertexArray(vao));
+#endif // #if !defined(USE_GLES2)
+    uint32_t buffers[2];
+    GL_CHECK(glGenBuffers(2, buffers));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
+
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, 0, uv));
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, 0, vb));
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    //GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, 0, uv));
+    //GL_CHECK(glEnableVertexAttribArray(_inUV));
+    //GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, 0, vb));
+    //GL_CHECK(glEnableVertexAttribArray(_inPos));
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     GL_CHECK(glUseProgram(0));
+
+    GL_CHECK(glDeleteBuffers(2, buffers));
+#if !defined(USE_GLES2)
+    GL_CHECK(glDeleteVertexArrays(1, &vao));
+#endif // #if !defined(USE_GLES2)
 #endif
     return true;
 }
@@ -222,15 +247,40 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
     model = glm::rotate(model, cmd.angle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    const GenericVertex data[] = {
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
+        { { -1.0f, 1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
+        { { 1.0f, 1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+        { { 1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+    };
+    const unsigned int idx[] = { 0, 1, 2, 3 };
+#if !defined(USE_GLES2)
+    uint32_t vao;
+    GL_CHECK(glGenVertexArrays(1, &vao));
+    GL_CHECK(glBindVertexArray(vao));
+#endif // #if !defined(USE_GLES2)
+    uint32_t buffers[2];
+    GL_CHECK(glGenBuffers(2, buffers));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
+
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, 0, uv));
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, 0, vb));
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    //GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, 0, uv));
+    //GL_CHECK(glEnableVertexAttribArray(_inUV));
+    //GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, 0, vb));
+    //GL_CHECK(glEnableVertexAttribArray(_inPos));
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
     GL_CHECK(glUseProgram(0));
+
+    GL_CHECK(glDeleteBuffers(2, buffers));
+#if !defined(USE_GLES2)
+    GL_CHECK(glDeleteVertexArrays(1, &vao));
+#endif // #if !defined(USE_GLES2)
 #endif
     return true;
 }
@@ -771,7 +821,7 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
     return true;
 }
 
-void RenderDraw_DrawTest()
+static void RenderDraw_DrawTest()
 {
     // clang-format off
 #if defined(USE_GL3) || defined(USE_GLES2)
@@ -787,15 +837,19 @@ void RenderDraw_DrawTest()
     GL_CHECK(glClearColor(0.4f, 0.0f, 0.0f, 0.0f));
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
     GL_CHECK(glUseProgram(_pProg));
+
+    uint32_t buffers[2];
+    GL_CHECK(glGenBuffers(2, buffers));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW));
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
+    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
+
 #if !defined(USE_GLES2)
     uint32_t vao = 0;
     GL_CHECK(glGenVertexArrays(1, &vao));
     GL_CHECK(glBindVertexArray(vao));
 #endif // #if !defined(USE_GLES2)
-    uint32_t vbo = 0;
-    GL_CHECK(glGenBuffers(1, &vbo));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
     GL_CHECK(glEnableVertexAttribArray(_inUV));
@@ -804,26 +858,21 @@ void RenderDraw_DrawTest()
     GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
-    uint32_t vio = 0;
-    GL_CHECK(glGenBuffers(1, &vio));
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vio));
-    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
-
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
 
-    GL_CHECK(glDeleteBuffers(1, &vbo));
-    GL_CHECK(glDeleteBuffers(1, &vio));
+    GL_CHECK(glDeleteBuffers(2, buffers));
 #if !defined(USE_GLES2)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
 #endif // #if !defined(USE_GLES2)
+    GL_CHECK(glUseProgram(0));
 #endif // #if defined(USE_GL3) || defined(USE_GLES2)
     // clang-format on
 }
 
 bool RenderDraw_Execute(RenderCmdList *cmdList)
 {
-    //RenderDraw_DrawTest(); // TODO: wtf?
+    RenderDraw_DrawTest();
     if (cmdList->immediateMode)
     {
         return false;

@@ -40,8 +40,7 @@ extern int _uModel;
 extern int _uTex;
 extern int _pProg;
 uint32_t _vao = 0;
-uint32_t _vbo = 0;
-uint32_t _vio = 0;
+uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
 int _inPos = 0;
 int _inColor = 0;
@@ -251,13 +250,11 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glGenVertexArrays(1, &_vao));
     GL_CHECK(glBindVertexArray(_vao));
 #endif // #if !defined(USE_GLES2)
-    GL_CHECK(glGenBuffers(1, &_vbo));
-    GL_CHECK(glGenBuffers(1, &_vio));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
+    GL_CHECK(glGenBuffers(2, _vibuffers));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, _vibuffers[0]));
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vio));
+    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vibuffers[1]));
     GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _vio));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
     GL_CHECK(glEnableVertexAttribArray(_inUV));
@@ -274,6 +271,7 @@ bool Render_Init(SDL_Window *window)
 
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
+    GL_CHECK(glUseProgram(0));
     // clang-format on
 #endif
     g_render.context = context;
@@ -321,6 +319,7 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
         float(cmd.camera_farZ));
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+    GL_CHECK(glUseProgram(0));
 #endif
     return true;
 }
