@@ -92,14 +92,14 @@ static void OGLDebugMsgCallback(
     const void *userParam)
 #endif // #if defined(USE_GL2)
 #if defined(USE_GL3)
-static void APIENTRY OGLDebugMsgCallback(
-    uint source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar *message,
-    void *userParam)
+    static void APIENTRY OGLDebugMsgCallback(
+        uint source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar *message,
+        void *userParam)
 #endif // #if defined(USE_GL2)
 {
     (void)source;
@@ -118,7 +118,7 @@ static void APIENTRY OGLDebugMsgCallback(
         if (sev == GL_DEBUG_SEVERITY_NOTIFICATION)
         {
             shouldAssert = OGL_DBGMSG_DISABLED;
-            shouldLog = OGL_DBGMSG_ENABLED;
+            shouldLog = OGL_DBGMSG_DISABLED;
         }
 
         for (auto &ctrl : s_openglDebugMsgs)

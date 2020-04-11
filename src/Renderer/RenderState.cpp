@@ -68,6 +68,7 @@ bool RenderState_FlushState(RenderState *state)
     glm::mat4 identity(1.0f);
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
+    GL_CHECK(glUseProgram(0));
 #endif
 
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
@@ -175,11 +176,11 @@ bool RenderState_SetBlend(
         state->blend.enabled = enabled;
         if (enabled)
         {
-            glEnable(GL_BLEND);
+            GL_CHECK(glEnable(GL_BLEND));
         }
         else
         {
-            glDisable(GL_BLEND);
+            GL_CHECK(glDisable(GL_BLEND));
         }
     }
 
@@ -190,7 +191,7 @@ bool RenderState_SetBlend(
         changed = true;
         state->blend.src = src;
         state->blend.dst = dst;
-        glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]);
+        GL_CHECK(glBlendFunc(s_blendFactorToOGLEnum[src], s_blendFactorToOGLEnum[dst]));
     }
 
     if (enabled && (forced || (state->blend.equation != equation)))
@@ -198,7 +199,7 @@ bool RenderState_SetBlend(
         assert(state->blend.equation != BlendEquation::BlendEquation_Invalid);
         changed = true;
         state->blend.equation = equation;
-        glBlendEquation(s_blendEquationToOGLEnum[equation]);
+        GL_CHECK(glBlendEquation(s_blendEquationToOGLEnum[equation]));
     }
 
     return changed;
@@ -226,12 +227,12 @@ bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool
         state->depth.func = func;
         if (enabled)
         {
-            glEnable(GL_DEPTH_TEST);
-            glDepthFunc(s_depthFuncToOGLFunc[func]);
+            GL_CHECK(glEnable(GL_DEPTH_TEST));
+            GL_CHECK(glDepthFunc(s_depthFuncToOGLFunc[func]));
         }
         else
         {
-            glDisable(GL_DEPTH_TEST);
+            GL_CHECK(glDisable(GL_DEPTH_TEST));
         }
         return true;
     }
@@ -245,11 +246,11 @@ bool RenderState_SetDepthEnabled(RenderState *state, bool enabled, bool forced)
     {
         if (enabled)
         {
-            glEnable(GL_DEPTH_TEST);
+            GL_CHECK(glEnable(GL_DEPTH_TEST));
         }
         else
         {
-            glDisable(GL_DEPTH_TEST);
+            GL_CHECK(glDisable(GL_DEPTH_TEST));
         }
         return true;
     }
@@ -263,11 +264,11 @@ bool RenderState_SetStencilEnabled(RenderState *state, bool enabled, bool forced
     {
         if (enabled)
         {
-            glEnable(GL_STENCIL_TEST);
+            GL_CHECK(glEnable(GL_STENCIL_TEST));
         }
         else
         {
-            glDisable(GL_STENCIL_TEST);
+            GL_CHECK(glDisable(GL_STENCIL_TEST));
         }
 
         return true;
@@ -327,16 +328,16 @@ bool RenderState_SetStencil(
         state->stencil.mask = mask;
         if (enabled)
         {
-            glEnable(GL_STENCIL_TEST);
-            glStencilFunc(s_stencilFuncToOGLFunc[func], ref, mask);
-            glStencilOp(
+            GL_CHECK(glEnable(GL_STENCIL_TEST));
+            GL_CHECK(glStencilFunc(s_stencilFuncToOGLFunc[func], ref, mask));
+            GL_CHECK(glStencilOp(
                 s_stencilOpToOGLOp[stencilFail],
                 s_stencilOpToOGLOp[depthFail],
-                s_stencilOpToOGLOp[bothFail]);
+                s_stencilOpToOGLOp[bothFail]));
         }
         else
         {
-            glDisable(GL_STENCIL_TEST);
+            GL_CHECK(glDisable(GL_STENCIL_TEST));
         }
         return true;
     }
@@ -349,11 +350,11 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
     if (forced || state->colorMask != mask)
     {
         state->colorMask = mask;
-        glColorMask(
+        GL_CHECK(glColorMask(
             mask & ColorMask::ColorMask_Red ? GL_TRUE : GL_FALSE,
             mask & ColorMask::ColorMask_Green ? GL_TRUE : GL_FALSE,
             mask & ColorMask::ColorMask_Blue ? GL_TRUE : GL_FALSE,
-            mask & ColorMask::ColorMask_Alpha ? GL_TRUE : GL_FALSE);
+            mask & ColorMask::ColorMask_Alpha ? GL_TRUE : GL_FALSE));
         return true;
     }
 
@@ -369,8 +370,58 @@ bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
 #if defined(USE_GL2)
         glColor4f(state->color[0], state->color[1], state->color[2], state->color[3]);
 #else
-        glVertexAttribPointer(_inPos, 4, GL_FLOAT, GL_FALSE, 0, state->color.rgba);
-        glEnableVertexAttribArray(_inPos);
+        const GenericVertex data[] = {
+            { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
+            { { -1.0f, 1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
+            { { 1.0f, 1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+            { { 1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+        };
+        const unsigned int idx[] = { 0, 1, 2, 3 };
+#if !defined(USE_GLES2)
+        uint32_t vao;
+        GL_CHECK(glGenVertexArrays(1, &vao));
+        GL_CHECK(glBindVertexArray(vao));
+#endif // #if !defined(USE_GLES2)
+        uint32_t buffers[2] = {};
+        GL_CHECK(glGenBuffers(2, buffers));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
+        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
+        GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
+        GL_CHECK(
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
+        GL_CHECK(glUseProgram(_pProg));
+        GL_CHECK(glEnableVertexAttribArray(_inPos));
+        GL_CHECK(glEnableVertexAttribArray(_inUV));
+        GL_CHECK(glEnableVertexAttribArray(_inColor));
+        GL_CHECK(glVertexAttribPointer(
+            _inPos,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(GenericVertex),
+            (GLvoid *)OFFSETOF(GenericVertex, pos)));
+        GL_CHECK(glVertexAttribPointer(
+            _inUV,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(GenericVertex),
+            (GLvoid *)OFFSETOF(GenericVertex, uv)));
+        GL_CHECK(glVertexAttribPointer(
+            _inColor,
+            4,
+            GL_UNSIGNED_BYTE,
+            GL_TRUE,
+            sizeof(GenericVertex),
+            (GLvoid *)OFFSETOF(GenericVertex, col)));
+
+        //GL_CHECK(glEnableVertexAttribArray(_inColor));
+        //GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, state->color.rgba));
+        GL_CHECK(glUseProgram(0));
+        GL_CHECK(glDeleteBuffers(2, buffers));
+#if !defined(USE_GLES2)
+        GL_CHECK(glDeleteVertexArrays(1, &vao));
+#endif // #if !defined(USE_GLES2)
 #endif
         return true;
     }
@@ -384,7 +435,7 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
     {
         state->clearColor = color;
         memcpy(state->clearColor.rgba, color.rgba, sizeof(state->clearColor.rgba));
-        glClearColor(color[0], color[1], color[2], color[3]);
+        GL_CHECK(glClearColor(color[0], color[1], color[2], color[3]));
         return true;
     }
 
@@ -414,7 +465,7 @@ bool RenderState_SetShaderUniform(
             case ShaderUniformType::ShaderUniformType_Int1:
             {
                 auto typedValue = *(GLint *)value;
-                glUniform1i(location, typedValue);
+                GL_CHECK(glUniform1i(location, typedValue));
                 break;
             }
 
@@ -463,7 +514,7 @@ bool RenderState_SetShaderLargeUniform(
         case ShaderUniformType::ShaderUniformType_Float1V:
         {
             auto typedValue = (GLfloat *)value;
-            glUniform1fv(location, count, typedValue);
+            GL_CHECK(glUniform1fv(location, count, typedValue));
             break;
         }
 
@@ -482,7 +533,7 @@ bool RenderState_SetShaderPipeline(RenderState *state, ShaderPipeline *pipeline,
     assert(pipeline);
     if (state->pipeline.program != pipeline->program || forced)
     {
-        glUseProgram(pipeline->program);
+        GL_CHECK(glUseProgram(pipeline->program));
         memcpy(&state->pipeline, pipeline, sizeof(*pipeline));
         state->uniformCache = RenderStateUniformCache{};
 
@@ -496,7 +547,7 @@ bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
 {
     // if (state->pipeline.program != RENDER_SHADERPROGRAM_INVALID || forced)
     {
-        glUseProgram(0);
+        GL_CHECK(glUseProgram(0));
         state->pipeline = ShaderPipeline{};
         state->uniformCache = RenderStateUniformCache{};
 
@@ -537,10 +588,10 @@ bool RenderState_SetTexture(
         }
         else
         {
-            glBindTexture(textureTypeToOGLType(type), texture);
+            GL_CHECK(glBindTexture(textureTypeToOGLType(type), texture));
             if (type == TextureType::TextureType_Texture2D_Mipmapped)
             {
-                glGenerateMipmap(GL_TEXTURE_2D);
+                GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
             }
         }
 
@@ -560,12 +611,12 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
 #if defined(USE_GL2)
             glEnable(GL_TEXTURE_2D);
 #endif
-            glBindFramebuffer(GL_FRAMEBUFFER, fb.handle);
-            glBindTexture(GL_TEXTURE_2D, fb.texture);
+            GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, fb.handle));
+            GL_CHECK(glBindTexture(GL_TEXTURE_2D, fb.texture));
         }
         else
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
         }
         state->framebuffer = fb;
         return true;
@@ -636,7 +687,9 @@ bool RenderState_SetViewParams(
             proj_flipped_y ? scaledBottom : scaledTop,
             float(camera_nearZ),
             float(camera_farZ));
+        GL_CHECK(glUseProgram(_pProg));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+        GL_CHECK(glUseProgram(0));
 #endif
         return true;
     }
@@ -653,6 +706,7 @@ bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool fo
     translation = glm::translate(translation, glm::vec3(pos[0], pos[1], pos[2]));
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(translation)));
+    GL_CHECK(glUseProgram(0));
 #endif
     return true;
 }
@@ -668,11 +722,11 @@ bool RenderState_SetScissor(
 
         if (enabled)
         {
-            glEnable(GL_SCISSOR_TEST);
+            GL_CHECK(glEnable(GL_SCISSOR_TEST));
         }
         else
         {
-            glDisable(GL_SCISSOR_TEST);
+            GL_CHECK(glDisable(GL_SCISSOR_TEST));
         }
     }
 
@@ -684,8 +738,7 @@ bool RenderState_SetScissor(
         state->scissor.y = y;
         state->scissor.width = width;
         state->scissor.height = height;
-
-        glScissor(x, y, width, height);
+        GL_CHECK(glScissor(x, y, width, height));
     }
     return changed;
 }

@@ -165,7 +165,7 @@ int main(int argc, char **argv)
     bd.content = vertices;
     sokol_init();
     sg_buffer vbuf = sg_make_buffer(&bd);
-    sg_shader shd = sg_make_shader((const sg_shader_desc *)win.sg_default_shader_desc);
+    sg_shader shd = sg_make_shader(&sg_default_shader_desc);
 
     sg_layout_desc layout = {};
     layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;
