@@ -10,6 +10,9 @@ Version: ?
 # inih (BSD-3-Clause)
 Version: https://github.com/benhoyt/inih/tree/0a87bf16693e35ed172ce8738404d9acd9545a5a/
 
+# libbacktrace (MIT)
+Version: Tracy profiler
+
 # libressl
 Version: 3.1.0 (https://www.libressl.org/)
 
@@ -45,6 +48,9 @@ Version: ?
 
 # tml (zlib)
 Version: 0.7
+
+# Tracy profiler (BSD-3-Clause)
+Version: https://github.com/wolfpld/tracy/tree/6c76c8098b7ec2dcf510ba7588068237c2f6b79d
 
 # tsf (MIT)
 Version: 0.8
