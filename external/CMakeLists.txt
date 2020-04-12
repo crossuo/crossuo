@@ -10,6 +10,7 @@ file(GLOB EXTERNAL_HEADERS ${EXTERNAL_DIR}/*.h)
 set(EXTERNAL_SRC
   tinyfiledialogs.c
   external.cpp
+  tracy/TracyClient.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNAL_SRC} ${EXTERNAL_HEADERS})
