@@ -363,15 +363,15 @@ static fs_path GetConfigFile()
 
 bool LoadGlobalConfig()
 {
-    const auto cfg = GetConfigFile();
+    auto cfg = GetConfigFile();
     Info(Config, "loading global config from: %s", fs_path_ascii(cfg));
     if (!fs_path_exists(cfg))
     {
-        Fatal(
-            Config,
-            "Could not load config file, try using X:UO Launcher.",
-            "failed to load: %s",
-            fs_path_ascii(cfg));
+        cfg = fs_path_join(fs_path_current(), cfg);
+    }
+
+    if (!fs_path_exists(cfg))
+    {
         return false;
     }
 
@@ -520,17 +520,10 @@ bool LoadGlobalConfig()
     Info(Client, "\tUse Verdata: %d", g_Config.UseVerdata);
     const auto uopath = fs_path_ascii(g_App.m_UOPath);
     Info(Client, "\tUltima Online Path: %s", uopath);
-
-    if ((uopath && !uopath[0]) || !fs_path_exists(g_App.m_UOPath))
+    if (uopath && uopath[0] && fs_path_exists(g_App.m_UOPath))
     {
-        Fatal(
-            Config,
-            "Couldn't find Ultima Online(tm) data files.",
-            "could not find data path: %s",
-            uopath);
-        return false;
+        uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
     }
-    uo_data_init(uopath, g_Config.ClientVersion, g_Config.UseVerdata);
     return true;
 }
 

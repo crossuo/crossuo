@@ -4,7 +4,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <common/str.h>
+#include <common/fs.h>
 #include <xuocore/enumlist.h>
 
 struct Config
