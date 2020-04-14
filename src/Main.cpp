@@ -5,9 +5,11 @@
 #include "CrossUO.h"
 #include "GameWindow.h"
 #include "Application.h"
+#include "Platform.h"
 #include "SDL_wrapper.h"
 #include <time.h>
 #include <external/popts.h>
+#include <external/process.h>
 #include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
 
@@ -118,6 +120,91 @@ void fatal_error_dialog(const char *message)
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message, nullptr);
 }
 
+bool load_config()
+{
+#if defined(XUO_WINDOWS)
+#define LAUNCHER_EXE "xuolauncher.exe"
+#else
+#define LAUNCHER_EXE "xuolauncher"
+#endif
+
+    const bool config_exists = LoadGlobalConfig();
+    const auto bin_fs = fs_path_join(fs_path_current(), LAUNCHER_EXE);
+    const auto bin = fs_path_ascii(bin_fs);
+    const bool launcher_exists = fs_path_exists(bin_fs);
+    if (!config_exists && !launcher_exists)
+    {
+        Platform::OpenBrowser("https://crossuo.com/#download");
+        Fatal(
+            Client,
+            "You need X:UO Launcher to launch CrossUO.\n"
+            "Please download from https://crossuo.com/#download",
+            "Could not find X:UO Launcher.");
+        return false;
+    }
+
+    auto launcher = [bin]() {
+        // TODO: check if one instance is already running and do nothing.
+        const char *args[] = { bin, 0 };
+        Info(Client, "Launching X:UO Launcher %s due missing config", bin);
+        process_s process;
+        const auto options = process_option_inherit_environment | process_option_child_detached;
+        if (process_create(args, options, &process) != 0)
+        {
+            Fatal(Client, "Could not launch X:UO Launcher", "could not launch: %s", bin);
+        }
+        SDL_Delay(500);
+    };
+
+    if (!config_exists && launcher_exists)
+    {
+        launcher();
+        return false;
+    }
+
+    if (config_exists)
+    {
+        const auto uopath = fs_path_ascii(g_App.m_UOPath);
+        bool valid_client = uopath && uopath[0] && fs_path_exists(g_App.m_UOPath);
+        if (!valid_client)
+        {
+            if (launcher_exists)
+            {
+                launcher();
+            }
+            Fatal(
+                Client,
+                "Couldn't find Ultima Online(tm) data files.\n"
+                "Please download the original ultima client and configure CrossUO to use the "
+                "original's client installation directory.",
+                "could not find data path: %s.",
+                uopath);
+            return false;
+        }
+
+        const bool new_client = fs_path_exists(fs_path_join(uopath, "MainMisc.uop"));
+        const bool old_client = fs_path_exists(fs_path_join(uopath, "chardata.mul"));
+        valid_client &= g_Config.ClientVersion >= VERSION(7, 0, 0, 0) ? new_client : old_client;
+        if (!valid_client)
+        {
+            if (launcher_exists)
+            {
+                launcher();
+            }
+            Fatal(
+                Client,
+                "Couldn't find valid Ultima Online(tm) data files for current configuration.\n"
+                "Make sure your configuration is pointing to the correct data files for the\n"
+                "correct version of your client installation directory.",
+                "could not find data files for client version %s.",
+                g_Config.ClientVersionString.c_str());
+            return false;
+        }
+    }
+
+    return true;
+}
+
 #if !defined(XUO_WINDOWS)
 XUO_EXPORT int plugin_main(int argc, char **argv)
 #else
@@ -144,7 +231,7 @@ int main(int argc, char **argv)
     Info(Client, "SDL initialized");
 
     g_App.Init();
-    if (!LoadGlobalConfig())
+    if (!load_config())
     {
         return EXIT_FAILURE;
     }
