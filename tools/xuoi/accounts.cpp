@@ -33,6 +33,7 @@
 #endif
 
 bool ui_modal(const char *title, const char *msg); // xuolauncher.cpp
+void save_config();                                // xuolauncher.cpp
 
 // model
 
@@ -234,9 +235,10 @@ void ui_accounts(ui_model &m)
     static char characterName[64] = {};
     static char clientVersion[32] = {};
     //static char protocolVersion[32] = {};
-    static char commandLine[FS_MAX_PATH] = {};
+    //static char commandLine[FS_MAX_PATH] = {};
     static int current_type = 0;
     static int current_shard = 0;
+    static bool useCrypto = false;
     static bool update_view = true;
     static bool ask_help = false;
     const auto picked = shard_picked();
@@ -314,7 +316,8 @@ void ui_accounts(ui_model &m)
             memset(path, 0, sizeof(path));
             memset(characterName, 0, sizeof(characterName));
             memset(clientVersion, 0, sizeof(clientVersion));
-            memset(commandLine, 0, sizeof(commandLine));
+            //memset(commandLine, 0, sizeof(commandLine));
+            useCrypto = false;
             current_type = 0;
             current_shard = 0;
         }
@@ -327,7 +330,8 @@ void ui_accounts(ui_model &m)
             memccpy(path, acct.account_data_path.c_str(), 0, sizeof(path));
             memccpy(characterName, acct.account_fast_login.c_str(), 0, sizeof(characterName));
             memccpy(clientVersion, acct.account_clientversion.c_str(), 0, sizeof(clientVersion));
-            memccpy(commandLine, acct.account_extra_cli.c_str(), 0, sizeof(commandLine));
+            //memccpy(commandLine, acct.account_extra_cli.c_str(), 0, sizeof(commandLine));
+            useCrypto = acct.account_crypt;
             current_type = account_client_type_index_by_cfg(acct.account_clienttype.c_str());
             current_shard = shard_index_by_loginserver(acct.account_loginserver.c_str());
         }
@@ -448,7 +452,8 @@ void ui_accounts(ui_model &m)
             //InputText("##9", "  Type:", w3, clientType, sizeof(clientType));
             const auto w3 = right_w - ImGui::GetCursorPosX() - 66;
             ComboBox("##9", "  Type:", w3, &current_type, client_types, IM_ARRAYSIZE(client_types));
-            InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
+            //InputText("##a", "  Command Line:", w, commandLine, sizeof(commandLine));
+            ImGui::Checkbox("Use Cryptography", &useCrypto);
 
             ImGui::Indent(ImGui::GetTreeNodeToLabelSpacing());
             ImGui::TreePop();
@@ -469,7 +474,8 @@ void ui_accounts(ui_model &m)
                     entry.account_data_path = astr_t(path);
                     entry.account_fast_login = astr_t(characterName);
                     entry.account_clientversion = astr_t(clientVersion);
-                    entry.account_extra_cli = astr_t(commandLine);
+                    //entry.account_extra_cli = astr_t(commandLine);
+                    entry.account_crypt = useCrypto;
                     entry.account_clienttype = astr_t(client_types_cfg[current_type]);
                     acct_id = int(s_accounts.entries.size());
                     s_accounts.entries.emplace_back(entry);
@@ -485,11 +491,11 @@ void ui_accounts(ui_model &m)
                 acct.account_data_path = astr_t(path);
                 acct.account_fast_login = astr_t(characterName);
                 acct.account_clientversion = astr_t(clientVersion);
-                acct.account_extra_cli = astr_t(commandLine);
+                //acct.account_extra_cli = astr_t(commandLine);
+                acct.account_crypt = useCrypto;
                 acct.account_clienttype = astr_t(client_types_cfg[current_type]);
             }
 
-            void save_config();
             save_config(); // force xuolauncher to save all configurations
         }
     }
