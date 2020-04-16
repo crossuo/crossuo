@@ -758,7 +758,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
         DEBUG(Data, "\tSignature....: %08X", file.Header->Signature);
         DEBUG(Data, "\tSectionOffset: %016lx", file.Header->SectionOffset);
         DEBUG(Data, "\tFileCapacity.: %d", file.Header->FileCapacity);
-        DEBUG(Data, "\tFileCount....: %d (Real: %d)", file.Header->FileCount, file.FileCount());
+        DEBUG(Data, "\tFileCount....: %d (Real: %zu)", file.Header->FileCount, file.FileCount());
         DEBUG(Data, "\tSectionCount.: %08x", file.Header->SectionCount);
         DEBUG(Data, "\tUnk1.........: %08x", file.Header->Unk1);
         DEBUG(Data, "\tUnk2.........: %08x", file.Header->Unk2);

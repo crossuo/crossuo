@@ -10,6 +10,7 @@
 #include <common/fs.h>
 #include <common/str.h>
 #include <xuocore/enumlist.h>
+#include <xuocore/client_info.h>
 #include "Crypt/CryptEntry.h"
 #include "Wisp/WispTextFileParser.h"
 #include "Managers/PacketManager.h"
@@ -48,6 +49,7 @@ struct Modified
     bool UseVerdata = false;
     bool ClientFlag = false;
     bool ProtocolVersion = false;
+    bool ClientVersion = false;
 };
 
 struct ConfigEntry
@@ -328,29 +330,6 @@ static void ClientVersionFixup(bool overrideProtocolVersion)
     }
 }
 
-void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t *proto)
-{
-    if (major)
-    {
-        *major = (g_Config.ClientVersion >> 24) & 0xff;
-    }
-
-    if (minor)
-    {
-        *minor = (g_Config.ClientVersion >> 16) & 0xff;
-    }
-
-    if (rev)
-    {
-        *rev = (g_Config.ClientVersion >> 8) & 0xff;
-    }
-
-    if (proto)
-    {
-        *proto = (g_Config.ClientVersion & 0xff);
-    }
-}
-
 static fs_path GetConfigFile()
 {
     if (!g_cli["config"].was_set())
@@ -391,6 +370,7 @@ bool LoadGlobalConfig()
                 case MSCC_CLIENT_VERSION:
                 {
                     g_Config.ClientVersionString = strings[1];
+                    g_Config.ClientVersionModified = true;
                 }
                 break;
                 case MSCC_PROTOCOL_CLIENT_VERSION:
@@ -480,25 +460,12 @@ bool LoadGlobalConfig()
 
     ClientVersionFixup(s_Mark.ProtocolVersion);
 
-    int a = (g_Config.ClientVersion >> 24) & 0xff;
-    int b = (g_Config.ClientVersion >> 16) & 0xff;
-    int c = (g_Config.ClientVersion >> 8) & 0xff;
-    int d = (g_Config.ClientVersion & 0xff);
-    char p1[64], p2[8];
-    snprintf(p1, sizeof(p1), "%d.%d.%d", a, b, c);
-    if (d >= 'a' && d <= 'z')
-    {
-        snprintf(p2, sizeof(p2), "%c", d);
-    }
-    else
-    {
-        snprintf(p2, sizeof(p2), ".%d", d);
-    }
+    char version[32];
+    client_version_string(g_Config.ClientVersion, version, sizeof(version));
 
     Info(Client, "Client Emulation:");
     Info(Client, "\tClient Version: %s", g_Config.ClientVersionString.c_str());
-    Info(
-        Client, "\tEmulation Compatibility Version: %s%s (0x%08x)", p1, p2, g_Config.ClientVersion);
+    Info(Client, "\tEmulation Compatibility Version: %s (0x%08x)", version, g_Config.ClientVersion);
     Info(
         Client,
         "\tProtocol Compatibility Version: %s (0x%08x)",
@@ -577,7 +544,10 @@ void SaveGlobalConfig()
         fprintf(cfg, "LoginServer=%s,%d\n", g_Config.ServerAddress.c_str(), g_Config.ServerPort);
     }
 
-    fprintf(cfg, "ClientVersion=%s\n", g_Config.ClientVersionString.c_str());
+    if (g_Config.ClientVersionModified)
+    {
+        fprintf(cfg, "ClientVersion=%s\n", g_Config.ClientVersionString.c_str());
+    }
 
     if (s_Mark.ProtocolVersion)
     {

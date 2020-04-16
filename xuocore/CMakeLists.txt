@@ -11,12 +11,13 @@ set(XUOCORE_SRCS
   uop.cpp
   uodata.cpp
   mappedfile.cpp
+  client_info.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${XUOCORE_SRCS} ${XUOCORE_HEADERS})
-add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT})
+add_dependencies(${PROJECT_NAME} ${EXTERNAL_PROJECT} ${EXTERNAL_PROJECT} ${COMMON_PROJECT})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${EXTERNAL_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${EXTERNAL_PROJECT} ${COMMON_PROJECT} ${LOADER} ${THREAD})
 target_include_directories(${PROJECT_NAME} PUBLIC ${EXTERNAL_INCLUDE})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)

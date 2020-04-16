@@ -10,6 +10,7 @@
 #include <time.h>
 #include <external/popts.h>
 #include <external/process.h>
+#include <xuocore/client_info.h>
 #include <common/logging/logging.h>
 #include "Managers/ConfigManager.h"
 
@@ -180,6 +181,37 @@ bool load_config()
                 "could not find data path: %s.",
                 uopath);
             return false;
+        }
+
+        if (!g_Config.ClientVersionModified)
+        {
+            const auto client_exe = fs_path_join(uopath, "client.exe");
+            const bool client_exe_exists = fs_path_exists(client_exe);
+            if (client_exe_exists)
+            {
+                client_info info;
+                client_version(fs_path_ascii(client_exe), info);
+                if (info.version)
+                {
+                    g_Config.ClientVersion = info.version;
+                    Info(
+                        Client,
+                        "Client version wasn't set, using auto-detected version from data.");
+
+                    char str[32] = {};
+                    client_version_string(info.version, str, sizeof(str));
+                    Info(Client, "Using client version: %s.", str);
+                    g_Config.ClientVersionString = str;
+                }
+                else
+                {
+                    Warning(
+                        Client,
+                        "Client version not found, signature: 0x%016lx, 0x%08x",
+                        info.xxh3,
+                        info.crc32);
+                }
+            }
         }
 
         const bool new_client = fs_path_exists(fs_path_join(uopath, "MainMisc.uop"));
