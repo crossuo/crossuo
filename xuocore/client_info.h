@@ -16,7 +16,7 @@ struct client_info
 };
 
 void client_version_string(uint32_t version, char *output, int maxlen);
-void client_version(const char *filename, client_info &info);
+int client_version(const char *filename, client_info &info);
 
 static client_info client_db[] = {
     { 0xcbfe27fe3ad70296, 0x05591bfe, 0x01170000 },
