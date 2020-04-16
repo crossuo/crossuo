@@ -112,6 +112,29 @@ void CConnectionManager::SendIP(CSocket &socket, uint8_t *ip)
     socket.Send(ip, 4);
 }
 
+static void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t *proto)
+{
+    if (major)
+    {
+        *major = (g_Config.ClientVersion >> 24) & 0xff;
+    }
+
+    if (minor)
+    {
+        *minor = (g_Config.ClientVersion >> 16) & 0xff;
+    }
+
+    if (rev)
+    {
+        *rev = (g_Config.ClientVersion >> 8) & 0xff;
+    }
+
+    if (proto)
+    {
+        *proto = (g_Config.ClientVersion & 0xff);
+    }
+}
+
 bool CConnectionManager::Connect(const astr_t &address, int port, uint8_t *gameSeed)
 {
     Info(Network, "Connecting %s:%d", address.c_str(), port);

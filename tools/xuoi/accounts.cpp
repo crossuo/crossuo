@@ -10,6 +10,7 @@
 #include <external/inih.h>
 #include <external/process.h>
 #include <external/tinyfiledialogs.h>
+#include <xuocore/client_info.h>
 #include "common.h"
 #include "ui_model.h"
 #include "shards.h"
@@ -367,6 +368,17 @@ void ui_accounts(ui_model &m)
             if (data_path)
             {
                 memcpy(path, data_path, sizeof(path));
+                const auto client_exe = fs_path_join(data_path, "client.exe");
+                const bool client_exe_exists = fs_path_exists(client_exe);
+                if (client_exe_exists)
+                {
+                    client_info info;
+                    client_version(fs_path_ascii(client_exe), info);
+                    if (info.version)
+                    {
+                        client_version_string(info.version, clientVersion, sizeof(clientVersion));
+                    }
+                }
             }
         }
         ImGui::SameLine();

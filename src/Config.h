@@ -33,9 +33,10 @@ struct Config
     uint32_t ClientVersion = CV_LATEST;
     uint32_t ProtocolClientVersion = CV_LATEST;
     uint32_t EncryptionType = 0;
+
+    bool ClientVersionModified = false;
 };
 
-void GetClientVersion(uint32_t *major, uint32_t *minor, uint32_t *rev, uint32_t *proto = nullptr);
 bool LoadGlobalConfig();
 void SaveGlobalConfig();
 
