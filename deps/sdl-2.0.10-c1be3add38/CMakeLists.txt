@@ -1918,6 +1918,12 @@ if(SDL_STATIC)
   if (NOT ANDROID)
     #set_target_properties(SDL2-static PROPERTIES DEBUG_POSTFIX ${SDL_CMAKE_DEBUG_POSTFIX})
   endif()
+
+  # xuo
+  target_compile_options(SDL2-static PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W0>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>
+  )
 endif()
 
 ##### Tests #####
