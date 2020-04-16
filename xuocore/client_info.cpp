@@ -16,6 +16,7 @@
 #include <common/checksum.h>
 
 #include "client_info.h"
+#include "client_db.h"
 
 #define READ_U8(p) (((unsigned char *)(p))[0])
 #define READ_U16(p) ((((unsigned char *)(p))[0]) | ((((unsigned char *)(p))[1]) << 8))

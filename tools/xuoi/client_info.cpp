@@ -1,3 +1,6 @@
+// AGPLv3 License
+// Copyright (c) 2019 Danny Angelo Carminati Grein
+
 #include <stdio.h>
 #include <xuocore/client_info.h>
 
