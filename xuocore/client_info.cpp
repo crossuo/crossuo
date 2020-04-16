@@ -181,34 +181,34 @@ void client_version_string(uint32_t version, char *output, int maxlen)
     snprintf(output, maxlen, "%d.%d.%d%s", a, b, c, p2);
 }
 
-void client_version(const char *filename, client_info &info)
+int client_version(const char *filename, client_info &info)
 {
     crc32_init();
 
 #if defined(NO_FS)
     struct stat st;
     if (stat(filename, &st) < 0)
-        return;
+        return -1;
 
     const size_t len = st.st_size;
     auto *buf = (char *)malloc(len);
     FILE *f = fopen(filename, "rb");
     if (!f)
-        return;
+        return -2;
 
     fread(buf, 1, len, f);
     fclose(f);
 #else
     fs_path file = fs_path_from(filename);
     if (!fs_path_exists(file))
-        return;
+        return -3;
     size_t len = 0;
     auto *buf = fs_map(file, &len);
     if (!len || !buf)
     {
         if (buf)
             fs_unmap(buf, len);
-        return;
+        return -4;
     }
 #endif // defined(NO_FS)
     const auto *data = find_version_data(buf);
@@ -220,19 +220,21 @@ void client_version(const char *filename, client_info &info)
     info.xxh3 = XXH64(static_cast<void *>(buf), len, 0x2593);
     info.crc32 = crc32_checksum(buf, len);
 
-    if (!info.version)
+    bool ret = 0;
+    for (int i = 0; client_db[i].xxh3; ++i)
     {
-        for (int i = 0; client_db[i].xxh3; ++i)
-        {
-            if (client_db[i].xxh3 != info.xxh3)
-                continue;
+        if (client_db[i].xxh3 != info.xxh3)
+            continue;
+        if (!info.version)
             info.version = client_db[i].version;
-            break;
-        }
+        ret = 1;
+        break;
     }
 #if defined(NO_FS)
     free(buf);
 #else
     fs_unmap(buf, len);
 #endif // defined(NO_FS)
+
+    return ret;
 }

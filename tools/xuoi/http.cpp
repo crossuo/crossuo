@@ -168,3 +168,18 @@ bool http_get_file(const char *url, const char *filename)
     fclose(fp);
     return true;
 }
+
+std::string http_urlencode(std::string str)
+{
+    std::string encoded;
+    CURL *curl = curl_easy_duphandle(s_curl_handle);
+    assert(curl);
+    char *out = curl_easy_escape(curl, str.c_str(), str.length());
+    if (out)
+    {
+        encoded = out;
+        curl_free(out);
+    }
+    curl_easy_cleanup(curl);
+    return encoded;
+}

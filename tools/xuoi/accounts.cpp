@@ -11,6 +11,7 @@
 #include <external/process.h>
 #include <external/tinyfiledialogs.h>
 #include <xuocore/client_info.h>
+#include "http.h"
 #include "common.h"
 #include "ui_model.h"
 #include "shards.h"
@@ -30,6 +31,8 @@
 #define XUO_EXE "./crossuo"
 #define XUOA_EXE "./xuoassist"
 #endif
+
+bool ui_modal(const char *title, const char *msg); // xuolauncher.cpp
 
 // model
 
@@ -209,6 +212,8 @@ static bool account_getter(void *data, int idx, const char **out_text)
     return true;
 }
 
+static client_info info;
+
 void ui_accounts(ui_model &m)
 {
     const auto profile_max_w = 120.f;
@@ -233,6 +238,7 @@ void ui_accounts(ui_model &m)
     static int current_type = 0;
     static int current_shard = 0;
     static bool update_view = true;
+    static bool ask_help = false;
     const auto picked = shard_picked();
     if (picked != -1)
         update_view = true;
@@ -372,15 +378,52 @@ void ui_accounts(ui_model &m)
                 const bool client_exe_exists = fs_path_exists(client_exe);
                 if (client_exe_exists)
                 {
-                    client_info info;
-                    client_version(fs_path_ascii(client_exe), info);
+                    ask_help = client_version(fs_path_ascii(client_exe), info) == 0;
                     if (info.version)
                     {
                         client_version_string(info.version, clientVersion, sizeof(clientVersion));
                     }
+                    else if (info.xxh3 && info.crc32)
+                    {
+                        ask_help = true;
+                    }
                 }
             }
         }
+
+        if (ask_help)
+        {
+            auto response = ui_modal(
+                "Unknown Client Version",
+                "X:UO Launcher couldn't auto-detect the client version to use.\n"
+                "Would you like to help us improve our launcher?");
+            if (response)
+            {
+                char signature[128];
+                snprintf(
+                    signature,
+                    sizeof(signature),
+                    "0x%016lx, 0x%08x, 0x%08x",
+                    info.xxh3,
+                    info.crc32,
+                    info.version);
+
+                std::string title = "[xuolauncher] unknown client: ";
+                title += signature;
+                title = http_urlencode(title);
+
+                std::string body =
+                    "My client version is: (put here if you know)\n"
+                    "(please, upload your client.exe with a screenshot and link here to help further)";
+                body = http_urlencode(body);
+
+                std::string url = "https://github.com/crossuo/crossuo/issues/new?title=";
+                url += title + "\\&body=" + body;
+                open_url(url);
+                ask_help = false;
+            }
+        }
+
         ImGui::SameLine();
         HelpMarker("The place where Ultima Online client is installed");
 
