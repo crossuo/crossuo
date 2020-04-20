@@ -32,8 +32,33 @@
 #define XUOA_EXE "./xuoassist"
 #endif
 
-bool ui_modal(const char *title, const char *msg); // xuolauncher.cpp
-void save_config();                                // xuolauncher.cpp
+void save_config(); // xuolauncher.cpp
+
+static inline bool ui_modal(const char *title, const char *msg, bool &response)
+{
+    bool closed = false;
+    ImGui::OpenPopup(title);
+    if (ImGui::BeginPopupModal(title))
+    {
+        ImGui::Text("%s", msg);
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::Button("Yes", ImVec2(80, 0)))
+        {
+            response = true;
+            closed = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No", ImVec2(80, 0)))
+        {
+            response = false;
+            closed = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    return closed;
+}
 
 // model
 
@@ -397,33 +422,38 @@ void ui_accounts(ui_model &m)
 
         if (ask_help)
         {
-            auto response = ui_modal(
+            bool response = false;
+            auto closed = ui_modal(
                 "Unknown Client Version",
                 "X:UO Launcher couldn't auto-detect the client version to use.\n"
-                "Would you like to help us improve our launcher?");
-            if (response)
+                "Would you like to help us improve our launcher?",
+                response);
+            if (closed)
             {
-                char signature[128];
-                snprintf(
-                    signature,
-                    sizeof(signature),
-                    "0x%016lx, 0x%08x, 0x%08x",
-                    info.xxh3,
-                    info.crc32,
-                    info.version);
+                if (response)
+                {
+                    char signature[128];
+                    snprintf(
+                        signature,
+                        sizeof(signature),
+                        "0x%016lx, 0x%08x, 0x%08x",
+                        info.xxh3,
+                        info.crc32,
+                        info.version);
 
-                std::string title = "[xuolauncher] unknown client: ";
-                title += signature;
-                title = http_urlencode(title);
+                    std::string title = "[xuolauncher] unknown client: ";
+                    title += signature;
+                    title = http_urlencode(title);
 
-                std::string body =
-                    "My client version is: (put here if you know)\n"
-                    "(please, upload your client.exe with a screenshot and link here to help further)";
-                body = http_urlencode(body);
+                    std::string body =
+                        "My client version is: (put here if you know)\n"
+                        "(please, upload your client.exe with a screenshot and link here to help further)";
+                    body = http_urlencode(body);
 
-                std::string url = "https://github.com/crossuo/crossuo/issues/new?title=";
-                url += title + "\\&body=" + body;
-                open_url(url);
+                    std::string url = "https://github.com/crossuo/crossuo/issues/new?title=";
+                    url += title + "\\&body=" + body;
+                    open_url(url);
+                }
                 ask_help = false;
             }
         }

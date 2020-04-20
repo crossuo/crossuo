@@ -267,7 +267,7 @@ void ui_backups(ui_model &m)
     }
 }
 
-bool ui_modal(const char *title, const char *msg)
+static inline bool ui_modal(const char *title, const char *msg)
 {
     bool yes = false;
     ImGui::OpenPopup(title);
