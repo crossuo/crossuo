@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundleIdentifier</key>
+        <string>com.crossuo</string>
+        <key>CFBundleDisplayName</key>
+        <string>CrossUO</string>
+        <key>CFBundleName</key>
+        <string>CrossUO</string>
+        <key>CFBundleExecutable</key>
+        <string>xuolauncher</string>
+        <key>CFBundleIconFile</key>
+        <string>crossuo.icns</string>
+    </dict>
+</plist>
