@@ -31,7 +31,7 @@ matrix:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        file: "crossuo-ubuntu-nightly.tgz"
+        file: "crossuo-linux-nightly.tgz"
         skip_cleanup: true
         on:
           tags: false
