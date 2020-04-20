@@ -59,12 +59,12 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && cmake --build . || exit 1
     cd ..
     echo Building nightly package
-    mkdir -p crossuo-osx-nightly/CrossUO.app/MacOS
-    cp release/src/crossuo.so crossuo-osx-nightly/CrossUO.app/MacOS/
-    cp release/src/crossuo crossuo-osx-nightly/CrossUO.app/MacOS/
-    cp release/tools/xuoi/xuolauncher crossuo-osx-nightly/CrossUO.app/MacOS/
-    mkdir -p crossuo-osx-nightly/CrossUO.app/Resources
-    cp resources/crossuo.icns crossuo-osx-nightly/CrossUO.app/Resources
-    cp resources/Info.plist crossuo-osx-nightly/CrossUO.app
-    zip crossuo-osx-nightly.zip crossuo-osx-nightly/*
+    mkdir -p CrossUO.app/Contents/MacOS/
+    cp release/src/crossuo.so CrossUO.app/Contents/MacOS/
+    cp release/src/crossuo CrossUO.app/Contents/MacOS/
+    cp release/tools/xuoi/xuolauncher CrossUO.app/Contents/MacOS/
+    mkdir -p CrossUO.app/Contents/Resources/
+    cp resources/crossuo.icns CrossUO.app/Contents/Resources/
+    cp resources/Info.plist CrossUO.app/Contents/
+    zip -r crossuo-osx-nightly.zip CrossUO.app
 fi
