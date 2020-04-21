@@ -384,9 +384,30 @@ FS_PRIVATE bool fs_path_create(const fs_path &path)
 
 FS_PRIVATE fs_path fs_path_current()
 {
+#if defined(__APPLE__)
+    static fs_path path;
+    static char pathbuf[PROC_PIDPATHINFO_MAXSIZE] = {};
+    if (pathbuf[0] != 0)
+        return path;
+
+    const pid_t pid = getpid();
+    proc_pidpath(pid, pathbuf, sizeof(pathbuf));
+    if (strstr(pathbuf, ".app/Contents/MacOS/") == nullptr)
+    {
+        char *currdir = getcwd(0, 0);
+        path = fs_path_from(currdir);
+        free(currdir);
+    }
+    else
+    {
+        path = fs_appdata_path(); // FIXME: quick hack for .app packages
+    }
+    return path;
+#else
     wchar_t path[FS_MAX_PATH];
     GetCurrentDirectoryW(FS_MAX_PATH, &path[0]);
     return fs_path_from(path);
+#endif // defined(__APPLE__)
 }
 
 FS_PRIVATE unsigned char *fs_map(const fs_path &path, size_t *length)
