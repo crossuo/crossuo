@@ -241,7 +241,7 @@ void load_shards()
     const auto fname = fs_path_join(fs_path_current(), "shards.cfg");
 #if !defined(VALIDATOR)
     http_get_file(
-        "https://github.com/crossuo/shards/releases/download/latest/shards.cfg",
+        "https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg",
         fs_path_ascii(fname));
 #endif
     load_shard_file(fname, s_shards);
