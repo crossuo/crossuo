@@ -405,7 +405,7 @@ xuo_context *xuo_init(const char *path, bool beta)
         return nullptr;
     }
 
-    ctx.config.cache_path = fs_path_join(fs_appdata_path(), "xuolauncher", "cache");
+    ctx.config.cache_path = fs_path_join(fs_path_appdata(), "xuolauncher", "cache");
     ctx.config.output_path = fs_path_from(path);
 
     fs_path dir = ctx.config.cache_path;

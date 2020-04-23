@@ -20,6 +20,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef FS_HEADER
 #define FS_HEADER
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h> // _NSGetExecutablePath
+#endif
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
@@ -84,7 +87,7 @@ bool fs_copy(const fs_path &from, const fs_path &to);
 void fs_del(const fs_path &target);
 bool fs_chmod(const fs_path &target, fs_mode mode);
 
-fs_path fs_appdata_path();
+fs_path fs_path_appdata();
 
 fs_path fs_directory(const fs_path &path);
 fs_type fs_path_type(const fs_path &path);
@@ -93,7 +96,9 @@ bool fs_path_is_file(const fs_path &path);
 bool fs_path_some(const fs_path &path);
 bool fs_path_exists(const fs_path &path);
 bool fs_path_create(const fs_path &path);
+bool fs_path_change(const fs_path &path);
 fs_path fs_path_current();
+fs_path fs_path_process();
 
 unsigned char *fs_map(const fs_path &path, size_t *length);
 void fs_unmap(unsigned char *ptr, size_t length);
@@ -252,8 +257,16 @@ FS_PRIVATE bool fs_path_equal(const fs_path &a, const fs_path &b)
 
 FS_PRIVATE void fs_append(fs_path &target, const fs_path &other)
 {
-    target.real_path += L"\\" + other.real_path;
-    target.temp_path += "\\" + other.temp_path;
+    if (target.real_path.back() == L'\\' || other.real_path.front() == L'\\')
+    {
+        target.real_path += other.real_path;
+        target.temp_path += other.temp_path;
+    }
+    else
+    {
+        target.real_path += L"\\" + other.real_path;
+        target.temp_path += "\\" + other.temp_path;
+    }
 }
 
 static void fs_path_list_internal_r(const wstr_t &path, std::vector<fs_path> &out)
@@ -382,6 +395,22 @@ FS_PRIVATE bool fs_path_create(const fs_path &path)
     return CreateDirectoryW(p.c_str(), nullptr) != 0u;
 }
 
+FS_PRIVATE bool fs_path_change(const fs_path &path)
+{
+    const auto &p = fs_path_wstr(path);
+    return SetCurrentDirectoryW(p.c_str()) != 0u;
+}
+
+FS_PRIVATE fs_path fs_path_process()
+{
+    wchar_t buf[FS_MAX_PATH];
+    int len = GetModuleFileNameW(nullptr, buf, FS_MAX_PATH);
+    len = len < FS_MAX_PATH ? len : FS_MAX_PATH - 1;
+    if (len >= 0)
+        buf[len] = '\0';
+    return fs_path_from(buf);
+}
+
 FS_PRIVATE fs_path fs_path_current()
 {
     wchar_t path[FS_MAX_PATH];
@@ -451,7 +480,7 @@ FS_PRIVATE void fs_del(const fs_path &target)
     DeleteFile(t.c_str());
 }
 
-FS_PRIVATE fs_path fs_appdata_path()
+FS_PRIVATE fs_path fs_path_appdata()
 {
     wchar_t path[FS_MAX_PATH] = {};
     SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, 0, path);
@@ -526,7 +555,14 @@ FS_PRIVATE bool fs_path_equal(const fs_path &a, const fs_path &b)
 
 FS_PRIVATE void fs_append(fs_path &target, const fs_path &other)
 {
-    target.real_path += "/" + other.real_path;
+    if (target.real_path.back() == '/' || other.real_path.front() == '/')
+    {
+        target.real_path += other.real_path;
+    }
+    else
+    {
+        target.real_path += "/" + other.real_path;
+    }
 }
 
 static std::vector<fs_path> s_files;
@@ -740,33 +776,41 @@ FS_PRIVATE bool fs_path_create(const fs_path &path)
     return mkdir(start, 0777) == 0;
 }
 
-FS_PRIVATE fs_path fs_path_current()
+FS_PRIVATE bool fs_path_change(const fs_path &path)
+{
+    return chdir(path.real_path.c_str()) == 0;
+}
+
+FS_PRIVATE fs_path fs_path_process()
 {
 #if defined(__APPLE__)
-    static fs_path path;
-    static char pathbuf[PROC_PIDPATHINFO_MAXSIZE] = {};
-    if (pathbuf[0] != 0)
-        return path;
-
-    const pid_t pid = getpid();
-    proc_pidpath(pid, pathbuf, sizeof(pathbuf));
-    if (strstr(pathbuf, ".app/Contents/MacOS/") == nullptr)
-    {
-        char *currdir = getcwd(0, 0);
-        path = fs_path_from(currdir);
-        free(currdir);
-    }
-    else
-    {
-        path = fs_appdata_path(); // FIXME: quick hack for .app packages
-    }
-    return path;
+    char buf[FS_MAX_PATH];
+    char exe[FS_MAX_PATH];
+    uint32_t len = sizeof(exe);
+    if (_NSGetExecutablePath(exe, &len) != 0)
+        return fs_path_current();
+    if (!realpath(exe, buf))
+        return fs_path_current();
+    fs_path file = fs_path_from(buf);
+    if (fs_path_is_file(file))
+        file = fs_directory(file);
+    return file;
 #else
+    char buf[FS_MAX_PATH];
+    int len = readlink("/proc/self/exe", buf, FS_MAX_PATH);
+    len = len < FS_MAX_PATH ? len : FS_MAX_PATH - 1;
+    if (len >= 0)
+        buf[len] = '\0';
+    return fs_path_from(buf);
+#endif // #if defined(__APPLE__)
+}
+
+FS_PRIVATE fs_path fs_path_current()
+{
     char *currdir = getcwd(0, 0);
     fs_path path = fs_path_from(currdir);
     free(currdir);
     return path;
-#endif // defined(__APPLE__)
 }
 
 #define USE_MMAP 1
@@ -877,7 +921,7 @@ FS_PRIVATE bool fs_chmod(const fs_path &target, fs_mode mode)
     return chmod(fs_path_ascii(target), m) == 0;
 }
 
-FS_PRIVATE fs_path fs_appdata_path()
+FS_PRIVATE fs_path fs_path_appdata()
 {
     static const char *datadir;
     static fs_path path;
