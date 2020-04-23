@@ -18,6 +18,7 @@
 #include "ui_shards.h"
 
 #define CFG_NAME account
+#define CFG_SECTION_FILTER_NAME "account"
 #define CFG_DEFINITION "cfg_launcher.h"
 #include "cfg_loader.h"
 
@@ -28,11 +29,12 @@
 #if defined(XUO_WINDOWS)
 #define XUO_EXE "crossuo.exe"
 #else
-#define XUO_EXE "./crossuo"
-#define XUOA_EXE "./xuoassist"
+#define XUO_EXE "crossuo"
+#define XUOA_EXE "xuoassist"
 #endif
 
-void save_config(); // xuolauncher.cpp
+extern void save_config();              // xuolauncher.cpp
+extern const fs_path &xuol_data_path(); // xuolauncher.cpp
 
 static inline bool ui_modal(const char *title, const char *msg, bool &response)
 {
@@ -84,7 +86,7 @@ static std::unordered_map<astr_t, int> s_account_by_name;
 
 void load_accounts()
 {
-    const auto fname = fs_path_join(fs_path_current(), "xuolauncher.cfg");
+    const auto fname = fs_path_join(xuol_data_path(), "xuolauncher.cfg");
     LOG_INFO("loading accounts from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     account::cfg(fp, s_accounts);
@@ -141,14 +143,13 @@ int account_client_type_index_by_name(const char *name)
     return 0;
 }
 
-static fs_path account_create_config(const account::entry &account, bool save = false)
+static fs_path account_create_config(const account::entry &account)
 {
     astr_t name = account.account_profile + ".cfg";
     std::replace(name.begin(), name.end(), '/', '_');
     std::replace(name.begin(), name.end(), '\\', '_');
 
-    const auto path = save ? fs_path_current() : fs_path_join(fs_appdata_path(), "xuolauncher");
-    const auto fname = fs_path_join(path, name);
+    const auto fname = fs_path_join(xuol_data_path(), name);
     auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {
@@ -183,15 +184,25 @@ static void account_launch(int account_index)
         return;
     }
 
-    auto bin = XUO_EXE;
+    fs_path bin = fs_path_join(fs_path_process(), XUO_EXE);
 #if !defined(XUO_WINDOWS)
-    if (fs_path_is_file(fs_path_from(XUOA_EXE)))
+    const fs_path paths[] = {
+        fs_path_join(xuol_data_path(), XUOA_EXE),  fs_path_join(fs_path_current(), XUOA_EXE),
+        fs_path_join(xuol_data_path(), XUO_EXE),   fs_path_join(fs_path_current(), XUO_EXE),
+        fs_path_join(fs_path_process(), XUOA_EXE),
+    };
+    for (int i = 0; i < countof(paths); ++i)
     {
-        bin = XUOA_EXE;
+        if (fs_path_is_file(paths[i]))
+        {
+            bin = paths[i];
+            break;
+        }
     }
+    fs_path_change(fs_directory(bin));
 #endif // !defined(XUO_WINDOWS)
 
-    const char *args[] = { bin, "--config", fs_path_ascii(cfg), 0 };
+    const char *args[] = { fs_path_ascii(bin), "--config", fs_path_ascii(cfg), 0 };
     LOG_INFO("running %s", args[0]);
 
     process_s process;
@@ -310,7 +321,7 @@ void ui_accounts(ui_model &m)
             }
             if (ImGui::Selectable("Export"))
             {
-                account_create_config(s_accounts.entries[acct_id], true);
+                account_create_config(s_accounts.entries[acct_id]);
                 ImGui::CloseCurrentPopup();
             }
             if (ImGui::Selectable("Launch"))

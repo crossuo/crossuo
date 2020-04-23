@@ -12,6 +12,7 @@
 
 extern bool valid_url(const astr_t &url);
 extern void open_url(const astr_t &url);
+extern const fs_path &xuol_data_path();
 
 namespace shard
 {
@@ -238,11 +239,13 @@ void load_shards()
     auto custom = shard::default_entry();
     custom.shard_name = "<custom shard>";
     s_shards.entries.emplace_back(custom);
-    const auto fname = fs_path_join(fs_path_current(), "shards.cfg");
 #if !defined(VALIDATOR)
+    const auto fname = fs_path_join(xuol_data_path(), "shards.cfg");
     http_get_file(
         "https://raw.githubusercontent.com/crossuo/shards/release/shards.cfg",
         fs_path_ascii(fname));
+#else
+    const auto fname = fs_path_join(fs_path_current(), "shards.cfg");
 #endif
     load_shard_file(fname, s_shards);
 

@@ -292,6 +292,24 @@ static inline bool ui_modal(const char *title, const char *msg)
     return yes;
 }
 
+const fs_path &xuol_data_path()
+{
+    static bool initialized = false;
+    static fs_path dir;
+    if (initialized)
+        return dir;
+
+    dir = fs_path_join(fs_path_appdata(), "xuolauncher");
+    if (!fs_path_create(dir))
+    {
+        LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
+        return dir;
+    }
+
+    initialized = true;
+    return dir;
+}
+
 #define CFG_NAME launcher
 #define CFG_SECTION_FILTER_NAME "global"
 #define CFG_DEFINITION "cfg_launcher.h"
@@ -306,7 +324,8 @@ launcher::entry &config()
 
 void load_config()
 {
-    const auto fname = fs_path_join(fs_path_current(), "xuolauncher.cfg");
+    const auto fname = fs_path_join(xuol_data_path(), "xuolauncher.cfg");
+
     LOG_INFO("loading settings from %s", fs_path_ascii(fname));
     auto fp = fs_open(fname, FS_READ);
     launcher::cfg(fp, s_config);
@@ -327,7 +346,7 @@ void write_config(void *_fp)
 
 void save_config()
 {
-    const auto fname = fs_path_join(fs_path_current(), "xuolauncher.cfg");
+    const auto fname = fs_path_join(xuol_data_path(), "xuolauncher.cfg");
     auto fp = fs_open(fname, FS_WRITE);
     if (!fp)
     {
@@ -346,24 +365,6 @@ void xuol_launch_quit()
 }
 
 static ui_model model;
-
-const fs_path &xuol_data_path()
-{
-    static bool initialized = false;
-    static fs_path dir;
-    if (initialized)
-        return dir;
-
-    dir = fs_path_join(fs_appdata_path(), "xuolauncher");
-    if (!fs_path_create(dir))
-    {
-        LOG_ERROR("failed to create directory: %s", fs_path_ascii(dir));
-        return dir;
-    }
-
-    initialized = true;
-    return dir;
-}
 
 #if !defined(XUO_DEBUG)
 static bool run_self_update_instance(int argc, char **argv)
