@@ -136,7 +136,7 @@ bool load_config()
     if (!config_exists && !launcher_exists)
     {
         Platform::OpenBrowser("https://crossuo.com/#download");
-        Fatal(
+        ErrorMessage(
             Client,
             "You need X:UO Launcher to launch CrossUO.\n"
             "Please download from https://crossuo.com/#download",
@@ -152,7 +152,7 @@ bool load_config()
         const auto options = process_option_inherit_environment | process_option_child_detached;
         if (process_create(args, options, &process) != 0)
         {
-            Fatal(Client, "Could not launch X:UO Launcher", "could not launch: %s", bin);
+            ErrorMessage(Client, "Could not launch X:UO Launcher", "could not launch: %s", bin);
         }
         SDL_Delay(500);
     };
@@ -173,7 +173,7 @@ bool load_config()
             {
                 launcher();
             }
-            Fatal(
+            ErrorMessage(
                 Client,
                 "Couldn't find Ultima Online(tm) data files.\n"
                 "Please download the original ultima client and configure CrossUO to use the "
@@ -223,7 +223,7 @@ bool load_config()
             {
                 launcher();
             }
-            Fatal(
+            ErrorMessage(
                 Client,
                 "Couldn't find valid Ultima Online(tm) data files for current configuration.\n"
                 "Make sure your configuration is pointing to the correct data files for the\n"
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 
     if (SDL_Init(SDL_INIT_TIMER) < 0)
     {
-        Fatal(
+        ErrorMessage(
             Client,
             "Window initialization failure.",
             "unable to initialize SDL %s",
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
         {
             const char *errMsg =
                 "Failed to create CrossUO client window. May be caused by a missing configuration file.";
-            Fatal(Client, errMsg, "error initializing game window");
+            ErrorMessage(Client, errMsg, "error initializing game window");
             return -1;
         }
     }
