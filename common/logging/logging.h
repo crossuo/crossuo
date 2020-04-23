@@ -63,6 +63,16 @@ extern fatalErrorCb g_fatalErrorCb;
         LOG_(system, FATAL, __VA_ARGS__);                                                          \
     } while (0);
 
+#define ErrorMessage(system, friendly_msg, ...)                                                    \
+    do                                                                                             \
+    {                                                                                              \
+        if (g_fatalErrorCb)                                                                        \
+        {                                                                                          \
+            g_fatalErrorCb(friendly_msg);                                                          \
+        }                                                                                          \
+        LOG_(system, ERROR, __VA_ARGS__);                                                          \
+    } while (0);
+
 #define INFO_DUMP(system, ...) LOG_DUMP_(system, 0, __VA_ARGS__)
 
 #if defined(XUO_DEBUG)
