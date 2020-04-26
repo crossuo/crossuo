@@ -537,9 +537,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             if (anim[0] != -1 && m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
             {
                 animFile = 2;
-
                 realAnimID = anim[0];
-
                 if (realAnimID == 68)
                 {
                     realAnimID = 122;
@@ -556,6 +554,11 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     startAnimID = realAnimID * 110;
                     groupType = AGT_MONSTER;
                 }
+
+                if (index == 192 || index == 793)
+                {
+                    mountedHeightOffset = -9;
+                }
             }
             else if (anim[1] != -1 && m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
             {
@@ -571,6 +574,11 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 {
                     startAnimID = 69300 + ((realAnimID - 630) * 175);
                     groupType = AGT_HUMAN;
+                }
+
+                if (index == 1401)
+                {
+                    mountedHeightOffset = 9;
                 }
             }
             else if (anim[2] != -1 && m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
@@ -618,13 +626,27 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     {
                         startAnimID = ((realAnimID - 200) * 65) + 22000;
                         groupType = AGT_ANIMAL;
-                        mountedHeightOffset = +8;
+                        //mountedHeightOffset = +8;
                     }
                 }
                 else //Hight
                 {
                     startAnimID = realAnimID * 110;
                     groupType = AGT_MONSTER;
+                }
+
+                switch (index)
+                {
+                    case 192:
+                    case 277:
+                        mountedHeightOffset = 0;
+                        break;
+                    case 1069:
+                        mountedHeightOffset = 3;
+                        break;
+                    default:
+                        mountedHeightOffset = -9;
+                        break;
                 }
             }
 
