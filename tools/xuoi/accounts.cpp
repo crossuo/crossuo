@@ -150,6 +150,7 @@ static fs_path account_create_config(const account::entry &account)
     astr_t name = account.account_profile + ".cfg";
     std::replace(name.begin(), name.end(), '/', '_');
     std::replace(name.begin(), name.end(), '\\', '_');
+    std::replace(name.begin(), name.end(), ' ', '_');
 
     const auto fname = fs_path_join(xuol_data_path(), name);
     auto fp = fs_open(fname, FS_WRITE);
