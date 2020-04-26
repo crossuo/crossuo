@@ -415,13 +415,11 @@ uint16_t CGameItem::GetMountAnimation()
             case 0x3E9B: // 16027
             case 0x3E9D: // 16029 Ethereal Unicorn
             {
-                graphic = 0x00C0;
-                break;
+                return 0x00C0;
             }
             case 0x3E9C: // 16028 Ethereal Kirin
             {
-                graphic = 0x00BF;
-                break;
+                return 0x00BF;
             }
             case 0x3E9E: // 16030
             {
@@ -604,10 +602,44 @@ uint16_t CGameItem::GetMountAnimation()
                 graphic = 0x042D;
                 break;
             }
-            default: //lightbrown/horse2
+            case 0x3ECA: // 16074 Tarantula
+            {
+                graphic = 0x0579;
+                break;
+            }
+            case 0x3ECC: // 16076
+            {
+                graphic = 0x0582;
+                break;
+            }
+            case 0x3ED1: // 16081 CoconutCrab
+            {
+                graphic = 0x05E6;
+                break;
+            }
+            case 0x3ECB: // 16075 Lasher
+            {
+                graphic = 0x057F;
+                break;
+            }
+            case 0x3ED0: // 16080 SkeletalCat
+            {
+                graphic = 0x05A1;
+                break;
+            }
+            case 0x3ECD: // 16077 Palomino
+            {
+                graphic = 0x0580;
+                break;
+            }
+            case 0x3ECF: // 16079 Eowmu
+            {
+                graphic = 0x05A0;
+                break;
+            }
+            default: // Lightbrown Horse2
             {
                 graphic = 0x00C8;
-
                 break;
             }
         }
