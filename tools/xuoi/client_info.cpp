@@ -2,6 +2,7 @@
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
 #include <stdio.h>
+#include <inttypes.h>
 #include <xuocore/client_info.h>
 
 #define FS_IMPLEMENTATION
@@ -45,6 +46,11 @@ int main(int argc, char **argv)
     char str[32] = {};
     client_version_string(info.version, str, sizeof(str));
     fprintf(
-        stdout, "{0x%016lx, 0x%08x, 0x%08x}, // %s\n", info.xxh3, info.crc32, info.version, str);
+        stdout,
+        "{0x%016" PRIx64 ", 0x%08x, 0x%08x}, // %s\n",
+        info.xxh3,
+        info.crc32,
+        info.version,
+        str);
     return 0;
 }

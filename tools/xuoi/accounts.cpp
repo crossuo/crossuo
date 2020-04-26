@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cmath>
+#include <inttypes.h>
 #include <external/inih.h>
 #include <external/process.h>
 #include <external/tinyfiledialogs.h>
@@ -28,6 +29,7 @@
 
 #if defined(XUO_WINDOWS)
 #define XUO_EXE "crossuo.exe"
+#define XUOA_EXE "crossuo.exe"
 #else
 #define XUO_EXE "crossuo"
 #define XUOA_EXE "xuoassist"
@@ -184,12 +186,11 @@ static void account_launch(int account_index)
         return;
     }
 
-    fs_path bin = fs_path_join(fs_path_process(), XUO_EXE);
-#if !defined(XUO_WINDOWS)
+    fs_path bin;
     const fs_path paths[] = {
         fs_path_join(xuol_data_path(), XUOA_EXE),  fs_path_join(fs_path_current(), XUOA_EXE),
         fs_path_join(xuol_data_path(), XUO_EXE),   fs_path_join(fs_path_current(), XUO_EXE),
-        fs_path_join(fs_path_process(), XUOA_EXE),
+        fs_path_join(fs_path_process(), XUOA_EXE), fs_path_join(fs_path_process(), XUO_EXE),
     };
     for (int i = 0; i < countof(paths); ++i)
     {
@@ -200,7 +201,6 @@ static void account_launch(int account_index)
         }
     }
     fs_path_change(fs_directory(bin));
-#endif // !defined(XUO_WINDOWS)
 
     const char *args[] = { fs_path_ascii(bin), "--config", fs_path_ascii(cfg), 0 };
     LOG_INFO("running %s", args[0]);
@@ -447,7 +447,7 @@ void ui_accounts(ui_model &m)
                     snprintf(
                         signature,
                         sizeof(signature),
-                        "0x%016lx, 0x%08x, 0x%08x",
+                        "0x%016" PRIx64 ", 0x%08x, 0x%08x",
                         info.xxh3,
                         info.crc32,
                         info.version);

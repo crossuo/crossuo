@@ -36,6 +36,12 @@ set(XUOL_SRCS
   ui_shards.cpp
 )
 
+if(XUO_WINDOWS)
+  set(XUOL_SRCS ${XUOL_SRCS}
+    ${CMAKE_SOURCE_DIR}/resources/crossuo.rc
+  )
+endif()
+
 set(XUOL_PROJECT xuolauncher)
 
 add_executable(${XUOL_PROJECT} ${XUOL_SRCS})
