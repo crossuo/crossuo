@@ -46,6 +46,7 @@ enum fs_mode
 
 enum fs_type
 {
+    FS_ERROR = -1,
     FS_FILE = 0x00,
     FS_DIR = 0x01,
 };
@@ -378,7 +379,8 @@ FS_PRIVATE fs_type fs_path_type(const fs_path &path)
 {
     const auto &p = fs_path_wstr(path);
     auto attr = GetFileAttributesW(p.c_str());
-    assert(attr != INVALID_FILE_ATTRIBUTES);
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        return FS_ERROR;
     return (attr & FILE_ATTRIBUTE_DIRECTORY) ? FS_DIR : FS_FILE;
 }
 
@@ -408,7 +410,8 @@ FS_PRIVATE fs_path fs_path_process()
     len = len < FS_MAX_PATH ? len : FS_MAX_PATH - 1;
     if (len >= 0)
         buf[len] = '\0';
-    return fs_path_from(buf);
+    const auto path = fs_directory(fs_path_from(buf));
+    return path;
 }
 
 FS_PRIVATE fs_path fs_path_current()
