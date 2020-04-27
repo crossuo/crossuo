@@ -12,7 +12,7 @@ astr_t GetBuildDateTimeStamp()
 
 #else
 
-#include "GitRevision.h"
+#include "revision.h"
 astr_t GetBuildDateTimeStamp()
 {
     return astr_t(__DATE__ " " __TIME__ " (" GIT_REV_STR ")");

@@ -438,6 +438,11 @@ int main(int argc, char **argv)
     load_accounts();
     load_shards();
 
+#if defined(XUO_MASTER)
+    config().global_auto_update = false;
+    config().global_check_updates = false;
+#endif // defined(XUO_MASTER)
+
     auto updater_init = []() {
         s_updated = false;
         s_update_backup_index = -1;

@@ -4,6 +4,7 @@
 #include "MainScreen.h"
 #include "BaseScreen.h"
 #include <common/utils.h>
+#include "revision.h"
 #include "../Config.h"
 #include "../Point.h"
 #include "../CrossUO.h"
@@ -43,7 +44,7 @@ void CMainScreen::Init()
     Load();
 
     Reset();
-    g_GameWindow.SetTitle("Ultima Online");
+    g_GameWindow.SetTitle(CLIENT_TITLE);
 #ifndef NEW_RENDERER_ENABLED
     g_GL.UpdateRect();
 #else

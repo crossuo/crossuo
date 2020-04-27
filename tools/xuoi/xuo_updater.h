@@ -6,8 +6,9 @@
 struct xuo_context;
 struct xuo_release;
 
-#define XUOL_VERSION "1.0.3b"
-#define XUOL_AGENT_NAME "X:UO Launcher v" XUOL_VERSION
+#include "revision.h"
+
+#define XUOL_AGENT_NAME LAUNCHER_TITLE
 #if defined(XUO_RELEASE)
 #define XUOL_UPDATER_HOST "http://update.crossuo.com/"
 #else

@@ -38,7 +38,7 @@ set(XUOL_SRCS
 
 if(XUO_WINDOWS)
   set(XUOL_SRCS ${XUOL_SRCS}
-    ${CMAKE_SOURCE_DIR}/resources/crossuo.rc
+    ${CMAKE_SOURCE_DIR}/resources/launcher.rc
   )
 endif()
 
