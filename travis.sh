@@ -27,7 +27,7 @@ if [[ "$TASK" == "clang" ]]; then
     mkdir -p debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && cmake --build . || exit 1
     cd ..
     echo Building Release
-    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && cmake --build . || exit 1
+    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DXUO_MASTER=On && cmake --build . || exit 1
     cd ..
     echo Building nightly package
     mkdir -p crossuo-linux-nightly
@@ -56,7 +56,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew outdated cmake || brew upgrade cmake
     gcc -v && g++ -v && cmake --version
     echo Building Release
-    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release && cmake --build . || exit 1
+    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DXUO_MASTER=On && cmake --build . || exit 1
     cd ..
     echo Building nightly package
     mkdir -p CrossUO.app/Contents/MacOS/

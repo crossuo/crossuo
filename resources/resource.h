@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by CrossUO.rc
+// Used by launcher.rc and client.rc
 //
 #define IDC_MYICON 2
 #define IDS_APP_TITLE 103

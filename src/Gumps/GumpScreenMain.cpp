@@ -2,7 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpScreenMain.h"
-#include "GitRevision.h"
+#include "revision.h"
 #include "../Config.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
@@ -142,7 +142,7 @@ void CGumpScreenMain::UpdateContent()
         text->CreateTextureA(9, astr_t("UO Version " + g_Config.ClientVersionString + "."));
 
         text = (CGUIText *)Add(new CGUIText(0x034E, 286, 467));
-        text->CreateTextureA(9, astr_t("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
+        text->CreateTextureA(9, astr_t(CLIENT_VERSION));
     }
     else
     {
@@ -190,7 +190,7 @@ void CGumpScreenMain::UpdateContent()
         text = (CGUIText *)Add(new CGUIText(0x802, 235, 440));
         text->CreateTextureA(9, astr_t("UO Version " + g_Config.ClientVersionString + "."));
         text = (CGUIText *)Add(new CGUIText(0x7F2, 200, 460));
-        text->CreateTextureA(9, astr_t("CrossUO beta v") + RC_PRODUCE_VERSION_STR);
+        text->CreateTextureA(9, astr_t(CLIENT_VERSION));
     }
 }
 

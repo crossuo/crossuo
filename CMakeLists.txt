@@ -61,14 +61,17 @@ endif()
 
 compile_definitions(XUO_DEBUG DEBUG_ONLY)
 compile_definitions(XUO_RELEASE RELEASE_ONLY)
+if (XUO_MASTER)
+  compile_definitions(XUO_MASTER RELEASE_ONLY)
+endif()
 
 #
 # Project Files
 #
 
 configure_file(
-  "${PROJECT_SOURCE_DIR}/src/GitRevision.h.in"
-  "${PROJECT_BINARY_DIR}/GitRevision.h"
+  "${PROJECT_SOURCE_DIR}/resources/revision.h.in"
+  "${PROJECT_BINARY_DIR}/revision.h"
 )
 include_directories("${PROJECT_BINARY_DIR}/")
 

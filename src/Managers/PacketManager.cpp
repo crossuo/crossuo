@@ -6269,7 +6269,7 @@ PACKET_HANDLER(CrossMessages)
         }
         case OCT_XUO_VERSION:
         {
-            // FIXME: get numeric version from GitRevision.h
+            // FIXME: get numeric version from revision.h
             CPacketCrossVersion(0).Send();
             break;
         }

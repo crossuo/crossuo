@@ -23,7 +23,7 @@ build_script:
     cmake --version
     mkdir build
     cd build
-    cmake .. -G %generator% %extra%
+    cmake .. -G %generator% %extra% -DXUO_MASTER=On
     cmake --build . --config Release
 only_commits:
   files:

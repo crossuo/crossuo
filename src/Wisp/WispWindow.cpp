@@ -128,8 +128,7 @@ void CWindow::SetMaxSize(const CSize &newMaxSize)
     m_MaxSize = newMaxSize;
 }
 
-bool CWindow::Create(
-    const char *className, const char *title, bool showCursor, int width, int height)
+bool CWindow::Create(const char *title, bool showCursor, int width, int height)
 {
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
     {

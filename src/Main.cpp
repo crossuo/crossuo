@@ -2,6 +2,7 @@
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
 #include "Config.h"
+#include "revision.h"
 #include "CrossUO.h"
 #include "GameWindow.h"
 #include "Application.h"
@@ -226,7 +227,7 @@ bool load_config()
             ErrorMessage(
                 Client,
                 "Couldn't find valid Ultima Online(tm) data files for current configuration.\n"
-                "Make sure your configuration is pointing to the correct data files for the\n"
+                "Make sure your configuration is pointing to the correct data files for the"
                 "correct version of your client installation directory.",
                 "could not find data files for client version %s.",
                 g_Config.ClientVersionString.c_str());
@@ -277,7 +278,7 @@ int main(int argc, char **argv)
     if (!isHeadless)
     {
         gfx_render_list_init();
-        if (!g_GameWindow.Create("CrossUO Client", "Ultima Online", false, 640, 480))
+        if (!g_GameWindow.Create(CLIENT_TITLE, false, 640, 480))
         {
             const char *errMsg =
                 "Failed to create CrossUO client window. May be caused by a missing configuration file.";

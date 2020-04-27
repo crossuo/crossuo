@@ -280,12 +280,6 @@ set(crossuo_src
   Config.cpp
 )
 
-if(XUO_WINDOWS)
-  set(crossuo_src ${crossuo_src}
-    CrossUO.rc
-  )
-endif()
-
 set(XUO_DIR ${PROJECT_SOURCE_DIR}/src/)
 include_directories(${XUO_DIR})
 
@@ -298,6 +292,10 @@ if(${CMAKE_VERSION} VERSION_LESS "3.8.0")
   source_group("${XUO_DIR}" FILES ${XUO_FILES})
 else()
   source_group(TREE "${XUO_DIR}" FILES ${XUO_FILES})
+endif()
+
+if(XUO_WINDOWS)
+  set(XUO_SRCS ${XUO_SRCS} ${CMAKE_SOURCE_DIR}/resources/client.rc)
 endif()
 
 if(XUO_WINDOWS OR XUO_EMSC)

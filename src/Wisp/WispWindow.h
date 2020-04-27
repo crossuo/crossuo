@@ -38,12 +38,7 @@ public:
     CWindow();
     virtual ~CWindow();
 
-    bool Create(
-        const char *className,
-        const char *title,
-        bool showCursor = false,
-        int width = 800,
-        int height = 600);
+    bool Create(const char *title, bool showCursor = false, int width = 800, int height = 600);
     void Destroy();
 
     static uint32_t PushEvent(uint32_t id, void *data1 = nullptr, void *data2 = nullptr);
