@@ -37,6 +37,8 @@
 
 extern void save_config();              // xuolauncher.cpp
 extern const fs_path &xuol_data_path(); // xuolauncher.cpp
+extern bool xuol_launch_assist();
+extern void xuol_launch_quit();
 
 static inline bool ui_modal(const char *title, const char *msg, bool &response)
 {
@@ -187,20 +189,37 @@ static void account_launch(int account_index)
         return;
     }
 
-    fs_path bin;
+    fs_path xuoa_bin;
+    const fs_path xuoa_paths[] = {
+        fs_path_join(xuol_data_path(), XUOA_EXE),
+        fs_path_join(fs_path_current(), XUOA_EXE),
+        fs_path_join(fs_path_process(), XUOA_EXE),
+    };
+    for (int i = 0; i < countof(xuoa_paths); ++i)
+    {
+        if (fs_path_is_file(xuoa_paths[i]))
+        {
+            xuoa_bin = xuoa_paths[i];
+            break;
+        }
+    }
+
+    fs_path xuo_bin;
     const fs_path paths[] = {
-        fs_path_join(xuol_data_path(), XUOA_EXE),  fs_path_join(fs_path_current(), XUOA_EXE),
-        fs_path_join(xuol_data_path(), XUO_EXE),   fs_path_join(fs_path_current(), XUO_EXE),
-        fs_path_join(fs_path_process(), XUOA_EXE), fs_path_join(fs_path_process(), XUO_EXE),
+        fs_path_join(xuol_data_path(), XUO_EXE),
+        fs_path_join(fs_path_current(), XUO_EXE),
+        fs_path_join(fs_path_process(), XUO_EXE),
     };
     for (int i = 0; i < countof(paths); ++i)
     {
         if (fs_path_is_file(paths[i]))
         {
-            bin = paths[i];
+            xuo_bin = paths[i];
             break;
         }
     }
+
+    auto bin = xuol_launch_assist() ? xuoa_bin : xuo_bin;
     fs_path_change(fs_directory(bin));
 
     const char *args[] = { fs_path_ascii(bin), "--config", fs_path_ascii(cfg), 0 };
@@ -214,7 +233,6 @@ static void account_launch(int account_index)
         LOG_ERROR("could not launch client %s", args[0]);
     }
 
-    void xuol_launch_quit();
     xuol_launch_quit();
 }
 

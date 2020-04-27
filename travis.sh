@@ -4,6 +4,7 @@ export XUO_TRAVIS=1
 
 echo TRAVIS_BUILD_DIR is $TRAVIS_BUILD_DIR
 echo TASK is $TASK
+echo TRAVIS_TAG is $TRAVIS_TAG
 echo TRAVIS_OS_NAME is $TRAVIS_OS_NAME
 
 if [[ "$TASK" == "clang-format" ]]; then
@@ -22,12 +23,16 @@ if [[ "$TASK" == "clang-format" ]]; then
     fi
 fi
 
+if [[ "$TRAVIS_TAG" == "" ]]; then
+    export EXTRA="-DXUO_MASTER=On"
+fi
+
 if [[ "$TASK" == "clang" ]]; then
     echo Building Debug
     mkdir -p debug && cd debug && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug && cmake --build . || exit 1
     cd ..
     echo Building Release
-    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DXUO_MASTER=On && cmake --build . || exit 1
+    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release $EXTRA && cmake --build . || exit 1
     cd ..
     echo Building nightly package
     mkdir -p crossuo-linux-nightly
@@ -56,7 +61,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew outdated cmake || brew upgrade cmake
     gcc -v && g++ -v && cmake --version
     echo Building Release
-    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DXUO_MASTER=On && cmake --build . || exit 1
+    mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release $EXTRA && cmake --build . || exit 1
     cd ..
     echo Building nightly package
     mkdir -p CrossUO.app/Contents/MacOS/

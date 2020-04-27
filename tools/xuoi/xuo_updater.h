@@ -10,7 +10,8 @@ struct xuo_release;
 
 #define XUOL_AGENT_NAME LAUNCHER_TITLE
 #if defined(XUO_RELEASE)
-#define XUOL_UPDATER_HOST "http://update.crossuo.com/"
+#define XUOL_UPDATER_HOST "https://raw.githubusercontent.com/crossuo/update/release/"
+// "http://update.crossuo.com/"
 #else
 #define XUOL_UPDATER_HOST "http://localhost:12593/"
 #endif
