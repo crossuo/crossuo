@@ -11,9 +11,13 @@ set(XUOI_LIBS "${PROJECT_NAME} ${THREAD} ${LOADER}" CACHE INTERNAL "")
 
 set(XUOI_SRCS
   common.cpp
+  common.h
   http.cpp
+  http.h
   xuo_updater.cpp
+  xuo_updater.h
   mft.cpp
+  mft.h
   xuoi.cpp
 )
 
@@ -27,13 +31,26 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${XUOCORE_PROJECT})
 # Launcher
 #
 set(XUOL_SRCS
-  common.cpp
   http.cpp
+  http.h
+  mft.cpp
+  mft.h
+  common.cpp
+  common.h
   xuo_updater.cpp
+  xuo_updater.h
   xuolauncher.cpp
   accounts.cpp
+  accounts.h
   ui_model.cpp
+  ui_model.h
   ui_shards.cpp
+  ui_shards.h
+  cfg_converters.h
+  cfg_crossuo.h
+  cfg_launcher.h
+  cfg_loader.h
+  cfg_shard.h
 )
 
 if(XUO_WINDOWS)

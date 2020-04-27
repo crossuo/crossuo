@@ -394,7 +394,7 @@ FS_PRIVATE bool fs_path_exists(const fs_path &path)
 FS_PRIVATE bool fs_path_create(const fs_path &path)
 {
     const auto &p = fs_path_wstr(path);
-    return CreateDirectoryW(p.c_str(), nullptr) != 0u;
+    return CreateDirectoryW(p.c_str(), nullptr) != ERROR_PATH_NOT_FOUND;
 }
 
 FS_PRIVATE bool fs_path_change(const fs_path &path)

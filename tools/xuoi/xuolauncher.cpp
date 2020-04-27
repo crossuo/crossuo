@@ -26,6 +26,10 @@
 
 #include "xuo_updater.h"
 
+// to avoid issues self-updating, launcher will copy-itself into another binary and relaunch it
+// this avoid the file being locked to write while updating iself
+#define XUOL_ENABLE_SAFE_SELF_UPDATE
+
 struct releases
 {
     const char *name;
@@ -37,6 +41,7 @@ static std::vector<releases> s_releases_updated;
 
 static xuo_context *s_ctx = nullptr;
 static bool s_update_check = false;
+static bool s_apply_update = false;
 static bool s_update_request = false;
 static bool s_update_started = false;
 static bool s_launcher_restart = false;
@@ -182,7 +187,7 @@ bool ComboBox(
 
 void view_changelog()
 {
-    open_url(XUOL_UPDATER_HOST "release/changelog.html");
+    open_url("http://crossuo.com/changelog.html");
 }
 
 void ui_updates(ui_model &m)
@@ -364,9 +369,13 @@ void xuol_launch_quit()
         s_launcher_quit = true;
 }
 
+bool xuol_launch_assist()
+{
+    return config().global_enable_assist;
+}
+
 static ui_model model;
 
-#if !defined(XUO_DEBUG)
 static bool run_self_update_instance(int argc, char **argv)
 {
     if (!argv[0])
@@ -379,7 +388,7 @@ static bool run_self_update_instance(int argc, char **argv)
 
     s_launcher_binary = fs_path_from(bin);
     s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
-#if defined(XUO_WINDOWS)
+#if defined(XUOL_ENABLE_SAFE_SELF_UPDATE)
     if (bin[len - 1] != '_')
     {
         astr_t filename{ bin };
@@ -402,17 +411,19 @@ static bool run_self_update_instance(int argc, char **argv)
 #endif // #if defined(XUO_WINDOWS)
     return true;
 }
-#endif // #if !defined(XUO_DEBUG)
 
 int main(int argc, char **argv)
 {
 #if !defined(XUO_DEBUG)
-    if (!run_self_update_instance(argc, argv))
+    const bool self_relaunch = true;
+#else
+    const bool self_relaunch = argc > 1 && strcmp(argv[1], "--self") == 0;
+#endif
+    if (self_relaunch && !run_self_update_instance(argc, argv))
     {
         LOG_INFO("terminating %s", argv[0]);
         return 0;
     }
-#endif
 
     LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
     crc32_init();
@@ -449,10 +460,10 @@ int main(int argc, char **argv)
         xuo_shutdown(s_ctx);
         const auto p = fs_path_current();
         const auto install_path = fs_path_ascii(p);
-        s_ctx = xuo_init(install_path, config().global_beta_channel);
+        s_ctx = xuo_init(install_path, false);
         if (s_ctx)
         {
-            if (config().global_check_updates || config().global_auto_update)
+            if (s_apply_update || config().global_check_updates || config().global_auto_update)
             {
                 s_has_update = xuo_update_check(s_ctx);
                 xuo_release_cb func = [](const char *name, const char *version, bool latest) {
@@ -560,10 +571,8 @@ int main(int argc, char **argv)
                     if (ImGui::MenuItem("Auto update", nullptr, &cfg.global_auto_update))
                     {
                     }
-                    if (ImGui::MenuItem("Use beta channel", nullptr, &cfg.global_beta_channel))
+                    if (ImGui::MenuItem("Enable assitant", nullptr, &cfg.global_enable_assist))
                     {
-                        s_releases.clear();
-                        s_update_check = true;
                     }
                     if (ImGui::MenuItem("Close after launch", nullptr, &cfg.global_auto_close))
                     {
@@ -605,6 +614,7 @@ int main(int argc, char **argv)
             }
             else if (s_update_check)
             {
+                s_apply_update = true;
                 if (update_worker.joinable())
                     update_worker.join();
                 update_worker = std::thread(updater_init);

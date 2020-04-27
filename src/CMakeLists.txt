@@ -295,7 +295,7 @@ else()
 endif()
 
 if(XUO_WINDOWS)
-  set(XUO_SRCS ${XUO_SRCS} ${CMAKE_SOURCE_DIR}/resources/client.rc)
+  set(XUO_FILES ${XUO_FILES} ${CMAKE_SOURCE_DIR}/resources/client.rc)
 endif()
 
 if(XUO_WINDOWS OR XUO_EMSC)
