@@ -219,7 +219,11 @@ static void account_launch(int account_index)
         }
     }
 
-    auto bin = xuol_launch_assist() ? xuoa_bin : xuo_bin;
+    auto bin = xuol_launch_assist() && !fs_path_empty(xuoa_bin) ? xuoa_bin : xuo_bin;
+    if (fs_path_empty(bin))
+    {
+        LOG_ERROR("could not find executable: %s", fs_path_ascii(bin));
+    }
     fs_path_change(fs_directory(bin));
 
     const char *args[] = { fs_path_ascii(bin), "--config", fs_path_ascii(cfg), 0 };
