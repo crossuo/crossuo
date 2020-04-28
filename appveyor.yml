@@ -17,7 +17,7 @@ init:
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015 Win64" )
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set generator="Visual Studio 16 2019" )
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set extra=-A x64 )
-- if "%APPVEYOR_REPO_TAG_NAME%"!="" ( set extra=%extra% -DXUO_MASTER=On )
+- if NOT "%APPVEYOR_REPO_TAG_NAME%"=="" ( set extra=%extra% -DXUO_MASTER=On )
 - echo %generator%
 build_script:
 - cmd: |-
