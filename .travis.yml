@@ -34,7 +34,6 @@ matrix:
         file: "crossuo-linux-nightly.tgz"
         skip_cleanup: true
         on:
-          tags: false
           branch: master
           repo: crossuo/crossuo
       install:
@@ -118,6 +117,5 @@ matrix:
         file: "crossuo-osx-nightly.zip"
         skip_cleanup: true
         on:
-          tags: false
           branch: master
           repo: crossuo/crossuo
