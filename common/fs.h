@@ -709,7 +709,7 @@ FS_PRIVATE size_t fs_size(FILE *fp)
 
 FS_PRIVATE uint64_t fs_timestamp_write(const fs_path &path)
 {
-    struct stat stats;
+    struct stat stats = {};
     if (stat(fs_path_ascii(path), &stats) == -1)
         return -1;
     if (stats.st_size == 0)
@@ -741,7 +741,7 @@ FS_PRIVATE fs_type fs_path_type(const fs_path &path)
 {
     assert(!path.real_path.empty());
     const char *name = fs_path_ascii(path);
-    struct stat file;
+    struct stat file = {};
     stat(name, &file);
     return (file.st_mode & S_IFREG) ? FS_FILE : FS_DIR;
 }
@@ -749,7 +749,7 @@ FS_PRIVATE fs_type fs_path_type(const fs_path &path)
 FS_PRIVATE bool fs_path_exists(const fs_path &path)
 {
     assert(!path.real_path.empty());
-    struct stat buffer;
+    struct stat buffer = {};
     auto r = stat(fs_path_ascii(path), &buffer) == 0;
     return r;
 }
@@ -886,7 +886,7 @@ FS_PRIVATE bool fs_copy(const fs_path &from, const fs_path &to)
 {
 #if defined(__linux__)
     int input, output;
-    struct stat src_stat;
+    struct stat src_stat = {};
     if ((input = open(fs_path_ascii(from), O_RDONLY)) == -1)
     {
         return false;
