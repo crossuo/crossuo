@@ -35,7 +35,7 @@ Or, you can use CMake-GUI to configure and generate the solution. For a step-by-
 
 ### Running
 
-After building, you should have a few executables somewhre in the `build` directory. You'll need at least the `crossuo` and `xuolauncher`, copy them somewhere and you're ready to go.
+After building, you should have a few executables somewhere in the `build` directory. You'll need at least the `crossuo` and `xuolauncher`, copy them somewhere and you're ready to go.
 
  > You'll need all the original Ultima Online data files, which you can download from their official website or from your preferred free shard.
  
