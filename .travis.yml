@@ -1,4 +1,8 @@
 language: cpp
+branches:
+  only:
+    - master
+    - /v\d+\.*/
 matrix:
   include:
     - os: linux
@@ -34,7 +38,8 @@ matrix:
         file: "crossuo-linux-nightly.tgz"
         skip_cleanup: true
         on:
-          branch: master
+          tags: false
+          all_branches: true
           repo: crossuo/crossuo
       install:
         - |
@@ -117,5 +122,6 @@ matrix:
         file: "crossuo-osx-nightly.zip"
         skip_cleanup: true
         on:
-          branch: master
+          tags: false
+          all_branches: true
           repo: crossuo/crossuo
