@@ -26,16 +26,16 @@ matrix:
       script: 
         - ./travis.sh
       before_deploy:
-        - git tag nightly -f
+        - git tag master -f
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        file: "crossuo-linux-nightly.tgz"
+        file: "crossuo-linux-master.tgz"
         skip_cleanup: true
         on:
-          tags: true
-          all_branches: true
+          tags: false
+          branch: master
           repo: crossuo/crossuo
       install:
         - |
@@ -93,31 +93,23 @@ matrix:
           packages:
             - ccache
             - ninja
-      #      - sdl2
-      #      - glew
-      #      - gcc@6
-      #    update: true
       install:
         - export PATH="/usr/local/opt/ccache/libexec:$PATH"
       osx_image: xcode10
-      #before_cache:
-      #  - brew cleanup
-      cache: 
+      cache:
         ccache: true
-        directories:
-      #    - $HOME/Library/Caches/Homebrew
       script:
         - ./travis.sh
       before_deploy:
-        - git tag nightly -f
+        - git tag master -f
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        tag_name: nightly
-        file: "crossuo-osx-nightly.zip"
+        tag_name: master
+        file: "crossuo-osx-master.zip"
         skip_cleanup: true
         on:
-          tags: true
-          all_branches: true
+          tags: false
+          branch: master
           repo: crossuo/crossuo

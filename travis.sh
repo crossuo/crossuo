@@ -34,12 +34,12 @@ if [[ "$TASK" == "clang" ]]; then
     echo Building Release
     mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release $EXTRA && cmake --build . || exit 1
     cd ..
-    echo Building nightly package
-    mkdir -p crossuo-linux-nightly
-    cp release/src/crossuo.so crossuo-linux-nightly/
-    cp release/src/crossuo crossuo-linux-nightly/
-    cp release/tools/xuoi/xuolauncher crossuo-linux-nightly/
-    tar -czvf crossuo-linux-nightly.tgz crossuo-linux-nightly/
+    echo Building master package
+    mkdir -p crossuo-linux-master
+    cp release/src/crossuo.so crossuo-linux-master/
+    cp release/src/crossuo crossuo-linux-master/
+    cp release/tools/xuoi/xuolauncher crossuo-linux-master/
+    tar -czvf crossuo-linux-master.tgz crossuo-linux-master/
 fi
 
 if [[ "$TASK" == "gcc" ]]; then
@@ -63,7 +63,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     echo Building Release
     mkdir -p release && cd release && cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release $EXTRA && cmake --build . || exit 1
     cd ..
-    echo Building nightly package
+    echo Building master package
     mkdir -p CrossUO.app/Contents/MacOS/
     cp release/src/crossuo.so CrossUO.app/Contents/MacOS/
     cp release/src/crossuo CrossUO.app/Contents/MacOS/
@@ -71,5 +71,5 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     mkdir -p CrossUO.app/Contents/Resources/
     cp resources/crossuo.icns CrossUO.app/Contents/Resources/
     cp resources/Info.plist CrossUO.app/Contents/
-    zip -r crossuo-osx-nightly.zip CrossUO.app
+    zip -r crossuo-osx-master.zip CrossUO.app
 fi

@@ -1,6 +1,7 @@
 version: 1.0.{build}
 pull_requests:
   do_not_increment_build_number: true
+skip_tags: true
 clone_folder: c:\projects\crossuo
 image:
 - Visual Studio 2017
@@ -16,7 +17,6 @@ init:
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015 Win64" )
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set generator="Visual Studio 16 2019" )
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set extra=-A x64 )
-- if NOT "%APPVEYOR_REPO_TAG_NAME%"=="" ( set extra=%extra% -DXUO_MASTER=On )
 - echo %generator%
 build_script:
 - cmd: |-
@@ -36,7 +36,7 @@ only_commits:
     - xuocore/
     - CMake/
 artifacts:
-  - path: crossuo-win64-nightly.zip
+  - path: crossuo-win64-master.zip
     name: CrossUO
 after_build:
   # if we are testing a pull request, we don't want to upload the build to the host
@@ -45,29 +45,18 @@ after_build:
   - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" (appveyor exit)
   - if "%CONFIGURATION%"=="Debug" (appveyor exit)
   - echo ** Compilation done. Packaging release files.
-  - 7z a crossuo-win64-nightly.zip "c:\projects\crossuo\build\src\Release\crossuo.exe" "c:\projects\crossuo\build\tools\xuoi\Release\xuolauncher.exe"
-  - mv crossuo-win64-nightly.zip ..
+  - 7z a crossuo-win64-master.zip "c:\projects\crossuo\build\src\Release\crossuo.exe" "c:\projects\crossuo\build\tools\xuoi\Release\xuolauncher.exe"
+  - mv crossuo-win64-master.zip ..
 deploy:
-  - provider: GitHub
-    tag: nightly
-    release: nightly
-    auth_token:
-      secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
-    artifact: crossuo-win64-nightly.zip
-    draft: false
-    prerelease: false
-    force_update: true
-    on:
-      branch: master
-      APPVEYOR_REPO_TAG: false
-  - provider: GitHub
-    tag: nightly
-    release: nightly
-    auth_token:
-      secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
-    artifact: crossuo-win64-nightly.zip
-    draft: false
-    prerelease: false
-    force_update: true
-    on:
-      APPVEYOR_REPO_TAG: true
+  tag: master
+  release: master
+  provider: GitHub
+  auth_token:
+    secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
+  artifact: crossuo-win64-master.zip
+  draft: false
+  prerelease: false
+  force_update: true
+  on:
+    branch: master
+    APPVEYOR_REPO_TAG: false
