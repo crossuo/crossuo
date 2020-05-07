@@ -654,12 +654,12 @@ void CGameScreen::AddTileToRenderList(
         obj->UseInRender = 0xFF;
         int drawX = obj->DrawX;
         int drawY = obj->DrawY;
-
+        /*
         if (drawX < g_RenderBounds.MinPixelsX || drawX > g_RenderBounds.MaxPixelsX)
         {
             break;
         }
-
+		*/
         bool aphaChanged = false;
 
         int z = obj->GetZ();
@@ -743,7 +743,7 @@ void CGameScreen::AddTileToRenderList(
                 }
             }
         }
-
+        /*
         int testMinZ = drawY + (z * 4);
         int testMaxZ = drawY;
 
@@ -757,12 +757,12 @@ void CGameScreen::AddTileToRenderList(
         {
             testMinZ = testMaxZ;
         }
-
-        if (testMinZ < g_RenderBounds.MinPixelsY || testMaxZ > g_RenderBounds.MaxPixelsY)
+        
+        if (testMinZ < g_RenderBounds.MinPixelsY || testMaxZ > g_RenderBounds.MaxPixelsY + 40)
         {
             continue;
         }
-
+        */
         if (obj->IsGameObject())
         {
             CGameObject *go = (CGameObject *)obj;
