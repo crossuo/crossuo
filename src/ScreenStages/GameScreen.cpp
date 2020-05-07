@@ -757,8 +757,8 @@ void CGameScreen::AddTileToRenderList(
         {
             testMinZ = testMaxZ;
         }
-        
-        if (testMinZ < g_RenderBounds.MinPixelsY || testMaxZ > g_RenderBounds.MaxPixelsY + 40)
+
+        if (testMinZ < g_RenderBounds.MinPixelsY || testMaxZ > g_RenderBounds.MaxPixelsY)
         {
             continue;
         }
