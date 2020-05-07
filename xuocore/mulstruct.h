@@ -301,14 +301,14 @@ struct HUES_BLOCK
     uint16_t TableEnd;
     char Name[20];
 };
-static_assert(sizeof(HUES_BLOCK) == 88, "Invalid RADAR_MAP_CELLS size");
+static_assert(sizeof(HUES_BLOCK) == 88, "Invalid HUES_BLOCK size");
 
 struct HUES_GROUP
 {
     uint32_t Header;
     HUES_BLOCK Entries[8];
 };
-static_assert(sizeof(HUES_GROUP) == 708, "Invalid HUES_BLOCK size");
+static_assert(sizeof(HUES_GROUP) == 708, "Invalid HUES_GROUP size");
 
 struct VERDATA_HUES_BLOCK
 {
