@@ -179,16 +179,17 @@ static_assert(sizeof(MAP_BLOCK) == 196, "Invalid MAP_BLOCK size");
 struct RADAR_MAP_CELLS
 {
     uint16_t Graphic;
+    uint16_t Hue;
     char Z;
     char IsLand;
 };
-static_assert(sizeof(RADAR_MAP_CELLS) == 4, "Invalid RADAR_MAP_CELLS size");
+static_assert(sizeof(RADAR_MAP_CELLS) == 6, "Invalid RADAR_MAP_CELLS size");
 
 struct RADAR_MAP_BLOCK
 {
     RADAR_MAP_CELLS Cells[8][8];
 };
-static_assert(sizeof(RADAR_MAP_BLOCK) == 256, "Invalid RADAR_MAP_BLOCK size");
+static_assert(sizeof(RADAR_MAP_BLOCK) == 384, "Invalid RADAR_MAP_BLOCK size");
 
 struct STATICS_BLOCK
 {
@@ -300,14 +301,14 @@ struct HUES_BLOCK
     uint16_t TableEnd;
     char Name[20];
 };
-static_assert(sizeof(RADAR_MAP_CELLS) == 4, "Invalid RADAR_MAP_CELLS size");
+static_assert(sizeof(HUES_BLOCK) == 88, "Invalid RADAR_MAP_CELLS size");
 
 struct HUES_GROUP
 {
     uint32_t Header;
     HUES_BLOCK Entries[8];
 };
-static_assert(sizeof(HUES_BLOCK) == 88, "Invalid HUES_BLOCK size");
+static_assert(sizeof(HUES_GROUP) == 708, "Invalid HUES_BLOCK size");
 
 struct VERDATA_HUES_BLOCK
 {
