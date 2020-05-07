@@ -215,8 +215,10 @@ bool load_config()
             }
         }
 
-        const bool new_client = fs_path_exists(fs_path_join(uopath, "MainMisc.uop"));
-        const bool old_client = fs_path_exists(fs_path_join(uopath, "chardata.mul"));
+        const bool new_client = fs_path_exists(fs_path_join(uopath, "MainMisc.uop"));  // 7+
+        const bool old_client3 = fs_path_exists(fs_path_join(uopath, "chardata.mul")); // <3
+        const bool old_client6 = fs_path_exists(fs_path_join(uopath, "map5.mul"));     // 6+
+        const bool old_client = old_client3 || old_client6;
         valid_client &= g_Config.ClientVersion >= VERSION(7, 0, 0, 0) ? new_client : old_client;
         if (!valid_client)
         {
@@ -226,7 +228,7 @@ bool load_config()
             }
             ErrorMessage(
                 Client,
-                "Couldn't find valid Ultima Online(tm) data files for current configuration.\n"
+                "Couldn't find valid Ultima Online(tm) data files matching your current configuration.\n"
                 "Make sure your configuration is pointing to the correct data files for the"
                 "correct version of your client installation directory.",
                 "could not find data files for client version %s.",
