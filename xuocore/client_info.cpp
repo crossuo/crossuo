@@ -45,7 +45,7 @@ static const unsigned char *find_version_data(const unsigned char *buf)
     const auto *idd = ioh + (magic == 0x10b ? 96 : 112); // IMAGE_DATA_DIRECTORY 32/64
     const uint32_t va_res = READ_U32(idd + 8 * 2);
     const auto *ish = ioh + iohSize; // IMAGE_SECTION_HEADER
-    for (int i = 0; i < numSections; ++i)
+    for (uint16_t i = 0; i < numSections; ++i)
     {
         const auto *sec = ish + 40 * i; // IMAGE_SECTION_HEADER*
         char section[9] = {};
@@ -108,15 +108,15 @@ static int get_version(const unsigned char *version, int &offset)
 {
 #define PAD(x) (((x) + 3) & 0xFFFFFFFC)
     offset = PAD(offset);
-    const uint16_t len = READ_U16(version + offset);
+    const int len = READ_U16(version + offset);
     offset += 2;
-    const uint16_t val_len = READ_U16(version + offset);
+    const int val_len = READ_U16(version + offset);
     offset += 2;
     const uint16_t type = READ_U16(version + offset);
     offset += 2;
 
     char info[200] = {};
-    int i = 0;
+    uint16_t i = 0;
     for (; i < sizeof(info); ++i)
     {
         uint16_t c = READ_U16(version + offset);
