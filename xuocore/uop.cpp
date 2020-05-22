@@ -19,20 +19,15 @@ using PackageHashTable = std::unordered_map<astr_t, HashToNameId>;
 
 static PackageHashTable s_package_hashes;
 
+// FIXME: This should be interpreted from Asset::AssetMap
 void uop_populate_asset_names()
 {
-    static const char *package[] = {
-        "animationframe",
-        // TODO: animation sequence
-        "gumpartlegacymul",
-        "artlegacymul",
-        "multicollection",
-        "soundlegacymul",
-    };
+    static const char *package[] = { "animationframe",  "gumpartlegacymul", "artlegacymul",
+                                     "multicollection", "soundlegacymul",   "animationsequence" };
 
     static const char *pack[] = {
         "animationlegacyframe", "gumpartlegacymul", "artlegacymul",
-        "multicollection",      "soundlegacymul",
+        "multicollection",      "soundlegacymul",   "animationsequence",
     };
 
     static const int package_size[] = {
@@ -45,7 +40,7 @@ void uop_populate_asset_names()
     };
 
     static const char *pattern[] = {
-        "%06d/%02d.bin", "%08d.tga", "%08d.tga", "%06d.bin", "%08d.dat",
+        "%06d/%02d.bin", "%08d.tga", "%08d.tga", "%06d.bin", "%08d.dat", "%08d.bin",
     };
 
     static const char *format = "build/%s/%s";

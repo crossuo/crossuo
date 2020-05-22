@@ -450,17 +450,17 @@ void CGumpPaperdoll::UpdateContent()
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x029A)
+    else if (obj->Graphic == 0x029a)
     {
         bodyGumppic =
-            (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x29A, 8, 19)); //Gargoly Male gump
+            (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x029a, 8, 19)); //Gargoly Male gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
     else if (obj->Graphic == 0x029B)
     {
         bodyGumppic =
-            (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x299, 8, 19)); //Gargoly Female gump
+            (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x0299, 8, 19)); //Gargoly Female gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
