@@ -82,22 +82,34 @@ public:
     bool IsNoShoot() { return (m_TiledataPtr->Flags & 0x00002000) != 0; }
     bool IsPrefixA() { return (m_TiledataPtr->Flags & 0x00004000) != 0; }
     bool IsPrefixAn() { return (m_TiledataPtr->Flags & 0x00008000) != 0; }
+    bool IsPrefixThe() { return (m_TiledataPtr->Flags & 0x0000C000) != 0; } // "the" == "a" + "an"
     bool IsInternal() { return (m_TiledataPtr->Flags & 0x00010000) != 0; }
     bool IsFoliage() { return (m_TiledataPtr->Flags & 0x00020000) != 0; }
     bool IsPartialHue() { return (m_TiledataPtr->Flags & 0x00040000) != 0; }
-    bool IsUnknown1() { return (m_TiledataPtr->Flags & 0x00080000) != 0; }
+    bool IsUseNewArt() { return (m_TiledataPtr->Flags & 0x00080000) != 0; }
     bool IsMap() { return (m_TiledataPtr->Flags & 0x00100000) != 0; }
     bool IsContainer() { return (m_TiledataPtr->Flags & 0x00200000) != 0; }
     bool IsWearable() { return (m_TiledataPtr->Flags & 0x00400000) != 0; }
     bool IsLightSource() { return (m_TiledataPtr->Flags & 0x00800000) != 0; }
     bool IsAnimated() { return (m_TiledataPtr->Flags & 0x01000000) != 0; }
+    // hover over, gargoyles can fly over
     bool IsNoDiagonal() { return (m_TiledataPtr->Flags & 0x02000000) != 0; }
-    bool IsUnknown2() { return (m_TiledataPtr->Flags & 0x04000000) != 0; }
+    bool IsArtUsed() { return (m_TiledataPtr->Flags & 0x04000000) != 0; }
     bool IsArmor() { return (m_TiledataPtr->Flags & 0x08000000) != 0; }
     bool IsRoof() { return (m_TiledataPtr->Flags & 0x10000000) != 0; }
     bool IsDoor() { return (m_TiledataPtr->Flags & 0x20000000) != 0; }
     bool IsStairBack() { return (m_TiledataPtr->Flags & 0x40000000) != 0; }
     bool IsStairRight() { return (m_TiledataPtr->Flags & 0x80000000) != 0; }
+    // Flags2
+    // NoHouse = 0x01,
+    // NoDraw = 0x02,
+    // Unused1 = 0x04,
+    // AlphaBlend = 0x08,
+    // NoShadow = 0x10,
+    // PixelBleed = 0x20,
+    // Unused2 = 0x40,
+    // PlayOnce = 0x80,
+    // MultiMovable = 0x0100,
 
     //Это объект группы объектов статики
     bool IsStaticGroupObject() { return true; }

@@ -69,17 +69,18 @@ public:
     virtual bool IsNoShoot() { return false; }
     virtual bool IsPrefixA() { return false; }
     virtual bool IsPrefixAn() { return false; }
+    virtual bool IsPrefixThe() { return false; }
     virtual bool IsInternal() { return false; }
     virtual bool IsFoliage() { return false; }
     virtual bool IsPartialHue() { return false; }
-    virtual bool IsUnknown1() { return false; }
+    virtual bool IsUseNewArt() { return false; }
     virtual bool IsMap() { return false; }
     virtual bool IsContainer() { return false; }
     virtual bool IsWearable() { return false; }
     virtual bool IsLightSource() { return false; }
     virtual bool IsAnimated() { return false; }
     virtual bool IsNoDiagonal() { return false; }
-    virtual bool IsUnknown2() { return false; }
+    virtual bool IsArtUsed() { return false; }
     virtual bool IsArmor() { return false; }
     virtual bool IsRoof() { return false; }
     virtual bool IsDoor() { return false; }
