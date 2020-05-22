@@ -47,7 +47,7 @@ CRenderStaticObject::CRenderStaticObject(
     {
         m_TextControl = new CTextContainer(5);
 
-        if (IsSurface() || (IsBackground() && IsUnknown2()))
+        if (IsSurface() || (IsBackground() && IsArtUsed()))
         {
             CanBeTransparent |= 0x10;
         }
@@ -66,7 +66,7 @@ CRenderStaticObject::CRenderStaticObject(
 
         m_TextControl = new CTextContainer(1);
 
-        if (IsSurface() || (IsBackground() && IsUnknown2()) || IsRoof())
+        if (IsSurface() || (IsBackground() && IsArtUsed()) || IsRoof())
         {
             CanBeTransparent |= 0x10;
         }

@@ -316,6 +316,10 @@ inline bool IsPrefixAn(int64_t flags)
 {
     return (flags & 0x00008000) != 0;
 }
+inline bool IsPrefixThe(int64_t flags)
+{
+    return (flags & 0x0000C000) != 0;
+}
 inline bool IsInternal(int64_t flags)
 {
     return (flags & 0x00010000) != 0;
@@ -328,7 +332,7 @@ inline bool IsPartialHue(int64_t flags)
 {
     return (flags & 0x00040000) != 0;
 }
-inline bool IsUnknown1(int64_t flags)
+inline bool IsUseNewArt(int64_t flags)
 {
     return (flags & 0x00080000) != 0;
 }
@@ -356,7 +360,7 @@ inline bool IsNoDiagonal(int64_t flags)
 {
     return (flags & 0x02000000) != 0;
 }
-inline bool IsUnknown2(int64_t flags)
+inline bool IsArtUsed(int64_t flags)
 {
     return (flags & 0x04000000) != 0;
 }
