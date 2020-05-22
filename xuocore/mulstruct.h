@@ -11,94 +11,6 @@
 
 #pragma pack(push, 1)
 
-#define MYP_MAGIC 0x0050594D // 'MYP\0' MypArchive / Mythic Package
-
-struct UopHeader
-{
-    uint32_t Magic = 0;
-    uint32_t Version = 0;
-    uint32_t Signature = 0;
-    uint64_t SectionOffset = 0;
-    uint32_t FileCapacity = 0;
-    uint32_t FileCount = 0;
-    uint32_t SectionCount = 0;
-    uint32_t Unk1 = 0; // SectionCount dup?
-    uint32_t Unk2 = 0;
-};
-static_assert(sizeof(UopHeader) == 40, "Invalid UopHeader size");
-
-struct UopSection
-{
-    uint32_t FileCount = 0;
-    uint64_t NextSection = 0;
-};
-static_assert(sizeof(UopSection) == 12, "Invalid UopSection size");
-
-struct UopFileEntry
-{
-    uint64_t Offset = 0;
-    uint32_t MetadataSize = 0;
-    uint32_t CompressedSize = 0;
-    uint32_t DecompressedSize = 0;
-    uint64_t Hash = 0;
-    uint32_t Checksum = 0; // crc32 of UopFileMetadata
-    uint16_t Flags = 0;    // Compression type (0 - none, 1 - zlib)
-};
-static_assert(sizeof(UopFileEntry) == 34, "Invalid UopFileEntry size");
-
-struct UopFileMetadata
-{
-    uint16_t Type = 0;
-    uint16_t Size = 0;
-    //uint16_t SigType;
-    //uint16_t SigSize;
-    //uint32_t DataPtr;
-};
-static_assert(sizeof(UopFileMetadata) == 4, "Invalid UopFileMetadata size");
-
-struct UopFileMetadata3
-{
-    uint32_t Unk = 0;
-};
-static_assert(sizeof(UopFileMetadata3) == 4, "Invalid UopFileMetadata3 size");
-
-struct UopFileMetadata4
-{
-    uint16_t SigType = 0;
-    uint16_t SigSize = 0;
-    //uint8_t *Data[SigSize];
-};
-static_assert(sizeof(UopFileMetadata4) == 4, "Invalid UopFileMetadata4 size");
-
-struct UopAnimationHeader
-{
-    // TODO: further invastigate the format for uncertain and unknown fields
-    uint32_t Format = 0;  // uncertain
-    uint32_t Version = 0; // uncertain
-    uint32_t DecompressedSize = 0;
-    uint32_t AnimationId = 0;
-    uint32_t Unk1 = 0;
-    uint32_t Unk2 = 0;
-    int16_t Unk3 = 0;
-    int16_t Unk4 = 0;
-    uint32_t HeaderSize = 0; // uncertain
-    uint32_t FrameCount = 0;
-    uint32_t Offset = 0;
-};
-static_assert(sizeof(UopAnimationHeader) == 40, "Invalid UopAnimationHeader size");
-
-struct UopAnimationFrame
-{
-    // TODO: further invastigate the format for uncertain and unknown fields
-    uint8_t *DataStart = nullptr;
-    uint16_t GroupId = 0;
-    uint16_t FrameId = 0;
-    uint32_t Unk1 = 0;
-    uint32_t Unk2 = 0;
-    uint32_t PixelDataOffset = 0;
-};
-static_assert(sizeof(UopAnimationHeader) == 40, "Invalid UopAnimationFrame size");
-
 // was ANIMATION_DIMENSIONS
 struct AnimationFrameInfo
 {
@@ -143,7 +55,8 @@ struct IndexBlock
 {
     uint32_t Position;
     uint32_t Size;
-    union {
+    union
+    {
         IdxImageData GumpData;
         IdxImageData LightData;
         IdxSoundData SoundData;

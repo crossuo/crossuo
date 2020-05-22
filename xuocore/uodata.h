@@ -15,8 +15,13 @@
 #include <unordered_map>
 #include <vector>
 #include "enumlist.h"
-#include "mulstruct.h"
+#include "uop.h"
+#include "mulstruct.h" // FIXME: MulLandTile2, MulStaticTile2 -> g_Data
 #include "mappedfile.h"
+
+struct IndexBlock;
+struct AnimationFrameInfo;
+struct AnimationSelector;
 
 extern astr_t g_dumpUopFile;
 
@@ -153,6 +158,11 @@ struct CIndexMusic
     bool Loop = false;
 };
 
+struct CIndexAnimationSequence
+{
+    // FIXME
+};
+
 struct Index
 {
     CIndexObjectLand m_Land[MAX_LAND_DATA_INDEX_COUNT];
@@ -164,10 +174,12 @@ struct Index
     CIndexMulti m_Multi[MAX_MULTI_DATA_INDEX_COUNT];
     CIndexLight m_Light[MAX_LIGHTS_DATA_INDEX_COUNT];
     CIndexAnimation m_Anim[MAX_ANIMATIONS_DATA_INDEX_COUNT];
+    //CIndexAnimationSequence m_AnimSequence[MAX_ANIMATIONS_DATA_INDEX_COUNT];
 
     int m_MultiIndexCount = 0;
 };
 
+// FIXME: make private
 struct UOData
 {
     std::vector<MulLandTile2> m_Land;
@@ -241,6 +253,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     CMappedFile m_LangcodeIff;
 
     // UOP
+    CUopMappedFile m_StringDictionary;
     CUopMappedFile m_ArtLegacyMUL;
     CUopMappedFile m_GumpartLegacyMUL;
     CUopMappedFile m_SoundLegacyMUL;
@@ -265,6 +278,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     void UopReadAnimations();
     bool IsMulFileOpen(int idx) const;
 
+    void LoadStringDictionary();
     bool LoadAnimation(const AnimationSelector &anim, LoadPixelData16Cb pLoadFunc);
     void LoadAnimationFrameInfo(
         AnimationFrameInfo &result,
