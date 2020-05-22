@@ -12,6 +12,7 @@ set(EXTERNAL_SRC
   tinyfiledialogs.c
   external.cpp
   tracy/TracyClient.cpp
+  zlib_amalg.c
 )
 
 add_library(${PROJECT_NAME} STATIC ${EXTERNAL_SRC} ${EXTERNAL_HEADERS})
