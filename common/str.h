@@ -20,6 +20,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef STR_HEADER
 #define STR_HEADER
 
+#include <external/miniconv.h>
 #include <string.h>
 #include <locale>
 #include <codecvt>
@@ -28,6 +29,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 using astr_t = std::string;
 using wstr_t = std::wstring;
+struct utf8_t
+{
+    std::string _s;
+};
 
 #if defined(_MSC_VER)
 #include <Windows.h>
@@ -48,6 +53,12 @@ using wstr_t = std::wstring;
 // TODO: encapsulate wstr_t into a wstr_t type and astr_t into a str_t type
 // so we can migrate for something lightweight in performance and memory
 
+void str_init();
+void str_terminate();
+utf8_t utf8_from(const char *str, size_t size);
+utf8_t utf8_from(astr_t aStr);
+utf8_t utf8_from(wstr_t aWstr);
+
 astr_t wstr_to_utf8(const wstr_t &aWstr);  // DEPRECATE, in memory everything should be UTF8
 wstr_t wstr_from_utf8(const astr_t &aStr); // DEPRECATE
 wstr_t wstr_from_utf8_input(const astr_t &aStr);
@@ -56,8 +67,10 @@ wstr_t wstr_camel_case(wstr_t aWstr);
 
 astr_t str_from(const wstr_t &aWstr);
 astr_t str_from(int val);
+astr_t str_from(const utf8_t &str);
 wstr_t wstr_from(const astr_t &aStr);
 wstr_t wstr_from(int val);
+wstr_t wstr_from(const utf8_t &str);
 #if !defined(_MSC_VER)
 const astr_t &str_from(const astr_t &aStr);
 #endif
@@ -76,6 +89,57 @@ bool str_to_bool(const astr_t &aStr);
 #if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
 #define STR_IMPLEMENTATED
 
+miniconv_t s_utf8_utf8;   // cleanup invalid data
+miniconv_t s_cp1250_utf8; // Issue #221
+miniconv_t *s_encodings[] = { &s_utf8_utf8, &s_cp1250_utf8 };
+
+void str_init()
+{
+    s_utf8_utf8 = miniconv_open("utf-8//IGNORE", "utf-8");
+    s_cp1250_utf8 = miniconv_open("utf-8//IGNORE", "cp1250");
+}
+
+void str_terminate()
+{
+    for (int e = 0; e < sizeof(s_encodings); e++)
+    {
+        //miniconv_close(*s_encodings[e]);
+    }
+}
+
+utf8_t utf8_from(const char *str, size_t size)
+{
+    utf8_t s;
+    char buf[512];
+    for (int e = 0; e < sizeof(s_encodings); e++)
+    {
+        const char *in_buf = (const char *)str;
+        size_t in_size = size;
+        char *out_buf = &buf[0];
+        size_t out_size = sizeof(buf);
+        int err = 0;
+        miniconv2(*s_encodings[e], &in_buf, &in_size, &out_buf, &out_size, &err);
+        if (err == 0)
+        {
+            out_size = sizeof(buf) - out_size;
+            s._s = std::string(reinterpret_cast<char const *>(buf), out_size);
+            return s;
+        }
+    }
+    s._s = "<decode error>";
+    return s;
+}
+
+utf8_t utf8_from(astr_t aStr)
+{
+    return utf8_from(aStr.data(), aStr.size());
+}
+
+utf8_t utf8_from(wstr_t aWstr)
+{
+    return utf8_from((char *)aWstr.data(), aWstr.size());
+}
+
 const char *str_lower(const char *aCStr)
 {
     char *s = const_cast<char *>(aCStr);
@@ -90,7 +154,7 @@ const char *str_lower(const char *aCStr)
 
 astr_t wstr_to_utf8(const wstr_t &aWstr)
 {
-#if defined(_MSC_VER)
+#if 0 //defined(_MSC_VER)
     int size = ::WideCharToMultiByte(
         CP_UTF8, 0, &aWstr[0], (int)aWstr.size(), nullptr, 0, nullptr, nullptr);
     astr_t result = "";
@@ -120,7 +184,7 @@ astr_t wstr_to_utf8(const wstr_t &aWstr)
 
 wstr_t wstr_from_utf8(const astr_t &aStr)
 {
-#if defined(_MSC_VER)
+#if 0 //defined(_MSC_VER)
     int size = ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)aStr.size(), nullptr, 0);
     wstr_t result = {};
     if (size > 0)
@@ -156,8 +220,31 @@ wstr_t wstr_from_utf8_input(const astr_t &aStr)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> convert;
     const std::wstring result = convert.from_bytes(aStr);
-
     return result;
+}
+
+astr_t str_from(const utf8_t &str)
+{
+    return str._s;
+}
+
+astr_t str_from(const wstr_t &aWstr)
+{
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.to_bytes(aWstr);
+}
+
+wstr_t wstr_from(const astr_t &aStr)
+{
+    utf8_t s = utf8_from(aStr);
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.from_bytes(s._s);
+}
+
+wstr_t wstr_from(const utf8_t &str)
+{
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.from_bytes(str._s);
 }
 
 astr_t str_camel_case(astr_t aStr)
@@ -216,46 +303,6 @@ const astr_t &str_from(const astr_t &str)
     return str;
 }
 #endif
-
-astr_t str_from(const wstr_t &aWstr)
-{
-#if 0
-    astr_t aStr = "";
-    int size = (int)aWstr.length();
-    int newSize =
-        ::WideCharToMultiByte(GetACP(), 0, aWstr.c_str(), size, nullptr, 0, nullptr, nullptr);
-
-    if (newSize > 0)
-    {
-        aStr.resize(newSize + 1);
-        ::WideCharToMultiByte(GetACP(), 0, aWstr.c_str(), size, &aStr[0], newSize, nullptr, nullptr);
-        aStr.resize(newSize); // str[newSize] = 0;
-    }
-    return str;
-#else
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.to_bytes(aWstr);
-#endif
-}
-
-wstr_t wstr_from(const astr_t &aStr)
-{
-#if 0
-    int size = (int)aStr.length();
-    wstr_t aWstr = {};
-
-    if (size > 0)
-    {
-        aWstr.resize(size + 1);
-        MultiByteToWideChar(GetACP(), 0, aStr.c_str(), size, &aWstr[0], size);
-        aWstr.resize(size); // aWstr[size] = 0;
-    }
-    return aWstr;
-#else
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(aStr);
-#endif
-}
 
 astr_t str_trim(const astr_t &aStr)
 {
