@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <SDL_timer.h>
+#include <common/str.h>
 #include "WispThread.h"
 #include "../GameWindow.h"
 #include "../Globals.h" // g_Ticks, CPU_USAGE_DELAY
@@ -14,6 +15,7 @@ CApplication::CApplication()
 
 void CApplication::Init()
 {
+    str_init();
     Info(Client, "initializing application");
     g_MainThread = CThread::GetCurrentThreadId();
 
@@ -23,6 +25,7 @@ void CApplication::Init()
 
 CApplication::~CApplication()
 {
+    str_terminate();
 }
 
 int CApplication::Run()

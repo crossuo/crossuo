@@ -246,6 +246,22 @@ XUO_EXPORT int plugin_main(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
+#if 0 // TEST encoding
+    str_init();
+    // Add some tests, this cliloc message seems to use broken UTF8
+    // "Hey buddy... Looking for work?"
+    uint8_t d[] = {
+        0x48, 0x65, 0x79, 0x20, 0x62, 0x75, 0x64, 0x64, 0x79, 0x2E, 0xC2,
+        0xA0, 0x20, 0x4C, 0x6F, 0x6F, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x66,
+        0x6F, 0x72, 0x20, 0x77, 0x6F, 0x72, 0x6B, 0x3F
+    };
+    // cp1250 - issue #221
+    //unsigned char a[] = { 0x56, 0xE1, 0x6c, 0x65, 0xE8, 0x6E, 0xED, 0x6B }; // input
+    astr_t s1( reinterpret_cast< char const* >( d ), sizeof( d ) );
+    str_terminate();
+    exit(0);
+#endif
+
     g_fatalErrorCb = &fatal_error_dialog;
     if (!InitCli(argc, argv))
     {

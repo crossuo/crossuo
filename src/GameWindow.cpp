@@ -34,18 +34,6 @@ CGameWindow g_GameWindow;
 CGameWindow::CGameWindow()
     : m_iRenderDelay(0)
 {
-#if 0
-    // Add some tests, this cliloc message seems to use broken UTF8
-    // "Hey buddy... Looking for work?"
-    //            ^^- c2 a0 - is an invalid code point
-    uint8_t d[] = {
-        0x48, 0x65, 0x79, 0x20, 0x62, 0x75, 0x64, 0x64, 0x79, 0x2E, 0xC2,
-        0xA0, 0x20, 0x4C, 0x6F, 0x6F, 0x6B, 0x69, 0x6E, 0x67, 0x20, 0x66,
-        0x6F, 0x72, 0x20, 0x77, 0x6F, 0x72, 0x6B, 0x3F
-    };
-    astr_t s( reinterpret_cast< char const* >( d ) ) ;
-    const auto ws = wstr_from_utf8(s);
-#endif
 }
 
 CGameWindow::~CGameWindow()
