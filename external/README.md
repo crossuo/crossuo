@@ -22,6 +22,9 @@ Version: ? (modified)
 # lookup3* (Public Domain)
 Version: ? (http://burtleburtle.net/bob/c/lookup3.c, https://en.wikipedia.org/wiki/Jenkins_hash_function)
 
+# miniconv (libpng)
+Version: 0x103 (https://github.com/malord/miniconv/tree/170ddcb9ac8eda1e08e7426acecb6a5733cf1d36)
+
 # miniz (Public Domain)
 Version: 2.1.0 (https://github.com/richgel999/miniz)
 
