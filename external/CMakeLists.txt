@@ -8,6 +8,7 @@ set(EXTERNAL_INCLUDE "${CMAKE_SOURCE_DIR}" CACHE INTERNAL "")
 file(GLOB EXTERNAL_HEADERS ${EXTERNAL_DIR}/*.h)
 
 set(EXTERNAL_SRC
+  miniconv.c
   tinyfiledialogs.c
   external.cpp
   tracy/TracyClient.cpp
