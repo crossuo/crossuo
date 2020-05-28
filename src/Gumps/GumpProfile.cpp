@@ -66,15 +66,14 @@ CGumpProfile::~CGumpProfile()
 {
     if (Changed && m_Entry != nullptr)
     {
-        CPacketProfileUpdate(Serial, m_Entry->m_Entry.Data(), m_Entry->m_Entry.Length()).Send();
+        CPacketProfileUpdate(Serial, m_Entry->m_Entry.GetTextW()).Send();
     }
 }
 
 void CGumpProfile::RecalculateHeight()
 {
     int offsetY = m_Entry->GetY();
-    m_Entry->m_Entry.CreateTextureW(0, m_Entry->m_Entry.Data(), 0, 210, TS_LEFT, 0);
-
+    m_Entry->m_Entry.CreateTextureW(0, m_Entry->m_Entry.GetTextW(), 0, 210, TS_LEFT, 0);
     if (m_Entry->m_Entry.m_Texture.Height > 14)
     {
         m_HitBox->Height = m_Entry->m_Entry.m_Texture.Height;

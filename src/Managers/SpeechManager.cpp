@@ -86,7 +86,7 @@ bool CSpeechManager::LoadSpeech()
         auto mainData = reader.ReadWStringLE(reader.Size - 2);
         std::vector<wstr_t> list;
         wstr_t temp;
-        for (const wchar_t &c : mainData)
+        for (const auto &c : mainData)
         {
             if (c == 0x000D || c == 0x000A)
             {
@@ -112,7 +112,7 @@ bool CSpeechManager::LoadSpeech()
         {
             uint16_t code = 0xFFFF;
             temp = {};
-            for (const wchar_t c : line)
+            for (const auto c : line)
             {
                 if (c == 0x0009)
                 {
@@ -192,7 +192,7 @@ bool CSpeechManager::LoadLangCodes()
     return true;
 }
 
-void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &codes)
+void CSpeechManager::GetKeywords(const wstr_t &text, std::vector<uint32_t> &codes) const
 {
     if (!m_Loaded || g_Config.ProtocolClientVersion < CV_305D)
     {
@@ -200,12 +200,12 @@ void CSpeechManager::GetKeywords(const wchar_t *text, std::vector<uint32_t> &cod
     }
 
     const auto size = (int)m_SpeechEntries.size();
-    auto input = wstr_lower(text);
+    auto copy = text;
+    auto input = wstr_lower(copy);
     for (int i = 0; i < size; i++)
     {
         CSpeechItem entry = m_SpeechEntries[i];
         auto data = entry.Data;
-
         if (data.length() > input.length() || data.length() == 0)
         {
             continue;

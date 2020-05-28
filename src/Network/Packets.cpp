@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <common/str.h>
@@ -48,8 +48,8 @@ CPacketFirstLogin::CPacketFirstLogin()
     }
     else
     {
-        WriteString(g_MainScreen.m_Account->c_str(), 30, false);
-        WriteString(g_MainScreen.m_Password->c_str(), 30, false);
+        WriteString(g_MainScreen.m_Account->GetTextA(), 30, false);
+        WriteString(g_MainScreen.m_Password->GetTextA(), 30, false);
         WriteUInt8(0xFF);
     }
 }
@@ -67,7 +67,7 @@ CPacketSecondLogin::CPacketSecondLogin()
 {
     WriteUInt8(0x91);
     WriteDataLE(g_GameSeed, 4);
-    WriteString(g_MainScreen.m_Account->c_str(), 30, false);
+    WriteString(g_MainScreen.m_Account->GetTextA(), 30, false);
 
     int passLen = 30;
 
@@ -77,7 +77,7 @@ CPacketSecondLogin::CPacketSecondLogin()
         passLen = 28;
     }
 
-    WriteString(g_MainScreen.m_Password->c_str(), passLen, false);
+    WriteString(g_MainScreen.m_Password->GetTextA(), passLen, false);
 }
 
 CPacketCreateCharacter::CPacketCreateCharacter(const astr_t &name)
@@ -386,26 +386,26 @@ CPacketASCIISpeechRequest::CPacketASCIISpeechRequest(
     WriteString(text, len, false);
 }
 
+// TODO: check this implementation
 CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     const wchar_t *text, SPEECH_TYPE type, uint16_t font, uint16_t color, uint8_t *language)
     : CPacket(1)
 {
     size_t len = lstrlenW(text);
     size_t size = 12;
-
     uint8_t typeValue = (uint8_t)type;
 
     std::vector<uint32_t> codes;
-    g_SpeechManager.GetKeywords(text, codes);
+    auto str = wstr_t(text);
+    g_SpeechManager.GetKeywords(str, codes);
 
-    //encoded
-    bool encoded = !codes.empty();
+    const bool encoded = !codes.empty();
     astr_t utf8string;
     std::vector<uint8_t> codeBytes;
     if (encoded)
     {
         typeValue |= ST_ENCODED_COMMAND;
-        utf8string = wstr_to_utf8(wstr_t(text));
+        utf8string = wstr_to_utf8(str);
         len = (int)utf8string.length();
         size += len;
         size += 1; //null terminator
@@ -464,7 +464,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
             WriteUInt8(codeBytes[i]);
         }
         WriteString(utf8string, len, true);
-        // в данном случае надо посылать как utf8, так читает сервер.
+        // in this case, you have to both send and read utf8
     }
     else
     {
@@ -635,7 +635,7 @@ CPacketGumpResponse::CPacketGumpResponse(CGumpGeneric *gump, int code)
                 (((entry->m_Entry.Length()) < (MAX_TEXTENTRY_LENGTH)) ? (entry->m_Entry.Length()) :
                                                                         (MAX_TEXTENTRY_LENGTH));
             WriteUInt16BE((uint16_t)len);
-            WriteWString(entry->m_Entry.Data(), len, true, false);
+            WriteWString(entry->m_Entry.GetTextW(), len, true, false);
         }
     }
 }
@@ -728,7 +728,7 @@ CPacketTextEntryDialogResponse::CPacketTextEntryDialogResponse(
 
     WriteUInt16BE((uint16_t)len + 1);
 
-    WriteString(entry->c_str(), len);
+    WriteString(entry->GetTextA(), len);
 }
 
 CPacketRenameRequest::CPacketRenameRequest(uint32_t serial, const astr_t &newName)
@@ -747,10 +747,11 @@ CPacketTipRequest::CPacketTipRequest(uint16_t id, uint8_t flag)
     WriteUInt8(flag);
 }
 
-CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(const char *text, size_t len, bool cancel)
+CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(const astr_t &text, bool cancel)
     : CPacket(1)
 {
-    size_t size = 15 + len + 1;
+    const auto len = text.size();
+    const auto size = 15 + len + 1;
     Resize(size, true);
 
     WriteDataLE(g_LastASCIIPrompt, 11);
@@ -761,10 +762,11 @@ CPacketASCIIPromptResponse::CPacketASCIIPromptResponse(const char *text, size_t 
 }
 
 CPacketUnicodePromptResponse::CPacketUnicodePromptResponse(
-    const wchar_t *text, size_t len, const astr_t &lang, bool cancel)
+    const wstr_t &text, const astr_t &lang, bool cancel)
     : CPacket(1)
 {
-    size_t size = 19 + (len * 2);
+    const auto len = text.size();
+    const auto size = 19 + (len * 2);
     Resize(size, true);
 
     WriteDataLE(g_LastUnicodePrompt, 11);
@@ -793,10 +795,11 @@ CPacketProfileRequest::CPacketProfileRequest(uint32_t serial)
     WriteUInt32BE(serial);
 }
 
-CPacketProfileUpdate::CPacketProfileUpdate(uint32_t serial, const wchar_t *text, size_t len)
+CPacketProfileUpdate::CPacketProfileUpdate(uint32_t serial, const wstr_t &text)
     : CPacket(1)
 {
-    size_t size = 12 + (len * 2);
+    const auto len = text.size();
+    const auto size = 12 + (len * 2);
     Resize(size, true);
 
     WriteUInt8(0xB8);
@@ -940,23 +943,19 @@ CPacketBulletinBoardRequestMessageSummary::CPacketBulletinBoardRequestMessageSum
 }
 
 CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
-    uint32_t serial, uint32_t replySerial, const char *subject, const char *message)
+    uint32_t serial, uint32_t replySerial, const astr_t &subject, const astr_t &message)
     : CPacket(1)
 {
-    size_t subjectLen = strlen(subject);
-    size_t size = 14 + subjectLen + 1;
-
-    int lines = 1;
-
-    const auto msgLen = (int)strlen(message);
+    const auto subjectLen = subject.size();
+    const auto msgLen = message.size();
+    auto size = 14 + subjectLen + 1;
     int len = 0;
-
+    int lines = 1;
     for (int i = 0; i < msgLen; i++)
     {
         if (message[i] == '\n')
         {
             len++;
-
             size += len + 1;
             len = 0;
             lines++;
@@ -983,23 +982,18 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
 
     WriteUInt8(lines);
     len = 0;
-    char *msgPtr = (char *)message;
-
+    const char *msgPtr = message.data();
     for (int i = 0; i < msgLen; i++)
     {
         if (msgPtr[len] == '\n')
         {
             len++;
-
             WriteUInt8(len);
-
             if (len > 1)
             {
                 WriteString(msgPtr, len - 1, false);
             }
-
             WriteUInt8(0);
-
             msgPtr += len;
             len = 0;
         }
@@ -1229,9 +1223,9 @@ CPacketChangeStatLockStateRequest::CPacketChangeStatLockStateRequest(uint8_t sta
 CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump)
     : CPacket(99)
 {
-    // FIXME: check if this should be ASCII or UTF8
-    auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.Data());
-    auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.Data());
+    // FIXME: PACKET: check if this should be ASCII or UTF8
+    auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.GetTextW());
+    auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.GetTextW());
 
     WriteUInt8(0xD4);
     WriteUInt32BE(gump->Serial);
@@ -1244,9 +1238,9 @@ CPacketBookHeaderChangeOld::CPacketBookHeaderChangeOld(CGumpBook *gump)
 CPacketBookHeaderChange::CPacketBookHeaderChange(CGumpBook *gump)
     : CPacket(1)
 {
-    // FIXME: check if this should be ASCII or UTF8
-    auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.Data());
-    auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.Data());
+    // FIXME: PACKET: check if this should be ASCII or UTF8
+    auto title = wstr_to_utf8(gump->m_EntryTitle->m_Entry.GetTextW());
+    auto author = wstr_to_utf8(gump->m_EntryAuthor->m_Entry.GetTextW());
     auto titlelen = (uint16_t)title.length();
     auto authorlen = (uint16_t)author.length();
     size_t size = 16 + title.length() + author.length();
@@ -1293,8 +1287,8 @@ CPacketBookPageData::CPacketBookPageData(CGumpBook *gump, int page)
     if (entry != nullptr)
     {
         CEntryText &textEntry = entry->m_Entry;
-        // FIXME: check if this should be ASCII or UTF8
-        auto data = wstr_to_utf8(textEntry.Data());
+        // FIXME: PACKET: check if this should be ASCII or UTF8
+        auto data = wstr_to_utf8(textEntry.GetTextW());
         size_t len = data.length();
         size_t size = 9 + 4 + 1;
 

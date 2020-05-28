@@ -158,7 +158,7 @@ void CGumpBuff::InitToolTip()
                     buff->TooltipTimer = g_Ticks + ((buff->Timer - g_Ticks) % 1000);
                     g_ToolTip.Reset();
 
-                    wchar_t buf[512] = { 0 };
+                    wchar_t buf[512];
                     swprintf(
                         buf,
                         sizeof(buf),

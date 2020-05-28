@@ -6404,7 +6404,7 @@ PACKET_HANDLER(CrossMessages)
         {
             uint16_t color = ReadUInt16BE();
             auto text = ReadWStringBE();
-            CGameConsole::Send(text, color);
+            SendConsoleText(text, color);
             break;
         }
         case OCT_RENAME_MOUNT_REQUEST:

@@ -10,7 +10,6 @@ class CGumpConsoleType : public CGump
 protected:
     bool m_ShowFullText = false;
     int m_SelectedType = 0;
-
     virtual void CalculateGumpState() override;
 
 public:
@@ -21,10 +20,9 @@ public:
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;
 
-    bool ConsoleIsEmpty();
-    void DeleteConsolePrefix();
-    void SetConsolePrefix();
-    bool GetShowFullText() { return m_ShowFullText; };
+    void SetConsolePrefix() const;
+    bool ConsoleIsEmpty() const;
+    bool GetShowFullText() const { return m_ShowFullText; };
     void SetShowFullText(bool val);
 
     GUMP_BUTTON_EVENT_H override;

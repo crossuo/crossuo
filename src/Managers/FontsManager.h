@@ -15,7 +15,7 @@
 
 typedef struct MULTILINES_FONT_DATA
 {
-    wchar_t item;
+    char16_t item;
     uint16_t flags;
     uint8_t font;
     uint16_t linkID;
@@ -56,7 +56,7 @@ struct WEB_LINK
 
 struct HTML_char
 {
-    wchar_t Char;
+    char16_t Char;
     uint8_t Font;
     TEXT_ALIGN_TYPE Align;
     uint16_t Flags;
@@ -90,9 +90,8 @@ private:
     WEBLINK_MAP m_WebLink;
 
     static uint8_t m_FontIndex[256];
-
-    size_t m_UnicodeFontAddress[20];
-    uint32_t m_UnicodeFontSize[20];
+    size_t m_UnicodeFontAddress[20] = {};
+    uint32_t m_UnicodeFontSize[20] = {};
 
     bool m_UseHTML = false;
     uint32_t m_HTMLColor = 0xFFFFFFFF;
@@ -108,10 +107,9 @@ private:
     int m_BottomMargin = 0;
 
     uint16_t GetWebLinkID(const astr_t &link, uint32_t &color);
-    uint16_t GetWebLinkID(const wstr_t &link, uint32_t &color);
 
     HTMLCHAR_LIST
-    GetHTMLData(uint8_t font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, uint16_t flags);
+    GetHTMLData(uint8_t font, const wstr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags);
 
     HTML_DATA_INFO GetHTMLInfoFromTag(const HTML_TAG_TYPE &tag);
     HTML_DATA_INFO GetCurrentHTMLInfo(const HTMLINFO_LIST &list);
@@ -121,19 +119,10 @@ private:
     uint32_t GetHTMLColorFromText(astr_t &str);
 
     HTML_TAG_TYPE
-    ParseHTMLTag(const wchar_t *str, int len, int &i, bool &endTag, HTML_DATA_INFO &info);
+    ParseHTMLTag(const wstr_t &str, int &i, bool &endTag, HTML_DATA_INFO &info);
 
-    HTMLCHAR_LIST
-    GetHTMLDataOld(
-        uint8_t font, const wchar_t *str, int &len, TEXT_ALIGN_TYPE align, uint16_t flags);
-
-    PMULTILINES_FONT_INFO GetInfoHTML(
-        uint8_t font,
-        const wchar_t *str,
-        int len,
-        TEXT_ALIGN_TYPE align,
-        uint16_t flags,
-        int width);
+    PMULTILINES_FONT_INFO
+    GetInfoHTML(uint8_t font, const wstr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags, int width);
 
     bool GenerateABase(
         uint8_t font,
@@ -155,7 +144,7 @@ private:
         uint16_t flags);
 
 public:
-    CFontsManager();
+    CFontsManager() = default;
     ~CFontsManager();
 
     void
@@ -202,13 +191,12 @@ public:
     astr_t GetTextByWidthA(uint8_t font, const astr_t &str, int width, bool isCropped);
 
     PMULTILINES_FONT_INFO
-    GetInfoA(
-        uint8_t font, const char *str, int len, TEXT_ALIGN_TYPE align, uint16_t flags, int width);
+    GetInfoA(uint8_t font, const astr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags, int width);
 
     std::vector<uint32_t> GeneratePixelsA(
         uint8_t font,
         CTextSprite &th,
-        const char *str,
+        const astr_t &str,
         uint16_t color,
         int width,
         TEXT_ALIGN_TYPE align,
@@ -261,18 +249,13 @@ public:
 
     wstr_t GetTextByWidthW(uint8_t font, const wstr_t &str, int width, bool isCropped);
 
-    PMULTILINES_FONT_INFO GetInfoW(
-        uint8_t font,
-        const wchar_t *str,
-        int len,
-        TEXT_ALIGN_TYPE align,
-        uint16_t flags,
-        int width);
+    PMULTILINES_FONT_INFO
+    GetInfoW(uint8_t font, const wstr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags, int width);
 
     std::vector<uint32_t> GeneratePixelsW(
         uint8_t font,
         CTextSprite &th,
-        const wchar_t *str,
+        const wstr_t &str,
         uint16_t color,
         uint8_t cell,
         int width,

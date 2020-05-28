@@ -1742,7 +1742,7 @@ void CGumpStatusbar::OnTextInput(const TextEvent &ev)
 {
     if (Serial != g_PlayerSerial)
     {
-        astr_t str = g_EntryPointer->c_str();
+        astr_t str = g_EntryPointer->GetTextA();
         if (g_EntryPointer->Pos() > 0)
         {
             str.resize(g_EntryPointer->Pos());
@@ -1843,7 +1843,7 @@ void CGumpStatusbar::SendRenameRequest()
         CEntryText *entry = &((CGUITextEntry *)item)->m_Entry;
         if (entry->Length() != 0u)
         {
-            CPacketRenameRequest(Serial, entry->c_str()).Send();
+            CPacketRenameRequest(Serial, entry->GetTextA()).Send();
         }
     }
 }

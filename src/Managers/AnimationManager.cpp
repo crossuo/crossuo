@@ -16,7 +16,6 @@
 #include "../CrossUO.h"
 #include "../TargetGump.h"
 #include "../SelectedObject.h"
-#include "../PartyObject.h"
 #include "../GameWindow.h"
 #include "../ScreenStages/GameScreen.h"
 #include "../GameObjects/GameCharacter.h"
@@ -374,7 +373,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
             if (strings.size() >= 3)
             {
-                uint16_t index = atoi(strings[0].c_str());
+                uint16_t index = str_to_int(strings[0]);
 
                 if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
                 {
@@ -420,8 +419,8 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 continue;
             }
 
-            uint16_t group = (uint16_t)atoi(strings[0].c_str());
-            int replaceGroup = atoi(strings[1].c_str());
+            uint16_t group = (uint16_t)str_to_int(strings[0]);
+            int replaceGroup = str_to_int(strings[1]);
 
             m_GroupReplaces[i].push_back(
                 std::pair<uint16_t, uint8_t>(group, (uint8_t)replaceGroup));
@@ -445,25 +444,25 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
         std::vector<astr_t> strings = equipConvParser.ReadTokens();
         if (strings.size() >= 5)
         {
-            auto body = (uint16_t)atoi(strings[0].c_str());
+            auto body = (uint16_t)str_to_int(strings[0]);
             if (body >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            auto graphic = (uint16_t)atoi(strings[1].c_str());
+            auto graphic = (uint16_t)str_to_int(strings[1]);
             if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            auto newGraphic = (uint16_t)atoi(strings[2].c_str());
+            auto newGraphic = (uint16_t)str_to_int(strings[2]);
             if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 newGraphic = graphic;
             }
 
-            const auto gump_field = (uint32_t)atoi(strings[3].c_str());
+            const auto gump_field = (uint32_t)str_to_int(strings[3]);
             if (gump_field >= MAX_GUMP_DATA_INDEX_COUNT)
             {
                 continue;
@@ -479,7 +478,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 gump = newGraphic; // +50000;
             }
 
-            auto color = (uint16_t)atoi(strings[4].c_str());
+            auto color = (uint16_t)str_to_int(strings[4]);
             EQUIP_CONV_BODY_MAP::iterator bodyMapIter = m_EquipConv.find(body);
             if (bodyMapIter == m_EquipConv.end())
             {
@@ -504,26 +503,26 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
         if (strings.size() >= 2)
         {
-            uint16_t index = atoi(strings[0].c_str());
+            uint16_t index = str_to_int(strings[0]);
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            int anim[4] = { atoi(strings[1].c_str()), -1, -1, -1 };
+            int anim[4] = { str_to_int(strings[1]), -1, -1, -1 };
 
             if (strings.size() >= 3)
             {
-                anim[1] = atoi(strings[2].c_str());
+                anim[1] = str_to_int(strings[2]);
 
                 if (strings.size() >= 4)
                 {
-                    anim[2] = atoi(strings[3].c_str());
+                    anim[2] = str_to_int(strings[3]);
 
                     if (strings.size() >= 5)
                     {
-                        anim[3] = atoi(strings[4].c_str());
+                        anim[3] = str_to_int(strings[4]);
                     }
                 }
             }
@@ -743,7 +742,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
         if (strings.size() >= 3)
         {
-            uint16_t index = atoi(strings[0].c_str());
+            uint16_t index = str_to_int(strings[0]);
 
             std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
@@ -752,7 +751,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 continue;
             }
 
-            uint16_t checkIndex = atoi(newBody[0].c_str());
+            uint16_t checkIndex = str_to_int(newBody[0]);
 
             if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
@@ -837,7 +836,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             dataIndex.Type = checkDataIndex.Type;
             dataIndex.Flags = checkDataIndex.Flags;
             dataIndex.Graphic = checkIndex;
-            dataIndex.Color = atoi(strings[2].c_str());
+            dataIndex.Color = str_to_int(strings[2]);
         }
     }
 
@@ -847,7 +846,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
         if (strings.size() >= 3)
         {
-            uint16_t index = atoi(strings[0].c_str());
+            uint16_t index = str_to_int(strings[0]);
 
             std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1].c_str());
 
@@ -856,7 +855,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 continue;
             }
 
-            uint16_t checkIndex = atoi(newBody[0].c_str());
+            uint16_t checkIndex = str_to_int(newBody[0]);
 
             if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
@@ -937,7 +936,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             dataIndex.Type = checkDataIndex.Type;
             dataIndex.Flags = checkDataIndex.Flags;
             dataIndex.Graphic = checkIndex;
-            dataIndex.Color = atoi(strings[2].c_str());
+            dataIndex.Color = str_to_int(strings[2]);
         }
     }
 }

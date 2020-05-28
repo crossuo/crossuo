@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include <common/str.h>
+#include <common/utils.h> // countof
 #include "GumpConsoleType.h"
 #include "../ToolTip.h"
 #include "../SelectedObject.h"
@@ -51,79 +52,6 @@ void CGumpConsoleType::SetShowFullText(bool val)
 {
     m_ShowFullText = val;
     WantUpdateContent = true;
-}
-
-bool CGumpConsoleType::ConsoleIsEmpty()
-{
-    bool result = (g_GameConsole.Length() == 0);
-
-    switch (m_SelectedType)
-    {
-        case GCTT_YELL:
-        case GCTT_WHISPER:
-        case GCTT_EMOTE:
-        case GCTT_C:
-        case GCTT_BROADCAST:
-        case GCTT_PARTY:
-        {
-            result = (g_ConsolePrefix[m_SelectedType] == g_GameConsole.Data());
-            break;
-        }
-        default:
-            break;
-    }
-
-    return result;
-}
-
-void CGumpConsoleType::DeleteConsolePrefix()
-{
-    static const wstr_t space = L" ";
-
-    switch (m_SelectedType)
-    {
-        case GCTT_YELL:
-        case GCTT_WHISPER:
-        case GCTT_EMOTE:
-        case GCTT_C:
-        case GCTT_BROADCAST:
-        case GCTT_PARTY:
-        {
-            wstr_t str(g_GameConsole.Data());
-
-            if (str.find(g_ConsolePrefix[m_SelectedType]) == 0)
-            {
-                str.erase(str.begin(), str.begin() + g_ConsolePrefix[m_SelectedType].length());
-                g_GameConsole.SetTextW(str);
-            }
-
-            break;
-        }
-        default:
-            break;
-    }
-}
-
-void CGumpConsoleType::SetConsolePrefix()
-{
-    switch (m_SelectedType)
-    {
-        case GCTT_YELL:
-        case GCTT_WHISPER:
-        case GCTT_EMOTE:
-        case GCTT_C:
-        case GCTT_BROADCAST:
-        case GCTT_PARTY:
-        {
-            wstr_t str(g_GameConsole.Data());
-            str = g_ConsolePrefix[m_SelectedType] + str;
-            g_GameConsole.SetTextW(str);
-
-            break;
-        }
-        default:
-            break;
-    }
 }
 
 void CGumpConsoleType::InitToolTip()
@@ -200,12 +128,12 @@ void CGumpConsoleType::UpdateContent()
         int offsetX = 0;
         int offsetY = obj->m_Texture.Height;
 
+        // FIXME: must match GAME_CONSOLE_TEXT_TYPE
         const char *text[] = { " Normal ",  " Yell ",      " Whisper ", " Emote ",
                                " Command ", " Broadcast ", " Party " };
 
         int text0Height = 0;
-
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < countof(text); i++)
         {
             CGUITextEntry *entry =
                 new CGUITextEntry((int)i + 1, 0, 0, 0, offsetX, offsetY, 0, false, 3);
@@ -222,8 +150,7 @@ void CGumpConsoleType::UpdateContent()
             else
             {
                 astr_t str = " ";
-                str += str_from(g_ConsolePrefix[i]);
-
+                str += CGameConsole::GetConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE(i));
                 if (str.length() < 3)
                 {
                     str += " ";
@@ -299,10 +226,9 @@ void CGumpConsoleType::GUMP_CHECKBOX_EVENT_C
 
 void CGumpConsoleType::GUMP_TEXT_ENTRY_EVENT_C
 {
-    DeleteConsolePrefix();
-
+    const auto type = (GAME_CONSOLE_TEXT_TYPE)m_SelectedType;
+    CGameConsole::DeleteConsoleTypePrefix(type);
     m_SelectedType = serial - 1;
-
     QFOR(item, m_Items, CBaseGUI *)
     {
         if (item->Type == GOT_TEXTENTRY)
@@ -311,8 +237,12 @@ void CGumpConsoleType::GUMP_TEXT_ENTRY_EVENT_C
             entry->Focused = (item->Serial == serial);
         }
     }
-
-    SetConsolePrefix();
-
+    CGameConsole::SetConsoleTypePrefix(type);
     WantRedraw = true;
+}
+
+void CGumpConsoleType::SetConsolePrefix() const
+{
+    const auto type = (GAME_CONSOLE_TEXT_TYPE)m_SelectedType;
+    CGameConsole::SetConsoleTypePrefix(type);
 }

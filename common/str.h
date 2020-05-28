@@ -89,9 +89,9 @@ bool str_to_bool(const astr_t &aStr);
 #if defined(STR_IMPLEMENTATION) && !defined(STR_IMPLEMENTATED)
 #define STR_IMPLEMENTATED
 
-miniconv_t s_utf8_utf8;   // cleanup invalid data
-miniconv_t s_cp1250_utf8; // Issue #221
-miniconv_t *s_encodings[] = { &s_utf8_utf8, &s_cp1250_utf8 };
+static miniconv_t s_utf8_utf8;   // cleanup invalid data
+static miniconv_t s_cp1250_utf8; // Issue #221
+static miniconv_t *s_encodings[] = { &s_utf8_utf8, &s_cp1250_utf8 };
 
 void str_init()
 {

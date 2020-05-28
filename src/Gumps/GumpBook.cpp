@@ -363,7 +363,7 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                 return;
             }
 
-            if (g_EntryPointer->Insert((wchar_t)key))
+            if (g_EntryPointer->Insert(checked_cast<char16_t>(key)))
             {
                 int linesCount = 0;
                 int maxLinesCount = 8;
@@ -393,20 +393,10 @@ void CGumpBook::InsertInContent(const Keycode key, bool isCharPress)
                     bool goBack = true;
 
                     //get info with last line of text on current page
-                    PMULTILINES_FONT_INFO info = Unicode ? g_FontManager.GetInfoW(
-                                                               1,
-                                                               g_EntryPointer->GetTextW().c_str(),
-                                                               int(g_EntryPointer->Length()),
-                                                               TS_LEFT,
-                                                               0,
-                                                               155) :
-                                                           g_FontManager.GetInfoA(
-                                                               4,
-                                                               g_EntryPointer->GetTextA().c_str(),
-                                                               int(g_EntryPointer->Length()),
-                                                               TS_LEFT,
-                                                               0,
-                                                               155);
+                    PMULTILINES_FONT_INFO info =
+                        Unicode ?
+                            g_FontManager.GetInfoW(1, g_EntryPointer->GetTextW(), TS_LEFT, 0, 155) :
+                            g_FontManager.GetInfoA(4, g_EntryPointer->GetTextA(), TS_LEFT, 0, 155);
 
                     bool addNewLine = false;
                     while (info != nullptr)
