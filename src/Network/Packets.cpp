@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <common/str.h>
@@ -539,6 +539,7 @@ CPacketOpenDoor::CPacketOpenDoor()
     WriteUInt8(0x12);
     WriteUInt16BE(0x0005);
     WriteUInt8(0x58);
+    WriteUInt8(0x00);
 }
 
 CPacketOpenSpellbook::CPacketOpenSpellbook(SPELLBOOK_TYPE type)
