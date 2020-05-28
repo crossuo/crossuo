@@ -125,7 +125,7 @@ void CGumpDrag::OnTextInput(const TextEvent &ev)
         int val = 0;
         if (g_EntryPointer->Length() != 0u)
         {
-            val = atoi(g_EntryPointer->c_str());
+            val = str_to_int(g_EntryPointer->GetTextA());
         }
 
         m_Slider->Value = val;
@@ -189,7 +189,7 @@ void CGumpDrag::OnKeyDown(const KeyEvent &ev)
 
             if (g_EntryPointer->Length() != 0u)
             {
-                val = atoi(g_EntryPointer->c_str());
+                val = str_to_int(g_EntryPointer->GetTextA());
             }
 
             m_Slider->Value = val;

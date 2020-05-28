@@ -897,7 +897,7 @@ void CGame::CheckStaticTileFilterFiles()
         if (strings.size() >= 2)
         {
             uint8_t flag = STFF_STUMP;
-            if (atoi(strings[1].c_str()) != 0)
+            if (str_to_int(strings[1]) != 0)
             {
                 flag |= STFF_STUMP_HATCHED;
             }
@@ -1031,10 +1031,10 @@ void CGame::LoadContainerOffsets()
                 uint16_t gump = TextToGraphic(strings[0].c_str());
                 uint16_t openSound = TextToGraphic(strings[1].c_str());
                 uint16_t closeSound = TextToGraphic(strings[2].c_str());
-                uint16_t minX = atoi(strings[3].c_str());
-                uint16_t minY = atoi(strings[4].c_str());
-                uint16_t maxX = atoi(strings[5].c_str());
-                uint16_t maxY = atoi(strings[6].c_str());
+                uint16_t minX = str_to_int(strings[3]);
+                uint16_t minY = str_to_int(strings[4]);
+                uint16_t maxX = str_to_int(strings[5]);
+                uint16_t maxY = str_to_int(strings[6]);
 
                 g_ContainerOffset.push_back(CContainerOffset(
                     gump, openSound, closeSound, CContainerOffsetRect(minX, minY, maxX, maxY)));
@@ -1327,18 +1327,15 @@ void CGame::LoadStartupConfig(int serial)
 {
     char buf[FS_MAX_PATH] = { 0 };
     CServer *server = g_ServerList.GetSelectedServer();
+    const auto &acct = g_MainScreen.m_Account->GetTextA();
     if (server != nullptr)
     {
         sprintf_s(
-            buf,
-            "desktop/%s/%s/0x%08X",
-            g_MainScreen.m_Account->c_str(),
-            FixServerName(server->Name).c_str(),
-            serial);
+            buf, "desktop/%s/%s/0x%08X", acct.c_str(), FixServerName(server->Name).c_str(), serial);
     }
     else
     {
-        sprintf_s(buf, "desktop/%s/0x%08X", g_MainScreen.m_Account->c_str(), serial);
+        sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
     if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
@@ -1512,18 +1509,15 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
 
     char buf[FS_MAX_PATH] = { 0 };
     CServer *server = g_ServerList.GetSelectedServer();
+    const astr_t &acct = g_MainScreen.m_Account->GetTextA();
     if (server != nullptr)
     {
         sprintf_s(
-            buf,
-            "desktop/%s/%s/0x%08X",
-            g_MainScreen.m_Account->c_str(),
-            FixServerName(server->Name).c_str(),
-            serial);
+            buf, "desktop/%s/%s/0x%08X", acct.c_str(), FixServerName(server->Name).c_str(), serial);
     }
     else
     {
-        sprintf_s(buf, "desktop/%s/0x%08X", g_MainScreen.m_Account->c_str(), serial);
+        sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
     if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
@@ -1553,14 +1547,13 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
             sprintf_s(
                 buf2,
                 "desktop/%s/%s/%s",
-                g_MainScreen.m_Account->c_str(),
+                acct.c_str(),
                 FixServerName(server->Name).c_str(),
                 characterName.c_str());
         }
         else
         {
-            sprintf_s(
-                buf2, "desktop/%s/%s", g_MainScreen.m_Account->c_str(), characterName.c_str());
+            sprintf_s(buf2, "desktop/%s/%s", acct.c_str(), characterName.c_str());
         }
 
         if (!g_MacroManager.Load(
@@ -1613,7 +1606,7 @@ void CGame::SaveLocalConfig(int serial)
         fs_path_create(path);
     }
 
-    path = fs_path_join(path, g_MainScreen.m_Account->c_str());
+    path = fs_path_join(path, g_MainScreen.m_Account->GetTextA());
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -3201,7 +3194,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
     {
         case VKS_SKILL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             CSkill *skill = g_SkillsManager.Get(index);
 
@@ -3234,7 +3227,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_1_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT)
             {
@@ -3245,7 +3238,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_2_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT)
             {
@@ -3256,7 +3249,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_3_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT)
             {
@@ -3267,7 +3260,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_4_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT)
             {
@@ -3278,7 +3271,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_5_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT)
             {
@@ -3289,7 +3282,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_6_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT)
             {
@@ -3300,7 +3293,7 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         }
         case VKS_SPELLBOOK_7_SPELL_NAME:
         {
-            int index = atoi(value.c_str());
+            int index = str_to_int(value);
 
             if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT)
             {
@@ -3431,7 +3424,7 @@ void CGame::LoadLogin(astr_t &login, int &port)
             if (lo == "loginserver")
             {
                 login = strings[1];
-                port = atoi(strings[2].c_str());
+                port = str_to_int(strings[2]);
             }
         }
     }
@@ -4114,7 +4107,7 @@ void CGame::IndexReplaces()
         auto strings = artParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            int index = atoi(strings[0].c_str());
+            int index = str_to_int(strings[0]);
             if (index < 0 || index >= MAX_LAND_DATA_INDEX_COUNT + (int)g_Data.m_Static.size())
             {
                 continue;
@@ -4124,7 +4117,7 @@ void CGame::IndexReplaces()
             int size = (int)newArt.size();
             for (int i = 0; i < size; i++)
             {
-                int checkIndex = atoi(newArt[i].c_str());
+                int checkIndex = str_to_int(newArt[i]);
                 if (checkIndex < 0 ||
                     checkIndex >= MAX_LAND_DATA_INDEX_COUNT + (int)g_Data.m_Static.size())
                 {
@@ -4137,7 +4130,7 @@ void CGame::IndexReplaces()
                     g_Index.m_Land[index] = g_Index.m_Land[checkIndex];
                     assert(g_Index.m_Land[index].UserData == nullptr);
                     g_Index.m_Land[index].UserData = nullptr;
-                    g_Index.m_Land[index].Color = atoi(strings[2].c_str());
+                    g_Index.m_Land[index].Color = str_to_int(strings[2]);
                     break;
                 }
                 if (index >= MAX_LAND_DATA_INDEX_COUNT && checkIndex >= MAX_LAND_DATA_INDEX_COUNT)
@@ -4151,7 +4144,7 @@ void CGame::IndexReplaces()
                         g_Index.m_Static[index] = g_Index.m_Static[checkIndex];
                         assert(g_Index.m_Static[index].UserData == nullptr);
                         g_Index.m_Static[index].UserData = nullptr;
-                        g_Index.m_Static[index].Color = atoi(strings[2].c_str());
+                        g_Index.m_Static[index].Color = str_to_int(strings[2]);
                         break;
                     }
                 }
@@ -4165,7 +4158,7 @@ void CGame::IndexReplaces()
         auto strings = textureParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            int index = atoi(strings[0].c_str());
+            int index = str_to_int(strings[0]);
             if (index < 0 || index >= MAX_LAND_TEXTURES_DATA_INDEX_COUNT ||
                 g_Index.m_Texture[index].Address != 0)
             {
@@ -4176,7 +4169,7 @@ void CGame::IndexReplaces()
             const int size = (int)newTexture.size();
             for (int i = 0; i < size; i++)
             {
-                int checkIndex = atoi(newTexture[i].c_str());
+                int checkIndex = str_to_int(newTexture[i]);
                 if (checkIndex < 0)
                 {
                     continue;
@@ -4188,7 +4181,7 @@ void CGame::IndexReplaces()
                     g_Index.m_Texture[index] = g_Index.m_Texture[checkIndex];
                     assert(g_Index.m_Texture[index].UserData == nullptr);
                     g_Index.m_Texture[index].UserData = nullptr;
-                    g_Index.m_Texture[index].Color = atoi(strings[2].c_str());
+                    g_Index.m_Texture[index].Color = str_to_int(strings[2]);
                     break;
                 }
             }
@@ -4201,7 +4194,7 @@ void CGame::IndexReplaces()
         auto strings = gumpParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            int index = atoi(strings[0].c_str());
+            int index = str_to_int(strings[0]);
             if (index < 0 || index >= MAX_GUMP_DATA_INDEX_COUNT ||
                 g_Index.m_Gump[index].Address != 0)
             {
@@ -4212,7 +4205,7 @@ void CGame::IndexReplaces()
             const int size = (int)newGump.size();
             for (int i = 0; i < size; i++)
             {
-                const int checkIndex = atoi(newGump[i].c_str());
+                const int checkIndex = str_to_int(newGump[i]);
                 if (checkIndex < 0 || checkIndex >= MAX_GUMP_DATA_INDEX_COUNT ||
                     g_Index.m_Gump[checkIndex].Address == 0)
                 {
@@ -4221,7 +4214,7 @@ void CGame::IndexReplaces()
                 g_Index.m_Gump[index] = g_Index.m_Gump[checkIndex];
                 assert(g_Index.m_Gump[index].UserData == nullptr);
                 g_Index.m_Gump[index].UserData = nullptr;
-                g_Index.m_Gump[index].Color = atoi(strings[2].c_str());
+                g_Index.m_Gump[index].Color = str_to_int(strings[2]);
                 break;
             }
         }
@@ -4233,7 +4226,7 @@ void CGame::IndexReplaces()
         auto strings = multiParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            int index = atoi(strings[0].c_str());
+            int index = str_to_int(strings[0]);
             if (index < 0 || index >= g_Index.m_MultiIndexCount ||
                 g_Index.m_Multi[index].Address != 0)
             {
@@ -4244,7 +4237,7 @@ void CGame::IndexReplaces()
             const int size = (int)newMulti.size();
             for (int i = 0; i < size; i++)
             {
-                const int checkIndex = atoi(newMulti[i].c_str());
+                const int checkIndex = str_to_int(newMulti[i]);
                 if (checkIndex < 0 || checkIndex >= g_Index.m_MultiIndexCount ||
                     g_Index.m_Multi[checkIndex].Address == 0)
                 {
@@ -4262,7 +4255,7 @@ void CGame::IndexReplaces()
         auto strings = soundParser.ReadTokens();
         if (strings.size() >= 2)
         {
-            int index = atoi(strings[0].c_str());
+            int index = str_to_int(strings[0]);
             if (index < 0 || index >= MAX_SOUND_DATA_INDEX_COUNT ||
                 g_Index.m_Sound[index].Address != 0)
             {
@@ -4273,7 +4266,7 @@ void CGame::IndexReplaces()
             const int size = (int)newSound.size();
             for (int i = 0; i < size; i++)
             {
-                const int checkIndex = atoi(newSound[i].c_str());
+                const int checkIndex = str_to_int(newSound[i]);
                 if (checkIndex < -1 || checkIndex >= MAX_SOUND_DATA_INDEX_COUNT)
                 {
                     continue;
@@ -4315,7 +4308,7 @@ void CGame::IndexReplaces()
         const size_t size = strings.size();
         if (size > 0)
         {
-            const uint32_t index = std::atoi(strings[0].c_str());
+            const uint32_t index = str_to_int(strings[0]);
             CIndexMusic &mp3 = g_Index.m_MP3[index];
             astr_t name = "music/digital/" + strings[1];
             astr_t extension = ".mp3";
@@ -6358,18 +6351,16 @@ void CGame::LogOut()
 
 void CGame::ConsolePromptSend()
 {
-    size_t len = g_GameConsole.Length();
-    bool cancel = (len < 1);
-
+    const auto len = g_GameConsole.Length();
+    const bool cancel = (len < 1);
     if (g_ConsolePrompt == PT_ASCII)
     {
-        CPacketASCIIPromptResponse(g_GameConsole.c_str(), len, cancel).Send();
+        CPacketASCIIPromptResponse(g_GameConsole.GetTextA(), cancel).Send();
     }
     else if (g_ConsolePrompt == PT_UNICODE)
     {
-        CPacketUnicodePromptResponse(g_GameConsole.Data(), len, g_Language, cancel).Send();
+        CPacketUnicodePromptResponse(g_GameConsole.GetTextW(), g_Language, cancel).Send();
     }
-
     g_ConsolePrompt = PT_NONE;
 }
 
@@ -6377,13 +6368,12 @@ void CGame::ConsolePromptCancel()
 {
     if (g_ConsolePrompt == PT_ASCII)
     {
-        CPacketASCIIPromptResponse("", 0, true).Send();
+        CPacketASCIIPromptResponse({}, true).Send();
     }
     else if (g_ConsolePrompt == PT_UNICODE)
     {
-        CPacketUnicodePromptResponse({}, 0, g_Language, true).Send();
+        CPacketUnicodePromptResponse({}, g_Language, true).Send();
     }
-
     g_ConsolePrompt = PT_NONE;
 }
 

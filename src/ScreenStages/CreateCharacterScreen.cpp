@@ -109,7 +109,7 @@ void CCreateCharacterScreen::OnTextInput(const TextEvent &ev)
         g_EntryPointer->Insert(ch);
     }
 
-    Name = g_EntryPointer->c_str();
+    Name = g_EntryPointer->GetTextA();
     m_Gump.WantRedraw = true;
 }
 
@@ -119,7 +119,7 @@ void CCreateCharacterScreen::OnKeyDown(const KeyEvent &ev)
     if (g_EntryPointer != nullptr)
     {
         g_EntryPointer->OnKey(&m_Gump, key);
-        Name = g_EntryPointer->c_str();
+        Name = g_EntryPointer->GetTextA();
         m_Gump.WantRedraw = true;
     }
 }

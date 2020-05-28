@@ -12,28 +12,134 @@
 
 CGameConsole g_GameConsole;
 
-CGameConsole::CGameConsole()
-    : CEntryText(128, 1000, 1000)
-{
-}
+static const char *s_ConsolePrefix[] = {
+    "",    //Normal
+    "! ",  //Yell
+    "; ",  //Whisper
+    ": ",  //Emote
+    ". ",  //Command
+    "? ",  //Broadcast
+    "/ ",  //Party
+    "\\ ", //Guild
+    "| ",  //Alliance
+};
 
-CGameConsole::~CGameConsole()
+static wstr_t DecomposeCommand(const wstr_t &text, int &member, GAME_CONSOLE_TEXT_TYPE &type)
 {
-    if (g_EntryPointer == this)
+    type = GCTT_NORMAL;
+    wstr_t result = {};
+
+    const auto len = text.size();
+    auto astr = str_from(text);
+    const char *atext = astr.c_str();
+    char aprefix = *atext;
+    if (aprefix == s_ConsolePrefix[GCTT_PARTY][0]) // Party
     {
-        g_EntryPointer = nullptr;
+        char *ptr = (char *)atext + 1;
+        while (ptr < atext + len && *ptr == ' ')
+        {
+            ptr++;
+        }
+
+        if (ptr < atext + len)
+        {
+            int i = 0;
+            sscanf(ptr, "%i", &i);
+            if (i > 0 && i < 11) // Party mebmer
+            {
+                char pmBuf[50];
+                if (g_Party.Member[i - 1].Serial != 0)
+                {
+                    auto name = g_Party.Member[i - 1].GetName(i);
+                    snprintf(pmBuf, sizeof(pmBuf), "Tell [%s]:", name.c_str());
+                }
+                else
+                {
+                    snprintf(pmBuf, sizeof(pmBuf), "Tell []:");
+                }
+
+                result = wstr_from(pmBuf);
+                type = GCTT_PARTY;
+                member = i - 1;
+            }
+        }
+
+        if (type == GCTT_NORMAL && len >= 4 && len <= 8)
+        {
+            if (strncasecmp(atext, "/add", 4) == 0)
+            {
+                type = GCTT_PARTY_ADD; // Party add
+            }
+            else if (strncasecmp(atext, "/quit", 5) == 0 || strncasecmp(atext, "/leave", 6) == 0)
+            {
+                type = GCTT_PARTY_LEAVE; // Party leave & quit
+            }
+            else if (strncasecmp(atext, "/accept", 7) == 0)
+            {
+                type = GCTT_PARTY_ACCEPT; // Party accept
+            }
+            else if (strncasecmp(atext, "/decline", 8) == 0)
+            {
+                type = GCTT_PARTY_DECLINE; // Party decline
+            }
+        }
+
+        if ((type == GCTT_PARTY_ADD || type == GCTT_PARTY_LEAVE || type == GCTT_PARTY_ACCEPT ||
+             type == GCTT_PARTY_DECLINE) &&
+            (result.length() == 0u))
+        {
+            result = L"Party:";
+        }
+
+        if (type == GCTT_NORMAL && (result.length() == 0u))
+        {
+            result = L"Party:";
+            type = GCTT_PARTY;
+        }
     }
+    else if (aprefix == s_ConsolePrefix[GCTT_YELL][0])
+    {
+        result = L"Yell:";
+        type = GCTT_YELL;
+    }
+    else if (aprefix == s_ConsolePrefix[GCTT_WHISPER][0])
+    {
+        result = L"Whisper:";
+        type = GCTT_WHISPER;
+    }
+    else if (aprefix == s_ConsolePrefix[GCTT_EMOTE][0])
+    {
+        result = L"Emote:";
+        type = GCTT_EMOTE;
+    }
+    else if (
+        g_Player->Graphic == 0x03DB && (*atext == '=' || aprefix == s_ConsolePrefix[GCTT_C][0]))
+    {
+        result = L"C:";
+        type = GCTT_C;
+    }
+    else if (aprefix == s_ConsolePrefix[GCTT_BROADCAST][0])
+    {
+        result = L"Broadcast:";
+        type = GCTT_BROADCAST;
+    }
+    else if (aprefix == s_ConsolePrefix[GCTT_GUILD][0])
+    {
+        result = L"Guild:";
+        type = GCTT_GUILD;
+    }
+    else if (aprefix == s_ConsolePrefix[GCTT_ALLIANCE][0])
+    {
+        result = L"Alliance:";
+        type = GCTT_ALLIANCE;
+    }
+
+    return result;
 }
 
-void CGameConsole::Send()
+void SendConsoleText(wstr_t text, uint16_t defaultColor)
 {
-    Send(Text);
-    m_Type = GCTT_NORMAL;
-}
-
-void CGameConsole::Send(wstr_t text, uint16_t defaultColor)
-{
-    size_t len = text.length();
+    const size_t len = text.length();
     if (len != 0u)
     {
         SPEECH_TYPE speechType = ST_NORMAL;
@@ -43,7 +149,7 @@ void CGameConsole::Send(wstr_t text, uint16_t defaultColor)
         {
             int member = -1;
             GAME_CONSOLE_TEXT_TYPE type = GCTT_NORMAL;
-            IsSystemCommand(text.c_str(), len, member, type);
+            (void)DecomposeCommand(text, member, type);
             if ((type != GCTT_NORMAL && len > 2) || type == GCTT_PARTY)
             {
                 if (type == GCTT_YELL)
@@ -165,142 +271,30 @@ void CGameConsole::Send(wstr_t text, uint16_t defaultColor)
             sendColor = defaultColor;
         }
 
+        // FIXME: fix how the string is passed, string view probably is best
         CPacketUnicodeSpeechRequest(
             text.c_str() + offset, speechType, 3, sendColor, (uint8_t *)g_Language.c_str())
             .Send();
     }
 }
 
-wstr_t CGameConsole::IsSystemCommand(
-    const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type)
+CGameConsole::CGameConsole()
+    : CEntryText(128, 1000, 1000)
 {
-    type = GCTT_NORMAL;
-    wstr_t result = {};
+}
 
-    if (*text == g_ConsolePrefix[GCTT_PARTY][0]) //Party
+CGameConsole::~CGameConsole()
+{
+    if (g_EntryPointer == this)
     {
-        auto lStr = str_from(text);
-        const char *cText = lStr.c_str();
-
-        char *ptr = (char *)cText + 1;
-
-        while (ptr < cText + len && *ptr == ' ')
-        {
-            ptr++;
-        }
-
-        if (ptr < cText + len)
-        {
-            int i = 0;
-
-            sscanf_s(ptr, "%i", &i);
-
-            if (i > 0 && i < 11) //Party mebmer
-            {
-                char pmBuf[50] = { 0 };
-
-                if (g_Party.Member[i - 1].Serial != 0)
-                {
-                    sprintf_s(pmBuf, "Tell [%s]:", g_Party.Member[i - 1].GetName(i).c_str());
-                }
-                else
-                {
-                    sprintf_s(pmBuf, "Tell []:");
-                }
-
-                result = wstr_from(pmBuf);
-
-                type = GCTT_PARTY;
-                member = i - 1;
-            }
-        }
-
-        if (type == GCTT_NORMAL && len >= 4 && len <= 8)
-        {
-            size_t lLen = 4;
-            if (len > 4)
-            {
-                lLen = len;
-            }
-
-            char lBuf[10]{};
-            memcpy(&lBuf[0], cText, lLen);
-
-            auto p = &lBuf[0];
-            while (*p++ != 0)
-            {
-                *p = tolower(*p);
-            }
-
-            if (memcmp(&lBuf[0], "/add", 4) == 0)
-            { //Party add
-                type = GCTT_PARTY_ADD;
-            }
-            else if ((memcmp(&lBuf[0], "/quit", 5) == 0) || (memcmp(&lBuf[0], "/leave", 6) == 0))
-            { //Party leave & quit
-                type = GCTT_PARTY_LEAVE;
-            }
-            else if (memcmp(&lBuf[0], "/accept", 7) == 0)
-            { //Party accept
-                type = GCTT_PARTY_ACCEPT;
-            }
-            else if (memcmp(&lBuf[0], "/decline", 8) == 0)
-            { //Party decline
-                type = GCTT_PARTY_DECLINE;
-            }
-        }
-
-        if ((type == GCTT_PARTY_ADD || type == GCTT_PARTY_LEAVE || type == GCTT_PARTY_ACCEPT ||
-             type == GCTT_PARTY_DECLINE) &&
-            (result.length() == 0u))
-        {
-            result = L"Party:";
-        }
-
-        if (type == GCTT_NORMAL && (result.length() == 0u))
-        {
-            result = L"Party:";
-            type = GCTT_PARTY;
-        }
+        g_EntryPointer = nullptr;
     }
-    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_YELL].c_str(), 4) == 0) //Yell
-    {
-        result = L"Yell:";
-        type = GCTT_YELL;
-    }
-    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_WHISPER].c_str(), 4) == 0) //Whisper
-    {
-        result = L"Whisper:";
-        type = GCTT_WHISPER;
-    }
-    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_EMOTE].c_str(), 4) == 0) //Emote
-    {
-        result = L"Emote:";
-        type = GCTT_EMOTE;
-    }
-    else if (
-        g_Player->Graphic == 0x03DB && (*text == L'=' || *text == g_ConsolePrefix[GCTT_C][0])) //C
-    {
-        result = L"C:";
-        type = GCTT_C;
-    }
-    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_BROADCAST].c_str(), 4) == 0) //Broadcast
-    {
-        result = L"Broadcast:";
-        type = GCTT_BROADCAST;
-    }
-    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_GUILD].c_str(), 4) == 0) //Guild
-    {
-        result = L"Guild:";
-        type = GCTT_GUILD;
-    }
-    else if (memcmp(&text[0], g_ConsolePrefix[GCTT_ALLIANCE].c_str(), 4) == 0) //Alliance
-    {
-        result = L"Alliance:";
-        type = GCTT_ALLIANCE;
-    }
+}
 
-    return result;
+void CGameConsole::Send()
+{
+    SendConsoleText(WText);
+    m_Type = GCTT_NORMAL;
 }
 
 bool CGameConsole::InChat() const
@@ -312,7 +306,7 @@ void CGameConsole::DrawW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     int posOffset = 0;
-    wstr_t wtext = Data();
+    wstr_t wtext = GetTextW();
     if (wtext.empty())
     {
         m_Type = GCTT_NORMAL;
@@ -323,15 +317,16 @@ void CGameConsole::DrawW(
         FixMaxWidthW(font);
     }
 
-    size_t len = Length();
-    const wchar_t *text = Data();
+    const size_t len = Length();
     if (len >= 2)
     {
+        const auto *text = wtext.c_str();
         int member = 0;
-        auto sysStr = IsSystemCommand(text, len, member, m_Type);
-        if (sysStr.length() != 0u)
+        auto sysStr = DecomposeCommand(text, member, m_Type);
+        if (!sysStr.empty())
         {
             posOffset = g_FontManager.GetWidthW(font, sysStr);
+            // FIXME: ?!?
             wchar_t trimPart[2] = L" ";
             *trimPart = *text;
             posOffset -= g_FontManager.GetWidthW(font, trimPart);
@@ -362,7 +357,7 @@ void CGameConsole::DrawW(
 
 void CGameConsole::SaveConsoleMessage()
 {
-    m_ConsoleStack[m_ConsoleStackCount % MAX_CONSOLE_STACK_SIZE] = Text;
+    m_ConsoleStack[m_ConsoleStackCount % MAX_CONSOLE_STACK_SIZE] = WText;
     m_ConsoleStackCount++;
     if (m_ConsoleStackCount > 1100)
     {
@@ -416,4 +411,82 @@ void CGameConsole::ClearStack()
 wstr_t CGameConsole::GetLastConsoleText()
 {
     return m_ConsoleStack[m_ConsoleStackCount - 1];
+}
+
+bool CGameConsole::ConsoleTypeIsEmpty(GAME_CONSOLE_TEXT_TYPE type)
+{
+    bool result = (g_GameConsole.Length() == 0);
+    if (result)
+        return result;
+
+    const wstr_t prefix = wstr_from(s_ConsolePrefix[type]);
+    switch (type)
+    {
+        case GCTT_YELL:
+        case GCTT_WHISPER:
+        case GCTT_EMOTE:
+        case GCTT_C:
+        case GCTT_BROADCAST:
+        case GCTT_PARTY:
+        {
+            result = g_GameConsole.GetTextW().compare(prefix);
+            break;
+        }
+        default:
+            break;
+    }
+
+    return result;
+}
+
+void CGameConsole::DeleteConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type)
+{
+    const wstr_t prefix = wstr_from(s_ConsolePrefix[type]);
+    switch (type)
+    {
+        case GCTT_YELL:
+        case GCTT_WHISPER:
+        case GCTT_EMOTE:
+        case GCTT_C:
+        case GCTT_BROADCAST:
+        case GCTT_PARTY:
+        {
+            auto str = g_GameConsole.GetTextW();
+            if (str.find(prefix) == 0)
+            {
+                str.erase(str.begin(), str.begin() + prefix.length());
+                g_GameConsole.SetTextW(str);
+            }
+
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void CGameConsole::SetConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type)
+{
+    const wstr_t prefix = wstr_from(s_ConsolePrefix[type]);
+    switch (type)
+    {
+        case GCTT_YELL:
+        case GCTT_WHISPER:
+        case GCTT_EMOTE:
+        case GCTT_C:
+        case GCTT_BROADCAST:
+        case GCTT_PARTY:
+        {
+            auto str = prefix + g_GameConsole.GetTextW();
+            g_GameConsole.SetTextW(str);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+const char *CGameConsole::GetConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type)
+{
+    return s_ConsolePrefix[type];
 }

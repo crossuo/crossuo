@@ -25,19 +25,15 @@ void CCharacterListScreen::Init()
 {
     CBaseScreen::Init();
 
-    auto title = astr_t("Ultima Online - ") + g_MainScreen.m_Account->c_str();
-
+    auto title = astr_t("Ultima Online - ") + g_MainScreen.m_Account->GetTextA();
     CServer *server = g_ServerList.GetSelectedServer();
-
     if (server != nullptr)
     {
         title += "(" + server->Name + ")";
     }
 
     g_GameWindow.SetTitle(title);
-
     g_CharacterList.Selected = 0;
-
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
 

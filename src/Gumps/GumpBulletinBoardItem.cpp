@@ -152,7 +152,7 @@ CGumpBulletinBoardItem::CGumpBulletinBoardItem(
         (useUnicode ? unicodeFontIndex : 9)));
     m_Entry->m_Entry.MaxWidth = 0;
     m_Entry->m_Entry.SetTextW(data);
-    m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.c_str(), textColor, 220, TS_LEFT, 0);
+    m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.GetTextA(), textColor, 220, TS_LEFT, 0);
     m_HitBox = (CGUIHitBox *)m_HTMLGump->Add(
         new CGUIHitBox(ID_GBBI_TEXT_FIELD, 3, 3, 220, m_Entry->m_Entry.m_Texture.Height));
 
@@ -226,7 +226,7 @@ void CGumpBulletinBoardItem::RecalculateHeight()
 {
     if (g_EntryPointer == &m_Entry->m_Entry)
     {
-        m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.c_str(), 0x0386, 220, TS_LEFT, 0);
+        m_Entry->m_Entry.CreateTextureA(9, m_Entry->m_Entry.GetTextA(), 0x0386, 220, TS_LEFT, 0);
         m_HitBox->Height = m_Entry->m_Entry.m_Texture.Height;
 
         if (m_HitBox->Height < 14)
@@ -245,7 +245,7 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
         if (serial == ID_GBBI_POST)
         {
             CPacketBulletinBoardPostMessage(
-                ID, 0, m_EntrySubject->m_Entry.c_str(), m_Entry->m_Entry.c_str())
+                ID, 0, m_EntrySubject->m_Entry.GetTextA(), m_Entry->m_Entry.GetTextA())
                 .Send();
 
             RemoveMark = true;
@@ -253,7 +253,7 @@ void CGumpBulletinBoardItem::GUMP_BUTTON_EVENT_C
         else if (serial == ID_GBBI_REPLY)
         {
             wstr_t subj(L"RE: ");
-            subj += m_EntrySubject->m_Entry.Data();
+            subj += m_EntrySubject->m_Entry.GetTextW();
 
             CGumpBulletinBoardItem *gump = new CGumpBulletinBoardItem(
                 0, 0, 0, 0, ID, wstr_from(g_Player->GetName()), subj, L"Date/Time", {});

@@ -15,12 +15,22 @@
 
 CParty g_Party;
 
-CParty::CParty()
+astr_t CPartyObject::GetName(int index)
 {
-}
-
-CParty::~CParty()
-{
+    if (Serial != 0u)
+    {
+        if (Character == nullptr)
+        {
+            Character = g_World->FindWorldCharacter(Serial);
+        }
+        if (Character != nullptr)
+        {
+            return Character->GetName();
+        }
+    }
+    char buf[10];
+    snprintf(buf, sizeof(buf), "[%i]", index);
+    return astr_t(buf);
 }
 
 bool CParty::Contains(int serial)

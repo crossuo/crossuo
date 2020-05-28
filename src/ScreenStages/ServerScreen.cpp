@@ -23,7 +23,7 @@ void CServerScreen::Init()
 {
     CBaseScreen::Init();
 
-    g_GameWindow.SetTitle(astr_t("Ultima Online - ") + g_MainScreen.m_Account->c_str());
+    g_GameWindow.SetTitle(astr_t("Ultima Online - ") + g_MainScreen.m_Account->GetTextA());
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
 

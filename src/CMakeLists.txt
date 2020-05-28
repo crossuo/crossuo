@@ -254,7 +254,6 @@ set(crossuo_src
   CrossUO.cpp
   GameWindow.cpp
   Party.cpp
-  PartyObject.cpp
   PressedObject.cpp
   Profession.cpp
   QuestArrow.cpp

@@ -546,7 +546,6 @@ void CGumpSkills::SetGroupTextFromEntry()
         if (item->Type == GOT_SKILLGROUP)
         {
             CGUISkillGroup *group = (CGUISkillGroup *)item;
-
             if (group->m_Name->Focused && g_EntryPointer == &group->m_Name->m_Entry &&
                 groupItem != nullptr)
             {
@@ -556,16 +555,12 @@ void CGumpSkills::SetGroupTextFromEntry()
                 {
                     g_EntryPointer->SetTextA("NoNameGroup");
                 }
-
-                groupItem->Name = g_EntryPointer->c_str();
-
+                groupItem->Name = g_EntryPointer->GetTextA();
                 break;
             }
 
             group->m_Name->Focused = false;
-
             index++;
-
             if (groupItem != nullptr)
             {
                 groupItem = groupItem->m_Next;
@@ -756,7 +751,7 @@ void CGumpSkills::OnTextInput(const TextEvent &ev)
 {
     const auto ch = EvChar(ev);
     g_EntryPointer->Insert(ch);
-    int val = g_FontManager.GetWidthA(6, g_EntryPointer->c_str());
+    int val = g_FontManager.GetWidthA(6, g_EntryPointer->GetTextA());
     if (val > 170)
     {
         g_EntryPointer->Remove(true);

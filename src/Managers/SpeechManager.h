@@ -57,7 +57,7 @@ public:
 
     bool LoadSpeech();
     bool LoadLangCodes();
-    void GetKeywords(const wchar_t *text, std::vector<uint32_t> &codes);
+    void GetKeywords(const wstr_t &text, std::vector<uint32_t> &codes) const;
 };
 
 extern CSpeechManager g_SpeechManager;

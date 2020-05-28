@@ -236,13 +236,13 @@ public:
 class CPacketASCIIPromptResponse : public CPacket
 {
 public:
-    CPacketASCIIPromptResponse(const char *text, size_t len, bool cancel);
+    CPacketASCIIPromptResponse(const astr_t &text, bool cancel);
 };
 
 class CPacketUnicodePromptResponse : public CPacket
 {
 public:
-    CPacketUnicodePromptResponse(const wchar_t *text, size_t len, const astr_t &lang, bool cancel);
+    CPacketUnicodePromptResponse(const wstr_t &text, const astr_t &lang, bool cancel);
 };
 
 class CPacketDyeDataResponse : public CPacket
@@ -260,7 +260,7 @@ public:
 class CPacketProfileUpdate : public CPacket
 {
 public:
-    CPacketProfileUpdate(uint32_t serial, const wchar_t *text, size_t len);
+    CPacketProfileUpdate(uint32_t serial, const wstr_t &text);
 };
 
 class CPacketCloseStatusbarGump : public CPacket
@@ -333,7 +333,7 @@ class CPacketBulletinBoardPostMessage : public CPacket
 {
 public:
     CPacketBulletinBoardPostMessage(
-        uint32_t serial, uint32_t replySerial, const char *subject, const char *message);
+        uint32_t serial, uint32_t replySerial, const astr_t &subject, const astr_t &message);
 };
 
 class CPacketBulletinBoardRemoveMessage : public CPacket

@@ -239,14 +239,14 @@ bool CMacroManager::Convert(const fs_path &path)
             continue;
         }
 
-        //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]", strings[0].c_str(), atoi(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION].c_str()));
+        //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]", strings[0].c_str(), str_to_int(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION]));
         bool macroAdded = false;
 
         CMacro *macro = new CMacro(
             ConvertStringToKeyCode(strings),
-            atoi(strings[size - MACRO_POSITION_ALT].c_str()) != 0,
-            atoi(strings[size - MACRO_POSITION_CTRL].c_str()) != 0,
-            atoi(strings[size - MACRO_POSITION_SHIFT].c_str()) != 0);
+            str_to_int(strings[size - MACRO_POSITION_ALT]) != 0,
+            str_to_int(strings[size - MACRO_POSITION_CTRL]) != 0,
+            str_to_int(strings[size - MACRO_POSITION_SHIFT]) != 0);
 
         astr_t TestLine{};
         while (!file.IsEOF())
@@ -879,7 +879,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
                 auto chBuffer = SDL_GetClipboardText();
                 if (chBuffer != nullptr && (strlen(chBuffer) != 0u))
                 {
-                    auto str = g_EntryPointer->Data() + wstr_from(chBuffer);
+                    auto str = g_EntryPointer->GetTextW() + wstr_from(chBuffer);
                     g_EntryPointer->SetTextW(str);
                 }
             }
@@ -1127,7 +1127,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             auto str = mos->m_String;
             if (str.length() != 0u)
             {
-                m_NextTimer = g_Ticks + std::atoi(str.c_str());
+                m_NextTimer = g_Ticks + str_to_int(str);
             }
             break;
         }
@@ -1306,7 +1306,7 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             auto str = mos->m_String;
             if (str.length() != 0u)
             {
-                g_ConfigManager.UpdateRange = std::atoi(str.c_str());
+                g_ConfigManager.UpdateRange = str_to_int(str);
                 if (g_ConfigManager.UpdateRange < MIN_VIEW_RANGE)
                 {
                     g_ConfigManager.UpdateRange = MIN_VIEW_RANGE;

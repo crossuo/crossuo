@@ -103,11 +103,11 @@ void CGumpTextEntryDialog::UpdateContent()
 void CGumpTextEntryDialog::GUMP_BUTTON_EVENT_C
 {
     if (serial == ID_GTED_BUTTON_OKAY)
-    { //Button okay
+    {
         SendTextEntryDialogResponse(true);
     }
     else if (serial == ID_GTED_BUTTON_CANCEL)
-    { //Button cancel
+    {
         SendTextEntryDialogResponse(false);
     }
 }
@@ -120,7 +120,7 @@ void CGumpTextEntryDialog::OnTextInput(const TextEvent &ev)
         if (ch >= '0' && ch <= '9')
         {
             g_EntryPointer->Insert(ch);
-            int val = atoi(g_EntryPointer->c_str());
+            const int val = str_to_int(g_EntryPointer->GetTextA());
             if (val > m_MaxLength)
             {
                 g_EntryPointer->Remove(true);

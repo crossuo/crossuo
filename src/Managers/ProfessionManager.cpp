@@ -92,7 +92,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             }
             case PM_CODE_DESC:
             {
-                descriptionIndex = atoi(strings[1].c_str());
+                descriptionIndex = str_to_int(strings[1]);
                 break;
             }
             case PM_CODE_TOPLEVEL:
@@ -102,7 +102,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             }
             case PM_CODE_GUMP:
             {
-                gump = atoi(strings[1].c_str());
+                gump = str_to_int(strings[1]);
 
                 g_Game.ExecuteGump(gump);
                 g_Game.ExecuteGump(gump + 1);
@@ -141,7 +141,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
                         if (skillPtr != nullptr && strings[1] == skillPtr->Name)
                         {
                             skillIndex[skillCount] = (int)j;
-                            skillValue[skillCount] = atoi(strings[2].c_str());
+                            skillValue[skillCount] = str_to_int(strings[2]);
                             skillCount++;
 
                             break;
@@ -156,7 +156,7 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
                 if (strings.size() > 2)
                 {
                     code = GetKeyCode(strings[1]);
-                    int val = atoi(strings[2].c_str());
+                    int val = str_to_int(strings[2]);
 
                     if (code == PM_CODE_STR)
                     {
@@ -176,14 +176,14 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             }
             case PM_CODE_NAME_CLILOC_ID:
             {
-                nameClilocID = atoi(strings[1].c_str());
+                nameClilocID = str_to_int(strings[1]);
                 name =
                     str_upper(g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name));
                 break;
             }
             case PM_CODE_DESCRIPTION_CLILOC_ID:
             {
-                descriptionClilocID = atoi(strings[1].c_str());
+                descriptionClilocID = str_to_int(strings[1]);
                 break;
             }
             default:

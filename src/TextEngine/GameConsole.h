@@ -4,7 +4,26 @@
 #pragma once
 
 #include "EntryText.h"
-const int MAX_CONSOLE_STACK_SIZE = 100;
+const int MAX_CONSOLE_STACK_SIZE = 200;
+
+enum GAME_CONSOLE_TEXT_TYPE
+{
+    GCTT_NORMAL = 0,
+    GCTT_YELL,
+    GCTT_WHISPER,
+    GCTT_EMOTE,
+    GCTT_C,
+    GCTT_BROADCAST,
+    GCTT_PARTY,
+    GCTT_GUILD,
+    GCTT_ALLIANCE,
+    GCTT_PARTY_ACCEPT,
+    GCTT_PARTY_DECLINE,
+    GCTT_PARTY_ADD,
+    GCTT_PARTY_LEAVE
+};
+
+void SendConsoleText(wstr_t text, uint16_t defaultColor = 0);
 
 class CGameConsole : public CEntryText
 {
@@ -18,10 +37,6 @@ private:
 public:
     CGameConsole();
     virtual ~CGameConsole();
-
-    static void Send(wstr_t text, uint16_t defaultColor = 0);
-    static wstr_t
-    IsSystemCommand(const wchar_t *text, size_t &len, int &member, GAME_CONSOLE_TEXT_TYPE &type);
 
     void DrawW(
         uint8_t font,
@@ -37,18 +52,11 @@ public:
     void ChangeConsoleMessage(bool next);
     void ClearStack();
     wstr_t GetLastConsoleText();
-};
 
-static const wstr_t g_ConsolePrefix[] = {
-    L"",    //Normal
-    L"! ",  //Yell
-    L"; ",  //Whisper
-    L": ",  //Emote
-    L".",   //Command
-    L"? ",  //Broadcast
-    L"/ ",  //Party
-    L"\\ ", //Guild
-    L"| "   //Alliance
+    static bool ConsoleTypeIsEmpty(GAME_CONSOLE_TEXT_TYPE type);
+    static void DeleteConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type);
+    static void SetConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type);
+    static const char *GetConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type);
 };
 
 extern CGameConsole g_GameConsole;

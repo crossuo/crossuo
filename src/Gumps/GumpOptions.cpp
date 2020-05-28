@@ -3860,8 +3860,7 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
         if (ch >= '0' && ch <= '9')
         {
             g_EntryPointer->Insert(ch);
-
-            int val = atoi(g_EntryPointer->c_str());
+            const int val = str_to_int(g_EntryPointer->GetTextA());
             if (val > 2000)
             {
                 g_EntryPointer->Remove(true);
@@ -3937,7 +3936,7 @@ void CGumpOptions::OnTextInput(const TextEvent &ev)
             if (canAdd)
             {
                 g_EntryPointer->Insert(ch);
-                ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
+                ((CMacroObjectString *)obj)->m_String = g_EntryPointer->GetTextA();
                 WantRedraw = true;
             }
         }
@@ -4014,7 +4013,7 @@ void CGumpOptions::OnKeyDown(const KeyEvent &ev)
 
                 if (obj != nullptr)
                 {
-                    ((CMacroObjectString *)obj)->m_String = g_EntryPointer->c_str();
+                    ((CMacroObjectString *)obj)->m_String = g_EntryPointer->GetTextA();
                 }
             }
         }
@@ -4175,14 +4174,14 @@ void CGumpOptions::ApplyPageChanges()
 
             if (m_ContainerOffsetX->m_Entry.Length() != 0u)
             {
-                curX = atoi(m_ContainerOffsetX->m_Entry.c_str());
+                curX = str_to_int(m_ContainerOffsetX->m_Entry.GetTextA());
             }
 
             int curY = g_ContainerRect.DefaultY;
 
             if (m_ContainerOffsetY->m_Entry.Length() != 0u)
             {
-                curY = atoi(m_ContainerOffsetY->m_Entry.c_str());
+                curY = str_to_int(m_ContainerOffsetY->m_Entry.GetTextA());
             }
 
             g_ContainerRect.DefaultX = curX;
@@ -4205,7 +4204,7 @@ void CGumpOptions::ApplyPageChanges()
 
             if (m_GameWindowWidth->m_Entry.Length() != 0u)
             {
-                curX = atoi(m_GameWindowWidth->m_Entry.c_str());
+                curX = str_to_int(m_GameWindowWidth->m_Entry.GetTextA());
             }
 
             if (curX < 640)
@@ -4224,7 +4223,7 @@ void CGumpOptions::ApplyPageChanges()
 
             if (m_GameWindowHeight->m_Entry.Length() != 0u)
             {
-                curY = atoi(m_GameWindowHeight->m_Entry.c_str());
+                curY = str_to_int(m_GameWindowHeight->m_Entry.GetTextA());
             }
 
             if (curY < 480)

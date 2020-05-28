@@ -1036,13 +1036,13 @@ bool CConfigManager::Load(const fs_path &path)
                     SetSound(str_to_bool(strings[1]));
                     break;
                 case CMKC_SOUND_VOLUME:
-                    m_SoundVolume = atoi(strings[1].c_str());
+                    m_SoundVolume = str_to_int(strings[1]);
                     break;
                 case CMKC_MUSIC:
                     SetMusic(str_to_bool(strings[1]));
                     break;
                 case CMKC_MUSIC_VOLUME:
-                    m_MusicVolume = atoi(strings[1].c_str());
+                    m_MusicVolume = str_to_int(strings[1]);
                     break;
                 case CMKC_FOOTSTEPS_SOUND:
                     FootstepsSound = str_to_bool(strings[1]);
@@ -1056,7 +1056,7 @@ bool CConfigManager::Load(const fs_path &path)
 
                 //Page 2
                 case CMKC_CLIENT_FPS:
-                    SetClientFPS(atoi(strings[1].c_str()));
+                    SetClientFPS(str_to_int(strings[1]));
                     break;
                 case CMKC_USE_SCALING:
                     m_UseScaling = str_to_bool(strings[1]);
@@ -1065,7 +1065,7 @@ bool CConfigManager::Load(const fs_path &path)
                     RemoveTextWithBlending = str_to_bool(strings[1]);
                     break;
                 case CMKC_DRAW_STATUS_STATE:
-                    m_DrawStatusState = atoi(strings[1].c_str());
+                    m_DrawStatusState = str_to_int(strings[1]);
                     break;
                 case CMKC_DRAW_STUMPS:
                     SetDrawStumps(str_to_bool(strings[1]));
@@ -1086,19 +1086,19 @@ bool CConfigManager::Load(const fs_path &path)
                     SetNoVegetation(str_to_bool(strings[1]));
                     break;
                 case CMKC_HIDDEN_CHARACTERS_RENDER_MODE:
-                    HiddenCharactersRenderMode = atoi(strings[1].c_str());
+                    HiddenCharactersRenderMode = str_to_int(strings[1]);
                     break;
                 case CMKC_HIDDEN_ALPHA:
-                    HiddenAlpha = atoi(strings[1].c_str());
+                    HiddenAlpha = str_to_int(strings[1]);
                     break;
                 case CMKC_USE_HIDDEN_MODE_ONLY_FOR_SELF:
                     UseHiddenModeOnlyForSelf = str_to_bool(strings[1]);
                     break;
                 case CMKC_TRANSPARENT_SPELL_ICONS:
-                    TransparentSpellIcons = atoi(strings[1].c_str());
+                    TransparentSpellIcons = str_to_int(strings[1]);
                     break;
                 case CMKC_SPELL_ICON_ALPHA:
-                    m_SpellIconAlpha = atoi(strings[1].c_str());
+                    m_SpellIconAlpha = str_to_int(strings[1]);
                     break;
                 case CMKC_OLD_STYLE_STATUSBAR:
                     m_OldStyleStatusbar = str_to_bool(strings[1]);
@@ -1116,10 +1116,10 @@ bool CConfigManager::Load(const fs_path &path)
                     SetPaperdollSlots(str_to_bool(strings[1]));
                     break;
                 case CMKC_DRAW_STATUS_CONDITION_STATE:
-                    DrawStatusConditionState = atoi(strings[1].c_str());
+                    DrawStatusConditionState = str_to_int(strings[1]);
                     break;
                 case CMKC_DRAW_STATUS_CONDITION_VALUE:
-                    DrawStatusConditionValue = atoi(strings[1].c_str());
+                    DrawStatusConditionValue = str_to_int(strings[1]);
                     break;
                 case CMKC_REMOVE_STATUSBARS_WITHOUT_OBJECTS:
                     RemoveStatusbarsWithoutObjects = str_to_bool(strings[1]);
@@ -1128,13 +1128,13 @@ bool CConfigManager::Load(const fs_path &path)
                     ShowDefaultConsoleEntryMode = str_to_bool(strings[1]);
                     break;
                 case CMKC_DRAW_AURA_STATE:
-                    SetDrawAuraState(atoi(strings[1].c_str()));
+                    SetDrawAuraState(str_to_int(strings[1]));
                     break;
                 case CMKC_DRAW_AURA_WITH_CTRL_PRESSED:
                     DrawAuraWithCtrlPressed = str_to_bool(strings[1]);
                     break;
                 case CMKC_SCREENSHOT_FORMAT:
-                    ScreenshotFormat = atoi(strings[1].c_str());
+                    ScreenshotFormat = str_to_int(strings[1]);
                     break;
                 case CMKC_SCALE_IMAGES_IN_PAPERDOLL_SLOTS:
                     SetScaleImagesInPaperdollSlots(str_to_bool(strings[1]));
@@ -1165,7 +1165,7 @@ bool CConfigManager::Load(const fs_path &path)
                     CheckPing = str_to_bool(strings[1]);
                     break;
                 case CMKC_PING_TIMER:
-                    SetPingTimer(atoi(strings[1].c_str()));
+                    SetPingTimer(str_to_int(strings[1]));
                     break;
 #endif // USE_PING
                 case CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC:
@@ -1180,66 +1180,66 @@ bool CConfigManager::Load(const fs_path &path)
                     UseToolTips = str_to_bool(strings[1]);
                     break;
                 case CMKC_TOOLTIPS_TEXT_COLOR:
-                    ToolTipsTextColor = atoi(strings[1].c_str());
+                    ToolTipsTextColor = str_to_int(strings[1]);
                     break;
                 case CMKC_TOOLTIPS_TEXT_FONT:
-                    ToolTipsTextFont = atoi(strings[1].c_str());
+                    ToolTipsTextFont = str_to_int(strings[1]);
                     break;
                 case CMKC_TOOLTIPS_DELAY:
-                    ToolTipsDelay = atoi(strings[1].c_str());
+                    ToolTipsDelay = str_to_int(strings[1]);
                     break;
 
                 //Page 4
                 case CMKC_CHAT_COLOR_INPUT_TEXT:
-                    ChatColorInputText = atoi(strings[1].c_str());
+                    ChatColorInputText = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_MENU_OPTION:
-                    ChatColorMenuOption = atoi(strings[1].c_str());
+                    ChatColorMenuOption = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_PLAYER_IN_MEMBER_LIST:
-                    ChatColorPlayerInMemberList = atoi(strings[1].c_str());
+                    ChatColorPlayerInMemberList = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_TEXT:
-                    ChatColorText = atoi(strings[1].c_str());
+                    ChatColorText = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_PLAYER_NAME_WITHOUT:
-                    ChatColorPlayerNameWithout = atoi(strings[1].c_str());
+                    ChatColorPlayerNameWithout = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_MUTED:
-                    ChatColorMuted = atoi(strings[1].c_str());
+                    ChatColorMuted = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_CHANNEL_MODERATOR_NAME:
-                    ChatColorChannelModeratorName = atoi(strings[1].c_str());
+                    ChatColorChannelModeratorName = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_CHANNEL_MODERATOR_TEXT:
-                    ChatColorChannelModeratorText = atoi(strings[1].c_str());
+                    ChatColorChannelModeratorText = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_MY_NAME:
-                    ChatColorMyName = atoi(strings[1].c_str());
+                    ChatColorMyName = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_MY_TEXT:
-                    ChatColorMyText = atoi(strings[1].c_str());
+                    ChatColorMyText = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_SYSTEM_MESSAGE:
-                    ChatColorSystemMessage = atoi(strings[1].c_str());
+                    ChatColorSystemMessage = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_FONT:
-                    ChatFont = atoi(strings[1].c_str());
+                    ChatFont = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_BG_OUTPUT_TEXT:
-                    ChatColorBGOutputText = atoi(strings[1].c_str());
+                    ChatColorBGOutputText = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_BG_INPUT_TEXT:
-                    ChatColorBGInputText = atoi(strings[1].c_str());
+                    ChatColorBGInputText = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_BG_USER_LIST:
-                    ChatColorBGUserList = atoi(strings[1].c_str());
+                    ChatColorBGUserList = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_BG_CONF_LIST:
-                    ChatColorBGConfList = atoi(strings[1].c_str());
+                    ChatColorBGConfList = str_to_int(strings[1]);
                     break;
                 case CMKC_CHAT_COLOR_BG_COMMAND_LIST:
-                    ChatColorBGCommandList = atoi(strings[1].c_str());
+                    ChatColorBGCommandList = str_to_int(strings[1]);
                     break;
 
                 //Page 6
@@ -1268,7 +1268,7 @@ bool CConfigManager::Load(const fs_path &path)
                     DisableNewTargetSystem = str_to_bool(strings[1]);
                     break;
                 case CMKC_ITEMP_ROPERTIES_MODE:
-                    m_ItemPropertiesMode = atoi(strings[1].c_str());
+                    m_ItemPropertiesMode = str_to_int(strings[1]);
                     break;
                 case CMKC_ITEMP_ROPERTIES_ICON:
                     m_ItemPropertiesIcon = str_to_bool(strings[1]);
@@ -1289,39 +1289,39 @@ bool CConfigManager::Load(const fs_path &path)
                     HoldShiftForEnablePathfind = str_to_bool(strings[1]);
                     break;
                 case CMKC_CONTAINER_DEFAULT_X:
-                    g_ContainerRect.DefaultX = atoi(strings[1].c_str());
+                    g_ContainerRect.DefaultX = str_to_int(strings[1]);
                     break;
                 case CMKC_CONTAINER_DEFAULT_Y:
-                    g_ContainerRect.DefaultY = atoi(strings[1].c_str());
+                    g_ContainerRect.DefaultY = str_to_int(strings[1]);
                     break;
 
                 //Page 7
                 case CMKC_GAME_WINDOW_WIDTH:
-                    GameWindowWidth = atoi(strings[1].c_str());
+                    GameWindowWidth = str_to_int(strings[1]);
                     break;
                 case CMKC_GAME_WINDOW_HEIGHT:
-                    GameWindowHeight = atoi(strings[1].c_str());
+                    GameWindowHeight = str_to_int(strings[1]);
                     break;
                 case CMKC_SPEECH_DELAY:
-                    SpeechDelay = atoi(strings[1].c_str());
+                    SpeechDelay = str_to_int(strings[1]);
                     break;
                 case CMKC_SCALE_SPEECH_DELAY:
                     ScaleSpeechDelay = str_to_bool(strings[1]);
                     break;
                 case CMKC_SPEECH_COLOR:
-                    SpeechColor = atoi(strings[1].c_str());
+                    SpeechColor = str_to_int(strings[1]);
                     break;
                 case CMKC_EMOTE_COLOR:
-                    EmoteColor = atoi(strings[1].c_str());
+                    EmoteColor = str_to_int(strings[1]);
                     break;
                 case CMKC_PARTY_MESSAGE_COLOR:
-                    PartyMessageColor = atoi(strings[1].c_str());
+                    PartyMessageColor = str_to_int(strings[1]);
                     break;
                 case CMKC_GUILD_MESSAGE_COLOR:
-                    GuildMessageColor = atoi(strings[1].c_str());
+                    GuildMessageColor = str_to_int(strings[1]);
                     break;
                 case CMKC_ALLIANCE_MESSAGE_COLOR:
-                    AllianceMessageColor = atoi(strings[1].c_str());
+                    AllianceMessageColor = str_to_int(strings[1]);
                     break;
                 case CMKC_IGNORE_GUILD_MESSAGE:
                     IgnoreGuildMessage = str_to_bool(strings[1]);
@@ -1350,22 +1350,22 @@ bool CConfigManager::Load(const fs_path &path)
 
                 //Page 8
                 case CMKC_INNOCENT_COLOR:
-                    InnocentColor = atoi(strings[1].c_str());
+                    InnocentColor = str_to_int(strings[1]);
                     break;
                 case CMKC_FRIENDLY_COLOR:
-                    FriendlyColor = atoi(strings[1].c_str());
+                    FriendlyColor = str_to_int(strings[1]);
                     break;
                 case CMKC_SOMEONE_COLOR:
-                    SomeoneColor = atoi(strings[1].c_str());
+                    SomeoneColor = str_to_int(strings[1]);
                     break;
                 case CMKC_CRIMINAL_COLOR:
-                    CriminalColor = atoi(strings[1].c_str());
+                    CriminalColor = str_to_int(strings[1]);
                     break;
                 case CMKC_ENEMY_COLOR:
-                    EnemyColor = atoi(strings[1].c_str());
+                    EnemyColor = str_to_int(strings[1]);
                     break;
                 case CMKC_MURDERER_COLOR:
-                    MurdererColor = atoi(strings[1].c_str());
+                    MurdererColor = str_to_int(strings[1]);
                     break;
                 case CMKC_CRIMINAL_ACTIONS_QUERY:
                     CriminalActionsQuery = str_to_bool(strings[1]);
@@ -1385,43 +1385,43 @@ bool CConfigManager::Load(const fs_path &path)
                     SetConsoleNeedEnter(str_to_bool(strings[1]));
                     break;
                 case CMKC_CIRCLE_TRANS_RADIUS:
-                    CircleTransRadius = atoi(strings[1].c_str());
+                    CircleTransRadius = str_to_int(strings[1]);
                     g_CircleOfTransparency.Create(CircleTransRadius);
                     break;
                 case CMKC_SKILL_REPORT:
-                    SkillReport = atoi(strings[1].c_str());
+                    SkillReport = str_to_int(strings[1]);
                     break;
                 case CMKC_SPEECH_FONT:
-                    SpeechFont = atoi(strings[1].c_str());
+                    SpeechFont = str_to_int(strings[1]);
                     break;
 
                 //No page
                 case CMKC_GAME_WINDOW_X:
-                    GameWindowX = atoi(strings[1].c_str());
+                    GameWindowX = str_to_int(strings[1]);
                     break;
                 case CMKC_GAME_WINDOW_Y:
-                    GameWindowY = atoi(strings[1].c_str());
+                    GameWindowY = str_to_int(strings[1]);
                     break;
                 case CMKC_ZOOMED:
                     zoomed = str_to_bool(strings[1]);
                     break;
                 case CMKC_REAL_X:
-                    windowX = atoi(strings[1].c_str());
+                    windowX = str_to_int(strings[1]);
                     break;
                 case CMKC_REAL_Y:
-                    windowY = atoi(strings[1].c_str());
+                    windowY = str_to_int(strings[1]);
                     break;
                 case CMKC_REAL_WIDTH:
-                    windowWidth = atoi(strings[1].c_str());
+                    windowWidth = str_to_int(strings[1]);
                     break;
                 case CMKC_REAL_HEIGHT:
-                    windowHeight = atoi(strings[1].c_str());
+                    windowHeight = str_to_int(strings[1]);
                     break;
                 case CMKC_TOGGLE_BUFFICON_WINDOW:
                     ToggleBufficonWindow = str_to_bool(strings[1]);
                     break;
                 case CMKC_DEVELOPER_MODE:
-                    g_DeveloperMode = (DEVELOPER_MODE)atoi(strings[1].c_str());
+                    g_DeveloperMode = (DEVELOPER_MODE)str_to_int(strings[1]);
                     break;
                 case CMKC_LAST_SERVER:
                     if (g_World == nullptr)
@@ -1436,7 +1436,7 @@ bool CConfigManager::Load(const fs_path &path)
                     }
                     break;
                 case CMKC_CHARACTER_BACKPACK_STYLE:
-                    m_CharacterBackpackStyle = atoi(strings[1].c_str());
+                    m_CharacterBackpackStyle = str_to_int(strings[1]);
                     break;
                 default:
                     break;

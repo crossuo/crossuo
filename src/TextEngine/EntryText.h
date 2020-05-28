@@ -24,8 +24,7 @@ public:
 
 protected:
     int m_Position = 0;
-    astr_t m_CText;
-    wstr_t Text;
+    wstr_t WText;
 
 public:
     CEntryText(int maxLength = 0, int width = 0, int maxWidth = 0, bool numberOnly = false);
@@ -43,17 +42,16 @@ public:
     int GetLinesCountW(
         uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0);
 
-    bool Insert(wchar_t ch, CGump *gump = nullptr);
+    bool Insert(char16_t ch, CGump *gump = nullptr);
     void Remove(bool left, CGump *gump = nullptr);
     void RemoveSequence(int startPos, int length);
     void AddPos(int val, CGump *gump = nullptr);
     void SetPos(int val, CGump *gump = nullptr);
-    const wchar_t *Data() const { return Text.c_str(); }
-    const char *c_str();
     void SetTextA(const astr_t &text);
     void SetTextW(const wstr_t &text);
-    astr_t GetTextA() const;
-    wstr_t GetTextW() const;
+    inline astr_t GetTextA() { return str_from(WText); }
+
+    inline const wstr_t &GetTextW() const { return WText; }
 
     void OnClick(
         CGump *gump,
@@ -66,7 +64,7 @@ public:
 
     void OnKey(CGump *gump, Keycode key);
     int Pos() const { return m_Position; }
-    size_t Length() const { return Text.length(); }
+    size_t Length() const { return WText.length(); }
     astr_t CheckMaxWidthA(uint8_t font, astr_t str);
     wstr_t CheckMaxWidthW(uint8_t font, wstr_t str);
     void FixMaxWidthA(uint8_t font);
