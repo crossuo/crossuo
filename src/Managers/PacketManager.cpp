@@ -388,8 +388,19 @@ CPacketInfo CPacketManager::m_Packets[0x100] = {
     /*0xFF*/ UMSG(XUO_SAVE_PACKET, PACKET_VARIABLE_SIZE)
 };
 
-CPacketManager::CPacketManager()
+// This packet is required as reply for a server message 0x03 of type SYSTEM
+// if this blob is not sent back, some servers my detect a custom client and think
+// we are PlayUO and disconnect us
+static uint8_t s_ackPacket[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
+                                     0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
+                                     0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
+                                     0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
+static void ServerTalkAcknowledge()
+{
+    g_Game.Send(s_ackPacket, sizeof(s_ackPacket));
+}
 
+CPacketManager::CPacketManager()
 {
     CREATE_MUTEX(m_Mutex);
 }
@@ -3235,50 +3246,32 @@ PACKET_HANDLER(Target)
 
 PACKET_HANDLER(Talk)
 {
-    if (g_World == nullptr)
-    {
-        if (g_GameState == GS_GAME_CONNECT)
-        {
-            const uint32_t _serial = ReadUInt32BE();
-            (void)_serial;
-            const uint16_t _graphic = ReadUInt16BE();
-            (void)_graphic;
-            const auto _type = (SPEECH_TYPE)ReadUInt8();
-            (void)_type;
-            const uint16_t _textColor = ReadUInt16BE();
-            (void)_textColor;
-            const uint16_t _font = ReadUInt16BE();
-            (void)_font;
-
-            auto name = ReadString();
-            if (Size > 44)
-            {
-                Ptr = Start + 44;
-                g_ConnectionScreen.SetConnectionFailed(true);
-                g_ConnectionScreen.SetTextA(ReadString());
-            }
-        }
-
-        return;
-    }
-
     uint32_t serial = ReadUInt32BE();
     uint16_t graphic = ReadUInt16BE();
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
     auto name = ReadString();
+    auto text = ReadString();
 
-    if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
+    if (serial == 0u && graphic == 0u && type == ST_NORMAL && font == 0xFFFF &&
         textColor == 0xFFFF && str_lower(name) == "system")
     {
-        uint8_t sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
-                                  0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
-                                  0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
-                                  0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
+        ServerTalkAcknowledge();
+        return;
+    }
 
-        g_Game.Send(sbuffer, 0x28);
-
+    if (g_World == nullptr) // CHECK
+    {
+        if (g_GameState == GS_GAME_CONNECT)
+        {
+            if (Size > 44)
+            {
+                Ptr = Start + 44;
+                g_ConnectionScreen.SetConnectionFailed(true);
+                g_ConnectionScreen.SetTextA(text);
+            }
+        }
         return;
     }
 
@@ -3291,14 +3284,14 @@ PACKET_HANDLER(Talk)
     if (Size > 44)
     {
         Ptr = Start + 44;
-        str = ReadString();
+        str = text; //ReadString();
     }
 
     Info(Network, "%s: %s", name.c_str(), str.c_str());
 
     CGameObject *obj = g_World->FindWorldObject(serial);
 
-    if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || (serial == 0u) ||
+    if (type == ST_BROADCAST || /*type == ST_SYSTEM ||*/ serial == 0xFFFFFFFF || serial == 0u ||
         (str_lower(name) == "system" && obj == nullptr))
     {
         g_Game.CreateTextMessage(TT_SYSTEM, serial, (uint8_t)font, textColor, str);
@@ -3379,16 +3372,10 @@ PACKET_HANDLER(UnicodeTalk)
     (void)_language;
     auto name = ReadString();
 
-    if ((serial == 0u) && (graphic == 0u) && type == ST_NORMAL && font == 0xFFFF &&
+    if (serial == 0u && graphic == 0u && type == ST_NORMAL && font == 0xFFFF &&
         textColor == 0xFFFF && str_lower(name) == "system")
     {
-        uint8_t sbuffer[0x28] = { 0x03, 0x00, 0x28, 0x20, 0x00, 0x34, 0x00, 0x03, 0xdb, 0x13,
-                                  0x14, 0x3f, 0x45, 0x2c, 0x58, 0x0f, 0x5d, 0x44, 0x2e, 0x50,
-                                  0x11, 0xdf, 0x75, 0x5c, 0xe0, 0x3e, 0x71, 0x4f, 0x31, 0x34,
-                                  0x05, 0x4e, 0x18, 0x1e, 0x72, 0x0f, 0x59, 0xad, 0xf5, 0x00 };
-
-        g_Game.Send(sbuffer, 0x28);
-
+        ServerTalkAcknowledge();
         return;
     }
 
