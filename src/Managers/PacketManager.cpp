@@ -4158,9 +4158,9 @@ PACKET_HANDLER(MegaCliloc)
             argument = ReadWStringLE(len / 2);
         }
 
+        DEBUG(Network, "Cliloc: 0x%08X len=%i arg=%s", cliloc, len, str_from(argument).c_str());
         auto str = g_ClilocManager.ParseArgumentsToClilocString(cliloc, true, argument);
         DEBUG(Network, "Cliloc: argstr=%s", str_from(str).c_str());
-        DEBUG(Network, "Cliloc: 0x%08X len=%i arg=%s", cliloc, len, str_from(argument).c_str());
 
         bool canAdd = true;
         for (const wstr_t &tempStr : list)
@@ -4229,7 +4229,7 @@ PACKET_HANDLER(MegaCliloc)
         g_ObjectPropertiesManager.Reset();
     }
 
-    if (inBuyList && (container->Serial != 0u))
+    if (inBuyList && container->Serial != 0u)
     {
         CGumpShop *gump = (CGumpShop *)g_GumpManager.GetGump(container->Serial, 0, GT_SHOP);
         if (gump != nullptr)

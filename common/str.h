@@ -101,9 +101,10 @@ void str_init()
 
 void str_terminate()
 {
-    for (int e = 0; e < sizeof(s_encodings); e++)
+    constexpr auto count = sizeof(s_encodings) / sizeof(s_encodings[0]);
+    for (int e = 0; e < count; e++)
     {
-        //miniconv_close(*s_encodings[e]);
+        miniconv_close(*s_encodings[e]);
     }
 }
 

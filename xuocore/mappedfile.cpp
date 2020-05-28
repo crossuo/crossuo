@@ -262,12 +262,8 @@ astr_t CDataReader::ReadString(size_t size, const intptr_t &offset)
     }
 
     auto *buf = (char *)alloca(size + 1);
-    if (ptr >= Start && ptr + size <= End)
-    {
-        ReadDataLE((uint8_t *)buf, size, offset);
-    }
+    ReadDataLE((uint8_t *)buf, size, offset);
     buf[size] = '\0';
-
     return { buf };
 }
 
@@ -294,27 +290,28 @@ wstr_t CDataReader::ReadWString(size_t size, bool bigEndian, const intptr_t &off
         }
     }
 
-    auto *buf = (wchar_t *)alloca((size + 1) * sizeof(wchar_t));
+    wstr_t result;
     if (ptr >= Start && ptr + size <= End)
     {
+        result.reserve(size);
         if (bigEndian)
         {
             for (int i = 0; i < (int)size; i++)
             {
-                buf[i] = (wchar_t)ReadInt16BE(offset);
+                wchar_t c = ReadInt16BE(offset) & 0xffff;
+                result.push_back(c);
             }
         }
         else
         {
             for (int i = 0; i < (int)size; i++)
             {
-                buf[i] = (wchar_t)ReadInt16LE(offset);
+                wchar_t c = ReadInt16LE(offset) & 0xffff;
+                result.push_back(c);
             }
         }
     }
-    buf[size] = 0;
-
-    return { buf };
+    return result;
 }
 
 wstr_t CDataReader::ReadWStringLE(size_t size, const intptr_t &offset)
