@@ -118,7 +118,7 @@ bool CSpeechManager::LoadSpeech()
                 {
                     if (temp.length() != 0u)
                     {
-                        code = std::stoi(temp);
+                        code = str_to_int(temp);
                         temp = {};
                     }
                 }

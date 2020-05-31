@@ -52,6 +52,7 @@ public:
     void ChangeConsoleMessage(bool next);
     void ClearStack();
     wstr_t GetLastConsoleText();
+    virtual bool Insert(char16_t ch, CGump *gump = nullptr) override;
 
     static bool ConsoleTypeIsEmpty(GAME_CONSOLE_TEXT_TYPE type);
     static void DeleteConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type);

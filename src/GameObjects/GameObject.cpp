@@ -212,9 +212,8 @@ void CGameObject::GenerateObjectHandlesTexture(wstr_t text)
         text = g_FontManager.GetTextByWidthW(font, text, width - 6, true);
     }
 
-    std::vector<uint32_t> textData = g_FontManager.GeneratePixelsW(
-        font, textTexture, text.c_str(), color, cell, width, tat, flags);
-
+    auto textData =
+        g_FontManager.GeneratePixelsW(font, textTexture, text, color, cell, width, tat, flags);
     if (textData.empty())
     {
         return;

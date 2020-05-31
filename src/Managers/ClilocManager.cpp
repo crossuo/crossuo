@@ -265,7 +265,7 @@ wstr_t CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstr
 
         if (arguments[i].length() > 1 && *arguments[i].c_str() == L'#')
         {
-            uint32_t id = std::stoi(arguments[i].c_str() + 1);
+            uint32_t id = str_to_int(arguments[i].c_str() + 1);
             arguments[i] = Cliloc(g_Language)->GetW(id, toCamelCase);
         }
 

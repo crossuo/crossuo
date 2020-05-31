@@ -307,7 +307,7 @@ void CDECL FUNCBODY_SendUnicodeSpeech(const wchar_t *text, unsigned short color)
         color = g_ConfigManager.SpeechColor;
     }
 
-    CPacketUnicodeSpeechRequest packet(text, ST_NORMAL, 3, color, (uint8_t *)g_Language.c_str());
+    CPacketUnicodeSpeechRequest packet(text, ST_NORMAL, 3, color, g_Language);
     UOMsg_Send(packet.Data().data(), packet.Data().size());
 }
 
