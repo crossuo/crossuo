@@ -77,6 +77,7 @@ const astr_t &str_from(const astr_t &aStr);
 
 astr_t str_trim(const astr_t &aStr);
 int str_to_int(const astr_t &aStr);
+int str_to_int(const wstr_t &aWstr);
 const char *str_lower(const char *aCStr);
 astr_t str_lower(astr_t aStr);
 astr_t str_upper(astr_t aStr);
@@ -391,7 +392,12 @@ bool str_to_bool(const astr_t &aStr)
 
 int str_to_int(const astr_t &aStr)
 {
-    return atoi(aStr.c_str());
+    return std::stoi(aStr);
+}
+
+int str_to_int(const wstr_t &aWstr)
+{
+    return std::stoi(aWstr);
 }
 
 astr_t str_from(int val)

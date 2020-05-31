@@ -42,7 +42,7 @@ public:
     int GetLinesCountW(
         uint8_t font, TEXT_ALIGN_TYPE align = TS_LEFT, uint16_t flags = 0, int width = 0);
 
-    bool Insert(char16_t ch, CGump *gump = nullptr);
+    virtual bool Insert(char16_t ch, CGump *gump = nullptr);
     void Remove(bool left, CGump *gump = nullptr);
     void RemoveSequence(int startPos, int length);
     void AddPos(int val, CGump *gump = nullptr);

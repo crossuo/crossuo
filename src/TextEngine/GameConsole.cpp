@@ -13,21 +13,21 @@
 CGameConsole g_GameConsole;
 
 static const char *s_ConsolePrefix[] = {
-    "",    //Normal
-    "! ",  //Yell
-    "; ",  //Whisper
-    ": ",  //Emote
-    ". ",  //Command
-    "? ",  //Broadcast
-    "/ ",  //Party
-    "\\ ", //Guild
-    "| ",  //Alliance
+    "",   //Normal
+    "! ", //Yell
+    "; ", //Whisper
+    ": ", //Emote
+    ".",  //Command
+    "?",  //Broadcast
+    "/",  //Party
+    "\\", //Guild
+    "|",  //Alliance
 };
 
-static wstr_t DecomposeCommand(const wstr_t &text, int &member, GAME_CONSOLE_TEXT_TYPE &type)
+static wstr_t GetConsolePrefixAndType(const wstr_t &text, int &member, GAME_CONSOLE_TEXT_TYPE &type)
 {
     type = GCTT_NORMAL;
-    wstr_t result = {};
+    wstr_t result;
 
     const auto len = text.size();
     auto astr = str_from(text);
@@ -44,8 +44,8 @@ static wstr_t DecomposeCommand(const wstr_t &text, int &member, GAME_CONSOLE_TEX
         if (ptr < atext + len)
         {
             int i = 0;
-            sscanf(ptr, "%i", &i);
-            if (i > 0 && i < 11) // Party mebmer
+            (void)sscanf(ptr, "%i", &i);
+            if (i > 0 && i < 11) // Party member
             {
                 char pmBuf[50];
                 if (g_Party.Member[i - 1].Serial != 0)
@@ -91,7 +91,7 @@ static wstr_t DecomposeCommand(const wstr_t &text, int &member, GAME_CONSOLE_TEX
             result = L"Party:";
         }
 
-        if (type == GCTT_NORMAL && (result.length() == 0u))
+        if (type == GCTT_NORMAL && result.length() == 0u)
         {
             result = L"Party:";
             type = GCTT_PARTY;
@@ -115,7 +115,7 @@ static wstr_t DecomposeCommand(const wstr_t &text, int &member, GAME_CONSOLE_TEX
     else if (
         g_Player->Graphic == 0x03DB && (*atext == '=' || aprefix == s_ConsolePrefix[GCTT_C][0]))
     {
-        result = L"C:";
+        result = L"Command:";
         type = GCTT_C;
     }
     else if (aprefix == s_ConsolePrefix[GCTT_BROADCAST][0])
@@ -134,148 +134,142 @@ static wstr_t DecomposeCommand(const wstr_t &text, int &member, GAME_CONSOLE_TEX
         type = GCTT_ALLIANCE;
     }
 
-    return result;
+    return result + L" ";
 }
 
 void SendConsoleText(wstr_t text, uint16_t defaultColor)
 {
     const size_t len = text.length();
-    if (len != 0u)
-    {
-        SPEECH_TYPE speechType = ST_NORMAL;
-        uint16_t sendColor = g_ConfigManager.SpeechColor;
-        int offset = 0;
-        if (len > 1)
-        {
-            int member = -1;
-            GAME_CONSOLE_TEXT_TYPE type = GCTT_NORMAL;
-            (void)DecomposeCommand(text, member, type);
-            if ((type != GCTT_NORMAL && len > 2) || type == GCTT_PARTY)
-            {
-                if (type == GCTT_YELL)
-                {
-                    speechType = ST_YELL;
-                    offset = 2;
-                }
-                else if (type == GCTT_WHISPER)
-                {
-                    speechType = ST_WHISPER;
-                    offset = 2;
-                }
-                else if (type == GCTT_EMOTE)
-                {
-                    text = text.replace(0, 2, L": *").append(L"*");
-                    speechType = ST_EMOTE;
-                    sendColor = g_ConfigManager.EmoteColor;
-                    offset = 2;
-                }
-                else if (type == GCTT_GUILD)
-                {
-                    speechType = ST_GUILD_CHAT;
-                    sendColor = g_ConfigManager.GuildMessageColor;
-                    offset = 2;
-                }
-                else if (type == GCTT_ALLIANCE)
-                {
-                    sendColor = g_ConfigManager.AllianceMessageColor;
-                    speechType = ST_ALLIANCE_CHAT;
-                    offset = 2;
-                }
-                else if (type == GCTT_PARTY)
-                {
-                    uint32_t serial = 0;
-                    offset = 1;
-                    sendColor = g_ConfigManager.PartyMessageColor;
-                    if (member != -1)
-                    {
-                        serial = g_Party.Member[member].Serial;
-                    }
+    if (len == 0)
+        return;
 
-                    if (g_Party.Leader != 0)
-                    {
-                        CPacketPartyMessage(text.c_str() + offset, len - offset, serial).Send();
-                    }
-                    else
-                    {
-                        astr_t str = "Note to self: " + str_from(text.c_str() + offset);
-                        g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
-                    }
-                    return;
-                }
-                else if (type == GCTT_PARTY_ACCEPT)
+    SPEECH_TYPE speechType = ST_NORMAL;
+    uint16_t sendColor = g_ConfigManager.SpeechColor;
+    int offset = 0;
+    if (len > 1)
+    {
+        int member = -1;
+        GAME_CONSOLE_TEXT_TYPE type = GCTT_NORMAL;
+        (void)GetConsolePrefixAndType(text, member, type);
+        offset = strlen(s_ConsolePrefix[type]);
+        if ((type != GCTT_NORMAL && len > 2) || type == GCTT_PARTY)
+        {
+            if (type == GCTT_YELL)
+            {
+                speechType = ST_YELL;
+            }
+            else if (type == GCTT_WHISPER)
+            {
+                speechType = ST_WHISPER;
+            }
+            else if (type == GCTT_EMOTE)
+            {
+                text = text.replace(0, offset, L": *").append(L"*");
+                speechType = ST_EMOTE;
+                sendColor = g_ConfigManager.EmoteColor;
+            }
+            else if (type == GCTT_GUILD)
+            {
+                speechType = ST_GUILD_CHAT;
+                sendColor = g_ConfigManager.GuildMessageColor;
+            }
+            else if (type == GCTT_ALLIANCE)
+            {
+                sendColor = g_ConfigManager.AllianceMessageColor;
+                speechType = ST_ALLIANCE_CHAT;
+            }
+            else if (type == GCTT_PARTY)
+            {
+                uint32_t serial = 0;
+                sendColor = g_ConfigManager.PartyMessageColor;
+                if (member != -1)
                 {
-                    if (g_Party.Inviter != 0 && g_Party.Leader == 0)
-                    {
-                        CPacketPartyAccept(g_Party.Inviter).Send();
-                        g_Party.Leader = g_Party.Inviter;
-                        g_Party.Inviter = 0;
-                    }
-                    else
-                    {
-                        g_Game.CreateTextMessage(
-                            TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
-                    }
-                    return;
+                    serial = g_Party.Member[member].Serial;
                 }
-                else if (type == GCTT_PARTY_DECLINE)
+
+                text.erase(0, offset);
+                if (g_Party.Leader != 0)
                 {
-                    if (g_Party.Inviter != 0 && g_Party.Leader == 0)
-                    {
-                        CPacketPartyDecline(g_Party.Inviter).Send();
-                        g_Party.Leader = 0;
-                        g_Party.Inviter = 0;
-                    }
-                    else
-                    {
-                        g_Game.CreateTextMessage(
-                            TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
-                    }
-                    return;
+                    CPacketPartyMessage(text.c_str(), len - offset, serial).Send();
                 }
-                else if (type == GCTT_PARTY_ADD)
+                else
                 {
-                    if (g_Party.Leader == 0 || g_Party.Leader == g_PlayerSerial)
-                    {
-                        CPacketPartyInviteRequest().Send();
-                    }
-                    else
-                    {
-                        g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "You are not party leader.");
-                    }
-                    return;
+                    astr_t str = "Note to self: " + str_from(text);
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, str);
                 }
-                else if (type == GCTT_PARTY_LEAVE)
+                return;
+            }
+            else if (type == GCTT_PARTY_ACCEPT)
+            {
+                if (g_Party.Inviter != 0 && g_Party.Leader == 0)
                 {
-                    if (g_Party.Leader != 0)
+                    CPacketPartyAccept(g_Party.Inviter).Send();
+                    g_Party.Leader = g_Party.Inviter;
+                    g_Party.Inviter = 0;
+                }
+                else
+                {
+                    g_Game.CreateTextMessage(
+                        TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
+                }
+                return;
+            }
+            else if (type == GCTT_PARTY_DECLINE)
+            {
+                if (g_Party.Inviter != 0 && g_Party.Leader == 0)
+                {
+                    CPacketPartyDecline(g_Party.Inviter).Send();
+                    g_Party.Leader = 0;
+                    g_Party.Inviter = 0;
+                }
+                else
+                {
+                    g_Game.CreateTextMessage(
+                        TT_SYSTEM, 0, 3, 0, "No one has invited you to be in a party.");
+                }
+                return;
+            }
+            else if (type == GCTT_PARTY_ADD)
+            {
+                if (g_Party.Leader == 0 || g_Party.Leader == g_PlayerSerial)
+                {
+                    CPacketPartyInviteRequest().Send();
+                }
+                else
+                {
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "You are not party leader.");
+                }
+                return;
+            }
+            else if (type == GCTT_PARTY_LEAVE)
+            {
+                if (g_Party.Leader != 0)
+                {
+                    for (int i = 0; i < 10; i++)
                     {
-                        for (int i = 0; i < 10; i++)
+                        if (g_Party.Member[i].Serial != 0)
                         {
-                            if (g_Party.Member[i].Serial != 0)
-                            {
-                                CPacketPartyRemoveRequest(g_Party.Member[i].Serial).Send();
-                            }
+                            CPacketPartyRemoveRequest(g_Party.Member[i].Serial).Send();
                         }
                     }
-                    else
-                    {
-                        g_Game.CreateTextMessage(
-                            TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
-                    }
-                    return;
                 }
+                else
+                {
+                    g_Game.CreateTextMessage(
+                        TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
+                }
+                return;
             }
         }
-
-        if (defaultColor != 0u)
-        {
-            sendColor = defaultColor;
-        }
-
-        // FIXME: fix how the string is passed, string view probably is best
-        CPacketUnicodeSpeechRequest(
-            text.c_str() + offset, speechType, 3, sendColor, (uint8_t *)g_Language.c_str())
-            .Send();
     }
+
+    if (defaultColor != 0u)
+    {
+        sendColor = defaultColor;
+    }
+
+    text.erase(0, offset);
+    CPacketUnicodeSpeechRequest(text, speechType, 3, sendColor, g_Language).Send();
 }
 
 CGameConsole::CGameConsole()
@@ -305,7 +299,6 @@ bool CGameConsole::InChat() const
 void CGameConsole::DrawW(
     uint8_t font, uint16_t color, int x, int y, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
-    int posOffset = 0;
     wstr_t wtext = GetTextW();
     if (wtext.empty())
     {
@@ -317,27 +310,19 @@ void CGameConsole::DrawW(
         FixMaxWidthW(font);
     }
 
-    const size_t len = Length();
-    if (len >= 2)
+    int member = 0;
+    const auto sysStr = GetConsolePrefixAndType(wtext, member, m_Type);
+    const auto offset = strlen(s_ConsolePrefix[m_Type]);
+    const bool expand = offset && wtext.size() >= offset &&
+                        (char)wtext[offset - 1] == s_ConsolePrefix[m_Type][offset - 1];
+    if (!sysStr.empty() && expand)
     {
-        const auto *text = wtext.c_str();
-        int member = 0;
-        auto sysStr = DecomposeCommand(text, member, m_Type);
-        if (!sysStr.empty())
-        {
-            posOffset = g_FontManager.GetWidthW(font, sysStr);
-            // FIXME: ?!?
-            wchar_t trimPart[2] = L" ";
-            *trimPart = *text;
-            posOffset -= g_FontManager.GetWidthW(font, trimPart);
-            sysStr += (text + 1);
-            wtext = sysStr;
-        }
+        wtext = sysStr + &wtext.c_str()[offset]; // remove prefix
     }
 
     if (Changed || Color != color)
     {
-        CheckMaxWidthW(font, wtext);
+        (void)CheckMaxWidthW(font, wtext);
         CreateTextureW(font, wtext, color, Width, align, flags);
         Changed = false;
         Color = color;
@@ -348,8 +333,7 @@ void CGameConsole::DrawW(
     {
         if (m_Position != 0)
         {
-            wtext.resize(m_Position);
-            x += (g_FontManager.GetWidthW(font, wtext) + posOffset);
+            x += g_FontManager.GetWidthW(font, wtext);
         }
         g_FontManager.DrawW(font, L"_", color, x, y, 30, 0, align, UOFONT_BLACK_BORDER);
     }
@@ -365,6 +349,23 @@ void CGameConsole::SaveConsoleMessage()
     }
     m_ConsoleSelectedIndex = (m_ConsoleStackCount - 1) % MAX_CONSOLE_STACK_SIZE;
     m_PositionChanged = false;
+}
+
+bool CGameConsole::Insert(char16_t ch, CGump *gump)
+{
+    // For Parity with original client, when the first console character
+    // is the prefix for Party, Guild or Alliance, they can be automatically
+    // replaced between each of them so communication is easier
+    auto replacable = [](auto c) -> bool {
+        return (char)c == s_ConsolePrefix[GCTT_PARTY][0] ||
+               (char)c == s_ConsolePrefix[GCTT_GUILD][0] ||
+               (char)c == s_ConsolePrefix[GCTT_ALLIANCE][0];
+    };
+    if (WText.size() == 1 && replacable(WText[0]) && replacable(ch))
+    {
+        WText.clear();
+    }
+    return CEntryText::Insert(ch, gump);
 }
 
 void CGameConsole::ChangeConsoleMessage(bool next)
@@ -408,6 +409,7 @@ void CGameConsole::ClearStack()
     m_ConsoleSelectedIndex = 0;
     m_PositionChanged = false;
 }
+
 wstr_t CGameConsole::GetLastConsoleText()
 {
     return m_ConsoleStack[m_ConsoleStackCount - 1];

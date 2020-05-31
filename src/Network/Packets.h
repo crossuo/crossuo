@@ -139,7 +139,11 @@ class CPacketUnicodeSpeechRequest : public CPacket
 {
 public:
     CPacketUnicodeSpeechRequest(
-        const wchar_t *text, SPEECH_TYPE type, uint16_t font, uint16_t color, uint8_t *language);
+        const wstr_t &text,
+        SPEECH_TYPE type,
+        uint16_t font,
+        uint16_t color,
+        const astr_t &language);
 };
 
 class CPacketCastSpell : public CPacket

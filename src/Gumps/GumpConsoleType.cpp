@@ -82,17 +82,17 @@ void CGumpConsoleType::InitToolTip()
         }
         case ID_GCT_COMMAND:
         {
-            g_ToolTip.Set(L"Command entry mode\nprefix is '. '");
+            g_ToolTip.Set(L"Command entry mode\nprefix is '.'");
             break;
         }
         case ID_GCT_BROADCAST:
         {
-            g_ToolTip.Set(L"Broadcast entry mode\nprefix is '? '");
+            g_ToolTip.Set(L"Broadcast entry mode\nprefix is '?'");
             break;
         }
         case ID_GCT_PARTY:
         {
-            g_ToolTip.Set(L"Party entry mode\nprefix is '/ '");
+            g_ToolTip.Set(L"Party entry mode\nprefix is '/'");
             break;
         }
         case ID_GCT_MINIMIZE:

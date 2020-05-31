@@ -388,15 +388,15 @@ CPacketASCIISpeechRequest::CPacketASCIISpeechRequest(
 
 // TODO: check this implementation
 CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
-    const wchar_t *text, SPEECH_TYPE type, uint16_t font, uint16_t color, uint8_t *language)
+    const wstr_t &text, SPEECH_TYPE type, uint16_t font, uint16_t color, const astr_t &language)
     : CPacket(1)
 {
-    size_t len = lstrlenW(text);
+    size_t len = text.size();
     size_t size = 12;
     uint8_t typeValue = (uint8_t)type;
 
     std::vector<uint32_t> codes;
-    auto str = wstr_t(text);
+    auto str = text;
     g_SpeechManager.GetKeywords(str, codes);
 
     const bool encoded = !codes.empty();
@@ -454,7 +454,7 @@ CPacketUnicodeSpeechRequest::CPacketUnicodeSpeechRequest(
     WriteUInt8(typeValue);
     WriteUInt16BE(color);
     WriteUInt16BE(font);
-    WriteDataLE(language, 4);
+    WriteDataLE((uint8_t *)language.c_str(), 4);
 
     //Sallos aka PlayUO algorithm
     if (encoded)

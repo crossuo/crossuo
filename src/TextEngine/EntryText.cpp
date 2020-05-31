@@ -180,7 +180,7 @@ bool CEntryText::Insert(char16_t ch, CGump *gump)
         {
             auto str = WText;
             str.insert(str.begin() + m_Position, ch);
-            if (std::stoi(str) >= MaxLength)
+            if (str_to_int(str) >= MaxLength)
             {
                 return false;
             }
