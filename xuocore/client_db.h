@@ -326,5 +326,7 @@ static client_info client_db[] = {
     { 0x2297f8427d221836, 0x08b12179, 0x0700550f },
     { 0xe9bca21b772a304b, 0x6e039160, 0x07000900 },
     { 0xfd9167ec1c3bee42, 0xae49354c, 0x07000901 },
+    // modified clients
+    { 0x00000000cc581c75, 0xe1d17eaf, 0x0600010a }, // Issue #220
     { 0, 0, 0 },
 };
