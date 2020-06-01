@@ -44,7 +44,7 @@ public:
         int x,
         int y,
         TEXT_ALIGN_TYPE align = TS_LEFT,
-        uint16_t flags = 0);
+        uint16_t flags = 0) override;
 
     bool InChat() const;
     void Send();
