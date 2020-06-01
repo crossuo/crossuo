@@ -125,6 +125,7 @@ enum
     // Chat Page
     ID_GO_P4_TEXT_FONT,
     ID_GO_P4_TEXT_COLOR,
+    ID_GO_P4_TEXT_LAST = ID_GO_P4_TEXT_COLOR + 15,
 
     // Macro Options Page
     ID_GO_P5_BUTTON_ADD,
