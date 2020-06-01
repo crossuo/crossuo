@@ -142,8 +142,11 @@ enum CLIENT_VERSION
     CV_70180 = VERSION(7, 0, 18, 0), //
     CV_70240 = VERSION(7, 0, 24, 0), // *.mul -> *.uop
     CV_70331 = VERSION(7, 0, 33, 1), //
+    //CV_70600 = VERSION(7, 0, 60, 0), //
     CV_70611 = VERSION(7, 0, 61, 1), // login screen Endless Journey 7.0.61.1
-    CV_LATEST = CV_70331,
+    //CV_70640 = VERSION(7, 0, 64, 0), //
+    CV_70796 = VERSION(7, 0, 79, 6), // Display houses content option
+    CV_LATEST = CV_70796,
 };
 
 enum CONNECTION_SCREEN_TYPE
