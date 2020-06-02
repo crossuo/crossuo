@@ -1522,24 +1522,22 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
 
     if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
     {
-        if (!g_ConfigManager.Load(g_App.UOFilesPath("%s/%s", buf, "options.cfg")))
+        g_ConfigManager.Init();
+        if (g_GameState >= GS_GAME)
         {
-            g_ConfigManager.Init();
-            if (g_GameState >= GS_GAME)
-            {
-                g_GameWindow.MaximizeWindow();
-            }
+            g_GameWindow.MaximizeWindow();
         }
     }
 
-    if (!g_SkillGroupManager.Load(g_App.ExeFilePath("skills.cuo")))
+    if (!g_SkillGroupManager.Load(g_App.ExeFilePath("skills.xuo")))
     {
-        g_SkillGroupManager.Load(g_App.UOFilesPath("skills.cuo"));
+        g_SkillGroupManager.Load(g_App.ExeFilePath("skills.cuo"));
     }
 
-    if (!g_MacroManager.Load(
-            g_App.ExeFilePath("%s/%s", buf, "macros.cuo"),
-            g_App.ExeFilePath("%s/%s", buf, "macros.txt")))
+    auto macros_xuo = g_App.ExeFilePath("%s/%s", buf, "macros.xuo");
+    auto macros_cuo = g_App.ExeFilePath("%s/%s", buf, "macros.cuo");
+    auto macros_data = fs_path_exists(macros_xuo) ? macros_xuo : macros_cuo;
+    if (!g_MacroManager.Load(macros_data, g_App.UOFilesPath("macros.txt")))
     {
         char buf2[FS_MAX_PATH] = { 0 };
         if (server != nullptr)
@@ -1555,17 +1553,19 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         {
             sprintf_s(buf2, "desktop/%s/%s", acct.c_str(), characterName.c_str());
         }
-
-        if (!g_MacroManager.Load(
-                g_App.ExeFilePath("%s/%s", buf2, "macros.cuo"),
-                g_App.ExeFilePath("%s/%s", buf2, "macros.txt")))
-        {
-            g_MacroManager.Load(g_App.UOFilesPath("macros.cuo"), g_App.UOFilesPath("macros.txt"));
-        }
     }
 
-    g_GumpManager.Load(g_App.ExeFilePath("%s/%s", buf, "gumps.cuo"));
-    g_CustomHousesManager.Load(g_App.ExeFilePath("%s/%s", buf, "customhouses.cuo"));
+    const auto gumps_xuo = g_App.ExeFilePath("%s/%s", buf, "gumps.xuo");
+    const auto gumps_cuo = g_App.ExeFilePath("%s/%s", buf, "gumps.cuo");
+    const auto gumps_data = fs_path_exists(gumps_xuo) ? gumps_xuo : gumps_cuo;
+    g_GumpManager.Load(gumps_data);
+
+    const auto customhouses_xuo = g_App.ExeFilePath("%s/%s", buf, "customhouses.xuo");
+    const auto customhouses_cuo = g_App.ExeFilePath("%s/%s", buf, "customhouses.cuo");
+    const auto customhouses_data =
+        fs_path_exists(customhouses_xuo) ? customhouses_xuo : customhouses_cuo;
+    g_CustomHousesManager.Load(customhouses_data);
+
     if (g_ConfigManager.OffsetInterfaceWindows)
     {
         g_ContainerRect.MakeDefault();
@@ -1638,20 +1638,16 @@ void CGame::SaveLocalConfig(int serial)
 
     Info(Client, "managers:saving");
     g_ConfigManager.Save(fs_path_join(path, "options.cfg"));
-    g_SkillGroupManager.Save(fs_path_join(path, "skills.cuo"));
-    g_MacroManager.Save(fs_path_join(path, "macros.cuo"));
-    g_GumpManager.Save(fs_path_join(path, "gumps.cuo"));
-    g_CustomHousesManager.Save(fs_path_join(path, "customhouses.cuo"));
-
-    Info(Client, "managers:saving in to root");
-    g_ConfigManager.Save(g_App.UOFilesPath("options.cfg"));
-    g_MacroManager.Save(g_App.UOFilesPath("macros.cuo"));
+    g_SkillGroupManager.Save(fs_path_join(path, "skills.xuo"));
+    g_MacroManager.Save(fs_path_join(path, "macros.xuo"));
+    g_GumpManager.Save(fs_path_join(path, "gumps.xuo"));
+    g_CustomHousesManager.Save(fs_path_join(path, "customhouses.xuo"));
 
     if (g_Player != nullptr)
     {
         Info(Client, "player exists");
         Info(Client, "name len: %zd", g_Player->GetName().length());
-        path = fs_path_join(root, astr_t(serbuf) + "_" + g_Player->GetName() + ".cuo");
+        path = fs_path_join(root, astr_t(serbuf) + "_" + g_Player->GetName() + ".xuo");
         if (!fs_path_exists(path))
         {
             Info(Client, "file saving");
@@ -4113,7 +4109,7 @@ void CGame::IndexReplaces()
                 continue;
             }
 
-            auto newArt = newDataParser.GetTokens(strings[1].c_str());
+            auto newArt = newDataParser.GetTokens(strings[1]);
             int size = (int)newArt.size();
             for (int i = 0; i < size; i++)
             {
@@ -4165,7 +4161,7 @@ void CGame::IndexReplaces()
                 continue;
             }
 
-            auto newTexture = newDataParser.GetTokens(strings[1].c_str());
+            auto newTexture = newDataParser.GetTokens(strings[1]);
             const int size = (int)newTexture.size();
             for (int i = 0; i < size; i++)
             {
@@ -4201,7 +4197,7 @@ void CGame::IndexReplaces()
                 continue;
             }
 
-            auto newGump = newDataParser.GetTokens(strings[1].c_str());
+            auto newGump = newDataParser.GetTokens(strings[1]);
             const int size = (int)newGump.size();
             for (int i = 0; i < size; i++)
             {
@@ -4233,7 +4229,7 @@ void CGame::IndexReplaces()
                 continue;
             }
 
-            auto newMulti = newDataParser.GetTokens(strings[1].c_str());
+            auto newMulti = newDataParser.GetTokens(strings[1]);
             const int size = (int)newMulti.size();
             for (int i = 0; i < size; i++)
             {
@@ -4262,7 +4258,7 @@ void CGame::IndexReplaces()
                 continue;
             }
 
-            auto newSound = newDataParser.GetTokens(strings[1].c_str());
+            auto newSound = newDataParser.GetTokens(strings[1]);
             const int size = (int)newSound.size();
             for (int i = 0; i < size; i++)
             {

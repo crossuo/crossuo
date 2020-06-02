@@ -1615,7 +1615,7 @@ uint32_t CFontsManager::GetHTMLColorFromText(astr_t &str1)
 void CFontsManager::GetHTMLInfoFromContent(HTML_DATA_INFO &info, const astr_t &content)
 {
     Wisp::CTextFileParser parser({}, " =", "", "\"\"");
-    auto strings = parser.GetTokens(content.c_str());
+    auto strings = parser.GetTokens(content);
     int size = (int)strings.size();
     for (int i = 0; i < size; i += 2)
     {

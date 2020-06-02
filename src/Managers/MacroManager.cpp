@@ -25,6 +25,7 @@
 #include "../Gumps/GumpSpellbook.h"
 #include "../Network/Packets.h"
 #include "../Walker/PathFinder.h"
+#include <algorithm>
 
 CMacroManager g_MacroManager;
 
@@ -216,18 +217,25 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<astr_t> &strings
 bool CMacroManager::Convert(const fs_path &path)
 {
     Wisp::CTextFileParser file(path, "", "", "");
-    Wisp::CTextFileParser unicodeParser({}, " ", "", "");
+    Wisp::CTextFileParser lineParser({}, " ", "", "");
 
     const int MACRO_POSITION_ALT = 2;
     const int MACRO_POSITION_CTRL = 3;
     const int MACRO_POSITION_SHIFT = 1;
 
+    astr_t macroArgs[CMacro::MACRO_ACTION_COUNT];
+    for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
+    {
+        auto v = str_upper(CMacro::m_MacroAction[i]);
+        v.erase(std::remove_if(v.begin(), v.end(), isspace), v.end());
+        macroArgs[i] = v;
+    }
+
     while (!file.IsEOF())
     {
-        std::vector<astr_t> strings = file.ReadTokens();
-        strings = unicodeParser.GetTokens(file.RawLine.c_str(), false);
-        size_t size = strings.size();
-
+        (void)file.ReadTokens(true);
+        auto strings = lineParser.GetTokens(file.RawLine, false);
+        const size_t size = strings.size();
         if (size == 0u)
         {
             continue;
@@ -241,25 +249,17 @@ bool CMacroManager::Convert(const fs_path &path)
 
         //TPRINT("Key: %s [alt=%i ctrl=%i shift=%i]", strings[0].c_str(), str_to_int(strings[MACRO_ALT_POSITION].c_str()), atoi(strings[MACRO_CTRL_POSITION].c_str()), atoi(strings[MACRO_SHIFT_POSITION]));
         bool macroAdded = false;
-
         CMacro *macro = new CMacro(
             ConvertStringToKeyCode(strings),
             str_to_int(strings[size - MACRO_POSITION_ALT]) != 0,
             str_to_int(strings[size - MACRO_POSITION_CTRL]) != 0,
             str_to_int(strings[size - MACRO_POSITION_SHIFT]) != 0);
 
-        astr_t TestLine{};
         while (!file.IsEOF())
         {
-            std::vector<astr_t> datas = file.ReadTokens();
-            TestLine.append(file.RawLine);
-            if ((*file.RawLine.c_str() != '\n') && (*file.RawLine.c_str() != '\r') &&
-                (!file.RawLine.empty()) && (*file.RawLine.c_str() != '#'))
-            {
-                continue;
-            }
-            std::vector<astr_t> data = unicodeParser.GetTokens(TestLine.c_str(), false);
-            TestLine = "";
+            (void)file.ReadTokens(true);
+            const char *line = file.RawLine.c_str();
+            std::vector<astr_t> data = lineParser.GetTokens(file.RawLine, false);
             if (data.empty())
             {
                 continue;
@@ -272,13 +272,18 @@ bool CMacroManager::Convert(const fs_path &path)
             }
             if (*data[0].c_str() == '+')
             {
-                astr_t raw = data[0].c_str() + 1;
-                data[0] = raw;
+                astr_t token;
+                for (int i = 1; i < file.RawLine.size(); i += 2)
+                {
+                    if (line[i] == '#' || line[i] == '\0' || line[i] == '\n')
+                        break;
+                    token += line[i];
+                }
+                data = lineParser.GetTokens(token, false);
             }
 
-            auto upData = str_upper(data[0]);
             MACRO_CODE code = MC_NONE;
-
+            auto upData = str_upper(data[0]);
             for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
             {
                 if (upData == str_upper(CMacro::m_MacroActionName[i]))
@@ -292,7 +297,7 @@ bool CMacroManager::Convert(const fs_path &path)
             if (code != MC_NONE)
             {
                 CMacroObject *obj = CMacro::CreateMacro(code);
-                if (obj->HaveString()) //Аргументы - строка
+                if (obj->HaveString())
                 {
                     if (data.size() > 1)
                     {
@@ -301,26 +306,22 @@ bool CMacroManager::Convert(const fs_path &path)
                         {
                             args += " " + data[i];
                         }
-
                         TRACE(Client, "\tsub action string is: %s", args.c_str());
-
                         ((CMacroObjectString *)obj)->m_String = args;
                     }
                 }
-                else if (data.size() > 1) //Аргументы - код (значение), либо просто код макроса
+                else if (data.size() > 1)
                 {
                     upData = data[1];
-
                     for (int i = 2; i < (int)data.size(); i++)
                     {
                         upData += " " + data[i];
                     }
 
                     upData = str_upper(upData);
-
                     for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
                     {
-                        if (upData == str_upper(CMacro::m_MacroAction[i]))
+                        if (upData == macroArgs[i])
                         {
                             obj->SubCode = (MACRO_SUB_CODE)i;
                             TRACE(

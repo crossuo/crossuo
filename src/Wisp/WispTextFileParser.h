@@ -51,7 +51,7 @@ public:
     bool IsEOF();
 
     std::vector<astr_t> ReadTokens(bool trim = true);
-    std::vector<astr_t> GetTokens(const char *str, bool trim = true);
+    std::vector<astr_t> GetTokens(const astr_t &str, bool trim = true);
 };
 
 class CTextFileWriter
