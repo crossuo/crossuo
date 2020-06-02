@@ -4805,7 +4805,7 @@ PACKET_HANDLER(OpenGump)
     Wisp::CTextFileParser cmdParser({}, " ", "", "");
     Wisp::CTextFileParser tilepicGraphicParser({}, ",", "", "");
 
-    auto commandList = parser.GetTokens(commands.c_str());
+    auto commandList = parser.GetTokens(commands);
     CBaseGUI *lastGumpObject = nullptr;
 
     bool EntryChanged = false;
@@ -4815,7 +4815,7 @@ PACKET_HANDLER(OpenGump)
 
     for (const astr_t &str : commandList)
     {
-        auto list = cmdParser.GetTokens(str.c_str(), false);
+        auto list = cmdParser.GetTokens(str, false);
         const int listSize = (int)list.size();
         if (listSize == 0)
         {
@@ -5096,7 +5096,7 @@ PACKET_HANDLER(OpenGump)
                 int graphic = 0;
                 if (cmd == "tilepic")
                 {
-                    auto graphicList = tilepicGraphicParser.GetTokens(list[3].c_str());
+                    auto graphicList = tilepicGraphicParser.GetTokens(list[3]);
                     if (!graphicList.empty())
                     {
                         graphic = str_to_int(graphicList[0]);
@@ -5134,7 +5134,7 @@ PACKET_HANDLER(OpenGump)
                 if (listSize >= 5 && g_Config.ClientVersion >= CV_305D)
                 {
                     Wisp::CTextFileParser gumppicParser({}, "=", "", "");
-                    auto hueList = gumppicParser.GetTokens(list[4].c_str());
+                    auto hueList = gumppicParser.GetTokens(list[4]);
                     if (hueList.size() > 1)
                     {
                         color = str_to_int(hueList[1]);
@@ -5146,7 +5146,7 @@ PACKET_HANDLER(OpenGump)
 
                     if (listSize >= 6)
                     {
-                        auto classList = gumppicParser.GetTokens(list[5].c_str());
+                        auto classList = gumppicParser.GetTokens(list[5]);
                         if (hueList.size() > 1)
                         {
                             if (str_lower(classList[0]) == "class" &&
@@ -6435,7 +6435,7 @@ PACKET_HANDLER(CrossMessages)
                 for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
                 {
                     astr_t macroName = CMacro::m_MacroActionName[i];
-                    if (strcmp(name.c_str(), macroName.c_str()) == 0)
+                    if (name == macroName)
                     {
                         macroCode = (MACRO_CODE)i;
                         break;

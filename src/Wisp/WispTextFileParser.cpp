@@ -190,7 +190,7 @@ astr_t CTextFileParser::ObtainQuotedData()
             exit = true;
             m_Ptr++;
             uint8_t *ptr = m_Ptr;
-            while (ptr < m_EOL && (*ptr != 0u) && *ptr != '\n' && *ptr != endQuote)
+            while (ptr < m_EOL && *ptr != 0u && *ptr != '\n' && *ptr != endQuote)
             {
                 ptr++;
             }
@@ -198,7 +198,7 @@ astr_t CTextFileParser::ObtainQuotedData()
             size_t size = ptr - m_Ptr;
             if (size > 0)
             {
-                result.resize(size + 1);
+                result.resize(size);
                 memcpy(&result[0], &m_Ptr[0], size);
                 result[size] = 0;
                 for (int j = (int)size - 1; j >= 0 && result[j] == '\r'; j--)
@@ -234,7 +234,7 @@ void CTextFileParser::SaveRawLine()
         RawLine.resize(size, 0);
         memcpy(&RawLine[0], &m_Ptr[0], size);
 
-        while ((RawLine.length() != 0u) && (RawLine[size - 1] == '\r' || RawLine[size - 1] == '\n'))
+        while (RawLine.length() != 0u && (RawLine[size - 1] == '\r' || RawLine[size - 1] == '\n'))
         {
             RawLine.resize(RawLine.length() - 1);
         }
@@ -280,15 +280,15 @@ std::vector<astr_t> CTextFileParser::ReadTokens(bool trim)
     return result;
 }
 
-std::vector<astr_t> CTextFileParser::GetTokens(const char *str, bool trim)
+std::vector<astr_t> CTextFileParser::GetTokens(const astr_t &str, bool trim)
 {
     TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
     std::vector<astr_t> result;
 
     uint8_t *oldEnd = m_End;
-    m_Ptr = (uint8_t *)str;
-    m_End = (uint8_t *)str + strlen(str);
+    m_Ptr = (uint8_t *)str.c_str();
+    m_End = m_Ptr + str.size();
     m_EOL = m_End;
 
     SaveRawLine();

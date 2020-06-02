@@ -744,7 +744,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
         {
             uint16_t index = str_to_int(strings[0]);
 
-            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1].c_str());
+            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1]);
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
@@ -848,7 +848,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
         {
             uint16_t index = str_to_int(strings[0]);
 
-            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1].c_str());
+            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1]);
 
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
