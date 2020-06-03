@@ -24,13 +24,14 @@ class CGumpSpellbook : public CGump
 
 public:
     static const int MAX_SPELLS_COUNT = 64;
-    static const int SPELLBOOK_1_SPELLS_COUNT = 64;
-    static const int SPELLBOOK_2_SPELLS_COUNT = 17;
-    static const int SPELLBOOK_3_SPELLS_COUNT = 10;
-    static const int SPELLBOOK_4_SPELLS_COUNT = 6;
-    static const int SPELLBOOK_5_SPELLS_COUNT = 8;
-    static const int SPELLBOOK_6_SPELLS_COUNT = 16;
-    static const int SPELLBOOK_7_SPELLS_COUNT = 30;
+    static const int SPELLBOOK_1_SPELLS_COUNT = 64; // Magery
+    static const int SPELLBOOK_2_SPELLS_COUNT = 17; // Necromancy
+    static const int SPELLBOOK_3_SPELLS_COUNT = 10; // Chivalry
+    static const int SPELLBOOK_4_SPELLS_COUNT = 6;  // Bushido
+    static const int SPELLBOOK_5_SPELLS_COUNT = 8;  // Ninjitsu
+    static const int SPELLBOOK_6_SPELLS_COUNT = 16; // Spellweaving
+    static const int SPELLBOOK_7_SPELLS_COUNT = 16; // Mysticism
+    static const int SPELLBOOK_8_SPELLS_COUNT = 45; // Mastery
 
     static astr_t m_SpellName1[SPELLBOOK_1_SPELLS_COUNT][2];
     static const astr_t m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2];
@@ -38,7 +39,8 @@ public:
     static const astr_t m_SpellName4[SPELLBOOK_4_SPELLS_COUNT];
     static const astr_t m_SpellName5[SPELLBOOK_5_SPELLS_COUNT];
     static const astr_t m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2];
-    static const astr_t m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][2];
+    static const astr_t m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][3];
+    static const astr_t m_SpellName8[SPELLBOOK_8_SPELLS_COUNT][3];
 
     static astr_t m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT];
 
@@ -49,7 +51,9 @@ private:
     static const SPELL_REQURIES m_SpellRequries4[SPELLBOOK_4_SPELLS_COUNT];
     static const SPELL_REQURIES m_SpellRequries5[SPELLBOOK_5_SPELLS_COUNT];
     static const SPELL_REQURIES m_SpellRequries6[SPELLBOOK_6_SPELLS_COUNT];
-    //static const SPELL_REQURIES m_SpellRequries7[SPELLBOOK_7_SPELLS_COUNT];
+    static const SPELL_REQURIES m_SpellRequries7[SPELLBOOK_7_SPELLS_COUNT];
+    static const PALADIN_SPELL_REQURIES m_SpellRequries8[SPELLBOOK_8_SPELLS_COUNT];
+    static const int m_SpellIndices8[SPELLBOOK_8_SPELLS_COUNT][8];
 
     int m_SpellCount{ 0 };
     uint8_t m_Spells[MAX_SPELLS_COUNT];
