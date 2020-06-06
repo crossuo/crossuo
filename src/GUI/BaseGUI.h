@@ -76,3 +76,16 @@ public:
     // Ability to handle component events if it is clamped, but the mouse is somewhere else
     virtual bool IsPressedOuthit() { return false; }
 };
+
+struct CGUIPage : public CBaseGUI
+{
+    int Index = 0;
+
+    CGUIPage(int index)
+        : CBaseGUI(GOT_PAGE, 0, 0, 0, 0, 0)
+        , Index(index)
+    {
+    }
+
+    virtual ~CGUIPage() = default;
+};

@@ -30,7 +30,6 @@
 #include "GUIGenericTextEntry.h"
 #include "GUILine.h"
 #include "GUIMinMaxButtons.h"
-#include "GUIPage.h"
 #include "GUIRadio.h"
 #include "GUIResizeButton.h"
 #include "GUIResizepic.h"

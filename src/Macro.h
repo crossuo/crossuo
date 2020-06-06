@@ -44,7 +44,7 @@ public:
     virtual ~CMacro();
 
     static const int MACRO_ACTION_NAME_COUNT = 60;
-    static const int MACRO_ACTION_COUNT = 210;
+    static const int MACRO_ACTION_COUNT = 211;
 
     static const char *m_MacroActionName[MACRO_ACTION_NAME_COUNT];
     static const char *m_MacroAction[MACRO_ACTION_COUNT];

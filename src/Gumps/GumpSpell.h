@@ -9,7 +9,7 @@ class CGumpSpell : public CGump
 {
 public:
     bool BigIcon = false;
-    SPELLBOOK_TYPE SpellType = ST_MAGE;
+    SPELLBOOK_TYPE SpellType = ST_MAGERY;
 
 private:
     static constexpr int ID_GS_LOCK_MOVING = 1;
