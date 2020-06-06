@@ -18,9 +18,11 @@ struct PALADIN_SPELL_REQURIES
     uint8_t TithingPoints;
 };
 
+void InitSpells();
+
 class CGumpSpellbook : public CGump
 {
-    SPELLBOOK_TYPE BookType = ST_MAGE;
+    SPELLBOOK_TYPE BookType = ST_MAGERY;
 
 public:
     static const int MAX_SPELLS_COUNT = 64;
@@ -55,37 +57,36 @@ private:
     static const PALADIN_SPELL_REQURIES m_SpellRequries8[SPELLBOOK_8_SPELLS_COUNT];
     static const int m_SpellIndices8[SPELLBOOK_8_SPELLS_COUNT][8];
 
-    int m_SpellCount{ 0 };
+    int m_SpellCount = 0;
+    int PageCount = 8;
     uint8_t m_Spells[MAX_SPELLS_COUNT];
-    int PageCount{ 8 };
 
-    CGUIGumppic *m_Body{ nullptr };
-    CGUIText *m_TithingPointsText{ nullptr };
+    CGUIGumppic *m_Body = nullptr;
+    CGUIText *m_TithingPointsText = nullptr;
 
-    CGUIButton *m_PrevPage{ nullptr };
-    CGUIButton *m_NextPage{ nullptr };
+    CGUIButton *m_PrevPage = nullptr;
+    CGUIButton *m_NextPage = nullptr;
 
-    CGUIGumppic *m_LastSpellPointer{ nullptr };
-    CGUIGumppic *m_LastSpellBookmark{ nullptr };
+    CGUIGumppic *m_LastSpellPointer = nullptr;
+    CGUIGumppic *m_LastSpellBookmark = nullptr;
 
-    void GetTooltipBookInfo(int &dictionaryPagesCount, int &tooltipOffset);
+    void GetTooltipBookInfo(int &indexPagesCount, int &tooltipOffset);
     void GetSummaryBookInfo(
         int &maxSpellsCount,
-        int &dictionaryPagesCount,
+        int &indexPagesCount,
         int &spellsOnPage,
         int &spellIndexOffset,
         uint16_t &graphic,
         uint16_t &minimizedGraphic,
         uint16_t &iconStartGraphic);
 
-    astr_t GetSpellName(int offset, astr_t &abbreviature, astr_t &reagents);
+    astr_t GetSpellName(int offset, astr_t &magicWord, astr_t &reagents);
     astr_t GetSpellRequries(int offset, int &y);
 
 public:
     CGumpSpellbook(uint32_t serial, int x, int y);
     virtual ~CGumpSpellbook();
 
-    static void InitStaticData();
     void UpdateGraphic(uint16_t parentGraphic);
     void ChangePage(int newPage);
 

@@ -1302,7 +1302,7 @@ void CGumpManager::Load(const fs_path &path)
                     if (gumpType == GT_SPELL)
                     {
                         uint16_t graphic = file.ReadUInt16LE();
-                        SPELLBOOK_TYPE spellType = ST_MAGE;
+                        SPELLBOOK_TYPE spellType = ST_MAGERY;
                         if (size > 18)
                         {
                             spellType = (SPELLBOOK_TYPE)file.ReadUInt8();
@@ -1399,7 +1399,7 @@ void CGumpManager::Load(const fs_path &path)
                 uint32_t serial = file.ReadUInt32LE();
                 uint16_t graphic = file.ReadUInt16LE();
 
-                SPELLBOOK_TYPE spellType = ST_MAGE;
+                SPELLBOOK_TYPE spellType = ST_MAGERY;
 
                 if (size > 18)
                 {

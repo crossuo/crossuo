@@ -32,7 +32,6 @@ CGumpSpell::CGumpSpell(
 
     m_SpellUnlocker->BoundingBoxCheck = true;
     m_SpellUnlocker->Visible = false;
-
     Add(new CGUIAlphaBlending(false, 0.0f));
 }
 
@@ -51,13 +50,13 @@ void CGumpSpell::InitToolTip()
     {
         int tooltipOffset = 0;
         int spellIndexOffset = 0;
-
         GetTooltipSpellInfo(tooltipOffset, spellIndexOffset);
-
-        g_ToolTip.Set(
-            g_ClilocManager.Cliloc(g_Language)
-                ->GetW(tooltipOffset - spellIndexOffset + Serial, true),
-            80);
+        if (SpellType == ST_MASTERY)
+        {
+            tooltipOffset = Serial >= 137 && Serial <= 143 ? 1115612 : 1155890;
+        }
+        const int spellIndex = tooltipOffset + (Serial - spellIndexOffset);
+        g_ToolTip.Set(g_ClilocManager.Cliloc(g_Language)->GetW(spellIndex, true), 80);
     }
 }
 
@@ -65,53 +64,52 @@ void CGumpSpell::GetTooltipSpellInfo(int &tooltipOffset, int &spellIndexOffset)
 {
     switch (SpellType)
     {
-        case ST_MAGE:
+        case ST_MAGERY:
         {
-            tooltipOffset = 3002010;
+            tooltipOffset = 3002011;
             spellIndexOffset = 0;
-
             break;
         }
-        case ST_NECRO:
+        case ST_NECROMANCY:
         {
-            tooltipOffset = 1060508;
+            tooltipOffset = 1060509;
             spellIndexOffset = 64;
-
             break;
         }
-        case ST_PALADIN:
+        case ST_CHIVALRY:
         {
-            tooltipOffset = 1060584;
+            tooltipOffset = 1060585;
             spellIndexOffset = 81;
-
             break;
         }
         case ST_BUSHIDO:
         {
-            tooltipOffset = 1060594;
+            tooltipOffset = 1060595;
             spellIndexOffset = 91;
-
             break;
         }
         case ST_NINJITSU:
         {
-            tooltipOffset = 1060609;
+            tooltipOffset = 1060610;
             spellIndexOffset = 97;
-
             break;
         }
-        case ST_SPELL_WEAVING:
+        case ST_SPELLWEAVING:
         {
-            tooltipOffset = 1071025;
+            tooltipOffset = 1071026;
             spellIndexOffset = 105;
-
             break;
         }
-        case ST_MYSTICISM: //?
+        case ST_MYSTICISM:
+        {
+            tooltipOffset = 1031678;
+            spellIndexOffset = 121;
+            break;
+        }
+        case ST_MASTERY:
         {
             tooltipOffset = 0;
-            spellIndexOffset = 0;
-
+            spellIndexOffset = 137;
             break;
         }
         default:
@@ -121,17 +119,15 @@ void CGumpSpell::GetTooltipSpellInfo(int &tooltipOffset, int &spellIndexOffset)
 
 void CGumpSpell::PrepareContent()
 {
-    bool wantBlender =
-        ((g_ConfigManager.TransparentSpellIcons != 0u) && g_SelectedObject.Gump != this);
-
+    const bool wantBlender =
+        (g_ConfigManager.TransparentSpellIcons != 0 && g_SelectedObject.Gump != this);
     if (m_Blender->Enabled != wantBlender)
     {
         m_Blender->Enabled = wantBlender;
         WantRedraw = true;
     }
 
-    bool wantUnlocker = (g_ShiftPressed && InGroup());
-
+    const bool wantUnlocker = g_ShiftPressed && InGroup();
     if (m_SpellUnlocker->Visible != wantUnlocker)
     {
         m_SpellUnlocker->Visible = wantUnlocker;
@@ -152,12 +148,10 @@ CGumpSpell *CGumpSpell::GetTopSpell()
     }
 
     CGumpSpell *gump = m_GroupPrev;
-
     while (gump != nullptr && gump->m_GroupPrev != nullptr)
     {
         gump = gump->m_GroupPrev;
     }
-
     return gump;
 }
 
@@ -170,17 +164,14 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
 
     int gumpWidth = 44;
     int gumpHeight = 44;
-
     int rangeX = 22;
     int rangeY = 22;
     int rangeOffsetX = 30;
     int rangeOffsetY = 30;
-
     if (BigIcon)
     {
         gumpWidth = 70;
         gumpHeight = 70;
-
         rangeX = 35;
         rangeY = 35;
         rangeOffsetX = 42;
@@ -188,7 +179,6 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
     }
 
     CGump *gump = (CGump *)g_GumpManager.m_Items;
-
     while (gump != nullptr)
     {
         if (gump != this && gump->GumpType == GT_SPELL && ((CGumpSpell *)gump)->BigIcon == BigIcon)
@@ -196,22 +186,20 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
             int gumpX = gump->GetX();
             int offsetX = abs(x - gumpX);
             int passed = 0;
-
             if (x >= gumpX && x <= (gumpX + gumpWidth))
             {
                 passed = 2;
             }
             else if (offsetX < rangeOffsetX)
-            { //left part of gump
-                passed = 1;
+            {
+                passed = 1; // left part of gump
             }
             else
             {
                 offsetX = abs(x - (gumpX + gumpWidth));
-
                 if (offsetX < rangeOffsetX)
-                { //right part of gump
-                    passed = -1;
+                {
+                    passed = -1; // right part of gump
                 }
                 else if (x >= (gumpX - rangeX) && x <= (gumpX + gumpWidth + rangeX))
                 {
@@ -220,7 +208,6 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
             }
 
             int gumpY = gump->GetY();
-
             if (abs(passed) == 1)
             {
                 if (y < (gumpY - rangeY) || y > (gumpY + gumpHeight + rangeY))
@@ -228,20 +215,18 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                     passed = 0;
                 }
             }
-            else if (passed == 2) //in gump range X
+            else if (passed == 2) // in gump range X
             {
                 int offsetY = abs(y - gumpY);
-
                 if (offsetY < rangeOffsetY)
-                { //top part of gump
+                { // top part of gump
                     passed = 2;
                 }
                 else
                 {
                     offsetY = abs(y - (gumpY + gumpHeight));
-
                     if (offsetY < rangeOffsetY)
-                    { //bottom part of gump
+                    { // bottom part of gump
                         passed = -2;
                     }
                     else
@@ -255,25 +240,24 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
             {
                 int testX = gumpX;
                 int testY = gumpY;
-
                 switch (passed)
                 {
-                    case -2: //gump bottom
+                    case -2: // gump bottom
                     {
                         testY += gumpHeight;
                         break;
                     }
-                    case -1: //gump right
+                    case -1: // gump right
                     {
                         testX += gumpWidth;
                         break;
                     }
-                    case 1: //gump left
+                    case 1: // gump left
                     {
                         testX -= gumpWidth;
                         break;
                     }
-                    case 2: //gump top
+                    case 2: // gump top
                     {
                         testY -= gumpHeight;
                         break;
@@ -283,7 +267,6 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                 }
 
                 CGump *testGump = (CGump *)g_GumpManager.m_Items;
-
                 while (testGump != nullptr)
                 {
                     if (testGump != this && testGump->GumpType == GT_SPELL &&
@@ -294,7 +277,6 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                             break;
                         }
                     }
-
                     testGump = (CGump *)testGump->m_Next;
                 }
 
@@ -302,42 +284,33 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                 {
                     x = testX;
                     y = testY;
-
                     break;
                 }
             }
         }
-
         gump = (CGump *)gump->m_Next;
     }
-
     return (CGumpSpell *)gump;
 }
 
 bool CGumpSpell::GetSpellGroupOffset(int &x, int &y)
 {
     if (InGroup() && g_MouseManager.LeftButtonPressed && g_PressedObject.LeftGump != nullptr &&
-        (g_PressedObject.LeftSerial == 0u))
+        g_PressedObject.LeftSerial == 0)
     {
         CGumpSpell *gump = GetTopSpell();
-
         while (gump != nullptr)
         {
-            //Если гамп захватили и (может быть) двигают
             if (gump != this && g_PressedObject.LeftGump == gump && gump->CanBeMoved())
             {
                 CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
-
                 x += offset.X;
                 y += offset.Y;
-
                 return true;
             }
-
             gump = gump->m_GroupNext;
         }
     }
-
     return false;
 }
 
@@ -349,21 +322,17 @@ void CGumpSpell::UpdateGroup(int x, int y)
     }
 
     CGumpSpell *gump = GetTopSpell();
-
     while (gump != nullptr)
     {
         if (gump != this)
         {
             gump->SetX(gump->GetX() + x);
             gump->SetY(gump->GetY() + y);
-
             g_GumpManager.MoveToBack(gump);
             //gump->WantRedraw = true;
         }
-
         gump = gump->m_GroupNext;
     }
-
     g_GumpManager.MoveToBack(this);
 }
 
@@ -378,12 +347,10 @@ void CGumpSpell::AddSpell(CGumpSpell *spell)
     else
     {
         CGumpSpell *gump = m_GroupNext;
-
         while (gump != nullptr && gump->m_GroupNext != nullptr)
         {
             gump = gump->m_GroupNext;
         }
-
         gump->m_GroupNext = spell;
         spell->m_GroupPrev = gump;
         spell->m_GroupNext = nullptr;
@@ -398,7 +365,6 @@ void CGumpSpell::AddSpell(CGumpSpell *spell)
     if (m_SpellUnlocker != nullptr)
     {
         m_SpellUnlocker->Visible = InGroup();
-
         WantRedraw = true;
     }
 }
@@ -409,7 +375,6 @@ void CGumpSpell::RemoveFromGroup()
     {
         m_GroupNext->WantRedraw = true;
         m_GroupNext->m_GroupPrev = m_GroupPrev;
-
         if (m_GroupNext->m_SpellUnlocker != nullptr)
         {
             m_GroupNext->m_SpellUnlocker->Visible = m_GroupNext->InGroup();
@@ -420,7 +385,6 @@ void CGumpSpell::RemoveFromGroup()
     {
         m_GroupPrev->WantRedraw = true;
         m_GroupPrev->m_GroupNext = m_GroupNext;
-
         if (m_GroupPrev->m_SpellUnlocker != nullptr)
         {
             m_GroupPrev->m_SpellUnlocker->Visible = m_GroupPrev->InGroup();
@@ -429,7 +393,6 @@ void CGumpSpell::RemoveFromGroup()
 
     m_GroupNext = nullptr;
     m_GroupPrev = nullptr;
-
     if (m_SpellUnlocker != nullptr)
     {
         m_SpellUnlocker->Visible = InGroup();
@@ -440,15 +403,12 @@ void CGumpSpell::RemoveFromGroup()
 void CGumpSpell::CalculateGumpState()
 {
     CGump::CalculateGumpState();
-
-    //Если гамп захватили и (может быть) двигают
     if ((g_GumpMovingOffset.X != 0) || (g_GumpMovingOffset.Y != 0))
     {
         if (!InGroup())
         {
             int testX = g_MouseManager.Position.X;
             int testY = g_MouseManager.Position.Y;
-
             if (GetNearSpell(testX, testY) != nullptr)
             {
                 g_GumpTranslate.X = (float)testX;
@@ -460,9 +420,7 @@ void CGumpSpell::CalculateGumpState()
     {
         int x = (int)g_GumpTranslate.X;
         int y = (int)g_GumpTranslate.Y;
-
         GetSpellGroupOffset(x, y);
-
         g_GumpTranslate.X = (float)x;
         g_GumpTranslate.Y = (float)y;
     }
@@ -477,14 +435,12 @@ void CGumpSpell::GUMP_BUTTON_EVENT_C
     else if (serial == ID_GS_BUTTON_REMOVE_FROM_GROUP)
     {
         CGumpSpell *oldGroup = m_GroupNext;
-
         if (oldGroup == nullptr)
         {
             oldGroup = m_GroupPrev;
         }
 
         RemoveFromGroup();
-
         if (oldGroup != nullptr)
         {
             oldGroup->UpdateGroup(0, 0);
@@ -497,12 +453,9 @@ bool CGumpSpell::OnLeftMouseButtonDoubleClick()
 {
     int tooltipOffset = 0;
     int spellIndexOffset = 0;
-
     GetTooltipSpellInfo(tooltipOffset, spellIndexOffset);
-
-    int spellIndex = Serial - spellIndexOffset + ((int)SpellType * 100);
-
-    g_Game.CastSpell(spellIndex);
-
+    const int spellIndex = Serial - spellIndexOffset;
+    const int spellOffset = SpellType == ST_MYSTICISM ? 677 : int(SpellType) * 100;
+    g_Game.CastSpell(spellOffset + spellIndex);
     return true;
 }

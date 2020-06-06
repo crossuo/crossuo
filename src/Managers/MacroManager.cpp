@@ -490,19 +490,19 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_NINJITSU_SPELLBOOK:
                 case MSC_G2_SPELL_WEAVING_SPELLBOOK:
                 case MSC_G2_MYSTICISM_SPELLBOOK:
+                case MSC_G2_MASTERY_SPELLBOOK:
                 {
-                    SPELLBOOK_TYPE type = ST_MAGE;
-
+                    SPELLBOOK_TYPE type = ST_MAGERY;
                     switch (g_MacroPointer->SubCode)
                     {
                         case MSC_G2_NECRO_SPELLBOOK:
                         {
-                            type = ST_NECRO;
+                            type = ST_NECROMANCY;
                             break;
                         }
                         case MSC_G2_PALADIN_SPELLBOOK:
                         {
-                            type = ST_PALADIN;
+                            type = ST_CHIVALRY;
                             break;
                         }
                         case MSC_G2_BUSHIDO_SPELLBOOK:
@@ -517,7 +517,7 @@ void CMacroManager::ProcessSubMenu()
                         }
                         case MSC_G2_SPELL_WEAVING_SPELLBOOK:
                         {
-                            type = ST_SPELL_WEAVING;
+                            type = ST_SPELLWEAVING;
                             break;
                         }
                         case MSC_G2_MYSTICISM_SPELLBOOK:
@@ -525,12 +525,15 @@ void CMacroManager::ProcessSubMenu()
                             type = ST_MYSTICISM;
                             break;
                         }
+                        case MSC_G2_MASTERY_SPELLBOOK:
+                        {
+                            type = ST_MASTERY;
+                            break;
+                        }
                         default:
                             break;
                     }
-
                     CPacketOpenSpellbook(type).Send();
-
                     break;
                 }
                 case MSC_G2_CHAT:
@@ -626,9 +629,9 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_NINJITSU_SPELLBOOK:
                 case MSC_G2_SPELL_WEAVING_SPELLBOOK:
                 case MSC_G2_MYSTICISM_SPELLBOOK:
+                case MSC_G2_MASTERY_SPELLBOOK:
                 {
                     //gump = g_GumpManager.GetGump(0, 0, GT_SPELLBOOK);
-
                     QFOR(item, g_GumpManager.m_Items, CGump *)
                     {
                         if (item->GumpType == GT_SPELLBOOK)
@@ -640,7 +643,7 @@ void CMacroManager::ProcessSubMenu()
                                 {
                                     case MSC_G2_MAGE_SPELLBOOK:
                                     {
-                                        if (gi->Graphic == 0x0EFA)
+                                        if (gi->Graphic == 0x0efa)
                                         {
                                             gump = item;
                                         }
@@ -664,7 +667,7 @@ void CMacroManager::ProcessSubMenu()
                                     }
                                     case MSC_G2_BUSHIDO_SPELLBOOK:
                                     {
-                                        if (gi->Graphic == 0x238C)
+                                        if (gi->Graphic == 0x238c)
                                         {
                                             gump = item;
                                         }
@@ -672,7 +675,7 @@ void CMacroManager::ProcessSubMenu()
                                     }
                                     case MSC_G2_NINJITSU_SPELLBOOK:
                                     {
-                                        if (gi->Graphic == 0x23A0)
+                                        if (gi->Graphic == 0x23a0)
                                         {
                                             gump = item;
                                         }
@@ -680,7 +683,7 @@ void CMacroManager::ProcessSubMenu()
                                     }
                                     case MSC_G2_SPELL_WEAVING_SPELLBOOK:
                                     {
-                                        if (gi->Graphic == 0x2D50)
+                                        if (gi->Graphic == 0x2d50)
                                         {
                                             gump = item;
                                         }
@@ -688,8 +691,16 @@ void CMacroManager::ProcessSubMenu()
                                     }
                                     case MSC_G2_MYSTICISM_SPELLBOOK:
                                     {
-                                        if (gi->Graphic == 0)
-                                        { //??????????
+                                        if (gi->Graphic == 0x2d9d)
+                                        {
+                                            gump = item;
+                                        }
+                                        break;
+                                    }
+                                    case MSC_G2_MASTERY_SPELLBOOK:
+                                    {
+                                        if (gi->Graphic == 0x225a) // 0x225b
+                                        {
                                             gump = item;
                                         }
                                         break;

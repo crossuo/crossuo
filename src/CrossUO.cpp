@@ -336,13 +336,7 @@ bool CGame::Install()
     fs_path_create(g_App.ExeFilePath("screenshots"));
 
     Info(Config, "client config loaded");
-    if (g_Config.ClientVersion >= CV_305D)
-    {
-        CGumpSpellbook::m_SpellReagents1[4] = "Sulfurous ash";                 // Magic Arrow
-        CGumpSpellbook::m_SpellReagents1[17] = "Black pearl";                  // Fireball
-        CGumpSpellbook::m_SpellReagents1[29] = "Mandrake root\nSulfurous ash"; // Lightning
-        CGumpSpellbook::m_SpellReagents1[42] = "Bloodmoss\nMandrake root";     // Explosion
-    }
+    InitSpells();
 
     LoadAutoLoginNames();
 
@@ -364,7 +358,6 @@ bool CGame::Install()
     }
 
     g_SpeechManager.LoadSpeech();
-    CGumpSpellbook::InitStaticData();
     g_ColorManager.Init();
 
     InitStaticAnimList();

@@ -79,7 +79,6 @@ set(gui_src
   GUI/GUILine.cpp
   GUI/GUIMenuObject.cpp
   GUI/GUIMinMaxButtons.cpp
-  GUI/GUIPage.cpp
   GUI/GUIPolygonal.cpp
   GUI/GUIRadio.cpp
   GUI/GUIResizeButton.cpp

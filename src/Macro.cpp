@@ -437,6 +437,7 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Spell Weaving Spellbook",
     "Quest Log",
     "Mysticism Spellbook",
+    "Mastery Spellbook",
     "Racial Abilities Book",
     "Bard Spellbook",
     "Anatomy", //Skills group
