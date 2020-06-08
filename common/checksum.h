@@ -135,8 +135,6 @@ CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s)
     return (static_cast<uint64_t>(esi) << 32) | eax;
 }
 
-#if 0
-
 static uint32_t crc32_table[256];
 static uint32_t crc32_reflect(uint32_t source, int c)
 {
@@ -165,7 +163,7 @@ CHECKSUM_PRIVATE void crc32_init()
         crc32_table[i] = crc32_reflect(crc32_table[i], 32);
     }
 
-#if 1
+#if 0
     printf ("static const unsigned int crc32_table[] =\n{\n");
     for (int i = 0; i < 256; i += 4)
     {
@@ -277,6 +275,18 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
     return crc;
 }
 
+CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
+{
+    uint32_t a = 1;
+    uint32_t b = 0;
+    for ( int i = 0; i < size; i++ )
+    {
+        a = ( a + ptr[i] ) % 65521;
+        b = ( b + a ) % 65521;
+    }
+    return ( b << 16 ) | a;
+}
+
 #endif
 
 #endif // CHECKSUM_IMPLEMENTATION
@@ -287,7 +297,8 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
 #include <stdint.h>
 #include <stddef.h>
 
-CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size);
 CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s);
+CHECKSUM_PRIVATE void crc32_init();
+CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size);
 
 #endif // CHECKSUM_HEADER
