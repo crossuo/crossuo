@@ -1,8 +1,6 @@
-// MIT License
-// Copyright (C) September 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
-#include <cmath> // ceilf
-#include <algorithm>
 #include "GumpSpellbook.h"
 #include "GumpSpell.h"
 #include "../Config.h"
@@ -18,16 +16,8 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../GameObjects/GameWorld.h"
 
-void InitSpells()
-{
-    if (g_Config.ClientVersion >= CV_305D)
-    {
-        CGumpSpellbook::m_SpellReagents1[4] = "Sulfurous ash";                 // Magic Arrow
-        CGumpSpellbook::m_SpellReagents1[17] = "Black pearl";                  // Fireball
-        CGumpSpellbook::m_SpellReagents1[29] = "Mandrake root\nSulfurous ash"; // Lightning
-        CGumpSpellbook::m_SpellReagents1[42] = "Bloodmoss\nMandrake root";     // Explosion
-    }
-}
+constexpr uint16_t nameColor = 0x0288;
+constexpr uint16_t powerColor = 0x0386;
 
 enum
 {
@@ -39,9 +29,24 @@ enum
     ID_GSB_BUTTON_CIRCLE_7_8 = 6,
     ID_GSB_BUTTON_MINIMIZE = 7,
     ID_GSB_LOCK_MOVING = 8,
-    ID_GSB_SPELL_ICON_LEFT = 100,
-    ID_GSB_SPELL_ICON_RIGHT = 1000,
+    ID_GSB_SPELL_SERIAL = 100,
 };
+
+static int s_MasteryIndexOrder[][8] = { { 0, 1, 2, 3, 4, 5, 6, 7 },
+                                        { 8, 9, 10, 11, 12, 13, 18, 19 },
+                                        {
+                                            16,
+                                            20,
+                                            21,
+                                            24,
+                                            25,
+                                            33,
+                                            34,
+                                            35,
+                                        },
+                                        { 26, 27, 28, 31, 36, 37, 39, 40 },
+                                        { 22, 23, 29, 30, 42, 43, -1, -1 },
+                                        { 14, 15, 17, 32, 38, 41, 44, -1 } };
 
 static astr_t s_SpellCircleName[] = { "First Circle",   "Second Circle", "Third Circle",
                                       "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
@@ -127,14 +132,9 @@ CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     memset(&m_Spells[0], 0, sizeof(m_Spells));
 }
 
-CGumpSpellbook::~CGumpSpellbook()
-{
-}
-
 void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
 {
-    SPELLBOOK_TYPE bookType = BookType;
-
+    SPELLBOOK_TYPE oldType = BookType;
     switch (parentGraphic)
     {
         case 0x0efa:
@@ -181,7 +181,10 @@ void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
         case 0x225a:
         case 0x225b:
         {
-            BookType = ST_MASTERY;
+            if (g_Config.ClientVersion >= CV_704565)
+            {
+                BookType = ST_MASTERY;
+            }
             break;
         }
         default:
@@ -191,7 +194,7 @@ void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
         }
     }
 
-    if (bookType != BookType)
+    if (oldType != BookType)
     {
         WantUpdateContent = true;
     }
@@ -205,144 +208,106 @@ void CGumpSpellbook::InitToolTip()
         return;
     }
 
-    int indexPagesCount = 0;
-    int tooltipOffset = 0;
-    GetTooltipBookInfo(indexPagesCount, tooltipOffset);
-    if (Page >= indexPagesCount)
+    const auto book = GetSpellbook(BookType);
+    if (Page >= book.IndexPagesCount)
     {
         uint32_t serial = g_SelectedObject.Serial;
-        if (serial >= (uint32_t)ID_GSB_SPELL_ICON_LEFT)
+        if (serial > ID_GSB_SPELL_SERIAL)
         {
-            if (serial >= (uint32_t)ID_GSB_SPELL_ICON_RIGHT)
-            {
-                serial -= ID_GSB_SPELL_ICON_RIGHT;
-            }
-            else
-            {
-                serial -= ID_GSB_SPELL_ICON_LEFT;
-            }
-
-            if (BookType == ST_MASTERY)
-            {
-                tooltipOffset = serial < 6 ? 1115689 : 1155932;
-            }
+            const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
+            assert(spellIndex < book.SpellCount);
+            const auto spell = book.Spells[spellIndex];
             g_ToolTip.Set(
-                g_ClilocManager.Cliloc(g_Language)->GetW(tooltipOffset + serial, true), 150);
+                g_ClilocManager.Cliloc(g_Language)->GetW(spell->DescriptionCliloc, true), 150);
         }
     }
 }
 
 void CGumpSpellbook::PrepareContent()
 {
-    int maxSpellsCount = 0;
-    int spellsOnPage = 0;
-    int indexPagesCount = 0;
-    int spellIndexOffset = 0;
-    uint16_t graphic = 0;
-    uint16_t minimizedGraphic = 0;
-    uint16_t iconStartGraphic = 0;
-
-    GetSummaryBookInfo(
-        maxSpellsCount,
-        indexPagesCount,
-        spellsOnPage,
-        spellIndexOffset,
-        graphic,
-        minimizedGraphic,
-        iconStartGraphic);
-
-    if (g_PressedObject.LeftGump == this && Page >= indexPagesCount &&
-        g_PressedObject.LeftSerial >= (uint32_t)ID_GSB_SPELL_ICON_LEFT)
+    const auto book = GetSpellbook(BookType);
+    if (g_PressedObject.LeftGump == this && Page >= book.IndexPagesCount &&
+        g_PressedObject.LeftSerial >= ID_GSB_SPELL_SERIAL)
     {
         CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
         if ((abs(offset.X) >= DRAG_PIXEL_RANGE || abs(offset.Y) >= DRAG_PIXEL_RANGE) ||
             (g_MouseManager.LastLeftButtonClickTimer + g_MouseManager.DoubleClickDelay < g_Ticks))
         {
-            int index = g_PressedObject.LeftSerial;
-            if (index < ID_GSB_SPELL_ICON_RIGHT)
-            {
-                index -= ID_GSB_SPELL_ICON_LEFT;
-            }
-            else
-            {
-                index -= ID_GSB_SPELL_ICON_RIGHT;
-            }
-
-            if (iconStartGraphic >= 0x5300 && iconStartGraphic < 0x5500)
-            {
-                iconStartGraphic += 0x0020;
-            }
-            else if (BookType == ST_MASTERY && index > 6)
-            {
-                iconStartGraphic = 0x9b8b - 6; // FIXME: mastery icon fixup
-            }
+            const int serial = g_PressedObject.LeftSerial;
+            const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
+            assert(spellIndex < book.SpellCount);
+            const auto spell = book.Spells[spellIndex];
             g_GumpManager.AddGump(new CGumpSpell(
-                index + spellIndexOffset,
+                serial,
+                spell->Type,
+                spell->SpellIconGraphic,
                 g_MouseManager.Position.X - 20,
-                g_MouseManager.Position.Y - 20,
-                iconStartGraphic + index,
-                BookType));
+                g_MouseManager.Position.Y - 20));
             g_GameWindow.EmulateOnLeftMouseButtonDown();
         }
     }
 
     if (!Minimized && m_LastSpellPointer != nullptr)
     {
-        spellIndexOffset = BookType == ST_MYSTICISM ? 677 : int(BookType) * 100;
         bool wantVisible = false;
         uint16_t graphicBookmark = 0x08ad;
         uint16_t graphicPointer = 0x08af;
         int wantX = m_LastSpellPointer->GetX();
         int wantY = m_LastSpellPointer->GetY();
-        if (Page < indexPagesCount)
+        if (Page < book.IndexPagesCount)
         {
-            //int offs = (spellsOnPage * Page);
             for (int j = 0; j < 2; j++)
             {
                 int y = 0;
-                for (int i = 0; i < spellsOnPage; i++)
+                const int currentPage = Page + j;
+                const int indexPage = BookType == ST_MASTERY ? currentPage / 2 : currentPage;
+                for (int i = 0; i < book.SpellsPerPage; i++)
                 {
-                    const int offs = BookType == ST_MASTERY ? m_SpellIndices8[Page / 2][i] - 1 :
-                                                              i + (spellsOnPage * Page);
-                    if (offs >= 0 && m_Spells[offs] != 0)
+                    const int spellIndex = i + (book.SpellsPerPage * indexPage);
+                    assert(spellIndex >= 0 && spellIndex < MAX_SPELLS_COUNT);
+                    if (m_Spells[spellIndex] == 0)
                     {
-                        if (offs + spellIndexOffset == g_LastSpellIndex - 1)
-                        {
-                            wantVisible = true;
-                            wantY = 52 + y;
-                            if (((Page + j) % 2) == 1)
-                            {
-                                graphicBookmark = 0x08ae;
-                                graphicPointer =
-                                    0x08b0 + (BookType == ST_MASTERY ? -1 : 0); // always left side
-                                wantX = 203;
-                            }
-                            else
-                            {
-                                wantX = 184;
-                            }
-                            //offs++;
-                            break;
-                        }
-                        y += 15;
+                        continue;
                     }
-                    //offs++;
+
+                    assert(book.Spells[spellIndex]);
+                    const auto spell = book.Spells[spellIndex];
+                    if (spell->Id == g_LastSpellIndex)
+                    {
+                        wantVisible = true;
+                        wantY = 52 + y;
+                        if (indexPage % 2 == 1)
+                        {
+                            graphicBookmark = 0x08ae;
+                            graphicPointer =
+                                0x08b0 + (book.Type == ST_MASTERY ? -1 : 0); // always left side
+                            wantX = 203;
+                        }
+                        else
+                        {
+                            wantX = 184;
+                        }
+                        break;
+                    }
+                    y += 15;
                 }
             }
         }
         else
         {
-            int page = indexPagesCount;
-            for (int i = 0; i < maxSpellsCount; i++)
+            int page = book.IndexPagesCount;
+            for (int spellIndex = 0; spellIndex < book.SpellCount; spellIndex++)
             {
-                if (m_Spells[i] == 0)
+                if (m_Spells[spellIndex] == 0)
                 {
                     continue;
                 }
 
+                assert(book.Spells[spellIndex]);
+                const auto spell = book.Spells[spellIndex];
                 if (page == Page || page == (Page + 1))
                 {
-                    if (i + spellIndexOffset == g_LastSpellIndex - 1)
+                    if (spell->Id == g_LastSpellIndex)
                     {
                         wantVisible = true;
                         wantY = 40;
@@ -378,287 +343,27 @@ void CGumpSpellbook::PrepareContent()
     }
 }
 
-void CGumpSpellbook::GetTooltipBookInfo(int &indexPagesCount, int &tooltipOffset)
+astr_t CGumpSpellbook::GetSpellRequries(int spellIndex, int &y) const
 {
-    int maxSpellsCount = 0;
-    switch (BookType)
+    char buf[100];
+    const auto book = GetSpellbook(BookType);
+    const auto spell = book.Spells[spellIndex];
+    if (spell->TithingCost)
     {
-        case ST_MAGERY:
-        {
-            maxSpellsCount = SPELLBOOK_1_SPELLS_COUNT;
-            tooltipOffset = 1061290;
-            break;
-        }
-        case ST_NECROMANCY:
-        {
-            maxSpellsCount = SPELLBOOK_2_SPELLS_COUNT;
-            tooltipOffset = 1061390;
-            break;
-        }
-        case ST_CHIVALRY:
-        {
-            maxSpellsCount = SPELLBOOK_3_SPELLS_COUNT;
-            tooltipOffset = 1061490;
-            break;
-        }
-        case ST_BUSHIDO:
-        {
-            maxSpellsCount = SPELLBOOK_4_SPELLS_COUNT;
-            tooltipOffset = 1063263;
-            break;
-        }
-        case ST_NINJITSU:
-        {
-            maxSpellsCount = SPELLBOOK_5_SPELLS_COUNT;
-            tooltipOffset = 1063279;
-            break;
-        }
-        case ST_SPELLWEAVING:
-        {
-            maxSpellsCount = SPELLBOOK_6_SPELLS_COUNT;
-            tooltipOffset = 1072042;
-            break;
-        }
-        case ST_MYSTICISM:
-        {
-            maxSpellsCount = SPELLBOOK_7_SPELLS_COUNT;
-            tooltipOffset = 1095193;
-            break;
-        }
-        case ST_MASTERY:
-        {
-            maxSpellsCount = SPELLBOOK_8_SPELLS_COUNT;
-            tooltipOffset = 0;
-            break;
-        }
-        default:
-            break;
+        y = 148;
+        const char *upkeep = book.Type == ST_MASTERY ? "Upkeep" : "Tithing";
+        snprintf(
+            buf,
+            sizeof(buf),
+            "%s Cost: %i\nMana Cost: %i\nMin. Skill: %i",
+            upkeep,
+            spell->TithingCost,
+            spell->ManaCost,
+            spell->MinSkill);
+        return buf;
     }
-
-    indexPagesCount = (int)ceilf(maxSpellsCount / 8.0f);
-    if (indexPagesCount % 2 == 1)
-    {
-        indexPagesCount++;
-    }
-}
-
-void CGumpSpellbook::GetSummaryBookInfo(
-    int &maxSpellsCount,
-    int &indexPagesCount,
-    int &spellsOnPage,
-    int &spellIndexOffset,
-    uint16_t &graphic,
-    uint16_t &minimizedGraphic,
-    uint16_t &iconStartGraphic)
-{
-    switch (BookType)
-    {
-        case ST_MAGERY:
-        {
-            maxSpellsCount = SPELLBOOK_1_SPELLS_COUNT;
-            graphic = 0x08aC;
-            minimizedGraphic = 0x08ba;
-            iconStartGraphic = 0x08c0;
-            spellIndexOffset = 0;
-            break;
-        }
-        case ST_NECROMANCY:
-        {
-            maxSpellsCount = SPELLBOOK_2_SPELLS_COUNT;
-            graphic = 0x2b00;
-            minimizedGraphic = 0x2b03;
-            iconStartGraphic = 0x5000;
-            spellIndexOffset = 64;
-            break;
-        }
-        case ST_CHIVALRY:
-        {
-            maxSpellsCount = SPELLBOOK_3_SPELLS_COUNT;
-            graphic = 0x2b01;
-            minimizedGraphic = 0x2b04;
-            iconStartGraphic = 0x5100;
-            spellIndexOffset = 81;
-            break;
-        }
-        case ST_BUSHIDO:
-        {
-            maxSpellsCount = SPELLBOOK_4_SPELLS_COUNT;
-            graphic = 0x2b07;
-            minimizedGraphic = 0x2b09;
-            iconStartGraphic = 0x5400;
-            spellIndexOffset = 91;
-            break;
-        }
-        case ST_NINJITSU:
-        {
-            maxSpellsCount = SPELLBOOK_5_SPELLS_COUNT;
-            graphic = 0x2B06;
-            minimizedGraphic = 0x2b08;
-            iconStartGraphic = 0x5300;
-            spellIndexOffset = 97;
-            break;
-        }
-        case ST_SPELLWEAVING:
-        {
-            maxSpellsCount = SPELLBOOK_6_SPELLS_COUNT;
-            graphic = 0x2b2f;
-            minimizedGraphic = 0x2b2d;
-            iconStartGraphic = 0x59d8;
-            spellIndexOffset = 105;
-            break;
-        }
-        case ST_MYSTICISM:
-        {
-            maxSpellsCount = SPELLBOOK_7_SPELLS_COUNT;
-            graphic = 0x2b32;
-            minimizedGraphic = 0x2b30;
-            iconStartGraphic = 0x5dc0;
-            spellIndexOffset = 121;
-            break;
-        }
-        case ST_MASTERY:
-        {
-            maxSpellsCount = SPELLBOOK_8_SPELLS_COUNT;
-            graphic = 0x08ac;
-            minimizedGraphic = 0x08ba;
-            iconStartGraphic = 0x0945;
-            spellIndexOffset = 137;
-            break;
-        }
-        default:
-            break;
-    }
-
-    spellsOnPage = std::min(maxSpellsCount / 2, 8);
-    indexPagesCount = (int)ceilf(maxSpellsCount / 8.0f);
-    if (BookType == ST_MASTERY)
-        indexPagesCount *= 2; // Mastery layout skips a page to show masteries
-
-    if (indexPagesCount % 2 == 1)
-    {
-        indexPagesCount++;
-    }
-}
-
-astr_t CGumpSpellbook::GetSpellName(int offset, astr_t &magicWord, astr_t &reagents)
-{
-    switch (BookType)
-    {
-        case ST_MAGERY:
-            magicWord = m_SpellName1[offset][1];
-            reagents = m_SpellReagents1[offset];
-            return m_SpellName1[offset][0];
-        case ST_NECROMANCY:
-            magicWord = m_SpellName2[offset][1];
-            reagents = m_SpellReagents2[offset];
-            return m_SpellName2[offset][0];
-        case ST_CHIVALRY:
-            magicWord = m_SpellName3[offset][1];
-            return m_SpellName3[offset][0];
-        case ST_BUSHIDO:
-            return m_SpellName4[offset];
-        case ST_NINJITSU:
-            return m_SpellName5[offset];
-        case ST_SPELLWEAVING:
-            magicWord = m_SpellName6[offset][1];
-            return m_SpellName6[offset][0];
-        case ST_MYSTICISM:
-            magicWord = m_SpellName7[offset][1];
-            reagents = m_SpellName7[offset][2];
-            return m_SpellName7[offset][0];
-        case ST_MASTERY:
-            magicWord = m_SpellName8[offset][1];
-            reagents = m_SpellName8[offset][2];
-            return m_SpellName8[offset][0];
-        default:
-            break;
-    }
-    return "";
-}
-
-astr_t CGumpSpellbook::GetSpellRequries(int offset, int &y)
-{
-    char buf[100] = { 0 };
     y = 162;
-
-    int manaCost = 0;
-    int minSkill = 0;
-    switch (BookType)
-    {
-        case ST_NECROMANCY:
-        {
-            const SPELL_REQURIES &req = m_SpellRequries2[offset];
-            manaCost = req.ManaCost;
-            minSkill = req.MinSkill;
-            break;
-        }
-        case ST_CHIVALRY:
-        {
-            y = 148;
-            const PALADIN_SPELL_REQURIES &req = m_SpellRequries3[offset];
-            sprintf_s(
-                buf,
-                "Tithing Cost: %i\nMana Cost: %i\nMin. Skill: %i",
-                req.TithingPoints,
-                req.ManaCost,
-                req.MinSkill);
-            return buf;
-        }
-        case ST_BUSHIDO:
-        {
-            const SPELL_REQURIES &req = m_SpellRequries4[offset];
-            manaCost = req.ManaCost;
-            minSkill = req.MinSkill;
-            break;
-        }
-        case ST_NINJITSU:
-        {
-            const SPELL_REQURIES &req = m_SpellRequries5[offset];
-            manaCost = req.ManaCost;
-            minSkill = req.MinSkill;
-            break;
-        }
-        case ST_SPELLWEAVING:
-        {
-            const SPELL_REQURIES &req = m_SpellRequries6[offset];
-            manaCost = req.ManaCost;
-            minSkill = req.MinSkill;
-            break;
-        }
-        case ST_MYSTICISM:
-        {
-            const SPELL_REQURIES &req = m_SpellRequries7[offset];
-            manaCost = req.ManaCost;
-            minSkill = req.MinSkill;
-            break;
-        }
-        case ST_MASTERY:
-        {
-            const PALADIN_SPELL_REQURIES &req = m_SpellRequries8[offset];
-            manaCost = req.ManaCost;
-            minSkill = req.MinSkill;
-            if (req.TithingPoints > 0)
-            {
-                y = 148;
-                sprintf_s(
-                    buf,
-                    "Upkeep Cost: %i\nMana Cost: %i\nMin. Skill: %i",
-                    req.TithingPoints,
-                    req.ManaCost,
-                    req.MinSkill);
-            }
-            else
-            {
-                sprintf_s(buf, "Mana Cost: %i\nMin. Skill: %i", req.ManaCost, req.MinSkill);
-            }
-            return buf;
-            break;
-        }
-        default:
-            break;
-    }
-
-    sprintf_s(buf, "Mana Cost: %i\nMin. Skill: %i", manaCost, minSkill);
+    snprintf(buf, sizeof(buf), "Mana Cost: %i\nMin. Skill: %i", spell->ManaCost, spell->MinSkill);
     return buf;
 }
 
@@ -671,34 +376,16 @@ void CGumpSpellbook::UpdateContent()
     m_LastSpellBookmark = nullptr;
     m_TithingPointsText = nullptr;
 
+    const auto book = GetSpellbook(BookType);
     Clear();
-
     Add(new CGUIPage(-1));
-
-    int maxSpellsCount = 0;
-    int spellsOnPage = 0;
-    int indexPagesCount = 0;
-    int spellIndexOffset = 0;
-    uint16_t graphic = 0;
-    uint16_t minimizedGraphic = 0;
-    uint16_t iconStartGraphic = 0;
-
-    GetSummaryBookInfo(
-        maxSpellsCount,
-        indexPagesCount,
-        spellsOnPage,
-        spellIndexOffset,
-        graphic,
-        minimizedGraphic,
-        iconStartGraphic);
-
     if (Minimized)
     {
-        m_Body = (CGUIGumppic *)Add(new CGUIGumppic(minimizedGraphic, 0, 0));
+        m_Body = (CGUIGumppic *)Add(new CGUIGumppic(book.MinimizedGraphic, 0, 0));
         return;
     }
 
-    m_Body = (CGUIGumppic *)Add(new CGUIGumppic(graphic, 0, 0));
+    m_Body = (CGUIGumppic *)Add(new CGUIGumppic(book.Graphic, 0, 0));
     Add(new CGUIHitBox(ID_GSB_BUTTON_MINIMIZE, 6, 100, 16, 16, true));
 
     m_SpellCount = 0;
@@ -712,15 +399,15 @@ void CGumpSpellbook::UpdateContent()
 
     QFOR(item, spellbook->m_Items, CGameItem *)
     {
-        int currentCount = item->Count;
-        if (currentCount > 0 && currentCount <= maxSpellsCount)
+        const int currentCount = item->Count;
+        if (currentCount > 0 && currentCount <= book.SpellCount)
         {
             m_Spells[currentCount - 1] = 1;
             m_SpellCount++;
         }
     }
 
-    if (BookType == ST_MAGERY)
+    if (book.Type == ST_MAGERY)
     {
         Add(new CGUIButton(ID_GSB_BUTTON_CIRCLE_1_2, 0x08B1, 0x08B1, 0x08B1, 58, 175));
         Add(new CGUIButton(ID_GSB_BUTTON_CIRCLE_1_2, 0x08B2, 0x08B2, 0x08B2, 93, 175));
@@ -732,98 +419,67 @@ void CGumpSpellbook::UpdateContent()
         Add(new CGUIButton(ID_GSB_BUTTON_CIRCLE_7_8, 0x08B8, 0x08B8, 0x08B8, 332, 175));
     }
 
-    PageCount = indexPagesCount + m_SpellCount;
+    PageCount = book.IndexPagesCount + m_SpellCount;
     int page = 0;
-    for (; page < indexPagesCount; page++)
+    for (; page < book.IndexPagesCount; page++)
     {
         Add(new CGUIPage(page));
-        if (page == 0 && BookType == ST_CHIVALRY)
+        if (page == 0 && book.Type == ST_CHIVALRY)
         {
-            m_TithingPointsText = (CGUIText *)Add(new CGUIText(0x0288, 62, 162));
+            m_TithingPointsText = (CGUIText *)Add(new CGUIText(nameColor, 62, 162));
             astr_t textData = "Tithing points\nAvailable: " + str_from(g_Player->TithingPoints);
             m_TithingPointsText->CreateTextureA(6, textData);
         }
 
         int indexX = 106;
-        int dataX = 62;
+        int dataX = 56;
         int y = 0;
-        int spellSerial = ID_GSB_SPELL_ICON_LEFT;
         if (page % 2 == 1)
         {
             indexX = 269;
-            dataX = 225;
-            spellSerial = ID_GSB_SPELL_ICON_RIGHT;
+            dataX = 221;
         }
 
-        CGUIText *text = (CGUIText *)Add(new CGUIText(0x0288, indexX, 10));
+        CGUIText *text = (CGUIText *)Add(new CGUIText(nameColor, indexX, 10));
         text->CreateTextureA(6, "INDEX");
-        if (BookType == ST_MASTERY)
+        if (book.Type == ST_MASTERY && page % 2 == 1)
         {
-            if (page % 2 == 1)
-            {
-                text = (CGUIText *)Add(new CGUIText(0x0288, dataX, 30));
-                text->CreateTextureA(6, "Abilities");
-                // TODO: active masteries
-                continue;
-            }
-            else if (page % 4 == 2)
-            {
-                spellSerial = ID_GSB_SPELL_ICON_RIGHT;
-            }
-        }
-
-        if (BookType == ST_MAGERY)
-        {
-            text = (CGUIText *)Add(new CGUIText(0x0288, dataX, 30));
-            text->CreateTextureA(6, s_SpellCircleName[page]);
-        }
-        else if (BookType == ST_MASTERY)
-        {
-            text = (CGUIText *)Add(new CGUIText(0x0288, dataX, 30));
-            text->CreateTextureA(6, page == indexPagesCount ? "Passive" : "Activated");
-
-            for (int i = 0; i < spellsOnPage; i++)
-            {
-                const int currentSpellIndex = m_SpellIndices8[page / 2][i] - 1;
-                if (currentSpellIndex < 0 || m_Spells[currentSpellIndex] == 0)
-                    continue;
-
-                astr_t magicWord;
-                astr_t reagents;
-                auto name = GetSpellName(currentSpellIndex, magicWord, reagents);
-                // FIXME: hack to crop the text
-                if (currentSpellIndex == 14)
-                {
-                    name = "Enchanted Summ..";
-                }
-
-                const int serial = spellSerial + currentSpellIndex;
-                const int tag = currentSpellIndex + 1;
-                auto box = (CGUIHitBox *)Add(new CGUIHitBox(serial, dataX, 52 + y, 100, 16, true));
-                auto entry = (CGUITextEntry *)Add(
-                    new CGUITextEntry(serial, 0x0288, 0, 0, dataX, 52 + y, 0, false, 9));
-                entry->m_Entry.SetTextA(name);
-                entry->CheckOnSerial = true;
-                entry->ReadOnly = true;
-                box->MoveOnDrag = true;
-                y += 15;
-            }
+            text = (CGUIText *)Add(new CGUIText(nameColor, dataX, 30));
+            text->CreateTextureA(6, "Abilities");
+            // TODO: active masteries
             continue;
         }
 
-        for (int i = 0; i < spellsOnPage; i++)
+        int indexPage = page;
+        if (book.Type == ST_MAGERY)
         {
-            const int currentSpellIndex = (page * spellsOnPage) + i;
-            if (m_Spells[currentSpellIndex] == 0)
+            text = (CGUIText *)Add(new CGUIText(nameColor, dataX, 30));
+            text->CreateTextureA(6, s_SpellCircleName[page]);
+        }
+        else if (book.Type == ST_MASTERY)
+        {
+            text = (CGUIText *)Add(new CGUIText(nameColor, dataX, 30));
+            text->CreateTextureA(6, page == book.IndexPagesCount ? "Passive" : "Activated");
+            if (page % 2 == 1)
+                continue;
+            indexPage = page / 2;
+        }
+
+        for (int i = 0; i < book.SpellsPerPage; i++)
+        {
+            const int spellIndex = book.Type == ST_MASTERY ? s_MasteryIndexOrder[indexPage][i] :
+                                                             i + (indexPage * book.SpellsPerPage);
+            assert(spellIndex < MAX_SPELLS_COUNT);
+            if (spellIndex < 0 || m_Spells[spellIndex] == 0)
                 continue;
 
-            astr_t magicWord;
-            astr_t reagents;
-            const auto name = GetSpellName(currentSpellIndex, magicWord, reagents);
-            const int serial = spellSerial + currentSpellIndex;
+            assert(spellIndex < book.SpellCount && book.Spells[spellIndex]);
+            const auto spell = book.Spells[spellIndex];
+            astr_t name = spell->Name;
+            const int serial = ID_GSB_SPELL_SERIAL + spellIndex;
             auto box = (CGUIHitBox *)Add(new CGUIHitBox(serial, dataX, 52 + y, 100, 16, true));
             auto entry = (CGUITextEntry *)Add(
-                new CGUITextEntry(serial, 0x0288, 0, 0, dataX, 52 + y, 0, false, 9));
+                new CGUITextEntry(serial, nameColor, 0, 0, dataX, 52 + y, 0, false, 9));
             entry->m_Entry.SetTextA(name);
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
@@ -832,81 +488,82 @@ void CGumpSpellbook::UpdateContent()
         }
     }
 
-    const int topTextY = BookType == ST_MAGERY ? 10 : 6;
-    const bool haveReagents = BookType <= ST_NECROMANCY || BookType == ST_MYSTICISM;
-    const bool hasMagicWords = BookType != ST_BUSHIDO && BookType != ST_NINJITSU;
-    for (int spell = 0; spell < maxSpellsCount; spell++)
+    const int topTextY = book.Type == ST_MAGERY ? 10 : 6;
+    for (int spellIndex = 0; spellIndex < book.SpellCount; spellIndex++)
     {
-        if (m_Spells[spell] == 0u)
+        if (m_Spells[spellIndex] == 0)
         {
             continue;
         }
 
-        int iconX = 62;
+        assert(book.Spells[spellIndex]);
+        const auto baseSpell = book.Spells[spellIndex];
+
+        int iconX = 56;
+        int topNameX = 87;
         int topTextX = 87;
         int iconTextX = 112;
-        uint32_t iconSerial = ID_GSB_SPELL_ICON_LEFT + spell;
-        if (page % 2 == 1) // page on the right
+        const uint32_t iconSerial = ID_GSB_SPELL_SERIAL + spellIndex;
+        if (page % 2 == 1)
         {
-            iconX = 225;
-            topTextX = 244;
+            iconX = 224;
+            topNameX = 224;
+            topTextX = 242;
             iconTextX = 275;
-            iconSerial = ID_GSB_SPELL_ICON_RIGHT + spell;
         }
         Add(new CGUIPage(page));
         page++;
 
-        astr_t magicWord;
-        astr_t reagents;
-        auto spellName = GetSpellName(spell, magicWord, reagents);
-        auto text = (CGUIText *)Add(new CGUIText(0x0288, topTextX, topTextY));
-        if (BookType == ST_MAGERY || BookType == ST_MASTERY)
+        CGUIText *text = nullptr;
+        if (book.Type == ST_MAGERY || book.Type == ST_MASTERY)
         {
-            const auto title = BookType == ST_MAGERY ? s_SpellCircleName[spell / 8] :
-                                                       MasterGroupNameById(spell + 1);
+            text = (CGUIText *)Add(new CGUIText(nameColor, topTextX, topTextY));
+            const auto title = book.Type == ST_MAGERY ? s_SpellCircleName[spellIndex / 8] :
+                                                        MasterGroupNameById(spellIndex + 1);
             text->CreateTextureA(6, title);
-            text = (CGUIText *)Add(new CGUIText(0x0288, iconTextX, 34));
-            text->CreateTextureA(6, spellName, 80);
-            if (magicWord[0] != 0)
+            text = (CGUIText *)Add(new CGUIText(nameColor, iconTextX, 34));
+            text->CreateTextureA(6, baseSpell->Name, 80);
+            if (baseSpell->PowerWords != nullptr)
             {
                 int magicWordY = (text->m_Texture.Height < 24) ? 31 : 26;
                 magicWordY += text->m_Texture.Height;
-                text = (CGUIText *)Add(new CGUIText(0x0288, iconTextX, magicWordY));
-                const auto font = BookType == ST_MAGERY ? 8 /* runes */ : 6;
-                text->CreateTextureA(font, magicWord, 80);
+                const auto color = book.Type == ST_MAGERY ? nameColor : powerColor;
+                text = (CGUIText *)Add(new CGUIText(color, iconTextX, magicWordY));
+                const auto font = book.Type == ST_MAGERY ? 8 /* runes */ : 6;
+                text->CreateTextureA(font, baseSpell->PowerWords, 80);
             }
         }
         else
         {
-            text->CreateTextureA(6, spellName);
-            if (hasMagicWords)
+            text = (CGUIText *)Add(new CGUIText(nameColor, topNameX, topTextY));
+            text->CreateTextureA(6, baseSpell->Name, 100);
+            if (baseSpell->PowerWords != nullptr)
             {
-                text = (CGUIText *)Add(new CGUIText(0x0288, iconTextX, 34));
-                text->CreateTextureA(6, magicWord, 80);
+                text = (CGUIText *)Add(new CGUIText(nameColor, iconTextX, 34));
+                text->CreateTextureA(6, baseSpell->PowerWords, 80);
             }
         }
 
-        if (BookType == ST_MASTERY && iconStartGraphic + spell > 0x094a &&
-            iconStartGraphic < 0x9b8b - spell)
-        {
-            iconStartGraphic = 0x9b8b - spell; // FIXME: icon fixup
-        }
-        auto icon = (CGUIGumppic *)Add(new CGUIGumppic(iconStartGraphic + spell, iconX, 40));
+        auto icon = (CGUIGumppic *)Add(new CGUIGumppic(baseSpell->BookIconGraphic, iconX, 40));
         icon->Serial = iconSerial;
-        if (haveReagents || reagents[0])
+        if (baseSpell->Reagents != nullptr)
         {
-            Add(new CGUIGumppicTiled(0x0835, iconX, 88, 120, 0));
-            text = (CGUIText *)Add(new CGUIText(0x0288, iconX, 92));
+            if (book.HasSeparator)
+            {
+                // line separator
+                Add(new CGUIGumppicTiled(0x0835, iconX, 88, 120, 0));
+            }
+            text = (CGUIText *)Add(new CGUIText(nameColor, iconX, 92));
             text->CreateTextureA(6, "Reagents:");
-            text = (CGUIText *)Add(new CGUIText(0x0288, iconX, 114));
-            text->CreateTextureA(9, reagents);
+            text = (CGUIText *)Add(new CGUIText(nameColor, iconX, 114));
+            text->CreateTextureA(9, baseSpell->Reagents);
         }
 
-        if (BookType != ST_MAGERY)
+        if (book.Type != ST_MAGERY)
         {
             int requriesY = 0;
-            auto requries = GetSpellRequries(spell, requriesY);
-            text = (CGUIText *)Add(new CGUIText(0x0288, iconX, requriesY));
+            auto requries = GetSpellRequries(spellIndex, requriesY);
+            text = (CGUIText *)Add(new CGUIText(nameColor, iconX, requriesY));
             text->CreateTextureA(6, requries);
         }
     }
@@ -972,48 +629,32 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
     {
         LockMoving = !LockMoving;
     }
-    else if (serial >= ID_GSB_SPELL_ICON_LEFT)
+    else if (serial >= ID_GSB_SPELL_SERIAL)
     {
-        int maxSpellsCount = 0;
-        int indexPagesCount = 0;
-        int spellsOnPage = 0;
-        int spellIndexOffset = 0;
-        uint16_t graphic = 0;
-        uint16_t minimizedGraphic = 0;
-        uint16_t iconStartGraphic = 0;
-
-        GetSummaryBookInfo(
-            maxSpellsCount,
-            indexPagesCount,
-            spellsOnPage,
-            spellIndexOffset,
-            graphic,
-            minimizedGraphic,
-            iconStartGraphic);
-
-        if (Page < indexPagesCount)
+        const auto book = GetSpellbook(BookType);
+        if (Page < book.IndexPagesCount)
         {
             for (int j = 0; j < 2; j++)
             {
-                for (int i = 0; i < spellsOnPage; i++)
+                const int currentPage = Page + j;
+                const int indexPage = BookType == ST_MASTERY ? currentPage / 2 : currentPage;
+                for (int i = 0; i < book.SpellsPerPage; i++)
                 {
-                    const int offset = j + (BookType == ST_MASTERY ? Page / 2 : Page);
-                    const int spell = BookType == ST_MASTERY ? m_SpellIndices8[Page / 2][i] - 1 :
-                                                               i + (spellsOnPage * offset);
-                    if (spell >= 0 && m_Spells[spell] == 0)
+                    const int spellIndex = i + (book.SpellsPerPage * indexPage);
+                    assert(spellIndex >= 0 && spellIndex < MAX_SPELLS_COUNT);
+                    if (m_Spells[spellIndex] == 0)
                     {
                         continue;
                     }
 
-                    if (serial == spell + ID_GSB_SPELL_ICON_LEFT ||
-                        serial == spell + ID_GSB_SPELL_ICON_RIGHT)
+                    if (serial == spellIndex + ID_GSB_SPELL_SERIAL)
                     {
-                        int c = indexPagesCount;
-                        for (int k = 0; k < maxSpellsCount; k++)
+                        int c = book.IndexPagesCount;
+                        for (int k = 0; k < book.SpellCount; k++)
                         {
                             if (m_Spells[k] != 0)
                             {
-                                if (k == spell)
+                                if (k == spellIndex)
                                 {
                                     break;
                                 }
@@ -1043,7 +684,7 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
 
 void CGumpSpellbook::GUMP_TEXT_ENTRY_EVENT_C
 {
-    if (serial >= ID_GSB_SPELL_ICON_LEFT)
+    if (serial >= ID_GSB_SPELL_SERIAL)
     {
         OnButton(serial);
     }
@@ -1078,31 +719,24 @@ bool CGumpSpellbook::OnLeftMouseButtonDoubleClick()
             WantRedraw = true;
             result = true;
         }
-        else
+        else if (g_PressedObject.LeftSerial >= ID_GSB_SPELL_SERIAL)
         {
-            if (g_PressedObject.LeftSerial >= ID_GSB_SPELL_ICON_LEFT)
+            const int spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_SERIAL;
+            const auto book = GetSpellbook(BookType);
+            const auto spell = book.Spells[spellIndex];
+            if (g_Config.ClientVersion < CV_308Z)
             {
-                int spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_ICON_RIGHT + 1;
-                if (g_PressedObject.LeftSerial < ID_GSB_SPELL_ICON_RIGHT)
-                {
-                    spellIndex = g_PressedObject.LeftSerial - ID_GSB_SPELL_ICON_LEFT + 1;
-                }
-                spellIndex += BookType == ST_MYSTICISM ? 677 : int(BookType) * 100;
-                if (g_Config.ClientVersion < CV_308Z)
-                {
-                    g_Game.CastSpellFromBook(spellIndex, Serial);
-                }
-                else
-                {
-                    g_Game.CastSpell(spellIndex);
-                }
-                Minimized = true;
-                WantUpdateContent = true;
-                result = true;
+                g_Game.CastSpellFromBook(spell->Id, Serial);
             }
+            else
+            {
+                g_Game.CastSpell(spell->Id);
+            }
+            Minimized = true;
+            WantUpdateContent = true;
+            result = true;
         }
     }
-
     return result;
 }
 
@@ -1122,319 +756,3 @@ void CGumpSpellbook::ChangePage(int newPage)
     m_NextPage->Visible = (Page + 2 < PageCount);
     g_Game.PlaySoundEffect(0x0055);
 }
-
-astr_t CGumpSpellbook::m_SpellName1[][2] = { { "Clumsy", "U J" },
-                                             { "Create Food", "I M Y" },
-                                             { "Feeblemind", "R W" },
-                                             { "Heal", "I M" },
-                                             { "Magic Arrow", "I P Y" },
-                                             { "Night Sight", "I L" },
-                                             { "Reactive Armor", "F S" },
-                                             { "Weaken", "D M" },
-                                             { "Agility", "E U" },
-                                             { "Cunning", "U W" },
-                                             { "Cure", "A N" },
-                                             { "Harm", "A M" },
-                                             { "Magic Trap", "I J" },
-                                             { "Magic Untrap", "A J" },
-                                             { "Protection", "U S" },
-                                             { "Strength", "U M" },
-                                             { "Bless", "R S" },
-                                             { "Fireball", "V F" },
-                                             { "Magic Lock", "A P" },
-                                             { "Poison", "I N" },
-                                             { "Telekinesis", "O P Y" },
-                                             { "Teleport", "R P" },
-                                             { "Unlock", "E P" },
-                                             { "Wall of Stone", "I S Y" },
-                                             { "Arch Cure", "V A N" },
-                                             { "Arch Protection", "V U S" },
-                                             { "Curse", "D S" },
-                                             { "Fire Field", "I F G" },
-                                             { "Greater Heal", "I V M" },
-                                             { "Lightning", "P O G" },
-                                             { "Mana Drain", "O R" },
-                                             { "Recall", "K O P" },
-                                             { "Blade Spirits", "I H J Y" },
-                                             { "Dispel Field", "A G" },
-                                             { "Incognito", "K I E" },
-                                             { "Magic Reflection", "I J S" },
-                                             { "Mind Blast", "P C W" },
-                                             { "Paralyze", "A E P" },
-                                             { "Poison Field", "I N G" },
-                                             { "Summ. Creature", "K X" },
-                                             { "Dispel", "A O" },
-                                             { "Energy Bolt", "C P" },
-                                             { "Explosion", "V O F" },
-                                             { "Invisibility", "A L X" },
-                                             { "Mark", "K P Y" },
-                                             { "Mass Curse", "V D S" },
-                                             { "Paralyze Field", "I E G" },
-                                             { "Reveal", "W Q" },
-                                             { "Chain Lightning", "V O G" },
-                                             { "Energy Field", "I S G" },
-                                             { "Flame Strike", "K V F" },
-                                             { "Gate Travel", "V R P" },
-                                             { "Mana Vampire", "O S" },
-                                             { "Mass Dispel", "V A O" },
-                                             { "Meteor Swarm", "F K D Y" },
-                                             { "Polymorph", "V Y R" },
-                                             { "Earthquake", "I V P" },
-                                             { "Energy Vortex", "V C P" },
-                                             { "Resurrection", "A C" },
-                                             { "Air Elemental", "K V X H" },
-                                             { "Summon Daemon", "K V X C" },
-                                             { "Earth Elemental", "K V X Y" },
-                                             { "Fire Elemental", "K V X F" },
-                                             { "Water Elemental", "K V X A" } };
-
-astr_t CGumpSpellbook::m_SpellReagents1[SPELLBOOK_1_SPELLS_COUNT] = {
-    "Bloodmoss\nNightshade",
-    "Garlic\nGinseng\nMandrake root",
-    "Ginseng\nNightshade",
-    "Garlic\nGinseng\nSpiders silk",
-    "Black pearl\nNightshade",
-    "Sulfurous ash\nSpiders silk",
-    "Garlic\nSulfurous ash\nSpiders silk",
-    "Garlic\nNightshade",
-    "Bloodmoss\nMandrake root",
-    "Mandrake root\nNightshade",
-    "Garlic\nGinseng",
-    "Nightshade\nSpiders silk",
-    "Garlic\nSulfurous ash\nSpiders silk",
-    "Bloodmoss\nSulfurous ash",
-    "Garlic\nGinseng\nSulfurous ash",
-    "Mandrake root\nNightshade",
-    "Garlic\nMandrake root",
-    "Black pearl\nSulfurous ash",
-    "Sulfurous ash\nBloodmoss\nGarlic",
-    "Nightshade",
-    "Bloodmoss\nMandrake root",
-    "Bloodmoss\nMandrake root",
-    "Bloodmoss\nSulfurous ash",
-    "Bloodmoss\nGarlic",
-    "Garlic\nGinseng\nMandrake root",
-    "Garlic\nGinseng\nMandrake root\nSulfurous ash",
-    "Garlic\nNightshade\nSulfurous ash",
-    "Black pearl\nSpiders silk\nSulfurous ash",
-    "Garlic\nGinseng\nMandrake root\nSpiders silk",
-    "Black pearl\nMandrake root\nSulfurous ash",
-    "Black pearl\nMandrake root\nSpiders silk",
-    "Black pearl\nBloodmoss\nMandrake root",
-    "Black pearl\nMandrake root\nNightshade",
-    "Garlic\nBlack pearl\nSpiders silk\nSulfurous ash",
-    "Bloodmoss\nGarlic\nNightshade",
-    "Garlic\nMandrake root\nSpiders silk",
-    "Black pearl\nMandrake root\nNightshade\nSulfurous ash",
-    "Garlic\nMandrake root\nSpiders silk",
-    "Black pearl\nNightshade\nSpiders silk",
-    "Bloodmoss\nMandrake root\nSpiders silk",
-    "Garlic\nMandrake root\nSulfurous ash",
-    "Black pearl\nNightshade",
-    "Black pearl\nMandrake root\nSulfurous ash",
-    "Bloodmoss\nNightshade",
-    "Black pearl\nBloodmoss\nMandrake root",
-    "Garlic\nMandrake root\nNightshade\nSulfurous ash",
-    "Black pearl\nGinseng\nSpiders silk",
-    "Bloodmoss\nSulfurous ash",
-    "Black pearl\nMandrake root\nBloodmoss\nSulfurous ash",
-    "Black pearl\nMandrake root\nSpiders silk\nSulfurous ash",
-    "Spiders silk\nSulfurous ash",
-    "Black pearl\nMandrake root\nSulfurous ash",
-    "Black pearl\nBloodmoss\nMandrake root\nSpiders silk",
-    "Black pearl\nGarlic\nMandrake root\nSulfurous ash",
-    "Bloodmoss\nSpiders silk\nMandrake root\nSulfurous ash",
-    "Bloodmoss\nMandrake root\nSpiders silk",
-    "Bloodmoss\nGinseng\nMandrake root\nSulfurous ash",
-    "Black pearl\nBloodmoss\nMandrake root\nNightshade",
-    "Bloodmoss\nGarlic\nGinseng",
-    "Bloodmoss\nMandrake root\nSpiders silk",
-    "Bloodmoss\nMandrake root\nSpiders silk\nSulfurous ash",
-    "Bloodmoss\nMandrake root\nSpiders silk",
-    "Bloodmoss\nMandrake root\nSpiders silk\nSulfurous ash",
-    "Bloodmoss\nMandrake root\nSpiders silk"
-};
-
-const astr_t CGumpSpellbook::m_SpellName2[SPELLBOOK_2_SPELLS_COUNT][2]{
-    { "Animate Dead", "Uus Corp" },
-    { "Blood Oath", "In Jux Mani Xen" },
-    { "Corpse Skin", "In Aglo Corp Ylem" },
-    { "Curse Weapon", "An Sanct Gra Char" },
-    { "Evil Omen", "Pas Tym An Sanct" },
-    { "Horrific Beast", "Rel Xen Vas Bal" },
-    { "Lich Form", "Rel Xen Corp Ort" },
-    { "Mind Rot", "Wis An Ben" },
-    { "Pain Spike", "In Sar" },
-    { "Poison Strike", "In Vas Nox" },
-    { "Strangle", "In Bal Nox" },
-    { "Summon Familiar", "Kal Xen Bal" },
-    { "Vampiric Embrace", "Rel Xen An Sanct" },
-    { "Vengeful Spirit", "Kal Xen Bal Beh" },
-    { "Wither", "Kal Vas An Flam" },
-    { "Wraith Form", "Rel Xen Um" },
-    { "Exorcism", "Ort Corp Grav" }
-};
-
-const astr_t CGumpSpellbook::m_SpellReagents2[SPELLBOOK_2_SPELLS_COUNT] = {
-    "Daemon Blood\nGrave Dust",
-    "Daemon Blood",
-    "Batwing\nGrave Dust",
-    "Pig Iron",
-    "Batwing\nNox Crystal",
-    "Batwing\nDaemon Blood",
-    "Nox Crystal\nDaemon Blood\nGrave Dust",
-    "Batwing\nDaemon Blood\nPig Iron",
-    "Grave Dust\nPig Iron",
-    "Nox Crystal",
-    "Nox Crystal\nDaemon Blood",
-    "Batwing\nGrave Dust\nDaemon Blood",
-    "Batwing\nNox Crystal\nPig Iron",
-    "Batwing\nGrave Dust\nPig Iron",
-    "Nox Crystal\nGrave Dust\nPig Iron",
-    "Nox Crystal\nPig Iron",
-    "Nox Crystal\nGrave Dust"
-};
-
-const astr_t CGumpSpellbook::m_SpellName3[SPELLBOOK_3_SPELLS_COUNT][2]{
-    { "Cleanse by Fire", "Expor Flamus" },     { "Close Wounds", "Obsu Vulni" },
-    { "Consecrate Weapon", "Consecrus Arma" }, { "Dispel Evil", "Dispiro Malas" },
-    { "Divine Fury", "Divinum Furis" },        { "Enemy of One", "Forul Solum" },
-    { "Holy Light", "Augus Luminos" },         { "Noble Sacrifice", "Dium Prostra" },
-    { "Remove Curse", "Extermo Vomica" },      { "Sacred Journey", "Sanctum Viatas" }
-};
-
-const astr_t CGumpSpellbook::m_SpellName4[SPELLBOOK_4_SPELLS_COUNT]{
-    "Honorable Execution", "Confidence",       "Evasion",
-    "Counter Attack",      "Lightning Strike", "Momentum Strike"
-};
-
-const astr_t CGumpSpellbook::m_SpellName5[SPELLBOOK_5_SPELLS_COUNT]{
-    "Focus Attack",    "Death Strike", "Animal Form", "Ki Attack",
-    "Surprise Attack", "Backstab",     "Shadowjump",  "Mirror Image"
-};
-
-const astr_t CGumpSpellbook::m_SpellName6[SPELLBOOK_6_SPELLS_COUNT][2]{
-    { "Arcane Circle", "Myrshalee" },     { "Gift of Renewal", "Olorisstra" },
-    { "Immolating Weapon", "Thalshara" }, { "Attunement", "Haeldril" },
-    { "Thunderstorm", "Erelonia" },       { "Nature's Fury", "Rauvvrae" },
-    { "Summon Fey", "Alalithra" },        { "Summon Fiend", "Nylisstra" },
-    { "Reaper Form", "Tarisstree" },      { "Wildfire", "Haelyn" },
-    { "Essence of Wind", "Anathrae" },    { "Dryad Allure", "Rathril" },
-    { "Ethereal Voyage", "Orlavdra" },    { "Word of Death", "Nyraxle" },
-    { "Gift of Life", "Illorae" },        { "Arcane Empowerment", "Aslavdra" }
-};
-
-const astr_t CGumpSpellbook::m_SpellName7[SPELLBOOK_7_SPELLS_COUNT][3]{
-    { "Nether Bolt", "In Corp Ylem", "Black pearl\nSulfurous ash" },
-    { "Healing Stone", "Kal In Mani", "Bone\nGarlic\nGinseng\nSpiders silk" },
-    { "Purge Magic", "An Ort Sanct", "Fertile dirt\nGarlic\nMandrake root\nSulfurous ash" },
-    { "Enchant", "In Ort Ylem", "Spider silk\nMandrake root\nSulfurous ash" },
-    { "Sleep", "In Zu", "Nightshade\nSpider silk\nBlack pearl" },
-    { "Eagle Strike", "Kal Por Xen", "Bloodmoss\nBone\nMandrake root\nSpiders silk" },
-    { "Animated Weapon", "In Jux Por Ylem", "Bone\nBlack pearl\nMandrake root\nNightshade" },
-    { "Stone Form", "In Rel Ylem", "Bloodmoss\nFertile dirt\nGarlic" },
-    { "Spell Trigger", "In Vas Ort Ex", "Dragon's blood\nGarlic\nMandrake root\nSpiders silk" },
-    { "Mass Sleep", "Vas Zu", "Gingeng\nNightshade\nSpiders silk" },
-    { "Cleansing Winds", "In Vas Mani Hur", "Dragon's blood\nGarlic\nGinseng\nMandrake root" },
-    { "Bombard", "Corp Por Ylem", "Bloodmoss\nDragon's blood\nNightshade\nSulfurous ash" },
-    { "Spell Plague", "Vas Rel Jux Ort", "Daemon bone\nDragon's blood\nNightshade\nSulfurous ash" },
-    { "Hail Storm", "Kal Des Ylem", "Dragon's blood\nBlack pearl\nBloodmoss\nMandrake root" },
-    { "Nether Cyclone", "Grav Hur", "Mandrake root\nNightshade\nSulfurous ash\nBloodmoss" },
-    { "Rising Colossus",
-      "Kal Vas Xen Corp Ylem",
-      "Daemon bone\nDragon's blood\nFertile dirt\nNightshade" },
-};
-
-const astr_t CGumpSpellbook::m_SpellName8[SPELLBOOK_8_SPELLS_COUNT][3]{
-    { "Inspire", "Uus Por", "" },
-    { "Invigorate", "An Zu", "" },
-    { "Resilience", "Kal Mani Tym", "" },
-    { "Perseverance", "Uus Jux Sanct", "" },
-    { "Tribulation", "In Jux Hur Rel", "" },
-    { "Despair", "Kal Des Mani Tym", "" },
-    { "Death Ray", "In Grav Corp", "Black pearl\nBloodmoss\nSpiders silk" },
-    { "Ethereal Burst", "Uus Ort Grav", "Bloodmoss\nGinseng\nMandrake root" },
-    { "Nether Blast", "In Vas Xen Por", "Dragon's blood\nDaemon bone" },
-    { "Mystic Weapon", "Vas Ylem Wis", "Fertile dirt\nBone" },
-    { "Command Undead", "In Corp Xen Por", "Daemon blood\nPig iron\nBatwing" },
-    { "Conduit", "Uus Corp Grav", "Nox crystal\nBatwing\nGrave dust" },
-    { "Mana Shield", "Faerkulggen", "" },
-    { "Summon Reaper", "Lartarisstree", "" },
-    { "Enchanted Summoning", "", "" },
-    { "Anticipate Hit", "", "" },
-    { "Warcry", "", "" },
-    { "Intuition", "", "" },
-    { "Rejuvenate", "", "" },
-    { "Holy Fist", "", "" },
-    { "Shadow", "", "" },
-    { "White Tiger Form", "", "" },
-    { "Flaming Shot", "", "" },
-    { "Playing The Odds", "", "" },
-    { "Thrust", "", "" },
-    { "Pierce", "", "" },
-    { "Stagger", "", "" },
-    { "Toughness", "", "" },
-    { "Onslaught", "", "" },
-    { "Focused Eye", "", "" },
-    { "Elemental Fury", "", "" },
-    { "Called Shot", "", "" },
-    { "Warrior's Gifts", "", "" },
-    { "Shield Bash", "", "" },
-    { "Bodyguard", "", "" },
-    { "Highten Senses", "", "" },
-    { "Tolerance", "", "" },
-    { "Injected Strike", "", "" },
-    { "Potency", "", "" },
-    { "Rampage", "", "" },
-    { "Fists of Fury", "", "" },
-    { "Knockout", "", "" },
-    { "Whispering", "", "" },
-    { "Combat Training", "", "" },
-    { "Boarding", "", "" },
-};
-
-const SPELL_REQURIES CGumpSpellbook::m_SpellRequries2[SPELLBOOK_2_SPELLS_COUNT] = {
-    { 23, 40 }, { 13, 20 }, { 11, 20 }, { 7, 0 },   { 11, 20 }, { 11, 40 },
-    { 23, 70 }, { 17, 30 }, { 5, 20 },  { 17, 50 }, { 29, 65 }, { 17, 30 },
-    { 23, 99 }, { 41, 80 }, { 23, 60 }, { 17, 20 }, { 40, 80 }
-};
-
-const PALADIN_SPELL_REQURIES CGumpSpellbook::m_SpellRequries3[SPELLBOOK_3_SPELLS_COUNT] = {
-    { 10, 5, 10 },  { 10, 0, 10 },  { 10, 15, 10 }, { 10, 35, 10 }, { 15, 25, 10 },
-    { 20, 45, 10 }, { 10, 55, 10 }, { 20, 65, 30 }, { 20, 5, 10 },  { 10, 15, 15 }
-};
-
-const SPELL_REQURIES CGumpSpellbook::m_SpellRequries4[SPELLBOOK_4_SPELLS_COUNT] = {
-    { 0, 25 }, { 10, 25 }, { 10, 60 }, { 5, 40 }, { 10, 50 }, { 10, 70 }
-};
-
-const SPELL_REQURIES CGumpSpellbook::m_SpellRequries5[SPELLBOOK_5_SPELLS_COUNT] = {
-    { 10, 30 }, { 30, 85 }, { 10, 0 }, { 25, 80 }, { 20, 60 }, { 30, 40 }, { 15, 50 }, { 10, 20 }
-};
-
-const SPELL_REQURIES CGumpSpellbook::m_SpellRequries6[SPELLBOOK_6_SPELLS_COUNT] = {
-    { 20, 0 },  { 24, 0 },  { 32, 10 }, { 24, 0 },  { 32, 10 }, { 24, 0 },  { 10, 38 }, { 10, 38 },
-    { 34, 24 }, { 50, 66 }, { 40, 52 }, { 40, 52 }, { 32, 24 }, { 50, 23 }, { 70, 38 }, { 50, 24 }
-};
-
-const SPELL_REQURIES CGumpSpellbook::m_SpellRequries7[SPELLBOOK_7_SPELLS_COUNT] = {
-    { 4, 0 },   { 4, 0 },   { 6, 8 },   { 6, 8 },   { 8, 20 },  { 9, 20 },  { 11, 33 }, { 11, 33 },
-    { 14, 45 }, { 14, 45 }, { 20, 58 }, { 20, 58 }, { 40, 70 }, { 50, 70 }, { 50, 83 }, { 50, 83 }
-};
-
-const PALADIN_SPELL_REQURIES CGumpSpellbook::m_SpellRequries8[SPELLBOOK_8_SPELLS_COUNT] = {
-    { 16, 90, 4 },  { 22, 90, 5 },  { 16, 90, 4 }, { 18, 90, 5 }, { 24, 90, 10 }, { 26, 90, 12 },
-    { 50, 90, 35 }, { 0, 90, 0 },   { 40, 90, 0 }, { 40, 90, 0 }, { 40, 90, 0 },  { 40, 90, 0 },
-    { 40, 90, 0 },  { 50, 90, 0 },  { 0, 90, 0 },  { 10, 90, 0 }, { 40, 90, 0 },  { 0, 90, 0 },
-    { 10, 90, 35 }, { 50, 90, 35 }, { 10, 90, 4 }, { 10, 90, 0 }, { 30, 90, 0 },  { 25, 90, 0 },
-    { 30, 90, 20 }, { 20, 90, 0 },  { 20, 90, 0 }, { 20, 90, 0 }, { 20, 90, 0 },  { 20, 90, 0 },
-    { 20, 90, 0 },  { 40, 90, 0 },  { 50, 90, 0 }, { 50, 90, 0 }, { 40, 90, 0 },  { 10, 90, 10 },
-    { 20, 90, 0 },  { 30, 90, 0 },  { 0, 90, 0 },  { 20, 90, 0 }, { 20, 90, 0 },  { 0, 90, 0 },
-    { 40, 90, 0 },  { 40, 90, 0 },  { 0, 90, 0 },
-};
-
-const int CGumpSpellbook::m_SpellIndices8[SPELLBOOK_8_SPELLS_COUNT][8] = {
-    { 1, 2, 3, 4, 5, 6, 7, 8 },        { 9, 10, 11, 12, 13, 14, 19, 20 },
-    { 17, 21, 22, 25, 34, 35, 36, 0 }, { 27, 28, 29, 32, 37, 38, 40, 41 },
-    { 23, 24, 30, 31, 43, 44, 0, 0 },  { 15, 16, 18, 33, 39, 42, 45, 0 },
-};

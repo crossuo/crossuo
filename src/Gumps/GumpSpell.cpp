@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "GumpSpell.h"
+#include "GumpSpellbook.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
 #include "../PressedObject.h"
@@ -11,12 +12,12 @@
 #include "../Managers/ConfigManager.h"
 #include "../Managers/ClilocManager.h"
 
-CGumpSpell::CGumpSpell(
-    uint32_t serial, short x, short y, uint16_t graphic, SPELLBOOK_TYPE spellType)
+CGumpSpell::CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, short x, short y)
     : CGump(GT_SPELL, serial, x, y)
-    , SpellType(spellType)
+    , SpellType(type)
 {
     Graphic = graphic;
+    BaseSpell = GetSpellByGraphicAndType(Graphic, SpellType);
     m_Locker.Serial = ID_GS_LOCK_MOVING;
     BigIcon = false; // (graphic >= 0x5300 && graphic < 0x5500);
 
@@ -48,72 +49,7 @@ void CGumpSpell::InitToolTip()
     }
     else
     {
-        int tooltipOffset = 0;
-        int spellIndexOffset = 0;
-        GetTooltipSpellInfo(tooltipOffset, spellIndexOffset);
-        if (SpellType == ST_MASTERY)
-        {
-            tooltipOffset = Serial >= 137 && Serial <= 143 ? 1115612 : 1155890;
-        }
-        const int spellIndex = tooltipOffset + (Serial - spellIndexOffset);
-        g_ToolTip.Set(g_ClilocManager.Cliloc(g_Language)->GetW(spellIndex, true), 80);
-    }
-}
-
-void CGumpSpell::GetTooltipSpellInfo(int &tooltipOffset, int &spellIndexOffset)
-{
-    switch (SpellType)
-    {
-        case ST_MAGERY:
-        {
-            tooltipOffset = 3002011;
-            spellIndexOffset = 0;
-            break;
-        }
-        case ST_NECROMANCY:
-        {
-            tooltipOffset = 1060509;
-            spellIndexOffset = 64;
-            break;
-        }
-        case ST_CHIVALRY:
-        {
-            tooltipOffset = 1060585;
-            spellIndexOffset = 81;
-            break;
-        }
-        case ST_BUSHIDO:
-        {
-            tooltipOffset = 1060595;
-            spellIndexOffset = 91;
-            break;
-        }
-        case ST_NINJITSU:
-        {
-            tooltipOffset = 1060610;
-            spellIndexOffset = 97;
-            break;
-        }
-        case ST_SPELLWEAVING:
-        {
-            tooltipOffset = 1071026;
-            spellIndexOffset = 105;
-            break;
-        }
-        case ST_MYSTICISM:
-        {
-            tooltipOffset = 1031678;
-            spellIndexOffset = 121;
-            break;
-        }
-        case ST_MASTERY:
-        {
-            tooltipOffset = 0;
-            spellIndexOffset = 137;
-            break;
-        }
-        default:
-            break;
+        g_ToolTip.Set(g_ClilocManager.Cliloc(g_Language)->GetW(BaseSpell->NameCliloc, true), 80);
     }
 }
 
@@ -451,11 +387,6 @@ void CGumpSpell::GUMP_BUTTON_EVENT_C
 
 bool CGumpSpell::OnLeftMouseButtonDoubleClick()
 {
-    int tooltipOffset = 0;
-    int spellIndexOffset = 0;
-    GetTooltipSpellInfo(tooltipOffset, spellIndexOffset);
-    const int spellIndex = Serial - spellIndexOffset;
-    const int spellOffset = SpellType == ST_MYSTICISM ? 677 : int(SpellType) * 100;
-    g_Game.CastSpell(spellOffset + spellIndex);
+    g_Game.CastSpell(BaseSpell->Id);
     return true;
 }

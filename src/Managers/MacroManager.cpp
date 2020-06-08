@@ -930,13 +930,13 @@ MACRO_RETURN_CODE CMacroManager::Process(CMacroObject *macro)
             int spell = (macro->SubCode - MSC_G6_CLUMSY + 1);
             if (spell > 0 && spell <= 151)
             {
-                const int spellsCountTable[7] = { CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT,
-                                                  CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT,
-                                                  CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT,
-                                                  CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT,
-                                                  CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT,
-                                                  CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT,
-                                                  CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT };
+                const int spellsCountTable[] = {
+                    int(SpellCount::Magery),    int(SpellCount::Necromancy),
+                    int(SpellCount::Chivalry),  int(SpellCount::Bushido),
+                    int(SpellCount::Ninjitsu),  int(SpellCount::Spellweaving),
+                    int(SpellCount::Mysticism), int(SpellCount::Mastery),
+                };
+                static_assert(countof(spellsCountTable) == ST_COUNT, "missing spell count");
 
                 int totalCount = 0;
                 int spellType = 0;

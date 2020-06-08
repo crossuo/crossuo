@@ -44,6 +44,7 @@
 #include "../Gumps/GumpOptions.h"
 #include "../Gumps/GumpMenu.h"
 #include "../Gumps/GumpGeneric.h"
+#include "../Gumps/GumpSpellbook.h"
 #include "../Network/Packets.h"
 #include "../Utility/PerfMarker.h"
 
@@ -65,7 +66,6 @@ int CGumpManager::GetNonpartyStatusbarsCount()
     return count;
 }
 
-// FIXME: This API taking ownership of obj and deleting "sometimes" is not safe
 void CGumpManager::AddGump(CGump *obj)
 {
     if (m_Items == nullptr)
@@ -1307,7 +1307,7 @@ void CGumpManager::Load(const fs_path &path)
                         {
                             spellType = (SPELLBOOK_TYPE)file.ReadUInt8();
                         }
-                        gump = new CGumpSpell(serial, gumpX, gumpY, graphic, spellType);
+                        gump = new CGumpSpell(serial, spellType, graphic, gumpX, gumpY);
                     }
                     else
                     {
@@ -1406,7 +1406,7 @@ void CGumpManager::Load(const fs_path &path)
                     spellType = (SPELLBOOK_TYPE)file.ReadUInt8();
                 }
 
-                CGumpSpell *spell = new CGumpSpell(serial, gumpX, gumpY, graphic, spellType);
+                CGumpSpell *spell = new CGumpSpell(serial, spellType, graphic, gumpX, gumpY);
                 spell->LockMoving = (gumpLockMoving != 0u);
 
                 AddGump(spell);
@@ -1546,15 +1546,12 @@ void CGumpManager::Save(const fs_path &path)
     Wisp::CBinaryFileWriter writer;
 
     writer.Open(path);
-
     writer.WriteInt8(1); //version
     writer.WriteBuffer();
-
     short count = 0;
 
     std::vector<CGump *> containerList;
     std::vector<CGump *> spellInGroupList;
-
     QFOR(gump, m_Items, CGump *)
     {
         switch (gump->GumpType)
@@ -1572,7 +1569,6 @@ void CGumpManager::Save(const fs_path &path)
             case GT_PROPERTY_ICON:
             {
                 uint8_t size = 12;
-
                 if (gump->GumpType == GT_JOURNAL)
                 {
                     size += 2;
@@ -1587,7 +1583,6 @@ void CGumpManager::Save(const fs_path &path)
                 }
 
                 SaveDefaultGumpProperties(writer, gump, size);
-
                 if (gump->GumpType == GT_JOURNAL)
                 {
                     writer.WriteUInt16LE(((CGumpJournal *)gump)->Height);
@@ -1599,21 +1594,16 @@ void CGumpManager::Save(const fs_path &path)
                 else if (gump->GumpType == GT_WORLD_MAP)
                 {
                     CGumpWorldMap *wmg = (CGumpWorldMap *)gump;
-
                     writer.WriteUInt8(wmg->GetMap());
                     writer.WriteUInt8(wmg->GetScale());
                     writer.WriteUInt8(static_cast<uint8_t>(wmg->GetLinkWithPlayer()));
-
                     writer.WriteInt16LE(wmg->Width);
                     writer.WriteInt16LE(wmg->Height);
-
                     writer.WriteInt16LE(wmg->OffsetX);
                     writer.WriteInt16LE(wmg->OffsetY);
                 }
-
                 writer.WriteBuffer();
                 count++;
-
                 break;
             }
             case GT_MENUBAR:
@@ -1621,21 +1611,16 @@ void CGumpManager::Save(const fs_path &path)
             case GT_RACIAL_ABILITIES_BOOK:
             {
                 SaveDefaultGumpProperties(writer, gump, 12);
-
                 writer.WriteBuffer();
                 count++;
-
                 break;
             }
             case GT_BUFF:
             {
                 SaveDefaultGumpProperties(writer, gump, 14);
-
                 writer.WriteUInt16LE(gump->Graphic);
-
                 writer.WriteBuffer();
                 count++;
-
                 break;
             }
             case GT_CONTAINER:
@@ -1645,14 +1630,12 @@ void CGumpManager::Save(const fs_path &path)
                 if (gump->GumpType != GT_SPELL)
                 {
                     CGameObject *topobj = g_World->FindWorldObject(gump->Serial);
-
                     if (topobj == nullptr || ((CGameItem *)topobj)->Layer == OL_BANK)
                     {
                         break;
                     }
 
                     topobj = topobj->GetTopObject();
-
                     if (topobj->Serial != g_PlayerSerial)
                     {
                         break;
@@ -1668,14 +1651,11 @@ void CGumpManager::Save(const fs_path &path)
                 }
 
                 SaveDefaultGumpProperties(writer, gump, 19);
-
                 writer.WriteUInt32LE(gump->Serial);
                 writer.WriteUInt16LE(gump->Graphic);
                 writer.WriteUInt8(((CGumpSpell *)gump)->SpellType);
                 writer.WriteBuffer();
-
                 count++;
-
                 break;
             }
             case GT_CONSOLE_TYPE:
@@ -1713,31 +1693,22 @@ void CGumpManager::Save(const fs_path &path)
     {
         uint32_t containerSerial = playerContainers.front();
         playerContainers.erase(playerContainers.begin());
-
-        for (std::vector<CGump *>::iterator it = containerList.begin(); it != containerList.end();)
+        for (auto it = containerList.begin(); it != containerList.end();)
         {
             CGump *gump = *it;
-
             if (gump->Serial == containerSerial)
             {
                 SaveDefaultGumpProperties(writer, gump, 16);
-
                 writer.WriteUInt32LE(gump->Serial);
                 writer.WriteBuffer();
-
                 count++;
-
                 it = containerList.erase(it);
-
                 break;
             }
-            {
-                ++it;
-            }
+            ++it;
         }
 
         CGameObject *owner = g_World->FindWorldObject(containerSerial);
-
         if (owner != nullptr)
         {
             QFOR(item, owner->m_Items, CGameItem *)
@@ -1751,18 +1722,15 @@ void CGumpManager::Save(const fs_path &path)
     }
 
     int spellGroupsCount = 0;
-
     if (static_cast<unsigned int>(!spellInGroupList.empty()) != 0u)
     {
         std::vector<CGump *> spellGroups;
-
-        while (static_cast<unsigned int>(!spellInGroupList.empty()) != 0u)
+        while (static_cast<unsigned int>(!spellInGroupList.empty()) != 0)
         {
             CGumpSpell *spell = (CGumpSpell *)spellInGroupList[0];
             CGumpSpell *topSpell = spell->GetTopSpell();
             spellGroups.push_back(topSpell);
             spellGroupsCount++;
-
             for (spell = topSpell; spell != nullptr; spell = spell->m_GroupNext)
             {
                 for (std::vector<CGump *>::iterator it = spellInGroupList.begin();
@@ -1780,22 +1748,18 @@ void CGumpManager::Save(const fs_path &path)
 
         for (int i = 0; i < spellGroupsCount; i++)
         {
-            //CGumpSpell *spell = (CGumpSpell *)spellGroups[i];
             int spellsCount = 0;
-
-            for (CGumpSpell *spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
+            for (auto spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
                  spell = spell->m_GroupNext)
             {
                 spellsCount++;
             }
 
             writer.WriteInt16LE(spellsCount);
-
-            for (CGumpSpell *spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
+            for (auto spell = (CGumpSpell *)spellGroups[i]; spell != nullptr;
                  spell = spell->m_GroupNext)
             {
                 SaveDefaultGumpProperties(writer, spell, 19);
-
                 writer.WriteUInt32LE(spell->Serial);
                 writer.WriteUInt16LE(spell->Graphic);
                 writer.WriteUInt8(spell->SpellType);
@@ -1808,6 +1772,5 @@ void CGumpManager::Save(const fs_path &path)
     writer.WriteInt16LE(count);
     writer.WriteUInt32LE(0); //EOF
     writer.WriteBuffer();
-
     writer.Close();
 }

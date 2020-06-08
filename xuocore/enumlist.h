@@ -137,15 +137,19 @@ enum CLIENT_VERSION
     CV_7090 = VERSION(7, 0, 9, 0), //
     // static data count = 0x10000 (2048 * 32)
     // static tiles flags changed from 32bits to 64bits
-    CV_70130 = VERSION(7, 0, 13, 0), //
-    CV_70160 = VERSION(7, 0, 16, 0), //
-    CV_70180 = VERSION(7, 0, 18, 0), //
-    CV_70240 = VERSION(7, 0, 24, 0), // *.mul -> *.uop
-    CV_70331 = VERSION(7, 0, 33, 1), //
+    CV_70130 = VERSION(7, 0, 13, 0),   //
+    CV_70160 = VERSION(7, 0, 16, 0),   //
+    CV_70180 = VERSION(7, 0, 18, 0),   //
+    CV_70240 = VERSION(7, 0, 24, 0),   // *.mul -> *.uop
+    CV_70331 = VERSION(7, 0, 33, 1),   //
+    CV_704565 = VERSION(7, 0, 45, 65), // Mastery Spellbook
+    CV_70470 = VERSION(7, 0, 47, 0),   //
+    CV_70500 = VERSION(7, 0, 50, 0),   // Mastery fixes
     //CV_70600 = VERSION(7, 0, 60, 0), //
     CV_70611 = VERSION(7, 0, 61, 1), // login screen Endless Journey 7.0.61.1
     //CV_70640 = VERSION(7, 0, 64, 0), //
     CV_70796 = VERSION(7, 0, 79, 6), // Display houses content option
+    CV_708111 = VERSION(7, 0, 81, 11),
     CV_LATEST = CV_70796,
 };
 
@@ -240,14 +244,17 @@ enum LOCKED_FEATURE_FLAG
 
 enum SPELLBOOK_TYPE
 {
-    ST_MAGERY = 0,
-    ST_NECROMANCY = 1,
-    ST_CHIVALRY = 2,
-    ST_BUSHIDO = 4,
-    ST_NINJITSU = 5,
-    ST_SPELLWEAVING = 6,
-    ST_MASTERY = 7,
-    ST_MYSTICISM = 8
+    ST_INVALID = -1,
+    ST_FIRST,
+    ST_MAGERY = ST_FIRST,
+    ST_NECROMANCY,
+    ST_CHIVALRY,
+    ST_BUSHIDO,
+    ST_NINJITSU,
+    ST_SPELLWEAVING,
+    ST_MASTERY,
+    ST_MYSTICISM,
+    ST_COUNT,
 };
 
 enum SCREEN_EFFECT_MODE
@@ -557,7 +564,8 @@ enum VALUE_KEY_STRING
     VKS_SPELLBOOK_4_SPELL_NAME,
     VKS_SPELLBOOK_5_SPELL_NAME,
     VKS_SPELLBOOK_6_SPELL_NAME,
-    VKS_SPELLBOOK_7_SPELL_NAME
+    VKS_SPELLBOOK_7_SPELL_NAME,
+    VKS_SPELLBOOK_8_SPELL_NAME,
 };
 
 enum XUO_FILE_INDEX
