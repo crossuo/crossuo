@@ -86,7 +86,7 @@ static mft_result mft_download(
             bytes = *buffer_size;
         }
         break;
-        case 1:
+        case 1: // zlib level 6 (default)
         {
             auto cl = entry.compressed_len;
             assert(cl < *buffer_size);

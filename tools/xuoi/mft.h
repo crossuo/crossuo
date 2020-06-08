@@ -73,9 +73,9 @@ struct mft_entry
 struct mft_package
 {
     const char *name = nullptr;
-    const char *remote_path = nullptr;
-    const char *repo = nullptr;
     const char *pack_name = nullptr; // for packs in packages
+    const char *repo = nullptr;
+    const char *remote_path = nullptr;
     uint32_t priority = 0;
 };
 
