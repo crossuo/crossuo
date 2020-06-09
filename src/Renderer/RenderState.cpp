@@ -91,7 +91,8 @@ bool RenderState_SetAlphaTest(
         return state->alphaTest.func != func || state->alphaTest.alphaRef != ref;
     };
 
-    if (enabled && differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTestFunc_Invalid))
+    if (enabled &&
+        (differentFuncOrRef() || (forced && func != AlphaTestFunc::AlphaTestFunc_Invalid)))
     {
         changed = true;
         state->alphaTest.func = func;
@@ -147,9 +148,9 @@ bool RenderState_SetBlend(
         }
     }
 
-    if (enabled && (state->blend.src != src || state->blend.dst != dst) ||
-        (forced && (state->blend.src != BlendFactor::BlendFactor_Invalid &&
-                    state->blend.dst != BlendFactor::BlendFactor_Invalid)))
+    if (enabled && ((state->blend.src != src || state->blend.dst != dst) ||
+                    (forced && (state->blend.src != BlendFactor::BlendFactor_Invalid &&
+                                state->blend.dst != BlendFactor::BlendFactor_Invalid))))
     {
         changed = true;
         state->blend.src = src;

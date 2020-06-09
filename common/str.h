@@ -156,7 +156,7 @@ const char *str_lower(const char *aCStr)
 
 astr_t wstr_to_utf8(const wstr_t &aWstr)
 {
-#if 0 //defined(_MSC_VER)
+#if defined(_MSC_VER)
     int size = ::WideCharToMultiByte(
         CP_UTF8, 0, &aWstr[0], (int)aWstr.size(), nullptr, 0, nullptr, nullptr);
     astr_t result = "";
@@ -186,7 +186,7 @@ astr_t wstr_to_utf8(const wstr_t &aWstr)
 
 wstr_t wstr_from_utf8(const astr_t &aStr)
 {
-#if 0 //defined(_MSC_VER)
+#if defined(_MSC_VER)
     int size = ::MultiByteToWideChar(CP_UTF8, 0, &aStr[0], (int)aStr.size(), nullptr, 0);
     wstr_t result = {};
     if (size > 0)

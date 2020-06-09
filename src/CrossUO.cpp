@@ -2800,46 +2800,52 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
         }
         case VKI_SPELLBOOK_COUNT:
         {
-            if (value >= 0 && value < 7)
+            if (value >= ST_FIRST && value < ST_COUNT)
             {
                 switch (value)
                 {
                     case 1:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT;
+                        value = int(SpellCount::Magery);
                         break;
                     }
                     case 2:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT;
+                        value = int(SpellCount::Necromancy);
                         break;
                     }
                     case 3:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT;
+                        value = int(SpellCount::Chivalry);
                         break;
                     }
                     case 4:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT;
+                        value = int(SpellCount::Bushido);
                         break;
                     }
                     case 5:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT;
+                        value = int(SpellCount::Ninjitsu);
                         break;
                     }
                     case 6:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT;
+                        value = int(SpellCount::Spellweaving);
                         break;
                     }
                     case 7:
                     {
-                        value = CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT;
+                        value = int(SpellCount::Mysticism);
+                        break;
+                    }
+                    case 8:
+                    {
+                        value = int(SpellCount::Mastery);
                         break;
                     }
                     default:
+                        assert(false && "unreachable");
                         break;
                 }
             }
@@ -3217,78 +3223,73 @@ astr_t CGame::ValueString(const VALUE_KEY_STRING &key, astr_t value)
         case VKS_SPELLBOOK_1_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Magery))
             {
-                value = CGumpSpellbook::m_SpellName1[index][0];
+                value = GetSpellByOffsetAndType(index, ST_MAGERY)->Name;
             }
-
             break;
         }
         case VKS_SPELLBOOK_2_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Necromancy))
             {
-                value = CGumpSpellbook::m_SpellName2[index][0];
+                value = GetSpellByOffsetAndType(index, ST_NECROMANCY)->Name;
             }
-
             break;
         }
         case VKS_SPELLBOOK_3_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Chivalry))
             {
-                value = CGumpSpellbook::m_SpellName3[index][0];
+                value = GetSpellByOffsetAndType(index, ST_CHIVALRY)->Name;
             }
-
             break;
         }
         case VKS_SPELLBOOK_4_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Bushido))
             {
-                value = CGumpSpellbook::m_SpellName4[index];
+                value = GetSpellByOffsetAndType(index, ST_BUSHIDO)->Name;
             }
-
             break;
         }
         case VKS_SPELLBOOK_5_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Ninjitsu))
             {
-                value = CGumpSpellbook::m_SpellName5[index];
+                value = GetSpellByOffsetAndType(index, ST_NINJITSU)->Name;
             }
-
             break;
         }
         case VKS_SPELLBOOK_6_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Spellweaving))
             {
-                value = CGumpSpellbook::m_SpellName6[index][0];
+                value = GetSpellByOffsetAndType(index, ST_SPELLWEAVING)->Name;
             }
-
             break;
         }
         case VKS_SPELLBOOK_7_SPELL_NAME:
         {
             int index = str_to_int(value);
-
-            if (index >= 0 && index < CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT)
+            if (index >= 0 && index < int(SpellCount::Mysticism))
             {
-                value = CGumpSpellbook::m_SpellName7[index][0];
+                value = GetSpellByOffsetAndType(index, ST_MYSTICISM)->Name;
             }
-
+            break;
+        }
+        case VKS_SPELLBOOK_8_SPELL_NAME:
+        {
+            int index = str_to_int(value);
+            if (index >= 0 && index < int(SpellCount::Mastery))
+            {
+                value = GetSpellByOffsetAndType(index, ST_MASTERY)->Name;
+            }
             break;
         }
         default:
@@ -6141,9 +6142,7 @@ void CGame::Attack(uint32_t serial)
 void CGame::AttackReq(uint32_t serial)
 {
     g_LastAttackObject = serial;
-
     //CPacketStatusRequest(serial).Send();
-
     CPacketAttackRequest(serial).Send();
 }
 
@@ -6157,7 +6156,6 @@ void CGame::CastSpell(int index)
     if (index >= 0)
     {
         g_LastSpellIndex = index;
-
         CPacketCastSpell(index).Send();
     }
 }
@@ -6167,7 +6165,6 @@ void CGame::CastSpellFromBook(int index, uint32_t serial)
     if (index >= 0)
     {
         g_LastSpellIndex = index;
-
         CPacketCastSpellFromBook(index, serial).Send();
     }
 }
@@ -6177,7 +6174,6 @@ void CGame::UseSkill(int index)
     if (index >= 0)
     {
         g_LastSkillIndex = index;
-
         CPacketUseSkill(index).Send();
     }
 }

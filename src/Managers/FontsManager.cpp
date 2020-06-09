@@ -692,9 +692,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
     uint16_t flags)
 {
     std::vector<uint32_t> pData;
-
     th.Clear();
-
     if (font >= FontCount)
     {
         return pData;
@@ -707,7 +705,6 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
     }
 
     FONT_DATA &fd = Font[font];
-
     if (width == 0)
     {
         width = GetWidthA(font, str);
@@ -725,42 +722,30 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
     }
 
     width += 4;
-
     int height = GetHeightA(info);
-
     if (height == 0)
     {
         PMULTILINES_FONT_INFO ptr = info;
-
         while (ptr != nullptr)
         {
             info = ptr;
-
             ptr = ptr->m_Next;
-
             info->Data.clear();
             delete info;
         }
-
         return pData;
     }
 
     int blocksize = height * width;
-
     pData.resize(blocksize, 0);
-
     int lineOffsY = 0;
     PMULTILINES_FONT_INFO ptr = info;
-
     bool partialHue = (font != 5 && font != 8) && !UnusePartialHue;
-    int font6OffsetY = (int)(font == 6) * 7;
-
+    int fontOffsetY = font == 6 ? 7 : (font == 9 ? 1 : 0);
     while (ptr != nullptr)
     {
         info = ptr;
-
         th.LinesCount = th.LinesCount + 1;
-
         int w = 0;
         if (ptr->Align == TS_CENTER)
         {
@@ -829,14 +814,10 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsA(
                     }
                 }
             }
-
             w += dw;
         }
-
-        lineOffsY += (ptr->MaxHeight - font6OffsetY);
-
+        lineOffsY += (ptr->MaxHeight - fontOffsetY);
         ptr = ptr->m_Next;
-
         info->Data.clear();
         delete info;
     }

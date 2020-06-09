@@ -55,53 +55,14 @@ CPluginPacketSpellsList::CPluginPacketSpellsList()
     WriteUInt16BE(OIPMT_SPELL_LIST);
     WriteUInt16BE(7);
 
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_1_SPELLS_COUNT; i++)
+    for (int i = ST_FIRST; i < ST_COUNT; i++)
     {
-        WriteString(CGumpSpellbook::m_SpellName1[i][0]);
-    }
-
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_2_SPELLS_COUNT; i++)
-    {
-        WriteString(CGumpSpellbook::m_SpellName2[i][0]);
-    }
-
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_3_SPELLS_COUNT; i++)
-    {
-        WriteString(CGumpSpellbook::m_SpellName3[i][0]);
-    }
-
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_4_SPELLS_COUNT; i++)
-    {
-        WriteString(CGumpSpellbook::m_SpellName4[i]);
-    }
-
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_5_SPELLS_COUNT; i++)
-    {
-        WriteString(CGumpSpellbook::m_SpellName5[i]);
-    }
-
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_6_SPELLS_COUNT; i++)
-    {
-        WriteString(CGumpSpellbook::m_SpellName6[i][0]);
-    }
-
-    WriteUInt16BE(CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT);
-
-    for (int i = 0; i < CGumpSpellbook::SPELLBOOK_7_SPELLS_COUNT; i++)
-    {
-        WriteString(CGumpSpellbook::m_SpellName7[i][0]);
+        const auto book = GetSpellbook(i);
+        WriteUInt16BE(book.SpellCount);
+        for (int s = 0; s < book.SpellCount; s++)
+        {
+            WriteString(book.Spells[s]->Name);
+        }
     }
 }
 

@@ -235,7 +235,6 @@ set(crossuo_src
   Point.cpp
   Vector.cpp
   Misc.cpp
-
   BaseQueue.cpp
   CharacterList.cpp
   CityList.cpp
@@ -263,6 +262,7 @@ set(crossuo_src
   ServerList.cpp
   SkillGroup.cpp
   Sprite.cpp
+  Spells.cpp
   Target.cpp
   TargetGump.cpp
   ToolTip.cpp
@@ -271,7 +271,6 @@ set(crossuo_src
   WeatherEffect.cpp
   Utility/PingThread.cpp
   Utility/PerfMarker.cpp
-
   Sockets.cpp
   Main.cpp
   Platform.cpp
