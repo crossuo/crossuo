@@ -162,6 +162,8 @@ void CGumpMinimap::GenerateMap()
                     int gy = px + py;
                     uint32_t color = mb.Cells[x][y].Graphic;
                     char &isLand = mb.Cells[x][y].IsLand;
+                    uint16_t hue = mb.Cells[x][y].Hue;
+
                     if (mapBlock != nullptr)
                     {
                         uint16_t multiColor = mapBlock->GetRadarColor((int)x, (int)y);
@@ -189,6 +191,9 @@ void CGumpMinimap::GenerateMap()
                         table = &foliageOffsetTable[((color - 0x4000) % 3) * tableSize];
                     }*/
                     color = 0x8000 | g_ColorManager.GetRadarColorData(color);
+                    if (hue != 0u)
+                        color = 0x8000 | g_ColorManager.GetColor16(color, hue);
+
                     CreatePixels(data, color, gx, gy, gumpWidth, gumpHeight, table, tableSize);
                 }
             }

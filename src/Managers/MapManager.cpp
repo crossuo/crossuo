@@ -444,6 +444,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
             MAP_CELLS &inCell = pmb->Cells[(y * 8) + x];
             RADAR_MAP_CELLS &outCell = mb.Cells[x][y];
             outCell.Graphic = inCell.TileID;
+            outCell.Hue = 0u;
             outCell.Z = inCell.Z;
             outCell.IsLand = 1;
         }
@@ -468,6 +469,7 @@ void CMapManager::GetRadarMapBlock(int blockX, int blockY, RADAR_MAP_BLOCK &mb)
                 if (outCell.Z <= sb->Z)
                 {
                     outCell.Graphic = sb->Color;
+                    outCell.Hue = sb->Hue;
                     outCell.Z = sb->Z;
                     outCell.IsLand = 0;
                 }
