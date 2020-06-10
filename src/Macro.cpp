@@ -552,7 +552,7 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Exorcism",
     "Cleanse By Fire",
     "Close Wounds",
-    "Concentrate Weapon",
+    "Consecrate Weapon",
     "Dispel Evil",
     "Divine Fury",
     "Enemy Of One",
