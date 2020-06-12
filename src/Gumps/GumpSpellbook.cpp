@@ -32,21 +32,14 @@ enum
     ID_GSB_SPELL_SERIAL = 100,
 };
 
-static int s_MasteryIndexOrder[][8] = { { 0, 1, 2, 3, 4, 5, 6, 7 },
-                                        { 8, 9, 10, 11, 12, 13, 18, 19 },
-                                        {
-                                            16,
-                                            20,
-                                            21,
-                                            24,
-                                            25,
-                                            33,
-                                            34,
-                                            35,
-                                        },
+// clang-format off
+static int s_MasteryIndexOrder[][8] = { {  0,  1,  2,  3,  4,  5,  6,  7 },
+                                        {  8,  9, 10, 11, 12, 13, 18, 19 },
+                                        { 16, 20, 21, 24, 25, 33, 34, 35 },
                                         { 26, 27, 28, 31, 36, 37, 39, 40 },
                                         { 22, 23, 29, 30, 42, 43, -1, -1 },
                                         { 14, 15, 17, 32, 38, 41, 44, -1 } };
+// clang-format on
 
 static astr_t s_SpellCircleName[] = { "First Circle",   "Second Circle", "Third Circle",
                                       "Fourth Circle",  "Fifth Circle",  "Sixth Circle",
@@ -212,7 +205,7 @@ void CGumpSpellbook::InitToolTip()
     if (Page >= book.IndexPagesCount)
     {
         uint32_t serial = g_SelectedObject.Serial;
-        if (serial > ID_GSB_SPELL_SERIAL)
+        if (serial >= ID_GSB_SPELL_SERIAL)
         {
             const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
             assert(spellIndex < book.SpellCount);
@@ -476,6 +469,10 @@ void CGumpSpellbook::UpdateContent()
             assert(spellIndex < book.SpellCount && book.Spells[spellIndex]);
             const auto spell = book.Spells[spellIndex];
             astr_t name = spell->Name;
+            if (name == "Arcane Empowerment")
+                name = "Arcane Empowe...";
+            else if (name == "Enchanted Summoning")
+                name = "Enchanted Summo..";
             const int serial = ID_GSB_SPELL_SERIAL + spellIndex;
             auto box = (CGUIHitBox *)Add(new CGUIHitBox(serial, dataX, 52 + y, 100, 16, true));
             auto entry = (CGUITextEntry *)Add(
@@ -514,6 +511,8 @@ void CGumpSpellbook::UpdateContent()
         Add(new CGUIPage(page));
         page++;
 
+        auto spellName = baseSpell->Name;
+        //g_ClilocManager.Cliloc(g_Language)->GetA(baseSpell->NameCliloc, true);
         CGUIText *text = nullptr;
         if (book.Type == ST_MAGERY || book.Type == ST_MASTERY)
         {
@@ -522,7 +521,7 @@ void CGumpSpellbook::UpdateContent()
                                                         MasterGroupNameById(spellIndex + 1);
             text->CreateTextureA(6, title);
             text = (CGUIText *)Add(new CGUIText(nameColor, iconTextX, 34));
-            text->CreateTextureA(6, baseSpell->Name, 80);
+            text->CreateTextureA(6, spellName, 80);
             if (baseSpell->PowerWords != nullptr)
             {
                 int magicWordY = (text->m_Texture.Height < 24) ? 31 : 26;
@@ -536,7 +535,7 @@ void CGumpSpellbook::UpdateContent()
         else
         {
             text = (CGUIText *)Add(new CGUIText(nameColor, topNameX, topTextY));
-            text->CreateTextureA(6, baseSpell->Name, 100);
+            text->CreateTextureA(6, spellName, 100);
             if (baseSpell->PowerWords != nullptr)
             {
                 text = (CGUIText *)Add(new CGUIText(nameColor, iconTextX, 34));
@@ -634,37 +633,10 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
         const auto book = GetSpellbook(BookType);
         if (Page < book.IndexPagesCount)
         {
-            for (int j = 0; j < 2; j++)
+            const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
+            if (m_Spells[spellIndex] != 0)
             {
-                const int currentPage = Page + j;
-                const int indexPage = BookType == ST_MASTERY ? currentPage / 2 : currentPage;
-                for (int i = 0; i < book.SpellsPerPage; i++)
-                {
-                    const int spellIndex = i + (book.SpellsPerPage * indexPage);
-                    assert(spellIndex >= 0 && spellIndex < MAX_SPELLS_COUNT);
-                    if (m_Spells[spellIndex] == 0)
-                    {
-                        continue;
-                    }
-
-                    if (serial == spellIndex + ID_GSB_SPELL_SERIAL)
-                    {
-                        int c = book.IndexPagesCount;
-                        for (int k = 0; k < book.SpellCount; k++)
-                        {
-                            if (m_Spells[k] != 0)
-                            {
-                                if (k == spellIndex)
-                                {
-                                    break;
-                                }
-                                c++;
-                            }
-                        }
-                        newPage = c;
-                        break;
-                    }
-                }
+                newPage = book.IndexPagesCount + spellIndex;
             }
         }
     }

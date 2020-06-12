@@ -47,7 +47,7 @@ uint32_t g_Ticks = 0;
 uint32_t g_ShaderColorTableInUse = 0;
 uint32_t g_ShaderDrawMode = 0;
 
-astr_t g_Language = "ENU";
+astr_t g_Language = "enu";
 
 GAME_STATE g_GameState = GS_MAIN;
 

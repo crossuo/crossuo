@@ -13,7 +13,6 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
     Loaded = false;
     Language = lang;
     FileIndex = fileIndex;
-
     if (Language.length() != 0u)
     {
         if (m_File.Load(g_App.UOFilesPath("intloc%02i.%s", fileIndex, lang.c_str())))
@@ -21,13 +20,10 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
             while (!m_File.IsEOF())
             {
                 uint32_t code = m_File.ReadUInt32BE();
-
                 if (code == 'TEXT')
                 {
                     int len = m_File.ReadInt32BE();
-
                     uint8_t *end = m_File.Ptr + len;
-
                     while (m_File.Ptr < end && !m_File.IsEOF())
                     {
                         m_Strings.push_back(wstr_from_utf8(m_File.ReadString()));
@@ -50,8 +46,7 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
                     break;
                 }
             }
-
-            Loaded = (!m_Strings.empty());
+            Loaded = !m_Strings.empty();
         }
     }
 }
@@ -59,7 +54,6 @@ CIntloc::CIntloc(int fileIndex, const astr_t &lang)
 CIntloc::~CIntloc()
 {
     m_File.Unload();
-
     m_Strings.clear();
 }
 
@@ -71,20 +65,9 @@ wstr_t CIntloc::Get(int id, bool toCamelCase)
         {
             return wstr_camel_case(m_Strings[id]);
         }
-
         return m_Strings[id];
     }
-
     return {};
-}
-
-CIntlocManager::CIntlocManager()
-
-{
-}
-
-CIntlocManager::~CIntlocManager()
-{
 }
 
 CIntloc *CIntlocManager::Intloc(int fileIndex, const astr_t &lang)
@@ -97,13 +80,11 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const astr_t &lang)
             {
                 return nullptr;
             }
-
             return obj;
         }
     }
 
     CIntloc *obj = (CIntloc *)Add(new CIntloc(fileIndex, lang));
-
     if (obj->Loaded)
     {
         return obj;
@@ -117,28 +98,14 @@ CIntloc *CIntlocManager::Intloc(int fileIndex, const astr_t &lang)
             {
                 return obj2;
             }
-
             break;
         }
     }
-
     return nullptr;
 }
 
-wstr_t CIntlocManager::Intloc(const astr_t &lang, uint32_t clilocID, bool isNewCliloc)
+wstr_t CIntlocManager::Intloc(const astr_t &lang, uint32_t clilocID, bool isNewCliloc) const
 {
-    auto language = str_lower(lang);
-    if (language.length() == 0u)
-    {
-        language = "enu";
-    }
-
-    wstr_t str = {};
-
-    if (str.length() == 0u)
-    {
-        str = g_ClilocManager.Cliloc(lang)->GetW(clilocID, true);
-    }
-
-    return str;
+    assert(str_lower(lang) == lang);
+    return g_ClilocManager.Cliloc(lang.empty() ? "enu" : lang)->GetW(clilocID, true);
 }

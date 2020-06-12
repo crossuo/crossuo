@@ -8,49 +8,31 @@
 #include <map>
 #include "../BaseQueue.h"
 
-typedef std::map<uint32_t, astr_t> CLILOC_MAP;
-
 class CCliloc : public CBaseQueueItem
 {
+    astr_t Load(uint32_t id);
+    astr_t GetX(int id, bool toCamelCase, const char *default_value);
+
 public:
-    astr_t Language = "";
+    astr_t Language;
     bool Loaded = false;
-
-private:
-    // System (id < 1000000)
-    CLILOC_MAP m_ClilocSystem;
-
-    // Regular (id >= 1000000 && id < 3000000)
-    CLILOC_MAP m_ClilocRegular;
-
-    // Support (id >= 3000000)
-    CLILOC_MAP m_ClilocSupport;
-
-    astr_t Load(uint32_t &id);
-    wstr_t CamelCaseTest(bool toCamelCase, const astr_t &result);
-    wstr_t GetX(int id, bool toCamelCase, astr_t &result);
-
-public:
-    CCliloc(const astr_t &lang);
-    virtual ~CCliloc();
-
     CMappedFile m_File;
 
-    astr_t GetA(int id, bool toCamelCase = false, astr_t result = {}); // FIXME
-    wstr_t GetW(int id, bool toCamelCase = false, astr_t result = {}); // FIXME
+    CCliloc(const astr_t &lang);
+    virtual ~CCliloc();
+    astr_t GetA(int id, bool toCamelCase = false, const char *default_value = nullptr);
+    wstr_t GetW(int id, bool toCamelCase = false, const char *default_value = nullptr);
 };
 
 class CClilocManager : public CBaseQueue
 {
-private:
-    CCliloc *m_LastCliloc{ nullptr };
-    CCliloc *m_ENUCliloc{ nullptr };
+    CCliloc *m_LastCliloc = nullptr;
+    CCliloc *m_ENUCliloc = nullptr;
     wstr_t ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstr_t args);
 
 public:
-    CClilocManager();
+    CClilocManager() = default;
     virtual ~CClilocManager();
-
     CCliloc *Cliloc(const astr_t &lang);
     wstr_t ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstr_t args);
     wstr_t ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstr_t args);

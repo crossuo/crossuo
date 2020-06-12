@@ -9,30 +9,32 @@
 
 CClilocManager g_ClilocManager;
 
+// System (id < 1000000)
+// Regular (id >= 1000000 && id < 3000000)
+// Support (id >= 3000000)
+typedef std::map<uint32_t, astr_t> ClilocMap;
+ClilocMap s_Cache;
+
+#define CONVERT_CASE(b, x) b ? str_camel_case(x) : x
+
 CCliloc::CCliloc(const astr_t &lang)
 {
     Loaded = false;
     Language = lang;
-    if (Language.length() != 0u)
+    if (Language.length() != 0)
     {
         auto file = astr_t("Cliloc.") + lang;
         auto path = g_App.UOFilesPath(file);
-        if (m_File.Load(path))
-        {
-            Loaded = true;
-        }
+        Loaded = m_File.Load(path);
     }
 }
 
 CCliloc::~CCliloc()
 {
     m_File.Unload();
-    m_ClilocSystem.clear();
-    m_ClilocRegular.clear();
-    m_ClilocSupport.clear();
 }
 
-astr_t CCliloc::Load(uint32_t &id)
+astr_t CCliloc::Load(uint32_t id)
 {
     astr_t result;
     if (Loaded)
@@ -49,107 +51,55 @@ astr_t CCliloc::Load(uint32_t &id)
                 if (len > 0)
                 {
                     result = m_File.ReadString(len);
+                    s_Cache[currentID] = result;
                 }
-
-                if (id >= 3000000)
-                {
-                    m_ClilocSupport[currentID] = result;
-                }
-                else if (id >= 1000000)
-                {
-                    m_ClilocRegular[currentID] = result;
-                }
-                else
-                {
-                    m_ClilocSystem[currentID] = result;
-                }
-
                 return result;
             }
 
             m_File.Move(len);
         }
     }
-    id = 0;
     return result;
 }
 
-wstr_t CCliloc::CamelCaseTest(bool toCamelCase, const astr_t &result)
+astr_t CCliloc::GetX(int id, bool toCamelCase, const char *default_value)
 {
-    if (toCamelCase)
+    auto it = s_Cache.find(id);
+    if (it != s_Cache.end() && !(*it).second.empty())
     {
-        return wstr_camel_case(wstr_from_utf8(result));
+        return CONVERT_CASE(toCamelCase, (*it).second);
     }
 
-    return wstr_from_utf8(result);
-}
-
-wstr_t CCliloc::GetX(int id, bool toCamelCase, astr_t &result)
-{
-    if (id >= 3000000)
+    astr_t result = Load(id);
+    if (Language != "enu")
     {
-        CLILOC_MAP::iterator i = m_ClilocSupport.find(id);
-        if (i != m_ClilocSupport.end() && ((*i).second.length() != 0u))
+        result = g_ClilocManager.Cliloc("enu")->GetX(id, toCamelCase, default_value);
+    }
+
+    if (result.length() == 0)
+    {
+        if (default_value == nullptr)
         {
-            return CamelCaseTest(toCamelCase, (*i).second);
+            char str[50];
+            snprintf(str, sizeof(str), "Unknown Cliloc #%i", id);
+            result = str;
+        }
+        else
+        {
+            result = default_value;
         }
     }
-    else if (id >= 1000000)
-    {
-        CLILOC_MAP::iterator i = m_ClilocRegular.find(id);
-        if (i != m_ClilocRegular.end() && ((*i).second.length() != 0u))
-        {
-            return CamelCaseTest(toCamelCase, (*i).second);
-        }
-    }
-    else
-    {
-        CLILOC_MAP::iterator i = m_ClilocSystem.find(id);
-        if (i != m_ClilocSystem.end() && ((*i).second.length() != 0u))
-        {
-            return CamelCaseTest(toCamelCase, (*i).second);
-        }
-    }
-
-    uint32_t tmpID = id;
-    auto loadStr = Load(tmpID);
-    if (loadStr.length() != 0u)
-    {
-        return CamelCaseTest(toCamelCase, loadStr);
-    }
-
-    if (tmpID == id && (loadStr.length() == 0u))
-    {
-        return {};
-    }
-
-    if (Language != "ENU" && this->Language != "enu")
-    {
-        return g_ClilocManager.Cliloc("enu")->GetW(id, toCamelCase, result);
-    }
-
-    if (result.length() == 0u)
-    {
-        char str[50]{};
-        sprintf(str, "Unknown Cliloc #%i", id);
-        result = str;
-    }
-
-    return CamelCaseTest(toCamelCase, result);
+    return CONVERT_CASE(toCamelCase, result);
 }
 
-astr_t CCliloc::GetA(int id, bool toCamelCase, astr_t result)
+astr_t CCliloc::GetA(int id, bool toCamelCase, const char *default_value)
 {
-    return str_from(GetX(id, toCamelCase, result));
+    return GetX(id, toCamelCase, default_value);
 }
 
-wstr_t CCliloc::GetW(int id, bool toCamelCase, astr_t result)
+wstr_t CCliloc::GetW(int id, bool toCamelCase, const char *default_value)
 {
-    return GetX(id, toCamelCase, result);
-}
-
-CClilocManager::CClilocManager()
-{
+    return wstr_from_utf8(GetX(id, toCamelCase, default_value));
 }
 
 CClilocManager::~CClilocManager()
@@ -160,19 +110,14 @@ CClilocManager::~CClilocManager()
 
 CCliloc *CClilocManager::Cliloc(const astr_t &lang)
 {
-    auto language = str_lower(lang);
-    if (language.length() == 0u)
-    {
-        language = "enu";
-    }
-
+    assert(str_lower(lang) == lang);
+    auto language = lang.length() == 0 ? "enu" : lang;
     if (language == "enu")
     {
         if (m_ENUCliloc == nullptr)
         {
             m_ENUCliloc = (CCliloc *)Add(new CCliloc(language));
         }
-
         return m_ENUCliloc;
     }
 
@@ -182,7 +127,6 @@ CCliloc *CClilocManager::Cliloc(const astr_t &lang)
         {
             return m_ENUCliloc;
         }
-
         return m_LastCliloc;
     }
 
@@ -194,13 +138,12 @@ CCliloc *CClilocManager::Cliloc(const astr_t &lang)
             {
                 return m_ENUCliloc;
             }
-
             m_LastCliloc = obj;
             return obj;
         }
     }
 
-    CCliloc *obj = (CCliloc *)Add(new CCliloc(language));
+    auto obj = (CCliloc *)Add(new CCliloc(language));
     if (!obj->Loaded)
     {
         return Cliloc("enu");
@@ -212,21 +155,19 @@ CCliloc *CClilocManager::Cliloc(const astr_t &lang)
 
 wstr_t CClilocManager::ParseArgumentsToClilocString(int cliloc, bool toCamelCase, wstr_t args)
 {
-    while ((args.length() != 0u) && args[0] == L'\t')
+    while (args.length() != 0 && args[0] == L'\t')
     {
         args.erase(args.begin());
     }
-
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
 }
 
 wstr_t CClilocManager::ParseXmfHtmlArgumentsToCliloc(int cliloc, bool toCamelCase, wstr_t args)
 {
-    while ((args.length() != 0u) && args[0] == L'@')
+    while (args.length() != 0 && args[0] == L'@')
     {
         args.erase(std::remove(args.begin(), args.end(), L'@'), args.end());
     }
-
     return ParseArgumentsToCliloc(cliloc, toCamelCase, args);
 }
 
@@ -268,7 +209,6 @@ wstr_t CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstr
             uint32_t id = str_to_int(arguments[i].c_str() + 1);
             arguments[i] = Cliloc(g_Language)->GetW(id, toCamelCase);
         }
-
         message.replace(pos1, pos2 - pos1 + 1, arguments[i]);
     }
 
@@ -276,6 +216,5 @@ wstr_t CClilocManager::ParseArgumentsToCliloc(int cliloc, bool toCamelCase, wstr
     {
         return wstr_camel_case(message);
     }
-
     return message;
 }

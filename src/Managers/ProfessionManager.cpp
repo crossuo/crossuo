@@ -177,8 +177,8 @@ bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
             case PM_CODE_NAME_CLILOC_ID:
             {
                 nameClilocID = str_to_int(strings[1]);
-                name =
-                    str_upper(g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name));
+                name = str_upper(
+                    g_ClilocManager.Cliloc(g_Language)->GetA(nameClilocID, true, name.c_str()));
                 break;
             }
             case PM_CODE_DESCRIPTION_CLILOC_ID:

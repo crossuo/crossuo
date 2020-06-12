@@ -22,7 +22,7 @@ void SetLanguageFromSystemLocale()
     auto langId = GetSystemDefaultLangID();
     if (langId == 0x0c0c)
     {
-        g_Language = "FRC";
+        g_Language = "frc";
     }
     else
     {
@@ -30,42 +30,42 @@ void SetLanguageFromSystemLocale()
         {
             case LANG_RUSSIAN:
             {
-                g_Language = "RUS";
+                g_Language = "rus";
                 break;
             }
             case LANG_FRENCH:
             {
-                g_Language = "FRA";
+                g_Language = "fra";
                 break;
             }
             case LANG_GERMAN:
             {
-                g_Language = "DEU";
+                g_Language = "deu";
                 break;
             }
             case LANG_SPANISH:
             {
-                g_Language = "ESP";
+                g_Language = "esp";
                 break;
             }
             case LANG_JAPANESE:
             {
-                g_Language = "JPN";
+                g_Language = "jpn";
                 break;
             }
             case LANG_KOREAN:
             {
-                g_Language = "KOR";
+                g_Language = "kor";
                 break;
             }
             case LANG_PORTUGUESE:
             {
-                g_Language = "PTB";
+                g_Language = "ptb";
                 break;
             }
             default:
             {
-                g_Language = "ENU";
+                g_Language = "enu";
                 break;
             }
         }
@@ -93,39 +93,39 @@ void SetLanguageFromSystemLocale()
 
     if (strstr(lang, "fr_CA."))
     {
-        g_Language = "FRC";
+        g_Language = "frc";
     }
     else if (strstr(lang, "fr_"))
     {
-        g_Language = "FRA";
+        g_Language = "fra";
     }
     else if (strstr(lang, "ru_"))
     {
-        g_Language = "RUS";
+        g_Language = "rus";
     }
     else if (strstr(lang, "de_"))
     {
-        g_Language = "DEU";
+        g_Language = "deu";
     }
     else if (strstr(lang, "ko_"))
     {
-        g_Language = "KOR";
+        g_Language = "kor";
     }
     else if (strstr(lang, "es_"))
     {
-        g_Language = "ESP";
+        g_Language = "esp";
     }
     else if (strstr(lang, "ja_"))
     {
-        g_Language = "JPN";
+        g_Language = "jpn";
     }
     else if (strstr(lang, "pt_BR"))
     {
-        g_Language = "PTB";
+        g_Language = "ptb";
     }
     else if (strstr(lang, "pt_"))
     {
-        g_Language = "PTG";
+        g_Language = "ptg";
     }
 
     Info(Client, "locale: %s", g_Language.c_str());
