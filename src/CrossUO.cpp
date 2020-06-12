@@ -331,7 +331,7 @@ bool CGame::Install()
     }
     else
     {
-        g_Language = g_Config.LocaleOverride;
+        g_Language = str_lower(g_Config.LocaleOverride);
     }
     fs_path_create(g_App.ExeFilePath("screenshots"));
 

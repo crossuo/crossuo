@@ -55,7 +55,7 @@ bool CSpeechManager::LoadSpeech()
     if (CurrentLanguage == nullptr)
     {
         CurrentLanguage = &m_LangCodes[0];
-        g_Language = m_LangCodes[0].Abbreviature;
+        g_Language = str_lower(m_LangCodes[0].Abbreviature);
     }
     Info(Client, "selected language: %s", g_Language.c_str());
 

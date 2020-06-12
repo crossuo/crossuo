@@ -93,7 +93,7 @@ void CToolTip::Set(const wstr_t &str, int maxWidth)
     Create(m_TextSprite, Data, MaxWidth, 0);
 }
 
-void CToolTip::Set(int clilocID, const astr_t &str, int maxWidth, bool toCamelCase)
+void CToolTip::Set(int clilocID, const char *str, int maxWidth, bool toCamelCase)
 {
     Set(g_ClilocManager.Cliloc(g_Language)->GetW(clilocID, toCamelCase, str), maxWidth);
     ClilocID = clilocID;

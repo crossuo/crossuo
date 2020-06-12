@@ -19,18 +19,11 @@ CGumpSpell::CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, s
     Graphic = graphic;
     BaseSpell = GetSpellByGraphicAndType(Graphic, SpellType);
     m_Locker.Serial = ID_GS_LOCK_MOVING;
-    BigIcon = false; // (graphic >= 0x5300 && graphic < 0x5500);
-
     m_Blender = (CGUIAlphaBlending *)Add(new CGUIAlphaBlending(
         g_ConfigManager.TransparentSpellIcons != 0u, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
     Add(new CGUIGumppic(Graphic, 0, 0));
-
-    /*if (BigIcon)
-		m_SpellUnlocker = (CGUIButton*)Add(new CGUIButton(ID_GS_BUTTON_REMOVE_FROM_GROUP, 0x082C, 0x082C, 0x082C, 56, 30));
-	else*/
     m_SpellUnlocker = (CGUIButton *)Add(
         new CGUIButton(ID_GS_BUTTON_REMOVE_FROM_GROUP, 0x082C, 0x082C, 0x082C, 30, 16));
-
     m_SpellUnlocker->BoundingBoxCheck = true;
     m_SpellUnlocker->Visible = false;
     Add(new CGUIAlphaBlending(false, 0.0f));
@@ -98,26 +91,16 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
         return nullptr;
     }
 
-    int gumpWidth = 44;
-    int gumpHeight = 44;
-    int rangeX = 22;
-    int rangeY = 22;
-    int rangeOffsetX = 30;
-    int rangeOffsetY = 30;
-    if (BigIcon)
-    {
-        gumpWidth = 70;
-        gumpHeight = 70;
-        rangeX = 35;
-        rangeY = 35;
-        rangeOffsetX = 42;
-        rangeOffsetY = 42;
-    }
-
+    const int gumpWidth = 44;
+    const int gumpHeight = 44;
+    const int rangeX = 22;
+    const int rangeY = 22;
+    const int rangeOffsetX = 30;
+    const int rangeOffsetY = 30;
     CGump *gump = (CGump *)g_GumpManager.m_Items;
     while (gump != nullptr)
     {
-        if (gump != this && gump->GumpType == GT_SPELL && ((CGumpSpell *)gump)->BigIcon == BigIcon)
+        if (gump != this && gump->GumpType == GT_SPELL)
         {
             int gumpX = gump->GetX();
             int offsetX = abs(x - gumpX);
@@ -205,8 +188,7 @@ CGumpSpell *CGumpSpell::GetNearSpell(int &x, int &y)
                 CGump *testGump = (CGump *)g_GumpManager.m_Items;
                 while (testGump != nullptr)
                 {
-                    if (testGump != this && testGump->GumpType == GT_SPELL &&
-                        ((CGumpSpell *)testGump)->BigIcon == BigIcon)
+                    if (testGump != this && testGump->GumpType == GT_SPELL)
                     {
                         if (testGump->GetX() == testX && testGump->GetY() == testY)
                         {

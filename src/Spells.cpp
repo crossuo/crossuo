@@ -1,3 +1,4 @@
+
 // AGPLv3 License
 // Copyright (c) 2020 Danny Angelo Carminati Grein
 
@@ -172,7 +173,7 @@ void InitSpells()
     s_Spells.push_back({ ST_SPELLWEAVING, 0, 601, "Arcane Circle", "Myrshalee", 0x59d8, 0x59d8, 1072042, 1071026, 0, 24, 0, TT_NEUTRAL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 1, 602, "Gift of Renewal", "Olorisstra", 0x59d9, 0x59d9, 1072043, 1071027, 0, 24, 0, TT_BENEFICIAL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 2, 603, "Immolating Weapon", "Thalshara", 0x59da, 0x59da, 1072044, 1071028, 10, 32, 0, TT_NEUTRAL, nullptr });
-    s_Spells.push_back({ ST_SPELLWEAVING, 3, 604, "Attune Weapon", "Haeldril", 0x59db, 0x59db, 1072045, 1071029, 0, 24, 0, TT_HARMFUL, nullptr });
+    s_Spells.push_back({ ST_SPELLWEAVING, 3, 604, "Attunement", "Haeldril", 0x59db, 0x59db, 1072045, 1071029, 0, 24, 0, TT_HARMFUL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 4, 605, "Thunderstorm", "Erelonia", 0x59dc, 0x59dc, 1072046, 1071030, 10, 32, 0, TT_HARMFUL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 5, 606, "Nature's Fury", "Rauvvrae", 0x59dd, 0x59dd, 1072047, 1071031, 0, 24, 0, TT_NEUTRAL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 6, 607, "Summon Fey", "Alalithra", 0x59de, 0x59de, 1072048, 1071032, 38, 10, 0, TT_NEUTRAL, nullptr });
@@ -184,7 +185,7 @@ void InitSpells()
     s_Spells.push_back({ ST_SPELLWEAVING, 12, 613, "Ethereal Voyage", "Orlavdra", 0x59e4, 0x59e4, 1072054, 1071038, 24, 32, 0, TT_NEUTRAL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 13, 614, "Word of Death", "Nyraxle", 0x59e5, 0x59e5, 1072055, 1071039, 83, 50, 0, TT_HARMFUL, nullptr });
     s_Spells.push_back({ ST_SPELLWEAVING, 14, 615, "Gift of Life", "Illorae", 0x59e6, 0x59e6, 1072056, 1071040, 38, 70, 0, TT_BENEFICIAL, nullptr });
-    s_Spells.push_back({ ST_SPELLWEAVING, 15, 616, "Arcane Empowe...", "Aslavdra", 0x59e7, 0x59e7, 1072057, 1071041, 24, 50, 0, TT_BENEFICIAL, nullptr }); // "Arcane Empowerment"
+    s_Spells.push_back({ ST_SPELLWEAVING, 15, 616, "Arcane Empowerment", "Aslavdra", 0x59e7, 0x59e7, 1072057, 1071041, 24, 50, 0, TT_BENEFICIAL, nullptr });
     // Mysticism
     assert(s_Spells.size() == int(SpellOffset::Mysticism));
     s_Spells.push_back({ ST_MYSTICISM, 0, 678, "Nether Bolt", "In Corp Ylem", 0x5dc0, 0x5dc0, 1095193, 1031678, 0, 4, 0, TT_HARMFUL, "Black Pearl\nSulfurous Ash" });
@@ -219,7 +220,7 @@ void InitSpells()
     s_Spells.push_back({ ST_MASTERY, 11, 712, "Conduit", "Uus Corp Grav", 0x9b90, 0x9b90, 1155943, 1155901, 90, 40, 0, TT_HARMFUL, "Nox Crystal\nBat Wing\nGrave Dust" });
     s_Spells.push_back({ ST_MASTERY, 12, 713, "Mana Shield", "Faerkulggen", 0x9b91, 0x9b91, 1155944, 1155902, 90, 40, 0, TT_BENEFICIAL, nullptr });
     s_Spells.push_back({ ST_MASTERY, 13, 714, "Summon Reaper", "Lartarisstree", 0x9b92, 0x9b92, 1155945, 1155903, 90, 50, 0, TT_NEUTRAL, nullptr });
-    s_Spells.push_back({ ST_MASTERY, 18, 715, "Enchanted Summo..", nullptr, 0x9b93, 0x9b93, 1155946, 1155904, 90, 0, 0, TT_NEUTRAL, nullptr }); // "Enchanted Summoning"
+    s_Spells.push_back({ ST_MASTERY, 18, 715, "Enchanted Summoning", nullptr, 0x9b93, 0x9b93, 1155946, 1155904, 90, 0, 0, TT_NEUTRAL, nullptr });
     s_Spells.push_back({ ST_MASTERY, 19, 716, "Anticipate Hit", nullptr, 0x9b94, 0x9b94, 1155947, 1155905, 90, 10, 0, TT_NEUTRAL, nullptr });
     s_Spells.push_back({ ST_MASTERY, 16, 717, "Warcry", nullptr, 0x9b95, 0x9b95, 1155948, 1155906, 90, 40, 0, TT_NEUTRAL, nullptr });
     s_Spells.push_back({ ST_MASTERY, 20, 718, "Intuition", nullptr, 0x9b96, 0x9b96, 1155949, 1155907, 90, 0, 0, TT_NEUTRAL, nullptr });

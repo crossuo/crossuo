@@ -25,7 +25,7 @@ public:
     void Reset();
     void Create(CTextSprite &texture, const wstr_t &str, int &width, int minWidth);
     void Set(const wstr_t &str, int maxWidth = 0);
-    void Set(int clilocID, const astr_t &str, int maxWidth = 0, bool toCamelCase = false);
+    void Set(int clilocID, const char *str, int maxWidth = 0, bool toCamelCase = false);
     void Draw(int cursorWidth = 0, int cursorHeight = 0);
 };
 
