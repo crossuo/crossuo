@@ -11,6 +11,9 @@ Current supported platforms:
 - Linux
 - MacOSX
 
+> Note for Linux users wanting to use X:UO Assist, Qt5 with multimedia and script support is required:
+> `sudo apt install qtmultimedia5-dev qtscript5-dev`
+
 In development:
 
 - RaspberryPi (working, but low fps)
