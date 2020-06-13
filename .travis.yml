@@ -26,6 +26,48 @@ matrix:
       script: 
         - ./travis.sh
       before_deploy:
+        - git tag release -f
+      deploy:
+        provider: releases
+        api_key: "$GH_TOKEN"
+        overwrite: true
+        file: "crossuo-linux-release.tgz"
+        skip_cleanup: true
+        on:
+          tags: true
+          branch: master
+          repo: crossuo/crossuo
+      install:
+        - |
+          CMAKE_URL="https://cmake.org/files/v3.13/cmake-3.13.5-Linux-x86_64.tar.gz"
+          mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+          export PATH=${PWD}/cmake/bin:${PATH}
+        - cmake --version
+    - os: linux
+      compiler: clang
+      name: clang-ninja
+      sudo: required
+      env: TASK=clang
+      dist: xenial
+      cache:
+        ccache: true
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - ninja-build
+            - libglu1-mesa-dev
+            - libegl1-mesa-dev
+            - libgles2-mesa-dev
+            - xorg-dev
+            - libsdl2-dev
+            - libglew-dev
+            - libsndio-dev
+            - libxkbcommon-dev
+      script: 
+        - ./travis.sh
+      before_deploy:
         - git tag master -f
       deploy:
         provider: releases
@@ -84,7 +126,7 @@ matrix:
             - llvm-toolchain-trusty-7
           packages:
             - clang-format-7
-      script: 
+      script:
         - ./travis.sh
     - os: osx
       sudo: false
@@ -111,5 +153,32 @@ matrix:
         skip_cleanup: true
         on:
           tags: false
+          branch: master
+          repo: crossuo/crossuo
+    - os: osx
+      sudo: false
+      addons:
+        homebrew:
+          packages:
+            - ccache
+            - ninja
+      install:
+        - export PATH="/usr/local/opt/ccache/libexec:$PATH"
+      osx_image: xcode10
+      cache:
+        ccache: true
+      script:
+        - ./travis.sh
+      before_deploy:
+        - git tag release -f
+      deploy:
+        provider: releases
+        api_key: "$GH_TOKEN"
+        overwrite: true
+        tag_name: release
+        file: "crossuo-osx-release.zip"
+        skip_cleanup: true
+        on:
+          tags: true
           branch: master
           repo: crossuo/crossuo
