@@ -250,13 +250,14 @@ void load_shards()
     load_shard_file(fname, s_shards);
 
     // sort by tags 'highlight', then name alphabetically
-    std::sort(s_shards.entries.begin(), s_shards.entries.end(), [](const auto &a, const auto &b) {
-        const auto ah = a.shard_tags.is_highlighted;
-        const auto bh = b.shard_tags.is_highlighted;
-        if (ah != bh)
-            return ah && !bh;
-        return a.shard_name < b.shard_name;
-    });
+    std::sort(
+        s_shards.entries.begin() + 1, s_shards.entries.end(), [](const auto &a, const auto &b) {
+            const auto ah = a.shard_tags.is_highlighted;
+            const auto bh = b.shard_tags.is_highlighted;
+            if (ah != bh)
+                return ah && !bh;
+            return a.shard_name < b.shard_name;
+        });
 
     int i = 0;
     for (auto &e : s_shards.entries)

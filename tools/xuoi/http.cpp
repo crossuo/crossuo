@@ -95,7 +95,7 @@ void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
     assert(url && "invalid url");
     assert(buf && size);
     http_recv_buf tmp = { *size, 0, buf };
-    LOG_TRACE("url %s", url);
+    LOG_INFO("Downloading %s", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
     assert(curl);
     if (s_agentName)
@@ -114,7 +114,7 @@ void http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
     assert(s_curl_handle && "http_init wasn't called");
     assert(url && "invalid url");
-    LOG_TRACE("url %s", url);
+    LOG_INFO("Downloading %s", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
     assert(curl);
     if (s_agentName)
@@ -132,7 +132,7 @@ void http_get_string(const char *url, std::string &data)
 {
     assert(s_curl_handle && "http_init wasn't called");
     assert(url && "invalid url");
-    LOG_TRACE("url %s", url);
+    LOG_INFO("Downloading %s", url);
     CURL *curl = curl_easy_duphandle(s_curl_handle);
     assert(curl);
     if (s_agentName)
@@ -151,6 +151,7 @@ bool http_get_file(const char *url, const char *filename)
     assert(s_curl_handle && "http_init wasn't called");
     assert(url && "invalid url");
     assert(filename && "invalid filename");
+    LOG_INFO("Downloading %s", url);
     FILE *fp = fopen(filename, "wb");
     if (!fp)
         return false;
