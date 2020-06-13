@@ -61,8 +61,8 @@ endif()
 
 compile_definitions(XUO_DEBUG DEBUG_ONLY)
 compile_definitions(XUO_RELEASE RELEASE_ONLY)
-if (XUO_MASTER)
-  compile_definitions(XUO_MASTER RELEASE_ONLY)
+if (XUO_DEPLOY)
+  compile_definitions(XUO_DEPLOY RELEASE_ONLY)
 endif()
 
 #
