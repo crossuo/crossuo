@@ -13,7 +13,7 @@ install:
 init:
 - echo %APPVEYOR_BUILD_WORKER_IMAGE%
 - set BUILD=master
-- if NOT "%APPVEYOR_REPO_TAG_NAME%"=="" (set BUILD=release)
+- if NOT "%APPVEYOR_REPO_TAG_NAME%"=="" (set BUILD=v%APPVEYOR_REPO_TAG_NAME%)
 - set version=
 - if NOT "%APPVEYOR_REPO_TAG_NAME%"=="" (set version=-DXUO_DEPLOY=On -DXUO_VERSION=%APPVEYOR_REPO_TAG_NAME%)
 - set extra=

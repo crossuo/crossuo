@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x # expand and echo commands
 export XUO_TRAVIS=1
 
 echo TRAVIS_BUILD_DIR is $TRAVIS_BUILD_DIR
@@ -25,9 +26,9 @@ fi
 
 if [[ "$TRAVIS_TAG" != "" ]]; then
     export EXTRA="-DXUO_DEPLOY=On -DXUO_VERSION=$TRAVIS_TAG"
-    export BUILD="release"
+    export BUILD=v$TRAVIS_TAG
 else
-    export BUILD="master"
+    export BUILD=master
 fi
 
 if [[ "$TASK" == "clang" ]]; then

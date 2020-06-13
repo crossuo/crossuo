@@ -449,10 +449,7 @@ int main(int argc, char **argv)
     load_accounts();
     load_shards();
 
-#if defined(XUO_DEPLOY)
-    config().global_auto_update = true;
-    config().global_check_updates = true;
-#else
+#if !defined(XUO_DEPLOY)
     config().global_auto_update = false;
     config().global_check_updates = false;
 #endif // defined(XUO_DEPLOY)

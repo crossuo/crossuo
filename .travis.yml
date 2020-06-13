@@ -39,7 +39,7 @@ matrix:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        file: "crossuo-linux-release.tgz"
+        file: "crossuo-linux-v$TRAVIS_TAG.tgz"
         skip_cleanup: true
         on:
           tags: true
@@ -120,7 +120,7 @@ matrix:
         provider: releases
         api_key: "$GH_TOKEN"
         overwrite: true
-        file: "crossuo-osx-release.zip"
+        file: "crossuo-osx-v$TRAVIS_TAG.zip"
         skip_cleanup: true
         on:
           tags: true
