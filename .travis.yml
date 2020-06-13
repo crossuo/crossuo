@@ -35,6 +35,7 @@ matrix:
         skip_cleanup: true
         on:
           branch: master
+          repo: crossuo/crossuo
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
@@ -50,6 +51,8 @@ matrix:
           export PATH=${PWD}/cmake/bin:${PATH}
         - cmake --version
     - os: linux
+      on:
+        repo: crossuo/crossuo
       compiler: gcc
       name: gcc-make
       sudo: required
@@ -116,6 +119,7 @@ matrix:
         skip_cleanup: true
         on:
           branch: master
+          repo: crossuo/crossuo
       deploy:
         provider: releases
         api_key: "$GH_TOKEN"
