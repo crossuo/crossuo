@@ -25,26 +25,25 @@ matrix:
             - libxkbcommon-dev
       script: 
         - ./travis.sh
-      before_deploy:
-        - git tag master -f
       deploy:
-        provider: releases
-        api_key: "$GH_TOKEN"
-        overwrite: true
-        file: "crossuo-linux-master.tgz"
-        skip_cleanup: true
-        tag_name: master
-        on:
-          branch: master
-          repo: crossuo/crossuo
-      deploy:
-        provider: releases
-        api_key: "$GH_TOKEN"
-        overwrite: true
-        file: "crossuo-linux-v$TRAVIS_TAG.tgz"
-        skip_cleanup: true
-        on:
-          tags: true
+        - provider: releases
+          api_key: "$GH_TOKEN"
+          overwrite: true
+          file: "crossuo-linux-master.tgz"
+          skip_cleanup: true
+          tag_name: master
+          on:
+            tags: false
+            branch: master
+            repo: crossuo/crossuo
+        - provider: releases
+          api_key: "$GH_TOKEN"
+          overwrite: true
+          file: "crossuo-linux-v$TRAVIS_TAG.tgz"
+          skip_cleanup: true
+          on:
+            tags: true
+            repo: crossuo/crossuo
       install:
         - |
           CMAKE_URL="https://cmake.org/files/v3.13/cmake-3.13.5-Linux-x86_64.tar.gz"
@@ -110,23 +109,22 @@ matrix:
         ccache: true
       script:
         - ./travis.sh
-      before_deploy:
-        - git tag master -f
       deploy:
-        provider: releases
-        api_key: "$GH_TOKEN"
-        overwrite: true
-        file: "crossuo-osx-master.zip"
-        skip_cleanup: true
-        tag_name: master
-        on:
-          branch: master
-          repo: crossuo/crossuo
-      deploy:
-        provider: releases
-        api_key: "$GH_TOKEN"
-        overwrite: true
-        file: "crossuo-osx-v$TRAVIS_TAG.zip"
-        skip_cleanup: true
-        on:
-          tags: true
+        - provider: releases
+          api_key: "$GH_TOKEN"
+          overwrite: true
+          file: "crossuo-osx-master.zip"
+          skip_cleanup: true
+          tag_name: master
+          on:
+            tags: false
+            branch: master
+            repo: crossuo/crossuo
+        - provider: releases
+          api_key: "$GH_TOKEN"
+          overwrite: true
+          file: "crossuo-osx-v$TRAVIS_TAG.zip"
+          skip_cleanup: true
+          on:
+            tags: true
+            repo: crossuo/crossuo
