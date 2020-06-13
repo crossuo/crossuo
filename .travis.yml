@@ -33,6 +33,7 @@ matrix:
         overwrite: true
         file: "crossuo-linux-master.tgz"
         skip_cleanup: true
+        tag_name: master
         on:
           branch: master
           repo: crossuo/crossuo
@@ -117,6 +118,7 @@ matrix:
         overwrite: true
         file: "crossuo-osx-master.zip"
         skip_cleanup: true
+        tag_name: master
         on:
           branch: master
           repo: crossuo/crossuo
