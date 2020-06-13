@@ -49,25 +49,24 @@ after_build:
   - 7z a crossuo-win64-%BUILD%.zip "c:\projects\crossuo\build\src\Release\crossuo.exe" "c:\projects\crossuo\build\tools\xuoi\Release\xuolauncher.exe"
   - mv crossuo-win64-%BUILD%.zip ..
 deploy:
-  tag: master
-  release: master
-  provider: GitHub
-  auth_token:
-    secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
-  artifact: crossuo-win64-master.zip
-  draft: false
-  prerelease: false
-  force_update: true
-  on:
-    branch: master
-deploy:
-  tag: $APPVEYOR_REPO_TAG_NAME
-  provider: GitHub
-  auth_token:
-    secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
-  artifact: crossuo-win64-v$APPVEYOR_REPO_TAG_NAME.zip
-  draft: false
-  prerelease: false
-  force_update: true
-  on:
-    APPVEYOR_REPO_TAG: true
+  - provider: GitHub
+    tag: master
+    release: master
+    auth_token:
+      secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
+    artifact: crossuo-win64-master.zip
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+      branch: master
+  - provider: GitHub
+    tag: $APPVEYOR_REPO_TAG_NAME
+    auth_token:
+      secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
+    artifact: crossuo-win64-v$APPVEYOR_REPO_TAG_NAME.zip
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+      APPVEYOR_REPO_TAG: true
