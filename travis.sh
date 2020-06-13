@@ -30,6 +30,7 @@ if [[ "$TRAVIS_TAG" != "" ]]; then
     export EXTRA="-DXUO_DEPLOY=On -DXUO_VERSION=$TRAVIS_TAG"
     export BUILD=v$TRAVIS_TAG
 else
+    export TRAVIS_TAG=master
     export BUILD=master
 fi
 
