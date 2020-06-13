@@ -5,6 +5,10 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 project(crossuo)
 
+if (NOT XUO_VERSION)
+  set(XUO_VERSION "1.0.4")
+endif()
+
 #
 # Custom Build Options
 #

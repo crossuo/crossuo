@@ -23,8 +23,8 @@ if [[ "$TASK" == "clang-format" ]]; then
     fi
 fi
 
-if [[ "$TRAVIS_TAG" == "release" ]]; then
-    export EXTRA="-DXUO_DEPLOY=On"
+if [[ "$TRAVIS_TAG" != "" ]]; then
+    export EXTRA="-DXUO_DEPLOY=On -DXUO_VERSION=$TRAVIS_TAG"
     export BUILD="release"
 else
     export BUILD="master"
