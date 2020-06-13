@@ -146,11 +146,14 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
     SPEECH_TYPE speechType = ST_NORMAL;
     uint16_t sendColor = g_ConfigManager.SpeechColor;
     int offset = 0;
+    int member = -1;
+    GAME_CONSOLE_TEXT_TYPE type = GCTT_NORMAL;
+    (void)GetConsolePrefixAndType(text, member, type);
+    if (len == 1 && type != GCTT_NORMAL)
+        return;
+
     if (len > 1)
     {
-        int member = -1;
-        GAME_CONSOLE_TEXT_TYPE type = GCTT_NORMAL;
-        (void)GetConsolePrefixAndType(text, member, type);
         offset = strlen(s_ConsolePrefix[type]);
         if ((type != GCTT_NORMAL && len > 2) || type == GCTT_PARTY)
         {
