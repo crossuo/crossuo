@@ -11,6 +11,7 @@ install:
 - cd %APPVEYOR_BUILD_FOLDER%
 init:
 - echo %APPVEYOR_BUILD_WORKER_IMAGE%
+- echo %APPVEYOR_REPO_TAG_NAME%
 - set BUILD=master
 - if NOT "%APPVEYOR_REPO_TAG_NAME%"=="" (set BUILD=v%APPVEYOR_REPO_TAG_NAME%)
 - set version=
@@ -21,6 +22,8 @@ init:
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set generator="Visual Studio 16 2019" )
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019 Preview" ( set extra=-A x64 )
 - echo %generator%
+- echo %BUILD%
+- echo %version%
 build_script:
 - cmd: |-
     cmake --version
@@ -60,10 +63,10 @@ deploy:
     on:
       branch: master
   - provider: GitHub
-    tag: $APPVEYOR_REPO_TAG_NAME
+    tag: $(APPVEYOR_REPO_TAG_NAME)
     auth_token:
       secure: SLomEHrGLqzU2qZzz1AzVNJYjH88TTkYWjebDB+Lj3qO6OU7gJwLEkNa3gJCPQ3/
-    artifact: crossuo-win64-v$APPVEYOR_REPO_TAG_NAME.zip
+    artifact: crossuo-win64-v$(APPVEYOR_REPO_TAG_NAME).zip
     draft: false
     prerelease: false
     force_update: true
