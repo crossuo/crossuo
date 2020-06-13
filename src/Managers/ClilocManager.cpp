@@ -13,7 +13,7 @@ CClilocManager g_ClilocManager;
 // Regular (id >= 1000000 && id < 3000000)
 // Support (id >= 3000000)
 typedef std::map<uint32_t, astr_t> ClilocMap;
-ClilocMap s_Cache;
+static ClilocMap s_Cache;
 
 #define CONVERT_CASE(b, x) b ? str_camel_case(x) : x
 
