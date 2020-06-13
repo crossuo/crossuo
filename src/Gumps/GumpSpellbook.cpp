@@ -424,20 +424,20 @@ void CGumpSpellbook::UpdateContent()
             m_TithingPointsText->CreateTextureA(6, textData);
         }
 
-        int indexX = 106;
-        int dataX = 56;
+        int pageTitleX = 106;
+        int contentX = 56;
         int y = 0;
         if (page % 2 == 1)
         {
-            indexX = 269;
-            dataX = 221;
+            pageTitleX = 269;
+            contentX = 224;
         }
 
-        CGUIText *text = (CGUIText *)Add(new CGUIText(nameColor, indexX, 10));
+        CGUIText *text = (CGUIText *)Add(new CGUIText(nameColor, pageTitleX, 10));
         text->CreateTextureA(6, "INDEX");
         if (book.Type == ST_MASTERY && page % 2 == 1)
         {
-            text = (CGUIText *)Add(new CGUIText(nameColor, dataX, 30));
+            text = (CGUIText *)Add(new CGUIText(nameColor, contentX, 30));
             text->CreateTextureA(6, "Abilities");
             // TODO: active masteries
             continue;
@@ -446,12 +446,12 @@ void CGumpSpellbook::UpdateContent()
         int indexPage = page;
         if (book.Type == ST_MAGERY)
         {
-            text = (CGUIText *)Add(new CGUIText(nameColor, dataX, 30));
+            text = (CGUIText *)Add(new CGUIText(nameColor, contentX, 30));
             text->CreateTextureA(6, s_SpellCircleName[page]);
         }
         else if (book.Type == ST_MASTERY)
         {
-            text = (CGUIText *)Add(new CGUIText(nameColor, dataX, 30));
+            text = (CGUIText *)Add(new CGUIText(nameColor, contentX, 30));
             text->CreateTextureA(6, page == book.IndexPagesCount ? "Passive" : "Activated");
             if (page % 2 == 1)
                 continue;
@@ -474,9 +474,9 @@ void CGumpSpellbook::UpdateContent()
             else if (name == "Enchanted Summoning")
                 name = "Enchanted Summo..";
             const int serial = ID_GSB_SPELL_SERIAL + spellIndex;
-            auto box = (CGUIHitBox *)Add(new CGUIHitBox(serial, dataX, 52 + y, 100, 16, true));
+            auto box = (CGUIHitBox *)Add(new CGUIHitBox(serial, contentX, 52 + y, 100, 16, true));
             auto entry = (CGUITextEntry *)Add(
-                new CGUITextEntry(serial, nameColor, 0, 0, dataX, 52 + y, 0, false, 9));
+                new CGUITextEntry(serial, nameColor, 0, 0, contentX, 52 + y, 0, false, 9));
             entry->m_Entry.SetTextA(name);
             entry->CheckOnSerial = true;
             entry->ReadOnly = true;
