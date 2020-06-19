@@ -46,22 +46,24 @@ void CWeather::Generate()
         return;
     }
 
-    int drawX = g_ConfigManager.GameWindowX;
-    int drawY = g_ConfigManager.GameWindowY;
+    int maxEffects =
+        g_ConfigManager.GameWindowWidth * g_ConfigManager.GameWindowHeight / 7500 + Count;
 
-    if (Count > 70)
+    if (CurrentCount > maxEffects)
     {
-        Count = 70;
+        CurrentCount = 0;
+        Count = 0;
+        m_Effects.clear();
     }
 
     WindTimer = 0;
 
-    while (CurrentCount < Count)
+    while (CurrentCount < maxEffects)
     {
         CWeatherEffect effect;
 
-        effect.X = (float)(drawX + RandomInt(g_ConfigManager.GameWindowWidth));
-        effect.Y = (float)(drawY + RandomInt(g_ConfigManager.GameWindowHeight));
+        effect.X = (float)(RandomInt(g_ConfigManager.GameWindowWidth));
+        effect.Y = (float)(RandomInt(g_ConfigManager.GameWindowHeight));
 
         m_Effects.push_back(effect);
 
@@ -160,8 +162,8 @@ void CWeather::Draw(int x, int y)
 
     for (auto effect = m_Effects.begin(); effect != m_Effects.end();)
     {
-        if ((effect->X < x || effect->X > (x + g_ConfigManager.GameWindowWidth)) ||
-            (effect->Y < y || effect->Y > (y + g_ConfigManager.GameWindowHeight)))
+        if ((effect->X > (g_ConfigManager.GameWindowWidth)) ||
+            (effect->Y > (g_ConfigManager.GameWindowHeight)))
         {
             if (removeEffects)
             {
@@ -179,8 +181,8 @@ void CWeather::Draw(int x, int y)
                 continue;
             }
 
-            effect->X = (float)(x + RandomInt(g_ConfigManager.GameWindowWidth));
-            effect->Y = (float)(y + RandomInt(g_ConfigManager.GameWindowHeight));
+            effect->X = (float)(RandomInt(g_ConfigManager.GameWindowWidth));
+            effect->Y = (float)(RandomInt(g_ConfigManager.GameWindowHeight));
         }
 
         switch (Type)
