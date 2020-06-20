@@ -12,7 +12,7 @@ class CWeather
 public:
     uint8_t Type = 0;
     uint8_t Count = 0;
-    uint8_t CurrentCount = 0;
+    uint16_t CurrentCount = 0;
     uint8_t Temperature = 0;
     uint32_t Timer = 0;
     char Wind = 0;

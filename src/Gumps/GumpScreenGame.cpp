@@ -4,6 +4,7 @@
 #include "GumpScreenGame.h"
 #include "GumpConsoleType.h"
 #include "GumpOptions.h"
+#include "../Weather.h"
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../ToolTip.h"
@@ -275,6 +276,8 @@ void CGumpScreenGame::OnLeftMouseButtonUp()
         {
             g_ConfigManager.GameWindowHeight = screenY;
         }
+
+        g_Weather.Generate();
 
         if (g_Config.ClientVersion >= CV_200)
         {
