@@ -3251,7 +3251,7 @@ PACKET_HANDLER(Talk)
     SPEECH_TYPE type = (SPEECH_TYPE)ReadUInt8();
     uint16_t textColor = ReadUInt16BE();
     uint16_t font = ReadUInt16BE();
-    auto name = ReadString();
+    auto name = ReadString(30);
     auto text = ReadString();
 
     if (serial == 0u && graphic == 0u && type == ST_NORMAL && font == 0xFFFF &&
@@ -5270,7 +5270,7 @@ PACKET_HANDLER(OpenGump)
     for (int i = 0; i < textLinesCount; i++)
     {
         const int linelen = ReadInt16BE();
-        if (linelen != 0)
+        if (linelen > 0)
         {
             gump->AddText(i, ReadWStringBE(linelen));
         }
