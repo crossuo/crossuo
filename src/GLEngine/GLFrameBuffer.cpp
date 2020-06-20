@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "Backend.h"
@@ -132,7 +132,10 @@ void CGLFrameBuffer::Release()
 
 bool CGLFrameBuffer::Ready(int width, int height)
 {
-    assert(width >= 0 && height >= 0);
+    if (width > 0 && height > 0)
+    {
+        assert(width >= 0 && height >= 0); //FIXME when recive usigned int ex. -999.-1 client crash
+    }
 #ifndef NEW_RENDERER_ENABLED
     return (m_Ready && Texture.Width == width && Texture.Height == height);
 #else
