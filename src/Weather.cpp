@@ -8,6 +8,7 @@
 #include "Misc.h"
 #include "Renderer/RenderAPI.h"
 #include "Utility/PerfMarker.h"
+#include "ScreenStages/GameScreen.h"
 
 CWeather g_Weather;
 
@@ -318,4 +319,10 @@ void CWeather::Draw(int x, int y)
     RenderAdd_SetColor(g_renderCmdList, SetColorCmd{ g_ColorWhite });
 #endif
     LastTick = g_Ticks;
+}
+
+void CWeather::Earthquake(int duration, int magnitude)
+{
+    EarthquakeTimer = g_Ticks + (duration * 1000);
+    g_GameScreen.EarthquakeMagnitude = magnitude;
 }

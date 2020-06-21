@@ -1085,13 +1085,11 @@ void CGameScreen::CalculateGameWindowBounds()
         (g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight / 2) +
         (g_Player->GetZ() * 4);
 
-    /*int earthquakeMagnitude = RandomInt(11);
-
-	if (earthquakeMagnitude)
-	{
-		g_RenderBounds.GameWindowCenterX += RandomInt(earthquakeMagnitude * 3);
-		g_RenderBounds.GameWindowCenterY += RandomInt(earthquakeMagnitude * 3);
-	}*/
+    if (g_Ticks < g_Weather.EarthquakeTimer)
+    {
+        g_RenderBounds.GameWindowCenterX += RandomInt(EarthquakeMagnitude * 3);
+        g_RenderBounds.GameWindowCenterY += RandomInt(EarthquakeMagnitude * 3);
+    }
 
     g_RenderBounds.GameWindowCenterX -= g_Player->OffsetX;
     g_RenderBounds.GameWindowCenterY -= (g_Player->OffsetY - g_Player->OffsetZ);

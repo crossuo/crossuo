@@ -2301,6 +2301,11 @@ PACKET_HANDLER(SetWeather)
 
             break;
         }
+        case 4:
+        {
+            g_Weather.Earthquake(3, 1);
+            g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, "An earthquake is in action");
+        }
         case 0xFE:
         case 0xFF:
         {
