@@ -17,6 +17,7 @@ public:
     uint32_t Timer = 0;
     char Wind = 0;
     uint32_t WindTimer = 0;
+    uint32_t EarthquakeTimer = 0;
     uint32_t LastTick = 0;
     float SimulationRatio = 37.0f;
 
@@ -28,6 +29,7 @@ public:
     void Reset();
     void Generate();
     void Draw(int x, int y);
+    void Earthquake(int duration, int magnitude);
 };
 
 extern CWeather g_Weather;

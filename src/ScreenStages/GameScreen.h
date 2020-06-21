@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -81,6 +81,7 @@ public:
     bool RenderListInitalized = false;
     bool UpdateDrawPos = false;
     int RenderIndex = 1;
+    uint8_t EarthquakeMagnitude = 0;
 
 private:
     CGameObject *m_ObjectHandlesList[MAX_OBJECT_HANDLES];
