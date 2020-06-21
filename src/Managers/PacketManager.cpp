@@ -22,6 +22,7 @@
 #include "PluginManager.h"
 #include <common/str.h>
 #include <xuocore/uodata.h>
+#include "revision.h"
 #include "../MultiMap.h"
 #include "../Point.h"
 #include "../Sockets.h"
@@ -6261,8 +6262,7 @@ PACKET_HANDLER(CrossMessages)
         }
         case OCT_XUO_VERSION:
         {
-            // FIXME: get numeric version from revision.h
-            CPacketCrossVersion(0).Send();
+            CPacketCrossVersion(PRODUCT_VERSION).Send();
             break;
         }
         case OCT_CLOSE_GENERIC_GUMP_WITHOUT_RESPONSE:
