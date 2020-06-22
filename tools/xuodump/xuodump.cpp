@@ -331,7 +331,7 @@ void uop_unpack_file(CUopMappedFile &file, astr_t filename)
         f = fs_path_join(p, mname);
         fs_file_write(f, meta);
 
-        auto meta_crc = adler32(meta.data(), meta.size());
+        auto meta_crc = asset->Checksum; //adler32(meta.data(), meta.size());
         auto data_crc = adler32(data.data(), data.size());
         mftw_package_add(
             pkg,

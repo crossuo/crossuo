@@ -9,7 +9,6 @@
 #include <map>
 #include <external/popts.h>
 #include <external/lookup3.h>
-#include <external/miniz.h>
 #include <common/checksum.h>
 #include "mft.h"
 #include "http.h"

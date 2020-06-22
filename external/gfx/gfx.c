@@ -60,13 +60,13 @@ int win_init(win_context *ctx)
 #if __APPLE__
     SDL_GL_SetAttribute(
         SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-#else
+#else // #if __APPLE__
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-#endif
+#endif // #if __APPLE__
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-#endif // SOKOL_GLES
+#endif // #if defined(USE_GL)
     const SDL_WindowFlags window_flags =
         (SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_Window *window = SDL_CreateWindow(
