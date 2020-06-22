@@ -5504,7 +5504,7 @@ void CGame::CreateTextMessageF(uint8_t font, uint16_t color, const char *format,
     va_list arg;
     va_start(arg, format);
     char buf[512] = { 0 };
-    SDL_vsnprintf(buf, sizeof(buf), format, arg);
+    vsnprintf(buf, sizeof(buf), format, arg);
     CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, buf);
     va_end(arg);
 }
@@ -5514,7 +5514,7 @@ void CGame::CreateUnicodeTextMessageF(uint8_t font, uint16_t color, const char *
     va_list arg;
     va_start(arg, format);
     char buf[512] = { 0 };
-    SDL_vsnprintf(buf, sizeof(buf), format, arg);
+    vsnprintf(buf, sizeof(buf), format, arg);
     CreateUnicodeTextMessage(TT_SYSTEM, 0xFFFFFFFF, font, color, wstr_from(buf));
     va_end(arg);
 }

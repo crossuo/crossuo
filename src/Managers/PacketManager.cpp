@@ -1,8 +1,5 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
-
-#include <external/miniz.h>
-
 #include "PacketManager.h"
 #include "GumpManager.h"
 #include "ConfigManager.h"
@@ -20,6 +17,7 @@
 #include "MapManager.h"
 #include "ConnectionManager.h"
 #include "PluginManager.h"
+#include <external/zlib_amalg.h>
 #include <common/str.h>
 #include <xuocore/uodata.h>
 #include "revision.h"
@@ -5335,7 +5333,7 @@ PACKET_HANDLER(OpenCompressedGump)
         cLen,
         dLen);
 
-    int z_err = mz_uncompress(&decLayoutData[0], &dLen, Ptr, cLen);
+    int z_err = uncompress(&decLayoutData[0], &dLen, Ptr, cLen);
     if (z_err != Z_OK)
     {
         Info(Network, "layout gump decompression error %d", z_err);
@@ -5359,7 +5357,7 @@ PACKET_HANDLER(OpenCompressedGump)
         gumpDecText.resize(dTLen);
         Info(Network, "decompressing text gump data");
 
-        z_err = mz_uncompress(&gumpDecText[0], &dTLen, Ptr, cTLen);
+        z_err = uncompress(&gumpDecText[0], &dTLen, Ptr, cTLen);
         if (z_err != Z_OK)
         {
             Info(Network, "text gump decompression error %d", z_err);
@@ -6104,7 +6102,7 @@ PACKET_HANDLER(CustomHouse)
         }
 
         std::vector<uint8_t> decompressedBytes(dLen);
-        int z_err = mz_uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
+        int z_err = uncompress(&decompressedBytes[0], &dLen, Ptr, cLen);
         if (z_err != Z_OK)
         {
             Info(

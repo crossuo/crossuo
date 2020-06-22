@@ -10,7 +10,9 @@
 #include <algorithm>
 #include <external/tinyxml2.h>
 #include <external/xxhash.h>
-#include <external/miniz.h>
+
+#define MINIZ_IMPLEMENTATION
+#include <external/miniz.h> // mz_zip_archive
 
 #include "xuo_updater.h"
 #include "common.h"

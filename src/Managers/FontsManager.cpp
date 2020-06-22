@@ -1515,75 +1515,75 @@ uint32_t CFontsManager::GetHTMLColorFromText(astr_t &str1)
         }
         else
         {
-            if (!SDL_strcasecmp(str, "red"))
+            if (!strcasecmp(str, "red"))
             {
                 color = 0x0000FFFF;
             }
-            else if (!SDL_strcasecmp(str, "cyan"))
+            else if (!strcasecmp(str, "cyan"))
             {
                 color = 0xFFFF00FF;
             }
-            else if (!SDL_strcasecmp(str, "blue"))
+            else if (!strcasecmp(str, "blue"))
             {
                 color = 0xFF0000FF;
             }
-            else if (!SDL_strcasecmp(str, "darkblue"))
+            else if (!strcasecmp(str, "darkblue"))
             {
                 color = 0xA00000FF;
             }
-            else if (!SDL_strcasecmp(str, "lightblue"))
+            else if (!strcasecmp(str, "lightblue"))
             {
                 color = 0xE6D8ADFF;
             }
-            else if (!SDL_strcasecmp(str, "purple"))
+            else if (!strcasecmp(str, "purple"))
             {
                 color = 0x800080FF;
             }
-            else if (!SDL_strcasecmp(str, "yellow"))
+            else if (!strcasecmp(str, "yellow"))
             {
                 color = 0x00FFFFFF;
             }
-            else if (!SDL_strcasecmp(str, "lime"))
+            else if (!strcasecmp(str, "lime"))
             {
                 color = 0x00FF00FF;
             }
-            else if (!SDL_strcasecmp(str, "magenta"))
+            else if (!strcasecmp(str, "magenta"))
             {
                 color = 0xFF00FFFF;
             }
-            else if (!SDL_strcasecmp(str, "white"))
+            else if (!strcasecmp(str, "white"))
             {
                 color = 0xFFFEFEFF;
             }
-            else if (!SDL_strcasecmp(str, "silver"))
+            else if (!strcasecmp(str, "silver"))
             {
                 color = 0xC0C0C0FF;
             }
-            else if (!SDL_strcasecmp(str, "gray") || !SDL_strcasecmp(str, "grey"))
+            else if (!strcasecmp(str, "gray") || !strcasecmp(str, "grey"))
             {
                 color = 0x808080FF;
             }
-            else if (!SDL_strcasecmp(str, "black"))
+            else if (!strcasecmp(str, "black"))
             {
                 color = 0x010101FF;
             }
-            else if (!SDL_strcasecmp(str, "orange"))
+            else if (!strcasecmp(str, "orange"))
             {
                 color = 0x00A5FFFF;
             }
-            else if (!SDL_strcasecmp(str, "brown"))
+            else if (!strcasecmp(str, "brown"))
             {
                 color = 0x2A2AA5FF;
             }
-            else if (!SDL_strcasecmp(str, "maroon"))
+            else if (!strcasecmp(str, "maroon"))
             {
                 color = 0x000080FF;
             }
-            else if (!SDL_strcasecmp(str, "green"))
+            else if (!strcasecmp(str, "green"))
             {
                 color = 0x008000FF;
             }
-            else if (!SDL_strcasecmp(str, "olive"))
+            else if (!strcasecmp(str, "olive"))
             {
                 color = 0x008080FF;
             }

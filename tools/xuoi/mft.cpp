@@ -6,7 +6,6 @@
 #include <atomic>
 #include <thread>
 #include <external/lookup3.h>
-#include <external/miniz.h>
 
 #include "mft.h"
 #include "http.h"
@@ -19,6 +18,8 @@
 
 #define STR_IMPLEMENTATION
 #include <common/str.h>
+
+#include <external/zlib_amalg.h>
 
 static mft_result mft_download(
     mft_product &prod,
@@ -108,7 +109,7 @@ static mft_result mft_download(
             }
             auto ol = checked_cast<uLongf>(ul);
             auto il = checked_cast<uLongf>(cl);
-            int z_err = mz_uncompress((unsigned char *)buffer, &ol, (unsigned char *)cbuffer, il);
+            int z_err = uncompress((unsigned char *)buffer, &ol, (unsigned char *)cbuffer, il);
             if (z_err != Z_OK)
             {
                 LOG_ERROR("(%s)%s: decompression error %d", entry.name, upath, z_err);

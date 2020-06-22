@@ -7,9 +7,6 @@
 #define FS_IMPLEMENTATION
 #include <common/fs.h>
 
-#define MINIZ_IMPLEMENTATION
-#include <external/miniz.h>
-
 #define LOOKUP3_IMPLEMENTATION
 #include <external/lookup3.h>
 

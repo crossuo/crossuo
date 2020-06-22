@@ -5,6 +5,10 @@
 
 #undef ERROR
 
+#if defined(XUO_EMSC)
+#define LOGURU_STACKTRACES 0
+#endif
+
 #if !defined(DISABLE_LOG)
 
 #define LOG_HEADER
