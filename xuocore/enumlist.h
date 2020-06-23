@@ -148,6 +148,7 @@ enum CLIENT_VERSION
     //CV_70600 = VERSION(7, 0, 60, 0), //
     CV_70611 = VERSION(7, 0, 61, 1), // login screen Endless Journey 7.0.61.1
     //CV_70640 = VERSION(7, 0, 64, 0), //
+    CV_70720 = VERSION(7, 0, 72, 0), // Publish 102 Enable Large Bank & Vault Gumps
     CV_70796 = VERSION(7, 0, 79, 6), // Display houses content option
     CV_708111 = VERSION(7, 0, 81, 11),
     CV_LATEST = CV_70796,
