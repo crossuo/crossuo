@@ -2691,13 +2691,12 @@ void CGumpOptions::DrawPage9()
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 86, 243));
     text->CreateTextureW(0, L"Set the font for speech");
-    
+
     //
     checkbox = (CGUICheckbox *)Add(
-                                   new CGUICheckbox(ID_GO_P9_LARGE_GUMPS, 0x00D2, 0x00D3, 0x00D2, 64, 270));
+        new CGUICheckbox(ID_GO_P9_LARGE_GUMPS, 0x00D2, 0x00D3, 0x00D2, 64, 270));
     checkbox->Checked = g_OptionsConfig.LargeGumps;
-    checkbox->SetTextParameters(
-                                0, L"Enable Large Container Gumps", g_OptionsTextColor);
+    checkbox->SetTextParameters(0, L"Enable Large Container Gumps", g_OptionsTextColor);
 }
 
 void CGumpOptions::DrawPage10()

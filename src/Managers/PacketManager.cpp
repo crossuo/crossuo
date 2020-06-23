@@ -2493,10 +2493,11 @@ PACKET_HANDLER(OpenContainer)
     else //Container
     {
         uint16_t graphic = 0xFFFF;
-        
+
         if (g_ConfigManager.LargeGumps)
         {
-            switch (gumpid) {
+            switch (gumpid)
+            {
                 case 0x3E:
                     gumpid = 0X06E9;
                     break;
@@ -2513,7 +2514,7 @@ PACKET_HANDLER(OpenContainer)
                     break;
             }
         }
-        
+
         for (int i = 0; i < (int)g_ContainerOffset.size(); i++)
         {
             if (gumpid == g_ContainerOffset[i].Gump)
