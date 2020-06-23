@@ -69,28 +69,27 @@ CGumpContainer::~CGumpContainer()
 
 void CGumpContainer::UpdateItemCoordinates(CGameObject *item)
 {
-    if (Graphic < g_ContainerOffset.size())
+    if (Graphic < g_Container.size())
     {
-        const CContainerOffsetRect &rect = g_ContainerOffset[Graphic].Rect;
-
-        if (item->GetX() < rect.MinX)
+        const auto &cont = g_Container[Graphic];
+        if (item->GetX() < cont.MinX)
         {
-            item->SetX(rect.MinX);
+            item->SetX(cont.MinX);
         }
 
-        if (item->GetY() < rect.MinY)
+        if (item->GetY() < cont.MinY)
         {
-            item->SetY(rect.MinY);
+            item->SetY(cont.MinY);
         }
 
-        if (item->GetX() > rect.MinX + rect.MaxX)
+        if (item->GetX() > cont.MinX + cont.MaxX)
         {
-            item->SetX(rect.MinX + rect.MaxX);
+            item->SetX(cont.MinX + cont.MaxX);
         }
 
-        if (item->GetY() > rect.MinY + rect.MaxY)
+        if (item->GetY() > cont.MinY + cont.MaxY)
         {
-            item->SetY(rect.MinY + rect.MaxY);
+            item->SetY(cont.MinY + cont.MaxY);
         }
     }
 }
@@ -428,7 +427,7 @@ void CGumpContainer::OnLeftMouseButtonUp()
     int y = g_MouseManager.Position.Y - m_Y;
     if (canDrop && g_ObjectInHand.Enabled)
     {
-        const CContainerOffsetRect &r = g_ContainerOffset[Graphic].Rect;
+        const auto &c = g_Container[Graphic];
         bool doubleDraw = false;
         uint16_t graphic = g_ObjectInHand.GetDrawGraphic(doubleDraw);
         auto spr = g_Game.ExecuteStaticArt(graphic);
@@ -443,25 +442,25 @@ void CGumpContainer::OnLeftMouseButtonUp()
             x -= (spr->Width / 2);
             y -= (spr->Height / 2);
 
-            if (x + spr->Width > r.MaxX)
+            if (x + spr->Width > c.MaxX)
             {
-                x = r.MaxX - spr->Width;
+                x = c.MaxX - spr->Width;
             }
 
-            if (y + spr->Height > r.MaxY)
+            if (y + spr->Height > c.MaxY)
             {
-                y = r.MaxY - spr->Height;
+                y = c.MaxY - spr->Height;
             }
         }
 
-        if (x < r.MinX)
+        if (x < c.MinX)
         {
-            x = r.MinX;
+            x = c.MinX;
         }
 
-        if (y < r.MinY)
+        if (y < c.MinY)
         {
-            y = r.MinY;
+            y = c.MinY;
         }
 
         if (dropContainer != Serial)

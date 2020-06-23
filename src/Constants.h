@@ -5,10 +5,6 @@
 
 #include <stdint.h>
 
-const int CONTAINERS_RECT_DEFAULT_POS = 40;
-
-const int CONTAINERS_RECT_LINESTEP = 800;
-
 const int MIN_FPS_LIMIT = 12;
 
 const int MAX_FPS_LIMIT = 300;
@@ -16,8 +12,6 @@ const int MAX_FPS_LIMIT = 300;
 const int DEFAULT_FPS = MAX_FPS_LIMIT;
 
 const int CPU_USAGE_DELAY = 2;
-
-const int CONTAINERS_RECT_STEP = 20;
 
 const int DRAG_ITEMS_DISTANCE = 3;
 

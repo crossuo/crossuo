@@ -2515,9 +2515,9 @@ PACKET_HANDLER(OpenContainer)
             }
         }
 
-        for (int i = 0; i < (int)g_ContainerOffset.size(); i++)
+        for (int i = 0; i < (int)g_Container.size(); i++)
         {
-            if (gumpid == g_ContainerOffset[i].Gump)
+            if (gumpid == g_Container[i].Gump)
             {
                 graphic = (uint16_t)i;
                 break;
@@ -2529,9 +2529,8 @@ PACKET_HANDLER(OpenContainer)
             return;
         }
 
-        g_ContainerRect.Calculate(gumpid);
-
-        gump = new CGumpContainer(serial, gumpid, g_ContainerRect.X, g_ContainerRect.Y);
+        const auto pos = ContainerNextPosition(gumpid);
+        gump = new CGumpContainer(serial, gumpid, pos.X, pos.Y);
         gump->Graphic = graphic;
         g_Game.ExecuteGump(gumpid);
     }

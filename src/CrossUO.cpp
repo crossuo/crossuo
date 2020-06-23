@@ -410,7 +410,7 @@ bool CGame::Install()
         g_GameWindow.ShowMessage("Failed to init audio system.", "Warning");
     }
 
-    LoadContainerOffsets();
+    ContainerInit();
 
     g_CityManager.Init();
 
@@ -910,160 +910,6 @@ void CGame::CheckStaticTileFilterFiles()
             m_StaticTilesFilterFlags[TextToGraphic(strings[0].c_str())] |= STFF_VEGETATION;
         }
     }
-}
-
-void CGame::LoadContainerOffsets()
-{
-    auto path = g_App.ExeFilePath("data");
-    fs_path_create(path);
-
-    auto filePath = fs_path_join(path, "containers.txt");
-    Info(Client, "containers: %s", fs_path_ascii(filePath));
-    if (!fs_path_exists(filePath))
-    {
-        //												Gump   OpenSnd  CloseSnd					minX minY maxX maxY
-        g_ContainerOffset.push_back(CContainerOffset(
-            0x0009, 0x0000, 0x0000, CContainerOffsetRect(20, 85, 124, 196))); //corpse
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x003C, 0x0048, 0x0058, CContainerOffsetRect(44, 65, 186, 159)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x003D, 0x0048, 0x0058, CContainerOffsetRect(29, 34, 137, 128)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x003E, 0x002F, 0x002E, CContainerOffsetRect(33, 36, 142, 148)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x003F, 0x004F, 0x0058, CContainerOffsetRect(19, 47, 182, 123)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0040, 0x002D, 0x002C, CContainerOffsetRect(16, 51, 150, 140)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0041, 0x004F, 0x0058, CContainerOffsetRect(35, 38, 145, 116)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0042, 0x002D, 0x002C, CContainerOffsetRect(18, 105, 162, 178)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0043, 0x002D, 0x002C, CContainerOffsetRect(16, 51, 181, 124)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0044, 0x002D, 0x002C, CContainerOffsetRect(20, 10, 170, 100)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0048, 0x002F, 0x002E, CContainerOffsetRect(16, 10, 154, 94)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0049, 0x002D, 0x002C, CContainerOffsetRect(18, 105, 162, 178)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x004A, 0x002D, 0x002C, CContainerOffsetRect(18, 105, 162, 178)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x004B, 0x002D, 0x002C, CContainerOffsetRect(16, 51, 184, 124)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x004C, 0x002D, 0x002C, CContainerOffsetRect(46, 74, 196, 184)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x004D, 0x002F, 0x002E, CContainerOffsetRect(76, 12, 140, 68)));
-        g_ContainerOffset.push_back(CContainerOffset(
-            0x004E, 0x002D, 0x002C, CContainerOffsetRect(24, 96, 140, 152))); //bugged
-        g_ContainerOffset.push_back(CContainerOffset(
-            0x004F, 0x002D, 0x002C, CContainerOffsetRect(24, 96, 140, 152))); //bugged
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0051, 0x002F, 0x002E, CContainerOffsetRect(16, 10, 154, 94)));
-        g_ContainerOffset.push_back(CContainerOffset(
-            0x091A, 0x0000, 0x0000, CContainerOffsetRect(1, 13, 260, 199))); //game board
-        g_ContainerOffset.push_back(CContainerOffset(
-            0x092E, 0x0000, 0x0000, CContainerOffsetRect(1, 13, 260, 199))); //backgammon game
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0104, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0105, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0106, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0107, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0108, 0x004F, 0x0058, CContainerOffsetRect(0, 35, 150, 105)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0109, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 175, 105)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x010A, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 175, 105)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x010B, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 175, 105)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x010C, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x010D, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x010E, 0x002F, 0x002E, CContainerOffsetRect(0, 20, 168, 115)));
-        //present boxes
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0102, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 245, 120)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x011B, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 220, 120)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x011C, 0x004F, 0x0058, CContainerOffsetRect(10, 10, 220, 145)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x011D, 0x004F, 0x0058, CContainerOffsetRect(10, 10, 220, 130)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x011E, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 290, 130)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x011F, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 220, 120)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0120, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 220, 130)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0121, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 220, 130)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0122, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 220, 130)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x0777A, 0x004F, 0x0058, CContainerOffsetRect(15, 10, 220, 130)));
-        //secret chest
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x058E, 0x002D, 0x002C, CContainerOffsetRect(16, 51, 184, 124)));
-        //Large gumps
-        g_ContainerOffset.push_back(
-            CContainerOffset(0X9CDD, 0x002D, 0x002C, CContainerOffsetRect(55, 65, 552, 310)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0X9CDF, 0x002D, 0x002C, CContainerOffsetRect(55, 65, 552, 310)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0x9CE3, 0x002D, 0x002C, CContainerOffsetRect(55, 65, 552, 310)));
-        g_ContainerOffset.push_back(
-            CContainerOffset(0X06E9, 0x002D, 0x002C, CContainerOffsetRect(70, 100, 330, 330)));
-    }
-    else
-    {
-        Wisp::CTextFileParser parser(filePath, " \t", "#;//", "");
-
-        while (!parser.IsEOF())
-        {
-            std::vector<astr_t> strings = parser.ReadTokens();
-
-            if (strings.size() >= 7)
-            {
-                uint16_t gump = TextToGraphic(strings[0].c_str());
-                uint16_t openSound = TextToGraphic(strings[1].c_str());
-                uint16_t closeSound = TextToGraphic(strings[2].c_str());
-                uint16_t minX = str_to_int(strings[3]);
-                uint16_t minY = str_to_int(strings[4]);
-                uint16_t maxX = str_to_int(strings[5]);
-                uint16_t maxY = str_to_int(strings[6]);
-
-                g_ContainerOffset.push_back(CContainerOffset(
-                    gump, openSound, closeSound, CContainerOffsetRect(minX, minY, maxX, maxY)));
-            }
-        }
-    }
-
-    if (!fs_path_exists(filePath))
-    {
-        CFileWriter file;
-        file.Init(filePath);
-        file.Print("#Format: gump open_sound close_sound minX minY maxX maxY\n");
-        for (const CContainerOffset &item : g_ContainerOffset)
-        {
-            file.Print(
-                "0x%04X 0x%04X 0x%04X %i %i %i %i\n",
-                item.Gump,
-                item.OpenSound,
-                item.CloseSound,
-                item.Rect.MinX,
-                item.Rect.MinY,
-                item.Rect.MaxX,
-                item.Rect.MaxY);
-        }
-    }
-
-    Info(Client, "g_ContainerOffset.size()=%zd", g_ContainerOffset.size());
 }
 
 void CGame::LoadAutoLoginNames()
@@ -1570,7 +1416,7 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
 
     if (g_ConfigManager.OffsetInterfaceWindows)
     {
-        g_ContainerRect.MakeDefault();
+        ContainerPositionReset();
     }
 
     if (g_ConfigManager.GetConsoleNeedEnter())

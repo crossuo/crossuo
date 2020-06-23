@@ -1020,6 +1020,7 @@ bool CConfigManager::Load(const fs_path &path)
     int windowWidth = -1;
     int windowHeight = -1;
     UpdateRange = g_MaxViewRange;
+    auto contPos = ContainerDefaultPosition();
 
     while (!file.IsEOF())
     {
@@ -1292,10 +1293,10 @@ bool CConfigManager::Load(const fs_path &path)
                     HoldShiftForEnablePathfind = str_to_bool(strings[1]);
                     break;
                 case CMKC_CONTAINER_DEFAULT_X:
-                    g_ContainerRect.DefaultX = str_to_int(strings[1]);
+                    contPos.X = str_to_int(strings[1]);
                     break;
                 case CMKC_CONTAINER_DEFAULT_Y:
-                    g_ContainerRect.DefaultY = str_to_int(strings[1]);
+                    contPos.Y = str_to_int(strings[1]);
                     break;
 
                 //Page 7
@@ -1643,8 +1644,9 @@ void CConfigManager::Save(const fs_path &path)
         writer.WriteBool("ReduceFPSUnactiveWindow", m_ReduceFPSUnactiveWindow);
         writer.WriteBool("HoldShiftForContextMenus", HoldShiftForContextMenus);
         writer.WriteBool("HoldShiftForEnablePathfind", HoldShiftForEnablePathfind);
-        writer.WriteInt("ContainerDefaultX", g_ContainerRect.DefaultX);
-        writer.WriteInt("ContainerDefaultY", g_ContainerRect.DefaultY);
+        const auto contPos = ContainerDefaultPosition();
+        writer.WriteInt("ContainerDefaultX", contPos.X);
+        writer.WriteInt("ContainerDefaultY", contPos.Y);
         writer.WriteInt("CharacterBackpackStyle", GetCharacterBackpackStyle());
 
         //Page 7
