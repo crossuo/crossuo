@@ -131,6 +131,7 @@ public:
     bool ShowIncomingNames = false;
     bool UseCircleTrans = false;
     bool StatReport = false;
+    bool LargeGumps = false;
     uint8_t CircleTransRadius = 0;
     uint8_t SkillReport = 0;
     uint16_t SpeechFont = 0;

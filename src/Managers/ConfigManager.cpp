@@ -162,6 +162,7 @@ enum
 #endif // USE_PING
     CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC,
     CMKC_DRAW_STATUS_FOR_HUMANOIDS,
+    CMKC_LARGEGUMPS,
 
     CMKC_COUNT
 };
@@ -304,6 +305,7 @@ static const ConfigEntry s_Keys[] = {
 #endif // USE_PING
     { CMKC_CANCEL_NEW_TARGET_SYSTEM_ON_SHIFT_ESC, "cancelnewtargetsystemonshiftesc" },
     { CMKC_DRAW_STATUS_FOR_HUMANOIDS, "drawstatusforhumanoids" },
+    { CMKC_LARGEGUMPS, "largegumps" },
     { CMKC_COUNT, nullptr },
 };
 
@@ -507,6 +509,7 @@ void CConfigManager::DefaultPage9()
     CircleTransRadius = 64;
     SkillReport = 1;
     SpeechFont = 0;
+    LargeGumps = false;
 }
 
 void CConfigManager::UpdateFeatures()
@@ -1394,7 +1397,9 @@ bool CConfigManager::Load(const fs_path &path)
                 case CMKC_SPEECH_FONT:
                     SpeechFont = str_to_int(strings[1]);
                     break;
-
+                case CMKC_LARGEGUMPS:
+                    LargeGumps = str_to_bool(strings[1]);
+                    break;
                 //No page
                 case CMKC_GAME_WINDOW_X:
                     GameWindowX = str_to_int(strings[1]);
@@ -1678,6 +1683,7 @@ void CConfigManager::Save(const fs_path &path)
         writer.WriteInt("CircleTransRadius", CircleTransRadius);
         writer.WriteInt("SkillReport", SkillReport);
         writer.WriteInt("SpeechFont", SpeechFont);
+        writer.WriteBool("LargeGumps", LargeGumps);
 
         //No page
         writer.WriteInt("GameWindowX", GameWindowX);

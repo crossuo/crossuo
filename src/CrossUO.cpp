@@ -1010,6 +1010,15 @@ void CGame::LoadContainerOffsets()
         //secret chest
         g_ContainerOffset.push_back(
             CContainerOffset(0x058E, 0x002D, 0x002C, CContainerOffsetRect(16, 51, 184, 124)));
+        //Large gumps
+        g_ContainerOffset.push_back(
+            CContainerOffset(0X9CDD, 0x002D, 0x002C, CContainerOffsetRect(55, 65, 552, 310)));
+        g_ContainerOffset.push_back(
+            CContainerOffset(0X9CDF, 0x002D, 0x002C, CContainerOffsetRect(55, 65, 552, 310)));
+        g_ContainerOffset.push_back(
+            CContainerOffset(0x9CE3, 0x002D, 0x002C, CContainerOffsetRect(55, 65, 552, 310)));
+        g_ContainerOffset.push_back(
+            CContainerOffset(0X06E9, 0x002D, 0x002C, CContainerOffsetRect(70, 100, 330, 330)));
     }
     else
     {

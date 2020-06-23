@@ -199,6 +199,7 @@ enum
     ID_GO_P9_SPEECH_FONT,
     ID_GO_P9_TRANSPARENCY_RADIUS,
     ID_GO_P9_INFORM_SKILLS,
+    ID_GO_P9_LARGE_GUMPS,
 
     ID_GO_COUNT,
 
@@ -2690,6 +2691,14 @@ void CGumpOptions::DrawPage9()
 
     text = (CGUIText *)Add(new CGUIText(g_OptionsTextColor, 86, 243));
     text->CreateTextureW(0, L"Set the font for speech");
+
+    if (g_Config.ClientVersion >= CV_70720)
+    {
+        checkbox = (CGUICheckbox *)Add(
+            new CGUICheckbox(ID_GO_P9_LARGE_GUMPS, 0x00D2, 0x00D3, 0x00D2, 64, 270));
+        checkbox->Checked = g_OptionsConfig.LargeGumps;
+        checkbox->SetTextParameters(0, L"Enable Large Container Gumps", g_OptionsTextColor);
+    }
 }
 
 void CGumpOptions::DrawPage10()
@@ -3479,6 +3488,10 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             else if (serial == ID_GO_P9_INFORM_STATS)
             { //Inform me of increases in strength, dexterity, and intelligence.
                 g_OptionsConfig.StatReport = state;
+            }
+            else if (serial == ID_GO_P9_LARGE_GUMPS)
+            {
+                g_OptionsConfig.LargeGumps = state;
             }
 
             break;
@@ -4285,6 +4298,7 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.SkillReport = g_OptionsConfig.SkillReport;
             g_ConfigManager.SpeechFont = g_OptionsConfig.SpeechFont;
             g_CircleOfTransparency.Create(g_ConfigManager.CircleTransRadius);
+            g_ConfigManager.LargeGumps = g_OptionsConfig.LargeGumps;
             break;
         }
         case 10: //Filter Options
