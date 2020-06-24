@@ -206,7 +206,7 @@ void CGumpManager::AddGump(CGump *obj)
         {
             case GT_CONTAINER:
             {
-                uint16_t sound = g_ContainerOffset[obj->Graphic].OpenSound;
+                uint16_t sound = g_Container[obj->Graphic].OpenSound;
                 if (sound != 0u)
                 {
                     g_Game.PlaySoundEffect(sound);
@@ -396,11 +396,9 @@ void CGumpManager::RemoveGump(CGump *obj)
         }
     }
 
-    if (obj->GumpType == GT_CONTAINER && obj->Graphic > 0 &&
-        obj->Graphic < g_ContainerOffset.size())
+    if (obj->GumpType == GT_CONTAINER && obj->Graphic > 0 && obj->Graphic < g_Container.size())
     {
-        uint16_t sound = g_ContainerOffset[obj->Graphic].CloseSound;
-
+        uint16_t sound = g_Container[obj->Graphic].CloseSound;
         if (sound != 0u)
         {
             g_Game.PlaySoundEffect(sound);

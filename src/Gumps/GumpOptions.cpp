@@ -2141,6 +2141,7 @@ void CGumpOptions::DrawPage6()
     text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 0, 76));
     text->CreateTextureW(0, L"Default interface windows offset x:");
 
+    const auto defaultContainerPos = ContainerDefaultPosition();
     html->Add(new CGUIResizepic(ID_GO_P6_CONTAINER_OFFSET_X, 0x0BB8, 250, 76, 60, 22));
     m_ContainerOffsetX = (CGUITextEntry *)html->Add(new CGUITextEntry(
         ID_GO_P6_CONTAINER_OFFSET_X,
@@ -2152,7 +2153,7 @@ void CGumpOptions::DrawPage6()
     m_ContainerOffsetX->CheckOnSerial = true;
     m_ContainerOffsetX->m_Entry.MaxLength = screenX;
     m_ContainerOffsetX->m_Entry.NumberOnly = true;
-    m_ContainerOffsetX->m_Entry.SetTextW(wstr_from(g_ContainerRect.DefaultX));
+    m_ContainerOffsetX->m_Entry.SetTextW(wstr_from(defaultContainerPos.X));
 
     text = (CGUIText *)html->Add(new CGUIText(g_OptionsTextColor, 312, 76));
     text->CreateTextureW(0, L"y:");
@@ -2168,7 +2169,7 @@ void CGumpOptions::DrawPage6()
     m_ContainerOffsetY->CheckOnSerial = true;
     m_ContainerOffsetY->m_Entry.MaxLength = screenY;
     m_ContainerOffsetY->m_Entry.NumberOnly = true;
-    m_ContainerOffsetY->m_Entry.SetTextW(wstr_from(g_ContainerRect.DefaultY));
+    m_ContainerOffsetY->m_Entry.SetTextW(wstr_from(defaultContainerPos.Y));
 
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P6_AUTO_ARRANGE_MINIMIZED_WINDOWS, 0x00D2, 0x00D3, 0x00D2, 0, 96));
@@ -2915,10 +2916,11 @@ void CGumpOptions::UpdateColor(const SELECT_COLOR_GUMP_STATE &state, uint16_t co
 
 void CGumpOptions::GUMP_BUTTON_EVENT_C
 {
+    const auto defaultContainerPos = ContainerDefaultPosition();
     if (serial == ID_GO_PAGE_6)
     {
-        m_ContainerOffsetX->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultX));
-        m_ContainerOffsetY->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultY));
+        m_ContainerOffsetX->m_Entry.SetTextA(str_from(defaultContainerPos.X));
+        m_ContainerOffsetY->m_Entry.SetTextA(str_from(defaultContainerPos.Y));
     }
     else if (serial == ID_GO_PAGE_7)
     {
@@ -2961,9 +2963,9 @@ void CGumpOptions::GUMP_BUTTON_EVENT_C
             case 6:
             {
                 g_OptionsConfig.DefaultPage6();
-
-                m_ContainerOffsetX->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultX));
-                m_ContainerOffsetY->m_Entry.SetTextA(str_from(g_ContainerRect.DefaultY));
+                const auto pos = ContainerDefaultPosition();
+                m_ContainerOffsetX->m_Entry.SetTextA(str_from(pos.X));
+                m_ContainerOffsetY->m_Entry.SetTextA(str_from(pos.Y));
 
                 break;
             }
@@ -4167,7 +4169,7 @@ void CGumpOptions::ApplyPageChanges()
             if (g_ConfigManager.OffsetInterfaceWindows != g_OptionsConfig.OffsetInterfaceWindows &&
                 g_OptionsConfig.OffsetInterfaceWindows)
             {
-                g_ContainerRect.MakeDefault();
+                ContainerPositionReset();
             }
 
             g_ConfigManager.OffsetInterfaceWindows = g_OptionsConfig.OffsetInterfaceWindows;
@@ -4184,22 +4186,16 @@ void CGumpOptions::ApplyPageChanges()
             g_ConfigManager.HoldShiftForEnablePathfind = g_OptionsConfig.HoldShiftForEnablePathfind;
             g_ConfigManager.SetCharacterBackpackStyle(g_OptionsConfig.GetCharacterBackpackStyle());
 
-            int curX = g_ContainerRect.DefaultX;
-
+            auto defaultContainerPos = ContainerDefaultPosition();
             if (m_ContainerOffsetX->m_Entry.Length() != 0u)
             {
-                curX = str_to_int(m_ContainerOffsetX->m_Entry.GetTextA());
+                defaultContainerPos.X = str_to_int(m_ContainerOffsetX->m_Entry.GetTextA());
             }
-
-            int curY = g_ContainerRect.DefaultY;
 
             if (m_ContainerOffsetY->m_Entry.Length() != 0u)
             {
-                curY = str_to_int(m_ContainerOffsetY->m_Entry.GetTextA());
+                defaultContainerPos.Y = str_to_int(m_ContainerOffsetY->m_Entry.GetTextA());
             }
-
-            g_ContainerRect.DefaultX = curX;
-            g_ContainerRect.DefaultY = curY;
 
             if (g_OptionsConfig.DisableMenubar)
             {
