@@ -112,7 +112,7 @@ void write_accounts(void *_fp)
         return;
 
     auto fp = (FILE *)_fp;
-    for (int i = 1; i < s_accounts.entries.size(); ++i)
+    for (size_t i = 1; i < s_accounts.entries.size(); ++i)
     {
         const auto &e = s_accounts.entries[i];
         account::write(fp, e, "Account");
@@ -180,7 +180,7 @@ static fs_path account_create_config(const account::entry &account)
 
 static void account_launch(int account_index)
 {
-    assert(account_index > 0 && account_index < s_accounts.entries.size());
+    assert(account_index > 0 && account_index < (int)s_accounts.entries.size());
     const auto &entry = s_accounts.entries[account_index];
     auto cfg = account_create_config(entry);
     if (!fs_path_some(cfg))
@@ -266,7 +266,7 @@ static bool account_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<account::entry> *)data;
     assert(items);
-    assert(idx < items->size());
+    assert(idx < (int)items->size());
     if (out_text)
         *out_text = items->at(idx).account_profile.c_str();
     return true;
@@ -280,7 +280,7 @@ void ui_accounts(ui_model &m)
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
     static auto label_size = ImGui::CalcTextSize("Profile Name: ", nullptr, true);
     static auto label_size2 = ImGui::CalcTextSize(" Use Character: ", nullptr, true);
-    const auto items = m.area.y / (line_size + 2) - 2;
+    const auto items = int(m.area.y / (line_size + 2) - 2);
 
     const int NEW_ACCOUNT = 0;
     const int last_item = NEW_ACCOUNT;

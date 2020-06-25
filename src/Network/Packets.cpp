@@ -951,7 +951,7 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     auto size = 14 + subjectLen + 1;
     int len = 0;
     int lines = 1;
-    for (int i = 0; i < msgLen; i++)
+    for (size_t i = 0; i < msgLen; i++)
     {
         if (message[i] == '\n')
         {
@@ -983,7 +983,7 @@ CPacketBulletinBoardPostMessage::CPacketBulletinBoardPostMessage(
     WriteUInt8(lines);
     len = 0;
     const char *msgPtr = message.data();
-    for (int i = 0; i < msgLen; i++)
+    for (size_t i = 0; i < msgLen; i++)
     {
         if (msgPtr[len] == '\n')
         {

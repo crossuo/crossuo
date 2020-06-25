@@ -273,7 +273,7 @@ bool CMacroManager::Convert(const fs_path &path)
             if (*data[0].c_str() == '+')
             {
                 astr_t token;
-                for (int i = 1; i < file.RawLine.size(); i += 2)
+                for (size_t i = 1; i < file.RawLine.size(); i += 2)
                 {
                     if (line[i] == '#' || line[i] == '\0' || line[i] == '\n')
                         break;

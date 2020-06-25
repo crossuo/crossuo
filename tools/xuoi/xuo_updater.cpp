@@ -288,7 +288,7 @@ static bool xuo_install_release(xuo_context &ctx, xuo_release &release)
         job.join();
     }
 #else
-    for (auto i = 0; i < release.files.size(); ++i)
+    for (size_t i = 0; i < release.files.size(); ++i)
     {
         if (xuo_update_file(ctx, release, release.files[i]) != xuo_ok)
         {

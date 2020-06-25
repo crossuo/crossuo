@@ -75,14 +75,14 @@ struct SetFrameBufferCmd
 struct SetViewParamsCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetViewParams;
-    int scene_x = 0.f;
-    int scene_y = 0.f;
-    int scene_width = 0.f;
-    int scene_height = 0.f;
-    int window_width = 0.f;
-    int window_height = 0.f;
-    int camera_nearZ = 0.f;
-    int camera_farZ = 0.f;
+    int scene_x = 0;
+    int scene_y = 0;
+    int scene_width = 0;
+    int scene_height = 0;
+    int window_width = 0;
+    int window_height = 0;
+    int camera_nearZ = 0;
+    int camera_farZ = 0;
     float scene_scale = 1.f;
     bool proj_flipped_y = false;
 };
@@ -96,8 +96,8 @@ struct SetModelViewTranslationCmd
 struct SetScissorCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetScissor;
-    int x = 0.f;
-    int y = 0.f;
+    int x = 0;
+    int y = 0;
     uint32_t width = 0;
     uint32_t height = 0;
 };

@@ -1234,7 +1234,7 @@ namespace loguru
 	{
 		if (out_buff_size == 0) { return; }
 		out_buff[0] = '\0';
-		long pos = 0;
+		size_t pos = 0;
 		if (g_preamble_date && pos < out_buff_size) {
 			pos += snprintf(out_buff + pos, out_buff_size - pos, "date       ");
 		}
@@ -1288,7 +1288,7 @@ namespace loguru
 			snprintf(level_buff, sizeof(level_buff) - 1, "% 5d", verbosity);
 		}
 
-		long pos = 0;
+		size_t pos = 0;
 
 		if (g_preamble_date && pos < out_buff_size) {
 			pos += snprintf(out_buff + pos, out_buff_size - pos, "%04d-%02d-%02d ",

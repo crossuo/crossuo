@@ -154,7 +154,7 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
 
     if (len > 1)
     {
-        offset = strlen(s_ConsolePrefix[type]);
+        offset = (int)strlen(s_ConsolePrefix[type]);
         if ((type != GCTT_NORMAL && len > 2) || type == GCTT_PARTY)
         {
             if (type == GCTT_YELL)

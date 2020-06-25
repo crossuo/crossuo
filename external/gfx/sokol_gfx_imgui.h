@@ -3095,7 +3095,7 @@ _SOKOL_PRIVATE void _sg_imgui_draw_uniforms_panel(sg_imgui_t* ctx, const sg_imgu
             else {
                 igText("%d: %s %s =", i, _sg_imgui_uniformtype_string(ud->type), ud->name?ud->name:"");
             }
-            for (int i = 0; i < num_items; i++) {
+            for (int ii = 0; ii < num_items; ii++) {
                 switch (ud->type) {
                     case SG_UNIFORMTYPE_FLOAT:
                         igText("    %.3f", *uptrf);

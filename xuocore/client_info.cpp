@@ -14,6 +14,7 @@
 
 #include <external/xxhash.h>
 #include <common/checksum.h>
+#include <common/utils.h>
 
 #include "client_info.h"
 #include "client_db.h"
@@ -120,7 +121,7 @@ static int get_version(const unsigned char *version, int &offset)
     {
         uint16_t c = READ_U16(version + offset);
         offset += 2;
-        info[i] = c;
+        info[i] = checked_cast<char>(c);
         if (!c)
             break;
     }

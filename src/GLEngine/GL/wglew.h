@@ -1446,7 +1446,7 @@ WGLEW_VAR_EXPORT GLboolean __WGLEW_NV_video_output;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_OML_sync_control;
 /* ------------------------------------------------------------------------- */
 
-GLEWAPI GLenum GLEWAPIENTRY wglewInit ();
+GLEWAPI GLenum GLEWAPIENTRY wglewInit (void);
 GLEWAPI GLboolean GLEWAPIENTRY wglewIsSupported (const char *name);
 
 #ifndef WGLEW_GET_VAR

@@ -148,10 +148,10 @@ static mft_result mft_entry_load(tinyxml2::XMLElement *node, mft_entry &entry)
     if (n)
         entry.name = n;
 
-    entry.uncompressed_len = node->Hex64Attribute("ul", 0);
+    entry.uncompressed_len = checked_cast<size_t>(node->Hex64Attribute("ul", 0));
     assert(entry.uncompressed_len < MFT_MAX_DOWNLOAD_SIZE);
     entry.compression_type = node->UnsignedAttribute("ct", 0);
-    entry.compressed_len = node->Hex64Attribute("cl", 0);
+    entry.compressed_len = checked_cast<size_t>(node->Hex64Attribute("cl", 0));
     assert(entry.compressed_len < MFT_MAX_DOWNLOAD_SIZE);
     entry.timestamp = node->Hex64Attribute("t", 0);
     entry.hash = (uint32_t)node->Hex64Attribute("rh", 0);
