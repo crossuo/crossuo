@@ -410,9 +410,9 @@ xuoi_product_install(mft_config &cfg, const char *product_url, const char *produ
 
             // set config as latest version already checked, so next loop for next product we skip it
             cfg.latest_checked = true;
-            xuoi_listing_load_version(prod, str_from(prod.last_version), prod.base_version);
-            prod.config.product_path =
-                fs_path_join(prod.config.output_path, str_from(prod.timestamp), prod.launchfile);
+            xuoi_listing_load_version(prod, std::to_string(prod.last_version), prod.base_version);
+            prod.config.product_path = fs_path_join(
+                prod.config.output_path, std::to_string(prod.timestamp), prod.launchfile);
         }
 
         fs_path prod_file = fs_path_join(prod.config.product_path, "cache");

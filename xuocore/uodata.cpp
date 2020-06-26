@@ -726,7 +726,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
 
     file.ResetPtr();
     uint64_t next = file.Header->SectionOffset;
-    file.Move(next);
+    file.Move(checked_cast<intptr_t>(next));
     do
     {
         auto section = (UopSection *)file.Ptr;
@@ -744,7 +744,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
         }
         next = section->NextSection;
         file.ResetPtr();
-        file.Move(next);
+        file.Move(checked_cast<intptr_t>(next));
     } while (next != 0);
     file.ResetPtr();
 
@@ -886,7 +886,7 @@ void CFileManager::LoadTiledata()
             }
         }
 
-        for (int i = 0; i < staticsSize; i++)
+        for (size_t i = 0; i < staticsSize; i++)
         {
             file.ReadUInt32LE();
             for (int j = 0; j < 32; j++)
@@ -1117,7 +1117,7 @@ void CFileManager::UopReadIndexFile(
                 obj->DataSize -= 8;
 
                 uopFile.ResetPtr();
-                uopFile.Move(block->Offset + block->MetadataSize);
+                uopFile.Move(checked_cast<intptr_t>(block->Offset + block->MetadataSize));
 
                 obj->Width = uopFile.ReadUInt32LE();
                 obj->Height = uopFile.ReadUInt32LE();

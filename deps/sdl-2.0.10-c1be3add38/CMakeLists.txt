@@ -1241,6 +1241,12 @@ elseif(WINDOWS)
     if(NOT ARCH_64)
       set_property(DIRECTORY . APPEND PROPERTY COMPILE_OPTIONS "/arch:SSE")
     endif()
+    set(MSVC_DISABLED_WARNINGS_LIST
+        -wd4738 # storing 32-bit float result in memory, possible loss of performance
+        -wd4273 # 'x': inconsistent dll linkage
+        -wd4255 # 'x': no function prototype given: converting '()' to '(void)'
+    )
+    add_compile_options(${MSVC_DISABLED_WARNINGS})
   endif()
 
   # Check for DirectX

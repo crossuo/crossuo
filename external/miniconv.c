@@ -4,8 +4,12 @@
 */
 
 /* For MSC */
+#ifndef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE
+#endif // _CRT_SECURE_NO_DEPRECATE
+#ifndef _CRT_NONSTDC_NO_WARNINGS
 #define _CRT_NONSTDC_NO_WARNINGS
+#endif // _CRT_NONSTDC_NO_WARNINGS
 
 #include "miniconv.h"
 #include <assert.h>

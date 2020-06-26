@@ -28,7 +28,7 @@ bool ui_shards_combo(
         current_item,
         shard_getter,
         &s_shards.entries,
-        s_shards.entries.size(),
+        int(s_shards.entries.size()),
         popup_max_height_in_items);
 }
 
@@ -79,7 +79,7 @@ void ui_shards(ui_model &m, bool picker)
     const int filler = picker ? -13 : +10;
     const float y = m.area.y - ImGui::GetCursorPosY() + line_size + filler;
     ImGui::BeginChild("shards", { m.area.x, y }, false, window_flags);
-    for (int i = 1; i < s_shards.entries.size(); i++)
+    for (int i = 1; i < (int)s_shards.entries.size(); i++)
     {
         const auto &it = s_shards.entries[i];
         const bool has_tags = !it.shard_tags.tags.empty();

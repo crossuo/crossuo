@@ -400,6 +400,26 @@ int str_to_int(const wstr_t &aWstr)
     return std::stoi(aWstr);
 }
 
+astr_t str_from(int64_t val)
+{
+    return std::to_string(val);
+}
+
+wstr_t wstr_from(int64_t val)
+{
+    return std::to_wstring(val);
+}
+
+astr_t str_from(uint64_t val)
+{
+    return std::to_string(val);
+}
+
+wstr_t wstr_from(uint64_t val)
+{
+    return std::to_wstring(val);
+}
+
 astr_t str_from(int val)
 {
     return std::to_string(val);
@@ -409,5 +429,4 @@ wstr_t wstr_from(int val)
 {
     return std::to_wstring(val);
 }
-
 #endif // STR_IMPLEMENTATION

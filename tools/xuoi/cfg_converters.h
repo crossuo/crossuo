@@ -8,7 +8,7 @@ static astr_t join(const std::vector<astr_t> &in, char delim)
     if (in.empty())
         return {};
     astr_t r = in[0];
-    for (int i = 1; i < in.size(); ++i)
+    for (size_t i = 1; i < in.size(); ++i)
         r += delim + in[i];
     return r;
 }

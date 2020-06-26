@@ -229,7 +229,7 @@ static bool backup_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<releases> *)data;
     assert(items);
-    assert(idx < items->size());
+    assert(idx < (int)items->size());
     if (out_text)
         *out_text = items->at(idx).display.c_str();
     return true;
@@ -238,7 +238,7 @@ static bool backup_getter(void *data, int idx, const char **out_text)
 void ui_backups(ui_model &m)
 {
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
-    const auto items = (m.area.y / (line_size + 2) - 2);
+    const auto items = int(m.area.y / (line_size + 2) - 2);
     const int last_item = 0;
     static int cur_item = last_item;
 
@@ -498,7 +498,7 @@ int main(int argc, char **argv)
     };
     auto update_backup = []() {
         assert(
-            s_update_backup_index >= 0 && s_update_backup_index < s_releases.size() &&
+            s_update_backup_index >= 0 && s_update_backup_index < (int)s_releases.size() &&
             "invalid backup index");
         auto &e = s_releases[s_update_backup_index];
         LOG_INFO("downloading package %s %s", e.name, e.version);

@@ -416,7 +416,7 @@ astr_t CFontsManager::GetTextByWidthA(uint8_t font, const astr_t &str, int width
 PMULTILINES_FONT_INFO CFontsManager::GetInfoA(
     uint8_t font, const astr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags, int width)
 {
-    const auto len = str.size();
+    const int len = (int)str.size();
     if (font >= FontCount)
     {
         return nullptr;
@@ -1237,7 +1237,7 @@ HTMLCHAR_LIST
 CFontsManager::GetHTMLData(uint8_t font, const wstr_t &str, TEXT_ALIGN_TYPE align, uint16_t flags)
 {
     HTMLCHAR_LIST data;
-    const auto len = str.size();
+    const auto len = (int)str.size();
     if (len < 1)
     {
         return data;
@@ -1722,7 +1722,7 @@ CFontsManager::ParseHTMLTag(const wstr_t &str, int &i, bool &endTag, HTML_DATA_I
 {
     HTML_TAG_TYPE tag = HTT_NONE;
     i++;
-    const auto len = str.size();
+    const auto len = (int)str.size();
     if (i < len && str[i] == L'/')
     {
         endTag = true;
@@ -1901,7 +1901,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoHTML(
     bool isFixed = ((flags & UOFONT_FIXED) != 0);
     bool isCropped = ((flags & UOFONT_CROPPED) != 0);
     ptr->Align = htmlData[0].Align;
-    for (int i = 0; i < htmlData.size(); i++)
+    for (int i = 0; i < (int)htmlData.size(); i++)
     {
         auto si = htmlData[i].Char;
         uint32_t *table = (uint32_t *)m_UnicodeFontAddress[htmlData[i].Font];
@@ -2160,7 +2160,7 @@ PMULTILINES_FONT_INFO CFontsManager::GetInfoW(
     uint32_t lastspace_charcolor = 0xFFFFFFFF;
     uint32_t lastspace_current_charcolor = 0xFFFFFFFF;
 
-    const auto len = str.size();
+    const auto len = (int)str.size();
     for (int i = 0; i < len; i++)
     {
         auto si = str[i];
@@ -2424,7 +2424,7 @@ std::vector<uint32_t> CFontsManager::GeneratePixelsW(
         return pData;
     }
 
-    const int len = str.size();
+    const int len = (int)str.size();
     if (len == 0)
     {
         return pData;

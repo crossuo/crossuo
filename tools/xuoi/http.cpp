@@ -175,7 +175,7 @@ std::string http_urlencode(std::string str)
     std::string encoded;
     CURL *curl = curl_easy_duphandle(s_curl_handle);
     assert(curl);
-    char *out = curl_easy_escape(curl, str.c_str(), str.length());
+    char *out = curl_easy_escape(curl, str.c_str(), (int)str.length());
     if (out)
     {
         encoded = out;

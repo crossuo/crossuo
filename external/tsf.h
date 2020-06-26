@@ -1102,7 +1102,7 @@ TSFDEF tsf* tsf_load(struct tsf_stream* stream)
 	struct tsf_riffchunk chunkList;
 	struct tsf_hydra hydra;
 	float* fontSamples = TSF_NULL;
-	unsigned int fontSampleCount;
+	unsigned int fontSampleCount = 0;
 
 	if (!tsf_riffchunk_read(TSF_NULL, &chunkHead, stream) || !TSF_FourCCEquals(chunkHead.id, "sfbk"))
 	{

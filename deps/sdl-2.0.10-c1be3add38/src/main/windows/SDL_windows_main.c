@@ -121,7 +121,7 @@ OutOfMemory(void)
 static int
 main_getcmdline()
 {
-    char **argv;
+    char **argv = NULL;
     int argc;
     char *cmdline = NULL;
     int retval = 0;

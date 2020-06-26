@@ -213,7 +213,7 @@ void CMainScreen::Load()
     if (len != 0)
     {
         m_Password->SetTextA(g_Config.Password);
-        for (int zv = 0; zv < len; zv++)
+        for (size_t zv = 0; zv < len; zv++)
         {
             m_MainGump.m_PasswordFake->Insert(L'*');
         }
