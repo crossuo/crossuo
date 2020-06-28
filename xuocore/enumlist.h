@@ -329,7 +329,8 @@ enum GUMP_TYPE
     GT_RACIAL_ABILITY,        // Gump racial abilities 100%
     GT_CUSTOM_HOUSE,
     GT_PROPERTY,
-    GT_PROPERTY_ICON
+    GT_PROPERTY_ICON,
+    GT_RESOURCETRACKER
 };
 
 enum GUMP_OBJECT_TYPE
