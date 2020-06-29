@@ -7,8 +7,11 @@ project(crossuo)
 
 if (NOT XUO_VERSION)
   set(XUO_VERSION "1.0.4")
-  set(XUO_VERSION_NUM "0,1,0,4")
 endif()
+
+string(REPLACE "." "," XUO_VERSION_NUM ${XUO_VERSION})
+set(XUO_VERSION_NUM "0,${XUO_VERSION_NUM}")
+message(STATUS "Version: ${XUO_VERSION} (${XUO_VERSION_NUM})")
 
 #
 # Custom Build Options

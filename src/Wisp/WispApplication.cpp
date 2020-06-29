@@ -6,6 +6,7 @@
 #include "WispThread.h"
 #include "../GameWindow.h"
 #include "../Globals.h" // g_Ticks, CPU_USAGE_DELAY
+#include "revision.h"
 
 namespace Wisp
 {
@@ -54,6 +55,19 @@ int CApplication::Run()
         SDL_Delay(std::max(iDelay - iDynamicFPS, CPU_USAGE_DELAY));
     }
     return EXIT_SUCCESS;
+}
+
+fs_path CApplication::FilePath(const char *str, ...) const
+{
+    va_list arg;
+    va_start(arg, str);
+
+    char out[FS_MAX_PATH] = { 0 };
+    vsprintf_s(out, str, arg);
+    va_end(arg);
+
+    fs_path res = fs_path_join(fs_path_appdata(), CLIENT_APPNAME, out);
+    return fs_insensitive(res);
 }
 
 fs_path CApplication::ExeFilePath(const char *str, ...) const

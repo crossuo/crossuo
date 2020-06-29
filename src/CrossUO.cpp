@@ -760,7 +760,7 @@ void CGame::CheckStaticTileFilterFiles()
 {
     memset(&m_StaticTilesFilterFlags[0], 0, sizeof(m_StaticTilesFilterFlags));
 
-    auto path = g_App.ExeFilePath("data");
+    auto path = g_App.FilePath("data");
     fs_path_create(path);
 
     auto filePath = fs_path_join(path, "cave.txt");
@@ -1186,9 +1186,13 @@ void CGame::LoadStartupConfig(int serial)
         sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
+    if (!g_ConfigManager.Load(g_App.FilePath("%s/%s", buf, "options.cfg")))
     {
-        g_ConfigManager.Load(g_App.UOFilesPath("%s/%s", buf, "options.cfg"));
+        // DEPRECATE: 1.0.6
+        if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
+        {
+            g_ConfigManager.Load(g_App.UOFilesPath("%s/%s", buf, "options.cfg"));
+        }
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());
@@ -1368,22 +1372,33 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         sprintf_s(buf, "desktop/%s/0x%08X", acct.c_str(), serial);
     }
 
-    if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
+    if (!g_ConfigManager.Load(g_App.FilePath("%s/%s", buf, "options.cfg")))
     {
-        g_ConfigManager.Init();
-        if (g_GameState >= GS_GAME)
+        // DEPRECATE: 1.0.6
+        if (!g_ConfigManager.Load(g_App.ExeFilePath("%s/%s", buf, "options.cfg")))
         {
-            g_GameWindow.MaximizeWindow();
+            g_ConfigManager.Init();
+            if (g_GameState >= GS_GAME)
+            {
+                g_GameWindow.MaximizeWindow();
+            }
         }
     }
 
-    if (!g_SkillGroupManager.Load(g_App.ExeFilePath("skills.xuo")))
+    if (!g_SkillGroupManager.Load(g_App.FilePath("skills.xuo")))
     {
-        g_SkillGroupManager.Load(g_App.ExeFilePath("skills.cuo"));
+        // DEPRECATE: 1.0.6
+        if (!g_SkillGroupManager.Load(g_App.ExeFilePath("skills.xuo")))
+        {
+            g_SkillGroupManager.Load(g_App.ExeFilePath("skills.cuo"));
+        }
     }
 
-    auto macros_xuo = g_App.ExeFilePath("%s/%s", buf, "macros.xuo");
+    auto macros_xuo1 = g_App.FilePath("%s/%s", buf, "macros.xuo");
+    // DEPRECATE: 1.0.6
+    auto macros_xuo2 = g_App.ExeFilePath("%s/%s", buf, "macros.xuo");
     auto macros_cuo = g_App.ExeFilePath("%s/%s", buf, "macros.cuo");
+    auto macros_xuo = fs_path_exists(macros_xuo1) ? macros_xuo1 : macros_xuo2;
     auto macros_data = fs_path_exists(macros_xuo) ? macros_xuo : macros_cuo;
     if (!g_MacroManager.Load(macros_data, g_App.UOFilesPath("macros.txt")))
     {
@@ -1403,13 +1418,20 @@ void CGame::LoadLocalConfig(int serial, astr_t characterName)
         }
     }
 
-    const auto gumps_xuo = g_App.ExeFilePath("%s/%s", buf, "gumps.xuo");
+    const auto gumps_xuo1 = g_App.FilePath("%s/%s", buf, "gumps.xuo");
+    // DEPRECATE: 1.0.6
+    const auto gumps_xuo2 = g_App.ExeFilePath("%s/%s", buf, "gumps.xuo");
     const auto gumps_cuo = g_App.ExeFilePath("%s/%s", buf, "gumps.cuo");
+    const auto gumps_xuo = fs_path_exists(gumps_xuo1) ? gumps_xuo1 : gumps_xuo2;
     const auto gumps_data = fs_path_exists(gumps_xuo) ? gumps_xuo : gumps_cuo;
     g_GumpManager.Load(gumps_data);
 
-    const auto customhouses_xuo = g_App.ExeFilePath("%s/%s", buf, "customhouses.xuo");
+    const auto customhouses_xuo1 = g_App.FilePath("%s/%s", buf, "customhouses.xuo");
+    // DEPRECATE: 1.0.6
+    const auto customhouses_xuo2 = g_App.ExeFilePath("%s/%s", buf, "customhouses.xuo");
     const auto customhouses_cuo = g_App.ExeFilePath("%s/%s", buf, "customhouses.cuo");
+    const auto customhouses_xuo =
+        fs_path_exists(customhouses_xuo1) ? customhouses_xuo1 : customhouses_xuo2;
     const auto customhouses_data =
         fs_path_exists(customhouses_xuo) ? customhouses_xuo : customhouses_cuo;
     g_CustomHousesManager.Load(customhouses_data);
@@ -1447,7 +1469,7 @@ void CGame::SaveLocalConfig(int serial)
     {
         return;
     }
-    auto path = g_App.ExeFilePath("desktop");
+    auto path = g_App.FilePath("desktop");
     if (!fs_path_exists(path))
     {
         Info(Client, "%s Does not exist, creating.", fs_path_ascii(path));
@@ -4384,9 +4406,13 @@ void CGame::LoadShaders()
 
 void CGame::LoadClientStartupConfig()
 {
-    if (!g_ConfigManager.Load(g_App.ExeFilePath("options.cfg")))
+    if (!g_ConfigManager.Load(g_App.FilePath("options.cfg")))
     {
-        g_ConfigManager.Load(g_App.UOFilesPath("options.cfg"));
+        // DEPRECATE: 1.0.6
+        if (!g_ConfigManager.Load(g_App.ExeFilePath("options.cfg")))
+        {
+            g_ConfigManager.Load(g_App.UOFilesPath("options.cfg"));
+        }
     }
 
     g_SoundManager.SetMusicVolume(g_ConfigManager.GetMusicVolume());

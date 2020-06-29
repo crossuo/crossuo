@@ -339,7 +339,7 @@ void CGumpWorldMap::LoadMap(int map)
             }
         }
 
-        auto path = g_App.ExeFilePath("data/worldmap%08X.xuo", crc32);
+        auto path = g_App.FilePath("data/worldmap%08X.xuo", crc32);
         bool fromFile = false;
 
         std::vector<uint16_t> buf;
@@ -478,8 +478,7 @@ void CGumpWorldMap::LoadMap(int map)
                 }
             }
 
-            fs_path_create(g_App.ExeFilePath("data"));
-
+            fs_path_create(g_App.FilePath("data"));
             FILE *mapFile = fs_open(path, FS_WRITE); // "wb"
             if (mapFile != nullptr)
             {
