@@ -44,6 +44,17 @@ astr_t as_str(const bool in)
     return in ? "yes" : "no";
 }
 
+bool convert(int &out, const char *raw)
+{
+    out = atoi(raw);
+    return true;
+}
+
+astr_t as_str(const int in)
+{
+    return std::to_string(in);
+}
+
 bool convert(bool &out, const char *raw)
 {
     out = false;

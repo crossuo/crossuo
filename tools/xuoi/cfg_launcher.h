@@ -17,6 +17,8 @@ CFG_FIELD(global, auto_update, "yes", bool)
 
 CFG_FIELD(global, enable_assist, "yes", bool)
 
+CFG_FIELD(global, last_used, "0", int)
+
 CFG_FIELD(account, profile, {}, astr_t)
 
 CFG_FIELD(account, login, {}, astr_t)
