@@ -35,10 +35,13 @@
 #define XUOA_EXE "xuoassist"
 #endif
 
-extern void save_config();              // xuolauncher.cpp
-extern const fs_path &xuol_data_path(); // xuolauncher.cpp
+// xuolauncher.cpp
+extern void save_config();
+extern const fs_path &xuol_data_path();
 extern bool xuol_launch_assist();
 extern void xuol_launch_quit();
+extern void xuol_set_last_used(int account_index);
+extern int xuol_last_used();
 
 static inline bool ui_modal(const char *title, const char *msg, bool &response)
 {
@@ -237,6 +240,7 @@ static void account_launch(int account_index)
         LOG_ERROR("could not launch client %s", args[0]);
     }
 
+    xuol_set_last_used(account_index);
     xuol_launch_quit();
 }
 
@@ -283,7 +287,7 @@ void ui_accounts(ui_model &m)
     const auto items = int(m.area.y / (line_size + 2) - 2);
 
     const int NEW_ACCOUNT = 0;
-    const int last_item = NEW_ACCOUNT;
+    const int last_item = xuol_last_used();
     static int acct_id = last_item;
 
     static char profileName[64] = {};

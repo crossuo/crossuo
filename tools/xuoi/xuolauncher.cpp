@@ -363,6 +363,16 @@ void save_config()
     fclose(fp);
 }
 
+void xuol_set_last_used(int account_index)
+{
+    config().global_last_used = account_index;
+}
+
+int xuol_last_used()
+{
+    return config().global_last_used;
+}
+
 void xuol_launch_quit()
 {
     if (config().global_auto_close)
