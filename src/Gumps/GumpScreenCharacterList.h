@@ -5,17 +5,14 @@
 
 #include "Gump.h"
 
-class CGumpScreenCharacterList : public CGump
+struct CGumpScreenCharacterList : public CGump
 {
-public:
     CGumpScreenCharacterList();
-    virtual ~CGumpScreenCharacterList();
+    virtual ~CGumpScreenCharacterList() = default;
 
     virtual void UpdateContent() override;
     virtual void InitToolTip() override;
-
     GUMP_BUTTON_EVENT_H override;
     GUMP_TEXT_ENTRY_EVENT_H override;
-
     virtual bool OnLeftMouseButtonDoubleClick() override;
 };

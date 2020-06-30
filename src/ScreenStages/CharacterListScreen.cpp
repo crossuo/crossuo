@@ -17,14 +17,9 @@ CCharacterListScreen::CCharacterListScreen()
 {
 }
 
-CCharacterListScreen::~CCharacterListScreen()
-{
-}
-
 void CCharacterListScreen::Init()
 {
     CBaseScreen::Init();
-
     auto title = astr_t("Ultima Online - ") + g_MainScreen.m_Account->GetTextA();
     CServer *server = g_ServerList.GetSelectedServer();
     if (server != nullptr)
@@ -43,22 +38,22 @@ void CCharacterListScreen::Init()
 
 void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
 {
-    if (action == 0xFF)
+    if (action == 0xff)
     {
         action = SmoothScreenAction;
     }
 
-    if (action == ID_SMOOTH_CLS_QUIT)
+    if (action == CCharacterListScreen::Quit)
     {
         g_GameWindow.Destroy();
     }
-    else if (action == ID_SMOOTH_CLS_CONNECT)
+    else if (action == CCharacterListScreen::Connect)
     {
         g_Game.Connect();
     }
-    else if (action == ID_SMOOTH_CLS_SELECT_CHARACTER)
+    else if (action == CCharacterListScreen::SelectCharacter)
     {
-        if (g_CharacterList.GetName(g_CharacterList.Selected).length() == 0u)
+        if (g_CharacterList.GetName(g_CharacterList.Selected).empty())
         {
             g_Game.InitScreen(GS_PROFESSION_SELECT);
         }
@@ -67,13 +62,13 @@ void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
             g_Game.CharacterSelection(g_CharacterList.Selected);
         }
     }
-    else if (action == ID_SMOOTH_CLS_GO_SCREEN_PROFESSION_SELECT)
+    else if (action == CCharacterListScreen::GotoScreenProfession)
     {
         g_Game.InitScreen(GS_PROFESSION_SELECT);
     }
-    else if (action == ID_SMOOTH_CLS_GO_SCREEN_DELETE)
+    else if (action == CCharacterListScreen::GotoScreenDelete)
     {
-        if (g_CharacterList.GetSelectedName().length() != 0u)
+        if (!g_CharacterList.GetSelectedName().empty())
         {
             g_Game.InitScreen(GS_DELETE);
             g_ConnectionScreen.SetType(CST_CHARACTER_LIST);
@@ -84,10 +79,9 @@ void CCharacterListScreen::ProcessSmoothAction(uint8_t action)
 void CCharacterListScreen::OnKeyDown(const KeyEvent &ev)
 {
     m_Gump.OnKeyDown(ev);
-
     const auto key = EvKey(ev);
     if (key == KEY_RETURN || key == KEY_RETURN2)
     {
-        CreateSmoothAction(ID_SMOOTH_CLS_SELECT_CHARACTER);
+        CreateSmoothAction(CCharacterListScreen::SelectCharacter);
     }
 }

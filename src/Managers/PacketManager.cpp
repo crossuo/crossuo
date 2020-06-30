@@ -413,7 +413,7 @@ CPacketManager::~CPacketManager()
 
 bool CPacketManager::AutoLoginNameExists(const astr_t &name)
 {
-    if (AutoLoginNames.length() == 0u)
+    if (AutoLoginNames.length() == 0)
     {
         return false;
     }
@@ -812,27 +812,22 @@ PACKET_HANDLER(RelayServer)
 PACKET_HANDLER(CharacterList)
 {
     HandleResendCharacterList();
-    uint8_t locCount = ReadUInt8();
+    const auto locCount = ReadUInt8();
     g_CityList.Clear();
     if (g_Config.ProtocolClientVersion >= CV_70130)
     {
         for (int i = 0; i < locCount; i++)
         {
             CCityItemNew *city = new CCityItemNew();
-
             city->LocationIndex = ReadUInt8();
-
             city->Name = ReadString(32);
             city->Area = ReadString(32);
-
             city->X = ReadUInt32BE();
             city->Y = ReadUInt32BE();
             city->Z = ReadUInt32BE();
             city->MapIndex = ReadUInt32BE();
             city->Cliloc = ReadUInt32BE();
-
             Move(4);
-
             g_CityList.AddCity(city);
         }
     }
@@ -841,28 +836,22 @@ PACKET_HANDLER(CharacterList)
         for (int i = 0; i < locCount; i++)
         {
             CCityItem *city = new CCityItem();
-
             city->LocationIndex = ReadUInt8();
-
             city->Name = ReadString(31);
             city->Area = ReadString(31);
-
             city->InitCity();
-
             g_CityList.AddCity(city);
         }
     }
 
     g_ClientFlag = ReadUInt32BE();
-
-    g_CharacterList.OnePerson = (g_ClientFlag & CLF_ONE_CHARACTER_SLOT) != 0u;
-    //g_SendLogoutNotification = (g_ClientFlag & LFF_RE) != 0u;
-    g_PopupEnabled = (g_ClientFlag & CLF_CONTEXT_MENU) != 0u;
-    g_TooltipsEnabled = ((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u) &&
+    g_CharacterList.SingleSlot = (g_ClientFlag & CLF_ONE_CHARACTER_SLOT) != 0;
+    //g_SendLogoutNotification = (g_ClientFlag & LFF_RE) != 0;
+    g_PopupEnabled = (g_ClientFlag & CLF_CONTEXT_MENU) != 0;
+    g_TooltipsEnabled = ((g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0) &&
                         (g_Config.ProtocolClientVersion >= CV_308Z);
-    g_PaperdollBooks = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u;
-    g_Pal_Necro_Creation = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0u;
-
+    g_PaperdollBooks = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0;
+    g_Pal_Necro_Creation = (g_ClientFlag & CLF_PALADIN_NECROMANCER_TOOLTIPS) != 0;
     g_CharacterListScreen.UpdateContent();
 }
 
@@ -884,9 +873,8 @@ PACKET_HANDLER(ResendCharacterList)
     g_CharacterList.Count = numSlots;
 
     int autoPos = -1;
-    bool autoLogin = g_MainScreen.m_AutoLogin->Checked;
+    const bool autoLogin = g_MainScreen.m_AutoLogin->Checked;
     bool haveCharacter = false;
-
     if (numSlots == 0)
     {
         Warning(Network, "no slots in character list");
@@ -896,13 +884,12 @@ PACKET_HANDLER(ResendCharacterList)
         int selectedPos = -1;
         for (int i = 0; i < numSlots; i++)
         {
-            auto name = ReadString(30);
+            const auto name = ReadString(30);
             Move(30);
-            if (name.length() != 0u)
+            if (!name.empty())
             {
                 haveCharacter = true;
                 g_CharacterList.SetName(i, name);
-
                 if (autoLogin && autoPos == -1 && AutoLoginNameExists(name))
                 {
                     autoPos = i;
@@ -917,7 +904,6 @@ PACKET_HANDLER(ResendCharacterList)
                     }
                 }
             }
-
             Info(Network, "%d: %s (%zd)", i, name.c_str(), name.length());
         }
 
