@@ -30,7 +30,11 @@ CGumpResourceTracker::CGumpResourceTracker(short x, short y)
     m_Trans = (CGUIChecktrans *)Add(new CGUIChecktrans(5, 5, 505, 65));
     m_gridDataBoxGUI = (CGUIDataBox *)Add(new CGUIDataBox());
     m_itemsDataBoxGui = (CGUIDataBox *)Add(new CGUIDataBox());
+    numRow = Height / boxDimension;
+    numCol = Width / boxDimension;
+    ResetTable();
     DrawGrid();
+    DrawItem();
 
     m_Resizer = (CGUIResizeButton *)Add(
         new CGUIResizeButton(ID_GWM_RESIZE, 0x0837, 0x0838, 0x0838, Width - 5, Height - 5));
@@ -93,12 +97,12 @@ void CGumpResourceTracker::Draw()
 
 void CGumpResourceTracker::DrawText()
 {
-    for (uint8_t c = 0; c < numCol; c++)
+    for (uint8_t r = 0; r < numRow; r++)
     {
-        for (uint8_t r = 0; r < numRow; r++)
+        for (uint8_t c = 0; c < numCol; c++)
         {
-            uint16_t graph = Items[c][r];
-            if (Items[c][r] != 0)
+            uint16_t graph = items[r][c];
+            if (graph != 0)
             {
                 int count = CountItemBackPack(graph);
                 CGUIText *txt = new CGUIText(
@@ -124,13 +128,11 @@ void CGumpResourceTracker::DrawText()
 
 void CGumpResourceTracker::DrawItem()
 {
-    numRow = Height / boxDimension;
-    numCol = Width / boxDimension;
-    for (uint8_t c = 0; c < numCol; c++)
+    for (uint8_t r = 0; r < numRow; r++)
     {
-        for (uint8_t r = 0; r < numRow; r++)
+        for (uint8_t c = 0; c < numCol; c++)
         {
-            uint16_t graph = Items[c][r];
+            uint16_t graph = items[r][c];
             if (graph != 0)
             {
                 CIndexObjectStatic &sio = g_Index.m_Static[graph];
@@ -138,7 +140,7 @@ void CGumpResourceTracker::DrawItem()
                 int tileOffsetX = (boxDimension - 18 - (spr->ImageWidth)) / 2;
                 int tileOffsetY = (boxDimension - (spr->ImageHeight)) / 2;
                 m_itemsDataBoxGui->Add(new CGUITilepic(
-                    Items[c][r],
+                    graph,
                     0xff,
                     (c * boxDimension) + tileOffsetX,
                     (r * boxDimension) + tileOffsetY));
@@ -149,8 +151,6 @@ void CGumpResourceTracker::DrawItem()
 
 void CGumpResourceTracker::DrawGrid()
 {
-    numRow = Height / boxDimension;
-    numCol = Width / boxDimension;
     for (uint8_t c = 0; c < numCol; c++)
     {
         m_gridDataBoxGUI->Add(new CGUILine(
@@ -215,16 +215,22 @@ void CGumpResourceTracker::UpdateSize()
     int maxHeight;
     GetDisplaySize(nullptr, &maxHeight);
     maxHeight -= 50;
+
     if (Height >= maxHeight)
     {
         Height = maxHeight;
     }
+
+    oldRow = numRow;
+    oldCol = numCol;
+    numRow = Height / boxDimension;
+    numCol = Width / boxDimension;
     m_itemsDataBoxGui->Clear();
+    items = ResizeTable(numRow, numCol);
     DeleteGrid();
     DrawGrid();
     DrawItem();
     DrawText();
-
     m_Background->Width = Width + 5;
     m_Background->Height = Height + 5;
     m_Trans->Width = Width - 10;
@@ -233,6 +239,37 @@ void CGumpResourceTracker::UpdateSize()
     m_Resizer->SetY(Height);
     WantRedraw = true;
     WantUpdateContent = true;
+}
+
+void CGumpResourceTracker::ResetTable()
+{
+    items = new uint16_t *[numRow] { 0 };
+    for (int r = 0; r < numRow; ++r)
+    {
+        items[r] = new uint16_t[numCol]{ 0 };
+    }
+}
+
+uint16_t **CGumpResourceTracker::ResizeTable(int nrow, int ncol)
+{
+    uint16_t **items_new = new uint16_t *[nrow] { 0 };
+    for (int r = 0; r < nrow; ++r)
+    {
+        items_new[r] = new uint16_t[ncol]{ 0 };
+        if (r < oldRow)
+        {
+            for (int c = 0; c < ncol; c++)
+            {
+                if (c < oldCol)
+                {
+                    // TODO: Move items to empty slot;
+                    //copy existing items in new table size if space available
+                    items_new[r][c] = items[r][c];
+                }
+            }
+        }
+    }
+    return items_new;
 }
 
 void CGumpResourceTracker::OnLeftMouseButtonUp()
@@ -246,7 +283,7 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
         {
             return;
         }
-        Items[currCol][currRow] = g_ObjectInHand.Graphic;
+        items[currRow][currCol] = g_ObjectInHand.Graphic;
         g_Game.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
         DrawItem();
         DrawText();
@@ -291,7 +328,6 @@ void CGumpResourceTracker::GUMP_BUTTON_EVENT_C
     {
         case ID_GTB_TARGET:
         {
-            //g_Target.GetTarget();
             break;
         }
     }
