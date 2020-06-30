@@ -211,7 +211,7 @@ bool CGumpScreenCharacterList::OnLeftMouseButtonDoubleClick()
                 g_CharacterListScreen.CreateSmoothAction(
                     CCharacterListScreen::GotoScreenProfession);
             }
-            else
+            else if (g_CharacterList.Selected == i)
             {
                 g_CharacterListScreen.CreateSmoothAction(CCharacterListScreen::SelectCharacter);
                 SDL_Delay(200);
