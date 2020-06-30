@@ -9,21 +9,22 @@
 
 class CCharacterListScreen : public CBaseScreen
 {
-private:
     CGumpScreenCharacterList m_CharacterListGump;
 
 public:
+    enum : uint8_t
+    {
+        Quit = 1,
+        Connect = 2,
+        SelectCharacter = 3,
+        GotoScreenProfession = 4,
+        GotoScreenDelete = 5,
+    };
+
     CCharacterListScreen();
-    virtual ~CCharacterListScreen();
-
-    static const uint8_t ID_SMOOTH_CLS_QUIT = 1;
-    static const uint8_t ID_SMOOTH_CLS_CONNECT = 2;
-    static const uint8_t ID_SMOOTH_CLS_SELECT_CHARACTER = 3;
-    static const uint8_t ID_SMOOTH_CLS_GO_SCREEN_PROFESSION_SELECT = 4;
-    static const uint8_t ID_SMOOTH_CLS_GO_SCREEN_DELETE = 5;
-
+    virtual ~CCharacterListScreen() = default;
     virtual void Init() override;
-    virtual void ProcessSmoothAction(uint8_t action = 0xFF) override;
+    virtual void ProcessSmoothAction(uint8_t action = 0xff) override;
     virtual void OnKeyDown(const KeyEvent &ev) override;
 };
 

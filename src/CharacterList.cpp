@@ -3,6 +3,7 @@
 #include "CharacterList.h"
 
 CCharacterList g_CharacterList;
+static astr_t s_invalid;
 
 CCharacterList::CCharacterList()
 {
@@ -17,7 +18,7 @@ void CCharacterList::Clear()
     }
 
     Selected = 0;
-    OnePerson = false;
+    SingleSlot = false;
     Have6Slot = false;
     Have7Slot = false;
 }
@@ -30,22 +31,20 @@ void CCharacterList::SetName(intptr_t pos, const astr_t &name)
     }
 }
 
-astr_t CCharacterList::GetName(intptr_t pos) const
+const astr_t &CCharacterList::GetName(intptr_t pos) const
 {
     if (pos >= 0 && pos < Count)
     {
         return m_Name[pos];
     }
-
-    return "";
+    return s_invalid;
 }
 
-astr_t CCharacterList::GetSelectedName() const
+const astr_t &CCharacterList::GetSelectedName() const
 {
     if (Selected >= 0 && Selected < Count)
     {
         return m_Name[Selected];
     }
-
-    return "";
+    return s_invalid;
 }
