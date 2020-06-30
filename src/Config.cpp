@@ -330,11 +330,18 @@ static void ClientVersionFixup(bool overrideProtocolVersion)
     }
 }
 
+// priority order looking for a config file:
+// 1. command line -c/--config option
+// 2. crossuo.cfg on the side with executable
+// 3. crossuo.cfg in the crossuo appdata
 static fs_path GetConfigFile()
 {
     if (!g_cli["config"].was_set())
     {
-        return g_App.ExeFilePath(CROSSUO_CONFIG);
+        const auto local_exe = g_App.ExeFilePath(CROSSUO_CONFIG);
+        if (fs_path_exists(local_exe))
+            return local_exe;
+        return g_App.FilePath(CROSSUO_CONFIG);
     }
 
     return fs_path_from(g_cli["config"].get().string);
