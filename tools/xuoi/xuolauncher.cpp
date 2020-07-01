@@ -362,7 +362,6 @@ int main(int argc, char **argv)
     }
 
     LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
-    crc32_init();
     http_init();
     static const auto ini = fs_path_join(xuol_data_path(), "xuolauncher.ini");
 
