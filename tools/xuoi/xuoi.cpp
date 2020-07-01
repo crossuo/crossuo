@@ -570,7 +570,6 @@ int main(int argc, char **argv)
     cfg.listing_only = s_cli["listing"].was_set();
     cfg.output_path = outpath;
 
-    crc32_init();
     http_init();
     int exit_code = 0;
     const char *name = xuo_platform_name();

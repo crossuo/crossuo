@@ -318,7 +318,6 @@ bool CGame::Install()
     Info(Client, "CGame::Install()");
     auto buildStamp = GetBuildDateTimeStamp();
     Info(Client, "CrossUO version is: %s (build %s)", PRODUCT_VERSION_STR, buildStamp.c_str());
-    crc32_init();
     for (int i = 0; i < MAX_MAPS_COUNT; i++)
     {
         g_MapBlockSize[i].Width = g_MapSize[i].Width / 8;

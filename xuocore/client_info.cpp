@@ -185,8 +185,6 @@ void client_version_string(uint32_t version, char *output, int maxlen)
 
 int client_version(const char *filename, client_info &info)
 {
-    crc32_init();
-
 #if defined(NO_FS)
     struct stat st;
     if (stat(filename, &st) < 0)
