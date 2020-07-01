@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     client_version_string(info.version, str, sizeof(str));
     fprintf(
         stdout,
-        "{0x%016" PRIx64 ", 0x%08x, 0x%08x}, // %s\n",
+        "    { 0x%016" PRIx64 ", 0x%08x, 0x%08x }, // %s\n",
         info.xxh3,
         info.crc32,
         info.version,
