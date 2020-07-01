@@ -193,6 +193,19 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
     return (crc & 0xFFFFFFFF);
 }
 
+// TODO: check why I added this
+CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
+{
+    uint32_t a = 1;
+    uint32_t b = 0;
+    for (int i = 0; i < size; i++)
+    {
+        a = (a + ptr[i]) % 65521;
+        b = (b + a) % 65521;
+    }
+    return (b << 16) | a;
+}
+
 #else
 
 // clang-format off
@@ -275,18 +288,6 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
     return crc;
 }
 
-CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
-{
-    uint32_t a = 1;
-    uint32_t b = 0;
-    for (int i = 0; i < size; i++)
-    {
-        a = (a + ptr[i]) % 65521;
-        b = (b + a) % 65521;
-    }
-    return (b << 16) | a;
-}
-
 #endif
 
 #endif // CHECKSUM_IMPLEMENTATION
@@ -300,5 +301,6 @@ CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
 CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s);
 CHECKSUM_PRIVATE void crc32_init();
 CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size);
+CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size);
 
 #endif // CHECKSUM_HEADER
