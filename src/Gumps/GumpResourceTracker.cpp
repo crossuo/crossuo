@@ -32,7 +32,6 @@ CGumpResourceTracker::CGumpResourceTracker(short x, short y)
     m_itemsDataBoxGui = (CGUIDataBox *)Add(new CGUIDataBox());
     numRow = Height / boxDimension;
     numCol = Width / boxDimension;
-    ResetTable();
     DrawGrid();
     DrawItem();
 
@@ -101,7 +100,7 @@ void CGumpResourceTracker::DrawText()
     {
         for (uint8_t c = 0; c < numCol; c++)
         {
-            uint16_t graph = items[r][c];
+            uint16_t graph = items[r][c].graphic;
             if (graph != 0)
             {
                 int count = CountItemBackPack(graph);
@@ -132,18 +131,23 @@ void CGumpResourceTracker::DrawItem()
     {
         for (uint8_t c = 0; c < numCol; c++)
         {
-            uint16_t graph = items[r][c];
-            if (graph != 0)
+            TrackedItem item = items[r][c];
+            if (item.graphic != 0)
             {
-                CIndexObjectStatic &sio = g_Index.m_Static[graph];
+                CIndexObjectStatic &sio = g_Index.m_Static[item.graphic];
                 auto spr = (CSprite *)sio.UserData;
-                int tileOffsetX = (boxDimension - 18 - (spr->ImageWidth)) / 2;
-                int tileOffsetY = (boxDimension - (spr->ImageHeight)) / 2;
-                m_itemsDataBoxGui->Add(new CGUITilepic(
-                    graph,
-                    0xff,
-                    (c * boxDimension) + tileOffsetX,
-                    (r * boxDimension) + tileOffsetY));
+                if (spr != NULL)
+                {
+                    int tileOffsetX = (boxDimension - 18 - (spr->ImageWidth)) / 2;
+                    int tileOffsetY = (boxDimension - (spr->ImageHeight)) / 2;
+                    m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, true));
+                    m_itemsDataBoxGui->Add(new CGUITilepic(
+                        item.graphic,
+                        item.color,
+                        (c * boxDimension) + tileOffsetX,
+                        (r * boxDimension) + tileOffsetY));
+                    m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, false));
+                }
             }
         }
     }
@@ -212,21 +216,22 @@ void CGumpResourceTracker::UpdateSize()
         Width = boxDimension;
     }
 
-    int maxHeight;
-    GetDisplaySize(nullptr, &maxHeight);
-    maxHeight -= 50;
+    int maxHeight = 1200;
+    int maxWidth = 1200;
 
     if (Height >= maxHeight)
     {
         Height = maxHeight;
     }
 
-    oldRow = numRow;
-    oldCol = numCol;
+    if (Width >= maxWidth)
+    {
+        Width = maxWidth;
+    }
+
     numRow = Height / boxDimension;
     numCol = Width / boxDimension;
     m_itemsDataBoxGui->Clear();
-    items = ResizeTable(numRow, numCol);
     DeleteGrid();
     DrawGrid();
     DrawItem();
@@ -241,37 +246,6 @@ void CGumpResourceTracker::UpdateSize()
     WantUpdateContent = true;
 }
 
-void CGumpResourceTracker::ResetTable()
-{
-    items = new uint16_t *[numRow] { 0 };
-    for (int r = 0; r < numRow; ++r)
-    {
-        items[r] = new uint16_t[numCol]{ 0 };
-    }
-}
-
-uint16_t **CGumpResourceTracker::ResizeTable(int nrow, int ncol)
-{
-    uint16_t **items_new = new uint16_t *[nrow] { 0 };
-    for (int r = 0; r < nrow; ++r)
-    {
-        items_new[r] = new uint16_t[ncol]{ 0 };
-        if (r < oldRow)
-        {
-            for (int c = 0; c < ncol; c++)
-            {
-                if (c < oldCol)
-                {
-                    // TODO: Move items to empty slot;
-                    //copy existing items in new table size if space available
-                    items_new[r][c] = items[r][c];
-                }
-            }
-        }
-    }
-    return items_new;
-}
-
 void CGumpResourceTracker::OnLeftMouseButtonUp()
 {
     CGump::OnLeftMouseButtonUp();
@@ -283,10 +257,11 @@ void CGumpResourceTracker::OnLeftMouseButtonUp()
         {
             return;
         }
-        items[currRow][currCol] = g_ObjectInHand.Graphic;
+        items[currRow][currCol].graphic = g_ObjectInHand.Graphic;
+        items[currRow][currCol].color = g_ObjectInHand.Color;
         g_Game.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
-        DrawItem();
         DrawText();
+        DrawItem();
         hasItemInGump = false;
     }
 }

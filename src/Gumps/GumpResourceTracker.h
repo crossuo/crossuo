@@ -4,13 +4,17 @@
 
 #include "Gump.h"
 
+struct TrackedItem
+{
+    uint16_t graphic = 0;
+    uint16_t color = 0;
+};
+
 class CGumpResourceTracker : public CGump
 {
 private:
-    uint16_t **items{ 0 };
+    TrackedItem items[20][20]{};
     uint8_t boxDimension = 60;
-    uint16_t oldRow = 0;
-    uint16_t oldCol = 0;
     uint16_t numRow = 0;
     uint16_t numCol = 0;
     int16_t currCol = -1;
@@ -31,8 +35,6 @@ private:
     void UpdateSize();
     void DeleteGrid();
     void DrawItem();
-    void ResetTable();
-    uint16_t **ResizeTable(int row, int col);
 
 public:
     CGumpResourceTracker(short x, short y);
