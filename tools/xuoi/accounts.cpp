@@ -1,6 +1,8 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Launcher
+
 #include "accounts.h"
 #include <vector>
 #include <unordered_map>
@@ -12,8 +14,8 @@
 #include <external/process.h>
 #include <external/tinyfiledialogs.h>
 #include <xuocore/client_info.h>
-#include "http.h"
-#include "common.h"
+#include <xuocore/http.h>
+#include <xuocore/common.h>
 #include "widgets.h"
 #include "ui_model.h"
 #include "shards.h"

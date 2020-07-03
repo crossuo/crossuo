@@ -1,10 +1,12 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Launcher
+
 #include "ui_model.h"
 #include "ui_shards.h"
 #include "shards.cpp"
-#include "common.h"
+#include <xuocore/common.h>
 
 // view
 void HoverToolTip(const char *desc);

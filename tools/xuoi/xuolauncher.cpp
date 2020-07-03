@@ -1,6 +1,8 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Launcher
+
 #include <stdio.h>
 #include <vector>
 #include <sstream>
@@ -16,14 +18,14 @@
 #include <external/gfx/imgui/imgui.h>
 #include <external/inih.h>
 #include <external/process.h>
+#include <xuocore/http.h>
+#include <xuocore/common.h>
 
 #include "icon_launcher.h"
-#include "common.h"
 #include "accounts.h"
 #include "shards.h"
 #include "ui_model.h"
 #include "ui_shards.h"
-#include "http.h"
 
 #include "xuo_updater.h"
 
@@ -360,6 +362,7 @@ int main(int argc, char **argv)
     }
 
     LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
+    crc32_init();
     http_init();
     static const auto ini = fs_path_join(xuol_data_path(), "xuolauncher.ini");
 

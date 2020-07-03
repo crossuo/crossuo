@@ -1,14 +1,16 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Launcher
+
 #include "shards.h"
 #include <vector>
 #include <sstream>
 #include <unordered_map>
 #include <algorithm>
 #include <external/inih.h>
-#include "http.h"
-#include "common.h"
+#include <xuocore/http.h>
+#include <xuocore/common.h>
 
 extern bool valid_url(const astr_t &url);
 extern void open_url(const astr_t &url);

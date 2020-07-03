@@ -1,6 +1,8 @@
 // MIT License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Network
+
 #include "http.h"
 
 #include <vector>
@@ -24,6 +26,11 @@ static const char *s_agentName = nullptr;
         if (r != CURLE_OK)                                                                         \
             LOG_ERROR(__FILE__ ":%d:ERROR:%d: %s", __LINE__, r, curl_easy_strerror(r));            \
     } while (0)
+
+#define DO_CURL_RET(ret, x)                                                                        \
+    ret = curl_easy_##x;                                                                           \
+    if (ret != CURLE_OK)                                                                           \
+        LOG_ERROR(__FILE__ ":%d:ERROR:%d: %s", __LINE__, ret, curl_easy_strerror(ret));
 
 static size_t recv_data_string(const char *data, size_t size, size_t nmemb, std::string *str)
 {
@@ -89,7 +96,7 @@ void http_shutdown()
     curl_global_cleanup();
 }
 
-void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
+bool http_get_binary(const char *url, const uint8_t *buf, size_t *size)
 {
     assert(s_curl_handle && "http_init wasn't called");
     assert(url && "invalid url");
@@ -105,12 +112,14 @@ void http_get_binary(const char *url, const uint8_t *buf, size_t *size)
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &tmp));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data));
-    DO_CURL(perform(curl));
+    CURLcode result;
+    DO_CURL_RET(result, perform(curl));
     curl_easy_cleanup(curl);
     *size = tmp.offset;
+    return result == CURLE_OK;
 }
 
-void http_get_binary(const char *url, std::vector<uint8_t> &data)
+bool http_get_binary(const char *url, std::vector<uint8_t> &data)
 {
     assert(s_curl_handle && "http_init wasn't called");
     assert(url && "invalid url");
@@ -124,11 +133,13 @@ void http_get_binary(const char *url, std::vector<uint8_t> &data)
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_vector));
-    DO_CURL(perform(curl));
+    CURLcode result;
+    DO_CURL_RET(result, perform(curl));
     curl_easy_cleanup(curl);
+    return result == CURLE_OK;
 }
 
-void http_get_string(const char *url, std::string &data)
+bool http_get_string(const char *url, std::string &data)
 {
     assert(s_curl_handle && "http_init wasn't called");
     assert(url && "invalid url");
@@ -142,8 +153,10 @@ void http_get_string(const char *url, std::string &data)
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, &data));
     DO_CURL(setopt(curl, CURLOPT_WRITEFUNCTION, recv_data_string));
-    DO_CURL(perform(curl));
+    CURLcode result;
+    DO_CURL_RET(result, perform(curl));
     curl_easy_cleanup(curl);
+    return result == CURLE_OK;
 }
 
 bool http_get_file(const char *url, const char *filename)
@@ -164,10 +177,11 @@ bool http_get_file(const char *url, const char *filename)
     DO_CURL(setopt(curl, CURLOPT_FOLLOWLOCATION, 1));
     DO_CURL(setopt(curl, CURLOPT_URL, url));
     DO_CURL(setopt(curl, CURLOPT_WRITEDATA, fp));
-    DO_CURL(perform(curl));
+    CURLcode result;
+    DO_CURL_RET(result, perform(curl));
     curl_easy_cleanup(curl);
     fclose(fp);
-    return true;
+    return result == CURLE_OK;
 }
 
 std::string http_urlencode(std::string str)
