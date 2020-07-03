@@ -17,11 +17,7 @@
 #include <external/cbase64.h>
 
 #include <common/utils.h>
-
-#define FS_IMPLEMENTATION
 #include <common/fs.h>
-
-#define CHECKSUM_IMPLEMENTATION
 #include <common/checksum.h>
 
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)

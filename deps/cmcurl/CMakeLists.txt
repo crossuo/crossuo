@@ -614,9 +614,9 @@ check_library_exists("${CURL_LIBS}" dlopen "" HAVE_DLOPEN)
 
 if(1) # but XUO need it # This code not needed for building within CMake.
 option(CURL_ZLIB "Set to ON to enable building curl with zlib support." ON)
-set(HAVE_LIBZ OFF)
-set(HAVE_ZLIB_H OFF)
-set(USE_ZLIB OFF)
+set(HAVE_LIBZ ON)
+set(HAVE_ZLIB_H ON)
+set(USE_ZLIB ON)
 if(CURL_ZLIB)
   find_package(ZLIB QUIET)
   if(ZLIB_FOUND)

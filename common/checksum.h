@@ -279,12 +279,12 @@ CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
 {
     uint32_t a = 1;
     uint32_t b = 0;
-    for ( int i = 0; i < size; i++ )
+    for (int i = 0; i < size; i++)
     {
-        a = ( a + ptr[i] ) % 65521;
-        b = ( b + a ) % 65521;
+        a = (a + ptr[i]) % 65521;
+        b = (b + a) % 65521;
     }
-    return ( b << 16 ) | a;
+    return (b << 16) | a;
 }
 
 #endif

@@ -1,6 +1,8 @@
 // AGPLv3 License
 // Copyright (c) 2020 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Data
+
 #include <stdint.h>
 #include <inttypes.h>
 #include <atomic>
@@ -9,12 +11,10 @@
 
 #include "mft.h"
 #include "http.h"
+#include "common.h"
 
 #include <common/utils.h>
 #include <common/logging/logging.h>
-#define LOG_TRACE(...) TRACE(Launcher, __VA_ARGS__)
-#define LOG_WARN(...) Warning(Launcher, __VA_ARGS__)
-#define LOG_ERROR(...) Error(Launcher, __VA_ARGS__)
 
 #define STR_IMPLEMENTATION
 #include <common/str.h>
@@ -81,7 +81,9 @@ static mft_result mft_download(
         {
             if (!fs_file_read(lpath, buffer, buffer_size))
             {
-                http_get_binary(upath, buffer, buffer_size);
+                if (!http_get_binary(upath, buffer, buffer_size))
+                    return mft_could_not_download_file;
+
                 fs_file_write(lpath, buffer, *buffer_size); // save to local cache
             }
             bytes = *buffer_size;
@@ -93,7 +95,9 @@ static mft_result mft_download(
             assert(cl < *buffer_size);
             if (!fs_file_read(lpath, cbuffer, buffer_size))
             {
-                http_get_binary(upath, cbuffer, buffer_size);
+                if (!http_get_binary(upath, cbuffer, buffer_size))
+                    return mft_could_not_download_file;
+
                 fs_file_write(lpath, cbuffer, *buffer_size); // save to local cache
             }
             cl = *buffer_size;
@@ -399,7 +403,9 @@ mft_result mft_consume_manifests(mft_product &prod)
             auto data = prod.download_buffers[0];
             auto cdata = prod.download_cbuffers[0];
             size_t size = prod.config.download_buffer_size;
-            mft_download(prod, prod.manifest_repo, entry.name, entry, data, cdata, &size);
+            if (auto error =
+                    mft_download(prod, prod.manifest_repo, entry.name, entry, data, cdata, &size))
+                return error;
             if (auto error = mft_load(prod, data, size, entry.remote_path))
                 return error;
         }

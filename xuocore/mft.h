@@ -19,6 +19,7 @@ enum mft_result : uint32_t
     mft_decompress_error,
     mft_write_error,
     mft_could_not_open_path,
+    mft_could_not_download_file,
 };
 
 struct mft_config

@@ -1,6 +1,8 @@
 // AGPLv3 License
 // Copyright (c) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Installer
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -10,11 +12,11 @@
 #include <external/popts.h>
 #include <external/lookup3.h>
 #include <common/checksum.h>
-#include "mft.h"
-#include "http.h"
+#include <xuocore/mft.h>
+#include <xuocore/http.h>
+#include <xuocore/common.h>
+#include <xuocore/uop.h>
 #include "xuo_updater.h"
-#include "xuocore/uop.h"
-#include "common.h"
 
 #define XUOI_MAX_DOWNLOAD_SIZE (1024 * 1024 * 1024)
 
@@ -368,12 +370,14 @@ static int xuoi_export_diff(
 static mft_result
 xuoi_product_install(mft_config &cfg, const char *product_url, const char *product_file)
 {
+    std::vector<astr_t> failures;
     LOG_INFO("Product address: %s%s", product_url, product_file);
 
     std::vector<uint8_t> data;
     char tmp[1024] = {};
     snprintf(tmp, sizeof(tmp), "%s%s", product_url, product_file);
-    http_get_binary(tmp, data);
+    if (!http_get_binary(tmp, data))
+        return mft_could_not_download_file;
 
     mft_product prod;
     mft_init(prod, cfg);
@@ -422,7 +426,11 @@ xuoi_product_install(mft_config &cfg, const char *product_url, const char *produ
         fs_file_write(fs_path_ascii(prod_file), data);
         data.clear();
         snprintf(tmp, sizeof(tmp), "%s%s.sig", product_url, product_file);
-        http_get_binary(tmp, data);
+        if (!http_get_binary(tmp, data))
+        {
+            failures.emplace_back(tmp);
+            continue;
+        }
         snprintf(tmp, sizeof(tmp), "%s.sig", fs_path_ascii(prod_file));
         fs_file_write(tmp, data);
 
@@ -502,6 +510,15 @@ xuoi_product_install(mft_config &cfg, const char *product_url, const char *produ
     } while (0);
 
     mft_cleanup(prod);
+
+    if (!failures.empty())
+    {
+        LOG_ERROR("Failed to download %zu files", failures.size());
+        for (const auto &entry : failures)
+        {
+            LOG_ERROR("\t%s\n", entry.c_str());
+        }
+    }
 
     return res;
 }

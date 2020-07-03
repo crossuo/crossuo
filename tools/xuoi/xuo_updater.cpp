@@ -1,6 +1,8 @@
 // AGPLv3 License
 // Copyright (C) 2019 Danny Angelo Carminati Grein
 
+#define LOGGER_MODULE Launcher
+
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
@@ -10,13 +12,13 @@
 #include <algorithm>
 #include <external/tinyxml2.h>
 #include <external/xxhash.h>
+#include <xuocore/http.h>
+#include <xuocore/common.h>
 
 #define MINIZ_IMPLEMENTATION
 #include <external/miniz.h> // mz_zip_archive
 
 #include "xuo_updater.h"
-#include "common.h"
-#include "http.h"
 
 #define XUOL_THREADED 0
 #if XUOL_THREADED
@@ -46,6 +48,7 @@ enum xuo_result
     xuo_could_not_write_file,
     xuo_could_not_deflate_file,
     xuo_could_not_copy_file,
+    xuo_could_not_download_file,
     xuo_install_failed,
 };
 
@@ -184,7 +187,9 @@ static xuo_result xuo_manifest_load(xuo_context &ctx, const char *platform, xuo_
         addr, sizeof(addr), manifest_addr, platform, channel == xuo_channel::beta ? "-beta" : "");
     LOG_INFO("downloading manifest %s", addr);
     std::vector<uint8_t> data;
-    http_get_binary(addr, data);
+    if (!http_get_binary(addr, data))
+        return xuo_could_not_download_file;
+
     ctx.manifest.swap(data);
     ctx.platform = platform;
     ctx.doc.Parse((char *)ctx.manifest.data(), ctx.manifest.size());

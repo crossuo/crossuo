@@ -6,7 +6,7 @@ if(NOT UNIX)
     set(NOT_NEED_LIBNSL 0)
     set(HAVE_LIBNSL 0)
     set(HAVE_GETHOSTNAME 1)
-    set(HAVE_LIBZ 0)
+    set(HAVE_LIBZ 1)
     set(HAVE_LIBCRYPTO 0)
 
     set(HAVE_DLOPEN 0)
