@@ -107,4 +107,5 @@ public:
     virtual CGameCharacter *GameCharacterPtr() { return this; }
     virtual CGameItem *FindSecureTradeBox();
     void SetDead(bool &dead);
+    bool IsMouseControl();
 };
