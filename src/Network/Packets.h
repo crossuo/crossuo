@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -615,4 +615,10 @@ class CPacketCrossVersion : public CPacket
 {
 public:
     CPacketCrossVersion(int version);
+};
+
+class CPacketMouseMovementRequest : public CPacket
+{
+public:
+    CPacketMouseMovementRequest(int run, uint8_t dir);
 };

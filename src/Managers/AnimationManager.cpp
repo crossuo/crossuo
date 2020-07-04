@@ -1828,7 +1828,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     int lightOffset = 20;
 
-    if (obj->IsHuman() && goi != nullptr) //Draw mount
+    if (obj->IsHuman() && goi != nullptr && !obj->IsMouseControl()) //Draw mount
     {
         m_Sitting = 0;
         lightOffset += 20;

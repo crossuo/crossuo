@@ -730,7 +730,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
         }
         else if (AnimationGroup == 0xFF)
         {
-            if (FindLayer(OL_MOUNT) != nullptr)
+            if (FindLayer(OL_MOUNT) != nullptr && !IsMouseControl())
             {
                 result = (uint8_t)PAG_ONMOUNT_STAND;
             }
@@ -1039,4 +1039,14 @@ CGameItem *CGameCharacter::FindSecureTradeBox()
 void CGameCharacter::SetDead(bool &dead)
 {
     m_Dead = dead;
+}
+
+bool CGameCharacter::IsMouseControl()
+{
+    CGameItem *it = FindLayer(OL_MOUNT);
+    if (it != nullptr)
+    {
+        return (it->Graphic == 0x3e96) ? true : false;
+    }
+    return false;
 }

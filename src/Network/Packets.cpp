@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <common/str.h>
@@ -1684,4 +1684,16 @@ CPacketCrossVersion::CPacketCrossVersion(int version)
     WriteUInt16BE(9);
     WriteUInt16BE(OCT_XUO_VERSION);
     WriteUInt32BE(version);
+}
+
+CPacketMouseMovementRequest::CPacketMouseMovementRequest(int run, uint8_t dir)
+    : CPacket(12)
+{
+    WriteUInt8(0xBF);
+    WriteUInt16BE(0x0C);
+    WriteUInt16BE(0x33);
+    WriteUInt32BE(g_PlayerSerial);
+    WriteUInt8(dir);
+    WriteUInt8(dir);
+    WriteUInt8(run);
 }

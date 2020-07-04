@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include <cmath> // hypotf
@@ -15,6 +15,7 @@
 #include "../GameObjects/ObjectOnCursor.h"
 #include "../GameObjects/GamePlayer.h"
 #include "../Gumps/GumpCustomHouse.h"
+#include "../Network/Packets.h"
 #include "../Walker/PathFinder.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
@@ -200,7 +201,14 @@ void CMouseManager::ProcessWalking()
 
         if (!g_PathFinder.AutoWalking)
         {
-            g_PathFinder.Walk(run, dir - 1);
+            if (g_Player->IsMouseControl())
+            {
+                CPacketMouseMovementRequest(run, dir - 1).Send();
+            }
+            else
+            {
+                g_PathFinder.Walk(run, dir - 1);
+            }
         }
     }
 }
