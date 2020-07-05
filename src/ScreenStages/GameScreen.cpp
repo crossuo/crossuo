@@ -48,7 +48,7 @@
 #include "../Gumps/GumpSkills.h"
 #include "../Gumps/GumpContainer.h"
 #include "../Gumps/GumpPopupMenu.h"
-#include "../Gumps/GumpToolbar.h"
+#include "../Gumps/GumpResourceTracker.h"
 #include "../Network/Packets.h"
 #include "../Walker/PathFinder.h"
 #include "../TextEngine/GameConsole.h"

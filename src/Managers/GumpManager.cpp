@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GumpManager.h"
@@ -805,7 +805,7 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
         }
         if (g_SelectedObject.Gump == gump && g_ObjectInHand.Enabled &&
             (gump->GumpType == GT_PAPERDOLL || gump->GumpType == GT_CONTAINER ||
-             gump->GumpType == GT_TRADE))
+             gump->GumpType == GT_TRADE || gump->GumpType == GT_RESOURCETRACKER))
         {
             gump->OnLeftMouseButtonUp();
 
