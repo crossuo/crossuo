@@ -13,8 +13,11 @@ struct TrackedItem
 class CGumpResourceTracker : public CGump
 {
 private:
-    TrackedItem items[20][20]{};
-    uint8_t boxDimension = 60;
+    static constexpr int BOX_SIZE = 60;
+    static constexpr int GRID_SIZE = 20;
+    static constexpr int MAX_WIDTH = GRID_SIZE * BOX_SIZE;
+    static constexpr int MAX_HEIGHT = GRID_SIZE * BOX_SIZE;
+    TrackedItem items[GRID_SIZE][GRID_SIZE]{};
     uint16_t numRow = 0;
     uint16_t numCol = 0;
     int16_t currCol = -1;
@@ -38,7 +41,7 @@ private:
 
 public:
     CGumpResourceTracker(short x, short y);
-    virtual ~CGumpResourceTracker();
+    virtual ~CGumpResourceTracker() = default;
 
     int Width = 515;
     int Height = 75;

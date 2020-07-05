@@ -26,12 +26,12 @@ enum
 CGumpResourceTracker::CGumpResourceTracker(short x, short y)
     : CGump(GT_RESOURCETRACKER, 0, x, y)
 {
-    m_Background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0xA3C, 0, 0, Width, Height));
+    m_Background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x0a3c, 0, 0, Width, Height));
     m_Trans = (CGUIChecktrans *)Add(new CGUIChecktrans(5, 5, 505, 65));
     m_gridDataBoxGUI = (CGUIDataBox *)Add(new CGUIDataBox());
     m_itemsDataBoxGui = (CGUIDataBox *)Add(new CGUIDataBox());
-    numRow = Height / boxDimension;
-    numCol = Width / boxDimension;
+    numRow = Height / BOX_SIZE;
+    numCol = Width / BOX_SIZE;
     DrawGrid();
     DrawItem();
 
@@ -39,17 +39,13 @@ CGumpResourceTracker::CGumpResourceTracker(short x, short y)
         new CGUIResizeButton(ID_GWM_RESIZE, 0x0837, 0x0838, 0x0838, Width - 5, Height - 5));
 }
 
-CGumpResourceTracker::~CGumpResourceTracker()
-{
-}
-
 void CGumpResourceTracker::PrepareContent()
 {
     CPoint2Di offset = g_MouseManager.RealPosition;
     offset.X -= GetX();
     offset.Y -= GetY();
-    currCol = offset.X / boxDimension;
-    currRow = offset.Y / boxDimension;
+    currCol = offset.X / BOX_SIZE;
+    currRow = offset.Y / BOX_SIZE;
 
     if (currCol > numCol - 1)
     {
@@ -101,26 +97,26 @@ void CGumpResourceTracker::DrawText()
         for (uint8_t c = 0; c < numCol; c++)
         {
             uint16_t graph = items[r][c].graphic;
-            if (graph != 0)
+            if (graph == 0)
             {
-                int count = CountItemBackPack(graph);
-                CGUIText *txt = new CGUIText(
-                    0x44, (c * boxDimension) + 5, (r * boxDimension) + boxDimension - 15);
-                if (count <= 20 && count > 10)
-                {
-                    txt->Color = 0x99; //yellow
-                }
-                else if (count <= 10)
-                {
-                    txt->Color = 0x26; //red
-                }
-                else
-                {
-                    txt->Color = 0x44;
-                }
-                txt->CreateTextureA(9, str_from(count), boxDimension, TS_CENTER);
-                m_itemsDataBoxGui->Add(txt);
+                continue;
             }
+            int count = CountItemBackPack(graph);
+            CGUIText *txt = new CGUIText(0x44, (c * BOX_SIZE) + 5, (r * BOX_SIZE) + BOX_SIZE - 15);
+            if (count <= 20 && count > 10)
+            {
+                txt->Color = 0x99; //yellow
+            }
+            else if (count <= 10)
+            {
+                txt->Color = 0x26; //red
+            }
+            else
+            {
+                txt->Color = 0x44;
+            }
+            txt->CreateTextureA(9, str_from(count), BOX_SIZE, TS_CENTER);
+            m_itemsDataBoxGui->Add(txt);
         }
     }
 }
@@ -131,23 +127,24 @@ void CGumpResourceTracker::DrawItem()
     {
         for (uint8_t c = 0; c < numCol; c++)
         {
-            TrackedItem item = items[r][c];
-            if (item.graphic != 0)
+            const auto &item = items[r][c];
+            if (item.graphic == 0)
             {
-                CIndexObjectStatic &sio = g_Index.m_Static[item.graphic];
-                auto spr = (CSprite *)sio.UserData;
-                if (spr != NULL)
-                {
-                    int tileOffsetX = (boxDimension - 18 - (spr->ImageWidth)) / 2;
-                    int tileOffsetY = (boxDimension - (spr->ImageHeight)) / 2;
-                    m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, true));
-                    m_itemsDataBoxGui->Add(new CGUITilepic(
-                        item.graphic,
-                        item.color,
-                        (c * boxDimension) + tileOffsetX,
-                        (r * boxDimension) + tileOffsetY));
-                    m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, false));
-                }
+                continue;
+            }
+            CIndexObjectStatic &sio = g_Index.m_Static[item.graphic];
+            auto spr = (CSprite *)sio.UserData;
+            if (spr != nullptr)
+            {
+                const int tileOffsetX = (BOX_SIZE - 18 - (spr->ImageWidth)) / 2;
+                const int tileOffsetY = (BOX_SIZE - (spr->ImageHeight)) / 2;
+                m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, true));
+                m_itemsDataBoxGui->Add(new CGUITilepic(
+                    item.graphic,
+                    item.color,
+                    (c * BOX_SIZE) + tileOffsetX,
+                    (r * BOX_SIZE) + tileOffsetY));
+                m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, false));
             }
         }
     }
@@ -157,12 +154,12 @@ void CGumpResourceTracker::DrawGrid()
 {
     for (uint8_t c = 0; c < numCol; c++)
     {
-        m_gridDataBoxGUI->Add(new CGUILine(
-            (c + 1) * boxDimension, 5, (c + 1) * boxDimension, boxDimension * numRow, 0x900));
+        m_gridDataBoxGUI->Add(
+            new CGUILine((c + 1) * BOX_SIZE, 5, (c + 1) * BOX_SIZE, BOX_SIZE * numRow, 0x900));
         for (uint8_t r = 0; r < numRow; r++)
         {
-            m_gridDataBoxGUI->Add(new CGUILine(
-                0, (r + 1) * boxDimension, boxDimension * numCol, (r + 1) * boxDimension, 0x900));
+            m_gridDataBoxGUI->Add(
+                new CGUILine(0, (r + 1) * BOX_SIZE, BOX_SIZE * numCol, (r + 1) * BOX_SIZE, 0x900));
         }
     }
 }
@@ -176,26 +173,27 @@ int CGumpResourceTracker::CountItemBackPack(uint32_t graph)
 {
     int result = 0;
     CGameItem *bk = (CGameItem *)g_Player->FindLayer(OL_BACKPACK);
-    if (bk != nullptr)
+    if (bk == nullptr)
     {
-        for (int i = 0; i < bk->GetItemsCount(); i++)
+        return result;
+    }
+    for (int i = 0; i < bk->GetItemsCount(); i++)
+    {
+        CGameItem *item = (CGameItem *)bk->Get(i);
+        if (item->IsContainer())
         {
-            CGameItem *item = (CGameItem *)bk->Get(i);
-            if (item->IsContainer())
+            for (int j = 0; j < item->GetItemsCount(); j++)
             {
-                for (int j = 0; j < item->GetItemsCount(); j++)
+                CGameItem *subitem = (CGameItem *)item->Get(j);
+                if (subitem->Graphic == graph)
                 {
-                    CGameItem *subitem = (CGameItem *)item->Get(j);
-                    if (subitem->Graphic == graph)
-                    {
-                        result += subitem->Count;
-                    }
+                    result += subitem->Count;
                 }
             }
-            else if (item->Graphic == graph)
-            {
-                result += item->Count;
-            }
+        }
+        else if (item->Graphic == graph)
+        {
+            result += item->Count;
         }
     }
     return result;
@@ -206,31 +204,28 @@ void CGumpResourceTracker::UpdateSize()
     Width = m_StartResizeWidth + g_MouseManager.LeftDroppedOffset().X;
     Height = m_StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
 
-    if (Height < boxDimension)
+    if (Height < BOX_SIZE)
     {
-        Height = boxDimension;
+        Height = BOX_SIZE;
     }
 
-    if (Width < boxDimension)
+    if (Width < BOX_SIZE)
     {
-        Width = boxDimension;
+        Width = BOX_SIZE;
     }
 
-    int maxHeight = 1200;
-    int maxWidth = 1200;
-
-    if (Height >= maxHeight)
+    if (Height >= MAX_HEIGHT)
     {
-        Height = maxHeight;
+        Height = MAX_HEIGHT;
     }
 
-    if (Width >= maxWidth)
+    if (Width >= MAX_WIDTH)
     {
-        Width = maxWidth;
+        Width = MAX_WIDTH;
     }
 
-    numRow = Height / boxDimension;
-    numCol = Width / boxDimension;
+    numRow = Height / BOX_SIZE;
+    numCol = Width / BOX_SIZE;
     m_itemsDataBoxGui->Clear();
     DeleteGrid();
     DrawGrid();
@@ -249,21 +244,22 @@ void CGumpResourceTracker::UpdateSize()
 void CGumpResourceTracker::OnLeftMouseButtonUp()
 {
     CGump::OnLeftMouseButtonUp();
-    if (hasItemInGump)
+    if (!hasItemInGump)
     {
-        CRenderWorldObject *container = g_World->FindWorldObject(g_ObjectInHand.Container);
-
-        if (container == nullptr)
-        {
-            return;
-        }
-        items[currRow][currCol].graphic = g_ObjectInHand.Graphic;
-        items[currRow][currCol].color = g_ObjectInHand.Color;
-        g_Game.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
-        DrawText();
-        DrawItem();
-        hasItemInGump = false;
+        return;
     }
+    CRenderWorldObject *container = g_World->FindWorldObject(g_ObjectInHand.Container);
+
+    if (container == nullptr)
+    {
+        return;
+    }
+    items[currRow][currCol].graphic = g_ObjectInHand.Graphic;
+    items[currRow][currCol].color = g_ObjectInHand.Color;
+    g_Game.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
+    DrawText();
+    DrawItem();
+    hasItemInGump = false;
 }
 
 void CGumpResourceTracker::OnLeftMouseButtonDown()
@@ -275,22 +271,23 @@ bool CGumpResourceTracker::OnLeftMouseButtonDoubleClick()
 {
     bool result = false;
 
-    if (g_PressedObject.LeftObject != nullptr && g_PressedObject.LeftObject->IsGUI())
+    if (g_PressedObject.LeftObject == nullptr && !g_PressedObject.LeftObject->IsGUI())
     {
-        if (((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_TILEPIC)
+        return result;
+    }
+    if (((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_TILEPIC)
+    {
+        CGameItem *item = (CGameItem *)g_Player->FindLayer(OL_BACKPACK);
+        CGameItem *find = nullptr;
+        if (item != nullptr)
         {
-            CGameItem *item = (CGameItem *)g_Player->FindLayer(OL_BACKPACK);
-            CGameItem *find = nullptr;
-            if (item != nullptr)
-            {
-                find = item->FindItem(g_PressedObject.LeftObject->Graphic);
-            }
-            if (find != nullptr)
-            {
-                g_Game.DoubleClick(find->Serial);
-                FrameCreated = false;
-                result = true;
-            }
+            find = item->FindItem(g_PressedObject.LeftObject->Graphic);
+        }
+        if (find != nullptr)
+        {
+            g_Game.DoubleClick(find->Serial);
+            FrameCreated = false;
+            result = true;
         }
     }
 
