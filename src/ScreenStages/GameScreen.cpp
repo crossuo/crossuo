@@ -2424,6 +2424,11 @@ void CGameScreen::OnLeftMouseButtonUp()
 
                 if (can_drop)
                 {
+                    if (rwo->IsMultiObject() ||
+                        rwo->IsStaticObject()) // TODO : Other object need Height ?
+                    {
+                        dropZ += rwo->StaticGroupObjectPtr()->GetStaticHeight();
+                    }
                     g_Game.DropItem(drop_container, dropX, dropY, dropZ);
                 }
             }
