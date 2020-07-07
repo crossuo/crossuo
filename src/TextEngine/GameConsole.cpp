@@ -336,6 +336,7 @@ void CGameConsole::DrawW(
     {
         if (m_Position != 0)
         {
+            wtext.resize(m_Position);
             x += g_FontManager.GetWidthW(font, wtext);
         }
         g_FontManager.DrawW(font, L"_", color, x, y, 30, 0, align, UOFONT_BLACK_BORDER);
