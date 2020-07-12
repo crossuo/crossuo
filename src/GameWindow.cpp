@@ -369,7 +369,7 @@ void CGameWindow::OnKeyDown(const KeyEvent &ev)
     const bool acceptKey = true;
     if (acceptKey && g_CurrentScreen != nullptr && g_ScreenEffectManager.Mode == SEM_NONE)
     {
-        if (g_CtrlPressed && key == SDLK_v && g_EntryPointer != nullptr) // FIXME: OSX CMD Key
+        if (g_CtrlPressed && key == SDLK_v && g_EntryPointer != nullptr)
         {
             if (g_GameState == GS_MAIN)
             {
