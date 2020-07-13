@@ -993,6 +993,7 @@ void CGame::Process(bool rendering)
     auto mod = SDL_GetModState();
     g_AltPressed = ((mod & KMOD_ALT) != 0);
     g_CtrlPressed = ((mod & KMOD_CTRL) != 0);
+    g_CmdPressed = ((mod & KMOD_LGUI) != 0);
     g_ShiftPressed = ((mod & KMOD_SHIFT) != 0);
 
     if (g_GameState >= GS_GAME) // || g_GameState == GS_GAME_BLOCKED)

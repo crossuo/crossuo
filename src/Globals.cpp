@@ -19,6 +19,7 @@ DebugContext g_DebugContext;
 
 bool g_AltPressed = false;
 bool g_CtrlPressed = false;
+bool g_CmdPressed = false;
 bool g_ShiftPressed = false;
 bool g_MovingFromMouse = false;
 bool g_AutoMoving = false;

@@ -40,6 +40,7 @@ enum
 
 extern bool g_AltPressed;
 extern bool g_CtrlPressed;
+extern bool g_CmdPressed;
 extern bool g_ShiftPressed;
 extern bool g_MovingFromMouse;
 extern bool g_AutoMoving;
