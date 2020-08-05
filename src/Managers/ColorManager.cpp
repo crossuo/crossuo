@@ -150,7 +150,9 @@ uint32_t CColorManager::Color16To32(uint16_t c)
 
 uint16_t CColorManager::Color32To16(int c)
 {
-    return ((((c & 0xFF) << 5) >> 8) | (((((c >> 16) & 0xFF) << 5) >> 8) << 10) | (((((c >> 8) & 0xFF) << 5) >> 8) << 5));
+    return (
+        (((c & 0xFF) << 5) >> 8) | (((((c >> 16) & 0xFF) << 5) >> 8) << 10) |
+        (((((c >> 8) & 0xFF) << 5) >> 8) << 5));
 }
 
 uint16_t CColorManager::ConvertToGray(uint16_t c)
