@@ -14,6 +14,7 @@
 #include <xuocore/client_info.h>
 #include "http.h"
 #include "common.h"
+#include "widgets.h"
 #include "ui_model.h"
 #include "shards.h"
 #include "ui_shards.h"
@@ -183,7 +184,10 @@ static fs_path account_create_config(const account::entry &account)
 
 static void account_launch(int account_index)
 {
-    assert(account_index > 0 && account_index < (int)s_accounts.entries.size());
+    if (account_index == 0)
+        return;
+
+    assert(account_index < (int)s_accounts.entries.size());
     const auto &entry = s_accounts.entries[account_index];
     auto cfg = account_create_config(entry);
     if (!fs_path_some(cfg))
@@ -244,28 +248,6 @@ static void account_launch(int account_index)
     xuol_launch_quit();
 }
 
-// view
-
-void HoverToolTip(const char *desc);
-void HelpMarker(const char *desc);
-void InputText(
-    const char *id,
-    const char *label,
-    float w,
-    char *buf,
-    size_t buf_size,
-    ImGuiInputTextFlags flags = 0,
-    ImGuiInputTextCallback callback = nullptr,
-    void *user_data = nullptr);
-bool ComboBox(
-    const char *id,
-    const char *label,
-    float w,
-    int *current_item,
-    const char *const items[],
-    int items_count,
-    int height_in_items = -1);
-
 static bool account_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<account::entry> *)data;
@@ -322,13 +304,14 @@ void ui_accounts(ui_model &m)
         ImGui::Text(ICON_FK_USER " Accounts");
         ImGui::SetNextItemWidth(left_w);
         ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-        if (ImGui::ListBox(
+        if (ListBox(
                 "##acct",
                 &acct_id,
                 account_getter,
                 &s_accounts.entries,
                 int(s_accounts.entries.size()),
-                items))
+                items,
+                &account_launch))
         {
             update_view = true;
         }
