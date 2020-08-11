@@ -22,6 +22,7 @@
 #include <xuocore/common.h>
 
 #include "icon_launcher.h"
+#include "common.h"
 #include "accounts.h"
 #include "shards.h"
 #include "ui_model.h"
