@@ -37,6 +37,8 @@ set(XUOL_SRCS
   mft.h
   common.cpp
   common.h
+  widgets.cpp
+  widgets.h
   xuo_updater.cpp
   xuo_updater.h
   xuolauncher.cpp
