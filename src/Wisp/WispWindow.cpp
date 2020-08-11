@@ -4,7 +4,7 @@
 #include "WispWindow.h"
 #include "../SDL_wrapper.h"
 #include <common/utils.h> // countof
-#include "../Icon.h"
+#include "icon_client.h"
 #include "../Point.h"
 #include "../GameWindow.h"
 #include "../Managers/PluginManager.h"

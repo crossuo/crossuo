@@ -1,12 +1,12 @@
-static const struct
+struct IconData
 {
     unsigned int width;
     unsigned int height;
     unsigned int bytes_per_pixel; /* 3:RGB, 4:RGBA */
     unsigned char pixel_data[120 * 120 * 4 + 1];
-} g_icon = { 120,
-             120,
-             4,
+};
+
+static const IconData g_icon = { 120, 120, 4,
              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
              "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"

@@ -81,6 +81,16 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/resources/revision.h.in"
   "${PROJECT_BINARY_DIR}/revision.h"
 )
+configure_file(
+  "${PROJECT_SOURCE_DIR}/resources/icon_launcher.h"
+  "${PROJECT_BINARY_DIR}/icon_launcher.h"
+  COPYONLY
+)
+configure_file(
+  "${PROJECT_SOURCE_DIR}/resources/icon_client.h"
+  "${PROJECT_BINARY_DIR}/icon_client.h"
+  COPYONLY
+)
 include_directories("${PROJECT_BINARY_DIR}/")
 
 add_subdirectory(external)

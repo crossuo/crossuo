@@ -17,6 +17,7 @@
 #include <external/inih.h>
 #include <external/process.h>
 
+#include "icon_launcher.h"
 #include "common.h"
 #include "accounts.h"
 #include "shards.h"
@@ -445,6 +446,7 @@ int main(int argc, char **argv)
     win.height = 284;
     win.vsync = 0;
     win.inifile = fs_path_ascii(ini);
+    win.icon = &g_icon_xuolauncher;
     win_init(&win);
 
     auto ui = ui_init(win);
