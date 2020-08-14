@@ -1336,7 +1336,7 @@ void CGumpOptions::DrawPage2()
     y += h;
     checkbox = (CGUICheckbox *)html->Add(
         new CGUICheckbox(ID_GO_P2_TRANSPARENT_SPELL_ICONS, 0x00D2, 0x00D3, 0x00D2, 0, y));
-    checkbox->Checked = (g_OptionsConfig.TransparentSpellIcons != 0u);
+    checkbox->Checked = g_OptionsConfig.TransparentSpellIcons;
     checkbox->SetTextParameters(0, L"Transparent spell icons, alpha:", g_OptionsTextColor);
     // same line
     m_SliderSpellIconsAlpha = (CGUISlider *)html->Add(new CGUISlider(
@@ -3257,7 +3257,7 @@ void CGumpOptions::GUMP_CHECKBOX_EVENT_C
             }
             else if (serial == ID_GO_P2_TRANSPARENT_SPELL_ICONS)
             {
-                g_OptionsConfig.TransparentSpellIcons = static_cast<uint8_t>(state);
+                g_OptionsConfig.TransparentSpellIcons = state;
             }
             else if (serial == ID_GO_P2_OLD_STYLE_STATUSBAR)
             {

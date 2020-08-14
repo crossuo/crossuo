@@ -51,7 +51,7 @@ public:
     uint8_t HiddenCharactersRenderMode = 0;
     uint8_t HiddenAlpha = 0;
     bool UseHiddenModeOnlyForSelf = false;
-    uint8_t TransparentSpellIcons = 0;
+    bool TransparentSpellIcons = false;
     bool RemoveStatusbarsWithoutObjects = false;
     bool ShowDefaultConsoleEntryMode = false;
     bool DrawAuraWithCtrlPressed = false;
@@ -61,7 +61,7 @@ public:
     bool HighlightTargetByType = true;
     bool AutoDisplayWorldMap = false;
     bool DisableMacroInChat = false;
-    bool AutoOpenDoors = false;
+    bool AutoOpenDoors = true;
     bool AlwaysDisplayHumanoidsName = false;
 #if USE_PING
     bool CheckPing = true;

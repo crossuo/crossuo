@@ -2610,11 +2610,11 @@ int CGame::ValueInt(const VALUE_KEY_INT &key, int value)
         {
             if (value == -1)
             {
-                value = g_ConfigManager.TransparentSpellIcons;
+                value = static_cast<uint8_t>(g_ConfigManager.TransparentSpellIcons);
             }
             else
             {
-                g_ConfigManager.TransparentSpellIcons = static_cast<uint8_t>(value != 0);
+                g_ConfigManager.TransparentSpellIcons = static_cast<bool>(value != 0);
             }
 
             break;

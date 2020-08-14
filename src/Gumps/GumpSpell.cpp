@@ -20,7 +20,7 @@ CGumpSpell::CGumpSpell(uint32_t serial, SPELLBOOK_TYPE type, uint16_t graphic, s
     BaseSpell = GetSpellByGraphicAndType(Graphic, SpellType);
     m_Locker.Serial = ID_GS_LOCK_MOVING;
     m_Blender = (CGUIAlphaBlending *)Add(new CGUIAlphaBlending(
-        g_ConfigManager.TransparentSpellIcons != 0u, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
+        g_ConfigManager.TransparentSpellIcons, g_ConfigManager.GetSpellIconAlpha() / 255.0f));
     Add(new CGUIGumppic(Graphic, 0, 0));
     m_SpellUnlocker = (CGUIButton *)Add(
         new CGUIButton(ID_GS_BUTTON_REMOVE_FROM_GROUP, 0x082C, 0x082C, 0x082C, 30, 16));
@@ -49,7 +49,7 @@ void CGumpSpell::InitToolTip()
 void CGumpSpell::PrepareContent()
 {
     const bool wantBlender =
-        (g_ConfigManager.TransparentSpellIcons != 0 && g_SelectedObject.Gump != this);
+        (g_ConfigManager.TransparentSpellIcons && g_SelectedObject.Gump != this);
     if (m_Blender->Enabled != wantBlender)
     {
         m_Blender->Enabled = wantBlender;
