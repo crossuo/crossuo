@@ -6,7 +6,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 project(crossuo)
 
 if (NOT XUO_VERSION)
-  set(XUO_VERSION "1.0.4")
+  set(XUO_VERSION "1.0.5")
 endif()
 
 string(REPLACE "." "," XUO_VERSION_NUM ${XUO_VERSION})
