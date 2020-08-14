@@ -113,7 +113,8 @@ utf8_t utf8_from(const char *str, size_t size)
 {
     utf8_t s;
     char buf[512];
-    for (int e = 0; e < sizeof(s_encodings); e++)
+    constexpr auto count = sizeof(s_encodings) / sizeof(s_encodings[0]);
+    for (int e = 0; e < count; e++)
     {
         const char *in_buf = (const char *)str;
         size_t in_size = size;
