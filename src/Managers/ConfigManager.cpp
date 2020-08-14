@@ -395,7 +395,7 @@ void CConfigManager::DefaultPage2()
     HiddenCharactersRenderMode = 0;
     HiddenAlpha = 0x7F;
     UseHiddenModeOnlyForSelf = true;
-    TransparentSpellIcons = 1u;
+    TransparentSpellIcons = false;
     m_SpellIconAlpha = 0x7F;
     m_OldStyleStatusbar = false;
     m_ApplyStateColorOnCharacters = false;
@@ -740,14 +740,12 @@ void CConfigManager::SetSpellIconAlpha(uint8_t val)
     if (this == &g_ConfigManager && val != m_SpellIconAlpha)
     {
         float alpha = val / 255.0f;
-        bool redraw = g_ConfigManager.TransparentSpellIcons != 0u;
-
+        const bool redraw = g_ConfigManager.TransparentSpellIcons;
         QFOR(gump, g_GumpManager.m_Items, CGump *)
         {
             if (gump->GumpType == GT_SPELL)
             {
                 ((CGumpSpell *)gump)->m_Blender->Alpha = alpha;
-
                 if (redraw)
                 {
                     gump->WantRedraw = true;
@@ -1099,7 +1097,7 @@ bool CConfigManager::Load(const fs_path &path)
                     UseHiddenModeOnlyForSelf = str_to_bool(strings[1]);
                     break;
                 case CMKC_TRANSPARENT_SPELL_ICONS:
-                    TransparentSpellIcons = str_to_int(strings[1]);
+                    TransparentSpellIcons = str_to_bool(strings[1]);
                     break;
                 case CMKC_SPELL_ICON_ALPHA:
                     m_SpellIconAlpha = str_to_int(strings[1]);
@@ -1572,7 +1570,7 @@ void CConfigManager::Save(const fs_path &path)
         writer.WriteInt("HiddenCharactersRenderMode", HiddenCharactersRenderMode);
         writer.WriteInt("HiddenAlpha", HiddenAlpha);
         writer.WriteBool("UseHiddenModeOnlyForSelf", UseHiddenModeOnlyForSelf);
-        writer.WriteInt("TransparentSpellIcons", TransparentSpellIcons);
+        writer.WriteBool("TransparentSpellIcons", TransparentSpellIcons);
         writer.WriteInt("SpellIconAlpha", m_SpellIconAlpha);
         writer.WriteBool("OldStyleStatusbar", m_OldStyleStatusbar);
         writer.WriteBool("OriginalPartyStatusbar", m_OriginalPartyStatusbar);
