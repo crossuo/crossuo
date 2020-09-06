@@ -170,6 +170,7 @@ bool load_config()
         bool valid_client = uopath && uopath[0] && fs_path_exists(g_App.m_UOPath);
         if (!valid_client)
         {
+            Warning(Client, "Couldn't find data files in the path: %s", uopath);
             if (launcher_exists)
             {
                 launcher();
@@ -184,10 +185,15 @@ bool load_config()
             return false;
         }
 
-        if (!g_Config.ClientVersionModified)
+        const auto client_exe = fs_path_join(uopath, "client.exe");
+        const bool client_exe_exists = fs_path_exists(client_exe);
+        const bool check_valid_data = !g_Config.ClientVersionModified;
+        if (check_valid_data)
         {
-            const auto client_exe = fs_path_join(uopath, "client.exe");
-            const bool client_exe_exists = fs_path_exists(client_exe);
+            Info(
+                Client,
+                "client version was not set in config, trying to auto-detect from '%s'",
+                fs_path_ascii(client_exe));
             if (client_exe_exists)
             {
                 client_info info;
@@ -213,27 +219,49 @@ bool load_config()
                         info.crc32);
                 }
             }
+            else
+            {
+                Info(
+                    Client,
+                    "a valid client.exe was not found, please set 'ClientVersion' in the config file or in launcher.");
+            }
         }
 
-        const bool new_client = fs_path_exists(fs_path_join(uopath, "MainMisc.uop"));  // 7+
-        const bool old_client3 = fs_path_exists(fs_path_join(uopath, "chardata.mul")); // <3
-        const bool old_client6 = fs_path_exists(fs_path_join(uopath, "map5.mul"));     // 6+
+        Info(Client, "validating data compatibility:");
+        const bool new_client = fs_path_exists(fs_path_join(uopath, "MainMisc.uop")); // >=7
+        Info(Client, "  >=7.x MainMisc.uop:%s found", new_client ? "" : " not");
+        const bool old_client3 = fs_path_exists(fs_path_join(uopath, "chardata.mul")); // <=3
+        Info(Client, "  <=3.x chardata.mul:%s found", old_client3 ? "" : " not");
+        const bool old_client6 = fs_path_exists(fs_path_join(uopath, "map4.mul")) &&
+                                 !fs_path_exists(fs_path_join(uopath, "map5.mul")); // <=6
+        Info(Client, "  >3.x && <= 6.x map4.mul:%s found", old_client6 ? "" : " not");
         const bool old_client = old_client3 || old_client6;
         valid_client &= g_Config.ClientVersion >= VERSION(7, 0, 0, 0) ? new_client : old_client;
         if (!valid_client)
         {
-            if (launcher_exists)
+            if (check_valid_data)
             {
-                launcher();
+                if (launcher_exists)
+                {
+                    launcher();
+                }
+                ErrorMessage(
+                    Client,
+                    "Couldn't find valid Ultima Online(tm) data files matching your current configuration.\n"
+                    "Make sure your configuration is pointing to the correct data files for the"
+                    "correct version of your client installation directory.",
+                    "could not find data files for client version %s.",
+                    g_Config.ClientVersionString.c_str());
+                return false;
             }
-            ErrorMessage(
-                Client,
-                "Couldn't find valid Ultima Online(tm) data files matching your current configuration.\n"
-                "Make sure your configuration is pointing to the correct data files for the"
-                "correct version of your client installation directory.",
-                "could not find data files for client version %s.",
-                g_Config.ClientVersionString.c_str());
-            return false;
+            else
+            {
+                Warning(
+                    Client,
+                    "couldn't validate that your data files are compatible with client version");
+                Warning(
+                    Client, "client will continue but errors may happen - please report any issue");
+            }
         }
     }
 

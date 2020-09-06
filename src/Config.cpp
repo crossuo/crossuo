@@ -350,7 +350,7 @@ static fs_path GetConfigFile()
 bool LoadGlobalConfig()
 {
     auto cfg = GetConfigFile();
-    Info(Config, "loading global config from: %s", fs_path_ascii(cfg));
+    Info(Config, "loading global config from: '%s'", fs_path_ascii(cfg));
     if (!fs_path_exists(cfg))
     {
         cfg = fs_path_join(fs_path_current(), cfg);
@@ -358,6 +358,7 @@ bool LoadGlobalConfig()
 
     if (!fs_path_exists(cfg))
     {
+        Info(Config, "config not found");
         return false;
     }
 
