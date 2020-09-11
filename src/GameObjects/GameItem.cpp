@@ -571,9 +571,14 @@ uint16_t CGameItem::GetMountAnimation()
                 graphic = 0x031F;
                 break;
             }
-            case 0x3EC3: //16067 Beetle
+            case 0x3EC3: // 16067 Beetle
             {
                 graphic = 0x02D4;
+                break;
+            }
+            case 0x3ECE: // 16078 Serpentine Dragon
+            {
+                graphic = 0x059A;
                 break;
             }
             case 0x3EC5: // 16069
@@ -627,6 +632,11 @@ uint16_t CGameItem::GetMountAnimation()
                 graphic = 0x05A1;
                 break;
             }
+            case 0x3ED2: // 16082 War boar
+            {
+                graphic = 0x05F6;
+                break;
+            }
             case 0x3ECD: // 16077 Palomino
             {
                 graphic = 0x0580;
@@ -639,7 +649,7 @@ uint16_t CGameItem::GetMountAnimation()
             }
             default: // Lightbrown Horse2
             {
-                graphic = 0x00C8;
+                //graphic = 0x00C8;
                 break;
             }
         }

@@ -210,8 +210,6 @@ struct SITTING_INFO_DATA
     bool DrawBack;
 };
 
-const int SITTING_ITEMS_COUNT = 98;
-
 const uint8_t INVALID_DIRECTION = 0xff;
 
 #define SITTING_N 0, 0, 0, 0
@@ -224,7 +222,7 @@ const uint8_t INVALID_DIRECTION = 0xff;
 #define SITTING_UNKNOWN 0, 2, 4, 6
 
 // from client 7.0.45.0
-static const SITTING_INFO_DATA SITTING_INFO[SITTING_ITEMS_COUNT] = {
+static const SITTING_INFO_DATA SITTING_INFO[] = {
     { 0x0459, SITTING_N_S, 2, 2, false },
     { 0x045A, SITTING_E_W, 2, 2, false },
     { 0x045B, SITTING_N_S, 2, 2, false },
@@ -300,12 +298,12 @@ static const SITTING_INFO_DATA SITTING_INFO[SITTING_ITEMS_COUNT] = {
 
     { 0x2A58, SITTING_S, 0, 0, false },
     { 0x2A59, SITTING_E, 0, 0, false },
-    { 0x2A5A, SITTING_UNKNOWN, 0, 0, false },
-    { 0x2A5B, SITTING_UNKNOWN, 10, 10, false },
-    { 0x2A7F, SITTING_UNKNOWN, 0, 0, false },
-    { 0x2A80, SITTING_UNKNOWN, 0, 0, false },
-    { 0x2DDF, SITTING_UNKNOWN, 2, 2, false },
-    { 0x2DE0, SITTING_UNKNOWN, 2, 2, false },
+    { 0x2A5A, SITTING_ALL, 0, 0, false },
+    { 0x2A5B, SITTING_ALL, 10, 10, false },
+    { 0x2A7F, SITTING_ALL, 0, 0, false },
+    { 0x2A80, SITTING_ALL, 0, 0, false },
+    { 0x2DDF, SITTING_ALL, 2, 2, false },
+    { 0x2DE0, SITTING_ALL, 2, 2, false },
     { 0x2DE3, SITTING_E, 4, 4, false },
     { 0x2DE4, SITTING_S, 4, 4, false },
     { 0x2DE5, SITTING_W, 4, 4, false },
@@ -314,15 +312,93 @@ static const SITTING_INFO_DATA SITTING_INFO[SITTING_ITEMS_COUNT] = {
     { 0x2DEC, SITTING_S, 4, 4, false },
     { 0x2DED, SITTING_E, 4, 4, false },
     { 0x2DEE, SITTING_W, 4, 4, false },
-    { 0x2DF5, SITTING_UNKNOWN, 4, 4, false },
-    { 0x2DF6, SITTING_UNKNOWN, 4, 4, false },
-    { 0x3088, SITTING_UNKNOWN, 4, 4, false },
-    { 0x3089, SITTING_UNKNOWN, 4, 4, false },
-    { 0x308A, SITTING_UNKNOWN, 4, 4, false },
-    { 0x308B, SITTING_UNKNOWN, 4, 4, false },
-    { 0x35ED, SITTING_UNKNOWN, 0, 0, false },
-    { 0x35EE, SITTING_UNKNOWN, 0, 0, false },
-    //
+    { 0x2DF5, SITTING_ALL, 4, 4, false },
+    { 0x2DF6, SITTING_ALL, 4, 4, false },
+    { 0x3088, SITTING_ALL, 4, 4, false },
+    { 0x3089, SITTING_ALL, 4, 4, false },
+    { 0x308A, SITTING_ALL, 4, 4, false },
+    { 0x308B, SITTING_ALL, 4, 4, false },
+    { 0x35ED, SITTING_ALL, 0, 0, false },
+    { 0x35EE, SITTING_ALL, 0, 0, false },
+
     { 0x3DFF, SITTING_N_S, 2, 2, false },
-    { 0x3E00, SITTING_E_W, 2, 2, false }
+    { 0x3E00, SITTING_E_W, 2, 2, false },
+
+    // TODO: new expansion
+    { 0x4C8D, SITTING_S, 4, 4, false },
+    { 0x4C8E, SITTING_S, 4, 4, false },
+    { 0x4C8F, SITTING_S, 4, 4, false },
+
+    { 0x4C1E, SITTING_E, 6, 6, false },
+    //{ 0x4C1F, SITTING_E, 6, 6, false },
+
+    { 0x4C8B, SITTING_E, 0, 0, false },
+    { 0x4C8C, SITTING_E, 0, 0, false },
+    { 0x4C8D, SITTING_S, 4, 4, false },
+    { 0x4C8E, SITTING_S, 4, 4, false },
+    { 0x4C8F, SITTING_S, 4, 4, false },
+
+    { 0x4C1E, SITTING_E, 6, 6, false },
+    { 0x4C80, SITTING_S, 4, 4, false },
+    { 0x4C81, SITTING_E, 0, 0, false },
+    { 0x4C82, SITTING_S, 4, 4, false },
+    { 0x4C83, SITTING_S, 4, 4, false },
+    { 0x4C84, SITTING_E, 0, 0, false },
+    { 0x4C85, SITTING_E, 0, 0, false },
+    { 0x4C86, SITTING_S, 4, 4, false },
+    { 0x4C87, SITTING_S, 4, 4, false },
+    { 0x4C88, SITTING_E, 0, 0, false },
+    { 0x4C89, SITTING_E, 0, 0, false },
+    { 0x4C8A, SITTING_E, 0, 0, false },
+    { 0x4C8B, SITTING_E, 0, 0, false },
+    { 0x4C8C, SITTING_E, 0, 0, false },
+    { 0x4C8D, SITTING_S, 4, 4, false },
+    { 0x4C8E, SITTING_S, 4, 4, false },
+    { 0x4C8F, SITTING_S, 4, 4, false },
+    //{ 0x4C1F, SITTING_E, 6, 6, false },
+
+    // thanks Tony!
+    { 0xA05F, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0xA05E, SITTING_N, 4, 4, false }, // NORTH ONLY
+    { 0xA05D, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0xA05C, SITTING_W, 6, 4, false }, // WEST ONLY
+
+    { 0x9EA2, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x9EA1, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0x9E9F, SITTING_N, 4, 4, false }, // NORTH ONLY
+    { 0x9EA0, SITTING_W, 6, 4, false }, // WEST ONLY
+
+    { 0x9E91, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0x9E90, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x9E8F, SITTING_W, 6, 4, false }, // WEST ONLY
+    { 0x9E8E, SITTING_N, 4, 4, false }, // NORTH ONLY
+
+    { 0x9C62, SITTING_N, 4, 4, false }, // NORTH ONLY
+    { 0x9C61, SITTING_N, 4, 4, false }, // NORTH ONLY
+    { 0x9C60, SITTING_N, 4, 4, false }, // NORTH ONLY
+
+    { 0x9C5F, SITTING_W, 6, 4, false }, // WEST ONLY
+    { 0x9C5E, SITTING_W, 6, 4, false }, // WEST ONLY
+    { 0x9C5D, SITTING_W, 6, 4, false }, // WEST ONLY
+
+    { 0x9C5A, SITTING_N, 4, 4, false }, // NORTH ONLY
+    { 0x9C59, SITTING_N, 4, 4, false }, // NORTH ONLY
+
+    { 0x9C58, SITTING_W, 6, 4, false }, // WEST ONLY
+    { 0x9C57, SITTING_W, 6, 4, false }, // WEST ONLY
+
+    { 0x402A, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x4029, SITTING_E, 0, 0, false }, // EAST ONLY
+
+    { 0x4028, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0x4027, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0x4023, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0x4024, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x4C1E, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x4C1B, SITTING_S, 4, 4, false }, // SOUTH ONLY
+    { 0x7132, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x71C2, SITTING_S, 4, 4, false }, // SOUTH ONLY
+
+    { 0x9977, SITTING_E, 0, 0, false }, // EAST ONLY
+    { 0x996C, SITTING_S, 4, 4, false }, // SOUTH ONLY
 };

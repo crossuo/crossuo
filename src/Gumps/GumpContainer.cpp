@@ -143,7 +143,7 @@ void CGumpContainer::InitToolTip()
 
 void CGumpContainer::PrepareContent()
 {
-    if (!g_Player->Dead() &&
+    if (!g_Player->IsDead() &&
         GetTopObjDistance(g_Player, g_World->FindWorldObject(Serial)) <= DRAG_ITEMS_DISTANCE &&
         g_PressedObject.LeftGump == this && !g_ObjectInHand.Enabled &&
         g_PressedObject.LeftSerial != ID_GC_MINIMIZE &&

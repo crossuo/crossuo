@@ -1024,7 +1024,7 @@ PACKET_HANDLER(EnterWorld)
     g_Game.Click(g_PlayerSerial);
     CPacketStatusRequest(g_PlayerSerial).Send();
 
-    if (g_Player->Dead())
+    if (g_Player->IsDead())
     {
         g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
     }
@@ -1573,7 +1573,7 @@ PACKET_HANDLER(UpdateObject)
         {
             bool updateStatusbar = (g_Player->GetFlags() != flags);
 
-            oldDead = g_Player->Dead();
+            oldDead = g_Player->IsDead();
             g_Player->Graphic = graphic;
             g_Player->OnGraphicChange(1000);
             g_Player->Color = g_ColorManager.FixColor(color);
@@ -1648,9 +1648,9 @@ PACKET_HANDLER(UpdateObject)
 
     if (obj->IsPlayer())
     {
-        if (oldDead != g_Player->Dead())
+        if (oldDead != g_Player->IsDead())
         {
-            if (g_Player->Dead())
+            if (g_Player->IsDead())
             {
                 g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
             }
@@ -3894,27 +3894,23 @@ PACKET_HANDLER(NewCharacterAnimation)
 
     uint32_t serial = ReadUInt32BE();
     CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
-    if (obj != nullptr)
+    if (!obj)
     {
-        uint16_t type = ReadUInt16BE();
-        uint16_t action = ReadUInt16BE();
-        uint8_t mode = ReadUInt8();
-
-        uint8_t group = g_AnimationManager.GetObjectNewAnimation(obj, type, action, mode);
-
-        obj->SetAnimation(group);
-
-        obj->AnimationRepeatMode = 1;
-        obj->AnimationDirection = true;
-
-        if ((type == 1 || type == 2) && obj->Graphic == 0x0015)
-        {
-            obj->AnimationRepeat = true;
-        }
-
-        obj->AnimationFromServer = true;
+        return;
     }
+
+    const uint16_t type = ReadUInt16BE();
+    const uint16_t action = ReadUInt16BE();
+    const uint8_t mode = ReadUInt8();
+    const uint8_t group = g_AnimationManager.GetObjectNewAnimation(obj, type, action, mode);
+    obj->SetAnimation(group);
+    obj->AnimationRepeatMode = 1;
+    obj->AnimationDirection = true;
+    if ((type == 1 || type == 2) && obj->Graphic == 0x0015)
+    {
+        obj->AnimationRepeat = true;
+    }
+    obj->AnimationFromServer = true;
 }
 
 PACKET_HANDLER(DisplayQuestArrow)
@@ -3997,7 +3993,8 @@ PACKET_HANDLER(Season)
         season = 0;
     }
 
-    if ((g_Player->Dead() /*|| g_Season == ST_DESOLATION*/) && (SEASON_TYPE)season != ST_DESOLATION)
+    if ((g_Player->IsDead() /*|| g_Season == ST_DESOLATION*/) &&
+        (SEASON_TYPE)season != ST_DESOLATION)
     {
         return;
     }

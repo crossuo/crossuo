@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <common/str.h>
+#include "../Config.h"
 #include "RenderStaticObject.h"
 #include "GLEngine/GLTexture.h"
 
@@ -84,10 +85,40 @@ public:
     // POL: ?
     // Sphere:
     // https://github.com/Sphereserver/Source-experimental/blob/c8ddf528c803fe70b7593c5acb121f1829b22d16/src/game/chars/CCharStatus.cpp#L618
-    bool Frozen() { return (m_Flags & 0x01) != 0; }
+    inline bool IsParalyzed() const { return (m_Flags & 0x01) != 0; }
     // 0x02 = Female
-    bool Poisoned(); // 0x04 if < 7.0.0
-    bool Flying();   // 0x04 if >= 7.0.0
+
+    inline bool IsPoisoned() const
+    {
+        if (g_Config.ClientVersion >= CV_7000)
+        {
+            return SA_Poisoned;
+        }
+        return (m_Flags & 0x04) != 0;
+    }
+
+    inline bool IsFlying() const
+    {
+        if (g_Config.ClientVersion >= CV_7000)
+        {
+            return (m_Flags & 0x04) != 0;
+        }
+        return false;
+    }
+
+    // aka IsMouseControl
+    inline bool IsDrivingBoat() const
+    {
+        const auto it = (CGameObject *)FindLayer(OL_MOUNT);
+        return (it && it->Graphic == 0x3E96);
+    }
+
+    inline bool IsMounted() const
+    {
+        const auto it = (CGameObject *)FindLayer(OL_MOUNT);
+        return (it && it->GetMountAnimation() != 0xffff && !IsDrivingBoat());
+    }
+
     bool YellowHits() { return (m_Flags & 0x08) != 0; }
     bool IgnoreCharacters() { return (m_Flags & 0x10) != 0; }
     bool Locked() { return (!(m_Flags & 0x20) && m_TiledataPtr->Weight > 90); }
@@ -95,13 +126,13 @@ public:
     bool Hidden() { return (m_Flags & 0x80) != 0; }
 
     bool Caller();
-    virtual bool IsHuman() { return false; }
+    virtual bool IsHuman() const { return false; }
     virtual bool IsPlayer() { return false; }
     static int IsGold(uint16_t graphic);
     uint16_t GetDrawGraphic(bool &doubleDraw);
-    bool IsGameObject() { return true; }
-    bool IsCorpse() { return (Graphic == 0x2006); }
+    bool IsGameObject() const { return true; }
+    bool IsCorpse() const { return (Graphic == 0x2006); }
     CGameObject *GetTopObject();
-    CGameItem *FindLayer(int layer);
+    CGameItem *FindLayer(int layer) const;
     virtual CGameItem *FindSecureTradeBox() { return nullptr; }
 };

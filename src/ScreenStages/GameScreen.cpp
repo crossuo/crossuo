@@ -1056,7 +1056,7 @@ void CGameScreen::AddOffsetCharacterTileToRenderList(CGameObject *obj, bool useO
 
 void CGameScreen::CalculateGameWindowBounds()
 {
-    g_GrayedPixels = g_Player->Dead();
+    g_GrayedPixels = g_Player->IsDead();
 
     if (g_GrayedPixels && g_Season != ST_DESOLATION)
     {
@@ -1357,7 +1357,7 @@ void CGameScreen::DrawGameWindow(bool render)
                 int y = obj->DrawY;
                 obj->Draw(x, y);
                 if ((g_ConfigManager.GetDrawStatusState() != 0u) && obj->IsGameObject() &&
-                    ((CGameObject *)obj)->NPC && !((CGameCharacter *)obj)->Dead())
+                    ((CGameObject *)obj)->NPC && !((CGameCharacter *)obj)->IsDead())
                 {
                     CGameCharacter *gc = (CGameCharacter *)obj;
                     if (g_ConfigManager.DrawStatusForHumanoids && !gc->IsHuman())
@@ -1420,7 +1420,7 @@ void CGameScreen::DrawGameWindow(bool render)
                                     continue;
                                 }
                                 width = (34 * width) / 100;
-                                if (gc->Poisoned())
+                                if (gc->IsPoisoned())
                                 {
                                     healthColor = 63; //Character status line (green)
                                 }
@@ -1793,7 +1793,7 @@ void CGameScreen::PreRender()
 
         g_DeathScreenTimer = 0;
     }
-    else if (!g_Player->Dead())
+    else if (!g_Player->IsDead())
     {
         g_DeathScreenTimer = 0;
     }
@@ -2542,7 +2542,7 @@ bool CGameScreen::OnLeftMouseButtonDoubleClick()
     if (charUnderMouse != 0)
     {
         if (!g_ConfigManager.DisableNewTargetSystem &&
-            (charUnderMouse != g_PlayerSerial || g_Player->FindLayer(OL_MOUNT) == nullptr))
+            (charUnderMouse != g_PlayerSerial || !g_Player->IsMounted()))
         {
             g_GumpManager.CloseGump(g_NewTargetSystem.Serial, 0, GT_TARGET_SYSTEM);
             g_NewTargetSystem.Serial = charUnderMouse;

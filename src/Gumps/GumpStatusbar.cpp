@@ -593,7 +593,7 @@ void CGumpStatusbar::UpdateContent()
                 if (percent > 0)
                 {
                     short gumpid = 0x0806;
-                    if (g_Player->Poisoned())
+                    if (g_Player->IsPoisoned())
                     {
                         gumpid = 0x0808;
                     }
@@ -1262,7 +1262,7 @@ void CGumpStatusbar::UpdateContent()
                 Add(new CGUIButton(ID_GSB_BUTTON_HEAL_2, 0x0939, 0x093A, 0x093A, 16, 33));
 
                 int color = 0;
-                if (g_Player->Poisoned())
+                if (g_Player->IsPoisoned())
                 {
                     color = 63; //Character status line (green)
                 }
@@ -1328,7 +1328,7 @@ void CGumpStatusbar::UpdateContent()
                 if (per > 0)
                 {
                     uint16_t gumpid = 0x0806; //Character status line (blue)
-                    if (g_Player->Poisoned())
+                    if (g_Player->IsPoisoned())
                     {
                         gumpid = 0x0808; //Character status line (green)
                     }
@@ -1431,7 +1431,7 @@ void CGumpStatusbar::UpdateContent()
                         Add(new CGUIButton(ID_GSB_BUTTON_HEAL_2, 0x0939, 0x093A, 0x093A, 16, 33));
                     }
                     int color = 0;
-                    if (member.Character->Poisoned())
+                    if (member.Character->IsPoisoned())
                     {
                         color = 63; //Character status line (green)
                     }
@@ -1540,7 +1540,7 @@ void CGumpStatusbar::UpdateContent()
                 if (per > 0)
                 {
                     uint16_t gumpid = 0x0806; //Character status line (blue)
-                    if (obj->Poisoned())
+                    if (obj->IsPoisoned())
                     {
                         gumpid = 0x0808; //Character status line (green)
                     }
