@@ -66,10 +66,10 @@ CGameObject::~CGameObject()
 
 void CGameObject::SetFlags(uint8_t val)
 {
-    bool poisoned = Poisoned();
+    bool poisoned = IsPoisoned();
     bool yellowHits = YellowHits();
     m_Flags = val;
-    if (poisoned != Poisoned() || yellowHits != YellowHits())
+    if (poisoned != IsPoisoned() || yellowHits != YellowHits())
     {
         g_GumpManager.UpdateContent(Serial, 0, GT_STATUSBAR);
         g_GumpManager.UpdateContent(Serial, 0, GT_TARGET_SYSTEM);
@@ -390,24 +390,6 @@ void CGameObject::ClearNotOpenedItems()
     }
 }
 
-bool CGameObject::Poisoned()
-{
-    if (g_Config.ClientVersion >= CV_7000)
-    {
-        return SA_Poisoned;
-    }
-    return (m_Flags & 0x04) != 0;
-}
-
-bool CGameObject::Flying()
-{
-    if (g_Config.ClientVersion >= CV_7000)
-    {
-        return (m_Flags & 0x04) != 0;
-    }
-    return false;
-}
-
 int CGameObject::IsGold(uint16_t graphic)
 {
     switch (graphic)
@@ -629,7 +611,7 @@ CGameObject *CGameObject::GetTopObject()
     return obj;
 }
 
-CGameItem *CGameObject::FindLayer(int layer)
+CGameItem *CGameObject::FindLayer(int layer) const
 {
     QFOR(obj, m_Items, CGameItem *)
     {

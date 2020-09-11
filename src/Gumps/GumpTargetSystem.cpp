@@ -112,7 +112,7 @@ void CGumpTargetSystem::UpdateContent()
             if (per > 0)
             {
                 uint16_t gumpid = 0x0806; //Character status line (blue)
-                if (obj->Poisoned())
+                if (obj->IsPoisoned())
                 {
                     gumpid = 0x0808; //Character status line (green)
                 }

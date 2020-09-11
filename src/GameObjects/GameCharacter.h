@@ -5,6 +5,7 @@
 
 #include "GameObject.h"
 #include "Globals.h"
+#include "GameItem.h"
 #include "../Sprite.h"
 #include "../Walker/WalkData.h"
 #include "../TextEngine/TextContainer.h"
@@ -82,22 +83,29 @@ public:
 
     void UpdateAnimationInfo(uint8_t &dir, bool canChange = false);
 
-    bool IsHuman()
+    bool IsHuman() const
     {
         return (
-            /*h_male,h_female*/ IN_RANGE(Graphic, 0x0190, 0x0193) ||
-            /*Savage_Male,Savage_Female*/ IN_RANGE(Graphic, 0x00B7, 0x00BA) ||
-            /*Elf h_male1,Elf h_female1*/ IN_RANGE(Graphic, 0x025D, 0x0260) ||
-            /**/ IN_RANGE(Graphic, 0x029A, 0x029B) ||
-            /**/ IN_RANGE(Graphic, 0x02B6, 0x02B7) ||
-            /**/ (Graphic == 0x03DB) ||
-            /*character_blackthorn*/ (Graphic == 0x03DF) ||
-            /*character_dupre*/ (Graphic == 0x03E2) ||
-            /*h_male3*/ (Graphic == 0x02E8) ||
-            /*h_female3*/ (Graphic == 0x02E9));
+            IN_RANGE(Graphic, 0x0190, 0x0193) || /*h_male,h_female*/
+            IN_RANGE(Graphic, 0x00B7, 0x00BA) || /*Savage_Male,Savage_Female*/
+            IN_RANGE(Graphic, 0x025D, 0x0260) || /*Elf h_male1,Elf h_female1*/
+            IN_RANGE(Graphic, 0x029A, 0x029B) || /*gargoyle_male, gargoyle_female*/
+            IN_RANGE(Graphic, 0x02B6, 0x02B7) || /**/
+            (Graphic == 0x03DB) ||               /**/
+            (Graphic == 0x03DF) ||               /*character_blackthorn*/
+            (Graphic == 0x03E2) ||               /*character_dupre*/
+            (Graphic == 0x02E8) ||               /*h_male3*/
+            (Graphic == 0x02E9) ||               /*h_female3*/
+            (Graphic == 0x04E5) ||               /*blackthorn*/
+            0);
     }
 
-    bool Dead()
+    inline bool IsGargoyle() const
+    {
+        return g_Config.ClientVersion >= CV_7000 && IN_RANGE(Graphic, 0x029A, 0x029B);
+    }
+
+    inline bool IsDead() const
     {
         return (IN_RANGE(Graphic, 0x0192, 0x0193) || IN_RANGE(Graphic, 0x025F, 0x0260) ||
                 IN_RANGE(Graphic, 0x02B6, 0x02B7)) ||
@@ -107,5 +115,4 @@ public:
     virtual CGameCharacter *GameCharacterPtr() { return this; }
     virtual CGameItem *FindSecureTradeBox();
     void SetDead(bool &dead);
-    bool IsMouseControl();
 };

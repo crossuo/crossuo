@@ -47,7 +47,7 @@ public:
     uint16_t GetMountAnimation();
     virtual bool IsInternal() { return ((m_TiledataPtr->Flags & 0x00010000) && !IsCorpse()); }
 
-    bool IsHuman()
+    bool IsHuman() const
     {
         return (
             IsCorpse() && (IN_RANGE(Count, 0x0192, 0x0193) || IN_RANGE(Count, 0x025F, 0x0260) ||

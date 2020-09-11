@@ -350,7 +350,7 @@ void CGumpPaperdoll::PrepareContent()
         return;
     }
 
-    if (!g_Player->Dead() && (CanLift || Serial == g_PlayerSerial) &&
+    if (!g_Player->IsDead() && (CanLift || Serial == g_PlayerSerial) &&
         g_PressedObject.LeftGump == this && !g_ObjectInHand.Enabled &&
         g_PressedObject.LeftSerial != 0xFFFFFFFF &&
         g_MouseManager.LastLeftButtonClickTimer < g_Ticks)
@@ -450,17 +450,23 @@ void CGumpPaperdoll::UpdateContent()
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x029a)
+    else if (obj->Graphic == 0x029A || obj->Graphic == 0x02B6)
     {
         bodyGumppic =
-            (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x029a, 8, 19)); //Gargoly Male gump
+            (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x029A, 8, 19)); //Gargoly Male gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x029B)
+    else if (obj->Graphic == 0x029B || obj->Graphic == 0x02B7)
     {
         bodyGumppic =
             (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x0299, 8, 19)); //Gargoly Female gump
+        bodyGumppic->PartialHue = true;
+        bodyGumppic->Color = color;
+    }
+    else if (obj->Graphic == 0x04E5)
+    {
+        bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0xC835, 8, 19)); //Blackthorn
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }

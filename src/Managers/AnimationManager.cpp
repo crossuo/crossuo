@@ -24,6 +24,32 @@
 
 CAnimationManager g_AnimationManager;
 
+enum ANIMATION_FLAGS : uint
+{
+    AF_NONE = 0x00000,
+    AF_UNKNOWN_1 = 0x00001,
+    AF_USE_2_IF_HITTED_WHILE_RUNNING = 0x00002,
+    AF_IDLE_AT_8_FRAME = 0x00004,
+    AF_CAN_FLYING = 0x00008,
+    AF_UNKNOWN_10 = 0x00010,
+    AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED = 0x00020,
+    AF_CALCULATE_OFFSET_BY_LOW_GROUP = 0x00040,
+    AF_UNKNOWN_80 = 0x00080,
+    AF_UNKNOWN_100 = 0x00100,
+    AF_UNKNOWN_200 = 0x00200,
+    AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP = 0x00400,
+    AF_UNKNOWN_800 = 0x00800,
+    AF_UNKNOWN_1000 = 0x01000,
+    AF_UNKNOWN_2000 = 0x02000,
+    AF_UNKNOWN_4000 = 0x04000,
+    AF_UNKNOWN_8000 = 0x08000,
+    AF_USE_UOP_ANIMATION = 0x10000,
+    AF_UNKNOWN_20000 = 0x20000,
+    AF_UNKNOWN_40000 = 0x40000,
+    AF_UNKNOWN_80000 = 0x80000,
+    AF_FOUND = 0x80000000
+};
+
 void *LoadSpritePixels(int width, int height, uint16_t *pixels)
 {
     auto spr = new CSprite();
@@ -1649,7 +1675,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     uint16_t targetColor = 0;
     bool needHPLine = false;
     uint32_t serial = obj->Serial;
-    bool drawShadow = !obj->Dead();
+    bool drawShadow = !obj->IsDead();
     m_UseBlending = false;
 
     if (g_DrawAura)
@@ -1746,11 +1772,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         if (g_ConfigManager.GetApplyStateColorOnCharacters())
         {
-            if (obj->Poisoned() || obj->SA_Poisoned)
+            if (obj->IsPoisoned() || obj->SA_Poisoned)
             {
                 Color = 0x0044;
             }
-            else if (obj->Frozen())
+            else if (obj->IsParalyzed())
             {
                 Color = 0x014C;
             }
@@ -1764,7 +1790,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             }
         }
 
-        if (obj->Dead())
+        if (obj->IsDead())
         {
             Color = 0x0386;
         }
@@ -1828,7 +1854,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     int lightOffset = 20;
 
-    if (obj->IsHuman() && goi != nullptr && !obj->IsMouseControl()) //Draw mount
+    if (obj->IsHuman() && goi != nullptr && !obj->IsDrivingBoat()) //Draw mount
     {
         m_Sitting = 0;
         lightOffset += 20;
@@ -2042,7 +2068,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                 g_NewTargetSystem.TopY = drawY - frameHeight - 8;
                 g_NewTargetSystem.BottomY = drawY + 7;
                 g_NewTargetSystem.TargetedCharacter = obj;
-                if (obj->Poisoned() || obj->SA_Poisoned)
+                if (obj->IsPoisoned() || obj->SA_Poisoned)
                 {
                     g_NewTargetSystem.HealthColor = 63; //Character status line (green)
                 }
@@ -2100,7 +2126,7 @@ void CAnimationManager::PrepareTargetAttackGump(
     gump.Color = targetColor;
     gump.Hits = per;
     gump.TargetedCharacter = &obj;
-    if (obj.Poisoned() || obj.SA_Poisoned)
+    if (obj.IsPoisoned() || obj.SA_Poisoned)
     {
         gump.HealthColor = 63; //Character status line (green)
     }
@@ -2319,7 +2345,7 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     {
         dims.Width = 20;
 
-        if (obj->NPC && obj->FindLayer(OL_MOUNT) != nullptr)
+        if (obj->NPC && obj->IsMounted())
         {
             dims.Height = 100;
         }
@@ -2739,11 +2765,9 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
 {
     if (action <= 10)
     {
-        CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+        const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
         ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-        if ((ia.Flags & 0x80000000) != 0u)
+        if (ia.Flags & AF_FOUND)
         {
             type = ia.Type;
         }
@@ -2757,7 +2781,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 2:
                     return 6;
                 case 3:
-                    if ((ia.Flags & 1) != 0u)
+                    if (ia.Flags & AF_UNKNOWN_1)
                     {
                         return 12;
                     }
@@ -2773,14 +2797,13 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
             {
                 return 6;
             }
-
             return 5;
         }
         else if (type != AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                if (action != 0u)
+                if (action > 0)
                 {
                     if (action == 1)
                     {
@@ -2790,10 +2813,8 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                     {
                         return 28;
                     }
-
                     return 26;
                 }
-
                 return 29;
             }
 
@@ -2806,6 +2827,11 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 6:
                     return 12;
                 case 7:
+                    if (obj->IsGargoyle() && obj->IsFlying() &&
+                        g_AnimationManager.AnimationExists(obj->Graphic, 72))
+                    {
+                        return 72;
+                    }
                     return 13;
                 case 8:
                     return 14;
@@ -2816,58 +2842,63 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 5:
                     return 10;
                 default:
-                    return 31;
+                    if (obj->IsGargoyle() && obj->IsFlying() &&
+                        g_AnimationManager.AnimationExists(obj->Graphic, 71))
+                    {
+                        return 71;
+                    }
+                    else if (g_AnimationManager.AnimationExists(obj->Graphic, 31))
+                    {
+                        return 31;
+                    }
             }
+        }
+
+        if (ia.Flags & AF_USE_2_IF_HITTED_WHILE_RUNNING)
+        {
+            return 2;
         }
 
         if ((mode % 2) != 0)
         {
             return 6;
         }
-
         return 5;
     }
-
     return 0;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
 
     if (type != AGT_MONSTER)
     {
-        if (type <= AGT_ANIMAL || obj->FindLayer(OL_MOUNT) != nullptr)
+        if (type <= AGT_ANIMAL || obj->IsMounted())
         {
-            return 0xFF;
+            return 0xff;
         }
-
         return 30;
     }
     if ((mode % 2) != 0)
     {
         return 15;
     }
-
     return 16;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -2884,7 +2915,6 @@ CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t act
             {
                 return 21;
             }
-
             return 22;
         }
 
@@ -2892,25 +2922,21 @@ CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t act
         {
             return 8;
         }
-
         return 12;
     }
     if ((mode % 2) != 0)
     {
         return 2;
     }
-
     return 3;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -2919,28 +2945,28 @@ CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t act
     {
         if (type > AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsGargoyle() && obj->IsFlying() &&
+                g_AnimationManager.AnimationExists(obj->Graphic, 77))
             {
-                return 0xFF;
+                return 77;
             }
-
+            if (obj->IsMounted())
+            {
+                return 0xff;
+            }
             return 20;
         }
-
         return 7;
     }
-
     return 10;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -2951,21 +2977,20 @@ CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t act
         {
             return 18;
         }
-
         return 17;
     }
+
     if (type != AGT_ANIMAL)
     {
-        if (obj->FindLayer(OL_MOUNT) != nullptr)
+        if (obj->IsMounted())
         {
-            return 0xFF;
+            return 0xff;
         }
 
         if ((mode % 2) != 0)
         {
             return 6;
         }
-
         return 5;
     }
 
@@ -2978,18 +3003,15 @@ CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t act
         default:
             break;
     }
-
     return 9;
 }
 
 uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
-
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -3003,29 +3025,26 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
                 return 3;
             }
 
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                return 0xFF;
+                return 0xff;
             }
-
             return 34;
         }
-
         return 5;
     }
-
     return 11;
 }
 
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    if (obj->FindLayer(OL_MOUNT) != nullptr)
+    if (obj->IsMounted())
     {
-        return 0xFF;
+        return 0xff;
     }
 
-    if (action != 0u)
+    if (action > 0)
     {
         if (action == 1)
         {
@@ -3042,9 +3061,9 @@ CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t act
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -3058,9 +3077,9 @@ CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t act
                 return 9;
             }
 
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                return 0xFF;
+                return 0xff;
             }
             return 33;
         }
@@ -3072,16 +3091,33 @@ CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t act
 uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
 
     if (type != AGT_MONSTER)
     {
-        return 0xFF;
+        if (obj->IsGargoyle())
+        {
+            if (obj->IsFlying())
+            {
+                if (action == 0)
+                {
+                    return 60;
+                }
+            }
+            else
+            {
+                if (action == 0)
+                {
+                    return 61;
+                }
+            }
+        }
+        return 0xff;
     }
     return 20;
 }
@@ -3089,9 +3125,9 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
-    if ((ia.Flags & 0x80000000) != 0u)
+    if (ia.Flags & AF_FOUND)
     {
         type = ia.Type;
     }
@@ -3100,18 +3136,26 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
     {
         if (type >= AGT_ANIMAL)
         {
-            if (obj->FindLayer(OL_MOUNT) != nullptr)
+            if (obj->IsMounted())
             {
-                return 0xFF;
+                return 0xff;
             }
 
             switch (action)
             {
                 case 1:
                 case 2:
+                    if (obj->IsGargoyle() && obj->IsFlying())
+                    {
+                        return 76;
+                    }
                     return 17;
                 default:
                     break;
+            }
+            if (obj->IsGargoyle() && obj->IsFlying())
+            {
+                return 75;
             }
             return 16;
         }

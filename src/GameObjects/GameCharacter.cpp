@@ -20,6 +20,8 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Utility/PerfMarker.h"
 
+#define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
+
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)
     , Hits(0)
@@ -155,22 +157,20 @@ void CGameCharacter::UpdateHitsTexture(uint8_t hits)
 int CGameCharacter::IsSitting()
 {
     int result = 0;
-    if (IsHuman() && FindLayer(OL_MOUNT) == nullptr &&
-        !TestStepNoChangeDirection(GetAnimationGroup()))
+    if (IsHuman() && !IsMounted() && !IsFlying() && !TestStepNoChangeDirection(GetAnimationGroup()))
     {
         CRenderWorldObject *obj = this;
-
         while (obj != nullptr && obj->m_PrevXY != nullptr)
         {
             obj = obj->m_PrevXY;
         }
 
-        while (obj != nullptr && (result == 0))
+        while (obj != nullptr && result == 0)
         {
             if (obj->IsStaticGroupObject() && abs(m_Z - obj->GetZ()) <= 1) //m_Z == obj->GetZ()
             {
                 uint16_t graphic = obj->Graphic;
-
+                /*
                 if (obj->IsGameObject())
                 {
                     if (((CGameObject *)obj)->NPC || ((CGameItem *)obj)->MultiBody)
@@ -178,7 +178,7 @@ int CGameCharacter::IsSitting()
                         graphic = 0;
                     }
                 }
-
+                */
                 switch (graphic)
                 {
                     case 0x0459:
@@ -279,26 +279,62 @@ int CGameCharacter::IsSitting()
                     case 0x35EE:
                     case 0x3DFF:
                     case 0x3E00:
-                    {
-                        for (int i = 0; i < SITTING_ITEMS_COUNT; i++)
+                    case 0x4C8D:
+                    case 0x4C8E:
+                    case 0x4C8F:
+                    case 0x4C1E:
+                    case 0xA05F:
+                    case 0xA05E:
+                    case 0xA05D:
+                    case 0xA05C:
+                    case 0x9EA2:
+                    case 0x9EA1:
+                    case 0x9E9F:
+                    case 0x9EA0:
+                    case 0x9E91:
+                    case 0x9E90:
+                    case 0x9E8F:
+                    case 0x9E8E:
+                    case 0x9C62:
+                    case 0x9C61:
+                    case 0x9C60:
+                    case 0x9C5F:
+                    case 0x9C5E:
+                    case 0x9C5D:
+                    case 0x9C5A:
+                    case 0x9C59:
+                    case 0x9C58:
+                    case 0x9C57:
+                    case 0x402A:
+                    case 0x4029:
+                    case 0x4028:
+                    case 0x4027:
+                    case 0x4023:
+                    case 0x4024:
+                    case 0x4C1B:
+                    case 0x7132:
+                    case 0x71C2:
+                    case 0x9977:
+                    case 0x996C:
+                        //case 0x4C1F:
                         {
-                            if (SITTING_INFO[i].Graphic == graphic)
+                            for (int i = 0; i < countof(SITTING_INFO); i++)
                             {
-                                result = (int)i + 1;
-                                break;
+                                if (SITTING_INFO[i].Graphic == graphic)
+                                {
+                                    result = (int)i + 1;
+                                    break;
+                                }
                             }
+                            break;
                         }
-                        break;
-                    }
                     default:
                         break;
                 }
             }
-
             obj = obj->m_NextXY;
         }
     }
-
     return result;
 }
 
@@ -431,7 +467,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
 {
     TimeToRandomFidget = g_Ticks + RANDOM_FIDGET_ANIMATION_DELAY;
 
-    if (FindLayer(OL_MOUNT) == nullptr)
+    if (!IsMounted())
     {
         AnimIndex = 0;
         AnimationFrameCount = 0;
@@ -681,7 +717,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
         {
             if (isRun)
             {
-                if (FindLayer(OL_MOUNT) != nullptr)
+                if (IsMounted())
                 {
                     result = (uint8_t)PAG_ONMOUNT_RIDE_FAST;
                 }
@@ -702,12 +738,13 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
             else
             {
             test_walk:
-                if (FindLayer(OL_MOUNT) != nullptr)
+                if (IsMounted())
                 {
                     result = (uint8_t)PAG_ONMOUNT_RIDE_SLOW;
                 }
                 else if (
-                    (FindLayer(OL_1_HAND) != nullptr || FindLayer(OL_2_HAND) != nullptr) && !Dead())
+                    (FindLayer(OL_1_HAND) != nullptr || FindLayer(OL_2_HAND) != nullptr) &&
+                    !IsDead())
                 {
                     if (InWar)
                     {
@@ -718,7 +755,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
                         result = (uint8_t)PAG_WALK_ARMED;
                     }
                 }
-                else if (InWar && !Dead())
+                else if (InWar && !IsDead())
                 {
                     result = (uint8_t)PAG_WALK_WARMODE;
                 }
@@ -730,11 +767,11 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
         }
         else if (AnimationGroup == 0xFF)
         {
-            if (FindLayer(OL_MOUNT) != nullptr && !IsMouseControl())
+            if (IsMounted() && !IsDrivingBoat())
             {
                 result = (uint8_t)PAG_ONMOUNT_STAND;
             }
-            else if (InWar && !Dead())
+            else if (InWar && !IsDead())
             {
                 if (FindLayer(OL_1_HAND) != nullptr)
                 {
@@ -766,7 +803,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
 
         if (Race == RT_GARGOYLE)
         {
-            if (Flying())
+            if (IsFlying())
             {
                 if (result == 0 || result == 1)
                 {
@@ -882,7 +919,7 @@ void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
                 SetAnimation(0xFF);
             }
 
-            int maxDelay = g_PathFinder.GetWalkSpeed(run != 0, FindLayer(OL_MOUNT) != nullptr) - 15;
+            int maxDelay = g_PathFinder.GetWalkSpeed(run != 0, IsMounted()) - 15;
 
             int delay = (int)g_Ticks - (int)LastStepTime;
             bool removeStep = (delay >= maxDelay);
@@ -1039,14 +1076,4 @@ CGameItem *CGameCharacter::FindSecureTradeBox()
 void CGameCharacter::SetDead(bool &dead)
 {
     m_Dead = dead;
-}
-
-bool CGameCharacter::IsMouseControl()
-{
-    CGameItem *it = FindLayer(OL_MOUNT);
-    if (it != nullptr)
-    {
-        return (it->Graphic == 0x3e96) ? true : false;
-    }
-    return false;
 }

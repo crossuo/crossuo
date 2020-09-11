@@ -106,7 +106,7 @@ bool CPathFinder::CreateItemsList(std::vector<CPathObject> &list, int x, int y, 
                 {
                     CGameCharacter *gc = (CGameCharacter *)obj;
 
-                    if (!ignoreGameCharacters && !gc->Dead() && !gc->IgnoreCharacters())
+                    if (!ignoreGameCharacters && !gc->IsDead() && !gc->IgnoreCharacters())
                     {
                         list.push_back(CPathObject(
                             POF_IMPASSABLE_OR_SURFACE,
@@ -292,13 +292,13 @@ bool CPathFinder::CalculateNewZ(int x, int y, char &z, int direction)
 {
     int stepState = PSS_NORMAL;
 
-    if (g_Player->Dead() || g_Player->Graphic == 0x03DB)
+    if (g_Player->IsDead() || g_Player->Graphic == 0x03DB)
     {
         stepState = PSS_DEAD_OR_GM;
     }
     else
     {
-        if (g_Player->Flying())
+        if (g_Player->IsFlying())
         { // && no mount?
             stepState = PSS_FLYING;
         }
@@ -561,7 +561,7 @@ int CPathFinder::GetWalkSpeed(bool run, bool onMount)
     bool mounted =
         (onMount ||
          (g_SpeedMode == CST_FAST_UNMOUNT || g_SpeedMode == CST_FAST_UNMOUNT_AND_CANT_RUN) ||
-         g_Player->Flying());
+         g_Player->IsFlying());
 
     return CHARACTER_ANIMATION_DELAY_TABLE[mounted][run];
 }
@@ -570,7 +570,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
 {
     if (BlockMoving || g_Walker.WalkingFailed || g_Walker.LastStepRequestTime > g_Ticks ||
         g_Walker.StepsCount >= MAX_STEPS_COUNT || g_Player == nullptr ||
-        /*!g_Player->Frozen() ||*/ (g_DeathScreenTimer != 0u) || g_GameState != GS_GAME)
+        /*!g_Player->IsParalyzed() ||*/ (g_DeathScreenTimer != 0u) || g_GameState != GS_GAME)
     {
         return false;
     }
@@ -589,7 +589,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     char z = g_Player->GetZ();
     uint8_t oldDirection = g_Player->Direction;
 
-    bool onMount = (g_Player->FindLayer(OL_MOUNT) != nullptr);
+    bool onMount = (g_Player->IsMounted());
 
     bool emptyStack = g_Player->m_Steps.empty();
 

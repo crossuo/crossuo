@@ -60,7 +60,7 @@ void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
             int soundID = 0x012B;
             int delaySound = 400;
 
-            if (gc->FindLayer(OL_MOUNT) != nullptr)
+            if (gc->IsMounted())
             {
                 if ((gc->m_Steps.back().Direction & 0x80) != 0)
                 {
@@ -1056,7 +1056,7 @@ void CGameWorld::UpdatePlayer(
 
         g_GameScreen.UpdateDrawPos = true;
 
-        bool oldDead = g_Player->Dead();
+        const bool oldDead = g_Player->IsDead();
         uint16_t oldGraphic = g_Player->Graphic;
 
         g_Player->Graphic = graphic;
@@ -1074,15 +1074,15 @@ void CGameWorld::UpdatePlayer(
 
         if ((oldGraphic != 0u) && oldGraphic != g_Player->Graphic)
         {
-            if (g_Player->Dead())
+            if (g_Player->IsDead())
             {
                 g_Target.Reset();
             }
         }
 
-        if (oldDead != g_Player->Dead())
+        if (oldDead != g_Player->IsDead())
         {
-            if (g_Player->Dead())
+            if (g_Player->IsDead())
             {
                 g_Game.ChangeSeason(ST_DESOLATION, DEATH_MUSIC_INDEX);
             }

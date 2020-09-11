@@ -201,7 +201,7 @@ void CMouseManager::ProcessWalking()
 
         if (!g_PathFinder.AutoWalking)
         {
-            if (g_Player->IsMouseControl())
+            if (g_Player->IsDrivingBoat())
             {
                 CPacketMouseMovementRequest(run, dir - 1).Send();
             }

@@ -40,7 +40,7 @@ public:
     virtual bool IsGUI() { return false; }
     virtual bool IsText() { return false; }
     virtual bool IsWorldObject() { return false; }
-    virtual bool IsGameObject() { return false; }
+    virtual bool IsGameObject() const { return false; }
     virtual void UpdateRealDrawCoordinates() {}
     virtual void UpdateDrawCoordinates() {}
     virtual void UpdateTextCoordinates() {}
