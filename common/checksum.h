@@ -135,6 +135,8 @@ CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s)
     return (static_cast<uint64_t>(esi) << 32) | eax;
 }
 
+#if 1 // USE_CLIENT_CRC32
+
 static uint32_t crc32_table[256];
 static uint32_t crc32_reflect(uint32_t source, int c)
 {
@@ -167,12 +169,12 @@ CHECKSUM_PRIVATE void crc32_init()
     printf ("static const unsigned int crc32_table[] =\n{\n");
     for (int i = 0; i < 256; i += 4)
     {
-        printf("  0x%08x, 0x%08x, 0x%08x, 0x%08x", 
-            crc32_table[i + 0], 
-            crc32_table[i + 1], 
+        printf("  0x%08x, 0x%08x, 0x%08x, 0x%08x",
+            crc32_table[i + 0],
+            crc32_table[i + 1],
             crc32_table[i + 2],
             crc32_table[i + 3]);
-            
+
         if (i + 4 < 256)
             putchar(',');
         putchar('\n');
@@ -193,20 +195,7 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
     return (crc & 0xFFFFFFFF);
 }
 
-// TODO: check why I added this
-CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
-{
-    uint32_t a = 1;
-    uint32_t b = 0;
-    for (int i = 0; i < size; i++)
-    {
-        a = (a + ptr[i]) % 65521;
-        b = (b + a) % 65521;
-    }
-    return (b << 16) | a;
-}
-
-#else
+#else // #if USE_CLIENT_CRC32
 
 // clang-format off
 static const unsigned int crc32_table[] =
@@ -288,7 +277,19 @@ CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size)
     return crc;
 }
 
-#endif
+#endif // #else // #if USE_CLIENT_CRC32
+
+CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size)
+{
+    uint32_t a = 1;
+    uint32_t b = 0;
+    for (int i = 0; i < size; i++)
+    {
+        a = (a + ptr[i]) % 65521;
+        b = (b + a) % 65521;
+    }
+    return (b << 16) | a;
+}
 
 #endif // CHECKSUM_IMPLEMENTATION
 
