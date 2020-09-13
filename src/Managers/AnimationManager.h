@@ -39,7 +39,7 @@ public:
     size_t m_AddressIdx[6];
     size_t m_SizeIdx[6];
     EQUIP_CONV_BODY_MAP m_EquipConv;
-    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
+    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
 
 private:
     int m_CharacterFrameHeight = 0;
@@ -122,7 +122,7 @@ public:
     bool CharacterPixelsInXY(class CGameCharacter *obj, int x, int y);
     void DrawCorpse(class CGameItem *obj, int x, int y);
     bool CorpsePixelsInXY(class CGameItem *obj, int x, int y);
-    uint8_t GetDieGroupIndex(uint16_t id, bool second);
+    uint8_t GetDieGroupIndex(uint16_t id, bool running);
     ANIMATION_GROUPS GetGroupIndex(uint16_t id) const;
     bool AnimationExists(uint16_t graphic, uint8_t group);
     uint8_t CorrectAnimationGroupServer(

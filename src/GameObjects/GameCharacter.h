@@ -88,9 +88,9 @@ public:
         return (
             IN_RANGE(Graphic, 0x0190, 0x0193) || /*h_male,h_female*/
             IN_RANGE(Graphic, 0x00B7, 0x00BA) || /*Savage_Male,Savage_Female*/
-            IN_RANGE(Graphic, 0x025D, 0x0260) || /*Elf h_male1,Elf h_female1*/
+            IN_RANGE(Graphic, 0x025D, 0x0260) || /*Elf h_male1,Elf h_female1, dead..*/
             IN_RANGE(Graphic, 0x029A, 0x029B) || /*gargoyle_male, gargoyle_female*/
-            IN_RANGE(Graphic, 0x02B6, 0x02B7) || /**/
+            IN_RANGE(Graphic, 0x02B6, 0x02B7) || /*dead gargoyle_male, gargoyle_female*/
             (Graphic == 0x03DB) ||               /**/
             (Graphic == 0x03DF) ||               /*character_blackthorn*/
             (Graphic == 0x03E2) ||               /*character_dupre*/
@@ -107,8 +107,10 @@ public:
 
     inline bool IsDead() const
     {
-        return (IN_RANGE(Graphic, 0x0192, 0x0193) || IN_RANGE(Graphic, 0x025F, 0x0260) ||
-                IN_RANGE(Graphic, 0x02B6, 0x02B7)) ||
+        return (IN_RANGE(Graphic, 0x0192, 0x0193) || /*dead h_male, h_female*/
+                IN_RANGE(Graphic, 0x025F, 0x0260) || /*dead elf h_male1, h_female1*/
+                IN_RANGE(Graphic, 0x02B6, 0x02B7) || /*dead gargoyle_male, gargoyle_female*/
+                0) ||
                m_Dead;
     }
 

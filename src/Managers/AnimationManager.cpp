@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
 
+#include <unordered_set>
 #include <common/utils.h>
 #include <common/str.h>
 #include "AnimationManager.h"
@@ -184,79 +185,37 @@ void CAnimationManager::UpdateAnimationAddressTable()
 static void load_animations(CAnimationManager *mgr)
 {
     size_t maxAddress = mgr->m_AddressIdx[0] + mgr->m_SizeIdx[0];
-    bool isValid = false; // CHECK
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
         CIndexAnimation &index = g_Index.m_Anim[i];
-        ANIMATION_GROUPS_TYPE groupType = AGT_UNKNOWN;
-        size_t findID = 0;
-        if (i >= 200)
+        if (index.Type == AGT_UNKNOWN)
         {
-            if (i >= 400) //People
-            {
-                groupType = AGT_HUMAN;
-                findID = (((i - 400) * 175) + 35000) * sizeof(AnimIdxBlock);
-            }
-            else //Low
-            {
-                groupType = AGT_ANIMAL;
-                findID = (((i - 200) * 65) + 22000) * sizeof(AnimIdxBlock);
-            }
+            index.Type = uo_type_by_graphic(i);
         }
-        else //Hight
-        {
-            groupType = AGT_MONSTER;
-            findID = (i * 110) * sizeof(AnimIdxBlock);
-        }
-
-        if (findID >= mgr->m_SizeIdx[0])
-        {
-            break;
-        }
-
         index.Graphic = (int)i;
-        //if (index.Type != AGT_UNKNOWN)
-        //	groupType = index.Type;
+        index.CorpseGraphic = i;
         int count = 0;
-        switch (groupType)
-        {
-            case AGT_MONSTER:
-            case AGT_SEA_MONSTER:
-            {
-                count = HAG_ANIMATION_COUNT;
-                break;
-            }
-            case AGT_HUMAN:
-            case AGT_EQUIPMENT:
-            {
-                count = PAG_ANIMATION_COUNT;
-                break;
-            }
-            case AGT_ANIMAL:
-            default:
-            {
-                count = LAG_ANIMATION_COUNT;
-                break;
-            }
-        }
+        const auto dataOffset = uo_get_anim_offset(i, index.Flags, index.Type, count);
+        if (dataOffset >= mgr->m_SizeIdx[0])
+            continue;
 
-        index.Type = groupType;
-        size_t address = mgr->m_AddressIdx[0] + findID;
+        bool isValid = false;
+        size_t address = mgr->m_AddressIdx[0] + dataOffset;
+        int block = 0;
         for (int j = 0; j < count; j++)
         {
             CTextureAnimationGroup &group = index.m_Groups[j];
-            const int offset = (int)j * MAX_MOBILE_DIRECTIONS;
             for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
             {
-                CTextureAnimationDirection &direction = group.m_Direction[d];
-                const auto *aidx =
-                    (AnimIdxBlock *)(address + ((offset + d) * sizeof(AnimIdxBlock)));
+                auto &direction = group.m_Direction[d];
+                const auto *aidx = (AnimIdxBlock *)(address + block * sizeof(AnimIdxBlock));
+                block++;
                 if ((size_t)aidx >= maxAddress)
                 {
                     break;
                 }
 
-                if ((aidx->Size != 0u) && aidx->Position != 0xFFFFFFFF && aidx->Size != 0xFFFFFFFF)
+                if (aidx->Size != 0 && aidx->Position != -1 && aidx->Size != -1)
                 {
                     direction.BaseAddress = aidx->Position;
                     direction.BaseSize = aidx->Size;
@@ -352,7 +311,8 @@ static void load_verdata(CAnimationManager *mgr)
 
 static void load_mobtype()
 {
-    static const astr_t typeNames[5] = { "monster", "sea_monster", "animal", "human", "equipment" };
+    static const astr_t typeNames[] = { "monster", "sea_monster", "animal", "human", "equipment" };
+    static_assert(countof(typeNames) == AGT_UNKNOWN, "update group types");
 
     Wisp::CTextFileParser mobtypesParser(g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
     while (!mobtypesParser.IsEOF())
@@ -366,12 +326,12 @@ static void load_mobtype()
                 continue;
             }
 
-            const auto testType = str_lower(strings[1]);
+            const auto entryType = str_lower(strings[1]);
             char *endP = nullptr;
             const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < countof(typeNames); i++)
             {
-                if (testType == typeNames[i])
+                if (entryType == typeNames[i])
                 {
                     g_Index.m_Anim[index].Type = ANIMATION_GROUPS_TYPE(i);
                     g_Index.m_Anim[index].Flags = ANIMATION_FLAGS(AF_FOUND | number);
@@ -431,16 +391,16 @@ static void load_equipconv(CAnimationManager *mgr)
             auto newGraphic = (uint16_t)str_to_int(strings[2]);
             if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
-                newGraphic = graphic;
+                continue;
             }
 
-            const auto gump_field = (uint32_t)str_to_int(strings[3]);
-            if (gump_field >= MAX_GUMP_DATA_INDEX_COUNT)
+            const auto gumpId = (uint32_t)str_to_int(strings[3]);
+            if (gumpId >= MAX_GUMP_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            auto gump = checked_cast<uint16_t>(gump_field);
+            auto gump = checked_cast<uint16_t>(gumpId);
             if (gump == 0)
             {
                 gump = graphic; // +50000;
@@ -456,10 +416,7 @@ static void load_equipconv(CAnimationManager *mgr)
             {
                 mgr->m_EquipConv.insert({ body, {} });
                 bodyMapIter = mgr->m_EquipConv.find(body);
-                if (bodyMapIter == mgr->m_EquipConv.end())
-                {
-                    continue; //?!?!??
-                }
+                assert(bodyMapIter != mgr->m_EquipConv.end());
             }
             bodyMapIter->second.insert({ graphic, { newGraphic, gump, color } });
         }
@@ -471,7 +428,7 @@ static void load_bodyconv(CAnimationManager *mgr)
     Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
     while (!bodyconvParser.IsEOF())
     {
-        auto strings = bodyconvParser.ReadTokens();
+        const auto strings = bodyconvParser.ReadTokens();
         if (strings.size() >= 2)
         {
             const uint16_t index = str_to_int(strings[0]);
@@ -495,9 +452,8 @@ static void load_bodyconv(CAnimationManager *mgr)
             }
 
             int animFile = 1;
-            uint16_t realAnimID = 0xffff;
+            uint16_t realAnimID = -1;
             char mountedHeightOffset = 0;
-
             if (anim[0] != -1 && mgr->m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
             {
                 animFile = 2;
@@ -540,16 +496,15 @@ static void load_bodyconv(CAnimationManager *mgr)
                 }
             }
 
-            if (animFile > 1 && realAnimID != 0xffff)
+            if (animFile > 1 && realAnimID != 0xFFFF)
             {
-                CIndexAnimation &dataIndex = g_Index.m_Anim[index];
+                auto &dataIndex = g_Index.m_Anim[index];
                 auto realType = (g_Config.ClientVersion < CV_500A) ?
                                     uo_type_by_graphic(realAnimID) :
                                     dataIndex.Type;
                 int count = 0;
-                auto addressOffset =
-                    uo_get_anim_offset(realAnimID, dataIndex.Flags, realType, count);
-                if (addressOffset < mgr->m_SizeIdx[animFile])
+                auto dataOffset = uo_get_anim_offset(realAnimID, dataIndex.Flags, realType, count);
+                if (dataOffset < mgr->m_SizeIdx[animFile])
                 {
                     dataIndex.Type = realType;
                     dataIndex.GraphicConversion = realAnimID | 0x8000;
@@ -559,17 +514,17 @@ static void load_bodyconv(CAnimationManager *mgr)
                         dataIndex.MountedHeightOffset = mountedHeightOffset;
                     }
 
-                    addressOffset += mgr->m_AddressIdx[animFile];
+                    dataOffset += mgr->m_AddressIdx[animFile];
                     size_t maxAddress = mgr->m_AddressIdx[animFile] + mgr->m_SizeIdx[animFile];
-                    int offset = 0;
+                    int block = 0;
                     for (int j = 0; j < count; j++)
                     {
                         auto &group = dataIndex.m_Groups[j];
-                        //int offset = (int)j * MAX_MOBILE_DIRECTIONS;
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
                             const auto *aidx =
-                                (AnimIdxBlock *)(addressOffset + offset * sizeof(AnimIdxBlock));
+                                (AnimIdxBlock *)(dataOffset + block * sizeof(AnimIdxBlock));
+                            block++;
                             if ((size_t)aidx >= maxAddress)
                             {
                                 continue;
@@ -594,30 +549,43 @@ static void load_bodydef()
 {
     Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
     Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
+    std::unordered_set<uint16_t> used = {};
     while (!bodyParser.IsEOF())
     {
         const auto strings = bodyParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            const uint16_t index = str_to_int(strings[0]);
-            const auto newBody = newBodyParser.GetTokens(strings[1]);
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
+            const auto graphic = checked_cast<uint16_t>(str_to_int(strings[0]));
+            const auto replaces = newBodyParser.GetTokens(strings[1]);
+            if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT || replaces.empty())
             {
                 continue;
             }
 
-            const uint16_t checkIndex = str_to_int(newBody[0]);
-            if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            if (used.find(graphic) != used.end())
             {
                 continue;
             }
 
-            CIndexAnimation &dataIndex = g_Index.m_Anim[index];
-            CIndexAnimation &checkDataIndex = g_Index.m_Anim[checkIndex];
+            // FIXME: there is something missing here, probably: { anim1, anim2, anim3, anim4 }
+            auto newGraphic = checked_cast<uint16_t>(str_to_int(replaces[0]));
+            if (replaces.size() >= 3)
+            {
+                newGraphic = checked_cast<uint16_t>(str_to_int(replaces[2]));
+            }
+
+            if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
+                continue;
+            }
+
+            auto &dataIndex = g_Index.m_Anim[graphic];
+            /*
+            auto &newDataIndex = g_Index.m_Anim[newGraphic];
             int count = 0;
             int ignoreGroups[2] = { -1, -1 };
 
-            switch (checkDataIndex.Type)
+            switch (newDataIndex.Type)
             {
                 case AGT_MONSTER:
                 case AGT_SEA_MONSTER:
@@ -654,11 +622,11 @@ static void load_bodydef()
                 }
 
                 CTextureAnimationGroup &group = dataIndex.m_Groups[j];
-                CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[j];
+                CTextureAnimationGroup &newGroup = newDataIndex.m_Groups[j];
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
-                    CTextureAnimationDirection &direction = group.m_Direction[d];
-                    CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
+                    auto &direction = group.m_Direction[d];
+                    auto &newDirection = newGroup.m_Direction[d];
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
@@ -679,12 +647,13 @@ static void load_bodydef()
                     }
                 }
             }
-
-            dataIndex.Type = checkDataIndex.Type;
-            dataIndex.Flags = checkDataIndex.Flags;
-            dataIndex.Graphic = checkIndex;
+            dataIndex.Type = newDataIndex.Type;
+            dataIndex.Flags = newDataIndex.Flags;
+            */
+            dataIndex.Graphic = newGraphic;
+            dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
             dataIndex.IsValidMUL = true;
-            dataIndex.Color = str_to_int(strings[2]);
+            used.insert(graphic);
         }
     }
 }
@@ -693,28 +662,36 @@ static void load_corpsedef()
 {
     Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
     Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
+    std::unordered_set<uint16_t> used = {};
     while (!corpseParser.IsEOF())
     {
         const auto strings = corpseParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            const uint16_t index = str_to_int(strings[0]);
-            const auto newBody = newBodyParser.GetTokens(strings[1]);
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
+            const auto graphic = checked_cast<uint16_t>(str_to_int(strings[0]));
+            const auto replaces = newBodyParser.GetTokens(strings[1]);
+            if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT || replaces.empty())
             {
                 continue;
             }
 
-            const uint16_t checkIndex = str_to_int(newBody[0]);
-            if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            if (used.find(graphic) != used.end())
             {
                 continue;
             }
 
-            CIndexAnimation &dataIndex = g_Index.m_Anim[index];
-            CIndexAnimation &checkDataIndex = g_Index.m_Anim[checkIndex];
+            // FIXME: there is something missing here, probably: { anim1, anim2, anim3, anim4 }
+            auto newGraphic = checked_cast<uint16_t>(str_to_int(replaces[0]));
+            if (replaces.size() >= 3)
+            {
+                newGraphic = checked_cast<uint16_t>(str_to_int(replaces[2]));
+            }
+
+            CIndexAnimation &dataIndex = g_Index.m_Anim[graphic];
+            /*
+            CIndexAnimation &newDataIndex = g_Index.m_Anim[newGraphic];
             int ignoreGroups[2] = { -1, -1 };
-            switch (checkDataIndex.Type)
+            switch (newDataIndex.Type)
             {
                 case AGT_MONSTER:
                 case AGT_SEA_MONSTER:
@@ -774,11 +751,13 @@ static void load_corpsedef()
                 }
             }
 
-            dataIndex.Type = checkDataIndex.Type;
-            dataIndex.Flags = checkDataIndex.Flags;
-            dataIndex.Graphic = checkIndex;
+            dataIndex.Type = newDataIndex.Type;
+            dataIndex.Flags = newDataIndex.Flags;
+            */
+            dataIndex.Graphic = newGraphic;
+            dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
             dataIndex.IsValidMUL = true;
-            dataIndex.Color = str_to_int(strings[2]);
+            used.insert(graphic);
         }
     }
 }
@@ -790,7 +769,7 @@ void static load_data_patches(CAnimationManager *mgr)
         load_mobtype();
     }
     load_animations(mgr);
-    load_verdata(mgr);
+    load_verdata(mgr); // <-- REFACTOR
     load_animdef(mgr);
     if (g_Config.ClientVersion < CV_305D)
     {
@@ -837,20 +816,46 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
     return AG_HIGHT;
 }
 
-uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool second)
+uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool running)
 {
     DEBUG(Data, "gr: 0x%04X, %i", id, g_Index.m_Anim[id].Type);
+    const auto flags = g_Index.m_Anim[id].Flags;
     switch (g_Index.m_Anim[id].Type)
     {
         case AGT_ANIMAL:
-            return (uint8_t)(second ? LAG_DIE_2 : LAG_DIE_1);
-        case AGT_MONSTER:
+        {
+            if (flags & AF_USE_2_IF_HITTED_WHILE_RUNNING || flags & AF_CAN_FLYING)
+            {
+                return 2;
+            }
+            if (flags & AF_USE_UOP_ANIMATION)
+            {
+                return running ? 3 : 2;
+            }
+            return running ? LAG_DIE_2 : LAG_DIE_1;
+        }
         case AGT_SEA_MONSTER:
-            return (uint8_t)(second ? HAG_DIE_2 : HAG_DIE_1);
+        {
+            if (!running)
+                return 8;
+
+            // [[fallthrough]]
+        }
+        case AGT_MONSTER:
+        {
+            if (flags & AF_USE_UOP_ANIMATION)
+            {
+                return running ? 3 : 2;
+            }
+            return running ? HAG_DIE_2 : HAG_DIE_1;
+        }
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
-            return (uint8_t)(second ? PAG_DIE_2 : PAG_DIE_1);
+        {
+            return running ? PAG_DIE_2 : PAG_DIE_1;
+        }
         case AGT_UNKNOWN:
+        default:
             break;
     }
 
@@ -866,7 +871,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
         {
             mirror = (dir == 2);
             dir = 1;
-
             break;
         }
         case 1:
@@ -874,7 +878,6 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
         {
             mirror = (dir == 1);
             dir = 2;
-
             break;
         }
         case 0:
@@ -882,19 +885,16 @@ void CAnimationManager::GetAnimDirection(uint8_t &dir, bool &mirror)
         {
             mirror = (dir == 0);
             dir = 3;
-
             break;
         }
         case 3:
         {
             dir = 0;
-
             break;
         }
         case 7:
         {
             dir = 4;
-
             break;
         }
         default:
@@ -910,28 +910,24 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
         {
             mirror = true;
             dir = 3;
-
             break;
         }
         case 2:
         {
             mirror = true;
             dir = 1;
-
             break;
         }
         case 4:
         {
             mirror = false;
             dir = 1;
-
             break;
         }
         case 6:
         {
             mirror = false;
             dir = 3;
-
             break;
         }
         default:
@@ -1384,7 +1380,6 @@ void CAnimationManager::Draw(
 void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y)
 {
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
-
     auto dir = SelectAnim.Direction;
     switch (dir)
     {
@@ -1406,7 +1401,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction1;
             }
-
             break;
         }
         case 1:
@@ -1427,7 +1421,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction2;
             }
-
             break;
         }
         case 3:
@@ -1448,7 +1441,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction3;
             }
-
             break;
         }
         case 5:
@@ -1469,7 +1461,6 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
             {
                 dir = data.Direction4;
             }
-
             break;
         }
         default:
@@ -2047,7 +2038,6 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     m_Sitting = 0;
     SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
     bool mirror = false;
-
     GetAnimDirection(SelectAnim.Direction, mirror);
 
     if (obj->Hidden())
@@ -2081,7 +2071,7 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     GetAnimDirection(SelectAnim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+    SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0);
 
     return TestPixels(obj, x, y, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
@@ -2089,61 +2079,59 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
-    bool result = false;
-    if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT)
-    {
-        auto groupDir = g_Index.m_Anim[graphic].m_Groups[group].m_Direction[0];
-        result = groupDir.Address != 0 || groupDir.IsUOP;
-    }
-    return result;
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT && group >= MAX_ANIMATION_GROUPS_COUNT)
+        return false;
+
+    const auto dir = g_Index.m_Anim[graphic].m_Groups[group].m_Direction[0];
+    return dir.Address != 0 && dir.Size != 0 || dir.IsUOP;
 }
 
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
 {
     AnimationFrameInfo result = {};
-    if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        CTextureAnimationGroup &group = g_Index.m_Anim[id].m_Groups[animGroup];
-        if (dir < MAX_MOBILE_DIRECTIONS)
-        {
-            auto &direction = group.m_Direction[dir];
-            int fc = direction.FrameCount;
-            if (fc > 0)
-            {
-                if (frameIndex >= fc)
-                {
-                    if (isCorpse)
-                    {
-                        frameIndex = fc - 1;
-                    }
-                    else
-                    {
-                        frameIndex = 0;
-                    }
-                }
+    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        return result;
 
-                if (direction.m_Frames != nullptr)
+    CTextureAnimationGroup &group = g_Index.m_Anim[id].m_Groups[animGroup];
+    if (dir < MAX_MOBILE_DIRECTIONS)
+    {
+        auto &direction = group.m_Direction[dir];
+        int fc = direction.FrameCount;
+        if (fc > 0)
+        {
+            if (frameIndex >= fc)
+            {
+                if (isCorpse)
                 {
-                    CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-                    auto spr = (CSprite *)frame.UserData;
-                    //assert(spr);
-                    if (!spr)
-                    {
-                        // FIXME: before we had CSprite in the struct, we need cleanup how to construct these objects
-                        spr = new CSprite();
-                    }
-                    result.Width = spr->Width;
-                    result.Height = spr->Height;
-                    result.CenterX = frame.CenterX;
-                    result.CenterY = frame.CenterY;
-                    return result;
+                    frameIndex = fc - 1;
+                }
+                else
+                {
+                    frameIndex = 0;
                 }
             }
+
+            if (direction.m_Frames != nullptr)
+            {
+                CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
+                auto spr = (CSprite *)frame.UserData;
+                //assert(spr);
+                if (!spr)
+                {
+                    // FIXME: before we had CSprite in the struct, we need cleanup how to construct these objects
+                    spr = new CSprite();
+                }
+                result.Width = spr->Width;
+                result.Height = spr->Height;
+                result.CenterX = frame.CenterX;
+                result.CenterY = frame.CenterY;
+                return result;
+            }
         }
-        CTextureAnimationDirection &direction = group.m_Direction[0];
-        g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
     }
+    CTextureAnimationDirection &direction = group.m_Direction[0];
+    g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
     return result;
 }
 
@@ -2184,7 +2172,6 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     if ((dims.Width == 0) && (dims.Height == 0) && (dims.CenterX == 0) && (dims.CenterY == 0))
     {
         dims.Width = 20;
-
         if (obj->NPC && obj->IsMounted())
         {
             dims.Height = 100;

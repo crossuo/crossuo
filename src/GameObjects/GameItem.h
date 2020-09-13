@@ -50,8 +50,10 @@ public:
     bool IsHuman() const
     {
         return (
-            IsCorpse() && (IN_RANGE(Count, 0x0192, 0x0193) || IN_RANGE(Count, 0x025F, 0x0260) ||
-                           IN_RANGE(Count, 0x02B6, 0x02B7)));
+            IsCorpse() && (IN_RANGE(Count, 0x0192, 0x0193) || /*dead h_male, h_female*/
+                           IN_RANGE(Count, 0x025F, 0x0260) || /*dead elf h_male1, h_female1*/
+                           IN_RANGE(Count, 0x02B6, 0x02B7) || /*dead garg_male, gargoyle_female*/
+                           0));
     }
 
     void LoadMulti(bool dropAlpha);

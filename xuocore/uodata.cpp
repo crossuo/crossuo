@@ -240,6 +240,7 @@ bool CFileManager::Load()
         {
             char uopMapName[64];
             snprintf(uopMapName, sizeof(uopMapName) - 1, "map%dLegacyMUL.uop", i);
+            // pattern: "build/map%dlegacymul/%08d.dat"
             if (!UopLoadFile(m_MapUOP[i], uopMapName))
             {
                 m_MapMul[i].Load(UOFilePath("map%d.mul", i));
@@ -398,6 +399,7 @@ bool CFileManager::LoadWithUop()
     }
 
     //Try to use map uop files first, if we can, we will use them.
+    // pattern: "build/artlegacymul/%08d.tga"
     if (!UopLoadFile(m_ArtLegacyMUL, "artLegacyMUL.uop"))
     {
         if (!m_ArtIdx.Load(UOFilePath("artidx.mul")))
@@ -410,7 +412,8 @@ bool CFileManager::LoadWithUop()
         }
     }
 
-    if (!UopLoadFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop"))
+    // pattern: "build/gumpartlegacymul/%08d.tga"
+    if (!UopLoadFile(m_GumpartLegacyMUL, "gumpartLegacyMUL.uop")) // extra width,height
     {
         if (!m_GumpIdx.Load(UOFilePath("gumpidx.mul")))
         {
@@ -428,6 +431,7 @@ bool CFileManager::LoadWithUop()
         UseUOPGumps = true;
     }
 
+    // pattern: "build/soundlegacymul/%08d.dat"
     if (!UopLoadFile(m_SoundLegacyMUL, "soundLegacyMUL.uop"))
     {
         if (!m_SoundIdx.Load(UOFilePath("soundidx.mul")))
@@ -440,6 +444,7 @@ bool CFileManager::LoadWithUop()
         }
     }
 
+    // pattern: "build/multicollection/%06d.bin"
     if (!UopLoadFile(m_MultiCollection, "MultiCollection.uop"))
     {
         if (!m_MultiIdx.Load(UOFilePath("multi.idx")))
@@ -532,6 +537,8 @@ void CFileManager::Unload()
 void CFileManager::UopReadAnimations()
 {
     TRACE(Data, "start uop read jobs");
+    // pattern: "build/animationsequence/%08d.bin"
+    UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
     std::thread readThread(&CFileManager::ReadTask, this);
     readThread.detach();
 }
@@ -549,6 +556,8 @@ static int UopSetAnimationGroups(int start, int end)
     };
 
     TRACE(Data, "running job %d:%d", start, end);
+    char filename[200];
+    const char *pattern = "build/animationlegacyframe/%06d/%02d.bin";
     int lastGroup = 0;
     for (int animId = start; animId < end; ++animId)
     {
@@ -556,13 +565,7 @@ static int UopSetAnimationGroups(int start, int end)
         for (int grpId = 0; grpId < MAX_ANIMATION_GROUPS_COUNT; ++grpId)
         {
             auto &group = idx.m_Groups[grpId];
-            char filename[200];
-            snprintf(
-                filename,
-                sizeof(filename),
-                "build/animationlegacyframe/%06d/%02d.bin",
-                animId,
-                grpId);
+            snprintf(filename, sizeof(filename), pattern, animId, grpId);
             const auto asset = uo_jenkins_hash(filename);
             const auto fileIndex = getAssetOwner(asset);
             if (fileIndex != -1)
@@ -572,7 +575,7 @@ static int UopSetAnimationGroups(int start, int end)
                     lastGroup = grpId;
                 }
                 idx.IsUOP = true;
-                group.m_UOPAnimData = g_FileManager.m_AnimationFrame[fileIndex].GetAsset(filename);
+                group.m_UOPAnimData = g_FileManager.m_AnimationFrame[fileIndex].GetAsset(asset);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
                     auto &dir = group.m_Direction[dirId];
@@ -599,12 +602,12 @@ void CFileManager::ReadTask()
     for (int i = 0; i < count; i++)
     {
         char name[64];
+        // pattern: "build/animationlegacyframe/%06d/%02d.bin"
         snprintf(name, sizeof(name), "AnimationFrame%d.uop", i + 1);
 
         auto &file = m_AnimationFrame[i];
         UopLoadFile(file, name);
     }
-    UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
 
     int range = MAX_ANIMATIONS_DATA_INDEX_COUNT / count;
     static int lastGroup[count];
@@ -632,7 +635,9 @@ void CFileManager::ReadTask()
     SetEvent();
 }
 
-void CFileManager::ProcessAnimSequeceData()
+// TODO: use map structure instead byte peeking
+// pattern: "build/animationsequence/%08d.bin"
+void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
 {
     TRACE(Data, "processing AnimationSequence data");
     for (const auto /*&[hash, block]*/ &kvp : m_AnimationSequence.m_MapByHash)
@@ -651,12 +656,12 @@ void CFileManager::ProcessAnimSequeceData()
         const uint32_t replaces = ReadInt32LE();
         if (replaces == 48 || replaces == 68)
         {
-            // 0x30 0xc070396e5a7ec7f4 0x029a (666) // GENDER_MALE RT_GARGOYLE
-            // 0x30 0xc6c811fa536c8b62 0x04e5 (1253) // ?
+            // 0x30 0xc070396e5a7ec7f4 0x029A (666) // GENDER_MALE RT_GARGOYLE
+            // 0x30 0xc6c811fa536c8b62 0x04E5 (1253) // ?
             // 0x44 0x6c1031f63255845a 0x0190 (400) // GENDER_MALE RT_HUMAN
             continue;
         }
-
+        assert(animId < MAX_ANIMATIONS_DATA_INDEX_COUNT);
         auto anim = &g_Index.m_Anim[animId];
         for (uint32_t i = 0; i < replaces; ++i)
         {
@@ -664,26 +669,12 @@ void CFileManager::ProcessAnimSequeceData()
             const auto frameCount = ReadInt32LE();
             const auto newGroupIdx = ReadInt32LE();
             //auto data = indexAnim->m_Groups[oldGroupIdx];
-            if (frameCount == 0 && anim)
+            if (frameCount == 0)
             {
-                switch (animId)
-                {
-                    case 0x042d:
-                    case 0x04e6: // Tiger
-                    case 0x04e7: // Tiger
-                    {
-                        anim->MountedHeightOffset = 18;
-                    }
-                    break;
-                    case 0x01b0: // a boura // && oldIdx == 23 // newIdx = 29
-                    case 0x0579:
-                    {
-                        anim->MountedHeightOffset = 9;
-                    }
-                    break;
-                }
-                auto newGroup = anim->m_Groups[newGroupIdx];
-                anim->m_Groups[oldGroupIdx] = newGroup;
+                assert(newGroupIdx != oldGroupIdx);
+                assert(oldGroupIdx < MAX_ANIMATION_GROUPS_COUNT);
+                assert(newGroupIdx < MAX_ANIMATION_GROUPS_COUNT);
+                anim->m_Groups[oldGroupIdx] = anim->m_Groups[newGroupIdx];
             }
             /*else
             {
@@ -693,6 +684,24 @@ void CFileManager::ProcessAnimSequeceData()
                 }
             }*/
             Move(60);
+        }
+        switch (animId)
+        {
+            case 0x042D:
+            case 0x04E6: // Tiger
+            case 0x04E7: // Tiger
+            {
+                anim->MountedHeightOffset = 18;
+            }
+            break;
+            case 0x01B0: // a boura // && oldIdx == 23 // newIdx = 29
+            case 0x0579:
+            case 0x05F6:
+            case 0x05A0:
+            {
+                anim->MountedHeightOffset = 9;
+            }
+            break;
         }
     }
     Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.FileCount());
@@ -1432,7 +1441,7 @@ void CFileManager::LoadAnimationFrame(
         {
             const uint8_t paletteIndex = ReadUInt8();
             uint16_t val = palette[paletteIndex];
-            if (val != 0u)
+            if (val != 0)
             {
                 val |= 0x8000;
             }

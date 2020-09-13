@@ -146,13 +146,14 @@ struct CIndexAnimation
     ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
     ANIMATION_FLAGS Flags = AF_NONE;
     uint16_t Graphic = 0;
+    uint16_t CorpseGraphic = 0;
     uint16_t GraphicConversion = 0x8000;
     uint16_t Color = 0;
     uint8_t FileIndex = 0;
     char MountedHeightOffset = 0;
     bool IsUOP = false;
     bool IsValidMUL = false;
-    CTextureAnimationGroup m_Groups[MAX_ANIMATION_GROUPS_COUNT];
+    CTextureAnimationGroup m_Groups[MAX_ANIMATION_GROUPS_COUNT]; // _uopReplaceGroupIndex
 };
 
 struct CIndexMusic
