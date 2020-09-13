@@ -424,16 +424,7 @@ bool CGame::Install()
     ExecuteStaticArt(0x0EEF); //gp 6+
 
     g_CreateCharacterManager.Init();
-
-    for (int i = 0; i < 6; i++)
-    {
-        g_AnimationManager.Init(
-            (int)i,
-            (size_t)g_FileManager.m_AnimIdx[i].Start,
-            (size_t)g_FileManager.m_AnimIdx[i].Size);
-    }
-
-    g_AnimationManager.InitIndexReplaces((uint32_t *)g_FileManager.m_VerdataMul.Start);
+    g_AnimationManager.Init();
 
     Info(Client, "loading client startup config");
     LoadClientStartupConfig();

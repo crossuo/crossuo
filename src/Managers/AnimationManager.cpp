@@ -181,11 +181,10 @@ void CAnimationManager::UpdateAnimationAddressTable()
     }
 }
 
-void CAnimationManager::Load(uint32_t *verdata)
+static void load_animations(CAnimationManager *mgr)
 {
-    size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
+    size_t maxAddress = mgr->m_AddressIdx[0] + mgr->m_SizeIdx[0];
     bool isValid = false; // CHECK
-
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
         CIndexAnimation &index = g_Index.m_Anim[i];
@@ -210,7 +209,7 @@ void CAnimationManager::Load(uint32_t *verdata)
             findID = (i * 110) * sizeof(AnimIdxBlock);
         }
 
-        if (findID >= m_SizeIdx[0])
+        if (findID >= mgr->m_SizeIdx[0])
         {
             break;
         }
@@ -242,7 +241,7 @@ void CAnimationManager::Load(uint32_t *verdata)
         }
 
         index.Type = groupType;
-        size_t address = m_AddressIdx[0] + findID;
+        size_t address = mgr->m_AddressIdx[0] + findID;
         for (int j = 0; j < count; j++)
         {
             CTextureAnimationGroup &group = index.m_Groups[j];
@@ -269,129 +268,122 @@ void CAnimationManager::Load(uint32_t *verdata)
         }
         index.IsValidMUL = isValid;
     }
+}
 
-    if (verdata != nullptr)
+static void load_verdata(CAnimationManager *mgr)
+{
+    auto verdata = (uint32_t *)g_FileManager.m_VerdataMul.Start;
+    if (verdata == nullptr)
+        return;
+
+    int dataCount = *verdata;
+    for (int j = 0; j < dataCount; j++)
     {
-        int dataCount = *verdata;
-
-        for (int j = 0; j < dataCount; j++)
+        const auto *vh = (VERDATA_HEADER *)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
+        if (vh->FileID == 0x06) //Anim
         {
-            VERDATA_HEADER *vh =
-                (VERDATA_HEADER *)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
+            ANIMATION_GROUPS_TYPE groupType = AGT_HUMAN;
+            uint32_t graphic = vh->BlockID;
+            uint16_t id = 0xFFFF;
+            uint32_t group = 0;
+            uint32_t dir = 0;
+            uint32_t offset = 0;
+            int count = 0;
 
-            if (vh->FileID == 0x06) //Anim
+            TRACE(Data, "vh->ID = 0x%02X vh->BlockID = 0x%08X", vh->FileID, graphic);
+            if (graphic < 35000)
             {
-                ANIMATION_GROUPS_TYPE groupType = AGT_HUMAN;
-                uint32_t graphic = vh->BlockID;
-                uint16_t id = 0xFFFF;
-                uint32_t group = 0;
-                uint32_t dir = 0;
-                uint32_t offset = 0;
-                int count = 0;
-
-                TRACE(Data, "vh->ID = 0x%02X vh->BlockID = 0x%08X", vh->FileID, graphic);
-                if (graphic < 35000)
+                if (graphic < 22000) //monsters
                 {
-                    if (graphic < 22000) //monsters
-                    {
-                        count = 22;
-                        groupType = AGT_MONSTER;
-                        id = graphic / 110;
-                        offset = graphic - (id * 110);
-                    }
-                    else //animals
-                    {
-                        count = 13;
-                        groupType = AGT_ANIMAL;
-                        id = (graphic - 22000) / 65;
-                        offset = graphic - ((id * 65) + 22000);
-                        id += 200;
-                    }
+                    count = 22;
+                    groupType = AGT_MONSTER;
+                    id = graphic / 110;
+                    offset = graphic - (id * 110);
                 }
-                else //humans
+                else //animals
                 {
-                    groupType = AGT_HUMAN;
-                    count = PAG_ANIMATION_COUNT;
-                    id = (graphic - 35000) / 175;
-                    offset = graphic - ((id * 175) + 35000);
-                    id += 400;
+                    count = 13;
+                    groupType = AGT_ANIMAL;
+                    id = (graphic - 22000) / 65;
+                    offset = graphic - ((id * 65) + 22000);
+                    id += 200;
                 }
+            }
+            else //humans
+            {
+                groupType = AGT_HUMAN;
+                count = PAG_ANIMATION_COUNT;
+                id = (graphic - 35000) / 175;
+                offset = graphic - ((id * 175) + 35000);
+                id += 400;
+            }
 
-                group = offset / MAX_MOBILE_DIRECTIONS;
-                dir = offset % MAX_MOBILE_DIRECTIONS;
+            group = offset / MAX_MOBILE_DIRECTIONS;
+            dir = offset % MAX_MOBILE_DIRECTIONS;
+            if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
+                Warning(Data, "Invalid animation patch 0x%04X (0x%08X)", id, graphic);
+                continue;
+            }
+            if (group >= (uint32_t)count)
+            {
+                Warning(
+                    Data,
+                    "Invalid group index: %i in animation patch 0x%04X (0x%08X)",
+                    group,
+                    id,
+                    graphic);
+                continue;
+            }
 
-                if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            CIndexAnimation &index = g_Index.m_Anim[id];
+            CTextureAnimationDirection &direction = index.m_Groups[group].m_Direction[dir];
+            direction.IsVerdata = true;
+            direction.BaseAddress = (size_t)g_FileManager.m_VerdataMul.Start + vh->Position;
+            direction.BaseSize = vh->Size;
+            direction.Address = direction.BaseAddress;
+            direction.Size = direction.BaseSize;
+            index.Graphic = id;
+            index.Type = groupType;
+            index.IsValidMUL = true;
+        }
+    }
+}
+
+static void load_mobtype()
+{
+    static const astr_t typeNames[5] = { "monster", "sea_monster", "animal", "human", "equipment" };
+
+    Wisp::CTextFileParser mobtypesParser(g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
+    while (!mobtypesParser.IsEOF())
+    {
+        const auto strings = mobtypesParser.ReadTokens();
+        if (strings.size() >= 3)
+        {
+            const uint16_t index = str_to_int(strings[0]);
+            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
+                continue;
+            }
+
+            const auto testType = str_lower(strings[1]);
+            char *endP = nullptr;
+            const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
+            for (int i = 0; i < 5; i++)
+            {
+                if (testType == typeNames[i])
                 {
-                    Warning(Data, "Invalid animation patch 0x%04X (0x%08X)", id, graphic);
-                    continue;
+                    g_Index.m_Anim[index].Type = ANIMATION_GROUPS_TYPE(i);
+                    g_Index.m_Anim[index].Flags = ANIMATION_FLAGS(AF_FOUND | number);
+                    break;
                 }
-                if (group >= (uint32_t)count)
-                {
-                    Warning(
-                        Data,
-                        "Invalid group index: %i in animation patch 0x%04X (0x%08X)",
-                        group,
-                        id,
-                        graphic);
-                    continue;
-                }
-
-                CIndexAnimation &index = g_Index.m_Anim[id];
-
-                CTextureAnimationDirection &direction = index.m_Groups[group].m_Direction[dir];
-
-                direction.IsVerdata = true;
-                direction.BaseAddress = (size_t)g_FileManager.m_VerdataMul.Start + vh->Position;
-                direction.BaseSize = vh->Size;
-                direction.Address = direction.BaseAddress;
-                direction.Size = direction.BaseSize;
-
-                index.Graphic = id;
-                index.Type = groupType;
-                index.IsValidMUL = true;
             }
         }
     }
 }
 
-void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
+static void load_animdef(CAnimationManager *mgr)
 {
-    if (g_Config.ClientVersion >= CV_500A)
-    {
-        static const astr_t typeNames[5] = {
-            "monster", "sea_monster", "animal", "human", "equipment"
-        };
-
-        Wisp::CTextFileParser mobtypesParser(g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
-        while (!mobtypesParser.IsEOF())
-        {
-            const auto strings = mobtypesParser.ReadTokens();
-            if (strings.size() >= 3)
-            {
-                const uint16_t index = str_to_int(strings[0]);
-                if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-                {
-                    continue;
-                }
-
-                const auto testType = str_lower(strings[1]);
-                char *endP = nullptr;
-                const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
-                for (int i = 0; i < 5; i++)
-                {
-                    if (testType == typeNames[i])
-                    {
-                        g_Index.m_Anim[index].Type = (ANIMATION_GROUPS_TYPE)i;
-                        g_Index.m_Anim[index].Flags = 0x80000000 | number;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    Load(verdata);
-
     Wisp::CTextFileParser animParser[] = {
         Wisp::CTextFileParser(g_App.UOFilesPath("Anim1.def"), " \t", "#;//", "{}"),
         Wisp::CTextFileParser(g_App.UOFilesPath("Anim2.def"), " \t", "#;//", "{}"),
@@ -411,19 +403,13 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 continue;
             }
             const auto replaceGroup = uint8_t(str_to_int(strings[1]));
-            m_GroupReplaces[i].push_back({ group, replaceGroup });
+            mgr->m_GroupReplaces[i].push_back({ group, replaceGroup });
         }
     }
+}
 
-    if (g_Config.ClientVersion < CV_305D)
-    { //CV_204C
-        return;
-    }
-
-    Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
-    Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
-    Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
+static void load_equipconv(CAnimationManager *mgr)
+{
     Wisp::CTextFileParser equipConvParser(g_App.UOFilesPath("Equipconv.def"), " \t", "#;//", "");
     while (!equipConvParser.IsEOF())
     {
@@ -465,12 +451,12 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             }
 
             auto color = (uint16_t)str_to_int(strings[4]);
-            auto bodyMapIter = m_EquipConv.find(body);
-            if (bodyMapIter == m_EquipConv.end())
+            auto bodyMapIter = mgr->m_EquipConv.find(body);
+            if (bodyMapIter == mgr->m_EquipConv.end())
             {
-                m_EquipConv.insert({ body, {} });
-                bodyMapIter = m_EquipConv.find(body);
-                if (bodyMapIter == m_EquipConv.end())
+                mgr->m_EquipConv.insert({ body, {} });
+                bodyMapIter = mgr->m_EquipConv.find(body);
+                if (bodyMapIter == mgr->m_EquipConv.end())
                 {
                     continue; //?!?!??
                 }
@@ -478,7 +464,11 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             bodyMapIter->second.insert({ graphic, { newGraphic, gump, color } });
         }
     }
+}
 
+static void load_bodyconv(CAnimationManager *mgr)
+{
+    Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
     while (!bodyconvParser.IsEOF())
     {
         auto strings = bodyconvParser.ReadTokens();
@@ -504,119 +494,44 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 }
             }
 
-            int startAnimID = -1;
             int animFile = 1;
-            uint16_t realAnimID = 0;
+            uint16_t realAnimID = 0xffff;
             char mountedHeightOffset = 0;
-            ANIMATION_GROUPS_TYPE groupType = AGT_UNKNOWN;
-            if (anim[0] != -1 && m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
+
+            if (anim[0] != -1 && mgr->m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
             {
                 animFile = 2;
                 realAnimID = anim[0];
-                if (realAnimID == 68)
-                {
-                    realAnimID = 122;
-                }
-
-                if (realAnimID >= 200) //Low
-                {
-                    startAnimID = ((realAnimID - 200) * 65) + 22000;
-                    groupType = AGT_ANIMAL;
-                    mountedHeightOffset = +8;
-                }
-                else //Hight
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-
-                if (index == 192 || index == 793)
+                if (index == 192 || index == 793) // 0x00C0 || 0x0319
                 {
                     mountedHeightOffset = -9;
                 }
             }
-            else if (anim[1] != -1 && m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
+            else if (anim[1] != -1 && mgr->m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
             {
                 animFile = 3;
                 realAnimID = anim[1];
-
-                if (realAnimID < 630)
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-                else
-                {
-                    startAnimID = 69300 + ((realAnimID - 630) * 175);
-                    groupType = AGT_HUMAN;
-                }
-
-                if (index == 1401)
+                if (index == 1401) // 0x0579
                 {
                     mountedHeightOffset = 9;
                 }
             }
-            else if (anim[2] != -1 && m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
+            else if (anim[2] != -1 && mgr->m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
             {
                 animFile = 4;
                 realAnimID = anim[2];
-
-                if (realAnimID >= 200)
-                {
-                    if (realAnimID >= 400) //People
-                    {
-                        startAnimID = ((realAnimID - 400) * 175) + 35000;
-                        groupType = AGT_HUMAN;
-                    }
-                    else //Low
-                    {
-                        startAnimID = ((realAnimID - 200) * 65) + 22000;
-                        groupType = AGT_ANIMAL;
-                        mountedHeightOffset = +8;
-                    }
-                }
-                else //Hight
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
             }
-            else if (anim[3] != -1 && m_AddressIdx[5] != 0 && g_FileManager.IsMulFileOpen(5))
+            else if (anim[3] != -1 && mgr->m_AddressIdx[5] != 0 && g_FileManager.IsMulFileOpen(5))
             {
                 animFile = 5;
                 realAnimID = anim[3];
-
-                if (realAnimID == 34)
-                {
-                    startAnimID = ((realAnimID - 200) * 65) + 22000;
-                }
-                else if (realAnimID >= 200)
-                {
-                    if (realAnimID >= 400) //People
-                    {
-                        startAnimID = ((realAnimID - 400) * 175) + 35000;
-                        groupType = AGT_HUMAN;
-                    }
-                    else //Low
-                    {
-                        startAnimID = ((realAnimID - 200) * 65) + 22000;
-                        groupType = AGT_ANIMAL;
-                        //mountedHeightOffset = +8;
-                    }
-                }
-                else //Hight
-                {
-                    startAnimID = realAnimID * 110;
-                    groupType = AGT_MONSTER;
-                }
-
                 switch (index)
                 {
-                    case 192:
-                    case 277:
+                    case 192: // 0x00C0
+                    case 277: // 0x0115
                         mountedHeightOffset = 0;
                         break;
-                    case 1069:
+                    case 1069: // 0x042D
                         mountedHeightOffset = 3;
                         break;
                     default:
@@ -625,80 +540,44 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 }
             }
 
-            if (animFile != 1 && startAnimID != -1)
+            if (animFile > 1 && realAnimID != 0xffff)
             {
-                startAnimID = startAnimID * sizeof(AnimIdxBlock);
-                if ((uint32_t)startAnimID < m_SizeIdx[animFile])
+                CIndexAnimation &dataIndex = g_Index.m_Anim[index];
+                auto realType = (g_Config.ClientVersion < CV_500A) ?
+                                    uo_type_by_graphic(realAnimID) :
+                                    dataIndex.Type;
+                int count = 0;
+                auto addressOffset =
+                    uo_get_anim_offset(realAnimID, dataIndex.Flags, realType, count);
+                if (addressOffset < mgr->m_SizeIdx[animFile])
                 {
-                    CIndexAnimation &dataIndex = g_Index.m_Anim[index];
-                    dataIndex.MountedHeightOffset = mountedHeightOffset;
-                    if (g_Config.ClientVersion < CV_500A || groupType == AGT_UNKNOWN)
+                    dataIndex.Type = realType;
+                    dataIndex.GraphicConversion = realAnimID | 0x8000;
+                    dataIndex.FileIndex = animFile;
+                    if (dataIndex.MountedHeightOffset == 0)
                     {
-                        if (realAnimID >= 200)
-                        {
-                            if (realAnimID >= 400)
-                            { //People
-                                dataIndex.Type = AGT_HUMAN;
-                            }
-                            else
-                            { //Low
-                                dataIndex.Type = AGT_ANIMAL;
-                                mountedHeightOffset = +8;
-                            }
-                        }
-                        else
-                        {
-                            dataIndex.Type = AGT_MONSTER;
-                        }
-                    }
-                    else if (groupType != AGT_UNKNOWN)
-                    {
-                        dataIndex.Type = groupType;
+                        dataIndex.MountedHeightOffset = mountedHeightOffset;
                     }
 
-                    int count = 0;
-
-                    switch (dataIndex.Type)
-                    {
-                        case AGT_MONSTER:
-                        case AGT_SEA_MONSTER:
-                        {
-                            count = HAG_ANIMATION_COUNT;
-                            break;
-                        }
-                        case AGT_HUMAN:
-                        case AGT_EQUIPMENT:
-                        {
-                            count = PAG_ANIMATION_COUNT;
-                            break;
-                        }
-                        case AGT_ANIMAL:
-                        default:
-                        {
-                            count = LAG_ANIMATION_COUNT;
-                            break;
-                        }
-                    }
-
-                    size_t address = m_AddressIdx[animFile] + startAnimID;
-                    size_t maxAddress = m_AddressIdx[animFile] + m_SizeIdx[animFile];
+                    addressOffset += mgr->m_AddressIdx[animFile];
+                    size_t maxAddress = mgr->m_AddressIdx[animFile] + mgr->m_SizeIdx[animFile];
+                    int offset = 0;
                     for (int j = 0; j < count; j++)
                     {
-                        CTextureAnimationGroup &group = dataIndex.m_Groups[j];
-                        int offset = (int)j * MAX_MOBILE_DIRECTIONS;
+                        auto &group = dataIndex.m_Groups[j];
+                        //int offset = (int)j * MAX_MOBILE_DIRECTIONS;
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
-                            CTextureAnimationDirection &direction = group.m_Direction[d];
                             const auto *aidx =
-                                (AnimIdxBlock *)(address + ((offset + d) * sizeof(AnimIdxBlock)));
+                                (AnimIdxBlock *)(addressOffset + offset * sizeof(AnimIdxBlock));
                             if ((size_t)aidx >= maxAddress)
                             {
-                                break;
+                                continue;
                             }
 
-                            if ((aidx->Size != 0u) && aidx->Position != 0xFFFFFFFF &&
-                                aidx->Size != 0xFFFFFFFF)
+                            if (aidx->Size != 0 && aidx->Position != -1 && aidx->Size != -1)
                             {
+                                auto &direction = group.m_Direction[d];
                                 direction.PatchedAddress = aidx->Position;
                                 direction.PatchedSize = aidx->Size;
                                 direction.FileIndex = animFile;
@@ -709,7 +588,12 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             }
         }
     }
+}
 
+static void load_bodydef()
+{
+    Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
+    Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
     while (!bodyParser.IsEOF())
     {
         const auto strings = bodyParser.ReadTokens();
@@ -803,7 +687,12 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             dataIndex.Color = str_to_int(strings[2]);
         }
     }
+}
 
+static void load_corpsedef()
+{
+    Wisp::CTextFileParser newBodyParser({}, " \t,{}", "#;//", "");
+    Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
     while (!corpseParser.IsEOF())
     {
         const auto strings = corpseParser.ReadTokens();
@@ -892,6 +781,35 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             dataIndex.Color = str_to_int(strings[2]);
         }
     }
+}
+
+void static load_data_patches(CAnimationManager *mgr)
+{
+    if (g_Config.ClientVersion >= CV_500A)
+    {
+        load_mobtype();
+    }
+    load_animations(mgr);
+    load_verdata(mgr);
+    load_animdef(mgr);
+    if (g_Config.ClientVersion < CV_305D)
+    {
+        return;
+    }
+    load_equipconv(mgr);
+    load_bodyconv(mgr);
+    load_bodydef();
+    load_corpsedef();
+}
+
+void CAnimationManager::Init()
+{
+    for (int i = 0; i < countof(g_FileManager.m_AnimIdx); i++)
+    {
+        m_AddressIdx[i] = (size_t)g_FileManager.m_AnimIdx[i].Start;
+        m_SizeIdx[i] = (size_t)g_FileManager.m_AnimIdx[i].Size;
+    }
+    load_data_patches(this);
 }
 
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const

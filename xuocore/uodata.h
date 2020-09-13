@@ -39,30 +39,30 @@ struct UopFileEntry;
 struct CUopMappedFile;
 using UopSectionHeaderMap = std::unordered_map<uint64_t, const UopFileEntry *>;
 
-struct CTextureAnimationFrame
+struct CTextureAnimationFrame // AnimationFrameTexture
 {
     void *UserData = nullptr;
     int16_t CenterX = 0;
     int16_t CenterY = 0;
 };
 
-struct CTextureAnimationDirection
+struct CTextureAnimationDirection // AnimationDirection
 {
-    uint8_t FrameCount = 0;
-    size_t BaseAddress = 0;
-    uint32_t BaseSize = 0;
-    size_t PatchedAddress = 0;
-    uint32_t PatchedSize = 0;
-    int FileIndex = 0;
+    CTextureAnimationFrame *m_Frames = nullptr;
     size_t Address = 0;
+    size_t BaseAddress = 0;
+    size_t PatchedAddress = 0;
+    uint32_t BaseSize = 0;
+    uint32_t PatchedSize = 0;
     uint32_t Size = 0;
     uint32_t LastAccessTime = 0;
+    uint8_t FileIndex = 0;
+    uint8_t FrameCount = 0;
     bool IsUOP = false;
     bool IsVerdata = false;
-    CTextureAnimationFrame *m_Frames = nullptr;
 };
 
-struct CTextureAnimationGroup
+struct CTextureAnimationGroup // AnimationGroup
 {
     CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
     const UopFileEntry *m_UOPAnimData = nullptr;
@@ -143,11 +143,12 @@ struct CIndexLight : public CIndexObject
 
 struct CIndexAnimation
 {
+    ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
+    ANIMATION_FLAGS Flags = AF_NONE;
     uint16_t Graphic = 0;
     uint16_t GraphicConversion = 0x8000;
     uint16_t Color = 0;
-    ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
-    uint32_t Flags = 0;
+    uint8_t FileIndex = 0;
     char MountedHeightOffset = 0;
     bool IsUOP = false;
     bool IsValidMUL = false;
@@ -351,5 +352,8 @@ private:
 };
 
 void uo_data_init(const char *path, uint32_t client_version, bool use_verdata);
+ANIMATION_GROUPS_TYPE uo_type_by_graphic(uint16_t graphic); // CalculateTypeByGraphic
+uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type, int &groupCount); // CalculateOffset
+uint32_t uo_get_group_offset(ANIMATION_GROUPS group, uint16_t graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
 
 extern CFileManager g_FileManager;

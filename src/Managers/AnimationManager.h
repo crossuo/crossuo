@@ -19,32 +19,6 @@ static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;
 static const float LOWER_BODY_RATIO = 0.94f;
 
-enum ANIMATION_FLAGS : uint
-{
-    AF_NONE = 0x00000,
-    AF_UNKNOWN_1 = 0x00001,
-    AF_USE_2_IF_HITTED_WHILE_RUNNING = 0x00002,
-    AF_IDLE_AT_8_FRAME = 0x00004,
-    AF_CAN_FLYING = 0x00008,
-    AF_UNKNOWN_10 = 0x00010,
-    AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED = 0x00020,
-    AF_CALCULATE_OFFSET_BY_LOW_GROUP = 0x00040,
-    AF_UNKNOWN_80 = 0x00080,
-    AF_UNKNOWN_100 = 0x00100,
-    AF_UNKNOWN_200 = 0x00200,
-    AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP = 0x00400,
-    AF_UNKNOWN_800 = 0x00800,
-    AF_UNKNOWN_1000 = 0x01000,
-    AF_UNKNOWN_2000 = 0x02000,
-    AF_UNKNOWN_4000 = 0x04000,
-    AF_UNKNOWN_8000 = 0x08000,
-    AF_USE_UOP_ANIMATION = 0x10000,
-    AF_UNKNOWN_20000 = 0x20000,
-    AF_UNKNOWN_40000 = 0x40000,
-    AF_UNKNOWN_80000 = 0x80000,
-    AF_FOUND = 0x80000000
-};
-
 struct CEquipConvData
 {
     uint16_t Graphic = 0;
@@ -61,10 +35,13 @@ public:
     uint16_t Color = 0;
     AnimationSelector SelectAnim;
 
-private:
+    //protected:
     size_t m_AddressIdx[6];
     size_t m_SizeIdx[6];
+    EQUIP_CONV_BODY_MAP m_EquipConv;
+    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
 
+private:
     int m_CharacterFrameHeight = 0;
 
     static void PrepareTargetAttackGump(
@@ -82,13 +59,10 @@ private:
     int m_Sitting = 0;
     bool m_UseBlending = false;
 
-    EQUIP_CONV_BODY_MAP m_EquipConv;
-
     CEquipConvData *m_EquipConvItem{ nullptr };
 
     static const int USED_LAYER_COUNT = 23;
     static const int m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT];
-    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2];
     std::deque<CTextureAnimationDirection *> m_UsedAnimList;
 
     bool TestPixels(
@@ -136,12 +110,7 @@ public:
     CAnimationManager();
     ~CAnimationManager();
     void ClearUnusedTextures(uint32_t ticks);
-
-    void Init(int graphic, size_t addressIdx, size_t sizeIdx)
-    {
-        m_AddressIdx[graphic] = addressIdx;
-        m_SizeIdx[graphic] = sizeIdx;
-    }
+    void Init();
 
     EQUIP_CONV_BODY_MAP &GetEquipConv() { return m_EquipConv; }
     void InitIndexReplaces(uint32_t *verdata);
