@@ -1298,6 +1298,7 @@ void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
     }
 }
 
+// 0x03CA dead shroud
 uint16_t CGameCharacter::GetMountAnimation()
 {
     uint16_t graphic = Graphic;
@@ -1309,12 +1310,12 @@ uint16_t CGameCharacter::GetMountAnimation()
             graphic -= 2;
             break;
         }
-        case 0x02B6:
+        case 0x02B6: // gargoyle
         {
             graphic = 667;
             break;
         }
-        case 0x02B7:
+        case 0x02B7: // gargoyle
         {
             graphic = 666;
             break;

@@ -431,33 +431,33 @@ void CGumpPaperdoll::UpdateContent()
     CGUIGumppic *bodyGumppic = nullptr;
 
     uint16_t color = obj->Color & 0x3FFF;
-    if (obj->Graphic == 0x0191 || obj->Graphic == 0x0193)
+    if (obj->Graphic == 0x0191 || obj->Graphic == 0x0193) // alive or dead
     {
         bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x000D, 8, 19)); //Female gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x025D)
+    else if (obj->Graphic == 0x025D || obj->Graphic == 0x025F) // alive or dead
     {
         bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x000E, 8, 19)); //Elf Male gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x025E)
+    else if (obj->Graphic == 0x025E || obj->Graphic == 0x0260) // alive or dead
     {
         bodyGumppic =
             (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x000F, 8, 19)); //Elf Female gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x029A || obj->Graphic == 0x02B6)
+    else if (obj->Graphic == 0x029A || obj->Graphic == 0x02B6) // alive or dead
     {
         bodyGumppic =
             (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x029A, 8, 19)); //Gargoly Male gump
         bodyGumppic->PartialHue = true;
         bodyGumppic->Color = color;
     }
-    else if (obj->Graphic == 0x029B || obj->Graphic == 0x02B7)
+    else if (obj->Graphic == 0x029B || obj->Graphic == 0x02B7) // alive or dead
     {
         bodyGumppic =
             (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x0299, 8, 19)); //Gargoly Female gump
@@ -479,7 +479,7 @@ void CGumpPaperdoll::UpdateContent()
         bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0xC72B, 8, 19)); //GM robe gump
         bodyGumppic->Color = color;
     }
-    else //if (obj->Graphic == 0x0190 || obj->Graphic == 0x0192)
+    else //if (obj->Graphic == 0x0190 || obj->Graphic == 0x0192) // alive or dead
     {
         bodyGumppic = (CGUIGumppic *)m_DataBox->Add(new CGUIGumppic(0x000C, 8, 19)); //Male gump
         bodyGumppic->PartialHue = true;

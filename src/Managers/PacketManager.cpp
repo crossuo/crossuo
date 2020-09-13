@@ -4018,28 +4018,25 @@ PACKET_HANDLER(DisplayDeath)
     }
 
     uint32_t serial = ReadUInt32BE();
-    uint32_t corpseSerial = ReadUInt32BE();
-    uint32_t running = ReadUInt32BE();
-
+    const uint32_t corpseSerial = ReadUInt32BE();
+    const uint32_t running = ReadUInt32BE();
     CGameCharacter *owner = g_World->FindWorldCharacter(serial);
-
     if (owner == nullptr)
     {
         return;
     }
 
     serial |= 0x80000000;
-
     g_World->ReplaceObject(owner, serial);
-
-    if (corpseSerial != 0u)
+    if (corpseSerial != 0)
     {
         g_CorpseManager.Add(CCorpse(corpseSerial, serial, owner->Direction, running != 0));
     }
 
-    uint8_t group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0);
-
+    const auto group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0);
     owner->SetAnimation(group, 0, 5, 1, false, false);
+    owner->AnimIndex = 0;
+    // TODO: auto open corpse
 }
 
 PACKET_HANDLER(OpenChat)
