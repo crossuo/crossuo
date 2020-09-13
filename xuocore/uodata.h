@@ -144,11 +144,13 @@ struct CIndexLight : public CIndexObject
 struct CIndexAnimation
 {
     uint16_t Graphic = 0;
+    uint16_t GraphicConversion = 0x8000;
     uint16_t Color = 0;
     ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
     uint32_t Flags = 0;
     char MountedHeightOffset = 0;
     bool IsUOP = false;
+    bool IsValidMUL = false;
     CTextureAnimationGroup m_Groups[MAX_ANIMATION_GROUPS_COUNT];
 };
 

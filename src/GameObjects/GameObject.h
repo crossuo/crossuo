@@ -30,7 +30,7 @@ protected:
     uint8_t m_Flags = 0;
 
 public:
-    uint8_t GetFlags() { return m_Flags; };
+    uint8_t GetFlags() const { return m_Flags; };
     void SetFlags(uint8_t val);
 
 protected:

@@ -754,7 +754,7 @@ bool CPathFinder::Walk(bool run, uint8_t direction)
     }
 
     g_Walker.LastStepRequestTime = g_Ticks + walkTime - nowDelta;
-    g_Player->GetAnimationGroup();
+    g_Player->GetAnimationGroup(0, true);
 
     return true;
 }

@@ -26,7 +26,7 @@ public:
 
     void ResetObjectHandlesState();
     void ProcessAnimation();
-    void ProcessSound(int ticks, CGameCharacter *gc);
+    void ProcessFootstepsSound(int ticks, CGameCharacter *gc);
     void SetPlayer(uint32_t serial);
     CGameItem *GetWorldItem(uint32_t serial);
     CGameCharacter *GetWorldCharacter(uint32_t serial);

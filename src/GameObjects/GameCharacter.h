@@ -27,7 +27,7 @@ public:
     uint8_t AnimationInterval = 0;
     uint8_t AnimationFrameCount = 0;
     uint8_t AnimationRepeatMode = 1;
-    uint8_t AnimationGroup = 0xFF;
+    uint8_t AnimationGroup = AG_INVALID;
     bool AnimationRepeat = false;
     bool AnimationDirection = false;
     bool AnimationFromServer = false;
@@ -70,10 +70,10 @@ public:
         bool repeat = false,
         bool frameDirection = false);
 
-    uint16_t GetMountAnimation();
-    uint8_t GetAnimationGroup(uint16_t checkGraphic = 0);
+    uint16_t GetMountAnimation();                                    // GetGraphicForAnimation
+    uint8_t GetAnimationGroup(uint16_t checkGraphic, bool isParent); // GetGroupForAnimation
     void GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation);
-    bool Staying() { return AnimationGroup == 0xFF && m_Steps.empty(); }
+    bool Staying() { return AnimationGroup == AG_INVALID && m_Steps.empty(); }
     bool TestStepNoChangeDirection(uint8_t group);
     virtual bool Walking() { return (LastStepTime > (uint32_t)(g_Ticks - WALKING_DELAY)); }
     virtual bool NoIterateAnimIndex()
@@ -81,7 +81,7 @@ public:
         return ((LastStepTime > (uint32_t)(g_Ticks - WALKING_DELAY)) && m_Steps.empty());
     }
 
-    void UpdateAnimationInfo(uint8_t &dir, bool canChange = false);
+    void UpdateAnimationInfo_ProcessSteps(uint8_t &dir, bool canChange = false);
 
     bool IsHuman() const
     {

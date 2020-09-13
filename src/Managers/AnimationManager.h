@@ -19,20 +19,37 @@ static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;
 static const float LOWER_BODY_RATIO = 0.94f;
 
-class CEquipConvData
+enum ANIMATION_FLAGS : uint
 {
-public:
+    AF_NONE = 0x00000,
+    AF_UNKNOWN_1 = 0x00001,
+    AF_USE_2_IF_HITTED_WHILE_RUNNING = 0x00002,
+    AF_IDLE_AT_8_FRAME = 0x00004,
+    AF_CAN_FLYING = 0x00008,
+    AF_UNKNOWN_10 = 0x00010,
+    AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED = 0x00020,
+    AF_CALCULATE_OFFSET_BY_LOW_GROUP = 0x00040,
+    AF_UNKNOWN_80 = 0x00080,
+    AF_UNKNOWN_100 = 0x00100,
+    AF_UNKNOWN_200 = 0x00200,
+    AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP = 0x00400,
+    AF_UNKNOWN_800 = 0x00800,
+    AF_UNKNOWN_1000 = 0x01000,
+    AF_UNKNOWN_2000 = 0x02000,
+    AF_UNKNOWN_4000 = 0x04000,
+    AF_UNKNOWN_8000 = 0x08000,
+    AF_USE_UOP_ANIMATION = 0x10000,
+    AF_UNKNOWN_20000 = 0x20000,
+    AF_UNKNOWN_40000 = 0x40000,
+    AF_UNKNOWN_80000 = 0x80000,
+    AF_FOUND = 0x80000000
+};
+
+struct CEquipConvData
+{
     uint16_t Graphic = 0;
     uint16_t Gump = 0;
     uint16_t Color = 0;
-
-    CEquipConvData(uint16_t graphic, uint16_t gump, uint16_t color)
-        : Graphic(graphic)
-        , Gump(gump)
-        , Color(color)
-    {
-    }
-    ~CEquipConvData() {}
 };
 
 typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
@@ -113,6 +130,8 @@ private:
     uint8_t GetObjectNewAnimationType_9_10(CGameCharacter *obj, uint16_t action, uint8_t mode);
     uint8_t GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode);
 
+    bool IsReplacedObjectAnimation(uint8_t anim, uint16_t v13) const;
+
 public:
     CAnimationManager();
     ~CAnimationManager();
@@ -135,8 +154,10 @@ public:
     void DrawCorpse(class CGameItem *obj, int x, int y);
     bool CorpsePixelsInXY(class CGameItem *obj, int x, int y);
     uint8_t GetDieGroupIndex(uint16_t id, bool second);
-    ANIMATION_GROUPS GetGroupIndex(uint16_t id);
+    ANIMATION_GROUPS GetGroupIndex(uint16_t id) const;
     bool AnimationExists(uint16_t graphic, uint8_t group);
+    uint8_t CorrectAnimationGroupServer(
+        ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const;
 
     AnimationFrameInfo GetAnimationDimensions(
         uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse);
