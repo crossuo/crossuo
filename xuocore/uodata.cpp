@@ -1479,3 +1479,134 @@ bool CFileManager::LoadAnimation(const AnimationSelector &anim, LoadPixelData16C
     }
     return false;
 }
+
+ANIMATION_GROUPS_TYPE uo_type_by_graphic(uint16_t graphic)
+{
+    return graphic < 200 ? AGT_MONSTER : (graphic < 400 ? AGT_ANIMAL : AGT_HUMAN);
+}
+
+uint32_t uo_get_group_offset(ANIMATION_GROUPS group, uint16_t graphic)
+{
+    switch (group)
+    {
+        case AG_LOW:
+        {
+            return ((graphic - 200) * 65 + 22000) * sizeof(AnimIdxBlock);
+        }
+        break;
+
+        case AG_HIGHT:
+        {
+            return graphic * 110 * sizeof(AnimIdxBlock);
+        }
+        break;
+
+        case AG_PEOPLE:
+        {
+            return ((graphic - 400) * 175 + 35000) * sizeof(AnimIdxBlock);
+        }
+        break;
+
+        case AG_NONE:
+        case AG_INVALID:
+        default:
+        {
+            assert(false && "Invalid group parameter");
+        }
+    }
+    return -1;
+}
+
+uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type, int &groupCount)
+{
+    uint64_t result = 0;
+    groupCount = 0;
+    ANIMATION_GROUPS group = AG_NONE;
+    switch (type)
+    {
+        case AGT_MONSTER:
+        {
+            if (flags & AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP)
+            {
+                group = AG_PEOPLE;
+            }
+            else if (flags & AF_CALCULATE_OFFSET_BY_LOW_GROUP)
+            {
+                group = AG_LOW;
+            }
+            else
+            {
+                group = AG_HIGHT;
+            }
+        }
+        break;
+
+        case AGT_SEA_MONSTER:
+        {
+            result = uo_get_group_offset(AG_HIGHT, graphic);
+            groupCount = LAG_ANIMATION_COUNT;
+        }
+        break;
+
+        case AGT_ANIMAL:
+        {
+            if (flags & AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED)
+            {
+                if (flags & AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP)
+                {
+                    group = AG_PEOPLE;
+                }
+                else if (flags & AF_CALCULATE_OFFSET_BY_LOW_GROUP)
+                {
+                    group = AG_LOW;
+                }
+                else
+                {
+                    group = AG_HIGHT;
+                }
+            }
+            else
+            {
+                group = AG_LOW;
+            }
+        }
+        break;
+
+        default:
+        {
+            group = AG_PEOPLE;
+        }
+        break;
+    }
+
+    switch (group)
+    {
+        case AG_LOW:
+        {
+            groupCount = LAG_ANIMATION_COUNT;
+            result = uo_get_group_offset(group, graphic);
+        }
+        break;
+
+        case AG_HIGHT:
+        {
+            groupCount = HAG_ANIMATION_COUNT;
+            result = uo_get_group_offset(group, graphic);
+        }
+        break;
+
+        case AG_PEOPLE:
+        {
+            groupCount = PAG_ANIMATION_COUNT;
+            result = uo_get_group_offset(group, graphic);
+        }
+        break;
+
+        case AG_NONE:
+        case AG_INVALID:
+        default:
+            break;
+    }
+
+    return result;
+}
