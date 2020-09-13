@@ -50,7 +50,7 @@ void CGameWorld::ResetObjectHandlesState()
     QFOR(obj, m_Items, CGameObject *) { obj->ClosedObjectHandle = false; }
 }
 
-void CGameWorld::ProcessSound(int ticks, CGameCharacter *gc)
+void CGameWorld::ProcessFootstepsSound(int ticks, CGameCharacter *gc)
 {
     if (g_ConfigManager.FootstepsSound && gc->IsHuman() && !gc->Hidden())
     {
@@ -95,12 +95,12 @@ void CGameWorld::ProcessAnimation()
     std::deque<CGameObject *> toRemove;
     QFOR(obj, m_Items, CGameObject *)
     {
-        if (obj->NPC)
+        if (obj->NPC) // Mobile
         {
             CGameCharacter *gc = obj->GameCharacterPtr();
             uint8_t dir = 0;
-            gc->UpdateAnimationInfo(dir, true);
-            ProcessSound(g_Ticks, gc);
+            gc->UpdateAnimationInfo_ProcessSteps(dir, true);
+            ProcessFootstepsSound(g_Ticks, gc);
             if (gc->LastAnimationChangeTime < g_Ticks && !gc->NoIterateAnimIndex())
             {
                 char frameIndex = gc->AnimIndex;
@@ -114,7 +114,9 @@ void CGameWorld::ProcessAnimation()
                 }
 
                 uint16_t id = gc->GetMountAnimation();
-                int animGroup = gc->GetAnimationGroup(id);
+                int animGroup = gc->GetAnimationGroup(id, true);
+
+                /* CHECK */
                 gc->ProcessGargoyleAnims(animGroup);
                 CGameItem *mount = gc->FindLayer(OL_MOUNT);
                 if (mount != nullptr)
@@ -126,13 +128,14 @@ void CGameWorld::ProcessAnimation()
                         case PAG_FIDGET_3:
                         {
                             id = mount->GetMountAnimation();
-                            animGroup = gc->GetAnimationGroup(id);
+                            animGroup = gc->GetAnimationGroup(id, true);
                             break;
                         }
                         default:
                             break;
                     }
                 }
+                /* CHECK */
 
                 bool mirror = false;
                 g_AnimationManager.GetAnimDirection(dir, mirror);
@@ -231,14 +234,14 @@ void CGameWorld::ProcessAnimation()
                         toRemove.push_back(obj);
                     }
                 }
-                else if ((obj->Serial & 0x80000000) != 0u)
+                else if ((obj->Serial & 0x80000000) != 0)
                 {
                     toRemove.push_back(obj);
                 }
                 gc->LastAnimationChangeTime = g_Ticks + currentDelay;
             }
         }
-        else if (obj->IsCorpse())
+        else if (obj->IsCorpse()) // Item
         {
             CGameItem *gi = (CGameItem *)obj;
             uint8_t dir = gi->Layer;

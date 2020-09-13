@@ -880,8 +880,9 @@ enum ANIMATION_GROUPS_TYPE
     AGT_UNKNOWN
 };
 
-enum ANIMATION_GROUPS
+enum ANIMATION_GROUPS : uint8_t
 {
+    AG_INVALID = 0xff,
     AG_NONE = 0,
     AG_LOW,
     AG_HIGHT,

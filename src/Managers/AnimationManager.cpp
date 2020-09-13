@@ -24,32 +24,6 @@
 
 CAnimationManager g_AnimationManager;
 
-enum ANIMATION_FLAGS : uint
-{
-    AF_NONE = 0x00000,
-    AF_UNKNOWN_1 = 0x00001,
-    AF_USE_2_IF_HITTED_WHILE_RUNNING = 0x00002,
-    AF_IDLE_AT_8_FRAME = 0x00004,
-    AF_CAN_FLYING = 0x00008,
-    AF_UNKNOWN_10 = 0x00010,
-    AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED = 0x00020,
-    AF_CALCULATE_OFFSET_BY_LOW_GROUP = 0x00040,
-    AF_UNKNOWN_80 = 0x00080,
-    AF_UNKNOWN_100 = 0x00100,
-    AF_UNKNOWN_200 = 0x00200,
-    AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP = 0x00400,
-    AF_UNKNOWN_800 = 0x00800,
-    AF_UNKNOWN_1000 = 0x01000,
-    AF_UNKNOWN_2000 = 0x02000,
-    AF_UNKNOWN_4000 = 0x04000,
-    AF_UNKNOWN_8000 = 0x08000,
-    AF_USE_UOP_ANIMATION = 0x10000,
-    AF_UNKNOWN_20000 = 0x20000,
-    AF_UNKNOWN_40000 = 0x40000,
-    AF_UNKNOWN_80000 = 0x80000,
-    AF_FOUND = 0x80000000
-};
-
 void *LoadSpritePixels(int width, int height, uint16_t *pixels)
 {
     auto spr = new CSprite();
@@ -210,14 +184,13 @@ void CAnimationManager::UpdateAnimationAddressTable()
 void CAnimationManager::Load(uint32_t *verdata)
 {
     size_t maxAddress = m_AddressIdx[0] + m_SizeIdx[0];
+    bool isValid = false; // CHECK
 
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
         CIndexAnimation &index = g_Index.m_Anim[i];
-
         ANIMATION_GROUPS_TYPE groupType = AGT_UNKNOWN;
         size_t findID = 0;
-
         if (i >= 200)
         {
             if (i >= 400) //People
@@ -243,12 +216,9 @@ void CAnimationManager::Load(uint32_t *verdata)
         }
 
         index.Graphic = (int)i;
-
         //if (index.Type != AGT_UNKNOWN)
         //	groupType = index.Type;
-
         int count = 0;
-
         switch (groupType)
         {
             case AGT_MONSTER:
@@ -272,9 +242,7 @@ void CAnimationManager::Load(uint32_t *verdata)
         }
 
         index.Type = groupType;
-
         size_t address = m_AddressIdx[0] + findID;
-
         for (int j = 0; j < count; j++)
         {
             CTextureAnimationGroup &group = index.m_Groups[j];
@@ -295,9 +263,11 @@ void CAnimationManager::Load(uint32_t *verdata)
                     direction.BaseSize = aidx->Size;
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
+                    isValid = true;
                 }
             }
         }
+        index.IsValidMUL = isValid;
     }
 
     if (verdata != nullptr)
@@ -378,6 +348,7 @@ void CAnimationManager::Load(uint32_t *verdata)
 
                 index.Graphic = id;
                 index.Type = groupType;
+                index.IsValidMUL = true;
             }
         }
     }
@@ -392,32 +363,26 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
         };
 
         Wisp::CTextFileParser mobtypesParser(g_App.UOFilesPath("mobtypes.txt"), " \t", "#;//", "");
-
         while (!mobtypesParser.IsEOF())
         {
-            std::vector<astr_t> strings = mobtypesParser.ReadTokens();
-
+            const auto strings = mobtypesParser.ReadTokens();
             if (strings.size() >= 3)
             {
-                uint16_t index = str_to_int(strings[0]);
-
+                const uint16_t index = str_to_int(strings[0]);
                 if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
                 {
                     continue;
                 }
 
-                auto testType = str_lower(strings[1]);
-
+                const auto testType = str_lower(strings[1]);
+                char *endP = nullptr;
+                const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
                 for (int i = 0; i < 5; i++)
                 {
                     if (testType == typeNames[i])
                     {
                         g_Index.m_Anim[index].Type = (ANIMATION_GROUPS_TYPE)i;
-
-                        char *endP = nullptr;
-                        g_Index.m_Anim[index].Flags =
-                            0x80000000 | strtoul(("0x" + strings[2]).c_str(), &endP, 16);
-
+                        g_Index.m_Anim[index].Flags = 0x80000000 | number;
                         break;
                     }
                 }
@@ -427,29 +392,26 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     Load(verdata);
 
-    //std::pair<uint16_t, char> m_GroupReplaces[2];
-
-    Wisp::CTextFileParser animParser[2] = {
+    Wisp::CTextFileParser animParser[] = {
         Wisp::CTextFileParser(g_App.UOFilesPath("Anim1.def"), " \t", "#;//", "{}"),
         Wisp::CTextFileParser(g_App.UOFilesPath("Anim2.def"), " \t", "#;//", "{}"),
     };
-
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < countof(animParser); i++)
     {
         while (!animParser[i].IsEOF())
         {
-            std::vector<astr_t> strings = animParser[i].ReadTokens();
-
+            const auto strings = animParser[i].ReadTokens();
             if (strings.size() < 2)
             {
                 continue;
             }
-
-            uint16_t group = (uint16_t)str_to_int(strings[0]);
-            int replaceGroup = str_to_int(strings[1]);
-
-            m_GroupReplaces[i].push_back(
-                std::pair<uint16_t, uint8_t>(group, (uint8_t)replaceGroup));
+            const auto group = uint16_t(str_to_int(strings[0]));
+            if (group == 0xffff)
+            {
+                continue;
+            }
+            const auto replaceGroup = uint8_t(str_to_int(strings[1]));
+            m_GroupReplaces[i].push_back({ group, replaceGroup });
         }
     }
 
@@ -462,21 +424,19 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
     Wisp::CTextFileParser bodyParser(g_App.UOFilesPath("Body.def"), " \t", "#;//", "{}");
     Wisp::CTextFileParser bodyconvParser(g_App.UOFilesPath("Bodyconv.def"), " \t", "#;//", "");
     Wisp::CTextFileParser corpseParser(g_App.UOFilesPath("Corpse.def"), " \t", "#;//", "{}");
-
     Wisp::CTextFileParser equipConvParser(g_App.UOFilesPath("Equipconv.def"), " \t", "#;//", "");
-
     while (!equipConvParser.IsEOF())
     {
-        std::vector<astr_t> strings = equipConvParser.ReadTokens();
+        const auto strings = equipConvParser.ReadTokens();
         if (strings.size() >= 5)
         {
-            auto body = (uint16_t)str_to_int(strings[0]);
+            const auto body = (uint16_t)str_to_int(strings[0]);
             if (body >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
-            auto graphic = (uint16_t)str_to_int(strings[1]);
+            const auto graphic = (uint16_t)str_to_int(strings[1]);
             if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
@@ -505,47 +465,38 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             }
 
             auto color = (uint16_t)str_to_int(strings[4]);
-            EQUIP_CONV_BODY_MAP::iterator bodyMapIter = m_EquipConv.find(body);
+            auto bodyMapIter = m_EquipConv.find(body);
             if (bodyMapIter == m_EquipConv.end())
             {
-                m_EquipConv.insert(EQUIP_CONV_BODY_MAP::value_type(body, EQUIP_CONV_DATA_MAP()));
-
+                m_EquipConv.insert({ body, {} });
                 bodyMapIter = m_EquipConv.find(body);
-
                 if (bodyMapIter == m_EquipConv.end())
                 {
                     continue; //?!?!??
                 }
             }
-
-            bodyMapIter->second.insert(
-                EQUIP_CONV_DATA_MAP::value_type(graphic, CEquipConvData(newGraphic, gump, color)));
+            bodyMapIter->second.insert({ graphic, { newGraphic, gump, color } });
         }
     }
 
     while (!bodyconvParser.IsEOF())
     {
-        std::vector<astr_t> strings = bodyconvParser.ReadTokens();
-
+        auto strings = bodyconvParser.ReadTokens();
         if (strings.size() >= 2)
         {
-            uint16_t index = str_to_int(strings[0]);
-
+            const uint16_t index = str_to_int(strings[0]);
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
             }
 
             int anim[4] = { str_to_int(strings[1]), -1, -1, -1 };
-
             if (strings.size() >= 3)
             {
                 anim[1] = str_to_int(strings[2]);
-
                 if (strings.size() >= 4)
                 {
                     anim[2] = str_to_int(strings[3]);
-
                     if (strings.size() >= 5)
                     {
                         anim[3] = str_to_int(strings[4]);
@@ -558,7 +509,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             uint16_t realAnimID = 0;
             char mountedHeightOffset = 0;
             ANIMATION_GROUPS_TYPE groupType = AGT_UNKNOWN;
-
             if (anim[0] != -1 && m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
             {
                 animFile = 2;
@@ -732,12 +682,10 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
                     size_t address = m_AddressIdx[animFile] + startAnimID;
                     size_t maxAddress = m_AddressIdx[animFile] + m_SizeIdx[animFile];
-
                     for (int j = 0; j < count; j++)
                     {
                         CTextureAnimationGroup &group = dataIndex.m_Groups[j];
                         int offset = (int)j * MAX_MOBILE_DIRECTIONS;
-
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
                             CTextureAnimationDirection &direction = group.m_Direction[d];
@@ -764,21 +712,17 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
     while (!bodyParser.IsEOF())
     {
-        std::vector<astr_t> strings = bodyParser.ReadTokens();
-
+        const auto strings = bodyParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            uint16_t index = str_to_int(strings[0]);
-
-            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1]);
-
+            const uint16_t index = str_to_int(strings[0]);
+            const auto newBody = newBodyParser.GetTokens(strings[1]);
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
                 continue;
             }
 
-            uint16_t checkIndex = str_to_int(newBody[0]);
-
+            const uint16_t checkIndex = str_to_int(newBody[0]);
             if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
@@ -786,7 +730,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
             CIndexAnimation &dataIndex = g_Index.m_Anim[index];
             CIndexAnimation &checkDataIndex = g_Index.m_Anim[checkIndex];
-
             int count = 0;
             int ignoreGroups[2] = { -1, -1 };
 
@@ -798,7 +741,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     count = HAG_ANIMATION_COUNT;
                     ignoreGroups[0] = HAG_DIE_1;
                     ignoreGroups[1] = HAG_DIE_2;
-
                     break;
                 }
                 case AGT_HUMAN:
@@ -807,7 +749,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     count = PAG_ANIMATION_COUNT;
                     ignoreGroups[0] = PAG_DIE_1;
                     ignoreGroups[1] = PAG_DIE_2;
-
                     break;
                 }
                 case AGT_ANIMAL:
@@ -815,7 +756,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                     count = LAG_ANIMATION_COUNT;
                     ignoreGroups[0] = LAG_DIE_1;
                     ignoreGroups[1] = LAG_DIE_2;
-
                     break;
                 }
                 default:
@@ -831,25 +771,22 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
                 CTextureAnimationGroup &group = dataIndex.m_Groups[j];
                 CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[j];
-
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
                     CTextureAnimationDirection &direction = group.m_Direction[d];
                     CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
-
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
-
-                    if (direction.PatchedAddress == 0u)
+                    if (direction.PatchedAddress == 0)
                     {
                         direction.PatchedAddress = newDirection.PatchedAddress;
                         direction.PatchedSize = newDirection.PatchedSize;
                         direction.FileIndex = newDirection.FileIndex;
                     }
 
-                    if (direction.BaseAddress == 0u)
+                    if (direction.BaseAddress == 0)
                     {
                         direction.BaseAddress = direction.PatchedAddress;
                         direction.BaseSize = direction.PatchedSize;
@@ -862,27 +799,24 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             dataIndex.Type = checkDataIndex.Type;
             dataIndex.Flags = checkDataIndex.Flags;
             dataIndex.Graphic = checkIndex;
+            dataIndex.IsValidMUL = true;
             dataIndex.Color = str_to_int(strings[2]);
         }
     }
 
     while (!corpseParser.IsEOF())
     {
-        std::vector<astr_t> strings = corpseParser.ReadTokens();
-
+        const auto strings = corpseParser.ReadTokens();
         if (strings.size() >= 3)
         {
-            uint16_t index = str_to_int(strings[0]);
-
-            std::vector<astr_t> newBody = newBodyParser.GetTokens(strings[1]);
-
+            const uint16_t index = str_to_int(strings[0]);
+            const auto newBody = newBodyParser.GetTokens(strings[1]);
             if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT || newBody.empty())
             {
                 continue;
             }
 
-            uint16_t checkIndex = str_to_int(newBody[0]);
-
+            const uint16_t checkIndex = str_to_int(newBody[0]);
             if (checkIndex >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
             {
                 continue;
@@ -890,9 +824,7 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
 
             CIndexAnimation &dataIndex = g_Index.m_Anim[index];
             CIndexAnimation &checkDataIndex = g_Index.m_Anim[checkIndex];
-
             int ignoreGroups[2] = { -1, -1 };
-
             switch (checkDataIndex.Type)
             {
                 case AGT_MONSTER:
@@ -900,7 +832,6 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 {
                     ignoreGroups[0] = HAG_DIE_1;
                     ignoreGroups[1] = HAG_DIE_2;
-
                     break;
                 }
                 case AGT_HUMAN:
@@ -908,14 +839,12 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
                 {
                     ignoreGroups[0] = PAG_DIE_1;
                     ignoreGroups[1] = PAG_DIE_2;
-
                     break;
                 }
                 case AGT_ANIMAL:
                 {
                     ignoreGroups[0] = LAG_DIE_1;
                     ignoreGroups[1] = LAG_DIE_2;
-
                     break;
                 }
                 default:
@@ -931,25 +860,22 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             {
                 CTextureAnimationGroup &group = dataIndex.m_Groups[ignoreGroups[j]];
                 CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[ignoreGroups[j]];
-
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
                     CTextureAnimationDirection &direction = group.m_Direction[d];
                     CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
-
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
-
-                    if (direction.PatchedAddress == 0u)
+                    if (direction.PatchedAddress == 0)
                     {
                         direction.PatchedAddress = newDirection.PatchedAddress;
                         direction.PatchedSize = newDirection.PatchedSize;
                         direction.FileIndex = newDirection.FileIndex;
                     }
 
-                    if (direction.BaseAddress == 0u)
+                    if (direction.BaseAddress == 0)
                     {
                         direction.BaseAddress = direction.PatchedAddress;
                         direction.BaseSize = direction.PatchedSize;
@@ -962,12 +888,13 @@ void CAnimationManager::InitIndexReplaces(uint32_t *verdata)
             dataIndex.Type = checkDataIndex.Type;
             dataIndex.Flags = checkDataIndex.Flags;
             dataIndex.Graphic = checkIndex;
+            dataIndex.IsValidMUL = true;
             dataIndex.Color = str_to_int(strings[2]);
         }
     }
 }
 
-ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id)
+ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
 {
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
@@ -1839,15 +1766,16 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     }
 
     SelectAnim.Direction = 0;
-    obj->UpdateAnimationInfo(SelectAnim.Direction);
+    obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
 
     bool mirror = false;
     uint8_t layerDir = SelectAnim.Direction;
 
     GetAnimDirection(SelectAnim.Direction, mirror);
 
+    const uint16_t graphic = /*GetGraphicForAnimation*/ obj->Graphic;
     uint8_t animIndex = obj->AnimIndex;
-    uint8_t animGroup = obj->GetAnimationGroup();
+    uint8_t animGroup = obj->GetAnimationGroup(graphic, true);
     SelectAnim.Group = animGroup;
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
@@ -1870,13 +1798,12 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (drawShadow)
         {
             Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, animIndex, 0x10000);
-            SelectAnim.Group = obj->GetAnimationGroup(mountID);
-
+            SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
             Draw(goi, drawX, drawY, mirror, animIndex, mountID + 0x10000);
         }
         else
         {
-            SelectAnim.Group = obj->GetAnimationGroup(mountID);
+            SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
         }
 
         Draw(goi, drawX, drawY, mirror, animIndex, mountID);
@@ -1891,7 +1818,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             animGroup = PAG_STAND;
             animIndex = 0;
 
-            obj->UpdateAnimationInfo(SelectAnim.Direction);
+            obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
 
             FixSittingDirection(layerDir, mirror, drawX, drawY);
 
@@ -2145,7 +2072,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     y -= 3;
     m_Sitting = obj->IsSitting();
     SelectAnim.Direction = 0;
-    obj->UpdateAnimationInfo(SelectAnim.Direction);
+    obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
 
     bool mirror = false;
     uint8_t layerDir = SelectAnim.Direction;
@@ -2153,7 +2080,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     GetAnimDirection(SelectAnim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    uint8_t animGroup = obj->GetAnimationGroup();
+    uint8_t animGroup = obj->GetAnimationGroup(0, true);
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
@@ -2163,9 +2090,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     if (obj->IsHuman() && goi != nullptr) //Check mount
     {
         uint16_t mountID = goi->GetMountAnimation();
-
-        SelectAnim.Group = obj->GetAnimationGroup(mountID);
-
+        SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
         if (TestPixels(goi, drawX, drawY, mirror, animIndex, mountID))
         {
             return true;
@@ -2180,11 +2105,8 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     {
         animGroup = PAG_STAND;
         animIndex = 0;
-
-        obj->UpdateAnimationInfo(SelectAnim.Direction);
-
+        obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
         FixSittingDirection(layerDir, mirror, drawX, drawY);
-
         if (SelectAnim.Direction == 3)
         {
             animGroup = 25;
@@ -2318,8 +2240,8 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     if (obj->NPC)
     {
         CGameCharacter *gc = obj->GameCharacterPtr();
-        gc->UpdateAnimationInfo(dir);
-        animGroup = gc->GetAnimationGroup();
+        gc->UpdateAnimationInfo_ProcessSteps(dir);
+        animGroup = gc->GetAnimationGroup(0, true);
         GetAnimDirection(dir, mirror);
     }
     else if (obj->IsCorpse())
@@ -2388,7 +2310,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
     if (gameObject->NPC)
     {
         CGameCharacter *obj = (CGameCharacter *)gameObject;
-        obj->UpdateAnimationInfo(SelectAnim.Direction);
+        obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
 
         bool mirror = false;
         uint8_t layerDir = SelectAnim.Direction;
@@ -2396,7 +2318,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         GetAnimDirection(SelectAnim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        uint8_t animGroup = obj->GetAnimationGroup();
+        uint8_t animGroup = obj->GetAnimationGroup(0, true);
 
         FRAME_OUTPUT_INFO info = {};
 
@@ -2405,11 +2327,8 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         if (goi != nullptr) //Check mount
         {
             uint16_t mountID = goi->GetMountAnimation();
-
-            SelectAnim.Group = obj->GetAnimationGroup(mountID);
-
+            SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
             CalculateFrameInformation(info, goi, mirror, animIndex);
-
             switch (animGroup)
             {
                 case PAG_FIDGET_1:
@@ -2728,24 +2647,21 @@ uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint1
     auto getReplaceGroup = [](const std::vector<std::pair<uint16_t, uint8_t>> &list,
                               uint16_t index,
                               uint16_t walkIndex) -> uint16_t {
-        for (const std::pair<uint16_t, uint8_t> &item : list)
+        for (const auto &item : list)
         {
             if (item.first == index)
             {
-                if (item.second == 0xFF)
+                if (item.second == 0xff)
                 {
                     return walkIndex;
                 }
-
                 return (uint16_t)item.second;
             }
         }
-
         return index;
     };
 
-    ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
-
+    const ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
     if (group == AG_LOW)
     {
         return (uint8_t)(
@@ -2756,8 +2672,22 @@ uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint1
         return (uint8_t)(
             getReplaceGroup(m_GroupReplaces[1], index, PAG_WALK_UNARMED) % PAG_ANIMATION_COUNT);
     }
-
     return (uint8_t)(index % HAG_ANIMATION_COUNT);
+}
+
+bool CAnimationManager::IsReplacedObjectAnimation(uint8_t anim, uint16_t v13) const
+{
+    if (anim >= countof(m_GroupReplaces))
+        return false;
+
+    for (const auto &item : m_GroupReplaces[anim])
+    {
+        if (item.first == v13)
+        {
+            return item.second != 0xff;
+        }
+    }
+    return false;
 }
 
 uint8_t
@@ -3220,4 +3150,556 @@ CAnimationManager::ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t g
         }
     }
     return dir;
+}
+
+static void LABEL_222(ANIMATION_FLAGS flags, uint16_t &v13)
+{
+    if (flags & AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED)
+    {
+        switch (v13)
+        {
+            case 0:
+                v13 = 0;
+                goto LABEL_243;
+            case 1:
+                v13 = 19;
+                goto LABEL_243;
+            case 5:
+            case 6:
+                if (flags & AF_IDLE_AT_8_FRAME)
+                    v13 = 4;
+                else
+                    v13 = uint16_t(6 - (RandomInt(2) & 1));
+                goto LABEL_243;
+            case 8:
+                v13 = 2;
+                goto LABEL_243;
+            case 9:
+                v13 = 17;
+                goto LABEL_243;
+            case 10:
+                v13 = 18;
+                if (flags & AF_IDLE_AT_8_FRAME)
+                    v13--;
+                goto LABEL_243;
+            case 12:
+                v13 = 3;
+                goto LABEL_243;
+        }
+        // LABEL_241
+        v13 = 1;
+    }
+    else
+    {
+        if (flags & AF_CALCULATE_OFFSET_BY_LOW_GROUP)
+        {
+            switch (v13)
+            {
+                case 0:
+                    // LABEL_232
+                    v13 = 0;
+                    break;
+                case 2:
+                    v13 = 8;
+                    break;
+                case 3:
+                    v13 = 12;
+                    break;
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 12:
+                case 13:
+                case 14:
+                    v13 = 5;
+                    break;
+                case 5:
+                    v13 = 6;
+                    break;
+                case 10:
+                case 21:
+                    v13 = 7;
+                    break;
+                case 11:
+                    //LABEL_238:
+                    v13 = 3;
+                    break;
+                case 17:
+                    v13 = 9;
+                    break;
+                case 18:
+                    v13 = 10;
+                    break;
+                case 19:
+                    v13 = 1;
+                    break;
+                default:
+                    //LABEL_242:
+                    v13 = 2;
+                    break;
+            }
+        }
+    }
+
+LABEL_243:
+    v13 = uint16_t(v13 & 0x7F);
+    if (v13 > 34)
+        v13 = 0;
+    //return uint8_t(v13);
+}
+
+static void LABEL_190(ANIMATION_FLAGS flags, uint16_t &v13)
+{
+    if (flags & AF_UNKNOWN_80 && v13 == 4)
+    {
+        v13 = 5;
+    }
+
+    if (flags & AF_UNKNOWN_200)
+    {
+        if (v13 - 7 > 9)
+        {
+            if (v13 == 19)
+            {
+                //LABEL_196
+                v13 = 0;
+            }
+            else if (v13 > 19)
+            {
+                v13 = 1;
+            }
+            LABEL_222(flags, v13);
+            return;
+        }
+    }
+    else
+    {
+        if (flags & AF_UNKNOWN_100)
+        {
+            switch (v13)
+            {
+                case 10:
+                case 15:
+                case 16:
+                    v13 = 1;
+                    LABEL_222(flags, v13);
+                    return;
+                case 11:
+                    v13 = 17;
+                    LABEL_222(flags, v13);
+                    return;
+            }
+            LABEL_222(flags, v13);
+            return;
+        }
+
+        if (flags & AF_UNKNOWN_1)
+        {
+            if (v13 == 21)
+            {
+                v13 = 10;
+            }
+            LABEL_222(flags, v13);
+            return;
+        }
+
+        if (flags & AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP)
+        {
+            //LABEL_222:
+            LABEL_222(flags, v13);
+            return;
+        }
+
+        switch (v13)
+        {
+            case 0:
+                v13 = 0;
+                break;
+            case 2:
+                v13 = 21;
+                LABEL_222(flags, v13);
+                return;
+            case 3:
+                v13 = 22;
+                LABEL_222(flags, v13);
+                return;
+            case 4:
+            case 9:
+                v13 = 9;
+                LABEL_222(flags, v13);
+                return;
+            case 5:
+                v13 = 11;
+                LABEL_222(flags, v13);
+                return;
+            case 6:
+                v13 = 13;
+                LABEL_222(flags, v13);
+                return;
+            case 7:
+                v13 = 18;
+                LABEL_222(flags, v13);
+                return;
+            case 8:
+                v13 = 19;
+                LABEL_222(flags, v13);
+                return;
+            case 10:
+            case 21:
+                v13 = 20;
+                LABEL_222(flags, v13);
+                return;
+            case 11:
+                v13 = 3;
+                LABEL_222(flags, v13);
+                return;
+            case 12:
+            case 14:
+                v13 = 16;
+                LABEL_222(flags, v13);
+                return;
+            case 13:
+                //LABEL_202:
+                v13 = 17;
+                LABEL_222(flags, v13);
+                return;
+            case 15:
+            case 16:
+                v13 = 30;
+                LABEL_222(flags, v13);
+                return;
+            case 17:
+                v13 = 5;
+                LABEL_222(flags, v13);
+                return;
+            case 18:
+                v13 = 6;
+                LABEL_222(flags, v13);
+                return;
+            case 19:
+                //LABEL_201:
+                v13 = 1;
+                LABEL_222(flags, v13);
+                return;
+        }
+    }
+    v13 = 4;
+    LABEL_222(flags, v13);
+}
+
+uint8_t CAnimationManager::CorrectAnimationGroupServer(
+    ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const
+{
+    auto originalType = type;
+    if (v13 == 12)
+    {
+        if (!(type == AGT_HUMAN || type == AGT_EQUIPMENT || flags & AF_UNKNOWN_1000))
+        {
+            if (type != AGT_MONSTER)
+            {
+                if (type == AGT_HUMAN || type == AGT_EQUIPMENT)
+                {
+                    v13 = 16;
+                }
+                else
+                    v13 = 5;
+            }
+            else
+                v13 = 4;
+        }
+    }
+
+    if (type != AGT_MONSTER)
+    {
+        if (type != AGT_SEA_MONSTER)
+        {
+            if (type == AGT_ANIMAL)
+            {
+                if (IsReplacedObjectAnimation(0, v13))
+                {
+                    originalType = AGT_UNKNOWN;
+                }
+                if (v13 > 12)
+                {
+                    v13 = 0; // 2
+                }
+            }
+            else
+            {
+                if (IsReplacedObjectAnimation(1, v13))
+                {
+                    // LABEL_190:
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                }
+            }
+        }
+        else
+        {
+            if (IsReplacedObjectAnimation(3, v13))
+            {
+                originalType = AGT_UNKNOWN;
+            }
+            if (v13 > 8)
+            {
+                v13 = 2;
+            }
+        }
+    }
+    else
+    {
+        if (IsReplacedObjectAnimation(2, v13))
+        {
+            originalType = AGT_UNKNOWN;
+        }
+        if (v13 > 21)
+        {
+            v13 = 1;
+        }
+    }
+
+    if (originalType == AGT_UNKNOWN)
+    {
+        LABEL_190(flags, v13);
+        return uint8_t(v13);
+    }
+
+    if (originalType != 0)
+    {
+        if (originalType == AGT_ANIMAL && type == AGT_MONSTER)
+        {
+            switch (v13)
+            {
+                case 0:
+                    v13 = 0;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 1:
+                    v13 = 19;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 3:
+                    v13 = 11;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 5:
+                    v13 = 4;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 6:
+                    v13 = 5;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 7:
+                case 11:
+                    v13 = 10;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 8:
+                    v13 = 2;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 9:
+                    v13 = 17;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 10:
+                    v13 = 18;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 12:
+                    v13 = 3;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            // LABEL_187
+            v13 = 1;
+        }
+        LABEL_190(flags, v13);
+        return uint8_t(v13);
+    }
+
+    switch (type)
+    {
+        case AGT_HUMAN:
+        {
+            switch (v13)
+            {
+                case 0:
+                    v13 = 0;
+                    goto LABEL_189;
+                case 2:
+                    v13 = 21;
+                    goto LABEL_189;
+                case 3:
+                    v13 = 22;
+                    goto LABEL_189;
+                case 4:
+                case 9:
+                    v13 = 9;
+                    goto LABEL_189;
+                case 5:
+                    //LABEL_163:
+                    v13 = 11;
+                    goto LABEL_189;
+                case 6:
+                    v13 = 13;
+                    goto LABEL_189;
+                case 7:
+                    //LABEL_165:
+                    v13 = 18;
+                    goto LABEL_189;
+                case 8:
+                    //LABEL_172:
+                    v13 = 19;
+                    goto LABEL_189;
+                case 10:
+                case 21:
+                    v13 = 20;
+                    goto LABEL_189;
+                case 12:
+                case 14:
+                    v13 = 16;
+                    goto LABEL_189;
+                case 13:
+                    //LABEL_164:
+                    v13 = 17;
+                    goto LABEL_189;
+                case 15:
+                case 16:
+                    v13 = 30;
+                    goto LABEL_189;
+                case 17:
+                    v13 = 5;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 18:
+                    v13 = 6;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 19:
+                    v13 = 1;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            //LABEL_161:
+            v13 = 4;
+            goto LABEL_189;
+        }
+        case AGT_ANIMAL:
+        {
+            switch (v13)
+            {
+                case 0:
+                    v13 = 0;
+                    goto LABEL_189;
+                case 2:
+                    v13 = 8;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 3:
+                    v13 = 12;
+                    goto LABEL_189;
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 12:
+                case 13:
+                case 14:
+                    v13 = 5;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 5:
+                    v13 = 6;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 10:
+                case 21:
+                    v13 = 7;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 11:
+                    v13 = 3;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+                case 17:
+                    //LABEL_170:
+                    v13 = 9;
+                    goto LABEL_189;
+                case 18:
+                    //LABEL_162:
+                    v13 = 10;
+                    goto LABEL_189;
+                case 19:
+                    v13 = 1;
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            v13 = 2;
+            LABEL_190(flags, v13);
+            return uint8_t(v13);
+        }
+        case AGT_SEA_MONSTER:
+        {
+            switch (v13)
+            {
+                case 0:
+                    //LABEL_182:
+                    v13 = 0;
+                    goto LABEL_189;
+                case 2:
+                case 3:
+                    //LABEL_178:
+                    v13 = 8;
+                    goto LABEL_189;
+                case 4:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 12:
+                case 13:
+                case 14:
+                    //LABEL_183:
+                    v13 = 5;
+                    goto LABEL_189;
+                case 5:
+                    //LABEL_184:
+                    v13 = 6;
+                    goto LABEL_189;
+                case 10:
+                case 21:
+                    //LABEL_185:
+                    v13 = 7;
+                    goto LABEL_189;
+                case 17:
+                    //LABEL_186:
+                    v13 = 3;
+                    goto LABEL_189;
+                case 18:
+                    v13 = 4;
+                    goto LABEL_189;
+                case 19:
+                    LABEL_190(flags, v13);
+                    return uint8_t(v13);
+            }
+            v13 = 2;
+            LABEL_190(flags, v13);
+            return uint8_t(v13);
+        }
+        default:
+        {
+        LABEL_189:
+            LABEL_190(flags, v13);
+            return uint8_t(v13);
+        }
+    }
+    // LABEL_188
+    v13 = 2;
+    LABEL_190(flags, v13);
+    return uint8_t(v13);
 }

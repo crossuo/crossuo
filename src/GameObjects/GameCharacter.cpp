@@ -2,6 +2,8 @@
 // Copyright (C) August 2016 Hotride
 
 #include <SDL_timer.h>
+#include <xuocore/uodata.h>
+#include <common/utils.h>
 #include "GameItem.h"
 #include "../CrossUO.h"
 #include "../TargetGump.h"
@@ -20,7 +22,12 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Utility/PerfMarker.h"
 
-#define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
+static uint16_t HANDS_BASE_ANIMID[] = { 0x0263, 0x0264, 0x0265, 0x0266, 0x0267, 0x0268, 0x0269,
+                                        0x026D, 0x0270, 0x0272, 0x0274, 0x027A, 0x027C, 0x027F,
+                                        0x0281, 0x0286, 0x0288, 0x0289, 0x028B, 0 };
+
+static uint16_t HAND2_BASE_ANIMID[] = { 0x0240, 0x0241, 0x0242, 0x0243, 0x0244,
+                                        0x0245, 0x0246, 0x03E0, 0x03E1, 0 };
 
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)
@@ -157,7 +164,8 @@ void CGameCharacter::UpdateHitsTexture(uint8_t hits)
 int CGameCharacter::IsSitting()
 {
     int result = 0;
-    if (IsHuman() && !IsMounted() && !IsFlying() && !TestStepNoChangeDirection(GetAnimationGroup()))
+    if (IsHuman() && !IsMounted() && !IsFlying() &&
+        !TestStepNoChangeDirection(GetAnimationGroup(0, true)))
     {
         CRenderWorldObject *obj = this;
         while (obj != nullptr && obj->m_PrevXY != nullptr)
@@ -487,49 +495,49 @@ void CGameCharacter::SetRandomFidgetAnimation()
     }
 }
 
+static const uint8_t s_animAssociateTable[PAG_ANIMATION_COUNT][3] = {
+    { LAG_WALK, HAG_WALK, PAG_WALK_UNARMED },
+    { LAG_WALK, HAG_WALK, PAG_WALK_ARMED },
+    { LAG_RUN, HAG_FLY, PAG_RUN_UNARMED },
+    { LAG_RUN, HAG_FLY, PAG_RUN_ARMED },
+    { LAG_STAND, HAG_STAND, PAG_STAND },
+    { LAG_FIDGET_1, HAG_FIDGET_1, PAG_FIDGET_1 },
+    { LAG_FIDGET_2, HAG_FIDGET_2, PAG_FIDGET_2 },
+    { LAG_STAND, HAG_STAND, PAG_STAND_ONEHANDED_ATTACK },
+    { LAG_STAND, HAG_STAND, PAG_STAND_TWOHANDED_ATTACK },
+    { LAG_EAT, HAG_ATTACK_3, PAG_ATTACK_ONEHANDED },
+    { LAG_EAT, HAG_ATTACK_1, PAG_ATTACK_UNARMED_1 },
+    { LAG_EAT, HAG_ATTACK_2, PAG_ATTACK_UNARMED_2 },
+    { LAG_EAT, HAG_ATTACK_3, PAG_ATTACK_TWOHANDED_DOWN },
+    { LAG_EAT, HAG_ATTACK_1, PAG_ATTACK_TWOHANDED_WIDE },
+    { LAG_EAT, HAG_ATTACK_2, PAG_ATTACK_TWOHANDED_JAB },
+    { LAG_WALK, HAG_WALK, PAG_WALK_WARMODE },
+    { LAG_EAT, HAG_ATTACK_2, PAG_CAST_DIRECTED },
+    { LAG_EAT, HAG_ATTACK_3, PAG_CAST_AREA },
+    { LAG_EAT, HAG_ATTACK_1, PAG_ATTACK_BOW },
+    { LAG_EAT, HAG_ATTACK_2, PAG_ATTACK_CROSSBOW },
+    { LAG_EAT, HAG_GET_HIT_1, PAG_GET_HIT },
+    { LAG_DIE_1, HAG_DIE_1, PAG_DIE_1 },
+    { LAG_DIE_2, HAG_DIE_2, PAG_DIE_2 },
+    { LAG_WALK, HAG_WALK, PAG_ONMOUNT_RIDE_SLOW },
+    { LAG_RUN, HAG_FLY, PAG_ONMOUNT_RIDE_FAST },
+    { LAG_STAND, HAG_STAND, PAG_ONMOUNT_STAND },
+    { LAG_EAT, HAG_ATTACK_1, PAG_ONMOUNT_ATTACK },
+    { LAG_EAT, HAG_ATTACK_2, PAG_ONMOUNT_ATTACK_BOW },
+    { LAG_EAT, HAG_ATTACK_1, PAG_ONMOUNT_ATTACK_CROSSBOW },
+    { LAG_EAT, HAG_ATTACK_2, PAG_ONMOUNT_SLAP_HORSE },
+    { LAG_EAT, HAG_STAND, PAG_TURN },
+    { LAG_WALK, HAG_WALK, PAG_ATTACK_UNARMED_AND_WALK },
+    { LAG_EAT, HAG_STAND, PAG_EMOTE_BOW },
+    { LAG_EAT, HAG_STAND, PAG_EMOTE_SALUTE },
+    { LAG_FIDGET_1, HAG_FIDGET_1, PAG_FIDGET_3 }
+};
+
 void CGameCharacter::GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation)
 {
-    const uint8_t animAssociateTable[PAG_ANIMATION_COUNT][3] = {
-        { LAG_WALK, HAG_WALK, PAG_WALK_UNARMED },
-        { LAG_WALK, HAG_WALK, PAG_WALK_ARMED },
-        { LAG_RUN, HAG_FLY, PAG_RUN_UNARMED },
-        { LAG_RUN, HAG_FLY, PAG_RUN_ARMED },
-        { LAG_STAND, HAG_STAND, PAG_STAND },
-        { LAG_FIDGET_1, HAG_FIDGET_1, PAG_FIDGET_1 },
-        { LAG_FIDGET_2, HAG_FIDGET_2, PAG_FIDGET_2 },
-        { LAG_STAND, HAG_STAND, PAG_STAND_ONEHANDED_ATTACK },
-        { LAG_STAND, HAG_STAND, PAG_STAND_TWOHANDED_ATTACK },
-        { LAG_EAT, HAG_ATTACK_3, PAG_ATTACK_ONEHANDED },
-        { LAG_EAT, HAG_ATTACK_1, PAG_ATTACK_UNARMED_1 },
-        { LAG_EAT, HAG_ATTACK_2, PAG_ATTACK_UNARMED_2 },
-        { LAG_EAT, HAG_ATTACK_3, PAG_ATTACK_TWOHANDED_DOWN },
-        { LAG_EAT, HAG_ATTACK_1, PAG_ATTACK_TWOHANDED_WIDE },
-        { LAG_EAT, HAG_ATTACK_2, PAG_ATTACK_TWOHANDED_JAB },
-        { LAG_WALK, HAG_WALK, PAG_WALK_WARMODE },
-        { LAG_EAT, HAG_ATTACK_2, PAG_CAST_DIRECTED },
-        { LAG_EAT, HAG_ATTACK_3, PAG_CAST_AREA },
-        { LAG_EAT, HAG_ATTACK_1, PAG_ATTACK_BOW },
-        { LAG_EAT, HAG_ATTACK_2, PAG_ATTACK_CROSSBOW },
-        { LAG_EAT, HAG_GET_HIT_1, PAG_GET_HIT },
-        { LAG_DIE_1, HAG_DIE_1, PAG_DIE_1 },
-        { LAG_DIE_2, HAG_DIE_2, PAG_DIE_2 },
-        { LAG_WALK, HAG_WALK, PAG_ONMOUNT_RIDE_SLOW },
-        { LAG_RUN, HAG_FLY, PAG_ONMOUNT_RIDE_FAST },
-        { LAG_STAND, HAG_STAND, PAG_ONMOUNT_STAND },
-        { LAG_EAT, HAG_ATTACK_1, PAG_ONMOUNT_ATTACK },
-        { LAG_EAT, HAG_ATTACK_2, PAG_ONMOUNT_ATTACK_BOW },
-        { LAG_EAT, HAG_ATTACK_1, PAG_ONMOUNT_ATTACK_CROSSBOW },
-        { LAG_EAT, HAG_ATTACK_2, PAG_ONMOUNT_SLAP_HORSE },
-        { LAG_EAT, HAG_STAND, PAG_TURN },
-        { LAG_WALK, HAG_WALK, PAG_ATTACK_UNARMED_AND_WALK },
-        { LAG_EAT, HAG_STAND, PAG_EMOTE_BOW },
-        { LAG_EAT, HAG_STAND, PAG_EMOTE_SALUTE },
-        { LAG_FIDGET_1, HAG_FIDGET_1, PAG_FIDGET_3 }
-    };
-
-    if ((group != 0u) && animation < PAG_ANIMATION_COUNT)
+    if (group != 0 && animation < PAG_ANIMATION_COUNT)
     {
-        animation = animAssociateTable[animation][group - 1];
+        animation = s_animAssociateTable[animation][group - 1];
     }
 }
 
@@ -627,23 +635,441 @@ bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
     return result;
 }
 
-uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
+static void CalculateHight(
+    ushort graphic,
+    CGameCharacter *mobile,
+    ANIMATION_FLAGS flags,
+    bool isrun,
+    bool iswalking,
+    uint8_t &result)
+{
+    if (flags & AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP)
+    {
+        if (result == AG_INVALID)
+        {
+            result = 0;
+        }
+    }
+    else if (flags & AF_CALCULATE_OFFSET_BY_LOW_GROUP)
+    {
+        if (!iswalking)
+        {
+            if (result == AG_INVALID)
+            {
+                result = 2;
+            }
+        }
+        else if (isrun)
+        {
+            result = 1;
+        }
+        else
+        {
+            result = 0;
+        }
+    }
+    else
+    {
+        if (mobile->IsFlying())
+        {
+            result = 19;
+        }
+        else if (!iswalking)
+        {
+            if (result == AG_INVALID)
+            {
+                if ((flags & AF_IDLE_AT_8_FRAME) && g_AnimationManager.AnimationExists(graphic, 8))
+                {
+                    result = 8;
+                }
+                else
+                {
+                    if ((flags & AF_USE_UOP_ANIMATION) && !mobile->InWarMode())
+                    {
+                        result = 25;
+                    }
+                    else
+                    {
+                        result = 1;
+                    }
+                }
+            }
+        }
+        else if (isrun)
+        {
+            if ((flags & AF_CAN_FLYING) && g_AnimationManager.AnimationExists(graphic, 19))
+            {
+                result = 19;
+            }
+            else
+            {
+                result = (flags & AF_USE_UOP_ANIMATION) ? 24 : 0;
+            }
+        }
+        else
+        {
+            if ((flags & AF_USE_UOP_ANIMATION) && !mobile->InWarMode())
+            {
+                result = 22;
+            }
+            else
+            {
+                result = 0;
+            }
+        }
+    }
+}
+
+#define USE_NEW_ANIM_CODE 1
+
+uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
 {
     uint16_t graphic = checkGraphic;
-
-    if (graphic == 0u)
+    if (graphic == 0)
     {
         graphic = GetMountAnimation();
     }
 
-    ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(graphic);
+#if USE_NEW_ANIM_CODE
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    {
+        return 0;
+    }
+
+    const auto &animData = g_Index.m_Anim[graphic];
+    //ANIMATION_GROUPS_TYPE originalType = AGT_UNKNOWN;
+    ANIMATION_GROUPS_TYPE type = animData.Type;
+    const bool uop = animData.IsUOP && (isParent || !animData.IsValidMUL);
+    /*
+    if (!uop)
+    {
+        if (!animData.HasBodyConversion)
+        {
+            const auto newGraphic = animData.Graphic;
+            if (graphic != newGraphic)
+            {
+                graphic = newGraphic;
+                ANIMATION_GROUPS_TYPE newType = g_Index.m_Anim[graphic].Type;
+                if (newType != animData.Type)
+                {
+                    originalType = animData.Type;
+                    type = newType;
+                }
+            }
+        }
+    }
+    */
+
+    const ANIMATION_FLAGS flags = AF_NONE;
+    if (AnimationFromServer && AnimationGroup != AG_INVALID)
+    {
+        return g_AnimationManager.CorrectAnimationGroupServer(type, flags, AnimationGroup);
+    }
+
+    //const ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(graphic);
     uint8_t result = AnimationGroup;
 
-    if (result != 0xFF && ((Serial & 0x80000000) == 0u) &&
-        (!AnimationFromServer || (checkGraphic != 0u)))
+    bool isWalking = Walking();
+    bool isRun = (Direction & 0x80) != 0;
+    if (!m_Steps.empty())
+    {
+        isWalking = true;
+        isRun = m_Steps.front().Run();
+    }
+
+    switch (type)
+    {
+        case AGT_ANIMAL:
+        {
+            if (flags & AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED)
+            {
+                CalculateHight(graphic, this, flags, isRun, isWalking, result);
+            }
+            else
+            {
+                if (!isWalking)
+                {
+                    if (result == AG_INVALID)
+                    {
+                        if (flags & AF_USE_UOP_ANIMATION)
+                        {
+                            if (InWarMode() && g_AnimationManager.AnimationExists(graphic, 1))
+                            {
+                                result = 1;
+                            }
+                            else
+                            {
+                                result = 25;
+                            }
+                        }
+                        else
+                        {
+                            result = 2;
+                        }
+                    }
+                }
+                else if (isRun)
+                {
+                    if (flags & AF_USE_UOP_ANIMATION)
+                    {
+                        result = 24;
+                    }
+                    else
+                    {
+                        result = g_AnimationManager.AnimationExists(graphic, 1) ? 1 : 2;
+                    }
+                }
+                else if (
+                    (flags & AF_USE_UOP_ANIMATION) != 0 &&
+                    (!InWarMode() || !g_AnimationManager.AnimationExists(graphic, 0)))
+                {
+                    result = 22;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            break;
+        }
+        case AGT_MONSTER:
+        {
+            CalculateHight(graphic, this, flags, isRun, isWalking, result);
+            break;
+        }
+        case AGT_SEA_MONSTER:
+        {
+            if (!isWalking)
+            {
+                if (result == AG_INVALID)
+                {
+                    result = 2;
+                }
+            }
+            else if (isRun)
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+            break;
+        }
+        default:
+        {
+            auto hand2 = FindLayer(OL_2_HAND);
+            if (!isWalking)
+            {
+                if (result == AG_INVALID)
+                {
+                    bool haveLightAtHand2 =
+                        hand2 != nullptr && hand2->IsLightSource() && hand2->AnimID == graphic;
+                    if (IsMounted())
+                    {
+                        result = haveLightAtHand2 ? 28 : 25;
+                    }
+                    else if (IsGargoyle() && IsFlying()) // TODO: what's up when it is dead?
+                    {
+                        result = InWarMode() ? 65 : 64;
+                    }
+                    else if (!InWarMode() || IsDead())
+                    {
+                        if (haveLightAtHand2)
+                        {
+                            // TODO: UOP EQUIPMENT ?
+                            result = 0;
+                        }
+                        else
+                        {
+                            if (uop && type == AGT_EQUIPMENT &&
+                                !g_AnimationManager.AnimationExists(graphic, 4))
+                            {
+                                result = 37;
+                            }
+                            else
+                            {
+                                result = 4;
+                            }
+                        }
+                    }
+                    else if (haveLightAtHand2)
+                    {
+                        // TODO: UOP EQUIPMENT ?
+                        result = 2;
+                    }
+                    else
+                    {
+                        uint16_t handAnimIDs[2];
+                        const auto hand1 = FindLayer(OL_1_HAND);
+                        if (hand1 != nullptr)
+                        {
+                            handAnimIDs[0] = hand1->AnimID;
+                        }
+                        if (hand2 != nullptr)
+                        {
+                            handAnimIDs[1] = hand2->AnimID;
+                        }
+                        if (hand1 == nullptr)
+                        {
+                            if (hand2 != nullptr)
+                            {
+                                if (uop && type == AGT_EQUIPMENT &&
+                                    !g_AnimationManager.AnimationExists(graphic, 7))
+                                {
+                                    result = 8;
+                                }
+                                else
+                                {
+                                    result = 7;
+                                }
+
+                                for (int i = 0; i < 2; i++)
+                                {
+                                    if (handAnimIDs[i] >= 0x0263 && handAnimIDs[i] <= 0x028B)
+                                    {
+                                        for (int k = 0; k < countof(HANDS_BASE_ANIMID); k++)
+                                        {
+                                            if (handAnimIDs[i] == HANDS_BASE_ANIMID[k])
+                                            {
+                                                result = 8;
+                                                i = 2;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if (IsGargoyle() && IsFlying())
+                            {
+                                result = 64;
+                            }
+                            else
+                            {
+                                result = 7;
+                            }
+                        }
+                        else
+                        {
+                            result = 7;
+                        }
+                    }
+                }
+            }
+            else if (IsMounted())
+            {
+                result = isRun ? 24 : 23;
+            }
+            //else if (EquippedGraphic0x3E96)
+            //{
+
+            //}
+            else if (isRun || !InWarMode() || IsDead())
+            {
+                if (flags & AF_USE_UOP_ANIMATION)
+                {
+                    // i'm not sure here if it's necessary the isgargoyle
+                    if (IsGargoyle() && IsFlying())
+                    {
+                        result = isRun ? 63 : 62;
+                    }
+                    else
+                    {
+                        if (isRun && g_AnimationManager.AnimationExists(graphic, 24))
+                        {
+                            result = 24;
+                        }
+                        else
+                        {
+                            if (isRun)
+                            {
+                                if (uop && type == AGT_EQUIPMENT &&
+                                    !g_AnimationManager.AnimationExists(graphic, 2))
+                                {
+                                    result = 3;
+                                }
+                                else
+                                {
+                                    result = 2;
+                                    if (IsGargoyle())
+                                    {
+                                        hand2 = FindLayer(OL_1_HAND);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (uop && type == AGT_EQUIPMENT &&
+                                    !g_AnimationManager.AnimationExists(graphic, 0))
+                                {
+                                    result = 1;
+                                }
+                                else
+                                {
+                                    result = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    result = isRun ? 2 : 0;
+                }
+
+                if (hand2 != nullptr)
+                {
+                    uint16_t hand2Graphic = hand2->AnimID;
+                    if (hand2Graphic < 0x0240 || hand2Graphic > 0x03E1)
+                    {
+                        if (IsGargoyle() && IsFlying())
+                        {
+                            result = isRun ? 63 : 62;
+                        }
+                        else
+                        {
+                            result = isRun ? 3 : 1;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < countof(HAND2_BASE_ANIMID); i++)
+                        {
+                            if (HAND2_BASE_ANIMID[i] == hand2Graphic)
+                            {
+                                if (IsGargoyle() && IsFlying())
+                                {
+                                    result = isRun ? 63 : 62;
+                                }
+                                else
+                                {
+                                    result = isRun ? 3 : 1;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (IsGargoyle() && IsFlying())
+            {
+                result = 62;
+            }
+            else
+            {
+                result = 15;
+            }
+        }
+    }
+#else
+    const ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(graphic);
+    uint8_t result = AnimationGroup;
+
+    if (result != AG_INVALID && ((Serial & 0x80000000) != 0) &&
+        (!AnimationFromServer || checkGraphic != 0))
     {
         GetAnimationGroup(groupIndex, result);
-
         if (!g_AnimationManager.AnimationExists(graphic, result))
         {
             CorrectAnimationGroup(graphic, groupIndex, result);
@@ -652,7 +1078,6 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
 
     bool isWalking = Walking();
     bool isRun = (Direction & 0x80) != 0;
-
     if (!m_Steps.empty())
     {
         isWalking = true;
@@ -672,7 +1097,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
                 result = (uint8_t)LAG_WALK;
             }
         }
-        else if (AnimationGroup == 0xFF)
+        else if (AnimationGroup == AG_INVALID)
         {
             result = (uint8_t)LAG_STAND;
             AnimIndex = 0;
@@ -692,7 +1117,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
                 }
             }
         }
-        else if (AnimationGroup == 0xFF)
+        else if (AnimationGroup == AG_INVALID)
         {
             result = (uint8_t)HAG_STAND;
             AnimIndex = 0;
@@ -765,7 +1190,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
                 }
             }
         }
-        else if (AnimationGroup == 0xFF)
+        else if (AnimationGroup == AG_INVALID)
         {
             if (IsMounted() && !IsDrivingBoat())
             {
@@ -801,68 +1226,66 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic)
         //67 same as 60/61
         //68 gg flying taking dmg
 
-        if (Race == RT_GARGOYLE)
+        if (Race == RT_GARGOYLE && IsFlying())
         {
-            if (IsFlying())
+            if (result == 0 || result == 1)
             {
-                if (result == 0 || result == 1)
-                {
-                    result = 62;
-                }
-                else if (result == 2 || result == 3)
-                {
-                    result = 63;
-                }
-                else if (result == 4)
-                {
-                    result = 64;
-                }
-                else if (result == 6)
-                {
-                    result = 66;
-                }
-                else if (result == 7 || result == 8)
-                {
-                    result = 65;
-                }
-                else if (result >= 9 && result <= 11)
-                {
-                    result = 71;
-                }
-                else if (result >= 12 && result <= 14)
-                {
-                    result = 72;
-                }
-                else if (result == 15)
-                {
-                    result = 62;
-                }
-                else if (result == 20)
-                {
-                    result = 77;
-                }
-                else if (result == 31)
-                {
-                    result = 71;
-                }
-                else if (result == 34)
-                {
-                    result = 78;
-                }
-                else if (
-                    result >=
-                    200) // && result <= 259) // FIXME: CHECK client.exe - result is a byte, what it was meant to be values >=256 ???
-                {
-                    result = 75;
-                }
-                /*else if (result >= 260 && result <= 270)
-                {
-                    result = 75;
-                }
-                */
+                result = 62;
             }
+            else if (result == 2 || result == 3)
+            {
+                result = 63;
+            }
+            else if (result == 4)
+            {
+                result = 64;
+            }
+            else if (result == 6)
+            {
+                result = 66;
+            }
+            else if (result == 7 || result == 8)
+            {
+                result = 65;
+            }
+            else if (result >= 9 && result <= 11)
+            {
+                result = 71;
+            }
+            else if (result >= 12 && result <= 14)
+            {
+                result = 72;
+            }
+            else if (result == 15)
+            {
+                result = 62;
+            }
+            else if (result == 20)
+            {
+                result = 77;
+            }
+            else if (result == 31)
+            {
+                result = 71;
+            }
+            else if (result == 34)
+            {
+                result = 78;
+            }
+            else if (
+                result >=
+                200) // && result <= 259) // FIXME: CHECK client.exe - result is a byte, what it was meant to be values >=256 ???
+            {
+                result = 75;
+            }
+            /*else if (result >= 260 && result <= 270)
+            {
+                result = 75;
+            }
+            */
         }
     }
+#endif
     return result;
 }
 
@@ -878,14 +1301,22 @@ void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
 uint16_t CGameCharacter::GetMountAnimation()
 {
     uint16_t graphic = Graphic;
-
     switch (graphic)
     {
-        case 0x0192: //male ghost
-        case 0x0193: //female ghost
+        case 0x0192: // male ghost
+        case 0x0193: // female ghost
         {
             graphic -= 2;
-
+            break;
+        }
+        case 0x02B6:
+        {
+            graphic = 667;
+            break;
+        }
+        case 0x02B7:
+        {
+            graphic = 666;
             break;
         }
         default:
@@ -895,7 +1326,7 @@ uint16_t CGameCharacter::GetMountAnimation()
     return graphic;
 }
 
-void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
+void CGameCharacter::UpdateAnimationInfo_ProcessSteps(uint8_t &dir, bool canChange)
 {
     dir = Direction & 7;
 
@@ -916,7 +1347,7 @@ void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
         {
             if (AnimationFromServer)
             {
-                SetAnimation(0xFF);
+                SetAnimation(AG_INVALID);
             }
 
             int maxDelay = g_PathFinder.GetWalkSpeed(run != 0, IsMounted()) - 15;
@@ -1039,7 +1470,7 @@ void CGameCharacter::UpdateAnimationInfo(uint8_t &dir, bool canChange)
 
                 if (directionChange)
                 {
-                    UpdateAnimationInfo(dir, canChange);
+                    UpdateAnimationInfo_ProcessSteps(dir, canChange);
                     return;
                 }
 
