@@ -59,7 +59,7 @@ void CGUIShopItem::UpdateOffsets()
                 group = LAG_STAND;
                 break;
             }
-            case AG_HIGHT:
+            case AG_HIGH:
             {
                 group = HAG_STAND;
                 break;
@@ -162,7 +162,7 @@ void CGUIShopItem::PrepareTextures()
                 animGroup = LAG_STAND;
                 break;
             }
-            case AG_HIGHT:
+            case AG_HIGH:
             {
                 animGroup = HAG_STAND;
                 break;
@@ -254,7 +254,7 @@ void CGUIShopItem::Draw(bool checktrans)
                 animGroup = LAG_STAND;
                 break;
             }
-            case AG_HIGHT:
+            case AG_HIGH:
             {
                 animGroup = HAG_STAND;
                 break;
@@ -268,8 +268,8 @@ void CGUIShopItem::Draw(bool checktrans)
                 break;
         }
 
-        CTextureAnimationGroup &group = g_Index.m_Anim[Graphic].m_Groups[animGroup];
-        CTextureAnimationDirection &direction = group.m_Direction[1];
+        CTextureAnimationGroup &group = g_Index.m_Anim[Graphic].Groups[animGroup];
+        CTextureAnimationDirection &direction = group.Direction[1];
         if (direction.FrameCount != 0)
         {
             assert(direction.m_Frames[0].UserData);

@@ -112,7 +112,8 @@ void CGameCharacter::UpdateTextCoordinates()
         return;
     }
 
-    const auto dims = g_AnimationManager.GetAnimationDimensions(this, 0);
+    const auto dims = g_AnimationManager.GetAnimationDimensions(
+        this->AnimIndex, this->GetMountAnimation(), 0, 0, this->IsMounted(), this->IsCorpse());
     int offset = 0;
 
     int x = DrawX + OffsetX;
@@ -567,7 +568,7 @@ void CGameCharacter::CorrectAnimationGroup(
             animation = LAG_STAND;
         }
     }
-    else if (group == AG_HIGHT)
+    else if (group == AG_HIGH)
     {
         switch (animation)
         {
@@ -1103,7 +1104,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
             AnimIndex = 0;
         }
     }
-    else if (groupIndex == AG_HIGHT)
+    else if (groupIndex == AG_HIGH)
     {
         if (isWalking)
         {
@@ -1310,14 +1311,14 @@ uint16_t CGameCharacter::GetMountAnimation()
             graphic -= 2;
             break;
         }
-        case 0x02B6: // gargoyle
+        case 0x02B6: // dead gargoyle
         {
-            graphic = 667;
+            graphic = 0x029B;
             break;
         }
-        case 0x02B7: // gargoyle
+        case 0x02B7: // dead gargoyle
         {
-            graphic = 666;
+            graphic = 0x029A;
             break;
         }
         default:

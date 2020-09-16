@@ -2342,9 +2342,8 @@ PACKET_HANDLER(EnableLockedFeatures)
         g_LockedClientFeatures = ReadUInt16BE();
     }
 
-    g_ChatEnabled = (bool)(g_LockedClientFeatures & LFF_T2A);
-
-    g_AnimationManager.UpdateAnimationAddressTable();
+    g_ChatEnabled = bool(g_LockedClientFeatures & LFF_T2A);
+    g_AnimationManager.UpdateAnimationTable();
 }
 
 PACKET_HANDLER(OpenContainer)

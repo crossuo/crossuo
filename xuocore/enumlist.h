@@ -134,7 +134,7 @@ enum CLIENT_VERSION
     CV_60144 = VERSION(6, 0, 14, 4),
     CV_7000 = VERSION(7, 0, 0, 0), //
     // static data count = 0x8000 (1024 * 32), before (<CV_7000) was 0x4000 (512 * 32)
-    CV_7090 = VERSION(7, 0, 9, 0), //
+    CV_7090 = VERSION(7, 0, 9, 0), // high seas
     // static data count = 0x10000 (2048 * 32)
     // static tiles flags changed from 32bits to 64bits
     CV_70130 = VERSION(7, 0, 13, 0),   //
@@ -147,7 +147,7 @@ enum CLIENT_VERSION
     CV_70500 = VERSION(7, 0, 50, 0),   // Mastery fixes
     //CV_70600 = VERSION(7, 0, 60, 0), //
     CV_70611 = VERSION(7, 0, 61, 1), // login screen Endless Journey 7.0.61.1
-    //CV_70640 = VERSION(7, 0, 64, 0), //
+    //CV_70640 = VERSION(7, 0, 64, 0), // Endless Journey background
     CV_70720 = VERSION(7, 0, 72, 0), // Publish 102 Enable Large Bank & Vault Gumps
     CV_70796 = VERSION(7, 0, 79, 6), // Display houses content option
     CV_708111 = VERSION(7, 0, 81, 11),
@@ -221,26 +221,26 @@ enum CHARACTER_LIST_FLAG
 
 enum LOCKED_FEATURE_FLAG
 {
-    LFF_T2A = 0x01,
-    LFF_RE = 0x02,
-    LFF_TD = 0x04,
-    LFF_LBR = 0x08,
-    LFF_AOS = 0x10,
-    LFF_6_SLOT = 0x20,
-    LFF_SE = 0x40,
-    LFF_ML = 0x80,
-    LFF_8_AGE = 0x100,
-    LFF_9_AGE = 0x200,
-    LFF_10_AGE = 0x400,
-    LFF_HOUSING = 0x800,
-    LFF_7_SLOT = 0x1000,
-    LFF_KR = 0x2000,
-    LFF_TRIAL_ACC = 0x4000,
-    LFF_11_AGE = 0x8000,
-    LFF_SA = 0x10000,
-    LFF_HSA = 0x20000,
-    LFF_GOTHIC_HOUSING = 0x40000,
-    LFF_RUSTIC_HOUSING = 0x80000
+    LFF_T2A = 0x01,               // TheSecondAge
+    LFF_RE = 0x02,                // Renaissance
+    LFF_TD = 0x04,                // ThirdDawn
+    LFF_LBR = 0x08,               // LordBlackthornsRevenge
+    LFF_AOS = 0x10,               // AgeOfShadows
+    LFF_6_SLOT = 0x20,            // CharacterSlot6
+    LFF_SE = 0x40,                // SamuraiEmpire
+    LFF_ML = 0x80,                // MondainsLegacy
+    LFF_8_AGE = 0x100,            // Splash8
+    LFF_9_AGE = 0x200,            // Splash9, Crystal/Shadow housing tiles
+    LFF_10_AGE = 0x400,           // TenthAge
+    LFF_HOUSING = 0x800,          // MoreStorage
+    LFF_7_SLOT = 0x1000,          // CharacterSlot7
+    LFF_KR = 0x2000,              // TenthAgeFaces
+    LFF_TRIAL_ACC = 0x4000,       // TrialAccount
+    LFF_11_AGE = 0x8000,          // EleventhAge
+    LFF_SA = 0x10000,             // StygianAbyss
+    LFF_HSA = 0x20000,            // HighSeas
+    LFF_GOTHIC_HOUSING = 0x40000, // GothicHousing
+    LFF_RUSTIC_HOUSING = 0x80000, // RusticHousing
 };
 
 enum SPELLBOOK_TYPE
@@ -872,27 +872,27 @@ enum DIRECTION_TYPE
 
 enum ANIMATION_FLAGS : uint32_t
 {
-    AF_NONE = 0x00000,
-    AF_UNKNOWN_1 = 0x00001,
-    AF_USE_2_IF_HITTED_WHILE_RUNNING = 0x00002,
-    AF_IDLE_AT_8_FRAME = 0x00004,
-    AF_CAN_FLYING = 0x00008,
-    AF_UNKNOWN_10 = 0x00010,
-    AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED = 0x00020,
-    AF_CALCULATE_OFFSET_BY_LOW_GROUP = 0x00040,
-    AF_UNKNOWN_80 = 0x00080,
-    AF_UNKNOWN_100 = 0x00100,
-    AF_UNKNOWN_200 = 0x00200,
-    AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP = 0x00400,
-    AF_UNKNOWN_800 = 0x00800,
-    AF_UNKNOWN_1000 = 0x01000,
-    AF_UNKNOWN_2000 = 0x02000,
-    AF_UNKNOWN_4000 = 0x04000,
-    AF_UNKNOWN_8000 = 0x08000,
-    AF_USE_UOP_ANIMATION = 0x10000,
-    AF_UNKNOWN_20000 = 0x20000,
-    AF_UNKNOWN_40000 = 0x40000,
-    AF_UNKNOWN_80000 = 0x80000,
+    AF_NONE = 0x00,
+    AF_UNKNOWN_1 = 0x01,
+    AF_USE_2_IF_HITTED_WHILE_RUNNING = 0x02,
+    AF_IDLE_AT_8_FRAME = 0x04,
+    AF_CAN_FLYING = 0x08,
+    AF_UNKNOWN_10 = 0x10,
+    AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED = 0x20,
+    AF_CALCULATE_OFFSET_BY_LOW_GROUP = 0x40,
+    AF_UNKNOWN_80 = 0x80,
+    AF_UNKNOWN_100 = 0x0100,
+    AF_UNKNOWN_200 = 0x0200,
+    AF_CALCULATE_OFFSET_BY_PEOPLE_GROUP = 0x0400,
+    AF_UNKNOWN_800 = 0x0800,
+    AF_UNKNOWN_1000 = 0x1000,
+    AF_UNKNOWN_2000 = 0x2000,
+    AF_UNKNOWN_4000 = 0x4000,
+    AF_UNKNOWN_8000 = 0x8000,
+    AF_USE_UOP_ANIMATION = 0x010000,
+    AF_UNKNOWN_20000 = 0x020000,
+    AF_UNKNOWN_40000 = 0x040000,
+    AF_UNKNOWN_80000 = 0x080000,
     AF_FOUND = 0x80000000
 };
 
@@ -911,7 +911,7 @@ enum ANIMATION_GROUPS : uint8_t
     AG_INVALID = 0xff,
     AG_NONE = 0,
     AG_LOW,
-    AG_HIGHT,
+    AG_HIGH,
     AG_PEOPLE
 };
 
@@ -934,7 +934,7 @@ enum LOW_ANIMATION_GROUP
     LAG_ANIMATION_COUNT
 };
 
-enum HIGHT_ANIMATION_GROUP
+enum HIGH_ANIMATION_GROUP
 {
     HAG_WALK = 0,
     HAG_STAND,

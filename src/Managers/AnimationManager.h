@@ -114,7 +114,7 @@ public:
 
     EQUIP_CONV_BODY_MAP &GetEquipConv() { return m_EquipConv; }
     void InitIndexReplaces(uint32_t *verdata);
-    void UpdateAnimationAddressTable();
+    void UpdateAnimationTable();
     void Load(uint32_t *verdata);
     void GetAnimDirection(uint8_t &dir, bool &mirror);
     void GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y);
@@ -132,10 +132,13 @@ public:
         uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse);
 
     AnimationFrameInfo GetAnimationDimensions(
-        class CGameObject *obj,
-        uint8_t frameIndex = 0xFF,
-        uint8_t defaultDirection = 0,
-        uint8_t defaultGroup = 0);
+        uint8_t animIndex,
+        uint16_t graphic,
+        uint8_t dir,
+        uint8_t group,
+        bool isMounted,
+        bool isCorpse,
+        uint8_t frameIndex = 0xff);
 
     struct DRAW_FRAME_INFORMATION
     CollectFrameInformation(class CGameObject *gameObject, bool checkLayers = true);

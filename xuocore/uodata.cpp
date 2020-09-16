@@ -564,7 +564,7 @@ static int UopSetAnimationGroups(int start, int end)
         auto &idx = g_Index.m_Anim[animId];
         for (int grpId = 0; grpId < MAX_ANIMATION_GROUPS_COUNT; ++grpId)
         {
-            auto &group = idx.m_Groups[grpId];
+            auto &group = idx.Groups[grpId];
             snprintf(filename, sizeof(filename), pattern, animId, grpId);
             const auto asset = uo_jenkins_hash(filename);
             const auto fileIndex = getAssetOwner(asset);
@@ -575,10 +575,10 @@ static int UopSetAnimationGroups(int start, int end)
                     lastGroup = grpId;
                 }
                 idx.IsUOP = true;
-                group.m_UOPAnimData = g_FileManager.m_AnimationFrame[fileIndex].GetAsset(asset);
+                group.AnimData = g_FileManager.m_AnimationFrame[fileIndex].GetAsset(asset);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
-                    auto &dir = group.m_Direction[dirId];
+                    auto &dir = group.Direction[dirId];
                     dir.IsUOP = true;
                     dir.BaseAddress = 0;
                     dir.Address = 0;
@@ -635,6 +635,15 @@ void CFileManager::ReadTask()
     SetEvent();
 }
 
+/*
+static void uo_replace_group(uint16_t graphic, uint8_t old, uint8_t newG) // ReplaceUopGroup
+{
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && old < MAX_ANIMATION_GROUPS_COUNT);
+    assert(newG < MAX_ANIMATION_GROUPS_COUNT);
+    g_Index.m_Anim[graphic].ReplaceGroupIndex[old] = newG + 1; // 0 == not replaced
+}
+*/
+
 // TODO: use map structure instead byte peeking
 // pattern: "build/animationsequence/%08d.bin"
 void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
@@ -668,19 +677,20 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
             const auto oldGroupIdx = ReadInt32LE();
             const auto frameCount = ReadInt32LE();
             const auto newGroupIdx = ReadInt32LE();
-            //auto data = indexAnim->m_Groups[oldGroupIdx];
+            //auto data = indexAnim->Groups[oldGroupIdx];
             if (frameCount == 0)
             {
                 assert(newGroupIdx != oldGroupIdx);
                 assert(oldGroupIdx < MAX_ANIMATION_GROUPS_COUNT);
                 assert(newGroupIdx < MAX_ANIMATION_GROUPS_COUNT);
-                anim->m_Groups[oldGroupIdx] = anim->m_Groups[newGroupIdx];
+                anim->Groups[oldGroupIdx] = anim->Groups[newGroupIdx];
+                //uo_replace_group(animId, oldGroupIdx, newGroupIdx);
             }
             /*else
             {
                 for( int k = i; k < 5; ++k)
                 {
-                    //group.m_Direction[k].FrameCount = frameCount;
+                    //group.Direction[k].FrameCount = frameCount;
                 }
             }*/
             Move(60);
@@ -1268,7 +1278,7 @@ bool CFileManager::UopReadAnimationFrames(
     const AnimationSelector &anim,
     LoadPixelData16Cb pLoadFunc)
 {
-    auto &block = *g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group].m_UOPAnimData;
+    auto &block = *g_Index.m_Anim[anim.Graphic].Groups[anim.Group].AnimData;
     std::vector<uint8_t> scratchBuffer;
     if (block.Hash == 0)
     {
@@ -1282,8 +1292,7 @@ bool CFileManager::UopReadAnimationFrames(
     }
     SetData(scratchBuffer.data(), block.DecompressedSize);
 
-    auto framesData = UopReadAnimationFramesData();
-
+    const auto framesData = UopReadAnimationFramesData();
     direction.FrameCount = checked_cast<uint8_t>(framesData.size() / 5);
     int dirFrameStartIdx = direction.FrameCount * anim.Direction;
     if (direction.m_Frames == nullptr)
@@ -1332,25 +1341,15 @@ void CFileManager::MulReadAnimationFrameInfo(
     int frameCount = ReadUInt32LE();
     if (frameCount > 0 && frameIndex >= frameCount)
     {
-        if (isCorpse)
-        {
-            frameIndex = frameCount - 1;
-        }
-        else
-        {
-            frameIndex = 0;
-        }
+        frameIndex = 0;
     }
 
     if (frameIndex < frameCount)
     {
         uint32_t *frameOffset = (uint32_t *)Ptr;
-        //Move(frameOffset[frameIndex]);
         Ptr = dataStart + frameOffset[frameIndex];
-        result.CenterX = ReadInt16LE();
-        result.CenterY = ReadInt16LE();
-        result.Width = ReadInt16LE();
-        result.Height = ReadInt16LE();
+        auto frameInfo = (AnimationFrameInfo *)Ptr;
+        result = *frameInfo;
     }
 }
 
@@ -1469,14 +1468,14 @@ void CFileManager::LoadAnimationFrameInfo(
     }
     else if (direction.IsUOP)
     {
-        UopReadAnimationFrameInfo(result, direction, *group.m_UOPAnimData);
+        UopReadAnimationFrameInfo(result, direction, *group.AnimData);
     }
 }
 
 bool CFileManager::LoadAnimation(const AnimationSelector &anim, LoadPixelData16Cb pLoadFunc)
 {
-    CTextureAnimationGroup &group = g_Index.m_Anim[anim.Graphic].m_Groups[anim.Group];
-    CTextureAnimationDirection &direction = group.m_Direction[anim.Direction];
+    CTextureAnimationGroup &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
+    CTextureAnimationDirection &direction = group.Direction[anim.Direction];
     if (direction.Address != 0)
     {
         assert(direction.Size != 0 && "please report this back");
@@ -1504,7 +1503,7 @@ uint32_t uo_get_group_offset(ANIMATION_GROUPS group, uint16_t graphic)
         }
         break;
 
-        case AG_HIGHT:
+        case AG_HIGH:
         {
             return graphic * 110 * sizeof(AnimIdxBlock);
         }
@@ -1526,7 +1525,8 @@ uint32_t uo_get_group_offset(ANIMATION_GROUPS group, uint16_t graphic)
     return -1;
 }
 
-uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type, int &groupCount)
+uint64_t
+uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type, int &groupCount)
 {
     uint64_t result = 0;
     groupCount = 0;
@@ -1545,14 +1545,14 @@ uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_T
             }
             else
             {
-                group = AG_HIGHT;
+                group = AG_HIGH;
             }
         }
         break;
 
         case AGT_SEA_MONSTER:
         {
-            result = uo_get_group_offset(AG_HIGHT, graphic);
+            result = uo_get_group_offset(AG_HIGH, graphic);
             groupCount = LAG_ANIMATION_COUNT;
         }
         break;
@@ -1571,7 +1571,7 @@ uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_T
                 }
                 else
                 {
-                    group = AG_HIGHT;
+                    group = AG_HIGH;
                 }
             }
             else
@@ -1597,7 +1597,7 @@ uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_T
         }
         break;
 
-        case AG_HIGHT:
+        case AG_HIGH:
         {
             groupCount = HAG_ANIMATION_COUNT;
             result = uo_get_group_offset(group, graphic);
