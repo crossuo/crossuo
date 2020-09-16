@@ -45,7 +45,8 @@ void CalculateFrameInformation(
 {
     const auto dir = g_AnimationManager.SelectAnim.Direction;
     const auto grp = g_AnimationManager.SelectAnim.Group;
-    const auto dim = g_AnimationManager.GetAnimationDimensions(obj, animIndex, dir, grp);
+    const auto dim = g_AnimationManager.GetAnimationDimensions(
+        obj->AnimIndex, obj->GetMountAnimation(), dir, grp, obj->IsMounted(), obj->IsCorpse());
     int y = -(dim.Height + dim.CenterY + 3);
     int x = -dim.CenterX;
     if (mirror)
@@ -139,34 +140,32 @@ CAnimationManager::~CAnimationManager()
     ClearUnusedTextures(g_Ticks + 100000);
 }
 
-void CAnimationManager::UpdateAnimationAddressTable()
+/*static bool uo_has_body_conversion(CIndexAnimation anim) // HasBodyConversion // HasPatch
+{
+    return (anim.GraphicConversion & 0x8000) == 0 && (anim.GraphicConversion & 0x1000) != 0;// && anim.BodyConvGroups;
+}*/
+
+void CAnimationManager::UpdateAnimationTable()
 {
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
-        CIndexAnimation &index = g_Index.m_Anim[i];
-
+        auto &data = g_Index.m_Anim[i];
         for (int g = 0; g < MAX_ANIMATION_GROUPS_COUNT; g++)
         {
-            CTextureAnimationGroup &group = index.m_Groups[g];
-
+            auto &group = data.Groups[g];
             for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
             {
-                CTextureAnimationDirection &direction = group.m_Direction[d];
+                auto &direction = group.Direction[d];
                 bool replace = (direction.FileIndex >= 4);
-
                 if (direction.FileIndex == 2)
                 {
-                    replace = (g_Config.ClientFlag >= CF_LBR);
+                    replace = g_Config.ClientFlag & LFF_LBR;
                 }
                 else if (direction.FileIndex == 3)
                 {
-                    replace = (g_Config.ClientFlag >= CF_AOS);
+                    replace = g_Config.ClientFlag & LFF_AOS;
                 }
-                //else if (direction.FileIndex == 4)
-                //	replace = (g_LockedClientFeatures & LFF_AOS);
-                //else if (direction.FileIndex == 5)
-                //	replace = true; // (g_LockedClientFeatures & LFF_ML);
-
+                // GraphicConversion
                 if (replace)
                 {
                     direction.Address = direction.PatchedAddress;
@@ -204,10 +203,10 @@ static void load_animations(CAnimationManager *mgr)
         int block = 0;
         for (int j = 0; j < count; j++)
         {
-            CTextureAnimationGroup &group = index.m_Groups[j];
+            auto &group = index.Groups[j];
             for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
             {
-                auto &direction = group.m_Direction[d];
+                auto &direction = group.Direction[d];
                 const auto *aidx = (AnimIdxBlock *)(address + block * sizeof(AnimIdxBlock));
                 block++;
                 if ((size_t)aidx >= maxAddress)
@@ -295,8 +294,8 @@ static void load_verdata(CAnimationManager *mgr)
                 continue;
             }
 
-            CIndexAnimation &index = g_Index.m_Anim[id];
-            CTextureAnimationDirection &direction = index.m_Groups[group].m_Direction[dir];
+            auto &index = g_Index.m_Anim[id];
+            auto &direction = index.Groups[group].Direction[dir];
             direction.IsVerdata = true;
             direction.BaseAddress = (size_t)g_FileManager.m_VerdataMul.Start + vh->Position;
             direction.BaseSize = vh->Size;
@@ -519,7 +518,7 @@ static void load_bodyconv(CAnimationManager *mgr)
                     int block = 0;
                     for (int j = 0; j < count; j++)
                     {
-                        auto &group = dataIndex.m_Groups[j];
+                        auto &group = dataIndex.Groups[j];
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
                             const auto *aidx =
@@ -532,7 +531,8 @@ static void load_bodyconv(CAnimationManager *mgr)
 
                             if (aidx->Size != 0 && aidx->Position != -1 && aidx->Size != -1)
                             {
-                                auto &direction = group.m_Direction[d];
+                                //dataIndex.GraphicConversion |= 0x1000; // BodyConvGroups != null
+                                auto &direction = group.Direction[d];
                                 direction.PatchedAddress = aidx->Position;
                                 direction.PatchedSize = aidx->Size;
                                 direction.FileIndex = animFile;
@@ -567,7 +567,7 @@ static void load_bodydef()
                 continue;
             }
 
-            // FIXME: there is something missing here, probably: { anim1, anim2, anim3, anim4 }
+            // FIXME: there is something missing here: { anim1, anim2, anim3, anim4 }
             auto newGraphic = checked_cast<uint16_t>(str_to_int(replaces[0]));
             if (replaces.size() >= 3)
             {
@@ -584,7 +584,6 @@ static void load_bodydef()
             auto &newDataIndex = g_Index.m_Anim[newGraphic];
             int count = 0;
             int ignoreGroups[2] = { -1, -1 };
-
             switch (newDataIndex.Type)
             {
                 case AGT_MONSTER:
@@ -621,12 +620,12 @@ static void load_bodydef()
                     continue;
                 }
 
-                CTextureAnimationGroup &group = dataIndex.m_Groups[j];
-                CTextureAnimationGroup &newGroup = newDataIndex.m_Groups[j];
+                CTextureAnimationGroup &group = dataIndex.Groups[j];
+                CTextureAnimationGroup &newGroup = newDataIndex.Groups[j];
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
-                    auto &direction = group.m_Direction[d];
-                    auto &newDirection = newGroup.m_Direction[d];
+                    auto &direction = group.Direction[d];
+                    auto &newDirection = newGroup.Direction[d];
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
@@ -680,7 +679,7 @@ static void load_corpsedef()
                 continue;
             }
 
-            // FIXME: there is something missing here, probably: { anim1, anim2, anim3, anim4 }
+            // FIXME: there is something missing here: { anim1, anim2, anim3, anim4 }
             auto newGraphic = checked_cast<uint16_t>(str_to_int(replaces[0]));
             if (replaces.size() >= 3)
             {
@@ -724,12 +723,12 @@ static void load_corpsedef()
 
             for (int j = 0; j < 2; j++)
             {
-                CTextureAnimationGroup &group = dataIndex.m_Groups[ignoreGroups[j]];
-                CTextureAnimationGroup &newGroup = checkDataIndex.m_Groups[ignoreGroups[j]];
+                CTextureAnimationGroup &group = dataIndex.Groups[ignoreGroups[j]];
+                CTextureAnimationGroup &newGroup = checkDataIndex.Groups[ignoreGroups[j]];
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
-                    CTextureAnimationDirection &direction = group.m_Direction[d];
-                    CTextureAnimationDirection &newDirection = newGroup.m_Direction[d];
+                    CTextureAnimationDirection &direction = group.Direction[d];
+                    CTextureAnimationDirection &newDirection = newGroup.Direction[d];
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
@@ -796,7 +795,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", id);
-        return AG_HIGHT;
+        return AG_HIGH;
     }
 
     switch (g_Index.m_Anim[id].Type)
@@ -805,7 +804,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
             return AG_LOW;
         case AGT_MONSTER:
         case AGT_SEA_MONSTER:
-            return AG_HIGHT;
+            return AG_HIGH;
         case AGT_HUMAN:
         case AGT_EQUIPMENT:
             return AG_PEOPLE;
@@ -813,7 +812,7 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
             break;
     }
 
-    return AG_HIGHT;
+    return AG_HIGH;
 }
 
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool running)
@@ -1813,8 +1812,8 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
         {
             assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-            CTextureAnimationDirection &direction =
-                g_Index.m_Anim[id].m_Groups[SelectAnim.Group].m_Direction[SelectAnim.Direction];
+            auto &direction =
+                g_Index.m_Anim[id].Groups[SelectAnim.Group].Direction[SelectAnim.Direction];
 
             if (direction.Address != 0 && direction.m_Frames != nullptr)
             {
@@ -2077,13 +2076,101 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
            DrawEquippedLayers(true, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
 }
 
+// FIXME: unused
+/*
+static void uo_convert_body_if_needed(uint16_t &graphic, bool isParent, bool isCorpse) // ConvertBodyIfNeeded
+{
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        return;
+
+    const auto &data = g_Index.m_Anim[graphic];
+    if (data.IsUOP && (isParent || !data.IsValidMUL))
+        return;
+
+    uint16_t newGraphic = isCorpse ? data.CorpseGraphic : data.Graphic;
+    do
+    {
+        //if (uo_has_body_conversion(data))
+        //    break;
+
+        auto &newData = g_Index.m_Anim[newGraphic];
+        if (graphic != newGraphic)
+        {
+            graphic = newGraphic;
+            newGraphic = isCorpse ? newData.CorpseGraphic : newData.Graphic;
+        }
+    } while (graphic != newGraphic);
+}
+*/
+/*
+static CTextureAnimationGroup uo_get_group(uint16_t graphic, uint8_t group) // GetUopGroup
+{
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT);
+    auto &data = g_Index.m_Anim[graphic];
+    //const auto replace = data.ReplaceGroupIndex[group] > 0 ? data.ReplaceGroupIndex[group] : group;
+    return data.Groups[group];
+}
+*/
+/*
+static CTextureAnimationGroup emptyGroup = {}; // FIXME
+CTextureAnimationGroup uo_get_body_animation_group(
+    uint16_t &graphic,
+    uint8_t &group,
+    uint16_t &hue,
+    bool isCorpse,
+    bool isParent = false) // GetBodyAnimationGroup, GetCorpseAnimationGroup
+{
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT);
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT && group >= MAX_ANIMATION_GROUPS_COUNT)
+        return emptyGroup;
+
+    auto &data = g_Index.m_Anim[graphic];
+    if (data.IsUOP && (isParent || !data.IsValidMUL))
+    {
+        return g_Index.m_Anim[graphic].Groups[group]; //uo_get_group(graphic, group);
+    }
+
+    uint16_t newGraphic = isCorpse ? data.CorpseGraphic : data.Graphic;
+    do
+    {
+        auto &newData = g_Index.m_Anim[newGraphic];
+        //if (uo_has_body_conversion(data))
+        //    break;
+
+        if (graphic != newGraphic)
+        {
+            graphic = newGraphic;
+            hue = data.Color;
+            newGraphic = isCorpse ? newData.CorpseGraphic : newData.Graphic;
+        }
+    } while (graphic != newGraphic);
+
+    data = g_Index.m_Anim[graphic];
+    //if (uo_has_body_conversion(data))
+    {
+        //return data.BodyConvGroups[group];
+    }
+
+    //if (data.Groups != nullptr)
+    {
+        return data.Groups[group];
+    }
+
+    //return emptyGroup;
+}
+*/
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
     if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT && group >= MAX_ANIMATION_GROUPS_COUNT)
         return false;
 
-    const auto dir = g_Index.m_Anim[graphic].m_Groups[group].m_Direction[0];
-    return dir.Address != 0 && dir.Size != 0 || dir.IsUOP;
+    /*uint16_t hue;
+    const bool isCorpse = false;
+    const auto dir = uo_get_body_animation_group(graphic, group, hue, isCorpse).Direction[0];
+    return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
+    */
+    const auto dir = g_Index.m_Anim[graphic].Groups[group].Direction[0];
+    return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
 }
 
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
@@ -2093,96 +2180,69 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
         return result;
 
-    CTextureAnimationGroup &group = g_Index.m_Anim[id].m_Groups[animGroup];
+    CTextureAnimationGroup &group = g_Index.m_Anim[id].Groups[animGroup];
+    //uint16_t hue = 0;
     if (dir < MAX_MOBILE_DIRECTIONS)
     {
-        auto &direction = group.m_Direction[dir];
+        auto &direction = group.Direction[dir];
+        //const auto direction =
+        //    uo_get_body_animation_group(id, animGroup, hue, isCorpse, true).Direction[dir];
         int fc = direction.FrameCount;
         if (fc > 0)
         {
             if (frameIndex >= fc)
             {
-                if (isCorpse)
-                {
-                    frameIndex = fc - 1;
-                }
-                else
-                {
-                    frameIndex = 0;
-                }
+                frameIndex = 0;
             }
 
             if (direction.m_Frames != nullptr)
             {
                 CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
                 auto spr = (CSprite *)frame.UserData;
-                //assert(spr);
-                if (!spr)
+                if (spr)
                 {
-                    // FIXME: before we had CSprite in the struct, we need cleanup how to construct these objects
-                    spr = new CSprite();
+                    result.Width = spr->Width;
+                    result.Height = spr->Height;
+                    result.CenterX = frame.CenterX;
+                    result.CenterY = frame.CenterY;
+                    //_animDimensionCache[id] = new Rectangle(x, y, w, h);
+                    return result;
                 }
-                result.Width = spr->Width;
-                result.Height = spr->Height;
-                result.CenterX = frame.CenterX;
-                result.CenterY = frame.CenterY;
-                return result;
             }
         }
     }
-    CTextureAnimationDirection &direction = group.m_Direction[0];
+
+    //auto group = uo_get_body_animation_group(id, animGroup, hue, isCorpse, true); // FIXME copy
+    //auto direction = group.Direction[0];
+    CTextureAnimationDirection &direction = group.Direction[0];
     g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
     return result;
 }
 
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
-    CGameObject *obj, uint8_t frameIndex, uint8_t defaultDirection, uint8_t defaultGroup)
+    uint8_t animIndex,
+    uint16_t graphic,
+    uint8_t dir,
+    uint8_t group,
+    bool isMounted,
+    bool isCorpse,
+    uint8_t frameIndex)
 {
-    uint8_t dir = defaultDirection & 0x7F;
-    uint8_t animGroup = defaultGroup;
-    uint16_t id = obj->GetMountAnimation();
+    dir &= 0x7F;
     bool mirror = false;
-
-    if (obj->NPC)
-    {
-        CGameCharacter *gc = obj->GameCharacterPtr();
-        gc->UpdateAnimationInfo_ProcessSteps(dir);
-        animGroup = gc->GetAnimationGroup(0, true);
-        GetAnimDirection(dir, mirror);
-    }
-    else if (obj->IsCorpse())
-    {
-        dir = ((CGameItem *)obj)->Layer & 7;
-        animGroup = GetDieGroupIndex(id, ((CGameItem *)obj)->UsedLayer != 0u);
-        GetAnimDirection(dir, mirror);
-    }
-    else if (((CGameItem *)obj)->Layer != OL_MOUNT)
-    { //TGameItem
-        id = ((CGameItem *)obj)->AnimID;
-    }
-
+    GetAnimDirection(dir, mirror);
     if (frameIndex == 0xFF)
     {
-        frameIndex = (uint8_t)obj->AnimIndex;
+        frameIndex = animIndex;
     }
 
-    AnimationFrameInfo dims =
-        GetAnimationDimensions(frameIndex, id, dir, animGroup, obj->IsCorpse());
-
-    if ((dims.Width == 0) && (dims.Height == 0) && (dims.CenterX == 0) && (dims.CenterY == 0))
+    auto frame = GetAnimationDimensions(frameIndex, graphic, dir, group, isCorpse);
+    if (frame.Width == 0 && frame.Height == 0 && frame.CenterX == 0 && frame.CenterY == 0)
     {
-        dims.Width = 20;
-        if (obj->NPC && obj->IsMounted())
-        {
-            dims.Height = 100;
-        }
-        else
-        {
-            dims.Height = 60;
-        }
+        frame.Height = isMounted ? 100 : 60;
     }
 
-    return dims;
+    return frame;
 }
 
 DRAW_FRAME_INFORMATION
@@ -3045,8 +3105,8 @@ CAnimationManager::ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t g
     SelectAnim.Direction = direction;
     SelectAnim.Graphic = graphic;
 
-    CTextureAnimationGroup &grp = g_Index.m_Anim[graphic].m_Groups[group];
-    CTextureAnimationDirection &dir = grp.m_Direction[direction];
+    auto &grp = g_Index.m_Anim[graphic].Groups[group];
+    auto &dir = grp.Direction[direction];
     if (dir.FrameCount == 0)
     {
         if (g_FileManager.LoadAnimation(SelectAnim, LoadSpritePixels))

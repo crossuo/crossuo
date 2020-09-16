@@ -51,7 +51,7 @@ struct CTextureAnimationDirection // AnimationDirection
     CTextureAnimationFrame *m_Frames = nullptr;
     size_t Address = 0;
     size_t BaseAddress = 0;
-    size_t PatchedAddress = 0;
+    size_t PatchedAddress = 0; // BodyConvGroups
     uint32_t BaseSize = 0;
     uint32_t PatchedSize = 0;
     uint32_t Size = 0;
@@ -64,8 +64,27 @@ struct CTextureAnimationDirection // AnimationDirection
 
 struct CTextureAnimationGroup // AnimationGroup
 {
-    CTextureAnimationDirection m_Direction[MAX_MOBILE_DIRECTIONS];
-    const UopFileEntry *m_UOPAnimData = nullptr;
+    CTextureAnimationDirection Direction[MAX_MOBILE_DIRECTIONS];
+    const UopFileEntry *AnimData = nullptr;
+    //uint8_t FileIndex = 0;
+};
+
+struct CIndexAnimation
+{
+    ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
+    ANIMATION_FLAGS Flags = AF_NONE;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
+    uint16_t CorpseGraphic = 0;
+    uint16_t CorpseColor = 0;
+    uint16_t GraphicConversion = 0x8000;
+    uint8_t FileIndex = 0;
+    char MountedHeightOffset = 0;
+    bool IsUOP = false;
+    bool IsValidMUL = false;
+    //uint8_t ReplaceGroupIndex[MAX_ANIMATION_GROUPS_COUNT]; // _uopReplaceGroupIndex
+    CTextureAnimationGroup Groups[MAX_ANIMATION_GROUPS_COUNT];
+    //CTextureAnimationGroup ReplaceGroups[MAX_ANIMATION_GROUPS_COUNT]; // UopGroups
 };
 
 struct CIndexObject
@@ -139,21 +158,6 @@ struct CIndexLight : public CIndexObject
 
     CIndexLight() = default;
     virtual ~CIndexLight() = default;
-};
-
-struct CIndexAnimation
-{
-    ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
-    ANIMATION_FLAGS Flags = AF_NONE;
-    uint16_t Graphic = 0;
-    uint16_t CorpseGraphic = 0;
-    uint16_t GraphicConversion = 0x8000;
-    uint16_t Color = 0;
-    uint8_t FileIndex = 0;
-    char MountedHeightOffset = 0;
-    bool IsUOP = false;
-    bool IsValidMUL = false;
-    CTextureAnimationGroup m_Groups[MAX_ANIMATION_GROUPS_COUNT]; // _uopReplaceGroupIndex
 };
 
 struct CIndexMusic
@@ -354,7 +358,14 @@ private:
 
 void uo_data_init(const char *path, uint32_t client_version, bool use_verdata);
 ANIMATION_GROUPS_TYPE uo_type_by_graphic(uint16_t graphic); // CalculateTypeByGraphic
-uint64_t uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type, int &groupCount); // CalculateOffset
-uint32_t uo_get_group_offset(ANIMATION_GROUPS group, uint16_t graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
+uint64_t uo_get_anim_offset(
+    uint16_t graphic,
+    uint32_t flags,
+    ANIMATION_GROUPS_TYPE type,
+    int &groupCount); // CalculateOffset
+uint32_t uo_get_group_offset(
+    ANIMATION_GROUPS group,
+    uint16_t
+        graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
 
 extern CFileManager g_FileManager;
