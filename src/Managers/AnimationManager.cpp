@@ -140,11 +140,6 @@ CAnimationManager::~CAnimationManager()
     ClearUnusedTextures(g_Ticks + 100000);
 }
 
-/*static bool uo_has_body_conversion(CIndexAnimation anim) // HasBodyConversion // HasPatch
-{
-    return (anim.GraphicConversion & 0x8000) == 0 && (anim.GraphicConversion & 0x1000) != 0;// && anim.BodyConvGroups;
-}*/
-
 void CAnimationManager::UpdateAnimationTable()
 {
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
@@ -2076,103 +2071,16 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
            DrawEquippedLayers(true, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
 }
 
-// FIXME: unused
-/*
-static void uo_convert_body_if_needed(uint16_t &graphic, bool isParent, bool isCorpse) // ConvertBodyIfNeeded
-{
-    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-        return;
-
-    const auto &data = g_Index.m_Anim[graphic];
-    if (data.IsUOP && (isParent || !data.IsValidMUL))
-        return;
-
-    uint16_t newGraphic = isCorpse ? data.CorpseGraphic : data.Graphic;
-    do
-    {
-        //if (uo_has_body_conversion(data))
-        //    break;
-
-        auto &newData = g_Index.m_Anim[newGraphic];
-        if (graphic != newGraphic)
-        {
-            graphic = newGraphic;
-            newGraphic = isCorpse ? newData.CorpseGraphic : newData.Graphic;
-        }
-    } while (graphic != newGraphic);
-}
-*/
-/*
-static CTextureAnimationGroup uo_get_group(uint16_t graphic, uint8_t group) // GetUopGroup
-{
-    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT);
-    auto &data = g_Index.m_Anim[graphic];
-    //const auto replace = data.ReplaceGroupIndex[group] > 0 ? data.ReplaceGroupIndex[group] : group;
-    return data.Groups[group];
-}
-*/
-/*
-static CTextureAnimationGroup emptyGroup = {}; // FIXME
-CTextureAnimationGroup uo_get_body_animation_group(
-    uint16_t &graphic,
-    uint8_t &group,
-    uint16_t &hue,
-    bool isCorpse,
-    bool isParent = false) // GetBodyAnimationGroup, GetCorpseAnimationGroup
-{
-    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT);
-    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT && group >= MAX_ANIMATION_GROUPS_COUNT)
-        return emptyGroup;
-
-    auto &data = g_Index.m_Anim[graphic];
-    if (data.IsUOP && (isParent || !data.IsValidMUL))
-    {
-        return g_Index.m_Anim[graphic].Groups[group]; //uo_get_group(graphic, group);
-    }
-
-    uint16_t newGraphic = isCorpse ? data.CorpseGraphic : data.Graphic;
-    do
-    {
-        auto &newData = g_Index.m_Anim[newGraphic];
-        //if (uo_has_body_conversion(data))
-        //    break;
-
-        if (graphic != newGraphic)
-        {
-            graphic = newGraphic;
-            hue = data.Color;
-            newGraphic = isCorpse ? newData.CorpseGraphic : newData.Graphic;
-        }
-    } while (graphic != newGraphic);
-
-    data = g_Index.m_Anim[graphic];
-    //if (uo_has_body_conversion(data))
-    {
-        //return data.BodyConvGroups[group];
-    }
-
-    //if (data.Groups != nullptr)
-    {
-        return data.Groups[group];
-    }
-
-    //return emptyGroup;
-}
-*/
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
 {
     if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT && group >= MAX_ANIMATION_GROUPS_COUNT)
         return false;
 
-    /*uint16_t hue;
-    const bool isCorpse = false;
-    const auto dir = uo_get_body_animation_group(graphic, group, hue, isCorpse).Direction[0];
-    return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
-    */
     const auto dir = g_Index.m_Anim[graphic].Groups[group].Direction[0];
     return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
 }
 
+// TODO: pre-compute or cache, profile this
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
 {
@@ -2181,12 +2089,9 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
         return result;
 
     CTextureAnimationGroup &group = g_Index.m_Anim[id].Groups[animGroup];
-    //uint16_t hue = 0;
     if (dir < MAX_MOBILE_DIRECTIONS)
     {
         auto &direction = group.Direction[dir];
-        //const auto direction =
-        //    uo_get_body_animation_group(id, animGroup, hue, isCorpse, true).Direction[dir];
         int fc = direction.FrameCount;
         if (fc > 0)
         {
@@ -2205,15 +2110,12 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
                     result.Height = spr->Height;
                     result.CenterX = frame.CenterX;
                     result.CenterY = frame.CenterY;
-                    //_animDimensionCache[id] = new Rectangle(x, y, w, h);
                     return result;
                 }
             }
         }
     }
 
-    //auto group = uo_get_body_animation_group(id, animGroup, hue, isCorpse, true); // FIXME copy
-    //auto direction = group.Direction[0];
     CTextureAnimationDirection &direction = group.Direction[0];
     g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
     return result;
