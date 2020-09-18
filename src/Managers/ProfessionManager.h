@@ -4,7 +4,7 @@
 #pragma once
 
 #include "../BaseQueue.h"
-#include "../Wisp.h" // REMOVE
+#include <xuocore/text_parser.h>
 
 class CBaseProfession;
 
@@ -37,7 +37,7 @@ private:
     };
 
     int GetKeyCode(const astr_t &key);
-    bool ParseFilePart(Wisp::CTextFileParser &file);
+    bool ParseFilePart(TextFileParser &file);
     bool AddChild(CBaseProfession *parent, CBaseProfession *child);
     void LoadProfessionDescription();
 

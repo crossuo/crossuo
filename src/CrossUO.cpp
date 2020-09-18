@@ -41,6 +41,7 @@
 #include <xuocore/mappedfile.h>
 #include <xuocore/commoninterfaces.h>
 #include <xuocore/uodata.h>
+#include <xuocore/text_parser.h>
 #include <common/utils.h>
 
 #include "Walker/Walker.h"
@@ -380,11 +381,12 @@ bool CGame::Install()
     Info(Client, "creating map blocksTable");
     g_MapManager.CreateBlocksTable();
 
-    // FIXME
+    // TODO: move to uodata
     Info(Client, "patching files");
     PatchFiles();
     Info(Client, "replacing indexes");
     IndexReplaces();
+    g_FileManager.LoadAnimations();
 
     CheckStaticTileFilterFiles();
 
@@ -424,7 +426,6 @@ bool CGame::Install()
     ExecuteStaticArt(0x0EEF); //gp 6+
 
     g_CreateCharacterManager.Init();
-    g_AnimationManager.Init();
 
     Info(Client, "loading client startup config");
     LoadClientStartupConfig();
@@ -860,7 +861,7 @@ void CGame::CheckStaticTileFilterFiles()
     }
 
     filePath = fs_path_join(path, "cave.txt");
-    Wisp::CTextFileParser caveParser(filePath, " \t", "#;//", "");
+    TextFileParser caveParser(filePath, " \t", "#;//", "");
     while (!caveParser.IsEOF())
     {
         auto strings = caveParser.ReadTokens();
@@ -873,7 +874,7 @@ void CGame::CheckStaticTileFilterFiles()
     }
 
     filePath = fs_path_join(path, "stumps.txt");
-    Wisp::CTextFileParser stumpParser(filePath, " \t", "#;//", "");
+    TextFileParser stumpParser(filePath, " \t", "#;//", "");
     while (!stumpParser.IsEOF())
     {
         auto strings = stumpParser.ReadTokens();
@@ -891,7 +892,7 @@ void CGame::CheckStaticTileFilterFiles()
     }
 
     filePath = fs_path_join(path, "vegetation.txt");
-    Wisp::CTextFileParser vegetationParser(filePath, " \t", "#;//", "");
+    TextFileParser vegetationParser(filePath, " \t", "#;//", "");
     while (!vegetationParser.IsEOF())
     {
         auto strings = vegetationParser.ReadTokens();
@@ -904,7 +905,7 @@ void CGame::CheckStaticTileFilterFiles()
 
 void CGame::LoadAutoLoginNames()
 {
-    Wisp::CTextFileParser file(g_App.UOFilesPath("autologinnames.cfg"), "", "#;", "");
+    TextFileParser file(g_App.UOFilesPath("autologinnames.cfg"), "", "#;", "");
 
     auto names = g_PacketManager.AutoLoginNames + "|";
 
@@ -3272,7 +3273,7 @@ void CGame::LoadLogin(astr_t &login, int &port)
         return;
     }
 
-    Wisp::CTextFileParser file(g_App.UOFilesPath("login.cfg"), "=,", "#;", "");
+    TextFileParser file(g_App.UOFilesPath("login.cfg"), "=,", "#;", "");
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens();
@@ -3951,13 +3952,13 @@ void CGame::IndexReplaces()
         return;
     }
 
-    Wisp::CTextFileParser newDataParser({}, " \t,{}", "#;//", "");
-    Wisp::CTextFileParser artParser(g_App.UOFilesPath("art.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser textureParser(g_App.UOFilesPath("TexTerr.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser gumpParser(g_App.UOFilesPath("gump.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser multiParser(g_App.UOFilesPath("Multi.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser soundParser(g_App.UOFilesPath("Sound.def"), " \t", "#;//", "{}");
-    Wisp::CTextFileParser mp3Parser(g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
+    TextFileParser newDataParser({}, " \t,{}", "#;//", "");
+    TextFileParser artParser(g_App.UOFilesPath("art.def"), " \t", "#;//", "{}");
+    TextFileParser textureParser(g_App.UOFilesPath("TexTerr.def"), " \t", "#;//", "{}");
+    TextFileParser gumpParser(g_App.UOFilesPath("gump.def"), " \t", "#;//", "{}");
+    TextFileParser multiParser(g_App.UOFilesPath("Multi.def"), " \t", "#;//", "{}");
+    TextFileParser soundParser(g_App.UOFilesPath("Sound.def"), " \t", "#;//", "{}");
+    TextFileParser mp3Parser(g_App.UOFilesPath("Music/Digital/Config.txt"), " ,", "#;", "");
 
     Info(Client, "replacing arts");
     while (!artParser.IsEOF())

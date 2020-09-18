@@ -6,6 +6,7 @@
 #include "SkillsManager.h"
 #include "ClilocManager.h"
 #include <xuocore/mappedfile.h>
+#include <xuocore/text_parser.h>
 #include <common/str.h>
 #include "../Config.h"
 #include "../CrossUO.h"
@@ -45,7 +46,7 @@ int CProfessionManager::GetKeyCode(const astr_t &key)
     return result;
 }
 
-bool CProfessionManager::ParseFilePart(Wisp::CTextFileParser &file)
+bool CProfessionManager::ParseFilePart(TextFileParser &file)
 {
     PROFESSION_TYPE type = PT_NO_PROF;
     std::vector<astr_t> childrens;
@@ -311,7 +312,7 @@ bool CProfessionManager::Load()
     head->TopLevel = true;
     Add(head);
 
-    Wisp::CTextFileParser file(g_App.UOFilesPath("Prof.txt"), " \t,", "#;", "\"\"");
+    TextFileParser file(g_App.UOFilesPath("Prof.txt"), " \t,", "#;", "\"\"");
 
     if (!file.IsEOF())
     {

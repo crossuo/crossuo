@@ -7,7 +7,6 @@ set(wisp_src
   Wisp/WispWindow.cpp
   Wisp/WispBinaryFileWriter.cpp
   Wisp/WispPacketMessage.cpp
-  Wisp/WispTextFileParser.cpp
 )
 
 set(gameobjects_src

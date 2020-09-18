@@ -5,6 +5,7 @@
 #include "GumpManager.h"
 #include "SoundManager.h"
 #include "ObjectPropertiesManager.h"
+#include <xuocore/text_parser.h>
 #include <common/fs.h>
 #include <common/str.h>
 #include <common/utils.h> // countof
@@ -1010,7 +1011,7 @@ bool CConfigManager::Load(const fs_path &path)
     screenX -= 20;
     screenY -= 60;
 
-    Wisp::CTextFileParser file(path, "=", "#;", "");
+    TextFileParser file(path, "=", "#;", "");
 
     bool zoomed = false;
     int windowX = -1;
@@ -1544,9 +1545,52 @@ bool CConfigManager::Load(const fs_path &path)
     return true;
 }
 
+struct TextFileWriter
+{
+    FILE *m_File{ nullptr };
+
+    TextFileWriter(const fs_path &path) { m_File = fs_open(path, FS_WRITE); }
+
+    ~TextFileWriter() { Close(); }
+
+    bool Opened() { return (m_File != nullptr); };
+    void Close()
+    {
+        if (m_File != nullptr)
+        {
+            fs_close(m_File);
+            m_File = nullptr;
+        }
+    }
+
+    void WriteString(const astr_t &key, const astr_t &value)
+    {
+        if (m_File != nullptr)
+        {
+            fputs(astr_t(key + "=" + value + "\n").c_str(), m_File);
+        }
+    }
+
+    void WriteInt(const astr_t &key, int value)
+    {
+        if (m_File != nullptr)
+        {
+            fputs(astr_t(key + "=" + str_from(value) + "\n").c_str(), m_File);
+        }
+    }
+
+    void WriteBool(const astr_t &key, bool value)
+    {
+        if (m_File != nullptr)
+        {
+            fputs(astr_t(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
+        }
+    }
+};
+
 void CConfigManager::Save(const fs_path &path)
 {
-    Wisp::CTextFileWriter writer(path);
+    TextFileWriter writer(path);
     if (writer.Opened())
     {
         //Page 1

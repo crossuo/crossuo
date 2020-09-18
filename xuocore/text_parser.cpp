@@ -1,19 +1,10 @@
 ﻿// MIT License
 
-#include "WispTextFileParser.h"
+#include "text_parser.h"
 
-#if 0
-#define TEXTPARSER_TRACE_FUNCTION DEBUG_TRACE_FUNCTION
-#else
-#define TEXTPARSER_TRACE_FUNCTION
-#endif
-
-namespace Wisp
-{
-CTextFileParser::CTextFileParser(
+TextFileParser::TextFileParser(
     const fs_path &path, const char *delimiters, const char *comentaries, const char *quotes)
 {
-    TEXTPARSER_TRACE_FUNCTION;
     if (!fs_path_empty(path))
     {
         m_File.Load(path);
@@ -21,16 +12,14 @@ CTextFileParser::CTextFileParser(
     StartupInitalize(delimiters, comentaries, quotes);
 }
 
-CTextFileParser::~CTextFileParser()
+TextFileParser::~TextFileParser()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     m_File.Unload();
 }
 
-void CTextFileParser::StartupInitalize(
+void TextFileParser::StartupInitalize(
     const char *delimiters, const char *comentaries, const char *quotes)
 {
-    TEXTPARSER_TRACE_FUNCTION;
     memset(&m_Delimiters[0], 0, sizeof(m_Delimiters));
     m_DelimitersSize = (int)strlen(delimiters);
     if (m_DelimitersSize != 0)
@@ -54,21 +43,18 @@ void CTextFileParser::StartupInitalize(
     m_End = m_File.End;
 }
 
-void CTextFileParser::Restart()
+void TextFileParser::Restart()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     m_File.ResetPtr();
 }
 
-bool CTextFileParser::IsEOF()
+bool TextFileParser::IsEOF()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     return (m_File.Ptr >= m_End);
 }
 
-void CTextFileParser::GetEOL()
+void TextFileParser::GetEOL()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     m_EOL = m_File.Ptr;
     if (!IsEOF())
     {
@@ -83,9 +69,8 @@ void CTextFileParser::GetEOL()
     }
 }
 
-bool CTextFileParser::IsDelimiter()
+bool TextFileParser::IsDelimiter()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     bool result = false;
     for (int i = 0; i < m_DelimitersSize && !result; i++)
     {
@@ -94,18 +79,16 @@ bool CTextFileParser::IsDelimiter()
     return result;
 }
 
-void CTextFileParser::SkipToData()
+void TextFileParser::SkipToData()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     while (m_Ptr < m_EOL && (*m_Ptr != 0u) && IsDelimiter())
     {
         m_Ptr++;
     }
 }
 
-bool CTextFileParser::IsComment()
+bool TextFileParser::IsComment()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     bool result = (*m_Ptr == '\n');
     for (int i = 0; i < m_ComentariesSize && !result; i++)
     {
@@ -121,7 +104,7 @@ bool CTextFileParser::IsComment()
     return result;
 }
 
-bool CTextFileParser::IsQuote()
+bool TextFileParser::IsQuote()
 {
     bool result = (*m_Ptr == '\n');
     for (int i = 0; i < m_QuotesSize; i += 2)
@@ -136,7 +119,7 @@ bool CTextFileParser::IsQuote()
     return result;
 }
 
-bool CTextFileParser::IsSecondQuote()
+bool TextFileParser::IsSecondQuote()
 {
     bool result = (*m_Ptr == '\n');
     for (int i = 0; i < m_QuotesSize; i += 2)
@@ -151,9 +134,8 @@ bool CTextFileParser::IsSecondQuote()
     return result;
 }
 
-astr_t CTextFileParser::ObtainData()
+astr_t TextFileParser::ObtainData()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     astr_t result;
     while (m_Ptr < m_End && (*m_Ptr != 0u) && *m_Ptr != '\n')
     {
@@ -177,9 +159,8 @@ astr_t CTextFileParser::ObtainData()
     return result;
 }
 
-astr_t CTextFileParser::ObtainQuotedData()
+astr_t TextFileParser::ObtainQuotedData()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     bool exit = false;
     astr_t result;
     for (int i = 0; i < m_QuotesSize; i += 2)
@@ -224,9 +205,8 @@ astr_t CTextFileParser::ObtainQuotedData()
     return result;
 }
 
-void CTextFileParser::SaveRawLine()
+void TextFileParser::SaveRawLine()
 {
-    TEXTPARSER_TRACE_FUNCTION;
     size_t size = m_EOL - m_Ptr;
 
     if (size > 0)
@@ -245,9 +225,8 @@ void CTextFileParser::SaveRawLine()
     }
 }
 
-std::vector<astr_t> CTextFileParser::ReadTokens(bool trim)
+std::vector<astr_t> TextFileParser::ReadTokens(bool trim)
 {
-    TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
     std::vector<astr_t> result;
 
@@ -280,9 +259,8 @@ std::vector<astr_t> CTextFileParser::ReadTokens(bool trim)
     return result;
 }
 
-std::vector<astr_t> CTextFileParser::GetTokens(const astr_t &str, bool trim)
+std::vector<astr_t> TextFileParser::GetTokens(const astr_t &str, bool trim)
 {
-    TEXTPARSER_TRACE_FUNCTION;
     m_Trim = trim;
     std::vector<astr_t> result;
 
@@ -309,48 +287,3 @@ std::vector<astr_t> CTextFileParser::GetTokens(const astr_t &str, bool trim)
     m_End = oldEnd;
     return result;
 }
-
-CTextFileWriter::CTextFileWriter(const fs_path &path)
-{
-    m_File = fs_open(path, FS_WRITE);
-}
-
-CTextFileWriter::~CTextFileWriter()
-{
-    Close();
-}
-
-void CTextFileWriter::Close()
-{
-    if (m_File != nullptr)
-    {
-        fs_close(m_File);
-        m_File = nullptr;
-    }
-}
-
-void CTextFileWriter::WriteString(const astr_t &key, const astr_t &value)
-{
-    if (m_File != nullptr)
-    {
-        fputs(astr_t(key + "=" + value + "\n").c_str(), m_File);
-    }
-}
-
-void CTextFileWriter::WriteInt(const astr_t &key, int value)
-{
-    if (m_File != nullptr)
-    {
-        fputs(astr_t(key + "=" + str_from(value) + "\n").c_str(), m_File);
-    }
-}
-
-void CTextFileWriter::WriteBool(const astr_t &key, bool value)
-{
-    if (m_File != nullptr)
-    {
-        fputs(astr_t(key + "=" + (value ? "yes" : "no") + "\n").c_str(), m_File);
-    }
-}
-
-}; // namespace Wisp
