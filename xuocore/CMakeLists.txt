@@ -20,6 +20,7 @@ set(XUOCORE_SRCS
   uodata.cpp
   mappedfile.cpp
   client_info.cpp
+  text_parser.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${XUOCORE_SRCS} ${XUOCORE_HEADERS})

@@ -8,6 +8,7 @@
 #include "PacketManager.h"
 #include <SDL_clipboard.h>
 #include <xuocore/mappedfile.h>
+#include <xuocore/text_parser.h>
 #include <common/fs.h>
 #include <common/str.h>
 #include <common/utils.h>
@@ -216,8 +217,8 @@ Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<astr_t> &strings
 
 bool CMacroManager::Convert(const fs_path &path)
 {
-    Wisp::CTextFileParser file(path, "", "", "");
-    Wisp::CTextFileParser lineParser({}, " ", "", "");
+    TextFileParser file(path, "", "", "");
+    TextFileParser lineParser({}, " ", "", "");
 
     const int MACRO_POSITION_ALT = 2;
     const int MACRO_POSITION_CTRL = 3;

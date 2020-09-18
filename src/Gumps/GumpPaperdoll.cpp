@@ -490,8 +490,7 @@ void CGumpPaperdoll::UpdateContent()
 
     //Draw equipment & backpack
     CGameItem *equipment = nullptr;
-    EQUIP_CONV_BODY_MAP &equipConv = g_AnimationManager.GetEquipConv();
-    EQUIP_CONV_BODY_MAP::iterator bodyIter = equipConv.find(obj->Graphic);
+    const auto bodyIter = uo_get_equip_body_conv(obj->Graphic); // FIXME
     g_ColorizerShader.Enable();
     //if (obj->IsHuman())
     {
@@ -543,16 +542,13 @@ void CGumpPaperdoll::UpdateContent()
                 }
 
                 uint16_t id = equipment->AnimID;
-                if (bodyIter != equipConv.end())
+                const auto conv = uo_get_equipconv(bodyIter, id);
+                if (conv != nullptr)
                 {
-                    EQUIP_CONV_DATA_MAP::iterator dataIter = bodyIter->second.find(id);
-                    if (dataIter != bodyIter->second.end())
-                    {
-                        id = dataIter->second.Gump;
-                    }
+                    id = conv->Gump;
                 }
 
-                if (id != 0u)
+                if (id != 0)
                 {
                     int cOfs = gumpOffset;
                     if (obj->Gender == GENDER_FEMALE && g_Game.ExecuteGump(id + cOfs) == nullptr)
@@ -575,13 +571,10 @@ void CGumpPaperdoll::UpdateContent()
                 if (equipment == nullptr)
                 {
                     uint16_t id = g_ObjectInHand.TiledataPtr->AnimID;
-                    if (bodyIter != equipConv.end())
+                    const auto conv = uo_get_equipconv(bodyIter, id);
+                    if (conv != nullptr)
                     {
-                        EQUIP_CONV_DATA_MAP::iterator dataIter = bodyIter->second.find(id);
-                        if (dataIter != bodyIter->second.end())
-                        {
-                            id = dataIter->second.Gump;
-                        }
+                        id = conv->Gump;
                     }
 
                     int cOfs = gumpOffset;

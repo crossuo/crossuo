@@ -6,13 +6,13 @@
 #include "Globals.h"
 #include "Application.h"
 #include <xuocore/uodata.h>
+#include <xuocore/text_parser.h>
 #include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/client_info.h>
 #include "Crypt/CryptEntry.h"
-#include "Wisp/WispTextFileParser.h"
 #include "Managers/PacketManager.h"
 
 #include <external/popts.h>
@@ -362,7 +362,7 @@ bool LoadGlobalConfig()
         return false;
     }
 
-    Wisp::CTextFileParser file(cfg, "=,", "#;", "");
+    TextFileParser file(cfg, "=,", "#;", "");
     while (!file.IsEOF())
     {
         auto strings = file.ReadTokens(false); // Trim remove spaces from paths

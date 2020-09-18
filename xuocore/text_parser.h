@@ -1,16 +1,13 @@
 // MIT License
 
-#ifndef WISP_TFP_H
-#define WISP_TFP_H
+#pragma once
 
 #include <stdint.h>
 #include <common/str.h>
 #include <common/fs.h>
 #include <xuocore/mappedfile.h>
 
-namespace Wisp
-{
-class CTextFileParser
+class TextFileParser
 {
 public:
     astr_t RawLine = "";
@@ -40,12 +37,12 @@ private:
     void SaveRawLine();
 
 public:
-    CTextFileParser(
+    TextFileParser(
         const fs_path &path,
         const char *delimiters = "",
         const char *comentaries = "",
         const char *quotes = "");
-    ~CTextFileParser();
+    ~TextFileParser();
 
     void Restart();
     bool IsEOF();
@@ -53,23 +50,3 @@ public:
     std::vector<astr_t> ReadTokens(bool trim = true);
     std::vector<astr_t> GetTokens(const astr_t &str, bool trim = true);
 };
-
-class CTextFileWriter
-{
-private:
-    FILE *m_File{ nullptr };
-
-public:
-    CTextFileWriter(const fs_path &path);
-    ~CTextFileWriter();
-
-    bool Opened() { return (m_File != nullptr); };
-    void Close();
-    void WriteString(const astr_t &key, const astr_t &value);
-    void WriteInt(const astr_t &key, int value);
-    void WriteBool(const astr_t &key, bool value);
-};
-
-}; // namespace Wisp
-
-#endif // WISP_TFP_H

@@ -166,6 +166,13 @@ struct CIndexMusic
     bool Loop = false;
 };
 
+struct CEquipConvData
+{
+    uint16_t Graphic = 0;
+    uint16_t Gump = 0;
+    uint16_t Color = 0;
+};
+
 struct CIndexAnimationSequence
 {
     // FIXME
@@ -281,8 +288,14 @@ struct CFileManager : public CDataReader // FIXME: not needed
     CMappedFile m_StaDifi[6];
     CMappedFile m_StaDif[6];
 
+    // Animation Frames
+    size_t m_AddressIdx[6];
+    size_t m_SizeIdx[6];
+    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
+
     bool Load();
     void Unload();
+    void LoadAnimations();
     void UopReadAnimations();
     bool IsMulFileOpen(int idx) const;
 
@@ -367,5 +380,12 @@ uint32_t uo_get_group_offset(
     ANIMATION_GROUPS group,
     uint16_t
         graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
+
+typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
+typedef std::unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
+const CEquipConvData *
+uo_get_equipconv(const EQUIP_CONV_BODY_MAP::iterator bodyMapIter, uint16_t graphic);
+const CEquipConvData *uo_get_equipconv(uint16_t bodyGraphic, uint16_t graphic);
+const EQUIP_CONV_BODY_MAP::iterator uo_get_equip_body_conv(uint16_t bodyGraphic);
 
 extern CFileManager g_FileManager;

@@ -20,6 +20,7 @@
 #include <external/zlib_amalg.h>
 #include <common/str.h>
 #include <xuocore/uodata.h>
+#include <xuocore/text_parser.h>
 #include "revision.h"
 #include "../MultiMap.h"
 #include "../Point.h"
@@ -4804,9 +4805,9 @@ PACKET_HANDLER(OpenGump)
     uint16_t commandsLength = ReadUInt16BE();
     auto commands = ReadString(commandsLength);
 
-    Wisp::CTextFileParser parser({}, " ", "", "{}");
-    Wisp::CTextFileParser cmdParser({}, " ", "", "");
-    Wisp::CTextFileParser tilepicGraphicParser({}, ",", "", "");
+    TextFileParser parser({}, " ", "", "{}");
+    TextFileParser cmdParser({}, " ", "", "");
+    TextFileParser tilepicGraphicParser({}, ",", "", "");
 
     auto commandList = parser.GetTokens(commands);
     CBaseGUI *lastGumpObject = nullptr;
@@ -5136,7 +5137,7 @@ PACKET_HANDLER(OpenGump)
                 int color = 0;
                 if (listSize >= 5 && g_Config.ClientVersion >= CV_305D)
                 {
-                    Wisp::CTextFileParser gumppicParser({}, "=", "", "");
+                    TextFileParser gumppicParser({}, "=", "", "");
                     auto hueList = gumppicParser.GetTokens(list[4]);
                     if (hueList.size() > 1)
                     {

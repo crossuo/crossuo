@@ -19,27 +19,11 @@ static const float UPPER_BODY_RATIO = 0.35f;
 static const float MID_BODY_RATIO = 0.60f;
 static const float LOWER_BODY_RATIO = 0.94f;
 
-struct CEquipConvData
-{
-    uint16_t Graphic = 0;
-    uint16_t Gump = 0;
-    uint16_t Color = 0;
-};
-
-typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
-typedef std::unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
-
 class CAnimationManager
 {
 public:
     uint16_t Color = 0;
     AnimationSelector SelectAnim;
-
-    //protected:
-    size_t m_AddressIdx[6];
-    size_t m_SizeIdx[6];
-    EQUIP_CONV_BODY_MAP m_EquipConv;
-    std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
 
 private:
     int m_CharacterFrameHeight = 0;
@@ -59,8 +43,6 @@ private:
     int m_Sitting = 0;
     bool m_UseBlending = false;
 
-    CEquipConvData *m_EquipConvItem{ nullptr };
-
     static const int USED_LAYER_COUNT = 23;
     static const int m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT];
     std::deque<CTextureAnimationDirection *> m_UsedAnimList;
@@ -74,7 +56,14 @@ private:
         uint16_t id = 0x0000);
 
     void FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y);
-    void Draw(class CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id = 0);
+    void Draw(
+        class CGameObject *obj,
+        int x,
+        int y,
+        bool mirror,
+        uint8_t &frameIndex,
+        int id = 0,
+        uint16_t convColor = 0);
     void DrawIntoFrameBuffer(class CGameCharacter *obj, int x, int y);
 
     bool DrawEquippedLayers(
@@ -110,9 +99,7 @@ public:
     CAnimationManager();
     ~CAnimationManager();
     void ClearUnusedTextures(uint32_t ticks);
-    void Init();
 
-    EQUIP_CONV_BODY_MAP &GetEquipConv() { return m_EquipConv; }
     void InitIndexReplaces(uint32_t *verdata);
     void UpdateAnimationTable();
     void Load(uint32_t *verdata);
