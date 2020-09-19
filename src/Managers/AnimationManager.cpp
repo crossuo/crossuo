@@ -327,6 +327,14 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
         {
             if (obj->m_Frames != nullptr)
             {
+                for (int i = 0; i < obj->FrameCount; i++)
+                {
+                    if (obj->m_Frames[i].UserData)
+                    {
+                        delete (CSprite *)obj->m_Frames[i].UserData;
+                        obj->m_Frames[i].UserData = nullptr;
+                    }
+                }
                 delete[] obj->m_Frames;
                 obj->m_Frames = nullptr;
             }
