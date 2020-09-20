@@ -234,7 +234,7 @@ inline AnimationDirFrames *uo_animation_get(AnimationState anim)
 
 inline AnimationDirFrames *uo_animation_get(uint16_t graphic, uint8_t group, uint8_t dir = 0)
 {
-    return uo_animation_get(AnimId({ dir, group, graphic }));
+    return uo_animation_get(AnimId({ graphic, group, dir }));
 }
 
 inline AnimationDirFrames *uo_animation_create(AnimationId animId)

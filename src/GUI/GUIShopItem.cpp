@@ -73,7 +73,7 @@ void CGUIShopItem::UpdateOffsets()
                 break;
         }
 
-        auto dims = g_AnimationManager.GetAnimationDimensions(0, Graphic, 1, group, false);
+        auto dims = g_AnimationManager.GetAnimationDimensions(0, { Graphic, 1, group }, false);
         if (dims.Height != 0)
         {
             m_MaxOffset = dims.Height;
@@ -176,7 +176,7 @@ void CGUIShopItem::PrepareTextures()
                 break;
         }
         const auto ticks = SDL_GetTicks() + 60000;
-        g_AnimationManager.ExecuteAnimation({ 1, group, Graphic }, ticks);
+        g_AnimationManager.ExecuteAnimation({ Graphic, group, 1 }, ticks);
     }
 
     g_Game.ExecuteGump(0x0039);
@@ -268,7 +268,7 @@ void CGUIShopItem::Draw(bool checktrans)
                 break;
         }
 
-        const auto anim = g_AnimationManager.ExecuteAnimation({ 1, group, Graphic }, g_Ticks);
+        const auto anim = g_AnimationManager.ExecuteAnimation({ Graphic, group, 1 }, g_Ticks);
         if (anim != nullptr && anim->FrameCount != 0)
         {
             assert(anim->Frames[0].UserData);

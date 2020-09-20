@@ -24,9 +24,9 @@ static_assert(sizeof(AnimationFrameInfo) == 8, "Invalid Animation Frame Info siz
 
 struct AnimationState
 {
-    uint8_t Direction = 0;
-    uint8_t Group = 0;
     uint16_t Graphic = 0;
+    uint8_t Group = 0;
+    uint8_t Direction = 0;
 };
 static_assert(sizeof(AnimationState) == sizeof(uint32_t), "Invalid AnimationState size");
 

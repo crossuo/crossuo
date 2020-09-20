@@ -53,7 +53,7 @@ private:
         int y,
         bool mirror,
         uint8_t &frameIndex,
-        uint16_t id = 0x0000);
+        uint16_t grahic = 0);
 
     void FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y);
     void Draw(
@@ -115,14 +115,12 @@ public:
     uint8_t CorrectAnimationGroupServer(
         ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const;
 
-    AnimationFrameInfo GetAnimationDimensions(
-        uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse);
+    AnimationFrameInfo
+    GetAnimationDimensions(uint8_t frameIndex, AnimationState anim, bool isCorpse);
 
     AnimationFrameInfo GetAnimationDimensions(
         uint8_t animIndex,
-        uint16_t graphic,
-        uint8_t dir,
-        uint8_t group,
+        AnimationState anim,
         bool isMounted,
         bool isCorpse,
         uint8_t frameIndex = 0xff);
