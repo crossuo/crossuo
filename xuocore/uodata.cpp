@@ -908,7 +908,7 @@ bool CFileManager::IsMulFileOpen(int idx) const
     return idx < countof(m_AnimMul) ? m_AnimMul[idx].Start != 0 : false;
 }
 
-uint8_t *CFileManager::MulReadAnimationData(const CTextureAnimationDirection &direction) const
+uint8_t *CFileManager::MulReadAnimationData(const AnimationDirection &direction) const
 {
     auto &file = m_AnimMul[direction.FileIndex];
     return file.Start + direction.Address;
@@ -1242,7 +1242,7 @@ std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
 
 void CFileManager::UopReadAnimationFrameInfo(
     AnimationFrameInfo &result,
-    CTextureAnimationDirection &direction,
+    AnimationDirection &direction,
     const UopFileEntry &block,
     bool isCorpse)
 {
@@ -1315,10 +1315,7 @@ bool CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelD
 }
 
 void CFileManager::MulReadAnimationFrameInfo(
-    AnimationFrameInfo &result,
-    CTextureAnimationDirection &direction,
-    uint8_t frameIndex,
-    bool isCorpse)
+    AnimationFrameInfo &result, AnimationDirection &direction, uint8_t frameIndex, bool isCorpse)
 {
     auto ptr = (uint8_t *)direction.Address;
     if (!direction.IsVerdata)
@@ -1385,7 +1382,7 @@ bool CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelD
 }
 
 void CFileManager::LoadAnimationFrame(
-    CTextureAnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc)
+    AnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc)
 {
     auto frameInfo = (AnimationFrameInfo *)Ptr;
     Move(sizeof(AnimationFrameInfo));
@@ -1449,8 +1446,8 @@ void CFileManager::LoadAnimationFrame(
 
 void CFileManager::LoadAnimationFrameInfo(
     AnimationFrameInfo &result,
-    CTextureAnimationDirection &direction,
-    CTextureAnimationGroup &group,
+    AnimationDirection &direction,
+    AnimationGroup &group,
     uint8_t frameIndex,
     bool isCorpse)
 {
@@ -1618,7 +1615,7 @@ static void load_animations(CFileManager *mgr)
     size_t maxAddress = mgr->m_AddressIdx[0] + mgr->m_SizeIdx[0];
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
-        CIndexAnimation &index = g_Index.m_Anim[i];
+        IndexAnimation &index = g_Index.m_Anim[i];
         if (index.Type == AGT_UNKNOWN)
         {
             index.Type = uo_type_by_graphic(i);
@@ -2078,8 +2075,8 @@ static void load_bodydef()
                     continue;
                 }
 
-                CTextureAnimationGroup &group = dataIndex.Groups[j];
-                CTextureAnimationGroup &newGroup = newDataIndex.Groups[j];
+                AnimationGroup &group = dataIndex.Groups[j];
+                AnimationGroup &newGroup = newDataIndex.Groups[j];
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
                     auto &direction = group.Direction[d];
@@ -2144,9 +2141,9 @@ static void load_corpsedef()
                 newGraphic = checked_cast<uint16_t>(str_to_int(replaces[2]));
             }
 
-            CIndexAnimation &dataIndex = g_Index.m_Anim[graphic];
+            IndexAnimation &dataIndex = g_Index.m_Anim[graphic];
             /*
-            CIndexAnimation &newDataIndex = g_Index.m_Anim[newGraphic];
+            IndexAnimation &newDataIndex = g_Index.m_Anim[newGraphic];
             int ignoreGroups[2] = { -1, -1 };
             switch (newDataIndex.Type)
             {
@@ -2181,12 +2178,12 @@ static void load_corpsedef()
 
             for (int j = 0; j < 2; j++)
             {
-                CTextureAnimationGroup &group = dataIndex.Groups[ignoreGroups[j]];
-                CTextureAnimationGroup &newGroup = checkDataIndex.Groups[ignoreGroups[j]];
+                AnimationGroup &group = dataIndex.Groups[ignoreGroups[j]];
+                AnimationGroup &newGroup = checkDataIndex.Groups[ignoreGroups[j]];
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
-                    CTextureAnimationDirection &direction = group.Direction[d];
-                    CTextureAnimationDirection &newDirection = newGroup.Direction[d];
+                    AnimationDirection &direction = group.Direction[d];
+                    AnimationDirection &newDirection = newGroup.Direction[d];
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
