@@ -42,8 +42,8 @@ struct FRAME_OUTPUT_INFO
 void CalculateFrameInformation(
     FRAME_OUTPUT_INFO &info, CGameObject *obj, bool mirror, uint8_t animIndex)
 {
-    const auto dir = g_AnimationManager.SelectAnim.Direction;
-    const auto grp = g_AnimationManager.SelectAnim.Group;
+    const auto dir = g_AnimationManager.Anim.Direction;
+    const auto grp = g_AnimationManager.Anim.Group;
     const auto dim = g_AnimationManager.GetAnimationDimensions(
         obj->AnimIndex, obj->GetMountAnimation(), dir, grp, obj->IsMounted(), obj->IsCorpse());
     int y = -(dim.Height + dim.CenterY + 3);
@@ -322,7 +322,7 @@ static const int MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR = 5;
 union AnimationDirectionId
 {
     uint32_t Key;
-    AnimationSelector Selector = {};
+    AnimationState Selector = {};
 };
 
 void DeleteAnimationDirection(AnimationDirectionId anim)
@@ -350,18 +350,18 @@ static std::unordered_map<uint32_t, uint32_t> s_UsedAnimList;
 CTextureAnimationDirection &CAnimationManager::ExecuteAnimation(
     uint8_t group, uint8_t direction, uint16_t graphic, uint32_t ticks)
 {
-    SelectAnim.Group = group;
-    SelectAnim.Direction = direction;
-    SelectAnim.Graphic = graphic;
+    Anim.Group = group;
+    Anim.Direction = direction;
+    Anim.Graphic = graphic;
 
     AnimationDirectionId anim;
-    anim.Selector = SelectAnim;
+    anim.Selector = Anim;
 
     auto &grp = g_Index.m_Anim[graphic].Groups[group];
     auto &dir = grp.Direction[direction];
     bool exists = false;
     if (dir.FrameCount == 0)
-        exists = g_FileManager.LoadAnimation(SelectAnim, LoadSpritePixels);
+        exists = g_FileManager.LoadAnimation(Anim, LoadSpritePixels);
 
     if (exists)
         s_UsedAnimList[anim.Key] = ticks;
@@ -427,9 +427,8 @@ bool CAnimationManager::TestPixels(
         return false;
     }
 
-    assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-    auto direction =
-        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id, g_Ticks);
+    assert(Anim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
+    auto direction = g_AnimationManager.ExecuteAnimation(Anim.Group, Anim.Direction, id, g_Ticks);
     const int fc = direction.FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
@@ -504,9 +503,8 @@ void CAnimationManager::Draw(
         return;
     }
 
-    assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-    auto direction =
-        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id, g_Ticks);
+    assert(Anim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
+    auto direction = g_AnimationManager.ExecuteAnimation(Anim.Group, Anim.Direction, id, g_Ticks);
     const int fc = direction.FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
@@ -821,7 +819,7 @@ void CAnimationManager::Draw(
 void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirror, int &x, int &y)
 {
     const SITTING_INFO_DATA &data = SITTING_INFO[m_Sitting - 1];
-    auto dir = SelectAnim.Direction;
+    auto dir = Anim.Direction;
     switch (dir)
     {
         case 7:
@@ -937,7 +935,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
         }
     }
 
-    SelectAnim.Direction = dir;
+    Anim.Direction = dir;
 }
 
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
@@ -1113,18 +1111,18 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
     }
 
-    SelectAnim.Direction = 0;
-    obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
+    Anim.Direction = 0;
+    obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
     bool mirror = false;
-    uint8_t layerDir = SelectAnim.Direction;
+    uint8_t layerDir = Anim.Direction;
 
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
     const uint16_t graphic = /*GetGraphicForAnimation*/ obj->Graphic;
     uint8_t animIndex = obj->AnimIndex;
     uint8_t animGroup = obj->GetAnimationGroup(graphic, true);
-    SelectAnim.Group = animGroup;
+    Anim.Group = animGroup;
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
@@ -1146,12 +1144,12 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (drawShadow)
         {
             Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, animIndex, 0x10000);
-            SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
+            Anim.Group = obj->GetAnimationGroup(mountID, false);
             Draw(goi, drawX, drawY, mirror, animIndex, mountID + 0x10000);
         }
         else
         {
-            SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
+            Anim.Group = obj->GetAnimationGroup(mountID, false);
         }
 
         Draw(goi, drawX, drawY, mirror, animIndex, mountID);
@@ -1166,11 +1164,11 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
             animGroup = PAG_STAND;
             animIndex = 0;
 
-            obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
+            obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
             FixSittingDirection(layerDir, mirror, drawX, drawY);
 
-            if (SelectAnim.Direction == 3)
+            if (Anim.Direction == 3)
             {
                 animGroup = 25;
             }
@@ -1185,7 +1183,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
     }
 
-    SelectAnim.Group = animGroup;
+    Anim.Group = animGroup;
 
     Draw(obj, drawX, drawY, mirror, animIndex); //Draw character
 
@@ -1195,7 +1193,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
 
-        if ((m_Sitting != 0) && SelectAnim.Direction == 3 && sittingData.DrawBack &&
+        if ((m_Sitting != 0) && Anim.Direction == 3 && sittingData.DrawBack &&
             obj->FindLayer(OL_CLOAK) == nullptr)
         {
             for (CRenderWorldObject *ro = obj->m_PrevXY; ro != nullptr; ro = ro->m_PrevXY)
@@ -1251,9 +1249,8 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
         {
-            assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-            auto &direction =
-                g_Index.m_Anim[id].Groups[SelectAnim.Group].Direction[SelectAnim.Direction];
+            assert(Anim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
+            auto &direction = g_Index.m_Anim[id].Groups[Anim.Group].Direction[Anim.Direction];
 
             if (direction.Address != 0 && direction.m_Frames != nullptr)
             {
@@ -1419,13 +1416,13 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 {
     y -= 3;
     m_Sitting = obj->IsSitting();
-    SelectAnim.Direction = 0;
-    obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
+    Anim.Direction = 0;
+    obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
     bool mirror = false;
-    uint8_t layerDir = SelectAnim.Direction;
+    uint8_t layerDir = Anim.Direction;
 
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
     uint8_t animGroup = obj->GetAnimationGroup(0, true);
@@ -1438,7 +1435,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     if (obj->IsHuman() && goi != nullptr) //Check mount
     {
         uint16_t mountID = goi->GetMountAnimation();
-        SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
+        Anim.Group = obj->GetAnimationGroup(mountID, false);
         if (TestPixels(goi, drawX, drawY, mirror, animIndex, mountID))
         {
             return true;
@@ -1453,15 +1450,15 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     {
         animGroup = PAG_STAND;
         animIndex = 0;
-        obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
+        obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
         FixSittingDirection(layerDir, mirror, drawX, drawY);
-        if (SelectAnim.Direction == 3)
+        if (Anim.Direction == 3)
         {
             animGroup = 25;
         }
     }
 
-    SelectAnim.Group = animGroup;
+    Anim.Group = animGroup;
 
     return TestPixels(obj, drawX, drawY, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, drawX, drawY, mirror, layerDir, animIndex, 0);
@@ -1475,9 +1472,9 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     }
 
     m_Sitting = 0;
-    SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
+    Anim.Direction = (obj->Layer & 0x7F) & 7;
     bool mirror = false;
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
     if (obj->Hidden())
     {
@@ -1489,11 +1486,11 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     }
 
     uint8_t animIndex = obj->AnimIndex;
-    SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+    Anim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
 
     Draw(obj, x, y, mirror, animIndex); //Draw animation
 
-    DrawEquippedLayers(false, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
+    DrawEquippedLayers(false, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
 
 bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
@@ -1504,16 +1501,16 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     }
 
     m_Sitting = 0;
-    SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
+    Anim.Direction = (obj->Layer & 0x7F) & 7;
     bool mirror = false;
 
-    GetAnimDirection(SelectAnim.Direction, mirror);
+    GetAnimDirection(Anim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0);
+    Anim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0);
 
     return TestPixels(obj, x, y, mirror, animIndex) ||
-           DrawEquippedLayers(true, obj, x, y, mirror, SelectAnim.Direction, animIndex, 0);
+           DrawEquippedLayers(true, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
 
 bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
@@ -1596,7 +1593,7 @@ DRAW_FRAME_INFORMATION
 CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLayers)
 {
     m_Sitting = 0;
-    SelectAnim.Direction = 0;
+    Anim.Direction = 0;
 
     DRAW_FRAME_INFORMATION dfInfo = {};
 
@@ -1622,12 +1619,12 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
     if (gameObject->NPC)
     {
         CGameCharacter *obj = (CGameCharacter *)gameObject;
-        obj->UpdateAnimationInfo_ProcessSteps(SelectAnim.Direction);
+        obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
         bool mirror = false;
-        uint8_t layerDir = SelectAnim.Direction;
+        uint8_t layerDir = Anim.Direction;
 
-        GetAnimDirection(SelectAnim.Direction, mirror);
+        GetAnimDirection(Anim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
         uint8_t animGroup = obj->GetAnimationGroup(0, true);
@@ -1639,7 +1636,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         if (goi != nullptr) //Check mount
         {
             uint16_t mountID = goi->GetMountAnimation();
-            SelectAnim.Group = obj->GetAnimationGroup(mountID, false);
+            Anim.Group = obj->GetAnimationGroup(mountID, false);
             CalculateFrameInformation(info, goi, mirror, animIndex);
             switch (animGroup)
             {
@@ -1656,7 +1653,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
             }
         }
 
-        SelectAnim.Group = animGroup;
+        Anim.Group = animGroup;
 
         CalculateFrameInformation(info, obj, mirror, animIndex);
 
@@ -1689,13 +1686,13 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
     {
         CGameItem *obj = (CGameItem *)gameObject;
 
-        SelectAnim.Direction = (obj->Layer & 0x7F) & 7;
+        Anim.Direction = (obj->Layer & 0x7F) & 7;
         bool mirror = false;
 
-        GetAnimDirection(SelectAnim.Direction, mirror);
+        GetAnimDirection(Anim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        SelectAnim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+        Anim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
 
         FRAME_OUTPUT_INFO info = {};
 
@@ -1705,8 +1702,8 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         {
             for (int l = 0; l < USED_LAYER_COUNT; l++)
             {
-                assert(SelectAnim.Direction < MAX_LAYER_DIRECTIONS && "Out-of-bounds access");
-                CGameItem *goi = obj->FindLayer(m_UsedLayers[SelectAnim.Direction][l]);
+                assert(Anim.Direction < MAX_LAYER_DIRECTIONS && "Out-of-bounds access");
+                CGameItem *goi = obj->FindLayer(m_UsedLayers[Anim.Direction][l]);
 
                 if (goi != nullptr && (goi->AnimID != 0u))
                 {

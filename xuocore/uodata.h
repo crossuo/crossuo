@@ -21,7 +21,7 @@
 
 struct IndexBlock;
 struct AnimationFrameInfo;
-struct AnimationSelector;
+struct AnimationState;
 
 extern astr_t g_dumpUopFile;
 
@@ -299,7 +299,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     bool IsMulFileOpen(int idx) const;
 
     void LoadStringDictionary();
-    bool LoadAnimation(const AnimationSelector &anim, LoadPixelData16Cb pLoadFunc);
+    bool LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void LoadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
@@ -354,17 +354,15 @@ private:
     void UopReadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
-        const UopFileEntry &block);
-    bool UopReadAnimationFrames(
-        CTextureAnimationDirection &direction,
-        const AnimationSelector &anim,
-        LoadPixelData16Cb pLoadFunc);
+        const UopFileEntry &block,
+        bool isCorpse);
+    bool UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void MulReadAnimationFrameInfo(
         AnimationFrameInfo &result,
         CTextureAnimationDirection &direction,
         uint8_t frameIndex,
         bool isCorpse);
-    bool MulReadAnimationFrames(CTextureAnimationDirection &direction, LoadPixelData16Cb pLoadFunc);
+    bool MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     // --
 };
 

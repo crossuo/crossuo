@@ -22,13 +22,19 @@ struct AnimationFrameInfo
 };
 static_assert(sizeof(AnimationFrameInfo) == 8, "Invalid Animation Frame Info size");
 
-struct AnimationSelector
+struct AnimationState
 {
     uint8_t Direction = 0;
     uint8_t Group = 0;
     uint16_t Graphic = 0;
 };
-static_assert(sizeof(AnimationSelector) == 4, "Invalid Animation Selector size");
+
+union AnimationId
+{
+    uint32_t Key;
+    AnimationState Selector = {};
+};
+static_assert(sizeof(AnimationId) == sizeof(uint32_t), "Invalid AnimationState size");
 
 struct VERDATA_HEADER
 {
