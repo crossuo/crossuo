@@ -22,12 +22,18 @@
 #include "../GameObjects/GamePlayer.h"
 #include "../Utility/PerfMarker.h"
 
+#define USE_NEW_ANIM_CODE 1
+
+#if USE_NEW_ANIM_CODE
+
 static uint16_t HANDS_BASE_ANIMID[] = { 0x0263, 0x0264, 0x0265, 0x0266, 0x0267, 0x0268, 0x0269,
                                         0x026D, 0x0270, 0x0272, 0x0274, 0x027A, 0x027C, 0x027F,
                                         0x0281, 0x0286, 0x0288, 0x0289, 0x028B, 0 };
 
 static uint16_t HAND2_BASE_ANIMID[] = { 0x0240, 0x0241, 0x0242, 0x0243, 0x0244,
                                         0x0245, 0x0246, 0x03E0, 0x03E1, 0 };
+
+#endif // #if USE_NEW_ANIM_CODE
 
 CGameCharacter::CGameCharacter(int serial)
     : CGameObject(serial)
@@ -113,7 +119,7 @@ void CGameCharacter::UpdateTextCoordinates()
     }
 
     const auto dims = g_AnimationManager.GetAnimationDimensions(
-        this->AnimIndex, this->GetMountAnimation(), 0, 0, this->IsMounted(), this->IsCorpse());
+        this->AnimIndex, this->GetGraphicForAnimation(), 0, 0, this->IsMounted(), this->IsCorpse());
     int offset = 0;
 
     int x = DrawX + OffsetX;
@@ -166,7 +172,7 @@ int CGameCharacter::IsSitting()
 {
     int result = 0;
     if (IsHuman() && !IsMounted() && !IsFlying() &&
-        !TestStepNoChangeDirection(GetAnimationGroup(0, true)))
+        !TestStepNoChangeDirection(GetGroupForAnimation(0, true)))
     {
         CRenderWorldObject *obj = this;
         while (obj != nullptr && obj->m_PrevXY != nullptr)
@@ -486,7 +492,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
         AnimationRepeat = false;
         AnimationFromServer = true;
 
-        ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(GetMountAnimation());
+        ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(GetGraphicForAnimation());
 
         const uint8_t fidgetAnimTable[3][3] = { { LAG_FIDGET_1, LAG_FIDGET_2, LAG_FIDGET_1 },
                                                 { HAG_FIDGET_1, HAG_FIDGET_2, HAG_FIDGET_1 },
@@ -636,7 +642,9 @@ bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
     return result;
 }
 
-static void CalculateHight(
+#if USE_NEW_ANIM_CODE
+
+static void CalculateHigh(
     ushort graphic,
     CGameCharacter *mobile,
     ANIMATION_FLAGS flags,
@@ -721,14 +729,14 @@ static void CalculateHight(
     }
 }
 
-#define USE_NEW_ANIM_CODE 1
+#endif // #if USE_NEW_ANIM_CODE
 
-uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
+uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
 {
-    uint16_t graphic = checkGraphic;
+    //uint16_t graphic = checkGraphic;
     if (graphic == 0)
     {
-        graphic = GetMountAnimation();
+        graphic = GetGraphicForAnimation();
     }
 
 #if USE_NEW_ANIM_CODE
@@ -784,7 +792,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
         {
             if (flags & AF_CALCULATE_OFFSET_LOW_GROUP_EXTENDED)
             {
-                CalculateHight(graphic, this, flags, isRun, isWalking, result);
+                CalculateHigh(graphic, this, flags, isRun, isWalking, result);
             }
             else
             {
@@ -835,7 +843,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
         }
         case AGT_MONSTER:
         {
-            CalculateHight(graphic, this, flags, isRun, isWalking, result);
+            CalculateHigh(graphic, this, flags, isRun, isWalking, result);
             break;
         }
         case AGT_SEA_MONSTER:
@@ -1068,7 +1076,7 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
     uint8_t result = AnimationGroup;
 
     if (result != AG_INVALID && ((Serial & 0x80000000) != 0) &&
-        (!AnimationFromServer || checkGraphic != 0))
+        (!AnimationFromServer || graphic != 0))
     {
         GetAnimationGroup(groupIndex, result);
         if (!g_AnimationManager.AnimationExists(graphic, result))
@@ -1300,7 +1308,7 @@ void CGameCharacter::ProcessGargoyleAnims(uint8_t &group)
 }
 
 // 0x03CA dead shroud
-uint16_t CGameCharacter::GetMountAnimation()
+uint16_t CGameCharacter::GetGraphicForAnimation()
 {
     uint16_t graphic = Graphic;
     switch (graphic)

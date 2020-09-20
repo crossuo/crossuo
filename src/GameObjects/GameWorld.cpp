@@ -113,8 +113,8 @@ void CGameWorld::ProcessAnimation()
                     frameIndex++;
                 }
 
-                auto graphic = gc->GetMountAnimation();
-                auto group = gc->GetAnimationGroup(graphic, true);
+                auto graphic = gc->GetGraphicForAnimation();
+                auto group = gc->GetGroupForAnimation(graphic, true);
 
                 /* CHECK */
                 gc->ProcessGargoyleAnims(group);
@@ -127,8 +127,8 @@ void CGameWorld::ProcessAnimation()
                         case PAG_FIDGET_2:
                         case PAG_FIDGET_3:
                         {
-                            graphic = mount->GetMountAnimation();
-                            group = gc->GetAnimationGroup(graphic, true);
+                            graphic = mount->GetGraphicForAnimation();
+                            group = gc->GetGroupForAnimation(graphic, true);
                             break;
                         }
                         default:
@@ -248,7 +248,7 @@ void CGameWorld::ProcessAnimation()
             if (obj->LastAnimationChangeTime < g_Ticks)
             {
                 char frameIndex = obj->AnimIndex + 1;
-                uint16_t graphic = obj->GetMountAnimation();
+                uint16_t graphic = obj->GetGraphicForAnimation();
                 bool mirror = false;
                 g_AnimationManager.GetAnimDirection(dir, mirror);
                 if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)

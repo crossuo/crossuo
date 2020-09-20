@@ -51,7 +51,7 @@ void CalculateFrameInformation(
     const auto dir = g_AnimationManager.Anim.Direction;
     const auto grp = g_AnimationManager.Anim.Group;
     const auto dim = g_AnimationManager.GetAnimationDimensions(
-        obj->AnimIndex, obj->GetMountAnimation(), dir, grp, obj->IsMounted(), obj->IsCorpse());
+        obj->AnimIndex, obj->GetGraphicForAnimation(), dir, grp, obj->IsMounted(), obj->IsCorpse());
     int y = -(dim.Height + dim.CenterY + 3);
     int x = -dim.CenterX;
     if (mirror)
@@ -387,7 +387,7 @@ bool CAnimationManager::TestPixels(
 
     if (id == 0)
     {
-        id = obj->GetMountAnimation();
+        id = obj->GetGraphicForAnimation();
     }
 
     if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
@@ -468,7 +468,7 @@ void CAnimationManager::Draw(
 
     if (graphic == 0)
     {
-        graphic = obj->GetMountAnimation();
+        graphic = obj->GetGraphicForAnimation();
     }
 
     if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
@@ -1098,7 +1098,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     const uint16_t graphic = /*GetGraphicForAnimation*/ obj->Graphic;
     uint8_t frameIndex = obj->AnimIndex;
-    uint8_t animGroup = obj->GetAnimationGroup(graphic, true);
+    uint8_t animGroup = obj->GetGroupForAnimation(graphic, true);
     Anim.Group = animGroup;
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
@@ -1110,7 +1110,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         m_Sitting = 0;
         lightOffset += 20;
 
-        uint16_t mountID = goi->GetMountAnimation();
+        uint16_t mountID = goi->GetGraphicForAnimation();
         int mountedHeightOffset = 0;
 
         if (mountID < MAX_ANIMATIONS_DATA_INDEX_COUNT)
@@ -1121,12 +1121,12 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (drawShadow)
         {
             Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, frameIndex, 0, true);
-            Anim.Group = obj->GetAnimationGroup(mountID, false);
+            Anim.Group = obj->GetGroupForAnimation(mountID, false);
             Draw(goi, drawX, drawY, mirror, frameIndex, mountID + 0x10000);
         }
         else
         {
-            Anim.Group = obj->GetAnimationGroup(mountID, false);
+            Anim.Group = obj->GetGroupForAnimation(mountID, false);
         }
 
         Draw(goi, drawX, drawY, mirror, frameIndex, mountID);
@@ -1222,7 +1222,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)
     {
-        uint16_t id = obj->GetMountAnimation();
+        uint16_t id = obj->GetGraphicForAnimation();
         const auto group = Anim.Group;
         const auto direction = Anim.Direction;
         const auto animation = ExecuteAnimation({ direction, group, id }, g_Ticks);
@@ -1398,7 +1398,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
     GetAnimDirection(Anim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    uint8_t animGroup = obj->GetAnimationGroup(0, true);
+    uint8_t animGroup = obj->GetGroupForAnimation(0, true);
 
     CGameItem *goi = obj->FindLayer(OL_MOUNT);
 
@@ -1407,8 +1407,8 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
     if (obj->IsHuman() && goi != nullptr) //Check mount
     {
-        uint16_t mountID = goi->GetMountAnimation();
-        Anim.Group = obj->GetAnimationGroup(mountID, false);
+        uint16_t mountID = goi->GetGraphicForAnimation();
+        Anim.Group = obj->GetGroupForAnimation(mountID, false);
         if (TestPixels(goi, drawX, drawY, mirror, animIndex, mountID))
         {
             return true;
@@ -1459,7 +1459,7 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     }
 
     uint8_t animIndex = obj->AnimIndex;
-    Anim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+    Anim.Group = GetDieGroupIndex(obj->GetGraphicForAnimation(), obj->UsedLayer != 0);
 
     Draw(obj, x, y, mirror, animIndex); //Draw animation
 
@@ -1480,7 +1480,7 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     GetAnimDirection(Anim.Direction, mirror);
 
     uint8_t animIndex = obj->AnimIndex;
-    Anim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0);
+    Anim.Group = GetDieGroupIndex(obj->GetGraphicForAnimation(), obj->UsedLayer != 0);
 
     return TestPixels(obj, x, y, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, x, y, mirror, Anim.Direction, animIndex, 0);
@@ -1597,7 +1597,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         GetAnimDirection(Anim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        uint8_t animGroup = obj->GetAnimationGroup(0, true);
+        uint8_t animGroup = obj->GetGroupForAnimation(0, true);
 
         FRAME_OUTPUT_INFO info = {};
 
@@ -1605,8 +1605,8 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
 
         if (goi != nullptr) //Check mount
         {
-            uint16_t mountID = goi->GetMountAnimation();
-            Anim.Group = obj->GetAnimationGroup(mountID, false);
+            uint16_t mountID = goi->GetGraphicForAnimation();
+            Anim.Group = obj->GetGroupForAnimation(mountID, false);
             CalculateFrameInformation(info, goi, mirror, animIndex);
             switch (animGroup)
             {
@@ -1662,7 +1662,7 @@ CAnimationManager::CollectFrameInformation(CGameObject *gameObject, bool checkLa
         GetAnimDirection(Anim.Direction, mirror);
 
         uint8_t animIndex = obj->AnimIndex;
-        Anim.Group = GetDieGroupIndex(obj->GetMountAnimation(), obj->UsedLayer != 0u);
+        Anim.Group = GetDieGroupIndex(obj->GetGraphicForAnimation(), obj->UsedLayer != 0u);
 
         FRAME_OUTPUT_INFO info = {};
 

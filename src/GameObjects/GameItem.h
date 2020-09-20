@@ -44,7 +44,7 @@ public:
     AddMulti(uint16_t graphic, uint16_t color, char x, char y, char z, bool isCustomHouseMulti);
 
     void OnGraphicChange(int direction = 0);
-    uint16_t GetMountAnimation();
+    uint16_t GetGraphicForAnimation();
     virtual bool IsInternal() { return ((m_TiledataPtr->Flags & 0x00010000) && !IsCorpse()); }
 
     bool IsHuman() const
