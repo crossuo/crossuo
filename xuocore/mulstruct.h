@@ -24,8 +24,8 @@ static_assert(sizeof(AnimationFrameInfo) == 8, "Invalid Animation Frame Info siz
 
 struct AnimationSelector
 {
-    uint8_t Group = 0;
     uint8_t Direction = 0;
+    uint8_t Group = 0;
     uint16_t Graphic = 0;
 };
 static_assert(sizeof(AnimationSelector) == 4, "Invalid Animation Selector size");

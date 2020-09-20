@@ -142,10 +142,10 @@ void CGameWorld::ProcessAnimation()
                 int currentDelay = delay;
                 if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
-                    auto direction = g_AnimationManager.ExecuteAnimation(animGroup, dir, id);
+                    auto direction =
+                        g_AnimationManager.ExecuteAnimation(animGroup, dir, id, g_Ticks);
                     if (direction.Address != 0 || direction.IsUOP)
                     {
-                        direction.LastAccessTime = g_Ticks;
                         int fc = direction.FrameCount;
                         if (gc->AnimationFromServer)
                         {
@@ -254,10 +254,10 @@ void CGameWorld::ProcessAnimation()
                 if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
                     int animGroup = g_AnimationManager.GetDieGroupIndex(id, gi->UsedLayer != 0u);
-                    auto direction = g_AnimationManager.ExecuteAnimation(animGroup, dir, id);
+                    auto direction =
+                        g_AnimationManager.ExecuteAnimation(animGroup, dir, id, g_Ticks);
                     if (direction.Address != 0 || direction.IsUOP)
                     {
-                        direction.LastAccessTime = g_Ticks;
                         const int fc = direction.FrameCount;
                         if (frameIndex >= fc)
                         {

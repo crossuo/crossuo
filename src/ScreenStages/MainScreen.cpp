@@ -37,12 +37,9 @@ CMainScreen::~CMainScreen()
 void CMainScreen::Init()
 {
     CBaseScreen::Init();
-
     g_ConfigLoaded = false;
     g_GlobalScale = 1.0;
-
     Load();
-
     Reset();
     g_GameWindow.SetTitle(CLIENT_TITLE);
 #ifndef NEW_RENDERER_ENABLED
@@ -50,22 +47,15 @@ void CMainScreen::Init()
 #else
     g_GumpManager.RedrawAll();
 #endif
-
     g_EntryPointer = m_MainGump.m_PasswordFake;
-
-    g_AnimationManager.ClearUnusedTextures(g_Ticks + 100000);
-
+    g_AnimationManager.ClearUnusedAnimations();
     g_QuestArrow.Enabled = false;
-
     g_TotalSendSize = 0;
     g_TotalRecvSize = 0;
-
     g_LightLevel = 0;
     g_PersonalLightLevel = 0;
-
     g_ScreenEffectManager.UseSunrise();
     SmoothScreenAction = 0;
-
     m_Gump.PrepareTextures();
 }
 

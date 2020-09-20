@@ -55,7 +55,6 @@ struct CTextureAnimationDirection // AnimationDirection
     uint32_t BaseSize = 0;
     uint32_t PatchedSize = 0;
     uint32_t Size = 0;
-    uint32_t LastAccessTime = 0;
     uint8_t FileIndex = 0;
     uint8_t FrameCount = 0;
     bool IsUOP = false;
