@@ -303,5 +303,4 @@ CHECKSUM_PRIVATE uint64_t uo_jenkins_hash(const char *s);
 CHECKSUM_PRIVATE void crc32_init();
 CHECKSUM_PRIVATE uint32_t crc32_checksum(uint8_t *ptr, size_t size);
 CHECKSUM_PRIVATE uint32_t adler32(uint8_t *ptr, size_t size);
-
 #endif // CHECKSUM_HEADER
