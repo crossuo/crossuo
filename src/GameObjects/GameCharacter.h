@@ -70,8 +70,8 @@ public:
         bool repeat = false,
         bool frameDirection = false);
 
-    uint16_t GetMountAnimation();                                    // GetGraphicForAnimation
-    uint8_t GetAnimationGroup(uint16_t checkGraphic, bool isParent); // GetGroupForAnimation
+    uint16_t GetGraphicForAnimation();
+    uint8_t GetGroupForAnimation(uint16_t graphic, bool isParent);
     void GetAnimationGroup(ANIMATION_GROUPS group, uint8_t &animation);
     bool Staying() { return AnimationGroup == AG_INVALID && m_Steps.empty(); }
     bool TestStepNoChangeDirection(uint8_t group);

@@ -777,7 +777,7 @@ void CGameScreen::AddTileToRenderList(
                 {
                     const auto dims = g_AnimationManager.GetAnimationDimensions(
                         go->AnimIndex,
-                        go->GetMountAnimation(),
+                        go->GetGraphicForAnimation(),
                         0,
                         0,
                         go->IsMounted(),
@@ -1405,7 +1405,7 @@ void CGameScreen::DrawGameWindow(bool render)
                         {
                             const auto dims = g_AnimationManager.GetAnimationDimensions(
                                 gc->AnimIndex,
-                                gc->GetMountAnimation(),
+                                gc->GetGraphicForAnimation(),
                                 0,
                                 0,
                                 gc->IsMounted(),

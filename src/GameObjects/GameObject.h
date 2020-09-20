@@ -63,7 +63,7 @@ public:
     void GenerateObjectHandlesTexture(wstr_t text);
     void DrawObjectHandlesTexture();
     void SelectObjectHandlesTexture();
-    virtual uint16_t GetMountAnimation();
+    virtual uint16_t GetGraphicForAnimation();
     virtual void OnGraphicChange(int direction = 0) {}
     virtual bool TranparentTest(int playerZ) { return false; }
     void DrawEffects(int x, int y);
@@ -116,7 +116,7 @@ public:
     inline bool IsMounted() const
     {
         const auto it = (CGameObject *)FindLayer(OL_MOUNT);
-        return (it && it->GetMountAnimation() != 0xffff && !IsDrivingBoat());
+        return (it && it->GetGraphicForAnimation() != 0xffff && !IsDrivingBoat());
     }
 
     bool YellowHits() { return (m_Flags & 0x08) != 0; }

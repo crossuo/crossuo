@@ -121,7 +121,12 @@ void CGameObject::DrawObjectHandlesTexture()
     {
         CGameCharacter *gc = (CGameCharacter *)this;
         const auto dims = g_AnimationManager.GetAnimationDimensions(
-            this->AnimIndex, this->GetMountAnimation(), 0, 0, this->IsMounted(), this->IsCorpse());
+            this->AnimIndex,
+            this->GetGraphicForAnimation(),
+            0,
+            0,
+            this->IsMounted(),
+            this->IsCorpse());
         x += gc->OffsetX;
         y += gc->OffsetY - (gc->OffsetZ + dims.Height + dims.CenterY + s_objectHandleOffsetY);
     }
@@ -156,7 +161,7 @@ void CGameObject::SelectObjectHandlesTexture()
             CGameCharacter *gc = (CGameCharacter *)this;
             const auto dims = g_AnimationManager.GetAnimationDimensions(
                 this->AnimIndex,
-                this->GetMountAnimation(),
+                this->GetGraphicForAnimation(),
                 0,
                 0,
                 this->IsMounted(),
@@ -333,7 +338,7 @@ void CGameObject::AddText(CTextData *msg)
     g_Game.AddJournalMessage(msg, JournalPrefix);
 }
 
-uint16_t CGameObject::GetMountAnimation()
+uint16_t CGameObject::GetGraphicForAnimation()
 {
     return Graphic; // + UO->GetStaticPointer(Graphic)->Increment;
 }

@@ -364,7 +364,7 @@ void CGameItem::Select(int x, int y)
     }
 }
 
-uint16_t CGameItem::GetMountAnimation()
+uint16_t CGameItem::GetGraphicForAnimation()
 {
     uint16_t graphic = Graphic;
 
