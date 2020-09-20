@@ -41,7 +41,7 @@ struct UopFileEntry;
 struct CUopMappedFile;
 using UopSectionHeaderMap = std::unordered_map<uint64_t, const UopFileEntry *>;
 
-struct CTextureAnimationFrame // AnimationFrameTexture
+struct AnimationFrame // AnimationFrameTexture
 {
     void *UserData = nullptr;
     int16_t CenterX = 0;
@@ -50,11 +50,11 @@ struct CTextureAnimationFrame // AnimationFrameTexture
 
 struct AnimationDirFrames
 {
-    CTextureAnimationFrame *Frames = nullptr;
+    AnimationFrame *Frames = nullptr;
     uint8_t FrameCount = 0;
 };
 
-struct CTextureAnimationDirection // AnimationDirection
+struct AnimationDirection
 {
     size_t Address = 0;
     size_t BaseAddress = 0;
@@ -68,15 +68,15 @@ struct CTextureAnimationDirection // AnimationDirection
     bool IsVerdata = false;
 };
 
-struct CTextureAnimationGroup // AnimationGroup
+struct AnimationGroup // AnimationGroup
 {
-    CTextureAnimationDirection Direction[MAX_MOBILE_DIRECTIONS];
+    AnimationDirection Direction[MAX_MOBILE_DIRECTIONS];
     const UopFileEntry *AnimData = nullptr;
 };
 
-struct CIndexAnimation
+struct IndexAnimation
 {
-    CTextureAnimationGroup Groups[MAX_ANIMATION_GROUPS_COUNT];
+    AnimationGroup Groups[MAX_ANIMATION_GROUPS_COUNT];
     ANIMATION_FLAGS Flags = AF_NONE;
     uint16_t Graphic = 0;
     uint16_t Color = 0;
@@ -165,7 +165,7 @@ struct CIndexLight : public CIndexObject
 
 struct CIndexMusic
 {
-    astr_t FilePath; // FIXME
+    astr_t FilePath;
     bool Loop = false;
 };
 
@@ -191,7 +191,7 @@ struct Index
     CIndexMusic m_MP3[MAX_MUSIC_DATA_INDEX_COUNT];
     CIndexMulti m_Multi[MAX_MULTI_DATA_INDEX_COUNT];
     CIndexLight m_Light[MAX_LIGHTS_DATA_INDEX_COUNT];
-    CIndexAnimation m_Anim[MAX_ANIMATIONS_DATA_INDEX_COUNT];
+    IndexAnimation m_Anim[MAX_ANIMATIONS_DATA_INDEX_COUNT];
     std::unordered_map<AnimationId, AnimationDirFrames *> m_Animations;
     int m_MultiIndexCount = 0;
 };
@@ -247,7 +247,7 @@ inline AnimationDirFrames *uo_animation_create(AnimationId animId)
     const auto dir = uint8_t(animId & 0xff);
     const auto &animInfo = g_Index.m_Anim[graphic].Groups[group].Direction[dir];
     const auto frameCount = animInfo.FrameCount;
-    animation->Frames = new CTextureAnimationFrame[frameCount];
+    animation->Frames = new AnimationFrame[frameCount];
     assert(animation->Frames);
     animation->FrameCount = frameCount;
     g_Index.m_Animations.emplace(animId, animation);
@@ -383,8 +383,8 @@ struct CFileManager : public CDataReader // FIXME: not needed
     bool LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void LoadAnimationFrameInfo(
         AnimationFrameInfo &result,
-        CTextureAnimationDirection &direction,
-        CTextureAnimationGroup &group,
+        AnimationDirection &direction,
+        AnimationGroup &group,
         uint8_t frameIndex,
         bool isCorpse);
     // --
@@ -402,9 +402,8 @@ private:
     UopAnimationHeader UopReadAnimationHeader();
     UopAnimationFrame UopReadAnimationFrame();
     std::vector<UopAnimationFrame> UopReadAnimationFramesData();
-    uint8_t *MulReadAnimationData(const CTextureAnimationDirection &direction) const;
-    void LoadAnimationFrame(
-        CTextureAnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc);
+    uint8_t *MulReadAnimationData(const AnimationDirection &direction) const;
+    void LoadAnimationFrame(AnimationFrame &frame, uint16_t *palette, LoadPixelData16Cb pLoadFunc);
 
     bool LoadWithUop();
     bool LoadWithMul();
@@ -434,13 +433,13 @@ private:
     // from AnimationManager
     void UopReadAnimationFrameInfo(
         AnimationFrameInfo &result,
-        CTextureAnimationDirection &direction,
+        AnimationDirection &direction,
         const UopFileEntry &block,
         bool isCorpse);
     bool UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void MulReadAnimationFrameInfo(
         AnimationFrameInfo &result,
-        CTextureAnimationDirection &direction,
+        AnimationDirection &direction,
         uint8_t frameIndex,
         bool isCorpse);
     bool MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);

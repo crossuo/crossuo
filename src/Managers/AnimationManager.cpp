@@ -179,15 +179,15 @@ void CAnimationManager::UpdateAnimationTable()
     }
 }
 
-ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
+ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
 {
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
-        Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", id);
+        Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", graphic);
         return AG_HIGH;
     }
 
-    switch (g_Index.m_Anim[id].Type)
+    switch (g_Index.m_Anim[graphic].Type)
     {
         case AGT_ANIMAL:
             return AG_LOW;
@@ -204,11 +204,11 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t id) const
     return AG_HIGH;
 }
 
-uint8_t CAnimationManager::GetDieGroupIndex(uint16_t id, bool running)
+uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running)
 {
-    DEBUG(Data, "gr: 0x%04X, %i", id, g_Index.m_Anim[id].Type);
-    const auto flags = g_Index.m_Anim[id].Flags;
-    switch (g_Index.m_Anim[id].Type)
+    DEBUG(Data, "gr: 0x%04X, %i", graphic, g_Index.m_Anim[graphic].Type);
+    const auto flags = g_Index.m_Anim[graphic].Flags;
+    switch (g_Index.m_Anim[graphic].Type)
     {
         case AGT_ANIMAL:
         {
@@ -1959,7 +1959,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
 {
     if (action <= 10)
     {
-        const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+        const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
         ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
         if (ia.Flags & AF_FOUND)
         {
@@ -2021,8 +2021,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 6:
                     return 12;
                 case 7:
-                    if (obj->IsGargoyle() && obj->IsFlying() &&
-                        g_AnimationManager.AnimationExists(obj->Graphic, 72))
+                    if (obj->IsGargoyle() && obj->IsFlying() && AnimationExists(obj->Graphic, 72))
                     {
                         return 72;
                     }
@@ -2036,12 +2035,11 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 5:
                     return 10;
                 default:
-                    if (obj->IsGargoyle() && obj->IsFlying() &&
-                        g_AnimationManager.AnimationExists(obj->Graphic, 71))
+                    if (obj->IsGargoyle() && obj->IsFlying() && AnimationExists(obj->Graphic, 71))
                     {
                         return 71;
                     }
-                    else if (g_AnimationManager.AnimationExists(obj->Graphic, 31))
+                    else if (AnimationExists(obj->Graphic, 31))
                     {
                         return 31;
                     }
@@ -2065,7 +2063,7 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2090,7 +2088,7 @@ CAnimationManager::GetObjectNewAnimationType_1_2(CGameCharacter *obj, uint16_t a
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2128,7 +2126,7 @@ CAnimationManager::GetObjectNewAnimationType_3(CGameCharacter *obj, uint16_t act
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2139,8 +2137,7 @@ CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t act
     {
         if (type > AGT_ANIMAL)
         {
-            if (obj->IsGargoyle() && obj->IsFlying() &&
-                g_AnimationManager.AnimationExists(obj->Graphic, 77))
+            if (obj->IsGargoyle() && obj->IsFlying() && AnimationExists(obj->Graphic, 77))
             {
                 return 77;
             }
@@ -2158,7 +2155,7 @@ CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t act
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2203,7 +2200,7 @@ CAnimationManager::GetObjectNewAnimationType_5(CGameCharacter *obj, uint16_t act
 uint8_t CAnimationManager::GetObjectNewAnimationType_6_14(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2255,7 +2252,7 @@ CAnimationManager::GetObjectNewAnimationType_7(CGameCharacter *obj, uint16_t act
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2285,7 +2282,7 @@ CAnimationManager::GetObjectNewAnimationType_8(CGameCharacter *obj, uint16_t act
 uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
     CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {
@@ -2319,7 +2316,7 @@ uint8_t CAnimationManager::GetObjectNewAnimationType_9_10(
 uint8_t
 CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t action, uint8_t mode)
 {
-    const CIndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
+    const IndexAnimation &ia = g_Index.m_Anim[obj->Graphic];
     ANIMATION_GROUPS_TYPE type = AGT_MONSTER;
     if (ia.Flags & AF_FOUND)
     {

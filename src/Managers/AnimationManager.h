@@ -7,12 +7,12 @@
 #include <unordered_map>
 #include <deque>
 #include <vector>
-#include <xuocore/mulstruct.h> // AnimationSelector
+#include <xuocore/mulstruct.h> // AnimationState
 #include "../Globals.h"        // ANIMATION_GROUPS
 
 class CTargetGump;
 class CGameCharacter;
-struct CTextureAnimationDirection;
+struct AnimationDirection;
 struct AnimationDirFrames;
 
 static const int MAX_LAYER_DIRECTIONS = 8;
@@ -109,8 +109,8 @@ public:
     bool CharacterPixelsInXY(class CGameCharacter *obj, int x, int y);
     void DrawCorpse(class CGameItem *obj, int x, int y);
     bool CorpsePixelsInXY(class CGameItem *obj, int x, int y);
-    uint8_t GetDieGroupIndex(uint16_t id, bool running);
-    ANIMATION_GROUPS GetGroupIndex(uint16_t id) const;
+    uint8_t GetDieGroupIndex(uint16_t graphic, bool running);
+    ANIMATION_GROUPS GetGroupIndex(uint16_t graphic) const;
     bool AnimationExists(uint16_t graphic, uint8_t group);
     uint8_t CorrectAnimationGroupServer(
         ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const;
