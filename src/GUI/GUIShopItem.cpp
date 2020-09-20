@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GUIShopItem.h"
@@ -175,7 +175,7 @@ void CGUIShopItem::PrepareTextures()
             default:
                 break;
         }
-        auto ticks = SDL_GetTicks() + 60000;
+        const auto ticks = SDL_GetTicks() + 60000;
         g_AnimationManager.ExecuteAnimation(animGroup, 1, Graphic, ticks);
     }
 

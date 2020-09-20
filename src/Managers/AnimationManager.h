@@ -23,7 +23,7 @@ class CAnimationManager
 {
 public:
     uint16_t Color = 0;
-    AnimationSelector SelectAnim;
+    AnimationState Anim;
 
 private:
     int m_CharacterFrameHeight = 0;

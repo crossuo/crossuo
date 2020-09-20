@@ -1240,7 +1240,10 @@ std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
 }
 
 void CFileManager::UopReadAnimationFrameInfo(
-    AnimationFrameInfo &result, CTextureAnimationDirection &direction, const UopFileEntry &block)
+    AnimationFrameInfo &result,
+    CTextureAnimationDirection &direction,
+    const UopFileEntry &block,
+    bool isCorpse)
 {
     if (block.Hash == 0)
     {
@@ -1264,10 +1267,7 @@ void CFileManager::UopReadAnimationFrameInfo(
     Move(sizeof(AnimationFrameInfo));
 }
 
-bool CFileManager::UopReadAnimationFrames(
-    CTextureAnimationDirection &direction,
-    const AnimationSelector &anim,
-    LoadPixelData16Cb pLoadFunc)
+bool CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
     auto &block = *g_Index.m_Anim[anim.Graphic].Groups[anim.Group].AnimData;
     std::vector<uint8_t> scratchBuffer;
@@ -1276,6 +1276,7 @@ bool CFileManager::UopReadAnimationFrames(
         return false;
     }
 
+    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     scratchBuffer.reserve(block.DecompressedSize);
     if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
     {
@@ -1344,9 +1345,10 @@ void CFileManager::MulReadAnimationFrameInfo(
     }
 }
 
-bool CFileManager::MulReadAnimationFrames(
-    CTextureAnimationDirection &direction, LoadPixelData16Cb pLoadFunc)
+bool CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
+    auto &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
+    auto &direction = group.Direction[anim.Direction];
     auto ptr = (uint8_t *)direction.Address;
     if (!direction.IsVerdata)
     {
@@ -1459,22 +1461,21 @@ void CFileManager::LoadAnimationFrameInfo(
     }
     else if (direction.IsUOP)
     {
-        UopReadAnimationFrameInfo(result, direction, *group.AnimData);
+        UopReadAnimationFrameInfo(result, direction, *group.AnimData, isCorpse);
     }
 }
 
-bool CFileManager::LoadAnimation(const AnimationSelector &anim, LoadPixelData16Cb pLoadFunc)
+bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
-    CTextureAnimationGroup &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
-    CTextureAnimationDirection &direction = group.Direction[anim.Direction];
+    auto &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
+    auto &direction = group.Direction[anim.Direction];
     if (direction.Address != 0)
     {
-        assert(direction.Size != 0 && "please report this back");
-        return MulReadAnimationFrames(direction, pLoadFunc);
+        return MulReadAnimationFrames(anim, pLoadFunc);
     }
     else if (direction.IsUOP)
     {
-        return UopReadAnimationFrames(direction, anim, pLoadFunc);
+        return UopReadAnimationFrames(anim, pLoadFunc);
     }
     return false;
 }
