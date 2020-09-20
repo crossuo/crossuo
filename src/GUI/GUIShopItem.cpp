@@ -175,8 +175,8 @@ void CGUIShopItem::PrepareTextures()
             default:
                 break;
         }
-        auto direction = g_AnimationManager.ExecuteAnimation(animGroup, 1, Graphic);
-        direction.LastAccessTime = SDL_GetTicks() + 60000;
+        auto ticks = SDL_GetTicks() + 60000;
+        g_AnimationManager.ExecuteAnimation(animGroup, 1, Graphic, ticks);
     }
 
     g_Game.ExecuteGump(0x0039);

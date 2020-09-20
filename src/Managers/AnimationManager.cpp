@@ -133,7 +133,7 @@ CAnimationManager::CAnimationManager()
 
 CAnimationManager::~CAnimationManager()
 {
-    ClearUnusedTextures(g_Ticks + 100000);
+    ClearUnusedAnimations();
 }
 
 void CAnimationManager::UpdateAnimationTable()
@@ -316,31 +316,73 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
     }
 }
 
-void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
+static const int CLEAR_ANIMATION_TEXTURES_DELAY = 10000;
+static const int MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR = 5;
+
+union AnimationDirectionId
+{
+    uint32_t Key;
+    AnimationSelector Selector = {};
+};
+
+void DeleteAnimationDirection(AnimationDirectionId anim)
+{
+    auto &grp = g_Index.m_Anim[anim.Selector.Graphic].Groups[anim.Selector.Group];
+    auto obj = &grp.Direction[anim.Selector.Direction];
+    if (obj->m_Frames != nullptr)
+    {
+        for (int i = 0; i < obj->FrameCount; i++)
+        {
+            if (obj->m_Frames[i].UserData)
+            {
+                delete (CSprite *)obj->m_Frames[i].UserData;
+                obj->m_Frames[i].UserData = nullptr;
+            }
+        }
+        delete[] obj->m_Frames;
+        obj->m_Frames = nullptr;
+        obj->FrameCount = 0;
+    }
+}
+
+static std::unordered_map<uint32_t, uint32_t> s_UsedAnimList;
+
+CTextureAnimationDirection &CAnimationManager::ExecuteAnimation(
+    uint8_t group, uint8_t direction, uint16_t graphic, uint32_t ticks)
+{
+    SelectAnim.Group = group;
+    SelectAnim.Direction = direction;
+    SelectAnim.Graphic = graphic;
+
+    AnimationDirectionId anim;
+    anim.Selector = SelectAnim;
+
+    auto &grp = g_Index.m_Anim[graphic].Groups[group];
+    auto &dir = grp.Direction[direction];
+    bool exists = false;
+    if (dir.FrameCount == 0)
+        exists = g_FileManager.LoadAnimation(SelectAnim, LoadSpritePixels);
+
+    if (exists)
+        s_UsedAnimList[anim.Key] = ticks;
+
+    return dir;
+}
+
+void CAnimationManager::ClearUnusedAnimations(uint32_t ticks)
 {
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
-    for (auto it = m_UsedAnimList.begin(); it != m_UsedAnimList.end();)
+    for (auto it = s_UsedAnimList.begin(); it != s_UsedAnimList.end();)
     {
-        CTextureAnimationDirection *obj = *it;
-        if (obj->LastAccessTime < ticks)
+        const auto lastAccessTime = it->second;
+        if (lastAccessTime < ticks || ticks == ~0)
         {
-            if (obj->m_Frames != nullptr)
-            {
-                for (int i = 0; i < obj->FrameCount; i++)
-                {
-                    if (obj->m_Frames[i].UserData)
-                    {
-                        delete (CSprite *)obj->m_Frames[i].UserData;
-                        obj->m_Frames[i].UserData = nullptr;
-                    }
-                }
-                delete[] obj->m_Frames;
-                obj->m_Frames = nullptr;
-            }
-            obj->FrameCount = 0;
-            obj->LastAccessTime = 0;
-            it = m_UsedAnimList.erase(it);
+            AnimationDirectionId anim;
+            anim.Key = it->first;
+            Info(Data, "Remove 0x%08x", anim.Key);
+            DeleteAnimationDirection(anim);
+            it = s_UsedAnimList.erase(it);
             if (++count >= MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
             {
                 break;
@@ -348,12 +390,22 @@ void CAnimationManager::ClearUnusedTextures(uint32_t ticks)
         }
         else
         {
-            it++;
+            ++it;
         }
     }
     if (count)
     {
         Info(Data, "removed %d animation textures", count);
+    }
+}
+
+void CAnimationManager::GarbageCollect()
+{
+    static uint32_t removeUnusedAnimationTexturesTime = 0;
+    if (removeUnusedAnimationTexturesTime < g_Ticks)
+    {
+        g_AnimationManager.ClearUnusedAnimations(g_Ticks);
+        removeUnusedAnimationTexturesTime = g_Ticks + CLEAR_ANIMATION_TEXTURES_DELAY;
     }
 }
 
@@ -377,7 +429,7 @@ bool CAnimationManager::TestPixels(
 
     assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
     auto direction =
-        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id);
+        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id, g_Ticks);
     const int fc = direction.FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
@@ -454,7 +506,7 @@ void CAnimationManager::Draw(
 
     assert(SelectAnim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
     auto direction =
-        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id);
+        g_AnimationManager.ExecuteAnimation(SelectAnim.Group, SelectAnim.Direction, id, g_Ticks);
     const int fc = direction.FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
@@ -2374,25 +2426,6 @@ uint8_t CAnimationManager::GetObjectNewAnimation(
             break;
     }
     return 0;
-}
-
-CTextureAnimationDirection &
-CAnimationManager::ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t graphic)
-{
-    SelectAnim.Group = group;
-    SelectAnim.Direction = direction;
-    SelectAnim.Graphic = graphic;
-
-    auto &grp = g_Index.m_Anim[graphic].Groups[group];
-    auto &dir = grp.Direction[direction];
-    if (dir.FrameCount == 0)
-    {
-        if (g_FileManager.LoadAnimation(SelectAnim, LoadSpritePixels))
-        {
-            m_UsedAnimList.push_back(&dir);
-        }
-    }
-    return dir;
 }
 
 static void LABEL_222(ANIMATION_FLAGS flags, uint16_t &v13)

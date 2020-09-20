@@ -1,4 +1,4 @@
-﻿// MIT License
+// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -45,7 +45,6 @@ private:
 
     static const int USED_LAYER_COUNT = 23;
     static const int m_UsedLayers[MAX_LAYER_DIRECTIONS][USED_LAYER_COUNT];
-    std::deque<CTextureAnimationDirection *> m_UsedAnimList;
 
     bool TestPixels(
         class CGameObject *obj,
@@ -98,7 +97,6 @@ private:
 public:
     CAnimationManager();
     ~CAnimationManager();
-    void ClearUnusedTextures(uint32_t ticks);
 
     void InitIndexReplaces(uint32_t *verdata);
     void UpdateAnimationTable();
@@ -135,8 +133,11 @@ public:
     uint8_t
     GetObjectNewAnimation(CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode);
 
+    void GarbageCollect();
+    void ClearUnusedAnimations(uint32_t ticks = ~0);
+
     CTextureAnimationDirection &
-    ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t graphic);
+    ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t graphic, uint32_t ticks);
 };
 
 extern CAnimationManager g_AnimationManager;

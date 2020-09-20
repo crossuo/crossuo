@@ -968,9 +968,6 @@ void CGame::Process(bool rendering)
         return;
     }
 
-    static uint32_t removeUnusedTexturesTime = 0;
-    static uint32_t removeUnusedAnimationTexturesTime = 0;
-
     g_MouseManager.Update();
 
     if (g_GameState >= GS_CHARACTER && (g_LastSendTime + SEND_TIMEOUT_DELAY) < g_Ticks)
@@ -1150,17 +1147,14 @@ void CGame::Process(bool rendering)
         }
     }
 
+    static uint32_t removeUnusedTexturesTime = 0;
     if (removeUnusedTexturesTime < g_Ticks)
     {
         ClearUnusedTextures();
         removeUnusedTexturesTime = g_Ticks + CLEAR_TEXTURES_DELAY;
     }
 
-    if (removeUnusedAnimationTexturesTime < g_Ticks)
-    {
-        g_AnimationManager.ClearUnusedTextures(g_Ticks);
-        removeUnusedAnimationTexturesTime = g_Ticks + CLEAR_ANIMATION_TEXTURES_DELAY;
-    }
+    g_AnimationManager.GarbageCollect();
 }
 
 void CGame::LoadStartupConfig(int serial)
