@@ -118,8 +118,9 @@ void CGameCharacter::UpdateTextCoordinates()
         return;
     }
 
+    const AnimationState anim = { this->GetGraphicForAnimation(), 0, 0 };
     const auto dims = g_AnimationManager.GetAnimationDimensions(
-        this->AnimIndex, this->GetGraphicForAnimation(), 0, 0, this->IsMounted(), this->IsCorpse());
+        this->AnimIndex, anim, this->IsMounted(), this->IsCorpse());
     int offset = 0;
 
     int x = DrawX + OffsetX;

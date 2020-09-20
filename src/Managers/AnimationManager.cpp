@@ -50,8 +50,9 @@ void CalculateFrameInformation(
 {
     const auto dir = g_AnimationManager.Anim.Direction;
     const auto grp = g_AnimationManager.Anim.Group;
+    const AnimationState anim = { obj->GetGraphicForAnimation(), dir, grp };
     const auto dim = g_AnimationManager.GetAnimationDimensions(
-        obj->AnimIndex, obj->GetGraphicForAnimation(), dir, grp, obj->IsMounted(), obj->IsCorpse());
+        obj->AnimIndex, anim, obj->IsMounted(), obj->IsCorpse());
     int y = -(dim.Height + dim.CenterY + 3);
     int x = -dim.CenterX;
     if (mirror)
@@ -378,24 +379,24 @@ void CAnimationManager::GarbageCollect()
 }
 
 bool CAnimationManager::TestPixels(
-    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, uint16_t id)
+    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, uint16_t graphic)
 {
     if (obj == nullptr)
     {
         return false;
     }
 
-    if (id == 0)
+    if (graphic == 0)
     {
-        id = obj->GetGraphicForAnimation();
+        graphic = obj->GetGraphicForAnimation();
     }
 
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         return false;
     }
 
-    const auto anim = ExecuteAnimation({ Anim.Direction, Anim.Group, id }, g_Ticks);
+    const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
     if (!anim)
     {
         //Info(Data, "Test: couldn't get animation: 0x%04x", id);
@@ -476,7 +477,7 @@ void CAnimationManager::Draw(
         return;
     }
 
-    const auto anim = ExecuteAnimation({ Anim.Direction, Anim.Group, graphic }, g_Ticks);
+    const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
     if (!anim)
     {
         //Info(Data, "Draw: couldn't get animation: 0x%04x", id);
@@ -1096,7 +1097,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     GetAnimDirection(Anim.Direction, mirror);
 
-    const uint16_t graphic = /*GetGraphicForAnimation*/ obj->Graphic;
+    const auto graphic = /*GetGraphicForAnimation*/ obj->Graphic;
     uint8_t frameIndex = obj->AnimIndex;
     uint8_t animGroup = obj->GetGroupForAnimation(graphic, true);
     Anim.Group = animGroup;
@@ -1222,10 +1223,10 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)
     {
-        uint16_t id = obj->GetGraphicForAnimation();
+        const auto id = obj->GetGraphicForAnimation();
         const auto group = Anim.Group;
-        const auto direction = Anim.Direction;
-        const auto animation = ExecuteAnimation({ direction, group, id }, g_Ticks);
+        const auto dir = Anim.Direction;
+        const auto animation = ExecuteAnimation({ id, group, dir }, g_Ticks);
         if (animation != nullptr && animation->Frames != nullptr)
         {
             auto &frame = animation->Frames[0];
@@ -1495,14 +1496,20 @@ bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
     return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
 }
 
-// TODO: pre-compute or cache, profile this
-AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
-    uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
+static std::unordered_map<AnimationId, AnimationFrameInfo> s_DimensionsCache;
+
+AnimationFrameInfo
+CAnimationManager::GetAnimationDimensions(uint8_t frameIndex, AnimationState anim, bool isCorpse)
 {
     AnimationFrameInfo result = {};
-    const auto animation = uo_animation_get(id, animGroup, dir);
+    const auto animId = AnimId(anim);
+    const auto animation = uo_animation_get(animId);
     if (animation == nullptr)
         return result;
+
+    const auto it = s_DimensionsCache.find(animId);
+    if (it != s_DimensionsCache.end())
+        return it->second;
 
     int fc = animation->FrameCount;
     if (fc > 0)
@@ -1522,40 +1529,35 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
                 result.Height = spr->Height;
                 result.CenterX = frame.CenterX;
                 result.CenterY = frame.CenterY;
+                s_DimensionsCache[animId] = result;
                 return result;
             }
         }
     }
 
-    auto &group = g_Index.m_Anim[id].Groups[animGroup];
+    auto &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
     auto &direction = group.Direction[0];
     g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
+    s_DimensionsCache[animId] = result;
     return result;
 }
 
 AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
-    uint8_t animIndex,
-    uint16_t graphic,
-    uint8_t dir,
-    uint8_t group,
-    bool isMounted,
-    bool isCorpse,
-    uint8_t frameIndex)
+    uint8_t animIndex, AnimationState anim, bool isMounted, bool isCorpse, uint8_t frameIndex)
 {
-    dir &= 0x7F;
+    anim.Direction &= 0x7F;
     bool mirror = false;
-    GetAnimDirection(dir, mirror);
+    GetAnimDirection(anim.Direction, mirror);
     if (frameIndex == 0xFF)
     {
         frameIndex = animIndex;
     }
 
-    auto frame = GetAnimationDimensions(frameIndex, graphic, dir, group, isCorpse);
+    auto frame = GetAnimationDimensions(frameIndex, anim, isCorpse);
     if (frame.Width == 0 && frame.Height == 0 && frame.CenterX == 0 && frame.CenterY == 0)
     {
         frame.Height = isMounted ? 100 : 60;
     }
-
     return frame;
 }
 

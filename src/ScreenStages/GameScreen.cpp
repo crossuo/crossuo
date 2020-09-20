@@ -775,13 +775,9 @@ void CGameScreen::AddTileToRenderList(
 
                 if (!textContainer.Empty())
                 {
+                    const AnimationState anim = { go->GetGraphicForAnimation(), 0, 0 };
                     const auto dims = g_AnimationManager.GetAnimationDimensions(
-                        go->AnimIndex,
-                        go->GetGraphicForAnimation(),
-                        0,
-                        0,
-                        go->IsMounted(),
-                        go->IsCorpse());
+                        go->AnimIndex, anim, go->IsMounted(), go->IsCorpse());
                     int textDrawX = drawX + character->OffsetX;
                     int textDrawY = drawY + character->OffsetY -
                                     (character->OffsetZ + dims.Height + dims.CenterY);
@@ -1403,13 +1399,9 @@ void CGameScreen::DrawGameWindow(bool render)
 
                         if (g_ConfigManager.GetDrawStatusState() == DCSS_ABOVE)
                         {
+                            const AnimationState anim = { gc->GetGraphicForAnimation(), 0, 0 };
                             const auto dims = g_AnimationManager.GetAnimationDimensions(
-                                gc->AnimIndex,
-                                gc->GetGraphicForAnimation(),
-                                0,
-                                0,
-                                gc->IsMounted(),
-                                gc->IsCorpse());
+                                gc->AnimIndex, anim, gc->IsMounted(), gc->IsCorpse());
                             y -= (dims.Height + dims.CenterY) + 24;
                             gc->UpdateHitsTexture(width);
                             x -= (gc->m_HitsTexture.Width / 2) - 3;

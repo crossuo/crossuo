@@ -143,7 +143,7 @@ void CGameWorld::ProcessAnimation()
                 if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
                     const auto anim =
-                        g_AnimationManager.ExecuteAnimation({ dir, group, graphic }, g_Ticks);
+                        g_AnimationManager.ExecuteAnimation({ graphic, group, dir }, g_Ticks);
                     if (anim != nullptr)
                     {
                         int fc = anim->FrameCount;
@@ -256,7 +256,7 @@ void CGameWorld::ProcessAnimation()
                     const auto group =
                         g_AnimationManager.GetDieGroupIndex(graphic, gi->UsedLayer != 0);
                     const auto anim =
-                        g_AnimationManager.ExecuteAnimation({ dir, group, graphic }, g_Ticks);
+                        g_AnimationManager.ExecuteAnimation({ graphic, group, dir }, g_Ticks);
                     if (anim != nullptr)
                     {
                         const int fc = anim->FrameCount;
