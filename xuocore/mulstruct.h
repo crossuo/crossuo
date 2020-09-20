@@ -28,13 +28,7 @@ struct AnimationState
     uint8_t Group = 0;
     uint16_t Graphic = 0;
 };
-
-union AnimationId
-{
-    uint32_t Key;
-    AnimationState Selector = {};
-};
-static_assert(sizeof(AnimationId) == sizeof(uint32_t), "Invalid AnimationState size");
+static_assert(sizeof(AnimationState) == sizeof(uint32_t), "Invalid AnimationState size");
 
 struct VERDATA_HEADER
 {

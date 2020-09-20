@@ -1290,12 +1290,12 @@ uint8_t CGameCharacter::GetAnimationGroup(uint16_t checkGraphic, bool isParent)
     return result;
 }
 
-void CGameCharacter::ProcessGargoyleAnims(int &animGroup)
+void CGameCharacter::ProcessGargoyleAnims(uint8_t &group)
 {
-    if (animGroup == 64 || animGroup == 65)
+    if (group == 64 || group == 65)
     {
-        animGroup = InWarMode() ? 65 : 64;
-        AnimationGroup = animGroup;
+        group = InWarMode() ? 65 : 64;
+        AnimationGroup = group;
     }
 }
 

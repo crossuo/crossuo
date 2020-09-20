@@ -113,22 +113,22 @@ void CGameWorld::ProcessAnimation()
                     frameIndex++;
                 }
 
-                uint16_t id = gc->GetMountAnimation();
-                int animGroup = gc->GetAnimationGroup(id, true);
+                auto graphic = gc->GetMountAnimation();
+                auto group = gc->GetAnimationGroup(graphic, true);
 
                 /* CHECK */
-                gc->ProcessGargoyleAnims(animGroup);
+                gc->ProcessGargoyleAnims(group);
                 CGameItem *mount = gc->FindLayer(OL_MOUNT);
                 if (mount != nullptr)
                 {
-                    switch (animGroup)
+                    switch (group)
                     {
                         case PAG_FIDGET_1:
                         case PAG_FIDGET_2:
                         case PAG_FIDGET_3:
                         {
-                            id = mount->GetMountAnimation();
-                            animGroup = gc->GetAnimationGroup(id, true);
+                            graphic = mount->GetMountAnimation();
+                            group = gc->GetAnimationGroup(graphic, true);
                             break;
                         }
                         default:
@@ -140,13 +140,13 @@ void CGameWorld::ProcessAnimation()
                 bool mirror = false;
                 g_AnimationManager.GetAnimDirection(dir, mirror);
                 int currentDelay = delay;
-                if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
+                if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
-                    auto direction =
-                        g_AnimationManager.ExecuteAnimation(animGroup, dir, id, g_Ticks);
-                    if (direction.Address != 0 || direction.IsUOP)
+                    const auto anim =
+                        g_AnimationManager.ExecuteAnimation({ dir, group, graphic }, g_Ticks);
+                    if (anim != nullptr)
                     {
-                        int fc = direction.FrameCount;
+                        int fc = anim->FrameCount;
                         if (gc->AnimationFromServer)
                         {
                             currentDelay += currentDelay * (int)(gc->AnimationInterval + 1);
@@ -248,17 +248,18 @@ void CGameWorld::ProcessAnimation()
             if (obj->LastAnimationChangeTime < g_Ticks)
             {
                 char frameIndex = obj->AnimIndex + 1;
-                uint16_t id = obj->GetMountAnimation();
+                uint16_t graphic = obj->GetMountAnimation();
                 bool mirror = false;
                 g_AnimationManager.GetAnimDirection(dir, mirror);
-                if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
+                if (graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && dir < MAX_MOBILE_DIRECTIONS)
                 {
-                    int animGroup = g_AnimationManager.GetDieGroupIndex(id, gi->UsedLayer != 0u);
-                    auto direction =
-                        g_AnimationManager.ExecuteAnimation(animGroup, dir, id, g_Ticks);
-                    if (direction.Address != 0 || direction.IsUOP)
+                    const auto group =
+                        g_AnimationManager.GetDieGroupIndex(graphic, gi->UsedLayer != 0);
+                    const auto anim =
+                        g_AnimationManager.ExecuteAnimation({ dir, group, graphic }, g_Ticks);
+                    if (anim != nullptr)
                     {
-                        const int fc = direction.FrameCount;
+                        const int fc = anim->FrameCount;
                         if (frameIndex >= fc)
                         {
                             frameIndex = fc - 1;

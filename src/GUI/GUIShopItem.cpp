@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
 #include "GUIShopItem.h"
@@ -154,29 +154,29 @@ void CGUIShopItem::PrepareTextures()
     }
     else
     {
-        uint8_t animGroup = 0;
+        uint8_t group = 0;
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
             case AG_LOW:
             {
-                animGroup = LAG_STAND;
+                group = LAG_STAND;
                 break;
             }
             case AG_HIGH:
             {
-                animGroup = HAG_STAND;
+                group = HAG_STAND;
                 break;
             }
             case AG_PEOPLE:
             {
-                animGroup = PAG_STAND;
+                group = PAG_STAND;
                 break;
             }
             default:
                 break;
         }
         const auto ticks = SDL_GetTicks() + 60000;
-        g_AnimationManager.ExecuteAnimation(animGroup, 1, Graphic, ticks);
+        g_AnimationManager.ExecuteAnimation({ 1, group, Graphic }, ticks);
     }
 
     g_Game.ExecuteGump(0x0039);
@@ -246,34 +246,33 @@ void CGUIShopItem::Draw(bool checktrans)
     }
     else
     {
-        uint8_t animGroup = 0;
+        uint8_t group = 0;
         switch (g_AnimationManager.GetGroupIndex(Graphic))
         {
             case AG_LOW:
             {
-                animGroup = LAG_STAND;
+                group = LAG_STAND;
                 break;
             }
             case AG_HIGH:
             {
-                animGroup = HAG_STAND;
+                group = HAG_STAND;
                 break;
             }
             case AG_PEOPLE:
             {
-                animGroup = PAG_STAND;
+                group = PAG_STAND;
                 break;
             }
             default:
                 break;
         }
 
-        CTextureAnimationGroup &group = g_Index.m_Anim[Graphic].Groups[animGroup];
-        CTextureAnimationDirection &direction = group.Direction[1];
-        if (direction.FrameCount != 0)
+        const auto anim = g_AnimationManager.ExecuteAnimation({ 1, group, Graphic }, g_Ticks);
+        if (anim != nullptr && anim->FrameCount != 0)
         {
-            assert(direction.m_Frames[0].UserData);
-            const auto *originalTexture = (CSprite *)direction.m_Frames[0].UserData;
+            assert(anim->Frames[0].UserData);
+            const auto *originalTexture = (CSprite *)anim->Frames[0].UserData;
             if (originalTexture && originalTexture->Texture != nullptr)
             {
 #ifndef NEW_RENDERER_ENABLED
