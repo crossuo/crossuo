@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 // Copyright (C) August 2016 Hotride
 
 #pragma once
@@ -13,6 +13,7 @@
 class CTargetGump;
 class CGameCharacter;
 struct CTextureAnimationDirection;
+struct AnimationDirFrames;
 
 static const int MAX_LAYER_DIRECTIONS = 8;
 static const float UPPER_BODY_RATIO = 0.35f;
@@ -61,7 +62,8 @@ private:
         int y,
         bool mirror,
         uint8_t &frameIndex,
-        int id = 0,
+        uint16_t graphic = 0,
+        bool isShadow = false,
         uint16_t convColor = 0);
     void DrawIntoFrameBuffer(class CGameCharacter *obj, int x, int y);
 
@@ -135,9 +137,7 @@ public:
 
     void GarbageCollect();
     void ClearUnusedAnimations(uint32_t ticks = ~0);
-
-    CTextureAnimationDirection &
-    ExecuteAnimation(uint8_t group, uint8_t direction, uint16_t graphic, uint32_t ticks);
+    AnimationDirFrames *ExecuteAnimation(AnimationState anim, uint32_t ticks);
 };
 
 extern CAnimationManager g_AnimationManager;

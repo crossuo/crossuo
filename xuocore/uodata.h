@@ -34,6 +34,8 @@ struct CSprite;
 #endif
 
 typedef void *(*LoadPixelData16Cb)(int width, int height, uint16_t *pixels);
+typedef void (*DeleteUserData)(void *UserData);
+typedef uint32_t AnimationId;
 
 struct UopFileEntry;
 struct CUopMappedFile;
@@ -46,9 +48,14 @@ struct CTextureAnimationFrame // AnimationFrameTexture
     int16_t CenterY = 0;
 };
 
+struct AnimationDirFrames
+{
+    CTextureAnimationFrame *Frames = nullptr;
+    uint8_t FrameCount = 0;
+};
+
 struct CTextureAnimationDirection // AnimationDirection
 {
-    CTextureAnimationFrame *m_Frames = nullptr;
     size_t Address = 0;
     size_t BaseAddress = 0;
     size_t PatchedAddress = 0; // BodyConvGroups
@@ -65,25 +72,22 @@ struct CTextureAnimationGroup // AnimationGroup
 {
     CTextureAnimationDirection Direction[MAX_MOBILE_DIRECTIONS];
     const UopFileEntry *AnimData = nullptr;
-    //uint8_t FileIndex = 0;
 };
 
 struct CIndexAnimation
 {
-    ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
+    CTextureAnimationGroup Groups[MAX_ANIMATION_GROUPS_COUNT];
     ANIMATION_FLAGS Flags = AF_NONE;
     uint16_t Graphic = 0;
     uint16_t Color = 0;
     uint16_t CorpseGraphic = 0;
     uint16_t CorpseColor = 0;
     uint16_t GraphicConversion = 0x8000;
+    ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
     uint8_t FileIndex = 0;
     char MountedHeightOffset = 0;
     bool IsUOP = false;
     bool IsValidMUL = false;
-    //uint8_t ReplaceGroupIndex[MAX_ANIMATION_GROUPS_COUNT]; // _uopReplaceGroupIndex
-    CTextureAnimationGroup Groups[MAX_ANIMATION_GROUPS_COUNT];
-    //CTextureAnimationGroup ReplaceGroups[MAX_ANIMATION_GROUPS_COUNT]; // UopGroups
 };
 
 struct CIndexObject
@@ -188,8 +192,7 @@ struct Index
     CIndexMulti m_Multi[MAX_MULTI_DATA_INDEX_COUNT];
     CIndexLight m_Light[MAX_LIGHTS_DATA_INDEX_COUNT];
     CIndexAnimation m_Anim[MAX_ANIMATIONS_DATA_INDEX_COUNT];
-    //CIndexAnimationSequence m_AnimSequence[MAX_ANIMATIONS_DATA_INDEX_COUNT];
-
+    std::unordered_map<AnimationId, AnimationDirFrames *> m_Animations;
     int m_MultiIndexCount = 0;
 };
 
@@ -205,6 +208,84 @@ struct UOData
 
 extern Index g_Index;
 extern UOData g_Data;
+
+inline AnimationId AnimId(AnimationState anim)
+{
+    return (AnimationId)((anim.Graphic << 16) | (anim.Group << 8) | anim.Direction);
+}
+
+inline AnimationId AnimId(uint16_t graphic, uint8_t group, uint8_t dir = 0)
+{
+    return (AnimationId)((graphic << 16) | (group << 8) | dir);
+}
+
+inline AnimationDirFrames *uo_animation_get(AnimationId animId)
+{
+    const auto it = g_Index.m_Animations.find(animId);
+    if (it == g_Index.m_Animations.end())
+        return nullptr;
+    return it->second;
+}
+
+inline AnimationDirFrames *uo_animation_get(AnimationState anim)
+{
+    return uo_animation_get(AnimId(anim));
+}
+
+inline AnimationDirFrames *uo_animation_get(uint16_t graphic, uint8_t group, uint8_t dir = 0)
+{
+    return uo_animation_get(AnimId({ dir, group, graphic }));
+}
+
+inline AnimationDirFrames *uo_animation_create(AnimationId animId)
+{
+    assert(uo_animation_get(animId) == nullptr);
+    auto animation = new AnimationDirFrames();
+    assert(animation != nullptr);
+    const auto graphic = uint16_t((animId >> 16) & 0xffff);
+    const auto group = uint8_t((animId >> 8) & 0xff);
+    const auto dir = uint8_t(animId & 0xff);
+    const auto &animInfo = g_Index.m_Anim[graphic].Groups[group].Direction[dir];
+    const auto frameCount = animInfo.FrameCount;
+    animation->Frames = new CTextureAnimationFrame[frameCount];
+    assert(animation->Frames);
+    animation->FrameCount = frameCount;
+    g_Index.m_Animations.emplace(animId, animation);
+    return animation;
+}
+
+inline AnimationDirFrames *uo_animation_create(AnimationState anim)
+{
+    return uo_animation_create(AnimId(anim));
+}
+
+inline void uo_animation_destroy(AnimationId animId, DeleteUserData pDeleter)
+{
+    auto it = g_Index.m_Animations.find(animId);
+    if (it == g_Index.m_Animations.end())
+        return;
+
+    auto dir = it->second;
+    g_Index.m_Animations.erase(it);
+
+    if (dir->Frames)
+    {
+        if (pDeleter)
+        {
+            for (int i = 0; i < dir->FrameCount; i++)
+            {
+                if (dir->Frames[i].UserData)
+                {
+                    pDeleter(dir->Frames[i].UserData);
+                }
+            }
+        }
+        delete[] dir->Frames;
+        dir->Frames = nullptr;
+    }
+
+    delete dir;
+}
 
 struct CUopMappedFile : public CMappedFile // FIXME: not needed
 {

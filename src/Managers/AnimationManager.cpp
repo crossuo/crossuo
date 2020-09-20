@@ -31,6 +31,12 @@ void *LoadSpritePixels(int width, int height, uint16_t *pixels)
     return spr;
 }
 
+void DeleteSprite(void *ptr)
+{
+    auto spr = (CSprite *)ptr;
+    delete spr;
+}
+
 struct FRAME_OUTPUT_INFO
 {
     int StartX = 0;
@@ -318,71 +324,33 @@ void CAnimationManager::GetSittingAnimDirection(uint8_t &dir, bool &mirror, int 
 
 static const int CLEAR_ANIMATION_TEXTURES_DELAY = 10000;
 static const int MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR = 5;
+static std::unordered_map<uint32_t, uint32_t> s_AnimationLifetime;
 
-union AnimationDirectionId
+AnimationDirFrames *CAnimationManager::ExecuteAnimation(AnimationState anim, uint32_t ticks)
 {
-    uint32_t Key;
-    AnimationState Selector = {};
-};
-
-void DeleteAnimationDirection(AnimationDirectionId anim)
-{
-    auto &grp = g_Index.m_Anim[anim.Selector.Graphic].Groups[anim.Selector.Group];
-    auto obj = &grp.Direction[anim.Selector.Direction];
-    if (obj->m_Frames != nullptr)
+    Anim = anim;
+    const auto animation = uo_animation_get(anim);
+    if (animation == nullptr)
     {
-        for (int i = 0; i < obj->FrameCount; i++)
-        {
-            if (obj->m_Frames[i].UserData)
-            {
-                delete (CSprite *)obj->m_Frames[i].UserData;
-                obj->m_Frames[i].UserData = nullptr;
-            }
-        }
-        delete[] obj->m_Frames;
-        obj->m_Frames = nullptr;
-        obj->FrameCount = 0;
+        g_FileManager.LoadAnimation(Anim, LoadSpritePixels);
     }
-}
-
-static std::unordered_map<uint32_t, uint32_t> s_UsedAnimList;
-
-CTextureAnimationDirection &CAnimationManager::ExecuteAnimation(
-    uint8_t group, uint8_t direction, uint16_t graphic, uint32_t ticks)
-{
-    Anim.Group = group;
-    Anim.Direction = direction;
-    Anim.Graphic = graphic;
-
-    AnimationDirectionId anim;
-    anim.Selector = Anim;
-
-    auto &grp = g_Index.m_Anim[graphic].Groups[group];
-    auto &dir = grp.Direction[direction];
-    bool exists = false;
-    if (dir.FrameCount == 0)
-        exists = g_FileManager.LoadAnimation(Anim, LoadSpritePixels);
-
-    if (exists)
-        s_UsedAnimList[anim.Key] = ticks;
-
-    return dir;
+    s_AnimationLifetime[AnimId(anim)] = ticks;
+    return animation;
 }
 
 void CAnimationManager::ClearUnusedAnimations(uint32_t ticks)
 {
     ticks -= CLEAR_ANIMATION_TEXTURES_DELAY;
     int count = 0;
-    for (auto it = s_UsedAnimList.begin(); it != s_UsedAnimList.end();)
+    for (auto it = s_AnimationLifetime.begin(); it != s_AnimationLifetime.end();)
     {
         const auto lastAccessTime = it->second;
         if (lastAccessTime < ticks || ticks == ~0)
         {
-            AnimationDirectionId anim;
-            anim.Key = it->first;
-            Info(Data, "Remove 0x%08x", anim.Key);
-            DeleteAnimationDirection(anim);
-            it = s_UsedAnimList.erase(it);
+            const auto animId = it->first;
+            Info(Data, "Remove 0x%08x", animId);
+            uo_animation_destroy(animId, DeleteSprite);
+            it = s_AnimationLifetime.erase(it);
             if (++count >= MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
             {
                 break;
@@ -427,9 +395,13 @@ bool CAnimationManager::TestPixels(
         return false;
     }
 
-    assert(Anim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-    auto direction = g_AnimationManager.ExecuteAnimation(Anim.Group, Anim.Direction, id, g_Ticks);
-    const int fc = direction.FrameCount;
+    const auto anim = ExecuteAnimation({ Anim.Direction, Anim.Group, id }, g_Ticks);
+    if (!anim)
+    {
+        //Info(Data, "Test: couldn't get animation: 0x%04x", id);
+        return false;
+    }
+    const int fc = anim->FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
@@ -442,12 +414,12 @@ bool CAnimationManager::TestPixels(
         }
     }
 
-    if (frameIndex >= direction.FrameCount)
+    if (frameIndex >= fc)
     {
         return false;
     }
 
-    auto &frame = direction.m_Frames[frameIndex];
+    auto &frame = anim->Frames[frameIndex];
     auto spr = (CSprite *)frame.UserData;
 
     if (!spr)
@@ -478,7 +450,14 @@ bool CAnimationManager::TestPixels(
 }
 
 void CAnimationManager::Draw(
-    CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id, uint16_t convColor)
+    CGameObject *obj,
+    int x,
+    int y,
+    bool mirror,
+    uint8_t &frameIndex,
+    uint16_t graphic,
+    bool isShadow,
+    uint16_t convColor)
 {
     ScopedPerfMarker(__FUNCTION__);
 
@@ -487,25 +466,23 @@ void CAnimationManager::Draw(
         return;
     }
 
-    const bool isShadow = (id >= 0x10000);
-    if (isShadow)
+    if (graphic == 0)
     {
-        id -= 0x10000;
+        graphic = obj->GetMountAnimation();
     }
 
-    if (id == 0)
-    {
-        id = obj->GetMountAnimation();
-    }
-
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
     {
         return;
     }
 
-    assert(Anim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-    auto direction = g_AnimationManager.ExecuteAnimation(Anim.Group, Anim.Direction, id, g_Ticks);
-    const int fc = direction.FrameCount;
+    const auto anim = ExecuteAnimation({ Anim.Direction, Anim.Group, graphic }, g_Ticks);
+    if (!anim)
+    {
+        //Info(Data, "Draw: couldn't get animation: 0x%04x", id);
+        return;
+    }
+    const int fc = anim->FrameCount;
     if (fc > 0 && frameIndex >= fc)
     {
         if (obj->IsCorpse())
@@ -518,12 +495,12 @@ void CAnimationManager::Draw(
         }
     }
 
-    if (frameIndex >= direction.FrameCount)
+    if (frameIndex >= fc)
     {
         return;
     }
 
-    CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
+    auto &frame = anim->Frames[frameIndex];
     auto spr = (CSprite *)frame.UserData;
     if (!spr) //spr->Texture == 0)
     {
@@ -591,9 +568,9 @@ void CAnimationManager::Draw(
 
                 if (color == 0u)
                 {
-                    if (direction.Address != direction.PatchedAddress)
+                    //if (direction.Address != direction.PatchedAddress) // FIXME
                     {
-                        color = g_Index.m_Anim[id].Color;
+                        color = g_Index.m_Anim[graphic].Color;
                     }
                     if (color == 0 && convColor != 0)
                     {
@@ -1120,7 +1097,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     GetAnimDirection(Anim.Direction, mirror);
 
     const uint16_t graphic = /*GetGraphicForAnimation*/ obj->Graphic;
-    uint8_t animIndex = obj->AnimIndex;
+    uint8_t frameIndex = obj->AnimIndex;
     uint8_t animGroup = obj->GetAnimationGroup(graphic, true);
     Anim.Group = animGroup;
 
@@ -1143,16 +1120,16 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         if (drawShadow)
         {
-            Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, animIndex, 0x10000);
+            Draw(obj, drawX, drawY + 10 + mountedHeightOffset, mirror, frameIndex, 0, true);
             Anim.Group = obj->GetAnimationGroup(mountID, false);
-            Draw(goi, drawX, drawY, mirror, animIndex, mountID + 0x10000);
+            Draw(goi, drawX, drawY, mirror, frameIndex, mountID + 0x10000);
         }
         else
         {
             Anim.Group = obj->GetAnimationGroup(mountID, false);
         }
 
-        Draw(goi, drawX, drawY, mirror, animIndex, mountID);
+        Draw(goi, drawX, drawY, mirror, frameIndex, mountID);
         drawY += mountedHeightOffset;
     }
     else
@@ -1162,7 +1139,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         if (m_Sitting != 0)
         {
             animGroup = PAG_STAND;
-            animIndex = 0;
+            frameIndex = 0;
 
             obj->UpdateAnimationInfo_ProcessSteps(Anim.Direction);
 
@@ -1179,17 +1156,17 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
         }
         else if (drawShadow)
         {
-            Draw(obj, drawX, drawY, mirror, animIndex, 0x10000);
+            Draw(obj, drawX, drawY, mirror, frameIndex, 0, true);
         }
     }
 
     Anim.Group = animGroup;
 
-    Draw(obj, drawX, drawY, mirror, animIndex); //Draw character
+    Draw(obj, drawX, drawY, mirror, frameIndex); //Draw character
 
     if (obj->IsHuman()) //Draw layered objects
     {
-        DrawEquippedLayers(false, obj, drawX, drawY, mirror, layerDir, animIndex, lightOffset);
+        DrawEquippedLayers(false, obj, drawX, drawY, mirror, layerDir, frameIndex, lightOffset);
 
         const SITTING_INFO_DATA &sittingData = SITTING_INFO[m_Sitting - 1];
 
@@ -1246,112 +1223,108 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     if (!g_ConfigManager.DisableNewTargetSystem && g_NewTargetSystem.Serial == obj->Serial)
     {
         uint16_t id = obj->GetMountAnimation();
-
-        if (id < MAX_ANIMATIONS_DATA_INDEX_COUNT)
+        const auto group = Anim.Group;
+        const auto direction = Anim.Direction;
+        const auto animation = ExecuteAnimation({ direction, group, id }, g_Ticks);
+        if (animation != nullptr && animation->Frames != nullptr)
         {
-            assert(Anim.Direction < MAX_MOBILE_DIRECTIONS && "Out-of-bound access");
-            auto &direction = g_Index.m_Anim[id].Groups[Anim.Group].Direction[Anim.Direction];
+            auto &frame = animation->Frames[0];
+            auto spr = (CSprite *)frame.UserData;
+            assert(spr);
 
-            if (direction.Address != 0 && direction.m_Frames != nullptr)
+            int frameWidth = spr->Width;
+            int frameHeight = spr->Height;
+
+            if (frameWidth >= 80)
             {
-                CTextureAnimationFrame &frame = direction.m_Frames[0];
-                auto spr = (CSprite *)frame.UserData;
-                assert(spr);
+                g_NewTargetSystem.GumpTop = 0x756D;
+                g_NewTargetSystem.GumpBottom = 0x756A;
+            }
+            else if (frameWidth >= 40)
+            {
+                g_NewTargetSystem.GumpTop = 0x756E;
+                g_NewTargetSystem.GumpBottom = 0x756B;
+            }
+            else
+            {
+                g_NewTargetSystem.GumpTop = 0x756F;
+                g_NewTargetSystem.GumpBottom = 0x756C;
+            }
 
-                int frameWidth = spr->Width;
-                int frameHeight = spr->Height;
-
-                if (frameWidth >= 80)
+            switch (obj->Notoriety)
+            {
+                case NT_INNOCENT:
                 {
-                    g_NewTargetSystem.GumpTop = 0x756D;
-                    g_NewTargetSystem.GumpBottom = 0x756A;
+                    g_NewTargetSystem.ColorGump = 0x7570;
+                    break;
                 }
-                else if (frameWidth >= 40)
+                case NT_FRIENDLY:
                 {
-                    g_NewTargetSystem.GumpTop = 0x756E;
-                    g_NewTargetSystem.GumpBottom = 0x756B;
+                    g_NewTargetSystem.ColorGump = 0x7571;
+                    break;
                 }
-                else
+                case NT_SOMEONE_GRAY:
+                case NT_CRIMINAL:
                 {
-                    g_NewTargetSystem.GumpTop = 0x756F;
-                    g_NewTargetSystem.GumpBottom = 0x756C;
+                    g_NewTargetSystem.ColorGump = 0x7572;
+                    break;
                 }
-
-                switch (obj->Notoriety)
+                case NT_ENEMY:
                 {
-                    case NT_INNOCENT:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7570;
-                        break;
-                    }
-                    case NT_FRIENDLY:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7571;
-                        break;
-                    }
-                    case NT_SOMEONE_GRAY:
-                    case NT_CRIMINAL:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7572;
-                        break;
-                    }
-                    case NT_ENEMY:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7573;
-                        break;
-                    }
-                    case NT_MURDERER:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7576;
-                        break;
-                    }
-                    case NT_INVULNERABLE:
-                    {
-                        g_NewTargetSystem.ColorGump = 0x7575;
-                        break;
-                    }
-                    default:
-                        break;
+                    g_NewTargetSystem.ColorGump = 0x7573;
+                    break;
                 }
-
-                int per = obj->MaxHits;
-
-                if (per > 0)
+                case NT_MURDERER:
                 {
-                    per = (obj->Hits * 100) / per;
+                    g_NewTargetSystem.ColorGump = 0x7576;
+                    break;
+                }
+                case NT_INVULNERABLE:
+                {
+                    g_NewTargetSystem.ColorGump = 0x7575;
+                    break;
+                }
+                default:
+                    break;
+            }
 
-                    if (per > 100)
-                    {
-                        per = 100;
-                    }
+            int per = obj->MaxHits;
 
-                    if (per < 1)
-                    {
-                        per = 0;
-                    }
-                    else
-                    {
-                        per = (34 * per) / 100;
-                    }
+            if (per > 0)
+            {
+                per = (obj->Hits * 100) / per;
+
+                if (per > 100)
+                {
+                    per = 100;
                 }
 
-                g_NewTargetSystem.Hits = per;
-                g_NewTargetSystem.X = drawX;
-                g_NewTargetSystem.TopY = drawY - frameHeight - 8;
-                g_NewTargetSystem.BottomY = drawY + 7;
-                g_NewTargetSystem.TargetedCharacter = obj;
-                if (obj->IsPoisoned() || obj->SA_Poisoned)
+                if (per < 1)
                 {
-                    g_NewTargetSystem.HealthColor = 63; //Character status line (green)
-                }
-                else if (obj->YellowHits())
-                {
-                    g_NewTargetSystem.HealthColor = 53; //Character status line (green)
+                    per = 0;
                 }
                 else
                 {
-                    g_NewTargetSystem.HealthColor = 90; //Character status line (blue)
+                    per = (34 * per) / 100;
                 }
+            }
+
+            g_NewTargetSystem.Hits = per;
+            g_NewTargetSystem.X = drawX;
+            g_NewTargetSystem.TopY = drawY - frameHeight - 8;
+            g_NewTargetSystem.BottomY = drawY + 7;
+            g_NewTargetSystem.TargetedCharacter = obj;
+            if (obj->IsPoisoned() || obj->SA_Poisoned)
+            {
+                g_NewTargetSystem.HealthColor = 63; //Character status line (green)
+            }
+            else if (obj->YellowHits())
+            {
+                g_NewTargetSystem.HealthColor = 53; //Character status line (green)
+            }
+            else
+            {
+                g_NewTargetSystem.HealthColor = 90; //Character status line (blue)
             }
         }
     }
@@ -1527,38 +1500,35 @@ AnimationFrameInfo CAnimationManager::GetAnimationDimensions(
     uint8_t frameIndex, uint16_t id, uint8_t dir, uint8_t animGroup, bool isCorpse)
 {
     AnimationFrameInfo result = {};
-    if (id >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+    const auto animation = uo_animation_get(id, animGroup, dir);
+    if (animation == nullptr)
         return result;
 
-    CTextureAnimationGroup &group = g_Index.m_Anim[id].Groups[animGroup];
-    if (dir < MAX_MOBILE_DIRECTIONS)
+    int fc = animation->FrameCount;
+    if (fc > 0)
     {
-        auto &direction = group.Direction[dir];
-        int fc = direction.FrameCount;
-        if (fc > 0)
+        if (frameIndex >= fc)
         {
-            if (frameIndex >= fc)
-            {
-                frameIndex = 0;
-            }
+            frameIndex = 0;
+        }
 
-            if (direction.m_Frames != nullptr)
+        if (animation->Frames != nullptr)
+        {
+            auto &frame = animation->Frames[frameIndex];
+            auto spr = (CSprite *)frame.UserData;
+            if (spr)
             {
-                CTextureAnimationFrame &frame = direction.m_Frames[frameIndex];
-                auto spr = (CSprite *)frame.UserData;
-                if (spr)
-                {
-                    result.Width = spr->Width;
-                    result.Height = spr->Height;
-                    result.CenterX = frame.CenterX;
-                    result.CenterY = frame.CenterY;
-                    return result;
-                }
+                result.Width = spr->Width;
+                result.Height = spr->Height;
+                result.CenterX = frame.CenterX;
+                result.CenterY = frame.CenterY;
+                return result;
             }
         }
     }
 
-    CTextureAnimationDirection &direction = group.Direction[0];
+    auto &group = g_Index.m_Anim[id].Groups[animGroup];
+    auto &direction = group.Direction[0];
     g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
     return result;
 }

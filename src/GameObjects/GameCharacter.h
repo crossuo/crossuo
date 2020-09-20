@@ -55,7 +55,7 @@ public:
 
     virtual void UpdateTextCoordinates();
     void UpdateHitsTexture(uint8_t hits);
-    void ProcessGargoyleAnims(int &animGroup);
+    void ProcessGargoyleAnims(uint8_t &group);
     int IsSitting();
     virtual void Draw(int x, int y);
     virtual void Select(int x, int y);

@@ -215,6 +215,7 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 
 bool CFileManager::Load()
 {
+    g_Index.m_Animations.reserve(1024);
     bool r = false;
     const bool useUop =
         s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop");
@@ -1285,22 +1286,18 @@ bool CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelD
     SetData(scratchBuffer.data(), block.DecompressedSize);
 
     const auto framesData = UopReadAnimationFramesData();
-    direction.FrameCount = checked_cast<uint8_t>(framesData.size() / 5);
-    int dirFrameStartIdx = direction.FrameCount * anim.Direction;
-    if (direction.m_Frames == nullptr)
-    {
-        direction.m_Frames = new CTextureAnimationFrame[direction.FrameCount];
-    }
+    const int frameCount = checked_cast<uint8_t>(framesData.size() / 5);
+    direction.FrameCount = frameCount;
+    int dirFrameStartIdx = frameCount * anim.Direction;
 
-    const int frameCount = direction.FrameCount;
+    if (uo_animation_get(anim) != nullptr)
+    {
+        return true;
+    }
+    auto animation = uo_animation_create(anim);
+
     for (int i = 0; i < frameCount; i++)
     {
-        CTextureAnimationFrame &frame = direction.m_Frames[i];
-        if (frame.UserData != nullptr)
-        {
-            continue;
-        }
-
         UopAnimationFrame frameData = framesData[i + dirFrameStartIdx];
         if (frameData.DataStart == nullptr)
         {
@@ -1310,6 +1307,8 @@ bool CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelD
         Ptr = frameData.DataStart + frameData.PixelDataOffset;
         auto palette = (uint16_t *)Ptr;
         Move(PALETTE_SIZE);
+
+        auto &frame = animation->Frames[i];
         LoadAnimationFrame(frame, palette, pLoadFunc);
     }
     return true;
@@ -1365,14 +1364,15 @@ bool CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelD
     //uint16_t color = g_Index.m_Anim[graphic].Color;
 
     direction.FrameCount = frameCount;
-    if (direction.m_Frames == nullptr)
+    if (uo_animation_get(anim) != nullptr)
     {
-        direction.m_Frames = new CTextureAnimationFrame[frameCount];
+        return true;
     }
+    auto animation = uo_animation_create(anim);
 
     for (uint32_t i = 0; i < frameCount; i++)
     {
-        CTextureAnimationFrame &frame = direction.m_Frames[i];
+        auto &frame = animation->Frames[i];
         if (frame.UserData != nullptr)
         {
             continue;
@@ -1456,7 +1456,6 @@ void CFileManager::LoadAnimationFrameInfo(
 {
     if (direction.Address != 0)
     {
-        assert(direction.Size != 0 && "please report this back");
         MulReadAnimationFrameInfo(result, direction, frameIndex, isCorpse);
     }
     else if (direction.IsUOP)
