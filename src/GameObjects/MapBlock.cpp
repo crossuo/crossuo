@@ -9,6 +9,7 @@
 #include "../Managers/MapManager.h"
 #include "../Managers/CustomHousesManager.h"
 #include "../Gumps/GumpCustomHouse.h"
+#include <xuocore/uodata.h>
 
 CMapBlock::CMapBlock(int index)
     : Index(index)
@@ -256,19 +257,15 @@ CLandObject *CMapBlock::GetLand(int x, int y)
         {
             break;
         }
-
         obj = (CMapObject *)obj->m_Next;
     }
-
     return (CLandObject *)obj;
 }
 
 void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
 {
     item->RemoveRender();
-
     int priorityZ = item->GetZ();
-
     if (item->IsLandObject())
     {
         if (((CLandObject *)item)->IsStretched)
@@ -320,7 +317,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
     }
 
     item->PriorityZ = priorityZ;
-
     CRenderWorldObject *obj = Block[x][y];
     if (obj == item)
     {
@@ -354,7 +350,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
         {
             break;
         }
-
         found = obj;
         obj = obj->m_NextXY;
     }
@@ -365,7 +360,6 @@ void CMapBlock::AddRender(CRenderWorldObject *item, int x, int y)
         CRenderWorldObject *next = found->m_NextXY;
         item->m_NextXY = next;
         found->m_NextXY = item;
-
         if (next != nullptr)
         {
             next->m_PrevXY = item;
@@ -415,10 +409,8 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
             {
                 break;
             }
-
             item = (CMapObject *)item->m_Next;
         }
-
         assert(item != nullptr);
         CMapObject *next = (CMapObject *)item->m_Next;
         item->m_Next = obj;
@@ -438,6 +430,5 @@ CMapObject *CMapBlock::AddObject(CMapObject *obj, int x, int y)
         obj->m_NextXY = nullptr;
         obj->m_PrevXY = nullptr;
     }
-
     return obj;
 }

@@ -14,6 +14,7 @@
 #include "../GameObjects/CustomHouseMultiObject.h"
 #include "../Network/Packets.h"
 #include "../Gumps/GumpCustomHouse.h"
+#include <xuocore/uodata.h> // g_MapBlockSize
 
 CPathFinder g_PathFinder;
 

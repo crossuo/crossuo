@@ -45,8 +45,6 @@ const int MAX_VIEW_RANGE_OLD = 18;
 
 const int MAX_VIEW_RANGE_NEW = 24;
 
-const int MAX_MAPS_COUNT = 6;
-
 const int DAMAGE_TEXT_NORMAL_DELAY = 1500;
 
 const int DAMAGE_TEXT_TRANSPARENT_DELAY = 400;

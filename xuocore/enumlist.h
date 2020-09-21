@@ -7,9 +7,11 @@
 
 #include <stdint.h>
 
+
 enum : int32_t
 {
     MAX_MOBILE_DIRECTIONS = 5,
+    MAX_MAPS_COUNT = 6,
     MAX_ANIMATION_GROUPS_COUNT = 100,
     MAX_LAND_DATA_INDEX_COUNT = 0x4000,
     // >=CV_7090: count=0x10000, >=CV_7000: count=0x8000, <CV_7000: count=0x4000

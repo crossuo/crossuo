@@ -29,6 +29,12 @@ UOData g_Data;
 Index g_Index;
 CFileManager g_FileManager;
 
+MapSize g_MapSize[MAX_MAPS_COUNT] = {
+    // Felucca      Trammel         Ilshenar        Malas           Tokuno          TerMur
+    { 7168, 4096 }, { 7168, 4096 }, { 2304, 1600 }, { 2560, 2048 }, { 1448, 1448 }, { 1280, 4096 },
+};
+MapSize g_MapBlockSize[MAX_MAPS_COUNT];
+
 static bool s_flag = false;
 static std::mutex s_protect;
 static std::condition_variable s_signal;
@@ -297,12 +303,17 @@ bool CFileManager::Load()
     LoadTiledata();
     LoadIndexFiles();
 
-    /*
-    Info(Client, "patching files");
+    Info(Data, "loading skills");
+    LoadSkills();
+    Info(Data, "loading hues");
+    LoadHues();
+    Info(Client, "creating map blocksTable");
+    CreateBlocksTable();
+
+    Info(Data, "patching files");
     PatchFiles();
-    Info(Client, "replacing indexes");
+    Info(Data, "replacing indexes");
     IndexReplaces();
-    */
 
     LoadAnimations();
     return r;
@@ -559,6 +570,8 @@ void CFileManager::Unload()
     }
 
     m_VerdataMul.Unload();
+
+    m_Skills.clear();
 }
 
 void CFileManager::UopReadAnimations()
@@ -2270,4 +2283,559 @@ void CFileManager::LoadAnimations()
         m_SizeIdx[i] = (size_t)m_AnimIdx[i].Size;
     }
     load_data_patches(this);
+}
+
+void CFileManager::LoadSkills()
+{
+    if (m_SkillsIdx.Size == 0 || m_SkillsMul.Size == 0)
+        return;
+
+    m_Skills.clear();
+
+    auto &idx = m_SkillsIdx;
+    auto &mul = m_SkillsMul;
+    while (!idx.IsEOF())
+    {
+        const auto idxBlock = (SkillIdxBlock *)idx.Ptr;
+        idx.Move(sizeof(SkillIdxBlock));
+        if (idxBlock->Size != 0 && idxBlock->Position != ~0 && idxBlock->Size != ~0)
+        {
+            mul.Ptr = mul.Start + idxBlock->Position;
+            const bool haveButton = (mul.ReadUInt8() != 0);
+            SkillData data = { mul.ReadString(idxBlock->Size - 1), haveButton };
+            m_Skills.emplace_back(data);
+        }
+    }
+}
+
+void CFileManager::LoadHues()
+{
+    const auto addr = (intptr_t)m_HuesMul.Start;
+    const auto size = m_HuesMul.Size;
+    if (addr == 0 || size == 0)
+        return;
+
+    const size_t count = size / sizeof(HUES_GROUP);
+    m_Hues.resize(count * 8);
+    memcpy(&m_Hues[0], (void *)addr, count * sizeof(HUES_GROUP));
+}
+
+void CFileManager::CreateBlocksTable()
+{
+    for (int i = 0; i < MAX_MAPS_COUNT; i++)
+    {
+        g_MapBlockSize[i].Width = g_MapSize[i].Width / 8;
+        g_MapBlockSize[i].Height = g_MapSize[i].Height / 8;
+    }
+
+    for (int map = 0; map < MAX_MAPS_COUNT; map++)
+    {
+        const auto &size = g_MapBlockSize[map];
+        CreateBlockTable((int)map, size.Width, size.Height);
+    }
+}
+
+void CFileManager::CreateBlockTable(int map, int width, int height)
+{
+    MAP_INDEX_LIST &list = m_BlockData[map];
+    const int maxBlockCount = width * height;
+    if (maxBlockCount < 1)
+    {
+        return;
+    }
+
+    list.resize(maxBlockCount);
+
+    size_t mapAddress = (size_t)g_FileManager.m_MapMul[map].Start;
+    size_t endMapAddress = mapAddress + g_FileManager.m_MapMul[map].Size;
+
+    CUopMappedFile &uopFile = g_FileManager.m_MapUOP[map];
+    const bool isUop = (uopFile.Start != nullptr);
+    if (isUop)
+    {
+        mapAddress = (size_t)uopFile.Start;
+        endMapAddress = mapAddress + uopFile.Size;
+    }
+
+    size_t staticIdxAddress = (size_t)g_FileManager.m_StaticIdx[map].Start;
+    size_t endStaticIdxAddress = staticIdxAddress + g_FileManager.m_StaticIdx[map].Size;
+    size_t staticAddress = (size_t)g_FileManager.m_StaticMul[map].Start;
+    size_t endStaticAddress = staticAddress + g_FileManager.m_StaticMul[map].Size;
+    if ((mapAddress == 0u) || (staticIdxAddress == 0u) || (staticAddress == 0u))
+    {
+        return;
+    }
+
+    int fileNumber = -1;
+    size_t uopOffset = 0;
+    for (int blockIdx = 0; blockIdx < maxBlockCount; blockIdx++)
+    {
+        CIndexMap &index = list[blockIdx];
+        size_t realMapAddress = 0;
+        size_t realStaticAddress = 0;
+        int realStaticCount = 0;
+        int blockNumber = (int)blockIdx;
+        if (isUop)
+        {
+            blockNumber &= 4095;
+            int shifted = (int)blockIdx >> 12;
+            if (fileNumber != shifted)
+            {
+                fileNumber = shifted;
+                char mapFilePath[200];
+                snprintf(
+                    mapFilePath,
+                    sizeof(mapFilePath),
+                    "build/map%dlegacymul/%08d.dat",
+                    map,
+                    shifted);
+                auto file = uopFile.GetAsset(mapFilePath);
+                if (file != nullptr)
+                {
+                    uopOffset = size_t(file->Offset + file->MetadataSize);
+                }
+                else
+                {
+                    Warning(Data, "couldn't find asset %s", mapFilePath);
+                }
+            }
+        }
+
+        const size_t address = mapAddress + uopOffset + (blockNumber * sizeof(MAP_BLOCK));
+        if (address < endMapAddress)
+        {
+            realMapAddress = address;
+        }
+
+        const auto *sidx = (StaIdxBlock *)(staticIdxAddress + blockIdx * sizeof(StaIdxBlock));
+        if ((size_t)sidx < endStaticIdxAddress && sidx->Size > 0 && sidx->Position != 0xFFFFFFFF)
+        {
+            const size_t address2 = staticAddress + sidx->Position;
+            if (address2 < endStaticAddress)
+            {
+                realStaticAddress = address2;
+                realStaticCount = sidx->Size / sizeof(STATICS_BLOCK);
+                if (realStaticCount > 1024)
+                {
+                    realStaticCount = 1024;
+                }
+            }
+        }
+        index.OriginalMapAddress = realMapAddress;
+        index.OriginalStaticAddress = realStaticAddress;
+        index.OriginalStaticCount = realStaticCount;
+        index.MapAddress = realMapAddress;
+        index.StaticAddress = realStaticAddress;
+        index.StaticCount = realStaticCount;
+    }
+}
+
+void CFileManager::PatchFiles()
+{
+    enum
+    {
+        PatchMap0 = 0x00,
+        PatchStaIdx0 = 0x01,
+        PatchStatics0 = 0x02,
+        PatchArtiIdx = 0x03,
+        PatchArt = 0x04,
+        PatchAnimIdx = 0x05,
+        PatchAnim = 0x06,
+        PatchSoundIdx = 0x07,
+        PatchSound = 0x08,
+        PatchTexIdx = 0x09,
+        PatchTexMaps = 0x0A,
+        PatchGumpIdx = 0x0B,
+        PatchGumpArt = 0x0C,
+        PatchMultiIdx = 0x0D,
+        PatchMulti = 0x0E,
+        PatchSkillsIdx = 0x0F,
+        PatchSkills = 0x10,
+        PatchTileData = 0x1E,
+        PatchAnimData = 0x1F,
+        PatchHues = 0x20,
+    };
+
+    auto &file = g_FileManager.m_VerdataMul;
+    if (!s_UseVerdata || file.Size == 0)
+    {
+        return;
+    }
+
+    const auto dataCount = *(int32_t *)file.Start;
+    const auto vAddr = (size_t)file.Start;
+    for (int i = 0; i < dataCount; i++)
+    {
+        VERDATA_HEADER *vh = (VERDATA_HEADER *)(vAddr + 4 + (i * sizeof(VERDATA_HEADER)));
+        if (vh->FileID == PatchMap0)
+        {
+            const auto &size = g_MapBlockSize[0];
+            const int maxBlockCount = size.Width * size.Height;
+            if (maxBlockCount < 1)
+                continue;
+
+            const auto block = vh->BlockID;
+            const auto address = vAddr + vh->Position;
+            auto &data = m_BlockData[0];
+            data[block].OriginalMapAddress = address;
+            data[block].MapAddress = address;
+        }
+        else if (vh->FileID == PatchArt)
+        {
+            if (vh->BlockID >= MAX_LAND_DATA_INDEX_COUNT) //Run
+            {
+                uint16_t ID = (uint16_t)vh->BlockID - MAX_LAND_DATA_INDEX_COUNT;
+                g_Index.m_Static[ID].Address = vAddr + vh->Position;
+                g_Index.m_Static[ID].DataSize = vh->Size;
+            }
+            else //Raw
+            {
+                g_Index.m_Land[vh->BlockID].Address = vAddr + vh->Position;
+                g_Index.m_Land[vh->BlockID].DataSize = vh->Size;
+            }
+        }
+        else if (vh->FileID == PatchGumpArt)
+        {
+            g_Index.m_Gump[vh->BlockID].Address = vAddr + vh->Position;
+            g_Index.m_Gump[vh->BlockID].DataSize = vh->Size;
+            g_Index.m_Gump[vh->BlockID].Width = vh->GumpData >> 16;
+            g_Index.m_Gump[vh->BlockID].Height = vh->GumpData & 0xFFFF;
+        }
+        else if (vh->FileID == PatchMulti && (int)vh->BlockID < g_Index.m_MultiIndexCount)
+        {
+            g_Index.m_Multi[vh->BlockID].Address = vAddr + vh->Position;
+            g_Index.m_Multi[vh->BlockID].DataSize = vh->Size;
+            g_Index.m_Multi[vh->BlockID].Count = uint16_t(vh->Size / sizeof(MultiIdxBlock));
+        }
+        else if (vh->FileID == PatchSkills && vh->BlockID < m_Skills.size())
+        {
+            const auto skillIdx = vh->BlockID;
+            auto &skill = m_Skills[skillIdx];
+            CDataReader reader((uint8_t *)vAddr + vh->Position, vh->Size);
+            skill.Iteractive = reader.ReadUInt8() != 0;
+            skill.Name = reader.ReadString(vh->Size - 1);
+        }
+        else if (vh->FileID == PatchTileData)
+        {
+            file.ResetPtr();
+            file.Move(vh->Position);
+            if (vh->Size == 836)
+            {
+                const int offset = vh->BlockID * 32;
+                if (offset + 32 > (int)g_Data.m_Land.size())
+                {
+                    continue;
+                }
+                file.ReadUInt32LE();
+                for (int j = 0; j < 32; j++)
+                {
+                    MulLandTile2 &tile = g_Data.m_Land[offset + j];
+                    if (s_ClientVersion < CV_7090)
+                    {
+                        tile.Flags = file.ReadUInt32LE();
+                    }
+                    else
+                    {
+                        tile.Flags = file.ReadInt64LE();
+                    }
+                    tile.TexID = file.ReadUInt16LE();
+                    file.ReadBuffer(tile.Name);
+                }
+            }
+            else if (vh->Size == 1188)
+            {
+                int offset = (vh->BlockID - 0x0200) * 32;
+                if (offset + 32 > (int)g_Data.m_Static.size())
+                {
+                    continue;
+                }
+                file.ReadUInt32LE();
+                for (int j = 0; j < 32; j++)
+                {
+                    MulStaticTile2 &tile = g_Data.m_Static[offset + j];
+                    if (s_ClientVersion < CV_7090)
+                    {
+                        tile.Flags = file.ReadUInt32LE();
+                    }
+                    else
+                    {
+                        tile.Flags = file.ReadInt64LE();
+                    }
+                    tile.Weight = file.ReadInt8();
+                    tile.Layer = file.ReadInt8();
+                    tile.Count = file.ReadInt32LE();
+                    tile.AnimID = file.ReadInt16LE();
+                    tile.Hue = file.ReadInt16LE();
+                    tile.LightIndex = file.ReadInt16LE();
+                    tile.Height = file.ReadInt8();
+                    file.ReadBuffer(tile.Name);
+                }
+            }
+        }
+        else if (vh->FileID == PatchHues)
+        {
+            const auto hueIdx = vh->BlockID;
+            if (hueIdx < m_Hues.size())
+            {
+                const auto group = (VERDATA_HUES_GROUP *)(vAddr + vh->Position);
+                m_Hues[hueIdx].Header = group->Header;
+                for (int entry = 0; entry < 8; entry++)
+                {
+                    memcpy(
+                        &m_Hues[hueIdx].Entries[entry].ColorTable[0],
+                        &group->Entries[entry].ColorTable[0],
+                        sizeof(HUES_BLOCK::ColorTable));
+                }
+            }
+        }
+        else if (vh->FileID != PatchAnimIdx && vh->FileID != PatchAnim)
+        {
+            Warning(
+                Client, "Unused verdata block (fileID) = %i (BlockID+ %i", vh->FileID, vh->BlockID);
+        }
+    }
+}
+
+// FIXME: there is some issue here - looks like this does not work correctly
+// need further investigation
+void CFileManager::IndexReplaces()
+{
+    if (s_ClientVersion < CV_305D)
+    { //CV_204C
+        return;
+    }
+
+    TextFileParser newDataParser({}, " \t,{}", "#;//", "");
+    TextFileParser artParser(UOFilePath("art.def"), " \t", "#;//", "{}");
+    TextFileParser textureParser(UOFilePath("TexTerr.def"), " \t", "#;//", "{}");
+    TextFileParser gumpParser(UOFilePath("gump.def"), " \t", "#;//", "{}");
+    TextFileParser multiParser(UOFilePath("Multi.def"), " \t", "#;//", "{}");
+    TextFileParser soundParser(UOFilePath("Sound.def"), " \t", "#;//", "{}");
+    TextFileParser mp3Parser(UOFilePath("Music/Digital/Config.txt"), " ,", "#;", "");
+
+    Info(Data, "replacing arts");
+    while (!artParser.IsEOF())
+    {
+        auto strings = artParser.ReadTokens();
+        if (strings.size() >= 3)
+        {
+            int index = str_to_int(strings[0]);
+            if (index < 0 || index >= MAX_LAND_DATA_INDEX_COUNT + (int)g_Data.m_Static.size())
+            {
+                continue;
+            }
+
+            auto newArt = newDataParser.GetTokens(strings[1]);
+            int size = (int)newArt.size();
+            for (int i = 0; i < size; i++)
+            {
+                int checkIndex = str_to_int(newArt[i]);
+                if (checkIndex < 0 ||
+                    checkIndex >= MAX_LAND_DATA_INDEX_COUNT + (int)g_Data.m_Static.size())
+                {
+                    continue;
+                }
+
+                if (index < MAX_LAND_DATA_INDEX_COUNT && checkIndex < MAX_LAND_DATA_INDEX_COUNT &&
+                    g_Index.m_Land[checkIndex].Address != 0 && g_Index.m_Land[index].Address == 0)
+                {
+                    g_Index.m_Land[index] = g_Index.m_Land[checkIndex];
+                    assert(g_Index.m_Land[index].UserData == nullptr);
+                    g_Index.m_Land[index].UserData = nullptr;
+                    g_Index.m_Land[index].Color = str_to_int(strings[2]);
+                    break;
+                }
+                if (index >= MAX_LAND_DATA_INDEX_COUNT && checkIndex >= MAX_LAND_DATA_INDEX_COUNT)
+                {
+                    checkIndex -= MAX_LAND_DATA_INDEX_COUNT;
+                    checkIndex &= 0x3FFF;
+                    index -= MAX_LAND_DATA_INDEX_COUNT;
+                    if (g_Index.m_Static[index].Address == 0 &&
+                        g_Index.m_Static[checkIndex].Address != 0)
+                    {
+                        g_Index.m_Static[index] = g_Index.m_Static[checkIndex];
+                        assert(g_Index.m_Static[index].UserData == nullptr);
+                        g_Index.m_Static[index].UserData = nullptr;
+                        g_Index.m_Static[index].Color = str_to_int(strings[2]);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Info(Data, "replacing textures");
+    while (!textureParser.IsEOF())
+    {
+        auto strings = textureParser.ReadTokens();
+        if (strings.size() >= 3)
+        {
+            int index = str_to_int(strings[0]);
+            if (index < 0 || index >= MAX_LAND_TEXTURES_DATA_INDEX_COUNT ||
+                g_Index.m_Texture[index].Address != 0)
+            {
+                continue;
+            }
+
+            auto newTexture = newDataParser.GetTokens(strings[1]);
+            const int size = (int)newTexture.size();
+            for (int i = 0; i < size; i++)
+            {
+                int checkIndex = str_to_int(newTexture[i]);
+                if (checkIndex < 0)
+                {
+                    continue;
+                }
+
+                if (index < TexturesDataCount && checkIndex < TexturesDataCount &&
+                    g_Index.m_Texture[checkIndex].Address != 0)
+                {
+                    g_Index.m_Texture[index] = g_Index.m_Texture[checkIndex];
+                    assert(g_Index.m_Texture[index].UserData == nullptr);
+                    g_Index.m_Texture[index].UserData = nullptr;
+                    g_Index.m_Texture[index].Color = str_to_int(strings[2]);
+                    break;
+                }
+            }
+        }
+    }
+
+    Info(Data, "replacing gumps");
+    while (!gumpParser.IsEOF())
+    {
+        auto strings = gumpParser.ReadTokens();
+        if (strings.size() >= 3)
+        {
+            int index = str_to_int(strings[0]);
+            if (index < 0 || index >= MAX_GUMP_DATA_INDEX_COUNT ||
+                g_Index.m_Gump[index].Address != 0)
+            {
+                continue;
+            }
+
+            auto newGump = newDataParser.GetTokens(strings[1]);
+            const int size = (int)newGump.size();
+            for (int i = 0; i < size; i++)
+            {
+                const int checkIndex = str_to_int(newGump[i]);
+                if (checkIndex < 0 || checkIndex >= MAX_GUMP_DATA_INDEX_COUNT ||
+                    g_Index.m_Gump[checkIndex].Address == 0)
+                {
+                    continue;
+                }
+                g_Index.m_Gump[index] = g_Index.m_Gump[checkIndex];
+                assert(g_Index.m_Gump[index].UserData == nullptr);
+                g_Index.m_Gump[index].UserData = nullptr;
+                g_Index.m_Gump[index].Color = str_to_int(strings[2]);
+                break;
+            }
+        }
+    }
+
+    Info(Data, "replacing multi");
+    while (!multiParser.IsEOF())
+    {
+        auto strings = multiParser.ReadTokens();
+        if (strings.size() >= 3)
+        {
+            int index = str_to_int(strings[0]);
+            if (index < 0 || index >= g_Index.m_MultiIndexCount ||
+                g_Index.m_Multi[index].Address != 0)
+            {
+                continue;
+            }
+
+            auto newMulti = newDataParser.GetTokens(strings[1]);
+            const int size = (int)newMulti.size();
+            for (int i = 0; i < size; i++)
+            {
+                const int checkIndex = str_to_int(newMulti[i]);
+                if (checkIndex < 0 || checkIndex >= g_Index.m_MultiIndexCount ||
+                    g_Index.m_Multi[checkIndex].Address == 0)
+                {
+                    continue;
+                }
+                g_Index.m_Multi[index] = g_Index.m_Multi[checkIndex];
+                break;
+            }
+        }
+    }
+
+    Info(Data, "replacing sounds");
+    while (!soundParser.IsEOF())
+    {
+        auto strings = soundParser.ReadTokens();
+        if (strings.size() >= 2)
+        {
+            int index = str_to_int(strings[0]);
+            if (index < 0 || index >= MAX_SOUND_DATA_INDEX_COUNT ||
+                g_Index.m_Sound[index].Address != 0)
+            {
+                continue;
+            }
+
+            auto newSound = newDataParser.GetTokens(strings[1]);
+            const int size = (int)newSound.size();
+            for (int i = 0; i < size; i++)
+            {
+                const int checkIndex = str_to_int(newSound[i]);
+                if (checkIndex < -1 || checkIndex >= MAX_SOUND_DATA_INDEX_COUNT)
+                {
+                    continue;
+                }
+
+                CIndexSound &in = g_Index.m_Sound[index];
+                if (checkIndex == -1)
+                {
+                    in.Address = 0;
+                    in.DataSize = 0;
+                    in.Delay = 0;
+                    in.LastAccessTime = 0;
+                }
+                else
+                {
+                    CIndexSound &out = g_Index.m_Sound[checkIndex];
+                    if (out.Address == 0)
+                    {
+                        continue;
+                    }
+                    in.Address = out.Address;
+                    in.DataSize = out.DataSize;
+                    in.Delay = out.Delay;
+                    in.LastAccessTime = out.LastAccessTime;
+                }
+
+                free(in.m_WaveFile); // FIXME!!!
+                in.m_WaveFile = nullptr;
+                in.UserData = nullptr;
+                break;
+            }
+        }
+    }
+
+    Info(Data, "loading music config");
+    while (!mp3Parser.IsEOF())
+    {
+        auto strings = mp3Parser.ReadTokens();
+        const size_t size = strings.size();
+        if (size > 0)
+        {
+            const uint32_t index = str_to_int(strings[0]);
+            CIndexMusic &mp3 = g_Index.m_MP3[index];
+            astr_t name = "music/digital/" + strings[1];
+            astr_t extension = ".mp3";
+            if (name.find(extension) == astr_t::npos)
+            {
+                name += extension;
+            }
+            if (size > 1)
+            {
+                mp3.FilePath = fs_path_str(UOFilePath(name.c_str()));
+            }
+            if (size > 2)
+            {
+                mp3.Loop = true;
+            }
+        }
+    }
 }

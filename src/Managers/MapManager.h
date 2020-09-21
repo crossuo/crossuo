@@ -9,24 +9,8 @@
 
 class CMapBlock;
 class CRenderWorldObject;
+struct CIndexMap;
 struct RADAR_MAP_BLOCK;
-
-class CIndexMap
-{
-public:
-    size_t OriginalMapAddress = 0;
-    size_t OriginalStaticAddress = 0;
-    uint32_t OriginalStaticCount = 0;
-
-    size_t MapAddress = 0;
-    size_t StaticAddress = 0;
-    uint32_t StaticCount = 0;
-
-    CIndexMap();
-    virtual ~CIndexMap();
-};
-
-typedef std::vector<CIndexMap> MAP_INDEX_LIST;
 
 class CMapManager : public CBaseQueue
 {
@@ -36,20 +20,17 @@ public:
 
 protected:
     CMapBlock **m_Blocks{ nullptr };
-    MAP_INDEX_LIST m_BlockData[MAX_MAPS_COUNT];
     bool m_BlockAccessList[0x1000];
     void ResetPatchesInBlockTable();
 
 public:
-    CMapManager();
+    CMapManager() = default;
     virtual ~CMapManager();
 
     int m_MapPatchCount[MAX_MAPS_COUNT];
     int m_StaticPatchCount[MAX_MAPS_COUNT];
 
     CIndexMap *GetIndex(int map, int blockX, int blockY);
-    void CreateBlockTable(int map);
-    void CreateBlocksTable();
     void ApplyPatches(CDataReader &stream);
     void UpdatePatched();
     void ClearBlockAccess();

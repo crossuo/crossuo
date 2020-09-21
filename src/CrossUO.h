@@ -20,7 +20,6 @@ struct CSprite;
 class CGame
 {
 public:
-    int TexturesDataCount = 0;
     astr_t m_OverrideServerAddress;
     int m_OverrideServerPort = 0;
 
