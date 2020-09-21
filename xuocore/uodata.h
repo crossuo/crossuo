@@ -374,9 +374,8 @@ struct CFileManager : public CDataReader // FIXME: not needed
     std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
 
     bool Load();
+    void Finalize();
     void Unload();
-    void LoadAnimations();
-    void UopReadAnimations();
     bool IsMulFileOpen(int idx) const;
 
     void LoadStringDictionary();
@@ -398,7 +397,6 @@ struct CFileManager : public CDataReader // FIXME: not needed
     bool MulLoadFile(CMappedFile &file, const fs_path &fileName);
 
 private:
-    // moved from AnimationManager
     UopAnimationHeader UopReadAnimationHeader();
     UopAnimationFrame UopReadAnimationFrame();
     std::vector<UopAnimationFrame> UopReadAnimationFramesData();
@@ -411,8 +409,10 @@ private:
 
     void LoadTiledata();
     void LoadIndexFiles();
+    void LoadAnimations();
 
-    void ReadTask();
+    void UopReadAnimations();
+    void AnimSequenceReadTask();
     void ProcessAnimSequeceData();
 
     void MulReadIndexFile(
@@ -430,7 +430,6 @@ private:
         CUopMappedFile &uopFile,
         int startIndex = 0);
 
-    // from AnimationManager
     void UopReadAnimationFrameInfo(
         AnimationFrameInfo &result,
         AnimationDirection &direction,

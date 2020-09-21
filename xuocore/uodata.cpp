@@ -215,6 +215,11 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 
 bool CFileManager::Load()
 {
+    if (s_ClientVersion >= CV_7000)
+    {
+        g_FileManager.UopReadAnimations();
+    }
+
     g_Index.m_Animations.reserve(1024);
     bool r = false;
     const bool useUop =
@@ -292,7 +297,26 @@ bool CFileManager::Load()
     LoadTiledata();
     LoadIndexFiles();
 
+    /*
+    Info(Client, "patching files");
+    PatchFiles();
+    Info(Client, "replacing indexes");
+    IndexReplaces();
+    */
+
+    LoadAnimations();
     return r;
+}
+
+void CFileManager::Finalize()
+{
+    if (s_ClientVersion >= CV_7000)
+    {
+        Info(Data, "waiting for file manager to try & load AnimationFrame files");
+        WaitTasks();
+        Info(Data, "FileManager.UopReadAnimations() done");
+    }
+    g_FileManager.ProcessAnimSequeceData();
 }
 
 bool CFileManager::LoadCommon()
@@ -542,7 +566,7 @@ void CFileManager::UopReadAnimations()
     TRACE(Data, "start uop read jobs");
     // pattern: "build/animationsequence/%08d.bin"
     UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
-    std::thread readThread(&CFileManager::ReadTask, this);
+    std::thread readThread(&CFileManager::AnimSequenceReadTask, this);
     readThread.detach();
 }
 
@@ -599,7 +623,7 @@ void CFileManager::WaitTasks() const
     WaitEvent();
 }
 
-void CFileManager::ReadTask()
+void CFileManager::AnimSequenceReadTask()
 {
     const static int count = countof(m_AnimationFrame);
     for (int i = 0; i < count; i++)
@@ -627,14 +651,13 @@ void CFileManager::ReadTask()
     {
         job.join();
     }
-    ProcessAnimSequeceData();
 
     const int maxGroup = *std::max_element(lastGroup, lastGroup + count);
     if (s_AnimGroupCount < maxGroup)
     {
         s_AnimGroupCount = maxGroup;
     }
-    m_AnimationSequence.Unload();
+
     SetEvent();
 }
 
@@ -707,6 +730,7 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
         }
     }
     Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.FileCount());
+    m_AnimationSequence.Unload();
 }
 
 static void DateFromTimestamp(const time_t rawtime, char *out, int maxLen)
