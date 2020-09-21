@@ -9,7 +9,7 @@
 
 CSkillsManager g_SkillsManager;
 
-CSkill::CSkill(bool haveButton, const astr_t &name)
+CSkill::CSkill(bool haveButton, astr_t name)
     : Button(haveButton)
 {
     if (name.length() != 0u)
@@ -20,41 +20,24 @@ CSkill::CSkill(bool haveButton, const astr_t &name)
     {
         Name = "NoNameSkill";
     }
-
-    //LOG("Skill loaded (button:%i): %s\n", m_Button, m_Name.c_str());
 }
 
-bool CSkillsManager::Load()
+bool CSkillsManager::Init()
 {
-    if ((g_FileManager.m_SkillsIdx.Size == 0u) || (g_FileManager.m_SkillsMul.Size == 0u) ||
-        (Count != 0u))
+    if (Count != 0)
     {
         return false;
     }
 
-    auto &idx = g_FileManager.m_SkillsIdx;
-    auto &mul = g_FileManager.m_SkillsMul;
-    while (!idx.IsEOF())
+    for (const auto &skill : g_FileManager.m_Skills)
     {
-        SkillIdxBlock *idxBlock = (SkillIdxBlock *)idx.Ptr;
-        idx.Move(sizeof(SkillIdxBlock));
-
-        if ((idxBlock->Size != 0u) && idxBlock->Position != 0xFFFFFFFF &&
-            idxBlock->Size != 0xFFFFFFFF)
-        {
-            mul.Ptr = mul.Start + idxBlock->Position;
-            const bool haveButton = (mul.ReadUInt8() != 0);
-            Add(CSkill(haveButton, mul.ReadString(idxBlock->Size - 1)));
-        }
+        Info(Client, "%d Skill: %s", Count, skill.Name.c_str());
+        Add(CSkill(skill.Iteractive, skill.Name));
     }
 
-    Info(Client, "skills count: %i", Count);
-    if (Count < 2 || Count > 100)
-    {
-        Count = 0;
-        return false;
-    }
-
+    Info(Client, "skills count: %d", Count);
+    Info(Client, "sorting skills");
+    Sort();
     return true;
 }
 
@@ -78,7 +61,6 @@ CSkill *CSkillsManager::Get(uint32_t index)
     {
         return &m_Skills[index];
     }
-
     return nullptr;
 }
 
@@ -166,14 +148,12 @@ int CSkillsManager::GetSortedIndex(uint32_t index)
     {
         return m_SortedTable[index];
     }
-
     return -1;
 }
 
 void CSkillsManager::UpdateSkillsSum()
 {
     SkillsTotal = 0.0f;
-
     for (const CSkill &skill : m_Skills)
     {
         SkillsTotal += skill.Value;

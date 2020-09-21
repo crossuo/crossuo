@@ -19,11 +19,19 @@
 #include "mulstruct.h" // FIXME: MulLandTile2, MulStaticTile2 -> g_Data
 #include "mappedfile.h"
 
+struct MapSize
+{
+    int Width = 0;
+    int Height = 0;
+};
+
 struct IndexBlock;
 struct AnimationFrameInfo;
 struct AnimationState;
 
 extern astr_t g_dumpUopFile;
+extern MapSize g_MapSize[MAX_MAPS_COUNT];
+extern MapSize g_MapBlockSize[MAX_MAPS_COUNT];
 
 #if LIBUO == 1
 typedef void *SoundInfo;
@@ -88,6 +96,12 @@ struct IndexAnimation
     char MountedHeightOffset = 0;
     bool IsUOP = false;
     bool IsValidMUL = false;
+};
+
+struct SkillData
+{
+    astr_t Name;
+    bool Iteractive = false;
 };
 
 struct CIndexObject
@@ -179,6 +193,16 @@ struct CEquipConvData
 struct CIndexAnimationSequence
 {
     // FIXME
+};
+
+struct CIndexMap
+{
+    size_t OriginalMapAddress = 0;
+    size_t OriginalStaticAddress = 0;
+    uint32_t OriginalStaticCount = 0;
+    size_t MapAddress = 0;
+    size_t StaticAddress = 0;
+    uint32_t StaticCount = 0;
 };
 
 struct Index
@@ -312,6 +336,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
 {
     bool UseUOPGumps = false;
     int UnicodeFontsCount = 0; // never read
+    int TexturesDataCount = 0;
 
     // Idx
     CMappedFile m_AnimIdx[6];
@@ -376,6 +401,18 @@ struct CFileManager : public CDataReader // FIXME: not needed
     bool Load();
     void Finalize();
     void Unload();
+
+    std::vector<SkillData> m_Skills;
+    void LoadSkills();
+
+    std::vector<HUES_GROUP> m_Hues;
+    void LoadHues();
+
+    typedef std::vector<CIndexMap> MAP_INDEX_LIST;
+    MAP_INDEX_LIST m_BlockData[MAX_MAPS_COUNT];
+    void CreateBlocksTable();
+    void CreateBlockTable(int map, int width, int height);
+
     bool IsMulFileOpen(int idx) const;
 
     void LoadStringDictionary();
@@ -414,6 +451,9 @@ private:
     void UopReadAnimations();
     void AnimSequenceReadTask();
     void ProcessAnimSequeceData();
+
+    void PatchFiles();
+    void IndexReplaces();
 
     void MulReadIndexFile(
         size_t indexMaxCount,

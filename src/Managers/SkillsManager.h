@@ -7,19 +7,18 @@
 #include <vector>
 #include <common/str.h>
 
-class CSkill
+struct CSkill
 {
-public:
     bool Button = 0;
-    astr_t Name = "";
+    astr_t Name;
     float BaseValue = 0.0f;
     float Value = 0.0f;
     float Cap = 0.0f;
     uint8_t Status = 0;
 
-    CSkill() {}
-    CSkill(bool haveButton, const astr_t &name);
-    ~CSkill() {}
+    CSkill() = default;
+    CSkill(bool haveButton, astr_t name);
+    ~CSkill() = default;
 };
 
 class CSkillsManager
@@ -36,10 +35,10 @@ private:
     bool CompareName(const astr_t &str1, const astr_t &str2);
 
 public:
-    CSkillsManager() {}
-    ~CSkillsManager() {}
+    CSkillsManager() = default;
+    ~CSkillsManager() = default;
 
-    bool Load();
+    bool Init();
     void Add(const CSkill &skill);
     void Clear();
     CSkill *Get(uint32_t index);

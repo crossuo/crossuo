@@ -54,12 +54,6 @@ GAME_STATE g_GameState = GS_MAIN;
 
 CGLTexture g_TextureGumpState[2];
 
-CSize g_MapSize[MAX_MAPS_COUNT] = {
-    // Felucca      Trammel         Ilshenar        Malas           Tokuno          TerMur
-    { 7168, 4096 }, { 7168, 4096 }, { 2304, 1600 }, { 2560, 2048 }, { 1448, 1448 }, { 1280, 4096 },
-};
-CSize g_MapBlockSize[MAX_MAPS_COUNT];
-
 CGLFrameBuffer g_LightBuffer;
 
 bool g_GumpPressed = false;

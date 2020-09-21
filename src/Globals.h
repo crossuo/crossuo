@@ -96,9 +96,6 @@ extern astr_t g_Language;
 
 extern GAME_STATE g_GameState;
 
-extern CSize g_MapSize[MAX_MAPS_COUNT];
-extern CSize g_MapBlockSize[MAX_MAPS_COUNT];
-
 extern bool g_GumpPressed;
 extern class CRenderObject *g_GumpSelectedElement;
 extern class CRenderObject *g_GumpPressedElement;

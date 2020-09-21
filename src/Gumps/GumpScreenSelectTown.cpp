@@ -7,7 +7,8 @@
 #include "../Managers/ClilocManager.h"
 #include "../Managers/FontsManager.h"
 #include "../ScreenStages/SelectTownScreen.h"
-#include "../Globals.h" // g_Language, g_MapSize, UOFONT_*
+#include "../Globals.h"     // g_Language, g_MapSize, UOFONT_*
+#include <xuocore/uodata.h> // g_MapSize
 
 enum
 {
