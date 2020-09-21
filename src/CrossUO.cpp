@@ -341,11 +341,6 @@ bool CGame::Install()
     LoadAutoLoginNames();
 
     Info(Client, "loading files");
-    if (g_Config.ClientVersion >= CV_7000)
-    {
-        g_FileManager.UopReadAnimations();
-    }
-
     if (!g_FileManager.Load())
     {
         auto errMsg =
@@ -386,7 +381,6 @@ bool CGame::Install()
     PatchFiles();
     Info(Client, "replacing indexes");
     IndexReplaces();
-    g_FileManager.LoadAnimations();
 
     CheckStaticTileFilterFiles();
 
@@ -542,12 +536,7 @@ bool CGame::Install()
     Info(Client, "initializing screen");
     InitScreen(GS_MAIN);
 
-    if (g_Config.ClientVersion >= CV_7000)
-    {
-        Info(Client, "waiting for file manager to try & load AnimationFrame files");
-        g_FileManager.WaitTasks();
-        Info(Client, "FileManager.UopReadAnimations() done");
-    }
+    g_FileManager.Finalize();
 
     Info(Client, "initialization completed");
     return true;
