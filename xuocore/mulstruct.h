@@ -51,6 +51,8 @@ struct IdxSoundData
     uint16_t Reserved;
 };
 
+// clang-format off
+// difference between format versions on unions
 struct IndexBlock
 {
     uint32_t Position;
@@ -63,6 +65,7 @@ struct IndexBlock
         uint32_t Unknown; // Map, Sta, Multi, Skills, Art, Anim, Texture
     };
 };
+// clang-format on
 static_assert(sizeof(IndexBlock) == 12, "Invalid IndexBlock size");
 
 typedef IndexBlock GumpIdxBlock;
