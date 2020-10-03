@@ -44,10 +44,12 @@ struct CSprite;
 typedef void *(*LoadPixelData16Cb)(int width, int height, uint16_t *pixels);
 typedef void (*DeleteUserData)(void *UserData);
 typedef uint32_t AnimationId;
+typedef uint32_t AnimationGroupId;
 
 struct UopFileEntry;
 struct CUopMappedFile;
 using UopSectionHeaderMap = std::unordered_map<uint64_t, const UopFileEntry *>;
+using UopFileMap = std::unordered_map<AnimationGroupId, const UopFileEntry *>;
 
 struct AnimationFrame // AnimationFrameTexture
 {
@@ -79,7 +81,7 @@ struct AnimationDirection
 struct AnimationGroup // AnimationGroup
 {
     AnimationDirection Direction[MAX_MOBILE_DIRECTIONS];
-    const UopFileEntry *AnimData = nullptr;
+    //const UopFileEntry *AnimData = nullptr;
 };
 
 struct IndexAnimation
@@ -217,6 +219,7 @@ struct Index
     CIndexLight m_Light[MAX_LIGHTS_DATA_INDEX_COUNT];
     IndexAnimation m_Anim[MAX_ANIMATIONS_DATA_INDEX_COUNT];
     std::unordered_map<AnimationId, AnimationDirFrames *> m_Animations;
+    std::unordered_map<AnimationGroupId, const UopFileEntry *> m_AnimationGroupFile;
     int m_MultiIndexCount = 0;
 };
 
@@ -309,6 +312,30 @@ inline void uo_animation_destroy(AnimationId animId, DeleteUserData pDeleter)
     }
 
     delete dir;
+}
+
+inline AnimationGroupId GroupId(AnimationId animId)
+{
+    return (AnimationGroupId)(animId & 0xffffff00);
+}
+
+inline AnimationGroupId GroupId(uint16_t graphic, uint8_t group, uint8_t dir = 0)
+{
+    return (AnimationGroupId)((graphic << 16) | (group << 8));
+}
+
+inline const UopFileEntry *uo_animation_group_get(AnimationGroupId groupId)
+{
+    const auto it = g_Index.m_AnimationGroupFile.find(groupId);
+    if (it == g_Index.m_AnimationGroupFile.end())
+        return nullptr;
+    return it->second;
+}
+
+inline const UopFileEntry *uo_animation_group_get(AnimationState anim)
+{
+    const auto groupId = GroupId(AnimId(anim));
+    return uo_animation_group_get(groupId);
 }
 
 struct CUopMappedFile : public CMappedFile // FIXME: not needed
@@ -418,11 +445,7 @@ struct CFileManager : public CDataReader // FIXME: not needed
     void LoadStringDictionary();
     bool LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void LoadAnimationFrameInfo(
-        AnimationFrameInfo &result,
-        AnimationDirection &direction,
-        AnimationGroup &group,
-        uint8_t frameIndex,
-        bool isCorpse);
+        AnimationFrameInfo &result, const AnimationState &anim, uint8_t frameIndex, bool isCorpse);
     // --
 
     CFileManager() = default;
@@ -473,7 +496,7 @@ private:
     void UopReadAnimationFrameInfo(
         AnimationFrameInfo &result,
         AnimationDirection &direction,
-        const UopFileEntry &block,
+        const UopFileEntry *block,
         bool isCorpse);
     bool UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc);
     void MulReadAnimationFrameInfo(
