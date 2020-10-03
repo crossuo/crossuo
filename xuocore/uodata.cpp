@@ -58,7 +58,6 @@ static bool WaitEvent()
     return true;
 }
 
-static uint8_t s_AnimGroupCount = PAG_ANIMATION_COUNT;
 static uint32_t s_ClientVersion = 0;
 static bool s_UseVerdata = false;
 static char s_UOPath[FS_MAX_PATH];
@@ -161,11 +160,12 @@ size_t CUopMappedFile::FileCount() const
     return m_MapByHash.size();
 }
 
-static bool DecompressBlock(const UopFileEntry &block, uint8_t *dst, uint8_t *src)
+static bool DecompressBlock(const UopFileEntry *block, uint8_t *dst, uint8_t *src)
 {
-    uLongf cLen = block.CompressedSize;
-    uLongf dLen = block.DecompressedSize;
-    if (cLen == 0 || block.Flags == 0)
+    assert(block);
+    uLongf cLen = block->CompressedSize;
+    uLongf dLen = block->DecompressedSize;
+    if (cLen == 0 || block->Flags == 0)
     {
         dst = src;
         return true;
@@ -181,10 +181,12 @@ static bool DecompressBlock(const UopFileEntry &block, uint8_t *dst, uint8_t *sr
     return true;
 }
 
-static bool UopDecompressBlock(const UopFileEntry &block, uint8_t *dst, int fileId)
+static bool UopDecompressBlock(const UopFileEntry *block, uint8_t *dst, int fileId)
 {
+    assert(block);
     assert(fileId >= 0 && fileId <= countof(g_FileManager.m_AnimationFrame));
-    uint8_t *src = g_FileManager.m_AnimationFrame[fileId].Start + block.Offset + block.MetadataSize;
+    uint8_t *src =
+        g_FileManager.m_AnimationFrame[fileId].Start + block->Offset + block->MetadataSize;
     return DecompressBlock(block, dst, src);
 }
 
@@ -211,7 +213,7 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
     assert(block);
     uint8_t *src = Start + block->Offset + block->MetadataSize;
     std::vector<uint8_t> dst(block->DecompressedSize, 0);
-    if (DecompressBlock(*block, dst.data(), src))
+    if (DecompressBlock(block, dst.data(), src))
     {
         return dst;
     }
@@ -583,7 +585,8 @@ void CFileManager::UopReadAnimations()
     readThread.detach();
 }
 
-static int UopSetAnimationGroups(int start, int end)
+// TODO: optimize finding the file index for specific hash
+const UopFileEntry *UopGetAnimationAsset(uint64_t hash, int &fileIndex)
 {
     const static int count = countof(CFileManager::m_AnimationFrame);
     auto getAssetOwner = [](uint64_t hash) -> int {
@@ -595,10 +598,18 @@ static int UopSetAnimationGroups(int start, int end)
         return -1;
     };
 
+    fileIndex = getAssetOwner(hash);
+    if (fileIndex == -1)
+        return nullptr;
+
+    return g_FileManager.m_AnimationFrame[fileIndex].GetAsset(hash);
+}
+
+static void UopSetAnimationGroups(int start, int end, UopFileMap *files)
+{
     TRACE(Data, "running job %d:%d", start, end);
     char filename[200];
     const char *pattern = "build/animationlegacyframe/%06d/%02d.bin";
-    int lastGroup = 0;
     for (int animId = start; animId < end; ++animId)
     {
         auto &idx = g_Index.m_Anim[animId];
@@ -607,15 +618,29 @@ static int UopSetAnimationGroups(int start, int end)
             auto &group = idx.Groups[grpId];
             snprintf(filename, sizeof(filename), pattern, animId, grpId);
             const auto asset = uo_jenkins_hash(filename);
-            const auto fileIndex = getAssetOwner(asset);
-            if (fileIndex != -1)
+            int fileIndex;
+            const auto data = UopGetAnimationAsset(asset, fileIndex);
+            if (data != nullptr)
             {
-                if (grpId > lastGroup)
+                files->emplace(GroupId(animId, grpId), data);
+                if (animId == 1408 && grpId == 25)
                 {
-                    lastGroup = grpId;
+                    animId = 1408;
                 }
                 idx.IsUOP = true;
-                group.AnimData = g_FileManager.m_AnimationFrame[fileIndex].GetAsset(asset);
+                const bool debug = animId == 1408;
+                const auto off = data->Offset;
+                const auto cs = data->CompressedSize;
+                const auto ds = data->DecompressedSize;
+                if (debug)
+                    Info(
+                        Data,
+                        "Animation: %d Group: %02d Address: %zu (%d/%d)",
+                        animId,
+                        grpId,
+                        off,
+                        cs,
+                        ds);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
                     auto &dir = group.Direction[dirId];
@@ -627,8 +652,6 @@ static int UopSetAnimationGroups(int start, int end)
             }
         }
     }
-
-    return lastGroup;
 }
 
 void CFileManager::WaitTasks() const
@@ -650,14 +673,16 @@ void CFileManager::AnimSequenceReadTask()
     }
 
     int range = MAX_ANIMATIONS_DATA_INDEX_COUNT / count;
-    static int lastGroup[count];
     std::vector<std::thread> jobs;
+    UopFileMap files[count] = {};
     for (int i = 0; i < count; i++)
     {
         int start = range * i;
         int end = range * (i + 1);
         TRACE(Data, "scheduling job for %d with range from %d to %d", i + 1, start, end);
-        auto job = [i, start, end]() { lastGroup[i] = UopSetAnimationGroups(start, end); };
+        auto file_map = &files[i];
+        file_map->reserve(0x10000);
+        auto job = [&file_map, start, end]() { UopSetAnimationGroups(start, end, file_map); };
         jobs.push_back(std::thread(job));
     }
     for (auto &job : jobs)
@@ -665,12 +690,11 @@ void CFileManager::AnimSequenceReadTask()
         job.join();
     }
 
-    const int maxGroup = *std::max_element(lastGroup, lastGroup + count);
-    if (s_AnimGroupCount < maxGroup)
+    for (auto file : files)
     {
-        s_AnimGroupCount = maxGroup;
+        // FIXME: check dupes?
+        g_Index.m_AnimationGroupFile.insert(file.begin(), file.end());
     }
-
     SetEvent();
 }
 
@@ -1269,10 +1293,10 @@ std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
 {
     auto header = UopReadAnimationHeader();
     std::vector<UopAnimationFrame> data;
-    data.resize(header.FrameCount);
+    data.reserve(header.FrameCount);
     for (uint32_t i = 0; i < header.FrameCount; i++)
     {
-        data.emplace(data.begin() + i, UopReadAnimationFrame());
+        data.emplace_back(UopReadAnimationFrame());
     }
     return data;
 }
@@ -1280,22 +1304,22 @@ std::vector<UopAnimationFrame> CFileManager::UopReadAnimationFramesData()
 void CFileManager::UopReadAnimationFrameInfo(
     AnimationFrameInfo &result,
     AnimationDirection &direction,
-    const UopFileEntry &block,
+    const UopFileEntry *block,
     bool isCorpse)
 {
-    if (block.Hash == 0)
+    if (block == nullptr || block->Hash == 0)
     {
         return;
     }
 
     std::vector<uint8_t> scratchBuffer;
-    scratchBuffer.reserve(block.DecompressedSize);
+    scratchBuffer.reserve(block->DecompressedSize);
     if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
     {
         return;
     }
     // FIXME: CFileManager SHOULD not be a DataReader! In fact, no class need to be. Clean up!
-    SetData(scratchBuffer.data(), block.DecompressedSize);
+    SetData(scratchBuffer.data(), block->DecompressedSize);
     const auto _header = UopReadAnimationHeader();
     (void)_header;
     auto frame = UopReadAnimationFrame(); // read only first frame to get image dimensions
@@ -1305,22 +1329,23 @@ void CFileManager::UopReadAnimationFrameInfo(
     Move(sizeof(AnimationFrameInfo));
 }
 
-bool CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
+inline bool
+CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
-    auto &block = *g_Index.m_Anim[anim.Graphic].Groups[anim.Group].AnimData;
-    std::vector<uint8_t> scratchBuffer;
-    if (block.Hash == 0)
+    const auto block = uo_animation_group_get(anim);
+    if (block == nullptr || block->Hash == 0)
     {
         return false;
     }
 
+    std::vector<uint8_t> scratchBuffer;
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
-    scratchBuffer.reserve(block.DecompressedSize);
+    scratchBuffer.reserve(block->DecompressedSize);
     if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
     {
         return false;
     }
-    SetData(scratchBuffer.data(), block.DecompressedSize);
+    SetData(scratchBuffer.data(), block->DecompressedSize);
 
     const auto framesData = UopReadAnimationFramesData();
     const int frameCount = checked_cast<uint8_t>(framesData.size() / 5);
@@ -1378,10 +1403,10 @@ void CFileManager::MulReadAnimationFrameInfo(
     }
 }
 
-bool CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
+inline bool
+CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
-    auto &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
-    auto &direction = group.Direction[anim.Direction];
+    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     auto ptr = (uint8_t *)direction.Address;
     if (!direction.IsVerdata)
     {
@@ -1482,35 +1507,34 @@ void CFileManager::LoadAnimationFrame(
 }
 
 void CFileManager::LoadAnimationFrameInfo(
-    AnimationFrameInfo &result,
-    AnimationDirection &direction,
-    AnimationGroup &group,
-    uint8_t frameIndex,
-    bool isCorpse)
+    AnimationFrameInfo &result, const AnimationState &anim, uint8_t frameIndex, bool isCorpse)
 {
+    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[0];
     if (direction.Address != 0)
     {
         MulReadAnimationFrameInfo(result, direction, frameIndex, isCorpse);
     }
-    else if (direction.IsUOP)
+    else
     {
-        UopReadAnimationFrameInfo(result, direction, *group.AnimData, isCorpse);
+        auto file = uo_animation_group_get(anim);
+        UopReadAnimationFrameInfo(result, direction, file, isCorpse);
     }
 }
 
 bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
-    auto &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
-    auto &direction = group.Direction[anim.Direction];
+    auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
+    bool res = false;
     if (direction.Address != 0)
     {
-        return MulReadAnimationFrames(anim, pLoadFunc);
+        res = MulReadAnimationFrames(anim, pLoadFunc);
     }
-    else if (direction.IsUOP)
+    else
     {
-        return UopReadAnimationFrames(anim, pLoadFunc);
+        res = UopReadAnimationFrames(anim, pLoadFunc);
     }
-    return false;
+
+    return res;
 }
 
 ANIMATION_GROUPS_TYPE uo_type_by_graphic(uint16_t graphic)
@@ -2276,7 +2300,6 @@ void CFileManager::LoadAnimations()
 {
     memset(m_AddressIdx, 0, sizeof(m_AddressIdx));
     memset(m_SizeIdx, 0, sizeof(m_SizeIdx));
-
     for (int i = 0; i < countof(m_AnimIdx); i++)
     {
         m_AddressIdx[i] = (size_t)m_AnimIdx[i].Start;
@@ -2291,7 +2314,6 @@ void CFileManager::LoadSkills()
         return;
 
     m_Skills.clear();
-
     auto &idx = m_SkillsIdx;
     auto &mul = m_SkillsMul;
     while (!idx.IsEOF())

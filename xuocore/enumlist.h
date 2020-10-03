@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 
-
 enum : int32_t
 {
     MAX_MOBILE_DIRECTIONS = 5,

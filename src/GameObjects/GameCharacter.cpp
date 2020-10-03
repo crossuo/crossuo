@@ -730,6 +730,11 @@ static void CalculateHigh(
     }
 }
 
+inline static bool HasBodyConversion(const IndexAnimation &data)
+{
+    return (data.GraphicConversion & 0x8000) == 0;
+}
+
 #endif // #if USE_NEW_ANIM_CODE
 
 uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
@@ -747,13 +752,12 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
     }
 
     const auto &animData = g_Index.m_Anim[graphic];
-    //ANIMATION_GROUPS_TYPE originalType = AGT_UNKNOWN;
+    ANIMATION_GROUPS_TYPE originalType = AGT_UNKNOWN;
     ANIMATION_GROUPS_TYPE type = animData.Type;
     const bool uop = animData.IsUOP && (isParent || !animData.IsValidMUL);
-    /*
     if (!uop)
     {
-        if (!animData.HasBodyConversion)
+        if (!HasBodyConversion(animData))
         {
             const auto newGraphic = animData.Graphic;
             if (graphic != newGraphic)
@@ -768,17 +772,14 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
             }
         }
     }
-    */
 
-    const ANIMATION_FLAGS flags = AF_NONE;
+    const ANIMATION_FLAGS flags = animData.Flags;
     if (AnimationFromServer && AnimationGroup != AG_INVALID)
     {
         return g_AnimationManager.CorrectAnimationGroupServer(type, flags, AnimationGroup);
     }
 
-    //const ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(graphic);
     uint8_t result = AnimationGroup;
-
     bool isWalking = Walking();
     bool isRun = (Direction & 0x80) != 0;
     if (!m_Steps.empty())

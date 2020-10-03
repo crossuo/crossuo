@@ -330,10 +330,13 @@ static std::unordered_map<uint32_t, uint32_t> s_AnimationLifetime;
 AnimationDirFrames *CAnimationManager::ExecuteAnimation(AnimationState anim, uint32_t ticks)
 {
     Anim = anim;
-    const auto animation = uo_animation_get(anim);
+    auto animation = uo_animation_get(anim);
     if (animation == nullptr)
     {
-        g_FileManager.LoadAnimation(Anim, LoadSpritePixels);
+        if (g_FileManager.LoadAnimation(Anim, LoadSpritePixels))
+        {
+            animation = uo_animation_get(anim);
+        }
     }
     s_AnimationLifetime[AnimId(anim)] = ticks;
     return animation;
@@ -461,7 +464,6 @@ void CAnimationManager::Draw(
     uint16_t convColor)
 {
     ScopedPerfMarker(__FUNCTION__);
-
     if (obj == nullptr)
     {
         return;
@@ -472,11 +474,7 @@ void CAnimationManager::Draw(
         graphic = obj->GetGraphicForAnimation();
     }
 
-    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        return;
-    }
-
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     const auto anim = ExecuteAnimation({ graphic, Anim.Group, Anim.Direction }, g_Ticks);
     if (!anim)
     {
@@ -1113,7 +1111,6 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 
         uint16_t mountID = goi->GetGraphicForAnimation();
         int mountedHeightOffset = 0;
-
         if (mountID < MAX_ANIMATIONS_DATA_INDEX_COUNT)
         {
             mountedHeightOffset = g_Index.m_Anim[mountID].MountedHeightOffset;
@@ -1535,9 +1532,7 @@ CAnimationManager::GetAnimationDimensions(uint8_t frameIndex, AnimationState ani
         }
     }
 
-    auto &group = g_Index.m_Anim[anim.Graphic].Groups[anim.Group];
-    auto &direction = group.Direction[0];
-    g_FileManager.LoadAnimationFrameInfo(result, direction, group, frameIndex, isCorpse);
+    g_FileManager.LoadAnimationFrameInfo(result, anim, frameIndex, isCorpse);
     s_DimensionsCache[animId] = result;
     return result;
 }
