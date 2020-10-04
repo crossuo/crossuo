@@ -756,7 +756,7 @@
 #cmakedefine HAVE_PROCESS_H 1
 
 /* if you have the zlib.h header file */
-#cmakedefine HAVE_ZLIB_H 1
+#cmakedefine HAVE_ZLIB_H 0
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
