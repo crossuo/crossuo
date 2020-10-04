@@ -15,7 +15,6 @@
 #include <common/checksum.h>
 
 #include <xuocore/uodata.h>
-#include <openssl/sha.h>
 
 static po::parser s_cli;
 static bool s_manifest = true; // s_cli["manifest"]
