@@ -121,7 +121,7 @@ unsigned int cbase64_encode_block(const unsigned char* data_in, unsigned int len
             {
                 state_in->step = step_A;
                 state_in->result = result;
-                return codechar - code_out;
+                return (unsigned int)(codechar - code_out);
             }
             fragment = *datachar++;
             result = (fragment & 0x0fc) >> 2;
@@ -132,7 +132,7 @@ unsigned int cbase64_encode_block(const unsigned char* data_in, unsigned int len
             {
                 state_in->step = step_B;
                 state_in->result = result;
-                return codechar - code_out;
+                return (unsigned int)(codechar - code_out);
             }
             fragment = *datachar++;
             result |= (fragment & 0x0f0) >> 4;
@@ -143,7 +143,7 @@ unsigned int cbase64_encode_block(const unsigned char* data_in, unsigned int len
             {
                 state_in->step = step_C;
                 state_in->result = result;
-                return codechar - code_out;
+                return (unsigned int)(codechar - code_out);
             }
             fragment = *datachar++;
             result |= (fragment & 0x0c0) >> 6;
@@ -154,7 +154,7 @@ unsigned int cbase64_encode_block(const unsigned char* data_in, unsigned int len
         }
     }
     // control should not reach here
-    return codechar - code_out;
+    return (unsigned int)(codechar - code_out);
 }
 
 unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
@@ -165,7 +165,7 @@ unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
     unsigned char* datachar = data_out;
     char fragment;
     char overwrite = state_in->result;
-    
+
     switch (state_in->step)
     {
         for (;;)
@@ -176,7 +176,7 @@ unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
                 {
                     state_in->step = step_A;
                     state_in->result = overwrite;
-                    return datachar - data_out;
+                    return (unsigned int)(datachar - data_out);
                 }
                 fragment = cbase64__decode_value(*codechar++);
             } while (fragment < 0);
@@ -187,7 +187,7 @@ unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
                 {
                     state_in->step = step_B;
                     state_in->result = overwrite;
-                    return datachar - data_out;
+                    return (unsigned int)(datachar - data_out);
                 }
                 fragment = cbase64__decode_value(*codechar++);
             } while (fragment < 0);
@@ -199,7 +199,7 @@ unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
                 {
                     state_in->step = step_C;
                     state_in->result = overwrite;
-                    return datachar - data_out;
+                    return (unsigned int)(datachar - data_out);
                 }
                 fragment = cbase64__decode_value(*codechar++);
             } while (fragment < 0);
@@ -211,7 +211,7 @@ unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
                 {
                     state_in->step = step_D;
                     state_in->result = overwrite;
-                    return datachar - data_out;
+                    return (unsigned int)(datachar - data_out);
                 }
                 fragment = cbase64__decode_value(*codechar++);
             } while (fragment < 0);
@@ -219,7 +219,7 @@ unsigned int cbase64_decode_block(const char* code_in, unsigned int length_in,
         }
     }
     // control should not reach here
-    return datachar - data_out;
+    return (unsigned int)(datachar - data_out);
 }
 
 unsigned int cbase64_encode_blockend(char* code_out, cbase64_encodestate* state_in)
@@ -240,7 +240,7 @@ unsigned int cbase64_encode_blockend(char* code_out, cbase64_encodestate* state_
     case step_D:
         break;
     }
-    return codechar - code_out;
+    return (unsigned int)(codechar - code_out);
 }
 
 #endif // CBASE64_IMPLEMENTATION

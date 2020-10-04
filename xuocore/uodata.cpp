@@ -800,7 +800,7 @@ void CFileManager::LoadStringDictionary()
             reader.Move(sizeof(UopDictionary));
 
             assert(header->Count - 1 < MAX_STRINGS);
-            for (int i = 0; i < header->Count - 1 && i < MAX_STRINGS; ++i)
+            for (int i = 0; i < int(header->Count - 1) && i < MAX_STRINGS; ++i)
             {
                 const auto len = reader.ReadInt16LE();
                 *(reader.Ptr - 2) = '\0';
@@ -882,7 +882,7 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
         fprintf(fp, "MypHeader for %s\n", uopFilename);
         fprintf(fp, "\tVersion......: %d\n", file.Header->Version);
         fprintf(fp, "\tSignature....: %08X\n", file.Header->Signature);
-        fprintf(fp, "\tSectionOffset: %016lx\n", file.Header->SectionOffset);
+        fprintf(fp, "\tSectionOffset: %016" PRIx64 "\n", file.Header->SectionOffset);
         fprintf(fp, "\tFileCapacity.: %d\n", file.Header->FileCapacity);
         fprintf(fp, "\tFileCount....: %d (Real: %zu)\n", file.Header->FileCount, file.FileCount());
         fprintf(fp, "\tSectionCount.: %08x\n", file.Header->SectionCount);
@@ -899,14 +899,14 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
             const auto block = file.m_MapByHash[it];
 
             auto meta = (UopFileMetadata *)(file.Start + block->Offset);
-            fprintf(fp, "\t\tBlock Header %08X_%016lX:\n", block->Checksum, block->Hash);
-            fprintf(fp, "\t\t\tOffset..........: %016lx\n", block->Offset);
+            fprintf(fp, "\t\tBlock Header %08X_%016" PRIX64 ":\n", block->Checksum, block->Hash);
+            fprintf(fp, "\t\t\tOffset..........: %016" PRIx64 "\n", block->Offset);
             fprintf(fp, "\t\t\tMetadataSize....: %d\n", block->MetadataSize);
             fprintf(fp, "\t\t\tCompressedSize..: %d\n", block->CompressedSize);
             fprintf(fp, "\t\t\tDecompressedSize: %d\n", block->DecompressedSize);
             fprintf(
                 fp,
-                "\t\t\tHash............: %016lx (%08x%08x)\n",
+                "\t\t\tHash............: %016" PRIx64 " (%08x%08x)\n",
                 block->Hash,
                 UOP_HASH_SH(block->Hash),
                 UOP_HASH_PH(block->Hash));

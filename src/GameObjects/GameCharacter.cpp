@@ -646,7 +646,7 @@ bool CGameCharacter::TestStepNoChangeDirection(uint8_t group)
 #if USE_NEW_ANIM_CODE
 
 static void CalculateHigh(
-    ushort graphic,
+    uint16_t graphic,
     CGameCharacter *mobile,
     ANIMATION_FLAGS flags,
     bool isrun,
