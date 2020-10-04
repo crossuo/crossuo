@@ -21,8 +21,8 @@ static bool s_manifest = true; // s_cli["manifest"]
 
 static std::vector<uint8_t> compress_data(std::vector<uint8_t> data)
 {
-    const auto srcLen = data.size();
-    auto dstLen = srcLen;
+    const uLong srcLen = (uLong)data.size();
+    uLongf dstLen = (uLongf)srcLen;
     std::vector<uint8_t> dst;
     dst.resize(dstLen);
     auto src = reinterpret_cast<unsigned char const *>(data.data());
@@ -41,9 +41,9 @@ size_t compress_file(const fs_path &infile, const fs_path &outfile, size_t *ul)
 {
     size_t data_len = 0;
     auto data = fs_map(infile, &data_len);
-    auto out_len = data_len;
+    uLongf out_len = (uLongf)data_len;
     auto out = (unsigned char *)malloc(out_len);
-    int z_err = compress(out, &out_len, data, data_len);
+    int z_err = compress(out, &out_len, data, (uLong)data_len);
     fs_unmap(data, data_len);
     assert(z_err == Z_OK);
     auto zfp = fs_open(outfile, fs_mode::FS_WRITE);
@@ -337,8 +337,8 @@ void uop_unpack_file(CUopMappedFile &file, astr_t filename)
             UOP_HASH_SH(asset->Hash),
             UOP_HASH_PH(asset->Hash),
             asset->DecompressedSize,
-            data.size(),
-            meta.size(),
+            int(data.size()),
+            int(meta.size()),
             meta_crc,
             0,
             data_crc);
@@ -443,7 +443,7 @@ void test_base64()
     {
         cbase64_decodestate b64;
         cbase64_init_decodestate(&b64);
-        s = cbase64_decode_block(data, strlen(data), out, &b64);
+        s = cbase64_decode_block(data, (int)strlen(data), out, &b64);
         for (int i = 0; i < s; i++)
         {
             fprintf(stdout, "%02x ", out[i]);

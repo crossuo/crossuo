@@ -144,7 +144,7 @@ bool uoi_load_contents()
             fclose(fp);
         }
 
-        received_files = prod.files.size() + prod.parts.size() - failures.size();
+        received_files = static_cast<int>(prod.files.size() + prod.parts.size() - failures.size());
     } while (0);
 
     mft_cleanup(prod);
@@ -159,8 +159,8 @@ bool uoi_load_contents()
     }
 
     const int MB = 1024 * 1024;
-    const int rx = received_size / MB;
-    const int total = expect_size / MB;
+    const int rx = static_cast<int>(received_size / MB);
+    const int total = static_cast<int>(expect_size / MB);
     LOG_INFO("Files %u/%u (%u MiB /%u MiB)", received_files, expect_files, rx, total);
 
     return res == mft_ok;
