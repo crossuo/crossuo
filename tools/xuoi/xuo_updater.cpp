@@ -231,7 +231,10 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     if (!fs_path_exists(ipath))
     {
         if (!http_get_file(upath, lpath))
+        {
+            LOG_ERROR("could not write file: %s", lpath);
             return xuo_could_not_write_file;
+        }
     }
 
     auto icrc = xuo_get_hash(ipath);
@@ -239,6 +242,7 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     {
         if (fs_path_is_file(ipath))
             fs_del(ipath);
+        LOG_ERROR("checksum validation failed: %s", fs_path_ascii(ipath));
         return xuo_checksum_failed;
     }
 
@@ -246,20 +250,30 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     memset(&zip, 0, sizeof(zip));
     mz_bool status = mz_zip_reader_init_file(&zip, lpath, 0);
     if (!status)
+    {
+        LOG_ERROR("could not open zip file: %s", lpath);
         return xuo_could_not_deflate_file;
+    }
 
     if (mz_zip_reader_get_num_files(&zip) != 1)
+    {
+        LOG_ERROR("error reading zip file: %s", lpath);
         return xuo_could_not_deflate_file;
+    }
 
     status = mz_zip_reader_extract_to_file(&zip, 0, fs_path_ascii(opath), 0);
     mz_zip_reader_end(&zip);
     if (!status)
+    {
+        LOG_ERROR("cold not uncompress zip file '%s' as '%s'", lpath, fs_path_ascii(opath));
         return xuo_could_not_deflate_file;
+    }
 
     auto ocrc = xuo_get_hash(opath);
     if (ocrc != file.hash)
     {
         fs_del(opath);
+        LOG_ERROR("uncompressed file checksum error: %s", fs_path_ascii(opath));
         return xuo_checksum_failed;
     }
 
