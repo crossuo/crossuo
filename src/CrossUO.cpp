@@ -510,8 +510,6 @@ bool CGame::Install()
     Info(Client, "initializing screen");
     InitScreen(GS_MAIN);
 
-    g_FileManager.Finalize();
-
     Info(Client, "initialization completed");
     return true;
 }

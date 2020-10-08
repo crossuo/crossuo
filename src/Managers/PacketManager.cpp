@@ -2344,7 +2344,8 @@ PACKET_HANDLER(EnableLockedFeatures)
     }
 
     g_ChatEnabled = bool(g_LockedClientFeatures & LFF_T2A);
-    g_AnimationManager.UpdateAnimationTable();
+    // update from server g_LockedClientFeatures?
+    uo_update_animation_tables(g_Config.ClientFlag);
 }
 
 PACKET_HANDLER(OpenContainer)

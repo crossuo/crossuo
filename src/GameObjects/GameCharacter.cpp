@@ -570,7 +570,7 @@ void CGameCharacter::CorrectAnimationGroup(
                 break;
         }
 
-        if (!g_AnimationManager.AnimationExists(graphic, animation))
+        if (!uo_animation_exists(graphic, animation))
         {
             animation = LAG_STAND;
         }
@@ -605,7 +605,7 @@ void CGameCharacter::CorrectAnimationGroup(
                 break;
         }
 
-        if (!g_AnimationManager.AnimationExists(graphic, animation))
+        if (!uo_animation_exists(graphic, animation))
         {
             animation = HAG_STAND;
         }
@@ -688,7 +688,7 @@ static void CalculateHigh(
         {
             if (result == AG_INVALID)
             {
-                if ((flags & AF_IDLE_AT_8_FRAME) && g_AnimationManager.AnimationExists(graphic, 8))
+                if ((flags & AF_IDLE_AT_8_FRAME) && uo_animation_exists(graphic, 8))
                 {
                     result = 8;
                 }
@@ -707,7 +707,7 @@ static void CalculateHigh(
         }
         else if (isrun)
         {
-            if ((flags & AF_CAN_FLYING) && g_AnimationManager.AnimationExists(graphic, 19))
+            if ((flags & AF_CAN_FLYING) && uo_animation_exists(graphic, 19))
             {
                 result = 19;
             }
@@ -739,18 +739,13 @@ inline static bool HasBodyConversion(const IndexAnimation &data)
 
 uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
 {
-    //uint16_t graphic = checkGraphic;
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     if (graphic == 0)
     {
         graphic = GetGraphicForAnimation();
     }
 
 #if USE_NEW_ANIM_CODE
-    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        return 0;
-    }
-
     const auto &animData = g_Index.m_Anim[graphic];
     ANIMATION_GROUPS_TYPE originalType = AGT_UNKNOWN;
     ANIMATION_GROUPS_TYPE type = animData.Type;
@@ -776,7 +771,8 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
     const ANIMATION_FLAGS flags = animData.Flags;
     if (AnimationFromServer && AnimationGroup != AG_INVALID)
     {
-        return g_AnimationManager.CorrectAnimationGroupServer(type, flags, AnimationGroup);
+        // FIXME: debug - combat animations seems broken
+        //return g_AnimationManager.CorrectAnimationGroupServer(type, flags, AnimationGroup);
     }
 
     uint8_t result = AnimationGroup;
@@ -804,7 +800,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                     {
                         if (flags & AF_USE_UOP_ANIMATION)
                         {
-                            if (InWarMode() && g_AnimationManager.AnimationExists(graphic, 1))
+                            if (InWarMode() && uo_animation_exists(graphic, 1))
                             {
                                 result = 1;
                             }
@@ -827,12 +823,12 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                     }
                     else
                     {
-                        result = g_AnimationManager.AnimationExists(graphic, 1) ? 1 : 2;
+                        result = uo_animation_exists(graphic, 1) ? 1 : 2;
                     }
                 }
                 else if (
                     (flags & AF_USE_UOP_ANIMATION) != 0 &&
-                    (!InWarMode() || !g_AnimationManager.AnimationExists(graphic, 0)))
+                    (!InWarMode() || !uo_animation_exists(graphic, 0)))
                 {
                     result = 22;
                 }
@@ -893,8 +889,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                         }
                         else
                         {
-                            if (uop && type == AGT_EQUIPMENT &&
-                                !g_AnimationManager.AnimationExists(graphic, 4))
+                            if (uop && type == AGT_EQUIPMENT && !uo_animation_exists(graphic, 4))
                             {
                                 result = 37;
                             }
@@ -926,7 +921,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                             if (hand2 != nullptr)
                             {
                                 if (uop && type == AGT_EQUIPMENT &&
-                                    !g_AnimationManager.AnimationExists(graphic, 7))
+                                    !uo_animation_exists(graphic, 7))
                                 {
                                     result = 8;
                                 }
@@ -986,7 +981,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                     }
                     else
                     {
-                        if (isRun && g_AnimationManager.AnimationExists(graphic, 24))
+                        if (isRun && uo_animation_exists(graphic, 24))
                         {
                             result = 24;
                         }
@@ -995,7 +990,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                             if (isRun)
                             {
                                 if (uop && type == AGT_EQUIPMENT &&
-                                    !g_AnimationManager.AnimationExists(graphic, 2))
+                                    !uo_animation_exists(graphic, 2))
                                 {
                                     result = 3;
                                 }
@@ -1011,7 +1006,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                             else
                             {
                                 if (uop && type == AGT_EQUIPMENT &&
-                                    !g_AnimationManager.AnimationExists(graphic, 0))
+                                    !uo_animation_exists(graphic, 0))
                                 {
                                     result = 1;
                                 }
@@ -1081,7 +1076,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
         (!AnimationFromServer || graphic != 0))
     {
         GetAnimationGroup(groupIndex, result);
-        if (!g_AnimationManager.AnimationExists(graphic, result))
+        if (!uo_animation_exists(graphic, result))
         {
             CorrectAnimationGroup(graphic, groupIndex, result);
         }
@@ -1122,7 +1117,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
 
             if (isRun)
             {
-                if (g_AnimationManager.AnimationExists(graphic, HAG_FLY))
+                if (uo_animation_exists(graphic, HAG_FLY))
                 {
                     result = (uint8_t)HAG_FLY;
                 }
@@ -1166,7 +1161,7 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
                     result = (uint8_t)PAG_RUN_UNARMED;
                 }
 
-                if (!IsHuman() && !g_AnimationManager.AnimationExists(graphic, result))
+                if (!IsHuman() && !uo_animation_exists(graphic, result))
                 {
                     goto test_walk;
                 }
@@ -1335,6 +1330,7 @@ uint16_t CGameCharacter::GetGraphicForAnimation()
             break;
     }
 
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     return graphic;
 }
 

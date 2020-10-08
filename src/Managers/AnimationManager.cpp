@@ -21,6 +21,7 @@
 #include "../GameObjects/GameCharacter.h"
 #include "../Renderer/RenderAPI.h"
 #include "../Utility/PerfMarker.h"
+#include "../Managers/FontsManager.h"
 
 CAnimationManager g_AnimationManager;
 
@@ -50,7 +51,7 @@ void CalculateFrameInformation(
 {
     const auto dir = g_AnimationManager.Anim.Direction;
     const auto grp = g_AnimationManager.Anim.Group;
-    const AnimationState anim = { obj->GetGraphicForAnimation(), dir, grp };
+    const AnimationState anim = { obj->GetGraphicForAnimation(), grp, dir };
     const auto dim = g_AnimationManager.GetAnimationDimensions(
         obj->AnimIndex, anim, obj->IsMounted(), obj->IsCorpse());
     int y = -(dim.Height + dim.CenterY + 3);
@@ -143,42 +144,6 @@ CAnimationManager::~CAnimationManager()
     ClearUnusedAnimations();
 }
 
-void CAnimationManager::UpdateAnimationTable()
-{
-    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
-    {
-        auto &data = g_Index.m_Anim[i];
-        for (int g = 0; g < MAX_ANIMATION_GROUPS_COUNT; g++)
-        {
-            auto &group = data.Groups[g];
-            for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-            {
-                auto &direction = group.Direction[d];
-                bool replace = (direction.FileIndex >= 4);
-                if (direction.FileIndex == 2)
-                {
-                    replace = g_Config.ClientFlag & LFF_LBR;
-                }
-                else if (direction.FileIndex == 3)
-                {
-                    replace = g_Config.ClientFlag & LFF_AOS;
-                }
-                // GraphicConversion
-                if (replace)
-                {
-                    direction.Address = direction.PatchedAddress;
-                    direction.Size = direction.PatchedSize;
-                }
-                else
-                {
-                    direction.Address = direction.BaseAddress;
-                    direction.Size = direction.BaseSize;
-                }
-            }
-        }
-    }
-}
-
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
 {
     if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
@@ -206,7 +171,6 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
 
 uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running)
 {
-    DEBUG(Data, "gr: 0x%04X, %i", graphic, g_Index.m_Anim[graphic].Type);
     const auto flags = g_Index.m_Anim[graphic].Flags;
     switch (g_Index.m_Anim[graphic].Type)
     {
@@ -352,7 +316,6 @@ void CAnimationManager::ClearUnusedAnimations(uint32_t ticks)
         if (lastAccessTime < ticks || ticks == ~0)
         {
             const auto animId = it->first;
-            Info(Data, "Remove 0x%08x", animId);
             uo_animation_destroy(animId, DeleteSprite);
             it = s_AnimationLifetime.erase(it);
             if (++count >= MAX_ANIMATIONS_OBJECT_REMOVED_BY_GARBAGE_COLLECTOR)
@@ -1161,6 +1124,14 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
     Anim.Group = animGroup;
 
     Draw(obj, drawX, drawY, mirror, frameIndex); //Draw character
+    if (g_DeveloperMode == DM_DEBUGGING)
+    {
+        char buf[100] = { 0 };
+        sprintf(buf, "A:0x%04X G:%02d D:%02d", Anim.Graphic, Anim.Group, Anim.Direction);
+        const auto py = drawY - 72;
+        const auto px = drawX - 50;
+        g_FontManager.DrawA(3, buf, 0x35, px, py, 100, TS_CENTER);
+    }
 
     if (obj->IsHuman()) //Draw layered objects
     {
@@ -1482,15 +1453,6 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
 
     return TestPixels(obj, x, y, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, x, y, mirror, Anim.Direction, animIndex, 0);
-}
-
-bool CAnimationManager::AnimationExists(uint16_t graphic, uint8_t group)
-{
-    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT && group >= MAX_ANIMATION_GROUPS_COUNT)
-        return false;
-
-    const auto dir = g_Index.m_Anim[graphic].Groups[group].Direction[0];
-    return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
 }
 
 static std::unordered_map<AnimationId, AnimationFrameInfo> s_DimensionsCache;
@@ -2016,7 +1978,8 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 6:
                     return 12;
                 case 7:
-                    if (obj->IsGargoyle() && obj->IsFlying() && AnimationExists(obj->Graphic, 72))
+                    if (obj->IsGargoyle() && obj->IsFlying() &&
+                        uo_animation_exists(obj->Graphic, 72))
                     {
                         return 72;
                     }
@@ -2030,11 +1993,12 @@ CAnimationManager::GetObjectNewAnimationType_0(CGameCharacter *obj, uint16_t act
                 case 5:
                     return 10;
                 default:
-                    if (obj->IsGargoyle() && obj->IsFlying() && AnimationExists(obj->Graphic, 71))
+                    if (obj->IsGargoyle() && obj->IsFlying() &&
+                        uo_animation_exists(obj->Graphic, 71))
                     {
                         return 71;
                     }
-                    else if (AnimationExists(obj->Graphic, 31))
+                    else if (uo_animation_exists(obj->Graphic, 31))
                     {
                         return 31;
                     }
@@ -2132,7 +2096,7 @@ CAnimationManager::GetObjectNewAnimationType_4(CGameCharacter *obj, uint16_t act
     {
         if (type > AGT_ANIMAL)
         {
-            if (obj->IsGargoyle() && obj->IsFlying() && AnimationExists(obj->Graphic, 77))
+            if (obj->IsGargoyle() && obj->IsFlying() && uo_animation_exists(obj->Graphic, 77))
             {
                 return 77;
             }

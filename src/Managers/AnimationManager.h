@@ -101,7 +101,6 @@ public:
     ~CAnimationManager();
 
     void InitIndexReplaces(uint32_t *verdata);
-    void UpdateAnimationTable();
     void Load(uint32_t *verdata);
     void GetAnimDirection(uint8_t &dir, bool &mirror);
     void GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y);
@@ -111,7 +110,6 @@ public:
     bool CorpsePixelsInXY(class CGameItem *obj, int x, int y);
     uint8_t GetDieGroupIndex(uint16_t graphic, bool running);
     ANIMATION_GROUPS GetGroupIndex(uint16_t graphic) const;
-    bool AnimationExists(uint16_t graphic, uint8_t group);
     uint8_t CorrectAnimationGroupServer(
         ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const;
 

@@ -22,6 +22,8 @@
 #include <common/fs.h>
 #include <common/checksum.h>
 
+// FIXME: Animation data: group and direction are protected and can be refactored
+
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)
 
 astr_t g_dumpUopFile;
@@ -34,29 +36,6 @@ MapSize g_MapSize[MAX_MAPS_COUNT] = {
     { 7168, 4096 }, { 7168, 4096 }, { 2304, 1600 }, { 2560, 2048 }, { 1448, 1448 }, { 1280, 4096 },
 };
 MapSize g_MapBlockSize[MAX_MAPS_COUNT];
-
-static bool s_flag = false;
-static std::mutex s_protect;
-static std::condition_variable s_signal;
-
-static void SetEvent()
-{
-    std::lock_guard<std::mutex> _(s_protect);
-    s_flag = true;
-    s_signal.notify_one();
-}
-
-static bool WaitEvent()
-{
-    std::unique_lock<std::mutex> lk(s_protect);
-    // prevent spurious wakeups from doing harm
-    while (!s_flag)
-    {
-        s_signal.wait(lk);
-    }
-    s_flag = false; // waiting resets the flag
-    return true;
-}
 
 static uint32_t s_ClientVersion = 0;
 static bool s_UseVerdata = false;
@@ -318,18 +297,13 @@ bool CFileManager::Load()
     IndexReplaces();
 
     LoadAnimations();
-    return r;
-}
 
-void CFileManager::Finalize()
-{
     if (s_ClientVersion >= CV_7000)
     {
-        Info(Data, "waiting for file manager to try & load AnimationFrame files");
-        WaitTasks();
-        Info(Data, "FileManager.UopReadAnimations() done");
+        g_FileManager.ProcessAnimSequeceData();
     }
-    g_FileManager.ProcessAnimSequeceData();
+
+    return r;
 }
 
 bool CFileManager::LoadCommon()
@@ -576,17 +550,7 @@ void CFileManager::Unload()
     m_Skills.clear();
 }
 
-void CFileManager::UopReadAnimations()
-{
-    TRACE(Data, "start uop read jobs");
-    // pattern: "build/animationsequence/%08d.bin"
-    UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
-    std::thread readThread(&CFileManager::AnimSequenceReadTask, this);
-    readThread.detach();
-}
-
-// TODO: optimize finding the file index for specific hash
-const UopFileEntry *UopGetAnimationAsset(uint64_t hash, int &fileIndex)
+static const UopFileEntry *UopGetAnimationAsset(uint64_t hash, int &fileIndex)
 {
     const static int count = countof(CFileManager::m_AnimationFrame);
     auto getAssetOwner = [](uint64_t hash) -> int {
@@ -605,12 +569,24 @@ const UopFileEntry *UopGetAnimationAsset(uint64_t hash, int &fileIndex)
     return g_FileManager.m_AnimationFrame[fileIndex].GetAsset(hash);
 }
 
-static void UopSetAnimationGroups(int start, int end, UopFileMap *files)
+void CFileManager::UopReadAnimations()
 {
-    TRACE(Data, "running job %d:%d", start, end);
+    // pattern: "build/animationsequence/%08d.bin"
+    UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
+    const static int count = countof(m_AnimationFrame);
+    for (int i = 0; i < count; i++)
+    {
+        char name[64];
+        // pattern: "build/animationlegacyframe/%06d/%02d.bin"
+        snprintf(name, sizeof(name), "AnimationFrame%d.uop", i + 1);
+        auto &file = m_AnimationFrame[i];
+        UopLoadFile(file, name);
+    }
+
     char filename[200];
     const char *pattern = "build/animationlegacyframe/%06d/%02d.bin";
-    for (int animId = start; animId < end; ++animId)
+    g_Index.m_AnimationGroupFile.reserve(16 * 1024);
+    for (int animId = 0; animId < MAX_ANIMATIONS_DATA_INDEX_COUNT; animId++)
     {
         auto &idx = g_Index.m_Anim[animId];
         for (int grpId = 0; grpId < MAX_ANIMATION_GROUPS_COUNT; ++grpId)
@@ -622,25 +598,8 @@ static void UopSetAnimationGroups(int start, int end, UopFileMap *files)
             const auto data = UopGetAnimationAsset(asset, fileIndex);
             if (data != nullptr)
             {
-                files->emplace(GroupId(animId, grpId), data);
-                if (animId == 1408 && grpId == 25)
-                {
-                    animId = 1408;
-                }
+                g_Index.m_AnimationGroupFile.emplace(GroupId(animId, grpId), data);
                 idx.IsUOP = true;
-                const bool debug = animId == 1408;
-                const auto off = data->Offset;
-                const auto cs = data->CompressedSize;
-                const auto ds = data->DecompressedSize;
-                if (debug)
-                    Info(
-                        Data,
-                        "Animation: %d Group: %02d Address: %zu (%d/%d)",
-                        animId,
-                        grpId,
-                        off,
-                        cs,
-                        ds);
                 for (int dirId = 0; dirId < 5; dirId++)
                 {
                     auto &dir = group.Direction[dirId];
@@ -654,50 +613,6 @@ static void UopSetAnimationGroups(int start, int end, UopFileMap *files)
     }
 }
 
-void CFileManager::WaitTasks() const
-{
-    WaitEvent();
-}
-
-void CFileManager::AnimSequenceReadTask()
-{
-    const static int count = countof(m_AnimationFrame);
-    for (int i = 0; i < count; i++)
-    {
-        char name[64];
-        // pattern: "build/animationlegacyframe/%06d/%02d.bin"
-        snprintf(name, sizeof(name), "AnimationFrame%d.uop", i + 1);
-
-        auto &file = m_AnimationFrame[i];
-        UopLoadFile(file, name);
-    }
-
-    int range = MAX_ANIMATIONS_DATA_INDEX_COUNT / count;
-    std::vector<std::thread> jobs;
-    UopFileMap files[count] = {};
-    for (int i = 0; i < count; i++)
-    {
-        int start = range * i;
-        int end = range * (i + 1);
-        TRACE(Data, "scheduling job for %d with range from %d to %d", i + 1, start, end);
-        auto file_map = &files[i];
-        file_map->reserve(0x10000);
-        auto job = [&file_map, start, end]() { UopSetAnimationGroups(start, end, file_map); };
-        jobs.push_back(std::thread(job));
-    }
-    for (auto &job : jobs)
-    {
-        job.join();
-    }
-
-    for (auto file : files)
-    {
-        // FIXME: check dupes?
-        g_Index.m_AnimationGroupFile.insert(file.begin(), file.end());
-    }
-    SetEvent();
-}
-
 // TODO: use map structure instead byte peeking
 // pattern: "build/animationsequence/%08d.bin"
 void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
@@ -709,45 +624,53 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
         const auto block = kvp.second;
         auto data = m_AnimationSequence.GetData(block);
         SetData(reinterpret_cast<uint8_t *>(&data[0]), data.size());
-        const uint32_t animId = ReadInt32LE(); // FIXME: uint16_t
-        Move(48);                              // there's nothing there
+        const auto entry = (UopAnimationSequence *)Ptr;
+        Move(sizeof(UopAnimationSequence));
+        assert(entry->Unk1 == 0 && entry->Unk2 == 0);
+        assert(entry->Unk3 == 0 && entry->Unk4 == 0);
+        assert(entry->Unk5 == 0 && entry->Unk6 == 0);
 
         // FIXME
         // amount of replaced indices, values seen in files so far: 29, 31, 32, 48, 68
         // human and gargoyle are complicated, skip for now
         // offset 52
-        const uint32_t replaces = ReadInt32LE();
-        if (replaces == 0x30 /*48*/ || replaces == 0x44 /*68*/)
+        if (entry->Replaces == 0x30 /*48*/ || entry->Replaces == 0x44 /*68*/)
         {
             // 0x30 0xc070396e5a7ec7f4 0x029A (666) // GENDER_MALE RT_GARGOYLE
             // 0x30 0xc6c811fa536c8b62 0x04E5 (1253) // ?
             // 0x44 0x6c1031f63255845a 0x0190 (400) // GENDER_MALE RT_HUMAN
             continue;
         }
-        assert(animId < MAX_ANIMATIONS_DATA_INDEX_COUNT);
-        auto anim = &g_Index.m_Anim[animId];
-        for (uint32_t i = 0; i < replaces; ++i)
+        assert(entry->Graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+        auto anim = &g_Index.m_Anim[entry->Graphic];
+        const bool canPatch = (anim->Flags & AF_USE_UOP_ANIMATION) != 0;
+        for (uint32_t replaceIdx = 0; replaceIdx < entry->Replaces; ++replaceIdx)
         {
-            const auto oldGroupIdx = ReadInt32LE();
-            const auto frameCount = ReadInt32LE();
-            const auto newGroupIdx = ReadInt32LE();
-            if (frameCount == 0)
+            const auto seq = (UopAnimationSequenceReplacement *)Ptr;
+            if (seq->FrameCount == 0)
             {
-                assert(newGroupIdx != oldGroupIdx);
-                assert(oldGroupIdx < MAX_ANIMATION_GROUPS_COUNT);
-                assert(newGroupIdx < MAX_ANIMATION_GROUPS_COUNT);
-                anim->Groups[oldGroupIdx] = anim->Groups[newGroupIdx];
-            }
-            /*else
-            {
-                for( int k = i; k < 5; ++k)
+                if (canPatch)
                 {
-                    //group.Direction[k].FrameCount = frameCount;
+                    assert(seq->NewGroup != seq->Group);
+                    assert(seq->Group < MAX_ANIMATION_GROUPS_COUNT);
+                    assert(seq->NewGroup < MAX_ANIMATION_GROUPS_COUNT);
+                    anim->Groups[seq->Group] = anim->Groups[seq->NewGroup];
+                    // update replaced file blocks with replacement entries
+                    auto file = uo_animation_group_get(GroupId(entry->Graphic, seq->NewGroup));
+                    g_Index.m_AnimationGroupFile.emplace(GroupId(entry->Graphic, seq->Group), file);
                 }
-            }*/
-            Move(60);
+            }
+            else
+            {
+                auto &group = anim->Groups[seq->Group];
+                for (int k = replaceIdx; k < 5; ++k)
+                {
+                    group.Direction[k].FrameCount = seq->FrameCount;
+                }
+            }
+            Move(sizeof(UopAnimationSequenceReplacement));
         }
-        switch (animId)
+        switch (entry->Graphic)
         {
             case 0x042D:
             case 0x04E6: // Tiger
@@ -2096,7 +2019,7 @@ static void load_bodydef()
             }
 
             auto &dataIndex = g_Index.m_Anim[graphic];
-            /*
+
             auto &newDataIndex = g_Index.m_Anim[newGraphic];
             int count = 0;
             int ignoreGroups[2] = { -1, -1 };
@@ -2164,7 +2087,7 @@ static void load_bodydef()
             }
             dataIndex.Type = newDataIndex.Type;
             dataIndex.Flags = newDataIndex.Flags;
-            */
+
             dataIndex.Graphic = newGraphic;
             dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
             dataIndex.IsValidMUL = true;
@@ -2203,7 +2126,7 @@ static void load_corpsedef()
             }
 
             IndexAnimation &dataIndex = g_Index.m_Anim[graphic];
-            /*
+
             IndexAnimation &newDataIndex = g_Index.m_Anim[newGraphic];
             int ignoreGroups[2] = { -1, -1 };
             switch (newDataIndex.Type)
@@ -2240,7 +2163,7 @@ static void load_corpsedef()
             for (int j = 0; j < 2; j++)
             {
                 AnimationGroup &group = dataIndex.Groups[ignoreGroups[j]];
-                AnimationGroup &newGroup = checkDataIndex.Groups[ignoreGroups[j]];
+                AnimationGroup &newGroup = newDataIndex.Groups[ignoreGroups[j]];
                 for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                 {
                     AnimationDirection &direction = group.Direction[d];
@@ -2268,7 +2191,7 @@ static void load_corpsedef()
 
             dataIndex.Type = newDataIndex.Type;
             dataIndex.Flags = newDataIndex.Flags;
-            */
+
             dataIndex.Graphic = newGraphic;
             dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
             dataIndex.IsValidMUL = true;
@@ -2857,6 +2780,50 @@ void CFileManager::IndexReplaces()
             if (size > 2)
             {
                 mp3.Loop = true;
+            }
+        }
+    }
+}
+
+bool uo_animation_exists(uint16_t graphic, uint8_t group)
+{
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT);
+    const auto dir = g_Index.m_Anim[graphic].Groups[group].Direction[0];
+    return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
+}
+
+void uo_update_animation_tables(uint32_t lockedFlags)
+{
+    for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
+    {
+        auto &data = g_Index.m_Anim[i];
+        for (int g = 0; g < MAX_ANIMATION_GROUPS_COUNT; g++)
+        {
+            auto &group = data.Groups[g];
+            for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
+            {
+                auto &direction = group.Direction[d];
+                bool replace = (direction.FileIndex >= 4);
+                if (direction.FileIndex == 2)
+                {
+                    replace = lockedFlags & LFF_LBR;
+                }
+                else if (direction.FileIndex == 3)
+                {
+                    replace = lockedFlags & LFF_AOS;
+                }
+                // GraphicConversion
+                // if (!HasBodyConversion(animData))
+                if (replace)
+                {
+                    direction.Address = direction.PatchedAddress;
+                    direction.Size = direction.PatchedSize;
+                }
+                else
+                {
+                    direction.Address = direction.BaseAddress;
+                    direction.Size = direction.BaseSize;
+                }
             }
         }
     }
