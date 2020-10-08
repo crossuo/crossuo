@@ -1435,9 +1435,8 @@ void CGameScreen::DrawGameWindow(bool render)
                             }
                         }
 
-                        OBJECT_HITS_INFO hitsInfo = { x,     y,           color,
-                                                      width, healthColor, &gc->m_HitsTexture };
-                        m_HitsStack.push_back(hitsInfo);
+                        m_HitsStack.push_back(
+                            { x, y, color, width, healthColor, &gc->m_HitsTexture });
                     }
                 }
             }
@@ -1621,9 +1620,7 @@ void CGameScreen::DrawGameWindowText(bool render)
         {
             if (g_ConfigManager.GetDrawStatusState() == DCSS_ABOVE)
             {
-                for (std::vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
-                     it != m_HitsStack.end();
-                     ++it)
+                for (auto it = m_HitsStack.begin(); it != m_HitsStack.end(); ++it)
                 {
                     CTextSprite *texture = it->HitsTexture;
                     texture->Draw(it->X, it->Y);
@@ -1634,9 +1631,7 @@ void CGameScreen::DrawGameWindowText(bool render)
                 g_ColorizerShader.Enable();
                 for (int i = 0; i < 2; i++)
                 {
-                    for (std::vector<OBJECT_HITS_INFO>::iterator it = m_HitsStack.begin();
-                         it != m_HitsStack.end();
-                         ++it)
+                    for (auto it = m_HitsStack.begin(); it != m_HitsStack.end(); ++it)
                     {
                         if (i == 0)
                         {

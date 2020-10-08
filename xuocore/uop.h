@@ -91,8 +91,27 @@ static_assert(sizeof(UopAnimationHeader) == 40, "Invalid UopAnimationFrame size"
 
 struct UopAnimationSequence
 {
-    uint16_t AnimId = 0;
+    uint16_t Graphic = 0;
+    uint16_t Unk0 = 0;
+    uint64_t Unk1 = 0;
+    uint64_t Unk2 = 0;
+    uint64_t Unk3 = 0;
+    uint64_t Unk4 = 0;
+    uint64_t Unk5 = 0;
+    uint64_t Unk6 = 0;
+    uint32_t Replaces = 0;
 };
+static_assert(sizeof(UopAnimationSequence) == 56, "Invalid UopAnimationSequence size");
+
+struct UopAnimationSequenceReplacement
+{
+    uint32_t Group = 0;
+    uint32_t FrameCount = 0;
+    uint32_t NewGroup = 0;
+    uint8_t Unk[60];
+};
+static_assert(
+    sizeof(UopAnimationSequenceReplacement) == 72, "Invalid UopAnimationSequenceReplacement size");
 
 // string_dictionary.uop
 struct UopDictionary

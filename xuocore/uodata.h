@@ -426,7 +426,6 @@ struct CFileManager : public CDataReader // FIXME: not needed
     std::vector<std::pair<uint16_t, uint8_t>> m_GroupReplaces[2]; // FIXME: map
 
     bool Load();
-    void Finalize();
     void Unload();
 
     std::vector<SkillData> m_Skills;
@@ -451,8 +450,6 @@ struct CFileManager : public CDataReader // FIXME: not needed
     CFileManager() = default;
     virtual ~CFileManager() = default;
 
-    void WaitTasks() const;
-
     bool UopLoadFile(CUopMappedFile &file, const char *fileName, bool dumpFile = false);
     bool MulLoadFile(CMappedFile &file, const fs_path &fileName);
 
@@ -472,7 +469,6 @@ private:
     void LoadAnimations();
 
     void UopReadAnimations();
-    void AnimSequenceReadTask();
     void ProcessAnimSequeceData();
 
     void PatchFiles();
@@ -519,6 +515,8 @@ uint32_t uo_get_group_offset(
     ANIMATION_GROUPS group,
     uint16_t
         graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
+void uo_update_animation_tables(uint32_t lockedFlags);
+bool uo_animation_exists(uint16_t graphic, uint8_t group);
 
 typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
 typedef std::unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
