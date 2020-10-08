@@ -334,5 +334,6 @@ static client_info client_db[] = {
     // other sources or from github issues
     { 0x5b8221ad426988d4, 0x81992bfb, 0x07000f01 }, // 7.0.15.1 Outlands (#265)
     { 0x00000000fc519294, 0x8393aab8, 0x011a0462 }, // 1.26.4b (#266)
+    { 0x8a195244c1e9c44b, 0xde1de66c, 0x011a0461 }, // 1.26.4a (#282)
     { 0, 0, 0 },
 };
