@@ -19,6 +19,7 @@
 #include "PluginManager.h"
 #include <external/zlib_amalg.h>
 #include <common/str.h>
+#include <common/utils.h>
 #include <xuocore/uodata.h>
 #include <xuocore/text_parser.h>
 #include "revision.h"
@@ -2344,8 +2345,8 @@ PACKET_HANDLER(EnableLockedFeatures)
     }
 
     g_ChatEnabled = bool(g_LockedClientFeatures & LFF_T2A);
-    // update from server g_LockedClientFeatures?
-    uo_update_animation_tables(g_Config.ClientFlag);
+    g_Config.ClientFlag = g_LockedClientFeatures;
+    uo_update_animation_tables(g_LockedClientFeatures);
 }
 
 PACKET_HANDLER(OpenContainer)
@@ -3863,25 +3864,18 @@ PACKET_HANDLER(CharacterAnimation)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
-
+    const auto serial = ReadUInt32BE();
+    auto *obj = g_World->FindWorldCharacter(serial);
     if (obj != nullptr)
     {
-        uint16_t action = ReadUInt16BE();
-        uint16_t frameCount = ReadUInt16BE();
-        frameCount = 0;
-        uint16_t repeatMode = ReadUInt16BE();
-        bool frameDirection = (ReadUInt8() == 0); //true - forward, false - backward
-        bool repeat = (ReadUInt8() != 0);
-        uint8_t delay = ReadUInt8();
-        obj->SetAnimation(
-            g_AnimationManager.GetReplacedObjectAnimation(obj, action),
-            delay,
-            (uint8_t)frameCount,
-            (uint8_t)repeatMode,
-            repeat,
-            frameDirection);
+        const auto action = ReadUInt16BE();
+        const auto frameCount = checked_cast<uint8_t>(ReadUInt16BE());
+        const auto repeatMode = checked_cast<uint8_t>(ReadUInt16BE());
+        const bool forward = (ReadUInt8() == 0); // true - forward, false - backward
+        const bool repeat = (ReadUInt8() != 0);
+        const uint8_t delay = ReadUInt8();
+        const auto group = g_AnimationManager.GetReplacedObjectAnimation(obj, action);
+        obj->SetAnimation(group, delay, frameCount, repeatMode, repeat, forward);
         obj->AnimationFromServer = true;
     }
 }
@@ -3893,8 +3887,8 @@ PACKET_HANDLER(NewCharacterAnimation)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-    CGameCharacter *obj = g_World->FindWorldCharacter(serial);
+    const auto serial = ReadUInt32BE();
+    auto *obj = g_World->FindWorldCharacter(serial);
     if (!obj)
     {
         return;
@@ -4018,10 +4012,10 @@ PACKET_HANDLER(DisplayDeath)
         return;
     }
 
-    uint32_t serial = ReadUInt32BE();
-    const uint32_t corpseSerial = ReadUInt32BE();
-    const uint32_t running = ReadUInt32BE();
-    CGameCharacter *owner = g_World->FindWorldCharacter(serial);
+    auto serial = ReadUInt32BE();
+    const auto corpseSerial = ReadUInt32BE();
+    const auto running = ReadUInt32BE();
+    auto *owner = g_World->FindWorldCharacter(serial);
     if (owner == nullptr)
     {
         return;
@@ -4034,7 +4028,7 @@ PACKET_HANDLER(DisplayDeath)
         g_CorpseManager.Add(CCorpse(corpseSerial, serial, owner->Direction, running != 0));
     }
 
-    const auto group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0);
+    const auto group = g_AnimationManager.GetDieGroupIndex(owner->Graphic, running != 0, true);
     owner->SetAnimation(group, 0, 5, 1, false, false);
     owner->AnimIndex = 0;
     // TODO: auto open corpse

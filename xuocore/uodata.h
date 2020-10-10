@@ -272,6 +272,7 @@ inline AnimationDirFrames *uo_animation_create(AnimationId animId)
     const auto graphic = uint16_t((animId >> 16) & 0xffff);
     const auto group = uint8_t((animId >> 8) & 0xff);
     const auto dir = uint8_t(animId & 0xff);
+    assert(group < MAX_ANIMATION_GROUPS_COUNT);
     const auto &animInfo = g_Index.m_Anim[graphic].Groups[group].Direction[dir];
     const auto frameCount = animInfo.FrameCount;
     animation->Frames = new AnimationFrame[frameCount];
@@ -451,7 +452,6 @@ struct CFileManager : public CDataReader // FIXME: not needed
     virtual ~CFileManager() = default;
 
     bool UopLoadFile(CUopMappedFile &file, const char *fileName, bool dumpFile = false);
-    bool MulLoadFile(CMappedFile &file, const fs_path &fileName);
 
 private:
     UopAnimationHeader UopReadAnimationHeader();

@@ -51,28 +51,7 @@ void CGUIShopItem::UpdateOffsets()
     }
     else
     {
-        uint8_t group = 0;
-        switch (g_AnimationManager.GetGroupIndex(Graphic))
-        {
-            case AG_LOW:
-            {
-                group = LAG_STAND;
-                break;
-            }
-            case AG_HIGH:
-            {
-                group = HAG_STAND;
-                break;
-            }
-            case AG_PEOPLE:
-            {
-                group = PAG_STAND;
-                break;
-            }
-            default:
-                break;
-        }
-
+        const uint8_t group = g_AnimationManager.GetStandingGroupForGraphic(Graphic);
         auto dims = g_AnimationManager.GetAnimationDimensions(0, { Graphic, 1, group }, false);
         if (dims.Height != 0)
         {
@@ -154,27 +133,7 @@ void CGUIShopItem::PrepareTextures()
     }
     else
     {
-        uint8_t group = 0;
-        switch (g_AnimationManager.GetGroupIndex(Graphic))
-        {
-            case AG_LOW:
-            {
-                group = LAG_STAND;
-                break;
-            }
-            case AG_HIGH:
-            {
-                group = HAG_STAND;
-                break;
-            }
-            case AG_PEOPLE:
-            {
-                group = PAG_STAND;
-                break;
-            }
-            default:
-                break;
-        }
+        const uint8_t group = g_AnimationManager.GetStandingGroupForGraphic(Graphic);
         const auto ticks = SDL_GetTicks() + 60000;
         g_AnimationManager.ExecuteAnimation({ Graphic, group, 1 }, ticks);
     }
@@ -246,28 +205,7 @@ void CGUIShopItem::Draw(bool checktrans)
     }
     else
     {
-        uint8_t group = 0;
-        switch (g_AnimationManager.GetGroupIndex(Graphic))
-        {
-            case AG_LOW:
-            {
-                group = LAG_STAND;
-                break;
-            }
-            case AG_HIGH:
-            {
-                group = HAG_STAND;
-                break;
-            }
-            case AG_PEOPLE:
-            {
-                group = PAG_STAND;
-                break;
-            }
-            default:
-                break;
-        }
-
+        const uint8_t group = g_AnimationManager.GetStandingGroupForGraphic(Graphic);
         const auto anim = g_AnimationManager.ExecuteAnimation({ Graphic, group, 1 }, g_Ticks);
         if (anim != nullptr && anim->FrameCount != 0)
         {

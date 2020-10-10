@@ -23,8 +23,50 @@
 #include <common/checksum.h>
 
 // FIXME: Animation data: group and direction are protected and can be refactored
+#define ANIMATION_DEBUG 0
+
+// clang-format off
+#if ANIMATION_DEBUG
+#define ANIMATION_ID 10
+#define DBG_ANIM(...) if (ANIMATION_ID != 0) DEBUG(Data, __VA_ARGS__);
+#define DBG_ANIM_ID(id, ...) if (id == ANIMATION_ID) DEBUG(Data, __VA_ARGS__);
+#define DBG_ANIM_DECLARE(x) x;
+#define DBG_ANIM_BLOCK(x) if (ANIMATION_ID != 0) { x; }
+#define DBG_ANIM_ID_BLOCK(id, x) if (id == ANIMATION_ID) { x; }
+#else // #if ANIMATION_DEBUG
+#define DBG_ANIM(...)
+#define DBG_ANIM_ID(...)
+#define DBG_ANIM_DECLARE(...)
+#define DBG_ANIM_BLOCK(...)
+#define DBG_ANIM_ID_BLOCK(...)
+#endif // #else // #if ANIMATION_DEBUG
+// clang-format on
 
 #define PALETTE_SIZE (sizeof(uint16_t) * 256)
+
+enum
+{
+    PatchMap0 = 0x00,
+    PatchStaIdx0 = 0x01,
+    PatchStatics0 = 0x02,
+    PatchArtiIdx = 0x03,
+    PatchArt = 0x04,
+    PatchAnimIdx = 0x05,
+    PatchAnim = 0x06,
+    PatchSoundIdx = 0x07,
+    PatchSound = 0x08,
+    PatchTexIdx = 0x09,
+    PatchTexMaps = 0x0A,
+    PatchGumpIdx = 0x0B,
+    PatchGumpArt = 0x0C,
+    PatchMultiIdx = 0x0D,
+    PatchMulti = 0x0E,
+    PatchSkillsIdx = 0x0F,
+    PatchSkills = 0x10,
+    PatchTileData = 0x1E,
+    PatchAnimData = 0x1F,
+    PatchHues = 0x20,
+};
 
 astr_t g_dumpUopFile;
 UOData g_Data;
@@ -202,12 +244,13 @@ std::vector<uint8_t> CUopMappedFile::GetData(const UopFileEntry *block)
 
 bool CFileManager::Load()
 {
+    DBG_ANIM("Animation debugging tracing enabled");
     if (s_ClientVersion >= CV_7000)
     {
         g_FileManager.UopReadAnimations();
     }
 
-    g_Index.m_Animations.reserve(1024);
+    g_Index.m_Animations.reserve(2 * 1024);
     bool r = false;
     const bool useUop =
         s_ClientVersion >= VERSION(7, 0, 0, 0) && UopLoadFile(m_MainMisc, "MainMisc.uop");
@@ -228,7 +271,7 @@ bool CFileManager::Load()
         if (i > 1)
         {
             m_AnimIdx[i].Load(UOFilePath("anim%i.idx", i));
-            MulLoadFile(m_AnimMul[i], UOFilePath("anim%i.mul", i));
+            m_AnimMul[i].Load(UOFilePath("anim%i.mul", i));
         }
 
         if (useUop)
@@ -328,7 +371,7 @@ bool CFileManager::LoadCommon()
     {
         return false;
     }
-    if (!MulLoadFile(m_AnimMul[0], UOFilePath("anim.mul")))
+    if (!m_AnimMul[0].Load(UOFilePath("anim.mul")))
     {
         return false;
     }
@@ -572,6 +615,7 @@ static const UopFileEntry *UopGetAnimationAsset(uint64_t hash, int &fileIndex)
 void CFileManager::UopReadAnimations()
 {
     // pattern: "build/animationsequence/%08d.bin"
+    DBG_ANIM("Reading AnimationSequence.uop");
     UopLoadFile(m_AnimationSequence, "AnimationSequence.uop");
     const static int count = countof(m_AnimationFrame);
     for (int i = 0; i < count; i++)
@@ -580,6 +624,7 @@ void CFileManager::UopReadAnimations()
         // pattern: "build/animationlegacyframe/%06d/%02d.bin"
         snprintf(name, sizeof(name), "AnimationFrame%d.uop", i + 1);
         auto &file = m_AnimationFrame[i];
+        DBG_ANIM("Reading %s", name);
         UopLoadFile(file, name);
     }
 
@@ -588,6 +633,7 @@ void CFileManager::UopReadAnimations()
     g_Index.m_AnimationGroupFile.reserve(16 * 1024);
     for (int animId = 0; animId < MAX_ANIMATIONS_DATA_INDEX_COUNT; animId++)
     {
+        DBG_ANIM_ID(animId, "Loading animation asset:");
         auto &idx = g_Index.m_Anim[animId];
         for (int grpId = 0; grpId < MAX_ANIMATION_GROUPS_COUNT; ++grpId)
         {
@@ -598,6 +644,13 @@ void CFileManager::UopReadAnimations()
             const auto data = UopGetAnimationAsset(asset, fileIndex);
             if (data != nullptr)
             {
+                DBG_ANIM_ID(
+                    animId,
+                    "\tGroup: %d (%d:%s) hash: %016" PRIx64,
+                    grpId,
+                    fileIndex,
+                    filename,
+                    asset);
                 g_Index.m_AnimationGroupFile.emplace(GroupId(animId, grpId), data);
                 idx.IsUOP = true;
                 for (int dirId = 0; dirId < 5; dirId++)
@@ -647,12 +700,12 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
         for (uint32_t replaceIdx = 0; replaceIdx < entry->Replaces; ++replaceIdx)
         {
             const auto seq = (UopAnimationSequenceReplacement *)Ptr;
+            assert(seq->Group < MAX_ANIMATION_GROUPS_COUNT);
             if (seq->FrameCount == 0)
             {
                 if (canPatch)
                 {
                     assert(seq->NewGroup != seq->Group);
-                    assert(seq->Group < MAX_ANIMATION_GROUPS_COUNT);
                     assert(seq->NewGroup < MAX_ANIMATION_GROUPS_COUNT);
                     anim->Groups[seq->Group] = anim->Groups[seq->NewGroup];
                     // update replaced file blocks with replacement entries
@@ -880,11 +933,6 @@ bool CFileManager::UopLoadFile(CUopMappedFile &file, const char *uopFilename, bo
         file.ResetPtr();
     }
     return true;
-}
-
-bool CFileManager::MulLoadFile(CMappedFile &file, const fs_path &fileName)
-{
-    return file.Load(fileName);
 }
 
 bool CFileManager::IsMulFileOpen(int idx) const
@@ -1262,6 +1310,7 @@ CFileManager::UopReadAnimationFrames(const AnimationState &anim, LoadPixelData16
     }
 
     std::vector<uint8_t> scratchBuffer;
+    assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     scratchBuffer.reserve(block->DecompressedSize);
     if (!UopDecompressBlock(block, scratchBuffer.data(), direction.FileIndex))
@@ -1329,6 +1378,7 @@ void CFileManager::MulReadAnimationFrameInfo(
 inline bool
 CFileManager::MulReadAnimationFrames(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
+    assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     auto ptr = (uint8_t *)direction.Address;
     if (!direction.IsVerdata)
@@ -1432,8 +1482,9 @@ void CFileManager::LoadAnimationFrame(
 void CFileManager::LoadAnimationFrameInfo(
     AnimationFrameInfo &result, const AnimationState &anim, uint8_t frameIndex, bool isCorpse)
 {
+    assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[0];
-    if (direction.Address != 0)
+    if (direction.Size != 0)
     {
         MulReadAnimationFrameInfo(result, direction, frameIndex, isCorpse);
     }
@@ -1446,9 +1497,10 @@ void CFileManager::LoadAnimationFrameInfo(
 
 bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb pLoadFunc)
 {
+    assert(anim.Group < MAX_ANIMATION_GROUPS_COUNT);
     auto &direction = g_Index.m_Anim[anim.Graphic].Groups[anim.Group].Direction[anim.Direction];
     bool res = false;
-    if (direction.Address != 0)
+    if (direction.Size != 0)
     {
         res = MulReadAnimationFrames(anim, pLoadFunc);
     }
@@ -1456,7 +1508,6 @@ bool CFileManager::LoadAnimation(const AnimationState &anim, LoadPixelData16Cb p
     {
         res = UopReadAnimationFrames(anim, pLoadFunc);
     }
-
     return res;
 }
 
@@ -1497,7 +1548,49 @@ uint32_t uo_get_group_offset(ANIMATION_GROUPS group, uint16_t graphic)
     return -1;
 }
 
+static bool uo_anim_group_is_die(ANIMATION_GROUPS_TYPE type, uint8_t group)
+{
+    switch (type)
+    {
+        case AGT_MONSTER:
+        case AGT_SEA_MONSTER:
+        {
+            return (group == HAG_DIE_1 || group == HAG_DIE_2);
+        }
+        case AGT_HUMAN:
+        case AGT_EQUIPMENT:
+        {
+            return (group == PAG_DIE_1 || group == PAG_DIE_2);
+        }
+        case AGT_ANIMAL:
+        {
+            return (group == LAG_DIE_1 || group == LAG_DIE_2);
+        }
+        default:
+            break;
+    }
+    return false;
+}
+
 /* AnimationLoader */
+
+static uint32_t uo_group_count_by_type[] = {
+    HAG_ANIMATION_COUNT, // AGT_MONSTER
+    HAG_ANIMATION_COUNT, // AGT_SEA_MONSTER
+    LAG_ANIMATION_COUNT, // AGT_ANIMAL
+    PAG_ANIMATION_COUNT, // AGT_HUMAN
+    PAG_ANIMATION_COUNT, // AGT_EQUIPMENT
+};
+static_assert(countof(uo_group_count_by_type) == AGT_COUNT, "missing count for group");
+
+/*
+static uint32_t uo_group_count_by_group[] = {
+    0, // AG_NONE
+    LAG_ANIMATION_COUNT, // AG_LOW
+    HAG_ANIMATION_COUNT, // AG_HIGH
+    PAG_ANIMATION_COUNT, // AG_PEOPLE
+};
+*/
 
 uint64_t
 uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type, int &groupCount)
@@ -1594,8 +1687,49 @@ uo_get_anim_offset(uint16_t graphic, uint32_t flags, ANIMATION_GROUPS_TYPE type,
     return result;
 }
 
+static void load_mobtype()
+{
+    static const astr_t typeNames[] = { "monster", "sea_monster", "animal", "human", "equipment" };
+    static_assert(countof(typeNames) == AGT_UNKNOWN, "update group types");
+    DBG_ANIM_DECLARE(bool dbgEntryFound = false);
+    DBG_ANIM("mobtype.txt");
+
+    TextFileParser mobtypesParser(UOFilePath("mobtypes.txt"), " \t", "#;//", "");
+    while (!mobtypesParser.IsEOF())
+    {
+        const auto strings = mobtypesParser.ReadTokens();
+        if (strings.size() >= 3)
+        {
+            const uint16_t index = str_to_int(strings[0]);
+            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
+            {
+                DBG_ANIM("\tdetected invalid entry in mobtypes.txt: %d", index);
+                continue;
+            }
+
+            const auto entryType = str_lower(strings[1]);
+            char *endP = nullptr;
+            const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
+            DBG_ANIM_ID(
+                index, "\tentry type: %s with: 0x%04x | AF_FOUND", entryType.c_str(), (int)number);
+            for (int i = 0; i < countof(typeNames); i++)
+            {
+                if (entryType == typeNames[i])
+                {
+                    DBG_ANIM_BLOCK(dbgEntryFound = true);
+                    g_Index.m_Anim[index].Type = ANIMATION_GROUPS_TYPE(i);
+                    g_Index.m_Anim[index].Flags = ANIMATION_FLAGS(AF_FOUND | number);
+                    break;
+                }
+            }
+        }
+    }
+    DBG_ANIM("\twas anim entry found in mobtypes.txt? %s", dbgEntryFound ? "yes" : "no");
+}
+
 static void load_animations(CFileManager *mgr)
 {
+    DBG_ANIM("load_animations");
     size_t maxAddress = mgr->m_AddressIdx[0] + mgr->m_SizeIdx[0];
     for (int i = 0; i < MAX_ANIMATIONS_DATA_INDEX_COUNT; i++)
     {
@@ -1608,32 +1742,41 @@ static void load_animations(CFileManager *mgr)
         index.CorpseGraphic = i;
         int count = 0;
         const auto dataOffset = uo_get_anim_offset(i, index.Flags, index.Type, count);
+        DBG_ANIM_ID(
+            i,
+            "\tload mul animation %d type: %d, group count: %d",
+            i,
+            index.Type,
+            uo_group_count_by_type[index.Type]);
         if (dataOffset >= mgr->m_SizeIdx[0])
             continue;
 
+        DBG_ANIM_ID(i, "\t\toffset: %" PRId64, dataOffset);
         bool isValid = false;
         size_t address = mgr->m_AddressIdx[0] + dataOffset;
+        DBG_ANIM_ID(i, "\t\taddress: %" PRId64, address);
         int block = 0;
         for (int j = 0; j < count; j++)
         {
+            assert(j < MAX_ANIMATION_GROUPS_COUNT);
             auto &group = index.Groups[j];
+            DBG_ANIM_ID(i, "\t\tgroup: %d", j);
             for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
             {
                 auto &direction = group.Direction[d];
-                const auto *aidx = (AnimIdxBlock *)(address + block * sizeof(AnimIdxBlock));
+                const auto *file = (AnimIdxBlock *)(address + block * sizeof(AnimIdxBlock));
                 block++;
-                if ((size_t)aidx >= maxAddress)
-                {
+                if ((size_t)file >= maxAddress)
                     break;
-                }
-
-                if (aidx->Size != 0 && aidx->Position != -1 && aidx->Size != -1)
+                if (file->Size > 0 && file->Position != -1 && file->Size != -1)
                 {
-                    direction.BaseAddress = aidx->Position;
-                    direction.BaseSize = aidx->Size;
+                    direction.BaseAddress = file->Position;
+                    direction.BaseSize = file->Size;
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
                     isValid = true;
+                    DBG_ANIM_ID(
+                        i, "\t\t\tdir: %d address: %d size: %d", d, file->Position, file->Size);
                 }
             }
         }
@@ -1643,6 +1786,7 @@ static void load_animations(CFileManager *mgr)
 
 static void load_verdata(CFileManager *mgr)
 {
+    DBG_ANIM("load_verdata");
     auto verdata = (uint32_t *)g_FileManager.m_VerdataMul.Start;
     if (verdata == nullptr)
         return;
@@ -1651,7 +1795,7 @@ static void load_verdata(CFileManager *mgr)
     for (int j = 0; j < dataCount; j++)
     {
         const auto *vh = (VERDATA_HEADER *)((size_t)verdata + 4 + (j * sizeof(VERDATA_HEADER)));
-        if (vh->FileID == 0x06) //Anim
+        if (vh->FileID == PatchAnim)
         {
             ANIMATION_GROUPS_TYPE groupType = AGT_HUMAN;
             uint32_t graphic = vh->BlockID;
@@ -1662,18 +1806,21 @@ static void load_verdata(CFileManager *mgr)
             int count = 0;
 
             TRACE(Data, "vh->ID = 0x%02X vh->BlockID = 0x%08X", vh->FileID, graphic);
+            DBG_ANIM_ID(graphic, "\tpatching anim using verdata");
+
+            // FIXME: uo_get_group_offset?
             if (graphic < 35000)
             {
                 if (graphic < 22000) //monsters
                 {
-                    count = 22;
+                    count = HAG_ANIMATION_COUNT;
                     groupType = AGT_MONSTER;
                     id = graphic / 110;
                     offset = graphic - (id * 110);
                 }
                 else //animals
                 {
-                    count = 13;
+                    count = LAG_ANIMATION_COUNT;
                     groupType = AGT_ANIMAL;
                     id = (graphic - 22000) / 65;
                     offset = graphic - ((id * 65) + 22000);
@@ -1707,13 +1854,23 @@ static void load_verdata(CFileManager *mgr)
                 continue;
             }
 
+            DBG_ANIM_ID(
+                id,
+                "\tverdata animation patch: 0x%04X (0x%08X) group: %d dir: %d",
+                id,
+                graphic,
+                group,
+                dir);
             auto &index = g_Index.m_Anim[id];
+            assert(group < MAX_ANIMATION_GROUPS_COUNT);
             auto &direction = index.Groups[group].Direction[dir];
             direction.IsVerdata = true;
             direction.BaseAddress = (size_t)g_FileManager.m_VerdataMul.Start + vh->Position;
             direction.BaseSize = vh->Size;
             direction.Address = direction.BaseAddress;
             direction.Size = direction.BaseSize;
+            DBG_ANIM_ID(id, "\t\taddress: %" PRId64, direction.Address);
+            DBG_ANIM_ID(id, "\t\tsize: %d", direction.Size);
             index.Graphic = id;
             index.Type = groupType;
             index.IsValidMUL = true;
@@ -1721,44 +1878,11 @@ static void load_verdata(CFileManager *mgr)
     }
 }
 
-static void load_mobtype()
-{
-    static const astr_t typeNames[] = { "monster", "sea_monster", "animal", "human", "equipment" };
-    static_assert(countof(typeNames) == AGT_UNKNOWN, "update group types");
-
-    TextFileParser mobtypesParser(UOFilePath("mobtypes.txt"), " \t", "#;//", "");
-    while (!mobtypesParser.IsEOF())
-    {
-        const auto strings = mobtypesParser.ReadTokens();
-        if (strings.size() >= 3)
-        {
-            const uint16_t index = str_to_int(strings[0]);
-            if (index >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
-            const auto entryType = str_lower(strings[1]);
-            char *endP = nullptr;
-            const auto number = strtoul(("0x" + strings[2]).c_str(), &endP, 16);
-            for (int i = 0; i < countof(typeNames); i++)
-            {
-                if (entryType == typeNames[i])
-                {
-                    g_Index.m_Anim[index].Type = ANIMATION_GROUPS_TYPE(i);
-                    g_Index.m_Anim[index].Flags = ANIMATION_FLAGS(AF_FOUND | number);
-                    break;
-                }
-            }
-        }
-    }
-}
-
 static void load_animdef(CFileManager *mgr)
 {
     TextFileParser animParser[] = {
-        TextFileParser(UOFilePath("Anim1.def"), " \t", "#;//", "{}"),
-        TextFileParser(UOFilePath("Anim2.def"), " \t", "#;//", "{}"),
+        TextFileParser(UOFilePath("Anim1.def"), " \t", "#;//", "{}"), // AG_LOW
+        TextFileParser(UOFilePath("Anim2.def"), " \t", "#;//", "{}"), // AG_PEOPLE
     };
     for (int i = 0; i < countof(animParser); i++)
     {
@@ -1864,6 +1988,7 @@ static void load_equipconv(CFileManager *mgr)
 
 static void load_bodyconv(CFileManager *mgr)
 {
+    DBG_ANIM("load_bodyconv");
     TextFileParser bodyconvParser(UOFilePath("Bodyconv.def"), " \t", "#;//", "");
     while (!bodyconvParser.IsEOF())
     {
@@ -1890,6 +2015,7 @@ static void load_bodyconv(CFileManager *mgr)
                 }
             }
 
+            DBG_ANIM_ID(index, "\tbodyconv {%d, %d, %d, %d}", anim[0], anim[1], anim[2], anim[3]);
             int animFile = 1;
             uint16_t realAnimID = -1;
             char mountedHeightOffset = 0;
@@ -1934,6 +2060,7 @@ static void load_bodyconv(CFileManager *mgr)
                         break;
                 }
             }
+            DBG_ANIM_ID(index, "\treal anim is %d is in animFile %d", realAnimID, animFile);
 
             if (animFile > 1 && realAnimID != 0xFFFF)
             {
@@ -1947,6 +2074,10 @@ static void load_bodyconv(CFileManager *mgr)
                     dataIndex.Type = realType;
                     dataIndex.GraphicConversion = realAnimID | 0x8000;
                     dataIndex.FileIndex = animFile;
+                    DBG_ANIM_ID(index, "\t\toffset: %" PRId64, dataOffset);
+                    DBG_ANIM_ID(index, "\t\ttype: %d", dataIndex.Type);
+                    DBG_ANIM_ID(
+                        index, "\t\tgraphic conversion: 0x%04X", dataIndex.GraphicConversion);
                     if (dataIndex.MountedHeightOffset == 0)
                     {
                         dataIndex.MountedHeightOffset = mountedHeightOffset;
@@ -1957,6 +2088,7 @@ static void load_bodyconv(CFileManager *mgr)
                     int block = 0;
                     for (int j = 0; j < count; j++)
                     {
+                        assert(j < MAX_ANIMATION_GROUPS_COUNT);
                         auto &group = dataIndex.Groups[j];
                         for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
                         {
@@ -1967,7 +2099,13 @@ static void load_bodyconv(CFileManager *mgr)
                             {
                                 continue;
                             }
-
+                            DBG_ANIM_ID(
+                                index,
+                                "\t\tpatch group: %d dir: %d offset: %d size: %d",
+                                j,
+                                d,
+                                aidx->Position,
+                                aidx->Size);
                             if (aidx->Size != 0 && aidx->Position != -1 && aidx->Size != -1)
                             {
                                 //dataIndex.GraphicConversion |= 0x1000; // BodyConvGroups != null
@@ -1984,19 +2122,21 @@ static void load_bodyconv(CFileManager *mgr)
     }
 }
 
-static void load_bodydef()
+static void load_body_corpse_def(fs_path file, bool alive)
 {
-    TextFileParser newBodyParser({}, " \t,{}", "#;//", "");
-    TextFileParser bodyParser(UOFilePath("Body.def"), " \t", "#;//", "{}");
+    TextFileParser newParser({}, " \t,{}", "#;//", "");
+    TextFileParser parser(file, " \t", "#;//", "{}");
     std::unordered_set<uint16_t> used = {};
-    while (!bodyParser.IsEOF())
+    while (!parser.IsEOF())
     {
-        const auto strings = bodyParser.ReadTokens();
+        const auto strings = parser.ReadTokens();
         if (strings.size() >= 3)
         {
             const auto graphic = checked_cast<uint16_t>(str_to_int(strings[0]));
-            const auto replaces = newBodyParser.GetTokens(strings[1]);
-            if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT || replaces.empty())
+            assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+
+            const auto replaces = newParser.GetTokens(strings[1]);
+            if (replaces.empty())
             {
                 continue;
             }
@@ -2012,59 +2152,27 @@ static void load_bodydef()
             {
                 newGraphic = checked_cast<uint16_t>(str_to_int(replaces[2]));
             }
+            assert(newGraphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
 
-            if (newGraphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-            {
-                continue;
-            }
-
+            DBG_ANIM_ID(graphic, "\tnew graphic: 0x%04X", newGraphic);
             auto &dataIndex = g_Index.m_Anim[graphic];
-
             auto &newDataIndex = g_Index.m_Anim[newGraphic];
-            int count = 0;
-            int ignoreGroups[2] = { -1, -1 };
-            switch (newDataIndex.Type)
+            const auto count = (int)uo_group_count_by_type[newDataIndex.Type];
+            for (int grpId = 0; grpId < count; grpId++)
             {
-                case AGT_MONSTER:
-                case AGT_SEA_MONSTER:
-                {
-                    count = HAG_ANIMATION_COUNT;
-                    ignoreGroups[0] = HAG_DIE_1;
-                    ignoreGroups[1] = HAG_DIE_2;
-                    break;
-                }
-                case AGT_HUMAN:
-                case AGT_EQUIPMENT:
-                {
-                    count = PAG_ANIMATION_COUNT;
-                    ignoreGroups[0] = PAG_DIE_1;
-                    ignoreGroups[1] = PAG_DIE_2;
-                    break;
-                }
-                case AGT_ANIMAL:
-                {
-                    count = LAG_ANIMATION_COUNT;
-                    ignoreGroups[0] = LAG_DIE_1;
-                    ignoreGroups[1] = LAG_DIE_2;
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            for (int j = 0; j < count; j++)
-            {
-                if (j == ignoreGroups[0] || j == ignoreGroups[1])
-                {
+                const bool die = uo_anim_group_is_die(newDataIndex.Type, grpId);
+                const bool skip = !(alive ^ die);
+                if (skip)
                     continue;
-                }
 
-                AnimationGroup &group = dataIndex.Groups[j];
-                AnimationGroup &newGroup = newDataIndex.Groups[j];
-                for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
+                DBG_ANIM_ID(graphic, "\tgroup: %d", grpId);
+                assert(grpId < MAX_ANIMATION_GROUPS_COUNT);
+                auto &group = dataIndex.Groups[grpId];
+                const auto &newGroup = newDataIndex.Groups[grpId];
+                for (int dirId = 0; dirId < MAX_MOBILE_DIRECTIONS; dirId++)
                 {
-                    auto &direction = group.Direction[d];
-                    auto &newDirection = newGroup.Direction[d];
+                    auto &direction = group.Direction[dirId];
+                    const auto &newDirection = newGroup.Direction[dirId];
                     direction.BaseAddress = newDirection.BaseAddress;
                     direction.BaseSize = newDirection.BaseSize;
                     direction.Address = direction.BaseAddress;
@@ -2074,8 +2182,13 @@ static void load_bodydef()
                         direction.PatchedAddress = newDirection.PatchedAddress;
                         direction.PatchedSize = newDirection.PatchedSize;
                         direction.FileIndex = newDirection.FileIndex;
+                        DBG_ANIM_ID(
+                            graphic,
+                            "\t\tpatch address: %" PRId64 ", size: %d file: %d",
+                            direction.PatchedAddress,
+                            direction.PatchedSize,
+                            direction.FileIndex);
                     }
-
                     if (direction.BaseAddress == 0)
                     {
                         direction.BaseAddress = direction.PatchedAddress;
@@ -2083,121 +2196,43 @@ static void load_bodydef()
                         direction.Address = direction.BaseAddress;
                         direction.Size = direction.BaseSize;
                     }
+                    DBG_ANIM_ID(
+                        graphic,
+                        "\t\tdir: %d, address: %" PRId64 ", size: %d file: %d",
+                        dirId,
+                        direction.Address,
+                        direction.Size,
+                        direction.FileIndex);
                 }
             }
             dataIndex.Type = newDataIndex.Type;
             dataIndex.Flags = newDataIndex.Flags;
-
             dataIndex.Graphic = newGraphic;
             dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
             dataIndex.IsValidMUL = true;
+            DBG_ANIM_ID(
+                graphic,
+                "\tmul anim type: %d, flags: 0x%08x, color: 0x%04x",
+                dataIndex.Type,
+                dataIndex.Flags,
+                dataIndex.Color);
             used.insert(graphic);
         }
     }
 }
 
+static void load_bodydef()
+{
+    const bool alive = true;
+    DBG_ANIM("load_bodydef");
+    load_body_corpse_def(UOFilePath("Body.def"), alive);
+}
+
 static void load_corpsedef()
 {
-    TextFileParser newBodyParser({}, " \t,{}", "#;//", "");
-    TextFileParser corpseParser(UOFilePath("Corpse.def"), " \t", "#;//", "{}");
-    std::unordered_set<uint16_t> used = {};
-    while (!corpseParser.IsEOF())
-    {
-        const auto strings = corpseParser.ReadTokens();
-        if (strings.size() >= 3)
-        {
-            const auto graphic = checked_cast<uint16_t>(str_to_int(strings[0]));
-            const auto replaces = newBodyParser.GetTokens(strings[1]);
-            if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT || replaces.empty())
-            {
-                continue;
-            }
-
-            if (used.find(graphic) != used.end())
-            {
-                continue;
-            }
-
-            // FIXME: there is something missing here: { anim1, anim2, anim3, anim4 }
-            auto newGraphic = checked_cast<uint16_t>(str_to_int(replaces[0]));
-            if (replaces.size() >= 3)
-            {
-                newGraphic = checked_cast<uint16_t>(str_to_int(replaces[2]));
-            }
-
-            IndexAnimation &dataIndex = g_Index.m_Anim[graphic];
-
-            IndexAnimation &newDataIndex = g_Index.m_Anim[newGraphic];
-            int ignoreGroups[2] = { -1, -1 };
-            switch (newDataIndex.Type)
-            {
-                case AGT_MONSTER:
-                case AGT_SEA_MONSTER:
-                {
-                    ignoreGroups[0] = HAG_DIE_1;
-                    ignoreGroups[1] = HAG_DIE_2;
-                    break;
-                }
-                case AGT_HUMAN:
-                case AGT_EQUIPMENT:
-                {
-                    ignoreGroups[0] = PAG_DIE_1;
-                    ignoreGroups[1] = PAG_DIE_2;
-                    break;
-                }
-                case AGT_ANIMAL:
-                {
-                    ignoreGroups[0] = LAG_DIE_1;
-                    ignoreGroups[1] = LAG_DIE_2;
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            if (ignoreGroups[0] == -1)
-            {
-                continue;
-            }
-
-            for (int j = 0; j < 2; j++)
-            {
-                AnimationGroup &group = dataIndex.Groups[ignoreGroups[j]];
-                AnimationGroup &newGroup = newDataIndex.Groups[ignoreGroups[j]];
-                for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
-                {
-                    AnimationDirection &direction = group.Direction[d];
-                    AnimationDirection &newDirection = newGroup.Direction[d];
-                    direction.BaseAddress = newDirection.BaseAddress;
-                    direction.BaseSize = newDirection.BaseSize;
-                    direction.Address = direction.BaseAddress;
-                    direction.Size = direction.BaseSize;
-                    if (direction.PatchedAddress == 0)
-                    {
-                        direction.PatchedAddress = newDirection.PatchedAddress;
-                        direction.PatchedSize = newDirection.PatchedSize;
-                        direction.FileIndex = newDirection.FileIndex;
-                    }
-
-                    if (direction.BaseAddress == 0)
-                    {
-                        direction.BaseAddress = direction.PatchedAddress;
-                        direction.BaseSize = direction.PatchedSize;
-                        direction.Address = direction.BaseAddress;
-                        direction.Size = direction.BaseSize;
-                    }
-                }
-            }
-
-            dataIndex.Type = newDataIndex.Type;
-            dataIndex.Flags = newDataIndex.Flags;
-
-            dataIndex.Graphic = newGraphic;
-            dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
-            dataIndex.IsValidMUL = true;
-            used.insert(graphic);
-        }
-    }
+    const bool alive = false;
+    DBG_ANIM("load_corpsedef");
+    load_body_corpse_def(UOFilePath("Corpse.def"), alive);
 }
 
 void static load_data_patches(CFileManager *mgr)
@@ -2207,7 +2242,7 @@ void static load_data_patches(CFileManager *mgr)
         load_mobtype();
     }
     load_animations(mgr);
-    load_verdata(mgr); // <-- REFACTOR
+    load_verdata(mgr); // <-- TODO: REFACTOR
     load_animdef(mgr);
     if (s_ClientVersion < CV_305D)
     {
@@ -2377,30 +2412,6 @@ void CFileManager::CreateBlockTable(int map, int width, int height)
 
 void CFileManager::PatchFiles()
 {
-    enum
-    {
-        PatchMap0 = 0x00,
-        PatchStaIdx0 = 0x01,
-        PatchStatics0 = 0x02,
-        PatchArtiIdx = 0x03,
-        PatchArt = 0x04,
-        PatchAnimIdx = 0x05,
-        PatchAnim = 0x06,
-        PatchSoundIdx = 0x07,
-        PatchSound = 0x08,
-        PatchTexIdx = 0x09,
-        PatchTexMaps = 0x0A,
-        PatchGumpIdx = 0x0B,
-        PatchGumpArt = 0x0C,
-        PatchMultiIdx = 0x0D,
-        PatchMulti = 0x0E,
-        PatchSkillsIdx = 0x0F,
-        PatchSkills = 0x10,
-        PatchTileData = 0x1E,
-        PatchAnimData = 0x1F,
-        PatchHues = 0x20,
-    };
-
     auto &file = g_FileManager.m_VerdataMul;
     if (!s_UseVerdata || file.Size == 0)
     {
@@ -2789,7 +2800,7 @@ bool uo_animation_exists(uint16_t graphic, uint8_t group)
 {
     assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT && group < MAX_ANIMATION_GROUPS_COUNT);
     const auto dir = g_Index.m_Anim[graphic].Groups[group].Direction[0];
-    return (dir.Address != 0 && dir.Size != 0) || dir.IsUOP;
+    return dir.Size != 0 || dir.IsUOP;
 }
 
 void uo_update_animation_tables(uint32_t lockedFlags)
@@ -2812,6 +2823,7 @@ void uo_update_animation_tables(uint32_t lockedFlags)
                 {
                     replace = lockedFlags & LFF_AOS;
                 }
+
                 // GraphicConversion
                 // if (!HasBodyConversion(animData))
                 if (replace)

@@ -492,14 +492,7 @@ void CGameCharacter::SetRandomFidgetAnimation()
         AnimationDirection = true;
         AnimationRepeat = false;
         AnimationFromServer = true;
-
-        ANIMATION_GROUPS groupIndex = g_AnimationManager.GetGroupIndex(GetGraphicForAnimation());
-
-        const uint8_t fidgetAnimTable[3][3] = { { LAG_FIDGET_1, LAG_FIDGET_2, LAG_FIDGET_1 },
-                                                { HAG_FIDGET_1, HAG_FIDGET_2, HAG_FIDGET_1 },
-                                                { PAG_FIDGET_1, PAG_FIDGET_2, PAG_FIDGET_3 } };
-
-        AnimationGroup = fidgetAnimTable[groupIndex - 1][RandomInt(3)];
+        AnimationGroup = g_AnimationManager.GetRandomIdleAnimation(GetGraphicForAnimation());
     }
 }
 
