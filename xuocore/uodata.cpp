@@ -2156,11 +2156,12 @@ static void load_body_corpse_def(fs_path file, bool alive)
 
             DBG_ANIM_ID(graphic, "\tnew graphic: 0x%04X", newGraphic);
             auto &dataIndex = g_Index.m_Anim[graphic];
+            const auto type = dataIndex.Type;
             auto &newDataIndex = g_Index.m_Anim[newGraphic];
-            const auto count = (int)uo_group_count_by_type[newDataIndex.Type];
+            const auto count = (int)uo_group_count_by_type[type];
             for (int grpId = 0; grpId < count; grpId++)
             {
-                const bool die = uo_anim_group_is_die(newDataIndex.Type, grpId);
+                const bool die = uo_anim_group_is_die(type, grpId);
                 const bool skip = !(alive ^ die);
                 if (skip)
                     continue;
@@ -2825,8 +2826,6 @@ void uo_update_animation_tables(uint32_t lockedFlags)
                     replace = lockedFlags & LFF_AOS;
                 }
 
-                // GraphicConversion
-                // if (!HasBodyConversion(animData))
                 if (replace)
                 {
                     direction.Address = direction.PatchedAddress;
@@ -2836,6 +2835,11 @@ void uo_update_animation_tables(uint32_t lockedFlags)
                 {
                     direction.Address = direction.BaseAddress;
                     direction.Size = direction.BaseSize;
+                }
+
+                if (replace && (data.GraphicConversion & 0x8000) != 0)
+                {
+                    data.GraphicConversion &= ~0x8000;
                 }
             }
         }
