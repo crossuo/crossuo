@@ -2,6 +2,7 @@
 // Copyright (C) August 2016 Hotride
 
 #include "Gump.h"
+#include <algorithm> // std::max
 #include "../CrossUO.h"
 #include "../Point.h"
 #include "../PressedObject.h"
@@ -1611,9 +1612,9 @@ void CGump::RecalculateSize()
     CPoint2Di offset;
 
     GetItemsSize(this, (CBaseGUI *)m_Items, minPosition, maxPosition, offset, -1, Page, Draw2Page);
-
-    CSize size(maxPosition.X - minPosition.X, maxPosition.Y - minPosition.Y);
-
+    auto w = maxPosition.X - minPosition.X;
+    auto h = maxPosition.Y - minPosition.Y;
+    CSize size(std::max(0, w), std::max(0, h));
     GumpRect = CRect(minPosition, size);
 }
 

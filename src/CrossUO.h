@@ -39,8 +39,6 @@ private:
 
     void LoadAutoLoginNames();
     void ProcessStaticAnimList();
-    void PatchFiles();
-    void IndexReplaces();
     void InitStaticAnimList();
     void LoadClientStartupConfig();
     void LoadShaders();

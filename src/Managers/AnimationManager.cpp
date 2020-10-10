@@ -144,14 +144,41 @@ CAnimationManager::~CAnimationManager()
     ClearUnusedAnimations();
 }
 
+uint8_t CAnimationManager::GetRandomIdleAnimation(uint16_t graphic) const
+{
+    ANIMATION_GROUPS groupIndex = GetGroupIndex(graphic);
+    const uint8_t fidgetAnimTable[3][3] = { { LAG_FIDGET_1, LAG_FIDGET_2, LAG_FIDGET_1 },
+                                            { HAG_FIDGET_1, HAG_FIDGET_2, HAG_FIDGET_1 },
+                                            { PAG_FIDGET_1, PAG_FIDGET_2, PAG_FIDGET_3 } };
+    return fidgetAnimTable[groupIndex - 1][RandomInt(3)];
+}
+
+uint8_t CAnimationManager::GetStandingGroupForGraphic(uint16_t graphic) const
+{
+    switch (GetGroupIndex(graphic))
+    {
+        case AG_LOW:
+        {
+            return LAG_STAND;
+        }
+        case AG_HIGH:
+        {
+            return HAG_STAND;
+        }
+        case AG_PEOPLE:
+        {
+            return PAG_STAND;
+        }
+        default:
+            break;
+    }
+    assert(false && "unknown group index for graphic");
+    return 0;
+}
+
 ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
 {
-    if (graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        Warning(Data, "GetGroupIndex: Invalid ID: 0x%04X", graphic);
-        return AG_HIGH;
-    }
-
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     switch (g_Index.m_Anim[graphic].Type)
     {
         case AGT_ANIMAL:
@@ -165,12 +192,12 @@ ANIMATION_GROUPS CAnimationManager::GetGroupIndex(uint16_t graphic) const
         case AGT_UNKNOWN:
             break;
     }
-
     return AG_HIGH;
 }
 
-uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running)
+uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool third)
 {
+    assert(graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     const auto flags = g_Index.m_Anim[graphic].Flags;
     switch (g_Index.m_Anim[graphic].Type)
     {
@@ -188,7 +215,7 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running)
         }
         case AGT_SEA_MONSTER:
         {
-            if (!running)
+            if (!third)
                 return 8;
 
             // [[fallthrough]]
@@ -1863,35 +1890,25 @@ bool CAnimationManager::IsCovered(int layer, CGameObject *owner)
 
 uint8_t CAnimationManager::GetReplacedObjectAnimation(CGameCharacter *obj, uint16_t index)
 {
-    auto getReplaceGroup = [](const std::vector<std::pair<uint16_t, uint8_t>> &list,
-                              uint16_t index,
-                              uint16_t walkIndex) -> uint16_t {
+    auto getReplaceGroup = [](const auto &list, uint16_t index) -> uint8_t {
         for (const auto &item : list)
         {
             if (item.first == index)
             {
-                if (item.second == 0xff)
-                {
-                    return walkIndex;
-                }
-                return (uint16_t)item.second;
+                return checked_cast<uint8_t>(item.second == 0xff ? 0 : item.second);
             }
         }
-        return index;
+        return checked_cast<uint8_t>(index);
     };
 
     const ANIMATION_GROUPS group = GetGroupIndex(obj->Graphic);
     if (group == AG_LOW)
     {
-        return (uint8_t)(
-            getReplaceGroup(g_FileManager.m_GroupReplaces[0], index, LAG_WALK) %
-            LAG_ANIMATION_COUNT);
+        return getReplaceGroup(g_FileManager.m_GroupReplaces[0], index) % LAG_ANIMATION_COUNT;
     }
     if (group == AG_PEOPLE)
     {
-        return (uint8_t)(
-            getReplaceGroup(g_FileManager.m_GroupReplaces[1], index, PAG_WALK_UNARMED) %
-            PAG_ANIMATION_COUNT);
+        return getReplaceGroup(g_FileManager.m_GroupReplaces[1], index) % PAG_ANIMATION_COUNT;
     }
     return (uint8_t)(index % HAG_ANIMATION_COUNT);
 }
@@ -2317,11 +2334,7 @@ CAnimationManager::GetObjectNewAnimationType_11(CGameCharacter *obj, uint16_t ac
 uint8_t CAnimationManager::GetObjectNewAnimation(
     CGameCharacter *obj, uint16_t type, uint16_t action, uint8_t mode)
 {
-    if (obj->Graphic >= MAX_ANIMATIONS_DATA_INDEX_COUNT)
-    {
-        return 0;
-    }
-
+    assert(obj->Graphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
     switch (type)
     {
         case 0:

@@ -100,7 +100,6 @@ public:
     CAnimationManager();
     ~CAnimationManager();
 
-    void InitIndexReplaces(uint32_t *verdata);
     void Load(uint32_t *verdata);
     void GetAnimDirection(uint8_t &dir, bool &mirror);
     void GetSittingAnimDirection(uint8_t &dir, bool &mirror, int &x, int &y);
@@ -108,7 +107,9 @@ public:
     bool CharacterPixelsInXY(class CGameCharacter *obj, int x, int y);
     void DrawCorpse(class CGameItem *obj, int x, int y);
     bool CorpsePixelsInXY(class CGameItem *obj, int x, int y);
-    uint8_t GetDieGroupIndex(uint16_t graphic, bool running);
+    uint8_t GetDieGroupIndex(uint16_t graphic, bool running, bool third = false);
+    uint8_t GetRandomIdleAnimation(uint16_t graphic) const;
+    uint8_t GetStandingGroupForGraphic(uint16_t graphic) const;
     ANIMATION_GROUPS GetGroupIndex(uint16_t graphic) const;
     uint8_t CorrectAnimationGroupServer(
         ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const;
