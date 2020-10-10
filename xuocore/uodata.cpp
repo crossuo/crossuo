@@ -2205,8 +2205,9 @@ static void load_body_corpse_def(fs_path file, bool alive)
                         direction.FileIndex);
                 }
             }
-            dataIndex.Type = newDataIndex.Type;
-            dataIndex.Flags = newDataIndex.Flags;
+            // do not overwrite type or flags, this is just graphics replacement
+            //dataIndex.Type = newDataIndex.Type;
+            //dataIndex.Flags = newDataIndex.Flags;
             dataIndex.Graphic = newGraphic;
             dataIndex.Color = checked_cast<uint16_t>(str_to_int(strings[2]));
             dataIndex.IsValidMUL = true;
