@@ -2017,12 +2017,12 @@ static void load_bodyconv(CFileManager *mgr)
 
             DBG_ANIM_ID(index, "\tbodyconv {%d, %d, %d, %d}", anim[0], anim[1], anim[2], anim[3]);
             int animFile = 1;
-            uint16_t realAnimID = -1;
+            uint16_t realAnimId = -1;
             char mountedHeightOffset = 0;
             if (anim[0] != -1 && mgr->m_AddressIdx[2] != 0 && g_FileManager.IsMulFileOpen(2))
             {
                 animFile = 2;
-                realAnimID = anim[0];
+                realAnimId = anim[0];
                 if (index == 192 || index == 793) // 0x00C0 || 0x0319
                 {
                     mountedHeightOffset = -9;
@@ -2031,7 +2031,7 @@ static void load_bodyconv(CFileManager *mgr)
             else if (anim[1] != -1 && mgr->m_AddressIdx[3] != 0 && g_FileManager.IsMulFileOpen(3))
             {
                 animFile = 3;
-                realAnimID = anim[1];
+                realAnimId = anim[1];
                 if (index == 1401) // 0x0579
                 {
                     mountedHeightOffset = 9;
@@ -2040,12 +2040,12 @@ static void load_bodyconv(CFileManager *mgr)
             else if (anim[2] != -1 && mgr->m_AddressIdx[4] != 0 && g_FileManager.IsMulFileOpen(4))
             {
                 animFile = 4;
-                realAnimID = anim[2];
+                realAnimId = anim[2];
             }
             else if (anim[3] != -1 && mgr->m_AddressIdx[5] != 0 && g_FileManager.IsMulFileOpen(5))
             {
                 animFile = 5;
-                realAnimID = anim[3];
+                realAnimId = anim[3];
                 switch (index)
                 {
                     case 192: // 0x00C0
@@ -2060,19 +2060,19 @@ static void load_bodyconv(CFileManager *mgr)
                         break;
                 }
             }
-            DBG_ANIM_ID(index, "\treal anim is %d is in animFile %d", realAnimID, animFile);
-
-            if (animFile > 1 && realAnimID != 0xFFFF)
+            DBG_ANIM_ID(index, "\treal anim is %d is in animFile %d", realAnimId, animFile);
+            if (animFile > 1 && realAnimId != 0xFFFF)
             {
                 auto &dataIndex = g_Index.m_Anim[index];
-                auto realType =
-                    (s_ClientVersion < CV_500A) ? uo_type_by_graphic(realAnimID) : dataIndex.Type;
+                const auto realType =
+                    (s_ClientVersion < CV_500A) ? uo_type_by_graphic(realAnimId) : dataIndex.Type;
                 int count = 0;
-                auto dataOffset = uo_get_anim_offset(realAnimID, dataIndex.Flags, realType, count);
+                auto dataOffset = uo_get_anim_offset(realAnimId, dataIndex.Flags, realType, count);
                 if (dataOffset < mgr->m_SizeIdx[animFile])
                 {
                     dataIndex.Type = realType;
-                    dataIndex.GraphicConversion = realAnimID | 0x8000;
+                    assert(realAnimId < APF_GROUP);
+                    dataIndex.GraphicConversion = realAnimId | APF_BODYCONV;
                     dataIndex.FileIndex = animFile;
                     DBG_ANIM_ID(index, "\t\toffset: %" PRId64, dataOffset);
                     DBG_ANIM_ID(index, "\t\ttype: %d", dataIndex.Type);
@@ -2084,7 +2084,7 @@ static void load_bodyconv(CFileManager *mgr)
                     }
 
                     dataOffset += mgr->m_AddressIdx[animFile];
-                    size_t maxAddress = mgr->m_AddressIdx[animFile] + mgr->m_SizeIdx[animFile];
+                    const auto maxAddress = mgr->m_AddressIdx[animFile] + mgr->m_SizeIdx[animFile];
                     int block = 0;
                     for (int j = 0; j < count; j++)
                     {
@@ -2108,7 +2108,7 @@ static void load_bodyconv(CFileManager *mgr)
                                 aidx->Size);
                             if (aidx->Size != 0 && aidx->Position != -1 && aidx->Size != -1)
                             {
-                                //dataIndex.GraphicConversion |= 0x1000; // BodyConvGroups != null
+                                dataIndex.GraphicConversion |= APF_GROUP;
                                 auto &direction = group.Direction[d];
                                 direction.PatchedAddress = aidx->Position;
                                 direction.PatchedSize = aidx->Size;
@@ -2837,9 +2837,9 @@ void uo_update_animation_tables(uint32_t lockedFlags)
                     direction.Size = direction.BaseSize;
                 }
 
-                if (replace && (data.GraphicConversion & 0x8000) != 0)
+                if (replace && !uo_has_body_conversion(data))
                 {
-                    data.GraphicConversion &= ~0x8000;
+                    data.GraphicConversion &= ~APF_BODYCONV;
                 }
             }
         }

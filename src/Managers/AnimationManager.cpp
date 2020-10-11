@@ -1444,21 +1444,11 @@ void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
     Anim.Direction = (obj->Layer & 0x7F) & 7;
     bool mirror = false;
     GetAnimDirection(Anim.Direction, mirror);
-
-    if (obj->Hidden())
-    {
-        Color = 0x038E;
-    }
-    else
-    {
-        Color = 0;
-    }
-
+    Color = obj->Hidden() ? 0x038E : 0;
     uint8_t animIndex = obj->AnimIndex;
-    Anim.Group = GetDieGroupIndex(obj->GetGraphicForAnimation(), obj->UsedLayer != 0);
-
+    const uint16_t graphic = g_AnimationManager.ConvertBodyIfNeeded(obj->GetGraphicForAnimation());
+    Anim.Group = GetDieGroupIndex(graphic, obj->UsedLayer != 0);
     Draw(obj, x, y, mirror, animIndex); //Draw animation
-
     DrawEquippedLayers(false, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
 
@@ -1481,6 +1471,27 @@ bool CAnimationManager::CorpsePixelsInXY(CGameItem *obj, int x, int y)
     return TestPixels(obj, x, y, mirror, animIndex) ||
            DrawEquippedLayers(true, obj, x, y, mirror, Anim.Direction, animIndex, 0);
 }
+
+uint16_t CAnimationManager::ConvertBodyIfNeeded(uint16_t graphic, bool isParent)
+{
+    uint16_t newGraphic = graphic;
+    uo_find_body_replacement(newGraphic, isParent);
+    return newGraphic;
+}
+
+/*
+AnimationGroup &CAnimationManager::GetBodyAnimationGroup(uint16_t graphic, uint8_t group, uint16_t &outHue, bool isParent)
+{
+    uint16_t newGraphic = graphic;
+    outHue = g_Index.m_Anim[graphic].Color;
+    if (!uo_find_body_replacement(newGraphic, isParent))
+    {
+        return g_Index.m_Anim[graphic].Groups[group];
+    }
+
+    return g_Index.m_Anim[newGraphic].Groups[group];
+}
+*/
 
 static std::unordered_map<AnimationId, AnimationFrameInfo> s_DimensionsCache;
 
@@ -2604,9 +2615,11 @@ static void LABEL_190(ANIMATION_FLAGS flags, uint16_t &v13)
 }
 
 uint8_t CAnimationManager::CorrectAnimationGroupServer(
-    ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const
+    ANIMATION_GROUPS_TYPE type,
+    ANIMATION_GROUPS_TYPE originalType,
+    ANIMATION_FLAGS flags,
+    uint16_t v13) const
 {
-    auto originalType = type;
     if (v13 == 12)
     {
         if (!(type == AGT_HUMAN || type == AGT_EQUIPMENT || flags & AF_UNKNOWN_1000))

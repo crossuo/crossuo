@@ -854,6 +854,13 @@ enum DIRECTION_TYPE
     DT_NW
 };
 
+enum ANIMATION_PATCH_FALGS : uint16_t
+{
+    APF_NONE = 0,
+    APF_GROUP = 0x4000,
+    APF_BODYCONV = 0x8000,
+};
+
 enum ANIMATION_FLAGS : uint32_t
 {
     AF_NONE = 0x00,
