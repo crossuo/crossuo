@@ -22,7 +22,7 @@ CGumpCombatBook::CGumpCombatBook(int x, int y)
 
     if (g_Config.ClientVersion < CV_7000)
     {
-        if (g_Config.ClientVersion >= CV_500A)
+        if (g_Config.ClientVersion >= CV_500A) // TODO: fix combat book
         {
             AbilityCount = 29;
         }

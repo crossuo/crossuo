@@ -107,12 +107,16 @@ public:
     bool CharacterPixelsInXY(class CGameCharacter *obj, int x, int y);
     void DrawCorpse(class CGameItem *obj, int x, int y);
     bool CorpsePixelsInXY(class CGameItem *obj, int x, int y);
+    uint16_t ConvertBodyIfNeeded(uint16_t graphic, bool isParent = false);
     uint8_t GetDieGroupIndex(uint16_t graphic, bool running, bool third = false);
     uint8_t GetRandomIdleAnimation(uint16_t graphic) const;
     uint8_t GetStandingGroupForGraphic(uint16_t graphic) const;
     ANIMATION_GROUPS GetGroupIndex(uint16_t graphic) const;
     uint8_t CorrectAnimationGroupServer(
-        ANIMATION_GROUPS_TYPE type, ANIMATION_FLAGS flags, uint16_t v13) const;
+        ANIMATION_GROUPS_TYPE type,
+        ANIMATION_GROUPS_TYPE originalType,
+        ANIMATION_FLAGS flags,
+        uint16_t v13) const;
 
     AnimationFrameInfo
     GetAnimationDimensions(uint8_t frameIndex, AnimationState anim, bool isCorpse);

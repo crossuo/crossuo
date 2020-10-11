@@ -723,11 +723,6 @@ static void CalculateHigh(
     }
 }
 
-inline static bool HasBodyConversion(const IndexAnimation &data)
-{
-    return (data.GraphicConversion & 0x8000) == 0;
-}
-
 #endif // #if USE_NEW_ANIM_CODE
 
 uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
@@ -745,27 +740,15 @@ uint8_t CGameCharacter::GetGroupForAnimation(uint16_t graphic, bool isParent)
     const bool uop = animData.IsUOP && (isParent || !animData.IsValidMUL);
     if (!uop)
     {
-        if (!HasBodyConversion(animData))
-        {
-            const auto newGraphic = animData.Graphic;
-            if (graphic != newGraphic)
-            {
-                graphic = newGraphic;
-                ANIMATION_GROUPS_TYPE newType = g_Index.m_Anim[graphic].Type;
-                if (newType != animData.Type)
-                {
-                    originalType = animData.Type;
-                    type = newType;
-                }
-            }
-        }
+        graphic = uo_get_graphic_replacement(graphic, type, originalType);
     }
 
     const ANIMATION_FLAGS flags = animData.Flags;
     if (AnimationFromServer && AnimationGroup != AG_INVALID)
     {
         // FIXME: debug - combat animations seems broken
-        //return g_AnimationManager.CorrectAnimationGroupServer(type, flags, AnimationGroup);
+        /*return g_AnimationManager.CorrectAnimationGroupServer(
+            type, originalType, flags, AnimationGroup);*/
     }
 
     uint8_t result = AnimationGroup;

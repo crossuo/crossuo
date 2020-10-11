@@ -92,7 +92,7 @@ struct IndexAnimation
     uint16_t Color = 0;
     uint16_t CorpseGraphic = 0;
     uint16_t CorpseColor = 0;
-    uint16_t GraphicConversion = 0x8000;
+    uint16_t GraphicConversion = 0;
     ANIMATION_GROUPS_TYPE Type = AGT_UNKNOWN;
     uint8_t FileIndex = 0;
     char MountedHeightOffset = 0;
@@ -339,6 +339,90 @@ inline const UopFileEntry *uo_animation_group_get(AnimationState anim)
     return uo_animation_group_get(groupId);
 }
 
+inline static bool uo_has_body_conversion(const IndexAnimation &data)
+{
+    const auto flag = data.GraphicConversion;
+    const bool hasBodyConv = (flag & APF_BODYCONV) == APF_BODYCONV;
+    const bool hasGroupPatch = (flag & APF_GROUP) == APF_GROUP;
+    return !hasBodyConv && hasGroupPatch;
+}
+
+inline static uint16_t uo_get_graphic_replacement(
+    uint16_t graphic, ANIMATION_GROUPS_TYPE &outType, ANIMATION_GROUPS_TYPE &outOriginalType)
+{
+    const auto &animData = g_Index.m_Anim[graphic];
+    if (!uo_has_body_conversion(animData))
+    {
+        const auto newGraphic = animData.Graphic;
+        if (graphic != newGraphic)
+        {
+            graphic = newGraphic;
+            const auto newType = g_Index.m_Anim[newGraphic].Type;
+            if (newType != outType)
+            {
+                outOriginalType = outType;
+                outType = newType;
+            }
+            return newGraphic;
+        }
+    }
+    return graphic;
+}
+
+inline static bool uo_find_body_replacement(uint16_t &outGraphic, bool isParent = false)
+{
+    assert(outGraphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    const auto &anim = g_Index.m_Anim[outGraphic];
+    const bool uop = anim.IsUOP && (isParent || !anim.IsValidMUL);
+    if (uop)
+    {
+        return false;
+    }
+    uint16_t newGraphic = anim.Graphic;
+    do
+    {
+        const auto conv = uo_has_body_conversion(anim);
+        if (conv)
+        {
+            break;
+        }
+        const auto &newAnim = g_Index.m_Anim[newGraphic];
+        if (outGraphic != newGraphic)
+        {
+            outGraphic = newGraphic;
+            newGraphic = newAnim.Graphic;
+        }
+    } while (outGraphic != newGraphic);
+    return true;
+}
+/*
+inline static bool uo_find_corpse_replacement(uint16_t &outGraphic, bool isParent = false)
+{
+    assert(outGraphic < MAX_ANIMATIONS_DATA_INDEX_COUNT);
+    const auto &anim = g_Index.m_Anim[outGraphic];
+    const bool uop = anim.IsUOP && (isParent || !anim.IsValidMUL);
+    if (uop)
+    {
+        return false;
+    }
+    uint16_t newGraphic = anim.CorpseGraphic;
+    do
+    {
+        const auto conv = uo_has_body_conversion(anim);
+        if (conv)
+        {
+            break;
+        }
+        const auto &newAnim = g_Index.m_Anim[newGraphic];
+        if (outGraphic != newGraphic)
+        {
+            outGraphic = newGraphic;
+            newGraphic = newAnim.CorpseGraphic;
+        }
+    } while (outGraphic != newGraphic);
+    return true;
+}
+*/
 struct CUopMappedFile : public CMappedFile // FIXME: not needed
 {
     UopHeader *Header = nullptr;
