@@ -11,10 +11,8 @@ class CBaseQueueItem;
 class CBaseQueue
 {
 public:
-    CBaseQueue();
-    virtual ~CBaseQueue();
-
     CBaseQueueItem *m_Items = nullptr;
+    virtual ~CBaseQueue();
 
     virtual void Clear();
     virtual CBaseQueueItem *Add(CBaseQueueItem *item);
@@ -35,9 +33,7 @@ public:
 class CBaseQueueItem : public CBaseQueue
 {
 public:
-    CBaseQueueItem();
     virtual ~CBaseQueueItem();
-
-    CBaseQueueItem *m_Next;
-    CBaseQueueItem *m_Prev;
+    CBaseQueueItem *m_Next = nullptr;
+    CBaseQueueItem *m_Prev = nullptr;
 };
