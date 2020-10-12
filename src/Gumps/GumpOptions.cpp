@@ -19,6 +19,7 @@
 #include "../Managers/OptionsMacroManager.h"
 #include "../Managers/ColorManager.h"
 #include "../Network/Packets.h"
+#include <common/utils.h> // countof
 
 #define KeyName(x) SDL_GetKeyName(x)
 
@@ -1959,9 +1960,9 @@ void CGumpOptions::RedrawMacroData()
                 true));
             combobox->SelectedIndex = obj->Code;
 
-            for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
+            for (int i = 0; i < countof(s_MacroActionName); i++)
             {
-                combobox->Add(new CGUIComboboxText(0x0386, 1, CMacro::GetActionName(i)));
+                combobox->Add(new CGUIComboboxText(0x0386, 1, s_MacroActionName[i]));
             }
 
             if (obj->HasSubMenu == 1)
@@ -1987,7 +1988,7 @@ void CGumpOptions::RedrawMacroData()
                     combobox->Add(new CGUIComboboxText(
                         0x0386,
                         1,
-                        CMacro::GetAction(macroListOffset + (int)i),
+                        s_MacroAction[macroListOffset + (int)i],
                         150,
                         TS_LEFT,
                         UOFONT_FIXED));

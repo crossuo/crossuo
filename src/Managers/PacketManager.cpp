@@ -6430,9 +6430,9 @@ PACKET_HANDLER(CrossMessages)
                 auto name = ReadString();
                 auto param = ReadString();
                 MACRO_CODE macroCode = MC_NONE;
-                for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
+                for (int i = 0; i < countof(s_MacroActionName); i++)
                 {
-                    astr_t macroName = CMacro::m_MacroActionName[i];
+                    astr_t macroName = s_MacroActionName[i];
                     if (name == macroName)
                     {
                         macroCode = (MACRO_CODE)i;
@@ -6455,9 +6455,9 @@ PACKET_HANDLER(CrossMessages)
                     }
                     else
                     {
-                        for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
+                        for (int i = 0; i < countof(s_MacroAction); i++)
                         {
-                            if (param == CMacro::m_MacroAction[i])
+                            if (param == s_MacroAction[i])
                             {
                                 macro->SubCode = (MACRO_SUB_CODE)i;
                                 break;

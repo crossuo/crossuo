@@ -25,8 +25,8 @@ private:
     Keycode ConvertStringToKeyCode(const std::vector<astr_t> &strings);
 
 public:
-    CMacroManager();
-    virtual ~CMacroManager();
+    CMacroManager() = default;
+    virtual ~CMacroManager() = default;
 
     class CMacro *FindMacro(Keycode key, bool alt, bool ctrl, bool shift);
     bool Convert(const fs_path &path);

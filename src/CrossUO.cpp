@@ -5913,11 +5913,11 @@ void CGame::OpenBackpack()
 
 void CGame::OpenLogOut()
 {
-    int x = g_ConfigManager.GameWindowX + (g_ConfigManager.GameWindowWidth / 2) - 40;
-    int y = g_ConfigManager.GameWindowY + (g_ConfigManager.GameWindowHeight / 2) - 20;
-
+    const int w = (g_ConfigManager.GameWindowWidth / 2);
+    const int h = (g_ConfigManager.GameWindowHeight / 2);
+    const int x = g_ConfigManager.GameWindowX + w - 40;
+    const int y = g_ConfigManager.GameWindowY + h - 20;
     g_GumpManager.AddGump(new CGumpQuestion(0, x, y, CGumpQuestion::ID_GQ_STATE_QUIT));
-
     InitScreen(GS_GAME_BLOCKED);
     g_GameBlockedScreen.Code = 3;
 }
@@ -5929,11 +5929,11 @@ void CGame::OpenChat()
 
 void CGame::OpenConfiguration()
 {
-    int x = (g_GameWindow.GetSize().Width / 2) - 320;
-    int y = (g_GameWindow.GetSize().Height / 2) - 240;
-
+    const int w = (g_ConfigManager.GameWindowWidth / 2);
+    const int h = (g_ConfigManager.GameWindowHeight / 2);
+    const int x = (g_GameWindow.GetSize().Width / 2) - w;
+    const int y = (g_GameWindow.GetSize().Height / 2) - h;
     g_OptionsConfig = g_ConfigManager;
-
     g_GumpManager.AddGump(new CGumpOptions(x, y));
 }
 
@@ -5943,9 +5943,8 @@ void CGame::OpenMail()
 
 void CGame::OpenPartyManifest()
 {
-    int x = (g_GameWindow.GetSize().Width / 2) - 272;
-    int y = (g_GameWindow.GetSize().Height / 2) - 240;
-
+    const int x = (g_GameWindow.GetSize().Width / 2) - 272;
+    const int y = (g_GameWindow.GetSize().Height / 2) - 240;
     g_GumpManager.AddGump(new CGumpPartyManifest(0, x, y, g_Party.CanLoot));
 }
 
