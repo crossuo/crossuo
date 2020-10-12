@@ -3,16 +3,9 @@
 
 #include "BaseQueue.h"
 
-CBaseQueueItem::CBaseQueueItem()
-    : m_Next(nullptr)
-    , m_Prev(nullptr)
-{
-}
-
 CBaseQueueItem::~CBaseQueueItem()
 {
     Clear();
-
     CBaseQueueItem *item = m_Next;
     while (item != nullptr && item != this)
     {
@@ -21,11 +14,6 @@ CBaseQueueItem::~CBaseQueueItem()
         delete item;
         item = next;
     }
-}
-
-CBaseQueue::CBaseQueue()
-    : m_Items(nullptr)
-{
 }
 
 CBaseQueue::~CBaseQueue()
