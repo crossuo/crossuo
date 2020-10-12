@@ -10,9 +10,10 @@ class CGumpSpellbook : public CGump
 {
 private:
     SPELLBOOK_TYPE BookType = ST_MAGERY;
-    int m_SpellCount = 0;
+    int SpellCount = 0;
     int PageCount = 8;
-    uint8_t m_Spells[MAX_SPELLS_COUNT];
+    uint8_t Spells[MAX_SPELLS_COUNT];
+    uint8_t SpellPage[MAX_SPELLS_COUNT];
 
     CGUIGumppic *m_Body = nullptr;
     CGUIText *m_TithingPointsText = nullptr;

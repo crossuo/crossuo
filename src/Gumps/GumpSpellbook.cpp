@@ -29,7 +29,7 @@ enum
     ID_GSB_BUTTON_CIRCLE_7_8 = 6,
     ID_GSB_BUTTON_MINIMIZE = 7,
     ID_GSB_LOCK_MOVING = 8,
-    ID_GSB_SPELL_SERIAL = 100,
+    ID_GSB_SPELL_SERIAL = 0x100,
 };
 
 // clang-format off
@@ -122,7 +122,7 @@ CGumpSpellbook::CGumpSpellbook(uint32_t serial, int x, int y)
     : CGump(GT_SPELLBOOK, serial, x, y)
 {
     Draw2Page = 1;
-    memset(&m_Spells[0], 0, sizeof(m_Spells));
+    memset(&Spells[0], 0, sizeof(Spells));
 }
 
 void CGumpSpellbook::UpdateGraphic(uint16_t parentGraphic)
@@ -258,7 +258,7 @@ void CGumpSpellbook::PrepareContent()
                 {
                     const int spellIndex = i + (book.SpellsPerPage * indexPage);
                     assert(spellIndex >= 0 && spellIndex < MAX_SPELLS_COUNT);
-                    if (m_Spells[spellIndex] == 0)
+                    if (Spells[spellIndex] == 0)
                     {
                         continue;
                     }
@@ -291,7 +291,7 @@ void CGumpSpellbook::PrepareContent()
             int page = book.IndexPagesCount;
             for (int spellIndex = 0; spellIndex < book.SpellCount; spellIndex++)
             {
-                if (m_Spells[spellIndex] == 0)
+                if (Spells[spellIndex] == 0)
                 {
                     continue;
                 }
@@ -381,8 +381,8 @@ void CGumpSpellbook::UpdateContent()
     m_Body = (CGUIGumppic *)Add(new CGUIGumppic(book.Graphic, 0, 0));
     Add(new CGUIHitBox(ID_GSB_BUTTON_MINIMIZE, 6, 100, 16, 16, true));
 
-    m_SpellCount = 0;
-    memset(&m_Spells[0], 0, sizeof(m_Spells));
+    SpellCount = 0;
+    memset(&Spells[0], 0, sizeof(Spells));
 
     CGameItem *spellbook = g_World->FindWorldItem(Serial);
     if (spellbook == nullptr)
@@ -395,8 +395,8 @@ void CGumpSpellbook::UpdateContent()
         const int currentCount = item->Count;
         if (currentCount > 0 && currentCount <= book.SpellCount)
         {
-            m_Spells[currentCount - 1] = 1;
-            m_SpellCount++;
+            Spells[currentCount - 1] = 1;
+            SpellCount++;
         }
     }
 
@@ -412,7 +412,7 @@ void CGumpSpellbook::UpdateContent()
         Add(new CGUIButton(ID_GSB_BUTTON_CIRCLE_7_8, 0x08B8, 0x08B8, 0x08B8, 332, 175));
     }
 
-    PageCount = book.IndexPagesCount + m_SpellCount;
+    PageCount = book.IndexPagesCount + SpellCount;
     int page = 0;
     for (; page < book.IndexPagesCount; page++)
     {
@@ -463,7 +463,7 @@ void CGumpSpellbook::UpdateContent()
             const int spellIndex = book.Type == ST_MASTERY ? s_MasteryIndexOrder[indexPage][i] :
                                                              i + (indexPage * book.SpellsPerPage);
             assert(spellIndex < MAX_SPELLS_COUNT);
-            if (spellIndex < 0 || m_Spells[spellIndex] == 0)
+            if (spellIndex < 0 || Spells[spellIndex] == 0)
                 continue;
 
             assert(spellIndex < book.SpellCount && book.Spells[spellIndex]);
@@ -486,15 +486,17 @@ void CGumpSpellbook::UpdateContent()
     }
 
     const int topTextY = book.Type == ST_MAGERY ? 10 : 6;
+    int spellPage = 0;
     for (int spellIndex = 0; spellIndex < book.SpellCount; spellIndex++)
     {
-        if (m_Spells[spellIndex] == 0)
+        if (Spells[spellIndex] == 0)
         {
             continue;
         }
 
         assert(book.Spells[spellIndex]);
-        const auto baseSpell = book.Spells[spellIndex];
+        auto baseSpell = book.Spells[spellIndex];
+        SpellPage[spellIndex] = spellPage++;
 
         int iconX = 56;
         int topNameX = 87;
@@ -634,9 +636,9 @@ void CGumpSpellbook::GUMP_BUTTON_EVENT_C
         if (Page < book.IndexPagesCount)
         {
             const int spellIndex = serial - ID_GSB_SPELL_SERIAL;
-            if (m_Spells[spellIndex] != 0)
+            if (Spells[spellIndex] != 0)
             {
-                newPage = book.IndexPagesCount + spellIndex;
+                newPage = book.IndexPagesCount + SpellPage[spellIndex];
             }
         }
     }
