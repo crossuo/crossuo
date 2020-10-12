@@ -11,7 +11,7 @@
 #include <xuocore/text_parser.h>
 #include <common/fs.h>
 #include <common/str.h>
-#include <common/utils.h>
+#include <common/utils.h> // countof
 #include "../Config.h"
 #include "../CrossUO.h"
 #include "../Macro.h"
@@ -34,14 +34,6 @@ uint8_t CMacroManager::m_SkillIndexTable[24] = { 1,  2,  35, 4,  6,  12,
                                                  14, 15, 16, 19, 21, 0xFF /*imbuing*/,
                                                  23, 3,  46, 9,  30, 22,
                                                  48, 32, 33, 47, 36, 38 };
-
-CMacroManager::CMacroManager()
-{
-}
-
-CMacroManager::~CMacroManager()
-{
-}
 
 Keycode CMacroManager::ConvertStringToKeyCode(const std::vector<astr_t> &strings)
 {
@@ -224,10 +216,10 @@ bool CMacroManager::Convert(const fs_path &path)
     const int MACRO_POSITION_CTRL = 3;
     const int MACRO_POSITION_SHIFT = 1;
 
-    astr_t macroArgs[CMacro::MACRO_ACTION_COUNT];
-    for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
+    astr_t macroArgs[countof(s_MacroAction)];
+    for (int i = 0; i < countof(s_MacroAction); i++)
     {
-        auto v = str_upper(CMacro::m_MacroAction[i]);
+        auto v = str_upper(s_MacroAction[i]);
         v.erase(std::remove_if(v.begin(), v.end(), isspace), v.end());
         macroArgs[i] = v;
     }
@@ -285,12 +277,12 @@ bool CMacroManager::Convert(const fs_path &path)
 
             MACRO_CODE code = MC_NONE;
             auto upData = str_upper(data[0]);
-            for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
+            for (int i = 0; i < countof(s_MacroActionName); i++)
             {
-                if (upData == str_upper(CMacro::m_MacroActionName[i]))
+                if (upData == str_upper(s_MacroActionName[i]))
                 {
                     code = (MACRO_CODE)i;
-                    TRACE(Client, "action found (%i): %s", i, CMacro::m_MacroActionName[i]);
+                    TRACE(Client, "action found (%i): %s", i, s_MacroActionName[i]);
                     break;
                 }
             }
@@ -320,13 +312,12 @@ bool CMacroManager::Convert(const fs_path &path)
                     }
 
                     upData = str_upper(upData);
-                    for (int i = 0; i < CMacro::MACRO_ACTION_COUNT; i++)
+                    for (int i = 0; i < countof(s_MacroAction); i++)
                     {
                         if (upData == macroArgs[i])
                         {
                             obj->SubCode = (MACRO_SUB_CODE)i;
-                            TRACE(
-                                Client, "\tsub action found (%i): %s", i, CMacro::m_MacroAction[i]);
+                            TRACE(Client, "\tsub action found (%i): %s", i, s_MacroAction[i]);
                             break;
                         }
                     }
@@ -594,7 +585,6 @@ void CMacroManager::ProcessSubMenu()
         case MC_MAXIMIZE:
         {
             CGump *gump = nullptr;
-
             switch (g_MacroPointer->SubCode)
             {
                 case MSC_G2_CONFIGURATION:

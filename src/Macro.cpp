@@ -3,6 +3,7 @@
 #include "Macro.h"
 #include <xuocore/mappedfile.h>
 #include "Wisp.h"
+#include <common/utils.h> // countof
 
 #define MODKEY_ALT 0x0100
 #define MODKEY_CTRL 0x0200
@@ -60,18 +61,10 @@ CMacroObject::CMacroObject(const MACRO_CODE &code, const MACRO_SUB_CODE &subCode
     }
 }
 
-CMacroObject::~CMacroObject()
-{
-}
-
 CMacroObjectString::CMacroObjectString(
     const MACRO_CODE &code, const MACRO_SUB_CODE &subCode, const astr_t &str)
     : CMacroObject(code, subCode)
     , m_String(str)
-{
-}
-
-CMacroObjectString::~CMacroObjectString()
 {
 }
 
@@ -80,10 +73,6 @@ CMacro::CMacro(Keycode key, bool alt, bool ctrl, bool shift)
     , Alt(alt)
     , Ctrl(ctrl)
     , Shift(shift)
-{
-}
-
-CMacro::~CMacro()
 {
 }
 
@@ -344,68 +333,72 @@ void CMacro::GetBoundByCode(const MACRO_CODE &code, int &count, int &offset)
     }
 }
 
-const char *CMacro::m_MacroActionName[MACRO_ACTION_NAME_COUNT] = { "(NONE)",
-                                                                   "Say",
-                                                                   "Emote",
-                                                                   "Whisper",
-                                                                   "Yell",
-                                                                   "Walk",
-                                                                   "War/Peace",
-                                                                   "Paste",
-                                                                   "Open",
-                                                                   "Close",
-                                                                   "Minimize",
-                                                                   "Maximize",
-                                                                   "OpenDoor",
-                                                                   "UseSkill",
-                                                                   "LastSkill",
-                                                                   "CastSpell",
-                                                                   "LastSpell",
-                                                                   "LastObject",
-                                                                   "Bow",
-                                                                   "Salute",
-                                                                   "QuitGame",
-                                                                   "AllNames",
-                                                                   "LastTarget",
-                                                                   "TargetSelf",
-                                                                   "Arm/Disarm",
-                                                                   "WaitForTarget",
-                                                                   "TargetNext",
-                                                                   "AttackLast",
-                                                                   "Delay",
-                                                                   "CircleTrans",
-                                                                   "CloseGumps",
-                                                                   "AlwaysRun",
-                                                                   "SaveDesktop",
-                                                                   "KillGumpOpen",
-                                                                   "PrimaryAbility",
-                                                                   "SecondaryAbility",
-                                                                   "EquipLastWeapon",
-                                                                   "SetUpdateRange",
-                                                                   "ModifyUpdateRange",
-                                                                   "IncreaseUpdateRange",
-                                                                   "DecreaseUpdateRange",
-                                                                   "MaxUpdateRange",
-                                                                   "MinUpdateRange",
-                                                                   "DefaultUpdateRange",
-                                                                   "UpdateRangeInfo",
-                                                                   "EnableRangeColor",
-                                                                   "DisableRangeColor",
-                                                                   "ToggleRangeColor",
-                                                                   "InvokeVirtue",
-                                                                   "SelectNext",
-                                                                   "SelectPrevious",
-                                                                   "SelectNearest",
-                                                                   "AttackSelectedTarget",
-                                                                   "UseSelectedTarget",
-                                                                   "CurrentTarget",
-                                                                   "TargetSystemOn/Off",
-                                                                   "ToggleBuficonWindow",
-                                                                   "BandageSelf",
-                                                                   "BandageTarget",
-                                                                   "ToggleGargoyleFlying" };
+// clang-format off
+const char *s_MacroActionName[] = {
+    "(NONE)",
+    "Say",
+    "Emote",
+    "Whisper",
+    "Yell",
+    "Walk",
+    "War/Peace",
+    "Paste",
+    "Open",
+    "Close",
+    "Minimize",
+    "Maximize",
+    "OpenDoor",
+    "UseSkill",
+    "LastSkill",
+    "CastSpell",
+    "LastSpell",
+    "LastObject",
+    "Bow",
+    "Salute",
+    "QuitGame",
+    "AllNames",
+    "LastTarget",
+    "TargetSelf",
+    "Arm/Disarm",
+    "WaitForTarget",
+    "TargetNext",
+    "AttackLast",
+    "Delay",
+    "CircleTrans",
+    "CloseGumps",
+    "AlwaysRun",
+    "SaveDesktop",
+    "KillGumpOpen",
+    "PrimaryAbility",
+    "SecondaryAbility",
+    "EquipLastWeapon",
+    "SetUpdateRange",
+    "ModifyUpdateRange",
+    "IncreaseUpdateRange",
+    "DecreaseUpdateRange",
+    "MaxUpdateRange",
+    "MinUpdateRange",
+    "DefaultUpdateRange",
+    "UpdateRangeInfo",
+    "EnableRangeColor",
+    "DisableRangeColor",
+    "ToggleRangeColor",
+    "InvokeVirtue",
+    "SelectNext",
+    "SelectPrevious",
+    "SelectNearest",
+    "AttackSelectedTarget",
+    "UseSelectedTarget",
+    "CurrentTarget",
+    "TargetSystemOn/Off",
+    "ToggleBuficonWindow",
+    "BandageSelf",
+    "BandageTarget",
+    "ToggleGargoyleFlying"
+};
+static_assert(countof(s_MacroActionName) == MC_COUNT, "missing macro action name string");
 
-const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
+const char *s_MacroAction[] = {
     "?",
     "NW (top)", //Walk group
     "N (topright)",
@@ -440,6 +433,7 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Mastery Spellbook",
     "Racial Abilities Book",
     "Bard Spellbook",
+    "Resource Tracker",
     "Anatomy", //Skills group
     "Animal Lore",
     "Animal Taming",
@@ -618,3 +612,5 @@ const char *CMacro::m_MacroAction[MACRO_ACTION_COUNT] = {
     "Object",
     "Mobile"
 };
+static_assert(countof(s_MacroAction) == MSC_TOTAL_COUNT, "missing macro action string");
+// clang-format on

@@ -6,6 +6,7 @@
 #include "../Managers/SkillsManager.h"
 #include "../Managers/PluginManager.h"
 #include "../Gumps/GumpSpellbook.h"
+#include <common/utils.h> // countof
 
 CPluginPacket::CPluginPacket()
 {
@@ -70,21 +71,17 @@ CPluginPacketMacrosList::CPluginPacketMacrosList()
     : CPluginPacket()
 {
     WriteUInt16BE(OIPMT_MACRO_LIST);
-    WriteUInt16BE(CMacro::MACRO_ACTION_NAME_COUNT);
-
-    for (int i = 0; i < CMacro::MACRO_ACTION_NAME_COUNT; i++)
+    WriteUInt16BE(countof(s_MacroActionName));
+    for (int i = 0; i < countof(s_MacroActionName); i++)
     {
-        WriteString(CMacro::m_MacroActionName[i]);
-
+        WriteString(s_MacroActionName[i]);
         int count = 0;
         int offset = 0;
         CMacro::GetBoundByCode((MACRO_CODE)i, count, offset);
-
         WriteUInt16BE(count);
-
         for (int j = 0; j < count; j++)
         {
-            WriteString(CMacro::m_MacroAction[j + offset]);
+            WriteString(s_MacroAction[j + offset]);
         }
     }
 }
