@@ -63,7 +63,7 @@ jobs:
         wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
         tar -xvf master.tar.gz
         emsdk-master/emsdk update
-        emsdk-master/emsdk install latest-fastcomp
-        emsdk-master/emsdk activate latest-fastcomp
+        emsdk-master/emsdk install latest
+        emsdk-master/emsdk activate latest
     - name: not-ready
       run: echo "need to setup"
