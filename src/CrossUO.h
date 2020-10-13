@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #pragma once
 
@@ -204,6 +206,7 @@ public:
     void OpenConfiguration();
     void OpenMail();
     void OpenPartyManifest();
+    void OpenResourceTracker();
     void OpenProfile(uint32_t serial = 0);
     void DisconnectGump();
     void OpenCombatBookGump();

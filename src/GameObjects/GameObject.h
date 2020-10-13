@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #pragma once
 
@@ -18,6 +20,8 @@ struct DRAW_FRAME_INFORMATION
     int Width;
     int Height;
 };
+
+uint16_t get_stack_graphic(uint16_t graphic, int count, bool &doubleDraw);
 
 class CGameObject : public CRenderStaticObject
 {

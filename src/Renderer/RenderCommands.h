@@ -305,7 +305,9 @@ struct ShaderUniformCmd
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_ShaderUniform;
     uint32_t id = RENDER_SHADERUNIFORMID_INVALID;
     ShaderUniformType uniform_type = ShaderUniformType::ShaderUniformType_Invalid;
-    union {
+    // clang-format off
+    union
+    {
         uint8_t data
             [RENDERSTATE_SHADER_UNIFORMDATA_SIZE]{}; // TODO add uniform storage for anything larger than this
         int asInt1;
@@ -317,6 +319,7 @@ struct ShaderUniformCmd
         float asFloat3[3];
         float asFloat4[4];
     } value{};
+    // clang-format on
 };
 
 struct ShaderLargeUniformCmd

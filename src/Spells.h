@@ -67,6 +67,22 @@ struct SpellBook
     const Spell *Spells[MAX_SPELLS_COUNT];
 };
 
+enum Reagent
+{
+    Batwing = 0x0F78,
+    BlackPearl = 0x0F7A,
+    Bloodmoss = 0x0F7B,
+    DemonBlood = 0x0F7D,
+    Garlic = 0x0F84,
+    Ginseng = 0x0F85,
+    MandrakeRoot = 0x0F86,
+    Nightshade = 0x0F88,
+    PigIron = 0x0F8A,
+    SulfurousAsh = 0x0F8C,
+    SpidersSilk = 0x0F8D,
+    GraveDust = 0x0F8F,
+};
+
 void InitSpells();
 const Spell &GetSpell(int offset);
 const SpellBook &GetSpellbook(SPELLBOOK_TYPE type);

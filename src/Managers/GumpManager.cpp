@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "GumpManager.h"
 #include "ConfigManager.h"
@@ -36,6 +38,7 @@
 #include "../Gumps/GumpAbility.h"
 #include "../Gumps/GumpRacialAbility.h"
 #include "../Gumps/GumpRacialAbilitiesBook.h"
+#include "../Gumps/GumpResourceTracker.h"
 #include "../Gumps/GumpPropertyIcon.h"
 #include "../Gumps/GumpCombatBook.h"
 #include "../Gumps/GumpSecureTrading.h"
@@ -272,7 +275,6 @@ CGump *CGumpManager::GumpExists(uintptr_t gumpID)
 CGump *CGumpManager::UpdateContent(uint32_t serial, int id, const GUMP_TYPE &type)
 {
     CGump *gump = GetGump(serial, id, type);
-
     if (gump != nullptr)
     {
         gump->WantUpdateContent = true;
@@ -283,7 +285,6 @@ CGump *CGumpManager::UpdateContent(uint32_t serial, int id, const GUMP_TYPE &typ
 CGump *CGumpManager::UpdateGump(uint32_t serial, int id, const GUMP_TYPE &type)
 {
     CGump *gump = GetGump(serial, id, type);
-
     if (gump != nullptr)
     {
         gump->WantRedraw = true;
@@ -293,12 +294,13 @@ CGump *CGumpManager::UpdateGump(uint32_t serial, int id, const GUMP_TYPE &type)
 
 CGump *CGumpManager::GetGump(uint32_t serial, int id, const GUMP_TYPE &type)
 {
-    CGump *gump = (CGump *)m_Items;
+    auto *gump = (CGump *)m_Items;
     while (gump != nullptr)
     {
         if (gump->GumpType == type)
         {
-            if (type == GT_SHOP || type == GT_TARGET_SYSTEM || type == GT_CUSTOM_HOUSE)
+            if (type == GT_RESOURCETRACKER || type == GT_SHOP || type == GT_TARGET_SYSTEM ||
+                type == GT_CUSTOM_HOUSE)
             {
                 break;
             }
@@ -808,7 +810,6 @@ bool CGumpManager::OnLeftMouseButtonUp(bool blocked)
              gump->GumpType == GT_TRADE || gump->GumpType == GT_RESOURCETRACKER))
         {
             gump->OnLeftMouseButtonUp();
-
             RemoveMarked();
             return true;
         }
@@ -1150,6 +1151,8 @@ bool CGumpManager::OnKeyDown(const KeyEvent &ev, bool blocked)
     return result;
 }
 
+static const int VERSION = 3;
+
 void CGumpManager::Load(const fs_path &path)
 {
     CMappedFile file;
@@ -1159,17 +1162,13 @@ void CGumpManager::Load(const fs_path &path)
     bool bufficonWindowFound = false;
     bool minimizedConsoleType = false;
     bool showFullTextConsoleType = false;
-
-    if (file.Load(path) && (file.Size != 0u))
+    if (file.Load(path) && file.Size != 0)
     {
-        uint8_t version = file.ReadUInt8();
-
+        const auto version = file.ReadUInt8();
         uint8_t *oldPtr = file.Ptr;
-
-        short count = 0;
-        short spellGroupsCount = 0;
-
-        if (version != 0u)
+        uint16_t count = 0;
+        uint16_t spellGroupsCount = 0;
+        if (version != 0)
         {
             file.Ptr = (uint8_t *)file.Start + (file.Size - 8);
             spellGroupsCount = file.ReadInt16LE();
@@ -1180,10 +1179,32 @@ void CGumpManager::Load(const fs_path &path)
             file.Ptr = (uint8_t *)file.Start + (file.Size - 6);
             count = file.ReadInt16LE();
         }
-
         file.Ptr = oldPtr;
-        bool menubarLoaded = false;
 
+        // custom static blob data
+        if (version == 3)
+        {
+            const auto blobMarker = file.ReadUInt32LE();
+            if (blobMarker == 0x33221100)
+            {
+                const auto blobType = file.ReadUInt8();
+                if (blobType == 0x01) // some gump extra data
+                {
+                    const auto gumpType = (GUMP_TYPE)file.ReadUInt8();
+                    switch (gumpType)
+                    {
+                        case GT_RESOURCETRACKER:
+                        {
+                            ResourceTracker_LoadStaticContents(file);
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        bool menubarLoaded = false;
         for (int i = 0; i < count; i++)
         {
             CGump *gump = nullptr;
@@ -1191,14 +1212,13 @@ void CGumpManager::Load(const fs_path &path)
             uint8_t size = file.ReadUInt8();
             next += size;
 
-            GUMP_TYPE gumpType = (GUMP_TYPE)file.ReadUInt8();
-            uint16_t gumpX = file.ReadUInt16LE();
-            uint16_t gumpY = file.ReadUInt16LE();
-            uint8_t gumpMinimized = file.ReadUInt8();
-            uint16_t gumpMinimizedX = file.ReadUInt16LE();
-            uint16_t gumpMinimizedY = file.ReadUInt16LE();
-            uint8_t gumpLockMoving = file.ReadUInt8();
-
+            const auto gumpType = (GUMP_TYPE)file.ReadUInt8();
+            const auto gumpX = file.ReadUInt16LE();
+            const auto gumpY = file.ReadUInt16LE();
+            const auto gumpMinimized = file.ReadUInt8();
+            const auto gumpMinimizedX = file.ReadUInt16LE();
+            const auto gumpMinimizedY = file.ReadUInt16LE();
+            const auto gumpLockMoving = file.ReadUInt8();
             switch ((GUMP_TYPE)gumpType)
             {
                 case GT_PAPERDOLL:
@@ -1229,6 +1249,11 @@ void CGumpManager::Load(const fs_path &path)
                 case GT_JOURNAL:
                 {
                     gump = new CGumpJournal(gumpX, gumpY, gumpMinimized != 0u, file.ReadInt16LE());
+                    break;
+                }
+                case GT_RESOURCETRACKER:
+                {
+                    gump = new CGumpResourceTracker(gumpX, gumpY);
                     break;
                 }
                 case GT_WORLD_MAP:
@@ -1370,7 +1395,6 @@ void CGumpManager::Load(const fs_path &path)
                 gump->LockMoving = (gumpLockMoving != 0u);
                 //gump->FixCoordinates();
                 AddGump(gump);
-                assert(gump != nullptr && "AddGump should not delete obj here");
                 gump->WantUpdateContent = true;
             }
 
@@ -1544,9 +1568,17 @@ void CGumpManager::Save(const fs_path &path)
     Wisp::CBinaryFileWriter writer;
 
     writer.Open(path);
-    writer.WriteInt8(1); //version
+    writer.WriteInt8(VERSION); // version
     writer.WriteBuffer();
-    short count = 0;
+    uint16_t count = 0;
+
+    // custom blob static data
+    {
+        writer.WriteUInt32LE(0x33221100); // blobMarker
+        writer.WriteUInt8(0x01);          // some gump extra data
+        writer.WriteUInt8(GT_RESOURCETRACKER);
+        ResourceTracker_SaveStaticContents(writer);
+    }
 
     std::vector<CGump *> containerList;
     std::vector<CGump *> spellInGroupList;
@@ -1564,6 +1596,7 @@ void CGumpManager::Save(const fs_path &path)
             case GT_SKILLS:
             case GT_JOURNAL:
             case GT_WORLD_MAP:
+            case GT_RESOURCETRACKER:
             case GT_PROPERTY_ICON:
             {
                 uint8_t size = 12;

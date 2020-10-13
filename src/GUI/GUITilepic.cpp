@@ -1,5 +1,7 @@
 ﻿// MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "GUITilepic.h"
 #include <xuocore/uodata.h>
@@ -8,12 +10,9 @@
 #include "../Point.h"
 #include "../Utility/PerfMarker.h"
 
-CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y)
+CGUITilepic::CGUITilepic(uint16_t graphic, uint16_t color, int x, int y, bool doubleDraw)
     : CGUIDrawObject(GOT_TILEPIC, 0, graphic, color, x, y)
-{
-}
-
-CGUITilepic::~CGUITilepic()
+    , DoubleDraw(doubleDraw)
 {
 }
 
@@ -37,12 +36,15 @@ void CGUITilepic::PrepareTextures()
 void CGUITilepic::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-
     auto spr = g_Game.ExecuteStaticArt(Graphic);
     if (spr != nullptr && spr->Texture)
     {
         SetShaderMode();
         spr->Texture->Draw(m_X, m_Y, checktrans);
+        if (DoubleDraw)
+        {
+            spr->Texture->Draw(m_X + 5, m_Y + 5, checktrans);
+        }
     }
 }
 

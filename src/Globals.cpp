@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "Target.h"
 #include "Point.h"
@@ -385,31 +387,4 @@ int GetTopObjDistance(CGameObject *current, CGameObject *target)
     }
 
     return 100500;
-}
-
-const char *GetReagentName(uint16_t id)
-{
-    switch (id)
-    {
-        case 0x0F7A:
-            return "Black pearl";
-        case 0x0F7B:
-            return "Bloodmoss";
-        case 0x0F84:
-            return "Garlic";
-        case 0x0F85:
-            return "Ginseng";
-        case 0x0F86:
-            return "Mandrake root";
-        case 0x0F88:
-            return "Nightshade";
-        case 0x0F8C:
-            return "Sulfurous ash";
-        case 0x0F8D:
-            return "Spiders silk";
-        default:
-            break;
-    }
-
-    return "";
 }

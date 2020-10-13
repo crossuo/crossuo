@@ -1,5 +1,8 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
+
 #include "PacketManager.h"
 #include "GumpManager.h"
 #include "ConfigManager.h"
@@ -2025,6 +2028,7 @@ PACKET_HANDLER(DeleteObject)
                 g_GumpManager.UpdateContent(cont, 0, GT_PAPERDOLL);
             }
 
+            g_GumpManager.UpdateContent(0, 0, GT_RESOURCETRACKER);
             g_GumpManager.UpdateContent(cont, 0, GT_CONTAINER);
             if (obj->Graphic == 0x0EB0)
             {

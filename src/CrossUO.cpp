@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "CrossUO.h"
 
@@ -133,6 +135,7 @@
 #include "Gumps/GumpQuestion.h"
 #include "Gumps/GumpRacialAbilitiesBook.h"
 #include "Gumps/GumpRacialAbility.h"
+#include "Gumps/GumpResourceTracker.h"
 #include "Gumps/GumpScreenCharacterList.h"
 #include "Gumps/GumpScreenConnection.h"
 #include "Gumps/GumpScreenCreateCharacter.h"
@@ -5946,6 +5949,15 @@ void CGame::OpenPartyManifest()
     const int x = (g_GameWindow.GetSize().Width / 2) - 272;
     const int y = (g_GameWindow.GetSize().Height / 2) - 240;
     g_GumpManager.AddGump(new CGumpPartyManifest(0, x, y, g_Party.CanLoot));
+}
+
+void CGame::OpenResourceTracker()
+{
+    const int w = (g_ConfigManager.GameWindowWidth / 2);
+    const int h = (g_ConfigManager.GameWindowHeight / 2);
+    const int x = (g_GameWindow.GetSize().Width / 2) - w;
+    const int y = (g_GameWindow.GetSize().Height / 2) - h;
+    g_GumpManager.AddGump(new CGumpResourceTracker(x, y));
 }
 
 void CGame::OpenProfile(uint32_t serial)

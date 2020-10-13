@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "GameWorld.h"
 #include "ObjectOnCursor.h"
@@ -438,6 +440,7 @@ void CGameWorld::RemoveFromContainer(CGameObject *obj)
         else
         {
             g_GumpManager.UpdateContent(containerSerial, 0, GT_CONTAINER);
+            g_GumpManager.UpdateContent(0, 0, GT_RESOURCETRACKER);
         }
 
         CGameObject *container = FindWorldObject(containerSerial);
@@ -811,6 +814,7 @@ void CGameWorld::UpdateGameObject(
             if (g_ObjectInHand.Layer == 0u)
             {
                 g_GumpManager.UpdateContent(g_ObjectInHand.Container, 0, GT_CONTAINER);
+                g_GumpManager.UpdateContent(0, 0, GT_RESOURCETRACKER);
             }
             else
             {
@@ -1126,6 +1130,7 @@ void CGameWorld::UpdateItemInContainer(CGameObject *obj, CGameObject *container,
             if (gump != nullptr && gump->GumpType == GT_CONTAINER)
             {
                 ((CGumpContainer *)gump)->UpdateItemCoordinates(obj);
+                g_GumpManager.UpdateContent(0, 0, GT_RESOURCETRACKER);
             }
         }
         if (gump != nullptr && !container->NPC)
