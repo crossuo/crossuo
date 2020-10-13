@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "MacroManager.h"
 #include "OptionsMacroManager.h"
@@ -475,6 +477,11 @@ void CMacroManager::ProcessSubMenu()
                     g_Game.OpenSkills();
                     break;
                 }
+                case MSC_G2_RESOURCE_TRACKER:
+                {
+                    g_Game.OpenResourceTracker();
+                    break;
+                }
                 case MSC_G2_MAGE_SPELLBOOK:
                 case MSC_G2_NECRO_SPELLBOOK:
                 case MSC_G2_PALADIN_SPELLBOOK:
@@ -611,6 +618,11 @@ void CMacroManager::ProcessSubMenu()
                 case MSC_G2_SKILLS:
                 {
                     gump = g_GumpManager.GetGump(0, 0, GT_SKILLS);
+                    break;
+                }
+                case MSC_G2_RESOURCE_TRACKER:
+                {
+                    gump = g_GumpManager.GetGump(0, 0, GT_RESOURCETRACKER);
                     break;
                 }
                 case MSC_G2_MAGE_SPELLBOOK:

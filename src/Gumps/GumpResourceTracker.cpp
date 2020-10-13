@@ -1,9 +1,12 @@
 // AGPLv3 License
 // Copyright (c) 2020 Jean-Martin Miljours
-// Copyright (c) 2020 CrossUO Team
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include <xuocore/uodata.h>
+#include <common/utils.h> // countof
+#include <algorithm>      // std::min, std::max
 #include "GumpResourceTracker.h"
+#include "../Spells.h"
 #include "../Managers/GumpManager.h"
 #include "../Managers/MouseManager.h"
 #include "../Managers/FontsManager.h"
@@ -17,26 +20,103 @@
 #include "../Utility/PerfMarker.h"
 #include "../Renderer/RenderAPI.h"
 
-enum
+static constexpr int GRID_SIZE = 20;
+static constexpr int MAX_WIDTH = GRID_SIZE * TRACKER_BOX_SIZE;
+static constexpr int MAX_HEIGHT = GRID_SIZE * TRACKER_BOX_SIZE;
+static constexpr int ID_GWM_RESIZE = 2;
+static constexpr int MAX_ITEMS = 58; // do not make this bigger or will break gump desktop saving
+
+static std::vector<TrackedItem> s_Items;
+static int s_Width = TRACKER_WIDTH;
+static int s_Height = TRACKER_HEIGHT;
+static const int VERSION = 1;
+
+struct ItemOffset
 {
-    ID_GMB_NONE,
-    ID_GTB_TARGET,
+    Reagent Graphic = (Reagent)0;
+    int XOffset = 0;
 };
 
-CGumpResourceTracker::CGumpResourceTracker(short x, short y)
+// clang-format off
+static ItemOffset itemOffset[] = {
+    { Ginseng,      -8 },
+    { MandrakeRoot, -5 },
+    { PigIron,      -5 },
+    { DemonBlood,   -7 },
+    { GraveDust,    -10 },
+    { Batwing,      -10 },
+    { BlackPearl,   -10 },
+    { SulfurousAsh, -3 },
+    { },
+};
+// clang-format on
+
+static int getXOffset(uint16_t graphic)
+{
+    for (const auto &entry : itemOffset)
+    {
+        if (graphic == entry.Graphic)
+            return entry.XOffset;
+    }
+    return 0;
+}
+
+void ResourceTracker_LoadStaticContents(CMappedFile &reader)
+{
+    s_Items.clear();
+    s_Width = reader.ReadUInt16LE();
+    s_Height = reader.ReadUInt16LE();
+    const auto version = reader.ReadUInt8();
+    if (version != VERSION)
+    {
+        return;
+    }
+    const uint8_t itemCount = reader.ReadUInt8();
+    for (int itemIdx = 0; itemIdx < itemCount; itemIdx++)
+    {
+        const auto graphic = reader.ReadUInt16LE();
+        const auto color = reader.ReadUInt16LE();
+        s_Items.push_back({ graphic, color });
+    }
+    g_GumpManager.UpdateContent(0, 0, GT_RESOURCETRACKER);
+}
+
+void ResourceTracker_SaveStaticContents(Wisp::CBinaryFileWriter &writer)
+{
+    writer.WriteUInt16LE(s_Width);
+    writer.WriteUInt16LE(s_Height);
+    writer.WriteUInt8(VERSION);
+    writer.WriteUInt8(uint8_t(s_Items.size()));
+    for (int itemIdx = 0; itemIdx < s_Items.size(); itemIdx++)
+    {
+        const auto item = s_Items[itemIdx];
+        writer.WriteUInt16LE(item.Graphic);
+        writer.WriteUInt16LE(item.Color);
+    }
+
+    s_Width = TRACKER_WIDTH;
+    s_Height = TRACKER_HEIGHT;
+    s_Items.clear();
+}
+
+CGumpResourceTracker::CGumpResourceTracker(int x, int y, int w, int h)
     : CGump(GT_RESOURCETRACKER, 0, x, y)
 {
-    m_Background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x0a3c, 0, 0, Width, Height));
-    m_Trans = (CGUIChecktrans *)Add(new CGUIChecktrans(5, 5, 505, 65));
-    m_gridDataBoxGUI = (CGUIDataBox *)Add(new CGUIDataBox());
-    m_itemsDataBoxGui = (CGUIDataBox *)Add(new CGUIDataBox());
-    numRow = Height / BOX_SIZE;
-    numCol = Width / BOX_SIZE;
-    DrawGrid();
-    DrawItem();
-
+    if (h != 0)
+    {
+        s_Height = h;
+    }
+    if (w != 0)
+    {
+        s_Width = w;
+    }
+    m_Background = (CGUIResizepic *)Add(new CGUIResizepic(0, 0x0A3C, 0, 0, s_Width, s_Height));
+    m_Trans = (CGUIChecktrans *)Add(new CGUIChecktrans(5, 5, s_Width - 5, s_Height - 5));
+    m_DataBox = (CGUIDataBox *)Add(new CGUIDataBox());
+    Rows = s_Height / TRACKER_BOX_SIZE;
+    Cols = s_Width / TRACKER_BOX_SIZE;
     m_Resizer = (CGUIResizeButton *)Add(
-        new CGUIResizeButton(ID_GWM_RESIZE, 0x0837, 0x0838, 0x0838, Width - 5, Height - 5));
+        new CGUIResizeButton(ID_GWM_RESIZE, 0x0837, 0x0838, 0x0838, s_Width - 5, s_Height - 5));
 }
 
 void CGumpResourceTracker::PrepareContent()
@@ -44,132 +124,137 @@ void CGumpResourceTracker::PrepareContent()
     CPoint2Di offset = g_MouseManager.RealPosition;
     offset.X -= GetX();
     offset.Y -= GetY();
-    currCol = offset.X / BOX_SIZE;
-    currRow = offset.Y / BOX_SIZE;
+    CurrCol = offset.X / TRACKER_BOX_SIZE;
+    CurrRow = offset.Y / TRACKER_BOX_SIZE;
 
-    if (currCol > numCol - 1)
+    if (CurrCol > Cols - 1)
     {
-        currCol = -1;
+        CurrCol = -1;
     }
-    if (currRow > numRow - 1)
+    if (CurrRow > Rows - 1)
     {
-        currRow = -1;
+        CurrRow = -1;
     }
 
     if (g_SelectedObject.Gump == this && g_ObjectInHand.Enabled && offset.X > 0 && offset.Y > 0)
     {
-        hasItemInGump = true;
-        drawDebug = true;
+        HasItemInGump = true;
+        DrawDebug = true;
         WantUpdateContent = true;
     }
     else
     {
-        drawDebug = false;
+        DrawDebug = false;
     }
 }
 
 void CGumpResourceTracker::UpdateContent()
 {
-    CGump::UpdateContent();
-    WantRedraw = true;
+    m_DataBox->Clear();
+    UpdateItems();
+    UpdateCounters();
 }
 
 void CGumpResourceTracker::Draw()
 {
+    ScopedPerfMarker(__FUNCTION__);
     char dbf[150] = { 0 };
-    if (g_DeveloperMode == DM_DEBUGGING && drawDebug)
+    if (g_DeveloperMode == DM_DEBUGGING && DrawDebug)
     {
-        sprintf_s(
+        sprintf(
             dbf, //column row
             "Curent selection :\nColumn=%i Row=%i\nObject in hand=0x%04X",
-            currCol,
-            currRow,
+            CurrCol,
+            CurrRow,
             g_ObjectInHand.Graphic);
         g_FontManager.DrawA(3, dbf, 0x35, GetX(), GetY() - 70);
     }
     CGump::Draw();
 }
 
-void CGumpResourceTracker::DrawText()
+void CGumpResourceTracker::UpdateCounters()
 {
-    for (uint8_t r = 0; r < numRow; r++)
+    for (uint8_t row = 0; row < Rows; row++)
     {
-        for (uint8_t c = 0; c < numCol; c++)
+        for (uint8_t col = 0; col < Cols; col++)
         {
-            uint16_t graph = items[r][c].graphic;
-            if (graph == 0)
-            {
+            const auto index = row * Cols + col;
+            if (index >= s_Items.size())
                 continue;
-            }
-            int count = CountItemBackPack(graph);
-            CGUIText *txt = new CGUIText(0x44, (c * BOX_SIZE) + 5, (r * BOX_SIZE) + BOX_SIZE - 15);
+
+            const auto item = s_Items[index];
+            const auto count = CountItemBackPack(item.Graphic);
+            CGUIText *txt = new CGUIText(
+                0x44,
+                (col * TRACKER_BOX_SIZE) + 5,
+                (row * TRACKER_BOX_SIZE) + TRACKER_BOX_SIZE - 15);
             if (count <= 20 && count > 10)
             {
-                txt->Color = 0x99; //yellow
+                txt->Color = 0x99; // yellow
             }
             else if (count <= 10)
             {
-                txt->Color = 0x26; //red
+                txt->Color = 0x26; // red
             }
             else
             {
-                txt->Color = 0x44;
+                txt->Color = 0x44; // green
             }
-            txt->CreateTextureA(9, str_from(count), BOX_SIZE, TS_CENTER);
-            m_itemsDataBoxGui->Add(txt);
+            txt->CreateTextureA(9, str_from(count), TRACKER_BOX_SIZE, TS_CENTER);
+            m_DataBox->Add(txt);
+            WantRedraw = true;
         }
     }
 }
 
-void CGumpResourceTracker::DrawItem()
+void CGumpResourceTracker::UpdateItems()
 {
-    for (uint8_t r = 0; r < numRow; r++)
+    for (uint8_t row = 0; row < Rows; row++)
     {
-        for (uint8_t c = 0; c < numCol; c++)
+        for (uint8_t col = 0; col < Cols; col++)
         {
-            const auto &item = items[r][c];
-            if (item.graphic == 0)
-            {
+            const auto index = row * Cols + col;
+            if (index >= s_Items.size())
                 continue;
-            }
-            CIndexObjectStatic &sio = g_Index.m_Static[item.graphic];
+
+            const auto item = s_Items[index];
+            bool doubleDraw = false;
+            const auto stackedGraphic = get_stack_graphic(item.Graphic, 999, doubleDraw);
+            const auto &sio = g_Index.m_Static[stackedGraphic];
             auto spr = (CSprite *)sio.UserData;
             if (spr != nullptr)
             {
-                const int tileOffsetX = (BOX_SIZE - 18 - (spr->ImageWidth)) / 2;
-                const int tileOffsetY = (BOX_SIZE - (spr->ImageHeight)) / 2;
-                m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, true));
-                m_itemsDataBoxGui->Add(new CGUITilepic(
-                    item.graphic,
-                    item.color,
-                    (c * BOX_SIZE) + tileOffsetX,
-                    (r * BOX_SIZE) + tileOffsetY));
-                m_itemsDataBoxGui->Add(new CGUIShader(&g_ColorizerShader, false));
+                const auto doubleOffset = doubleDraw ? -5 : 0;
+                auto tileOffsetX = ((TRACKER_BOX_SIZE / 2) - (spr->ImageWidth / 2)) - 5;
+                const auto tileOffsetY = (TRACKER_BOX_SIZE - (spr->ImageHeight)) / 2;
+                tileOffsetX += getXOffset(item.Graphic);
+                const auto posX = (col * TRACKER_BOX_SIZE) + tileOffsetX + doubleOffset;
+                const auto posY = (row * TRACKER_BOX_SIZE) + tileOffsetY + doubleOffset;
+                m_DataBox->Add(new CGUIShader(&g_ColorizerShader, true));
+                m_DataBox->Add(new CGUITilepic(stackedGraphic, item.Color, posX, posY, doubleDraw));
+                m_DataBox->Add(new CGUIShader(&g_ColorizerShader, false));
+                WantRedraw = true;
             }
         }
     }
 }
 
-void CGumpResourceTracker::DrawGrid()
+void CGumpResourceTracker::UpdateGrid()
 {
-    for (uint8_t c = 0; c < numCol; c++)
+    const auto color = 0x900;
+    for (uint8_t col = 0; col < Cols; col++)
     {
-        m_gridDataBoxGUI->Add(
-            new CGUILine((c + 1) * BOX_SIZE, 5, (c + 1) * BOX_SIZE, BOX_SIZE * numRow, 0x900));
-        for (uint8_t r = 0; r < numRow; r++)
+        const auto c = (col + 1) * TRACKER_BOX_SIZE;
+        m_DataBox->Add(new CGUILine(c, 5, c, TRACKER_BOX_SIZE * Rows, color));
+        for (uint8_t row = 0; row < Rows; row++)
         {
-            m_gridDataBoxGUI->Add(
-                new CGUILine(0, (r + 1) * BOX_SIZE, BOX_SIZE * numCol, (r + 1) * BOX_SIZE, 0x900));
+            const auto r = (row + 1) * TRACKER_BOX_SIZE;
+            m_DataBox->Add(new CGUILine(0, r, TRACKER_BOX_SIZE * Cols, r, color));
         }
     }
 }
 
-void CGumpResourceTracker::DeleteGrid()
-{
-    m_gridDataBoxGUI->Clear();
-}
-
-int CGumpResourceTracker::CountItemBackPack(uint32_t graph)
+int CGumpResourceTracker::CountItemBackPack(uint16_t graphic)
 {
     int result = 0;
     CGameItem *bk = (CGameItem *)g_Player->FindLayer(OL_BACKPACK);
@@ -185,13 +270,13 @@ int CGumpResourceTracker::CountItemBackPack(uint32_t graph)
             for (int j = 0; j < item->GetItemsCount(); j++)
             {
                 CGameItem *subitem = (CGameItem *)item->Get(j);
-                if (subitem->Graphic == graph)
+                if (subitem->Graphic == graphic)
                 {
                     result += subitem->Count;
                 }
             }
         }
-        else if (item->Graphic == graph)
+        else if (item->Graphic == graphic)
         {
             result += item->Count;
         }
@@ -201,42 +286,18 @@ int CGumpResourceTracker::CountItemBackPack(uint32_t graph)
 
 void CGumpResourceTracker::UpdateSize()
 {
-    Width = m_StartResizeWidth + g_MouseManager.LeftDroppedOffset().X;
-    Height = m_StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
-
-    if (Height < BOX_SIZE)
-    {
-        Height = BOX_SIZE;
-    }
-
-    if (Width < BOX_SIZE)
-    {
-        Width = BOX_SIZE;
-    }
-
-    if (Height >= MAX_HEIGHT)
-    {
-        Height = MAX_HEIGHT;
-    }
-
-    if (Width >= MAX_WIDTH)
-    {
-        Width = MAX_WIDTH;
-    }
-
-    numRow = Height / BOX_SIZE;
-    numCol = Width / BOX_SIZE;
-    m_itemsDataBoxGui->Clear();
-    DeleteGrid();
-    DrawGrid();
-    DrawItem();
-    DrawText();
-    m_Background->Width = Width + 5;
-    m_Background->Height = Height + 5;
-    m_Trans->Width = Width - 10;
-    m_Trans->Height = Height - 10;
-    m_Resizer->SetX(Width);
-    m_Resizer->SetY(Height);
+    s_Width = StartResizeWidth + g_MouseManager.LeftDroppedOffset().X;
+    s_Height = StartResizeHeight + g_MouseManager.LeftDroppedOffset().Y;
+    s_Height = std::max(TRACKER_BOX_SIZE, std::min(MAX_HEIGHT, s_Height));
+    s_Width = std::max(TRACKER_BOX_SIZE, std::min(MAX_WIDTH, s_Width));
+    Rows = s_Height / TRACKER_BOX_SIZE;
+    Cols = s_Width / TRACKER_BOX_SIZE;
+    m_Background->Width = s_Width + 5;
+    m_Background->Height = s_Height + 5;
+    m_Trans->Width = s_Width - 10;
+    m_Trans->Height = s_Height - 10;
+    m_Resizer->SetX(s_Width);
+    m_Resizer->SetY(s_Height);
     WantRedraw = true;
     WantUpdateContent = true;
 }
@@ -244,83 +305,83 @@ void CGumpResourceTracker::UpdateSize()
 void CGumpResourceTracker::OnLeftMouseButtonUp()
 {
     CGump::OnLeftMouseButtonUp();
-    if (!hasItemInGump)
+    if (!HasItemInGump || s_Items.size() >= MAX_ITEMS)
     {
         return;
     }
-    CRenderWorldObject *container = g_World->FindWorldObject(g_ObjectInHand.Container);
 
+    const auto container = g_World->FindWorldObject(g_ObjectInHand.Container);
     if (container == nullptr)
     {
         return;
     }
-    items[currRow][currCol].graphic = g_ObjectInHand.Graphic;
-    items[currRow][currCol].color = g_ObjectInHand.Color;
+    const auto color = g_ObjectInHand.Color;
+    const auto graphic = g_ObjectInHand.Graphic;
     g_Game.DropItem(container->Serial, 0xFFFF, 0xFFFF, 0);
-    DrawText();
-    DrawItem();
-    hasItemInGump = false;
-}
 
-void CGumpResourceTracker::OnLeftMouseButtonDown()
-{
-    CGump::OnLeftMouseButtonDown();
+    const auto index = CurrRow * Cols + CurrCol;
+    if (!IsStackable(graphic))
+    {
+        return;
+    }
+
+    const TrackedItem item = { graphic, color };
+    const auto cond = [&item](auto x) {
+        return x.Graphic == item.Graphic && x.Color == item.Color;
+    };
+    const auto it = std::find_if(s_Items.begin(), s_Items.end(), cond);
+    if (it != s_Items.end())
+    {
+        return;
+    }
+
+    if (index >= s_Items.size())
+    {
+        s_Items.push_back(item);
+    }
+    else
+    {
+        s_Items.insert(s_Items.begin() + index, item);
+    }
+
+    WantUpdateContent = true;
+    HasItemInGump = false;
 }
 
 bool CGumpResourceTracker::OnLeftMouseButtonDoubleClick()
 {
-    bool result = false;
-
     if (g_PressedObject.LeftObject == nullptr && !g_PressedObject.LeftObject->IsGUI())
     {
-        return result;
-    }
-    if (((CBaseGUI *)g_PressedObject.LeftObject)->Type == GOT_TILEPIC)
-    {
-        CGameItem *item = (CGameItem *)g_Player->FindLayer(OL_BACKPACK);
-        CGameItem *find = nullptr;
-        if (item != nullptr)
-        {
-            find = item->FindItem(g_PressedObject.LeftObject->Graphic);
-        }
-        if (find != nullptr)
-        {
-            g_Game.DoubleClick(find->Serial);
-            FrameCreated = false;
-            result = true;
-        }
+        return false;
     }
 
-    return result;
-}
-
-void CGumpResourceTracker::GUMP_BUTTON_EVENT_C
-{
-    switch (serial)
+    const auto index = CurrRow * Cols + CurrCol;
+    if (index >= s_Items.size())
     {
-        case ID_GTB_TARGET:
-        {
-            break;
-        }
+        return false;
     }
+
+    s_Items.erase(s_Items.begin() + index);
+    WantUpdateContent = true;
+    return true;
 }
 
 void CGumpResourceTracker::GUMP_RESIZE_START_EVENT_C
 {
-    m_StartResizeWidth = Width;
-    m_StartResizeHeight = Height;
+    StartResizeWidth = s_Width;
+    StartResizeHeight = s_Height;
 }
 
 void CGumpResourceTracker::GUMP_RESIZE_EVENT_C
 {
     CPoint2Di offset = g_MouseManager.LeftDroppedOffset();
-    Width = m_StartResizeWidth + offset.X;
-    Height = m_StartResizeHeight + offset.Y;
+    s_Width = StartResizeWidth + offset.X;
+    s_Height = StartResizeHeight + offset.Y;
     UpdateSize();
 }
 
 void CGumpResourceTracker::GUMP_RESIZE_END_EVENT_C
 {
-    m_StartResizeWidth = 0;
-    m_StartResizeHeight = 0;
+    StartResizeWidth = 0;
+    StartResizeHeight = 0;
 }

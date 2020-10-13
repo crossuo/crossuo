@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #pragma once
 
@@ -59,8 +61,6 @@ int GetDistance(const CPoint2Di &current, CGameObject *target);
 int GetDistance(const CPoint2Di &current, const CPoint2Di &target);
 int GetRemoveDistance(const CPoint2Di &current, CGameObject *target);
 int GetTopObjDistance(CGameObject *current, CGameObject *target);
-
-const char *GetReagentName(uint16_t id);
 
 extern int g_LandObjectsCount;
 extern int g_StaticsObjectsCount;

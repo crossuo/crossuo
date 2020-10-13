@@ -1,60 +1,54 @@
 // AGPLv3 License
 // Copyright (c) 2020 Jean-Martin Miljours
-// Copyright (c) 2020 CrossUO Team
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "Gump.h"
 
+#define TRACKER_BOX_SIZE (60)
+#define TRACKER_WIDTH ((8 * TRACKER_BOX_SIZE) + 5)
+#define TRACKER_HEIGHT (TRACKER_BOX_SIZE + 5)
+
+void ResourceTracker_LoadStaticContents(CMappedFile &reader);
+void ResourceTracker_SaveStaticContents(Wisp::CBinaryFileWriter &writer);
+
 struct TrackedItem
 {
-    uint16_t graphic = 0;
-    uint16_t color = 0;
+    uint16_t Graphic = 0;
+    uint16_t Color = 0;
 };
 
 class CGumpResourceTracker : public CGump
 {
 private:
-    static constexpr int BOX_SIZE = 60;
-    static constexpr int GRID_SIZE = 20;
-    static constexpr int MAX_WIDTH = GRID_SIZE * BOX_SIZE;
-    static constexpr int MAX_HEIGHT = GRID_SIZE * BOX_SIZE;
-    TrackedItem items[GRID_SIZE][GRID_SIZE]{};
-    uint16_t numRow = 0;
-    uint16_t numCol = 0;
-    int16_t currCol = -1;
-    int16_t currRow = -1;
-    bool drawDebug = false;
-    bool hasItemInGump = false;
-    static constexpr int ID_GWM_RESIZE = 2;
-    int m_StartResizeWidth = 0;
-    int m_StartResizeHeight = 0;
+    int16_t CurrCol = -1;
+    int16_t CurrRow = -1;
+    bool DrawDebug = false;
+    bool HasItemInGump = false;
+    int StartResizeWidth = 0;
+    int StartResizeHeight = 0;
     CGUIResizeButton *m_Resizer = nullptr;
     CGUIResizepic *m_Background = nullptr;
     CGUIChecktrans *m_Trans = nullptr;
-    CGUIDataBox *m_gridDataBoxGUI = nullptr;
-    CGUIDataBox *m_itemsDataBoxGui = nullptr;
+    CGUIDataBox *m_DataBox = nullptr;
 
-    void DrawText();
-    void DrawGrid();
     void UpdateSize();
-    void DeleteGrid();
-    void DrawItem();
+    void UpdateGrid();
+    void UpdateItems();
+    void UpdateCounters();
+    int CountItemBackPack(uint16_t graphic);
 
 public:
-    CGumpResourceTracker(short x, short y);
+    CGumpResourceTracker(int x, int y, int w = 0, int h = 0);
     virtual ~CGumpResourceTracker() = default;
-
-    int Width = 515;
-    int Height = 75;
-    int CountItemBackPack(uint32_t graph); // TODO move this in item
+    uint16_t Rows = 0;
+    uint16_t Cols = 0;
 
     virtual void Draw() override;
     virtual void PrepareContent() override;
     virtual void UpdateContent() override;
     virtual void OnLeftMouseButtonUp() override;
-    virtual void OnLeftMouseButtonDown() override;
     virtual bool OnLeftMouseButtonDoubleClick() override;
 
-    GUMP_BUTTON_EVENT_H override;
     GUMP_RESIZE_START_EVENT_H override;
     GUMP_RESIZE_EVENT_H override;
     GUMP_RESIZE_END_EVENT_H override;

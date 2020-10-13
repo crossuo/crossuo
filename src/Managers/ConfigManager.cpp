@@ -1,5 +1,7 @@
 // MIT License
 // Copyright (C) August 2016 Hotride
+// AGPLv3 License
+// Copyright (c) 2020 Danny Angelo Carminati Grein
 
 #include "ConfigManager.h"
 #include "GumpManager.h"
@@ -942,9 +944,7 @@ void CConfigManager::SetCharacterBackpackStyle(uint8_t val)
     if (this == &g_ConfigManager && g_World != nullptr)
     {
         g_GumpManager.UpdateContent(g_PlayerSerial, 0, GT_PAPERDOLL);
-
         CGameItem *backpack = g_Player->FindLayer(OL_BACKPACK);
-
         if (backpack != nullptr)
         {
             g_GumpManager.UpdateContent(backpack->Serial, 0, GT_CONTAINER);
