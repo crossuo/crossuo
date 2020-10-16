@@ -10,6 +10,7 @@
 #include <common/logging/logging.h>
 #include <common/fs.h>
 #include <common/str.h>
+#include <common/utils.h>
 #include <xuocore/enumlist.h>
 #include <xuocore/client_info.h>
 #include "Crypt/CryptEntry.h"
@@ -36,6 +37,7 @@ enum
     MSCC_CLIENT_VERSION,
     MSCC_PROTOCOL_CLIENT_VERSION,
     MSCC_USE_CRYPT,
+    MSCC_USE_KEYS,
     MSCC_USE_VERDATA,
     MSCC_CLIENT_TYPE,
     MSCC_LOCALE_OVERRIDE,
@@ -70,11 +72,13 @@ static const ConfigEntry s_Keys[] = {
     { MSCC_CLIENT_VERSION, "clientversion" },
     { MSCC_PROTOCOL_CLIENT_VERSION, "protocolclientversion" },
     { MSCC_USE_CRYPT, "crypt" },
+    { MSCC_USE_KEYS, "keys" },
     { MSCC_USE_VERDATA, "useverdata" },
     { MSCC_CLIENT_TYPE, "clienttype" },
     { MSCC_LOCALE_OVERRIDE, "language" },
     { MSCC_COUNT, nullptr },
 };
+static_assert(countof(s_Keys) == MSCC_COUNT, "missing config entry");
 
 static uint32_t GetConfigKey(const astr_t &key)
 {
@@ -239,25 +243,31 @@ static void SetClientCrypt(uint32_t version)
 {
     if (version == CV_200X)
     {
-        g_Config.Key1 = 0x2D13A5FC;
-        g_Config.Key2 = 0x2D13A5FD;
-        g_Config.Key3 = 0xA39D527F;
+        if (!g_Config.ClientKeysSet)
+        {
+            g_Config.Key1 = 0x2D13A5FC;
+            g_Config.Key2 = 0x2D13A5FD;
+            g_Config.Key3 = 0xA39D527F;
+        }
         g_Config.EncryptionType = ET_203;
         return;
     }
 
-    int a = (version >> 24) & 0xff;
-    int b = (version >> 16) & 0xff;
-    int c = (version >> 8) & 0xff;
+    if (!g_Config.ClientKeysSet)
+    {
+        int a = (version >> 24) & 0xff;
+        int b = (version >> 16) & 0xff;
+        int c = (version >> 8) & 0xff;
 
-    int temp = ((a << 9 | b) << 10 | c) ^ ((c * c) << 5);
-    g_Config.Key2 = (temp << 4) ^ (b * b) ^ (b * 0x0B000000) ^ (c * 0x380000) ^ 0x2C13A5FD;
-    temp = (((a << 9 | c) << 10 | b) * 8) ^ (c * c * 0x0c00);
-    g_Config.Key3 = temp ^ (b * b) ^ (b * 0x6800000) ^ (c * 0x1c0000) ^ 0x0A31D527F;
+        int temp = ((a << 9 | b) << 10 | c) ^ ((c * c) << 5);
+        g_Config.Key2 = (temp << 4) ^ (b * b) ^ (b * 0x0B000000) ^ (c * 0x380000) ^ 0x2C13A5FD;
+        temp = (((a << 9 | c) << 10 | b) * 8) ^ (c * c * 0x0c00);
+        g_Config.Key3 = temp ^ (b * b) ^ (b * 0x6800000) ^ (c * 0x1c0000) ^ 0x0A31D527F;
 
-    // Configurator does this, not sure why
-    // lets keep compatibility until we understand more
-    g_Config.Key1 = g_Config.Key2 - 1;
+        // Configurator does this, not sure why
+        // lets keep compatibility until we understand more
+        g_Config.Key1 = g_Config.Key2 - 1;
+    }
 
     if (version < VERSION(1, 25, 35, 0))
     {
@@ -369,7 +379,18 @@ bool LoadGlobalConfig()
         if (strings.size() >= 2)
         {
             const auto key = config::GetConfigKey(strings[0]);
-            if (key != MSCC_NONE && key != MSCC_ACTPWD)
+            if (key == MSCC_USE_KEYS)
+            {
+                Info(
+                    Config,
+                    "\t%s=%s,%s,%s,%s",
+                    config::s_Keys[key - 1].key_name,
+                    strings[1].c_str(),
+                    strings[2].c_str(),
+                    strings[3].c_str(),
+                    strings[4].c_str());
+            }
+            else if (key != MSCC_NONE && key != MSCC_ACTPWD)
             {
                 Info(Config, "\t%s=%s", config::s_Keys[key - 1].key_name, strings[1].c_str());
             }
@@ -437,6 +458,16 @@ bool LoadGlobalConfig()
                 case MSCC_USE_CRYPT:
                 {
                     g_Config.UseCrypt = str_to_bool(strings[1]);
+                    break;
+                }
+                case MSCC_USE_KEYS:
+                {
+                    g_Config.Key1 = str_to_int(strings[1], 16);
+                    g_Config.Key2 = str_to_int(strings[2], 16);
+                    g_Config.Key3 = str_to_int(strings[3], 16);
+                    g_Config.Seed = str_to_int(strings[4], 16);
+                    g_Config.UseCrypt = true;
+                    g_Config.ClientKeysSet = true;
                     break;
                 }
                 case MSCC_USE_VERDATA:
@@ -542,6 +573,17 @@ void SaveGlobalConfig()
     }
 
     fprintf(cfg, "Crypt=%s\n", (g_Config.UseCrypt ? "yes" : "no"));
+    if (g_Config.ClientKeysSet)
+    {
+        fprintf(
+            cfg,
+            "Keys=0x%08x,0x%08x,0x%08x,0x%04x\n",
+            g_Config.Key1,
+            g_Config.Key2,
+            g_Config.Key3,
+            g_Config.Seed);
+    }
+
     if (!fs_path_equal(g_App.m_UOPath, g_App.m_ExePath))
     {
         fprintf(cfg, "CustomPath=%s\n", fs_path_ascii(g_App.m_UOPath));

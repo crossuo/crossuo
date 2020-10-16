@@ -35,6 +35,7 @@ struct Config
     uint32_t EncryptionType = 0;
 
     bool ClientVersionModified = false;
+    bool ClientKeysSet = false;
 };
 
 bool LoadGlobalConfig();
