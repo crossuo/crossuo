@@ -46,6 +46,7 @@ size_t compress_file(const fs_path &infile, const fs_path &outfile, size_t *ul)
     int z_err = compress(out, &out_len, data, (uLong)data_len);
     fs_unmap(data, data_len);
     assert(z_err == Z_OK);
+    (void)z_err;
     auto zfp = fs_open(outfile, fs_mode::FS_WRITE);
     assert(zfp);
     fwrite(out, out_len, 1, zfp);
