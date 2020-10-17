@@ -22,13 +22,17 @@ namespace shard
 
 struct url_other
 {
-    astr_t name;
+    astr_t name; // dynamic ui
     astr_t type;
     astr_t url;
 };
 
 astr_t as_str(const url_other &in)
 {
+    if (in.url.length() == 0)
+        return "";
+    if (in.type.length() == 0)
+        return in.url;
     return in.type + "+" + in.url;
 }
 

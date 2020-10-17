@@ -32,3 +32,4 @@ bool ListBox(
     int items_count,
     int height_in_items,
     ListBoxItemCallback callback = nullptr);
+bool DialogYesNo(const char *title, const char *msg, bool &open);
