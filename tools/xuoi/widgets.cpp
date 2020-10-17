@@ -127,3 +127,28 @@ bool ListBox(
     ImGui::ListBoxFooter();
     return value_changed;
 }
+
+bool DialogYesNo(const char *title, const char *msg, bool &open)
+{
+    bool response = false;
+    ImGui::OpenPopup(title);
+    if (ImGui::BeginPopupModal(title))
+    {
+        ImGui::Text("%s", msg);
+        ImGui::SetNextItemWidth(-1.0f);
+        if (ImGui::Button("Yes", ImVec2(80, 0)))
+        {
+            open = false;
+            ImGui::CloseCurrentPopup();
+            response = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No", ImVec2(80, 0)))
+        {
+            open = false;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    return response;
+}

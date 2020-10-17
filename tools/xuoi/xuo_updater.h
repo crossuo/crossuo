@@ -13,7 +13,8 @@ struct xuo_release;
 #define XUOL_UPDATER_HOST "https://raw.githubusercontent.com/crossuo/update/release/"
 // "http://update.crossuo.com/"
 #else
-#define XUOL_UPDATER_HOST "http://localhost:12593/"
+#define XUOL_UPDATER_HOST "https://raw.githubusercontent.com/crossuo/update/release/"
+//#define XUOL_UPDATER_HOST "http://localhost:12593/"
 #endif
 
 typedef void (*xuo_release_cb)(const char *release, const char *version, bool latest);

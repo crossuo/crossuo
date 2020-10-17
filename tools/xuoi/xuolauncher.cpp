@@ -24,14 +24,11 @@
 #include "icon_launcher.h"
 #include "accounts.h"
 #include "shards.h"
+#include "widgets.h"
 #include "ui_model.h"
 #include "ui_shards.h"
 
 #include "xuo_updater.h"
-
-// to avoid issues self-updating, launcher will copy-itself into another binary and relaunch it
-// this avoid the file being locked to write while updating iself
-#define XUOL_ENABLE_SAFE_SELF_UPDATE
 
 struct releases
 {
@@ -198,31 +195,6 @@ void ui_backups(ui_model &m)
     }
 }
 
-static inline bool ui_modal(const char *title, const char *msg)
-{
-    bool yes = false;
-    ImGui::OpenPopup(title);
-    if (ImGui::BeginPopupModal(title))
-    {
-        ImGui::Text("%s", msg);
-        ImGui::SetNextItemWidth(-1.0f);
-        if (ImGui::Button("Yes", ImVec2(80, 0)))
-        {
-            s_launcher_restart = false;
-            ImGui::CloseCurrentPopup();
-            yes = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("No", ImVec2(80, 0)))
-        {
-            s_launcher_restart = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    return yes;
-}
-
 const fs_path &xuol_data_path()
 {
     static bool initialized = false;
@@ -314,17 +286,8 @@ static ui_model model;
 
 static bool run_self_update_instance(int argc, char **argv)
 {
-    if (!argv[0])
-        return true;
-
     const char *bin = argv[0];
-    auto len = strlen(bin);
-    if (!len)
-        return true;
-
-    s_launcher_binary = fs_path_from(bin);
-    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
-#if defined(XUOL_ENABLE_SAFE_SELF_UPDATE)
+    const auto len = strlen(bin);
     if (bin[len - 1] != '_')
     {
         astr_t filename{ bin };
@@ -344,12 +307,15 @@ static bool run_self_update_instance(int argc, char **argv)
         }
         return false;
     }
-#endif // #if defined(XUO_WINDOWS)
     return true;
 }
 
 int main(int argc, char **argv)
 {
+    const char *bin = argv[0];
+    s_launcher_binary = fs_path_from(bin);
+    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
+
 #if !defined(XUO_DEBUG)
     const bool self_relaunch = true;
 #else
@@ -427,7 +393,8 @@ int main(int argc, char **argv)
     auto update_run = []() {
         s_updated = xuo_update_apply(s_ctx);
         const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart = s_launcher_timestamp && s_launcher_timestamp != timestamp;
+        s_launcher_restart =
+            s_updated || (s_launcher_timestamp && s_launcher_timestamp != timestamp);
         s_update_started = false;
         s_has_update = false;
         model.view = ui_view::accounts;
@@ -441,7 +408,7 @@ int main(int argc, char **argv)
         s_update_backup_index = -1;
         s_updated = xuo_release_get(s_ctx, e.name, e.version);
         const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart = s_launcher_timestamp != timestamp;
+        s_launcher_restart = s_updated || s_launcher_timestamp != timestamp;
         s_update_started = false;
         s_has_update = false;
         model.view = ui_view::accounts;
@@ -570,8 +537,8 @@ int main(int argc, char **argv)
                 ui_shards(model, true);
 
             if (s_launcher_restart)
-                s_launcher_quit =
-                    ui_modal("Update", "A restart is required, do you want to close?");
+                s_launcher_quit = DialogYesNo(
+                    "Update", "A restart is required, do you want to close?", s_launcher_restart);
         }
         ImGui::End();
         ui_draw(ui);
