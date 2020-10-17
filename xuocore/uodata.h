@@ -81,7 +81,6 @@ struct AnimationDirection
 struct AnimationGroup // AnimationGroup
 {
     AnimationDirection Direction[MAX_MOBILE_DIRECTIONS];
-    //const UopFileEntry *AnimData = nullptr;
 };
 
 struct IndexAnimation
@@ -601,6 +600,7 @@ uint32_t uo_get_group_offset(
         graphic); // CalculateLowGroupOffset, CalculateHighGroupOffset, CalculatePeopleGroupOffset
 void uo_update_animation_tables(uint32_t lockedFlags);
 bool uo_animation_exists(uint16_t graphic, uint8_t group);
+void uo_animation_dump(const char *file);
 
 typedef std::unordered_map<uint16_t, CEquipConvData> EQUIP_CONV_DATA_MAP;
 typedef std::unordered_map<uint16_t, EQUIP_CONV_DATA_MAP> EQUIP_CONV_BODY_MAP;
