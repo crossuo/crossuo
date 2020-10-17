@@ -24,6 +24,7 @@
 
 // FIXME: Animation data: group and direction are protected and can be refactored
 #define ANIMATION_DEBUG 0
+#define ANIMATION_DUMP 0
 
 // clang-format off
 #if ANIMATION_DEBUG
@@ -102,6 +103,48 @@ void uo_data_init(const char *path, uint32_t client_version, bool use_verdata)
     s_UOPath[amount + 1] = 0;
     s_ClientVersion = client_version;
     s_UseVerdata = use_verdata;
+}
+
+void uo_animation_dump(const char *file)
+{
+#if ANIMATION_DUMP
+    auto fp = fs_open(fs_path_from(file), FS_WRITE);
+    fprintf(
+        fp,
+        "anim,group,dir,framecount,file,uop,verdata,address,size,patched,base_address,base_size,patched_address,patched_size\n");
+    for (int a = 0; a < MAX_ANIMATIONS_DATA_INDEX_COUNT; a++)
+    {
+        const auto &data = g_Index.m_Anim[a];
+        for (int g = 0; g < MAX_ANIMATION_GROUPS_COUNT; g++)
+        {
+            const auto &group = data.Groups[g];
+            for (int d = 0; d < MAX_MOBILE_DIRECTIONS; d++)
+            {
+                const auto &dir = group.Direction[d];
+                const auto patched = dir.Address == dir.PatchedAddress;
+                fprintf(
+                    fp,
+                    "0x%04X,%d,%d,%d,%d,%d,%d,0x%016" PRIx64 ",%u,%d,0x%016" PRIx64
+                    ",%u,0x%016" PRIx64 ",%u\n",
+                    a,
+                    g,
+                    d,
+                    dir.FrameCount,
+                    dir.FileIndex,
+                    dir.IsUOP,
+                    dir.IsVerdata,
+                    (uint64_t)dir.Address,
+                    dir.Size,
+                    patched,
+                    (uint64_t)dir.BaseAddress,
+                    dir.BaseSize,
+                    (uint64_t)dir.PatchedAddress,
+                    dir.PatchedSize);
+            }
+        }
+    }
+    fs_close(fp);
+#endif // ANIMATION_DUMP
 }
 
 void CIndexObject::ReadIndexFile(size_t address, IndexBlock *ptr)
@@ -2266,6 +2309,7 @@ void CFileManager::LoadAnimations()
         m_SizeIdx[i] = (size_t)m_AnimIdx[i].Size;
     }
     load_data_patches(this);
+    uo_animation_dump("anim-pre.csv");
 }
 
 void CFileManager::LoadSkills()
@@ -2844,4 +2888,5 @@ void uo_update_animation_tables(uint32_t lockedFlags)
             }
         }
     }
+    uo_animation_dump("anim-post.csv");
 }
