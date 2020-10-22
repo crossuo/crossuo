@@ -130,6 +130,18 @@ void CWindow::SetMaxSize(const CSize &newMaxSize)
 
 bool CWindow::Create(const char *title, bool showCursor, int width, int height)
 {
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    auto debugContext = true;
+#else
+    auto debugContext = false;
+#endif
+    if (debugContext)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
     {
         return false;

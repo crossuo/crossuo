@@ -42,7 +42,7 @@ int win_init(win_context *ctx)
     assert(ctx->title != 0);
     assert(ctx->width != 0);
     assert(ctx->height != 0);
-    
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
         printf("Error: %s\n", SDL_GetError());
