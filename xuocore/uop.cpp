@@ -29,19 +29,21 @@ void uop_populate_asset_names()
         "animationlegacyframe", "gumpartlegacymul", "artlegacymul",
         "multicollection",      "soundlegacymul",   "animationsequence",
     };
+    static_assert(countof(pack) == countof(package), "missing pack entry");
 
     static const int package_size[] = {
         MAX_ANIMATIONS_DATA_INDEX_COUNT, MAX_GUMP_DATA_INDEX_COUNT,  MAX_STATIC_DATA_INDEX_COUNT,
-        MAX_MULTI_DATA_INDEX_COUNT,      MAX_SOUND_DATA_INDEX_COUNT,
+        MAX_MULTI_DATA_INDEX_COUNT,      MAX_SOUND_DATA_INDEX_COUNT, MAX_ANIMATIONS_DATA_INDEX_COUNT
     };
+    static_assert(countof(package_size) == countof(package), "missing package_size entry");
 
-    static const int group_size[] = {
-        MAX_ANIMATION_GROUPS_COUNT, 1, 1, 1, 1,
-    };
+    static const int group_size[] = { MAX_ANIMATION_GROUPS_COUNT, 1, 1, 1, 1, 1 };
+    static_assert(countof(group_size) == countof(package), "missing group_size entry");
 
     static const char *pattern[] = {
         "%06d/%02d.bin", "%08d.tga", "%08d.tga", "%06d.bin", "%08d.dat", "%08d.bin",
     };
+    static_assert(countof(pattern) == countof(package), "missing pattern entry");
 
     static const char *format = "build/%s/%s";
     char build[200];
