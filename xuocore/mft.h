@@ -4,7 +4,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <unordered_map>
+#include <map>
 #include <vector>
 #include <external/tinyxml2.h>
 #include <common/str.h>
@@ -27,6 +27,7 @@ struct mft_config
     const char *agent_name = "";
     uint32_t thread_count = 1;
     uint32_t download_buffer_size = MFT_MAX_DOWNLOAD_SIZE;
+    uint32_t download_retries = 5;
     bool mirror_mode = false;
     bool listing_only = false;
     bool dump_extracted = true;
@@ -95,6 +96,8 @@ struct mft_manifest
     tinyxml2::XMLDocument doc;
 };
 
+using mft_entries_map = std::map<astr_t, mft_entry>;
+
 struct mft_product
 {
     uint64_t timestamp = 0;
@@ -109,7 +112,7 @@ struct mft_product
     std::vector<mft_stage> stages;
     std::vector<mft_package> packages;
     std::vector<mft_manifest *> manifests;
-    std::unordered_map<astr_t, mft_entry> base_version;
+    mft_entries_map base_version;
 
     uint64_t last_version = 0;
     mft_config config;
@@ -121,5 +124,5 @@ void mft_init(mft_product &prod, mft_config &cfg);
 mft_result mft_load(
     mft_product &prod, const uint8_t *data, size_t data_size, const char *remote_path = nullptr);
 mft_result mft_consume_manifests(mft_product &prod);
-size_t mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries);
+size_t mft_download_batch(mft_product &prod, const std::vector<mft_entry> &entries);
 void mft_cleanup(mft_product &prod);

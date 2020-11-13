@@ -14,6 +14,8 @@ set(XUOCORE_SRCS
   http.h
   mft.cpp
   mft.h
+  xuoi.cpp
+  xuoi.h
   uo_installer.cpp
   uo_installer.h
   uop.cpp
