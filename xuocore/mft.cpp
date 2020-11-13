@@ -437,8 +437,6 @@ static void mft_entry_remote_name(mft_entry &entry, char name[32])
 static size_t mft_download_entry(mft_product &prod, mft_entry &entry, uint32_t thread_id)
 {
     assert(thread_id < prod.config.thread_count);
-    if (entry.state != state_need_update)
-        return 0;
 
     char name[32] = {};
     mft_entry_remote_name(entry, name);
@@ -482,8 +480,33 @@ static size_t mft_download_entry(mft_product &prod, mft_entry &entry, uint32_t t
     return bytes + meta_bytes;
 }
 
-size_t mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries)
+namespace
 {
+template <class InputIt, class OutputIt, class UnaryPredicate>
+OutputIt remove_copy_if(InputIt first, InputIt last, OutputIt d_first, UnaryPredicate p)
+{
+    for (; first != last; ++first)
+    {
+        if (!p(*first))
+        {
+            *d_first++ = *first;
+        }
+    }
+    return d_first;
+}
+} // namespace
+
+size_t mft_download_batch(mft_product &prod, const std::vector<mft_entry> &allentries)
+{
+    std::vector<mft_entry> entries;
+    ::remove_copy_if(
+        allentries.begin(),
+        allentries.end(),
+        std::back_inserter(entries),
+        [](const mft_entry &entry) {
+            return entry.state != state_need_update && entry.state != state_download_failed;
+        });
+
     const uint32_t threads = prod.config.thread_count;
     size_t bytes = 0;
     if (threads > 1)
@@ -491,7 +514,7 @@ size_t mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries)
         const auto total = uint32_t(entries.size());
         const auto batch_size = total / threads;
         const auto remainder = total % threads;
-        LOG_TRACE(
+        LOG_INFO(
             "total threads: %d, total entries: %d, batch size: %d",
             threads,
             total,
@@ -534,6 +557,29 @@ size_t mft_download_batch(mft_product &prod, std::vector<mft_entry> &entries)
             bytes += mft_download_entry(prod, e, 0);
         }
     }
+
+    std::vector<mft_entry> currentEntries = entries;
+    std::vector<mft_entry> failedEntries;
+    for (int i = 0; 0 < prod.config.download_retries; i++)
+    {
+        ::remove_copy_if(
+            currentEntries.begin(),
+            currentEntries.end(),
+            std::back_inserter(failedEntries),
+            [](const mft_entry &entry) { return entry.state != state_download_failed; });
+
+        if (failedEntries.size() == 0)
+            break;
+
+        LOG_INFO("retrying downloading %zu failed files (%d)...", failedEntries.size(), i);
+        for (auto &e : failedEntries)
+        {
+            bytes += mft_download_entry(prod, e, 0);
+        }
+
+        currentEntries = failedEntries;
+    }
+
     return bytes;
 }
 
