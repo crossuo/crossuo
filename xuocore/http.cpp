@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #define LOGGER_MODULE Network
 

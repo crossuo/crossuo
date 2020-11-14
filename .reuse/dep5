@@ -1,0 +1,207 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: CrossUO third party dependencies
+Upstream-Contact: CrossUO Team
+Source: http://www.crossuo.com
+
+Files: resources/*
+Copyright: 2020 Danny Angelo Carminati Grein
+License: AGPL-3.0-or-later
+
+Files: tools/xuodeploy/Cargo.lock
+Copyright: 2020 Danny Angelo Carminati Grein
+License: AGPL-3.0-or-later
+
+Files: src/cursor1.cur
+Copyright: 2020 Danny Angelo Carminati Grein
+License: AGPL-3.0-or-later
+
+#
+# 3rd party dependencies
+#
+
+Files: external/ass.h
+Copyright: Danny Angelo Carminati Grein 
+           David Reid - mackron@gmail.com
+           2013-2018 Jari Komppa
+License: Unlicense and Zlib
+
+Files: external/cbase64.h
+Copyright: Jordan Cristiano
+           Chris Venter	<chris.venter@gmail.com>
+License: CC-PDDC
+
+Files: external/gfx/fontstash.h
+Copyright: 2009-2013 Mikko Mononen <memon@inside.org>
+License: Zlib
+
+Files: external/gfx/GL/gl3w.h
+Copyright: Varied
+License: Unlicense
+
+Files: external/gfx/imgui/*
+Copyright: 2014-2020 Omar Cornut
+License: MIT
+
+Files: external/loguru.h
+Copyright: Emil Ernerfeldt <emil.ernerfeldt@gmail.com>
+License: Unlicense or CC0-1.0
+
+Files: external/lookup3.h
+Copyright: Bob Jenkins, May 2006
+License: Unlicense or CC0-1.0
+
+Files: external/miniconv*
+Copyright: 2005-2012 Mark H. P. Lord.
+License: Libpng
+
+Files: external/miniz.h
+Copyright: Rich Geldreich <richgel99@gmail.com>
+License: Unlicense
+
+Files: external/popts.h
+Copyright: 2017-2018 Josua Rieder <josua.rieder1996@gmail.com>
+License: MIT
+
+Files: external/process.h
+Copyright: sheredom
+License: Unlicense
+
+Files: external/gfx/sokol*
+Copyright: 2018 Andre Weissflog
+License: Zlib or Libpng
+
+Files: external/stb_image_write.h external/gfx/stb_truetype.h external/gfx/imgui/imstb*
+Copyright: Sean Barrett 2010-2015
+License: MIT or Unlicense
+
+Files: external/tinyxml2.*
+Copyright: Lee Thomason (www.grinninglizard.com)
+License: Zlib
+
+Files: external/tinyfiledialogs.*
+Copyright: 2014 - 2018 Guillaume Vareille http://ysengrin.com
+License: Zlib
+
+Files: external/tml.h
+Copyright: 2017, 2018 Bernhard Schelling
+License: Zlib
+
+Files: external/tracy/libbacktrace/*
+Copyright: 2012-2020 Free Software Foundation, Inc.
+License: BSD-3-Clause
+
+Files: external/tracy/*
+Copyright: 2017-2020, Bartosz Taudul <wolf.pld@gmail.com>
+License: BSD-3-Clause
+
+Files: external/tsf.h
+Copyright: 2017, 2018 Bernhard Schelling
+           2012 Steve Folta (https://github.com/stevefolta/SFZero)
+License: MIT
+
+Files: external/xxh*
+Copyright: 2012-2016, Yann Collet
+License: BSD-2-Clause
+
+Files: external/zlib_amalg.*
+Copyright: 1995-2016 Jean-loup Gailly, Mark Adler
+License: Zlib
+
+#
+# CMake static curl
+#
+
+Files: deps/cmcurl/*
+Copyright: curl
+License: curl
+
+Files: deps/cmcurl/lib/libressl/*
+Copyright: 1998-2011 The OpenSSL Project
+License: OpenSSL
+
+#
+# SDL 2.0.10 from debian/copyright
+#
+
+Files: deps/sdl-2.0.10-c1be3add38/src/libm/*
+Copyright: 1993 by Sun Microsystems, Inc. All rights reserved.
+License: LicenseRef-SunPro
+
+Files: deps/sdl-2.0.10-c1be3add38/src/main/windows/SDL_windows_main.c
+Copyright: 2019 Sam Lantinga
+License: CC0-1.0
+Comment: SDL_main.c, placed in the public domain by Sam Lantinga  4/13/98
+
+Files: deps/sdl-2.0.10-c1be3add38/src/render/mmx.h
+Copyright: 1997-99 by H. Dietz and R. Fisher
+License: Zlib or Libpng
+Comment:
+  Copyright but no mention to license.
+  .
+  Included since long ago with SDL (and its Debian package) under directory
+  src/video/mmx.h
+
+Files: deps/sdl-2.0.10-c1be3add38/src/render/SDL_yuv_sw.c
+Copyright: 1995 Erik Corry
+           1995 The Regents of the University of California
+           1995 Brown University
+License: LicenseRef-BrownUn_UnCalifornia_ErikCorry
+
+Files: deps/sdl-2.0.10-c1be3add38/src/test/SDL_test_md5.c
+Copyright: 1997-2019 Sam Lantinga <slouken@libsdl.org>
+           1990 RSA Data Security, Inc.
+License: Zlib or Libpng
+         RSA_Data_Security
+
+Files: deps/sdl-2.0.10-c1be3add38/src/thread/windows/win_ce_semaphore.c
+Copyright: 1998, Johnson M. Hart (with corrections 2001 by Rainer Loritz)
+License: Johnson_M._Hart
+
+Files: deps/sdl-2.0.10-c1be3add38/src/video/x11/imKStoUCS.c
+       src/video/x11/imKStoUCS.h
+Copyright: 1994-2003 The XFree86 Project, Inc.
+License: X11
+
+Files: deps/sdl-2.0.10-c1be3add38/test/testhaptic.c
+Copyright: 1997-2019 Sam Lantinga <slouken@libsdl.org>
+           2008 Edgar Simo Serra
+License: BSD-3-Clause
+
+Files: deps/sdl-2.0.10-c1be3add38/test/testrumble.c
+Copyright: 1997-2019 Sam Lantinga <slouken@libsdl.org>
+           2011 Edgar Simo Serra
+License: BSD-3-Clause
+
+Files: deps/sdl-2.0.10-c1be3add38/test/shapes/*
+Copyright: none
+License: Zlib or Libpng
+Comment: No specific information about the images
+
+Files: deps/sdl-2.0.10-c1be3add38/Xcode/TemplatesForXcode*/*/main.c
+Copyright: none
+License: Zlib or Libpng
+Comment: SDL files, no copyright or license notice
+
+Files: deps/sdl-2.0.10-c1be3add38/Xcode/SDLTest/sdlcommon_prefix.h
+Copyright: 2003 Darrell Walisser
+License: Zlib or Libpng
+Comment:
+ Created by Darrell Walisser on Wed Aug 06 2003.
+ Copyright (c) 2003 __MyCompanyName__. All rights reserved.
+
+Files: deps/sdl-2.0.10-c1be3add38/debian/*
+Copyright: 2011-2012, Manuel A. Fernandez Montecelo <manuel.montezelo@gmail.com>
+           2011-2012, Felix Geyer <debfx-pkg@fobos.de>
+           2011, Roman Vasiyarov <rvasiyarov@gmail.com>
+           2010, Jon Dowland <jmtd@debian.org>
+           2009, Barry deFreese <bdefreese@debian.org>
+           2007-2008, Aurelien Jarno <aurel32@debian.org>
+           2007-2008, Sam Hocevar (Debian packages) <sam+deb@zoy.org>
+           2002-2007, Josselin Mouette <joss@debian.org>
+           2001, Christian T. Steigies <cts@debian.org>
+           2001, Branden Robinson <branden@debian.org>
+License: LGPL-2.1-or-later
+
+Files: deps/sdl-2.0.10-c1be3add38/*
+Copyright: 1997-2019 Sam Lantinga <slouken@libsdl.org>
+License: Zlib or Libpng

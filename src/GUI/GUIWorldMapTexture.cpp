@@ -1,5 +1,5 @@
-﻿// MIT License
-// Copyright (C) September 2016 Hotride
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIWorldMapTexture.h"
 #include "../Managers/MouseManager.h"

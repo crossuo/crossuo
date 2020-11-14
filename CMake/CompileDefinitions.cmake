@@ -13,6 +13,9 @@
 #   compile_definitions(_DEBUG DEBUG_ONLY) -> -D_DEBUG
 #   compile_definitions(NDEBUG RELEASE_ONLY) -> -DNDEBUG
 #   compile_definitions($<$<COMPILE_LANGUAGE:C>:THISISONLYFORC>)
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 function(compile_definitions)
   set(defs ${ARGN})

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LicenseRef-GLEW
+
 /*
 ** The OpenGL Extension Wrangler Library
 ** Copyright (C) 2008-2019, Nigel Stewart <nigels[]users sourceforge net>

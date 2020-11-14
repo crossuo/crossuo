@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 # Developing a change
 
 If you're making a tiny bugfix that only changes a few lines, then you don't really have to worry about how you structure your development or organise branches. You can just make your fix, open up a pull request, and everything can be handled from there on the fly.

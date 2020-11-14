@@ -1,5 +1,5 @@
-﻿// MIT License
-// Copyright (C) September 2016 Hotride
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUIMinMaxButtons.h"
 #include "../CrossUO.h"

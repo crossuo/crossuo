@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 We want CrossUO to be an open and welcoming project, and for that reason I want to make sure that people feel secure joining the project by outlining and enforcing expected behaviour from members of the community. This code is used in many open source projects and embodies that spirit of inclusiveness well.
 
 # Contributor Covenant Code of Conduct

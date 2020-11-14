@@ -1,8 +1,6 @@
-# From Yuzu: https://github.com/yuzu-emu/yuzu/blob/master/CMakeLists.txt
-#
-# Setup a custom clang-format target (if clang-format can be found) that will run
-# against all the src files. This should be used before making a pull request.
-# =======================================================================
+# Modified, based on https://github.com/yuzu-emu/yuzu/blob/master/CMakeLists.txt
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 set(CLANG_FORMAT_POSTFIX "-7")
 find_program(CLANG_FORMAT

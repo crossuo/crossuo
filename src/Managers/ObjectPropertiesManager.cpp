@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (C) October 2017 Hotride
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2017 Hotride
 
 #include "ObjectPropertiesManager.h"
 #include "ConfigManager.h"

@@ -1,4 +1,6 @@
-﻿
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Hotride
+
 #ifndef UOHuffmanH
 #define UOHuffmanH
 

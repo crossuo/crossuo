@@ -1,5 +1,5 @@
-// AGPLv3 License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #define LOGGER_MODULE Installer
 
@@ -37,10 +37,10 @@
 static void print_banner()
 {
     fprintf(stdout, "xuoi - crossuo installer 0.0.1\n");
-    fprintf(stdout, "Copyright (c) 2019 Danny Angelo Carminati Grein\n");
+    fprintf(stdout, "Copyright (c) 2020 Danny Angelo Carminati Grein\n");
     fprintf(
         stdout,
-        "License AGPLv3+: GNU AGPL version 3 or later <http://gnu.org/licenses/agpl.html>.\n");
+        "License AGPLv3+: GNU Affero GPL version 3 or later <http://gnu.org/licenses/agpl.html>.\n");
     fprintf(stdout, "\n");
 }
 

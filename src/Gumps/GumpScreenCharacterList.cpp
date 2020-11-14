@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GumpScreenCharacterList.h"
 #include <SDL_timer.h>

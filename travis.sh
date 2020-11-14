@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
 set -x # expand and echo commands
 export XUO_TRAVIS=1
 
@@ -22,6 +25,12 @@ if [[ "$TASK" == "clang-format" ]]; then
             exit 1
         else
             echo Code formatting validation passed.
+        fi
+        docker run -v ${TRAVIS_BUILD_DIR}:/data fsfe/reuse:latest lint
+        if [[ $? != 0 ]]; then
+            echo See above output to find the issue.
+            echo Failed due missing copyright or licensing information.
+            exit 1
         fi
     fi
 fi

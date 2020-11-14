@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Hotride
+
 uniform sampler2D usedTexture;
 uniform int drawMode;
 uniform float colors[96];

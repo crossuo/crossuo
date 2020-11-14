@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 X:UO Deploy
 ===
 **xuodeploy** is an internal tool for deploying CrossUO updates
