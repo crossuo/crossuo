@@ -1,7 +1,5 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
-// AGPLv3 License
-// Copyright (c) 2020 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include "CrossUO.h"
 

@@ -1,5 +1,5 @@
-﻿// MIT License
-// Copyright (C) August 2016 Hotride
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include <cmath> // atan2, sin, cos, sqrt
 #include "GameEffectMoving.h"

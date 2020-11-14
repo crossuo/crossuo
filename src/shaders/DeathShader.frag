@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: Hotride
+
 varying vec3 l;
 varying vec3 n;
 

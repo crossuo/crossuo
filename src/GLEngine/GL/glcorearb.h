@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 #ifndef __glcorearb_h_
 #define __glcorearb_h_
 

@@ -1,4 +1,9 @@
-﻿#ifndef WISP_MOUSE_H
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+#ifndef WISP_MOUSE_H
 #define WISP_MOUSE_H
 
 #include <SDL_events.h>

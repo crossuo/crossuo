@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (C) September 2017 Hotride
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2017 Hotride
 
 #include "CustomHouseObjects.h"
 #include <stdio.h> // sscanf

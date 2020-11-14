@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
 macro(xuo_disable_console TARGET)
   if (XUO_WINDOWS)
     set_target_properties(${TARGET} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")

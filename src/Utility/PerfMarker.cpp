@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
+
 #include "PerfMarker.h"
 
 // #define PERFMARKERS_ENABLED

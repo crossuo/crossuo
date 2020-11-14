@@ -1,4 +1,7 @@
-﻿// MIT License
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #pragma once
 

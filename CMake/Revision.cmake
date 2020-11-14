@@ -1,4 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 # for revision info
+
 find_package(Git)
 if(GIT_FOUND)
   # make sure version information gets re-run when the current Git HEAD changes

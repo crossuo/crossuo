@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 # CrossUO Client
 
 [![Travis Build Status](https://travis-ci.org/crossuo/crossuo.svg?branch=master)](https://travis-ci.org/crossuo/crossuo)

@@ -1,5 +1,5 @@
-// AGPLv3 License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #ifndef EXTERNAL_GFX_H
 #define EXTERNAL_GFX_H

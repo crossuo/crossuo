@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 # ass (see: soloud, dr_mp3, dr_wav)
 Version: https://github.com/fungos/ass/tree/8304be16aa254ad20a413d41b409ec2172250eb6 (modified)
 
@@ -8,6 +12,9 @@ Version: https://github.com/SizzlingCalamari/cbase64/tree/a353cab21c021aa4b16135
 Version: ? (https://curl.haxx.se/docs/copyright.html)
 
 # dr_mp3/dr_wav (Public Domain/MIT-0)
+Version: ?
+
+# fontstash (zlib)
 Version: ?
 
 # inih (BSD-3-Clause)

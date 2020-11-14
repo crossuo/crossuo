@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 ## CrossUO Individual Contributor License Agreement
 
 Thank you for your interest in contributing to CrossUO ("We" or "Us").

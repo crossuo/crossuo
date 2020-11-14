@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+(you can ignore these two lines above as it is the license of this file itself)
+-->
 ## Description
 
 <!--

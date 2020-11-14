@@ -1,5 +1,5 @@
-﻿// MIT License
-// Copyright (C) December 2016 Hotride
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #include "GUITilepicScaled.h"
 #include "../CrossUO.h"

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 function(add_cxx_option flag)
   if(ARGV1 STREQUAL "RELEASE_ONLY")

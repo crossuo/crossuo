@@ -1,5 +1,5 @@
-// AGPLv3 License
-// Copyright (C) 2019 Everton Fernando Patitucci da Silva
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #pragma once
 

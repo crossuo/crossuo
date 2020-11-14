@@ -1,5 +1,5 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
 
 #define UO_RENDER_LIST_SORT 1
 #define UO_CHECKERBOARD_SEQUENCE_RENDER_LIST 1

@@ -1,4 +1,8 @@
-﻿// clang-format off
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
+
+// clang-format off
+
 #include "UOHuffman.h"
 
 int CDecompressingCopier::tree[] = {

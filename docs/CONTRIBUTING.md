@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 # Contributing to CrossUO
 
 This document is split up and organised into several sections to aid reading and linking. For small changes like one-line fixes or minor tweaks then you can just read the [quick start section](#quick-start) below.

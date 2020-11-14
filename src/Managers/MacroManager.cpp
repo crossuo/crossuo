@@ -1,7 +1,7 @@
-// MIT License
-// Copyright (C) August 2016 Hotride
-// AGPLv3 License
-// Copyright (c) 2020 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2016 Hotride
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "MacroManager.h"
 #include "OptionsMacroManager.h"

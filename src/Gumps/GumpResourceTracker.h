@@ -1,6 +1,6 @@
-// AGPLv3 License
-// Copyright (c) 2020 Jean-Martin Miljours
-// Copyright (c) 2020 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Jean-Martin Miljours
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "Gump.h"
 

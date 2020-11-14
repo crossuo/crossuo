@@ -1,5 +1,6 @@
-// GPL
-// Copyright (C) December 2019 Nirad Jean-Martin Miljours
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2019 Nirad Jean-Martin Miljours
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #include "GUIChecktrans.h"
 #include "../Renderer/RenderAPI.h"

@@ -1,5 +1,5 @@
-﻿// MIT License
-// Copyright (C) December 2017 Hotride
+﻿// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2017 Hotride
 
 #pragma once
 
