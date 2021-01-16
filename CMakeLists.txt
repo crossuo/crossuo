@@ -55,6 +55,7 @@ endif()
 
 find_package(OpenGL REQUIRED)
 set(XUO_LOCAL_HEADERS 1)
+set(WAYLAND_SHARED Off) # Disable Wayland as it causes multiple definitions errors during linking
 if (NOT XUO_EMSC)
   xuo_dependency(cmcurl cmcurl CURL)
   xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
