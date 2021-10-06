@@ -163,7 +163,7 @@ const int WAIT_FOR_TARGET_DELAY = 5000;
 
 static const bool LAYER_UNSAFE[30] = { false, //0
                                        true,  true, true,  true,  true,  true,  true,  true,
-                                       true,  true, false, true,  true,  true,  false, false,
+                                       true,  true, false, false, true,  true,  false, false,
                                        true,  true, true,  true,
                                        false, //0x15
                                        true,  true, true,  false, false, false, false, false };
