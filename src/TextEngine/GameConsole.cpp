@@ -22,6 +22,10 @@ static const char *s_ConsolePrefix[] = {
     "/",  //Party
     "\\", //Guild
     "|",  //Alliance
+    "/",  //Party Accept
+    "/",  //Party Decline
+    "/",  //Party Add
+    "/"   //Party Leave
 };
 
 static wstr_t GetConsolePrefixAndType(const wstr_t &text, int &member, GAME_CONSOLE_TEXT_TYPE &type)
