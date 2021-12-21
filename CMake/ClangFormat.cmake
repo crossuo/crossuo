@@ -2,11 +2,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
-set(CLANG_FORMAT_POSTFIX "-7")
 find_program(CLANG_FORMAT
     NAMES
-      clang-format${CLANG_FORMAT_POSTFIX}
-      clang-format
+      clang-format-7
     PATHS
       /usr/bin
       ${PROJECT_BINARY_DIR}/downloads
@@ -15,9 +13,9 @@ find_program(CLANG_FORMAT
 if (NOT CLANG_FORMAT)
     if (WIN32)
         message(STATUS "Clang format not found! Downloading...")
-        set(CLANG_FORMAT "${PROJECT_BINARY_DIR}/downloads/clang-format${CLANG_FORMAT_POSTFIX}.exe")
+        set(CLANG_FORMAT "${PROJECT_BINARY_DIR}/downloads/clang-format-7.exe")
         file(DOWNLOAD
-            https://github.com/crossuo/dep-build-win/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
+            https://github.com/crossuo/dep-build-win/raw/master/clang-format-7.exe
             "${CLANG_FORMAT}" SHOW_PROGRESS
             STATUS DOWNLOAD_SUCCESS)
         if (NOT DOWNLOAD_SUCCESS EQUAL 0)
