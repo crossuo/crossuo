@@ -9,7 +9,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 project(crossuo)
 
 if (NOT XUO_VERSION)
-  set(XUO_VERSION "1.0.6")
+  set(XUO_VERSION "1.0.7")
 endif()
 
 string(REPLACE "." "," XUO_VERSION_NUM ${XUO_VERSION})
@@ -56,7 +56,7 @@ endif()
 find_package(OpenGL REQUIRED)
 set(XUO_LOCAL_HEADERS 1)
 # Disable Wayland as it causes multiple definitions errors during linking
-set(WAYLAND_SHARED OFF CACHE BOOL "Force disable Wayland") 
+set(WAYLAND_SHARED OFF CACHE BOOL "Force disable Wayland")
 if (NOT XUO_EMSC)
   xuo_dependency(cmcurl cmcurl CURL)
   xuo_dependency(XSDL2 sdl-2.0.10-c1be3add38 SDL2)
