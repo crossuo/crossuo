@@ -6,6 +6,19 @@ name: build
 on: [push]
 
 jobs:
+  Checks:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: prepare
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format-7
+        clang-format --version
+    - name: clang-format
+      run: ${GITHUB_WORKSPACE}/.github/code-checks.sh
   Windows:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -13,55 +26,114 @@ jobs:
         os: [windows-2019]
         gen: [Visual Studio 16 2019]
         arch: [Win32, x64]
+        type: [Debug, Release]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 1
     - name: configure
-      run: cmake -G "${{ matrix.gen }}" -A ${{ matrix.arch }} -B build -S .
+      run: |
+        cmake --version
+        cmake -G "${{ matrix.gen }}" -A ${{ matrix.arch }} -B build -S . -DXUO_DEPLOY=On  -DCMAKE_BUILD_TYPE=${{ matrix.type }}
     - name: build
-      run: cmake --build build
+      run: cmake --build build --config ${{ matrix.type }}
+    - name: package
+      if: matrix.arch == 'x64' && matrix.type == 'Release'
+      run: .github\package.cmd
+    - name: release master
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/heads/master')
+      with:
+        tag_name: master
+        files: crossuo-win64-master.zip
+    - name: release tag
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: crossuo-win64-*.zip
   Linux:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04]
+        os: [ubuntu-18.04, ubuntu-20.04]
         cc: [gcc, clang]
+        type: [Debug, Release]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - name: Prepare
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.os }}-${{ matrix.cc }}-${{ matrix.type }}
+    - name: prepare
       run: |
+        export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
         sudo apt-get update
         sudo apt-get install -y ninja-build xorg-dev libglu1-mesa-dev libalut-dev gcc-multilib g++-multilib mesa-common-dev libasound-dev
+        cmake --version
         gcc --version
         clang --version
     - name: configure gcc
       if: matrix.cc == 'gcc'
-      run: mkdir build && cd build && CC=gcc CXX=g++ cmake -G Ninja ..
+      run: mkdir build && cd build && CC=gcc CXX=g++ cmake -G Ninja .. -DCMAKE_BUILD_TYPE=${{ matrix.arch }}
     - name: configure clang
       if: matrix.cc == 'clang'
-      run: mkdir build && cd build && CC=clang CXX=clang++ cmake -G Ninja ..
+      run: mkdir build && cd build && CC=clang CXX=clang++ cmake -G Ninja .. -DXUO_DEPLOY=On -DCMAKE_BUILD_TYPE=${{ matrix.arch }}
     - name: build
       run: cd build && cmake --build . -j 8
+    - name: package
+      run: ${GITHUB_WORKSPACE}/.github/package.sh ${{ github.ref }} ${{ matrix.type }} ${{ matrix.cc }}
+    - name: release master
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/heads/master')
+      with:
+        tag_name: master
+        files: crossuo-linux-*.tgz
+    - name: release tag
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: crossuo-linux-*.tgz
   MacOSX:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-10.15, macos-11]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 1
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.os }}
+    - name: ccache setup
+      run: export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
     - name: configure
-      run: cmake -B build -S .
+      run: cmake -B build -S .  -DXUO_DEPLOY=On -DCMAKE_BUILD_TYPE=Release
     - name: build
       run: cmake --build build
+    - name: package
+      run: ${GITHUB_WORKSPACE}/.github/package.sh ${{ github.ref }} Release clang
+    - name: release master
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/heads/master')
+      with:
+        tag_name: master
+        files: crossuo-osx-master.zip
+    - name: release tag
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: crossuo-osx-*.zip
   Emscripten:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - name: Install Dependencies
+    - name: prepare
       run: |
         wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
         tar -xvf master.tar.gz

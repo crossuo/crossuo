@@ -315,8 +315,8 @@ add_dependencies(crossuo ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT
 target_link_libraries(crossuo PUBLIC ${EXTERNAL_PROJECT} ${XUOCORE_PROJECT} ${COMMON_PROJECT} ${SDL2_LIBRARIES} ${GL_LIBRARIES} ${THREAD})
 target_include_directories(crossuo PUBLIC ${COMMON_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/GLEngine/GL/*.h)
 
-if(CLANG_FORMAT AND NOT $ENV{XUO_TRAVIS})
-  add_dependencies(crossuo clang-format)
+if(CLANG_FORMAT AND NOT $ENV{XUO_CI})
+  add_dependencies(crossuo clang-format-7)
 endif()
 
 if(XUO_WINDOWS)
