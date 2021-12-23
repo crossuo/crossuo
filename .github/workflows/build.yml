@@ -3,7 +3,7 @@
 
 name: build
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   Checks:
@@ -38,7 +38,7 @@ jobs:
     - name: build
       run: cmake --build build --config ${{ matrix.type }}
     - name: package
-      if: matrix.arch == 'x64' && matrix.type == 'Release'
+      if: matrix.arch == 'x64' && matrix.type == 'Release' && startsWith(github.ref, 'refs/pull/') != true
       run: .github\package.cmd
     - name: release master
       uses: softprops/action-gh-release@v1
@@ -83,6 +83,7 @@ jobs:
     - name: build
       run: cd build && cmake --build . -j 8
     - name: package
+      if: startsWith(github.ref, 'refs/pull/') != true
       run: ${GITHUB_WORKSPACE}/.github/package.sh ${{ github.ref }} ${{ matrix.type }} ${{ matrix.cc }}
     - name: release master
       uses: softprops/action-gh-release@v1
@@ -115,6 +116,7 @@ jobs:
     - name: build
       run: cmake --build build
     - name: package
+      if: startsWith(github.ref, 'refs/pull/') != true
       run: ${GITHUB_WORKSPACE}/.github/package.sh ${{ github.ref }} Release clang
     - name: release master
       uses: softprops/action-gh-release@v1
