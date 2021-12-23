@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 Version: https://github.com/fungos/ass/tree/8304be16aa254ad20a413d41b409ec2172250eb6 (modified)
 
 # cbase64 (Public Domain)
-Version: https://github.com/SizzlingCalamari/cbase64/tree/a353cab21c021aa4b16135baf909452b3ddc1173
+Version: https://github.com/SizzlingCalamari/cbase64/tree/a353cab21c021aa4b16135baf909452b3ddc1173 (modified)
 
 # curl (curl MIT/X-like)
 Version: ? (https://curl.haxx.se/docs/copyright.html)
