@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <common/utils.h> // countof
 #include <common/logging/logging.h>
+#include <stdio.h> // snprintf
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \
     case RenderCommandType::Cmd_##type:                                                            \
