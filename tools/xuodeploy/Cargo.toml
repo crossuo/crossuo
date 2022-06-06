@@ -18,4 +18,4 @@ serde_derive = "1.0.104"
 serde = { version = "1.0", features = ["derive"] }
 quick-xml = { version = "0.17", features = [ "serialize" ] }
 warp = "0.2.1"
-tokio = { version = "0.2", features = ["macros"] }
+tokio = { version = "1.8", features = ["macros"] }
