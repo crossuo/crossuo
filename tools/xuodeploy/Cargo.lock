@@ -1251,11 +1251,10 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.8.4"
+version = "1.18.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50dae83881bc9b0403dd5b44ea9deed3e939856cc8722d5be37f0d6e5c6d53dd"
+checksum = "8bfb875c82dc0a4f1f37a30e720dee181a2b3a06a428b0fc6873ea38d6407850"
 dependencies = [
- "autocfg 1.0.0",
  "pin-project-lite 0.2.9",
  "tokio-macros",
 ]
@@ -1580,7 +1579,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "structopt",
- "tokio 1.8.4",
+ "tokio 1.18.4",
  "twox-hash",
  "walkdir",
  "warp",
