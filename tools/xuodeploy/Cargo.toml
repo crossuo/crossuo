@@ -17,5 +17,5 @@ structopt = "0.3.8"
 serde_derive = "1.0.104"
 serde = { version = "1.0", features = ["derive"] }
 quick-xml = { version = "0.17", features = [ "serialize" ] }
-warp = "0.2.1"
+warp = "0.3.3"
 tokio = { version = "1.18", features = ["macros"] }
