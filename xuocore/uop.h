@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <common/str.h>
 
 #define UOP_HASH(ph, sh) static_cast<uint64_t>(((uint64_t(ph) << 32) | sh))

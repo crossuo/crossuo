@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <common/str.h>
 
 class CCharacterList
