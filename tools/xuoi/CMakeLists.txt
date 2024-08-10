@@ -61,6 +61,11 @@ target_link_libraries(${XUOL_PROJECT} PUBLIC ${XUOCORE_PROJECT} ${CURL_LIBRARIES
 target_include_directories(${XUOL_PROJECT} PUBLIC ${XUOCORE_PROJECT} ${EXTERNALGFX_INCLUDE})
 xuo_disable_console(${XUOL_PROJECT})
 
+add_custom_command(TARGET ${XUOL_PROJECT} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${XUOL_PROJECT}> ${PROJECT_BINARY_DIR}/../../src/${XUOL_PROJECT}
+  COMMENT "Copied ${PROJECT_BINARY_DIR}/../../src/${XUOL_PROJECT}"
+)
+
 #
 # shardchk
 #
