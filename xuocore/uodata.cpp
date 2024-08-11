@@ -408,7 +408,10 @@ bool CFileManager::LoadCommon()
     }
     if (!m_MultiMap.Load(UOFilePath("Multimap.rle")))
     {
-        return false;
+        if (!m_MultiMap.Load(UOFilePath("multimap.rle")))
+        {
+            return false;
+        }
     }
     if (!m_TextureIdx.Load(UOFilePath("texidx.mul")))
     {
@@ -436,7 +439,10 @@ bool CFileManager::LoadCommon()
     }
     if (!m_SkillsMul.Load(UOFilePath("skills.mul")))
     {
-        return false;
+        if (!m_SkillsMul.Load(UOFilePath("Skills.mul")))
+        {
+            return false;
+        }
     }
     if (!m_TextureMul.Load(UOFilePath("texmaps.mul")))
     {
