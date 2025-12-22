@@ -2,12 +2,12 @@
 #  message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the SDL source code and call cmake from there")
 #endif()
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.10)
 project(SDL2 C CXX)
 
 if(WINDOWS_STORE)
   enable_language(CXX)
-  cmake_minimum_required(VERSION 3.11)
+  cmake_minimum_required(VERSION 3.10)
   add_definitions(-DSDL_BUILDING_WINRT=1 -ZW)
   link_libraries(
     -nodefaultlib:vccorlib$<$<CONFIG:Debug>:d>
@@ -1335,7 +1335,7 @@ elseif(WINDOWS)
     if(WINDOWS_STORE)
       set(SDL_VIDEO_DRIVER_WINRT 1)
       file(GLOB WIN_VIDEO_SOURCES
-        ${SDL2_SOURCE_DIR}/src/video/winrt/*.c 
+        ${SDL2_SOURCE_DIR}/src/video/winrt/*.c
         ${SDL2_SOURCE_DIR}/src/video/winrt/*.cpp
         ${SDL2_SOURCE_DIR}/src/render/direct3d11/*.cpp
         )
