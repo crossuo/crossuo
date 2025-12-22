@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <common/str.h>
+#include <cstdint>
 
 #define UOP_HASH(ph, sh) static_cast<uint64_t>(((uint64_t(ph) << 32) | sh))
 #define UOP_HASH_PH(hash) static_cast<uint32_t>(hash >> 32)
