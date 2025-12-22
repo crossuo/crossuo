@@ -149,6 +149,7 @@ struct DrawLandTileCmd
         uint32_t height = 0;
     } rect;
     float3 normals[4];
+    int drawMode = 0;
 };
 
 struct DrawShadowCmd

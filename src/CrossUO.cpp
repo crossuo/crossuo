@@ -4483,31 +4483,20 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         {
             color = g_OutOfRangeColor;
         }
+        int drawMode = SDM_LAND;
         if (!g_GrayedPixels && (color != 0u))
         {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_LAND_COLORED);
-#else
-            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-            cmd.value.asInt1 = SDM_LAND_COLORED;
-            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#endif
-            g_ColorManager.SendColorsToShader(color);
-        }
-        else
-        {
-#ifndef NEW_RENDERER_ENABLED
-            glUniform1iARB(g_ShaderDrawMode, SDM_LAND);
-#else
-            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-            cmd.value.asInt1 = SDM_LAND;
-            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#endif
+            drawMode = SDM_LAND_COLORED;
         }
         assert(spr->Texture != nullptr);
 #ifndef NEW_RENDERER_ENABLED
+        glUniform1iARB(g_ShaderDrawMode, drawMode);
         g_GL.DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
 #else
+        if (drawMode == SDM_LAND_COLORED)
+        {
+            g_ColorManager.SendColorsToShader(color);
+        }
         DrawLandTileCmd cmd{
             spr->Texture->Texture,
             x,
@@ -4526,7 +4515,8 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
                 { float(land->m_Normals[3].X),
                   float(land->m_Normals[3].Y),
                   float(land->m_Normals[3].Z) },
-            }
+            },
+            drawMode
         };
         RenderAdd_DrawLandTile(g_renderCmdList, cmd);
 #endif

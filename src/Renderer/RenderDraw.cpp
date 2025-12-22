@@ -31,6 +31,10 @@ extern int _uProjectionView;
 extern int _uModel;
 extern int _uTex;
 extern int _pProg;
+extern int _pProgLand;
+extern int _inNormalLand;
+extern int _uDrawModeLand;
+extern int _uColorsLand;
 #endif
 
 #include <queue>
@@ -439,7 +443,100 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     glTranslatef(-translateX, -translateY, 0.0f);
 #else
-    // TODO: gles
+    // GLES2 implementation with normals and lighting
+    struct LandVertex
+    {
+        float pos[2];
+        float uv[2];
+        uint32_t color;
+        float normal[3];
+    };
+
+    // Build vertex data for the land tile quad (triangle strip)
+    LandVertex vertices[4];
+    const float4 white = { 1.0f, 1.0f, 1.0f, 1.0f };
+    uint32_t whiteColor = *(uint32_t *)&white;
+
+    // Vertex 0 (top)
+    vertices[0].pos[0] = 22.0f;
+    vertices[0].pos[1] = -rc.x;
+    vertices[0].uv[0] = 0.0f;
+    vertices[0].uv[1] = 0.0f;
+    vertices[0].color = whiteColor;
+    vertices[0].normal[0] = cmd.normals[0][0];
+    vertices[0].normal[1] = cmd.normals[0][1];
+    vertices[0].normal[2] = cmd.normals[0][2];
+
+    // Vertex 1 (left)
+    vertices[1].pos[0] = 0.0f;
+    vertices[1].pos[1] = 22.0f - rc.y;
+    vertices[1].uv[0] = 0.0f;
+    vertices[1].uv[1] = 1.0f;
+    vertices[1].color = whiteColor;
+    vertices[1].normal[0] = cmd.normals[3][0];
+    vertices[1].normal[1] = cmd.normals[3][1];
+    vertices[1].normal[2] = cmd.normals[3][2];
+
+    // Vertex 2 (right)
+    vertices[2].pos[0] = 44.0f;
+    vertices[2].pos[1] = 22.0f - rc.height;
+    vertices[2].uv[0] = 1.0f;
+    vertices[2].uv[1] = 0.0f;
+    vertices[2].color = whiteColor;
+    vertices[2].normal[0] = cmd.normals[1][0];
+    vertices[2].normal[1] = cmd.normals[1][1];
+    vertices[2].normal[2] = cmd.normals[1][2];
+
+    // Vertex 3 (bottom)
+    vertices[3].pos[0] = 22.0f;
+    vertices[3].pos[1] = 44.0f - rc.width;
+    vertices[3].uv[0] = 1.0f;
+    vertices[3].uv[1] = 1.0f;
+    vertices[3].color = whiteColor;
+    vertices[3].normal[0] = cmd.normals[2][0];
+    vertices[3].normal[1] = cmd.normals[2][1];
+    vertices[3].normal[2] = cmd.normals[2][2];
+
+    // Create and bind vertex buffer
+    uint32_t vbo;
+    GL_CHECK(glGenBuffers(1, &vbo));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(LandVertex), vertices, GL_STATIC_DRAW));
+
+    // Use the land tile shader
+    GL_CHECK(glUseProgram(_pProgLand));
+
+    // Set up model matrix with translation
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
+
+    // Set draw mode uniform
+    GL_CHECK(glUniform1i(_uDrawModeLand, cmd.drawMode));
+
+    // Set up vertex attributes
+    GL_CHECK(glEnableVertexAttribArray(_inPos));
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)0));
+
+    GL_CHECK(glEnableVertexAttribArray(_inUV));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)offsetof(LandVertex, uv)));
+
+    GL_CHECK(glEnableVertexAttribArray(_inColor));
+    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(LandVertex), (void*)offsetof(LandVertex, color)));
+
+    GL_CHECK(glEnableVertexAttribArray(_inNormalLand));
+    GL_CHECK(glVertexAttribPointer(_inNormalLand, 3, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)offsetof(LandVertex, normal)));
+
+    // Draw the quad
+    GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+
+    // Cleanup
+    GL_CHECK(glDisableVertexAttribArray(_inPos));
+    GL_CHECK(glDisableVertexAttribArray(_inUV));
+    GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormalLand));
+    GL_CHECK(glDeleteBuffers(1, &vbo));
+    GL_CHECK(glUseProgram(0));
 #endif
 
     return true;

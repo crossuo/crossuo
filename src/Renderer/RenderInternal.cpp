@@ -39,6 +39,10 @@ extern int _uProjectionView;
 extern int _uModel;
 extern int _uTex;
 extern int _pProg;
+extern int _pProgLand;
+extern int _inNormalLand;
+extern int _uDrawModeLand;
+extern int _uColorsLand;
 uint32_t _vao = 0;
 uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
@@ -49,6 +53,10 @@ int _uProjectionView = 0;
 int _uModel = 0;
 int _uTex = 0;
 int _pProg = 0;
+int _pProgLand = 0;
+int _inNormalLand = 0;
+int _uDrawModeLand = 0;
+int _uColorsLand = 0;
 #endif
 
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
@@ -273,6 +281,54 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
     GL_CHECK(glUseProgram(0));
     // clang-format on
+
+    // Initialize land tile shader with normals
+    const auto vsLand = glCreateShader(GL_VERTEX_SHADER);
+    GL_CHECK(glShaderSource(vsLand, 1, &g_vShaderLand, nullptr));
+    GL_CHECK(glCompileShader(vsLand));
+    status = GL_TRUE;
+    GL_CHECK(glGetShaderiv(vsLand, GL_COMPILE_STATUS, &status));
+    if (status == GL_FALSE)
+    {
+        glGetShaderInfoLog(vsLand, sizeof(msg), nullptr, msg);
+        Error(Renderer, "land vs compilation: %s", msg);
+    }
+
+    const auto psLand = glCreateShader(GL_FRAGMENT_SHADER);
+    GL_CHECK(glShaderSource(psLand, 1, &g_pShaderLand, nullptr));
+    GL_CHECK(glCompileShader(psLand));
+    status = GL_TRUE;
+    GL_CHECK(glGetShaderiv(psLand, GL_COMPILE_STATUS, &status));
+    if (status == GL_FALSE)
+    {
+        glGetShaderInfoLog(psLand, sizeof(msg), nullptr, msg);
+        Error(Renderer, "land ps compilation: %s", msg);
+    }
+
+    _pProgLand = glCreateProgram();
+    GL_CHECK(glAttachShader(_pProgLand, vsLand));
+    GL_CHECK(glAttachShader(_pProgLand, psLand));
+    GL_CHECK(glLinkProgram(_pProgLand));
+    status = GL_TRUE;
+    GL_CHECK(glGetProgramiv(_pProgLand, GL_LINK_STATUS, &status));
+    if (status == GL_FALSE)
+    {
+        glGetProgramInfoLog(psLand, sizeof(msg), nullptr, msg);
+        Error(Renderer, "land program link: %s", msg);
+    }
+
+    _inPos = glGetAttribLocation(_pProgLand, "inPos");
+    _inUV = glGetAttribLocation(_pProgLand, "inUV");
+    _inColor = glGetAttribLocation(_pProgLand, "inColor");
+    _inNormalLand = glGetAttribLocation(_pProgLand, "inNormal");
+    _uProjectionView = glGetUniformLocation(_pProgLand, "uProjectionView");
+    _uModel = glGetUniformLocation(_pProgLand, "uModel");
+    _uTex = glGetUniformLocation(_pProgLand, "uTex");
+    _uDrawModeLand = glGetUniformLocation(_pProgLand, "drawMode");
+    _uColorsLand = glGetUniformLocation(_pProgLand, "colors");
+    GL_CHECK(glUseProgram(_pProgLand));
+    GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
+    GL_CHECK(glUseProgram(0));
 #endif
     g_render.context = context;
     g_render.window = window;
