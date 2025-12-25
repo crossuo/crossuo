@@ -54,7 +54,7 @@ public:
 
 protected:
     CGameEffect *m_Effects = nullptr;
-    CGLTexture m_TextureObjectHandles; // FIXME: gfx
+    CGLTexture m_TextureObjectHandles;
 
 public:
     CGameObject(int serial = 0);

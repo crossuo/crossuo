@@ -4218,7 +4218,6 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
     return result;
 }
 
-// FIXME: gfx
 void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 {
     auto spr = ExecuteGump(id);
@@ -4260,7 +4259,6 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
     }
 }
 
-// FIXME: gfx
 void CGame::DrawGump(
     uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue)
 {
@@ -4509,6 +4507,13 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         glUniform1iARB(g_ShaderDrawMode, drawMode);
         g_GL.DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
 #else
+#if defined(USE_GL2)
+        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
+        cmd.value.asInt1 = drawMode;
+        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(drawMode);
+#endif
         if (drawMode == SDM_LAND_COLORED)
         {
             g_ColorManager.SendColorsToShader(color);
@@ -4539,7 +4544,6 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
     }
 }
 
-// FIXME: gfx
 void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 {
     auto spr = ExecuteLandArt(id);
@@ -4584,7 +4588,6 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
     }
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     auto spr = ExecuteStaticArt(id);
@@ -4621,13 +4624,11 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
     }
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DrawStaticArt(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
     auto spr = ExecuteStaticArt(id);
@@ -4701,14 +4702,12 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
     }
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtAnimatedTransparent(
     uint16_t id, uint16_t color, int x, int y, bool selection)
 {
     DrawStaticArtTransparent(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
-// FIXME: gfx
 void CGame::DrawStaticArtInContainer(
     uint16_t id, uint16_t color, int x, int y, bool selection, bool onMouse)
 {

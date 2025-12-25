@@ -63,6 +63,9 @@ int _uDrawModeLand = 0;
 int _uColorsLand = 0;
 int _uAlphaTestEnabledLand = 0;
 int _uAlphaRefLand = 0;
+int _uProjectionViewLand = 0;
+int _uModelLand = 0;
+int _uTexLand = 0;
 
 // Global state for current draw mode and color palette (GL3/GLES only)
 int g_CurrentDrawMode = 0; // SDM_NO_COLOR
@@ -339,9 +342,9 @@ bool Render_Init(SDL_Window *window)
     _inUV = glGetAttribLocation(_pProgLand, "inUV");
     _inColor = glGetAttribLocation(_pProgLand, "inColor");
     _inNormalLand = glGetAttribLocation(_pProgLand, "inNormal");
-    _uProjectionView = glGetUniformLocation(_pProgLand, "uProjectionView");
-    _uModel = glGetUniformLocation(_pProgLand, "uModel");
-    _uTex = glGetUniformLocation(_pProgLand, "uTex");
+    _uProjectionViewLand = glGetUniformLocation(_pProgLand, "uProjectionView");
+    _uModelLand = glGetUniformLocation(_pProgLand, "uModel");
+    _uTexLand = glGetUniformLocation(_pProgLand, "uTex");
     _uDrawModeLand = glGetUniformLocation(_pProgLand, "drawMode");
     _uColorsLand = glGetUniformLocation(_pProgLand, "colors");
     _uAlphaTestEnabledLand = glGetUniformLocation(_pProgLand, "uAlphaTestEnabled");
@@ -349,7 +352,7 @@ bool Render_Init(SDL_Window *window)
     _uAlphaRefLand = glGetUniformLocation(_pProgLand, "uAlphaRef");
     GL_CHECK_ATTRIB(_uAlphaRefLand);
     GL_CHECK(glUseProgram(_pProgLand));
-    GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
+    GL_CHECK(glUniform1i(_uTexLand, 0)); // texture unit 0
     GL_CHECK(glUseProgram(0));
 #endif
     g_render.context = context;
@@ -395,8 +398,13 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
         float(cmd.scene_y),
         float(cmd.camera_nearZ),
         float(cmd.camera_farZ));
+    // Set projection for basic shader
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+    GL_CHECK(glUseProgram(0));
+    // Set projection for land shader too
+    GL_CHECK(glUseProgram(_pProgLand));
+    GL_CHECK(glUniformMatrix4fv(_uProjectionViewLand, 1, false, glm::value_ptr(projection)));
     GL_CHECK(glUseProgram(0));
 #endif
     return true;
