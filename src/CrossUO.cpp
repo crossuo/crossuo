@@ -4230,9 +4230,13 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = uniformValue;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(uniformValue);
+#endif
 #endif
 
             g_ColorManager.SendColorsToShader(color);
@@ -4242,9 +4246,13 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(SDM_NO_COLOR);
+#endif
 #endif
         }
 
@@ -4265,9 +4273,13 @@ void CGame::DrawGump(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = uniformValue;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(uniformValue);
+#endif
 #endif
 
             g_ColorManager.SendColorsToShader(color);
@@ -4277,9 +4289,13 @@ void CGame::DrawGump(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(SDM_NO_COLOR);
+#endif
 #endif
         }
         spr->Texture->Draw(x, y, width, height);
@@ -4539,9 +4555,13 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = SDM_COLORED;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(SDM_COLORED);
+#endif
 #endif
             g_ColorManager.SendColorsToShader(color);
         }
@@ -4550,9 +4570,13 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(SDM_NO_COLOR);
+#endif
 #endif
         }
         assert(spr->Texture != nullptr);
@@ -4584,9 +4608,13 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = uniformValue;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(uniformValue);
+#endif
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
@@ -4619,9 +4647,13 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = uniformValue;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(uniformValue);
+#endif
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawRotated(x, y, angle);
@@ -4655,9 +4687,13 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
+#if defined(USE_GL2)
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = uniformValue;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(uniformValue);
+#endif
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawTransparent(
@@ -4702,9 +4738,13 @@ void CGame::DrawStaticArtInContainer(
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = uniformValue;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(uniformValue);
+#endif
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x, y);
@@ -4725,9 +4765,13 @@ void CGame::DrawLight(LIGHT_DATA &light)
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = uniformValue;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(uniformValue);
+#endif
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(

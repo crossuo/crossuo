@@ -32,6 +32,8 @@ extern int _uModel;
 extern int _uTex;
 extern int _uAlphaTestEnabled;
 extern int _uAlphaRef;
+extern int _uDrawMode;
+extern int _uColors;
 extern int _pProg;
 extern int _pProgLand;
 extern int _inNormalLand;
@@ -39,6 +41,8 @@ extern int _uDrawModeLand;
 extern int _uColorsLand;
 extern int _uAlphaTestEnabledLand;
 extern int _uAlphaRefLand;
+extern int g_CurrentDrawMode;
+extern float g_CurrentColors[96];
 #endif
 
 #include <queue>
@@ -171,6 +175,8 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
     GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -290,6 +296,8 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
     GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -522,6 +530,8 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         GL_CHECK(glUseProgram(_pProg));
         GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
         GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+        GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
+        GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
         GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
         GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -696,8 +706,11 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
+#if defined(USE_GL2)
+    // Shader uniform is only used with custom shader pipelines in GL2
     RenderState_SetShaderUniform(
         state, cmd.uniformId, &cmd.uniformValue, ShaderUniformType::ShaderUniformType_Int1);
+#endif
     RenderState_SetBlend(
         state,
         true,
@@ -776,6 +789,8 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
     GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -895,6 +910,8 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 1));
 
@@ -1079,6 +1096,8 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
     GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
+    GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
