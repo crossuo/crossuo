@@ -54,6 +54,8 @@ int _uModel = 0;
 int _uTex = 0;
 int _uAlphaTestEnabled = 0;
 int _uAlphaRef = 0;
+int _uDrawMode = 0;
+int _uColors = 0;
 int _pProg = 0;
 int _pProgLand = 0;
 int _inNormalLand = 0;
@@ -61,6 +63,10 @@ int _uDrawModeLand = 0;
 int _uColorsLand = 0;
 int _uAlphaTestEnabledLand = 0;
 int _uAlphaRefLand = 0;
+
+// Global state for current draw mode and color palette (GL3/GLES only)
+int g_CurrentDrawMode = 0; // SDM_NO_COLOR
+float g_CurrentColors[96] = { 0.0f };
 #endif
 
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
@@ -263,6 +269,10 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK_ATTRIB(_uAlphaTestEnabled);
     _uAlphaRef = glGetUniformLocation(_pProg, "uAlphaRef");
     GL_CHECK_ATTRIB(_uAlphaRef);
+    _uDrawMode = glGetUniformLocation(_pProg, "drawMode");
+    GL_CHECK_ATTRIB(_uDrawMode);
+    _uColors = glGetUniformLocation(_pProg, "colors");
+    GL_CHECK_ATTRIB(_uColors);
     GL_CHECK(glUseProgram(_pProg));
 
     // clang-format off
@@ -777,3 +787,15 @@ void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
     cmdList->remainingSize = cmdList->size;
     cmdList->state = state;
 }
+
+#if defined(USE_GL3) || defined(USE_GLES)
+void Render_SetDrawMode(int drawMode)
+{
+    g_CurrentDrawMode = drawMode;
+}
+
+int Render_GetDrawMode()
+{
+    return g_CurrentDrawMode;
+}
+#endif

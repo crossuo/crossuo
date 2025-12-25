@@ -212,9 +212,13 @@ void CTextRenderer::Draw()
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = uniformValue;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(uniformValue);
+#endif
 #endif
 
             if (text.Transparent)
@@ -389,9 +393,13 @@ void CTextRenderer::WorldDraw()
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = uniformValue;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(uniformValue);
+#endif
 #endif
 
             if (text.Transparent)

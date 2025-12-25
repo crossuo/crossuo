@@ -601,9 +601,13 @@ void CAnimationManager::Draw(
                 }
 
                 RenderAdd_SetBlend(g_renderCmdList, BlendStateCmd{ blendSrc, blendDst });
+#if defined(USE_GL2)
                 ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
                 cmd.value.asInt1 = uniformValue;
                 RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+                Render_SetDrawMode(uniformValue);
+#endif
 #endif
                 sdmNoColor = false;
             }
@@ -619,9 +623,13 @@ void CAnimationManager::Draw(
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
 #else
+#if defined(USE_GL2)
                 ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
                 cmd.value.asInt1 = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
                 RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+                Render_SetDrawMode(partialHue ? SDM_PARTIAL_HUE : SDM_COLORED);
+#endif
 #endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
@@ -633,9 +641,13 @@ void CAnimationManager::Draw(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
+#if defined(USE_GL2)
             ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
             cmd.value.asInt1 = SDM_NO_COLOR;
             RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+            Render_SetDrawMode(SDM_NO_COLOR);
+#endif
 #endif
         }
 
@@ -946,9 +958,13 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                            ToColorB(auraColor) / 255.f,
                            ToColorA(auraColor) / 255.f } });
 
+#if defined(USE_GL2)
         ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
         cmd.value.asInt1 = SDM_NO_COLOR;
         RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
+#else
+        Render_SetDrawMode(SDM_NO_COLOR);
+#endif
 #endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
