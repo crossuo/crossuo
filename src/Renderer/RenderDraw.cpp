@@ -41,6 +41,9 @@ extern int _uDrawModeLand;
 extern int _uColorsLand;
 extern int _uAlphaTestEnabledLand;
 extern int _uAlphaRefLand;
+extern int _uProjectionViewLand;
+extern int _uModelLand;
+extern int _uTexLand;
 extern int g_CurrentDrawMode;
 extern float g_CurrentColors[96];
 #endif
@@ -610,8 +613,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     // Build vertex data for the land tile quad (triangle strip)
     LandVertex vertices[4];
-    const float4 white = { 1.0f, 1.0f, 1.0f, 1.0f };
-    uint32_t whiteColor = *(uint32_t *)&white;
+    const uint32_t whiteColor = 0xFFFFFFFF; // RGBA white
 
     // Vertex 0 (top)
     vertices[0].pos[0] = 22.0f;
@@ -674,10 +676,11 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     // Apply stored translation first, then the tile's position
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
+    GL_CHECK(glUniformMatrix4fv(_uModelLand, 1, false, glm::value_ptr(model)));
 
-    // Set draw mode uniform
+    // Set draw mode and colors uniforms
     GL_CHECK(glUniform1i(_uDrawModeLand, cmd.drawMode));
+    GL_CHECK(glUniform1fv(_uColorsLand, 96, g_CurrentColors));
 
     // Set up vertex attributes
     GL_CHECK(glEnableVertexAttribArray(_inPos));
