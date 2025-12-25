@@ -169,6 +169,8 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
 
     GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -286,6 +288,8 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
 
     GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -516,6 +520,8 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         GL_CHECK(glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(GenericVertex), vertices, GL_STATIC_DRAW));
 
         GL_CHECK(glUseProgram(_pProg));
+        GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+        GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
         GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
         GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -644,6 +650,8 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     // Use the land tile shader
     GL_CHECK(glUseProgram(_pProgLand));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabledLand, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRefLand, state->alphaTest.alphaRef));
 
     // Set up model matrix with translation
     glm::mat4 model(1.0f);
@@ -766,6 +774,8 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
 
     GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -872,6 +882,8 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, (segments + 1) * sizeof(GenericVertex), vertices, GL_STATIC_DRAW));
 
     GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -965,6 +977,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
 
     GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -1063,6 +1077,8 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(GenericVertex), data, GL_STATIC_DRAW));
 
     GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     GL_CHECK(glEnableVertexAttribArray(_inPos));

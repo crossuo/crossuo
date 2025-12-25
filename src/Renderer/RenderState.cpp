@@ -118,20 +118,8 @@ bool RenderState_SetAlphaTest(
             glDisable(GL_ALPHA_TEST);
         }
 #elif defined(USE_GLES) || defined(USE_GL3)
-        // For GL3/GLES, update shader uniforms for both programs
-        GLint currentProgram = 0;
-        GL_CHECK(glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram));
-        
-        // Update basic shader
-        GL_CHECK(glUseProgram(_pProg));
-        GL_CHECK(glUniform1i(_uAlphaTestEnabled, enabled ? 1 : 0));
-        
-        // Update land shader
-        GL_CHECK(glUseProgram(_pProgLand));
-        GL_CHECK(glUniform1i(_uAlphaTestEnabledLand, enabled ? 1 : 0));
-        
-        // Restore previous program
-        GL_CHECK(glUseProgram(currentProgram));
+        // For GL3/GLES, we'll set the uniform when the program is used
+        // Just store the state for now
 #endif
     }
 
@@ -155,22 +143,8 @@ bool RenderState_SetAlphaTest(
 #if defined(USE_GL2)
         glAlphaFunc(s_alphaTestfuncToOGLFunc[func], ref);
 #elif defined(USE_GLES) || defined(USE_GL3)
-        // For GL3/GLES, update shader uniforms for both programs
-        GLint currentProgram = 0;
-        GL_CHECK(glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram));
-        
-        // Update basic shader
-        GL_CHECK(glUseProgram(_pProg));
-        GL_CHECK(glUniform1i(_uAlphaTestEnabled, enabled ? 1 : 0));
-        GL_CHECK(glUniform1f(_uAlphaRef, ref));
-        
-        // Update land shader
-        GL_CHECK(glUseProgram(_pProgLand));
-        GL_CHECK(glUniform1i(_uAlphaTestEnabledLand, enabled ? 1 : 0));
-        GL_CHECK(glUniform1f(_uAlphaRefLand, ref));
-        
-        // Restore previous program
-        GL_CHECK(glUseProgram(currentProgram));
+        // For GL3/GLES, we'll set the uniform when the program is used
+        // Just store the state for now
 #endif
     }
 
