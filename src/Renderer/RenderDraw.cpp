@@ -151,6 +151,8 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 #else
     // GL3/GLES - quad rendering
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the command's position
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
     // Build vertex data using UV coords from command and vertex positions
@@ -271,6 +273,8 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 #else
     // GL3/GLES - rotated quad rendering
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the command's position and rotation
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
     model = glm::rotate(model, glm::radians(cmd.angle), glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -443,6 +447,8 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 #else
     // GL3/GLES - character sitting rendering
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the command's position
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(x, y, 0.0f));
 
     // Build vertex list for the sitting character (triangle strip)
@@ -665,6 +671,8 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     // Set up model matrix with translation
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the tile's position
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
@@ -756,6 +764,8 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 #else
     // GL3/GLES - shadow rendering
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the shadow's position
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(x, translateY, 0.0f));
 
     const uint32_t white = 0xffffffff;
@@ -865,6 +875,8 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
 #else
     // GL3/GLES - circle rendering
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the circle's position
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
     // Build circle vertices (triangle fan: center + perimeter)
@@ -965,6 +977,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
 #else
     // GL3/GLES - untextured quad rendering
     glm::mat4 model(1.0f);
+    // Apply stored translation first, then the quad's position
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
     const uint32_t col = colored ? 
@@ -1067,7 +1081,9 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     glEnable(GL_TEXTURE_2D);
 #else
     // GL3/GLES - line rendering
-    glm::mat4 model(1.0f); // Identity, no translation needed for lines
+    glm::mat4 model(1.0f);
+    // Apply stored translation
+    model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
 
     const uint32_t col = colored ? 
         (((uint32_t)(cmd.color[0] * 255) << 0) |

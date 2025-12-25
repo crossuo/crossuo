@@ -322,6 +322,8 @@ struct RenderState
     ColorMask colorMask = ColorMask::ColorMask_All;
     float4 color = g_ColorWhite;
     float4 clearColor = g_ColorBlack;
+    float projection[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+    float3 modelTranslation = {0.0f, 0.0f, 0.0f};
 };
 
 struct RenderCmdList

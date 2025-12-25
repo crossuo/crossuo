@@ -716,12 +716,10 @@ bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool fo
 #if defined(USE_GL2)
     glTranslatef(pos[0], pos[1], pos[2]);
 #else
-    // TODO: gles - model translation
-    glm::mat4 translation(1.0f);
-    translation = glm::translate(translation, glm::vec3(pos[0], pos[1], pos[2]));
-    GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(translation)));
-    GL_CHECK(glUseProgram(0));
+    // Accumulate translation in state for GL3/GLES (like glTranslatef does)
+    state->modelTranslation.rgb[0] += pos[0];
+    state->modelTranslation.rgb[1] += pos[1];
+    state->modelTranslation.rgb[2] += pos[2];
 #endif
     return true;
 }
