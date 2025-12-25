@@ -30,11 +30,15 @@ extern int _inUV;
 extern int _uProjectionView;
 extern int _uModel;
 extern int _uTex;
+extern int _uAlphaTestEnabled;
+extern int _uAlphaRef;
 extern int _pProg;
 extern int _pProgLand;
 extern int _inNormalLand;
 extern int _uDrawModeLand;
 extern int _uColorsLand;
+extern int _uAlphaTestEnabledLand;
+extern int _uAlphaRefLand;
 #endif
 
 #include <queue>
@@ -627,7 +631,12 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     vertices[3].normal[1] = cmd.normals[2][1];
     vertices[3].normal[2] = cmd.normals[2][2];
 
-    // Create and bind vertex buffer
+    // Create and bind vertex array and buffer
+#if !defined(USE_GLES2)
+    uint32_t vao;
+    GL_CHECK(glGenVertexArrays(1, &vao));
+    GL_CHECK(glBindVertexArray(vao));
+#endif
     uint32_t vbo;
     GL_CHECK(glGenBuffers(1, &vbo));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
@@ -666,6 +675,9 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     GL_CHECK(glDisableVertexAttribArray(_inColor));
     GL_CHECK(glDisableVertexAttribArray(_inNormalLand));
     GL_CHECK(glDeleteBuffers(1, &vbo));
+#if !defined(USE_GLES2)
+    GL_CHECK(glDeleteVertexArrays(1, &vao));
+#endif
     GL_CHECK(glUseProgram(0));
 #endif
 
@@ -846,8 +858,8 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
         vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor };
     }
 
-    // Disable texturing for untextured circle
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, RENDER_TEXTUREHANDLE_INVALID);
+    // Bind default white texture for untextured circle
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
 
 #if !defined(USE_GLES2)
     uint32_t vao;
@@ -939,8 +951,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
         { { float(cmd.width), 0.0f }, { 1.0f, 0.0f }, col },
     };
 
-    // Disable texturing for untextured quad
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, RENDER_TEXTUREHANDLE_INVALID);
+    // Bind default white texture for untextured quad
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
 
 #if !defined(USE_GLES2)
     uint32_t vao;
@@ -1037,8 +1049,8 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
         { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col },
     };
 
-    // Disable texturing for line
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, RENDER_TEXTUREHANDLE_INVALID);
+    // Bind default white texture for line
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
 
 #if !defined(USE_GLES2)
     uint32_t vao;

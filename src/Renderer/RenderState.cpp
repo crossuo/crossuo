@@ -14,13 +14,19 @@
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 #if defined(USE_GLES) || defined(USE_GL3)
+extern uint32_t _defaultTex;
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;
 extern int _uProjectionView;
 extern int _uModel;
 extern int _uTex;
+extern int _uAlphaTestEnabled;
+extern int _uAlphaRef;
 extern int _pProg;
+extern int _pProgLand;
+extern int _uAlphaTestEnabledLand;
+extern int _uAlphaRefLand;
 #endif
 
 bool RenderState_FlushState(RenderState *state)
@@ -110,6 +116,21 @@ bool RenderState_SetAlphaTest(
         {
             glDisable(GL_ALPHA_TEST);
         }
+#elif defined(USE_GLES) || defined(USE_GL3)
+        // For GL3/GLES, update shader uniforms for both programs
+        GLint currentProgram = 0;
+        GL_CHECK(glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram));
+        
+        // Update basic shader
+        GL_CHECK(glUseProgram(_pProg));
+        GL_CHECK(glUniform1i(_uAlphaTestEnabled, enabled ? 1 : 0));
+        
+        // Update land shader
+        GL_CHECK(glUseProgram(_pProgLand));
+        GL_CHECK(glUniform1i(_uAlphaTestEnabledLand, enabled ? 1 : 0));
+        
+        // Restore previous program
+        GL_CHECK(glUseProgram(currentProgram));
 #endif
     }
 
@@ -125,6 +146,23 @@ bool RenderState_SetAlphaTest(
         state->alphaTest.alphaRef = ref;
 #if defined(USE_GL2)
         glAlphaFunc(s_alphaTestfuncToOGLFunc[func], ref);
+#elif defined(USE_GLES) || defined(USE_GL3)
+        // For GL3/GLES, update shader uniforms for both programs
+        GLint currentProgram = 0;
+        GL_CHECK(glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram));
+        
+        // Update basic shader
+        GL_CHECK(glUseProgram(_pProg));
+        GL_CHECK(glUniform1i(_uAlphaTestEnabled, enabled ? 1 : 0));
+        GL_CHECK(glUniform1f(_uAlphaRef, ref));
+        
+        // Update land shader
+        GL_CHECK(glUseProgram(_pProgLand));
+        GL_CHECK(glUniform1i(_uAlphaTestEnabledLand, enabled ? 1 : 0));
+        GL_CHECK(glUniform1f(_uAlphaRefLand, ref));
+        
+        // Restore previous program
+        GL_CHECK(glUseProgram(currentProgram));
 #endif
     }
 
@@ -576,7 +614,10 @@ bool RenderState_SetTexture(
         state->texture.type = type;
         if (texture == RENDER_TEXTUREHANDLE_INVALID)
         {
-            // TODO bind null?
+#if defined(USE_GLES) || defined(USE_GL3)
+            // Bind default white texture for GL3/GLES to support vertex colors
+            GL_CHECK(glBindTexture(textureTypeToOGLType(type), _defaultTex));
+#endif
         }
         else
         {
