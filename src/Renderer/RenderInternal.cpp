@@ -52,11 +52,15 @@ int _inUV = 0;
 int _uProjectionView = 0;
 int _uModel = 0;
 int _uTex = 0;
+int _uAlphaTestEnabled = 0;
+int _uAlphaRef = 0;
 int _pProg = 0;
 int _pProgLand = 0;
 int _inNormalLand = 0;
 int _uDrawModeLand = 0;
 int _uColorsLand = 0;
+int _uAlphaTestEnabledLand = 0;
+int _uAlphaRefLand = 0;
 #endif
 
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
@@ -255,6 +259,10 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK_ATTRIB(_uModel);
     _uTex = glGetUniformLocation(_pProg, "uTex");
     GL_CHECK_ATTRIB(_uTex);
+    _uAlphaTestEnabled = glGetUniformLocation(_pProg, "uAlphaTestEnabled");
+    GL_CHECK_ATTRIB(_uAlphaTestEnabled);
+    _uAlphaRef = glGetUniformLocation(_pProg, "uAlphaRef");
+    GL_CHECK_ATTRIB(_uAlphaRef);
     GL_CHECK(glUseProgram(_pProg));
 
     // clang-format off
@@ -337,6 +345,10 @@ bool Render_Init(SDL_Window *window)
     _uTex = glGetUniformLocation(_pProgLand, "uTex");
     _uDrawModeLand = glGetUniformLocation(_pProgLand, "drawMode");
     _uColorsLand = glGetUniformLocation(_pProgLand, "colors");
+    _uAlphaTestEnabledLand = glGetUniformLocation(_pProgLand, "uAlphaTestEnabled");
+    GL_CHECK_ATTRIB(_uAlphaTestEnabledLand);
+    _uAlphaRefLand = glGetUniformLocation(_pProgLand, "uAlphaRef");
+    GL_CHECK_ATTRIB(_uAlphaRefLand);
     GL_CHECK(glUseProgram(_pProgLand));
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
     GL_CHECK(glUseProgram(0));
