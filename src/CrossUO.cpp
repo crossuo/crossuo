@@ -4473,8 +4473,17 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, 
         DrawResizepicGump_Internal(id, x, y, width, height);
         RenderAdd_DisableBlend(g_renderCmdList);
 
-        // FIXME epatitucci what were the original values for func, op, ref & mask?
-        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{});
+        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
+        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay blended)
+        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
+        RenderAdd_SetStencil(
+            g_renderCmdList,
+            StencilStateCmd{ StencilFunc::StencilFunc_Different,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             1,
+                             1 });
         DrawResizepicGump_Internal(id, x, y, width, height);
         RenderAdd_DisableStencil(g_renderCmdList);
     }

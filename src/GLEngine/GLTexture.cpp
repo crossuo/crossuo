@@ -46,8 +46,17 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
         RenderAdd_DisableBlend(g_renderCmdList);
 
-        // FIXME what are the assumed values for func, op, ref, and mask?
-        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{ StencilFunc::StencilFunc_Greater });
+        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
+        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay blended)
+        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
+        RenderAdd_SetStencil(
+            g_renderCmdList,
+            StencilStateCmd{ StencilFunc::StencilFunc_Different,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             1,
+                             1 });
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
@@ -113,8 +122,17 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
         RenderAdd_DisableBlend(g_renderCmdList);
 
-        // FIXME what were the original func, op, and stencil values?
-        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{ StencilFunc::StencilFunc_Greater });
+        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
+        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay blended)
+        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
+        RenderAdd_SetStencil(
+            g_renderCmdList,
+            StencilStateCmd{ StencilFunc::StencilFunc_Different,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             1,
+                             1 });
         RenderAdd_DrawQuad(g_renderCmdList, cmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
@@ -200,9 +218,20 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
 
     if (stencil)
     {
-        // FIXME what were the original func, op, and stencil values?
-        RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{ StencilFunc::StencilFunc_Greater });
-        RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        // Use NOTEQUAL stencil test with ref=1 to match GL1 behavior
+        // Objects INSIDE circle (stencil=1): NOTEQUAL(1,1) = false, don't draw (stay at 0.25 alpha)
+        // Objects OUTSIDE circle (stencil=0): NOTEQUAL(0,1) = true, draw full opacity
+        RenderAdd_SetStencil(
+            g_renderCmdList,
+            StencilStateCmd{ StencilFunc::StencilFunc_Different,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             StencilOp::StencilOp_Keep,
+                             1,
+                             1 });
+        // Create new command with full opacity for the second draw
+        auto fullOpacityCmd = DrawQuadCmd{ Texture, x, y, Width, Height, 1.f, 1.f, g_ColorWhite };
+        RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
 #endif
