@@ -57,7 +57,9 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
-        RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        // Draw again - default white color (no rgba specified) at full opacity
+        auto fullOpacityCmd = DrawQuadCmd{ Texture, x, y, Width, Height };
+        RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
@@ -133,7 +135,15 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
-        RenderAdd_DrawQuad(g_renderCmdList, cmd);
+        // Draw again - default white color (no rgba specified) at full opacity
+        auto fullOpacityCmd = DrawQuadCmd{ Texture,
+                                        x,
+                                        y,
+                                        uint32_t(width),
+                                        uint32_t(height),
+                                        width / float(Width),
+                                        height / float(Height) };
+        RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
         RenderAdd_DisableStencil(g_renderCmdList);
     }
     else
@@ -229,10 +239,10 @@ void CGLTexture::DrawTransparent(int x, int y, bool stencil)
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
-        // Create new command with full opacity for the second draw
-        auto fullOpacityCmd = DrawQuadCmd{ Texture, x, y, Width, Height, 1.f, 1.f, g_ColorWhite };
-        RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
-        RenderAdd_DisableStencil(g_renderCmdList);
+       // Draw again at full opacity (rgba defaults to white when not specified)
+       auto fullOpacityCmd = DrawQuadCmd{ Texture, x, y, Width, Height };
+       RenderAdd_DrawQuad(g_renderCmdList, fullOpacityCmd);
+       RenderAdd_DisableStencil(g_renderCmdList);
     }
 #endif
 }
