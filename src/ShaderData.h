@@ -94,7 +94,7 @@ static const char *g_vShaderLand =
     "{\n"
     "    vUV = inUV;\n"
     "    vColor = inColor;\n"
-    "    vNormal = (uModel * vec4(inNormal, 0.0)).xyz;\n"
+    "    vNormal = inNormal;\n"
     "    gl_Position = uProjectionView * uModel * vec4(inPos, 0.0, 1.0);\n"
     "}";
 

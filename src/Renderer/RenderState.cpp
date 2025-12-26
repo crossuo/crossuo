@@ -75,6 +75,10 @@ bool RenderState_FlushState(RenderState *state)
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
     GL_CHECK(glUseProgram(0));
+
+    GL_CHECK(glUseProgram(_pProgLand));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
+    GL_CHECK(glUseProgram(0));
 #endif
 
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
@@ -703,6 +707,9 @@ bool RenderState_SetViewParams(
             float(camera_nearZ),
             float(camera_farZ));
         GL_CHECK(glUseProgram(_pProg));
+        GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
+        GL_CHECK(glUseProgram(0));
+        GL_CHECK(glUseProgram(_pProgLand));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
         GL_CHECK(glUseProgram(0));
 #endif

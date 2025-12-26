@@ -611,49 +611,52 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         float normal[3];
     };
 
-    // Build vertex data for the land tile quad (triangle strip)
-    LandVertex vertices[4];
-    const uint32_t whiteColor = 0xFFFFFFFF; // RGBA white
-
-    // Vertex 0 (top)
-    vertices[0].pos[0] = 22.0f;
-    vertices[0].pos[1] = -rc.x;
-    vertices[0].uv[0] = 0.0f;
-    vertices[0].uv[1] = 0.0f;
-    vertices[0].color = whiteColor;
-    vertices[0].normal[0] = cmd.normals[0][0];
-    vertices[0].normal[1] = cmd.normals[0][1];
-    vertices[0].normal[2] = cmd.normals[0][2];
-
-    // Vertex 1 (left)
-    vertices[1].pos[0] = 0.0f;
-    vertices[1].pos[1] = 22.0f - rc.y;
-    vertices[1].uv[0] = 0.0f;
-    vertices[1].uv[1] = 1.0f;
-    vertices[1].color = whiteColor;
-    vertices[1].normal[0] = cmd.normals[3][0];
-    vertices[1].normal[1] = cmd.normals[3][1];
-    vertices[1].normal[2] = cmd.normals[3][2];
-
-    // Vertex 2 (right)
-    vertices[2].pos[0] = 44.0f;
-    vertices[2].pos[1] = 22.0f - rc.height;
-    vertices[2].uv[0] = 1.0f;
-    vertices[2].uv[1] = 0.0f;
-    vertices[2].color = whiteColor;
-    vertices[2].normal[0] = cmd.normals[1][0];
-    vertices[2].normal[1] = cmd.normals[1][1];
-    vertices[2].normal[2] = cmd.normals[1][2];
-
-    // Vertex 3 (bottom)
-    vertices[3].pos[0] = 22.0f;
-    vertices[3].pos[1] = 44.0f - rc.width;
-    vertices[3].uv[0] = 1.0f;
-    vertices[3].uv[1] = 1.0f;
-    vertices[3].color = whiteColor;
-    vertices[3].normal[0] = cmd.normals[2][0];
-    vertices[3].normal[1] = cmd.normals[2][1];
-    vertices[3].normal[2] = cmd.normals[2][2];
+    LandVertex vertices[4] = {
+        // Vertex 0
+        {
+            {22.0f, (float)-rc.x},           // pos
+            {0.0f, 0.0f},                     // uv
+            0xFFFFFFFF,                       // color (white, fully opaque)
+            {
+                (float)cmd.normals[0][0],
+                (float)cmd.normals[0][1],
+                (float)cmd.normals[0][2]
+            }                                 // normal
+        },
+        // Vertex 1
+        {
+            {0.0f, (float)(22 - rc.y)},      // pos
+            {0.0f, 1.0f},                     // uv
+            0xFFFFFFFF,
+            {
+                (float)cmd.normals[3][0],
+                (float)cmd.normals[3][1],
+                (float)cmd.normals[3][2]
+            }
+        },
+        // Vertex 2
+        {
+            {44.0f, (float)(22 - rc.h)},      // pos
+            {1.0f, 0.0f},                     // uv
+            0xFFFFFFFF,
+            {
+                (float)cmd.normals[1][0],
+                (float)cmd.normals[1][1],
+                (float)cmd.normals[1][2]
+            }
+        },
+        // Vertex 3
+        {
+            {22.0f, (float)(44 - rc.w)},      // pos
+            {1.0f, 1.0f},                     // uv
+            0xFFFFFFFF,
+            {
+                (float)cmd.normals[2][0],
+                (float)cmd.normals[2][1],
+                (float)cmd.normals[2][2]
+            }
+        }
+    };
 
     // Create and bind vertex array and buffer
 #if !defined(USE_GLES2)
@@ -984,7 +987,7 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
-    const uint32_t col = colored ? 
+    const uint32_t col = colored ?
         (((uint32_t)(cmd.color[0] * 255) << 0) |
          ((uint32_t)(cmd.color[1] * 255) << 8) |
          ((uint32_t)(cmd.color[2] * 255) << 16) |
@@ -1088,7 +1091,7 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     // Apply stored translation
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
 
-    const uint32_t col = colored ? 
+    const uint32_t col = colored ?
         (((uint32_t)(cmd.color[0] * 255) << 0) |
          ((uint32_t)(cmd.color[1] * 255) << 8) |
          ((uint32_t)(cmd.color[2] * 255) << 16) |
