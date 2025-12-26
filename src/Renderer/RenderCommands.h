@@ -145,8 +145,8 @@ struct DrawLandTileCmd
     {
         int x = 0;
         int y = 0;
-        uint32_t width = 0;
-        uint32_t height = 0;
+        int w = 0;
+        int h = 0;
     } rect;
     float3 normals[4];
     int drawMode = 0;

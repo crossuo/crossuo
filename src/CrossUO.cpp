@@ -4522,7 +4522,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
             spr->Texture->Texture,
             x,
             y + (land->GetZ() * 4),
-            { land->m_Rect.x, land->m_Rect.y, uint32_t(land->m_Rect.w), uint32_t(land->m_Rect.h) },
+            { land->m_Rect.x, land->m_Rect.y, land->m_Rect.w, land->m_Rect.h },
             {
                 { float(land->m_Normals[0].X),
                   float(land->m_Normals[0].Y),
