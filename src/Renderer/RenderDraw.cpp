@@ -92,10 +92,6 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-    if (cmd.rgba != g_ColorInvalid)
-    {
-        RenderState_SetColor(state, cmd.rgba);
-    }
     // clang-format off
     const float uv[] = {
          0.0f, cmd.v,
@@ -118,6 +114,10 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     // clang-format on
     const auto &vb = cmd.mirrored ? v_mirrored : v;
 #if defined(USE_GL2)
+    if (cmd.rgba != g_ColorInvalid)
+    {
+        RenderState_SetColor(state, cmd.rgba);
+    }
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glBegin(GL_TRIANGLE_STRIP);
     for (int i = 0; i < sizeof(v); i += 2)
@@ -154,17 +154,24 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 #else
     // GL3/GLES - quad rendering
     glm::mat4 model(1.0f);
-    // Apply stored translation first, then the command's position
+    // Apply stored translation first, then command's position
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
     // Build vertex data using UV coords from command and vertex positions
-    const uint32_t white = 0xffffffff;
+    // Use actual color from command instead of hardcoded white
+    const bool colored = (cmd.rgba != g_ColorInvalid);
+    const uint32_t col = colored ?
+        (((uint32_t)(cmd.rgba[0] * 255) << 0) |
+         ((uint32_t)(cmd.rgba[1] * 255) << 8) |
+         ((uint32_t)(cmd.rgba[2] * 255) << 16) |
+         ((uint32_t)(cmd.rgba[3] * 255) << 24)) : 0xffffffff;
+
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, white },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, white },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, white },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, white },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col },
     };
 
 #if !defined(USE_GLES2)
@@ -204,8 +211,14 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 #if !defined(USE_GLES2)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
 #endif
-    GL_CHECK(glUseProgram(0));
 #endif
+
+    // Restore color state to white after drawing colored quad
+    if (colored)
+    {
+        RenderState_SetColor(state, g_ColorWhite);
+    }
+
     return true;
 }
 
@@ -214,10 +227,6 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     ScopedPerfMarker(__FUNCTION__);
 
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-    if (cmd.rgba != g_ColorInvalid)
-    {
-        RenderState_SetColor(state, cmd.rgba);
-    }
     // clang-format off
     const float uv[] = {
          0.0f, cmd.v,
@@ -240,6 +249,10 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     // clang-format on
     const auto &vb = cmd.mirrored ? v_mirrored : v;
 #if defined(USE_GL2)
+    if (cmd.rgba != g_ColorInvalid)
+    {
+        RenderState_SetColor(state, cmd.rgba);
+    }
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
     glRotatef(cmd.angle, 0.0f, 0.0f, 1.0f);
     glBegin(GL_TRIANGLE_STRIP);
@@ -276,18 +289,25 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 #else
     // GL3/GLES - rotated quad rendering
     glm::mat4 model(1.0f);
-    // Apply stored translation first, then the command's position and rotation
+    // Apply stored translation first, then command's position and rotation
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
     model = glm::rotate(model, glm::radians(cmd.angle), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // Build vertex data using UV coords from command and vertex positions
-    const uint32_t white = 0xffffffff;
+    // Use actual color from command instead of hardcoded white
+    const bool colored = (cmd.rgba != g_ColorInvalid);
+    const uint32_t col = colored ?
+        (((uint32_t)(cmd.rgba[0] * 255) << 0) |
+         ((uint32_t)(cmd.rgba[1] * 255) << 8) |
+         ((uint32_t)(cmd.rgba[2] * 255) << 16) |
+         ((uint32_t)(cmd.rgba[3] * 255) << 24)) : 0xffffffff;
+
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, white },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, white },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, white },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, white },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col },
     };
 
 #if !defined(USE_GLES2)
@@ -327,8 +347,14 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 #if !defined(USE_GLES2)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
 #endif
-    GL_CHECK(glUseProgram(0));
+
+    // Restore color state to white after drawing colored quad
+    if (colored)
+    {
+        RenderState_SetColor(state, g_ColorWhite);
+    }
 #endif
+
     return true;
 }
 
@@ -454,73 +480,78 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(x, y, 0.0f));
 
-    // Build vertex list for the sitting character (triangle strip)
+    // Build vertex list for sitting character (triangle strip)
     GenericVertex vertices[10]; // Max 10 vertices for 3 segments
     int vertexCount = 0;
-    const uint32_t white = 0xffffffff;
+    // Use actual color from state instead of hardcoded white
+    const uint32_t col = 
+        (((uint32_t)(state->color[0] * 255) << 0) |
+         ((uint32_t)(state->color[1] * 255) << 8) |
+         ((uint32_t)(state->color[2] * 255) << 16) |
+         ((uint32_t)(state->color[3] * 255) << 24));
 
     if (cmd.mirror)
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, white };
-            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, white };
-            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, white };
-            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, white };
+            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col };
+            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col };
+            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, col };
+            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, col };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, white };
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, white };
+                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col };
             }
-            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, white };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, white };
+            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, col };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, col };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, white };
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, white };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, col };
             }
-            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, white };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, white };
+            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, col };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, col };
         }
     }
     else
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, white };
-            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, white };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, white };
-            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, white };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col };
+            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, col };
+            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, col };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, white };
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, white };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col };
             }
-            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, white };
-            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, white };
+            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, col };
+            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, col };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, white };
-                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, white };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, col };
             }
-            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, white };
-            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, white };
+            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, col };
+            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, col };
         }
     }
 
@@ -616,7 +647,10 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         {
             {22.0f, (float)-rc.x},           // pos
             {0.0f, 0.0f},                     // uv
-            0xFFFFFFFF,                       // color (white, fully opaque)
+            (((uint32_t)(state->color[0] * 255) << 0) |
+             ((uint32_t)(state->color[1] * 255) << 8) |
+             ((uint32_t)(state->color[2] * 255) << 16) |
+             ((uint32_t)(state->color[3] * 255) << 24)),  // use actual color from state
             {
                 (float)cmd.normals[0][0],
                 (float)cmd.normals[0][1],
@@ -627,7 +661,10 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         {
             {0.0f, (float)(22 - rc.y)},      // pos
             {0.0f, 1.0f},                     // uv
-            0xFFFFFFFF,
+            (((uint32_t)(state->color[0] * 255) << 0) |
+             ((uint32_t)(state->color[1] * 255) << 8) |
+             ((uint32_t)(state->color[2] * 255) << 16) |
+             ((uint32_t)(state->color[3] * 255) << 24)),
             {
                 (float)cmd.normals[3][0],
                 (float)cmd.normals[3][1],
@@ -638,7 +675,10 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         {
             {44.0f, (float)(22 - rc.h)},      // pos
             {1.0f, 0.0f},                     // uv
-            0xFFFFFFFF,
+            (((uint32_t)(state->color[0] * 255) << 0) |
+             ((uint32_t)(state->color[1] * 255) << 8) |
+             ((uint32_t)(state->color[2] * 255) << 16) |
+             ((uint32_t)(state->color[3] * 255) << 24)),
             {
                 (float)cmd.normals[1][0],
                 (float)cmd.normals[1][1],
@@ -649,7 +689,10 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
         {
             {22.0f, (float)(44 - rc.w)},      // pos
             {1.0f, 1.0f},                     // uv
-            0xFFFFFFFF,
+            (((uint32_t)(state->color[0] * 255) << 0) |
+             ((uint32_t)(state->color[1] * 255) << 8) |
+             ((uint32_t)(state->color[2] * 255) << 16) |
+             ((uint32_t)(state->color[3] * 255) << 24)),
             {
                 (float)cmd.normals[2][0],
                 (float)cmd.normals[2][1],
@@ -770,26 +813,31 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 #else
     // GL3/GLES - shadow rendering
     glm::mat4 model(1.0f);
-    // Apply stored translation first, then the shadow's position
+    // Apply stored translation first, then shadow's position
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(x, translateY, 0.0f));
 
-    const uint32_t white = 0xffffffff;
+    // Use actual color from state instead of hardcoded white
+    const uint32_t col = 
+        (((uint32_t)(state->color[0] * 255) << 0) |
+         ((uint32_t)(state->color[1] * 255) << 8) |
+         ((uint32_t)(state->color[2] * 255) << 16) |
+         ((uint32_t)(state->color[3] * 255) << 24));
     GenericVertex data[4];
 
     if (cmd.mirror)
     {
-        data[0] = { { width, height }, { 0.0f, 1.0f }, white };
-        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, white };
-        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, white };
-        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, white };
+        data[0] = { { width, height }, { 0.0f, 1.0f }, col };
+        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, col };
+        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, col };
+        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, col };
     }
     else
     {
-        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, white };
-        data[1] = { { width, height }, { 1.0f, 1.0f }, white };
-        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, white };
-        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, white };
+        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, col };
+        data[1] = { { width, height }, { 1.0f, 1.0f }, col };
+        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col };
+        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col };
     }
 
 #if !defined(USE_GLES2)
@@ -888,8 +936,14 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     // Build circle vertices (triangle fan: center + perimeter)
     const int segments = 361; // 0 to 360 degrees
     GenericVertex vertices[segments + 1];
-    const uint32_t centerColor = 0xffffffff; // Use current color from state
-    const uint32_t edgeColor = cmd.gradientMode != 0 ? 0x00000000 : 0xffffffff;
+    // Use actual color from state instead of hardcoded white
+    const uint32_t centerColor = 
+        (((uint32_t)(state->color[0] * 255) << 0) |
+         ((uint32_t)(state->color[1] * 255) << 8) |
+         ((uint32_t)(state->color[2] * 255) << 16) |
+         ((uint32_t)(state->color[3] * 255) << 24));
+    // Edge color: black if gradient mode is on, otherwise use state color
+    const uint32_t edgeColor = cmd.gradientMode != 0 ? 0x00000000 : centerColor;
 
     // Center vertex
     vertices[0] = { { 0.0f, 0.0f }, { 0.5f, 0.5f }, centerColor };
