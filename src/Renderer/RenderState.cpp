@@ -260,6 +260,7 @@ bool RenderState_SetDepthEnabled(RenderState *state, bool enabled, bool forced)
 {
     if (forced || state->depth.enabled != enabled)
     {
+        state->depth.enabled = enabled;
         if (enabled)
         {
             GL_CHECK(glEnable(GL_DEPTH_TEST));
@@ -278,6 +279,7 @@ bool RenderState_SetStencilEnabled(RenderState *state, bool enabled, bool forced
 {
     if (forced || state->stencil.enabled != enabled)
     {
+        state->stencil.enabled = enabled;
         if (enabled)
         {
             GL_CHECK(glEnable(GL_STENCIL_TEST));
@@ -739,7 +741,6 @@ bool RenderState_SetScissor(
     {
         changed = true;
         state->scissor.enabled = enabled;
-
         if (enabled)
         {
             GL_CHECK(glEnable(GL_SCISSOR_TEST));
