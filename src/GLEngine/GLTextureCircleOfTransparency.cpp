@@ -65,7 +65,6 @@ bool CGLTextureCircleOfTransparency::Create(int radius)
 void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-
     if (m_Sprite.Texture == nullptr)
     {
         return;
@@ -85,6 +84,8 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     glStencilFunc(GL_NOTEQUAL, 1, 1);
     glDisable(GL_STENCIL_TEST);
 #else
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CircleOfTransparency");
+
     auto stencilCmd = StencilStateCmd{ StencilFunc::StencilFunc_AlwaysPass,
                                        StencilOp::StencilOp_Keep,
                                        StencilOp::StencilOp_Keep,
@@ -103,53 +104,5 @@ void CGLTextureCircleOfTransparency::Draw(int x, int y, bool checktrans)
     // TODO skipping some redundant state changes due to stencil being disabled
     // test this is still working as intended
     RenderAdd_DisableStencil(g_renderCmdList);
-#endif
-}
-
-void CGLTextureCircleOfTransparency::Redraw()
-{
-    ScopedPerfMarker(__FUNCTION__);
-
-#ifndef NEW_RENDERER_ENABLED
-    glClear(GL_STENCIL_BUFFER_BIT);
-    if (g_ConfigManager.UseCircleTrans && m_Sprite.Texture != nullptr)
-    {
-        glEnable(GL_STENCIL_TEST);
-        glColorMask(0u, 0u, 0u, 1u);
-        glStencilFunc(GL_ALWAYS, 1, 1);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        g_GL.Draw(*m_Sprite.Texture, X, Y);
-        glColorMask(1u, 1u, 1u, 1u);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-        glStencilFunc(GL_NOTEQUAL, 1, 1);
-        glDisable(GL_STENCIL_TEST);
-    }
-#else
-    RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Stencil });
-    if (g_ConfigManager.UseCircleTrans && m_Sprite.Texture != nullptr)
-    {
-        RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_Alpha });
-        auto stencilCmd = StencilStateCmd{ StencilFunc::StencilFunc_AlwaysPass,
-                                           StencilOp::StencilOp_Keep,
-                                           StencilOp::StencilOp_Keep,
-                                           StencilOp::StencilOp_Replace,
-                                           1,
-                                           1 };
-        RenderAdd_SetStencil(g_renderCmdList, stencilCmd);
-
-        RenderAdd_DrawQuad(
-            g_renderCmdList,
-            DrawQuadCmd{ m_Sprite.Texture->Texture,
-                         X,
-                         Y,
-                         m_Sprite.Texture->Width,
-                         m_Sprite.Texture->Height });
-
-        RenderAdd_SetColorMask(g_renderCmdList, SetColorMaskCmd{ ColorMask::ColorMask_All });
-
-        // TODO skipping some redundant state changes due to stencil being disabled
-        // test this is still working as intended
-        RenderAdd_DisableStencil(g_renderCmdList);
-    }
 #endif
 }

@@ -1343,7 +1343,7 @@ void CGameScreen::DrawGameWindow(bool render)
                 g_CircleOfTransparency.Draw(drawX, drawY);
             }
         }
-
+        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "GameScreen");
         m_HitsStack.clear();
         for (int i = 0; i < m_RenderListCount; i++)
         {
@@ -1898,48 +1898,51 @@ void CGameScreen::Render()
 
         DrawGameWindow(true);
         //UnuseShader();
-        if (deathScreenTimer == 0u)
         {
-            if (!g_GrayedPixels)
+            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Post-GameScreen");
+            if (deathScreenTimer == 0u)
             {
-                DrawGameWindowLight();
-                g_ColorizerShader.Enable();
-                g_NewTargetSystem.Draw();
-                g_TargetGump.Draw();
-                g_AttackTargetGump.Draw();
-                g_ColorizerShader.Disable();
-                g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
+                if (!g_GrayedPixels)
+                {
+                    DrawGameWindowLight();
+                    g_ColorizerShader.Enable();
+                    g_NewTargetSystem.Draw();
+                    g_TargetGump.Draw();
+                    g_AttackTargetGump.Draw();
+                    g_ColorizerShader.Disable();
+                    g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
+                }
+
+                DrawGameWindowText(true);
+                DrawSmoothMonitorEffect();
             }
+            else
+            {
+    #ifndef NEW_RENDERER_ENABLED
+                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+                g_GL.DrawPolygone(
+                    g_RenderBounds.GameWindowPosX,
+                    g_RenderBounds.GameWindowPosY,
+                    g_RenderBounds.GameWindowWidth,
+                    g_RenderBounds.GameWindowHeight);
+                glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    #else
+                RenderAdd_DrawUntexturedQuad(
+                    g_renderCmdList,
+                    DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
+                                        g_RenderBounds.GameWindowPosY,
+                                        uint32_t(g_RenderBounds.GameWindowWidth),
+                                        uint32_t(g_RenderBounds.GameWindowHeight),
+                                        g_ColorBlack });
+    #endif
 
-            DrawGameWindowText(true);
-            DrawSmoothMonitorEffect();
-        }
-        else
-        {
-#ifndef NEW_RENDERER_ENABLED
-            glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-            g_GL.DrawPolygone(
-                g_RenderBounds.GameWindowPosX,
-                g_RenderBounds.GameWindowPosY,
-                g_RenderBounds.GameWindowWidth,
-                g_RenderBounds.GameWindowHeight);
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
-            RenderAdd_DrawUntexturedQuad(
-                g_renderCmdList,
-                DrawUntexturedQuadCmd{ g_RenderBounds.GameWindowPosX,
-                                       g_RenderBounds.GameWindowPosY,
-                                       uint32_t(g_RenderBounds.GameWindowWidth),
-                                       uint32_t(g_RenderBounds.GameWindowHeight),
-                                       g_ColorBlack });
-#endif
-
-            g_FontManager.DrawA(
-                3,
-                "You are dead.",
-                0,
-                g_RenderBounds.GameWindowPosX + (g_RenderBounds.GameWindowWidth / 2) - 50,
-                g_RenderBounds.GameWindowPosY + (g_RenderBounds.GameWindowHeight / 2) - 20);
+                g_FontManager.DrawA(
+                    3,
+                    "You are dead.",
+                    0,
+                    g_RenderBounds.GameWindowPosX + (g_RenderBounds.GameWindowWidth / 2) - 50,
+                    g_RenderBounds.GameWindowPosY + (g_RenderBounds.GameWindowHeight / 2) - 20);
+            }
         }
     }
     g_OutOfRangeColor = 0;
@@ -1948,6 +1951,7 @@ void CGameScreen::Render()
 
     if (deathScreenTimer == 0u)
     {
+        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "SystemChat");
         g_SystemChat.DrawSystemChat(
             g_RenderBounds.GameWindowPosX,
             g_RenderBounds.GameWindowPosY,
@@ -1955,199 +1959,204 @@ void CGameScreen::Render()
         g_QuestArrow.Draw();
     }
 
-#ifndef NEW_RENDERER_ENABLED
-    g_GL.RestorePort();
-#else
-    auto viewParamsCmd = SetViewParamsCmd{
-        0, 0, windowSize.Width, windowSize.Height, windowSize.Width, windowSize.Height, -150, 150
-    };
-    RenderAdd_SetViewParams(g_renderCmdList, viewParamsCmd);
-#endif
-    m_GameScreenGump.Draw();
-
-    if (g_DeveloperMode == DM_SHOW_FPS_ONLY)
     {
-        char dbf[100] = { 0 };
+        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Debug Text");
+    #ifndef NEW_RENDERER_ENABLED
+        g_GL.RestorePort();
+    #else
+        auto viewParamsCmd = SetViewParamsCmd{
+            0, 0, windowSize.Width, windowSize.Height, windowSize.Width, windowSize.Height, -150, 150
+        };
+        RenderAdd_SetViewParams(g_renderCmdList, viewParamsCmd);
+    #endif
+        m_GameScreenGump.Draw();
 
-        sprintf_s(
-            dbf,
-            "FPS=%i (%ims) (Min=%d, Max=%d) scale=%.1f\n%s",
-            FPScount,
-            g_FrameDelay[WINDOW_ACTIVE],
-            FPSMin,
-            FPSMax,
-            g_GlobalScale,
-            g_PingString.c_str());
-
-        g_FontManager.DrawA(
-            3,
-            dbf,
-            0x35,
-            g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth + 10,
-            g_RenderBounds.GameWindowPosY);
-    }
-    else if (g_DeveloperMode == DM_DEBUGGING)
-    {
-        char dbf[150] = { 0 };
-
-        sprintf_s(
-            dbf,
-            "FPS=%i (%ims) (Min=%d, Max=%d) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
-            FPScount,
-            g_FrameDelay[WINDOW_ACTIVE],
-            FPSMin,
-            FPSMax,
-            g_PingString.c_str(),
-            g_Player->Direction,
-            g_RenderBounds.PlayerZ,
-            m_MaxDrawZ,
-            g_GlobalScale);
-
-        g_FontManager.DrawA(3, dbf, 0x35, 20, 30);
-
-        sprintf_s(
-            dbf,
-            "Rendered %i object counts:\nLand=%i Statics=%i Game=%i Multi=%i Lights=%i",
-            g_RenderedObjectsCountInGameWindow,
-            g_LandObjectsCount,
-            g_StaticsObjectsCount,
-            g_GameObjectsCount,
-            g_MultiObjectsCount,
-            m_LightCount);
-
-        g_FontManager.DrawA(3, dbf, 0x35, 20, 54);
-
-        if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
+        if (g_DeveloperMode == DM_SHOW_FPS_ONLY)
         {
-            CRenderWorldObject *selRwo = (CRenderWorldObject *)g_SelectedObject.Object;
-            CLandObject *land = selRwo->LandObjectPtr();
-            char soName[20] = "UnknownObject";
-
-            switch (selRwo->RenderType)
-            {
-                case ROT_LAND_OBJECT:
-                {
-                    if (!land->IsStretched)
-                    {
-                        sprintf_s(soName, "Land");
-                    }
-                    else
-                    {
-                        sprintf_s(soName, "LandTex (mz=%i)", land->MinZ);
-                    }
-
-                    break;
-                }
-                case ROT_STATIC_OBJECT:
-                {
-                    sprintf_s(soName, "Static");
-                    break;
-                }
-                case ROT_GAME_OBJECT:
-                {
-                    sprintf_s(soName, "GameObject");
-                    break;
-                }
-                case ROT_MULTI_OBJECT:
-                {
-                    sprintf_s(soName, "Multi");
-
-                    if (((CMultiObject *)selRwo)->IsCustomHouseMulti())
-                    {
-                        sprintf_s(soName, "Multi CH %04X", ((CMultiObject *)selRwo)->State);
-                    }
-                    else
-                    {
-                        sprintf_s(soName, "Multi");
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            int tz = selRwo->GetZ();
-
-            //Если это тайл текстуры
-            if (land != nullptr && land->IsStretched)
-            {
-                tz = (char)land->Serial;
-            }
-
-            uint32_t tiledataFlags = (uint32_t)(
-                selRwo->IsStaticGroupObject() ?
-                    ((CRenderStaticObject *)selRwo)->GetStaticData()->Flags :
-                    0);
+            char dbf[100] = { 0 };
 
             sprintf_s(
                 dbf,
-                "Selected:\n%s: G=0x%04X C:0x%04X TF=0x%08X X=%i Y=%i Z=%i (%i) PriZ=%i",
-                soName,
-                selRwo->Graphic,
-                selRwo->Color,
-                tiledataFlags,
-                selRwo->GetX(),
-                selRwo->GetY(),
-                selRwo->GetZ(),
-                tz,
-                selRwo->PriorityZ);
+                "FPS=%i (%ims) (Min=%d, Max=%d) scale=%.1f\n%s",
+                FPScount,
+                g_FrameDelay[WINDOW_ACTIVE],
+                FPSMin,
+                FPSMax,
+                g_GlobalScale,
+                g_PingString.c_str());
 
-            const astr_t flagNames[] = { "Background", "Weapon",     "Transparent", "Translucent",
-                                         "Wall",       "Damaging",   "Impassable",  "Wet",
-                                         "Unknown",    "Surface",    "Bridge",      "Stackable",
-                                         "Window",     "NoShoot",    "PrefixA",     "PrefixAn",
-                                         "Internal",   "Foliage",    "PartialHue",  "Unknown1",
-                                         "Map",        "Container",  "Wearable",    "LightSource",
-                                         "Animated",   "NoDiagonal", "Unknown2",    "Armor",
-                                         "Roof",       "Door",       "StairBack",   "StairRight" };
+            g_FontManager.DrawA(
+                3,
+                dbf,
+                0x35,
+                g_RenderBounds.GameWindowPosX + g_RenderBounds.GameWindowWidth + 10,
+                g_RenderBounds.GameWindowPosY);
+        }
+        else if (g_DeveloperMode == DM_DEBUGGING)
+        {
+            char dbf[150] = { 0 };
 
-            astr_t flagsData{};
-            for (int f = 0; f < 32; f++)
+            sprintf_s(
+                dbf,
+                "FPS=%i (%ims) (Min=%d, Max=%d) %sDir=%i Z=%i (MDZ=%i) scale=%.1f",
+                FPScount,
+                g_FrameDelay[WINDOW_ACTIVE],
+                FPSMin,
+                FPSMax,
+                g_PingString.c_str(),
+                g_Player->Direction,
+                g_RenderBounds.PlayerZ,
+                m_MaxDrawZ,
+                g_GlobalScale);
+
+            g_FontManager.DrawA(3, dbf, 0x35, 20, 30);
+
+            sprintf_s(
+                dbf,
+                "Rendered %i object counts:\nLand=%i Statics=%i Game=%i Multi=%i Lights=%i",
+                g_RenderedObjectsCountInGameWindow,
+                g_LandObjectsCount,
+                g_StaticsObjectsCount,
+                g_GameObjectsCount,
+                g_MultiObjectsCount,
+                m_LightCount);
+
+            g_FontManager.DrawA(3, dbf, 0x35, 20, 54);
+
+            if (g_SelectedObject.Object != nullptr && g_SelectedObject.Object->IsWorldObject())
             {
-                if ((tiledataFlags & (1 << f)) != 0u)
+                CRenderWorldObject *selRwo = (CRenderWorldObject *)g_SelectedObject.Object;
+                CLandObject *land = selRwo->LandObjectPtr();
+                char soName[20] = "UnknownObject";
+
+                switch (selRwo->RenderType)
                 {
-                    flagsData += astr_t("\n") + flagNames[f];
+                    case ROT_LAND_OBJECT:
+                    {
+                        if (!land->IsStretched)
+                        {
+                            sprintf_s(soName, "Land");
+                        }
+                        else
+                        {
+                            sprintf_s(soName, "LandTex (mz=%i)", land->MinZ);
+                        }
+
+                        break;
+                    }
+                    case ROT_STATIC_OBJECT:
+                    {
+                        sprintf_s(soName, "Static");
+                        break;
+                    }
+                    case ROT_GAME_OBJECT:
+                    {
+                        sprintf_s(soName, "GameObject");
+                        break;
+                    }
+                    case ROT_MULTI_OBJECT:
+                    {
+                        sprintf_s(soName, "Multi");
+
+                        if (((CMultiObject *)selRwo)->IsCustomHouseMulti())
+                        {
+                            sprintf_s(soName, "Multi CH %04X", ((CMultiObject *)selRwo)->State);
+                        }
+                        else
+                        {
+                            sprintf_s(soName, "Multi");
+                        }
+                        break;
+                    }
+                    default:
+                        break;
                 }
+
+                int tz = selRwo->GetZ();
+
+                //Если это тайл текстуры
+                if (land != nullptr && land->IsStretched)
+                {
+                    tz = (char)land->Serial;
+                }
+
+                uint32_t tiledataFlags = (uint32_t)(
+                    selRwo->IsStaticGroupObject() ?
+                        ((CRenderStaticObject *)selRwo)->GetStaticData()->Flags :
+                        0);
+
+                sprintf_s(
+                    dbf,
+                    "Selected:\n%s: G=0x%04X C:0x%04X TF=0x%08X X=%i Y=%i Z=%i (%i) PriZ=%i",
+                    soName,
+                    selRwo->Graphic,
+                    selRwo->Color,
+                    tiledataFlags,
+                    selRwo->GetX(),
+                    selRwo->GetY(),
+                    selRwo->GetZ(),
+                    tz,
+                    selRwo->PriorityZ);
+
+                const astr_t flagNames[] = { "Background", "Weapon",     "Transparent", "Translucent",
+                                            "Wall",       "Damaging",   "Impassable",  "Wet",
+                                            "Unknown",    "Surface",    "Bridge",      "Stackable",
+                                            "Window",     "NoShoot",    "PrefixA",     "PrefixAn",
+                                            "Internal",   "Foliage",    "PartialHue",  "Unknown1",
+                                            "Map",        "Container",  "Wearable",    "LightSource",
+                                            "Animated",   "NoDiagonal", "Unknown2",    "Armor",
+                                            "Roof",       "Door",       "StairBack",   "StairRight" };
+
+                astr_t flagsData{};
+                for (int f = 0; f < 32; f++)
+                {
+                    if ((tiledataFlags & (1 << f)) != 0u)
+                    {
+                        flagsData += astr_t("\n") + flagNames[f];
+                    }
+                }
+
+                flagsData = astr_t(dbf) + flagsData;
+
+                g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
             }
-
-            flagsData = astr_t(dbf) + flagsData;
-
-            g_FontManager.DrawA(3, flagsData, 0x0035, 20, 102);
         }
     }
-
-    g_GumpManager.Draw(false);
-    g_GameConsole.DrawW(
-        (uint8_t)g_ConfigManager.SpeechFont,
-        g_ConfigManager.SpeechColor,
-        g_RenderBounds.GameWindowPosX,
-        g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
-        TS_LEFT,
-        UOFONT_BLACK_BORDER | UOFONT_FIXED);
-
-    g_PluginManager.SceneDraw();
-    if (g_GameState == GS_GAME_BLOCKED)
     {
-        g_SelectedObject.Init(tempSelected);
-        g_PressedObject.Init(tempPressed);
-        g_GameBlockedScreen.SelectObject();
-        g_GameBlockedScreen.Render();
-    }
-    else
-    {
-        InitToolTip();
-        g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
-    }
+        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "UI");
+        g_GumpManager.Draw(false);
+        g_GameConsole.DrawW(
+            (uint8_t)g_ConfigManager.SpeechFont,
+            g_ConfigManager.SpeechColor,
+            g_RenderBounds.GameWindowPosX,
+            g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
+            TS_LEFT,
+            UOFONT_BLACK_BORDER | UOFONT_FIXED);
 
-    RenderDebug_ProcessFrame(g_renderCmdList);
-    RenderDraw_Execute(g_renderCmdList);
+        g_PluginManager.SceneDraw();
+        if (g_GameState == GS_GAME_BLOCKED)
+        {
+            g_SelectedObject.Init(tempSelected);
+            g_PressedObject.Init(tempPressed);
+            g_GameBlockedScreen.SelectObject();
+            g_GameBlockedScreen.Render();
+        }
+        else
+        {
+            InitToolTip();
+            g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
+        }
 
-#ifdef NEW_RENDERER_ENABLED
-    Render_SwapBuffers();
-    g_ScreenshotBuilder.GPUDataReady();
-#else
-    g_GL.EndDraw();
-#endif
+        RenderDebug_ProcessFrame(g_renderCmdList);
+        RenderDraw_Execute(g_renderCmdList);
+
+    #ifdef NEW_RENDERER_ENABLED
+        Render_SwapBuffers();
+        g_ScreenshotBuilder.GPUDataReady();
+    #else
+        g_GL.EndDraw();
+    #endif
+    }
 }
 
 void CGameScreen::SelectObject()

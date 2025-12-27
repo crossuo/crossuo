@@ -91,6 +91,9 @@ bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
 bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
+//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+//    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, "DrawQuad");
+//#endif
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     // clang-format off
     const float uv[] = {
@@ -217,6 +220,10 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
         RenderState_SetColor(state, g_ColorWhite);
     }
 #endif
+
+//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+//    glPopDebugGroup();
+//#endif
 
     return true;
 }
@@ -904,6 +911,9 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
+//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+//    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, "DrawCircle");
+//#endif
 
     const float pi = (float)XUO_M_PI * 2.0f;
     const auto radius = cmd.radius;
@@ -995,7 +1005,12 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
 #endif
     GL_CHECK(glUseProgram(0));
+    glEnable(GL_TEXTURE_2D);
 #endif
+
+//#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+//    glPopDebugGroup();
+//#endif
 
     return true;
 }
@@ -1487,6 +1502,8 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DisableShaderPipeline, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(GetFrameBufferPixels, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(PushDebugMarker, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(PopDebugMarker, cmd, &cmdList->state)
 
             default:
                 assert(false);

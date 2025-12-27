@@ -18,6 +18,11 @@
 #include "RenderCommands.h"
 extern RenderCmdList *g_renderCmdList;
 
+// Debug markers for RenderDoc support (GL3 only)
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#include "Debug/OGLDebugMarker.h"
+#endif
+
 // Frame debug dumping
 void RenderDebug_EnableDump();
 void RenderDebug_StartFrame();
@@ -96,7 +101,6 @@ bool RenderAdd_SetModelViewTranslation(
     RenderCmdList *cmdList, const SetModelViewTranslationCmd &cmd);
 bool RenderAdd_SetScissor(RenderCmdList *cmdList, const SetScissorCmd &cmd);
 bool RenderAdd_DisableScissor(RenderCmdList *cmdList);
-
 bool RenderAdd_GetFrameBufferPixels(RenderCmdList *cmdList, const GetFrameBufferPixelsCmd &cmd);
 
 bool RenderDraw_Execute(RenderCmdList *cmdList);

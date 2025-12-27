@@ -97,6 +97,9 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state);
 bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState *state);
 bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state);
 
+bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state);
+bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state);
+
 bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *state);
 bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *state);
 bool RenderDraw_SetModelViewTranslation(const SetModelViewTranslationCmd &cmd, RenderState *state);
@@ -123,3 +126,7 @@ bool RenderDraw_ShaderPipeline(const ShaderPipelineCmd &cmd, RenderState *state)
 bool RenderDraw_DisableShaderPipeline(const DisableShaderPipelineCmd &cmd, RenderState *state);
 
 bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderState *state);
+
+// Debug functions for command dumping
+void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state);
+void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state);

@@ -45,6 +45,10 @@ enum RenderCommandType : uint8_t
     Cmd_ShaderPipeline,
     Cmd_DisableShaderPipeline,
 
+    // Debug markers for RenderDoc support
+    Cmd_PushDebugMarker,
+    Cmd_PopDebugMarker,
+
     RenderCommandType_Invalid = 0xff,
 };
 
@@ -344,4 +348,15 @@ struct GetFrameBufferPixelsCmd
     uint32_t window_height = 0;
     void *data = nullptr; // TODO add resource storage to the renderer, this would be a handle then
     size_t dataSize = 0;
+};
+
+struct PushDebugMarkerCmd
+{
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_PushDebugMarker;
+    const char *label = nullptr; // Label is assumed to be valid until command execution
+};
+
+struct PopDebugMarkerCmd
+{
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_PopDebugMarker;
 };

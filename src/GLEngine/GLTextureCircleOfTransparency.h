@@ -18,8 +18,6 @@ struct CGLTextureCircleOfTransparency
     virtual ~CGLTextureCircleOfTransparency();
 
     bool Create(int radius);
-    void Redraw();
-
     virtual void Draw(int x, int y, bool checktrans = false);
 };
 
