@@ -2249,26 +2249,45 @@ SOKOL_API_DECL void sg_discard_context(sg_context ctx_id);
     #define GL_LUMINANCE 0x1909
     #endif
 
-    #if defined(SOKOL_GLES2) && !defined(__glew_h__)
-    #   ifdef GL_ANGLE_instanced_arrays
-    #       define SOKOL_INSTANCING_ENABLED
-    #       define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedANGLE(mode, first, count, instancecount)
-    #       define glDrawElementsInstanced(mode, count, type, indices, instancecount) glDrawElementsInstancedANGLE(mode, count, type, indices, instancecount)
-    #       define glVertexAttribDivisor(index, divisor) glVertexAttribDivisorANGLE(index, divisor)
-    #   elif defined(GL_EXT_draw_instanced) && defined(GL_EXT_instanced_arrays)
-    #       define SOKOL_INSTANCING_ENABLED
-    #       define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedEXT(mode, first, count, instancecount)
-    #       define glDrawElementsInstanced(mode, count, type, indices, instancecount) glDrawElementsInstancedEXT(mode, count, type, indices, instancecount)
-    #       define glVertexAttribDivisor(index, divisor) glVertexAttribDivisorEXT(index, divisor)
+    #if defined(SOKOL_GLES2)
+    #   if !defined(__glew_h__)
+    #       ifdef GL_ANGLE_instanced_arrays
+    #           define SOKOL_INSTANCING_ENABLED
+    #           define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedANGLE(mode, first, count, instancecount)
+    #           define glDrawElementsInstanced(mode, count, type, indices, instancecount) glDrawElementsInstancedANGLE(mode, count, type, indices, instancecount)
+    #           define glVertexAttribDivisor(index, divisor) glVertexAttribDivisorANGLE(index, divisor)
+    #       elif defined(GL_EXT_draw_instanced) && defined(GL_EXT_instanced_arrays)
+    #           define SOKOL_INSTANCING_ENABLED
+    #           define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedEXT(mode, first, count, instancecount)
+    #           define glDrawElementsInstanced(mode, count, type, indices, instancecount) glDrawElementsInstancedEXT(mode, count, type, indices, instancecount)
+    #           define glVertexAttribDivisor(index, divisor) glVertexAttribDivisorEXT(index, divisor)
+    #       else
+    #           define SOKOL_GLES2_INSTANCING_ERROR "Select GL_ANGLE_instanced_arrays or (GL_EXT_draw_instanced & GL_EXT_instanced_arrays) to enable instancing in GLES2"
+    #           define glDrawArraysInstanced(mode, first, count, instancecount) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #           define glDrawElementsInstanced(mode, count, type, indices, instancecount) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #           define glVertexAttribDivisor(index, divisor) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #       endif
     #   else
-    #       define SOKOL_GLES2_INSTANCING_ERROR "Select GL_ANGLE_instanced_arrays or (GL_EXT_draw_instanced & GL_EXT_instanced_arrays) to enable instancing in GLES2"
-    #       define glDrawArraysInstanced(mode, first, count, instancecount) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
-    #       define glDrawElementsInstanced(mode, count, type, indices, instancecount) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
-    #       define glVertexAttribDivisor(index, divisor) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #       ifdef GLEW_ANGLE_instanced_arrays
+    #           define SOKOL_INSTANCING_ENABLED
+    #           define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedANGLE(mode, first, count, instancecount)
+    #           define glDrawElementsInstanced(mode, count, type, indices, instancecount) glDrawElementsInstancedANGLE(mode, count, type, indices, instancecount)
+    #           define glVertexAttribDivisor(index, divisor) glVertexAttribDivisorANGLE(index, divisor)
+    #       elif defined(GLEW_EXT_draw_instanced) && defined(GLEW_EXT_instanced_arrays)
+    #           define SOKOL_INSTANCING_ENABLED
+    #           define glDrawArraysInstanced(mode, first, count, instancecount)  glDrawArraysInstancedEXT(mode, first, count, instancecount)
+    #           define glDrawElementsInstanced(mode, count, type, indices, instancecount) glDrawElementsInstancedEXT(mode, count, type, indices, instancecount)
+    #           define glVertexAttribDivisor(index, divisor) glVertexAttribDivisorEXT(index, divisor)
+    #       else
+    #           define SOKOL_GLES2_INSTANCING_ERROR "Select GLEW_ANGLE_instanced_arrays or (GLEW_EXT_draw_instanced & GLEW_EXT_instanced_arrays) to enable instancing in GLES2 with GLEW"
+    #           define glDrawArraysInstanced(mode, first, count, instancecount) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #           define glDrawElementsInstanced(mode, count, type, indices, instancecount) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #           define glVertexAttribDivisor(index, divisor) SOKOL_ASSERT(0 && SOKOL_GLES2_INSTANCING_ERROR)
+    #       endif
     #   endif
-    #else
+#else
     #   define SOKOL_INSTANCING_ENABLED
-    #endif
+#endif
     #define _SG_GL_CHECK_ERROR() { SOKOL_ASSERT(glGetError() == GL_NO_ERROR); }
 
 #elif defined(SOKOL_D3D11)

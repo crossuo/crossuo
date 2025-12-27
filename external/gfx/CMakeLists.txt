@@ -30,8 +30,16 @@ if (USE_GL2)
     list(APPEND EXTERNALGFX_SRC GL/glew.c)
 endif()
 
+if (USE_GLES2)
+    list(REMOVE_ITEM EXTERNALGFX_SRC imgui/imgui_impl_opengl2.cpp)
+endif()
+
 add_library(${PROJECT_NAME} STATIC ${EXTERNALGFX_SRC} ${EXTERNALGFX_HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
+
+if (USE_GLES2)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_ES2)
+endif()
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Remove warning from 3rd party compilation
 if(MSVC)
