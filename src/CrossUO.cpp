@@ -4482,6 +4482,7 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, 
                              StencilOp::StencilOp_Keep,
                              1,
                              1 });
+        RenderAdd_EnableStencil(g_renderCmdList);
         DrawResizepicGump_Internal(id, x, y, width, height);
         RenderAdd_DisableStencil(g_renderCmdList);
     }

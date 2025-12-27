@@ -19,9 +19,7 @@
 extern RenderCmdList *g_renderCmdList;
 
 // Debug markers for RenderDoc support (GL3 only)
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #include "Debug/OGLDebugMarker.h"
-#endif
 
 // Frame debug dumping
 void RenderDebug_EnableDump();

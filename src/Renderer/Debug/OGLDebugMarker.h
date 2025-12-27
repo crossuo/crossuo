@@ -48,19 +48,10 @@ struct ScopedGLDebugMarker
 
 #else
 
-// Stub implementations for non-GL3 builds (compile to nothing)
-inline bool RenderAdd_PushDebugMarker(RenderCmdList *cmdList, const char *label) { (void)cmdList; (void)label; return true; }
-inline bool RenderAdd_PopDebugMarker(RenderCmdList *cmdList) { (void)cmdList; return true; }
-
-// Stub scoped marker
-struct ScopedGLDebugMarker
-{
-    explicit ScopedGLDebugMarker(RenderCmdList *cmdList, const char *label) { (void)cmdList; (void)label; }
-    ~ScopedGLDebugMarker() {}
-};
-
-// Stub macros
 #define SCOPED_GL_DEBUG_MARKER(cmdList)
+#define SCOPED_GL_DEBUG_MARKER_LABEL(cmdList, label)
+
+// Manual marker macros for more control
 #define GL_DEBUG_MARKER_PUSH(cmdList, label)
 #define GL_DEBUG_MARKER_POP(cmdList)
 

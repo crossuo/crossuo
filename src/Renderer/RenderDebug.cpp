@@ -490,10 +490,10 @@ static void DumpInfo(const char *format, ...)
     va_end(args);
 }
 
-void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
+void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s",
+        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s | alphaTest: %s, alphaRef: %f",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -501,13 +501,15 @@ void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
         cmd->height,
         cmd->u,
         cmd->v,
-        cmd->mirrored ? "true" : "false");
+        cmd->mirrored ? "true" : "false",
+        state->alphaTest.enabled ? "true" : "false",
+        state->alphaTest.alphaRef);
 }
 
-void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
+void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - mirrored: %s",
+        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - mirrored: %s | alphaTest: %s, alphaRef: %f",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -516,7 +518,9 @@ void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
         cmd->angle,
         cmd->u,
         cmd->v,
-        cmd->mirrored ? "true" : "false");
+        cmd->mirrored ? "true" : "false",
+        state->alphaTest.enabled ? "true" : "false",
+        state->alphaTest.alphaRef);
 }
 
 void RenderDraw_FlushStateDebug(FlushStateCmd *, RenderState *)
@@ -690,20 +694,22 @@ void RenderDraw_DrawShadowDebug(DrawShadowCmd *cmd, RenderState *)
         cmd->restoreBlendFunc ? "true" : "false");
 }
 
-void RenderDraw_DrawCircleDebug(DrawCircleCmd *cmd, RenderState *)
+void RenderDraw_DrawCircleDebug(DrawCircleCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "DrawCircleCmd: x: %d - y: %d - radius: %f - gradientMode: %d",
+        "DrawCircleCmd: x: %d - y: %d - radius: %f - gradientMode: %d | alphaTest: %s, alphaRef: %f",
         cmd->x,
         cmd->y,
         cmd->radius,
-        cmd->gradientMode);
+        cmd->gradientMode,
+        state->alphaTest.enabled ? "true" : "false",
+        state->alphaTest.alphaRef);
 }
 
-void RenderDraw_DrawUntexturedQuadDebug(DrawUntexturedQuadCmd *cmd, RenderState *)
+void RenderDraw_DrawUntexturedQuadDebug(DrawUntexturedQuadCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "DrawUntexturedQuadCmd: x: %d - y: %d - width: %d - height: %d - rgba: (%f, %f, %f, %f)",
+        "DrawUntexturedQuadCmd: x: %d - y: %d - width: %d - height: %d - rgba: (%f, %f, %f, %f) | alphaTest: %s, alphaRef: %f",
         cmd->x,
         cmd->y,
         cmd->width,
@@ -711,13 +717,15 @@ void RenderDraw_DrawUntexturedQuadDebug(DrawUntexturedQuadCmd *cmd, RenderState 
         cmd->color[0],
         cmd->color[1],
         cmd->color[2],
-        cmd->color[3]);
+        cmd->color[3],
+        state->alphaTest.enabled ? "true" : "false",
+        state->alphaTest.alphaRef);
 }
 
-void RenderDraw_DrawLineDebug(DrawLineCmd *cmd, RenderState *)
+void RenderDraw_DrawLineDebug(DrawLineCmd *cmd, RenderState *state)
 {
     DumpInfo(
-        "DrawLineCmd: x0: %d - y0: %d - x1: %d - y1: %d - rgba: (%f, %f, %f, %f)",
+        "DrawLineCmd: x0: %d - y0: %d - x1: %d - y1: %d - rgba: (%f, %f, %f, %f) | alphaTest: %s, alphaRef: %f",
         cmd->x0,
         cmd->y0,
         cmd->x1,
@@ -725,7 +733,9 @@ void RenderDraw_DrawLineDebug(DrawLineCmd *cmd, RenderState *)
         cmd->color[0],
         cmd->color[1],
         cmd->color[2],
-        cmd->color[3]);
+        cmd->color[3],
+        state->alphaTest.enabled ? "true" : "false",
+        state->alphaTest.alphaRef);
 }
 
 void RenderDraw_ClearRTDebug(ClearRTCmd *cmd, RenderState *)

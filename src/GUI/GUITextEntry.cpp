@@ -243,11 +243,10 @@ void CGUITextEntry::Draw(bool checktrans)
 
 #ifndef NEW_RENDERER_ENABLED
         glDisable(GL_BLEND);
-
         glEnable(GL_STENCIL_TEST);
 #else
         RenderAdd_DisableBlend(g_renderCmdList);
-        // FIXME renderer - what were the original values for stencil func, op, ref and mask?
+        RenderAdd_EnableStencil(g_renderCmdList);
         RenderAdd_SetStencil(g_renderCmdList, StencilStateCmd{});
 #endif
 
