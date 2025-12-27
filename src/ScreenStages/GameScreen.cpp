@@ -1481,6 +1481,7 @@ void CGameScreen::DrawGameWindow(bool render)
 
 void CGameScreen::DrawGameWindowLight()
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Game Light");
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
@@ -1905,11 +1906,14 @@ void CGameScreen::Render()
                 if (!g_GrayedPixels)
                 {
                     DrawGameWindowLight();
-                    g_ColorizerShader.Enable();
-                    g_NewTargetSystem.Draw();
-                    g_TargetGump.Draw();
-                    g_AttackTargetGump.Draw();
-                    g_ColorizerShader.Disable();
+                    {
+                        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Colorizer");
+                        g_ColorizerShader.Enable();
+                        g_NewTargetSystem.Draw();
+                        g_TargetGump.Draw();
+                        g_AttackTargetGump.Draw();
+                        g_ColorizerShader.Disable();
+                    }
                     g_Weather.Draw(g_RenderBounds.GameWindowPosX, g_RenderBounds.GameWindowPosY);
                 }
 
