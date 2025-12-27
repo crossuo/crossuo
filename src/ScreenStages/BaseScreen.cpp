@@ -6,6 +6,7 @@
 #include "../Managers/MouseManager.h"
 #include "../Managers/ScreenEffectManager.h"
 #include "ScreenshotBuilder.h"
+#include "../Renderer/RenderAPI.h"
 
 CBaseScreen *g_CurrentScreen = nullptr;
 
@@ -50,6 +51,7 @@ void CBaseScreen::Render()
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);
 
+    RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
 
 #ifdef NEW_RENDERER_ENABLED

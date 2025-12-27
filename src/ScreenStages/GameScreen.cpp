@@ -2139,6 +2139,7 @@ void CGameScreen::Render()
         g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
     }
 
+    RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
 
 #ifdef NEW_RENDERER_ENABLED

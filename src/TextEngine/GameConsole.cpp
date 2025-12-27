@@ -5,6 +5,7 @@
 #include "GameConsole.h"
 #include "../CrossUO.h"
 #include "../Party.h"
+#include "../GameWindow.h"
 #include "../Managers/FontsManager.h"
 #include "../Managers/ConfigManager.h"
 #include "../Network/Packets.h"
@@ -18,6 +19,7 @@ static const char *s_ConsolePrefix[] = {
     "; ", //Whisper
     ": ", //Emote
     ".",  //Command
+    "`",  //Local Command
     "?",  //Broadcast
     "/",  //Party
     "\\", //Guild
@@ -121,6 +123,11 @@ static wstr_t GetConsolePrefixAndType(const wstr_t &text, int &member, GAME_CONS
     {
         result = L"Command:";
         type = GCTT_C;
+    }
+    else if (aprefix == s_ConsolePrefix[GCTT_LOCAL_COMMAND][0])
+    {
+        result = L"$>";
+        type = GCTT_LOCAL_COMMAND;
     }
     else if (aprefix == s_ConsolePrefix[GCTT_BROADCAST][0])
     {
@@ -266,6 +273,32 @@ void SendConsoleText(wstr_t text, uint16_t defaultColor)
                         TT_SYSTEM, 0xFFFFFFFF, 3, 0, "You are not in a party.");
                 }
                 return;
+            }
+            else if (type == GCTT_C)
+            {
+                // GM commands only - sent to server
+                return;
+            }
+            else if (type == GCTT_LOCAL_COMMAND)
+            {
+                // Local player commands
+                astr_t command = str_from(text.substr(offset));
+                if (command == "dumpframe")
+                {
+                    RenderDebug_EnableDump();
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0, 3, 0, "Render dump enabled for next frame");
+                    return;
+                }
+                else if (command == "quit")
+                {
+                    g_GameWindow.Destroy();
+                }
+                else
+                {
+                    astr_t str = "Unknown command: %s" + command;
+                    g_Game.CreateTextMessage(TT_SYSTEM, 0xFFFFFFFF, 3, 0, str);
+                    return;
+                }
             }
         }
     }
@@ -438,6 +471,7 @@ bool CGameConsole::ConsoleTypeIsEmpty(GAME_CONSOLE_TEXT_TYPE type)
         case GCTT_C:
         case GCTT_BROADCAST:
         case GCTT_PARTY:
+        case GCTT_LOCAL_COMMAND:
         {
             result = g_GameConsole.GetTextW().compare(prefix);
             break;
@@ -460,6 +494,7 @@ void CGameConsole::DeleteConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type)
         case GCTT_C:
         case GCTT_BROADCAST:
         case GCTT_PARTY:
+        case GCTT_LOCAL_COMMAND:
         {
             auto str = g_GameConsole.GetTextW();
             if (str.find(prefix) == 0)
@@ -486,6 +521,7 @@ void CGameConsole::SetConsoleTypePrefix(GAME_CONSOLE_TEXT_TYPE type)
         case GCTT_C:
         case GCTT_BROADCAST:
         case GCTT_PARTY:
+        case GCTT_LOCAL_COMMAND:
         {
             auto str = prefix + g_GameConsole.GetTextW();
             g_GameConsole.SetTextW(str);

@@ -18,6 +18,12 @@
 #include "RenderCommands.h"
 extern RenderCmdList *g_renderCmdList;
 
+// Frame debug dumping
+void RenderDebug_EnableDump();
+void RenderDebug_StartFrame();
+void RenderDebug_EndFrame();
+void RenderDebug_ProcessFrame(RenderCmdList *cmdList);
+
 // TODO fix it
 bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd);
 bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb);
