@@ -105,6 +105,7 @@ void CLandObject::UpdateZ(int zTop, int zRight, int zBottom)
 
 void CLandObject::Draw(int x, int y)
 {
+    return;
     ScopedPerfMarker(__FUNCTION__);
 
     if (m_Z <= g_MaxGroundZ)

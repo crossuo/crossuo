@@ -426,3 +426,29 @@ bool RenderAdd_GetFrameBufferPixels(RenderCmdList *cmdList, const GetFrameBuffer
     RenderDraw_GetFrameBufferPixels(cmd, &cmdList->state);
     return true;
 }
+
+bool RenderAdd_PushDebugMarker(RenderCmdList *cmdList, const char *label)
+{
+    PushDebugMarkerCmd cmd{ label };
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_PushDebugMarker(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_PopDebugMarker(RenderCmdList *cmdList)
+{
+    PopDebugMarkerCmd cmd;
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_PopDebugMarker(cmd, &cmdList->state);
+    return true;
+}

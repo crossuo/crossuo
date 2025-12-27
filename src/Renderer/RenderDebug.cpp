@@ -888,6 +888,8 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(DisableShaderPipeline, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW_DEBUG(GetFrameBufferPixels, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(PushDebugMarker, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(PopDebugMarker, cmd, &cmdList->state)
 
             case RenderCommandType_Invalid:
                 DumpInfo("Invalid type.");
@@ -909,4 +911,42 @@ void RenderDebug_ProcessFrame(RenderCmdList *cmdList)
         RenderDraw_DumpCmdList(cmdList);
     }
     RenderDebug_EndFrame();
+}
+
+bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
+{
+    (void)state;
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    if (cmd.label)
+    {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
+    }
+#else
+    (void)cmd;
+#endif
+    return true;
+}
+
+bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
+{
+    (void)state;
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    glPopDebugGroup();
+#else
+    (void)cmd;
+#endif
+    return true;
+}
+
+void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state)
+{
+    (void)state;
+    DumpInfo("PushDebugMarker: %s", cmd->label ? cmd->label : "(null)");
+}
+
+void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state)
+{
+    (void)state;
+    (void)cmd;
+    DumpInfo("PopDebugMarker");
 }
