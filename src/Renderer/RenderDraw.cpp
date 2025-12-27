@@ -211,13 +211,12 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 #if !defined(USE_GLES2)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
 #endif
-#endif
-
     // Restore color state to white after drawing colored quad
     if (colored)
     {
         RenderState_SetColor(state, g_ColorWhite);
     }
+#endif
 
     return true;
 }
@@ -484,7 +483,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     GenericVertex vertices[10]; // Max 10 vertices for 3 segments
     int vertexCount = 0;
     // Use actual color from state instead of hardcoded white
-    const uint32_t col = 
+    const uint32_t col =
         (((uint32_t)(state->color[0] * 255) << 0) |
          ((uint32_t)(state->color[1] * 255) << 8) |
          ((uint32_t)(state->color[2] * 255) << 16) |
@@ -624,11 +623,11 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     glNormal3f(cmd.normals[1][0], cmd.normals[1][1], cmd.normals[1][2]);
     glTexCoord2i(1, 0);
-    glVertex2i(44, 22 - rc.height); //>
+    glVertex2i(44, 22 - rc.h); //>
 
     glNormal3f(cmd.normals[2][0], cmd.normals[2][1], cmd.normals[2][2]);
     glTexCoord2i(1, 1);
-    glVertex2i(22, 44 - rc.width); //v
+    glVertex2i(22, 44 - rc.w); //v
     glEnd();
 
     glTranslatef(-translateX, -translateY, 0.0f);
@@ -818,7 +817,7 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     model = glm::translate(model, glm::vec3(x, translateY, 0.0f));
 
     // Use actual color from state instead of hardcoded white
-    const uint32_t col = 
+    const uint32_t col =
         (((uint32_t)(state->color[0] * 255) << 0) |
          ((uint32_t)(state->color[1] * 255) << 8) |
          ((uint32_t)(state->color[2] * 255) << 16) |
@@ -937,7 +936,7 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     const int segments = 361; // 0 to 360 degrees
     GenericVertex vertices[segments + 1];
     // Use actual color from state instead of hardcoded white
-    const uint32_t centerColor = 
+    const uint32_t centerColor =
         (((uint32_t)(state->color[0] * 255) << 0) |
          ((uint32_t)(state->color[1] * 255) << 8) |
          ((uint32_t)(state->color[2] * 255) << 16) |
@@ -1448,8 +1447,6 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
 
     while (cmd < listEnd)
     {
-        // RenderCommandHeader &cmdHeader = *(RenderCommandHeader *)cmd;
-        // switch (cmdHeader.type)
         RenderCommandType type = *(RenderCommandType *)cmd;
         cmd += sizeof(type);
         switch (type)
@@ -1477,19 +1474,19 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(DisableDepthState, cmd, &cmdList->state)
             MATCH_CASE_DRAW(EnableDepthState, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColorMask, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(SetColor, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(SetClearColor, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(SetViewParams, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(SetModelViewTranslation, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(SetScissor, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(DisableScissor, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(SetColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetClearColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetViewParams, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetModelViewTranslation, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetScissor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DisableScissor, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW(ShaderUniform, cmd, &cmdList->state)
             MATCH_CASE_DRAW(ShaderLargeUniform, cmd, &cmdList->state)
-            MATCH_CASE_DRAW(ShaderPipeline, cmd, &cmdList->state);
-            MATCH_CASE_DRAW(DisableShaderPipeline, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(ShaderPipeline, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(DisableShaderPipeline, cmd, &cmdList->state)
 
-            MATCH_CASE_DRAW(GetFrameBufferPixels, cmd, &cmdList->state);
+            MATCH_CASE_DRAW(GetFrameBufferPixels, cmd, &cmdList->state)
 
             default:
                 assert(false);

@@ -9,7 +9,8 @@
 #include <assert.h>
 #include <common/utils.h> // countof
 #include <common/logging/logging.h>
-#include <stdio.h> // snprintf
+#include <stdio.h> // snprintf, fprintf, fopen, fclose
+#include <string.h>
 
 #define MATCH_CASE_DRAW_DEBUG(type, cmd, state)                                                    \
     case RenderCommandType::Cmd_##type:                                                            \
@@ -42,7 +43,7 @@ struct
 {
     OpenGLDebugMsgState assert = OGL_DBGMSG_UNSET;
     OpenGLDebugMsgState log = OGL_DBGMSG_UNSET;
-} static s_openglDebugMsgType[OGL_DEBUGMSG_SEVERITY_COUNT];
+} static s_openglDebugMsgType[OGL_DEBUGMSG_TYPE_COUNT];
 
 struct
 {
@@ -51,29 +52,29 @@ struct
     OpenGLDebugMsgState log = OGL_DBGMSG_UNSET;
 } static s_openglDebugMsgs[OGL_DEBUGMSG_IDS_MAX];
 
-static void EnableOpenGLDebugMsgSeverity(GLenum severity, bool assert, bool log)
+static void EnableOpenGLDebugMsgSeverity(GLenum severity, bool shouldAssert, bool shouldLog)
 {
     auto &info = s_openglDebugMsgSeverity[severity % OGL_DEBUGMSG_SEVERITY_COUNT];
-    info.assert = assert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
-    info.log = log ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+    info.assert = shouldAssert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+    info.log = shouldLog ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
 }
 
-static void EnableOpenGLDebugMsgType(GLenum type, bool assert, bool log)
+static void EnableOpenGLDebugMsgType(GLenum type, bool shouldAssert, bool shouldLog)
 {
     auto &info = s_openglDebugMsgType[type % OGL_DEBUGMSG_TYPE_COUNT];
-    info.assert = assert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
-    info.log = log ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+    info.assert = shouldAssert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+    info.log = shouldLog ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
 }
 
-static void EnableOpenGLMessage(GLuint id, bool assert, bool log)
+static void EnableOpenGLMessage(GLuint id, bool shouldAssert, bool shouldLog)
 {
     for (auto &msg : s_openglDebugMsgs)
     {
         if (msg.id == OGL_DEBUGMSG_INVALIDID)
         {
             msg.id = id;
-            msg.assert = assert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
-            msg.log = log ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+            msg.assert = shouldAssert ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
+            msg.log = shouldLog ? OGL_DBGMSG_ENABLED : OGL_DBGMSG_DISABLED;
             return;
         }
     }
@@ -230,6 +231,120 @@ static const char *BlendEquationAsString(BlendEquation equation)
     return s_equationToText[equation];
 }
 
+static const char *AlphaTestFuncAsString(AlphaTestFunc func)
+{
+    static const char *s_funcToText[] = {
+        "AlphaTestFunc_NeverPass",
+        "AlphaTestFunc_AlwaysPass",
+        "AlphaTestFunc_Equal",
+        "AlphaTestFunc_Different",
+        "AlphaTestFunc_Less",
+        "AlphaTestFunc_LessOrEqual",
+        "AlphaTestFunc_Greater",
+        "AlphaTestFunc_GreaterOrEqual",
+    };
+
+    static_assert(
+        countof(s_funcToText) == AlphaTestFunc::AlphaTestFunc_Count, "missing alpha test functions");
+
+    if (func == AlphaTestFunc::AlphaTestFunc_Invalid)
+    {
+        return "Invalid";
+    }
+
+    assert(func < AlphaTestFunc::AlphaTestFunc_Count);
+    return s_funcToText[func];
+}
+
+static const char *StencilFuncAsString(StencilFunc func)
+{
+    static const char *s_funcToText[] = {
+        "StencilFunc_NeverPass",
+        "StencilFunc_AlwaysPass",
+        "StencilFunc_Less",
+        "StencilFunc_LessOrEqual",
+        "StencilFunc_Greater",
+        "StencilFunc_GreaterOrEqual",
+        "StencilFunc_Equal",
+        "StencilFunc_Different",
+    };
+
+    static_assert(
+        countof(s_funcToText) == StencilFunc::StencilFunc_Count, "missing stencil functions");
+
+    if (func == StencilFunc::StencilFunc_Invalid)
+    {
+        return "Invalid";
+    }
+
+    assert(func < StencilFunc::StencilFunc_Count);
+    return s_funcToText[func];
+}
+
+static const char *StencilOpAsString(StencilOp op)
+{
+    static const char *s_opToText[] = {
+        "StencilOp_Keep",
+        "StencilOp_Zero",
+        "StencilOp_Replace",
+        "StencilOp_IncrementClamp",
+        "StencilOp_IncrementWrap",
+        "StencilOp_DecrementClamp",
+        "StencilOp_DecrementWrap",
+        "StencilOp_Invert",
+    };
+
+    static_assert(countof(s_opToText) == StencilOp::StencilOp_Count, "missing stencil ops");
+
+    if (op == StencilOp::StencilOp_Invalid)
+    {
+        return "Invalid";
+    }
+
+    assert(op < StencilOp::StencilOp_Count);
+    return s_opToText[op];
+}
+
+static const char *DepthFuncAsString(DepthFunc func)
+{
+    static const char *s_funcToText[] = {
+        "DepthFunc_NeverPass",
+        "DepthFunc_AlwaysPass",
+        "DepthFunc_Equal",
+        "DepthFunc_Different",
+        "DepthFunc_Less",
+        "DepthFunc_LessOrEqual",
+        "DepthFunc_Greater",
+        "DepthFunc_GreaterOrEqual",
+    };
+
+    static_assert(
+        countof(s_funcToText) == DepthFunc::DepthFunc_Count, "missing depth functions");
+
+    if (func == DepthFunc::DepthFunc_Invalid)
+    {
+        return "Invalid";
+    }
+
+    assert(func < DepthFunc::DepthFunc_Count);
+    return s_funcToText[func];
+}
+
+static const char *ClearRTMaskAsString(ClearRT mask)
+{
+    static char buffer[64];
+    buffer[0] = '\0';
+    if (mask & ClearRT::ClearRT_Color)
+        strcat(buffer, "Color");
+    if (mask & ClearRT::ClearRT_Depth)
+        strcat(buffer, buffer[0] ? "|Depth" : "Depth");
+    if (mask & ClearRT::ClearRT_Stencil)
+        strcat(buffer, buffer[0] ? "|Stencil" : "Stencil");
+    if (buffer[0] == '\0')
+        strcpy(buffer, "None");
+    return buffer;
+}
+
 const char *ShaderUniformTypeAsString(ShaderUniformType type)
 {
     static const char *s_uniformTypeAsStr[] = {
@@ -301,11 +416,84 @@ static const char *TextureTypeAsString(TextureType type)
     return s_textureTypeAsStr[type];
 }
 
+// Frame dump system
+static uint32_t s_frameCount = 0;
+static bool s_dumpEnabled = false;
+static bool s_dumpInProgress = false;
+static FILE *s_dumpFile = nullptr;
+
+void RenderDebug_EnableDump()
+{
+    if (!s_dumpEnabled)
+    {
+        s_dumpEnabled = true;
+        s_dumpInProgress = false;
+        Info(Renderer, "Render dump enabled for next frame");
+    }
+}
+
+void RenderDebug_StartFrame()
+{
+    s_frameCount++;
+
+    if (s_dumpEnabled && !s_dumpInProgress)
+    {
+        // Start dumping at the beginning of this frame
+        char filename[32];
+        snprintf(filename, sizeof(filename), "frame%u.log", s_frameCount);
+        s_dumpFile = fopen(filename, "w");
+        if (s_dumpFile)
+        {
+            s_dumpInProgress = true;
+            fprintf(s_dumpFile, "=== Frame %u Render Command Dump ===\n", s_frameCount);
+        }
+        else
+        {
+            Error(Renderer, "Failed to open dump file: %s", filename);
+            s_dumpEnabled = false;
+        }
+    }
+}
+
+void RenderDebug_EndFrame()
+{
+    if (s_dumpInProgress && s_dumpFile)
+    {
+        fprintf(s_dumpFile, "=== End of Frame %u ===\n", s_frameCount);
+        fclose(s_dumpFile);
+        s_dumpFile = nullptr;
+        Info(Renderer, "Render dump written to frame%u.log", s_frameCount);
+    }
+
+    // Disable dumping after one frame
+    s_dumpInProgress = false;
+    s_dumpEnabled = false;
+}
+
+static void DumpInfo(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    char buffer[2048];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+
+    if (s_dumpFile)
+    {
+        fprintf(s_dumpFile, "%s\n", buffer);
+    }
+    else
+    {
+        Info(Renderer, "%s", buffer);
+    }
+
+    va_end(args);
+}
+
 void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
 {
-    Info(
-        Renderer,
-        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s\n",
+    DumpInfo(
+        "DrawQuadCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - u: %f - v: %f - mirrored: %s",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -318,9 +506,8 @@ void RenderDraw_DrawQuadDebug(DrawQuadCmd *cmd, RenderState *)
 
 void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
 {
-    Info(
-        Renderer,
-        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - mirrored: %s\n",
+    DumpInfo(
+        "RotatedTextureCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - angle - %f - u: %f - v: %f - mirrored: %s",
         cmd->texture,
         cmd->x,
         cmd->y,
@@ -334,21 +521,19 @@ void RenderDraw_DrawRotatedQuadDebug(DrawRotatedQuadCmd *cmd, RenderState *)
 
 void RenderDraw_FlushStateDebug(FlushStateCmd *, RenderState *)
 {
-    Info(Renderer, "FlushStateCmd\n");
-    assert(false); // TODO
+    DumpInfo("FlushStateCmd");
 }
 
 void RenderDraw_SetTextureDebug(SetTextureCmd *cmd, RenderState *)
 {
     auto typeAsStr = TextureTypeAsString(cmd->type);
-    Info(Renderer, "SetTextureCmd: texture: %d - type: %s\n", cmd->texture, typeAsStr);
+    DumpInfo("SetTextureCmd: texture: %d - type: %s", cmd->texture, typeAsStr);
 }
 
 void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *)
 {
-    Info(
-        Renderer,
-        "BlendStateCmd: src: %s + dst: %s - equation: %s\n",
+    DumpInfo(
+        "BlendStateCmd: src: %s + dst: %s - equation: %s",
         BlendFactorAsString(cmd->src),
         BlendFactorAsString(cmd->dst),
         BlendEquationAsString(cmd->equation));
@@ -356,33 +541,35 @@ void RenderDraw_BlendStateDebug(BlendStateCmd *cmd, RenderState *)
 
 void RenderDraw_DisableBlendStateDebug(DisableBlendStateCmd *, RenderState *)
 {
-    Info(Renderer, "DisableBlendStateCmd\n");
-    assert(false); // TODO
+    DumpInfo("DisableBlendStateCmd");
 }
 
-void RenderDraw_StencilStateDebug(StencilStateCmd *, RenderState *)
+void RenderDraw_StencilStateDebug(StencilStateCmd *cmd, RenderState *)
 {
-    Info(Renderer, "StencilStateCmd\n");
-    assert(false); // TODO
+    DumpInfo(
+        "StencilStateCmd: func: %s - stencilFail: %s - depthFail: %s - bothFail: %s - ref: %u - mask: 0x%x",
+        StencilFuncAsString(cmd->func),
+        StencilOpAsString(cmd->stencilFail),
+        StencilOpAsString(cmd->depthFail),
+        StencilOpAsString(cmd->bothFail),
+        cmd->ref,
+        cmd->mask);
 }
 
 void RenderDraw_DisableStencilStateDebug(DisableStencilStateCmd *, RenderState *)
 {
-    Info(Renderer, "DisableStencilStateCmd\n");
-    assert(false); // TODO
+    DumpInfo("DisableStencilStateCmd");
 }
 
 void RenderDraw_EnableStencilStateDebug(EnableStencilStateCmd *, RenderState *)
 {
-    Info(Renderer, "EnableStencilStateCmd\n");
-    assert(false); // TODO
+    DumpInfo("EnableStencilStateCmd");
 }
 
 void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *)
 {
-    Info(
-        Renderer,
-        "SetColorMaskCmd: mask: %s|%s|%s|%s\n",
+    DumpInfo(
+        "SetColorMaskCmd: mask: %s|%s|%s|%s",
         cmd->mask & ColorMask::ColorMask_Red ? "Red" : "",
         cmd->mask & ColorMask::ColorMask_Green ? "Green" : "",
         cmd->mask & ColorMask::ColorMask_Blue ? "Blue" : "",
@@ -391,9 +578,8 @@ void RenderDraw_SetColorMaskDebug(SetColorMaskCmd *cmd, RenderState *)
 
 void RenderDraw_SetColorDebug(SetColorCmd *cmd, RenderState *)
 {
-    Info(
-        Renderer,
-        "SetColorCmd: rgba: (%f, %f, %f, %f)\n",
+    DumpInfo(
+        "SetColorCmd: rgba: (%f, %f, %f, %f)",
         cmd->color[0],
         cmd->color[1],
         cmd->color[2],
@@ -413,9 +599,8 @@ void RenderDraw_ShaderUniformDebug(ShaderUniformCmd *cmd, RenderState *state)
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);
-    Info(
-        Renderer,
-        "ShaderUniformCmd: id: %d - location: %d - value: %s - type: %s\n",
+    DumpInfo(
+        "ShaderUniformCmd: id: %d - location: %d - value: %s - type: %s",
         pipelineValid ? cmd->id : RENDER_SHADERUNIFORMID_INVALID,
         pipelineValid ? state->pipeline.uniforms[cmd->id].location :
                         RENDER_SHADERUNIFORMLOC_INVALID,
@@ -436,9 +621,8 @@ void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState 
 
     auto pipelineValid = state->pipeline.program != RENDER_SHADERPROGRAM_INVALID;
     assert((pipelineValid && cmd->id < countof(state->pipeline.uniforms)) || !pipelineValid);
-    Info(
-        Renderer,
-        "ShaderLargeUniformCmd: id: %d - location: %d - count: %d - values: %s - type: %s\n",
+    DumpInfo(
+        "ShaderLargeUniformCmd: id: %d - location: %d - count: %d - values: %s - type: %s",
         pipelineValid ? cmd->id : RENDER_SHADERUNIFORMID_INVALID,
         pipelineValid ? state->pipeline.uniforms[cmd->id].location :
                         RENDER_SHADERUNIFORMLOC_INVALID,
@@ -447,20 +631,208 @@ void RenderDraw_ShaderLargeUniformDebug(ShaderLargeUniformCmd *cmd, RenderState 
         typeAsStr);
 }
 
-void RenderDraw_ShaderPipelineDebug(ShaderPipelineCmd *, RenderState *)
+void RenderDraw_ShaderPipelineDebug(ShaderPipelineCmd *cmd, RenderState *)
 {
-    assert(false); // TODO
+    auto pipelineValid = cmd->pipeline != nullptr;
+    DumpInfo(
+        "ShaderPipelineCmd: pipeline: %p - program: %d - uniformCount: %u",
+        cmd->pipeline,
+        pipelineValid ? cmd->pipeline->program : RENDER_SHADERPROGRAM_INVALID,
+        pipelineValid ? cmd->pipeline->uniformCount : 0);
 }
 
 void RenderDraw_DisableShaderPipelineDebug(DisableShaderPipelineCmd *, RenderState *)
 {
-    assert(false); // TODO
+    DumpInfo("DisableShaderPipelineCmd");
+}
+
+void RenderDraw_DrawCharacterSittingDebug(DrawCharacterSittingCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "DrawCharacterSittingCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - h3mod: %f - h6mod: %f - h9mod: %f - mirror: %s",
+        cmd->texture,
+        cmd->x,
+        cmd->y,
+        cmd->width,
+        cmd->height,
+        cmd->h3mod,
+        cmd->h6mod,
+        cmd->h9mod,
+        cmd->mirror ? "true" : "false");
+}
+
+void RenderDraw_DrawLandTileDebug(DrawLandTileCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "DrawLandTileCmd: texture: %d - x: %d - y: %d - rect: {x:%d y:%d w:%d h:%d} - drawMode: %d",
+        cmd->texture,
+        cmd->x,
+        cmd->y,
+        cmd->rect.x,
+        cmd->rect.y,
+        cmd->rect.w,
+        cmd->rect.h,
+        cmd->drawMode);
+}
+
+void RenderDraw_DrawShadowDebug(DrawShadowCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "DrawShadowCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - uniformId: %d - uniformValue: %d - mirror: %s - restoreBlendFunc: %s",
+        cmd->texture,
+        cmd->x,
+        cmd->y,
+        cmd->width,
+        cmd->height,
+        cmd->uniformId,
+        cmd->uniformValue,
+        cmd->mirror ? "true" : "false",
+        cmd->restoreBlendFunc ? "true" : "false");
+}
+
+void RenderDraw_DrawCircleDebug(DrawCircleCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "DrawCircleCmd: x: %d - y: %d - radius: %f - gradientMode: %d",
+        cmd->x,
+        cmd->y,
+        cmd->radius,
+        cmd->gradientMode);
+}
+
+void RenderDraw_DrawUntexturedQuadDebug(DrawUntexturedQuadCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "DrawUntexturedQuadCmd: x: %d - y: %d - width: %d - height: %d - rgba: (%f, %f, %f, %f)",
+        cmd->x,
+        cmd->y,
+        cmd->width,
+        cmd->height,
+        cmd->color[0],
+        cmd->color[1],
+        cmd->color[2],
+        cmd->color[3]);
+}
+
+void RenderDraw_DrawLineDebug(DrawLineCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "DrawLineCmd: x0: %d - y0: %d - x1: %d - y1: %d - rgba: (%f, %f, %f, %f)",
+        cmd->x0,
+        cmd->y0,
+        cmd->x1,
+        cmd->y1,
+        cmd->color[0],
+        cmd->color[1],
+        cmd->color[2],
+        cmd->color[3]);
+}
+
+void RenderDraw_ClearRTDebug(ClearRTCmd *cmd, RenderState *)
+{
+    DumpInfo("ClearRTCmd: mask: %s", ClearRTMaskAsString(cmd->clearMask));
+}
+
+void RenderDraw_SetFrameBufferDebug(SetFrameBufferCmd *cmd, RenderState *)
+{
+    DumpInfo("SetFrameBufferCmd: frameBuffer: %u", cmd->frameBuffer);
+}
+
+void RenderDraw_AlphaTestDebug(AlphaTestCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "AlphaTestCmd: func: %s - ref: %f",
+        AlphaTestFuncAsString(cmd->func),
+        cmd->ref);
+}
+
+void RenderDraw_DisableAlphaTestDebug(DisableAlphaTestCmd *, RenderState *)
+{
+    DumpInfo("DisableAlphaTestCmd");
+}
+
+void RenderDraw_DepthStateDebug(DepthStateCmd *cmd, RenderState *)
+{
+    DumpInfo("DepthStateCmd: func: %s", DepthFuncAsString(cmd->func));
+}
+
+void RenderDraw_DisableDepthStateDebug(DisableDepthStateCmd *, RenderState *)
+{
+    DumpInfo("DisableDepthStateCmd");
+}
+
+void RenderDraw_EnableDepthStateDebug(EnableDepthStateCmd *, RenderState *)
+{
+    DumpInfo("EnableDepthStateCmd");
+}
+
+void RenderDraw_SetClearColorDebug(SetClearColorCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetClearColorCmd: rgba: (%f, %f, %f, %f)",
+        cmd->color[0],
+        cmd->color[1],
+        cmd->color[2],
+        cmd->color[3]);
+}
+
+void RenderDraw_SetViewParamsDebug(SetViewParamsCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetViewParamsCmd: scene: %d,%d %dx%d - window: %dx%d - camera: %d,%d - scale: %f - proj_flipped_y: %s",
+        cmd->scene_x,
+        cmd->scene_y,
+        cmd->scene_width,
+        cmd->scene_height,
+        cmd->window_width,
+        cmd->window_height,
+        cmd->camera_nearZ,
+        cmd->camera_farZ,
+        cmd->scene_scale,
+        cmd->proj_flipped_y ? "true" : "false");
+}
+
+void RenderDraw_SetModelViewTranslationDebug(SetModelViewTranslationCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetModelViewTranslationCmd: pos: (%f, %f, %f)",
+        cmd->pos[0],
+        cmd->pos[1],
+        cmd->pos[2]);
+}
+
+void RenderDraw_SetScissorDebug(SetScissorCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetScissorCmd: x: %d - y: %d - width: %u - height: %u",
+        cmd->x,
+        cmd->y,
+        cmd->width,
+        cmd->height);
+}
+
+void RenderDraw_DisableScissorDebug(DisableScissorCmd *, RenderState *)
+{
+    DumpInfo("DisableScissorCmd");
+}
+
+void RenderDraw_GetFrameBufferPixelsDebug(GetFrameBufferPixelsCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "GetFrameBufferPixelsCmd: x: %d - y: %d - width: %u - height: %u - window: %ux%u - data: %p - dataSize: %zu",
+        cmd->x,
+        cmd->y,
+        cmd->width,
+        cmd->height,
+        cmd->window_width,
+        cmd->window_height,
+        cmd->data,
+        cmd->dataSize);
 }
 
 void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
 {
-    Info(
-        Renderer,
+    DumpInfo(
         "Dumping cmd list %p, data %p, capacity %dkB, free size %dkB, immediate? %s",
         cmdList,
         cmdList->data,
@@ -474,51 +846,67 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
 
     while (cmd < listEnd)
     {
-        RenderCommandHeader &cmdHeader = *(RenderCommandHeader *)cmd;
-        switch (cmdHeader.type)
+        RenderCommandType type = *(RenderCommandType *)cmd;
+        cmd += sizeof(type);
+        switch (type)
         {
             MATCH_CASE_DRAW_DEBUG(DrawQuad, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DrawRotatedQuad, cmd, &cmdList->state)
 
+            MATCH_CASE_DRAW_DEBUG(DrawCharacterSitting, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawLandTile, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawShadow, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawCircle, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawUntexturedQuad, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DrawLine, cmd, &cmdList->state)
+
             MATCH_CASE_DRAW_DEBUG(FlushState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetTexture, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetFrameBuffer, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(AlphaTest, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DisableAlphaTest, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(BlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableStencilState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(EnableStencilState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DepthState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DisableDepthState, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(EnableDepthState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColorMask, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetClearColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetViewParams, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetModelViewTranslation, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetScissor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DisableScissor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(ClearRT, cmd, &cmdList->state)
 
             MATCH_CASE_DRAW_DEBUG(ShaderUniform, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(ShaderLargeUniform, cmd, &cmdList->state)
-            MATCH_CASE_DRAW_DEBUG(ShaderPipeline, cmd, &cmdList->state);
-            MATCH_CASE_DRAW_DEBUG(DisableShaderPipeline, cmd, &cmdList->state);
+            MATCH_CASE_DRAW_DEBUG(ShaderPipeline, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(DisableShaderPipeline, cmd, &cmdList->state)
 
-            case Cmd_DrawCharacterSitting:
-            case Cmd_DrawLandTile:
-            case Cmd_DrawShadow:
-            case Cmd_DrawCircle:
-            case Cmd_DrawUntexturedQuad:
-            case Cmd_DrawLine:
-            case Cmd_ClearRT:
-            case Cmd_SetFrameBuffer:
-            case Cmd_AlphaTest:
-            case Cmd_DisableAlphaTest:
-            case Cmd_DepthState:
-            case Cmd_DisableDepthState:
-            case Cmd_EnableDepthState:
-            case Cmd_SetClearColor:
-            case Cmd_SetViewParams:
-            case Cmd_SetModelViewTranslation:
-            case Cmd_SetScissor:
-            case Cmd_DisableScissor:
-            case Cmd_GetFrameBufferPixels:
+            MATCH_CASE_DRAW_DEBUG(GetFrameBufferPixels, cmd, &cmdList->state)
+
             case RenderCommandType_Invalid:
-                // TODO
+                DumpInfo("Invalid type.");
+                assert(false);
+                break;
             default:
+                DumpInfo("Unknown command type: %d", type);
                 assert(false);
                 break;
         }
     }
+}
+
+void RenderDebug_ProcessFrame(RenderCmdList *cmdList)
+{
+    RenderDebug_StartFrame();
+    if (s_dumpInProgress && cmdList)
+    {
+        RenderDraw_DumpCmdList(cmdList);
+    }
+    RenderDebug_EndFrame();
 }

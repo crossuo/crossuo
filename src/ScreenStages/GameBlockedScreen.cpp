@@ -36,6 +36,7 @@ void CGameBlockedScreen::Render()
     InitToolTip();
     g_MouseManager.Draw(0x2073); //Main Gump mouse cursor
 
+    RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
 }
 

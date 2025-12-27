@@ -48,17 +48,6 @@ enum RenderCommandType : uint8_t
     RenderCommandType_Invalid = 0xff,
 };
 
-struct RenderCommandHeader
-{
-    RenderCommandType type = RenderCommandType_Invalid;
-    RenderCommandHeader(RenderCommandType type_)
-        : type(type_)
-    {
-    }
-
-    RenderCommandHeader() = default;
-};
-
 struct SetTextureCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetTexture;
