@@ -4762,6 +4762,7 @@ void CGame::DrawStaticArtInContainer(
 
 void CGame::DrawLight(LIGHT_DATA &light)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Light Source");
     auto spr = ExecuteLight(light.ID);
     if (spr != nullptr)
     {

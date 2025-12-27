@@ -75,6 +75,7 @@ void CWeather::Generate()
 void CWeather::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Weather");
     bool removeEffects = false;
 
     if (Timer < g_Ticks)
