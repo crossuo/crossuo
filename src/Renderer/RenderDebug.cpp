@@ -926,7 +926,7 @@ void RenderDebug_ProcessFrame(RenderCmdList *cmdList)
 bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
 {
     (void)state;
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
     if (cmd.label)
     {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
@@ -940,7 +940,7 @@ bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *stat
 bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
 {
     (void)state;
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
     glPopDebugGroup();
 #else
     (void)cmd;

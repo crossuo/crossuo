@@ -53,8 +53,10 @@ ui_context ui_init(win_context &win)
     ImGui_ImplSDL2_InitForOpenGL(win.window, win.context);
 #endif
 
-#if defined(USE_GL3) || defined(USE_GLES)
+#if defined(USE_GL3)
     ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
+#elif defined(USE_GLES)
+    ImGui_ImplOpenGL3_Init("#version 100");
 #elif defined(USE_GL2)
     ImGui_ImplOpenGL2_Init();
 #elif defined(USE_DX11)
