@@ -35,15 +35,7 @@ extern int _uAlphaRef;
 extern int _uDrawMode;
 extern int _uColors;
 extern int _pProg;
-extern int _pProgLand;
-extern int _inNormalLand;
-extern int _uDrawModeLand;
-extern int _uColorsLand;
-extern int _uAlphaTestEnabledLand;
-extern int _uAlphaRefLand;
-extern int _uProjectionViewLand;
-extern int _uModelLand;
-extern int _uTexLand;
+extern int _inNormal;
 extern int g_CurrentDrawMode;
 extern float g_CurrentColors[96];
 #endif
@@ -203,6 +195,9 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    // Set identity normal (0, 0, 1) for 2D quads
+    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
+
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
@@ -341,6 +336,9 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
 
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
+
+    // Set identity normal (0, 0, 1) for 2D rotated quads
+    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -589,6 +587,9 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         GL_CHECK(glEnableVertexAttribArray(_inColor));
         GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+        // Set identity normal (0, 0, 1) for 2D character sitting
+        GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
+
         GL_CHECK(glUniform1i(_uTex, 0));
         GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount));
 
@@ -718,21 +719,21 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(LandVertex), vertices, GL_STATIC_DRAW));
 
-    // Use the land tile shader
-    GL_CHECK(glUseProgram(_pProgLand));
-    GL_CHECK(glUniform1i(_uAlphaTestEnabledLand, state->alphaTest.enabled ? 1 : 0));
-    GL_CHECK(glUniform1f(_uAlphaRefLand, state->alphaTest.alphaRef));
+    // Use the unified shader with land tile mode
+    GL_CHECK(glUseProgram(_pProg));
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
+    GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
 
     // Set up model matrix with translation
     glm::mat4 model(1.0f);
     // Apply stored translation first, then the tile's position
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
-    GL_CHECK(glUniformMatrix4fv(_uModelLand, 1, false, glm::value_ptr(model)));
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(model)));
 
     // Set draw mode and colors uniforms
-    GL_CHECK(glUniform1i(_uDrawModeLand, cmd.drawMode));
-    GL_CHECK(glUniform1fv(_uColorsLand, 96, g_CurrentColors));
+    GL_CHECK(glUniform1i(_uDrawMode, cmd.drawMode));
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
 
     // Set up vertex attributes
     GL_CHECK(glEnableVertexAttribArray(_inPos));
@@ -744,8 +745,8 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(LandVertex), (void*)offsetof(LandVertex, color)));
 
-    GL_CHECK(glEnableVertexAttribArray(_inNormalLand));
-    GL_CHECK(glVertexAttribPointer(_inNormalLand, 3, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)offsetof(LandVertex, normal)));
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)offsetof(LandVertex, normal)));
 
     // Draw the quad
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -754,7 +755,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
-    GL_CHECK(glDisableVertexAttribArray(_inNormalLand));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
@@ -871,6 +872,9 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
+
+    // Set identity normal (0, 0, 1) for 2D shadows
+    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -991,6 +995,9 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    // Set identity normal (0, 0, 1) for 2D circles
+    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
+
     GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
     GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
     GL_CHECK(glUniform1i(_uTex, 0));
@@ -1095,6 +1102,9 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    // Set identity normal (0, 0, 1) for 2D untextured quads
+    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
+
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
@@ -1198,6 +1208,9 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
+
+    // Set identity normal (0, 0, 1) for 2D lines
+    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
     GL_CHECK(glUniform1i(_uTex, 0));
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));

@@ -25,9 +25,6 @@ extern int _uTex;
 extern int _uAlphaTestEnabled;
 extern int _uAlphaRef;
 extern int _pProg;
-extern int _pProgLand;
-extern int _uAlphaTestEnabledLand;
-extern int _uAlphaRefLand;
 #endif
 
 bool RenderState_FlushState(RenderState *state)
@@ -73,10 +70,6 @@ bool RenderState_FlushState(RenderState *state)
     // TODO: gles - model identity
     glm::mat4 identity(1.0f);
     GL_CHECK(glUseProgram(_pProg));
-    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
-    GL_CHECK(glUseProgram(0));
-
-    GL_CHECK(glUseProgram(_pProgLand));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
     GL_CHECK(glUseProgram(0));
 #endif
@@ -709,9 +702,6 @@ bool RenderState_SetViewParams(
             float(camera_nearZ),
             float(camera_farZ));
         GL_CHECK(glUseProgram(_pProg));
-        GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
-        GL_CHECK(glUseProgram(0));
-        GL_CHECK(glUseProgram(_pProgLand));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
         GL_CHECK(glUseProgram(0));
 #endif

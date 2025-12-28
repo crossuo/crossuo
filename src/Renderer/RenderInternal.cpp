@@ -35,20 +35,18 @@ extern uint32_t _defaultTex;
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;
+extern int _inNormal;
 extern int _uProjectionView;
 extern int _uModel;
 extern int _uTex;
 extern int _pProg;
-extern int _pProgLand;
-extern int _inNormalLand;
-extern int _uDrawModeLand;
-extern int _uColorsLand;
 uint32_t _vao = 0;
 uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
 int _inPos = 0;
 int _inColor = 0;
 int _inUV = 0;
+int _inNormal = 0;
 int _uProjectionView = 0;
 int _uModel = 0;
 int _uTex = 0;
@@ -57,15 +55,6 @@ int _uAlphaRef = 0;
 int _uDrawMode = 0;
 int _uColors = 0;
 int _pProg = 0;
-int _pProgLand = 0;
-int _inNormalLand = 0;
-int _uDrawModeLand = 0;
-int _uColorsLand = 0;
-int _uAlphaTestEnabledLand = 0;
-int _uAlphaRefLand = 0;
-int _uProjectionViewLand = 0;
-int _uModelLand = 0;
-int _uTexLand = 0;
 
 // Global state for current draw mode and color palette (GL3/GLES only)
 int g_CurrentDrawMode = 0; // SDM_NO_COLOR
@@ -262,6 +251,8 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK_ATTRIB(_inUV);
     _inColor = glGetAttribLocation(_pProg, "inColor");
     GL_CHECK_ATTRIB(_inColor);
+    _inNormal = glGetAttribLocation(_pProg, "inNormal");
+    GL_CHECK_ATTRIB(_inNormal);
     _uProjectionView = glGetUniformLocation(_pProg, "uProjectionView");
     GL_CHECK_ATTRIB(_uProjectionView);
     _uModel = glGetUniformLocation(_pProg, "uModel");
@@ -313,58 +304,6 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
     GL_CHECK(glUseProgram(0));
     // clang-format on
-
-    // Initialize land tile shader with normals
-    const auto vsLand = glCreateShader(GL_VERTEX_SHADER);
-    GL_CHECK(glShaderSource(vsLand, 1, &g_vShaderLand, nullptr));
-    GL_CHECK(glCompileShader(vsLand));
-    status = GL_TRUE;
-    GL_CHECK(glGetShaderiv(vsLand, GL_COMPILE_STATUS, &status));
-    if (status == GL_FALSE)
-    {
-        glGetShaderInfoLog(vsLand, sizeof(msg), nullptr, msg);
-        Error(Renderer, "land vs compilation: %s", msg);
-    }
-
-    const auto psLand = glCreateShader(GL_FRAGMENT_SHADER);
-    GL_CHECK(glShaderSource(psLand, 1, &g_pShaderLand, nullptr));
-    GL_CHECK(glCompileShader(psLand));
-    status = GL_TRUE;
-    GL_CHECK(glGetShaderiv(psLand, GL_COMPILE_STATUS, &status));
-    if (status == GL_FALSE)
-    {
-        glGetShaderInfoLog(psLand, sizeof(msg), nullptr, msg);
-        Error(Renderer, "land ps compilation: %s", msg);
-    }
-
-    _pProgLand = glCreateProgram();
-    GL_CHECK(glAttachShader(_pProgLand, vsLand));
-    GL_CHECK(glAttachShader(_pProgLand, psLand));
-    GL_CHECK(glLinkProgram(_pProgLand));
-    status = GL_TRUE;
-    GL_CHECK(glGetProgramiv(_pProgLand, GL_LINK_STATUS, &status));
-    if (status == GL_FALSE)
-    {
-        glGetProgramInfoLog(psLand, sizeof(msg), nullptr, msg);
-        Error(Renderer, "land program link: %s", msg);
-    }
-
-    _inPos = glGetAttribLocation(_pProgLand, "inPos");
-    _inUV = glGetAttribLocation(_pProgLand, "inUV");
-    _inColor = glGetAttribLocation(_pProgLand, "inColor");
-    _inNormalLand = glGetAttribLocation(_pProgLand, "inNormal");
-    _uProjectionViewLand = glGetUniformLocation(_pProgLand, "uProjectionView");
-    _uModelLand = glGetUniformLocation(_pProgLand, "uModel");
-    _uTexLand = glGetUniformLocation(_pProgLand, "uTex");
-    _uDrawModeLand = glGetUniformLocation(_pProgLand, "drawMode");
-    _uColorsLand = glGetUniformLocation(_pProgLand, "colors");
-    _uAlphaTestEnabledLand = glGetUniformLocation(_pProgLand, "uAlphaTestEnabled");
-    GL_CHECK_ATTRIB(_uAlphaTestEnabledLand);
-    _uAlphaRefLand = glGetUniformLocation(_pProgLand, "uAlphaRef");
-    GL_CHECK_ATTRIB(_uAlphaRefLand);
-    GL_CHECK(glUseProgram(_pProgLand));
-    GL_CHECK(glUniform1i(_uTexLand, 0)); // texture unit 0
-    GL_CHECK(glUseProgram(0));
 #endif
     g_render.context = context;
     g_render.window = window;
@@ -414,10 +353,6 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     // Set projection for basic shader
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
-    GL_CHECK(glUseProgram(0));
-    // Set projection for land shader too
-    GL_CHECK(glUseProgram(_pProgLand));
-    GL_CHECK(glUniformMatrix4fv(_uProjectionViewLand, 1, false, glm::value_ptr(projection)));
     GL_CHECK(glUseProgram(0));
 #endif
     return true;
