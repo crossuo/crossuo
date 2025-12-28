@@ -217,6 +217,10 @@ void CGLShader::Disable()
     glUseProgramObjectARB(0);
 #else
     RenderAdd_DisableShaderPipeline(g_renderCmdList);
+    extern float g_CurrentColors[96];
+    memset(g_CurrentColors, 0, sizeof(g_CurrentColors));
+    extern int g_CurrentDrawMode;
+    g_CurrentDrawMode = 0; // SDM_NO_COLOR
 #endif
     g_ShaderColorTableInUse = 0;
     g_ShaderDrawMode = 0;
