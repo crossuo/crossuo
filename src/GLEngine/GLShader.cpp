@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2016 Hotride
+// MIT License
+// Copyright (C) August 2016 Hotride
 
 #include "GLShader.h"
 #include <assert.h>

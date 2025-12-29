@@ -12,8 +12,10 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <assert.h>
 #include <string.h> // memcmp, memcpy
-#define XUO_M_PI 3.14159265358979323846264338327950288
+#include <deque> // deque
 
+#define XUO_M_PI 3.14159265358979323846264338327950288
+#define NORMAL_IDENTITY { 0.0f, 0.0f, 1.0f }
 #define MATCH_CASE_DRAW(type, cmd, state)                                                          \
     case RenderCommandType::Cmd_##type:                                                            \
     {                                                                                              \
@@ -40,7 +42,6 @@ extern int g_CurrentDrawMode;
 extern float g_CurrentColors[96];
 #endif
 
-#include <queue>
 static std::deque<SetScissorCmd> s_ScissorList;
 
 void Render_PushScissor(int x, int y, uint32_t w, uint32_t h)
@@ -154,19 +155,18 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
     // Build vertex data using UV coords from command and vertex positions
-    // Use actual color from command instead of hardcoded white
-    const bool colored = (cmd.rgba != g_ColorInvalid);
+    const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
-        (((uint32_t)(cmd.rgba[0] * 255) << 0) |
-         ((uint32_t)(cmd.rgba[1] * 255) << 8) |
-         ((uint32_t)(cmd.rgba[2] * 255) << 16) |
-         ((uint32_t)(cmd.rgba[3] * 255) << 24)) : 0xffffffff;
+        (((uint32_t)(cmd.color[0] * 255) << 0) |
+         ((uint32_t)(cmd.color[1] * 255) << 8) |
+         ((uint32_t)(cmd.color[2] * 255) << 16) |
+         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY },
     };
 
 #if !defined(USE_GLES2)
@@ -195,6 +195,9 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
     // Set identity normal (0, 0, 1) for 2D quads
     GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -204,6 +207,7 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
 
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
@@ -296,19 +300,18 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     model = glm::rotate(model, glm::radians(cmd.angle), glm::vec3(0.0f, 0.0f, 1.0f));
 
     // Build vertex data using UV coords from command and vertex positions
-    // Use actual color from command instead of hardcoded white
-    const bool colored = (cmd.rgba != g_ColorInvalid);
+    const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
-        (((uint32_t)(cmd.rgba[0] * 255) << 0) |
-         ((uint32_t)(cmd.rgba[1] * 255) << 8) |
-         ((uint32_t)(cmd.rgba[2] * 255) << 16) |
-         ((uint32_t)(cmd.rgba[3] * 255) << 24)) : 0xffffffff;
+        (((uint32_t)(cmd.color[0] * 255) << 0) |
+         ((uint32_t)(cmd.color[1] * 255) << 8) |
+         ((uint32_t)(cmd.color[2] * 255) << 16) |
+         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { vb[0], vb[1] }, { uv[0], uv[1] }, col },
-        { { vb[2], vb[3] }, { uv[2], uv[3] }, col },
-        { { vb[4], vb[5] }, { uv[4], uv[5] }, col },
-        { { vb[6], vb[7] }, { uv[6], uv[7] }, col },
+        { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY },
+        { { vb[2], vb[3] }, { uv[2], uv[3] }, col, NORMAL_IDENTITY },
+        { { vb[4], vb[5] }, { uv[4], uv[5] }, col, NORMAL_IDENTITY },
+        { { vb[6], vb[7] }, { uv[6], uv[7] }, col, NORMAL_IDENTITY },
     };
 
 #if !defined(USE_GLES2)
@@ -337,6 +340,9 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
     // Set identity normal (0, 0, 1) for 2D rotated quads
     GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -346,6 +352,7 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
 
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
@@ -498,64 +505,64 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col };
-            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col };
-            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, col };
-            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, col };
+            vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { width, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { 0.0f, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col };
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { width, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
             }
-            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, col };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, col };
+            vertices[vertexCount++] = { { widthOffset, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, col };
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
             }
-            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, col };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, col };
+            vertices[vertexCount++] = { { widthOffset, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
         }
     }
     else
     {
         if (cmd.h3mod != 0.0f)
         {
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col };
-            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col };
-            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, col };
-            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, col };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { s_sittingCharacterOffset, h03 }, { 0.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { widthOffset, h03 }, { 1.0f, cmd.h3mod }, col, NORMAL_IDENTITY };
         }
 
         if (cmd.h6mod != 0.0f)
         {
             if (cmd.h3mod == 0.0f)
             {
-                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col };
-                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { s_sittingCharacterOffset, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { widthOffset, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
             }
-            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, col };
-            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, col };
+            vertices[vertexCount++] = { { 0.0f, h06 }, { 0.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { width, h06 }, { 1.0f, cmd.h6mod }, col, NORMAL_IDENTITY };
         }
 
         if (cmd.h9mod != 0.0f)
         {
             if (cmd.h6mod == 0.0f)
             {
-                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col };
-                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, col };
+                vertices[vertexCount++] = { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+                vertices[vertexCount++] = { { width, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
             }
-            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, col };
-            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, col };
+            vertices[vertexCount++] = { { 0.0f, h09 }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
+            vertices[vertexCount++] = { { width, h09 }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
         }
     }
 
@@ -587,6 +594,9 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         GL_CHECK(glEnableVertexAttribArray(_inColor));
         GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+        GL_CHECK(glEnableVertexAttribArray(_inNormal));
+        GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
         // Set identity normal (0, 0, 1) for 2D character sitting
         GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -596,6 +606,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         GL_CHECK(glDisableVertexAttribArray(_inPos));
         GL_CHECK(glDisableVertexAttribArray(_inUV));
         GL_CHECK(glDisableVertexAttribArray(_inColor));
+        GL_CHECK(glDisableVertexAttribArray(_inNormal));
 
         GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
@@ -640,66 +651,52 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     glTranslatef(-translateX, -translateY, 0.0f);
 #else
-    // GLES2 implementation with normals and lighting
-    struct LandVertex
-    {
-        float pos[2];
-        float uv[2];
-        uint32_t color;
-        float normal[3];
-    };
 
-    LandVertex vertices[4] = {
-        // Vertex 0
+    const uint32_t col =
+        (((uint32_t)(state->color[0] * 255) << 0) |
+        ((uint32_t)(state->color[1] * 255) << 8) |
+        ((uint32_t)(state->color[2] * 255) << 16) |
+        ((uint32_t)(state->color[3] * 255) << 24));
+
+    GenericVertex vertices[4] = {
+        // Vertex 0: Bottom-left
         {
             {22.0f, (float)-rc.x},           // pos
-            {0.0f, 0.0f},                     // uv
-            (((uint32_t)(state->color[0] * 255) << 0) |
-             ((uint32_t)(state->color[1] * 255) << 8) |
-             ((uint32_t)(state->color[2] * 255) << 16) |
-             ((uint32_t)(state->color[3] * 255) << 24)),  // use actual color from state
+            {0.0f, 0.0f},                    // uv
+            col,
             {
                 (float)cmd.normals[0][0],
                 (float)cmd.normals[0][1],
                 (float)cmd.normals[0][2]
             }                                 // normal
         },
-        // Vertex 1
+        // Vertex 1: Top-left
         {
             {0.0f, (float)(22 - rc.y)},      // pos
-            {0.0f, 1.0f},                     // uv
-            (((uint32_t)(state->color[0] * 255) << 0) |
-             ((uint32_t)(state->color[1] * 255) << 8) |
-             ((uint32_t)(state->color[2] * 255) << 16) |
-             ((uint32_t)(state->color[3] * 255) << 24)),
+            {0.0f, 1.0f},                    // uv
+            col,
             {
                 (float)cmd.normals[3][0],
                 (float)cmd.normals[3][1],
                 (float)cmd.normals[3][2]
             }
         },
-        // Vertex 2
+        // Vertex 2: Bottom-right
         {
             {44.0f, (float)(22 - rc.h)},      // pos
-            {1.0f, 0.0f},                     // uv
-            (((uint32_t)(state->color[0] * 255) << 0) |
-             ((uint32_t)(state->color[1] * 255) << 8) |
-             ((uint32_t)(state->color[2] * 255) << 16) |
-             ((uint32_t)(state->color[3] * 255) << 24)),
+            {1.0f, 0.0f},                    // uv
+            col,
             {
                 (float)cmd.normals[1][0],
                 (float)cmd.normals[1][1],
                 (float)cmd.normals[1][2]
             }
         },
-        // Vertex 3
+        // Vertex 3: Top-right
         {
             {22.0f, (float)(44 - rc.w)},      // pos
-            {1.0f, 1.0f},                     // uv
-            (((uint32_t)(state->color[0] * 255) << 0) |
-             ((uint32_t)(state->color[1] * 255) << 8) |
-             ((uint32_t)(state->color[2] * 255) << 16) |
-             ((uint32_t)(state->color[3] * 255) << 24)),
+            {1.0f, 1.0f},                    // uv
+            col,
             {
                 (float)cmd.normals[2][0],
                 (float)cmd.normals[2][1],
@@ -717,7 +714,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
     uint32_t vbo;
     GL_CHECK(glGenBuffers(1, &vbo));
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(LandVertex), vertices, GL_STATIC_DRAW));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GenericVertex), vertices, GL_STATIC_DRAW));
 
     // Use the unified shader with land tile mode
     GL_CHECK(glUseProgram(_pProg));
@@ -737,16 +734,16 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 
     // Set up vertex attributes
     GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)0));
+    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)0));
 
     GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)offsetof(LandVertex, uv)));
+    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, uv)));
 
     GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(LandVertex), (void*)offsetof(LandVertex, color)));
+    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, col)));
 
     GL_CHECK(glEnableVertexAttribArray(_inNormal));
-    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(LandVertex), (void*)offsetof(LandVertex, normal)));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
 
     // Draw the quad
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
@@ -834,17 +831,17 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 
     if (cmd.mirror)
     {
-        data[0] = { { width, height }, { 0.0f, 1.0f }, col };
-        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, col };
-        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, col };
-        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, col };
+        data[0] = { { width, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
+        data[1] = { { 0.0f, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
+        data[2] = { { width * (ratio + 1.0f), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+        data[3] = { { width * ratio, 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
     }
     else
     {
-        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, col };
-        data[1] = { { width, height }, { 1.0f, 1.0f }, col };
-        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col };
-        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col };
+        data[0] = { { 0.0f, height }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY };
+        data[1] = { { width, height }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY };
+        data[2] = { { width * ratio, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY };
+        data[3] = { { width * (ratio + 1.0f), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY };
     }
 
 #if !defined(USE_GLES2)
@@ -873,6 +870,9 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
     // Set identity normal (0, 0, 1) for 2D shadows
     GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -882,6 +882,7 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
 
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
@@ -959,13 +960,13 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     const uint32_t edgeColor = cmd.gradientMode != 0 ? 0x00000000 : centerColor;
 
     // Center vertex
-    vertices[0] = { { 0.0f, 0.0f }, { 0.5f, 0.5f }, centerColor };
+    vertices[0] = { { 0.0f, 0.0f }, { 0.5f, 0.5f }, centerColor, NORMAL_IDENTITY };
 
     // Perimeter vertices
     for (int i = 0; i <= 360; i++)
     {
         float a = (i / 180.0f) * pi;
-        vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor };
+        vertices[i + 1] = { { float(cos(a) * radius), float(sin(a) * radius) }, { 0.5f, 0.5f }, edgeColor, NORMAL_IDENTITY };
     }
 
     // Bind default white texture for untextured circle
@@ -995,6 +996,9 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
     // Set identity normal (0, 0, 1) for 2D circles
     GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -1006,6 +1010,7 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
 
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
@@ -1069,10 +1074,10 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { 0.0f, float(cmd.height) }, { 0.0f, 1.0f }, col },
-        { { float(cmd.width), float(cmd.height) }, { 1.0f, 1.0f }, col },
-        { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col },
-        { { float(cmd.width), 0.0f }, { 1.0f, 0.0f }, col },
+        { { 0.0f, float(cmd.height) }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.width), float(cmd.height) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY },
+        { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.width), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY },
     };
 
     // Bind default white texture for untextured quad
@@ -1102,6 +1107,9 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
     // Set identity normal (0, 0, 1) for 2D untextured quads
     GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -1111,6 +1119,7 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
 
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
@@ -1139,23 +1148,6 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    auto colored = memcmp(g_ColorInvalid.rgba, cmd.color.rgba, sizeof(g_ColorInvalid.rgba)) != 0;
-    auto blend = colored && cmd.color[3] < 1.f;
-    if (colored)
-    {
-        RenderState_SetColor(state, cmd.color);
-
-        if (blend)
-        {
-            RenderState_SetBlend(
-                state,
-                true,
-                BlendFactor::BlendFactor_SrcAlpha,
-                BlendFactor::BlendFactor_OneMinusSrcAlpha,
-                BlendEquation::BlendEquation_Add);
-        }
-    }
-
 #if defined(USE_GL2)
     glDisable(GL_TEXTURE_2D);
     glBegin(GL_LINES);
@@ -1169,6 +1161,7 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     // Apply stored translation
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
 
+    const bool colored = (cmd.color != g_ColorInvalid);
     const uint32_t col = colored ?
         (((uint32_t)(cmd.color[0] * 255) << 0) |
          ((uint32_t)(cmd.color[1] * 255) << 8) |
@@ -1176,10 +1169,16 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col },
-        { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col },
+        { { float(cmd.x0), float(cmd.y0) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.x1), float(cmd.y1) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY },
     };
-
+    RenderState_SetColor(state, cmd.color);
+    RenderState_SetBlend(
+        state,
+        true,
+        BlendFactor::BlendFactor_SrcAlpha,
+        BlendFactor::BlendFactor_OneMinusSrcAlpha,
+        BlendEquation::BlendEquation_Add);
     // Bind default white texture for line
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
 
@@ -1209,6 +1208,9 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     GL_CHECK(glEnableVertexAttribArray(_inColor));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
 
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (void*)offsetof(GenericVertex, normal)));
+
     // Set identity normal (0, 0, 1) for 2D lines
     GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
 
@@ -1218,7 +1220,15 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     GL_CHECK(glDisableVertexAttribArray(_inPos));
     GL_CHECK(glDisableVertexAttribArray(_inUV));
     GL_CHECK(glDisableVertexAttribArray(_inColor));
+    GL_CHECK(glDisableVertexAttribArray(_inNormal));
+    RenderState_SetBlend(
+        state,
+        false,
+        BlendFactor::BlendFactor_Invalid,
+        BlendFactor::BlendFactor_Invalid,
+        BlendEquation::BlendEquation_Invalid);
 
+    RenderState_SetColor(state, g_ColorWhite);
     GL_CHECK(glDeleteBuffers(1, &vbo));
 #if !defined(USE_GLES2)
     GL_CHECK(glDeleteVertexArrays(1, &vao));
@@ -1226,20 +1236,7 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
     GL_CHECK(glUseProgram(0));
 #endif
 
-    if (colored)
-    {
-        if (blend)
-        {
-            RenderState_SetBlend(
-                state,
-                false,
-                BlendFactor::BlendFactor_Invalid,
-                BlendFactor::BlendFactor_Invalid,
-                BlendEquation::BlendEquation_Invalid);
-        }
 
-        RenderState_SetColor(state, g_ColorWhite);
-    }
 
     return true;
 }
@@ -1412,61 +1409,9 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
     return true;
 }
 
-static void RenderDraw_DrawTest()
-{
-    // clang-format off
-#if defined(USE_GL3) || defined(USE_GLES2)
-    //ScopedPerfMarker(__FUNCTION__);
-
-    const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-    };
-    const unsigned int idx[] = { 0, 1, 2, 3 };
-    GL_CHECK(glClearColor(0.4f, 0.0f, 0.0f, 0.0f));
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
-    GL_CHECK(glUseProgram(_pProg));
-
-    uint32_t buffers[2];
-    GL_CHECK(glGenBuffers(2, buffers));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW));
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
-    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
-
-#if !defined(USE_GLES2)
-    uint32_t vao = 0;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif // #if !defined(USE_GLES2)
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    // Set identity normal (0, 0, 1) for test rendering
-    GL_CHECK(glVertexAttrib3f(_inNormal, 0.0f, 0.0f, 1.0f));
-
-    GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
-    GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
-
-    GL_CHECK(glDeleteBuffers(2, buffers));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif // #if !defined(USE_GLES2)
-    GL_CHECK(glUseProgram(0));
-#endif // #if defined(USE_GL3) || defined(USE_GLES2)
-    // clang-format on
-}
 
 bool RenderDraw_Execute(RenderCmdList *cmdList)
 {
-    //RenderDraw_DrawTest();
     if (cmdList->immediateMode)
     {
         return false;

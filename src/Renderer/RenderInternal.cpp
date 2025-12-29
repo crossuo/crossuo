@@ -260,10 +260,10 @@ bool Render_Init(SDL_Window *window)
 
     // clang-format off
     const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
+        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
+        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
+        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
     };
     const unsigned int idx[] = { 0, 1, 2, 3 };
 #if !defined(USE_GLES2)
@@ -279,9 +279,11 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glEnableVertexAttribArray(_inPos));
     GL_CHECK(glEnableVertexAttribArray(_inUV));
     GL_CHECK(glEnableVertexAttribArray(_inColor));
+    GL_CHECK(glEnableVertexAttribArray(_inNormal));
     GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
     GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
     GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
+    GL_CHECK(glVertexAttribPointer(_inNormal, 3, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, normal)));
 
     GL_CHECK(glGenTextures(1, &_defaultTex));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, _defaultTex));
@@ -289,9 +291,17 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
+    // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
+    GL_CHECK(glUniform1i(_uDrawMode, 0)); // SDM_NO_COLOR - initial draw mode
+    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors)); // Initial color palette
+    GL_CHECK(glUniform1i(_uAlphaTestEnabled, 0)); // Alpha test disabled initially
+    GL_CHECK(glUniform1f(_uAlphaRef, 0.0f)); // Initial alpha reference value
+
+    // Initialize model matrix to identity
+    glm::mat4 identity(1.0f);
+    GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
-    GL_CHECK(glUseProgram(0));
     // clang-format on
 #endif
     g_render.context = context;
@@ -340,7 +350,6 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     // Set projection for basic shader
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
-    GL_CHECK(glUseProgram(0));
 #endif
     return true;
 }
