@@ -31,8 +31,7 @@ bool RenderState_FlushState(RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
     RenderState_SetTexture(state, state->texture.type, state->texture.texture, true);
-    // FIXME epatitucci
-    // RenderState_SetFrameBuffer(state, state->framebuffer, true);
+    RenderState_SetFrameBuffer(state, state->framebuffer, true);
     RenderState_SetBlend(
         state,
         state->blend.enabled,
@@ -71,7 +70,6 @@ bool RenderState_FlushState(RenderState *state)
     glm::mat4 identity(1.0f);
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
-    GL_CHECK(glUseProgram(0));
 #endif
 
     // RenderState_SetShaderPipeline(state, &state->pipeline, true);
@@ -556,7 +554,7 @@ bool RenderState_SetShaderPipeline(RenderState *state, ShaderPipeline *pipeline,
 
 bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
 {
-    // if (state->pipeline.program != RENDER_SHADERPROGRAM_INVALID || forced)
+    if (state->pipeline.program != RENDER_SHADERPROGRAM_INVALID || forced)
     {
         GL_CHECK(glUseProgram(0));
         state->pipeline = ShaderPipeline{};
@@ -564,8 +562,7 @@ bool RenderState_DisableShaderPipeline(RenderState *state, bool forced)
 
         return true;
     }
-
-    // return false;
+    return false;
 }
 
 bool RenderState_SetTexture(
@@ -617,8 +614,7 @@ bool RenderState_SetTexture(
 
 bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forced)
 {
-    // TODO epatitucci FIXME
-    // if (forced || (memcmp(&state->framebuffer, &fb, sizeof(state->framebuffer) != 0)))
+    if (forced || (state->framebuffer.handle != fb.handle || state->framebuffer.texture != fb.texture))
     {
         if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
         {
@@ -635,7 +631,7 @@ bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forc
         state->framebuffer = fb;
         return true;
     }
-    // return false;
+    return false;
 }
 
 bool RenderState_SetViewParams(
@@ -652,19 +648,21 @@ bool RenderState_SetViewParams(
     bool proj_flipped_y,
     bool forced)
 {
-    // FIXME epatitucci
-    // if (forced || (state->viewport.left != left || state->viewport.right != right ||
-    //                state->viewport.bottom != bottom || state->viewport.top != top ||
-    //                state->viewport.nearZ != nearZ || state->viewport.farZ != farZ ||
-    //                state->viewport.scale != state->viewport.scale))
+    const int right = scene_x + scene_width;
+    const int needed_height = scene_y + scene_height;
+    const int bottom = window_height - needed_height;
+
+    if (forced ||
+        state->viewport.left != scene_x ||
+        state->viewport.right != right ||
+        state->viewport.bottom != bottom ||
+        state->viewport.top != scene_y ||
+        state->viewport.nearZ != camera_nearZ ||
+        state->viewport.farZ != camera_farZ ||
+        state->viewport.scale != scene_scale ||
+        state->viewport.proj_flipped_y != proj_flipped_y)
     {
         ScopedPerfMarker(__FUNCTION__);
-
-        const int right = scene_x + scene_width;
-        // game viewport isn't scaled, if the OS window is smaller than GameWindowPosY + GameWindowHeight, bottom will
-        // be negative by this difference
-        const int needed_height = scene_y + scene_height;
-        const int bottom = window_height - needed_height;
 
         state->viewport.left = scene_x;
         state->viewport.right = right;
@@ -703,11 +701,10 @@ bool RenderState_SetViewParams(
             float(camera_farZ));
         GL_CHECK(glUseProgram(_pProg));
         GL_CHECK(glUniformMatrix4fv(_uProjectionView, 1, false, glm::value_ptr(projection)));
-        GL_CHECK(glUseProgram(0));
 #endif
         return true;
     }
-    // return false;
+    return false;
 }
 
 bool RenderState_SetModelViewTranslation(RenderState *state, float3 pos, bool forced)

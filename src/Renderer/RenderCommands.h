@@ -110,7 +110,7 @@ struct DrawQuadCmd
     uint32_t height = 0;
     float u = 1.f;
     float v = 1.f;
-    float4 rgba = g_ColorInvalid;
+    float4 color = g_ColorInvalid;
     bool mirrored = false;
 };
 
@@ -199,7 +199,7 @@ struct DrawRotatedQuadCmd
     float angle = 0.f;
     float u = 1.f;
     float v = 1.f;
-    float4 rgba = g_ColorWhite;
+    float4 color = g_ColorWhite;
     bool mirrored = false;
 };
 

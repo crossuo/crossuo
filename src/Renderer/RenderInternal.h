@@ -7,6 +7,17 @@
 #error "Do not include this directly. Include RenderAPI.h"
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
+
+// Forward declarations to avoid circular includes
+struct RenderState;
+struct RenderCmdList;
+struct ShaderPipeline;
+
+#include "RenderTypes.h"
+#include "RenderCommands.h"
+
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type);
 // FIXME naming
 void SetupOGLDebugMessage();
