@@ -40,7 +40,7 @@ void CMultiObject::UpdateGraphicBySeason()
 void CMultiObject::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMultiObject::Draw");
     uint16_t color = Color;
 
     if (State != 0)

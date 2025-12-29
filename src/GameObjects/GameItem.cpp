@@ -162,7 +162,7 @@ void CGameItem::CalculateFieldColor()
 void CGameItem::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGameItem::Draw");
     if (Container == 0xFFFFFFFF)
     {
         if (MultiBody)

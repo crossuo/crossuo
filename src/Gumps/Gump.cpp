@@ -163,6 +163,7 @@ bool CGump::CanBeMoved()
 
 void CGump::DrawLocker()
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGump::DrawLocker");
     if ((m_Locker.Serial != 0u) && g_ShowGumpLocker)
     {
         g_TextureGumpState[LockMoving].Draw(m_Locker.GetX(), m_Locker.GetY());
@@ -305,7 +306,7 @@ void CGump::ProcessListing()
 void CGump::DrawItems(CBaseGUI *start, int currentPage, int draw2Page)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGump::DrawItems");
     CGUIComboBox *combo = nullptr;
     int page = 0;
     bool canDraw = ((draw2Page == 0) || (page >= currentPage && page <= currentPage + draw2Page));
@@ -1389,6 +1390,7 @@ void CGump::GenerateFrame(bool stop)
 void CGump::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGump::Draw");
     CalculateGumpState();
     if (WantUpdateContent)
     {

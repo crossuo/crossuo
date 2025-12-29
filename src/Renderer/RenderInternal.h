@@ -2,13 +2,14 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #pragma once
-
+#if (defined(USE_GLES) || defined(USE_GL3)) && !defined(USE_GL2)
 #ifndef RENDERER_INTERNAL
 #error "Do not include this directly. Include RenderAPI.h"
 #endif
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <glm/glm.hpp>
 
 // Forward declarations to avoid circular includes
 struct RenderState;
@@ -17,6 +18,29 @@ struct ShaderPipeline;
 
 #include "RenderTypes.h"
 #include "RenderCommands.h"
+
+// External variable declarations for shared renderer state
+extern bool g_rendererDebugForceStateReset;
+extern int g_CurrentDrawMode;
+extern float g_CurrentColors[96];
+extern uint32_t g_drawVAO;
+extern uint32_t g_drawVBO;
+extern size_t g_vboSize;
+extern uint32_t _vibuffers[2];
+extern int _uAlphaTestEnabled;
+extern int _uAlphaRef;
+extern int _uDrawMode;
+extern int _uColors;
+extern uint32_t _vao;
+extern uint32_t _defaultTex;
+extern int _inPos;
+extern int _inColor;
+extern int _inUV;
+extern int _inNormal;
+extern int _uProjectionView;
+extern int _uModel;
+extern int _uTex;
+extern int _pProg;
 
 uint32_t Render_ShaderUniformTypeToSize(ShaderUniformType type);
 // FIXME naming
@@ -30,6 +54,12 @@ bool RenderState_SetTexture(
     RenderState *state, TextureType type, texture_handle_t texture, bool forced = false);
 bool RenderState_SetFrameBuffer(RenderState *state, frame_buffer_t fb, bool forced = false);
 
+// Persistent vertex buffer initialization and cleanup for optimized rendering
+bool Render_InitVertexBuffers();
+void Render_CleanupVertexBuffers();
+
+bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatrix);
+void RenderState_ResetAllStates(RenderState *state);
 bool RenderState_FlushState(RenderState *state);
 bool RenderState_SetAlphaTest(
     RenderState *state, bool enabled, AlphaTestFunc func, float alphaRef, bool forced = false);
@@ -141,3 +171,4 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
 // Debug functions for command dumping
 void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state);
 void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state);
+#endif // #if (defined(USE_GLES) || defined(USE_GL3)) && !defined(USE_GL2)

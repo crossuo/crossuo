@@ -187,7 +187,7 @@ void CGLShader::Enable()
 #else
     if (m_ShaderPipeline.program != RENDER_SHADERPROGRAM_INVALID)
     {
-        RenderAdd_SetShaderPipeline(g_renderCmdList, &m_ShaderPipeline);
+        //RenderAdd_SetShaderPipeline(g_renderCmdList, &m_ShaderPipeline);
         result = true;
     }
 #endif
@@ -200,13 +200,7 @@ void CGLShader::Enable()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-#if defined(USE_GL2)
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
         Render_SetDrawMode(SDM_NO_COLOR);
-#endif
 #endif
     }
 }
@@ -216,11 +210,8 @@ void CGLShader::Disable()
 #ifndef NEW_RENDERER_ENABLED
     glUseProgramObjectARB(0);
 #else
-    RenderAdd_DisableShaderPipeline(g_renderCmdList);
-    extern float g_CurrentColors[96];
-    memset(g_CurrentColors, 0, sizeof(g_CurrentColors));
-    extern int g_CurrentDrawMode;
-    g_CurrentDrawMode = 0; // SDM_NO_COLOR
+    //RenderAdd_DisableShaderPipeline(g_renderCmdList);
+    Render_SetDrawMode(0); // SDM_NO_COLOR
 #endif
     g_ShaderColorTableInUse = 0;
     g_ShaderDrawMode = 0;
@@ -231,7 +222,7 @@ void CGLShader::Pause()
 #ifndef NEW_RENDERER_ENABLED
     glUseProgramObjectARB(0);
 #else
-    RenderAdd_DisableShaderPipeline(g_renderCmdList);
+    //RenderAdd_DisableShaderPipeline(g_renderCmdList);
 #endif
 }
 
@@ -242,7 +233,7 @@ void CGLShader::Resume()
 #else
     // if (m_ShaderPipeline.program != RENDER_SHADERPROGRAM_INVALID)
     {
-        RenderAdd_SetShaderPipeline(g_renderCmdList, &m_ShaderPipeline);
+        //RenderAdd_SetShaderPipeline(g_renderCmdList, &m_ShaderPipeline);
     }
 #endif
 }

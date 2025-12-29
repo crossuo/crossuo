@@ -1481,7 +1481,7 @@ void CGameScreen::DrawGameWindow(bool render)
 
 void CGameScreen::DrawGameWindowLight()
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Game Light");
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGameScreen::DrawGameWindowLight");
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
@@ -2151,10 +2151,9 @@ void CGameScreen::Render()
             g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
         }
 
+    #ifdef NEW_RENDERER_ENABLED
         RenderDebug_ProcessFrame(g_renderCmdList);
         RenderDraw_Execute(g_renderCmdList);
-
-    #ifdef NEW_RENDERER_ENABLED
         Render_SwapBuffers();
         g_ScreenshotBuilder.GPUDataReady();
     #else

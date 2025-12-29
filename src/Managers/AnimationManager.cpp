@@ -454,6 +454,7 @@ void CAnimationManager::Draw(
     uint16_t convColor)
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw");
     if (obj == nullptr)
     {
         return;
@@ -595,13 +596,7 @@ void CAnimationManager::Draw(
                 }
 
                 RenderAdd_SetBlend(g_renderCmdList, BlendStateCmd{ blendSrc, blendDst });
-#if defined(USE_GL2)
-                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-                cmd.value.asInt1 = uniformValue;
-                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
                 Render_SetDrawMode(uniformValue);
-#endif
 #endif
                 sdmNoColor = false;
             }
@@ -617,13 +612,7 @@ void CAnimationManager::Draw(
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
 #else
-#if defined(USE_GL2)
-                ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-                cmd.value.asInt1 = partialHue ? SDM_PARTIAL_HUE : SDM_COLORED;
-                RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
                 Render_SetDrawMode(partialHue ? SDM_PARTIAL_HUE : SDM_COLORED);
-#endif
 #endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
@@ -635,13 +624,7 @@ void CAnimationManager::Draw(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-#if defined(USE_GL2)
-            ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-            cmd.value.asInt1 = SDM_NO_COLOR;
-            RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
             Render_SetDrawMode(SDM_NO_COLOR);
-#endif
 #endif
         }
 
@@ -918,6 +901,9 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
 
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::DrawCharacter");
+    m_EquipConvItem = nullptr;
+
     m_Transform = false;
 
     int drawX = x + obj->OffsetX;
@@ -951,14 +937,7 @@ void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
                            ToColorG(auraColor) / 255.f,
                            ToColorB(auraColor) / 255.f,
                            ToColorA(auraColor) / 255.f } });
-
-#if defined(USE_GL2)
-        ShaderUniformCmd cmd{ g_ShaderDrawMode, ShaderUniformType::ShaderUniformType_Int1 };
-        cmd.value.asInt1 = SDM_NO_COLOR;
-        RenderAdd_SetShaderUniform(g_renderCmdList, cmd);
-#else
         Render_SetDrawMode(SDM_NO_COLOR);
-#endif
 #endif
         g_AuraTexture.Draw(drawX - g_AuraTexture.Width / 2, drawY - g_AuraTexture.Height / 2);
 
@@ -1451,6 +1430,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::DrawCorpse");
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return;
@@ -1718,6 +1698,7 @@ bool CAnimationManager::DrawEquippedLayers(
     uint8_t animIndex,
     int lightOffset)
 {
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::DrawEquippedLayers");
     bool result = false;
     const auto &list = obj->m_DrawLayeredObjects;
     uint16_t bodyGraphic = obj->Graphic;

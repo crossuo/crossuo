@@ -15,6 +15,7 @@ CGUIAlphaBlending::CGUIAlphaBlending(bool enabled, float alpha)
 void CGUIAlphaBlending::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
+    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
 #ifndef NEW_RENDERER_ENABLED
     if (Enabled)
     {

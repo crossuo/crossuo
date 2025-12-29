@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
@@ -83,16 +84,6 @@ static void EnableOpenGLMessage(GLuint id, bool shouldAssert, bool shouldLog)
     assert(false);
 }
 
-#if defined(USE_GL2)
-static void OGLDebugMsgCallback(
-    uint source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar *message,
-    const void *userParam)
-#endif // #if defined(USE_GL2)
 #if defined(USE_GL3)
     static void APIENTRY OGLDebugMsgCallback(
         uint source,
@@ -102,7 +93,7 @@ static void OGLDebugMsgCallback(
         GLsizei length,
         const GLchar *message,
         void *userParam)
-#endif // #if defined(USE_GL2)
+#endif // #if defined(USE_GL3)
 {
     (void)source;
     (void)length;
@@ -960,3 +951,4 @@ void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *s
     (void)cmd;
     DumpInfo("PopDebugMarker");
 }
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

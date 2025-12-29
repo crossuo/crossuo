@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #pragma once
-
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #include <stdint.h>
 
 enum RenderCommandType : uint8_t
@@ -360,3 +360,4 @@ struct PopDebugMarkerCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_PopDebugMarker;
 };
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

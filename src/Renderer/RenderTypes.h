@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #pragma once
-
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #include <stdint.h>
 #include <common/logging/logging.h>
 
@@ -324,12 +324,12 @@ struct RenderState
     float4 clearColor = g_ColorBlack;
     float projection[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     float3 modelTranslation = {0.0f, 0.0f, 0.0f};
-    
+
     // Cached GL3/GLES state to avoid redundant uploads
 #if defined(USE_GLES) || defined(USE_GL3)
     int currentDrawMode = 0;
     float currentColors[96] = {0.0f};
-    uint32_t currentProgram = 0;
+    uint32_t currentProgram = -1;
     float cachedModelMatrix[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     bool modelMatrixCached = false;
 #endif
@@ -354,3 +354,4 @@ struct RenderCmdList
 
     RenderCmdList() = default;
 };
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

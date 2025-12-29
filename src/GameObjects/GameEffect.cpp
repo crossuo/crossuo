@@ -138,6 +138,7 @@ uint16_t CGameEffect::GetCurrentGraphic()
 
 void CGameEffect::ApplyRenderMode()
 {
+    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
     switch (RenderMode)
     {
         case 1: //ok

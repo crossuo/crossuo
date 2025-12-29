@@ -50,11 +50,9 @@ void CBaseScreen::Render()
     InitToolTip();
     DrawSmoothMonitorEffect();
     g_MouseManager.Draw(CursorGraphic);
-
+#ifdef NEW_RENDERER_ENABLED
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
-
-#ifdef NEW_RENDERER_ENABLED
     Render_SwapBuffers();
     g_ScreenshotBuilder.GPUDataReady();
 #else
