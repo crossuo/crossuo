@@ -5,6 +5,7 @@
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <glm/glm.hpp>
@@ -73,10 +74,9 @@ void RenderState_ResetAllStates(RenderState *state)
     if (g_rendererDebugForceStateReset)
     {
         // Reset blend state
-        RenderDraw_DisableBlendState({}, state);
-        state->currentDrawMode = 1;
-        Render_SetDrawMode(0);
-
+        //RenderState_SetBlendEnabled(state, false);
+        //state->currentDrawMode = 1;
+/*
         // Reset color to white
         RenderState_SetColor(state, g_ColorWhite);
 
@@ -84,19 +84,19 @@ void RenderState_ResetAllStates(RenderState *state)
         RenderState_SetAlphaTest(state, true, AlphaTestFunc::AlphaTestFunc_Greater, 0.f);
 
         // Reset stencil state
-        RenderDraw_DisableStencilState({}, state);
+        RenderState_SetStencilEnabled(state, false);
 
         // Reset depth state
-        RenderDraw_DisableDepthState({}, state);
+        RenderState_SetDepthEnabled(state, flase);
 
         // Reset scissor state
-        RenderDraw_DisableScissor({}, state);
+        RenderState_SetScissor(state, false, 0, 0, 0, 0);
 
         // Reset color mask
         RenderState_SetColorMask(state, ColorMask::ColorMask_All);
 
         // Reset shader pipeline
-        RenderDraw_DisableShaderPipeline({}, state);
+        RenderState_DisableShaderPipeline(state);
 
         // Reset GL program
         //GL_CHECK(glUseProgram(0));
@@ -115,7 +115,7 @@ void RenderState_ResetAllStates(RenderState *state)
         state->modelMatrixCached = false;
 
         // Reset global color palette
-        memset(g_CurrentColors, 0, sizeof(g_CurrentColors));
+        memset(g_CurrentColors, 0, sizeof(g_CurrentColors));*/
     }
 }
 
@@ -262,6 +262,29 @@ bool RenderState_SetBlend(
     }
 
     return changed;
+}
+
+bool RenderState_SetBlendEnabled(RenderState *state, bool enabled, bool forced)
+{
+    if (forced || state->blend.enabled != enabled)
+    {
+        RENDER_STATE_LOG_BLEND(state->blend.enabled, enabled);
+        if (!forced)
+        {
+            RenderDebug_LogStackTrace("  BLEND STATE CHANGE");
+        }
+        state->blend.enabled = enabled;
+        if (enabled)
+        {
+            GL_CHECK(glEnable(GL_BLEND));
+        }
+        else
+        {
+            GL_CHECK(glDisable(GL_BLEND));
+        }
+        return true;
+    }
+    return false;
 }
 
 bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced)

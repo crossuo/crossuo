@@ -476,7 +476,7 @@ void CMouseManager::Draw(uint16_t id)
 #ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
-                Render_SetDrawMode(SDM_COLORED);
+                RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
 #endif
                 g_ColorManager.SendColorsToShader(color);
             }
@@ -527,7 +527,7 @@ void CMouseManager::Draw(uint16_t id)
                         g_renderCmdList,
                         BlendStateCmd{ BlendFactor::BlendFactor_One,
                                        BlendFactor::BlendFactor_OneMinusSrcAlpha });
-                    Render_SetDrawMode(SDM_NO_COLOR);
+                    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
                     RenderAdd_SetColor(
                         g_renderCmdList,
                         SetColorCmd{ { ToColorR(auraColor) / 255.f,

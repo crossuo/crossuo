@@ -752,6 +752,11 @@ void RenderDraw_DisableAlphaTestDebug(DisableAlphaTestCmd *, RenderState *)
     DumpInfo("DisableAlphaTestCmd");
 }
 
+void RenderDraw_SetDrawModeDebug(SetDrawModeCmd *cmd, RenderState *)
+{
+    DumpInfo("SetDrawModeCmd: drawMode: %d", cmd->drawMode);
+}
+
 void RenderDraw_DepthStateDebug(DepthStateCmd *cmd, RenderState *)
 {
     DumpInfo("DepthStateCmd: func: %s", DepthFuncAsString(cmd->func));
@@ -775,6 +780,18 @@ void RenderDraw_SetClearColorDebug(SetClearColorCmd *cmd, RenderState *)
         cmd->color[1],
         cmd->color[2],
         cmd->color[3]);
+}
+
+void RenderDraw_SetColorPaletteDebug(SetColorPaletteCmd *cmd, RenderState *)
+{
+    DumpInfo(
+        "SetColorPaletteCmd: first colors: (%f, %f, %f, %f, %f, %f)",
+        cmd->palette[0],
+        cmd->palette[1],
+        cmd->palette[2],
+        cmd->palette[3],
+        cmd->palette[4],
+        cmd->palette[5]);
 }
 
 void RenderDraw_SetViewParamsDebug(SetViewParamsCmd *cmd, RenderState *)
@@ -866,6 +883,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(SetFrameBuffer, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(AlphaTest, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableAlphaTest, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetDrawMode, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(BlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(StencilState, cmd, &cmdList->state)
@@ -877,6 +895,7 @@ void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
             MATCH_CASE_DRAW_DEBUG(SetColorMask, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetClearColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW_DEBUG(SetColorPalette, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetViewParams, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetModelViewTranslation, cmd, &cmdList->state)
             MATCH_CASE_DRAW_DEBUG(SetScissor, cmd, &cmdList->state)

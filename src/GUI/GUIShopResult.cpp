@@ -71,7 +71,7 @@ void CGUIShopResult::Draw(bool checktrans)
 #else
     RenderAdd_SetModelViewTranslation(
         g_renderCmdList, SetModelViewTranslationCmd{ { (float)m_X, (float)m_Y, 0.0f } });
-    Render_SetDrawMode(SDM_NO_COLOR);
+    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
 
     m_NameText.Draw(34, 0, checktrans);

@@ -212,7 +212,7 @@ void CTextRenderer::Draw()
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 
 #else
-            Render_SetDrawMode(uniformValue);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
             if (text.Transparent)
@@ -387,7 +387,7 @@ void CTextRenderer::WorldDraw()
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-            Render_SetDrawMode(uniformValue);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
             if (text.Transparent)

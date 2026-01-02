@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
-#include <cmath> // cos, sin
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <external/gfx/gfx.h>
 #include <glm/glm.hpp>
@@ -67,7 +67,6 @@ bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state)
 bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     // clang-format off
     const float uv[] = {
          0.0f, cmd.v,
@@ -106,19 +105,27 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawQuad");
     RenderState_ResetAllStates(state);
+
+    // FIXME: FORCE RESET STATES TO AVOID GRAPHICAL ISSUES
+    // Need to figure out which object is "leaking" state here
+    //RenderState_SetBlendEnabled(state, false);
+
     return true;
 }
 
 bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     // clang-format off
     const float uv[] = {
          0.0f, cmd.v,
@@ -158,22 +165,23 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *stat
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
     model = glm::rotate(model, glm::radians(cmd.angle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawRotatedQuad");
     RenderState_ResetAllStates(state);
     return true;
 }
 
 bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderState *state)
 {
-    static const auto s_sittingCharacterOffset = 8.f;
-
     ScopedPerfMarker(__FUNCTION__);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
-
+    static const auto s_sittingCharacterOffset = 8.f;
     const auto x = (GLfloat)cmd.x;
     const auto y = (GLfloat)cmd.y;
     const float width = (float)cmd.width;
@@ -262,10 +270,15 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
         glm::mat4 model(1.0f);
         model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
         model = glm::translate(model, glm::vec3(x, y, 0.0f));
+
+        RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
         RenderState_SetupCachedState(state, model);
+        RENDER_STATE_DUMP_BEFORE(state);
         GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
         GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, vertexCount * sizeof(GenericVertex), vertices));
         GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount));
+        RENDER_STATE_DUMP_AFTER(state);
+        RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawCharacterSitting");
         RenderState_ResetAllStates(state);
     }
 
@@ -275,8 +288,6 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     const float translateX = cmd.x - 22.0f;
     const float translateY = cmd.y - 22.0f;
     const auto &rc = cmd.rect;
@@ -341,10 +352,15 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
                                            state->modelTranslation[1],
                                            state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(translateX, translateY, 0.0f));
+
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), vertices));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawLandTile");
     RenderState_ResetAllStates(state);
     return true;
 }
@@ -352,14 +368,6 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *state)
 bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
 {
     ScopedPerfMarker(__FUNCTION__);
-    RenderState_SetBlend(
-        state,
-        true,
-        BlendFactor::BlendFactor_DstColor,
-        BlendFactor::BlendFactor_Zero,
-        BlendEquation::BlendEquation_Add);
-
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     const auto width = (float)cmd.width;
     const auto height = cmd.height / 2.0f;
     const auto x = GLfloat(cmd.x);
@@ -390,11 +398,22 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(x, translateY, 0.0f));
+
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, cmd.texture);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
+    RenderState_SetBlend(
+        state,
+        true,
+        BlendFactor::BlendFactor_DstColor,
+        BlendFactor::BlendFactor_Zero,
+        BlendEquation::BlendEquation_Add);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    RenderDraw_DisableBlendState({}, state);
+    RenderState_SetBlendEnabled(state, false);
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawShadow");
     RenderState_ResetAllStates(state);
     return true;
 }
@@ -429,11 +448,15 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *state)
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, (segments + 1) * sizeof(GenericVertex), vertices));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, segments + 1));
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawCircle");
     RenderState_ResetAllStates(state);
     return true;
 }
@@ -458,11 +481,15 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
+
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawUntexturedQuad");
     RenderState_ResetAllStates(state);
     return true;
 }
@@ -493,11 +520,16 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *state)
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
+
     RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
     RenderState_SetupCachedState(state, model);
+    RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_LINES, 0, 2));
+    RenderState_SetBlendEnabled(state, false);
+    RENDER_STATE_DUMP_AFTER(state);
+    RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawLine");
     RenderState_ResetAllStates(state);
     return true;
 }
@@ -519,12 +551,7 @@ bool RenderDraw_BlendState(const BlendStateCmd &cmd, RenderState *state)
 
 bool RenderDraw_DisableBlendState(const DisableBlendStateCmd &, RenderState *state)
 {
-    return RenderState_SetBlend(
-        state,
-        false,
-        BlendFactor::BlendFactor_Invalid,
-        BlendFactor::BlendFactor_Invalid,
-        BlendEquation::BlendEquation_Invalid);
+    return RenderState_SetBlendEnabled(state, false);
 }
 
 bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *state)
@@ -599,6 +626,14 @@ bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *state)
     return RenderState_SetColorMask(state, cmd.mask);
 }
 
+bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *state)
+{
+    // Update both global and cached draw mode
+    Render_SetDrawMode(cmd.drawMode);
+    state->currentDrawMode = cmd.drawMode;
+    return true;
+}
+
 bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state)
 {
     return RenderState_SetColor(state, cmd.color);
@@ -607,6 +642,13 @@ bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state)
 bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state)
 {
     return RenderState_SetClearColor(state, cmd.color);
+}
+
+bool RenderDraw_SetColorPalette(const SetColorPaletteCmd &cmd, RenderState *)
+{
+    // Copy color palette to global state (will be uploaded to shader via RenderState_SetupCachedState)
+    memcpy(g_CurrentColors, cmd.palette, sizeof(cmd.palette));
+    return true;
 }
 
 bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *)
@@ -698,6 +740,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(SetTexture, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetFrameBuffer, cmd, &cmdList->state)
             MATCH_CASE_DRAW(AlphaTest, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetDrawMode, cmd, &cmdList->state)
             MATCH_CASE_DRAW(BlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW(DisableBlendState, cmd, &cmdList->state)
             MATCH_CASE_DRAW(StencilState, cmd, &cmdList->state)
@@ -709,6 +752,7 @@ bool RenderDraw_Execute(RenderCmdList *cmdList)
             MATCH_CASE_DRAW(SetColorMask, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetColor, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetClearColor, cmd, &cmdList->state)
+            MATCH_CASE_DRAW(SetColorPalette, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetViewParams, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetModelViewTranslation, cmd, &cmdList->state)
             MATCH_CASE_DRAW(SetScissor, cmd, &cmdList->state)

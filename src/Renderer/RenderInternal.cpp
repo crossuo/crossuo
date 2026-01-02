@@ -5,6 +5,7 @@
 #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 #define RENDERER_INTERNAL
 #include "../Renderer/RenderInternal.h"
+#include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
 #include <common/logging/logging.h>
 #include <assert.h>
@@ -741,8 +742,11 @@ void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
     cmdList->state = state;
 }
 
+
 void Render_SetDrawMode(int drawMode)
 {
+    RENDER_STATE_LOG_DRAW_MODE(g_CurrentDrawMode, drawMode);
+    RenderDebug_LogStackTrace("  DRAW MODE CHANGE");
     g_CurrentDrawMode = drawMode;
 }
 
@@ -750,4 +754,5 @@ int Render_GetDrawMode()
 {
     return g_CurrentDrawMode;
 }
+
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

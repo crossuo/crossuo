@@ -39,7 +39,7 @@ void CGUIDrawObject::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        Render_SetDrawMode(uniformValue);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         g_ColorManager.SendColorsToShader(Color);
     }
@@ -48,7 +48,7 @@ void CGUIDrawObject::SetShaderMode()
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-        Render_SetDrawMode(SDM_NO_COLOR);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
     }
 }

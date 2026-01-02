@@ -151,6 +151,20 @@ bool RenderAdd_DisableAlphaTest(RenderCmdList *cmdList)
     return true;
 }
 
+bool RenderAdd_SetDrawMode(RenderCmdList *cmdList, const SetDrawModeCmd &cmd)
+{
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    // Update both global and cached draw mode
+    Render_SetDrawMode(cmd.drawMode);
+    cmdList->state.currentDrawMode = cmd.drawMode;
+    return true;
+}
+
 bool RenderAdd_SetBlend(RenderCmdList *cmdList, const BlendStateCmd &cmd)
 {
     auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
@@ -285,6 +299,18 @@ bool RenderAdd_SetClearColor(RenderCmdList *cmdList, const SetClearColorCmd &cmd
     }
 
     RenderDraw_SetClearColor(cmd, &cmdList->state);
+    return true;
+}
+
+bool RenderAdd_SetColorPalette(RenderCmdList *cmdList, const SetColorPaletteCmd &cmd)
+{
+    auto ret = Render_AppendCmdType(cmdList, cmd._type, &cmd, sizeof(cmd));
+    if (!cmdList->immediateMode)
+    {
+        return ret;
+    }
+
+    RenderDraw_SetColorPalette(cmd, &cmdList->state);
     return true;
 }
 

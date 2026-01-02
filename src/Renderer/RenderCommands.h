@@ -23,6 +23,7 @@ enum RenderCommandType : uint8_t
     Cmd_SetFrameBuffer,
     Cmd_AlphaTest,
     Cmd_DisableAlphaTest,
+    Cmd_SetDrawMode,
     Cmd_BlendState,
     Cmd_DisableBlendState,
     Cmd_StencilState,
@@ -34,6 +35,7 @@ enum RenderCommandType : uint8_t
     Cmd_SetColorMask,
     Cmd_SetColor,
     Cmd_SetClearColor,
+    Cmd_SetColorPalette,
     Cmd_SetViewParams,
     Cmd_SetModelViewTranslation,
     Cmd_SetScissor,
@@ -199,7 +201,7 @@ struct DrawRotatedQuadCmd
     float angle = 0.f;
     float u = 1.f;
     float v = 1.f;
-    float4 color = g_ColorWhite;
+    float4 color = g_ColorInvalid;
     bool mirrored = false;
 };
 
@@ -213,6 +215,12 @@ struct AlphaTestCmd
 struct DisableAlphaTestCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_DisableAlphaTest;
+};
+
+struct SetDrawModeCmd
+{
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetDrawMode;
+    int drawMode = 0;
 };
 
 struct BlendStateCmd
@@ -281,6 +289,12 @@ struct SetClearColorCmd
 {
     static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetClearColor;
     float4 color = g_ColorInvalid;
+};
+
+struct SetColorPaletteCmd
+{
+    static constexpr RenderCommandType _type = RenderCommandType::Cmd_SetColorPalette;
+    float palette[96]; // 32 colors × 3 RGB values
 };
 
 struct ClearRTCmd

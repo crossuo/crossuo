@@ -70,6 +70,7 @@ bool RenderState_SetBlend(
     BlendFactor dst,
     BlendEquation equation,
     bool forced = false);
+bool RenderState_SetBlendEnabled(RenderState *state, bool enabled, bool forced = false);
 bool RenderState_SetDepth(RenderState *state, bool enabled, DepthFunc func, bool forced = false);
 bool RenderState_SetDepthEnabled(RenderState *state, bool enabled, bool forced = false);
 bool RenderState_SetStencil(
@@ -159,6 +160,7 @@ bool RenderDraw_EnableDepthState(const EnableDepthStateCmd &cmd, RenderState *st
 bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *state);
 bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state);
 bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state);
+bool RenderDraw_SetColorPalette(const SetColorPaletteCmd &cmd, RenderState *state);
 bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *state);
 
 bool RenderDraw_ShaderUniform(const ShaderUniformCmd &cmd, RenderState *state);

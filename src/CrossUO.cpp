@@ -4230,7 +4230,7 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-            Render_SetDrawMode(uniformValue);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
             g_ColorManager.SendColorsToShader(color);
@@ -4240,7 +4240,7 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-            Render_SetDrawMode(SDM_NO_COLOR);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
         }
 
@@ -4261,7 +4261,7 @@ void CGame::DrawGump(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-            Render_SetDrawMode(uniformValue);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
 
             g_ColorManager.SendColorsToShader(color);
@@ -4271,7 +4271,7 @@ void CGame::DrawGump(
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-            Render_SetDrawMode(SDM_NO_COLOR);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
         }
         spr->Texture->Draw(x, y, width, height);
@@ -4498,7 +4498,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
         glUniform1iARB(g_ShaderDrawMode, drawMode);
         g_GL.DrawLandTexture(*spr->Texture, x, y + (land->GetZ() * 4), land);
 #else
-        Render_SetDrawMode(drawMode);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{drawMode});
         if (drawMode == SDM_LAND_COLORED)
         {
             g_ColorManager.SendColorsToShader(color);
@@ -4545,7 +4545,7 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
 #else
-            Render_SetDrawMode(SDM_COLORED);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_COLORED});
 #endif
             g_ColorManager.SendColorsToShader(color);
         }
@@ -4554,7 +4554,7 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-            Render_SetDrawMode(SDM_NO_COLOR);
+            RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
         }
         assert(spr->Texture != nullptr);
@@ -4586,7 +4586,7 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        Render_SetDrawMode(uniformValue);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x - g_Index.m_Static[id].Width, y - g_Index.m_Static[id].Height);
@@ -4619,7 +4619,7 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        Render_SetDrawMode(uniformValue);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawRotated(x, y, angle);
@@ -4655,7 +4655,7 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-        Render_SetDrawMode(uniformValue);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->DrawTransparent(
@@ -4700,7 +4700,7 @@ void CGame::DrawStaticArtInContainer(
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        Render_SetDrawMode(uniformValue);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(x, y);
@@ -4722,7 +4722,7 @@ void CGame::DrawLight(LIGHT_DATA &light)
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, uniformValue);
 #else
-        Render_SetDrawMode(uniformValue);
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{uniformValue});
 #endif
         assert(spr->Texture != nullptr);
         spr->Texture->Draw(

@@ -338,7 +338,7 @@ void CGUISlider::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-    Render_SetDrawMode(SDM_NO_COLOR);
+    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
     if (BackgroundGraphic != 0u)
     {

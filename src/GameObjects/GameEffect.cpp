@@ -235,11 +235,7 @@ void CGameEffect::RemoveRenderMode()
             glDisable(GL_BLEND);
             glBlendEquation(GL_FUNC_ADD);
 #else
-            RenderAdd_SetBlend(
-                g_renderCmdList,
-                BlendStateCmd{ BlendFactor::BlendFactor_Invalid,
-                               BlendFactor::BlendFactor_Invalid,
-                               BlendEquation::BlendEquation_Add });
+            RenderAdd_DisableBlend(g_renderCmdList);
 #endif
             break;
         }

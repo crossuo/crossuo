@@ -25,7 +25,7 @@ void CGUIResizepic::Draw(bool checktrans)
 #ifndef NEW_RENDERER_ENABLED
     glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
-    Render_SetDrawMode(SDM_NO_COLOR);
+    RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_NO_COLOR});
 #endif
     g_Game.DrawResizepicGump(Graphic, m_X, m_Y, Width, Height, checktrans);
 }
