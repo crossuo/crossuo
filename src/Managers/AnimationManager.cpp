@@ -1237,6 +1237,7 @@ void CAnimationManager::Draw(
     auto sdmNoColor = true;
     if (isShadow)
     {
+        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Shadow");
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
@@ -1252,6 +1253,7 @@ void CAnimationManager::Draw(
         }
 #else
         auto tex = spr->Texture;
+        RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{SDM_SHADOW});
         RenderAdd_DrawShadow(
             g_renderCmdList,
             DrawShadowCmd{ tex->Texture,
@@ -1259,8 +1261,6 @@ void CAnimationManager::Draw(
                            y,
                            tex->Width,
                            tex->Height,
-                           g_ShaderDrawMode,
-                           SDM_SHADOW,
                            mirror,
                            m_UseBlending });
 #endif
@@ -1299,6 +1299,7 @@ void CAnimationManager::Draw(
 
             if ((color & SPECTRAL_COLOR_FLAG) != 0)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw SpectralColor");
                 spectralColor = true;
 #ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
@@ -1329,6 +1330,7 @@ void CAnimationManager::Draw(
             }
             else if (color != 0u)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Colored");
 #ifndef NEW_RENDERER_ENABLED
                 if (partialHue)
                 {
@@ -1339,7 +1341,10 @@ void CAnimationManager::Draw(
                     glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
                 }
 #else
+{
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, partialHue?"CAnimationManager::Draw SDM_PARTIAL_HUE":"CAnimationManager::Draw SDM_COLORED");
                 RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{partialHue ? SDM_PARTIAL_HUE : SDM_COLORED});
+}
 #endif
                 g_ColorManager.SendColorsToShader(color);
                 sdmNoColor = false;
@@ -1348,6 +1353,7 @@ void CAnimationManager::Draw(
 
         if (sdmNoColor)
         {
+            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw NoColor");
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
@@ -1446,23 +1452,28 @@ void CAnimationManager::Draw(
                     }
                 }
             }
+            {
+                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Sitting");
 #ifndef NEW_RENDERER_ENABLED
-            g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
+                g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
 #else
-            auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
-                                                x,
-                                                y,
-                                                spr->Texture->Width,
-                                                spr->Texture->Height,
-                                                h3mod,
-                                                h6mod,
-                                                h9mod,
-                                                mirror };
-            RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
+                auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
+                                                    x,
+                                                    y,
+                                                    spr->Texture->Width,
+                                                    spr->Texture->Height,
+                                                    h3mod,
+                                                    h6mod,
+                                                    h9mod,
+                                                    mirror };
+                RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
+            }
 #endif
         }
         else
         {
+            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Mirrored");
+
 #ifndef NEW_RENDERER_ENABLED
             g_GL.DrawMirrored(*spr->Texture, x, y, mirror);
 #else
@@ -1483,6 +1494,7 @@ void CAnimationManager::Draw(
         {
             if (m_UseBlending)
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw UseBlending");
 #ifndef NEW_RENDERER_ENABLED
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #else
@@ -1494,6 +1506,7 @@ void CAnimationManager::Draw(
             }
             else
             {
+                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw NoBlending");
 #ifndef NEW_RENDERER_ENABLED
                 glDisable(GL_BLEND);
 #else

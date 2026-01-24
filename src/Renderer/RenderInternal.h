@@ -21,8 +21,6 @@ struct ShaderPipeline;
 
 // External variable declarations for shared renderer state
 extern bool g_rendererDebugForceStateReset;
-extern int g_CurrentDrawMode;
-extern float g_CurrentColors[96];
 extern uint32_t g_drawVAO;
 extern uint32_t g_drawVBO;
 extern size_t g_vboSize;
@@ -127,6 +125,8 @@ bool RenderState_SetShaderLargeUniform(
 bool RenderState_SetShaderPipeline(
     RenderState *state, ShaderPipeline *pipeline, bool forced = false);
 bool RenderState_DisableShaderPipeline(RenderState *state, bool forced = false);
+bool RenderState_SetDrawMode(RenderState *state, int drawMode, bool forced = false);
+bool RenderState_SetColorPalette(RenderState *state, const float *colors, bool forced = false);
 
 bool RenderDraw_SetTexture(const SetTextureCmd &cmd, RenderState *state);
 bool RenderDraw_SetFrameBuffer(const SetFrameBufferCmd &cmd, RenderState *state);
@@ -157,6 +157,7 @@ bool RenderDraw_EnableStencilState(const EnableStencilStateCmd &cmd, RenderState
 bool RenderDraw_DepthState(const DepthStateCmd &cmd, RenderState *state);
 bool RenderDraw_DisableDepthState(const DisableDepthStateCmd &cmd, RenderState *state);
 bool RenderDraw_EnableDepthState(const EnableDepthStateCmd &cmd, RenderState *state);
+bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *state);
 bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *state);
 bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state);
 bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state);

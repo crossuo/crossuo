@@ -155,10 +155,8 @@ struct DrawShadowCmd
     int y = 0;
     uint32_t width = 0;
     uint32_t height = 0;
-    uint32_t uniformId = 0;
-    int uniformValue = 0;
     bool mirror = false;
-    bool restoreBlendFunc = false;
+    bool keepBlend = false;
 };
 
 struct DrawCircleCmd

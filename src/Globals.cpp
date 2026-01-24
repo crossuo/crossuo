@@ -48,7 +48,10 @@ uint32_t g_TotalRecvSize = 0;
 uint32_t g_Ticks = 0;
 
 uint32_t g_ShaderColorTableInUse = 0;
+
+#ifndef NEW_RENDERER_ENABLED
 uint32_t g_ShaderDrawMode = 0;
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 astr_t g_Language = "enu";
 

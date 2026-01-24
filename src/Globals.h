@@ -90,7 +90,9 @@ extern uint32_t g_TotalRecvSize;
 extern uint32_t g_Ticks;
 
 extern uint32_t g_ShaderColorTableInUse;
+#ifndef NEW_RENDERER_ENABLED
 extern uint32_t g_ShaderDrawMode;
+#endif // #ifndef NEW_RENDERER_ENABLED
 
 extern astr_t g_Language;
 

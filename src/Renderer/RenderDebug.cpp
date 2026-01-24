@@ -673,16 +673,14 @@ void RenderDraw_DrawLandTileDebug(DrawLandTileCmd *cmd, RenderState *)
 void RenderDraw_DrawShadowDebug(DrawShadowCmd *cmd, RenderState *)
 {
     DumpInfo(
-        "DrawShadowCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - uniformId: %d - uniformValue: %d - mirror: %s - restoreBlendFunc: %s",
+        "DrawShadowCmd: texture: %d - x: %d - y: %d - width: %d - height: %d - mirror: %s - keepBlend: %s",
         cmd->texture,
         cmd->x,
         cmd->y,
         cmd->width,
         cmd->height,
-        cmd->uniformId,
-        cmd->uniformValue,
         cmd->mirror ? "true" : "false",
-        cmd->restoreBlendFunc ? "true" : "false");
+        cmd->keepBlend ? "true" : "false");
 }
 
 void RenderDraw_DrawCircleDebug(DrawCircleCmd *cmd, RenderState *state)

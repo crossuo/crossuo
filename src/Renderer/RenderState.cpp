@@ -40,22 +40,6 @@ bool RenderState_SetupCachedState(RenderState *state, const glm::mat4 &modelMatr
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, state->alphaTest.enabled ? 1 : 0));
     GL_CHECK(glUniform1f(_uAlphaRef, state->alphaTest.alphaRef));
 
-    // Upload draw mode if changed (this is a global variable that can change between draws)
-    if (state->currentDrawMode != g_CurrentDrawMode)
-    {
-        GL_CHECK(glUniform1i(_uDrawMode, g_CurrentDrawMode));
-        state->currentDrawMode = g_CurrentDrawMode;
-        stateChanged = true;
-    }
-
-    // Upload color palette if changed (96 floats = 384 bytes)
-    if (memcmp(state->currentColors, g_CurrentColors, sizeof(state->currentColors)) != 0)
-    {
-        GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors));
-        memcpy(state->currentColors, g_CurrentColors, sizeof(state->currentColors));
-        stateChanged = true;
-    }
-
     // Upload model matrix if changed
     if (!state->modelMatrixCached ||
         memcmp(state->cachedModelMatrix, &modelMatrix[0][0], sizeof(state->cachedModelMatrix)) != 0)
@@ -113,9 +97,7 @@ void RenderState_ResetAllStates(RenderState *state)
         memset(state->currentColors, 0, sizeof(state->currentColors));
         state->currentProgram = 0;
         state->modelMatrixCached = false;
-
-        // Reset global color palette
-        memset(g_CurrentColors, 0, sizeof(g_CurrentColors));*/
+        */
     }
 }
 
@@ -159,7 +141,8 @@ bool RenderState_FlushState(RenderState *state)
     GL_CHECK(glUseProgram(_pProg));
     GL_CHECK(glUniformMatrix4fv(_uModel, 1, false, glm::value_ptr(identity)));
 
-    // RenderState_SetShaderPipeline(state, &state->pipeline, true);
+    RenderState_SetDrawMode(state, 0, true);
+    //RenderState_SetShaderPipeline(state, &state->pipeline, true);
     // FIXME uniform cache is not applied during flush, not sure if it should be applied or if the behavior
     // should be clear
     // TODO add a compile-time assert to ensure any newly added command is applied or properly ignored here
@@ -242,7 +225,7 @@ bool RenderState_SetBlend(
         "missing blend equation mapping");
 
     bool changed = false;
-    if (state->blend.enabled != enabled || forced)
+    if (forced || state->blend.enabled != enabled || state->blend.src != src || state->blend.dst != dst || state->blend.equation != equation)
     {
         changed = true;
         state->blend.enabled = enabled;
@@ -445,15 +428,24 @@ bool RenderState_SetColorMask(RenderState *state, ColorMask mask, bool forced)
     return false;
 }
 
+bool RenderState_SetDrawMode(RenderState *state, int drawMode, bool forced)
+{
+    if (forced || state->currentDrawMode != drawMode)
+    {
+        state->currentDrawMode = drawMode;
+        GL_CHECK(glUniform1i(_uDrawMode, drawMode));
+        return true;
+    }
+
+    return false;
+}
+
 bool RenderState_SetColor(RenderState *state, float4 color, bool forced)
 {
     if (forced || state->color != color)
     {
         state->color = color;
         memcpy(state->color.rgba, color.rgba, sizeof(state->color.rgba));
-        // For GL3/GLES, color is handled per-vertex in draw commands
-        // No need to set a global color uniform - this function is kept for compatibility
-        // and to maintain the cached state
         return true;
     }
 
@@ -467,6 +459,20 @@ bool RenderState_SetClearColor(RenderState *state, float4 color, bool forced)
         state->clearColor = color;
         memcpy(state->clearColor.rgba, color.rgba, sizeof(state->clearColor.rgba));
         GL_CHECK(glClearColor(color[0], color[1], color[2], color[3]));
+        return true;
+    }
+
+    return false;
+}
+
+bool RenderState_SetColorPalette(RenderState *state, const float *colors, bool forced)
+{
+    constexpr int paletteSize = 96;
+    assert(sizeof(state->currentColors) == paletteSize * sizeof(float));
+    if (memcmp(state->currentColors, colors, paletteSize * sizeof(float)) != 0)
+    {
+        memcpy(state->currentColors, colors, paletteSize * sizeof(float));
+        GL_CHECK(glUniform1fv(_uColors, paletteSize, colors));
         return true;
     }
 

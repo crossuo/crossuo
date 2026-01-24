@@ -159,9 +159,7 @@ bool RenderAdd_SetDrawMode(RenderCmdList *cmdList, const SetDrawModeCmd &cmd)
         return ret;
     }
 
-    // Update both global and cached draw mode
-    Render_SetDrawMode(cmd.drawMode);
-    cmdList->state.currentDrawMode = cmd.drawMode;
+    RenderDraw_SetDrawMode(cmd, &cmdList->state);
     return true;
 }
 

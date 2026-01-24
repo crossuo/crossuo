@@ -17,15 +17,16 @@
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 // clang-format off
+// SDL_PIXELFORMAT_ABGR8888
 static const uint32_t _missingTexture[] = {
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
-    0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff,
-    0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000, 0xff00ffff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
+    0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
+    0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
 };
 // clang-format on
 #include "../ShaderData.h"
@@ -58,10 +59,6 @@ int _uColors = 0;
 int _pProg = 0;
 
 bool g_rendererDebugForceStateReset = false;
-
-// Global state for current draw mode and color palette (GL3/GLES only)
-int g_CurrentDrawMode = 0; // SDM_NO_COLOR
-float g_CurrentColors[96] = { 0.0f };
 
 // Persistent vertex buffers for optimized rendering (avoid per-draw allocation)
 uint32_t g_drawVAO = 0;
@@ -250,10 +247,10 @@ bool Render_Init(SDL_Window *window)
 
     // clang-format off
     const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff, { 0.0f, 0.0f, 1.0f } },
+        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
+        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xffff00ff, { 0.0f, 0.0f, 1.0f } },
     };
     const unsigned int idx[] = { 0, 1, 2, 3 };
 #if !defined(USE_GLES2)
@@ -284,7 +281,8 @@ bool Render_Init(SDL_Window *window)
     // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
     GL_CHECK(glUniform1i(_uDrawMode, 0)); // SDM_NO_COLOR - initial draw mode
-    GL_CHECK(glUniform1fv(_uColors, 96, g_CurrentColors)); // Initial color palette
+    static float currentColors[96] = { 0.0f };
+    GL_CHECK(glUniform1fv(_uColors, 96, currentColors)); // Initial color palette
     GL_CHECK(glUniform1i(_uAlphaTestEnabled, 0)); // Alpha test disabled initially
     GL_CHECK(glUniform1f(_uAlphaRef, 0.0f)); // Initial alpha reference value
 
@@ -740,19 +738,6 @@ void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
 
     cmdList->remainingSize = cmdList->size;
     cmdList->state = state;
-}
-
-
-void Render_SetDrawMode(int drawMode)
-{
-    RENDER_STATE_LOG_DRAW_MODE(g_CurrentDrawMode, drawMode);
-    RenderDebug_LogStackTrace("  DRAW MODE CHANGE");
-    g_CurrentDrawMode = drawMode;
-}
-
-int Render_GetDrawMode()
-{
-    return g_CurrentDrawMode;
 }
 
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

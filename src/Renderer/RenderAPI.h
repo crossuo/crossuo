@@ -61,11 +61,11 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb);
 void Render_PushScissor(int x, int y, uint32_t w, uint32_t h);
 void Render_PopScissor();
 
-#if defined(USE_GL3) || defined(USE_GLES)
+//#if defined(USE_GL3) || defined(USE_GLES)
 // GL3/GLES helpers for draw mode (replaces shader pipeline system in GL2)
-void Render_SetDrawMode(int drawMode);
-int Render_GetDrawMode();
-#endif
+//void Render_SetDrawMode(int drawMode);
+//int Render_GetDrawMode();
+//#endif
 
 bool RenderAdd_SetTexture(RenderCmdList *cmdList, const SetTextureCmd &cmd);
 bool RenderAdd_SetFrameBuffer(RenderCmdList *cmdList, const SetFrameBufferCmd &cmd);

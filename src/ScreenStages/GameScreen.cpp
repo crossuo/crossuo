@@ -1517,7 +1517,6 @@ void CGameScreen::DrawGameWindowLight()
             SetClearColorCmd{ { newLightColor, newLightColor, newLightColor, 1.f } });
         RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{ ClearRT::ClearRT_Color });
         RenderAdd_SetClearColor(g_renderCmdList, SetClearColorCmd{ g_ColorBlack });
-
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_One, BlendFactor::BlendFactor_One });

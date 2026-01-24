@@ -411,7 +411,20 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *state)
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));
     GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(GenericVertex), data));
     GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
-    RenderState_SetBlendEnabled(state, false);
+
+    if (cmd.keepBlend)
+    {
+        RenderState_SetBlend(
+            state,
+            true,
+            BlendFactor::BlendFactor_SrcAlpha,
+            BlendFactor::BlendFactor_OneMinusSrcAlpha,
+            BlendEquation::BlendEquation_Add);
+    }
+    else
+    {
+        RenderState_SetBlendEnabled(state, false);
+    }
     RENDER_STATE_DUMP_AFTER(state);
     RenderDebug_CheckStateLeaks(state, "RenderDraw_DrawShadow");
     RenderState_ResetAllStates(state);
@@ -628,10 +641,7 @@ bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *state)
 
 bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *state)
 {
-    // Update both global and cached draw mode
-    Render_SetDrawMode(cmd.drawMode);
-    state->currentDrawMode = cmd.drawMode;
-    return true;
+    return RenderState_SetDrawMode(state, cmd.drawMode);
 }
 
 bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *state)
@@ -644,11 +654,9 @@ bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *state)
     return RenderState_SetClearColor(state, cmd.color);
 }
 
-bool RenderDraw_SetColorPalette(const SetColorPaletteCmd &cmd, RenderState *)
+bool RenderDraw_SetColorPalette(const SetColorPaletteCmd &cmd, RenderState *state)
 {
-    // Copy color palette to global state (will be uploaded to shader via RenderState_SetupCachedState)
-    memcpy(g_CurrentColors, cmd.palette, sizeof(cmd.palette));
-    return true;
+    return RenderState_SetColorPalette(state, cmd.palette);
 }
 
 bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *)
