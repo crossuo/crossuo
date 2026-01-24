@@ -1,5 +1,5 @@
 #include "../gfx.h"
-#if defined(USE_GL2)
+#if defined(USE_GL2) || defined(USE_GL1)
 // dear imgui: Renderer for OpenGL2 (legacy OpenGL, fixed pipeline)
 // This needs to be used along with a Platform Binding (e.g. GLFW, SDL, Win32, custom..)
 

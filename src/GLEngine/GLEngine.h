@@ -4,11 +4,20 @@
 #pragma once
 
 #include "../Renderer/RenderAPI.h"
-#ifndef NEW_RENDERER_ENABLED
+#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
 
 #include <deque>
 #include "../Platform.h"
 #include "../Point.h"
+
+#if defined(RENDERER_LEGACY)
+#include "Renderer/RenderTypes.h"
+extern RenderCmdList *g_renderCmdList;
+extern float4 g_ColorWhite;
+extern float4 g_ColorBlack;
+extern float4 g_ColorBlue;
+extern float4 g_ColorInvalid;
+#endif // defined(RENDERER_LEGACY)
 
 typedef std::deque<CRect> SCISSOR_LIST;
 typedef uint32_t texture_handle_t;
@@ -76,4 +85,4 @@ public:
 
 extern CGLEngine g_GL;
 
-#endif // NEW_RENDERER_ENABLED
+#endif // !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)

@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #pragma once
-
 #include <external/gfx/gfx.h>
 
 // clang-format off
@@ -99,32 +98,11 @@ static const char *g_pShader =
     "    }\n"
     "}";
 
-#if defined(USE_GLES) || defined(USE_GL3)
-/*
-drawMode:
-
-enum SHADER_DRAW_MODE
-{
-    SDM_NO_COLOR = 0,
-    SDM_COLORED = 1,
-    SDM_PARTIAL_HUE = 2,
-    SDM_TEXT_COLORED_NO_BLACK = 3,
-    SDM_TEXT_COLORED = 4,
-    SDM_LAND = 6,
-    SDM_LAND_COLORED = 7,
-    SDM_SPECTRAL = 10,
-    SDM_SPECIAL_SPECTRAL = 11,
-    SDM_SHADOW = 12
-};
-*/
-
 static const char *g_Vert_ShaderData = g_vShader;
 static const char *g_Frag_DeathShaderData = g_pShader;
 static const char *g_Frag_LightShaderData = g_pShader;
 static const char *g_Frag_FontShaderData = g_pShader;
 static const char *g_Frag_ColorizerShaderData = g_pShader;
 static const char *g_Frag_LandShaderData = g_pShader;
-
-#endif
 
 // clang-format on

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES) || (defined(RENDERER_LEGACY) && defined(USE_GL1)))
 #include "../Renderer/RenderAPI.h"
 #define RENDERER_INTERNAL
 #include "Renderer/RenderInternal.h"

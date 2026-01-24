@@ -502,8 +502,10 @@ bool CGame::Install()
     Info(Client, "creating aura");
     CreateAuraTexture();
 
+#if !defined(RENDERER_LEGACY)
     Info(Client, "loading shaders");
     LoadShaders();
+#endif
 
     Info(Client, "updating main screen content");
     g_MainScreen.UpdateContent();
@@ -3921,6 +3923,7 @@ void CGame::CreateObjectHandlesBackground()
     }
 }
 
+#if !defined(RENDERER_LEGACY)
 void CGame::LoadShaders()
 {
     g_DeathShader.Init(g_Vert_ShaderData, g_Frag_DeathShaderData, 0);
@@ -3928,6 +3931,7 @@ void CGame::LoadShaders()
     g_FontColorizerShader.Init(g_Vert_ShaderData, g_Frag_FontShaderData, 1);
     g_LightColorizerShader.Init(g_Vert_ShaderData, g_Frag_LightShaderData, 1);
 }
+#endif
 
 void CGame::LoadClientStartupConfig()
 {

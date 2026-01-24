@@ -10,7 +10,7 @@
 
 #if defined(USE_GL3) || defined(USE_GLES)
 #include "imgui/imgui_impl_opengl3.h"
-#elif defined(USE_GL2)
+#elif defined(USE_GL2) || defined(USE_GL1)
 #include "imgui/imgui_impl_opengl2.h"
 #elif defined(USE_DX11)
 #include "imgui/imgui_impl_dx11.h"
@@ -57,7 +57,7 @@ ui_context ui_init(win_context &win)
     ImGui_ImplOpenGL3_Init("#version " GL_SHADER_VERSION);
 #elif defined(USE_GLES)
     ImGui_ImplOpenGL3_Init("#version 100");
-#elif defined(USE_GL2)
+#elif defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL2_Init();
 #elif defined(USE_DX11)
     // create device d3d
@@ -186,7 +186,7 @@ void ui_draw(ui_context &ui)
     ImGui::Render();
 #if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-#elif defined(USE_GL2)
+#elif defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 #elif defined(USE_DX11)
     g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
@@ -224,7 +224,7 @@ void ui_update(ui_context &ctx)
 {
 #if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_NewFrame();
-#elif defined(USE_GL2)
+#elif defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL2_NewFrame();
 #elif defined(USE_DX11)
     ImGui_ImplDX11_NewFrame();
@@ -293,7 +293,7 @@ void ui_shutdown(ui_context &)
 {
 #if defined(USE_GL3) || defined(USE_GLES)
     ImGui_ImplOpenGL3_Shutdown();
-#elif defined(USE_GL2)
+#elif defined(USE_GL2) || defined(USE_GL1)
     ImGui_ImplOpenGL2_Shutdown();
 #elif defined(USE_DX11)
     ImGui_ImplDX11_Shutdown();

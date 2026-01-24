@@ -8,7 +8,7 @@
 
 struct CGLShader
 {
-#ifndef NEW_RENDERER_ENABLED
+#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
     GLuint m_Shader = 0;
     GLuint m_VertexShader = 0;
     GLuint m_FragmentShader = 0;

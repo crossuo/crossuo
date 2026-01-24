@@ -1452,22 +1452,19 @@ void CAnimationManager::Draw(
                     }
                 }
             }
-            {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Sitting");
 #ifndef NEW_RENDERER_ENABLED
-                g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
+            g_GL.DrawSitting(*spr->Texture, x, y, mirror, h3mod, h6mod, h9mod);
 #else
-                auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
-                                                    x,
-                                                    y,
-                                                    spr->Texture->Width,
-                                                    spr->Texture->Height,
-                                                    h3mod,
-                                                    h6mod,
-                                                    h9mod,
-                                                    mirror };
-                RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
-            }
+            auto cmd = DrawCharacterSittingCmd{ spr->Texture->Texture,
+                                                x,
+                                                y,
+                                                spr->Texture->Width,
+                                                spr->Texture->Height,
+                                                h3mod,
+                                                h6mod,
+                                                h9mod,
+                                                mirror };
+            RenderAdd_DrawCharacterSitting(g_renderCmdList, cmd);
 #endif
         }
         else

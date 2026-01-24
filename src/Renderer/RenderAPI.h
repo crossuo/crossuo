@@ -5,13 +5,14 @@
 
 #include <external/gfx/gfx.h>
 
-#if !defined(NEW_RENDERER_ENABLED)
+#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
 #include "../GLEngine/GLEngine.h"
-#endif // #if !defined(NEW_RENDERER_ENABLED)
+#include "Debug/OGLDebugMarker.h"
+#endif // #if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
 
 #include "../SDL_wrapper.h"
 
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(NEW_RENDERER_ENABLED)
 
 #if defined(USE_GL3)
 #define OGL_DEBUGCONTEXT_ENABLED
@@ -21,9 +22,6 @@
 #include "RenderCommands.h"
 #include "Debug/OGLDebugMarker.h"
 extern RenderCmdList *g_renderCmdList;
-
-// Debug markers for RenderDoc support (GL3 only)
-#include "Debug/OGLDebugMarker.h"
 
 // Frame debug dumping
 void RenderDebug_EnableDump();
@@ -108,4 +106,4 @@ bool RenderAdd_DisableScissor(RenderCmdList *cmdList);
 bool RenderAdd_GetFrameBufferPixels(RenderCmdList *cmdList, const GetFrameBufferPixelsCmd &cmd);
 
 bool RenderDraw_Execute(RenderCmdList *cmdList);
-#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#endif // #if defined(NEW_RENDERER_ENABLED)

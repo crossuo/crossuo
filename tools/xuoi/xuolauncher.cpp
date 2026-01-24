@@ -431,8 +431,18 @@ int main(int argc, char **argv)
                 s_launcher_quit = true;
         }
 
-        glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
+        sg_color_attachment_action clear_action;
+        clear_action.action = SG_ACTION_CLEAR;
+        clear_action.val[0] = ui.clear_color.x;
+        clear_action.val[1] = ui.clear_color.y;
+        clear_action.val[2] = ui.clear_color.z;
+        clear_action.val[3] = ui.clear_color.w;
+
+        sg_pass_action pass_action = {};
+        pass_action.colors[0] = clear_action;
+
+        sg_begin_default_pass(&pass_action, win.width, win.height);
+
 
         int x, y;
         SDL_GetWindowPosition(win.window, &x, &y);
@@ -544,6 +554,8 @@ int main(int argc, char **argv)
         }
         ImGui::End();
         ui_draw(ui);
+        sg_end_pass();
+        sg_commit();
         win_flip(&win);
     }
 

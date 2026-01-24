@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2020 Everton Fernando Patitucci da Silva
 
 #pragma once
-#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+#if defined(NEW_RENDERER_ENABLED)
 #include <stdint.h>
 #include <common/logging/logging.h>
 

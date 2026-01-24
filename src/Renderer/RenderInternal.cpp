@@ -29,7 +29,6 @@ static const uint32_t _missingTexture[] = {
     0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
 };
 // clang-format on
-#include "../ShaderData.h"
 extern uint32_t _vao;
 extern uint32_t _vbo;
 extern uint32_t _vio;

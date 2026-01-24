@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2016 Hotride
 
 #include "../Renderer/RenderAPI.h"
-#ifndef NEW_RENDERER_ENABLED
+#if !defined(NEW_RENDERER_ENABLED) || defined(RENDERER_LEGACY)
 
 #include <cmath> // cos, sin
 #include <algorithm>

@@ -68,13 +68,26 @@ if (RENDER_GL1 OR RENDER_GL3)
 endif()
 
 if (OPENGL_FOUND)
-  if (RENDER_GL1) # GL1/GL2 is the same for us
-    compile_definitions(USE_GL2=1)
-    set(USE_GL2 1)
+  if (RENDERER_GL1 OR RENDER_GL1) # RENDERER_GL1 for compatibility, RENDER_GL1 is original
+    # Use GL1 for legacy renderer
+    if (RENDERER_LEGACY)
+      compile_definitions(USE_GL1=1)
+      compile_definitions(NEW_RENDERER_ENABLED=1)
+      compile_definitions(RENDERER_LEGACY=1)
+      set(USE_GL1 1)
+      message(STATUS "Building with NEW_RENDERER_ENABLED + RENDERER_LEGACY (GL1)")
+    else()
+      # Original legacy mode: GL2 without new renderer
+      compile_definitions(USE_GL2=1)
+      set(USE_GL2 1)
+      message(STATUS "Building with original legacy renderer (GL2)")
+    endif()
   else()
+    # Modern mode: GL3 with new renderer
     compile_definitions(USE_GL3=1)
     compile_definitions(NEW_RENDERER_ENABLED=1)
     set(USE_GL3 1)
+    message(STATUS "Building with new modern renderer (GL3)")
   endif()
   set(GL_LIBRARIES ${OPENGL_LIBRARIES})
 elseif (GLESv2_FOUND)
@@ -82,6 +95,7 @@ elseif (GLESv2_FOUND)
   compile_definitions(NEW_RENDERER_ENABLED=1)
   set(USE_GLES2 1)
   set(GL_LIBRARIES ${GLESv2_LIBRARY_DIR})
+  message(STATUS "Building with new renderer (GLES2)")
 endif()
 
 set(XUO_LOCAL_HEADERS 1)
