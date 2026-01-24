@@ -160,7 +160,7 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *state)
         (((uint32_t)(cmd.color[0] * 255) << 0) |
          ((uint32_t)(cmd.color[1] * 255) << 8) |
          ((uint32_t)(cmd.color[2] * 255) << 16) |
-         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
+         ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff; // BUG with light - g_LightBuffer.Draw
 
     const GenericVertex data[] = {
         { { vb[0], vb[1] }, { uv[0], uv[1] }, col, NORMAL_IDENTITY },

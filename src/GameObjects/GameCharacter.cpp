@@ -357,7 +357,7 @@ int CGameCharacter::IsSitting()
 void CGameCharacter::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-
+    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGameCharacter::Draw");
     if (TimeToRandomFidget < g_Ticks)
     {
         SetRandomFidgetAnimation();
