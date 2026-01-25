@@ -84,16 +84,14 @@ static void EnableOpenGLMessage(GLuint id, bool shouldAssert, bool shouldLog)
     assert(false);
 }
 
-#if defined(USE_GL3)
-    static void APIENTRY OGLDebugMsgCallback(
-        uint source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
-        const GLchar *message,
-        void *userParam)
-#endif // #if defined(USE_GL3)
+static void APIENTRY OGLDebugMsgCallback(
+    uint source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    void *userParam)
 {
     (void)source;
     (void)length;
@@ -846,6 +844,19 @@ void RenderDraw_GetFrameBufferPixelsDebug(GetFrameBufferPixelsCmd *cmd, RenderSt
         cmd->dataSize);
 }
 
+void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state)
+{
+    (void)state;
+    DumpInfo("PushDebugMarker: %s", cmd->label ? cmd->label : "(null)");
+}
+
+void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state)
+{
+    (void)state;
+    (void)cmd;
+    DumpInfo("PopDebugMarker");
+}
+
 void RenderDraw_DumpCmdList(RenderCmdList *cmdList)
 {
     DumpInfo(
@@ -931,41 +942,4 @@ void RenderDebug_ProcessFrame(RenderCmdList *cmdList)
     RenderDebug_EndFrame();
 }
 
-bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
-{
-    (void)state;
-#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
-    if (cmd.label)
-    {
-        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
-    }
-#else
-    (void)cmd;
-#endif
-    return true;
-}
-
-bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
-{
-    (void)state;
-#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
-    glPopDebugGroup();
-#else
-    (void)cmd;
-#endif
-    return true;
-}
-
-void RenderDraw_PushDebugMarkerDebug(const PushDebugMarkerCmd *cmd, RenderState *state)
-{
-    (void)state;
-    DumpInfo("PushDebugMarker: %s", cmd->label ? cmd->label : "(null)");
-}
-
-void RenderDraw_PopDebugMarkerDebug(const PopDebugMarkerCmd *cmd, RenderState *state)
-{
-    (void)state;
-    (void)cmd;
-    DumpInfo("PopDebugMarker");
-}
 #endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))

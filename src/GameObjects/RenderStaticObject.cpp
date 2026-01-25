@@ -215,7 +215,7 @@ bool CRenderStaticObject::IsNoDrawTile(uint16_t graphic)
 void CRenderStaticObject::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CRenderStaticObject::Draw");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CRenderStaticObject::Draw");
     g_RenderedObjectsCountInGameWindow++;
 
     bool useAlpha = (m_DrawTextureColor[3] != 0xFF);

@@ -176,7 +176,7 @@ bool CTextRenderer::CalculatePositions(bool noCalculate)
 void CTextRenderer::Draw()
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CTextRenderer::Draw");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CTextRenderer::Draw");
     CalculatePositions(true);
 
     for (CRenderTextObject *item = m_DrawPointer; item != nullptr; item = item->m_PrevDraw)

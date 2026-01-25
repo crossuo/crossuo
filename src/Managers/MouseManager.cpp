@@ -342,7 +342,7 @@ bool CMouseManager::LoadCursorTextures()
 void CMouseManager::Draw(uint16_t id)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw");
     if (g_GameState >= GS_GAME)
     {
         if (g_CustomHouseGump != nullptr && (g_CustomHouseGump->SelectedGraphic != 0u))
@@ -365,7 +365,7 @@ void CMouseManager::Draw(uint16_t id)
 
             if (static_cast<unsigned int>(!list.empty()) != 0u)
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw DrawStaticArt");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArt");
                 for (const CBuildObject &item : list)
                 {
                     int x = g_MouseManager.Position.X + (item.X - item.Y) * 22;
@@ -376,7 +376,7 @@ void CMouseManager::Draw(uint16_t id)
             }
             else
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw DrawStaticArtInContainer");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArtInContainer");
                 g_Game.DrawStaticArtInContainer(
                     g_CustomHouseGump->SelectedGraphic,
                     color,
@@ -413,7 +413,7 @@ void CMouseManager::Draw(uint16_t id)
                 auto to = g_Game.ExecuteGump(ohGraphic);
                 if (to != nullptr)
                 {
-                    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw DrawGump");
+                    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawGump");
                     g_Game.DrawGump(
                         ohGraphic,
                         ohColor,
@@ -423,7 +423,7 @@ void CMouseManager::Draw(uint16_t id)
             }
             else
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw DrawStaticArtInContainer 2");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArtInContainer 2");
                 g_Game.DrawStaticArtInContainer(
                     ohGraphic,
                     ohColor,
@@ -434,7 +434,7 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (doubleDraw)
                 {
-                    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw DrawStaticArtInContainer 3");
+                    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw DrawStaticArtInContainer 3");
                     g_Game.DrawStaticArtInContainer(
                         ohGraphic,
                         ohColor,
@@ -472,13 +472,13 @@ void CMouseManager::Draw(uint16_t id)
 
         if (id < 16)
         {
-            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw g_ToolTip.Draw");
+            SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw");
             g_ToolTip.Draw(spr->Width, spr->Height);
             int x = Position.X + m_CursorOffset[0][id];
             int y = Position.Y + m_CursorOffset[1][id];
             if (color != 0u)
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw g_ToolTip.Draw Color");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw Color");
                 g_ColorizerShader.Enable();
 #ifndef NEW_RENDERER_ENABLED
                 glUniform1iARB(g_ShaderDrawMode, SDM_COLORED);
@@ -490,7 +490,7 @@ void CMouseManager::Draw(uint16_t id)
             spr->Texture->Draw(x, y);
             if (color != 0u)
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw g_ToolTip.Draw Disable Color");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw Disable Color");
                 g_ColorizerShader.Disable();
             }
 
@@ -513,7 +513,7 @@ void CMouseManager::Draw(uint16_t id)
 
                 if (auraColor != 0u)
                 {
-                    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CMouseManager::Draw g_ToolTip.Draw auraColor");
+                    SCOPED_GL_DEBUG_MARKER_LABEL("CMouseManager::Draw g_ToolTip.Draw auraColor");
 #ifndef NEW_RENDERER_ENABLED
                     glEnable(GL_BLEND);
                     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

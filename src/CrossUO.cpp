@@ -4224,7 +4224,7 @@ bool CGame::ExecuteGumpPart(uint16_t id, int count)
 
 void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteGump(id);
     if (spr != nullptr)
     {
@@ -4255,7 +4255,7 @@ void CGame::DrawGump(uint16_t id, uint16_t color, int x, int y, bool partialHue)
 void CGame::DrawGump(
     uint16_t id, uint16_t color, int x, int y, int width, int height, bool partialHue)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteGump(id);
     if (spr != nullptr)
     {
@@ -4284,7 +4284,7 @@ void CGame::DrawGump(
 
 static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int height)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     CGLTexture *th[9] = { nullptr };
     for (int i = 0; i < 9; i++)
     {
@@ -4429,7 +4429,7 @@ static void DrawResizepicGump_Internal(uint16_t id, int x, int y, int width, int
 
 void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, bool checktrans)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
 #ifndef NEW_RENDERER_ENABLED
     if (checktrans)
     {
@@ -4479,7 +4479,7 @@ void CGame::DrawResizepicGump(uint16_t id, int x, int y, int width, int height, 
 
 void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     uint16_t id = land->Graphic;
     auto spr = ExecuteTexture(id);
     if (spr == nullptr)
@@ -4535,7 +4535,7 @@ void CGame::DrawLandTexture(CLandObject *land, uint16_t color, int x, int y)
 
 void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteLandArt(id);
     if (spr != nullptr)
     {
@@ -4568,7 +4568,7 @@ void CGame::DrawLandArt(uint16_t id, uint16_t color, int x, int y)
 
 void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
@@ -4599,13 +4599,13 @@ void CGame::DrawStaticArt(uint16_t id, uint16_t color, int x, int y, bool select
 
 void CGame::DrawStaticArtAnimated(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     DrawStaticArt(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
 void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
@@ -4632,13 +4632,13 @@ void CGame::DrawStaticArtRotated(uint16_t id, uint16_t color, int x, int y, floa
 
 void CGame::DrawStaticArtAnimatedRotated(uint16_t id, uint16_t color, int x, int y, float angle)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     DrawStaticArtRotated(id + g_Index.m_Static[id].Offset, color, x, y, angle);
 }
 
 void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr && id > 1)
     {
@@ -4670,14 +4670,14 @@ void CGame::DrawStaticArtTransparent(uint16_t id, uint16_t color, int x, int y, 
 void CGame::DrawStaticArtAnimatedTransparent(
     uint16_t id, uint16_t color, int x, int y, bool selection)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     DrawStaticArtTransparent(id + g_Index.m_Static[id].Offset, color, x, y, selection);
 }
 
 void CGame::DrawStaticArtInContainer(
     uint16_t id, uint16_t color, int x, int y, bool selection, bool onMouse)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteStaticArt(id);
     if (spr != nullptr)
     {
@@ -4713,7 +4713,7 @@ void CGame::DrawStaticArtInContainer(
 
 void CGame::DrawLight(LIGHT_DATA &light)
 {
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     auto spr = ExecuteLight(light.ID);
     if (spr != nullptr)
     {

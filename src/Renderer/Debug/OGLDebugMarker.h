@@ -38,16 +38,16 @@ struct ScopedGLDebugMarker
     }
 };
 
-#define SCOPED_GL_DEBUG_MARKER(cmdList) ScopedGLDebugMarker _scopedGLMarker(cmdList, __FUNCTION__)
-#define SCOPED_GL_DEBUG_MARKER_LABEL(cmdList, label) ScopedGLDebugMarker _scopedGLMarker(cmdList, label)
-#define GL_DEBUG_MARKER_PUSH(cmdList, label) RenderAdd_PushDebugMarker(cmdList, label)
-#define GL_DEBUG_MARKER_POP(cmdList) RenderAdd_PopDebugMarker(cmdList)
+#define SCOPED_GL_DEBUG_MARKER() ScopedGLDebugMarker _scopedGLMarker(g_renderCmdList, __FUNCTION__)
+#define SCOPED_GL_DEBUG_MARKER_LABEL(label) ScopedGLDebugMarker _scopedGLMarker(g_renderCmdList, label)
+#define GL_DEBUG_MARKER_PUSH(label) RenderAdd_PushDebugMarker(g_renderCmdList, label)
+#define GL_DEBUG_MARKER_POP() RenderAdd_PopDebugMarker(g_renderCmdList)
 
 #else // #if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))
 
-#define SCOPED_GL_DEBUG_MARKER(cmdList)
-#define SCOPED_GL_DEBUG_MARKER_LABEL(cmdList, label)
-#define GL_DEBUG_MARKER_PUSH(cmdList, label)
-#define GL_DEBUG_MARKER_POP(cmdList)
+#define SCOPED_GL_DEBUG_MARKER()
+#define SCOPED_GL_DEBUG_MARKER_LABEL(label)
+#define GL_DEBUG_MARKER_PUSH(label)
+#define GL_DEBUG_MARKER_POP()
 
 #endif // #if defined(NEW_RENDERER_ENABLED) && !defined(RENDERER_LEGACY) && (defined(USE_GL3) || defined(USE_GLES))

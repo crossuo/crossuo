@@ -716,6 +716,27 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
     return true;
 }
 
+bool RenderDraw_PushDebugMarker(const PushDebugMarkerCmd &cmd, RenderState *state)
+{
+    (void)state;
+#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, OGL_USERPERFMARKERS_ID, -1, cmd.label);
+#else
+    (void)cmd;
+#endif
+    return true;
+}
+
+bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *state)
+{
+    (void)state;
+#if defined(NEW_RENDERER_ENABLED) && defined(USE_GL3)
+    glPopDebugGroup();
+#else
+    (void)cmd;
+#endif
+    return true;
+}
 
 bool RenderDraw_Execute(RenderCmdList *cmdList)
 {

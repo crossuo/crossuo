@@ -199,7 +199,7 @@ bool CGLFrameBuffer::Use()
 void CGLFrameBuffer::Draw(int x, int y)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGLFrameBuffer::Draw");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CGLFrameBuffer::Draw");
     if (m_Ready)
     {
 #ifndef NEW_RENDERER_ENABLED

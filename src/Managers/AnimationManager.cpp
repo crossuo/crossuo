@@ -1174,7 +1174,7 @@ void CAnimationManager::Draw(
     CGameObject *obj, int x, int y, bool mirror, uint8_t &frameIndex, int id)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw");
     if (obj == nullptr)
     {
         return;
@@ -1237,7 +1237,7 @@ void CAnimationManager::Draw(
     auto sdmNoColor = true;
     if (isShadow)
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Shadow");
+        SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Shadow");
 #ifndef NEW_RENDERER_ENABLED
         glUniform1iARB(g_ShaderDrawMode, SDM_SHADOW);
         glEnable(GL_BLEND);
@@ -1299,7 +1299,7 @@ void CAnimationManager::Draw(
 
             if ((color & SPECTRAL_COLOR_FLAG) != 0)
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw SpectralColor");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw SpectralColor");
                 spectralColor = true;
 #ifndef NEW_RENDERER_ENABLED
                 glEnable(GL_BLEND);
@@ -1330,7 +1330,7 @@ void CAnimationManager::Draw(
             }
             else if (color != 0u)
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Colored");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Colored");
 #ifndef NEW_RENDERER_ENABLED
                 if (partialHue)
                 {
@@ -1342,7 +1342,7 @@ void CAnimationManager::Draw(
                 }
 #else
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, partialHue?"CAnimationManager::Draw SDM_PARTIAL_HUE":"CAnimationManager::Draw SDM_COLORED");
+    SCOPED_GL_DEBUG_MARKER_LABEL(partialHue?"CAnimationManager::Draw SDM_PARTIAL_HUE":"CAnimationManager::Draw SDM_COLORED");
                 RenderAdd_SetDrawMode(g_renderCmdList, SetDrawModeCmd{partialHue ? SDM_PARTIAL_HUE : SDM_COLORED});
 }
 #endif
@@ -1353,7 +1353,7 @@ void CAnimationManager::Draw(
 
         if (sdmNoColor)
         {
-            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw NoColor");
+            SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw NoColor");
 #ifndef NEW_RENDERER_ENABLED
             glUniform1iARB(g_ShaderDrawMode, SDM_NO_COLOR);
 #else
@@ -1469,7 +1469,7 @@ void CAnimationManager::Draw(
         }
         else
         {
-            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw Mirrored");
+            SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw Mirrored");
 
 #ifndef NEW_RENDERER_ENABLED
             g_GL.DrawMirrored(*spr->Texture, x, y, mirror);
@@ -1491,7 +1491,7 @@ void CAnimationManager::Draw(
         {
             if (m_UseBlending)
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw UseBlending");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw UseBlending");
 #ifndef NEW_RENDERER_ENABLED
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #else
@@ -1503,7 +1503,7 @@ void CAnimationManager::Draw(
             }
             else
             {
-                SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::Draw NoBlending");
+                SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::Draw NoBlending");
 #ifndef NEW_RENDERER_ENABLED
                 glDisable(GL_BLEND);
 #else
@@ -1643,7 +1643,7 @@ void CAnimationManager::FixSittingDirection(uint8_t &layerDirection, bool &mirro
 
 void CAnimationManager::DrawCharacter(CGameCharacter *obj, int x, int y)
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::DrawCharacter");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawCharacter");
     m_EquipConvItem = nullptr;
 
     m_Transform = false;
@@ -2175,7 +2175,7 @@ bool CAnimationManager::CharacterPixelsInXY(CGameCharacter *obj, int x, int y)
 
 void CAnimationManager::DrawCorpse(CGameItem *obj, int x, int y)
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::DrawCorpse");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawCorpse");
     if (g_CorpseManager.InList(obj->Serial, 0))
     {
         return;
@@ -2484,7 +2484,7 @@ bool CAnimationManager::DrawEquippedLayers(
     uint8_t animIndex,
     int lightOffset)
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CAnimationManager::DrawEquippedLayers");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CAnimationManager::DrawEquippedLayers");
     bool result = false;
 
     std::vector<CGameItem *> &list = obj->m_DrawLayeredObjects;

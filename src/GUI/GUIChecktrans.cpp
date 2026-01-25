@@ -18,7 +18,7 @@ CGUIChecktrans::~CGUIChecktrans()
 void CGUIChecktrans::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
 #ifndef NEW_RENDERER_ENABLED
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

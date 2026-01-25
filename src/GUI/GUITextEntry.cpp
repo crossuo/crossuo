@@ -146,7 +146,7 @@ void CGUITextEntry::PrepareTextures()
 void CGUITextEntry::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
     int y = m_Y;
     uint16_t color = Color;
 

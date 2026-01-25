@@ -1343,7 +1343,7 @@ void CGameScreen::DrawGameWindow(bool render)
                 g_CircleOfTransparency.Draw(drawX, drawY);
             }
         }
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "GameScreen");
+        SCOPED_GL_DEBUG_MARKER_LABEL("GameScreen");
         m_HitsStack.clear();
         for (int i = 0; i < m_RenderListCount; i++)
         {
@@ -1481,7 +1481,7 @@ void CGameScreen::DrawGameWindow(bool render)
 
 void CGameScreen::DrawGameWindowLight()
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGameScreen::DrawGameWindowLight");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CGameScreen::DrawGameWindowLight");
 #ifndef NEW_RENDERER_ENABLED
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #else
@@ -1822,7 +1822,7 @@ void CGameScreen::Render()
         currentFPS++;
     }
 
-#ifdef NEW_RENDERER_ENABLED
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
     g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
@@ -1832,7 +1832,8 @@ void CGameScreen::Render()
     // Gump-something; investigate it and remove/move it elsewhere so
     // we can get rid of glEngine
     g_GL.BeginDraw();
-#endif
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+
     if (DrawSmoothMonitor() != 0)
     {
         return;
@@ -1897,17 +1898,20 @@ void CGameScreen::Render()
             g_ColorizerShader.Enable();
         }
 
+        GL_DEBUG_MARKER_PUSH("GameScreen");
         DrawGameWindow(true);
+        GL_DEBUG_MARKER_POP();
+
         //UnuseShader();
         {
-            SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Post-GameScreen");
+            SCOPED_GL_DEBUG_MARKER_LABEL("Post-GameScreen");
             if (deathScreenTimer == 0u)
             {
                 if (!g_GrayedPixels)
                 {
                     DrawGameWindowLight();
                     {
-                        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Colorizer");
+                        SCOPED_GL_DEBUG_MARKER_LABEL("Colorizer");
                         g_ColorizerShader.Enable();
                         g_NewTargetSystem.Draw();
                         g_TargetGump.Draw();
@@ -1955,7 +1959,7 @@ void CGameScreen::Render()
 
     if (deathScreenTimer == 0u)
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "SystemChat");
+        SCOPED_GL_DEBUG_MARKER_LABEL("SystemChat");
         g_SystemChat.DrawSystemChat(
             g_RenderBounds.GameWindowPosX,
             g_RenderBounds.GameWindowPosY,
@@ -1964,7 +1968,7 @@ void CGameScreen::Render()
     }
 
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Debug Text");
+        SCOPED_GL_DEBUG_MARKER_LABEL("Debug Text");
     #ifndef NEW_RENDERER_ENABLED
         g_GL.RestorePort();
     #else
@@ -2126,9 +2130,12 @@ void CGameScreen::Render()
             }
         }
     }
+
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "UI");
+        GL_DEBUG_MARKER_PUSH("UI");
         g_GumpManager.Draw(false);
+        GL_DEBUG_MARKER_POP();
+        GL_DEBUG_MARKER_PUSH("Console");
         g_GameConsole.DrawW(
             (uint8_t)g_ConfigManager.SpeechFont,
             g_ConfigManager.SpeechColor,
@@ -2136,8 +2143,10 @@ void CGameScreen::Render()
             g_RenderBounds.GameWindowPosY + g_RenderBounds.GameWindowHeight - 18,
             TS_LEFT,
             UOFONT_BLACK_BORDER | UOFONT_FIXED);
-
+        GL_DEBUG_MARKER_POP();
+        GL_DEBUG_MARKER_PUSH("Scene");
         g_PluginManager.SceneDraw();
+        GL_DEBUG_MARKER_POP();
         if (g_GameState == GS_GAME_BLOCKED)
         {
             g_SelectedObject.Init(tempSelected);
@@ -2147,20 +2156,21 @@ void CGameScreen::Render()
         }
         else
         {
+            SCOPED_GL_DEBUG_MARKER_LABEL("Cursor");
             InitToolTip();
             g_MouseManager.Draw(g_MouseManager.GetGameCursor()); //Game Gump mouse cursor
         }
-
-    #ifdef NEW_RENDERER_ENABLED
-        RenderDebug_ProcessFrame(g_renderCmdList);
-        RenderDraw_Execute(g_renderCmdList);
-        g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
-        Render_SwapBuffers();
-        g_ScreenshotBuilder.GPUDataReady();
-    #else
-        g_GL.EndDraw();
-    #endif
     }
+
+#if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
+    RenderDebug_ProcessFrame(g_renderCmdList);
+    RenderDraw_Execute(g_renderCmdList);
+    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
+    Render_SwapBuffers();
+    g_ScreenshotBuilder.GPUDataReady();
+#else
+    g_GL.EndDraw();
+#endif // #if defined(NEW_RENDERER_ENABLED) && (defined(USE_GL3) || defined(USE_GLES))
 }
 
 void CGameScreen::SelectObject()

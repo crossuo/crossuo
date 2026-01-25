@@ -149,6 +149,12 @@ bool Render_Init(SDL_Window *window)
     Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
     Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+#if defined(USE_GL3) && defined(OGL_DEBUGCONTEXT_ENABLED)
+    GLint maxStackDepth;
+    glGetIntegerv(GL_MAX_DEBUG_GROUP_STACK_DEPTH, &maxStackDepth);
+    Info(Renderer, "    Markers Depth: %d", maxStackDepth);
+#endif // #if defined(USE_GL3) && defined(OGL_DEBUGCONTEXT_ENABLED)
+
 #if defined(USE_GL)
 #ifdef OGL_DEBUGCONTEXT_ENABLED
     // debug messages callback needs ogl >= 4.30

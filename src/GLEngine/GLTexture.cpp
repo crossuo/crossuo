@@ -39,7 +39,7 @@ void CGLTexture::Draw(int x, int y, bool checktrans)
     auto cmd = DrawQuadCmd{ Texture, x, y, Width, Height };
     if (checktrans)
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Object with Transparency");
+        SCOPED_GL_DEBUG_MARKER_LABEL("Object with Transparency");
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -117,7 +117,7 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 
     if (checktrans)
     {
-        SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "Object With Transparency 2");
+        SCOPED_GL_DEBUG_MARKER_LABEL("Object With Transparency 2");
         RenderAdd_SetBlend(
             g_renderCmdList,
             BlendStateCmd{ BlendFactor::BlendFactor_SrcAlpha,
@@ -149,7 +149,7 @@ void CGLTexture::Draw(int x, int y, int width, int height, bool checktrans)
 
 void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
 {
-    SCOPED_GL_DEBUG_MARKER_LABEL(g_renderCmdList, "CGLTexture::Draw_Tooltip");
+    SCOPED_GL_DEBUG_MARKER_LABEL("CGLTexture::Draw_Tooltip");
 #ifndef NEW_RENDERER_ENABLED
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

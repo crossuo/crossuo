@@ -29,7 +29,7 @@ CGUILine::~CGUILine()
 void CGUILine::Draw(bool checktrans)
 {
     ScopedPerfMarker(__FUNCTION__);
-    SCOPED_GL_DEBUG_MARKER(g_renderCmdList);
+    SCOPED_GL_DEBUG_MARKER();
 #ifndef NEW_RENDERER_ENABLED
     glColor4ub(ColorR, ColorG, ColorB, ColorA);
 

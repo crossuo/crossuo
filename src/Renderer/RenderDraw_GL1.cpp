@@ -18,7 +18,6 @@
 #define XUO_M_PI 3.14159265358979323846264338327950288
 static float s_modelTranslation[3] = { 0.f, 0.f, 0.f };
 static float s_palette[96] = {};
-RenderCmdList *g_renderCmdList = nullptr;
 float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
 float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };
 float4 g_ColorBlue = { 0.f, 0.f, 1.f, 1.f };
@@ -435,8 +434,16 @@ bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *)
 
 bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *)
 {
-    ScopedPerfMarker(__FUNCTION__);
-    // Flush state not needed in immediate mode
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glLoadIdentity();
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_BLEND);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
     return true;
 }
 
@@ -1060,6 +1067,7 @@ void Render_Shutdown()
 
 void Render_SwapBuffers()
 {
+    glDisable(GL_ALPHA_TEST);
     SDL_GL_SwapWindow(g_render.window);
 }
 
@@ -1112,81 +1120,24 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     return true;
 }
 
-bool HACKRender_GetFrameBuffer(RenderCmdList *cmdList, frame_buffer_t *currFb)
+bool HACKRender_GetFrameBuffer(RenderCmdList *, frame_buffer_t *)
 {
-    assert(currFb);
-    *currFb = cmdList->state.framebuffer;
     return true;
 }
 
-void Render_ResetCmdList(RenderCmdList *cmdList, RenderState state)
+void Render_ResetCmdList(RenderCmdList *, RenderState)
 {
 }
 
-static void *s_renderCmdListData = nullptr;
-
-void gfx_render_list_init()
+bool Render_AppendCmd(RenderCmdList *, const void *, uint32_t )
 {
-    if (s_renderCmdListData)
-    {
-        return;
-    }
-
-    static const uint32_t s_renderCmdListSize = 512 * 1024;
-    s_renderCmdListData = malloc(s_renderCmdListSize);
-    assert(s_renderCmdListData);
-
-    static RenderCmdList s_renderCmdList(
-        s_renderCmdListData, s_renderCmdListSize, Render_DefaultState(), false);
-    g_renderCmdList = &s_renderCmdList;
-}
-
-void gfx_render_list_destroy()
-{
-    if (s_renderCmdListData)
-    {
-        free(s_renderCmdListData);
-        s_renderCmdListData = nullptr;
-    }
-    g_renderCmdList = nullptr;
-}
-
-bool Render_AppendCmd(RenderCmdList *cmdList, const void *cmd, uint32_t cmdSize)
-{
-    assert(cmdList);
-    assert(cmd);
-    assert(cmdSize);
-
-    if (cmdList->remainingSize >= cmdSize)
-    {
-        memcpy(cmdList->data + cmdList->size - cmdList->remainingSize, cmd, cmdSize);
-        cmdList->remainingSize -= cmdSize;
-        return true;
-    }
-
-    Error(
-        Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
-    return false;
+    return true;
 }
 
 bool Render_AppendCmdType(
-    RenderCmdList *cmdList, RenderCommandType type, const void *cmd, uint32_t cmdSize)
+    RenderCmdList *, RenderCommandType, const void *, uint32_t)
 {
-    static_assert(sizeof(type) == sizeof(uint8_t), "command type id is assumed to be byte sized");
-    if (cmdList->remainingSize >= sizeof(type) + cmdSize)
-    {
-        auto ptr = cmdList->data + cmdList->size - cmdList->remainingSize;
-        *ptr = (uint8_t)type;
-        ptr++;
-
-        memcpy(ptr, cmd, cmdSize);
-        cmdList->remainingSize -= sizeof(type) + cmdSize;
-        return true;
-    }
-
-    Error(
-        Renderer, "%s render cmd list capacity reached. skipping render cmd %p", __FUNCTION__, cmd);
-    return false;
+    return true;
 }
 
 #endif // defined(NEW_RENDERER_ENABLED) && defined(RENDERER_LEGACY) && defined(USE_GL1)
