@@ -20,6 +20,29 @@ CFontsManager::~CFontsManager()
     delete[] Font;
     FontCount = 0;
     m_WebLink.clear();
+    ClearTextSpritePool();
+}
+
+void CFontsManager::ClearTextSpritePool()
+{
+    // Delete all sprites in the pool (including their textures)
+    for (auto *sprite : m_TextSpritePool)
+    {
+        if (sprite != nullptr)
+        {
+            sprite->Clear();
+            delete sprite;
+        }
+    }
+    m_TextSpritePool.clear();
+}
+
+CTextSprite *CFontsManager::AllocateTextSprite()
+{
+    // Create a new sprite and add it to the pool
+    CTextSprite *sprite = new CTextSprite();
+    m_TextSpritePool.push_back(sprite);
+    return sprite;
 }
 
 bool CFontsManager::LoadFonts()
@@ -861,10 +884,11 @@ void CFontsManager::DrawA(
     // TODO renderer - text resources (texture data) are created and destroyed in this scope, preventing us
     // from using a delayed render list. Text and other form of dynamic mesh/data should live beyond the caller scope
     // living through the CPU frame where the cmd is issued all the way to the when the GPU is done executing it.
-    CTextSprite th;
-    if (GenerateA(font, th, str, color, width, align, flags))
+    // FIXED: Using sprite pool to ensure sprites (and their textures) live through GPU execution
+    CTextSprite *th = AllocateTextSprite();
+    if (GenerateA(font, *th, str, color, width, align, flags))
     {
-        th.Draw(x, y);
+        th->Draw(x, y);
     }
 }
 
@@ -2962,10 +2986,11 @@ void CFontsManager::DrawW(
     TEXT_ALIGN_TYPE align,
     uint16_t flags)
 {
-    CTextSprite th;
-    if (GenerateW(font, th, str, color, cell, width, align, flags))
+    // FIXED: Using sprite pool to ensure sprites (and their textures) live through GPU execution
+    CTextSprite *th = AllocateTextSprite();
+    if (GenerateW(font, *th, str, color, cell, width, align, flags))
     {
-        th.Draw(x, y);
+        th->Draw(x, y);
     }
 }
 

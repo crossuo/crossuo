@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
+#include "ShaderData.h"
 #define countof(xarray) (sizeof(xarray) / sizeof(xarray[0]))
 
 // clang-format off
@@ -39,8 +40,6 @@ extern int _inUV;
 extern int _inNormal;
 extern int _uProjectionView;
 extern int _uModel;
-extern int _uTex;
-extern int _pProg;
 uint32_t _vao = 0;
 uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
@@ -51,11 +50,13 @@ int _inNormal = 0;
 int _uProjectionView = 0;
 int _uModel = 0;
 int _uTex = 0;
+int _pProg = 0;
+
+
 int _uAlphaTestEnabled = 0;
 int _uAlphaRef = 0;
 int _uDrawMode = 0;
 int _uColors = 0;
-int _pProg = 0;
 
 bool g_rendererDebugForceStateReset = false;
 

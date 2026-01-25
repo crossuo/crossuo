@@ -27,6 +27,7 @@ void CBaseScreen::Render()
 {
 #ifdef NEW_RENDERER_ENABLED
     Render_ResetCmdList(g_renderCmdList, Render_DefaultState());
+    g_FontManager.ClearTextSpritePool(); // Clear previous frame's text sprites
     RenderAdd_FlushState(g_renderCmdList);
     RenderAdd_ClearRT(g_renderCmdList, ClearRTCmd{});
 #else
@@ -53,6 +54,7 @@ void CBaseScreen::Render()
 #ifdef NEW_RENDERER_ENABLED
     RenderDebug_ProcessFrame(g_renderCmdList);
     RenderDraw_Execute(g_renderCmdList);
+    g_FontManager.ClearTextSpritePool(); // Clear text sprites (GPU is done with them)
     Render_SwapBuffers();
     g_ScreenshotBuilder.GPUDataReady();
 #else
