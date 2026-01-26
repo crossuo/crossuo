@@ -4,6 +4,7 @@
 #pragma once
 #if defined(NEW_RENDERER_ENABLED)
 #include <stdint.h>
+#include <stddef.h> // size_t
 #include <common/logging/logging.h>
 
 #define RENDER_TEXTUREHANDLE_INVALID (0xffffffff)

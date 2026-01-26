@@ -31,6 +31,7 @@ extern int _uDrawMode;
 extern int _uColors;
 extern uint32_t _vao;
 extern uint32_t _defaultTex;
+extern uint32_t _whiteTex;
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;

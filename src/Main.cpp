@@ -103,7 +103,7 @@ void gfx_render_list_init()
     // use indirect-rendering to enable delayed render cmds (commands are pushed to the GPU when RenderDraw_Execute is called)
     // don't use this until text resources lifetime isn't fixed (see CFontsManager::DrawA)
 #if defined(RENDERER_LEGACY)
-    const bool immediateMode = false;
+    const bool immediateMode = true;
 #else
     const bool immediateMode = !g_cli["indirect-rendering"].was_set();
 #endif //#if defined(RENDERER_LEGACY)

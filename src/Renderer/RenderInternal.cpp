@@ -29,11 +29,22 @@ static const uint32_t _missingTexture[] = {
     0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff,
     0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000, 0xffff00ff, 0x00000000,
 };
+static const uint32_t _whiteTexture[] = {
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+};
 // clang-format on
 extern uint32_t _vao;
 extern uint32_t _vbo;
 extern uint32_t _vio;
 extern uint32_t _defaultTex;
+extern uint32_t _whiteTex;
 extern int _inPos;
 extern int _inColor;
 extern int _inUV;
@@ -43,6 +54,7 @@ extern int _uModel;
 uint32_t _vao = 0;
 uint32_t _vibuffers[2] = { 0, 0 };
 uint32_t _defaultTex = 0;
+uint32_t _whiteTex = 0;
 int _inPos = 0;
 int _inColor = 0;
 int _inUV = 0;
@@ -66,14 +78,7 @@ uint32_t g_drawVBO = 0;
 size_t g_vboSize = 0;
 const size_t MAX_VERTICES = 65536; // Support up to 64k vertices
 
-float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
-float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };
-float4 g_ColorBlue = { 0.f, 0.f, 1.f, 1.f };
-static int g_iColorInvalid = 0xffffffff;
-float4 g_ColorInvalid = { *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid };
+
 
 struct
 {
@@ -81,37 +86,7 @@ struct
     SDL_Window *window = nullptr;
 } g_render;
 
-float float4::operator[](size_t i) const
-{
-    assert(i < countof(rgba));
-    return rgba[i];
-}
 
-bool float4::operator==(const float4 &other) const
-{
-    return memcmp(rgba, other.rgba, sizeof(rgba)) == 0;
-}
-
-bool float4::operator!=(const float4 &other) const
-{
-    return !(*this == other);
-}
-
-float float3::operator[](size_t i) const
-{
-    assert(i < countof(rgb));
-    return rgb[i];
-}
-
-bool float3::operator==(const float3 &other) const
-{
-    return memcmp(rgb, other.rgb, sizeof(rgb)) == 0;
-}
-
-bool float3::operator!=(const float3 &other) const
-{
-    return !(*this == other);
-}
 
 bool Render_Init(SDL_Window *window)
 {
@@ -283,6 +258,10 @@ bool Render_Init(SDL_Window *window)
     GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, _missingTexture));
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    GL_CHECK(glGenTextures(1, &_whiteTex));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, _whiteTex));
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, _whiteTexture));
 
     // Set texture unit to 0 once during initialization (never needs to change)
     GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
@@ -607,11 +586,15 @@ texture_handle_t Render_CreateTexture2D(
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
 
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
+    //GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0));
     GL_CHECK(glGenTextures(1, &tex));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D, tex));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    //GL_CHECK(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE));
+
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    //GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    //GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CHECK(glTexImage2D(
         GL_TEXTURE_2D,
         0,

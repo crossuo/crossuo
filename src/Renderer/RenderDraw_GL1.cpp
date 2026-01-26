@@ -8,6 +8,7 @@
 #include "../Renderer/RenderInternal.h"
 #include "Debug/RenderDebug.h"
 #include "../Utility/PerfMarker.h"
+#include "../GameWindow.h"
 #include <external/gfx/gfx.h>
 #include <GL/gl.h>
 #include <math.h>
@@ -16,16 +17,7 @@
 #include <deque>
 
 #define XUO_M_PI 3.14159265358979323846264338327950288
-static float s_modelTranslation[3] = { 0.f, 0.f, 0.f };
 static float s_palette[96] = {};
-float4 g_ColorWhite = { 1.f, 1.f, 1.f, 1.f };
-float4 g_ColorBlack = { 0.f, 0.f, 0.f, 1.f };
-float4 g_ColorBlue = { 0.f, 0.f, 1.f, 1.f };
-static int g_iColorInvalid = 0xffffffff;
-float4 g_ColorInvalid = { *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid,
-                          *(float *)&g_iColorInvalid };
 static std::deque<SetScissorCmd> s_ScissorList;
 
 struct
@@ -39,7 +31,7 @@ void Render_PushScissor(int x, int y, uint32_t w, uint32_t h)
     ScopedPerfMarker(__FUNCTION__);
     auto cmd = SetScissorCmd{ x, y, w, h };
     s_ScissorList.push_back(cmd);
-    RenderAdd_SetScissor(g_renderCmdList, cmd);
+    RenderDraw_SetScissor(cmd, nullptr);
 }
 
 void Render_PopScissor()
@@ -52,19 +44,20 @@ void Render_PopScissor()
 
     if (s_ScissorList.empty())
     {
-        RenderAdd_DisableScissor(g_renderCmdList);
+        DisableScissorCmd cmd;
+        RenderDraw_DisableScissor(cmd, nullptr);
     }
     else
     {
         SetScissorCmd &cmd = s_ScissorList.back();
-        RenderAdd_SetScissor(g_renderCmdList, cmd);
+        RenderDraw_SetScissor(cmd, nullptr);
     }
 }
 
 bool RenderDraw_SetTexture(const SetTextureCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glBindTexture(GL_TEXTURE_2D, cmd.texture);
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, cmd.texture));
     return true;
 }
 
@@ -80,38 +73,38 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    glPushMatrix();
-    glTranslatef(
-        s_modelTranslation[0] + (GLfloat)cmd.x,
-        s_modelTranslation[1] + (GLfloat)cmd.y,
-        0.0f);
+    Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)cmd.x, (float)cmd.y, (float)cmd.width, (float)cmd.height);
+    GL_CALL(glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f));
+
+    const float drawCountX = cmd.u;
+    const float drawCountY = cmd.v;
 
     glBegin(GL_TRIANGLE_STRIP);
     if (cmd.mirrored)
     {
-        glTexCoord2i(0, 1);
+        glTexCoord2f(0.0f, drawCountY);
         glVertex2i((int)cmd.width, (int)cmd.height);
-        glTexCoord2i(1, 1);
+        glTexCoord2f(drawCountX, drawCountY);
         glVertex2i(0, (int)cmd.height);
-        glTexCoord2i(0, 0);
+        glTexCoord2f(0.0f, 0.0f);
         glVertex2i((int)cmd.width, 0);
-        glTexCoord2i(1, 0);
+        glTexCoord2f(drawCountX, 0.0f);
         glVertex2i(0, 0);
     }
     else
     {
-        glTexCoord2i(0, 1);
+        glTexCoord2f(0.0f, drawCountY);
         glVertex2i(0, (int)cmd.height);
-        glTexCoord2i(1, 1);
+        glTexCoord2f(drawCountX, drawCountY);
         glVertex2i((int)cmd.width, (int)cmd.height);
-        glTexCoord2i(0, 0);
+        glTexCoord2f(0.0f, 0.0f);
         glVertex2i(0, 0);
-        glTexCoord2i(1, 0);
+        glTexCoord2f(drawCountX, 0.0f);
         glVertex2i((int)cmd.width, 0);
     }
     glEnd();
 
-    glPopMatrix();
+    GL_CALL(glTranslatef((GLfloat)-cmd.x, (GLfloat)-cmd.y, 0.0f));
 
     return true;
 }
@@ -125,8 +118,7 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *)
     const float width = (float)cmd.width;
     const float height = (float)cmd.height;
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0] + (GLfloat)cmd.x, s_modelTranslation[1] + translateY, 0.0f);
+    glTranslatef((GLfloat)cmd.x, translateY, 0.0f);
 
     glRotatef(cmd.angle, 0.0f, 0.0f, 1.0f);
 
@@ -141,7 +133,8 @@ bool RenderDraw_DrawRotatedQuad(const DrawRotatedQuadCmd &cmd, RenderState *)
     glVertex2f(width, 0.0f);
     glEnd();
 
-    glPopMatrix();
+    glRotatef(cmd.angle, 0.0f, 0.0f, -1.0f);
+    glTranslatef((GLfloat)-cmd.x, -translateY, 0.0f);
 
     return true;
 }
@@ -161,8 +154,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0] + x, s_modelTranslation[1] + y, 0.0f);
+    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
     glBegin(GL_TRIANGLE_STRIP);
 
@@ -261,7 +253,7 @@ bool RenderDraw_DrawCharacterSitting(const DrawCharacterSittingCmd &cmd, RenderS
 
     glEnd();
 
-    glPopMatrix();
+    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
 
     return true;
 }
@@ -275,8 +267,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *)
 
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0] + translateX, s_modelTranslation[1] + translateY, 0.0f);
+    glTranslatef(translateX, translateY, 0.0f);
 
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(cmd.normals[0][0], cmd.normals[0][1], cmd.normals[0][2]);
@@ -296,7 +287,7 @@ bool RenderDraw_DrawLandTile(const DrawLandTileCmd &cmd, RenderState *)
     glVertex2i(22, 44 - rc.w); //v
     glEnd();
 
-    glPopMatrix();
+    glTranslatef(-translateX, -translateY, 0.0f);
 
     return true;
 }
@@ -312,8 +303,8 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
 
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0] + (GLfloat)x, s_modelTranslation[1] + (GLfloat)y, 0.0f);
+    GLfloat translateY = (GLfloat)(y + height * 0.75);
+    glTranslatef((GLfloat)x, translateY, 0.0f);
 
     glBegin(GL_TRIANGLE_STRIP);
     if (cmd.mirror)
@@ -340,7 +331,7 @@ bool RenderDraw_DrawShadow(const DrawShadowCmd &cmd, RenderState *)
     }
     glEnd();
 
-    glPopMatrix();
+    glTranslatef((GLfloat)-x, -translateY, 0.0f);
 
     return true;
 }
@@ -356,8 +347,7 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *)
     const uint32_t centerColor = 0xFFFFFFFF;
     const uint32_t edgeColor = 0xFFFFFFFF;
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0] + centerX, s_modelTranslation[1] + centerY, 0.0f);
+    glTranslatef(centerX, centerY, 0.0f);
 
     glBegin(GL_TRIANGLE_FAN);
     glColor4ub(centerColor & 0xFF, (centerColor >> 8) & 0xFF, (centerColor >> 16) & 0xFF, (centerColor >> 24) & 0xFF);
@@ -371,7 +361,7 @@ bool RenderDraw_DrawCircle(const DrawCircleCmd &cmd, RenderState *)
     }
     glEnd();
 
-    glPopMatrix();
+    glTranslatef(-centerX, -centerY, 0.0f);
 
     return true;
 }
@@ -383,20 +373,21 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     const int y = cmd.y;
     const int width = (int)cmd.width;
     const int height = (int)cmd.height;
-    const uint32_t col = 0xFFFFFFFF;
+    GL_CALL(glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
+    GL_CALL(glDisable(GL_TEXTURE_2D));
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0] + (GLfloat)x, s_modelTranslation[1] + (GLfloat)y, 0.0f);
+    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
 
-    glBegin(GL_TRIANGLE_STRIP);
-    glColor4ub(col & 0xFF, (col >> 8) & 0xFF, (col >> 16) & 0xFF, (col >> 24) & 0xFF);
-    glVertex2i(0, height);
-    glVertex2i(width, height);
-    glVertex2i(0, 0);
-    glVertex2i(width, 0);
-    glEnd();
+    GL_CALL(glBegin(GL_TRIANGLE_STRIP));
+    GL_CALL(glVertex2i(0, height));
+    GL_CALL(glVertex2i(width, height));
+    GL_CALL(glVertex2i(0, 0));
+    GL_CALL(glVertex2i(width, 0));
+    GL_CALL(glEnd());
 
-    glPopMatrix();
+    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
+    GL_CALL(glColor4f(1.0f, 1.0f, 1.0f, 1.0f));
+    GL_CALL(glEnable(GL_TEXTURE_2D));
 
     return true;
 }
@@ -406,16 +397,11 @@ bool RenderDraw_DrawLine(const DrawLineCmd &cmd, RenderState *)
     ScopedPerfMarker(__FUNCTION__);
     const uint32_t col = 0xFFFFFFFF;
 
-    glPushMatrix();
-    glTranslatef(s_modelTranslation[0], s_modelTranslation[1], 0.0f);
-
     glBegin(GL_LINES);
     glColor4ub(col & 0xFF, (col >> 8) & 0xFF, (col >> 16) & 0xFF, (col >> 24) & 0xFF);
     glVertex2i(cmd.x0, cmd.y0);
     glVertex2i(cmd.x1, cmd.y1);
     glEnd();
-
-    glPopMatrix();
 
     return true;
 }
@@ -434,60 +420,130 @@ bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *)
 
 bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glLoadIdentity();
+    ScopedPerfMarker(__FUNCTION__);
+    Info(Renderer, "GL_CALL: *** BEGIN FRAME ***");
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+    GL_CALL(glLoadIdentity());
 
-    glDisable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_BLEND);
+    GL_CALL(glDisable(GL_DEPTH_TEST));
+    GL_CALL(glDepthFunc(GL_LEQUAL));
+    GL_CALL(glDisable(GL_STENCIL_TEST));
+    GL_CALL(glDisable(GL_BLEND));
 
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
+    GL_CALL(glEnable(GL_ALPHA_TEST));
+    GL_CALL(glAlphaFunc(GL_GREATER, 0.0f));
     return true;
 }
 
 bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glViewport(0, 0, cmd.window_width, cmd.window_height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(
-        (GLdouble)cmd.scene_x,
-        (GLdouble)(cmd.scene_x + cmd.scene_width),
-        (GLdouble)cmd.scene_y,
-        (GLdouble)(cmd.scene_y + cmd.scene_height),
-        (GLdouble)cmd.camera_nearZ,
-        (GLdouble)cmd.camera_farZ);
+    GLdouble left = (GLdouble)cmd.scene_x;
+    GLdouble right = (GLdouble)(cmd.scene_x + cmd.scene_width);
+    GLdouble top = (GLdouble)cmd.scene_y;
+    GLdouble bottom = (GLdouble)(cmd.scene_y + cmd.scene_height);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    int glBottom;
+    if (cmd.proj_flipped_y)
+    {
+        // Frame buffers are already in OpenGL coordinate space (bottom-left origin)
+        // No Y-flip needed, no scaling
+        glBottom = cmd.scene_y;
+    }
+    else
+    {
+        // Window coordinates are in screen space (top-left origin)
+        // Need to flip Y to convert to OpenGL coordinate space
+        // game viewport isn't scaled, if OS window is smaller than scene_y + scene_height, bottom will
+        // be negative by this difference
+        int needed_height = cmd.scene_y + cmd.scene_height;
+        glBottom = cmd.window_height - needed_height;
+
+        // Apply global scaling like ViewPortScaled does
+        GLdouble newRight = right * cmd.scene_scale;
+        GLdouble newBottom = bottom * cmd.scene_scale;
+
+        left = (left * cmd.scene_scale) - (newRight - right);
+        top = (top * cmd.scene_scale) - (newBottom - bottom);
+        bottom = newBottom;
+        right = newRight;
+    }
+
+    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)cmd.scene_x, (float)glBottom, (float)cmd.scene_width, (float)cmd.scene_height);
+    GL_CALL(glViewport(cmd.scene_x, glBottom, cmd.scene_width, cmd.scene_height));
+    GL_CALL(glMatrixMode(GL_PROJECTION));
+    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", left, right, bottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
+    GL_CALL(glOrtho(left, right, bottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ));
+
+    GL_CALL(glMatrixMode(GL_MODELVIEW));
+    GL_CALL(glLoadIdentity());
 
     return true;
 }
 
+bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
+{
+    ScopedPerfMarker(__FUNCTION__);
+
+    // game viewport isn't scaled, if the OS window is smaller than scene_y + scene_height, bottom will
+    // be negative by this difference
+    int needed_height = cmd.scene_y + cmd.scene_height;
+    int bottom = cmd.window_height - needed_height;
+    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)cmd.scene_x, (float)bottom, (float)cmd.scene_width, (float)cmd.scene_height);
+    GL_CALL(glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height));
+    GL_CALL(glMatrixMode(GL_PROJECTION));
+    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", float(cmd.scene_x),
+        float(cmd.scene_x + cmd.scene_width),
+        float(cmd.scene_y + cmd.scene_height),
+        float(cmd.scene_y),
+        float(cmd.camera_nearZ),
+        float(cmd.camera_farZ));
+    GL_CALL(glOrtho(
+        float(cmd.scene_x),
+        float(cmd.scene_x + cmd.scene_width),
+        float(cmd.scene_y + cmd.scene_height),
+        float(cmd.scene_y),
+        float(cmd.camera_nearZ),
+        float(cmd.camera_farZ)));
+
+    GL_CALL(glMatrixMode(GL_MODELVIEW));
+    GL_CALL(glLoadIdentity());
+
+    return true;
+}
+
+
+
 bool RenderDraw_SetModelViewTranslation(const SetModelViewTranslationCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    s_modelTranslation[0] = cmd.pos[0];
-    s_modelTranslation[1] = cmd.pos[1];
-    s_modelTranslation[2] = cmd.pos[2];
+    glTranslatef(
+        (GLfloat)cmd.pos[0],
+        (GLfloat)cmd.pos[1],
+        (GLfloat)cmd.pos[2]);
     return true;
 }
 
 bool RenderDraw_SetScissor(const SetScissorCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(cmd.x, cmd.y, cmd.width, cmd.height);
+    GL_CALL(glEnable(GL_SCISSOR_TEST));
+    // Transform scissor coordinates from screen space to OpenGL space
+    // Screen space: Y=0 is at top, increases downward
+    // OpenGL space: Y=0 is at bottom, increases upward
+    int gl_scissor_y = cmd.height - cmd.y;
+
+    Info(Renderer, "GL_CALL: glScissor args: left = %f, right = %f, bottom = %f, top = %f", (float)cmd.x, (float)gl_scissor_y, (float)cmd.width, (float)cmd.height);
+    GL_CALL(glScissor(cmd.x, gl_scissor_y, cmd.width, cmd.height));
     return true;
 }
 
 bool RenderDraw_DisableScissor(const DisableScissorCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glDisable(GL_SCISSOR_TEST);
+    GL_CALL(glDisable(GL_SCISSOR_TEST));
     return true;
 }
 
@@ -525,8 +581,8 @@ bool RenderDraw_AlphaTest(const AlphaTestCmd &cmd, RenderState *)
             break;
     }
 
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(func, cmd.ref);
+    GL_CALL(glEnable(GL_ALPHA_TEST));
+    GL_CALL(glAlphaFunc(func, cmd.ref));
 
     return true;
 }
@@ -534,7 +590,7 @@ bool RenderDraw_AlphaTest(const AlphaTestCmd &cmd, RenderState *)
 bool RenderDraw_DisableAlphaTest(const DisableAlphaTestCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glDisable(GL_ALPHA_TEST);
+    GL_CALL(glDisable(GL_ALPHA_TEST));
     return true;
 }
 
@@ -598,8 +654,8 @@ bool RenderDraw_BlendState(const BlendStateCmd &cmd, RenderState *)
             break;
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(src, dst);
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(src, dst));
 
     return true;
 }
@@ -607,7 +663,7 @@ bool RenderDraw_BlendState(const BlendStateCmd &cmd, RenderState *)
 bool RenderDraw_DisableBlendState(const DisableBlendStateCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glDisable(GL_BLEND);
+    GL_CALL(glDisable(GL_BLEND));
     return true;
 }
 
@@ -738,9 +794,9 @@ bool RenderDraw_StencilState(const StencilStateCmd &cmd, RenderState *)
             break;
     }
 
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(func, cmd.ref, cmd.mask);
-    glStencilOp(sfail, dpfail, dppass);
+    GL_CALL(glEnable(GL_STENCIL_TEST));
+    GL_CALL(glStencilFunc(func, cmd.ref, cmd.mask));
+    GL_CALL(glStencilOp(sfail, dpfail, dppass));
 
     return true;
 }
@@ -748,14 +804,14 @@ bool RenderDraw_StencilState(const StencilStateCmd &cmd, RenderState *)
 bool RenderDraw_DisableStencilState(const DisableStencilStateCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glDisable(GL_STENCIL_TEST);
+    GL_CALL(glDisable(GL_STENCIL_TEST));
     return true;
 }
 
 bool RenderDraw_EnableStencilState(const EnableStencilStateCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glEnable(GL_STENCIL_TEST);
+    GL_CALL(glEnable(GL_STENCIL_TEST));
     return true;
 }
 
@@ -793,8 +849,8 @@ bool RenderDraw_DepthState(const DepthStateCmd &cmd, RenderState *)
             break;
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(func);
+    GL_CALL(glEnable(GL_DEPTH_TEST));
+    GL_CALL(glDepthFunc(func));
 
     return true;
 }
@@ -802,21 +858,21 @@ bool RenderDraw_DepthState(const DepthStateCmd &cmd, RenderState *)
 bool RenderDraw_DisableDepthState(const DisableDepthStateCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glDisable(GL_DEPTH_TEST);
+    GL_CALL(glDisable(GL_DEPTH_TEST));
     return true;
 }
 
 bool RenderDraw_EnableDepthState(const EnableDepthStateCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glEnable(GL_DEPTH_TEST);
+    GL_CALL(glEnable(GL_DEPTH_TEST));
     return true;
 }
 
 bool RenderDraw_SetDrawMode(const SetDrawModeCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glUniform1iARB(g_ShaderDrawMode, cmd.drawMode);
+    // Shaders not supported in GL1/GL2 fixed pipeline - SetDrawMode is a no-op
     return true;
 }
 
@@ -827,21 +883,21 @@ bool RenderDraw_SetColorMask(const SetColorMaskCmd &cmd, RenderState *)
     GLboolean g = (cmd.mask & ColorMask::ColorMask_Green) != 0;
     GLboolean b = (cmd.mask & ColorMask::ColorMask_Blue) != 0;
     GLboolean a = (cmd.mask & ColorMask::ColorMask_Alpha) != 0;
-    glColorMask(r, g, b, a);
+    GL_CALL(glColorMask(r, g, b, a));
     return true;
 }
 
 bool RenderDraw_SetColor(const SetColorCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]);
+    GL_CALL(glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
     return true;
 }
 
 bool RenderDraw_SetClearColor(const SetClearColorCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    glClearColor(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]);
+    GL_CALL(glClearColor(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
     return true;
 }
 
@@ -868,7 +924,7 @@ bool RenderDraw_ClearRT(const ClearRTCmd &cmd, RenderState *)
     {
         mask |= GL_STENCIL_BUFFER_BIT;
     }
-    glClear(mask);
+    GL_CALL(glClear(mask));
     return true;
 }
 
@@ -909,7 +965,7 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
 
     if (cmd.dataSize >= neededSize)
     {
-        glReadPixels(cmd.x, cmd.y, cmd.width, cmd.height, format, GL_UNSIGNED_BYTE, cmd.data);
+        GL_CALL(glReadPixels(cmd.x, cmd.y, cmd.width, cmd.height, format, GL_UNSIGNED_BYTE, cmd.data));
     }
 
     return true;
@@ -936,11 +992,14 @@ texture_handle_t Render_CreateTexture2D(
     texture_handle_t tex = RENDER_TEXTUREHANDLE_INVALID;
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    //glBindTexture(GL_TEXTURE_2D, 0);
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
@@ -970,30 +1029,32 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
     texture_handle_t texture;
     framebuffer_handle_t handle;
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+    GL_CALL(glGenTextures(1, &texture));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    GL_CALL(glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA4,
+        GL_RGBA8,
         width,
         height,
         0,
         GL_BGRA,
-        GL_UNSIGNED_BYTE,
-        nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        GL_UNSIGNED_INT_8_8_8_8,
+        nullptr));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 
     GLint currentFrameBuffer = 0;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFrameBuffer);
-    glGenFramebuffers(1, &handle);
-    glBindFramebuffer(GL_FRAMEBUFFER, handle);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, currentFrameBuffer);
+    GL_CALL(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFrameBuffer));
+    GL_CALL(glGenFramebuffers(1, &handle));
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, handle));
+    GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0));
+    int glresult;
+    GL_CALL(glresult = glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    assert(glresult == GL_FRAMEBUFFER_COMPLETE);
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, currentFrameBuffer));
 
     return frame_buffer_t{ texture, handle };
 }
@@ -1002,12 +1063,12 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb)
 {
     if (fb.texture != RENDER_TEXTUREHANDLE_INVALID)
     {
-        glDeleteTextures(1, &fb.texture);
+        GL_CALL(glDeleteTextures(1, &fb.texture));
     }
 
     if (fb.handle != RENDER_FRAMEBUFFER_INVALID)
     {
-        glDeleteFramebuffers(1, &fb.handle);
+        GL_CALL(glDeleteFramebuffers(1, &fb.handle));
     }
 
     return true;
@@ -1042,16 +1103,104 @@ uint32_t Render_GetUniformId(ShaderPipeline *pipeline, const char *uniform)
 
 bool Render_Init(SDL_Window *window)
 {
+#ifdef OGL_DEBUGCONTEXT_ENABLED
+    auto debugContext = true;
+#else
+    auto debugContext = false;
+#endif
+    win_gfx_context_attrbutes(debugContext);
     g_render.window = window;
     g_render.context = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, g_render.context);
-    SDL_GL_SetSwapInterval(0);
+    GL_CALL(SDL_GL_MakeCurrent(window, g_render.context));
 
-    glClearStencil(0);
-    glClearDepthf(1.0);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    int glewInitResult = glewInit();
+    if (glewInitResult != 0)
+    {
+        Error(Renderer, "glewInit: %s", glewGetErrorString(glewInitResult));
+        return false;
+    }
+    Info(
+        Renderer,
+        "glew(%s), fb=%i v(%s) (shader: %i)",
+        glewGetString(GLEW_VERSION),
+        GL_ARB_framebuffer_object,
+        glGetString(GL_VERSION),
+        GL_ARB_shader_objects);
+
+    // debug messages callback needs ogl >= 4.30
+    // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDebugMessageControl.xhtml
+    if (debugContext && GLEW_KHR_debug)
+    {
+        SetupOGLDebugMessage();
+    }
+
+    Info(Renderer, "Graphics Successfully Initialized");
+    Info(Renderer, "OpenGL Info:");
+    Info(Renderer, "    Version: %s", glGetString(GL_VERSION));
+    Info(Renderer, "     Vendor: %s", glGetString(GL_VENDOR));
+    Info(Renderer, "   Renderer: %s", glGetString(GL_RENDERER));
+    Info(Renderer, "    Shading: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    auto canUseFrameBuffer =
+        (GL_ARB_framebuffer_object && glBindFramebuffer && glDeleteFramebuffers &&
+            glFramebufferTexture2D && glGenFramebuffers);
+
+    Info(Renderer, "g_UseFrameBuffer = %i", canUseFrameBuffer);
+
+    if (!canUseFrameBuffer)
+    {
+        SDL_GL_DeleteContext(g_render.context);
+        g_render.context = nullptr;
+        Error(Client, "Your graphics card does not support Frame Buffers");
+    }
+    GL_CALL(glClearStencil(0));
+    GL_CALL(glClearDepthf(1.0));
+    GL_CALL(glEnable(GL_TEXTURE_2D));
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+    GL_CALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f)); // Black Background
+    GL_CALL(glShadeModel(GL_SMOOTH));              // Enables Smooth Color Shading
+    GL_CALL(glClearDepth(1.0));                    // Depth Buffer Setup
+    GL_CALL(glDisable(GL_DITHER));
+
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
+    GL_CALL(glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST));
+
+    GL_CALL(glEnable(GL_TEXTURE_2D));
+
+    GL_CALL(SDL_GL_SetSwapInterval(0)); // 1 vsync
+
+    GL_CALL(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL));
+    GL_CALL(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
+
+    GL_CALL(glClearStencil(0));
+    GL_CALL(glStencilMask(1));
+
+    GL_CALL(glEnable(GL_LIGHT0));
+
+    GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
+    GL_CALL(glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]));
+
+    GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    GL_CALL(glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]));
+
+    GLfloat lav = 0.8f;
+    GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
+    GL_CALL(glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]));
+
+    GL_CALL(glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE));
+
+    const auto size = g_GameWindow.GetSize();
+    const auto width = size.Width;
+    const auto height = size.Height;
+    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)0, (float)0, (float)width, (float)height);
+    GL_CALL(glViewport(0, 0, width, height));
+    GL_CALL(glMatrixMode(GL_PROJECTION));
+    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", (float)0, (float)width, (float)height, (float)0, (float)-150.0, (float)150.0);
+    GL_CALL(glOrtho(0, width, height, 0, -150.0, 150.0));
+    GL_CALL(glMatrixMode(GL_MODELVIEW));
 
     return true;
 }
@@ -1067,8 +1216,10 @@ void Render_Shutdown()
 
 void Render_SwapBuffers()
 {
-    glDisable(GL_ALPHA_TEST);
-    SDL_GL_SwapWindow(g_render.window);
+    ScopedPerfMarker(__FUNCTION__);
+    GL_CALL(glDisable(GL_ALPHA_TEST));
+    GL_CALL(SDL_GL_SwapWindow(g_render.window));
+    Info(Renderer, "GL_CALL: *** END FRAME ***");
 }
 
 RenderState Render_DefaultState()
@@ -1082,41 +1233,15 @@ RenderState Render_DefaultState()
 
 bool Render_ResetState()
 {
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_ALPHA_TEST);
-    glDisable(GL_SCISSOR_TEST);
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    return true;
-}
-
-bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
-{
     ScopedPerfMarker(__FUNCTION__);
-
-    // game viewport isn't scaled, if the OS window is smaller than scene_y + scene_height, bottom will
-    // be negative by this difference
-    int needed_height = cmd.scene_y + cmd.scene_height;
-    int bottom = cmd.window_height - needed_height;
-
-    glViewport(cmd.scene_x, bottom, cmd.scene_width, cmd.scene_height);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(
-        float(cmd.scene_x),
-        float(cmd.scene_x + cmd.scene_width),
-        float(cmd.scene_y + cmd.scene_height),
-        float(cmd.scene_y),
-        float(cmd.camera_nearZ),
-        float(cmd.camera_farZ));
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
+    GL_CALL(glEnable(GL_TEXTURE_2D));
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glDisable(GL_DEPTH_TEST));
+    GL_CALL(glDisable(GL_STENCIL_TEST));
+    GL_CALL(glDisable(GL_ALPHA_TEST));
+    GL_CALL(glDisable(GL_SCISSOR_TEST));
+    GL_CALL(glColor4f(1.0f, 1.0f, 1.0f, 1.0f));
     return true;
 }
 

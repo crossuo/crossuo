@@ -166,9 +166,10 @@ void CGLTexture::Draw_Tooltip(int x, int y, int width, int height)
     RenderAdd_DrawUntexturedQuad(
         g_renderCmdList,
         DrawUntexturedQuadCmd{ x, y, uint32_t(width), uint32_t(height), { 0.f, 0.f, 0.f, 0.5f } });
-    auto cmd = DrawQuadCmd{ Texture, x + 6, y + 4, Width, Height };
     RenderAdd_DisableBlend(g_renderCmdList);
-    RenderAdd_DrawQuad(g_renderCmdList, cmd);
+    RenderAdd_DrawQuad(
+        g_renderCmdList,
+        DrawQuadCmd{ Texture, x + 6, y + 4, Width, Height });
 #endif
 }
 

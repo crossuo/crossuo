@@ -1533,9 +1533,8 @@ bool CConfigManager::Load(const fs_path &path)
 
 #ifndef NEW_RENDERER_ENABLED
         g_GL.UpdateRect();
-#else
-        g_GumpManager.RedrawAll();
 #endif
+        g_GumpManager.RedrawAll();
     }
     else
     {

@@ -485,17 +485,17 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
          ((uint32_t)(cmd.color[3] * 255) << 24)) : 0xffffffff;
 
     const GenericVertex data[] = {
-        { { 0.0f, float(cmd.height) }, { 0.0f, 1.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.width), float(cmd.height) }, { 1.0f, 1.0f }, col, NORMAL_IDENTITY },
+        { { 0.0f, float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.width), float(cmd.height) }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
         { { 0.0f, 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
-        { { float(cmd.width), 0.0f }, { 1.0f, 0.0f }, col, NORMAL_IDENTITY },
+        { { float(cmd.width), 0.0f }, { 0.0f, 0.0f }, col, NORMAL_IDENTITY },
     };
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(state->modelTranslation[0], state->modelTranslation[1], state->modelTranslation[2]));
     model = glm::translate(model, glm::vec3(cmd.x, cmd.y, 0.0f));
 
-    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _defaultTex);
+    RenderState_SetTexture(state, TextureType::TextureType_Texture2D, _whiteTex);
     RenderState_SetupCachedState(state, model);
     RENDER_STATE_DUMP_BEFORE(state);
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, g_drawVBO));

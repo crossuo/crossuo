@@ -182,7 +182,7 @@ bool CGLEngine::Install()
 #endif
     win_gfx_context_attrbutes(debugContext);
     m_context = SDL_GL_CreateContext(g_GameWindow.m_window);
-    SDL_GL_MakeCurrent(g_GameWindow.m_window, m_context);
+    GL_CALL(SDL_GL_MakeCurrent(g_GameWindow.m_window, m_context));
 
     int glewInitResult = glewInit();
     if (glewInitResult != 0)
@@ -226,37 +226,43 @@ bool CGLEngine::Install()
         Error(Client, "Your graphics card does not support Frame Buffers");
         g_GameWindow.ShowMessage("Your graphics card does not support Frame Buffers", "Error");
     }
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-    glShadeModel(GL_SMOOTH);              // Enables Smooth Color Shading
-    glClearDepth(1.0);                    // Depth Buffer Setup
-    glDisable(GL_DITHER);
+    GL_CALL(glClearStencil(0));
+    GL_CALL(glClearDepthf(1.0));
+    GL_CALL(glEnable(GL_TEXTURE_2D));
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+    GL_CALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f)); // Black Background
+    GL_CALL(glShadeModel(GL_SMOOTH));              // Enables Smooth Color Shading
+    GL_CALL(glClearDepth(1.0));                    // Depth Buffer Setup
+    GL_CALL(glDisable(GL_DITHER));
 
     //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   //Realy Nice perspective calculations
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+    GL_CALL(glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST));
 
-    glEnable(GL_TEXTURE_2D);
+    GL_CALL(glEnable(GL_TEXTURE_2D));
 
-    SDL_GL_SetSwapInterval(0); // 1 vsync
+    GL_CALL(SDL_GL_SetSwapInterval(0)); // 1 vsync
 
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    GL_CALL(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL));
+    GL_CALL(glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
 
-    glClearStencil(0);
-    glStencilMask(1);
+    GL_CALL(glClearStencil(0));
+    GL_CALL(glStencilMask(1));
 
-    glEnable(GL_LIGHT0);
+    GL_CALL(glEnable(GL_LIGHT0));
 
     GLfloat lightPosition[] = { -1.0f, -1.0f, 0.5f, 0.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]);
+    GL_CALL(glLightfv(GL_LIGHT0, GL_POSITION, &lightPosition[0]));
 
     GLfloat lightAmbient[] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]);
+    GL_CALL(glLightfv(GL_LIGHT0, GL_AMBIENT, &lightAmbient[0]));
 
     GLfloat lav = 0.8f;
     GLfloat lightAmbientValues[] = { lav, lav, lav, lav };
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]);
+    GL_CALL(glLightModelfv(GL_LIGHT_MODEL_AMBIENT, &lightAmbientValues[0]));
 
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+    GL_CALL(glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE));
 
     const auto size = g_GameWindow.GetSize();
     ViewPort(0, 0, size.Width, size.Height);
@@ -281,8 +287,6 @@ void CGLEngine::UpdateRect()
 
     ViewPort(0, 0, width, height);
     //ViewPort(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
-
-    g_GumpManager.RedrawAll();
 }
 
 void CGLEngine::BindTexture16(CGLTexture &texture, int width, int height, uint16_t *pixels)
@@ -338,33 +342,36 @@ void CGLEngine::BeginDraw()
 {
     ScopedPerfMarker(__FUNCTION__);
     Drawing = true;
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glLoadIdentity();
+    Info(Renderer, "GL_CALL: *** BEGIN FRAME ***");
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+    GL_CALL(glLoadIdentity());
 
-    glDisable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_BLEND);
+    GL_CALL(glDisable(GL_DEPTH_TEST));
+    GL_CALL(glDepthFunc(GL_LEQUAL));
+    GL_CALL(glDisable(GL_STENCIL_TEST));
+    GL_CALL(glDisable(GL_BLEND));
 
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
+    GL_CALL(glEnable(GL_ALPHA_TEST));
+    GL_CALL(glAlphaFunc(GL_GREATER, 0.0f));
 }
 
 void CGLEngine::EndDraw()
 {
     ScopedPerfMarker(__FUNCTION__);
     Drawing = false;
-    glDisable(GL_ALPHA_TEST);
-    SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window);
+    GL_CALL(glDisable(GL_ALPHA_TEST));
+    GL_CALL(SDL_GL_SwapWindow(Wisp::g_WispWindow->m_window));
+    Info(Renderer, "GL_CALL: *** END FRAME ***");
 }
 
 void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)x, (float)g_GameWindow.GetSize().Height - y - height, (float)width, (float)height);
+    GL_CALL(glViewport(x, g_GameWindow.GetSize().Height - y - height, width, height));
+    GL_CALL(glMatrixMode(GL_PROJECTION));
+    GL_CALL(glLoadIdentity());
 
     GLdouble left = (GLdouble)x;
     GLdouble right = (GLdouble)(width + x);
@@ -377,8 +384,9 @@ void CGLEngine::ViewPortScaled(int x, int y, int width, int height)
     left = (left * g_GlobalScale) - (newRight - right);
     top = (top * g_GlobalScale) - (newBottom - bottom);
 
-    glOrtho(left, newRight, newBottom, top, -150.0, 150.0);
-    glMatrixMode(GL_MODELVIEW);
+    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", left, newRight, newBottom, top, -150.0, 150.0);
+    GL_CALL(glOrtho(left, newRight, newBottom, top, -150.0, 150.0));
+    GL_CALL(glMatrixMode(GL_MODELVIEW));
 }
 
 void CGLEngine::ViewPort(int x, int y, int width, int height)
@@ -386,22 +394,25 @@ void CGLEngine::ViewPort(int x, int y, int width, int height)
     ScopedPerfMarker(__FUNCTION__);
 
     const auto size = g_GameWindow.GetSize();
-    glViewport(x, size.Height - y - height, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(x, width + x, height + y, y, -150.0, 150.0);
-    glMatrixMode(GL_MODELVIEW);
+    Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", x, size.Height - y - height, width, height);
+    GL_CALL(glViewport(x, size.Height - y - height, width, height));
+    GL_CALL(glMatrixMode(GL_PROJECTION));
+    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", (float)x, (float)width + x, (float)height + y, (float)y, (float)-150.0, (float)150.0);
+    GL_CALL(glOrtho(x, width + x, height + y, y, -150.0, 150.0));
+    GL_CALL(glMatrixMode(GL_MODELVIEW));
 }
 
 void CGLEngine::RestorePort()
 {
     ScopedPerfMarker(__FUNCTION__);
-
-    glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0);
-    glMatrixMode(GL_MODELVIEW);
+    Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", 0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height);
+    GL_CALL(glViewport(0, 0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height));
+    GL_CALL(glMatrixMode(GL_PROJECTION));
+    GL_CALL(glLoadIdentity());
+    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", (float)0.0, (float)g_GameWindow.GetSize().Width, (float)g_GameWindow.GetSize().Height, (float)0.0, (float)-150.0, (float)150.0);
+    GL_CALL(glOrtho(0.0, g_GameWindow.GetSize().Width, g_GameWindow.GetSize().Height, 0.0, -150.0, 150.0));
+    GL_CALL(glMatrixMode(GL_MODELVIEW));
 }
 
 void CGLEngine::PushScissor(int x, int y, int width, int height)
@@ -428,8 +439,9 @@ void CGLEngine::PushScissor(const CRect &rect)
 {
     ScopedPerfMarker(__FUNCTION__);
     m_ScissorList.push_back(rect);
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
+    GL_CALL(glEnable(GL_SCISSOR_TEST));
+    Info(Renderer, "GL_CALL: glScissor args: left = %f, right = %f, bottom = %f, top = %f", (float)rect.Position.X, (float)rect.Position.Y, (float)rect.Size.Width, (float)rect.Size.Height);
+    GL_CALL(glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height));
 }
 
 void CGLEngine::PopScissor()
@@ -443,12 +455,13 @@ void CGLEngine::PopScissor()
 
     if (m_ScissorList.empty())
     {
-        glDisable(GL_SCISSOR_TEST);
+        GL_CALL(glDisable(GL_SCISSOR_TEST));
     }
     else
     {
         CRect &rect = m_ScissorList.back();
-        glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height);
+        Info(Renderer, "GL_CALL: glScissor args: left = %f, right = %f, bottom = %f, top = %f", (float)rect.Position.X, (float)rect.Position.Y, (float)rect.Size.Width, (float)rect.Size.Height);
+        GL_CALL(glScissor(rect.Position.X, rect.Position.Y, rect.Size.Width, rect.Size.Height));
     }
 }
 
@@ -456,7 +469,7 @@ void CGLEngine::ClearScissorList()
 {
     ScopedPerfMarker(__FUNCTION__);
     m_ScissorList.clear();
-    glDisable(GL_SCISSOR_TEST);
+    GL_CALL(glDisable(GL_SCISSOR_TEST));
 }
 
 inline void CGLEngine::BindTexture(GLuint texture)
@@ -488,20 +501,20 @@ void CGLEngine::DrawPolygone(int x, int y, int width, int height)
 {
     ScopedPerfMarker(__FUNCTION__);
 
-    glDisable(GL_TEXTURE_2D);
+    GL_CALL(glDisable(GL_TEXTURE_2D));
 
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
+    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
 
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex2i(0, height);
-    glVertex2i(width, height);
-    glVertex2i(0, 0);
-    glVertex2i(width, 0);
-    glEnd();
+    GL_CALL(glBegin(GL_TRIANGLE_STRIP));
+    GL_CALL(glVertex2i(0, height));
+    GL_CALL(glVertex2i(width, height));
+    GL_CALL(glVertex2i(0, 0));
+    GL_CALL(glVertex2i(width, 0));
+    GL_CALL(glEnd());
 
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
+    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
 
-    glEnable(GL_TEXTURE_2D);
+    GL_CALL(glEnable(GL_TEXTURE_2D));
 }
 
 void CGLEngine::DrawCircle(float x, float y, float radius, int gradientMode)
@@ -580,7 +593,8 @@ void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
     int width = texture.Width;
     int height = texture.Height;
 
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
+    Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)x, (float)y, (float)width, (float)height);
+    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
 
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2i(0, 1);
@@ -593,7 +607,7 @@ void CGLEngine::Draw(const CGLTexture &texture, int x, int y)
     glVertex2i(width, 0);
     glEnd();
 
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
+    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
 }
 
 void CGLEngine::DrawRotated(const CGLTexture &texture, int x, int y, float angle)
@@ -839,7 +853,8 @@ void CGLEngine::DrawStretched(
     int width = texture.Width;
     int height = texture.Height;
 
-    glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
+    Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)x, (float)y, (float)width, (float)height);
+    GL_CALL(glTranslatef((GLfloat)x, (GLfloat)y, 0.0f));
 
     float drawCountX = drawWidth / (float)width;
     float drawCountY = drawHeight / (float)height;
@@ -855,7 +870,7 @@ void CGLEngine::DrawStretched(
     glVertex2i(drawWidth, 0);
     glEnd();
 
-    glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f);
+    GL_CALL(glTranslatef((GLfloat)-x, (GLfloat)-y, 0.0f));
 }
 
 void CGLEngine::DrawResizepic(CGLTexture **th, int x, int y, int width, int height)

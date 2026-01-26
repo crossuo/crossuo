@@ -108,6 +108,15 @@
             exit(-69); \
         } \
     } while(0)
+#define GL_CALL(statement) \
+    do { \
+        Info(Renderer, "GL_CALL: %s", TOSTRING(statement)); \
+        statement; \
+        const auto e = glGetError(); \
+        if (e != GL_NO_ERROR) { \
+            Warning(Renderer, TOSTRING(statement) " returned error: 0x%04x", e); \
+        } \
+    } while(0)
 
 #define GL_SHADER_HEADER \
     "#version " GL_SHADER_VERSION "\n" \

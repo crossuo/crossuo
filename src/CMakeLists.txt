@@ -49,8 +49,10 @@ set(renderer_src
   Renderer/RenderDraw.cpp
   Renderer/RenderDraw_GL1.cpp
   Renderer/RenderDebug.cpp
+  Renderer/RenderGlobals.cpp
   Renderer/RenderState.cpp
   Renderer/RenderInternal.cpp
+  Renderer/RenderTypes.cpp
 )
 
 set(gui_src
