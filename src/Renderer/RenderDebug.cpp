@@ -42,7 +42,7 @@ struct
 {
     OpenGLDebugMsgState assert = OGL_DBGMSG_UNSET;
     OpenGLDebugMsgState log = OGL_DBGMSG_UNSET;
-} static s_openglDebugMsgType[OGL_DEBUGMSG_SEVERITY_COUNT];
+} static s_openglDebugMsgType[OGL_DEBUGMSG_TYPE_COUNT];
 
 struct
 {

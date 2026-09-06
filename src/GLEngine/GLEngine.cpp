@@ -42,7 +42,7 @@ struct
 {
     bool assert = false;
     bool log = false;
-} static s_openglDebugMsgType[OGL_DEBUGMSG_SEVERITY_COUNT];
+} static s_openglDebugMsgType[OGL_DEBUGMSG_TYPE_COUNT];
 
 struct
 {

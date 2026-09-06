@@ -72,6 +72,11 @@ struct
 {
     SDL_GLContext context = nullptr;
     SDL_Window *window = nullptr;
+    // set when the GL context is gone; global/static destructors may still try
+    // to release GL resources afterwards (destruction order at exit is not
+    // guaranteed), and issuing GL calls on a dead context corrupts the driver
+    // state and crashes the process
+    bool shutdown = false;
 } g_render;
 
 float float4::operator[](size_t i) const
@@ -111,6 +116,12 @@ bool Render_Init(SDL_Window *window)
     win_gfx_context_attrbutes(true);
     auto context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
+
+    // mark the renderer as down on ANY process exit path (atexit handlers run
+    // in reverse order, so this executes before the global/static destructors),
+    // guarding the Render_Destroy* calls against issuing GL commands without a
+    // live context
+    atexit([] { g_render.shutdown = true; });
 
 #if defined(USE_GLEW)
     int glewInitResult = glewInit();
@@ -337,9 +348,11 @@ bool Render_Init(SDL_Window *window)
 
 void Render_Shutdown()
 {
+    g_render.shutdown = true;
     if (g_render.context != nullptr)
     {
         SDL_GL_DeleteContext(g_render.context);
+        g_render.context = nullptr;
     }
 }
 
@@ -520,6 +533,11 @@ bool Render_CreateShaderPipeline(
 bool Render_DestroyShaderPipeline(ShaderPipeline *pipeline)
 {
     assert(pipeline);
+    if (g_render.shutdown || g_render.context == nullptr)
+    {
+        return false; // GL context is gone, GL resource release is irrelevant
+    }
+
     if (pipeline->program != RENDER_SHADERPROGRAM_INVALID)
     {
         for (auto handle : pipeline->shaders)
@@ -658,6 +676,11 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
 
 bool Render_DestroyFrameBuffer(frame_buffer_t fb)
 {
+    if (g_render.shutdown || g_render.context == nullptr)
+    {
+        return false; // GL context is gone, GL resource release is irrelevant
+    }
+
     auto validTex = fb.texture != RENDER_TEXTUREHANDLE_INVALID;
     auto validFb = fb.handle != RENDER_FRAMEBUFFER_INVALID;
     assert(validFb);
@@ -678,6 +701,11 @@ bool Render_DestroyFrameBuffer(frame_buffer_t fb)
 bool Render_DestroyTexture(texture_handle_t texture)
 {
     assert(texture != RENDER_TEXTUREHANDLE_INVALID);
+    if (g_render.shutdown || g_render.context == nullptr)
+    {
+        return false; // GL context is gone, GL resource release is irrelevant
+    }
+
     if (texture != RENDER_TEXTUREHANDLE_INVALID)
     {
         GL_CHECK(glDeleteTextures(1, &texture));

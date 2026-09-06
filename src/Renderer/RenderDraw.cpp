@@ -918,58 +918,8 @@ bool RenderDraw_GetFrameBufferPixels(const GetFrameBufferPixelsCmd &cmd, RenderS
     return true;
 }
 
-static void RenderDraw_DrawTest()
-{
-    // clang-format off
-#if defined(USE_GL3) || defined(USE_GLES2)
-    //ScopedPerfMarker(__FUNCTION__);
-
-    const GenericVertex data[] = {
-        { { -1.0f, -1.0f }, { 0.0f, 0.0f }, 0xff00ffff },
-        { { -1.0f,  1.0f }, { 0.0f, 1.0f }, 0xff00ffff },
-        { {  1.0f,  1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-        { {  1.0f, -1.0f }, { 1.0f, 1.0f }, 0xff00ffff },
-    };
-    const unsigned int idx[] = { 0, 1, 2, 3 };
-    GL_CHECK(glClearColor(0.4f, 0.0f, 0.0f, 0.0f));
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
-    GL_CHECK(glUseProgram(_pProg));
-
-    uint32_t buffers[2];
-    GL_CHECK(glGenBuffers(2, buffers));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, buffers[0]));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW));
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]));
-    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(unsigned int), idx, GL_STATIC_DRAW));
-
-#if !defined(USE_GLES2)
-    uint32_t vao = 0;
-    GL_CHECK(glGenVertexArrays(1, &vao));
-    GL_CHECK(glBindVertexArray(vao));
-#endif // #if !defined(USE_GLES2)
-
-    GL_CHECK(glEnableVertexAttribArray(_inPos));
-    GL_CHECK(glEnableVertexAttribArray(_inUV));
-    GL_CHECK(glEnableVertexAttribArray(_inColor));
-    GL_CHECK(glVertexAttribPointer(_inPos, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, pos)));
-    GL_CHECK(glVertexAttribPointer(_inUV, 2, GL_FLOAT, GL_FALSE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, uv)));
-    GL_CHECK(glVertexAttribPointer(_inColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GenericVertex), (GLvoid*)OFFSETOF(GenericVertex, col)));
-
-    GL_CHECK(glUniform1i(_uTex, 0)); // texture unit 0
-    GL_CHECK(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
-
-    GL_CHECK(glDeleteBuffers(2, buffers));
-#if !defined(USE_GLES2)
-    GL_CHECK(glDeleteVertexArrays(1, &vao));
-#endif // #if !defined(USE_GLES2)
-    GL_CHECK(glUseProgram(0));
-#endif // #if defined(USE_GL3) || defined(USE_GLES2)
-    // clang-format on
-}
-
 bool RenderDraw_Execute(RenderCmdList *cmdList)
 {
-    RenderDraw_DrawTest();
     if (cmdList->immediateMode)
     {
         return false;
