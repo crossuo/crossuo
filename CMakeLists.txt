@@ -2,6 +2,9 @@
 # SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 cmake_minimum_required(VERSION 3.13)
+# Vendored deps declare cmake_minimum_required older than 3.5, which CMake >= 4
+# rejects; allow configuring them anyway.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} clang PATHS ENV PATH NO_DEFAULT_PATH)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} clang++ PATHS ENV PATH NO_DEFAULT_PATH)
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)

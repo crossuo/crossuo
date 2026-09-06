@@ -238,8 +238,6 @@ uint8_t CAnimationManager::GetDieGroupIndex(uint16_t graphic, bool running, bool
         case AGT_UNKNOWN:
         default:
             break;
-        default:
-            break;
     }
 
     return 0;
