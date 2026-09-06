@@ -2416,6 +2416,8 @@ static void LABEL_222(ANIMATION_FLAGS flags, uint16_t &v13)
             case 12:
                 v13 = 3;
                 goto LABEL_243;
+            default:
+                break;
         }
         // LABEL_241
         v13 = 1;
@@ -2521,6 +2523,8 @@ static void LABEL_190(ANIMATION_FLAGS flags, uint16_t &v13)
                     v13 = 17;
                     LABEL_222(flags, v13);
                     return;
+                default:
+                    break;
             }
             LABEL_222(flags, v13);
             return;
@@ -2614,6 +2618,8 @@ static void LABEL_190(ANIMATION_FLAGS flags, uint16_t &v13)
                 v13 = 1;
                 LABEL_222(flags, v13);
                 return;
+            default:
+                break;
         }
     }
     v13 = 4;
@@ -2746,6 +2752,8 @@ uint8_t CAnimationManager::CorrectAnimationGroupServer(
                     v13 = 3;
                     LABEL_190(flags, v13);
                     return uint8_t(v13);
+                default:
+                    break;
             }
             // LABEL_187
             v13 = 1;
@@ -2816,6 +2824,8 @@ uint8_t CAnimationManager::CorrectAnimationGroupServer(
                     v13 = 1;
                     LABEL_190(flags, v13);
                     return uint8_t(v13);
+                default:
+                    break;
             }
             //LABEL_161:
             v13 = 4;
@@ -2871,6 +2881,8 @@ uint8_t CAnimationManager::CorrectAnimationGroupServer(
                     v13 = 1;
                     LABEL_190(flags, v13);
                     return uint8_t(v13);
+                default:
+                    break;
             }
             v13 = 2;
             LABEL_190(flags, v13);
@@ -2919,6 +2931,8 @@ uint8_t CAnimationManager::CorrectAnimationGroupServer(
                 case 19:
                     LABEL_190(flags, v13);
                     return uint8_t(v13);
+                default:
+                    break;
             }
             v13 = 2;
             LABEL_190(flags, v13);

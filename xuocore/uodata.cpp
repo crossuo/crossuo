@@ -794,6 +794,8 @@ void CFileManager::ProcessAnimSequeceData() // "AnimationSequence.uop"
                 anim->MountedHeightOffset = 9;
             }
             break;
+            default:
+                break;
         }
     }
     Info(Data, "AnimationSequence processed %zd entries", m_AnimationSequence.FileCount());
