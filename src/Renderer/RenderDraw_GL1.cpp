@@ -73,7 +73,6 @@ bool RenderDraw_DrawQuad(const DrawQuadCmd &cmd, RenderState *)
     ScopedPerfMarker(__FUNCTION__);
     glBindTexture(GL_TEXTURE_2D, cmd.texture);
 
-    //Info(Renderer, "GL_CALL: translate = %f, %f (%f, %f)", (float)cmd.x, (float)cmd.y, (float)cmd.width, (float)cmd.height);
     glTranslatef((GLfloat)cmd.x, (GLfloat)cmd.y, 0.0f);
 
     const float drawCountX = cmd.u;
@@ -421,7 +420,6 @@ bool RenderDraw_PopDebugMarker(const PopDebugMarkerCmd &cmd, RenderState *)
 bool RenderDraw_FlushState(const FlushStateCmd &cmd, RenderState *)
 {
     ScopedPerfMarker(__FUNCTION__);
-    Info(Renderer, "GL_CALL: *** BEGIN FRAME ***");
     GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
     GL_CALL(glLoadIdentity());
 
@@ -451,17 +449,11 @@ bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
     int newRight = right;
     if (cmd.proj_flipped_y)
     {
-        Info(Renderer, "GL_CALL: FLIPPED");
         // Frame buffers are already in OpenGL coordinate space (bottom-left origin)
         // No Y-flip needed, no scaling
     }
     else
     {
-        if (cmd.scene_scale != 1.0f)
-            Info(Renderer, "GL_CALL: SCALED");
-        else
-            Info(Renderer, "GL_CALL: NORMAL");
-
         // Apply global scaling like ViewPortScaled does
         newRight = right * cmd.scene_scale;
         newBottom = bottom * cmd.scene_scale;
@@ -470,11 +462,9 @@ bool RenderDraw_SetViewParams(const SetViewParamsCmd &cmd, RenderState *)
         top = (top * cmd.scene_scale) - (newBottom - bottom);
     }
 
-    Info(Renderer, "GL_CALL: glViewport args: x = %d, y = %d, width = %d, height = %d", viewX, viewY, viewW, viewH);
     glViewport(viewX, viewY, viewW, viewH);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    Info(Renderer, "GL_CALL: glOrtho args: left = %d, right = %d, bottom = %d, top = %d", (int)left, (int)newRight, (int)newBottom, (int)top);
     glOrtho(left, newRight, newBottom, top, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -491,11 +481,9 @@ bool HACKRender_SetViewParams(const SetViewParamsCmd &cmd)
     int viewW = cmd.window_width;
     int viewH = cmd.window_height;
 
-    Info(Renderer, "GL_CALL: HACKRender_SetViewParams glViewport args: x = %d, y = %d, width = %d, height = %d", viewX, viewY, viewW, viewH);
     glViewport(viewX, viewY, viewW, viewH);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    Info(Renderer, "GL_CALL: HACKRender_SetViewParams glOrtho args: left = %d, right = %d, bottom = %d, top = %d", viewX, viewY, viewW, viewH);
     glOrtho(viewX, viewY, viewW, viewH, (GLdouble)cmd.camera_nearZ, (GLdouble)cmd.camera_farZ);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -524,7 +512,6 @@ bool RenderDraw_SetScissor(const SetScissorCmd &cmd, RenderState *)
     // OpenGL space: Y=0 is at bottom, increases upward
     int gl_scissor_y = cmd.height - cmd.y;
 
-    Info(Renderer, "GL_CALL: glScissor args: left = %f, right = %f, bottom = %f, top = %f", (float)cmd.x, (float)gl_scissor_y, (float)cmd.width, (float)cmd.height);
     GL_CALL(glScissor(cmd.x, gl_scissor_y, cmd.width, cmd.height));
     return true;
 }
@@ -1185,11 +1172,9 @@ bool Render_Init(SDL_Window *window)
     const auto size = g_GameWindow.GetSize();
     const auto width = size.Width;
     const auto height = size.Height;
-    Info(Renderer, "GL_CALL: glViewport args: x = %f, y = %f, width = %f, height = %f", (float)0, (float)0, (float)width, (float)height);
     GL_CALL(glViewport(0, 0, width, height));
     GL_CALL(glMatrixMode(GL_PROJECTION));
     GL_CALL(glLoadIdentity());
-    Info(Renderer, "GL_CALL: glOrtho args: left = %f, right = %f, bottom = %f, top = %f, nZ = %f, fZ = %f", (float)0, (float)width, (float)height, (float)0, (float)-150.0, (float)150.0);
     GL_CALL(glOrtho(0, width, height, 0, -150.0, 150.0));
     GL_CALL(glMatrixMode(GL_MODELVIEW));
 
@@ -1210,7 +1195,6 @@ void Render_SwapBuffers()
     ScopedPerfMarker(__FUNCTION__);
     GL_CALL(glDisable(GL_ALPHA_TEST));
     GL_CALL(SDL_GL_SwapWindow(g_render.window));
-    Info(Renderer, "GL_CALL: *** END FRAME ***");
 }
 
 RenderState Render_DefaultState()

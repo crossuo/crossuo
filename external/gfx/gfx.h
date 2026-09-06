@@ -110,7 +110,6 @@
     } while(0)
 #define GL_CALL(statement) \
     do { \
-        Info(Renderer, "GL_CALL: %s", TOSTRING(statement)); \
         statement; \
         const auto e = glGetError(); \
         if (e != GL_NO_ERROR) { \
