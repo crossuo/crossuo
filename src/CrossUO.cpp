@@ -5737,6 +5737,9 @@ void CGame::ClearWorld()
     g_MapManager.Clear();
     Info(Client, "\tmap cleared");
 
+    g_AnimationManager.ClearUnusedAnimations();
+    Info(Client, "\tunused animations cleared");
+
     g_CurrentMap = 0;
 
     g_Party.Leader = 0;

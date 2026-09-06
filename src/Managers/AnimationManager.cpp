@@ -141,7 +141,11 @@ CAnimationManager::CAnimationManager()
 
 CAnimationManager::~CAnimationManager()
 {
-    ClearUnusedAnimations();
+    // NOTE: static destruction order across translation units is unspecified; by
+    // the time this destructor runs during __cxa_finalize, g_Index (xuocore) and
+    // s_AnimationLifetime may already be destroyed, and touching them here crashes
+    // (SIGSEGV at exit). Animations are freed in CGame::ClearWorld instead, while
+    // all globals are still alive.
 }
 
 uint8_t CAnimationManager::GetRandomIdleAnimation(uint16_t graphic) const
