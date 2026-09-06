@@ -1,5 +1,5 @@
-// AGPLv3 License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 /* clang-format off */
 #ifndef CFG_FIELD
@@ -16,6 +16,8 @@ CFG_FIELD(global, check_updates, "yes", bool)
 CFG_FIELD(global, auto_update, "yes", bool)
 
 CFG_FIELD(global, enable_assist, "yes", bool)
+
+CFG_FIELD(global, last_used, "0", int)
 
 CFG_FIELD(account, profile, {}, astr_t)
 

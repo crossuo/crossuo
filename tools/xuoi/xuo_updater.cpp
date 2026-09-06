@@ -1,5 +1,7 @@
-// AGPLv3 License
-// Copyright (C) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+#define LOGGER_MODULE Launcher
 
 #include <vector>
 #include <stdint.h>
@@ -10,11 +12,13 @@
 #include <algorithm>
 #include <external/tinyxml2.h>
 #include <external/xxhash.h>
-#include <external/miniz.h>
+#include <xuocore/http.h>
+#include <xuocore/common.h>
+
+#define MINIZ_IMPLEMENTATION
+#include <external/miniz.h> // mz_zip_archive
 
 #include "xuo_updater.h"
-#include "common.h"
-#include "http.h"
 
 #define XUOL_THREADED 0
 #if XUOL_THREADED
@@ -44,6 +48,7 @@ enum xuo_result
     xuo_could_not_write_file,
     xuo_could_not_deflate_file,
     xuo_could_not_copy_file,
+    xuo_could_not_download_file,
     xuo_install_failed,
 };
 
@@ -182,7 +187,9 @@ static xuo_result xuo_manifest_load(xuo_context &ctx, const char *platform, xuo_
         addr, sizeof(addr), manifest_addr, platform, channel == xuo_channel::beta ? "-beta" : "");
     LOG_INFO("downloading manifest %s", addr);
     std::vector<uint8_t> data;
-    http_get_binary(addr, data);
+    if (!http_get_binary(addr, data))
+        return xuo_could_not_download_file;
+
     ctx.manifest.swap(data);
     ctx.platform = platform;
     ctx.doc.Parse((char *)ctx.manifest.data(), ctx.manifest.size());
@@ -224,7 +231,10 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     if (!fs_path_exists(ipath))
     {
         if (!http_get_file(upath, lpath))
+        {
+            LOG_ERROR("could not write file: %s", lpath);
             return xuo_could_not_write_file;
+        }
     }
 
     auto icrc = xuo_get_hash(ipath);
@@ -232,6 +242,7 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     {
         if (fs_path_is_file(ipath))
             fs_del(ipath);
+        LOG_ERROR("checksum validation failed: %s", fs_path_ascii(ipath));
         return xuo_checksum_failed;
     }
 
@@ -239,20 +250,30 @@ static xuo_result xuo_update_file(xuo_context &ctx, xuo_release &rel, xuo_file &
     memset(&zip, 0, sizeof(zip));
     mz_bool status = mz_zip_reader_init_file(&zip, lpath, 0);
     if (!status)
+    {
+        LOG_ERROR("could not open zip file: %s", lpath);
         return xuo_could_not_deflate_file;
+    }
 
     if (mz_zip_reader_get_num_files(&zip) != 1)
+    {
+        LOG_ERROR("error reading zip file: %s", lpath);
         return xuo_could_not_deflate_file;
+    }
 
     status = mz_zip_reader_extract_to_file(&zip, 0, fs_path_ascii(opath), 0);
     mz_zip_reader_end(&zip);
     if (!status)
+    {
+        LOG_ERROR("cold not uncompress zip file '%s' as '%s'", lpath, fs_path_ascii(opath));
         return xuo_could_not_deflate_file;
+    }
 
     auto ocrc = xuo_get_hash(opath);
     if (ocrc != file.hash)
     {
         fs_del(opath);
+        LOG_ERROR("uncompressed file checksum error: %s", fs_path_ascii(opath));
         return xuo_checksum_failed;
     }
 
@@ -288,7 +309,7 @@ static bool xuo_install_release(xuo_context &ctx, xuo_release &release)
         job.join();
     }
 #else
-    for (auto i = 0; i < release.files.size(); ++i)
+    for (size_t i = 0; i < release.files.size(); ++i)
     {
         if (xuo_update_file(ctx, release, release.files[i]) != xuo_ok)
         {

@@ -1,5 +1,7 @@
-// AGPLv3 License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+#define LOGGER_MODULE Launcher
 
 #include <stdio.h>
 #include <vector>
@@ -16,19 +18,17 @@
 #include <external/gfx/imgui/imgui.h>
 #include <external/inih.h>
 #include <external/process.h>
+#include <xuocore/http.h>
+#include <xuocore/common.h>
 
-#include "common.h"
+#include "icon_launcher.h"
 #include "accounts.h"
 #include "shards.h"
+#include "widgets.h"
 #include "ui_model.h"
 #include "ui_shards.h"
-#include "http.h"
 
 #include "xuo_updater.h"
-
-// to avoid issues self-updating, launcher will copy-itself into another binary and relaunch it
-// this avoid the file being locked to write while updating iself
-#define XUOL_ENABLE_SAFE_SELF_UPDATE
 
 struct releases
 {
@@ -108,83 +108,6 @@ void XUODefaultStyle()
     /* clang-format on */
 }
 
-void HoverToolTip(const char *desc)
-{
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetTextLineHeightWithSpacing() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
-
-void HelpMarker(const char *desc)
-{
-    ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImGui::GetColorU32(ImGuiCol_Text));
-    ImGui::TextDisabled("" ICON_FK_QUESTION_CIRCLE);
-    ImGui::PopStyleColor();
-    HoverToolTip(desc);
-}
-
-void InputText(
-    const char *id,
-    const char *label,
-    float w,
-    char *buf,
-    size_t buf_size,
-    ImGuiInputTextFlags flags = 0,
-    ImGuiInputTextCallback callback = nullptr,
-    void *user_data = nullptr)
-{
-    ImGui::Text("%s", label);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(w);
-    ImGui::InputText(id, buf, buf_size, flags, callback, user_data);
-    ImGui::PopItemWidth();
-}
-
-bool ComboBox(
-    const char *id,
-    const char *label,
-    float w,
-    int *current_item,
-    const char *const items[],
-    int items_count,
-    int height_in_items = -1)
-{
-    ImGui::Text("%s", label);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(w);
-    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-    const bool changed = ImGui::Combo(id, current_item, items, items_count, height_in_items);
-    ImGui::PopStyleColor();
-    ImGui::PopItemWidth();
-    return changed;
-}
-
-bool ComboBox(
-    const char *id,
-    const char *label,
-    float w,
-    int *current_item,
-    bool (*items_getter)(void *data, int idx, const char **out_text),
-    void *data,
-    int items_count,
-    int height_in_items = -1)
-{
-    ImGui::Text("%s", label);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(w);
-    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-    const bool changed =
-        ImGui::Combo(id, current_item, items_getter, data, items_count, height_in_items);
-    ImGui::PopStyleColor();
-    ImGui::PopItemWidth();
-    return changed;
-}
-
 void view_changelog()
 {
     open_url("http://crossuo.com/changelog.html");
@@ -229,7 +152,7 @@ static bool backup_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<releases> *)data;
     assert(items);
-    assert(idx < items->size());
+    assert(idx < (int)items->size());
     if (out_text)
         *out_text = items->at(idx).display.c_str();
     return true;
@@ -238,7 +161,7 @@ static bool backup_getter(void *data, int idx, const char **out_text)
 void ui_backups(ui_model &m)
 {
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
-    const auto items = (m.area.y / (line_size + 2) - 2);
+    const auto items = int(m.area.y / (line_size + 2) - 2);
     const int last_item = 0;
     static int cur_item = last_item;
 
@@ -270,31 +193,6 @@ void ui_backups(ui_model &m)
         s_update_backup_index = cur_item;
         s_update_request = true;
     }
-}
-
-static inline bool ui_modal(const char *title, const char *msg)
-{
-    bool yes = false;
-    ImGui::OpenPopup(title);
-    if (ImGui::BeginPopupModal(title))
-    {
-        ImGui::Text("%s", msg);
-        ImGui::SetNextItemWidth(-1.0f);
-        if (ImGui::Button("Yes", ImVec2(80, 0)))
-        {
-            s_launcher_restart = false;
-            ImGui::CloseCurrentPopup();
-            yes = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("No", ImVec2(80, 0)))
-        {
-            s_launcher_restart = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    return yes;
 }
 
 const fs_path &xuol_data_path()
@@ -363,6 +261,16 @@ void save_config()
     fclose(fp);
 }
 
+void xuol_set_last_used(int account_index)
+{
+    config().global_last_used = account_index;
+}
+
+int xuol_last_used()
+{
+    return config().global_last_used;
+}
+
 void xuol_launch_quit()
 {
     if (config().global_auto_close)
@@ -378,17 +286,8 @@ static ui_model model;
 
 static bool run_self_update_instance(int argc, char **argv)
 {
-    if (!argv[0])
-        return true;
-
     const char *bin = argv[0];
-    auto len = strlen(bin);
-    if (!len)
-        return true;
-
-    s_launcher_binary = fs_path_from(bin);
-    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
-#if defined(XUOL_ENABLE_SAFE_SELF_UPDATE)
+    const auto len = strlen(bin);
     if (bin[len - 1] != '_')
     {
         astr_t filename{ bin };
@@ -408,12 +307,15 @@ static bool run_self_update_instance(int argc, char **argv)
         }
         return false;
     }
-#endif // #if defined(XUO_WINDOWS)
     return true;
 }
 
 int main(int argc, char **argv)
 {
+    const char *bin = argv[0];
+    s_launcher_binary = fs_path_from(bin);
+    s_launcher_timestamp = fs_timestamp_write(s_launcher_binary);
+
 #if !defined(XUO_DEBUG)
     const bool self_relaunch = true;
 #else
@@ -426,17 +328,17 @@ int main(int argc, char **argv)
     }
 
     LOG_INFO("started %s in %s", argv[0], fs_path_ascii(fs_path_current()));
-    crc32_init();
     http_init();
+    crc32_init();
     static const auto ini = fs_path_join(xuol_data_path(), "xuolauncher.ini");
 
     win_context win;
-    memset(&win, 0, sizeof(win_context));
     win.title = XUOL_AGENT_NAME;
     win.width = 550;
     win.height = 284;
     win.vsync = 0;
     win.inifile = fs_path_ascii(ini);
+    win.icon = &g_icon_xuolauncher;
     win_init(&win);
 
     auto ui = ui_init(win);
@@ -492,21 +394,22 @@ int main(int argc, char **argv)
     auto update_run = []() {
         s_updated = xuo_update_apply(s_ctx);
         const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart = s_launcher_timestamp && s_launcher_timestamp != timestamp;
+        s_launcher_restart =
+            s_updated || (s_launcher_timestamp && s_launcher_timestamp != timestamp);
         s_update_started = false;
         s_has_update = false;
         model.view = ui_view::accounts;
     };
     auto update_backup = []() {
         assert(
-            s_update_backup_index >= 0 && s_update_backup_index < s_releases.size() &&
+            s_update_backup_index >= 0 && s_update_backup_index < (int)s_releases.size() &&
             "invalid backup index");
         auto &e = s_releases[s_update_backup_index];
         LOG_INFO("downloading package %s %s", e.name, e.version);
         s_update_backup_index = -1;
         s_updated = xuo_release_get(s_ctx, e.name, e.version);
         const auto timestamp = fs_timestamp_write(s_launcher_binary);
-        s_launcher_restart = s_launcher_timestamp != timestamp;
+        s_launcher_restart = s_updated || s_launcher_timestamp != timestamp;
         s_update_started = false;
         s_has_update = false;
         model.view = ui_view::accounts;
@@ -527,18 +430,8 @@ int main(int argc, char **argv)
                 s_launcher_quit = true;
         }
 
-        sg_color_attachment_action clear_action;
-        clear_action.action = SG_ACTION_CLEAR;
-        clear_action.val[0] = ui.clear_color.x;
-        clear_action.val[1] = ui.clear_color.y;
-        clear_action.val[2] = ui.clear_color.z;
-        clear_action.val[3] = ui.clear_color.w;
-
-        sg_pass_action pass_action = {};
-        pass_action.colors[0] = clear_action;
-
-        sg_begin_default_pass(&pass_action, win.width, win.height);
-
+        glClearColor(ui.clear_color.x, ui.clear_color.y, ui.clear_color.z, ui.clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         int x, y;
         SDL_GetWindowPosition(win.window, &x, &y);
@@ -645,13 +538,11 @@ int main(int argc, char **argv)
                 ui_shards(model, true);
 
             if (s_launcher_restart)
-                s_launcher_quit =
-                    ui_modal("Update", "A restart is required, do you want to close?");
+                s_launcher_quit = DialogYesNo(
+                    "Update", "A restart is required, do you want to close?", s_launcher_restart);
         }
         ImGui::End();
         ui_draw(ui);
-        sg_end_pass();
-        sg_commit();
         win_flip(&win);
     }
 

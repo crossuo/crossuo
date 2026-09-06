@@ -1,5 +1,7 @@
-// AGPLv3 License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
+
+#define LOGGER_MODULE Launcher
 
 #include "accounts.h"
 #include <vector>
@@ -12,8 +14,9 @@
 #include <external/process.h>
 #include <external/tinyfiledialogs.h>
 #include <xuocore/client_info.h>
-#include "http.h"
-#include "common.h"
+#include <xuocore/http.h>
+#include <xuocore/common.h>
+#include "widgets.h"
 #include "ui_model.h"
 #include "shards.h"
 #include "ui_shards.h"
@@ -35,10 +38,13 @@
 #define XUOA_EXE "xuoassist"
 #endif
 
-extern void save_config();              // xuolauncher.cpp
-extern const fs_path &xuol_data_path(); // xuolauncher.cpp
+// xuolauncher.cpp
+extern void save_config();
+extern const fs_path &xuol_data_path();
 extern bool xuol_launch_assist();
 extern void xuol_launch_quit();
+extern void xuol_set_last_used(int account_index);
+extern int xuol_last_used();
 
 static inline bool ui_modal(const char *title, const char *msg, bool &response)
 {
@@ -112,7 +118,7 @@ void write_accounts(void *_fp)
         return;
 
     auto fp = (FILE *)_fp;
-    for (int i = 1; i < s_accounts.entries.size(); ++i)
+    for (size_t i = 1; i < s_accounts.entries.size(); ++i)
     {
         const auto &e = s_accounts.entries[i];
         account::write(fp, e, "Account");
@@ -180,7 +186,10 @@ static fs_path account_create_config(const account::entry &account)
 
 static void account_launch(int account_index)
 {
-    assert(account_index > 0 && account_index < s_accounts.entries.size());
+    if (account_index == 0)
+        return;
+
+    assert(account_index < (int)s_accounts.entries.size());
     const auto &entry = s_accounts.entries[account_index];
     auto cfg = account_create_config(entry);
     if (!fs_path_some(cfg))
@@ -237,36 +246,15 @@ static void account_launch(int account_index)
         LOG_ERROR("could not launch client %s", args[0]);
     }
 
+    xuol_set_last_used(account_index);
     xuol_launch_quit();
 }
-
-// view
-
-void HoverToolTip(const char *desc);
-void HelpMarker(const char *desc);
-void InputText(
-    const char *id,
-    const char *label,
-    float w,
-    char *buf,
-    size_t buf_size,
-    ImGuiInputTextFlags flags = 0,
-    ImGuiInputTextCallback callback = nullptr,
-    void *user_data = nullptr);
-bool ComboBox(
-    const char *id,
-    const char *label,
-    float w,
-    int *current_item,
-    const char *const items[],
-    int items_count,
-    int height_in_items = -1);
 
 static bool account_getter(void *data, int idx, const char **out_text)
 {
     auto *items = (std::vector<account::entry> *)data;
     assert(items);
-    assert(idx < items->size());
+    assert(idx < (int)items->size());
     if (out_text)
         *out_text = items->at(idx).account_profile.c_str();
     return true;
@@ -280,10 +268,10 @@ void ui_accounts(ui_model &m)
     const auto line_size = ImGui::GetTextLineHeightWithSpacing();
     static auto label_size = ImGui::CalcTextSize("Profile Name: ", nullptr, true);
     static auto label_size2 = ImGui::CalcTextSize(" Use Character: ", nullptr, true);
-    const auto items = m.area.y / (line_size + 2) - 2;
+    const auto items = int(m.area.y / (line_size + 2) - 2);
 
     const int NEW_ACCOUNT = 0;
-    const int last_item = NEW_ACCOUNT;
+    const int last_item = xuol_last_used();
     static int acct_id = last_item;
 
     static char profileName[64] = {};
@@ -318,13 +306,14 @@ void ui_accounts(ui_model &m)
         ImGui::Text(ICON_FK_USER " Accounts");
         ImGui::SetNextItemWidth(left_w);
         ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_SelectedEntryBg));
-        if (ImGui::ListBox(
+        if (ListBox(
                 "##acct",
                 &acct_id,
                 account_getter,
                 &s_accounts.entries,
                 int(s_accounts.entries.size()),
-                items))
+                items,
+                &account_launch))
         {
             update_view = true;
         }

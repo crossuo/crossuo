@@ -1,5 +1,5 @@
-// AGPLv3 License
-// Copyright (c) 2019 Danny Angelo Carminati Grein
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2020 Danny Angelo Carminati Grein
 
 #define CFG_CONVERTERS
 
@@ -8,7 +8,7 @@ static astr_t join(const std::vector<astr_t> &in, char delim)
     if (in.empty())
         return {};
     astr_t r = in[0];
-    for (int i = 1; i < in.size(); ++i)
+    for (size_t i = 1; i < in.size(); ++i)
         r += delim + in[i];
     return r;
 }
@@ -42,6 +42,17 @@ bool convert(astr_t &out, const char *raw)
 astr_t as_str(const bool in)
 {
     return in ? "yes" : "no";
+}
+
+bool convert(int &out, const char *raw)
+{
+    out = atoi(raw);
+    return true;
+}
+
+astr_t as_str(const int in)
+{
+    return std::to_string(in);
 }
 
 bool convert(bool &out, const char *raw)
