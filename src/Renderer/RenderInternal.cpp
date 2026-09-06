@@ -629,7 +629,7 @@ frame_buffer_t Render_CreateFrameBuffer(uint32_t width, uint32_t height)
 {
     if (g_render.shutdown || g_render.context == nullptr)
     {
-        return RENDER_FRAMEBUFFER_INVALID; // GL context is gone
+        return frame_buffer_t{}; // default = invalid handles, GL context is gone
     }
     texture_handle_t texture;
     framebuffer_handle_t handle;
