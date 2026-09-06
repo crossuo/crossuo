@@ -30,13 +30,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${XUOCORE_PROJECT})
 # Launcher
 #
 set(XUOL_SRCS
-  http.cpp
-  http.h
-  mft.cpp
-  mft.h
-  common.cpp
-  common.h
-  http.cpp
+  widgets.cpp
+  widgets.h
   xuo_updater.cpp
   xuo_updater.h
   xuolauncher.cpp
