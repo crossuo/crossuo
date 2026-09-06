@@ -373,8 +373,8 @@ bool RenderDraw_DrawUntexturedQuad(const DrawUntexturedQuadCmd &cmd, RenderState
     const int y = cmd.y;
     const int width = (int)cmd.width;
     const int height = (int)cmd.height;
-    glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]));
-    glDisable(GL_TEXTURE_2D));
+    glColor4f(cmd.color[0], cmd.color[1], cmd.color[2], cmd.color[3]);
+    glDisable(GL_TEXTURE_2D);
 
     glTranslatef((GLfloat)x, (GLfloat)y, 0.0f);
 
